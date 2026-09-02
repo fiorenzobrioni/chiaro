@@ -9,9 +9,8 @@ as the body of the GitHub Release, so a version's entry is written **before** it
 
 ## [Unreleased]
 
-Nothing released yet. The app is in its scaffolding phases: the engines are in and
-verified, the design system is code, and the screens start with Fase 2. See
-`PLANNING.md` for where the work actually is.
+Nothing released yet. The engines are in and verified, the design system is code, and
+the first screen — Today — is built. See `PLANNING.md` for where the work actually is.
 
 ### Added
 
@@ -28,3 +27,17 @@ verified, the design system is code, and the screens start with Fase 2. See
   the daylight ribbon, Inter as a bundled variable font, and the first components.
 - Four tests that hold the design document to the code: `PaletteContrastTest`,
   `ScrimContractTest`, `SkyPaletteTest`, `NoRawColorTest`.
+- The Today screen: the computed sky canvas over the active place, the headline sentence
+  (built on the alert engine's own thresholds, and absent when there is nothing to say),
+  the next 24 hours with a rain sparkline, the merged rest-of-day timeline (sun, moon and
+  rain turns), the week on one shared temperature scale with each day's ribbon of light,
+  and a details grid where every number carries its one-line meaning. Cached content
+  renders before any network is asked; stale data states its age; a report past its
+  horizon is an empty state, never an old screen posing as current.
+- The weather icons: Meteocons v2.0.0 (MIT), imported as vector drawables by
+  `tools/import_meteocons.py` with the palette re-anchored so every stroke clears 3:1 on
+  both surfaces — measured in the tool, re-measured by `IconContrastTest` on every build.
+  `material-icons-extended` is gone (the debug APK drops from 64 to 33 MB).
+- The minimal Places sheet: search-as-you-type against Open-Meteo geocoding, tap to add
+  and select, the saved list to switch — the piece of Fase 3 a cityless fresh install
+  cannot exist without.

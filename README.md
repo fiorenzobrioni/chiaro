@@ -31,9 +31,12 @@ managed to fetch, and it says how old that data is instead of pretending.
 
 ## Status
 
-Early. Fase 0 is done: the project builds, and the engines it inherited arrive with their
-test suite green (248 tests). The screens start with Fase 2. `PLANNING.md` is the honest
-account of where things are.
+Early, but visible now. The engines arrived from tweather with their test suite green
+(Fase 0), the design system is code with tests holding it to its own document (Fase 1),
+and the Today screen is built (Fase 2): the computed sky, one sentence before any number,
+the next hours, the day's merged timeline, the week on one shared scale, and a details
+grid where every number carries its meaning. 290 tests are green. `PLANNING.md` is the
+honest account of where things are.
 
 ## Where it comes from
 
