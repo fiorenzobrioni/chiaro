@@ -340,6 +340,28 @@ la stessa altezza.
   disegna lo scheletro, mai la schermata sbagliata per un frame (né il primo avvio a
   un utente di lunga data, né "nessun luogo" a chi ha tre città).
 
+### Verifica su device e ritocchi (committente, 2 set 2026, sera)
+
+Fase 3 provata sul telefono: pager, foglio, GPS e primo avvio funzionano. Dallo
+screenshot, tre richieste — due accolte e una che era un difetto:
+
+- **La scritta "Chiaro" in cima era l'ActionBar di sistema**, mai disegnata dall'app:
+  `Theme.DeviceDefault.DayNight` la porta con sé e nessuno gliel'aveva chiesta. Il
+  tema ora è `NoActionBar`. Trovato dall'occhio del committente, invisibile a ogni
+  test.
+- **Il selettore del luogo vive SUL canvas** (nome, chevron e pallini in bianco sul
+  cielo), e il canvas arriva fino al bordo alto dello schermo, dietro la status bar.
+  È un passo verso la §8.1, non una violazione della §3.6: il contratto dello scrim si
+  ESTENDE a una seconda banda simmetrica in alto — stesso colore, stessa alfa, stessa
+  garanzia misurata — che copre selettore e icone di stato (bianche sopra il canvas,
+  inchiostro del tema negli stati senza canvas). Costo onesto, detto al committente:
+  scorrendo, il nome se ne va col cielo che etichetta; il ritorno in barra compatta è
+  il collasso della §8.1, che resta alla motion pass.
+- **Icone meteo più grandi**: 32dp nella strip oraria (in celle da 56 le 24dp
+  intrinseche erano timide accanto alle cifre), 28dp nelle righe della settimana.
+
+DESIGN.md §3.6 aggiornato con il contratto a due bande.
+
 ## Fase 4 — Impostazioni e guida
 
 - [ ] Preferenze M3; rimozione di `EditorSettings`/`showDetails` (deviazione Fase 0)

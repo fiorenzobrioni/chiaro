@@ -70,7 +70,9 @@ fun DayRow(
                 imageVector = icon,
                 contentDescription = null, // the row speaks once, via its semantics
                 tint = Color.Unspecified,
-                modifier = Modifier.size(24.dp)
+                // 28dp: between the strip's 32 and the timeline's 24, sized to the
+                // row it sits in (device check, 2 set).
+                modifier = Modifier.size(28.dp)
             )
             Text(
                 text = "$rainPct%",

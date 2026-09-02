@@ -249,13 +249,16 @@ when the activity is not resumed. No particles, no parallax, no video.
 
 ### 3.6 The scrim contract
 
-Text over the canvas is `#FFFFFF` (secondary text `#FFFFFF` at 70% alpha) over a bottom
-scrim from `rgba(16,18,22,0.00)` to `rgba(16,18,22,0.55)` covering the text band. The rule
-that makes this safe is testable and tested: **for the brightest possible canvas (Day band,
-0% cloud, bottom stop `#C7DDEB`), white on the scrimmed band is 5.29:1** — above the 4.5:1
-floor, and the alpha was chosen for that reason: 0.50 gives 4.53:1 and leaves no headroom
-for a future band, 0.45 gives 3.95:1 and fails. If a band is ever added that breaks it,
-`ScrimContractTest` fails rather than the reader squinting.
+Text over the canvas is `#FFFFFF` (secondary text `#FFFFFF` at 70% alpha) over a scrim
+of `rgba(16,18,22,0.55)` fading to transparent, covering **both text bands** — the
+bottom one under the temperature and the headline sentence, and, since the canvas owns
+the top edge of the screen (Fase 3), a symmetric top one under the place switcher and
+the status bar icons. One color, one alpha, both bands. The rule that makes this safe
+is testable and tested: **for the brightest possible canvas (Day band, 0% cloud, its
+brightest stop `#C7DDEB`), white on the scrimmed band is 5.29:1** — above the 4.5:1
+floor, and the alpha was chosen for that reason: 0.50 gives 4.53:1 and leaves no
+headroom for a future band, 0.45 gives 3.95:1 and fails. If a band is ever added that
+breaks it, `ScrimContractTest` fails rather than the reader squinting.
 
 ---
 

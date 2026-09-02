@@ -1,19 +1,26 @@
 package com.callbackdev.chiaro.ui.today
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -24,12 +31,9 @@ import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,11 +42,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.core.view.WindowCompat
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -90,13 +96,13 @@ fun TodayRoute(
     var placesOpen by remember { mutableStateOf(false) }
 
     when (val model = pager) {
-        // The stores have not answered yet: a skeleton under a bare bar, never a
+        // The stores have not answered yet: a skeleton under a bare header, never a
         // wrong screen for one frame.
-        null -> TodayScaffold(title = null, onOpenPlaces = { placesOpen = true }) {
+        null -> GlobalFrame(onOpenPlaces = { placesOpen = true }) {
             TodaySkeleton()
         }
         else -> if (model.pages.isEmpty()) {
-            TodayScaffold(title = null, onOpenPlaces = { placesOpen = true }) {
+            GlobalFrame(onOpenPlaces = { placesOpen = true }) {
                 NoPlaceState(onOpenPlaces = { placesOpen = true })
             }
         } else {
@@ -118,6 +124,11 @@ fun TodayRoute(
  * The pager between places (VISION §5.1): one page per saved place, plus the device
  * position while GPS is on. Settling on a page IS selecting it — the pager and the
  * sheet write the same store, so they can never disagree about what is active.
+ *
+ * There is deliberately no app bar (device decision, 2 set): the place row lives ON
+ * the sky it labels, over the canvas' top scrim, and swiping to another place carries
+ * its name with it. The §8.1 collapse — the row and the temperature condensing into a
+ * persistent bar on scroll — remains the motion pass' work.
  */
 @Composable
 private fun PagedToday(
@@ -148,18 +159,13 @@ private fun PagedToday(
         }
     }
 
-    val current = pages.getOrNull(pagerState.currentPage.coerceIn(0, pages.lastIndex))
-    val title = when (current) {
-        is PlacePage.Gps -> current.lastFix?.name
-            ?: stringResource(R.string.places_gps_title)
-        is PlacePage.Saved -> current.city.name
-        null -> null
-    }
-    TodayScaffold(
-        title = title,
-        onOpenPlaces = onOpenPlaces,
-        dots = if (pages.size > 1) pagerState.currentPage to pages.size else null
-    ) {
+    // The status bar icons follow what is under them: white over the canvas' top
+    // scrim, theme ink over the plain states.
+    val currentPage = pages.getOrNull(pagerState.currentPage.coerceIn(0, pages.lastIndex))
+    val currentState = currentPage?.let { stateFor(it).collectAsStateWithLifecycle().value }
+    StatusBarIcons(overCanvas = currentState is TodayUiState.Content)
+
+    Surface(modifier = Modifier.fillMaxSize()) {
         HorizontalPager(
             state = pagerState,
             key = { pages[it].key },
@@ -169,6 +175,8 @@ private fun PagedToday(
             val state by stateFor(page).collectAsStateWithLifecycle()
             TodayPage(
                 state = state,
+                title = pageTitle(page),
+                dots = if (pages.size > 1) index to pages.size else null,
                 onRefresh = { onRefresh(page) },
                 onOpenPlaces = onOpenPlaces
             )
@@ -177,71 +185,126 @@ private fun PagedToday(
 }
 
 @Composable
+private fun pageTitle(page: PlacePage): String = when (page) {
+    is PlacePage.Gps -> page.lastFix?.name ?: stringResource(R.string.places_gps_title)
+    is PlacePage.Saved -> page.city.name
+}
+
+/** White over the canvas needs dark icons off; the plain states follow the theme. */
+@Composable
+private fun StatusBarIcons(overCanvas: Boolean) {
+    val activity = LocalActivity.current
+    val darkTheme = isSystemInDarkTheme()
+    DisposableEffect(overCanvas, darkTheme, activity) {
+        activity?.window?.let { window ->
+            WindowCompat.getInsetsController(window, window.decorView)
+                .isAppearanceLightStatusBars = !overCanvas && !darkTheme
+        }
+        onDispose { }
+    }
+}
+
+@Composable
 private fun TodayPage(
     state: TodayUiState,
+    title: String,
+    dots: Pair<Int, Int>?,
     onRefresh: () -> Unit,
     onOpenPlaces: () -> Unit
 ) {
     when (state) {
-        TodayUiState.Starting -> TodaySkeleton()
-        TodayUiState.NoPlace -> NoPlaceState(onOpenPlaces)
-        is TodayUiState.Empty -> EmptyState(state, onRefresh)
-        is TodayUiState.Content -> ContentState(state, onRefresh)
+        is TodayUiState.Content -> ContentState(state, title, dots, onRefresh, onOpenPlaces)
+        else -> Column(modifier = Modifier.fillMaxSize()) {
+            PlaceHeader(
+                title = title,
+                dots = dots,
+                onOpenPlaces = onOpenPlaces,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                dotInactive = MaterialTheme.colorScheme.outlineVariant,
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            )
+            when (state) {
+                TodayUiState.Starting -> TodaySkeleton()
+                TodayUiState.NoPlace -> NoPlaceState(onOpenPlaces)
+                is TodayUiState.Empty -> EmptyState(state, onRefresh)
+                is TodayUiState.Content -> Unit // handled above
+            }
+        }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** The frame for the two page-less situations: not started yet, and no place at all. */
 @Composable
-private fun TodayScaffold(
-    title: String?,
+private fun GlobalFrame(
     onOpenPlaces: () -> Unit,
-    dots: Pair<Int, Int>? = null,
     content: @Composable () -> Unit
 ) {
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            val shown = title ?: stringResource(R.string.app_name)
-            TopAppBar(
-                title = {
-                    Column {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .clickable(onClick = onOpenPlaces)
-                                .semantics { contentDescription = shown }
-                        ) {
-                            Text(shown, style = MaterialTheme.typography.titleMedium)
-                            Icon(
-                                imageVector = Icons.Outlined.KeyboardArrowDown,
-                                contentDescription = stringResource(R.string.place_switcher_action)
-                            )
-                        }
-                        dots?.let { (selected, count) ->
-                            PageDots(selected = selected, count = count)
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            PlaceHeader(
+                title = stringResource(R.string.app_name),
+                dots = null,
+                onOpenPlaces = onOpenPlaces,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                dotInactive = MaterialTheme.colorScheme.outlineVariant,
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             )
-        }
-    ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             content()
         }
     }
 }
 
-/** The place dots of VISION §5.1's app bar: position among the pages, at a glance. */
+/**
+ * The place switcher: name, chevron, and the pager dots when there is more than one
+ * page. One composable for both grounds — white over the canvas' scrim, theme ink on
+ * a plain surface — so the two can never drift apart in shape.
+ */
 @Composable
-private fun PageDots(selected: Int, count: Int) {
+private fun PlaceHeader(
+    title: String,
+    dots: Pair<Int, Int>?,
+    onOpenPlaces: () -> Unit,
+    contentColor: Color,
+    dotInactive: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clickable(onClick = onOpenPlaces)
+                .semantics { contentDescription = title }
+        ) {
+            Text(title, style = MaterialTheme.typography.titleMedium, color = contentColor)
+            Icon(
+                imageVector = Icons.Outlined.KeyboardArrowDown,
+                contentDescription = stringResource(R.string.place_switcher_action),
+                tint = contentColor
+            )
+        }
+        dots?.let { (selected, count) ->
+            PageDots(
+                selected = selected,
+                count = count,
+                active = contentColor,
+                inactive = dotInactive
+            )
+        }
+    }
+}
+
+/** The place dots of VISION §5.1: position among the pages, at a glance. */
+@Composable
+private fun PageDots(selected: Int, count: Int, active: Color, inactive: Color) {
     val description = stringResource(R.string.pager_dots_desc, selected + 1, count)
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
-            .padding(top = 2.dp)
+            .padding(top = 4.dp)
             .semantics { contentDescription = description }
     ) {
         repeat(count) { index ->
@@ -249,13 +312,7 @@ private fun PageDots(selected: Int, count: Int) {
                 modifier = Modifier
                     .size(6.dp)
                     .clip(CircleShape)
-                    .background(
-                        if (index == selected) {
-                            MaterialTheme.colorScheme.onSurface
-                        } else {
-                            MaterialTheme.colorScheme.outlineVariant
-                        }
-                    )
+                    .background(if (index == selected) active else inactive)
             )
         }
     }
@@ -380,7 +437,13 @@ private fun ErrorBanner(error: TodayError, onRetry: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ContentState(content: TodayUiState.Content, onRefresh: () -> Unit) {
+private fun ContentState(
+    content: TodayUiState.Content,
+    title: String,
+    dots: Pair<Int, Int>?,
+    onRefresh: () -> Unit,
+    onOpenPlaces: () -> Unit
+) {
     val locale = Locale.getDefault()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val timeFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
@@ -391,9 +454,10 @@ private fun ContentState(content: TodayUiState.Content, onRefresh: () -> Unit) {
     PullToRefreshBox(isRefreshing = content.refreshing, onRefresh = onRefresh) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = WindowInsets.navigationBars.asPaddingValues()
         ) {
-            item { CanvasHeader(content, units, timeFmt, locale) }
+            item { CanvasHeader(content, title, dots, units, timeFmt, locale, onOpenPlaces) }
 
             if (content.error != null) {
                 item { ErrorBanner(content.error, onRefresh) }
@@ -439,12 +503,18 @@ private fun SectionTitle(text: String) {
 @Composable
 private fun CanvasHeader(
     content: TodayUiState.Content,
+    title: String,
+    dots: Pair<Int, Int>?,
     units: UnitSettings,
     timeFmt: DateTimeFormatter,
-    locale: Locale
+    locale: Locale,
+    onOpenPlaces: () -> Unit
 ) {
     val sky = content.sky
     val current = content.report.current
+    // The canvas owns the top edge of the screen: its height grows by the status bar
+    // so the sky sits behind the clock, over the top scrim that keeps both legible.
+    val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     SkyCanvas(
         gradient = SkyPalette.gradient(
             sunAltitudeDeg = sky.sunAltitudeDeg,
@@ -453,8 +523,19 @@ private fun CanvasHeader(
             moonIllumination = sky.moonIllumination,
             moonAltitudeDeg = sky.moonAltitudeDeg
         ),
-        height = 280.dp
+        height = 280.dp + statusTop
     ) {
+        PlaceHeader(
+            title = title,
+            dots = dots,
+            onOpenPlaces = onOpenPlaces,
+            contentColor = Color.White,
+            dotInactive = Color.White.copy(alpha = 0.4f),
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)

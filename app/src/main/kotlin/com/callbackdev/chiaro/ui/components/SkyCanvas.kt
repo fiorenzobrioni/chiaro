@@ -22,13 +22,16 @@ import com.callbackdev.chiaro.ui.theme.SkyPalette
 
 /**
  * DESIGN.md §3 and §8.1. The gradient is the sky above the active city, computed by
- * [SkyPalette]; this composable paints it and guarantees the scrim.
+ * [SkyPalette]; this composable paints it and guarantees the scrim — on BOTH text
+ * bands since Fase 3: the bottom one under the temperature and the sentence, and a
+ * symmetric top one under the place row and the status bar icons, now that the canvas
+ * reaches the top edge of the screen.
  *
- * The scrim is not decoration and not optional: the canvas is the one surface in the app
- * that does not follow the reader's theme, so white text over an unscrimmed noon sky
- * would be about 1.3:1. `ScrimContractTest` pins the alpha at the value that clears
+ * The scrims are not decoration and not optional: the canvas is the one surface in the
+ * app that does not follow the reader's theme, so white text over an unscrimmed noon
+ * sky would be about 1.3:1. `ScrimContractTest` pins the alpha at the value that clears
  * 4.5:1 for every altitude the palette can produce, which is why it is a constant here
- * and not a parameter.
+ * and not a parameter — one constant, both bands.
  */
 @Composable
 fun SkyCanvas(
@@ -45,7 +48,8 @@ fun SkyCanvas(
             .background(Brush.verticalGradient(gradient.stops()))
             .background(
                 Brush.verticalGradient(
-                    0.00f to Color.Transparent,
+                    0.00f to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha),
+                    0.25f to Color.Transparent,
                     0.45f to Color.Transparent,
                     1.00f to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha)
                 )

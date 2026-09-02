@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -68,7 +69,9 @@ fun HourStrip(
                     imageVector = cell.icon,
                     contentDescription = null, // the cell speaks once, via its semantics
                     tint = Color.Unspecified, // Meteocons carry their own measured colors
-                    modifier = Modifier.padding(vertical = 2.dp)
+                    // 32dp in a 56dp cell: at the drawable's intrinsic 24 the icons
+                    // read as timid next to the figures (device check, 2 set).
+                    modifier = Modifier.padding(vertical = 2.dp).size(32.dp)
                 )
                 Text(
                     text = cell.temperature,
