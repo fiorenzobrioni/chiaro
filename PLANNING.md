@@ -325,8 +325,19 @@ dominio non arriva mai a schermo. I notifier della Fase 6 renderizzano comunque 
 - [ ] Icona definitiva, screenshot, scheda dello store
 - [ ] Sezione `## [1.0.0]` nel `CHANGELOG.md` **prima** del tag: `release.yml` la legge
       e la usa come corpo della Release
-- [ ] Chiave di release generata fuori dal repo, quattro `CHIARO_KEYSTORE*` in
-      `~/.gradle/gradle.properties` e i quattro Secrets sul repo, poi il tag `v1.0.0`
+- [ ] Chiave di release: **generata** (2 set 2026, in anticipo sulla fase — una chiave
+      è immutabile per la vita dell'app, averla presto non costa nulla e permette di
+      collaudare `release.yml` molto prima del tag). `C:\Fiorenzo\keys\
+      chiaro-release.jks`, alias `chiaro`, RSA 4096, 30 anni, `CN=callbackdev`, come
+      il resto della serie (convenzione registrata in tweather, Fase 12); impronta
+      SHA-256 del certificato
+      `7B:05:E2:47:E4:22:F9:1F:E7:BD:FA:C9:E6:3E:72:2C:BB:6A:3A:7E:8D:43:56:36:66:53:6A:DA:75:8E:7B:22`.
+      La firma è già collaudata in locale: `assembleRelease` con le quattro proprietà
+      passate via ambiente produce un APK il cui certificato combacia con quell'impronta
+      (verificato con apksigner). Restano al committente: le quattro `CHIARO_KEYSTORE*`
+      in `~/.gradle/gradle.properties`, i quattro Secrets sul repo, il backup della
+      password nel password manager (e la cancellazione del file di transito
+      `chiaro-release.password.txt`), poi il tag `v1.0.0`
 
 ---
 
