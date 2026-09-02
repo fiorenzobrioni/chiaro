@@ -7,10 +7,14 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
+import com.callbackdev.chiaro.data.LocationProvider
+import com.callbackdev.chiaro.data.LocationSettings
+import com.callbackdev.chiaro.data.SearchHistoryStore
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.WeatherRepository
 import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.toGpsCity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,23 +37,53 @@ sealed interface SearchState {
     data object Failed : SearchState
 }
 
+/** Where the device-position row is in its life. [Error] words arrive at render. */
+sealed interface GpsState {
+    data object Idle : GpsState
+    data object Acquiring : GpsState
+    data class Error(val kind: GpsError) : GpsState
+}
+
+enum class GpsError { PERMISSION, DISABLED, TIMEOUT, UNAVAILABLE }
+
+/** One saved row: the city plus the cached temperature beside it (VISION §5.6) —
+ * cached only, already formatted°-less; a place list must never spend network. */
+data class SavedPlace(val city: City, val temperatureC: Double?)
+
+/** What swipe-to-remove needs to offer its undo: the row and where it was. */
+data class RemovedPlace(val city: City, val index: Int, val wasActive: Boolean)
+
 /**
- * The minimum of Fase 3 that Fase 2 cannot exist without (deviation recorded in
- * PLANNING.md): a fresh install has NO city — seeding a fake one is forbidden — so the
- * empty state needs a sheet that can search, add and select a real place. The full
- * Places surface (GPS, reorder, swipe-to-remove, first run) stays Fase 3 work.
+ * The Places surface (VISION §5.6): the device position pinned on top, the saved
+ * list with a cached temperature beside each, search-as-you-type with the recent
+ * searches, reorder, and remove-with-undo. Fase 3 makes this the real thing the
+ * Fase 2 sheet was a down payment on.
  */
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class PlacesViewModel(
     private val repository: WeatherRepository,
-    private val cityStore: CityStore
+    private val cityStore: CityStore,
+    private val searchHistory: SearchHistoryStore,
+    private val locationProvider: LocationProvider
 ) : ViewModel() {
 
-    val cities: StateFlow<List<City>> = cityStore.cities
+    val places: StateFlow<List<SavedPlace>> = cityStore.cities
+        .mapLatest { cities ->
+            cities.map { SavedPlace(it, repository.cachedReport(it)?.current?.tempC) }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val active: StateFlow<ActiveSource?> = cityStore.activeSource
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    val location: StateFlow<LocationSettings?> = cityStore.locationSettings
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    val recentSearches: StateFlow<List<String>> = searchHistory.recentSearches
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    private val gpsStateFlow = MutableStateFlow<GpsState>(GpsState.Idle)
+    val gpsState: StateFlow<GpsState> = gpsStateFlow.asStateFlow()
 
     private val queryFlow = MutableStateFlow("")
     val query: StateFlow<String> = queryFlow.asStateFlow()
@@ -75,17 +109,87 @@ class PlacesViewModel(
         queryFlow.value = value
     }
 
-    /** A tapped search result: saved, made active, and the first-run debt settled —
-     * choosing a place IS the first-run answer, wherever it is given from. */
+    /** A tapped search result: saved, made active, remembered as a search, and the
+     * first-run debt settled — choosing a place IS the first-run answer, wherever it
+     * is given from. */
     fun choose(city: City) {
+        val term = queryFlow.value.trim()
         viewModelScope.launch {
             cityStore.add(city)
             cityStore.markInitDone()
+            if (term.isNotEmpty()) searchHistory.add(term)
         }
+        queryFlow.value = ""
     }
 
     fun select(city: City) {
         viewModelScope.launch { cityStore.setActive(city) }
+    }
+
+    /** Reorder, from the sheet's drag: [city] lands at [toIndex] among the saved. */
+    fun move(city: City, toIndex: Int) {
+        viewModelScope.launch { cityStore.move(city, toIndex) }
+    }
+
+    /** Swipe-to-remove. The returned memo is what [undoRemove] restores. */
+    fun remove(place: RemovedPlace) {
+        viewModelScope.launch { cityStore.remove(place.city) }
+    }
+
+    fun undoRemove(place: RemovedPlace) {
+        viewModelScope.launch {
+            cityStore.insert(place.city, place.index)
+            if (place.wasActive) cityStore.setActive(place.city)
+        }
+    }
+
+    /**
+     * The device-position flow, called only AFTER the permission is granted (the UI
+     * owns the permission dialog; this owns everything behind it). Fix first, then
+     * the toggle: enabling a source that cannot name a place yet would flash "no
+     * place" at whoever is watching.
+     */
+    fun enableGps() {
+        if (gpsStateFlow.value == GpsState.Acquiring) return
+        gpsStateFlow.value = GpsState.Acquiring
+        viewModelScope.launch {
+            try {
+                val fix = locationProvider.currentFix()
+                cityStore.updateGpsCity(fix.toGpsCity())
+                cityStore.setUseGps(true)
+                cityStore.markInitDone()
+                gpsStateFlow.value = GpsState.Idle
+            } catch (e: WeatherException) {
+                gpsStateFlow.value = GpsState.Error(
+                    when (e) {
+                        is WeatherException.LocationPermissionDenied -> GpsError.PERMISSION
+                        is WeatherException.LocationDisabled -> GpsError.DISABLED
+                        is WeatherException.LocationTimeout -> GpsError.TIMEOUT
+                        else -> GpsError.UNAVAILABLE
+                    }
+                )
+            }
+        }
+    }
+
+    fun disableGps() {
+        viewModelScope.launch { cityStore.setUseGps(false) }
+        gpsStateFlow.value = GpsState.Idle
+    }
+
+    /** Tapping the enabled GPS row: select it, and quietly refresh the fix — the
+     * reader who taps "my position" means where they are now, not where they were. */
+    fun selectGps() {
+        viewModelScope.launch {
+            cityStore.setActiveGps()
+            runCatching { locationProvider.currentFix() }
+                .onSuccess { cityStore.updateGpsCity(it.toGpsCity()) }
+            // a failed silent re-fix keeps the last one: old position, real weather
+        }
+    }
+
+    fun dismissGpsError() {
+        gpsStateFlow.value = GpsState.Idle
     }
 
     companion object {
@@ -94,7 +198,9 @@ class PlacesViewModel(
                 val app = checkNotNull(this[APPLICATION_KEY])
                 PlacesViewModel(
                     repository = ServiceLocator.weatherRepository(app),
-                    cityStore = ServiceLocator.cityStore(app)
+                    cityStore = ServiceLocator.cityStore(app),
+                    searchHistory = ServiceLocator.searchHistoryStore(app),
+                    locationProvider = ServiceLocator.locationProvider(app)
                 )
             }
         }

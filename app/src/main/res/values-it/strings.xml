@@ -155,4 +155,24 @@
     <string name="places_offline">Sei offline: la ricerca ha bisogno di una connessione</string>
     <string name="places_failed">La ricerca non ha funzionato, riprova</string>
     <string name="places_active">Attivo</string>
+    <string name="places_gps_title">La mia posizione</string>
+    <string name="places_gps_subtitle_off">Usa la posizione del telefono</string>
+    <string name="places_gps_acquiring">Sto cercando la tua posizione…</string>
+    <string name="places_recent">Ricerche recenti</string>
+    <string name="places_removed">%1$s rimossa</string>
+    <string name="places_move_up">Sposta su</string>
+    <string name="places_move_down">Sposta giù</string>
+    <string name="action_undo">Annulla</string>
+    <string name="gps_error_permission">Senza il permesso non posso trovare la tua posizione</string>
+    <string name="gps_error_disabled">La localizzazione del telefono è spenta</string>
+    <string name="gps_error_timeout">Nessuna posizione trovata: riprova all\'aperto</string>
+    <string name="gps_error_unavailable">Posizione non disponibile al momento</string>
+    <string name="pager_dots_desc">Luogo %1$d di %2$d</string>
+
+    <!-- Primo avvio: una schermata, due risposte, saltare è concesso -->
+    <string name="first_run_tagline">Il meteo che ti dice cosa farne.</string>
+    <string name="first_run_use_location">Usa la mia posizione</string>
+    <string name="first_run_location_why">Serve solo a trovare il meteo di dove sei. Non lascia mai il telefono.</string>
+    <string name="first_run_search">Cerca una città</string>
+    <string name="first_run_skip">Non ora</string>
 </resources>

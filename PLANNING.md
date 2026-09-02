@@ -294,11 +294,51 @@ dai test: **le card dei dettagli, accoppiate per riga, avevano altezze indipende
 lunghezza diversa. Corretto: la riga usa `IntrinsicSize.Max` e le due tile riempiono
 la stessa altezza.
 
-## Fase 3 — Luoghi e primo avvio
+## Fase 3 — Luoghi e primo avvio ✅
 
-- [ ] Pager tra i luoghi, sheet di gestione completo (riordino, rimozione con undo),
-      GPS, `migrateFirstRun`/`firstRun` cablati
-- [ ] Primo avvio: una schermata, due risposte
+- [x] Pager tra i luoghi: una pagina per città salvata più la posizione del telefono
+      quando il GPS è attivo; fermarsi su una pagina È selezionarla (pager e foglio
+      scrivono lo stesso store); pallini di posizione nell'app bar
+- [x] Foglio dei luoghi completo: riga GPS appuntata in cima con switch e stato,
+      temperatura (dalla cache, mai dalla rete) accanto a ogni salvato, ricerche
+      recenti, riordino col drag da pressione lunga, rimozione con swipe e undo
+- [x] GPS: permesso → fix → pseudo-città → attivazione, errori in parole
+      (permesso negato / localizzazione spenta / timeout / non disponibile)
+- [x] `migrateFirstRun`/`firstRun` cablati nella shell: `Unknown` non disegna nulla,
+      un solo controllo per installazione
+- [x] Primo avvio: una schermata, due risposte, «Non ora» concesso — e atterra sul
+      vero stato "nessun luogo"
+
+### Decisioni della fase
+
+- **`CityStore` cresce di due metodi** (`move`, `insert`) con i loro test: il riordino
+  e l'undo non erano esprimibili con l'API ereditata. Drift additivo, registrato in
+  `UPSTREAM.md`. Toccando il file, i suoi commenti col vocabolario di tweather sono
+  stati riscritti — questa è la fase che costruisce le superfici (primo avvio, foglio
+  dei luoghi) che i sostituti onesti dovevano nominare.
+- **Niente FAB nel foglio** (deviazione dall'inciso della VISION §5.6): il primo
+  elemento interattivo del foglio È già "aggiungi un luogo" — un bottone che galleggia
+  sopra l'affordance che duplica è decorazione.
+- **Nel flusso GPS il fix viene prima del toggle**: attivare una sorgente che non sa
+  ancora nominare un luogo farebbe lampeggiare "nessun luogo" a chi guarda. Toccare la
+  riga GPS già attiva la seleziona e rinnova il fix in silenzio (un fallimento tiene
+  il fix vecchio: posizione di prima, meteo vero). Il rinnovo periodico del fix è
+  lavoro del job condiviso, Fase 6.
+- **Il permesso si chiede solo dal bottone che lo spiega** (VISION §5.8), e l'esito
+  negato non ha un ramo suo: si chiama comunque il provider, che risponde con l'errore
+  onesto. Un percorso solo, un vocabolario solo.
+- **Il refresh è indirizzato alla pagina**: il pull su Milano non è una richiesta di
+  spendere due GET su ogni vicino che il pager tiene caldo.
+- **Riordino**: durante il drag l'ordine vive in uno stato locale e le emissioni dello
+  store si ignorano (strapperebbero la riga da sotto il dito); si persiste a fine
+  gesto con una sola `move`. Per TalkBack le stesse mosse sono azioni custom
+  ("Sposta su"/"Sposta giù") sulle righe.
+- **L'undo ripristina posizione E selezione**: `insert` rimette la riga dov'era senza
+  selezionarla, e se la città rimossa era attiva l'undo la riattiva. Un undo che non
+  ripristina lo stato esatto non è un undo.
+- **Lo scheletro anche prima degli store**: il `PagerModel` parte `null` e la shell
+  disegna lo scheletro, mai la schermata sbagliata per un frame (né il primo avvio a
+  un utente di lunga data, né "nessun luogo" a chi ha tre città).
 
 ## Fase 4 — Impostazioni e guida
 

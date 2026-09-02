@@ -158,4 +158,24 @@
     <string name="places_offline">You\'re offline: search needs a connection</string>
     <string name="places_failed">Search didn\'t work, try again</string>
     <string name="places_active">Active</string>
+    <string name="places_gps_title">My position</string>
+    <string name="places_gps_subtitle_off">Use the phone\'s location</string>
+    <string name="places_gps_acquiring">Finding your position…</string>
+    <string name="places_recent">Recent searches</string>
+    <string name="places_removed">%1$s removed</string>
+    <string name="places_move_up">Move up</string>
+    <string name="places_move_down">Move down</string>
+    <string name="action_undo">Undo</string>
+    <string name="gps_error_permission">Without the permission I can\'t find your position</string>
+    <string name="gps_error_disabled">The phone\'s location services are off</string>
+    <string name="gps_error_timeout">No position found: try again in the open</string>
+    <string name="gps_error_unavailable">Position unavailable right now</string>
+    <string name="pager_dots_desc">Place %1$d of %2$d</string>
+
+    <!-- First run: one screen, two answers, skipping allowed -->
+    <string name="first_run_tagline">Weather that tells you what to do about it.</string>
+    <string name="first_run_use_location">Use my position</string>
+    <string name="first_run_location_why">Only used to find the weather where you are. It never leaves the phone.</string>
+    <string name="first_run_search">Search for a city</string>
+    <string name="first_run_skip">Not now</string>
 </resources>

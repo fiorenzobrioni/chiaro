@@ -40,12 +40,18 @@ is short on purpose — three edits, each with its reason in the file:
 - `sys@tweather.app` → `sys@chiaro.app` in the history rows. A value, not a comment.
 - `TweatherDatabase` → `ChiaroDatabase`, `tweather.db` → `chiaro.db`.
 - No `:core:sync` yet: the worker and the notifiers arrive in Fase 6 (PLANNING.md).
+- `CityStore` grew `move(city, toIndex)` and `insert(city, index)` (Fase 3): Chiaro's
+  Places sheet is reorderable and its swipe-to-remove has an undo, two things
+  tweather's Explorer never needed. Additive only — every inherited method and test
+  is unchanged. If tweather ever grows the same needs, these belong upstream too.
 
 ## The known debt
 
-**The inherited comments still speak tweather's vocabulary.** `CityStore` mentions
-`$ tweather init`, `RuleEngine` mentions `$ tweather run rules`, `WorkspaceStore`
-mentions a hint in a file that does not exist here. Ten lines, all of them comments.
+**The inherited comments still speak tweather's vocabulary.** `RuleEngine` and
+`NotificationRule` mention `$ tweather run` (rewritten with Fase 6, when Chiaro's
+alerts surface exists), `WorkspaceStore` mentions a hint in a file that does not exist
+here (Fase 4, with settings). `CityStore`'s were rewritten in Fase 3 — the phase that
+built the surfaces (first run, the Places sheet) their honest replacements had to name.
 
 They were deliberately left alone in Fase 0, and the reason is worth writing down: each
 one names a tweather SURFACE, and the honest replacement is the name of the Chiaro

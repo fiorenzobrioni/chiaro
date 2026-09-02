@@ -47,6 +47,48 @@ class CityStoreTest {
         scope.cancel()
     }
 
+    @Test
+    fun `move reorders without touching the selection`() = runBlocking {
+        val store = store()
+        store.add(milan)
+        store.add(turin) // active is now Turin, list is [Milan, Turin]
+        store.move(turin, 0)
+        assertEquals(listOf(turin, milan), store.cities.first())
+        assertEquals(ActiveSource.Saved(turin), store.activeSource.first())
+    }
+
+    @Test
+    fun `move clamps an out-of-range index and ignores an unknown city`() = runBlocking {
+        val store = store()
+        store.add(milan)
+        store.add(turin)
+        store.move(milan, 99)
+        assertEquals(listOf(turin, milan), store.cities.first())
+        store.move(gpsCity, 0) // never in the saved list
+        assertEquals(listOf(turin, milan), store.cities.first())
+    }
+
+    @Test
+    fun `insert restores a removed city at its old index without selecting it`() = runBlocking {
+        val store = store()
+        store.add(milan)
+        store.add(turin)
+        store.setActive(milan)
+        store.remove(milan) // active falls to Turin
+        assertEquals(ActiveSource.Saved(turin), store.activeSource.first())
+        store.insert(milan, 0) // the undo: back where it was, selection untouched
+        assertEquals(listOf(milan, turin), store.cities.first())
+        assertEquals(ActiveSource.Saved(turin), store.activeSource.first())
+    }
+
+    @Test
+    fun `insert is a no-op for a city already saved`() = runBlocking {
+        val store = store()
+        store.add(milan)
+        store.insert(milan, 0)
+        assertEquals(listOf(milan), store.cities.first())
+    }
+
     /** Fase 14b: no seeded city any more — "nothing configured" is a real state. */
     @Test
     fun `a fresh store has no location at all`() = runBlocking {

@@ -18,7 +18,7 @@ import kotlinx.serialization.json.Json
 
 private val Context.citiesDataStore by preferencesDataStore(name = "cities")
 
-/** `settings.config`'s `location` section plus the last persisted GPS fix. */
+/** The GPS toggle's persisted state plus the last fix it produced. */
 data class LocationSettings(val useGps: Boolean, val gpsCity: City?)
 
 /** What the main screen shows weather for: a saved city, the device position, or
@@ -30,20 +30,21 @@ sealed interface ActiveSource {
     data class Gps(val lastFix: City?) : ActiveSource
 
     /**
-     * No location configured: a fresh install that has not answered `tweather init`
-     * yet, or one whose last saved city was removed with GPS off. Before Fase 14b
-     * this state could not be represented — an empty list fell back to a seeded
-     * Milan, so `cities.json` always listed a city the user had never chosen.
+     * No location configured: a fresh install that has not answered the first-run
+     * screen yet, or one whose last saved place was removed with GPS off. Inherited
+     * from tweather's Fase 14b, where this state first became representable — before
+     * it, an empty list fell back to a seeded Milan the user had never chosen.
      */
     data object None : ActiveSource
 }
 
 /** What the shell must know before it can draw anything — see [CityStore.firstRun]. */
 enum class FirstRun {
-    /** The legacy check has not run yet in this process: draw nothing, not `init`. */
+    /** The legacy check has not run yet in this process: draw nothing — flashing
+     * the first-run screen at a long-time user would be answering for them. */
     Unknown,
 
-    /** `$ tweather init` still owes an answer. */
+    /** The first-run screen still owes an answer. */
     Pending,
 
     /** Answered — with a city, with GPS, or by skipping — or inherited by an upgrade. */
@@ -51,10 +52,10 @@ enum class FirstRun {
 }
 
 /**
- * Persists the saved-cities list (the Explorer's "files") and the active city as
- * DataStore preferences: the list as a JSON array, the selection as the city id.
- * An empty list is a real state since Fase 14b ([ActiveSource.None]): the store no
- * longer invents [DefaultCity] to have something to show.
+ * Persists the saved-places list and the active place as DataStore preferences: the
+ * list as a JSON array, the selection as the city id. An empty list is a real state
+ * ([ActiveSource.None]): the store never invents [DefaultCity] to have something to
+ * show.
  */
 class CityStore(
     private val dataStore: DataStore<Preferences>,
@@ -82,9 +83,9 @@ class CityStore(
         .distinctUntilChanged()
 
     /**
-     * Whether `$ tweather init` (Fase 14c) still owes an answer. [FirstRun.Unknown]
-     * until [migrateFirstRun] has run in this install: the shell must not flash the
-     * init screen at someone who has been using the app for months.
+     * Whether the first-run screen still owes an answer. [FirstRun.Unknown] until
+     * [migrateFirstRun] has run in this install: the shell must not flash first-run
+     * at someone who has been using the app for months.
      */
     val firstRun: Flow<FirstRun> = dataStore.data
         .map { prefs ->
@@ -98,11 +99,11 @@ class CityStore(
 
     /**
      * Decides once per install whether it predates the empty state, and never runs
-     * again. [hasHistory] — any commit in the Logs — is what tells a used install
-     * from a fresh one: someone who never opened `cities.json` has nothing in this
+     * again. [hasHistory] — any fetch ever recorded — is what tells a used install
+     * from a fresh one: someone who never touched the place list has nothing in this
      * store either, but has been watching the seeded Milan since the day they
      * installed, and an update must not take it away. Such an install has the seed
-     * written for real (it was a fallback, never a stored value) and skips `init`.
+     * written for real (it was a fallback, never a stored value) and skips first-run.
      * A genuinely fresh install writes nothing but the marker.
      */
     suspend fun migrateFirstRun(hasHistory: Boolean) {
@@ -122,20 +123,20 @@ class CityStore(
         }
     }
 
-    /** The init screen has been answered — skipping it counts as an answer. */
+    /** First-run has been answered — skipping it counts as an answer. */
     suspend fun markInitDone() {
         dataStore.edit { it[InitDone] = true }
     }
 
     /**
-     * Adds (or refreshes) [city] and makes it active — the Search screen's flow.
+     * Adds (or refreshes) [city] and makes it active — the search flow.
      *
      * A city already in the list is REPLACED, not skipped: the stored record can be
-     * older than the geocoding answer the user just tapped. That is what kept a Milano
-     * searched in Italian showing as `milan.json` after Fase 13f — same GeoNames id as
-     * the seeded "Milan", so the add was a no-op and the English record survived. Same
-     * bug for anyone who switches the phone's language and re-adds a city. Its position
-     * in the list is kept: re-adding a city is not a reorder.
+     * older than the geocoding answer the user just tapped. Inherited fix (tweather,
+     * Fase 13f): a Milano searched in Italian kept rendering under its old English
+     * record — same GeoNames id as the stored "Milan", so the add was a no-op. Same
+     * bug for anyone who switches the phone's language and re-adds a city. Its
+     * position in the list is kept: re-adding a city is not a reorder.
      */
     suspend fun add(city: City) {
         dataStore.edit { prefs ->
@@ -155,10 +156,42 @@ class CityStore(
     }
 
     /**
-     * Removes [city] — the last one included, since Fase 14b. The old guard existed
-     * only because the main screen could not survive without a subject; now an empty
-     * `cities.json` is a state the editor can say out loud. Removing the active city
-     * activates the first one left, or nothing.
+     * Moves [city] to [toIndex] in the saved list (Chiaro, Fase 3 — the Places sheet
+     * is reorderable, VISION §5.6). Everything else about the row is untouched: a
+     * reorder is not a selection and not a refresh.
+     */
+    suspend fun move(city: City, toIndex: Int) {
+        dataStore.edit { prefs ->
+            val cities = decode(prefs).toMutableList()
+            val from = cities.indexOfFirst { it.id == city.id }
+            if (from < 0) return@edit
+            val item = cities.removeAt(from)
+            cities.add(toIndex.coerceIn(0, cities.size), item)
+            prefs[CitiesJson] = json.encodeToString(cities)
+        }
+    }
+
+    /**
+     * Re-inserts [city] at [index] without selecting it — the other half of
+     * swipe-to-remove's undo (Chiaro, Fase 3): [add] would append at the end and
+     * steal the selection, and an undo that does not restore the exact previous
+     * state is not an undo. A city already in the list is left where it is.
+     */
+    suspend fun insert(city: City, index: Int) {
+        dataStore.edit { prefs ->
+            val cities = decode(prefs)
+            if (cities.any { it.id == city.id }) return@edit
+            val updated = cities.toMutableList()
+            updated.add(index.coerceIn(0, cities.size), city)
+            prefs[CitiesJson] = json.encodeToString(updated)
+        }
+    }
+
+    /**
+     * Removes [city] — the last one included. The old guard against removing the
+     * last place existed only because tweather's main screen once could not survive
+     * without a subject; here "no place yet" is a state the screen says out loud.
+     * Removing the active city activates the first one left, or nothing.
      */
     suspend fun remove(city: City) {
         dataStore.edit { prefs ->
@@ -190,7 +223,7 @@ class CityStore(
         }
     }
 
-    /** Selects GPS from the Explorer; no-op while the toggle is off. */
+    /** Selects GPS from the Places sheet; no-op while the toggle is off. */
     suspend fun setActiveGps() {
         dataStore.edit { prefs ->
             if (prefs[UseGps] == true) prefs[ActiveCityId] = GpsCityId
@@ -217,19 +250,18 @@ class CityStore(
         private val ActiveCityId = longPreferencesKey("active_city_id")
         private val UseGps = booleanPreferencesKey("use_gps")
 
-        /** Fase 14b: this install has been checked for a pre-14b history. */
+        /** This install has been checked for a history that predates first-run. */
         private val Migrated = booleanPreferencesKey("first_run_migrated")
 
-        /** Fase 14c: `$ tweather init` has been answered. */
+        /** The first-run screen has been answered. */
         private val InitDone = booleanPreferencesKey("init_done")
         private val GpsCityJson = stringPreferencesKey("gps_city_json")
 
         /**
-         * NOT seeded on a fresh install any more (Fase 14b): a city the user never
-         * chose is the one thing `cities.json` must not claim. It survives as what
-         * [migrateFirstRun] writes for installs that predate the empty state and
-         * have been watching it all along. Milan — where the app is developed
-         * (deviation from the PRD's New York sample, see PLANNING).
+         * NOT seeded on a fresh install: a city the user never chose is the one
+         * thing the place list must not claim. It survives as what [migrateFirstRun]
+         * writes for installs that predate the empty state and have been watching it
+         * all along. Milan — where the app is developed.
          */
         val DefaultCity = City(
             id = 3_173_435, // GeoNames id, as Open-Meteo geocoding would return

@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,12 +32,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
@@ -67,6 +74,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Today (VISION §5.2): the canvas, the sentence, the hours, the day, the week, the
@@ -78,49 +86,140 @@ fun TodayRoute(
     todayViewModel: TodayViewModel = viewModel(factory = TodayViewModel.Factory),
     placesViewModel: PlacesViewModel = viewModel(factory = PlacesViewModel.Factory)
 ) {
-    val state by todayViewModel.state.collectAsStateWithLifecycle()
+    val pager by todayViewModel.pager.collectAsStateWithLifecycle()
     var placesOpen by remember { mutableStateOf(false) }
 
-    TodayScreen(
-        state = state,
-        onRefresh = todayViewModel::refresh,
-        onOpenPlaces = { placesOpen = true }
-    )
+    when (val model = pager) {
+        // The stores have not answered yet: a skeleton under a bare bar, never a
+        // wrong screen for one frame.
+        null -> TodayScaffold(title = null, onOpenPlaces = { placesOpen = true }) {
+            TodaySkeleton()
+        }
+        else -> if (model.pages.isEmpty()) {
+            TodayScaffold(title = null, onOpenPlaces = { placesOpen = true }) {
+                NoPlaceState(onOpenPlaces = { placesOpen = true })
+            }
+        } else {
+            PagedToday(
+                model = model,
+                stateFor = todayViewModel::stateFor,
+                onRefresh = todayViewModel::refresh,
+                onSettled = todayViewModel::setActive,
+                onOpenPlaces = { placesOpen = true }
+            )
+        }
+    }
     if (placesOpen) {
         PlacesSheet(viewModel = placesViewModel, onDismiss = { placesOpen = false })
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * The pager between places (VISION §5.1): one page per saved place, plus the device
+ * position while GPS is on. Settling on a page IS selecting it — the pager and the
+ * sheet write the same store, so they can never disagree about what is active.
+ */
 @Composable
-fun TodayScreen(
+private fun PagedToday(
+    model: PagerModel,
+    stateFor: (PlacePage) -> StateFlow<TodayUiState>,
+    onRefresh: (PlacePage) -> Unit,
+    onSettled: (PlacePage) -> Unit,
+    onOpenPlaces: () -> Unit
+) {
+    val pages by rememberUpdatedState(model.pages)
+    val pagerState = rememberPagerState(
+        initialPage = model.activeIndex.coerceIn(0, model.pages.lastIndex)
+    ) { pages.size }
+
+    // Selection made elsewhere (the sheet, a removal) → the pager follows.
+    LaunchedEffect(model.activeIndex, pages.size) {
+        val target = model.activeIndex
+        if (target in pages.indices && target != pagerState.currentPage &&
+            !pagerState.isScrollInProgress
+        ) {
+            pagerState.animateScrollToPage(target)
+        }
+    }
+    // The pager settled → that is the selection now.
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.settledPage }.collect { settled ->
+            pages.getOrNull(settled)?.let(onSettled)
+        }
+    }
+
+    val current = pages.getOrNull(pagerState.currentPage.coerceIn(0, pages.lastIndex))
+    val title = when (current) {
+        is PlacePage.Gps -> current.lastFix?.name
+            ?: stringResource(R.string.places_gps_title)
+        is PlacePage.Saved -> current.city.name
+        null -> null
+    }
+    TodayScaffold(
+        title = title,
+        onOpenPlaces = onOpenPlaces,
+        dots = if (pages.size > 1) pagerState.currentPage to pages.size else null
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            key = { pages[it].key },
+            modifier = Modifier.fillMaxSize()
+        ) { index ->
+            val page = pages.getOrNull(index) ?: return@HorizontalPager
+            val state by stateFor(page).collectAsStateWithLifecycle()
+            TodayPage(
+                state = state,
+                onRefresh = { onRefresh(page) },
+                onOpenPlaces = onOpenPlaces
+            )
+        }
+    }
+}
+
+@Composable
+private fun TodayPage(
     state: TodayUiState,
     onRefresh: () -> Unit,
     onOpenPlaces: () -> Unit
 ) {
+    when (state) {
+        TodayUiState.Starting -> TodaySkeleton()
+        TodayUiState.NoPlace -> NoPlaceState(onOpenPlaces)
+        is TodayUiState.Empty -> EmptyState(state, onRefresh)
+        is TodayUiState.Content -> ContentState(state, onRefresh)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TodayScaffold(
+    title: String?,
+    onOpenPlaces: () -> Unit,
+    dots: Pair<Int, Int>? = null,
+    content: @Composable () -> Unit
+) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            val place = when (state) {
-                is TodayUiState.Content -> state.city.name
-                is TodayUiState.Empty -> state.city.name
-                else -> stringResource(R.string.app_name)
-            }
+            val shown = title ?: stringResource(R.string.app_name)
             TopAppBar(
                 title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clickable(onClick = onOpenPlaces)
-                            .semantics {
-                                contentDescription = place
-                            }
-                    ) {
-                        Text(place, style = MaterialTheme.typography.titleMedium)
-                        Icon(
-                            imageVector = Icons.Outlined.KeyboardArrowDown,
-                            contentDescription = stringResource(R.string.place_switcher_action)
-                        )
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clickable(onClick = onOpenPlaces)
+                                .semantics { contentDescription = shown }
+                        ) {
+                            Text(shown, style = MaterialTheme.typography.titleMedium)
+                            Icon(
+                                imageVector = Icons.Outlined.KeyboardArrowDown,
+                                contentDescription = stringResource(R.string.place_switcher_action)
+                            )
+                        }
+                        dots?.let { (selected, count) ->
+                            PageDots(selected = selected, count = count)
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -130,12 +229,34 @@ fun TodayScreen(
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            when (state) {
-                TodayUiState.Starting -> TodaySkeleton()
-                TodayUiState.NoPlace -> NoPlaceState(onOpenPlaces)
-                is TodayUiState.Empty -> EmptyState(state, onRefresh)
-                is TodayUiState.Content -> ContentState(state, onRefresh)
-            }
+            content()
+        }
+    }
+}
+
+/** The place dots of VISION §5.1's app bar: position among the pages, at a glance. */
+@Composable
+private fun PageDots(selected: Int, count: Int) {
+    val description = stringResource(R.string.pager_dots_desc, selected + 1, count)
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier
+            .padding(top = 2.dp)
+            .semantics { contentDescription = description }
+    ) {
+        repeat(count) { index ->
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (index == selected) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.outlineVariant
+                        }
+                    )
+            )
         }
     }
 }
