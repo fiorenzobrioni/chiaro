@@ -346,11 +346,14 @@ private fun CanvasHeader(
                 style = com.callbackdev.chiaro.ui.theme.HeroTemperature,
                 color = Color.White
             )
+            // Two type sizes on one line align by BASELINE, not by top: top-aligned
+            // they read as a mistake the moment the sizes differ (device check, 2 set).
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     text = stringResource(WeatherText.condition(current.condition.wmoCode)),
                     style = MaterialTheme.typography.titleMedium,
-                    color = Color.White
+                    color = Color.White,
+                    modifier = Modifier.alignByBaseline()
                 )
                 Text(
                     text = stringResource(
@@ -360,7 +363,8 @@ private fun CanvasHeader(
                         )
                     ),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.7f)
+                    color = Color.White.copy(alpha = 0.7f),
+                    modifier = Modifier.alignByBaseline()
                 )
             }
             DaylightRibbon(
