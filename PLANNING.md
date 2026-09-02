@@ -349,7 +349,16 @@ la stessa altezza.
       (verificato con apksigner). Restano al committente: le quattro `CHIARO_KEYSTORE*`
       in `~/.gradle/gradle.properties`, i quattro Secrets sul repo, il backup della
       password nel password manager (e la cancellazione del file di transito
-      `chiaro-release.password.txt`), poi il tag `v1.0.0`
+      `chiaro-release.password.txt`), poi il tag `v1.0.0`.
+      **Prova generale eseguita** (2 set 2026, tag `v0.0.1-rc1`, poi cancellato con la
+      sua release): la catena Secrets → keystore decodificato → APK firmato → GitHub
+      Release ha funzionato al primo colpo — `chiaro-v0.0.1-rc1.apk` riscaricato da
+      GitHub e verificato con apksigner (stessa impronta della chiave vera), mapping R8
+      allegato e accoppiato al tag, corpo della release caduto correttamente sulle note
+      generate con il warning previsto (nessuna sezione `0.0.1-rc1` nel CHANGELOG).
+      Un difetto trovato e corretto: una release `-rc` usciva come release piena ed era
+      etichettata "Latest" — ora `release.yml` marca prerelease ogni tag con trattino,
+      che è la definizione SemVer di prerelease
 
 ---
 

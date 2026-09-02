@@ -87,3 +87,6 @@ jobs:
             chiaro-${{ github.ref_name }}.apk
             mapping-${{ github.ref_name }}.txt
           generate_release_notes: true
+          # A hyphen in the tag (v1.0.0-rc1) is a prerelease by SemVer definition.
+          # Found by the v0.0.1-rc1 rehearsal, which GitHub happily labeled "Latest".
+          prerelease: ${{ contains(github.ref_name, '-') }}
