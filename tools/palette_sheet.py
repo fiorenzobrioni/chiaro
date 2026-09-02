@@ -84,6 +84,9 @@ def sky_at(altitude: float, table) -> tuple[str, str, str]:
 
 
 def main() -> None:
+    # Windows consoles and redirects default to a legacy codepage that cannot
+    # carry the verdict glyphs; the sheet declares utf-8, so stdout must be it.
+    sys.stdout.reconfigure(encoding="utf-8")
     table = anchors()
     sem = semantic()
     sur = surfaces()

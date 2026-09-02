@@ -94,6 +94,24 @@ parte (`tools/seed_edits.py`) con la motivazione accanto:
   come i moduli Android. Un toolchain pretende un JDK 17 su ogni macchina che builda,
   e quello di Android Studio non lo è.
 
+### La verifica nel nuovo repo (2026-09-02)
+
+Il trapianto da `tweather/docs/chiaro/` è stato verificato per intero sulla prima
+macchina che non l'aveva prodotto: 271 test verdi (141 domain, 107 data, 23 app, zero
+skip), lint a zero errori, APK debug `com.callbackdev.chiaro.debug` etichettato
+`Chiaro (dev)`, release minificata a 2,2 MB. Due cose non erano sopravvissute alla
+copia, entrambe invisibili sulla macchina d'origine:
+
+- **`gradlew` aveva perso il bit eseguibile nell'indice git** (100644): su Windows il
+  working tree non lo distingue, ma il runner Linux della CI sì — la prima run è morta
+  in 18 secondi con `Permission denied`. Sistemato con `git update-index --chmod=+x`,
+  che è anche l'unico posto dove su Windows quel bit esiste davvero.
+- **`tools/palette_sheet.py` presumeva uno stdout UTF-8.** Su Windows console e
+  redirezione partono in cp1252, e il glifo `✓` dei verdetti la faceva esplodere —
+  peggio, una redirezione su file avrebbe scritto un HTML corrotto che dichiara
+  `charset=utf-8`. Ora lo script riconfigura il proprio stdout, che è il posto giusto:
+  il foglio dichiara l'encoding, quindi lo deve garantire.
+
 ---
 
 ## Fase 1 — Il sistema di design in Compose ✅
