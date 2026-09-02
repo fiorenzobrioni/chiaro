@@ -1,4 +1,158 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="skeleton_note">Le schermate arrivano con la Fase 2.</string>
+    <!-- Il canvas -->
+    <string name="feels_like">Percepiti %1$s</string>
+    <string name="place_switcher_action">Cambia luogo</string>
+    <string name="ribbon_desc">Alba alle %1$s, tramonto alle %2$s</string>
+    <string name="ribbon_desc_all_day">Oggi il sole non tramonta</string>
+    <string name="ribbon_desc_all_night">Oggi il sole non sorge</string>
+
+    <!-- La frase in cima. Quando non c\'è niente da dire, nessuna stringa viene usata. -->
+    <string name="headline_severe_thunder">Temporale verso le %1$s</string>
+    <string name="headline_severe_ice">Pioggia gelata verso le %1$s</string>
+    <string name="headline_severe_rain">Pioggia forte verso le %1$s</string>
+    <string name="headline_severe_snow">Neve fitta verso le %1$s</string>
+    <string name="headline_wet_soon">Ombrello verso le %1$s</string>
+    <string name="headline_wet_soon_clearing">Ombrello verso le %1$s, schiarisce dopo le %2$s</string>
+    <string name="headline_snow_soon">Neve verso le %1$s</string>
+    <string name="headline_snow_soon_clearing">Neve verso le %1$s, schiarisce dopo le %2$s</string>
+    <string name="headline_wet_now_stopping">La pioggia dovrebbe smettere verso le %1$s</string>
+    <string name="headline_wet_now">Pioggia per il resto della giornata</string>
+    <string name="headline_snow_now_stopping">La neve dovrebbe smettere verso le %1$s</string>
+    <string name="headline_snow_now">Neve per il resto della giornata</string>
+
+    <!-- Freschezza ed errori: l\'età vera, il motivo vero -->
+    <plurals name="freshness_minutes_ago">
+        <item quantity="one">Aggiornato %d minuto fa</item>
+        <item quantity="other">Aggiornato %d minuti fa</item>
+    </plurals>
+    <plurals name="freshness_hours_ago">
+        <item quantity="one">Aggiornato %d ora fa</item>
+        <item quantity="other">Aggiornato %d ore fa</item>
+    </plurals>
+    <plurals name="freshness_days_ago">
+        <item quantity="one">Aggiornato %d giorno fa</item>
+        <item quantity="other">Aggiornato %d giorni fa</item>
+    </plurals>
+    <string name="error_offline">Aggiornamento non riuscito: sei offline</string>
+    <string name="error_service">Aggiornamento non riuscito: il servizio non risponde</string>
+    <string name="error_unknown">Aggiornamento non riuscito: qualcosa è andato storto</string>
+    <string name="error_retry">Riprova</string>
+
+    <!-- Sezioni -->
+    <string name="section_next_hours">Prossime ore</string>
+    <string name="section_rest_of_day">Il resto della giornata</string>
+    <string name="section_week">La settimana</string>
+    <string name="section_details">Dettagli</string>
+
+    <!-- La timeline unificata -->
+    <string name="tl_sunrise">Alba</string>
+    <string name="tl_golden_morning_end">Finisce l\'ora d\'oro</string>
+    <string name="tl_golden_evening">Ora d\'oro</string>
+    <string name="tl_sunset">Tramonto</string>
+    <string name="tl_blue_evening">Ora blu</string>
+    <string name="tl_dark">Buio pieno</string>
+    <string name="tl_moonrise">Sorge la luna</string>
+    <string name="tl_moonset">Tramonta la luna</string>
+    <string name="tl_rain_start">La pioggia diventa probabile (%1$d%%)</string>
+    <string name="tl_rain_stop">La pioggia dovrebbe smettere</string>
+
+    <!-- La settimana -->
+    <string name="week_today">Oggi</string>
+    <string name="week_day_desc">%1$s: %2$s, minima %3$s, massima %4$s, pioggia %5$d%%</string>
+
+    <!-- La strip oraria -->
+    <string name="hour_cell_desc">Alle %1$s, %2$s, %3$s, pioggia %4$d%%</string>
+    <string name="sparkline_peak_desc">Picco di pioggia %1$d%% verso le %2$s</string>
+    <string name="sparkline_dry_desc">Nessuna pioggia attesa nelle prossime ore</string>
+
+    <!-- Griglia dettagli: etichette -->
+    <string name="metric_uv">UV</string>
+    <string name="metric_wind">Vento</string>
+    <string name="metric_humidity">Umidità</string>
+    <string name="metric_dew">Punto di rugiada</string>
+    <string name="metric_pressure">Pressione</string>
+    <string name="metric_visibility">Visibilità</string>
+    <string name="metric_air">Qualità dell\'aria</string>
+    <string name="metric_pollen">Pollini</string>
+
+    <!-- Griglia dettagli: le righe di significato (§1.2 — ogni numero dice cosa farne) -->
+    <string name="uv_meaning_low">Nessuna protezione necessaria</string>
+    <string name="uv_meaning_moderate">Scotta in circa 45 minuti</string>
+    <string name="uv_meaning_high">Scotta in circa 25 minuti, copriti</string>
+    <string name="uv_meaning_very_high">Scotta in circa 15 minuti, copriti</string>
+    <string name="uv_meaning_extreme">Scotta in circa 10 minuti, resta all\'ombra</string>
+    <string name="wind_meaning_calm">Aria ferma, non si sente</string>
+    <string name="wind_meaning_light">Una brezza leggera</string>
+    <string name="wind_meaning_moderate">Si sente, non dà fastidio</string>
+    <string name="wind_meaning_strong">Tieni il cappello</string>
+    <string name="wind_meaning_gale">Difficile camminarci contro</string>
+    <string name="humidity_meaning_dry">Aria secca</string>
+    <string name="humidity_meaning_comfortable">Confortevole</string>
+    <string name="humidity_meaning_humid">Un po\' appiccicosa</string>
+    <string name="humidity_meaning_oppressive">Afa pesante</string>
+    <string name="dew_meaning_dry">Aria asciutta e frizzante</string>
+    <string name="dew_meaning_pleasant">Gradevole</string>
+    <string name="dew_meaning_sticky">Leggermente appiccicosa</string>
+    <string name="dew_meaning_muggy">Afosa</string>
+    <string name="dew_meaning_oppressive">Opprimente</string>
+    <string name="pressure_meaning_low">Bassa: tempo instabile più probabile</string>
+    <string name="pressure_meaning_normal">Nella norma</string>
+    <string name="pressure_meaning_high">Alta: tende al sereno</string>
+    <string name="visibility_meaning_clear">Limpido, si vede lontano</string>
+    <string name="visibility_meaning_light_haze">Leggera foschia</string>
+    <string name="visibility_meaning_haze">Foschia fitta</string>
+    <string name="visibility_meaning_fog">Nebbia: prudenza in strada</string>
+    <string name="aqi_meaning_good">Aria pulita, fai quello che vuoi</string>
+    <string name="aqi_meaning_moderate">Va bene stare all\'aperto</string>
+    <string name="aqi_meaning_sensitive">Bene una passeggiata, salta la corsa</string>
+    <string name="aqi_meaning_unhealthy">Meglio stare al chiuso</string>
+    <string name="aqi_meaning_very_unhealthy">Malsana: limita il tempo fuori</string>
+    <string name="aqi_meaning_hazardous">Pericolosa: resta al chiuso</string>
+    <string name="pollen_level_none">Assenti</string>
+    <string name="pollen_level_low">Bassi</string>
+    <string name="pollen_level_moderate">Moderati</string>
+    <string name="pollen_level_high">Alti</string>
+    <string name="pollen_meaning_none">Respirano tutti</string>
+    <string name="pollen_meaning_low">Si notano appena</string>
+    <string name="pollen_meaning_moderate">Chi è allergico se ne accorge</string>
+    <string name="pollen_meaning_high">Giornata dura per chi è allergico</string>
+
+    <!-- Condizioni: il vocabolario WMO, una parola ciascuna -->
+    <string name="cond_clear">Sereno</string>
+    <string name="cond_mostly_clear">Quasi sereno</string>
+    <string name="cond_partly_cloudy">Poco nuvoloso</string>
+    <string name="cond_overcast">Coperto</string>
+    <string name="cond_fog">Nebbia</string>
+    <string name="cond_drizzle">Pioviggine</string>
+    <string name="cond_freezing_drizzle">Pioviggine gelata</string>
+    <string name="cond_rain_light">Pioggia leggera</string>
+    <string name="cond_rain">Pioggia</string>
+    <string name="cond_rain_heavy">Pioggia forte</string>
+    <string name="cond_freezing_rain">Pioggia gelata</string>
+    <string name="cond_snow_light">Neve leggera</string>
+    <string name="cond_snow">Neve</string>
+    <string name="cond_snow_heavy">Neve fitta</string>
+    <string name="cond_snow_grains">Nevischio</string>
+    <string name="cond_showers">Rovesci</string>
+    <string name="cond_showers_violent">Rovesci violenti</string>
+    <string name="cond_snow_showers">Rovesci di neve</string>
+    <string name="cond_thunderstorm">Temporale</string>
+    <string name="cond_thunderstorm_hail">Temporale con grandine</string>
+    <string name="cond_unknown">Condizioni sconosciute</string>
+
+    <!-- Stati vuoti e di errore -->
+    <string name="empty_no_place_title">Nessun luogo</string>
+    <string name="empty_no_place_body">Aggiungi una città per vedere il suo cielo.</string>
+    <string name="empty_no_place_action">Cerca un luogo</string>
+    <string name="empty_no_data_body">Prima previsione per %1$s in arrivo…</string>
+
+    <!-- Foglio dei luoghi (il minimo della Fase 3 che serve alla Fase 2) -->
+    <string name="places_title">Luoghi</string>
+    <string name="places_search_hint">Cerca una città</string>
+    <string name="places_saved">Salvati</string>
+    <string name="places_no_results">Nessun risultato per “%1$s”</string>
+    <string name="places_offline">Sei offline: la ricerca ha bisogno di una connessione</string>
+    <string name="places_failed">La ricerca non ha funzionato, riprova</string>
+    <string name="places_active">Attivo</string>
 </resources>

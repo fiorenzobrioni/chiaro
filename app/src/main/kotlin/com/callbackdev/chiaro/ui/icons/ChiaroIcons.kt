@@ -1,37 +1,23 @@
 package com.callbackdev.chiaro.ui.icons
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AcUnit
-import androidx.compose.material.icons.outlined.Air
-import androidx.compose.material.icons.outlined.BlurOn
-import androidx.compose.material.icons.outlined.Bolt
-import androidx.compose.material.icons.outlined.Cloud
-import androidx.compose.material.icons.outlined.DarkMode
-import androidx.compose.material.icons.outlined.Grain
-import androidx.compose.material.icons.outlined.Opacity
-import androidx.compose.material.icons.outlined.Thermostat
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.WbCloudy
-import androidx.compose.material.icons.outlined.WbSunny
+import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.domain.model.MoonPhase
 
 /**
- * The weather icon set, behind one lookup (DESIGN.md §4.5, §13.1).
+ * The weather icon set, behind one lookup (DESIGN.md §4.5, §13.1): **Meteocons**
+ * (github.com/basmilius/meteocons, MIT), imported as vector drawables by
+ * `tools/import_meteocons.py` from the v2.0.0 line set, recolored so every stroke
+ * clears 3:1 against both surfaces — the tool carries the measured table, and
+ * `IconContrastTest` re-measures the emitted XML.
  *
- * **The decision: Meteocons** (github.com/basmilius/meteocons), MIT, ~475 hand-drawn
- * weather icons with animated variants. It satisfies every requirement in §4.5 and the
- * only obligation is preserving the copyright notices, which costs a file in `licenses/`.
- *
- * **What ships today is not that.** Converting several hundred SVGs into Android vector
- * drawables is a mechanical job that wants Android Studio's importer and a look at the
- * result, so it belongs to Fase 2 where the icons first appear on a screen. Until then
- * this maps to Material's own outlined set: coherent, complete enough for every WMO
- * bucket, and — the point — behind the same function call, so Fase 2 changes the bodies
- * here and nothing else in the app.
- *
- * What must NOT happen is the thing tweather could get away with: emoji. They are
- * rendered by the system font, differ per device and per OEM, cannot be tinted, and
- * would undo the design system on the one screen everybody looks at.
+ * The `*Res` functions are the actual mapping and stay plain functions on purpose:
+ * they are unit-testable without Compose, and the Glance widgets (Fase 8) need
+ * resource ids, not ImageVectors. The `@Composable` accessors are the same mapping
+ * one `vectorResource` later.
  */
 object ChiaroIcons {
 
@@ -40,21 +26,86 @@ object ChiaroIcons {
      * exists — a clear night is not a sunny day, and that is the only place in the
      * mapping where the distinction changes anything.
      */
-    fun forCondition(wmoCode: Int, night: Boolean = false): ImageVector = when (wmoCode) {
-        0 -> if (night) Icons.Outlined.DarkMode else Icons.Outlined.WbSunny
-        1, 2 -> if (night) Icons.Outlined.DarkMode else Icons.Outlined.WbCloudy
-        3 -> Icons.Outlined.Cloud
-        45, 48 -> Icons.Outlined.BlurOn
-        51, 53, 55, 56, 57 -> Icons.Outlined.Grain
-        61, 63, 65, 66, 67, 80, 81, 82 -> Icons.Outlined.Opacity
-        71, 73, 75, 77, 85, 86 -> Icons.Outlined.AcUnit
-        95, 96, 99 -> Icons.Outlined.Bolt
-        else -> Icons.Outlined.Cloud
+    @DrawableRes
+    fun conditionRes(wmoCode: Int, night: Boolean = false): Int = when (wmoCode) {
+        0 -> if (night) R.drawable.mc_clear_night else R.drawable.mc_clear_day
+        1, 2 -> if (night) R.drawable.mc_partly_cloudy_night else R.drawable.mc_partly_cloudy_day
+        3 -> R.drawable.mc_overcast
+        45, 48 -> if (night) R.drawable.mc_fog_night else R.drawable.mc_fog_day
+        51, 53, 55 -> R.drawable.mc_drizzle
+        56, 57, 66, 67 -> R.drawable.mc_sleet
+        61, 63, 65, 82 -> R.drawable.mc_rain
+        71, 73, 75, 77 -> R.drawable.mc_snow
+        80, 81 -> if (night) {
+            R.drawable.mc_partly_cloudy_night_rain
+        } else {
+            R.drawable.mc_partly_cloudy_day_rain
+        }
+        85, 86 -> if (night) {
+            R.drawable.mc_partly_cloudy_night_snow
+        } else {
+            R.drawable.mc_partly_cloudy_day_snow
+        }
+        95 -> R.drawable.mc_thunderstorms
+        96, 99 -> R.drawable.mc_thunderstorms_rain
+        else -> R.drawable.mc_cloudy
     }
 
-    val wind: ImageVector = Icons.Outlined.Air
-    val humidity: ImageVector = Icons.Outlined.Opacity
-    val visibility: ImageVector = Icons.Outlined.Visibility
-    val temperature: ImageVector = Icons.Outlined.Thermostat
-    val uv: ImageVector = Icons.Outlined.WbSunny
+    @Composable
+    fun condition(wmoCode: Int, night: Boolean = false): ImageVector =
+        ImageVector.vectorResource(conditionRes(wmoCode, night))
+
+    /** One drawing per [MoonPhase] name — the same classifier the report carries. */
+    @DrawableRes
+    fun moonPhaseRes(phase: MoonPhase): Int = when (phase) {
+        MoonPhase.NEW_MOON -> R.drawable.mc_moon_new
+        MoonPhase.WAXING_CRESCENT -> R.drawable.mc_moon_waxing_crescent
+        MoonPhase.FIRST_QUARTER -> R.drawable.mc_moon_first_quarter
+        MoonPhase.WAXING_GIBBOUS -> R.drawable.mc_moon_waxing_gibbous
+        MoonPhase.FULL_MOON -> R.drawable.mc_moon_full
+        MoonPhase.WANING_GIBBOUS -> R.drawable.mc_moon_waning_gibbous
+        MoonPhase.LAST_QUARTER -> R.drawable.mc_moon_last_quarter
+        MoonPhase.WANING_CRESCENT -> R.drawable.mc_moon_waning_crescent
+    }
+
+    @Composable
+    fun moonPhase(phase: MoonPhase): ImageVector =
+        ImageVector.vectorResource(moonPhaseRes(phase))
+
+    // The details grid. Each accessor names the METRIC, not the drawing, so a better
+    // drawing later is a one-line change here and nothing else.
+    val wind: ImageVector @Composable get() = ImageVector.vectorResource(R.drawable.mc_wind)
+    val humidity: ImageVector @Composable get() = ImageVector.vectorResource(R.drawable.mc_humidity)
+    val visibility: ImageVector @Composable get() = ImageVector.vectorResource(R.drawable.mc_mist)
+    val temperature: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.mc_thermometer)
+    val uv: ImageVector @Composable get() = ImageVector.vectorResource(R.drawable.mc_uv_index)
+    val pressure: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.mc_barometer)
+    val dewPoint: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.mc_raindrop)
+    val precipitation: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.mc_raindrops)
+    val airQuality: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.mc_smoke_particles)
+
+    /** Meteocons v2 has no pollen icon (v3 does, but it is a different drawing and
+     * cannot be mixed in). Airborne grains are the dust icon's literal subject, so it
+     * serves until the v3 family stabilizes — recorded in PLANNING.md Fase 2. */
+    val pollen: ImageVector @Composable get() = ImageVector.vectorResource(R.drawable.mc_dust)
+
+    // The day's timeline and the Sky screen.
+    /** The rain-over glyph: a cloud with nothing falling out of it. */
+    val cloud: ImageVector @Composable get() = ImageVector.vectorResource(R.drawable.mc_cloudy)
+    val sunrise: ImageVector @Composable get() = ImageVector.vectorResource(R.drawable.mc_sunrise)
+    val sunset: ImageVector @Composable get() = ImageVector.vectorResource(R.drawable.mc_sunset)
+    val moonrise: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.mc_moonrise)
+    val moonset: ImageVector @Composable get() = ImageVector.vectorResource(R.drawable.mc_moonset)
+    val horizon: ImageVector @Composable get() = ImageVector.vectorResource(R.drawable.mc_horizon)
+    val star: ImageVector @Composable get() = ImageVector.vectorResource(R.drawable.mc_star)
+    val starryNight: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.mc_starry_night)
+    val fallingStars: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.mc_falling_stars)
 }

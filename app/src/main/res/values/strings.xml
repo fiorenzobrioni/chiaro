@@ -2,5 +2,160 @@
 <resources>
     <!-- The brand, so it does not travel: a name is not prose. -->
     <string name="app_name" translatable="false">Chiaro</string>
-    <string name="skeleton_note">The screens arrive with Fase 2.</string>
+
+    <!-- The canvas -->
+    <string name="feels_like">Feels like %1$s</string>
+    <string name="place_switcher_action">Change place</string>
+    <string name="ribbon_desc">Sunrise at %1$s, sunset at %2$s</string>
+    <string name="ribbon_desc_all_day">The sun never sets today</string>
+    <string name="ribbon_desc_all_night">The sun never rises today</string>
+
+    <!-- The headline sentence. When there is nothing to say, no string is used at all. -->
+    <string name="headline_severe_thunder">Thunderstorm around %1$s</string>
+    <string name="headline_severe_ice">Freezing rain around %1$s</string>
+    <string name="headline_severe_rain">Heavy rain around %1$s</string>
+    <string name="headline_severe_snow">Heavy snow around %1$s</string>
+    <string name="headline_wet_soon">Umbrella around %1$s</string>
+    <string name="headline_wet_soon_clearing">Umbrella around %1$s, clearing after %2$s</string>
+    <string name="headline_snow_soon">Snow around %1$s</string>
+    <string name="headline_snow_soon_clearing">Snow around %1$s, clearing after %2$s</string>
+    <string name="headline_wet_now_stopping">Rain should stop around %1$s</string>
+    <string name="headline_wet_now">Rain for the rest of the day</string>
+    <string name="headline_snow_now_stopping">Snow should stop around %1$s</string>
+    <string name="headline_snow_now">Snow for the rest of the day</string>
+
+    <!-- Freshness and errors: the real age, the real reason -->
+    <plurals name="freshness_minutes_ago">
+        <item quantity="one">Updated %d minute ago</item>
+        <item quantity="other">Updated %d minutes ago</item>
+    </plurals>
+    <plurals name="freshness_hours_ago">
+        <item quantity="one">Updated %d hour ago</item>
+        <item quantity="other">Updated %d hours ago</item>
+    </plurals>
+    <plurals name="freshness_days_ago">
+        <item quantity="one">Updated %d day ago</item>
+        <item quantity="other">Updated %d days ago</item>
+    </plurals>
+    <string name="error_offline">Couldn\'t update: you\'re offline</string>
+    <string name="error_service">Couldn\'t update: the service isn\'t answering</string>
+    <string name="error_unknown">Couldn\'t update: something went wrong</string>
+    <string name="error_retry">Retry</string>
+
+    <!-- Sections -->
+    <string name="section_next_hours">Next hours</string>
+    <string name="section_rest_of_day">The rest of the day</string>
+    <string name="section_week">The week</string>
+    <string name="section_details">Details</string>
+
+    <!-- The merged timeline -->
+    <string name="tl_sunrise">Sunrise</string>
+    <string name="tl_golden_morning_end">Golden hour ends</string>
+    <string name="tl_golden_evening">Golden hour</string>
+    <string name="tl_sunset">Sunset</string>
+    <string name="tl_blue_evening">Blue hour</string>
+    <string name="tl_dark">Fully dark sky</string>
+    <string name="tl_moonrise">Moonrise</string>
+    <string name="tl_moonset">Moonset</string>
+    <string name="tl_rain_start">Rain gets likely (%1$d%%)</string>
+    <string name="tl_rain_stop">Rain should ease off</string>
+
+    <!-- The week -->
+    <string name="week_today">Today</string>
+    <string name="week_day_desc">%1$s: %2$s, low %3$s, high %4$s, rain %5$d%%</string>
+
+    <!-- The hour strip -->
+    <string name="hour_cell_desc">At %1$s, %2$s, %3$s, rain %4$d%%</string>
+    <string name="sparkline_peak_desc">Rain probability peaks at %1$d%% around %2$s</string>
+    <string name="sparkline_dry_desc">No rain expected in the next hours</string>
+
+    <!-- Details grid: labels -->
+    <string name="metric_uv">UV</string>
+    <string name="metric_wind">Wind</string>
+    <string name="metric_humidity">Humidity</string>
+    <string name="metric_dew">Dew point</string>
+    <string name="metric_pressure">Pressure</string>
+    <string name="metric_visibility">Visibility</string>
+    <string name="metric_air">Air quality</string>
+    <string name="metric_pollen">Pollen</string>
+
+    <!-- Details grid: the meaning lines (§1.2 — every number says what to do with it) -->
+    <string name="uv_meaning_low">No protection needed</string>
+    <string name="uv_meaning_moderate">Burns in about 45 minutes</string>
+    <string name="uv_meaning_high">Burns in about 25 minutes, cover up</string>
+    <string name="uv_meaning_very_high">Burns in about 15 minutes, cover up</string>
+    <string name="uv_meaning_extreme">Burns in about 10 minutes, stay in shade</string>
+    <string name="wind_meaning_calm">Still air, you won\'t notice it</string>
+    <string name="wind_meaning_light">A light breeze</string>
+    <string name="wind_meaning_moderate">Noticeable, not a bother</string>
+    <string name="wind_meaning_strong">Hold on to your hat</string>
+    <string name="wind_meaning_gale">Hard to walk against</string>
+    <string name="humidity_meaning_dry">Dry air</string>
+    <string name="humidity_meaning_comfortable">Comfortable</string>
+    <string name="humidity_meaning_humid">A little sticky</string>
+    <string name="humidity_meaning_oppressive">Heavy, muggy air</string>
+    <string name="dew_meaning_dry">Dry, crisp air</string>
+    <string name="dew_meaning_pleasant">Pleasant</string>
+    <string name="dew_meaning_sticky">Slightly sticky</string>
+    <string name="dew_meaning_muggy">Muggy</string>
+    <string name="dew_meaning_oppressive">Oppressive</string>
+    <string name="pressure_meaning_low">Low: unsettled weather is likelier</string>
+    <string name="pressure_meaning_normal">In the normal range</string>
+    <string name="pressure_meaning_high">High: leans toward clear skies</string>
+    <string name="visibility_meaning_clear">Clear, you can see far</string>
+    <string name="visibility_meaning_light_haze">Slight haze</string>
+    <string name="visibility_meaning_haze">Thick haze</string>
+    <string name="visibility_meaning_fog">Fog: take care on the road</string>
+    <string name="aqi_meaning_good">Clean air, do anything</string>
+    <string name="aqi_meaning_moderate">Fine for being outside</string>
+    <string name="aqi_meaning_sensitive">Fine for a walk, skip the run</string>
+    <string name="aqi_meaning_unhealthy">Better to stay indoors</string>
+    <string name="aqi_meaning_very_unhealthy">Unhealthy: limit time outside</string>
+    <string name="aqi_meaning_hazardous">Hazardous: stay indoors</string>
+    <string name="pollen_level_none">None</string>
+    <string name="pollen_level_low">Low</string>
+    <string name="pollen_level_moderate">Moderate</string>
+    <string name="pollen_level_high">High</string>
+    <string name="pollen_meaning_none">Everyone breathes easy</string>
+    <string name="pollen_meaning_low">Barely noticeable</string>
+    <string name="pollen_meaning_moderate">Allergies will notice</string>
+    <string name="pollen_meaning_high">A hard day for allergies</string>
+
+    <!-- Conditions: the WMO vocabulary, one word each -->
+    <string name="cond_clear">Clear</string>
+    <string name="cond_mostly_clear">Mostly clear</string>
+    <string name="cond_partly_cloudy">Partly cloudy</string>
+    <string name="cond_overcast">Overcast</string>
+    <string name="cond_fog">Fog</string>
+    <string name="cond_drizzle">Drizzle</string>
+    <string name="cond_freezing_drizzle">Freezing drizzle</string>
+    <string name="cond_rain_light">Light rain</string>
+    <string name="cond_rain">Rain</string>
+    <string name="cond_rain_heavy">Heavy rain</string>
+    <string name="cond_freezing_rain">Freezing rain</string>
+    <string name="cond_snow_light">Light snow</string>
+    <string name="cond_snow">Snow</string>
+    <string name="cond_snow_heavy">Heavy snow</string>
+    <string name="cond_snow_grains">Snow grains</string>
+    <string name="cond_showers">Showers</string>
+    <string name="cond_showers_violent">Violent showers</string>
+    <string name="cond_snow_showers">Snow showers</string>
+    <string name="cond_thunderstorm">Thunderstorm</string>
+    <string name="cond_thunderstorm_hail">Thunderstorm with hail</string>
+    <string name="cond_unknown">Unknown conditions</string>
+
+    <!-- Empty and error states -->
+    <string name="empty_no_place_title">No place yet</string>
+    <string name="empty_no_place_body">Add a city to see its sky.</string>
+    <string name="empty_no_place_action">Find a place</string>
+    <string name="empty_no_data_body">Getting the first forecast for %1$s…</string>
+
+    <!-- Places sheet (the minimum of Fase 3 that Fase 2 needs) -->
+    <string name="places_title">Places</string>
+    <string name="places_search_hint">Search for a city</string>
+    <string name="places_saved">Saved</string>
+    <string name="places_no_results">No results for “%1$s”</string>
+    <string name="places_offline">You\'re offline: search needs a connection</string>
+    <string name="places_failed">Search didn\'t work, try again</string>
+    <string name="places_active">Active</string>
 </resources>

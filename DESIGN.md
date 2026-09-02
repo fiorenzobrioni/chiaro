@@ -496,16 +496,21 @@ monotonicity test in the suite had passed without complaint.
 
 ## 13. Open items
 
-1. ~~The icon family~~ — **decided: Meteocons** (github.com/basmilius/meteocons), MIT,
-   around 475 hand-drawn weather icons with animated and static variants in four styles.
-   It satisfies §4.5 outright, and the only obligation is preserving the copyright
-   notices, which costs one file in `licenses/`. What ships today is not yet that:
-   converting several hundred SVGs into Android vector drawables wants Android Studio's
-   importer and a look at the result, so it belongs to Fase 2 where the icons first
-   appear on a screen. Until then `ui/icons/ChiaroIcons` maps every WMO bucket to
-   Material's own outlined set, behind the same function call, so Fase 2 changes the
-   bodies there and nothing else in the app. What must not happen is the thing tweather
-   could get away with: emoji.
+1. ~~The icon family~~ — **shipped in Fase 2: Meteocons v2.0.0**
+   (github.com/basmilius/meteocons), MIT, line style, converted to vector drawables by
+   `tools/import_meteocons.py` (the importer of record — re-running it IS the import)
+   behind `ui/icons/ChiaroIcons`. One departure worth this document's attention: **the
+   palette is re-anchored, not copied.** Meteocons draws for a dark backdrop — its
+   cloud stroke is `#E5E7EB`, which is 1.18:1 against this app's light surface, and in
+   the hour strip the icon is the only carrier of "what kind of weather". Every hue is
+   kept; every luminance is moved into `Y ∈ [0.120, 0.283]`, the band that clears §10's
+   3:1 non-text floor against BOTH surfaces of §2.2 (worst case after the move:
+   3.04:1). The measured table lives in the tool, and `IconContrastTest` re-measures
+   the emitted XML on every build, in the same spirit as `PaletteContrastTest`:
+   assert the outcome, not the method. The icons keep their own colors under every
+   theme (they depict the world, like the canvas — §2.1's other justified exception),
+   which is why the floor must hold on both surfaces at once. Animated variants, if
+   they ever come, come as AVDs and as their own decision.
 2. **Dynamic color default** — on, as written here. Worth revisiting after the first
    screenshots: a wallpaper-derived scheme makes every store screenshot a different app.
    Likely resolution: dynamic on device, the Chiaro scheme in the store assets.

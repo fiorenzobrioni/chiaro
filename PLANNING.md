@@ -178,19 +178,114 @@ verifica il risultato invece di fidarsi del metodo. I neutri hanno la croma fiss
   non è né l'uno né l'altro. Un marchio non viaggia. È l'unica eccezione e sta scritta
   accanto alla stringa, non in un documento lontano.
 
-## Fase 2 — Oggi
+## Fase 2 — Oggi ✅
 
-- [ ] Import di Meteocons come vector drawable, dietro `ChiaroIcons` (deviazione Fase 1)
-- [ ] Composizione della schermata sui primitivi della Fase 1
-- [ ] **La frase**: `AlertEngine` + `WeatherRecency` → una riga di prosa in cima
-- [ ] Strip orario + sparkline pioggia, timeline "il resto della giornata"
-- [ ] La settimana con le barre di range su scala condivisa
-- [ ] Griglia dei dettagli, ogni numero con la sua riga di significato
-- [ ] Chip di freschezza, stati vuoto/errore/stale
+- [x] Import di Meteocons come vector drawable, dietro `ChiaroIcons` (deviazione Fase 1)
+- [x] Composizione della schermata sui primitivi della Fase 1
+- [x] **La frase**: motori + `WeatherRecency` → una riga di prosa in cima
+- [x] Strip orario + sparkline pioggia, timeline "il resto della giornata"
+- [x] La settimana con le barre di range su scala condivisa
+- [x] Griglia dei dettagli, ogni numero con la sua riga di significato
+- [x] Chip di freschezza, stati vuoto/errore/stale
+- [x] **Anticipo minimo della Fase 3**: il foglio dei luoghi (ricerca, aggiunta,
+      selezione) — vedi deviazioni
+
+### Le icone: import riproducibile, e una palette ri-ancorata
+
+- **Niente importer di Android Studio.** La Fase 1 lo prevedeva; al momento di farlo,
+  un import a mano di ~50 SVG è irriproducibile e non lascia traccia delle scelte.
+  Invece: `tools/import_meteocons.py`, il gemello di `seed_core.py` — legge un checkout
+  di Meteocons **v2.0.0** (il tag: il `main` attuale è un ridisegno v3 a 128px che non
+  va mischiato con questa famiglia), converte lo stile *line* in vector drawable e
+  scrive i `mc_*.xml`. Rilanciarlo È l'import. Le tre scelte non meccaniche stanno nel
+  docstring del tool: animazioni SMIL eliminate (i VD non le portano), tratteggi
+  **ridisegnati** come archi e segmenti veri (i VD non hanno dasharray; le due volute
+  del vento diventano piene — lì il tratteggio esisteva solo per essere animato), e la
+  palette qui sotto.
+- **La palette di Meteocons è ri-ancorata, non copiata.** Il set line è disegnato per
+  fondale scuro: il tratto delle nuvole è `#E5E7EB`, **1,18:1** sulla superficie chiara
+  — invisibile, e nella strip oraria l'icona è l'unico portatore di "che tempo fa".
+  Ogni tinta è mantenuta, ogni luminanza è spostata nella banda `Y ∈ [0.120, 0.283]`
+  che supera il pavimento 3:1 dei segni non testuali (DESIGN §10) su **entrambe** le
+  superfici. Peggior caso dopo lo spostamento: 3,04:1. La tabella misurata è nel tool;
+  `IconContrastTest` rimisura l'XML emesso a ogni build, perché quello che spedisce è
+  il file, non la tabella.
+- **`material-icons-extended` rimosso** dal catalogo e dalle dipendenze: l'APK di
+  debug scende da 64 a 33 MB. Il `Refresh` del chip di freschezza e la lente della
+  ricerca vengono da `material-icons-core`, che material3 porta comunque.
+- **Il polline non ha un'icona in v2** (la v3 ce l'ha, ma è l'altro disegno). La tile
+  usa `dust` — particelle sospese, che è letteralmente il soggetto — finché la famiglia
+  v3 non si stabilizza. Le icone del cielo (fasi lunari, stelle) sono importate già
+  adesso: stesso giro del tool, le usa la Fase 5.
+
+### Lo stato della schermata, e la regola che lo governa
+
+- `TodayUiState`: `Starting` (scheletro), `NoPlace`, `Empty(city)` (luogo sì, dati mai
+  arrivati), `Content`. **Niente stato "Loading"**: un refresh alza un flag sul
+  contenuto che c'è già, non lo sostituisce. La cache si emette PRIMA che il fetch
+  parta, sempre.
+- `TodayStateBuilder` è puro e senza orologio (il tempo è un parametro): tutto lo
+  stato — trim di recency, staleness, canvas, ribbon, frase, timeline, settimana — è
+  testabile a tavolino come i motori. Un tick al minuto nel ViewModel rifà i conti
+  anche quando non arrivano dati: l'età dichiarata e il cielo si muovono col tempo.
+- Un report oltre il proprio orizzonte è `Empty`, non "vecchio": la settimana scorsa
+  sotto un titolo "Oggi" non sarebbe dato stantio, sarebbe dato sbagliato (la regola
+  di `WeatherRecency`, che qui diventa visibile).
+- `ActiveSource.Gps` senza fix è trattato come `NoPlace`: il flusso GPS vero
+  (permesso, fix, pseudo-città) è della Fase 3, e fino ad allora "nessun luogo" è
+  l'unica cosa onesta che la schermata può dire.
+
+### La frase in cima
+
+- `HeadlineEngine`, puro, con le **stesse soglie di `AlertEngine`** (70% sulle
+  prossime 6 ore, severi su 12): la frase e la notifica non devono mai essere in
+  disaccordo su cosa conta come "sta arrivando pioggia". Casi: severo (per bucket),
+  "ombrello verso le X, schiarisce dopo le Y", "smette verso le X", "pioggia per il
+  resto della giornata", varianti neve. **Il silenzio è una risposta**: giornata
+  tranquilla → la riga non esiste. Nessuna frase di riempimento, mai.
+- La localizzazione avviene nel renderer: l'engine risponde in tipi, non in lingua.
+
+### Il vocabolario WMO è dell'app, non del dominio
+
+La VISION §7.2 prevedeva di spostare le tabelle di traduzione nel dominio. Facendolo
+si è visto che per Chiaro è il posto sbagliato: qui tutto ciò che si vede è una
+risorsa Android (plurali, picker di lingua per-app), e `:core:domain` è JVM puro senza
+risorse. Le parole delle condizioni (`WeatherText.condition`) e le righe di significato
+dei numeri vivono in `:app` come string resources IT/EN; la `description` inglese del
+dominio non arriva mai a schermo. I notifier della Fase 6 renderizzano comunque in
+`:app`, quindi il vocabolario sarà già dove serve.
+
+### Deviazioni e rinvii registrati
+
+- **Fase 3 anticipata al minimo**: un'installazione nuova non ha città e seminarne una
+  finta è vietato, quindi la schermata vuota ha bisogno del foglio dei luoghi. Fatto il
+  minimo che la Fase 2 non può non avere: ricerca-mentre-scrivi (debounce 350 ms),
+  tocco per aggiungere e selezionare, lista dei salvati per cambiare. GPS, riordino,
+  swipe-per-rimuovere, primo avvio e `migrateFirstRun` restano Fase 3. Scegliere un
+  luogo dal foglio chiama già `markInitDone`: rispondere alla domanda del primo avvio
+  da un'altra porta è comunque rispondere.
+- **Niente bottom navigation** finché non esiste la seconda destinazione (Cielo,
+  Fase 5): una barra con tre tab morte è lo schermo che mente su cosa sa fare l'app.
+- **L'app bar non è ancora il collasso del canvas** (§8.1): per ora è una barra
+  normale con il selettore del luogo, e il canvas sta sotto. Il collasso con la
+  transizione è rifinitura, non struttura.
+- **Il canvas si aggiorna al tick del minuto**, senza il crossfade a 30 s della §3.5:
+  arriva con la passata di motion della Fase 9.
+- **Le unità sono i default** (`UnitSettings()`) finché la Fase 4 non costruisce
+  l'interruttore: leggere da uno store che nessuna UI può cambiare è un interruttore
+  finto.
+- **I verdetti sulla timeline** (chip della §8.4) arrivano con il cablaggio di
+  `SkyVerdictEngine` in Fase 5; la riga ha già lo slot per il trailing.
+- **L'espansione della riga del giorno** è un `AnimatedVisibility` con le ore di quel
+  giorno; la shared-element transition della §7 arriva con la motion pass.
+- **Icone importate ma non ancora usate** (fasi lunari, stelle cadenti, bussola…):
+  deliberate, sono il fabbisogno della Fase 5 e l'import è un giro solo del tool. Le
+  segnalazioni UnusedResources del lint restano warning, e restano vere.
 
 ## Fase 3 — Luoghi e primo avvio
 
-- [ ] Pager tra i luoghi, sheet di gestione, ricerca, GPS, stato "nessun luogo"
+- [ ] Pager tra i luoghi, sheet di gestione completo (riordino, rimozione con undo),
+      GPS, `migrateFirstRun`/`firstRun` cablati
 - [ ] Primo avvio: una schermata, due risposte
 
 ## Fase 4 — Impostazioni e guida
