@@ -282,6 +282,18 @@ dominio non arriva mai a schermo. I notifier della Fase 6 renderizzano comunque 
   deliberate, sono il fabbisogno della Fase 5 e l'import è un giro solo del tool. Le
   segnalazioni UnusedResources del lint restano warning, e restano vere.
 
+### Verifica su device (committente, 2 set 2026)
+
+Prima installazione reale (APK release firmato con la chiave vera), screenshot alla
+mano: canvas notturno corretto alle 20:57, la frase assente su una serata serena (il
+silenzio come risposta, osservato funzionare), timeline con "Buio pieno 21:45" e
+"Sorge la luna 22:01", settimana su scala condivisa, espansione in-place delle ore di
+un giorno, griglia dettagli con i significati. Un difetto trovato dall'occhio e non
+dai test: **le card dei dettagli, accoppiate per riga, avevano altezze indipendenti**
+— due fondi che non combaciano leggono come un disallineamento, non come contenuti di
+lunghezza diversa. Corretto: la riga usa `IntrinsicSize.Max` e le due tile riempiono
+la stessa altezza.
+
 ## Fase 3 — Luoghi e primo avvio
 
 - [ ] Pager tra i luoghi, sheet di gestione completo (riordino, rimozione con undo),

@@ -6,7 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -675,14 +677,19 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         tiles.chunked(2).forEach { rowTiles ->
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            // The pair shares one height: two cards whose bottoms disagree read as a
+            // misalignment, not as content of different lengths (device check, 2 set).
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.height(IntrinsicSize.Max)
+            ) {
                 rowTiles.forEach { tile ->
                     MetricTile(
                         icon = tile.icon(),
                         label = stringResource(tile.label),
                         value = tile.value,
                         meaning = stringResource(tile.meaning),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                 }
                 if (rowTiles.size == 1) {
