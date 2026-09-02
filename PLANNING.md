@@ -359,6 +359,12 @@ screenshot, tre richieste — due accolte e una che era un difetto:
   il collasso della §8.1, che resta alla motion pass.
 - **Icone meteo più grandi**: 32dp nella strip oraria (in celle da 56 le 24dp
   intrinseche erano timide accanto alle cifre), 28dp nelle righe della settimana.
+- **Secondo giro (stessa sera)**: il selettore del luogo sale a `titleLarge` — è
+  l'etichetta del cielo che governa la pagina, a 16sp competeva con i titoli di
+  sezione — e la pagina GPS porta il pin della posizione prima del nome. Non è solo
+  grafica: una "Cavenago" salvata e il fix GPS fermo a Cavenago erano due pagine
+  identiche, e l'origine di un dato è parte della sua verità. Il pin non parla mai da
+  solo: la descrizione della riga premette "La mia posizione" per TalkBack.
 
 DESIGN.md §3.6 aggiornato con il contratto a due bande.
 

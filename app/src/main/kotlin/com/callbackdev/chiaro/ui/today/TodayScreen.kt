@@ -28,6 +28,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -176,6 +177,7 @@ private fun PagedToday(
             TodayPage(
                 state = state,
                 title = pageTitle(page),
+                isGps = page is PlacePage.Gps,
                 dots = if (pages.size > 1) index to pages.size else null,
                 onRefresh = { onRefresh(page) },
                 onOpenPlaces = onOpenPlaces
@@ -208,15 +210,18 @@ private fun StatusBarIcons(overCanvas: Boolean) {
 private fun TodayPage(
     state: TodayUiState,
     title: String,
+    isGps: Boolean,
     dots: Pair<Int, Int>?,
     onRefresh: () -> Unit,
     onOpenPlaces: () -> Unit
 ) {
     when (state) {
-        is TodayUiState.Content -> ContentState(state, title, dots, onRefresh, onOpenPlaces)
+        is TodayUiState.Content ->
+            ContentState(state, title, isGps, dots, onRefresh, onOpenPlaces)
         else -> Column(modifier = Modifier.fillMaxSize()) {
             PlaceHeader(
                 title = title,
+                isGps = isGps,
                 dots = dots,
                 onOpenPlaces = onOpenPlaces,
                 contentColor = MaterialTheme.colorScheme.onSurface,
@@ -245,6 +250,7 @@ private fun GlobalFrame(
         Column(modifier = Modifier.fillMaxSize()) {
             PlaceHeader(
                 title = stringResource(R.string.app_name),
+                isGps = false,
                 dots = null,
                 onOpenPlaces = onOpenPlaces,
                 contentColor = MaterialTheme.colorScheme.onSurface,
@@ -262,24 +268,40 @@ private fun GlobalFrame(
  * The place switcher: name, chevron, and the pager dots when there is more than one
  * page. One composable for both grounds — white over the canvas' scrim, theme ink on
  * a plain surface — so the two can never drift apart in shape.
+ *
+ * [isGps] draws the position pin before the name: a saved "Cavenago" and the GPS fix
+ * standing in Cavenago would otherwise be two identical pages, and where a number
+ * comes from is part of its truth (device request, 2 set). The pin carries its word
+ * through the row's description, never alone.
  */
 @Composable
 private fun PlaceHeader(
     title: String,
+    isGps: Boolean,
     dots: Pair<Int, Int>?,
     onOpenPlaces: () -> Unit,
     contentColor: Color,
     dotInactive: Color,
     modifier: Modifier = Modifier
 ) {
+    val spoken = if (isGps) stringResource(R.string.header_gps_desc, title) else title
     Column(modifier = modifier) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier
                 .clickable(onClick = onOpenPlaces)
-                .semantics { contentDescription = title }
+                .semantics { contentDescription = spoken }
         ) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = contentColor)
+            if (isGps) {
+                Icon(
+                    imageVector = Icons.Outlined.LocationOn,
+                    contentDescription = null, // the row speaks once, GPS included
+                    tint = contentColor,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Text(title, style = MaterialTheme.typography.titleLarge, color = contentColor)
             Icon(
                 imageVector = Icons.Outlined.KeyboardArrowDown,
                 contentDescription = stringResource(R.string.place_switcher_action),
@@ -440,6 +462,7 @@ private fun ErrorBanner(error: TodayError, onRetry: () -> Unit) {
 private fun ContentState(
     content: TodayUiState.Content,
     title: String,
+    isGps: Boolean,
     dots: Pair<Int, Int>?,
     onRefresh: () -> Unit,
     onOpenPlaces: () -> Unit
@@ -457,7 +480,7 @@ private fun ContentState(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = WindowInsets.navigationBars.asPaddingValues()
         ) {
-            item { CanvasHeader(content, title, dots, units, timeFmt, locale, onOpenPlaces) }
+            item { CanvasHeader(content, title, isGps, dots, units, timeFmt, locale, onOpenPlaces) }
 
             if (content.error != null) {
                 item { ErrorBanner(content.error, onRefresh) }
@@ -504,6 +527,7 @@ private fun SectionTitle(text: String) {
 private fun CanvasHeader(
     content: TodayUiState.Content,
     title: String,
+    isGps: Boolean,
     dots: Pair<Int, Int>?,
     units: UnitSettings,
     timeFmt: DateTimeFormatter,
@@ -527,6 +551,7 @@ private fun CanvasHeader(
     ) {
         PlaceHeader(
             title = title,
+            isGps = isGps,
             dots = dots,
             onOpenPlaces = onOpenPlaces,
             contentColor = Color.White,

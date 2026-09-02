@@ -168,6 +168,7 @@
     <string name="gps_error_timeout">Nessuna posizione trovata: riprova all\'aperto</string>
     <string name="gps_error_unavailable">Posizione non disponibile al momento</string>
     <string name="pager_dots_desc">Luogo %1$d di %2$d</string>
+    <string name="header_gps_desc">La mia posizione: %1$s</string>
 
     <!-- Primo avvio: una schermata, due risposte, saltare è concesso -->
     <string name="first_run_tagline">Il meteo che ti dice cosa farne.</string>

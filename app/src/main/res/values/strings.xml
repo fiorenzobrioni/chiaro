@@ -171,6 +171,7 @@
     <string name="gps_error_timeout">No position found: try again in the open</string>
     <string name="gps_error_unavailable">Position unavailable right now</string>
     <string name="pager_dots_desc">Place %1$d of %2$d</string>
+    <string name="header_gps_desc">My position: %1$s</string>
 
     <!-- First run: one screen, two answers, skipping allowed -->
     <string name="first_run_tagline">Weather that tells you what to do about it.</string>
