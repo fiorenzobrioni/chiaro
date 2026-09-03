@@ -712,6 +712,32 @@ APK ok.
 322 test verdi (141 domain, 118 data, 5 sync — col nuovo test dei widget che tengono
 vivo il job — 58 app), zero failure, zero skip; lint a zero errori; APK debug ok.
 
+### Verifica su device e rifacimento (committente, 3 set 2026)
+
+Quattro rilievi, due dei quali hanno rifatto il vestito dei widget:
+
+- **"L'ultimo widget messo vince"**: su One UI ogni repaint riversava il contenuto
+  dell'ultimo tipo piazzato su tutti e tre. Colpevole: la mappatura id→classe interna
+  di Glance dietro `updateAll`. Ora gli aggiornamenti sono guidati dagli id di
+  sistema per `ComponentName` — la verità del launcher, che non può mescolarsi — e
+  ogni id riceve la composizione del SUO ricevitore.
+- **Il vestito nuovo**: lo sfondo di default è il gradiente del cielo del canvas —
+  la stessa `SkyPalette.gradient` sulla stessa fotografia del momento, resa bitmap
+  con lo scrim §3.6 cotto dentro e inchiostro bianco sopra, come l'eroe dell'app.
+  Icona 56dp, temperatura 32sp, nome città su riga intera (i «Cavenago di Brianza»
+  ci stanno). In alternativa: cartoncino Chiaro/Scuro/Come il telefono.
+- **Impostazioni per-widget** dal flusso di riconfigurazione del launcher (tocco
+  prolungato): luogo (il luogo attivo, o una città salvata appuntata —
+  `WidgetCityStore` ereditato esce dalla panchina, e il worker fetcha anche le
+  città appuntate), sfondo, opacità con slider fino a Trasparente. Ogni scelta
+  persiste al tocco e ridipinge quel solo widget. Il gruppo Widget delle
+  Impostazioni globali sparisce: due posti per lo stesso pomello divergono.
+- **Nota onesta sull'opacità bassa**: gradiente e scrim scalano insieme, l'inchiostro
+  resta pieno; sotto ~40% col vestito Cielo la leggibilità dipende dallo sfondo del
+  lettore — è la sua scelta, per quel widget.
+- **L'icona dell'app** stringe le distanze: falce giù, onde su, composizione centrata
+  nel badge (il primo taglio abbracciava i bordi e lasciava un golfo in mezzo).
+
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
 - [ ] Contrasti, scala testo 200%, TalkBack, motion ridotto

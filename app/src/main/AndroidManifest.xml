@@ -33,6 +33,19 @@
             </intent-filter>
         </activity>
 
+        <!-- The per-widget settings, opened by the launcher's reconfigure flow
+             (long-press → the pencil). Exported because the HOST starts it; it acts
+             only on the appWidgetId it is handed and reads nothing sensitive. -->
+        <activity
+            android:name=".widget.WidgetConfigActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.Chiaro">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <!-- The home widgets (Fase 8): Now, Today, Sky. exported=false — the system
              delivers APPWIDGET_* regardless, and nothing else needs in. -->
         <receiver

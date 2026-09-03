@@ -141,6 +141,22 @@ class WeatherSyncWorker(
             }
         }
 
+        // Widgets pinned to another city have no other producer of history commits:
+        // without this their data would only age (device review, 3 set). One extra
+        // fetch per distinct pinned city per period, only while such a widget exists.
+        widgets?.pinnedCities().orEmpty()
+            .filter { it.cacheKey != city.cacheKey }
+            .distinctBy { it.cacheKey }
+            .forEach { pinned ->
+                runCatching {
+                    ServiceLocator.weatherRepository(context).getWeather(
+                        pinned,
+                        forceRefresh = false,
+                        ttl = Duration.ofMinutes(settings.updateFrequencyMin.toLong())
+                    )
+                }
+            }
+
         // The sky (Fase 5–7). Deliberately OUTSIDE the alerts gate in spirit —
         // recording is not notifying — but this worker only runs when alerts are
         // wanted until Fase 8 gives it a second customer.

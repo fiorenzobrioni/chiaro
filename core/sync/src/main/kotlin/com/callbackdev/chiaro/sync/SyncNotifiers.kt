@@ -45,6 +45,12 @@ interface SyncNotifiers {
 interface SyncWidgets {
     fun hasWidgets(): Boolean
     suspend fun repaintAll()
+
+    /** The saved cities pinned to placed widgets (device review, 3 set): a widget
+     * watching Milano while the app watches Roma has no other producer of data, so
+     * the periodic job fetches each pinned city too — one extra fetch per distinct
+     * pin per period, only while such a widget is placed. */
+    suspend fun pinnedCities(): List<com.callbackdev.chiaro.domain.model.City>
 }
 
 /**

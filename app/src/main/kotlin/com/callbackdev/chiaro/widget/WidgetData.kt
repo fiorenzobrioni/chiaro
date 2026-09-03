@@ -4,14 +4,15 @@ import android.content.Context
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.data.ServiceLocator
+import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.sky.SkyJob
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyScheduler
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.domain.sky.SkyVerdictEngine
-import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.ui.today.TodayStateBuilder
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import java.time.Duration
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.first
  */
 data class WidgetModel(
     val settings: AppSettings,
+    val look: WidgetLook,
     val city: City?,
     val content: TodayUiState.Content?,
     val nextMoment: NextMoment?,
@@ -44,17 +46,21 @@ data class NextMoment(
 
 object WidgetData {
 
-    suspend fun load(context: Context): WidgetModel {
+    /**
+     * The model for ONE widget instance: its pinned city if it has one (the
+     * inherited [com.callbackdev.chiaro.data.WidgetCityStore], off the bench since
+     * the reconfigure flow landed), the app's active place otherwise, and its own
+     * look. A pin whose city was removed falls back to the active place — the honest
+     * nearest answer, and the reconfigure flow is one long-press away.
+     */
+    suspend fun load(context: Context, appWidgetId: Int): WidgetModel {
         val settings = ServiceLocator.settingsStore(context).settings.first()
-        val city = when (val source = ServiceLocator.cityStore(context).activeSource.first()) {
-            is ActiveSource.Saved -> source.city
-            is ActiveSource.Gps -> source.lastFix
-            ActiveSource.None -> null
-        }
+        val look = WidgetLookStore.get(context).lookFor(appWidgetId)
+        val city = pinnedCity(context, appWidgetId) ?: activeCity(context)
         val zone = city?.timezone?.let { runCatching { ZoneId.of(it) }.getOrNull() }
             ?: ZoneId.systemDefault()
         if (city == null) {
-            return WidgetModel(settings, null, null, null, zone)
+            return WidgetModel(settings, look, null, null, null, zone)
         }
         val now = Instant.now()
         val report = ServiceLocator.weatherRepository(context).cachedReport(city)
@@ -66,6 +72,7 @@ object WidgetData {
         }
         return WidgetModel(
             settings = settings,
+            look = look,
             city = city,
             content = content,
             nextMoment = nextMoment(context, city, zone, now, report, settings),
@@ -73,13 +80,27 @@ object WidgetData {
         )
     }
 
+    private suspend fun pinnedCity(context: Context, appWidgetId: Int): City? {
+        val cityId = ServiceLocator.widgetCityStore(context)
+            .current()[appWidgetId] ?: return null
+        return ServiceLocator.cityStore(context).cities.first()
+            .firstOrNull { it.id == cityId }
+    }
+
+    private suspend fun activeCity(context: Context): City? =
+        when (val source = ServiceLocator.cityStore(context).activeSource.first()) {
+            is ActiveSource.Saved -> source.city
+            is ActiveSource.Gps -> source.lastFix
+            ActiveSource.None -> null
+        }
+
     /** The first subscribed moment to fire after now, with the sky's opinion on it. */
     private suspend fun nextMoment(
         context: Context,
         city: City,
         zone: ZoneId,
         now: Instant,
-        report: com.callbackdev.chiaro.domain.model.WeatherReport?,
+        report: WeatherReport?,
         settings: AppSettings
     ): NextMoment? {
         val jobs = ServiceLocator.skySubscriptionStore(context).subscriptions.first()

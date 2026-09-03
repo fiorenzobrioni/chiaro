@@ -6,11 +6,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
-import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
@@ -41,13 +41,23 @@ import java.util.Locale
 class TodayWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val model = WidgetData.load(context)
+        val appWidgetId = runCatching {
+            GlanceAppWidgetManager(context).getAppWidgetId(id)
+        }.getOrDefault(0)
+        val model = WidgetData.load(context, appWidgetId)
         val schemes = widgetSchemes(context, model.settings.dynamicColor)
+        val skyBitmap = model.content
+            ?.takeIf { model.look.background == WidgetBackground.SKY }
+            ?.let { skyGradientBitmap(it.sky, model.look.opacityPct) }
         provideContent {
-            WidgetCard(schemes, model.settings) {
+            WidgetCard(model, schemes, skyBitmap) { palette ->
                 when (val content = model.content) {
-                    null -> if (model.city == null) NoPlaceContent() else NoDataContent()
-                    else -> TodayContent(content, model)
+                    null -> if (model.city == null) {
+                        NoPlaceContent(palette)
+                    } else {
+                        NoDataContent(palette)
+                    }
+                    else -> TodayContent(content, model, palette)
                 }
             }
         }
@@ -60,7 +70,11 @@ class TodayWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun TodayContent(content: TodayUiState.Content, model: WidgetModel) {
+    private fun TodayContent(
+        content: TodayUiState.Content,
+        model: WidgetModel,
+        palette: WidgetPalette
+    ) {
         val context = LocalContext.current
         val locale = Locale.getDefault()
         val is24h = android.text.format.DateFormat.is24HourFormat(context)
@@ -79,26 +93,30 @@ class TodayWidget : GlanceAppWidget() {
                         )
                     ),
                     contentDescription = null,
-                    modifier = GlanceModifier.size(40.dp)
+                    modifier = GlanceModifier.size(52.dp)
                 )
-                Column(modifier = GlanceModifier.padding(start = 10.dp)) {
+                Column(modifier = GlanceModifier.padding(start = 12.dp)) {
                     Text(
                         text = Formats.temperature(
                             current.tempC, model.settings.units.temperature, locale
                         ),
                         style = TextStyle(
-                            color = GlanceTheme.colors.onSurface,
-                            fontSize = 26.sp,
+                            color = palette.primary,
+                            fontSize = 30.sp,
                             fontWeight = FontWeight.Medium
                         )
                     )
-                    Text(text = content.city.name, style = secondaryStyle(12.sp))
+                    Text(
+                        text = content.city.name,
+                        style = secondaryStyle(palette, 13.sp),
+                        maxLines = 1
+                    )
                 }
                 Spacer(modifier = GlanceModifier.defaultWeight())
                 if (content.isStale) {
                     Text(
                         text = staleText(context, content.lastSync, Instant.now()),
-                        style = TextStyle(color = FreshnessInk, fontSize = 11.sp)
+                        style = TextStyle(color = palette.stale, fontSize = 11.sp)
                     )
                 }
             }
@@ -107,8 +125,8 @@ class TodayWidget : GlanceAppWidget() {
                 Text(
                     text = sentence,
                     style = TextStyle(
-                        color = GlanceTheme.colors.onSurface,
-                        fontSize = 13.sp,
+                        color = palette.primary,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Medium
                     ),
                     maxLines = 2,
@@ -127,7 +145,7 @@ class TodayWidget : GlanceAppWidget() {
                     ) {
                         Text(
                             text = Formats.hourLabel(strip.hour.time, is24h, locale),
-                            style = secondaryStyle(11.sp)
+                            style = secondaryStyle(palette, 11.sp)
                         )
                         Spacer(modifier = GlanceModifier.height(2.dp))
                         Image(
@@ -139,17 +157,14 @@ class TodayWidget : GlanceAppWidget() {
                                 )
                             ),
                             contentDescription = null,
-                            modifier = GlanceModifier.size(24.dp)
+                            modifier = GlanceModifier.size(28.dp)
                         )
                         Spacer(modifier = GlanceModifier.height(2.dp))
                         Text(
                             text = Formats.temperature(
                                 strip.hour.tempC, model.settings.units.temperature, locale
                             ),
-                            style = TextStyle(
-                                color = GlanceTheme.colors.onSurface,
-                                fontSize = 12.sp
-                            )
+                            style = TextStyle(color = palette.primary, fontSize = 12.sp)
                         )
                     }
                 }

@@ -557,8 +557,12 @@
     <string name="widget_no_place_hint">Tocca per aprire Chiaro e aggiungerne uno</string>
     <string name="widget_no_data">Sto prendendo la prima previsione…</string>
     <string name="widget_sky_empty">Nessun momento del cielo seguito. Tocca per sceglierne.</string>
-    <string name="settings_group_widgets">Widget</string>
-    <string name="settings_widget_opacity">Sfondo del widget</string>
-    <string name="settings_widget_opacity_note">Quanto è pieno il cartoncino dietro i numeri. Il testo resta sempre a piena tinta.</string>
     <string name="settings_opacity_full">Pieno</string>
+    <string name="widget_opacity_transparent">Trasparente</string>
+    <string name="widget_config_title">Questo widget</string>
+    <string name="widget_config_place">Luogo</string>
+    <string name="widget_config_active_place">Il luogo attivo dell\'app</string>
+    <string name="widget_config_background">Sfondo</string>
+    <string name="widget_bg_sky">Il cielo di adesso</string>
+    <string name="widget_config_opacity">Opacità dello sfondo</string>
 </resources>

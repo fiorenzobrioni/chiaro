@@ -6,11 +6,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
-import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
@@ -19,7 +19,6 @@ import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
-import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.text.FontWeight
@@ -44,14 +43,20 @@ import java.util.Locale
 class SkyWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val model = WidgetData.load(context)
+        val appWidgetId = runCatching {
+            GlanceAppWidgetManager(context).getAppWidgetId(id)
+        }.getOrDefault(0)
+        val model = WidgetData.load(context, appWidgetId)
         val schemes = widgetSchemes(context, model.settings.dynamicColor)
+        val skyBitmap = model.content
+            ?.takeIf { model.look.background == WidgetBackground.SKY }
+            ?.let { skyGradientBitmap(it.sky, model.look.opacityPct) }
         provideContent {
-            WidgetCard(schemes, model.settings) {
+            WidgetCard(model, schemes, skyBitmap) { palette ->
                 when {
-                    model.city == null -> NoPlaceContent()
-                    model.nextMoment == null -> NoMomentContent()
-                    else -> SkyContent(model, model.nextMoment)
+                    model.city == null -> NoPlaceContent(palette)
+                    model.nextMoment == null -> NoMomentContent(palette)
+                    else -> SkyContent(model, model.nextMoment, palette)
                 }
             }
         }
@@ -59,7 +64,7 @@ class SkyWidget : GlanceAppWidget() {
 }
 
 @Composable
-private fun SkyContent(model: WidgetModel, moment: NextMoment) {
+private fun SkyContent(model: WidgetModel, moment: NextMoment, palette: WidgetPalette) {
     val context = LocalContext.current
     val locale = Locale.getDefault()
     val is24h = android.text.format.DateFormat.is24HourFormat(context)
@@ -75,19 +80,19 @@ private fun SkyContent(model: WidgetModel, moment: NextMoment) {
             Image(
                 provider = ImageProvider(skyJobIconRes(moment, model.settings.weatherIcons)),
                 contentDescription = null,
-                modifier = GlanceModifier.size(36.dp)
+                modifier = GlanceModifier.size(46.dp)
             )
-            Column(modifier = GlanceModifier.padding(start = 10.dp)) {
+            Column(modifier = GlanceModifier.padding(start = 12.dp)) {
                 Text(
                     text = context.getString(SkyText.nameRes(moment.job.id)),
                     style = TextStyle(
-                        color = GlanceTheme.colors.onSurface,
-                        fontSize = 14.sp,
+                        color = palette.primary,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     ),
                     maxLines = 1
                 )
-                Text(text = timeLine, style = secondaryStyle(12.sp))
+                Text(text = timeLine, style = secondaryStyle(palette, 12.sp))
             }
         }
         Spacer(modifier = GlanceModifier.defaultWeight())
@@ -142,12 +147,12 @@ private fun skyJobIconRes(moment: NextMoment, style: WeatherIcons): Int = when (
 
 /** Subscriptions emptied by hand: the widget says why it is quiet, never blanks. */
 @Composable
-private fun NoMomentContent() {
+private fun NoMomentContent(palette: WidgetPalette) {
     val context = LocalContext.current
     Column {
         Text(
             text = context.getString(R.string.widget_sky_empty),
-            style = secondaryStyle(12.sp)
+            style = secondaryStyle(palette, 12.sp)
         )
     }
 }
