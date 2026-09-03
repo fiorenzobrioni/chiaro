@@ -10,8 +10,8 @@ as the body of the GitHub Release, so a version's entry is written **before** it
 ## [Unreleased]
 
 Nothing released yet. The engines are in and verified, the design system is code, and
-the everyday surface — Today, places, first run, settings, the guide — is built. See
-`PLANNING.md` for where the work actually is.
+the everyday surface — Today, places, first run, settings, the guide, the Sky screen
+with its reminders — is built. See `PLANNING.md` for where the work actually is.
 
 ### Added
 
@@ -56,6 +56,19 @@ the everyday surface — Today, places, first run, settings, the guide — is bu
   no radar map — short prose in both languages, illustrated with the app's own
   components, reachable from Settings forever and pointed at once by a dismissable
   card on Today.
+- The Sky screen (Fase 5): tonight's verdict on the dark window with the numbers that
+  decided it (and the moon named when it was the moon), the day's subscribed moments
+  resolved in the city's own timezone, the calendar ahead (meteor peaks, the next full
+  moon, solstices and equinoxes, with an honest "too far out to say" past the
+  forecast's horizon), and the grouped 32-moment catalog where each entry teaches what
+  it is in one line.
+- Sky reminders (Fase 5): a bell per moment plus a default lead, delivered by a single
+  deliberately inexact alarm (15-minute floor, no exact-alarm permission), suppressed
+  when the sky will hide the event unless asked otherwise, re-armed on boot and on
+  every edit. The notification speaks the reader's language and carries the verdict
+  with its number.
+- The bottom navigation (Fase 5): Today and Sky; the remaining tabs arrive with their
+  screens.
 
 ### Removed
 

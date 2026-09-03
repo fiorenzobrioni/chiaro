@@ -32,6 +32,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- The one alarm of the sky reminders (Fase 5), plus the boot re-arm.
+             exported=false: BOOT_COMPLETED is a protected broadcast the system is
+             exempt from the export check for, and our own alarm intent is explicit,
+             so nothing else can make this fire. -->
+        <receiver
+            android:name=".notifications.SkyAlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

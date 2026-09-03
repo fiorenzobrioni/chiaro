@@ -255,4 +255,150 @@
     <string name="guide_card_body">Two minutes on where the numbers are born and how to read them.</string>
     <string name="guide_card_open">Open the guide</string>
     <string name="guide_card_dismiss">Dismiss</string>
+
+    <!-- The bottom navigation (Fase 5) -->
+    <string name="tab_today">Today</string>
+    <string name="tab_sky">Sky</string>
+
+    <!-- Sky (Fase 5). Everything speaks words: the dotted ids never reach a screen. -->
+    <string name="sky_no_place_body">Add a place to see what its sky has planned.</string>
+    <string name="sky_section_moments">Today\'s moments</string>
+    <string name="sky_section_events">Coming up</string>
+    <string name="sky_section_reminders">Reminders</string>
+    <string name="sky_add_moment">Add a moment</string>
+    <string name="sky_moment_past">Passed</string>
+    <string name="sky_tonight_label">Tonight</string>
+    <string name="sky_tonight_window">Dark from %1$s to %2$s</string>
+    <string name="sky_tonight_no_darkness">The sky never gets fully dark tonight: at this latitude, in this season, it happens.</string>
+    <string name="sky_tonight_moon">The moon is up, %1$d%% lit</string>
+    <string name="sky_moon_line">%1$s · %2$d%% lit</string>
+    <string name="sky_too_far">Too far out to say</string>
+
+    <!-- Verdict evidence: the number that decided the word next to it -->
+    <string name="sky_evidence_cloud" formatted="false">cloud %1$d%%</string>
+    <string name="sky_evidence_rain" formatted="false">rain %1$d%%</string>
+    <string name="sky_evidence_moon" formatted="false">moon %1$d%%</string>
+
+    <!-- Why the app does not know: the reason always travels with the question mark -->
+    <string name="sky_unknown_beyond">The forecast doesn\'t reach that far yet</string>
+    <string name="sky_unknown_no_data">No forecast yet to judge by</string>
+    <string name="sky_unknown_stale">The last forecast is too old to judge by</string>
+    <string name="sky_unknown_no_coverage">The forecast doesn\'t cover those hours</string>
+
+    <!-- Why the sky skips a day: a fact about the sky, never a gap in the list -->
+    <string name="sky_none_polar_day">The sun doesn\'t set today</string>
+    <string name="sky_none_polar_night">The sun doesn\'t rise today</string>
+    <string name="sky_none_moon">The moon skips it today: it happens about once a month</string>
+    <string name="sky_none_no_darkness">The sky never gets fully dark tonight</string>
+
+    <!-- Reminders: inexact by design, and the screen says so -->
+    <string name="sky_default_lead">Usual reminder</string>
+    <string name="sky_lead_title">Reminder for this moment</string>
+    <string name="sky_lead_follow_default">Same as usual (%1$s)</string>
+    <string name="sky_lead_off">No reminder</string>
+    <plurals name="sky_lead_minutes">
+        <item quantity="one">%d minute before</item>
+        <item quantity="other">%d minutes before</item>
+    </plurals>
+    <plurals name="sky_lead_hours">
+        <item quantity="one">%d hour before</item>
+        <item quantity="other">%d hours before</item>
+    </plurals>
+    <string name="sky_lead_one_day">A day before</string>
+    <string name="sky_notify_on_fail">Even under a covered sky</string>
+    <string name="sky_notify_on_fail_note">Send the reminder even when the verdict says the sky will hide it</string>
+    <string name="sky_reminders_note">Reminders can arrive a few minutes early or late: keeping them loose is what keeps them off the battery.</string>
+    <string name="sky_bell_on_desc">Reminder for %1$s: on, tap to change</string>
+    <string name="sky_bell_off_desc">Reminder for %1$s: off, tap to set one</string>
+
+    <!-- The reminder as a notification -->
+    <string name="sky_channel_name">Sky reminders</string>
+    <string name="sky_channel_description">A heads-up shortly before the sky moments you follow</string>
+    <plurals name="sky_notification_in">
+        <item quantity="one">In %1$d minute, at %2$s</item>
+        <item quantity="other">In %1$d minutes, at %2$s</item>
+    </plurals>
+
+    <!-- The moon's eight names -->
+    <string name="moon_phase_new">New moon</string>
+    <string name="moon_phase_waxing_crescent">Waxing crescent</string>
+    <string name="moon_phase_first_quarter">First quarter</string>
+    <string name="moon_phase_waxing_gibbous">Waxing gibbous</string>
+    <string name="moon_phase_full">Full moon</string>
+    <string name="moon_phase_waning_gibbous">Waning gibbous</string>
+    <string name="moon_phase_last_quarter">Last quarter</string>
+    <string name="moon_phase_waning_crescent">Waning crescent</string>
+
+    <!-- The catalog groups -->
+    <string name="sky_group_sun">Sun</string>
+    <string name="sky_group_night">Night</string>
+    <string name="sky_group_moon">Moon</string>
+    <string name="sky_group_seasons">Seasons</string>
+    <string name="sky_group_meteors">Meteor showers</string>
+
+    <!-- The 32 moments: a name and the one line that teaches what it is -->
+    <string name="sky_name_sun_rise">Sunrise</string>
+    <string name="sky_expl_sun_rise">The sun clears the horizon.</string>
+    <string name="sky_name_sun_set">Sunset</string>
+    <string name="sky_expl_sun_set">The sun drops below the horizon.</string>
+    <string name="sky_name_solar_noon">Solar noon</string>
+    <string name="sky_expl_solar_noon">The sun at its highest point of the day.</string>
+    <string name="sky_name_civil_am">Civil twilight, morning</string>
+    <string name="sky_expl_civil_am">Light enough to get around without streetlights, up to sunrise.</string>
+    <string name="sky_name_civil_pm">Civil twilight, evening</string>
+    <string name="sky_expl_civil_pm">From sunset to when the streetlights earn their keep.</string>
+    <string name="sky_name_nautical_am">Nautical twilight, morning</string>
+    <string name="sky_expl_nautical_am">The horizon line appears while the sky is still dark.</string>
+    <string name="sky_name_nautical_pm">Nautical twilight, evening</string>
+    <string name="sky_expl_nautical_pm">The horizon fades out and the real evening begins.</string>
+    <string name="sky_name_astronomical_am">Astronomical twilight, morning</string>
+    <string name="sky_expl_astronomical_am">The last truly dark sky before the day arrives.</string>
+    <string name="sky_name_astronomical_pm">Astronomical twilight, evening</string>
+    <string name="sky_expl_astronomical_pm">From here on the sky is properly dark.</string>
+    <string name="sky_name_golden_am">Golden hour, morning</string>
+    <string name="sky_expl_golden_am">The first stretch after sunrise: warm, low light, the photographer\'s.</string>
+    <string name="sky_name_golden_pm">Golden hour, evening</string>
+    <string name="sky_expl_golden_pm">The last light before sunset, warm and low.</string>
+    <string name="sky_name_blue_am">Blue hour, morning</string>
+    <string name="sky_expl_blue_am">The deep blue of the sky just before sunrise.</string>
+    <string name="sky_name_blue_pm">Blue hour, evening</string>
+    <string name="sky_expl_blue_pm">The deep blue of the sky just after sunset.</string>
+    <string name="sky_name_darkness">Full darkness</string>
+    <string name="sky_expl_darkness">Truly dark with the moon down: the window for the stars.</string>
+    <string name="sky_name_moon_rise">Moonrise</string>
+    <string name="sky_expl_moon_rise">The moon clears the horizon.</string>
+    <string name="sky_name_moon_set">Moonset</string>
+    <string name="sky_expl_moon_set">The moon drops below the horizon.</string>
+    <string name="sky_name_moon_today">Today\'s moon</string>
+    <string name="sky_expl_moon_today">Which moon is out: the phase, and how much of it is lit.</string>
+    <string name="sky_name_moon_phase">Next moon phase</string>
+    <string name="sky_expl_moon_phase">The instant of the next quarter: new, first quarter, full, last.</string>
+    <string name="sky_name_equinox_march">March equinox</string>
+    <string name="sky_expl_equinox_march">Day and night nearly equal: spring starts in the north, autumn in the south.</string>
+    <string name="sky_name_solstice_june">June solstice</string>
+    <string name="sky_expl_solstice_june">The longest day in the north, the shortest in the south.</string>
+    <string name="sky_name_equinox_september">September equinox</string>
+    <string name="sky_expl_equinox_september">Day and night nearly equal: autumn in the north, spring in the south.</string>
+    <string name="sky_name_solstice_december">December solstice</string>
+    <string name="sky_expl_solstice_december">The longest night in the north, the shortest in the south.</string>
+    <string name="sky_name_quadrantids">Quadrantids</string>
+    <string name="sky_expl_quadrantids">The early-January shower, short and intense.</string>
+    <string name="sky_name_lyrids">Lyrids</string>
+    <string name="sky_expl_lyrids">The late-April shower, among the oldest on record.</string>
+    <string name="sky_name_eta_aquariids">Eta Aquariids</string>
+    <string name="sky_expl_eta_aquariids">The May shower, born of Halley\'s comet.</string>
+    <string name="sky_name_delta_aquariids">Delta Aquariids</string>
+    <string name="sky_expl_delta_aquariids">The late-July shower, at its best from the southern hemisphere.</string>
+    <string name="sky_name_perseids">Perseids</string>
+    <string name="sky_expl_perseids">The August shower, the famous one.</string>
+    <string name="sky_name_draconids">Draconids</string>
+    <string name="sky_expl_draconids">The early-October shower, best just after dark.</string>
+    <string name="sky_name_orionids">Orionids</string>
+    <string name="sky_expl_orionids">The late-October shower, also from Halley\'s comet.</string>
+    <string name="sky_name_leonids">Leonids</string>
+    <string name="sky_expl_leonids">The November shower, fast and now and then surprising.</string>
+    <string name="sky_name_geminids">Geminids</string>
+    <string name="sky_expl_geminids">The December shower, the richest of the year.</string>
+    <string name="sky_name_ursids">Ursids</string>
+    <string name="sky_expl_ursids">The solstice shower, small and northern-only.</string>
 </resources>

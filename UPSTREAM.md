@@ -55,6 +55,11 @@ is short on purpose — three edits, each with its reason in the file:
 - `WorkspaceStore` slimmed to the one concept that survives the reskin (Fase 4): the
   one-shot pointer to the help surface, renamed onto Chiaro's (`guideCardDismissed`).
   `MainEditorFile` and the active-tab state left with the editor they described.
+- One piece of tweather's APP layer did survive after all (Fase 5): the sky reminder
+  trio (`SkyAlarmScheduler`, `SkyAlarmReceiver`, `SkyNotifier`) is a near-verbatim
+  port into Chiaro's `:app/notifications` — the alarm reasoning is product, not
+  presentation — with the notification text rewritten as localized prose. A fix in
+  the alarm logic almost certainly belongs in both apps.
 
 ## The known debt
 

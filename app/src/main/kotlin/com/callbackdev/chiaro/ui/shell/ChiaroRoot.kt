@@ -1,14 +1,23 @@
 package com.callbackdev.chiaro.ui.shell
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -20,9 +29,12 @@ import com.callbackdev.chiaro.data.CityStore
 import com.callbackdev.chiaro.data.FirstRun
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.WeatherRepository
+import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.firstrun.FirstRunRoute
 import com.callbackdev.chiaro.ui.guide.GuideRoute
+import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.settings.SettingsRoute
+import com.callbackdev.chiaro.ui.sky.SkyRoute
 import com.callbackdev.chiaro.ui.today.TodayRoute
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -68,12 +80,15 @@ class ShellViewModel(
 }
 
 /**
- * The screens the app bar reaches (Fase 4): Settings from the gear, the guide from
- * Settings or from the one-time card on Today. Held as plain state rather than a nav
- * graph: three destinations and two edges do not earn one, and the bottom navigation
- * of VISION §5.1 will re-pose the question when Sky arrives (Fase 5).
+ * The two layers above the first-run gate (Fase 4, grown a bar in Fase 5): the
+ * bottom-navigation tabs, and the screens the app bar reaches over them — Settings
+ * from the gear, the guide from Settings or from the one-time card on Today. Plain
+ * state rather than a nav graph: two tabs and two overlays do not earn one; Alerts
+ * and the Journal (Fase 6–7) will re-pose the question.
  */
-private enum class ShellScreen { TODAY, SETTINGS, GUIDE }
+private enum class ShellTab { TODAY, SKY }
+
+private enum class ShellOverlay { SETTINGS, GUIDE }
 
 @Composable
 fun ChiaroRoot(shellViewModel: ShellViewModel = viewModel(factory = ShellViewModel.Factory)) {
@@ -87,29 +102,92 @@ fun ChiaroRoot(shellViewModel: ShellViewModel = viewModel(factory = ShellViewMod
 
 @Composable
 private fun MainScreens() {
-    var screen by rememberSaveable { mutableStateOf(ShellScreen.TODAY) }
+    var tab by rememberSaveable { mutableStateOf(ShellTab.TODAY) }
+    var overlay by rememberSaveable { mutableStateOf<ShellOverlay?>(null) }
     // The guide has two doors (VISION §5.7); back returns through the one it entered.
-    var guideOrigin by rememberSaveable { mutableStateOf(ShellScreen.TODAY) }
+    var guideFromSettings by rememberSaveable { mutableStateOf(false) }
 
-    BackHandler(enabled = screen != ShellScreen.TODAY) {
-        screen = if (screen == ShellScreen.GUIDE) guideOrigin else ShellScreen.TODAY
+    // Back peels one layer: guide → its door, settings → the tabs, Sky → Today.
+    BackHandler(enabled = overlay != null || tab != ShellTab.TODAY) {
+        when {
+            overlay == ShellOverlay.GUIDE ->
+                overlay = if (guideFromSettings) ShellOverlay.SETTINGS else null
+            overlay == ShellOverlay.SETTINGS -> overlay = null
+            else -> tab = ShellTab.TODAY
+        }
     }
 
-    when (screen) {
-        ShellScreen.TODAY -> TodayRoute(
-            onOpenSettings = { screen = ShellScreen.SETTINGS },
+    when (overlay) {
+        ShellOverlay.SETTINGS -> SettingsRoute(
+            onBack = { overlay = null },
             onOpenGuide = {
-                guideOrigin = ShellScreen.TODAY
-                screen = ShellScreen.GUIDE
+                guideFromSettings = true
+                overlay = ShellOverlay.GUIDE
             }
         )
-        ShellScreen.SETTINGS -> SettingsRoute(
-            onBack = { screen = ShellScreen.TODAY },
+        ShellOverlay.GUIDE -> GuideRoute(
+            onBack = { overlay = if (guideFromSettings) ShellOverlay.SETTINGS else null }
+        )
+        null -> TabScaffold(
+            tab = tab,
+            onSelectTab = { tab = it },
+            onOpenSettings = { overlay = ShellOverlay.SETTINGS },
             onOpenGuide = {
-                guideOrigin = ShellScreen.SETTINGS
-                screen = ShellScreen.GUIDE
+                guideFromSettings = false
+                overlay = ShellOverlay.GUIDE
             }
         )
-        ShellScreen.GUIDE -> GuideRoute(onBack = { screen = guideOrigin })
+    }
+}
+
+/**
+ * The bottom bar of VISION §5.1, at its current width: Today and Sky. Alerts and the
+ * Journal join when their screens exist — a bar with dead tabs would be the screen
+ * lying about what the app can do. The tab content swaps; what must survive a switch
+ * (the active place, the subscriptions) lives in the ViewModels, not in the screen.
+ */
+@Composable
+private fun TabScaffold(
+    tab: ShellTab,
+    onSelectTab: (ShellTab) -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenGuide: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.weight(1f)) {
+            when (tab) {
+                ShellTab.TODAY -> TodayRoute(
+                    onOpenSettings = onOpenSettings,
+                    onOpenGuide = onOpenGuide
+                )
+                ShellTab.SKY -> SkyRoute(onOpenSettings = onOpenSettings)
+            }
+        }
+        NavigationBar {
+            NavigationBarItem(
+                selected = tab == ShellTab.TODAY,
+                onClick = { onSelectTab(ShellTab.TODAY) },
+                icon = {
+                    Icon(
+                        imageVector = ChiaroIcons.condition(0, night = false),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                label = { Text(stringResource(R.string.tab_today)) }
+            )
+            NavigationBarItem(
+                selected = tab == ShellTab.SKY,
+                onClick = { onSelectTab(ShellTab.SKY) },
+                icon = {
+                    Icon(
+                        imageVector = ChiaroIcons.starryNight,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                label = { Text(stringResource(R.string.tab_sky)) }
+            )
+        }
     }
 }

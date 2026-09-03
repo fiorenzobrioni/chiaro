@@ -252,4 +252,150 @@
     <string name="guide_card_body">Due minuti su dove nascono i numeri e come leggerli.</string>
     <string name="guide_card_open">Apri la guida</string>
     <string name="guide_card_dismiss">Chiudi</string>
+
+    <!-- La barra di navigazione (Fase 5) -->
+    <string name="tab_today">Oggi</string>
+    <string name="tab_sky">Cielo</string>
+
+    <!-- Cielo (Fase 5). Tutto parla a parole: gli id puntati non arrivano mai a schermo. -->
+    <string name="sky_no_place_body">Aggiungi un luogo per vedere cosa ha in programma il suo cielo.</string>
+    <string name="sky_section_moments">I momenti di oggi</string>
+    <string name="sky_section_events">In arrivo</string>
+    <string name="sky_section_reminders">Promemoria</string>
+    <string name="sky_add_moment">Aggiungi un momento</string>
+    <string name="sky_moment_past">Passato</string>
+    <string name="sky_tonight_label">Stanotte</string>
+    <string name="sky_tonight_window">Buio dalle %1$s alle %2$s</string>
+    <string name="sky_tonight_no_darkness">Stanotte il cielo non diventa mai del tutto buio: a questa latitudine, in questa stagione, capita.</string>
+    <string name="sky_tonight_moon">C\'è la luna, illuminata al %1$d%%</string>
+    <string name="sky_moon_line">%1$s · illuminata al %2$d%%</string>
+    <string name="sky_too_far">Troppo lontano per dirlo</string>
+
+    <!-- L\'evidenza dei verdetti: il numero che ha deciso la parola accanto -->
+    <string name="sky_evidence_cloud" formatted="false">nuvole %1$d%%</string>
+    <string name="sky_evidence_rain" formatted="false">pioggia %1$d%%</string>
+    <string name="sky_evidence_moon" formatted="false">luna %1$d%%</string>
+
+    <!-- Perché non lo so: la ragione viaggia sempre col punto di domanda -->
+    <string name="sky_unknown_beyond">La previsione non arriva ancora così lontano</string>
+    <string name="sky_unknown_no_data">Non c\'è ancora una previsione per giudicare</string>
+    <string name="sky_unknown_stale">L\'ultima previsione è troppo vecchia per giudicare</string>
+    <string name="sky_unknown_no_coverage">La previsione non copre quelle ore</string>
+
+    <!-- Perché il cielo salta un giorno: un fatto del cielo, mai un buco nella lista -->
+    <string name="sky_none_polar_day">Oggi il sole non tramonta</string>
+    <string name="sky_none_polar_night">Oggi il sole non sorge</string>
+    <string name="sky_none_moon">Oggi la luna lo salta: capita circa una volta al mese</string>
+    <string name="sky_none_no_darkness">Stanotte il cielo non diventa mai del tutto buio</string>
+
+    <!-- Promemoria: inesatti di proposito, e lo schermo lo dice -->
+    <string name="sky_default_lead">Promemoria abituale</string>
+    <string name="sky_lead_title">Promemoria per questo momento</string>
+    <string name="sky_lead_follow_default">Come al solito (%1$s)</string>
+    <string name="sky_lead_off">Nessun promemoria</string>
+    <plurals name="sky_lead_minutes">
+        <item quantity="one">%d minuto prima</item>
+        <item quantity="other">%d minuti prima</item>
+    </plurals>
+    <plurals name="sky_lead_hours">
+        <item quantity="one">%d ora prima</item>
+        <item quantity="other">%d ore prima</item>
+    </plurals>
+    <string name="sky_lead_one_day">Un giorno prima</string>
+    <string name="sky_notify_on_fail">Anche a cielo coperto</string>
+    <string name="sky_notify_on_fail_note">Manda il promemoria anche quando il verdetto dice che il cielo lo nasconderà</string>
+    <string name="sky_reminders_note">I promemoria possono arrivare qualche minuto prima o dopo: tenerli larghi è ciò che li tiene fuori dalla batteria.</string>
+    <string name="sky_bell_on_desc">Promemoria per %1$s: attivo, tocca per cambiarlo</string>
+    <string name="sky_bell_off_desc">Promemoria per %1$s: spento, tocca per impostarlo</string>
+
+    <!-- Il promemoria come notifica -->
+    <string name="sky_channel_name">Promemoria del cielo</string>
+    <string name="sky_channel_description">Un avviso poco prima dei momenti del cielo che segui</string>
+    <plurals name="sky_notification_in">
+        <item quantity="one">Tra %1$d minuto, alle %2$s</item>
+        <item quantity="other">Tra %1$d minuti, alle %2$s</item>
+    </plurals>
+
+    <!-- Gli otto nomi della luna -->
+    <string name="moon_phase_new">Luna nuova</string>
+    <string name="moon_phase_waxing_crescent">Falce crescente</string>
+    <string name="moon_phase_first_quarter">Primo quarto</string>
+    <string name="moon_phase_waxing_gibbous">Gibbosa crescente</string>
+    <string name="moon_phase_full">Luna piena</string>
+    <string name="moon_phase_waning_gibbous">Gibbosa calante</string>
+    <string name="moon_phase_last_quarter">Ultimo quarto</string>
+    <string name="moon_phase_waning_crescent">Falce calante</string>
+
+    <!-- I gruppi del catalogo -->
+    <string name="sky_group_sun">Sole</string>
+    <string name="sky_group_night">Notte</string>
+    <string name="sky_group_moon">Luna</string>
+    <string name="sky_group_seasons">Stagioni</string>
+    <string name="sky_group_meteors">Stelle cadenti</string>
+
+    <!-- I 32 momenti: un nome e la riga che insegna cos\'è -->
+    <string name="sky_name_sun_rise">Alba</string>
+    <string name="sky_expl_sun_rise">Il sole supera l\'orizzonte.</string>
+    <string name="sky_name_sun_set">Tramonto</string>
+    <string name="sky_expl_sun_set">Il sole scende sotto l\'orizzonte.</string>
+    <string name="sky_name_solar_noon">Mezzogiorno solare</string>
+    <string name="sky_expl_solar_noon">Il sole nel punto più alto della giornata.</string>
+    <string name="sky_name_civil_am">Crepuscolo civile, mattina</string>
+    <string name="sky_expl_civil_am">Abbastanza luce per muoversi senza lampioni, fino all\'alba.</string>
+    <string name="sky_name_civil_pm">Crepuscolo civile, sera</string>
+    <string name="sky_expl_civil_pm">Dal tramonto a quando i lampioni si guadagnano lo stipendio.</string>
+    <string name="sky_name_nautical_am">Crepuscolo nautico, mattina</string>
+    <string name="sky_expl_nautical_am">La linea dell\'orizzonte compare mentre il cielo è ancora scuro.</string>
+    <string name="sky_name_nautical_pm">Crepuscolo nautico, sera</string>
+    <string name="sky_expl_nautical_pm">L\'orizzonte svanisce e comincia la sera vera.</string>
+    <string name="sky_name_astronomical_am">Crepuscolo astronomico, mattina</string>
+    <string name="sky_expl_astronomical_am">L\'ultimo cielo davvero scuro prima che arrivi il giorno.</string>
+    <string name="sky_name_astronomical_pm">Crepuscolo astronomico, sera</string>
+    <string name="sky_expl_astronomical_pm">Da qui in poi il cielo è scuro sul serio.</string>
+    <string name="sky_name_golden_am">Ora dorata, mattina</string>
+    <string name="sky_expl_golden_am">Il primo tratto dopo l\'alba: luce calda e radente, quella delle foto.</string>
+    <string name="sky_name_golden_pm">Ora dorata, sera</string>
+    <string name="sky_expl_golden_pm">L\'ultima luce prima del tramonto, calda e radente.</string>
+    <string name="sky_name_blue_am">Ora blu, mattina</string>
+    <string name="sky_expl_blue_am">Il blu profondo del cielo poco prima dell\'alba.</string>
+    <string name="sky_name_blue_pm">Ora blu, sera</string>
+    <string name="sky_expl_blue_pm">Il blu profondo del cielo subito dopo il tramonto.</string>
+    <string name="sky_name_darkness">Buio pieno</string>
+    <string name="sky_expl_darkness">Davvero buio e con la luna giù: la finestra per le stelle.</string>
+    <string name="sky_name_moon_rise">Sorge la luna</string>
+    <string name="sky_expl_moon_rise">La luna supera l\'orizzonte.</string>
+    <string name="sky_name_moon_set">Tramonta la luna</string>
+    <string name="sky_expl_moon_set">La luna scende sotto l\'orizzonte.</string>
+    <string name="sky_name_moon_today">La luna di oggi</string>
+    <string name="sky_expl_moon_today">Che luna c\'è: la fase, e quanta ne è illuminata.</string>
+    <string name="sky_name_moon_phase">Prossima fase lunare</string>
+    <string name="sky_expl_moon_phase">L\'istante del prossimo quarto: nuova, primo quarto, piena, ultimo.</string>
+    <string name="sky_name_equinox_march">Equinozio di marzo</string>
+    <string name="sky_expl_equinox_march">Giorno e notte quasi uguali: a nord comincia la primavera, a sud l\'autunno.</string>
+    <string name="sky_name_solstice_june">Solstizio di giugno</string>
+    <string name="sky_expl_solstice_june">Il giorno più lungo a nord, il più corto a sud.</string>
+    <string name="sky_name_equinox_september">Equinozio di settembre</string>
+    <string name="sky_expl_equinox_september">Giorno e notte quasi uguali: a nord l\'autunno, a sud la primavera.</string>
+    <string name="sky_name_solstice_december">Solstizio di dicembre</string>
+    <string name="sky_expl_solstice_december">La notte più lunga a nord, la più corta a sud.</string>
+    <string name="sky_name_quadrantids">Quadrantidi</string>
+    <string name="sky_expl_quadrantids">Lo sciame di inizio gennaio, breve e intenso.</string>
+    <string name="sky_name_lyrids">Liridi</string>
+    <string name="sky_expl_lyrids">Lo sciame di fine aprile, tra i più antichi mai registrati.</string>
+    <string name="sky_name_eta_aquariids">Eta Aquaridi</string>
+    <string name="sky_expl_eta_aquariids">Lo sciame di maggio, figlio della cometa di Halley.</string>
+    <string name="sky_name_delta_aquariids">Delta Aquaridi</string>
+    <string name="sky_expl_delta_aquariids">Lo sciame di fine luglio, al suo meglio dall\'emisfero sud.</string>
+    <string name="sky_name_perseids">Perseidi</string>
+    <string name="sky_expl_perseids">Lo sciame di agosto: le lacrime di San Lorenzo.</string>
+    <string name="sky_name_draconids">Draconidi</string>
+    <string name="sky_expl_draconids">Lo sciame di inizio ottobre, al suo meglio appena fa buio.</string>
+    <string name="sky_name_orionids">Orionidi</string>
+    <string name="sky_expl_orionids">Lo sciame di fine ottobre, anche lui dalla cometa di Halley.</string>
+    <string name="sky_name_leonids">Leonidi</string>
+    <string name="sky_expl_leonids">Lo sciame di novembre, veloce e ogni tanto sorprendente.</string>
+    <string name="sky_name_geminids">Geminidi</string>
+    <string name="sky_expl_geminids">Lo sciame di dicembre, il più ricco dell\'anno.</string>
+    <string name="sky_name_ursids">Ursidi</string>
+    <string name="sky_expl_ursids">Lo sciame del solstizio, piccolo e tutto boreale.</string>
 </resources>

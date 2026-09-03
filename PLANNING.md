@@ -436,11 +436,71 @@ suo mestiere una volta: i `%` degli esempi di evidenza nella guida ("nuvole 10%"
 leggevano come stringhe di formato — marcate `formatted="false"`, che è la
 dichiarazione onesta: sono prosa, non template.
 
-## Fase 5 — Cielo
+## Fase 5 — Cielo ✅
 
-- [ ] Stasera, i momenti di oggi, il catalogo raggruppato, i prossimi eventi
-- [ ] Promemoria (allarmi inesatti, soglia 15 minuti)
-- [ ] Decisione sulla resa cron di `SkyJob` (deviazione Fase 0)
+- [x] Stasera: il verdetto-eroe sulla finestra di buio, con i numeri che l'hanno
+      deciso e la ragione quando non erano le nuvole (la luna, con la percentuale)
+- [x] I momenti di oggi: le sottoscrizioni giornaliere risolte nel fuso della città,
+      in ordine di orario, verdetto con evidenza, campanella per il promemoria
+- [x] In arrivo: i picchi delle meteore, la prossima luna piena, solstizi ed
+      equinozi — col verdetto dove la previsione arriva e l'onesto "troppo lontano
+      per dirlo" dove non arriva
+- [x] Il catalogo dei 32 momenti, raggruppato (Sole · Notte · Luna · Stagioni ·
+      Stelle cadenti), ognuno con la riga che insegna cos'è
+- [x] Promemoria: allarmi inesatti (`setAndAllowWhileIdle`), soglia minima 15 minuti,
+      uno alla volta, re-arm su boot/avvio/modifica, notifica in prosa localizzata
+- [x] La barra di navigazione: Oggi e Cielo — i tab arrivano con le loro schermate
+- [x] Decisione sulla resa cron di `SkyJob` (deviazione Fase 0): chiusa, sotto
+
+### Decisioni della fase
+
+- **La resa cron resta, con la sua guardia.** La tassonomia di `SkyJobKind`
+  (giornaliero/annuale/polling) è ciò che fa avanzare lo scheduler, e l'espressione
+  cron che ogni kind porta con sé è parte dell'identità del job nel motore condiviso
+  con tweather: lì è una riga visibile del file, qui è metadato mai renderizzato.
+  Toglierla sarebbe deriva della copia senza guadagno funzionale, e renderebbe più
+  costosa l'estrazione del core condiviso (VISION §7.3). `cron-utils` resta
+  `testImplementation` con i suoi due test, che continuano a verificare un fatto vero
+  del motore.
+- **I promemoria vivono in `:app/notifications`, non in `:core:sync`.** Il trio
+  (scheduler, receiver, notifier) è ereditato da tweather quasi verbatim — le ragioni
+  (inesatto, uno alla volta, solo il luogo attivo) sono di prodotto e restano nei
+  commenti — ma il testo della notifica è di Chiaro: prosa localizzata, il nome del
+  momento come titolo, il verdetto col suo numero nel corpo, mai un id puntato.
+  `:core:sync` arriva in Fase 6 col job periodico condiviso, che farà da secondo
+  re-arm; intanto rearmano il boot, l'avvio del processo e ogni modifica sul Cielo.
+- **"Stasera" non dipende dalle sottoscrizioni**: è l'eroe fisso della schermata, e
+  alle tre di notte significa la notte in corso (la finestra di ieri finché la sua
+  alba non è passata), non il prossimo tramonto.
+- **I momenti di oggi sono i job giornalieri; gli annuali stanno in "In arrivo"** —
+  che è a catalogo intero, non a sottoscrizioni: le Perseidi arrivano comunque, la
+  campanella però viaggia solo sulle righe sottoscritte. La luna piena entra in
+  calendario come quarto nominato, senza verdetto: una fase è un fatto del giorno,
+  non uno spettacolo da giudicare (regola `observable` del catalogo).
+- **Lead per momento senza drift dello store**: null segue il predefinito, zero è
+  l'esplicito "mai" — `SkyLead.ofMinutes(0)` legge già OFF, quindi la distinzione è
+  rappresentabile senza toccare `SkySubscriptionStore`.
+- **Gli equinozi si chiamano coi mesi** (marzo, giugno, settembre, dicembre), non con
+  le stagioni: "equinozio di primavera" è una bugia per mezzo pianeta, e la riga di
+  spiegazione dice a chi tocca cosa.
+- **`moon.today` mostra fase e illuminazione al posto del verdetto**, e l'icona è la
+  fase vera: il valore del momento È la luna, non l'orario di mezzogiorno a cui il
+  motore lo appende.
+- **`skyEnabled` resta plumbing senza interruttore**: in tweather toglieva un file
+  dalla strip dell'editor; qui la destinazione Cielo è metà del prodotto e nascondere
+  un tab principale non è un'opzione che offriamo. La chiave resta nel data layer
+  (lo scheduler la onora) per il giorno in cui una superficie la reclamasse.
+- **Il permesso notifiche si chiede alla prima campanella** (VISION §5.8): mai
+  all'avvio, mai dalla schermata — dal gesto che lo rende necessario.
+- **Il test dell'eroe vive su una luna nuova** (11 set 2026): sul 2 settembre la luna
+  vera lavava la notte e il PASS atteso era in realtà un UNSTABLE con nota MOONLIGHT —
+  il motore aveva ragione e il test torto, che è esattamente il motivo per cui il
+  builder è puro e la data è un parametro.
+
+### Verifica
+
+307 test verdi (141 domain, 114 data, 52 app — con i 10 nuovi di
+`SkyStateBuilderTest`), zero failure, zero skip; lint a zero errori; APK debug ok.
 
 ## Fase 6 — Avvisi, e `:core:sync`
 
