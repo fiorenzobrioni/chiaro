@@ -49,6 +49,7 @@ class SettingsStoreTest {
         assertEquals(WindSpeedUnit.KMH, settings.units.windSpeed)
         assertEquals(ThemeMode.SYSTEM, settings.themeMode)
         assertEquals(true, settings.dynamicColor)
+        assertEquals(WeatherIcons.FILL, settings.weatherIcons)
         assertEquals(true, settings.skyEnabled)
         assertNull(settings.skyNotifyDefaultMin)
         assertEquals(false, settings.skyNotifyOnFail)
@@ -64,6 +65,7 @@ class SettingsStoreTest {
         store.setWindSpeedUnit(WindSpeedUnit.MPH)
         store.setThemeMode(ThemeMode.DARK)
         store.setDynamicColor(false)
+        store.setWeatherIcons(WeatherIcons.LINE)
         store.setUpdateFrequency(30)
 
         val settings = store.settings.first()
@@ -71,6 +73,7 @@ class SettingsStoreTest {
         assertEquals(WindSpeedUnit.MPH, settings.units.windSpeed)
         assertEquals(ThemeMode.DARK, settings.themeMode)
         assertEquals(false, settings.dynamicColor)
+        assertEquals(WeatherIcons.LINE, settings.weatherIcons)
         assertEquals(30, settings.updateFrequencyMin)
     }
 

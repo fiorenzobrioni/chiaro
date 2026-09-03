@@ -24,6 +24,10 @@ private val Context.settingsDataStore by preferencesDataStore(name = "settings")
  */
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+/** The two Meteocons drawings of the same glyphs: filled shapes, or line strokes.
+ * UI-only for the same reason as [ThemeMode]. */
+enum class WeatherIcons { FILL, LINE }
+
 /**
  * Everything the Settings screen edits. The engine inputs ([units], [notifications],
  * the sky keys) are typed in `:core:domain`; the rest is presentation and stays here.
@@ -38,6 +42,9 @@ data class AppSettings(
      * generated Chiaro scheme — for readers who want the app to look like itself.
      */
     val dynamicColor: Boolean = true,
+    /** FILL by default (decision, 3 set): filled glyphs read faster at 24-32dp for
+     * an audience that scans, and the line set stays one Settings tap away. */
+    val weatherIcons: WeatherIcons = WeatherIcons.FILL,
     /**
      * The Sky screen's master switch (its surface arrives in Fase 5). Default true:
      * the sky is the differentiator, and a feature that ships switched off is a
@@ -89,6 +96,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 ),
                 themeMode = enumOrDefault(prefs[Theme], ThemeMode.SYSTEM),
                 dynamicColor = prefs[DynamicColor] ?: true,
+                weatherIcons = enumOrDefault(prefs[IconStyle], WeatherIcons.FILL),
                 skyEnabled = prefs[SkyEnabled] ?: true,
                 // 0 is how "off" is stored: an Int? preference cannot hold null, and
                 // absent must read the same as explicitly switched off.
@@ -110,6 +118,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setUserRules(enabled: Boolean) = set(UserRules, enabled)
     suspend fun setThemeMode(mode: ThemeMode) = set(Theme, mode.name)
     suspend fun setDynamicColor(enabled: Boolean) = set(DynamicColor, enabled)
+    suspend fun setWeatherIcons(style: WeatherIcons) = set(IconStyle, style.name)
     suspend fun setSkyEnabled(enabled: Boolean) = set(SkyEnabled, enabled)
 
     /** 0 stands for "off": DataStore has no nullable Int, and absent means default. */
@@ -144,6 +153,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
         private val UserRules = booleanPreferencesKey("notif_user_rules")
         private val Theme = stringPreferencesKey("appearance_theme_mode")
         private val DynamicColor = booleanPreferencesKey("appearance_dynamic_color")
+        private val IconStyle = stringPreferencesKey("appearance_weather_icons")
         private val SkyEnabled = booleanPreferencesKey("sky_enabled")
         private val SkyNotifyDefault = intPreferencesKey("sky_notify_default_min")
         private val SkyNotifyOnFail = booleanPreferencesKey("sky_notify_on_fail")

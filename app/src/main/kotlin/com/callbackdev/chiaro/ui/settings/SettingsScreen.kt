@@ -46,6 +46,7 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.data.ThemeMode
 import com.callbackdev.chiaro.data.UpdateFrequencies
+import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import java.util.Locale
@@ -139,6 +140,13 @@ private fun SettingsList(
                 label = stringResource(R.string.settings_theme),
                 value = themeLabel(settings.themeMode),
                 onClick = { dialog = SettingsDialog.THEME }
+            )
+        }
+        item {
+            ValueRow(
+                label = stringResource(R.string.settings_weather_icons),
+                value = iconStyleLabel(settings.weatherIcons),
+                onClick = { dialog = SettingsDialog.ICONS }
             )
         }
         item {
@@ -253,6 +261,14 @@ private fun SettingsList(
             onSelect = { viewModel.setThemeMode(it); dialog = null },
             onDismiss = { dialog = null }
         )
+        SettingsDialog.ICONS -> RadioDialog(
+            title = stringResource(R.string.settings_weather_icons),
+            explanation = stringResource(R.string.settings_weather_icons_note),
+            options = WeatherIcons.entries.map { it to iconStyleLabel(it) },
+            selected = settings.weatherIcons,
+            onSelect = { viewModel.setWeatherIcons(it); dialog = null },
+            onDismiss = { dialog = null }
+        )
         SettingsDialog.FREQUENCY -> RadioDialog(
             title = stringResource(R.string.settings_update_frequency),
             explanation = stringResource(R.string.settings_update_frequency_note),
@@ -283,7 +299,7 @@ private fun SettingsList(
     }
 }
 
-private enum class SettingsDialog { TEMPERATURE, WIND, THEME, FREQUENCY, RESET }
+private enum class SettingsDialog { TEMPERATURE, WIND, THEME, ICONS, FREQUENCY, RESET }
 
 @Composable
 private fun GroupHeader(text: String) {
@@ -369,6 +385,12 @@ private fun temperatureLabel(unit: TemperatureUnit): String = when (unit) {
 private fun windLabel(unit: WindSpeedUnit): String = when (unit) {
     WindSpeedUnit.KMH -> stringResource(R.string.settings_wind_kmh)
     WindSpeedUnit.MPH -> stringResource(R.string.settings_wind_mph)
+}
+
+@Composable
+private fun iconStyleLabel(style: WeatherIcons): String = when (style) {
+    WeatherIcons.FILL -> stringResource(R.string.settings_icons_fill)
+    WeatherIcons.LINE -> stringResource(R.string.settings_icons_line)
 }
 
 @Composable

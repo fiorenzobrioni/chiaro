@@ -95,6 +95,12 @@ with its reminders, the alerts, the Journal — is built. See `PLANNING.md` for 
   is built entirely from data already on disk.
 - "What changed" on Today (Fase 7): up to three sentences after the day's timeline
   when the latest update moved the week, tapping opens the Journal.
+- Two weather-icon themes: Meteocons' fill set joins the line set (same glyphs, solid
+  shapes), chosen in Settings → Appearance, filled by default. Both sets are
+  re-anchored to clear the measured 3:1 contrast floor on both surfaces, and
+  `IconContrastTest` now sweeps both.
+- The launcher mark, replacing the Fase 0 placeholder: the icon family's starry-night
+  crescent in Chiaro's own palette, low in the badge over two calm waves.
 
 ### Removed
 

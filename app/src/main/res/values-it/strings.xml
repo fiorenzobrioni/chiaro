@@ -195,6 +195,10 @@
     <string name="settings_theme_system">Come il telefono</string>
     <string name="settings_theme_light">Chiaro</string>
     <string name="settings_theme_dark">Scuro</string>
+    <string name="settings_weather_icons">Icone del meteo</string>
+    <string name="settings_icons_fill">Piene</string>
+    <string name="settings_icons_line">A tratto</string>
+    <string name="settings_weather_icons_note">Due disegni delle stesse icone: forme piene, o tratti sottili.</string>
     <string name="settings_dynamic_color">Colori dallo sfondo</string>
     <string name="settings_dynamic_color_note">Attivo, la palette arriva dal tuo sfondo. Spento, Chiaro indossa la sua.</string>
     <string name="settings_group_updates">Aggiornamenti</string>

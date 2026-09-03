@@ -630,6 +630,44 @@ errori; APK debug ok. Nota di macchina: la trappola dei backslash negli heredoc 
 questa workstation ha mangiato gli escape degli apostrofi nelle stringhe — riscritti
 con l'edit diretto, ed è il promemoria di usare quello per le risorse Android.
 
+## Intervento su richiesta (committente, 3 set 2026) — il tema Fill e il marchio
+
+- [x] Il set **Fill** di Meteocons v2.0.0 entra come secondo tema di icone (48
+      drawable `mcf_*`), scelto in Impostazioni → Aspetto; **default FILL**, deciso
+      col committente: le forme piene si leggono più in fretta a 24–32dp per un
+      pubblico che scorre, e il tratto resta a un tocco di distanza
+- [x] Il marchio vero al posto del segnaposto di Fase 0: la falce stellata della
+      famiglia, stile fill, tavolozza di Chiaro, bassa nel badge sopra due onde
+
+### Decisioni dell'intervento
+
+- **Anche il Fill è ri-ancorato, non copiato.** La tavolozza del sito vive su fondo
+  neutro: sulla superficie chiara di Chiaro misura 1,0–2,4:1 (la faccia delle nuvole
+  è bianca al 93% — sparirebbe). `FILL_REMAP` nel tool: tinte conservate, luminanze
+  in `Y ∈ [0.120, 0.283]`, ordine tonale dentro ogni famiglia preservato così
+  l'elemento in ombra resta più scuro del suo vicino illuminato. `IconContrastTest`
+  ora spazza entrambi i prefissi: il pavimento 3:1 vale per tutte e due le penne.
+- **Due deroghe proprie del Fill** (documentate nel tool): i gradienti si appiattiscono
+  al colore di faccia — a 24–32dp la rampa non si vede e la macchina dei gradienti
+  di VectorDrawable non comprerebbe niente — e gli hairline di bordo (0.5) cadono:
+  esistevano per orlare un riempimento quasi bianco su pagina bianca. I tratti veri
+  (≥1, i raggi del sole) restano e si rimappano.
+- **Un refuso upstream corretto per nome**: `fill/drizzle.svg` tratteggia `url(#e)`
+  ma definisce a/b/c/d — le gocce sono a/c/d, quindi `e` può solo voler dire `d`.
+  Il fix sta nel tool con questo commento, mai come fallback silenzioso.
+- **Le icone della barra restano fuori dal tema**: sono sagome che la barra tinge di
+  un colore solo — fill e line sarebbero identiche — e la coppia è già calibrata
+  sulla campana Material accanto (rilievo device di Fase 6).
+- **Lo stile viaggia in un CompositionLocal** (`LocalWeatherIcons`), fornito da
+  `MainActivity` accanto al tema: ogni schermata cambia insieme, nessuna schermata
+  deve saperlo. Le funzioni `*Res` prendono lo stile come parametro: i widget Glance
+  di Fase 8 vorranno id di risorsa, non ImageVector.
+
+### Verifica
+
+Suite completa verde (`IconContrastTest` misura ora 96 drawable), lint a zero errori,
+APK ok.
+
 ## Fase 8 — Widget
 
 - [ ] Glance: Ora, Oggi, Cielo; `ServiceLocator.install` riceve il repaint

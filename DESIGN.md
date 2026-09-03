@@ -500,9 +500,16 @@ monotonicity test in the suite had passed without complaint.
 ## 13. Open items
 
 1. ~~The icon family~~ — **shipped in Fase 2: Meteocons v2.0.0**
-   (github.com/basmilius/meteocons), MIT, line style, converted to vector drawables by
+   (github.com/basmilius/meteocons), MIT, converted to vector drawables by
    `tools/import_meteocons.py` (the importer of record — re-running it IS the import)
-   behind `ui/icons/ChiaroIcons`. One departure worth this document's attention: **the
+   behind `ui/icons/ChiaroIcons`. Two styles of the same drawings since 3 set 2026:
+   **fill** (the default — solid shapes read faster at 24–32dp for an audience that
+   scans) and **line**, chosen in Settings → Appearance; the whole family switches
+   together through `LocalWeatherIcons`, and the navigation-bar silhouettes stay
+   outside the choice (they are tinted to one color; the styles would be identical).
+   The fill set carries its own measured re-anchor table (`FILL_REMAP`): gradients
+   flattened to their face color, hairline edge strokes dropped, every fill in the
+   same band below. One departure worth this document's attention: **the
    palette is re-anchored, not copied.** Meteocons draws for a dark backdrop — its
    cloud stroke is `#E5E7EB`, which is 1.18:1 against this app's light surface, and in
    the hour strip the icon is the only carrier of "what kind of weather". Every hue is
@@ -517,8 +524,10 @@ monotonicity test in the suite had passed without complaint.
 2. **Dynamic color default** — on, as written here. Worth revisiting after the first
    screenshots: a wallpaper-derived scheme makes every store screenshot a different app.
    Likely resolution: dynamic on device, the Chiaro scheme in the store assets.
-3. **The brand mark** — the launcher icon in the skeleton is a placeholder (a sun over the
-   ribbon). The real one is drawn with the icon family, from the same two elements.
+3. ~~The brand mark~~ — **shipped, 3 set 2026**: the icon family's starry-night
+   crescent, fill style, in Chiaro's own palette (moon `#3589AC`, stars `#C27D08` —
+   the brand amber), set low in the badge over two calm waves; everything inside the
+   33-unit safe circle, and the `<monochrome>` layer reuses the same drawable.
 4. **`heroTemperature`** is an extended type role, not a Material one. Confirm it survives
    contact with the expressive scale rather than becoming `displayLarge` with a tighter
    line height.

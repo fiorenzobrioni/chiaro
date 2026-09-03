@@ -25,6 +25,18 @@ Three deliberate departures from the source, each the kind that must be written 
    synthesized as real arcs and segments; the two dashed wind curls become solid — the
    dash there only existed to be animated.
 
+The FILL set (the second icon theme, chosen in Settings) adds two departures of its own:
+
+4. **Gradients are flattened to their face color.** Every fill is a two-stop gradient
+   whose first stop covers 45% flat; at 24-32dp the ramp is invisible and the face stop
+   IS the icon's color. VectorDrawable gradients exist but would buy nothing here.
+5. **Hairline edge strokes (width 0.5) are dropped.** They exist to edge a near-white
+   fill against a white page; after the re-anchor below the fills are deep and carry
+   their own edge. Real drawing strokes (width >= 1, the sun's rays) stay and remap.
+   The fill palette gets its own table (FILL_REMAP): same hues, luminances moved into
+   the same [0.120, 0.283] band, order inside each hue family preserved so a shaded
+   element stays darker than its lit neighbour.
+
 Requires no third-party packages, runs from the repo root.
 """
 from __future__ import annotations
@@ -37,6 +49,7 @@ import xml.etree.ElementTree as ET
 
 OUT = pathlib.Path("app/src/main/res/drawable")
 SRC_SUBDIR = pathlib.Path("production/line/all")
+FILL_SRC_SUBDIR = pathlib.Path("production/fill/all")
 
 # svg name (in production/line/all) -> drawable name. The subset the app exposes
 # through ChiaroIcons; growing it is: add a line, re-run, add the accessor.
@@ -112,6 +125,55 @@ REMAP = {
     "#ef4444": "#EF4444",  # thermometer red, already in band (3.58 / 4.92)
 }
 
+# The fill set's palette, re-anchored exactly like REMAP above: hue kept, luminance
+# moved into the [0.120, 0.283] band that clears 3:1 against both surfaces. Ratios
+# measured with IconContrastTest's arithmetic (light / dark).
+FILL_REMAP = {
+    "#ffffff": "#8E8E8E",  # 3.12 / 5.65  compass needle half, drop shine
+    "#f3f7fe": "#8C8F93",  # 3.09 / 5.70  cloud face
+    "#e6effc": "#7E838A",  # 3.63 / 4.85  cloud mid
+    "#deeafb": "#717881",  # 4.25 / 4.15  cloud shade
+    "#e5e7eb": "#7D879B",  # 3.44 / 5.13  (reused from the line table)
+    "#d4d7dd": "#838488",  # 3.56 / 4.96  fog/mist bands
+    "#bec1c6": "#7B7D81",  # 3.92 / 4.49
+    "#b8bdc6": "#787B81",  # 4.04 / 4.37
+    "#afb4bc": "#73767B",  # 4.34 / 4.06
+    "#a5aab2": "#6E7177",  # 4.66 / 3.79
+    "#9ca3af": "#656E7E",  # 4.89 / 3.60  (reused from the line table)
+    "#848b98": "#636973",  # 5.26 / 3.35
+    "#6b7280": "#5F6672",  # 5.50 / 3.20
+    "#515a69": "#5B6575",  # 5.61 / 3.14
+    "#384354": "#54647C",  # 5.72 / 3.08
+    "#374151": "#596A83",  # 5.24 / 3.36  (reused from the line table)
+    "#fcd966": "#A48D40",  # 3.09 / 5.70  star gold, lit
+    "#fcd34d": "#A0852E",  # 3.39 / 5.20
+    "#fccd34": "#9D7F1D",  # 3.64 / 4.84
+    "#fde68a": "#9C8D53",  # 3.15 / 5.60  dust
+    "#fde171": "#9A8842",  # 3.34 / 5.27
+    "#fbbf24": "#B08516",  # 3.22 / 5.48  sun face
+    "#f7b23b": "#B17E27",  # 3.40 / 5.19
+    "#f8af18": "#B07B0E",  # 3.51 / 5.02  sun edge
+    "#f6a823": "#AF7616",  # 3.68 / 4.79
+    "#f59e0b": "#B07005",  # 3.87 / 4.56  sun shade
+    "#86c3db": "#6493A5",  # 3.19 / 5.52  moon lit
+    "#72b9d5": "#3589AC",  # 3.75 / 4.70  (reused from the line table)
+    "#5eafcf": "#427F97",  # 4.24 / 4.16  moon shade
+    "#4286ee": "#4286EE",  # 3.40 / 5.18  (already in band)
+    "#0950bc": "#0D5FDD",  # 5.40 / 3.26  rain shade
+    "#3392d6": "#3392D6",  # 3.21 / 5.49  (already in band)
+    "#2885c7": "#2885C7",  # 3.79 / 4.65  (already in band)
+    "#2477b2": "#2477B2",  # 4.59 / 3.84  (already in band)
+    "#ef4444": "#EF4444",  # 3.58 / 4.92  (already in band)
+    "#dc2626": "#DC2626",  # 4.60 / 3.84  (already in band)
+    "#f87171": "#D76161",  # 3.46 / 5.09  umbrella red, lit
+}
+
+# The set being converted right now; main() flips this between the two passes.
+ACTIVE = {"palette": REMAP, "drop_hairline": False, "prefix": "mc_"}
+
+# Gradient id -> face color of the current file (departure #4).
+GRADIENTS = {}
+
 SVG_NS = "{http://www.w3.org/2000/svg}"
 
 LINECAP = {"butt": "butt", "round": "round", "square": "square"}
@@ -126,9 +188,18 @@ HEADER = (
 
 
 def remap(color: str) -> str:
-    mapped = REMAP.get(color.lower())
+    c = color.lower()
+    if c.startswith("#") and len(c) == 4:  # #fff -> #ffffff
+        c = "#" + "".join(ch * 2 for ch in c[1:])
+    if c.startswith("url("):
+        m = re.match(r"url\(#(.+)\)", c)
+        face = GRADIENTS.get(m.group(1)) if m else None
+        if face is None:
+            sys.exit(f"paint references unknown gradient: {color}")
+        c = face.lower()
+    mapped = ACTIVE["palette"].get(c)
     if mapped is None:
-        sys.exit(f"unmapped color {color}: add it to REMAP with a measured value")
+        sys.exit(f"unmapped color {c}: add it to the active table with a measured value")
     return mapped
 
 
@@ -266,6 +337,9 @@ def parse_rotate(transform: str) -> float:
     return float(m.group(1))
 
 
+NL8 = chr(10) + " " * 8
+
+
 def stroke_attrs(el: ET.Element) -> str:
     """The paint of one SVG shape, as vector-drawable attributes."""
     a = []
@@ -274,6 +348,9 @@ def stroke_attrs(el: ET.Element) -> str:
         a.append(f'android:fillColor="{remap(fill)}"')
     stroke = el.get("stroke")
     if stroke and stroke != "none":
+        width = float(el.get("stroke-width", "1"))
+        if ACTIVE["drop_hairline"] and width < 1.0:
+            return NL8.join(a)  # departure #5: the edge hairline goes
         a.append(f'android:strokeColor="{remap(stroke)}"')
         a.append(f'android:strokeWidth="{el.get("stroke-width", "1")}"')
         cap = el.get("stroke-linecap")
@@ -300,6 +377,8 @@ def convert_shape(el: ET.Element, lines: list[str], indent: str) -> None:
     tag = el.tag.removeprefix(SVG_NS)
     if tag in ("animate", "animateTransform", "animateMotion"):
         return  # SMIL does not travel; departure #2 in the module docstring
+    if el.get("opacity") or el.get("fill-opacity") or el.get("stroke-opacity"):
+        sys.exit(f"opacity on <{tag}>; decide by hand")
     if tag == "g":
         children = list(el)
         clip = el.get("clip-path")
@@ -363,6 +442,23 @@ def convert(svg_path: pathlib.Path, out_path: pathlib.Path) -> None:
     CLIPS.clear()
     for clip in root.iter(f"{SVG_NS}clipPath"):
         CLIPS[clip.get("id")] = clip.find(f"{SVG_NS}path").get("d")
+    GRADIENTS.clear()
+    XLINK = "{http://www.w3.org/1999/xlink}href"
+    for grad in root.iter(f"{SVG_NS}linearGradient"):
+        stops = grad.findall(f"{SVG_NS}stop")
+        if stops:
+            GRADIENTS[grad.get("id")] = stops[0].get("stop-color")
+        else:
+            # xlink:href inherits another gradient's stops (the star clusters)
+            ref = (grad.get(XLINK) or grad.get("href") or "").lstrip("#")
+            if ref not in GRADIENTS:
+                sys.exit(f"gradient {grad.get('id')} references unknown {ref}")
+            GRADIENTS[grad.get("id")] = GRADIENTS[ref]
+    # Upstream typo in fill/drizzle.svg (v2.0.0): the third drop strokes url(#e)
+    # but the file defines a/b/c/d — the drops are a/c/d, so e can only mean d.
+    # Fixed by name, never by falling back silently.
+    if svg_path.name == "drizzle.svg" and "e" not in GRADIENTS and "d" in GRADIENTS:
+        GRADIENTS["e"] = GRADIENTS["d"]
     lines: list[str] = []
     for child in root:
         convert_shape(child, lines, "    ")
@@ -381,16 +477,26 @@ def convert(svg_path: pathlib.Path, out_path: pathlib.Path) -> None:
 def main() -> None:
     if len(sys.argv) != 2:
         sys.exit(__doc__.split("\n\n")[1].strip())
-    src = pathlib.Path(sys.argv[1]) / SRC_SUBDIR
-    if not src.is_dir():
-        sys.exit(f"not a meteocons v2.0.0 checkout: {src} missing")
+    checkout = pathlib.Path(sys.argv[1])
     OUT.mkdir(parents=True, exist_ok=True)
-    for svg_name, drawable in sorted(ICONS.items()):
-        svg = src / f"{svg_name}.svg"
-        if not svg.is_file():
-            sys.exit(f"missing upstream icon: {svg}")
-        convert(svg, OUT / f"{drawable}.xml")
-    print(f"{len(ICONS)} drawables written to {OUT}")
+    passes = [
+        (SRC_SUBDIR, REMAP, False, "mc_"),
+        (FILL_SRC_SUBDIR, FILL_REMAP, True, "mcf_"),
+    ]
+    total = 0
+    for subdir, palette, drop_hairline, prefix in passes:
+        src = checkout / subdir
+        if not src.is_dir():
+            sys.exit(f"not a meteocons v2.0.0 checkout: {src} missing")
+        ACTIVE.update(palette=palette, drop_hairline=drop_hairline, prefix=prefix)
+        for svg_name, drawable in sorted(ICONS.items()):
+            svg = src / f"{svg_name}.svg"
+            if not svg.is_file():
+                sys.exit(f"missing upstream icon: {svg}")
+            out_name = drawable if prefix == "mc_" else drawable.replace("mc_", "mcf_", 1)
+            convert(svg, OUT / f"{out_name}.xml")
+            total += 1
+    print(f"{total} drawables written to {OUT}")
 
 
 if __name__ == "__main__":

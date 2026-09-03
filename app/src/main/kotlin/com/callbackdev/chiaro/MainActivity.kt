@@ -7,8 +7,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.CompositionLocalProvider
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.ThemeMode
+import com.callbackdev.chiaro.data.WeatherIcons
+import com.callbackdev.chiaro.ui.icons.LocalWeatherIcons
 import com.callbackdev.chiaro.ui.shell.ChiaroRoot
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 
@@ -39,7 +42,11 @@ class MainActivity : ComponentActivity() {
                 darkTheme = darkTheme,
                 dynamicColor = settings?.dynamicColor ?: true
             ) {
-                ChiaroRoot()
+                CompositionLocalProvider(
+                    LocalWeatherIcons provides (settings?.weatherIcons ?: WeatherIcons.FILL)
+                ) {
+                    ChiaroRoot()
+                }
             }
         }
     }

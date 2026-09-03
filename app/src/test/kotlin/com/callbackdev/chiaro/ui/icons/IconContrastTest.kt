@@ -36,9 +36,15 @@ class IconContrastTest {
     @Test
     fun `every icon color clears 3 to 1 on both surfaces`() {
         val drawables = File("src/main/res/drawable")
-            .listFiles { f -> f.name.startsWith("mc_") && f.extension == "xml" }
+            .listFiles { f ->
+                (f.name.startsWith("mc_") || f.name.startsWith("mcf_")) && f.extension == "xml"
+            }
             .orEmpty()
         assertTrue("no mc_*.xml drawables found — did the import move?", drawables.isNotEmpty())
+        assertTrue(
+            "the fill set is missing — run tools/import_meteocons.py",
+            drawables.any { it.name.startsWith("mcf_") }
+        )
 
         val offenders = drawables.flatMap { file ->
             colorAttr.findAll(file.readText()).map { it.groupValues[1] }.distinct().mapNotNull {
