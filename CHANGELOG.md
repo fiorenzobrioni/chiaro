@@ -11,7 +11,7 @@ as the body of the GitHub Release, so a version's entry is written **before** it
 
 Nothing released yet. The engines are in and verified, the design system is code, and
 the everyday surface — Today, places, first run, settings, the guide, the Sky screen
-with its reminders, the alerts, the Journal — is built. See `PLANNING.md` for where the work actually is.
+with its reminders, the alerts, the Journal, the home widgets — is built. See `PLANNING.md` for where the work actually is.
 
 ### Added
 
@@ -95,6 +95,15 @@ with its reminders, the alerts, the Journal — is built. See `PLANNING.md` for 
   is built entirely from data already on disk.
 - "What changed" on Today (Fase 7): up to three sentences after the day's timeline
   when the latest update moved the week, tapping opens the Journal.
+- The home widgets (Fase 8), in Glance: Now (icon, temperature, place), Today (now
+  plus the day's sentence and the next hours) and Sky (the next followed moment and
+  its verdict — the widget nobody else ships). They draw from the same builders the
+  app reads, repaint on every data commit, follow the system's light/dark with the
+  app's own color scheme (dynamic or Chiaro), state their age when stale, and say
+  "no place yet" instead of ever showing a number they do not have. A placed widget
+  keeps the shared periodic job alive on its own.
+- The Widgets group in Settings (Fase 8): the card's background opacity, applied to
+  the fill only — the text always keeps full ink.
 - Two weather-icon themes: Meteocons' fill set joins the line set (same glyphs, solid
   shapes), chosen in Settings → Appearance, filled by default. Both sets are
   re-anchored to clear the measured 3:1 contrast floor on both surfaces, and

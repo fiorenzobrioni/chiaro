@@ -549,4 +549,19 @@
     <string name="journal_fetch_failed">An update didn\'t make it</string>
     <string name="today_changed_title">What changed</string>
     <string name="today_changed_open">The whole story is in the Journal</string>
+
+    <!-- The home widgets (Fase 8) -->
+    <string name="widget_now_label">Chiaro · Now</string>
+    <string name="widget_now_desc">The sky right now: icon, temperature, place</string>
+    <string name="widget_today_label">Chiaro · Today</string>
+    <string name="widget_today_desc">Now, the day\'s sentence, and the next hours</string>
+    <string name="widget_sky_label">Chiaro · Sky</string>
+    <string name="widget_sky_desc">The next sky moment and its verdict</string>
+    <string name="widget_no_place_hint">Tap to open Chiaro and add one</string>
+    <string name="widget_no_data">Getting the first forecast…</string>
+    <string name="widget_sky_empty">No sky moments followed. Tap to pick some.</string>
+    <string name="settings_group_widgets">Widgets</string>
+    <string name="settings_widget_opacity">Widget background</string>
+    <string name="settings_widget_opacity_note">How solid the card behind the numbers is. The text always keeps full ink.</string>
+    <string name="settings_opacity_full">Solid</string>
 </resources>

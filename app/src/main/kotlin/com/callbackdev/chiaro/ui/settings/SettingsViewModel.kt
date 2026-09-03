@@ -46,6 +46,8 @@ class SettingsViewModel(private val store: SettingsStore) : ViewModel() {
     fun setUpdateFrequency(minutes: Int) =
         viewModelScope.launch { store.setUpdateFrequency(minutes) }
 
+    fun setWidgetOpacity(pct: Int) = viewModelScope.launch { store.setWidgetOpacity(pct) }
+
     fun resetToDefaults() = viewModelScope.launch { store.resetToDefaults() }
 
     companion object {

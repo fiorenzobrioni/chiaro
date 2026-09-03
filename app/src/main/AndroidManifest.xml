@@ -33,6 +33,42 @@
             </intent-filter>
         </activity>
 
+        <!-- The home widgets (Fase 8): Now, Today, Sky. exported=false — the system
+             delivers APPWIDGET_* regardless, and nothing else needs in. -->
+        <receiver
+            android:name=".widget.NowWidgetReceiver"
+            android:exported="false"
+            android:label="@string/widget_now_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_now_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.TodayWidgetReceiver"
+            android:exported="false"
+            android:label="@string/widget_today_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_today_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.SkyWidgetReceiver"
+            android:exported="false"
+            android:label="@string/widget_sky_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_sky_info" />
+        </receiver>
+
         <!-- The one alarm of the sky reminders (Fase 5), plus the boot re-arm.
              exported=false: BOOT_COMPLETED is a protected broadcast the system is
              exempt from the export check for, and our own alarm intent is explicit,

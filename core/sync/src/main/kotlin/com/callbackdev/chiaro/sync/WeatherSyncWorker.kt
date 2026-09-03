@@ -45,10 +45,11 @@ class WeatherSyncWorker(
         val alertsWanted = SyncScheduler.alertsWanted(
             settings.notifications, notifiers.notificationsEnabled(), enabledRules.isNotEmpty()
         )
-        // Self-heal: nothing left to sync for — cancel instead of waking up for
-        // nothing forever (the Alerts screen and app start re-enqueue if conditions
-        // return). Fase 8's widgets will add their own reason to stay.
-        if (!alertsWanted) {
+        // Self-heal: nothing left to sync for (no alerts wanted AND no widget
+        // placed) — cancel instead of waking up for nothing forever (the Alerts
+        // screen, the widget receivers and app start re-enqueue if conditions return).
+        val widgets = SyncDependencies.widgets
+        if (!alertsWanted && widgets?.hasWidgets() != true) {
             SyncScheduler.cancel(context)
             return Result.success()
         }
@@ -68,8 +69,11 @@ class WeatherSyncWorker(
             )
         } catch (e: WeatherException.NoNetwork) {
             // The Journal is where offline honesty lives (Fase 7): a fetch that
-            // could not land is an entry, not a silent gap.
+            // could not land is an entry, not a silent gap. And this is exactly when
+            // a widget must stop presenting old numbers as current (Fase 8): repaint
+            // so its stale marker can appear.
             recordFailure(context, city, FetchFailureReason.OFFLINE)
+            widgets?.repaintAll()
             return Result.retry() // captive portal/DNS flap; CONNECTED already gated
         } catch (e: WeatherException) {
             recordFailure(
@@ -77,8 +81,13 @@ class WeatherSyncWorker(
                 if (e is WeatherException.ApiError) FetchFailureReason.SERVICE
                 else FetchFailureReason.UNKNOWN
             )
+            widgets?.repaintAll()
             return Result.success() // next period is at most one interval away
         }
+
+        // A widget-only sync fetches (the repository's commit hook repaints) but
+        // must never evaluate or post alerts.
+        if (!alertsWanted) return Result.success()
 
         // Alerts and rules run in the CITY's timezone, not the device's.
         val zone = runCatching { ZoneId.of(report.location.timezone) }

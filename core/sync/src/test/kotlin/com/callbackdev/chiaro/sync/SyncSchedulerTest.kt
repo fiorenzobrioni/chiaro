@@ -54,4 +54,16 @@ class SyncSchedulerTest {
     fun `everything off cancels`() {
         assertFalse(SyncScheduler.shouldRun(allOff, notificationsEnabled = true))
     }
+
+    /** Fase 8: a placed widget is its own reason to keep fetching — it renders
+     * instead of notifying, so even disabled notifications do not cancel it. */
+    @Test
+    fun `a placed widget keeps the job alive on its own`() {
+        assertTrue(
+            SyncScheduler.shouldRun(allOff, notificationsEnabled = false, hasWidgets = true)
+        )
+        assertFalse(
+            SyncScheduler.shouldRun(allOff, notificationsEnabled = false, hasWidgets = false)
+        )
+    }
 }

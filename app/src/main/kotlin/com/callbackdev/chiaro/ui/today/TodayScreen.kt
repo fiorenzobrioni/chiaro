@@ -784,40 +784,10 @@ private fun WhatChanged(
     }
 }
 
-/** The sentence, or nothing. Localization happens here, on top of [HeadlineEngine]'s
- * language-free answer. */
+/** The sentence, or nothing: [HeadlineText]'s mapping, shared with the Today widget. */
 @Composable
-private fun headlineText(headline: Headline?, timeFmt: DateTimeFormatter): String? {
-    fun t(at: LocalDateTime): String = at.format(timeFmt)
-    return when (headline) {
-        null -> null
-        is Headline.Severe -> stringResource(
-            when (headline.bucket) {
-                AlertEngine.SevereBucket.THUNDER -> R.string.headline_severe_thunder
-                AlertEngine.SevereBucket.ICE -> R.string.headline_severe_ice
-                AlertEngine.SevereBucket.RAIN -> R.string.headline_severe_rain
-                AlertEngine.SevereBucket.SNOW -> R.string.headline_severe_snow
-            },
-            t(headline.at)
-        )
-        is Headline.WetSoon -> when {
-            headline.snow && headline.clearsAt != null ->
-                stringResource(R.string.headline_snow_soon_clearing, t(headline.at), t(headline.clearsAt))
-            headline.snow -> stringResource(R.string.headline_snow_soon, t(headline.at))
-            headline.clearsAt != null ->
-                stringResource(R.string.headline_wet_soon_clearing, t(headline.at), t(headline.clearsAt))
-            else -> stringResource(R.string.headline_wet_soon, t(headline.at))
-        }
-        is Headline.WetNow -> when {
-            headline.snow && headline.stopsAt != null ->
-                stringResource(R.string.headline_snow_now_stopping, t(headline.stopsAt))
-            headline.snow -> stringResource(R.string.headline_snow_now)
-            headline.stopsAt != null ->
-                stringResource(R.string.headline_wet_now_stopping, t(headline.stopsAt))
-            else -> stringResource(R.string.headline_wet_now)
-        }
-    }
-}
+private fun headlineText(headline: Headline?, timeFmt: DateTimeFormatter): String? =
+    HeadlineText.of(LocalContext.current, headline, timeFmt)
 
 @Composable
 private fun ribbonDescription(

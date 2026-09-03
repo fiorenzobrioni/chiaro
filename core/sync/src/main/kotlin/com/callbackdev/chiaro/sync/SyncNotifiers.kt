@@ -37,6 +37,17 @@ interface SyncNotifiers {
 }
 
 /**
+ * The widgets, as the worker sees them (Fase 8): whether any are placed — a placed
+ * widget keeps the periodic job alive on its own — and how to repaint them all,
+ * which the worker does after a FAILED fetch so the stale marker can appear (a
+ * successful one repaints through the repository's commit hook instead).
+ */
+interface SyncWidgets {
+    fun hasWidgets(): Boolean
+    suspend fun repaintAll()
+}
+
+/**
  * The worker's one seam to the app, in the exact shape of `ServiceLocator.install`
  * (Fase 0): the library does not know the app, so the app introduces itself at
  * startup. `ChiaroApplication` calls [install] before any work can run — a worker
@@ -48,7 +59,12 @@ object SyncDependencies {
     var notifiers: SyncNotifiers? = null
         private set
 
-    fun install(notifiers: SyncNotifiers) {
+    @Volatile
+    var widgets: SyncWidgets? = null
+        private set
+
+    fun install(notifiers: SyncNotifiers, widgets: SyncWidgets? = null) {
         this.notifiers = notifiers
+        this.widgets = widgets
     }
 }

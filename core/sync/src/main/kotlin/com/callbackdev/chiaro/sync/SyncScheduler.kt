@@ -44,15 +44,16 @@ object SyncScheduler {
                 )
 
     /**
-     * Split out pure so the enqueue-vs-cancel decision is unit-testable. The widgets
-     * of Fase 8 will add their own reason to keep the job alive; until then alerts
-     * are the only customer.
+     * Split out pure so the enqueue-vs-cancel decision is unit-testable. A placed
+     * home widget keeps the job alive on its own (Fase 8): same interval, same
+     * single fetch — it just renders instead of notifying.
      */
     fun shouldRun(
         settings: NotificationSettings,
         notificationsEnabled: Boolean,
-        hasEnabledRules: Boolean = false
-    ): Boolean = alertsWanted(settings, notificationsEnabled, hasEnabledRules)
+        hasEnabledRules: Boolean = false,
+        hasWidgets: Boolean = false
+    ): Boolean = alertsWanted(settings, notificationsEnabled, hasEnabledRules) || hasWidgets
 
     suspend fun reconcile(context: Context) {
         val settings = ServiceLocator.settingsStore(context).settings.first()
@@ -60,7 +61,8 @@ object SyncScheduler {
             ServiceLocator.ruleStore(context).rules.first().any { it.enabled }
         val notificationsEnabled =
             SyncDependencies.notifiers?.notificationsEnabled() ?: false
-        if (shouldRun(settings.notifications, notificationsEnabled, hasEnabledRules)) {
+        val hasWidgets = SyncDependencies.widgets?.hasWidgets() ?: false
+        if (shouldRun(settings.notifications, notificationsEnabled, hasEnabledRules, hasWidgets)) {
             val request = PeriodicWorkRequestBuilder<WeatherSyncWorker>(
                 settings.updateFrequencyMin.coerceAtLeast(15).toLong(), TimeUnit.MINUTES
             )

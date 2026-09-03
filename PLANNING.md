@@ -668,9 +668,49 @@ con l'edit diretto, ed è il promemoria di usare quello per le risorse Android.
 Suite completa verde (`IconContrastTest` misura ora 96 drawable), lint a zero errori,
 APK ok.
 
-## Fase 8 — Widget
+## Fase 8 — Widget ✅
 
-- [ ] Glance: Ora, Oggi, Cielo; `ServiceLocator.install` riceve il repaint
+- [x] Glance: **Ora** (icona, temperatura, luogo), **Oggi** (l'adesso, la frase del
+      giorno, le prossime cinque ore), **Cielo** (il prossimo momento seguito e il
+      suo verdetto — il widget che nessun altro spedisce)
+- [x] `ServiceLocator.install` riceve il repaint: ogni commit della storia ridipinge
+      i tre widget, così home e app non possono raccontare due pomeriggi diversi
+- [x] Il gruppo «Widget» nelle Impostazioni (l'opacità dello sfondo che aspettava
+      dalla Fase 4), applicata al solo cartoncino: il testo resta a piena tinta
+- [x] Un widget piazzato tiene vivo il job periodico da solo (`shouldRun` cresce di
+      `hasWidgets`, col suo test); un fetch fallito ridipinge perché il marcatore di
+      freschezza possa comparire
+
+### Decisioni della fase
+
+- **I widget non inventano** (VISION §5.9), e il modo più corto per non inventare è
+  non calcolare: il contenuto è la risposta di `TodayStateBuilder` sul report in
+  cache — stessi numeri, stesso verdetto di freschezza, stesso taglio delle ore
+  passate che mostra l'app, zero rete al momento del disegno. Il Cielo usa
+  `SkyScheduler.nextToFire` e lo stesso `SkyVerdictEngine` della schermata.
+- **I widget seguono il sistema, non il tema forzato dell'app**: vivono sul launcher,
+  e un widget scuro su una home chiara sarebbe una bugia del launcher, non nostra.
+  I colori sono coppie giorno/notte costruite dagli stessi schemi dell'app (dinamico
+  o Chiaro secondo l'impostazione); i verdetti restano le coppie fisse di DESIGN
+  §2.3 — un verdetto significa la stessa cosa qualunque sia lo sfondo.
+- **Niente città appuntate nella v1**: VISION §5.9 non le chiede, e i tre widget
+  seguono il luogo attivo. `WidgetCityStore` ereditato resta in panchina come
+  `skyEnabled`; se un giorno una superficie lo reclama, il costo sarà solo la UI.
+- **Le vie del repaint sono tre e arrivano in un punto solo** (`ChiaroWidgets`):
+  il commit del repository (dati nuovi), il fallimento del worker (deve comparire
+  lo stale), e un collettore di processo su luogo attivo + impostazioni — che copre
+  anche unità, stile delle icone e opacità senza che nessuna schermata debba
+  ricordarsene.
+- **`updatePeriodMillis` è 0 di proposito**: il job condiviso guida ogni repaint al
+  ritmo scelto dal lettore; un secondo orologio sarebbe batteria spesa due volte.
+- **Niente preview nel picker per ora**: `previewLayout` pretende un layout
+  RemoteViews disegnato a mano da tenere allineato ai widget veri. Arriva con gli
+  asset dello store (Fase 10), quando si disegnano comunque schermate di vetrina.
+
+### Verifica
+
+322 test verdi (141 domain, 118 data, 5 sync — col nuovo test dei widget che tengono
+vivo il job — 58 app), zero failure, zero skip; lint a zero errori; APK debug ok.
 
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 

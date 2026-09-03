@@ -546,4 +546,19 @@
     <string name="journal_fetch_failed">Un aggiornamento non è arrivato</string>
     <string name="today_changed_title">Cos\'è cambiato</string>
     <string name="today_changed_open">La storia intera è nel Diario</string>
+
+    <!-- I widget della home (Fase 8) -->
+    <string name="widget_now_label">Chiaro · Ora</string>
+    <string name="widget_now_desc">Il cielo in questo momento: icona, temperatura, luogo</string>
+    <string name="widget_today_label">Chiaro · Oggi</string>
+    <string name="widget_today_desc">L\'adesso, la frase del giorno e le prossime ore</string>
+    <string name="widget_sky_label">Chiaro · Cielo</string>
+    <string name="widget_sky_desc">Il prossimo momento del cielo e il suo verdetto</string>
+    <string name="widget_no_place_hint">Tocca per aprire Chiaro e aggiungerne uno</string>
+    <string name="widget_no_data">Sto prendendo la prima previsione…</string>
+    <string name="widget_sky_empty">Nessun momento del cielo seguito. Tocca per sceglierne.</string>
+    <string name="settings_group_widgets">Widget</string>
+    <string name="settings_widget_opacity">Sfondo del widget</string>
+    <string name="settings_widget_opacity_note">Quanto è pieno il cartoncino dietro i numeri. Il testo resta sempre a piena tinta.</string>
+    <string name="settings_opacity_full">Pieno</string>
 </resources>

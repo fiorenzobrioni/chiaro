@@ -47,6 +47,7 @@ import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.data.ThemeMode
 import com.callbackdev.chiaro.data.UpdateFrequencies
 import com.callbackdev.chiaro.data.WeatherIcons
+import com.callbackdev.chiaro.data.WidgetOpacities
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import java.util.Locale
@@ -176,6 +177,15 @@ private fun SettingsList(
             )
         }
 
+        item { GroupHeader(stringResource(R.string.settings_group_widgets)) }
+        item {
+            ValueRow(
+                label = stringResource(R.string.settings_widget_opacity),
+                value = opacityLabel(settings.widgetOpacityPct),
+                onClick = { dialog = SettingsDialog.WIDGET_OPACITY }
+            )
+        }
+
         item { GroupHeader(stringResource(R.string.settings_group_language)) }
         item {
             ValueRow(
@@ -269,6 +279,14 @@ private fun SettingsList(
             onSelect = { viewModel.setWeatherIcons(it); dialog = null },
             onDismiss = { dialog = null }
         )
+        SettingsDialog.WIDGET_OPACITY -> RadioDialog(
+            title = stringResource(R.string.settings_widget_opacity),
+            explanation = stringResource(R.string.settings_widget_opacity_note),
+            options = WidgetOpacities.map { it to opacityLabel(it) },
+            selected = settings.widgetOpacityPct,
+            onSelect = { viewModel.setWidgetOpacity(it); dialog = null },
+            onDismiss = { dialog = null }
+        )
         SettingsDialog.FREQUENCY -> RadioDialog(
             title = stringResource(R.string.settings_update_frequency),
             explanation = stringResource(R.string.settings_update_frequency_note),
@@ -299,7 +317,9 @@ private fun SettingsList(
     }
 }
 
-private enum class SettingsDialog { TEMPERATURE, WIND, THEME, ICONS, FREQUENCY, RESET }
+private enum class SettingsDialog {
+    TEMPERATURE, WIND, THEME, ICONS, WIDGET_OPACITY, FREQUENCY, RESET
+}
 
 @Composable
 private fun GroupHeader(text: String) {
@@ -399,6 +419,10 @@ private fun themeLabel(mode: ThemeMode): String = when (mode) {
     ThemeMode.LIGHT -> stringResource(R.string.settings_theme_light)
     ThemeMode.DARK -> stringResource(R.string.settings_theme_dark)
 }
+
+@Composable
+private fun opacityLabel(pct: Int): String =
+    if (pct == 100) stringResource(R.string.settings_opacity_full) else "$pct%"
 
 @Composable
 private fun frequencyLabel(minutes: Int): String = when (minutes) {
