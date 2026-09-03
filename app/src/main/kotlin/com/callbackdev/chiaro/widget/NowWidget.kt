@@ -85,12 +85,8 @@ private fun NowContent(
             modifier = GlanceModifier.size(68.dp)
         )
         Column(modifier = GlanceModifier.padding(start = 12.dp).fillMaxWidth()) {
-            // The day's range sits next to the number that moves inside it — low
-            // before high, the week rows' own reading order. Near midnight today's
-            // daily row can be gone from the trimmed report; then the pair is simply
-            // not drawn, never guessed.
-            val today = content.report.daily
-                .firstOrNull { it.date == content.now.toLocalDate() }
+            // The day's range sits next to the number that moves inside it.
+            val range = dayRangeText(content, model.settings.units.temperature, locale)
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
                     text = Formats.temperature(
@@ -102,13 +98,9 @@ private fun NowContent(
                         fontWeight = FontWeight.Medium
                     )
                 )
-                if (today != null) {
+                if (range != null) {
                     Text(
-                        text = "↓" + Formats.temperature(
-                            today.lowC, model.settings.units.temperature, locale
-                        ) + " ↑" + Formats.temperature(
-                            today.highC, model.settings.units.temperature, locale
-                        ),
+                        text = range,
                         style = secondaryStyle(palette, 13.sp),
                         maxLines = 1,
                         // 4dp of bottom inset lands the small line on the big

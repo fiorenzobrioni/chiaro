@@ -1,7 +1,10 @@
 package com.callbackdev.chiaro
 
 import android.app.Application
+import android.app.WallpaperManager
 import android.content.res.Configuration
+import android.os.Handler
+import android.os.Looper
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.notifications.ChiaroNotifiers
 import com.callbackdev.chiaro.notifications.SkyAlarmScheduler
@@ -46,6 +49,18 @@ class ChiaroApplication : Application() {
             runCatching { SkyAlarmScheduler.reschedule(this@ChiaroApplication) }
             runCatching { SyncScheduler.reconcile(this@ChiaroApplication) }
         }
+        // The see-through widgets pick their ink off the wallpaper's own color
+        // hints (WidgetUi): a new wallpaper means they must be asked to look again.
+        WallpaperManager.getInstance(this).addOnColorsChangedListener(
+            { _, which ->
+                if (which and WallpaperManager.FLAG_SYSTEM != 0) {
+                    appScope.launch {
+                        runCatching { ChiaroWidgets.updateAll(this@ChiaroApplication) }
+                    }
+                }
+            },
+            Handler(Looper.getMainLooper())
+        )
         // The widgets follow the reader everywhere the data does not: a new active
         // place, a unit change, the icon style, the opacity. One process-lifetime
         // collector covers every path that edits either store (Fase 8).

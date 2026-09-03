@@ -107,19 +107,33 @@ class TodayWidget : GlanceAppWidget() {
                     modifier = GlanceModifier.size(64.dp)
                 )
                 Column(modifier = GlanceModifier.padding(start = 12.dp)) {
-                    Text(
-                        text = Formats.temperature(
-                            current.tempC, model.settings.units.temperature, locale
-                        ),
-                        style = TextStyle(
-                            color = palette.primary,
-                            fontSize = 30.sp,
-                            fontWeight = FontWeight.Medium
+                    val range =
+                        dayRangeText(content, model.settings.units.temperature, locale)
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            text = Formats.temperature(
+                                current.tempC, model.settings.units.temperature, locale
+                            ),
+                            style = TextStyle(
+                                color = palette.primary,
+                                fontSize = 36.sp,
+                                fontWeight = FontWeight.Medium
+                            )
                         )
-                    )
+                        if (range != null) {
+                            Text(
+                                text = range,
+                                style = secondaryStyle(palette, 14.sp),
+                                maxLines = 1,
+                                // The small line lands on the big number's baseline.
+                                modifier = GlanceModifier
+                                    .padding(start = 8.dp, bottom = 5.dp)
+                            )
+                        }
+                    }
                     Text(
                         text = content.city.name,
-                        style = secondaryStyle(palette, 15.sp),
+                        style = secondaryStyle(palette, 16.sp),
                         maxLines = 1
                     )
                 }
@@ -151,8 +165,14 @@ class TodayWidget : GlanceAppWidget() {
                 (LocalSize.current.width - WidgetCardPadding * 2 + StripCellSpacing) /
                     (StripCellMin + StripCellSpacing)
                 ).toInt().coerceIn(StripCellsFloor, StripCellsCeiling)
+            val shown = content.strip.take(cells)
+            // The rain row appears when any visible hour has something to report:
+            // then EVERY cell prints its figure (a 0% next to an 80% is information),
+            // and on a dry stretch the whole row stays home — the app strip's rule,
+            // sized for a launcher.
+            val showRain = shown.any { it.hour.precipChancePct > 0 }
             Row(modifier = GlanceModifier.fillMaxWidth()) {
-                content.strip.take(cells).forEachIndexed { index, strip ->
+                shown.forEachIndexed { index, strip ->
                     if (index > 0) Spacer(modifier = GlanceModifier.width(StripCellSpacing))
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -160,7 +180,7 @@ class TodayWidget : GlanceAppWidget() {
                     ) {
                         Text(
                             text = Formats.hourLabel(strip.hour.time, is24h, locale),
-                            style = secondaryStyle(palette, 11.sp)
+                            style = secondaryStyle(palette, 12.sp)
                         )
                         Spacer(modifier = GlanceModifier.height(2.dp))
                         Image(
@@ -172,15 +192,24 @@ class TodayWidget : GlanceAppWidget() {
                                 )
                             ),
                             contentDescription = null,
-                            modifier = GlanceModifier.size(28.dp)
+                            modifier = GlanceModifier.size(32.dp)
                         )
                         Spacer(modifier = GlanceModifier.height(2.dp))
                         Text(
                             text = Formats.temperature(
                                 strip.hour.tempC, model.settings.units.temperature, locale
                             ),
-                            style = TextStyle(color = palette.primary, fontSize = 12.sp)
+                            style = TextStyle(color = palette.primary, fontSize = 14.sp)
                         )
+                        if (showRain) {
+                            Text(
+                                text = "${strip.hour.precipChancePct}%",
+                                style = TextStyle(
+                                    color = rainInk(strip.hour.precipChancePct, palette),
+                                    fontSize = 11.sp
+                                )
+                            )
+                        }
                     }
                 }
             }

@@ -1,5 +1,7 @@
 package com.callbackdev.chiaro.widget
 
+import android.app.WallpaperColors
+import android.app.WallpaperManager
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Bitmap
@@ -38,15 +40,19 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider as FixedColorProvider
 import com.callbackdev.chiaro.MainActivity
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.theme.ChiaroDarkColors
 import com.callbackdev.chiaro.ui.theme.ChiaroDarkScheme
 import com.callbackdev.chiaro.ui.theme.ChiaroLightColors
 import com.callbackdev.chiaro.ui.theme.ChiaroLightScheme
+import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.theme.SkyPalette
 import com.callbackdev.chiaro.ui.today.SkySnapshot
+import com.callbackdev.chiaro.ui.today.TodayUiState
 import java.time.Duration
 import java.time.Instant
+import java.util.Locale
 
 /**
  * The widgets' side of the design system (Fase 8, redrawn on device review): the
@@ -64,11 +70,16 @@ fun widgetSchemes(context: Context, dynamicColor: Boolean): WidgetSchemes =
         WidgetSchemes(ChiaroLightScheme, ChiaroDarkScheme)
     }
 
-/** The three inks a widget writes with, resolved once per background choice. */
+/** The inks a widget writes with, resolved once per background choice, plus the one
+ * fact a quantity ramp needs about the ground they all sit on. */
 data class WidgetPalette(
     val primary: androidx.glance.unit.ColorProvider,
     val secondary: androidx.glance.unit.ColorProvider,
-    val stale: androidx.glance.unit.ColorProvider
+    val stale: androidx.glance.unit.ColorProvider,
+    /** Whether the effective ground is dark — the scrimmed sky, a dark card, a dark
+     * wallpaper behind a see-through card — so ramps pick the set that was SELECTED
+     * for dark rather than the light one flipped (DESIGN §2.3). */
+    val darkGround: Boolean
 )
 
 /**
@@ -86,33 +97,53 @@ fun isNight(context: Context): Boolean =
 /** Below this solidity the card stops being the ink's ground. */
 private const val InkTrustFloorPct = 50
 
+/**
+ * Whether the system wallpaper can carry dark text, by the launcher's own account
+ * (the [WallpaperColors] hint). A see-through card has no ground of its own, and the
+ * phone's THEME turned out to be a bad proxy for what is behind it — a light theme
+ * over a near-black wallpaper is common, and it made theme-following ink invisible
+ * (device screenshot, 3 set). When the wallpaper declines to answer (live wallpapers
+ * may), the theme stays the fallback.
+ */
+fun wallpaperWantsDarkInk(context: Context): Boolean {
+    val colors = runCatching {
+        WallpaperManager.getInstance(context)
+            .getWallpaperColors(WallpaperManager.FLAG_SYSTEM)
+    }.getOrNull() ?: return !isNight(context)
+    return colors.colorHints and WallpaperColors.HINT_SUPPORTS_DARK_TEXT != 0
+}
+
 private fun palette(
     background: WidgetBackground,
     schemes: WidgetSchemes,
     night: Boolean,
-    opacityPct: Int
+    opacityPct: Int,
+    wallpaperDark: Boolean
 ): WidgetPalette {
     val lightInks = WidgetPalette(
         primary = FixedColorProvider(schemes.light.onSurface),
         secondary = FixedColorProvider(schemes.light.onSurfaceVariant),
-        stale = FixedColorProvider(ChiaroLightColors.freshness.ink)
+        stale = FixedColorProvider(ChiaroLightColors.freshness.ink),
+        darkGround = false
     )
     val darkInks = WidgetPalette(
         primary = FixedColorProvider(schemes.dark.onSurface),
         secondary = FixedColorProvider(schemes.dark.onSurfaceVariant),
-        stale = FixedColorProvider(ChiaroDarkColors.freshness.ink)
+        stale = FixedColorProvider(ChiaroDarkColors.freshness.ink),
+        darkGround = true
     )
     // A card under half solidity no longer guarantees its own ground, so the ink
-    // stops trusting it: whatever the dress, it follows the phone's theme — the
-    // best proxy a widget has for the wallpaper showing through (device report,
-    // 3 set: dark ink on a see-through card over a dark wallpaper).
-    if (opacityPct < InkTrustFloorPct) return if (night) darkInks else lightInks
+    // stops trusting it and asks the wallpaper itself ([wallpaperWantsDarkInk]) —
+    // the theme was a bad proxy for what shows through (device screenshot, 3 set).
+    if (opacityPct < InkTrustFloorPct) return if (wallpaperDark) darkInks else lightInks
     return when (background) {
-        // White over the scrimmed gradient: the §3.6 numbers, reused as-is.
+        // White over the scrimmed gradient: the §3.6 numbers, reused as-is — the
+        // scrim makes the ground dark whatever the sky above it is doing.
         WidgetBackground.SKY -> WidgetPalette(
             primary = FixedColorProvider(Color.White),
             secondary = FixedColorProvider(Color.White.copy(alpha = 0.75f)),
-            stale = FixedColorProvider(Color.White.copy(alpha = 0.85f))
+            stale = FixedColorProvider(Color.White.copy(alpha = 0.85f)),
+            darkGround = true
         )
         WidgetBackground.LIGHT -> lightInks
         WidgetBackground.DARK -> darkInks
@@ -149,7 +180,11 @@ fun WidgetCard(
             look.background
         }
     val alpha = look.opacityPct / 100f
-    val night = isNight(LocalContext.current)
+    val context = LocalContext.current
+    val night = isNight(context)
+    // The wallpaper is asked only when the card is see-through enough to matter.
+    val wallpaperDark =
+        look.opacityPct < InkTrustFloorPct && !wallpaperWantsDarkInk(context)
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
@@ -178,7 +213,9 @@ fun WidgetCard(
             Box(modifier = GlanceModifier.fillMaxSize().background(fill)) {}
         }
         Box(modifier = GlanceModifier.fillMaxSize().padding(contentPadding)) {
-            content(palette(effectiveBackground, schemes, night, look.opacityPct))
+            content(
+                palette(effectiveBackground, schemes, night, look.opacityPct, wallpaperDark)
+            )
         }
     }
 }
@@ -273,6 +310,31 @@ fun staleText(context: Context, lastSync: Instant, now: Instant): String {
         )
     }
 }
+
+/** "↓13° ↑24°": the day's range, low before high — the week rows' own reading
+ * order. Null near midnight, when the trimmed report no longer carries today's
+ * daily row: the pair is then not drawn, never guessed. */
+fun dayRangeText(
+    content: TodayUiState.Content,
+    unit: TemperatureUnit,
+    locale: Locale
+): String? {
+    val today = content.report.daily
+        .firstOrNull { it.date == content.now.toLocalDate() } ?: return null
+    return "↓" + Formats.temperature(today.lowC, unit, locale) +
+        " ↑" + Formats.temperature(today.highC, unit, locale)
+}
+
+/** The rain figure's ink: the §2.3 ramp selected for the ground the card really
+ * has, the secondary ink when there is nothing to say — the app strip's own rule. */
+fun rainInk(pct: Int, palette: WidgetPalette): androidx.glance.unit.ColorProvider =
+    if (pct > 0) {
+        FixedColorProvider(
+            (if (palette.darkGround) ChiaroDarkColors else ChiaroLightColors).rainAt(pct)
+        )
+    } else {
+        palette.secondary
+    }
 
 /** The verdict pair, resolved at render time like every other widget color: same
  * fixed semantics as in the app — a verdict means the same thing whatever the

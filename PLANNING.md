@@ -732,12 +732,14 @@ Quattro rilievi, due dei quali hanno rifatto il vestito dei widget:
   città appuntate), sfondo, opacità con slider fino a Trasparente. Ogni scelta
   persiste al tocco e ridipinge quel solo widget. Il gruppo Widget delle
   Impostazioni globali sparisce: due posti per lo stesso pomello divergono.
-- **Nota onesta sull'opacità bassa** (rivista il 3 set, seconda passata su device):
-  gradiente e scrim scalano insieme e l'inchiostro resta pieno, ma «le la leggibilità
-  è scelta del lettore» su device era semplicemente testo invisibile. Ora sotto il
-  50% il cartoncino non è più il fondo dell'inchiostro, quindi l'inchiostro smette
-  di fidarsi e segue il tema del telefono — il miglior indizio che un widget ha su
-  cosa ci sia sotto.
+- **Nota onesta sull'opacità bassa** (rivista due volte, 3 set): «la leggibilità
+  è scelta del lettore» su device era semplicemente testo invisibile; la prima
+  correzione — sotto il 50% l'inchiostro segue il tema del telefono — è durata uno
+  screenshot: tema chiaro su wallpaper quasi nero è una combinazione comune, e
+  l'inchiostro spariva lo stesso. Ora sotto il 50% l'inchiostro chiede al wallpaper
+  stesso (`WallpaperColors`, l'hint «regge testo scuro» del launcher), col tema come
+  riserva se il wallpaper non risponde; l'Application ridipinge quando i colori del
+  wallpaper cambiano.
 - **L'icona dell'app** stringe le distanze: falce giù, onde su, composizione centrata
   nel badge (il primo taglio abbracciava i bordi e lasciava un golfo in mezzo).
 - **Seconda passata su device (3 set 2026)** — tre correzioni grafiche:
@@ -767,9 +769,29 @@ Quattro rilievi, due dei quali hanno rifatto il vestito dei widget:
     (minimo 4, massimo 7 — al minimo di 4 celle launcher restano le 5 di sempre);
     padding del cartoncino a 12 dp sui widget a una cella (Now e Sky), parametro
     `contentPadding` con default 14 dp per il Today.
+  - **Terza passata (screenshot su device, 3 set sera)**: il chip del verdetto del
+    widget Cielo usciva dal fondo del cartoncino su una cella — icona 54→48 dp e
+    pillola più bassa (4 dp verticali, raggio 12). Il widget Oggi riempie lo spazio
+    che già occupava: temperatura a 36 sp con minima/massima accanto (lo stesso
+    `dayRangeText` del Now, estratto in WidgetUi), città a 16 sp, striscia con icone
+    a 32 dp, ore a 12 sp, gradi a 14 sp e la riga della pioggia — compare quando
+    almeno un'ora visibile ha qualcosa da dire, e allora ogni cella stampa la sua
+    cifra, 0% compreso (la regola della striscia dell'app); la `WidgetPalette`
+    impara `darkGround`, così la rampa della pioggia sceglie il set selezionato per
+    il fondo vero (cielo scrimmato e cartoncino scuro compresi).
+  - **Il vestito «Il cielo adesso» resta** (valutato su screenshot, 3 set): è
+    l'unico sfondo che dice qualcosa di vero sul cielo ed è l'eredità diretta del
+    canvas; un'opzione che costa poco non si toglie per un dubbio estetico. Se il
+    grigio del velo non convince, il posto dove intervenire è la saturazione del
+    gradiente, non l'esistenza dell'opzione.
 
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
+- [ ] Passata colore (chiesta su device, 3 set): una palette più viva per schema e
+      icone meteo — gli stessi colori, più pieni; il riferimento è il widget meteo
+      di sistema Samsung. Da fare con gli stessi numeri misurati di DESIGN.md §2
+      (contrasti, deuteranopia), non come ritocco al volo: è il motivo per cui non
+      è entrata nella passata widget del 3 set
 - [ ] Contrasti, scala testo 200%, TalkBack, motion ridotto
 - [ ] Avvio a freddo sotto 400 ms, canvas sotto 2 ms/frame
 - [ ] Passata IT/EN completa

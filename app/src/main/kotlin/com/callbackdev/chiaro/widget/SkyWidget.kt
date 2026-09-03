@@ -83,7 +83,7 @@ private fun SkyContent(model: WidgetModel, moment: NextMoment, palette: WidgetPa
             Image(
                 provider = ImageProvider(skyJobIconRes(moment, model.settings.weatherIcons)),
                 contentDescription = null,
-                modifier = GlanceModifier.size(54.dp)
+                modifier = GlanceModifier.size(48.dp)
             )
             Column(modifier = GlanceModifier.padding(start = 12.dp)) {
                 Text(
@@ -119,8 +119,10 @@ private fun VerdictPill(verdict: SkyVerdict) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier
             .background(verdictContainer(verdict.kind, night))
-            .cornerRadius(14.dp)
-            .padding(horizontal = 10.dp, vertical = 5.dp)
+            // 48dp icon and a 4dp-tall pill: on a one-cell grant the first cut
+            // (54dp, 5dp) left the pill's bottom outside the card (screenshot, 3 set).
+            .cornerRadius(12.dp)
+            .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
         Text(
             text = if (detail != null) "$word · $detail" else word,
