@@ -420,6 +420,20 @@ private fun MomentRow(
         }
         is SkyOccurrence.None -> stringResource(SkyText.notScheduledRes(occ.reason))
     }
+    // Which day the time belongs to, in a word. Today's scheduled moments carry no
+    // marker — a time with nothing in front of it means today, and saying it on
+    // every row would be four "Today"s nobody reads; a `∅` says its day, because
+    // "the moon skips it" without one is a sentence missing its subject.
+    val dayMark = when (moment.timing) {
+        MomentTiming.NOW -> stringResource(R.string.sky_moment_now)
+        MomentTiming.TOMORROW -> stringResource(R.string.sky_day_tomorrow)
+        MomentTiming.TODAY ->
+            if (moment.occurrence is SkyOccurrence.None) {
+                stringResource(R.string.sky_day_today)
+            } else {
+                null
+            }
+    }
     // The chip lives UNDER the name, never beside it: in a trailing slot a wide
     // verdict ("Niente da fare · nuvole 100%") squeezed the name to one letter per
     // line (device finding, 3 set). Only the fixed-width bell trails.
@@ -432,16 +446,10 @@ private fun MomentRow(
                 modifier = Modifier.size(26.dp)
             )
         },
-        headlineContent = {
-            Text(
-                text = name,
-                color = if (moment.past) quiet else MaterialTheme.colorScheme.onSurface
-            )
-        },
+        headlineContent = { Text(text = name) },
         supportingContent = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                val past = if (moment.past) stringResource(R.string.sky_moment_past) + " · " else ""
-                Text(past + timeLine)
+                Text(listOfNotNull(dayMark, timeLine).joinToString(" · "))
                 moment.verdict?.let { verdict ->
                     VerdictChip(
                         kind = SkyText.chipKind(verdict.kind),

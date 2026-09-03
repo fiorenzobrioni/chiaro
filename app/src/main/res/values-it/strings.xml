@@ -263,11 +263,13 @@
 
     <!-- Cielo (Fase 5). Tutto parla a parole: gli id puntati non arrivano mai a schermo. -->
     <string name="sky_no_place_body">Aggiungi un luogo per vedere cosa ha in programma il suo cielo.</string>
-    <string name="sky_section_moments">I momenti di oggi</string>
+    <string name="sky_section_moments">I prossimi momenti</string>
     <string name="sky_section_events">In arrivo</string>
     <string name="sky_section_reminders">Promemoria</string>
     <string name="sky_add_moment">Aggiungi un momento</string>
-    <string name="sky_moment_past">Passato</string>
+    <string name="sky_moment_now">Adesso</string>
+    <string name="sky_day_today">Oggi</string>
+    <string name="sky_day_tomorrow">Domani</string>
     <string name="sky_tonight_label">Stanotte</string>
     <string name="sky_tonight_window">Buio dalle %1$s alle %2$s</string>
     <string name="sky_tonight_no_darkness">Stanotte il cielo non diventa mai del tutto buio: a questa latitudine, in questa stagione, capita.</string>
@@ -287,10 +289,10 @@
     <string name="sky_unknown_no_coverage">La previsione non copre quelle ore</string>
 
     <!-- Perché il cielo salta un giorno: un fatto del cielo, mai un buco nella lista -->
-    <string name="sky_none_polar_day">Oggi il sole non tramonta</string>
-    <string name="sky_none_polar_night">Oggi il sole non sorge</string>
-    <string name="sky_none_moon">Oggi la luna lo salta: capita circa una volta al mese</string>
-    <string name="sky_none_no_darkness">Stanotte il cielo non diventa mai del tutto buio</string>
+    <string name="sky_none_polar_day">Il sole non tramonta</string>
+    <string name="sky_none_polar_night">Il sole non sorge</string>
+    <string name="sky_none_moon">La luna lo salta, come capita circa una volta al mese</string>
+    <string name="sky_none_no_darkness">Il cielo non diventa mai del tutto buio</string>
 
     <!-- Promemoria: inesatti di proposito, e lo schermo lo dice -->
     <string name="sky_default_lead">Promemoria abituale</string>
@@ -556,7 +558,7 @@
     <string name="widget_sky_desc">Il prossimo momento del cielo e il suo verdetto</string>
     <string name="widget_no_place_hint">Tocca per aprire Chiaro e aggiungerne uno</string>
     <string name="widget_no_data">Sto prendendo la prima previsione…</string>
-    <string name="widget_sky_empty">Nessun momento del cielo seguito. Tocca per sceglierne.</string>
+    <string name="widget_sky_empty">Nessun momento del cielo in arrivo. Tocca per sceglierne.</string>
     <string name="settings_opacity_full">Pieno</string>
     <string name="widget_opacity_transparent">Trasparente</string>
     <string name="widget_config_title">Questo widget</string>

@@ -784,6 +784,52 @@ Quattro rilievi, due dei quali hanno rifatto il vestito dei widget:
     canvas; un'opzione che costa poco non si toglie per un dubbio estetico. Se il
     grigio del velo non convince, il posto dove intervenire è la saturazione del
     gradiente, non l'esistenza dell'opzione.
+  - **Quarta passata (screenshot su device, 3 set sera)** — tre richieste del
+    committente, la terza delle quali era un'incoerenza vera fra widget e app:
+    - **L'icona meteo cresce fino a riempire la cella.** Un numero fisso può essere
+      giusto su una sola dimensione di widget, e il disegno Meteocons occupa circa
+      metà della sua scatola (la falce di `mcf_clear_night` copre 36 unità su 64):
+      a 68 dp sul vetro arrivavano ~38 dp di luna, meno del widget Samsung accanto. Ora
+      `heroIconSize` in WidgetUi prende l'altezza davvero concessa dal launcher e ci
+      sta dentro (pavimento 52 dp, soffitto 96 dp); il Now passa a `SizeMode.Exact`
+      per poterla leggere, il Today toglie dal conto quello che gli servono frase e
+      striscia (`HeroReserve`, 116 dp). Il widget Cielo non si tocca: la sua icona a
+      48 dp è quella che alla terza passata ha fatto entrare la pillola nel
+      cartoncino.
+    - **Minima e massima escono dai due widget** (Now e Today): erano l'aggiunta
+      della seconda passata, e su device la coppia accanto al numero grande è
+      rumore — VISION §5.9 chiede «icona, temperatura, luogo» e adesso è quello che
+      c'è. `dayRangeText` esce da WidgetUi con loro; l'escursione del giorno resta
+      dove è nata, sulle righe della settimana.
+    - **Il widget Cielo e la schermata Cielo mostravano due albe diverse.** Alle
+      21:19 la lista «I momenti di oggi» teneva l'alba della mattina, grigia e
+      marcata `Passato`, con un `? Presto per dirlo` che le ore trascorse non
+      potevano più sostenere; il widget sulla stessa home mostrava già l'alba di
+      DOMANI, giudicata `Bello · nuvole 0%`. Nessuna delle due superfici sbagliava
+      per conto suo: la finestra che ciascuna guardava non era scritta da nessuna
+      parte. Ora è scritta una volta sola, in `ui/sky/SkyUpcoming.kt`, e la leggono
+      entrambe. La regola: un momento smette di essere di oggi quando è finito, e
+      allora la riga diventa quella di domani e lo dice («Domani · 06:47»). Tre
+      eccezioni, che sono fatti e non comodità: una finestra aperta e non chiusa
+      vince e si marca «Adesso» (la regola per cui alle 03:00 «stanotte» è il cielo
+      fuori, che finora viveva solo nella card Stanotte e ora la card legge da qui);
+      un `∅` resta di oggi, perché «oggi la luna lo salta» è una risposta su oggi
+      (dottrina di `SkyScheduler`, tenuta); e il momento-lunare del giorno non
+      scorre mai, perché è un'affermazione SU oggi e non un appuntamento — stampare
+      «Domani» sotto «La luna di oggi» sarebbe assurdo, e «Passato» alle nove di
+      sera già lo era.
+    - Ricadute oneste: la sezione si chiama «I prossimi momenti» (un elenco che può
+      contenere domani non è «di oggi»); i quattro `sky_none_*` perdono l'«oggi»
+      incorporato e il giorno passa nel marcatore, perché ora un `∅` può essere di
+      domani; `sky_moment_past` sparisce. Il widget Cielo stampa il marcatore con lo
+      stesso vocabolario e, per un evento oltre domani, la data — un'ora nuda su una
+      home si legge come quella di oggi. Il momento-lunare non è candidato del
+      widget (`SkyUpcoming.firstAt` lo salta): fissato a oggi, vincerebbe per sempre
+      ogni confronto — e lo stato vuoto del widget dice «nessun momento in arrivo»
+      invece di «nessun momento seguito», che con la sola luna sottoscritta sarebbe
+      falso. Cinque test nuovi in `SkyStateBuilderTest`, fra cui quello che
+      lega le due superfici: il momento del widget è la prima riga della schermata
+      che fira davvero.
 
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 

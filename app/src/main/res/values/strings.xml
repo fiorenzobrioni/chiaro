@@ -266,11 +266,13 @@
 
     <!-- Sky (Fase 5). Everything speaks words: the dotted ids never reach a screen. -->
     <string name="sky_no_place_body">Add a place to see what its sky has planned.</string>
-    <string name="sky_section_moments">Today\'s moments</string>
+    <string name="sky_section_moments">The moments ahead</string>
     <string name="sky_section_events">Coming up</string>
     <string name="sky_section_reminders">Reminders</string>
     <string name="sky_add_moment">Add a moment</string>
-    <string name="sky_moment_past">Passed</string>
+    <string name="sky_moment_now">Now</string>
+    <string name="sky_day_today">Today</string>
+    <string name="sky_day_tomorrow">Tomorrow</string>
     <string name="sky_tonight_label">Tonight</string>
     <string name="sky_tonight_window">Dark from %1$s to %2$s</string>
     <string name="sky_tonight_no_darkness">The sky never gets fully dark tonight: at this latitude, in this season, it happens.</string>
@@ -290,10 +292,10 @@
     <string name="sky_unknown_no_coverage">The forecast doesn\'t cover those hours</string>
 
     <!-- Why the sky skips a day: a fact about the sky, never a gap in the list -->
-    <string name="sky_none_polar_day">The sun doesn\'t set today</string>
-    <string name="sky_none_polar_night">The sun doesn\'t rise today</string>
-    <string name="sky_none_moon">The moon skips it today: it happens about once a month</string>
-    <string name="sky_none_no_darkness">The sky never gets fully dark tonight</string>
+    <string name="sky_none_polar_day">The sun doesn\'t set</string>
+    <string name="sky_none_polar_night">The sun doesn\'t rise</string>
+    <string name="sky_none_moon">The moon skips it, as it does about once a month</string>
+    <string name="sky_none_no_darkness">The sky never gets fully dark</string>
 
     <!-- Reminders: inexact by design, and the screen says so -->
     <string name="sky_default_lead">Usual reminder</string>
@@ -559,7 +561,7 @@
     <string name="widget_sky_desc">The next sky moment and its verdict</string>
     <string name="widget_no_place_hint">Tap to open Chiaro and add one</string>
     <string name="widget_no_data">Getting the first forecast…</string>
-    <string name="widget_sky_empty">No sky moments followed. Tap to pick some.</string>
+    <string name="widget_sky_empty">No sky moment coming up. Tap to follow one.</string>
     <string name="settings_opacity_full">Solid</string>
     <string name="widget_opacity_transparent">See-through</string>
     <string name="widget_config_title">This widget</string>

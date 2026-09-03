@@ -287,9 +287,13 @@ The differentiator with the most engineering already behind it.
 - **Tonight**: a hero verdict — *Great* / *So-so* / *No chance* / *Not sure yet* — for the dark
   window, with the numbers that decided it and the reason when it was not the clouds ("the moon is
   up, 94% lit").
-- **Today's moments**: a list of the reader's subscribed events (sunrise, golden hour, sunset, dark
-  window, moon by default — four to five, never the full catalog), each a card with time, verdict
-  chip, evidence, and a bell for a reminder.
+- **The moments ahead**: a list of the reader's subscribed events (sunrise, golden hour, sunset,
+  dark window, moon by default — four to five, never the full catalog), each a card with time,
+  verdict chip, evidence, and a bell for a reminder. The list is an agenda, not a log: a moment
+  that is over is replaced by its next occurrence and the row names the day ("Tomorrow"), a window
+  in progress says "Now", and the moon's day-moment stays today's because it is a statement about
+  today rather than an appointment. The Sky widget resolves its moment by the same rule, so the
+  home screen and the app can never print two different sunrises.
 - **Next events**: the calendar ahead — meteor peaks with their dates, full moon, solstice,
   equinox — with the verdict where the forecast reaches that far and an honest "too far out to
   say" where it does not.
@@ -366,9 +370,11 @@ first time the reader turns on something that needs them, never at startup.
 
 Glance, three sizes, matching the app's dynamic color:
 
-- **Now**: icon, temperature, place.
+- **Now**: icon, temperature, place — and nothing else; the weather icon fills the height the
+  launcher grants, because at arm's length it is the first thing to read.
 - **Today**: now plus the next hours strip plus the headline sentence.
-- **Sky**: the next moment and its verdict — the widget nobody else ships.
+- **Sky**: the moment in front of the reader and its verdict, with the day named when it is not
+  today — the widget nobody else ships.
 
 A widget never invents: with stale data it says how old it is, and with no place configured it says
 so and opens the app.

@@ -40,19 +40,15 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider as FixedColorProvider
 import com.callbackdev.chiaro.MainActivity
 import com.callbackdev.chiaro.R
-import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.theme.ChiaroDarkColors
 import com.callbackdev.chiaro.ui.theme.ChiaroDarkScheme
 import com.callbackdev.chiaro.ui.theme.ChiaroLightColors
 import com.callbackdev.chiaro.ui.theme.ChiaroLightScheme
-import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.theme.SkyPalette
 import com.callbackdev.chiaro.ui.today.SkySnapshot
-import com.callbackdev.chiaro.ui.today.TodayUiState
 import java.time.Duration
 import java.time.Instant
-import java.util.Locale
 
 /**
  * The widgets' side of the design system (Fase 8, redrawn on device review): the
@@ -311,19 +307,18 @@ fun staleText(context: Context, lastSync: Instant, now: Instant): String {
     }
 }
 
-/** "↓13° ↑24°": the day's range, low before high — the week rows' own reading
- * order. Null near midnight, when the trimmed report no longer carries today's
- * daily row: the pair is then not drawn, never guessed. */
-fun dayRangeText(
-    content: TodayUiState.Content,
-    unit: TemperatureUnit,
-    locale: Locale
-): String? {
-    val today = content.report.daily
-        .firstOrNull { it.date == content.now.toLocalDate() } ?: return null
-    return "↓" + Formats.temperature(today.lowC, unit, locale) +
-        " ↑" + Formats.temperature(today.highC, unit, locale)
-}
+/**
+ * The hero glyph's size: it fills the height the launcher really granted, between a
+ * floor and a ceiling (committente, 3 set — "as big as the Samsung one"). A fixed
+ * number could only ever be right on one cell size, and the Meteocons art sits
+ * inside about half its box, so the box has to be generous before the glyph reads
+ * at arm's length. The floor keeps a squeezed widget legible; the ceiling stops a
+ * tall grant from turning the icon into a poster.
+ */
+fun heroIconSize(available: Dp): Dp = available.coerceIn(HeroIconMin, HeroIconMax)
+
+private val HeroIconMin = 52.dp
+private val HeroIconMax = 96.dp
 
 /** The rain figure's ink: the §2.3 ramp selected for the ground the card really
  * has, the secondary ink when there is nothing to say — the app strip's own rule. */

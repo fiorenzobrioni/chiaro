@@ -10,9 +10,9 @@ import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.sky.SkyJob
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
-import com.callbackdev.chiaro.domain.sky.SkyScheduler
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.domain.sky.SkyVerdictEngine
+import com.callbackdev.chiaro.ui.sky.SkyUpcoming
 import com.callbackdev.chiaro.ui.today.TodayStateBuilder
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import java.time.Duration
@@ -36,12 +36,17 @@ data class WidgetModel(
     val zone: ZoneId
 )
 
-/** The Sky widget's subject: the next subscribed moment to fire, judged. */
+/**
+ * The Sky widget's subject: the subscribed moment in front of the reader, judged.
+ * [inProgress] is a window that has opened and not closed — the widget says so
+ * rather than printing a start time that has been and gone.
+ */
 data class NextMoment(
     val job: SkyJob,
     val start: Instant,
     val end: Instant?,
-    val verdict: SkyVerdict?
+    val verdict: SkyVerdict?,
+    val inProgress: Boolean
 )
 
 object WidgetData {
@@ -94,7 +99,12 @@ object WidgetData {
             ActiveSource.None -> null
         }
 
-    /** The first subscribed moment to fire after now, with the sky's opinion on it. */
+    /**
+     * The subscribed moment in front of the reader, with the sky's opinion on it —
+     * [SkyUpcoming]'s answer, which is exactly the first scheduled row of the Sky
+     * screen's own list. The widget and the screen printed two different sunrises
+     * until the rule lived in one place (committente, 3 set).
+     */
     private suspend fun nextMoment(
         context: Context,
         city: City,
@@ -107,8 +117,8 @@ object WidgetData {
             .filter { it.enabled }
             .mapNotNull { SkyJobCatalog.byId(it.jobId) }
         if (jobs.isEmpty()) return null
-        val at: SkyOccurrence.At =
-            SkyScheduler.nextToFire(jobs, now, zone, city.coordinates) ?: return null
+        val upcoming = SkyUpcoming.firstAt(jobs, now, zone, city.coordinates) ?: return null
+        val at: SkyOccurrence.At = upcoming.at ?: return null
         val verdict = if (at.job.observable) {
             SkyVerdictEngine.evaluate(
                 job = at.job,
@@ -123,6 +133,6 @@ object WidgetData {
         } else {
             null
         }
-        return NextMoment(at.job, at.start, at.end, verdict)
+        return NextMoment(at.job, at.start, at.end, verdict, upcoming.inProgress)
     }
 }

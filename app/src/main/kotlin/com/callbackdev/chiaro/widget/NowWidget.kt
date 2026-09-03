@@ -9,8 +9,10 @@ import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
+import androidx.glance.LocalSize
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
@@ -34,6 +36,10 @@ import java.util.Locale
  * its age; no place says so; nothing here is ever a guess.
  */
 class NowWidget : GlanceAppWidget() {
+
+    /** Exact sizing so [LocalSize] is the height the launcher really granted: the
+     * icon fills it (device review, 3 set — a fixed size fits one cell only). */
+    override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val appWidgetId = runCatching {
@@ -83,34 +89,24 @@ private fun NowContent(
                 )
             ),
             contentDescription = null, // the temperature and place say it in words
-            modifier = GlanceModifier.size(68.dp)
+            modifier = GlanceModifier.size(
+                heroIconSize(LocalSize.current.height - WidgetCardPaddingTight * 2)
+            )
         )
         Column(modifier = GlanceModifier.padding(start = 12.dp).fillMaxWidth()) {
-            // The day's range sits next to the number that moves inside it.
-            val range = dayRangeText(content, model.settings.units.temperature, locale)
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = Formats.temperature(
-                        current.tempC, model.settings.units.temperature, locale
-                    ),
-                    style = TextStyle(
-                        color = palette.primary,
-                        fontSize = 34.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+            // Icon, temperature, place — VISION §5.9's three, and only those: the
+            // day's range next to the number read as clutter on the home screen
+            // (committente, 3 set) and it is one tap away in the app.
+            Text(
+                text = Formats.temperature(
+                    current.tempC, model.settings.units.temperature, locale
+                ),
+                style = TextStyle(
+                    color = palette.primary,
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.Medium
                 )
-                if (range != null) {
-                    Text(
-                        text = range,
-                        style = secondaryStyle(palette, 13.sp),
-                        maxLines = 1,
-                        // 4dp of bottom inset lands the small line on the big
-                        // number's baseline — two sizes top-aligned read as a
-                        // mistake (the hero's own rule, device check, 2 set).
-                        modifier = GlanceModifier.padding(start = 8.dp, bottom = 4.dp)
-                    )
-                }
-            }
+            )
             Text(
                 text = content.city.name,
                 style = secondaryStyle(palette, 15.sp),

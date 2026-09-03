@@ -37,7 +37,14 @@ class SkyStateBuilderTest {
     private val fetched: LocalDateTime = LocalDateTime.of(2026, 9, 11, 12, 0)
     private val noon = fetched.atZone(zone).toInstant()
 
-    private fun report(cloudPct: Int = 10, precipPct: Int = 5) = sampleWeatherReport().copy(
+    /** [syncedAt] is when the fetch landed: a report older than twice the update
+     * interval is too old to judge by, and the evening cases here are about the
+     * moment on the row, not about staleness. */
+    private fun report(
+        cloudPct: Int = 10,
+        precipPct: Int = 5,
+        syncedAt: LocalDateTime = fetched
+    ) = sampleWeatherReport().copy(
         hourly = (0 until 48).map {
             HourlyForecast(
                 time = fetched.plusHours(it.toLong()),
@@ -48,7 +55,7 @@ class SkyStateBuilderTest {
             )
         },
         systemInfo = sampleWeatherReport().systemInfo.copy(
-            lastSync = fetched.atZone(zone).toInstant()
+            lastSync = syncedAt.atZone(zone).toInstant()
         )
     )
 
@@ -78,15 +85,87 @@ class SkyStateBuilderTest {
     }
 
     @Test
-    fun `the default subscriptions become today's moments in time order`() {
+    fun `the default subscriptions become the moments ahead, in time order`() {
         val content = SkyStateBuilder.build(milan, report(), defaults(), AppSettings(), noon)
 
         assertEquals(SkyJobCatalog.defaults.size, content.moments.size)
         val scheduled = content.moments.map { it.occurrence }.filterIsInstance<SkyOccurrence.At>()
         assertEquals(scheduled.sortedBy { it.start }, scheduled)
-        // The morning is over by noon; the evening is not.
-        assertTrue(content.moments.first { it.job.id == "sun.rise" }.past)
-        assertTrue(!content.moments.first { it.job.id == "sun.set" }.past)
+        // The morning is over by noon, so its row is tomorrow's; the evening is not.
+        assertEquals(
+            MomentTiming.TOMORROW,
+            content.moments.first { it.job.id == "sun.rise" }.timing
+        )
+        assertEquals(
+            MomentTiming.TODAY,
+            content.moments.first { it.job.id == "sun.set" }.timing
+        )
+    }
+
+    /**
+     * The device report this rule was written for (3 set): at 21:19 the screen showed
+     * this morning's sunrise, greyed out and unjudgeable, while the widget already
+     * showed tomorrow's, judged. Now the screen shows the one the widget shows.
+     */
+    @Test
+    fun `in the evening the sunrise row is tomorrow's, and it can be judged`() {
+        val eveningAt = LocalDateTime.of(2026, 9, 11, 21, 19)
+        val evening = eveningAt.atZone(zone).toInstant()
+        val content = SkyStateBuilder.build(
+            milan, report(syncedAt = eveningAt), defaults(), AppSettings(), evening
+        )
+
+        val sunrise = content.moments.first { it.job.id == "sun.rise" }
+        assertEquals(MomentTiming.TOMORROW, sunrise.timing)
+        val at = sunrise.occurrence as SkyOccurrence.At
+        assertTrue(at.start.isAfter(evening))
+        assertEquals(LocalDate.of(2026, 9, 12), at.start.atZone(zone).toLocalDate())
+        // The hours it lands in are in the forecast, so there is a real verdict.
+        assertEquals(SkyVerdictKind.PASS, sunrise.verdict?.kind)
+    }
+
+    @Test
+    fun `the screen and the Sky widget name the same moment`() {
+        val evening = LocalDateTime.of(2026, 9, 11, 21, 19).atZone(zone).toInstant()
+        val content = SkyStateBuilder.build(milan, report(), defaults(), AppSettings(), evening)
+
+        val widget = SkyUpcoming.firstAt(
+            SkyJobCatalog.defaults, evening, zone, milan.coordinates
+        )
+        // The widget's moment is the screen's first row that actually fires (the
+        // moon's day-moment is a standing fact about today, not an appointment).
+        val firstToFire = content.moments
+            .filter { it.job.id != SkyJobCatalog.MoonToday.id }
+            .mapNotNull { it.occurrence as? SkyOccurrence.At }
+            .minByOrNull { it.start }
+        assertEquals(firstToFire?.start, widget?.at?.start)
+        assertEquals(firstToFire?.job?.id, widget?.at?.job?.id)
+    }
+
+    @Test
+    fun `the moon's day-moment never rolls to tomorrow`() {
+        val evening = LocalDateTime.of(2026, 9, 11, 21, 19).atZone(zone).toInstant()
+        val content = SkyStateBuilder.build(milan, report(), defaults(), AppSettings(), evening)
+
+        val moon = content.moments.first { it.job.id == "moon.today" }
+        assertEquals(MomentTiming.TODAY, moon.timing)
+        val at = moon.occurrence as SkyOccurrence.At
+        assertEquals(LocalDate.of(2026, 9, 11), at.start.atZone(zone).toLocalDate())
+    }
+
+    @Test
+    fun `a window that has opened and not closed is the one shown, marked now`() {
+        val threeAm = LocalDateTime.of(2026, 9, 12, 3, 0).atZone(zone).toInstant()
+        val subscriptions = listOf(SkySubscription("darkness.window"))
+        val content = SkyStateBuilder.build(milan, report(), subscriptions, AppSettings(), threeAm)
+
+        val window = content.moments.single()
+        assertEquals(MomentTiming.NOW, window.timing)
+        val at = window.occurrence as SkyOccurrence.At
+        assertTrue(at.start.isBefore(threeAm))
+        assertTrue(at.end!!.isAfter(threeAm))
+        // The hero and the row are looking at the same night.
+        assertEquals(content.tonight.window?.start, at.start)
     }
 
     @Test
