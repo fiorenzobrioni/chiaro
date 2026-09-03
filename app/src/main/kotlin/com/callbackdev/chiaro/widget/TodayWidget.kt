@@ -9,8 +9,10 @@ import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
+import androidx.glance.LocalSize
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
@@ -40,6 +42,10 @@ import java.util.Locale
  */
 class TodayWidget : GlanceAppWidget() {
 
+    /** Exact sizing so [LocalSize] is the width the launcher really granted — the
+     * strip reads it to decide how many hours honestly fit. */
+    override val sizeMode: SizeMode = SizeMode.Exact
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val appWidgetId = runCatching {
             GlanceAppWidgetManager(context).getAppWidgetId(id)
@@ -64,9 +70,14 @@ class TodayWidget : GlanceAppWidget() {
     }
 
     private companion object {
-        /** Cells in the strip: enough shape to plan the afternoon, few enough that
-         * every number stays readable at 4 launcher cells. */
-        const val STRIP_CELLS = 5
+        /** The strip sizes itself to the width the launcher actually granted: a
+         * cell under this width squeezes its numbers, and fewer than four hours is
+         * no longer an afternoon. At the 4-cell minimum this lands on the same five
+         * cells the strip always had; wider widgets get their sixth and seventh. */
+        val StripCellMin = 38.dp
+        val StripCellSpacing = 6.dp
+        const val StripCellsFloor = 4
+        const val StripCellsCeiling = 7
     }
 
     @Composable
@@ -93,7 +104,7 @@ class TodayWidget : GlanceAppWidget() {
                         )
                     ),
                     contentDescription = null,
-                    modifier = GlanceModifier.size(52.dp)
+                    modifier = GlanceModifier.size(64.dp)
                 )
                 Column(modifier = GlanceModifier.padding(start = 12.dp)) {
                     Text(
@@ -108,7 +119,7 @@ class TodayWidget : GlanceAppWidget() {
                     )
                     Text(
                         text = content.city.name,
-                        style = secondaryStyle(palette, 13.sp),
+                        style = secondaryStyle(palette, 15.sp),
                         maxLines = 1
                     )
                 }
@@ -136,9 +147,13 @@ class TodayWidget : GlanceAppWidget() {
 
             Spacer(modifier = GlanceModifier.defaultWeight())
 
+            val cells = (
+                (LocalSize.current.width - WidgetCardPadding * 2 + StripCellSpacing) /
+                    (StripCellMin + StripCellSpacing)
+                ).toInt().coerceIn(StripCellsFloor, StripCellsCeiling)
             Row(modifier = GlanceModifier.fillMaxWidth()) {
-                content.strip.take(STRIP_CELLS).forEachIndexed { index, strip ->
-                    if (index > 0) Spacer(modifier = GlanceModifier.width(6.dp))
+                content.strip.take(cells).forEachIndexed { index, strip ->
+                    if (index > 0) Spacer(modifier = GlanceModifier.width(StripCellSpacing))
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = GlanceModifier.defaultWeight()

@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro
 
 import android.app.Application
+import android.content.res.Configuration
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.notifications.ChiaroNotifiers
 import com.callbackdev.chiaro.notifications.SkyAlarmScheduler
@@ -57,6 +58,16 @@ class ChiaroApplication : Application() {
                 .collect {
                     runCatching { ChiaroWidgets.updateAll(this@ChiaroApplication) }
                 }
+        }
+    }
+
+    /** The widgets resolve day/night and every string at render time (WidgetUi): a
+     * theme or locale flip while the process lives repaints them on the spot instead
+     * of waiting for the next sync to notice. */
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        appScope.launch {
+            runCatching { ChiaroWidgets.updateAll(this@ChiaroApplication) }
         }
     }
 }

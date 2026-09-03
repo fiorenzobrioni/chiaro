@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.widget
 
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.LinearGradient
@@ -13,6 +14,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,7 +27,6 @@ import androidx.glance.action.clickable
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.background
-import androidx.glance.color.ColorProvider
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.ContentScale
@@ -70,34 +71,59 @@ data class WidgetPalette(
     val stale: androidx.glance.unit.ColorProvider
 )
 
-private fun palette(background: WidgetBackground, schemes: WidgetSchemes): WidgetPalette =
-    when (background) {
+/**
+ * The system's answer at render time: is the phone in night mode right now? Glance's
+ * own day/night providers are resolved by the LAUNCHER, and a host that flips the
+ * card without flipping the words leaves dark ink on a dark card (device report,
+ * 3 set). Resolving every color here against one configuration makes that split
+ * impossible; the Application repaints on every configuration change, so the answer
+ * can only go stale while the process is dead, and the next sync corrects it.
+ */
+fun isNight(context: Context): Boolean =
+    (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+        Configuration.UI_MODE_NIGHT_YES
+
+/** Below this solidity the card stops being the ink's ground. */
+private const val InkTrustFloorPct = 50
+
+private fun palette(
+    background: WidgetBackground,
+    schemes: WidgetSchemes,
+    night: Boolean,
+    opacityPct: Int
+): WidgetPalette {
+    val lightInks = WidgetPalette(
+        primary = FixedColorProvider(schemes.light.onSurface),
+        secondary = FixedColorProvider(schemes.light.onSurfaceVariant),
+        stale = FixedColorProvider(ChiaroLightColors.freshness.ink)
+    )
+    val darkInks = WidgetPalette(
+        primary = FixedColorProvider(schemes.dark.onSurface),
+        secondary = FixedColorProvider(schemes.dark.onSurfaceVariant),
+        stale = FixedColorProvider(ChiaroDarkColors.freshness.ink)
+    )
+    // A card under half solidity no longer guarantees its own ground, so the ink
+    // stops trusting it: whatever the dress, it follows the phone's theme — the
+    // best proxy a widget has for the wallpaper showing through (device report,
+    // 3 set: dark ink on a see-through card over a dark wallpaper).
+    if (opacityPct < InkTrustFloorPct) return if (night) darkInks else lightInks
+    return when (background) {
         // White over the scrimmed gradient: the §3.6 numbers, reused as-is.
         WidgetBackground.SKY -> WidgetPalette(
             primary = FixedColorProvider(Color.White),
             secondary = FixedColorProvider(Color.White.copy(alpha = 0.75f)),
             stale = FixedColorProvider(Color.White.copy(alpha = 0.85f))
         )
-        WidgetBackground.LIGHT -> WidgetPalette(
-            primary = FixedColorProvider(schemes.light.onSurface),
-            secondary = FixedColorProvider(schemes.light.onSurfaceVariant),
-            stale = FixedColorProvider(ChiaroLightColors.freshness.ink)
-        )
-        WidgetBackground.DARK -> WidgetPalette(
-            primary = FixedColorProvider(schemes.dark.onSurface),
-            secondary = FixedColorProvider(schemes.dark.onSurfaceVariant),
-            stale = FixedColorProvider(ChiaroDarkColors.freshness.ink)
-        )
-        WidgetBackground.SYSTEM -> WidgetPalette(
-            primary = ColorProvider(schemes.light.onSurface, schemes.dark.onSurface),
-            secondary = ColorProvider(
-                schemes.light.onSurfaceVariant, schemes.dark.onSurfaceVariant
-            ),
-            stale = ColorProvider(
-                ChiaroLightColors.freshness.ink, ChiaroDarkColors.freshness.ink
-            )
-        )
+        WidgetBackground.LIGHT -> lightInks
+        WidgetBackground.DARK -> darkInks
+        WidgetBackground.SYSTEM -> if (night) darkInks else lightInks
     }
+}
+
+/** The card's inner padding: the roomy default, and the tighter dress for the
+ * one-cell widgets, whose bigger icon needs the air (device review, 3 set). */
+val WidgetCardPadding = 14.dp
+val WidgetCardPaddingTight = 12.dp
 
 /**
  * The card every widget lives in. The sky dress is a bitmap of the same gradient the
@@ -112,6 +138,7 @@ fun WidgetCard(
     model: WidgetModel,
     schemes: WidgetSchemes,
     skyBitmap: Bitmap?,
+    contentPadding: Dp = WidgetCardPadding,
     content: @Composable (WidgetPalette) -> Unit
 ) {
     val look = model.look
@@ -122,6 +149,7 @@ fun WidgetCard(
             look.background
         }
     val alpha = look.opacityPct / 100f
+    val night = isNight(LocalContext.current)
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
@@ -142,15 +170,15 @@ fun WidgetCard(
                     FixedColorProvider(schemes.light.surface.copy(alpha = alpha))
                 WidgetBackground.DARK ->
                     FixedColorProvider(schemes.dark.surface.copy(alpha = alpha))
-                else -> ColorProvider(
-                    day = schemes.light.surface.copy(alpha = alpha),
-                    night = schemes.dark.surface.copy(alpha = alpha)
+                else -> FixedColorProvider(
+                    (if (night) schemes.dark.surface else schemes.light.surface)
+                        .copy(alpha = alpha)
                 )
             }
             Box(modifier = GlanceModifier.fillMaxSize().background(fill)) {}
         }
-        Box(modifier = GlanceModifier.fillMaxSize().padding(14.dp)) {
-            content(palette(effectiveBackground, schemes))
+        Box(modifier = GlanceModifier.fillMaxSize().padding(contentPadding)) {
+            content(palette(effectiveBackground, schemes, night, look.opacityPct))
         }
     }
 }
@@ -246,17 +274,19 @@ fun staleText(context: Context, lastSync: Instant, now: Instant): String {
     }
 }
 
-/** The verdict pair as day/night providers: same fixed semantics as in the app —
- * a verdict means the same thing whatever the wallpaper is (DESIGN §2.3). */
-fun verdictInk(kind: SkyVerdictKind): androidx.glance.unit.ColorProvider = ColorProvider(
-    day = verdictColorsLight(kind).ink,
-    night = verdictColorsDark(kind).ink
-)
+/** The verdict pair, resolved at render time like every other widget color: same
+ * fixed semantics as in the app — a verdict means the same thing whatever the
+ * wallpaper is (DESIGN §2.3) — and ink and container resolve together, so no
+ * host can ever pair one mode's chip with the other mode's word. */
+fun verdictInk(kind: SkyVerdictKind, night: Boolean): androidx.glance.unit.ColorProvider =
+    FixedColorProvider(
+        (if (night) verdictColorsDark(kind) else verdictColorsLight(kind)).ink
+    )
 
-fun verdictContainer(kind: SkyVerdictKind): androidx.glance.unit.ColorProvider = ColorProvider(
-    day = verdictColorsLight(kind).container,
-    night = verdictColorsDark(kind).container
-)
+fun verdictContainer(kind: SkyVerdictKind, night: Boolean): androidx.glance.unit.ColorProvider =
+    FixedColorProvider(
+        (if (night) verdictColorsDark(kind) else verdictColorsLight(kind)).container
+    )
 
 private fun verdictColorsLight(kind: SkyVerdictKind) = when (kind) {
     SkyVerdictKind.PASS -> ChiaroLightColors.pass

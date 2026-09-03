@@ -20,6 +20,11 @@ import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.SkyGradient
 import com.callbackdev.chiaro.ui.theme.SkyPalette
 
+/** Where the top scrim band fades out, as a fraction of the canvas height. Today's
+ * screen reads it to know how far white status-bar icons stay backed by scrim before
+ * the bar must return to theme ink. */
+const val SkyCanvasTopScrimEnd = 0.25f
+
 /**
  * DESIGN.md §3 and §8.1. The gradient is the sky above the active city, computed by
  * [SkyPalette]; this composable paints it and guarantees the scrim — on BOTH text
@@ -49,7 +54,7 @@ fun SkyCanvas(
             .background(
                 Brush.verticalGradient(
                     0.00f to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha),
-                    0.25f to Color.Transparent,
+                    SkyCanvasTopScrimEnd to Color.Transparent,
                     0.45f to Color.Transparent,
                     1.00f to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha)
                 )

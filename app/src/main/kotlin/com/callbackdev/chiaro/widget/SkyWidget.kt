@@ -52,7 +52,10 @@ class SkyWidget : GlanceAppWidget() {
             ?.takeIf { model.look.background == WidgetBackground.SKY }
             ?.let { skyGradientBitmap(it.sky, model.look.opacityPct) }
         provideContent {
-            WidgetCard(model, schemes, skyBitmap) { palette ->
+            WidgetCard(
+                model, schemes, skyBitmap,
+                contentPadding = WidgetCardPaddingTight
+            ) { palette ->
                 when {
                     model.city == null -> NoPlaceContent(palette)
                     model.nextMoment == null -> NoMomentContent(palette)
@@ -80,7 +83,7 @@ private fun SkyContent(model: WidgetModel, moment: NextMoment, palette: WidgetPa
             Image(
                 provider = ImageProvider(skyJobIconRes(moment, model.settings.weatherIcons)),
                 contentDescription = null,
-                modifier = GlanceModifier.size(46.dp)
+                modifier = GlanceModifier.size(54.dp)
             )
             Column(modifier = GlanceModifier.padding(start = 12.dp)) {
                 Text(
@@ -105,6 +108,7 @@ private fun SkyContent(model: WidgetModel, moment: NextMoment, palette: WidgetPa
 @Composable
 private fun VerdictPill(verdict: SkyVerdict) {
     val context = LocalContext.current
+    val night = isNight(context)
     val word = context.getString(SkyText.verdictWordRes(verdict.kind))
     val detail = if (verdict.kind == SkyVerdictKind.UNKNOWN) {
         SkyText.unknownReason(context.resources, verdict)
@@ -114,13 +118,13 @@ private fun VerdictPill(verdict: SkyVerdict) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier
-            .background(verdictContainer(verdict.kind))
+            .background(verdictContainer(verdict.kind, night))
             .cornerRadius(14.dp)
             .padding(horizontal = 10.dp, vertical = 5.dp)
     ) {
         Text(
             text = if (detail != null) "$word · $detail" else word,
-            style = TextStyle(color = verdictInk(verdict.kind), fontSize = 12.sp),
+            style = TextStyle(color = verdictInk(verdict.kind, night), fontSize = 12.sp),
             maxLines = 1
         )
     }

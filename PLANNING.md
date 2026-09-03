@@ -732,11 +732,41 @@ Quattro rilievi, due dei quali hanno rifatto il vestito dei widget:
   città appuntate), sfondo, opacità con slider fino a Trasparente. Ogni scelta
   persiste al tocco e ridipinge quel solo widget. Il gruppo Widget delle
   Impostazioni globali sparisce: due posti per lo stesso pomello divergono.
-- **Nota onesta sull'opacità bassa**: gradiente e scrim scalano insieme, l'inchiostro
-  resta pieno; sotto ~40% col vestito Cielo la leggibilità dipende dallo sfondo del
-  lettore — è la sua scelta, per quel widget.
+- **Nota onesta sull'opacità bassa** (rivista il 3 set, seconda passata su device):
+  gradiente e scrim scalano insieme e l'inchiostro resta pieno, ma «le la leggibilità
+  è scelta del lettore» su device era semplicemente testo invisibile. Ora sotto il
+  50% il cartoncino non è più il fondo dell'inchiostro, quindi l'inchiostro smette
+  di fidarsi e segue il tema del telefono — il miglior indizio che un widget ha su
+  cosa ci sia sotto.
 - **L'icona dell'app** stringe le distanze: falce giù, onde su, composizione centrata
   nel badge (il primo taglio abbracciava i bordi e lasciava un golfo in mezzo).
+- **Seconda passata su device (3 set 2026)** — tre correzioni grafiche:
+  - Icona meteo più grande (Now 56→68 dp, Today 52→64 dp, Sky 46→54 dp) e nome
+    della città a 15 sp: a distanza di braccio erano i primi a sparire.
+  - **I colori dei widget si risolvono al render, non nel launcher**: i ColorProvider
+    day/night di Glance sono risolti dall'host, e un host che gira il cartoncino senza
+    girare l'inchiostro lascia parole scure su cartoncino scuro (visto su device).
+    Ora ogni colore si risolve contro una sola configurazione (`isNight` in WidgetUi)
+    e l'Application ridipinge a ogni cambio di configurazione (tema E lingua); il
+    costo onesto è che un flip di tema a processo morto resta indietro fino al sync
+    successivo — un cartoncino del tema sbagliato ma leggibile, mai illeggibile.
+  - **Le icone della status bar seguono ciò che hanno sotto, davvero**: seguivano lo
+    STATO di Today (Content ⇒ bianche) ma non lo scroll, e il contenuto chiaro
+    scrollato sotto la barra le rendeva invisibili. Ora il default è legato al tema
+    APPLICATO in MainActivity (status e navigation bar: un tema forzato contro il
+    sistema lasciava le icone del sistema anche sugli altri schermi); su Today
+    restano bianche solo finché la banda di scrim del canvas è dietro la barra
+    (`SkyCanvasTopScrimEnd`, una costante sola per canvas e soglia); quando Today
+    esce di scena la barra torna al tema.
+  - Quattro rifiniture applicate nella stessa passata: temperatura del Now a 34 sp
+    (bilancia l'icona cresciuta); minima e massima del giorno accanto alla
+    temperatura del Now (↓ prima di ↑, l'ordine di lettura delle righe della
+    settimana; vicino a mezzanotte la riga daily di oggi può mancare dal report
+    ritagliato e allora la coppia non si disegna); la striscia oraria del Today passa
+    a `SizeMode.Exact` e conta le celle sulla larghezza reale concessa dal launcher
+    (minimo 4, massimo 7 — al minimo di 4 celle launcher restano le 5 di sempre);
+    padding del cartoncino a 12 dp sui widget a una cella (Now e Sky), parametro
+    `contentPadding` con default 14 dp per il Today.
 
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 

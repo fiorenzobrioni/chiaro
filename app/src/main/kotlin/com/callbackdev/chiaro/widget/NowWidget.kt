@@ -45,7 +45,10 @@ class NowWidget : GlanceAppWidget() {
             ?.takeIf { model.look.background == WidgetBackground.SKY }
             ?.let { skyGradientBitmap(it.sky, model.look.opacityPct) }
         provideContent {
-            WidgetCard(model, schemes, skyBitmap) { palette ->
+            WidgetCard(
+                model, schemes, skyBitmap,
+                contentPadding = WidgetCardPaddingTight
+            ) { palette ->
                 when (val content = model.content) {
                     null -> if (model.city == null) {
                         NoPlaceContent(palette)
@@ -79,22 +82,45 @@ private fun NowContent(
                 )
             ),
             contentDescription = null, // the temperature and place say it in words
-            modifier = GlanceModifier.size(56.dp)
+            modifier = GlanceModifier.size(68.dp)
         )
         Column(modifier = GlanceModifier.padding(start = 12.dp).fillMaxWidth()) {
-            Text(
-                text = Formats.temperature(
-                    current.tempC, model.settings.units.temperature, locale
-                ),
-                style = TextStyle(
-                    color = palette.primary,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Medium
+            // The day's range sits next to the number that moves inside it — low
+            // before high, the week rows' own reading order. Near midnight today's
+            // daily row can be gone from the trimmed report; then the pair is simply
+            // not drawn, never guessed.
+            val today = content.report.daily
+                .firstOrNull { it.date == content.now.toLocalDate() }
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = Formats.temperature(
+                        current.tempC, model.settings.units.temperature, locale
+                    ),
+                    style = TextStyle(
+                        color = palette.primary,
+                        fontSize = 34.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
-            )
+                if (today != null) {
+                    Text(
+                        text = "↓" + Formats.temperature(
+                            today.lowC, model.settings.units.temperature, locale
+                        ) + " ↑" + Formats.temperature(
+                            today.highC, model.settings.units.temperature, locale
+                        ),
+                        style = secondaryStyle(palette, 13.sp),
+                        maxLines = 1,
+                        // 4dp of bottom inset lands the small line on the big
+                        // number's baseline — two sizes top-aligned read as a
+                        // mistake (the hero's own rule, device check, 2 set).
+                        modifier = GlanceModifier.padding(start = 8.dp, bottom = 4.dp)
+                    )
+                }
+            }
             Text(
                 text = content.city.name,
-                style = secondaryStyle(palette, 13.sp),
+                style = secondaryStyle(palette, 15.sp),
                 maxLines = 1
             )
             if (content.isStale) {

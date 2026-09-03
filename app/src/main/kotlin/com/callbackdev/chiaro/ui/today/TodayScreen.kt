@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -48,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.core.view.WindowCompat
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -76,6 +79,7 @@ import com.callbackdev.chiaro.ui.components.HourStrip
 import com.callbackdev.chiaro.ui.components.MetricTile
 import com.callbackdev.chiaro.ui.components.RainSparkline
 import com.callbackdev.chiaro.ui.components.SkyCanvas
+import com.callbackdev.chiaro.ui.components.SkyCanvasTopScrimEnd
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.places.PlacesSheet
@@ -187,11 +191,14 @@ private fun PagedToday(
         }
     }
 
-    // The status bar icons follow what is under them: white over the canvas' top
-    // scrim, theme ink over the plain states.
+    // The status bar icons follow what is under them: white while the canvas' top
+    // scrim still backs the bar, theme ink over the plain states AND once the scroll
+    // has carried the scrim past it — white icons over scrolled-up light content
+    // were unreadable (device report, 3 set).
     val currentPage = pages.getOrNull(pagerState.currentPage.coerceIn(0, pages.lastIndex))
     val currentState = currentPage?.let { stateFor(it).collectAsStateWithLifecycle().value }
-    StatusBarIcons(overCanvas = currentState is TodayUiState.Content)
+    var canvasBehindBar by remember { mutableStateOf(true) }
+    StatusBarIcons(overCanvas = currentState is TodayUiState.Content && canvasBehindBar)
 
     Surface(modifier = Modifier.fillMaxSize()) {
         HorizontalPager(
@@ -213,7 +220,9 @@ private fun PagedToday(
                 onOpenSettings = onOpenSettings,
                 onOpenGuide = onOpenGuide,
                 onOpenJournal = onOpenJournal,
-                onDismissGuideCard = onDismissGuideCard
+                onDismissGuideCard = onDismissGuideCard,
+                isCurrent = index == pagerState.currentPage,
+                onCanvasBehindBar = { canvasBehindBar = it }
             )
         }
     }
@@ -233,11 +242,12 @@ private fun StatusBarIcons(overCanvas: Boolean) {
     val activity = LocalActivity.current
     val darkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     DisposableEffect(overCanvas, darkTheme, activity) {
-        activity?.window?.let { window ->
+        val controller = activity?.window?.let { window ->
             WindowCompat.getInsetsController(window, window.decorView)
-                .isAppearanceLightStatusBars = !overCanvas && !darkTheme
         }
-        onDispose { }
+        controller?.isAppearanceLightStatusBars = !overCanvas && !darkTheme
+        // Leaving Today — a tab switch, an overlay — hands the bar back to the theme.
+        onDispose { controller?.isAppearanceLightStatusBars = !darkTheme }
     }
 }
 
@@ -254,14 +264,16 @@ private fun TodayPage(
     onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
     onOpenJournal: () -> Unit,
-    onDismissGuideCard: () -> Unit
+    onDismissGuideCard: () -> Unit,
+    isCurrent: Boolean,
+    onCanvasBehindBar: (Boolean) -> Unit
 ) {
     when (state) {
         is TodayUiState.Content ->
             ContentState(
                 state, title, isGps, dots, units, guideCardVisible,
                 onRefresh, onOpenPlaces, onOpenSettings, onOpenGuide, onOpenJournal,
-                onDismissGuideCard
+                onDismissGuideCard, isCurrent, onCanvasBehindBar
             )
         else -> Column(modifier = Modifier.fillMaxSize()) {
             PlaceHeader(
@@ -534,14 +546,33 @@ private fun ContentState(
     onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
     onOpenJournal: () -> Unit,
-    onDismissGuideCard: () -> Unit
+    onDismissGuideCard: () -> Unit,
+    isCurrent: Boolean,
+    onCanvasBehindBar: (Boolean) -> Unit
 ) {
     val locale = Locale.getDefault()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val timeFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
 
+    // White status-bar icons hold only while the canvas' top scrim band is still
+    // behind the bar: past that offset the sky under the clock is unscrimmed, then
+    // gone altogether, and the bar must return to theme ink.
+    val listState = rememberLazyListState()
+    val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val flipAtPx = with(LocalDensity.current) {
+        ((CanvasBaseHeight + statusTop) * SkyCanvasTopScrimEnd - statusTop).toPx()
+    }.coerceAtLeast(0f)
+    val behindBar by remember(flipAtPx) {
+        derivedStateOf {
+            listState.firstVisibleItemIndex == 0 &&
+                listState.firstVisibleItemScrollOffset <= flipAtPx
+        }
+    }
+    LaunchedEffect(isCurrent, behindBar) { if (isCurrent) onCanvasBehindBar(behindBar) }
+
     PullToRefreshBox(isRefreshing = content.refreshing, onRefresh = onRefresh) {
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = WindowInsets.navigationBars.asPaddingValues()
@@ -614,6 +645,9 @@ private fun SectionTitle(text: String) {
     )
 }
 
+/** The canvas' height before the status bar's own height is added on top. */
+private val CanvasBaseHeight = 280.dp
+
 @Composable
 private fun CanvasHeader(
     content: TodayUiState.Content,
@@ -639,7 +673,7 @@ private fun CanvasHeader(
             moonIllumination = sky.moonIllumination,
             moonAltitudeDeg = sky.moonAltitudeDeg
         ),
-        height = 280.dp + statusTop
+        height = CanvasBaseHeight + statusTop
     ) {
         PlaceHeader(
             title = title,

@@ -5,7 +5,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.CompositionLocalProvider
 import com.callbackdev.chiaro.data.ServiceLocator
@@ -37,6 +40,18 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.LIGHT -> false
                 ThemeMode.DARK -> true
                 ThemeMode.SYSTEM, null -> isSystemInDarkTheme()
+            }
+            // The bars' ink follows the APPLIED theme, not the system's: a reader
+            // who forces light against a dark phone was getting white icons over a
+            // white surface (device report, 3 set). Today's canvas takes the status
+            // bar over while it is behind it (TodayScreen.StatusBarIcons) and hands
+            // it back when it goes.
+            val view = LocalView.current
+            DisposableEffect(darkTheme) {
+                val controller = WindowCompat.getInsetsController(window, view)
+                controller.isAppearanceLightStatusBars = !darkTheme
+                controller.isAppearanceLightNavigationBars = !darkTheme
+                onDispose { }
             }
             ChiaroTheme(
                 darkTheme = darkTheme,
