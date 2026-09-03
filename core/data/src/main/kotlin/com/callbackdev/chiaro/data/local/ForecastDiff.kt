@@ -126,10 +126,14 @@ object ForecastDiff {
     }
 
     /**
-     * The horizon only ever holds tomorrow and the day after (city-local at fetch
-     * time), so the earliest date in this fetch is tomorrow — no timezone needed
-     * at render time.
+     * The horizon starts at tomorrow (city-local at fetch time), so the earliest
+     * date in this fetch IS tomorrow and every other label is a date distance from
+     * it — position-independent, which matters now that the horizon holds a week
+     * and a day can drop out of the middle without shifting its neighbours' names.
      */
-    private fun dayLabel(sortedDates: List<String>, date: String): String =
-        if (sortedDates.indexOf(date) == 0) "tomorrow" else "in 2 days"
+    private fun dayLabel(sortedDates: List<String>, date: String): String {
+        val first = java.time.LocalDate.parse(sortedDates.first())
+        val n = java.time.temporal.ChronoUnit.DAYS.between(first, java.time.LocalDate.parse(date)) + 1
+        return if (n == 1L) "tomorrow" else "in $n days"
+    }
 }

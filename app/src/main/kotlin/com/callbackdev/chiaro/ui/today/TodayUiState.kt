@@ -50,7 +50,12 @@ sealed interface TodayUiState {
         val lastSync: Instant,
         val isStale: Boolean,
         val refreshing: Boolean,
-        val error: TodayError?
+        val error: TodayError?,
+        /** VISION §5.2.5: the latest forecast revisions, at most three lines,
+         * tapping opens the Journal. Filled by the ViewModel, not the builder —
+         * it comes from the history, which the builder deliberately never reads. */
+        val whatChanged: List<com.callbackdev.chiaro.ui.journal.JournalEntry.ForecastShift> =
+            emptyList()
     ) : TodayUiState
 }
 

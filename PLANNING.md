@@ -578,10 +578,57 @@ campana e il tratto cresce fino ai suoi ~2dp ottici. Le meteocons originali non 
 toccano — nelle liste, accanto al testo, il loro peso è quello giusto; è la barra
 che chiede un altro registro.
 
-## Fase 7 — Diario
+## Fase 7 — Diario ✅
 
-- [ ] Voci per fetch (snapshot, previsioni, regole scattate, run del cielo)
-- [ ] La striscia di deriva delle previsioni, con vista tabellare
+- [x] Le voci per fetch, lette come prosa e raggruppate per giorno: revisioni della
+      previsione ("Sabato 5 è migliorato: pioggia 70% → 30%"), regole scattate, run
+      del cielo osservati (col verdetto o con l'onesto "nessun aggiornamento
+      abbastanza vicino"), e gli aggiornamenti falliti con il loro motivo
+- [x] La striscia di deriva: una riga per giorno bersaglio, una colonna per fetch,
+      colore sulla rampa della metrica (pioggia/massime), legenda sempre presente,
+      giudizio nella frase accanto, numeri dietro un tocco lungo
+- [x] Il quarto tab: la barra di VISION §5.1 è completa, nessun tab mai nato morto
+- [x] "Cos'è cambiato" su Oggi (VISION §5.2.5): fino a tre frasi dopo la timeline,
+      il tocco apre il Diario
+
+### Decisioni della fase
+
+- **L'orizzonte di `flattenForecast` passa da 2 a 7 giorni.** Il seme di tweather
+  conserva domani e dopodomani perché i suoi Logs mostravano solo quelli; la deriva e
+  "Cos'è cambiato" sono SULLA settimana — "sabato è migliorato" pretende sabato su
+  disco. `ForecastDiff` è per-data e non cambia; `dayLabel` passa dalla posizione
+  alla distanza di data (identico sui 2 giorni, giusto sui 7). Deriva registrata in
+  `UPSTREAM.md`, test ereditati aggiornati. Le righe vecchie con 2 giorni restano
+  leggibili: le celle che un fetch non copriva si disegnano come assenza (bordo
+  sottile), mai come uno zero.
+- **I fetch falliti vivono in un loro store (`FetchLogStore`), non nella tabella
+  Room.** La storia registra ciò che l'app ha imparato; un fallimento è ciò che non
+  ha potuto imparare, e infilarlo come commit con snapshot nullo avrebbe sporcato la
+  macchina dei diff ereditata. Anello limitato a 30 voci, scritto dai due soli punti
+  che fanno fetch (il pull di Oggi e il worker), letto dal Diario.
+- **Il giudizio lo decide la pioggia** ("migliorato"/"peggiorato"): è il numero su cui
+  la gente pianifica, ed è l'esempio che VISION stessa usa. La sola temperatura resta
+  neutra — più caldo non è universalmente meglio — e il giudizio sta nella frase, mai
+  nel colore della striscia (DESIGN §8.10).
+- **Lo `status` memorizzato non arriva a schermo**: il suo valore è l'etichetta
+  inglese del motore ("Rain"), e una parola inglese non deve comparire (VISION §8).
+  Le frasi delle revisioni parlano coi numeri: pioggia, massima, minima.
+- **Un giorno che entra in orizzonte non è una revisione**: il diff lo emette come
+  "file nuovo", la prosa lo tace — il calendario che avanza non è una notizia.
+- **"Cos'è cambiato" lo riempie il ViewModel, non il builder di Oggi**: viene dalla
+  storia, che `TodayStateBuilder` deliberatamente non legge; il campo ha un default
+  e i test del builder non si toccano. Si ricalcola sui movimenti dei dati, mai sul
+  tick del minuto.
+- **Il vocabolario delle revisioni è condiviso** (`JournalText`): Oggi e il Diario
+  citano la stessa frase, per costruzione.
+
+### Verifica
+
+321 test verdi (141 domain, 118 data — con i 2 di `FetchLogStoreTest` — 4 sync,
+58 app — con i 6 di `JournalStateBuilderTest`), zero failure, zero skip; lint a zero
+errori; APK debug ok. Nota di macchina: la trappola dei backslash negli heredoc di
+questa workstation ha mangiato gli escape degli apostrofi nelle stringhe — riscritti
+con l'edit diretto, ed è il promemoria di usare quello per le risorse Android.
 
 ## Fase 8 — Widget
 

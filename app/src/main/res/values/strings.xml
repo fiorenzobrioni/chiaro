@@ -516,4 +516,33 @@
     <string name="guide_alerts_p1">The ready-made ones are switches: severe weather ahead, rain in the next hours, the morning summary. Next to each one is written exactly what it sends and when, so nothing arrives that you did not ask for.</string>
     <string name="guide_alerts_p2">Then there are yours. Each one is a sentence with three pieces to tap: what to watch, how to compare it, the threshold. “Try it now” runs it on the data the app already has and tells you what it would have done, without sending anything.</string>
     <string name="guide_alerts_p3">The checks travel with the weather updates, at the same rhythm, so alerts cost no extra battery. And the message of an alert of yours is yours: Chiaro never rewrites it and never translates it.</string>
+
+    <!-- The Journal (Fase 7): the history read as prose, and the drift of the week -->
+    <string name="tab_journal">Journal</string>
+    <string name="journal_no_place_body">Add a place and the journal starts writing itself: every update leaves a line.</string>
+    <string name="journal_empty">Nothing written yet. The journal fills up as the updates come in.</string>
+    <string name="journal_yesterday">Yesterday</string>
+    <string name="journal_at_time">at %1$s</string>
+    <string name="journal_drift_title">How the week has been moving</string>
+    <string name="journal_metric_rain">Rain</string>
+    <string name="journal_metric_high">Highs</string>
+    <string name="journal_drift_waiting">The drift appears after a few more updates: one column is not a trend.</string>
+    <string name="journal_drift_quiet">The week has held steady so far.</string>
+    <string name="journal_drift_rain_better" formatted="false">%1$s improved: rain %2$d%% → %3$d%%.</string>
+    <string name="journal_drift_rain_worse" formatted="false">%1$s got worse: rain %2$d%% → %3$d%%.</string>
+    <string name="journal_drift_high_moved">%1$s\'s high moved from %2$s to %3$s.</string>
+    <string name="journal_drift_columns">%1$d updates, %2$s to %3$s</string>
+    <string name="journal_drift_desc">hold for the numbers</string>
+    <string name="journal_drift_table_title">The numbers behind the colors</string>
+    <string name="journal_shift_better">%1$s improved</string>
+    <string name="journal_shift_worse">%1$s got worse</string>
+    <string name="journal_shift_neutral">%1$s\'s forecast changed</string>
+    <string name="journal_field_rain" formatted="false">rain %1$d%% → %2$d%%</string>
+    <string name="journal_field_high">high %1$s → %2$s</string>
+    <string name="journal_field_low">low %1$s → %2$s</string>
+    <string name="journal_rule_fired">Your alert “%1$s” fired</string>
+    <string name="journal_sky_skipped">No update came close enough to judge it</string>
+    <string name="journal_fetch_failed">An update didn\'t make it</string>
+    <string name="today_changed_title">What changed</string>
+    <string name="today_changed_open">The whole story is in the Journal</string>
 </resources>

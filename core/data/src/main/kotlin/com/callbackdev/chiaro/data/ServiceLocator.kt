@@ -62,6 +62,9 @@ object ServiceLocator {
     @Volatile
     private var skyAlertStateStore: SkyAlertStateStore? = null
 
+    @Volatile
+    private var fetchLogStore: FetchLogStore? = null
+
     fun weatherRepository(context: Context): WeatherRepository =
         repository ?: synchronized(this) {
             repository ?: build(context.applicationContext).also { repository = it }
@@ -125,6 +128,12 @@ object ServiceLocator {
         skyAlertStateStore ?: synchronized(this) {
             skyAlertStateStore ?: SkyAlertStateStore.create(context.applicationContext)
                 .also { skyAlertStateStore = it }
+        }
+
+    fun fetchLogStore(context: Context): FetchLogStore =
+        fetchLogStore ?: synchronized(this) {
+            fetchLogStore ?: FetchLogStore.create(context.applicationContext, json)
+                .also { fetchLogStore = it }
         }
 
     fun ruleStateStore(context: Context): RuleStateStore =

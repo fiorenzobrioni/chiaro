@@ -7,12 +7,17 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
+import com.callbackdev.chiaro.data.FetchFailureReason
+import com.callbackdev.chiaro.data.FetchLogStore
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.SettingsStore
 import com.callbackdev.chiaro.data.WorkspaceStore
 import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.ui.journal.JournalEntry
+import com.callbackdev.chiaro.ui.journal.JournalRow
+import com.callbackdev.chiaro.ui.journal.JournalStateBuilder
 import java.time.Clock
 import java.time.Duration
 import kotlinx.coroutines.Dispatchers
@@ -70,6 +75,7 @@ class TodayViewModel(
     private val cityStore: CityStore,
     private val settingsStore: SettingsStore,
     private val workspaceStore: WorkspaceStore,
+    private val fetchLogStore: FetchLogStore,
     private val clock: Clock = Clock.systemUTC()
 ) : ViewModel() {
 
@@ -153,6 +159,7 @@ class TodayViewModel(
             var refreshing = false
             var error: TodayError? = null
             var report = repository.cachedReport(city)
+            var whatChanged: List<JournalEntry.ForecastShift> = emptyList()
 
             suspend fun push() {
                 val current = report
@@ -160,12 +167,32 @@ class TodayViewModel(
                     if (current == null) {
                         TodayUiState.Empty(city, refreshing, error)
                     } else {
-                        TodayStateBuilder.build(
+                        val built = TodayStateBuilder.build(
                             city, current, clock.instant(), updateFrequencyMin,
                             refreshing, error
                         )
+                        if (built is TodayUiState.Content) {
+                            built.copy(whatChanged = whatChanged)
+                        } else built
                     }
                 )
+            }
+
+            // VISION §5.2.5: the latest revisions, read off the history the fetches
+            // write. Recomputed when the data moves, never on the minute tick.
+            suspend fun refreshChanged() {
+                whatChanged = runCatching {
+                    JournalStateBuilder.latestShifts(
+                        repository.historyFor(city, limit = 12).map { entry ->
+                            JournalRow(
+                                at = java.time.Instant.ofEpochSecond(entry.timestampEpochSeconds),
+                                forecast = repository.forecast(entry),
+                                firedRules = emptyList(),
+                                skyRuns = emptyList()
+                            )
+                        }
+                    )
+                }.getOrDefault(emptyList())
             }
 
             suspend fun fetch(force: Boolean) {
@@ -179,11 +206,24 @@ class TodayViewModel(
                         ttl = Duration.ofMinutes(updateFrequencyMin.toLong())
                     )
                     error = null
+                    refreshChanged()
                 } catch (e: WeatherException) {
                     error = when (e) {
                         is WeatherException.NoNetwork -> TodayError.OFFLINE
                         is WeatherException.ApiError -> TodayError.SERVICE
                         else -> TodayError.UNKNOWN
+                    }
+                    // The Journal is where offline honesty lives (Fase 7): the
+                    // failure becomes an entry, not a silent gap between commits.
+                    runCatching {
+                        fetchLogStore.record(
+                            city.cacheKey, clock.instant().epochSecond,
+                            when (error) {
+                                TodayError.OFFLINE -> FetchFailureReason.OFFLINE
+                                TodayError.SERVICE -> FetchFailureReason.SERVICE
+                                else -> FetchFailureReason.UNKNOWN
+                            }
+                        )
                     }
                 } finally {
                     refreshing = false
@@ -191,6 +231,7 @@ class TodayViewModel(
                 }
             }
 
+            refreshChanged()
             push()
             launch { fetch(force = false) }
             launch {
@@ -215,7 +256,8 @@ class TodayViewModel(
                     repository = ServiceLocator.weatherRepository(app),
                     cityStore = ServiceLocator.cityStore(app),
                     settingsStore = ServiceLocator.settingsStore(app),
-                    workspaceStore = ServiceLocator.workspaceStore(app)
+                    workspaceStore = ServiceLocator.workspaceStore(app),
+                    fetchLogStore = ServiceLocator.fetchLogStore(app)
                 )
             }
         }

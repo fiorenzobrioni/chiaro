@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.callbackdev.chiaro.data.ActiveSource
+import com.callbackdev.chiaro.data.FetchFailureReason
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.WeatherException
@@ -66,8 +67,16 @@ class WeatherSyncWorker(
                 ttl = Duration.ofMinutes(settings.updateFrequencyMin.toLong())
             )
         } catch (e: WeatherException.NoNetwork) {
+            // The Journal is where offline honesty lives (Fase 7): a fetch that
+            // could not land is an entry, not a silent gap.
+            recordFailure(context, city, FetchFailureReason.OFFLINE)
             return Result.retry() // captive portal/DNS flap; CONNECTED already gated
         } catch (e: WeatherException) {
+            recordFailure(
+                context, city,
+                if (e is WeatherException.ApiError) FetchFailureReason.SERVICE
+                else FetchFailureReason.UNKNOWN
+            )
             return Result.success() // next period is at most one interval away
         }
 
@@ -134,6 +143,17 @@ class WeatherSyncWorker(
         }
 
         return Result.success()
+    }
+
+    private suspend fun recordFailure(
+        context: Context,
+        city: City,
+        reason: FetchFailureReason
+    ) {
+        runCatching {
+            ServiceLocator.fetchLogStore(context)
+                .record(city.cacheKey, Instant.now().epochSecond, reason)
+        }
     }
 
     /**

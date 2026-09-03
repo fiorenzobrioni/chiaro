@@ -164,6 +164,23 @@ class WeatherRepository(
             ?.let { runCatching { json.decodeFromString<List<String>>(it) }.getOrNull() }
             ?: emptyList()
 
+    /** A commit's flattened snapshot, decoded for the Journal (Fase 7). */
+    fun snapshot(entry: com.callbackdev.chiaro.data.local.WeatherHistoryEntry): Map<String, String> =
+        runCatching { json.decodeFromString<Map<String, String>>(entry.snapshotJson) }
+            .getOrDefault(emptyMap())
+
+    /** A commit's flattened week of forecast (`<date>.<field>` keys), for the drift. */
+    fun forecast(entry: com.callbackdev.chiaro.data.local.WeatherHistoryEntry): Map<String, String> =
+        entry.forecastJson
+            ?.let { runCatching { json.decodeFromString<Map<String, String>>(it) }.getOrNull() }
+            ?: emptyMap()
+
+    /** The sky runs a commit observed, decoded where they were encoded. */
+    fun skyRuns(entry: com.callbackdev.chiaro.data.local.WeatherHistoryEntry): List<SkyRun> =
+        entry.skyRunsJson
+            ?.let { runCatching { json.decodeFromString<List<SkyRun>>(it) }.getOrNull() }
+            ?: emptyList()
+
     private suspend fun fetch(city: City, now: Instant): WeatherReport = wrapErrors {
         val startNanos = System.nanoTime()
         val (forecast, air) = coroutineScope {

@@ -11,7 +11,7 @@ as the body of the GitHub Release, so a version's entry is written **before** it
 
 Nothing released yet. The engines are in and verified, the design system is code, and
 the everyday surface — Today, places, first run, settings, the guide, the Sky screen
-with its reminders, the alerts — is built. See `PLANNING.md` for where the work actually is.
+with its reminders, the alerts, the Journal — is built. See `PLANNING.md` for where the work actually is.
 
 ### Added
 
@@ -83,6 +83,18 @@ with its reminders, the alerts — is built. See `PLANNING.md` for where the wor
   "Temporale verso le 18:00", never a data dump.
 - The guide's fourth chapter (Fase 6): how the alerts work, landed together with the
   screen it describes.
+- The Journal (Fase 7): the history table read as prose, newest first, grouped by
+  day — forecast revisions with their numbers ("Saturday improved: rain 70% → 30%"),
+  fired alerts, the sky moments the app observed (with the verdict, or an honest "no
+  update came close enough"), and the updates that failed, each with its reason. The
+  bottom bar reaches its four destinations.
+- The forecast drift strip (Fase 7): one row per target day, one column per fetch,
+  color on the metric's own ramp (rain, or the highs on the diverging temperature
+  ramp), legend always present, the judgement in a sentence beside it and the raw
+  numbers behind a long press. Each commit now stores the week ahead, so the strip
+  is built entirely from data already on disk.
+- "What changed" on Today (Fase 7): up to three sentences after the day's timeline
+  when the latest update moved the week, tapping opens the Journal.
 
 ### Removed
 

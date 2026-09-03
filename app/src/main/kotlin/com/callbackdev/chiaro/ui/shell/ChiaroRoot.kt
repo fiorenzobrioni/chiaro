@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -36,6 +37,7 @@ import com.callbackdev.chiaro.ui.alerts.AlertsRoute
 import com.callbackdev.chiaro.ui.firstrun.FirstRunRoute
 import com.callbackdev.chiaro.ui.guide.GuideRoute
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
+import com.callbackdev.chiaro.ui.journal.JournalRoute
 import com.callbackdev.chiaro.ui.settings.SettingsRoute
 import com.callbackdev.chiaro.ui.sky.SkyRoute
 import com.callbackdev.chiaro.ui.today.TodayRoute
@@ -89,7 +91,7 @@ class ShellViewModel(
  * state rather than a nav graph: two tabs and two overlays do not earn one; Alerts
  * and the Journal (Fase 6–7) will re-pose the question.
  */
-private enum class ShellTab { TODAY, SKY, ALERTS }
+private enum class ShellTab { TODAY, SKY, ALERTS, JOURNAL }
 
 private enum class ShellOverlay { SETTINGS, GUIDE }
 
@@ -138,15 +140,15 @@ private fun MainScreens() {
             onOpenGuide = {
                 guideFromSettings = false
                 overlay = ShellOverlay.GUIDE
-            }
+            },
+            onOpenJournal = { tab = ShellTab.JOURNAL }
         )
     }
 }
 
 /**
- * The bottom bar of VISION §5.1, at its current width: Today, Sky and Alerts. The
- * Journal joins in Fase 7 — a bar with dead tabs would be the screen lying about
- * what the app can do. The tab content swaps; what must survive a switch
+ * The bottom bar of VISION §5.1, complete since Fase 7: Today, Sky, Alerts and the
+ * Journal — every tab arrived with its screen, none ever shipped dead. The tab content swaps; what must survive a switch
  * (the active place, the subscriptions) lives in the ViewModels, not in the screen.
  */
 @Composable
@@ -154,17 +156,20 @@ private fun TabScaffold(
     tab: ShellTab,
     onSelectTab: (ShellTab) -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenGuide: () -> Unit
+    onOpenGuide: () -> Unit,
+    onOpenJournal: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.weight(1f)) {
             when (tab) {
                 ShellTab.TODAY -> TodayRoute(
                     onOpenSettings = onOpenSettings,
-                    onOpenGuide = onOpenGuide
+                    onOpenGuide = onOpenGuide,
+                    onOpenJournal = onOpenJournal
                 )
                 ShellTab.SKY -> SkyRoute(onOpenSettings = onOpenSettings)
                 ShellTab.ALERTS -> AlertsRoute(onOpenSettings = onOpenSettings)
+                ShellTab.JOURNAL -> JournalRoute(onOpenSettings = onOpenSettings)
             }
         }
         NavigationBar {
@@ -203,6 +208,18 @@ private fun TabScaffold(
                     )
                 },
                 label = { Text(stringResource(R.string.tab_alerts)) }
+            )
+            NavigationBarItem(
+                selected = tab == ShellTab.JOURNAL,
+                onClick = { onSelectTab(ShellTab.JOURNAL) },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.DateRange,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                label = { Text(stringResource(R.string.tab_journal)) }
             )
         }
     }

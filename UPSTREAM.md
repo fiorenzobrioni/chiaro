@@ -69,7 +69,18 @@ is short on purpose — three edits, each with its reason in the file:
   created rule (Fase 6): Chiaro's templates are born in the reader's language, while
   the inherited `add()` seeds tweather's fixed English starter. Additive, tested;
   `WeatherRepository` likewise grew `firedRules(entry)` so the JSON the repository
-  writes is decoded by the repository too.
+  writes is decoded by the repository too — and, in Fase 7, `snapshot`, `forecast`
+  and `skyRuns` for the Journal, on the same principle.
+- `WeatherSnapshots.flattenForecast` stores SEVEN target dates here, two upstream
+  (Fase 7): tweather's Logs only ever showed tomorrow and the day after, Chiaro's
+  drift strip and "what changed" are about the week — "Saturday improved" needs
+  Saturday on disk. `ForecastDiff` is per-date and unchanged; its `dayLabel` now
+  derives from date distance instead of list position (same output on two dates,
+  correct on seven). If tweather ever widens its Logs, this belongs upstream too.
+- `FetchLogStore` is new and Chiaro-only (Fase 7): a bounded ring of failed fetches
+  (when, which place, why) so the Journal can say "an update didn't make it" —
+  offline honesty is a Chiaro surface; upstream's Logs render commits, and a commit
+  that never happened has nothing to render there.
 
 ## The known debt
 

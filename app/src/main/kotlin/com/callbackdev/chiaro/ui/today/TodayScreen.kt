@@ -97,6 +97,7 @@ import kotlinx.coroutines.flow.StateFlow
 fun TodayRoute(
     onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
+    onOpenJournal: () -> Unit,
     todayViewModel: TodayViewModel = viewModel(factory = TodayViewModel.Factory),
     placesViewModel: PlacesViewModel = viewModel(factory = PlacesViewModel.Factory)
 ) {
@@ -131,6 +132,7 @@ fun TodayRoute(
                 onOpenPlaces = { placesOpen = true },
                 onOpenSettings = onOpenSettings,
                 onOpenGuide = openGuideFromCard,
+                onOpenJournal = onOpenJournal,
                 onDismissGuideCard = todayViewModel::dismissGuideCard
             )
         }
@@ -161,6 +163,7 @@ private fun PagedToday(
     onOpenPlaces: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
+    onOpenJournal: () -> Unit,
     onDismissGuideCard: () -> Unit
 ) {
     val pages by rememberUpdatedState(model.pages)
@@ -209,6 +212,7 @@ private fun PagedToday(
                 onOpenPlaces = onOpenPlaces,
                 onOpenSettings = onOpenSettings,
                 onOpenGuide = onOpenGuide,
+                onOpenJournal = onOpenJournal,
                 onDismissGuideCard = onDismissGuideCard
             )
         }
@@ -249,13 +253,15 @@ private fun TodayPage(
     onOpenPlaces: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
+    onOpenJournal: () -> Unit,
     onDismissGuideCard: () -> Unit
 ) {
     when (state) {
         is TodayUiState.Content ->
             ContentState(
                 state, title, isGps, dots, units, guideCardVisible,
-                onRefresh, onOpenPlaces, onOpenSettings, onOpenGuide, onDismissGuideCard
+                onRefresh, onOpenPlaces, onOpenSettings, onOpenGuide, onOpenJournal,
+                onDismissGuideCard
             )
         else -> Column(modifier = Modifier.fillMaxSize()) {
             PlaceHeader(
@@ -527,6 +533,7 @@ private fun ContentState(
     onOpenPlaces: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
+    onOpenJournal: () -> Unit,
     onDismissGuideCard: () -> Unit
 ) {
     val locale = Locale.getDefault()
@@ -571,6 +578,20 @@ private fun ContentState(
             if (content.timeline.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.section_rest_of_day)) }
                 item { RestOfDay(content, timeFmt) }
+            }
+
+            // VISION §5.2.5 — when something did change: two or three sentences,
+            // tapping opens the Journal where the whole story lives.
+            if (content.whatChanged.isNotEmpty()) {
+                item { SectionTitle(stringResource(R.string.today_changed_title)) }
+                item {
+                    WhatChanged(
+                        shifts = content.whatChanged,
+                        units = units,
+                        locale = locale,
+                        onOpenJournal = onOpenJournal
+                    )
+                }
             }
 
             if (content.week.isNotEmpty()) {
@@ -726,6 +747,40 @@ private fun GuideCard(onOpen: () -> Unit, onDismiss: () -> Unit) {
         ) {
             Text(stringResource(R.string.guide_card_open))
         }
+    }
+}
+
+/** VISION §5.2.5: each revision as one sentence, the same words the Journal uses
+ * ([JournalText]), the whole block one door to it. */
+@Composable
+private fun WhatChanged(
+    shifts: List<com.callbackdev.chiaro.ui.journal.JournalEntry.ForecastShift>,
+    units: UnitSettings,
+    locale: Locale,
+    onOpenJournal: () -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onOpenJournal)
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+    ) {
+        shifts.forEach { shift ->
+            Text(
+                text = com.callbackdev.chiaro.ui.journal.JournalText.shiftHeadline(shift, locale) +
+                    ": " +
+                    com.callbackdev.chiaro.ui.journal.JournalText.shiftDetails(
+                        shift.shifts, units, locale
+                    ),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+        Text(
+            text = stringResource(R.string.today_changed_open),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 

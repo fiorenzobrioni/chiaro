@@ -513,4 +513,33 @@
     <string name="guide_alerts_p1">Quelli pronti sono interruttori: maltempo in arrivo, pioggia nelle prossime ore, il riepilogo del mattino. Accanto a ognuno c\'è scritto esattamente cosa manda e quando, così non arriva niente che non hai chiesto.</string>
     <string name="guide_alerts_p2">Poi ci sono i tuoi. Ognuno è una frase con tre pezzi da toccare: cosa guardare, come confrontarlo, la soglia. «Prova adesso» la esegue sui dati che l\'app ha già e ti dice cosa avrebbe fatto, senza mandare niente.</string>
     <string name="guide_alerts_p3">I controlli viaggiano insieme agli aggiornamenti del meteo, allo stesso ritmo, così gli avvisi non chiedono batteria in più. E il messaggio di un avviso tuo è tuo: Chiaro non lo riscrive e non lo traduce.</string>
+
+    <!-- Il Diario (Fase 7): la storia letta come prosa, e la deriva della settimana -->
+    <string name="tab_journal">Diario</string>
+    <string name="journal_no_place_body">Aggiungi un luogo e il diario comincia a scriversi da solo: ogni aggiornamento lascia una riga.</string>
+    <string name="journal_empty">Ancora niente da raccontare. Il diario si riempie man mano che arrivano gli aggiornamenti.</string>
+    <string name="journal_yesterday">Ieri</string>
+    <string name="journal_at_time">alle %1$s</string>
+    <string name="journal_drift_title">Come si sta muovendo la settimana</string>
+    <string name="journal_metric_rain">Pioggia</string>
+    <string name="journal_metric_high">Massime</string>
+    <string name="journal_drift_waiting">La deriva compare dopo qualche altro aggiornamento: una colonna sola non è una tendenza.</string>
+    <string name="journal_drift_quiet">Finora la settimana è rimasta com\'era.</string>
+    <string name="journal_drift_rain_better" formatted="false">%1$s è migliorato: pioggia %2$d%% → %3$d%%.</string>
+    <string name="journal_drift_rain_worse" formatted="false">%1$s è peggiorato: pioggia %2$d%% → %3$d%%.</string>
+    <string name="journal_drift_high_moved">La massima di %1$s è passata da %2$s a %3$s.</string>
+    <string name="journal_drift_columns">%1$d aggiornamenti, da %2$s a %3$s</string>
+    <string name="journal_drift_desc">tieni premuto per i numeri</string>
+    <string name="journal_drift_table_title">I numeri dietro i colori</string>
+    <string name="journal_shift_better">%1$s è migliorato</string>
+    <string name="journal_shift_worse">%1$s è peggiorato</string>
+    <string name="journal_shift_neutral">La previsione di %1$s è cambiata</string>
+    <string name="journal_field_rain" formatted="false">pioggia %1$d%% → %2$d%%</string>
+    <string name="journal_field_high">massima %1$s → %2$s</string>
+    <string name="journal_field_low">minima %1$s → %2$s</string>
+    <string name="journal_rule_fired">Il tuo avviso «%1$s» è scattato</string>
+    <string name="journal_sky_skipped">Nessun aggiornamento abbastanza vicino per giudicare</string>
+    <string name="journal_fetch_failed">Un aggiornamento non è arrivato</string>
+    <string name="today_changed_title">Cos\'è cambiato</string>
+    <string name="today_changed_open">La storia intera è nel Diario</string>
 </resources>
