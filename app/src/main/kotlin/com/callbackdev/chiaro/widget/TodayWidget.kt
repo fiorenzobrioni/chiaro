@@ -70,6 +70,14 @@ class TodayWidget : GlanceAppWidget() {
     }
 
     private companion object {
+        /** The hero number's size, named because the ink balance beside it is
+         * measured off the leading this size carries. */
+        const val TemperatureSp = 36f
+
+        /** What the sentence and the hour strip need under the hero row, so the
+         * icon can take the rest of the granted height (device review, 3 set). */
+        val HeroReserve = 116.dp
+
         /** The strip sizes itself to the width the launcher actually granted: a
          * cell under this width squeezes its numbers, and fewer than four hours is
          * no longer an afternoon. At the 4-cell minimum this lands on the same five
@@ -105,33 +113,32 @@ class TodayWidget : GlanceAppWidget() {
                         )
                     ),
                     contentDescription = null,
-                    modifier = GlanceModifier.size(64.dp)
-                )
-                Column(modifier = GlanceModifier.padding(start = 12.dp)) {
-                    val range =
-                        dayRangeText(content, model.settings.units.temperature, locale)
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            text = Formats.temperature(
-                                current.tempC, model.settings.units.temperature, locale
-                            ),
-                            style = TextStyle(
-                                color = palette.primary,
-                                fontSize = 36.sp,
-                                fontWeight = FontWeight.Medium
-                            )
+                    modifier = GlanceModifier.size(
+                        heroIconSize(
+                            LocalSize.current.height - WidgetCardPadding * 2 - HeroReserve
                         )
-                        if (range != null) {
-                            Text(
-                                text = range,
-                                style = secondaryStyle(palette, 14.sp),
-                                maxLines = 1,
-                                // The small line lands on the big number's baseline.
-                                modifier = GlanceModifier
-                                    .padding(start = 8.dp, bottom = 5.dp)
-                            )
-                        }
-                    }
+                    )
+                )
+                // The bottom padding balances the leading above the temperature, so
+                // the words' ink lines up with the glyph's rather than the two boxes
+                // lining up (the Now widget's finding, 5th device pass).
+                Column(
+                    modifier = GlanceModifier
+                        .padding(start = 12.dp, bottom = textInkBalance(context, TemperatureSp))
+                ) {
+                    // The temperature and the place, and nothing between them: the
+                    // day's range left the hero with the Now widget's (committente,
+                    // 3 set) — the week's rows are where a range belongs.
+                    Text(
+                        text = Formats.temperature(
+                            current.tempC, model.settings.units.temperature, locale
+                        ),
+                        style = TextStyle(
+                            color = palette.primary,
+                            fontSize = TemperatureSp.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
                     Text(
                         text = content.city.name,
                         style = secondaryStyle(palette, 16.sp),

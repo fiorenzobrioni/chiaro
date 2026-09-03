@@ -287,9 +287,13 @@ The differentiator with the most engineering already behind it.
 - **Tonight**: a hero verdict — *Great* / *So-so* / *No chance* / *Not sure yet* — for the dark
   window, with the numbers that decided it and the reason when it was not the clouds ("the moon is
   up, 94% lit").
-- **Today's moments**: a list of the reader's subscribed events (sunrise, golden hour, sunset, dark
-  window, moon by default — four to five, never the full catalog), each a card with time, verdict
-  chip, evidence, and a bell for a reminder.
+- **The moments ahead**: a list of the reader's subscribed events (sunrise, golden hour, sunset,
+  dark window, moon by default — four to five, never the full catalog), each a card with time,
+  verdict chip, evidence, and a bell for a reminder. The list is an agenda, not a log: a moment
+  that is over is replaced by its next occurrence and the row names the day ("Tomorrow"), a window
+  in progress says "Now", and the moon's day-moment stays today's because it is a statement about
+  today rather than an appointment. The Sky widget resolves its moment by the same rule, so the
+  home screen and the app can never print two different sunrises.
 - **Next events**: the calendar ahead — meteor peaks with their dates, full moon, solstice,
   equinox — with the verdict where the forecast reaches that far and an honest "too far out to
   say" where it does not.
@@ -350,10 +354,18 @@ Standard M3 preferences, grouped: units, appearance (theme, dynamic color, canva
 frequency, notifications, widgets, language, about. Reset is a destructive-styled item with a
 confirmation dialog rather than a two-tap `$` command.
 
-`HELP.md` becomes **the guide**: short, illustrated, answering the four questions a new reader has
-(where the data comes from, what the sky verdicts mean, how alerts work, why there is no radar).
-Reachable from settings and from a one-time card on the home screen. It never explains an interface
-element, because an interface element that needs explaining is a bug in this edition.
+`HELP.md` becomes **the guide**: a tour of the four screens — what each one answers, what it can do,
+and the things a screen cannot say out loud (that the sky is computed rather than photographed, that
+a reminder is loose on purpose, that a failed update is a line in the Journal) — closing on where the
+numbers come from. It teaches by showing the app's OWN components as examples, each captioned as one:
+the verdict chips, a details tile, the freshness chip, a miniature of the drift strip. Reachable from
+settings and from a one-time card on the home screen.
+
+Two rules hold it in shape. It **never teaches a control**, because a control that needs explaining is
+a bug in this edition: it says what a screen is for, never which button to press. And it **never
+justifies an absence** — the chapter on why there is no radar map was cut on the committente's call
+(4th device pass): a guide is where a product says what it does, and the useful half of that chapter,
+where the answer to "is it about to rain?" actually lives, belongs in the tour of Today.
 
 ### 5.8 First run
 
@@ -366,9 +378,11 @@ first time the reader turns on something that needs them, never at startup.
 
 Glance, three sizes, matching the app's dynamic color:
 
-- **Now**: icon, temperature, place.
+- **Now**: icon, temperature, place — and nothing else; the weather icon fills the height the
+  launcher grants, because at arm's length it is the first thing to read.
 - **Today**: now plus the next hours strip plus the headline sentence.
-- **Sky**: the next moment and its verdict — the widget nobody else ships.
+- **Sky**: the moment in front of the reader and its verdict, with the day named when it is not
+  today — the widget nobody else ships.
 
 A widget never invents: with stale data it says how old it is, and with no place configured it says
 so and opens the app.

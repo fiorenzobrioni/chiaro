@@ -379,7 +379,9 @@ DESIGN.md §3.6 aggiornato con il contratto a due bande.
       letti da `MainActivity`; l'ingranaggio vive accanto al selettore del luogo
 - [x] Le unità vere arrivano a Oggi (chiusa la nota "Fase 4" in `ContentState`)
 - [x] La guida: dove nascono i dati, cosa dicono i verdetti, perché niente radar —
-      prosa IT/EN, illustrata coi componenti veri (i quattro `VerdictChip`)
+      prosa IT/EN, illustrata coi componenti veri (i quattro `VerdictChip`).
+      **Riscritta come giro delle quattro schermate nella passata su device del 3 set
+      (in fondo a Fase 8), col capitolo sul radar tolto**
 - [x] La card una-tantum su Oggi che punta alla guida: usata o chiusa, sparisce per
       sempre; la guida resta raggiungibile dalle Impostazioni
 
@@ -411,11 +413,12 @@ DESIGN.md §3.6 aggiornato con il contratto a due bande.
   quattro parole (*Bello*, *Così così*, *Niente da fare*, *Presto per dirlo*) nascono
   qui, nella pagina che le spiega, e la Fase 5 parlerà le stesse.
 - **Il tono della guida è una regola, non un caso**: ogni scelta di prodotto vi
-  compare come un fatto su come funzionano le cose (il radar è un'immagine
-  distribuita come tale; i dati di Chiaro sono numeri, e la stessa domanda trova
-  risposta nella frase e nelle probabilità orarie), mai come un giudizio di valore, e
+  compare come un fatto su come funzionano le cose, mai come un giudizio di valore, e
   senza paragoni con altre app. La guida inoltre non spiega mai un elemento
   dell'interfaccia: un elemento che ha bisogno di spiegazione è un bug (VISION §5.7).
+  *(Il corollario «e non giustifica un'assenza» è arrivato dopo, col taglio del
+  capitolo sul radar: la risposta a «sta per piovere?» è rimasta, il paragone
+  implicito no.)*
 - **Il dialogo di reset dice cosa NON tocca**: luoghi, storico e card della guida
   sopravvivono, e non per caso — il reset pulisce il solo DataStore delle
   impostazioni, e la card vive in `workspace` proprio perché un ripristino non deve
@@ -784,6 +787,107 @@ Quattro rilievi, due dei quali hanno rifatto il vestito dei widget:
     canvas; un'opzione che costa poco non si toglie per un dubbio estetico. Se il
     grigio del velo non convince, il posto dove intervenire è la saturazione del
     gradiente, non l'esistenza dell'opzione.
+  - **Quarta passata (screenshot su device, 3 set sera)** — tre richieste del
+    committente, la terza delle quali era un'incoerenza vera fra widget e app:
+    - **L'icona meteo cresce fino a riempire la cella.** Un numero fisso può essere
+      giusto su una sola dimensione di widget, e il disegno Meteocons occupa circa
+      metà della sua scatola (la falce di `mcf_clear_night` copre 36 unità su 64):
+      a 68 dp sul vetro arrivavano ~38 dp di luna, meno del widget Samsung accanto. Ora
+      `heroIconSize` in WidgetUi prende l'altezza davvero concessa dal launcher e ci
+      sta dentro (pavimento 52 dp, soffitto 96 dp); il Now passa a `SizeMode.Exact`
+      per poterla leggere, il Today toglie dal conto quello che gli servono frase e
+      striscia (`HeroReserve`, 116 dp). Il widget Cielo non si tocca: la sua icona a
+      48 dp è quella che alla terza passata ha fatto entrare la pillola nel
+      cartoncino.
+    - **Minima e massima escono dai due widget** (Now e Today): erano l'aggiunta
+      della seconda passata, e su device la coppia accanto al numero grande è
+      rumore — VISION §5.9 chiede «icona, temperatura, luogo» e adesso è quello che
+      c'è. `dayRangeText` esce da WidgetUi con loro; l'escursione del giorno resta
+      dove è nata, sulle righe della settimana.
+    - **Il widget Cielo e la schermata Cielo mostravano due albe diverse.** Alle
+      21:19 la lista «I momenti di oggi» teneva l'alba della mattina, grigia e
+      marcata `Passato`, con un `? Presto per dirlo` che le ore trascorse non
+      potevano più sostenere; il widget sulla stessa home mostrava già l'alba di
+      DOMANI, giudicata `Bello · nuvole 0%`. Nessuna delle due superfici sbagliava
+      per conto suo: la finestra che ciascuna guardava non era scritta da nessuna
+      parte. Ora è scritta una volta sola, in `ui/sky/SkyUpcoming.kt`, e la leggono
+      entrambe. La regola: un momento smette di essere di oggi quando è finito, e
+      allora la riga diventa quella di domani e lo dice («Domani · 06:47»). Tre
+      eccezioni, che sono fatti e non comodità: una finestra aperta e non chiusa
+      vince e si marca «Adesso» (la regola per cui alle 03:00 «stanotte» è il cielo
+      fuori, che finora viveva solo nella card Stanotte e ora la card legge da qui);
+      un `∅` resta di oggi, perché «oggi la luna lo salta» è una risposta su oggi
+      (dottrina di `SkyScheduler`, tenuta); e il momento-lunare del giorno non
+      scorre mai, perché è un'affermazione SU oggi e non un appuntamento — stampare
+      «Domani» sotto «La luna di oggi» sarebbe assurdo, e «Passato» alle nove di
+      sera già lo era.
+    - Ricadute oneste: la sezione si chiama «I prossimi momenti» (un elenco che può
+      contenere domani non è «di oggi»); i quattro `sky_none_*` perdono l'«oggi»
+      incorporato e il giorno passa nel marcatore, perché ora un `∅` può essere di
+      domani; `sky_moment_past` sparisce. Il widget Cielo stampa il marcatore con lo
+      stesso vocabolario e, per un evento oltre domani, la data — un'ora nuda su una
+      home si legge come quella di oggi. Il momento-lunare non è candidato del
+      widget (`SkyUpcoming.firstAt` lo salta): fissato a oggi, vincerebbe per sempre
+      ogni confronto — e lo stato vuoto del widget dice «nessun momento in arrivo»
+      invece di «nessun momento seguito», che con la sola luna sottoscritta sarebbe
+      falso. Cinque test nuovi in `SkyStateBuilderTest`, fra cui quello che
+      lega le due superfici: il momento del widget è la prima riga della schermata
+      che fira davvero.
+  - **Quinta passata (misurata sullo screenshot, 3 set notte)** — il widget Ora
+    ancora troppo timido accanto a quello Samsung. Misure vere invece che a occhio:
+    dal raggio della card (24 dp = 54 px) lo screenshot dà ~2.25 px/dp, quindi il
+    widget Ora riceve ~101 dp di altezza e l'Oggi ~235 dp; il glifo Samsung è 101 px,
+    quello di Chiaro era 90 px e partiva 25 px più a destra. Due correzioni: il
+    cartoncino del Now scende a 6 dp sopra e sotto e a **zero sul bordo iniziale** (il
+    disegno Meteocons porta già un quarto di scatola come margine: è quello l'incasso,
+    e l'icona parte dove parte la card), e il soffitto di `heroIconSize` sale a 104 dp.
+    Sulla stessa densità l'icona passa da 77 a 89 dp — glifo ~103 px, bordo a ~121 px
+    contro i 118 px del vicino. Il testo si stacca dall'icona a 8 dp invece di 12,
+    perché quel quarto di margine è già aria. Oggi e Cielo non si toccano.
+  - **L'icona sembrava ancora allineata in alto** (committente, sullo screenshot
+    successivo): non era un'impressione, ed è misurabile. Un blocco di testo è più
+    alto dell'inchiostro che si vede — il font di sistema lascia circa un quarto di em
+    vuoto sopra le maiuscole di «23°», mentre la «g» di Cavenago arriva al bordo
+    inferiore della sua riga — quindi il suo inchiostro sta basso nella propria
+    scatola, e centrare le due SCATOLE lascia l'icona in alto di metà di quella banda:
+    5,1 dp misurati sullo screenshot con la luna (disegno centrato), contro i 5,2 dp
+    che il modello prevede. Il rimedio è simmetria, non un numero magico:
+    `textInkBalance` mette sotto l'ultima riga la stessa banda che il font lascia
+    sopra la prima (0,24 em della temperatura, moltiplicato per la scala di testo del
+    lettore, letto da un `Context` come `isNight` — sul launcher non esiste
+    `LocalConfiguration`), e a quel punto basta il centraggio verticale. Applicato a
+    Ora e a Oggi: è la stessa riga.
+  - **Quello che resta non si tocca**: rasterizzando la famiglia Meteocons (script
+    ad hoc con cairosvg) la maggior parte dei disegni è esattamente al centro della
+    sua scatola, la notte nuvolosa sta il 4% in alto e il temporale il 10% in basso —
+    il fulmine pende, di proposito. È la composizione dell'illustratore, non un
+    difetto: una tabella di correzioni per icona sarebbe l'app che discute con la
+    propria grafica, e romperebbe la linea d'orizzonte condivisa dalla famiglia.
+  - **La guida riscritta** (chiesta dal committente insieme alla passata widget):
+    - **Il capitolo «perché non c'è il radar» esce.** Valutato e condiviso: una guida
+      è il posto dove un prodotto dice cosa fa, non dove difende ciò che non è, e
+      metterlo terzo su quattro capitoli piazzava un'assenza nel posto migliore della
+      pagina. La metà utile — dove sta la risposta a «sta per piovere?» — sopravvive
+      dentro il giro di Oggi, senza nominare il radar.
+    - **Da quattro domande a un giro delle quattro schermate**: la mappa della barra
+      in basso (con le icone vere), poi Oggi, Cielo, Avvisi, Diario, poi luoghi,
+      widget, impostazioni, e in chiusura da dove arrivano i numeri. Ogni schermata:
+      una frase su cosa risponde, poi le sue funzioni una per una, col titolo in
+      primary e la riga che dice a cosa serve.
+    - **Riferimenti grafici, non screenshot**: la guida mostra i componenti VERI —
+      i quattro chip di verdetto (già c'erano), una riga di momento del Cielo col
+      marcatore «Domani», il chip di freschezza, due tessere dei dettagli, una
+      miniatura della striscia di deriva sulla rampa della pioggia — ognuno con la
+      didascalia che dice che è un esempio. Uno screenshot invecchia al primo
+      restyling; un componente vero no, e segue tema, unità e stile delle icone.
+    - **La regola che resta**: la guida non insegna un comando. Dice a cosa serve una
+      schermata e cosa può fare, mai quale bottone premere — un elemento che ha
+      bisogno di spiegazioni resta un bug di questa edizione (VISION §5.7, riscritto).
+    - Settanta stringhe nuove in due lingue in una sola sessione sono esattamente il
+      posto dove se ne dimentica una: arriva `StringsParityTest` (ogni stringa
+      traducibile esiste in entrambe le lingue, nessun nome dichiarato due volte,
+      stessi argomenti di formato nelle due versioni). Ha già pagato l'affitto: ha
+      trovato i doppioni del vecchio capitolo Avvisi rimasti nel file.
 
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 

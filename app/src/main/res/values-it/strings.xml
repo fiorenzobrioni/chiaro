@@ -231,25 +231,110 @@
     <string name="verdict_fail">Niente da fare</string>
     <string name="verdict_unknown">Presto per dirlo</string>
 
-    <!-- La guida (VISION §5.7): prosa, quindi tutto si traduce. -->
+    <!-- La guida (VISION §5.7): prosa, quindi tutto si traduce. Dalla quarta passata
+         su device è un giro delle quattro schermate - a cosa risponde ciascuna e le
+         poche cose che una schermata non può dire da sola - e non più un capitolo che
+         giustifica una mappa radar che nessuno ha chiesto. -->
     <string name="guide_entry_title">Come leggere Chiaro</string>
-    <string name="guide_entry_subtitle">Dove nascono i dati, cosa dicono i verdetti, perché non c\'è il radar</string>
+    <string name="guide_entry_subtitle">Le quattro schermate, cosa dicono i verdetti, da dove arrivano i numeri</string>
     <string name="guide_title">La guida</string>
-    <string name="guide_intro">Chiaro racconta il cielo sopra i tuoi luoghi: prima una frase, poi i numeri che l\'hanno decisa. Questa pagina risponde alle domande che nascono più spesso.</string>
-    <string name="guide_data_title">Dove nascono i dati</string>
-    <string name="guide_data_p1">Previsioni, qualità dell\'aria e ricerca dei luoghi arrivano da Open-Meteo, un servizio meteo aperto: gratuito, senza account, e l\'unica cosa che esce dal telefono è la richiesta del meteo stessa. Se attivi la posizione, Chiaro usa quella approssimativa che offre Android, solo per chiedere la previsione di dove sei.</string>
-    <string name="guide_data_p2">Alba, tramonto, la luna e il resto del cielo si calcolano direttamente sul telefono. Per questo sono giusti anche senza nessuna connessione.</string>
-    <string name="guide_data_p3">Quando un aggiornamento non passa, non sparisce niente: Chiaro conserva l\'ultima previsione arrivata, ti dice quanto è vecchia e mette da parte, in silenzio, le ore già passate. Quello che vedi è sempre qualcosa che i dati hanno detto davvero.</string>
-    <string name="guide_verdicts_title">Cosa dicono i verdetti</string>
-    <string name="guide_verdicts_p1">Per i momenti del cielo che vale la pena aspettare — un\'alba, un\'ora dorata, una notte di stelle — Chiaro risponde con una parola e un piccolo segno, così:</string>
+    <string name="guide_intro">Chiaro racconta il cielo sopra i tuoi luoghi e cosa farne: prima una frase, poi i numeri che l\'hanno decisa. Questa guida attraversa le quattro schermate, dice a cosa risponde ciascuna e segnala le cose che vale la pena sapere e che una schermata non può dire da sola.</string>
+
+    <string name="guide_map_title">Le quattro schermate</string>
+    <string name="guide_map_today">Il cielo adesso e come andrà la giornata.</string>
+    <string name="guide_map_sky">I momenti del cielo, e se stanotte ne vale la pena.</string>
+    <string name="guide_map_alerts">Cosa deve avvisarti, e quando.</string>
+    <string name="guide_map_journal">Come è cambiata la previsione.</string>
+    <string name="guide_map_note">I tuoi luoghi sono a un tocco, dietro al nome in cima alla schermata; le impostazioni dietro all\'ingranaggio accanto.</string>
+
+    <string name="guide_today_title">Oggi</string>
+    <string name="guide_today_p1">Il cielo disegnato in cima non è una fotografia: è calcolato per questo minuto dall\'altezza del sole, dalle nuvole, dalla pioggia e dalla luna, così alle tre di notte con il sereno è lo stesso blu profondo che vedresti fuori. La striscia sottile sotto è la giornata, dalla prima luce all\'ultima, con l\'ora in cui sei segnata sopra.</string>
+    <string name="guide_today_headline_title">La frase</string>
+    <string name="guide_today_headline_body">Quando c\'è qualcosa che vale la pena dire — ombrello verso le cinque, temporale alle tre — è scritto sopra ogni numero. Quando non c\'è niente da dire, la frase non compare: anche il silenzio è una risposta.</string>
+    <string name="guide_today_rain_title">Sta per piovere?</string>
+    <string name="guide_today_rain_body">La risposta è in due punti: la frase in cima e, subito sotto, le probabilità ora per ora, con il picco delle prossime ore segnato sulla piccola curva della pioggia. Chiaro descrive la pioggia nella lingua in cui arrivano i dati: quanto è probabile, quanta, da che ora a che ora.</string>
+    <string name="guide_today_fresh_title">Quanto sono freschi i numeri</string>
+    <string name="guide_today_fresh_body">Quando quello che stai leggendo non è più fresco, Chiaro ne dice l\'età vera invece di nasconderla, e un aggiornamento fallito dice perché. Tira giù la schermata per chiederne uno nuovo, o tocca l\'età stessa per riprovare.</string>
+    <string name="guide_today_fresh_caption">Un esempio: l\'età di quello che stai leggendo — si tocca per riprovare.</string>
+    <string name="guide_today_hours_title">Le prossime ore</string>
+    <string name="guide_today_hours_body">Ventiquattro ore di temperatura, cielo e probabilità di pioggia, a partire dall\'ora dopo questa: l\'ora in cui sei è il numero grande in cima.</string>
+    <string name="guide_today_rest_title">Il resto della giornata</string>
+    <string name="guide_today_rest_body">Una sola linea del tempo per tutto quello che manca: alba o tramonto, l\'ora dorata e l\'ora blu, il momento in cui il cielo diventa del tutto buio, il sorgere e il calare della luna, e le ore in cui la pioggia dovrebbe iniziare e smettere.</string>
+    <string name="guide_today_week_title">La settimana</string>
+    <string name="guide_today_week_body">Sette giorni su un\'unica scala di temperatura, così la stessa lunghezza di barra significa la stessa cosa su ogni riga. La striscia sotto ogni giorno è la sua luce, dall\'alba al tramonto. Tocca un giorno per aprirne le ore.</string>
+    <string name="guide_today_details_title">I dettagli</string>
+    <string name="guide_today_details_body">UV, vento, umidità, punto di rugiada, pressione, visibilità, qualità dell\'aria e pollini. Ogni numero porta con sé la riga che dice cosa farne, che è l\'unico motivo per cui sta sullo schermo.</string>
+    <string name="guide_today_details_caption">Un esempio: due dettagli, ognuno con la riga che dice cosa farne.</string>
+    <string name="guide_today_changed_title">Cosa è cambiato</string>
+    <string name="guide_today_changed_body">Quando l\'ultimo aggiornamento sposta i giorni che vengono, fino a tre frasi dicono come. Toccale e la storia completa si apre nel Diario.</string>
+    <string name="guide_today_places_title">Più di un luogo</string>
+    <string name="guide_today_places_body">Scorri di lato per passare da un luogo all\'altro; i puntini sotto il cielo dicono dove sei.</string>
+
+    <string name="guide_sky_title">Cielo</string>
+    <string name="guide_sky_p1">È la schermata che nessun\'altra app meteo porta. Prende i momenti che vale la pena aspettare — un\'alba, un\'ora dorata, una notte di stelle, il picco di uno sciame meteorico — e dice se stanotte è una di quelle buone. Tutto quello che c\'è sopra è calcolato sul telefono, quindi funziona anche senza connessione.</string>
+    <string name="guide_sky_tonight_title">Stanotte</string>
+    <string name="guide_sky_tonight_body">La card in cima è la finestra di buio: le ore in cui il cielo è davvero scuro e la luna è fuori dai piedi. Porta il verdetto, le due ore tra cui corre e il numero che l\'ha deciso.</string>
+    <string name="guide_verdicts_p1">Un verdetto è una parola, un piccolo segno e il numero che c\'è dietro — mai un colore da solo:</string>
     <string name="guide_verdicts_caption">Un esempio: una notte di stelle, giudicata dalle sue nuvole.</string>
-    <string name="guide_verdicts_p2">Il numero accanto alla parola è la prova che l\'ha decisa, così la risposta puoi pesarla anche tu. E quando la previsione non arriva abbastanza lontano per giudicare, la risposta è quella onesta: un grigio «presto per dirlo», mai un\'ipotesi vestita da verdetto.</string>
+    <string name="guide_verdicts_p2">Il numero accanto alla parola è la prova che l\'ha decisa, così la risposta puoi pesarla anche tu. Quando la previsione non arriva così lontano, o l\'ultima arrivata è troppo vecchia per fidarsi, la risposta è quella onesta: un grigio «presto per dirlo», mai un\'ipotesi vestita da verdetto.</string>
     <string name="guide_verdict_evidence_pass" formatted="false">nuvole 10%</string>
     <string name="guide_verdict_evidence_unstable" formatted="false">nuvole 45%</string>
     <string name="guide_verdict_evidence_fail" formatted="false">nuvole 90%</string>
-    <string name="guide_radar_title">Perché non c\'è la mappa radar</string>
-    <string name="guide_radar_p1">Una mappa radar è una fotografia in diretta della pioggia, scattata da stazioni a terra e distribuita come immagini. Open-Meteo, dove nascono i dati di Chiaro, descrive il tempo con i numeri — quanto è probabile, quanta, da che ora a che ora — ed è la lingua che Chiaro è fatto per leggere.</string>
-    <string name="guide_radar_p2">Così alla domanda a cui risponde un radar — sta per arrivare la pioggia? — qui rispondono parole e numeri: la frase in cima alla giornata e, subito sotto, le probabilità di pioggia ora per ora. Quando la pioggia è in arrivo, Chiaro lo dice, e dice quando.</string>
+    <string name="guide_sky_moments_title">I prossimi momenti</string>
+    <string name="guide_sky_moments_body">I momenti che segui, nell\'ordine in cui capitano. Quello che è passato lascia il posto alla sua prossima volta e la riga dice di che giorno si tratta; quello che sta capitando adesso lo dice. È lo stesso momento che il widget Cielo mostra sulla home, risolto allo stesso modo.</string>
+    <string name="guide_sky_moment_caption">Un esempio: l\'alba di domani, giudicata dalle sue nuvole.</string>
+    <string name="guide_sky_bell_title">La campanella</string>
+    <string name="guide_sky_bell_body">Ogni momento può ricordarsi di te, con il suo anticipo o con quello abituale. I promemoria sono volutamente larghi — possono arrivare qualche minuto prima o dopo — ed è proprio quella larghezza a tenerli fuori dalla batteria. Il promemoria di qualcosa che le nuvole nasconderanno resta zitto, a meno che tu non lo voglia lo stesso.</string>
+    <string name="guide_sky_events_title">In arrivo</string>
+    <string name="guide_sky_events_body">Il calendario davanti: i picchi degli sciami meteorici con la loro data, la prossima luna piena, solstizi ed equinozi — col verdetto dove la previsione arriva e un onesto «troppo lontano per dirlo» dove non arriva.</string>
+    <string name="guide_sky_catalog_title">Aggiungi un momento</string>
+    <string name="guide_sky_catalog_body">Trentadue momenti, raggruppati in sole, notte, luna, stagioni e sciami meteorici, ognuno con la riga che dice cos\'è. È il posto dove si scopre cos\'è davvero un\'ora blu: aggiungendola.</string>
+
+    <string name="guide_alerts_title">Avvisi</string>
+    <string name="guide_alerts_p1">Qui vivono due specie: quelli già scritti e quelli che scrivi tu. Non arriva niente che non abbia acceso tu.</string>
+    <string name="guide_alerts_ready_title">Pronti all\'uso</string>
+    <string name="guide_alerts_ready_body" formatted="false">Tre interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo nelle prossime 12 ore (al massimo uno per temporale), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno) e il riepilogo del mattino, una volta tra le 6 e le 12.</string>
+    <string name="guide_alerts_yours_title">I tuoi</string>
+    <string name="guide_alerts_yours_body">Parti da un\'idea — una finestra per correre, ghiaccio domattina, una notte serena — oppure costruisci la frase da te: cosa guardare, come confrontarlo, la soglia, e una seconda condizione se serve. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile.</string>
+    <string name="guide_alerts_preview_title">Provalo adesso</string>
+    <string name="guide_alerts_preview_body">Fa girare il tuo avviso sulla previsione che è già sul telefono e ti dice cosa avrebbe fatto. Non manda niente e non lascia traccia.</string>
+    <string name="guide_alerts_message_title">Il messaggio è tuo</string>
+    <string name="guide_alerts_message_body">Chiaro non lo riscrive e non lo traduce mai. Le parole tra graffe diventano numeri quando scatta: {trigger.value} è ciò che l\'ha fatto scattare, {trigger.time} è quando.</string>
+    <string name="guide_alerts_battery_title">Quanto costa</string>
+    <string name="guide_alerts_battery_body">Niente in più: i controlli viaggiano sull\'aggiornamento del meteo che hai già chiesto, al ritmo scelto nelle impostazioni. Android chiede il permesso per le notifiche la prima volta che accendi un avviso.</string>
+
+    <string name="guide_journal_title">Diario</string>
+    <string name="guide_journal_p1">Ogni aggiornamento lascia una riga. Il Diario è quel registro letto come prosa, dal più recente, raggruppato per giorno.</string>
+    <string name="guide_journal_entries_title">Cosa c\'è scritto</string>
+    <string name="guide_journal_entries_body">Come si è mossa la previsione per i giorni che vengono, quali dei tuoi avvisi sono scattati e quando, quali momenti del cielo sono stati osservati davvero e con che verdetto — e gli aggiornamenti che non sono passati, col loro motivo. Un aggiornamento fallito è una riga, non un silenzio.</string>
+    <string name="guide_journal_drift_title">Come si muove la settimana</string>
+    <string name="guide_journal_drift_body">Una riga per ogni giorno davanti, una colonna per ogni aggiornamento, il colore sulla scala della grandezza: la pioggia, oppure le massime. Risponde alla domanda che si fa davvero chi organizza un fine settimana: sta migliorando o peggiorando? Tieni premuto per vedere i numeri dietro ai colori.</string>
+    <string name="guide_journal_drift_caption">Un esempio: tre giorni, sei aggiornamenti, sulla scala della pioggia.</string>
+
+    <string name="guide_places_title">I tuoi luoghi</string>
+    <string name="guide_places_p1">Il nome in cima a Oggi e a Cielo apre l\'elenco dei luoghi, ed è lì che si gestiscono tutti.</string>
+    <string name="guide_places_search_title">Aggiungerne uno</string>
+    <string name="guide_places_search_body">Scrivi un paio di lettere e i risultati arrivano mentre scrivi; le ricerche già fatte restano a portata di mano. La ricerca ha bisogno della connessione, tutto il resto no.</string>
+    <string name="guide_places_gps_title">La mia posizione</string>
+    <string name="guide_places_gps_body">È facoltativa e viene chiesta solo quando la accendi tu. Chiaro usa la posizione approssimata che offre Android, solo per chiedere la previsione di dove sei: non gira mai in sottofondo e non esce mai dal telefono.</string>
+    <string name="guide_places_order_title">Ordine e rimozione</string>
+    <string name="guide_places_order_body">Sposta un luogo su o giù e lo scorrimento di Oggi segue quell\'ordine. Scorri via un luogo per toglierlo, con un attimo per annullare se era un errore.</string>
+
+    <string name="guide_widgets_title">I widget sulla home</string>
+    <string name="guide_widgets_three_title">Sono tre</string>
+    <string name="guide_widgets_three_body">Ora: icona, temperatura, luogo. Oggi: quello, più la frase della giornata e le prossime ore. Cielo: il momento che hai davanti e il suo verdetto, lo stesso che mostra la schermata Cielo.</string>
+    <string name="guide_widgets_config_title">Come si imposta</string>
+    <string name="guide_widgets_config_body">Tieni premuto un widget per aprire le sue impostazioni: quale luogo guarda (quello attivo, o un luogo fisso suo), lo sfondo — compreso lo stesso cielo calcolato che disegna l\'app — e quanto quello sfondo è coprente.</string>
+    <string name="guide_widgets_honest_title">Non inventano</string>
+    <string name="guide_widgets_honest_body">Un dato vecchio dice quanto è vecchio, un widget senza luogo lo dice, e nessuno mostra un numero che non ha. Si ridisegnano quando arriva un aggiornamento, quindi non costano batteria per conto loro.</string>
+
+    <string name="guide_settings_title">Impostazioni</string>
+    <string name="guide_settings_body">Le unità di temperatura e vento; l\'aspetto, dove vivono il tema, i due disegni delle icone meteo e la palette presa dallo sfondo; ogni quanto cercare una previsione nuova; la lingua dell\'app, sul selettore di Android. Ripristinare i valori iniziali rimette unità, aspetto e frequenza come erano all\'inizio e lascia i tuoi luoghi e la tua storia esattamente dove sono.</string>
+
+    <string name="guide_data_title">Da dove arrivano i numeri</string>
+    <string name="guide_data_p1">Previsioni, qualità dell\'aria e ricerca dei luoghi arrivano da Open-Meteo, un servizio meteo aperto: gratuito, senza account, e l\'unica cosa che esce dal telefono è la richiesta del meteo stessa. Nessun account, nessuna pubblicità, nessun tracciamento.</string>
+    <string name="guide_data_p2">Alba, tramonto, la luna e tutto il modulo del cielo si calcolano direttamente sul telefono. Per questo sono giusti anche senza nessuna connessione.</string>
+    <string name="guide_data_p3">Quando un aggiornamento non passa, non sparisce niente: Chiaro conserva l\'ultima previsione arrivata, ti dice quanto è vecchia e mette da parte, in silenzio, le ore già passate. Quello che vedi è sempre qualcosa che i dati hanno detto davvero.</string>
 
     <!-- La card una-tantum su Oggi che indica la guida -->
     <string name="guide_card_title">Prima volta qui?</string>
@@ -263,11 +348,13 @@
 
     <!-- Cielo (Fase 5). Tutto parla a parole: gli id puntati non arrivano mai a schermo. -->
     <string name="sky_no_place_body">Aggiungi un luogo per vedere cosa ha in programma il suo cielo.</string>
-    <string name="sky_section_moments">I momenti di oggi</string>
+    <string name="sky_section_moments">I prossimi momenti</string>
     <string name="sky_section_events">In arrivo</string>
     <string name="sky_section_reminders">Promemoria</string>
     <string name="sky_add_moment">Aggiungi un momento</string>
-    <string name="sky_moment_past">Passato</string>
+    <string name="sky_moment_now">Adesso</string>
+    <string name="sky_day_today">Oggi</string>
+    <string name="sky_day_tomorrow">Domani</string>
     <string name="sky_tonight_label">Stanotte</string>
     <string name="sky_tonight_window">Buio dalle %1$s alle %2$s</string>
     <string name="sky_tonight_no_darkness">Stanotte il cielo non diventa mai del tutto buio: a questa latitudine, in questa stagione, capita.</string>
@@ -287,10 +374,10 @@
     <string name="sky_unknown_no_coverage">La previsione non copre quelle ore</string>
 
     <!-- Perché il cielo salta un giorno: un fatto del cielo, mai un buco nella lista -->
-    <string name="sky_none_polar_day">Oggi il sole non tramonta</string>
-    <string name="sky_none_polar_night">Oggi il sole non sorge</string>
-    <string name="sky_none_moon">Oggi la luna lo salta: capita circa una volta al mese</string>
-    <string name="sky_none_no_darkness">Stanotte il cielo non diventa mai del tutto buio</string>
+    <string name="sky_none_polar_day">Il sole non tramonta</string>
+    <string name="sky_none_polar_night">Il sole non sorge</string>
+    <string name="sky_none_moon">La luna lo salta, come capita circa una volta al mese</string>
+    <string name="sky_none_no_darkness">Il cielo non diventa mai del tutto buio</string>
 
     <!-- Promemoria: inesatti di proposito, e lo schermo lo dice -->
     <string name="sky_default_lead">Promemoria abituale</string>
@@ -512,11 +599,6 @@
     <string name="notif_summary_body">%1$s. Minima %2$s, massima %3$s, pioggia %4$d%%.</string>
     <string name="notif_rule_title">«%1$s» · %2$s</string>
 
-    <!-- Il quarto capitolo della guida, arrivato con la schermata che racconta -->
-    <string name="guide_alerts_title">Come funzionano gli avvisi</string>
-    <string name="guide_alerts_p1">Quelli pronti sono interruttori: maltempo in arrivo, pioggia nelle prossime ore, il riepilogo del mattino. Accanto a ognuno c\'è scritto esattamente cosa manda e quando, così non arriva niente che non hai chiesto.</string>
-    <string name="guide_alerts_p2">Poi ci sono i tuoi. Ognuno è una frase con tre pezzi da toccare: cosa guardare, come confrontarlo, la soglia. «Prova adesso» la esegue sui dati che l\'app ha già e ti dice cosa avrebbe fatto, senza mandare niente.</string>
-    <string name="guide_alerts_p3">I controlli viaggiano insieme agli aggiornamenti del meteo, allo stesso ritmo, così gli avvisi non chiedono batteria in più. E il messaggio di un avviso tuo è tuo: Chiaro non lo riscrive e non lo traduce.</string>
 
     <!-- Il Diario (Fase 7): la storia letta come prosa, e la deriva della settimana -->
     <string name="tab_journal">Diario</string>
@@ -556,7 +638,7 @@
     <string name="widget_sky_desc">Il prossimo momento del cielo e il suo verdetto</string>
     <string name="widget_no_place_hint">Tocca per aprire Chiaro e aggiungerne uno</string>
     <string name="widget_no_data">Sto prendendo la prima previsione…</string>
-    <string name="widget_sky_empty">Nessun momento del cielo seguito. Tocca per sceglierne.</string>
+    <string name="widget_sky_empty">Nessun momento del cielo in arrivo. Tocca per sceglierne.</string>
     <string name="settings_opacity_full">Pieno</string>
     <string name="widget_opacity_transparent">Trasparente</string>
     <string name="widget_config_title">Questo widget</string>

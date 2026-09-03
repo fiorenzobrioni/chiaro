@@ -32,6 +32,8 @@ import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.sky.SkyText
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
@@ -74,9 +76,23 @@ private fun SkyContent(model: WidgetModel, moment: NextMoment, palette: WidgetPa
     val timeFmt = Formats.timeFormatter(is24h, locale)
 
     val start = moment.start.atZone(model.zone).format(timeFmt)
-    val timeLine = moment.end
+    val clock = moment.end
         ?.let { "$start – ${it.atZone(model.zone).format(timeFmt)}" }
         ?: start
+    // Which day that clock belongs to, in the Sky screen's own words: at nine in the
+    // evening the next sunrise is TOMORROW's, and a bare "06:47" on a home screen
+    // reads as this morning's (committente, 3 set). Today's moments carry no marker;
+    // anything past tomorrow carries its date, because a word for it would be a
+    // guess at how the reader counts days.
+    val date = moment.start.atZone(model.zone).toLocalDate()
+    val today = LocalDate.now(model.zone)
+    val dayMark = when {
+        moment.inProgress -> context.getString(R.string.sky_moment_now)
+        date == today -> null
+        date == today.plusDays(1) -> context.getString(R.string.sky_day_tomorrow)
+        else -> date.format(DateTimeFormatter.ofPattern("d MMM", locale))
+    }
+    val timeLine = listOfNotNull(dayMark, clock).joinToString(" · ")
 
     Column(modifier = GlanceModifier.fillMaxSize()) {
         Row(verticalAlignment = Alignment.CenterVertically) {

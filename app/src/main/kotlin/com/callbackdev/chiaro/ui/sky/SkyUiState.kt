@@ -51,8 +51,13 @@ data class Tonight(
     val verdict: SkyVerdict?
 )
 
+/** When a moment's occurrence lands — the word the row prints before the time. */
+enum class MomentTiming { NOW, TODAY, TOMORROW }
+
 /**
- * One subscribed moment of today, resolved and judged.
+ * One subscribed moment, resolved and judged: the one in front of the reader right
+ * now ([SkyUpcoming]), which is today's while today's is still coming and tomorrow's
+ * once it is over.
  *
  * [verdict] is null for the jobs that are geometry rather than a sight (solar noon,
  * the moon's phase): a verdict on something the clouds cannot spoil would be the
@@ -65,8 +70,8 @@ data class Moment(
     /** The lead in force: the moment's own, or the default it follows. */
     val lead: SkyLead,
     val followsDefault: Boolean,
-    /** Fully over at build time: rendered quieter, never dropped — it was today's. */
-    val past: Boolean,
+    /** Happening, today's, or tomorrow's — said in words above the verdict. */
+    val timing: MomentTiming,
     /** For the moon's day-moment: the phase is the value, not a verdict. */
     val moonPhase: MoonPhase? = null,
     val moonIlluminationPct: Int? = null
@@ -139,7 +144,9 @@ object SkyStateBuilder {
     /**
      * The night in progress, or the one ahead: yesterday's window while its dawn is
      * still coming (at 03:00 "tonight" means the sky outside, not the next dusk),
-     * today's otherwise.
+     * today's otherwise. That is [SkyUpcoming]'s rule for every moment, and the card
+     * reads it from there so the hero and a subscribed dark-window row cannot
+     * disagree about which night they are talking about.
      */
     private fun tonight(
         city: City,
@@ -148,20 +155,20 @@ object SkyStateBuilder {
         judge: (SkyJob, SkyOccurrence.At) -> SkyVerdict?
     ): Tonight {
         val job = SkyJobCatalog.DarknessWindow
-        val today = now.atZone(zone).toLocalDate()
-        val current = SkyScheduler.resolve(job, today.minusDays(1), zone, city.coordinates)
-        val occurrence = when {
-            current is SkyOccurrence.At && current.end?.isAfter(now) == true -> current
-            else -> SkyScheduler.resolve(job, today, zone, city.coordinates)
-        }
-        val at = occurrence as? SkyOccurrence.At ?: return Tonight(window = null, verdict = null)
+        val at = SkyUpcoming.of(job, now, zone, city.coordinates).at
+            ?: return Tonight(window = null, verdict = null)
         return Tonight(window = at, verdict = judge(job, at))
     }
 
     /**
-     * Today's subscribed daily moments, in the order they happen; the days the sky
-     * skips one (`∅`) keep their row with the reason, sorted after the scheduled —
-     * a fact about the sky, not a gap in the list.
+     * The subscribed daily moments in front of the reader, in the order they happen.
+     *
+     * Each one is [SkyUpcoming]'s answer rather than today's calendar row: a moment
+     * that is over is tomorrow's, and the row says "Tomorrow" instead of greying out
+     * a sunrise nobody can attend any more. That is also what the Sky widget shows,
+     * from the same rule — the two surfaces used to print two different sunrises
+     * (committente, 3 set). The days the sky skips one (`∅`) keep their row with the
+     * reason, sorted after the scheduled: a fact about the sky, not a gap in the list.
      */
     private fun moments(
         subscriptions: List<SkySubscription>,
@@ -177,16 +184,20 @@ object SkyStateBuilder {
             .mapNotNull { sub -> SkyJobCatalog.byId(sub.jobId)?.let { sub to it } }
             .filter { (_, job) -> job.kind == SkyJobKind.DAILY }
             .map { (sub, job) ->
-                val occurrence = SkyScheduler.resolve(job, today, zone, city.coordinates)
-                val at = occurrence as? SkyOccurrence.At
+                val upcoming = SkyUpcoming.of(job, now, zone, city.coordinates)
+                val at = upcoming.at
                 val isMoonDay = job.id == SkyJobCatalog.MoonToday.id
                 Moment(
                     job = job,
-                    occurrence = occurrence,
+                    occurrence = upcoming.occurrence,
                     verdict = at?.let { judge(job, it) },
                     lead = SkyLead.ofMinutes(sub.notifyLeadMinutes ?: settings.skyNotifyDefaultMin),
                     followsDefault = sub.notifyLeadMinutes == null,
-                    past = at != null && (at.end ?: at.start).isBefore(now),
+                    timing = when {
+                        upcoming.inProgress -> MomentTiming.NOW
+                        upcoming.date == today -> MomentTiming.TODAY
+                        else -> MomentTiming.TOMORROW
+                    },
                     moonPhase = if (isMoonDay && at != null) MoonPhase.at(at.start) else null,
                     moonIlluminationPct = if (isMoonDay && at != null) {
                         (AstronomyEngine.moonIllumination(at.start).illuminatedFraction * 100)

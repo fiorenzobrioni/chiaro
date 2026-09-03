@@ -52,16 +52,21 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   the system per-app language picker, about, and a reset that says exactly what it
   restores and what it leaves alone. Groups arrive with the feature they control, so
   notifications and widgets join in their own phases.
-- The guide (Fase 4): where the data is born, what the sky verdicts say, why there is
-  no radar map — short prose in both languages, illustrated with the app's own
-  components, reachable from Settings forever and pointed at once by a dismissable
-  card on Today.
+- The guide (Fase 4, rewritten in the widget-and-guide pass): a tour of the four
+  screens in both languages — what each one answers, what it can do, and the things a
+  screen cannot say out loud (the sky is computed rather than photographed, a reminder
+  is loose on purpose, a failed update is a line in the Journal), followed by where the
+  numbers come from. It teaches with the app's own components shown as examples —
+  verdict chips, a details tile, the freshness chip, a miniature drift strip, each with
+  a caption saying it is an example. Reachable from Settings forever and pointed at once
+  by a dismissable card on Today.
 - The Sky screen (Fase 5): tonight's verdict on the dark window with the numbers that
-  decided it (and the moon named when it was the moon), the day's subscribed moments
-  resolved in the city's own timezone, the calendar ahead (meteor peaks, the next full
-  moon, solstices and equinoxes, with an honest "too far out to say" past the
-  forecast's horizon), and the grouped 32-moment catalog where each entry teaches what
-  it is in one line.
+  decided it (and the moon named when it was the moon), the subscribed moments ahead
+  resolved in the city's own timezone — a moment that is over is replaced by its next
+  occurrence, marked "Tomorrow", and a window in progress says "Now" — the calendar
+  ahead (meteor peaks, the next full moon, solstices and equinoxes, with an honest
+  "too far out to say" past the forecast's horizon), and the grouped 32-moment catalog
+  where each entry teaches what it is in one line.
 - Sky reminders (Fase 5): a bell per moment plus a default lead, delivered by a single
   deliberately inexact alarm (15-minute floor, no exact-alarm permission), suppressed
   when the sky will hide the event unless asked otherwise, re-armed on boot and on
@@ -81,8 +86,6 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   that cancels itself when nothing is left to serve. The notifiers stay in the app
   behind an interface, and they speak prose: a severe-weather heads-up reads
   "Temporale verso le 18:00", never a data dump.
-- The guide's fourth chapter (Fase 6): how the alerts work, landed together with the
-  screen it describes.
 - The Journal (Fase 7): the history table read as prose, newest first, grouped by
   day — forecast revisions with their numbers ("Saturday improved: rain 70% → 30%"),
   fired alerts, the sky moments the app observed (with the verdict, or an honest "no
@@ -96,12 +99,15 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 - "What changed" on Today (Fase 7): up to three sentences after the day's timeline
   when the latest update moved the week, tapping opens the Journal.
 - The home widgets (Fase 8), in Glance: Now (icon, temperature, place), Today (now
-  plus the day's sentence and the next hours) and Sky (the next followed moment and
-  its verdict — the widget nobody else ships). They draw from the same builders the
-  app reads, repaint on every data commit, follow the system's light/dark with the
-  app's own color scheme (dynamic or Chiaro), state their age when stale, and say
-  "no place yet" instead of ever showing a number they do not have. A placed widget
-  keeps the shared periodic job alive on its own.
+  plus the day's sentence and the next hours) and Sky (the followed moment in front of
+  you and its verdict, with the day named when it is not today — the widget nobody
+  else ships). The weather icon grows to fill the height the launcher grants. They draw
+  from the same builders the app reads — the Sky widget and the Sky screen resolve
+  their moment through the same rule, so the two cannot print two different sunrises —
+  repaint on every data commit, follow the system's light/dark with the app's own color
+  scheme (dynamic or Chiaro), state their age when stale, and say "no place yet"
+  instead of ever showing a number they do not have. A placed widget keeps the shared
+  periodic job alive on its own.
 - The Widgets group in Settings (Fase 8): the card's background opacity, applied to
   the fill only — the text always keeps full ink.
 - Two weather-icon themes: Meteocons' fill set joins the line set (same glyphs, solid
@@ -116,3 +122,9 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 - The last of the editor's vocabulary in the data layer (Fase 4): line numbers, word
   wrap, the technical-details toggle, the theme-profile name and the editor tab state.
   Chiaro's settings hold what Chiaro's screens actually edit.
+- The guide's chapter on why there is no radar map: a guide is where a product says
+  what it does, not where it defends what it is not. The useful half of it survives
+  inside the tour of Today, where the answer to "is it about to rain?" actually lives.
+- The day's low and high from the Now and Today widgets: beside a 34sp number the pair
+  read as clutter on a home screen, and VISION §5.9 asks those cards for icon,
+  temperature and place.

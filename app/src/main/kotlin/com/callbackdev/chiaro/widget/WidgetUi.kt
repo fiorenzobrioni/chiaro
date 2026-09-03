@@ -40,19 +40,15 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider as FixedColorProvider
 import com.callbackdev.chiaro.MainActivity
 import com.callbackdev.chiaro.R
-import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.theme.ChiaroDarkColors
 import com.callbackdev.chiaro.ui.theme.ChiaroDarkScheme
 import com.callbackdev.chiaro.ui.theme.ChiaroLightColors
 import com.callbackdev.chiaro.ui.theme.ChiaroLightScheme
-import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.theme.SkyPalette
 import com.callbackdev.chiaro.ui.today.SkySnapshot
-import com.callbackdev.chiaro.ui.today.TodayUiState
 import java.time.Duration
 import java.time.Instant
-import java.util.Locale
 
 /**
  * The widgets' side of the design system (Fase 8, redrawn on device review): the
@@ -156,6 +152,10 @@ private fun palette(
 val WidgetCardPadding = 14.dp
 val WidgetCardPaddingTight = 12.dp
 
+/** The air the Now widget's hero leaves above and below itself: it is one row, so
+ * the glyph may own almost the whole height (4th device pass, measured). */
+val WidgetCardPaddingSnug = 6.dp
+
 /**
  * The card every widget lives in. The sky dress is a bitmap of the same gradient the
  * app's canvas computes for this exact moment, darkened by the §3.6 scrim so white
@@ -170,6 +170,13 @@ fun WidgetCard(
     schemes: WidgetSchemes,
     skyBitmap: Bitmap?,
     contentPadding: Dp = WidgetCardPadding,
+    /**
+     * The leading edge on its own, because a Meteocons glyph carries about a quarter
+     * of its box as margin already: on the Now widget the card adds nothing there and
+     * the icon starts where the card starts, which is what puts its ink level with
+     * the other weather widgets on the home screen (measured, 4th device pass).
+     */
+    contentPaddingStart: Dp = contentPadding,
     content: @Composable (WidgetPalette) -> Unit
 ) {
     val look = model.look
@@ -212,7 +219,14 @@ fun WidgetCard(
             }
             Box(modifier = GlanceModifier.fillMaxSize().background(fill)) {}
         }
-        Box(modifier = GlanceModifier.fillMaxSize().padding(contentPadding)) {
+        Box(
+            modifier = GlanceModifier.fillMaxSize().padding(
+                start = contentPaddingStart,
+                top = contentPadding,
+                end = contentPadding,
+                bottom = contentPadding
+            )
+        ) {
             content(
                 palette(effectiveBackground, schemes, night, look.opacityPct, wallpaperDark)
             )
@@ -311,19 +325,57 @@ fun staleText(context: Context, lastSync: Instant, now: Instant): String {
     }
 }
 
-/** "↓13° ↑24°": the day's range, low before high — the week rows' own reading
- * order. Null near midnight, when the trimmed report no longer carries today's
- * daily row: the pair is then not drawn, never guessed. */
-fun dayRangeText(
-    content: TodayUiState.Content,
-    unit: TemperatureUnit,
-    locale: Locale
-): String? {
-    val today = content.report.daily
-        .firstOrNull { it.date == content.now.toLocalDate() } ?: return null
-    return "↓" + Formats.temperature(today.lowC, unit, locale) +
-        " ↑" + Formats.temperature(today.highC, unit, locale)
-}
+/**
+ * The hero glyph's size: it fills the height the launcher really granted, between a
+ * floor and a ceiling (committente, 3 set — "as big as the Samsung one"). A fixed
+ * number could only ever be right on one cell size, and the Meteocons art draws
+ * inside about half its box (the crescent of `mcf_clear_night` is 33 units of 64),
+ * so the box has to be generous before the glyph reads at arm's length. The floor
+ * keeps a squeezed widget legible; the ceiling stops a tall grant from turning the
+ * icon into a poster.
+ *
+ * Measured on the device's own screenshot (4th pass): the launcher grants the Now
+ * widget about 101 dp of height, so 12 dp of card padding on each side left a 77 dp
+ * box against the neighbouring widget's 87 dp — the reason the Now widget now keeps
+ * only 6 dp above and below.
+ */
+/**
+ * The band of empty leading a block of words carries above its capitals, so the row
+ * beside it can balance the same band underneath.
+ *
+ * A text block is taller than the ink you can see: the system font leaves roughly a
+ * quarter of an em above the capitals of "23°", while the last line's descenders (the
+ * g of "Cavenago") reach the very bottom of its box. Centre such a block against an
+ * icon and the ICON reads high — measured at 5 dp on the device's own screenshot (5th
+ * device pass), which is exactly half that band, the half the block's own asymmetry
+ * is worth. Padding the block by the band at the bottom makes it symmetric around its
+ * own ink, and then plain vertical centring lands the two inks on one line.
+ *
+ * It follows the reader's font scale, because the band is made of text — read off a
+ * Context rather than a composition local for the same reason [isNight] is: a widget
+ * is recomposed by the Application on every configuration change, and there is no
+ * `LocalConfiguration` on the launcher's side of the fence. What it does
+ * not chase is the drawing: measured over the icon family, most Meteocons sit dead
+ * centre in their box, a cloudy night sits 4% high and a thunderstorm 10% low — the
+ * bolt hangs down on purpose. That is the illustrator's composition, not a defect,
+ * and a per-icon table to "fix" it would be the app arguing with its own artwork.
+ */
+fun textInkBalance(context: Context, fontSizeSp: Float): Dp =
+    (fontSizeSp * LeadingAboveCaps * context.resources.configuration.fontScale).dp
+
+/** Ascender minus cap height, as a fraction of the font size. The device's own font
+ * measures about 0.30 em; 0.24 is the value taken, because a last line that ends
+ * without a descender gives part of the band back at the bottom. */
+private const val LeadingAboveCaps = 0.24f
+
+fun heroIconSize(
+    available: Dp,
+    min: Dp = HeroIconMin,
+    max: Dp = HeroIconMax
+): Dp = available.coerceIn(min, max)
+
+private val HeroIconMin = 52.dp
+private val HeroIconMax = 104.dp
 
 /** The rain figure's ink: the §2.3 ramp selected for the ground the card really
  * has, the secondary ink when there is nothing to say — the app strip's own rule. */
