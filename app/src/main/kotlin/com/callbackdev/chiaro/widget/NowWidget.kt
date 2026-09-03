@@ -72,6 +72,9 @@ class NowWidget : GlanceAppWidget() {
     }
 }
 
+/** The hero number's size, named because the ink balance below is measured off it. */
+private const val TemperatureSp = 34f
+
 @Composable
 private fun NowContent(
     content: TodayUiState.Content,
@@ -103,7 +106,15 @@ private fun NowContent(
             )
         )
         // 8dp, not 12: a quarter of the glyph's box is already empty on that side.
-        Column(modifier = GlanceModifier.padding(start = 8.dp).fillMaxWidth()) {
+        // The bottom balances the leading above "23°", so the words' ink and the
+        // glyph's ink share a centre line instead of the two boxes sharing one
+        // (committente, 5th device pass — the icon read high by exactly half that
+        // band).
+        Column(
+            modifier = GlanceModifier
+                .padding(start = 8.dp, bottom = textInkBalance(context, TemperatureSp))
+                .fillMaxWidth()
+        ) {
             // Icon, temperature, place — VISION §5.9's three, and only those: the
             // day's range next to the number read as clutter on the home screen
             // (committente, 3 set) and it is one tap away in the app.
@@ -113,7 +124,7 @@ private fun NowContent(
                 ),
                 style = TextStyle(
                     color = palette.primary,
-                    fontSize = 34.sp,
+                    fontSize = TemperatureSp.sp,
                     fontWeight = FontWeight.Medium
                 )
             )

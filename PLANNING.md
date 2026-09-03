@@ -844,6 +844,25 @@ Quattro rilievi, due dei quali hanno rifatto il vestito dei widget:
     Sulla stessa densità l'icona passa da 77 a 89 dp — glifo ~103 px, bordo a ~121 px
     contro i 118 px del vicino. Il testo si stacca dall'icona a 8 dp invece di 12,
     perché quel quarto di margine è già aria. Oggi e Cielo non si toccano.
+  - **L'icona sembrava ancora allineata in alto** (committente, sullo screenshot
+    successivo): non era un'impressione, ed è misurabile. Un blocco di testo è più
+    alto dell'inchiostro che si vede — il font di sistema lascia circa un quarto di em
+    vuoto sopra le maiuscole di «23°», mentre la «g» di Cavenago arriva al bordo
+    inferiore della sua riga — quindi il suo inchiostro sta basso nella propria
+    scatola, e centrare le due SCATOLE lascia l'icona in alto di metà di quella banda:
+    5,1 dp misurati sullo screenshot con la luna (disegno centrato), contro i 5,2 dp
+    che il modello prevede. Il rimedio è simmetria, non un numero magico:
+    `textInkBalance` mette sotto l'ultima riga la stessa banda che il font lascia
+    sopra la prima (0,24 em della temperatura, moltiplicato per la scala di testo del
+    lettore, letto da un `Context` come `isNight` — sul launcher non esiste
+    `LocalConfiguration`), e a quel punto basta il centraggio verticale. Applicato a
+    Ora e a Oggi: è la stessa riga.
+  - **Quello che resta non si tocca**: rasterizzando la famiglia Meteocons (script
+    ad hoc con cairosvg) la maggior parte dei disegni è esattamente al centro della
+    sua scatola, la notte nuvolosa sta il 4% in alto e il temporale il 10% in basso —
+    il fulmine pende, di proposito. È la composizione dell'illustratore, non un
+    difetto: una tabella di correzioni per icona sarebbe l'app che discute con la
+    propria grafica, e romperebbe la linea d'orizzonte condivisa dalla famiglia.
   - **La guida riscritta** (chiesta dal committente insieme alla passata widget):
     - **Il capitolo «perché non c'è il radar» esce.** Valutato e condiviso: una guida
       è il posto dove un prodotto dice cosa fa, non dove difende ciò che non è, e

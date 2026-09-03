@@ -339,6 +339,35 @@ fun staleText(context: Context, lastSync: Instant, now: Instant): String {
  * box against the neighbouring widget's 87 dp — the reason the Now widget now keeps
  * only 6 dp above and below.
  */
+/**
+ * The band of empty leading a block of words carries above its capitals, so the row
+ * beside it can balance the same band underneath.
+ *
+ * A text block is taller than the ink you can see: the system font leaves roughly a
+ * quarter of an em above the capitals of "23°", while the last line's descenders (the
+ * g of "Cavenago") reach the very bottom of its box. Centre such a block against an
+ * icon and the ICON reads high — measured at 5 dp on the device's own screenshot (5th
+ * device pass), which is exactly half that band, the half the block's own asymmetry
+ * is worth. Padding the block by the band at the bottom makes it symmetric around its
+ * own ink, and then plain vertical centring lands the two inks on one line.
+ *
+ * It follows the reader's font scale, because the band is made of text — read off a
+ * Context rather than a composition local for the same reason [isNight] is: a widget
+ * is recomposed by the Application on every configuration change, and there is no
+ * `LocalConfiguration` on the launcher's side of the fence. What it does
+ * not chase is the drawing: measured over the icon family, most Meteocons sit dead
+ * centre in their box, a cloudy night sits 4% high and a thunderstorm 10% low — the
+ * bolt hangs down on purpose. That is the illustrator's composition, not a defect,
+ * and a per-icon table to "fix" it would be the app arguing with its own artwork.
+ */
+fun textInkBalance(context: Context, fontSizeSp: Float): Dp =
+    (fontSizeSp * LeadingAboveCaps * context.resources.configuration.fontScale).dp
+
+/** Ascender minus cap height, as a fraction of the font size. The device's own font
+ * measures about 0.30 em; 0.24 is the value taken, because a last line that ends
+ * without a descender gives part of the band back at the bottom. */
+private const val LeadingAboveCaps = 0.24f
+
 fun heroIconSize(
     available: Dp,
     min: Dp = HeroIconMin,
