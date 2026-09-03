@@ -420,6 +420,9 @@ private fun MomentRow(
         }
         is SkyOccurrence.None -> stringResource(SkyText.notScheduledRes(occ.reason))
     }
+    // The chip lives UNDER the name, never beside it: in a trailing slot a wide
+    // verdict ("Niente da fare · nuvole 100%") squeezed the name to one letter per
+    // line (device finding, 3 set). Only the fixed-width bell trails.
     ListItem(
         leadingContent = {
             Icon(
@@ -436,11 +439,9 @@ private fun MomentRow(
             )
         },
         supportingContent = {
-            val past = if (moment.past) stringResource(R.string.sky_moment_past) + " · " else ""
-            Text(past + timeLine)
-        },
-        trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                val past = if (moment.past) stringResource(R.string.sky_moment_past) + " · " else ""
+                Text(past + timeLine)
                 moment.verdict?.let { verdict ->
                     VerdictChip(
                         kind = SkyText.chipKind(verdict.kind),
@@ -448,8 +449,10 @@ private fun MomentRow(
                         evidence = SkyText.chipEvidence(res, verdict)
                     )
                 }
-                BellButton(lead = moment.lead, name = name, onClick = onBell)
             }
+        },
+        trailingContent = {
+            BellButton(lead = moment.lead, name = name, onClick = onBell)
         }
     )
 }
@@ -471,6 +474,7 @@ private fun EventRow(
     val verdictLine = event.verdict?.let { verdict ->
         SkyText.unknownReason(res, verdict)
     }
+    // Same rule as MomentRow: the chip goes under the text, only the bell trails.
     ListItem(
         leadingContent = {
             Icon(
@@ -481,9 +485,9 @@ private fun EventRow(
             )
         },
         headlineContent = { Text(name) },
-        supportingContent = { Text(listOfNotNull(date, verdictLine).joinToString(" · ")) },
-        trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        supportingContent = {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(listOfNotNull(date, verdictLine).joinToString(" · "))
                 event.verdict?.takeIf { it.kind != SkyVerdictKind.UNKNOWN }?.let { verdict ->
                     VerdictChip(
                         kind = SkyText.chipKind(verdict.kind),
@@ -491,9 +495,11 @@ private fun EventRow(
                         evidence = SkyText.chipEvidence(res, verdict)
                     )
                 }
-                if (onBell != null && event.lead != null) {
-                    BellButton(lead = event.lead, name = name, onClick = onBell)
-                }
+            }
+        },
+        trailingContent = {
+            if (onBell != null && event.lead != null) {
+                BellButton(lead = event.lead, name = name, onClick = onBell)
             }
         }
     )

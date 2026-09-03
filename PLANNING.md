@@ -502,6 +502,16 @@ dichiarazione onesta: sono prosa, non template.
 307 test verdi (141 domain, 114 data, 52 app — con i 10 nuovi di
 `SkyStateBuilderTest`), zero failure, zero skip; lint a zero errori; APK debug ok.
 
+### Verifica su device (committente, 3 set 2026)
+
+Tutto funziona, con un difetto di layout trovato dall'occhio, invisibile a ogni test:
+nelle righe dei momenti il chip del verdetto stava nel `trailingContent` della
+`ListItem`, che prende tutta la larghezza che chiede — un chip largo («Niente da
+fare · nuvole 100%») strizzava la colonna del nome a una lettera per riga. Il chip
+ora vive sotto al nome, nella colonna del testo, e a destra resta solo la campanella
+a larghezza fissa. Stessa correzione sulle righe di «In arrivo», che avevano la
+stessa struttura e avrebbero mostrato lo stesso difetto al primo verdetto largo.
+
 ## Fase 6 — Avvisi, e `:core:sync`
 
 - [ ] Il modulo `:core:sync` con il job periodico condiviso e gli scheduler
