@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -30,6 +32,7 @@ import com.callbackdev.chiaro.data.FirstRun
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.WeatherRepository
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.ui.alerts.AlertsRoute
 import com.callbackdev.chiaro.ui.firstrun.FirstRunRoute
 import com.callbackdev.chiaro.ui.guide.GuideRoute
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
@@ -86,7 +89,7 @@ class ShellViewModel(
  * state rather than a nav graph: two tabs and two overlays do not earn one; Alerts
  * and the Journal (Fase 6–7) will re-pose the question.
  */
-private enum class ShellTab { TODAY, SKY }
+private enum class ShellTab { TODAY, SKY, ALERTS }
 
 private enum class ShellOverlay { SETTINGS, GUIDE }
 
@@ -141,9 +144,9 @@ private fun MainScreens() {
 }
 
 /**
- * The bottom bar of VISION §5.1, at its current width: Today and Sky. Alerts and the
- * Journal join when their screens exist — a bar with dead tabs would be the screen
- * lying about what the app can do. The tab content swaps; what must survive a switch
+ * The bottom bar of VISION §5.1, at its current width: Today, Sky and Alerts. The
+ * Journal joins in Fase 7 — a bar with dead tabs would be the screen lying about
+ * what the app can do. The tab content swaps; what must survive a switch
  * (the active place, the subscriptions) lives in the ViewModels, not in the screen.
  */
 @Composable
@@ -161,6 +164,7 @@ private fun TabScaffold(
                     onOpenGuide = onOpenGuide
                 )
                 ShellTab.SKY -> SkyRoute(onOpenSettings = onOpenSettings)
+                ShellTab.ALERTS -> AlertsRoute(onOpenSettings = onOpenSettings)
             }
         }
         NavigationBar {
@@ -187,6 +191,18 @@ private fun TabScaffold(
                     )
                 },
                 label = { Text(stringResource(R.string.tab_sky)) }
+            )
+            NavigationBarItem(
+                selected = tab == ShellTab.ALERTS,
+                onClick = { onSelectTab(ShellTab.ALERTS) },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Notifications,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                label = { Text(stringResource(R.string.tab_alerts)) }
             )
         }
     }

@@ -398,4 +398,119 @@
     <string name="sky_expl_geminids">Lo sciame di dicembre, il più ricco dell\'anno.</string>
     <string name="sky_name_ursids">Ursidi</string>
     <string name="sky_expl_ursids">Lo sciame del solstizio, piccolo e tutto boreale.</string>
+
+    <!-- Avvisi (Fase 6). Due gruppi, una schermata: interruttori che dicono
+         esattamente cosa mandano, e le regole del lettore come frase a chip. -->
+    <string name="tab_alerts">Avvisi</string>
+    <string name="alerts_group_ready">Pronti</string>
+    <string name="alerts_group_yours">I tuoi</string>
+    <string name="alert_severe_title">Maltempo in arrivo</string>
+    <string name="alert_severe_desc">Un avviso quando nelle prossime 12 ore compare un temporale, pioggia gelata, pioggia o neve forte. Al massimo uno per perturbazione.</string>
+    <string name="alert_precip_title">Pioggia nelle prossime ore</string>
+    <string name="alert_precip_desc" formatted="false">Un avviso quando la pioggia supera il 70% di probabilità entro 6 ore. Al massimo due volte al giorno.</string>
+    <string name="alert_summary_title">Il riepilogo del mattino</string>
+    <string name="alert_summary_desc">Una volta al giorno, tra le 6 e le 12: il cielo di oggi, minima, massima e pioggia.</string>
+    <string name="alerts_templates_title">Parti da un\'idea</string>
+    <string name="rule_sentence_prefix">Quando</string>
+    <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
+    <string name="rule_and">e</string>
+    <string name="rule_last_fired">Scattato l\'ultima volta %1$s</string>
+    <string name="rule_never_fired">Non è ancora mai scattato</string>
+    <string name="rule_name_label">Nome</string>
+    <string name="rule_message_label">Il tuo messaggio</string>
+    <string name="rule_message_help">Le parole tra graffe diventano numeri: {trigger.value} è quello che l\'ha fatto scattare, {trigger.time} è quando.</string>
+    <string name="rule_add_condition">e un\'altra condizione</string>
+    <string name="rule_remove_condition">Togli questa condizione</string>
+    <string name="rule_preview_action">Prova adesso</string>
+    <string name="rule_preview_fires">Adesso scatterebbe: «%1$s»</string>
+    <string name="rule_preview_passes">Adesso resterebbe zitto.</string>
+    <string name="rule_preview_unavailable">Non posso dirlo: «%1$s» al momento non ha un valore.</string>
+    <string name="rule_preview_no_data">Non posso dirlo: nessuna previsione ancora per questo luogo.</string>
+    <string name="rule_delete">Elimina questo avviso</string>
+    <string name="rule_delete_confirm_title">Eliminare questo avviso?</string>
+    <string name="rule_delete_confirm_body">Sparisce per sempre, messaggio compreso.</string>
+    <string name="rule_pick_variable">Cosa guardare</string>
+    <string name="rule_pick_operator">Come confrontarlo</string>
+    <string name="rule_pick_value">La soglia</string>
+    <string name="action_done">Fatto</string>
+
+    <!-- Gli operatori, come li vuole la frase -->
+    <string name="op_above">sopra</string>
+    <string name="op_at_least">almeno</string>
+    <string name="op_below">sotto</string>
+    <string name="op_at_most">al massimo</string>
+    <string name="op_equal">esattamente</string>
+    <string name="op_not_equal">tutto tranne</string>
+    <string name="op_is">è</string>
+    <string name="op_is_not">non è</string>
+    <string name="value_yes">sì</string>
+    <string name="value_no">no</string>
+
+    <!-- Le variabili, come frasi. Gli id puntati non arrivano mai a schermo. -->
+    <string name="var_current_temp">la temperatura adesso</string>
+    <string name="var_current_feels_like">la percepita adesso</string>
+    <string name="var_current_humidity">l\'umidità adesso</string>
+    <string name="var_current_dew_point">il punto di rugiada adesso</string>
+    <string name="var_current_uv">l\'indice UV adesso</string>
+    <string name="var_current_wind">il vento adesso</string>
+    <string name="var_current_gust">le raffiche adesso</string>
+    <string name="var_current_precip">la probabilità di pioggia adesso</string>
+    <string name="var_current_pressure">la pressione adesso</string>
+    <string name="var_current_visibility">la visibilità adesso</string>
+    <string name="var_current_aqi">l\'indice dell\'aria adesso</string>
+    <string name="var_next6_precip">la pioggia nelle prossime 6 ore</string>
+    <string name="var_next6_temp_min">la minima delle prossime 6 ore</string>
+    <string name="var_next6_temp_max">la massima delle prossime 6 ore</string>
+    <string name="var_next6_severe">il maltempo nelle prossime 6 ore</string>
+    <string name="var_next12_precip">la pioggia nelle prossime 12 ore</string>
+    <string name="var_next12_temp_min">la minima delle prossime 12 ore</string>
+    <string name="var_next12_temp_max">la massima delle prossime 12 ore</string>
+    <string name="var_next12_severe">il maltempo nelle prossime 12 ore</string>
+    <string name="var_today_high">la massima di oggi</string>
+    <string name="var_today_low">la minima di oggi</string>
+    <string name="var_today_precip">la pioggia di oggi</string>
+    <string name="var_today_uv">l\'UV massimo di oggi</string>
+
+    <!-- I cinque punti di partenza. Nome e messaggio diventano contenuto del lettore
+         alla creazione, nella sua lingua, e da lì in poi non si traducono più. -->
+    <string name="tpl_bike_title">Dimmi quando posso pedalare</string>
+    <string name="tpl_bike_desc" formatted="false">Almeno 12° e pioggia sotto il 20% nelle prossime 6 ore.</string>
+    <string name="tpl_bike_name">bici</string>
+    <string name="tpl_bike_message" formatted="false">Si pedala: {current.temp_c}° e pioggia al {next_6h.precip_chance_max}%.</string>
+    <string name="tpl_ice_title">Ghiaccio domattina</string>
+    <string name="tpl_ice_desc">Quando nelle prossime 12 ore si scende sotto zero.</string>
+    <string name="tpl_ice_name">ghiaccio</string>
+    <string name="tpl_ice_message" formatted="false">Possibile ghiaccio: si scende a {trigger.value}° verso le {trigger.time}.</string>
+    <string name="tpl_run_title">Una finestra per correre</string>
+    <string name="tpl_run_desc" formatted="false">Pioggia sotto il 20% nelle prossime 6 ore e non più di 26°.</string>
+    <string name="tpl_run_name">corsa</string>
+    <string name="tpl_run_message" formatted="false">Buona finestra per correre: pioggia al {trigger.value}%.</string>
+    <string name="tpl_uv_title">UV alto</string>
+    <string name="tpl_uv_desc">Quando l\'indice UV di oggi arriva almeno a 7.</string>
+    <string name="tpl_uv_name">sole</string>
+    <string name="tpl_uv_message" formatted="false">Oggi UV fino a {trigger.value}: crema e cappello.</string>
+    <string name="tpl_night_title">Una notte senza pioggia</string>
+    <string name="tpl_night_desc" formatted="false">Pioggia sotto il 10% nelle prossime 12 ore.</string>
+    <string name="tpl_night_name">notte</string>
+    <string name="tpl_night_message" formatted="false">Stanotte niente pioggia in vista ({trigger.value}%).</string>
+
+    <!-- Gli avvisi integrati come notifiche: una frase, mai un elenco di dati -->
+    <string name="notif_channel_severe">Maltempo</string>
+    <string name="notif_channel_precip">Pioggia in arrivo</string>
+    <string name="notif_channel_summary">Riepilogo del mattino</string>
+    <string name="notif_channel_rules">I tuoi avvisi</string>
+    <string name="notif_severe_title">Maltempo in arrivo · %1$s</string>
+    <string name="notif_severe_body">%1$s verso le %2$s</string>
+    <string name="notif_rain_fragment">, pioggia al %1$d%%</string>
+    <string name="notif_precip_title">Pioggia in arrivo · %1$s</string>
+    <string name="notif_precip_body">Ombrello verso le %1$s: pioggia al %2$d%%.</string>
+    <string name="notif_summary_title">Oggi · %1$s</string>
+    <string name="notif_summary_body">%1$s. Minima %2$s, massima %3$s, pioggia %4$d%%.</string>
+    <string name="notif_rule_title">«%1$s» · %2$s</string>
+
+    <!-- Il quarto capitolo della guida, arrivato con la schermata che racconta -->
+    <string name="guide_alerts_title">Come funzionano gli avvisi</string>
+    <string name="guide_alerts_p1">Quelli pronti sono interruttori: maltempo in arrivo, pioggia nelle prossime ore, il riepilogo del mattino. Accanto a ognuno c\'è scritto esattamente cosa manda e quando, così non arriva niente che non hai chiesto.</string>
+    <string name="guide_alerts_p2">Poi ci sono i tuoi. Ognuno è una frase con tre pezzi da toccare: cosa guardare, come confrontarlo, la soglia. «Prova adesso» la esegue sui dati che l\'app ha già e ti dice cosa avrebbe fatto, senza mandare niente.</string>
+    <string name="guide_alerts_p3">I controlli viaggiano insieme agli aggiornamenti del meteo, allo stesso ritmo, così gli avvisi non chiedono batteria in più. E il messaggio di un avviso tuo è tuo: Chiaro non lo riscrive e non lo traduce.</string>
 </resources>

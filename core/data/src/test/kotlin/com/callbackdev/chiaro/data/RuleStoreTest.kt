@@ -36,6 +36,35 @@ class RuleStoreTest {
         scope.cancel()
     }
 
+    /** The Chiaro-side add (Fase 6): content chosen by the caller, ids still
+     * monotonic, ceiling still enforced. */
+    @Test
+    fun `parameterized add creates the given rule and returns it`() = runBlocking {
+        val store = store()
+        val created = store.add(
+            name = "bici",
+            conditions = listOf(
+                com.callbackdev.chiaro.domain.rules.RuleCondition(
+                    "current.temp_c", RuleOp.GTE, 12.0
+                )
+            ),
+            message = "Si pedala"
+        )
+        assertEquals(created, store.rules.first().single())
+        assertTrue(created!!.enabled)
+        // The counter is shared with the plain add: no id is ever reused.
+        store.add()
+        assertEquals(listOf(1L, 2L), store.rules.first().map { it.id })
+    }
+
+    @Test
+    fun `parameterized add refuses past the ceiling`() = runBlocking {
+        val store = store()
+        repeat(MaxRules) { store.add() }
+        assertEquals(null, store.add(name = "extra", conditions = emptyList(), message = "no"))
+        assertEquals(MaxRules, store.rules.first().size)
+    }
+
     @Test
     fun `starts empty and add appends the umbrella template`() = runBlocking {
         val store = store()

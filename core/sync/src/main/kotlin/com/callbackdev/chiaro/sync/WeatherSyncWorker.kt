@@ -1,0 +1,175 @@
+package com.callbackdev.chiaro.sync
+
+import android.content.Context
+import androidx.work.CoroutineWorker
+import androidx.work.WorkerParameters
+import com.callbackdev.chiaro.data.ActiveSource
+import com.callbackdev.chiaro.data.ServiceLocator
+import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.WeatherException
+import com.callbackdev.chiaro.domain.WeatherFreshness
+import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.GpsCityId
+import com.callbackdev.chiaro.domain.model.WeatherReport
+import com.callbackdev.chiaro.domain.rules.RuleEngine
+import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
+import com.callbackdev.chiaro.domain.sky.SkyRunRecorder
+import java.time.Duration
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import kotlinx.coroutines.flow.first
+
+/**
+ * The single periodic background job (Fase 6, see [SyncScheduler]): fetch weather
+ * for the active place, evaluate the built-in alerts and the reader's rules, record
+ * what the sky did, re-arm the reminder alarm. Named "sync", not "alerts" — the
+ * fetch is the reusable part, and the widgets of Fase 8 will re-render off the same
+ * run. Battery: one fetch (two HTTP GETs — forecast + air quality) per period, and a
+ * cache HIT is free when the reader just used the app.
+ *
+ * Inherited from tweather minus its widget legs; what it says when something fires
+ * is [SyncNotifiers]' business, in :app.
+ */
+class WeatherSyncWorker(
+    appContext: Context,
+    params: WorkerParameters
+) : CoroutineWorker(appContext, params) {
+
+    override suspend fun doWork(): Result {
+        val context = applicationContext
+        val notifiers = SyncDependencies.notifiers ?: return Result.success()
+        val settings = ServiceLocator.settingsStore(context).settings.first()
+        val enabledRules = ServiceLocator.ruleStore(context).rules.first().filter { it.enabled }
+        val alertsWanted = SyncScheduler.alertsWanted(
+            settings.notifications, notifiers.notificationsEnabled(), enabledRules.isNotEmpty()
+        )
+        // Self-heal: nothing left to sync for — cancel instead of waking up for
+        // nothing forever (the Alerts screen and app start re-enqueue if conditions
+        // return). Fase 8's widgets will add their own reason to stay.
+        if (!alertsWanted) {
+            SyncScheduler.cancel(context)
+            return Result.success()
+        }
+
+        val city = when (val source = ServiceLocator.cityStore(context).activeSource.first()) {
+            is ActiveSource.Saved -> source.city
+            // Background location is off the table by design: last persisted fix only
+            is ActiveSource.Gps -> source.lastFix ?: return Result.success()
+            ActiveSource.None -> return Result.success()
+        }
+
+        val report = try {
+            ServiceLocator.weatherRepository(context).getWeather(
+                city,
+                forceRefresh = false,
+                ttl = Duration.ofMinutes(settings.updateFrequencyMin.toLong())
+            )
+        } catch (e: WeatherException.NoNetwork) {
+            return Result.retry() // captive portal/DNS flap; CONNECTED already gated
+        } catch (e: WeatherException) {
+            return Result.success() // next period is at most one interval away
+        }
+
+        // Alerts and rules run in the CITY's timezone, not the device's.
+        val zone = runCatching { ZoneId.of(report.location.timezone) }
+            .getOrDefault(ZoneId.systemDefault())
+        val now = ZonedDateTime.now(zone).toLocalDateTime()
+        // Stable identity, not cacheKey: the GPS pseudo-city's cacheKey moves with
+        // the fix (~1.1 km grid) and would re-notify the same storm at every commute
+        // leg; ids never move.
+        val cityKey = if (city.id == GpsCityId) "gps" else city.id.toString()
+
+        val stateStore = ServiceLocator.alertStateStore(context)
+        val alerts = AlertEngine.evaluate(
+            report = report,
+            settings = settings.notifications,
+            state = stateStore.state.first(),
+            now = now,
+            cityKey = cityKey
+        )
+        alerts.forEach { alert ->
+            // Fingerprint burns only on a successful post (muted channel → retry later)
+            if (notifiers.notifyAlert(alert, settings.units.temperature)) {
+                stateStore.record(alert)
+            }
+        }
+
+        // The reader's own rules: same fetch, same clock, zero extra battery.
+        if (settings.notifications.userRules && enabledRules.isNotEmpty()) {
+            val ruleStateStore = ServiceLocator.ruleStateStore(context)
+            val evaluation = RuleEngine.evaluate(
+                rules = enabledRules,
+                report = report,
+                state = ruleStateStore.state.first(),
+                now = now,
+                cityKey = cityKey
+            )
+            // Re-arm regardless of what posts: false is false
+            ruleStateStore.unlatch(evaluation.unlatch)
+            val fired = mutableListOf<String>()
+            evaluation.triggers.forEach { trigger ->
+                val posted = notifiers.notifyRule(
+                    trigger, report.location.city, report, now, settings.units
+                )
+                if (posted) {
+                    ruleStateStore.record(trigger)
+                    fired += trigger.rule.name
+                }
+            }
+            // The Journal's food (Fase 7): this fetch's commit lists what fired.
+            if (fired.isNotEmpty()) {
+                ServiceLocator.weatherRepository(context).recordFiredRules(city, fired)
+            }
+        }
+
+        // The sky (Fase 5–7). Deliberately OUTSIDE the alerts gate in spirit —
+        // recording is not notifying — but this worker only runs when alerts are
+        // wanted until Fase 8 gives it a second customer.
+        if (settings.skyEnabled) {
+            recordSkyRuns(context, city, report, settings.updateFrequencyMin)
+            // The receiver arms the next reminder when one fires; this is the safety
+            // net — an alarm lost to a force-stop comes back at the next fetch.
+            notifiers.rearmSkyReminders()
+        }
+
+        return Result.success()
+    }
+
+    /**
+     * Which sky moments ran since this city's previous commit, attached to the one
+     * this fetch just wrote.
+     *
+     * The previous commit IS the "since": it is precisely the last moment the app
+     * looked at this city, so the window between them is everything that happened
+     * while it was not looking. On the very first commit there is no previous one
+     * and nothing to have missed, so nothing is recorded — an install does not
+     * acquire a history of sunsets it was not installed for.
+     */
+    private suspend fun recordSkyRuns(
+        context: Context,
+        city: City,
+        report: WeatherReport,
+        updateFrequencyMin: Int
+    ) {
+        val subscriptions = ServiceLocator.skySubscriptionStore(context).subscriptions.first()
+        val jobs = subscriptions.filter { it.enabled }.mapNotNull { SkyJobCatalog.byId(it.jobId) }
+        if (jobs.isEmpty()) return
+        val repository = ServiceLocator.weatherRepository(context)
+        val history = repository.historyFor(city, limit = 2)
+        val previous = history.getOrNull(1) ?: return
+        val zone = runCatching { ZoneId.of(report.location.timezone) }
+            .getOrDefault(ZoneId.systemDefault())
+        val runs = SkyRunRecorder.runsSince(
+            since = Instant.ofEpochSecond(previous.timestampEpochSeconds),
+            now = report.systemInfo.lastSync,
+            jobs = jobs,
+            zone = zone,
+            coordinates = city.coordinates,
+            hours = report.hourly,
+            dataAge = Duration.ZERO,
+            staleAfter = WeatherFreshness.staleAfter(updateFrequencyMin)
+        )
+        repository.recordSkyRuns(city, runs)
+    }
+}

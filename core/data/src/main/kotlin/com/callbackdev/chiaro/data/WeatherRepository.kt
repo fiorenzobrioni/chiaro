@@ -157,6 +157,13 @@ class WeatherRepository(
     suspend fun historyFor(city: City, limit: Int = HISTORY_RETENTION) =
         historyDao.historyFor(city.cacheKey, limit)
 
+    /** The rule names a commit recorded, decoded where they were encoded (Fase 6):
+     * the Alerts screen reads "last fired" off these without owning the JSON. */
+    fun firedRules(entry: com.callbackdev.chiaro.data.local.WeatherHistoryEntry): List<String> =
+        entry.firedRulesJson
+            ?.let { runCatching { json.decodeFromString<List<String>>(it) }.getOrNull() }
+            ?: emptyList()
+
     private suspend fun fetch(city: City, now: Instant): WeatherReport = wrapErrors {
         val startNanos = System.nanoTime()
         val (forecast, air) = coroutineScope {

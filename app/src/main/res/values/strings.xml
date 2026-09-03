@@ -401,4 +401,119 @@
     <string name="sky_expl_geminids">The December shower, the richest of the year.</string>
     <string name="sky_name_ursids">Ursids</string>
     <string name="sky_expl_ursids">The solstice shower, small and northern-only.</string>
+
+    <!-- Alerts (Fase 6). Two groups, one screen: switches that say exactly what
+         they send, and the reader's own rules as a sentence of chips. -->
+    <string name="tab_alerts">Alerts</string>
+    <string name="alerts_group_ready">Ready-made</string>
+    <string name="alerts_group_yours">Yours</string>
+    <string name="alert_severe_title">Severe weather ahead</string>
+    <string name="alert_severe_desc">A heads-up when a thunderstorm, freezing rain, heavy rain or heavy snow shows up in the next 12 hours. At most one per storm.</string>
+    <string name="alert_precip_title">Rain in the next hours</string>
+    <string name="alert_precip_desc" formatted="false">A heads-up when rain gets past 70% likely within 6 hours. At most twice a day.</string>
+    <string name="alert_summary_title">The morning summary</string>
+    <string name="alert_summary_desc">Once a day, between 6 and 12: today\'s sky, low, high and rain.</string>
+    <string name="alerts_templates_title">Start from an idea</string>
+    <string name="rule_sentence_prefix">When</string>
+    <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
+    <string name="rule_and">and</string>
+    <string name="rule_last_fired">Last fired %1$s</string>
+    <string name="rule_never_fired">Never fired so far</string>
+    <string name="rule_name_label">Name</string>
+    <string name="rule_message_label">Your message</string>
+    <string name="rule_message_help">Words in braces become numbers: {trigger.value} is what fired it, {trigger.time} is when.</string>
+    <string name="rule_add_condition">and another condition</string>
+    <string name="rule_remove_condition">Remove this condition</string>
+    <string name="rule_preview_action">Try it now</string>
+    <string name="rule_preview_fires">It would fire right now: “%1$s”</string>
+    <string name="rule_preview_passes">It would stay quiet right now.</string>
+    <string name="rule_preview_unavailable">Can\'t say: “%1$s” has no value right now.</string>
+    <string name="rule_preview_no_data">Can\'t say: no forecast yet for this place.</string>
+    <string name="rule_delete">Delete this alert</string>
+    <string name="rule_delete_confirm_title">Delete this alert?</string>
+    <string name="rule_delete_confirm_body">It goes away for good, message included.</string>
+    <string name="rule_pick_variable">What to watch</string>
+    <string name="rule_pick_operator">How to compare</string>
+    <string name="rule_pick_value">The threshold</string>
+    <string name="action_done">Done</string>
+
+    <!-- The operators, as the sentence needs them -->
+    <string name="op_above">above</string>
+    <string name="op_at_least">at least</string>
+    <string name="op_below">below</string>
+    <string name="op_at_most">at most</string>
+    <string name="op_equal">exactly</string>
+    <string name="op_not_equal">anything but</string>
+    <string name="op_is">is</string>
+    <string name="op_is_not">is not</string>
+    <string name="value_yes">yes</string>
+    <string name="value_no">no</string>
+
+    <!-- The variables, as phrases. The dotted ids never reach a screen. -->
+    <string name="var_current_temp">the temperature now</string>
+    <string name="var_current_feels_like">the feels-like now</string>
+    <string name="var_current_humidity">the humidity now</string>
+    <string name="var_current_dew_point">the dew point now</string>
+    <string name="var_current_uv">the UV index now</string>
+    <string name="var_current_wind">the wind now</string>
+    <string name="var_current_gust">the gusts now</string>
+    <string name="var_current_precip">the rain chance now</string>
+    <string name="var_current_pressure">the pressure now</string>
+    <string name="var_current_visibility">the visibility now</string>
+    <string name="var_current_aqi">the air quality index now</string>
+    <string name="var_next6_precip">rain in the next 6 hours</string>
+    <string name="var_next6_temp_min">the low of the next 6 hours</string>
+    <string name="var_next6_temp_max">the high of the next 6 hours</string>
+    <string name="var_next6_severe">severe weather in the next 6 hours</string>
+    <string name="var_next12_precip">rain in the next 12 hours</string>
+    <string name="var_next12_temp_min">the low of the next 12 hours</string>
+    <string name="var_next12_temp_max">the high of the next 12 hours</string>
+    <string name="var_next12_severe">severe weather in the next 12 hours</string>
+    <string name="var_today_high">today\'s high</string>
+    <string name="var_today_low">today\'s low</string>
+    <string name="var_today_precip">today\'s rain chance</string>
+    <string name="var_today_uv">today\'s peak UV</string>
+
+    <!-- The five starting points. Name and message become the reader's content at
+         creation, in their language, and are never translated again. -->
+    <string name="tpl_bike_title">Tell me when I can ride</string>
+    <string name="tpl_bike_desc" formatted="false">At least 12° out and rain under 20% for the next 6 hours.</string>
+    <string name="tpl_bike_name">bike</string>
+    <string name="tpl_bike_message" formatted="false">Good to ride: {current.temp_c}° out, {next_6h.precip_chance_max}% rain ahead.</string>
+    <string name="tpl_ice_title">Ice tomorrow morning</string>
+    <string name="tpl_ice_desc">When the next 12 hours dip below zero.</string>
+    <string name="tpl_ice_name">ice</string>
+    <string name="tpl_ice_message" formatted="false">Possible ice: down to {trigger.value}° around {trigger.time}.</string>
+    <string name="tpl_run_title">A window to run</string>
+    <string name="tpl_run_desc" formatted="false">Rain under 20% for the next 6 hours and no more than 26°.</string>
+    <string name="tpl_run_name">run</string>
+    <string name="tpl_run_message" formatted="false">Good window for a run: rain at {trigger.value}%.</string>
+    <string name="tpl_uv_title">High UV</string>
+    <string name="tpl_uv_desc">When today\'s UV index reaches at least 7.</string>
+    <string name="tpl_uv_name">sun</string>
+    <string name="tpl_uv_message" formatted="false">UV up to {trigger.value} today: sunscreen and a hat.</string>
+    <string name="tpl_night_title">A night without rain</string>
+    <string name="tpl_night_desc" formatted="false">Rain under 10% for the next 12 hours.</string>
+    <string name="tpl_night_name">night</string>
+    <string name="tpl_night_message" formatted="false">No rain in sight tonight ({trigger.value}%).</string>
+
+    <!-- The built-in alerts as notifications: a sentence, never a data dump -->
+    <string name="notif_channel_severe">Severe weather</string>
+    <string name="notif_channel_precip">Incoming rain</string>
+    <string name="notif_channel_summary">Morning summary</string>
+    <string name="notif_channel_rules">Your alerts</string>
+    <string name="notif_severe_title">Severe weather ahead · %1$s</string>
+    <string name="notif_severe_body">%1$s around %2$s</string>
+    <string name="notif_rain_fragment">, rain at %1$d%%</string>
+    <string name="notif_precip_title">Rain on the way · %1$s</string>
+    <string name="notif_precip_body">Umbrella around %1$s: rain at %2$d%%.</string>
+    <string name="notif_summary_title">Today · %1$s</string>
+    <string name="notif_summary_body">%1$s. Low %2$s, high %3$s, rain %4$d%%.</string>
+    <string name="notif_rule_title">“%1$s” · %2$s</string>
+
+    <!-- The guide's fourth chapter, landed with the screen it is about -->
+    <string name="guide_alerts_title">How the alerts work</string>
+    <string name="guide_alerts_p1">The ready-made ones are switches: severe weather ahead, rain in the next hours, the morning summary. Next to each one is written exactly what it sends and when, so nothing arrives that you did not ask for.</string>
+    <string name="guide_alerts_p2">Then there are yours. Each one is a sentence with three pieces to tap: what to watch, how to compare it, the threshold. “Try it now” runs it on the data the app already has and tells you what it would have done, without sending anything.</string>
+    <string name="guide_alerts_p3">The checks travel with the weather updates, at the same rhythm, so alerts cost no extra battery. And the message of an alert of yours is yours: Chiaro never rewrites it and never translates it.</string>
 </resources>

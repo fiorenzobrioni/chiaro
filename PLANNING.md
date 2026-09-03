@@ -512,11 +512,61 @@ ora vive sotto al nome, nella colonna del testo, e a destra resta solo la campan
 a larghezza fissa. Stessa correzione sulle righe di «In arrivo», che avevano la
 stessa struttura e avrebbero mostrato lo stesso difetto al primo verdetto largo.
 
-## Fase 6 — Avvisi, e `:core:sync`
+## Fase 6 — Avvisi, e `:core:sync` ✅
 
-- [ ] Il modulo `:core:sync` con il job periodico condiviso e gli scheduler
-- [ ] I notifier in `:app` dietro un'interfaccia, con il testo di Chiaro
-- [ ] Avvisi pronti + template + builder a chip + anteprima
+- [x] Il modulo `:core:sync`: il worker periodico condiviso (fetch, avvisi integrati,
+      regole, osservazione del cielo, re-arm del promemoria), `SyncScheduler` con la
+      riconciliazione a stato desiderato, e i suoi 4 test puri
+- [x] I notifier in `:app` dietro `SyncNotifiers`: `AlertNotifier` (prosa, tre
+      canali), `RuleNotifier` (il messaggio del lettore, interpolato, mai tradotto),
+      installati da `ChiaroApplication` come lo User-Agent di Fase 0
+- [x] La schermata Avvisi: i tre pronti con interruttore e descrizione esatta di
+      cosa mandano e quando; le regole del lettore come card (frase in parole, stato,
+      ultimo scatto); i cinque template che creano regole vere, già accese
+- [x] Il builder a chip: variabile in parole, operatore, soglia su slider (mai un
+      campo di testo per un valore con un range), seconda condizione opzionale, il
+      messaggio con i segnaposto spiegati, «Prova adesso» senza notifiche
+- [x] Il terzo tab della barra, e il quarto capitolo della guida (arrivato con la
+      schermata che racconta, come promesso in Fase 4)
+
+### Decisioni della fase
+
+- **Gli interruttori delle notifiche vivono sulla schermata Avvisi, non nelle
+  Impostazioni.** VISION §5.7 elenca un gruppo "notifiche" tra le preferenze e §5.4
+  mette gli interruttori accanto a ciò che governano: tenerli in due posti sarebbe
+  lo stesso interruttore che può divergere. Vince §5.4 — la descrizione onesta di
+  cosa manda un avviso sta meglio accanto all'avviso.
+- **Il quinto template parla di pioggia, non di sereno.** VISION abbozzava "una notte
+  serena", ma il registro delle variabili non ha la copertura nuvolosa: promettere
+  "sereno" su un controllo che legge solo la pioggia sarebbe la notifica che mente.
+  «Una notte senza pioggia» è quello che il motore può davvero verificare; se il
+  registro un giorno crescesse di `cloud_cover`, la crescita spetta a monte (è motore
+  condiviso), e il template potrà dire la parola che oggi non può.
+- **`RuleStore` cresce di un `add` parametrizzato** (nome, condizioni, messaggio, che
+  ritorna la regola creata): i template di Chiaro nascono nella lingua del lettore,
+  mentre l'`add()` ereditato semina il testo inglese fisso di tweather. Additivo,
+  con i suoi test, registrato in `UPSTREAM.md`. Stesso giro per
+  `WeatherRepository.firedRules(entry)`: la decodifica dei nomi scattati sta dove
+  sta la codifica, non in un ViewModel che dovrebbe importare la serializzazione.
+- **"Ultimo scatto" si legge dalla storia, per nome.** I commit annotano i nomi delle
+  regole scattate (`recordFiredRules`): la card mostra il più recente per il luogo
+  attivo. Una regola rinominata riparte da zero — è la lettura onesta di quello che
+  i dati sanno dire, e il Diario di Fase 7 racconterà il resto.
+- **La riconciliazione segue ogni modifica**: interruttori, regole, frequenza di
+  aggiornamento, avvio del processo. Il worker si auto-cancella quando non resta
+  nessuno da servire (i widget di Fase 8 aggiungeranno il loro motivo per restare).
+- **Le modifiche a chip persistono subito, i campi di testo alla chiusura
+  dell'editor**: un tap è una scelta discreta, una tastiera no — persistere a ogni
+  battuta sarebbe una scrittura DataStore per lettera.
+- **Il permesso notifiche si chiede al primo interruttore che si accende** (VISION
+  §5.8), mai all'ingresso nella schermata.
+
+### Verifica
+
+313 test verdi (141 domain, 116 data — con i 2 nuovi dell'`add` parametrizzato —
+4 sync, 52 app), zero failure, zero skip; lint a zero errori; APK debug ok. Il lint
+ha ripetuto la lezione di Fase 5 sulle percentuali nude nelle descrizioni dei
+template: `formatted="false"`, sono prosa.
 
 ## Fase 7 — Diario
 

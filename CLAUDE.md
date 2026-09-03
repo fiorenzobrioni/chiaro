@@ -45,8 +45,10 @@ full java.time), compile/targetSdk 36.
 
 **Modules**: `:core:domain` is **pure Kotlin/JVM** and must stay that way. If a class in
 it needs a `Context` or a `Resources`, it is in the wrong module. `:core:data` is the
-Android library with the Open-Meteo client, the mapper, Room and DataStore. `:app` holds
-everything visible. `:core:sync` (the shared WorkManager job) arrives in Fase 6.
+Android library with the Open-Meteo client, the mapper, Room and DataStore. `:core:sync`
+holds the single periodic WorkManager job (fetch, alerts, rules, sky observation); its
+notifiers are text and live in `:app` behind the `SyncNotifiers` interface. `:app` holds
+everything visible.
 
 **Debug signing**: `keystore/debug.keystore` is intentionally committed (alias
 `chiaro-debug`, store/key password `android`) so debug APKs from CI and any machine share

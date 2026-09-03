@@ -107,6 +107,7 @@ android {
 
 dependencies {
     implementation(project(":core:data"))
+    implementation(project(":core:sync"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)

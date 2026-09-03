@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,8 +39,8 @@ import com.callbackdev.chiaro.ui.theme.ChiaroTheme
  * and a screen shown once cannot be consulted the day the question actually arrives.
  *
  * It answers the questions a new reader brings, never an interface element: an
- * interface element that needs explaining is a bug in this edition. The alerts
- * chapter joins in Fase 6, together with the screen it will be about.
+ * interface element that needs explaining is a bug in this edition. Four chapters
+ * since Fase 6, when the alerts screen arrived and its chapter with it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,6 +96,11 @@ private fun GuideContent(modifier: Modifier = Modifier) {
         SectionTitle(ChiaroIcons.precipitation, stringResource(R.string.guide_radar_title))
         Paragraph(stringResource(R.string.guide_radar_p1))
         Paragraph(stringResource(R.string.guide_radar_p2))
+
+        SectionTitle(Icons.Outlined.Notifications, stringResource(R.string.guide_alerts_title))
+        Paragraph(stringResource(R.string.guide_alerts_p1))
+        Paragraph(stringResource(R.string.guide_alerts_p2))
+        Paragraph(stringResource(R.string.guide_alerts_p3))
     }
 }
 

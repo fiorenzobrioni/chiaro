@@ -46,8 +46,8 @@ data class RuleCondition(
 @Serializable
 data class NotificationRule(
     val id: Long,
-    /** Slug named by the user: shown in the file, in the notification's command line
-     * (`$ tweather run <name>`) and in the Logs check line. */
+    /** Named by the user: the rule card's title on the Alerts screen, and the
+     * notification's own ("bici" · Milano). User content, never translated. */
     val name: String,
     val enabled: Boolean = true,
     /** 1..[MaxConditions] conditions, all required (`and`). `or` = two rules. */

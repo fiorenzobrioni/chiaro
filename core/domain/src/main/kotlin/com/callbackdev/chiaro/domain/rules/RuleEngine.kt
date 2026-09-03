@@ -90,8 +90,8 @@ object RuleEngine {
     }
 
     /**
-     * Stateless check of one rule — the dry run's engine (`$ tweather run rules`):
-     * no dedup, no latching, exactly what IS true right now.
+     * Stateless check of one rule — the engine behind the Alerts screen's
+     * "try it now": no dedup, no latching, exactly what IS true right now.
      */
     fun check(rule: NotificationRule, report: WeatherReport, now: LocalDateTime): RuleCheck {
         var first: ResolvedValue? = null

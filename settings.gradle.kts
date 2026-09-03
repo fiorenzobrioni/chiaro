@@ -22,8 +22,9 @@ dependencyResolutionManagement {
 
 rootProject.name = "chiaro"
 
-// :core:sync (the shared WorkManager job and the alarm schedulers) is deliberately
-// absent until Fase 6 — see PLANNING.md, "What Fase 0 does not seed, and why".
 include(":app")
 include(":core:domain")
 include(":core:data")
+// The shared periodic job (Fase 6): fetch, alerts, rules, sky observation — one
+// worker, one schedule. Its notifiers are text and live in :app behind an interface.
+include(":core:sync")

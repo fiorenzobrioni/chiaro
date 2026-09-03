@@ -39,7 +39,6 @@ is short on purpose — three edits, each with its reason in the file:
 
 - `sys@tweather.app` → `sys@chiaro.app` in the history rows. A value, not a comment.
 - `TweatherDatabase` → `ChiaroDatabase`, `tweather.db` → `chiaro.db`.
-- No `:core:sync` yet: the worker and the notifiers arrive in Fase 6 (PLANNING.md).
 - `CityStore` grew `move(city, toIndex)` and `insert(city, index)` (Fase 3): Chiaro's
   Places sheet is reorderable and its swipe-to-remove has an undo, two things
   tweather's Explorer never needed. Additive only — every inherited method and test
@@ -60,15 +59,26 @@ is short on purpose — three edits, each with its reason in the file:
   port into Chiaro's `:app/notifications` — the alarm reasoning is product, not
   presentation — with the notification text rewritten as localized prose. A fix in
   the alarm logic almost certainly belongs in both apps.
+- `:core:sync` exists here and not upstream (Fase 6): tweather keeps its worker and
+  scheduler in `:app` because its notifiers live a file away; Chiaro's split is what
+  makes the shared-core extraction cheap. The worker and `SyncScheduler` are
+  near-verbatim ports of tweather's `WeatherSyncWorker`/`AlertScheduler` minus the
+  widget legs (they return in Fase 8), with the notifiers moved behind
+  `SyncNotifiers` — text is presentation, and a `:core:*` module must not own it.
+- `RuleStore` grew a parameterized `add(name, conditions, message)` returning the
+  created rule (Fase 6): Chiaro's templates are born in the reader's language, while
+  the inherited `add()` seeds tweather's fixed English starter. Additive, tested;
+  `WeatherRepository` likewise grew `firedRules(entry)` so the JSON the repository
+  writes is decoded by the repository too.
 
 ## The known debt
 
-**The inherited comments still speak tweather's vocabulary.** `RuleEngine` and
-`NotificationRule` mention `$ tweather run` (rewritten with Fase 6, when Chiaro's
-alerts surface exists). `CityStore`'s were rewritten in Fase 3 — the phase that
-built the surfaces (first run, the Places sheet) their honest replacements had to
-name — and `SettingsStore`'s and `WorkspaceStore`'s in Fase 4, with the Settings
-screen and the guide card those files now serve.
+**The inherited comments spoke tweather's vocabulary, and each phase rewrote the
+ones naming a surface it built**: `CityStore`'s in Fase 3 (first run, the Places
+sheet), `SettingsStore`'s and `WorkspaceStore`'s in Fase 4 (Settings, the guide
+card), `RuleEngine`'s and `NotificationRule`'s in Fase 6 (the Alerts screen and its
+"try it now"). The debt is paid; what remains English in `:core` comments is
+engine vocabulary, not surface names.
 
 They were deliberately left alone in Fase 0, and the reason is worth writing down: each
 one names a tweather SURFACE, and the honest replacement is the name of the Chiaro

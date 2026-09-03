@@ -11,7 +11,7 @@ as the body of the GitHub Release, so a version's entry is written **before** it
 
 Nothing released yet. The engines are in and verified, the design system is code, and
 the everyday surface — Today, places, first run, settings, the guide, the Sky screen
-with its reminders — is built. See `PLANNING.md` for where the work actually is.
+with its reminders, the alerts — is built. See `PLANNING.md` for where the work actually is.
 
 ### Added
 
@@ -69,6 +69,20 @@ with its reminders — is built. See `PLANNING.md` for where the work actually i
   with its number.
 - The bottom navigation (Fase 5): Today and Sky; the remaining tabs arrive with their
   screens.
+- The Alerts screen (Fase 6): the three ready-made alerts as switches that say exactly
+  what they send and when; the reader's own rules as cards with their sentence in
+  plain words, their state and when they last fired; five templates that create real
+  rules already switched on; and a builder that is a sentence of tappable chips — what
+  to watch, how to compare, the threshold on a slider — with an optional second
+  condition, the reader's own message, and a "try it now" that says what the rule
+  would do without posting anything.
+- `:core:sync` (Fase 6): the single periodic background job shared by the fetch, the
+  built-in alerts, the rules and the sky observation, with desired-state scheduling
+  that cancels itself when nothing is left to serve. The notifiers stay in the app
+  behind an interface, and they speak prose: a severe-weather heads-up reads
+  "Temporale verso le 18:00", never a data dump.
+- The guide's fourth chapter (Fase 6): how the alerts work, landed together with the
+  screen it describes.
 
 ### Removed
 

@@ -43,6 +43,33 @@ class RuleStore(
         }
     }
 
+    /**
+     * Appends a rule with the given content — Chiaro's templates, whose name and
+     * message are the reader's language at creation time (Fase 6). Additive next to
+     * [add], which keeps upstream's fixed English starter for parity. Returns the
+     * created rule, or null at the [MaxRules] ceiling.
+     */
+    suspend fun add(
+        name: String,
+        conditions: List<RuleCondition>,
+        message: String
+    ): NotificationRule? {
+        var created: NotificationRule? = null
+        dataStore.edit { prefs ->
+            val rules = decode(prefs)
+            if (rules.size >= MaxRules) return@edit
+            val id = prefs[NextRuleId] ?: 1L
+            prefs[NextRuleId] = id + 1
+            val rule = NotificationRule(
+                id = id, name = name, enabled = true,
+                conditions = conditions, message = message
+            )
+            created = rule
+            prefs[RulesJson] = json.encodeToString(rules + rule)
+        }
+        return created
+    }
+
     suspend fun update(rule: NotificationRule) {
         dataStore.edit { prefs ->
             val rules = decode(prefs)
