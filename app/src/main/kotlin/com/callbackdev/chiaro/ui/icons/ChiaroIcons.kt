@@ -1,8 +1,10 @@
 package com.callbackdev.chiaro.ui.icons
 
 import androidx.annotation.DrawableRes
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import com.callbackdev.chiaro.R
@@ -19,9 +21,11 @@ val LocalWeatherIcons = staticCompositionLocalOf { WeatherIcons.FILL }
 /**
  * The weather icon set, behind one lookup (DESIGN.md §4.5, §13.1): **Meteocons**
  * (github.com/basmilius/meteocons, MIT), imported as vector drawables by
- * `tools/import_meteocons.py` from the v2.0.0 LINE and FILL sets, both recolored so
- * every mark clears 3:1 against both surfaces — the tool carries the two measured
- * tables, and `IconContrastTest` re-measures the emitted XML.
+ * `tools/import_meteocons.py` from the v2.0.0 LINE and FILL sets, recolored for a
+ * measured 3:1 on the ground each set is picked for — the line set on both
+ * surfaces, the fill set as TWO sets (re-anchored for light grounds, Meteocons' own
+ * palette for dark ones), chosen here by ground. The tool carries the measured
+ * tables and `IconContrastTest` re-measures the emitted XML per set.
  *
  * The `*Res` functions are the actual mapping and stay plain functions on purpose:
  * they are unit-testable without Compose, and the Glance widgets (Fase 8) need
@@ -83,10 +87,72 @@ object ChiaroIcons {
         R.drawable.mc_moon_waning_crescent to R.drawable.mcf_moon_waning_crescent,
     )
 
-    /** The style applied to a line resource id: identity for LINE, sibling for FILL. */
+    /** The dark-ground fill siblings (mcfn_*): Meteocons' own palette, on the
+     * kind of backdrop it was drawn for. Same one-table rule as [fillOf]. */
+    private val fillNightOf = mapOf(
+        R.drawable.mc_clear_day to R.drawable.mcfn_clear_day,
+        R.drawable.mc_clear_night to R.drawable.mcfn_clear_night,
+        R.drawable.mc_partly_cloudy_day to R.drawable.mcfn_partly_cloudy_day,
+        R.drawable.mc_partly_cloudy_night to R.drawable.mcfn_partly_cloudy_night,
+        R.drawable.mc_overcast to R.drawable.mcfn_overcast,
+        R.drawable.mc_cloudy to R.drawable.mcfn_cloudy,
+        R.drawable.mc_fog_day to R.drawable.mcfn_fog_day,
+        R.drawable.mc_fog_night to R.drawable.mcfn_fog_night,
+        R.drawable.mc_drizzle to R.drawable.mcfn_drizzle,
+        R.drawable.mc_rain to R.drawable.mcfn_rain,
+        R.drawable.mc_sleet to R.drawable.mcfn_sleet,
+        R.drawable.mc_snow to R.drawable.mcfn_snow,
+        R.drawable.mc_partly_cloudy_day_rain to R.drawable.mcfn_partly_cloudy_day_rain,
+        R.drawable.mc_partly_cloudy_night_rain to R.drawable.mcfn_partly_cloudy_night_rain,
+        R.drawable.mc_partly_cloudy_day_snow to R.drawable.mcfn_partly_cloudy_day_snow,
+        R.drawable.mc_partly_cloudy_night_snow to R.drawable.mcfn_partly_cloudy_night_snow,
+        R.drawable.mc_thunderstorms to R.drawable.mcfn_thunderstorms,
+        R.drawable.mc_thunderstorms_rain to R.drawable.mcfn_thunderstorms_rain,
+        R.drawable.mc_not_available to R.drawable.mcfn_not_available,
+        R.drawable.mc_wind to R.drawable.mcfn_wind,
+        R.drawable.mc_humidity to R.drawable.mcfn_humidity,
+        R.drawable.mc_uv_index to R.drawable.mcfn_uv_index,
+        R.drawable.mc_thermometer to R.drawable.mcfn_thermometer,
+        R.drawable.mc_barometer to R.drawable.mcfn_barometer,
+        R.drawable.mc_raindrop to R.drawable.mcfn_raindrop,
+        R.drawable.mc_raindrops to R.drawable.mcfn_raindrops,
+        R.drawable.mc_mist to R.drawable.mcfn_mist,
+        R.drawable.mc_umbrella to R.drawable.mcfn_umbrella,
+        R.drawable.mc_snowflake to R.drawable.mcfn_snowflake,
+        R.drawable.mc_dust to R.drawable.mcfn_dust,
+        R.drawable.mc_smoke_particles to R.drawable.mcfn_smoke_particles,
+        R.drawable.mc_compass to R.drawable.mcfn_compass,
+        R.drawable.mc_sunrise to R.drawable.mcfn_sunrise,
+        R.drawable.mc_sunset to R.drawable.mcfn_sunset,
+        R.drawable.mc_horizon to R.drawable.mcfn_horizon,
+        R.drawable.mc_star to R.drawable.mcfn_star,
+        R.drawable.mc_starry_night to R.drawable.mcfn_starry_night,
+        R.drawable.mc_falling_stars to R.drawable.mcfn_falling_stars,
+        R.drawable.mc_moonrise to R.drawable.mcfn_moonrise,
+        R.drawable.mc_moonset to R.drawable.mcfn_moonset,
+        R.drawable.mc_moon_new to R.drawable.mcfn_moon_new,
+        R.drawable.mc_moon_waxing_crescent to R.drawable.mcfn_moon_waxing_crescent,
+        R.drawable.mc_moon_first_quarter to R.drawable.mcfn_moon_first_quarter,
+        R.drawable.mc_moon_waxing_gibbous to R.drawable.mcfn_moon_waxing_gibbous,
+        R.drawable.mc_moon_full to R.drawable.mcfn_moon_full,
+        R.drawable.mc_moon_waning_gibbous to R.drawable.mcfn_moon_waning_gibbous,
+        R.drawable.mc_moon_last_quarter to R.drawable.mcfn_moon_last_quarter,
+        R.drawable.mc_moon_waning_crescent to R.drawable.mcfn_moon_waning_crescent,
+    )
+
+    /** The style applied to a line resource id: identity for LINE; for FILL, the
+     * sibling for the ground the icon will sit on — [darkGround] is the applied
+     * theme in the app, and the card's own ground in a widget (WidgetPalette). */
     @DrawableRes
-    fun styledRes(@DrawableRes lineRes: Int, style: WeatherIcons): Int =
-        if (style == WeatherIcons.FILL) fillOf.getValue(lineRes) else lineRes
+    fun styledRes(
+        @DrawableRes lineRes: Int,
+        style: WeatherIcons,
+        darkGround: Boolean = false
+    ): Int = when {
+        style != WeatherIcons.FILL -> lineRes
+        darkGround -> fillNightOf.getValue(lineRes)
+        else -> fillOf.getValue(lineRes)
+    }
 
     /**
      * The icon for a WMO weather code. [night] picks the nocturnal variant where one
@@ -97,7 +163,8 @@ object ChiaroIcons {
     fun conditionRes(
         wmoCode: Int,
         night: Boolean = false,
-        style: WeatherIcons = WeatherIcons.FILL
+        style: WeatherIcons = WeatherIcons.FILL,
+        darkGround: Boolean = false
     ): Int = styledRes(
         when (wmoCode) {
             0 -> if (night) R.drawable.mc_clear_night else R.drawable.mc_clear_day
@@ -122,16 +189,23 @@ object ChiaroIcons {
             96, 99 -> R.drawable.mc_thunderstorms_rain
             else -> R.drawable.mc_cloudy
         },
-        style
+        style,
+        darkGround
     )
 
     @Composable
     fun condition(wmoCode: Int, night: Boolean = false): ImageVector =
-        ImageVector.vectorResource(conditionRes(wmoCode, night, LocalWeatherIcons.current))
+        ImageVector.vectorResource(
+            conditionRes(wmoCode, night, LocalWeatherIcons.current, darkGround())
+        )
 
     /** One drawing per [MoonPhase] name — the same classifier the report carries. */
     @DrawableRes
-    fun moonPhaseRes(phase: MoonPhase, style: WeatherIcons = WeatherIcons.FILL): Int = styledRes(
+    fun moonPhaseRes(
+        phase: MoonPhase,
+        style: WeatherIcons = WeatherIcons.FILL,
+        darkGround: Boolean = false
+    ): Int = styledRes(
         when (phase) {
             MoonPhase.NEW_MOON -> R.drawable.mc_moon_new
             MoonPhase.WAXING_CRESCENT -> R.drawable.mc_moon_waxing_crescent
@@ -142,17 +216,29 @@ object ChiaroIcons {
             MoonPhase.LAST_QUARTER -> R.drawable.mc_moon_last_quarter
             MoonPhase.WANING_CRESCENT -> R.drawable.mc_moon_waning_crescent
         },
-        style
+        style,
+        darkGround
     )
 
     @Composable
     fun moonPhase(phase: MoonPhase): ImageVector =
-        ImageVector.vectorResource(moonPhaseRes(phase, LocalWeatherIcons.current))
+        ImageVector.vectorResource(
+            moonPhaseRes(phase, LocalWeatherIcons.current, darkGround())
+        )
 
     /** The styled vector for a line id: the one seam every accessor below shares. */
     @Composable
     private fun styled(@DrawableRes lineRes: Int): ImageVector =
-        ImageVector.vectorResource(styledRes(lineRes, LocalWeatherIcons.current))
+        ImageVector.vectorResource(
+            styledRes(lineRes, LocalWeatherIcons.current, darkGround())
+        )
+
+    /** The ground the icon is about to sit on: the APPLIED theme's surface, read off
+     * the scheme itself — a reader can force the theme against the system, and the
+     * icon must follow the choice the way the status bar does. */
+    @Composable
+    private fun darkGround(): Boolean =
+        MaterialTheme.colorScheme.surface.luminance() < 0.5f
 
     // The details grid. Each accessor names the METRIC, not the drawing, so a better
     // drawing later is a one-line change here and nothing else.

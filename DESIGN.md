@@ -87,9 +87,9 @@ Three hues, and each one is a time of day the product is actually about:
 
 | Source | Hex | What it is |
 |---|---|---|
-| Primary | `#E8A33D` | the golden hour |
-| Secondary | `#3A7CA5` | daylight sky |
-| Tertiary | `#6C5B8C` | the blue hour |
+| Primary | `#F1A000` | the golden hour |
+| Secondary | `#007DB6` | daylight sky |
+| Tertiary | `#70569C` | the blue hour |
 | Neutral | `#8C857A` | warm, so the surfaces read as paper and not as aluminium |
 | Neutral variant | `#8A8578` | outlines and dividers |
 | Error | `#BA1A1A` | Material's, unchanged — a convention worth borrowing |
@@ -101,7 +101,7 @@ everything else is measured against them:
 | Role | Light | Dark |
 |---|---|---|
 | `surface` | `#FCF9F3` | `#16130E` |
-| `primary` | `#835400` | `#FFB958` |
+| `primary` | `#835500` | `#FFB957` |
 
 The two surfaces sit 17.6:1 apart, which is the headroom every token in §2.3 is
 measured inside. Both, and the other 34 roles, are **generated**: `tools/gen_scheme.py`
@@ -118,6 +118,15 @@ overwhelmingly blue, it is the color of the thing this app knows about that othe
 and Material's tone system keeps it legible where a hand-picked amber would not be: the
 primary role at tone 40 is a deep bronze, not a highlighter.
 
+The palette was retuned once (3 Sep 2026, the color pass): every hue source, sky
+anchor and quantity ramp had its chroma raised in OKLCh — ×1.22 to ×1.65 depending
+on how washed the original was, raised once more after the first on-device look — at
+**held WCAG luminance**, which is why every ratio
+printed in this document survived the retune with at most a 0.04 drift. The neutrals
+did not move: the warm paper is the identity, the chroma was the complaint. (The
+amber primary at tone 40 barely moved either — it was already at the sRGB gamut
+edge, which is its own kind of measurement.)
+
 ### 2.3 Semantic tokens Material does not have
 
 Material has no slot for "the sky at nautical twilight" or "70% chance of rain". These
@@ -132,9 +141,9 @@ and the color is the third carrier, not the first.
 
 | Verdict | ink (light) | container (light) | ink (dark) | container (dark) |
 |---|---|---|---|---|
-| pass | `#0F5C30` 7.7:1 | `#D7EBDD` | `#7FD69A` 10.6:1 | `#173D28` |
-| unstable | `#7A5200` 6.6:1 | `#F7E6BF` | `#F2C063` 11.0:1 | `#3D2F08` |
-| fail | `#8E1B10` 8.6:1 | `#F9DEDA` | `#FFB4AB` 10.9:1 | `#4A1712` |
+| pass | `#005D2D` 7.7:1 | `#D1EDD9` | `#54DC88` 10.6:1 | `#003F23` |
+| unstable | `#7A5200` 6.6:1 | `#FDE5AE` | `#FFBC27` 11.0:1 | `#3F2F00` |
+| fail | `#950700` 8.7:1 | `#FFDCD7` | `#FFB4AB` 10.9:1 | `#560705` |
 | unknown | `#4F5359` 7.4:1 | `#E7E7E4` | `#A8ADB6` 8.2:1 | `#2B2B2E` |
 
 Ratios are against the surface of §2.2; ink-on-container is 5.6:1 or better in both
@@ -145,8 +154,8 @@ a color, and a gray chip reads as "no answer" without anyone having to be taught
 §12):
 
 ```
-light  #E3EEF7  #BBD7EB  #8CBADB  #5896C6  #2E6F9E     Y .84 .65 .46 .28 .14
-dark   #1A2E3D  #234A63  #2F6B8C  #4A90B5  #79B9DA     Y .03 .06 .13 .25 .44
+light  #DFEFFC  #AFD9F6  #76BCEC  #2E97DE  #006FAC     Y .84 .65 .46 .28 .14
+dark   #0E2E44  #004B6F  #006C98  #0092C8  #55BCEC     Y .02 .06 .13 .25 .44
 ```
 
 **Temperature** — a diverging quantity, because it has a meaningful middle. Two hues and a
@@ -155,8 +164,8 @@ comfortable reference, and **never at the min/max of what happens to be on scree
 scale that re-anchors itself makes a mild week look like a heatwave):
 
 ```
-light  #2E6F9E  #6BA3C6  #A9C7DC  #DCD7CC  #EBC190  #D9843A  #B45415
-dark   #7FB6D8  #4E90BC  #356F99  #4A4740  #93601F  #C1782A  #E39A4A
+light  #006FAC  #4CA5D8  #9CC9E7  #DCD7CC  #FABD72  #E67E00  #B85100
+dark   #63B8EA  #1791D2  #0070AB  #4A4740  #985E00  #C87400  #F29300
 ```
 
 Luminance peaks at the midpoint in light and troughs at it in dark, so in both schemes the
@@ -197,14 +206,14 @@ states. `SkyPaletteTest` holds that (no half-degree step may change the sky by m
 
 | Band | Altitude | top | mid | bottom |
 |---|---|---|---|---|
-| Day | ≥ 12° | `#4E8FBF` | `#7FB4D6` | `#C7DDEB` |
-| Low sun | 8° | `#5583B0` | `#93B5CE` | `#E0CFB4` |
-| Golden hour | 4° | `#5C7FA8` | `#E0A45C` | `#F3D3A0` |
-| Horizon | 0° | `#54739C` | `#D68F45` | `#F0C68C` |
-| Civil / blue hour | −6° | `#2A3E63` | `#4B5F8F` | `#8A7FA8` |
-| Nautical | −12° | `#1B2540` | `#2C3A5E` | `#46527A` |
-| Astronomical | −18° | `#121A2E` | `#18223C` | `#232E4B` |
-| Night | ≤ −90° | `#0E1320` | `#131A2A` | `#1A2233` |
+| Day | ≥ 12° | `#0090DA` | `#55B7F0` | `#BADFF6` |
+| Low sun | 8° | `#3483CA` | `#80B7DE` | `#E8CEA3` |
+| Golden hour | 4° | `#4B7FBB` | `#F49C04` | `#FFD083` |
+| Horizon | 0° | `#4573AF` | `#E58800` | `#FFC268` |
+| Civil / blue hour | −6° | `#203D73` | `#425DA4` | `#8D7CB7` |
+| Nautical | −12° | `#172449` | `#27396A` | `#425187` |
+| Astronomical | −18° | `#101934` | `#152143` | `#202D53` |
+| Night | ≤ −90° | `#0D1323` | `#111A2D` | `#182237` |
 
 The golden hour has **two** anchors, and that is a fix rather than a flourish: with one
 anchor at the horizon, 3° above it rendered as the midpoint between a cool low sun and the
@@ -255,8 +264,8 @@ bottom one under the temperature and the headline sentence, and, since the canva
 the top edge of the screen (Fase 3), a symmetric top one under the place switcher and
 the status bar icons. One color, one alpha, both bands. The rule that makes this safe
 is testable and tested: **for the brightest possible canvas (Day band, 0% cloud, its
-brightest stop `#C7DDEB`), white on the scrimmed band is 5.29:1** — above the 4.5:1
-floor, and the alpha was chosen for that reason: 0.50 gives 4.53:1 and leaves no
+brightest stop `#BADFF6`), white on the scrimmed band is 5.29:1** — above the 4.5:1
+floor, and the alpha was chosen for that reason: 0.50 gives 4.58:1 and leaves no
 headroom for a future band, 0.45 gives 3.95:1 and fails. If a band is ever added that
 breaks it, `ScrimContractTest` fails rather than the reader squinting.
 
@@ -507,20 +516,27 @@ monotonicity test in the suite had passed without complaint.
    scans) and **line**, chosen in Settings → Appearance; the whole family switches
    together through `LocalWeatherIcons`, and the navigation-bar silhouettes stay
    outside the choice (they are tinted to one color; the styles would be identical).
-   The fill set carries its own measured re-anchor table (`FILL_REMAP`): gradients
-   flattened to their face color, hairline edge strokes dropped, every fill in the
-   same band below. One departure worth this document's attention: **the
-   palette is re-anchored, not copied.** Meteocons draws for a dark backdrop — its
-   cloud stroke is `#E5E7EB`, which is 1.18:1 against this app's light surface, and in
-   the hour strip the icon is the only carrier of "what kind of weather". Every hue is
-   kept; every luminance is moved into `Y ∈ [0.120, 0.283]`, the band that clears §10's
-   3:1 non-text floor against BOTH surfaces of §2.2 (worst case after the move:
-   3.04:1). The measured table lives in the tool, and `IconContrastTest` re-measures
-   the emitted XML on every build, in the same spirit as `PaletteContrastTest`:
-   assert the outcome, not the method. The icons keep their own colors under every
-   theme (they depict the world, like the canvas — §2.1's other justified exception),
-   which is why the floor must hold on both surfaces at once. Animated variants, if
-   they ever come, come as AVDs and as their own decision.
+   Gradients are flattened to their face color (a two-stop ramp is invisible at
+   24–32dp) and hairline edge strokes are dropped. On color, the departure worth
+   this document's attention: **the palette is re-anchored, not copied — and since
+   the icon pass (3 set 2026) the fill set ships twice, picked by its ground.**
+   Meteocons draws for a dark backdrop: its cloud stroke is `#E5E7EB`, 1.18:1 against
+   this app's light surface, and in the hour strip the icon is the only carrier of
+   "what kind of weather", so the marks owe §10's 3:1 non-text floor. A single asset
+   owing 3:1 on BOTH surfaces of §2.2 is forced into `Y ∈ [0.120, 0.283]` — correct
+   arithmetic, muted result, and the reason the fill set is now two sets. The line
+   set (`mc_*`) serves both themes and keeps that band, its chroma raised ×1.25 at
+   held luminance (the color pass' trick: same measured ratios, fuller color); the
+   fill set for light grounds (`mcf_*`) gets the same treatment. The fill set for
+   dark grounds (`mcfn_*`) is **Meteocons' own fill palette, verbatim**, except the
+   four near-black details lifted to clear 3:1 against the dark surface.
+   `ChiaroIcons` picks by ground — the app by its applied theme, the widgets by
+   their card's own `darkGround` — so each set only ever meets the surface its floor
+   was measured against, and `IconContrastTest` re-measures the emitted XML per set
+   on every build, in the same spirit as `PaletteContrastTest`: assert the outcome,
+   not the method. The icons keep their own colors under every theme (they depict
+   the world, like the canvas — §2.1's other justified exception). Animated
+   variants, if they ever come, come as AVDs and as their own decision.
 2. **Dynamic color default** — on, as written here. Worth revisiting after the first
    screenshots: a wallpaper-derived scheme makes every store screenshot a different app.
    Likely resolution: dynamic on device, the Chiaro scheme in the store assets.

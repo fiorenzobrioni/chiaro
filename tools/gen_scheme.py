@@ -20,9 +20,12 @@ from __future__ import annotations
 import math
 
 SOURCES = {
-    "primary": ("#E8A33D", None),
-    "secondary": ("#3A7CA5", None),
-    "tertiary": ("#6C5B8C", None),
+    # Boosted on the color pass (3 set 2026): chroma up at held WCAG luminance, so
+    # the measured ratios of DESIGN.md survive by construction. PaletteContrastTest
+    # stays the arbiter of the outcome.
+    "primary": ("#F1A000", None),
+    "secondary": ("#007DB6", None),
+    "tertiary": ("#70569C", None),
     "error": ("#BA1A1A", None),
     # Chroma pinned: a surface is a warm white, not a beige.
     "neutral": ("#8C857A", 3.0),

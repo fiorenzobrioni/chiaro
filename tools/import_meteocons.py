@@ -25,7 +25,7 @@ Three deliberate departures from the source, each the kind that must be written 
    synthesized as real arcs and segments; the two dashed wind curls become solid — the
    dash there only existed to be animated.
 
-The FILL set (the second icon theme, chosen in Settings) adds two departures of its own:
+The FILL set (the second icon theme, chosen in Settings) adds three departures of its own:
 
 4. **Gradients are flattened to their face color.** Every fill is a two-stop gradient
    whose first stop covers 45% flat; at 24-32dp the ramp is invisible and the face stop
@@ -36,6 +36,16 @@ The FILL set (the second icon theme, chosen in Settings) adds two departures of 
    The fill palette gets its own table (FILL_REMAP): same hues, luminances moved into
    the same [0.120, 0.283] band, order inside each hue family preserved so a shaded
    element stays darker than its lit neighbour.
+6. **The fill set ships twice, picked by the ground it sits on** (icon pass, 3 set
+   2026). One asset owing 3:1 on BOTH surfaces is forced into Y in [0.120, 0.283] --
+   correct arithmetic, muted result. mcf_* keeps that band for LIGHT grounds, its
+   chroma raised x1.25 at held WCAG luminance (the color pass' trick: same measured
+   ratios, fuller color -- the line set gets the same treatment); mcfn_* is
+   Meteocons' own fill palette, verbatim except the four near-black details lifted
+   to clear 3:1 against the DARK surface. ChiaroIcons picks the set by ground (the
+   app by its applied theme, the widgets by their card's darkGround), so each set
+   only ever meets the surface its floor was measured against, and
+   IconContrastTest measures each set against ITS surface.
 
 Requires no third-party packages, runs from the repo root.
 """
@@ -109,63 +119,109 @@ ICONS = {
 
 # Source hue -> shipped color. Hue kept, luminance moved into [0.120, 0.283], the band
 # where a mark clears 3:1 against both surfaces of DESIGN.md §2.2 (light 0.9492, dark
-# 0.0067). Measured with the same arithmetic PaletteContrastTest uses; worst case after
-# the move is 3.04:1, and IconContrastTest holds the floor.
+# 0.0067). Measured with the same arithmetic PaletteContrastTest uses, and
+# IconContrastTest holds the floor. Since the icon pass (3 set 2026) the shipped
+# values also carry the color pass' trick -- chroma x1.25 at held luminance -- so the
+# ratios kept their numbers while the color filled out.
 REMAP = {
-    "#f59e0b": "#C27D08",  # sun amber            3.21 / 5.50
-    "#fcd34d": "#C27D08",  # star yellow -> the one amber; two ambers said nothing
-    "#fde68a": "#C27D08",  # dust yellow -> same
-    "#72b9d5": "#3589AC",  # moon blue            3.70 / 4.76
-    "#72b8d4": "#3589AC",  # snow blue -> unified with the moon; they were 1 bit apart
-    "#e5e7eb": "#7D879B",  # cloud stroke         3.44 / 5.13
-    "#9ca3af": "#656E7E",  # back cloud           4.89 / 3.60
-    "#d1d5db": "#707D8F",  # fog bands            3.98 / 4.43
-    "#374151": "#596A83",  # needles, arrows      5.24 / 3.36
-    "#2885c7": "#2885C7",  # rain blue, already in band (3.79 / 4.65)
-    "#ef4444": "#EF4444",  # thermometer red, already in band (3.58 / 4.92)
+    "#f59e0b": "#C37D00",  # sun amber            3.20 / 5.52
+    "#fcd34d": "#C37D00",  # star yellow -> the one amber; two ambers said nothing
+    "#fde68a": "#C37D00",  # dust yellow -> same
+    "#72b9d5": "#008AB6",  # moon blue            3.76 / 4.68
+    "#72b8d4": "#008AB6",  # snow blue -> unified with the moon; they were 1 bit apart
+    "#e5e7eb": "#7B87A0",  # cloud stroke         3.44 / 5.13
+    "#9ca3af": "#636E82",  # back cloud           4.89 / 3.60
+    "#d1d5db": "#6D7D94",  # fog bands            3.99 / 4.42
+    "#374151": "#556A89",  # needles, arrows      5.25 / 3.36
+    "#2885c7": "#0085D0",  # rain blue            3.79 / 4.65
+    "#ef4444": "#FF2634",  # thermometer red      3.58 / 4.92
 }
 
-# The fill set's palette, re-anchored exactly like REMAP above: hue kept, luminance
-# moved into the [0.120, 0.283] band that clears 3:1 against both surfaces. Ratios
-# measured with IconContrastTest's arithmetic (light / dark).
+# The fill set for LIGHT grounds (mcf_*), re-anchored exactly like REMAP above: hue
+# kept, luminance moved into the [0.120, 0.283] band, chroma x1.25 at held luminance
+# since the icon pass. Ratios measured with IconContrastTest's arithmetic
+# (light / dark).
 FILL_REMAP = {
     "#ffffff": "#8E8E8E",  # 3.12 / 5.65  compass needle half, drop shine
-    "#f3f7fe": "#8C8F93",  # 3.09 / 5.70  cloud face
-    "#e6effc": "#7E838A",  # 3.63 / 4.85  cloud mid
-    "#deeafb": "#717881",  # 4.25 / 4.15  cloud shade
-    "#e5e7eb": "#7D879B",  # 3.44 / 5.13  (reused from the line table)
-    "#d4d7dd": "#838488",  # 3.56 / 4.96  fog/mist bands
-    "#bec1c6": "#7B7D81",  # 3.92 / 4.49
-    "#b8bdc6": "#787B81",  # 4.04 / 4.37
-    "#afb4bc": "#73767B",  # 4.34 / 4.06
-    "#a5aab2": "#6E7177",  # 4.66 / 3.79
-    "#9ca3af": "#656E7E",  # 4.89 / 3.60  (reused from the line table)
-    "#848b98": "#636973",  # 5.26 / 3.35
-    "#6b7280": "#5F6672",  # 5.50 / 3.20
-    "#515a69": "#5B6575",  # 5.61 / 3.14
-    "#384354": "#54647C",  # 5.72 / 3.08
-    "#374151": "#596A83",  # 5.24 / 3.36  (reused from the line table)
-    "#fcd966": "#A48D40",  # 3.09 / 5.70  star gold, lit
-    "#fcd34d": "#A0852E",  # 3.39 / 5.20
-    "#fccd34": "#9D7F1D",  # 3.64 / 4.84
-    "#fde68a": "#9C8D53",  # 3.15 / 5.60  dust
-    "#fde171": "#9A8842",  # 3.34 / 5.27
-    "#fbbf24": "#B08516",  # 3.22 / 5.48  sun face
-    "#f7b23b": "#B17E27",  # 3.40 / 5.19
-    "#f8af18": "#B07B0E",  # 3.51 / 5.02  sun edge
-    "#f6a823": "#AF7616",  # 3.68 / 4.79
-    "#f59e0b": "#B07005",  # 3.87 / 4.56  sun shade
-    "#86c3db": "#6493A5",  # 3.19 / 5.52  moon lit
-    "#72b9d5": "#3589AC",  # 3.75 / 4.70  (reused from the line table)
-    "#5eafcf": "#427F97",  # 4.24 / 4.16  moon shade
-    "#4286ee": "#4286EE",  # 3.40 / 5.18  (already in band)
-    "#0950bc": "#0D5FDD",  # 5.40 / 3.26  rain shade
-    "#3392d6": "#3392D6",  # 3.21 / 5.49  (already in band)
-    "#2885c7": "#2885C7",  # 3.79 / 4.65  (already in band)
-    "#2477b2": "#2477B2",  # 4.59 / 3.84  (already in band)
-    "#ef4444": "#EF4444",  # 3.58 / 4.92  (already in band)
-    "#dc2626": "#DC2626",  # 4.60 / 3.84  (already in band)
-    "#f87171": "#D76161",  # 3.46 / 5.09  umbrella red, lit
+    "#f3f7fe": "#8B8F94",  # 3.10 / 5.69  cloud face
+    "#e6effc": "#7D838C",  # 3.64 / 4.85  cloud mid
+    "#deeafb": "#6F7883",  # 4.26 / 4.14  cloud shade
+    "#e5e7eb": "#7B87A0",  # 3.44 / 5.13  (reused from the line table)
+    "#d4d7dd": "#838489",  # 3.55 / 4.96  fog/mist bands
+    "#bec1c6": "#7B7D82",  # 3.92 / 4.50
+    "#b8bdc6": "#777B83",  # 4.04 / 4.36
+    "#afb4bc": "#72767C",  # 4.35 / 4.06
+    "#a5aab2": "#6D7179",  # 4.66 / 3.78
+    "#9ca3af": "#636E82",  # 4.89 / 3.60  (reused from the line table)
+    "#848b98": "#626976",  # 5.26 / 3.35
+    "#6b7280": "#5D6675",  # 5.52 / 3.20
+    "#515a69": "#596579",  # 5.61 / 3.14
+    "#384354": "#506482",  # 5.73 / 3.08
+    "#374151": "#556A89",  # 5.25 / 3.36  (reused from the line table)
+    "#fcd966": "#AA8C1B",  # 3.09 / 5.71  star gold, lit
+    "#fcd34d": "#A48400",  # 3.40 / 5.19
+    "#fccd34": "#9F7E00",  # 3.66 / 4.82
+    "#fde68a": "#A08D40",  # 3.13 / 5.63  dust
+    "#fde171": "#9F8725",  # 3.35 / 5.26
+    "#fbbf24": "#B28500",  # 3.20 / 5.51  sun face
+    "#f7b23b": "#B67C00",  # 3.40 / 5.18
+    "#f8af18": "#B17B00",  # 3.50 / 5.03  sun edge
+    "#f6a823": "#B17500",  # 3.69 / 4.78
+    "#f59e0b": "#B17000",  # 3.85 / 4.58  sun shade
+    "#86c3db": "#5794AB",  # 3.21 / 5.50  moon lit
+    "#72b9d5": "#008AB6",  # 3.76 / 4.68  (reused from the line table)
+    "#5eafcf": "#2C809F",  # 4.26 / 4.14  moon shade
+    "#4286ee": "#3184FF",  # 3.40 / 5.18
+    "#0950bc": "#005EE3",  # 5.39 / 3.27  rain shade
+    "#3392d6": "#0092E3",  # 3.21 / 5.49
+    "#2885c7": "#0085D0",  # 3.79 / 4.65
+    "#2477b2": "#0077BB",  # 4.59 / 3.84
+    "#ef4444": "#FF2634",  # 3.58 / 4.92
+    "#dc2626": "#E50017",  # 4.60 / 3.83
+    "#f87171": "#E85256",  # 3.46 / 5.09  umbrella red, lit
+}
+
+# The fill set for DARK grounds (mcfn_*): Meteocons' own palette, verbatim -- the
+# backdrop it was drawn for -- except the four near-black details, lifted at held hue
+# and chroma to clear 3:1 against the dark surface (Y floor 0.1212). Ratios as above.
+FILL_NIGHT = {
+    "#ffffff": "#FFFFFF",  # 1.05 / 18.52
+    "#f3f7fe": "#F3F7FE",  # 1.02 / 17.24  cloud face
+    "#e6effc": "#E6EFFC",  # 1.10 / 15.98  cloud mid
+    "#deeafb": "#DEEAFB",  # 1.16 / 15.23  cloud shade
+    "#e5e7eb": "#E5E7EB",  # 1.18 / 14.96
+    "#d4d7dd": "#D4D7DD",  # 1.37 / 12.85  fog/mist bands
+    "#bec1c6": "#BEC1C6",  # 1.72 / 10.26
+    "#b8bdc6": "#B8BDC6",  # 1.80 / 9.82
+    "#afb4bc": "#AFB4BC",  # 1.98 / 8.89
+    "#a5aab2": "#A5AAB2",  # 2.22 / 7.93
+    "#9ca3af": "#9CA3AF",  # 2.42 / 7.30
+    "#848b98": "#848B98",  # 3.26 / 5.41
+    "#6b7280": "#6B7280",  # 4.60 / 3.83
+    "#515a69": "#596271",  # 5.86 / 3.01  lifted (was 2.66:1 on dark)
+    "#384354": "#576275",  # 5.86 / 3.01  lifted (was 1.85:1 on dark)
+    "#374151": "#586274",  # 5.85 / 3.01  lifted (was 1.80:1 on dark)
+    "#fcd966": "#FCD966",  # 1.31 / 13.46  star gold, lit
+    "#fcd34d": "#FCD34D",  # 1.37 / 12.85
+    "#fccd34": "#FCCD34",  # 1.44 / 12.28
+    "#fde68a": "#FDE68A",  # 1.19 / 14.87  dust
+    "#fde171": "#FDE171",  # 1.23 / 14.28
+    "#fbbf24": "#FBBF24",  # 1.59 / 11.10  sun face
+    "#f7b23b": "#F7B23B",  # 1.76 / 10.04
+    "#f8af18": "#F8AF18",  # 1.79 / 9.82  sun edge
+    "#f6a823": "#F6A823",  # 1.90 / 9.30
+    "#f59e0b": "#F59E0B",  # 2.04 / 8.63  sun shade
+    "#86c3db": "#86C3DB",  # 1.84 / 9.56  moon lit
+    "#72b9d5": "#72B9D5",  # 2.08 / 8.48
+    "#5eafcf": "#5EAFCF",  # 2.35 / 7.51  moon shade
+    "#4286ee": "#4286EE",  # 3.40 / 5.18
+    "#0950bc": "#195CC9",  # 5.85 / 3.01  lifted (was 2.55:1 on dark), rain shade
+    "#3392d6": "#3392D6",  # 3.21 / 5.49
+    "#2885c7": "#2885C7",  # 3.79 / 4.65
+    "#2477b2": "#2477B2",  # 4.59 / 3.84
+    "#ef4444": "#EF4444",  # 3.58 / 4.92
+    "#dc2626": "#DC2626",  # 4.60 / 3.84
+    "#f87171": "#F87171",  # 2.63 / 6.70  umbrella red, lit
 }
 
 # The set being converted right now; main() flips this between the two passes.
@@ -182,8 +238,9 @@ LINEJOIN = {"miter": "miter", "round": "round", "bevel": "bevel"}
 HEADER = (
     "<!-- Generated by tools/import_meteocons.py from Meteocons v2.0.0\n"
     "     (github.com/basmilius/meteocons), MIT, (c) 2020-2021 Bas Milius —\n"
-    "     licenses/Meteocons-MIT.txt. Recolored for contrast on both surfaces;\n"
-    "     the table and its measurements are in the tool. Do not edit by hand. -->\n"
+    "     licenses/Meteocons-MIT.txt. Recolored for measured contrast on the\n"
+    "     ground its set is picked for; the tables are in the tool. Do not edit\n"
+    "     by hand. -->\n"
 )
 
 
@@ -482,6 +539,7 @@ def main() -> None:
     passes = [
         (SRC_SUBDIR, REMAP, False, "mc_"),
         (FILL_SRC_SUBDIR, FILL_REMAP, True, "mcf_"),
+        (FILL_SRC_SUBDIR, FILL_NIGHT, True, "mcfn_"),
     ]
     total = 0
     for subdir, palette, drop_hairline, prefix in passes:
@@ -493,7 +551,7 @@ def main() -> None:
             svg = src / f"{svg_name}.svg"
             if not svg.is_file():
                 sys.exit(f"missing upstream icon: {svg}")
-            out_name = drawable if prefix == "mc_" else drawable.replace("mc_", "mcf_", 1)
+            out_name = drawable.replace("mc_", prefix, 1)
             convert(svg, OUT / f"{out_name}.xml")
             total += 1
     print(f"{total} drawables written to {OUT}")

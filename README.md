@@ -1,9 +1,9 @@
 # Chiaro
 
 ![Status](https://img.shields.io/badge/status-fase%200-8C857A?labelColor=FCFAF6)
-![License](https://img.shields.io/badge/license-GPL--3.0-3A7CA5?labelColor=FCFAF6)
-![minSdk](https://img.shields.io/badge/minSdk-33-6C5B8C?labelColor=FCFAF6)
-![Kotlin](https://img.shields.io/badge/Kotlin-2.2-E8A33D?labelColor=FCFAF6)
+![License](https://img.shields.io/badge/license-GPL--3.0-007DB6?labelColor=FCFAF6)
+![minSdk](https://img.shields.io/badge/minSdk-33-70569C?labelColor=FCFAF6)
+![Kotlin](https://img.shields.io/badge/Kotlin-2.2-F1A000?labelColor=FCFAF6)
 ![API key](https://img.shields.io/badge/API%20key-none%20needed-2E6B3E?labelColor=FCFAF6)
 
 **The weather app that tells you what to do about it.**

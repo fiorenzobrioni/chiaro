@@ -78,7 +78,8 @@ private fun NowContent(
         Image(
             provider = ImageProvider(
                 ChiaroIcons.conditionRes(
-                    current.condition.wmoCode, content.night, model.settings.weatherIcons
+                    current.condition.wmoCode, content.night,
+                    model.settings.weatherIcons, palette.darkGround
                 )
             ),
             contentDescription = null, // the temperature and place say it in words

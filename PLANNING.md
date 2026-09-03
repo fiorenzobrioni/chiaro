@@ -787,11 +787,37 @@ Quattro rilievi, due dei quali hanno rifatto il vestito dei widget:
 
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
-- [ ] Passata colore (chiesta su device, 3 set): una palette più viva per schema e
-      icone meteo — gli stessi colori, più pieni; il riferimento è il widget meteo
-      di sistema Samsung. Da fare con gli stessi numeri misurati di DESIGN.md §2
-      (contrasti, deuteranopia), non come ritocco al volo: è il motivo per cui non
-      è entrata nella passata widget del 3 set
+- [x] Passata colore (chiesta su device, 3 set; fatta il 3 set sera, alzata una
+      seconda volta dopo la prova su device — «ancora un pochino» — la stessa sera):
+      croma su in OKLCh — ×1.65 sul cielo diurno, a scalare fino a ×1.22 sulla
+      notte; ×1.4–1.45 su verdetti, rampe e sorgenti dello schema — a **luminanza
+      WCAG bloccata**,
+      così ogni rapporto misurato di DESIGN.md è sopravvissuto per costruzione
+      (scarto massimo documentato 0.04; tutti i numeri di §2.2–§2.3–§3.2–§3.6
+      riaggiornati, `PaletteContrastTest`/`ScrimContractTest`/`SkyPaletteTest` verdi
+      senza ritocchi). I neutri non si sono mossi: la carta calda è identità, il
+      croma era la lamentela. Il cielo era il punto: il diurno passa da `#4E8FBF` a
+      `#0090DA`, l'ora dorata guadagna oro vero (`#F49C04`/`#E58800` — quest'ultimo
+      già al bordo del gamut alla prima alzata: più in là di così, a pari luminanza,
+      l'sRGB non va). Due note oneste: il
+      primary ambra al tono 40 era già al bordo del gamut sRGB e si muove appena
+      (la vividezza dell'app in dynamic color OFF arriva da secondary/terziario,
+      rampe e cielo); le ICONE meteo non sono state toccate — `FILL_REMAP` è una
+      rimappatura di luminanza per contrasto, non di tinta, e una passata sulle
+      icone è un lavoro a parte se dopo la prova su device servirà ancora
+- [x] Passata icone meteo (3 set sera, subito dopo la passata colore): il set fill
+      si sdoppia per terreno. Il vincolo «3:1 su entrambe le superfici» con un solo
+      asset forza ogni luminanza in Y ∈ [0.120, 0.283] — aritmetica giusta, resa
+      spenta; ora `mcf_*` (terreni chiari) tiene la banda con croma ×1.25 a luminanza
+      ferma, e `mcfn_*` (terreni scuri) è la palette fill ORIGINALE di Meteocons,
+      identica salvo 4 dettagli quasi-neri alzati per il 3:1 su scuro (33 colori su
+      37 verbatim). `ChiaroIcons` sceglie dal terreno (l'app dal tema applicato, i
+      widget dal proprio `darkGround`); `IconContrastTest` misura ogni set contro la
+      SUA superficie. Anche il set line guadagna croma ×1.25 a luminanza ferma. I
+      gradienti restano appiattiti al colore di faccia: a 24–32 dp una rampa a due
+      stop è invisibile (motivo registrato nel tool). Nota: il marchio dell'app
+      conserva i valori pre-passata (`#3589AC`/`#C27D08`) — è un drawable disegnato
+      a mano, non rigenerato; da riallineare solo se si ridisegna il badge
 - [ ] Contrasti, scala testo 200%, TalkBack, motion ridotto
 - [ ] Avvio a freddo sotto 400 ms, canvas sotto 2 ms/frame
 - [ ] Passata IT/EN completa

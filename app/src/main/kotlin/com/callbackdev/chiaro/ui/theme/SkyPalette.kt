@@ -25,22 +25,29 @@ object SkyPalette {
      * The rows of DESIGN.md §3.2 as ANCHORS on solar altitude, not as buckets: a value
      * between two anchors is the blend of the two, which is what makes a sunset move
      * instead of snapping through seven states.
+     *
+     * Retuned on the color pass (3 set 2026, raised once more after the device look
+     * the same evening): chroma up in OKLCh — ×1.65 for the day sky, tapering to
+     * ×1.22 at night — at HELD WCAG luminance, so the scrim contract
+     * and every brightness ordering the tests assert survived the retune by
+     * construction. The day sky was the whole point: it was the most washed-out
+     * thing on the screen it was supposed to be the hero of.
      */
     private val anchors: List<Pair<Double, SkyGradient>> = listOf(
-        90.0 to SkyGradient(Color(0xFF4E8FBF), Color(0xFF7FB4D6), Color(0xFFC7DDEB)),
-        12.0 to SkyGradient(Color(0xFF4E8FBF), Color(0xFF7FB4D6), Color(0xFFC7DDEB)),
-        8.0 to SkyGradient(Color(0xFF5583B0), Color(0xFF93B5CE), Color(0xFFE0CFB4)),
+        90.0 to SkyGradient(Color(0xFF0090DA), Color(0xFF55B7F0), Color(0xFFBADFF6)),
+        12.0 to SkyGradient(Color(0xFF0090DA), Color(0xFF55B7F0), Color(0xFFBADFF6)),
+        8.0 to SkyGradient(Color(0xFF3483CA), Color(0xFF80B7DE), Color(0xFFE8CEA3)),
         // TWO golden anchors, not one. With a single anchor at the horizon the golden
         // hour was only golden in its last minutes: at 3° the canvas rendered as the
         // midpoint between a cool low sun and the amber, which is a washed-out tan and
         // is not what anybody means by the golden hour. Rendering the sheet and looking
         // at it is what found this; no test would have.
-        4.0 to SkyGradient(Color(0xFF5C7FA8), Color(0xFFE0A45C), Color(0xFFF3D3A0)),
-        0.0 to SkyGradient(Color(0xFF54739C), Color(0xFFD68F45), Color(0xFFF0C68C)),
-        -6.0 to SkyGradient(Color(0xFF2A3E63), Color(0xFF4B5F8F), Color(0xFF8A7FA8)),
-        -12.0 to SkyGradient(Color(0xFF1B2540), Color(0xFF2C3A5E), Color(0xFF46527A)),
-        -18.0 to SkyGradient(Color(0xFF121A2E), Color(0xFF18223C), Color(0xFF232E4B)),
-        -90.0 to SkyGradient(Color(0xFF0E1320), Color(0xFF131A2A), Color(0xFF1A2233))
+        4.0 to SkyGradient(Color(0xFF4B7FBB), Color(0xFFF49C04), Color(0xFFFFD083)),
+        0.0 to SkyGradient(Color(0xFF4573AF), Color(0xFFE58800), Color(0xFFFFC268)),
+        -6.0 to SkyGradient(Color(0xFF203D73), Color(0xFF425DA4), Color(0xFF8D7CB7)),
+        -12.0 to SkyGradient(Color(0xFF172449), Color(0xFF27396A), Color(0xFF425187)),
+        -18.0 to SkyGradient(Color(0xFF101934), Color(0xFF152143), Color(0xFF202D53)),
+        -90.0 to SkyGradient(Color(0xFF0D1323), Color(0xFF111A2D), Color(0xFF182237))
     )
 
     /**
@@ -57,7 +64,7 @@ object SkyPalette {
     private const val CloudDarkening = 0.15f
 
     /** What moonlight lifts a night sky toward. */
-    private val Moonlight = Color(0xFF2A3550)
+    private val Moonlight = Color(0xFF273458)
 
     /**
      * The canvas for one moment.
@@ -113,7 +120,7 @@ object SkyPalette {
 
     /**
      * 0.55, and the number has a reason: against the brightest stop this palette can
-     * produce, white lands at 5.29:1. 0.50 gives 4.53:1 and leaves no headroom for a
+     * produce, white lands at 5.29:1. 0.50 gives 4.58:1 and leaves no headroom for a
      * band added later; 0.45 gives 3.95:1 and fails outright.
      */
     const val ScrimAlpha = 0.55f

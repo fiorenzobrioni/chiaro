@@ -100,7 +100,8 @@ class TodayWidget : GlanceAppWidget() {
                 Image(
                     provider = ImageProvider(
                         ChiaroIcons.conditionRes(
-                            current.condition.wmoCode, content.night, model.settings.weatherIcons
+                            current.condition.wmoCode, content.night,
+                            model.settings.weatherIcons, palette.darkGround
                         )
                     ),
                     contentDescription = null,
@@ -188,7 +189,8 @@ class TodayWidget : GlanceAppWidget() {
                                 ChiaroIcons.conditionRes(
                                     strip.hour.condition.wmoCode,
                                     strip.night,
-                                    model.settings.weatherIcons
+                                    model.settings.weatherIcons,
+                                    palette.darkGround
                                 )
                             ),
                             contentDescription = null,

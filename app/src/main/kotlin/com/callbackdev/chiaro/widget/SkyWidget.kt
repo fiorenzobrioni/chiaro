@@ -81,7 +81,9 @@ private fun SkyContent(model: WidgetModel, moment: NextMoment, palette: WidgetPa
     Column(modifier = GlanceModifier.fillMaxSize()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
-                provider = ImageProvider(skyJobIconRes(moment, model.settings.weatherIcons)),
+                provider = ImageProvider(
+                    skyJobIconRes(moment, model.settings.weatherIcons, palette.darkGround)
+                ),
                 contentDescription = null,
                 modifier = GlanceModifier.size(48.dp)
             )
@@ -133,22 +135,27 @@ private fun VerdictPill(verdict: SkyVerdict) {
 }
 
 /** The moon's day-moment gets its real phase; everything else its family glyph. */
-private fun skyJobIconRes(moment: NextMoment, style: WeatherIcons): Int = when (moment.job.id) {
-    "sun.rise", "twilight.civil.am" -> ChiaroIcons.styledRes(R.drawable.mc_sunrise, style)
-    "sun.set", "twilight.civil.pm" -> ChiaroIcons.styledRes(R.drawable.mc_sunset, style)
-    "solar.noon" -> ChiaroIcons.conditionRes(0, night = false, style = style)
-    "golden_hour.am", "golden_hour.pm" -> ChiaroIcons.styledRes(R.drawable.mc_horizon, style)
+private fun skyJobIconRes(
+    moment: NextMoment,
+    style: WeatherIcons,
+    darkGround: Boolean
+): Int = when (moment.job.id) {
+    "sun.rise", "twilight.civil.am" -> ChiaroIcons.styledRes(R.drawable.mc_sunrise, style, darkGround)
+    "sun.set", "twilight.civil.pm" -> ChiaroIcons.styledRes(R.drawable.mc_sunset, style, darkGround)
+    "solar.noon" ->
+        ChiaroIcons.conditionRes(0, night = false, style = style, darkGround = darkGround)
+    "golden_hour.am", "golden_hour.pm" -> ChiaroIcons.styledRes(R.drawable.mc_horizon, style, darkGround)
     "blue_hour.am", "blue_hour.pm",
     "twilight.nautical.am", "twilight.nautical.pm" ->
-        ChiaroIcons.styledRes(R.drawable.mc_star, style)
+        ChiaroIcons.styledRes(R.drawable.mc_star, style, darkGround)
     "twilight.astronomical.am", "twilight.astronomical.pm", "darkness.window" ->
-        ChiaroIcons.styledRes(R.drawable.mc_starry_night, style)
-    "moon.rise" -> ChiaroIcons.styledRes(R.drawable.mc_moonrise, style)
-    "moon.set" -> ChiaroIcons.styledRes(R.drawable.mc_moonset, style)
-    "moon.today", "moon.phase" -> ChiaroIcons.moonPhaseRes(MoonPhase.FULL_MOON, style)
+        ChiaroIcons.styledRes(R.drawable.mc_starry_night, style, darkGround)
+    "moon.rise" -> ChiaroIcons.styledRes(R.drawable.mc_moonrise, style, darkGround)
+    "moon.set" -> ChiaroIcons.styledRes(R.drawable.mc_moonset, style, darkGround)
+    "moon.today", "moon.phase" -> ChiaroIcons.moonPhaseRes(MoonPhase.FULL_MOON, style, darkGround)
     "equinox.spring", "solstice.summer", "equinox.autumn", "solstice.winter" ->
-        ChiaroIcons.styledRes(R.drawable.mc_horizon, style)
-    else -> ChiaroIcons.styledRes(R.drawable.mc_falling_stars, style)
+        ChiaroIcons.styledRes(R.drawable.mc_horizon, style, darkGround)
+    else -> ChiaroIcons.styledRes(R.drawable.mc_falling_stars, style, darkGround)
 }
 
 /** Subscriptions emptied by hand: the widget says why it is quiet, never blanks. */

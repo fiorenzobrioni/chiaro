@@ -62,33 +62,36 @@ data class ChiaroColors(
     }
 }
 
+// Retuned on the color pass (3 set 2026): chroma up at held WCAG luminance, so every
+// measured ratio of DESIGN.md §2.3 kept its number. `unknown` deliberately did not
+// move: not knowing is not a state with a color. `PaletteContrastTest` re-measured.
 internal val ChiaroLightColors = ChiaroColors(
-    pass = VerdictColors(Color(0xFF0F5C30), Color(0xFFD7EBDD)),
-    unstable = VerdictColors(Color(0xFF7A5200), Color(0xFFF7E6BF)),
-    fail = VerdictColors(Color(0xFF8E1B10), Color(0xFFF9DEDA)),
+    pass = VerdictColors(Color(0xFF005D2D), Color(0xFFD1EDD9)),
+    unstable = VerdictColors(Color(0xFF7A5200), Color(0xFFFDE5AE)),
+    fail = VerdictColors(Color(0xFF950700), Color(0xFFFFDCD7)),
     unknown = VerdictColors(Color(0xFF4F5359), Color(0xFFE7E7E4)),
     rainRamp = listOf(
-        Color(0xFFE3EEF7), Color(0xFFBBD7EB), Color(0xFF8CBADB),
-        Color(0xFF5896C6), Color(0xFF2E6F9E)
+        Color(0xFFDFEFFC), Color(0xFFAFD9F6), Color(0xFF76BCEC),
+        Color(0xFF2E97DE), Color(0xFF006FAC)
     ),
     temperatureRamp = listOf(
-        Color(0xFF2E6F9E), Color(0xFF6BA3C6), Color(0xFFA9C7DC), Color(0xFFDCD7CC),
-        Color(0xFFEBC190), Color(0xFFD9843A), Color(0xFFB45415)
+        Color(0xFF006FAC), Color(0xFF4CA5D8), Color(0xFF9CC9E7), Color(0xFFDCD7CC),
+        Color(0xFFFABD72), Color(0xFFE67E00), Color(0xFFB85100)
     )
 )
 
 internal val ChiaroDarkColors = ChiaroColors(
-    pass = VerdictColors(Color(0xFF7FD69A), Color(0xFF173D28)),
-    unstable = VerdictColors(Color(0xFFF2C063), Color(0xFF3D2F08)),
-    fail = VerdictColors(Color(0xFFFFB4AB), Color(0xFF4A1712)),
+    pass = VerdictColors(Color(0xFF54DC88), Color(0xFF003F23)),
+    unstable = VerdictColors(Color(0xFFFFBC27), Color(0xFF3F2F00)),
+    fail = VerdictColors(Color(0xFFFFB4AB), Color(0xFF560705)),
     unknown = VerdictColors(Color(0xFFA8ADB6), Color(0xFF2B2B2E)),
     rainRamp = listOf(
-        Color(0xFF1A2E3D), Color(0xFF234A63), Color(0xFF2F6B8C),
-        Color(0xFF4A90B5), Color(0xFF79B9DA)
+        Color(0xFF0E2E44), Color(0xFF004B6F), Color(0xFF006C98),
+        Color(0xFF0092C8), Color(0xFF55BCEC)
     ),
     temperatureRamp = listOf(
-        Color(0xFF7FB6D8), Color(0xFF4E90BC), Color(0xFF356F99), Color(0xFF4A4740),
-        Color(0xFF93601F), Color(0xFFC1782A), Color(0xFFE39A4A)
+        Color(0xFF63B8EA), Color(0xFF1791D2), Color(0xFF0070AB), Color(0xFF4A4740),
+        Color(0xFF985E00), Color(0xFFC87400), Color(0xFFF29300)
     )
 )
 
