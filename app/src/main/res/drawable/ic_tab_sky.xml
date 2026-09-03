@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Sky tab: mc_starry_night's crescent and stars, rescaled for the navigation
+     bar exactly as ic_tab_today is — the glyph sits off-center in its 64-box, so
+     the pivot is the glyph's own center (32, 33), not the box's. Stroke 4.25 × 1.25
+     ≈ 5.3/64 ≈ the bell's 2dp at 24dp. Color is irrelevant: the bar tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+    <group
+        android:scaleX="1.25"
+        android:scaleY="1.25"
+        android:pivotX="32"
+        android:pivotY="33">
+        <path
+            android:pathData="M 42.56 21.13 L 41.26 19 a .55 .55 0 0 1 -.06 -.5 l .8 -2.36 a .59 .59 0 0 0 -.87 -.7 L 39 16.74 a .55 .55 0 0 1 -.5 .06 l -2.36 -.8 a .59 .59 0 0 0 -.7 .87 l 1.3 2.13 a .55 .55 0 0 1 .06 .5 l -.8 2.36 a .59 .59 0 0 0 .87 .7 l 2.13 -1.3 a .55 .55 0 0 1 .5 -.06 l 2.36 .8 a .59 .59 0 0 0 .7 -.87 z"
+            android:fillColor="#FF000000"/>
+        <path
+            android:pathData="M 49.73 27.18 l -2.49 -.07 a .62 .62 0 0 1 -.46 -.22 l -1.53 -2 a .6 .6 0 0 0 -1.07 .35 l -.07 2.49 a .62 .62 0 0 1 -.22 .46 l -2 1.53 a .6 .6 0 0 0 .35 1.07 l 2.49 .07 a .62 .62 0 0 1 .46 .22 l 1.53 2 a .6 .6 0 0 0 1.07 -.35 l .07 -2.49 a .62 .62 0 0 1 .22 -.46 l 2 -1.53 a .6 .6 0 0 0 -.35 -1.07 z"
+            android:fillColor="#FF000000"/>
+        <path
+            android:pathData="M 40.69 27.65 l -1.25 -1.1 a .4 .4 0 0 1 -.14 -.31 v -1.66 a .39 .39 0 0 0 -.69 -.27 l -1.1 1.25 a .4 .4 0 0 1 -.31 .14 h -1.66 a .39 .39 0 0 0 -.27 .69 l 1.25 1.1 a .4 .4 0 0 1 .14 .31 v 1.66 a .39 .39 0 0 0 .69 .27 l 1.1 -1.25 a .4 .4 0 0 1 .31 -.14 h 1.66 a .39 .39 0 0 0 .27 -.69 z"
+            android:fillColor="#FF000000"/>
+        <path
+            android:pathData="M 46.66 36.2 a 16.66 16.66 0 0 1 -16.78 -16.55 16.29 16.29 0 0 1 .55 -4.15 A 16.56 16.56 0 1 0 48.5 36.1 c -.61 .06 -1.22 .1 -1.84 .1 z"
+            android:strokeColor="#FF000000"
+            android:strokeWidth="4.25"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"/>
+    </group>
+</vector>

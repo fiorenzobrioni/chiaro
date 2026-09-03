@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Today tab: mc_clear_day's sun, rescaled for the navigation bar. Meteocons
+     fill ~70% of their box with a ~1.1dp stroke; the Material bell beside this tab
+     fills ~80% with ~2dp — same glyph, so the pair reads as one family (device
+     finding, 3 set). The scale (1.15) grows the effective stroke too, hence 4.6
+     units here ≈ 5.3/64 ≈ the bell's 2dp at 24dp. Color is irrelevant: the bar
+     tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+    <group
+        android:scaleX="1.15"
+        android:scaleY="1.15"
+        android:pivotX="32"
+        android:pivotY="32">
+        <path
+            android:pathData="M 42.5 32 A 10.5 10.5 0 1 1 32 21.5 10.5 10.5 0 0 1 42.5 32 z M 32 15.71 V 9.5 m 0 45 v -6.21 m 11.52 -27.81 l 4.39 -4.39 M 16.09 47.91 l 4.39 -4.39 m 0 -23 l -4.39 -4.39 m 31.82 31.78 l -4.39 -4.39 M 15.71 32 H 9.5 m 45 0 h -6.21"
+            android:strokeColor="#FF000000"
+            android:strokeWidth="4.6"
+            android:strokeLineCap="round"
+            android:strokeMiterLimit="10"/>
+    </group>
+</vector>

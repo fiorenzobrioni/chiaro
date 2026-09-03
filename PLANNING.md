@@ -568,6 +568,16 @@ stessa struttura e avrebbero mostrato lo stesso difetto al primo verdetto largo.
 ha ripetuto la lezione di Fase 5 sulle percentuali nude nelle descrizioni dei
 template: `formatted="false"`, sono prosa.
 
+### Verifica su device (committente, 3 set 2026)
+
+Tutto funziona. Un rilievo grafico sulla barra: le meteocons di Oggi e Cielo
+riempiono ~70% del loro box con un tratto da ~1,1dp, la campana Material di Avvisi
+~80% con ~2dp — tre tab, due pesi. Risolto con due varianti da tab degli stessi
+glifi (`ic_tab_today`, `ic_tab_sky`): un group scala il disegno al riempimento della
+campana e il tratto cresce fino ai suoi ~2dp ottici. Le meteocons originali non si
+toccano — nelle liste, accanto al testo, il loro peso è quello giusto; è la barra
+che chiede un altro registro.
+
 ## Fase 7 — Diario
 
 - [ ] Voci per fetch (snapshot, previsioni, regole scattate, run del cielo)

@@ -173,7 +173,7 @@ private fun TabScaffold(
                 onClick = { onSelectTab(ShellTab.TODAY) },
                 icon = {
                     Icon(
-                        imageVector = ChiaroIcons.condition(0, night = false),
+                        imageVector = ChiaroIcons.tabToday,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp)
                     )
@@ -185,7 +185,7 @@ private fun TabScaffold(
                 onClick = { onSelectTab(ShellTab.SKY) },
                 icon = {
                     Icon(
-                        imageVector = ChiaroIcons.starryNight,
+                        imageVector = ChiaroIcons.tabSky,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp)
                     )

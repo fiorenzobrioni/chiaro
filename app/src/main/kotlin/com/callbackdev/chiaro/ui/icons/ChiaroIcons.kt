@@ -108,4 +108,12 @@ object ChiaroIcons {
         @Composable get() = ImageVector.vectorResource(R.drawable.mc_starry_night)
     val fallingStars: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.mc_falling_stars)
+
+    // The navigation bar. Same glyphs as the family above, rescaled to the optical
+    // size and stroke weight of the Material bell beside them: three tabs, one
+    // apparent weight (device finding, 3 set).
+    val tabToday: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_tab_today)
+    val tabSky: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_tab_sky)
 }
