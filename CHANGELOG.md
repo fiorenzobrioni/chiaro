@@ -10,7 +10,8 @@ as the body of the GitHub Release, so a version's entry is written **before** it
 ## [Unreleased]
 
 Nothing released yet. The engines are in and verified, the design system is code, and
-the first screen — Today — is built. See `PLANNING.md` for where the work actually is.
+the everyday surface — Today, places, first run, settings, the guide — is built. See
+`PLANNING.md` for where the work actually is.
 
 ### Added
 
@@ -41,3 +42,23 @@ the first screen — Today — is built. See `PLANNING.md` for where the work ac
 - The minimal Places sheet: search-as-you-type against Open-Meteo geocoding, tap to add
   and select, the saved list to switch — the piece of Fase 3 a cityless fresh install
   cannot exist without.
+- Places in full (Fase 3): a horizontal pager between saved places where settling on a
+  page is selecting it, the complete sheet (GPS row pinned on top with its own state,
+  cached temperature beside each saved place, recent searches, long-press reorder,
+  swipe-to-remove with an undo that restores position and selection), the GPS flow with
+  its errors in words, and the one-screen first run that lands "Not now" on the real
+  no-place state.
+- Settings (Fase 4): units, appearance (theme and dynamic color), update frequency,
+  the system per-app language picker, about, and a reset that says exactly what it
+  restores and what it leaves alone. Groups arrive with the feature they control, so
+  notifications and widgets join in their own phases.
+- The guide (Fase 4): where the data is born, what the sky verdicts say, why there is
+  no radar map — short prose in both languages, illustrated with the app's own
+  components, reachable from Settings forever and pointed at once by a dismissable
+  card on Today.
+
+### Removed
+
+- The last of the editor's vocabulary in the data layer (Fase 4): line numbers, word
+  wrap, the technical-details toggle, the theme-profile name and the editor tab state.
+  Chiaro's settings hold what Chiaro's screens actually edit.

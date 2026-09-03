@@ -368,10 +368,73 @@ screenshot, tre richieste — due accolte e una che era un difetto:
 
 DESIGN.md §3.6 aggiornato con il contratto a due bande.
 
-## Fase 4 — Impostazioni e guida
+## Fase 4 — Impostazioni e guida ✅
 
-- [ ] Preferenze M3; rimozione di `EditorSettings`/`showDetails` (deviazione Fase 0)
-- [ ] La guida: dove nascono i dati, cosa vogliono dire i verdetti, perché niente radar
+- [x] Preferenze M3 in gruppi: unità (temperatura, vento), aspetto (tema, colori
+      dinamici), aggiornamenti (frequenza), lingua (il picker per-app di sistema),
+      informazioni (versione, dati, sorgente, privacy), ripristino con conferma
+- [x] Rimozione di `EditorSettings`/`showDetails` (deviazione Fase 0) — e con loro
+      il resto del lessico da editor rimasto nel data layer (sotto)
+- [x] Il tema segue le scelte: `ThemeMode` (sistema/chiaro/scuro) e `dynamicColor`
+      letti da `MainActivity`; l'ingranaggio vive accanto al selettore del luogo
+- [x] Le unità vere arrivano a Oggi (chiusa la nota "Fase 4" in `ContentState`)
+- [x] La guida: dove nascono i dati, cosa dicono i verdetti, perché niente radar —
+      prosa IT/EN, illustrata coi componenti veri (i quattro `VerdictChip`)
+- [x] La card una-tantum su Oggi che punta alla guida: usata o chiusa, sparisce per
+      sempre; la guida resta raggiungibile dalle Impostazioni
+
+### Decisioni della fase
+
+- **La pulizia del data layer va oltre la deviazione registrata.** La Fase 0
+  prometteva la rimozione di `EditorSettings` e `showDetails`; toccando il file sono
+  caduti per lo stesso motivo anche `themeProfileName` (nominava i tre profili tema di
+  tweather: l'aspetto di Chiaro è `themeMode` + `dynamicColor`, e ora sono quelle le
+  chiavi) e `lastModifiedEpochSeconds` (rendeva la riga `// Last modified:` di
+  `settings.config`, una superficie che qui non esiste). `WorkspaceStore` perde
+  `MainEditorFile` — lo stato del tab di un editor che non c'è — e tiene il puntatore
+  una-tantum, rinominato sulla superficie che serve davvero: la card della guida.
+  I test sono cambiati insieme al codice che coprivano, e il nuovo
+  `SettingsStoreTest` copre quello che prima era senza guardia: default, round-trip,
+  fallback su valori non riconosciuti, reset. Registrato in `UPSTREAM.md`.
+- **Niente gruppo notifiche né widget in Impostazioni, per ora.** VISION §5.7 li
+  elenca, ma i notifier arrivano in Fase 6 e i widget in Fase 8: un interruttore che
+  oggi non cambia niente è lo schermo che mente (§1.1). Ogni gruppo compare nella
+  fase che accende la funzione che governa. Stesso criterio per "movimento del
+  canvas": il canvas oggi è statico (la motion pass è più avanti), lo switch arriva
+  con l'animazione che spegne.
+- **Navigazione a stato, non NavHost**: tre destinazioni e due archi non giustificano
+  un grafo. `BackHandler` riporta la guida alla porta da cui è entrata (Oggi o
+  Impostazioni); la bottom navigation di Fase 5 riporrà la domanda.
+- **La guida spedisce tre capitoli su quattro**: "come funzionano gli avvisi"
+  (VISION §5.7) arriva in Fase 6 insieme alla schermata che racconta — la guida non
+  descrive quello che l'app non fa ancora. I verdetti invece si insegnano già: le
+  quattro parole (*Bello*, *Così così*, *Niente da fare*, *Presto per dirlo*) nascono
+  qui, nella pagina che le spiega, e la Fase 5 parlerà le stesse.
+- **Il tono della guida è una regola, non un caso**: ogni scelta di prodotto vi
+  compare come un fatto su come funzionano le cose (il radar è un'immagine
+  distribuita come tale; i dati di Chiaro sono numeri, e la stessa domanda trova
+  risposta nella frase e nelle probabilità orarie), mai come un giudizio di valore, e
+  senza paragoni con altre app. La guida inoltre non spiega mai un elemento
+  dell'interfaccia: un elemento che ha bisogno di spiegazione è un bug (VISION §5.7).
+- **Il dialogo di reset dice cosa NON tocca**: luoghi, storico e card della guida
+  sopravvivono, e non per caso — il reset pulisce il solo DataStore delle
+  impostazioni, e la card vive in `workspace` proprio perché un ripristino non deve
+  rimostrarla a chi la guida l'ha già letta.
+- **Le icone della status bar leggono la luminanza della `surface`** invece di
+  `isSystemInDarkTheme`: col tema forzabile dalle impostazioni i due possono
+  divergere, e le icone devono seguire la scelta, non il sistema.
+- **`units` parte dai default e insegue lo store**: il valore iniziale è quello di
+  un'installazione fresca, e lo store risponde entro il primo frame. Un °C mostrato a
+  chi ha scelto °F per un frame è un numero vero in un'unità vera, non una bugia; la
+  costante è che nessun placeholder si vesta mai da valore.
+
+### Verifica
+
+297 test verdi (141 domain, 114 data — con i 5 nuovi di `SettingsStoreTest` — e 42
+app), zero failure, zero skip; lint a zero errori; APK debug ok. Il lint ha fatto il
+suo mestiere una volta: i `%` degli esempi di evidenza nella guida ("nuvole 10%")
+leggevano come stringhe di formato — marcate `formatted="false"`, che è la
+dichiarazione onesta: sono prosa, non template.
 
 ## Fase 5 — Cielo
 

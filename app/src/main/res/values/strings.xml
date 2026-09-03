@@ -179,4 +179,80 @@
     <string name="first_run_location_why">Only used to find the weather where you are. It never leaves the phone.</string>
     <string name="first_run_search">Search for a city</string>
     <string name="first_run_skip">Not now</string>
+
+    <!-- Settings (Fase 4). Groups appear WITH the feature they control: notifications
+         join in Fase 6, widgets in Fase 8 — a switch that changes nothing would be
+         the screen lying (DESIGN §1.1). -->
+    <string name="settings_title">Settings</string>
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="settings_group_units">Units</string>
+    <string name="settings_temperature">Temperature</string>
+    <string name="settings_temp_celsius">Celsius (°C)</string>
+    <string name="settings_temp_fahrenheit">Fahrenheit (°F)</string>
+    <string name="settings_wind">Wind</string>
+    <string name="settings_wind_kmh">Kilometers per hour (km/h)</string>
+    <string name="settings_wind_mph">Miles per hour (mph)</string>
+    <string name="settings_group_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">Same as the phone</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_dynamic_color">Wallpaper colors</string>
+    <string name="settings_dynamic_color_note">On, the palette comes from your wallpaper. Off, Chiaro wears its own.</string>
+    <string name="settings_group_updates">Updates</string>
+    <string name="settings_update_frequency">Update frequency</string>
+    <string name="settings_update_frequency_note">How long a forecast stays current before Chiaro asks for a fresh one.</string>
+    <string name="settings_freq_15">Every 15 minutes</string>
+    <string name="settings_freq_30">Every 30 minutes</string>
+    <string name="settings_freq_60">Every hour</string>
+    <string name="settings_freq_120">Every 2 hours</string>
+    <string name="settings_group_language">Language</string>
+    <string name="settings_language">App language</string>
+    <string name="settings_language_system">Same as the phone</string>
+    <string name="settings_group_about">About</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_data_source">Weather data</string>
+    <string name="settings_data_source_note">Forecasts, air quality and place search by Open-Meteo</string>
+    <string name="settings_source_code">Source code</string>
+    <string name="settings_source_code_note">Free software, GPL-3.0, on GitHub</string>
+    <string name="settings_privacy">Privacy</string>
+    <string name="settings_privacy_note">No account, no ads, no tracking. The only thing that leaves the phone is the weather request.</string>
+    <string name="settings_reset">Restore the default settings</string>
+    <string name="settings_reset_dialog_title">Restore the defaults?</string>
+    <string name="settings_reset_dialog_body">Units, appearance and update frequency go back to how they started. Your places and your history stay exactly as they are.</string>
+    <string name="settings_reset_confirm">Restore</string>
+
+    <!-- The four verdict words (VISION §5.3). Defined with the guide that teaches
+         them; the Sky screen (Fase 5) speaks the same ones. -->
+    <string name="verdict_pass">Great</string>
+    <string name="verdict_unstable">So-so</string>
+    <string name="verdict_fail">No chance</string>
+    <string name="verdict_unknown">Not sure yet</string>
+
+    <!-- The guide (VISION §5.7): prose, so everything localizes. -->
+    <string name="guide_entry_title">How to read Chiaro</string>
+    <string name="guide_entry_subtitle">Where the data is born, what the verdicts say, why there is no radar</string>
+    <string name="guide_title">The guide</string>
+    <string name="guide_intro">Chiaro tells the sky over your places: a sentence first, then the numbers that decided it. This page answers the questions that come up most often.</string>
+    <string name="guide_data_title">Where the data is born</string>
+    <string name="guide_data_p1">Forecasts, air quality and place search come from Open-Meteo, an open weather service: free, with no account, and the only thing that ever leaves your phone is the weather request itself. If you turn your position on, Chiaro uses the approximate one Android provides, only to ask for the forecast where you are.</string>
+    <string name="guide_data_p2">Sunrise, sunset, the moon and the rest of the sky are computed right on your phone. That is why they are correct even with no connection at all.</string>
+    <string name="guide_data_p3">When an update cannot get through, nothing goes blank: Chiaro keeps the last forecast that arrived, tells you how old it is, and quietly sets aside the hours that have already passed. What you see is always something the data really said.</string>
+    <string name="guide_verdicts_title">What the verdicts say</string>
+    <string name="guide_verdicts_p1">For the moments of the sky worth waiting for — a sunrise, a golden hour, a night of stars — Chiaro answers with a word and a small sign, like this:</string>
+    <string name="guide_verdicts_caption">An example: a night of stars, judged by its clouds.</string>
+    <string name="guide_verdicts_p2">The number next to the word is the evidence that decided it, so you can weigh the answer yourself. And when the forecast does not reach far enough to judge, the answer is the honest one: a grey “not sure yet”, never a guess dressed up as a verdict.</string>
+    <string name="guide_verdict_evidence_pass" formatted="false">10% cloud</string>
+    <string name="guide_verdict_evidence_unstable" formatted="false">45% cloud</string>
+    <string name="guide_verdict_evidence_fail" formatted="false">90% cloud</string>
+    <string name="guide_radar_title">Why there is no radar map</string>
+    <string name="guide_radar_p1">A radar map is a live photograph of rain, taken by ground stations and distributed as images. Open-Meteo, where Chiaro\'s data is born, describes the weather with numbers — how likely, how much, from when until when — and that is the language Chiaro is built to read.</string>
+    <string name="guide_radar_p2">So the question a radar answers — is rain about to reach me? — is answered here in words and numbers: the sentence at the top of the day and, right below it, the rain chances hour by hour. When rain is on its way, Chiaro says so, and says when.</string>
+
+    <!-- The one-time card on Today that points at the guide -->
+    <string name="guide_card_title">New around here?</string>
+    <string name="guide_card_body">Two minutes on where the numbers are born and how to read them.</string>
+    <string name="guide_card_open">Open the guide</string>
+    <string name="guide_card_dismiss">Dismiss</string>
 </resources>

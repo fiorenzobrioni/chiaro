@@ -44,14 +44,26 @@ is short on purpose — three edits, each with its reason in the file:
   Places sheet is reorderable and its swipe-to-remove has an undo, two things
   tweather's Explorer never needed. Additive only — every inherited method and test
   is unchanged. If tweather ever grows the same needs, these belong upstream too.
+- `SettingsStore` lost the editor's vocabulary and gained Chiaro's (Fase 4):
+  `EditorSettings`, `showDetails`, `themeProfileName` and the `lastModified` stamp
+  named surfaces that only exist in tweather (line numbers, the technical JSON view,
+  the three theme profiles, the `// Last modified:` header of `settings.config`);
+  in their place sit `themeMode` and `dynamicColor`, the two keys Chiaro's
+  Appearance group actually edits. The engine-facing keys (units, notifications,
+  sky, update frequency, widget opacity) are byte-for-byte the same preferences.
+  `SettingsStoreTest` is new — upstream never had one.
+- `WorkspaceStore` slimmed to the one concept that survives the reskin (Fase 4): the
+  one-shot pointer to the help surface, renamed onto Chiaro's (`guideCardDismissed`).
+  `MainEditorFile` and the active-tab state left with the editor they described.
 
 ## The known debt
 
 **The inherited comments still speak tweather's vocabulary.** `RuleEngine` and
 `NotificationRule` mention `$ tweather run` (rewritten with Fase 6, when Chiaro's
-alerts surface exists), `WorkspaceStore` mentions a hint in a file that does not exist
-here (Fase 4, with settings). `CityStore`'s were rewritten in Fase 3 — the phase that
-built the surfaces (first run, the Places sheet) their honest replacements had to name.
+alerts surface exists). `CityStore`'s were rewritten in Fase 3 — the phase that
+built the surfaces (first run, the Places sheet) their honest replacements had to
+name — and `SettingsStore`'s and `WorkspaceStore`'s in Fase 4, with the Settings
+screen and the guide card those files now serve.
 
 They were deliberately left alone in Fase 0, and the reason is worth writing down: each
 one names a tweather SURFACE, and the honest replacement is the name of the Chiaro

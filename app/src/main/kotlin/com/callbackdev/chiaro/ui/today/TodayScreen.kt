@@ -4,7 +4,6 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,10 +26,15 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -49,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.core.view.WindowCompat
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
@@ -90,29 +95,43 @@ import kotlinx.coroutines.flow.StateFlow
  */
 @Composable
 fun TodayRoute(
+    onOpenSettings: () -> Unit,
+    onOpenGuide: () -> Unit,
     todayViewModel: TodayViewModel = viewModel(factory = TodayViewModel.Factory),
     placesViewModel: PlacesViewModel = viewModel(factory = PlacesViewModel.Factory)
 ) {
     val pager by todayViewModel.pager.collectAsStateWithLifecycle()
+    val units by todayViewModel.units.collectAsStateWithLifecycle()
+    val guideCard by todayViewModel.guideCardVisible.collectAsStateWithLifecycle()
     var placesOpen by remember { mutableStateOf(false) }
+    // Opening the guide is what the card was for: the two roads share the exit.
+    val openGuideFromCard = {
+        todayViewModel.dismissGuideCard()
+        onOpenGuide()
+    }
 
     when (val model = pager) {
         // The stores have not answered yet: a skeleton under a bare header, never a
         // wrong screen for one frame.
-        null -> GlobalFrame(onOpenPlaces = { placesOpen = true }) {
+        null -> GlobalFrame(onOpenPlaces = { placesOpen = true }, onOpenSettings = onOpenSettings) {
             TodaySkeleton()
         }
         else -> if (model.pages.isEmpty()) {
-            GlobalFrame(onOpenPlaces = { placesOpen = true }) {
+            GlobalFrame(onOpenPlaces = { placesOpen = true }, onOpenSettings = onOpenSettings) {
                 NoPlaceState(onOpenPlaces = { placesOpen = true })
             }
         } else {
             PagedToday(
                 model = model,
+                units = units,
+                guideCardVisible = guideCard,
                 stateFor = todayViewModel::stateFor,
                 onRefresh = todayViewModel::refresh,
                 onSettled = todayViewModel::setActive,
-                onOpenPlaces = { placesOpen = true }
+                onOpenPlaces = { placesOpen = true },
+                onOpenSettings = onOpenSettings,
+                onOpenGuide = openGuideFromCard,
+                onDismissGuideCard = todayViewModel::dismissGuideCard
             )
         }
     }
@@ -134,10 +153,15 @@ fun TodayRoute(
 @Composable
 private fun PagedToday(
     model: PagerModel,
+    units: UnitSettings,
+    guideCardVisible: Boolean?,
     stateFor: (PlacePage) -> StateFlow<TodayUiState>,
     onRefresh: (PlacePage) -> Unit,
     onSettled: (PlacePage) -> Unit,
-    onOpenPlaces: () -> Unit
+    onOpenPlaces: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenGuide: () -> Unit,
+    onDismissGuideCard: () -> Unit
 ) {
     val pages by rememberUpdatedState(model.pages)
     val pagerState = rememberPagerState(
@@ -179,8 +203,13 @@ private fun PagedToday(
                 title = pageTitle(page),
                 isGps = page is PlacePage.Gps,
                 dots = if (pages.size > 1) index to pages.size else null,
+                units = units,
+                guideCardVisible = guideCardVisible,
                 onRefresh = { onRefresh(page) },
-                onOpenPlaces = onOpenPlaces
+                onOpenPlaces = onOpenPlaces,
+                onOpenSettings = onOpenSettings,
+                onOpenGuide = onOpenGuide,
+                onDismissGuideCard = onDismissGuideCard
             )
         }
     }
@@ -192,11 +221,13 @@ private fun pageTitle(page: PlacePage): String = when (page) {
     is PlacePage.Saved -> page.city.name
 }
 
-/** White over the canvas needs dark icons off; the plain states follow the theme. */
+/** White over the canvas needs dark icons off; the plain states follow the theme —
+ * the APPLIED theme, read off the surface itself, because since Fase 4 the reader can
+ * force light or dark against the system and the icons must follow the choice. */
 @Composable
 private fun StatusBarIcons(overCanvas: Boolean) {
     val activity = LocalActivity.current
-    val darkTheme = isSystemInDarkTheme()
+    val darkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     DisposableEffect(overCanvas, darkTheme, activity) {
         activity?.window?.let { window ->
             WindowCompat.getInsetsController(window, window.decorView)
@@ -212,18 +243,27 @@ private fun TodayPage(
     title: String,
     isGps: Boolean,
     dots: Pair<Int, Int>?,
+    units: UnitSettings,
+    guideCardVisible: Boolean?,
     onRefresh: () -> Unit,
-    onOpenPlaces: () -> Unit
+    onOpenPlaces: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenGuide: () -> Unit,
+    onDismissGuideCard: () -> Unit
 ) {
     when (state) {
         is TodayUiState.Content ->
-            ContentState(state, title, isGps, dots, onRefresh, onOpenPlaces)
+            ContentState(
+                state, title, isGps, dots, units, guideCardVisible,
+                onRefresh, onOpenPlaces, onOpenSettings, onOpenGuide, onDismissGuideCard
+            )
         else -> Column(modifier = Modifier.fillMaxSize()) {
             PlaceHeader(
                 title = title,
                 isGps = isGps,
                 dots = dots,
                 onOpenPlaces = onOpenPlaces,
+                onOpenSettings = onOpenSettings,
                 contentColor = MaterialTheme.colorScheme.onSurface,
                 dotInactive = MaterialTheme.colorScheme.outlineVariant,
                 modifier = Modifier
@@ -244,6 +284,7 @@ private fun TodayPage(
 @Composable
 private fun GlobalFrame(
     onOpenPlaces: () -> Unit,
+    onOpenSettings: () -> Unit,
     content: @Composable () -> Unit
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
@@ -253,6 +294,7 @@ private fun GlobalFrame(
                 isGps = false,
                 dots = null,
                 onOpenPlaces = onOpenPlaces,
+                onOpenSettings = onOpenSettings,
                 contentColor = MaterialTheme.colorScheme.onSurface,
                 dotInactive = MaterialTheme.colorScheme.outlineVariant,
                 modifier = Modifier
@@ -280,40 +322,55 @@ private fun PlaceHeader(
     isGps: Boolean,
     dots: Pair<Int, Int>?,
     onOpenPlaces: () -> Unit,
+    onOpenSettings: () -> Unit,
     contentColor: Color,
     dotInactive: Color,
     modifier: Modifier = Modifier
 ) {
     val spoken = if (isGps) stringResource(R.string.header_gps_desc, title) else title
-    Column(modifier = modifier) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier
-                .clickable(onClick = onOpenPlaces)
-                .semantics { contentDescription = spoken }
-        ) {
-            if (isGps) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier
+                    .clickable(onClick = onOpenPlaces)
+                    .semantics { contentDescription = spoken }
+            ) {
+                if (isGps) {
+                    Icon(
+                        imageVector = Icons.Outlined.LocationOn,
+                        contentDescription = null, // the row speaks once, GPS included
+                        tint = contentColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Text(title, style = MaterialTheme.typography.titleLarge, color = contentColor)
                 Icon(
-                    imageVector = Icons.Outlined.LocationOn,
-                    contentDescription = null, // the row speaks once, GPS included
-                    tint = contentColor,
-                    modifier = Modifier.size(20.dp)
+                    imageVector = Icons.Outlined.KeyboardArrowDown,
+                    contentDescription = stringResource(R.string.place_switcher_action),
+                    tint = contentColor
                 )
             }
-            Text(title, style = MaterialTheme.typography.titleLarge, color = contentColor)
-            Icon(
-                imageVector = Icons.Outlined.KeyboardArrowDown,
-                contentDescription = stringResource(R.string.place_switcher_action),
-                tint = contentColor
-            )
+            dots?.let { (selected, count) ->
+                PageDots(
+                    selected = selected,
+                    count = count,
+                    active = contentColor,
+                    inactive = dotInactive
+                )
+            }
         }
-        dots?.let { (selected, count) ->
-            PageDots(
-                selected = selected,
-                count = count,
-                active = contentColor,
-                inactive = dotInactive
+        // The gear of VISION §5.1: settings are visited once a month, so they get an
+        // icon by the place row, not a tab. Same two grounds as the row itself.
+        IconButton(onClick = onOpenSettings) {
+            Icon(
+                imageVector = Icons.Outlined.Settings,
+                contentDescription = stringResource(R.string.settings_title),
+                tint = contentColor
             )
         }
     }
@@ -464,15 +521,17 @@ private fun ContentState(
     title: String,
     isGps: Boolean,
     dots: Pair<Int, Int>?,
+    units: UnitSettings,
+    guideCardVisible: Boolean?,
     onRefresh: () -> Unit,
-    onOpenPlaces: () -> Unit
+    onOpenPlaces: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenGuide: () -> Unit,
+    onDismissGuideCard: () -> Unit
 ) {
     val locale = Locale.getDefault()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val timeFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
-    // Unit settings arrive with the Settings screen (Fase 4); until a switch exists,
-    // the defaults are the truth, not a guess.
-    val units = remember { UnitSettings() }
 
     PullToRefreshBox(isRefreshing = content.refreshing, onRefresh = onRefresh) {
         LazyColumn(
@@ -480,7 +539,12 @@ private fun ContentState(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = WindowInsets.navigationBars.asPaddingValues()
         ) {
-            item { CanvasHeader(content, title, isGps, dots, units, timeFmt, locale, onOpenPlaces) }
+            item {
+                CanvasHeader(
+                    content, title, isGps, dots, units, timeFmt, locale,
+                    onOpenPlaces, onOpenSettings
+                )
+            }
 
             if (content.error != null) {
                 item { ErrorBanner(content.error, onRefresh) }
@@ -493,6 +557,12 @@ private fun ContentState(
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
+            }
+            // The one-time pointer to the guide (VISION 5.7): true shows it, false
+            // and null both draw nothing - a card that flashed while the store was
+            // still answering would be shown to everyone and dismissed by nobody.
+            if (guideCardVisible == true) {
+                item { GuideCard(onOpen = onOpenGuide, onDismiss = onDismissGuideCard) }
             }
 
             item { SectionTitle(stringResource(R.string.section_next_hours)) }
@@ -532,7 +602,8 @@ private fun CanvasHeader(
     units: UnitSettings,
     timeFmt: DateTimeFormatter,
     locale: Locale,
-    onOpenPlaces: () -> Unit
+    onOpenPlaces: () -> Unit,
+    onOpenSettings: () -> Unit
 ) {
     val sky = content.sky
     val current = content.report.current
@@ -554,6 +625,7 @@ private fun CanvasHeader(
             isGps = isGps,
             dots = dots,
             onOpenPlaces = onOpenPlaces,
+            onOpenSettings = onOpenSettings,
             contentColor = Color.White,
             dotInactive = Color.White.copy(alpha = 0.4f),
             modifier = Modifier
@@ -606,6 +678,53 @@ private fun CanvasHeader(
                     color = Color.White
                 )
             }
+        }
+    }
+}
+
+/**
+ * The one-time card that points at the guide (VISION 5.7): a card in the scroll, not
+ * a dialog over it - it waits its turn and never blocks the sky. Opening the guide
+ * uses it up, the X waves it away, and either way it never comes back: the guide
+ * itself stays one tap away in Settings forever.
+ */
+@Composable
+private fun GuideCard(onOpen: () -> Unit, onDismiss: () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 4.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.guide_card_title),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Text(
+                    text = stringResource(R.string.guide_card_body),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            IconButton(onClick = onDismiss) {
+                Icon(
+                    imageVector = Icons.Outlined.Close,
+                    contentDescription = stringResource(R.string.guide_card_dismiss)
+                )
+            }
+        }
+        TextButton(
+            onClick = onOpen,
+            modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
+        ) {
+            Text(stringResource(R.string.guide_card_open))
         }
     }
 }

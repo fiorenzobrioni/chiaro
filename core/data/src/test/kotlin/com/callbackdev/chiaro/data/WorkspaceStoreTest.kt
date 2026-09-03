@@ -31,35 +31,22 @@ class WorkspaceStoreTest {
         scope.cancel()
     }
 
-    @Test
-    fun `first run opens on the JSON file`() = runBlocking {
-        val store = store(tmp.newFile("ws.preferences_pb"))
-        assertEquals(MainEditorFile.JSON, store.mainActiveFile.first())
-    }
-
-    @Test
-    fun `selecting the README is observed`() = runBlocking {
-        val store = store(tmp.newFile("ws.preferences_pb"))
-        store.setMainActiveFile(MainEditorFile.README)
-        assertEquals(MainEditorFile.README, store.mainActiveFile.first())
-    }
-
     /**
-     * Fase 14d: the HELP.md hint is workspace state on purpose — it must not be a
-     * `settings.config` key that `$ git restore` would bring back to a veteran.
+     * The guide card is session state on purpose — a settings reset must not bring
+     * it back to someone who read the guide long ago (VISION §5.7).
      */
     @Test
-    fun `the help hint shows until it is dismissed`() = runBlocking {
+    fun `the guide card shows until it is dismissed`() = runBlocking {
         val store = store(tmp.newFile("ws.preferences_pb"))
-        assertEquals(false, store.helpHintDismissed.first())
+        assertEquals(false, store.guideCardDismissed.first())
 
-        store.dismissHelpHint()
+        store.dismissGuideCard()
 
-        assertEquals(true, store.helpHintDismissed.first())
+        assertEquals(true, store.guideCardDismissed.first())
     }
 
     @Test
-    fun `the active file survives a restart (new store on the same file)`() = runBlocking {
+    fun `the dismissal survives a restart (new store on the same file)`() = runBlocking {
         val file = tmp.newFile("ws.preferences_pb")
         // DataStore allows one active instance per file: the first scope must be
         // FULLY torn down (cancelAndJoin, cancel alone is async) to simulate
@@ -67,8 +54,8 @@ class WorkspaceStoreTest {
         val firstRunJob = SupervisorJob()
         val firstRun = CoroutineScope(Dispatchers.IO + firstRunJob)
         WorkspaceStore(PreferenceDataStoreFactory.create(scope = firstRun) { file })
-            .setMainActiveFile(MainEditorFile.README)
+            .dismissGuideCard()
         firstRunJob.cancelAndJoin()
-        assertEquals(MainEditorFile.README, store(file).mainActiveFile.first())
+        assertEquals(true, store(file).guideCardDismissed.first())
     }
 }

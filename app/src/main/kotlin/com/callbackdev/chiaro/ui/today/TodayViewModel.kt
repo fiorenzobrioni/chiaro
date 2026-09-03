@@ -9,8 +9,10 @@ import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.SettingsStore
+import com.callbackdev.chiaro.data.WorkspaceStore
 import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.settings.UnitSettings
 import java.time.Clock
 import java.time.Duration
 import kotlinx.coroutines.Dispatchers
@@ -67,6 +69,7 @@ class TodayViewModel(
     private val repository: com.callbackdev.chiaro.data.WeatherRepository,
     private val cityStore: CityStore,
     private val settingsStore: SettingsStore,
+    private val workspaceStore: WorkspaceStore,
     private val clock: Clock = Clock.systemUTC()
 ) : ViewModel() {
 
@@ -93,6 +96,25 @@ class TodayViewModel(
         }
         PagerModel(pages, activeIndex)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** The reader's units (Fase 4). Starts on the defaults — the same values a fresh
+     * install chose — and follows the store from its first answer on. */
+    val units: StateFlow<UnitSettings> = settingsStore.settings
+        .map { it.units }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UnitSettings())
+
+    /** The one-time guide card (VISION §5.7). Null until the store answers: a card
+     * that flashes and leaves would be shown to everyone exactly once, dismissed by
+     * nobody. */
+    val guideCardVisible: StateFlow<Boolean?> = workspaceStore.guideCardDismissed
+        .map { dismissed -> !dismissed }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** Used or waved away, the card is done: both roads end here. */
+    fun dismissGuideCard() {
+        viewModelScope.launch { workspaceStore.dismissGuideCard() }
+    }
 
     /** The state of one page, created on first request and shared from then on. */
     fun stateFor(page: PlacePage): StateFlow<TodayUiState> {
@@ -192,7 +214,8 @@ class TodayViewModel(
                 TodayViewModel(
                     repository = ServiceLocator.weatherRepository(app),
                     cityStore = ServiceLocator.cityStore(app),
-                    settingsStore = ServiceLocator.settingsStore(app)
+                    settingsStore = ServiceLocator.settingsStore(app),
+                    workspaceStore = ServiceLocator.workspaceStore(app)
                 )
             }
         }

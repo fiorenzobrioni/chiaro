@@ -1,9 +1,13 @@
 package com.callbackdev.chiaro.ui.shell
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -17,6 +21,8 @@ import com.callbackdev.chiaro.data.FirstRun
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.WeatherRepository
 import com.callbackdev.chiaro.ui.firstrun.FirstRunRoute
+import com.callbackdev.chiaro.ui.guide.GuideRoute
+import com.callbackdev.chiaro.ui.settings.SettingsRoute
 import com.callbackdev.chiaro.ui.today.TodayRoute
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -61,12 +67,49 @@ class ShellViewModel(
     }
 }
 
+/**
+ * The screens the app bar reaches (Fase 4): Settings from the gear, the guide from
+ * Settings or from the one-time card on Today. Held as plain state rather than a nav
+ * graph: three destinations and two edges do not earn one, and the bottom navigation
+ * of VISION §5.1 will re-pose the question when Sky arrives (Fase 5).
+ */
+private enum class ShellScreen { TODAY, SETTINGS, GUIDE }
+
 @Composable
 fun ChiaroRoot(shellViewModel: ShellViewModel = viewModel(factory = ShellViewModel.Factory)) {
     val firstRun by shellViewModel.firstRun.collectAsStateWithLifecycle()
     when (firstRun) {
         FirstRun.Unknown -> Surface(modifier = Modifier.fillMaxSize()) { }
         FirstRun.Pending -> FirstRunRoute(onSkip = shellViewModel::skip)
-        FirstRun.Done -> TodayRoute()
+        FirstRun.Done -> MainScreens()
+    }
+}
+
+@Composable
+private fun MainScreens() {
+    var screen by rememberSaveable { mutableStateOf(ShellScreen.TODAY) }
+    // The guide has two doors (VISION §5.7); back returns through the one it entered.
+    var guideOrigin by rememberSaveable { mutableStateOf(ShellScreen.TODAY) }
+
+    BackHandler(enabled = screen != ShellScreen.TODAY) {
+        screen = if (screen == ShellScreen.GUIDE) guideOrigin else ShellScreen.TODAY
+    }
+
+    when (screen) {
+        ShellScreen.TODAY -> TodayRoute(
+            onOpenSettings = { screen = ShellScreen.SETTINGS },
+            onOpenGuide = {
+                guideOrigin = ShellScreen.TODAY
+                screen = ShellScreen.GUIDE
+            }
+        )
+        ShellScreen.SETTINGS -> SettingsRoute(
+            onBack = { screen = ShellScreen.TODAY },
+            onOpenGuide = {
+                guideOrigin = ShellScreen.SETTINGS
+                screen = ShellScreen.GUIDE
+            }
+        )
+        ShellScreen.GUIDE -> GuideRoute(onBack = { screen = guideOrigin })
     }
 }
