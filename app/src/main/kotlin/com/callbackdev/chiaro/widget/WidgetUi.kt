@@ -152,6 +152,10 @@ private fun palette(
 val WidgetCardPadding = 14.dp
 val WidgetCardPaddingTight = 12.dp
 
+/** The air the Now widget's hero leaves above and below itself: it is one row, so
+ * the glyph may own almost the whole height (4th device pass, measured). */
+val WidgetCardPaddingSnug = 6.dp
+
 /**
  * The card every widget lives in. The sky dress is a bitmap of the same gradient the
  * app's canvas computes for this exact moment, darkened by the §3.6 scrim so white
@@ -166,6 +170,13 @@ fun WidgetCard(
     schemes: WidgetSchemes,
     skyBitmap: Bitmap?,
     contentPadding: Dp = WidgetCardPadding,
+    /**
+     * The leading edge on its own, because a Meteocons glyph carries about a quarter
+     * of its box as margin already: on the Now widget the card adds nothing there and
+     * the icon starts where the card starts, which is what puts its ink level with
+     * the other weather widgets on the home screen (measured, 4th device pass).
+     */
+    contentPaddingStart: Dp = contentPadding,
     content: @Composable (WidgetPalette) -> Unit
 ) {
     val look = model.look
@@ -208,7 +219,14 @@ fun WidgetCard(
             }
             Box(modifier = GlanceModifier.fillMaxSize().background(fill)) {}
         }
-        Box(modifier = GlanceModifier.fillMaxSize().padding(contentPadding)) {
+        Box(
+            modifier = GlanceModifier.fillMaxSize().padding(
+                start = contentPaddingStart,
+                top = contentPadding,
+                end = contentPadding,
+                bottom = contentPadding
+            )
+        ) {
             content(
                 palette(effectiveBackground, schemes, night, look.opacityPct, wallpaperDark)
             )
@@ -310,15 +328,25 @@ fun staleText(context: Context, lastSync: Instant, now: Instant): String {
 /**
  * The hero glyph's size: it fills the height the launcher really granted, between a
  * floor and a ceiling (committente, 3 set — "as big as the Samsung one"). A fixed
- * number could only ever be right on one cell size, and the Meteocons art sits
- * inside about half its box, so the box has to be generous before the glyph reads
- * at arm's length. The floor keeps a squeezed widget legible; the ceiling stops a
- * tall grant from turning the icon into a poster.
+ * number could only ever be right on one cell size, and the Meteocons art draws
+ * inside about half its box (the crescent of `mcf_clear_night` is 33 units of 64),
+ * so the box has to be generous before the glyph reads at arm's length. The floor
+ * keeps a squeezed widget legible; the ceiling stops a tall grant from turning the
+ * icon into a poster.
+ *
+ * Measured on the device's own screenshot (4th pass): the launcher grants the Now
+ * widget about 101 dp of height, so 12 dp of card padding on each side left a 77 dp
+ * box against the neighbouring widget's 87 dp — the reason the Now widget now keeps
+ * only 6 dp above and below.
  */
-fun heroIconSize(available: Dp): Dp = available.coerceIn(HeroIconMin, HeroIconMax)
+fun heroIconSize(
+    available: Dp,
+    min: Dp = HeroIconMin,
+    max: Dp = HeroIconMax
+): Dp = available.coerceIn(min, max)
 
 private val HeroIconMin = 52.dp
-private val HeroIconMax = 96.dp
+private val HeroIconMax = 104.dp
 
 /** The rain figure's ink: the §2.3 ramp selected for the ground the card really
  * has, the secondary ink when there is nothing to say — the app strip's own rule. */

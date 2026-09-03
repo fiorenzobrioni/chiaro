@@ -234,25 +234,110 @@
     <string name="verdict_fail">No chance</string>
     <string name="verdict_unknown">Not sure yet</string>
 
-    <!-- The guide (VISION §5.7): prose, so everything localizes. -->
+    <!-- The guide (VISION §5.7): prose, so everything localizes. Since the 4th
+         device pass it is a tour of the four screens - what each one answers and the
+         handful of things a screen cannot say out loud - and no longer a chapter
+         justifying a radar map nobody asked for. -->
     <string name="guide_entry_title">How to read Chiaro</string>
-    <string name="guide_entry_subtitle">Where the data is born, what the verdicts say, why there is no radar</string>
+    <string name="guide_entry_subtitle">The four screens, what the verdicts say, where the numbers come from</string>
     <string name="guide_title">The guide</string>
-    <string name="guide_intro">Chiaro tells the sky over your places: a sentence first, then the numbers that decided it. This page answers the questions that come up most often.</string>
-    <string name="guide_data_title">Where the data is born</string>
-    <string name="guide_data_p1">Forecasts, air quality and place search come from Open-Meteo, an open weather service: free, with no account, and the only thing that ever leaves your phone is the weather request itself. If you turn your position on, Chiaro uses the approximate one Android provides, only to ask for the forecast where you are.</string>
-    <string name="guide_data_p2">Sunrise, sunset, the moon and the rest of the sky are computed right on your phone. That is why they are correct even with no connection at all.</string>
-    <string name="guide_data_p3">When an update cannot get through, nothing goes blank: Chiaro keeps the last forecast that arrived, tells you how old it is, and quietly sets aside the hours that have already passed. What you see is always something the data really said.</string>
-    <string name="guide_verdicts_title">What the verdicts say</string>
-    <string name="guide_verdicts_p1">For the moments of the sky worth waiting for — a sunrise, a golden hour, a night of stars — Chiaro answers with a word and a small sign, like this:</string>
+    <string name="guide_intro">Chiaro tells you what the sky over your places is doing, and what to do about it: a sentence first, then the numbers that decided it. This guide walks through the four screens, says what each one answers, and points out the things worth knowing that a screen cannot say out loud.</string>
+
+    <string name="guide_map_title">The four screens</string>
+    <string name="guide_map_today">The sky right now, and how the day will go.</string>
+    <string name="guide_map_sky">The moments of the sky, and whether tonight is worth it.</string>
+    <string name="guide_map_alerts">What should tell you, and when.</string>
+    <string name="guide_map_journal">How the forecast has been changing.</string>
+    <string name="guide_map_note">Your places are one tap away, behind the name at the top of the screen; the settings are behind the gear beside it.</string>
+
+    <string name="guide_today_title">Today</string>
+    <string name="guide_today_p1">The sky at the top is not a photograph: it is computed for this minute from the height of the sun, the clouds, the rain and the moon, so at three in the morning under a clear sky it is the same deep blue you would see outside. The thin band under it is the day itself, from first light to last, with the hour you are in marked on it.</string>
+    <string name="guide_today_headline_title">The sentence</string>
+    <string name="guide_today_headline_body">When there is something worth saying — an umbrella around five, a thunderstorm at three — it is written above every number. When there is nothing to say, no sentence appears: quiet is an answer too.</string>
+    <string name="guide_today_rain_title">Is it about to rain?</string>
+    <string name="guide_today_rain_body">Two places answer that: the sentence at the top and, right below it, the chances hour by hour, with the peak of the coming hours marked on the small rain curve. Chiaro describes rain the way its data arrives — how likely, how much, from when to when.</string>
+    <string name="guide_today_fresh_title">How fresh the numbers are</string>
+    <string name="guide_today_fresh_body">When what you are reading is no longer fresh, Chiaro says its real age instead of hiding it, and an update that failed says why. Pull the screen down to ask for a new one, or tap the age itself to try again.</string>
+    <string name="guide_today_fresh_caption">An example: the age of what you are reading — tap it to try again.</string>
+    <string name="guide_today_hours_title">The next hours</string>
+    <string name="guide_today_hours_body">Twenty-four hours of temperature, sky and rain chance, starting from the hour after this one: the hour you are in is the big number at the top.</string>
+    <string name="guide_today_rest_title">The rest of the day</string>
+    <string name="guide_today_rest_body">One timeline for everything still ahead: sunrise or sunset, the golden and blue hours, the moment the sky goes fully dark, moonrise and moonset, and the hours rain is expected to start and ease off.</string>
+    <string name="guide_today_week_title">The week</string>
+    <string name="guide_today_week_body">Seven days on one shared temperature scale, so the same bar length means the same thing on every row. The stripe under each day is its light, from dawn to dusk. Tap a day to open its hours.</string>
+    <string name="guide_today_details_title">The details</string>
+    <string name="guide_today_details_body">UV, wind, humidity, dew point, pressure, visibility, air quality and pollen. Each number carries the line that says what to do about it, which is the only reason it is on the screen.</string>
+    <string name="guide_today_details_caption">An example: two details, each with the line that says what to do about it.</string>
+    <string name="guide_today_changed_title">What changed</string>
+    <string name="guide_today_changed_body">When the latest update moves the days ahead, up to three sentences say how. Tap them and the whole story opens in the Journal.</string>
+    <string name="guide_today_places_title">More than one place</string>
+    <string name="guide_today_places_body">Swipe sideways to move between your places; the dots under the sky say where you are.</string>
+
+    <string name="guide_sky_title">Sky</string>
+    <string name="guide_sky_p1">This is the screen no other weather app ships. It takes the moments worth waiting for — a sunrise, a golden hour, a night of stars, a meteor peak — and says whether tonight is one of the good ones. Everything on it is computed on your phone, so it works with no connection at all.</string>
+    <string name="guide_sky_tonight_title">Tonight</string>
+    <string name="guide_sky_tonight_body">The card at the top is the dark window: the hours when the sky is genuinely dark and the moon is out of the way. It carries the verdict, the two hours it runs between, and the number that decided it.</string>
+    <string name="guide_verdicts_p1">A verdict is a word, a small sign and the number behind it — never a colour alone:</string>
     <string name="guide_verdicts_caption">An example: a night of stars, judged by its clouds.</string>
-    <string name="guide_verdicts_p2">The number next to the word is the evidence that decided it, so you can weigh the answer yourself. And when the forecast does not reach far enough to judge, the answer is the honest one: a grey “not sure yet”, never a guess dressed up as a verdict.</string>
+    <string name="guide_verdicts_p2">The number next to the word is the evidence that decided it, so you can weigh the answer yourself. When the forecast does not reach that far, or the last one that arrived is too old to trust, the answer is the honest one: a grey “not sure yet”, never a guess dressed up as a verdict.</string>
     <string name="guide_verdict_evidence_pass" formatted="false">10% cloud</string>
     <string name="guide_verdict_evidence_unstable" formatted="false">45% cloud</string>
     <string name="guide_verdict_evidence_fail" formatted="false">90% cloud</string>
-    <string name="guide_radar_title">Why there is no radar map</string>
-    <string name="guide_radar_p1">A radar map is a live photograph of rain, taken by ground stations and distributed as images. Open-Meteo, where Chiaro\'s data is born, describes the weather with numbers — how likely, how much, from when until when — and that is the language Chiaro is built to read.</string>
-    <string name="guide_radar_p2">So the question a radar answers — is rain about to reach me? — is answered here in words and numbers: the sentence at the top of the day and, right below it, the rain chances hour by hour. When rain is on its way, Chiaro says so, and says when.</string>
+    <string name="guide_sky_moments_title">The moments ahead</string>
+    <string name="guide_sky_moments_body">The moments you follow, in the order they happen. One that is over is replaced by its next occurrence and the row says which day it is; one that is happening right now says so. It is the same moment the Sky widget shows on your home screen, resolved the same way.</string>
+    <string name="guide_sky_moment_caption">An example: tomorrow\'s sunrise, judged by its clouds.</string>
+    <string name="guide_sky_bell_title">The bell</string>
+    <string name="guide_sky_bell_body">Each moment can remind you, with its own lead time or the usual one. Reminders are deliberately loose — they can arrive a few minutes early or late — and that looseness is exactly what keeps them off your battery. A reminder for something the clouds are going to hide stays quiet, unless you ask for it anyway.</string>
+    <string name="guide_sky_events_title">Coming up</string>
+    <string name="guide_sky_events_body">The calendar ahead: meteor peaks with their dates, the next full moon, solstices and equinoxes — with a verdict where the forecast reaches that far and an honest “too far out to say” where it does not.</string>
+    <string name="guide_sky_catalog_title">Add a moment</string>
+    <string name="guide_sky_catalog_body">Thirty-two moments, grouped by sun, night, moon, seasons and meteor showers, each with the one line that says what it is. This is the place to find out what a blue hour actually is: by adding one.</string>
+
+    <string name="guide_alerts_title">Alerts</string>
+    <string name="guide_alerts_p1">Two kinds live here: the ones already written, and the ones you write. Nothing arrives that you did not switch on.</string>
+    <string name="guide_alerts_ready_title">Ready-made</string>
+    <string name="guide_alerts_ready_body" formatted="false">Three switches, each saying exactly what it sends and when: severe weather in the next 12 hours (at most one per storm), rain past 70% likely within 6 hours (at most twice a day), and the morning summary, once between 6 and 12.</string>
+    <string name="guide_alerts_yours_title">Yours</string>
+    <string name="guide_alerts_yours_body">Start from an idea — a window to run, ice tomorrow morning, a clear night — or build the sentence yourself: what to watch, how to compare it, the threshold, and a second condition if you want one. Values are picked, never typed, so an alert cannot be written wrong.</string>
+    <string name="guide_alerts_preview_title">Try it now</string>
+    <string name="guide_alerts_preview_body">Runs your alert against the forecast already on the phone and tells you what it would have done. Nothing is sent, nothing is recorded.</string>
+    <string name="guide_alerts_message_title">The message is yours</string>
+    <string name="guide_alerts_message_body">Chiaro never rewrites it and never translates it. Words in braces become numbers when it fires: {trigger.value} is what set it off, {trigger.time} is when.</string>
+    <string name="guide_alerts_battery_title">What it costs</string>
+    <string name="guide_alerts_battery_body">Nothing extra: the checks ride the weather update you already asked for, at the rhythm you chose in the settings. Android asks for notification permission the first time you turn an alert on.</string>
+
+    <string name="guide_journal_title">Journal</string>
+    <string name="guide_journal_p1">Every update leaves a line. The Journal is that record read as prose, newest first, grouped by day.</string>
+    <string name="guide_journal_entries_title">What is written there</string>
+    <string name="guide_journal_entries_body">How the forecast moved for the days ahead, which of your alerts fired and when, which sky moments were actually observed and with what verdict — and the updates that did not make it, with the reason. A failed update is an entry, not a silence.</string>
+    <string name="guide_journal_drift_title">How the week has been moving</string>
+    <string name="guide_journal_drift_body">One row per day ahead, one column per update, the colour on the metric\'s own scale: rain, or the highs. It answers the question anyone planning a weekend actually asks — is this getting better or worse? Hold it to see the numbers behind the colours.</string>
+    <string name="guide_journal_drift_caption">An example: three days, six updates, on the rain scale.</string>
+
+    <string name="guide_places_title">Your places</string>
+    <string name="guide_places_p1">The name at the top of Today and Sky opens the list of places, and that is where they are all managed.</string>
+    <string name="guide_places_search_title">Adding one</string>
+    <string name="guide_places_search_body">Type a couple of letters and the results arrive as you go; the searches you have already made stay within reach. Search needs a connection, everything else does not.</string>
+    <string name="guide_places_gps_title">My position</string>
+    <string name="guide_places_gps_body">Optional, and only ever asked for when you turn it on. Chiaro uses the approximate position Android provides, only to ask for the forecast where you are; it never runs in the background and it never leaves the phone.</string>
+    <string name="guide_places_order_title">Order and removal</string>
+    <string name="guide_places_order_body">Move a place up or down and the swipe on Today follows that order. Swipe a place away to remove it, with a moment to undo if it was a mistake.</string>
+
+    <string name="guide_widgets_title">The home widgets</string>
+    <string name="guide_widgets_three_title">Three of them</string>
+    <string name="guide_widgets_three_body">Now: icon, temperature, place. Today: that, plus the day\'s sentence and the next hours. Sky: the moment in front of you and its verdict — the same one the Sky screen shows.</string>
+    <string name="guide_widgets_config_title">Setting one up</string>
+    <string name="guide_widgets_config_body">Press and hold a widget to open its own settings: which place it watches (the active one, or a fixed place of its own), its background — including the same computed sky the app draws — and how solid that background is.</string>
+    <string name="guide_widgets_honest_title">They never invent</string>
+    <string name="guide_widgets_honest_body">Old data says how old it is, a widget with no place says so, and none of them shows a number it does not have. They repaint when an update lands, so they cost no battery of their own.</string>
+
+    <string name="guide_settings_title">Settings</string>
+    <string name="guide_settings_body">Units for temperature and wind; appearance, where the theme, the two drawings of the weather icons and the wallpaper palette live; how often to look for a new forecast; the app language, on Android\'s own picker. Restoring the defaults puts units, appearance and frequency back as they started and leaves your places and your history exactly where they are.</string>
+
+    <string name="guide_data_title">Where the numbers come from</string>
+    <string name="guide_data_p1">Forecasts, air quality and place search come from Open-Meteo, an open weather service: free, with no account, and the only thing that ever leaves your phone is the weather request itself. No account, no ads, no tracking.</string>
+    <string name="guide_data_p2">Sunrise, sunset, the moon and the whole sky module are computed right on your phone. That is why they are correct even with no connection at all.</string>
+    <string name="guide_data_p3">When an update cannot get through, nothing goes blank: Chiaro keeps the last forecast that arrived, tells you how old it is, and quietly sets aside the hours that have already passed. What you see is always something the data really said.</string>
 
     <!-- The one-time card on Today that points at the guide -->
     <string name="guide_card_title">New around here?</string>
@@ -517,11 +602,6 @@
     <string name="notif_summary_body">%1$s. Low %2$s, high %3$s, rain %4$d%%.</string>
     <string name="notif_rule_title">“%1$s” · %2$s</string>
 
-    <!-- The guide's fourth chapter, landed with the screen it is about -->
-    <string name="guide_alerts_title">How the alerts work</string>
-    <string name="guide_alerts_p1">The ready-made ones are switches: severe weather ahead, rain in the next hours, the morning summary. Next to each one is written exactly what it sends and when, so nothing arrives that you did not ask for.</string>
-    <string name="guide_alerts_p2">Then there are yours. Each one is a sentence with three pieces to tap: what to watch, how to compare it, the threshold. “Try it now” runs it on the data the app already has and tells you what it would have done, without sending anything.</string>
-    <string name="guide_alerts_p3">The checks travel with the weather updates, at the same rhythm, so alerts cost no extra battery. And the message of an alert of yours is yours: Chiaro never rewrites it and never translates it.</string>
 
     <!-- The Journal (Fase 7): the history read as prose, and the drift of the week -->
     <string name="tab_journal">Journal</string>

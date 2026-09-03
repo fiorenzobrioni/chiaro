@@ -354,10 +354,18 @@ Standard M3 preferences, grouped: units, appearance (theme, dynamic color, canva
 frequency, notifications, widgets, language, about. Reset is a destructive-styled item with a
 confirmation dialog rather than a two-tap `$` command.
 
-`HELP.md` becomes **the guide**: short, illustrated, answering the four questions a new reader has
-(where the data comes from, what the sky verdicts mean, how alerts work, why there is no radar).
-Reachable from settings and from a one-time card on the home screen. It never explains an interface
-element, because an interface element that needs explaining is a bug in this edition.
+`HELP.md` becomes **the guide**: a tour of the four screens — what each one answers, what it can do,
+and the things a screen cannot say out loud (that the sky is computed rather than photographed, that
+a reminder is loose on purpose, that a failed update is a line in the Journal) — closing on where the
+numbers come from. It teaches by showing the app's OWN components as examples, each captioned as one:
+the verdict chips, a details tile, the freshness chip, a miniature of the drift strip. Reachable from
+settings and from a one-time card on the home screen.
+
+Two rules hold it in shape. It **never teaches a control**, because a control that needs explaining is
+a bug in this edition: it says what a screen is for, never which button to press. And it **never
+justifies an absence** — the chapter on why there is no radar map was cut on the committente's call
+(4th device pass): a guide is where a product says what it does, and the useful half of that chapter,
+where the answer to "is it about to rain?" actually lives, belongs in the tour of Today.
 
 ### 5.8 First run
 

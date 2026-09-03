@@ -52,10 +52,14 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   the system per-app language picker, about, and a reset that says exactly what it
   restores and what it leaves alone. Groups arrive with the feature they control, so
   notifications and widgets join in their own phases.
-- The guide (Fase 4): where the data is born, what the sky verdicts say, why there is
-  no radar map — short prose in both languages, illustrated with the app's own
-  components, reachable from Settings forever and pointed at once by a dismissable
-  card on Today.
+- The guide (Fase 4, rewritten in the widget-and-guide pass): a tour of the four
+  screens in both languages — what each one answers, what it can do, and the things a
+  screen cannot say out loud (the sky is computed rather than photographed, a reminder
+  is loose on purpose, a failed update is a line in the Journal), followed by where the
+  numbers come from. It teaches with the app's own components shown as examples —
+  verdict chips, a details tile, the freshness chip, a miniature drift strip, each with
+  a caption saying it is an example. Reachable from Settings forever and pointed at once
+  by a dismissable card on Today.
 - The Sky screen (Fase 5): tonight's verdict on the dark window with the numbers that
   decided it (and the moon named when it was the moon), the subscribed moments ahead
   resolved in the city's own timezone — a moment that is over is replaced by its next
@@ -82,8 +86,6 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   that cancels itself when nothing is left to serve. The notifiers stay in the app
   behind an interface, and they speak prose: a severe-weather heads-up reads
   "Temporale verso le 18:00", never a data dump.
-- The guide's fourth chapter (Fase 6): how the alerts work, landed together with the
-  screen it describes.
 - The Journal (Fase 7): the history table read as prose, newest first, grouped by
   day — forecast revisions with their numbers ("Saturday improved: rain 70% → 30%"),
   fired alerts, the sky moments the app observed (with the verdict, or an honest "no
@@ -120,3 +122,9 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 - The last of the editor's vocabulary in the data layer (Fase 4): line numbers, word
   wrap, the technical-details toggle, the theme-profile name and the editor tab state.
   Chiaro's settings hold what Chiaro's screens actually edit.
+- The guide's chapter on why there is no radar map: a guide is where a product says
+  what it does, not where it defends what it is not. The useful half of it survives
+  inside the tour of Today, where the answer to "is it about to rain?" actually lives.
+- The day's low and high from the Now and Today widgets: beside a 34sp number the pair
+  read as clutter on a home screen, and VISION §5.9 asks those cards for icon,
+  temperature and place.

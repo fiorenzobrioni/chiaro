@@ -53,7 +53,11 @@ class NowWidget : GlanceAppWidget() {
         provideContent {
             WidgetCard(
                 model, schemes, skyBitmap,
-                contentPadding = WidgetCardPaddingTight
+                contentPadding = WidgetCardPaddingSnug,
+                // Nothing on the leading edge: the glyph's own margin is the inset,
+                // and it lands the icon where the neighbouring weather widgets put
+                // theirs (measured on the device's screenshot, 4th pass).
+                contentPaddingStart = 0.dp
             ) { palette ->
                 when (val content = model.content) {
                     null -> if (model.city == null) {
@@ -89,11 +93,17 @@ private fun NowContent(
                 )
             ),
             contentDescription = null, // the temperature and place say it in words
+            // One row, one hero: the icon takes the whole height the card is not
+            // using, floor 56dp so a squeezed grant stays legible.
             modifier = GlanceModifier.size(
-                heroIconSize(LocalSize.current.height - WidgetCardPaddingTight * 2)
+                heroIconSize(
+                    LocalSize.current.height - WidgetCardPaddingSnug * 2,
+                    min = 56.dp
+                )
             )
         )
-        Column(modifier = GlanceModifier.padding(start = 12.dp).fillMaxWidth()) {
+        // 8dp, not 12: a quarter of the glyph's box is already empty on that side.
+        Column(modifier = GlanceModifier.padding(start = 8.dp).fillMaxWidth()) {
             // Icon, temperature, place — VISION §5.9's three, and only those: the
             // day's range next to the number read as clutter on the home screen
             // (committente, 3 set) and it is one tap away in the app.

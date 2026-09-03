@@ -379,7 +379,9 @@ DESIGN.md §3.6 aggiornato con il contratto a due bande.
       letti da `MainActivity`; l'ingranaggio vive accanto al selettore del luogo
 - [x] Le unità vere arrivano a Oggi (chiusa la nota "Fase 4" in `ContentState`)
 - [x] La guida: dove nascono i dati, cosa dicono i verdetti, perché niente radar —
-      prosa IT/EN, illustrata coi componenti veri (i quattro `VerdictChip`)
+      prosa IT/EN, illustrata coi componenti veri (i quattro `VerdictChip`).
+      **Riscritta come giro delle quattro schermate nella passata su device del 3 set
+      (in fondo a Fase 8), col capitolo sul radar tolto**
 - [x] La card una-tantum su Oggi che punta alla guida: usata o chiusa, sparisce per
       sempre; la guida resta raggiungibile dalle Impostazioni
 
@@ -411,11 +413,12 @@ DESIGN.md §3.6 aggiornato con il contratto a due bande.
   quattro parole (*Bello*, *Così così*, *Niente da fare*, *Presto per dirlo*) nascono
   qui, nella pagina che le spiega, e la Fase 5 parlerà le stesse.
 - **Il tono della guida è una regola, non un caso**: ogni scelta di prodotto vi
-  compare come un fatto su come funzionano le cose (il radar è un'immagine
-  distribuita come tale; i dati di Chiaro sono numeri, e la stessa domanda trova
-  risposta nella frase e nelle probabilità orarie), mai come un giudizio di valore, e
+  compare come un fatto su come funzionano le cose, mai come un giudizio di valore, e
   senza paragoni con altre app. La guida inoltre non spiega mai un elemento
   dell'interfaccia: un elemento che ha bisogno di spiegazione è un bug (VISION §5.7).
+  *(Il corollario «e non giustifica un'assenza» è arrivato dopo, col taglio del
+  capitolo sul radar: la risposta a «sta per piovere?» è rimasta, il paragone
+  implicito no.)*
 - **Il dialogo di reset dice cosa NON tocca**: luoghi, storico e card della guida
   sopravvivono, e non per caso — il reset pulisce il solo DataStore delle
   impostazioni, e la card vive in `workspace` proprio perché un ripristino non deve
@@ -830,6 +833,42 @@ Quattro rilievi, due dei quali hanno rifatto il vestito dei widget:
       falso. Cinque test nuovi in `SkyStateBuilderTest`, fra cui quello che
       lega le due superfici: il momento del widget è la prima riga della schermata
       che fira davvero.
+  - **Quinta passata (misurata sullo screenshot, 3 set notte)** — il widget Ora
+    ancora troppo timido accanto a quello Samsung. Misure vere invece che a occhio:
+    dal raggio della card (24 dp = 54 px) lo screenshot dà ~2.25 px/dp, quindi il
+    widget Ora riceve ~101 dp di altezza e l'Oggi ~235 dp; il glifo Samsung è 101 px,
+    quello di Chiaro era 90 px e partiva 25 px più a destra. Due correzioni: il
+    cartoncino del Now scende a 6 dp sopra e sotto e a **zero sul bordo iniziale** (il
+    disegno Meteocons porta già un quarto di scatola come margine: è quello l'incasso,
+    e l'icona parte dove parte la card), e il soffitto di `heroIconSize` sale a 104 dp.
+    Sulla stessa densità l'icona passa da 77 a 89 dp — glifo ~103 px, bordo a ~121 px
+    contro i 118 px del vicino. Il testo si stacca dall'icona a 8 dp invece di 12,
+    perché quel quarto di margine è già aria. Oggi e Cielo non si toccano.
+  - **La guida riscritta** (chiesta dal committente insieme alla passata widget):
+    - **Il capitolo «perché non c'è il radar» esce.** Valutato e condiviso: una guida
+      è il posto dove un prodotto dice cosa fa, non dove difende ciò che non è, e
+      metterlo terzo su quattro capitoli piazzava un'assenza nel posto migliore della
+      pagina. La metà utile — dove sta la risposta a «sta per piovere?» — sopravvive
+      dentro il giro di Oggi, senza nominare il radar.
+    - **Da quattro domande a un giro delle quattro schermate**: la mappa della barra
+      in basso (con le icone vere), poi Oggi, Cielo, Avvisi, Diario, poi luoghi,
+      widget, impostazioni, e in chiusura da dove arrivano i numeri. Ogni schermata:
+      una frase su cosa risponde, poi le sue funzioni una per una, col titolo in
+      primary e la riga che dice a cosa serve.
+    - **Riferimenti grafici, non screenshot**: la guida mostra i componenti VERI —
+      i quattro chip di verdetto (già c'erano), una riga di momento del Cielo col
+      marcatore «Domani», il chip di freschezza, due tessere dei dettagli, una
+      miniatura della striscia di deriva sulla rampa della pioggia — ognuno con la
+      didascalia che dice che è un esempio. Uno screenshot invecchia al primo
+      restyling; un componente vero no, e segue tema, unità e stile delle icone.
+    - **La regola che resta**: la guida non insegna un comando. Dice a cosa serve una
+      schermata e cosa può fare, mai quale bottone premere — un elemento che ha
+      bisogno di spiegazioni resta un bug di questa edizione (VISION §5.7, riscritto).
+    - Settanta stringhe nuove in due lingue in una sola sessione sono esattamente il
+      posto dove se ne dimentica una: arriva `StringsParityTest` (ogni stringa
+      traducibile esiste in entrambe le lingue, nessun nome dichiarato due volte,
+      stessi argomenti di formato nelle due versioni). Ha già pagato l'affitto: ha
+      trovato i doppioni del vecchio capitolo Avvisi rimasti nel file.
 
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
