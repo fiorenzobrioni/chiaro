@@ -12,20 +12,23 @@ import org.junit.Test
  * proves nothing about the next. What the numbers below encode:
  *
  * - the card spends 24dp on its own padding (12 top, 12 bottom);
- * - a hero with a verdict costs 80 more (48dp glyph, 6dp gap, 26dp pill), so 104 in
- *   all; a hero without one costs 48, so 72;
- * - every further moment costs 26 (a 20dp glyph and its 6dp gap).
+ * - a hero with a verdict costs 80 more (48dp glyph, 6dp gap, 26dp pill); without one
+ *   it costs 48;
+ * - the air between the moment and its list costs 10, charged once;
+ * - every further moment costs 28 (a 22dp row and its 6dp gap).
+ *
+ * So the first row arrives at 114 + 28 = 142dp of grant, and at 110 when the hero
+ * carries no verdict.
  */
 class SkyWidgetRowsTest {
 
     @Test
     fun `the first row arrives at the height that actually fits it`() {
-        // 104dp of grant is the hero and its pill; a row needs 26 more.
-        assertEquals(0, skyExtraRows(129.dp, heroHasVerdict = true, available = 5))
-        assertEquals(1, skyExtraRows(130.dp, heroHasVerdict = true, available = 5))
-        assertEquals(1, skyExtraRows(155.dp, heroHasVerdict = true, available = 5))
-        assertEquals(2, skyExtraRows(156.dp, heroHasVerdict = true, available = 5))
-        assertEquals(3, skyExtraRows(182.dp, heroHasVerdict = true, available = 5))
+        assertEquals(0, skyExtraRows(141.dp, heroHasVerdict = true, available = 5))
+        assertEquals(1, skyExtraRows(142.dp, heroHasVerdict = true, available = 5))
+        assertEquals(1, skyExtraRows(169.dp, heroHasVerdict = true, available = 5))
+        assertEquals(2, skyExtraRows(170.dp, heroHasVerdict = true, available = 5))
+        assertEquals(3, skyExtraRows(198.dp, heroHasVerdict = true, available = 5))
     }
 
     @Test
@@ -36,14 +39,14 @@ class SkyWidgetRowsTest {
     }
 
     @Test
-    fun `an unjudged hero leaves the pill's room, and a row takes it`() {
+    fun `an unjudged hero leaves the pill's room, and a row takes it sooner`() {
         // Solar noon and the moon's phase carry no verdict: nothing the clouds can
         // spoil has one (the catalog's `observable` rule). The 32dp the pill would
         // have used is real space, and leaving it empty would be the widget refusing
         // to say something true it has room for.
-        assertEquals(0, skyExtraRows(97.dp, heroHasVerdict = false, available = 5))
-        assertEquals(1, skyExtraRows(98.dp, heroHasVerdict = false, available = 5))
-        assertEquals(1, skyExtraRows(101.dp, heroHasVerdict = false, available = 5))
+        assertEquals(0, skyExtraRows(109.dp, heroHasVerdict = false, available = 5))
+        assertEquals(1, skyExtraRows(110.dp, heroHasVerdict = false, available = 5))
+        assertEquals(2, skyExtraRows(138.dp, heroHasVerdict = false, available = 5))
     }
 
     @Test

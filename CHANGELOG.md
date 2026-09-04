@@ -166,10 +166,18 @@ polish:
   before, and every cell after that adds compact rows — glyph, name, when, and the
   verdict's word in the verdict's own color — off the same ordered list the Sky screen
   reads. Four subscriptions draw four rows on a widget with room for six: the list is
-  never padded out.
+  never padded out, and the block sits in the middle of the space it does not fill
+  rather than clinging to the top edge. Every verdict on a row wears the same chip the
+  hero's pill is made of — a bare colored word was hard to read on a dark card, because
+  the app's verdict inks are measured against the app's SURFACE and a widget's ground is
+  a scrimmed sky or somebody's wallpaper; ink and container are a measured pair, so a
+  chip carries its own ground with it.
 - **The Now widget can show the sky's state beside the temperature**, off by default and
   switched on per widget in its own settings rather than appearing and vanishing as the
-  widget is resized. The standard layout is untouched.
+  widget is resized. The standard layout is untouched. The words are set at three fifths
+  of the hero number and given the card's own 12dp of air, optically centred against it:
+  small and close, they read as something stuck to the degree sign rather than said with
+  it.
 - **The five starting-point alerts are named with a capital** ("Bike", not "bike"). The
   lowercase came from tweather, where a rule lives in a configuration file and a lowercase
   identifier is the code register — the one register this product deliberately does not

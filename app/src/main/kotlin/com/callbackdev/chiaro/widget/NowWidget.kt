@@ -80,8 +80,17 @@ class NowWidget : GlanceAppWidget() {
 /** The hero number's size, named because the ink balance below is measured off it. */
 private const val TemperatureSp = 34f
 
-/** The state's size: the place name's, because they are the same kind of word. */
-private const val ConditionSp = 15f
+/**
+ * The state's size and the air around it (committente, 4 set: at the place name's
+ * 15sp and 6dp away it read as an afterthought stuck to the degree sign).
+ *
+ * 20sp is roughly three fifths of the hero, which puts three clear steps on the card
+ * — 34 for the number, 20 for what the sky is doing, 15 for where — instead of two
+ * sizes competing and one of them losing. The gap is the card's own 12, and the
+ * degree sign donates a little more optical space on top of it.
+ */
+private const val ConditionSp = 20f
+private val ConditionGap = 12.dp
 
 @Composable
 private fun NowContent(
@@ -131,7 +140,14 @@ private fun NowContent(
             // the reader asked for it in the widget's own settings (committente,
             // 4 set): the standard dress is the one tuned on device, and this is the
             // room a wide widget can spend rather than a size the layout reacts to.
-            Row(verticalAlignment = Alignment.Bottom) {
+            // Optically centred, not bottom- or baseline-aligned (committente, 4 set
+            // — bottom-aligned and small, the word read as something stuck on the
+            // number rather than said with it). Glance has no baseline alignment; but
+            // at these two sizes the system font puts each block's visible ink almost
+            // exactly at the centre of its own box, so centring the two boxes centres
+            // the two inks — which is the treatment a small label beside a big numeral
+            // wants anyway.
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = Formats.temperature(
                         current.tempC, model.settings.units.temperature, locale
@@ -143,19 +159,13 @@ private fun NowContent(
                     )
                 )
                 if (model.look.showCondition) {
-                    // Bottom, because Glance has no baseline alignment: the app's own
-                    // hero puts two type sizes on one line with `alignByBaseline` and
-                    // says why (TodayScreen, 2 set), and bottom-aligning two boxes
-                    // lands the small word within a few dp of the big number's
-                    // baseline — the nearest true thing available on this side of the
-                    // fence.
                     Text(
                         text = context.getString(
                             WeatherText.condition(current.condition.wmoCode)
                         ),
                         style = secondaryStyle(palette, ConditionSp.sp),
                         maxLines = 1,
-                        modifier = GlanceModifier.padding(start = 6.dp)
+                        modifier = GlanceModifier.padding(start = ConditionGap)
                     )
                 }
             }

@@ -1020,6 +1020,36 @@ e una è una forma che non regge.
   della regola e la notifica «Bici» · Milano. Cambia **solo il seme**: una regola già salvata
   tiene il nome che le ha dato il lettore, che è testo suo e non nostro da correggere.
 
+- **Ritocco sui due widget, sullo screenshot del device (committente, 4 set sera).**
+  - **Ora, lo stato**: a 15sp e 6dp dal numero si leggeva come una cosa attaccata al
+    segno di grado. Ora 20sp — circa tre quinti dell'eroe, che mette tre gradini chiari
+    sulla card (34 il numero, 20 cosa fa il cielo, 15 dove) invece di due corpi che si
+    fanno concorrenza — e 12dp d'aria, i 12 della card. Allineamento **ottico**
+    (`CenterVertically`) e non più al fondo: Glance non ha l'allineamento alla linea di
+    base, ma a questi due corpi il font di sistema mette l'inchiostro visibile quasi
+    esattamente al centro della propria scatola, quindi centrare le scatole centra gli
+    inchiostri — che è poi il trattamento che una parolina accanto a un numerone vuole.
+  - **Cielo, il verdetto delle righe**: il verde nudo era poco leggibile su card scura.
+    La causa è la stessa dell'inchiostro trasparente di stamattina — gli inchiostri dei
+    verdetti sono misurati contro la **superficie dell'app**, e il terreno di un widget è
+    un cielo scrimato, una tappezzeria, o quello che ha scelto il lettore. Inchiostro e
+    contenitore sono una coppia **misurata** (`PaletteContrastTest`: «verdict ink reads on
+    its own container», 4,5:1), quindi un chip si porta dietro il proprio terreno ed è
+    leggibile su qualunque card. È esattamente il motivo per cui l'eroe ha una pillola
+    dal primo giorno; le righe ne prendono la sorella piccola, parola sola.
+  - **Cielo, «Tramonto19:55»**: la `Row` della riga compatta non era `fillMaxWidth`, quindi
+    il `defaultWeight` sul nome non aveva niente da distribuire e l'ora gli restava
+    incollata. E il disallineamento verticale era nome 13sp contro ora 12sp: due corpi
+    diversi centrati sono due linee di base che si mancano. Stessa dimensione per
+    entrambi, `fillMaxWidth` sulla riga, e 8dp prima dell'ora.
+  - **Cielo, la composizione**: una lista che finisce prima della card lasciava tutto in
+    alto e un buco in fondo. Ora il blocco sta in mezzo allo spazio che non riempie; con
+    zero righe la pillola tiene il bordo inferiore su cui era stata tarata (3 set).
+  - Il budget cambia di conseguenza (riga 22dp + 6 di stacco, e 10dp d'aria fra il momento
+    e la sua lista, contati una volta sola perché contarli dentro il ciclo farebbe
+    dipendere il budget dalla propria risposta). `SkyWidgetRowsTest` aggiornato: prima riga
+    a 142dp di concessione, a 110 se l'eroe non porta verdetto.
+
 - **Il canvas finisce diritto.** I due angoli inferiori portavano un raggio di 28dp: si
   leggeva come una card che galleggia sopra lo scroll invece che come il cielo con cui la
   schermata si apre. Tolti; `DESIGN.md` §6 aggiornato (il cielo non ha angoli).
