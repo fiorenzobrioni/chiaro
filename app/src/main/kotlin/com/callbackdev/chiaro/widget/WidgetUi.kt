@@ -33,9 +33,11 @@ import androidx.glance.action.clickable
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.background
+import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.ContentScale
+import androidx.glance.layout.Row
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
@@ -44,7 +46,9 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider as FixedColorProvider
 import com.callbackdev.chiaro.MainActivity
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
+import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.theme.ChiaroDarkColors
 import com.callbackdev.chiaro.ui.theme.ChiaroDarkScheme
 import com.callbackdev.chiaro.ui.theme.ChiaroLightColors
@@ -53,6 +57,7 @@ import com.callbackdev.chiaro.ui.theme.SkyPalette
 import com.callbackdev.chiaro.ui.today.SkySnapshot
 import java.time.Duration
 import java.time.Instant
+import java.util.Locale
 
 /**
  * The widgets' side of the design system (Fase 8, redrawn on device review): the
@@ -315,6 +320,49 @@ fun skyGradientBitmap(sky: SkySnapshot, opacityPct: Int): Bitmap {
     canvas.drawRect(0f, 0f, size.toFloat(), size.toFloat(), scrim)
     return bitmap
 }
+
+/**
+ * The day's high and low, as the trailing edge of a hero row (committente, 4 set).
+ *
+ * High first and in the strong ink, low after it and dimmed — which is the app's own
+ * emphasis, not a borrowed convention: the week's rows print the low in
+ * `onSurfaceVariant` and the high in the plain one for exactly this reason, so the pair
+ * says which is which without a word for it. Nothing is drawn at all when the report
+ * has no day left to describe (§1.1).
+ *
+ * Tabular figures are not available to Glance, so the pair is three Texts rather than
+ * one: it is also the only way to give the two numbers two inks.
+ */
+@Composable
+fun DayRange(highC: Double, lowC: Double, units: UnitSettings, palette: WidgetPalette) {
+    val locale = Locale.getDefault()
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = Formats.temperature(highC, units.temperature, locale),
+            style = TextStyle(
+                color = palette.primary,
+                fontSize = DayRangeSp,
+                fontWeight = FontWeight.Medium
+            ),
+            maxLines = 1
+        )
+        // Punctuation, not prose: a slash between two temperatures reads the same in
+        // every language this app speaks, so it stays in the code.
+        Text(
+            text = " / ",
+            style = secondaryStyle(palette, DayRangeSp),
+            maxLines = 1
+        )
+        Text(
+            text = Formats.temperature(lowC, units.temperature, locale),
+            style = secondaryStyle(palette, DayRangeSp),
+            maxLines = 1
+        )
+    }
+}
+
+/** The pair sits at the place name's size: it is the same order of fact. */
+private val DayRangeSp = 15.sp
 
 /** The honest empty state: no place yet, and the tap that fixes it. */
 @Composable

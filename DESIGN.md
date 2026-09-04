@@ -334,6 +334,15 @@ distaste for fake depth survives the reskin as restraint rather than prohibition
 **Spacing**: an 8dp grid with a 4dp sub-unit. Screen margin 16dp; card padding 16dp; gap
 between cards 12dp; gap between sections 24dp; touch targets never below 48dp.
 
+A **section header** costs 16dp above and 4dp below (`SectionTop`/`SectionBottom` in
+`ui/theme/Shape.kt`); a **group header** inside a section costs 12dp above. Those are what
+the header spends, not what the eye sees: the neighbouring rows add their own 8dp of
+vertical padding, which is how 16 + 8 becomes the 24dp above and 4 + 8 the 12dp below. A
+list that spaces its own items pays part of the same bill through its gap — Today's does,
+which is why its header asks for 12 and not 16. The numbers are written down because they
+grew apart before anyone compared them: three different values across five screens (device
+review, 4 set).
+
 **Density**: on a 6.1" phone at default font size, the canvas, the headline sentence and
 the first hours of the strip are above the fold. That is the layout's acceptance test.
 

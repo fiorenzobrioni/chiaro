@@ -96,9 +96,10 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
     val cityStore = remember { ServiceLocator.cityStore(context) }
     val widgetCityStore = remember { ServiceLocator.widgetCityStore(context) }
     val lookStore = remember { WidgetLookStore.get(context) }
-    // The content option belongs to the Now widget alone; the other two would show a
-    // switch that changes nothing.
-    val isNow = remember(appWidgetId) { ChiaroWidgets.isNowWidget(context, appWidgetId) }
+    // Content options are not the same for all three: only the Now widget can put the
+    // state beside its number, and only Now and Today carry a day at all. A switch that
+    // changes nothing must not be offered.
+    val kind = remember(appWidgetId) { ChiaroWidgets.kindOf(context, appWidgetId) }
 
     val cities by cityStore.cities.collectAsStateWithLifecycle(initialValue = emptyList())
     val pinnedFlow = remember(appWidgetId) {
@@ -189,20 +190,29 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
                 steps = 19
             )
 
-            if (isNow) {
+            fun save(next: WidgetLook) {
+                look = next
+                scope.launch {
+                    lookStore.set(appWidgetId, next)
+                    repaint()
+                }
+            }
+
+            if (kind == WidgetKind.NOW || kind == WidgetKind.TODAY) {
                 SectionLabel(stringResource(R.string.widget_config_content))
+                if (kind == WidgetKind.NOW) {
+                    SwitchRow(
+                        label = stringResource(R.string.widget_config_show_condition),
+                        note = stringResource(R.string.widget_config_show_condition_note),
+                        checked = current.showCondition,
+                        onToggle = { save(current.copy(showCondition = it)) }
+                    )
+                }
                 SwitchRow(
-                    label = stringResource(R.string.widget_config_show_condition),
-                    note = stringResource(R.string.widget_config_show_condition_note),
-                    checked = current.showCondition,
-                    onToggle = { wanted ->
-                        val next = current.copy(showCondition = wanted)
-                        look = next
-                        scope.launch {
-                            lookStore.set(appWidgetId, next)
-                            repaint()
-                        }
-                    }
+                    label = stringResource(R.string.widget_config_show_range),
+                    note = stringResource(R.string.widget_config_show_range_note),
+                    checked = current.showDayRange,
+                    onToggle = { save(current.copy(showDayRange = it)) }
                 )
             }
         }

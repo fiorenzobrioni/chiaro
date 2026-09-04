@@ -183,6 +183,20 @@ polish:
   identifier is the code register — the one register this product deliberately does not
   have. Only the seed changed: a rule already saved keeps the name its reader gave it.
 
+- **The day's high and low are back on the Now and Today widgets**, against the trailing
+  edge and level with the temperature rather than under it: the position was what made
+  the pair read as clutter in the first place, not the pair. High first and in the strong
+  ink, low after it and dimmed — the same emphasis the week's own rows use, so it says
+  which is which without a word for it. On by default, switchable per widget.
+- **A dry run draws no rain sparkline.** With every hour at 0% the chart was a flat line
+  along the bottom of a 28dp box: on the screen it read as a stray divider with a hole
+  above it, and it said nothing the row of "0%" over it had not already said.
+- **One header rhythm across all five screens.** A section header sat 20dp under the block
+  above it on four screens and 12 on Today, where the list's own gap made up the
+  difference; a group header sat at 16 in two places and 20 in a third. The three numbers
+  now live in one place with the arithmetic written down, and every screen lands on the
+  24dp between sections the design document always asked for.
+
 - **The sky canvas ends on a straight line.** Its two bottom corners carried a 28dp round
   that read as a card floating over the scroll rather than as the sky the screen opens
   on.

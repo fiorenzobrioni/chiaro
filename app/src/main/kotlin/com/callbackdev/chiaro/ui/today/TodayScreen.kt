@@ -644,6 +644,13 @@ private fun ContentState(
     }
 }
 
+/**
+ * The same header rhythm every other screen keeps (DESIGN §6, `SectionTop`), reached
+ * by a different road: this list spaces its items by 12dp, so 12 of the section's 24
+ * are already paid and the header adds the other 12 itself. The 12dp under it is that
+ * same list gap — which is exactly what a 4dp bottom plus a row's 8dp of padding comes
+ * to on the screens that have no list spacing.
+ */
 @Composable
 private fun SectionTitle(text: String) {
     Text(
@@ -877,20 +884,22 @@ private fun NextHours(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         HourStrip(hours = content.strip.map { it.toCell(units, is24h, locale) })
-        val percentages = content.strip.map { it.hour.precipChancePct }
+        // A dry run draws NO sparkline (device review, 4 set). Every value at zero put
+        // a flat line along the bottom of a 28dp box, which read on the screen as a
+        // stray divider with a hole above it — and said nothing the row of "0%" right
+        // over it had not already said. §1.1: a section with no data is not drawn, and
+        // a chart of nothing but zeros is one.
         val peak = content.strip.maxByOrNull { it.hour.precipChancePct }
-        RainSparkline(
-            percentages = percentages,
-            description = if (peak != null && peak.hour.precipChancePct > 0) {
-                stringResource(
+        if (peak != null && peak.hour.precipChancePct > 0) {
+            RainSparkline(
+                percentages = content.strip.map { it.hour.precipChancePct },
+                description = stringResource(
                     R.string.sparkline_peak_desc,
                     peak.hour.precipChancePct,
                     peak.hour.time.format(timeFmt)
                 )
-            } else {
-                stringResource(R.string.sparkline_dry_desc)
-            }
-        )
+            )
+        }
     }
 }
 

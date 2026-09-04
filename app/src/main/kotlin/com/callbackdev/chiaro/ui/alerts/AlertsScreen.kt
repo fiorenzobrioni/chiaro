@@ -55,6 +55,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.callbackdev.chiaro.ui.theme.GroupTop
+import com.callbackdev.chiaro.ui.theme.SectionBottom
+import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.rules.MaxConditions
 import com.callbackdev.chiaro.domain.rules.NotificationRule
@@ -236,7 +239,9 @@ private fun AlertsContent(
                     text = stringResource(R.string.alerts_templates_title),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
+                    modifier = Modifier.padding(
+                        start = 16.dp, top = GroupTop, bottom = SectionBottom
+                    )
                 )
             }
             items(RuleText.templates.size) { index ->
@@ -268,7 +273,7 @@ private fun GroupTitle(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 4.dp)
+        modifier = Modifier.padding(start = 16.dp, top = SectionTop, bottom = SectionBottom)
     )
 }
 

@@ -31,7 +31,16 @@ data class WidgetLook(
      * Off by default so every widget already on a home screen keeps the layout it was
      * placed with.
      */
-    val showCondition: Boolean = false
+    val showCondition: Boolean = false,
+    /**
+     * The day's high and low, anchored to the trailing edge (committente, 4 set). The
+     * pair was on these two widgets until the third device pass took it off, and the
+     * reason it went was WHERE it was: printed under a 34sp number it read as clutter.
+     * Against the far edge, level with the state, it is the thing every weather widget
+     * carries and the hero keeps its air. On by default, because that is what it was
+     * asked back for; off is one tap away for whoever preferred the bare number.
+     */
+    val showDayRange: Boolean = true
 ) {
     companion object {
         const val DEFAULT_OPACITY = 85
@@ -54,7 +63,12 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             ?: WidgetBackground.SKY
         val opacity = (prefs[opacityKey(appWidgetId)] ?: WidgetLook.DEFAULT_OPACITY)
             .coerceIn(0, 100)
-        return WidgetLook(background, opacity, prefs[conditionKey(appWidgetId)] ?: false)
+        return WidgetLook(
+            background = background,
+            opacityPct = opacity,
+            showCondition = prefs[conditionKey(appWidgetId)] ?: false,
+            showDayRange = prefs[rangeKey(appWidgetId)] ?: true
+        )
     }
 
     suspend fun set(appWidgetId: Int, look: WidgetLook) {
@@ -62,6 +76,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             prefs[backgroundKey(appWidgetId)] = look.background.name
             prefs[opacityKey(appWidgetId)] = look.opacityPct.coerceIn(0, 100)
             prefs[conditionKey(appWidgetId)] = look.showCondition
+            prefs[rangeKey(appWidgetId)] = look.showDayRange
         }
     }
 
@@ -72,6 +87,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 prefs.remove(backgroundKey(it))
                 prefs.remove(opacityKey(it))
                 prefs.remove(conditionKey(it))
+                prefs.remove(rangeKey(it))
             }
         }
     }
@@ -79,6 +95,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
     private fun backgroundKey(id: Int) = stringPreferencesKey("bg_$id")
     private fun opacityKey(id: Int) = intPreferencesKey("opacity_$id")
     private fun conditionKey(id: Int) = booleanPreferencesKey("condition_$id")
+    private fun rangeKey(id: Int) = booleanPreferencesKey("range_$id")
 
     companion object {
         @Volatile

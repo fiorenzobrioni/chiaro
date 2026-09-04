@@ -1050,6 +1050,35 @@ e una è una forma che non regge.
     dipendere il budget dalla propria risposta). `SkyWidgetRowsTest` aggiornato: prima riga
     a 142dp di concessione, a 110 se l'eroe non porta verdetto.
 
+- **Massima e minima tornano sui widget Ora e Oggi** (committente, 4 set sera), ancorate
+  al bordo destro e all'altezza della temperatura invece che sotto il numero. Erano state
+  tolte al terzo giro perché «accanto a un numero da 34sp si leggevano come disordine»:
+  il problema era **dove stavano**, non la coppia. Massima prima e in inchiostro forte,
+  minima dopo e attenuata — che è l'enfasi delle righe della settimana (`DayRow` stampa la
+  minima in `onSurfaceVariant` e la massima in quello pieno), quindi la coppia dice quale
+  è quale senza una parola per dirlo. Accese di default, spegnibili per singolo widget.
+  Sul widget Ora è lo stato a prendere lo spazio elastico e a troncarsi: pesare le parole
+  invece che spaziarle decide chi cede su una card stretta, e uno stato che vincesse la
+  discussione spingerebbe i numeri fuori dal widget.
+- **Spaziature: verificate, e una sola era davvero sbagliata.** Domanda del committente
+  («le spaziature ti sembrano troppo grandi?») sullo screenshot di Oggi. Misurate contro
+  DESIGN §6: 24dp fra sezioni, 12 sotto un'intestazione, 16 di margine, righe della
+  timeline a 36dp di passo — che è più **stretto** dei 48 di una riga di lista Material,
+  non più largo. Quindi no, il ritmo verticale è giusto. Quello che si vedeva era altro:
+  - **La sparkline della pioggia su una giornata asciutta.** Con tutte le ore a 0% il
+    tracciato è una riga piatta sul fondo di una scatola da 28dp: sullo schermo si legge
+    come un separatore capitato lì con un buco sopra, e non dice niente che la fila di
+    «0%» sopra non abbia già detto. §1.1 — una sezione senza dati non si disegna, e un
+    grafico di soli zeri è una di quelle. Via anche la sua descrizione per TalkBack, che
+    non aveva più chi la chiamasse.
+  - **Il ritmo delle intestazioni era cresciuto in tre valori diversi su cinque schermate**
+    (20 su quattro, 12 su Oggi dove i 12 di `spacedBy` pagano la differenza; e i gruppi a
+    16 in due posti, 20 in un terzo). Nessuno se n'era accorto perché nessuno li aveva mai
+    messi in fila. Ora i tre numeri stanno in un posto solo (`SectionTop`, `GroupTop`,
+    `SectionBottom` in `ui/theme/Shape.kt`) con l'aritmetica scritta — quello che
+    l'intestazione **spende**, non quello che si vede, perché le righe vicine ci aggiungono
+    i propri 8dp — e DESIGN §6 lo dice invece di lasciarlo dedurre.
+
 - **Il canvas finisce diritto.** I due angoli inferiori portavano un raggio di 28dp: si
   leggeva come una card che galleggia sopra lo scroll invece che come il cielo con cui la
   schermata si apre. Tolti; `DESIGN.md` §6 aggiornato (il cielo non ha angoli).

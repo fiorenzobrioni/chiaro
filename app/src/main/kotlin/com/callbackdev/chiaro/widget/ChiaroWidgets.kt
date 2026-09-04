@@ -31,6 +31,9 @@ import kotlinx.coroutines.launch
  * live composition without re-running `provideGlance`, so on its own it repaints the
  * OLD model (see [WidgetRefresh] for the whole of it).
  */
+/** The three, as the reconfigure screen needs to tell them apart. */
+enum class WidgetKind { NOW, TODAY, SKY }
+
 object ChiaroWidgets {
 
     private val household: List<Pair<Class<*>, () -> GlanceAppWidget>> = listOf(
@@ -47,15 +50,21 @@ object ChiaroWidgets {
     }
 
     /**
-     * Whether [appWidgetId] belongs to the Now widget — the reconfigure screen is one
-     * activity for all three, and an option only one of them honours must not be
-     * offered to the other two. An unbound id (asked before the host has bound the
-     * provider) answers false: better a missing switch for one frame than one that
-     * changes nothing.
+     * Which of the three [appWidgetId] is — the reconfigure screen is one activity for
+     * all of them, and an option only some honour must not be offered to the rest. An
+     * unbound id (asked before the host has bound the provider) answers null: better a
+     * missing switch for one frame than one that changes nothing.
      */
-    fun isNowWidget(context: Context, appWidgetId: Int): Boolean =
-        AppWidgetManager.getInstance(context).getAppWidgetInfo(appWidgetId)
-            ?.provider?.className == NowWidgetReceiver::class.java.name
+    fun kindOf(context: Context, appWidgetId: Int): WidgetKind? =
+        when (
+            AppWidgetManager.getInstance(context).getAppWidgetInfo(appWidgetId)
+                ?.provider?.className
+        ) {
+            NowWidgetReceiver::class.java.name -> WidgetKind.NOW
+            TodayWidgetReceiver::class.java.name -> WidgetKind.TODAY
+            SkyWidgetReceiver::class.java.name -> WidgetKind.SKY
+            else -> null
+        }
 
     suspend fun updateAll(context: Context) {
         WidgetRefresh.invalidate()

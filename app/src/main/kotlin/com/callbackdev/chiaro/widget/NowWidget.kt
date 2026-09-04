@@ -17,6 +17,7 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
+import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
@@ -101,6 +102,9 @@ private fun NowContent(
     val context = LocalContext.current
     val locale = Locale.getDefault()
     val current = content.report.current
+    // The recency-trimmed day, so a report that outlived today describes no day at
+    // all rather than yesterday's (§1.1).
+    val today = content.week.firstOrNull()?.forecast
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier.fillMaxSize()
@@ -130,7 +134,7 @@ private fun NowContent(
         Column(
             modifier = GlanceModifier
                 .padding(start = 8.dp, bottom = textInkBalance(context, TemperatureSp))
-                .fillMaxWidth()
+                .defaultWeight()
         ) {
             // Icon, temperature, place — VISION §5.9's three, and only those: the
             // day's range next to the number read as clutter on the home screen
@@ -147,7 +151,10 @@ private fun NowContent(
             // exactly at the centre of its own box, so centring the two boxes centres
             // the two inks — which is the treatment a small label beside a big numeral
             // wants anyway.
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = GlanceModifier.fillMaxWidth()
+            ) {
                 Text(
                     text = Formats.temperature(
                         current.tempC, model.settings.units.temperature, locale
@@ -158,6 +165,10 @@ private fun NowContent(
                         fontWeight = FontWeight.Medium
                     )
                 )
+                // The state takes the slack and clips into it; the range keeps its
+                // own width against the far edge. Weighting the words rather than
+                // spacing them is what decides who gives ground on a narrow card, and
+                // a state that wins the argument would push the numbers off the widget.
                 if (model.look.showCondition) {
                     Text(
                         text = context.getString(
@@ -165,8 +176,15 @@ private fun NowContent(
                         ),
                         style = secondaryStyle(palette, ConditionSp.sp),
                         maxLines = 1,
-                        modifier = GlanceModifier.padding(start = ConditionGap)
+                        modifier = GlanceModifier
+                            .padding(start = ConditionGap, end = ConditionGap)
+                            .defaultWeight()
                     )
+                } else {
+                    Spacer(modifier = GlanceModifier.defaultWeight())
+                }
+                today?.takeIf { model.look.showDayRange }?.let { day ->
+                    DayRange(day.highC, day.lowC, model.settings.units, palette)
                 }
             }
             Text(

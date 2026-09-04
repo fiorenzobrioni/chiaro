@@ -64,7 +64,6 @@
     <!-- La strip oraria -->
     <string name="hour_cell_desc">Alle %1$s, %2$s, %3$s, pioggia %4$d%%</string>
     <string name="sparkline_peak_desc">Picco di pioggia %1$d%% verso le %2$s</string>
-    <string name="sparkline_dry_desc">Nessuna pioggia attesa nelle prossime ore</string>
 
     <!-- Griglia dettagli: etichette -->
     <string name="metric_uv">UV</string>
@@ -666,4 +665,6 @@
     <string name="widget_config_content">Contenuto</string>
     <string name="widget_config_show_condition">Stato del cielo accanto alla temperatura</string>
     <string name="widget_config_show_condition_note">Serve spazio: su un widget stretto le parole vengono tagliate.</string>
+    <string name="widget_config_show_range">Massima e minima di oggi</string>
+    <string name="widget_config_show_range_note">Contro il bordo destro, all\'altezza della temperatura.</string>
 </resources>

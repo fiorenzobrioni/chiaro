@@ -67,7 +67,6 @@
     <!-- The hour strip -->
     <string name="hour_cell_desc">At %1$s, %2$s, %3$s, rain %4$d%%</string>
     <string name="sparkline_peak_desc">Rain probability peaks at %1$d%% around %2$s</string>
-    <string name="sparkline_dry_desc">No rain expected in the next hours</string>
 
     <!-- Details grid: labels -->
     <string name="metric_uv">UV</string>
@@ -670,4 +669,6 @@
     <string name="widget_config_content">Content</string>
     <string name="widget_config_show_condition">Sky state beside the temperature</string>
     <string name="widget_config_show_condition_note">It needs the room: on a narrow widget the words are cut off.</string>
+    <string name="widget_config_show_range">Today\'s high and low</string>
+    <string name="widget_config_show_range_note">Against the far edge, level with the temperature.</string>
 </resources>
