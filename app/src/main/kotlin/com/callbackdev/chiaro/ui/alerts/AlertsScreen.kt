@@ -42,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,6 +55,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -65,6 +68,7 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.rules.MaxConditions
 import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.rules.RuleCondition
+import com.callbackdev.chiaro.domain.rules.RuleMessages
 import com.callbackdev.chiaro.domain.rules.RuleOp
 import com.callbackdev.chiaro.domain.rules.RuleVariableKind
 import com.callbackdev.chiaro.domain.rules.RuleVariables
@@ -343,6 +347,7 @@ private sealed interface EditorDialog {
     data class Variable(val index: Int) : EditorDialog
     data class Operator(val index: Int) : EditorDialog
     data class Value(val index: Int) : EditorDialog
+    data object Placeholder : EditorDialog
     data object ConfirmDelete : EditorDialog
 }
 
@@ -372,18 +377,41 @@ private fun RuleEditorSheet(
     val res = LocalContext.current.resources
     val scope = rememberCoroutineScope()
     var name by rememberSaveable(rule.id) { mutableStateOf(rule.name) }
-    var message by rememberSaveable(rule.id) { mutableStateOf(rule.message) }
+    // A TextFieldValue rather than a String: a value picked from the list lands where
+    // the cursor is, and a cursor is something only the field itself knows about. It
+    // starts at the end of the message, so a value picked before the field is ever
+    // touched appends instead of jumping to the front.
+    var message by rememberSaveable(rule.id, stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(rule.message, TextRange(rule.message.length)))
+    }
     var dialog by remember { mutableStateOf<EditorDialog?>(null) }
     var preview by remember { mutableStateOf<RulePreview?>(null) }
     val scroll = rememberScrollState()
 
     fun close() {
         val trimmedName = name.trim().ifEmpty { rule.name }
-        if (trimmedName != rule.name || message != rule.message) {
-            viewModel.update(rule.copy(name = trimmedName, message = message))
+        if (trimmedName != rule.name || message.text != rule.message) {
+            viewModel.update(rule.copy(name = trimmedName, message = message.text))
         }
         onDismiss()
     }
+
+    /** A picked value replaces the selection, and the cursor lands after it. */
+    fun insert(placeholder: String) {
+        val start = message.selection.min
+        val end = message.selection.max
+        message = TextFieldValue(
+            text = message.text.replaceRange(start, end, placeholder),
+            selection = TextRange(start + placeholder.length)
+        )
+    }
+
+    // An answer about conditions that have since changed would be an answer to a
+    // question nobody asked (DESIGN §1.1: the screen must not lie). Editing a chip
+    // takes it away rather than letting it age in place; the message is not in the
+    // key, because rewording what a fired alert would say does not change whether it
+    // fires — the answer already quotes the wording it was given.
+    LaunchedEffect(rule.conditions) { preview = null }
 
     ModalBottomSheet(
         onDismissRequest = ::close,
@@ -470,12 +498,28 @@ private fun RuleEditorSheet(
                 supportingText = { Text(stringResource(R.string.rule_message_help)) },
                 modifier = Modifier.fillMaxWidth()
             )
+            // Every variable of the registry interpolates into the message, not only
+            // the trigger's two, and until now nothing on the screen said so (asked by
+            // the committente, 4 set). A list you tap is the only way this product can
+            // say it: VISION §5.4 rules out a syntax to remember, and the dotted names
+            // are not words it speaks out loud — so the reader picks words, and what
+            // lands in the message is their own text.
+            TextButton(
+                onClick = { dialog = EditorDialog.Placeholder },
+                contentPadding = FlushTextButtonPadding
+            ) {
+                Icon(Icons.Outlined.Add, contentDescription = null)
+                Text(
+                    text = stringResource(R.string.rule_message_add_value),
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+            }
 
             // The dry run (VISION §5.4): what it would have done, nothing posted.
             TextButton(
                 onClick = {
                     scope.launch {
-                        preview = viewModel.preview(rule.copy(message = message))
+                        preview = viewModel.preview(rule.copy(message = message.text))
                         // The answer prints under the button, which on a short screen
                         // is under the fold: whoever just asked the question should not
                         // have to drag the sheet to read it. Two frames, because the
@@ -562,6 +606,14 @@ private fun RuleEditorSheet(
             },
             onDismiss = { dialog = null }
         )
+        EditorDialog.Placeholder -> PlaceholderPickerDialog(
+            units = units,
+            onPick = { placeholder ->
+                insert(placeholder)
+                dialog = null
+            },
+            onDismiss = { dialog = null }
+        )
         EditorDialog.ConfirmDelete -> AlertDialog(
             onDismissRequest = { dialog = null },
             title = { Text(stringResource(R.string.rule_delete_confirm_title)) },
@@ -644,6 +696,78 @@ private fun ConditionChips(
 // ---------------------------------------------------------------------------------
 // The pickers
 // ---------------------------------------------------------------------------------
+
+/**
+ * The values a message can print. `RuleMessages` resolves every name the registry
+ * knows, not only the two the trigger carries, and this is where the reader finds
+ * that out: the list is words, and the tap writes the name into their own message.
+ * Picked, never typed — VISION §5.4 rules out a syntax to remember, and a screen of
+ * dotted ids would be the jargon this product does not speak.
+ */
+@Composable
+private fun PlaceholderPickerDialog(
+    units: UnitSettings,
+    onPick: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    // Every variable but the yes/no ones: those interpolate as `true`/`false`, which
+    // is neither a number nor a word this product says — offering them would drop a
+    // code word into the reader's own sentence. A rule can still watch them.
+    val printable = remember {
+        RuleVariables.all.filter { it.kind != RuleVariableKind.BOOLEAN }
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.rule_pick_placeholder)) },
+        text = {
+            LazyColumn {
+                item {
+                    Text(
+                        text = stringResource(R.string.rule_placeholder_intro),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+                item {
+                    PlaceholderRow(stringResource(R.string.var_trigger_value)) {
+                        onPick(RuleMessages.placeholder(RuleMessages.TriggerValue))
+                    }
+                }
+                item {
+                    PlaceholderRow(stringResource(R.string.var_trigger_time)) {
+                        onPick(RuleMessages.placeholder(RuleMessages.TriggerTime))
+                    }
+                }
+                items(printable.size) { index ->
+                    val variable = printable[index]
+                    // The displayed name, so the message says the unit the number will
+                    // arrive in; the engine resolves either spelling of it.
+                    val name = RuleVariables.displayId(variable, units)
+                    PlaceholderRow(stringResource(RuleText.nameRes(variable.id))) {
+                        onPick(RuleMessages.placeholder(name))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        }
+    )
+}
+
+/** One offered value: a whole row is the target, 48dp of it. */
+@Composable
+private fun PlaceholderRow(name: String, onPick: () -> Unit) {
+    Text(
+        text = name,
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onPick)
+            .padding(vertical = 12.dp)
+    )
+}
 
 @Composable
 private fun VariablePickerDialog(

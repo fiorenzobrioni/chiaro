@@ -116,6 +116,14 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   `IconContrastTest` now sweeps both.
 - The launcher mark, replacing the Fase 0 placeholder: the icon family's starry-night
   crescent in Chiaro's own palette, low in the badge over two calm waves.
+- **The values an alert's message can print are now a list you tap** (asked by the
+  committente, 4 set). Every value an alert can watch can also be printed inside the
+  message it sends, which nothing on the screen had ever said — the help line named
+  the two the trigger carries and stopped there. "Add a value" under the message opens
+  the same vocabulary the condition uses, in the same words, and the pick lands where
+  the cursor is. Nothing has to be typed and nothing has to be remembered, which is the
+  rule the whole builder follows; the name arrives spelled for the reader's own units,
+  and the engine resolves either spelling of it.
 
 ### Fixed
 
@@ -214,6 +222,9 @@ polish:
   Material's own content padding, so its label started inside the sheet's 16dp margin
   while everything else began on it. The sheet's three text buttons drop that padding
   horizontally and keep it vertically, so every line in the form now starts on one edge.
+- **A dry run's answer no longer outlives its question.** It stayed on the screen while
+  the conditions under it were edited, so a verdict about one alert sat under another.
+  It goes when a chip moves.
 
 ### Removed
 

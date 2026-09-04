@@ -301,7 +301,7 @@
     <string name="guide_alerts_preview_title">Try it now</string>
     <string name="guide_alerts_preview_body">Runs your alert against the forecast already on the phone and tells you what it would have done. Nothing is sent, nothing is recorded.</string>
     <string name="guide_alerts_message_title">The message is yours</string>
-    <string name="guide_alerts_message_body">Chiaro never rewrites it and never translates it. Words in braces become numbers when it fires: {trigger.value} is what set it off, {trigger.time} is when.</string>
+    <string name="guide_alerts_message_body">Chiaro never rewrites it and never translates it. Words in braces become numbers when it fires: {trigger.value} is what set it off, {trigger.time} is when. Anything an alert can watch can be printed the same way, and the list under the message writes it for you.</string>
     <string name="guide_alerts_battery_title">What it costs</string>
     <string name="guide_alerts_battery_body">Nothing extra: the checks ride the weather update you already asked for, at the rhythm you chose in the settings. Android asks for notification permission the first time you turn an alert on.</string>
 
@@ -511,7 +511,8 @@
     <string name="rule_never_fired">Never fired so far</string>
     <string name="rule_name_label">Name</string>
     <string name="rule_message_label">Your message</string>
-    <string name="rule_message_help">Words in braces become numbers: {trigger.value} is what fired it, {trigger.time} is when.</string>
+    <string name="rule_message_help">Words in braces become numbers when the alert fires. Add them below rather than typing them.</string>
+    <string name="rule_message_add_value">Add a value</string>
     <string name="rule_add_condition">and another condition</string>
     <string name="rule_remove_condition">Remove this condition</string>
     <string name="rule_preview_action">Try it now</string>
@@ -525,6 +526,8 @@
     <string name="rule_pick_variable">What to watch</string>
     <string name="rule_pick_operator">How to compare</string>
     <string name="rule_pick_value">The threshold</string>
+    <string name="rule_pick_placeholder">A value in the message</string>
+    <string name="rule_placeholder_intro">Tap one: it lands where the cursor is, and becomes the number when the alert fires.</string>
     <string name="action_done">Done</string>
 
     <!-- The operators, as the sentence needs them -->
@@ -540,6 +543,8 @@
     <string name="value_no">no</string>
 
     <!-- The variables, as phrases. The dotted ids never reach a screen. -->
+    <string name="var_trigger_value">what set the alert off</string>
+    <string name="var_trigger_time">the hour it went off</string>
     <string name="var_current_temp">the temperature now</string>
     <string name="var_current_feels_like">the feels-like now</string>
     <string name="var_current_humidity">the humidity now</string>
