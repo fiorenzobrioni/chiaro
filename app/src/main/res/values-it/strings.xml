@@ -566,23 +566,23 @@
          alla creazione, nella sua lingua, e da lì in poi non si traducono più. -->
     <string name="tpl_bike_title">Dimmi quando posso pedalare</string>
     <string name="tpl_bike_desc" formatted="false">Almeno 12° e pioggia sotto il 20% nelle prossime 6 ore.</string>
-    <string name="tpl_bike_name">bici</string>
+    <string name="tpl_bike_name">Bici</string>
     <string name="tpl_bike_message" formatted="false">Si pedala: {current.temp_c}° e pioggia al {next_6h.precip_chance_max}%.</string>
     <string name="tpl_ice_title">Ghiaccio domattina</string>
     <string name="tpl_ice_desc">Quando nelle prossime 12 ore si scende sotto zero.</string>
-    <string name="tpl_ice_name">ghiaccio</string>
+    <string name="tpl_ice_name">Ghiaccio</string>
     <string name="tpl_ice_message" formatted="false">Possibile ghiaccio: si scende a {trigger.value}° verso le {trigger.time}.</string>
     <string name="tpl_run_title">Una finestra per correre</string>
     <string name="tpl_run_desc" formatted="false">Pioggia sotto il 20% nelle prossime 6 ore e non più di 26°.</string>
-    <string name="tpl_run_name">corsa</string>
+    <string name="tpl_run_name">Corsa</string>
     <string name="tpl_run_message" formatted="false">Buona finestra per correre: pioggia al {trigger.value}%.</string>
     <string name="tpl_uv_title">UV alto</string>
     <string name="tpl_uv_desc">Quando l\'indice UV di oggi arriva almeno a 7.</string>
-    <string name="tpl_uv_name">sole</string>
+    <string name="tpl_uv_name">Sole</string>
     <string name="tpl_uv_message" formatted="false">Oggi UV fino a {trigger.value}: crema e cappello.</string>
     <string name="tpl_night_title">Una notte senza pioggia</string>
     <string name="tpl_night_desc" formatted="false">Pioggia sotto il 10% nelle prossime 12 ore.</string>
-    <string name="tpl_night_name">notte</string>
+    <string name="tpl_night_name">Notte</string>
     <string name="tpl_night_message" formatted="false">Stanotte niente pioggia in vista ({trigger.value}%).</string>
 
     <!-- Gli avvisi integrati come notifiche: una frase, mai un elenco di dati -->
@@ -663,4 +663,7 @@
     <string name="widget_config_background">Sfondo</string>
     <string name="widget_bg_sky">Il cielo di adesso</string>
     <string name="widget_config_opacity">Opacità dello sfondo</string>
+    <string name="widget_config_content">Contenuto</string>
+    <string name="widget_config_show_condition">Stato del cielo accanto alla temperatura</string>
+    <string name="widget_config_show_condition_note">Serve spazio: su un widget stretto le parole vengono tagliate.</string>
 </resources>

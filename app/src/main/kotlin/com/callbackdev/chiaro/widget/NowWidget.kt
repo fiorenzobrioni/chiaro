@@ -27,6 +27,7 @@ import androidx.glance.text.TextStyle
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.today.TodayUiState
+import com.callbackdev.chiaro.ui.today.WeatherText
 import java.time.Instant
 import java.util.Locale
 
@@ -79,6 +80,9 @@ class NowWidget : GlanceAppWidget() {
 /** The hero number's size, named because the ink balance below is measured off it. */
 private const val TemperatureSp = 34f
 
+/** The state's size: the place name's, because they are the same kind of word. */
+private const val ConditionSp = 15f
+
 @Composable
 private fun NowContent(
     content: TodayUiState.Content,
@@ -122,16 +126,39 @@ private fun NowContent(
             // Icon, temperature, place — VISION §5.9's three, and only those: the
             // day's range next to the number read as clutter on the home screen
             // (committente, 3 set) and it is one tap away in the app.
-            Text(
-                text = Formats.temperature(
-                    current.tempC, model.settings.units.temperature, locale
-                ),
-                style = TextStyle(
-                    color = palette.primary,
-                    fontSize = TemperatureSp.sp,
-                    fontWeight = FontWeight.Medium
+            //
+            // The fourth thing, the sky's state, is beside the number and OFF unless
+            // the reader asked for it in the widget's own settings (committente,
+            // 4 set): the standard dress is the one tuned on device, and this is the
+            // room a wide widget can spend rather than a size the layout reacts to.
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = Formats.temperature(
+                        current.tempC, model.settings.units.temperature, locale
+                    ),
+                    style = TextStyle(
+                        color = palette.primary,
+                        fontSize = TemperatureSp.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
-            )
+                if (model.look.showCondition) {
+                    // Bottom, because Glance has no baseline alignment: the app's own
+                    // hero puts two type sizes on one line with `alignByBaseline` and
+                    // says why (TodayScreen, 2 set), and bottom-aligning two boxes
+                    // lands the small word within a few dp of the big number's
+                    // baseline — the nearest true thing available on this side of the
+                    // fence.
+                    Text(
+                        text = context.getString(
+                            WeatherText.condition(current.condition.wmoCode)
+                        ),
+                        style = secondaryStyle(palette, ConditionSp.sp),
+                        maxLines = 1,
+                        modifier = GlanceModifier.padding(start = 6.dp)
+                    )
+                }
+            }
             Text(
                 text = content.city.name,
                 style = secondaryStyle(palette, 15.sp),

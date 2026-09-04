@@ -977,6 +977,49 @@ e una è una forma che non regge.
     il suo dedup richiede — allargarlo per far parlare una notifica sarebbe stato il
     contrario del taglio dei moduli.
 
+- **Widget Cielo: tanti momenti quanti ce ne stanno.** Chiesto dal committente (4 set):
+  ne mostrava sempre e solo uno. Non era una scelta di layout, era l'unico dei tre widget
+  rimasto sul `SizeMode.Single` di default — quindi `LocalSize` gli riportava la dimensione
+  **minima dichiarata nel provider** e non sapeva di essere stato allargato. Passa a
+  `SizeMode.Exact` come Ora e Oggi, e l'altezza concessa decide: una cella resta l'eroe con
+  la sua pillola esattamente come prima, ogni cella in più aggiunge righe compatte (glifo
+  20dp, nome, quando, e la **parola** del verdetto nel colore del verdetto). La parola e non
+  la pillola, e senza il numero: in una riga così ci sta uno dei tre, e DESIGN §2.3 dice
+  quale — un verdetto è un glifo e una parola prima di essere un colore; l'aritmetica resta
+  a un tocco di distanza sulla schermata che ha lo spazio per stamparla.
+  - La lista è `SkyUpcoming.allAt`, cioè `firstAt` che smette di buttare via N-1 risposte:
+    stesso ordinamento delle righe programmate della schermata Cielo, che è l'invariante
+    protetta da quando le due superfici stampavano due albe diverse (3 set). Un widget che
+    ne stampa PARECCHIE ha di che discordare molto di più.
+  - Il budget (`skyExtraRows`, puro e con tabella in `SkyWidgetRowsTest`) è aritmetica sulle
+    altezze vere della card, non una tabella di dimensioni di cella: i launcher non sono
+    d'accordo su cosa sia una cella, e l'unica cosa che riportano tutti onestamente è
+    quanti dp hanno concesso. 24 di padding, 80 per eroe+pillola, 26 per ogni riga.
+  - Un eroe **senza** verdetto (mezzogiorno solare, la fase lunare: niente che le nuvole
+    possano rovinare) libera i 32dp della pillola, e una riga se li prende. Spazio vero
+    lasciato vuoto sarebbe il widget che si rifiuta di dire una cosa vera che ci sta.
+  - La lista non si imbottisce mai: quattro sottoscrizioni disegnano quattro righe su un
+    widget che ne reggerebbe sei. Inventare un quinto momento è l'unica cosa che questo
+    widget non deve fare.
+- **Widget Ora: lo stato del cielo accanto alla temperatura**, spento di default e acceso
+  per singolo widget dalle sue proprietà. Valutata e **scartata** la comparsa automatica sul
+  ridimensionamento (proposta e respinta dal committente, e a ragione): il widget cambierebbe
+  contenuto mentre se ne trascinano le maniglie, e un widget che si riscrive da solo mentre
+  lo si dimensiona non si può mirare. Acceso disegna sempre; su una card stretta la riga si
+  tronca, che è una cosa che si vede e si disfa. Spento di default perché ogni widget già
+  piazzato deve tenere il vestito con cui è stato messo. L'interruttore compare **solo** per
+  i widget Ora (`ChiaroWidgets.isNowWidget`): la schermata di configurazione è una sola per
+  tutti e tre, e un'opzione che due di loro ignorano non va offerta. Allineamento a
+  `Alignment.Bottom` perché Glance non ha l'allineamento alla linea di base: l'eroe dell'app
+  mette due corpi su una riga con `alignByBaseline` e dice perché (TodayScreen, 2 set); da
+  questa parte dello steccato il fondo delle due scatole è la cosa vera più vicina.
+- **I nomi dei modelli di avviso hanno l'iniziale maiuscola** («Bici», non «bici»). Non è
+  gusto: il minuscolo arrivava da tweather, dove `alerts.rules` è un file di configurazione
+  e un identificatore minuscolo è **registro codice** — l'unico registro che questo prodotto
+  ha buttato via di proposito (CLAUDE.md). Qui il nome sta in posizione di titolo: la card
+  della regola e la notifica «Bici» · Milano. Cambia **solo il seme**: una regola già salvata
+  tiene il nome che le ha dato il lettore, che è testo suo e non nostro da correggere.
+
 - **Il canvas finisce diritto.** I due angoli inferiori portavano un raggio di 28dp: si
   leggeva come una card che galleggia sopra lo scroll invece che come il cielo con cui la
   schermata si apre. Tolti; `DESIGN.md` §6 aggiornato (il cielo non ha angoli).

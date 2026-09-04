@@ -89,23 +89,34 @@ object SkyUpcoming {
     }
 
     /**
-     * The first of [jobs] the sky will actually deliver — what the Sky widget prints,
-     * and by construction the first scheduled row of the screen's own list.
+     * Every one of [jobs] the sky will actually deliver, soonest first — the Sky
+     * widget's whole list once it knows how tall it is (Fase 8b), and by construction
+     * the scheduled part of the screen's own list in the screen's own order.
      *
      * The moon's day-moment is not a candidate: it is pinned to today by [of] and
      * never fires, so leaving it in would make it win every comparison forever.
+     */
+    fun allAt(
+        jobs: List<SkyJob>,
+        now: Instant,
+        zone: ZoneId,
+        coords: Coordinates
+    ): List<Resolved> = jobs
+        .filterNot { it.id == SkyJobCatalog.MoonToday.id }
+        .map { of(it, now, zone, coords) }
+        .filter { it.at != null }
+        .sortedBy { it.at!!.start }
+
+    /**
+     * The first of [jobs] the sky will actually deliver — the head of [allAt], named
+     * because it is also the one moment a one-cell widget has room for.
      */
     fun firstAt(
         jobs: List<SkyJob>,
         now: Instant,
         zone: ZoneId,
         coords: Coordinates
-    ): Resolved? = jobs
-        .asSequence()
-        .filterNot { it.id == SkyJobCatalog.MoonToday.id }
-        .map { of(it, now, zone, coords) }
-        .filter { it.at != null }
-        .minByOrNull { it.at!!.start }
+    ): Resolved? = allAt(jobs, now, zone, coords).firstOrNull()
 
     private fun SkyOccurrence.isCovering(at: Instant): Boolean =
         this is SkyOccurrence.At && covers(at)

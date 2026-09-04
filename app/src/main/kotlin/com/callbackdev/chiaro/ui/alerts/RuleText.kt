@@ -124,6 +124,14 @@ object RuleText {
      * sensible thresholds, already on — the builder is for adjusting it, not for
      * building from nothing. Name and message become user content at creation, in
      * the reader's language, and are never translated again.
+     *
+     * The seed names are CAPITALIZED (committente, 4 set). They arrived lowercase
+     * from tweather, where `alerts.rules` is a configuration file and a lowercase
+     * identifier is the code register — the one register this product deliberately
+     * does not have (CLAUDE.md). Here the name is a proper name in a title's place:
+     * the rule's card, and the notification's own `“Bike” · Milan`. Only the SEED
+     * changes: a rule already saved keeps whatever the reader called it, because
+     * that is their text and not ours to correct.
      */
     data class Template(
         val titleRes: Int,

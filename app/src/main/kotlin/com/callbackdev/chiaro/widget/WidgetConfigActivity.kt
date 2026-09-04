@@ -12,12 +12,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -94,6 +96,9 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
     val cityStore = remember { ServiceLocator.cityStore(context) }
     val widgetCityStore = remember { ServiceLocator.widgetCityStore(context) }
     val lookStore = remember { WidgetLookStore.get(context) }
+    // The content option belongs to the Now widget alone; the other two would show a
+    // switch that changes nothing.
+    val isNow = remember(appWidgetId) { ChiaroWidgets.isNowWidget(context, appWidgetId) }
 
     val cities by cityStore.cities.collectAsStateWithLifecycle(initialValue = emptyList())
     val pinnedFlow = remember(appWidgetId) {
@@ -183,6 +188,23 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
                 valueRange = 0f..100f,
                 steps = 19
             )
+
+            if (isNow) {
+                SectionLabel(stringResource(R.string.widget_config_content))
+                SwitchRow(
+                    label = stringResource(R.string.widget_config_show_condition),
+                    note = stringResource(R.string.widget_config_show_condition_note),
+                    checked = current.showCondition,
+                    onToggle = { wanted ->
+                        val next = current.copy(showCondition = wanted)
+                        look = next
+                        scope.launch {
+                            lookStore.set(appWidgetId, next)
+                            repaint()
+                        }
+                    }
+                )
+            }
         }
 
         Button(
@@ -204,6 +226,34 @@ private fun SectionLabel(text: String) {
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
     )
+}
+
+/** A toggle with the sentence that says what it costs — the same shape the Settings
+ * screen gives every switch, so a reader meets one control, not two. */
+@Composable
+private fun SwitchRow(
+    label: String,
+    note: String,
+    checked: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .toggleable(value = checked, onValueChange = onToggle, role = Role.Switch)
+            .padding(vertical = 10.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+            Text(text = label, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = note,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(checked = checked, onCheckedChange = null)
+    }
 }
 
 @Composable

@@ -159,6 +159,22 @@ polish:
   end of the forecast says "from 17:00" and stops, a line whose data is missing is not
   drawn, and the wind says "right now" in words because the hourly forecast carries none.
 
+- **The Sky widget shows as many moments as it has room for.** It printed exactly one at
+  every size, and could not have done otherwise: it was the only one of the three left on
+  Glance's default sizing, so it was told the provider's minimum size and never learned it
+  had been made bigger. Measured now: one cell is the moment and its verdict exactly as
+  before, and every cell after that adds compact rows — glyph, name, when, and the
+  verdict's word in the verdict's own color — off the same ordered list the Sky screen
+  reads. Four subscriptions draw four rows on a widget with room for six: the list is
+  never padded out.
+- **The Now widget can show the sky's state beside the temperature**, off by default and
+  switched on per widget in its own settings rather than appearing and vanishing as the
+  widget is resized. The standard layout is untouched.
+- **The five starting-point alerts are named with a capital** ("Bike", not "bike"). The
+  lowercase came from tweather, where a rule lives in a configuration file and a lowercase
+  identifier is the code register — the one register this product deliberately does not
+  have. Only the seed changed: a rule already saved keeps the name its reader gave it.
+
 - **The sky canvas ends on a straight line.** Its two bottom corners carried a 28dp round
   that read as a card floating over the scroll rather than as the sky the screen opens
   on.

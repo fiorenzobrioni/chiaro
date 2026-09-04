@@ -46,6 +46,17 @@ object ChiaroWidgets {
         }
     }
 
+    /**
+     * Whether [appWidgetId] belongs to the Now widget — the reconfigure screen is one
+     * activity for all three, and an option only one of them honours must not be
+     * offered to the other two. An unbound id (asked before the host has bound the
+     * provider) answers false: better a missing switch for one frame than one that
+     * changes nothing.
+     */
+    fun isNowWidget(context: Context, appWidgetId: Int): Boolean =
+        AppWidgetManager.getInstance(context).getAppWidgetInfo(appWidgetId)
+            ?.provider?.className == NowWidgetReceiver::class.java.name
+
     suspend fun updateAll(context: Context) {
         WidgetRefresh.invalidate()
         val appWidgetManager = AppWidgetManager.getInstance(context)

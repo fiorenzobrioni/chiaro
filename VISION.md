@@ -379,13 +379,18 @@ first time the reader turns on something that needs them, never at startup.
 Glance, three sizes, matching the app's dynamic color:
 
 - **Now**: icon, temperature, place — and nothing else; the weather icon fills the height the
-  launcher grants, because at arm's length it is the first thing to read.
+  launcher grants, because at arm's length it is the first thing to read. The sky's state can join
+  the temperature, and is off until the reader turns it on in the widget's own settings: the
+  standard dress stays the one tuned on device, and a widget that rewrote itself while its handles
+  were being dragged would be one nobody could aim.
 - **Today**: now plus the next hours strip plus the headline sentence.
-- **Sky**: the moment in front of the reader and its verdict, with the day named when it is not
-  today — the widget nobody else ships.
+- **Sky**: the moments in front of the reader and their verdicts, with the day named when it is not
+  today — the widget nobody else ships. The first keeps the glyph and the verdict pill; a taller
+  grant adds compact rows off the same ordered list the Sky screen reads, as many as honestly fit
+  and never more than the reader subscribed to.
 
-A widget never invents: with stale data it says how old it is, and with no place configured it says
-so and opens the app.
+A widget never invents: with stale data it says how old it is, with no place configured it says so
+and opens the app, and no layout ever pads itself out to fill the space it was given.
 
 ---
 
