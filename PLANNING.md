@@ -1076,8 +1076,21 @@ e una è una forma che non regge.
     16 in due posti, 20 in un terzo). Nessuno se n'era accorto perché nessuno li aveva mai
     messi in fila. Ora i tre numeri stanno in un posto solo (`SectionTop`, `GroupTop`,
     `SectionBottom` in `ui/theme/Shape.kt`) con l'aritmetica scritta — quello che
-    l'intestazione **spende**, non quello che si vede, perché le righe vicine ci aggiungono
-    i propri 8dp — e DESIGN §6 lo dice invece di lasciarlo dedurre.
+    l'intestazione **spende**, non quello che si vede, perché il vicino ci aggiunge il suo
+    — e DESIGN §6 lo dice invece di lasciarlo dedurre.
+  - **Correzione, subito dopo** (domanda del committente: «adesso è omogeneo?»). Verificato
+    riga per riga invece che a memoria: **no**, e la prima risposta era troppo generosa.
+    Il costo dell'intestazione ora è uniforme davvero (una sorgente, tre costanti, sei
+    punti di chiamata), ma il divario che si vede no, perché il vicino non è lo stesso
+    ovunque: righe dell'app con 8dp su Oggi e nelle note, `FilterChip` senza padding
+    verticale nel Diario, e soprattutto **`ListItem` di Material** per i momenti del Cielo,
+    gli interruttori e le card degli Avvisi, e le righe delle Impostazioni — che porta il
+    proprio padding e una altezza minima che centra il testo. Quel caso **resta com'è**:
+    una lista fatta con `ListItem` si legge bene perché segue la piattaforma, e limare due
+    dp a un componente per centrare un numero scritto in un documento sarebbe il sistema
+    di design che discute con Material su una cosa che nessuno può vedere. DESIGN §6 e il
+    KDoc delle costanti dicono adesso questo, invece dell'aritmetica generalizzata che
+    valeva solo per due schermate su cinque.
 
 - **Il canvas finisce diritto.** I due angoli inferiori portavano un raggio di 28dp: si
   leggeva come una card che galleggia sopra lo scroll invece che come il cielo con cui la

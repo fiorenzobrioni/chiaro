@@ -20,9 +20,14 @@ val ChiaroShapes = Shapes(
  * section header sat 20dp under the block above it on four screens and 12 on Today,
  * where the list's own 12dp gap made up the difference (device review, 4 set).
  *
- * The numbers are what a header COSTS, not what the eye sees: a row's own 8dp of
- * vertical padding is added on top, which is how [SectionBottom]'s 4 becomes the 12dp
- * gap the document asks for, and [SectionTop]'s 16 becomes 24.
+ * The numbers are what a header COSTS, not what the eye sees: the neighbour adds its
+ * own. Beside one of the app's own rows (8dp of vertical padding) [SectionTop]'s 16
+ * becomes the 24dp the document asks for and [SectionBottom]'s 4 becomes 12. Beside a
+ * Material `ListItem` — the Sky moments, the Alerts switches, the Settings rows — the
+ * gap is Material's own and comes out a little larger, which is left alone on purpose:
+ * a list built out of `ListItem` reads right because it follows the platform, and
+ * trimming a component to hit a number in a document is the design system arguing with
+ * Material over something nobody can see.
  */
 val SectionTop = 16.dp
 

@@ -191,11 +191,13 @@ polish:
 - **A dry run draws no rain sparkline.** With every hour at 0% the chart was a flat line
   along the bottom of a 28dp box: on the screen it read as a stray divider with a hole
   above it, and it said nothing the row of "0%" over it had not already said.
-- **One header rhythm across all five screens.** A section header sat 20dp under the block
+- **One header cost across all five screens.** A section header sat 20dp under the block
   above it on four screens and 12 on Today, where the list's own gap made up the
   difference; a group header sat at 16 in two places and 20 in a third. The three numbers
-  now live in one place with the arithmetic written down, and every screen lands on the
-  24dp between sections the design document always asked for.
+  now live in one place. What a header spends is uniform; what the eye sees still depends
+  on the neighbour, and on the three screens whose rows are Material `ListItem`s the gap
+  is Material's own — deliberately, because a list built out of the platform's component
+  reads right by following it.
 
 - **The sky canvas ends on a straight line.** Its two bottom corners carried a 28dp round
   that read as a card floating over the scroll rather than as the sky the screen opens

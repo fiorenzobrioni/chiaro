@@ -335,13 +335,27 @@ distaste for fake depth survives the reskin as restraint rather than prohibition
 between cards 12dp; gap between sections 24dp; touch targets never below 48dp.
 
 A **section header** costs 16dp above and 4dp below (`SectionTop`/`SectionBottom` in
-`ui/theme/Shape.kt`); a **group header** inside a section costs 12dp above. Those are what
-the header spends, not what the eye sees: the neighbouring rows add their own 8dp of
-vertical padding, which is how 16 + 8 becomes the 24dp above and 4 + 8 the 12dp below. A
-list that spaces its own items pays part of the same bill through its gap — Today's does,
-which is why its header asks for 12 and not 16. The numbers are written down because they
-grew apart before anyone compared them: three different values across five screens (device
-review, 4 set).
+`ui/theme/Shape.kt`); a **group header** inside a section costs 12dp above. The numbers are
+written down because they grew apart before anyone compared them: three different values
+across five screens (device review, 4 set).
+
+Those are what the header **spends**, not what the eye sees — the neighbour adds its own,
+and the neighbour is not the same everywhere:
+
+- next to one of the app's own rows (8dp of vertical padding), 16 + 8 is the 24dp above
+  and 4 + 8 the 12dp below;
+- Today's list spaces its own items by 12dp, so its header asks for 12 rather than 16 and
+  arrives at the same 24 / 12;
+- next to a Material `ListItem` — the Sky moments, the Alerts switches and rule cards, the
+  Settings rows — the gap is Material's, not ours: `ListItem` brings its own padding and a
+  minimum height that centres its text, so the air under a header there is at least 12dp
+  and usually a little more.
+
+That last case is **deliberate and stays**. A list built out of `ListItem` looks right
+because it follows the platform, and shaving 2dp off a component to match a number in this
+document would be the design system arguing with Material over something no reader can
+see. What the document asks for is one header cost everywhere, which is what the three
+constants give.
 
 **Density**: on a 6.1" phone at default font size, the canvas, the headline sentence and
 the first hours of the strip are above the fold. That is the layout's acceptance test.
