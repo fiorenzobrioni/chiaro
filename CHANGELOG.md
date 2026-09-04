@@ -117,6 +117,38 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 - The launcher mark, replacing the Fase 0 placeholder: the icon family's starry-night
   crescent in Chiaro's own palette, low in the badge over two calm waves.
 
+### Fixed
+
+Four things the device found (committente, 4 set), all of them behaviour rather than
+polish:
+
+- **"My position" now follows the reader.** The fix behind the device-position page was
+  only ever re-taken when the source was enabled or its row tapped in the Places sheet,
+  so someone who drove to the next town and pulled to refresh got fresh numbers for the
+  town they had left. A pull on that page now takes the position first and the weather
+  after, and swiping onto the page re-takes it too (throttled to one fix every five
+  minutes, so a swipe back and forth is not a stream of them). A failed fix stays silent
+  and keeps the last position: old place with real weather beats an error over numbers
+  that are still true. Background location remains off the table.
+- **The widgets repaint when the data does.** Glance runs `provideGlance` once per
+  session and keeps the composition alive for about forty-five seconds afterwards;
+  inside that window `update()` wakes the composition without running the function
+  again, so a widget that loaded its model before `provideContent` repainted its own old
+  numbers. A manual refresh, the morning sync and a just-confirmed widget setting all
+  landed in that window — which is also why the setting case looked intermittent. The
+  model is now read from inside the composition and re-read whenever anything the widget
+  draws changes.
+- **A see-through widget over a dark wallpaper is legible again.** Under half solidity
+  the card is not the ink's ground, so the ink asked the wallpaper — and fell back to the
+  phone's THEME whenever the wallpaper gave no answer. A light theme over a black
+  wallpaper then wrote black on black (the same phone in dark mode was fine). The
+  wallpaper hint is an affirmative signal and is read as one: dark ink only where the
+  system says the ground is bright. Picking a light or a dark card now also names the ink
+  at any solidity, so there is a way out; `WidgetInkTest` holds the whole table.
+- **The sky canvas ends on a straight line.** Its two bottom corners carried a 28dp round
+  that read as a card floating over the scroll rather than as the sky the screen opens
+  on.
+
 ### Removed
 
 - The last of the editor's vocabulary in the data layer (Fase 4): line numbers, word

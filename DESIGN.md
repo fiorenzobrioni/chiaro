@@ -320,7 +320,7 @@ probabilities to whole percent; wind to whole units; distances to one decimal be
 
 | Component | Shape |
 |---|---|
-| canvas (bottom corners) | extraLarge, 28dp |
+| canvas (bottom corners) | square: the sky has no corners |
 | cards, sheets | large, 16dp |
 | metric tiles, hour cells | medium, 12dp |
 | chips, buttons, FAB | full |

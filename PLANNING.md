@@ -889,6 +889,66 @@ Quattro rilievi, due dei quali hanno rifatto il vestito dei widget:
       stessi argomenti di formato nelle due versioni). Ha già pagato l'affitto: ha
       trovato i doppioni del vecchio capitolo Avvisi rimasti nel file.
 
+## Verifica su device (committente, 4 set 2026) — quattro difetti, quattro correzioni
+
+Quattro segnalazioni dopo l'uso vero, nessuna di gusto: tre sono comportamento sbagliato
+e una è una forma che non regge.
+
+- **«La mia posizione» non seguiva chi si sposta.** Il fix GPS veniva ripreso solo
+  all'accensione della sorgente (`enableGps`) e al tocco della riga nel foglio dei luoghi
+  (`selectGps`); il pull-to-refresh di Oggi chiedeva soltanto il meteo per il fix
+  *salvato*. Chi cambiava paese e aggiornava a mano otteneva numeri freschi del paese che
+  aveva lasciato. Ora `TodayViewModel.refresh` sulla pagina della posizione **riprende
+  prima la posizione e poi il meteo**, e anche l'atterraggio sulla pagina (`setActive`, il
+  pager che si assesta) rifà il fix — con una soglia di 5 minuti, perché il settle scatta
+  a ogni avvio e a ogni swipe di ritorno e «la batteria è una funzionalità». Un fix che
+  fallisce è **silenzioso** e tiene l'ultimo: posizione vecchia con meteo vero batte un
+  errore sopra numeri ancora giusti. Quando il fix si sposta, la `cacheKey` cambia, la
+  pagina si ricostruisce e lo stato della nuova chiave fa il suo fetch da solo — chiedere
+  anche un refresh spenderebbe due GET sullo stesso arrivo. Il pull resta girevole durante
+  l'acquisizione (`locating`): un fix può prendere quindici secondi, e un gesto che non
+  risponde si legge come rotto. La **posizione in background resta fuori discussione**:
+  il worker continua a usare l'ultimo fix persistito.
+- **I widget non si riaggiornavano.** Il difetto vero della fase 8, e non era nostro
+  codice mancante ma un contratto di Glance letto male: `provideGlance` gira **una volta
+  per sessione**, e la sessione resta viva ~45 secondi dopo la prima composizione
+  (`TimeoutOptions.initialTimeout`, +5 s per evento). Dentro quella finestra `update()`
+  non riesegue la funzione: manda `UpdateGlanceState` alla composizione già aperta, che
+  ricompone con lo **stesso modello** caricato prima di `provideContent`. AndroidX lo
+  scrive nel KDoc di `provideGlance` («observe your sources of data within the
+  composition»). Da qui tutti e tre i sintomi: refresh manuale, sync del mattino, e
+  soprattutto il «a volte» delle proprietà del widget — fuori finestra la sessione era
+  scaduta, `update()` ne apriva una nuova e sembrava funzionare. Correzione:
+  `WidgetRefresh` (un contatore in-process) più `rememberWidgetModel`, che rilegge il
+  modello **dentro** la composizione a ogni tick; `ChiaroWidgets.updateAll/updateOne`
+  invalidano prima di ridipingere, così la stessa chiamata copre sia la sessione viva sia
+  quella da aprire. Contatore in memoria e non persistito di proposito: una sessione non
+  sopravvive al processo che la esegue, quindi alla morte del processo muore anche la
+  composizione vecchia. Anche `skyGradientBitmap` e gli schemi passano dentro la
+  composizione, `remember`izzati sul dato che li muove (è una bitmap 320×320: una
+  ricomposizione non è un motivo per allocarne un'altra).
+- **Widget trasparente illeggibile.** Sotto `InkTrustFloorPct` (50%) la card non è più il
+  terreno dell'inchiostro e la decisione passava alla tappezzeria — ma quando
+  `getWallpaperColors` non risponde (colori non ancora estratti, live wallpaper, OEM che
+  torna null) il ripiego era il **tema del telefono**. Tema chiaro su sfondo nero =
+  scritte nere su nero; lo stesso telefono in scura andava bene, che è esattamente il
+  racconto della segnalazione. Ora l'`HINT_SUPPORTS_DARK_TEXT` è letto per quello che è,
+  un segnale **affermativo**: inchiostro scuro solo dove il sistema dichiara il terreno
+  chiaro, chiaro in tutti gli altri casi (e la schermata di blocco è interrogata come
+  seconda fonte). Il ripiego non può sbagliare nello stesso verso, perché una tappezzeria
+  chiara è precisamente il caso che l'hint esiste per annunciare. In più: **LIGHT e DARK
+  scelti a mano decidono l'inchiostro a qualsiasi opacità** — prima, a opacità zero,
+  scegliere «scuro» consegnava comunque la decisione alla tappezzeria, quindi chi si
+  ritrovava il widget illeggibile non aveva **nessuna** via d'uscita. La regola è pura
+  (`widgetInk` in `WidgetInk.kt`) e fissata da `WidgetInkTest`: uno screenshot non può
+  pinnarla, perché il guasto si vede solo sui telefoni la cui tappezzeria non pubblica i
+  colori, che è il caso che nessuno ha davanti.
+- **Il canvas finisce diritto.** I due angoli inferiori portavano un raggio di 28dp: si
+  leggeva come una card che galleggia sopra lo scroll invece che come il cielo con cui la
+  schermata si apre. Tolti; `DESIGN.md` §6 aggiornato (il cielo non ha angoli).
+
+---
+
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
 - [x] Passata colore (chiesta su device, 3 set; fatta il 3 set sera, alzata una

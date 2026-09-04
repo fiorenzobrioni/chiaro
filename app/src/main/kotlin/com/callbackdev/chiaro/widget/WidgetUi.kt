@@ -14,6 +14,10 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
@@ -66,6 +70,44 @@ fun widgetSchemes(context: Context, dynamicColor: Boolean): WidgetSchemes =
         WidgetSchemes(ChiaroLightScheme, ChiaroDarkScheme)
     }
 
+/**
+ * The model this widget draws, re-read INSIDE the composition whenever [WidgetRefresh]
+ * ticks. [initial] is what `provideGlance` already loaded and [loadedAt] the revision it
+ * loaded at, so the first frame costs nothing extra and only a real change re-reads.
+ *
+ * This is the whole of the Fase 8 repaint fix (device report, 4 set): Glance keeps a
+ * composition alive for about forty-five seconds and `update()` does not restart
+ * `provideGlance`, so a widget that loads its data before `provideContent` and observes
+ * nothing afterwards repaints its OWN old numbers. [WidgetRefresh] carries the reason.
+ */
+@Composable
+fun rememberWidgetModel(
+    context: Context,
+    appWidgetId: Int,
+    initial: WidgetModel,
+    loadedAt: Long
+): WidgetModel {
+    val revision by WidgetRefresh.revision.collectAsState()
+    val model by produceState(initial, revision) {
+        if (revision != loadedAt) value = WidgetData.load(context, appWidgetId)
+    }
+    return model
+}
+
+/** The sky dress for [model], recomputed only when the sky or the look really moves —
+ * it is a 320×320 bitmap, and a recomposition is not a reason to allocate another. */
+@Composable
+fun rememberSkyBitmap(model: WidgetModel): Bitmap? {
+    val sky = model.content?.sky?.takeIf { model.look.background == WidgetBackground.SKY }
+    val opacity = model.look.opacityPct
+    return remember(sky, opacity) { sky?.let { skyGradientBitmap(it, opacity) } }
+}
+
+/** The two schemes this widget writes in, rebuilt only when the choice behind them does. */
+@Composable
+fun rememberWidgetSchemes(context: Context, dynamicColor: Boolean): WidgetSchemes =
+    remember(dynamicColor) { widgetSchemes(context, dynamicColor) }
+
 /** The inks a widget writes with, resolved once per background choice, plus the one
  * fact a quantity ramp needs about the ground they all sit on. */
 data class WidgetPalette(
@@ -90,61 +132,60 @@ fun isNight(context: Context): Boolean =
     (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
         Configuration.UI_MODE_NIGHT_YES
 
-/** Below this solidity the card stops being the ink's ground. */
-private const val InkTrustFloorPct = 50
-
 /**
- * Whether the system wallpaper can carry dark text, by the launcher's own account
- * (the [WallpaperColors] hint). A see-through card has no ground of its own, and the
- * phone's THEME turned out to be a bad proxy for what is behind it — a light theme
- * over a near-black wallpaper is common, and it made theme-following ink invisible
- * (device screenshot, 3 set). When the wallpaper declines to answer (live wallpapers
- * may), the theme stays the fallback.
+ * Whether the wallpaper behind a see-through card can carry DARK text, by the system's
+ * own account: [WallpaperColors.HINT_SUPPORTS_DARK_TEXT], which the platform sets when
+ * it has looked at the image and found it bright enough. A see-through card has no
+ * ground of its own, and the phone's THEME is a bad proxy for what is behind it — a
+ * light theme over a near-black wallpaper is common, and it made theme-following ink
+ * invisible (device screenshot, 3 set).
+ *
+ * The hint is an AFFIRMATIVE signal and is read as one (device report, 4 set): dark ink
+ * only when the system says the ground is bright, light ink in every other case — hint
+ * absent, colors not extracted yet, a live wallpaper that answers nothing at all, or the
+ * call failing outright. The 3-set version fell back to the theme when it got no answer,
+ * and that is exactly the reported failure: a light theme over a black wallpaper wrote
+ * black on black, while the same phone in dark mode was fine. Falling back the other way
+ * cannot produce that, because a bright wallpaper is precisely the case the hint exists
+ * to announce.
+ *
+ * The lock screen is asked as a second source: on the phones where the home wallpaper's
+ * colors are unavailable the two are usually the same image, and one more answer is
+ * better than none.
  */
 fun wallpaperWantsDarkInk(context: Context): Boolean {
-    val colors = runCatching {
-        WallpaperManager.getInstance(context)
-            .getWallpaperColors(WallpaperManager.FLAG_SYSTEM)
-    }.getOrNull() ?: return !isNight(context)
+    val manager = runCatching { WallpaperManager.getInstance(context) }.getOrNull() ?: return false
+    val colors = wallpaperColors(manager, WallpaperManager.FLAG_SYSTEM)
+        ?: wallpaperColors(manager, WallpaperManager.FLAG_LOCK)
+        ?: return false
     return colors.colorHints and WallpaperColors.HINT_SUPPORTS_DARK_TEXT != 0
 }
 
-private fun palette(
-    background: WidgetBackground,
-    schemes: WidgetSchemes,
-    night: Boolean,
-    opacityPct: Int,
-    wallpaperDark: Boolean
-): WidgetPalette {
-    val lightInks = WidgetPalette(
+private fun wallpaperColors(manager: WallpaperManager, which: Int): WallpaperColors? =
+    runCatching { manager.getWallpaperColors(which) }.getOrNull()
+
+/** [widgetInk]'s answer, dressed in the colors it names. The decision itself is pure
+ * and lives next door precisely so a test can pin it (`WidgetInkTest`). */
+private fun palette(ink: WidgetInk, schemes: WidgetSchemes): WidgetPalette = when (ink) {
+    // White over the scrimmed gradient: the §3.6 numbers, reused as-is.
+    WidgetInk.OVER_SKY -> WidgetPalette(
+        primary = FixedColorProvider(Color.White),
+        secondary = FixedColorProvider(Color.White.copy(alpha = 0.75f)),
+        stale = FixedColorProvider(Color.White.copy(alpha = 0.85f)),
+        darkGround = ink.darkGround
+    )
+    WidgetInk.ON_LIGHT -> WidgetPalette(
         primary = FixedColorProvider(schemes.light.onSurface),
         secondary = FixedColorProvider(schemes.light.onSurfaceVariant),
         stale = FixedColorProvider(ChiaroLightColors.freshness.ink),
-        darkGround = false
+        darkGround = ink.darkGround
     )
-    val darkInks = WidgetPalette(
+    WidgetInk.ON_DARK -> WidgetPalette(
         primary = FixedColorProvider(schemes.dark.onSurface),
         secondary = FixedColorProvider(schemes.dark.onSurfaceVariant),
         stale = FixedColorProvider(ChiaroDarkColors.freshness.ink),
-        darkGround = true
+        darkGround = ink.darkGround
     )
-    // A card under half solidity no longer guarantees its own ground, so the ink
-    // stops trusting it and asks the wallpaper itself ([wallpaperWantsDarkInk]) —
-    // the theme was a bad proxy for what shows through (device screenshot, 3 set).
-    if (opacityPct < InkTrustFloorPct) return if (wallpaperDark) darkInks else lightInks
-    return when (background) {
-        // White over the scrimmed gradient: the §3.6 numbers, reused as-is — the
-        // scrim makes the ground dark whatever the sky above it is doing.
-        WidgetBackground.SKY -> WidgetPalette(
-            primary = FixedColorProvider(Color.White),
-            secondary = FixedColorProvider(Color.White.copy(alpha = 0.75f)),
-            stale = FixedColorProvider(Color.White.copy(alpha = 0.85f)),
-            darkGround = true
-        )
-        WidgetBackground.LIGHT -> lightInks
-        WidgetBackground.DARK -> darkInks
-        WidgetBackground.SYSTEM -> if (night) darkInks else lightInks
-    }
 }
 
 /** The card's inner padding: the roomy default, and the tighter dress for the
@@ -189,9 +230,15 @@ fun WidgetCard(
     val alpha = look.opacityPct / 100f
     val context = LocalContext.current
     val night = isNight(context)
-    // The wallpaper is asked only when the card is see-through enough to matter.
-    val wallpaperDark =
-        look.opacityPct < InkTrustFloorPct && !wallpaperWantsDarkInk(context)
+    // The wallpaper is asked only when the card is see-through enough to matter AND
+    // the reader has not already named an ink by picking a light or a dark card: it is
+    // a binder round-trip, and [widgetInk] would throw the answer away in every other
+    // case anyway.
+    val delegatesInk = effectiveBackground == WidgetBackground.SKY ||
+        effectiveBackground == WidgetBackground.SYSTEM
+    val wallpaperCarriesDarkInk = look.opacityPct < InkTrustFloorPct && delegatesInk &&
+        wallpaperWantsDarkInk(context)
+    val ink = widgetInk(effectiveBackground, look.opacityPct, night, wallpaperCarriesDarkInk)
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
@@ -227,9 +274,7 @@ fun WidgetCard(
                 bottom = contentPadding
             )
         ) {
-            content(
-                palette(effectiveBackground, schemes, night, look.opacityPct, wallpaperDark)
-            )
+            content(palette(ink, schemes))
         }
     }
 }

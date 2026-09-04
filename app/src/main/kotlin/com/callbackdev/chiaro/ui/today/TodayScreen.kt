@@ -107,6 +107,7 @@ fun TodayRoute(
 ) {
     val pager by todayViewModel.pager.collectAsStateWithLifecycle()
     val units by todayViewModel.units.collectAsStateWithLifecycle()
+    val locating by todayViewModel.locating.collectAsStateWithLifecycle()
     val guideCard by todayViewModel.guideCardVisible.collectAsStateWithLifecycle()
     var placesOpen by remember { mutableStateOf(false) }
     // Opening the guide is what the card was for: the two roads share the exit.
@@ -129,6 +130,7 @@ fun TodayRoute(
             PagedToday(
                 model = model,
                 units = units,
+                locating = locating,
                 guideCardVisible = guideCard,
                 stateFor = todayViewModel::stateFor,
                 onRefresh = todayViewModel::refresh,
@@ -160,6 +162,7 @@ fun TodayRoute(
 private fun PagedToday(
     model: PagerModel,
     units: UnitSettings,
+    locating: Boolean,
     guideCardVisible: Boolean?,
     stateFor: (PlacePage) -> StateFlow<TodayUiState>,
     onRefresh: (PlacePage) -> Unit,
@@ -214,6 +217,9 @@ private fun PagedToday(
                 isGps = page is PlacePage.Gps,
                 dots = if (pages.size > 1) index to pages.size else null,
                 units = units,
+                // Taking the position again IS the refresh on that page, so its pull
+                // has to keep spinning while the fix is in flight.
+                locating = locating && page is PlacePage.Gps,
                 guideCardVisible = guideCardVisible,
                 onRefresh = { onRefresh(page) },
                 onOpenPlaces = onOpenPlaces,
@@ -258,6 +264,7 @@ private fun TodayPage(
     isGps: Boolean,
     dots: Pair<Int, Int>?,
     units: UnitSettings,
+    locating: Boolean,
     guideCardVisible: Boolean?,
     onRefresh: () -> Unit,
     onOpenPlaces: () -> Unit,
@@ -271,7 +278,7 @@ private fun TodayPage(
     when (state) {
         is TodayUiState.Content ->
             ContentState(
-                state, title, isGps, dots, units, guideCardVisible,
+                state, title, isGps, dots, units, locating, guideCardVisible,
                 onRefresh, onOpenPlaces, onOpenSettings, onOpenGuide, onOpenJournal,
                 onDismissGuideCard, isCurrent, onCanvasBehindBar
             )
@@ -540,6 +547,7 @@ private fun ContentState(
     isGps: Boolean,
     dots: Pair<Int, Int>?,
     units: UnitSettings,
+    locating: Boolean,
     guideCardVisible: Boolean?,
     onRefresh: () -> Unit,
     onOpenPlaces: () -> Unit,
@@ -570,7 +578,7 @@ private fun ContentState(
     }
     LaunchedEffect(isCurrent, behindBar) { if (isCurrent) onCanvasBehindBar(behindBar) }
 
-    PullToRefreshBox(isRefreshing = content.refreshing, onRefresh = onRefresh) {
+    PullToRefreshBox(isRefreshing = content.refreshing || locating, onRefresh = onRefresh) {
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),

@@ -26,6 +26,10 @@ import kotlinx.coroutines.launch
  * `ComponentName`), never by Glance's own class-to-id bookkeeping: on the first
  * device pass that bookkeeping repainted every widget with the last-placed one's
  * content, and the system's answer is the one the launcher physically binds to.
+ *
+ * Every road out of here goes through [WidgetRefresh] first: `update()` alone wakes a
+ * live composition without re-running `provideGlance`, so on its own it repaints the
+ * OLD model (see [WidgetRefresh] for the whole of it).
  */
 object ChiaroWidgets {
 
@@ -43,6 +47,7 @@ object ChiaroWidgets {
     }
 
     suspend fun updateAll(context: Context) {
+        WidgetRefresh.invalidate()
         val appWidgetManager = AppWidgetManager.getInstance(context)
         val glanceManager = GlanceAppWidgetManager(context)
         household.forEach { (receiver, widget) ->
@@ -57,6 +62,7 @@ object ChiaroWidgets {
 
     /** One instance, freshly loaded — the reconfigure flow's "apply now". */
     suspend fun updateOne(context: Context, appWidgetId: Int) {
+        WidgetRefresh.invalidate()
         val manager = AppWidgetManager.getInstance(context)
         val glanceManager = GlanceAppWidgetManager(context)
         household.forEach { (receiver, widget) ->
