@@ -65,14 +65,16 @@
     <string name="hour_cell_desc">Alle %1$s, %2$s, %3$s, pioggia %4$d%%</string>
     <string name="sparkline_peak_desc">Picco di pioggia %1$d%% verso le %2$s</string>
 
-    <!-- Griglia dettagli: etichette -->
+    <!-- Griglia dettagli: etichette. Una riga sola accanto all'icona da 24dp:
+         su uno schermo da 360dp sono 94dp. «Punto di rugiada» (113) e
+         «Qualità dell'aria» (107) sforavano e andavano a capo. -->
     <string name="metric_uv">UV</string>
     <string name="metric_wind">Vento</string>
     <string name="metric_humidity">Umidità</string>
-    <string name="metric_dew">Punto di rugiada</string>
+    <string name="metric_dew">Rugiada</string>
     <string name="metric_pressure">Pressione</string>
     <string name="metric_visibility">Visibilità</string>
-    <string name="metric_air">Qualità dell\'aria</string>
+    <string name="metric_air">Qualità aria</string>
     <string name="metric_pollen">Pollini</string>
 
     <!-- Griglia dettagli: le righe di significato (§1.2 — ogni numero dice cosa farne) -->

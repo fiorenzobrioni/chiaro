@@ -68,7 +68,9 @@
     <string name="hour_cell_desc">At %1$s, %2$s, %3$s, rain %4$d%%</string>
     <string name="sparkline_peak_desc">Rain probability peaks at %1$d%% around %2$s</string>
 
-    <!-- Details grid: labels -->
+    <!-- Details grid: labels. One line beside the tile's 24dp icon, which on a
+         360dp screen is a budget of 94dp: a label written past it wraps and
+         pushes its own value down while the tile next to it stays put. -->
     <string name="metric_uv">UV</string>
     <string name="metric_wind">Wind</string>
     <string name="metric_humidity">Humidity</string>

@@ -225,6 +225,18 @@ polish:
 - **A dry run's answer no longer outlives its question.** It stayed on the screen while
   the conditions under it were edited, so a verdict about one alert sat under another.
   It goes when a chip moves.
+- **The details grid's icons are the drawings again, not their silhouettes.** The tile
+  passed a flat tint to `Icon`, which recolors the whole vector — the one place in the
+  app that did it to a weather icon, and against the rule that the family keeps its own
+  colors (DESIGN §13.1). Flattened, the humidity drop lost the white % that makes it
+  humidity, the barometer lost its needle, the air-quality particles merged into a blob.
+  Two tiles that shared a drawing no longer do either: a dew point is a temperature, so
+  it now carries the thermometer and the drop is the humidity mark alone.
+- **Every label in the details grid holds one line.** Measured against the width the
+  tile actually leaves it — 94dp beside the 24dp icon on a 360dp screen — the Italian
+  "Punto di rugiada" (113dp) and "Qualità dell'aria" (107dp) did not fit, so they wrapped
+  and pushed their own value down while the tile beside them stayed put. They are now
+  "Rugiada" and "Qualità aria"; the full term keeps the places that have room for it.
 
 ### Removed
 

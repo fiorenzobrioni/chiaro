@@ -409,7 +409,11 @@ colored bar is not a number.
 
 **8.6 MetricTile** — icon, label, value (`titleMedium`, tabular), meaning line
 (`bodySmall`, `onSurfaceVariant`). Never ships without the meaning line (§1.2). Tapping
-opens the details sheet at that metric.
+opens the details sheet at that metric. The icon is drawn **untinted** like every other
+weather icon (§13.1): a flat tint turns the family into silhouettes, and two metrics
+whose drawings differ only inside — humidity's drop and its %, the barometer's needle —
+become one mark. The label is one line: beside a 24dp icon two columns of a 360dp screen
+leave it 94dp, and a label is written to fit that rather than trimmed to it.
 
 **8.7 VerdictChip** — glyph + word + evidence, in that order: `✓ Great · 12% cloud`. The
 container is the verdict container color, the text is the ink color. **Never the color

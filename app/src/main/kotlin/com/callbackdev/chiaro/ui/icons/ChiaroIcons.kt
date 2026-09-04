@@ -245,10 +245,17 @@ object ChiaroIcons {
     val wind: ImageVector @Composable get() = styled(R.drawable.mc_wind)
     val humidity: ImageVector @Composable get() = styled(R.drawable.mc_humidity)
     val visibility: ImageVector @Composable get() = styled(R.drawable.mc_mist)
-    val temperature: ImageVector @Composable get() = styled(R.drawable.mc_thermometer)
     val uv: ImageVector @Composable get() = styled(R.drawable.mc_uv_index)
     val pressure: ImageVector @Composable get() = styled(R.drawable.mc_barometer)
-    val dewPoint: ImageVector @Composable get() = styled(R.drawable.mc_raindrop)
+
+    /** The thermometer, not the raindrop (4 set 2026). Meteocons draws `humidity` as
+     * `raindrop` with a % laid over it, so the two tiles that sit one under the other
+     * in the details grid were the same drawing twice — told apart only by a white
+     * glyph the reader has to look for, and not at all once anything tints them flat.
+     * A dew point is a temperature, so it gets the instrument that reads one; the
+     * drop stays the humidity mark alone. This is what §13.1's «the accessor names
+     * the metric, not the drawing» is for. */
+    val dewPoint: ImageVector @Composable get() = styled(R.drawable.mc_thermometer)
     val precipitation: ImageVector @Composable get() = styled(R.drawable.mc_raindrops)
     val airQuality: ImageVector @Composable get() = styled(R.drawable.mc_smoke_particles)
 

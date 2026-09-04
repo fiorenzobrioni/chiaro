@@ -1283,6 +1283,68 @@ E due cose chieste subito dopo, sullo stesso foglio.
 
 ---
 
+## La griglia dei dettagli (committente, 4 set 2026) — due icone uguali, un'etichetta a capo
+
+Screenshot da device: «le icone delle schede dettagli non sono chiare e due sembrano
+uguali (umidità e punto di rugiada)», e «Punto di rugiada» che va a capo. Due difetti
+diversi con una radice sola ciascuno.
+
+- **Le icone erano tinte piatte.** `MetricTile` passava `tint = onSurfaceVariant` a
+  `Icon`, che ricolora l'intero vettore: un Meteocon diventa la sua sagoma. È l'unico
+  posto dell'app che lo faceva sui disegni meteo — `HourStrip`, `DayRow` e
+  `TimelineRow` passano `Color.Unspecified` da sempre — e contraddiceva DESIGN §13.1
+  («the icons keep their own colors under every theme»: dipingono il mondo, come il
+  canvas). Il conto della sagoma, tessera per tessera: l'umidità perde il **%** bianco
+  che la rende umidità (Meteocons disegna `humidity` come `raindrop` con la percentuale
+  sopra) e diventa una goccia qualunque, cioè **esattamente** la goccia del punto di
+  rugiada; il barometro perde la lancetta rossa e diventa un disco; le tre particelle
+  della qualità dell'aria si fondono in una macchia; la nuvola dei pollini si salda ai
+  suoi trattini. Con i colori rimessi, sei tessere su otto si leggono da sole.
+- **Ma due gocce restano due gocce.** Rimesso il colore, umidità e punto di rugiada
+  restano lo **stesso disegno** distinto da un glifo bianco che va cercato — in due
+  schede appaiate. Un punto di rugiada è una temperatura, quindi prende lo strumento che
+  la legge: `dewPoint` passa da `mc_raindrop` a `mc_thermometer` (§13.1: «l'accessore
+  nomina la metrica, non il disegno» serve a questo). Cade l'accessore `temperature`,
+  che non era usato da nessuno ed era il secondo nome dello stesso disegno; `mc_raindrop`
+  resta nella famiglia, semplicemente non lo chiede più nessuno schermo.
+- **La più debole delle otto resta la qualità dell'aria.** Meteocons v2 non ha un'icona
+  AQI: `smoke-particles` sono tre cerchi che nei set fill si fondono, perché
+  l'importatore lascia cadere i filetti da 0.5 (departure #5) che nell'originale li
+  separavano. Provata `smoke`, scartata: è una nuvola, e finirebbe **accanto** alla
+  nuvola dei pollini, cioè si scambierebbe un segno debole con una coppia confondibile —
+  il difetto appena corretto. Resta com'è, con la stessa scadenza già scritta per i
+  pollini: la famiglia v3, quando si potrà mescolare.
+
+E l'etichetta, misurata invece che stimata (Inter, 14sp, tracking di `labelLarge`):
+
+- Il budget è quello che avanza accanto all'icona da 24dp: `(360 − 32 − 12) / 2 − 32 −
+  32 = 94dp` su uno schermo da 360dp, 108.5dp su quello da ~389dp dello screenshot.
+  «Punto di rugiada» misura **113dp** e «Qualità dell'aria» **107dp**: sul device del
+  committente andava a capo la prima, su un 360dp vanno a capo tutte e due. Non era un
+  caso limite di quel telefono.
+- Scartate, con il loro numero: stringere icona e spaziatura (24→20dp, 8→6dp) e il
+  padding della scheda (16→14dp) vale 6–10dp e non basta a 360; portare **tutte** le
+  etichette a `labelMedium` (12sp) lascia «Punto di rugiada» a 97dp — ancora sopra i 94 —
+  e rimpicciolisce otto etichette per una; far rimpicciolire da sola la sola etichetta
+  lunga (`autoSize`) tiene il termine ma rompe l'omogeneità che il committente ha chiesto
+  per nome.
+- Scelta: **etichette scritte dentro il budget**. `metric_dew` → «Rugiada» (56dp),
+  `metric_air` → «Qualità aria» (78dp). Ora le otto italiane e le otto inglesi stanno
+  tutte su una riga anche a 360dp, con margine, e la scala tipografica resta una sola
+  taglia. Il termine intero non sparisce dal prodotto: resta dove c'è spazio, nella
+  variabile degli avvisi («il punto di rugiada adesso») e nella prosa della guida. Il
+  budget è ora scritto come commento sopra le etichette nei due `strings.xml`, perché la
+  prossima etichetta nasca dentro; e `MetricTile` dice perché la riga non si tronca mai
+  con i puntini: a scala testo grande va a capo e tiene le parole, che è il modo onesto
+  di rompersi.
+
+Non toccato di proposito: la stessa tinta piatta è sulle righe del Cielo (dove
+`quiet` **serve**: smorza un momento già passato), sulle voci del Diario e su un campione
+della guida. Lì i disegni sono a soggetto singolo — un'alba, una luna — e la sagoma
+sopravvive; se il committente li vuole a colori anche lì è una riga per punto.
+
+---
+
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
 - [x] Passata colore (chiesta su device, 3 set; fatta il 3 set sera, alzata una
