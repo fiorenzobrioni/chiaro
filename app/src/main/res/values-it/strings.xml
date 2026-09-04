@@ -298,7 +298,7 @@
     <string name="guide_alerts_preview_title">Provalo adesso</string>
     <string name="guide_alerts_preview_body">Fa girare il tuo avviso sulla previsione che è già sul telefono e ti dice cosa avrebbe fatto. Non manda niente e non lascia traccia.</string>
     <string name="guide_alerts_message_title">Il messaggio è tuo</string>
-    <string name="guide_alerts_message_body">Chiaro non lo riscrive e non lo traduce mai. Le parole tra graffe diventano numeri quando scatta: {trigger.value} è ciò che l\'ha fatto scattare, {trigger.time} è quando.</string>
+    <string name="guide_alerts_message_body">Chiaro non lo riscrive e non lo traduce mai. Le parole tra graffe diventano numeri quando scatta: {trigger.value} è ciò che l\'ha fatto scattare, {trigger.time} è quando. Ogni valore che un avviso può guardare si può stampare allo stesso modo, e la lista sotto il messaggio lo scrive al posto tuo.</string>
     <string name="guide_alerts_battery_title">Quanto costa</string>
     <string name="guide_alerts_battery_body">Niente in più: i controlli viaggiano sull\'aggiornamento del meteo che hai già chiesto, al ritmo scelto nelle impostazioni. Android chiede il permesso per le notifiche la prima volta che accendi un avviso.</string>
 
@@ -508,7 +508,8 @@
     <string name="rule_never_fired">Non è ancora mai scattato</string>
     <string name="rule_name_label">Nome</string>
     <string name="rule_message_label">Il tuo messaggio</string>
-    <string name="rule_message_help">Le parole tra graffe diventano numeri: {trigger.value} è quello che l\'ha fatto scattare, {trigger.time} è quando.</string>
+    <string name="rule_message_help">Le parole tra graffe diventano numeri quando l\'avviso scatta. Aggiungile qui sotto invece di scriverle.</string>
+    <string name="rule_message_add_value">Aggiungi un valore</string>
     <string name="rule_add_condition">e un\'altra condizione</string>
     <string name="rule_remove_condition">Togli questa condizione</string>
     <string name="rule_preview_action">Prova adesso</string>
@@ -522,6 +523,8 @@
     <string name="rule_pick_variable">Cosa guardare</string>
     <string name="rule_pick_operator">Come confrontarlo</string>
     <string name="rule_pick_value">La soglia</string>
+    <string name="rule_pick_placeholder">Un valore nel messaggio</string>
+    <string name="rule_placeholder_intro">Toccane uno: finisce dove sei col cursore e diventa il numero quando l\'avviso scatta.</string>
     <string name="action_done">Fatto</string>
 
     <!-- Gli operatori, come li vuole la frase -->
@@ -537,6 +540,8 @@
     <string name="value_no">no</string>
 
     <!-- Le variabili, come frasi. Gli id puntati non arrivano mai a schermo. -->
+    <string name="var_trigger_value">quello che ha fatto scattare l\'avviso</string>
+    <string name="var_trigger_time">l\'ora in cui è scattato</string>
     <string name="var_current_temp">la temperatura adesso</string>
     <string name="var_current_feels_like">la percepita adesso</string>
     <string name="var_current_humidity">l\'umidità adesso</string>
