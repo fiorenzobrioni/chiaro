@@ -404,7 +404,7 @@ Nothing in tweather is dropped. Everything moves to the surface that fits a Mate
 |---|---|
 | `weather_data.json` (current, air quality, pollen, astronomical, hourly, daily, system info) | **Today**: canvas, next hours, week, details grid |
 | `README.md` tab (human summary, `## Status`) | **The headline sentence** + the "rest of the day" timeline |
-| `sky.crontab` (32 jobs, verdicts, `--notify`) | **Sky**: moments, verdicts with evidence, reminders |
+| `sky.crontab` (51 jobs, verdicts, `--notify`) | **Sky**: moments, verdicts with evidence, reminders |
 | `cities.json` (search, saved cities, GPS entry) | **Places** sheet + the place pager |
 | `settings.config` | **Settings** |
 | `alerts.rules` (user rules, dry run, master switch) | **Alerts → Yours**: templates + chip builder + preview |

@@ -115,6 +115,26 @@ Rewriting them now would mean inventing vocabulary in a comment instead of in a 
 **Every phase rewrites the comments in the code it touches**, and the count above is
 what "done" is measured against.
 
+## The copy that went the other way (Fase 19)
+
+Everything above flows tweather → Chiaro. **Fase 19 is the first change that flowed
+the other way**: nineteen sky jobs, an eclipse engine, the year-events searches and the
+rainbow window were written here, in `:core:domain/sky`, and ported to tweather with a
+package rename and nothing else — the two packages are byte-identical again, which is
+the property the whole ledger exists to keep.
+
+Two consequences worth writing down:
+
+- **The direction is not the point; the identity is.** `UPSTREAM.md` tracks a copy, not
+  a parent. A change made once and applied to both is exactly the cheap case; the
+  expensive one is a change made twice, differently, which is what the extraction rule
+  below is watching for.
+- **The surfaces stayed apart, as designed.** The nineteen jobs are the same nineteen in
+  both apps and the words for them are not: Chiaro's Cielo screen groups them in a
+  catalog sheet and prints the eclipse evidence as a localized sentence, tweather's
+  `sky.crontab` prints it as an English readout in the evidence column (its Fase 18
+  register rule). One engine, two registers — which is the whole thesis of the fork.
+
 ## When to extract
 
 The rule from VISION.md §7.3: copy now, extract `weather-core` into its own repo when
