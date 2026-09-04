@@ -499,6 +499,9 @@ private fun EventRow(
         supportingContent = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(listOfNotNull(date, verdictLine).joinToString(" · "))
+                // An eclipse says which kind it is and the number that decides it,
+                // the same way a verdict carries its own arithmetic.
+                eclipseLine(res, event)?.let { Text(it) }
                 event.verdict?.takeIf { it.kind != SkyVerdictKind.UNKNOWN }?.let { verdict ->
                     VerdictChip(
                         kind = SkyText.chipKind(verdict.kind),
@@ -515,6 +518,11 @@ private fun EventRow(
         }
     )
 }
+
+/** The eclipse sentence of an event row, or null when the row is not an eclipse. */
+private fun eclipseLine(res: android.content.res.Resources, event: UpcomingEvent): String? =
+    event.lunarEclipse?.let { SkyText.lunarEclipseLine(res, it) }
+        ?: event.solarEclipse?.let { SkyText.solarEclipseLine(res, it) }
 
 @Composable
 private fun BellButton(lead: SkyLead, name: String, onClick: () -> Unit) {
@@ -553,17 +561,27 @@ private fun eventIcon(event: UpcomingEvent) = when (event.quarter) {
 
 @Composable
 private fun jobIcon(job: SkyJob) = when (job.id) {
-    "sun.rise", "twilight.civil.am" -> ChiaroIcons.sunrise
-    "sun.set", "twilight.civil.pm" -> ChiaroIcons.sunset
-    "solar.noon" -> ChiaroIcons.condition(0, night = false)
+    "sun.rise", "twilight.civil.am", "sun.latest_rise" -> ChiaroIcons.sunrise
+    "sun.set", "twilight.civil.pm", "sun.earliest_set" -> ChiaroIcons.sunset
+    "solar.noon", "earth.perihelion", "earth.aphelion" -> ChiaroIcons.condition(0, night = false)
     "golden_hour.am", "golden_hour.pm" -> ChiaroIcons.horizon
     "blue_hour.am", "blue_hour.pm",
     "twilight.nautical.am", "twilight.nautical.pm" -> ChiaroIcons.star
     "twilight.astronomical.am", "twilight.astronomical.pm",
-    "darkness.window" -> ChiaroIcons.starryNight
+    "darkness.window", "milky_way.core",
+    "night.white.start", "night.white.end" -> ChiaroIcons.starryNight
+    // The zodiacal light is a glow standing out of the horizon, which is the one
+    // drawing in the family that says exactly that.
+    "zodiacal.am", "zodiacal.pm" -> ChiaroIcons.horizon
     "moon.rise" -> ChiaroIcons.moonrise
     "moon.set" -> ChiaroIcons.moonset
-    "moon.today", "moon.phase" -> ChiaroIcons.moonPhase(MoonPhase.FULL_MOON)
+    "moon.new" -> ChiaroIcons.moonPhase(MoonPhase.NEW_MOON)
+    "moon.first_quarter" -> ChiaroIcons.moonPhase(MoonPhase.FIRST_QUARTER)
+    "moon.last_quarter" -> ChiaroIcons.moonPhase(MoonPhase.LAST_QUARTER)
+    // A lunar eclipse happens at a full moon, so the full moon IS its picture.
+    "moon.today", "moon.phase", "moon.full",
+    "moon.closest_full", "eclipse.lunar" -> ChiaroIcons.moonPhase(MoonPhase.FULL_MOON)
+    "eclipse.solar" -> ChiaroIcons.solarEclipse
     "equinox.spring", "solstice.summer",
     "equinox.autumn", "solstice.winter" -> ChiaroIcons.horizon
     else -> ChiaroIcons.fallingStars // the meteor showers
@@ -580,19 +598,33 @@ private fun catalogGroups(): List<CatalogGroup> {
     return listOf(
         CatalogGroup(
             R.string.sky_group_sun,
-            listOf(c.SunRise, c.SunSet, c.SolarNoon, c.GoldenAm, c.GoldenPm, c.BlueAm, c.BluePm, c.CivilAm, c.CivilPm)
+            listOf(
+                c.SunRise, c.SunSet, c.SolarNoon, c.GoldenAm, c.GoldenPm, c.BlueAm, c.BluePm,
+                c.CivilAm, c.CivilPm, c.EarliestSunset, c.LatestSunrise
+            )
         ),
         CatalogGroup(
             R.string.sky_group_night,
-            listOf(c.NauticalAm, c.NauticalPm, c.AstronomicalAm, c.AstronomicalPm, c.DarknessWindow)
+            listOf(
+                c.NauticalAm, c.NauticalPm, c.AstronomicalAm, c.AstronomicalPm,
+                c.DarknessWindow, c.MilkyWayCore, c.ZodiacalPm, c.ZodiacalAm,
+                c.WhiteNightsStart, c.WhiteNightsEnd
+            )
         ),
         CatalogGroup(
             R.string.sky_group_moon,
-            listOf(c.MoonRise, c.MoonSet, c.MoonToday, c.MoonPhase)
+            listOf(
+                c.MoonRise, c.MoonSet, c.MoonToday, c.MoonPhase,
+                c.MoonNew, c.MoonFirstQuarter, c.MoonFull, c.MoonLastQuarter, c.MoonClosestFull
+            )
         ),
+        CatalogGroup(R.string.sky_group_eclipses, listOf(c.LunarEclipse, c.SolarEclipse)),
         CatalogGroup(
             R.string.sky_group_seasons,
-            listOf(c.EquinoxSpring, c.SolsticeSummer, c.EquinoxAutumn, c.SolsticeWinter)
+            listOf(
+                c.EquinoxSpring, c.SolsticeSummer, c.EquinoxAutumn, c.SolsticeWinter,
+                c.Perihelion, c.Aphelion
+            )
         ),
         CatalogGroup(R.string.sky_group_meteors, c.meteorShowers)
     )

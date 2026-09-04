@@ -289,7 +289,7 @@
     <string name="guide_sky_events_title">In arrivo</string>
     <string name="guide_sky_events_body">Il calendario davanti: i picchi degli sciami meteorici con la loro data, la prossima luna piena, solstizi ed equinozi — col verdetto dove la previsione arriva e un onesto «troppo lontano per dirlo» dove non arriva.</string>
     <string name="guide_sky_catalog_title">Aggiungi un momento</string>
-    <string name="guide_sky_catalog_body">Trentadue momenti, raggruppati in sole, notte, luna, stagioni e sciami meteorici, ognuno con la riga che dice cos\'è. È il posto dove si scopre cos\'è davvero un\'ora blu: aggiungendola.</string>
+    <string name="guide_sky_catalog_body">Una cinquantina di momenti, raggruppati in sole, notte, luna, eclissi, stagioni e sciami meteorici, ognuno con la riga che dice cos\'è. È il posto dove si scopre cos\'è davvero un\'ora blu, o la luce zodiacale: aggiungendola.</string>
 
     <string name="guide_alerts_title">Avvisi</string>
     <string name="guide_alerts_p1">Qui vivono due specie: quelli già scritti e quelli che scrivi tu. Non arriva niente che non abbia acceso tu.</string>
@@ -423,9 +423,10 @@
     <string name="sky_group_night">Notte</string>
     <string name="sky_group_moon">Luna</string>
     <string name="sky_group_seasons">Stagioni</string>
+    <string name="sky_group_eclipses">Eclissi</string>
     <string name="sky_group_meteors">Stelle cadenti</string>
 
-    <!-- I 32 momenti: un nome e la riga che insegna cos\'è -->
+    <!-- I momenti: un nome e la riga che insegna cos\'è -->
     <string name="sky_name_sun_rise">Alba</string>
     <string name="sky_expl_sun_rise">Il sole supera l\'orizzonte.</string>
     <string name="sky_name_sun_set">Tramonto</string>
@@ -490,6 +491,69 @@
     <string name="sky_expl_geminids">Lo sciame di dicembre, il più ricco dell\'anno.</string>
     <string name="sky_name_ursids">Ursidi</string>
     <string name="sky_expl_ursids">Lo sciame del solstizio, piccolo e tutto boreale.</string>
+
+    <!-- Fase 19: the jobs that came with the eclipses -->
+    <string name="sky_name_milky_way_core">Via Lattea</string>
+    <string name="sky_expl_milky_way_core">Il centro luminoso della Via Lattea, abbastanza alto da vedersi, dentro la notte astronomica: da marzo a ottobre, basso a sud.</string>
+    <string name="sky_name_zodiacal_pm">Luce zodiacale, sera</string>
+    <string name="sky_expl_zodiacal_pm">Un cono di luce debole sopra il punto del tramonto: polvere illuminata lungo l\'eclittica, visibile solo nelle sere in cui l\'eclittica è ripida.</string>
+    <string name="sky_name_zodiacal_am">Luce zodiacale, mattina</string>
+    <string name="sky_expl_zodiacal_am">Lo stesso cono prima dell\'alba, quella che chiamavano falsa aurora.</string>
+    <string name="sky_name_moon_new">Luna nuova</string>
+    <string name="sky_expl_moon_new">La Luna tra noi e il Sole: il cielo più buio del mese.</string>
+    <string name="sky_name_moon_first_quarter">Primo quarto</string>
+    <string name="sky_expl_moon_first_quarter">Mezza Luna che cresce, alta al tramonto.</string>
+    <string name="sky_name_moon_full">Luna piena</string>
+    <string name="sky_expl_moon_full">Tutta illuminata, sorge mentre il Sole tramonta e resta su tutta la notte.</string>
+    <string name="sky_name_moon_last_quarter">Ultimo quarto</string>
+    <string name="sky_expl_moon_last_quarter">Mezza Luna che cala, alta all\'alba.</string>
+    <string name="sky_name_moon_closest_full">Luna piena più vicina</string>
+    <string name="sky_expl_moon_closest_full">La luna piena dell\'anno che passa più vicina alla Terra: circa un settimo più larga di quella più lontana.</string>
+    <string name="sky_name_eclipse_lunar">Eclissi di Luna</string>
+    <string name="sky_expl_eclipse_lunar">La Luna attraversa l\'ombra della Terra. Si guarda a occhio nudo, e si vede da ovunque la Luna sia sopra l\'orizzonte.</string>
+    <string name="sky_name_eclipse_solar">Eclissi di Sole</string>
+    <string name="sky_expl_eclipse_solar">La Luna passa davanti al Sole. Quanto lo copre dipende da dove sei, e non si guarda mai senza un filtro adatto.</string>
+    <string name="sky_name_earth_perihelion">Terra al punto più vicino al Sole</string>
+    <string name="sky_expl_earth_perihelion">L\'estremo vicino dell\'orbita, nella prima settimana di gennaio: l\'inverno del nord non c\'entra con la distanza.</string>
+    <string name="sky_name_earth_aphelion">Terra al punto più lontano</string>
+    <string name="sky_expl_earth_aphelion">L\'estremo lontano, nella prima settimana di luglio.</string>
+    <string name="sky_name_sun_earliest_set">Tramonto più presto</string>
+    <string name="sky_expl_sun_earliest_set">Non è il solstizio: il Sole tramonta al minimo circa due settimane prima.</string>
+    <string name="sky_name_sun_latest_rise">Alba più tardi</string>
+    <string name="sky_expl_sun_latest_rise">E sorge al massimo tardi circa una settimana dopo il solstizio.</string>
+    <string name="sky_name_night_white_start">Inizio delle notti bianche</string>
+    <string name="sky_expl_night_white_start">La notte smette di diventare del tutto buia: succede sopra i 48 gradi di latitudine circa.</string>
+    <string name="sky_name_night_white_end">Fine delle notti bianche</string>
+    <string name="sky_expl_night_white_end">La notte astronomica torna.</string>
+    <string name="sky_name_alpha_capricornids">Alfa Capricornidi</string>
+    <string name="sky_expl_alpha_capricornids">Poche, lente e luminose: questo sciame fa bolidi. Divide la notte con le Delta Aquaridi.</string>
+    <string name="sky_name_southern_taurids">Tauridi australi</string>
+    <string name="sky_expl_southern_taurids">Uno sciame d\'autunno lungo e lento: poche meteore, spesso molto luminose.</string>
+    <string name="sky_name_northern_taurids">Tauridi boreali</string>
+    <string name="sky_expl_northern_taurids">La seconda metà delle Tauridi, a novembre.</string>
+    <string name="sky_none_darkness_all_year">Qui la notte diventa del tutto buia tutto l\'anno</string>
+    <string name="sky_none_ecliptic_flat">In questa stagione l\'eclittica è troppo bassa</string>
+    <string name="sky_none_core_too_low">Stanotte il centro della Via Lattea resta troppo basso</string>
+    <string name="sky_none_no_eclipse">Nessuna eclissi visibile da qui per anni</string>
+    <string name="sky_eclipse_lunar_total">Totale: la Luna entra tutta nell\'ombra</string>
+    <string name="sky_eclipse_lunar_partial">Parziale: il %1$d%% della Luna nell\'ombra</string>
+    <string name="sky_eclipse_lunar_penumbral">Debole: la Luna sfiora appena l\'ombra</string>
+    <string name="sky_eclipse_solar_total">Totale da qui</string>
+    <string name="sky_eclipse_solar_annular">Da qui resta un anello di Sole</string>
+    <string name="sky_eclipse_solar_partial">Da qui il Sole è coperto al %1$d%%</string>
+    <string name="sky_eclipse_solar_warning">Mai guardare il Sole senza un filtro adatto</string>
+
+    <!-- Fase 19: da che parte guardare, per la riga dell\'arcobaleno -->
+    <string name="compass_n">nord</string>
+    <string name="compass_ne">nord-est</string>
+    <string name="compass_e">est</string>
+    <string name="compass_se">sud-est</string>
+    <string name="compass_s">sud</string>
+    <string name="compass_sw">sud-ovest</string>
+    <string name="compass_w">ovest</string>
+    <string name="compass_nw">nord-ovest</string>
+    <string name="timeline_rainbow">Sole basso e pioggia (%1$d%%): un arcobaleno starebbe a %2$s</string>
+    <string name="timeline_rainbow_desc">Finestra arcobaleno, dalle %1$s alle %2$s, guardando a %3$s</string>
 
     <!-- Avvisi (Fase 6). Due gruppi, una schermata: interruttori che dicono
          esattamente cosa mandano, e le regole del lettore come frase a chip. -->

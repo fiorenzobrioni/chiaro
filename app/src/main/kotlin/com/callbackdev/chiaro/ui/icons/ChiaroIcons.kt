@@ -75,6 +75,7 @@ object ChiaroIcons {
         R.drawable.mc_star to R.drawable.mcf_star,
         R.drawable.mc_starry_night to R.drawable.mcf_starry_night,
         R.drawable.mc_falling_stars to R.drawable.mcf_falling_stars,
+        R.drawable.mc_solar_eclipse to R.drawable.mcf_solar_eclipse,
         R.drawable.mc_moonrise to R.drawable.mcf_moonrise,
         R.drawable.mc_moonset to R.drawable.mcf_moonset,
         R.drawable.mc_moon_new to R.drawable.mcf_moon_new,
@@ -128,6 +129,7 @@ object ChiaroIcons {
         R.drawable.mc_star to R.drawable.mcfn_star,
         R.drawable.mc_starry_night to R.drawable.mcfn_starry_night,
         R.drawable.mc_falling_stars to R.drawable.mcfn_falling_stars,
+        R.drawable.mc_solar_eclipse to R.drawable.mcfn_solar_eclipse,
         R.drawable.mc_moonrise to R.drawable.mcfn_moonrise,
         R.drawable.mc_moonset to R.drawable.mcfn_moonset,
         R.drawable.mc_moon_new to R.drawable.mcfn_moon_new,
@@ -275,6 +277,17 @@ object ChiaroIcons {
     val star: ImageVector @Composable get() = styled(R.drawable.mc_star)
     val starryNight: ImageVector @Composable get() = styled(R.drawable.mc_starry_night)
     val fallingStars: ImageVector @Composable get() = styled(R.drawable.mc_falling_stars)
+
+    /** The moon over the sun: the one eclipse drawing Meteocons v2 has (Fase 19). */
+    val solarEclipse: ImageVector @Composable get() = styled(R.drawable.mc_solar_eclipse)
+
+    /**
+     * Meteocons v2 has no rainbow, and the sun-behind-a-shower drawing is not a
+     * substitute for one: it is literally the weather a rainbow is made of, which is
+     * what the row it marks says.
+     */
+    val rainbow: ImageVector
+        @Composable get() = styled(R.drawable.mc_partly_cloudy_day_rain)
 
     // The navigation bar. Deliberately NOT styled (decision, 3 set): these are
     // silhouettes the bar tints to one color, so fill-vs-line would change nothing

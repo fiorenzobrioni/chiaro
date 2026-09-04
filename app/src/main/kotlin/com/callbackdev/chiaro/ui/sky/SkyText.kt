@@ -3,11 +3,16 @@ package com.callbackdev.chiaro.ui.sky
 import android.content.res.Resources
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.model.MoonPhase
+import com.callbackdev.chiaro.domain.sky.LunarEclipse
+import com.callbackdev.chiaro.domain.sky.LunarEclipseKind
+import com.callbackdev.chiaro.domain.sky.SolarEclipse
+import com.callbackdev.chiaro.domain.sky.SolarEclipseKind
 import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.domain.sky.SkyVerdictNote
 import com.callbackdev.chiaro.ui.components.VerdictKind
+import kotlin.math.roundToInt
 
 /**
  * Every dotted job id turned into words (VISION §5.3: "the dot notation never
@@ -54,6 +59,25 @@ object SkyText {
         "meteor.leonids.peak" -> R.string.sky_name_leonids
         "meteor.geminids.peak" -> R.string.sky_name_geminids
         "meteor.ursids.peak" -> R.string.sky_name_ursids
+        "milky_way.core" -> R.string.sky_name_milky_way_core
+        "zodiacal.pm" -> R.string.sky_name_zodiacal_pm
+        "zodiacal.am" -> R.string.sky_name_zodiacal_am
+        "moon.new" -> R.string.sky_name_moon_new
+        "moon.first_quarter" -> R.string.sky_name_moon_first_quarter
+        "moon.full" -> R.string.sky_name_moon_full
+        "moon.last_quarter" -> R.string.sky_name_moon_last_quarter
+        "moon.closest_full" -> R.string.sky_name_moon_closest_full
+        "eclipse.lunar" -> R.string.sky_name_eclipse_lunar
+        "eclipse.solar" -> R.string.sky_name_eclipse_solar
+        "earth.perihelion" -> R.string.sky_name_earth_perihelion
+        "earth.aphelion" -> R.string.sky_name_earth_aphelion
+        "sun.earliest_set" -> R.string.sky_name_sun_earliest_set
+        "sun.latest_rise" -> R.string.sky_name_sun_latest_rise
+        "night.white.start" -> R.string.sky_name_night_white_start
+        "night.white.end" -> R.string.sky_name_night_white_end
+        "meteor.alpha_capricornids.peak" -> R.string.sky_name_alpha_capricornids
+        "meteor.southern_taurids.peak" -> R.string.sky_name_southern_taurids
+        "meteor.northern_taurids.peak" -> R.string.sky_name_northern_taurids
         else -> error("no words for sky job $jobId")
     }
 
@@ -91,6 +115,25 @@ object SkyText {
         "meteor.leonids.peak" -> R.string.sky_expl_leonids
         "meteor.geminids.peak" -> R.string.sky_expl_geminids
         "meteor.ursids.peak" -> R.string.sky_expl_ursids
+        "milky_way.core" -> R.string.sky_expl_milky_way_core
+        "zodiacal.pm" -> R.string.sky_expl_zodiacal_pm
+        "zodiacal.am" -> R.string.sky_expl_zodiacal_am
+        "moon.new" -> R.string.sky_expl_moon_new
+        "moon.first_quarter" -> R.string.sky_expl_moon_first_quarter
+        "moon.full" -> R.string.sky_expl_moon_full
+        "moon.last_quarter" -> R.string.sky_expl_moon_last_quarter
+        "moon.closest_full" -> R.string.sky_expl_moon_closest_full
+        "eclipse.lunar" -> R.string.sky_expl_eclipse_lunar
+        "eclipse.solar" -> R.string.sky_expl_eclipse_solar
+        "earth.perihelion" -> R.string.sky_expl_earth_perihelion
+        "earth.aphelion" -> R.string.sky_expl_earth_aphelion
+        "sun.earliest_set" -> R.string.sky_expl_sun_earliest_set
+        "sun.latest_rise" -> R.string.sky_expl_sun_latest_rise
+        "night.white.start" -> R.string.sky_expl_night_white_start
+        "night.white.end" -> R.string.sky_expl_night_white_end
+        "meteor.alpha_capricornids.peak" -> R.string.sky_expl_alpha_capricornids
+        "meteor.southern_taurids.peak" -> R.string.sky_expl_southern_taurids
+        "meteor.northern_taurids.peak" -> R.string.sky_expl_northern_taurids
         else -> error("no words for sky job $jobId")
     }
 
@@ -111,6 +154,62 @@ object SkyText {
         SkyNotScheduled.POLAR_NIGHT -> R.string.sky_none_polar_night
         SkyNotScheduled.MOON_ABSENT -> R.string.sky_none_moon
         SkyNotScheduled.NO_DARKNESS -> R.string.sky_none_no_darkness
+        SkyNotScheduled.DARKNESS_ALL_YEAR -> R.string.sky_none_darkness_all_year
+        SkyNotScheduled.ECLIPTIC_TOO_FLAT -> R.string.sky_none_ecliptic_flat
+        SkyNotScheduled.CORE_TOO_LOW -> R.string.sky_none_core_too_low
+        SkyNotScheduled.NO_ECLIPSE_AHEAD -> R.string.sky_none_no_eclipse
+    }
+
+    /**
+     * What an eclipse row says under its name: the kind, and the number the kind was
+     * decided on. A verdict ships with its arithmetic (VISION §5.3) and an eclipse is
+     * no different — "partial" alone is a word, "72 % of the moon in the shadow" is
+     * something a reader can picture before going outside.
+     */
+    fun lunarEclipseLine(res: Resources, eclipse: LunarEclipse): String = when (eclipse.kind) {
+        LunarEclipseKind.TOTAL -> res.getString(R.string.sky_eclipse_lunar_total)
+        LunarEclipseKind.PARTIAL -> res.getString(
+            R.string.sky_eclipse_lunar_partial,
+            (eclipse.umbralMagnitude * 100).roundToInt().coerceIn(1, 99)
+        )
+        LunarEclipseKind.PENUMBRAL -> res.getString(R.string.sky_eclipse_lunar_penumbral)
+    }
+
+    /**
+     * The solar line, in OBSCURATION rather than magnitude: the fraction of the disk
+     * covered is what the light outside does, and the fraction of the diameter — the
+     * number an almanac prints — reads a good deal more dramatic than the afternoon
+     * looks. The warning travels with it, always, on every kind.
+     */
+    fun solarEclipseLine(res: Resources, eclipse: SolarEclipse): String {
+        val head = when (eclipse.kind) {
+            SolarEclipseKind.TOTAL -> res.getString(R.string.sky_eclipse_solar_total)
+            SolarEclipseKind.ANNULAR -> res.getString(R.string.sky_eclipse_solar_annular)
+            SolarEclipseKind.PARTIAL -> res.getString(
+                R.string.sky_eclipse_solar_partial,
+                (eclipse.obscuration * 100).roundToInt().coerceIn(1, 99)
+            )
+        }
+        return head + " \u00b7 " + res.getString(R.string.sky_eclipse_solar_warning)
+    }
+
+    /**
+     * A bearing in words, to the eighth of the compass. Prose, so it localizes: the
+     * app says "look east", never "look 92°" — a number nobody can act on without
+     * turning their phone into a compass first.
+     */
+    fun bearingRes(degrees: Double): Int {
+        val point = (((degrees % 360.0) + 360.0) % 360.0 + 22.5).toInt() / 45 % 8
+        return when (point) {
+            0 -> R.string.compass_n
+            1 -> R.string.compass_ne
+            2 -> R.string.compass_e
+            3 -> R.string.compass_se
+            4 -> R.string.compass_s
+            5 -> R.string.compass_sw
+            6 -> R.string.compass_w
+            else -> R.string.compass_nw
+        }
     }
 
     /** The domain's four answers on the UI's four chips. */
