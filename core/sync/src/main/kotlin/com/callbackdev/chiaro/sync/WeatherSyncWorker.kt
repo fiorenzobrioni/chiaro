@@ -108,7 +108,7 @@ class WeatherSyncWorker(
         )
         alerts.forEach { alert ->
             // Fingerprint burns only on a successful post (muted channel → retry later)
-            if (notifiers.notifyAlert(alert, settings.units.temperature)) {
+            if (notifiers.notifyAlert(alert, report, settings.units)) {
                 stateStore.record(alert)
             }
         }

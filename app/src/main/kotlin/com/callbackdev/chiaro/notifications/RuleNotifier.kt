@@ -11,7 +11,9 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.rules.RuleMessages
 import com.callbackdev.chiaro.domain.rules.RuleTrigger
+import com.callbackdev.chiaro.domain.rules.RuleVariables
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.ui.alerts.RuleText
 import java.time.LocalDateTime
 
 /**
@@ -19,6 +21,13 @@ import java.time.LocalDateTime
  * user content, in their language, never translated (VISION §8) — with the
  * `{placeholders}` interpolated in their units. The chrome names the rule and the
  * place, and that is all the chrome there is: the message is the point.
+ *
+ * Expanded, the message keeps its place at the top and the rule's ARITHMETIC goes
+ * under it (Fase 6b): each condition as the sentence the Alerts screen shows, with
+ * the value that was actually read beside it. A verdict ships with its arithmetic
+ * (CLAUDE.md), and "why did this go off?" is the only question a fired rule ever
+ * raises. Collapsed it stays the message alone — that is what the reader wrote it
+ * for, and the system gives it one line.
  *
  * One channel for every rule, one notification id per rule: a re-fire of the same
  * rule overwrites, different rules stack.
@@ -69,7 +78,10 @@ object RuleNotifier {
                 context.getString(R.string.notif_rule_title, trigger.rule.name, cityLabel)
             )
             .setContentText(message)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(expanded(context, trigger, report, now, units, message))
+            )
             .setContentIntent(openApp(context, id))
             .setAutoCancel(true)
             .build()
@@ -79,6 +91,40 @@ object RuleNotifier {
         } catch (e: SecurityException) {
             false // POST_NOTIFICATIONS revoked between the check and the post
         }
+    }
+
+    /**
+     * The reader's message, then the conditions that made it fire, each with the
+     * reading behind it: "rain in the next 6 hours at least 20% (now 75%)".
+     *
+     * A condition whose variable cannot be resolved right now (air quality down, an
+     * empty window) prints its sentence WITHOUT a reading rather than a zero — the
+     * engine already refuses to call missing data "false", and the notification must
+     * not undo that in words (§1.1).
+     */
+    private fun expanded(
+        context: Context,
+        trigger: RuleTrigger,
+        report: WeatherReport,
+        now: LocalDateTime,
+        units: UnitSettings,
+        message: String
+    ): String {
+        val res = context.resources
+        val lines = trigger.rule.conditions.map { condition ->
+            val sentence = RuleText.sentence(res, condition, units)
+            val variable = RuleVariables.byId(condition.variable)
+            val reading = variable?.resolve?.invoke(report, now)
+                ?.let { RuleVariables.formatValue(variable.kind, it.value, units) }
+            if (reading == null) {
+                sentence
+            } else {
+                context.getString(R.string.notif_rule_condition, sentence, reading)
+            }
+        }
+        if (lines.isEmpty()) return message
+        return message + "\n\n" + context.getString(R.string.notif_rule_why) + "\n" +
+            lines.joinToString("\n")
     }
 
     private fun openApp(context: Context, requestCode: Int): PendingIntent =

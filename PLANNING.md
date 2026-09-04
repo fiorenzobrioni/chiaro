@@ -943,6 +943,40 @@ e una è una forma che non regge.
   (`widgetInk` in `WidgetInk.kt`) e fissata da `WidgetInkTest`: uno screenshot non può
   pinnarla, perché il guasto si vede solo sui telefoni la cui tappezzeria non pubblica i
   colori, che è il caso che nessuno ha davanti.
+- **Notifiche: chiusa e aperta sono due testi.** Segnalazione del committente: espandere
+  una notifica restituiva esattamente quello che già diceva — tutti e tre i notificatori
+  passavano la STESSA stringa a `setContentText` e a `BigTextStyle.bigText`. tweather fa
+  già la cosa giusta (riga singola ripiegata / oggetto JSON stampato), e qui vale lo stesso
+  principio nel registro di questo prodotto: niente JSON, prosa. Chiusa resta la frase (il
+  sistema le dà una riga e taglia il resto); aperta la frase diventa il titolo e sotto va
+  il resto, **un fatto per riga con la sua conseguenza** — la regola della griglia dei
+  dettagli (DESIGN §1.2) applicata al posto in cui si legge prima di aprire l'app.
+  - **Maltempo e pioggia**: la finestra vera (`AlertDetails`, puro e con tabella di test)
+    è la corsa di ore consecutive attorno all'ora dell'avviso, non l'ora sola che
+    l'`Alert` porta per il suo fingerprint; più il picco di pioggia con la sua ora,
+    l'escursione di temperatura nella finestra, e le due letture di adesso.
+  - **Riepilogo del mattino**: alba e tramonto, UV massimo, vento e aria, ognuno con la
+    riga che dice cosa farne (`WeatherText` era già scritto: le bande sono le stesse dei
+    dettagli di Oggi, quindi zero voce editoriale nuova da mantenere).
+  - **Regole del lettore**: il messaggio resta suo e in cima; sotto, «Perché è scattata»
+    e ogni condizione come la frase che mostra la schermata Avvisi, col valore letto
+    accanto (`RuleText.sentence` + `RuleVariables.resolve`). Un verdetto viaggia con la
+    sua aritmetica, e «perché è partita?» è l'unica domanda che una regola scattata pone.
+    Una variabile non risolvibile stampa la frase **senza** lettura: il motore si rifiuta
+    di chiamare «falso» un dato assente, e la notifica non può disfarlo a parole.
+  - **Promemoria del cielo**: gli stessi pezzi smettono di dividersi una riga, e sotto
+    arriva la spiegazione del momento dal catalogo — già scritta e già stampata dalla
+    schermata Cielo, quindi le due non possono divergere.
+  - **Onestà del blocco**: una corsa che arriva in fondo alla previsione dice «dalle 17:00»
+    e si ferma (una fine mai vista sarebbe la bugia che il lettore non può verificare);
+    una riga senza dato non si disegna; il vento dice «adesso» **a parole**, perché le ore
+    previste non portano vento e stamparlo nudo sotto una finestra di temporale lo
+    farebbe leggere come il vento del temporale.
+  - **Conseguenza sull'interfaccia di `:core:sync`**: `notifyAlert` riceve ora il
+    `WeatherReport` e le `UnitSettings` intere. Il `Alert` del dominio resta stretto quanto
+    il suo dedup richiede — allargarlo per far parlare una notifica sarebbe stato il
+    contrario del taglio dei moduli.
+
 - **Il canvas finisce diritto.** I due angoli inferiori portavano un raggio di 28dp: si
   leggeva come una card che galleggia sopra lo scroll invece che come il cielo con cui la
   schermata si apre. Tolti; `DESIGN.md` §6 aggiornato (il cielo non ha angoli).

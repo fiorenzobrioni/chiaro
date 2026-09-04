@@ -602,6 +602,23 @@
     <string name="notif_summary_body">%1$s. Low %2$s, high %3$s, rain %4$d%%.</string>
     <string name="notif_rule_title">“%1$s” · %2$s</string>
 
+    <!-- The expanded notification (Fase 6b): the collapsed line is the sentence, and
+         under it one fact per line, each with what to do about it — the details grid's
+         own rule (DESIGN §1.2), in the one place the reader reads before opening the
+         app. A line whose data is missing is not drawn. -->
+    <string name="notif_detail_window">From %1$s to %2$s</string>
+    <string name="notif_detail_from">From %1$s on</string>
+    <string name="notif_detail_hour">Around %1$s</string>
+    <string name="notif_detail_rain_peak">Rain up to %1$d%%, worst around %2$s</string>
+    <string name="notif_detail_temp_range">Temperature %1$s to %2$s</string>
+    <string name="notif_detail_now">Right now %1$s · %2$s</string>
+    <string name="notif_detail_sun">Sunrise %1$s, sunset %2$s</string>
+    <string name="notif_detail_uv">Peak UV %1$d · %2$s</string>
+    <string name="notif_detail_wind">Wind right now %1$s · %2$s</string>
+    <string name="notif_detail_air">Air quality %1$d · %2$s</string>
+    <string name="notif_rule_why">Why it fired</string>
+    <string name="notif_rule_condition">%1$s — value %2$s</string>
+
 
     <!-- The Journal (Fase 7): the history read as prose, and the drift of the week -->
     <string name="tab_journal">Journal</string>

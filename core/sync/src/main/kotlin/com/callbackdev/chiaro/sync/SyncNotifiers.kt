@@ -3,7 +3,6 @@ package com.callbackdev.chiaro.sync
 import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.rules.RuleTrigger
-import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import java.time.LocalDateTime
 
@@ -21,7 +20,14 @@ interface SyncNotifiers {
     /** Whether the system will show anything at all right now. */
     fun notificationsEnabled(): Boolean
 
-    fun notifyAlert(alert: Alert, temperature: TemperatureUnit): Boolean
+    /**
+     * [report] is the fetch the alert was found in, handed over so the app can say
+     * more than the alert's own fingerprint fields carry (Fase 6b): the expanded
+     * notification names the window the weather covers, its worst hour and the day's
+     * own facts, and all of it has to come from data rather than from a guess. The
+     * domain [Alert] stays as narrow as its dedup needs it to be.
+     */
+    fun notifyAlert(alert: Alert, report: WeatherReport, units: UnitSettings): Boolean
 
     fun notifyRule(
         trigger: RuleTrigger,

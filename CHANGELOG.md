@@ -145,6 +145,20 @@ polish:
   wallpaper hint is an affirmative signal and is read as one: dark ink only where the
   system says the ground is bright. Picking a light or a dark card now also names the ink
   at any solidity, so there is a way out; `WidgetInkTest` holds the whole table.
+- **A pulled-open notification now says more than the collapsed one.** Every
+  notification used the same text for both states, so expanding one gave back exactly
+  what it already said. Collapsed stays the sentence — the system gives it one line and
+  cuts the rest — and expanded keeps that sentence as the headline with the rest of the
+  story under it, one fact per line, each with what to do about it: for a storm or a
+  rain warning the window the weather really covers, its worst hour and by how much, the
+  temperature across it, and the current reading; for the morning summary the day's
+  sunrise and sunset, its peak UV, the wind and the air, each with its own consequence
+  line; for one of the reader's own alerts the arithmetic that fired it, condition by
+  condition with the value read; for a sky reminder the moment's own explanation under
+  the lead and the verdict. Nothing in the block is invented: a window that runs past the
+  end of the forecast says "from 17:00" and stops, a line whose data is missing is not
+  drawn, and the wind says "right now" in words because the hourly forecast carries none.
+
 - **The sky canvas ends on a straight line.** Its two bottom corners carried a 28dp round
   that read as a card floating over the scroll rather than as the sky the screen opens
   on.

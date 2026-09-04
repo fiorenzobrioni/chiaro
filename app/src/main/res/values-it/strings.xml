@@ -599,6 +599,22 @@
     <string name="notif_summary_body">%1$s. Minima %2$s, massima %3$s, pioggia %4$d%%.</string>
     <string name="notif_rule_title">«%1$s» · %2$s</string>
 
+    <!-- La notifica espansa (Fase 6b): la riga chiusa è la frase, sotto un fatto per
+         riga con cosa farci — la regola della griglia dei dettagli (DESIGN §1.2), nel
+         posto in cui si legge prima di aprire l'app. Una riga senza dato non si disegna. -->
+    <string name="notif_detail_window">Dalle %1$s alle %2$s</string>
+    <string name="notif_detail_from">Dalle %1$s in poi</string>
+    <string name="notif_detail_hour">Verso le %1$s</string>
+    <string name="notif_detail_rain_peak">Pioggia fino al %1$d%%, il peggio verso le %2$s</string>
+    <string name="notif_detail_temp_range">Temperatura da %1$s a %2$s</string>
+    <string name="notif_detail_now">Adesso %1$s · %2$s</string>
+    <string name="notif_detail_sun">Alba %1$s, tramonto %2$s</string>
+    <string name="notif_detail_uv">UV massimo %1$d · %2$s</string>
+    <string name="notif_detail_wind">Vento adesso %1$s · %2$s</string>
+    <string name="notif_detail_air">Qualità dell\'aria %1$d · %2$s</string>
+    <string name="notif_rule_why">Perché è scattata</string>
+    <string name="notif_rule_condition">%1$s — valore %2$s</string>
+
 
     <!-- Il Diario (Fase 7): la storia letta come prosa, e la deriva della settimana -->
     <string name="tab_journal">Diario</string>
