@@ -172,7 +172,7 @@
     <!-- Primo avvio: una schermata, due risposte, saltare è concesso -->
     <string name="first_run_tagline">Il meteo che ti dice cosa farne.</string>
     <string name="first_run_use_location">Usa la mia posizione</string>
-    <string name="first_run_location_why">Serve solo a trovare il meteo di dove sei. Non lascia mai il telefono.</string>
+    <string name="first_run_location_why">Arrotondata a circa un chilometro e usata solo per chiedere a Open-Meteo le previsioni di dove sei. Nessun account, niente da conservare, e mai letta in sottofondo.</string>
     <string name="first_run_search">Cerca una città</string>
     <string name="first_run_skip">Non ora</string>
 
@@ -315,7 +315,7 @@
     <string name="guide_places_search_title">Aggiungerne uno</string>
     <string name="guide_places_search_body">Scrivi un paio di lettere e i risultati arrivano mentre scrivi; le ricerche già fatte restano a portata di mano. La ricerca ha bisogno della connessione, tutto il resto no.</string>
     <string name="guide_places_gps_title">La mia posizione</string>
-    <string name="guide_places_gps_body">È facoltativa e viene chiesta solo quando la accendi tu. Chiaro usa la posizione approssimata che offre Android, solo per chiedere la previsione di dove sei: non gira mai in sottofondo e non esce mai dal telefono.</string>
+    <string name="guide_places_gps_body">È facoltativa e viene chiesta solo quando la accendi tu. Chiaro prende la posizione approssimata che offre Android, la arrotonda a circa un chilometro e manda quella a Open-Meteo: è l\'unico modo per chiedere la previsione di dove sei. Il nome del posto lo trova il geocoder di Android. Niente viene conservato altrove, non c\'è account e non c\'è tracciamento, e la posizione non viene mai letta ad app chiusa.</string>
     <string name="guide_places_order_title">Ordine e rimozione</string>
     <string name="guide_places_order_body">Sposta un luogo su o giù e lo scorrimento di Oggi segue quell\'ordine. Scorri via un luogo per toglierlo, con un attimo per annullare se era un errore.</string>
 

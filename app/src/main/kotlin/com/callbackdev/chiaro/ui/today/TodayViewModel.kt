@@ -15,14 +15,14 @@ import com.callbackdev.chiaro.data.SettingsStore
 import com.callbackdev.chiaro.data.WorkspaceStore
 import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.model.City
-import com.callbackdev.chiaro.domain.model.toGpsCity
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.ui.journal.JournalEntry
 import com.callbackdev.chiaro.ui.journal.JournalRow
 import com.callbackdev.chiaro.ui.journal.JournalStateBuilder
+import com.callbackdev.chiaro.ui.places.GpsError
+import com.callbackdev.chiaro.ui.places.asGpsError
 import java.time.Clock
 import java.time.Duration
-import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -89,15 +90,31 @@ class TodayViewModel(
 
     private val pageStates = mutableMapOf<String, StateFlow<TodayUiState>>()
 
-    /** True while the device position is being re-acquired, so the GPS page's pull
-     * shows the reader that something is happening: a fix can take up to fifteen
-     * seconds, and a gesture that answers with nothing reads as a broken one. */
+    /**
+     * True while a position acquisition **the reader asked for** is in flight, so the
+     * GPS page's pull keeps spinning: a fix can take up to fifteen seconds, and a
+     * gesture that answers with nothing reads as a broken one.
+     *
+     * Deliberately not set by the automatic paths (Fase 3b). It used to be, and since
+     * landing on the page re-fixes and landing happens at every launch, the reader met
+     * a spinning pull indicator on every single app start — for work nobody had asked
+     * for, over content that was already on screen and already right.
+     */
     private val locatingFlow = MutableStateFlow(false)
     val locating: StateFlow<Boolean> = locatingFlow.asStateFlow()
 
-    /** When the fix under [PlacePage.Gps] was last re-taken, so landing on the page
-     * cannot spend one per swipe. Null until this process takes its first. */
-    private var lastFixAt: Instant? = null
+    /**
+     * Why an explicitly requested fix failed, said in words once (Fase 3b). An
+     * automatic fix that fails stays silent — the last position with real weather
+     * beats an error over numbers that are still true — but a pull that silently
+     * changes nothing is how a revoked permission stayed invisible forever.
+     */
+    private val locationErrorFlow = MutableStateFlow<GpsError?>(null)
+    val locationError: StateFlow<GpsError?> = locationErrorFlow.asStateFlow()
+
+    /** One acquisition at a time in this ViewModel; the provider coalesces across
+     * the other one. */
+    private var acquiring = false
 
     val pager: StateFlow<PagerModel?> = combine(
         cityStore.locationSettings,
@@ -165,8 +182,28 @@ class TodayViewModel(
     fun refresh(page: PlacePage) {
         when (page) {
             is PlacePage.Saved -> refreshRequests.tryEmit(page.city.cacheKey)
-            is PlacePage.Gps -> viewModelScope.launch { refix(page, force = true) }
+            is PlacePage.Gps -> viewModelScope.launch { refix(page, explicit = true) }
         }
+    }
+
+    /** The error banner's own dismissal, and what the snackbar calls once it has been
+     * read: an error is worth saying once, not until the reader taps it away. */
+    fun dismissLocationError() {
+        locationErrorFlow.value = null
+    }
+
+    /**
+     * The app came back to the front (Fase 3b). The pager settles once and does not
+     * settle again on a warm resume, so before this the position page could sit on a
+     * fix taken before a three-hour drive while its weather refreshed happily beside
+     * it — the position was re-taken at every cold start, which is when it was least
+     * likely to be wrong, and never when it was most likely to be. Silent, and gated
+     * by the same interval as everything else, so on the ordinary resume it does
+     * nothing at all.
+     */
+    fun resumed(page: PlacePage) {
+        if (page !is PlacePage.Gps) return
+        viewModelScope.launch { refix(page, explicit = false) }
     }
 
     /** The pager settled on [page]: that IS the selection (VISION §5.6 — the active
@@ -178,7 +215,7 @@ class TodayViewModel(
             when (page) {
                 is PlacePage.Gps -> {
                     cityStore.setActiveGps()
-                    refix(page, force = false)
+                    refix(page, explicit = false)
                 }
                 is PlacePage.Saved -> cityStore.setActive(page.city)
             }
@@ -186,44 +223,85 @@ class TodayViewModel(
     }
 
     /**
-     * Re-takes the device position and persists it when it has moved. [force] is the
-     * reader asking out loud (the pull); without it the fix is skipped while the last
-     * one is younger than [GpsRefixInterval], so settling on the page — which happens
-     * on every app start and every swipe back — cannot turn into a stream of fixes.
+     * Re-takes the device position. [explicit] is the reader asking out loud — the
+     * pull — which is the only thing that shows a spinner, bypasses every interval and
+     * reports a failure.
      *
-     * A failed fix is silent on purpose: the last position with real weather beats an
-     * error banner over numbers that are still true. Nothing is cancelled either — the
-     * page keeps whatever it was showing until the new fix lands.
+     * Nothing is cancelled: the page keeps whatever it was showing until the new fix
+     * lands, and an automatic fix that fails leaves no trace at all.
      */
-    private suspend fun refix(page: PlacePage.Gps, force: Boolean) {
+    private suspend fun refix(page: PlacePage.Gps, explicit: Boolean) {
         val previous = page.lastFix
-        val now = clock.instant()
-        val due = force || lastFixAt?.let { Duration.between(it, now) >= GpsRefixInterval } ?: true
-        if (due && !locatingFlow.value) {
-            locatingFlow.value = true
-            val fix = try {
-                runCatching { locationProvider.currentFix().toGpsCity() }.getOrNull()
-            } finally {
-                locatingFlow.value = false
-            }
-            if (fix != null) {
-                lastFixAt = clock.instant()
-                // A moved fix rebuilds the page under a new cacheKey, and the state
-                // for that key fetches on its own: asking for a refresh here as well
-                // would spend two GETs on the same arrival.
-                if (fix != previous) {
-                    cityStore.updateGpsCity(fix)
-                    if (fix.cacheKey != previous?.cacheKey) return
-                }
-            }
-        }
+        // A moved fix rebuilds the page under a new cacheKey and the state for that
+        // key fetches on its own: asking for a refresh here as well would spend two
+        // GETs on the same arrival.
+        if (acquire(previous, explicit)) return
         // Same place (or no fix at all): the reader still asked for new numbers.
-        if (force) previous?.let { refreshRequests.tryEmit(it.cacheKey) }
+        if (explicit) previous?.let { refreshRequests.tryEmit(it.cacheKey) }
+    }
+
+    /**
+     * Takes the position when one is due, hands it to the store to adopt, and answers
+     * whether the PLACE changed.
+     *
+     * Two gates, and they guard different things. The persisted instant is what makes
+     * a launch free: it survives the process, which the old in-memory counter did not,
+     * so a cold start behind a fix taken minutes ago now asks for nothing — while
+     * before it counted every launch as due and acquired a position every time. The
+     * [acquiring] flag is only about this object doing one thing at a time; the
+     * provider's own throttle is what keeps the Places sheet and this ViewModel from
+     * paying twice for one gesture.
+     *
+     * The maxAge handed down is the same interval, so the layer that knows how to be
+     * cheap gets to be cheap: below it the platform answers from a position it already
+     * holds and powers nothing up at all.
+     */
+    private suspend fun acquire(previous: City?, explicit: Boolean): Boolean {
+        if (acquiring) return false
+        if (!explicit && previous != null && !fixIsDue()) return false
+
+        acquiring = true
+        if (explicit) locatingFlow.value = true
+        val fix = try {
+            locationProvider.currentFix(
+                maxAge = if (explicit) LocationProvider.Now else GpsRefixInterval,
+                timeout = if (explicit) {
+                    LocationProvider.DefaultTimeout
+                } else {
+                    LocationProvider.SilentTimeout
+                }
+            )
+        } catch (e: WeatherException) {
+            if (explicit) locationErrorFlow.value = e.asGpsError()
+            null
+        } finally {
+            acquiring = false
+            locatingFlow.value = false
+        }
+        if (fix == null) return false
+
+        // The adoption rule lives in the store, so every road to a fix obeys it: under
+        // two kilometres this keeps the place and takes only its better name.
+        val adopted = cityStore.adoptGpsFix(fix, clock.instant())
+        return adopted.cacheKey != previous?.cacheKey
+    }
+
+    /** Whether the persisted fix has aged past the interval. No fix ever taken (or a
+     * clock that moved backwards under us) counts as due. */
+    private suspend fun fixIsDue(): Boolean {
+        val fixedAt = cityStore.locationSettings.first().fixedAt ?: return true
+        val age = Duration.between(fixedAt, clock.instant())
+        return age.isNegative || age >= GpsRefixInterval
     }
 
     private fun cityStates(city: City, updateFrequencyMin: Int): Flow<TodayUiState> =
         channelFlow {
-            var refreshing = false
+            // Two flags, not one (Fase 3b): [inFlight] is the guard against two
+            // fetches racing, [userRefreshing] is the only thing the pull indicator
+            // is allowed to believe. They used to be the same variable, which is how
+            // an automatic fetch came to spin a gesture's spinner.
+            var inFlight = false
+            var userRefreshing = false
             var error: TodayError? = null
             var report = repository.cachedReport(city)
             var whatChanged: List<JournalEntry.ForecastShift> = emptyList()
@@ -232,11 +310,11 @@ class TodayViewModel(
                 val current = report
                 send(
                     if (current == null) {
-                        TodayUiState.Empty(city, refreshing, error)
+                        TodayUiState.Empty(city, userRefreshing, error)
                     } else {
                         val built = TodayStateBuilder.build(
                             city, current, clock.instant(), updateFrequencyMin,
-                            refreshing, error
+                            userRefreshing, error
                         )
                         if (built is TodayUiState.Content) {
                             built.copy(whatChanged = whatChanged)
@@ -262,14 +340,17 @@ class TodayViewModel(
                 }.getOrDefault(emptyList())
             }
 
-            suspend fun fetch(force: Boolean) {
-                if (refreshing) return
-                refreshing = true
-                push()
+            suspend fun fetch(userAsked: Boolean) {
+                if (inFlight) return
+                inFlight = true
+                userRefreshing = userAsked
+                // An automatic fetch has nothing to announce, so it does not even
+                // spend a frame saying it started.
+                if (userAsked) push()
                 try {
                     report = repository.getWeather(
                         city,
-                        forceRefresh = force,
+                        forceRefresh = userAsked,
                         ttl = Duration.ofMinutes(updateFrequencyMin.toLong())
                     )
                     error = null
@@ -293,16 +374,22 @@ class TodayViewModel(
                         )
                     }
                 } finally {
-                    refreshing = false
+                    inFlight = false
+                    userRefreshing = false
                     push()
                 }
             }
 
+            // The cached report goes out FIRST (Fase 3b). The revisions need a Room
+            // query and a dozen JSON decodes, and they feed a section far down the
+            // page: waiting for them held the whole screen on its skeleton for work
+            // nothing visible was waiting on.
+            push()
             refreshChanged()
             push()
-            launch { fetch(force = false) }
+            launch { fetch(userAsked = false) }
             launch {
-                refreshRequests.filter { it == city.cacheKey }.collect { fetch(force = true) }
+                refreshRequests.filter { it == city.cacheKey }.collect { fetch(userAsked = true) }
             }
             // The minute tick: the stated age, the staleness verdict and the recency
             // trim all move with the clock even when no new data does.
@@ -316,10 +403,13 @@ class TodayViewModel(
         }
 
     companion object {
-        /** How stale a fix has to be before merely landing on the position page takes
-         * another one. Battery is a feature (CLAUDE.md): a one-shot coarse fix is
-         * cheap, a fix per swipe is not. */
-        private val GpsRefixInterval: Duration = Duration.ofMinutes(5)
+        /**
+         * How stale a fix has to be before an automatic path takes another one, and
+         * also the maxAge handed to the provider. Battery is a feature (CLAUDE.md):
+         * a one-shot coarse fix is cheap, a fix per swipe is not, and a fix per
+         * launch is the one that adds up.
+         */
+        private val GpsRefixInterval: Duration = LocationProvider.SilentMaxAge
 
         val Factory = viewModelFactory {
             initializer {

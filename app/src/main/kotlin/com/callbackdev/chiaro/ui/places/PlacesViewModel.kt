@@ -14,12 +14,15 @@ import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.WeatherRepository
 import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.model.City
-import com.callbackdev.chiaro.domain.model.toGpsCity
+import java.time.Clock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.mapLatest
@@ -46,6 +49,15 @@ sealed interface GpsState {
 
 enum class GpsError { PERMISSION, DISABLED, TIMEOUT, UNAVAILABLE }
 
+/** The honest word for a failed fix. Shared since Fase 3b: Today's pull has to say
+ * exactly what the sheet has always said, and one mapping is how it stays that way. */
+fun WeatherException.asGpsError(): GpsError = when (this) {
+    is WeatherException.LocationPermissionDenied -> GpsError.PERMISSION
+    is WeatherException.LocationDisabled -> GpsError.DISABLED
+    is WeatherException.LocationTimeout -> GpsError.TIMEOUT
+    else -> GpsError.UNAVAILABLE
+}
+
 /** One saved row: the city plus the cached temperature beside it (VISION §5.6) —
  * cached only, already formatted°-less; a place list must never spend network. */
 data class SavedPlace(val city: City, val temperatureC: Double?)
@@ -64,7 +76,8 @@ class PlacesViewModel(
     private val repository: WeatherRepository,
     private val cityStore: CityStore,
     private val searchHistory: SearchHistoryStore,
-    private val locationProvider: LocationProvider
+    private val locationProvider: LocationProvider,
+    private val clock: Clock = Clock.systemUTC()
 ) : ViewModel() {
 
     val places: StateFlow<List<SavedPlace>> = cityStore.cities
@@ -84,6 +97,15 @@ class PlacesViewModel(
 
     private val gpsStateFlow = MutableStateFlow<GpsState>(GpsState.Idle)
     val gpsState: StateFlow<GpsState> = gpsStateFlow.asStateFlow()
+
+    /**
+     * A tap on the position row has come back with a position — the sheet's cue to
+     * close, which it deliberately does not do before then (Fase 3b). The row is the
+     * only surface that can say "I am looking" and the only one that can say why it
+     * failed, and it used to be dismissed a frame after the tap, so it said neither.
+     */
+    private val gpsSelectedFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val gpsSelected: SharedFlow<Unit> = gpsSelectedFlow.asSharedFlow()
 
     private val queryFlow = MutableStateFlow("")
     val query: StateFlow<String> = queryFlow.asStateFlow()
@@ -154,20 +176,16 @@ class PlacesViewModel(
         gpsStateFlow.value = GpsState.Acquiring
         viewModelScope.launch {
             try {
-                val fix = locationProvider.currentFix()
-                cityStore.updateGpsCity(fix.toGpsCity())
+                // Now, not "recent enough": the reader has just asked for their
+                // position, and the page settle this enable causes will read the
+                // provider's memo rather than pay for a second acquisition.
+                val fix = locationProvider.currentFix(maxAge = LocationProvider.Now)
+                cityStore.adoptGpsFix(fix, clock.instant())
                 cityStore.setUseGps(true)
                 cityStore.markInitDone()
                 gpsStateFlow.value = GpsState.Idle
             } catch (e: WeatherException) {
-                gpsStateFlow.value = GpsState.Error(
-                    when (e) {
-                        is WeatherException.LocationPermissionDenied -> GpsError.PERMISSION
-                        is WeatherException.LocationDisabled -> GpsError.DISABLED
-                        is WeatherException.LocationTimeout -> GpsError.TIMEOUT
-                        else -> GpsError.UNAVAILABLE
-                    }
-                )
+                gpsStateFlow.value = GpsState.Error(e.asGpsError())
             }
         }
     }
@@ -177,19 +195,39 @@ class PlacesViewModel(
         gpsStateFlow.value = GpsState.Idle
     }
 
-    /** Tapping the enabled GPS row: select it, and quietly refresh the fix — the
-     * reader who taps "my position" means where they are now, not where they were. */
+    /**
+     * Tapping the enabled GPS row: select it, and refresh the fix — the reader who
+     * taps "my position" means where they are now, not where they were.
+     *
+     * Said out loud since Fase 3b, both ways. The row goes to [GpsState.Acquiring]
+     * while it runs, because a tap that takes fifteen seconds and shows nothing reads
+     * as a dead row; and the failure is reported instead of swallowed, because a
+     * permission revoked in Settings otherwise showed up nowhere at all. The last
+     * position is still kept either way: old place, real weather.
+     */
     fun selectGps() {
+        if (gpsStateFlow.value == GpsState.Acquiring) return
+        gpsStateFlow.value = GpsState.Acquiring
         viewModelScope.launch {
             cityStore.setActiveGps()
-            runCatching { locationProvider.currentFix() }
-                .onSuccess { cityStore.updateGpsCity(it.toGpsCity()) }
-            // a failed silent re-fix keeps the last one: old position, real weather
+            try {
+                val fix = locationProvider.currentFix(maxAge = LocationProvider.Now)
+                cityStore.adoptGpsFix(fix, clock.instant())
+                gpsStateFlow.value = GpsState.Idle
+                gpsSelectedFlow.tryEmit(Unit)
+            } catch (e: WeatherException) {
+                gpsStateFlow.value = GpsState.Error(e.asGpsError())
+            }
         }
     }
 
+    /**
+     * Clears a failure that has been read. Only a failure: an acquisition in flight is
+     * not something to dismiss, and since Fase 3b both the toggle and the row can be
+     * the thing in flight.
+     */
     fun dismissGpsError() {
-        gpsStateFlow.value = GpsState.Idle
+        if (gpsStateFlow.value is GpsState.Error) gpsStateFlow.value = GpsState.Idle
     }
 
     companion object {

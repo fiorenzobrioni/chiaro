@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -37,6 +38,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -57,6 +60,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
@@ -80,6 +85,7 @@ import com.callbackdev.chiaro.ui.components.MetricTile
 import com.callbackdev.chiaro.ui.components.RainSparkline
 import com.callbackdev.chiaro.ui.components.SkyCanvas
 import com.callbackdev.chiaro.ui.components.SkyCanvasTopScrimEnd
+import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.places.PlacesSheet
@@ -108,7 +114,11 @@ fun TodayRoute(
     val pager by todayViewModel.pager.collectAsStateWithLifecycle()
     val units by todayViewModel.units.collectAsStateWithLifecycle()
     val locating by todayViewModel.locating.collectAsStateWithLifecycle()
+    val locationError by todayViewModel.locationError.collectAsStateWithLifecycle()
     val guideCard by todayViewModel.guideCardVisible.collectAsStateWithLifecycle()
+    // Resolved here, in composition, because a snackbar is shown from a coroutine and
+    // a coroutine has no Resources: what travels down is the sentence, already said.
+    val locationErrorMessage = locationError?.let { stringResource(gpsErrorText(it)) }
     var placesOpen by remember { mutableStateOf(false) }
     // Opening the guide is what the card was for: the two roads share the exit.
     val openGuideFromCard = {
@@ -131,10 +141,13 @@ fun TodayRoute(
                 model = model,
                 units = units,
                 locating = locating,
+                locationErrorMessage = locationErrorMessage,
                 guideCardVisible = guideCard,
                 stateFor = todayViewModel::stateFor,
                 onRefresh = todayViewModel::refresh,
                 onSettled = todayViewModel::setActive,
+                onResumed = todayViewModel::resumed,
+                onLocationErrorShown = todayViewModel::dismissLocationError,
                 onOpenPlaces = { placesOpen = true },
                 onOpenSettings = onOpenSettings,
                 onOpenGuide = openGuideFromCard,
@@ -163,10 +176,13 @@ private fun PagedToday(
     model: PagerModel,
     units: UnitSettings,
     locating: Boolean,
+    locationErrorMessage: String?,
     guideCardVisible: Boolean?,
     stateFor: (PlacePage) -> StateFlow<TodayUiState>,
     onRefresh: (PlacePage) -> Unit,
     onSettled: (PlacePage) -> Unit,
+    onResumed: (PlacePage) -> Unit,
+    onLocationErrorShown: () -> Unit,
     onOpenPlaces: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
@@ -193,6 +209,21 @@ private fun PagedToday(
             pages.getOrNull(settled)?.let(onSettled)
         }
     }
+    // Coming back to the front is the moment the position is most likely to be wrong,
+    // and the settle above does not fire again on a warm resume. Silent and gated:
+    // usually it costs nothing.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        pages.getOrNull(pagerState.currentPage)?.let(onResumed)
+    }
+
+    // A fix the reader asked for and did not get, said once. Everything else about a
+    // failed fix stays silent by design.
+    val snackbar = remember { SnackbarHostState() }
+    LaunchedEffect(locationErrorMessage) {
+        val message = locationErrorMessage ?: return@LaunchedEffect
+        snackbar.showSnackbar(message = message, withDismissAction = true)
+        onLocationErrorShown()
+    }
 
     // The status bar icons follow what is under them: white while the canvas' top
     // scrim still backs the bar, theme ink over the plain states AND once the scroll
@@ -204,31 +235,40 @@ private fun PagedToday(
     StatusBarIcons(overCanvas = currentState is TodayUiState.Content && canvasBehindBar)
 
     Surface(modifier = Modifier.fillMaxSize()) {
-        HorizontalPager(
-            state = pagerState,
-            key = { pages[it].key },
-            modifier = Modifier.fillMaxSize()
-        ) { index ->
-            val page = pages.getOrNull(index) ?: return@HorizontalPager
-            val state by stateFor(page).collectAsStateWithLifecycle()
-            TodayPage(
-                state = state,
-                title = pageTitle(page),
-                isGps = page is PlacePage.Gps,
-                dots = if (pages.size > 1) index to pages.size else null,
-                units = units,
-                // Taking the position again IS the refresh on that page, so its pull
-                // has to keep spinning while the fix is in flight.
-                locating = locating && page is PlacePage.Gps,
-                guideCardVisible = guideCardVisible,
-                onRefresh = { onRefresh(page) },
-                onOpenPlaces = onOpenPlaces,
-                onOpenSettings = onOpenSettings,
-                onOpenGuide = onOpenGuide,
-                onOpenJournal = onOpenJournal,
-                onDismissGuideCard = onDismissGuideCard,
-                isCurrent = index == pagerState.currentPage,
-                onCanvasBehindBar = { canvasBehindBar = it }
+        Box(modifier = Modifier.fillMaxSize()) {
+            HorizontalPager(
+                state = pagerState,
+                key = { pages[it].key },
+                modifier = Modifier.fillMaxSize()
+            ) { index ->
+                val page = pages.getOrNull(index) ?: return@HorizontalPager
+                val state by stateFor(page).collectAsStateWithLifecycle()
+                TodayPage(
+                    state = state,
+                    title = pageTitle(page),
+                    isGps = page is PlacePage.Gps,
+                    dots = if (pages.size > 1) index to pages.size else null,
+                    units = units,
+                    // Taking the position again IS the refresh on that page, so a
+                    // pull there keeps spinning until the fix lands. Only a pull:
+                    // `locating` is never set by the automatic paths.
+                    locating = locating && page is PlacePage.Gps,
+                    guideCardVisible = guideCardVisible,
+                    onRefresh = { onRefresh(page) },
+                    onOpenPlaces = onOpenPlaces,
+                    onOpenSettings = onOpenSettings,
+                    onOpenGuide = onOpenGuide,
+                    onOpenJournal = onOpenJournal,
+                    onDismissGuideCard = onDismissGuideCard,
+                    isCurrent = index == pagerState.currentPage,
+                    onCanvasBehindBar = { canvasBehindBar = it }
+                )
+            }
+            SnackbarHost(
+                hostState = snackbar,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
             )
         }
     }
@@ -578,7 +618,13 @@ private fun ContentState(
     }
     LaunchedEffect(isCurrent, behindBar) { if (isCurrent) onCanvasBehindBar(behindBar) }
 
-    PullToRefreshBox(isRefreshing = content.refreshing || locating, onRefresh = onRefresh) {
+    // Both halves are the reader's own gesture and nothing else (Fase 3b): the pull
+    // indicator means "doing what you just asked", so an automatic fetch and an
+    // automatic re-fix leave it alone — VISION §5.2, refresh silent.
+    PullToRefreshBox(
+        isRefreshing = content.userRefreshing || locating,
+        onRefresh = onRefresh
+    ) {
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),

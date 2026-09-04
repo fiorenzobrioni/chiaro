@@ -4,6 +4,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Coarse only: city-level accuracy is all a forecast can use. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- ...and the permission alone would have Play read the hardware as REQUIRED and
+         filter the app off devices that have none. Saved places are the main way to
+         use Chiaro; the device position is the optional half. -->
+    <uses-feature
+        android:name="android.hardware.location"
+        android:required="false" />
     <!-- Asked the first time the reader turns on something that needs it, never at
          startup (VISION.md §5.8). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

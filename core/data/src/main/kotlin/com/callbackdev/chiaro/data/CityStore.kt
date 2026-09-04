@@ -10,7 +10,12 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
+import com.callbackdev.chiaro.domain.model.FixAdoptionMeters
+import com.callbackdev.chiaro.domain.model.GeoFix
 import com.callbackdev.chiaro.domain.model.GpsCityId
+import com.callbackdev.chiaro.domain.model.distanceMetersTo
+import com.callbackdev.chiaro.domain.model.toGpsCity
+import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -18,8 +23,17 @@ import kotlinx.serialization.json.Json
 
 private val Context.citiesDataStore by preferencesDataStore(name = "cities")
 
-/** The GPS toggle's persisted state plus the last fix it produced. */
-data class LocationSettings(val useGps: Boolean, val gpsCity: City?)
+/**
+ * The GPS toggle's persisted state, the last fix it produced, and WHEN that fix was
+ * taken. The instant is what makes a cold start cheap (Fase 3b): the interval used to
+ * be counted in a ViewModel field, which was null again at every process start, so
+ * every launch counted as due and every launch acquired a position.
+ */
+data class LocationSettings(
+    val useGps: Boolean,
+    val gpsCity: City?,
+    val fixedAt: Instant?
+)
 
 /** What the main screen shows weather for: a saved city, the device position, or
  * nothing at all. */
@@ -65,7 +79,13 @@ class CityStore(
     val cities: Flow<List<City>> = dataStore.data.map(::decode).distinctUntilChanged()
 
     val locationSettings: Flow<LocationSettings> = dataStore.data
-        .map { prefs -> LocationSettings(prefs[UseGps] ?: false, decodeGpsCity(prefs)) }
+        .map { prefs ->
+            LocationSettings(
+                useGps = prefs[UseGps] ?: false,
+                gpsCity = decodeGpsCity(prefs),
+                fixedAt = prefs[GpsFixedAt]?.let(Instant::ofEpochMilli)
+            )
+        }
         .distinctUntilChanged()
 
     /** GPS is the source only while enabled AND selected (sentinel [GpsCityId]). */
@@ -230,10 +250,42 @@ class CityStore(
         }
     }
 
-    /** Upserts the persisted GPS pseudo-city; never touches the saved list. */
-    suspend fun updateGpsCity(city: City) {
-        require(city.id == GpsCityId) { "not the GPS pseudo-city: ${city.id}" }
-        dataStore.edit { it[GpsCityJson] = json.encodeToString(city) }
+    /**
+     * Records a fix and answers with the place the app should now be showing. Never
+     * touches the saved list.
+     *
+     * The adoption rule is here rather than in a caller because every road to a fix
+     * has to obey it (Fase 3b). Under [FixAdoptionMeters] the reader has not changed
+     * town: the coordinates — and with them the cacheKey, the page, the disk cache
+     * and the Journal's history — stay exactly where they were, and only what reverse
+     * geocoding learned about the NAME is taken. Past it the fix is a new place and
+     * replaces the old one wholesale. Read and write happen inside one edit, so two
+     * fixes landing together cannot both measure themselves against the same
+     * predecessor.
+     *
+     * The instant is written on every fix, adopted or not: it is the answer to "is
+     * another acquisition due", which does not depend on whether the reader moved.
+     */
+    suspend fun adoptGpsFix(fix: GeoFix, at: Instant): City {
+        val updated = dataStore.edit { prefs ->
+            val previous = decodeGpsCity(prefs)
+            val moved = previous == null ||
+                fix.coordinates.distanceMetersTo(previous.coordinates) >= FixAdoptionMeters
+            val adopted = if (moved) {
+                fix.toGpsCity()
+            } else {
+                // A failed geocode must not overwrite a name that worked: its City
+                // would carry the coordinate label of a position we are not adopting.
+                previous.copy(
+                    name = fix.placeName ?: previous.name,
+                    region = fix.region ?: previous.region,
+                    country = fix.country ?: previous.country
+                )
+            }
+            prefs[GpsCityJson] = json.encodeToString(adopted)
+            prefs[GpsFixedAt] = at.toEpochMilli()
+        }
+        return decodeGpsCity(updated) ?: fix.toGpsCity()
     }
 
     private fun decodeGpsCity(prefs: Preferences): City? =
@@ -256,6 +308,9 @@ class CityStore(
         /** The first-run screen has been answered. */
         private val InitDone = booleanPreferencesKey("init_done")
         private val GpsCityJson = stringPreferencesKey("gps_city_json")
+
+        /** When [GpsCityJson] was taken, so the interval survives the process. */
+        private val GpsFixedAt = longPreferencesKey("gps_fixed_at")
 
         /**
          * NOT seeded on a fresh install: a city the user never chose is the one

@@ -175,7 +175,7 @@
     <!-- First run: one screen, two answers, skipping allowed -->
     <string name="first_run_tagline">Weather that tells you what to do about it.</string>
     <string name="first_run_use_location">Use my position</string>
-    <string name="first_run_location_why">Only used to find the weather where you are. It never leaves the phone.</string>
+    <string name="first_run_location_why">Rounded to about a kilometre and used only to ask Open-Meteo for the forecast where you are. No account, nothing stored, and never read in the background.</string>
     <string name="first_run_search">Search for a city</string>
     <string name="first_run_skip">Not now</string>
 
@@ -318,7 +318,7 @@
     <string name="guide_places_search_title">Adding one</string>
     <string name="guide_places_search_body">Type a couple of letters and the results arrive as you go; the searches you have already made stay within reach. Search needs a connection, everything else does not.</string>
     <string name="guide_places_gps_title">My position</string>
-    <string name="guide_places_gps_body">Optional, and only ever asked for when you turn it on. Chiaro uses the approximate position Android provides, only to ask for the forecast where you are; it never runs in the background and it never leaves the phone.</string>
+    <string name="guide_places_gps_body">Optional, and only ever asked for when you turn it on. Chiaro takes the approximate position Android provides, rounds it to about a kilometre and sends that to Open-Meteo, which is the only way to ask for the forecast where you are; the name of the place comes from Android\'s own geocoder. Nothing is kept anywhere else, there is no account and no tracking, and the position is never read while the app is closed.</string>
     <string name="guide_places_order_title">Order and removal</string>
     <string name="guide_places_order_body">Move a place up or down and the swipe on Today follows that order. Swipe a place away to remove it, with a moment to undo if it was a mistake.</string>
 
