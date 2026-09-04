@@ -203,6 +203,18 @@ polish:
   that read as a card floating over the scroll rather than as the sky the screen opens
   on.
 
+- **An alert's editor opens on the whole of itself.** The sheet behind a rule started
+  half-open, which is the right state for a list — there is more under the fold, and the
+  gesture that reveals it is the gesture that scrolls it — and the wrong one for a form,
+  where the name, the condition, the message and the dry run are one sentence. Two
+  consequences went with it. The dry run's answer printed just below the fold, so
+  whoever had asked the question had to drag the sheet to read it; the sheet now opens
+  on all of its content, and the answer is brought into view in any case. And that
+  answer sat 12dp to the left of the button that asks for it: a text button carries
+  Material's own content padding, so its label started inside the sheet's 16dp margin
+  while everything else began on it. The sheet's three text buttons drop that padding
+  horizontally and keep it vertically, so every line in the form now starts on one edge.
+
 ### Removed
 
 - The last of the editor's vocabulary in the data layer (Fase 4): line numbers, word

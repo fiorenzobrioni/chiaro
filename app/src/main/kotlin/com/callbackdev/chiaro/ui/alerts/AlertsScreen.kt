@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,6 +40,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -344,6 +347,15 @@ private sealed interface EditorDialog {
 }
 
 /**
+ * Material's text buttons carry 12dp of content padding, which would set a button's
+ * label 12dp inside the sheet's own 16dp margin — and the dry run prints its answer
+ * against that margin, so the question and the answer landed on two different left
+ * edges (device review, 4 set). Dropped horizontally, kept vertically: the 8dp is the
+ * button's own, and the 48dp touch target is Material's minimum, not this padding's.
+ */
+private val FlushTextButtonPadding = PaddingValues(horizontal = 0.dp, vertical = 8.dp)
+
+/**
  * The builder (VISION §5.4): a sentence of tappable chips — variable, operator,
  * threshold — an optional second condition, the reader's own message, and a dry run
  * that says what the rule would do right now without posting anything. Chip edits
@@ -363,6 +375,7 @@ private fun RuleEditorSheet(
     var message by rememberSaveable(rule.id) { mutableStateOf(rule.message) }
     var dialog by remember { mutableStateOf<EditorDialog?>(null) }
     var preview by remember { mutableStateOf<RulePreview?>(null) }
+    val scroll = rememberScrollState()
 
     fun close() {
         val trimmedName = name.trim().ifEmpty { rule.name }
@@ -372,10 +385,17 @@ private fun RuleEditorSheet(
         onDismiss()
     }
 
-    ModalBottomSheet(onDismissRequest = ::close) {
+    ModalBottomSheet(
+        onDismissRequest = ::close,
+        // A form is not a list: it opens on all of itself. Material's half-open state
+        // is for content that continues past the fold, and this content does not —
+        // stopping at half made the reader drag the sheet before reading it
+        // (device review, 4 set).
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ) {
         Column(
             modifier = Modifier
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scroll)
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -424,14 +444,17 @@ private fun RuleEditorSheet(
                 )
             }
             if (rule.conditions.size < MaxConditions) {
-                TextButton(onClick = {
-                    viewModel.update(
-                        rule.copy(
-                            conditions = rule.conditions +
-                                RuleCondition("current.temp_c", RuleOp.GTE, 20.0)
+                TextButton(
+                    onClick = {
+                        viewModel.update(
+                            rule.copy(
+                                conditions = rule.conditions +
+                                    RuleCondition("current.temp_c", RuleOp.GTE, 20.0)
+                            )
                         )
-                    )
-                }) {
+                    },
+                    contentPadding = FlushTextButtonPadding
+                ) {
                     Icon(Icons.Outlined.Add, contentDescription = null)
                     Text(
                         text = stringResource(R.string.rule_add_condition),
@@ -449,11 +472,22 @@ private fun RuleEditorSheet(
             )
 
             // The dry run (VISION §5.4): what it would have done, nothing posted.
-            TextButton(onClick = {
-                scope.launch {
-                    preview = viewModel.preview(rule.copy(message = message))
-                }
-            }) {
+            TextButton(
+                onClick = {
+                    scope.launch {
+                        preview = viewModel.preview(rule.copy(message = message))
+                        // The answer prints under the button, which on a short screen
+                        // is under the fold: whoever just asked the question should not
+                        // have to drag the sheet to read it. Two frames, because the
+                        // line is composed on the first and measured on the second, and
+                        // the scroll range only knows about it once it is measured.
+                        withFrameNanos { }
+                        withFrameNanos { }
+                        scroll.animateScrollTo(scroll.maxValue)
+                    }
+                },
+                contentPadding = FlushTextButtonPadding
+            ) {
                 Text(stringResource(R.string.rule_preview_action))
             }
             preview?.let { result ->
@@ -473,7 +507,10 @@ private fun RuleEditorSheet(
                 )
             }
 
-            TextButton(onClick = { dialog = EditorDialog.ConfirmDelete }) {
+            TextButton(
+                onClick = { dialog = EditorDialog.ConfirmDelete },
+                contentPadding = FlushTextButtonPadding
+            ) {
                 Text(
                     text = stringResource(R.string.rule_delete),
                     color = MaterialTheme.colorScheme.error

@@ -1206,6 +1206,48 @@ della categoria e non è stato toccato niente.
 
 ---
 
+## Il foglio di una regola (committente, 4 set 2026) — tre difetti di forma
+
+Tre segnalazioni sullo stesso foglio, quello che si apre toccando un avviso proprio. La
+terza è arrivata come domanda — «sarebbe meglio penso che compaia già tutta visibile, sei
+d'accordo?» — e sì: è la prima causa, e le altre due sono in buona parte la sua coda.
+
+- **Il foglio si apriva a metà.** `ModalBottomSheet` parte parzialmente espanso quando il
+  contenuto supera metà schermo, ed è lo stato giusto per una **lista**: sotto la piega
+  c'è dell'altro, e il gesto per vederlo è lo stesso gesto con cui la si scorre. L'editor
+  non è una lista, è un **modulo**: nome, condizione, messaggio e prova sono una frase
+  sola, e leggerne metà non serve a niente. Ora `skipPartiallyExpanded = true`, come già
+  fa il foglio dei luoghi dalla Fase 3 — e siccome la colonna non chiede tutta l'altezza,
+  il foglio si apre alto quanto quello che ha da dire, non a schermo pieno per principio.
+- **La prova a vuoto rispondeva sotto la piega.** Con il foglio a metà, «Prova adesso»
+  stampava la risposta appena fuori dalla vista: chi aveva appena fatto la domanda doveva
+  trascinare il foglio per leggere la risposta, che è il contrario di quello che una
+  prova a vuoto promette (VISION §5.4 — dice cosa farebbe, subito, senza mandare niente).
+  Il punto sopra di solito basta; la prova porta comunque la risposta in vista da sé.
+  Due frame di attesa prima di scorrere, e sono due per un motivo: la riga si **compone**
+  sul primo e si **misura** sul secondo, e `maxValue` la conosce solo da misurata — con un
+  frame solo si scorre alla fine di ieri. Nessun rischio quando non c'è niente da
+  scorrere: `maxValue` è 0 e lo scorrimento programmatico non passa dal nested scroll,
+  quindi non trascina il foglio.
+- **La risposta era fuori squadra rispetto alla domanda.** Il risultato è un `Text` e
+  parte dal margine del foglio (16dp); «Prova adesso» è un `TextButton` e Material gli
+  mette 12dp di padding interno, quindi l'etichetta partiva da 28. Due bordi sinistri a
+  12dp di distanza su due righe attaccate: si vede, ed è quello che il committente ha
+  visto. I tre bottoni testuali del foglio (aggiungi condizione, prova, elimina) prendono
+  ora `FlushTextButtonPadding` — orizzontale a 0, verticale agli 8dp che erano già suoi —
+  così ogni elemento del foglio comincia sullo stesso bordo: il riquadro dei due campi di
+  testo, i chip, i titoli, le risposte, le azioni. Il tocco resta di 48dp, che è il minimo
+  di Material e non viene da questo padding.
+
+  Non contraddice la decisione del 4 set sui `ListItem` («una lista fatta con `ListItem`
+  si legge bene perché segue la piattaforma, e limare due dp per centrare un numero
+  scritto in un documento sarebbe il sistema di design che discute con Material»): là il
+  divario era verticale, dentro righe diverse, e nessuno poteva vederlo; qui sono due
+  bordi sinistri su due righe consecutive, cioè la cosa che l'occhio misura meglio di
+  ogni altra. La regola resta: si segue Material finché non si vede.
+
+---
+
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
 - [x] Passata colore (chiesta su device, 3 set; fatta il 3 set sera, alzata una
