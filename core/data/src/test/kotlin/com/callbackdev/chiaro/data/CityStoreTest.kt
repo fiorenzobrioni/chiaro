@@ -6,6 +6,7 @@ import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.GeoFix
 import com.callbackdev.chiaro.domain.model.GpsCityId
 import com.callbackdev.chiaro.domain.model.toGpsCity
+import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,7 +33,9 @@ class CityStoreTest {
     // Distinct from DefaultCity (Milan) so add/setActive really change the store
     private val turin = City(3_165_524, "Turin", "Piedmont", "Italy",
         Coordinates(45.0703, 7.6869), "Europe/Rome")
-    private val gpsCity = GeoFix(Coordinates(45.46, 9.19), "Milano", null, "Italy").toGpsCity()
+    private val gpsFix = GeoFix(Coordinates(45.46, 9.19), "Milano", null, "Italy")
+    private val gpsCity = gpsFix.toGpsCity()
+    private val fixedAt: Instant = Instant.parse("2026-09-04T10:15:00Z")
     private val milan = CityStore.DefaultCity
 
     private fun store(): CityStore = CityStore(
@@ -107,10 +110,10 @@ class CityStoreTest {
     }
 
     @Test
-    fun `updateGpsCity persists the fix without touching the saved list`() = runBlocking {
+    fun `adoptGpsFix persists the fix without touching the saved list`() = runBlocking {
         val store = store()
         store.setUseGps(true)
-        store.updateGpsCity(gpsCity)
+        store.adoptGpsFix(gpsFix, fixedAt)
         assertEquals(ActiveSource.Gps(gpsCity), store.activeSource.first())
         assertEquals(emptyList<City>(), store.cities.first())
     }
@@ -131,7 +134,7 @@ class CityStoreTest {
         assertEquals(ActiveSource.None, store.activeSource.first())
 
         store.setUseGps(true)
-        store.updateGpsCity(gpsCity)
+        store.adoptGpsFix(gpsFix, fixedAt)
         store.add(turin)
         store.setActiveGps()
         assertEquals(ActiveSource.Gps(gpsCity), store.activeSource.first())
@@ -171,7 +174,7 @@ class CityStoreTest {
     fun `gps pseudo-city never appears in cities and cannot be added`() = runBlocking {
         val store = store()
         store.setUseGps(true)
-        store.updateGpsCity(gpsCity)
+        store.adoptGpsFix(gpsFix, fixedAt)
         assertNull(store.cities.first().find { it.id == GpsCityId })
     }
 
@@ -260,8 +263,71 @@ class CityStoreTest {
         assertEquals(ActiveSource.None, store.activeSource.first())
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun `updateGpsCity rejects a regular city`(): Unit = runBlocking {
-        store().updateGpsCity(turin)
+    /**
+     * Fase 3b. The old guard here was a runtime `require` that the city handed in
+     * carried the GPS id; the signature takes a [GeoFix] now, so a regular city is
+     * not something a caller can express and the check has nothing left to catch.
+     * What replaces it are the three tests below, which cover the rule that actually
+     * decides what gets stored.
+     */
+    @Test
+    fun `a fix under the adoption distance keeps the place and takes only its name`() =
+        runBlocking {
+            val store = store()
+            store.adoptGpsFix(gpsFix, fixedAt)
+
+            // ~800 m north: a different cacheKey cell, the same town.
+            val nearby = GeoFix(Coordinates(45.467, 9.19), "Milano Centro", "Lombardia", "Italy")
+            val adopted = store.adoptGpsFix(nearby, fixedAt.plusSeconds(600))
+
+            assertEquals(gpsCity.coordinates, adopted.coordinates)
+            assertEquals(gpsCity.cacheKey, adopted.cacheKey)
+            assertEquals("Milano Centro", adopted.name)
+            assertEquals("Lombardia", adopted.region)
+        }
+
+    @Test
+    fun `a fix past the adoption distance is a new place`() = runBlocking {
+        val store = store()
+        store.adoptGpsFix(gpsFix, fixedAt)
+
+        // Turin: unambiguously somewhere else.
+        val far = GeoFix(Coordinates(45.07, 7.69), "Torino", "Piemonte", "Italy")
+        val adopted = store.adoptGpsFix(far, fixedAt.plusSeconds(600))
+
+        assertEquals(Coordinates(45.07, 7.69), adopted.coordinates)
+        assertEquals("Torino", adopted.name)
+    }
+
+    /** A geocode that failed must not overwrite a name that worked: its own name is
+     * the coordinate label of a position we are NOT adopting. */
+    @Test
+    fun `a nameless fix nearby leaves the stored name alone`() = runBlocking {
+        val store = store()
+        store.adoptGpsFix(gpsFix, fixedAt)
+
+        val nameless = GeoFix(Coordinates(45.467, 9.19), null, null, null)
+        val adopted = store.adoptGpsFix(nameless, fixedAt.plusSeconds(600))
+
+        assertEquals("Milano", adopted.name)
+        assertEquals("Italy", adopted.country)
+    }
+
+    /** The instant is what makes a cold start free, so it is written on every fix —
+     * including the ones that changed nothing about the place. */
+    @Test
+    fun `every fix records when it was taken`() = runBlocking {
+        val store = store()
+        store.adoptGpsFix(gpsFix, fixedAt)
+        assertEquals(fixedAt, store.locationSettings.first().fixedAt)
+
+        val later = fixedAt.plusSeconds(3_600)
+        store.adoptGpsFix(gpsFix, later)
+        assertEquals(later, store.locationSettings.first().fixedAt)
+    }
+
+    @Test
+    fun `no fix taken yet has no instant`() = runBlocking {
+        assertNull(store().locationSettings.first().fixedAt)
     }
 }

@@ -15,8 +15,16 @@ import java.time.ZoneId
 /**
  * The states Today can be in, each one the honest name of a situation the reader is
  * actually in. There is deliberately no "Loading": before anything is known the screen
- * is [Starting] (a skeleton, §8.11), and while a refresh runs the CONTENT stays up
- * with [Content.refreshing] set — no full-screen spinner exists in this product.
+ * is [Starting] (a skeleton, §8.11), and while a refresh runs the CONTENT stays up —
+ * no full-screen spinner exists in this product.
+ *
+ * [Content.userRefreshing] is narrower than it looks and the name is the point (Fase
+ * 3b). It is true only while a refresh the READER asked for is running, because the
+ * only thing it drives is the pull-to-refresh indicator, and that indicator means
+ * "doing what you just asked". The automatic fetch — cold start, TTL expiry, landing
+ * on a page — runs with this false and says nothing: VISION §5.2 spells it out,
+ * content first, freshness stated, refresh silent. What the reader is told about an
+ * automatic refresh is the freshness chip, which states the real age either way.
  */
 sealed interface TodayUiState {
 
@@ -31,7 +39,7 @@ sealed interface TodayUiState {
      * covers the present). The skeleton, plus the fetch state and its error. */
     data class Empty(
         val city: City,
-        val refreshing: Boolean,
+        val userRefreshing: Boolean,
         val error: TodayError?
     ) : TodayUiState
 
@@ -49,7 +57,7 @@ sealed interface TodayUiState {
         val week: List<WeekDay>,
         val lastSync: Instant,
         val isStale: Boolean,
-        val refreshing: Boolean,
+        val userRefreshing: Boolean,
         val error: TodayError?,
         /** VISION §5.2.5: the latest forecast revisions, at most three lines,
          * tapping opens the Journal. Filled by the ViewModel, not the builder —
@@ -111,13 +119,13 @@ object TodayStateBuilder {
         report: WeatherReport,
         now: Instant,
         updateFrequencyMin: Int,
-        refreshing: Boolean,
+        userRefreshing: Boolean,
         error: TodayError?
     ): TodayUiState {
         val zone = runCatching { ZoneId.of(report.location.timezone) }
             .getOrDefault(ZoneId.systemDefault())
         if (!WeatherRecency.coversNow(report, now)) {
-            return TodayUiState.Empty(city, refreshing, error)
+            return TodayUiState.Empty(city, userRefreshing, error)
         }
         val trimmed = WeatherRecency.trim(report, now)
         val local = LocalDateTime.ofInstant(now, zone)
@@ -148,7 +156,7 @@ object TodayStateBuilder {
             week = week(trimmed, zone, coords),
             lastSync = report.systemInfo.lastSync,
             isStale = WeatherFreshness.isStale(report.systemInfo.lastSync, updateFrequencyMin, now),
-            refreshing = refreshing,
+            userRefreshing = userRefreshing,
             error = error
         )
     }

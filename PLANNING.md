@@ -1098,6 +1098,114 @@ e una è una forma che non regge.
 
 ---
 
+## Review della posizione (committente, 4 set 2026) — lo spinner all'avvio e la strategia dei fix
+
+Una review dell'intero percorso della posizione, chiesta dopo che «ogni volta che apro
+l'app c'è lo spinner che gira per un po'». Lo spinner era la punta: sotto c'era una
+strategia di acquisizione rovesciata rispetto alle linee guida della piattaforma, e una
+soglia che non sopravviveva al processo.
+
+**Cosa era giusto e resta com'è**: solo `ACCESS_COARSE_LOCATION`, niente play-services,
+nessuna posizione in background (il worker e i widget usano l'ultimo fix persistito e se
+non c'è escono), coordinate arrotondate a due decimali prima di uscire, permesso chiesto
+in contesto dopo la frase che lo spiega. Su queste cose Chiaro è più rigoroso della media
+della categoria e non è stato toccato niente.
+
+- **Lo spinner a ogni avvio.** Catena deterministica: il pager si assesta sulla pagina
+  attiva → `setActive` → `refix` → la soglia dei 5 minuti si leggeva da `lastFixAt`, un
+  campo del ViewModel, quindi `null` a processo appena nato e quindi *sempre* dovuta →
+  15 s di timeout più 5 s di geocoding con `locating` acceso → e `TodayScreen` legava
+  `locating` (e `content.refreshing`) al `PullToRefreshBox`. L'indicatore del pull, per
+  contratto Material, vuol dire «sto facendo quello che mi hai appena chiesto»: acceso da
+  codice per un aggiornamento automatico dice una bugia sull'origine, e viola la regola
+  scritta in VISION §5.2 e DESIGN §1.4 — *content first, freshness stated, refresh
+  silent*. Ora `refreshing` si chiama `userRefreshing` e lo alza solo `refresh()`; il
+  fetch automatico non spende nemmeno un frame per dire che è partito, e quello che il
+  lettore sente dire di un aggiornamento automatico resta il chip di freschezza, che
+  l'età vera la dice comunque. Nota: tweather la distinzione ce l'aveva già
+  (`revalidateFix` non accende `acquiringFix`); si era persa nel reskin.
+- **La soglia ora sopravvive al processo.** `CityStore` persiste `gps_fixed_at` accanto
+  a `gps_city_json` e `LocationSettings` lo porta: un avvio a freddo dietro un fix di due
+  minuti fa non chiede più niente a nessuno. Era il difetto che costava di più — il
+  processo muore molto più spesso di quanto cambi la città in cui ti trovi.
+- **Prima l'ultimo noto, poi l'acquisizione.** `AndroidLocationProvider.currentFix`
+  prende ora `maxAge` e `timeout`: sotto `maxAge` risponde con la posizione che il
+  sistema già possiede (gratis, istantanea, nessuna radio accesa), e solo oltre avvia
+  `getCurrentLocation`. È l'ordine che la documentazione Android raccomanda e che le app
+  meteo diffuse usano; prima era esattamente il contrario, con l'ultimo noto relegato a
+  ripiego dopo il timeout. L'ultimo noto viene anche **cercato su tutti i provider
+  abilitati** e **filtrato per età** (`elapsedRealtimeNanos`, monotono): senza tetto
+  poteva essere di ieri o della città da cui eri tornato, ed entrava come «dove sei
+  adesso». Tetto di 24 ore per il ripiego. Il timeout del percorso silenzioso scende a
+  8 s: dietro contenuto già disegnato, quindici secondi non li aspetta nessuno.
+- **Un'azione, un fix.** `CachedLocationProvider` avvolge il provider vero nel
+  `ServiceLocator` e tiene l'ultimo `GeoFix` con il suo istante, dietro un `Mutex`.
+  Attivare il GPS costava due acquisizioni di fila — `PlacesViewModel` prendeva il fix,
+  la scrittura sullo store spostava il pager sulla pagina posizione, e il settle ne
+  chiedeva un altro a un oggetto che del primo non sapeva niente — perché la soglia
+  stava dentro i due ViewModel invece che sotto entrambi. La finestra di coalescenza è
+  di 10 secondi: la larghezza di una catena di UI, e ben sotto l'intervallo in cui possa
+  cambiare qualcosa che il lettore noti.
+- **Un fix fallito lo dice, se qualcuno l'ha chiesto.** Restava silenzioso anche dopo un
+  pull, e anche quando il motivo era che il permesso non c'era più: la pagina «La mia
+  posizione» mostrava per sempre il posto di prima senza che nulla lo segnalasse (il chip
+  di freschezza parla dell'età del *meteo*). Ora il fallimento automatico è muto come
+  prima — posizione vecchia con meteo vero batte un errore sopra numeri ancora giusti —
+  e quello esplicito arriva come snackbar sulla pagina, con la stessa frase che il foglio
+  Luoghi dice da sempre (`asGpsError`, una sola mappatura per tutti). `selectGps` mostra
+  anche `GpsState.Acquiring`: un tocco che prende quindici secondi e non mostra niente si
+  legge come una riga morta.
+- **Aggiornamento al ritorno in primo piano.** Il fix si riprendeva a ogni avvio a
+  freddo — quando è meno probabile che sia sbagliato — e mai al risveglio a processo
+  vivo, quando è più probabile: il settle del pager non si ripete. `LifecycleEventEffect`
+  su `ON_RESUME`, silenzioso e sotto la stessa soglia, quindi di solito non fa niente.
+- **La soglia di adozione, 2 km.** `cacheKey` si muove su un reticolo da ~1,1 km e lo
+  stato della pagina è indicizzato su quella: ogni cella attraversata ricostruiva la
+  pagina dallo scheletro, spendeva due GET e ricominciava la storia del Diario. Un
+  chilometro non è «movimento vero» per una previsione (i modelli risolvono fra 1 e
+  11 km). `CityStore.adoptGpsFix` decide adesso per tutti, dentro un solo `edit`: sotto
+  `FixAdoptionMeters` le coordinate restano dove sono e si prende solo il nome migliore
+  che il geocoding ha trovato — e un geocoding fallito non sovrascrive un nome che
+  funzionava, perché il suo nome sarebbe l'etichetta di coordinate che non stiamo
+  adottando.
+- **Il geocoding riceve le coordinate arrotondate.** Tutto il resto arrotondava a due
+  decimali prima di uscire; la chiamata al `Geocoder` passava `location.latitude` e
+  `location.longitude` intatti, cioè la coordinata più precisa che l'app possiede
+  finiva all'unico servizio che l'app non controlla. Ora si arrotonda una volta sola,
+  all'inizio.
+- **Le due frasi sulla privacy dicevano il falso.** «Non lascia mai il telefono» non è
+  vero: le coordinate arrotondate vanno a Open-Meteo — è l'unico modo per avere una
+  previsione di dove sei — e il reverse geocoding passa dal `Geocoder` di piattaforma,
+  che su quasi tutti i dispositivi è un servizio di rete. In un prodotto la cui prima
+  regola è che lo schermo non deve mentire, e con la scheda Sicurezza dei dati da
+  compilare in modo coerente, era il punto più esposto del percorso. Riscritte in IT e
+  EN dicendo la cosa vera, che è comunque un'ottima cosa da dire.
+- **Il primo disegno non aspetta più il Diario.** In `cityStates` la prima `push()`
+  arrivava dopo `cachedReport()` *e* dopo `refreshChanged()` — una query su Room e dodici
+  decodifiche JSON per una sezione in fondo alla pagina. Ora il report in cache esce
+  subito e le revisioni arrivano con la seconda emissione.
+- **`runCatching` ingoiava anche la cancellazione** nei due punti che prendevano il fix
+  senza `try`/`catch` tipato: ora catturano `WeatherException`, come `enableGps` faceva
+  già.
+- **Manifest**: `<uses-feature android:name="android.hardware.location"
+  android:required="false" />`. Dal solo permesso il Play Store deduceva l'hardware come
+  necessario e filtrava l'installazione sui dispositivi che non ce l'hanno; i luoghi
+  salvati sono il modo principale di usare Chiaro.
+- **I test che mancavano.** `LocationProvider` aveva scritto in testa «astratta così i
+  test dei ViewModel possono simularla» e non esisteva un solo test che la simulasse. Con
+  la soglia spostata sotto il provider e l'adozione dentro lo store, il percorso è
+  diventato la cosa più facile da testare del progetto: `CachedLocationProviderTest`
+  (memo, coalescenza, due chiamanti insieme, fallimento non memorizzato), i tre casi
+  dell'adozione in `CityStoreTest`, la distanza in `GpsLocationTest`. Sparisce il vecchio
+  `updateGpsCity rejects a regular city`: la firma prende un `GeoFix`, quindi una città
+  qualsiasi non è più esprimibile e il `require` non aveva più niente da intercettare.
+- **Da riportare a monte**: `LocationProvider.kt` era identico nei due repository, quindi
+  ultimo-noto-per-primo, tetto d'età e arrotondamento prima del geocoding sono difetti
+  anche di tweather (`UPSTREAM.md`, e la regola delle Note trasversali: quando lo stesso
+  bug va corretto due volte, si estrae `weather-core`).
+
+---
+
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
 - [x] Passata colore (chiesta su device, 3 set; fatta il 3 set sera, alzata una

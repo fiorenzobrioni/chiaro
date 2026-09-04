@@ -43,6 +43,23 @@ is short on purpose — three edits, each with its reason in the file:
   Places sheet is reorderable and its swipe-to-remove has an undo, two things
   tweather's Explorer never needed. Additive only — every inherited method and test
   is unchanged. If tweather ever grows the same needs, these belong upstream too.
+- The position path diverged in three places (review della posizione, 4 set 2026), and
+  the three are not the same kind of divergence:
+  - **`LocationProvider` should NOT diverge.** `currentFix` takes a `maxAge` and a
+    `timeout`, answers from the position the system already holds when one that young
+    exists, bounds the last-known fallback by age, and rounds the coordinates before
+    handing them to the `Geocoder`. All three were bugs upstream too, on the byte-for-byte
+    identical file — so the fix is being carried back rather than kept here. Keep the two
+    copies in step.
+  - `CityStore.updateGpsCity(city)` became `adoptGpsFix(fix: GeoFix, at: Instant): City`
+    and gained the `gps_fixed_at` preference. Chiaro-only for now: it exists because the
+    place PAGE is keyed on the cacheKey and a 1.1 km grid made the page blank on a walk
+    across town, which is a shape tweather's single editor does not have. The persisted
+    instant, on the other hand, would help upstream too.
+  - `CachedLocationProvider` is Chiaro-only and is about Chiaro's own shape: two
+    ViewModels reach the position (Places owns the toggle, Today owns the page) where
+    tweather has one, so the throttle had to move under both of them. Upstream has
+    nothing to share it between.
 - `SettingsStore` lost the editor's vocabulary and gained Chiaro's (Fase 4):
   `EditorSettings`, `showDetails`, `themeProfileName` and the `lastModified` stamp
   named surfaces that only exist in tweather (line numbers, the technical JSON view,

@@ -88,10 +88,16 @@ object ServiceLocator {
                 .also { settingsStore = it }
         }
 
+    /**
+     * Wrapped in [CachedLocationProvider] since Fase 3b: the throttle has to be
+     * shared by every caller, and this singleton is the one place both ViewModels
+     * already meet.
+     */
     fun locationProvider(context: Context): LocationProvider =
         locationProvider ?: synchronized(this) {
-            locationProvider ?: AndroidLocationProvider(context.applicationContext)
-                .also { locationProvider = it }
+            locationProvider
+                ?: CachedLocationProvider(AndroidLocationProvider(context.applicationContext))
+                    .also { locationProvider = it }
         }
 
     fun alertStateStore(context: Context): AlertStateStore =

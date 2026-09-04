@@ -82,7 +82,7 @@ object WidgetData {
         val content = report?.let {
             TodayStateBuilder.build(
                 city, it, now, settings.updateFrequencyMin,
-                refreshing = false, error = null
+                userRefreshing = false, error = null
             ) as? TodayUiState.Content
         }
         return WidgetModel(

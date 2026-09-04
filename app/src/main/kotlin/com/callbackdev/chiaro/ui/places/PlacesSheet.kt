@@ -102,6 +102,13 @@ fun PlacesSheet(
         ActivityResultContracts.RequestPermission()
     ) { viewModel.enableGps() }
 
+    LaunchedEffect(Unit) {
+        // A failure from the last time the sheet was open has been read by now: this
+        // ViewModel outlives the sheet, so without this it would greet the next one.
+        viewModel.dismissGpsError()
+        viewModel.gpsSelected.collect { onDismiss() }
+    }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -126,10 +133,11 @@ fun PlacesSheet(
                         permissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
                     },
                     onDisable = viewModel::disableGps,
-                    onSelect = {
-                        viewModel.selectGps()
-                        onDismiss()
-                    }
+                    // No dismissal here: the row goes to "looking for you" and the
+                    // sheet closes when the position answers (or stays, with the
+                    // reason, when it does not). The selection itself is instant —
+                    // Today has already switched behind the sheet.
+                    onSelect = viewModel::selectGps
                 )
                 (gpsState as? GpsState.Error)?.let { error ->
                     Text(
