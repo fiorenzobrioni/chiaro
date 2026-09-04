@@ -66,6 +66,9 @@ import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
+import com.callbackdev.chiaro.ui.theme.GroupTop
+import com.callbackdev.chiaro.ui.theme.SectionBottom
+import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -321,7 +324,7 @@ private fun SkySectionTitle(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 4.dp)
+        modifier = Modifier.padding(start = 16.dp, top = SectionTop, bottom = SectionBottom)
     )
 }
 
@@ -616,7 +619,9 @@ private fun CatalogSheet(
                         text = stringResource(group.titleRes),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
+                        modifier = Modifier.padding(
+                            start = 16.dp, top = GroupTop, bottom = SectionBottom
+                        )
                     )
                 }
                 items(group.jobs.size) { index ->

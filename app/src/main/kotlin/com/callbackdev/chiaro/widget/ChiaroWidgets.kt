@@ -26,7 +26,14 @@ import kotlinx.coroutines.launch
  * `ComponentName`), never by Glance's own class-to-id bookkeeping: on the first
  * device pass that bookkeeping repainted every widget with the last-placed one's
  * content, and the system's answer is the one the launcher physically binds to.
+ *
+ * Every road out of here goes through [WidgetRefresh] first: `update()` alone wakes a
+ * live composition without re-running `provideGlance`, so on its own it repaints the
+ * OLD model (see [WidgetRefresh] for the whole of it).
  */
+/** The three, as the reconfigure screen needs to tell them apart. */
+enum class WidgetKind { NOW, TODAY, SKY }
+
 object ChiaroWidgets {
 
     private val household: List<Pair<Class<*>, () -> GlanceAppWidget>> = listOf(
@@ -42,7 +49,25 @@ object ChiaroWidgets {
         }
     }
 
+    /**
+     * Which of the three [appWidgetId] is — the reconfigure screen is one activity for
+     * all of them, and an option only some honour must not be offered to the rest. An
+     * unbound id (asked before the host has bound the provider) answers null: better a
+     * missing switch for one frame than one that changes nothing.
+     */
+    fun kindOf(context: Context, appWidgetId: Int): WidgetKind? =
+        when (
+            AppWidgetManager.getInstance(context).getAppWidgetInfo(appWidgetId)
+                ?.provider?.className
+        ) {
+            NowWidgetReceiver::class.java.name -> WidgetKind.NOW
+            TodayWidgetReceiver::class.java.name -> WidgetKind.TODAY
+            SkyWidgetReceiver::class.java.name -> WidgetKind.SKY
+            else -> null
+        }
+
     suspend fun updateAll(context: Context) {
+        WidgetRefresh.invalidate()
         val appWidgetManager = AppWidgetManager.getInstance(context)
         val glanceManager = GlanceAppWidgetManager(context)
         household.forEach { (receiver, widget) ->
@@ -57,6 +82,7 @@ object ChiaroWidgets {
 
     /** One instance, freshly loaded — the reconfigure flow's "apply now". */
     suspend fun updateOne(context: Context, appWidgetId: Int) {
+        WidgetRefresh.invalidate()
         val manager = AppWidgetManager.getInstance(context)
         val glanceManager = GlanceAppWidgetManager(context)
         household.forEach { (receiver, widget) ->

@@ -6,11 +6,9 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,6 +35,11 @@ const val SkyCanvasTopScrimEnd = 0.25f
  * sky would be about 1.3:1. `ScrimContractTest` pins the alpha at the value that clears
  * 4.5:1 for every altitude the palette can produce, which is why it is a constant here
  * and not a parameter — one constant, both bands.
+ *
+ * The bottom edge is STRAIGHT (committente, 4 set): the canvas carried a 28dp round
+ * on its two bottom corners until then, which read as a card floating over the scroll
+ * rather than as the sky the screen opens on. The sky has no corners, so neither does
+ * the block that draws it.
  */
 @Composable
 fun SkyCanvas(
@@ -49,7 +52,6 @@ fun SkyCanvas(
         modifier = modifier
             .fillMaxWidth()
             .height(height)
-            .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
             .background(Brush.verticalGradient(gradient.stops()))
             .background(
                 Brush.verticalGradient(

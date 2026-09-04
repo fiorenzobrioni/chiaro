@@ -17,6 +17,7 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
+import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
@@ -27,6 +28,7 @@ import androidx.glance.text.TextStyle
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.today.TodayUiState
+import com.callbackdev.chiaro.ui.today.WeatherText
 import java.time.Instant
 import java.util.Locale
 
@@ -45,12 +47,16 @@ class NowWidget : GlanceAppWidget() {
         val appWidgetId = runCatching {
             GlanceAppWidgetManager(context).getAppWidgetId(id)
         }.getOrDefault(0)
-        val model = WidgetData.load(context, appWidgetId)
-        val schemes = widgetSchemes(context, model.settings.dynamicColor)
-        val skyBitmap = model.content
-            ?.takeIf { model.look.background == WidgetBackground.SKY }
-            ?.let { skyGradientBitmap(it.sky, model.look.opacityPct) }
+        // The revision is read BEFORE the load, so the model composed below is only
+        // re-read when something really changed after it (see [WidgetRefresh]: Glance
+        // does not run this function again while the session is alive, which is why
+        // everything the widget draws is observed from inside the composition).
+        val loadedAt = WidgetRefresh.revision.value
+        val initial = WidgetData.load(context, appWidgetId)
         provideContent {
+            val model = rememberWidgetModel(context, appWidgetId, initial, loadedAt)
+            val schemes = rememberWidgetSchemes(context, model.settings.dynamicColor)
+            val skyBitmap = rememberSkyBitmap(model)
             WidgetCard(
                 model, schemes, skyBitmap,
                 contentPadding = WidgetCardPaddingSnug,
@@ -75,6 +81,18 @@ class NowWidget : GlanceAppWidget() {
 /** The hero number's size, named because the ink balance below is measured off it. */
 private const val TemperatureSp = 34f
 
+/**
+ * The state's size and the air around it (committente, 4 set: at the place name's
+ * 15sp and 6dp away it read as an afterthought stuck to the degree sign).
+ *
+ * 20sp is roughly three fifths of the hero, which puts three clear steps on the card
+ * — 34 for the number, 20 for what the sky is doing, 15 for where — instead of two
+ * sizes competing and one of them losing. The gap is the card's own 12, and the
+ * degree sign donates a little more optical space on top of it.
+ */
+private const val ConditionSp = 20f
+private val ConditionGap = 12.dp
+
 @Composable
 private fun NowContent(
     content: TodayUiState.Content,
@@ -84,6 +102,9 @@ private fun NowContent(
     val context = LocalContext.current
     val locale = Locale.getDefault()
     val current = content.report.current
+    // The recency-trimmed day, so a report that outlived today describes no day at
+    // all rather than yesterday's (§1.1).
+    val today = content.week.firstOrNull()?.forecast
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier.fillMaxSize()
@@ -113,21 +134,59 @@ private fun NowContent(
         Column(
             modifier = GlanceModifier
                 .padding(start = 8.dp, bottom = textInkBalance(context, TemperatureSp))
-                .fillMaxWidth()
+                .defaultWeight()
         ) {
             // Icon, temperature, place — VISION §5.9's three, and only those: the
             // day's range next to the number read as clutter on the home screen
             // (committente, 3 set) and it is one tap away in the app.
-            Text(
-                text = Formats.temperature(
-                    current.tempC, model.settings.units.temperature, locale
-                ),
-                style = TextStyle(
-                    color = palette.primary,
-                    fontSize = TemperatureSp.sp,
-                    fontWeight = FontWeight.Medium
+            //
+            // The fourth thing, the sky's state, is beside the number and OFF unless
+            // the reader asked for it in the widget's own settings (committente,
+            // 4 set): the standard dress is the one tuned on device, and this is the
+            // room a wide widget can spend rather than a size the layout reacts to.
+            // Optically centred, not bottom- or baseline-aligned (committente, 4 set
+            // — bottom-aligned and small, the word read as something stuck on the
+            // number rather than said with it). Glance has no baseline alignment; but
+            // at these two sizes the system font puts each block's visible ink almost
+            // exactly at the centre of its own box, so centring the two boxes centres
+            // the two inks — which is the treatment a small label beside a big numeral
+            // wants anyway.
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = GlanceModifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = Formats.temperature(
+                        current.tempC, model.settings.units.temperature, locale
+                    ),
+                    style = TextStyle(
+                        color = palette.primary,
+                        fontSize = TemperatureSp.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
-            )
+                // The state takes the slack and clips into it; the range keeps its
+                // own width against the far edge. Weighting the words rather than
+                // spacing them is what decides who gives ground on a narrow card, and
+                // a state that wins the argument would push the numbers off the widget.
+                if (model.look.showCondition) {
+                    Text(
+                        text = context.getString(
+                            WeatherText.condition(current.condition.wmoCode)
+                        ),
+                        style = secondaryStyle(palette, ConditionSp.sp),
+                        maxLines = 1,
+                        modifier = GlanceModifier
+                            .padding(start = ConditionGap, end = ConditionGap)
+                            .defaultWeight()
+                    )
+                } else {
+                    Spacer(modifier = GlanceModifier.defaultWeight())
+                }
+                today?.takeIf { model.look.showDayRange }?.let { day ->
+                    DayRange(day.highC, day.lowC, model.settings.units, palette)
+                }
+            }
             Text(
                 text = content.city.name,
                 style = secondaryStyle(palette, 15.sp),

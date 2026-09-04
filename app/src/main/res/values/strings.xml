@@ -67,7 +67,6 @@
     <!-- The hour strip -->
     <string name="hour_cell_desc">At %1$s, %2$s, %3$s, rain %4$d%%</string>
     <string name="sparkline_peak_desc">Rain probability peaks at %1$d%% around %2$s</string>
-    <string name="sparkline_dry_desc">No rain expected in the next hours</string>
 
     <!-- Details grid: labels -->
     <string name="metric_uv">UV</string>
@@ -569,23 +568,23 @@
          creation, in their language, and are never translated again. -->
     <string name="tpl_bike_title">Tell me when I can ride</string>
     <string name="tpl_bike_desc" formatted="false">At least 12° out and rain under 20% for the next 6 hours.</string>
-    <string name="tpl_bike_name">bike</string>
+    <string name="tpl_bike_name">Bike</string>
     <string name="tpl_bike_message" formatted="false">Good to ride: {current.temp_c}° out, {next_6h.precip_chance_max}% rain ahead.</string>
     <string name="tpl_ice_title">Ice tomorrow morning</string>
     <string name="tpl_ice_desc">When the next 12 hours dip below zero.</string>
-    <string name="tpl_ice_name">ice</string>
+    <string name="tpl_ice_name">Ice</string>
     <string name="tpl_ice_message" formatted="false">Possible ice: down to {trigger.value}° around {trigger.time}.</string>
     <string name="tpl_run_title">A window to run</string>
     <string name="tpl_run_desc" formatted="false">Rain under 20% for the next 6 hours and no more than 26°.</string>
-    <string name="tpl_run_name">run</string>
+    <string name="tpl_run_name">Run</string>
     <string name="tpl_run_message" formatted="false">Good window for a run: rain at {trigger.value}%.</string>
     <string name="tpl_uv_title">High UV</string>
     <string name="tpl_uv_desc">When today\'s UV index reaches at least 7.</string>
-    <string name="tpl_uv_name">sun</string>
+    <string name="tpl_uv_name">Sun</string>
     <string name="tpl_uv_message" formatted="false">UV up to {trigger.value} today: sunscreen and a hat.</string>
     <string name="tpl_night_title">A night without rain</string>
     <string name="tpl_night_desc" formatted="false">Rain under 10% for the next 12 hours.</string>
-    <string name="tpl_night_name">night</string>
+    <string name="tpl_night_name">Night</string>
     <string name="tpl_night_message" formatted="false">No rain in sight tonight ({trigger.value}%).</string>
 
     <!-- The built-in alerts as notifications: a sentence, never a data dump -->
@@ -601,6 +600,23 @@
     <string name="notif_summary_title">Today · %1$s</string>
     <string name="notif_summary_body">%1$s. Low %2$s, high %3$s, rain %4$d%%.</string>
     <string name="notif_rule_title">“%1$s” · %2$s</string>
+
+    <!-- The expanded notification (Fase 6b): the collapsed line is the sentence, and
+         under it one fact per line, each with what to do about it — the details grid's
+         own rule (DESIGN §1.2), in the one place the reader reads before opening the
+         app. A line whose data is missing is not drawn. -->
+    <string name="notif_detail_window">From %1$s to %2$s</string>
+    <string name="notif_detail_from">From %1$s on</string>
+    <string name="notif_detail_hour">Around %1$s</string>
+    <string name="notif_detail_rain_peak">Rain up to %1$d%%, worst around %2$s</string>
+    <string name="notif_detail_temp_range">Temperature %1$s to %2$s</string>
+    <string name="notif_detail_now">Right now %1$s · %2$s</string>
+    <string name="notif_detail_sun">Sunrise %1$s, sunset %2$s</string>
+    <string name="notif_detail_uv">Peak UV %1$d · %2$s</string>
+    <string name="notif_detail_wind">Wind right now %1$s · %2$s</string>
+    <string name="notif_detail_air">Air quality %1$d · %2$s</string>
+    <string name="notif_rule_why">Why it fired</string>
+    <string name="notif_rule_condition">%1$s — value %2$s</string>
 
 
     <!-- The Journal (Fase 7): the history read as prose, and the drift of the week -->
@@ -650,4 +666,9 @@
     <string name="widget_config_background">Background</string>
     <string name="widget_bg_sky">The sky right now</string>
     <string name="widget_config_opacity">Background opacity</string>
+    <string name="widget_config_content">Content</string>
+    <string name="widget_config_show_condition">Sky state beside the temperature</string>
+    <string name="widget_config_show_condition_note">It needs the room: on a narrow widget the words are cut off.</string>
+    <string name="widget_config_show_range">Today\'s high and low</string>
+    <string name="widget_config_show_range_note">Against the far edge, level with the temperature.</string>
 </resources>

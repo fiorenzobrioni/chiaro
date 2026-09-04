@@ -107,6 +107,7 @@ fun TodayRoute(
 ) {
     val pager by todayViewModel.pager.collectAsStateWithLifecycle()
     val units by todayViewModel.units.collectAsStateWithLifecycle()
+    val locating by todayViewModel.locating.collectAsStateWithLifecycle()
     val guideCard by todayViewModel.guideCardVisible.collectAsStateWithLifecycle()
     var placesOpen by remember { mutableStateOf(false) }
     // Opening the guide is what the card was for: the two roads share the exit.
@@ -129,6 +130,7 @@ fun TodayRoute(
             PagedToday(
                 model = model,
                 units = units,
+                locating = locating,
                 guideCardVisible = guideCard,
                 stateFor = todayViewModel::stateFor,
                 onRefresh = todayViewModel::refresh,
@@ -160,6 +162,7 @@ fun TodayRoute(
 private fun PagedToday(
     model: PagerModel,
     units: UnitSettings,
+    locating: Boolean,
     guideCardVisible: Boolean?,
     stateFor: (PlacePage) -> StateFlow<TodayUiState>,
     onRefresh: (PlacePage) -> Unit,
@@ -214,6 +217,9 @@ private fun PagedToday(
                 isGps = page is PlacePage.Gps,
                 dots = if (pages.size > 1) index to pages.size else null,
                 units = units,
+                // Taking the position again IS the refresh on that page, so its pull
+                // has to keep spinning while the fix is in flight.
+                locating = locating && page is PlacePage.Gps,
                 guideCardVisible = guideCardVisible,
                 onRefresh = { onRefresh(page) },
                 onOpenPlaces = onOpenPlaces,
@@ -258,6 +264,7 @@ private fun TodayPage(
     isGps: Boolean,
     dots: Pair<Int, Int>?,
     units: UnitSettings,
+    locating: Boolean,
     guideCardVisible: Boolean?,
     onRefresh: () -> Unit,
     onOpenPlaces: () -> Unit,
@@ -271,7 +278,7 @@ private fun TodayPage(
     when (state) {
         is TodayUiState.Content ->
             ContentState(
-                state, title, isGps, dots, units, guideCardVisible,
+                state, title, isGps, dots, units, locating, guideCardVisible,
                 onRefresh, onOpenPlaces, onOpenSettings, onOpenGuide, onOpenJournal,
                 onDismissGuideCard, isCurrent, onCanvasBehindBar
             )
@@ -540,6 +547,7 @@ private fun ContentState(
     isGps: Boolean,
     dots: Pair<Int, Int>?,
     units: UnitSettings,
+    locating: Boolean,
     guideCardVisible: Boolean?,
     onRefresh: () -> Unit,
     onOpenPlaces: () -> Unit,
@@ -570,7 +578,7 @@ private fun ContentState(
     }
     LaunchedEffect(isCurrent, behindBar) { if (isCurrent) onCanvasBehindBar(behindBar) }
 
-    PullToRefreshBox(isRefreshing = content.refreshing, onRefresh = onRefresh) {
+    PullToRefreshBox(isRefreshing = content.refreshing || locating, onRefresh = onRefresh) {
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
@@ -636,6 +644,13 @@ private fun ContentState(
     }
 }
 
+/**
+ * The same header rhythm every other screen keeps (DESIGN §6, `SectionTop`), reached
+ * by a different road: this list spaces its items by 12dp, so 12 of the section's 24
+ * are already paid and the header adds the other 12 itself. The 12dp under it is that
+ * same list gap — which is exactly what a 4dp bottom plus a row's 8dp of padding comes
+ * to on the screens that have no list spacing.
+ */
 @Composable
 private fun SectionTitle(text: String) {
     Text(
@@ -869,20 +884,22 @@ private fun NextHours(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         HourStrip(hours = content.strip.map { it.toCell(units, is24h, locale) })
-        val percentages = content.strip.map { it.hour.precipChancePct }
+        // A dry run draws NO sparkline (device review, 4 set). Every value at zero put
+        // a flat line along the bottom of a 28dp box, which read on the screen as a
+        // stray divider with a hole above it — and said nothing the row of "0%" right
+        // over it had not already said. §1.1: a section with no data is not drawn, and
+        // a chart of nothing but zeros is one.
         val peak = content.strip.maxByOrNull { it.hour.precipChancePct }
-        RainSparkline(
-            percentages = percentages,
-            description = if (peak != null && peak.hour.precipChancePct > 0) {
-                stringResource(
+        if (peak != null && peak.hour.precipChancePct > 0) {
+            RainSparkline(
+                percentages = content.strip.map { it.hour.precipChancePct },
+                description = stringResource(
                     R.string.sparkline_peak_desc,
                     peak.hour.precipChancePct,
                     peak.hour.time.format(timeFmt)
                 )
-            } else {
-                stringResource(R.string.sparkline_dry_desc)
-            }
-        )
+            )
+        }
     }
 }
 

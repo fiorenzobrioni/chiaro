@@ -41,6 +41,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.callbackdev.chiaro.ui.theme.SectionBottom
+import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.BuildConfig
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppSettings
@@ -307,7 +309,9 @@ private fun GroupHeader(text: String) {
         text = text,
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp)
+        modifier = Modifier.padding(
+            start = 16.dp, end = 16.dp, top = SectionTop, bottom = SectionBottom
+        )
     )
 }
 

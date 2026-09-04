@@ -23,6 +23,12 @@ import java.time.format.DateTimeFormatter
  * WITH its number — a reminder that says "clear" without the figure it read is an
  * opinion, and this app does not send opinions. The dotted job ids never appear.
  *
+ * Expanded (Fase 6b), the same pieces stop sharing a line — the lead, then the
+ * verdict with its number, then the catalog's own sentence on what this moment IS.
+ * That last line is the reminder's whole point for anyone who subscribed to "the
+ * blue hour" once and has forgotten what it means, and it is already written: the
+ * Sky screen prints the same sentence.
+ *
  * One channel, one notification id per job: a second reminder for the same moment
  * replaces the first instead of stacking.
  */
@@ -52,14 +58,20 @@ object SkyNotifier {
             return false
         }
 
-        val body = body(context, occurrenceAt, zone, verdict, now)
+        val lines = lines(context, occurrenceAt, zone, verdict, now)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_chiaro)
             .setContentTitle(context.getString(SkyText.nameRes(jobId)))
-            .setContentText(body)
-            // Same text expanded: the line is short enough to fit, and BigTextStyle
-            // is what stops the system from eliding the verdict on a narrow screen.
-            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            // Collapsed: one line, so the pieces share it. BigTextStyle is also what
+            // stops the system from eliding the verdict on a narrow screen.
+            .setContentText(lines.joinToString(" · "))
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(
+                        (lines + context.getString(SkyText.explanationRes(jobId)))
+                            .joinToString("\n")
+                    )
+            )
             .setContentIntent(openApp(context))
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_EVENT)
@@ -72,20 +84,23 @@ object SkyNotifier {
         }
     }
 
-    /** "Tra 30 minuti, alle 18:32 · Bello, nuvole 8%" — lead, clock time, verdict. */
-    private fun body(
+    /**
+     * The two facts the reminder is made of: "Tra 30 minuti, alle 18:32" and "Bello,
+     * nuvole 8%". Joined by a dot when the notification has one line, stacked when it
+     * has more — same words either way, so the two forms cannot drift.
+     */
+    private fun lines(
         context: Context,
         occurrenceAt: Instant,
         zone: ZoneId,
         verdict: SkyVerdict?,
         now: Instant
-    ): String {
+    ): List<String> {
         val minutes = Duration.between(now, occurrenceAt).toMinutes().coerceAtLeast(0).toInt()
         val time = occurrenceAt.atZone(zone).format(clockFormat(context))
         val lead = context.resources
             .getQuantityString(R.plurals.sky_notification_in, minutes, minutes, time)
-        val verdictLine = verdict?.let { verdictLine(context, it) }
-        return listOfNotNull(lead, verdictLine).joinToString(" · ")
+        return listOfNotNull(lead, verdict?.let { verdictLine(context, it) })
     }
 
     /** The verdict word and its arithmetic, or the honest reason there is none. */

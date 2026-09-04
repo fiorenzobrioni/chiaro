@@ -889,6 +889,215 @@ Quattro rilievi, due dei quali hanno rifatto il vestito dei widget:
       stessi argomenti di formato nelle due versioni). Ha già pagato l'affitto: ha
       trovato i doppioni del vecchio capitolo Avvisi rimasti nel file.
 
+## Verifica su device (committente, 4 set 2026) — quattro difetti, quattro correzioni
+
+Quattro segnalazioni dopo l'uso vero, nessuna di gusto: tre sono comportamento sbagliato
+e una è una forma che non regge.
+
+- **«La mia posizione» non seguiva chi si sposta.** Il fix GPS veniva ripreso solo
+  all'accensione della sorgente (`enableGps`) e al tocco della riga nel foglio dei luoghi
+  (`selectGps`); il pull-to-refresh di Oggi chiedeva soltanto il meteo per il fix
+  *salvato*. Chi cambiava paese e aggiornava a mano otteneva numeri freschi del paese che
+  aveva lasciato. Ora `TodayViewModel.refresh` sulla pagina della posizione **riprende
+  prima la posizione e poi il meteo**, e anche l'atterraggio sulla pagina (`setActive`, il
+  pager che si assesta) rifà il fix — con una soglia di 5 minuti, perché il settle scatta
+  a ogni avvio e a ogni swipe di ritorno e «la batteria è una funzionalità». Un fix che
+  fallisce è **silenzioso** e tiene l'ultimo: posizione vecchia con meteo vero batte un
+  errore sopra numeri ancora giusti. Quando il fix si sposta, la `cacheKey` cambia, la
+  pagina si ricostruisce e lo stato della nuova chiave fa il suo fetch da solo — chiedere
+  anche un refresh spenderebbe due GET sullo stesso arrivo. Il pull resta girevole durante
+  l'acquisizione (`locating`): un fix può prendere quindici secondi, e un gesto che non
+  risponde si legge come rotto. La **posizione in background resta fuori discussione**:
+  il worker continua a usare l'ultimo fix persistito.
+- **I widget non si riaggiornavano.** Il difetto vero della fase 8, e non era nostro
+  codice mancante ma un contratto di Glance letto male: `provideGlance` gira **una volta
+  per sessione**, e la sessione resta viva ~45 secondi dopo la prima composizione
+  (`TimeoutOptions.initialTimeout`, +5 s per evento). Dentro quella finestra `update()`
+  non riesegue la funzione: manda `UpdateGlanceState` alla composizione già aperta, che
+  ricompone con lo **stesso modello** caricato prima di `provideContent`. AndroidX lo
+  scrive nel KDoc di `provideGlance` («observe your sources of data within the
+  composition»). Da qui tutti e tre i sintomi: refresh manuale, sync del mattino, e
+  soprattutto il «a volte» delle proprietà del widget — fuori finestra la sessione era
+  scaduta, `update()` ne apriva una nuova e sembrava funzionare. Correzione:
+  `WidgetRefresh` (un contatore in-process) più `rememberWidgetModel`, che rilegge il
+  modello **dentro** la composizione a ogni tick; `ChiaroWidgets.updateAll/updateOne`
+  invalidano prima di ridipingere, così la stessa chiamata copre sia la sessione viva sia
+  quella da aprire. Contatore in memoria e non persistito di proposito: una sessione non
+  sopravvive al processo che la esegue, quindi alla morte del processo muore anche la
+  composizione vecchia. Anche `skyGradientBitmap` e gli schemi passano dentro la
+  composizione, `remember`izzati sul dato che li muove (è una bitmap 320×320: una
+  ricomposizione non è un motivo per allocarne un'altra).
+- **Widget trasparente illeggibile.** Sotto `InkTrustFloorPct` (50%) la card non è più il
+  terreno dell'inchiostro e la decisione passava alla tappezzeria — ma quando
+  `getWallpaperColors` non risponde (colori non ancora estratti, live wallpaper, OEM che
+  torna null) il ripiego era il **tema del telefono**. Tema chiaro su sfondo nero =
+  scritte nere su nero; lo stesso telefono in scura andava bene, che è esattamente il
+  racconto della segnalazione. Ora l'`HINT_SUPPORTS_DARK_TEXT` è letto per quello che è,
+  un segnale **affermativo**: inchiostro scuro solo dove il sistema dichiara il terreno
+  chiaro, chiaro in tutti gli altri casi (e la schermata di blocco è interrogata come
+  seconda fonte). Il ripiego non può sbagliare nello stesso verso, perché una tappezzeria
+  chiara è precisamente il caso che l'hint esiste per annunciare. In più: **LIGHT e DARK
+  scelti a mano decidono l'inchiostro a qualsiasi opacità** — prima, a opacità zero,
+  scegliere «scuro» consegnava comunque la decisione alla tappezzeria, quindi chi si
+  ritrovava il widget illeggibile non aveva **nessuna** via d'uscita. La regola è pura
+  (`widgetInk` in `WidgetInk.kt`) e fissata da `WidgetInkTest`: uno screenshot non può
+  pinnarla, perché il guasto si vede solo sui telefoni la cui tappezzeria non pubblica i
+  colori, che è il caso che nessuno ha davanti.
+- **Notifiche: chiusa e aperta sono due testi.** Segnalazione del committente: espandere
+  una notifica restituiva esattamente quello che già diceva — tutti e tre i notificatori
+  passavano la STESSA stringa a `setContentText` e a `BigTextStyle.bigText`. tweather fa
+  già la cosa giusta (riga singola ripiegata / oggetto JSON stampato), e qui vale lo stesso
+  principio nel registro di questo prodotto: niente JSON, prosa. Chiusa resta la frase (il
+  sistema le dà una riga e taglia il resto); aperta la frase diventa il titolo e sotto va
+  il resto, **un fatto per riga con la sua conseguenza** — la regola della griglia dei
+  dettagli (DESIGN §1.2) applicata al posto in cui si legge prima di aprire l'app.
+  - **Maltempo e pioggia**: la finestra vera (`AlertDetails`, puro e con tabella di test)
+    è la corsa di ore consecutive attorno all'ora dell'avviso, non l'ora sola che
+    l'`Alert` porta per il suo fingerprint; più il picco di pioggia con la sua ora,
+    l'escursione di temperatura nella finestra, e le due letture di adesso.
+  - **Riepilogo del mattino**: alba e tramonto, UV massimo, vento e aria, ognuno con la
+    riga che dice cosa farne (`WeatherText` era già scritto: le bande sono le stesse dei
+    dettagli di Oggi, quindi zero voce editoriale nuova da mantenere).
+  - **Regole del lettore**: il messaggio resta suo e in cima; sotto, «Perché è scattata»
+    e ogni condizione come la frase che mostra la schermata Avvisi, col valore letto
+    accanto (`RuleText.sentence` + `RuleVariables.resolve`). Un verdetto viaggia con la
+    sua aritmetica, e «perché è partita?» è l'unica domanda che una regola scattata pone.
+    Una variabile non risolvibile stampa la frase **senza** lettura: il motore si rifiuta
+    di chiamare «falso» un dato assente, e la notifica non può disfarlo a parole.
+  - **Promemoria del cielo**: gli stessi pezzi smettono di dividersi una riga, e sotto
+    arriva la spiegazione del momento dal catalogo — già scritta e già stampata dalla
+    schermata Cielo, quindi le due non possono divergere.
+  - **Onestà del blocco**: una corsa che arriva in fondo alla previsione dice «dalle 17:00»
+    e si ferma (una fine mai vista sarebbe la bugia che il lettore non può verificare);
+    una riga senza dato non si disegna; il vento dice «adesso» **a parole**, perché le ore
+    previste non portano vento e stamparlo nudo sotto una finestra di temporale lo
+    farebbe leggere come il vento del temporale.
+  - **Conseguenza sull'interfaccia di `:core:sync`**: `notifyAlert` riceve ora il
+    `WeatherReport` e le `UnitSettings` intere. Il `Alert` del dominio resta stretto quanto
+    il suo dedup richiede — allargarlo per far parlare una notifica sarebbe stato il
+    contrario del taglio dei moduli.
+
+- **Widget Cielo: tanti momenti quanti ce ne stanno.** Chiesto dal committente (4 set):
+  ne mostrava sempre e solo uno. Non era una scelta di layout, era l'unico dei tre widget
+  rimasto sul `SizeMode.Single` di default — quindi `LocalSize` gli riportava la dimensione
+  **minima dichiarata nel provider** e non sapeva di essere stato allargato. Passa a
+  `SizeMode.Exact` come Ora e Oggi, e l'altezza concessa decide: una cella resta l'eroe con
+  la sua pillola esattamente come prima, ogni cella in più aggiunge righe compatte (glifo
+  20dp, nome, quando, e la **parola** del verdetto nel colore del verdetto). La parola e non
+  la pillola, e senza il numero: in una riga così ci sta uno dei tre, e DESIGN §2.3 dice
+  quale — un verdetto è un glifo e una parola prima di essere un colore; l'aritmetica resta
+  a un tocco di distanza sulla schermata che ha lo spazio per stamparla.
+  - La lista è `SkyUpcoming.allAt`, cioè `firstAt` che smette di buttare via N-1 risposte:
+    stesso ordinamento delle righe programmate della schermata Cielo, che è l'invariante
+    protetta da quando le due superfici stampavano due albe diverse (3 set). Un widget che
+    ne stampa PARECCHIE ha di che discordare molto di più.
+  - Il budget (`skyExtraRows`, puro e con tabella in `SkyWidgetRowsTest`) è aritmetica sulle
+    altezze vere della card, non una tabella di dimensioni di cella: i launcher non sono
+    d'accordo su cosa sia una cella, e l'unica cosa che riportano tutti onestamente è
+    quanti dp hanno concesso. 24 di padding, 80 per eroe+pillola, 26 per ogni riga.
+  - Un eroe **senza** verdetto (mezzogiorno solare, la fase lunare: niente che le nuvole
+    possano rovinare) libera i 32dp della pillola, e una riga se li prende. Spazio vero
+    lasciato vuoto sarebbe il widget che si rifiuta di dire una cosa vera che ci sta.
+  - La lista non si imbottisce mai: quattro sottoscrizioni disegnano quattro righe su un
+    widget che ne reggerebbe sei. Inventare un quinto momento è l'unica cosa che questo
+    widget non deve fare.
+- **Widget Ora: lo stato del cielo accanto alla temperatura**, spento di default e acceso
+  per singolo widget dalle sue proprietà. Valutata e **scartata** la comparsa automatica sul
+  ridimensionamento (proposta e respinta dal committente, e a ragione): il widget cambierebbe
+  contenuto mentre se ne trascinano le maniglie, e un widget che si riscrive da solo mentre
+  lo si dimensiona non si può mirare. Acceso disegna sempre; su una card stretta la riga si
+  tronca, che è una cosa che si vede e si disfa. Spento di default perché ogni widget già
+  piazzato deve tenere il vestito con cui è stato messo. L'interruttore compare **solo** per
+  i widget Ora (`ChiaroWidgets.isNowWidget`): la schermata di configurazione è una sola per
+  tutti e tre, e un'opzione che due di loro ignorano non va offerta. Allineamento a
+  `Alignment.Bottom` perché Glance non ha l'allineamento alla linea di base: l'eroe dell'app
+  mette due corpi su una riga con `alignByBaseline` e dice perché (TodayScreen, 2 set); da
+  questa parte dello steccato il fondo delle due scatole è la cosa vera più vicina.
+- **I nomi dei modelli di avviso hanno l'iniziale maiuscola** («Bici», non «bici»). Non è
+  gusto: il minuscolo arrivava da tweather, dove `alerts.rules` è un file di configurazione
+  e un identificatore minuscolo è **registro codice** — l'unico registro che questo prodotto
+  ha buttato via di proposito (CLAUDE.md). Qui il nome sta in posizione di titolo: la card
+  della regola e la notifica «Bici» · Milano. Cambia **solo il seme**: una regola già salvata
+  tiene il nome che le ha dato il lettore, che è testo suo e non nostro da correggere.
+
+- **Ritocco sui due widget, sullo screenshot del device (committente, 4 set sera).**
+  - **Ora, lo stato**: a 15sp e 6dp dal numero si leggeva come una cosa attaccata al
+    segno di grado. Ora 20sp — circa tre quinti dell'eroe, che mette tre gradini chiari
+    sulla card (34 il numero, 20 cosa fa il cielo, 15 dove) invece di due corpi che si
+    fanno concorrenza — e 12dp d'aria, i 12 della card. Allineamento **ottico**
+    (`CenterVertically`) e non più al fondo: Glance non ha l'allineamento alla linea di
+    base, ma a questi due corpi il font di sistema mette l'inchiostro visibile quasi
+    esattamente al centro della propria scatola, quindi centrare le scatole centra gli
+    inchiostri — che è poi il trattamento che una parolina accanto a un numerone vuole.
+  - **Cielo, il verdetto delle righe**: il verde nudo era poco leggibile su card scura.
+    La causa è la stessa dell'inchiostro trasparente di stamattina — gli inchiostri dei
+    verdetti sono misurati contro la **superficie dell'app**, e il terreno di un widget è
+    un cielo scrimato, una tappezzeria, o quello che ha scelto il lettore. Inchiostro e
+    contenitore sono una coppia **misurata** (`PaletteContrastTest`: «verdict ink reads on
+    its own container», 4,5:1), quindi un chip si porta dietro il proprio terreno ed è
+    leggibile su qualunque card. È esattamente il motivo per cui l'eroe ha una pillola
+    dal primo giorno; le righe ne prendono la sorella piccola, parola sola.
+  - **Cielo, «Tramonto19:55»**: la `Row` della riga compatta non era `fillMaxWidth`, quindi
+    il `defaultWeight` sul nome non aveva niente da distribuire e l'ora gli restava
+    incollata. E il disallineamento verticale era nome 13sp contro ora 12sp: due corpi
+    diversi centrati sono due linee di base che si mancano. Stessa dimensione per
+    entrambi, `fillMaxWidth` sulla riga, e 8dp prima dell'ora.
+  - **Cielo, la composizione**: una lista che finisce prima della card lasciava tutto in
+    alto e un buco in fondo. Ora il blocco sta in mezzo allo spazio che non riempie; con
+    zero righe la pillola tiene il bordo inferiore su cui era stata tarata (3 set).
+  - Il budget cambia di conseguenza (riga 22dp + 6 di stacco, e 10dp d'aria fra il momento
+    e la sua lista, contati una volta sola perché contarli dentro il ciclo farebbe
+    dipendere il budget dalla propria risposta). `SkyWidgetRowsTest` aggiornato: prima riga
+    a 142dp di concessione, a 110 se l'eroe non porta verdetto.
+
+- **Massima e minima tornano sui widget Ora e Oggi** (committente, 4 set sera), ancorate
+  al bordo destro e all'altezza della temperatura invece che sotto il numero. Erano state
+  tolte al terzo giro perché «accanto a un numero da 34sp si leggevano come disordine»:
+  il problema era **dove stavano**, non la coppia. Massima prima e in inchiostro forte,
+  minima dopo e attenuata — che è l'enfasi delle righe della settimana (`DayRow` stampa la
+  minima in `onSurfaceVariant` e la massima in quello pieno), quindi la coppia dice quale
+  è quale senza una parola per dirlo. Accese di default, spegnibili per singolo widget.
+  Sul widget Ora è lo stato a prendere lo spazio elastico e a troncarsi: pesare le parole
+  invece che spaziarle decide chi cede su una card stretta, e uno stato che vincesse la
+  discussione spingerebbe i numeri fuori dal widget.
+- **Spaziature: verificate, e una sola era davvero sbagliata.** Domanda del committente
+  («le spaziature ti sembrano troppo grandi?») sullo screenshot di Oggi. Misurate contro
+  DESIGN §6: 24dp fra sezioni, 12 sotto un'intestazione, 16 di margine, righe della
+  timeline a 36dp di passo — che è più **stretto** dei 48 di una riga di lista Material,
+  non più largo. Quindi no, il ritmo verticale è giusto. Quello che si vedeva era altro:
+  - **La sparkline della pioggia su una giornata asciutta.** Con tutte le ore a 0% il
+    tracciato è una riga piatta sul fondo di una scatola da 28dp: sullo schermo si legge
+    come un separatore capitato lì con un buco sopra, e non dice niente che la fila di
+    «0%» sopra non abbia già detto. §1.1 — una sezione senza dati non si disegna, e un
+    grafico di soli zeri è una di quelle. Via anche la sua descrizione per TalkBack, che
+    non aveva più chi la chiamasse.
+  - **Il ritmo delle intestazioni era cresciuto in tre valori diversi su cinque schermate**
+    (20 su quattro, 12 su Oggi dove i 12 di `spacedBy` pagano la differenza; e i gruppi a
+    16 in due posti, 20 in un terzo). Nessuno se n'era accorto perché nessuno li aveva mai
+    messi in fila. Ora i tre numeri stanno in un posto solo (`SectionTop`, `GroupTop`,
+    `SectionBottom` in `ui/theme/Shape.kt`) con l'aritmetica scritta — quello che
+    l'intestazione **spende**, non quello che si vede, perché il vicino ci aggiunge il suo
+    — e DESIGN §6 lo dice invece di lasciarlo dedurre.
+  - **Correzione, subito dopo** (domanda del committente: «adesso è omogeneo?»). Verificato
+    riga per riga invece che a memoria: **no**, e la prima risposta era troppo generosa.
+    Il costo dell'intestazione ora è uniforme davvero (una sorgente, tre costanti, sei
+    punti di chiamata), ma il divario che si vede no, perché il vicino non è lo stesso
+    ovunque: righe dell'app con 8dp su Oggi e nelle note, `FilterChip` senza padding
+    verticale nel Diario, e soprattutto **`ListItem` di Material** per i momenti del Cielo,
+    gli interruttori e le card degli Avvisi, e le righe delle Impostazioni — che porta il
+    proprio padding e una altezza minima che centra il testo. Quel caso **resta com'è**:
+    una lista fatta con `ListItem` si legge bene perché segue la piattaforma, e limare due
+    dp a un componente per centrare un numero scritto in un documento sarebbe il sistema
+    di design che discute con Material su una cosa che nessuno può vedere. DESIGN §6 e il
+    KDoc delle costanti dicono adesso questo, invece dell'aritmetica generalizzata che
+    valeva solo per due schermate su cinque.
+
+- **Il canvas finisce diritto.** I due angoli inferiori portavano un raggio di 28dp: si
+  leggeva come una card che galleggia sopra lo scroll invece che come il cielo con cui la
+  schermata si apre. Tolti; `DESIGN.md` §6 aggiornato (il cielo non ha angoli).
+
+---
+
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
 - [x] Passata colore (chiesta su device, 3 set; fatta il 3 set sera, alzata una

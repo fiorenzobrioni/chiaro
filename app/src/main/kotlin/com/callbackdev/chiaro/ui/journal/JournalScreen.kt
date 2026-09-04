@@ -55,6 +55,8 @@ import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.sky.SkyText
+import com.callbackdev.chiaro.ui.theme.SectionBottom
+import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import java.time.LocalDate
 import java.time.ZoneId
@@ -248,7 +250,7 @@ private fun JournalSectionTitle(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 4.dp)
+        modifier = Modifier.padding(start = 16.dp, top = SectionTop, bottom = SectionBottom)
     )
 }
 

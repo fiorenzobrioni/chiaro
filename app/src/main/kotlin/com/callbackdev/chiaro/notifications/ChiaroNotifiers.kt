@@ -5,7 +5,6 @@ import androidx.core.app.NotificationManagerCompat
 import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.rules.RuleTrigger
-import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.sync.SyncNotifiers
 import java.time.LocalDateTime
@@ -21,8 +20,11 @@ class ChiaroNotifiers(private val context: Context) : SyncNotifiers {
     override fun notificationsEnabled(): Boolean =
         NotificationManagerCompat.from(context).areNotificationsEnabled()
 
-    override fun notifyAlert(alert: Alert, temperature: TemperatureUnit): Boolean =
-        AlertNotifier.notify(context, alert, temperature)
+    override fun notifyAlert(
+        alert: Alert,
+        report: WeatherReport,
+        units: UnitSettings
+    ): Boolean = AlertNotifier.notify(context, alert, report, units)
 
     override fun notifyRule(
         trigger: RuleTrigger,

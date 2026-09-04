@@ -50,12 +50,16 @@ class TodayWidget : GlanceAppWidget() {
         val appWidgetId = runCatching {
             GlanceAppWidgetManager(context).getAppWidgetId(id)
         }.getOrDefault(0)
-        val model = WidgetData.load(context, appWidgetId)
-        val schemes = widgetSchemes(context, model.settings.dynamicColor)
-        val skyBitmap = model.content
-            ?.takeIf { model.look.background == WidgetBackground.SKY }
-            ?.let { skyGradientBitmap(it.sky, model.look.opacityPct) }
+        // The revision is read BEFORE the load, so the model composed below is only
+        // re-read when something really changed after it (see [WidgetRefresh]: Glance
+        // does not run this function again while the session is alive, which is why
+        // everything the widget draws is observed from inside the composition).
+        val loadedAt = WidgetRefresh.revision.value
+        val initial = WidgetData.load(context, appWidgetId)
         provideContent {
+            val model = rememberWidgetModel(context, appWidgetId, initial, loadedAt)
+            val schemes = rememberWidgetSchemes(context, model.settings.dynamicColor)
+            val skyBitmap = rememberSkyBitmap(model)
             WidgetCard(model, schemes, skyBitmap) { palette ->
                 when (val content = model.content) {
                     null -> if (model.city == null) {
@@ -127,8 +131,10 @@ class TodayWidget : GlanceAppWidget() {
                         .padding(start = 12.dp, bottom = textInkBalance(context, TemperatureSp))
                 ) {
                     // The temperature and the place, and nothing between them: the
-                    // day's range left the hero with the Now widget's (committente,
-                    // 3 set) — the week's rows are where a range belongs.
+                    // day's range left the hero here and on the Now widget in the third
+                    // device pass, and came back in the fourth against the far edge
+                    // instead of under the number — the position was the problem, not
+                    // the pair.
                     Text(
                         text = Formats.temperature(
                             current.tempC, model.settings.units.temperature, locale
@@ -146,11 +152,20 @@ class TodayWidget : GlanceAppWidget() {
                     )
                 }
                 Spacer(modifier = GlanceModifier.defaultWeight())
-                if (content.isStale) {
-                    Text(
-                        text = staleText(context, content.lastSync, Instant.now()),
-                        style = TextStyle(color = palette.stale, fontSize = 11.sp)
-                    )
+                // Both trailing facts share the edge, the range over the age: they are
+                // read at the same glance and would fight for the same corner otherwise.
+                Column(horizontalAlignment = Alignment.End) {
+                    content.week.firstOrNull()?.forecast
+                        ?.takeIf { model.look.showDayRange }
+                        ?.let { day ->
+                            DayRange(day.highC, day.lowC, model.settings.units, palette)
+                        }
+                    if (content.isStale) {
+                        Text(
+                            text = staleText(context, content.lastSync, Instant.now()),
+                            style = TextStyle(color = palette.stale, fontSize = 11.sp)
+                        )
+                    }
                 }
             }
 

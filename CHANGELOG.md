@@ -117,6 +117,92 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 - The launcher mark, replacing the Fase 0 placeholder: the icon family's starry-night
   crescent in Chiaro's own palette, low in the badge over two calm waves.
 
+### Fixed
+
+Four things the device found (committente, 4 set), all of them behaviour rather than
+polish:
+
+- **"My position" now follows the reader.** The fix behind the device-position page was
+  only ever re-taken when the source was enabled or its row tapped in the Places sheet,
+  so someone who drove to the next town and pulled to refresh got fresh numbers for the
+  town they had left. A pull on that page now takes the position first and the weather
+  after, and swiping onto the page re-takes it too (throttled to one fix every five
+  minutes, so a swipe back and forth is not a stream of them). A failed fix stays silent
+  and keeps the last position: old place with real weather beats an error over numbers
+  that are still true. Background location remains off the table.
+- **The widgets repaint when the data does.** Glance runs `provideGlance` once per
+  session and keeps the composition alive for about forty-five seconds afterwards;
+  inside that window `update()` wakes the composition without running the function
+  again, so a widget that loaded its model before `provideContent` repainted its own old
+  numbers. A manual refresh, the morning sync and a just-confirmed widget setting all
+  landed in that window — which is also why the setting case looked intermittent. The
+  model is now read from inside the composition and re-read whenever anything the widget
+  draws changes.
+- **A see-through widget over a dark wallpaper is legible again.** Under half solidity
+  the card is not the ink's ground, so the ink asked the wallpaper — and fell back to the
+  phone's THEME whenever the wallpaper gave no answer. A light theme over a black
+  wallpaper then wrote black on black (the same phone in dark mode was fine). The
+  wallpaper hint is an affirmative signal and is read as one: dark ink only where the
+  system says the ground is bright. Picking a light or a dark card now also names the ink
+  at any solidity, so there is a way out; `WidgetInkTest` holds the whole table.
+- **A pulled-open notification now says more than the collapsed one.** Every
+  notification used the same text for both states, so expanding one gave back exactly
+  what it already said. Collapsed stays the sentence — the system gives it one line and
+  cuts the rest — and expanded keeps that sentence as the headline with the rest of the
+  story under it, one fact per line, each with what to do about it: for a storm or a
+  rain warning the window the weather really covers, its worst hour and by how much, the
+  temperature across it, and the current reading; for the morning summary the day's
+  sunrise and sunset, its peak UV, the wind and the air, each with its own consequence
+  line; for one of the reader's own alerts the arithmetic that fired it, condition by
+  condition with the value read; for a sky reminder the moment's own explanation under
+  the lead and the verdict. Nothing in the block is invented: a window that runs past the
+  end of the forecast says "from 17:00" and stops, a line whose data is missing is not
+  drawn, and the wind says "right now" in words because the hourly forecast carries none.
+
+- **The Sky widget shows as many moments as it has room for.** It printed exactly one at
+  every size, and could not have done otherwise: it was the only one of the three left on
+  Glance's default sizing, so it was told the provider's minimum size and never learned it
+  had been made bigger. Measured now: one cell is the moment and its verdict exactly as
+  before, and every cell after that adds compact rows — glyph, name, when, and the
+  verdict's word in the verdict's own color — off the same ordered list the Sky screen
+  reads. Four subscriptions draw four rows on a widget with room for six: the list is
+  never padded out, and the block sits in the middle of the space it does not fill
+  rather than clinging to the top edge. Every verdict on a row wears the same chip the
+  hero's pill is made of — a bare colored word was hard to read on a dark card, because
+  the app's verdict inks are measured against the app's SURFACE and a widget's ground is
+  a scrimmed sky or somebody's wallpaper; ink and container are a measured pair, so a
+  chip carries its own ground with it.
+- **The Now widget can show the sky's state beside the temperature**, off by default and
+  switched on per widget in its own settings rather than appearing and vanishing as the
+  widget is resized. The standard layout is untouched. The words are set at three fifths
+  of the hero number and given the card's own 12dp of air, optically centred against it:
+  small and close, they read as something stuck to the degree sign rather than said with
+  it.
+- **The five starting-point alerts are named with a capital** ("Bike", not "bike"). The
+  lowercase came from tweather, where a rule lives in a configuration file and a lowercase
+  identifier is the code register — the one register this product deliberately does not
+  have. Only the seed changed: a rule already saved keeps the name its reader gave it.
+
+- **The day's high and low are back on the Now and Today widgets**, against the trailing
+  edge and level with the temperature rather than under it: the position was what made
+  the pair read as clutter in the first place, not the pair. High first and in the strong
+  ink, low after it and dimmed — the same emphasis the week's own rows use, so it says
+  which is which without a word for it. On by default, switchable per widget.
+- **A dry run draws no rain sparkline.** With every hour at 0% the chart was a flat line
+  along the bottom of a 28dp box: on the screen it read as a stray divider with a hole
+  above it, and it said nothing the row of "0%" over it had not already said.
+- **One header cost across all five screens.** A section header sat 20dp under the block
+  above it on four screens and 12 on Today, where the list's own gap made up the
+  difference; a group header sat at 16 in two places and 20 in a third. The three numbers
+  now live in one place. What a header spends is uniform; what the eye sees still depends
+  on the neighbour, and on the three screens whose rows are Material `ListItem`s the gap
+  is Material's own — deliberately, because a list built out of the platform's component
+  reads right by following it.
+
+- **The sky canvas ends on a straight line.** Its two bottom corners carried a 28dp round
+  that read as a card floating over the scroll rather than as the sky the screen opens
+  on.
+
 ### Removed
 
 - The last of the editor's vocabulary in the data layer (Fase 4): line numbers, word

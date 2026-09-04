@@ -32,9 +32,19 @@ data class WidgetModel(
     val look: WidgetLook,
     val city: City?,
     val content: TodayUiState.Content?,
-    val nextMoment: NextMoment?,
+    /**
+     * The subscribed moments in front of the reader, soonest first (Fase 8b). A list
+     * rather than one, because the Sky widget draws as many as the launcher's grant
+     * has room for; on a one-cell widget that is exactly [nextMoment] and nothing
+     * changes. Capped at [WidgetData.MaxMoments] — every entry costs a verdict, and
+     * no home screen is tall enough for more.
+     */
+    val moments: List<NextMoment>,
     val zone: ZoneId
-)
+) {
+    /** The one a one-cell widget shows, and the head of every taller one. */
+    val nextMoment: NextMoment? get() = moments.firstOrNull()
+}
 
 /**
  * The Sky widget's subject: the subscribed moment in front of the reader, judged.
@@ -65,7 +75,7 @@ object WidgetData {
         val zone = city?.timezone?.let { runCatching { ZoneId.of(it) }.getOrNull() }
             ?: ZoneId.systemDefault()
         if (city == null) {
-            return WidgetModel(settings, look, null, null, null, zone)
+            return WidgetModel(settings, look, null, null, emptyList(), zone)
         }
         val now = Instant.now()
         val report = ServiceLocator.weatherRepository(context).cachedReport(city)
@@ -80,7 +90,7 @@ object WidgetData {
             look = look,
             city = city,
             content = content,
-            nextMoment = nextMoment(context, city, zone, now, report, settings),
+            moments = moments(context, city, zone, now, report, settings),
             zone = zone
         )
     }
@@ -100,39 +110,53 @@ object WidgetData {
         }
 
     /**
-     * The subscribed moment in front of the reader, with the sky's opinion on it —
-     * [SkyUpcoming]'s answer, which is exactly the first scheduled row of the Sky
-     * screen's own list. The widget and the screen printed two different sunrises
-     * until the rule lived in one place (committente, 3 set).
+     * The subscribed moments in front of the reader, judged — [SkyUpcoming]'s own
+     * answers, which are exactly the scheduled rows of the Sky screen's list in the
+     * screen's order. The widget and the screen printed two different sunrises until
+     * the rule lived in one place (committente, 3 set), and a widget that now prints
+     * SEVERAL of them has that much more to disagree about.
      */
-    private suspend fun nextMoment(
+    private suspend fun moments(
         context: Context,
         city: City,
         zone: ZoneId,
         now: Instant,
         report: WeatherReport?,
         settings: AppSettings
-    ): NextMoment? {
+    ): List<NextMoment> {
         val jobs = ServiceLocator.skySubscriptionStore(context).subscriptions.first()
             .filter { it.enabled }
             .mapNotNull { SkyJobCatalog.byId(it.jobId) }
-        if (jobs.isEmpty()) return null
-        val upcoming = SkyUpcoming.firstAt(jobs, now, zone, city.coordinates) ?: return null
-        val at: SkyOccurrence.At = upcoming.at ?: return null
-        val verdict = if (at.job.observable) {
-            SkyVerdictEngine.evaluate(
-                job = at.job,
-                start = at.start,
-                end = at.end,
-                hours = report?.hourly.orEmpty(),
-                zone = zone,
-                coordinates = city.coordinates,
-                dataAge = report?.let { Duration.between(it.systemInfo.lastSync, now) },
-                staleAfter = WeatherFreshness.staleAfter(settings.updateFrequencyMin)
-            )
-        } else {
-            null
-        }
-        return NextMoment(at.job, at.start, at.end, verdict, upcoming.inProgress)
+        if (jobs.isEmpty()) return emptyList()
+        val hours = report?.hourly.orEmpty()
+        val dataAge = report?.let { Duration.between(it.systemInfo.lastSync, now) }
+        val staleAfter = WeatherFreshness.staleAfter(settings.updateFrequencyMin)
+        return SkyUpcoming.allAt(jobs, now, zone, city.coordinates)
+            .take(MaxMoments)
+            .mapNotNull { upcoming ->
+                val at: SkyOccurrence.At = upcoming.at ?: return@mapNotNull null
+                val verdict = if (at.job.observable) {
+                    SkyVerdictEngine.evaluate(
+                        job = at.job,
+                        start = at.start,
+                        end = at.end,
+                        hours = hours,
+                        zone = zone,
+                        coordinates = city.coordinates,
+                        dataAge = dataAge,
+                        staleAfter = staleAfter
+                    )
+                } else {
+                    null
+                }
+                NextMoment(at.job, at.start, at.end, verdict, upcoming.inProgress)
+            }
     }
+
+    /**
+     * How many moments are worth resolving at all. Six compact rows under the hero
+     * need a widget five cells tall, which no launcher grid offers; past that the
+     * only thing another verdict buys is battery spent on a row nobody can see.
+     */
+    private const val MaxMoments = 6
 }
