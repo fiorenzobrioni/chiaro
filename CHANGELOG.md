@@ -146,6 +146,27 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 
 ### Fixed
 
+- **The place name follows the reader's town again, not their province.** In Cavenago
+  di Brianza the header read "Provincia di Monza e della Brianza"; in Segrate it read
+  "Milano". Three things had to be wrong at once. The reverse geocoder was being
+  handed the coordinates rounded to about a kilometre rather than the ones the phone
+  gave — a displacement of up to 679 m at these latitudes, which is enough to leave a
+  small comune and land in the fields beside it, where there is no town to name. Only
+  the first of the several addresses the lookup returns was read, and the chain that
+  turned it into a name put the province *ahead* of the quarter, so one address with
+  no town on it was all it took for the province to win. Rounding is now what leaves
+  the app, not what the lookup is asked about; five addresses are read; and the most
+  specific name any of them knows wins, with the province kept as the answer only when
+  it is the only one there is. A province printed where a town goes is not wrong data:
+  it is data from another level standing where the reader reads a different one, which
+  is the screen-must-not-lie rule caught from the side.
+- **Between two positions the phone already holds, the better one wins rather than the
+  more recent.** They were ranked by their timestamp alone, so a position derived from
+  a cell tower ten seconds ago beat a good fix from two minutes before — which is the
+  other half of "Milano" while standing in Segrate. They are now ranked by how far the
+  reader may be from each one by now: the accuracy it declares plus the ground they
+  could have covered since.
+
 Four things the device found (committente, 4 set), all of them behaviour rather than
 polish:
 
