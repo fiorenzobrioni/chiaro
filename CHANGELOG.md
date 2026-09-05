@@ -143,6 +143,17 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   the cursor is. Nothing has to be typed and nothing has to be remembered, which is the
   rule the whole builder follows; the name arrives spelled for the reader's own units,
   and the engine resolves either spelling of it.
+- **A guide to the sky events** (asked by the committente, 5 set). Every entry in the
+  catalog now has a page: what it is, when it happens, whether the clouds have a say and
+  what to read next — fifty-one of them, in both languages, all offline. It has two
+  doors. The info button beside a catalog entry opens the page inside the sheet, so the
+  list you were halfway down survives and the button that adds the event travels with
+  the answer; and the index, from the Sky screen and from the guide in Settings, is
+  there for a reader who came to understand rather than to subscribe. "When it happens"
+  is read off the event's own definition rather than written down a second time, so a
+  page can never claim a cadence or a verdict the app does not have. The prose is
+  ported from tweather's manual pages, rewritten wherever it spoke about a crontab line
+  or a file: nothing in this edition has one, and no page prints a dotted name.
 
 ### Fixed
 

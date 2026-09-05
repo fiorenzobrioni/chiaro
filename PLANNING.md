@@ -1517,6 +1517,90 @@ regione e paese presi dal gradino che li ha) e cinque su quale posizione vince.
 
 ---
 
+## La guida agli eventi del cielo (committente, 5 set 2026)
+
+Richiesta: «in tweather è stata aggiunta una guida per gli eventi del cielo, sia come
+guida unica sia come descrizione di ogni singolo evento in fase di add. Guarda com'è
+fatta l'implementazione e portala anche in Chiaro, nello stile dell'app».
+
+In tweather è la **Fase 23**: `man 7 <job>`, una pagina per ognuno dei 51 job del
+catalogo, quattro sezioni sempre nello stesso ordine (NOME, DESCRIZIONE, QUANDO, VEDERE
+ANCHE), due porte — `[man]` su ogni riga del picker e `$ man sky` in fondo al file — e
+tutto lo schermo, tab comprese, perché una man page è un programma che hai lanciato.
+
+Il problema che risolveva è però **suo**: là i job hanno nomi puntati in inglese perché
+il crontab li stampa, e `zodiacal.pm` a chi non sa già che cos'è non dice niente. Qui
+quel problema non esiste (VISION §8: non c'è un registro «codice» da proteggere) e ogni
+evento ha già un nome in parole e la riga che lo spiega. Resta l'altra metà, identica
+nelle due edizioni: **una riga basta per scegliere da un elenco e non basta per capire
+che cosa si è scelto**. Quindi si porta la prosa e non la forma — niente `man`, niente
+sezioni urlate, niente schermo preso a forza.
+
+### Che cosa è arrivato
+
+- **`ui/sky/SkyGuide.kt`** — il contenuto. La mappa id → pagina (51, totale sul catalogo,
+  `error(...)` per un id senza pagina, esattamente come fa `SkyText` per i nomi);
+  l'adiacenza del «Vedi anche», simmetrica per costruzione; e il **«Quando succede»
+  generato da `SkyJob`**: cadenza, forma, `observable`, `visibilityDependent` e
+  `needsDarkness` sono campi che il motore già legge, e una frase scritta a mano su quei
+  campi sarebbe una seconda copia della verità, libera di divergere alla prima modifica.
+  Scritta a mano c'è solo la descrizione.
+- **`ui/sky/SkyGuideScreen.kt`** — l'indice (i sei gruppi del catalogo, ogni voce con
+  l'icona e la riga che già mostra il foglio «Aggiungi un momento») e la pagina: nome e
+  riga di catalogo in testa, due paragrafi in `bodyLarge` come la guida di Impostazioni,
+  «Quando succede» e «Vedi anche» come chip che navigano. Nessun id puntato da nessuna
+  parte.
+- **Le due porte.** Il pulsante info su ogni riga di «Aggiungi un momento», e l'indice
+  dalla schermata Cielo (una riga sotto «Aggiungi un momento») e dal capitolo Cielo della
+  guida in Impostazioni.
+- **51 pagine × 2 lingue**, portate dalle `sky_man_*` di tweather come `sky_about_*`,
+  accostate nel file alla coppia `sky_name_*`/`sky_expl_*` dello stesso evento.
+
+### Le decisioni
+
+- **La pagina si apre DENTRO il foglio del catalogo, non sopra.** A schermo intero
+  avrebbe buttato via l'elenco a metà scorrimento, e il gesto indietro sarebbe tornato
+  alla schermata invece che alla lista. Dentro il foglio, «indietro» torna all'elenco e
+  la pagina si porta dietro il bottone che aggiunge: la domanda «che cos'è» e la risposta
+  «allora lo aggiungo» diventano lo stesso gesto, che è tutto il senso di questa porta.
+  L'info è un `IconButton` vero e non un secondo `clickable` sulla riga: due bersagli su
+  una riga sola, o sono 48dp o è decorazione che si può premere.
+- **La seconda porta non è ridondante**, anche se qui il catalogo elenca tutti i 51
+  eventi (in tweather il picker offre solo quelli non ancora nel file, ed era quello
+  l'argomento). Chi vuole leggere non deve passare da «Aggiungi»: è una guida, non un
+  effetto collaterale dell'iscrizione.
+- **Il registro, riga per riga.** Tredici pagine su 51 parlavano di righe di crontab, di
+  job, del file, di `--notify` e della «tua città»: riscritte una a una in
+  evento/voce/app/luogo, in tutte e due le lingue. Una pagina che dicesse «riga» sarebbe
+  la biforcazione che si vede da fuori. `SkyGuideTest` lo tiene fermo: nessuna pagina
+  stampa un id puntato, né in italiano né in inglese.
+- **I gruppi del catalogo si spostano in `SkyGuide`.** L'indice e il foglio mostrano gli
+  stessi 51 eventi: due ordini diversi sarebbero l'app che si contraddice, e un test
+  verifica che l'indice sia il catalogo, una volta ciascuno.
+- **Nell'indice a schermo intero non si aggiunge niente.** Lì si legge; il bottone sta
+  nella pagina aperta dal catalogo, dove aggiungere è la conseguenza di aver letto.
+- **La guida di Impostazioni resta un giro delle quattro schermate** e non ingoia
+  cinquantuno pagine: il capitolo Cielo ci porta con un link, e il capitolo dice ora che
+  ogni momento ha anche la sua pagina.
+
+### Verifica
+
+- 10 test nuovi (`SkyGuideTest`): totalità sul catalogo, indice = catalogo una volta
+  ciascuno, due paragrafi veri e nessun segnaposto, ogni pagina davvero tradotta, nessun
+  id sullo schermo, «vedi anche» che non punta a se stesso né nel vuoto, simmetria con la
+  sola eccezione documentata (gli sciami puntano al buio pieno e il buio pieno non
+  risponde a tredici sciami), il «quando» che segue i campi del job e un evento non
+  osservabile che non incolpa mai le nuvole.
+- Suite completa verde, `lintDebug` senza errori.
+- **Da provare su device**: il foglio del catalogo con la pagina aperta a schermo piccolo
+  (scorrimento annidato dentro il `ModalBottomSheet`), la lunghezza delle pagine a scala
+  testo 200%, e il fondo dell'indice aperto dalla scheda Cielo — lì lo `Scaffold` della
+  guida tiene i suoi inset di sistema mentre sotto c'è già la barra delle schede, quindi
+  in fondo alla lista può avanzare un po' di aria; è la scelta che tiene corretto l'altro
+  ingresso (dalla guida di Impostazioni, dove sotto non c'è niente).
+
+---
+
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
 - [x] Passata colore (chiesta su device, 3 set; fatta il 3 set sera, alzata una

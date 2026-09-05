@@ -136,6 +136,25 @@ Two consequences worth writing down:
   `sky.crontab` prints it as an English readout in the evidence column (its Fase 18
   register rule). One engine, two registers — which is the whole thesis of the fork.
 
+## The prose that travelled, and the surface that did not (5 set 2026)
+
+The guide to the sky events (`ui/sky/SkyGuide.kt` and its `sky_about_*` strings) is the
+first thing copied out of tweather that is **not** in `:core`: fifty-one pages written
+there as `man 7 <job>` (its Fase 23) and brought here as pages of a Material guide.
+
+It is worth recording precisely because it is not the ledger's usual case. The engines
+are copied byte-for-byte and the identity is the property being kept; this is prose,
+and it arrived **rewritten**: thirteen of the fifty-one pages spoke about a crontab
+line, a job, the file or `--notify`, and every one of those sentences says event, entry,
+app and place here, in both languages. So the two copies are deliberately not identical
+and never will be — what they share is the content, and a page corrected in one app is
+worth carrying to the other by hand, sentence by sentence, not by diff.
+
+What did not travel is the shape: no manual, no shouted section headers, no screen taken
+whole. `SkyJob` still generates the "when it happens" section in both, which is the only
+part of the page an engine change can invalidate — and the only part neither app writes
+by hand.
+
 ## The same file, wrong a second time (5 set 2026)
 
 The place name of the device position was wrong in both apps at once — "Provincia di
