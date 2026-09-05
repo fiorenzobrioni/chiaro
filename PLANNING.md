@@ -1512,8 +1512,8 @@ regione e paese presi dal gradino che li ha) e cinque su quale posizione vince.
 
 **Verifiche**: 627 test verdi (11 nuovi: 170 `:app`, 457 `:core`), lint 0 errori.
 
-- [ ] Da verificare su device: nome del comune corretto da Cavenago di Brianza e da
-      Segrate, e il fallback alle coordinate quando il geocoding non risponde
+- [x] Verificato su device (committente, 5 set 2026): il nome del comune torna
+      corretto, senza riattivare il GPS
 
 ---
 
