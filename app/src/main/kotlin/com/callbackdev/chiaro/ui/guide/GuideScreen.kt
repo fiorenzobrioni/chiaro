@@ -28,8 +28,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -45,6 +50,7 @@ import com.callbackdev.chiaro.ui.components.VerdictChip
 import com.callbackdev.chiaro.ui.components.VerdictKind
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
+import com.callbackdev.chiaro.ui.sky.SkyGuideRoute
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import java.time.LocalDate
@@ -73,6 +79,14 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GuideRoute(onBack: () -> Unit) {
+    // The events guide is the one chapter that is a document of its own: fifty-one
+    // pages do not belong inside a tour, and a reader who opens it here has to be able
+    // to come back to the paragraph they left.
+    var eventsOpen by rememberSaveable { mutableStateOf(false) }
+    if (eventsOpen) {
+        SkyGuideRoute(onClose = { eventsOpen = false })
+        return
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -89,6 +103,7 @@ fun GuideRoute(onBack: () -> Unit) {
         }
     ) { padding ->
         GuideContent(
+            onOpenSkyGuide = { eventsOpen = true },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -97,7 +112,7 @@ fun GuideRoute(onBack: () -> Unit) {
 }
 
 @Composable
-private fun GuideContent(modifier: Modifier = Modifier) {
+private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
@@ -183,6 +198,9 @@ private fun GuideContent(modifier: Modifier = Modifier) {
             stringResource(R.string.guide_sky_catalog_title),
             stringResource(R.string.guide_sky_catalog_body)
         )
+        TextButton(onClick = onOpenSkyGuide) {
+            Text(stringResource(R.string.guide_sky_events_action))
+        }
 
         Chapter(Icons.Outlined.Notifications, stringResource(R.string.guide_alerts_title))
         Paragraph(stringResource(R.string.guide_alerts_p1))

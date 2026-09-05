@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.ui.sky
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -21,10 +22,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -42,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -87,6 +92,14 @@ fun SkyRoute(
 ) {
     val state by skyViewModel.state.collectAsStateWithLifecycle()
     var placesOpen by remember { mutableStateOf(false) }
+    // The guide takes the tab rather than opening beside it: it is a document, and a
+    // reader who is in it is reading, not watching tonight's verdict. The bottom bar
+    // stays, because they never left the Sky tab.
+    var guideOpen by rememberSaveable { mutableStateOf(false) }
+    if (guideOpen) {
+        SkyGuideRoute(onClose = { guideOpen = false })
+        return
+    }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -98,7 +111,11 @@ fun SkyRoute(
             when (val s = state) {
                 SkyUiState.Starting -> Unit // the tick answers within a frame; no skeleton flash
                 SkyUiState.NoPlace -> NoPlaceForSky(onOpenPlaces = { placesOpen = true })
-                is SkyUiState.Content -> SkyContent(s, skyViewModel)
+                is SkyUiState.Content -> SkyContent(
+                    content = s,
+                    viewModel = skyViewModel,
+                    onOpenGuide = { guideOpen = true }
+                )
             }
         }
     }
@@ -175,7 +192,11 @@ private sealed interface LeadDialog {
 }
 
 @Composable
-private fun SkyContent(content: SkyUiState.Content, viewModel: SkyViewModel) {
+private fun SkyContent(
+    content: SkyUiState.Content,
+    viewModel: SkyViewModel,
+    onOpenGuide: () -> Unit
+) {
     val locale = Locale.getDefault()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val timeFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
@@ -230,6 +251,25 @@ private fun SkyContent(content: SkyUiState.Content, viewModel: SkyViewModel) {
                     modifier = Modifier.padding(start = 4.dp)
                 )
             }
+        }
+        // A row and not a second button beside "Add a moment": the two labels are a
+        // line and a half on a 360dp screen in Italian, and this one is the door for a
+        // reader who came to understand rather than to subscribe.
+        item {
+            ListItem(
+                leadingContent = {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = null, // the headline right beside it says it
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                headlineContent = { Text(stringResource(R.string.sky_guide_entry_title)) },
+                supportingContent = {
+                    Text(stringResource(R.string.sky_guide_entry_subtitle))
+                },
+                modifier = Modifier.clickable(onClick = onOpenGuide)
+            )
         }
 
         item { SkySectionTitle(stringResource(R.string.sky_section_events)) }
@@ -560,7 +600,7 @@ private fun eventIcon(event: UpcomingEvent) = when (event.quarter) {
 }
 
 @Composable
-private fun jobIcon(job: SkyJob) = when (job.id) {
+internal fun jobIcon(job: SkyJob) = when (job.id) {
     "sun.rise", "twilight.civil.am", "sun.latest_rise" -> ChiaroIcons.sunrise
     "sun.set", "twilight.civil.pm", "sun.earliest_set" -> ChiaroIcons.sunset
     "solar.noon", "earth.perihelion", "earth.aphelion" -> ChiaroIcons.condition(0, night = false)
@@ -591,49 +631,20 @@ private fun jobIcon(job: SkyJob) = when (job.id) {
 // The catalog
 // ---------------------------------------------------------------------------------
 
-private data class CatalogGroup(val titleRes: Int, val jobs: List<SkyJob>)
-
-private fun catalogGroups(): List<CatalogGroup> {
-    val c = SkyJobCatalog
-    return listOf(
-        CatalogGroup(
-            R.string.sky_group_sun,
-            listOf(
-                c.SunRise, c.SunSet, c.SolarNoon, c.GoldenAm, c.GoldenPm, c.BlueAm, c.BluePm,
-                c.CivilAm, c.CivilPm, c.EarliestSunset, c.LatestSunrise
-            )
-        ),
-        CatalogGroup(
-            R.string.sky_group_night,
-            listOf(
-                c.NauticalAm, c.NauticalPm, c.AstronomicalAm, c.AstronomicalPm,
-                c.DarknessWindow, c.MilkyWayCore, c.ZodiacalPm, c.ZodiacalAm,
-                c.WhiteNightsStart, c.WhiteNightsEnd
-            )
-        ),
-        CatalogGroup(
-            R.string.sky_group_moon,
-            listOf(
-                c.MoonRise, c.MoonSet, c.MoonToday, c.MoonPhase,
-                c.MoonNew, c.MoonFirstQuarter, c.MoonFull, c.MoonLastQuarter, c.MoonClosestFull
-            )
-        ),
-        CatalogGroup(R.string.sky_group_eclipses, listOf(c.LunarEclipse, c.SolarEclipse)),
-        CatalogGroup(
-            R.string.sky_group_seasons,
-            listOf(
-                c.EquinoxSpring, c.SolsticeSummer, c.EquinoxAutumn, c.SolsticeWinter,
-                c.Perihelion, c.Aphelion
-            )
-        ),
-        CatalogGroup(R.string.sky_group_meteors, c.meteorShowers)
-    )
-}
-
 /**
  * "Add a moment" (VISION §5.3): the whole catalog, grouped, each entry with the one
  * line that teaches what it is. This is where a person learns what a blue hour is —
  * by adding one. A subscribed row taps back out of the list.
+ *
+ * The one line was never quite enough, though, and the info button is the other half:
+ * it opens the event's page INSIDE the sheet, so reading about the zodiacal light
+ * does not throw away the list you were halfway down, and the page carries the button
+ * that adds it. Two targets on one row, which is why the icon is a real
+ * [IconButton] and not a second clickable modifier: 48dp, or it is decoration that
+ * happens to be tappable.
+ *
+ * The grouping itself lives in [SkyGuide], because the guide's index shows the same
+ * fifty-one events and two orders would be the app disagreeing with itself.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -643,9 +654,33 @@ private fun CatalogSheet(
     onRemove: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    var openId by rememberSaveable { mutableStateOf<String?>(null) }
     ModalBottomSheet(onDismissRequest = onDismiss) {
+        val open = openId?.let { SkyJobCatalog.byId(it) }
+        if (open != null) {
+            // Back closes the page, not the sheet: the reader came here from the list
+            // and that is where the gesture should put them back.
+            BackHandler { openId = null }
+            val subscribed = open.id in subscribedIds
+            SkyEventPage(
+                job = open,
+                onOpenRelated = { openId = it },
+                onBack = { openId = null },
+                action = {
+                    // Adding returns to the list, where the check mark is the receipt.
+                    CatalogAction(
+                        subscribed = subscribed,
+                        onClick = {
+                            if (subscribed) onRemove(open.id) else onAdd(open.id)
+                            openId = null
+                        }
+                    )
+                }
+            )
+            return@ModalBottomSheet
+        }
         LazyColumn {
-            catalogGroups().forEach { group ->
+            SkyGuide.groups.forEach { group ->
                 item {
                     Text(
                         text = stringResource(group.titleRes),
@@ -664,12 +699,23 @@ private fun CatalogSheet(
                         headlineContent = { Text(name) },
                         supportingContent = { Text(stringResource(SkyText.explanationRes(job.id))) },
                         trailingContent = {
-                            Icon(
-                                imageVector = if (subscribed) Icons.Outlined.Check else Icons.Outlined.Add,
-                                contentDescription = null, // the row itself announces the action
-                                tint = if (subscribed) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = { openId = job.id }) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Info,
+                                        contentDescription = stringResource(
+                                            R.string.sky_guide_open_desc, name
+                                        ),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Icon(
+                                    imageVector = if (subscribed) Icons.Outlined.Check else Icons.Outlined.Add,
+                                    contentDescription = null, // the row itself announces the action
+                                    tint = if (subscribed) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         },
                         modifier = Modifier.clickable {
                             if (subscribed) onRemove(job.id) else onAdd(job.id)
@@ -677,6 +723,21 @@ private fun CatalogSheet(
                     )
                 }
             }
+        }
+    }
+}
+
+/** The one button of an event's page inside the sheet: filled to add, outlined to
+ * undo — the same weight order every destructive-ish action in the app uses. */
+@Composable
+private fun CatalogAction(subscribed: Boolean, onClick: () -> Unit) {
+    if (subscribed) {
+        OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.sky_guide_remove_action))
+        }
+    } else {
+        Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.sky_guide_add_action))
         }
     }
 }

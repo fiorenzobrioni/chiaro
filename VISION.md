@@ -300,6 +300,13 @@ The differentiator with the most engineering already behind it.
 - **Add a moment**: the 32-job catalog, grouped (Sun · Moon · Night · Seasons · Meteor showers),
   each with a one-line explanation of what it is. This is where a person learns what a blue hour is,
   by adding one.
+- **The guide to the events**: a page for every entry in that catalog — what it is, when it happens,
+  what the clouds have to do with it, and what to read next. It has two doors, and neither is
+  redundant: the info button beside a catalog entry, which opens the page *inside* the sheet so the
+  list survives and the button that adds it travels with the answer; and the index, from the Sky
+  screen and from the guide in Settings, for a reader who came to understand rather than to
+  subscribe. The prose is ported from tweather's manual pages; the dotted names it was written
+  around are not.
 - **Reminders**: 15/30/60 minutes before, per moment, plus a default; inexact alarms, exactly as in
   tweather. A reminder for an event the sky will ruin is off by default.
 
