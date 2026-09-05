@@ -47,10 +47,11 @@ is short on purpose — three edits, each with its reason in the file:
   the three are not the same kind of divergence:
   - **`LocationProvider` should NOT diverge.** `currentFix` takes a `maxAge` and a
     `timeout`, answers from the position the system already holds when one that young
-    exists, bounds the last-known fallback by age, and rounds the coordinates before
-    handing them to the `Geocoder`. All three were bugs upstream too, on the byte-for-byte
-    identical file — so the fix is being carried back rather than kept here. Keep the two
-    copies in step.
+    exists, and bounds the last-known fallback by age. All of it was a bug upstream too,
+    on the byte-for-byte identical file — so the fix was carried back rather than kept
+    here. Keep the two copies in step. The file was **corrected in both again on 5 set
+    2026** (the place name, below): it is still identical modulo the package name, which
+    is the property to preserve.
   - `CityStore.updateGpsCity(city)` became `adoptGpsFix(fix: GeoFix, at: Instant): City`
     and gained the `gps_fixed_at` preference. Chiaro-only for now: it exists because the
     place PAGE is keyed on the cacheKey and a 1.1 km grid made the page blank on a walk
@@ -134,6 +135,32 @@ Two consequences worth writing down:
   catalog sheet and prints the eclipse evidence as a localized sentence, tweather's
   `sky.crontab` prints it as an English readout in the evidence column (its Fase 18
   register rule). One engine, two registers — which is the whole thesis of the fork.
+
+## The same file, wrong a second time (5 set 2026)
+
+The place name of the device position was wrong in both apps at once — "Provincia di
+Monza e della Brianza" for a reader in Cavenago di Brianza, "Milano" for one in Segrate
+— and for the same three reasons, because `LocationProvider.kt` was still byte-for-byte
+identical. Two of the three were introduced by the position review of 4 set, and one had
+been there since the file was written:
+
+- the `Geocoder` was asked about the rounded pair (up to 679 m of displacement, for a
+  privacy gain of zero: coarse permission already hands the app a position quantized
+  onto a ~2 km grid, so both values name the same cell);
+- one address was read out of the ladder the lookup returns, and `subAdminArea` sat in
+  the *middle* of the name chain, so a rung with no `locality` printed the province;
+- the last-known positions were ranked by recency alone, so a cell fix ten seconds old
+  beat a good one from two minutes ago.
+
+The fix is the same in both, and the two decisions were extracted into pure functions
+(`geocodedPlace`, `expectedErrorMeters`) so `LocationProviderTest` — identical in both
+repositories — can hold them without a device. `PLANNING.md` carries the reasoning in
+each repo.
+
+**This is the second time.** The rule below says `weather-core` gets extracted when the
+same bug has to be fixed in both apps for the second time, and the position path is now
+that file: fixed here on 4 set and carried upstream, wrong again in both on 5 set. The
+trigger has fired; what it is waiting on is a decision, not another occurrence.
 
 ## When to extract
 

@@ -1447,6 +1447,76 @@ dalle effemeridi USNO. Tutti i riferimenti sono nei test, con l'URL da cui vengo
 - **Aloni e pareli**: sarebbero una stima travestita da previsione — lo stesso motivo per
   cui lo ZHR di uno sciame non si stampa.
 
+## Il nome della posizione (committente, 5 set 2026) — la provincia al posto del comune
+
+Segnalato su tutte e due le app lo stesso giorno, con due esempi: da Cavenago di
+Brianza l'intestazione diceva «Provincia di Monza e della Brianza», da Segrate diceva
+«Milano». `LocationProvider.kt` era ancora identico byte per byte a quello di tweather,
+quindi il difetto era di tutti e due e la correzione è la stessa in tutti e due
+(`UPSTREAM.md`).
+
+**Tre cose, e nessuna è una colpa del geocoder.** Due sono regressioni della review
+della posizione del 4 settembre, una c'era da sempre e quella review l'ha esposta.
+
+- **Al `Geocoder` andavano le coordinate arrotondate.** L'avevamo cambiato con questa
+  motivazione: tutto il resto arrotonda a due decimali prima di uscire, e la chiamata
+  al geocoding riceveva invece la coordinata più precisa che l'app possiede, cioè
+  proprio all'unico servizio che l'app non controlla. **La premessa era falsa.** Con
+  `ACCESS_COARSE_LOCATION` non esiste una coordinata precisa da proteggere: la
+  piattaforma quantizza la posizione su un reticolo da ~2 km e alza l'accuratezza
+  dichiarata ad almeno 2 km *prima* che l'app la veda. I due valori indicano la stessa
+  cella e l'arrotondamento non comprava un grammo di privacy — che è esattamente il
+  genere di frase che quella stessa review aveva riscritto altrove perché diceva il
+  falso. Comprava però fino a **679 m** di spostamento a queste latitudini (555 m di
+  latitudine, 390 m di longitudine a 45,5°N): su Cavenago sono 421 m verso sud-est, su
+  Segrate 373 m verso ovest, abbastanza per uscire da un comune piccolo e finire nei
+  campi accanto, dove un comune da rispondere non c'è. Si arrotonda di nuovo solo ciò
+  che esce dall'app: il `GeoFix` — e con lui `cacheKey`, la cache, il Diario e la
+  chiamata a Open-Meteo — resta a due decimali esatti come prima.
+- **Si leggeva un solo indirizzo, e nell'ordine sbagliato.** `getFromLocation(..., 1)`
+  più `locality ?: subAdminArea ?: subLocality`: il backend risponde a un punto con una
+  **scala** di indirizzi a granularità crescente, e per un punto che non sta su una
+  strada il primo gradino può non avere nessun comune sopra — in Italia torna con la
+  regione e la provincia e niente in mezzo. Bastava quello perché `subAdminArea`, che
+  stava *in mezzo* alla catena, vincesse a mani basse. Una provincia stampata dove va
+  il nome del posto è la regola «lo schermo non deve mentire» presa in contropiede: non
+  è un dato sbagliato, è un dato di un altro livello messo dove il lettore ne legge un
+  altro. Ora si chiedono cinque gradini e si prende il nome più specifico che **uno
+  qualsiasi** di loro conosce: comune, poi frazione o quartiere (che è comunque un posto
+  in cui una persona può stare), e la provincia solo quando nessun gradino sa altro —
+  dove torna a essere la risposta onesta, perché è l'unica che c'è.
+- **Fra due posizioni già note vinceva la più recente.** La review ha fatto bene a
+  chiedere l'ultimo noto a *tutti* i provider abilitati, ma li ordinava per
+  `elapsedRealtimeNanos` e basta. I provider non rispondono con la stessa cosa: fused
+  restituisce una posizione che un'altra app ha già pagato, network può restituire la
+  cella a cui il telefono è attaccato, e il permesso coarse alza entrambe a 2 km senza
+  migliorare la peggiore. Una cella arrivata dieci secondi fa batteva così un fix buono
+  di due minuti fa, e rispondeva «Milano» a chi stava a Segrate. Ora si ordina per
+  quanto il lettore può essere lontano da ciascuna *adesso*: accuratezza dichiarata più
+  quello che può aver percorso da allora (10 m/s, chi attraversa una città e non
+  un'autostrada). Il termine sull'età serve al ripiego delle 24 ore, dove un fix ottimo
+  di ieri non deve battere uno mediocre di un'ora fa.
+
+**Non toccato**: `maxAge` e la soglia persistita, il ripiego a 24 ore, l'ordine
+fused → network → gps, `CachedLocationProvider`, `FixAdoptionMeters` e il permesso solo
+coarse. La strategia era giusta; erano sbagliati i tre dettagli sopra. Nota che
+l'adozione sotto i 2 km prende comunque il nome nuovo, quindi il nome corretto arriva
+sulla pagina della posizione senza aspettare uno spostamento vero.
+
+**Test**: `LocationProviderTest` in tutti e due i repository, identico. Le due decisioni
+sono state estratte in due funzioni pure — `geocodedPlace(List<Address>)` e
+`expectedErrorMeters(accuracy, age)` — proprio perché fossero verificabili senza un
+dispositivo: sei casi sul nome (la provincia scavalcata, la frazione che batte la
+provincia, la provincia che resta quando non c'è altro, i campi vuoti, la lista vuota,
+regione e paese presi dal gradino che li ha) e cinque su quale posizione vince.
+
+**Verifiche**: 627 test verdi (11 nuovi: 170 `:app`, 457 `:core`), lint 0 errori.
+
+- [ ] Da verificare su device: nome del comune corretto da Cavenago di Brianza e da
+      Segrate, e il fallback alle coordinate quando il geocoding non risponde
+
+---
+
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
 - [x] Passata colore (chiesta su device, 3 set; fatta il 3 set sera, alzata una
