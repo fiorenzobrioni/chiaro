@@ -97,6 +97,7 @@ ICONS = {
     "snowflake": "mc_snowflake",
     "dust": "mc_dust",
     "smoke-particles": "mc_smoke_particles",
+    "solar-eclipse": "mc_solar_eclipse",
     "compass": "mc_compass",
     # the day's timeline and the Sky screen
     "sunrise": "mc_sunrise",

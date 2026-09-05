@@ -68,7 +68,9 @@
     <string name="hour_cell_desc">At %1$s, %2$s, %3$s, rain %4$d%%</string>
     <string name="sparkline_peak_desc">Rain probability peaks at %1$d%% around %2$s</string>
 
-    <!-- Details grid: labels -->
+    <!-- Details grid: labels. One line beside the tile's 24dp icon, which on a
+         360dp screen is a budget of 94dp: a label written past it wraps and
+         pushes its own value down while the tile next to it stays put. -->
     <string name="metric_uv">UV</string>
     <string name="metric_wind">Wind</string>
     <string name="metric_humidity">Humidity</string>
@@ -290,7 +292,7 @@
     <string name="guide_sky_events_title">Coming up</string>
     <string name="guide_sky_events_body">The calendar ahead: meteor peaks with their dates, the next full moon, solstices and equinoxes — with a verdict where the forecast reaches that far and an honest “too far out to say” where it does not.</string>
     <string name="guide_sky_catalog_title">Add a moment</string>
-    <string name="guide_sky_catalog_body">Thirty-two moments, grouped by sun, night, moon, seasons and meteor showers, each with the one line that says what it is. This is the place to find out what a blue hour actually is: by adding one.</string>
+    <string name="guide_sky_catalog_body">Some fifty moments, grouped by sun, night, moon, eclipses, seasons and meteor showers, each with the one line that says what it is. This is the place to find out what a blue hour actually is, or the zodiacal light: by adding one.</string>
 
     <string name="guide_alerts_title">Alerts</string>
     <string name="guide_alerts_p1">Two kinds live here: the ones already written, and the ones you write. Nothing arrives that you did not switch on.</string>
@@ -424,9 +426,10 @@
     <string name="sky_group_night">Night</string>
     <string name="sky_group_moon">Moon</string>
     <string name="sky_group_seasons">Seasons</string>
+    <string name="sky_group_eclipses">Eclipses</string>
     <string name="sky_group_meteors">Meteor showers</string>
 
-    <!-- The 32 moments: a name and the one line that teaches what it is -->
+    <!-- The moments: a name and the one line that teaches what it is -->
     <string name="sky_name_sun_rise">Sunrise</string>
     <string name="sky_expl_sun_rise">The sun clears the horizon.</string>
     <string name="sky_name_sun_set">Sunset</string>
@@ -491,6 +494,69 @@
     <string name="sky_expl_geminids">The December shower, the richest of the year.</string>
     <string name="sky_name_ursids">Ursids</string>
     <string name="sky_expl_ursids">The solstice shower, small and northern-only.</string>
+
+    <!-- Fase 19: the jobs that came with the eclipses -->
+    <string name="sky_name_milky_way_core">Milky Way</string>
+    <string name="sky_expl_milky_way_core">The bright core of the Milky Way, high enough to see, inside the astronomical night: March to October here, low in the south.</string>
+    <string name="sky_name_zodiacal_pm">Zodiacal light, evening</string>
+    <string name="sky_expl_zodiacal_pm">A faint cone of light standing over the sunset: sunlight on dust along the ecliptic, visible only on the nights the ecliptic stands steeply.</string>
+    <string name="sky_name_zodiacal_am">Zodiacal light, morning</string>
+    <string name="sky_expl_zodiacal_am">The same cone before dawn, the one they used to call the false dawn.</string>
+    <string name="sky_name_moon_new">New moon</string>
+    <string name="sky_expl_moon_new">The moon between us and the sun: the darkest sky of the month.</string>
+    <string name="sky_name_moon_first_quarter">First quarter</string>
+    <string name="sky_expl_moon_first_quarter">Half lit and growing, high in the sky at sunset.</string>
+    <string name="sky_name_moon_full">Full moon</string>
+    <string name="sky_expl_moon_full">Fully lit, rising as the sun sets and up all night.</string>
+    <string name="sky_name_moon_last_quarter">Last quarter</string>
+    <string name="sky_expl_moon_last_quarter">Half lit and shrinking, high in the sky at dawn.</string>
+    <string name="sky_name_moon_closest_full">Closest full moon</string>
+    <string name="sky_expl_moon_closest_full">The full moon of the year that passes nearest the earth: about a seventh wider than the farthest one.</string>
+    <string name="sky_name_eclipse_lunar">Lunar eclipse</string>
+    <string name="sky_expl_eclipse_lunar">The moon crossing the earth\'s shadow. Safe to look at, and visible from wherever the moon is up.</string>
+    <string name="sky_name_eclipse_solar">Solar eclipse</string>
+    <string name="sky_expl_eclipse_solar">The moon passing in front of the sun. How much it covers depends on where you stand, and it is never safe to look without a proper filter.</string>
+    <string name="sky_name_earth_perihelion">Earth closest to the sun</string>
+    <string name="sky_expl_earth_perihelion">The near end of the orbit, in the first week of January: the northern winter has nothing to do with distance.</string>
+    <string name="sky_name_earth_aphelion">Earth farthest from the sun</string>
+    <string name="sky_expl_earth_aphelion">The far end, in the first week of July.</string>
+    <string name="sky_name_sun_earliest_set">Earliest sunset</string>
+    <string name="sky_expl_sun_earliest_set">Not the solstice: the sun sets at its earliest about a fortnight before it.</string>
+    <string name="sky_name_sun_latest_rise">Latest sunrise</string>
+    <string name="sky_expl_sun_latest_rise">And it rises at its latest about a week after the solstice.</string>
+    <string name="sky_name_night_white_start">White nights begin</string>
+    <string name="sky_expl_night_white_start">The night stops getting fully dark, which happens above about 48 degrees of latitude.</string>
+    <string name="sky_name_night_white_end">White nights end</string>
+    <string name="sky_expl_night_white_end">The astronomical night comes back.</string>
+    <string name="sky_name_alpha_capricornids">Alpha Capricornids</string>
+    <string name="sky_expl_alpha_capricornids">Few, slow and bright: this one makes fireballs. Shares its night with the delta Aquariids.</string>
+    <string name="sky_name_southern_taurids">Southern Taurids</string>
+    <string name="sky_expl_southern_taurids">A long, slow autumn stream: not many, often very bright.</string>
+    <string name="sky_name_northern_taurids">Northern Taurids</string>
+    <string name="sky_expl_northern_taurids">The second half of the Taurids, in November.</string>
+    <string name="sky_none_darkness_all_year">The night gets fully dark here all year</string>
+    <string name="sky_none_ecliptic_flat">The ecliptic lies too flat this season</string>
+    <string name="sky_none_core_too_low">The Milky Way\'s core stays too low tonight</string>
+    <string name="sky_none_no_eclipse">No eclipse visible from here for years yet</string>
+    <string name="sky_eclipse_lunar_total">Total: the whole moon inside the shadow</string>
+    <string name="sky_eclipse_lunar_partial">Partial: %1$d%% of the moon in the shadow</string>
+    <string name="sky_eclipse_lunar_penumbral">Faint: the moon only grazes the shadow</string>
+    <string name="sky_eclipse_solar_total">Total from here</string>
+    <string name="sky_eclipse_solar_annular">A ring of sun left, from here</string>
+    <string name="sky_eclipse_solar_partial">%1$d%% of the sun covered, from here</string>
+    <string name="sky_eclipse_solar_warning">Never look at the sun without a proper filter</string>
+
+    <!-- Fase 19: where to turn, for the rainbow line -->
+    <string name="compass_n">north</string>
+    <string name="compass_ne">north-east</string>
+    <string name="compass_e">east</string>
+    <string name="compass_se">south-east</string>
+    <string name="compass_s">south</string>
+    <string name="compass_sw">south-west</string>
+    <string name="compass_w">west</string>
+    <string name="compass_nw">north-west</string>
+    <string name="timeline_rainbow">Low sun and rain (%1$d%%): a rainbow would stand to the %2$s</string>
+    <string name="timeline_rainbow_desc">Rainbow window, %1$s to %2$s, looking %3$s</string>
 
     <!-- Alerts (Fase 6). Two groups, one screen: switches that say exactly what
          they send, and the reader's own rules as a sentence of chips. -->

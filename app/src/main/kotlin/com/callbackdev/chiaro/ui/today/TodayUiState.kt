@@ -83,11 +83,20 @@ data class SkySnapshot(
 
 enum class TimelineKind {
     SUNRISE, GOLDEN_MORNING_END, GOLDEN_EVENING, SUNSET, BLUE_EVENING, DARK,
-    MOONRISE, MOONSET, RAIN_START, RAIN_STOP
+    MOONRISE, MOONSET, RAIN_START, RAIN_STOP, RAINBOW
 }
 
-/** One row of "the rest of the day". [pct] only for the rain turns. */
-data class TimelineItem(val at: LocalDateTime, val kind: TimelineKind, val pct: Int? = null)
+/**
+ * One row of "the rest of the day". [pct] carries the rain probability of the turns
+ * and of the rainbow window; [bearingDeg] is the rainbow's only, and is where to
+ * look — a rainbow is the one row on this screen that comes with a direction.
+ */
+data class TimelineItem(
+    val at: LocalDateTime,
+    val kind: TimelineKind,
+    val pct: Int? = null,
+    val bearingDeg: Double? = null
+)
 
 /** One cell's worth of forecast, with its own day/night already decided — the strip
  * crosses midnight, so "is it night" is per hour, not per screen. */
@@ -186,6 +195,20 @@ object TodayStateBuilder {
         val lunar = AstronomyEngine.lunarDay(now.toLocalDate(), zone, report.location.coordinates)
         sun(lunar.moonrise, TimelineKind.MOONRISE)
         sun(lunar.moonset, TimelineKind.MOONSET)
+
+        // The rainbow windows of the rest of today: geometry (the sun under 42°) and
+        // weather (rain likely, sky not shut) at the same time. A possibility, printed
+        // with the number it rests on — never a promise (RainbowWindow's own rule).
+        com.callbackdev.chiaro.domain.sky.RainbowWindow
+            .windows(report.hourly, zone, report.location.coordinates)
+            .forEach { rainbow ->
+                items += TimelineItem(
+                    at = LocalDateTime.ofInstant(rainbow.start, zone),
+                    kind = TimelineKind.RAINBOW,
+                    pct = rainbow.precipChancePct,
+                    bearingDeg = rainbow.lookTowardsDeg
+                )
+            }
 
         // Rain turns: the hours where the chance crosses half, up or down, today.
         val todayHours = report.hourly.filter { it.time.toLocalDate() == now.toLocalDate() }

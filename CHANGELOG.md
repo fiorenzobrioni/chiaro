@@ -116,6 +116,25 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   `IconContrastTest` now sweeps both.
 - The launcher mark, replacing the Fase 0 placeholder: the icon family's starry-night
   crescent in Chiaro's own palette, low in the badge over two calm waves.
+- **The Sky screen learns eclipses, and eighteen other moments** (asked by the
+  committente, 4 set). Both eclipses, resolved for the place rather than for the
+  planet: a lunar one only while the moon is up here, a solar one as these
+  coordinates see it — clipped to daylight, and with its maximum re-measured inside
+  the visible part, because a window that runs past sunset ends at sunset. The four
+  moon quarters get rows of their own beside the generic next-quarter line, and so
+  does the year's closest full moon. Two dark-sky windows go one step past the
+  darkness window: the core of the Milky Way while it is high enough to see, and the
+  zodiacal light on the nights the ecliptic stands steeply enough to show it. Four
+  annual facts join the solstices — the earliest sunset and the latest sunrise, which
+  are not the solstice; the earth at its closest to and farthest from the sun; and the
+  start and end of the white nights, above the latitudes that have them. Three more
+  meteor showers, from the same list the table already cited. Every one of them is
+  computed on the phone and works offline, like the rest of the module.
+- **A rainbow window on Today's timeline.** The one sky event that is not astronomy: a
+  bow is centred opposite the sun and rises 42°, so it can only clear the horizon while
+  the sun is under 42 — and whether rain is falling into that light is two numbers the
+  fetch already carries. The row says when, on what rain probability, and which way to
+  turn, in words. A possibility, never a promise.
 - **The values an alert's message can print are now a list you tap** (asked by the
   committente, 4 set). Every value an alert can watch can also be printed inside the
   message it sends, which nothing on the screen had ever said — the help line named
@@ -225,6 +244,23 @@ polish:
 - **A dry run's answer no longer outlives its question.** It stayed on the screen while
   the conditions under it were edited, so a verdict about one alert sat under another.
   It goes when a chip moves.
+- **A subscribed moment with no recurrence had no row.** The Sky screen took the daily
+  moments and the annual calendar and dropped everything in between, so the next moon
+  quarter — a line you could add from the catalog, that the widget showed and the
+  reminders armed — never appeared on the screen that owns it. The calendar now carries
+  those too, which is also where the new quarters and the eclipses land.
+- **The details grid's icons are the drawings again, not their silhouettes.** The tile
+  passed a flat tint to `Icon`, which recolors the whole vector — the one place in the
+  app that did it to a weather icon, and against the rule that the family keeps its own
+  colors (DESIGN §13.1). Flattened, the humidity drop lost the white % that makes it
+  humidity, the barometer lost its needle, the air-quality particles merged into a blob.
+  Two tiles that shared a drawing no longer do either: a dew point is a temperature, so
+  it now carries the thermometer and the drop is the humidity mark alone.
+- **Every label in the details grid holds one line.** Measured against the width the
+  tile actually leaves it — 94dp beside the 24dp icon on a 360dp screen — the Italian
+  "Punto di rugiada" (113dp) and "Qualità dell'aria" (107dp) did not fit, so they wrapped
+  and pushed their own value down while the tile beside them stayed put. They are now
+  "Rugiada" and "Qualità aria"; the full term keeps the places that have room for it.
 
 ### Removed
 

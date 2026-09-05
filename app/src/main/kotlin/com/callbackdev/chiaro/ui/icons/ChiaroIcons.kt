@@ -75,6 +75,7 @@ object ChiaroIcons {
         R.drawable.mc_star to R.drawable.mcf_star,
         R.drawable.mc_starry_night to R.drawable.mcf_starry_night,
         R.drawable.mc_falling_stars to R.drawable.mcf_falling_stars,
+        R.drawable.mc_solar_eclipse to R.drawable.mcf_solar_eclipse,
         R.drawable.mc_moonrise to R.drawable.mcf_moonrise,
         R.drawable.mc_moonset to R.drawable.mcf_moonset,
         R.drawable.mc_moon_new to R.drawable.mcf_moon_new,
@@ -128,6 +129,7 @@ object ChiaroIcons {
         R.drawable.mc_star to R.drawable.mcfn_star,
         R.drawable.mc_starry_night to R.drawable.mcfn_starry_night,
         R.drawable.mc_falling_stars to R.drawable.mcfn_falling_stars,
+        R.drawable.mc_solar_eclipse to R.drawable.mcfn_solar_eclipse,
         R.drawable.mc_moonrise to R.drawable.mcfn_moonrise,
         R.drawable.mc_moonset to R.drawable.mcfn_moonset,
         R.drawable.mc_moon_new to R.drawable.mcfn_moon_new,
@@ -245,10 +247,17 @@ object ChiaroIcons {
     val wind: ImageVector @Composable get() = styled(R.drawable.mc_wind)
     val humidity: ImageVector @Composable get() = styled(R.drawable.mc_humidity)
     val visibility: ImageVector @Composable get() = styled(R.drawable.mc_mist)
-    val temperature: ImageVector @Composable get() = styled(R.drawable.mc_thermometer)
     val uv: ImageVector @Composable get() = styled(R.drawable.mc_uv_index)
     val pressure: ImageVector @Composable get() = styled(R.drawable.mc_barometer)
-    val dewPoint: ImageVector @Composable get() = styled(R.drawable.mc_raindrop)
+
+    /** The thermometer, not the raindrop (4 set 2026). Meteocons draws `humidity` as
+     * `raindrop` with a % laid over it, so the two tiles that sit one under the other
+     * in the details grid were the same drawing twice — told apart only by a white
+     * glyph the reader has to look for, and not at all once anything tints them flat.
+     * A dew point is a temperature, so it gets the instrument that reads one; the
+     * drop stays the humidity mark alone. This is what §13.1's «the accessor names
+     * the metric, not the drawing» is for. */
+    val dewPoint: ImageVector @Composable get() = styled(R.drawable.mc_thermometer)
     val precipitation: ImageVector @Composable get() = styled(R.drawable.mc_raindrops)
     val airQuality: ImageVector @Composable get() = styled(R.drawable.mc_smoke_particles)
 
@@ -268,6 +277,17 @@ object ChiaroIcons {
     val star: ImageVector @Composable get() = styled(R.drawable.mc_star)
     val starryNight: ImageVector @Composable get() = styled(R.drawable.mc_starry_night)
     val fallingStars: ImageVector @Composable get() = styled(R.drawable.mc_falling_stars)
+
+    /** The moon over the sun: the one eclipse drawing Meteocons v2 has (Fase 19). */
+    val solarEclipse: ImageVector @Composable get() = styled(R.drawable.mc_solar_eclipse)
+
+    /**
+     * Meteocons v2 has no rainbow, and the sun-behind-a-shower drawing is not a
+     * substitute for one: it is literally the weather a rainbow is made of, which is
+     * what the row it marks says.
+     */
+    val rainbow: ImageVector
+        @Composable get() = styled(R.drawable.mc_partly_cloudy_day_rain)
 
     // The navigation bar. Deliberately NOT styled (decision, 3 set): these are
     // silhouettes the bar tints to one color, so fill-vs-line would change nothing

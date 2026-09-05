@@ -82,6 +82,7 @@ import com.callbackdev.chiaro.ui.components.FreshnessChip
 import com.callbackdev.chiaro.ui.components.HourCell
 import com.callbackdev.chiaro.ui.components.HourStrip
 import com.callbackdev.chiaro.ui.components.MetricTile
+import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.components.RainSparkline
 import com.callbackdev.chiaro.ui.components.SkyCanvas
 import com.callbackdev.chiaro.ui.components.SkyCanvasTopScrimEnd
@@ -991,6 +992,7 @@ private fun timelineIcon(kind: TimelineKind) = when (kind) {
     TimelineKind.DARK -> ChiaroIcons.starryNight
     TimelineKind.MOONRISE -> ChiaroIcons.moonrise
     TimelineKind.MOONSET -> ChiaroIcons.moonset
+    TimelineKind.RAINBOW -> ChiaroIcons.rainbow
     TimelineKind.RAIN_START -> ChiaroIcons.precipitation
     TimelineKind.RAIN_STOP -> ChiaroIcons.cloud
 }
@@ -1005,6 +1007,11 @@ private fun timelineText(item: TimelineItem): String = when (item.kind) {
     TimelineKind.DARK -> stringResource(R.string.tl_dark)
     TimelineKind.MOONRISE -> stringResource(R.string.tl_moonrise)
     TimelineKind.MOONSET -> stringResource(R.string.tl_moonset)
+    TimelineKind.RAINBOW -> stringResource(
+        R.string.timeline_rainbow,
+        item.pct ?: 0,
+        stringResource(SkyText.bearingRes(item.bearingDeg ?: 0.0))
+    )
     TimelineKind.RAIN_START -> stringResource(R.string.tl_rain_start, item.pct ?: 0)
     TimelineKind.RAIN_STOP -> stringResource(R.string.tl_rain_stop)
 }
