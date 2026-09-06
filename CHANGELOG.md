@@ -167,6 +167,12 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   `update_frequency_min` is back to meaning one thing: how often the app wakes up in
   the background. Battery is still a feature, and the periodic job is still where it
   is paid; a screen you just opened is not.
+- **Battery saver postpones the automatic re-reads.** The fetch on landing and the
+  one the minute tick makes are conveniences nobody asked for out loud, so under the
+  system's battery saver they do not run. A pull to refresh always does, and so does
+  a page that has nothing to show yet. What keeps running either way is the clock: the
+  stated age, the freshness verdict and the hours already over cost no radio, and
+  freezing them would trade battery for a page that lies about the hour.
 - **A page left open no longer freezes at the fetch that opened it.** The minute tick
   moved the stated age, the freshness verdict and the hours already over, but never
   the numbers themselves. Past those fifteen minutes it now re-reads them, silently,

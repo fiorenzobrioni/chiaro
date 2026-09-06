@@ -10,6 +10,7 @@ import com.callbackdev.chiaro.data.CityStore
 import com.callbackdev.chiaro.data.FetchFailureReason
 import com.callbackdev.chiaro.data.FetchLogStore
 import com.callbackdev.chiaro.data.LocationProvider
+import com.callbackdev.chiaro.data.PowerSaveState
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.SettingsStore
 import com.callbackdev.chiaro.data.WorkspaceStore
@@ -83,7 +84,8 @@ class TodayViewModel(
     private val workspaceStore: WorkspaceStore,
     private val fetchLogStore: FetchLogStore,
     private val locationProvider: LocationProvider,
-    private val clock: Clock = Clock.systemUTC()
+    private val clock: Clock = Clock.systemUTC(),
+    private val powerSave: PowerSaveState = PowerSaveState.Off
 ) : ViewModel() {
 
     /** Carries the cacheKey of the page whose reader pulled. */
@@ -343,6 +345,15 @@ class TodayViewModel(
 
             suspend fun fetch(userAsked: Boolean) {
                 if (inFlight) return
+                // Battery saver postpones the fetches nobody asked for out loud: the
+                // one on landing and the one the tick makes past the fifteen minutes.
+                // Never a pull, and never a page that has nothing to show yet — the
+                // alternative there is a skeleton, which is not a cheaper screen but
+                // an empty one. What still happens under saver is `push()`: the age,
+                // the freshness verdict and the recency trim cost no radio and no
+                // disk, and letting them freeze would trade battery for a page that
+                // lies about the hour (§1.1).
+                if (!userAsked && report != null && powerSave.isOn()) return
                 inFlight = true
                 userRefreshing = userAsked
                 // An automatic fetch has nothing to announce, so it does not even
@@ -434,7 +445,8 @@ class TodayViewModel(
                     settingsStore = ServiceLocator.settingsStore(app),
                     workspaceStore = ServiceLocator.workspaceStore(app),
                     fetchLogStore = ServiceLocator.fetchLogStore(app),
-                    locationProvider = ServiceLocator.locationProvider(app)
+                    locationProvider = ServiceLocator.locationProvider(app),
+                    powerSave = PowerSaveState.of(app)
                 )
             }
         }

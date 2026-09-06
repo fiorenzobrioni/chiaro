@@ -1645,6 +1645,23 @@ l'intervallo del worker e la base di `isStale`.
   caricamento, e invecchia sullo schermo. Là è nato `onResumed()`, che qui non serve
   perché il flusso lo fa già.
 
+**Risparmio energetico** (aggiunto su richiesta del committente subito dopo): sotto
+battery saver i fetch automatici — quello all'atterraggio e quello del tick — non
+partono. Mai la pull, mai una pagina che non ha ancora niente da mostrare (lì
+l'alternativa è uno scheletro, che non è una schermata più economica, è una vuota),
+e mai il job periodico: quello lo differisce già il sistema con Doze e App Standby, e
+zittirlo qui silenzierebbe un'allerta proprio sul telefono con meno carica. `push()`
+continua invece a girare: età, freschezza e taglio di recency non costano né radio né
+disco, e congelarli scambierebbe batteria con una pagina che mente sull'ora (§1.1).
+`PowerSaveState` sta in `:core:data` accanto a `LocationProvider` — è stato di
+piattaforma — ed è letto come funzione, non come valore, perché l'interruttore può
+essere spostato mentre il processo è vivo.
+
+**Non testato qui**: `:app` non ha ancora un banco di prova per i ViewModel e
+costruirlo vuole sei `testImplementation` in più nel modulo (datastore, room,
+retrofit e il convertitore, okhttp, serialization). La stessa guardia è coperta da due
+test in tweather, dove il banco esiste già.
+
 **Verifiche**: suite verde, lint 0 errori. `WeatherFreshnessTest` è nuovo e sta in
 `:core:data` invece che accanto all'oggetto che prova, perché `UpdateFrequencies` sta
 lì: il caso che conta è che l'invariante «un hit non può essere stale» regga per

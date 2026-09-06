@@ -111,7 +111,11 @@ punctuation.
   TTL let a battery setting decide how old the hero may be while somebody is looking
   at it — an hour by default, two at the top of the range, with the freshness chip
   silent because a cache hit is never stale. Today re-reads when the page comes back
-  (`WhileSubscribed`) and, past those 15 minutes, on its minute tick; both silently.
+  (`WhileSubscribed`) and, past those 15 minutes, on its minute tick; both silently,
+  and neither under battery saver (`PowerSaveState`) — but `push()` still runs there,
+  because the stated age and the recency trim cost nothing and freezing them would
+  trade battery for a page that lies about the hour. A pull to refresh and a page with
+  nothing to show yet are never postponed.
 - **Offline**: the last successful report per place is kept with no TTL and carries a week
   of forecast, so the app is never blank. `WeatherRecency` drops the hours that have
   already happened; `WeatherFreshness` decides whether to trust what is left.
