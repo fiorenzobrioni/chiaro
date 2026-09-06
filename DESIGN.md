@@ -158,6 +158,23 @@ light  #DFEFFC  #AFD9F6  #76BCEC  #2E97DE  #006FAC     Y .84 .65 .46 .28 .14
 dark   #0E2E44  #004B6F  #006C98  #0092C8  #55BCEC     Y .02 .06 .13 .25 .44
 ```
 
+That is the ramp of the **marks** — the sparkline, the drift cell, the swatch — and it
+cannot carry text: on paper its light end is 1.12:1 and its middle 1.96:1. So a printed
+probability has a **second ramp of the same quantity, selected as ink** (6 set 2026, after
+a device report: the week's 0% was the heaviest figure in a column of pale blues, because
+it alone fell back to `onSurfaceVariant` at 8.9:1 while 15% was printing at 1.3:1). Same
+hue family, same five steps, every one of them measured against the surface of §2.2:
+
+```
+light  #5F7281  #426780  #1D5C81  #00507E  #004470     4.8 5.7 6.9 8.2 9.7 : 1
+dark   #768996  #759BB3  #71ADD0  #6FBFEB  #76D1FF     5.1 6.3 7.6 9.1 10.9 : 1
+```
+
+Two rules come with it. **Zero is the quiet end of this ramp, not another color**: a
+probability of nothing is still a probability, and the figure with the least to say must
+not be the loudest one in the column. And **the fill ramp never paints a figure** — where
+a number is printed it is `rainInkAt`, where a mark is drawn it is `rainAt`.
+
 **Temperature** — a diverging quantity, because it has a meaningful middle. Two hues and a
 neutral midpoint, never a rainbow; the midpoint is anchored at **15 °C / 59 °F**, a fixed
 comfortable reference, and **never at the min/max of what happens to be on screen** (a
@@ -393,16 +410,25 @@ Warning role, the real age ("3 hours ago"), tappable to retry, with a progress s
 retrying. Never a toast: a toast is gone before it is read.
 
 **8.3 HourStrip** — horizontal, 24 cells from the next full hour, each 56dp wide: hour,
-icon, temperature (tabular), rain probability. Under it a **rain sparkline**: single series,
-rain ramp (§2.3), 2px line, 4px rounded ends, no legend (one series is named by its title),
-values direct-labeled only at the peaks.
+icon, temperature (tabular), rain probability on the ink ramp (§2.3), zero included; an
+hour the provider gave no probability for prints nothing at all.
+
+**8.3b RainChart** — under the strip, the same 24 hours as one series: 2px line on the
+**ink** ramp (a mark has its own 3:1 floor, and the fill ramp's light end clears neither
+floor), the area under it tinted with the fill ramp at 0.30 → 0.06, three recessive
+gridlines at 0 / 50 / 100% with the two ends labelled in the right-hand gutter, a tick
+and the hour under the axis every six hours with the first and last always named, and a
+dot on every hour. No legend: one series, named by its own caption. It replaced a bare
+sparkline on the second device review (6 set 2026) — over a day pinned at 100% a line
+with no scale under it is a shape with nowhere to stand, and the flatter the day the
+less it said. A dry run still draws nothing at all (§1.1).
 
 **8.4 TimelineRow** — the merged day (VISION §5.2.4): time, icon or event glyph, one line
 of prose, optional verdict chip. Sun events, weather turns and the reader's own alerts use
 the same row; only the leading glyph differs.
 
-**8.5 DayRow** — weekday, icon, rain probability, the **temperature range bar** and the
-ribbon. The bar is one horizontal track per day, all seven **sharing one scale across the
+**8.5 DayRow** — weekday, icon, rain probability on the ink ramp (§2.3, zero included),
+the **temperature range bar** and the ribbon. The bar is one horizontal track per day, all seven **sharing one scale across the
 week** so the week has a shape, filled with the diverging temperature ramp (§2.3) and
 anchored at 15 °C; the low and high are printed at its ends in tabular figures, because a
 colored bar is not a number.
@@ -458,11 +484,18 @@ in the app bar with a dots indicator, and a horizontal pager between saved place
 
 2px lines, 4px rounded ends anchored to the baseline, markers ≥ 8dp, a 2px surface gap
 between adjacent fills, recessive gridlines (`outlineVariant` at 1dp, horizontal only).
+
+The one deliberate exception to the 8dp marker: a **per-point dot on a dense series** —
+the hour dots of §8.3b — is rhythm rather than a marker. It says where the hours are, no
+value is ever read off it (the strip above prints all 24), and it is drawn only while the
+points are at least 6dp apart. An axis tick is not a gridline and lives outside the plot:
+1dp, 3dp long, under the baseline.
 Direct labels on the extremes only — never a number on every point.
 
 ### 9.3 Every chart has a text equivalent
 
-The sparkline's peaks are printed, the range bar's ends are printed, the drift strip has a
+The rain chart prints the ends of its scale and the hours under it, and the strip above it
+prints every one of its values; the range bar's ends are printed, the drift strip has a
 table view. This is both the accessibility floor and §1.2: a picture of a number is not a
 number.
 
@@ -471,7 +504,8 @@ number.
 ## 10. Accessibility
 
 - **Contrast**: every ink token ≥ 4.5:1 against its surface, measured in §2.3 and asserted
-  in §12. Non-text marks ≥ 3:1. The canvas is covered by the scrim contract (§3.6).
+  in §12. Non-text marks ≥ 3:1. A quantity that is both drawn and printed therefore owns
+  two ramps, and the fill one never paints a figure (§2.3). The canvas is covered by the scrim contract (§3.6).
 - **Never color alone**: verdicts carry a glyph and a word; the drift strip has a table;
   chart series are direct-labeled.
 - **Type scale to 200%**: layouts wrap and reflow, they do not clip or ellipsize a value.
@@ -515,7 +549,8 @@ Four tests keep this document from rotting, in the series' habit of turning a de
 into something CI can fail:
 
 - **`PaletteContrastTest`** asserts every ratio printed in §2.3 and the monotonicity of the
-  two ramps. If a token is re-picked, the numbers in this file must be re-measured.
+  three ramps, and walks the printed probability from 0 to 100 to hold every step of it
+  above the §10 floor. If a token is re-picked, the numbers in this file must be re-measured.
 - **`ScrimContractTest`** asserts §3.6 against the brightest band.
 - **`NoRawColorTest`** sweeps the UI sources and fails on a hex literal outside
   `ui/theme/`. It caught its first violation the day it was written — the canvas' own

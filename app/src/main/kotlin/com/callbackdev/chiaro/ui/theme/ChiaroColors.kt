@@ -25,8 +25,13 @@ data class ChiaroColors(
     val unstable: VerdictColors,
     val fail: VerdictColors,
     val unknown: VerdictColors,
-    /** Five steps, one hue, monotonic in luminance. Index 0 is "almost none". */
+    /** Five steps, one hue, monotonic in luminance. Index 0 is "almost none".
+     * This is the ramp of the MARKS — a sparkline, a drift cell, a swatch. It never
+     * carries text: its light end is a fill on paper, not an ink (§2.3). */
     val rainRamp: List<Color>,
+    /** The same quantity, selected for FIGURES: five steps, the same hue family, every
+     * one of them at or above 4.5:1 on the surface (§2.3, §10). */
+    val rainInkRamp: List<Color>,
     /** Seven steps, diverging, the middle one neutral. [temperatureAt] anchors it. */
     val temperatureRamp: List<Color>
 ) {
@@ -36,8 +41,17 @@ data class ChiaroColors(
      */
     val freshness: VerdictColors get() = unstable
 
-    /** The ramp step for a probability, interpolated. */
+    /** The ramp step for a probability, interpolated. For marks only: see [rainInkAt]. */
     fun rainAt(percent: Int): Color = sample(rainRamp, percent.coerceIn(0, 100) / 100f)
+
+    /**
+     * The ink for a printed probability. Zero is the quiet end of this ramp and not a
+     * different color: a figure that jumped to the secondary text role at 0% read as the
+     * heaviest thing in a row of pale blues, which is backwards — 0% is the one number in
+     * the column with nothing to say (reported on device, 6 set 2026). Legibility is why
+     * the fill ramp cannot do this job: `rainAt(15)` is 1.3:1 on paper.
+     */
+    fun rainInkAt(percent: Int): Color = sample(rainInkRamp, percent.coerceIn(0, 100) / 100f)
 
     /**
      * The ramp step for a temperature. The scale is anchored to the WORLD — −5 °C at one
@@ -74,6 +88,10 @@ internal val ChiaroLightColors = ChiaroColors(
         Color(0xFFDFEFFC), Color(0xFFAFD9F6), Color(0xFF76BCEC),
         Color(0xFF2E97DE), Color(0xFF006FAC)
     ),
+    rainInkRamp = listOf(
+        Color(0xFF5F7281), Color(0xFF426780), Color(0xFF1D5C81),
+        Color(0xFF00507E), Color(0xFF004470)
+    ),
     temperatureRamp = listOf(
         Color(0xFF006FAC), Color(0xFF4CA5D8), Color(0xFF9CC9E7), Color(0xFFDCD7CC),
         Color(0xFFFABD72), Color(0xFFE67E00), Color(0xFFB85100)
@@ -88,6 +106,10 @@ internal val ChiaroDarkColors = ChiaroColors(
     rainRamp = listOf(
         Color(0xFF0E2E44), Color(0xFF004B6F), Color(0xFF006C98),
         Color(0xFF0092C8), Color(0xFF55BCEC)
+    ),
+    rainInkRamp = listOf(
+        Color(0xFF768996), Color(0xFF759BB3), Color(0xFF71ADD0),
+        Color(0xFF6FBFEB), Color(0xFF76D1FF)
     ),
     temperatureRamp = listOf(
         Color(0xFF63B8EA), Color(0xFF1791D2), Color(0xFF0070AB), Color(0xFF4A4740),

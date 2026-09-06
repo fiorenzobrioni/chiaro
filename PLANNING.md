@@ -1762,6 +1762,52 @@ tweather, allineati byte per byte.
       stop è invisibile (motivo registrato nel tool). Nota: il marchio dell'app
       conserva i valori pre-passata (`#3589AC`/`#C27D08`) — è un drawable disegnato
       a mano, non rigenerato; da riallineare solo se si ridisegna il badge
+- [x] Rampa d'inchiostro per la probabilità di pioggia (segnalata su device, 6 set):
+      nella settimana lo 0% era la cifra più pesante della colonna. Cadeva su
+      `onSurfaceVariant` (8.9:1) mentre il 15% accanto stampava a 1.29:1, perché una
+      cifra stava usando la rampa dei SEGNI — quella pensata per sparkline, celle del
+      diario e campioni, il cui estremo chiaro su carta è 1.12:1. Ora `rainInkRamp` e
+      `rainInkAt`: cinque passi della stessa famiglia di tinta (la deriva verso il
+      265° del fondo scala è quella della rampa di riempimento), scelti come
+      inchiostro e misurati contro la superficie di §2.2 — 4.8→9.7:1 su chiaro,
+      5.1→10.9:1 su scuro — **zero compreso**: una probabilità nulla è comunque una
+      probabilità e sta all'estremo quieto della stessa scala, non su un altro
+      colore. La rampa di riempimento non stampa più nessuna cifra e resta dei segni.
+      Stessa regola nel widget, dove valeva lo stesso salto e in più i valori bassi
+      sparivano sul cielo. `PaletteContrastTest` cammina da 0 a 100 e tiene ogni passo
+      sopra il 4.5:1 di §10, più monotonia e il fatto che lo 0% non gridi più del
+      100%; DESIGN §2.3, §8.3, §8.5, §10 e §12 riscritti con i numeri misurati.
+      Le due luminanze sono libere di cambiare insieme: la cifra dello 0% ora è
+      **più leggera** di prima, ed è il punto della segnalazione
+- [x] La sparkline della pioggia diventa un grafico (chiesto su device, 6 set, subito
+      dopo la rampa d'inchiostro): sotto le prossime ore c'era una sparkline nuda, e una
+      sparkline nuda è una forma senza un posto dove stare — su una giornata inchiodata
+      al 100% disegnava una riga quasi dritta in un riquadro vuoto, e più la giornata era
+      piatta meno diceva. Ora `RainChart`, con le due domande che uno si fa davvero
+      (*quanto in alto* e *quando*): tre linee di griglia recessive a 0 / 50 / 100% con i
+      due estremi stampati nella colonna di destra, un punto per ogni ora, l'ora sotto
+      l'asse ogni sei con la prima e l'ultima sempre nominate, e l'area sotto la linea
+      velata con la rampa di riempimento (0.30 → 0.06) perché a colpo d'occhio una
+      superficie porta un livello e un tratto porta una direzione. La linea passa alla
+      rampa d'inchiostro: anche un segno ha il suo 3:1, e una giornata con picco 10%
+      disegnava la sua linea in `#D0E8FA`, che non è una linea. Due regole tornano
+      funzioni pure e testate (`RainChartTest`): dove la linea si interrompe (`rainRuns`
+      — un'ora senza previsione non diventa uno zero) e quali ore l'asse nomina
+      (`axisTicks` — l'ultima solo se la sua etichetta non finisce addosso alla
+      precedente). Il punto orario è l'unica eccezione dichiarata al «marker ≥ 8dp» di
+      §9.2, e sta scritta lì: è ritmo, non un valore da leggere — i 24 numeri sono nella
+      striscia sopra — e sotto i 6dp di passo non viene disegnato. La giornata asciutta
+      continua a non disegnare niente
+- [x] «Cos'è cambiato» dopo «La settimana» (chiesto su device, 6 set — e d'accordo):
+      ogni frase di quella sezione parla di un giorno più avanti («La previsione di
+      Mercoledì 9 è cambiata»), quindi prima della settimana nominava giorni che il
+      lettore non aveva ancora visto, e tagliava in due il blocco che parla di oggi.
+      Nello stesso giro il difetto visto nello screenshot: una revisione di cui questa
+      schermata non ha le parole (un codice di condizione) stampava «… è cambiata:» e
+      basta — i due punti e il vuoto. Ora non diventa proprio una riga, e non spreca una
+      delle tre che la sezione ha; nel Diario la riga resta, perché quello è il registro,
+      ma perde il separatore appeso davanti all'ora. Le frasi si costruiscono adesso
+      prima della lista, perché un `LazyListScope` non può chiamare una composable
 - [ ] Contrasti, scala testo 200%, TalkBack, motion ridotto
 - [ ] Avvio a freddo sotto 400 ms, canvas sotto 2 ms/frame
 - [ ] Passata IT/EN completa

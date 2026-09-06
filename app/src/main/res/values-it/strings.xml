@@ -63,7 +63,8 @@
 
     <!-- La strip oraria -->
     <string name="hour_cell_desc">Alle %1$s, %2$s, %3$s, pioggia %4$d%%</string>
-    <string name="sparkline_peak_desc">Picco di pioggia %1$d%% verso le %2$s</string>
+    <string name="rain_chart_caption">Probabilità di pioggia</string>
+    <string name="rain_chart_desc">Probabilità di pioggia dalle %1$s alle %2$s su una scala da 0 a 100%%, con picco %3$d%% verso le %4$s</string>
 
     <!-- Griglia dettagli: etichette. Una riga sola accanto all'icona da 24dp:
          su uno schermo da 360dp sono 94dp. «Punto di rugiada» (113) e
