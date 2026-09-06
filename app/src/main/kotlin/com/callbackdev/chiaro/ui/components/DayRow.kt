@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.tabular
 
@@ -70,9 +71,10 @@ fun DayRow(
                 imageVector = icon,
                 contentDescription = null, // the row speaks once, via its semantics
                 tint = Color.Unspecified,
-                // 28dp: between the strip's 32 and the timeline's 24, sized to the
-                // row it sits in (device check, 2 set).
-                modifier = Modifier.size(28.dp)
+                // Between the strip and the timeline on the family's ladder, sized to
+                // the row it sits in. The ribbon below still starts at 52dp (the day
+                // label's 44 plus the 8 beside it), which the icon's size never touched.
+                modifier = Modifier.size(WeatherIconSize.Week)
             )
             Text(
                 text = "$rainPct%",

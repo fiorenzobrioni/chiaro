@@ -22,6 +22,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.tabular
 
@@ -75,9 +76,9 @@ fun HourStrip(
                     imageVector = cell.icon,
                     contentDescription = null, // the cell speaks once, via its semantics
                     tint = Color.Unspecified, // Meteocons carry their own measured colors
-                    // 32dp in a 56dp cell: at the drawable's intrinsic 24 the icons
-                    // read as timid next to the figures (device check, 2 set).
-                    modifier = Modifier.padding(vertical = 2.dp).size(32.dp)
+                    // The top rung of the family's ladder, in a 56dp cell. The 2dp of
+                    // vertical padding is the cell's own rhythm and does not move with it.
+                    modifier = Modifier.padding(vertical = 2.dp).size(WeatherIconSize.Strip)
                 )
                 Text(
                     text = cell.temperature,

@@ -69,9 +69,10 @@
     <string name="rain_chart_caption">Chance of rain</string>
     <string name="rain_chart_desc">Chance of rain from %1$s to %2$s on a scale of 0 to 100%%, peaking at %3$d%% around %4$s</string>
 
-    <!-- Details grid: labels. One line beside the tile's 24dp icon, which on a
-         360dp screen is a budget of 94dp: a label written past it wraps and
-         pushes its own value down while the tile next to it stays put. -->
+    <!-- Details grid: labels. One line beside the tile's 28dp icon, which on a
+         360dp screen is a budget of 90dp (94 until the icons grew, 6 set): a label
+         written past it wraps and pushes its own value down while the tile next to
+         it stays put. -->
     <string name="metric_uv">UV</string>
     <string name="metric_wind">Wind</string>
     <string name="metric_humidity">Humidity</string>

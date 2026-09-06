@@ -42,9 +42,13 @@ data class AppSettings(
      * generated Chiaro scheme — for readers who want the app to look like itself.
      */
     val dynamicColor: Boolean = true,
-    /** FILL by default (decision, 3 set): filled glyphs read faster at 24-32dp for
-     * an audience that scans, and the line set stays one Settings tap away. */
-    val weatherIcons: WeatherIcons = WeatherIcons.FILL,
+    /** LINE by default (decision, 6 set 2026 — the default moves, the choice stays).
+     * The outlined drawings keep one weight of ink on a screen whose hero is already a
+     * painted sky, and at the sizes Today now uses (§13.1's ladder, 28-36dp) they read
+     * as fast as the solid ones did at 24-32. The fill set stays one Settings tap away.
+     * An install that never opened this setting flips on upgrade: that is what a default
+     * is, and moving it for those readers is the point of the change. */
+    val weatherIcons: WeatherIcons = WeatherIcons.LINE,
     /**
      * The Sky screen's master switch (its surface arrives in Fase 5). Default true:
      * the sky is the differentiator, and a feature that ships switched off is a
@@ -96,7 +100,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 ),
                 themeMode = enumOrDefault(prefs[Theme], ThemeMode.SYSTEM),
                 dynamicColor = prefs[DynamicColor] ?: true,
-                weatherIcons = enumOrDefault(prefs[IconStyle], WeatherIcons.FILL),
+                weatherIcons = enumOrDefault(prefs[IconStyle], WeatherIcons.LINE),
                 skyEnabled = prefs[SkyEnabled] ?: true,
                 // 0 is how "off" is stored: an Int? preference cannot hold null, and
                 // absent must read the same as explicitly switched off.

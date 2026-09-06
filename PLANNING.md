@@ -1729,6 +1729,76 @@ tweather, allineati byte per byte.
 
 ---
 
+## Le icone del meteo (committente, 6 set 2026) — il tratto come default, e una scala sola
+
+Due richieste dallo stesso screenshot di Oggi, e la seconda spiega la prima.
+
+- [x] **Il default passa da FILL a LINE.** Non è un ripensamento sull'argomento del 3 set
+      («le forme piene si leggono più in fretta a 24–32dp»): quell'argomento valeva
+      *a quelle taglie*. Le taglie si sono mosse — punto sotto — e su una schermata il cui
+      eroe è già un cielo dipinto il tratto tiene l'inchiostro su un peso solo, invece di
+      appoggiare otto adesivi colorati sopra un dipinto. Il set line è anche l'unico dei
+      tre che serve entrambi i fondi con la stessa misura (DESIGN §13.1), quindi il
+      default non deve più scegliere per chi non ha ancora scelto un tema. La scelta resta
+      dov'era, in Impostazioni → Aspetto, con le stesse due voci.
+      Il default si sposta in quattro posti perché quattro sono i posti che lo dicono:
+      `AppSettings`, la lettura dello `SettingsStore` (un preferenza assente deve leggere
+      come il default, non come il vecchio default), il `LocalWeatherIcons` e il fallback
+      di `MainActivity` mentre le impostazioni sono ancora nulle. Anche i due parametri
+      `style` con valore di default in `ChiaroIcons` seguono: nessun chiamante li usa —
+      i widget passano sempre lo stile — ma un default che contraddice il default
+      dell'app è una trappola che aspetta il primo chiamante.
+      **Conseguenza dichiarata**: un'installazione esistente che non ha mai aperto quella
+      voce cambia aspetto con l'aggiornamento. È cosa vuol dire «default», ed è
+      esattamente il gruppo di lettori per cui la modifica è stata chiesta.
+- [x] **Le icone crescono di 4dp ovunque su Oggi**, e niente altro si muove: nessun
+      padding, nessuno `spacedBy`, nessuna larghezza di colonna. Striscia oraria 32→36,
+      riga della settimana 28→32, riga del resto della giornata 24→28, scheda dei
+      dettagli 24→28.
+- [x] **I quattro numeri diventano una scala sola**, `ui/icons/WeatherIconSize`. Il
+      commento di `DayRow` diceva già «tra i 32 della striscia e i 24 della timeline»:
+      quando quattro punti del codice si citano a vicenda per stare in ordine, l'ordine è
+      un oggetto, non un commento ripetuto quattro volte. Adesso la prossima passata è una
+      riga per pioli, e l'ordine dei pioli è scritto dov'è: è l'ordine di lettura — la
+      striscia si scorre di lato e porta il peso maggiore, la settimana si legge in
+      colonna, una riga di prosa apre col glifo più piccolo dei tre.
+
+### I conti che la crescita doveva pagare
+
+- **La cella oraria non si allarga**: 36dp dentro i 56dp di cella lasciano 10dp d'aria per
+  lato, e i 4dp di passo fra le celle restano quelli. La striscia non cambia larghezza,
+  quindi non cambia quante ore entrano nello schermo.
+- **La griglia dei dettagli**: il budget dell'etichetta è quello che avanza accanto
+  all'icona, `(360 − 32 − 12) / 2 − 32 − 36 = 90dp` su uno schermo da 360dp, contro i 94
+  di prima. Misurato di nuovo con la stessa ricetta del 4 set (Inter variabile a wght 500,
+  14sp, tracking di `labelLarge`, `opsz` 14): la più larga delle sedici etichette che
+  l'app spedisce è «Qualità aria» a **76,7dp**, poi «Air quality» 68,6 e «Dew point»
+  68,4. Il margine più stretto resta 13dp, e le due etichette che nel 4 set sforavano —
+  «Punto di rugiada» 110,9 e «Qualità dell'aria» 105,5 — non sono più quelle spedite.
+  Il budget nuovo è riscritto nei due `strings.xml` e in DESIGN §8.6, perché la prossima
+  etichetta nasca dentro il numero giusto.
+- **La riga della settimana** perde 4dp di barra della temperatura (la barra ha `weight(1f)`
+  e paga lei l'allargamento): 112→108dp su 360. La scala è condivisa fra i sette giorni,
+  quindi la forma della settimana è la stessa, solo 4dp più stretta. Il nastro di luce
+  sotto la riga parte ancora a 52dp — i 44 dell'etichetta del giorno più gli 8 accanto —
+  e quel numero non ha mai dipeso dall'icona.
+- **La riga del resto della giornata** perde gli stessi 4dp di prosa (232→228dp su 360):
+  `bodyMedium` va a capo tenendo le parole, che è la rottura onesta già scelta per le
+  etichette.
+- **Fuori dalla scala di proposito**: i widget Glance, dove l'icona si misura sulla cella
+  (Fase 8, e l'eroe del Now ha già il suo soffitto a 104dp), e le sagome della barra di
+  navigazione, che sono Material a 24dp e non sono disegni meteo.
+
+### Verifica
+
+Suite verde (`test` + `:app:testDebugUnitTest`), lint a 0 errori. `SettingsStoreTest`
+segue il default in due punti: l'asserzione del fresh install diventa LINE, e il
+round-trip scrive adesso FILL — un round-trip che scrive il default non dimostra niente.
+
+- [ ] Da verificare su device (committente)
+
+---
+
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
 - [x] Passata colore (chiesta su device, 3 set; fatta il 3 set sera, alzata una

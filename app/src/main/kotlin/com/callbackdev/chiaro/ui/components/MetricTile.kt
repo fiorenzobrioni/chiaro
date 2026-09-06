@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
+import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.theme.tabular
 
 /**
@@ -48,10 +49,11 @@ fun MetricTile(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             // The header holds one line by construction, never by truncation: on a
-            // 360dp screen the two columns leave the label 94dp beside the 24dp icon,
-            // so the eight labels are written to fit that budget rather than trimmed
-            // with an ellipsis. A label that outgrows it (a huge font scale) wraps and
-            // keeps its words, which is the honest way to fail.
+            // 360dp screen the two columns leave the label 90dp beside the 28dp icon
+            // (94 before the icon grew, 6 set), so the eight labels are written to fit
+            // that budget rather than trimmed with an ellipsis — the widest of them,
+            // «Qualità aria», measures 77dp. A label that outgrows the budget (a huge
+            // font scale) wraps and keeps its words, which is the honest way to fail.
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -68,7 +70,7 @@ fun MetricTile(
                     // air-quality mark merge into one blob. Reported from a device
                     // (4 set 2026): «due sembrano uguali».
                     tint = Color.Unspecified,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(WeatherIconSize.Tile)
                 )
                 Text(
                     text = label,
