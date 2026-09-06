@@ -1601,6 +1601,134 @@ sezioni urlate, niente schermo preso a forza.
 
 ---
 
+## L'ora attuale (committente, 6 set 2026) — l'eroe era l'ultima ora, non questo minuto
+
+Segnalata **su tutte e due le app** con la stessa frase: la situazione corrente sembra
+un po' spessa, più l'ultima ora che l'ora attuale. È vero, ed è una causa sola —
+condivisa, come il resto di `:core`, quindi corretta due volte con la stessa diagnosi
+(`UPSTREAM.md`: un difetto del core si corregge anche a monte).
+
+**La lettura di Open-Meteo non c'entra.** Il blocco `current` è pubblicato su una
+griglia di quindici minuti: ogni risposta porta `"interval": 900` accanto ai valori e
+`current.time` è l'ultimo quarto d'ora, non il minuto della richiesta (verificato sul
+servizio: alle 10:53 locali la risposta diceva `10:45`). Il mapper legge quel blocco e
+prende nuvole e pioggia dall'ora corrente dell'orario, che è la riga giusta.
+
+**Il TTL della cache era `update_frequency_min`.** Quel valore è l'intervallo del job
+periodico — una scelta di batteria, 15/30/60/120 con 60 di default — e usarlo come TTL
+gli faceva decidere una cosa che non gli era stata chiesta: quanto possono essere
+vecchi i numeri *mentre il lettore li sta guardando*. Con il default, atterrare su
+Oggi entro un'ora dall'ultima sincronizzazione mostrava quella sincronizzazione, eroe
+e frase compresi; con 120, due ore. E la pastiglia di freschezza taceva per
+costruzione: `isStale` scatta a 2× l'intervallo, quindi un cache hit non è mai stale.
+
+Il TTL ora è `WeatherFreshness.ProviderResolution`, quindici minuti, cioè la
+risoluzione con cui il fornitore pubblica «adesso». Un valore più vecchio di così non
+è vecchio: è un valore che Open-Meteo ha già sostituito, e rileggerlo costa una
+richiesta che il lettore ha chiesto aprendo l'app. **Batteria è una feature** e resta
+vera dov'è vera: il job periodico è dove quel costo si paga, una schermata appena
+aperta no. I due intervalli tornano due numeri, e `update_frequency_min` resta
+l'intervallo del worker e la base di `isStale`.
+
+**Due strade, perché le due app arrivavano allo stesso schermo da posti diversi.**
+
+- Qui lo stato si ricostruisce da solo quando la pagina torna in primo piano
+  (`WhileSubscribed(5_000)` cancella il flusso cinque secondi dopo l'uscita e lo
+  rifà al rientro), quindi il TTL è tutta la correzione per il caso «riapro l'app».
+  Restava l'altro: una pagina lasciata aperta si fermava al fetch che l'aveva aperta,
+  perché il tick al minuto ridisegnava — età dichiarata, verdetto di freschezza,
+  taglio di recency — ma non rileggeva mai. Ora oltre i quindici minuti il tick
+  rilegge, in silenzio come ogni fetch automatico (VISION §5.2: contenuto prima,
+  freschezza dichiarata, aggiornamento silenzioso) e a costo zero quando la pagina
+  non è a schermo, visto che quel flusso non esiste.
+- In tweather non c'era **niente**: il documento si costruisce una volta, al
+  caricamento, e invecchia sullo schermo. Là è nato `onResumed()`, che qui non serve
+  perché il flusso lo fa già.
+
+**Risparmio energetico** (aggiunto su richiesta del committente subito dopo): sotto
+battery saver i fetch automatici — quello all'atterraggio e quello del tick — non
+partono. Mai la pull, mai una pagina che non ha ancora niente da mostrare (lì
+l'alternativa è uno scheletro, che non è una schermata più economica, è una vuota),
+e mai il job periodico: quello lo differisce già il sistema con Doze e App Standby, e
+zittirlo qui silenzierebbe un'allerta proprio sul telefono con meno carica. `push()`
+continua invece a girare: età, freschezza e taglio di recency non costano né radio né
+disco, e congelarli scambierebbe batteria con una pagina che mente sull'ora (§1.1).
+`PowerSaveState` sta in `:core:data` accanto a `LocationProvider` — è stato di
+piattaforma — ed è letto come funzione, non come valore, perché l'interruttore può
+essere spostato mentre il processo è vivo.
+
+**Non testato qui**: `:app` non ha ancora un banco di prova per i ViewModel e
+costruirlo vuole sei `testImplementation` in più nel modulo (datastore, room,
+retrofit e il convertitore, okhttp, serialization). La stessa guardia è coperta da due
+test in tweather, dove il banco esiste già.
+
+**Verifiche**: suite verde, lint 0 errori. `WeatherFreshnessTest` è nuovo e sta in
+`:core:data` invece che accanto all'oggetto che prova, perché `UpdateFrequencies` sta
+lì: il caso che conta è che l'invariante «un hit non può essere stale» regga per
+**ogni** intervallo selezionabile, e una lista ricopiata a mano sarebbe esattamente la
+cosa che va fuori sincrono.
+
+- [ ] Da verificare su device (committente)
+
+---
+
+## Come si legge lo stato del provider (review, 6 set 2026) — e la pioggia deve esserci
+
+Review chiesta sul repo gemello e applicata qui identica: `:core` è copiato da tweather
+e `UPSTREAM.md` chiede che un difetto del core si corregga da tutte e due le parti. La
+misura è la stessa — 23 città su cinque continenti, 3 864 ore, 161 giorni-città, dati
+scaricati quel giorno — e il dettaglio completo sta nella Fase 26 di tweather.
+
+**La riparazione della nebbia regge**: riscrive l'1,09% delle ore, e delle 25 servite
+come `45`/`48` diciassette hanno una visibilità sopra i 1 000 m nella stessa risposta
+(mediana 4 km, massimo 16,3). Il crudo era peggio.
+
+**Il difetto trovato** è della stessa famiglia in un'altra colonna: qualsiasi ora con
+codice ≥ 51 reclamava il giorno intero, e il 47% dei giorni «bagnati» lo era solo per
+pioviggine — Singapore etichettava una giornata intera per un'ora di 0,1 mm all'1% di
+probabilità. Ora la precipitazione deve essere materiale (≥ 1 mm sul giorno oppure
+≥ 3 ore) e i codici di pericolo reclamano il giorno senza condizioni.
+
+**La nebbia non dura un'ora**: viene scritta solo se anche l'ora accanto è sotto soglia
+(le transizioni della settimana passano da 18 a 14), mentre toglierla resta una
+decisione per ora.
+
+**Le due fragilità minori** contano più qui che a monte, perché DESIGN §1.1 le vieta
+esplicitamente: `visibilityKm` e `precipChancePct` sono ora nullable fino alle
+superfici. Il riquadro della visibilità **non viene disegnato** quando il modello non
+la porta, come già fa la qualità dell'aria; la cella dell'ora tiene i suoi 56dp e non
+stampa niente invece di uno 0% mai previsto; e la **sparkline della pioggia si
+interrompe** sull'ora ignota invece di disegnarla a zero — un grafico che inventa un
+punto è la stessa bugia di una casella con un trattino.
+
+### La riga di chiusura di Oggi
+
+Chiesta dal committente. Fino a qui la pagina diceva *quando* solo quando aveva cattive
+notizie: la pastiglia di freschezza compare oltre il doppio dell'intervallo e tace
+altrimenti, quindi chi voleva solo sapere quanto fosse recente l'eroe non aveva dove
+guardare.
+
+`Aggiornato alle 18:45 · dati Open-Meteo`, in fondo alla pagina. **In fondo di
+proposito**: un orario è riferimento, non titolo, e la testa di quella schermata è del
+cielo, della temperatura e della frase del giorno (VISION §5.2, una cosa prima di
+qualsiasi numero). Dà anche una fine alla pagina e mette l'attribuzione dove va un
+colophon.
+
+Le due cose non si sovrappongono e fanno lavori diversi: la pastiglia è un **avviso** e
+porta un'età relativa («7 ore fa») più una via d'uscita, questa è una **constatazione**
+e porta l'ora dell'orologio, che è quella che si confronta con il proprio. L'ora è
+quella del LUOGO come ogni altra ora della schermata: sarebbe difendibile anche quella
+del lettore (il fetch è successo sul suo orologio), ma un piè di pagina in un fuso
+diverso dalla striscia che gli sta sopra è una riga da leggere due volte, e nel caso
+prevalente — il posto in cui sei — le due coincidono.
+
+**Verifiche**: suite verde, lint 0 errori. I test del mapper sono gli stessi di
+tweather, allineati byte per byte.
+
+- [ ] Da verificare su device (committente)
+
+---
+
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
 - [x] Passata colore (chiesta su device, 3 set; fatta il 3 set sera, alzata una

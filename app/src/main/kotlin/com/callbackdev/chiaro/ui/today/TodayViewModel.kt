@@ -10,10 +10,12 @@ import com.callbackdev.chiaro.data.CityStore
 import com.callbackdev.chiaro.data.FetchFailureReason
 import com.callbackdev.chiaro.data.FetchLogStore
 import com.callbackdev.chiaro.data.LocationProvider
+import com.callbackdev.chiaro.data.PowerSaveState
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.SettingsStore
 import com.callbackdev.chiaro.data.WorkspaceStore
 import com.callbackdev.chiaro.domain.WeatherException
+import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.ui.journal.JournalEntry
@@ -82,7 +84,8 @@ class TodayViewModel(
     private val workspaceStore: WorkspaceStore,
     private val fetchLogStore: FetchLogStore,
     private val locationProvider: LocationProvider,
-    private val clock: Clock = Clock.systemUTC()
+    private val clock: Clock = Clock.systemUTC(),
+    private val powerSave: PowerSaveState = PowerSaveState.Off
 ) : ViewModel() {
 
     /** Carries the cacheKey of the page whose reader pulled. */
@@ -342,17 +345,26 @@ class TodayViewModel(
 
             suspend fun fetch(userAsked: Boolean) {
                 if (inFlight) return
+                // Battery saver postpones the fetches nobody asked for out loud: the
+                // one on landing and the one the tick makes past the fifteen minutes.
+                // Never a pull, and never a page that has nothing to show yet — the
+                // alternative there is a skeleton, which is not a cheaper screen but
+                // an empty one. What still happens under saver is `push()`: the age,
+                // the freshness verdict and the recency trim cost no radio and no
+                // disk, and letting them freeze would trade battery for a page that
+                // lies about the hour (§1.1).
+                if (!userAsked && report != null && powerSave.isOn()) return
                 inFlight = true
                 userRefreshing = userAsked
                 // An automatic fetch has nothing to announce, so it does not even
                 // spend a frame saying it started.
                 if (userAsked) push()
                 try {
-                    report = repository.getWeather(
-                        city,
-                        forceRefresh = userAsked,
-                        ttl = Duration.ofMinutes(updateFrequencyMin.toLong())
-                    )
+                    // No `ttl` of its own since 6 set 2026: the repository's
+                    // WeatherFreshness.ProviderResolution applies. Handing it the
+                    // polling interval meant landing on this page an hour after the
+                    // last sync showed that sync's numbers as the present.
+                    report = repository.getWeather(city, forceRefresh = userAsked)
                     error = null
                     refreshChanged()
                 } catch (e: WeatherException) {
@@ -393,9 +405,22 @@ class TodayViewModel(
             }
             // The minute tick: the stated age, the staleness verdict and the recency
             // trim all move with the clock even when no new data does.
+            //
+            // And past the provider's own resolution the DATA moves too (device, 6 set
+            // 2026). A page left open does not freeze at the fetch that opened it:
+            // once the report is older than the fifteen minutes Open-Meteo publishes
+            // on, the next tick re-reads it. Silent, like every automatic fetch, and
+            // free when the page is not on screen — this whole flow is cancelled five
+            // seconds after the reader leaves it.
             launch {
                 while (true) {
                     delay(60_000)
+                    val age = report?.let {
+                        Duration.between(it.systemInfo.lastSync, clock.instant())
+                    }
+                    if (age != null && age >= WeatherFreshness.ProviderResolution) {
+                        fetch(userAsked = false)
+                    }
                     push()
                 }
             }
@@ -420,7 +445,8 @@ class TodayViewModel(
                     settingsStore = ServiceLocator.settingsStore(app),
                     workspaceStore = ServiceLocator.workspaceStore(app),
                     fetchLogStore = ServiceLocator.fetchLogStore(app),
-                    locationProvider = ServiceLocator.locationProvider(app)
+                    locationProvider = ServiceLocator.locationProvider(app),
+                    powerSave = PowerSaveState.of(app)
                 )
             }
         }

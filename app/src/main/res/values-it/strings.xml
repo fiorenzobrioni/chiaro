@@ -783,6 +783,7 @@
     <string name="journal_rule_fired">Il tuo avviso «%1$s» è scattato</string>
     <string name="journal_sky_skipped">Nessun aggiornamento abbastanza vicino per giudicare</string>
     <string name="journal_fetch_failed">Un aggiornamento non è arrivato</string>
+    <string name="today_updated_footer">Aggiornato alle %1$s · dati Open-Meteo</string>
     <string name="today_changed_title">Cos\'è cambiato</string>
     <string name="today_changed_open">La storia intera è nel Diario</string>
 

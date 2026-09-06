@@ -193,7 +193,7 @@ class TodayWidget : GlanceAppWidget() {
             // then EVERY cell prints its figure (a 0% next to an 80% is information),
             // and on a dry stretch the whole row stays home — the app strip's rule,
             // sized for a launcher.
-            val showRain = shown.any { it.hour.precipChancePct > 0 }
+            val showRain = shown.any { (it.hour.precipChancePct ?: 0) > 0 }
             Row(modifier = GlanceModifier.fillMaxWidth()) {
                 shown.forEachIndexed { index, strip ->
                     if (index > 0) Spacer(modifier = GlanceModifier.width(StripCellSpacing))
@@ -225,11 +225,14 @@ class TodayWidget : GlanceAppWidget() {
                             ),
                             style = TextStyle(color = palette.primary, fontSize = 14.sp)
                         )
-                        if (showRain) {
+                        // An hour with no forecast chance prints nothing under it
+                        // rather than a 0% it was never told (Fase 26).
+                        val pct = strip.hour.precipChancePct
+                        if (showRain && pct != null) {
                             Text(
-                                text = "${strip.hour.precipChancePct}%",
+                                text = "$pct%",
                                 style = TextStyle(
-                                    color = rainInk(strip.hour.precipChancePct, palette),
+                                    color = rainInk(pct, palette),
                                     fontSize = 11.sp
                                 )
                             )

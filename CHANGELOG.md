@@ -28,6 +28,11 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   the daylight ribbon, Inter as a bundled variable font, and the first components.
 - Four tests that hold the design document to the code: `PaletteContrastTest`,
   `ScrimContractTest`, `SkyPaletteTest`, `NoRawColorTest`.
+- Today ends with a line saying when its numbers arrived and where they came from:
+  "Updated at 18:45 · Open-Meteo data". The freshness chip only speaks when the data is
+  old enough to worry about, so until now a reader who simply wanted to know how recent
+  the page was had nowhere to look. It sits at the foot because a timestamp is
+  reference rather than headline, and because that is where a colophon goes.
 - The Today screen: the computed sky canvas over the active place, the headline sentence
   (built on the alert engine's own thresholds, and absent when there is nothing to say),
   the next 24 hours with a rain sparkline, the merged rest-of-day timeline (sun, moon and
@@ -157,6 +162,42 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 
 ### Fixed
 
+- **A day is no longer called rainy because of one damp hour.** Any hour carrying a
+  precipitation code used to label the whole day, so a single hour of 0.1 mm at 1%
+  probability printed "Drizzle" across the week. Measured over 161 city-days: 47% of
+  the days that came back wet were wet only from drizzle codes. Rain now has to be
+  real before it names the day — a millimetre over the day, or three hours of it —
+  while storms, freezing rain and the heavy grades still name it whatever falls.
+- **Fog stops flickering on and off between hours.** An isolated hour is only turned
+  into fog when the hour beside it is murky too; fog is not one hour long. Dropping a
+  fog code the forecast's own visibility contradicts still happens on the spot, and it
+  happens often: two thirds of the fog codes served are contradicted, some by sixteen
+  kilometres.
+- **Nothing renders a number the app was not given.** An hour with no forecast rain
+  probability used to show "0%", which is a forecast of its own; the rain sparkline
+  drew it as a point on the line. Now the cell prints nothing, the sparkline breaks
+  where the data does, and the visibility tile is simply not drawn when the weather
+  model does not carry visibility — which could previously sink the whole fetch.
+- **The hero is this minute again, not the last hour.** The report was kept for as
+  long as `update_frequency_min`, the background polling interval: with its default of
+  60 minutes, landing on Today inside that hour showed the last background sync as if
+  it were the present — temperature, sentence and all — and at 120 it could be two
+  hours. The freshness chip said nothing, because staleness is counted from twice that
+  interval and a cache hit is never that old. Open-Meteo publishes its current
+  readings on a fifteen minute grid, and that is now how long one is kept.
+  `update_frequency_min` is back to meaning one thing: how often the app wakes up in
+  the background. Battery is still a feature, and the periodic job is still where it
+  is paid; a screen you just opened is not.
+- **Battery saver postpones the automatic re-reads.** The fetch on landing and the
+  one the minute tick makes are conveniences nobody asked for out loud, so under the
+  system's battery saver they do not run. A pull to refresh always does, and so does
+  a page that has nothing to show yet. What keeps running either way is the clock: the
+  stated age, the freshness verdict and the hours already over cost no radio, and
+  freezing them would trade battery for a page that lies about the hour.
+- **A page left open no longer freezes at the fetch that opened it.** The minute tick
+  moved the stated age, the freshness verdict and the hours already over, but never
+  the numbers themselves. Past those fifteen minutes it now re-reads them, silently,
+  and it costs nothing while the page is not on screen.
 - **The place name follows the reader's town again, not their province.** In Cavenago
   di Brianza the header read "Provincia di Monza e della Brianza"; in Segrate it read
   "Milano". Three things had to be wrong at once. The reverse geocoder was being

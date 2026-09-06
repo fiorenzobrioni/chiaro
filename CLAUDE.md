@@ -102,9 +102,32 @@ punctuation.
 
 - **Provider**: Open-Meteo (forecast, air quality, geocoding), no API key. Astronomy is
   computed locally by `:core:domain` and works offline.
+- **Reading the provider's `weather_code`** (inherited from tweather's Fase 13b/13c,
+  re-measured 6 Sep 2026 over 23 cities and 3 864 hours): fog is checked against the
+  same hour's visibility — the served code contradicts the served visibility 68% of the
+  times it says fog — and is only *invented* when the neighbouring hour is also below
+  1 km, because fog is not one hour long; a contradicted fog code is still dropped on
+  the spot. The day's code comes from the day's own hours, and precipitation must be
+  material before it labels the day (≥ 1 mm or ≥ 3 hours, hazard codes exempt): one
+  hour of 0.1 mm at 1% probability was printing "Drizzle" over a whole day. `visibility`
+  and `precipitation_probability` are model-dependent and therefore **nullable all the
+  way to the screen** — §1.1 in the data layer: the visibility tile is not drawn, the
+  hour cell prints nothing, and the rain sparkline breaks rather than plotting a zero
+  nobody forecast.
 - **Battery is a feature**: one shared periodic job for sync, alerts, rules and sky
   observation; inexact alarms for reminders (hence the 15 minute floor and no
   `SCHEDULE_EXACT_ALARM`); no foreground service, no background location, no FCM.
+  That is where the cost is paid, and **not** on a screen the reader just opened: the
+  report cache TTL is `WeatherFreshness.ProviderResolution` (15 min, Open-Meteo's own
+  `"interval": 900`), never `update_frequency_min`. Using the polling interval as the
+  TTL let a battery setting decide how old the hero may be while somebody is looking
+  at it — an hour by default, two at the top of the range, with the freshness chip
+  silent because a cache hit is never stale. Today re-reads when the page comes back
+  (`WhileSubscribed`) and, past those 15 minutes, on its minute tick; both silently,
+  and neither under battery saver (`PowerSaveState`) — but `push()` still runs there,
+  because the stated age and the recency trim cost nothing and freezing them would
+  trade battery for a page that lies about the hour. A pull to refresh and a page with
+  nothing to show yet are never postponed.
 - **Offline**: the last successful report per place is kept with no TTL and carries a week
   of forecast, so the app is never blank. `WeatherRecency` drops the hours that have
   already happened; `WeatherFreshness` decides whether to trust what is left.

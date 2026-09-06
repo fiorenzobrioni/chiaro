@@ -787,6 +787,7 @@
     <string name="journal_rule_fired">Your alert “%1$s” fired</string>
     <string name="journal_sky_skipped">No update came close enough to judge it</string>
     <string name="journal_fetch_failed">An update didn\'t make it</string>
+    <string name="today_updated_footer">Updated at %1$s · Open-Meteo data</string>
     <string name="today_changed_title">What changed</string>
     <string name="today_changed_open">The whole story is in the Journal</string>
 

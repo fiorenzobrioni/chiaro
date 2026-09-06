@@ -34,7 +34,8 @@ data class HourCell(
     val hourLabel: String,
     val icon: ImageVector,
     val temperature: String,
-    val rainPct: Int,
+    /** Null when the provider forecast no chance for that hour — never a stand-in 0. */
+    val rainPct: Int?,
     val description: String
 )
 
@@ -42,6 +43,11 @@ data class HourCell(
  * DESIGN.md §8.3. Horizontal, 24 cells from the next full hour, each 56dp: hour, icon,
  * temperature, rain probability. The rain column prints even a 0 — an absent number
  * under one hour would read as "no data", and it is data.
+ *
+ * A **null** [HourCell.rainPct] is the other case and it really is "no data" (Fase
+ * 26): the provider forecast no chance for that hour. The cell keeps its 56dp so the
+ * strip does not shift, and prints nothing where the figure would be — never a 0,
+ * which is a forecast, and never a dash, which §1.1 forbids.
  */
 @Composable
 fun HourStrip(
@@ -78,13 +84,12 @@ fun HourStrip(
                     style = MaterialTheme.typography.labelLarge.tabular()
                 )
                 Text(
-                    text = "${cell.rainPct}%",
+                    text = cell.rainPct?.let { "$it%" }.orEmpty(),
                     style = MaterialTheme.typography.labelSmall.tabular(),
-                    color = if (cell.rainPct > 0) {
-                        ChiaroTheme.colors.rainAt(cell.rainPct)
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
+                    color = cell.rainPct
+                        ?.takeIf { it > 0 }
+                        ?.let { ChiaroTheme.colors.rainAt(it) }
+                        ?: MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
