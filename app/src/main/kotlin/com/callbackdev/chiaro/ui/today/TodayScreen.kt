@@ -68,6 +68,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -687,8 +688,45 @@ private fun ContentState(
 
             item { SectionTitle(stringResource(R.string.section_details)) }
             item { Details(content.report, units, locale) }
+            item { DataFooter(content, timeFmt) }
         }
     }
+}
+
+/**
+ * The page's last line: when these numbers arrived, and where they came from.
+ *
+ * Until now the page said when only when it had bad news — the freshness chip appears
+ * past twice the polling interval and is silent otherwise — so a reader who simply
+ * wanted to know how recent the hero was had nowhere to look. This is the quiet half
+ * of the same fact, and the two do different jobs: the chip is a warning and carries a
+ * relative age ("7 hours ago") plus a way out; this is a statement and carries the
+ * clock time, which is what you check against your own watch.
+ *
+ * At the FOOT of the page on purpose. A timestamp is reference, not headline, and the
+ * top of this screen is spoken for by the sky, the temperature and the sentence of the
+ * day — VISION §5.2's order, one thing before any number. It also gives the page an
+ * ending and puts the attribution where a colophon goes.
+ *
+ * The hour is the PLACE's, like every other hour on this screen. It is a defensible
+ * either way — the fetch happened on the reader's clock — but a footer in a different
+ * timezone from the strip right above it is a line that has to be read twice, and for
+ * the overwhelming case (the place you are in) the two are the same hour anyway.
+ */
+@Composable
+private fun DataFooter(content: TodayUiState.Content, timeFmt: DateTimeFormatter) {
+    Text(
+        text = stringResource(
+            R.string.today_updated_footer,
+            LocalDateTime.ofInstant(content.lastSync, content.zone).format(timeFmt)
+        ),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+    )
 }
 
 /**
@@ -936,13 +974,14 @@ private fun NextHours(
         // stray divider with a hole above it — and said nothing the row of "0%" right
         // over it had not already said. §1.1: a section with no data is not drawn, and
         // a chart of nothing but zeros is one.
-        val peak = content.strip.maxByOrNull { it.hour.precipChancePct }
-        if (peak != null && peak.hour.precipChancePct > 0) {
+        val peak = content.strip.maxByOrNull { it.hour.precipChancePct ?: -1 }
+        val peakPct = peak?.hour?.precipChancePct
+        if (peakPct != null && peakPct > 0) {
             RainSparkline(
                 percentages = content.strip.map { it.hour.precipChancePct },
                 description = stringResource(
                     R.string.sparkline_peak_desc,
-                    peak.hour.precipChancePct,
+                    peakPct,
                     peak.hour.time.format(timeFmt)
                 )
             )
@@ -961,7 +1000,9 @@ private fun StripHour.toCell(units: UnitSettings, is24h: Boolean, locale: Locale
         temperature = temp,
         rainPct = hour.precipChancePct,
         description = stringResource(
-            R.string.hour_cell_desc, hourLabel, word, temp, hour.precipChancePct
+            // Spoken as 0 only when the forecast says 0; an hour with no chance at
+            // all reads without the rain clause, like the cell itself.
+            R.string.hour_cell_desc, hourLabel, word, temp, hour.precipChancePct ?: 0
         )
     )
 }
@@ -1120,14 +1161,18 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
                 meaning = WeatherText.pressureMeaning(current.pressureMb)
             )
         )
-        add(
-            Tile(
-                icon = { ChiaroIcons.visibility },
-                label = R.string.metric_visibility,
-                value = Formats.kilometers(current.visibilityKm, locale),
-                meaning = WeatherText.visibilityMeaning(current.visibilityKm)
+        // §1.1 again (Fase 26): `visibility` is a model-dependent field, and a model
+        // that does not carry it gets no tile rather than a tile reading 0 km.
+        current.visibilityKm?.let { km ->
+            add(
+                Tile(
+                    icon = { ChiaroIcons.visibility },
+                    label = R.string.metric_visibility,
+                    value = Formats.kilometers(km, locale),
+                    meaning = WeatherText.visibilityMeaning(km)
+                )
             )
-        )
+        }
         // §1.1: data the provider does not have for here is not drawn — no dashes.
         report.airQuality?.let { air ->
             add(

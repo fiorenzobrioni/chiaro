@@ -28,6 +28,11 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   the daylight ribbon, Inter as a bundled variable font, and the first components.
 - Four tests that hold the design document to the code: `PaletteContrastTest`,
   `ScrimContractTest`, `SkyPaletteTest`, `NoRawColorTest`.
+- Today ends with a line saying when its numbers arrived and where they came from:
+  "Updated at 18:45 · Open-Meteo data". The freshness chip only speaks when the data is
+  old enough to worry about, so until now a reader who simply wanted to know how recent
+  the page was had nowhere to look. It sits at the foot because a timestamp is
+  reference rather than headline, and because that is where a colophon goes.
 - The Today screen: the computed sky canvas over the active place, the headline sentence
   (built on the alert engine's own thresholds, and absent when there is nothing to say),
   the next 24 hours with a rain sparkline, the merged rest-of-day timeline (sun, moon and
@@ -157,6 +162,22 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 
 ### Fixed
 
+- **A day is no longer called rainy because of one damp hour.** Any hour carrying a
+  precipitation code used to label the whole day, so a single hour of 0.1 mm at 1%
+  probability printed "Drizzle" across the week. Measured over 161 city-days: 47% of
+  the days that came back wet were wet only from drizzle codes. Rain now has to be
+  real before it names the day — a millimetre over the day, or three hours of it —
+  while storms, freezing rain and the heavy grades still name it whatever falls.
+- **Fog stops flickering on and off between hours.** An isolated hour is only turned
+  into fog when the hour beside it is murky too; fog is not one hour long. Dropping a
+  fog code the forecast's own visibility contradicts still happens on the spot, and it
+  happens often: two thirds of the fog codes served are contradicted, some by sixteen
+  kilometres.
+- **Nothing renders a number the app was not given.** An hour with no forecast rain
+  probability used to show "0%", which is a forecast of its own; the rain sparkline
+  drew it as a point on the line. Now the cell prints nothing, the sparkline breaks
+  where the data does, and the visibility tile is simply not drawn when the weather
+  model does not carry visibility — which could previously sink the whole fetch.
 - **The hero is this minute again, not the last hour.** The report was kept for as
   long as `update_frequency_min`, the background polling interval: with its default of
   60 minutes, landing on Today inside that hour showed the last background sync as if

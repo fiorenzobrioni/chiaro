@@ -1672,6 +1672,63 @@ cosa che va fuori sincrono.
 
 ---
 
+## Come si legge lo stato del provider (review, 6 set 2026) — e la pioggia deve esserci
+
+Review chiesta sul repo gemello e applicata qui identica: `:core` è copiato da tweather
+e `UPSTREAM.md` chiede che un difetto del core si corregga da tutte e due le parti. La
+misura è la stessa — 23 città su cinque continenti, 3 864 ore, 161 giorni-città, dati
+scaricati quel giorno — e il dettaglio completo sta nella Fase 26 di tweather.
+
+**La riparazione della nebbia regge**: riscrive l'1,09% delle ore, e delle 25 servite
+come `45`/`48` diciassette hanno una visibilità sopra i 1 000 m nella stessa risposta
+(mediana 4 km, massimo 16,3). Il crudo era peggio.
+
+**Il difetto trovato** è della stessa famiglia in un'altra colonna: qualsiasi ora con
+codice ≥ 51 reclamava il giorno intero, e il 47% dei giorni «bagnati» lo era solo per
+pioviggine — Singapore etichettava una giornata intera per un'ora di 0,1 mm all'1% di
+probabilità. Ora la precipitazione deve essere materiale (≥ 1 mm sul giorno oppure
+≥ 3 ore) e i codici di pericolo reclamano il giorno senza condizioni.
+
+**La nebbia non dura un'ora**: viene scritta solo se anche l'ora accanto è sotto soglia
+(le transizioni della settimana passano da 18 a 14), mentre toglierla resta una
+decisione per ora.
+
+**Le due fragilità minori** contano più qui che a monte, perché DESIGN §1.1 le vieta
+esplicitamente: `visibilityKm` e `precipChancePct` sono ora nullable fino alle
+superfici. Il riquadro della visibilità **non viene disegnato** quando il modello non
+la porta, come già fa la qualità dell'aria; la cella dell'ora tiene i suoi 56dp e non
+stampa niente invece di uno 0% mai previsto; e la **sparkline della pioggia si
+interrompe** sull'ora ignota invece di disegnarla a zero — un grafico che inventa un
+punto è la stessa bugia di una casella con un trattino.
+
+### La riga di chiusura di Oggi
+
+Chiesta dal committente. Fino a qui la pagina diceva *quando* solo quando aveva cattive
+notizie: la pastiglia di freschezza compare oltre il doppio dell'intervallo e tace
+altrimenti, quindi chi voleva solo sapere quanto fosse recente l'eroe non aveva dove
+guardare.
+
+`Aggiornato alle 18:45 · dati Open-Meteo`, in fondo alla pagina. **In fondo di
+proposito**: un orario è riferimento, non titolo, e la testa di quella schermata è del
+cielo, della temperatura e della frase del giorno (VISION §5.2, una cosa prima di
+qualsiasi numero). Dà anche una fine alla pagina e mette l'attribuzione dove va un
+colophon.
+
+Le due cose non si sovrappongono e fanno lavori diversi: la pastiglia è un **avviso** e
+porta un'età relativa («7 ore fa») più una via d'uscita, questa è una **constatazione**
+e porta l'ora dell'orologio, che è quella che si confronta con il proprio. L'ora è
+quella del LUOGO come ogni altra ora della schermata: sarebbe difendibile anche quella
+del lettore (il fetch è successo sul suo orologio), ma un piè di pagina in un fuso
+diverso dalla striscia che gli sta sopra è una riga da leggere due volte, e nel caso
+prevalente — il posto in cui sei — le due coincidono.
+
+**Verifiche**: suite verde, lint 0 errori. I test del mapper sono gli stessi di
+tweather, allineati byte per byte.
+
+- [ ] Da verificare su device (committente)
+
+---
+
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
 - [x] Passata colore (chiesta su device, 3 set; fatta il 3 set sera, alzata una

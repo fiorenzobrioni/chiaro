@@ -153,7 +153,7 @@ object TodayStateBuilder {
             sky = SkySnapshot(
                 sunAltitudeDeg = sunAltitude,
                 cloudPct = currentHour.cloudCoverPct,
-                precipPct = currentHour.precipChancePct,
+                precipPct = currentHour.precipChancePct ?: 0,
                 moonIllumination = moon.illuminatedFraction,
                 moonAltitudeDeg = AstronomyEngine.moonAltitude(now, coords),
                 phases = DaylightPhases.phases(today, zone),
@@ -213,10 +213,14 @@ object TodayStateBuilder {
         // Rain turns: the hours where the chance crosses half, up or down, today.
         val todayHours = report.hourly.filter { it.time.toLocalDate() == now.toLocalDate() }
         todayHours.zipWithNext().forEach { (a, b) ->
-            if (a.precipChancePct < RAIN_TURN_PCT && b.precipChancePct >= RAIN_TURN_PCT) {
-                items += TimelineItem(b.time, TimelineKind.RAIN_START, b.precipChancePct)
+            // A turn needs two hours that both said something: an hour with no
+            // forecast chance cannot start the rain and cannot stop it (Fase 26).
+            val from = a.precipChancePct ?: return@forEach
+            val to = b.precipChancePct ?: return@forEach
+            if (from < RAIN_TURN_PCT && to >= RAIN_TURN_PCT) {
+                items += TimelineItem(b.time, TimelineKind.RAIN_START, to)
             }
-            if (a.precipChancePct >= RAIN_TURN_PCT && b.precipChancePct < RAIN_TURN_PCT) {
+            if (from >= RAIN_TURN_PCT && to < RAIN_TURN_PCT) {
                 items += TimelineItem(b.time, TimelineKind.RAIN_STOP)
             }
         }

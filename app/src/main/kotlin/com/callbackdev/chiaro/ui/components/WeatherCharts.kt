@@ -28,12 +28,14 @@ import com.callbackdev.chiaro.ui.theme.ChiaroTheme
  */
 @Composable
 fun RainSparkline(
-    percentages: List<Int>,
+    /** An hour the provider gave no chance for is `null` and becomes a GAP in the
+     * line (Fase 26) — drawing it at zero would be the chart inventing a forecast. */
+    percentages: List<Int?>,
     description: String,
     modifier: Modifier = Modifier,
     height: Dp = 28.dp
 ) {
-    val color = ChiaroTheme.colors.rainAt(percentages.maxOrNull() ?: 0)
+    val color = ChiaroTheme.colors.rainAt(percentages.filterNotNull().maxOrNull() ?: 0)
     Canvas(
         modifier = modifier.fillMaxWidth().height(height)
             .semantics { contentDescription = description }
@@ -41,11 +43,17 @@ fun RainSparkline(
         if (percentages.size < 2) return@Canvas
         val step = size.width / (percentages.size - 1)
         val path = Path()
+        var pendingMove = true
         percentages.forEachIndexed { index, value ->
+            if (value == null) {
+                pendingMove = true // the line breaks here and picks up after the gap
+                return@forEachIndexed
+            }
             val x = step * index
             // The axis is fixed at 0..100, never at the data's own range.
             val y = size.height * (1f - value.coerceIn(0, 100) / 100f)
-            if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            if (pendingMove) path.moveTo(x, y) else path.lineTo(x, y)
+            pendingMove = false
         }
         drawPath(path, color, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
     }

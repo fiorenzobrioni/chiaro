@@ -74,7 +74,10 @@ object HeadlineEngine {
                 .drop(1)
                 .takeWhile { it.time.isBefore(now.plusHours(TURN_LOOKAHEAD_HOURS.toLong())) }
                 .firstOrNull {
-                    it.condition.wmoCode !in WET_CODES && it.precipChancePct < CLEAR_BELOW_PCT
+                    // An hour with no forecast chance is not evidence that it clears:
+                    // the sentence waits for an hour that actually says so (Fase 26).
+                    it.condition.wmoCode !in WET_CODES &&
+                        (it.precipChancePct ?: return@firstOrNull false) < CLEAR_BELOW_PCT
                 }
             return Headline.WetNow(
                 stopsAt = stopsAt?.time,
@@ -85,15 +88,15 @@ object HeadlineEngine {
         val soonEnd = now.plusHours(AlertEngine.PRECIP_LOOKAHEAD_HOURS)
         val wetHour = hours.firstOrNull {
             !it.time.isBefore(now) && !it.time.isAfter(soonEnd) &&
-                it.precipChancePct >= AlertEngine.PRECIP_THRESHOLD_PCT
+                (it.precipChancePct ?: 0) >= AlertEngine.PRECIP_THRESHOLD_PCT
         } ?: return null
         val clearsAt = hours.asSequence()
             .filter { it.time.isAfter(wetHour.time) }
             .takeWhile { it.time.isBefore(wetHour.time.plusHours(TURN_LOOKAHEAD_HOURS.toLong())) }
-            .firstOrNull { it.precipChancePct < CLEAR_BELOW_PCT }
+            .firstOrNull { (it.precipChancePct ?: return@firstOrNull false) < CLEAR_BELOW_PCT }
         return Headline.WetSoon(
             at = wetHour.time,
-            pct = wetHour.precipChancePct,
+            pct = wetHour.precipChancePct ?: 0,
             snow = wetHour.condition.wmoCode in SNOW_CODES,
             clearsAt = clearsAt?.time
         )
