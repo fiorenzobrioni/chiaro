@@ -62,11 +62,12 @@ class WeatherSyncWorker(
         }
 
         val report = try {
-            ServiceLocator.weatherRepository(context).getWeather(
-                city,
-                forceRefresh = false,
-                ttl = Duration.ofMinutes(settings.updateFrequencyMin.toLong())
-            )
+            // No `ttl` of its own since 6 set 2026: the repository's
+            // WeatherFreshness.ProviderResolution applies here too. Handing it
+            // `update_frequency_min` meant a foreground fetch from ninety minutes ago
+            // could still satisfy this run — and this run evaluates the alerts and
+            // writes the journal entry.
+            ServiceLocator.weatherRepository(context).getWeather(city, forceRefresh = false)
         } catch (e: WeatherException.NoNetwork) {
             // The Journal is where offline honesty lives (Fase 7): a fetch that
             // could not land is an entry, not a silent gap. And this is exactly when
@@ -151,8 +152,7 @@ class WeatherSyncWorker(
                 runCatching {
                     ServiceLocator.weatherRepository(context).getWeather(
                         pinned,
-                        forceRefresh = false,
-                        ttl = Duration.ofMinutes(settings.updateFrequencyMin.toLong())
+                        forceRefresh = false
                     )
                 }
             }

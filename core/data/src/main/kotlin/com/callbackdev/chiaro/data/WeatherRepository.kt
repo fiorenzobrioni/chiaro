@@ -10,6 +10,7 @@ import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoGeocodingApi
 import com.callbackdev.chiaro.data.remote.dto.GeoResultDto
 import com.callbackdev.chiaro.domain.WeatherException
+import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.model.CacheStatus
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
@@ -42,7 +43,7 @@ class WeatherRepository(
     private val diskCache: ReportDiskCache? = null,
     private val json: Json = Json,
     private val clock: Clock = Clock.systemUTC(),
-    private val cacheTtl: Duration = Duration.ofMinutes(15),
+    private val cacheTtl: Duration = WeatherFreshness.ProviderResolution,
     /**
      * Fired after every history commit — the single choke point where new data
      * lands, whichever caller fetched it (FAB, cold start, background worker).
@@ -70,9 +71,16 @@ class WeatherRepository(
     }
 
     /**
-     * Report for [city]: fresh cache entry unless expired or [forceRefresh] (the
-     * FAB). Cache hits keep the original `last_sync` and flip `cache_status` to HIT.
-     * [ttl] lets the caller apply the user's `update_frequency_min` setting.
+     * Report for [city]: fresh cache entry unless expired or [forceRefresh] (a pull to
+     * refresh). Cache hits keep the original `last_sync` and flip `cache_status` to
+     * HIT.
+     *
+     * [ttl] defaults to [WeatherFreshness.ProviderResolution] and every caller takes
+     * that default since the 6 set 2026 fix. It used to be handed the reader's
+     * `update_frequency_min`, which turned a battery setting into the answer to "how
+     * old may the hero be while somebody is looking at it" — an hour by default, two
+     * at the top of the range. The parameter stays because a test wants to name its
+     * own window, not because a caller should.
      */
     suspend fun getWeather(
         city: City,

@@ -1601,6 +1601,60 @@ sezioni urlate, niente schermo preso a forza.
 
 ---
 
+## L'ora attuale (committente, 6 set 2026) — l'eroe era l'ultima ora, non questo minuto
+
+Segnalata **su tutte e due le app** con la stessa frase: la situazione corrente sembra
+un po' spessa, più l'ultima ora che l'ora attuale. È vero, ed è una causa sola —
+condivisa, come il resto di `:core`, quindi corretta due volte con la stessa diagnosi
+(`UPSTREAM.md`: un difetto del core si corregge anche a monte).
+
+**La lettura di Open-Meteo non c'entra.** Il blocco `current` è pubblicato su una
+griglia di quindici minuti: ogni risposta porta `"interval": 900` accanto ai valori e
+`current.time` è l'ultimo quarto d'ora, non il minuto della richiesta (verificato sul
+servizio: alle 10:53 locali la risposta diceva `10:45`). Il mapper legge quel blocco e
+prende nuvole e pioggia dall'ora corrente dell'orario, che è la riga giusta.
+
+**Il TTL della cache era `update_frequency_min`.** Quel valore è l'intervallo del job
+periodico — una scelta di batteria, 15/30/60/120 con 60 di default — e usarlo come TTL
+gli faceva decidere una cosa che non gli era stata chiesta: quanto possono essere
+vecchi i numeri *mentre il lettore li sta guardando*. Con il default, atterrare su
+Oggi entro un'ora dall'ultima sincronizzazione mostrava quella sincronizzazione, eroe
+e frase compresi; con 120, due ore. E la pastiglia di freschezza taceva per
+costruzione: `isStale` scatta a 2× l'intervallo, quindi un cache hit non è mai stale.
+
+Il TTL ora è `WeatherFreshness.ProviderResolution`, quindici minuti, cioè la
+risoluzione con cui il fornitore pubblica «adesso». Un valore più vecchio di così non
+è vecchio: è un valore che Open-Meteo ha già sostituito, e rileggerlo costa una
+richiesta che il lettore ha chiesto aprendo l'app. **Batteria è una feature** e resta
+vera dov'è vera: il job periodico è dove quel costo si paga, una schermata appena
+aperta no. I due intervalli tornano due numeri, e `update_frequency_min` resta
+l'intervallo del worker e la base di `isStale`.
+
+**Due strade, perché le due app arrivavano allo stesso schermo da posti diversi.**
+
+- Qui lo stato si ricostruisce da solo quando la pagina torna in primo piano
+  (`WhileSubscribed(5_000)` cancella il flusso cinque secondi dopo l'uscita e lo
+  rifà al rientro), quindi il TTL è tutta la correzione per il caso «riapro l'app».
+  Restava l'altro: una pagina lasciata aperta si fermava al fetch che l'aveva aperta,
+  perché il tick al minuto ridisegnava — età dichiarata, verdetto di freschezza,
+  taglio di recency — ma non rileggeva mai. Ora oltre i quindici minuti il tick
+  rilegge, in silenzio come ogni fetch automatico (VISION §5.2: contenuto prima,
+  freschezza dichiarata, aggiornamento silenzioso) e a costo zero quando la pagina
+  non è a schermo, visto che quel flusso non esiste.
+- In tweather non c'era **niente**: il documento si costruisce una volta, al
+  caricamento, e invecchia sullo schermo. Là è nato `onResumed()`, che qui non serve
+  perché il flusso lo fa già.
+
+**Verifiche**: suite verde, lint 0 errori. `WeatherFreshnessTest` è nuovo e sta in
+`:core:data` invece che accanto all'oggetto che prova, perché `UpdateFrequencies` sta
+lì: il caso che conta è che l'invariante «un hit non può essere stale» regga per
+**ogni** intervallo selezionabile, e una lista ricopiata a mano sarebbe esattamente la
+cosa che va fuori sincrono.
+
+- [ ] Da verificare su device (committente)
+
+---
+
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
 - [x] Passata colore (chiesta su device, 3 set; fatta il 3 set sera, alzata una

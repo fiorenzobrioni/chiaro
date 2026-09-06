@@ -105,6 +105,13 @@ punctuation.
 - **Battery is a feature**: one shared periodic job for sync, alerts, rules and sky
   observation; inexact alarms for reminders (hence the 15 minute floor and no
   `SCHEDULE_EXACT_ALARM`); no foreground service, no background location, no FCM.
+  That is where the cost is paid, and **not** on a screen the reader just opened: the
+  report cache TTL is `WeatherFreshness.ProviderResolution` (15 min, Open-Meteo's own
+  `"interval": 900`), never `update_frequency_min`. Using the polling interval as the
+  TTL let a battery setting decide how old the hero may be while somebody is looking
+  at it — an hour by default, two at the top of the range, with the freshness chip
+  silent because a cache hit is never stale. Today re-reads when the page comes back
+  (`WhileSubscribed`) and, past those 15 minutes, on its minute tick; both silently.
 - **Offline**: the last successful report per place is kept with no TTL and carries a week
   of forecast, so the app is never blank. `WeatherRecency` drops the hours that have
   already happened; `WeatherFreshness` decides whether to trust what is left.

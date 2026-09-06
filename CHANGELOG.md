@@ -157,6 +157,20 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 
 ### Fixed
 
+- **The hero is this minute again, not the last hour.** The report was kept for as
+  long as `update_frequency_min`, the background polling interval: with its default of
+  60 minutes, landing on Today inside that hour showed the last background sync as if
+  it were the present — temperature, sentence and all — and at 120 it could be two
+  hours. The freshness chip said nothing, because staleness is counted from twice that
+  interval and a cache hit is never that old. Open-Meteo publishes its current
+  readings on a fifteen minute grid, and that is now how long one is kept.
+  `update_frequency_min` is back to meaning one thing: how often the app wakes up in
+  the background. Battery is still a feature, and the periodic job is still where it
+  is paid; a screen you just opened is not.
+- **A page left open no longer freezes at the fetch that opened it.** The minute tick
+  moved the stated age, the freshness verdict and the hours already over, but never
+  the numbers themselves. Past those fifteen minutes it now re-reads them, silently,
+  and it costs nothing while the page is not on screen.
 - **The place name follows the reader's town again, not their province.** In Cavenago
   di Brianza the header read "Provincia di Monza e della Brianza"; in Segrate it read
   "Milano". Three things had to be wrong at once. The reverse geocoder was being
