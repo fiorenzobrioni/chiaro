@@ -77,11 +77,10 @@ fun DayRow(
             Text(
                 text = "$rainPct%",
                 style = MaterialTheme.typography.labelSmall.tabular(),
-                color = if (rainPct > 0) {
-                    ChiaroTheme.colors.rainAt(rainPct)
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
+                // The ink ramp, zero included: 0% is the quiet end of the same scale and
+                // not the secondary text role, which printed the emptiest day of the week
+                // in the heaviest ink on it (DESIGN.md §2.3).
+                color = ChiaroTheme.colors.rainInkAt(rainPct),
                 textAlign = TextAlign.End,
                 modifier = Modifier.width(36.dp)
             )

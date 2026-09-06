@@ -162,6 +162,15 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 
 ### Fixed
 
+- **The rain probability is one scale again, 0% included.** In the week rows the
+  quietest number was printed in the heaviest ink: 0% fell back to the secondary text
+  role at 8.9:1 while the 15% beside it printed at 1.29:1, because a figure was being
+  painted with the ramp meant for marks (a sparkline, a drift cell, a swatch), whose
+  light end is 1.12:1 on paper. Printed probabilities now have their own ink ramp in
+  the same hue family, every step of it measured against the surface: 0% is the quiet
+  end of that ramp rather than another color, and every value from 0 to 100 clears the
+  4.5:1 floor. The hour strip and the widget follow the same rule; on the widget the
+  low values used to disappear into the sky behind them.
 - **A day is no longer called rainy because of one damp hour.** Any hour carrying a
   precipitation code used to label the whole day, so a single hour of 0.1 mm at 1%
   probability printed "Drizzle" across the week. Measured over 161 city-days: 47% of

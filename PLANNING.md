@@ -1762,6 +1762,23 @@ tweather, allineati byte per byte.
       stop è invisibile (motivo registrato nel tool). Nota: il marchio dell'app
       conserva i valori pre-passata (`#3589AC`/`#C27D08`) — è un drawable disegnato
       a mano, non rigenerato; da riallineare solo se si ridisegna il badge
+- [x] Rampa d'inchiostro per la probabilità di pioggia (segnalata su device, 6 set):
+      nella settimana lo 0% era la cifra più pesante della colonna. Cadeva su
+      `onSurfaceVariant` (8.9:1) mentre il 15% accanto stampava a 1.29:1, perché una
+      cifra stava usando la rampa dei SEGNI — quella pensata per sparkline, celle del
+      diario e campioni, il cui estremo chiaro su carta è 1.12:1. Ora `rainInkRamp` e
+      `rainInkAt`: cinque passi della stessa famiglia di tinta (la deriva verso il
+      265° del fondo scala è quella della rampa di riempimento), scelti come
+      inchiostro e misurati contro la superficie di §2.2 — 4.8→9.7:1 su chiaro,
+      5.1→10.9:1 su scuro — **zero compreso**: una probabilità nulla è comunque una
+      probabilità e sta all'estremo quieto della stessa scala, non su un altro
+      colore. La rampa di riempimento non stampa più nessuna cifra e resta dei segni.
+      Stessa regola nel widget, dove valeva lo stesso salto e in più i valori bassi
+      sparivano sul cielo. `PaletteContrastTest` cammina da 0 a 100 e tiene ogni passo
+      sopra il 4.5:1 di §10, più monotonia e il fatto che lo 0% non gridi più del
+      100%; DESIGN §2.3, §8.3, §8.5, §10 e §12 riscritti con i numeri misurati.
+      Le due luminanze sono libere di cambiare insieme: la cifra dello 0% ora è
+      **più leggera** di prima, ed è il punto della segnalazione
 - [ ] Contrasti, scala testo 200%, TalkBack, motion ridotto
 - [ ] Avvio a freddo sotto 400 ms, canvas sotto 2 ms/frame
 - [ ] Passata IT/EN completa

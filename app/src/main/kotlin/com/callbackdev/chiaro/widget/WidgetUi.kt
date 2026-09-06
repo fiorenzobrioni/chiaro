@@ -470,16 +470,14 @@ fun heroIconSize(
 private val HeroIconMin = 52.dp
 private val HeroIconMax = 104.dp
 
-/** The rain figure's ink: the §2.3 ramp selected for the ground the card really
- * has, the secondary ink when there is nothing to say — the app strip's own rule. */
+/** The rain figure's ink: the §2.3 INK ramp — the one selected for figures rather
+ * than for marks — resolved on the ground the card really has, zero included. The
+ * app strip's own rule: 0% is the quiet end of the scale, not a second color, and the
+ * fill ramp never carries text (its light end is 1.3:1 on paper). */
 fun rainInk(pct: Int, palette: WidgetPalette): androidx.glance.unit.ColorProvider =
-    if (pct > 0) {
-        FixedColorProvider(
-            (if (palette.darkGround) ChiaroDarkColors else ChiaroLightColors).rainAt(pct)
-        )
-    } else {
-        palette.secondary
-    }
+    FixedColorProvider(
+        (if (palette.darkGround) ChiaroDarkColors else ChiaroLightColors).rainInkAt(pct)
+    )
 
 /** The verdict pair, resolved at render time like every other widget color: same
  * fixed semantics as in the app — a verdict means the same thing whatever the

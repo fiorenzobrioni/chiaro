@@ -86,9 +86,10 @@ fun HourStrip(
                 Text(
                     text = cell.rainPct?.let { "$it%" }.orEmpty(),
                     style = MaterialTheme.typography.labelSmall.tabular(),
+                    // Zero is the ramp's quiet end, not another role (DESIGN.md §2.3);
+                    // an hour with no forecast at all prints nothing, so its ink is moot.
                     color = cell.rainPct
-                        ?.takeIf { it > 0 }
-                        ?.let { ChiaroTheme.colors.rainAt(it) }
+                        ?.let { ChiaroTheme.colors.rainInkAt(it) }
                         ?: MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

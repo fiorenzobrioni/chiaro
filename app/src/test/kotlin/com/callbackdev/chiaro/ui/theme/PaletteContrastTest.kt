@@ -105,6 +105,45 @@ class PaletteContrastTest {
     }
 
     @Test
+    fun `the rain INK ramp is one hue, monotonic, and reads at every step`() {
+        listOf(
+            ChiaroLightColors.rainInkRamp to ChiaroLightScheme.surface,
+            ChiaroDarkColors.rainInkRamp to ChiaroDarkScheme.surface
+        ).forEach { (ramp, surface) ->
+            val ys = ramp.map(::luminance)
+            val descending = ys.zipWithNext().all { (a, b) -> a > b }
+            val ascending = ys.zipWithNext().all { (a, b) -> a < b }
+            assertTrue("the rain ink ramp is not monotonic: $ys", descending || ascending)
+            ramp.forEachIndexed { i, ink -> assertAtLeast(4.5, ink, surface, "rain ink step $i") }
+        }
+    }
+
+    @Test
+    fun `a printed probability reads at every value, zero included`() {
+        // The bug this ramp exists for: the FILL ramp is a fill, and painting a figure
+        // with its light end put 15% on paper at 1.3:1 while 0% fell back to the
+        // secondary text role and became the heaviest number in the row.
+        listOf(
+            ChiaroLightColors to ChiaroLightScheme.surface,
+            ChiaroDarkColors to ChiaroDarkScheme.surface
+        ).forEach { (colors, surface) ->
+            (0..100 step 5).forEach { pct ->
+                assertAtLeast(4.5, colors.rainInkAt(pct), surface, "the ink of a probability of $pct")
+            }
+            // Quiet at the bottom, loud at the top: the scale still carries the quantity.
+            assertTrue(
+                "0% must not out-shout 100%",
+                contrast(colors.rainInkAt(0), surface) < contrast(colors.rainInkAt(100), surface)
+            )
+            // And it is the same ink at 0% as just above it: no step, no second color.
+            assertTrue(
+                "0% must sit on the ramp its neighbours are on",
+                colors.rainInkAt(0) == colors.rainInkRamp.first()
+            )
+        }
+    }
+
+    @Test
     fun `the temperature ramp peaks at its neutral middle, and troughs at it in dark`() {
         val light = ChiaroLightColors.temperatureRamp.map(::luminance)
         assertTrue("the light ramp should be lightest in the middle: $light",
