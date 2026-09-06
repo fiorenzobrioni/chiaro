@@ -160,7 +160,28 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   ported from tweather's manual pages, rewritten wherever it spoke about a crontab line
   or a file: nothing in this edition has one, and no page prints a dotted name.
 
+### Changed
+
+- **The rain sparkline is a chart now.** A line with no scale under it is a shape with
+  nowhere to stand: on a day pinned at 100% it drew a near-straight rule across an empty
+  box, and the flatter the day the less it said. It now carries the two things a reader
+  actually asks it — how high, and when: gridlines at 0, 50 and 100% with both ends
+  printed, a dot on every hour, the hour named under the axis every six hours with the
+  first and last always there, and a tinted area under the line, because a filled shape
+  carries a level at a glance where a stroke only carries a direction. The line itself
+  moved to the ink ramp: a day peaking at 10% used to draw its line in a colour two steps
+  above the paper it was on. A day with no rain in it still draws nothing at all.
+- **"What changed" comes after the week.** Every sentence in it is about a day further
+  out, so ahead of the week it named days the reader had not been shown yet, and it cut
+  between the two sections about today and the one about the days ahead.
+
 ### Fixed
+
+- **A forecast revision with nothing to say is no longer a line.** When the only thing
+  that moved was a field this screen has no words for, Today printed "Wednesday 9's
+  forecast changed:" and stopped — a colon with nothing behind it, and one of the three
+  lines the section is allowed spent on it. The Journal keeps the row, because that is
+  the log, but loses the separator that used to dangle in front of the hour.
 
 - **The rain probability is one scale again, 0% included.** In the week rows the
   quietest number was printed in the heaviest ink: 0% fell back to the secondary text

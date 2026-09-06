@@ -411,9 +411,17 @@ retrying. Never a toast: a toast is gone before it is read.
 
 **8.3 HourStrip** — horizontal, 24 cells from the next full hour, each 56dp wide: hour,
 icon, temperature (tabular), rain probability on the ink ramp (§2.3), zero included; an
-hour the provider gave no probability for prints nothing at all. Under it a **rain sparkline**: single series,
-rain ramp (§2.3), 2px line, 4px rounded ends, no legend (one series is named by its title),
-values direct-labeled only at the peaks.
+hour the provider gave no probability for prints nothing at all.
+
+**8.3b RainChart** — under the strip, the same 24 hours as one series: 2px line on the
+**ink** ramp (a mark has its own 3:1 floor, and the fill ramp's light end clears neither
+floor), the area under it tinted with the fill ramp at 0.30 → 0.06, three recessive
+gridlines at 0 / 50 / 100% with the two ends labelled in the right-hand gutter, a tick
+and the hour under the axis every six hours with the first and last always named, and a
+dot on every hour. No legend: one series, named by its own caption. It replaced a bare
+sparkline on the second device review (6 set 2026) — over a day pinned at 100% a line
+with no scale under it is a shape with nowhere to stand, and the flatter the day the
+less it said. A dry run still draws nothing at all (§1.1).
 
 **8.4 TimelineRow** — the merged day (VISION §5.2.4): time, icon or event glyph, one line
 of prose, optional verdict chip. Sun events, weather turns and the reader's own alerts use
@@ -476,11 +484,18 @@ in the app bar with a dots indicator, and a horizontal pager between saved place
 
 2px lines, 4px rounded ends anchored to the baseline, markers ≥ 8dp, a 2px surface gap
 between adjacent fills, recessive gridlines (`outlineVariant` at 1dp, horizontal only).
+
+The one deliberate exception to the 8dp marker: a **per-point dot on a dense series** —
+the hour dots of §8.3b — is rhythm rather than a marker. It says where the hours are, no
+value is ever read off it (the strip above prints all 24), and it is drawn only while the
+points are at least 6dp apart. An axis tick is not a gridline and lives outside the plot:
+1dp, 3dp long, under the baseline.
 Direct labels on the extremes only — never a number on every point.
 
 ### 9.3 Every chart has a text equivalent
 
-The sparkline's peaks are printed, the range bar's ends are printed, the drift strip has a
+The rain chart prints the ends of its scale and the hours under it, and the strip above it
+prints every one of its values; the range bar's ends are printed, the drift strip has a
 table view. This is both the accessibility floor and §1.2: a picture of a number is not a
 number.
 

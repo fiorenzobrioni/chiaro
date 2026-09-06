@@ -279,12 +279,18 @@ private fun EntryRow(
 ) {
     val time = entry.at.atZone(zone).format(timeFmt)
     when (entry) {
-        is JournalEntry.ForecastShift -> EntryItem(
-            icon = ChiaroIcons.cloud,
-            headline = JournalText.shiftHeadline(entry, locale),
-            supporting = JournalText.shiftDetails(entry.shifts, units, locale) +
-                " · " + stringResource(R.string.journal_at_time, time)
-        )
+        is JournalEntry.ForecastShift -> {
+            val details = JournalText.shiftDetails(entry.shifts, units, locale)
+            val at = stringResource(R.string.journal_at_time, time)
+            EntryItem(
+                icon = ChiaroIcons.cloud,
+                headline = JournalText.shiftHeadline(entry, locale),
+                // A revision this screen has no words for keeps its row — the Journal
+                // is the log, and "something moved at 21:54" is still the truth — but
+                // it does not keep the separator in front of the hour.
+                supporting = if (details.isBlank()) at else "$details · $at"
+            )
+        }
         is JournalEntry.RuleFired -> EntryItem(
             icon = Icons.Outlined.Notifications,
             headline = stringResource(R.string.journal_rule_fired, entry.name),

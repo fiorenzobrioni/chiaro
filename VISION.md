@@ -265,17 +265,21 @@ The spine of the product, one vertical scroll, in this order:
 2. **A freshness chip** when, and only when, it matters: "Updated 3 hours ago" in amber, tappable to
    retry. Pull to refresh; no FAB on this screen, because the app refreshes itself.
 3. **Next hours**: a horizontal strip, 24 hours from the next full hour, each with icon, temperature
-   and rain probability, plus a rain-probability sparkline underneath so a wet stretch is a shape
-   rather than twelve numbers.
+   and rain probability, plus a rain-probability chart underneath — a 0–100% scale, the hours named
+   under it, a dot per hour — so a wet stretch is a shape rather than twelve numbers, and the shape
+   has somewhere to stand.
 4. **The rest of the day**: the merged timeline, and the second differentiator on this screen. Sun
    and sky events, weather turns ("rain starts around 17:00"), and the reader's own alerts, in one
    chronological list. This is `sky.crontab` plus the hourly forecast plus `alerts.rules`, collapsed
    into the artifact a person actually keeps in their head: what is going to happen today, in order.
-5. **What changed** (when something did): "Saturday improved: rain 70% → 30%". Two or three lines,
-   tapping opens the Journal.
-6. **The week**: seven rows, each with icon, a min/max bar aligned across the whole week (so the
+5. **The week**: seven rows, each with icon, a min/max bar aligned across the whole week (so the
    week has a *shape*), rain probability, and the daylight ribbon. Tapping a row expands it in
    place with a shared-element transition into that day's hours.
+6. **What changed** (when something did): "Saturday improved: rain 70% → 30%". Two or three lines,
+   tapping opens the Journal. **After** the week, and not before it (moved 6 set 2026): every one
+   of these sentences names a day further out, so ahead of the week it was naming days the reader
+   had not been shown yet — and it cut between the two sections about today and the one about the
+   days ahead. A revision this screen has no words for is not a line at all.
 7. **Details**: air quality, pollen, UV, wind, humidity, pressure, visibility, dew point — as a grid
    of small cards, each with its number and its one-line meaning (§3.3). Cards for data the region
    does not have are not drawn (pollen outside Europe simply is not there).

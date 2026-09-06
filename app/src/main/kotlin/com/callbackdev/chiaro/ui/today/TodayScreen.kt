@@ -84,7 +84,8 @@ import com.callbackdev.chiaro.ui.components.HourCell
 import com.callbackdev.chiaro.ui.components.HourStrip
 import com.callbackdev.chiaro.ui.components.MetricTile
 import com.callbackdev.chiaro.ui.sky.SkyText
-import com.callbackdev.chiaro.ui.components.RainSparkline
+import com.callbackdev.chiaro.ui.components.RainChart
+import com.callbackdev.chiaro.ui.components.RainHour
 import com.callbackdev.chiaro.ui.components.SkyCanvas
 import com.callbackdev.chiaro.ui.components.SkyCanvasTopScrimEnd
 import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
@@ -620,6 +621,21 @@ private fun ContentState(
     }
     LaunchedEffect(isCurrent, behindBar) { if (isCurrent) onCanvasBehindBar(behindBar) }
 
+    // "What changed", written out here because a `LazyListScope` cannot call a
+    // composable and these sentences need the string table. A revision whose fields
+    // this screen has no words for (a condition code, say) produces NO line: on device
+    // it printed as "Wednesday 9's forecast changed:" with nothing after the colon,
+    // which is §1.1's dash in a card by another route — and it spent one of the three
+    // lines the section is allowed.
+    val changed = content.whatChanged.mapNotNull { shift ->
+        val details = com.callbackdev.chiaro.ui.journal.JournalText.shiftDetails(
+            shift.shifts, units, locale
+        )
+        if (details.isBlank()) null
+        else com.callbackdev.chiaro.ui.journal.JournalText.shiftHeadline(shift, locale) +
+            ": " + details
+    }
+
     // Both halves are the reader's own gesture and nothing else (Fase 3b): the pull
     // indicator means "doing what you just asked", so an automatic fetch and an
     // automatic re-fix leave it alone — VISION §5.2, refresh silent.
@@ -667,23 +683,20 @@ private fun ContentState(
                 item { RestOfDay(content, timeFmt) }
             }
 
-            // VISION §5.2.5 — when something did change: two or three sentences,
-            // tapping opens the Journal where the whole story lives.
-            if (content.whatChanged.isNotEmpty()) {
-                item { SectionTitle(stringResource(R.string.today_changed_title)) }
-                item {
-                    WhatChanged(
-                        shifts = content.whatChanged,
-                        units = units,
-                        locale = locale,
-                        onOpenJournal = onOpenJournal
-                    )
-                }
-            }
-
             if (content.week.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.section_week)) }
                 item { Week(content, units, is24h, locale, timeFmt) }
+            }
+
+            // VISION §5.2.5 — when something did change: two or three sentences,
+            // tapping opens the Journal where the whole story lives. AFTER the week
+            // (asked on device, 6 set, and it is the right order): every one of these
+            // sentences is about a day further out — "Wednesday's forecast changed" —
+            // so it used to name days the reader had not been shown yet, and it split
+            // the two sections about today from the one about the days ahead.
+            if (changed.isNotEmpty()) {
+                item { SectionTitle(stringResource(R.string.today_changed_title)) }
+                item { WhatChanged(lines = changed, onOpenJournal = onOpenJournal) }
             }
 
             item { SectionTitle(stringResource(R.string.section_details)) }
@@ -885,12 +898,11 @@ private fun GuideCard(onOpen: () -> Unit, onDismiss: () -> Unit) {
 }
 
 /** VISION §5.2.5: each revision as one sentence, the same words the Journal uses
- * ([JournalText]), the whole block one door to it. */
+ * ([JournalText]), the whole block one door to it. The sentences arrive built (see
+ * the list above): a revision with no printable numbers never becomes a line. */
 @Composable
 private fun WhatChanged(
-    shifts: List<com.callbackdev.chiaro.ui.journal.JournalEntry.ForecastShift>,
-    units: UnitSettings,
-    locale: Locale,
+    lines: List<String>,
     onOpenJournal: () -> Unit
 ) {
     Column(
@@ -900,15 +912,8 @@ private fun WhatChanged(
             .clickable(onClick = onOpenJournal)
             .padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
-        shifts.forEach { shift ->
-            Text(
-                text = com.callbackdev.chiaro.ui.journal.JournalText.shiftHeadline(shift, locale) +
-                    ": " +
-                    com.callbackdev.chiaro.ui.journal.JournalText.shiftDetails(
-                        shift.shifts, units, locale
-                    ),
-                style = MaterialTheme.typography.bodyMedium
-            )
+        lines.forEach { line ->
+            Text(text = line, style = MaterialTheme.typography.bodyMedium)
         }
         Text(
             text = stringResource(R.string.today_changed_open),
@@ -969,7 +974,7 @@ private fun NextHours(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         HourStrip(hours = content.strip.map { it.toCell(units, is24h, locale) })
-        // A dry run draws NO sparkline (device review, 4 set). Every value at zero put
+        // A dry run draws NO chart (device review, 4 set). Every value at zero put
         // a flat line along the bottom of a 28dp box, which read on the screen as a
         // stray divider with a hole above it — and said nothing the row of "0%" right
         // over it had not already said. §1.1: a section with no data is not drawn, and
@@ -977,10 +982,18 @@ private fun NextHours(
         val peak = content.strip.maxByOrNull { it.hour.precipChancePct ?: -1 }
         val peakPct = peak?.hour?.precipChancePct
         if (peakPct != null && peakPct > 0) {
-            RainSparkline(
-                percentages = content.strip.map { it.hour.precipChancePct },
+            RainChart(
+                hours = content.strip.map {
+                    RainHour(
+                        label = Formats.hourLabel(it.hour.time, is24h, locale),
+                        pct = it.hour.precipChancePct
+                    )
+                },
+                caption = stringResource(R.string.rain_chart_caption),
                 description = stringResource(
-                    R.string.sparkline_peak_desc,
+                    R.string.rain_chart_desc,
+                    content.strip.first().hour.time.format(timeFmt),
+                    content.strip.last().hour.time.format(timeFmt),
                     peakPct,
                     peak.hour.time.format(timeFmt)
                 )
