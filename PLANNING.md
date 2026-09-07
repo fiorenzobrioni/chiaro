@@ -2084,6 +2084,64 @@ parte di questa passata che resta da guardare su un telefono.
       `getBestDateTimePattern`, che costerebbe al file la purezza e le sue prove unitarie).
       L'ordine è giusto per tutte e due le lingue spedite. Si riapre con la terza
 
+## Il sole del widget e quello dell'app (committente, 7 set 2026)
+
+Segnalazione: «il colore del sole nelle icone meteo nell'app è un po' scuro rispetto al
+colore del sole nell'icona meteo del widget. È così by design?». Sì, ed è obbligato: i set
+sono tre, scelti dal terreno (§13.1). Il sole a tratto `mc_` sta a `#C37D00` (Y 0.263), il
+pieno per terreni chiari `mcf_` a `#B28500` (Y 0.262), il pieno per terreni scuri `mcfn_`
+a `#FBBF24` (Y 0.579) — la palette originale di Meteocons, che disegna per fondi scuri.
+Due volte e mezzo la luminanza, ed è esattamente lo scarto visto. Il verso opposto lo
+spiega da solo: `#FBBF24` sulla carta chiara dell'app misura **1.59:1**, cioè illeggibile.
+Nota per chi rilegge: con lo stile **Tratto** (il default) app e widget disegnano lo
+stesso `#C37D00`, perché `styledRes` ignora il terreno per il set a tratto — chi vede la
+differenza è sullo stile Pieno.
+
+### Il buco vero, che la domanda ha scoperto
+
+Misurando la risposta è saltato fuori altro. La card **Cielo** del widget non è un fondo
+scuro: è il cielo scrimmato, e al suo punto più chiaro vale `#5C6E7B`, **Y 0.149**, un
+mezzotono. Lì un inchiostro tiene il 3:1 solo a Y ≥ 0.546 **oppure** Y ≤ 0.016, e in mezzo
+non c'è niente. Nessuno dei due set ci sta: **8 colori su 8** del set a tratto cadono
+(1.03–1.57:1) e **25 su 37** del pieno-notte (1.09–2.93:1). Il sole è uno dei dodici che
+passano, ed è il motivo per cui la card sembra a posto e per cui la cosa non si era mai
+vista. Il sole a tratto scende sotto la soglia **da −7° di altezza solare in su**: tutte le
+ore di luce.
+`IconContrastTest` non lo vedeva perché misura ogni set contro le due **superfici
+dell'app**; il cielo scrimmato è un terzo terreno contro cui le icone non erano mai state
+misurate.
+
+### Le tre uscite, e perché nessuna è stata presa
+
+1. **Sdoppiare il set a tratto per terreno**, come era stato fatto col pieno — la prima
+   scelta, e cade alla misurazione. La superficie scura dell'app (Y 0.008) è già servita a
+   5.52:1, quindi un set del genere esisterebbe solo per il cielo e dovrebbe portare
+   **ogni** colore sopra Y 0.546: una famiglia quasi bianca in cui nuvola, pioggia, sole e
+   termometro smettono di essere cose diverse, per ~98 drawable nuovi. È l'uscita 3 con
+   più file.
+2. **Alzare lo scrim**: servirebbe alpha ≈ 0.93 per portare il fondo a Y 0.013. È una card
+   nera col ricordo di un cielo dietro.
+3. **Tingere il glifo nell'inchiostro della card** (bianco sopra lo scrim): completa,
+   gratuita e già disponibile — il bianco lì misura 5.29:1, che è il numero di §3.6, e
+   `ColorFilter.tint` è come si disegna già il segnaposto. **Respinta dal committente per
+   ragioni di prodotto**: «non voglio icona monocromatica, si perderebbe molto
+   dell'aspetto grafico e della bellezza per l'utente». È una decisione sul prodotto, non
+   sull'aritmetica, e il prodotto è la sua.
+
+### Cosa resta, dichiarato
+
+Un'eccezione accettata e **limitata** al 3:1 di §10, scritta in DESIGN §13.1 con i numeri
+e con le tre uscite pesate, e richiamata da §10 e dal commento in testa a
+`IconContrastTest` — perché un test che non copre un terreno deve dirlo, invece di
+lasciar credere una copertura che non ha. I confini: vale per il solo sfondo **Cielo**; le
+card Chiaro, Scuro e Sistema sono le due superfici dell'app, già misurate, e l'app non
+mette mai un'icona meteo sul canvas. E su quella card l'icona non è l'unico portatore
+della condizione — accanto c'è la parola — che è la situazione che il 3:1 di §10 protegge
+davvero nella striscia oraria. Se si riapre, l'uscita che tiene tutte e due le cose è una
+placca scurita sotto il glifo: contrasto senza rinunciare al colore.
+
+---
+
 ## Fase 10 — Store e v1.0.0
 
 - [ ] Icona definitiva, screenshot, scheda dello store

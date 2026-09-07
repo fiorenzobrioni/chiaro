@@ -20,6 +20,15 @@ import org.junit.Test
  * This sweeps the emitted XML rather than the tool's table, for the same reason
  * `PaletteContrastTest` asserts the outcome instead of trusting the method: what ships
  * is the file, and a hand edit to a drawable would slip past a table nobody re-runs.
+ *
+ * **What this does NOT measure, and it is not an oversight**: the widget's Cielo card.
+ * That ground is the scrimmed sky, `#5C6E7B` at its brightest — a mid-tone, Y 0.149,
+ * where an ink needs Y ≥ 0.546 or Y ≤ 0.016 to clear 3:1 and neither set qualifies
+ * (8 of 8 line colors short, 25 of 37 fill-night ones; measured 7 set 2026). It is a
+ * declared exception, argued in DESIGN §13.1 with the three fixes that were weighed
+ * and why the committente turned them down — the colored icons are much of what makes
+ * that widget worth looking at. A test cannot assert an accepted shortfall, so it says
+ * so here instead of silently implying a coverage it does not have.
  */
 class IconContrastTest {
 

@@ -538,7 +538,8 @@ number.
 ## 10. Accessibility
 
 - **Contrast**: every ink token ≥ 4.5:1 against its surface, measured in §2.3 and asserted
-  in §12. Non-text marks ≥ 3:1. A quantity that is both drawn and printed therefore owns
+  in §12. Non-text marks ≥ 3:1, with one declared exception measured and argued in §13.1
+  (the weather icon on the widget's Cielo card, where the ground is a mid-tone sky). A quantity that is both drawn and printed therefore owns
   two ramps, and the fill one never paints a figure (§2.3). The canvas is covered by the scrim contract (§3.6).
 - **Never color alone**: verdicts carry a glyph and a word; the drift strip has a table;
   chart series are direct-labeled.
@@ -701,6 +702,38 @@ monotonicity test in the suite had passed without complaint.
    not the method. The icons keep their own colors under every theme (they depict
    the world, like the canvas — §2.1's other justified exception). Animated
    variants, if they ever come, come as AVDs and as their own decision.
+
+   **The one ground no icon set clears, declared** (7 set 2026, measured from a device
+   report that the app's sun looks darker than the widget's — which it is, and by
+   design: `mc_`/`mcf_` sit at Y 0.26, `mcfn_` at Y 0.58). The widget's **Cielo** card
+   is the scrimmed sky, and at its brightest that ground is `#5C6E7B`, **Y 0.149** — a
+   mid-tone. An ink clears 3:1 there only at Y ≥ 0.546 or Y ≤ 0.016, with nothing in
+   between, and neither set lives in those bands: **8 of the line set's 8 colors fall
+   short (1.03–1.57:1), and 25 of the fill-night set's 37 (1.09–2.93:1)**. The sun is
+   one of the twelve that pass, which is why the card looks right and is the reason
+   this went unseen. The line sun drops under the floor from −7° of solar altitude
+   upward: every daylight hour.
+
+   Three ways out were measured and all three were turned down. Splitting the line set
+   by ground the way the fill set was split does not help: the app's dark surface
+   (Y 0.008) is already served at 5.52:1, so such a set would exist only for the sky
+   and would have to put **every** color above Y 0.546 — a near-white family where a
+   cloud, a raindrop and a sun stop being different things, in ~98 new drawables.
+   Raising the scrim needs alpha ≈ 0.93 to bring the ground to Y 0.013, which is a black
+   card with the memory of a sky behind it. Tinting the glyph to the card's own ink is
+   the cheap and complete fix — white measures 5.29:1 there, `ColorFilter.tint` is
+   already how the position pin is drawn — and **the committente turned it down on
+   product grounds: the colored icons are much of what makes the widget worth looking
+   at, and a monochrome silhouette buys a ratio at the cost of the thing itself.**
+
+   So this is an accepted, bounded exception to §10's 3:1 for non-text marks, and it is
+   bounded: it applies to the **Cielo** background only. The Chiaro, Scuro and Sistema
+   cards are the app's own two surfaces, which `IconContrastTest` measures, and the app
+   itself never puts a weather icon on the canvas. Nothing else on the Cielo card relies
+   on it either — the condition is named in words beside the glyph, so the icon is not
+   the sole carrier there the way it is in the hour strip, which is what §10's floor is
+   protecting. If it is ever reopened, the option that keeps both is a small darkened
+   plate under the glyph: contrast without giving up the color.
 2. **Dynamic color default** — on, as written here. Worth revisiting after the first
    screenshots: a wallpaper-derived scheme makes every store screenshot a different app.
    Likely resolution: dynamic on device, the Chiaro scheme in the store assets.
