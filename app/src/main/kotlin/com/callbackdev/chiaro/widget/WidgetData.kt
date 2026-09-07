@@ -4,6 +4,7 @@ import android.content.Context
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.data.ServiceLocator
+import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.WeatherReport
@@ -52,6 +53,14 @@ data class WidgetModel(
 ) {
     /** The one a one-cell widget shows, and the head of every taller one. */
     val nextMoment: NextMoment? get() = moments.firstOrNull()
+
+    /**
+     * The icon family this card really draws with (committente, 8 set): the widget's own
+     * choice when it made one, the app's Settings choice otherwise. Resolved here rather
+     * than at each `Image`, so the hero glyph and the hour strip on the same card can
+     * never end up from two different families.
+     */
+    val iconStyle: WeatherIcons get() = look.icons.resolve(settings.weatherIcons)
 }
 
 /**

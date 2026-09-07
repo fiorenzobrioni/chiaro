@@ -229,8 +229,18 @@
     <string name="settings_language_system">Come il telefono</string>
     <string name="settings_group_about">Informazioni</string>
     <string name="settings_version">Versione</string>
+    <string name="settings_developer">Sviluppo</string>
+    <string name="settings_copyright">Copyright</string>
+    <string name="settings_license">Licenza</string>
+    <string name="settings_license_note">GPL-3.0 — libera di usare, studiare, modificare e condividere</string>
     <string name="settings_data_source">I dati del meteo</string>
-    <string name="settings_data_source_note">Previsioni, qualità dell\'aria e ricerca dei luoghi di Open-Meteo</string>
+    <string name="settings_data_source_note">Previsioni, qualità dell\'aria e ricerca dei luoghi di Open-Meteo, CC BY 4.0</string>
+    <string name="settings_credit_icons">Set di icone del meteo</string>
+    <string name="settings_credit_icons_note">Meteocons di Bas Milius, MIT</string>
+    <string name="settings_credit_font">Carattere</string>
+    <string name="settings_credit_font_note">Inter di Rasmus Andersson, SIL Open Font License 1.1</string>
+    <string name="settings_credit_ui_icons">Icone dell\'interfaccia</string>
+    <string name="settings_credit_ui_icons_note">Material Icons di Google, Apache 2.0</string>
     <string name="settings_source_code">Codice sorgente</string>
     <string name="settings_source_code_note">Software libero, GPL-3.0, su GitHub</string>
     <string name="settings_privacy">Privacy</string>
@@ -340,7 +350,7 @@
     <string name="guide_widgets_three_title">Sono tre</string>
     <string name="guide_widgets_three_body">Ora: icona, temperatura, luogo. Oggi: quello, più la frase della giornata e le prossime ore. Cielo: il momento che hai davanti e il suo verdetto, lo stesso che mostra la schermata Cielo.</string>
     <string name="guide_widgets_config_title">Come si imposta</string>
-    <string name="guide_widgets_config_body">Tieni premuto un widget per aprire le sue impostazioni: quale luogo guarda (quello attivo, o un luogo fisso suo), lo sfondo — compreso lo stesso cielo calcolato che disegna l\'app — e quanto quello sfondo è coprente.</string>
+    <string name="guide_widgets_config_body">Tieni premuto un widget per aprire le sue impostazioni: quale luogo guarda (quello attivo, o un luogo fisso suo), lo sfondo — compreso lo stesso cielo calcolato che disegna l\'app — quanto quello sfondo è coprente, e con quali icone del meteo disegna.</string>
     <string name="guide_widgets_honest_title">Non inventano</string>
     <string name="guide_widgets_honest_body">Un dato vecchio dice quanto è vecchio, un widget senza luogo lo dice, e nessuno mostra un numero che non ha. Si ridisegnano quando arriva un aggiornamento, quindi non costano batteria per conto loro.</string>
 
@@ -825,4 +835,15 @@
     <string name="widget_config_show_condition_note">Serve un widget largo: su uno stretto le parole vengono tagliate.</string>
     <string name="widget_config_show_range">Massima e minima di oggi</string>
     <string name="widget_config_show_range_note">Al bordo opposto, in linea con la temperatura.</string>
+    <string name="widget_config_icons">Icone del meteo</string>
+    <string name="widget_icons_app">Segui l\'app</string>
+
+    <!-- L\'anteprima del selettore (Fase 8c): valori d\'esempio per una scheda che il
+         launcher disegna senza mai eseguire il widget. -->
+    <string name="widget_preview_place">Milano</string>
+    <string name="widget_preview_headline">Pioggia in arrivo verso le cinque.</string>
+    <!-- La metà «prova» del verdetto d\'esempio, scritta come la scrive
+         `sky_evidence_cloud`: l\'anteprima non deve stampare una forma che il widget
+         non stampa mai. -->
+    <string name="widget_preview_evidence">nuvole 10%</string>
 </resources>

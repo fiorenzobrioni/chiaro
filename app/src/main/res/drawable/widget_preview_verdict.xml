@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The verdict pill's ground on the Sky preview: the measured container half of the
+     vivid dark PASS pair, with the 12dp corner the widget's own pill carries. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/widget_preview_verdict_container" />
+    <corners android:radius="12dp" />
+</shape>

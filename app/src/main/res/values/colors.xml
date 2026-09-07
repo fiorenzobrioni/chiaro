@@ -4,4 +4,30 @@
          white of DESIGN.md §2.5 (committente, 7 set — the mark used to wear the paper
          dress). The foreground drawable carries the arithmetic for all four inks. -->
     <color name="ic_launcher_background">#E9F2FC</color>
+
+    <!-- The widget-picker previews (Fase 8c), and the one place their hexes live.
+         "Roles, never hexes" is a rule about composables; a static preview layout has
+         no composition and no theme to read from — the launcher inflates it in a
+         restricted context and never runs a line of our code — so the values are baked,
+         and baked HERE rather than sprayed across three layouts.
+
+         Every one of them is COMPUTED, not picked: the ground is the vivid sky's
+         midday anchor (SkyPalette.Vivid at +90°) composited under the §3.6 scrim the
+         real card paints — scrim × 0.55 + sky × 0.45, in sRGB values, exactly as
+         `skyGradientBitmap` does it — and the inks are §3.6's white pair over it. The
+         rain figures are VividDarkColors.rainInkRamp sampled at the stops themselves
+         (0/25/50/75%), so no interpolation has to be reproduced by hand, and the
+         verdict pair is VividDarkColors.pass — ink and container together, never one
+         mode's word on the other mode's chip. -->
+    <color name="widget_preview_sky_top">#094B6E</color>
+    <color name="widget_preview_sky_mid">#1C5D7F</color>
+    <color name="widget_preview_sky_bottom">#586F7F</color>
+    <color name="widget_preview_ink">#FFFFFFFF</color>
+    <color name="widget_preview_ink_dim">#BFFFFFFF</color>
+    <color name="widget_preview_rain_0">#688BA2</color>
+    <color name="widget_preview_rain_25">#539ECA</color>
+    <color name="widget_preview_rain_50">#22B1F1</color>
+    <color name="widget_preview_rain_75">#42C1FF</color>
+    <color name="widget_preview_verdict_ink">#00E079</color>
+    <color name="widget_preview_verdict_container">#003F23</color>
 </resources>

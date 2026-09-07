@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The hour-strip cell of the Today preview, as four styles rather than twenty
+     repeated attribute blocks: five cells that must agree on their sizes, in a layout
+     nothing computes. The rain figure's COLOR stays on each TextView, because that is
+     the one thing that differs from cell to cell. -->
+<resources>
+    <style name="WidgetPreviewHour">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/widget_preview_ink_dim</item>
+    </style>
+
+    <style name="WidgetPreviewHourIcon">
+        <item name="android:layout_width">32dp</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:layout_marginBottom">2dp</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <style name="WidgetPreviewHourTemp">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/widget_preview_ink</item>
+    </style>
+
+    <style name="WidgetPreviewHourRain">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+</resources>

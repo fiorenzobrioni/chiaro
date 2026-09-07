@@ -123,7 +123,7 @@ private fun NowContent(
             provider = ImageProvider(
                 ChiaroIcons.conditionRes(
                     current.condition.wmoCode, content.night,
-                    model.settings.weatherIcons, palette.darkGround,
+                    model.iconStyle, palette.darkGround,
                     model.settings.palette
                 )
             ),

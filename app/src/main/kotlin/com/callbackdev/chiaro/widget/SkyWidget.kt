@@ -144,7 +144,7 @@ private fun HeroMoment(model: WidgetModel, moment: NextMoment, palette: WidgetPa
         Image(
             provider = ImageProvider(
                 skyJobIconRes(
-                    moment, model.settings.weatherIcons, palette.darkGround,
+                    moment, model.iconStyle, palette.darkGround,
                     model.settings.palette
                 )
             ),
@@ -202,7 +202,7 @@ private fun CompactMoment(model: WidgetModel, moment: NextMoment, palette: Widge
         Image(
             provider = ImageProvider(
                 skyJobIconRes(
-                    moment, model.settings.weatherIcons, palette.darkGround,
+                    moment, model.iconStyle, palette.darkGround,
                     model.settings.palette
                 )
             ),

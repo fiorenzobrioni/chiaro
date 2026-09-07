@@ -217,6 +217,12 @@ private fun SettingsList(
             )
         }
 
+        // The About block completed against tweather's own (committente, 8 set): who
+        // wrote it, what it is licensed as, and what it is built out of. The series
+        // ships the same facts on both apps, and the three credits below are exactly
+        // what `licenses/README.md` says travels inside the APK — a bundled font and a
+        // bundled icon family are somebody's work, and a screen that names the weather
+        // provider and stops there is only two thirds honest.
         item { GroupHeader(stringResource(R.string.settings_group_about)) }
         item {
             ListItem(
@@ -225,10 +231,50 @@ private fun SettingsList(
             )
         }
         item {
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_developer)) },
+                supportingContent = { Text(stringResource(R.string.settings_developer_note)) }
+            )
+        }
+        item {
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_copyright)) },
+                supportingContent = { Text(stringResource(R.string.settings_copyright_note)) }
+            )
+        }
+        item {
+            ValueRow(
+                label = stringResource(R.string.settings_license),
+                value = stringResource(R.string.settings_license_note),
+                onClick = { openUrl(context, "https://www.gnu.org/licenses/gpl-3.0.html") }
+            )
+        }
+        item {
             ValueRow(
                 label = stringResource(R.string.settings_data_source),
                 value = stringResource(R.string.settings_data_source_note),
                 onClick = { openUrl(context, "https://open-meteo.com") }
+            )
+        }
+        item {
+            ValueRow(
+                label = stringResource(R.string.settings_credit_icons),
+                value = stringResource(R.string.settings_credit_icons_note),
+                onClick = { openUrl(context, "https://github.com/basmilius/weather-icons") }
+            )
+        }
+        item {
+            ValueRow(
+                label = stringResource(R.string.settings_credit_font),
+                value = stringResource(R.string.settings_credit_font_note),
+                onClick = { openUrl(context, "https://rsms.me/inter/") }
+            )
+        }
+        item {
+            ValueRow(
+                label = stringResource(R.string.settings_credit_ui_icons),
+                value = stringResource(R.string.settings_credit_ui_icons_note),
+                onClick = { openUrl(context, "https://github.com/google/material-design-icons") }
             )
         }
         item {

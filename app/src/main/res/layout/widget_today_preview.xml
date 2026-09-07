@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Today widget in the picker: the hero row, the day's sentence, the hour strip.
+     Same rules as `widget_now_preview` — sample values, the default dress baked in,
+     nothing here reads a forecast. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_preview_sky"
+    android:orientation="vertical"
+    android:padding="14dp"
+    tools:ignore="HardcodedText">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/mcn_partly_cloudy_day" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:includeFontPadding="false"
+                android:text="25°"
+                android:textColor="@color/widget_preview_ink"
+                android:textSize="36sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@string/widget_preview_place"
+                android:textColor="@color/widget_preview_ink_dim"
+                android:textSize="16sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- One sentence before any number (VISION §5.1), on the launcher too. It takes
+         the slack rather than a spacer taking it: `Space` is not one of the views
+         RemoteViews knows, and a preview layout has to stay inside that set. -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="top"
+        android:maxLines="2"
+        android:paddingTop="6dp"
+        android:text="@string/widget_preview_headline"
+        android:textColor="@color/widget_preview_ink"
+        android:textSize="14sp" />
+
+    <!-- Five hours, the count a four-cell grant lands on. Every cell prints its rain
+         figure because one of them has something to report — the strip's own rule. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/WidgetPreviewHour"
+                android:text="14" />
+
+            <ImageView
+                style="@style/WidgetPreviewHourIcon"
+                android:src="@drawable/mcn_partly_cloudy_day" />
+
+            <TextView
+                style="@style/WidgetPreviewHourTemp"
+                android:text="26°" />
+
+            <TextView
+                style="@style/WidgetPreviewHourRain"
+                android:text="0%"
+                android:textColor="@color/widget_preview_rain_0" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingStart="6dp">
+
+            <TextView
+                style="@style/WidgetPreviewHour"
+                android:text="15" />
+
+            <ImageView
+                style="@style/WidgetPreviewHourIcon"
+                android:src="@drawable/mcn_partly_cloudy_day" />
+
+            <TextView
+                style="@style/WidgetPreviewHourTemp"
+                android:text="26°" />
+
+            <TextView
+                style="@style/WidgetPreviewHourRain"
+                android:text="0%"
+                android:textColor="@color/widget_preview_rain_0" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingStart="6dp">
+
+            <TextView
+                style="@style/WidgetPreviewHour"
+                android:text="16" />
+
+            <ImageView
+                style="@style/WidgetPreviewHourIcon"
+                android:src="@drawable/mcn_cloudy" />
+
+            <TextView
+                style="@style/WidgetPreviewHourTemp"
+                android:text="25°" />
+
+            <TextView
+                style="@style/WidgetPreviewHourRain"
+                android:text="25%"
+                android:textColor="@color/widget_preview_rain_25" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingStart="6dp">
+
+            <TextView
+                style="@style/WidgetPreviewHour"
+                android:text="17" />
+
+            <ImageView
+                style="@style/WidgetPreviewHourIcon"
+                android:src="@drawable/mcn_partly_cloudy_day_rain" />
+
+            <TextView
+                style="@style/WidgetPreviewHourTemp"
+                android:text="23°" />
+
+            <TextView
+                style="@style/WidgetPreviewHourRain"
+                android:text="50%"
+                android:textColor="@color/widget_preview_rain_50" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingStart="6dp">
+
+            <TextView
+                style="@style/WidgetPreviewHour"
+                android:text="18" />
+
+            <ImageView
+                style="@style/WidgetPreviewHourIcon"
+                android:src="@drawable/mcn_rain" />
+
+            <TextView
+                style="@style/WidgetPreviewHourTemp"
+                android:text="21°" />
+
+            <TextView
+                style="@style/WidgetPreviewHourRain"
+                android:text="75%"
+                android:textColor="@color/widget_preview_rain_75" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

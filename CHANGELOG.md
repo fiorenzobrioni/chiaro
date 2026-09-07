@@ -239,6 +239,31 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   centred on the card now instead of sitting in its top corner, where two lines read like
   content that had not finished loading.
 
+- **The widget picker shows the real widgets.** Glance has no picker preview of its own,
+  so the launcher was advertising all three with the same generic loading card. Each one
+  now carries a static preview drawn as the card really looks: the computed sky under its
+  scrim, the outlined icons, and sample values — the hero glyph with a temperature and a
+  place for Now, the day's sentence and five hours with their rain for Today, the moment
+  and its verdict pill for Sky. A preview is a drawing of the product, never a reading:
+  the moment the launcher binds a widget it draws only what it actually knows.
+
+- **A widget can pick its own weather icons.** Its settings — reached by pressing and
+  holding it — now offer the icon family beside the background and the opacity: follow
+  the app, filled, or outlined. Filled reads across a room and outlined reads quietly on
+  a page, and a card living on a wallpaper is not the app screen, so the two can honestly
+  differ. Existing widgets keep following the app, which is what they did before.
+
+- **The Now widget's icon moves a little closer to the edge.** The previous pass sized
+  its inset off the icon family's median margin, and the family's median is not what a
+  night home screen shows: the crescent keeps almost a quarter of its box empty on that
+  side, so it ended up sitting noticeably further in than the neighbouring widget's. The
+  inset is halved; the day's high and low keep the trailing edge they were given.
+
+- **About is complete.** The section now names the developer, the copyright and the
+  licence, and credits everything the app is built out of: Open-Meteo's data under
+  CC BY 4.0, the Meteocons weather icons, the Inter typeface and Google's interface
+  icons, each with its licence and a tap through to the source.
+
 - **Settings reads like settings.** Every explanation is now one short sentence about
   what the option does. Gone are the lines that justified a design decision to the reader
   ("either way they stop moving when your phone asks for less animation") and the privacy
