@@ -165,6 +165,12 @@
     <string name="places_removed">%1$s rimossa</string>
     <string name="places_move_up">Sposta su</string>
     <string name="places_move_down">Sposta giù</string>
+    <string name="places_remove">Rimuovi</string>
+    <string name="places_search_clear">Cancella la ricerca</string>
+    <string name="places_recent_clear">Cancella</string>
+    <string name="places_recent_remove">Togli “%1$s” dalle ricerche recenti</string>
+    <string name="places_recent_removed">Ricerca recente rimossa</string>
+    <string name="places_recent_cleared">Ricerche recenti cancellate</string>
     <string name="action_undo">Annulla</string>
     <string name="gps_error_permission">Senza il permesso non posso trovare la tua posizione</string>
     <string name="gps_error_disabled">La localizzazione del telefono è spenta</string>

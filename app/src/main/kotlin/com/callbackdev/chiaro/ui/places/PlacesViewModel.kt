@@ -131,6 +131,24 @@ class PlacesViewModel(
         queryFlow.value = value
     }
 
+    /**
+     * Forgets one remembered search. The sheet passes the list it was showing to
+     * [restoreRecents] if the reader undoes it: searching for the term again would
+     * file it as the newest one, and the order of that list means something.
+     */
+    fun removeRecent(term: String) {
+        viewModelScope.launch { searchHistory.remove(term) }
+    }
+
+    /** Forgets every remembered search, with the same undo as [removeRecent]. */
+    fun clearRecents() {
+        viewModelScope.launch { searchHistory.clear() }
+    }
+
+    fun restoreRecents(terms: List<String>) {
+        viewModelScope.launch { searchHistory.restore(terms) }
+    }
+
     /** A tapped search result: saved, made active, remembered as a search, and the
      * first-run debt settled — choosing a place IS the first-run answer, wherever it
      * is given from. */

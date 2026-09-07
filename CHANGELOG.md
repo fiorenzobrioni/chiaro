@@ -159,6 +159,18 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   page can never claim a cadence or a verdict the app does not have. The prose is
   ported from tweather's manual pages, rewritten wherever it spoke about a crontab line
   or a file: nothing in this edition has one, and no page prints a dotted name.
+- **Recent searches can be forgotten, one at a time or all at once** (reported on device,
+  7 Sep). They had no removal at all: no gesture, no button, nothing, so the only honest
+  reading of the section was that it was permanent. Each row now carries a cross and the
+  section a "Clear", both undoable through the snackbar the saved places already use. The
+  saved rows' swipe was the obvious thing to copy and the wrong one: a gesture is exactly
+  as invisible as the nothing that was there before, and the report came from not finding
+  anything. Undo puts the list back as it stood, order included, rather than searching the
+  terms again — that list is ordered by when each search happened, and re-adding one would
+  date it today.
+- **A cross in the "Search for a city" field**, while there is something in it to clear.
+  It appears with the first character and goes away with the last: a cross over an empty
+  field offers to undo nothing.
 
 ### Changed
 
@@ -378,6 +390,11 @@ polish:
   "Punto di rugiada" (113dp) and "Qualità dell'aria" (107dp) did not fit, so they wrapped
   and pushed their own value down while the tile beside them stayed put. They are now
   "Rugiada" and "Qualità aria"; the full term keeps the places that have room for it.
+- **A saved place can be removed with TalkBack.** Swipe-to-remove was the only way out
+  of that list, and a swipe has neither a keyboard nor a screen reader — so for anybody
+  using one, the list could be added to and reordered but never shortened. The row's
+  custom actions now carry "Remove" beside "Move up" and "Move down", which have been
+  there since the reorder gesture landed, for this same reason.
 
 ### Removed
 

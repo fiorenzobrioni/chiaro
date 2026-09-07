@@ -1895,6 +1895,35 @@ parte di questa passata che resta da guardare su un telefono.
       delle tre che la sezione ha; nel Diario la riga resta, perché quello è il registro,
       ma perde il separatore appeso davanti all'ora. Le frasi si costruiscono adesso
       prima della lista, perché un `LazyListScope` non può chiamare una composable
+- [x] Le ricerche recenti si cancellano, e il campo di ricerca si svuota in un colpo
+      (segnalato su device, 7 set): sulle recenti non c'era **nessun** modo di togliere
+      una riga — né un gesto né un comando — e il lettore l'ha letto come «non si
+      cancellano», che era esatto. La strada breve era copiare lo scorrimento dei
+      salvati, ma un gesto è invisibile esattamente quanto il niente che c'era prima:
+      la segnalazione nasce dal non trovare, e una scorciatoia nascosta non si fa
+      trovare. Quindi ogni recente prende una **crocetta** in coda alla riga e la
+      sezione un **«Cancella»** accanto al titolo — due bersagli visibili, entrambi
+      con l'annulla nella stessa snackbar che serve i luoghi (una cancellazione
+      annullabile può permettersi di essere a un tocco solo).
+      L'annulla rimette la lista **com'era, ordine compreso**:
+      `SearchHistoryStore.restore(list)` scrive l'elenco che riceve invece di rigiocare
+      `add(term)`, perché quella lista è ordinata per *quando* si è cercato e
+      riaggiungere un termine lo dichiarerebbe il più recente — una data inventata dal
+      pulsante «annulla». `remove(term)` toglie con lo stesso confronto con cui `add`
+      deduplica (spazi e maiuscole: la riga che si vede è quella che se ne va, comunque
+      fosse stata scritta). Sette prove nuove in `SearchHistoryStoreTest`.
+      Nel campo «Cerca una città» compare una **X** in coda finché c'è qualcosa da
+      cancellare, e non prima: una crocetta che non annulla niente è decorazione.
+      Terza cosa, trovata guardando la stessa schermata: **i salvati non erano
+      rimovibili con TalkBack**. Lo scorrimento era l'unica via, e uno scorrimento non
+      ha né tastiera né screen reader; adesso la riga porta l'azione «Rimuovi» accanto
+      a «Sposta su» e «Sposta giù», che stanno lì dalla Fase 3 esattamente per questo
+      motivo. È materia di questa fase e costava tre righe.
+      **La guida resta com'è**, di proposito: VISION §5.7 dice che non insegna un
+      controllo, e una crocetta visibile non è un controllo da insegnare — lo
+      scorrimento dei salvati è nella guida perché è invisibile, ed è l'eccezione che
+      spiega la regola, non un precedente. Suite verde (`test` + `:app:testDebugUnitTest`),
+      lint a 0 errori, APK debug costruito
 - [ ] Contrasti, scala testo 200%, TalkBack, motion ridotto
 - [ ] Avvio a freddo sotto 400 ms, canvas sotto 2 ms/frame
 - [ ] Passata IT/EN completa
