@@ -31,6 +31,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
@@ -77,7 +78,9 @@ class SkyWidget : GlanceAppWidget() {
         val initial = WidgetData.load(context, appWidgetId)
         provideContent {
             val model = rememberWidgetModel(context, appWidgetId, initial, loadedAt)
-            val schemes = rememberWidgetSchemes(context, model.settings.dynamicColor)
+            val schemes = rememberWidgetSchemes(
+                context, model.settings.dynamicColor, model.settings.palette
+            )
             val skyBitmap = rememberSkyBitmap(model)
             WidgetCard(
                 model, schemes, skyBitmap,
@@ -120,7 +123,7 @@ private fun SkyContent(model: WidgetModel, palette: WidgetPalette) {
         if (extra == 0) Spacer(modifier = GlanceModifier.defaultWeight())
         moment.verdict?.let { verdict ->
             if (extra > 0) Spacer(modifier = GlanceModifier.height(RowGap))
-            VerdictPill(verdict)
+            VerdictPill(verdict, palette)
         }
         if (extra > 0) {
             Spacer(modifier = GlanceModifier.height(ListGap))
@@ -140,7 +143,10 @@ private fun HeroMoment(model: WidgetModel, moment: NextMoment, palette: WidgetPa
     Row(verticalAlignment = Alignment.CenterVertically) {
         Image(
             provider = ImageProvider(
-                skyJobIconRes(moment, model.settings.weatherIcons, palette.darkGround)
+                skyJobIconRes(
+                    moment, model.settings.weatherIcons, palette.darkGround,
+                    model.settings.palette
+                )
             ),
             contentDescription = null,
             modifier = GlanceModifier.size(HeroIconSize)
@@ -195,7 +201,10 @@ private fun CompactMoment(model: WidgetModel, moment: NextMoment, palette: Widge
     ) {
         Image(
             provider = ImageProvider(
-                skyJobIconRes(moment, model.settings.weatherIcons, palette.darkGround)
+                skyJobIconRes(
+                    moment, model.settings.weatherIcons, palette.darkGround,
+                    model.settings.palette
+                )
             ),
             contentDescription = null,
             modifier = GlanceModifier.size(CompactIconSize)
@@ -214,25 +223,28 @@ private fun CompactMoment(model: WidgetModel, moment: NextMoment, palette: Widge
         )
         moment.verdict?.let { verdict ->
             Spacer(modifier = GlanceModifier.width(8.dp))
-            VerdictChip(verdict)
+            VerdictChip(verdict, palette)
         }
     }
 }
 
 /** The pill's small sibling: same measured ink-and-container pair, word only. */
 @Composable
-private fun VerdictChip(verdict: SkyVerdict) {
+private fun VerdictChip(verdict: SkyVerdict, palette: WidgetPalette) {
     val context = LocalContext.current
     val night = isNight(context)
     Row(
         modifier = GlanceModifier
-            .background(verdictContainer(verdict.kind, night))
+            .background(verdictContainer(verdict.kind, night, palette.dress))
             .cornerRadius(8.dp)
             .padding(horizontal = 7.dp, vertical = 2.dp)
     ) {
         Text(
             text = context.getString(SkyText.verdictWordRes(verdict.kind)),
-            style = TextStyle(color = verdictInk(verdict.kind, night), fontSize = 11.sp),
+            style = TextStyle(
+                color = verdictInk(verdict.kind, night, palette.dress),
+                fontSize = 11.sp
+            ),
             maxLines = 1
         )
     }
@@ -311,7 +323,7 @@ private val ListGap = 10.dp
 /** DESIGN §8.7 on the launcher: the word first, the number beside it, the color
  * third — a bare colored dot on a home screen would tell some readers nothing. */
 @Composable
-private fun VerdictPill(verdict: SkyVerdict) {
+private fun VerdictPill(verdict: SkyVerdict, palette: WidgetPalette) {
     val context = LocalContext.current
     val night = isNight(context)
     val word = context.getString(SkyText.verdictWordRes(verdict.kind))
@@ -323,7 +335,7 @@ private fun VerdictPill(verdict: SkyVerdict) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier
-            .background(verdictContainer(verdict.kind, night))
+            .background(verdictContainer(verdict.kind, night, palette.dress))
             // 48dp icon and a 4dp-tall pill: on a one-cell grant the first cut
             // (54dp, 5dp) left the pill's bottom outside the card (screenshot, 3 set).
             .cornerRadius(12.dp)
@@ -331,7 +343,10 @@ private fun VerdictPill(verdict: SkyVerdict) {
     ) {
         Text(
             text = if (detail != null) "$word · $detail" else word,
-            style = TextStyle(color = verdictInk(verdict.kind, night), fontSize = 12.sp),
+            style = TextStyle(
+                color = verdictInk(verdict.kind, night, palette.dress),
+                fontSize = 12.sp
+            ),
             maxLines = 1
         )
     }
@@ -341,24 +356,32 @@ private fun VerdictPill(verdict: SkyVerdict) {
 private fun skyJobIconRes(
     moment: NextMoment,
     style: WeatherIcons,
-    darkGround: Boolean
+    darkGround: Boolean,
+    appPalette: AppPalette
 ): Int = when (moment.job.id) {
-    "sun.rise", "twilight.civil.am" -> ChiaroIcons.styledRes(R.drawable.mc_sunrise, style, darkGround)
-    "sun.set", "twilight.civil.pm" -> ChiaroIcons.styledRes(R.drawable.mc_sunset, style, darkGround)
+    "sun.rise", "twilight.civil.am" ->
+        ChiaroIcons.styledRes(R.drawable.mc_sunrise, style, darkGround, appPalette)
+    "sun.set", "twilight.civil.pm" ->
+        ChiaroIcons.styledRes(R.drawable.mc_sunset, style, darkGround, appPalette)
     "solar.noon" ->
-        ChiaroIcons.conditionRes(0, night = false, style = style, darkGround = darkGround)
-    "golden_hour.am", "golden_hour.pm" -> ChiaroIcons.styledRes(R.drawable.mc_horizon, style, darkGround)
+        ChiaroIcons.conditionRes(
+            0, night = false, style = style, darkGround = darkGround,
+            palette = appPalette
+        )
+    "golden_hour.am", "golden_hour.pm" ->
+        ChiaroIcons.styledRes(R.drawable.mc_horizon, style, darkGround, appPalette)
     "blue_hour.am", "blue_hour.pm",
     "twilight.nautical.am", "twilight.nautical.pm" ->
-        ChiaroIcons.styledRes(R.drawable.mc_star, style, darkGround)
+        ChiaroIcons.styledRes(R.drawable.mc_star, style, darkGround, appPalette)
     "twilight.astronomical.am", "twilight.astronomical.pm", "darkness.window" ->
-        ChiaroIcons.styledRes(R.drawable.mc_starry_night, style, darkGround)
-    "moon.rise" -> ChiaroIcons.styledRes(R.drawable.mc_moonrise, style, darkGround)
-    "moon.set" -> ChiaroIcons.styledRes(R.drawable.mc_moonset, style, darkGround)
-    "moon.today", "moon.phase" -> ChiaroIcons.moonPhaseRes(MoonPhase.FULL_MOON, style, darkGround)
+        ChiaroIcons.styledRes(R.drawable.mc_starry_night, style, darkGround, appPalette)
+    "moon.rise" -> ChiaroIcons.styledRes(R.drawable.mc_moonrise, style, darkGround, appPalette)
+    "moon.set" -> ChiaroIcons.styledRes(R.drawable.mc_moonset, style, darkGround, appPalette)
+    "moon.today", "moon.phase" ->
+        ChiaroIcons.moonPhaseRes(MoonPhase.FULL_MOON, style, darkGround, appPalette)
     "equinox.spring", "solstice.summer", "equinox.autumn", "solstice.winter" ->
-        ChiaroIcons.styledRes(R.drawable.mc_horizon, style, darkGround)
-    else -> ChiaroIcons.styledRes(R.drawable.mc_falling_stars, style, darkGround)
+        ChiaroIcons.styledRes(R.drawable.mc_horizon, style, darkGround, appPalette)
+    else -> ChiaroIcons.styledRes(R.drawable.mc_falling_stars, style, darkGround, appPalette)
 }
 
 /** Subscriptions emptied by hand: the widget says why it is quiet, never blanks. */

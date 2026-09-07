@@ -208,12 +208,16 @@
     <string name="settings_theme_system">Same as the phone</string>
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_dark">Dark</string>
+    <string name="settings_palette">Palette</string>
+    <string name="settings_palette_paper">Paper</string>
+    <string name="settings_palette_vivid">Vivid</string>
+    <string name="settings_palette_note">Paper is Chiaro\'s own: warm white, amber, a quiet sky. Vivid is the same app at the brightest colors a screen holds: cool white, an azure accent, a saturated sky and brighter weather icons on dark backgrounds.</string>
     <string name="settings_weather_icons">Weather icons</string>
     <string name="settings_icons_fill">Filled</string>
     <string name="settings_icons_line">Outlined</string>
     <string name="settings_weather_icons_note">Two drawings of the same icons: solid shapes, or thin strokes.</string>
     <string name="settings_dynamic_color">Wallpaper colors</string>
-    <string name="settings_dynamic_color_note">On, the palette comes from your wallpaper. Off, Chiaro wears its own.</string>
+    <string name="settings_dynamic_color_note">On, the colors come from your wallpaper. Off, Chiaro wears the palette you picked above.</string>
     <string name="settings_group_updates">Updates</string>
     <string name="settings_update_frequency">Update frequency</string>
     <string name="settings_update_frequency_note">How long a forecast stays current before Chiaro asks for a fresh one.</string>

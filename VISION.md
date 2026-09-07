@@ -158,6 +158,11 @@ their place, and a color scheme that is generated rather than hand-picked.
 
 - **Dynamic color** on by default (Material You, wallpaper-derived), with a curated in-app palette
   as the fallback and as an explicit choice for people who want the app to look like itself.
+- **Two curated palettes, and the reader picks** (7 set 2026): *Paper*, the warm identity, and
+  *Vivid*, the same design at the brightest colors a screen holds — cool white, an azure accent,
+  saturated ramps and sky. It is one choice over the scheme, the semantic tokens, the canvas and
+  the icon sets, and it applies even under dynamic color, because none of those ever followed the
+  wallpaper. DESIGN §2.5 carries the rule they were derived by and the measurements.
 - **Light is the default**, dark is complete and equal, both follow the system. The t-series' dark
   monopoly was a stylistic position; here it would just be an accessibility problem.
 - **No skeuomorphic weather art.** No 3D glass droplets, no photographic backgrounds. The visual
@@ -361,7 +366,8 @@ one place a FAB earns its keep.
 
 ### 5.7 Settings and the guide
 
-Standard M3 preferences, grouped: units, appearance (theme, dynamic color, canvas motion), update
+Standard M3 preferences, grouped: units, appearance (theme, palette, weather icons, dynamic color,
+canvas motion), update
 frequency, notifications, widgets, language, about. Reset is a destructive-styled item with a
 confirmation dialog rather than a two-tap `$` command.
 

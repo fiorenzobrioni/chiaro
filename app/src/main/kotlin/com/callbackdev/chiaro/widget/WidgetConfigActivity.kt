@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -37,7 +38,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.ServiceLocator
+import com.callbackdev.chiaro.data.ThemeMode
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -69,8 +72,22 @@ class WidgetConfigActivity : ComponentActivity() {
             Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
         )
 
+        val settingsStore = ServiceLocator.settingsStore(applicationContext)
         setContent {
-            ChiaroTheme {
+            // This screen is part of the app, so it wears what the app wears: the
+            // reader's theme, their answer on wallpaper colors, and their dress (§2.5).
+            // Until the store's first emission the defaults hold, which is also what a
+            // fresh install chose.
+            val settings by settingsStore.settings.collectAsStateWithLifecycle(initialValue = null)
+            ChiaroTheme(
+                darkTheme = when (settings?.themeMode) {
+                    ThemeMode.LIGHT -> false
+                    ThemeMode.DARK -> true
+                    ThemeMode.SYSTEM, null -> isSystemInDarkTheme()
+                },
+                dynamicColor = settings?.dynamicColor ?: true,
+                palette = settings?.palette ?: AppPalette.PAPER
+            ) {
                 Scaffold(
                     topBar = {
                         TopAppBar(title = { Text(stringResource(R.string.widget_config_title)) })

@@ -50,14 +50,14 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider as FixedColorProvider
 import com.callbackdev.chiaro.MainActivity
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.format.Formats
-import com.callbackdev.chiaro.ui.theme.ChiaroDarkColors
-import com.callbackdev.chiaro.ui.theme.ChiaroDarkScheme
-import com.callbackdev.chiaro.ui.theme.ChiaroLightColors
-import com.callbackdev.chiaro.ui.theme.ChiaroLightScheme
+import com.callbackdev.chiaro.ui.theme.ChiaroColors
+import com.callbackdev.chiaro.ui.theme.ChiaroPalette
 import com.callbackdev.chiaro.ui.theme.SkyPalette
+import com.callbackdev.chiaro.ui.theme.paletteFor
 import com.callbackdev.chiaro.ui.today.SkySnapshot
 import java.time.Duration
 import java.time.Instant
@@ -70,14 +70,26 @@ import java.util.Locale
  * The alternatives are a plain card in the app's schemes (dynamic or Chiaro), fixed
  * light, fixed dark, or following the system — each widget chooses for itself.
  */
-data class WidgetSchemes(val light: ColorScheme, val dark: ColorScheme)
+data class WidgetSchemes(
+    val light: ColorScheme,
+    val dark: ColorScheme,
+    /**
+     * The dress the reader picked (DESIGN §2.5). It rides along even when the two
+     * schemes above came from the wallpaper, because the semantic tokens and the sky
+     * never followed the wallpaper in the first place (§2.3, §3.7) — so a widget under
+     * dynamic color still paints the reader's ramps, verdicts and sky.
+     */
+    val dress: ChiaroPalette
+)
 
-fun widgetSchemes(context: Context, dynamicColor: Boolean): WidgetSchemes =
-    if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        WidgetSchemes(dynamicLightColorScheme(context), dynamicDarkColorScheme(context))
+fun widgetSchemes(context: Context, dynamicColor: Boolean, palette: AppPalette): WidgetSchemes {
+    val dress = paletteFor(palette)
+    return if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        WidgetSchemes(dynamicLightColorScheme(context), dynamicDarkColorScheme(context), dress)
     } else {
-        WidgetSchemes(ChiaroLightScheme, ChiaroDarkScheme)
+        WidgetSchemes(dress.lightScheme, dress.darkScheme, dress)
     }
+}
 
 /**
  * The model this widget draws, re-read INSIDE the composition whenever [WidgetRefresh]
@@ -109,13 +121,17 @@ fun rememberWidgetModel(
 fun rememberSkyBitmap(model: WidgetModel): Bitmap? {
     val sky = model.content?.sky?.takeIf { model.look.background == WidgetBackground.SKY }
     val opacity = model.look.opacityPct
-    return remember(sky, opacity) { sky?.let { skyGradientBitmap(it, opacity) } }
+    val table = paletteFor(model.settings.palette).sky
+    return remember(sky, opacity, table) { sky?.let { skyGradientBitmap(it, opacity, table) } }
 }
 
 /** The two schemes this widget writes in, rebuilt only when the choice behind them does. */
 @Composable
-fun rememberWidgetSchemes(context: Context, dynamicColor: Boolean): WidgetSchemes =
-    remember(dynamicColor) { widgetSchemes(context, dynamicColor) }
+fun rememberWidgetSchemes(
+    context: Context,
+    dynamicColor: Boolean,
+    palette: AppPalette
+): WidgetSchemes = remember(dynamicColor, palette) { widgetSchemes(context, dynamicColor, palette) }
 
 /** The inks a widget writes with, resolved once per background choice, plus the one
  * fact a quantity ramp needs about the ground they all sit on. */
@@ -126,8 +142,14 @@ data class WidgetPalette(
     /** Whether the effective ground is dark — the scrimmed sky, a dark card, a dark
      * wallpaper behind a see-through card — so ramps pick the set that was SELECTED
      * for dark rather than the light one flipped (DESIGN §2.3). */
-    val darkGround: Boolean
-)
+    val darkGround: Boolean,
+    /** The reader's palette, carried so the ramps and verdicts on this card come from
+     * the same dress as the app's (§2.5). */
+    val dress: ChiaroPalette
+) {
+    /** The §2.3 set for the ground this card really has. */
+    val colors: ChiaroColors get() = dress.colors(darkGround)
+}
 
 /**
  * The system's answer at render time: is the phone in night mode right now? Glance's
@@ -181,19 +203,22 @@ private fun palette(ink: WidgetInk, schemes: WidgetSchemes): WidgetPalette = whe
         primary = FixedColorProvider(Color.White),
         secondary = FixedColorProvider(Color.White.copy(alpha = 0.75f)),
         stale = FixedColorProvider(Color.White.copy(alpha = 0.85f)),
-        darkGround = ink.darkGround
+        darkGround = ink.darkGround,
+        dress = schemes.dress
     )
     WidgetInk.ON_LIGHT -> WidgetPalette(
         primary = FixedColorProvider(schemes.light.onSurface),
         secondary = FixedColorProvider(schemes.light.onSurfaceVariant),
-        stale = FixedColorProvider(ChiaroLightColors.freshness.ink),
-        darkGround = ink.darkGround
+        stale = FixedColorProvider(schemes.dress.lightColors.freshness.ink),
+        darkGround = ink.darkGround,
+        dress = schemes.dress
     )
     WidgetInk.ON_DARK -> WidgetPalette(
         primary = FixedColorProvider(schemes.dark.onSurface),
         secondary = FixedColorProvider(schemes.dark.onSurfaceVariant),
-        stale = FixedColorProvider(ChiaroDarkColors.freshness.ink),
-        darkGround = ink.darkGround
+        stale = FixedColorProvider(schemes.dress.darkColors.freshness.ink),
+        darkGround = ink.darkGround,
+        dress = schemes.dress
     )
 }
 
@@ -293,8 +318,8 @@ fun WidgetCard(
  * whole of it (uniform here — every pixel of a widget can carry text), both scaled
  * by the widget's opacity so transparency thins the sky, never the words.
  */
-fun skyGradientBitmap(sky: SkySnapshot, opacityPct: Int): Bitmap {
-    val gradient = SkyPalette.gradient(
+fun skyGradientBitmap(sky: SkySnapshot, opacityPct: Int, table: SkyPalette): Bitmap {
+    val gradient = table.gradient(
         sunAltitudeDeg = sky.sunAltitudeDeg,
         cloudPct = sky.cloudPct,
         precipPct = sky.precipPct,
@@ -523,34 +548,31 @@ private val HeroIconMax = 104.dp
  * app strip's own rule: 0% is the quiet end of the scale, not a second color, and the
  * fill ramp never carries text (its light end is 1.3:1 on paper). */
 fun rainInk(pct: Int, palette: WidgetPalette): androidx.glance.unit.ColorProvider =
-    FixedColorProvider(
-        (if (palette.darkGround) ChiaroDarkColors else ChiaroLightColors).rainInkAt(pct)
-    )
+    FixedColorProvider(palette.colors.rainInkAt(pct))
 
 /** The verdict pair, resolved at render time like every other widget color: same
  * fixed semantics as in the app — a verdict means the same thing whatever the
  * wallpaper is (DESIGN §2.3) — and ink and container resolve together, so no
  * host can ever pair one mode's chip with the other mode's word. */
-fun verdictInk(kind: SkyVerdictKind, night: Boolean): androidx.glance.unit.ColorProvider =
-    FixedColorProvider(
-        (if (night) verdictColorsDark(kind) else verdictColorsLight(kind)).ink
-    )
+fun verdictInk(
+    kind: SkyVerdictKind,
+    night: Boolean,
+    dress: ChiaroPalette
+): androidx.glance.unit.ColorProvider = FixedColorProvider(verdictColors(kind, night, dress).ink)
 
-fun verdictContainer(kind: SkyVerdictKind, night: Boolean): androidx.glance.unit.ColorProvider =
-    FixedColorProvider(
-        (if (night) verdictColorsDark(kind) else verdictColorsLight(kind)).container
-    )
+fun verdictContainer(
+    kind: SkyVerdictKind,
+    night: Boolean,
+    dress: ChiaroPalette
+): androidx.glance.unit.ColorProvider =
+    FixedColorProvider(verdictColors(kind, night, dress).container)
 
-private fun verdictColorsLight(kind: SkyVerdictKind) = when (kind) {
-    SkyVerdictKind.PASS -> ChiaroLightColors.pass
-    SkyVerdictKind.UNSTABLE -> ChiaroLightColors.unstable
-    SkyVerdictKind.FAIL -> ChiaroLightColors.fail
-    SkyVerdictKind.UNKNOWN -> ChiaroLightColors.unknown
-}
-
-private fun verdictColorsDark(kind: SkyVerdictKind) = when (kind) {
-    SkyVerdictKind.PASS -> ChiaroDarkColors.pass
-    SkyVerdictKind.UNSTABLE -> ChiaroDarkColors.unstable
-    SkyVerdictKind.FAIL -> ChiaroDarkColors.fail
-    SkyVerdictKind.UNKNOWN -> ChiaroDarkColors.unknown
-}
+private fun verdictColors(kind: SkyVerdictKind, night: Boolean, dress: ChiaroPalette) =
+    dress.colors(night).let {
+        when (kind) {
+            SkyVerdictKind.PASS -> it.pass
+            SkyVerdictKind.UNSTABLE -> it.unstable
+            SkyVerdictKind.FAIL -> it.fail
+            SkyVerdictKind.UNKNOWN -> it.unknown
+        }
+    }

@@ -205,12 +205,16 @@
     <string name="settings_theme_system">Come il telefono</string>
     <string name="settings_theme_light">Chiaro</string>
     <string name="settings_theme_dark">Scuro</string>
+    <string name="settings_palette">Palette</string>
+    <string name="settings_palette_paper">Carta</string>
+    <string name="settings_palette_vivid">Brillante</string>
+    <string name="settings_palette_note">Carta è quella di Chiaro: bianco caldo, ambra, un cielo pacato. Brillante è la stessa app con i colori più accesi che uno schermo può dare: bianco freddo, accento azzurro, cielo saturo e icone del meteo più vivaci sugli sfondi scuri.</string>
     <string name="settings_weather_icons">Icone del meteo</string>
     <string name="settings_icons_fill">Piene</string>
     <string name="settings_icons_line">A tratto</string>
     <string name="settings_weather_icons_note">Due disegni delle stesse icone: forme piene, o tratti sottili.</string>
     <string name="settings_dynamic_color">Colori dallo sfondo</string>
-    <string name="settings_dynamic_color_note">Attivo, la palette arriva dal tuo sfondo. Spento, Chiaro indossa la sua.</string>
+    <string name="settings_dynamic_color_note">Attivo, i colori arrivano dal tuo sfondo. Spento, Chiaro indossa la palette che hai scelto qui sopra.</string>
     <string name="settings_group_updates">Aggiornamenti</string>
     <string name="settings_update_frequency">Frequenza di aggiornamento</string>
     <string name="settings_update_frequency_note">Per quanto tempo una previsione resta attuale prima che Chiaro ne chieda una nuova.</string>

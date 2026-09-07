@@ -45,6 +45,7 @@ import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.BuildConfig
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.data.ThemeMode
 import com.callbackdev.chiaro.data.UpdateFrequencies
@@ -142,6 +143,13 @@ private fun SettingsList(
                 label = stringResource(R.string.settings_theme),
                 value = themeLabel(settings.themeMode),
                 onClick = { dialog = SettingsDialog.THEME }
+            )
+        }
+        item {
+            ValueRow(
+                label = stringResource(R.string.settings_palette),
+                value = paletteLabel(settings.palette),
+                onClick = { dialog = SettingsDialog.PALETTE }
             )
         }
         item {
@@ -263,6 +271,14 @@ private fun SettingsList(
             onSelect = { viewModel.setThemeMode(it); dialog = null },
             onDismiss = { dialog = null }
         )
+        SettingsDialog.PALETTE -> RadioDialog(
+            title = stringResource(R.string.settings_palette),
+            explanation = stringResource(R.string.settings_palette_note),
+            options = AppPalette.entries.map { it to paletteLabel(it) },
+            selected = settings.palette,
+            onSelect = { viewModel.setPalette(it); dialog = null },
+            onDismiss = { dialog = null }
+        )
         SettingsDialog.ICONS -> RadioDialog(
             title = stringResource(R.string.settings_weather_icons),
             explanation = stringResource(R.string.settings_weather_icons_note),
@@ -301,7 +317,7 @@ private fun SettingsList(
     }
 }
 
-private enum class SettingsDialog { TEMPERATURE, WIND, THEME, ICONS, FREQUENCY, RESET }
+private enum class SettingsDialog { TEMPERATURE, WIND, THEME, PALETTE, ICONS, FREQUENCY, RESET }
 
 @Composable
 private fun GroupHeader(text: String) {
@@ -395,6 +411,12 @@ private fun windLabel(unit: WindSpeedUnit): String = when (unit) {
 private fun iconStyleLabel(style: WeatherIcons): String = when (style) {
     WeatherIcons.FILL -> stringResource(R.string.settings_icons_fill)
     WeatherIcons.LINE -> stringResource(R.string.settings_icons_line)
+}
+
+@Composable
+private fun paletteLabel(palette: AppPalette): String = when (palette) {
+    AppPalette.PAPER -> stringResource(R.string.settings_palette_paper)
+    AppPalette.VIVID -> stringResource(R.string.settings_palette_vivid)
 }
 
 @Composable

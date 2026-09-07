@@ -49,6 +49,8 @@ class SettingsStoreTest {
         assertEquals(WindSpeedUnit.KMH, settings.units.windSpeed)
         assertEquals(ThemeMode.SYSTEM, settings.themeMode)
         assertEquals(true, settings.dynamicColor)
+        // Paper is the identity; a second dress that arrives switched on is a redesign.
+        assertEquals(AppPalette.PAPER, settings.palette)
         assertEquals(WeatherIcons.LINE, settings.weatherIcons)
         assertEquals(true, settings.skyEnabled)
         assertNull(settings.skyNotifyDefaultMin)
@@ -65,6 +67,7 @@ class SettingsStoreTest {
         store.setWindSpeedUnit(WindSpeedUnit.MPH)
         store.setThemeMode(ThemeMode.DARK)
         store.setDynamicColor(false)
+        store.setPalette(AppPalette.VIVID)
         store.setWeatherIcons(WeatherIcons.FILL)
         store.setUpdateFrequency(30)
 
@@ -73,6 +76,7 @@ class SettingsStoreTest {
         assertEquals(WindSpeedUnit.MPH, settings.units.windSpeed)
         assertEquals(ThemeMode.DARK, settings.themeMode)
         assertEquals(false, settings.dynamicColor)
+        assertEquals(AppPalette.VIVID, settings.palette)
         assertEquals(WeatherIcons.FILL, settings.weatherIcons)
         assertEquals(30, settings.updateFrequencyMin)
     }
@@ -84,11 +88,13 @@ class SettingsStoreTest {
         ds.edit {
             it[stringPreferencesKey("units_temperature")] = "KELVIN"
             it[stringPreferencesKey("appearance_theme_mode")] = "OBSIDIAN"
+            it[stringPreferencesKey("appearance_palette")] = "NEON"
         }
 
         val settings = SettingsStore(ds).settings.first()
         assertEquals(TemperatureUnit.CELSIUS, settings.units.temperature)
         assertEquals(ThemeMode.SYSTEM, settings.themeMode)
+        assertEquals(AppPalette.PAPER, settings.palette)
     }
 
     /** An interval outside the offered set reads as the default, same rule as the enums. */

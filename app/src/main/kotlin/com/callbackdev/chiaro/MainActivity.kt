@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.CompositionLocalProvider
+import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.ThemeMode
 import com.callbackdev.chiaro.data.WeatherIcons
@@ -55,7 +56,8 @@ class MainActivity : ComponentActivity() {
             }
             ChiaroTheme(
                 darkTheme = darkTheme,
-                dynamicColor = settings?.dynamicColor ?: true
+                dynamicColor = settings?.dynamicColor ?: true,
+                palette = settings?.palette ?: AppPalette.PAPER
             ) {
                 CompositionLocalProvider(
                     LocalWeatherIcons provides (settings?.weatherIcons ?: WeatherIcons.LINE)

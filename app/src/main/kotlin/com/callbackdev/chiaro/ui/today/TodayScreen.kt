@@ -94,7 +94,7 @@ import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.theme.ChiaroMotion
-import com.callbackdev.chiaro.ui.theme.SkyPalette
+import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.reducedMotion
 import com.callbackdev.chiaro.ui.theme.reflowForText
 import java.time.Duration
@@ -810,7 +810,7 @@ private fun CanvasHeader(
     // so the sky sits behind the clock, over the top scrim that keeps both legible.
     val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     SkyCanvas(
-        gradient = SkyPalette.gradient(
+        gradient = ChiaroTheme.sky.gradient(
             sunAltitudeDeg = sky.sunAltitudeDeg,
             cloudPct = sky.cloudPct,
             precipPct = sky.precipPct,

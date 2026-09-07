@@ -2142,6 +2142,120 @@ placca scurita sotto il glifo: contrasto senza rinunciare al colore.
 
 ---
 
+## La seconda palette, «Brillante» (committente, 7 set 2026)
+
+Richiesta: «la palette di oggi è un po' stile colori su carta. È possibile aggiungerne
+una nuova, scelta dall'utente nelle impostazioni, con colori più brillanti, in
+particolare come quelli del widget» — con lo screenshot di un widget meteo altrui, blu
+saturo, testo bianco, sole giallo acceso. Poi, a lavoro iniziato: «anche i colori delle
+icone li voglio vivaci, per esempio un bel sole giallo vivace».
+
+### Che cosa è arrivato
+
+Due vestiti, non due app. `AppSettings.palette` (`AppPalette.PAPER` / `VIVID`, PAPER di
+default) sceglie **insieme** lo schema Material, i token semantici di §2.3, la tabella
+delle bande del cielo e — sui terreni scuri — il set delle icone. Uno solo, perché
+schema, token e cielo sono stati misurati insieme: mescolare il cielo vivace con le rampe
+di carta sarebbe una terza palette che nessuno ha misurato. `ui/theme/Palettes.kt` è il
+posto dove i quattro pezzi stanno insieme, `ChiaroTheme(palette = …)` è dove entra, e
+`LocalAppPalette` è quello che porta la scelta fin dove serve un *file* invece di un
+valore (le icone).
+
+Vale anche coi colori dallo sfondo accesi, ed è voluto: la palette semantica e il canvas
+non hanno mai seguito il wallpaper (§2.3, §3), quindi la scelta del lettore decide
+comunque verdetti, rampe e cielo. Le due domande sono due, e la riga di Impostazioni lo
+dice.
+
+### La regola, e perché una regola invece di una seconda scelta a mano
+
+Dopo il color pass del 3 set la maggior parte dei token di carta **sta già sul bordo del
+gamut sRGB** alla propria luminanza: alzare la saturazione li restituisce identici. Quello
+che resta da spendere è la luminanza, e spenderla significa rimisurare tutto. Quindi una
+regola sola (`tools/gen_vivid.py`):
+
+> stesso tono, **luminanza WCAG tenuta ferma**, croma fino al bordo del gamut o a **×1.8**
+> di quella di carta, quello che arriva prima.
+
+Il contrasto dipende solo dalla luminanza: tenerla ferma porta di là *ogni* rapporto
+stampato in DESIGN, ogni monotonia, ogni ordinamento di luminosità del cielo. Il tetto
+×1.8 è quello che impedisce alla regola di diventare una caricatura: un token
+deliberatamente quasi-neutro — il centro della rampa divergente, `unknown`, un cielo
+notturno — sarebbe altrimenti trascinato sul bordo del gamut e smetterebbe di essere
+neutro, che è l'unica cosa per cui esiste. `PaletteContrastTest` misura anche questo, non
+si fida della costruzione.
+
+Gli schemi Material **non** sono derivati così: sono generati da sorgenti proprie con lo
+stesso `tools/gen_scheme.py`, perché uno schema tonale non è un insieme di token da
+spostare. Le tre tinte restano i tre momenti del giorno di §2.2; cambia quale comanda —
+**il cielo diurno promosso a primary** (`#2C7BF2`), l'ambra una casella sotto. A tono 40
+un'ambra è un bronzo comunque, e chi chiede brillantezza non sta chiedendo un bronzo. I
+neutri passano a croma 6 e 14 (da 3 e 7): è quello che trasforma un bianco caldo in uno
+freddo, `#FCF9F3` → `#F6FAFF`, `#16130E` → `#0D141B`.
+
+### Il risultato onesto: tre inchiostri non si muovono
+
+I tre inchiostri chiari dei verdetti escono **identici** a quelli di carta. Non è una resa
+del generatore: a 4,5:1 sulla carta chiara la luminanza è vincolata a `Y ≤ 0.172`, e lì
+sotto sRGB non ha altro da dare. Dove la palette vivace si vede davvero è dove la
+luminanza non era il vincolo — riempimenti, rampe, cielo, e sui fondi scuri le icone. È
+scritto in DESIGN §2.5 così com'è, invece di lasciar credere una differenza che non c'è.
+
+### Le icone
+
+Il set a tratto `mc_*` serve entrambe le superfici, e per farlo è chiuso in
+`Y ∈ [0.120, 0.283]`: è per questo che il sole dell'app è un bronzo, ed è la stessa
+misura della segnalazione del 7 set qui sopra. Su un fondo **scuro** quel tetto non
+esiste. `tools/gen_vivid_icons.py` genera `mcn_*` da `mc_*` con la regola di §2.5 e senza
+il tetto: sole `#C37D00` → **`#FFA500`**, pioggia `#0085D0` → `#00A4FF`, luna e neve
+`#008AB6` → `#02C3FF`; i grigi delle nuvole restano grigi, perché ×1.8 di un croma piccolo
+è un croma piccolo. Lo legge solo la palette vivace, e solo su terreno scuro: carta tiene
+una famiglia sola su entrambi, che è parte di cosa vuol dire «carta».
+
+Su terreno **chiaro** la palette vivace riceve gli stessi file di carta, e questo è il
+gamut che parla, non una dimenticanza: a `Y ≤ 0.284` un giallo acceso non esiste. Averlo
+lì significa scambiare il 3:1 di §10, che è una decisione e non un colore — resta al
+committente, dichiarata invece che presa di nascosto.
+
+Effetto collaterale misurato, sulla card **Cielo** del widget (il buco dichiarato in
+§13.1): il sole passa da **1,57:1 a 2,68:1** e il set da 1,03–1,57 a 1,03–2,68. Sempre 8
+su 8 sotto il pavimento, quindi l'eccezione resta esattamente com'è per tutti e due i
+vestiti — ma l'icona che il lettore guarda davvero su quella card è quasi arrivata.
+
+### Guardarla, che nessun test fa
+
+`tools/palette_sheet.py` disegna adesso **tutti e due** i vestiti, uno sotto l'altro: una
+seconda palette che non puoi vedere accanto alla prima è una seconda palette che nessuno
+ha confrontato. Cosa mostra e i numeri non dicono: fra 0° e −6° il canvas vivace vira al
+**marrone** più di quello di carta, perché la miscela è percettiva e il punto medio Oklab
+fra un'ambra satura e un viola saturo è un marrone saturo. Lasciato: dura sei gradi di
+altezza solare e legge come un vero crepuscolo. Se un giorno smette di leggersi così, la
+via d'uscita è quella che §3.2 ha già usato per l'ora d'oro — un'ancora in più, non una
+tabella più spenta.
+
+### Verifica
+
+- `PaletteContrastTest` gira su **entrambi** i vestiti (verdetti, contenitori, ruoli
+  on-color, rampe, probabilità da 0 a 100) e aggiunge le due affermazioni che rendono
+  economico un secondo vestito: i token vivaci tengono le luminanze di carta, e il centro
+  della rampa divergente resta un neutro. Più: ogni `AppPalette` ha un vestito.
+- `PaletteDocTest` legge DESIGN **per sezione**. Serviva: il documento stampa ora due
+  tabelle di verdetti, due terne di rampe e due tabelle di bande della stessa forma, e uno
+  sweep dell'intero file avrebbe misurato allegramente la rampa vivace contro il Kotlin di
+  carta — e sarebbe passato.
+- `SkyPaletteTest` gira su entrambe le tabelle, più il §3.7: stesse altitudini, stesse
+  luminanze alle ancore (deriva < 0,003), e fra le ancore al massimo **0,0112** — misurato,
+  non assunto, perché la miscela è percettiva.
+- `ScrimContractTest` spazza entrambe le tabelle a ogni mezzo grado. È l'unico contratto
+  che la luminanza tenuta ferma **non** porta di là da sola: lo scrim compone per canale.
+  Bianco sul cielo vivace più luminoso: **5,26:1** (carta 5,27:1).
+- `IconContrastTest` misura quattro set contro **quattro** superfici: un set misurato
+  sulla carta di un vestito e spedito sopra quella dell'altro è precisamente la cosa che
+  passa la revisione e cade sul device.
+- `SettingsStoreTest`: default PAPER, round-trip, e un nome sconosciuto (`"NEON"`) che
+  torna al default invece di lanciare.
+
+---
+
 ## Fase 10 — Store e v1.0.0
 
 - [ ] Icona definitiva, screenshot, scheda dello store

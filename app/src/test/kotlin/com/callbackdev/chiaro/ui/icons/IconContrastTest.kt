@@ -3,6 +3,8 @@ package com.callbackdev.chiaro.ui.icons
 import androidx.compose.ui.graphics.Color
 import com.callbackdev.chiaro.ui.theme.ChiaroDarkScheme
 import com.callbackdev.chiaro.ui.theme.ChiaroLightScheme
+import com.callbackdev.chiaro.ui.theme.VividDarkScheme
+import com.callbackdev.chiaro.ui.theme.VividLightScheme
 import java.io.File
 import kotlin.math.pow
 import org.junit.Assert.assertTrue
@@ -16,6 +18,13 @@ import org.junit.Test
  * owes only the surface `ChiaroIcons` will ever put it on. Meteocons' own palette does
  * not clear the light surface (its cloud gray is 1.18:1 there), which is why mcf_* is
  * re-anchored and mcfn_* is the original palette on the backdrop it was drawn for.
+ * mcn_* joined them with the vivid palette (§2.5): the line set with its light-ground
+ * ceiling removed, so it owes the dark surfaces only.
+ *
+ * "The surface" is now four surfaces, because there are two dresses: a set owes every
+ * light surface, or every dark one, or both. A set measured against one dress's paper
+ * and shipped over the other's is exactly the kind of thing that passes review and
+ * fails on a device.
  *
  * This sweeps the emitted XML rather than the tool's table, for the same reason
  * `PaletteContrastTest` asserts the outcome instead of trusting the method: what ships
@@ -50,7 +59,8 @@ class IconContrastTest {
         val drawables = File("src/main/res/drawable")
             .listFiles { f ->
                 (f.name.startsWith("mc_") || f.name.startsWith("mcf_") ||
-                    f.name.startsWith("mcfn_")) && f.extension == "xml"
+                    f.name.startsWith("mcfn_") || f.name.startsWith("mcn_")) &&
+                    f.extension == "xml"
             }
             .orEmpty()
         assertTrue("no mc_*.xml drawables found — did the import move?", drawables.isNotEmpty())
@@ -62,21 +72,29 @@ class IconContrastTest {
             "the fill-night set is missing — run tools/import_meteocons.py",
             drawables.any { it.name.startsWith("mcfn_") }
         )
+        assertTrue(
+            "the vivid line set is missing — run tools/gen_vivid_icons.py",
+            drawables.any { it.name.startsWith("mcn_") }
+        )
+
+        // Every surface a set can meet, both dresses (§2.5).
+        val lightGrounds = listOf(ChiaroLightScheme.surface, VividLightScheme.surface)
+        val darkGrounds = listOf(ChiaroDarkScheme.surface, VividDarkScheme.surface)
 
         val offenders = drawables.flatMap { file ->
-            val night = file.name.startsWith("mcfn_")
-            val fillLight = !night && file.name.startsWith("mcf_")
+            val darkOnly = file.name.startsWith("mcfn_") || file.name.startsWith("mcn_")
+            val lightOnly = !darkOnly && file.name.startsWith("mcf_")
+            val grounds = when {
+                darkOnly -> darkGrounds
+                lightOnly -> lightGrounds
+                else -> lightGrounds + darkGrounds
+            }
             colorAttr.findAll(file.readText()).map { it.groupValues[1] }.distinct().mapNotNull {
                 val color = Color(0xFF000000 or it.toLong(16))
-                val vsLight = contrast(color, ChiaroLightScheme.surface)
-                val vsDark = contrast(color, ChiaroDarkScheme.surface)
-                val fails = when {
-                    night -> vsDark < 3.0
-                    fillLight -> vsLight < 3.0
-                    else -> vsLight < 3.0 || vsDark < 3.0
-                }
-                if (fails) {
-                    "${file.name} #$it — %.2f:1 light, %.2f:1 dark".format(vsLight, vsDark)
+                val worst = grounds.minOf { ground -> contrast(color, ground) }
+                if (worst < 3.0) {
+                    "${file.name} #$it — %.2f:1 on the worst ground its set is picked for"
+                        .format(worst)
                 } else {
                     null
                 }

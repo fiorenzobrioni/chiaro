@@ -11,7 +11,11 @@ import kotlin.math.pow
  * unreadable. The contract: white over the scrim, over the brightest sky this palette
  * can produce, is at least 4.5:1.
  *
- * The alpha is 0.55 because of the numbers below, not because it looked right.
+ * The alpha is 0.55 because of the numbers below, not because it looked right — and
+ * because they hold for EVERY band table (§3.7), which is what this sweeps. The vivid
+ * table holds the paper one's luminances, but the scrim composites per channel and a
+ * per-channel composite of a more saturated color is not the same pixel: "by
+ * construction" does not survive that step, so it is measured instead.
  */
 class ScrimContractTest {
 
@@ -53,41 +57,51 @@ class ScrimContractTest {
     }
 
     @Test
-    fun `white text survives the brightest sky the palette can produce`() {
-        val brightest = SkyPalette.brightestBottomStop()
-        val actual = contrast(Color.White, scrimmed(brightest))
-        assertTrue("white over the scrimmed canvas is %.2f:1".format(actual), actual >= 4.5)
+    fun `white text survives the brightest sky either palette can produce`() {
+        SkyPalette.entries.forEach { sky ->
+            val brightest = sky.brightestBottomStop()
+            val actual = contrast(Color.White, scrimmed(brightest))
+            assertTrue(
+                "white over the scrimmed canvas is %.2f:1 over $brightest".format(actual),
+                actual >= 4.5
+            )
+        }
     }
 
     @Test
     fun `every stop of every band survives it, not just the one we thought was brightest`() {
         // The band table is data; a future row could be brighter than the day sky and
-        // nobody would notice until a screenshot. So: sweep the whole altitude range.
-        var worst = Double.MAX_VALUE
-        var worstAt = 0.0
-        var altitude = -90.0
-        while (altitude <= 90.0) {
-            SkyPalette.gradient(altitude).stops().forEach { stop ->
-                val c = contrast(Color.White, scrimmed(stop))
-                if (c < worst) {
-                    worst = c
-                    worstAt = altitude
+        // nobody would notice until a screenshot. So: sweep the whole altitude range,
+        // of every table there is.
+        SkyPalette.entries.forEachIndexed { index, sky ->
+            var worst = Double.MAX_VALUE
+            var worstAt = 0.0
+            var altitude = -90.0
+            while (altitude <= 90.0) {
+                sky.gradient(altitude).stops().forEach { stop ->
+                    val c = contrast(Color.White, scrimmed(stop))
+                    if (c < worst) {
+                        worst = c
+                        worstAt = altitude
+                    }
                 }
+                altitude += 0.5
             }
-            altitude += 0.5
+            assertTrue(
+                "table $index: the worst case is %.2f:1 at altitude %.1f".format(worst, worstAt),
+                worst >= 4.5
+            )
         }
-        assertTrue(
-            "the worst case is %.2f:1 at altitude %.1f".format(worst, worstAt),
-            worst >= 4.5
-        )
     }
 
     @Test
     fun `the chosen alpha is the smallest one that clears the floor with headroom`() {
-        val brightest = SkyPalette.brightestBottomStop()
-        assertTrue("0.45 should NOT clear the floor, or the spec is stale",
-            contrast(Color.White, scrimmed(brightest, 0.45f)) < 4.5)
-        assertTrue("0.55 should clear it",
-            contrast(Color.White, scrimmed(brightest, 0.55f)) >= 4.5)
+        SkyPalette.entries.forEach { sky ->
+            val brightest = sky.brightestBottomStop()
+            assertTrue("0.45 should NOT clear the floor, or the spec is stale",
+                contrast(Color.White, scrimmed(brightest, 0.45f)) < 4.5)
+            assertTrue("0.55 should clear it",
+                contrast(Color.White, scrimmed(brightest, 0.55f)) >= 4.5)
+        }
     }
 }

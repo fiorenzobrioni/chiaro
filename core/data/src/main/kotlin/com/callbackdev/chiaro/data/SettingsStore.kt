@@ -29,6 +29,13 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 enum class WeatherIcons { FILL, LINE }
 
 /**
+ * Which of the app's own two dresses it wears when it is not wearing the wallpaper's
+ * (DESIGN §2.5): [PAPER], warm and quiet, the identity; [VIVID], cool and saturated,
+ * for the reader who wants the sky to shout. UI-only, like the two above.
+ */
+enum class AppPalette { PAPER, VIVID }
+
+/**
  * Everything the Settings screen edits. The engine inputs ([units], [notifications],
  * the sky keys) are typed in `:core:domain`; the rest is presentation and stays here.
  */
@@ -42,6 +49,14 @@ data class AppSettings(
      * generated Chiaro scheme — for readers who want the app to look like itself.
      */
     val dynamicColor: Boolean = true,
+    /**
+     * Which generated palette [dynamicColor] falls back to, and — because the semantic
+     * tokens and the sky canvas never followed the wallpaper in the first place (§2.3,
+     * §3.7) — which quantity ramps and which sky the app paints either way. PAPER by
+     * default: it is the identity, and a second palette that arrives switched on is a
+     * redesign nobody asked for.
+     */
+    val palette: AppPalette = AppPalette.PAPER,
     /** LINE by default (decision, 6 set 2026 — the default moves, the choice stays).
      * The outlined drawings keep one weight of ink on a screen whose hero is already a
      * painted sky, and at the sizes Today now uses (§13.1's ladder, 30-38dp) they read
@@ -100,6 +115,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 ),
                 themeMode = enumOrDefault(prefs[Theme], ThemeMode.SYSTEM),
                 dynamicColor = prefs[DynamicColor] ?: true,
+                palette = enumOrDefault(prefs[Palette], AppPalette.PAPER),
                 weatherIcons = enumOrDefault(prefs[IconStyle], WeatherIcons.LINE),
                 skyEnabled = prefs[SkyEnabled] ?: true,
                 // 0 is how "off" is stored: an Int? preference cannot hold null, and
@@ -122,6 +138,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setUserRules(enabled: Boolean) = set(UserRules, enabled)
     suspend fun setThemeMode(mode: ThemeMode) = set(Theme, mode.name)
     suspend fun setDynamicColor(enabled: Boolean) = set(DynamicColor, enabled)
+    suspend fun setPalette(palette: AppPalette) = set(Palette, palette.name)
     suspend fun setWeatherIcons(style: WeatherIcons) = set(IconStyle, style.name)
     suspend fun setSkyEnabled(enabled: Boolean) = set(SkyEnabled, enabled)
 
@@ -157,6 +174,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
         private val UserRules = booleanPreferencesKey("notif_user_rules")
         private val Theme = stringPreferencesKey("appearance_theme_mode")
         private val DynamicColor = booleanPreferencesKey("appearance_dynamic_color")
+        private val Palette = stringPreferencesKey("appearance_palette")
         private val IconStyle = stringPreferencesKey("appearance_weather_icons")
         private val SkyEnabled = booleanPreferencesKey("sky_enabled")
         private val SkyNotifyDefault = intPreferencesKey("sky_notify_default_min")
