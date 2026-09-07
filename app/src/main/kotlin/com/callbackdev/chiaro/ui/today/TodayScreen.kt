@@ -93,7 +93,10 @@ import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
+import com.callbackdev.chiaro.ui.theme.ChiaroMotion
 import com.callbackdev.chiaro.ui.theme.SkyPalette
+import com.callbackdev.chiaro.ui.theme.reducedMotion
+import com.callbackdev.chiaro.ui.theme.reflowForText
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
@@ -198,12 +201,16 @@ private fun PagedToday(
     ) { pages.size }
 
     // Selection made elsewhere (the sheet, a removal) → the pager follows.
-    LaunchedEffect(model.activeIndex, pages.size) {
+    val reduced = reducedMotion()
+    LaunchedEffect(model.activeIndex, pages.size, reduced) {
         val target = model.activeIndex
         if (target in pages.indices && target != pagerState.currentPage &&
             !pagerState.isScrollInProgress
         ) {
-            pagerState.animateScrollToPage(target)
+            // The page arrives either way; with motion off it arrives without the
+            // sideways travel, which on a full-screen pager is the largest movement
+            // in the app (§7).
+            if (reduced) pagerState.scrollToPage(target) else pagerState.animateScrollToPage(target)
         }
     }
     // The pager settled → that is the selection now.
@@ -1042,6 +1049,7 @@ private fun StripHour.toCell(units: UnitSettings, is24h: Boolean, locale: Locale
         icon = ChiaroIcons.condition(hour.condition.wmoCode, night),
         temperature = temp,
         rainPct = hour.precipChancePct,
+        rainLabel = hour.precipChancePct?.let { Formats.percent(it, locale) },
         description = stringResource(
             // Spoken as 0 only when the forecast says 0; an hour with no chance at
             // all reads without the rain clause, like the cell itself.
@@ -1113,6 +1121,7 @@ private fun Week(
     var expanded by remember(content.week.firstOrNull()?.forecast?.date) {
         mutableStateOf<java.time.LocalDate?>(null)
     }
+    val reduced = reducedMotion()
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -1127,6 +1136,7 @@ private fun Week(
                 dayLabel = label,
                 icon = ChiaroIcons.condition(f.condition.wmoCode, night = false),
                 rainPct = f.precipPct,
+                rainLabel = Formats.percent(f.precipPct, locale),
                 lowC = f.lowC,
                 highC = f.highC,
                 lowLabel = low,
@@ -1146,7 +1156,11 @@ private fun Week(
                     null
                 }
             )
-            AnimatedVisibility(visible = expanded == f.date) {
+            AnimatedVisibility(
+                visible = expanded == f.date,
+                enter = ChiaroMotion.enter(reduced),
+                exit = ChiaroMotion.exit(reduced)
+            ) {
                 HourStrip(
                     hours = day.hours.map { it.toCell(units, is24h, locale) },
                     modifier = Modifier.padding(top = 4.dp)
@@ -1184,7 +1198,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
             Tile(
                 icon = { ChiaroIcons.humidity },
                 label = R.string.metric_humidity,
-                value = "${current.humidityPct}%",
+                value = Formats.percent(current.humidityPct, locale),
                 meaning = WeatherText.humidityMeaning(current.humidityPct)
             )
         )
@@ -1222,7 +1236,10 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
                 Tile(
                     icon = { ChiaroIcons.airQuality },
                     label = R.string.metric_air,
-                    value = "${air.aqiIndex} AQI",
+                    // Until the Fase 9 IT/EN pass this value was assembled here with
+                    // the acronym written into the Kotlin, which is the one place a
+                    // language cannot reach. The string owns the whole value now.
+                    value = stringResource(R.string.metric_air_value, air.aqiIndex),
                     meaning = WeatherText.aqiMeaning(air.aqiIndex)
                 )
             )
@@ -1243,7 +1260,12 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        tiles.chunked(2).forEach { rowTiles ->
+        // §10: two columns is a budget, not a layout. At 150% the label beside the
+        // 30dp icon has 88dp for a word that wants 115, and the tile becomes three
+        // wrapped lines of two words. One column keeps the pair rule (a row of one is
+        // still a row) and gives the label the whole width it needed all along.
+        val perRow = if (reflowForText()) 1 else 2
+        tiles.chunked(perRow).forEach { rowTiles ->
             // The pair shares one height: two cards whose bottoms disagree read as a
             // misalignment, not as content of different lengths (device check, 2 set).
             Row(
@@ -1259,7 +1281,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
                         modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                 }
-                if (rowTiles.size == 1) {
+                if (rowTiles.size < perRow) {
                     Box(modifier = Modifier.weight(1f))
                 }
             }

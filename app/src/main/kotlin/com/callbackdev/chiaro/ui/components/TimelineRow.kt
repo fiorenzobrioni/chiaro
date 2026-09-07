@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
+import com.callbackdev.chiaro.ui.theme.forText
 import com.callbackdev.chiaro.ui.theme.tabular
 
 /**
@@ -48,7 +49,9 @@ fun TimelineRow(
             text = time,
             style = MaterialTheme.typography.labelLarge.tabular(),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(48.dp)
+            // §10: the clock column grows with the reader's type, or «12:30 PM»
+            // wraps in half at 200% while the prose beside it has room to spare.
+            modifier = Modifier.width(48.dp.forText())
         )
         Icon(
             imageVector = icon,

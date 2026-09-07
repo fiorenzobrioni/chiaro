@@ -1960,9 +1960,129 @@ parte di questa passata che resta da guardare su un telefono.
       è stata scritta. Guida aggiornata (`guide_today_places_body`): dire che
       l'intestazione porta giorno e ora di lì è dire cosa fa una schermata, non
       insegnare un controllo. Suite verde, lint a 0 errori, APK debug costruito
-- [ ] Contrasti, scala testo 200%, TalkBack, motion ridotto
-- [ ] Avvio a freddo sotto 400 ms, canvas sotto 2 ms/frame
-- [ ] Passata IT/EN completa
+- [x] **Verifica della passata colore** (chiesta col resto della fase, 7 set): la palette
+      dell'app **è** quella finale. Non è una lettura a occhio: `PaletteDocTest` adesso
+      legge DESIGN.md e misura contro il codice — i due ruoli nominati in §2.2, la tabella
+      dei verdetti e le tre rampe di §2.3, gli otto banchi di §3.2, il bersaglio della luna
+      di §3.4, lo scrim di §3.6 e i suoi tre rapporti — esadecimali **e** numeri stampati.
+      `tools/gen_scheme.py` rigenerato produce `Scheme.kt` byte per byte, quindi anche le
+      sorgenti dello schema sono quelle post-passata. Il foglio della palette è stato
+      renderizzato e guardato, che è l'altra metà del lavoro: cielo diurno saturo, ora
+      d'oro d'oro vero, rampe con croma.
+      Due scostamenti trovati, entrambi documentali e entrambi corretti:
+      **(1)** §3.4 stampava ancora `#2A3550` come bersaglio della luce lunare mentre il
+      canvas mescola `#273458` dalla passata del 3 set — sei giorni di documento che
+      diceva il colore vecchio, e nessun test che guardasse. È il motivo per cui
+      `PaletteDocTest` esiste adesso.
+      **(2)** i tre rapporti dello scrim erano tre aritmetiche diverse: `5.29` viene da un
+      composito sRGB arrotondato a 8 bit con pareggio verso il basso, `3.95` dallo stesso
+      con pareggio verso l'alto, e `4.58` **non si raggiunge in nessun modo** — il valore
+      vero a 0.50 è 4.53. `ScrimContractTest` ne aveva una quarta, `Color.lerp`, che
+      interpola in Oklab: una mescolanza percettiva, non un composito, e quindi il modello
+      sbagliato per misurare una regola di compositing. Adesso una sola funzione, la stessa
+      nei due test e in §3.6: `scrim × α + cielo × (1 − α)` sui valori sRGB, come fa il
+      brush. La conclusione non si è mossa e anzi si è irrigidita: 0.50 supera la soglia di
+      0.03, che non è margine, è fortuna.
+      Terza cosa, minore: `tools/palette_sheet.py` non disegnava `rainInkRamp` (la sua
+      regex conosceva due rampe su tre, ed è nata prima della terza). Adesso la disegna
+      **come inchiostro** — cinque cifre di percentuale sulla superficie contro cui sono
+      misurate — perché un campione di quella rampa mostrerebbe l'unica proprietà che non
+      serve. Il marchio conserva i suoi valori pre-passata di proposito (§13.3), come già
+      registrato
+- [x] Contrasti, scala testo 200%, TalkBack, motion ridotto (7 set)
+      **Motion ridotto** era la voce con più distanza fra il documento e l'APK: §7 diceva
+      «reduced motion collassa tutto a una dissolvenza di 100 ms» dalla Fase 1, la costante
+      `reducedMotionFadeMillis` esisteva dalla Fase 1, e **niente la leggeva** — nessuna
+      animazione dell'app aveva mai chiesto nulla al lettore. Adesso `ChiaroTheme` legge
+      `Settings.Global.ANIMATOR_DURATION_SCALE` (che è l'API: Android non ha un
+      `prefers-reduced-motion`, e sia «Rimuovi animazioni» in Accessibilità sia la scala
+      degli animator in Opzioni sviluppatore scrivono lì) e pubblica `LocalReducedMotion`.
+      Con un `ContentObserver`, perché l'interruttore sta **fuori** dall'app: un valore
+      letto una volta all'avvio sarebbe giusto fino al primo lettore che lo accende ad app
+      aperta, cioè esattamente il lettore per cui esiste. I tre punti in cui l'app si
+      muove chiedono tutti e tre: la striscia oraria della settimana si apre con
+      `ChiaroMotion.enter/exit`, il pager fa `scrollToPage` invece di animare, e la
+      risposta della prova a vuoto nell'editor di regole compare invece di scorrere fin
+      lì. Il canvas non ha avuto bisogno di niente: è un `Brush`, non ha mai animato, e il
+      «diventa un gradiente statico» di §3.5 lo mantiene per costruzione.
+      **Scala testo 200%**: il rischio non era il taglio — in `ui/` non c'è **un solo**
+      `maxLines`, ed è voluto — ma il fatto che una colonna misurata in dp che contiene
+      testo misurato in sp si sfascia da sola. Al 200% le quattro colonne della riga
+      settimanale, la cella oraria, l'orologio della timeline e la data della striscia del
+      diario contenevano tutte testo largo il doppio di loro: niente veniva tagliato,
+      andava a capo **in mezzo a un valore**, su una riga che non aveva l'altezza per
+      ospitarlo. Due regole in `ui/theme/TextScale.kt`: una colonna che contiene testo si
+      misura **in testo** (`Dp.forText()`, con tetto a 2.0 dove si ferma il cursore di
+      sistema), e sopra **1.5** una riga di colonne diventa **due righe** — la settimana si
+      spezza in «che giorno, che giornata» e «quanto caldo», la griglia dei dettagli passa
+      a una colonna. 1.5 è misurato e non tondo: sopra quella soglia alla barra delle
+      temperature restano meno di 48dp, che è una sbavatura e non una barra. Anteprime a
+      `fontScale = 2f` accanto a quelle normali per i due posti che §10 nomina, più la
+      striscia oraria.
+      **TalkBack**: l'audit non ha trovato buchi da riempire — tutti e 35 i
+      `contentDescription = null` sono righe che parlano una volta sola o glifi con la
+      parola accanto, e ogni `IconButton` ha la sua descrizione.
+      Sui **bersagli da 48dp** ha trovato due cose più piccole di così — la riga della
+      settimana ne disegna 42 (icona 34, stacco 4, nastro 4) e il chip di freschezza 32 —
+      ed è andato a correggerle scoprendo che non c'era niente da correggere: Compose
+      allarga i limiti di un nodo di pointer input fino al bersaglio minimo della
+      piattaforma, quindi un `clickable` è già 48dp per un dito, qualunque cosa disegni.
+      Vale la pena scriverlo perché quell'allargamento ha un buco: non riserva **spazio**,
+      quindi due bersagli piccoli più vicini dei loro limiti allargati si contendono i
+      tocchi in mezzo. Nessuno dei due è quel caso — le righe della settimana distano 12dp
+      e ne contengono uno ciascuna, il chip è solo nella sua riga.
+      `minimumInteractiveComponentSize()` è stato scritto e poi **tolto**: sulla settimana
+      costava 6dp per riga, cioè una pagina più alta di 42dp, per comprare al lettore
+      esattamente niente. Registrato in §10 con il motivo, perché la prossima lettura di
+      quei 42dp farà la stessa domanda e merita la risposta già misurata.
+      **Contrasti**: nessun ritocco necessario — è la parte già coperta da
+      `PaletteContrastTest`, `ScrimContractTest` e `IconContrastTest` — ma la correzione
+      del modello di compositing dello scrim (sopra) è caduta qui, ed è l'unico numero di
+      accessibilità che si è mosso in tutta la fase.
+      Due prove nuove, pure e senza device: `MotionTest` (le tre molle sono le tre molle, e
+      tutte diventano la stessa dissolvenza da 100 ms) e `TextScaleTest` (le due regole,
+      più l'aritmetica che giustifica l'1.5, accanto al numero così che spostare l'uno
+      voglia dire spostare l'altra)
+- [x] Avvio a freddo sotto 400 ms, canvas sotto 2 ms/frame — **misurato dal committente**
+      (7 set): «ben sotto i 400 ms», e il canvas sotto i 2 ms/frame. Coerente con come è
+      fatto: il canvas è un `Brush.verticalGradient` con sopra un secondo brush di scrim,
+      due gradienti e nessuno shader, nessuna particella, nessun ricalcolo per frame — il
+      budget di §3.5 non è mai stato in discussione perché non c'è niente da spendere. E
+      all'avvio non c'è spinner da attraversare (§1.1): la prima cosa composta è il
+      contenuto in cache
+- [x] Passata IT/EN completa (7 set): la parità c'era già ed è verde — 696 stringhe per
+      lingua, zero mancanti da una parte o dall'altra, argomenti di formato uguali, e le
+      sei stringhe identiche nelle due lingue sono identiche per davvero («UV», «Celsius
+      (°C)», «Privacy», «no»). Quindi la passata è servita a guardare **fuori** da
+      `strings.xml`, che è dove si nasconde quello che una parità non vede:
+      **(1)** cinque percentuali costruite a mano (`"$pct%"`) nella settimana, nella
+      striscia oraria, nel dettaglio umidità, nella tabella del diario e nel widget. In
+      italiano e in inglese quel template è giusto, ed è precisamente il motivo per cui era
+      sopravvissuto a cinque letture: la regola di §11 non è «l'output deve cambiare», è
+      che un numero stampato appartiene alla lingua, cifre comprese. `Formats.percent`
+      adesso, e `DayRow`/`HourCell` ricevono la cifra **già scritta** accanto alla
+      quantità che serve alla rampa d'inchiostro — due campi per una cosa sola, sì, ma sono
+      due cose: una si stampa e una si colora.
+      **(2)** il valore della qualità dell'aria montava l'acronimo dentro il Kotlin: una
+      parola inglese saldata nell'unico posto dove una lingua non arriva. Adesso il valore
+      intero è `metric_air_value`.
+      **(3)** `Formats` non aveva **nessuna** prova, dalla Fase 2 — ed è il file che porta
+      tutta la regola di §11. `FormatsTest` la mette alla prova nelle due lingue in
+      parallelo, che è il modo in cui un formattatore fallisce davvero: essendo giusto
+      nella lingua in cui è stato scritto («9,4 km» / «9.4 km», «Lunedì 7 settembre» /
+      «Monday 7 September»).
+      **(4)** `StringsParityTest` guadagna tre controlli che un'aggiunta futura romperebbe
+      per prima: le quantità dei plurali devono coincidere fra le due lingue
+      (`getQuantityString` non si lamenta, restituisce la frase sbagliata), nessuna stringa
+      vuota, e nessun `%` non raddoppiato dentro una stringa che formatta — che non è un
+      difetto di stile ma un crash nel momento in cui la frase serve. Nessuna violazione
+      esistente: le prove nascono verdi, ed è il punto.
+      Una decisione registrata e non un'omissione: `Formats.dayLong` continua a scrivere
+      `EEEE d MMMM` invece di chiedere uno schema localizzato. java.time non sa costruire
+      «giorno della settimana, giorno, mese, senza anno» per locale (è il
+      `DateTimePatternGenerator` di ICU, raggiungibile su Android solo via
+      `getBestDateTimePattern`, che costerebbe al file la purezza e le sue prove unitarie).
+      L'ordine è giusto per tutte e due le lingue spedite. Si riapre con la terza
 
 ## Fase 10 — Store e v1.0.0
 

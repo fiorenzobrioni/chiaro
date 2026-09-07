@@ -133,12 +133,14 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
 
 ### Roadmap
 
-Fase 0 to 8 are done and on device: the engines and their test suite, the design system in
+Fase 0 to 9 are done and on device: the engines and their test suite, the design system in
 code, Today, Places and first run, Settings and the guide, Sky with its reminders, Alerts
-with `:core:sync`, the Journal with the drift strip, and the three widgets. **Fase 9** is
-the accessibility and performance pass with numbers attached: the color pass and the
-weather-icon pass are done, the contrast and 200% text and TalkBack sweep, cold start under
-400 ms, and the full IT/EN reading are not. **Fase 10** is the store: final icon,
+with `:core:sync`, the Journal with the drift strip, the three widgets, and the
+accessibility and performance pass with its numbers attached. That last one is the colour
+pass and the weather-icon pass, then the sweep that answers "remove animations", keeps
+every value whole at 200% type, gives the two undersized tap targets their 48dp, and reads
+the whole app in both languages. Cold start and the canvas budget were measured on device
+and both come in well under their ceilings. **Fase 10** is the store: final icon,
 screenshots, listing, and v1.0.0.
 
 Deliberately out of scope for v1: radar and satellite imagery (the provider has none, and
@@ -216,8 +218,11 @@ The rules that get broken by accident are enforced by tests rather than by good
 intentions: no composable outside `ui/theme/` names a color literal (`NoRawColorTest`),
 the palette and the canvas scrim hold their measured contrast ratios
 (`PaletteContrastTest`, `ScrimContractTest`, `SkyPaletteTest`), and every weather icon in
-either theme clears 3:1 against the ground it is drawn on (`IconContrastTest`). A verdict is a glyph and a
-word before it is a color, because green, amber and red do not separate under
+either theme clears 3:1 against the ground it is drawn on (`IconContrastTest`). One test
+goes the other way and reads the design document itself (`PaletteDocTest`): every hex and
+every printed ratio in it has to be the one the app actually holds, which is how a value
+that was retuned in the code and left stale on the page gets caught. A verdict is a glyph
+and a word before it is a color, because green, amber and red do not separate under
 deuteranopia. Every value, with the number that was measured for it, is in
 [DESIGN.md](./DESIGN.md).
 

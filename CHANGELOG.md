@@ -26,8 +26,9 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   the semantic tokens Material has no slot for (verdicts, a rain ramp, a diverging
   temperature ramp anchored at 15 °C), the computed sky canvas and its scrim contract,
   the daylight ribbon, Inter as a bundled variable font, and the first components.
-- Four tests that hold the design document to the code: `PaletteContrastTest`,
-  `ScrimContractTest`, `SkyPaletteTest`, `NoRawColorTest`.
+- Seven tests that hold the design document to the code: `PaletteContrastTest`,
+  `PaletteDocTest`, `ScrimContractTest`, `SkyPaletteTest`, `NoRawColorTest`, `MotionTest`
+  and `TextScaleTest`.
 - Today ends with a line saying when its numbers arrived and where they came from:
   "Updated at 18:45 · Open-Meteo data". The freshness chip only speaks when the data is
   old enough to worry about, so until now a reader who simply wanted to know how recent
@@ -181,6 +182,19 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   page it would be the phone's own clock reprinted under the status bar that shows it,
   while on Palermo or Reykjavík it is the one thing you cannot look up. The hour is the
   place's, like every other hour on that screen, and it moves with the minute.
+- **The app answers "remove animations".** Android has no reduced-motion flag of its own:
+  the accessibility toggle and the developer-options slider both write the animator
+  duration scale, and zero is the answer. Chiaro reads it, watches it while it is open,
+  and collapses all three places it moves to a 100ms fade: the week row opens without
+  sliding, the pager jumps between places instead of travelling, and a rule's dry-run
+  answer appears instead of being scrolled to. The sky canvas needed nothing, having never
+  animated.
+- **Everything on screen keeps its whole value at 200% type.** Nothing was ever cut off,
+  but a column measured in fixed units holding text measured in scaling ones comes apart
+  by itself: the week row's four columns, the hour cell, the timeline's clock and the
+  journal's dates all held text twice their width and wrapped it mid-value. Columns that
+  hold text now grow with the reader's type, and past 150% the week row becomes two lines
+  (which day and what kind of day, then how warm) and the details grid becomes one column.
 
 ### Changed
 
@@ -210,6 +224,12 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 - **"What changed" comes after the week.** Every sentence in it is about a day further
   out, so ahead of the week it named days the reader had not been shown yet, and it cut
   between the two sections about today and the one about the days ahead.
+- **Every printed number goes through the reader's language, percentages included.** Five
+  of them were assembled in code instead — right in both shipped languages, which is
+  exactly why they survived five readings — and the air-quality value had an English word
+  welded into it where no translation could reach. The formatter itself is now tested in
+  Italian and English at once, which is how a formatter really fails: by being correct in
+  the language it was written in.
 
 ### Fixed
 

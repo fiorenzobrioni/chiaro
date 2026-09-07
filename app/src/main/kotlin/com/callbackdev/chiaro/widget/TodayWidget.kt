@@ -231,7 +231,7 @@ class TodayWidget : GlanceAppWidget() {
                         val pct = strip.hour.precipChancePct
                         if (showRain && pct != null) {
                             Text(
-                                text = "$pct%",
+                                text = Formats.percent(pct, locale),
                                 style = TextStyle(
                                     color = rainInk(pct, palette),
                                     fontSize = 11.sp
