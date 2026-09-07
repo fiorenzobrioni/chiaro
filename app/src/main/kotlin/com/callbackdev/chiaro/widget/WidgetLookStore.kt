@@ -37,13 +37,21 @@ data class WidgetLook(
      * pair was on these two widgets until the third device pass took it off, and the
      * reason it went was WHERE it was: printed under a 34sp number it read as clutter.
      * Against the far edge, level with the state, it is the thing every weather widget
-     * carries and the hero keeps its air. On by default, because that is what it was
-     * asked back for; off is one tap away for whoever preferred the bare number.
+     * carries and the hero keeps its air.
+     *
+     * **Off by default since 7 set 2026** (committente), which is the third position
+     * this pair has held and the one that matches the rest of the card: the bare number
+     * is the hero, and the range is a tap away for whoever wants it. A widget already on
+     * a home screen that never had this edited follows the new default — that is what a
+     * default is, and moving it for those readers is the point of moving it.
      */
-    val showDayRange: Boolean = true
+    val showDayRange: Boolean = false
 ) {
     companion object {
-        const val DEFAULT_OPACITY = 85
+        /** 100 since 7 set 2026 (committente): a solid card. The reader can thin it
+         * per widget, and below [InkTrustFloorPct] the ink starts asking the wallpaper
+         * what color it should be, which is a different conversation. */
+        const val DEFAULT_OPACITY = 100
     }
 }
 
@@ -67,7 +75,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             background = background,
             opacityPct = opacity,
             showCondition = prefs[conditionKey(appWidgetId)] ?: false,
-            showDayRange = prefs[rangeKey(appWidgetId)] ?: true
+            showDayRange = prefs[rangeKey(appWidgetId)] ?: false
         )
     }
 

@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import com.callbackdev.chiaro.data.AppPalette
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.pow
@@ -9,8 +10,16 @@ import kotlin.math.pow
  * DESIGN.md §2.3 and §10 print numbers; this is what stops them from becoming
  * decoration. Every ratio in the document is asserted here, so re-picking a token
  * without re-measuring it fails the build instead of the reader's eyes.
+ *
+ * Every assertion runs over EVERY dress (§2.5). The vivid palette was derived from the
+ * paper one at held luminance, so all of this should hold for it by construction; a
+ * palette that is only correct by construction is a palette nobody has measured, which
+ * is exactly the failure mode this file exists for.
  */
 class PaletteContrastTest {
+
+    /** The two dresses, named, so a failure says which one broke. */
+    private val dresses = ChiaroPalettes.map { (choice, dress) -> choice.name.lowercase() to dress }
 
     private fun channel(c: Float) =
         if (c <= 0.03928f) c / 12.92 else ((c + 0.055) / 1.055).toDouble().pow(2.4)
@@ -28,61 +37,90 @@ class PaletteContrastTest {
         assertTrue("$what is %.2f:1, below $expected:1".format(actual), actual >= expected)
     }
 
+    private fun ChiaroColors.verdicts() = listOf(
+        "pass" to pass, "unstable" to unstable, "fail" to fail, "unknown" to unknown
+    )
+
+    /** `paletteFor` looks a dress up by enum value and throws if there is not one. A
+     * palette added to the store without one is a crash on the first frame, so the map
+     * is checked against the enum rather than against the two entries it happens to
+     * have. */
     @Test
-    fun `verdict ink reads on its surface in both schemes`() {
-        val light = ChiaroLightScheme.surface
-        val dark = ChiaroDarkScheme.surface
-        listOf(
-            "pass" to ChiaroLightColors.pass, "unstable" to ChiaroLightColors.unstable,
-            "fail" to ChiaroLightColors.fail, "unknown" to ChiaroLightColors.unknown
-        ).forEach { (name, v) -> assertAtLeast(4.5, v.ink, light, "light $name ink") }
-        listOf(
-            "pass" to ChiaroDarkColors.pass, "unstable" to ChiaroDarkColors.unstable,
-            "fail" to ChiaroDarkColors.fail, "unknown" to ChiaroDarkColors.unknown
-        ).forEach { (name, v) -> assertAtLeast(4.5, v.ink, dark, "dark $name ink") }
+    fun `every palette the reader can choose has a dress`() {
+        AppPalette.entries.forEach { choice ->
+            assertTrue("no dress for $choice", ChiaroPalettes.containsKey(choice))
+            val dress = paletteFor(choice)
+            assertTrue("$choice: light and dark must not be the same scheme",
+                dress.lightScheme.surface != dress.darkScheme.surface)
+            assertTrue("$choice: scheme(dark) must pick the dark one",
+                dress.scheme(true) == dress.darkScheme && dress.scheme(false) == dress.lightScheme)
+            assertTrue("$choice: colors(dark) must pick the dark set",
+                dress.colors(true) == dress.darkColors && dress.colors(false) == dress.lightColors)
+        }
+        assertTrue(
+            "the two dresses must not share a sky",
+            paletteFor(AppPalette.PAPER).sky !== paletteFor(AppPalette.VIVID).sky
+        )
+    }
+
+    @Test
+    fun `verdict ink reads on its surface in every scheme`() {
+        dresses.forEach { (dress, palette) ->
+            palette.lightColors.verdicts().forEach { (name, v) ->
+                assertAtLeast(4.5, v.ink, palette.lightScheme.surface, "$dress light $name ink")
+            }
+            palette.darkColors.verdicts().forEach { (name, v) ->
+                assertAtLeast(4.5, v.ink, palette.darkScheme.surface, "$dress dark $name ink")
+            }
+        }
     }
 
     @Test
     fun `verdict ink reads on its own container`() {
-        (listOf(ChiaroLightColors, ChiaroDarkColors)).forEach { colors ->
-            listOf(colors.pass, colors.unstable, colors.fail, colors.unknown).forEach {
-                assertAtLeast(4.5, it.ink, it.container, "ink on container")
+        dresses.forEach { (dress, palette) ->
+            listOf(palette.lightColors, palette.darkColors).forEach { colors ->
+                colors.verdicts().forEach { (name, v) ->
+                    assertAtLeast(4.5, v.ink, v.container, "$dress $name ink on container")
+                }
             }
         }
     }
 
     @Test
     fun `the two surfaces are as far apart as the document says`() {
-        assertAtLeast(17.0, ChiaroLightScheme.surface, ChiaroDarkScheme.surface, "surface span")
+        dresses.forEach { (dress, palette) ->
+            assertAtLeast(
+                17.0, palette.lightScheme.surface, palette.darkScheme.surface,
+                "$dress surface span"
+            )
+        }
     }
 
     @Test
     fun `body text reads on every surface container`() {
-        listOf(
-            ChiaroLightScheme.onSurface to listOf(
-                ChiaroLightScheme.surface, ChiaroLightScheme.surfaceContainerLowest,
-                ChiaroLightScheme.surfaceContainerLow, ChiaroLightScheme.surfaceContainer,
-                ChiaroLightScheme.surfaceContainerHigh, ChiaroLightScheme.surfaceContainerHighest
-            ),
-            ChiaroDarkScheme.onSurface to listOf(
-                ChiaroDarkScheme.surface, ChiaroDarkScheme.surfaceContainerLowest,
-                ChiaroDarkScheme.surfaceContainerLow, ChiaroDarkScheme.surfaceContainer,
-                ChiaroDarkScheme.surfaceContainerHigh, ChiaroDarkScheme.surfaceContainerHighest
-            )
-        ).forEach { (ink, surfaces) ->
-            surfaces.forEach { assertAtLeast(4.5, ink, it, "onSurface over a container") }
+        schemes().forEach { (name, s) ->
+            listOf(
+                s.surface, s.surfaceContainerLowest, s.surfaceContainerLow,
+                s.surfaceContainer, s.surfaceContainerHigh, s.surfaceContainerHighest
+            ).forEach { assertAtLeast(4.5, s.onSurface, it, "$name onSurface over a container") }
         }
     }
 
     @Test
     fun `the secondary text role still reads, which is where a generated scheme usually fails`() {
-        assertAtLeast(4.5, ChiaroLightScheme.onSurfaceVariant, ChiaroLightScheme.surface, "light onSurfaceVariant")
-        assertAtLeast(4.5, ChiaroDarkScheme.onSurfaceVariant, ChiaroDarkScheme.surface, "dark onSurfaceVariant")
+        schemes().forEach { (name, s) ->
+            assertAtLeast(4.5, s.onSurfaceVariant, s.surface, "$name onSurfaceVariant")
+        }
+    }
+
+    /** Every generated scheme there is, named. */
+    private fun schemes() = dresses.flatMap { (dress, palette) ->
+        listOf("$dress light" to palette.lightScheme, "$dress dark" to palette.darkScheme)
     }
 
     @Test
     fun `on-color roles read on the color they are named for`() {
-        listOf(ChiaroLightScheme, ChiaroDarkScheme).forEach { s ->
+        schemes().forEach { (_, s) ->
             assertAtLeast(4.5, s.onPrimary, s.primary, "onPrimary")
             assertAtLeast(4.5, s.onSecondary, s.secondary, "onSecondary")
             assertAtLeast(4.5, s.onTertiary, s.tertiary, "onTertiary")
@@ -94,22 +132,27 @@ class PaletteContrastTest {
         }
     }
 
+    /** Every (semantic set, its surface) pair there is, named. */
+    private fun sets() = dresses.flatMap { (dress, palette) ->
+        listOf(
+            Triple("$dress light", palette.lightColors, palette.lightScheme.surface),
+            Triple("$dress dark", palette.darkColors, palette.darkScheme.surface)
+        )
+    }
+
     @Test
     fun `the rain ramp is one hue, light to dark, with no step that repeats`() {
-        listOf(ChiaroLightColors.rainRamp, ChiaroDarkColors.rainRamp).forEach { ramp ->
-            val ys = ramp.map(::luminance)
+        sets().forEach { (name, colors, _) ->
+            val ys = colors.rainRamp.map(::luminance)
             val descending = ys.zipWithNext().all { (a, b) -> a > b }
             val ascending = ys.zipWithNext().all { (a, b) -> a < b }
-            assertTrue("the rain ramp is not monotonic: $ys", descending || ascending)
+            assertTrue("the $name rain ramp is not monotonic: $ys", descending || ascending)
         }
     }
 
     @Test
     fun `the rain INK ramp is one hue, monotonic, and reads at every step`() {
-        listOf(
-            ChiaroLightColors.rainInkRamp to ChiaroLightScheme.surface,
-            ChiaroDarkColors.rainInkRamp to ChiaroDarkScheme.surface
-        ).forEach { (ramp, surface) ->
+        sets().map { (_, colors, surface) -> colors.rainInkRamp to surface }.forEach { (ramp, surface) ->
             val ys = ramp.map(::luminance)
             val descending = ys.zipWithNext().all { (a, b) -> a > b }
             val ascending = ys.zipWithNext().all { (a, b) -> a < b }
@@ -123,10 +166,7 @@ class PaletteContrastTest {
         // The bug this ramp exists for: the FILL ramp is a fill, and painting a figure
         // with its light end put 15% on paper at 1.3:1 while 0% fell back to the
         // secondary text role and became the heaviest number in the row.
-        listOf(
-            ChiaroLightColors to ChiaroLightScheme.surface,
-            ChiaroDarkColors to ChiaroDarkScheme.surface
-        ).forEach { (colors, surface) ->
+        sets().forEach { (_, colors, surface) ->
             (0..100 step 5).forEach { pct ->
                 assertAtLeast(4.5, colors.rainInkAt(pct), surface, "the ink of a probability of $pct")
             }
@@ -145,20 +185,71 @@ class PaletteContrastTest {
 
     @Test
     fun `the temperature ramp peaks at its neutral middle, and troughs at it in dark`() {
-        val light = ChiaroLightColors.temperatureRamp.map(::luminance)
-        assertTrue("the light ramp should be lightest in the middle: $light",
-            light.indexOf(light.max()) == 3)
-        val dark = ChiaroDarkColors.temperatureRamp.map(::luminance)
-        assertTrue("the dark ramp should be darkest in the middle: $dark",
-            dark.indexOf(dark.min()) == 3)
+        dresses.forEach { (dress, palette) ->
+            val light = palette.lightColors.temperatureRamp.map(::luminance)
+            assertTrue("the $dress light ramp should be lightest in the middle: $light",
+                light.indexOf(light.max()) == 3)
+            val dark = palette.darkColors.temperatureRamp.map(::luminance)
+            assertTrue("the $dress dark ramp should be darkest in the middle: $dark",
+                dark.indexOf(dark.min()) == 3)
+        }
+    }
+
+    /**
+     * The diverging ramp's midpoint is the one token that must NOT gain color: two hues
+     * and a neutral is the design, and a saturated middle makes it a rainbow (§9.1).
+     * This is what the vivid palette's chroma ceiling is for, so it is measured.
+     */
+    @Test
+    fun `the temperature ramp's middle stays a neutral in every dress`() {
+        sets().forEach { (name, colors, _) ->
+            val middle = colors.temperatureRamp[3]
+            val spread = listOf(middle.red, middle.green, middle.blue).let { it.max() - it.min() }
+            assertTrue("the $name midpoint has a hue: $middle (spread %.3f)".format(spread),
+                spread < 0.16f)
+        }
     }
 
     @Test
     fun `the temperature ramp is anchored to the world`() {
-        // 15 C is the middle step, and it stays the middle step whatever is on screen.
-        val mid = ChiaroLightColors.temperatureAt(ChiaroColors.ANCHOR_MID)
-        assertTrue("15 C must sample the neutral step", mid == ChiaroLightColors.temperatureRamp[3])
-        assertTrue("below the floor clamps", ChiaroLightColors.temperatureAt(-40.0) == ChiaroLightColors.temperatureRamp.first())
-        assertTrue("above the ceiling clamps", ChiaroLightColors.temperatureAt(60.0) == ChiaroLightColors.temperatureRamp.last())
+        sets().forEach { (name, colors, _) ->
+            // 15 C is the middle step, and it stays the middle step whatever is on screen.
+            assertTrue("$name: 15 C must sample the neutral step",
+                colors.temperatureAt(ChiaroColors.ANCHOR_MID) == colors.temperatureRamp[3])
+            assertTrue("$name: below the floor clamps",
+                colors.temperatureAt(-40.0) == colors.temperatureRamp.first())
+            assertTrue("$name: above the ceiling clamps",
+                colors.temperatureAt(60.0) == colors.temperatureRamp.last())
+        }
+    }
+
+    /**
+     * §2.5's actual claim: the vivid palette is the paper one re-picked at the gamut
+     * edge with the luminance HELD. Holding luminance is what carries every ratio above
+     * from one dress to the other, so it is asserted directly rather than inferred.
+     */
+    @Test
+    fun `the vivid palette holds the paper palette's luminances`() {
+        listOf(
+            "light" to (ChiaroLightColors to VividLightColors),
+            "dark" to (ChiaroDarkColors to VividDarkColors)
+        ).forEach { (mode, pair) ->
+            val (paper, vivid) = pair
+            val tokens = { c: ChiaroColors ->
+                c.verdicts().flatMap { (_, v) -> listOf(v.ink, v.container) } +
+                    c.rainRamp + c.rainInkRamp + c.temperatureRamp
+            }
+            val before = tokens(paper)
+            val after = tokens(vivid)
+            assertTrue("$mode: the two sets must have the same tokens", before.size == after.size)
+            before.zip(after).forEachIndexed { i, (a, b) ->
+                val drift = kotlin.math.abs(luminance(a) - luminance(b))
+                assertTrue(
+                    "$mode token $i moved its luminance by %.4f ($a -> $b)".format(drift),
+                    drift < 0.005
+                )
+            }
+            assertTrue("$mode: the vivid set must not BE the paper set", before != after)
+        }
     }
 }

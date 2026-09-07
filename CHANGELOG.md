@@ -22,13 +22,36 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 - The engines, copied from tweather with their test suite: the Open-Meteo client and
   mapper, the Room history, the alert engine, the rules engine and the whole astronomy
   module. `UPSTREAM.md` records the commit they came from and how to reproduce the copy.
+- The weather icons move. Meteocons draws its family with SMIL animations and the
+  import had been dropping them; `tools/import_meteocons.py` now carries them across as
+  AnimatedVectorDrawables, so the sun turns, the cloud banks drift, the rain falls out of
+  step with itself and the lightning flickers — the illustrator's own motion, not a
+  rewrite of it. The condition family only: a barometer that spins forever is decoration.
+  On by default with a switch in Settings → Appearance, and always still when the phone
+  asks for less animation, which is the same setting every other animation in the app
+  reads. Not in the widgets, where `RemoteViews` cannot run one at all.
+- New defaults for a fresh install: dark theme, the Vivid palette, wallpaper colors off,
+  outlined icons, animated icons on; and for a newly placed widget, a solid card with the
+  day's range off. The app now opens looking like itself rather than like the wallpaper,
+  which also resolves the design document's open question about store screenshots.
+- A second palette, chosen in Settings → Appearance: **Paper**, the warm identity, and
+  **Vivid**, the same app at the brightest colors a screen holds — a cool white, an azure
+  accent, saturated quantity ramps, a saturated sky and brighter weather icons on dark
+  grounds. One choice picks the Material scheme, the semantic tokens, the sky bands and
+  the icon set together, and it holds even under wallpaper colors, because the ramps and
+  the canvas never followed the wallpaper. The vivid tokens are generated from the paper
+  ones by one rule — same hue, held luminance, chroma to the sRGB gamut edge or ×1.8 —
+  so every contrast ratio the design document prints is the same number in both, and the
+  tests measure both rather than trusting that.
 - The design system in Compose: a generated Material color scheme from three source hues,
   the semantic tokens Material has no slot for (verdicts, a rain ramp, a diverging
   temperature ramp anchored at 15 °C), the computed sky canvas and its scrim contract,
   the daylight ribbon, Inter as a bundled variable font, and the first components.
 - Seven tests that hold the design document to the code: `PaletteContrastTest`,
   `PaletteDocTest`, `ScrimContractTest`, `SkyPaletteTest`, `NoRawColorTest`, `MotionTest`
-  and `TextScaleTest`.
+  and `TextScaleTest`. Since the second palette they run over both of them, and
+  `PaletteDocTest` reads the document section by section — two tables of the same shape
+  in one file is one table and one lie waiting.
 - Today ends with a line saying when its numbers arrived and where they came from:
   "Updated at 18:45 · Open-Meteo data". The freshness chip only speaks when the data is
   old enough to worry about, so until now a reader who simply wanted to know how recent

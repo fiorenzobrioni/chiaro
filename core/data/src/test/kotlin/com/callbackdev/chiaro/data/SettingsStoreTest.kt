@@ -47,9 +47,14 @@ class SettingsStoreTest {
 
         assertEquals(TemperatureUnit.CELSIUS, settings.units.temperature)
         assertEquals(WindSpeedUnit.KMH, settings.units.windSpeed)
-        assertEquals(ThemeMode.SYSTEM, settings.themeMode)
-        assertEquals(true, settings.dynamicColor)
+        // The 7 set 2026 defaults (committente): the app opens looking like itself,
+        // dark and vivid, with the weather moving.
+        assertEquals(ThemeMode.DARK, settings.themeMode)
+        assertEquals(false, settings.dynamicColor)
+        // Paper is the identity; a second dress that arrives switched on is a redesign.
+        assertEquals(AppPalette.VIVID, settings.palette)
         assertEquals(WeatherIcons.LINE, settings.weatherIcons)
+        assertEquals(true, settings.animatedIcons)
         assertEquals(true, settings.skyEnabled)
         assertNull(settings.skyNotifyDefaultMin)
         assertEquals(false, settings.skyNotifyOnFail)
@@ -63,17 +68,21 @@ class SettingsStoreTest {
 
         store.setTemperatureUnit(TemperatureUnit.FAHRENHEIT)
         store.setWindSpeedUnit(WindSpeedUnit.MPH)
-        store.setThemeMode(ThemeMode.DARK)
-        store.setDynamicColor(false)
+        store.setThemeMode(ThemeMode.LIGHT)
+        store.setDynamicColor(true)
+        store.setPalette(AppPalette.PAPER)
         store.setWeatherIcons(WeatherIcons.FILL)
+        store.setAnimatedIcons(false)
         store.setUpdateFrequency(30)
 
         val settings = store.settings.first()
         assertEquals(TemperatureUnit.FAHRENHEIT, settings.units.temperature)
         assertEquals(WindSpeedUnit.MPH, settings.units.windSpeed)
-        assertEquals(ThemeMode.DARK, settings.themeMode)
-        assertEquals(false, settings.dynamicColor)
+        assertEquals(ThemeMode.LIGHT, settings.themeMode)
+        assertEquals(true, settings.dynamicColor)
+        assertEquals(AppPalette.PAPER, settings.palette)
         assertEquals(WeatherIcons.FILL, settings.weatherIcons)
+        assertEquals(false, settings.animatedIcons)
         assertEquals(30, settings.updateFrequencyMin)
     }
 
@@ -84,11 +93,13 @@ class SettingsStoreTest {
         ds.edit {
             it[stringPreferencesKey("units_temperature")] = "KELVIN"
             it[stringPreferencesKey("appearance_theme_mode")] = "OBSIDIAN"
+            it[stringPreferencesKey("appearance_palette")] = "NEON"
         }
 
         val settings = SettingsStore(ds).settings.first()
         assertEquals(TemperatureUnit.CELSIUS, settings.units.temperature)
-        assertEquals(ThemeMode.SYSTEM, settings.themeMode)
+        assertEquals(ThemeMode.DARK, settings.themeMode)
+        assertEquals(AppPalette.VIVID, settings.palette)
     }
 
     /** An interval outside the offered set reads as the default, same rule as the enums. */
@@ -110,7 +121,7 @@ class SettingsStoreTest {
         store.resetToDefaults()
 
         val settings = store.settings.first()
-        assertEquals(ThemeMode.SYSTEM, settings.themeMode)
+        assertEquals(ThemeMode.DARK, settings.themeMode)
         assertEquals(TemperatureUnit.CELSIUS, settings.units.temperature)
         assertEquals(DefaultUpdateFrequencyMin, settings.updateFrequencyMin)
     }

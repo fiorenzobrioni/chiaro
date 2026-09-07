@@ -117,6 +117,62 @@ internal val ChiaroDarkColors = ChiaroColors(
     )
 )
 
+/**
+ * The vivid palette's half of §2.3, GENERATED from the two sets above by
+ * `tools/gen_vivid.py`: same hue, same WCAG luminance, chroma to the sRGB gamut edge or
+ * ×1.8 of paper's, whichever comes first.
+ *
+ * Because contrast is a function of luminance alone and the luminance is held, **every
+ * ratio §2.3 prints for the paper palette is the ratio these tokens measure too** —
+ * `PaletteContrastTest` runs over both sets and asserts exactly that rather than taking
+ * it on trust.
+ *
+ * Several tokens come out identical to paper's, the light verdict inks among them. That
+ * is not the generator giving up: after the 3 set 2026 color pass those inks already sit
+ * ON the gamut edge at the luminance 4.5:1 allows them, and sRGB has nothing left to
+ * give at that brightness. Where the vivid palette is visibly vivid is the fills, the
+ * ramps and the sky — the tokens whose luminance was never the constraint.
+ *
+ * Do not hand-edit: change the paper values, regenerate, and re-measure.
+ */
+internal val VividLightColors = ChiaroColors(
+    pass = VerdictColors(Color(0xFF005D2D), Color(0xFFBFF2CE)),
+    unstable = VerdictColors(Color(0xFF7A5200), Color(0xFFFFE5A8)),
+    fail = VerdictColors(Color(0xFF950700), Color(0xFFFFDCD7)),
+    unknown = VerdictColors(Color(0xFF4C535E), Color(0xFFE7E7E2)),
+    rainRamp = listOf(
+        Color(0xFFDCEFFF), Color(0xFFA4DAFF), Color(0xFF57BEFF),
+        Color(0xFF0097E8), Color(0xFF006FAC)
+    ),
+    rainInkRamp = listOf(
+        Color(0xFF50738F), Color(0xFF136997), Color(0xFF005C88),
+        Color(0xFF00507E), Color(0xFF004470)
+    ),
+    temperatureRamp = listOf(
+        Color(0xFF006FAC), Color(0xFF00A6EB), Color(0xFF7BCCFF), Color(0xFFE0D7C3),
+        Color(0xFFFFBB66), Color(0xFFE67E00), Color(0xFFB85100)
+    )
+)
+
+internal val VividDarkColors = ChiaroColors(
+    pass = VerdictColors(Color(0xFF00E079), Color(0xFF003F23)),
+    unstable = VerdictColors(Color(0xFFFFBC27), Color(0xFF3F2F00)),
+    fail = VerdictColors(Color(0xFFFFB4AB), Color(0xFF590001)),
+    unknown = VerdictColors(Color(0xFFA4ADBD), Color(0xFF2B2B30)),
+    rainRamp = listOf(
+        Color(0xFF002E4A), Color(0xFF004B6F), Color(0xFF006C98),
+        Color(0xFF0092C8), Color(0xFF00BEFD)
+    ),
+    rainInkRamp = listOf(
+        Color(0xFF688BA2), Color(0xFF539ECA), Color(0xFF22B1F1),
+        Color(0xFF42C1FF), Color(0xFF76D1FF)
+    ),
+    temperatureRamp = listOf(
+        Color(0xFF2FBAFF), Color(0xFF0091D5), Color(0xFF0070AB), Color(0xFF4C473A),
+        Color(0xFF985E00), Color(0xFFC87400), Color(0xFFF29300)
+    )
+)
+
 val LocalChiaroColors = staticCompositionLocalOf { ChiaroLightColors }
 
 /** The semantic palette of §2.3, next to `MaterialTheme.colorScheme` rather than inside
@@ -124,4 +180,9 @@ val LocalChiaroColors = staticCompositionLocalOf { ChiaroLightColors }
 object ChiaroTheme {
     val colors: ChiaroColors
         @Composable @ReadOnlyComposable get() = LocalChiaroColors.current
+
+    /** The band table the reader's palette paints the canvas with (§3.7). Same reason
+     * it lives here and not in `colorScheme`: Material has no slot for a sky. */
+    val sky: SkyPalette
+        @Composable @ReadOnlyComposable get() = LocalSkyPalette.current
 }

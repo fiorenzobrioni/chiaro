@@ -2142,6 +2142,233 @@ placca scurita sotto il glifo: contrasto senza rinunciare al colore.
 
 ---
 
+## La seconda palette, «Brillante» (committente, 7 set 2026)
+
+Richiesta: «la palette di oggi è un po' stile colori su carta. È possibile aggiungerne
+una nuova, scelta dall'utente nelle impostazioni, con colori più brillanti, in
+particolare come quelli del widget» — con lo screenshot di un widget meteo altrui, blu
+saturo, testo bianco, sole giallo acceso. Poi, a lavoro iniziato: «anche i colori delle
+icone li voglio vivaci, per esempio un bel sole giallo vivace».
+
+### Che cosa è arrivato
+
+Due vestiti, non due app. `AppSettings.palette` (`AppPalette.PAPER` / `VIVID`, PAPER di
+default) sceglie **insieme** lo schema Material, i token semantici di §2.3, la tabella
+delle bande del cielo e — sui terreni scuri — il set delle icone. Uno solo, perché
+schema, token e cielo sono stati misurati insieme: mescolare il cielo vivace con le rampe
+di carta sarebbe una terza palette che nessuno ha misurato. `ui/theme/Palettes.kt` è il
+posto dove i quattro pezzi stanno insieme, `ChiaroTheme(palette = …)` è dove entra, e
+`LocalAppPalette` è quello che porta la scelta fin dove serve un *file* invece di un
+valore (le icone).
+
+Vale anche coi colori dallo sfondo accesi, ed è voluto: la palette semantica e il canvas
+non hanno mai seguito il wallpaper (§2.3, §3), quindi la scelta del lettore decide
+comunque verdetti, rampe e cielo. Le due domande sono due, e la riga di Impostazioni lo
+dice.
+
+### La regola, e perché una regola invece di una seconda scelta a mano
+
+Dopo il color pass del 3 set la maggior parte dei token di carta **sta già sul bordo del
+gamut sRGB** alla propria luminanza: alzare la saturazione li restituisce identici. Quello
+che resta da spendere è la luminanza, e spenderla significa rimisurare tutto. Quindi una
+regola sola (`tools/gen_vivid.py`):
+
+> stesso tono, **luminanza WCAG tenuta ferma**, croma fino al bordo del gamut o a **×1.8**
+> di quella di carta, quello che arriva prima.
+
+Il contrasto dipende solo dalla luminanza: tenerla ferma porta di là *ogni* rapporto
+stampato in DESIGN, ogni monotonia, ogni ordinamento di luminosità del cielo. Il tetto
+×1.8 è quello che impedisce alla regola di diventare una caricatura: un token
+deliberatamente quasi-neutro — il centro della rampa divergente, `unknown`, un cielo
+notturno — sarebbe altrimenti trascinato sul bordo del gamut e smetterebbe di essere
+neutro, che è l'unica cosa per cui esiste. `PaletteContrastTest` misura anche questo, non
+si fida della costruzione.
+
+Gli schemi Material **non** sono derivati così: sono generati da sorgenti proprie con lo
+stesso `tools/gen_scheme.py`, perché uno schema tonale non è un insieme di token da
+spostare. Le tre tinte restano i tre momenti del giorno di §2.2; cambia quale comanda —
+**il cielo diurno promosso a primary** (`#2C7BF2`), l'ambra una casella sotto. A tono 40
+un'ambra è un bronzo comunque, e chi chiede brillantezza non sta chiedendo un bronzo. I
+neutri passano a croma 6 e 14 (da 3 e 7): è quello che trasforma un bianco caldo in uno
+freddo, `#FCF9F3` → `#F6FAFF`, `#16130E` → `#0D141B`.
+
+### Il risultato onesto: tre inchiostri non si muovono
+
+I tre inchiostri chiari dei verdetti escono **identici** a quelli di carta. Non è una resa
+del generatore: a 4,5:1 sulla carta chiara la luminanza è vincolata a `Y ≤ 0.172`, e lì
+sotto sRGB non ha altro da dare. Dove la palette vivace si vede davvero è dove la
+luminanza non era il vincolo — riempimenti, rampe, cielo, e sui fondi scuri le icone. È
+scritto in DESIGN §2.5 così com'è, invece di lasciar credere una differenza che non c'è.
+
+### Le icone
+
+Il set a tratto `mc_*` serve entrambe le superfici, e per farlo è chiuso in
+`Y ∈ [0.120, 0.283]`: è per questo che il sole dell'app è un bronzo, ed è la stessa
+misura della segnalazione del 7 set qui sopra. Su un fondo **scuro** quel tetto non
+esiste. `tools/gen_vivid_icons.py` genera `mcn_*` da `mc_*` con la regola di §2.5 e senza
+il tetto: sole `#C37D00` → **`#FFA500`**, pioggia `#0085D0` → `#00A4FF`, luna e neve
+`#008AB6` → `#02C3FF`; i grigi delle nuvole restano grigi, perché ×1.8 di un croma piccolo
+è un croma piccolo. Lo legge solo la palette vivace, e solo su terreno scuro: carta tiene
+una famiglia sola su entrambi, che è parte di cosa vuol dire «carta».
+
+Su terreno **chiaro** la palette vivace riceve gli stessi file di carta, e questo è il
+gamut che parla, non una dimenticanza: a `Y ≤ 0.284` un giallo acceso non esiste. Averlo
+lì significa scambiare il 3:1 di §10, che è una decisione e non un colore — resta al
+committente, dichiarata invece che presa di nascosto.
+
+Effetto collaterale misurato, sulla card **Cielo** del widget (il buco dichiarato in
+§13.1): il sole passa da **1,57:1 a 2,68:1** e il set da 1,03–1,57 a 1,03–2,68. Sempre 8
+su 8 sotto il pavimento, quindi l'eccezione resta esattamente com'è per tutti e due i
+vestiti — ma l'icona che il lettore guarda davvero su quella card è quasi arrivata.
+
+### Guardarla, che nessun test fa
+
+`tools/palette_sheet.py` disegna adesso **tutti e due** i vestiti, uno sotto l'altro: una
+seconda palette che non puoi vedere accanto alla prima è una seconda palette che nessuno
+ha confrontato. Cosa mostra e i numeri non dicono: fra 0° e −6° il canvas vivace vira al
+**marrone** più di quello di carta, perché la miscela è percettiva e il punto medio Oklab
+fra un'ambra satura e un viola saturo è un marrone saturo. Lasciato: dura sei gradi di
+altezza solare e legge come un vero crepuscolo. Se un giorno smette di leggersi così, la
+via d'uscita è quella che §3.2 ha già usato per l'ora d'oro — un'ancora in più, non una
+tabella più spenta.
+
+### Verifica
+
+- `PaletteContrastTest` gira su **entrambi** i vestiti (verdetti, contenitori, ruoli
+  on-color, rampe, probabilità da 0 a 100) e aggiunge le due affermazioni che rendono
+  economico un secondo vestito: i token vivaci tengono le luminanze di carta, e il centro
+  della rampa divergente resta un neutro. Più: ogni `AppPalette` ha un vestito.
+- `PaletteDocTest` legge DESIGN **per sezione**. Serviva: il documento stampa ora due
+  tabelle di verdetti, due terne di rampe e due tabelle di bande della stessa forma, e uno
+  sweep dell'intero file avrebbe misurato allegramente la rampa vivace contro il Kotlin di
+  carta — e sarebbe passato.
+- `SkyPaletteTest` gira su entrambe le tabelle, più il §3.7: stesse altitudini, stesse
+  luminanze alle ancore (deriva < 0,003), e fra le ancore al massimo **0,0112** — misurato,
+  non assunto, perché la miscela è percettiva.
+- `ScrimContractTest` spazza entrambe le tabelle a ogni mezzo grado. È l'unico contratto
+  che la luminanza tenuta ferma **non** porta di là da sola: lo scrim compone per canale.
+  Bianco sul cielo vivace più luminoso: **5,26:1** (carta 5,27:1).
+- `IconContrastTest` misura quattro set contro **quattro** superfici: un set misurato
+  sulla carta di un vestito e spedito sopra quella dell'altro è precisamente la cosa che
+  passa la revisione e cade sul device.
+- `SettingsStoreTest`: default PAPER, round-trip, e un nome sconosciuto (`"NEON"`) che
+  torna al default invece di lanciare.
+
+---
+
+## Le icone si muovono, e i nuovi default (committente, 7 set 2026)
+
+Richiesta, dopo la risposta sulle icone: «sul sito meteocons ci sono le icone animate:
+usarle per l'app (no per il widget) sarebbe possibile? Sarebbe un bel salto per la
+grafica». Sì. Ed è arrivato.
+
+### La correzione che va detta
+
+Nella risposta preliminare avevo consigliato «animare solo l'eroe di Oggi». Aprendo lo
+schermo: **un'icona eroe non esiste**. L'eroe di Oggi è il numero della temperatura sul
+canvas, e la condizione lì è una parola, non un glifo. Le icone della condizione stanno
+solo in due posti — la striscia oraria e le righe della settimana — e sono esattamente le
+stesse due. Quindi la regola è diventata quella onesta: **si muove la famiglia della
+condizione, dovunque sia disegnata; non si muove nient'altro.**
+
+Un tile dei dettagli porta un segno che etichetta una grandezza: un barometro che gira
+per sempre è decoro, e §1.4 è dove va il decoro. `mc_not_available` non si muove perché
+Meteocons non lo anima: non esiste un'animazione per «non lo sappiamo», ed è la quantità
+giusta di movimento per quel caso. `ChiaroIcons.movingRes` restituisce **null** per
+quelli, invece di un fermo travestito da animato.
+
+### Come, e perché così
+
+Le SMIL sono nei sorgenti che l'app già usa: `import_meteocons.py` le buttava via
+(departure #2). Ora le porta di là come `AnimatedVectorDrawable` — **departure #7**. Non
+una riscrittura del movimento: quello è dell'illustratore, e riscriverlo sarebbe stato un
+secondo parere sul disegno di qualcun altro.
+
+Quattro forme SMIL nella famiglia, tutte lineari e tutte infinite: `rotate` e `translate`
+diventano un `<group>` col suo pivot che anima `rotation` o `translateX/Y`, `opacity`
+diventa `fillAlpha`/`strokeAlpha` sui path del gruppo, e `gradientTransform` cade insieme
+al gradiente che l'importer aveva già appiattito. Due cose che SMIL ha e AVD no:
+
+- **`additive="sum"`** impila due trasformazioni su un elemento; AVD ne dà una a gruppo,
+  quindi due trasformazioni diventano due gruppi annidati, il più esterno per primo — che
+  è l'ordine in cui SMIL le moltiplica.
+- **Un `begin` negativo** è una *fase*, non un ritardo: è quello che fa cadere tre gocce
+  sfasate invece che in fila per uno. `startOffset` di AVD è l'opposto, quindi la fase
+  finisce nei keyframe. `check_phase` ricampiona la curva emessa contro quella SMIL e si
+  ferma se non combaciano — il budget è l'unico punto di aritmetica del tool che un
+  lettore non può controllare guardando l'output.
+
+Otto set adesso: quattro fermi (49 disegni) e quattro animati (18). `mca_*`, `mcaf_*`,
+`mcafn_*` dall'importer; `mcan_*` da `gen_vivid_icons.py`, che ricolora `mca_*` con la
+stessa tabella di `mc_*` — sono gli stessi disegni nella stessa palette, e l'animazione
+non tocca un colore.
+
+Il render è un `AndroidView` con una `ImageView`, e non un painter Compose, perché i loop
+qui sono infiniti e `AnimatedImageVector` è fatto per l'altra cosa: una transizione da uno
+stato all'altro, giocata una volta quando un booleano cambia. Il conto della batteria lo
+paga la piattaforma, non una promessa scritta qui: un AVD si ferma quando il suo host
+smette di essere visibile (`ImageView.onVisibilityAggregated` → `setVisible(false)`),
+quindi una cella che esce dallo schermo o l'app in background fermano l'animazione senza
+un observer nostro.
+
+### Verifica
+
+- **L'importer riproduce**. Prima di toccare qualsiasi cosa: rilanciato su un checkout
+  v2.0.0, i 147 drawable fermi sono usciti **identici byte per byte** a quelli in repo.
+  Senza quella prova ogni modifica al tool sarebbe stata alla cieca.
+- `AnimatedIconTest`: un'icona animata **è** l'icona ferma (stessi path nello stesso
+  ordine, stessi colori nello stesso ordine — la cosa più forte che un test JVM può dire
+  su un disegno che non può rendere); ogni `<target>` punta a un elemento che il vettore
+  ha davvero; ogni proprietà animata appartiene al tipo di elemento a cui è puntata; ogni
+  loop è infinito, positivo e lineare, con keyframe che vanno avanti. Tutte e quattro
+  falliscono in silenzio su un device: un'icona che semplicemente non si muove, scoperta
+  da una persona. **Ha trovato il suo primo difetto il giorno in cui è stato scritto**:
+  `fmt` arrotondava a due decimali e i due keyframe di un salto istantaneo finivano sullo
+  stesso istante — un salto che non avviene.
+- `IconContrastTest` spazza otto set contro quattro superfici.
+- **E poi guardato**: `tools/icon_filmstrip.py` valuta ogni animator a una serie di
+  istanti e scrive i fotogrammi in SVG. Un test può dire che la pioggia ha un animator
+  valido; solo una persona può dire che la pioggia **scende**. Controllati tutti e
+  quattro i set: gocce che scendono e sfumano, sole che gira, luna che dondola, banchi di
+  nebbia che scorrono, fulmine che lampeggia.
+
+### I nuovi default (committente)
+
+| Voce | Prima | Ora |
+|---|---|---|
+| Tema | Come il telefono | **Scuro** |
+| Palette | Carta | **Brillante** |
+| Icone del meteo | A tratto | A tratto (invariata) |
+| Icone animate | — | **Attivo** |
+| Colori dallo sfondo | Attivo | **Spento** |
+| Widget · opacità | 85% | **100%** |
+| Widget · massima e minima | Attivo | **Spento** |
+
+Due note che valgono più dei valori.
+
+**Perché la palette sembrava non cambiare nulla.** Il device report diceva «il cambiamento
+è minimo tra i due temi», e aveva ragione: con i colori dallo sfondo **accesi** lo schema
+Material arriva dal wallpaper, e della palette si vedevano solo rampe e cielo. Due terzi
+erano spenti. Spegnendo dynamic color — che è l'altro default chiesto qui — la differenza
+diventa piena. I due valori sono stati scelti insieme e nessuno dei due dice granché senza
+l'altro. Questo chiude anche il secondo punto aperto di DESIGN §13, e lo chiude dal lato
+opposto a quello che ipotizzava.
+
+**Il tema scuro contro VISION §4.** Il documento diceva «chiaro è il default, il monopolio
+scuro della serie t era una posizione stilistica e qui sarebbe un problema di
+accessibilità». La riga è stata riscritta, non ignorata: quello che ha spostato la
+decisione è che l'eroe di quest'app è un cielo notturno dipinto per metà giornata e che la
+palette Brillante è stata scelta sul suo schema scuro. La preoccupazione che la vecchia
+riga proteggeva resta vera e resta scritta — un'app che ignora la modalità chiara del
+telefono sembra rotta a qualcuno — quindi «Come il telefono» è a un tocco e lo scuro è un
+default, non un monopolio.
+
+I due default del widget cambiano anche i widget **già posati** che non hanno mai avuto
+quella voce modificata: è quello che significa un default, ed è il motivo per cui lo si
+sposta.
+
+---
+
 ## Fase 10 — Store e v1.0.0
 
 - [ ] Icona definitiva, screenshot, scheda dello store

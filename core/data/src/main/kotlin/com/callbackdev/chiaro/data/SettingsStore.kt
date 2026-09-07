@@ -29,19 +29,49 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 enum class WeatherIcons { FILL, LINE }
 
 /**
+ * Which of the app's own two dresses it wears when it is not wearing the wallpaper's
+ * (DESIGN §2.5): [PAPER], warm and quiet, the identity; [VIVID], cool and saturated,
+ * for the reader who wants the sky to shout. UI-only, like the two above.
+ */
+enum class AppPalette { PAPER, VIVID }
+
+/**
  * Everything the Settings screen edits. The engine inputs ([units], [notifications],
  * the sky keys) are typed in `:core:domain`; the rest is presentation and stays here.
  */
 data class AppSettings(
     val units: UnitSettings = UnitSettings(),
     val notifications: NotificationSettings = NotificationSettings(),
-    /** SYSTEM by default: an app that follows the phone needs no explaining. */
-    val themeMode: ThemeMode = ThemeMode.SYSTEM,
     /**
-     * Material's wallpaper-derived scheme, on by default (DESIGN §2.1). Off gives the
-     * generated Chiaro scheme — for readers who want the app to look like itself.
+     * DARK by default since 7 set 2026 (committente: «è molto bello»), against the
+     * older SYSTEM and against VISION §4's «light is the default».
+     *
+     * The argument that moved: this app's hero is a painted night sky for half of every
+     * day, the vivid palette below was picked for its dark scheme, and the two together
+     * are what the product is meant to look like the first time it opens. The cost is
+     * real and stated — an app that does not follow the phone's light mode reads as
+     * broken to some readers — and it is one tap from here to SYSTEM.
      */
-    val dynamicColor: Boolean = true,
+    val themeMode: ThemeMode = ThemeMode.DARK,
+    /**
+     * Material's wallpaper-derived scheme. **Off by default since 7 set 2026**, which
+     * closes DESIGN §13's second open item on the side it was leaning: the app looks
+     * like itself, on the device and in the store screenshots alike.
+     *
+     * It is also what makes [palette] visible. With dynamic color on, the Material roles
+     * come from the wallpaper and a palette choice only reaches the ramps and the sky —
+     * which is precisely why the first device look at the vivid dress reported "the
+     * change is minimal". It was: two thirds of it was switched off.
+     */
+    val dynamicColor: Boolean = false,
+    /**
+     * Which generated palette [dynamicColor] falls back to, and — because the semantic
+     * tokens and the sky canvas never followed the wallpaper in the first place (§2.3,
+     * §3.7) — which quantity ramps and which sky the app paints either way. VIVID by
+     * default since 7 set 2026 (committente), with [dynamicColor] off beside it: the two
+     * were chosen together and neither says much without the other.
+     */
+    val palette: AppPalette = AppPalette.VIVID,
     /** LINE by default (decision, 6 set 2026 — the default moves, the choice stays).
      * The outlined drawings keep one weight of ink on a screen whose hero is already a
      * painted sky, and at the sizes Today now uses (§13.1's ladder, 30-38dp) they read
@@ -49,6 +79,13 @@ data class AppSettings(
      * An install that never opened this setting flips on upgrade: that is what a default
      * is, and moving it for those readers is the point of the change. */
     val weatherIcons: WeatherIcons = WeatherIcons.LINE,
+    /**
+     * Whether the weather icons move (DESIGN §7.1): Meteocons' own SMIL, carried over as
+     * AnimatedVectorDrawables. On by default — it is the thing the reader is meant to
+     * notice — and it is only half the answer: the system's "remove animations" always
+     * wins, and the drawings that have no motion never invent any.
+     */
+    val animatedIcons: Boolean = true,
     /**
      * The Sky screen's master switch (its surface arrives in Fase 5). Default true:
      * the sky is the differentiator, and a feature that ships switched off is a
@@ -98,9 +135,11 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                     precipitationWarning = prefs[PrecipWarning] ?: true,
                     userRules = prefs[UserRules] ?: true
                 ),
-                themeMode = enumOrDefault(prefs[Theme], ThemeMode.SYSTEM),
-                dynamicColor = prefs[DynamicColor] ?: true,
+                themeMode = enumOrDefault(prefs[Theme], ThemeMode.DARK),
+                dynamicColor = prefs[DynamicColor] ?: false,
+                palette = enumOrDefault(prefs[Palette], AppPalette.VIVID),
                 weatherIcons = enumOrDefault(prefs[IconStyle], WeatherIcons.LINE),
+                animatedIcons = prefs[AnimatedIcons] ?: true,
                 skyEnabled = prefs[SkyEnabled] ?: true,
                 // 0 is how "off" is stored: an Int? preference cannot hold null, and
                 // absent must read the same as explicitly switched off.
@@ -122,7 +161,9 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setUserRules(enabled: Boolean) = set(UserRules, enabled)
     suspend fun setThemeMode(mode: ThemeMode) = set(Theme, mode.name)
     suspend fun setDynamicColor(enabled: Boolean) = set(DynamicColor, enabled)
+    suspend fun setPalette(palette: AppPalette) = set(Palette, palette.name)
     suspend fun setWeatherIcons(style: WeatherIcons) = set(IconStyle, style.name)
+    suspend fun setAnimatedIcons(enabled: Boolean) = set(AnimatedIcons, enabled)
     suspend fun setSkyEnabled(enabled: Boolean) = set(SkyEnabled, enabled)
 
     /** 0 stands for "off": DataStore has no nullable Int, and absent means default. */
@@ -157,7 +198,9 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
         private val UserRules = booleanPreferencesKey("notif_user_rules")
         private val Theme = stringPreferencesKey("appearance_theme_mode")
         private val DynamicColor = booleanPreferencesKey("appearance_dynamic_color")
+        private val Palette = stringPreferencesKey("appearance_palette")
         private val IconStyle = stringPreferencesKey("appearance_weather_icons")
+        private val AnimatedIcons = booleanPreferencesKey("appearance_animated_icons")
         private val SkyEnabled = booleanPreferencesKey("sky_enabled")
         private val SkyNotifyDefault = intPreferencesKey("sky_notify_default_min")
         private val SkyNotifyOnFail = booleanPreferencesKey("sky_notify_on_fail")

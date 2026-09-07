@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.SettingsStore
@@ -39,6 +40,11 @@ class SettingsViewModel(private val store: SettingsStore) : ViewModel() {
 
     fun setDynamicColor(enabled: Boolean) =
         viewModelScope.launch { store.setDynamicColor(enabled) }
+
+    fun setPalette(palette: AppPalette) = viewModelScope.launch { store.setPalette(palette) }
+
+    fun setAnimatedIcons(enabled: Boolean) =
+        viewModelScope.launch { store.setAnimatedIcons(enabled) }
 
     fun setWeatherIcons(style: WeatherIcons) =
         viewModelScope.launch { store.setWeatherIcons(style) }

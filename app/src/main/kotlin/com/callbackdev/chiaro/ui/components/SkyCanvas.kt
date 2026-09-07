@@ -72,7 +72,7 @@ private fun SkyCanvasPreview() {
         androidx.compose.foundation.layout.Column {
             listOf(50.0 to "mezzogiorno", 3.0 to "ora d'oro", -4.0 to "ora blu", -30.0 to "notte")
                 .forEach { (altitude, label) ->
-                    SkyCanvas(gradient = SkyPalette.gradient(altitude), height = 100.dp) {
+                    SkyCanvas(gradient = SkyPalette.Paper.gradient(altitude), height = 100.dp) {
                         androidx.compose.material3.Text(
                             text = label,
                             color = Color.White,

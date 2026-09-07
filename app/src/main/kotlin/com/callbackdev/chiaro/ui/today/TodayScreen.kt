@@ -91,10 +91,11 @@ import com.callbackdev.chiaro.ui.components.SkyCanvasTopScrimEnd
 import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
+import com.callbackdev.chiaro.ui.icons.ConditionGlyph
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.theme.ChiaroMotion
-import com.callbackdev.chiaro.ui.theme.SkyPalette
+import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.reducedMotion
 import com.callbackdev.chiaro.ui.theme.reflowForText
 import java.time.Duration
@@ -810,7 +811,7 @@ private fun CanvasHeader(
     // so the sky sits behind the clock, over the top scrim that keeps both legible.
     val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     SkyCanvas(
-        gradient = SkyPalette.gradient(
+        gradient = ChiaroTheme.sky.gradient(
             sunAltitudeDeg = sky.sunAltitudeDeg,
             cloudPct = sky.cloudPct,
             precipPct = sky.precipPct,
@@ -1046,7 +1047,7 @@ private fun StripHour.toCell(units: UnitSettings, is24h: Boolean, locale: Locale
     val word = stringResource(WeatherText.condition(hour.condition.wmoCode))
     return HourCell(
         hourLabel = hourLabel,
-        icon = ChiaroIcons.condition(hour.condition.wmoCode, night),
+        condition = ConditionGlyph(hour.condition.wmoCode, night),
         temperature = temp,
         rainPct = hour.precipChancePct,
         rainLabel = hour.precipChancePct?.let { Formats.percent(it, locale) },
@@ -1134,7 +1135,7 @@ private fun Week(
             val high = Formats.temperature(f.highC, units.temperature, locale)
             DayRow(
                 dayLabel = label,
-                icon = ChiaroIcons.condition(f.condition.wmoCode, night = false),
+                condition = ConditionGlyph(f.condition.wmoCode, night = false),
                 rainPct = f.precipPct,
                 rainLabel = Formats.percent(f.precipPct, locale),
                 lowC = f.lowC,

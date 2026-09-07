@@ -9,8 +9,11 @@ It reads the hexes **out of the Kotlin sources**, never from a copy of them: a p
 that has its own idea of the palette is a preview that lies the first time somebody
 retunes a token.
 
+Both dresses are rendered, one under the other (DESIGN.md §2.5): a second palette you
+cannot see beside the first is a second palette nobody compared.
+
     python3 tools/palette_sheet.py > /tmp/palette.html
-    chromium --headless --screenshot=/tmp/palette.png --window-size=1160,1200 file:///tmp/palette.html
+    chromium --headless --screenshot=/tmp/palette.png --window-size=1160,2400 file:///tmp/palette.html
 """
 from __future__ import annotations
 
@@ -36,18 +39,31 @@ def read(name: str) -> str:
     return path.read_text()
 
 
-def anchors() -> list[tuple[float, tuple[str, str, str]]]:
-    found = SKY.findall(read("SkyPalette.kt"))
-    if not found:
-        sys.exit("no sky anchors parsed — did SkyPalette.kt change shape?")
+#: The two dresses, as the names their values carry in the Kotlin. Adding a third means
+#: adding a row here and nothing else in this file.
+DRESSES = (("paper", "Chiaro"), ("vivid", "Vivid"))
+
+
+def anchors(dress: str) -> list[tuple[float, tuple[str, str, str]]]:
+    """One band table. The two tables live in the same file, so the block is cut out by
+    the `val <Name> = SkyPalette(` that introduces it rather than by reading the lot."""
+    text = read("SkyPalette.kt")
+    start = text.index(f"val {'Paper' if dress == 'paper' else 'Vivid'} = SkyPalette(")
+    end = text.index("\n        )", start)
+    found = SKY.findall(text[start:end])
+    if len(found) != 9:
+        sys.exit(f"{dress}: parsed {len(found)} sky anchors, expected 9 — did SkyPalette.kt change shape?")
     return [(float(a), (f"#{t}", f"#{m}", f"#{b}")) for a, t, m, b in found]
 
 
-def semantic() -> dict:
+def semantic(prefix: str) -> dict:
     text = read("ChiaroColors.kt")
-    light, dark = text.split("internal val ChiaroDarkColors")
+    start = text.index(f"internal val {prefix}LightColors")
+    light = text[start:text.index(f"internal val {prefix}DarkColors")]
+    dark_start = text.index(f"internal val {prefix}DarkColors")
+    dark = text[dark_start:text.index("\n)", text.index("temperatureRamp", dark_start)) + 2]
     out = {}
-    for label, chunk in (("light", light), ("dark", "internal val ChiaroDarkColors" + dark)):
+    for label, chunk in (("light", light), ("dark", dark)):
         verdicts = {n: (f"#{i}", f"#{c}") for n, i, c in VERDICT.findall(chunk)}
         ramps = {n: [f"#{h}" for h in HEX.findall(body)] for n, body in RAMP.findall(chunk)}
         if len(verdicts) != 4 or len(ramps) != 3:
@@ -56,15 +72,18 @@ def semantic() -> dict:
     return out
 
 
-def surfaces() -> dict:
+def surfaces(prefix: str) -> dict:
     text = read("Scheme.kt")
-    light, dark = text.split("internal val ChiaroDarkScheme")
-    def roles(chunk: str) -> dict:
+
+    def roles(name: str) -> dict:
+        start = text.index(f"internal val {name}")
+        chunk = text[start:text.index("\n)", start)]
         return {
             m.group(1): "#" + m.group(2)
             for m in re.finditer(r"(\w+) = Color\(0xFF([0-9A-Fa-f]{6})\)", chunk)
         }
-    return {"light": roles(light), "dark": roles("internal val ChiaroDarkScheme" + dark)}
+
+    return {"light": roles(f"{prefix}LightScheme"), "dark": roles(f"{prefix}DarkScheme")}
 
 
 def mix(a: str, b: str, t: float) -> str:
@@ -87,12 +106,9 @@ def main() -> None:
     # Windows consoles and redirects default to a legacy codepage that cannot
     # carry the verdict glyphs; the sheet declares utf-8, so stdout must be it.
     sys.stdout.reconfigure(encoding="utf-8")
-    table = anchors()
-    sem = semantic()
-    sur = surfaces()
     p = print
     p("<html><head><meta charset=utf-8><style>"
-      "body{font-family:system-ui;margin:0;background:%s;color:%s}"
+      "body{font-family:system-ui;margin:0}"
       "h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#7C7768;margin:20px 16px 8px}"
       ".row{display:flex;gap:4px;padding:0 16px}.b{flex:1;height:120px;border-radius:8px;position:relative;overflow:hidden}"
       ".l{position:absolute;bottom:0;left:0;right:0;color:#fff;font-size:11px;padding:14px 5px 5px;"
@@ -101,10 +117,20 @@ def main() -> None:
       ".chips{display:flex;gap:8px;padding:0 16px}"
       ".figures{display:flex;gap:16px;padding:0 16px;font-size:20px;font-weight:600}"
       ".chip{padding:6px 12px;border-radius:99px;font-size:13px;font-weight:500}"
-      ".dark{background:%s;color:%s;padding:1px 0 24px;margin-top:24px}.dark h2{color:#969081}"
-      "</style></head><body>" % (sur["light"]["surface"], sur["light"]["onSurface"],
-                                 sur["dark"]["surface"], sur["dark"]["onSurface"]))
+      ".dark{padding:1px 0 24px;margin-top:24px}.dark h2{color:#969081}"
+      "h1{font:600 15px system-ui;letter-spacing:.04em;margin:0;padding:20px 16px 0}"
+      ".sheet{padding-bottom:24px}"
+      "</style></head><body>")
 
+    for dress, prefix in DRESSES:
+        sheet(p, dress, anchors(dress), semantic(prefix), surfaces(prefix))
+    p("</body></html>")
+
+
+def sheet(p, dress: str, table, sem: dict, sur: dict) -> None:
+    p("<div class=sheet style='background:%s;color:%s'>"
+      % (sur["light"]["surface"], sur["light"]["onSurface"]))
+    p(f"<h1>{dress}</h1>")
     p("<h2>The sky, degree by degree</h2><div class=row>")
     for altitude in (30, 12, 8, 6, 4, 2, 0, -2, -4, -6, -9, -12, -15, -18, -40):
         s = sky_at(altitude, table)
@@ -113,8 +139,9 @@ def main() -> None:
     p("</div>")
 
     for mode in ("light", "dark"):
-        wrap = "<div class=dark>" if mode == "dark" else ""
-        p(wrap)
+        if mode == "dark":
+            p("<div class=dark style='background:%s;color:%s'>"
+              % (sur["dark"]["surface"], sur["dark"]["onSurface"]))
         p(f"<h2>Rain ramp, the marks · {mode}</h2><div class=ramp>")
         for c in sem[mode]["rainRamp"]:
             p(f"<div style='background:{c}'></div>")
@@ -139,7 +166,7 @@ def main() -> None:
         p("</div>")
         if mode == "dark":
             p("</div>")
-    p("</body></html>")
+    p("</div>")
 
 
 if __name__ == "__main__":

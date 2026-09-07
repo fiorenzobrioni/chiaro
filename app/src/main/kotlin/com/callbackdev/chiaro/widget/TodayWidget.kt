@@ -58,7 +58,9 @@ class TodayWidget : GlanceAppWidget() {
         val initial = WidgetData.load(context, appWidgetId)
         provideContent {
             val model = rememberWidgetModel(context, appWidgetId, initial, loadedAt)
-            val schemes = rememberWidgetSchemes(context, model.settings.dynamicColor)
+            val schemes = rememberWidgetSchemes(
+                context, model.settings.dynamicColor, model.settings.palette
+            )
             val skyBitmap = rememberSkyBitmap(model)
             WidgetCard(model, schemes, skyBitmap) { palette ->
                 when (val content = model.content) {
@@ -113,7 +115,8 @@ class TodayWidget : GlanceAppWidget() {
                     provider = ImageProvider(
                         ChiaroIcons.conditionRes(
                             current.condition.wmoCode, content.night,
-                            model.settings.weatherIcons, palette.darkGround
+                            model.settings.weatherIcons, palette.darkGround,
+                            model.settings.palette
                         )
                     ),
                     contentDescription = null,
@@ -213,7 +216,8 @@ class TodayWidget : GlanceAppWidget() {
                                     strip.hour.condition.wmoCode,
                                     strip.night,
                                     model.settings.weatherIcons,
-                                    palette.darkGround
+                                    palette.darkGround,
+                                    model.settings.palette
                                 )
                             ),
                             contentDescription = null,

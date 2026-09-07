@@ -13,7 +13,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.callbackdev.chiaro.ui.theme.SkyPalette
+import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 
 /**
  * One phase of light, as a fraction of the day. [start] and [end] are 0..1 from local
@@ -39,6 +39,8 @@ fun DaylightRibbon(
     height: Dp = 6.dp,
     markerColor: Color = Color.White
 ) {
+    // Read outside the Canvas: the draw lambda is a DrawScope, not a composition.
+    val sky = ChiaroTheme.sky
     Canvas(
         modifier = modifier
             .fillMaxWidth()
@@ -52,7 +54,7 @@ fun DaylightRibbon(
             // The middle stop of the canvas' own gradient: the ribbon is a thin slice of
             // the same sky, not a second palette to keep in sync.
             drawRect(
-                color = SkyPalette.gradient(phase.sunAltitudeDeg).mid,
+                color = sky.gradient(phase.sunAltitudeDeg).mid,
                 topLeft = Offset(left, 0f),
                 size = Size(right - left, size.height)
             )

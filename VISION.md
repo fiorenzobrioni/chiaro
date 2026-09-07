@@ -156,12 +156,29 @@ defaults. Chiaro must read as *a designed Material app*, which means committing 
 apps skip: real shape variety, real motion physics, button groups and FAB menus where they earn
 their place, and a color scheme that is generated rather than hand-picked.
 
-- **Dynamic color** on by default (Material You, wallpaper-derived), with a curated in-app palette
-  as the fallback and as an explicit choice for people who want the app to look like itself.
-- **Light is the default**, dark is complete and equal, both follow the system. The t-series' dark
-  monopoly was a stylistic position; here it would just be an accessibility problem.
+- **Dynamic color** available (Material You, wallpaper-derived) but **off by default since
+  7 set 2026**: the app opens looking like itself, on the device and in the store screenshots
+  alike, and the palette choice below only says something when the wallpaper is not answering
+  for it. One tap brings the wallpaper back.
+- **Two curated palettes, and the reader picks** (7 set 2026): *Paper*, the warm identity, and
+  *Vivid*, the same design at the brightest colors a screen holds — cool white, an azure accent,
+  saturated ramps and sky. It is one choice over the scheme, the semantic tokens, the canvas and
+  the icon sets, and it applies even under dynamic color, because none of those ever followed the
+  wallpaper. DESIGN §2.5 carries the rule they were derived by and the measurements.
+- **Dark is the default since 7 set 2026** (committente), and light is complete and equal. The
+  earlier position here was that light should lead and both should follow the system, on the
+  grounds that the t-series' dark monopoly was stylistic and would be an accessibility problem
+  here. What changed the call is what the app actually is: its hero is a painted night sky for
+  half of every day, and the vivid palette was picked for its dark scheme. The concern the old
+  line was protecting has not gone away — an app that ignores the phone's light mode reads as
+  broken to some readers — so *Same as the phone* stays one tap away and dark never becomes a
+  monopoly, only a default.
 - **No skeuomorphic weather art.** No 3D glass droplets, no photographic backgrounds. The visual
   interest comes from color, gradient and motion driven by real data.
+- **The weather icons move** (7 set 2026): Meteocons' own animations, carried over as
+  AnimatedVectorDrawables for the condition family and nothing else. On by default, off in one
+  tap, and always off when the phone asks for less motion. DESIGN §7.1 has the rules and the
+  costs.
 
 ### 4.2 The sky canvas (the signature)
 
@@ -361,7 +378,8 @@ one place a FAB earns its keep.
 
 ### 5.7 Settings and the guide
 
-Standard M3 preferences, grouped: units, appearance (theme, dynamic color, canvas motion), update
+Standard M3 preferences, grouped: units, appearance (theme, palette, weather icons, animated
+icons, dynamic color, canvas motion), update
 frequency, notifications, widgets, language, about. Reset is a destructive-styled item with a
 confirmation dialog rather than a two-tap `$` command.
 
