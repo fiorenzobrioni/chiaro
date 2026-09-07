@@ -26,9 +26,10 @@ import com.callbackdev.chiaro.ui.theme.ChiaroTheme
  * — a bar with three dead tabs would be the screen lying about what the app can do.
  *
  * The theme reads the reader's choices (Fase 4). Until the store's first emission the
- * defaults hold — system dark, dynamic color — which are also what a fresh install
- * chose; only a reader who forced the theme against the system can see one frame of
- * the other scheme, and one frame is cheaper than holding the whole app blank.
+ * defaults hold — the phone's own light or dark, the vivid dress — which are also what
+ * a fresh install chose; only a reader who forced the theme against the system can see
+ * one frame of the other scheme, and one frame is cheaper than holding the whole app
+ * blank.
  */
 class MainActivity : ComponentActivity() {
 
@@ -40,9 +41,9 @@ class MainActivity : ComponentActivity() {
             val settings by settingsStore.settings.collectAsStateWithLifecycle(initialValue = null)
             val darkTheme = when (settings?.themeMode) {
                 ThemeMode.LIGHT -> false
-                // `null` is the store's first frame, and DARK is what it will say.
-                ThemeMode.DARK, null -> true
-                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                ThemeMode.DARK -> true
+                // `null` is the store's first frame, and SYSTEM is what it will say.
+                ThemeMode.SYSTEM, null -> isSystemInDarkTheme()
             }
             // The bars' ink follows the APPLIED theme, not the system's: a reader
             // who forces light against a dark phone was getting white icons over a

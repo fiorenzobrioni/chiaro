@@ -186,7 +186,7 @@
     <!-- First run: one screen, two answers, skipping allowed -->
     <string name="first_run_tagline">Weather that tells you what to do about it.</string>
     <string name="first_run_use_location">Use my position</string>
-    <string name="first_run_location_why">Rounded to about a kilometre and used only to ask Open-Meteo for the forecast where you are. No account, nothing stored, and never read in the background.</string>
+    <string name="first_run_location_why">Used only to get the forecast where you are, rounded to about a kilometre.</string>
     <string name="first_run_search">Search for a city</string>
     <string name="first_run_skip">Not now</string>
 
@@ -211,18 +211,18 @@
     <string name="settings_palette">Palette</string>
     <string name="settings_palette_paper">Paper</string>
     <string name="settings_palette_vivid">Vivid</string>
-    <string name="settings_palette_note">Paper is Chiaro\'s own: warm white, amber, a quiet sky. Vivid is the same app at the brightest colors a screen holds: cool white, an azure accent, a saturated sky and brighter weather icons on dark backgrounds.</string>
+    <string name="settings_palette_note">Paper is warm white and amber. Vivid is cool white and azure, with brighter weather icons.</string>
     <string name="settings_weather_icons">Weather icons</string>
     <string name="settings_icons_fill">Filled</string>
     <string name="settings_icons_line">Outlined</string>
-    <string name="settings_weather_icons_note">Two drawings of the same icons: solid shapes, or thin strokes.</string>
+    <string name="settings_weather_icons_note">Two drawings of the same icons: solid shapes, or thin outlines.</string>
     <string name="settings_animated_icons">Animated icons</string>
-    <string name="settings_animated_icons_note">The weather icons move: the sun turns, rain falls, the lightning flashes. Off leaves them still. Either way they stop moving when your phone asks for less animation.</string>
+    <string name="settings_animated_icons_note">The weather icons move: the sun turns, the rain falls, the lightning flashes.</string>
     <string name="settings_dynamic_color">Wallpaper colors</string>
-    <string name="settings_dynamic_color_note">On, the colors come from your wallpaper. Off, Chiaro wears the palette you picked above.</string>
+    <string name="settings_dynamic_color_note">The colors come from your wallpaper instead of the palette above.</string>
     <string name="settings_group_updates">Updates</string>
     <string name="settings_update_frequency">Update frequency</string>
-    <string name="settings_update_frequency_note">How long a forecast stays current before Chiaro asks for a fresh one.</string>
+    <string name="settings_update_frequency_note">How long a forecast stays current before Chiaro asks for a new one.</string>
     <string name="settings_freq_15">Every 15 minutes</string>
     <string name="settings_freq_30">Every 30 minutes</string>
     <string name="settings_freq_60">Every hour</string>
@@ -237,10 +237,10 @@
     <string name="settings_source_code">Source code</string>
     <string name="settings_source_code_note">Free software, GPL-3.0, on GitHub</string>
     <string name="settings_privacy">Privacy</string>
-    <string name="settings_privacy_note">No account, no ads, no tracking. The only thing that leaves the phone is the weather request.</string>
-    <string name="settings_reset">Restore the default settings</string>
-    <string name="settings_reset_dialog_title">Restore the defaults?</string>
-    <string name="settings_reset_dialog_body">Units, appearance and update frequency go back to how they started. Your places and your history stay exactly as they are.</string>
+    <string name="settings_privacy_note">No account, no ads, no tracking.</string>
+    <string name="settings_reset">Restore default settings</string>
+    <string name="settings_reset_dialog_title">Restore default settings?</string>
+    <string name="settings_reset_dialog_body">Units, appearance and update frequency go back to their defaults. Your places and your history are not affected.</string>
     <string name="settings_reset_confirm">Restore</string>
 
     <!-- The four verdict words (VISION §5.3). Defined with the guide that teaches
@@ -348,10 +348,10 @@
     <string name="guide_widgets_honest_body">Old data says how old it is, a widget with no place says so, and none of them shows a number it does not have. They repaint when an update lands, so they cost no battery of their own.</string>
 
     <string name="guide_settings_title">Settings</string>
-    <string name="guide_settings_body">Units for temperature and wind; appearance, where the theme, the two drawings of the weather icons and the wallpaper palette live; how often to look for a new forecast; the app language, on Android\'s own picker. Restoring the defaults puts units, appearance and frequency back as they started and leaves your places and your history exactly where they are.</string>
+    <string name="guide_settings_body">Units for temperature and wind. Appearance, where the theme, the palette, the two drawings of the weather icons and the wallpaper colors live. How often to look for a new forecast. The app language, on Android\'s own picker. Restoring the defaults puts units, appearance and frequency back as they started and leaves your places and your history exactly where they are.</string>
 
     <string name="guide_data_title">Where the numbers come from</string>
-    <string name="guide_data_p1">Forecasts, air quality and place search come from Open-Meteo, an open weather service: free, with no account, and the only thing that ever leaves your phone is the weather request itself. No account, no ads, no tracking.</string>
+    <string name="guide_data_p1">Forecasts, air quality and place search come from Open-Meteo, an open weather service: free, no account, no API key. The weather request is the only thing that leaves your phone.</string>
     <string name="guide_data_p2">Sunrise, sunset, the moon and the whole sky module are computed right on your phone. That is why they are correct even with no connection at all.</string>
     <string name="guide_data_p3">When an update cannot get through, nothing goes blank: Chiaro keeps the last forecast that arrived, tells you how old it is, and quietly sets aside the hours that have already passed. What you see is always something the data really said.</string>
 
@@ -413,8 +413,8 @@
     </plurals>
     <string name="sky_lead_one_day">A day before</string>
     <string name="sky_notify_on_fail">Even under a covered sky</string>
-    <string name="sky_notify_on_fail_note">Send the reminder even when the verdict says the sky will hide it</string>
-    <string name="sky_reminders_note">Reminders can arrive a few minutes early or late: keeping them loose is what keeps them off the battery.</string>
+    <string name="sky_notify_on_fail_note">Send the reminder even when the verdict says the sky will hide it.</string>
+    <string name="sky_reminders_note">Reminders can arrive a few minutes early or late.</string>
     <string name="sky_bell_on_desc">Reminder for %1$s: on, tap to change</string>
     <string name="sky_bell_off_desc">Reminder for %1$s: off, tap to set one</string>
 
@@ -826,7 +826,7 @@
     <string name="widget_config_opacity">Background opacity</string>
     <string name="widget_config_content">Content</string>
     <string name="widget_config_show_condition">Sky state beside the temperature</string>
-    <string name="widget_config_show_condition_note">It needs the room: on a narrow widget the words are cut off.</string>
+    <string name="widget_config_show_condition_note">Needs a wide widget: on a narrow one the words are cut off.</string>
     <string name="widget_config_show_range">Today\'s high and low</string>
-    <string name="widget_config_show_range_note">Against the far edge, level with the temperature.</string>
+    <string name="widget_config_show_range_note">At the far edge, level with the temperature.</string>
 </resources>

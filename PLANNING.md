@@ -2336,7 +2336,7 @@ un observer nostro.
 
 | Voce | Prima | Ora |
 |---|---|---|
-| Tema | Come il telefono | **Scuro** |
+| Tema | Come il telefono | **Scuro** (poi rimesso a «Come il telefono», stessa giornata: vedi sotto) |
 | Palette | Carta | **Brillante** |
 | Icone del meteo | A tratto | A tratto (invariata) |
 | Icone animate | — | **Attivo** |
@@ -2366,6 +2366,126 @@ default, non un monopolio.
 I due default del widget cambiano anche i widget **già posati** che non hanno mai avuto
 quella voce modificata: è quello che significa un default, ed è il motivo per cui lo si
 sposta.
+
+---
+
+## Bordi, marchio, tema e parole (committente, 7 set 2026)
+
+Quattro richieste in una passata, arrivate con lo screenshot del widget «Ora» sulla home.
+
+### Il widget «Ora» respira dai due lati
+
+Segnalazione: l'icona un po' troppo vicina al bordo sinistro, la massima e la minima
+**decisamente** vicine al destro. Erano due errori diversi con una causa sola: la quarta
+passata su device aveva messo `contentPaddingStart = 0.dp` sul presupposto che «un glifo
+Meteocons porta circa un quarto della sua scatola come margine», e aveva lasciato il
+bordo destro a `WidgetCardPaddingSnug`, i 6 dp verticali pensati per far crescere l'eroe.
+
+Il presupposto è stato **misurato invece che stimato**: rasterizzando tutti e 160 i
+disegni delle condizioni (le quattro famiglie, `mc_ mcf_ mcn_ mcfn_`), il margine
+d'inchiostro a sinistra è 6,5/64 nel caso più stretto (`partly_cloudy_day`) e 9/64 alla
+mediana — non 16/64. Sulla scatola da ~89 dp che la concessione a una cella lascia sono
+**9-12,5 dp**, mentre il testo, che di margine laterale non ne ha, si fermava a 6.
+
+Ora la card prende tre numeri invece di uno:
+
+| Bordo | Prima | Ora | Perché |
+|---|---|---|---|
+| Sopra e sotto | 6 dp | 6 dp | l'eroe possiede l'altezza, invariato |
+| Sinistra | 0 dp | **8 dp** | 8 + 9…12,5 = 17-20,5 dp d'inchiostro dal bordo, contro i 15-18,5 che il glifo ha già sopra e sotto: i due dp in più sono quello che si riprende l'angolo da 24 dp, che in verticale non c'è |
+| Destra | 6 dp | **12 dp** | `WidgetCardPaddingTight`, cioè l'inset che l'altro widget da una cella già usa |
+
+Il conto che la modifica doveva pagare è la colonna delle parole, che perde 14 dp:
+«23°» più «27° / 16°» misurano circa 117 dp (metrica Inter) contro i 123 dp di colonna su
+una concessione da 240 dp. Era già troppo stretto a 216 dp **prima** di questa passata e
+lo resta — la coppia massima/minima è spenta di default e la sua riga di configurazione
+dice che serve spazio.
+
+**Anche gli stati vuoti** (seconda segnalazione, stessa passata). «Sto prendendo la prima
+previsione…» e «Nessun luogo» stavano incastrati nell'angolo in alto a sinistra di una
+card per il resto vuota: senza forma da seguire, due righe in alto sembrano contenuto che
+non ha finito di caricare, non un messaggio. Ora sono **centrati verticalmente** sulla
+card, su tutti e tre i widget. E sul widget «Ora» prendono l'inset del TESTO anche a
+sinistra: gli 8 dp esistono perché la riga è aperta da un glifo che si porta il margine
+da sé, e uno stato vuoto di glifi non ne ha.
+
+### Il marchio passa alla palette Brillante
+
+L'icona del launcher indossava ancora Carta, che dal 7 set non è più la palette che una
+nuova installazione vede. È un disegno fatto a mano, quindi non esce da un generatore,
+ma si sposta con la stessa regola di `tools/gen_scheme.py`: **ogni inchiostro tiene la
+chiarezza CIELAB con cui è stato disegnato e prende tinta e croma dalla sorgente vivida
+di DESIGN §2.5**.
+
+| | Prima | Ora | |
+|---|---|---|---|
+| Luna, onda vicina | `#3589AC` | `#317DF5` | primario vivido `#2C7BF2` a L\* 54 |
+| Stelle | `#C27D08` | `#BB8000` | secondario vivido `#FFB000` a L\* 58 |
+| Onda lontana | `#6493A5` | `#6288E8` | stesso blu a L\* 58, croma allo 0,8 del bordo di gamut |
+| Sfondo | `#F4F1EA` | `#E9F2FC` | neutro vivido al tono 95 |
+
+Tenere la chiarezza tiene i contrasti che il badge aveva sul proprio fondo: stelle
+2,99 → 3,00, luna 3,50 → 3,45, onda lontana 2,97 → 2,99. Due note oneste. La prima: le
+**stelle non si muovono quasi**, perché a L\* 58 tutti e due gli ambra stanno già sul
+bordo del gamut sRGB — è lo stesso fatto che §2.5 registra per i token che non si spostano,
+non una modifica lasciata a metà. La seconda: l'onda lontana è l'unico numero scelto a
+occhio invece che dalla regola. Alla croma proporzionale a quella di Carta (0,62 del
+bordo) veniva un grigio-violetto; a 0,8 le due onde restano due onde e restano blu.
+
+Il livello `<monochrome>` riusa lo stesso drawable e il sistema ne legge solo l'alfa,
+quindi l'icona a tema non cambia.
+
+### Il tema torna a «Come il telefono»
+
+Il default scuro deciso poche ore prima è stato revocato dal committente. La ragione è
+quella che la decisione precedente aveva già scritto **come proprio costo**: un'app che
+ignora la modalità chiara del telefono sembra rotta, e un default è quello che la maggior
+parte dei lettori vedrà per sempre. Entrambi gli schemi scuri restano a un tocco, e un
+telefono in modalità scura li ottiene lo stesso senza chiedere.
+
+Spostato anche il ripiego del **primo fotogramma**, in `MainActivity` e in
+`WidgetConfigActivity`: `null` (lo store non ha ancora risposto) seguiva `DARK`, ora
+segue il sistema, che è quello che lo store sta per dire.
+
+### Le stringhe
+
+Richiesta: in Impostazioni e nel resto dell'app, testi che descrivano **la funzione per
+chi legge**, omogenei, né troppo lunghi né telegrafici; via le frasi che sembrano
+giustificare qualcosa e quelle che insistono su un tema. Lo stile di riferimento è quello
+delle app del Play Store, e le linee guida di Google dicono la stessa cosa: una riga di
+supporto è **una** frase che dice cosa fa l'impostazione, non perché la si è costruita così.
+
+Le tre famiglie di difetto trovate, con un esempio ciascuna:
+
+1. **La giustificazione.** «In ogni caso si fermano quando il telefono chiede meno
+   animazioni» (icone animate), «tenerli larghi è ciò che li tiene fuori dalla batteria»
+   (promemoria del cielo). Vera, e non affare del lettore: è il progetto che si spiega.
+2. **L'insistenza.** La privacy compariva tre volte con le stesse parole — in
+   Impostazioni, nel primo avvio e nella guida — e ogni volta con una clausola in più.
+   Ora è detta una volta per posto: in Informazioni resta il fatto secco, nel primo avvio
+   resta solo la ragione del permesso (che Google chiede di dare), nella guida resta la
+   frase su Open-Meteo senza il ritornello.
+3. **La lunghezza disomogenea.** Le spiegazioni dei dialoghi andavano da 62 a 210
+   caratteri. Ora stanno tutte fra 62 e 100, una frase o due corte.
+
+Ritoccate anche: le due righe di configurazione del widget, il corpo della guida sulle
+impostazioni (una catena di punti e virgola diventata quattro frasi) e la voce di
+ripristino, che ora si chiama «Ripristina le impostazioni predefinite» in tutte e due le
+lingue invece di essere più lunga in inglese che in italiano.
+
+Nessuna stringa aggiunta o rimossa: `StringsParityTest` continua a valere e IT/EN restano
+allineate riga per riga.
+
+### Verifica
+
+- `./gradlew test :app:testDebugUnitTest` verde, `:app:lintDebug` pulito,
+  `:app:assembleDebug` costruito
+- `SettingsStoreTest` aggiornato sul nuovo default del tema (tre asserzioni: prima
+  installazione, enum sconosciuto, ripristino)
+- Icona renderizzata e guardata a 432, 192, 96 e 48 px sotto la maschera circolare del
+  launcher, su home chiara e scura
+- Bordi del widget verificati su un mock geometrico con le metriche vere del carattere,
+  prima e dopo
 
 ---
 

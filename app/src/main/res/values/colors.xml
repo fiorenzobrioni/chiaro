@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Placeholder launcher background. The brand's color is Fase 1 (DESIGN.md §2). -->
-    <color name="ic_launcher_background">#F4F1EA</color>
+    <!-- The badge's ground: the vivid palette's neutral at tone 95, the cool daylight
+         white of DESIGN.md §2.5 (committente, 7 set — the mark used to wear the paper
+         dress). The foreground drawable carries the arithmetic for all four inks. -->
+    <color name="ic_launcher_background">#E9F2FC</color>
 </resources>

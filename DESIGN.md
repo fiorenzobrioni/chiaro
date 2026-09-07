@@ -967,9 +967,18 @@ a valid animator and only a person can say the rain falls downward.
    On device and in the store, the app now looks like itself. It stays one tap away for
    readers who want their wallpaper back.
 3. ~~The brand mark~~ — **shipped, 3 set 2026**: the icon family's starry-night
-   crescent, fill style, in Chiaro's own palette (moon `#3589AC`, stars `#C27D08` —
-   the brand amber), set low in the badge over two calm waves; everything inside the
+   crescent, fill style, set low in the badge over two calm waves; everything inside the
    33-unit safe circle, and the `<monochrome>` layer reuses the same drawable.
+   **Repainted in the vivid dress, 7 set 2026** (committente), that being the palette a
+   fresh install wears since item 2 above resolved. It is hand-drawn, so it does not
+   come out of a generator, but it moves by the same rule `tools/gen_scheme.py` uses:
+   each ink keeps the CIELAB lightness it was drawn at and takes its hue and chroma from
+   the vivid source of §2.5. Moon and near wave `#3589AC` → `#317DF5`, stars `#C27D08` →
+   `#BB8000`, far wave `#6493A5` → `#6288E8`, ground `#F4F1EA` → `#E9F2FC`. Holding the
+   lightness holds the badge's contrasts against its own ground — 2.99 → 3.00 stars,
+   3.50 → 3.45 moon, 2.97 → 2.99 far wave — and the stars barely move because at L\* 58
+   both palettes' ambers are already on the sRGB gamut edge, which is the same fact
+   §2.5 records about the tokens that do not move.
 4. **`heroTemperature`** is an extended type role, not a Material one. Confirm it survives
    contact with the expressive scale rather than becoming `displayLarge` with a tighter
    line height.

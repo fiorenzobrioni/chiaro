@@ -82,8 +82,8 @@ class WidgetConfigActivity : ComponentActivity() {
             ChiaroTheme(
                 darkTheme = when (settings?.themeMode) {
                     ThemeMode.LIGHT -> false
-                    ThemeMode.DARK, null -> true
-                    ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                    ThemeMode.DARK -> true
+                    ThemeMode.SYSTEM, null -> isSystemInDarkTheme()
                 },
                 dynamicColor = settings?.dynamicColor ?: false,
                 palette = settings?.palette ?: AppPalette.VIVID

@@ -1,12 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The mark (decision, 3 set): the starry-night crescent from the app's own icon
-     family, fill style, in Chiaro's deep palette — moon in the daylight blue, stars
-     in the brand amber — sitting low in the badge over two calm waves. Geometry is
+     family, fill style, sitting low in the badge over two calm waves. Geometry is
      mcf_starry_night's, mapped into the 108-box (scale 0.87, glyph center at 54,46;
      nudged down and the waves up on device review, 3 set — the first cut hugged both
      edges and left a gulf between moon and sea)
      so everything clears the 33-unit safe circle of every launcher mask. The
-     <monochrome> layer reuses this drawable: the system reads its alpha. -->
+     <monochrome> layer reuses this drawable: the system reads its alpha.
+
+     Repainted in the VIVID dress (committente, 7 set), which is the one a fresh
+     install wears since the palette default moved. Same method as tools/gen_scheme.py
+     and for the same reason — one algorithm, two dresses: each ink keeps the CIELAB
+     lightness it was drawn at and takes its hue and chroma from the vivid source of
+     DESIGN §2.5, so the badge's measured contrasts against its own ground survive the
+     change (2.99 → 3.00 stars, 3.50 → 3.45 moon, 2.97 → 2.99 far wave).
+
+       moon, near wave  #3589AC → #317DF5   vivid primary #2C7BF2 at L* 54
+       stars            #C27D08 → #BB8000   vivid secondary #FFB000 at L* 58
+       far wave         #6493A5 → #6288E8   the same blue at L* 58, chroma at 0.8 of
+                                            the gamut edge so the two waves stay two
+       ground           #F4F1EA → #E9F2FC   vivid neutral at tone 95 (colors.xml)
+
+     The stars barely move, and that is the palette being honest rather than the edit
+     being incomplete: at L* 58 both ambers are already on the sRGB gamut edge, so
+     there is no brighter amber to take. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
@@ -18,26 +34,26 @@
         android:translateX="26.2"
         android:translateY="17.6">
         <path
-            android:fillColor="#C27D08"
+            android:fillColor="#BB8000"
             android:pathData="M 35.44 16.87 l 1.3 2.13 a 0.55 0.55 0 0 1 0.06 0.5 l -0.8 2.36 a 0.59 0.59 0 0 0 0.87 0.7 l 2.13 -1.3 a 0.55 0.55 0 0 1 0.5 -0.06 l 2.36 0.8 a 0.59 0.59 0 0 0 0.7 -0.87 L 41.26 19 a 0.55 0.55 0 0 1 -0.06 -0.5 l 0.8 -2.36 a 0.59 0.59 0 0 0 -0.87 -0.7 L 39 16.74 a 0.55 0.55 0 0 1 -0.5 0.06 l -2.36 -0.8 a 0.59 0.59 0 0 0 -0.7 0.87 z" />
         <path
-            android:fillColor="#C27D08"
+            android:fillColor="#BB8000"
             android:pathData="M 42.27 30.82 l 2.49 0.07 a 0.62 0.62 0 0 1 0.46 0.22 l 1.53 2 a 0.6 0.6 0 0 0 1.07 -0.35 l 0.07 -2.49 a 0.62 0.62 0 0 1 0.22 -0.46 l 2 -1.53 a 0.6 0.6 0 0 0 -0.35 -1.07 l -2.49 -0.07 a 0.62 0.62 0 0 1 -0.46 -0.22 l -1.53 -2 a 0.6 0.6 0 0 0 -1.07 0.35 l -0.07 2.49 a 0.62 0.62 0 0 1 -0.22 0.46 l -2 1.53 a 0.6 0.6 0 0 0 0.35 1.07 z" />
         <path
-            android:fillColor="#C27D08"
+            android:fillColor="#BB8000"
             android:pathData="M 35.31 26.35 l 1.25 1.1 a 0.4 0.4 0 0 1 0.14 0.31 v 1.66 a 0.39 0.39 0 0 0 0.69 0.27 l 1.1 -1.25 a 0.4 0.4 0 0 1 0.31 -0.14 h 1.66 a 0.39 0.39 0 0 0 0.27 -0.69 l -1.25 -1.1 a 0.4 0.4 0 0 1 -0.14 -0.31 v -1.66 a 0.39 0.39 0 0 0 -0.69 -0.27 l -1.1 1.25 a 0.4 0.4 0 0 1 -0.31 0.14 h -1.66 a 0.39 0.39 0 0 0 -0.27 0.69 z" />
         <path
-            android:fillColor="#3589AC"
+            android:fillColor="#317DF5"
             android:pathData="M 46.66 36.2 a 16.66 16.66 0 0 1 -16.78 -16.55 16.29 16.29 0 0 1 0.55 -4.15 A 16.56 16.56 0 1 0 48.5 36.1 c -0.61 0.06 -1.22 0.1 -1.84 0.1 z" />
     </group>
     <!-- Two calm waves under the night: the sea the sky is worth going out for. -->
     <path
-        android:strokeColor="#6493A5"
+        android:strokeColor="#6288E8"
         android:strokeWidth="4.5"
         android:strokeLineCap="round"
         android:pathData="M 36 70 c 6 -5 12 5 18 0 c 6 -5 12 5 18 0" />
     <path
-        android:strokeColor="#3589AC"
+        android:strokeColor="#317DF5"
         android:strokeWidth="4.5"
         android:strokeLineCap="round"
         android:pathData="M 41 78 c 5 -4.2 10 4.2 15 0 c 5 -4.2 10 4.2 15 0" />
