@@ -59,15 +59,23 @@ class NowWidget : GlanceAppWidget() {
                 context, model.settings.dynamicColor, model.settings.palette
             )
             val skyBitmap = rememberSkyBitmap(model)
+            val content = model.content
             WidgetCard(
                 model, schemes, skyBitmap,
                 contentPadding = WidgetCardPaddingSnug,
-                // Nothing on the leading edge: the glyph's own margin is the inset,
-                // and it lands the icon where the neighbouring weather widgets put
-                // theirs (measured on the device's screenshot, 4th pass).
-                contentPaddingStart = 0.dp
+                // Snug above and below — the glyph is the hero and owns the height —
+                // but a real inset on both sides, sized for what leans on each of
+                // them (committente, 7 set; the numbers are in [WidgetCardPaddingLeading]).
+                //
+                // The smaller leading inset exists BECAUSE a glyph leads the row and
+                // brings a margin of its own. An empty state has no glyph, only words,
+                // and words have none — so it gets the same inset as the words on the
+                // other side, and the message lines up with where a place name would be.
+                contentPaddingStart =
+                    if (content != null) WidgetCardPaddingLeading else WidgetCardPaddingTrailing,
+                contentPaddingEnd = WidgetCardPaddingTrailing
             ) { palette ->
-                when (val content = model.content) {
+                when (content) {
                     null -> if (model.city == null) {
                         NoPlaceContent(palette)
                     } else {
@@ -129,11 +137,11 @@ private fun NowContent(
                 )
             )
         )
-        // 8dp, not 12: a quarter of the glyph's box is already empty on that side.
-        // The bottom balances the leading above "23°", so the words' ink and the
-        // glyph's ink share a centre line instead of the two boxes sharing one
-        // (committente, 5th device pass — the icon read high by exactly half that
-        // band).
+        // 8dp, not 12: the glyph leaves 9 to 12.5 dp of its own box empty on that side
+        // too, so the gap the eye reads is 17 to 20. The bottom balances the leading above
+        // "23°", so the words' ink and the glyph's ink share a centre line instead of
+        // the two boxes sharing one (committente, 5th device pass — the icon read high
+        // by exactly half that band).
         Column(
             modifier = GlanceModifier
                 .padding(start = 8.dp, bottom = textInkBalance(context, TemperatureSp))

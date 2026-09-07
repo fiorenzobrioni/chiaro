@@ -43,16 +43,18 @@ data class AppSettings(
     val units: UnitSettings = UnitSettings(),
     val notifications: NotificationSettings = NotificationSettings(),
     /**
-     * DARK by default since 7 set 2026 (committente: «è molto bello»), against the
-     * older SYSTEM and against VISION §4's «light is the default».
+     * SYSTEM again since 7 set 2026 (committente), which reverses the DARK default of
+     * that morning and puts the app back on the platform's own rule: the phone says
+     * light or dark, and every app follows it.
      *
-     * The argument that moved: this app's hero is a painted night sky for half of every
-     * day, the vivid palette below was picked for its dark scheme, and the two together
-     * are what the product is meant to look like the first time it opens. The cost is
-     * real and stated — an app that does not follow the phone's light mode reads as
-     * broken to some readers — and it is one tap from here to SYSTEM.
+     * DARK won the first argument because the hero is a painted night sky for half of
+     * every day and the vivid palette below was picked for its dark scheme, so the
+     * product opened looking like itself. It loses the second one for the reason the
+     * first stated as its own cost: an app that ignores the phone's light mode reads
+     * as broken, and a default is what most readers will ever see. Both dark schemes
+     * are still one tap away, and a phone in dark mode still gets them by default.
      */
-    val themeMode: ThemeMode = ThemeMode.DARK,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
     /**
      * Material's wallpaper-derived scheme. **Off by default since 7 set 2026**, which
      * closes DESIGN §13's second open item on the side it was leaning: the app looks
@@ -135,7 +137,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                     precipitationWarning = prefs[PrecipWarning] ?: true,
                     userRules = prefs[UserRules] ?: true
                 ),
-                themeMode = enumOrDefault(prefs[Theme], ThemeMode.DARK),
+                themeMode = enumOrDefault(prefs[Theme], ThemeMode.SYSTEM),
                 dynamicColor = prefs[DynamicColor] ?: false,
                 palette = enumOrDefault(prefs[Palette], AppPalette.VIVID),
                 weatherIcons = enumOrDefault(prefs[IconStyle], WeatherIcons.LINE),

@@ -232,6 +232,35 @@ val WidgetCardPaddingTight = 12.dp
 val WidgetCardPaddingSnug = 6.dp
 
 /**
+ * The Now widget's two horizontal insets, which are neither the vertical one nor each
+ * other (committente, 7 set: the icon a little too close to the leading edge, the high
+ * and the low decidedly close to the trailing one).
+ *
+ * The two edges carry different things, so one number was never going to be right for
+ * both. Text has almost no side bearing, so at [WidgetCardPaddingSnug] the low's degree
+ * sign really did stop 6 dp from the card; it takes [WidgetCardPaddingTight], the inset
+ * the other one-cell widget already writes at. A Meteocons glyph brings a margin of its
+ * own — measured by rasterising all 160 condition drawables, 6.5/64 of the box at the
+ * tightest (`partly_cloudy_day`) and 9/64 at the median, which is 9 to 12.5 dp at the
+ * ~89 dp box the launcher's one-cell grant leaves. So the leading edge does not need
+ * the same number: it needs the difference.
+ *
+ * 8 dp is that difference, read off the vertical. The same glyph margin applies above
+ * and below, so the hero's ink already sits 15 to 18.5 dp from the card's top and
+ * bottom; 8 + 9…12.5 lands it 17 to 20.5 dp from the leading edge, the extra couple of
+ * dp being what the 24 dp corner takes back on a side the vertical does not have. The
+ * icon ends up inset by its own INK rather than by its bounding box, which is the only
+ * inset the eye can see.
+ *
+ * The cost is 14 dp of the words' column, and the one thing that has to fit in it is
+ * the optional high/low: "23°" and "27° / 16°" come to about 117 dp, against 123 dp of
+ * column on a 240 dp grant. It was already too tight at 216 dp before this change and
+ * it still is — which is what [R.string.widget_config_show_range] is for.
+ */
+val WidgetCardPaddingLeading = 8.dp
+val WidgetCardPaddingTrailing = WidgetCardPaddingTight
+
+/**
  * The card every widget lives in. The sky dress is a bitmap of the same gradient the
  * app's canvas computes for this exact moment, darkened by the §3.6 scrim so white
  * ink clears its measured floor; the reader's opacity scales gradient and scrim
@@ -246,12 +275,13 @@ fun WidgetCard(
     skyBitmap: Bitmap?,
     contentPadding: Dp = WidgetCardPadding,
     /**
-     * The leading edge on its own, because a Meteocons glyph carries about a quarter
-     * of its box as margin already: on the Now widget the card adds nothing there and
-     * the icon starts where the card starts, which is what puts its ink level with
-     * the other weather widgets on the home screen (measured, 4th device pass).
+     * The two horizontal edges on their own, because what sits against them is not
+     * the same thing: a Meteocons glyph carries a margin of its own and text carries
+     * none. The Now widget is the one card that needs the distinction — see
+     * [WidgetCardPaddingLeading] for the measured numbers.
      */
     contentPaddingStart: Dp = contentPadding,
+    contentPaddingEnd: Dp = contentPadding,
     content: @Composable (WidgetPalette) -> Unit
 ) {
     val look = model.look
@@ -304,7 +334,7 @@ fun WidgetCard(
             modifier = GlanceModifier.fillMaxSize().padding(
                 start = contentPaddingStart,
                 top = contentPadding,
-                end = contentPadding,
+                end = contentPaddingEnd,
                 bottom = contentPadding
             )
         ) {
@@ -393,11 +423,28 @@ fun DayRange(highC: Double, lowC: Double, units: UnitSettings, palette: WidgetPa
 /** The pair sits at the place name's size: it is the same order of fact. */
 private val DayRangeSp = 15.sp
 
+/**
+ * The empty states sit in the MIDDLE of the card, not at the top of it (committente,
+ * 7 set — on the Now widget the "no forecast yet" line was jammed into the top corner
+ * of a card that was otherwise empty).
+ *
+ * A card with content has a shape that decides where the words go: the hero row is
+ * centred on the Now widget, the header is the top of a full column on Today and Sky.
+ * A card with one or two lines in it has no such shape, and left at the top those lines
+ * read like content that failed to finish loading rather than a message. Centred on the
+ * card's own axis they read as the message they are — and it is the same treatment on
+ * all three widgets, which is the other half of the report.
+ */
+private val EmptyStateModifier: GlanceModifier get() = GlanceModifier.fillMaxSize()
+
 /** The honest empty state: no place yet, and the tap that fixes it. */
 @Composable
 fun NoPlaceContent(palette: WidgetPalette) {
     val context = LocalContext.current
-    Column {
+    Column(
+        modifier = EmptyStateModifier,
+        verticalAlignment = Alignment.Vertical.CenterVertically
+    ) {
         Text(
             text = context.getString(R.string.empty_no_place_title),
             style = TextStyle(
@@ -417,7 +464,10 @@ fun NoPlaceContent(palette: WidgetPalette) {
 @Composable
 fun NoDataContent(palette: WidgetPalette) {
     val context = LocalContext.current
-    Column {
+    Column(
+        modifier = EmptyStateModifier,
+        verticalAlignment = Alignment.Vertical.CenterVertically
+    ) {
         Text(
             text = context.getString(R.string.widget_no_data),
             style = TextStyle(color = palette.secondary, fontSize = 12.sp)

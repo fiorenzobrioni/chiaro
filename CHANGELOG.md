@@ -30,10 +30,11 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   On by default with a switch in Settings → Appearance, and always still when the phone
   asks for less animation, which is the same setting every other animation in the app
   reads. Not in the widgets, where `RemoteViews` cannot run one at all.
-- New defaults for a fresh install: dark theme, the Vivid palette, wallpaper colors off,
-  outlined icons, animated icons on; and for a newly placed widget, a solid card with the
-  day's range off. The app now opens looking like itself rather than like the wallpaper,
-  which also resolves the design document's open question about store screenshots.
+- New defaults for a fresh install: the Vivid palette, wallpaper colors off, outlined
+  icons, animated icons on; and for a newly placed widget, a solid card with the day's
+  range off. The theme keeps following the phone. The app now opens looking like itself
+  rather than like the wallpaper, which also resolves the design document's open question
+  about store screenshots.
 - A second palette, chosen in Settings → Appearance: **Paper**, the warm identity, and
   **Vivid**, the same app at the brightest colors a screen holds — a cool white, an azure
   accent, saturated quantity ramps, a saturated sky and brighter weather icons on dark
@@ -220,6 +221,31 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   (which day and what kind of day, then how warm) and the details grid becomes one column.
 
 ### Changed
+
+- **The app icon wears the Vivid palette.** The mark was still painted in Paper, which
+  stopped being the palette a fresh install sees. The crescent, the stars and the two
+  waves are the same drawing: each ink keeps the lightness it was drawn at and takes its
+  hue and chroma from the vivid source colors, so the badge is a cool white ground under
+  an azure moon while every contrast inside it stays where it was measured.
+
+- **The Now widget breathes on both sides.** The weather icon used to start exactly where
+  the card starts, on the assumption that the glyph carried a quarter of its box as
+  margin; measuring all 160 condition drawings put the real figure between 6.5 and 9
+  parts in 64, so the icon sat closer to the edge than intended and the day's high and
+  low, which have no margin at all, sat closer still. The card now insets its two
+  horizontal edges separately — enough for the glyph on the leading side, the full inset
+  for the words on the trailing one — and keeps the tight top and bottom that let the
+  icon fill the height. The messages a widget shows when it has nothing to draw yet are
+  centred on the card now instead of sitting in its top corner, where two lines read like
+  content that had not finished loading.
+
+- **Settings reads like settings.** Every explanation is now one short sentence about
+  what the option does. Gone are the lines that justified a design decision to the reader
+  ("either way they stop moving when your phone asks for less animation") and the privacy
+  claim that was repeated in three places with a longer clause each time; it is stated
+  once, where it belongs. The palette description went from 210 characters to 90, the
+  restore row is called the same length of thing in both languages, and the same pass was
+  made over the first-run screen, the sky reminders and the widget configuration.
 
 - **The weather icons are drawn in line by default, and every one of them is 6dp
   bigger.** The default moving is the consequence, not the cause: the drawings were sized

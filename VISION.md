@@ -54,8 +54,8 @@ The skin is thrown away. The soul is not, because the soul was never the monospa
 
 - The editor metaphor in full: no files, no tabs, no gutter, no syntax colors, no `$` commands,
   no diff hunks, no crontab, no JSON on screen.
-- The fixed dark palette. Chiaro follows the system, supports dynamic color, and its default look
-  is light.
+- The fixed dark palette. Chiaro follows the system by default and supports dynamic color; the
+  reader can force either mode (§4).
 - Emoji as iconography (§4.5).
 - Jargon of every kind. Not "translated jargon" — **absent** jargon. Where tweather taught the
   reader a borrowed word and glossed it in `HELP.md`, Chiaro simply never borrows it.
@@ -165,14 +165,13 @@ their place, and a color scheme that is generated rather than hand-picked.
   saturated ramps and sky. It is one choice over the scheme, the semantic tokens, the canvas and
   the icon sets, and it applies even under dynamic color, because none of those ever followed the
   wallpaper. DESIGN §2.5 carries the rule they were derived by and the measurements.
-- **Dark is the default since 7 set 2026** (committente), and light is complete and equal. The
-  earlier position here was that light should lead and both should follow the system, on the
-  grounds that the t-series' dark monopoly was stylistic and would be an accessibility problem
-  here. What changed the call is what the app actually is: its hero is a painted night sky for
-  half of every day, and the vivid palette was picked for its dark scheme. The concern the old
-  line was protecting has not gone away — an app that ignores the phone's light mode reads as
-  broken to some readers — so *Same as the phone* stays one tap away and dark never becomes a
-  monopoly, only a default.
+- **The theme follows the phone**, and light and dark are complete and equal. Dark was the
+  default for a few hours on 7 set 2026 (committente), on the grounds that the hero is a painted
+  night sky for half of every day and that the vivid palette was picked for its dark scheme;
+  the same committente reversed it the same day, and *Same as the phone* is the default again.
+  The reason is the one the dark entry already stated as its own cost: an app that ignores the
+  phone's light mode reads as broken, and a default is what most readers will ever see. Both
+  dark schemes are one tap away, and a phone in dark mode still gets them without asking.
 - **No skeuomorphic weather art.** No 3D glass droplets, no photographic backgrounds. The visual
   interest comes from color, gradient and motion driven by real data.
 - **The weather icons move** (7 set 2026): Meteocons' own animations, carried over as

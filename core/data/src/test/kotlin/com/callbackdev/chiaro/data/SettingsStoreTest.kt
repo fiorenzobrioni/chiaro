@@ -48,10 +48,11 @@ class SettingsStoreTest {
         assertEquals(TemperatureUnit.CELSIUS, settings.units.temperature)
         assertEquals(WindSpeedUnit.KMH, settings.units.windSpeed)
         // The 7 set 2026 defaults (committente): the app opens looking like itself,
-        // dark and vivid, with the weather moving.
-        assertEquals(ThemeMode.DARK, settings.themeMode)
+        // vivid and with the weather moving, in whichever mode the phone is in.
+        assertEquals(ThemeMode.SYSTEM, settings.themeMode)
         assertEquals(false, settings.dynamicColor)
-        // Paper is the identity; a second dress that arrives switched on is a redesign.
+        // Vivid since the same pass, with dynamic color off beside it: the two were
+        // chosen together and neither says much without the other.
         assertEquals(AppPalette.VIVID, settings.palette)
         assertEquals(WeatherIcons.LINE, settings.weatherIcons)
         assertEquals(true, settings.animatedIcons)
@@ -98,7 +99,7 @@ class SettingsStoreTest {
 
         val settings = SettingsStore(ds).settings.first()
         assertEquals(TemperatureUnit.CELSIUS, settings.units.temperature)
-        assertEquals(ThemeMode.DARK, settings.themeMode)
+        assertEquals(ThemeMode.SYSTEM, settings.themeMode)
         assertEquals(AppPalette.VIVID, settings.palette)
     }
 
@@ -121,7 +122,7 @@ class SettingsStoreTest {
         store.resetToDefaults()
 
         val settings = store.settings.first()
-        assertEquals(ThemeMode.DARK, settings.themeMode)
+        assertEquals(ThemeMode.SYSTEM, settings.themeMode)
         assertEquals(TemperatureUnit.CELSIUS, settings.units.temperature)
         assertEquals(DefaultUpdateFrequencyMin, settings.updateFrequencyMin)
     }

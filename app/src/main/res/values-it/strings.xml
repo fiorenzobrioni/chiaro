@@ -183,7 +183,7 @@
     <!-- Primo avvio: una schermata, due risposte, saltare è concesso -->
     <string name="first_run_tagline">Il meteo che ti dice cosa farne.</string>
     <string name="first_run_use_location">Usa la mia posizione</string>
-    <string name="first_run_location_why">Arrotondata a circa un chilometro e usata solo per chiedere a Open-Meteo le previsioni di dove sei. Nessun account, niente da conservare, e mai letta in sottofondo.</string>
+    <string name="first_run_location_why">Usata solo per avere le previsioni di dove sei, arrotondata a circa un chilometro.</string>
     <string name="first_run_search">Cerca una città</string>
     <string name="first_run_skip">Non ora</string>
 
@@ -208,18 +208,18 @@
     <string name="settings_palette">Palette</string>
     <string name="settings_palette_paper">Carta</string>
     <string name="settings_palette_vivid">Brillante</string>
-    <string name="settings_palette_note">Carta è quella di Chiaro: bianco caldo, ambra, un cielo pacato. Brillante è la stessa app con i colori più accesi che uno schermo può dare: bianco freddo, accento azzurro, cielo saturo e icone del meteo più vivaci sugli sfondi scuri.</string>
+    <string name="settings_palette_note">Carta è bianco caldo e ambra. Brillante è bianco freddo e azzurro, con icone del meteo più vivaci.</string>
     <string name="settings_weather_icons">Icone del meteo</string>
     <string name="settings_icons_fill">Piene</string>
     <string name="settings_icons_line">A tratto</string>
-    <string name="settings_weather_icons_note">Due disegni delle stesse icone: forme piene, o tratti sottili.</string>
+    <string name="settings_weather_icons_note">Due disegni delle stesse icone: forme piene, o contorni sottili.</string>
     <string name="settings_animated_icons">Icone animate</string>
-    <string name="settings_animated_icons_note">Le icone del meteo si muovono: il sole gira, la pioggia scende, il fulmine lampeggia. Spento restano ferme. In ogni caso si fermano quando il telefono chiede meno animazioni.</string>
+    <string name="settings_animated_icons_note">Le icone del meteo si muovono: il sole gira, la pioggia scende, il fulmine lampeggia.</string>
     <string name="settings_dynamic_color">Colori dallo sfondo</string>
-    <string name="settings_dynamic_color_note">Attivo, i colori arrivano dal tuo sfondo. Spento, Chiaro indossa la palette che hai scelto qui sopra.</string>
+    <string name="settings_dynamic_color_note">I colori arrivano dallo sfondo del telefono invece che dalla palette qui sopra.</string>
     <string name="settings_group_updates">Aggiornamenti</string>
     <string name="settings_update_frequency">Frequenza di aggiornamento</string>
-    <string name="settings_update_frequency_note">Per quanto tempo una previsione resta attuale prima che Chiaro ne chieda una nuova.</string>
+    <string name="settings_update_frequency_note">Per quanto tempo una previsione resta valida prima che Chiaro ne chieda una nuova.</string>
     <string name="settings_freq_15">Ogni 15 minuti</string>
     <string name="settings_freq_30">Ogni 30 minuti</string>
     <string name="settings_freq_60">Ogni ora</string>
@@ -234,10 +234,10 @@
     <string name="settings_source_code">Codice sorgente</string>
     <string name="settings_source_code_note">Software libero, GPL-3.0, su GitHub</string>
     <string name="settings_privacy">Privacy</string>
-    <string name="settings_privacy_note">Nessun account, nessuna pubblicità, nessun tracciamento. L\'unica cosa che esce dal telefono è la richiesta del meteo.</string>
-    <string name="settings_reset">Ripristina le impostazioni</string>
-    <string name="settings_reset_dialog_title">Ripristinare le impostazioni?</string>
-    <string name="settings_reset_dialog_body">Unità, aspetto e frequenza di aggiornamento tornano com\'erano all\'inizio. I tuoi luoghi e lo storico restano esattamente come sono.</string>
+    <string name="settings_privacy_note">Nessun account, nessuna pubblicità, nessun tracciamento.</string>
+    <string name="settings_reset">Ripristina le impostazioni predefinite</string>
+    <string name="settings_reset_dialog_title">Ripristinare le impostazioni predefinite?</string>
+    <string name="settings_reset_dialog_body">Unità, aspetto e frequenza di aggiornamento tornano ai valori predefiniti. I tuoi luoghi e il tuo storico non vengono toccati.</string>
     <string name="settings_reset_confirm">Ripristina</string>
 
     <!-- Le quattro parole dei verdetti (VISION §5.3). Definite con la guida che le
@@ -345,10 +345,10 @@
     <string name="guide_widgets_honest_body">Un dato vecchio dice quanto è vecchio, un widget senza luogo lo dice, e nessuno mostra un numero che non ha. Si ridisegnano quando arriva un aggiornamento, quindi non costano batteria per conto loro.</string>
 
     <string name="guide_settings_title">Impostazioni</string>
-    <string name="guide_settings_body">Le unità di temperatura e vento; l\'aspetto, dove vivono il tema, i due disegni delle icone meteo e la palette presa dallo sfondo; ogni quanto cercare una previsione nuova; la lingua dell\'app, sul selettore di Android. Ripristinare i valori iniziali rimette unità, aspetto e frequenza come erano all\'inizio e lascia i tuoi luoghi e la tua storia esattamente dove sono.</string>
+    <string name="guide_settings_body">Le unità di temperatura e vento. L\'aspetto, dove vivono il tema, la palette, i due disegni delle icone del meteo e i colori presi dallo sfondo. Ogni quanto cercare una previsione nuova. La lingua dell\'app, sul selettore di Android. Ripristinare le impostazioni predefinite rimette unità, aspetto e frequenza come erano all\'inizio e lascia i tuoi luoghi e il tuo storico esattamente dove sono.</string>
 
     <string name="guide_data_title">Da dove arrivano i numeri</string>
-    <string name="guide_data_p1">Previsioni, qualità dell\'aria e ricerca dei luoghi arrivano da Open-Meteo, un servizio meteo aperto: gratuito, senza account, e l\'unica cosa che esce dal telefono è la richiesta del meteo stessa. Nessun account, nessuna pubblicità, nessun tracciamento.</string>
+    <string name="guide_data_p1">Previsioni, qualità dell\'aria e ricerca dei luoghi arrivano da Open-Meteo, un servizio meteo aperto: gratuito, senza account e senza chiave API. La richiesta del meteo è l\'unica cosa che esce dal telefono.</string>
     <string name="guide_data_p2">Alba, tramonto, la luna e tutto il modulo del cielo si calcolano direttamente sul telefono. Per questo sono giusti anche senza nessuna connessione.</string>
     <string name="guide_data_p3">Quando un aggiornamento non passa, non sparisce niente: Chiaro conserva l\'ultima previsione arrivata, ti dice quanto è vecchia e mette da parte, in silenzio, le ore già passate. Quello che vedi è sempre qualcosa che i dati hanno detto davvero.</string>
 
@@ -410,8 +410,8 @@
     </plurals>
     <string name="sky_lead_one_day">Un giorno prima</string>
     <string name="sky_notify_on_fail">Anche a cielo coperto</string>
-    <string name="sky_notify_on_fail_note">Manda il promemoria anche quando il verdetto dice che il cielo lo nasconderà</string>
-    <string name="sky_reminders_note">I promemoria possono arrivare qualche minuto prima o dopo: tenerli larghi è ciò che li tiene fuori dalla batteria.</string>
+    <string name="sky_notify_on_fail_note">Manda il promemoria anche quando il verdetto dice che il cielo lo nasconderà.</string>
+    <string name="sky_reminders_note">I promemoria possono arrivare qualche minuto prima o dopo.</string>
     <string name="sky_bell_on_desc">Promemoria per %1$s: attivo, tocca per cambiarlo</string>
     <string name="sky_bell_off_desc">Promemoria per %1$s: spento, tocca per impostarlo</string>
 
@@ -822,7 +822,7 @@
     <string name="widget_config_opacity">Opacità dello sfondo</string>
     <string name="widget_config_content">Contenuto</string>
     <string name="widget_config_show_condition">Stato del cielo accanto alla temperatura</string>
-    <string name="widget_config_show_condition_note">Serve spazio: su un widget stretto le parole vengono tagliate.</string>
+    <string name="widget_config_show_condition_note">Serve un widget largo: su uno stretto le parole vengono tagliate.</string>
     <string name="widget_config_show_range">Massima e minima di oggi</string>
-    <string name="widget_config_show_range_note">Contro il bordo destro, all\'altezza della temperatura.</string>
+    <string name="widget_config_show_range_note">Al bordo opposto, in linea con la temperatura.</string>
 </resources>
