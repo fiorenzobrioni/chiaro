@@ -77,6 +77,7 @@
     <string name="metric_pressure">Pressione</string>
     <string name="metric_visibility">Visibilità</string>
     <string name="metric_air">Qualità aria</string>
+    <string name="metric_air_value">%1$d AQI</string>
     <string name="metric_pollen">Pollini</string>
 
     <!-- Griglia dettagli: le righe di significato (§1.2 — ogni numero dice cosa farne) -->

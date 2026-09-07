@@ -58,6 +58,7 @@ import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
+import com.callbackdev.chiaro.ui.theme.forText
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -379,7 +380,8 @@ private fun DriftStrip(
                     text = date.format(dayFmt),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.width(52.dp)
+                    // §10: «Sab 13» in the reader's type, not in 52 fixed dp.
+                    modifier = Modifier.width(52.dp.forText())
                 )
                 drift.fetches.indices.forEach { col ->
                     val color = when (metric) {
@@ -529,7 +531,7 @@ private fun DriftTableDialog(
                 drift.dates.forEachIndexed { row, date ->
                     val values = when (metric) {
                         DriftMetric.RAIN -> drift.rain[row].map { cell ->
-                            cell?.let { "$it%" } ?: "·"
+                            cell?.let { Formats.percent(it, locale) } ?: "·"
                         }
                         DriftMetric.HIGH -> drift.highC[row].map { cell ->
                             cell?.let { Formats.temperature(it, units.temperature, locale) } ?: "·"

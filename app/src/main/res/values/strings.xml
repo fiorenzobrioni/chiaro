@@ -80,6 +80,7 @@
     <string name="metric_pressure">Pressure</string>
     <string name="metric_visibility">Visibility</string>
     <string name="metric_air">Air quality</string>
+    <string name="metric_air_value">%1$d AQI</string>
     <string name="metric_pollen">Pollen</string>
 
     <!-- Details grid: the meaning lines (§1.2 — every number says what to do with it) -->

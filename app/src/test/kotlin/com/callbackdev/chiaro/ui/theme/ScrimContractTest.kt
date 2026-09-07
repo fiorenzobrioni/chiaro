@@ -1,7 +1,6 @@
 package com.callbackdev.chiaro.ui.theme
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.pow
@@ -32,7 +31,26 @@ class ScrimContractTest {
         return (hi + 0.05) / (lo + 0.05)
     }
 
-    private fun scrimmed(background: Color, a: Float = alpha) = lerp(background, scrim, a)
+    /**
+     * The scrim over a sky, the way the framebuffer does it (found in the Fase 9
+     * accessibility pass): the canvas paints `ScrimColor.copy(alpha = …)` in a brush,
+     * so SRC_OVER mixes the two colors' sRGB VALUES and the pixel the reader sees is
+     * 8 bits per channel.
+     *
+     * This used `Color.lerp`, which interpolates in Oklab: a perceptual blend, not a
+     * composite. Close enough to keep passing, wrong enough that the document and the
+     * test disagreed about the number they were both quoting, and §3.6's rejected
+     * alphas turned out to be quoting a third arithmetic again. `PaletteDocTest`
+     * measures with this same function now, which is the point of writing it once.
+     */
+    private fun scrimmed(background: Color, a: Float = alpha): Color {
+        fun mix(f: Float, b: Float) = f * a + b * (1 - a)
+        return Color(
+            mix(scrim.red, background.red),
+            mix(scrim.green, background.green),
+            mix(scrim.blue, background.blue)
+        )
+    }
 
     @Test
     fun `white text survives the brightest sky the palette can produce`() {

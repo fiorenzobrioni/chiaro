@@ -25,7 +25,7 @@ SKY = re.compile(
     r"Color\(0xFF([0-9A-Fa-f]{6})\), Color\(0xFF([0-9A-Fa-f]{6})\)\)"
 )
 VERDICT = re.compile(r"(\w+) = VerdictColors\(Color\(0xFF([0-9A-Fa-f]{6})\), Color\(0xFF([0-9A-Fa-f]{6})\)\)")
-RAMP = re.compile(r"(rainRamp|temperatureRamp) = listOf\((.*?)\)\s*\n", re.S)
+RAMP = re.compile(r"(rainRamp|rainInkRamp|temperatureRamp) = listOf\((.*?)\)\s*\n", re.S)
 HEX = re.compile(r"0xFF([0-9A-Fa-f]{6})")
 
 
@@ -50,8 +50,8 @@ def semantic() -> dict:
     for label, chunk in (("light", light), ("dark", "internal val ChiaroDarkColors" + dark)):
         verdicts = {n: (f"#{i}", f"#{c}") for n, i, c in VERDICT.findall(chunk)}
         ramps = {n: [f"#{h}" for h in HEX.findall(body)] for n, body in RAMP.findall(chunk)}
-        if len(verdicts) != 4 or len(ramps) != 2:
-            sys.exit(f"{label}: parsed {len(verdicts)} verdicts and {len(ramps)} ramps, expected 4 and 2")
+        if len(verdicts) != 4 or len(ramps) != 3:
+            sys.exit(f"{label}: parsed {len(verdicts)} verdicts and {len(ramps)} ramps, expected 4 and 3")
         out[label] = {"verdicts": verdicts, **ramps}
     return out
 
@@ -99,6 +99,7 @@ def main() -> None:
       "background:linear-gradient(transparent,rgba(16,18,22,.55))}"
       ".ramp{display:flex;height:32px;border-radius:8px;overflow:hidden;margin:0 16px}.ramp div{flex:1}"
       ".chips{display:flex;gap:8px;padding:0 16px}"
+      ".figures{display:flex;gap:16px;padding:0 16px;font-size:20px;font-weight:600}"
       ".chip{padding:6px 12px;border-radius:99px;font-size:13px;font-weight:500}"
       ".dark{background:%s;color:%s;padding:1px 0 24px;margin-top:24px}.dark h2{color:#969081}"
       "</style></head><body>" % (sur["light"]["surface"], sur["light"]["onSurface"],
@@ -114,9 +115,15 @@ def main() -> None:
     for mode in ("light", "dark"):
         wrap = "<div class=dark>" if mode == "dark" else ""
         p(wrap)
-        p(f"<h2>Rain ramp · {mode}</h2><div class=ramp>")
+        p(f"<h2>Rain ramp, the marks · {mode}</h2><div class=ramp>")
         for c in sem[mode]["rainRamp"]:
             p(f"<div style='background:{c}'></div>")
+        # The ink ramp is drawn as INK, on the surface it was measured against: a
+        # printed probability is the thing it has to survive, and a swatch of it would
+        # show the one property nobody needs (its fill) and hide the one that matters.
+        p(f"</div><h2>Rain ramp, the figures · {mode}</h2><div class=figures>")
+        for i, c in enumerate(sem[mode]["rainInkRamp"]):
+            p(f"<span style='color:{c}'>{i * 25}%</span>")
         p(f"</div><h2>Temperature ramp · {mode}</h2><div class=ramp>")
         for c in sem[mode]["temperatureRamp"]:
             p(f"<div style='background:{c}'></div>")

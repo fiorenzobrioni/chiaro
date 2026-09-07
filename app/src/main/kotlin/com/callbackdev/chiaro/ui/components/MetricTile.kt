@@ -108,3 +108,9 @@ private fun MetricTilePreview() {
         }
     }
 }
+
+/** The other of §10's two places. The grid that holds these reflows to one column at
+ * this scale (`TodayScreen.Details`); the tile itself only has to keep its words. */
+@Preview(showBackground = true, fontScale = 2f)
+@Composable
+private fun MetricTileLargeTextPreview() = MetricTilePreview()

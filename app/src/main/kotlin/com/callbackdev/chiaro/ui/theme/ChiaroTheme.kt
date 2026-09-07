@@ -20,6 +20,9 @@ import androidx.compose.ui.platform.LocalContext
  *
  * The semantic palette of §2.3 does NOT follow the wallpaper (see [ChiaroColors]); only
  * the Material roles do.
+ *
+ * It also carries the reader's motion setting (§7, [LocalReducedMotion]): a theme is
+ * where the app asks the system what it prefers, and motion is one of those answers.
  */
 @Composable
 fun ChiaroTheme(
@@ -40,7 +43,10 @@ fun ChiaroTheme(
     }
 
     CompositionLocalProvider(
-        LocalChiaroColors provides if (darkTheme) ChiaroDarkColors else ChiaroLightColors
+        LocalChiaroColors provides if (darkTheme) ChiaroDarkColors else ChiaroLightColors,
+        // §7: the reader's answer to "less motion", read once here and asked at every
+        // place the app moves. Live, because the toggle lives outside the app.
+        LocalReducedMotion provides rememberReducedMotion(context)
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

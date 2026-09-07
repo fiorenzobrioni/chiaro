@@ -64,6 +64,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.callbackdev.chiaro.ui.theme.GroupTop
 import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
+import com.callbackdev.chiaro.ui.theme.reducedMotion
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.rules.MaxConditions
 import com.callbackdev.chiaro.domain.rules.NotificationRule
@@ -387,6 +388,7 @@ private fun RuleEditorSheet(
     var dialog by remember { mutableStateOf<EditorDialog?>(null) }
     var preview by remember { mutableStateOf<RulePreview?>(null) }
     val scroll = rememberScrollState()
+    val reduced = reducedMotion()
 
     fun close() {
         val trimmedName = name.trim().ifEmpty { rule.name }
@@ -527,7 +529,11 @@ private fun RuleEditorSheet(
                         // the scroll range only knows about it once it is measured.
                         withFrameNanos { }
                         withFrameNanos { }
-                        scroll.animateScrollTo(scroll.maxValue)
+                        // §7: with motion off the answer still has to come into view —
+                        // the scroll is what carries the information here, the travel is
+                        // only how it gets there.
+                        if (reduced) scroll.scrollTo(scroll.maxValue)
+                        else scroll.animateScrollTo(scroll.maxValue)
                     }
                 },
                 contentPadding = FlushTextButtonPadding

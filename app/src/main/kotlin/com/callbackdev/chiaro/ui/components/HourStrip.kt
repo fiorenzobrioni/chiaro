@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
+import com.callbackdev.chiaro.ui.theme.forText
 import com.callbackdev.chiaro.ui.theme.tabular
 
 /**
@@ -35,8 +36,10 @@ data class HourCell(
     val hourLabel: String,
     val icon: ImageVector,
     val temperature: String,
-    /** Null when the provider forecast no chance for that hour — never a stand-in 0. */
+    /** Null when the provider forecast no chance for that hour — never a stand-in 0.
+     * The quantity, for the ink ramp; [rainLabel] is what gets printed (§11). */
     val rainPct: Int?,
+    val rainLabel: String?,
     val description: String
 )
 
@@ -62,7 +65,11 @@ fun HourStrip(
         items(hours) { cell ->
             Column(
                 modifier = Modifier
-                    .width(56.dp)
+                    // §10: a cell measured in dp holding text measured in sp came
+                    // apart at 200% — «11 PM» and «-10°» both outgrow 56dp, and the
+                    // strip scrolls sideways anyway, so the cell can simply be as
+                    // wide as the reader's type needs.
+                    .width(56.dp.forText())
                     .semantics { contentDescription = cell.description },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -85,7 +92,7 @@ fun HourStrip(
                     style = MaterialTheme.typography.labelLarge.tabular()
                 )
                 Text(
-                    text = cell.rainPct?.let { "$it%" }.orEmpty(),
+                    text = cell.rainLabel.orEmpty(),
                     style = MaterialTheme.typography.labelSmall.tabular(),
                     // Zero is the ramp's quiet end, not another role (DESIGN.md §2.3);
                     // an hour with no forecast at all prints nothing, so its ink is moot.
@@ -112,6 +119,7 @@ private fun HourStripPreview() {
                     ),
                     temperature = "${22 - i}°",
                     rainPct = rain[i],
+                    rainLabel = "${rain[i]}%",
                     description = "Alle ${14 + i}, ${22 - i} gradi, pioggia ${rain[i]}%"
                 )
             },
@@ -119,3 +127,8 @@ private fun HourStripPreview() {
         )
     }
 }
+
+/** The strip at 200%: the cells grow, the columns stay columns, the row scrolls. */
+@Preview(showBackground = true, widthDp = 360, fontScale = 2f)
+@Composable
+private fun HourStripLargeTextPreview() = HourStripPreview()

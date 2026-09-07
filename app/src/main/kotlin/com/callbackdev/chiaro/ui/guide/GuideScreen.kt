@@ -53,6 +53,7 @@ import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.sky.SkyGuideRoute
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
+import com.callbackdev.chiaro.ui.theme.forText
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.Locale
@@ -496,7 +497,8 @@ private fun DriftSample() {
                     text = Formats.dayLabel(today.plusDays(index + 1L), locale),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.width(52.dp)
+                    // §10, and the same column as the Journal's own strip.
+                modifier = Modifier.width(52.dp.forText())
                 )
                 percentages.forEach { percent ->
                     Box(

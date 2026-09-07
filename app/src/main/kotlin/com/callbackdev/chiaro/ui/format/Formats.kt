@@ -38,6 +38,18 @@ object Formats {
 
     fun pressure(mb: Double, locale: Locale): String = String.format(locale, "%.0f hPa", mb)
 
+    /**
+     * A probability or a proportion. It went through here on the Fase 9 IT/EN pass,
+     * having been `"$pct%"` in five places until then.
+     *
+     * In Italian and English that template is right, which is exactly why it survived
+     * five readings: §11's rule is not "the output must differ", it is that a number the
+     * screen prints is the locale's to shape — digits included. A hand-built `"$h:$m"`
+     * is called out in the document by name; a hand-built percentage is the same
+     * sentence with a different unit.
+     */
+    fun percent(value: Int, locale: Locale): String = String.format(locale, "%d%%", value)
+
     /** Clock times honor the reader's 12/24-hour system setting, always. */
     fun timeFormatter(is24Hour: Boolean, locale: Locale): DateTimeFormatter =
         DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h:mm a", locale)

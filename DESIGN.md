@@ -166,7 +166,7 @@ it alone fell back to `onSurfaceVariant` at 8.9:1 while 15% was printing at 1.3:
 hue family, same five steps, every one of them measured against the surface of §2.2:
 
 ```
-light  #5F7281  #426780  #1D5C81  #00507E  #004470     4.8 5.7 6.9 8.2 9.7 : 1
+light  #5F7281  #426780  #1D5C81  #00507E  #004470     4.7 5.7 6.9 8.2 9.7 : 1
 dark   #768996  #759BB3  #71ADD0  #6FBFEB  #76D1FF     5.1 6.3 7.6 9.1 10.9 : 1
 ```
 
@@ -261,9 +261,14 @@ an overcast full-moon night rendered brighter than a clear one.
 ### 3.4 The moon
 
 At night only (altitude < −6°), and only while the moon is above the horizon, each stop is
-lifted toward `#2A3550` by `illumination × clamp(moonAltitude/40°, 0, 1) × (1 − cloud)`. A full moon high in a clear sky makes a
+lifted toward `#273458` by `illumination × clamp(moonAltitude/40°, 0, 1) × (1 − cloud)`. A full moon high in a clear sky makes a
 visibly lighter canvas, which is both true and the reason the sky section says the dark
 window is spoiled.
+
+The lift target went up with the rest of the sky on the color pass (`#2A3550` → `#273458`),
+and this line said the old value until the Fase 9 audit read the document against the
+code. That is the drift `PaletteDocTest` now exists to prevent: a number in this file is
+only worth printing if something fails when it stops being true.
 
 ### 3.5 Motion and cost
 
@@ -281,10 +286,19 @@ bottom one under the temperature and the headline sentence, and, since the canva
 the top edge of the screen (Fase 3), a symmetric top one under the place switcher and
 the status bar icons. One color, one alpha, both bands. The rule that makes this safe
 is testable and tested: **for the brightest possible canvas (Day band, 0% cloud, its
-brightest stop `#BADFF6`), white on the scrimmed band is 5.29:1** — above the 4.5:1
-floor, and the alpha was chosen for that reason: 0.50 gives 4.58:1 and leaves no
+brightest stop `#BADFF6`), white on the scrimmed band is 5.27:1** — above the 4.5:1
+floor, and the alpha was chosen for that reason: 0.50 gives 4.53:1 and leaves no
 headroom for a future band, 0.45 gives 3.95:1 and fails. If a band is ever added that
 breaks it, `ScrimContractTest` fails rather than the reader squinting.
+
+Those three numbers are **SRC_OVER in sRGB values** — `scrim × α + sky × (1 − α)`, which
+is what the brush does — held at the 8 bits per channel the framebuffer holds. They were
+re-measured in the Fase 9 pass and two of them moved: the section had quoted 5.29 / 4.58
+/ 3.95, three numbers from three arithmetics, one of which (4.58) no arithmetic reaches.
+`ScrimContractTest` had a fourth, `Color.lerp`, which blends in Oklab — a perceptual mix,
+not a composite. One model now, in both tests and in this line. The conclusion never
+moved, and the correction sharpens it: 0.50 clears the floor by 0.03, which is not
+headroom, it is luck.
 
 ---
 
@@ -394,6 +408,22 @@ the pager between places moves the canvas with it, so switching city looks like 
 another sky. **Reduced motion collapses every one of these to a 100 ms fade**, and the
 canvas freezes (§3.5). No animation ever gates information: a reader who disables motion
 sees the same content at the same moment.
+
+**How the app knows** (Fase 9): Android has no `prefers-reduced-motion` of its own.
+Accessibility → Remove animations and Developer options → Animator duration scale both
+write `Settings.Global.ANIMATOR_DURATION_SCALE`, and zero is the answer — the same number
+the platform's own animators read, so this is the API and not a way around a missing one.
+`ChiaroTheme` reads it, watches it (the toggle lives outside the app, so a value read once
+at start-up would be wrong for exactly the reader it is for) and publishes
+`LocalReducedMotion`.
+
+The app moves in three places and all three ask: the week row's hour strip opens with
+`ChiaroMotion.enter/exit`, the pager `scrollToPage`s instead of animating, and the rule
+editor's dry-run answer jumps into view instead of scrolling to it. Until that pass
+`ChiaroMotion.reducedMotionFadeMillis` was a constant nothing consulted, which is the
+shape a design rule takes when it is only written down: true in this file, absent from
+the APK. The canvas needed nothing — it is a `Brush`, it has never animated, and §3.5's
+"becomes a static gradient" is a promise it keeps by construction.
 
 ---
 
@@ -508,16 +538,41 @@ number.
 ## 10. Accessibility
 
 - **Contrast**: every ink token ≥ 4.5:1 against its surface, measured in §2.3 and asserted
-  in §12. Non-text marks ≥ 3:1. A quantity that is both drawn and printed therefore owns
+  in §12. Non-text marks ≥ 3:1, with one declared exception measured and argued in §13.1
+  (the weather icon on the widget's Cielo card, where the ground is a mid-tone sky). A quantity that is both drawn and printed therefore owns
   two ramps, and the fill one never paints a figure (§2.3). The canvas is covered by the scrim contract (§3.6).
 - **Never color alone**: verdicts carry a glyph and a word; the drift strip has a table;
   chart series are direct-labeled.
 - **Type scale to 200%**: layouts wrap and reflow, they do not clip or ellipsize a value.
-  The week rows and the metric grid are the two places this is tested.
+  The week rows and the metric grid are the two places this is tested, and both have a
+  `fontScale = 2f` preview beside their normal one so the check is a thing you look at.
+  Clipping was never the risk — there is not one `maxLines` in `ui/` — but **a column
+  measured in dp holding text measured in sp comes apart on its own**: at 200% the week
+  row's four columns, the hour cell, the timeline's clock and the drift strip's date all
+  held text twice their width, and nothing was cut off because it wrapped mid-value into
+  a line the row had no height for. Two rules, in `ui/theme/TextScale.kt`: a column that
+  holds text is **measured in text** (`Dp.forText()`, capped at 2.0 where the system's own
+  slider stops), and past **1.5** a row of columns becomes **two rows** — the week row
+  splits into "which day, what kind of day" and "how warm", the metric grid drops to one
+  column. 1.5 is measured, not round: above it the range bar has under 48dp left, which is
+  a smudge and not a bar.
 - **TalkBack**: reading order is canvas → sentence → freshness → content. Every icon has a
-  description that says the word ("mostly cloudy"), never the glyph. The ribbon reads its
-  phases with times. Charts announce their extremes and their current value.
-- **Reduced motion**: §7. **Touch targets**: ≥ 48dp, always.
+  description that says the word ("mostly cloudy"), never the glyph — or `null` where the
+  words are right beside it and the row speaks once, which is the case for every one of the
+  35 nulls in `ui/`. The ribbon reads its phases with times. Charts announce their extremes
+  and their current value. Every row that can be removed can be removed without a gesture
+  (`customActions`, Fase 9's predecessor pass).
+- **Reduced motion**: §7. **Touch targets**: ≥ 48dp, always. Two things the app draws are
+  smaller than that — the week row is 42dp (a 34dp icon, 4dp of gap, the 4dp ribbon) and
+  the freshness chip 32dp — and the Fase 9 pass went to fix them and found nothing to fix:
+  Compose expands a pointer node's bounds to the platform's minimum touch target, so a
+  `clickable` of any size is already 48dp to a finger. Worth writing down because the
+  expansion has one hole: it reserves no **space**, so two small targets sitting closer
+  than their expanded bounds fight over the taps between them. Neither case is that — the
+  week's rows are 12dp apart and hold one target each, the chip is alone in its row. If a
+  layout ever puts two small targets side by side, `minimumInteractiveComponentSize()` is
+  the answer, and it costs layout height; spending that height where nothing is ambiguous
+  buys the reader nothing.
 - **Color vision**: the status set's measured CVD separation is in §2.3, and the mitigation
   is structural, not hopeful.
 
@@ -531,7 +586,19 @@ no code register in this product to protect. Two mechanical consequences for des
 - Italian runs 15–25% longer than English. Every label is laid out for the longer string;
   no single-line assumption survives without a wrap test.
 - Numbers and dates go through the locale's formatter, always: decimal separator, day
-  names, 12/24-hour clock. A hand-built `"$h:$m"` is a bug.
+  names, 12/24-hour clock. A hand-built `"$h:$m"` is a bug — and so is a hand-built
+  `"$pct%"`, which is the same sentence with a different unit and which the Fase 9 IT/EN
+  pass found in five places. `Formats.percent` now, and `FormatsTest` checks every
+  function in the file against **both** shipped languages side by side, because the
+  failure mode of a formatter is being right in the language it was written in.
+- A printed value never has a word welded into it in Kotlin. The air-quality tile printed
+  its index with the acronym written into the source, and Kotlin is the one place a
+  language cannot reach; the whole value is `metric_air_value` now.
+- `Formats.dayLong` writes `EEEE d MMMM` rather than asking for a localized skeleton, and
+  that is a decision, not an oversight: java.time cannot build "weekday, day, month,
+  no year" per locale (that is ICU's `DateTimePatternGenerator`, reachable on Android only
+  through `getBestDateTimePattern`, which would cost the file its purity and its unit
+  tests). The order is correct for both shipped languages. Revisit it with the third.
 - RTL is not a target language today, but no layout may hardcode left/right — start/end
   only, so that decision stays cheap.
 
@@ -549,12 +616,20 @@ ui/theme/
   ChiaroTheme.kt    the entry point
 ```
 
-Four tests keep this document from rotting, in the series' habit of turning a design rule
+Seven tests keep this document from rotting, in the series' habit of turning a design rule
 into something CI can fail:
 
 - **`PaletteContrastTest`** asserts every ratio printed in §2.3 and the monotonicity of the
   three ramps, and walks the printed probability from 0 to 100 to hold every step of it
   above the §10 floor. If a token is re-picked, the numbers in this file must be re-measured.
+- **`PaletteDocTest`** asserts the other half of that, and the half that had quietly gone
+  wrong: it **reads this file** and checks that §2.2's two named roles, §2.3's verdict
+  table and three ramps, §3.2's eight bands, §3.4's moon target and §3.6's scrim and its
+  three ratios are the values the app actually holds — hexes *and* printed numbers. It was
+  written in Fase 9 because the audit that went looking found the moon's lift target still
+  printing its pre-color-pass value, six days after the pass. Everything else matched, so
+  the color pass was done; but "was done" is only sayable after looking, and this is what
+  looks now.
 - **`ScrimContractTest`** asserts §3.6 against the brightest band.
 - **`NoRawColorTest`** sweeps the UI sources and fails on a hex literal outside
   `ui/theme/`. It caught its first violation the day it was written — the canvas' own
@@ -563,6 +638,14 @@ into something CI can fail:
 - **`SkyPaletteTest`** holds the canvas' claims: darker after sunset, continuous at every
   altitude, an anchor renders as itself and a midpoint as neither, an overcast midnight is
   not a dusk, and an overcast full moon does not out-shine a clear one.
+- **`MotionTest`** holds §7's table and the one rule under it: the three springs are the
+  three springs, and every one of them becomes the same 100 ms fade when motion is reduced.
+- **`TextScaleTest`** holds §10's two rules and the measurement behind the 1.5 threshold,
+  so moving the number means moving the arithmetic that justifies it.
+- **`StringsParityTest`** holds §11: every translatable string in both languages, the same
+  format arguments, the same plural quantities, no blanks, and no `%` that would throw at
+  the moment a sentence is needed. **`FormatsTest`** holds the other side of it — the
+  formatter itself, in Italian and English at once.
 
 And one thing that is not a test, because it cannot be. **`tools/palette_sheet.py`**
 renders the palette to an HTML sheet, reading the hexes out of the Kotlin sources so it
@@ -619,6 +702,38 @@ monotonicity test in the suite had passed without complaint.
    not the method. The icons keep their own colors under every theme (they depict
    the world, like the canvas — §2.1's other justified exception). Animated
    variants, if they ever come, come as AVDs and as their own decision.
+
+   **The one ground no icon set clears, declared** (7 set 2026, measured from a device
+   report that the app's sun looks darker than the widget's — which it is, and by
+   design: `mc_`/`mcf_` sit at Y 0.26, `mcfn_` at Y 0.58). The widget's **Cielo** card
+   is the scrimmed sky, and at its brightest that ground is `#5C6E7B`, **Y 0.149** — a
+   mid-tone. An ink clears 3:1 there only at Y ≥ 0.546 or Y ≤ 0.016, with nothing in
+   between, and neither set lives in those bands: **8 of the line set's 8 colors fall
+   short (1.03–1.57:1), and 25 of the fill-night set's 37 (1.09–2.93:1)**. The sun is
+   one of the twelve that pass, which is why the card looks right and is the reason
+   this went unseen. The line sun drops under the floor from −7° of solar altitude
+   upward: every daylight hour.
+
+   Three ways out were measured and all three were turned down. Splitting the line set
+   by ground the way the fill set was split does not help: the app's dark surface
+   (Y 0.008) is already served at 5.52:1, so such a set would exist only for the sky
+   and would have to put **every** color above Y 0.546 — a near-white family where a
+   cloud, a raindrop and a sun stop being different things, in ~98 new drawables.
+   Raising the scrim needs alpha ≈ 0.93 to bring the ground to Y 0.013, which is a black
+   card with the memory of a sky behind it. Tinting the glyph to the card's own ink is
+   the cheap and complete fix — white measures 5.29:1 there, `ColorFilter.tint` is
+   already how the position pin is drawn — and **the committente turned it down on
+   product grounds: the colored icons are much of what makes the widget worth looking
+   at, and a monochrome silhouette buys a ratio at the cost of the thing itself.**
+
+   So this is an accepted, bounded exception to §10's 3:1 for non-text marks, and it is
+   bounded: it applies to the **Cielo** background only. The Chiaro, Scuro and Sistema
+   cards are the app's own two surfaces, which `IconContrastTest` measures, and the app
+   itself never puts a weather icon on the canvas. Nothing else on the Cielo card relies
+   on it either — the condition is named in words beside the glyph, so the icon is not
+   the sole carrier there the way it is in the hour strip, which is what §10's floor is
+   protecting. If it is ever reopened, the option that keeps both is a small darkened
+   plate under the glyph: contrast without giving up the color.
 2. **Dynamic color default** — on, as written here. Worth revisiting after the first
    screenshots: a wallpaper-derived scheme makes every store screenshot a different app.
    Likely resolution: dynamic on device, the Chiaro scheme in the store assets.

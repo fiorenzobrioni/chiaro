@@ -33,7 +33,7 @@ object SkyPalette {
      * construction. The day sky was the whole point: it was the most washed-out
      * thing on the screen it was supposed to be the hero of.
      */
-    private val anchors: List<Pair<Double, SkyGradient>> = listOf(
+    internal val anchors: List<Pair<Double, SkyGradient>> = listOf(
         90.0 to SkyGradient(Color(0xFF0090DA), Color(0xFF55B7F0), Color(0xFFBADFF6)),
         12.0 to SkyGradient(Color(0xFF0090DA), Color(0xFF55B7F0), Color(0xFFBADFF6)),
         8.0 to SkyGradient(Color(0xFF3483CA), Color(0xFF80B7DE), Color(0xFFE8CEA3)),
@@ -64,7 +64,7 @@ object SkyPalette {
     private const val CloudDarkening = 0.15f
 
     /** What moonlight lifts a night sky toward. */
-    private val Moonlight = Color(0xFF273458)
+    internal val Moonlight = Color(0xFF273458)
 
     /**
      * The canvas for one moment.
@@ -120,8 +120,10 @@ object SkyPalette {
 
     /**
      * 0.55, and the number has a reason: against the brightest stop this palette can
-     * produce, white lands at 5.29:1. 0.50 gives 4.58:1 and leaves no headroom for a
-     * band added later; 0.45 gives 3.95:1 and fails outright.
+     * produce, white lands at 5.27:1. 0.50 gives 4.53:1 and leaves no headroom for a
+     * band added later; 0.45 gives 3.95:1 and fails outright. Measured as the brush
+     * composites — `scrim × α + sky × (1 − α)` in sRGB values — which is not what
+     * `Color.lerp` does (DESIGN.md §3.6).
      */
     const val ScrimAlpha = 0.55f
 
