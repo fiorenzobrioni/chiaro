@@ -2256,6 +2256,119 @@ tabella più spenta.
 
 ---
 
+## Le icone si muovono, e i nuovi default (committente, 7 set 2026)
+
+Richiesta, dopo la risposta sulle icone: «sul sito meteocons ci sono le icone animate:
+usarle per l'app (no per il widget) sarebbe possibile? Sarebbe un bel salto per la
+grafica». Sì. Ed è arrivato.
+
+### La correzione che va detta
+
+Nella risposta preliminare avevo consigliato «animare solo l'eroe di Oggi». Aprendo lo
+schermo: **un'icona eroe non esiste**. L'eroe di Oggi è il numero della temperatura sul
+canvas, e la condizione lì è una parola, non un glifo. Le icone della condizione stanno
+solo in due posti — la striscia oraria e le righe della settimana — e sono esattamente le
+stesse due. Quindi la regola è diventata quella onesta: **si muove la famiglia della
+condizione, dovunque sia disegnata; non si muove nient'altro.**
+
+Un tile dei dettagli porta un segno che etichetta una grandezza: un barometro che gira
+per sempre è decoro, e §1.4 è dove va il decoro. `mc_not_available` non si muove perché
+Meteocons non lo anima: non esiste un'animazione per «non lo sappiamo», ed è la quantità
+giusta di movimento per quel caso. `ChiaroIcons.movingRes` restituisce **null** per
+quelli, invece di un fermo travestito da animato.
+
+### Come, e perché così
+
+Le SMIL sono nei sorgenti che l'app già usa: `import_meteocons.py` le buttava via
+(departure #2). Ora le porta di là come `AnimatedVectorDrawable` — **departure #7**. Non
+una riscrittura del movimento: quello è dell'illustratore, e riscriverlo sarebbe stato un
+secondo parere sul disegno di qualcun altro.
+
+Quattro forme SMIL nella famiglia, tutte lineari e tutte infinite: `rotate` e `translate`
+diventano un `<group>` col suo pivot che anima `rotation` o `translateX/Y`, `opacity`
+diventa `fillAlpha`/`strokeAlpha` sui path del gruppo, e `gradientTransform` cade insieme
+al gradiente che l'importer aveva già appiattito. Due cose che SMIL ha e AVD no:
+
+- **`additive="sum"`** impila due trasformazioni su un elemento; AVD ne dà una a gruppo,
+  quindi due trasformazioni diventano due gruppi annidati, il più esterno per primo — che
+  è l'ordine in cui SMIL le moltiplica.
+- **Un `begin` negativo** è una *fase*, non un ritardo: è quello che fa cadere tre gocce
+  sfasate invece che in fila per uno. `startOffset` di AVD è l'opposto, quindi la fase
+  finisce nei keyframe. `check_phase` ricampiona la curva emessa contro quella SMIL e si
+  ferma se non combaciano — il budget è l'unico punto di aritmetica del tool che un
+  lettore non può controllare guardando l'output.
+
+Otto set adesso: quattro fermi (49 disegni) e quattro animati (18). `mca_*`, `mcaf_*`,
+`mcafn_*` dall'importer; `mcan_*` da `gen_vivid_icons.py`, che ricolora `mca_*` con la
+stessa tabella di `mc_*` — sono gli stessi disegni nella stessa palette, e l'animazione
+non tocca un colore.
+
+Il render è un `AndroidView` con una `ImageView`, e non un painter Compose, perché i loop
+qui sono infiniti e `AnimatedImageVector` è fatto per l'altra cosa: una transizione da uno
+stato all'altro, giocata una volta quando un booleano cambia. Il conto della batteria lo
+paga la piattaforma, non una promessa scritta qui: un AVD si ferma quando il suo host
+smette di essere visibile (`ImageView.onVisibilityAggregated` → `setVisible(false)`),
+quindi una cella che esce dallo schermo o l'app in background fermano l'animazione senza
+un observer nostro.
+
+### Verifica
+
+- **L'importer riproduce**. Prima di toccare qualsiasi cosa: rilanciato su un checkout
+  v2.0.0, i 147 drawable fermi sono usciti **identici byte per byte** a quelli in repo.
+  Senza quella prova ogni modifica al tool sarebbe stata alla cieca.
+- `AnimatedIconTest`: un'icona animata **è** l'icona ferma (stessi path nello stesso
+  ordine, stessi colori nello stesso ordine — la cosa più forte che un test JVM può dire
+  su un disegno che non può rendere); ogni `<target>` punta a un elemento che il vettore
+  ha davvero; ogni proprietà animata appartiene al tipo di elemento a cui è puntata; ogni
+  loop è infinito, positivo e lineare, con keyframe che vanno avanti. Tutte e quattro
+  falliscono in silenzio su un device: un'icona che semplicemente non si muove, scoperta
+  da una persona. **Ha trovato il suo primo difetto il giorno in cui è stato scritto**:
+  `fmt` arrotondava a due decimali e i due keyframe di un salto istantaneo finivano sullo
+  stesso istante — un salto che non avviene.
+- `IconContrastTest` spazza otto set contro quattro superfici.
+- **E poi guardato**: `tools/icon_filmstrip.py` valuta ogni animator a una serie di
+  istanti e scrive i fotogrammi in SVG. Un test può dire che la pioggia ha un animator
+  valido; solo una persona può dire che la pioggia **scende**. Controllati tutti e
+  quattro i set: gocce che scendono e sfumano, sole che gira, luna che dondola, banchi di
+  nebbia che scorrono, fulmine che lampeggia.
+
+### I nuovi default (committente)
+
+| Voce | Prima | Ora |
+|---|---|---|
+| Tema | Come il telefono | **Scuro** |
+| Palette | Carta | **Brillante** |
+| Icone del meteo | A tratto | A tratto (invariata) |
+| Icone animate | — | **Attivo** |
+| Colori dallo sfondo | Attivo | **Spento** |
+| Widget · opacità | 85% | **100%** |
+| Widget · massima e minima | Attivo | **Spento** |
+
+Due note che valgono più dei valori.
+
+**Perché la palette sembrava non cambiare nulla.** Il device report diceva «il cambiamento
+è minimo tra i due temi», e aveva ragione: con i colori dallo sfondo **accesi** lo schema
+Material arriva dal wallpaper, e della palette si vedevano solo rampe e cielo. Due terzi
+erano spenti. Spegnendo dynamic color — che è l'altro default chiesto qui — la differenza
+diventa piena. I due valori sono stati scelti insieme e nessuno dei due dice granché senza
+l'altro. Questo chiude anche il secondo punto aperto di DESIGN §13, e lo chiude dal lato
+opposto a quello che ipotizzava.
+
+**Il tema scuro contro VISION §4.** Il documento diceva «chiaro è il default, il monopolio
+scuro della serie t era una posizione stilistica e qui sarebbe un problema di
+accessibilità». La riga è stata riscritta, non ignorata: quello che ha spostato la
+decisione è che l'eroe di quest'app è un cielo notturno dipinto per metà giornata e che la
+palette Brillante è stata scelta sul suo schema scuro. La preoccupazione che la vecchia
+riga proteggeva resta vera e resta scritta — un'app che ignora la modalità chiara del
+telefono sembra rotta a qualcuno — quindi «Come il telefono» è a un tocco e lo scuro è un
+default, non un monopolio.
+
+I due default del widget cambiano anche i widget **già posati** che non hanno mai avuto
+quella voce modificata: è quello che significa un default, ed è il motivo per cui lo si
+sposta.
+
+---
+
 ## Fase 10 — Store e v1.0.0
 
 - [ ] Icona definitiva, screenshot, scheda dello store

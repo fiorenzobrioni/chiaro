@@ -213,6 +213,8 @@
     <string name="settings_icons_fill">Piene</string>
     <string name="settings_icons_line">A tratto</string>
     <string name="settings_weather_icons_note">Due disegni delle stesse icone: forme piene, o tratti sottili.</string>
+    <string name="settings_animated_icons">Icone animate</string>
+    <string name="settings_animated_icons_note">Le icone del meteo si muovono: il sole gira, la pioggia scende, il fulmine lampeggia. Spento restano ferme. In ogni caso si fermano quando il telefono chiede meno animazioni.</string>
     <string name="settings_dynamic_color">Colori dallo sfondo</string>
     <string name="settings_dynamic_color_note">Attivo, i colori arrivano dal tuo sfondo. Spento, Chiaro indossa la palette che hai scelto qui sopra.</string>
     <string name="settings_group_updates">Aggiornamenti</string>

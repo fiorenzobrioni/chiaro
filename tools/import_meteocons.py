@@ -328,7 +328,16 @@ def norm_path_data(d: str) -> str:
 
 
 def fmt(x: float) -> str:
-    return f"{x:.2f}".rstrip("0").rstrip(".")
+    return f"{round(x, 2) + 0.0:.2f}".rstrip("0").rstrip(".")
+
+
+def fmt5(x: float) -> str:
+    """Five decimals, for the numbers that are fractions of a cycle rather than points on
+    a 64-unit grid. Two decimals is plenty for a path and not nearly enough here: it
+    rounded the two keyframes of an instantaneous jump onto the same instant, which is a
+    jump that does not happen (found by `AnimatedIconTest`, 7 set 2026). The `+ 0.0`
+    rounds first so that a value which lands on -0.0 prints as "0" and not as "-0"."""
+    return f"{round(x, 5) + 0.0:.5f}".rstrip("0").rstrip(".")
 
 
 def dashed_circle_data(cx: float, cy: float, r: float, dash: float, gap: float,
@@ -395,11 +404,9 @@ def parse_rotate(transform: str) -> float:
     return float(m.group(1))
 
 
-NL8 = chr(10) + " " * 8
-
-
-def stroke_attrs(el: ET.Element) -> str:
-    """The paint of one SVG shape, as vector-drawable attributes."""
+def stroke_attrs(el: ET.Element, indent: str = "    ") -> str:
+    """The paint of one SVG shape, as vector-drawable attributes, continued at the
+    indentation of the shape they belong to."""
     a = []
     fill = el.get("fill", "")
     if fill and fill != "none":
@@ -408,7 +415,7 @@ def stroke_attrs(el: ET.Element) -> str:
     if stroke and stroke != "none":
         width = float(el.get("stroke-width", "1"))
         if ACTIVE["drop_hairline"] and width < 1.0:
-            return NL8.join(a)  # departure #5: the edge hairline goes
+            return f"\n{indent}    ".join(a)  # departure #5: the edge hairline goes
         a.append(f'android:strokeColor="{remap(stroke)}"')
         a.append(f'android:strokeWidth="{el.get("stroke-width", "1")}"')
         cap = el.get("stroke-linecap")
@@ -420,7 +427,7 @@ def stroke_attrs(el: ET.Element) -> str:
         miter = el.get("stroke-miterlimit")
         if miter:
             a.append(f'android:strokeMiterLimit="{miter}"')
-    return "\n        ".join(a)
+    return f"\n{indent}    ".join(a)
 
 
 def circle_data(cx: float, cy: float, r: float) -> str:
@@ -431,7 +438,7 @@ def circle_data(cx: float, cy: float, r: float) -> str:
     )
 
 
-def convert_shape(el: ET.Element, lines: list[str], indent: str) -> None:
+def convert_shape(el: ET.Element, lines: list[str], indent: str, name: str | None = None) -> None:
     tag = el.tag.removeprefix(SVG_NS)
     if tag in ("animate", "animateTransform", "animateMotion"):
         return  # SMIL does not travel; departure #2 in the module docstring
@@ -467,7 +474,10 @@ def convert_shape(el: ET.Element, lines: list[str], indent: str) -> None:
             if el.get("transform"):
                 sys.exit("transform on an undashed circle; decide by hand")
             d = circle_data(cx, cy, r)
-        lines.append(f'{indent}<path\n{indent}    android:pathData="{d}"\n{indent}    {stroke_attrs(el)}/>')
+        lines.append(
+            f"{indent}<path\n{named(indent, name)}"
+            f'{indent}    android:pathData="{d}"\n{indent}    {stroke_attrs(el, indent)}/>'
+        )
         return
     if tag == "path":
         if el.get("transform"):
@@ -482,7 +492,8 @@ def convert_shape(el: ET.Element, lines: list[str], indent: str) -> None:
             else:
                 pass  # keep the geometry, drop the dash
         lines.append(
-            f'{indent}<path\n{indent}    android:pathData="{norm_path_data(d)}"\n{indent}    {stroke_attrs(el)}/>'
+            f"{indent}<path\n{named(indent, name)}"
+            f'{indent}    android:pathData="{norm_path_data(d)}"\n{indent}    {stroke_attrs(el, indent)}/>'
         )
         return
     if tag == "defs":
@@ -490,10 +501,18 @@ def convert_shape(el: ET.Element, lines: list[str], indent: str) -> None:
     sys.exit(f"unhandled SVG element <{tag}>")
 
 
+def named(indent: str, name: str | None) -> str:
+    """The one line that tells an `<animated-vector>` which path to reach for. Absent
+    on the static passes, so their output is byte-for-byte what it was."""
+    return "" if name is None else f'{indent}    android:name="{name}"\n'
+
+
 CLIPS: dict[str, str] = {}
 
 
-def convert(svg_path: pathlib.Path, out_path: pathlib.Path) -> None:
+def prepare(svg_path: pathlib.Path) -> ET.Element:
+    """The file's root, with its clip paths and gradient face colors resolved. Shared by
+    the static and the animated passes so they can never read one file two ways."""
     root = ET.parse(svg_path).getroot()
     if root.get("viewBox") != "0 0 64 64":
         sys.exit(f"{svg_path.name}: unexpected viewBox {root.get('viewBox')}")
@@ -517,6 +536,11 @@ def convert(svg_path: pathlib.Path, out_path: pathlib.Path) -> None:
     # Fixed by name, never by falling back silently.
     if svg_path.name == "drizzle.svg" and "e" not in GRADIENTS and "d" in GRADIENTS:
         GRADIENTS["e"] = GRADIENTS["d"]
+    return root
+
+
+def convert(svg_path: pathlib.Path, out_path: pathlib.Path) -> None:
+    root = prepare(svg_path)
     lines: list[str] = []
     for child in root:
         convert_shape(child, lines, "    ")
@@ -532,18 +556,423 @@ def convert(svg_path: pathlib.Path, out_path: pathlib.Path) -> None:
     )
 
 
+# --------------------------------------------------------------------------- animation
+#
+# Departure #7, and the reason this section exists at all: **the SMIL comes back, as an
+# AnimatedVectorDrawable.** Departure #2 above still holds for the static sets — a
+# `<vector>` cannot carry SMIL — but an `<animated-vector>` can carry the same motion
+# written in Android's own vocabulary, and Meteocons' motion is worth carrying: it was
+# drawn by the illustrator, not invented here.
+#
+# The mapping is small because the source is regular. Every animation in the condition
+# family is one of four things, all linear, all `repeatCount="indefinite"`:
+#
+#   animateTransform rotate     -> a <group> with a pivot, animating `rotation`
+#   animateTransform translate  -> a <group> animating `translateX` / `translateY`
+#   animate opacity             -> the group's paths, animating `fillAlpha`/`strokeAlpha`
+#   animateTransform gradientTransform -> dropped, with the gradient it turns (departure #4)
+#
+# Two things SMIL has and AVD does not, and how each is answered:
+#
+# **`additive="sum"`** stacks two transforms on one element. AVD gives a group exactly one
+# transform, so two transforms become two nested groups, outermost first — which is the
+# order SMIL multiplies them in.
+#
+# **A negative `begin`** is a phase, not a delay: it says the loop started in the past, so
+# at t=0 it is already part-way round. It is what makes three raindrops fall out of step
+# instead of in a chorus line. AVD has `startOffset`, which is the opposite (a delay), so
+# the phase is baked into the keyframes instead: [loop_keyframes] rotates the control
+# points. That is exact rather than approximate, and [check_phase] re-derives it.
+
+#: The condition family — the drawings `ChiaroIcons.conditionRes` reaches for, and the
+#: only ones that move (DESIGN.md §7.1). A metric tile's mark labels a quantity; it is
+#: not weather, and a barometer that spins forever is decoration.
+ANIMATED_SOURCES = (
+    "clear-day", "clear-night", "partly-cloudy-day", "partly-cloudy-night",
+    "overcast", "cloudy", "fog-day", "fog-night", "drizzle", "sleet", "rain", "snow",
+    "partly-cloudy-day-rain", "partly-cloudy-night-rain",
+    "partly-cloudy-day-snow", "partly-cloudy-night-snow",
+    "thunderstorms", "thunderstorms-rain",
+)
+
+ANIMATED_HEADER = (
+    "<!-- Generated by tools/import_meteocons.py from Meteocons v2.0.0\n"
+    "     (github.com/basmilius/meteocons), MIT, (c) 2020-2021 Bas Milius —\n"
+    "     licenses/Meteocons-MIT.txt. The illustrator's own SMIL motion, rewritten\n"
+    "     as an AnimatedVectorDrawable; colors as in the static sibling. Do not\n"
+    "     edit by hand. -->\n"
+)
+
+#: How far apart the two keyframes of an instantaneous jump are put. Small enough to read
+#: as a jump at any duration in the family — the shortest loop is 700 ms, so this is under
+#: a millisecond, well inside one frame — and large enough to survive [fmt5] and keep the
+#: fractions strictly increasing, which is what `AnimatedIconTest` checks.
+WRAP_STEP = 0.001
+
+
+def parse_time(value: str) -> int:
+    """SMIL's `0.7s` in the milliseconds an animator counts."""
+    if not value.endswith("s"):
+        sys.exit(f"unhandled SMIL time {value!r}")
+    return round(float(value[:-1]) * 1000)
+
+
+def smil_values(attr: str, arity: int) -> list[list[float]]:
+    out = []
+    for chunk in attr.split(";"):
+        parts = chunk.replace(",", " ").split()
+        if len(parts) != arity:
+            sys.exit(f"expected {arity} numbers per SMIL value, got {chunk!r}")
+        out.append([float(p) for p in parts])
+    return out
+
+
+def loop_keyframes(controls: list[float], phase: float) -> list[tuple[float, float]]:
+    """One SMIL `values` list as AVD keyframes, rotated to start at `phase` of the cycle.
+
+    SMIL spaces its values evenly across the duration and, with a negative `begin`,
+    starts part-way through. AVD has no phase, so the rotation is done here: the control
+    points move to where the shifted cycle puts them and the cycle's own start value is
+    pinned at both ends. A sawtooth (first value ≠ last) also jumps once per cycle, and a
+    jump is drawn as two keyframes half a millisecond apart, because a tool that only
+    knows ramps draws a vertical edge as a very steep one.
+    """
+    n = len(controls)
+    fractions = [i / (n - 1) for i in range(n)]
+
+    def at(f: float) -> float:
+        f %= 1.0
+        for i in range(n - 1):
+            if fractions[i] <= f <= fractions[i + 1]:
+                span = fractions[i + 1] - fractions[i]
+                return controls[i] + (controls[i + 1] - controls[i]) * (f - fractions[i]) / span
+        return controls[-1]
+
+    if phase == 0.0:
+        return list(zip(fractions, controls))
+
+    points = {round(b, 9): at(b + phase)
+              for b in {0.0, 1.0} | {(f - phase) % 1.0 for f in fractions}}
+    if abs(controls[0] - controls[-1]) > 1e-9:
+        wrap = round((1.0 - phase) % 1.0, 9)
+        points.pop(wrap, None)
+        points[wrap] = controls[-1]
+        points[round(min(wrap + WRAP_STEP, 1.0 - WRAP_STEP), 9)] = controls[0]
+    return sorted(points.items())
+
+
+def check_phase(controls: list[float], phase: float, keyframes: list[tuple[float, float]]) -> None:
+    """The keyframes really are the SMIL loop, shifted. Sampled rather than argued,
+    because the rotation above is the one piece of arithmetic in this tool that a
+    reader cannot check by looking at the output."""
+    n = len(controls)
+    fractions = [i / (n - 1) for i in range(n)]
+
+    def smil(f: float) -> float:
+        f %= 1.0
+        for i in range(n - 1):
+            if fractions[i] <= f <= fractions[i + 1]:
+                span = fractions[i + 1] - fractions[i]
+                return controls[i] + (controls[i + 1] - controls[i]) * (f - fractions[i]) / span
+        return controls[-1]
+
+    def emitted(f: float) -> float:
+        for (fa, va), (fb, vb) in zip(keyframes, keyframes[1:]):
+            if fa <= f <= fb:
+                return va if fb == fa else va + (vb - va) * (f - fa) / (fb - fa)
+        return keyframes[-1][1]
+
+    # Drawing the jump as a very steep ramp spends WRAP_STEP of the cycle on it, so
+    # everything after the jump runs that much early. The budget is that lateness times
+    # the steepest ramp in the loop — a bound, not a fudge: widen WRAP_STEP and this
+    # widens with it, which is the honest relationship between the two.
+    slope = max(abs(b - a) / (fractions[1] - fractions[0]) for a, b in zip(controls, controls[1:]))
+    budget = WRAP_STEP * slope + 1e-6
+    wrap = (1.0 - phase) % 1.0
+    for i in range(401):
+        f = i / 400
+        # Inside the jump the two curves are allowed to disagree outright — and the jump
+        # is at the cycle's seam, so "near it" has to be measured the way a circle does.
+        if min(abs(f - wrap), abs(f - wrap - 1.0), abs(f - wrap + 1.0)) <= WRAP_STEP * 2:
+            continue
+        if abs(emitted(f) - smil(f + phase)) > budget:
+            sys.exit(
+                f"phase rotation is wrong at {f}: {emitted(f)} vs {smil(f + phase)}, "
+                f"outside a budget of {budget}"
+            )
+
+
+def animator(prop: str, keyframes: list[tuple[float, float]], duration: int) -> str:
+    """One property's loop. Two control points are a plain from/to; more is a keyframe
+    list, which is also what a phase rotation always produces."""
+    pad = "    "
+    head = (
+        "<objectAnimator\n"
+        f'{pad}android:duration="{duration}"\n'
+        f'{pad}android:repeatCount="infinite"\n'
+        f'{pad}android:valueType="floatType"\n'
+        f'{pad}android:interpolator="@android:anim/linear_interpolator"'
+    )
+    if len(keyframes) == 2 and keyframes[0][0] == 0.0 and keyframes[1][0] == 1.0:
+        return (
+            f'{head}\n{pad}android:propertyName="{prop}"\n'
+            f'{pad}android:valueFrom="{fmt(keyframes[0][1])}"\n'
+            f'{pad}android:valueTo="{fmt(keyframes[1][1])}"/>'
+        )
+    rows = "\n".join(
+        f'{pad}    <keyframe android:fraction="{fmt5(f)}" android:value="{fmt5(v)}"/>'
+        for f, v in keyframes
+    )
+    return (
+        f'{head}>\n'
+        f'{pad}<propertyValuesHolder android:propertyName="{prop}">\n'
+        f'{rows}\n'
+        f'{pad}</propertyValuesHolder>\n'
+        "</objectAnimator>"
+    )
+
+
+class Anim:
+    """One SMIL element, resolved: what it drives, over how long, from which phase."""
+
+    def __init__(self, el: ET.Element):
+        self.duration = parse_time(el.get("dur"))
+        begin = el.get("begin")
+        shift = -parse_time(begin) if begin else 0
+        if shift < 0:
+            sys.exit(f"a positive SMIL begin is a delay, not a phase: {begin}")
+        self.phase = (shift % self.duration) / self.duration if shift else 0.0
+        self.kind = el.get("type") if el.tag.endswith("animateTransform") else "opacity"
+        arity = {"rotate": 3, "translate": 2, "opacity": 1}.get(self.kind)
+        if arity is None:
+            sys.exit(f"unhandled SMIL transform type {self.kind!r}")
+        if el.get("values"):
+            self.values = smil_values(el.get("values"), arity)
+        elif el.get("from") and el.get("to"):
+            self.values = smil_values(f'{el.get("from")};{el.get("to")}', arity)
+        else:
+            sys.exit("a SMIL animation with neither values nor from/to")
+        if el.get("repeatCount") != "indefinite":
+            sys.exit(f"unhandled repeatCount {el.get('repeatCount')!r}")
+
+    def channels(self) -> list[tuple[str, list[float]]]:
+        """The AVD properties this animation drives, and their control points."""
+        if self.kind == "rotate":
+            return [("rotation", [v[0] for v in self.values])]
+        if self.kind == "translate":
+            return [("translateX", [v[0] for v in self.values]),
+                    ("translateY", [v[1] for v in self.values])]
+        return [("alpha", [v[0] for v in self.values])]
+
+    def pivot(self) -> tuple[float, float]:
+        pivots = {(v[1], v[2]) for v in self.values}
+        if len(pivots) != 1:
+            sys.exit(f"a rotation that moves its own pivot: {self.values}")
+        return pivots.pop()
+
+    def emit(self, props: list[str]) -> list[str]:
+        out = []
+        for prop, controls in self.channels():
+            targets = props if prop == "alpha" else [prop]
+            for target in targets:
+                if len(set(controls)) == 1:
+                    continue  # a channel that does not move is not an animation
+                keyframes = loop_keyframes(controls, self.phase)
+                check_phase(controls, self.phase, keyframes)
+                out.append(animator(target, keyframes, self.duration))
+        return out
+
+
+def smil_of(el: ET.Element) -> tuple[list[ET.Element], list[ET.Element]]:
+    transforms, opacity = [], []
+    for child in el:
+        tag = child.tag.removeprefix(SVG_NS)
+        if tag not in ("animate", "animateTransform", "animateMotion"):
+            continue
+        attribute = child.get("attributeName")
+        if tag == "animateTransform" and attribute == "transform":
+            transforms.append(child)
+        elif tag == "animate" and attribute == "opacity":
+            opacity.append(child)
+        elif attribute == "gradientTransform":
+            continue  # it turns a gradient this importer has already flattened
+        else:
+            sys.exit(f"unhandled SMIL <{tag} attributeName={attribute!r}>")
+    return transforms, opacity
+
+
+class Animated:
+    """The walk that builds one `<animated-vector>`: the drawing, and the targets.
+
+    The line set hangs its SMIL on `<g>` wrappers and the fill set hangs it straight on
+    the `<path>`. Both are the same thing — a transform needs a group in AVD either way —
+    so a leaf that animates simply gets the group it was missing.
+    """
+
+    def __init__(self):
+        self.lines: list[str] = []
+        self.targets: list[tuple[str, list[str]]] = []
+        self.groups = 0
+        self.paths = 0
+
+    def clip_data(self, clip: str) -> str:
+        match = re.match(r"url\(#(.+)\)", clip)
+        data = CLIPS.get(match.group(1)) if match else None
+        if data is None:
+            sys.exit(f"clip-path references unknown id: {clip}")
+        return norm_path_data(data)
+
+    def alpha_props(self, el: ET.Element) -> list[str]:
+        """Which alpha channels the emitted path will actually have. Asked of the same
+        function that writes the paint, so the answer cannot drift from the drawing."""
+        attrs = stroke_attrs(el)
+        props = []
+        if "android:fillColor" in attrs:
+            props.append("fillAlpha")
+        if "android:strokeColor" in attrs:
+            props.append("strokeAlpha")
+        if not props:
+            sys.exit("an opacity animation on a shape with no paint")
+        return props
+
+    def open_transforms(self, transforms: list[ET.Element], indent: str) -> str:
+        """One nested `<group>` per SMIL transform, outermost first — which is the order
+        SMIL multiplies them in when they are stacked with `additive="sum"`."""
+        for smil in transforms:
+            animation = Anim(smil)
+            name = f"g{self.groups}"
+            self.groups += 1
+            attrs = [f'android:name="{name}"']
+            if animation.kind == "rotate":
+                px, py = animation.pivot()
+                attrs += [f'android:pivotX="{fmt(px)}"', f'android:pivotY="{fmt(py)}"']
+            self.lines.append(
+                f"{indent}<group\n"
+                + "\n".join(f"{indent}    {a}" for a in attrs)
+                + ">"
+            )
+            self.targets.append((name, animation.emit([])))
+            indent += "    "
+        return indent
+
+    def close(self, indent: str, opened: int) -> str:
+        for _ in range(opened):
+            indent = indent[:-4]
+            self.lines.append(f"{indent}</group>")
+        return indent
+
+    def leaf(self, el: ET.Element, indent: str, fades: list[ET.Element]) -> None:
+        if not fades:
+            convert_shape(el, self.lines, indent)
+            return
+        name = f"p{self.paths}"
+        self.paths += 1
+        props = self.alpha_props(el)
+        convert_shape(el, self.lines, indent, name)
+        animators = [line for fade in fades for line in Anim(fade).emit(props)]
+        self.targets.append((name, animators))
+
+    def shape(self, el: ET.Element, indent: str, fades: list[ET.Element]) -> None:
+        tag = el.tag.removeprefix(SVG_NS)
+        if tag in ("animate", "animateTransform", "animateMotion", "defs"):
+            return
+        if tag == "g":
+            self.group(el, indent, fades)
+            return
+        if tag not in ("path", "circle"):
+            sys.exit(f"unhandled SVG element <{tag}> in the animated pass")
+        transforms, own_fades = smil_of(el)
+        inner = self.open_transforms(transforms, indent)
+        self.leaf(el, inner, fades + own_fades)
+        self.close(inner, len(transforms))
+
+    def group(self, el: ET.Element, indent: str, fades: list[ET.Element]) -> None:
+        transforms, own_fades = smil_of(el)
+        fades = fades + own_fades
+        children = [c for c in el if c.tag.removeprefix(SVG_NS)
+                    not in ("animate", "animateTransform", "animateMotion")]
+        if el.get("transform"):
+            sys.exit(f"a static transform on a group: {el.get('transform')}")
+        opened = 0
+        inner = indent
+        clip = el.get("clip-path")
+        if clip:
+            # The clip is the WINDOW, and a window does not travel with what it shows.
+            # It goes OUTSIDE the animated groups, so the drawing slides behind it;
+            # nesting it inside would carry it along and animate nothing visible. The
+            # overcast icon's back cloud is the whole reason this is written down.
+            self.lines.append(f"{inner}<group>")
+            self.lines.append(f'{inner}    <clip-path android:pathData="{self.clip_data(clip)}"/>')
+            inner += "    "
+            opened += 1
+        inner = self.open_transforms(transforms, inner)
+        opened += len(transforms)
+        for child in children:
+            self.shape(child, inner, fades)
+        self.close(inner, opened)
+
+
+def indented(block: str, indent: str) -> str:
+    return "\n".join(indent + line if line else line for line in block.split("\n"))
+
+
+def convert_animated(svg_path: pathlib.Path, out_path: pathlib.Path) -> None:
+    root = prepare(svg_path)
+    walk = Animated()
+    for child in root:
+        walk.shape(child, "            ", [])
+    if not walk.targets:
+        sys.exit(f"{svg_path.name}: nothing to animate — it does not belong in ANIMATED_SOURCES")
+    targets = []
+    for name, animators in walk.targets:
+        if not animators:
+            continue
+        if len(animators) > 1:
+            body = ('<set android:ordering="together">\n'
+                    + "\n".join(indented(a, "    ") for a in animators)
+                    + "\n</set>")
+        else:
+            body = animators[0]
+        body = indented(body, " " * 12)
+        targets.append(
+            f'    <target android:name="{name}">\n'
+            f'        <aapt:attr name="android:animation">\n'
+            f"{body}\n"
+            f"        </aapt:attr>\n"
+            f"    </target>"
+        )
+    out_path.write_text(
+        ANIMATED_HEADER
+        + '<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"\n'
+        + '    xmlns:aapt="http://schemas.android.com/aapt">\n'
+        + '    <aapt:attr name="android:drawable">\n'
+        + '        <vector\n'
+        + '            android:width="24dp"\n            android:height="24dp"\n'
+        + '            android:viewportWidth="64"\n            android:viewportHeight="64">\n'
+        + "\n".join(walk.lines)
+        + "\n        </vector>\n"
+        + "    </aapt:attr>\n"
+        + "\n".join(targets)
+        + "\n</animated-vector>\n",
+        encoding="utf-8",
+    )
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         sys.exit(__doc__.split("\n\n")[1].strip())
     checkout = pathlib.Path(sys.argv[1])
     OUT.mkdir(parents=True, exist_ok=True)
+    # (source set, palette, drop hairlines, static prefix, animated prefix). The vivid
+    # line sets, mcn_* and mcan_*, are not here: they are recolored from mc_* and mca_*
+    # by tools/gen_vivid_icons.py, which knows the vivid palette and this tool does not.
     passes = [
-        (SRC_SUBDIR, REMAP, False, "mc_"),
-        (FILL_SRC_SUBDIR, FILL_REMAP, True, "mcf_"),
-        (FILL_SRC_SUBDIR, FILL_NIGHT, True, "mcfn_"),
+        (SRC_SUBDIR, REMAP, False, "mc_", "mca_"),
+        (FILL_SRC_SUBDIR, FILL_REMAP, True, "mcf_", "mcaf_"),
+        (FILL_SRC_SUBDIR, FILL_NIGHT, True, "mcfn_", "mcafn_"),
     ]
-    total = 0
-    for subdir, palette, drop_hairline, prefix in passes:
+    static = animated = 0
+    for subdir, palette, drop_hairline, prefix, moving in passes:
         src = checkout / subdir
         if not src.is_dir():
             sys.exit(f"not a meteocons v2.0.0 checkout: {src} missing")
@@ -552,10 +981,15 @@ def main() -> None:
             svg = src / f"{svg_name}.svg"
             if not svg.is_file():
                 sys.exit(f"missing upstream icon: {svg}")
-            out_name = drawable.replace("mc_", prefix, 1)
-            convert(svg, OUT / f"{out_name}.xml")
-            total += 1
-    print(f"{total} drawables written to {OUT}")
+            convert(svg, OUT / f"{drawable.replace('mc_', prefix, 1)}.xml")
+            static += 1
+            if svg_name in ANIMATED_SOURCES:
+                convert_animated(svg, OUT / f"{drawable.replace('mc_', moving, 1)}.xml")
+                animated += 1
+    missing = set(ANIMATED_SOURCES) - set(ICONS)
+    if missing:
+        sys.exit(f"ANIMATED_SOURCES names icons this tool does not import: {sorted(missing)}")
+    print(f"{static} drawables and {animated} animated ones written to {OUT}")
 
 
 if __name__ == "__main__":

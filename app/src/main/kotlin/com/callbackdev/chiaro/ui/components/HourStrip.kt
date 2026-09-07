@@ -22,6 +22,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.ui.icons.ConditionGlyph
+import com.callbackdev.chiaro.ui.icons.ConditionIcon
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.forText
@@ -34,7 +36,7 @@ import com.callbackdev.chiaro.ui.theme.tabular
  */
 data class HourCell(
     val hourLabel: String,
-    val icon: ImageVector,
+    val condition: ConditionGlyph,
     val temperature: String,
     /** Null when the provider forecast no chance for that hour — never a stand-in 0.
      * The quantity, for the ink ramp; [rainLabel] is what gets printed (§11). */
@@ -79,10 +81,8 @@ fun HourStrip(
                     style = MaterialTheme.typography.labelSmall.tabular(),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Icon(
-                    imageVector = cell.icon,
-                    contentDescription = null, // the cell speaks once, via its semantics
-                    tint = Color.Unspecified, // Meteocons carry their own measured colors
+                ConditionIcon(
+                    glyph = cell.condition,
                     // The top rung of the family's ladder, in a 56dp cell. The 2dp of
                     // vertical padding is the cell's own rhythm and does not move with it.
                     modifier = Modifier.padding(vertical = 2.dp).size(WeatherIconSize.Strip)
@@ -114,9 +114,7 @@ private fun HourStripPreview() {
             hours = (0 until 8).map { i ->
                 HourCell(
                     hourLabel = "${14 + i}",
-                    icon = ImageVector.vectorResource(
-                        if (rain[i] >= 40) R.drawable.mc_rain else R.drawable.mc_partly_cloudy_day
-                    ),
+                    condition = ConditionGlyph(if (rain[i] >= 40) 63 else 2),
                     temperature = "${22 - i}°",
                     rainPct = rain[i],
                     rainLabel = "${rain[i]}%",

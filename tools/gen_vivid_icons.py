@@ -20,11 +20,15 @@ can reach their target chroma almost anywhere and stay where they are. The sun c
 amber runs out of gamut long before the cap, so it climbs to where the gamut is widest
 and comes out at #FFA500, which is what anybody means by a yellow sun.
 
-Only the vivid palette reads this set (`ChiaroIcons.styledRes`). Paper keeps the
+Only the vivid palette reads these sets (`ChiaroIcons.styledRes`). Paper keeps the
 both-grounds set, because the muted-but-consistent line family is part of what "paper"
 means and moving it would be a redesign of the default nobody asked for.
 
-    python3 tools/gen_vivid_icons.py          # writes app/src/main/res/drawable/mcn_*.xml
+Two sets come out, because the line family ships twice: `mcn_*` from the static `mc_*`,
+and `mcan_*` from the animated `mca_*`. One table serves both — they are the same
+drawings in the same palette, and the animation never touches a color.
+
+    python3 tools/gen_vivid_icons.py     # writes drawable/mcn_*.xml and drawable/mcan_*.xml
 """
 from __future__ import annotations
 
@@ -58,9 +62,19 @@ FLOOR = 3.05
 
 COLOR_ATTR = re.compile(r'(android:(?:strokeColor|fillColor)=")#([0-9A-Fa-f]{6})(")')
 
-HEADER_OLD = "Recolored for measured contrast on the\n     ground its set is picked for; the tables are in the tool. Do not edit\n     by hand."
-HEADER_NEW = ("Recolored by tools/gen_vivid_icons.py for a DARK\n     ground and the vivid palette (DESIGN.md §13.1): the both-grounds\n"
-              "     luminance ceiling lifted, chroma at the gamut edge. Do not edit by\n     hand.")
+#: (source prefix, output prefix). The static line set and the animated one, which are
+#: the same drawings and therefore the same recolor.
+SETS = (("mc_", "mcn_"), ("mca_", "mcan_"))
+
+#: What the importer wrote about its own colors, and what is true of these instead.
+HEADERS = {
+    "Recolored for measured contrast on the\n     ground its set is picked for; the tables are in the tool. Do not edit\n     by hand.":
+        "Recolored by tools/gen_vivid_icons.py for a DARK\n     ground and the vivid palette (DESIGN.md §13.1): the both-grounds\n"
+        "     luminance ceiling lifted, chroma at the gamut edge. Do not edit by\n     hand.",
+    "The illustrator's own SMIL motion, rewritten\n     as an AnimatedVectorDrawable; colors as in the static sibling. Do not\n     edit by hand.":
+        "The illustrator's own SMIL motion, rewritten\n     as an AnimatedVectorDrawable; recolored by tools/gen_vivid_icons.py\n"
+        "     for a DARK ground and the vivid palette. Do not edit by hand.",
+}
 
 
 def dark_surface() -> str:
@@ -99,22 +113,33 @@ def main() -> None:
     ground = dark_surface()
     floor_y = FLOOR * (luminance(hex_to_rgb(ground)) + 0.05) - 0.05
 
-    sources = sorted(DRAWABLE.glob("mc_*.xml"))
-    if not sources:
+    # `mc_*` and `mca_*` are disjoint globs: the underscore is part of the prefix.
+    sources = {prefix: sorted(DRAWABLE.glob(f"{prefix}*.xml")) for prefix, _ in SETS}
+    if not sources["mc_"]:
         sys.exit("no mc_*.xml to read — run tools/import_meteocons.py first")
+    if not sources["mca_"]:
+        sys.exit("no mca_*.xml to read — run tools/import_meteocons.py first")
 
     table: dict[str, str] = {}
-    for path in sources:
-        for _, value, _ in COLOR_ATTR.findall(path.read_text()):
-            key = "#" + value.upper()
-            table.setdefault(key, lifted(key, floor_y))
+    for paths in sources.values():
+        for path in paths:
+            for _, value, _ in COLOR_ATTR.findall(path.read_text()):
+                key = "#" + value.upper()
+                table.setdefault(key, lifted(key, floor_y))
 
-    for path in sources:
-        text = path.read_text().replace(HEADER_OLD, HEADER_NEW)
-        text = COLOR_ATTR.sub(lambda m: m.group(1) + table["#" + m.group(2).upper()] + m.group(3), text)
-        (DRAWABLE / ("mcn_" + path.name[len("mc_"):])).write_text(text)
+    written = 0
+    for prefix, out_prefix in SETS:
+        for path in sources[prefix]:
+            text = path.read_text()
+            for before, after in HEADERS.items():
+                text = text.replace(before, after)
+            text = COLOR_ATTR.sub(
+                lambda m: m.group(1) + table["#" + m.group(2).upper()] + m.group(3), text
+            )
+            (DRAWABLE / (out_prefix + path.name[len(prefix):])).write_text(text)
+            written += 1
 
-    print(f"{len(sources)} drawables written as mcn_*, on {ground}", file=sys.stderr)
+    print(f"{written} drawables written as mcn_* and mcan_*, on {ground}", file=sys.stderr)
     for before, after in sorted(table.items(), key=lambda kv: -contrast(hex_to_rgb(kv[1]), hex_to_rgb(ground))):
         print("  %s -> %s   %.2f:1 -> %.2f:1 on %s" % (
             before, after,

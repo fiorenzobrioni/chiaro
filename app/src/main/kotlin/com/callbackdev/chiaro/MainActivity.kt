@@ -15,6 +15,7 @@ import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.ThemeMode
 import com.callbackdev.chiaro.data.WeatherIcons
+import com.callbackdev.chiaro.ui.icons.LocalAnimatedIcons
 import com.callbackdev.chiaro.ui.icons.LocalWeatherIcons
 import com.callbackdev.chiaro.ui.shell.ChiaroRoot
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
@@ -39,8 +40,9 @@ class MainActivity : ComponentActivity() {
             val settings by settingsStore.settings.collectAsStateWithLifecycle(initialValue = null)
             val darkTheme = when (settings?.themeMode) {
                 ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
-                ThemeMode.SYSTEM, null -> isSystemInDarkTheme()
+                // `null` is the store's first frame, and DARK is what it will say.
+                ThemeMode.DARK, null -> true
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
             }
             // The bars' ink follows the APPLIED theme, not the system's: a reader
             // who forces light against a dark phone was getting white icons over a
@@ -56,11 +58,12 @@ class MainActivity : ComponentActivity() {
             }
             ChiaroTheme(
                 darkTheme = darkTheme,
-                dynamicColor = settings?.dynamicColor ?: true,
-                palette = settings?.palette ?: AppPalette.PAPER
+                dynamicColor = settings?.dynamicColor ?: false,
+                palette = settings?.palette ?: AppPalette.VIVID
             ) {
                 CompositionLocalProvider(
-                    LocalWeatherIcons provides (settings?.weatherIcons ?: WeatherIcons.LINE)
+                    LocalWeatherIcons provides (settings?.weatherIcons ?: WeatherIcons.LINE),
+                    LocalAnimatedIcons provides (settings?.animatedIcons ?: true)
                 ) {
                     ChiaroRoot()
                 }

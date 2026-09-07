@@ -43,6 +43,9 @@ class SettingsViewModel(private val store: SettingsStore) : ViewModel() {
 
     fun setPalette(palette: AppPalette) = viewModelScope.launch { store.setPalette(palette) }
 
+    fun setAnimatedIcons(enabled: Boolean) =
+        viewModelScope.launch { store.setAnimatedIcons(enabled) }
+
     fun setWeatherIcons(style: WeatherIcons) =
         viewModelScope.launch { store.setWeatherIcons(style) }
 

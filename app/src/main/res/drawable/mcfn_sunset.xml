@@ -16,8 +16,8 @@
         <path
             android:pathData="M 32 22.71 V 16.5 m 0 45 v -6.21 m 11.52 -27.81 l 4.39 -4.39 M 16.09 54.91 l 4.39 -4.39 m 0 -23 l -4.39 -4.39 m 31.82 31.78 l -4.39 -4.39 M 15.71 39 H 9.5 m 45 0 h -6.21"
             android:strokeColor="#FBBF24"
-        android:strokeWidth="3"
-        android:strokeLineCap="round"/>
+            android:strokeWidth="3"
+            android:strokeLineCap="round"/>
     </group>
     <path
         android:pathData="M 16 42.5 h 11 l 5 4.5 5 -4.5 h 11"

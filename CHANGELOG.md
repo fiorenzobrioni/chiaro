@@ -22,6 +22,18 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 - The engines, copied from tweather with their test suite: the Open-Meteo client and
   mapper, the Room history, the alert engine, the rules engine and the whole astronomy
   module. `UPSTREAM.md` records the commit they came from and how to reproduce the copy.
+- The weather icons move. Meteocons draws its family with SMIL animations and the
+  import had been dropping them; `tools/import_meteocons.py` now carries them across as
+  AnimatedVectorDrawables, so the sun turns, the cloud banks drift, the rain falls out of
+  step with itself and the lightning flickers — the illustrator's own motion, not a
+  rewrite of it. The condition family only: a barometer that spins forever is decoration.
+  On by default with a switch in Settings → Appearance, and always still when the phone
+  asks for less animation, which is the same setting every other animation in the app
+  reads. Not in the widgets, where `RemoteViews` cannot run one at all.
+- New defaults for a fresh install: dark theme, the Vivid palette, wallpaper colors off,
+  outlined icons, animated icons on; and for a newly placed widget, a solid card with the
+  day's range off. The app now opens looking like itself rather than like the wallpaper,
+  which also resolves the design document's open question about store screenshots.
 - A second palette, chosen in Settings → Appearance: **Paper**, the warm identity, and
   **Vivid**, the same app at the brightest colors a screen holds — a cool white, an azure
   accent, saturated quantity ramps, a saturated sky and brighter weather icons on dark

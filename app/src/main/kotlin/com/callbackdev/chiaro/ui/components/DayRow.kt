@@ -24,6 +24,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.ui.icons.ConditionGlyph
+import com.callbackdev.chiaro.ui.icons.ConditionIcon
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.forText
@@ -49,7 +51,7 @@ import com.callbackdev.chiaro.ui.theme.tabular
 @Composable
 fun DayRow(
     dayLabel: String,
-    icon: ImageVector,
+    condition: ConditionGlyph,
     /** The quantity, which the ink ramp needs. */
     rainPct: Int,
     /** The same quantity printed, which the locale owns (§11). */
@@ -86,7 +88,7 @@ fun DayRow(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
-            ) { DayAndSky(dayLabel, icon, rainPct, rainLabel) }
+            ) { DayAndSky(dayLabel, condition, rainPct, rainLabel) }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -96,7 +98,7 @@ fun DayRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                DayAndSky(dayLabel, icon, rainPct, rainLabel)
+                DayAndSky(dayLabel, condition, rainPct, rainLabel)
                 Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC)
             }
         }
@@ -114,7 +116,7 @@ fun DayRow(
 @Composable
 private fun RowScope.DayAndSky(
     dayLabel: String,
-    icon: ImageVector,
+    condition: ConditionGlyph,
     rainPct: Int,
     rainLabel: String
 ) {
@@ -123,10 +125,8 @@ private fun RowScope.DayAndSky(
         style = MaterialTheme.typography.labelLarge,
         modifier = Modifier.width(44.dp.forText())
     )
-    Icon(
-        imageVector = icon,
-        contentDescription = null, // the row speaks once, via its semantics
-        tint = Color.Unspecified,
+    ConditionIcon(
+        glyph = condition,
         // Between the strip and the timeline on the family's ladder, sized to
         // the row it sits in. The ribbon below still starts at 52dp (the day
         // label's 44 plus the 8 beside it), which the icon's size never touched.
@@ -191,14 +191,14 @@ private fun DayRowPreview() {
         )
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             listOf(
-                Triple("Oggi", R.drawable.mc_partly_cloudy_day, Triple(12.0, 22.0, 10)),
-                Triple("Gio", R.drawable.mc_rain, Triple(14.0, 19.0, 80)),
-                Triple("Ven", R.drawable.mc_clear_day, Triple(9.0, 24.0, 0))
-            ).forEach { (day, iconRes, data) ->
+                Triple("Oggi", 2, Triple(12.0, 22.0, 10)),
+                Triple("Gio", 63, Triple(14.0, 19.0, 80)),
+                Triple("Ven", 0, Triple(9.0, 24.0, 0))
+            ).forEach { (day, wmoCode, data) ->
                 val (low, high, rain) = data
                 DayRow(
                     dayLabel = day,
-                    icon = ImageVector.vectorResource(iconRes),
+                    condition = ConditionGlyph(wmoCode),
                     rainPct = rain,
                     rainLabel = "$rain%",
                     lowC = low,

@@ -161,6 +161,19 @@ private fun SettingsList(
         }
         item {
             ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_animated_icons)) },
+                supportingContent = { Text(stringResource(R.string.settings_animated_icons_note)) },
+                trailingContent = {
+                    Switch(checked = settings.animatedIcons, onCheckedChange = null)
+                },
+                modifier = Modifier.clickable(
+                    onClick = { viewModel.setAnimatedIcons(!settings.animatedIcons) },
+                    role = Role.Switch
+                )
+            )
+        }
+        item {
+            ListItem(
                 headlineContent = { Text(stringResource(R.string.settings_dynamic_color)) },
                 supportingContent = { Text(stringResource(R.string.settings_dynamic_color_note)) },
                 trailingContent = {

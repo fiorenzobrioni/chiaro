@@ -19,7 +19,10 @@ import org.junit.Test
  * not clear the light surface (its cloud gray is 1.18:1 there), which is why mcf_* is
  * re-anchored and mcfn_* is the original palette on the backdrop it was drawn for.
  * mcn_* joined them with the vivid palette (§2.5): the line set with its light-ground
- * ceiling removed, so it owes the dark surfaces only.
+ * ceiling removed, so it owes the dark surfaces only. Each of the four has an animated
+ * twin (§7.1) painted from the same table, and they are swept here too — `AnimatedIconTest`
+ * proves twin and original are the same colors, but what ships is the file, and a hand
+ * edit to a drawable is exactly what neither of those two guards would catch alone.
  *
  * "The surface" is now four surfaces, because there are two dresses: a set owes every
  * light surface, or every dark one, or both. A set measured against one dress's paper
@@ -56,39 +59,37 @@ class IconContrastTest {
 
     @Test
     fun `every icon color clears 3 to 1 on the ground its set is picked for`() {
-        val drawables = File("src/main/res/drawable")
-            .listFiles { f ->
-                (f.name.startsWith("mc_") || f.name.startsWith("mcf_") ||
-                    f.name.startsWith("mcfn_") || f.name.startsWith("mcn_")) &&
-                    f.extension == "xml"
-            }
-            .orEmpty()
-        assertTrue("no mc_*.xml drawables found — did the import move?", drawables.isNotEmpty())
-        assertTrue(
-            "the fill set is missing — run tools/import_meteocons.py",
-            drawables.any { it.name.startsWith("mcf_") && !it.name.startsWith("mcfn_") }
-        )
-        assertTrue(
-            "the fill-night set is missing — run tools/import_meteocons.py",
-            drawables.any { it.name.startsWith("mcfn_") }
-        )
-        assertTrue(
-            "the vivid line set is missing — run tools/gen_vivid_icons.py",
-            drawables.any { it.name.startsWith("mcn_") }
-        )
-
         // Every surface a set can meet, both dresses (§2.5).
         val lightGrounds = listOf(ChiaroLightScheme.surface, VividLightScheme.surface)
         val darkGrounds = listOf(ChiaroDarkScheme.surface, VividDarkScheme.surface)
 
+        // Every set the app ships, and the grounds `ChiaroIcons` can put it on. Longest
+        // prefix first, because "mcafn_" is also a "mca…" and only one of them is right.
+        val sets = listOf(
+            "mcafn_" to darkGrounds,
+            "mcaf_" to lightGrounds,
+            "mcan_" to darkGrounds,
+            "mca_" to lightGrounds + darkGrounds,
+            "mcfn_" to darkGrounds,
+            "mcf_" to lightGrounds,
+            "mcn_" to darkGrounds,
+            "mc_" to lightGrounds + darkGrounds
+        )
+
+        val drawables = File("src/main/res/drawable")
+            .listFiles { f -> f.extension == "xml" && sets.any { (p, _) -> f.name.startsWith(p) } }
+            .orEmpty()
+        assertTrue("no mc_*.xml drawables found — did the import move?", drawables.isNotEmpty())
+        sets.forEach { (prefix, _) ->
+            assertTrue(
+                "the $prefix* set is missing — run tools/import_meteocons.py, then " +
+                    "tools/gen_vivid_icons.py",
+                drawables.any { it.name.startsWith(prefix) }
+            )
+        }
+
         val offenders = drawables.flatMap { file ->
-            val darkOnly = file.name.startsWith("mcfn_") || file.name.startsWith("mcn_")
-            val lightOnly = !darkOnly && file.name.startsWith("mcf_")
-            val grounds = when {
-                darkOnly -> darkGrounds
-                lightOnly -> lightGrounds
-                else -> lightGrounds + darkGrounds
-            }
+            val grounds = sets.first { (prefix, _) -> file.name.startsWith(prefix) }.second
             colorAttr.findAll(file.readText()).map { it.groupValues[1] }.distinct().mapNotNull {
                 val color = Color(0xFF000000 or it.toLong(16))
                 val worst = grounds.minOf { ground -> contrast(color, ground) }

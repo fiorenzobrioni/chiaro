@@ -82,11 +82,11 @@ class WidgetConfigActivity : ComponentActivity() {
             ChiaroTheme(
                 darkTheme = when (settings?.themeMode) {
                     ThemeMode.LIGHT -> false
-                    ThemeMode.DARK -> true
-                    ThemeMode.SYSTEM, null -> isSystemInDarkTheme()
+                    ThemeMode.DARK, null -> true
+                    ThemeMode.SYSTEM -> isSystemInDarkTheme()
                 },
-                dynamicColor = settings?.dynamicColor ?: true,
-                palette = settings?.palette ?: AppPalette.PAPER
+                dynamicColor = settings?.dynamicColor ?: false,
+                palette = settings?.palette ?: AppPalette.VIVID
             ) {
                 Scaffold(
                     topBar = {

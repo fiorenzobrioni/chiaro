@@ -206,6 +206,102 @@ object ChiaroIcons {
     )
 
     /**
+     * The four moving siblings of a drawing that has any (`mca_*`, `mcan_*`, `mcaf_*`,
+     * `mcafn_*`), in the same order the static sets are picked in: line on a light
+     * ground, line on a dark one, fill on a light one, fill on a dark one.
+     */
+    private class Moving(
+        @DrawableRes val line: Int,
+        @DrawableRes val lineNight: Int,
+        @DrawableRes val fill: Int,
+        @DrawableRes val fillNight: Int
+    )
+
+    /**
+     * Which drawings move (DESIGN.md §7.1). The condition family and only it: a metric
+     * tile's mark labels a quantity, and a barometer that spins forever is decoration.
+     * `mc_not_available` is absent because Meteocons draws it still — the family has no
+     * animation for "we do not know", which is the right amount of motion for it.
+     *
+     * One table, so a missing sibling is a loud absence at the call site rather than a
+     * quiet mixed family, and `AnimatedIconTest` walks it against the resources.
+     */
+    private val movingOf = mapOf(
+        R.drawable.mc_clear_day to Moving(
+            R.drawable.mca_clear_day, R.drawable.mcan_clear_day,
+            R.drawable.mcaf_clear_day, R.drawable.mcafn_clear_day
+        ),
+        R.drawable.mc_clear_night to Moving(
+            R.drawable.mca_clear_night, R.drawable.mcan_clear_night,
+            R.drawable.mcaf_clear_night, R.drawable.mcafn_clear_night
+        ),
+        R.drawable.mc_partly_cloudy_day to Moving(
+            R.drawable.mca_partly_cloudy_day, R.drawable.mcan_partly_cloudy_day,
+            R.drawable.mcaf_partly_cloudy_day, R.drawable.mcafn_partly_cloudy_day
+        ),
+        R.drawable.mc_partly_cloudy_night to Moving(
+            R.drawable.mca_partly_cloudy_night, R.drawable.mcan_partly_cloudy_night,
+            R.drawable.mcaf_partly_cloudy_night, R.drawable.mcafn_partly_cloudy_night
+        ),
+        R.drawable.mc_overcast to Moving(
+            R.drawable.mca_overcast, R.drawable.mcan_overcast,
+            R.drawable.mcaf_overcast, R.drawable.mcafn_overcast
+        ),
+        R.drawable.mc_cloudy to Moving(
+            R.drawable.mca_cloudy, R.drawable.mcan_cloudy,
+            R.drawable.mcaf_cloudy, R.drawable.mcafn_cloudy
+        ),
+        R.drawable.mc_fog_day to Moving(
+            R.drawable.mca_fog_day, R.drawable.mcan_fog_day,
+            R.drawable.mcaf_fog_day, R.drawable.mcafn_fog_day
+        ),
+        R.drawable.mc_fog_night to Moving(
+            R.drawable.mca_fog_night, R.drawable.mcan_fog_night,
+            R.drawable.mcaf_fog_night, R.drawable.mcafn_fog_night
+        ),
+        R.drawable.mc_drizzle to Moving(
+            R.drawable.mca_drizzle, R.drawable.mcan_drizzle,
+            R.drawable.mcaf_drizzle, R.drawable.mcafn_drizzle
+        ),
+        R.drawable.mc_sleet to Moving(
+            R.drawable.mca_sleet, R.drawable.mcan_sleet,
+            R.drawable.mcaf_sleet, R.drawable.mcafn_sleet
+        ),
+        R.drawable.mc_rain to Moving(
+            R.drawable.mca_rain, R.drawable.mcan_rain,
+            R.drawable.mcaf_rain, R.drawable.mcafn_rain
+        ),
+        R.drawable.mc_snow to Moving(
+            R.drawable.mca_snow, R.drawable.mcan_snow,
+            R.drawable.mcaf_snow, R.drawable.mcafn_snow
+        ),
+        R.drawable.mc_partly_cloudy_day_rain to Moving(
+            R.drawable.mca_partly_cloudy_day_rain, R.drawable.mcan_partly_cloudy_day_rain,
+            R.drawable.mcaf_partly_cloudy_day_rain, R.drawable.mcafn_partly_cloudy_day_rain
+        ),
+        R.drawable.mc_partly_cloudy_night_rain to Moving(
+            R.drawable.mca_partly_cloudy_night_rain, R.drawable.mcan_partly_cloudy_night_rain,
+            R.drawable.mcaf_partly_cloudy_night_rain, R.drawable.mcafn_partly_cloudy_night_rain
+        ),
+        R.drawable.mc_partly_cloudy_day_snow to Moving(
+            R.drawable.mca_partly_cloudy_day_snow, R.drawable.mcan_partly_cloudy_day_snow,
+            R.drawable.mcaf_partly_cloudy_day_snow, R.drawable.mcafn_partly_cloudy_day_snow
+        ),
+        R.drawable.mc_partly_cloudy_night_snow to Moving(
+            R.drawable.mca_partly_cloudy_night_snow, R.drawable.mcan_partly_cloudy_night_snow,
+            R.drawable.mcaf_partly_cloudy_night_snow, R.drawable.mcafn_partly_cloudy_night_snow
+        ),
+        R.drawable.mc_thunderstorms to Moving(
+            R.drawable.mca_thunderstorms, R.drawable.mcan_thunderstorms,
+            R.drawable.mcaf_thunderstorms, R.drawable.mcafn_thunderstorms
+        ),
+        R.drawable.mc_thunderstorms_rain to Moving(
+            R.drawable.mca_thunderstorms_rain, R.drawable.mcan_thunderstorms_rain,
+            R.drawable.mcaf_thunderstorms_rain, R.drawable.mcafn_thunderstorms_rain
+        ),
+    )
+
+    /**
      * The style applied to a line resource id: for FILL, the sibling for the ground the
      * icon will sit on; for LINE, the shipped set, or its dark-ground sibling when the
      * reader is wearing the vivid dress. [darkGround] is the applied theme in the app
@@ -245,34 +341,54 @@ object ChiaroIcons {
         style: WeatherIcons = WeatherIcons.LINE,
         darkGround: Boolean = false,
         palette: AppPalette = AppPalette.PAPER
-    ): Int = styledRes(
-        when (wmoCode) {
-            0 -> if (night) R.drawable.mc_clear_night else R.drawable.mc_clear_day
-            1, 2 -> if (night) R.drawable.mc_partly_cloudy_night else R.drawable.mc_partly_cloudy_day
-            3 -> R.drawable.mc_overcast
-            45, 48 -> if (night) R.drawable.mc_fog_night else R.drawable.mc_fog_day
-            51, 53, 55 -> R.drawable.mc_drizzle
-            56, 57, 66, 67 -> R.drawable.mc_sleet
-            61, 63, 65, 82 -> R.drawable.mc_rain
-            71, 73, 75, 77 -> R.drawable.mc_snow
-            80, 81 -> if (night) {
-                R.drawable.mc_partly_cloudy_night_rain
-            } else {
-                R.drawable.mc_partly_cloudy_day_rain
-            }
-            85, 86 -> if (night) {
-                R.drawable.mc_partly_cloudy_night_snow
-            } else {
-                R.drawable.mc_partly_cloudy_day_snow
-            }
-            95 -> R.drawable.mc_thunderstorms
-            96, 99 -> R.drawable.mc_thunderstorms_rain
-            else -> R.drawable.mc_cloudy
-        },
-        style,
-        darkGround,
-        palette
-    )
+    ): Int = styledRes(conditionLineRes(wmoCode, night), style, darkGround, palette)
+
+    /**
+     * The moving sibling of a static drawing, or **null** when this family has none —
+     * which is the honest answer for the metric marks and for "not available", and the
+     * signal the caller needs to fall back to the still one rather than to invent
+     * motion.
+     */
+    @DrawableRes
+    fun movingRes(
+        @DrawableRes lineRes: Int,
+        style: WeatherIcons,
+        darkGround: Boolean = false,
+        palette: AppPalette = AppPalette.PAPER
+    ): Int? = movingOf[lineRes]?.let {
+        when {
+            style == WeatherIcons.FILL -> if (darkGround) it.fillNight else it.fill
+            palette == AppPalette.VIVID && darkGround -> it.lineNight
+            else -> it.line
+        }
+    }
+
+    /** The line drawing for a WMO code, before any style or ground is applied: the seam
+     * [movingRes] and [styledRes] are both keyed on. */
+    @DrawableRes
+    fun conditionLineRes(wmoCode: Int, night: Boolean = false): Int = when (wmoCode) {
+        0 -> if (night) R.drawable.mc_clear_night else R.drawable.mc_clear_day
+        1, 2 -> if (night) R.drawable.mc_partly_cloudy_night else R.drawable.mc_partly_cloudy_day
+        3 -> R.drawable.mc_overcast
+        45, 48 -> if (night) R.drawable.mc_fog_night else R.drawable.mc_fog_day
+        51, 53, 55 -> R.drawable.mc_drizzle
+        56, 57, 66, 67 -> R.drawable.mc_sleet
+        61, 63, 65, 82 -> R.drawable.mc_rain
+        71, 73, 75, 77 -> R.drawable.mc_snow
+        80, 81 -> if (night) {
+            R.drawable.mc_partly_cloudy_night_rain
+        } else {
+            R.drawable.mc_partly_cloudy_day_rain
+        }
+        85, 86 -> if (night) {
+            R.drawable.mc_partly_cloudy_night_snow
+        } else {
+            R.drawable.mc_partly_cloudy_day_snow
+        }
+        95 -> R.drawable.mc_thunderstorms
+        96, 99 -> R.drawable.mc_thunderstorms_rain
+        else -> R.drawable.mc_cloudy
+    }
 
     @Composable
     fun condition(wmoCode: Int, night: Boolean = false): ImageVector =

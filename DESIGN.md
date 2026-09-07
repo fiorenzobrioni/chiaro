@@ -70,12 +70,15 @@ The anti-pattern list, kept short so it is actually remembered:
 
 Chiaro's color comes from Material's tonal palettes, and there are two sources for them:
 
-1. **Dynamic color** (default on): the palettes are derived from the reader's wallpaper by
-   the platform. Chiaro consumes `dynamicLightColorScheme` / `dynamicDarkColorScheme` and
-   never hardcodes a role over them.
-2. **The Chiaro scheme** (the fallback, and an explicit choice in settings for readers who
-   want the app to look like itself): generated from the source colors in §2.2 by the same
-   tonal algorithm.
+1. **The generated schemes** (default, and two of them since §2.5): built from the source
+   colors of §2.2 and §2.5 by the same tonal algorithm. This is the app looking like
+   itself, which is what it does out of the box since 7 set 2026 — §13's second open item,
+   resolved.
+2. **Dynamic color** (a switch in settings): the palettes are derived from the reader's
+   wallpaper by the platform. Chiaro consumes `dynamicLightColorScheme` /
+   `dynamicDarkColorScheme` and never hardcodes a role over them. It reaches the Material
+   roles only: the semantic tokens of §2.3 and the canvas of §3 never followed the
+   wallpaper, and still do not.
 
 Consequence for implementation: **no composable ever names a hex.** It names a role
 (`MaterialTheme.colorScheme.primaryContainer`) or a semantic token (§2.3). A hex in a
@@ -524,8 +527,8 @@ Material 3 Expressive's spring physics, from `MaterialTheme.motionScheme`:
 Shared-element transition from a week row to its day sheet; predictive back everywhere;
 the pager between places moves the canvas with it, so switching city looks like turning to
 another sky. **Reduced motion collapses every one of these to a 100 ms fade**, and the
-canvas freezes (§3.5). No animation ever gates information: a reader who disables motion
-sees the same content at the same moment.
+canvas freezes (§3.5) and the weather icons stop (§7.1). No animation ever gates
+information: a reader who disables motion sees the same content at the same moment.
 
 **How the app knows** (Fase 9): Android has no `prefers-reduced-motion` of its own.
 Accessibility → Remove animations and Developer options → Animator duration scale both
@@ -535,13 +538,62 @@ the platform's own animators read, so this is the API and not a way around a mis
 at start-up would be wrong for exactly the reader it is for) and publishes
 `LocalReducedMotion`.
 
-The app moves in three places and all three ask: the week row's hour strip opens with
+The app moves in four places and all four ask (the fourth is §7.1's icons): the week row's hour strip opens with
 `ChiaroMotion.enter/exit`, the pager `scrollToPage`s instead of animating, and the rule
 editor's dry-run answer jumps into view instead of scrolling to it. Until that pass
 `ChiaroMotion.reducedMotionFadeMillis` was a constant nothing consulted, which is the
 shape a design rule takes when it is only written down: true in this file, absent from
 the APK. The canvas needed nothing — it is a `Brush`, it has never animated, and §3.5's
 "becomes a static gradient" is a promise it keeps by construction.
+
+### 7.1 The weather moves
+
+The weather icons are Meteocons' **animated** drawings since 7 set 2026 (committente),
+and the motion is the illustrator's own: every source SVG in the family carries SMIL, and
+`tools/import_meteocons.py` now carries it across as an `AnimatedVectorDrawable` instead
+of dropping it. The sun turns once in 45 seconds, the moon rocks, cloud banks drift, drops
+fall in 0.7 seconds and out of step with each other, the bolt flickers. Nothing was
+invented here; a rewrite would have been a second opinion about somebody else's drawing.
+
+**Only the condition family moves.** A metric tile's mark labels a quantity — a barometer
+that spins forever is decoration, and §1.4 is where decoration goes. `mc_not_available`
+does not move either, because the family has no animation for "we do not know", which is
+the right amount of motion for it. `ChiaroIcons.movingRes` returns **null** for those
+rather than a still frame dressed as a moving one, and the caller falls back.
+
+Four things must all be true before an icon moves, and they are checked in this order:
+
+1. the reader left **Settings → Appearance → Animated icons** on (it ships on);
+2. the system is not asking for less motion — the same `ANIMATOR_DURATION_SCALE` every
+   other animation in the app reads (§7), so «Remove animations» stops the weather too;
+3. this drawing HAS a moving sibling;
+4. this is not a Compose preview, where the `AndroidView` that hosts it renders as nothing.
+
+**Where it moves**: the hour strip and the week rows on Today — every condition icon the
+app draws, which is the same list. About thirteen at once in the worst case, because the
+strip is a `LazyRow` that composes what fits and the week is seven. **Not the widgets**,
+and not by choice: `RemoteViews` cannot run an `AnimatedVectorDrawable` at all.
+
+**What it costs**, and why the answer is the platform's rather than a promise made here:
+an AVD stops when its host stops being visible — `ImageView.onVisibilityAggregated` calls
+`setVisible(false)`, and the platform pauses the animator set. Scrolling a cell away or
+backgrounding the app therefore stops the work without a lifecycle observer of our own.
+
+**How the conversion works**, because it is the only place in the app where a file format
+was translated rather than copied. Four SMIL forms appear in the family, all linear, all
+endless: `rotate` and `translate` become a `<group>` with its pivot animating `rotation`
+or `translateX`/`translateY`; `opacity` becomes the group's paths animating `fillAlpha`
+and `strokeAlpha`; a `gradientTransform` is dropped with the gradient the importer had
+already flattened. Two things SMIL has that AVD does not:
+
+- **`additive="sum"`** stacks two transforms on one element. AVD gives a group exactly
+  one, so two transforms become two nested groups, outermost first — the order SMIL
+  multiplies them in.
+- **A negative `begin`** is a phase, not a delay: it is what makes three raindrops fall
+  out of step instead of in a chorus line. AVD's `startOffset` is the opposite, so the
+  phase is baked into the keyframes instead. An instantaneous wrap is drawn as two
+  keyframes one thousandth of a cycle apart, which under a millisecond at the family's
+  shortest loop and inside a single frame.
 
 ---
 
@@ -774,6 +826,14 @@ into something CI can fail:
   the same luminances, and drift by at most 0.0112 between anchors — because the blend is
   perceptual and a midpoint between two saturated colors is not the midpoint between two
   dull ones.
+- **`AnimatedIconTest`** holds §7.1: a moving icon is the still icon (same paths in
+  the same order, same colors in the same order — the strongest thing a JVM test can say
+  about a drawing it cannot render), every `<target>` names an element the vector really
+  has, every animated property belongs to the kind of element it is aimed at, and every
+  loop is endless, positive and linear with keyframes that go forwards. Each of those
+  four fails silently on a device: an icon that simply does not move, discovered by a
+  person. It found its first defect the day it was written — two keyframes of an
+  instantaneous jump rounded onto the same instant, which is a jump that never happens.
 - **`MotionTest`** holds §7's table and the one rule under it: the three springs are the
   three springs, and every one of them becomes the same 100 ms fade when motion is reduced.
 - **`TextScaleTest`** holds §10's two rules and the measurement behind the 1.5 threshold,
@@ -783,11 +843,14 @@ into something CI can fail:
   the moment a sentence is needed. **`FormatsTest`** holds the other side of it — the
   formatter itself, in Italian and English at once.
 
-And one thing that is not a test, because it cannot be. **`tools/palette_sheet.py`**
-renders the palette to an HTML sheet, reading the hexes out of the Kotlin sources so it
+And two things that are not tests, because they cannot be. **`tools/palette_sheet.py`**
+renders both palettes to an HTML sheet, reading the hexes out of the Kotlin sources so it
 can never drift from them. Run it and look at the result whenever a color moves: it is
 what found that the golden hour was not golden at 3°, which every contrast and
 monotonicity test in the suite had passed without complaint.
+**`tools/icon_filmstrip.py`** is the same idea for §7.1: it evaluates every animator at a
+series of instants and writes the frames out as SVG, because a test can say the rain has
+a valid animator and only a person can say the rain falls downward.
 
 ---
 
@@ -818,7 +881,12 @@ monotonicity test in the suite had passed without complaint.
    reading order: the strip is scanned sideways and carries the most weight, the week is
    read down, a line of prose leads with the smallest glyph.
    Gradients are flattened to their face color (a two-stop ramp is invisible at
-   30–38dp, and was at the 24–32 of the import) and hairline edge strokes are dropped. On color, the departure worth
+   30–38dp, and was at the 24–32 of the import) and hairline edge strokes are dropped.
+   **The SMIL is no longer dropped** (7 set 2026): each of the four sets has an animated
+   twin — `mca_*`, `mcan_*`, `mcaf_*`, `mcafn_*` — carrying the illustrator's own motion
+   as an `AnimatedVectorDrawable`, for the eighteen drawings of the condition family that
+   have any. The rule for which move and when is §7.1; the colors are the same table, so
+   nothing in this section's arithmetic changes. On color, the departure worth
    this document's attention: **the palette is re-anchored, not copied — and since
    the icon pass (3 set 2026) the fill set ships twice, picked by its ground.**
    Meteocons draws for a dark backdrop: its cloud stroke is `#E5E7EB`, 1.18:1 against
@@ -890,9 +958,14 @@ monotonicity test in the suite had passed without complaint.
    the sole carrier there the way it is in the hour strip, which is what §10's floor is
    protecting. If it is ever reopened, the option that keeps both is a small darkened
    plate under the glyph: contrast without giving up the color.
-2. **Dynamic color default** — on, as written here. Worth revisiting after the first
-   screenshots: a wallpaper-derived scheme makes every store screenshot a different app.
-   Likely resolution: dynamic on device, the Chiaro scheme in the store assets.
+2. ~~Dynamic color default~~ — **resolved 7 set 2026, the other way**: dynamic color
+   ships **off**, and the generated vivid scheme of §2.5 is what a fresh install wears.
+   The reason the item existed was that a wallpaper-derived scheme makes every store
+   screenshot a different app; the reason it resolved this way is that it also makes the
+   palette choice invisible — with dynamic color on, a dress reaches only the ramps and
+   the sky, which is exactly what the first device look reported as "barely a change".
+   On device and in the store, the app now looks like itself. It stays one tap away for
+   readers who want their wallpaper back.
 3. ~~The brand mark~~ — **shipped, 3 set 2026**: the icon family's starry-night
    crescent, fill style, in Chiaro's own palette (moon `#3589AC`, stars `#C27D08` —
    the brand amber), set low in the badge over two calm waves; everything inside the

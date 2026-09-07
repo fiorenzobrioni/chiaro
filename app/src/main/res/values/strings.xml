@@ -216,6 +216,8 @@
     <string name="settings_icons_fill">Filled</string>
     <string name="settings_icons_line">Outlined</string>
     <string name="settings_weather_icons_note">Two drawings of the same icons: solid shapes, or thin strokes.</string>
+    <string name="settings_animated_icons">Animated icons</string>
+    <string name="settings_animated_icons_note">The weather icons move: the sun turns, rain falls, the lightning flashes. Off leaves them still. Either way they stop moving when your phone asks for less animation.</string>
     <string name="settings_dynamic_color">Wallpaper colors</string>
     <string name="settings_dynamic_color_note">On, the colors come from your wallpaper. Off, Chiaro wears the palette you picked above.</string>
     <string name="settings_group_updates">Updates</string>
