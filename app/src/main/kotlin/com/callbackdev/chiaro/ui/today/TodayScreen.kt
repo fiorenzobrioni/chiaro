@@ -329,6 +329,9 @@ private fun TodayPage(
             PlaceHeader(
                 title = title,
                 isGps = isGps,
+                // No report, so no timezone and no honest hour: the phone's own would
+                // be a guess wearing the place's name.
+                localNow = null,
                 dots = dots,
                 onOpenPlaces = onOpenPlaces,
                 onOpenSettings = onOpenSettings,
@@ -360,6 +363,7 @@ private fun GlobalFrame(
             PlaceHeader(
                 title = stringResource(R.string.app_name),
                 isGps = false,
+                localNow = null,
                 dots = null,
                 onOpenPlaces = onOpenPlaces,
                 onOpenSettings = onOpenSettings,
@@ -383,11 +387,20 @@ private fun GlobalFrame(
  * standing in Cavenago would otherwise be two identical pages, and where a number
  * comes from is part of its truth (device request, 2 set). The pin carries its word
  * through the row's description, never alone.
+ *
+ * [localNow] is the other half of that same question, and appears on exactly the pages
+ * the pin does not (device request, 7 set): the day and the hour IN this place. On the
+ * position page it would be the phone's own clock printed under the status bar that
+ * already shows it; on any other place it is the one thing the reader cannot look up —
+ * Palermo and Reykjavík are not on the same hour, and some days not on the same date.
+ * It is a fact about the place, not about the data: the page's last line still says
+ * when the numbers arrived, in the same timezone as this one and in its own words.
  */
 @Composable
 private fun PlaceHeader(
     title: String,
     isGps: Boolean,
+    localNow: String?,
     dots: Pair<Int, Int>?,
     onOpenPlaces: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -421,6 +434,17 @@ private fun PlaceHeader(
                     imageVector = Icons.Outlined.KeyboardArrowDown,
                     contentDescription = stringResource(R.string.place_switcher_action),
                     tint = contentColor
+                )
+            }
+            // Outside the tappable row: it is a fact, not a way in. Full strength
+            // rather than a faded white — this sits over the sky, where §3.6's scrim
+            // is measured against ink at full opacity, and the size is what makes it
+            // secondary.
+            localNow?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = contentColor
                 )
             }
             dots?.let { (selected, count) ->
@@ -791,6 +815,12 @@ private fun CanvasHeader(
         PlaceHeader(
             title = title,
             isGps = isGps,
+            localNow = if (isGps) {
+                null
+            } else {
+                "${Formats.dayLong(content.now.toLocalDate(), locale)} · " +
+                    content.now.format(timeFmt)
+            },
             dots = dots,
             onOpenPlaces = onOpenPlaces,
             onOpenSettings = onOpenSettings,

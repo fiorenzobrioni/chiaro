@@ -145,10 +145,11 @@ class TodayWidget : GlanceAppWidget() {
                             fontWeight = FontWeight.Medium
                         )
                     )
-                    Text(
-                        text = content.city.name,
-                        style = secondaryStyle(palette, 16.sp),
-                        maxLines = 1
+                    PlaceLine(
+                        name = content.city.name,
+                        fromGps = model.fromGps,
+                        palette = palette,
+                        size = 16.sp
                     )
                 }
                 Spacer(modifier = GlanceModifier.defaultWeight())

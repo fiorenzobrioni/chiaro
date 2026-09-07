@@ -187,10 +187,11 @@ private fun NowContent(
                     DayRange(day.highC, day.lowC, model.settings.units, palette)
                 }
             }
-            Text(
-                text = content.city.name,
-                style = secondaryStyle(palette, 15.sp),
-                maxLines = 1
+            PlaceLine(
+                name = content.city.name,
+                fromGps = model.fromGps,
+                palette = palette,
+                size = 15.sp
             )
             if (content.isStale) {
                 Text(

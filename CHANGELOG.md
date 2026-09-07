@@ -171,6 +171,16 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 - **A cross in the "Search for a city" field**, while there is something in it to clear.
   It appears with the first character and goes away with the last: a cross over an empty
   field offers to undo nothing.
+- **The widgets say when the place they show is your position** (reported on device,
+  7 Sep): the position pin now sits before the name, the same mark Today's header has
+  carried since the second device pass and for the same reason — a saved "Cavenago" and
+  a fix standing in Cavenago were two identical cards. A widget pinned to a city never
+  draws it: a pin is a saved city, and it stays that city while you travel.
+- **Today says what day and hour it is in a place that is not the one you are in.** It
+  appears under the name on exactly the pages the position pin does not: on the position
+  page it would be the phone's own clock reprinted under the status bar that shows it,
+  while on Palermo or Reykjavík it is the one thing you cannot look up. The hour is the
+  place's, like every other hour on that screen, and it moves with the minute.
 
 ### Changed
 

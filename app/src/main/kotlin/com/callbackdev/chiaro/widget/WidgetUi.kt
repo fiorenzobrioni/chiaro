@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
@@ -38,8 +39,11 @@ import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
+import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
+import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -399,6 +403,50 @@ fun NoDataContent(palette: WidgetPalette) {
 @Composable
 fun secondaryStyle(palette: WidgetPalette, size: TextUnit): TextStyle =
     TextStyle(color = palette.secondary, fontSize = size)
+
+/**
+ * The place a card is showing, with the position pin before the name when that place
+ * is the phone's own (device request, 7 set). It is Today's header rule (§5.1) carried
+ * onto the home screen, for the reason that rule exists: a saved "Cavenago" and a fix
+ * standing in Cavenago are two identical cards, and a card that is following the
+ * reader around should say so. Same glyph as the app screen — see the drawable.
+ *
+ * The pin is sized on the name's own text size and the reader's font scale, like
+ * [textInkBalance] and for the same reason: a glyph that stays put while the words
+ * grow stops being part of the same line.
+ */
+@Composable
+fun PlaceLine(
+    name: String,
+    fromGps: Boolean,
+    palette: WidgetPalette,
+    size: TextUnit,
+    modifier: GlanceModifier = GlanceModifier
+) {
+    val context = LocalContext.current
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
+        if (fromGps) {
+            Image(
+                provider = ImageProvider(R.drawable.ic_place_pin),
+                // The pin's own words, so the card reads "My position, Cavenago"
+                // rather than showing a mark it never names.
+                contentDescription = context.getString(R.string.places_gps_title),
+                colorFilter = ColorFilter.tint(palette.secondary),
+                modifier = GlanceModifier.size(placePinSize(context, size.value))
+            )
+            Spacer(modifier = GlanceModifier.width(PlacePinGap))
+        }
+        Text(text = name, style = secondaryStyle(palette, size), maxLines = 1)
+    }
+}
+
+/** The app screen puts a 20dp pin before a 22sp title; the ratio travels, the numbers
+ * do not — a widget's name is 15 or 16sp. */
+private fun placePinSize(context: Context, fontSizeSp: Float): Dp =
+    (fontSizeSp * PinToText * context.resources.configuration.fontScale).dp
+
+private const val PinToText = 0.9f
+private val PlacePinGap = 4.dp
 
 /** The stale marker (VISION §5.9): with old data the widget says how old. */
 fun staleText(context: Context, lastSync: Instant, now: Instant): String {
