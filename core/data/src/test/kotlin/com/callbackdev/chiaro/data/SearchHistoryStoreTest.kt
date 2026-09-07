@@ -83,4 +83,74 @@ class SearchHistoryStoreTest {
 
         assertEquals(emptyList<String>(), store.entries())
     }
+
+    @Test
+    fun `remove forgets one search and leaves the others where they were`() = runBlocking {
+        val store = store()
+        store.add("Milano")
+        store.add("Torino")
+        store.add("Genova")
+
+        store.remove("Torino")
+
+        assertEquals(listOf("Genova", "Milano"), store.entries())
+    }
+
+    @Test
+    fun `remove matches the way add deduplicates, ignoring case and spaces`() = runBlocking {
+        val store = store()
+        store.add("Milano")
+        store.add("Torino")
+
+        store.remove("  milano  ")
+
+        assertEquals(listOf("Torino"), store.entries())
+    }
+
+    @Test
+    fun `removing something that is not there changes nothing`() = runBlocking {
+        val store = store()
+        store.add("Milano")
+
+        store.remove("Torino")
+        store.remove("   ")
+
+        assertEquals(listOf("Milano"), store.entries())
+    }
+
+    @Test
+    fun `restore puts the list back in the order it was given`() = runBlocking {
+        val store = store()
+        store.add("Milano")
+        store.add("Torino")
+        store.add("Genova")
+        val before = store.entries()
+
+        store.clear()
+        store.restore(before)
+
+        // and not "Milano, Torino, Genova": replaying add would call the oldest
+        // search the newest one
+        assertEquals(before, store.entries())
+    }
+
+    @Test
+    fun `restoring an empty list is the same as forgetting everything`() = runBlocking {
+        val store = store()
+        store.add("Milano")
+
+        store.restore(emptyList())
+
+        assertEquals(emptyList<String>(), store.entries())
+    }
+
+    @Test
+    fun `restore keeps the cap`() = runBlocking {
+        val store = store()
+        val many = (1..SearchHistoryStore.MAX_ENTRIES + 3).map { "City $it" }
+
+        store.restore(many)
+
+        assertEquals(many.take(SearchHistoryStore.MAX_ENTRIES), store.entries())
+    }
 }

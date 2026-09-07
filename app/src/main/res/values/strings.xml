@@ -168,6 +168,12 @@
     <string name="places_removed">%1$s removed</string>
     <string name="places_move_up">Move up</string>
     <string name="places_move_down">Move down</string>
+    <string name="places_remove">Remove</string>
+    <string name="places_search_clear">Clear the search</string>
+    <string name="places_recent_clear">Clear</string>
+    <string name="places_recent_remove">Remove “%1$s” from recent searches</string>
+    <string name="places_recent_removed">Recent search removed</string>
+    <string name="places_recent_cleared">Recent searches cleared</string>
     <string name="action_undo">Undo</string>
     <string name="gps_error_permission">Without the permission I can\'t find your position</string>
     <string name="gps_error_disabled">The phone\'s location services are off</string>
@@ -274,7 +280,7 @@
     <string name="guide_today_changed_title">What changed</string>
     <string name="guide_today_changed_body">When the latest update moves the days ahead, up to three sentences say how. Tap them and the whole story opens in the Journal.</string>
     <string name="guide_today_places_title">More than one place</string>
-    <string name="guide_today_places_body">Swipe sideways to move between your places; the dots under the sky say where you are.</string>
+    <string name="guide_today_places_body">Swipe sideways to move between your places; the dots under the sky say where you are. For a place that is not the one you are standing in, the header says what day and what hour it is there.</string>
 
     <string name="guide_sky_title">Sky</string>
     <string name="guide_sky_p1">This is the screen no other weather app ships. It takes the moments worth waiting for — a sunrise, a golden hour, a night of stars, a meteor peak — and says whether tonight is one of the good ones. Everything on it is computed on your phone, so it works with no connection at all.</string>

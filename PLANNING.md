@@ -1895,6 +1895,71 @@ parte di questa passata che resta da guardare su un telefono.
       delle tre che la sezione ha; nel Diario la riga resta, perché quello è il registro,
       ma perde il separatore appeso davanti all'ora. Le frasi si costruiscono adesso
       prima della lista, perché un `LazyListScope` non può chiamare una composable
+- [x] Le ricerche recenti si cancellano, e il campo di ricerca si svuota in un colpo
+      (segnalato su device, 7 set): sulle recenti non c'era **nessun** modo di togliere
+      una riga — né un gesto né un comando — e il lettore l'ha letto come «non si
+      cancellano», che era esatto. La strada breve era copiare lo scorrimento dei
+      salvati, ma un gesto è invisibile esattamente quanto il niente che c'era prima:
+      la segnalazione nasce dal non trovare, e una scorciatoia nascosta non si fa
+      trovare. Quindi ogni recente prende una **crocetta** in coda alla riga e la
+      sezione un **«Cancella»** accanto al titolo — due bersagli visibili, entrambi
+      con l'annulla nella stessa snackbar che serve i luoghi (una cancellazione
+      annullabile può permettersi di essere a un tocco solo).
+      L'annulla rimette la lista **com'era, ordine compreso**:
+      `SearchHistoryStore.restore(list)` scrive l'elenco che riceve invece di rigiocare
+      `add(term)`, perché quella lista è ordinata per *quando* si è cercato e
+      riaggiungere un termine lo dichiarerebbe il più recente — una data inventata dal
+      pulsante «annulla». `remove(term)` toglie con lo stesso confronto con cui `add`
+      deduplica (spazi e maiuscole: la riga che si vede è quella che se ne va, comunque
+      fosse stata scritta). Sette prove nuove in `SearchHistoryStoreTest`.
+      Nel campo «Cerca una città» compare una **X** in coda finché c'è qualcosa da
+      cancellare, e non prima: una crocetta che non annulla niente è decorazione.
+      Terza cosa, trovata guardando la stessa schermata: **i salvati non erano
+      rimovibili con TalkBack**. Lo scorrimento era l'unica via, e uno scorrimento non
+      ha né tastiera né screen reader; adesso la riga porta l'azione «Rimuovi» accanto
+      a «Sposta su» e «Sposta giù», che stanno lì dalla Fase 3 esattamente per questo
+      motivo. È materia di questa fase e costava tre righe.
+      **La guida resta com'è**, di proposito: VISION §5.7 dice che non insegna un
+      controllo, e una crocetta visibile non è un controllo da insegnare — lo
+      scorrimento dei salvati è nella guida perché è invisibile, ed è l'eccezione che
+      spiega la regola, non un precedente. Suite verde (`test` + `:app:testDebugUnitTest`),
+      lint a 0 errori, APK debug costruito
+- [x] Il segno della posizione arriva sui widget, e Oggi dice che ora è **là**
+      (due richieste su device, 7 set — sono la stessa domanda vista dai due lati).
+      Sul widget: il nome del luogo non diceva da dove veniva, quindi un «Cavenago»
+      salvato e una posizione GPS ferma a Cavenago erano due cartoncini identici. Ora
+      il segnaposto sta prima del nome quando quel luogo è la posizione del telefono —
+      la stessa regola dell'intestazione di Oggi (§5.1, decisa il 2 set), portata sulla
+      schermata home. Un widget **appuntato** non lo mostra mai e non chiede nemmeno la
+      sorgente attiva: uno spillo è una città salvata per definizione, e resta quella
+      mentre il lettore viaggia. Il modello guadagna `WidgetModel.fromGps`, e la riga
+      del luogo diventa una sola `PlaceLine` condivisa da Now e Oggi (il widget Cielo
+      non stampa il nome). Il segnaposto si misura sulla dimensione del nome **per il
+      fattore di scala del testo del lettore**, come `textInkBalance`: un glifo fermo
+      accanto a parole che crescono smette di far parte della stessa riga.
+      Il disegno è `place` di Material Icons nel tema outlined, copiato verbatim in
+      `res/drawable/ic_place_pin.xml` — Glance non sa disegnare un `ImageVector` di
+      Compose, vuole un id di risorsa, quindi lo stesso glifo esiste due volte e il
+      commento del file lo dice; riga aggiunta in `licenses/README.md` con il testo
+      Apache-2.0 accanto agli altri due.
+      Su Oggi: sotto il nome di un luogo che **non** è la posizione compaiono il giorno
+      e l'ora **di lì**. È il complemento esatto del segnaposto — appare sulle pagine
+      dove quello non c'è — e la ragione è la stessa: sulla pagina della posizione
+      sarebbe l'orologio del telefono ristampato sotto la barra di stato che lo mostra
+      già, mentre su Palermo o Reykjavík è l'unica cosa che il lettore non può guardare
+      altrove. L'ora è quella del posto, come ogni altra ora della schermata, e ticchetta
+      col minuto che `push()` fa girare anche in risparmio energetico. Non si confonde
+      col piede della pagina: quello dice *quando sono arrivati i numeri* e lo dice con
+      le sue parole («Aggiornato alle …»), nello stesso fuso.
+      Una conseguenza accettata: sulla pagina GPS la riga non c'è, quindi i puntini del
+      pager stanno 18dp più in alto che sulle altre. Riservare lo spazio vuoto sarebbe
+      peggio (una banda vuota sotto «La mia posizione» sembra qualcosa che non ha
+      caricato), e le pagine differiscono già per cielo, numeri e frase. Da guardare
+      su device.
+      `Formats.dayLong` è la quinta copia di «formatta e maiuscola l'iniziale» che non
+      è stata scritta. Guida aggiornata (`guide_today_places_body`): dire che
+      l'intestazione porta giorno e ora di lì è dire cosa fa una schermata, non
+      insegnare un controllo. Suite verde, lint a 0 errori, APK debug costruito
 - [ ] Contrasti, scala testo 200%, TalkBack, motion ridotto
 - [ ] Avvio a freddo sotto 400 ms, canvas sotto 2 ms/frame
 - [ ] Passata IT/EN completa

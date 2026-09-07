@@ -165,6 +165,12 @@
     <string name="places_removed">%1$s rimossa</string>
     <string name="places_move_up">Sposta su</string>
     <string name="places_move_down">Sposta giù</string>
+    <string name="places_remove">Rimuovi</string>
+    <string name="places_search_clear">Cancella la ricerca</string>
+    <string name="places_recent_clear">Cancella</string>
+    <string name="places_recent_remove">Togli “%1$s” dalle ricerche recenti</string>
+    <string name="places_recent_removed">Ricerca recente rimossa</string>
+    <string name="places_recent_cleared">Ricerche recenti cancellate</string>
     <string name="action_undo">Annulla</string>
     <string name="gps_error_permission">Senza il permesso non posso trovare la tua posizione</string>
     <string name="gps_error_disabled">La localizzazione del telefono è spenta</string>
@@ -271,7 +277,7 @@
     <string name="guide_today_changed_title">Cosa è cambiato</string>
     <string name="guide_today_changed_body">Quando l\'ultimo aggiornamento sposta i giorni che vengono, fino a tre frasi dicono come. Toccale e la storia completa si apre nel Diario.</string>
     <string name="guide_today_places_title">Più di un luogo</string>
-    <string name="guide_today_places_body">Scorri di lato per passare da un luogo all\'altro; i puntini sotto il cielo dicono dove sei.</string>
+    <string name="guide_today_places_body">Scorri di lato per passare da un luogo all\'altro; i puntini sotto il cielo dicono dove sei. Per un luogo che non è quello in cui ti trovi, l\'intestazione dice che giorno e che ora sono lì.</string>
 
     <string name="guide_sky_title">Cielo</string>
     <string name="guide_sky_p1">È la schermata che nessun\'altra app meteo porta. Prende i momenti che vale la pena aspettare — un\'alba, un\'ora dorata, una notte di stelle, il picco di uno sciame meteorico — e dice se stanotte è una di quelle buone. Tutto quello che c\'è sopra è calcolato sul telefono, quindi funziona anche senza connessione.</string>

@@ -31,6 +31,14 @@ data class WidgetModel(
     val settings: AppSettings,
     val look: WidgetLook,
     val city: City?,
+    /**
+     * Whether [city] is where the phone says it is, rather than a place off the saved
+     * list. It is the widget's half of Today's header rule (§5.1): a saved "Cavenago"
+     * and a fix standing in Cavenago are two identical cards otherwise, and where a
+     * number comes from is part of its truth. False by construction for a pinned
+     * widget — a pin is a saved city, and it stays that city while the reader travels.
+     */
+    val fromGps: Boolean,
     val content: TodayUiState.Content?,
     /**
      * The subscribed moments in front of the reader, soonest first (Fase 8b). A list
@@ -71,11 +79,16 @@ object WidgetData {
     suspend fun load(context: Context, appWidgetId: Int): WidgetModel {
         val settings = ServiceLocator.settingsStore(context).settings.first()
         val look = WidgetLookStore.get(context).lookFor(appWidgetId)
-        val city = pinnedCity(context, appWidgetId) ?: activeCity(context)
+        val pinned = pinnedCity(context, appWidgetId)
+        // The active source is only asked for when nothing is pinned: a pin answers
+        // the question on its own, and asking anyway would let a GPS fix put its pin
+        // on a card that is deliberately watching somewhere else.
+        val active = if (pinned == null) activeSource(context) else null
+        val city = pinned ?: activeCity(active)
         val zone = city?.timezone?.let { runCatching { ZoneId.of(it) }.getOrNull() }
             ?: ZoneId.systemDefault()
         if (city == null) {
-            return WidgetModel(settings, look, null, null, emptyList(), zone)
+            return WidgetModel(settings, look, null, false, null, emptyList(), zone)
         }
         val now = Instant.now()
         val report = ServiceLocator.weatherRepository(context).cachedReport(city)
@@ -89,6 +102,7 @@ object WidgetData {
             settings = settings,
             look = look,
             city = city,
+            fromGps = active is ActiveSource.Gps,
             content = content,
             moments = moments(context, city, zone, now, report, settings),
             zone = zone
@@ -102,12 +116,14 @@ object WidgetData {
             .firstOrNull { it.id == cityId }
     }
 
-    private suspend fun activeCity(context: Context): City? =
-        when (val source = ServiceLocator.cityStore(context).activeSource.first()) {
-            is ActiveSource.Saved -> source.city
-            is ActiveSource.Gps -> source.lastFix
-            ActiveSource.None -> null
-        }
+    private suspend fun activeSource(context: Context): ActiveSource =
+        ServiceLocator.cityStore(context).activeSource.first()
+
+    private fun activeCity(source: ActiveSource?): City? = when (source) {
+        is ActiveSource.Saved -> source.city
+        is ActiveSource.Gps -> source.lastFix
+        ActiveSource.None, null -> null
+    }
 
     /**
      * The subscribed moments in front of the reader, judged — [SkyUpcoming]'s own

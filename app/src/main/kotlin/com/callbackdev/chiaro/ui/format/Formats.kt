@@ -50,4 +50,11 @@ object Formats {
     fun dayLabel(date: java.time.LocalDate, locale: Locale): String =
         date.format(DateTimeFormatter.ofPattern("EEE", locale))
             .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+
+    /** The whole day written out — "Sunday 7 September", "Domenica 7 settembre".
+     * Capitalized like [dayLabel]: Italian writes its weekdays in lower case inside a
+     * sentence, and this one is not inside anything. */
+    fun dayLong(date: java.time.LocalDate, locale: Locale): String =
+        date.format(DateTimeFormatter.ofPattern("EEEE d MMMM", locale))
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
 }

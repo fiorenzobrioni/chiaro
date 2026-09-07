@@ -18,10 +18,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -35,6 +37,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
@@ -75,6 +78,12 @@ import kotlinx.coroutines.launch
  * temperature beside each place, long-press drag to reorder (with accessibility
  * actions doing the same job for TalkBack), and swipe-to-remove with undo.
  *
+ * Every removal on this sheet is undoable and every one of them is reachable without
+ * a gesture: the recents carry a cross each and the section a "Clear", the saved rows
+ * keep their swipe and gained the TalkBack action that swipe never had (reported on
+ * device, 7 Sep — the recents looked permanent because nothing on them said otherwise,
+ * and a hidden gesture would have said no more).
+ *
  * Deliberately no FAB: the sheet's first interactive element already IS "add a
  * place" — a button floating over the affordance it duplicates would be decoration
  * (deviation from §5.6's aside, recorded in PLANNING.md).
@@ -96,6 +105,8 @@ fun PlacesSheet(
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val removedMessage = stringResource(R.string.places_removed)
+    val recentRemovedMessage = stringResource(R.string.places_recent_removed)
+    val recentsClearedMessage = stringResource(R.string.places_recent_cleared)
     val undoLabel = stringResource(R.string.action_undo)
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -153,6 +164,20 @@ fun PlacesSheet(
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text(stringResource(R.string.places_search_hint)) },
                     leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                    // Only while there is something to clear: an empty field with a
+                    // cross on it offers to undo nothing.
+                    trailingIcon = {
+                        if (query.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.setQuery("") }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Close,
+                                    contentDescription = stringResource(
+                                        R.string.places_search_clear
+                                    )
+                                )
+                            }
+                        }
+                    },
                     singleLine = true
                 )
 
@@ -162,6 +187,33 @@ fun PlacesSheet(
                         recents = recents,
                         active = active,
                         onRecent = viewModel::setQuery,
+                        // The list on screen is what the undo puts back, order and all
+                        onRemoveRecent = { term ->
+                            val before = recents
+                            viewModel.removeRecent(term)
+                            scope.launch {
+                                val result = snackbar.showSnackbar(
+                                    message = recentRemovedMessage,
+                                    actionLabel = undoLabel
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    viewModel.restoreRecents(before)
+                                }
+                            }
+                        },
+                        onClearRecents = {
+                            val before = recents
+                            viewModel.clearRecents()
+                            scope.launch {
+                                val result = snackbar.showSnackbar(
+                                    message = recentsClearedMessage,
+                                    actionLabel = undoLabel
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    viewModel.restoreRecents(before)
+                                }
+                            }
+                        },
                         onSelect = { viewModel.select(it); onDismiss() },
                         onMove = viewModel::move,
                         onRemove = { memo ->
@@ -269,6 +321,8 @@ private fun SavedAndRecents(
     recents: List<String>,
     active: ActiveSource?,
     onRecent: (String) -> Unit,
+    onRemoveRecent: (String) -> Unit,
+    onClearRecents: () -> Unit,
     onSelect: (City) -> Unit,
     onMove: (City, Int) -> Unit,
     onRemove: (RemovedPlace) -> Unit
@@ -306,7 +360,20 @@ private fun SavedAndRecents(
             }
     ) {
         if (recents.isNotEmpty()) {
-            item(key = "recents-header") { SectionLabel(stringResource(R.string.places_recent)) }
+            item(key = "recents-header") {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SectionLabel(stringResource(R.string.places_recent))
+                    // At most five terms, so the whole section is one tap — and the
+                    // undo below is why that tap is allowed to be one.
+                    TextButton(onClick = onClearRecents) {
+                        Text(stringResource(R.string.places_recent_clear))
+                    }
+                }
+            }
             recents.forEach { term ->
                 item(key = "recent:$term") {
                     ListItem(
@@ -314,6 +381,20 @@ private fun SavedAndRecents(
                             Icon(Icons.Outlined.Search, contentDescription = null)
                         },
                         headlineContent = { Text(term) },
+                        // A cross rather than the saved rows' swipe: this is the row
+                        // whose removal the reader could not find, and a gesture is
+                        // exactly as invisible as what was there before.
+                        trailingContent = {
+                            IconButton(onClick = { onRemoveRecent(term) }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Close,
+                                    contentDescription = stringResource(
+                                        R.string.places_recent_remove,
+                                        term
+                                    )
+                                )
+                            }
+                        },
                         modifier = Modifier.clickable { onRecent(term) }
                     )
                 }
@@ -359,6 +440,7 @@ private fun SavedRow(
 ) {
     val moveUp = stringResource(R.string.places_move_up)
     val moveDown = stringResource(R.string.places_move_down)
+    val removeLabel = stringResource(R.string.places_remove)
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
             if (value != SwipeToDismissBoxValue.Settled) onRemove()
@@ -420,6 +502,10 @@ private fun SavedRow(
                         if (index < lastIndex) {
                             add(CustomAccessibilityAction(moveDown) { onMove(index + 1); true })
                         }
+                        // The swipe has never had a keyboard or a screen reader: a row
+                        // that can only be removed by dragging it cannot be removed at
+                        // all by whoever is not dragging.
+                        add(CustomAccessibilityAction(removeLabel) { onRemove(); true })
                     }
                 }
         )

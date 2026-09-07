@@ -23,33 +23,57 @@ class SearchHistoryStore(
 ) {
 
     val recentSearches: Flow<List<String>> = dataStore.data
-        .map { prefs ->
-            prefs[RecentsJson]
-                ?.let { runCatching { json.decodeFromString<List<String>>(it) }.getOrNull() }
-                .orEmpty()
-        }
+        .map { prefs -> prefs.recents() }
         .distinctUntilChanged()
+
+    private fun Preferences.recents(): List<String> =
+        this[RecentsJson]
+            ?.let { runCatching { json.decodeFromString<List<String>>(it) }.getOrNull() }
+            .orEmpty()
 
     suspend fun add(term: String) {
         val clean = term.trim()
         if (clean.isEmpty()) return
         dataStore.edit { prefs ->
-            val current = prefs[RecentsJson]
-                ?.let { runCatching { json.decodeFromString<List<String>>(it) }.getOrNull() }
-                .orEmpty()
-            val updated = (listOf(clean) + current.filterNot { it.equals(clean, ignoreCase = true) })
-                .take(MAX_ENTRIES)
-            prefs[RecentsJson] = json.encodeToString(updated)
+            val kept = prefs.recents().filterNot { it.equals(clean, ignoreCase = true) }
+            prefs[RecentsJson] = json.encodeToString((listOf(clean) + kept).take(MAX_ENTRIES))
         }
     }
 
     /**
-     * `$ history -c` — forgets what was searched for. Deliberately narrow: the saved
-     * cities are the user's files, not history, and live in [CityStore] where the
-     * Explorer's own `[rm]` removes them one by one.
+     * Forgets one term, matched the way [add] deduplicates it — the reader who taps the
+     * cross beside "milano" means the entry they are looking at, whatever casing it was
+     * typed in. Removing something that is not there is not an error, it is a no-op.
+     */
+    suspend fun remove(term: String) {
+        val clean = term.trim()
+        if (clean.isEmpty()) return
+        dataStore.edit { prefs ->
+            val kept = prefs.recents().filterNot { it.equals(clean, ignoreCase = true) }
+            prefs[RecentsJson] = json.encodeToString(kept)
+        }
+    }
+
+    /**
+     * Forgets what was searched for. Deliberately narrow: the saved cities are not
+     * history, and live in [CityStore] where they are removed one by one.
      */
     suspend fun clear() {
         dataStore.edit { it.remove(RecentsJson) }
+    }
+
+    /**
+     * Puts back a list that was just taken away — the undo behind [remove] and [clear].
+     * It writes the order it is given instead of replaying [add], because this list is
+     * ordered by *when* each term was searched: re-adding would file yesterday's search
+     * as the newest one, which is a claim the store would have made up.
+     */
+    suspend fun restore(terms: List<String>) {
+        val clean = terms.map { it.trim() }.filter { it.isNotEmpty() }.take(MAX_ENTRIES)
+        dataStore.edit { prefs ->
+            if (clean.isEmpty()) prefs.remove(RecentsJson)
+            else prefs[RecentsJson] = json.encodeToString(clean)
+        }
     }
 
     companion object {
