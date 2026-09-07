@@ -66,10 +66,10 @@
     <string name="rain_chart_caption">Probabilità di pioggia</string>
     <string name="rain_chart_desc">Probabilità di pioggia dalle %1$s alle %2$s su una scala da 0 a 100%%, con picco %3$d%% verso le %4$s</string>
 
-    <!-- Griglia dettagli: etichette. Una riga sola accanto all'icona da 28dp:
-         su uno schermo da 360dp sono 90dp (erano 94 con l'icona da 24, 6 set).
+    <!-- Griglia dettagli: etichette. Una riga sola accanto all'icona da 30dp:
+         su uno schermo da 360dp sono 88dp (erano 94 con l'icona da 24, 6 set).
          «Punto di rugiada» (111) e «Qualità dell'aria» (105) sforavano e andavano
-         a capo; la più larga che l'app spedisce, «Qualità aria», misura 77. -->
+         a capo; la più larga che l'app spedisce, «Qualità aria», misura 76,7. -->
     <string name="metric_uv">UV</string>
     <string name="metric_wind">Vento</string>
     <string name="metric_humidity">Umidità</string>

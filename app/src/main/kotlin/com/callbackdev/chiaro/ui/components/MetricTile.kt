@@ -49,10 +49,10 @@ fun MetricTile(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             // The header holds one line by construction, never by truncation: on a
-            // 360dp screen the two columns leave the label 90dp beside the 28dp icon
+            // 360dp screen the two columns leave the label 88dp beside the 30dp icon
             // (94 before the icon grew, 6 set), so the eight labels are written to fit
             // that budget rather than trimmed with an ellipsis — the widest of them,
-            // «Qualità aria», measures 77dp. A label that outgrows the budget (a huge
+            // «Qualità aria», measures 76.7dp. A label that outgrows the budget (a huge
             // font scale) wraps and keeps its words, which is the honest way to fail.
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),

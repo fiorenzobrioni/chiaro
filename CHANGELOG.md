@@ -162,16 +162,20 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 
 ### Changed
 
-- **The weather icons are drawn in line by default, and every one of them is 4dp
+- **The weather icons are drawn in line by default, and every one of them is 6dp
   bigger.** The default moving is the consequence, not the cause: the drawings were sized
-  for scanning, not for looking at, so the family's ladder went up (hour strip 32 to 36dp,
-  week row 28 to 32, timeline row and detail tile 24 to 28) and nothing else moved with
-  it, no padding and no column width. At those sizes the outlined set keeps one weight of
-  ink on a screen whose hero is already a painted sky, where eight filled marks read as
-  stickers laid over a painting. The four sizes are one object now
-  (`ui/icons/WeatherIconSize`) instead of four numbers quoting each other in four
-  components. The fill set is still one tap away in Settings → Appearance; an install that
-  never opened that setting changes with the upgrade, which is what a default is.
+  for scanning, not for looking at, so the family's ladder went up (hour strip 32 to 38dp,
+  week row 28 to 34, timeline row and detail tile 24 to 30) and nothing else moved with
+  it, no padding and no column width. What the growth spends is the elastic measures
+  beside the icons, each checked at 360dp: the fixed 56dp hour cell keeps 9dp of air per
+  side, the week's temperature bar and the timeline's prose give up 6dp apiece, and the
+  detail label's budget goes 94 to 88dp against a widest shipped label of 76.7dp. At those
+  sizes the outlined set keeps one weight of ink on a screen whose hero is already a
+  painted sky, where eight filled marks read as stickers laid over a painting. The four
+  sizes are one object now (`ui/icons/WeatherIconSize`) instead of four numbers quoting
+  each other in four components. The fill set is still one tap away in Settings →
+  Appearance; an install that never opened that setting changes with the upgrade, which is
+  what a default is.
 - **The rain sparkline is a chart now.** A line with no scale under it is a shape with
   nowhere to stand: on a day pinned at 100% it drew a near-straight rule across an empty
   box, and the flatter the day the less it said. It now carries the two things a reader

@@ -44,7 +44,7 @@ data class AppSettings(
     val dynamicColor: Boolean = true,
     /** LINE by default (decision, 6 set 2026 — the default moves, the choice stays).
      * The outlined drawings keep one weight of ink on a screen whose hero is already a
-     * painted sky, and at the sizes Today now uses (§13.1's ladder, 28-36dp) they read
+     * painted sky, and at the sizes Today now uses (§13.1's ladder, 30-38dp) they read
      * as fast as the solid ones did at 24-32. The fill set stays one Settings tap away.
      * An install that never opened this setting flips on upgrade: that is what a default
      * is, and moving it for those readers is the point of the change. */

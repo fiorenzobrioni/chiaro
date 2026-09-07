@@ -1751,10 +1751,13 @@ Due richieste dallo stesso screenshot di Oggi, e la seconda spiega la prima.
       **Conseguenza dichiarata**: un'installazione esistente che non ha mai aperto quella
       voce cambia aspetto con l'aggiornamento. È cosa vuol dire «default», ed è
       esattamente il gruppo di lettori per cui la modifica è stata chiesta.
-- [x] **Le icone crescono di 4dp ovunque su Oggi**, e niente altro si muove: nessun
-      padding, nessuno `spacedBy`, nessuna larghezza di colonna. Striscia oraria 32→36,
-      riga della settimana 28→32, riga del resto della giornata 24→28, scheda dei
-      dettagli 24→28.
+- [x] **Le icone crescono di 6dp ovunque su Oggi**, e niente altro si muove: nessun
+      padding, nessuno `spacedBy`, nessuna larghezza di colonna. Striscia oraria 32→38,
+      riga della settimana 28→34, riga del resto della giornata 24→30, scheda dei
+      dettagli 24→30. **In due passi**: 4dp, poi altri 2 chiesti dal committente sul
+      confronto prima/dopo, «dove non modifica layout e spaziature attuali» — che è la
+      condizione che i quattro pioli hanno dovuto superare uno per uno, non una formalità.
+      Tutti e quattro la superano a 360dp, e il conto è sotto.
 - [x] **I quattro numeri diventano una scala sola**, `ui/icons/WeatherIconSize`. Il
       commento di `DayRow` diceva già «tra i 32 della striscia e i 24 della timeline»:
       quando quattro punti del codice si citano a vicenda per stare in ordine, l'ordine è
@@ -1765,24 +1768,33 @@ Due richieste dallo stesso screenshot di Oggi, e la seconda spiega la prima.
 
 ### I conti che la crescita doveva pagare
 
-- **La cella oraria non si allarga**: 36dp dentro i 56dp di cella lasciano 10dp d'aria per
-  lato, e i 4dp di passo fra le celle restano quelli. La striscia non cambia larghezza,
-  quindi non cambia quante ore entrano nello schermo.
-- **La griglia dei dettagli**: il budget dell'etichetta è quello che avanza accanto
-  all'icona, `(360 − 32 − 12) / 2 − 32 − 36 = 90dp` su uno schermo da 360dp, contro i 94
-  di prima. Misurato di nuovo con la stessa ricetta del 4 set (Inter variabile a wght 500,
-  14sp, tracking di `labelLarge`, `opsz` 14): la più larga delle sedici etichette che
-  l'app spedisce è «Qualità aria» a **76,7dp**, poi «Air quality» 68,6 e «Dew point»
-  68,4. Il margine più stretto resta 13dp, e le due etichette che nel 4 set sforavano —
-  «Punto di rugiada» 110,9 e «Qualità dell'aria» 105,5 — non sono più quelle spedite.
-  Il budget nuovo è riscritto nei due `strings.xml` e in DESIGN §8.6, perché la prossima
-  etichetta nasca dentro il numero giusto.
-- **La riga della settimana** perde 4dp di barra della temperatura (la barra ha `weight(1f)`
-  e paga lei l'allargamento): 112→108dp su 360. La scala è condivisa fra i sette giorni,
-  quindi la forma della settimana è la stessa, solo 4dp più stretta. Il nastro di luce
-  sotto la riga parte ancora a 52dp — i 44 dell'etichetta del giorno più gli 8 accanto —
-  e quel numero non ha mai dipeso dall'icona.
-- **La riga del resto della giornata** perde gli stessi 4dp di prosa (232→228dp su 360):
+Un'icona che cresce dentro un layout fermo non prende spazio dal nulla: lo prende dalle
+tre misure elastiche che le stanno accanto, più la cella fissa che la contiene. Sono
+quattro conti, rifatti a ogni passo — sotto ci sono i valori del secondo, con quelli del
+primo fra parentesi.
+
+- **La cella oraria non si allarga**: 38dp dentro i 56dp di cella lasciano 9dp d'aria per
+  lato (erano 10), e i 4dp di passo fra le celle restano quelli. La striscia non cambia
+  larghezza, quindi non cambia quante ore entrano nello schermo. È il piolo con più
+  margine dei quattro, ed è per questo che è il più alto.
+- **La griglia dei dettagli** è il conto che decide il tetto. Il budget dell'etichetta è
+  quello che avanza accanto all'icona, `(360 − 32 − 12) / 2 − 32 − 38 = 88dp` su uno
+  schermo da 360dp (90 al primo passo, 94 prima di tutto). Misurato di nuovo con la stessa
+  ricetta del 4 set (Inter variabile a wght 500, 14sp, tracking di `labelLarge`, `opsz`
+  14): la più larga delle sedici etichette che l'app spedisce è «Qualità aria» a
+  **76,7dp**, poi «Air quality» 68,6 e «Dew point» 68,4. Restano **11,3dp** di margine:
+  abbastanza per il secondo passo, ed è il numero da guardare prima di un terzo, perché
+  lì si comincia a spendere il margine invece dell'aria.
+  Il contratto è, ed è sempre stato, un contratto **a 360dp**: sotto quella larghezza le
+  etichette vanno a capo tenendo le parole — la rottura onesta già scelta per loro — e lo
+  facevano anche a 320dp con l'icona da 24 (74dp di budget contro gli stessi 76,7). Non è
+  una regressione di questa passata, è il limite dichiarato che resta dov'era.
+- **La riga della settimana** perde 6dp di barra della temperatura (la barra ha
+  `weight(1f)` e paga lei l'allargamento): 112→106dp su 360 (108 al primo passo). La
+  scala è condivisa fra i sette giorni, quindi la forma della settimana è la stessa, solo
+  più stretta. Il nastro di luce sotto la riga parte ancora a 52dp — i 44 dell'etichetta
+  del giorno più gli 8 accanto — e quel numero non ha mai dipeso dall'icona.
+- **La riga del resto della giornata** perde gli stessi 6dp di prosa (232→226dp su 360):
   `bodyMedium` va a capo tenendo le parole, che è la rottura onesta già scelta per le
   etichette.
 - **Fuori dalla scala di proposito**: i widget Glance, dove l'icona si misura sulla cella
@@ -1791,9 +1803,14 @@ Due richieste dallo stesso screenshot di Oggi, e la seconda spiega la prima.
 
 ### Verifica
 
-Suite verde (`test` + `:app:testDebugUnitTest`), lint a 0 errori. `SettingsStoreTest`
-segue il default in due punti: l'asserzione del fresh install diventa LINE, e il
-round-trip scrive adesso FILL — un round-trip che scrive il default non dimostra niente.
+Suite verde (`test` + `:app:testDebugUnitTest`), lint a 0 errori, APK debug costruito, a
+entrambi i passi. `SettingsStoreTest` segue il default in due punti: l'asserzione del
+fresh install diventa LINE, e il round-trip scrive adesso FILL — un round-trip che scrive
+il default non dimostra niente.
+
+Nessun device qui: le taglie sono verificate per aritmetica (i quattro conti sopra) e su
+un confronto prima/dopo disegnato con i drawable veri, non su una resa reale. È l'unica
+parte di questa passata che resta da guardare su un telefono.
 
 - [ ] Da verificare su device (committente)
 
