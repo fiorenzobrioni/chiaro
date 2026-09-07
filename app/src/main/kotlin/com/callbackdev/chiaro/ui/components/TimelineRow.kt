@@ -18,6 +18,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.tabular
 
@@ -53,7 +54,7 @@ fun TimelineRow(
             imageVector = icon,
             contentDescription = null, // the prose beside it says the word
             tint = Color.Unspecified,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(WeatherIconSize.Timeline)
         )
         Text(
             text = text,

@@ -438,8 +438,12 @@ colored bar is not a number.
 opens the details sheet at that metric. The icon is drawn **untinted** like every other
 weather icon (§13.1): a flat tint turns the family into silhouettes, and two metrics
 whose drawings differ only inside — humidity's drop and its %, the barometer's needle —
-become one mark. The label is one line: beside a 24dp icon two columns of a 360dp screen
-leave it 94dp, and a label is written to fit that rather than trimmed to it.
+become one mark. The label is one line: beside a 30dp icon two columns of a 360dp screen
+leave it 88dp, and a label is written to fit that rather than trimmed to it. (It was 94dp
+beside a 24dp icon until the family's ladder went up on 6 set 2026; the widest label the
+app ships measures 76.7dp, so the six the icon took cost nothing and left 11dp of margin.
+The contract is a 360dp contract: narrower than that the labels wrap and keep their words,
+as they already did at 320dp beside the 24dp icon.)
 
 **8.7 VerdictChip** — glyph + word + evidence, in that order: `✓ Great · 12% cloud`. The
 container is the verdict container color, the text is the ink color. **Never the color
@@ -574,12 +578,28 @@ monotonicity test in the suite had passed without complaint.
    (github.com/basmilius/meteocons), MIT, converted to vector drawables by
    `tools/import_meteocons.py` (the importer of record — re-running it IS the import)
    behind `ui/icons/ChiaroIcons`. Two styles of the same drawings since 3 set 2026:
-   **fill** (the default — solid shapes read faster at 24–32dp for an audience that
-   scans) and **line**, chosen in Settings → Appearance; the whole family switches
-   together through `LocalWeatherIcons`, and the navigation-bar silhouettes stay
+   **line** (the default since 6 set 2026 — one weight of ink on a screen whose hero is
+   already a painted sky) and **fill**, chosen in Settings → Appearance; the whole family
+   switches together through `LocalWeatherIcons`, and the navigation-bar silhouettes stay
    outside the choice (they are tinted to one color; the styles would be identical).
+   Fill was the default from 3 set (solid shapes read faster at small sizes for an
+   audience that scans) and the argument held while the sizes were small; the sizes
+   moved, so the default did too.
+   **The sizes are one ladder, `ui/icons/WeatherIconSize`**, and not four numbers spread
+   over four components: hour strip **38dp**, week row **34dp**, timeline row and metric
+   tile **30dp**. Each is 6dp above what it was until 6 set 2026 — 4dp, then 2 more on a
+   second look — when the drawings asked to be examined rather than recognised on a
+   device; the step changed no padding, no arrangement and no column width, so every
+   section kept the rhythm it was tuned to. What it spends instead are the three elastic
+   measures beside the icons, each measured at 360dp: the 56dp hour cell keeps 9dp of air
+   per side, the week's temperature bar and the timeline's prose give up 6dp apiece
+   (112→106dp, 232→226dp), and the tile's label budget goes 94→88dp against a widest
+   label of 76.7dp. That last margin is the ladder's ceiling, and it is why a further
+   step would have to be argued rather than assumed. The order of the rungs is the
+   reading order: the strip is scanned sideways and carries the most weight, the week is
+   read down, a line of prose leads with the smallest glyph.
    Gradients are flattened to their face color (a two-stop ramp is invisible at
-   24–32dp) and hairline edge strokes are dropped. On color, the departure worth
+   30–38dp, and was at the 24–32 of the import) and hairline edge strokes are dropped. On color, the departure worth
    this document's attention: **the palette is re-anchored, not copied — and since
    the icon pass (3 set 2026) the fill set ships twice, picked by its ground.**
    Meteocons draws for a dark backdrop: its cloud stroke is `#E5E7EB`, 1.18:1 against

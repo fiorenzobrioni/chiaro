@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
                 dynamicColor = settings?.dynamicColor ?: true
             ) {
                 CompositionLocalProvider(
-                    LocalWeatherIcons provides (settings?.weatherIcons ?: WeatherIcons.FILL)
+                    LocalWeatherIcons provides (settings?.weatherIcons ?: WeatherIcons.LINE)
                 ) {
                     ChiaroRoot()
                 }

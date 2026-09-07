@@ -1729,6 +1729,93 @@ tweather, allineati byte per byte.
 
 ---
 
+## Le icone del meteo (committente, 6 set 2026) — il tratto come default, e una scala sola
+
+Due richieste dallo stesso screenshot di Oggi, e la seconda spiega la prima.
+
+- [x] **Il default passa da FILL a LINE.** Non è un ripensamento sull'argomento del 3 set
+      («le forme piene si leggono più in fretta a 24–32dp»): quell'argomento valeva
+      *a quelle taglie*. Le taglie si sono mosse — punto sotto — e su una schermata il cui
+      eroe è già un cielo dipinto il tratto tiene l'inchiostro su un peso solo, invece di
+      appoggiare otto adesivi colorati sopra un dipinto. Il set line è anche l'unico dei
+      tre che serve entrambi i fondi con la stessa misura (DESIGN §13.1), quindi il
+      default non deve più scegliere per chi non ha ancora scelto un tema. La scelta resta
+      dov'era, in Impostazioni → Aspetto, con le stesse due voci.
+      Il default si sposta in quattro posti perché quattro sono i posti che lo dicono:
+      `AppSettings`, la lettura dello `SettingsStore` (un preferenza assente deve leggere
+      come il default, non come il vecchio default), il `LocalWeatherIcons` e il fallback
+      di `MainActivity` mentre le impostazioni sono ancora nulle. Anche i due parametri
+      `style` con valore di default in `ChiaroIcons` seguono: nessun chiamante li usa —
+      i widget passano sempre lo stile — ma un default che contraddice il default
+      dell'app è una trappola che aspetta il primo chiamante.
+      **Conseguenza dichiarata**: un'installazione esistente che non ha mai aperto quella
+      voce cambia aspetto con l'aggiornamento. È cosa vuol dire «default», ed è
+      esattamente il gruppo di lettori per cui la modifica è stata chiesta.
+- [x] **Le icone crescono di 6dp ovunque su Oggi**, e niente altro si muove: nessun
+      padding, nessuno `spacedBy`, nessuna larghezza di colonna. Striscia oraria 32→38,
+      riga della settimana 28→34, riga del resto della giornata 24→30, scheda dei
+      dettagli 24→30. **In due passi**: 4dp, poi altri 2 chiesti dal committente sul
+      confronto prima/dopo, «dove non modifica layout e spaziature attuali» — che è la
+      condizione che i quattro pioli hanno dovuto superare uno per uno, non una formalità.
+      Tutti e quattro la superano a 360dp, e il conto è sotto.
+- [x] **I quattro numeri diventano una scala sola**, `ui/icons/WeatherIconSize`. Il
+      commento di `DayRow` diceva già «tra i 32 della striscia e i 24 della timeline»:
+      quando quattro punti del codice si citano a vicenda per stare in ordine, l'ordine è
+      un oggetto, non un commento ripetuto quattro volte. Adesso la prossima passata è una
+      riga per pioli, e l'ordine dei pioli è scritto dov'è: è l'ordine di lettura — la
+      striscia si scorre di lato e porta il peso maggiore, la settimana si legge in
+      colonna, una riga di prosa apre col glifo più piccolo dei tre.
+
+### I conti che la crescita doveva pagare
+
+Un'icona che cresce dentro un layout fermo non prende spazio dal nulla: lo prende dalle
+tre misure elastiche che le stanno accanto, più la cella fissa che la contiene. Sono
+quattro conti, rifatti a ogni passo — sotto ci sono i valori del secondo, con quelli del
+primo fra parentesi.
+
+- **La cella oraria non si allarga**: 38dp dentro i 56dp di cella lasciano 9dp d'aria per
+  lato (erano 10), e i 4dp di passo fra le celle restano quelli. La striscia non cambia
+  larghezza, quindi non cambia quante ore entrano nello schermo. È il piolo con più
+  margine dei quattro, ed è per questo che è il più alto.
+- **La griglia dei dettagli** è il conto che decide il tetto. Il budget dell'etichetta è
+  quello che avanza accanto all'icona, `(360 − 32 − 12) / 2 − 32 − 38 = 88dp` su uno
+  schermo da 360dp (90 al primo passo, 94 prima di tutto). Misurato di nuovo con la stessa
+  ricetta del 4 set (Inter variabile a wght 500, 14sp, tracking di `labelLarge`, `opsz`
+  14): la più larga delle sedici etichette che l'app spedisce è «Qualità aria» a
+  **76,7dp**, poi «Air quality» 68,6 e «Dew point» 68,4. Restano **11,3dp** di margine:
+  abbastanza per il secondo passo, ed è il numero da guardare prima di un terzo, perché
+  lì si comincia a spendere il margine invece dell'aria.
+  Il contratto è, ed è sempre stato, un contratto **a 360dp**: sotto quella larghezza le
+  etichette vanno a capo tenendo le parole — la rottura onesta già scelta per loro — e lo
+  facevano anche a 320dp con l'icona da 24 (74dp di budget contro gli stessi 76,7). Non è
+  una regressione di questa passata, è il limite dichiarato che resta dov'era.
+- **La riga della settimana** perde 6dp di barra della temperatura (la barra ha
+  `weight(1f)` e paga lei l'allargamento): 112→106dp su 360 (108 al primo passo). La
+  scala è condivisa fra i sette giorni, quindi la forma della settimana è la stessa, solo
+  più stretta. Il nastro di luce sotto la riga parte ancora a 52dp — i 44 dell'etichetta
+  del giorno più gli 8 accanto — e quel numero non ha mai dipeso dall'icona.
+- **La riga del resto della giornata** perde gli stessi 6dp di prosa (232→226dp su 360):
+  `bodyMedium` va a capo tenendo le parole, che è la rottura onesta già scelta per le
+  etichette.
+- **Fuori dalla scala di proposito**: i widget Glance, dove l'icona si misura sulla cella
+  (Fase 8, e l'eroe del Now ha già il suo soffitto a 104dp), e le sagome della barra di
+  navigazione, che sono Material a 24dp e non sono disegni meteo.
+
+### Verifica
+
+Suite verde (`test` + `:app:testDebugUnitTest`), lint a 0 errori, APK debug costruito, a
+entrambi i passi. `SettingsStoreTest` segue il default in due punti: l'asserzione del
+fresh install diventa LINE, e il round-trip scrive adesso FILL — un round-trip che scrive
+il default non dimostra niente.
+
+Nessun device qui: le taglie sono verificate per aritmetica (i quattro conti sopra) e su
+un confronto prima/dopo disegnato con i drawable veri, non su una resa reale. È l'unica
+parte di questa passata che resta da guardare su un telefono.
+
+- [ ] Da verificare su device (committente)
+
+---
+
 ## Fase 9 — Accessibilità e prestazioni, con i numeri
 
 - [x] Passata colore (chiesta su device, 3 set; fatta il 3 set sera, alzata una

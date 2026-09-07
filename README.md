@@ -109,8 +109,8 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   forever, pointed at once by a dismissable card on Today
 - 🎨 **Appearance**: dynamic color from the wallpaper, or Chiaro's own generated scheme as
   the fallback, in light, dark or whatever the system is doing. Two weather-icon themes,
-  fill and line, both re-anchored to clear a measured 3:1 against the surface they are
-  drawn on
+  outlined by default or filled, both re-anchored to clear a measured 3:1 against the
+  surface they are drawn on
 - ⚙️ **Settings**: units (temperature, wind), appearance, update frequency (15, 30, 60 or
   120 minutes, 60 by default), the system per-app language picker, the data source and the
   privacy position, and a reset that says exactly what it restores and what it leaves

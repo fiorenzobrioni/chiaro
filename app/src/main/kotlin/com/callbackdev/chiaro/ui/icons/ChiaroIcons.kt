@@ -13,10 +13,10 @@ import com.callbackdev.chiaro.domain.model.MoonPhase
 
 /**
  * The reader's icon style, provided by `MainActivity` from the settings alongside the
- * theme. FILL is the default a fresh install sees; the accessors below read this so
- * every screen switches together, with no screen ever asked to care.
+ * theme. LINE is the default a fresh install sees (6 set 2026); the accessors below read
+ * this so every screen switches together, with no screen ever asked to care.
  */
-val LocalWeatherIcons = staticCompositionLocalOf { WeatherIcons.FILL }
+val LocalWeatherIcons = staticCompositionLocalOf { WeatherIcons.LINE }
 
 /**
  * The weather icon set, behind one lookup (DESIGN.md §4.5, §13.1): **Meteocons**
@@ -165,7 +165,7 @@ object ChiaroIcons {
     fun conditionRes(
         wmoCode: Int,
         night: Boolean = false,
-        style: WeatherIcons = WeatherIcons.FILL,
+        style: WeatherIcons = WeatherIcons.LINE,
         darkGround: Boolean = false
     ): Int = styledRes(
         when (wmoCode) {
@@ -205,7 +205,7 @@ object ChiaroIcons {
     @DrawableRes
     fun moonPhaseRes(
         phase: MoonPhase,
-        style: WeatherIcons = WeatherIcons.FILL,
+        style: WeatherIcons = WeatherIcons.LINE,
         darkGround: Boolean = false
     ): Int = styledRes(
         when (phase) {
