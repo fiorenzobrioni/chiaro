@@ -709,6 +709,9 @@ APK ok.
 - **Niente preview nel picker per ora**: `previewLayout` pretende un layout
   RemoteViews disegnato a mano da tenere allineato ai widget veri. Arriva con gli
   asset dello store (Fase 10), quando si disegnano comunque schermate di vetrina.
+  **Ripreso l'8 set 2026** (committente): le anteprime generiche erano la prima cosa
+  che un lettore vedeva dei widget, e aspettare la Fase 10 non le rendeva migliori —
+  vedi «L'anteprima nel picker» più sotto.
 
 ### Verifica
 
@@ -2486,6 +2489,138 @@ allineate riga per riga.
   launcher, su home chiara e scura
 - Bordi del widget verificati su un mock geometrico con le metriche vere del carattere,
   prima e dopo
+
+---
+
+## L'anteprima nel picker, l'inset a sinistra, le icone del widget, le Informazioni (committente, 8 set 2026)
+
+Quattro richieste in una passata, arrivate con lo screenshot della home: il widget «Ora»
+di Chiaro sopra il widget meteo di un'altra app.
+
+### Le anteprime del picker smettono di essere generiche
+
+Segnalazione: nel selettore dei widget del launcher le tre anteprime sono generiche e non
+somigliano al disegno vero. È esattamente la voce che la Fase 8 aveva rimandato («niente
+preview nel picker per ora», in fondo a quella fase) e la ragione per rimandarla non
+regge più: le si voleva **con** gli asset dello store, ma il picker è la prima cosa che
+un lettore vede dei widget, e finché non c'è un `previewLayout` l'host mostra il layout
+di caricamento di Glance — lo stesso cartoncino grigio per tutti e tre.
+
+Come le fa tweather, e perché è l'unica strada: il picker **non esegue** il widget. Non
+c'è luogo, non c'è report, non c'è composizione — quindi la preview è un layout statico
+con valori d'esempio e il vestito di default cotto dentro. Tre file in `res/layout/`, uno
+per widget, che ridisegnano il cartoncino vero:
+
+| Anteprima | Che cosa disegna |
+|---|---|
+| `widget_now_preview` | glifo eroe, 25°, il luogo — i tre di VISION §5.9 e solo quelli, come il default |
+| `widget_today_preview` | la riga eroe, la frase del giorno, cinque ore con la loro pioggia |
+| `widget_sky_preview` | il momento davanti al lettore, l'ora, e la pastiglia del verdetto |
+
+Gli hex sono **calcolati, non scelti**, e stanno in `values/colors.xml` invece che sparsi
+nei tre layout: il fondo è l'ancora di mezzogiorno di `SkyPalette.Vivid` composita sotto
+lo scrim §3.6 con l'aritmetica di `skyGradientBitmap` (`scrim × 0,55 + cielo × 0,45`, in
+valori sRGB), gli inchiostri sono la coppia bianca di §3.6, le cifre della pioggia sono
+`VividDarkColors.rainInkRamp` campionata **sui gradini** (0/25/50/75%, che cadono esatti e
+non chiedono di riprodurre a mano un'interpolazione), e il verdetto è la coppia
+inchiostro+contenitore di `VividDarkColors.pass` — mai una metà sola, che è la stessa
+regola che la pastiglia vera segue. Le icone sono `mcn_*`: tratto, palette vivida, fondo
+scuro, cioè quello che una installazione nuova disegna davvero.
+
+`NoRawColorTest` guarda i `.kt` e questi sono XML, ma la regola non è aggirata: è che un
+layout statico non ha composizione né tema da leggere — il launcher lo gonfia in un
+contesto ristretto e non esegue una riga del nostro codice. Il posto unico dove i valori
+stanno è il commento che li spiega.
+
+Un'anteprima resta un **disegno del prodotto, mai una lettura**: nell'istante in cui il
+launcher lega il widget, questo layout sparisce e il widget torna a non inventare nulla.
+
+### L'inset a sinistra: 8 dp erano troppi, 4 sono la misura
+
+Segnalazione: «avevamo riallineato l'icona che era troppo vicina al bordo; ora è un po'
+troppo lontana, riavvicinala solo un poco — prendi spunto dal widget sotto il nostro».
+
+Misurato sullo screenshot invece che a occhio (1080 px di larghezza, densità ~2,75):
+
+| | Bordo card → inchiostro |
+|---|---|
+| «Ora» di Chiaro, luna a 8 dp di inset | 65 px (≈ 22 dp) |
+| Il widget dell'altra app, stessa luna | 46 px (≈ 17 dp) |
+
+La passata del 7 set aveva letto il margine del glifo sulla **famiglia** — 9/64 alla
+mediana — e la mediana non è ciò che si sta guardando. `clear_night`, la falce, tiene
+vuoto il **22,5%** della propria scatola dal lato d'attacco (misurato sul tracciato:
+`min x` ≈ 15,9 su 64, meno 1,5 di stroke), cioè due volte e mezzo la mediana. L'inset che
+corregge un glifo mediano ne sovracorregge i più marginati, e quelli sono proprio i
+disegni che una home notturna mostra.
+
+`WidgetCardPaddingLeading` passa da **8 a 4 dp**: la falce si ferma a un paio di dp dal
+widget su cui la segnalazione è stata misurata, il glifo mediano resta a ~12 dp dal bordo
+— più dei 6 dp di testo nudo da cui la storia era partita — e la colonna delle parole si
+riprende 4 dp dei 14 che aveva perso. Il bordo destro e i 6 dp sopra/sotto non si toccano.
+
+### La famiglia di icone diventa una proprietà del widget
+
+Richiesta: nelle proprietà del widget, poter scegliere il tipo di icona meteo — «Segui
+l'app», «Piene» o «A tratto» — per poterle avere diverse fra widget e app.
+
+Accolta, e sta accanto a sfondo e opacità per lo stesso motivo per cui quelle sono
+per-widget: **un cartoncino sulla home non è la schermata dell'app**. Sta su un wallpaper
+che l'app non vede, a una dimensione che l'app non disegna, e la famiglia piena si legge
+da dall'altra parte della stanza dove quella a tratto si legge bene su una pagina. Che un
+lettore voglia onestamente una per posto è più che plausibile.
+
+- `WidgetIcons { APP, FILL, LINE }` in `WidgetLookStore`, con `resolve(app)` che è tutta
+  la logica; `WidgetLook.icons` di default `APP`, quindi ogni widget già piazzato continua
+  a disegnare quello che disegnava e ogni cambio futuro in Impostazioni lo raggiunge.
+- `WidgetModel.iconStyle` risolve **una volta** per card: il glifo eroe e la striscia
+  delle ore sulla stessa scheda non possono finire di due famiglie diverse.
+- La sezione è offerta a tutti e tre i widget, a differenza degli interruttori di
+  contenuto sotto: tutti e tre disegnano glifi meteo.
+- Le due etichette dei disegni sono le stringhe che le Impostazioni già usano
+  (`settings_icons_fill`, `settings_icons_line`): un lettore incontra un controllo, non due.
+
+### Informazioni: i dati che mancavano
+
+Richiesta: completare «Informazioni» guardando i dati che mostra tweather. Il blocco
+`about` di `settings.config` porta `app_name`, `version`, `developer`, `copyright`,
+`license` e un nodo `credits` con la sorgente dei dati e il carattere; Chiaro aveva
+versione, sorgente dati, codice sorgente e privacy.
+
+Aggiunte quattro righe e completate due:
+
+| Riga | Valore |
+|---|---|
+| Sviluppo | Callback Dev |
+| Copyright | © 2026 Fiorenzo Brioni |
+| Licenza | GPL-3.0, che apre il testo della licenza |
+| Set di icone del meteo | Meteocons di Bas Milius, MIT |
+| Carattere | Inter di Rasmus Andersson, SIL OFL 1.1 |
+| Icone dell'interfaccia | Material Icons di Google, Apache 2.0 |
+| I dati del meteo | ora dice anche **CC BY 4.0** |
+
+I tre crediti sono esattamente ciò che `licenses/README.md` dichiara viaggiare dentro
+l'APK: un carattere e una famiglia di icone incorporati sono lavoro di qualcuno, e una
+schermata che nomina il fornitore dei dati e si ferma lì è onesta per due terzi. Chiaro
+ne ha uno in più di tweather perché ne incorpora uno in più.
+
+Il nome dell'app non prende una riga sua: in una lista M3 sotto un titolo «Impostazioni»
+sarebbe la stessa parola detta due volte, mentre nel file JSON di tweather `app_name` è
+una chiave come le altre. Sviluppo e copyright sono `translatable="false"`: un nome
+proprio non è prosa.
+
+### Verifica
+
+- 476 test verdi (165 domain, 158 data, 5 sync, 148 app), zero failure, zero skip;
+  `:app:lintDebug` pulito; `:app:assembleDebug` costruito
+- Due test nuovi: `WidgetPreviewTest` (ogni provider nomina un `previewLayout` che
+  esiste; nessuna anteprima usa una view che `RemoteViews` non sa gonfiare — è così che
+  lo `Space` della striscia di Oggi è diventato un peso sulla frase) e `WidgetIconsTest`
+  sulla tabella di `resolve`
+- `StringsParityTest` continua a valere: le stringhe nuove arrivano in coppia, tranne le
+  due `translatable="false"`
+- Inset misurato sul tracciato vettoriale di `mcn_clear_night` e sullo screenshot del
+  committente, non stimato
 
 ---
 

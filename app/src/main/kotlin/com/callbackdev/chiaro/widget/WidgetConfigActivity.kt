@@ -215,6 +215,23 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
                 }
             }
 
+            // Offered on all three, unlike the content switches below: every card draws
+            // weather glyphs, and the reason to pick a family here is the card's own —
+            // its size, its ground, the wallpaper behind it (see [WidgetIcons]).
+            SectionLabel(stringResource(R.string.widget_config_icons))
+            val iconOptions = listOf(
+                WidgetIcons.APP to stringResource(R.string.widget_icons_app),
+                WidgetIcons.FILL to stringResource(R.string.settings_icons_fill),
+                WidgetIcons.LINE to stringResource(R.string.settings_icons_line)
+            )
+            iconOptions.forEach { (icons, label) ->
+                ChoiceRow(
+                    label = label,
+                    selected = current.icons == icons,
+                    onPick = { save(current.copy(icons = icons)) }
+                )
+            }
+
             if (kind == WidgetKind.NOW || kind == WidgetKind.TODAY) {
                 SectionLabel(stringResource(R.string.widget_config_content))
                 if (kind == WidgetKind.NOW) {

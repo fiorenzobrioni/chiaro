@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The Sky widget (VISION §5.9): the next moment and its verdict — the widget
-     nobody else ships. -->
+     nobody else ships.
+     previewLayout: see `layout/widget_sky_preview.xml`, and widget_now_info for why. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_sky_desc"
     android:initialLayout="@layout/glance_default_loading_layout"
+    android:previewLayout="@layout/widget_sky_preview"
     android:minWidth="180dp"
     android:minHeight="40dp"
     android:targetCellWidth="3"

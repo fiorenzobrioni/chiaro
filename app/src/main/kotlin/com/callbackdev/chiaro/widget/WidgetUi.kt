@@ -245,19 +245,21 @@ val WidgetCardPaddingSnug = 6.dp
  * ~89 dp box the launcher's one-cell grant leaves. So the leading edge does not need
  * the same number: it needs the difference.
  *
- * 8 dp is that difference, read off the vertical. The same glyph margin applies above
- * and below, so the hero's ink already sits 15 to 18.5 dp from the card's top and
- * bottom; 8 + 9…12.5 lands it 17 to 20.5 dp from the leading edge, the extra couple of
- * dp being what the 24 dp corner takes back on a side the vertical does not have. The
- * icon ends up inset by its own INK rather than by its bounding box, which is the only
- * inset the eye can see.
+ * **4 dp since 8 set 2026** (committente, with the home screen beside a second weather
+ * widget for scale), which halves the 8 dp the previous pass wrote. That pass read the
+ * glyph margin off the FAMILY — 9/64 at the median — and the family's median is not what
+ * anybody is looking at: `clear_night`, the crescent, keeps 22.5% of its box empty on
+ * the leading side, roughly two and a half times the median, so at 8 dp its ink stopped
+ * about 22 dp in while the neighbouring widget's moon stopped at 16. The inset that
+ * corrects a median glyph over-corrects the widest-margined ones, and those are the ones
+ * a night home screen shows.
  *
- * The cost is 14 dp of the words' column, and the one thing that has to fit in it is
- * the optional high/low: "23°" and "27° / 16°" come to about 117 dp, against 123 dp of
- * column on a 240 dp grant. It was already too tight at 216 dp before this change and
- * it still is — which is what [R.string.widget_config_show_range] is for.
+ * At 4 dp the crescent lands within a dp or two of the widget the report was measured
+ * against, and the median glyph still clears the edge by ~12 dp — more than the 6 dp of
+ * bare text it started from, which was the complaint that opened this. The words' column
+ * gets 4 dp back, which is 4 dp of the optional high/low it was already short of.
  */
-val WidgetCardPaddingLeading = 8.dp
+val WidgetCardPaddingLeading = 4.dp
 val WidgetCardPaddingTrailing = WidgetCardPaddingTight
 
 /**

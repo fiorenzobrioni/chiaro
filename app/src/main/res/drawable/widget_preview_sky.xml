@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The preview card's ground: the same three stops, top to bottom, that
+     `skyGradientBitmap` paints — a clear midday sky with the §3.6 scrim already in
+     them (see values/colors.xml for the arithmetic). Picker-only: the running widget
+     computes its gradient from the sky above the reader's own place. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:startColor="@color/widget_preview_sky_top"
+        android:centerColor="@color/widget_preview_sky_mid"
+        android:endColor="@color/widget_preview_sky_bottom"
+        android:type="linear" />
+    <corners android:radius="24dp" />
+</shape>

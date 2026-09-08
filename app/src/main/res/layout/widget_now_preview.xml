@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Now widget as the launcher's picker draws it (Fase 8c, committente 8 set).
+
+  A Glance widget has no picker preview of its own: without `previewLayout` the host
+  shows the generic loading layout, which is why all three of ours advertised the same
+  grey card. The picker never runs `provideGlance` — there is no place, no report and no
+  composition on that screen — so the preview is a static layout with sample values and
+  the DEFAULT dress baked in: the computed sky under its scrim, white ink, the vivid
+  line icons a fresh install draws with. It is the same card, one moment of it.
+
+  Sample data only: a preview is a drawing of the product, never a reading. What the
+  widget itself must never invent, it still never invents — the moment the launcher
+  binds it, this layout is gone.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_preview_sky"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="4dp"
+    android:paddingTop="6dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="6dp"
+    tools:ignore="HardcodedText">
+
+    <!-- The hero, at the size a one-cell grant leaves once the card's 6dp above and
+         below are paid. -->
+    <ImageView
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/mcn_partly_cloudy_day" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:includeFontPadding="false"
+            android:text="25°"
+            android:textColor="@color/widget_preview_ink"
+            android:textSize="34sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:text="@string/widget_preview_place"
+            android:textColor="@color/widget_preview_ink_dim"
+            android:textSize="15sp" />
+    </LinearLayout>
+</LinearLayout>

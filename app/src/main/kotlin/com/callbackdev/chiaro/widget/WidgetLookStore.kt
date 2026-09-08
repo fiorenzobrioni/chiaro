@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.callbackdev.chiaro.data.WeatherIcons
 import kotlinx.coroutines.flow.first
 
 private val Context.widgetLookDataStore by preferencesDataStore(name = "widget_look")
@@ -15,6 +16,31 @@ private val Context.widgetLookDataStore by preferencesDataStore(name = "widget_l
 /** What a widget wears: the sky gradient (the app's own hero, the default), or a
  * plain card in light, dark, or whatever the phone says. */
 enum class WidgetBackground { SKY, LIGHT, DARK, SYSTEM }
+
+/**
+ * Which weather drawings a widget uses (committente, 8 set): the app's own choice, or
+ * one of the two Meteocons families named outright.
+ *
+ * The app has one icon setting and it stays the app's; this is the per-widget override
+ * beside the background and the opacity, and for the same reason those are per-widget —
+ * a card on a home screen is not the app screen, it sits on a wallpaper the app never
+ * sees, at a size the app never draws. The filled family reads at a glance across a
+ * room where the line family reads quietly on a page, and a reader may honestly want
+ * one in each place.
+ *
+ * [APP] is the default, so a widget already placed keeps drawing what it drew and every
+ * later change to the Settings choice still reaches it.
+ */
+enum class WidgetIcons {
+    APP, FILL, LINE;
+
+    /** The family this choice really means, given what the app is set to. */
+    fun resolve(app: WeatherIcons): WeatherIcons = when (this) {
+        APP -> app
+        FILL -> WeatherIcons.FILL
+        LINE -> WeatherIcons.LINE
+    }
+}
 
 /** One widget's look: its background, how solid the card is (0 = see-through), and
  * what it puts on the card. */
@@ -45,7 +71,13 @@ data class WidgetLook(
      * a home screen that never had this edited follows the new default — that is what a
      * default is, and moving it for those readers is the point of moving it.
      */
-    val showDayRange: Boolean = false
+    val showDayRange: Boolean = false,
+    /**
+     * The icon family this card draws with, or [WidgetIcons.APP] to keep following the
+     * Settings choice — which is the default, and what every widget placed before this
+     * option existed keeps doing.
+     */
+    val icons: WidgetIcons = WidgetIcons.APP
 ) {
     companion object {
         /** 100 since 7 set 2026 (committente): a solid card. The reader can thin it
@@ -75,7 +107,10 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             background = background,
             opacityPct = opacity,
             showCondition = prefs[conditionKey(appWidgetId)] ?: false,
-            showDayRange = prefs[rangeKey(appWidgetId)] ?: false
+            showDayRange = prefs[rangeKey(appWidgetId)] ?: false,
+            icons = prefs[iconsKey(appWidgetId)]
+                ?.let { name -> WidgetIcons.entries.firstOrNull { it.name == name } }
+                ?: WidgetIcons.APP
         )
     }
 
@@ -85,6 +120,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             prefs[opacityKey(appWidgetId)] = look.opacityPct.coerceIn(0, 100)
             prefs[conditionKey(appWidgetId)] = look.showCondition
             prefs[rangeKey(appWidgetId)] = look.showDayRange
+            prefs[iconsKey(appWidgetId)] = look.icons.name
         }
     }
 
@@ -96,6 +132,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 prefs.remove(opacityKey(it))
                 prefs.remove(conditionKey(it))
                 prefs.remove(rangeKey(it))
+                prefs.remove(iconsKey(it))
             }
         }
     }
@@ -104,6 +141,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
     private fun opacityKey(id: Int) = intPreferencesKey("opacity_$id")
     private fun conditionKey(id: Int) = booleanPreferencesKey("condition_$id")
     private fun rangeKey(id: Int) = booleanPreferencesKey("range_$id")
+    private fun iconsKey(id: Int) = stringPreferencesKey("icons_$id")
 
     companion object {
         @Volatile
