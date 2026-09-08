@@ -17,7 +17,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
@@ -41,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -57,6 +61,7 @@ import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
+import com.callbackdev.chiaro.ui.theme.ChiaroColors
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.forText
 import java.time.LocalDate
@@ -201,9 +206,11 @@ private fun JournalBody(content: JournalContent, units: UnitSettings) {
                     zone = content.zone,
                     units = units,
                     locale = locale,
-                    onLongPress = { tableOpen = true }
+                    timeFmt = timeFmt,
+                    onOpenTable = { tableOpen = true }
                 )
             }
+            item { FrostLine(content.drift, units, locale) }
             item { DriftSentence(content.drift, metric, units, locale) }
         } else if (content.days.isNotEmpty()) {
             item {
@@ -228,7 +235,7 @@ private fun JournalBody(content: JournalContent, units: UnitSettings) {
         }
 
         content.days.forEach { day ->
-            item { JournalSectionTitle(dayTitle(day.date, dayFmt)) }
+            item { JournalSectionTitle(dayTitle(day.date, content.zone, dayFmt)) }
             items(day.entries.size) { index ->
                 EntryRow(day.entries[index], content.zone, timeFmt, units, locale)
             }
@@ -255,9 +262,11 @@ private fun JournalSectionTitle(text: String) {
     )
 }
 
+/** [zone] is the PLACE's, like the grouping above it: reading Tokyo's journal from
+ * Italy, "today" is Tokyo's today or the two headings disagree by a day. */
 @Composable
-private fun dayTitle(date: LocalDate, dayFmt: DateTimeFormatter): String {
-    val today = LocalDate.now()
+private fun dayTitle(date: LocalDate, zone: ZoneId, dayFmt: DateTimeFormatter): String {
+    val today = LocalDate.now(zone)
     return when (date) {
         today -> stringResource(R.string.week_today)
         today.minusDays(1) -> stringResource(R.string.journal_yesterday)
@@ -314,6 +323,39 @@ private fun EntryRow(
                     " · " + stringResource(R.string.journal_at_time, time)
             }
         )
+        // The loop closed: what the app said, against what it then saw. The check is
+        // "this day has been checked", not a verdict — green and red would be a
+        // judgement on the weather, and the outcome is a fact (DESIGN §8.10).
+        is JournalEntry.DayOutcome -> EntryItem(
+            icon = Icons.Outlined.Check,
+            headline = stringResource(
+                if (entry.rained) R.string.journal_outcome_rained
+                else R.string.journal_outcome_dry,
+                Formats.percent(entry.forecastPrecipPct, locale)
+            ),
+            supporting = buildList {
+                val forecast = entry.forecastHighC
+                val observed = entry.observedHighC
+                if (forecast != null && observed != null) {
+                    add(
+                        stringResource(
+                            R.string.journal_outcome_high,
+                            Formats.temperature(forecast, units.temperature, locale),
+                            Formats.temperature(observed, units.temperature, locale)
+                        )
+                    )
+                }
+                // What the claim rests on, stated like a sky run states its distance:
+                // a verdict that hides its coverage is a verdict you cannot weigh.
+                add(
+                    pluralStringResource(
+                        R.plurals.journal_outcome_coverage,
+                        entry.coveredHours,
+                        entry.coveredHours
+                    )
+                )
+            }.joinToString(" · ")
+        )
         is JournalEntry.FetchFailed -> EntryItem(
             icon = Icons.Outlined.Warning,
             headline = stringResource(R.string.journal_fetch_failed),
@@ -349,10 +391,11 @@ private fun EntryItem(icon: ImageVector, headline: String, supporting: String) {
 // ---------------------------------------------------------------------------------
 
 /**
- * One row per target day, one column per fetch, color on the metric's OWN ramp —
- * whether Saturday got "better" is a judgement, and the judgement lives in the
- * sentence underneath, never in the color. Cells the fetch did not cover are drawn
- * as absence (hairline outline), not as a zero. Long press opens the numbers.
+ * One row per target day, one column per **slot of six hours**, color on the metric's
+ * OWN ramp — whether Saturday got "better" is a judgement, and the judgement lives in
+ * the sentence underneath, never in the color. A slot no fetch landed in, and a cell
+ * whose fetch did not cover that day, are both drawn as absence (hairline outline),
+ * never as a zero. A tap, or a long press, opens the numbers.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -362,28 +405,68 @@ private fun DriftStrip(
     zone: ZoneId,
     units: UnitSettings,
     locale: Locale,
-    onLongPress: () -> Unit
+    timeFmt: DateTimeFormatter,
+    onOpenTable: () -> Unit
 ) {
     val dayFmt = remember(locale) { DateTimeFormatter.ofPattern("EEE d", locale) }
     val tableHint = stringResource(R.string.journal_drift_desc)
+    val window = pluralStringResource(
+        R.plurals.journal_drift_columns,
+        drift.columnHours.toInt(),
+        drift.columnHours.toInt(),
+        drift.oldest.atZone(zone).format(dayFmt) + " " + drift.oldest.atZone(zone).format(timeFmt),
+        drift.newest.atZone(zone).format(dayFmt) + " " + drift.newest.atZone(zone).format(timeFmt)
+    )
+    val metricName = stringResource(
+        when (metric) {
+            DriftMetric.RAIN -> R.string.journal_metric_rain
+            DriftMetric.HIGH -> R.string.journal_metric_high
+        }
+    )
+    // One announcement for the whole strip: the cells carry no text, so without this
+    // TalkBack would read seven dates and nothing about what is drawn beside them.
+    val stripDescription = stringResource(R.string.journal_drift_a11y, metricName, window)
     Column(
         verticalArrangement = Arrangement.spacedBy(2.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .combinedClickable(onClick = {}, onLongClick = onLongPress)
-            .semantics { contentDescription = tableHint }
+            // Both gestures open the table. An empty onClick left a ripple that did
+            // nothing and, worse, gave TalkBack a "double tap to activate" for an
+            // action that was not there.
+            .combinedClickable(onClick = onOpenTable, onLongClick = onOpenTable)
+            .semantics(mergeDescendants = true) { contentDescription = stripDescription }
     ) {
+        // The mark's slot is added to every row or to none, so the cells stay in one
+        // grid; a week with nothing freezing in it draws exactly the strip it drew
+        // before this existed.
+        val marked = drift.frostC.any { it != null }
+        val labelWidth = (if (marked) 68.dp else 52.dp).forText()
         drift.dates.forEachIndexed { row, date ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = date.format(dayFmt),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                     // §10: «Sab 13» in the reader's type, not in 52 fixed dp.
-                    modifier = Modifier.width(52.dp.forText())
-                )
-                drift.fetches.indices.forEach { col ->
+                    modifier = Modifier.width(labelWidth)
+                ) {
+                    Text(
+                        text = date.format(dayFmt),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (drift.frostC[row] != null) {
+                        Icon(
+                            imageVector = ChiaroIcons.frost,
+                            // The strip speaks once, and the clause under it names
+                            // these days in words: a glyph is never the only carrier.
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                }
+                drift.columns.indices.forEach { col ->
                     val color = when (metric) {
                         DriftMetric.RAIN -> drift.rain[row][col]
                             ?.let { ChiaroTheme.colors.rainAt(it) }
@@ -411,12 +494,7 @@ private fun DriftStrip(
         }
         DriftLegend(metric, units, locale)
         Text(
-            text = stringResource(
-                R.string.journal_drift_columns,
-                drift.fetches.size,
-                drift.fetches.first().atZone(zone).format(dayFmt),
-                drift.fetches.last().atZone(zone).format(dayFmt)
-            ) + " · " + tableHint,
+            text = "$window · $tableHint",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp)
@@ -424,7 +502,15 @@ private fun DriftStrip(
     }
 }
 
-/** Always present (DESIGN §8.10): sampled swatches with the scale's real ends. */
+/**
+ * Always present (DESIGN §8.10): sampled swatches with the scale's REAL ends.
+ *
+ * The temperature legend used to print −10 °C and 40 °C under swatches drawn from a
+ * ramp that clamps at −5 and 35 — measured ΔE 0.00 between −10 and −5, and between 40
+ * and 35, so the two end swatches were duplicates and the two numbers under them were
+ * ends the scale does not have. The anchors are the only honest labels, and the
+ * samples are spaced evenly along the ramp so the ramp looks like the ramp.
+ */
 @Composable
 private fun DriftLegend(metric: DriftMetric, units: UnitSettings, locale: Locale) {
     Row(
@@ -435,14 +521,21 @@ private fun DriftLegend(metric: DriftMetric, units: UnitSettings, locale: Locale
         val (samples, low, high) = when (metric) {
             DriftMetric.RAIN -> Triple(
                 (0..100 step 20).map { ChiaroTheme.colors.rainAt(it) },
-                "0%", "100%"
+                Formats.percent(0, locale),
+                Formats.percent(100, locale)
             )
-            DriftMetric.HIGH -> Triple(
-                listOf(-10.0, 0.0, 10.0, 15.0, 20.0, 30.0, 40.0)
-                    .map { ChiaroTheme.colors.temperatureAt(it) },
-                Formats.temperature(-10.0, units.temperature, locale),
-                Formats.temperature(40.0, units.temperature, locale)
-            )
+            DriftMetric.HIGH -> {
+                val span = ChiaroColors.ANCHOR_HIGH - ChiaroColors.ANCHOR_LOW
+                Triple(
+                    (0..6).map {
+                        ChiaroTheme.colors.temperatureAt(
+                            ChiaroColors.ANCHOR_LOW + span * it / 6.0
+                        )
+                    },
+                    Formats.temperature(ChiaroColors.ANCHOR_LOW, units.temperature, locale),
+                    Formats.temperature(ChiaroColors.ANCHOR_HIGH, units.temperature, locale)
+                )
+            }
         }
         Text(low, style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -458,7 +551,55 @@ private fun DriftLegend(metric: DriftMetric, units: UnitSettings, locale: Locale
     }
 }
 
-/** The judgement in words, beside the strip — never in its colors (DESIGN §8.10). */
+/**
+ * The days the strip marked, in words and with their numbers — the legend for the
+ * glyph and the information itself in one line (DESIGN §10: never a mark alone).
+ *
+ * It sits OUTSIDE the strip's merged description on purpose, so a screen reader
+ * reaches it as its own sentence instead of it being folded into a paragraph about
+ * columns. Absent entirely when nothing is freezing: a section with no data is not
+ * drawn (§1.1), and a "no frost" line every week is the filler this screen refuses.
+ */
+@Composable
+private fun FrostLine(drift: DriftModel, units: UnitSettings, locale: Locale) {
+    val dayFmt = remember(locale) { DateTimeFormatter.ofPattern("EEEE d", locale) }
+    val days = drift.dates.indices.mapNotNull { row ->
+        drift.frostC[row]?.let { low ->
+            stringResource(
+                R.string.journal_drift_frost_day,
+                drift.dates[row].format(dayFmt),
+                Formats.temperature(low, units.temperature, locale)
+            )
+        }
+    }
+    if (days.isEmpty()) return
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+    ) {
+        Icon(
+            imageVector = ChiaroIcons.frost,
+            contentDescription = null, // the sentence beside it says it
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = stringResource(R.string.journal_drift_frost, days.joinToString(", ")),
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+/**
+ * The judgement in words, beside the strip — never in its colors (DESIGN §8.10).
+ *
+ * Three states, not two. "Quiet" used to cover both the week that did not move and the
+ * week that moved and came back, so the strip could print "the week held steady" over a
+ * list of entries recording two revisions of the same day. A swing that returns is a
+ * fact about the week, and saying it is cheaper than being contradicted by the prose
+ * underneath.
+ */
 @Composable
 private fun DriftSentence(
     drift: DriftModel,
@@ -467,41 +608,51 @@ private fun DriftSentence(
     locale: Locale
 ) {
     val dayFmt = remember(locale) { DateTimeFormatter.ofPattern("EEEE d", locale) }
+    /** A day at the head of a sentence takes a capital; in Italian the weekday is
+     * lowercase on its own, so the format alone is not enough. */
+    fun day(date: LocalDate): String = date.format(dayFmt)
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+
     val sentence = when (metric) {
         DriftMetric.RAIN -> {
-            val moved = drift.dates.indices.mapNotNull { row ->
-                val cells = drift.rain[row].filterNotNull()
-                if (cells.size < 2) return@mapNotNull null
-                Triple(drift.dates[row], cells.first(), cells.last())
-            }.maxByOrNull { (_, first, last) -> kotlin.math.abs(last - first) }
+            val moves = drift.dates.indices.mapNotNull { row -> move(drift.dates[row], drift.rain[row]) }
+            val net = moves.filter { kotlin.math.abs(it.last - it.first) >= RAIN_MOVE_PCT }
+                .maxByOrNull { kotlin.math.abs(it.last - it.first) }
+            val swing = moves.filter { it.high - it.low >= RAIN_MOVE_PCT }
+                .maxByOrNull { it.high - it.low }
             when {
-                moved == null || kotlin.math.abs(moved.third - moved.second) < 10 ->
-                    stringResource(R.string.journal_drift_quiet)
-                moved.third < moved.second -> stringResource(
-                    R.string.journal_drift_rain_better,
-                    moved.first.format(dayFmt), moved.second, moved.third
+                net != null && net.last < net.first -> stringResource(
+                    R.string.journal_drift_rain_better, day(net.date),
+                    Formats.percent(net.first, locale), Formats.percent(net.last, locale)
                 )
-                else -> stringResource(
-                    R.string.journal_drift_rain_worse,
-                    moved.first.format(dayFmt), moved.second, moved.third
+                net != null -> stringResource(
+                    R.string.journal_drift_rain_worse, day(net.date),
+                    Formats.percent(net.first, locale), Formats.percent(net.last, locale)
                 )
+                swing != null -> stringResource(
+                    R.string.journal_drift_rain_swing, day(swing.date),
+                    Formats.percent(swing.low, locale), Formats.percent(swing.high, locale)
+                )
+                else -> stringResource(R.string.journal_drift_quiet)
             }
         }
         DriftMetric.HIGH -> {
-            val moved = drift.dates.indices.mapNotNull { row ->
-                val cells = drift.highC[row].filterNotNull()
-                if (cells.size < 2) return@mapNotNull null
-                Triple(drift.dates[row], cells.first(), cells.last())
-            }.maxByOrNull { (_, first, last) -> kotlin.math.abs(last - first) }
-            if (moved == null || kotlin.math.abs(moved.third - moved.second) < 1.0) {
-                stringResource(R.string.journal_drift_quiet)
-            } else {
-                stringResource(
+            fun temp(value: Double) = Formats.temperature(value, units.temperature, locale)
+            val moves = drift.dates.indices.mapNotNull { row -> move(drift.dates[row], drift.highC[row]) }
+            val net = moves.filter { kotlin.math.abs(it.last - it.first) >= HIGH_MOVE_C }
+                .maxByOrNull { kotlin.math.abs(it.last - it.first) }
+            val swing = moves.filter { it.high - it.low >= HIGH_MOVE_C }
+                .maxByOrNull { it.high - it.low }
+            when {
+                net != null -> stringResource(
                     R.string.journal_drift_high_moved,
-                    moved.first.format(dayFmt),
-                    Formats.temperature(moved.second, units.temperature, locale),
-                    Formats.temperature(moved.third, units.temperature, locale)
+                    net.date.format(dayFmt), temp(net.first), temp(net.last)
                 )
+                swing != null -> stringResource(
+                    R.string.journal_drift_high_swing,
+                    day(swing.date), temp(swing.low), temp(swing.high)
+                )
+                else -> stringResource(R.string.journal_drift_quiet)
             }
         }
     }
@@ -512,8 +663,29 @@ private fun DriftSentence(
     )
 }
 
+/** What one row of the strip did: where it started, where it ended, and how far it
+ * wandered in between. Null when the row has fewer than two predictions to compare. */
+private data class DriftMove<T : Comparable<T>>(
+    val date: LocalDate,
+    val first: T,
+    val last: T,
+    val low: T,
+    val high: T
+)
+
+private fun <T : Comparable<T>> move(date: LocalDate, cells: List<T?>): DriftMove<T>? {
+    val present = cells.filterNotNull()
+    if (present.size < 2) return null
+    return DriftMove(date, present.first(), present.last(), present.min(), present.max())
+}
+
+/** The strip's own thresholds are the diff engine's, so the sentence can never claim
+ * a move the entries below it never recorded. */
+private const val RAIN_MOVE_PCT = 10
+private const val HIGH_MOVE_C = 1.0
+
 /** The numbers behind the colors (DESIGN §9.3): a picture of a number is not a
- * number. One line per target day, values in fetch order, absence as a dot. */
+ * number. One line per target day, values in column order, absence as a dot. */
 @Composable
 private fun DriftTableDialog(
     drift: DriftModel,
@@ -527,14 +699,18 @@ private fun DriftTableDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.journal_drift_table_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
                 drift.dates.forEachIndexed { row, date ->
                     val values = when (metric) {
                         DriftMetric.RAIN -> drift.rain[row].map { cell ->
-                            cell?.let { Formats.percent(it, locale) } ?: "·"
+                            cell?.let { Formats.percent(it, locale) } ?: JournalText.MISSING
                         }
                         DriftMetric.HIGH -> drift.highC[row].map { cell ->
-                            cell?.let { Formats.temperature(it, units.temperature, locale) } ?: "·"
+                            cell?.let { Formats.temperature(it, units.temperature, locale) }
+                                ?: JournalText.MISSING
                         }
                     }
                     Text(

@@ -2652,6 +2652,199 @@ proprio non è prosa.
       etichettata "Latest" — ora `release.yml` marca prerelease ogni tag con trattino,
       che è la definizione SemVer di prerelease
 
+## Il Diario, revisione della card (committente, 8 set 2026) — e il cerchio si chiude
+
+Nove rilievi su una schermata sola, più la funzione che le mancava. In ordine di peso.
+
+- [x] **L'asse della striscia diventa il tempo.** Era una colonna per *fetch*: alla
+      cadenza predefinita di un'ora la striscia mostrava quattordici ORE sotto un
+      titolo che dice «la settimana», stampava sotto «14 aggiornamenti, da Sab 5 a Sab
+      5» (primo e ultimo formattati a solo giorno, quasi sempre lo stesso), e disegnava
+      una notte a telefono spento esattamente come un'ora di sonno. Ora una colonna è
+      una fascia di **sei ore**, quattordici fasce sono tre giorni e mezzo — la
+      finestra che VISION §5.5 promette — e una fascia senza fetch è una **casella
+      vuota**, non una colonna che sparisce. Le fasce vuote in testa si tagliano: la
+      striscia comincia dove comincia la prova, mai prima. La didascalia stampa la
+      larghezza della fascia e i due estremi con **giorno e ora**
+- [x] **Le righe sono solo i giorni ancora davanti.** L'orizzonte del fetch più recente
+      parte dal *suo* domani: dopo tre giorni offline la striscia intitolata «la
+      settimana» mostrava giorni già passati. Ora le date si filtrano su oggi, e una
+      striscia senza più giorni davanti non si disegna
+- [x] **La legenda delle massime stampava estremi che la scala non ha.** Campionava
+      −10…40 °C su una rampa ancorata a −5/35 con `coerceIn`: misurato, ΔE(−10, −5) =
+      0,00 e ΔE(40, 35) = 0,00 — due pastiglie duplicate e due numeri falsi, contro
+      DESIGN §8.10 e §9.3. Ora i sette campioni sono equispaziati fra le ancore vere e
+      i numeri sotto sono quelli
+- [x] **La frase della deriva partiva in minuscolo, in italiano**: «sabato 5 è
+      migliorato». `JournalText` e i titoli dei giorni facevano già `titlecase`, la
+      frase no; in inglese il difetto non si vedeva perché il giorno è già maiuscolo
+- [x] **«Oggi» e «Ieri» seguono il fuso del LUOGO**, come il raggruppamento sopra:
+      leggevano `LocalDate.now()` di sistema, e il Diario di Tokyo visto dall'Italia
+      poteva intitolare «Oggi» il domani di Tokyo
+- [x] **Un tocco sulla striscia apre i numeri.** C'era un `onClick = {}`: ripple che non
+      faceva niente e, peggio, un'azione «tocca due volte per attivare» annunciata a
+      TalkBack che non esisteva. Il suggerimento cambia di conseguenza («tocca per i
+      numeri») e la striscia guadagna una descrizione unica — le caselle non hanno
+      testo, quindi senza di quella un lettore di schermo sentiva sette date e nient'altro
+- [x] **La pioggia non inventa più uno zero.** `journal_field_rain` stampava
+      `old ?: 0`, cioè «pioggia 0% → 80%» dove il valore vecchio non c'era, mentre le
+      temperature accanto stampavano già il trattino. E il difetto veniva da più in
+      basso: vedi la riga sulla probabilità nullable, sotto
+- [x] **Tre stati per la frase, non due.** «Finora la settimana è rimasta com'era»
+      copriva sia la settimana ferma sia quella che si è mossa ed è tornata — la frase
+      poteva contraddire le due revisioni elencate sotto di sé. Ora esiste «è andato su
+      e giù, fra X e Y», con le stesse soglie del motore di diff (10 punti, 1 °C) così
+      la frase non può mai affermare un movimento che le voci non hanno registrato
+- [x] **La retention diventa per città.** `prune` era globale: con quattro luoghi
+      salvati ogni Diario aveva venticinque commit, e la profondità della propria
+      cronologia dipendeva da quanti altri posti si seguono. Ora cento commit **per
+      città**, più un tetto globale come rete di sicurezza (togliere un luogo non
+      cancella i suoi commit). Di conseguenza il Diario legge tutta la cronologia della
+      città e non più 40 righe — che a cadenza oraria erano meno di due giorni, meno
+      della finestra della striscia stessa
+- [x] **Il tick del minuto sparisce.** Il ViewModel ricostruiva quaranta righe di JSON e
+      il motore di diff una volta al minuto, anche a dati fermi e anche in risparmio
+      energetico (cosa che Oggi non fa). Niente su quella schermata invecchia con
+      l'orologio: gli orari sono tutti assoluti. Ora segue un Flow di Room per città,
+      che riemette alla scrittura e solo alla scrittura — più un solo risveglio a
+      **mezzanotte del luogo**, che è l'unico evento d'orologio che questa schermata ha
+      davvero (lì «Oggi» diventa «Ieri», e lì una giornata finita diventa giudicabile).
+      Il fuso lo risolve una funzione sola, `JournalStateBuilder.zoneOf`, così
+      raggruppamento, etichette, verdetti e sveglia non possono discordare
+- [x] **«E poi com'è andata?»** — il cerchio che mancava: `ForecastOutcome`, e una riga
+      in più che chiude ogni giornata finita
+
+### Decisioni dell'intervento
+
+- **La probabilità giornaliera diventa nullable fino a schermo.** Il seme mappava
+  `precipitation_probability_max` con `?: 0`, e uno zero è una previsione di niente
+  pioggia messa in bocca a un modello che non ha parlato — esattamente ciò che §1.1
+  vieta, e che Chiaro già rispettava per l'ora ma non per il giorno. Ora: la riga della
+  settimana non stampa nulla e tiene la sua colonna (un trattino sarebbe un valore), lo
+  snapshot omette la chiave, la striscia disegna assenza, la variabile di regola
+  `today.precip_pct` non si risolve e la sua regola salta invece di far scattare
+  `< 10` su un dato mancante, e il riepilogo del mattino lascia cadere la frase della
+  pioggia invece di annunciare «0%». Registrato in `UPSTREAM.md`: è un bug anche
+  a monte.
+- **Il verdetto della giornata poggia sull'ora, non sull'istante.** `current.precipitation`
+  di Open-Meteo è la somma dell'ora **precedente**, quindi con fetch orari le
+  osservazioni piastrellano la giornata invece di campionarla e sperare che non abbia
+  piovuto in mezzo. Due chiavi nuove nello snapshot (`current.wmo_code`,
+  `current.precip_last_hour_mm`): il codice perché la domanda «pioveva quando hai
+  guardato» deve avere per risposta un numero che il dominio sa leggere
+  (`WeatherCodes.isPrecipitation`), non l'etichetta inglese riconosciuta a mano.
+- **Le due regole del verdetto non sono simmetriche, ed è il punto.** «Ha piovuto»
+  basta una osservazione bagnata: il positivo è una prova, e nessuna ora mancante può
+  dis-vederla. «Non ha piovuto» pretende **16 ore delle 24 davvero coperte** (finestre
+  unite, così una raffica di pull-to-refresh non compra copertura). Sotto quella soglia
+  la giornata non prende nessun verdetto — non «forse», proprio nessuna riga: una
+  sezione senza dati non si disegna. Le ore coperte sono stampate accanto al verdetto,
+  come un run del cielo stampa il suo `obs`: un giudizio che nasconde la sua copertura
+  è un giudizio che non si può pesare.
+- **La massima osservata si chiama «vista».** È un massimo su campioni, non una misura
+  della stazione, e la parola lo dice. Compare solo con la copertura sopra soglia,
+  perché un massimo su tre letture non è un massimo.
+- **Un commit scritto prima delle due chiavi è silenzio, non un'ora asciutta.** Niente
+  fallback che riconosca a ritroso l'etichetta inglese: la funzione si riempie dai
+  giorni successivi all'aggiornamento invece di giudicare giornate su cui non ha prove.
+- **Il verdetto apre il giorno che chiude**: è datato all'ultimo istante della giornata,
+  quindi l'ordinamento dal più recente lo mette in cima alla sua sezione.
+- **La spunta non è un verdetto.** L'icona dice «questa giornata è stata verificata»,
+  non «bene» o «male»: verde e rosso sarebbero un giudizio sul tempo, e com'è andata è
+  un fatto. La parola porta l'esito, come dappertutto qui.
+- **Le Minime restano fuori dalla striscia, e adesso è scritto perché.** Non sono
+  escluse dal Diario — sono salvate, diffate a 1 °C e stampate nella prosa delle
+  revisioni («minima 12° → 14°»): sono fuori dai *chip*. La minima non è una domanda di
+  deriva ma di soglia — «gela?», «si dorme?» — e quella risposta si scrive con un
+  avviso, non con una striscia di calore. E un giudizio non le si può dare: il verso si
+  ribalta con la stagione, perché una minima che scende è sollievo ad agosto e brina a
+  gennaio, e qui ogni numero deve portare la sua conseguenza. Conferma misurata, non
+  motivo principale: sulla rampa ancorata al mondo una fascia di minime italiane
+  (≈2–20 °C) occupa il 45% della rampa contro il 65% delle massime.
+- **Quello che NON è stato aggiunto**, per la stessa regola: filtri per tipo di voce (le
+  soglie tengono già basso il volume), ricerca, esportazione, un terzo chip qualsiasi.
+  Vento e millimetri non esistono in `DailyForecast` e costerebbero modello, mapper,
+  schema e migrazione: si valutano per conto loro, non si infilano qui.
+
+### Coda dell'intervento (committente, 8 set 2026) — il sottozero
+
+- [x] **`Formats.temperature` stampava `-0°`.** Domanda del committente sulle minime
+      sottozero; la risposta è che escono senza filtri né clamp (`temperature_2m_min` è
+      un `Double` non-nullable che arriva intatto a schermo, e lo slider degli avvisi va
+      da −30 a +45 °C, quindi «minima sotto 0» è scrivibile). Cercando la conferma è
+      saltato fuori un difetto vero: `%f` conserva il segno di un valore che ha appena
+      arrotondato via, quindi −0,4 °C stampava `-0°`. Verificato sulla JVM prima e dopo:
+      `-0,4 → "0°"`, `-0,5 → "-1°"`, `-3,4 → "-3°"`. Vale per ogni temperatura di ogni
+      schermata, perché passano tutte da lì. Sette asserzioni nuove in `FormatsTest`,
+      su entrambe le lingue, entrambe le unità e due precisioni.
+
+### Il gelo nella striscia (committente, 8 set 2026)
+
+- [x] **Un segno accanto al giorno, non un terzo chip.** La domanda «e d'inverno?» ha
+      una risposta che la striscia poteva dare senza tradire sé stessa: il gelo è una
+      soglia, e una soglia si segna, non si dipinge su una rampa. Un fiocco accanto
+      all'etichetta del giorno quando la minima prevista è **a zero o sotto**, e sotto
+      la striscia una riga che nomina quei giorni col loro numero — «Gelo previsto:
+      sabato 5 (−2°), domenica 6 (0°)». Il dato era già su disco: `low_c` sta nello
+      snapshot dalla Fase 7.
+
+### Decisioni
+
+- **Zero, non due gradi.** La brina da irraggiamento arriva anche con una minima a 2 °C
+  perché il suolo irraggia più dell'aria a due metri, ma un segno che scatta su una
+  notte che il termometro del lettore leggerà +2 è un segno che si impara a ignorare.
+  La sfumatura la porta un avviso, che ha le parole per dirla; un glifo no.
+- **Decide l'ultima parola, non la più fredda mai detta.** Il segno dice cosa prevede
+  l'app adesso: un giorno che è tornato sopra zero lo perde, invece di tenersi un
+  avvertimento che nessuno sostiene più.
+- **Non è mai il glifo da solo** (DESIGN §10): la riga sotto la striscia è insieme la
+  legenda del segno e l'informazione stessa, e sta **fuori** dalla descrizione unificata
+  della striscia, così un lettore di schermo la riceve come frase propria invece che
+  ripiegata in un paragrafo sulle colonne. Quando non gela non c'è: una riga «niente
+  gelo» ogni settimana è il riempitivo che questa schermata rifiuta.
+- **Lo spazio del segno si aggiunge a tutte le righe o a nessuna**, così le caselle
+  restano una griglia sola; una settimana senza gelo disegna esattamente la striscia
+  che disegnava prima.
+- **L'accessore si chiama `frost`, non `snowflake`** (§13.1: nomina la grandezza, non il
+  disegno). Il disegno è il fiocco di Meteocons, ma la domanda lì è il ghiaccio, non la
+  neve.
+- **L'esempio della guida resta senza segno.** Le percentuali del campione sono
+  dichiaratamente inventate, ma un avviso di gelo su un giorno vero e nominato si
+  leggerebbe come una previsione: il testo lo descrive a parole, il disegno non lo finge.
+
+### Rimasto aperto
+
+- **Il Diario del GPS si azzera se ti sposti.** `cacheKey` è lat/lon arrotondati a due
+  decimali (~1,1 km), quindi «la mia posizione» cambia chiave con te e la cronologia
+  riparte: la schermata dice «Ancora niente da raccontare» mentre i commit esistono
+  sotto un'altra chiave. Non toccato di proposito: quella chiave governa cache, cache su
+  disco, avvisi, cielo e widget, e re-inchiavarla è una decisione di prodotto con una
+  migrazione dietro, non una rifinitura del Diario.
+- **Sotto −5 °C il colore satura, il numero no.** `temperatureAt` è ancorata a −5/35
+  con `coerceIn`, e la usano due superfici: la striscia di deriva sulle massime e — cosa
+  che la review aveva mancato — la barra di intervallo della settimana
+  (`WeatherCharts.kt:292`). Quindi il capo sinistro della barra a −5 e a −12 è dello
+  stesso blu. La barra però non mente: il numero stampato accanto è esatto e la
+  posizione è giusta, perché quella scala è il min/max della settimana e non le ancore
+  della rampa. È il costo dichiarato di DESIGN §9.1 (una scala ancorata al mondo, non a
+  ciò che c'è a schermo), non un difetto da correggere di nascosto: se le ancore vanno
+  allargate è una decisione di design, con le sue misure di contrasto da rifare.
+- **`AlertKind.PRECIPITATION` tiene il suo `?: 0`**: lì la probabilità viene dall'ora che
+  ha superato la soglia, quindi è non-nulla per costruzione e il fallback non può
+  scattare. Lasciato com'è per non allargare la modifica.
+- **Le due `plurals` nuove non definiscono `many`** e lint le segnala, come le sei già
+  presenti nel file: in italiano `many` vale da un milione in su, e qui si contano ore
+  di una giornata e larghezze di fascia. Coerenti col resto del file.
+
+### Verifica
+
+823 test verdi in tutti i moduli (11 nuovi in `ForecastOutcomeTest`, 4 nuovi in
+`JournalStateBuilderTest`, 2 in `WeatherSnapshotsTest`), zero failure, zero skip;
+`:app:lintDebug` a zero errori (66 warning, gli stessi di prima più le due `many`
+sopra); `:app:compileDebugKotlin` pulito.
+
+---
+
 ---
 
 ## Note trasversali

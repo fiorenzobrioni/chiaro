@@ -5,6 +5,8 @@ import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.pow
 
 /**
  * Every number the screen prints goes through here, because DESIGN.md §5 makes
@@ -24,7 +26,13 @@ object Formats {
             TemperatureUnit.CELSIUS -> celsius
             TemperatureUnit.FAHRENHEIT -> celsius * 9.0 / 5.0 + 32.0
         }
-        return String.format(locale, "%.${decimals}f°", value)
+        // A value that rounds away to zero keeps its sign through `%f`, so −0.4 °C
+        // printed **"-0°"** — a reading nobody writes by hand, and the one thing the
+        // sub-zero end of the scale got wrong. At this precision that value IS zero,
+        // so it is formatted as zero. The threshold mirrors `%f`'s own HALF_UP: −0.5
+        // still rounds to −1°, and every other negative keeps its sign.
+        val roundsToZero = abs(value) * 10.0.pow(decimals) < 0.5
+        return String.format(locale, "%.${decimals}f°", if (roundsToZero) 0.0 else value)
     }
 
     fun wind(kph: Double, unit: WindSpeedUnit, locale: Locale): String = when (unit) {

@@ -95,6 +95,27 @@ is short on purpose — three edits, each with its reason in the file:
   Saturday on disk. `ForecastDiff` is per-date and unchanged; its `dayLabel` now
   derives from date distance instead of list position (same output on two dates,
   correct on seven). If tweather ever widens its Logs, this belongs upstream too.
+- `DailyForecast.precipPct` is **nullable** here, non-null upstream (Fase 7b): the
+  seed maps `precipitation_probability_max` with `?: 0`, and a zero is a forecast of
+  no rain put in the mouth of a model that never gave one. Chiaro's §1.1 already
+  carried the hourly probability nullable to the screen; the daily one now travels the
+  same way — the week row prints nothing, `flattenForecast` omits the key, the drift
+  strip draws absence and the morning summary drops the clause. This is a bug upstream
+  too and the fix belongs there.
+- `WeatherSnapshots.flatten` writes two keys the seed does not (Fase 7b):
+  `current.wmo_code` and `current.precip_last_hour_mm`. `ForecastOutcome` needs to ask
+  a past commit "was it raining when you looked", and the answer has to be a number the
+  domain can read rather than the English label matched back by hand. The same pass
+  fixed an inherited leak beside them: `current.precip_chance_pct` was written with
+  `.toString()` on a nullable Int and had been storing the literal string `"null"`.
+- `ForecastOutcome` is new and Chiaro-only (Fase 7b): what the app predicted for a
+  finished day, checked against what it then observed. Upstream's Logs render commits;
+  reading two of them against each other to say "it rained" is a Chiaro surface.
+- `WeatherHistoryDao.prune` was global and is now a **per-city** `pruneCity` plus a
+  global backstop (Fase 7b): with one shared cap of a hundred rows, four saved places
+  each got twenty-five commits, so a place's diary depth depended on how many other
+  places you follow. The backstop stays because removing a place does not delete its
+  commits. Upstream has one city at a time and never met this.
 - `FetchLogStore` is new and Chiaro-only (Fase 7): a bounded ring of failed fetches
   (when, which place, why) so the Journal can say "an update didn't make it" —
   offline honesty is a Chiaro surface; upstream's Logs render commits, and a commit

@@ -26,10 +26,14 @@ class JournalStateBuilderTest {
     private fun at(day: Int, hour: Int): Instant =
         LocalDate.of(2026, 9, day).atTime(hour, 0).atZone(zone).toInstant()
 
-    private fun forecast(precip: Int, high: Double) = mapOf(
+    /** Somewhere on the 3rd, with Saturday still ahead: the drift's rows are the days
+     * that have not happened yet. */
+    private val now = at(3, 12)
+
+    private fun forecast(precip: Int, high: Double, low: Double = 14.0) = mapOf(
         "$saturday.status" to "Rain",
         "$saturday.high_c" to high.toString(),
-        "$saturday.low_c" to "14.0",
+        "$saturday.low_c" to low.toString(),
         "$saturday.precip_pct" to precip.toString()
     )
 
@@ -37,8 +41,15 @@ class JournalStateBuilderTest {
         at: Instant,
         forecast: Map<String, String> = emptyMap(),
         fired: List<String> = emptyList(),
-        runs: List<SkyRun> = emptyList()
-    ) = JournalRow(at, forecast, fired, runs)
+        runs: List<SkyRun> = emptyList(),
+        snapshot: Map<String, String> = emptyMap()
+    ) = JournalRow(at, forecast, fired, runs, snapshot)
+
+    private fun build(
+        rows: List<JournalRow>,
+        failures: List<FetchFailure> = emptyList(),
+        now: Instant = this.now
+    ) = JournalStateBuilder.build(milan, rows, failures, now)
 
     @Test
     fun `a rain drop reads as Saturday improved, with the numbers`() {
@@ -46,7 +57,7 @@ class JournalStateBuilderTest {
             row(at(3, 7), forecast(precip = 30, high = 27.0)),
             row(at(2, 7), forecast(precip = 70, high = 24.0))
         )
-        val content = JournalStateBuilder.build(milan, rows, emptyList())
+        val content = build(rows)
 
         val shift = content.days.flatMap { it.entries }
             .filterIsInstance<JournalEntry.ForecastShift>()
@@ -60,8 +71,7 @@ class JournalStateBuilderTest {
 
     @Test
     fun `a day entering the horizon is not a revision worth a sentence`() {
-        val rows = listOf(row(at(2, 7), forecast(precip = 70, high = 24.0)))
-        val content = JournalStateBuilder.build(milan, rows, emptyList())
+        val content = build(listOf(row(at(2, 7), forecast(precip = 70, high = 24.0))))
 
         assertTrue(
             content.days.flatMap { it.entries }
@@ -80,7 +90,7 @@ class JournalStateBuilderTest {
             )
         )
         val failures = listOf(FetchFailure("k", at(2, 9).epochSecond, FetchFailureReason.OFFLINE))
-        val content = JournalStateBuilder.build(milan, rows, failures)
+        val content = build(rows, failures)
 
         assertEquals(listOf(LocalDate.of(2026, 9, 3), LocalDate.of(2026, 9, 2)),
             content.days.map { it.date })
@@ -98,7 +108,7 @@ class JournalStateBuilderTest {
         val rows = listOf(
             row(at(3, 7), runs = listOf(SkyRun("sun.set", at(3, 5).epochSecond, kind = null)))
         )
-        val content = JournalStateBuilder.build(milan, rows, emptyList())
+        val content = build(rows)
         val run = content.days.single().entries
             .filterIsInstance<JournalEntry.SkyObserved>().single()
         assertNull(run.verdict)
@@ -106,22 +116,38 @@ class JournalStateBuilderTest {
 
     @Test
     fun `one fetch is not a drift, two are`() {
-        val one = JournalStateBuilder.build(
-            milan, listOf(row(at(2, 7), forecast(70, 24.0))), emptyList()
-        )
-        assertNull(one.drift)
+        assertNull(build(listOf(row(at(2, 7), forecast(70, 24.0)))).drift)
 
-        val two = JournalStateBuilder.build(
-            milan,
-            listOf(row(at(3, 7), forecast(30, 27.0)), row(at(2, 7), forecast(70, 24.0))),
-            emptyList()
+        val two = build(
+            listOf(row(at(3, 7), forecast(30, 27.0)), row(at(2, 7), forecast(70, 24.0)))
         )
         val drift = two.drift
         assertNotNull(drift)
         assertEquals(listOf(LocalDate.parse(saturday)), drift!!.dates)
-        // Columns oldest → newest, values in fetch order.
-        assertEquals(listOf(70, 30), drift.rain.single())
-        assertEquals(listOf(24.0, 27.0), drift.highC.single())
+        // Columns oldest → newest, values in column order.
+        assertEquals(listOf(70, 30), drift.rain.single().filterNotNull())
+        assertEquals(listOf(24.0, 27.0), drift.highC.single().filterNotNull())
+        assertEquals(at(2, 7), drift.oldest)
+        assertEquals(at(3, 7), drift.newest)
+    }
+
+    @Test
+    fun `the axis is time, so a day between two fetches is drawn as a gap`() {
+        // Twenty-four hours apart at a six-hour column: four slots, three of them empty.
+        val drift = build(
+            listOf(row(at(3, 7), forecast(30, 27.0)), row(at(2, 7), forecast(70, 24.0)))
+        ).drift!!
+        assertEquals(5, drift.columns.size)
+        assertEquals(2, drift.columns.count { it != null })
+        assertEquals(listOf(70, null, null, null, 30), drift.rain.single())
+    }
+
+    @Test
+    fun `two fetches inside the same slot are one column, and one column is no drift`() {
+        val drift = build(
+            listOf(row(at(3, 7), forecast(30, 27.0)), row(at(3, 10), forecast(20, 27.0)))
+        ).drift
+        assertNull(drift)
     }
 
     @Test
@@ -131,10 +157,102 @@ class JournalStateBuilderTest {
             row(at(2, 7), emptyMap()),          // no forecast stored on this one
             row(at(1, 7), forecast(70, 24.0))
         )
-        val drift = JournalStateBuilder.build(milan, rows, emptyList()).drift
+        val drift = build(rows).drift
         assertNotNull(drift)
-        // The empty fetch is not a column at all: it said nothing about any day.
-        assertEquals(2, drift!!.fetches.size)
-        assertEquals(listOf(70, 30), drift.rain.single())
+        // The empty fetch said nothing about any day, so its slot stays empty; the two
+        // that spoke are forty-eight hours and eight columns apart.
+        assertEquals(9, drift!!.columns.size)
+        assertEquals(2, drift.columns.count { it != null })
+        assertEquals(listOf(70, 30), drift.rain.single().filterNotNull())
+    }
+
+    @Test
+    fun `a horizon gone stale offline loses its rows instead of showing a past week`() {
+        // The newest fetch is four days old: everything it called "tomorrow" has
+        // already happened, and a strip of days gone by is not the week ahead.
+        val rows = listOf(
+            row(at(3, 7), forecast(30, 27.0)), row(at(2, 7), forecast(70, 24.0))
+        )
+        assertNull(build(rows, now = at(9, 12)).drift)
+    }
+
+    @Test
+    fun `a day forecast to freeze is marked, and a day above zero is not`() {
+        val mild = build(
+            listOf(row(at(3, 7), forecast(30, 8.0)), row(at(2, 7), forecast(70, 6.0)))
+        ).drift!!
+        assertNull(mild.frostC.single())
+
+        val freezing = build(
+            listOf(
+                row(at(3, 7), forecast(30, 8.0, low = -1.5)),
+                row(at(2, 7), forecast(70, 6.0, low = 2.0))
+            )
+        ).drift!!
+        assertEquals(-1.5, freezing.frostC.single()!!, 0.001)
+    }
+
+    @Test
+    fun `the mark follows the latest word, not the coldest one ever said`() {
+        // Yesterday's fetch said −3°, this morning's says +2°: nobody is standing by
+        // the frost any more, so the day loses its mark.
+        val warmed = build(
+            listOf(
+                row(at(3, 7), forecast(30, 8.0, low = 2.0)),
+                row(at(2, 7), forecast(70, 6.0, low = -3.0))
+            )
+        ).drift!!
+        assertNull(warmed.frostC.single())
+    }
+
+    @Test
+    fun `zero itself is freezing`() {
+        val drift = build(
+            listOf(
+                row(at(3, 7), forecast(30, 8.0, low = 0.0)),
+                row(at(2, 7), forecast(70, 6.0, low = 1.0))
+            )
+        ).drift!!
+        assertEquals(0.0, drift.frostC.single()!!, 0.001)
+    }
+
+    // -----------------------------------------------------------------------------
+    // The loop closed: what the app said, against what it then saw.
+    // -----------------------------------------------------------------------------
+
+    private fun observed(mm: Double) = mapOf(
+        "current.wmo_code" to (if (mm > 0) "63" else "3"),
+        "current.precip_last_hour_mm" to mm.toString(),
+        "current.temp_c" to "21.0"
+    )
+
+    @Test
+    fun `a finished day is judged, and its verdict opens the day it closes`() {
+        val target = LocalDate.of(2026, 9, 3)
+        val rows = listOf(row(at(2, 22), mapOf("$target.precip_pct" to "70", "$target.high_c" to "24.0"))) +
+            (0..23).map { row(at(3, it), snapshot = observed(mm = 0.0)) }
+        val content = build(rows, now = at(4, 12))
+
+        val day = content.days.single { it.date == target }
+        val outcome = day.entries.first() as JournalEntry.DayOutcome
+        assertEquals(target, outcome.date)
+        assertEquals(70, outcome.forecastPrecipPct)
+        assertEquals(false, outcome.rained)
+        assertEquals(24.0, outcome.forecastHighC!!, 0.001)
+        assertEquals(21.0, outcome.observedHighC!!, 0.001)
+    }
+
+    @Test
+    fun `a day the app could not watch enough gets no line at all`() {
+        val target = LocalDate.of(2026, 9, 3)
+        val rows = listOf(row(at(2, 22), mapOf("$target.precip_pct" to "70"))) +
+            (8..12).map { row(at(3, it), snapshot = observed(mm = 0.0)) }
+
+        assertTrue(
+            build(rows, now = at(4, 12)).days
+                .flatMap { it.entries }
+                .filterIsInstance<JournalEntry.DayOutcome>()
+                .isEmpty()
+        )
     }
 }

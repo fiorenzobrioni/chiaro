@@ -168,7 +168,15 @@ data class DailyForecast(
     val highC: Double,
     val lowC: Double,
     val condition: WeatherCondition,
-    val precipPct: Int,
+    /**
+     * The day's peak probability of precipitation, **null when the model behind this
+     * response does not carry one** (§1.1, Fase 26 for the hourly field): the seed
+     * coerced it to `0`, which is the one value a probability must never be invented
+     * as — a zero is a forecast of no rain, and "we were not told" is not that. Null
+     * travels to the screen, where the week row prints nothing, the snapshot omits
+     * the key and the drift strip draws absence.
+     */
+    val precipPct: Int?,
     /**
      * The day's PEAK UV (Open-Meteo `uv_index_max`), with [uvDescription] its label
      * — never the instant reading [CurrentConditions.uvIndex]: under a "Today"

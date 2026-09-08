@@ -1137,7 +1137,7 @@ private fun Week(
                 dayLabel = label,
                 condition = ConditionGlyph(f.condition.wmoCode, night = false),
                 rainPct = f.precipPct,
-                rainLabel = Formats.percent(f.precipPct, locale),
+                rainLabel = f.precipPct?.let { Formats.percent(it, locale) },
                 lowC = f.lowC,
                 highC = f.highC,
                 lowLabel = low,
@@ -1145,11 +1145,20 @@ private fun Week(
                 scaleLowC = scaleLow,
                 scaleHighC = scaleHigh,
                 phases = day.phases,
-                description = stringResource(
-                    R.string.week_day_desc,
+                // Two forms, because a day with no probability must not announce one:
+                // the row that prints nothing says nothing (§1.1).
+                description = f.precipPct?.let { pct ->
+                    stringResource(
+                        R.string.week_day_desc,
+                        label,
+                        stringResource(WeatherText.condition(f.condition.wmoCode)),
+                        low, high, pct
+                    )
+                } ?: stringResource(
+                    R.string.week_day_desc_no_rain,
                     label,
                     stringResource(WeatherText.condition(f.condition.wmoCode)),
-                    low, high, f.precipPct
+                    low, high
                 ),
                 onClick = if (day.hours.isNotEmpty()) {
                     { expanded = if (expanded == f.date) null else f.date }

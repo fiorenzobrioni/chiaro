@@ -53,6 +53,36 @@ interface WeatherHistoryDao {
     @Query("SELECT * FROM weather_history ORDER BY timestamp_epoch_s DESC LIMIT :limit")
     fun observeLatest(limit: Int): Flow<List<WeatherHistoryEntry>>
 
+    /**
+     * [historyFor] as a Flow: the Journal follows one city's commits instead of
+     * re-reading the table on a timer. Room re-emits on write and only on write, so
+     * a screen that is open sees a fetch land and an idle screen costs nothing.
+     */
+    @Query(
+        "SELECT * FROM weather_history WHERE city_key = :cityKey " +
+            "ORDER BY timestamp_epoch_s DESC LIMIT :limit"
+    )
+    fun observeFor(cityKey: String, limit: Int): Flow<List<WeatherHistoryEntry>>
+
+    /**
+     * The retention that matters: **per city**. The global [prune] below had been the
+     * only one, so four saved places shared one hundred rows and each city's Journal
+     * got twenty-five — a diary whose depth depended on how many other places you
+     * follow, and a drift strip eating half of it.
+     */
+    @Query(
+        "DELETE FROM weather_history WHERE city_key = :cityKey AND id NOT IN " +
+            "(SELECT id FROM weather_history WHERE city_key = :cityKey " +
+            "ORDER BY timestamp_epoch_s DESC LIMIT :keep)"
+    )
+    suspend fun pruneCity(cityKey: String, keep: Int)
+
+    /**
+     * The backstop, now only a backstop: it bounds the table when places come and go
+     * (removing a place does not delete its commits) and evicts the globally oldest
+     * rows, which for an abandoned place is exactly the right ones. Sized so it can
+     * never be what truncates an active city's history.
+     */
     @Query(
         "DELETE FROM weather_history WHERE id NOT IN " +
             "(SELECT id FROM weather_history ORDER BY timestamp_epoch_s DESC LIMIT :keep)"

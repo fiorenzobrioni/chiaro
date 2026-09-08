@@ -5,6 +5,8 @@ import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class WeatherSnapshotsTest {
@@ -51,6 +53,27 @@ class WeatherSnapshotsTest {
             setOf("2023-10-28.status", "2023-10-28.high_c", "2023-10-28.low_c", "2023-10-28.precip_pct"),
             WeatherSnapshots.flattenForecast(report).keys
         )
+    }
+
+    @Test
+    fun `a day with no probability leaves the key out, it does not write a zero`() {
+        val report = reportWithDaily(
+            DailyForecast(today.plusDays(1), 20.0, 12.0, sunny, null, 5, "Moderate ☀️")
+        )
+        val flat = WeatherSnapshots.flattenForecast(report)
+        assertEquals(
+            setOf("2023-10-28.status", "2023-10-28.high_c", "2023-10-28.low_c"),
+            flat.keys
+        )
+        assertNull(flat["2023-10-28.precip_pct"])
+    }
+
+    @Test
+    fun `the current snapshot carries the code and the hour behind it`() {
+        val flat = WeatherSnapshots.flatten(sampleWeatherReport())
+        // ForecastOutcome reads these two and nothing else to judge a past hour.
+        assertNotNull(flat["current.wmo_code"]?.toIntOrNull())
+        assertNotNull(flat["current.precip_last_hour_mm"]?.toDoubleOrNull())
     }
 
     @Test
