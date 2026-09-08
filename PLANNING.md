@@ -2978,6 +2978,107 @@ aveva mai visto.
 
 ---
 
+## Ora: tre ritocchi sullo screenshot; Cielo: rifatto in tre forme (committente, 8 set 2026, sera)
+
+Screenshot del device con le tre forme di «Ora» accanto al widget del launcher: «va
+benissimo», più tre ritocchi da valutare («falli solo se sei convinto») e la richiesta di
+rifare da capo il widget «Cielo» con la stessa logica di adattamento.
+
+### I tre ritocchi, tutti applicati, con le misure che li reggono
+
+| | Prima | Ora | Perché |
+|---|---|---|---|
+| Frase del giorno | 14 sp Medium | **16 sp** Medium | il vicino la scrive a ~17 sp sotto un numero da ~30; a 16 sotto il nostro 34 il rapporto è lo stesso. Con Roboto misurato: ogni frase breve tiene **due righe** nella colonna da 116 dp del 4×1 e da 131 del 2×2 |
+| Luogo | 15 sp | **16 sp** | stesso corpo della frase, distinta da peso e inchiostro (Regular, attenuato) come fa il vicino. «Cavenago di Brianza» misura **145 dp** a 16 sp e la colonna del 3×1 ne ha 154: ci sta. Col pin GPS (16 + 4) non ci starebbe a nessuno dei due corpi, e a 4 celle (116 dp) si tronca con l'ellissi in entrambi i casi: limite dichiarato, non introdotto |
+| Pin della posizione | 0,9 × testo | **1,0 × testo** | il disegno riempie 20/24 della scatola, quindi a 0,9 su 16 sp erano 12 dp d'inchiostro (l'altezza delle maiuscole e basta); il pin del vicino misura ~13,5 dp, maiuscola più discendente. A 1,0 sono 13,3 |
+
+Il costo dei due corpi in più è pagato dal glifo della forma alta, che scende da ~75 a
+~69 dp di scatola (`nowTallIconSize`), e da **due stringhe brevi in più**: a 16 sp
+«Pioggia per il resto della giornata» era l'unica frase a chiedere tre righe sul 2×2, e il
+registro breve la dice «del giorno» (l'inglese era già breve; le stringhe esistono in
+entrambe le lingue perché il registro è uno). L'anteprima del picker segue i corpi nuovi.
+
+### Cielo: le tre forme (`SkyWidgetLayout.kt`, puro, con tabella in `SkyWidgetLayoutTest`)
+
+Il numero-eroe è **l'ora del momento** a 30 sp Medium, con sotto il nome a 15 sp
+attenuato e davanti il glifo del momento che riempie l'altezza (tetto 72 dp). La domanda
+della card è «quando, e vale la pena uscire»: il primo pezzo lo dice un orologio leggibile
+a un braccio di distanza, dove un nome a 15 sp sopra un'ora a 12 non lo diceva; il secondo
+lo dice il verdetto; quale momento sia lo dice il glifo, come il glifo di «Ora» dice che
+tempo fa. Le due card sulla stessa home si leggono come sorelle.
+
+- **Stretta** (tre celle, il minimo del widget): glifo · ora / **segno** + nome. Il segno è
+  il glifo del verdetto — `✓ ~ ✗ ?`, il vocabolario della serie e gli stessi caratteri con
+  cui si apre il chip dell'app — da solo in un tondo da 22 dp nei colori misurati del
+  verdetto. È il verdetto alla misura che una card stretta può permettersi: una forma prima
+  che un colore (DESIGN §2.3), quindi leggibile in deuteranopia, e la parola sta una forma
+  più su o a un tocco.
+- **Larga** (quattro celle e oltre): la stessa riga, e contro il bordo opposto la colonna
+  del verdetto (96 dp fissi): il chip con la **parola** sopra e il **numero** che l'ha
+  deciso sotto («nuvole 10%»). Fissa e non pesata perché un chip non va a capo: «Presto per
+  dirlo» a 11 sp misura 89 dp con il suo padding, e 12 sp non ci starebbe.
+- **Alta** (due righe o più): quella riga in testa, col glifo a 60 dp fissi, e sotto
+  l'elenco dei momenti successivi, uno per riga — glifo piccolo, nome, ora col marcatore
+  del giorno, verdetto: la parola su una card larga, il segno su una stretta, così una card
+  parla un registro solo dall'alto in basso. Il budget (`skyRows`) è aritmetica sulle
+  altezze vere: sul 3×2 e sul 4×2 del device tre righe; la lista non si imbottisce mai.
+
+### Decisioni
+
+- **La forma non dipende dal contenuto.** Larga o stretta lo decide la geometria
+  (`skyIsWide`: la colonna delle parole tiene almeno 120 dp una volta pagata quella del
+  verdetto), mai quale momento c'è: una card che cambiasse forma con la previsione non si
+  potrebbe mirare — la regola già scritta per «Ora».
+- **L'ora a 30 sp, non 34 come la temperatura.** Un'ora è più lunga di una temperatura:
+  «12:05 AM» sono otto glifi contro i quattro di «−12°», e a 34 misura 149 dp contro i 136
+  che il 4×1 lascia alle parole; a 30 ne misura 132. Cinque glifi a 30 portano circa
+  l'inchiostro di tre a 34, quindi i due numeri affiancati hanno lo stesso peso ottico.
+- **Il glifo di Cielo ha un tetto a 72 dp** dove quello di «Ora» arriva a 104: sul launcher
+  che concede 101 dp a riga un'alba da 89 dp schiaccerebbe l'orologio e, sottraendo alla
+  colonna delle parole, riporterebbe il 4×1 alla forma stretta. Sul device (82 dp) i due
+  glifi sono uguali, 70.
+- **Marcatore del giorno prima del nome** («Domani · Sorge la luna»), così quando la
+  colonna finisce è la coda del nome a cadere con l'ellissi, mai la parola che dice quale
+  giorno. Sui nomi lunghi con marcatore a tre e quattro celle l'ellissi c'è, misurata:
+  «Domani · Sorge la luna» sono 150 dp a 15 sp contro 136 di colonna. Limite dichiarato.
+- **Una finestra in corso mostra l'ora in cui finisce**, con «Adesso · Ora d'oro» sotto:
+  «adesso, fino alle 20:20» è la prossima cosa che succede, e stampare come eroe un'ora
+  già passata sarebbe strano. Le finestre non in corso stampano il solo inizio: «19:55 –
+  20:20» a 30 sp sono 200 dp, e la chiusura è a un tocco.
+- **Chip con la sola parola, segno col solo glifo.** Il chip dell'app scrive glifo e
+  parola insieme; qui la parola da sola perché «✓ Presto per dirlo» sforerebbe la colonna
+  da 96 di un dp. Il numero sta sotto il chip sull'eroe e a un tocco nelle righe.
+- **Lo stato vuoto di Cielo** («Nessun momento del cielo in arrivo») era rimasto in alto a
+  sinistra quando il 7 set gli altri due erano stati centrati: ora è centrato come loro.
+- **Piazzamento predefinito a 4×1** anche per Cielo (da 3), la forma con parola e numero;
+  il minimo resta tre celle (`minWidth` 180 dp). L'anteprima del picker è la forma larga.
+- `SkyWidgetRowsTest` esce con il budget che fissava; `SkyWidgetLayoutTest` prende il suo
+  posto con forme, glifi, colonne e righe.
+
+### Rimasto aperto
+
+- **Su device**: le tre forme di Cielo a 3×1, 4×1, 3×2 e 4×2, con un momento di domani e
+  uno in corso; la resa del segno `✓ ~ ✗ ?` col font di sistema Samsung (nell'app gli
+  stessi caratteri si vedono già, ma il widget passa da RemoteViews).
+- **Righe compatte a 180 dp di larghezza** (una griglia da 90 dp per cella concede il 2×2):
+  «Domani · 06:47» più il segno lasciano al nome pochi dp e l'ellissi lo mangia. Sotto i
+  180 il widget non è piazzabile; sopra i 250 (tre celle del device) il nome ha ≥ 78 dp.
+- **Le lettere lunghe dei crepuscoli** («Crepuscolo astronomico, mattina», 236 dp a 16 sp)
+  si troncano su ogni forma a una riga: nomi da 31 caratteri non stanno in nessuna colonna
+  da 136, e accorciarli è una decisione di copy della schermata, non del widget.
+
+### Verifica
+
+Suite `:app` verde (167 test: 7 in `SkyWidgetLayoutTest` al posto dei 5 di
+`SkyWidgetRowsTest`, gli 8 di `NowWidgetLayoutTest` aggiornati ai corpi nuovi).
+`:app:lintDebug` a zero errori, 67 avvisi come prima (l'anteprima nuova di Cielo non ne
+aggiunge). Le larghezze citate sopra sono misurate con Roboto Regular dal layoutlib di
+Android Studio (Medium stimato a +3%); il font di sistema del device è un altro, e i
+margini tenuti sono di quell'ordine. APK di debug costruito; **la verifica su device è del
+committente**.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae

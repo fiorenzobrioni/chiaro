@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The Sky widget (VISION §5.9): the next moment and its verdict — the widget
-     nobody else ships.
+<!-- The Sky widget (VISION §5.9): the next moment, when, and its verdict — the widget
+     nobody else ships — and the moments after it on a taller card.
+
+     Four cells by one as the default placement (8 set 2026, from three), as the Now
+     widget: that is the one-row form that carries the verdict's word and its number
+     against the far edge. Three cells (minWidth) is the floor, and there the verdict
+     is the mark before the name.
+
      previewLayout: see `layout/widget_sky_preview.xml`, and widget_now_info for why. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_sky_desc"
@@ -8,7 +14,7 @@
     android:previewLayout="@layout/widget_sky_preview"
     android:minWidth="180dp"
     android:minHeight="40dp"
-    android:targetCellWidth="3"
+    android:targetCellWidth="4"
     android:targetCellHeight="1"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"

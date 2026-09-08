@@ -63,11 +63,11 @@
             android:singleLine="true"
             android:text="@string/widget_preview_place"
             android:textColor="@color/widget_preview_ink_dim"
-            android:textSize="15sp" />
+            android:textSize="16sp" />
     </LinearLayout>
 
     <!-- The sentence: the Today preview's sample, in the dress the widget gives it —
-         14sp medium, strong ink, right-aligned, two lines. -->
+         16sp medium, strong ink, right-aligned, two lines. -->
     <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -81,5 +81,5 @@
         android:text="@string/widget_preview_headline"
         android:textAlignment="viewEnd"
         android:textColor="@color/widget_preview_ink"
-        android:textSize="14sp" />
+        android:textSize="16sp" />
 </LinearLayout>

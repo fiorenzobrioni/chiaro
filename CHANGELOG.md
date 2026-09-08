@@ -325,6 +325,29 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   height so the place name is not cut to «Dergan…». The picker shows the four-cell form,
   which is also where a new widget now lands.
 
+- **The Now widget's words grow a step, and so does the position pin.** On the device,
+  beside the launcher's own widget, the sentence at 14 sp and the place at 15 read small
+  against its 17: both are 16 now, told apart by weight and ink rather than size. The
+  brief register gains its last two forms — «per il resto del giorno» for the rain and
+  the snow that do not stop today — because at 16 sp «della giornata» was the one sentence
+  that no longer fit two lines on a square card. The pin before a position's name grows
+  from nine tenths of the text to its full size, which puts its ink where the
+  neighbour's sits: a cap height and a descender, not a cap height alone.
+
+- **The Sky widget is laid out again, on the Now widget's grammar.** The moment's time
+  is the hero number now, its name under it with the day marker before it, the glyph
+  filling the height beside them; on a four-cell card the verdict stands against the far
+  edge as its word in the measured container with the number that decided it underneath,
+  and on a three-cell card, where a word would push «Domani · Sorge la luna» off the card,
+  it is the series' own mark — `✓ ~ ✗ ?` in the verdict's colors — before the name. A
+  two-row card keeps that as its head and lists the moments after it, one per row with
+  its small glyph, name, time and verdict, the word on a wide card and the mark on a
+  narrow one, as many rows as the height holds and never more than you subscribed to.
+  For a window that is open right now the number shown is when it ends, because that is
+  the next thing that happens. The picker shows the four-cell form, where a new widget
+  now lands; the message a widget shows when every subscription is off is centred like
+  the other empty states.
+
 - **About is complete.** The section now names the developer, the copyright and the
   licence, and credits everything the app is built out of: Open-Meteo's data under
   CC BY 4.0, the Meteocons weather icons, the Inter typeface and Google's interface

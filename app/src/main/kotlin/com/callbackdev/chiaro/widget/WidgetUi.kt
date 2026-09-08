@@ -521,11 +521,19 @@ fun PlaceLine(
 }
 
 /** The app screen puts a 20dp pin before a 22sp title; the ratio travels, the numbers
- * do not — a widget's name is 15 or 16sp. */
+ * do not — a widget's name is 16sp. */
 private fun placePinSize(context: Context, fontSizeSp: Float): Dp =
     (fontSizeSp * PinToText * context.resources.configuration.fontScale).dp
 
-private const val PinToText = 0.9f
+/**
+ * The pin's box is the text's size. **1.0 since 8 set 2026** (committente, on the
+ * screenshot beside the launcher's own widget: «ours is smaller, and it does not look
+ * good»), from 0.9. The drawing fills 20 of its 24 units top to bottom, so at 0.9 a
+ * 16sp name got 12 dp of pin — the cap height and no more — where the reference's pin
+ * stands ~13.5 dp, a cap height and a descender. At 1.0 the ink is 13.3 dp: the same
+ * mark at the same size, on every widget that prints a place.
+ */
+private const val PinToText = 1.0f
 private val PlacePinGap = 4.dp
 
 /** The stale marker (VISION §5.9): with old data the widget says how old. */

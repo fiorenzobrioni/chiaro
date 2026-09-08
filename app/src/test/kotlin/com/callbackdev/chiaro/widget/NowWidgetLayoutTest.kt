@@ -72,9 +72,9 @@ class NowWidgetLayoutTest {
 
     @Test
     fun `the sentence takes the lines the row holds, up to three`() {
-        // (82 − 12) / (14 × 1.32) = 3.79 → 3 at the default font size…
+        // (82 − 12) / (16 × 1.32) = 3.31 → 3 at the default font size…
         assertEquals(3, nowSentenceLines(fourByOne, fontScale = 1f))
-        // …and 2 at the largest system font: (70) / (14 × 1.32 × 1.3) = 2.9.
+        // …and 2 at the largest system font: (70) / (16 × 1.32 × 1.3) = 2.55.
         assertEquals(2, nowSentenceLines(fourByOne, fontScale = 1.3f))
         assertEquals(2, nowSentenceLines(DpSize(340.dp, 60.dp), fontScale = 1f))
         assertEquals(1, nowSentenceLines(DpSize(340.dp, 40.dp), fontScale = 1f))
@@ -84,13 +84,13 @@ class NowWidgetLayoutTest {
 
     @Test
     fun `the tall glyph is what the text block leaves, plus the shared leading band`() {
-        // Text: 34 × 1.32 + 2 × 14 × 1.32 + 15 × 1.32 = 101.64. Room: 189 − 6 − 14 −
-        // 101.64 + 34 × 0.24 = 75.52 — about 54 dp of drawing on the reference two-by-two.
-        assertEquals(75.52f, nowTallIconSize(twoByTwo, fontScale = 1f, stale = false).value, 0.05f)
-        // A stale marker under the place costs its 11 sp line: 75.52 − 14.52.
-        assertEquals(61f, nowTallIconSize(twoByTwo, fontScale = 1f, stale = true).value, 0.05f)
+        // Text: 34 × 1.32 + 2 × 16 × 1.32 + 16 × 1.32 = 108.24. Room: 189 − 6 − 14 −
+        // 108.24 + 34 × 0.24 = 68.92 — about 50 dp of drawing on the reference two-by-two.
+        assertEquals(68.92f, nowTallIconSize(twoByTwo, fontScale = 1f, stale = false).value, 0.05f)
+        // A stale marker under the place costs its 11 sp line: 68.92 − 14.52.
+        assertEquals(54.4f, nowTallIconSize(twoByTwo, fontScale = 1f, stale = true).value, 0.05f)
         // The shorter two-row grant the launcher has also been seen to make.
-        assertEquals(69.52f, nowTallIconSize(DpSize(159.dp, 183.dp), fontScale = 1f, stale = false).value, 0.05f)
+        assertEquals(62.92f, nowTallIconSize(DpSize(159.dp, 183.dp), fontScale = 1f, stale = false).value, 0.05f)
     }
 
     @Test

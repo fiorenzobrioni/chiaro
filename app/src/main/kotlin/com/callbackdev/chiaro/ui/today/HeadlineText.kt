@@ -57,13 +57,17 @@ object HeadlineText {
                     else R.string.headline_snow_now_stopping,
                     t(headline.stopsAt)
                 )
-                headline.snow -> context.getString(R.string.headline_snow_now)
+                headline.snow -> context.getString(
+                    if (brief) R.string.headline_snow_now_brief else R.string.headline_snow_now
+                )
                 headline.stopsAt != null -> context.getString(
                     if (brief) R.string.headline_wet_now_stopping_brief
                     else R.string.headline_wet_now_stopping,
                     t(headline.stopsAt)
                 )
-                else -> context.getString(R.string.headline_wet_now)
+                else -> context.getString(
+                    if (brief) R.string.headline_wet_now_brief else R.string.headline_wet_now
+                )
             }
         }
     }

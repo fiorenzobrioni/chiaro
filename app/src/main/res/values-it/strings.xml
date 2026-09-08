@@ -22,6 +22,8 @@
     <string name="headline_snow_now">Neve per il resto della giornata</string>
     <string name="headline_wet_now_stopping_brief">Pioggia fino alle %1$s circa</string>
     <string name="headline_snow_now_stopping_brief">Neve fino alle %1$s circa</string>
+    <string name="headline_wet_now_brief">Pioggia per il resto del giorno</string>
+    <string name="headline_snow_now_brief">Neve per il resto del giorno</string>
 
     <!-- Freschezza ed errori: l\'età vera, il motivo vero -->
     <plurals name="freshness_minutes_ago">
@@ -837,7 +839,7 @@
     <string name="widget_today_label">Chiaro · Oggi</string>
     <string name="widget_today_desc">L\'adesso, la frase del giorno e le prossime ore</string>
     <string name="widget_sky_label">Chiaro · Cielo</string>
-    <string name="widget_sky_desc">Il prossimo momento del cielo e il suo verdetto</string>
+    <string name="widget_sky_desc">Il prossimo momento del cielo, quando, e il suo verdetto — e quelli dopo su una card più alta</string>
     <string name="widget_no_place_hint">Tocca per aprire Chiaro e aggiungerne uno</string>
     <string name="widget_no_data">Sto prendendo la prima previsione…</string>
     <string name="widget_sky_empty">Nessun momento del cielo in arrivo. Tocca per sceglierne.</string>

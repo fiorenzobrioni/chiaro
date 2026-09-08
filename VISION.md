@@ -418,11 +418,14 @@ Glance, three sizes, matching the app's dynamic color:
   reader expects a widget to do.)
 - **Today**: now plus the next hours strip plus the headline sentence.
 - **Sky**: the moments in front of the reader and their verdicts, with the day named when it is not
-  today — the widget nobody else ships. The first keeps the glyph and the verdict pill; a taller
-  grant adds compact rows off the same ordered list the Sky screen reads, as many as honestly fit
-  and never more than the reader subscribed to. Every verdict on a widget wears its chip: the
-  app's verdict inks are measured against the app's own surface, and a card whose ground is a
-  scrimmed sky or a wallpaper has to bring its own.
+  today — the widget nobody else ships. Laid out on the Now widget's grammar (8 set 2026): the
+  moment's time is the hero number, its name under it, the glyph beside them; the verdict is the
+  word chip over the number that decided it against the far edge where the card is wide, and the
+  series' own mark (`✓ ~ ✗ ?`) before the name where it is not. A taller grant adds compact rows
+  off the same ordered list the Sky screen reads, as many as honestly fit and never more than the
+  reader subscribed to. Every verdict on a widget wears its container: the app's verdict inks are
+  measured against the app's own surface, and a card whose ground is a scrimmed sky or a wallpaper
+  has to bring its own.
 
 A widget never invents: with stale data it says how old it is, with no place configured it says so
 and opens the app, and no layout ever pads itself out to fill the space it was given.

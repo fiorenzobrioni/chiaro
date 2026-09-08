@@ -62,7 +62,7 @@ internal fun nowRowIconSize(size: DpSize): Dp {
 internal val WordsColumnMin = 84.dp
 
 /** A squeezed grant stays legible: below this the Meteocons art loses its detail. */
-private val RowIconMin = 56.dp
+internal val RowIconMin = 56.dp
 
 /**
  * The width each of the two text columns gets on a [NowLayout.WIDE] card: the row's
@@ -80,20 +80,21 @@ internal fun nowSentenceColumnWidth(size: DpSize): Dp {
 }
 
 /**
- * The narrowest column worth a sentence: 96 dp is about fourteen characters of 14 sp,
- * and three lines of fourteen hold every sentence the widget can say in its brief
- * register («Temporale verso le 15:00» wraps to three, and fits). On the reference
- * device a four-cell card (~340 dp) gives each column ~116 dp and a three-cell card
- * (~250 dp) ~71, so the threshold sits well clear of both.
+ * The narrowest column worth a sentence: 96 dp is about twelve characters of 16 sp,
+ * and three lines of twelve hold every sentence the widget can say in its brief
+ * register (measured with the system font: «Pioggia gelata verso le 15:00» wraps to
+ * three at 96 dp and fits). On the reference device a four-cell card (~340 dp) gives
+ * each column ~116 dp — where every brief sentence takes two lines — and a three-cell
+ * card (~250 dp) ~71, so the threshold sits well clear of both.
  */
 internal val SentenceColumnMin = 96.dp
 
 /**
- * How many lines the sentence may take on a one-row card: as many 14 sp lines as the
- * height really holds, capped at three. Two would cut «Pioggia per il resto della
- * giornata» in the narrowest column that qualifies, and the row has the height — three
- * lines are ~56 dp against the ~70 the card leaves — so the cap is the sentence's, not
- * the card's. A reader's larger font scale lowers the count rather than overflowing.
+ * How many lines the sentence may take on a one-row card: as many 16 sp lines as the
+ * height really holds, capped at three. The third line is the safety net for the
+ * narrowest column that qualifies, and the row has the height for it — three lines are
+ * ~63 dp against the ~70 the card leaves — so the cap is the sentence's, not the card's.
+ * A reader's larger font scale lowers the count rather than overflowing.
  */
 internal fun nowSentenceLines(size: DpSize, fontScale: Float): Int {
     val room = size.height - WidgetCardPaddingSnug * 2
@@ -103,7 +104,9 @@ internal fun nowSentenceLines(size: DpSize, fontScale: Float): Int {
 internal const val RowSentenceMaxLines = 3
 
 /** On a tall card the sentence takes two lines, as the reference does: the third line
- * would cost the glyph 19 dp, and at 20 characters a line two hold the brief register. */
+ * would cost the glyph 21 dp, and at the ~131 dp a two-cell card leaves the words every
+ * brief sentence fits two lines of 16 sp (measured — which is why «per il resto della
+ * giornata» has a brief form, «del giorno»: the full one needed three). */
 internal const val TallSentenceMaxLines = 2
 
 /**
@@ -117,8 +120,9 @@ internal const val TallSentenceMaxLines = 2
  * 12 dp of its own box empty at the bottom (measured over the family, see
  * [WidgetCardPaddingLeading]), so the glyph's box may sink into that leading without
  * any ink meeting. On the reference device's two-by-two (~159 × 189 dp) this puts the
- * glyph at ~75 dp — about 54 dp of drawing against the neighbour's 64 — where a plain
- * stack would have left 67.
+ * glyph at ~69 dp — about 50 dp of drawing against the neighbour's 64 — where a plain
+ * stack would have left 61. (It was ~75 at 14 and 15 sp; the two extra points of text
+ * the committente asked for on 8 set are paid here, and knowingly.)
  */
 internal fun nowTallIconSize(size: DpSize, fontScale: Float, stale: Boolean): Dp {
     val text = textLineHeight(TemperatureSp, fontScale) +
@@ -134,12 +138,17 @@ internal fun nowTallIconSize(size: DpSize, fontScale: Float, stale: Boolean): Dp
 internal const val TemperatureSp = 34f
 
 /**
- * The sentence's size (14 sp Medium, the Today widget's own): the second thing read
- * after the number, so it takes the strong ink; not the third size on the card because
- * a multi-line block beside a 34 sp numeral wants the body size, not a display one.
+ * The sentence and the place share one size, 16 sp, and differ by weight and ink: the
+ * sentence Medium in the strong ink (the second thing read after the number), the place
+ * Regular in the quiet one. **16 since 8 set 2026** (committente, with the screenshot
+ * beside the launcher's own widget, whose description and place both sit at ~17 sp
+ * under a ~30 sp number): they were 14 and 15, and read small. Sixteen under a 34 sp
+ * hero keeps the reference's ratio, and it is the size at which every brief sentence
+ * still takes two lines in a four-cell column and «Cavenago di Brianza» (145 dp,
+ * measured) still fits the 154 dp a three-cell card leaves the words.
  */
-internal const val SentenceSp = 14f
-internal const val PlaceSp = 15f
+internal const val SentenceSp = 16f
+internal const val PlaceSp = 16f
 internal const val StaleSp = 11f
 
 /**
