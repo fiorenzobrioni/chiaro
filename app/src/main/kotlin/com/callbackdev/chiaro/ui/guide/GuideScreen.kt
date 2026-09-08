@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.guide
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -474,18 +475,20 @@ private fun MetricSample() {
 
 /**
  * The drift strip in miniature, drawn the way the Journal draws it: a row per day
- * ahead, a column per update, the rain ramp for color. The days are the real next
- * three — a strip labelled with invented weekdays would be the guide teaching a
- * calendar nobody has — and only the percentages are the example.
+ * ahead, a column per six-hour slot, the rain ramp for color, and an empty slot drawn
+ * as absence — the guide has to teach the gap too, or the first night with the phone
+ * off looks like a bug. The days are the real next three — a strip labelled with
+ * invented weekdays would be the guide teaching a calendar nobody has — and only the
+ * percentages are the example.
  */
 @Composable
 private fun DriftSample() {
     val locale = Locale.getDefault()
     val today = LocalDate.now()
     val rows = listOf(
-        listOf(70, 60, 55, 40, 30, 20), // a day that kept improving
-        listOf(20, 25, 20, 20, 15, 20), // a day that held
-        listOf(10, 20, 35, 50, 60, 70)  // a day that turned
+        listOf(70, 60, null, 40, 30, 20), // a day that kept improving, across a gap
+        listOf(20, 25, null, 20, 15, 20), // a day that held
+        listOf(10, 20, null, 50, 60, 70)  // a day that turned
     )
     Column(
         verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -506,7 +509,16 @@ private fun DriftSample() {
                             .weight(1f)
                             .height(16.dp)
                             .padding(1.dp)
-                            .background(ChiaroTheme.colors.rainAt(percent))
+                            .let { base ->
+                                if (percent != null) {
+                                    base.background(ChiaroTheme.colors.rainAt(percent))
+                                } else {
+                                    base.border(
+                                        width = 0.5.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant
+                                    )
+                                }
+                            }
                     )
                 }
             }

@@ -220,7 +220,47 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   hold text now grow with the reader's type, and past 150% the week row becomes two lines
   (which day and what kind of day, then how warm) and the details grid becomes one column.
 
+- **The Journal closes the loop: what the forecast said, against what happened.** When a
+  day is over, one more line opens its section — "Rain was given at 70%: it rained", with
+  the high that was forecast beside the warmest reading actually seen. Everything it
+  needs was already on disk: the last prediction written before the day began, checked
+  against the updates taken during it. Two rules, and they are deliberately not
+  symmetric. "It rained" needs one wet observation, because a positive is proof and no
+  amount of missing hours can un-see it. "It stayed dry" needs sixteen of the day's
+  twenty-four hours genuinely covered — each update accounts for the hour behind it,
+  overlapping windows are merged so a refresh spree buys nothing, and under the floor the
+  day gets no line at all rather than a verdict resting on a phone that was switched off.
+  The hours behind the claim are printed with it. Days from before this update carry no
+  observation and are not judged: the screen fills in from here, it does not invent a
+  past.
+
 ### Changed
+
+- **The drift strip is drawn on time, not on updates.** It used to be one column per
+  update, so at the default hour of polling it showed fourteen hours under a heading that
+  says "how the week has been moving", printed "14 updates, Sat 5 to Sat 5" underneath,
+  and spaced a night with the phone off exactly like an hour of it. A column is now a
+  six-hour slot, fourteen of them are three and a half days, and a slot no update landed
+  in is drawn as the gap it was. Empty slots at the start are trimmed, so the strip begins
+  where the evidence begins; the caption states the slot width and both ends with their
+  hour. The rows are the days still ahead: a horizon gone stale offline loses them rather
+  than labelling days already gone "the week ahead".
+
+- **The Journal follows its place instead of polling it.** It rebuilt forty commits of
+  JSON and a diff engine once a minute, on unchanged data, and did it under battery saver
+  too. Nothing on that screen ages with the clock, so the timer bought nothing: it now
+  watches the table, which reports a new update and stays quiet otherwise. The history it
+  reads is the whole of the place's own, which is also now what is kept — a hundred
+  commits **per place** rather than a hundred shared between them, so a place's diary no
+  longer gets shorter each time you follow another one.
+
+- **A day with no rain probability says nothing instead of saying zero.** The provider's
+  models do not all forecast one, and the day was being filled with a 0% — which is not
+  "we were not told", it is a forecast of no rain. The week row now leaves its column
+  empty and keeps the grid, the journal prints a dash where the old value never existed,
+  the drift strip draws absence, the morning summary drops the rain clause rather than
+  announcing 0%, and an alert of yours that reads the day's probability skips instead of
+  firing "under 10%" on nothing.
 
 - **The app icon wears the Vivid palette.** The mark was still painted in Paper, which
   stopped being the palette a fresh install sees. The crescent, the stars and the two
@@ -306,6 +346,28 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   the language it was written in.
 
 ### Fixed
+
+- **The drift legend printed ends the scale does not have.** The temperature swatches
+  were labelled −10 °C and 40 °C while the ramp itself stops at −5 and 35: measured, the
+  two end swatches were exact duplicates of their neighbours and the two numbers under
+  them named temperatures the strip cannot draw. The legend now samples evenly between
+  the real anchors and prints those.
+
+- **A tap on the drift strip does something.** It carried a ripple that led nowhere, and
+  announced an action to screen readers that did not exist; the numbers were only ever
+  behind a long press. Both gestures now open them, the hint says so, and the strip
+  finally describes itself to a screen reader — its cells carry no text, so a reader used
+  to hear seven dates and nothing about what was drawn beside them.
+
+- **"Today" and "Yesterday" follow the place, not the phone.** Reading a journal from
+  another time zone, the day headings were grouped in the place's day but labelled in the
+  device's, so they could disagree by one.
+
+- **The drift sentence no longer contradicts the entries under it.** "The week has held
+  steady" covered both the week that did not move and the week that moved and came back,
+  above a list recording two revisions of the same day. A swing that returns now says so.
+  And in Italian the sentence started with a lowercase weekday, where every other headline
+  on the screen already capitalised it.
 
 - **A forecast revision with nothing to say is no longer a line.** When the only thing
   that moved was a field this screen has no words for, Today printed "Wednesday 9's

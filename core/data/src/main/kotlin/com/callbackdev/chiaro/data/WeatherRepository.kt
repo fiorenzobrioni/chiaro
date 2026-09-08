@@ -165,6 +165,11 @@ class WeatherRepository(
     suspend fun historyFor(city: City, limit: Int = HISTORY_RETENTION) =
         historyDao.historyFor(city.cacheKey, limit)
 
+    /** One city's commits as a Flow (Fase 7b): the Journal follows the table instead
+     * of polling it on a minute tick. */
+    fun historyFlowFor(city: City, limit: Int = HISTORY_RETENTION) =
+        historyDao.observeFor(city.cacheKey, limit)
+
     /** The rule names a commit recorded, decoded where they were encoded (Fase 6):
      * the Alerts screen reads "last fired" off these without owning the JSON. */
     fun firedRules(entry: com.callbackdev.chiaro.data.local.WeatherHistoryEntry): List<String> =
@@ -249,7 +254,8 @@ class WeatherRepository(
                 forecastJson = json.encodeToString(WeatherSnapshots.flattenForecast(report))
             )
         )
-        historyDao.prune(HISTORY_RETENTION)
+        historyDao.pruneCity(city.cacheKey, HISTORY_RETENTION)
+        historyDao.prune(HISTORY_RETENTION * HISTORY_CITIES)
         // A failing observer must never sink a successful fetch — but a cancelled
         // caller still has to unwind, and runCatching would eat the cancellation
         // too, letting a superseded load publish its stale report.
@@ -285,7 +291,14 @@ class WeatherRepository(
 
     companion object {
         const val HISTORY_AUTHOR = "sys@chiaro.app"
+
+        /** Commits kept **per city** — the depth of one place's Journal. */
         const val HISTORY_RETENTION = 100
+
+        /** How many places the table is sized for before its global backstop bites.
+         * Generous on purpose: it exists to bound rows left behind by places that
+         * were removed, never to shorten a place somebody still follows. */
+        private const val HISTORY_CITIES = 8
     }
 }
 

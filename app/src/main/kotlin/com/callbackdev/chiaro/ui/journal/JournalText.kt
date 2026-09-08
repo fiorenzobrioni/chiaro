@@ -16,6 +16,9 @@ import java.util.Locale
  */
 object JournalText {
 
+    /** What a value that was never recorded prints as. Not a zero, not a blank. */
+    const val MISSING = "\u2013"
+
     /** "Sabato 5 è migliorato" / "è peggiorato" / neutral when rain did not decide. */
     @Composable
     fun shiftHeadline(shift: JournalEntry.ForecastShift, locale: Locale): String {
@@ -44,16 +47,23 @@ object JournalText {
             raw?.toDoubleOrNull()?.let { Formats.temperature(it, units.temperature, locale) }
         return shifts.mapNotNull { shift ->
             when (shift.field) {
-                "precip_pct" -> stringResource(
-                    R.string.journal_field_rain,
-                    shift.old?.toDoubleOrNull()?.toInt() ?: 0,
-                    shift.new.toDoubleOrNull()?.toInt() ?: 0
-                )
+                // The dash, never a "0%": the old value is absent when the previous
+                // fetch carried no probability for that day, and a probability is the
+                // one number that must not be invented as zero (§1.1). The
+                // temperatures beside it had always done this; rain had not.
+                "precip_pct" -> shift.new.toDoubleOrNull()?.toInt()?.let { new ->
+                    stringResource(
+                        R.string.journal_field_rain,
+                        shift.old?.toDoubleOrNull()?.toInt()?.let { Formats.percent(it, locale) }
+                            ?: MISSING,
+                        Formats.percent(new, locale)
+                    )
+                }
                 "high_c" -> temp(shift.new)?.let { new ->
-                    stringResource(R.string.journal_field_high, temp(shift.old) ?: "–", new)
+                    stringResource(R.string.journal_field_high, temp(shift.old) ?: MISSING, new)
                 }
                 "low_c" -> temp(shift.new)?.let { new ->
-                    stringResource(R.string.journal_field_low, temp(shift.old) ?: "–", new)
+                    stringResource(R.string.journal_field_low, temp(shift.old) ?: MISSING, new)
                 }
                 else -> null
             }

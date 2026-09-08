@@ -3,10 +3,12 @@ package com.callbackdev.chiaro.ui.journal
 import com.callbackdev.chiaro.data.FetchFailure
 import com.callbackdev.chiaro.data.FetchFailureReason
 import com.callbackdev.chiaro.data.local.ForecastDiff
+import com.callbackdev.chiaro.data.local.ForecastOutcome
 import com.callbackdev.chiaro.data.local.SnapshotDiff
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.sky.SkyRun
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -19,7 +21,10 @@ data class JournalRow(
     val at: Instant,
     val forecast: Map<String, String>,
     val firedRules: List<String>,
-    val skyRuns: List<SkyRun>
+    val skyRuns: List<SkyRun>,
+    /** The commit's `current.*` snapshot — what the app FOUND when it looked, which
+     * is the evidence [JournalEntry.DayOutcome] judges a finished day against. */
+    val snapshot: Map<String, String> = emptyMap()
 )
 
 /** One line of the Journal's prose, newest first inside its day (VISION §5.5). */
@@ -54,6 +59,22 @@ sealed interface JournalEntry {
         override val at: Instant,
         val reason: FetchFailureReason
     ) : JournalEntry
+
+    /**
+     * A finished day, checked against what happened (`ForecastOutcome`). [at] is the
+     * day's last instant, so newest-first ordering inside a day puts the verdict at
+     * the top of the day it closes. Only days the app watched enough to speak about
+     * become entries — see the engine for the two asymmetric rules.
+     */
+    data class DayOutcome(
+        override val at: Instant,
+        val date: LocalDate,
+        val forecastPrecipPct: Int,
+        val rained: Boolean,
+        val forecastHighC: Double?,
+        val observedHighC: Double?,
+        val coveredHours: Int
+    ) : JournalEntry
 }
 
 /** One changed field: old value (null when the day just entered the horizon) → new. */
@@ -62,22 +83,37 @@ data class FieldShift(val field: String, val old: String?, val new: String)
 data class JournalDay(val date: LocalDate, val entries: List<JournalEntry>)
 
 /**
- * The drift matrix (VISION §5.5): one row per target day, one column per fetch,
- * values on the metric's own scale. Null cells are fetches whose horizon did not
+ * The drift matrix (VISION §5.5): one row per target day, one column per **slot of
+ * time**, values on the metric's own scale. Null cells are slots whose fetch did not
  * cover that day — drawn as absence, never as a zero.
  */
 data class DriftModel(
     val dates: List<LocalDate>,
-    val fetches: List<Instant>,
+    /**
+     * One entry per column, oldest first; null where no fetch landed in that slot.
+     * The axis is TIME, so a night with the phone off is a gap in the strip and not
+     * a column that quietly disappears.
+     */
+    val columns: List<Instant?>,
     val rain: List<List<Int?>>,
-    val highC: List<List<Double?>>
-)
+    val highC: List<List<Double?>>,
+    /** Hours one column stands for — the caption states it. */
+    val columnHours: Long
+) {
+    /**
+     * Both ends of the strip are real fetches: the last slot is the one the newest
+     * fetch defines, and leading empty slots are trimmed off before the model is
+     * built. Only the interior can be a gap.
+     */
+    val newest: Instant get() = columns.last()!!
+    val oldest: Instant get() = columns.first()!!
+}
 
 data class JournalContent(
     val placeName: String,
     val zone: ZoneId,
     val days: List<JournalDay>,
-    /** Null until at least two fetches carry a forecast: one column is not a drift. */
+    /** Null until at least two slots carry a forecast: one column is not a drift. */
     val drift: DriftModel?
 )
 
@@ -89,17 +125,35 @@ data class JournalContent(
 object JournalStateBuilder {
 
     /** Columns the strip can hold before it stops being readable at 8dp cells. */
-    private const val MAX_FETCH_COLUMNS = 14
+    private const val MAX_COLUMNS = 14
+
+    /**
+     * Hours one column stands for. 14 × 6 h is three and a half days, which is the
+     * "over the last several days" the strip is supposed to answer for (VISION §5.5).
+     *
+     * The axis used to be one column per FETCH, which at the default hour of cadence
+     * drew fourteen hours under a heading that says "the week", printed "from Sat 5 to
+     * Sat 5" underneath, and spaced a phone that slept all night exactly like one that
+     * fetched every hour. Time is the axis; a slot with no fetch in it is a gap.
+     */
+    private const val COLUMN_HOURS = 6L
+
+    /** The place's own zone, falling back to the device's: the Journal groups, labels
+     * and judges days in it, and the ViewModel wakes on its midnight. One resolution,
+     * so those four can never disagree. */
+    fun zoneOf(city: City): ZoneId =
+        city.timezone?.let { runCatching { ZoneId.of(it) }.getOrNull() } ?: ZoneId.systemDefault()
 
     fun build(
         city: City,
         rows: List<JournalRow>,
-        failures: List<FetchFailure>
+        failures: List<FetchFailure>,
+        now: Instant
     ): JournalContent {
-        val zone = city.timezone?.let { runCatching { ZoneId.of(it) }.getOrNull() }
-            ?: ZoneId.systemDefault()
+        val zone = zoneOf(city)
         val entries = buildList {
             addAll(forecastShifts(rows))
+            addAll(outcomes(rows, zone, now))
             rows.forEach { row ->
                 row.firedRules.forEach { add(JournalEntry.RuleFired(row.at, it)) }
                 row.skyRuns.forEach { run ->
@@ -127,7 +181,7 @@ object JournalStateBuilder {
             placeName = city.name,
             zone = zone,
             days = days,
-            drift = drift(rows)
+            drift = drift(rows, zone, now)
         )
     }
 
@@ -177,6 +231,32 @@ object JournalStateBuilder {
         }
     }
 
+    /** The other half of the loop: what the app said, checked against what it then
+     * saw. The engine decides what may be claimed; this only dates the entry. */
+    private fun outcomes(
+        rows: List<JournalRow>,
+        zone: ZoneId,
+        now: Instant
+    ): List<JournalEntry.DayOutcome> = ForecastOutcome
+        .compute(
+            fetches = rows.map {
+                ForecastOutcome.Fetch(it.at.epochSecond, it.forecast, it.snapshot)
+            },
+            zone = zone,
+            today = now.atZone(zone).toLocalDate()
+        )
+        .map { outcome ->
+            JournalEntry.DayOutcome(
+                at = outcome.date.plusDays(1).atStartOfDay(zone).toInstant().minusSeconds(1),
+                date = outcome.date,
+                forecastPrecipPct = outcome.forecastPrecipPct,
+                rained = outcome.rained,
+                forecastHighC = outcome.forecastHighC,
+                observedHighC = outcome.observedHighC,
+                coveredHours = outcome.coveredHours
+            )
+        }
+
     /** REMOVED+ADDED pairs become old → new; context lines are not a change. */
     private fun fieldShifts(lines: List<SnapshotDiff.Line>): List<FieldShift> {
         val removed = lines.filter { it.type == SnapshotDiff.Type.REMOVED }
@@ -200,32 +280,45 @@ object JournalStateBuilder {
     }
 
     /**
-     * Rows are the NEWEST fetch's week — the days still ahead are the ones a person
-     * is planning; columns are the fetches that said anything about them.
+     * Rows are the days still AHEAD — the ones a person is planning, which is why a
+     * horizon gone stale offline loses its rows instead of showing a "week ahead"
+     * that already happened. Columns are slots of [COLUMN_HOURS], newest last, each
+     * holding the last fetch that landed in it.
      */
-    private fun drift(rows: List<JournalRow>): DriftModel? {
+    private fun drift(rows: List<JournalRow>, zone: ZoneId, now: Instant): DriftModel? {
         val fetches = rows
             .filter { it.forecast.isNotEmpty() }
             .sortedBy { it.at }
-            .takeLast(MAX_FETCH_COLUMNS)
-        if (fetches.size < 2) return null
+        val newest = fetches.lastOrNull()?.at ?: return null
+        val slots = arrayOfNulls<JournalRow>(MAX_COLUMNS)
+        fetches.forEach { row ->
+            val slotsBack = Duration.between(row.at, newest).seconds / (COLUMN_HOURS * 3600)
+            if (slotsBack in 0 until MAX_COLUMNS.toLong()) {
+                val index = (MAX_COLUMNS - 1 - slotsBack).toInt()
+                val held = slots[index]
+                if (held == null || row.at.isAfter(held.at)) slots[index] = row
+            }
+        }
+        // Leading empty slots are not a gap in the record, they are a record that does
+        // not reach that far back yet: the strip starts where the evidence does.
+        val columns = slots.dropWhile { it == null }
+        if (columns.count { it != null } < 2) return null
+        val today = now.atZone(zone).toLocalDate()
         val dates = fetches.last().forecast.keys
             .map { it.substringBefore('.') }
             .distinct()
             .sorted()
-            .map(LocalDate::parse)
+            .mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }
+            .filter { it.isAfter(today) }
         if (dates.isEmpty()) return null
-        fun cell(fetch: JournalRow, date: LocalDate, field: String): String? =
-            fetch.forecast["$date.$field"]
+        fun cell(date: LocalDate, field: String): List<String?> =
+            columns.map { it?.forecast?.get("$date.$field") }
         return DriftModel(
             dates = dates,
-            fetches = fetches.map { it.at },
-            rain = dates.map { date ->
-                fetches.map { cell(it, date, "precip_pct")?.toDoubleOrNull()?.toInt() }
-            },
-            highC = dates.map { date ->
-                fetches.map { cell(it, date, "high_c")?.toDoubleOrNull() }
-            }
+            columns = columns.map { it?.at },
+            rain = dates.map { date -> cell(date, "precip_pct").map { it?.toDoubleOrNull()?.toInt() } },
+            highC = dates.map { date -> cell(date, "high_c").map { it?.toDoubleOrNull() } },
+            columnHours = COLUMN_HOURS
         )
     }
 }

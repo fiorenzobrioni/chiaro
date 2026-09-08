@@ -106,13 +106,18 @@ object AlertNotifier {
             AlertKind.PRECIPITATION -> context.getString(
                 R.string.notif_precip_body, time ?: "", alert.precipPct ?: 0
             )
-            AlertKind.DAILY_SUMMARY -> context.getString(
-                R.string.notif_summary_body,
-                condition ?: context.getString(R.string.cond_unknown),
-                alert.lowC?.let { Formats.temperature(it, unit, locale) } ?: "–",
-                alert.highC?.let { Formats.temperature(it, unit, locale) } ?: "–",
-                alert.precipPct ?: 0
-            )
+            // Two forms: the day may carry no probability at all (§1.1), and the
+            // summary then drops the clause rather than announcing a 0% nobody
+            // forecast. The temperatures keep their dash — an absent reading in a
+            // list of readings is a dash; an absent clause is no clause.
+            AlertKind.DAILY_SUMMARY -> {
+                val low = alert.lowC?.let { Formats.temperature(it, unit, locale) } ?: "–"
+                val high = alert.highC?.let { Formats.temperature(it, unit, locale) } ?: "–"
+                val sky = condition ?: context.getString(R.string.cond_unknown)
+                alert.precipPct?.let {
+                    context.getString(R.string.notif_summary_body, sky, low, high, it)
+                } ?: context.getString(R.string.notif_summary_body_no_rain, sky, low, high)
+            }
         }
     }
 

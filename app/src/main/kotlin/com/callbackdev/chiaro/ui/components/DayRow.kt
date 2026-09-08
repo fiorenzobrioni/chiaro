@@ -52,10 +52,12 @@ import com.callbackdev.chiaro.ui.theme.tabular
 fun DayRow(
     dayLabel: String,
     condition: ConditionGlyph,
-    /** The quantity, which the ink ramp needs. */
-    rainPct: Int,
-    /** The same quantity printed, which the locale owns (§11). */
-    rainLabel: String,
+    /** The quantity, which the ink ramp needs; **null when the model carried no
+     * probability** (§1.1) — the column then prints nothing and keeps its width, the
+     * way the hour cell already does. A dash would read as a value. */
+    rainPct: Int?,
+    /** The same quantity printed, which the locale owns (§11); null with [rainPct]. */
+    rainLabel: String?,
     lowC: Double,
     highC: Double,
     lowLabel: String,
@@ -117,8 +119,8 @@ fun DayRow(
 private fun RowScope.DayAndSky(
     dayLabel: String,
     condition: ConditionGlyph,
-    rainPct: Int,
-    rainLabel: String
+    rainPct: Int?,
+    rainLabel: String?
 ) {
     Text(
         text = dayLabel,
@@ -133,12 +135,15 @@ private fun RowScope.DayAndSky(
         modifier = Modifier.size(WeatherIconSize.Week)
     )
     Text(
-        text = rainLabel,
+        // Empty, not a dash: the column holds its width so the week stays a grid, and
+        // an absent probability leaves no mark at all rather than one that looks like
+        // a reading.
+        text = rainLabel.orEmpty(),
         style = MaterialTheme.typography.labelSmall.tabular(),
         // The ink ramp, zero included: 0% is the quiet end of the same scale and
         // not the secondary text role, which printed the emptiest day of the week
         // in the heaviest ink on it (DESIGN.md §2.3).
-        color = ChiaroTheme.colors.rainInkAt(rainPct),
+        color = ChiaroTheme.colors.rainInkAt(rainPct ?: 0),
         textAlign = TextAlign.End,
         modifier = Modifier.width(36.dp.forText())
     )
@@ -191,16 +196,19 @@ private fun DayRowPreview() {
         )
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             listOf(
-                Triple("Oggi", 2, Triple(12.0, 22.0, 10)),
-                Triple("Gio", 63, Triple(14.0, 19.0, 80)),
-                Triple("Ven", 0, Triple(9.0, 24.0, 0))
+                Triple("Oggi", 2, Triple(12.0, 22.0, 10 as Int?)),
+                Triple("Gio", 63, Triple(14.0, 19.0, 80 as Int?)),
+                Triple("Ven", 0, Triple(9.0, 24.0, 0 as Int?)),
+                // The row whose model carried no probability: the column is empty and
+                // the grid still lines up (§1.1).
+                Triple("Sab", 3, Triple(11.0, 20.0, null))
             ).forEach { (day, wmoCode, data) ->
                 val (low, high, rain) = data
                 DayRow(
                     dayLabel = day,
                     condition = ConditionGlyph(wmoCode),
                     rainPct = rain,
-                    rainLabel = "$rain%",
+                    rainLabel = rain?.let { "$it%" },
                     lowC = low,
                     highC = high,
                     lowLabel = "${low.toInt()}°",
@@ -208,7 +216,8 @@ private fun DayRowPreview() {
                     scaleLowC = 9.0,
                     scaleHighC = 24.0,
                     phases = phases,
-                    description = "$day, da ${low.toInt()} a ${high.toInt()} gradi, pioggia $rain%"
+                    description = "$day, da ${low.toInt()} a ${high.toInt()} gradi" +
+                        (rain?.let { ", pioggia $it%" } ?: "")
                 )
             }
         }
