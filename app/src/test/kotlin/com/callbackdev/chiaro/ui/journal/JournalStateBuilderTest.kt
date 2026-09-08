@@ -30,10 +30,10 @@ class JournalStateBuilderTest {
      * that have not happened yet. */
     private val now = at(3, 12)
 
-    private fun forecast(precip: Int, high: Double) = mapOf(
+    private fun forecast(precip: Int, high: Double, low: Double = 14.0) = mapOf(
         "$saturday.status" to "Rain",
         "$saturday.high_c" to high.toString(),
-        "$saturday.low_c" to "14.0",
+        "$saturday.low_c" to low.toString(),
         "$saturday.precip_pct" to precip.toString()
     )
 
@@ -174,6 +174,46 @@ class JournalStateBuilderTest {
             row(at(3, 7), forecast(30, 27.0)), row(at(2, 7), forecast(70, 24.0))
         )
         assertNull(build(rows, now = at(9, 12)).drift)
+    }
+
+    @Test
+    fun `a day forecast to freeze is marked, and a day above zero is not`() {
+        val mild = build(
+            listOf(row(at(3, 7), forecast(30, 8.0)), row(at(2, 7), forecast(70, 6.0)))
+        ).drift!!
+        assertNull(mild.frostC.single())
+
+        val freezing = build(
+            listOf(
+                row(at(3, 7), forecast(30, 8.0, low = -1.5)),
+                row(at(2, 7), forecast(70, 6.0, low = 2.0))
+            )
+        ).drift!!
+        assertEquals(-1.5, freezing.frostC.single()!!, 0.001)
+    }
+
+    @Test
+    fun `the mark follows the latest word, not the coldest one ever said`() {
+        // Yesterday's fetch said −3°, this morning's says +2°: nobody is standing by
+        // the frost any more, so the day loses its mark.
+        val warmed = build(
+            listOf(
+                row(at(3, 7), forecast(30, 8.0, low = 2.0)),
+                row(at(2, 7), forecast(70, 6.0, low = -3.0))
+            )
+        ).drift!!
+        assertNull(warmed.frostC.single())
+    }
+
+    @Test
+    fun `zero itself is freezing`() {
+        val drift = build(
+            listOf(
+                row(at(3, 7), forecast(30, 8.0, low = 0.0)),
+                row(at(2, 7), forecast(70, 6.0, low = 1.0))
+            )
+        ).drift!!
+        assertEquals(0.0, drift.frostC.single()!!, 0.001)
     }
 
     // -----------------------------------------------------------------------------

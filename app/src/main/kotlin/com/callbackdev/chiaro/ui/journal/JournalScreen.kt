@@ -210,6 +210,7 @@ private fun JournalBody(content: JournalContent, units: UnitSettings) {
                     onOpenTable = { tableOpen = true }
                 )
             }
+            item { FrostLine(content.drift, units, locale) }
             item { DriftSentence(content.drift, metric, units, locale) }
         } else if (content.days.isNotEmpty()) {
             item {
@@ -436,15 +437,35 @@ private fun DriftStrip(
             .combinedClickable(onClick = onOpenTable, onLongClick = onOpenTable)
             .semantics(mergeDescendants = true) { contentDescription = stripDescription }
     ) {
+        // The mark's slot is added to every row or to none, so the cells stay in one
+        // grid; a week with nothing freezing in it draws exactly the strip it drew
+        // before this existed.
+        val marked = drift.frostC.any { it != null }
+        val labelWidth = (if (marked) 68.dp else 52.dp).forText()
         drift.dates.forEachIndexed { row, date ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = date.format(dayFmt),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                     // §10: «Sab 13» in the reader's type, not in 52 fixed dp.
-                    modifier = Modifier.width(52.dp.forText())
-                )
+                    modifier = Modifier.width(labelWidth)
+                ) {
+                    Text(
+                        text = date.format(dayFmt),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (drift.frostC[row] != null) {
+                        Icon(
+                            imageVector = ChiaroIcons.frost,
+                            // The strip speaks once, and the clause under it names
+                            // these days in words: a glyph is never the only carrier.
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                }
                 drift.columns.indices.forEach { col ->
                     val color = when (metric) {
                         DriftMetric.RAIN -> drift.rain[row][col]
@@ -527,6 +548,46 @@ private fun DriftLegend(metric: DriftMetric, units: UnitSettings, locale: Locale
         }
         Text(high, style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/**
+ * The days the strip marked, in words and with their numbers — the legend for the
+ * glyph and the information itself in one line (DESIGN §10: never a mark alone).
+ *
+ * It sits OUTSIDE the strip's merged description on purpose, so a screen reader
+ * reaches it as its own sentence instead of it being folded into a paragraph about
+ * columns. Absent entirely when nothing is freezing: a section with no data is not
+ * drawn (§1.1), and a "no frost" line every week is the filler this screen refuses.
+ */
+@Composable
+private fun FrostLine(drift: DriftModel, units: UnitSettings, locale: Locale) {
+    val dayFmt = remember(locale) { DateTimeFormatter.ofPattern("EEEE d", locale) }
+    val days = drift.dates.indices.mapNotNull { row ->
+        drift.frostC[row]?.let { low ->
+            stringResource(
+                R.string.journal_drift_frost_day,
+                drift.dates[row].format(dayFmt),
+                Formats.temperature(low, units.temperature, locale)
+            )
+        }
+    }
+    if (days.isEmpty()) return
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+    ) {
+        Icon(
+            imageVector = ChiaroIcons.frost,
+            contentDescription = null, // the sentence beside it says it
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = stringResource(R.string.journal_drift_frost, days.joinToString(", ")),
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 

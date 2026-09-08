@@ -97,6 +97,13 @@ data class DriftModel(
     val columns: List<Instant?>,
     val rain: List<List<Int?>>,
     val highC: List<List<Double?>>,
+    /**
+     * One per row: the day's latest predicted minimum, present **only when it is at or
+     * below freezing**. Not a third metric — the minimum has no drift worth a ramp, it
+     * has a threshold — so it is a mark on the day and a clause in words, never a
+     * column of its own.
+     */
+    val frostC: List<Double?>,
     /** Hours one column stands for — the caption states it. */
     val columnHours: Long
 ) {
@@ -137,6 +144,14 @@ object JournalStateBuilder {
      * fetched every hour. Time is the axis; a slot with no fetch in it is a gap.
      */
     private const val COLUMN_HOURS = 6L
+
+    /**
+     * Where the drift strip marks a day (committente, 8 set 2026). Zero and not two:
+     * a marker that fires on a night the reader's own thermometer will read as +2 °C
+     * is a marker they learn to distrust, and ground frost under a mild screen-level
+     * minimum is a nuance an alert can carry and a glyph cannot.
+     */
+    private const val FREEZING_C = 0.0
 
     /** The place's own zone, falling back to the device's: the Journal groups, labels
      * and judges days in it, and the ViewModel wakes on its midnight. One resolution,
@@ -318,6 +333,14 @@ object JournalStateBuilder {
             columns = columns.map { it?.at },
             rain = dates.map { date -> cell(date, "precip_pct").map { it?.toDoubleOrNull()?.toInt() } },
             highC = dates.map { date -> cell(date, "high_c").map { it?.toDoubleOrNull() } },
+            // The LATEST prediction decides, not the coldest one ever made: the mark
+            // says what the app is forecasting now, so a day that has warmed back
+            // above zero loses it instead of keeping a warning nobody still stands by.
+            frostC = dates.map { date ->
+                cell(date, "low_c").mapNotNull { it?.toDoubleOrNull() }
+                    .lastOrNull()
+                    ?.takeIf { it <= FREEZING_C }
+            },
             columnHours = COLUMN_HOURS
         )
     }

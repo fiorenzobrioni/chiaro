@@ -335,7 +335,7 @@
     <string name="guide_journal_entries_title">Cosa c\'è scritto</string>
     <string name="guide_journal_entries_body">Come si è mossa la previsione per i giorni che vengono, quali dei tuoi avvisi sono scattati e quando, quali momenti del cielo sono stati osservati davvero e con che verdetto — e gli aggiornamenti che non sono passati, col loro motivo. Un aggiornamento fallito è una riga, non un silenzio. E quando una giornata è finita, una riga in più la chiude: a quanto era data la pioggia, e se ha piovuto.</string>
     <string name="guide_journal_drift_title">Come si muove la settimana</string>
-    <string name="guide_journal_drift_body">Una riga per ogni giorno davanti, una colonna ogni sei ore, il colore sulla scala della grandezza: la pioggia, oppure le massime. Una casella dove non è arrivato nessun aggiornamento resta vuota, così una notte a telefono spento si vede per il buco che è stato. Risponde alla domanda che si fa davvero chi organizza un fine settimana: sta migliorando o peggiorando? Toccala per vedere i numeri dietro ai colori.</string>
+    <string name="guide_journal_drift_body">Una riga per ogni giorno davanti, una colonna ogni sei ore, il colore sulla scala della grandezza: la pioggia, oppure le massime. Una casella dove non è arrivato nessun aggiornamento resta vuota, così una notte a telefono spento si vede per il buco che è stato. Un giorno la cui minima prevista è a zero o sotto porta un segno accanto al nome, e sotto la striscia quei giorni sono elencati: il gelo è una soglia, non una deriva, quindi prende un segno e una frase invece di una scala tutta sua. Risponde alla domanda che si fa davvero chi organizza un fine settimana: sta migliorando o peggiorando? Toccala per vedere i numeri dietro ai colori.</string>
     <string name="guide_journal_drift_caption">Un esempio: tre giorni, sei fasce, sulla scala della pioggia.</string>
 
     <string name="guide_places_title">I tuoi luoghi</string>
@@ -795,6 +795,8 @@
     <string name="journal_metric_high">Massime</string>
     <string name="journal_drift_waiting">La deriva compare dopo qualche altro aggiornamento: una colonna sola non è una tendenza.</string>
     <string name="journal_drift_quiet">Finora la settimana è rimasta com\'era.</string>
+    <string name="journal_drift_frost">Gelo previsto: %1$s</string>
+    <string name="journal_drift_frost_day">%1$s (%2$s)</string>
     <string name="journal_drift_rain_better">%1$s è migliorato: pioggia %2$s → %3$s.</string>
     <string name="journal_drift_rain_worse">%1$s è peggiorato: pioggia %2$s → %3$s.</string>
     <string name="journal_drift_high_moved">La massima di %1$s è passata da %2$s a %3$s.</string>

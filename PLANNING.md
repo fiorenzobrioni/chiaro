@@ -2778,6 +2778,40 @@ Nove rilievi su una schermata sola, più la funzione che le mancava. In ordine d
       schermata, perché passano tutte da lì. Sette asserzioni nuove in `FormatsTest`,
       su entrambe le lingue, entrambe le unità e due precisioni.
 
+### Il gelo nella striscia (committente, 8 set 2026)
+
+- [x] **Un segno accanto al giorno, non un terzo chip.** La domanda «e d'inverno?» ha
+      una risposta che la striscia poteva dare senza tradire sé stessa: il gelo è una
+      soglia, e una soglia si segna, non si dipinge su una rampa. Un fiocco accanto
+      all'etichetta del giorno quando la minima prevista è **a zero o sotto**, e sotto
+      la striscia una riga che nomina quei giorni col loro numero — «Gelo previsto:
+      sabato 5 (−2°), domenica 6 (0°)». Il dato era già su disco: `low_c` sta nello
+      snapshot dalla Fase 7.
+
+### Decisioni
+
+- **Zero, non due gradi.** La brina da irraggiamento arriva anche con una minima a 2 °C
+  perché il suolo irraggia più dell'aria a due metri, ma un segno che scatta su una
+  notte che il termometro del lettore leggerà +2 è un segno che si impara a ignorare.
+  La sfumatura la porta un avviso, che ha le parole per dirla; un glifo no.
+- **Decide l'ultima parola, non la più fredda mai detta.** Il segno dice cosa prevede
+  l'app adesso: un giorno che è tornato sopra zero lo perde, invece di tenersi un
+  avvertimento che nessuno sostiene più.
+- **Non è mai il glifo da solo** (DESIGN §10): la riga sotto la striscia è insieme la
+  legenda del segno e l'informazione stessa, e sta **fuori** dalla descrizione unificata
+  della striscia, così un lettore di schermo la riceve come frase propria invece che
+  ripiegata in un paragrafo sulle colonne. Quando non gela non c'è: una riga «niente
+  gelo» ogni settimana è il riempitivo che questa schermata rifiuta.
+- **Lo spazio del segno si aggiunge a tutte le righe o a nessuna**, così le caselle
+  restano una griglia sola; una settimana senza gelo disegna esattamente la striscia
+  che disegnava prima.
+- **L'accessore si chiama `frost`, non `snowflake`** (§13.1: nomina la grandezza, non il
+  disegno). Il disegno è il fiocco di Meteocons, ma la domanda lì è il ghiaccio, non la
+  neve.
+- **L'esempio della guida resta senza segno.** Le percentuali del campione sono
+  dichiaratamente inventate, ma un avviso di gelo su un giorno vero e nominato si
+  leggerebbe come una previsione: il testo lo descrive a parole, il disegno non lo finge.
+
 ### Rimasto aperto
 
 - **Il Diario del GPS si azzera se ti sposti.** `cacheKey` è lat/lon arrotondati a due

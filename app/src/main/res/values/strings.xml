@@ -340,7 +340,7 @@
     <string name="guide_journal_entries_title">What is written there</string>
     <string name="guide_journal_entries_body">How the forecast moved for the days ahead, which of your alerts fired and when, which sky moments were actually observed and with what verdict — and the updates that did not make it, with the reason. A failed update is an entry, not a silence. When a day is over, one more line closes it: what the rain was given at, and whether it rained.</string>
     <string name="guide_journal_drift_title">How the week has been moving</string>
-    <string name="guide_journal_drift_body">One row per day ahead, one column per six hours, the colour on the metric\'s own scale: rain, or the highs. A slot no update landed in stays empty, so a night with the phone off looks like the gap it was. It answers the question anyone planning a weekend actually asks — is this getting better or worse? Tap it to see the numbers behind the colours.</string>
+    <string name="guide_journal_drift_body">One row per day ahead, one column per six hours, the colour on the metric\'s own scale: rain, or the highs. A slot no update landed in stays empty, so a night with the phone off looks like the gap it was. A day whose forecast minimum is at or below zero carries a mark beside its name, with those days named underneath: freezing is a threshold, not a drift, so it gets a mark and a sentence rather than a scale of its own. It answers the question anyone planning a weekend actually asks — is this getting better or worse? Tap it to see the numbers behind the colours.</string>
     <string name="guide_journal_drift_caption">An example: three days, six slots, on the rain scale.</string>
 
     <string name="guide_places_title">Your places</string>
@@ -801,6 +801,8 @@
     <string name="journal_metric_high">Highs</string>
     <string name="journal_drift_waiting">The drift appears after a few more updates: one column is not a trend.</string>
     <string name="journal_drift_quiet">The week has held steady so far.</string>
+    <string name="journal_drift_frost">Frost forecast: %1$s</string>
+    <string name="journal_drift_frost_day">%1$s (%2$s)</string>
     <string name="journal_drift_rain_better">%1$s improved: rain %2$s → %3$s.</string>
     <string name="journal_drift_rain_worse">%1$s got worse: rain %2$s → %3$s.</string>
     <string name="journal_drift_high_moved">%1$s\'s high moved from %2$s to %3$s.</string>

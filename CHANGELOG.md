@@ -220,6 +220,15 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   hold text now grow with the reader's type, and past 150% the week row becomes two lines
   (which day and what kind of day, then how warm) and the details grid becomes one column.
 
+- **The drift strip marks the days it expects to freeze.** A day whose forecast
+  minimum is at or below zero carries a small mark beside its name, and one line under
+  the strip names those days with their numbers — "Frost forecast: Saturday 5 (28°),
+  Sunday 6 (32°)". It is not a third metric: freezing is a threshold, not a drift, so it
+  gets a mark and a sentence instead of a colour scale it would have nothing to say on.
+  The latest forecast decides, so a day that warms back above zero loses its mark rather
+  than keeping a warning nobody stands by; the line is absent entirely when nothing is
+  freezing.
+
 - **The Journal closes the loop: what the forecast said, against what happened.** When a
   day is over, one more line opens its section — "Rain was given at 70%: it rained", with
   the high that was forecast beside the warmest reading actually seen. Everything it

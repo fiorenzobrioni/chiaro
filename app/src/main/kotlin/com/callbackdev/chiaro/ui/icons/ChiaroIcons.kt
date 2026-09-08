@@ -458,6 +458,12 @@ object ChiaroIcons {
      * the metric, not the drawing» is for. */
     val dewPoint: ImageVector @Composable get() = styled(R.drawable.mc_thermometer)
     val precipitation: ImageVector @Composable get() = styled(R.drawable.mc_raindrops)
+
+    /** Freezing, not snow: the Journal's drift strip marks the days whose forecast
+     * minimum is at or below zero, and the question there is ice, not precipitation.
+     * The accessor names the metric (§13.1), which is why it is not called
+     * `snowflake`. */
+    val frost: ImageVector @Composable get() = styled(R.drawable.mc_snowflake)
     val airQuality: ImageVector @Composable get() = styled(R.drawable.mc_smoke_particles)
 
     /** Meteocons v2 has no pollen icon (v3 does, but it is a different drawing and
