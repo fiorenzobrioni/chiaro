@@ -101,4 +101,38 @@ class NowWidgetLayoutTest {
         // Three rows: the ceiling stops the icon turning into a poster.
         assertEquals(104f, nowTallIconSize(DpSize(159.dp, 290.dp), fontScale = 1f, stale = false).value, 0.01f)
     }
+
+    @Test
+    fun `with the sentence turned off the tall glyph takes its two lines`() {
+        // 68.92 + 2 × 16 × 1.32 = 111.16, over the ceiling.
+        assertEquals(
+            104f,
+            nowTallIconSize(twoByTwo, fontScale = 1f, stale = false, withSentence = false).value,
+            0.01f
+        )
+        // On the shorter grant too (62.92 + 42.24 = 105.16); with a stale marker it
+        // comes back under the ceiling: 105.16 − 14.52.
+        assertEquals(
+            104f,
+            nowTallIconSize(DpSize(159.dp, 183.dp), fontScale = 1f, stale = false, withSentence = false).value,
+            0.01f
+        )
+        assertEquals(
+            90.64f,
+            nowTallIconSize(DpSize(159.dp, 183.dp), fontScale = 1f, stale = true, withSentence = false).value,
+            0.05f
+        )
+    }
+
+    @Test
+    fun `the other way round, the sentence gets the row less number, glyph, gaps and insets`() {
+        // 340 − 14 (words' edge) − 66 (number) − 12 (gap) − 8 (gap) − 70 (glyph) − 4
+        // (glyph's edge) = 166: room for two lines of 16 sp beside the number.
+        assertEquals(166f, nowMirroredSentenceWidth(fourByOne).value, 0.01f)
+        // Four cells on a five-column grid still qualify (146 ≥ 96)…
+        assertEquals(146f, nowMirroredSentenceWidth(DpSize(320.dp, 82.dp)).value, 0.01f)
+        // …and three cells do not (76): the mirrored card shows the number and the
+        // place alone, exactly as the standard one does at that width.
+        assertEquals(76f, nowMirroredSentenceWidth(threeByOne).value, 0.01f)
+    }
 }

@@ -80,6 +80,25 @@ internal fun nowSentenceColumnWidth(size: DpSize): Dp {
 }
 
 /**
+ * The sentence's room on a one-row card laid the other way round
+ * ([WidgetArrangement.ICON_END]): the glyph in the trailing corner, and on the leading
+ * side the number with the sentence at its shoulder — the tall card's composition
+ * pressed into one row (committente, 8 set 2026, afternoon). The words take the words'
+ * inset on the leading edge and the glyph the glyph's on the trailing one, the same two
+ * numbers as the standard row on swapped edges; the sentence gets what is left after
+ * the number's own column ([TemperatureColumnMin]) and the gap between them. Compared
+ * against [SentenceColumnMin] like the standard row's column: 166 dp on the reference
+ * four-cell card, 146 on a five-column grid's four cells, 76 on three cells — where the
+ * sentence stays home, exactly as it does the other way round.
+ */
+internal fun nowMirroredSentenceWidth(size: DpSize): Dp =
+    size.width - WidgetCardPaddingTrailing - TemperatureColumnMin - SentenceGap -
+        IconTextGap - nowRowIconSize(size) - WidgetCardPaddingLeading
+
+/** What the number needs beside a sentence: «−12°» at 34 sp Medium is ~62 dp. */
+internal val TemperatureColumnMin = 66.dp
+
+/**
  * The narrowest column worth a sentence: 96 dp is about twelve characters of 16 sp,
  * and three lines of twelve hold every sentence the widget can say in its brief
  * register (measured with the system font: «Pioggia gelata verso le 15:00» wraps to
@@ -124,9 +143,14 @@ internal const val TallSentenceMaxLines = 2
  * stack would have left 61. (It was ~75 at 14 and 15 sp; the two extra points of text
  * the committente asked for on 8 set are paid here, and knowingly.)
  */
-internal fun nowTallIconSize(size: DpSize, fontScale: Float, stale: Boolean): Dp {
+internal fun nowTallIconSize(
+    size: DpSize,
+    fontScale: Float,
+    stale: Boolean,
+    withSentence: Boolean = true
+): Dp {
     val text = textLineHeight(TemperatureSp, fontScale) +
-        textLineHeight(SentenceSp, fontScale) * TallSentenceMaxLines +
+        (if (withSentence) textLineHeight(SentenceSp, fontScale) * TallSentenceMaxLines else 0.dp) +
         textLineHeight(PlaceSp, fontScale) +
         (if (stale) textLineHeight(StaleSp, fontScale) else 0.dp)
     val room = size.height - WidgetCardPaddingSnug - WidgetCardPadding - text +

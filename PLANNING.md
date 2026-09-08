@@ -3079,6 +3079,107 @@ committente**.
 
 ---
 
+## Interruttore per la frase, la disposizione al contrario, Oggi rifatto, i nomi (committente, 8 set 2026, pomeriggio)
+
+«Entrambi i widget sono ok.» Quattro richieste: la frase visibile o no dalle impostazioni
+di Ora; una disposizione alternativa per Ora su una riga («l'icona a destra, e nella prima
+riga il testo che lì è nella seconda» — il 4×2 schiacciato in 4×1); una revisione completa
+di Oggi, con lo stesso interruttore se ci sta; nomi nuovi nel picker, senza «Chiaro ·».
+
+### La frase, un interruttore (Ora e Oggi)
+
+`WidgetLook.showSentence`, **acceso di default**: lo slot esiste per quello, e chi vuole
+il numero nudo lo spegne per singolo widget. Decide solo il **contenuto**: se c'è
+**spazio** lo decide ancora la concessione (`NowLayout`, `todayIsWide`), quindi
+l'interruttore può togliere la frase, mai forzarla su una card troppo stretta. È il
+contrario, un giorno dopo, dell'interruttore «stato accanto alla temperatura» uscito la
+mattina: quello era spento di default e decideva il layout. Con la frase spenta la forma
+alta di Ora dà le sue due righe al glifo (`nowTallIconSize(withSentence = false)`: 104 dp
+sul 2×2, il soffitto).
+
+### La disposizione al contrario (`WidgetArrangement`, solo Ora)
+
+Due valori, per widget: `ICON_START` (la grammatica del launcher, default) e `ICON_END`:
+il glifo nell'angolo di coda, e sul lato d'attacco il numero con la frase **alla sua
+spalla** — due righe al massimo, centrate sull'altezza del numero, come la descrizione del
+vicino sta accanto al suo — e il luogo sotto entrambi. È la composizione della card alta
+premuta in una riga, per chi vuole le due sulla stessa home senza che litighino. I due
+inset si scambiano di bordo e restano gli stessi numeri: 14 alle parole, 4 al glifo. La
+frase compare quando il suo spazio (`nowMirroredSentenceWidth`: la riga meno bordi, glifo,
+gap e la colonna del numero, 66 dp) supera lo stesso minimo della colonna standard, 96:
+166 dp sul 4×1 del device, 146 su una griglia a cinque colonne, 76 su tre celle — dove
+resta a casa, esattamente come dall'altro verso. La card alta ignora la scelta: ha già il
+glifo a destra.
+
+### Oggi, rifatto sulla grammatica di Ora (`TodayWidgetLayout.kt`, puro, con tabella)
+
+«Oggi = adesso più le prossime ore» è la definizione di VISION §5.9, e ora la card lo dice
+con una grammatica sola: **la testa è la riga larga di Ora** — glifo che riempie la fascia,
+temperatura (34 sp, era 36) sopra il luogo, frase contro il bordo opposto, minima e massima
+**sotto la frase** quando richieste — e sotto la striscia delle ore.
+
+- **La frase lascia la sua riga** sotto l'eroe e va al bordo opposto, dove Ora la stampa e
+  dove chi ha le due card sulla stessa home la cerca già. La riga restituita va al glifo:
+  sul 4×2 del device (~340 × 189) passa da **~45 a ~76 dp**, la misura che Ora disegna
+  accanto. Registro breve anche qui: la colonna è la stessa di Ora (~113 dp).
+- **Il budget** (`todayHeroIconSize`): altezza meno 6 sopra, 14 sotto, la striscia
+  (84,84 dp con la riga della pioggia, 70,32 senza) e 8 di stacco; le parole dell'eroe
+  (`todayHeroTextHeight`: la colonna più alta fra sinistra — temperatura, luogo, età,
+  banda di `textInkBalance` — e destra — frase su due righe, escursione) sono 74 dp e
+  stanno nella fascia.
+- **La riga della pioggia deve anche starci** (`todayShowRain`), oltre ad avere qualcosa
+  da dire: sul 4×2 ci sta (86,8 dp di spazio contro 84,8), ma un marcatore di età prende la
+  terza riga alle parole e lo spazio scende a 72: allora la riga resta a casa invece di
+  essere tagliata al bordo — la sezione che non ci sta non si disegna.
+- **Stretta** (250 dp, il minimo del provider): niente colonna a destra, quindi né frase né
+  escursione — la coppia aveva lasciato il posto sotto il numero alla terza passata proprio
+  perché lì affollava. La nota dell'interruttore dice ora «al bordo opposto, sotto la
+  frase».
+- Inset come Ora: 4 al glifo (attacco e alto), 14 alle parole (coda e basso); la striscia
+  paga da sé i 10 dp che la portano all'inset delle parole. Anteprima del picker rifatta
+  sulla stessa struttura (il vuoto fra riga e striscia è un `FrameLayout`: `Space` non è
+  fra le view che RemoteViews gonfia).
+
+### I nomi
+
+| | Prima | Ora |
+|---|---|---|
+| Ora | «Chiaro · Ora» / «Chiaro · Now» | **«Colpo d'occhio»** / **«At a glance»** — il glance nel senso vecchio della parola, che è la definizione del widget in VISION |
+| Oggi | «Chiaro · Oggi» / «Chiaro · Today» | **«Le prossime ore»** / **«The hours ahead»** — quello che la striscia aggiunge all'adesso |
+| Cielo | «Chiaro · Cielo» / «Chiaro · Sky» | **«Momenti del cielo»** / **«Sky moments»** — la sezione della schermata Cielo, che è la lista che il widget legge |
+
+Il nome dell'app sta già sopra la lista nel picker, quindi ripeterlo davanti a ognuno non
+diceva niente. La guida in app usa gli stessi nomi.
+
+### Decisioni
+
+- **Un solo registro per la frase su tutti i widget**: breve. Oggi stampava la frase intera
+  su una riga tutta sua; nella colonna di 113 dp la frase intera («Ombrello verso le
+  17:00, schiarisce dopo le 19:00», 330 dp a 16 sp) chiederebbe tre righe. La frase intera è
+  nella schermata.
+- **`fontScale`, `sentence` e `sentenceStyle`** escono da `NowWidget.kt` come `internal`
+  e li usano anche Oggi (tutti e tre) e Cielo (`fontScale`): una frase, un vestito, una
+  scala.
+- **`DayRange` a 16 sp** (era 15), il corpo del luogo: stesso ordine di fatto, stesso corpo.
+
+### Rimasto aperto
+
+- **Su device**: Ora al contrario a 3×1 e 4×1 (frase alla spalla del numero su due righe,
+  luogo sotto); Oggi a 3×2 e 4×2 con e senza pioggia, con l'escursione accesa; la frase
+  spenta su entrambi; i tre nomi nel picker.
+- **Oggi a 250 dp** perde frase ed escursione insieme: se il committente le vuole anche lì,
+  la via è la frase sotto l'eroe a tutta larghezza come prima, pagata dal glifo.
+
+### Verifica
+
+Suite `:app` verde (175 test: 6 nuovi in `TodayWidgetLayoutTest`, 2 in
+`NowWidgetLayoutTest` per il glifo senza frase e la disposizione al contrario).
+`:app:lintDebug` a zero errori e 60 avvisi, sette meno di prima: l'anteprima di Oggi
+rifatta chiude i suoi `RtlSymmetry`. APK di debug costruito; **la verifica su device è
+del committente**.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae

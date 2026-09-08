@@ -42,6 +42,21 @@ enum class WidgetIcons {
     }
 }
 
+/**
+ * Which way round the Now widget's one-row card is laid (committente, 8 set 2026,
+ * afternoon: «un layout alternativo… l'icona a destra, e nella prima riga il testo che
+ * lì è nella seconda»).
+ *
+ * [ICON_START] is the launcher's own grammar and the default: glyph first, the number
+ * over the place beside it, the sentence against the far edge. [ICON_END] is the tall
+ * card's composition pressed into one row — the glyph in the trailing corner, and on
+ * the leading side the number with the sentence at its shoulder and the place under
+ * both — so a reader who likes the square card can have its look on a strip too, and
+ * a home screen can carry the two without them fighting. A tall card ignores the
+ * choice: it already has its glyph on the trailing side.
+ */
+enum class WidgetArrangement { ICON_START, ICON_END }
+
 /** One widget's look: its background, how solid the card is (0 = see-through), and
  * what it puts on the card. */
 data class WidgetLook(
@@ -59,13 +74,24 @@ data class WidgetLook(
      * Now widget is a glance at what the sky is doing now, and on it the pair competed
      * with the sentence for the same edge; the reader who wants the day's range on the
      * home screen has the widget that carries the day.
-     *
-     * There used to be a second switch here, the sky's state beside the Now widget's
-     * temperature. It went the same day: the state's slot is now the day's sentence,
-     * and whether there is room for it is decided by the grant ([NowLayout]), not by a
-     * setting — see that file for the reversal and its reason.
      */
     val showDayRange: Boolean = false,
+    /**
+     * The day's sentence on the Now and Today widgets — the headline Today opens with
+     * in its brief register, or the sky's state when there is nothing to warn about.
+     * **On by default**, because it is what the slot is for; a reader who wants the
+     * bare number turns it off per widget (committente, 8 set 2026, afternoon: «la
+     * possibilità di rendere visibile/invisibile la descrizione»). Whether there is
+     * ROOM for it is still the grant's decision ([NowLayout]): this switch can only
+     * take the sentence away, never force it onto a card too narrow to hold it.
+     *
+     * It replaces, a day later and the other way up, the «state beside the temperature»
+     * switch that went on 8 set morning: that one was off by default and decided the
+     * layout, this one is on by default and decides only the content.
+     */
+    val showSentence: Boolean = true,
+    /** Which way round the Now widget's one-row card is laid; see [WidgetArrangement]. */
+    val arrangement: WidgetArrangement = WidgetArrangement.ICON_START,
     /**
      * The icon family this card draws with, or [WidgetIcons.APP] to keep following the
      * Settings choice — which is the default, and what every widget placed before this
@@ -101,6 +127,10 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             background = background,
             opacityPct = opacity,
             showDayRange = prefs[rangeKey(appWidgetId)] ?: false,
+            showSentence = prefs[sentenceKey(appWidgetId)] ?: true,
+            arrangement = prefs[arrangementKey(appWidgetId)]
+                ?.let { name -> WidgetArrangement.entries.firstOrNull { it.name == name } }
+                ?: WidgetArrangement.ICON_START,
             icons = prefs[iconsKey(appWidgetId)]
                 ?.let { name -> WidgetIcons.entries.firstOrNull { it.name == name } }
                 ?: WidgetIcons.APP
@@ -112,6 +142,8 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             prefs[backgroundKey(appWidgetId)] = look.background.name
             prefs[opacityKey(appWidgetId)] = look.opacityPct.coerceIn(0, 100)
             prefs[rangeKey(appWidgetId)] = look.showDayRange
+            prefs[sentenceKey(appWidgetId)] = look.showSentence
+            prefs[arrangementKey(appWidgetId)] = look.arrangement.name
             prefs[iconsKey(appWidgetId)] = look.icons.name
         }
     }
@@ -123,6 +155,8 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 prefs.remove(backgroundKey(it))
                 prefs.remove(opacityKey(it))
                 prefs.remove(rangeKey(it))
+                prefs.remove(sentenceKey(it))
+                prefs.remove(arrangementKey(it))
                 prefs.remove(iconsKey(it))
                 // The switch this key belonged to is gone (8 set 2026); a widget placed
                 // while it existed still carries the key, and leaves with it.
@@ -134,6 +168,8 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
     private fun backgroundKey(id: Int) = stringPreferencesKey("bg_$id")
     private fun opacityKey(id: Int) = intPreferencesKey("opacity_$id")
     private fun rangeKey(id: Int) = booleanPreferencesKey("range_$id")
+    private fun sentenceKey(id: Int) = booleanPreferencesKey("sentence_$id")
+    private fun arrangementKey(id: Int) = stringPreferencesKey("arrangement_$id")
     private fun iconsKey(id: Int) = stringPreferencesKey("icons_$id")
     private fun legacyConditionKey(id: Int) = booleanPreferencesKey("condition_$id")
 

@@ -426,7 +426,7 @@ fun DayRange(highC: Double, lowC: Double, units: UnitSettings, palette: WidgetPa
 }
 
 /** The pair sits at the place name's size: it is the same order of fact. */
-private val DayRangeSp = 15.sp
+private val DayRangeSp = 16.sp
 
 /**
  * The empty states sit in the MIDDLE of the card, not at the top of it (committente,

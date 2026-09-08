@@ -353,7 +353,7 @@
 
     <string name="guide_widgets_title">I widget sulla home</string>
     <string name="guide_widgets_three_title">Sono tre</string>
-    <string name="guide_widgets_three_body">Ora: icona, temperatura, luogo — e su una card larga o alta la frase della giornata, o lo stato del cielo quando non c\'è niente da segnalare; ridimensionala e mostra quello che ci sta. Oggi: quello, più la frase intera e le prossime ore. Cielo: il momento che hai davanti e il suo verdetto, lo stesso che mostra la schermata Cielo.</string>
+    <string name="guide_widgets_three_body">Colpo d\'occhio: icona, temperatura, luogo — e su una card larga o alta la frase della giornata, o lo stato del cielo quando non c\'è niente da segnalare; ridimensionala e mostra quello che ci sta, e dalle sue impostazioni si può girare al contrario. Le prossime ore: quello, più le ore che vengono. Momenti del cielo: il momento che hai davanti, quando, e il suo verdetto — lo stesso che mostra la schermata Cielo — e quelli dopo su una card più alta.</string>
     <string name="guide_widgets_config_title">Come si imposta</string>
     <string name="guide_widgets_config_body">Tieni premuto un widget per aprire le sue impostazioni: quale luogo guarda (quello attivo, o un luogo fisso suo), lo sfondo — compreso lo stesso cielo calcolato che disegna l\'app — quanto quello sfondo è coprente, e con quali icone del meteo disegna.</string>
     <string name="guide_widgets_honest_title">Non inventano</string>
@@ -834,11 +834,11 @@
     <string name="today_changed_open">La storia intera è nel Diario</string>
 
     <!-- I widget della home (Fase 8) -->
-    <string name="widget_now_label">Chiaro · Ora</string>
+    <string name="widget_now_label">Colpo d\'occhio</string>
     <string name="widget_now_desc">Il cielo in questo momento: icona, temperatura, luogo — e la frase del giorno dove c\'è spazio</string>
-    <string name="widget_today_label">Chiaro · Oggi</string>
+    <string name="widget_today_label">Le prossime ore</string>
     <string name="widget_today_desc">L\'adesso, la frase del giorno e le prossime ore</string>
-    <string name="widget_sky_label">Chiaro · Cielo</string>
+    <string name="widget_sky_label">Momenti del cielo</string>
     <string name="widget_sky_desc">Il prossimo momento del cielo, quando, e il suo verdetto — e quelli dopo su una card più alta</string>
     <string name="widget_no_place_hint">Tocca per aprire Chiaro e aggiungerne uno</string>
     <string name="widget_no_data">Sto prendendo la prima previsione…</string>
@@ -853,7 +853,12 @@
     <string name="widget_config_opacity">Opacità dello sfondo</string>
     <string name="widget_config_content">Contenuto</string>
     <string name="widget_config_show_range">Massima e minima di oggi</string>
-    <string name="widget_config_show_range_note">Al bordo opposto, in linea con la temperatura.</string>
+    <string name="widget_config_show_range_note">Al bordo opposto, sotto la frase del giorno.</string>
+    <string name="widget_config_show_sentence">La frase del giorno</string>
+    <string name="widget_config_show_sentence_note">Ombrello verso le cinque, temporale alle tre — o, quando non c\'è niente da segnalare, cosa fa il cielo adesso. Compare dove la card ha spazio.</string>
+    <string name="widget_config_arrangement">Disposizione</string>
+    <string name="widget_arrangement_icon_start">Icona a sinistra, frase al bordo opposto</string>
+    <string name="widget_arrangement_icon_end">Icona a destra, frase accanto alla temperatura</string>
     <string name="widget_config_icons">Icone del meteo</string>
     <string name="widget_icons_app">Segui l\'app</string>
 

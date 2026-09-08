@@ -91,7 +91,7 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
 - 🏠 **Widgets**, in Glance: **Now** (icon, temperature, place, with the weather glyph
   growing into the height the launcher grants, and the day's sentence when the card is
   wide or tall enough to hold it: three forms, and the size you give it picks one),
-  **Today** (now plus the whole sentence and the next hours) and **Sky** (the moments in
+  **Today** (that same row as the head of the card, and the next hours under it) and **Sky** (the moments in
   front of you and their verdicts: the moment's time as the big number, its name under it,
   the verdict as a word with the number that decided it or, on a narrower card, as the
   series' own mark, and on a taller card as many further moments as honestly fit and never

@@ -1,14 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The Today widget in the picker: the hero row, the day's sentence, the hour strip.
-     Same rules as `widget_now_preview` — sample values, the default dress baked in,
-     nothing here reads a forecast. -->
+<!-- The Today widget in the picker: the Now widget's row as the head of the card, the
+     hour strip under it. Same rules as `widget_now_preview` — sample values, the default
+     dress baked in, nothing here reads a forecast — and the same insets the widget
+     writes: 4dp before the glyph, 6 above it, 14 at the words' edge and under the strip.
+     The hero row is the wide one-row form: glyph at ~76dp (what a two-row grant leaves
+     once the strip is paid), the temperature over the place, and the day's sentence
+     against the far edge. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_preview_sky"
     android:orientation="vertical"
-    android:padding="14dp"
+    android:paddingStart="4dp"
+    android:paddingTop="6dp"
+    android:paddingEnd="14dp"
+    android:paddingBottom="14dp"
     tools:ignore="HardcodedText">
 
     <LinearLayout
@@ -18,16 +25,18 @@
         android:orientation="horizontal">
 
         <ImageView
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="76dp"
+            android:layout_height="76dp"
             android:importantForAccessibility="no"
             android:src="@drawable/mcn_partly_cloudy_day" />
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:orientation="vertical"
-            android:paddingStart="12dp">
+            android:paddingStart="8dp"
+            android:paddingEnd="0dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -36,7 +45,7 @@
                 android:includeFontPadding="false"
                 android:text="25°"
                 android:textColor="@color/widget_preview_ink"
-                android:textSize="36sp" />
+                android:textSize="34sp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -46,30 +55,43 @@
                 android:textColor="@color/widget_preview_ink_dim"
                 android:textSize="16sp" />
         </LinearLayout>
+
+        <!-- One sentence before any number (VISION §5.1), on the launcher too — in the
+             slot the Now widget prints it in. -->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="end"
+            android:maxLines="2"
+            android:paddingStart="12dp"
+            android:paddingEnd="0dp"
+            android:text="@string/widget_preview_headline"
+            android:textAlignment="viewEnd"
+            android:textColor="@color/widget_preview_ink"
+            android:textSize="16sp" />
     </LinearLayout>
 
-    <!-- One sentence before any number (VISION §5.1), on the launcher too. It takes
-         the slack rather than a spacer taking it: `Space` is not one of the views
-         RemoteViews knows, and a preview layout has to stay inside that set. -->
-    <TextView
+    <!-- The slack between the two, taken by an empty frame: `Space` is not one of the
+         views RemoteViews knows, and a preview layout has to stay inside that set. -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fontFamily="sans-serif-medium"
-        android:gravity="top"
-        android:maxLines="2"
-        android:paddingTop="6dp"
-        android:text="@string/widget_preview_headline"
-        android:textColor="@color/widget_preview_ink"
-        android:textSize="14sp" />
+        android:layout_weight="1" />
 
     <!-- Five hours, the count a four-cell grant lands on. Every cell prints its rain
-         figure because one of them has something to report — the strip's own rule. -->
+         figure because one of them has something to report — the strip's own rule. The
+         strip starts at the words' inset: the card's 4dp plus its own 10. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:baselineAligned="false"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="0dp">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -102,7 +124,8 @@
             android:layout_weight="1"
             android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:paddingStart="6dp">
+            android:paddingStart="6dp"
+            android:paddingEnd="0dp">
 
             <TextView
                 style="@style/WidgetPreviewHour"
@@ -128,7 +151,8 @@
             android:layout_weight="1"
             android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:paddingStart="6dp">
+            android:paddingStart="6dp"
+            android:paddingEnd="0dp">
 
             <TextView
                 style="@style/WidgetPreviewHour"
@@ -154,7 +178,8 @@
             android:layout_weight="1"
             android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:paddingStart="6dp">
+            android:paddingStart="6dp"
+            android:paddingEnd="0dp">
 
             <TextView
                 style="@style/WidgetPreviewHour"
@@ -180,7 +205,8 @@
             android:layout_weight="1"
             android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:paddingStart="6dp">
+            android:paddingStart="6dp"
+            android:paddingEnd="0dp">
 
             <TextView
                 style="@style/WidgetPreviewHour"

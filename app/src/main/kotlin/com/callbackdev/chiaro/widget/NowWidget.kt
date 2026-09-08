@@ -38,9 +38,11 @@ import java.util.Locale
 /**
  * The Now widget (VISION §5.9): icon, temperature, place — the glance in the word's
  * old sense, drawn big enough to be one (device review, 3 set) — and, where the grant
- * has room, the day's sentence. Three forms, one per kind of grant ([NowLayout]); the
- * launcher's size picks the form and nothing else does. Stale data states its age; no
- * place says so; nothing here is ever a guess.
+ * has room and the reader has not turned it off, the day's sentence. Three forms, one
+ * per kind of grant ([NowLayout]), and for the one-row forms two arrangements
+ * ([WidgetArrangement]): the launcher's size picks the form, the widget's own settings
+ * pick the arrangement and whether the sentence is there at all. Stale data states its
+ * age; no place says so; nothing here is ever a guess.
  */
 class NowWidget : GlanceAppWidget() {
 
@@ -67,29 +69,27 @@ class NowWidget : GlanceAppWidget() {
             val content = model.content
             val size = LocalSize.current
             val layout = if (content == null) null else nowLayout(size)
+            val mirrored = layout != NowLayout.TALL &&
+                model.look.arrangement == WidgetArrangement.ICON_END
             // Each edge is inset for what sits against it — a glyph brings a margin of
             // its own, words bring none (the numbers are in [WidgetCardPaddingLeading]).
-            // One-row forms: the glyph leads the row and owns the height, so 4 dp before
-            // it, 6 above and below, and the words' 14 at the far edge. The tall form:
-            // the glyph sits in the top trailing corner, so those two edges take the
-            // glyph's numbers and the other two the words'. An empty state has no glyph,
-            // only words, and words get the words' inset on every side.
-            val paddingStart = when (layout) {
-                NowLayout.NARROW, NowLayout.WIDE -> WidgetCardPaddingLeading
-                NowLayout.TALL, null -> WidgetCardPadding
+            // One-row forms: the glyph owns the height, so 6 above and below; it leads
+            // the row in the standard arrangement and closes it in the mirrored one, and
+            // the glyph's 4 and the words' 14 follow it to whichever edge it is on. The
+            // tall form: the glyph sits in the top trailing corner, so those two edges
+            // take the glyph's numbers and the other two the words'. An empty state has
+            // no glyph, only words, and words get the words' inset on every side.
+            val glyphLeads = layout == NowLayout.NARROW || layout == NowLayout.WIDE
+            val paddingStart = when {
+                glyphLeads && !mirrored -> WidgetCardPaddingLeading
+                else -> WidgetCardPadding
             }
-            val paddingEnd = when (layout) {
-                NowLayout.TALL -> WidgetCardPaddingLeading
-                NowLayout.NARROW, NowLayout.WIDE, null -> WidgetCardPaddingTrailing
+            val paddingEnd = when {
+                layout == NowLayout.TALL || (glyphLeads && mirrored) -> WidgetCardPaddingLeading
+                else -> WidgetCardPaddingTrailing
             }
-            val paddingTop = when (layout) {
-                NowLayout.NARROW, NowLayout.WIDE, NowLayout.TALL -> WidgetCardPaddingSnug
-                null -> WidgetCardPadding
-            }
-            val paddingBottom = when (layout) {
-                NowLayout.NARROW, NowLayout.WIDE -> WidgetCardPaddingSnug
-                NowLayout.TALL, null -> WidgetCardPadding
-            }
+            val paddingTop = if (layout != null) WidgetCardPaddingSnug else WidgetCardPadding
+            val paddingBottom = if (glyphLeads) WidgetCardPaddingSnug else WidgetCardPadding
             WidgetCard(
                 model, schemes, skyBitmap,
                 contentPaddingStart = paddingStart,
@@ -97,13 +97,20 @@ class NowWidget : GlanceAppWidget() {
                 contentPaddingTop = paddingTop,
                 contentPaddingBottom = paddingBottom
             ) { palette ->
+                val sentenceOn = model.look.showSentence
                 when {
                     content == null && model.city == null -> NoPlaceContent(palette)
                     content == null -> NoDataContent(palette)
-                    layout == NowLayout.TALL -> TallContent(content, model, palette, size)
+                    layout == NowLayout.TALL ->
+                        TallContent(content, model, palette, size, withSentence = sentenceOn)
+                    mirrored -> MirroredRowContent(
+                        content, model, palette, size,
+                        withSentence = sentenceOn &&
+                            nowMirroredSentenceWidth(size) >= SentenceColumnMin
+                    )
                     else -> RowContent(
                         content, model, palette, size,
-                        withSentence = layout == NowLayout.WIDE
+                        withSentence = sentenceOn && layout == NowLayout.WIDE
                     )
                 }
             }
@@ -112,11 +119,12 @@ class NowWidget : GlanceAppWidget() {
 }
 
 /**
- * The one-row card: glyph, then the temperature over the place, then — on a card wide
- * enough ([NowLayout.WIDE]) — the day's sentence against the far edge. The two text
- * columns split the row's slack evenly ([nowSentenceColumnWidth]), so the temperature
- * block keeps its place at the glyph's side, the sentence keeps the far edge, and the
- * empty space lands in the middle, which is where the reference widget puts it too.
+ * The one-row card in the standard arrangement: glyph, then the temperature over the
+ * place, then — on a card wide enough ([NowLayout.WIDE]) and unless the reader turned it
+ * off — the day's sentence against the far edge. The two text columns split the row's
+ * slack evenly ([nowSentenceColumnWidth]), so the temperature block keeps its place at
+ * the glyph's side, the sentence keeps the far edge, and the empty space lands in the
+ * middle, which is where the reference widget puts it too.
  */
 @Composable
 private fun RowContent(
@@ -171,6 +179,63 @@ private fun RowContent(
 }
 
 /**
+ * The one-row card the other way round ([WidgetArrangement.ICON_END]): the tall card's
+ * composition pressed into a row. The glyph closes the row in the trailing corner; on
+ * the leading side the temperature with the sentence at its shoulder — two lines at
+ * most, centred on the number's height, as the reference's description sits beside its
+ * number — and the place under both. The sentence appears when its room
+ * ([nowMirroredSentenceWidth]) clears the same minimum as the standard row's column,
+ * so a three-cell card shows the number and the place alone either way round.
+ */
+@Composable
+private fun MirroredRowContent(
+    content: TodayUiState.Content,
+    model: WidgetModel,
+    palette: WidgetPalette,
+    size: DpSize,
+    withSentence: Boolean
+) {
+    val context = LocalContext.current
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = GlanceModifier.fillMaxSize()
+    ) {
+        Column(
+            modifier = GlanceModifier
+                .padding(end = IconTextGap, bottom = textInkBalance(context, TemperatureSp))
+                .defaultWeight()
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = GlanceModifier.fillMaxWidth()
+            ) {
+                Temperature(content, model, palette)
+                if (withSentence) {
+                    Text(
+                        text = sentence(context, content),
+                        style = sentenceStyle(palette, TextAlign.Start),
+                        // Two lines beside a 34 sp number are the number's own height;
+                        // a third would push the place off the card.
+                        maxLines = TallSentenceMaxLines,
+                        modifier = GlanceModifier
+                            .padding(start = SentenceGap)
+                            .defaultWeight()
+                    )
+                }
+            }
+            PlaceLine(
+                name = content.city.name,
+                fromGps = model.fromGps,
+                palette = palette,
+                size = PlaceSp.sp
+            )
+            StaleLine(content, palette)
+        }
+        HeroIcon(content, model, palette, nowRowIconSize(size))
+    }
+}
+
+/**
  * The two-row card: the glyph alone in the top trailing corner, the words stacked
  * against the bottom leading one — temperature, sentence, place, in the order the
  * reference stacks them and the order the app's own Today reads.
@@ -180,14 +245,16 @@ private fun RowContent(
  * temperature's empty leading band (the budget counts on it), which a Column that
  * stacks boxes could never let them do. Horizontally they do not meet either — the
  * glyph is on the trailing side, the number on the leading one — so the only place
- * the two could touch is a band that is empty by construction.
+ * the two could touch is a band that is empty by construction. With the sentence
+ * turned off the budget gives its two lines to the glyph.
  */
 @Composable
 private fun TallContent(
     content: TodayUiState.Content,
     model: WidgetModel,
     palette: WidgetPalette,
-    size: DpSize
+    size: DpSize,
+    withSentence: Boolean
 ) {
     val context = LocalContext.current
     Box(
@@ -196,7 +263,7 @@ private fun TallContent(
     ) {
         HeroIcon(
             content, model, palette,
-            nowTallIconSize(size, fontScale(context), content.isStale)
+            nowTallIconSize(size, fontScale(context), content.isStale, withSentence)
         )
         // The words stop at the words' inset on the trailing side too: the card's
         // end padding is the glyph's 4, so the column pays the difference itself.
@@ -208,12 +275,14 @@ private fun TallContent(
                 .padding(end = WidgetCardPadding - WidgetCardPaddingLeading)
         ) {
             Temperature(content, model, palette)
-            Text(
-                text = sentence(context, content),
-                style = sentenceStyle(palette, TextAlign.Start),
-                maxLines = TallSentenceMaxLines,
-                modifier = GlanceModifier.fillMaxWidth()
-            )
+            if (withSentence) {
+                Text(
+                    text = sentence(context, content),
+                    style = sentenceStyle(palette, TextAlign.Start),
+                    maxLines = TallSentenceMaxLines,
+                    modifier = GlanceModifier.fillMaxWidth()
+                )
+            }
             PlaceLine(
                 name = content.city.name,
                 fromGps = model.fromGps,
@@ -284,9 +353,10 @@ private fun StaleLine(content: TodayUiState.Content, palette: WidgetPalette) {
  * never tell two stories about the same afternoon — and the sky's present state when
  * there is nothing to warn about. The fallback is not a filler: «Poco nuvoloso» is a
  * true thing about the sky right now, which is what this card is for, and a slot that
- * went blank on every quiet day would read as a card that failed to load.
+ * went blank on every quiet day would read as a card that failed to load. Shared with
+ * the Today widget, which prints the same slot for the same reason.
  */
-private fun sentence(context: Context, content: TodayUiState.Content): String {
+internal fun sentence(context: Context, content: TodayUiState.Content): String {
     val locale = Locale.getDefault()
     val timeFmt = Formats.timeFormatter(
         android.text.format.DateFormat.is24HourFormat(context), locale
@@ -295,10 +365,10 @@ private fun sentence(context: Context, content: TodayUiState.Content): String {
         ?: context.getString(WeatherText.condition(content.report.current.condition.wmoCode))
 }
 
-/** The sentence's dress on both forms: the Today widget's own 14 sp Medium in the
- * strong ink — the second thing read after the number, and the same sentence the other
- * widget prints, so it wears the same clothes there and here. */
-private fun sentenceStyle(palette: WidgetPalette, align: TextAlign): TextStyle = TextStyle(
+/** The sentence's dress on every form: 16 sp Medium in the strong ink — the second
+ * thing read after the number, and the same sentence on both widgets that print it,
+ * so it wears the same clothes there and here. */
+internal fun sentenceStyle(palette: WidgetPalette, align: TextAlign): TextStyle = TextStyle(
     color = palette.primary,
     fontSize = SentenceSp.sp,
     fontWeight = FontWeight.Medium,
@@ -307,4 +377,4 @@ private fun sentenceStyle(palette: WidgetPalette, align: TextAlign): TextStyle =
 
 /** Read off a Context rather than a composition local for the reason [isNight] is:
  * there is no `LocalConfiguration` on the launcher's side of the fence. */
-private fun fontScale(context: Context): Float = context.resources.configuration.fontScale
+internal fun fontScale(context: Context): Float = context.resources.configuration.fontScale

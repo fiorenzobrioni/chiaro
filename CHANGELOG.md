@@ -348,6 +348,32 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   now lands; the message a widget shows when every subscription is off is centred like
   the other empty states.
 
+- **The widgets have names.** In the launcher's picker they were «Chiaro · Now», «Chiaro
+  · Today» and «Chiaro · Sky»; they are **At a glance**, **The hours ahead** and **Sky
+  moments** now («Colpo d'occhio», «Le prossime ore», «Momenti del cielo»), which say what
+  each one shows rather than repeating the app's name above them.
+
+- **The day's sentence can be turned off, per widget.** A switch in the widget's own
+  settings, for At a glance and for The hours ahead, on by default: a reader who wants the
+  bare number has it. Whether there is room for the sentence stays the card's decision;
+  the switch can only take it away.
+
+- **At a glance can be laid the other way round.** Its settings offer a second
+  arrangement for the one-row card: the glyph in the trailing corner, and on the leading
+  side the temperature with the sentence at its shoulder — two lines at most, centred on
+  the number — and the place under both. It is the tall card's composition pressed into
+  a row, for a home screen that wants the two to match; the sentence appears at the same
+  widths as the other way round, and a tall card is the same either way.
+
+- **The hours ahead is laid out again on the same grammar.** Its head is At a glance's
+  wide row — glyph filling the hero band, temperature over place, the day's sentence
+  against the far edge, the day's high and low under the sentence when asked for — and
+  the hour strip hangs under it. The line the sentence used to take under the hero goes to
+  the glyph, which grows from ~45 to ~76 dp on a four-by-two card; the temperature drops
+  from 36 to 34 sp to match its sibling. The strip keeps its rules and gains one: the rain
+  row also has to fit, and yields to the hero's words when a stale marker takes their
+  third line rather than being cut at the card's edge.
+
 - **About is complete.** The section now names the developer, the copyright and the
   licence, and credits everything the app is built out of: Open-Meteo's data under
   CC BY 4.0, the Meteocons weather icons, the Inter typeface and Google's interface

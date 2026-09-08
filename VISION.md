@@ -416,7 +416,13 @@ Glance, three sizes, matching the app's dynamic color:
   a setting precisely so a card would not rewrite itself under a reader's fingers, and a season of
   living beside the launcher's own weather widget, which reflows, showed that reflowing is what the
   reader expects a widget to do.)
-- **Today**: now plus the next hours strip plus the headline sentence.
+- **Today**: now plus the next hours strip. Since 8 set 2026 the head of the card IS the Now
+  widget's wide row — glyph, temperature over place, the day's sentence against the far edge and
+  the day's high and low under it when asked for — and the strip hangs under it; the line the
+  sentence used to take goes to the glyph.
+- Both Now and Today let the reader turn the sentence off per widget, and Now can lay its one-row
+  card the other way round — glyph in the trailing corner, the sentence at the number's shoulder,
+  the tall card's composition pressed into one row — so a home screen can carry the two looks.
 - **Sky**: the moments in front of the reader and their verdicts, with the day named when it is not
   today — the widget nobody else ships. Laid out on the Now widget's grammar (8 set 2026): the
   moment's time is the hero number, its name under it, the glyph beside them; the verdict is the

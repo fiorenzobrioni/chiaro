@@ -403,10 +403,6 @@ private fun timeFormatter(context: Context): DateTimeFormatter = Formats.timeFor
 private fun evidence(context: Context, verdict: SkyVerdict): String? =
     SkyText.chipEvidence(context.resources, verdict)
 
-/** Read off a Context rather than a composition local for the reason [isNight] is:
- * there is no `LocalConfiguration` on the launcher's side of the fence. */
-private fun fontScale(context: Context): Float = context.resources.configuration.fontScale
-
 /** The moon's day-moment gets its real phase; everything else its family glyph. */
 private fun skyJobIconRes(
     moment: NextMoment,

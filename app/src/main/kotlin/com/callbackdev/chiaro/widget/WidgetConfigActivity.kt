@@ -231,17 +231,42 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
                 )
             }
 
-            // Today only (8 set 2026): the Now widget decides what it shows from the
-            // size it was given (see NowWidgetLayout), so it has no content switch
-            // left to offer, and the Sky widget never had a day to show.
-            if (kind == WidgetKind.TODAY) {
+            // Now and Today carry the day's sentence and may hide it; only Today carries
+            // the day's range; only Now has a one-row card that can be laid two ways.
+            // The Sky widget's content is its subscriptions, chosen on the Sky screen,
+            // so it has no content switch to offer here.
+            if (kind == WidgetKind.NOW || kind == WidgetKind.TODAY) {
                 SectionLabel(stringResource(R.string.widget_config_content))
                 SwitchRow(
-                    label = stringResource(R.string.widget_config_show_range),
-                    note = stringResource(R.string.widget_config_show_range_note),
-                    checked = current.showDayRange,
-                    onToggle = { save(current.copy(showDayRange = it)) }
+                    label = stringResource(R.string.widget_config_show_sentence),
+                    note = stringResource(R.string.widget_config_show_sentence_note),
+                    checked = current.showSentence,
+                    onToggle = { save(current.copy(showSentence = it)) }
                 )
+                if (kind == WidgetKind.TODAY) {
+                    SwitchRow(
+                        label = stringResource(R.string.widget_config_show_range),
+                        note = stringResource(R.string.widget_config_show_range_note),
+                        checked = current.showDayRange,
+                        onToggle = { save(current.copy(showDayRange = it)) }
+                    )
+                }
+            }
+            if (kind == WidgetKind.NOW) {
+                SectionLabel(stringResource(R.string.widget_config_arrangement))
+                val arrangements = listOf(
+                    WidgetArrangement.ICON_START to
+                        stringResource(R.string.widget_arrangement_icon_start),
+                    WidgetArrangement.ICON_END to
+                        stringResource(R.string.widget_arrangement_icon_end)
+                )
+                arrangements.forEach { (arrangement, label) ->
+                    ChoiceRow(
+                        label = label,
+                        selected = current.arrangement == arrangement,
+                        onPick = { save(current.copy(arrangement = arrangement)) }
+                    )
+                }
             }
         }
 
