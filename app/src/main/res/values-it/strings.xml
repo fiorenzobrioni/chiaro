@@ -24,6 +24,17 @@
     <string name="headline_snow_now_stopping_brief">Neve fino alle %1$s circa</string>
     <string name="headline_wet_now_brief">Pioggia per il resto del giorno</string>
     <string name="headline_snow_now_brief">Neve per il resto del giorno</string>
+    <!-- La frase anticipa (9 set 2026): pioggia possibile oggi, pioggia probabile domani,
+         gelo entro domattina, nebbia in arrivo, vento forte adesso. -->
+    <string name="headline_wet_maybe">Possibile pioggia verso le %1$s</string>
+    <string name="headline_snow_maybe">Possibile neve verso le %1$s</string>
+    <string name="headline_wet_tomorrow">Domani ombrello dalle %1$s</string>
+    <string name="headline_snow_tomorrow">Domani neve dalle %1$s</string>
+    <string name="headline_frost">Gelo verso le %1$s, minima %2$s</string>
+    <string name="headline_frost_brief">Gelo verso le %1$s</string>
+    <string name="headline_fog">Nebbia verso le %1$s</string>
+    <string name="headline_wind">Vento forte, fino a %1$s</string>
+    <string name="headline_wind_brief">Vento fino a %1$s</string>
 
     <!-- Freschezza ed errori: l\'età vera, il motivo vero -->
     <plurals name="freshness_minutes_ago">
@@ -288,7 +299,7 @@
     <string name="guide_today_title">Oggi</string>
     <string name="guide_today_p1">Il cielo disegnato in cima non è una fotografia: è calcolato per questo minuto dall\'altezza del sole, dalle nuvole, dalla pioggia e dalla luna, così alle tre di notte con il sereno è lo stesso blu profondo che vedresti fuori. La striscia sottile sotto è la giornata, dalla prima luce all\'ultima, con l\'ora in cui sei segnata sopra.</string>
     <string name="guide_today_headline_title">La frase</string>
-    <string name="guide_today_headline_body">Quando c\'è qualcosa che vale la pena dire — ombrello verso le cinque, temporale alle tre — è scritto sopra ogni numero. Quando non c\'è niente da dire, la frase non compare: anche il silenzio è una risposta.</string>
+    <string name="guide_today_headline_body">Quando c\'è qualcosa che vale la pena dire — ombrello verso le cinque, temporale alle tre, gelo entro domattina, nebbia in arrivo, o l\'ombrello di domani — è scritto sopra ogni numero. La frase anticipa: quello che succede adesso lo dice già il numero grande. Quando non c\'è niente da dire, la frase non compare: anche il silenzio è una risposta.</string>
     <string name="guide_today_rain_title">Sta per piovere?</string>
     <string name="guide_today_rain_body">La risposta è in due punti: la frase in cima e, subito sotto, le probabilità ora per ora, con il picco delle prossime ore segnato sulla piccola curva della pioggia. Chiaro descrive la pioggia nella lingua in cui arrivano i dati: quanto è probabile, quanta, da che ora a che ora.</string>
     <string name="guide_today_fresh_title">Quanto sono freschi i numeri</string>

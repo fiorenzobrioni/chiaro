@@ -958,7 +958,7 @@ private fun CanvasHeader(
                     nowFraction = sky.nowFraction,
                     description = ribbonDescription(content, timeFmt)
                 )
-                headlineText(content.headline, timeFmt)?.let { sentence ->
+                headlineText(content.headline, timeFmt, units)?.let { sentence ->
                     Text(
                         text = sentence,
                         style = MaterialTheme.typography.titleLarge,
@@ -1045,8 +1045,11 @@ private fun WhatChanged(
 
 /** The sentence, or nothing: [HeadlineText]'s mapping, shared with the Today widget. */
 @Composable
-private fun headlineText(headline: Headline?, timeFmt: DateTimeFormatter): String? =
-    HeadlineText.of(LocalContext.current, headline, timeFmt)
+private fun headlineText(
+    headline: Headline?,
+    timeFmt: DateTimeFormatter,
+    units: UnitSettings
+): String? = HeadlineText.of(LocalContext.current, headline, timeFmt, units)
 
 @Composable
 private fun ribbonDescription(

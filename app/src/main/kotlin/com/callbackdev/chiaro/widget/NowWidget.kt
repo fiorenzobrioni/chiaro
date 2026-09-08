@@ -29,6 +29,7 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
+import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.ui.today.HeadlineText
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import com.callbackdev.chiaro.ui.today.WeatherText
@@ -168,7 +169,7 @@ private fun RowContent(
                     .defaultWeight()
             ) {
                 Text(
-                    text = sentence(context, content),
+                    text = sentence(context, content, model.settings.units),
                     style = sentenceStyle(palette, TextAlign.End),
                     maxLines = nowSentenceLines(size, fontScale(context)),
                     modifier = GlanceModifier.fillMaxWidth()
@@ -212,7 +213,7 @@ private fun MirroredRowContent(
                 Temperature(content, model, palette)
                 if (withSentence) {
                     Text(
-                        text = sentence(context, content),
+                        text = sentence(context, content, model.settings.units),
                         style = sentenceStyle(palette, TextAlign.Start),
                         // Two lines beside a 34 sp number are the number's own height;
                         // a third would push the place off the card.
@@ -277,7 +278,7 @@ private fun TallContent(
             Temperature(content, model, palette)
             if (withSentence) {
                 Text(
-                    text = sentence(context, content),
+                    text = sentence(context, content, model.settings.units),
                     style = sentenceStyle(palette, TextAlign.Start),
                     maxLines = TallSentenceMaxLines,
                     modifier = GlanceModifier.fillMaxWidth()
@@ -356,12 +357,12 @@ private fun StaleLine(content: TodayUiState.Content, palette: WidgetPalette) {
  * went blank on every quiet day would read as a card that failed to load. Shared with
  * the Today widget, which prints the same slot for the same reason.
  */
-internal fun sentence(context: Context, content: TodayUiState.Content): String {
+internal fun sentence(context: Context, content: TodayUiState.Content, units: UnitSettings): String {
     val locale = Locale.getDefault()
     val timeFmt = Formats.timeFormatter(
         android.text.format.DateFormat.is24HourFormat(context), locale
     )
-    return HeadlineText.of(context, content.headline, timeFmt, brief = true)
+    return HeadlineText.of(context, content.headline, timeFmt, units, brief = true)
         ?: context.getString(WeatherText.condition(content.report.current.condition.wmoCode))
 }
 
