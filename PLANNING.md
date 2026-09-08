@@ -3180,6 +3180,486 @@ del committente**.
 
 ---
 
+## La revisione di Oggi: il terzo gradino delle icone, l'eroe che cresce, lo scroll (committente, 8 set 2026, sera)
+
+Richiesta: una review della schermata principale — layout, disposizione delle sezioni,
+icone del meteo «leggermente più grandi ma senza aumentare le spaziature» — e lo scroll
+della pagina e della striscia oraria, «leggermente scattoso» da quando le icone si
+muovono, da migliorare **senza toccare le animazioni**. Poi: applicare tutto, correggere
+la documentazione dove sbagliava, e dire se il bordo del canvas sta meglio dritto o
+arrotondato. Nessun device collegato: tutto quello che segue è misurato nel codice, nei
+sorgenti di piattaforma e nei file delle icone, e la verifica sul telefono è del
+committente.
+
+### Le misure che hanno deciso
+
+- **L'inchiostro nel riquadro.** Prima di ingrandire le icone ho misurato quanto del
+  viewport 64×64 dei Meteocons occupa il disegno, statico e lungo tutto il loop
+  dell'animazione (campionando i path, stroke incluso, e allargando ogni gruppo animato
+  dell'escursione dei suoi keyframe di traslazione; la rotazione è limitata dal punto
+  più lontano dal pivot). Le 18 icone della condizione usano il riquadro quando si
+  muovono: unione x **6.0–61.6**, y **8.0–60.0**. Le gocce cadono fino a y 60, il banco
+  dell'overcast arriva a x 61.6, il sole parte da y 8. Un ritaglio uniforme del viewport
+  potrebbe prendere 2.4 unità (sotto il 4%) e sposterebbe i centri ottici: **no**,
+  misurato. La nuvola ferma è quello che fa sembrare piccola la famiglia: 30 unità di
+  altezza in un riquadro da 64, cioè 20dp di disegno in un'icona da 42.
+- **L'eroe a testo grande.** Il canvas era 280dp fissi più status bar; dentro, tutto in
+  sp. Spazio libero a 100% di testo: 30dp con la frase su una riga, **2dp su due**,
+  −26dp su tre. La frase più lunga in italiano fa 49 caratteri con le due ore e su 360dp
+  va su due righe: la pagina era al limite già a 100%, e a 115% eroe e riga del luogo si
+  sovrapponevano di 30dp.
+- **Dove va il tempo dello scroll**, verificato nei sorgenti e non supposto:
+  - AOSP `AnimatedVectorDrawable`: il costruttore privato copia già in profondità
+    l'albero del vettore per ogni istanza (`AnimatedVectorDrawableState(copy, …)` fa
+    `newDrawable` + `mutate` sul `VectorDrawable` interno), quindi il `mutate()` in
+    `ConditionIcon` era una **seconda** copia buttata via; l'animatore è
+    `VectorDrawableAnimatorRT` e gira sul RenderThread finché il canvas è accelerato;
+    `setVisible(false)` mette in pausa i loop infiniti.
+  - Compose `AndroidViewHolder`: `onGloballyPositioned` richiama `View.layout()` a ogni
+    spostamento, cioè a ogni frame di scroll, per ogni icona interop.
+    `LazyListMeasuredItem` piazza ogni item su un layer, quindi senza interop uno scroll
+    sposta i layer senza ridisegnarli.
+  - Compose `animation-graphics`: il parser legge `repeatCount="infinite"` e costruisce
+    un `repeatable` infinito. **La motivazione scritta il 7 set era sbagliata**: non è
+    che `AnimatedImageVector` non sappia fare un loop, è che lo fa ricomponendo il
+    vettore a ogni frame e rasterizzando su CPU, sul thread che serve allo scroll. La
+    scelta dell'`ImageView` resta giusta per questo motivo, ed è quello che DESIGN §7.1
+    e il KDoc dicono adesso.
+
+### Decisioni
+
+1. **Icone: terzo gradino, +4dp su ogni piolo** — striscia **42**, settimana **38**,
+   timeline **34**, tile **34**. Nessuna spaziatura, nessuna colonna, nessun
+   arrangement cambia. Cosa paga ciascuno, a 360dp: la striscia **niente** (l'icona si
+   prende i 2dp di padding verticale in cui stava, la cella resta 112dp e l'aria laterale
+   passa da 9 a 7dp); la settimana 4dp di altezza per riga e la barra 106→102dp; la
+   timeline 4dp per riga e la prosa 226→222dp; il tile 4dp di testata e il budget
+   dell'etichetta 88→84dp contro i 76.7 di «Qualità aria» — 7.3dp di margine, **fine
+   della scala** per quel piolo. Scartata la scala a tempo di disegno (`scale(1.1)`
+   nello stesso riquadro): per la striscia è la stessa cosa scritta peggio, per le altre
+   righe fa sbordare l'inchiostro di 1–2dp nei gap.
+2. **Il canvas è un pavimento, non una misura**: almeno 280dp più status bar, e cresce
+   col testo. Riga del luogo ed eroe sono i due capi di una `Column` con `SpaceBetween`
+   su `heightIn(min)`, non due figli allineati ai bordi opposti di una scatola fissa. Il
+   flip delle icone della status bar si misura sull'altezza reale dell'item del canvas
+   (`layoutInfo`), perché la fascia di scrim è una frazione e la frazione ora si muove.
+3. **Bordo dritto, confermato.** Il committente ha chiesto un parere: gli angoli
+   arrotondati facevano leggere il cielo come una card che galleggia sullo scroll, ed è
+   il motivo per cui erano stati tolti il 4 set. Sulla pagina ogni altra superficie è
+   rientrata di 16dp e arrotondata; l'unica che non lo è dev'essere il terreno su cui la
+   pagina si apre, non un'altra card. Dritto.
+4. **Skeleton rimisurato sul layout vero**: il blocco del cielo aveva ancora gli angoli
+   da 28dp persi il 4 set e i 240dp di prima che il canvas arrivasse alla status bar; le
+   celle erano 96dp contro i 112 della striscia. Ora il blocco è `280 − (8 + 48 + 8)` =
+   216dp a bordo dritto, così riga del luogo più blocco finiscono dove finisce il canvas
+   vero; sei celle da 56×112 a 4dp l'una dall'altra.
+5. **La riga del luogo a 8dp ovunque**: era 8 sul cielo e 12 sugli stati piatti, quindi
+   sfogliando da un luogo con report a uno senza il titolo saltava di 4dp.
+6. **La striscia scorre a filo schermo**: il margine di pagina entra come
+   `contentPadding` della `LazyRow` invece di stare sulla colonna che la contiene, così
+   la prima cella parte sui 16dp come tutto il resto e le altre scivolano sotto il bordo
+   dello schermo invece di essere tagliate su una linea 16dp più dentro, che faceva
+   leggere la striscia come una scatola. Vale anche per la striscia del giorno aperto.
+7. **Lo scroll, quattro interventi che non toccano un disegno né un animatore:**
+   - via il `mutate()` (una copia dell'albero per cella invece di due);
+   - la cella riciclata **tiene il drawable**: `onReset` ferma solo il loop, `update` lo
+     riavvia se la risorsa è la stessa, `onRelease` lo rilascia. Vive in una
+     `MovingIconView` con il proprio flag `resting`, perché il RenderThread riferisce la
+     fine del loop al thread UI uno o due frame dopo lo `stop()`, e un riuso arrivato in
+     quella finestra avrebbe trovato `isRunning` vero e lasciato l'icona ferma;
+   - le celle hanno una **chiave** (`HourCell.key`, l'ora): allo scoccare dell'ora esce
+     solo la prima cella, invece di rigonfiare tutte le icone visibili nello stesso
+     frame;
+   - la settimana è **sette item** invece di uno: stesso ritmo (la colonna spaziava di
+     12dp e la lista spazia di 12dp), ma il prefetch prende una riga alla volta invece
+     di sette icone nel frame in cui la sezione entra. Lo stato del giorno aperto è
+     salito in `ContentState`.
+   Quello che resta è l'animazione stessa: ~14 cache vettoriali rirasterizzate sul
+   RenderThread a ogni vsync. È il prezzo della funzione e l'unica leva è quante icone si
+   muovono insieme; si misura con un A/B, `adb shell settings put global
+   animator_duration_scale 0` spegne le icone (già leggono quel valore) e `dumpsys
+   gfxinfo` confronta i frame persi.
+8. **Dettagli in fondo**, per decisione del committente. La revisione grafica delle card
+   è un parere dato a parte, non un intervento.
+
+### Rimasto aperto (su device)
+
+- Striscia e pagina: gli scatti prima e dopo, con l'A/B sopra.
+- L'eroe a 130% di testo e con una frase su due righe: la riga del luogo non deve più
+  essere raggiunta.
+- Skeleton contro canvas vero: nessun salto quando arriva il report.
+- La settimana: aprire e chiudere un giorno ora che ogni riga è un item, e il ritmo dei
+  12dp tra le righe.
+- Le icone a 42/38/34: se «leggermente più grandi» è questo.
+
+### Verifica
+
+Suite `:app` verde (175 test, invariati: nessuna regola pura nuova, i cambi sono di
+layout e di interop). `:app:lintDebug` a zero errori e 60 avvisi, come prima. APK di
+debug costruito; **la verifica su device è del committente**.
+
+---
+
+## Le card dei dettagli rifatte, e la review di Cielo (committente, 8 set 2026, notte)
+
+Richiesta, subito dopo: applicare tutti i consigli dati sulle card dei dettagli; fare la
+stessa review a **Cielo** — layout, dimensione delle icone «o comunque vedi tu», logica,
+dati e messaggi — e pushare su un branch nuovo perché parta la CI.
+
+### Le card, com'erano e come sono
+
+Il problema era di gerarchia: valore a 16sp contro un'etichetta a 14 e un'icona da 34dp,
+l'occhio andava sull'icona e non sulla lettura. Da qui:
+
+- **Il valore è una lettura**: `ReadingValue` in `Type.kt`, Inter Light 24sp su 32 di
+  interlinea, tabulare — la voce dell'eroe alla scala di una card, con lo stesso
+  argomento del 64sp: un numero in peso da corpo legge come un titolo, non come una
+  lettura. Costa 8dp per riga di card.
+- **Una traccia dove la scala è del mondo** (`QuantityTrack`): 4dp, `outlineVariant`
+  con il tratto in `primary` fino al valore, mai più stretto di quanto è alto. Solo per
+  UV (0–11: sopra il tracciato è pieno e parla la frase), Umidità (0–100) e Qualità aria
+  (0–300, la soglia «pericolosa» dell'AQI statunitense che il provider serve). Niente per
+  pressione e visibilità: una è una banda stretta intorno a 1013, l'altra è logaritmica,
+  e una traccia lì sarebbe una forma senza niente da dire.
+- **Vento**: il valore è la sola velocità. Sotto, una freccia disegnata (`WindArrow`,
+  non un'icona Material: l'unica freccia del set base è auto-specchiata in RTL e una
+  direzione della bussola non deve esserlo) che indica **dove va l'aria**, e le parole
+  «da nord-est» per **da dove viene** — le stesse otto parole che Cielo usa per un
+  arcobaleno (`SkyText.bearingRes`), perché un pubblico generale legge «da nord-est» e
+  decodifica «NNE». La convenzione è quella delle mappe: la freccia è movimento, la
+  didascalia è la sorgente. La sigla a sedici punti del modello, che in italiano
+  stampava «W», resta nei dati. **Le raffiche** hanno una riga quando contano
+  (`WeatherText.gustsMaterial`: almeno 25 km/h e almeno una volta e mezza il vento) e in
+  quei giorni la frase si legge sulla raffica, perché «si sente, non dà fastidio» sopra
+  «raffiche a 45 km/h» è la card che litiga con sé stessa.
+- **Umidità e Rugiada sono una card.** Dicevano la stessa cosa una sotto l'altra
+  («Confortevole» / «Gradevole»), e «Rugiada» è la parola meno capita dello schermo. La
+  card Umidità tiene la percentuale e la traccia, prende la frase dal punto di rugiada
+  (il predittore migliore di come si sta) e stampa «Rugiada 12°» come nota: il dato non
+  si perde, il titolo sì. Via `metric_dew` e le quattro `humidity_meaning_*`; il campione
+  della Guida usa la frase della rugiada.
+- **Qualità aria** senza «AQI»: era l'unica sigla di uno schermo fatto per non averne, e
+  l'etichetta dice già cos'è il numero. Via `metric_air_value`.
+- **Pollini**: la nota dice **quali** («Graminacee e alberi»), dalle tre famiglie del
+  modello al livello peggiore, in ordine di catalogo; niente riga quando sono assenti.
+  Le famiglie stanno in risorsa minuscole per entrare in un elenco (`list_two`,
+  `list_three`, localizzati) e la card mette la maiuscola alla prima.
+
+**Le larghezze, misurate a 360dp**: l'interno di una card è `(360 − 32 − 12) / 2 − 32` =
+126dp. «↙ da nord-ovest» ≈ 120dp, sta. «Raffiche a 45 km/h» ≈ 131dp può andare a capo a
+360 e sta su una riga da 393dp in su (142dp), che è la larghezza dei telefoni di oggi;
+«Raffiche fino a» era scartata per questo. «Graminacee, alberi e erbe» va a capo, ed è il
+caso raro in cui tutte e tre le famiglie sono allo stesso livello. Una card più alta
+allarga la sua compagna di riga, com'era già (`IntrinsicSize.Max`).
+
+### Cielo: la review
+
+**Layout.** La struttura regge — l'eroe, i momenti, l'agenda, i promemoria — e il chip
+del verdetto sotto il nome (device, 3 set) resta la scelta giusta. Due cose cambiate:
+
+- **Le icone erano silhouette**: 26dp tinte `onSurfaceVariant` nei momenti e negli
+  eventi, nell'indice della guida e nella testata della pagina (36dp), 18dp con la tinta
+  del chip nei correlati. Era l'ultimo posto in cui la famiglia era tinta piatta, e
+  tinta piatta la luna piena e la luna nuova sono lo stesso disco, alba e tramonto lo
+  stesso orizzonte. Ora colori propri (§13.1) e la scala di Oggi: **34dp** (il piolo
+  della timeline) nelle righe di momenti, eventi e indice, **42dp** (il piolo della
+  striscia) come unico glifo della pagina di un evento, **24dp** nei chip correlati, dove
+  a 18 un Meteocon erano 13dp di inchiostro.
+- **I segni di spunta del catalogo** venivano ricostruiti dalle righe a schermo
+  (momenti più eventi con campanella): un job iscritto senza riga — una ricerca di
+  eclissi che non trova niente davanti — risultava non iscritto e si offriva di essere
+  aggiunto di nuovo. `Content.subscribedIds` arriva dallo store.
+
+**Logica e messaggi, verificati e lasciati com'erano:**
+
+- La card Stanotte stampa la riga della luna al posto del numero delle nuvole solo
+  quando `moonPct` c'è, e il motore lo mette solo quando la luna ha deciso il verdetto
+  (`SkyVerdictNote.MOONLIGHT`): la riga della luna **è** l'aritmetica, non la nasconde.
+- «Domani» sui momenti giornalieri è sempre esatto: `SkyScheduler.next` riporta i giorni
+  `∅` invece di saltarli, quindi il prossimo è sempre quello di domani, con o senza
+  motivo.
+- Il formato degli eventi («12 agosto · La previsione non arriva ancora così lontano»)
+  va a capo sotto il nome e legge bene; il giorno della settimana non serve a mesi di
+  distanza.
+- Cielo non aggiunge l'inset della barra di navigazione in fondo alla lista, Oggi sì:
+  la `NavigationBar` sta sotto entrambe e consuma l'inset da sé, quindi Oggi ha 24–48dp
+  di respiro in più prima della barra. Lasciato: non è un errore in nessuno dei due.
+
+**Trovato e non corretto, perché sta nel core** (UPSTREAM: si corregge a monte):
+`SkyScheduler.darkness()` risponde `NO_DARKNESS` anche quando il sole resta sotto i −18°
+per tutto il giorno — notte polare, crepuscolo astronomico senza inizio né fine — e la
+card Stanotte direbbe «il cielo non diventa mai del tutto buio» a Longyearbyen in
+dicembre, che è il contrario. Serve un motivo distinto («buio tutto il giorno») nel
+motore e la card che lo stampa. Fuori dalle latitudini del pubblico dell'app; registrato.
+
+### Verifica
+
+Suite `:app` verde (175 test). `:app:lintDebug` a zero errori e 60 avvisi, come prima.
+APK di debug costruito; il branch `claude/today-details-sky-review-k4p7wz` porta tutto
+alla CI; **la verifica su device è del committente**: le card con e senza raffiche, la
+striscia a filo, l'eroe a testo grande, Cielo con le icone a colori.
+
+---
+
+## La notte polare corretta, e la review di Avvisi e Diario (committente, 8 set 2026, tarda sera)
+
+APK della CI provato: «ottimo». Richiesta: correggere la notte polare trovata nella
+review di Cielo; poi la stessa passata, funzionale ed estetica, sulle ultime due
+schermate — Avvisi e Diario — con particolare attenzione al funzionamento del Diario e
+alle correzioni da proporre.
+
+### La notte polare: corretta nel core, e registrata in UPSTREAM
+
+`SkyScheduler.darkness()` rispondeva `NO_DARKNESS` per due cieli opposti: il sole che non
+scende mai 18° sotto l'orizzonte (la notte bianca) e il sole che non **risale** mai fino a
+18° sotto (la notte polare profonda, dove è buio a mezzogiorno). La card Stanotte diceva
+«il cielo non diventa mai del tutto buio» anche sul secondo, che è il contrario. Prima di
+correggere, il conto di dove capita: il sole resta sotto i −18° tutto il giorno solo se a
+mezzogiorno solare `90 − |φ − δ| < −18`, cioè oltre **84,6°** di latitudine al solstizio
+— nessun paese abitato, le stazioni polari sì. Corretto comunque, perché è il motore che
+chiama una notte polare con il nome di una notte bianca:
+
+- nuovo motivo `SkyNotScheduled.DARK_ALL_DAY`; `darkness()` lo restituisce quando il
+  giorno è senza sole (`sunDownAllDay`) **e** l'altezza del sole al mezzogiorno solare è
+  sotto il crepuscolo astronomico. Il giorno di confine con un solo estremo nullo resta
+  `NO_DARKNESS`, che è la risposta giusta anche lì;
+- la Via Lattea propaga il motivo della finestra invece di riscriverlo `NO_DARKNESS`;
+- `Tonight.reason` porta il motivo alla card, che stampa la frase giusta
+  (`sky_tonight_dark_all_day`); le righe `∅` hanno la loro (`sky_none_dark_all_day`);
+- `SkySchedulerTest`: a −89,5° al solstizio di giugno la finestra è `DARK_ALL_DAY`,
+  Copenaghen lo stesso giorno resta `NO_DARKNESS`;
+- **UPSTREAM.md**: è un bug anche a monte — `sky.crontab` stampa lo stesso `∅` — e la
+  voce dice che la correzione va portata di là (motivo, ramo, test).
+
+### Avvisi: la review
+
+**Funziona.** Interruttori pronti con la frase di cosa mandano e quando; regole del
+lettore come frase di chip con picker e mai un campo libero per un valore con un
+intervallo; «Prova adesso» che risponde senza notificare e si azzera quando una
+condizione cambia; permesso chiesto al primo interruttore acceso; cancellazione
+confermata; il template crea una regola vera e apre subito l'editor. Tutto coerente con
+VISION §5.4. Da correggere o migliorare, in ordine:
+
+1. **«Scattato l'ultima volta» è nel fuso del telefono** (`ZoneId.systemDefault()`),
+   l'unica ora dell'app che non è del luogo. Per il proprio luogo coincidono; per
+   Palermo letta da Reykjavík no. Portare `zone` in `AlertsUiState.Content`.
+2. **Il picker degli operatori offre «uguale a» e «diverso da» sulle grandezze
+   continue**: «temperatura uguale a 20°» non scatta quasi mai ed è la soglia senza
+   senso che i picker esistono per rendere non scrivibile. Nascondere i due per
+   `NUMBER`, `TEMPERATURE`, `SPEED`; restano per i sì/no.
+3. **Un template si può aggiungere due volte** e produce due regole «Bici» identiche.
+   Un template le cui condizioni esistono già tra le regole va segnato come aggiunto
+   (o nascosto), come fa il catalogo di Cielo con la spunta.
+4. **Al massimo delle regole i template spariscono senza una parola**: una riga «Hai già
+   il massimo di N avvisi: togline uno per aggiungerne un altro» dove stavano.
+5. **Estetica**: le regole del lettore sono `ListItem` identici agli interruttori pronti,
+   e il titolo di gruppo è l'unica cosa che le distingue. VISION le chiama *card*: una
+   `Surface` `surfaceContainer` come le card dei dettagli — nome, frase, ultimo scatto,
+   interruttore — separa i due gruppi a colpo d'occhio e dice che la card si apre, cosa
+   che una riga con interruttore non dice.
+6. **La risposta di «Prova adesso»** è tutta in `onSurfaceVariant`: quando scatterebbe è
+   la risposta che il lettore cercava e merita l'inchiostro pieno; «resterebbe zitto»
+   può restare quieto.
+
+### Diario: la review
+
+**Verificato leggendo il costruttore e i due motori** (`ForecastDiff`, `ForecastOutcome`):
+le revisioni diventano righe solo con una baseline (un giorno che entra nell'orizzonte
+non è una revisione); il giudizio lo dà la pioggia e la temperatura resta neutra; l'esito
+di una giornata finita si dichiara «ha piovuto» con una sola osservazione bagnata e «non
+ha piovuto» solo con 16 ore coperte; la deriva ha l'asse del tempo a fasce di 6 ore, il
+buco resta buco, la testata parte dove parte l'evidenza e il gelo segna il giorno
+sull'ultima previsione; i giorni si raggruppano nel fuso del luogo e la schermata si
+sveglia solo alla sua mezzanotte. Nessun errore di logica trovato. Le proposte, in
+ordine di resa:
+
+1. **Comprimere le revisioni per giorno bersaglio.** Ogni fetch che sposta la massima di
+   un giorno di 1 °C o la pioggia di 10 punti fa una riga; a cadenza oraria e su sette
+   giorni bersaglio questo può essere una decina o più di righe al giorno dello stesso
+   tenore («la massima di venerdì è passata da 24° a 25°»), e il diario smette di essere
+   leggibile. Proposta: nel costruttore, per ogni coppia (giorno del diario, giorno
+   bersaglio) una riga sola con primo → ultimo valore e «in N aggiornamenti», e nessuna
+   riga quando il valore è tornato dov'era — la frase della deriva già ragiona così
+   («è andato su e giù»), la prosa no. Il Diario di Oggi («Cosa è cambiato») resta
+   sull'ultimo fetch com'è.
+2. **Oggi nella deriva.** Le righe sono i giorni «ancora avanti» e oggi è escluso, ma «la
+   pioggia di oggi è salita nelle ultime ore?» è la domanda del mattino. Includere oggi
+   come prima riga finché la giornata corre.
+3. **La copertura dell'esito.** Ogni osservazione copre l'ora precedente, fissa: a
+   cadenza di 2 ore (il massimo dell'intervallo) una giornata copre al più 12 ore e il
+   verdetto «non ha piovuto» non arriva **mai**; a cadenza oraria basta una notte in
+   Doze per scendere sotto le 16. Proposta, in `ForecastOutcome`: ogni osservazione copre
+   il tempo dal fetch precedente, con un tetto (3 ore), così la copertura misura quanto
+   l'app ha davvero guardato e non quante volte. Da verificare su device prima: se «Ieri»
+   riceve la sua riga di esito alla cadenza del committente.
+4. **La tabella dei numeri** unisce quattordici valori con frecce in una riga di dialogo
+   che va a capo male. Una griglia con l'ora della fascia in testa, o le sole fasce con
+   un valore.
+5. **Le icone delle righe**: nuvola e stella sono Meteocons tinti in grigio a 24dp, la
+   stessa silhouette tolta a Cielo. Qui però il glifo è la **categoria** della riga, non
+   il tempo: la scelta coerente è un set Material monocromo per tutte e cinque le
+   categorie (revisione, cielo osservato, avviso scattato, esito, aggiornamento
+   mancato), come campanella, spunta e triangolo già sono. La regola §13.1 riguarda le
+   icone del meteo, e queste non lo sarebbero più.
+6. **L'ora come etichetta in coda** alla riga (`trailingContent`, `labelSmall`) invece
+   che «· alle 21:54» in fondo alla frase: un registro si scorre per ora.
+7. **La deriva in una card** `surfaceContainer` con i chip dentro: cinque elementi
+   impilati (titolo, chip, striscia, gelo, frase) diventano un oggetto.
+
+Nessuna di queste è implementata: sono proposte, con il numero 1 e il numero 3 come le
+due che cambiano quello che il Diario dice.
+
+### Verifica
+
+`:core:domain` verde (166 test, uno nuovo), `:core:data` verde (171), `:app` verde (175).
+`:app:lintDebug` a zero errori e 60 avvisi. APK di debug costruito. La correzione è nel
+working tree del branch della CI, **non ancora pushata**: la CI riparte quando il
+committente lo dice.
+
+---
+
+## Avvisi e Diario: le proposte applicate (committente, 9 set 2026, notte)
+
+Richiesta: applicare tutte le correzioni e le proposte della review di Avvisi e Diario;
+sullo scatto residuo dello scroll di Oggi solo una risposta, senza codice; poi push
+perché riparta la CI.
+
+### Avvisi
+
+1. **«Scattato l'ultima volta» nel fuso del luogo**: `AlertsUiState.Content.zone`, letto
+   dalla città attiva con il fallback del telefono, e la card lo usa.
+2. **Niente «uguale a» / «diverso da» sulle grandezze continue**: il picker li offre
+   solo ai sì/no. Una regola che già li porta li tiene; il picker smette di proporli.
+3. **Un template già presente è segnato** con la spunta in `primary` e non è più
+   toccabile: il confronto è sulle condizioni (`RuleCondition` è una data class), così
+   vale anche se il lettore ha rinominato la regola. Stringa `tpl_already_added`.
+4. **Al massimo delle regole** una riga lo dice (`alerts_max_reached`, con `MaxRules`),
+   dove prima i template sparivano e basta.
+5. **Le regole sono card**: `Surface` `surfaceContainer` con angolo `medium`, nome in
+   `titleMedium`, frase, ultimo scatto in `bodySmall` grigio, interruttore a destra;
+   tutta la card apre l'editor, l'interruttore resta il suo bersaglio. Item con chiave
+   sull'id della regola, così un toggle anima la riga invece di ricostruirla.
+6. **La risposta di «Prova adesso»** è in `onSurface` quando scatterebbe, quieta negli
+   altri tre casi.
+
+### Diario
+
+1. **Le revisioni si piegano** per coppia (giorno del diario, giorno bersaglio):
+   `JournalStateBuilder.forecastShifts(rows, zone)` raggruppa le revisioni per fetch
+   (`revisions`, che resta quello che legge «Cosa è cambiato» su Oggi) e per ogni campo
+   tiene il primo valore vecchio e l'ultimo nuovo; un campo tornato dov'era non è un
+   cambiamento (confronto numerico dove i valori sono numeri), un giorno i cui campi
+   sono tutti tornati non ha riga. `ForecastShift.revisions` dice quante ne raccoglie e
+   la riga lo stampa oltre uno (`journal_shift_revisions`, plurale). Due test nuovi in
+   `JournalStateBuilderTest`: la piega su tre fetch, e il ritorno che cancella.
+2. **Oggi nella deriva.** Le righe sono `!isBefore(today)`. Ma il giorno corrente non
+   era su disco: `WeatherSnapshots.flattenForecast` salvava da domani a sette giorni,
+   ora salva **da oggi** (`0L..7L`). È una divergenza in più dal core di tweather ed è
+   in UPSTREAM con la sua cucitura: `ForecastDiff.dayLabel` chiama «tomorrow» la prima
+   data salvata, e quell'etichetta è dei Logs di tweather, niente qui la legge.
+   `WeatherSnapshotsTest` aggiornato. Effetto collaterale voluto: anche «Cosa è
+   cambiato» su Oggi può ora dire che la previsione di oggi si è mossa.
+3. **La copertura dell'esito** (`ForecastOutcome`): una lettura copre il tempo dalla
+   lettura precedente, con un tetto di **due ore** — la cadenza massima dell'app — e la
+   prima lettura copre la sua ora. Prima ogni lettura copriva un'ora fissa, quindi a
+   cadenza di due ore una giornata guardata da cima a fondo copriva dodici ore e il
+   verdetto «non ha piovuto» non arrivava mai. La pioggia resta sull'ora che i
+   millimetri descrivono, non sulla finestra di copertura: una lettura bagnata all'1:30
+   che copre fino a ieri non bagna ieri. Tre test nuovi in `ForecastOutcomeTest` e uno
+   adattato (tre letture a 9, 10 e 16: quattro ore coperte, non tre). Il tetto è una
+   scelta: due ore è quanto l'app stessa promette di guardare, sei ore di sonno ne
+   coprono due. In UPSTREAM.
+4. **La tabella dei numeri è una griglia**: intestazione a due righe (giorno e ora
+   dello slot, del fetch se c'è, nominale se lo slot è vuoto), una riga per giorno
+   bersaglio, cifre tabulari, scorrimento laterale quando è più larga del dialogo.
+5. **Icone monocrome Material** per le cinque categorie: matita per la revisione,
+   stella per il cielo osservato, campanella, spunta, triangolo. Nuvola e stella
+   Meteocons tinte grigie erano l'ultima silhouette rimasta; qui il glifo è la categoria
+   e non il tempo, quindi §13.1 non lo raggiunge.
+6. **L'ora in coda alla riga** come `labelSmall` tabulare; l'esito, che è del giorno,
+   non ne ha. Via «· alle 21:54» dalle frasi e via la stringa `journal_at_time`.
+7. **La deriva in una card** `surfaceContainer`: chip, striscia, gelo e frase in una
+   `Column` con 16dp di margine e 12 di passo; la striscia, il gelo e la frase perdono i
+   margini propri. Il titolo di sezione resta fuori.
+
+DESIGN §8.10 e la guida («una riga per oggi e per ogni giorno davanti») aggiornati.
+
+### Lo scatto residuo di Oggi, solo una risposta
+
+Quello che resta è del RenderThread: ~14 vettori animati rirasterizzati a ogni vsync
+mentre lo stesso thread muove i layer dello scroll. L'unica leva che non tocca né i
+disegni né i loro animatori è **fermare i loop mentre la lista è in movimento**
+(`isScrollInProgress` → `setVisible(false)` sul drawable, che mette in pausa un AVD
+infinito; ripresa da dove era a lista ferma). Costa zero da ferma e toglie tutto il
+lavoro vettoriale dai frame dello scroll; il prezzo è che le icone si congelano durante
+un trascinamento lento. Da misurare prima con l'A/B `animator_duration_scale 0`. Non
+applicato: il committente ha chiesto solo la risposta.
+
+### Verifica
+
+`:core:domain` verde (166), `:core:data` verde (174, tre nuovi), `:app` verde (177, due
+nuovi). `:app:lintDebug` a zero errori e 61 avvisi (uno in più). APK di debug costruito e
+branch pushato: la CI produce quello da provare.
+
+---
+
+## Il meteo sta fermo mentre la pagina si muove (committente, 9 set 2026)
+
+APK provato: «tutto ok». Richiesta: provare la soluzione proposta per lo scatto residuo
+di Oggi, pushare e aprire la PR.
+
+### Quello che AOSP ha detto prima di scrivere
+
+La proposta era `setVisible(false)` sul drawable durante lo scroll, perché
+`AnimatedVectorDrawable.setVisible` mette in pausa un loop infinito. Letto il sorgente
+prima di fidarsi: `VectorDrawableAnimatorRT.pause()` e `resume()` sono **due TODO** in
+AOSP. Sul RenderThread la pausa non esiste, e con essa cade anche una frase che DESIGN
+§7.1 e il KDoc ripetevano dal 7 set — «la piattaforma mette in pausa l'animatore quando
+la view non è più visibile». Non è vero: quello che ferma il lavoro è **non essere
+disegnati**, perché hwui non prepara un nodo fuori dalla display list e non ne fa girare
+gli animatori. Il risultato pratico era comunque giusto (una cella fuori schermo non
+costa); la spiegazione no, ed è corretta in entrambi i posti.
+
+Neanche `stop()` va bene: porta il disegno al fotogramma finale del loop, che per la
+pioggia è quello **senza gocce**, e `start()` alla ripresa rifarebbe partire tutto dalla
+nuvola.
+
+### Cosa fa adesso
+
+- `LocalMotionPaused`, in `ConditionIcon.kt`: vero finché uno scroll è in corso. Lo
+  forniscono la lista di Oggi (`listState.isScrollInProgress`), la riga della striscia
+  (`rowState`, in OR con quello che la pagina già dice) e il pager tra i luoghi
+  (`pagerState.isScrollInProgress`).
+- Un'icona animata è **due cose in una scatola**: il disegno fermo e il gemello animato
+  sopra. Sono composti sempre entrambi — comporre quattordici painter al primo frame di
+  uno scroll sarebbe lo scatto che si vuole togliere — e il locale decide chi si vede: il
+  fermo ad alpha 1 con la `ImageView` `INVISIBLE` mentre la pagina si muove, il gemello
+  sopra un fermo trasparente da ferma.
+- Una View `INVISIBLE` il padre non la disegna, il suo nodo esce dalla display list e
+  hwui non ne tocca gli animatori: il RenderThread spende i frame dello scroll sui layer
+  e non sui vettori. Alla ripresa il loop è dove lo mette l'orologio — gli animatori
+  vanno a tempo di frame — non dove era rimasto: niente replay.
+- Il prezzo visibile: un cambio di posa alle due estremità di uno scroll, il disegno
+  animato scatta nella posa ferma quando il dito si muove e torna quando si ferma. È il
+  compromesso già detto nella risposta di ieri, con «fermo nella posa da fermo» al posto
+  di «congelato».
+
+DESIGN §7.1 e il KDoc di `ConditionIcon` corretti sulla pausa e aggiornati sul nuovo
+comportamento.
+
+### Rimasto aperto (su device)
+
+- Lo scatto è sparito, o ridotto? Se resta identico, il collo non era il RenderThread e
+  l'A/B `animator_duration_scale 0` resta il modo di dirlo.
+- Il cambio di posa a inizio e fine scroll: se disturba più dello scatto, si può limitare
+  al solo fling (drag in corso → `interactionSource` della lista) o togliere del tutto.
+
+### Verifica
+
+Suite verdi; lint invariato; APK di debug costruito; PR aperta sul branch.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae

@@ -36,7 +36,24 @@ object ForecastOutcome {
     const val MIN_COVERAGE_HOURS = 16
 
     private const val DAY_HOURS = 24
+
+    /** The hour a reading's millimetres describe: Open-Meteo's own definition. */
     private val OBSERVATION_WINDOW = java.time.Duration.ofHours(1)
+
+    /**
+     * The most one reading may vouch for, backwards, when the previous reading is
+     * further away than an hour (8 set 2026): the app's own longest cadence. Until then
+     * every reading covered exactly the hour behind it, which made "covered" mean "how
+     * many times the app fetched" rather than "how long it was watching": at the two-hour
+     * cadence a day watched end to end covered twelve hours and never reached the floor,
+     * so a dry day at that setting was never called dry, and at the hourly cadence one
+     * night in Doze — where the periodic job runs at the system's convenience — dropped
+     * a fully watched day under sixteen. A reading now covers the time since the one
+     * before it, capped here, so a phone that watched all day at its own cadence covers
+     * the day, and a phone that slept six hours still leaves four of them uncovered.
+     * The rain itself stays on the hour the millimetres describe.
+     */
+    private val MAX_OBSERVATION_WINDOW = java.time.Duration.ofHours(2)
 
     /** One commit, as the Journal already decodes it. */
     data class Fetch(
@@ -96,15 +113,21 @@ object ForecastOutcome {
         var rained = false
         var high: Double? = null
         val covered = mutableListOf<Pair<Instant, Instant>>()
+        var previous: Instant? = null
         observations.forEach { obs ->
-            val from = maxOf(obs.at.minus(OBSERVATION_WINDOW), start)
+            // Coverage reaches back to the previous reading, up to the cap; the very
+            // first reading has nothing before it and vouches for its own hour.
+            val window = previous
+                ?.let { minOf(java.time.Duration.between(it, obs.at), MAX_OBSERVATION_WINDOW) }
+                ?: OBSERVATION_WINDOW
+            previous = obs.at
+            val from = maxOf(obs.at.minus(window), start)
             val until = minOf(obs.at, end)
-            if (from < until) {
-                covered += Pair(from, until)
-                // The millimetres belong to the hour behind the reading, so they count
-                // for the day that hour overlaps.
-                if (obs.lastHourMm != null && obs.lastHourMm > 0.0) rained = true
-            }
+            if (from < until) covered += Pair(from, until)
+            // The millimetres belong to the HOUR behind the reading — not to the
+            // coverage window — so they count for the day that hour overlaps.
+            val rainFrom = maxOf(obs.at.minus(OBSERVATION_WINDOW), start)
+            if (rainFrom < until && obs.lastHourMm != null && obs.lastHourMm > 0.0) rained = true
             // The code is what the sky was doing AT the reading, so it counts only
             // for the day the reading itself falls in.
             if (obs.at >= start && obs.at < end) {

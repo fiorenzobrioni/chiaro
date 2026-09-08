@@ -59,7 +59,10 @@ sealed interface AlertsUiState {
         val notifications: NotificationSettings,
         val rules: List<RuleCardModel>,
         val canAdd: Boolean,
-        val units: UnitSettings
+        val units: UnitSettings,
+        /** The active place's zone, for "last fired" — every other hour in the app is the
+         * place's, and this one was the phone's (review, 8 set 2026). */
+        val zone: ZoneId = ZoneId.systemDefault()
     ) : AlertsUiState
 }
 
@@ -87,6 +90,8 @@ class AlertsViewModel(
             placeName = city?.name,
             notifications = settings.notifications,
             rules = rules.map { RuleCardModel(it, lastFired[it.name]) },
+            zone = city?.timezone?.let { runCatching { ZoneId.of(it) }.getOrNull() }
+                ?: ZoneId.systemDefault(),
             canAdd = rules.size < MaxRules,
             units = settings.units
         )

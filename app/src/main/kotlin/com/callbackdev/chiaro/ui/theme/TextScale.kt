@@ -25,9 +25,9 @@ import androidx.compose.ui.unit.Dp
  *    only affordable while there is something to grow into; beyond 150% the week row's
  *    four columns and its bar want more than a phone is wide, and the honest answer is
  *    two lines, not a thinner bar. That threshold is where the numbers stop fitting, not
- *    a round number: 44+36+34+34 dp of columns at 1.5 is 222dp, which with the icon and
- *    the gaps leaves the range bar 40dp — under the 48dp that makes it a bar rather than
- *    a smudge.
+ *    a round number: 44+36+34+34 dp of columns at 1.5 is 222dp, which with the 38dp
+ *    icon and the five 8dp gaps leaves the range bar 28dp of 328 — under the 48dp that
+ *    makes it a bar rather than a smudge.
  *
  * The ceiling on growth is 2.0 because the system's own slider stops at 200%; past that
  * the reflow is what carries the layout, not the multiplier.

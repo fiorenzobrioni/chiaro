@@ -461,13 +461,15 @@ private fun MetricSample() {
             label = stringResource(R.string.metric_uv),
             value = "7",
             meaning = stringResource(R.string.uv_meaning_high),
+            scale = 7f / 11f,
             modifier = Modifier.weight(1f)
         )
         MetricTile(
             icon = ChiaroIcons.humidity,
             label = stringResource(R.string.metric_humidity),
             value = "62%",
-            meaning = stringResource(R.string.humidity_meaning_comfortable),
+            meaning = stringResource(R.string.dew_meaning_pleasant),
+            scale = 0.62f,
             modifier = Modifier.weight(1f)
         )
     }

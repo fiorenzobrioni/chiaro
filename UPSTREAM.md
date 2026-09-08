@@ -120,6 +120,26 @@ is short on purpose — three edits, each with its reason in the file:
   (when, which place, why) so the Journal can say "an update didn't make it" —
   offline honesty is a Chiaro surface; upstream's Logs render commits, and a commit
   that never happened has nothing to render there.
+- `SkyNotScheduled.DARK_ALL_DAY` and the branch in `SkyScheduler.darkness()` that
+  returns it (8 set 2026): the darkness window reported `NO_DARKNESS` for two opposite
+  skies — the sun that never sinks 18° under the horizon and the sun that never climbs
+  back up to it — and the Sky screen said "never gets fully dark" over a sky that is
+  dark at noon. It only happens above 84.6° of latitude at the solstice, so no town ever
+  saw it; it is still the engine calling a polar night a white night. **This is a bug
+  upstream too** — `sky.crontab` prints the same `∅` reason — and the fix belongs there
+  as well: the new reason, the branch, and `SkySchedulerTest`'s near-pole case.
+- `WeatherSnapshots.flattenForecast` stores **today** as well as the seven days after it
+  (8 set 2026): the Journal's drift strip gained a row for the day in progress, and a row
+  needs its day on disk. Chiaro-only, like the seven-day horizon before it. One inherited
+  seam to know about: `ForecastDiff.dayLabel` still calls the earliest stored date
+  "tomorrow"; that label is upstream's Logs vocabulary and nothing in Chiaro reads it,
+  so it was left as it is rather than re-taught for a screen that does not exist here.
+- `ForecastOutcome` (Chiaro-only, above) changed what a reading vouches for (8 set
+  2026): the time since the previous reading, capped at two hours — the app's own longest
+  cadence — instead of a fixed hour. At the two-hour cadence a day watched end to end
+  covered twelve hours and never reached the sixteen-hour floor, so a dry day at that
+  setting was never called dry. The rain itself still counts only for the hour its
+  millimetres describe. `ForecastOutcomeTest` has the three cases.
 
 ## The known debt
 

@@ -22,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Settings
@@ -67,6 +68,7 @@ import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.ui.theme.reducedMotion
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.rules.MaxConditions
+import com.callbackdev.chiaro.domain.rules.MaxRules
 import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.rules.RuleCondition
 import com.callbackdev.chiaro.domain.rules.RuleMessages
@@ -227,17 +229,23 @@ private fun AlertsContent(
         }
 
         item { GroupTitle(stringResource(R.string.alerts_group_yours)) }
-        items(content.rules.size) { index ->
+        // The reader's rules are CARDS (VISION §5.4), since the review of 8 set 2026:
+        // as list rows they were indistinguishable from the ready-made switches above
+        // them, and a row with a switch does not say "I open". Keyed, so a toggle
+        // animates in place instead of the list rebuilding the row.
+        items(content.rules.size, key = { content.rules[it].rule.id }) { index ->
             val card = content.rules[index]
             RuleCard(
                 card = card,
                 units = content.units,
+                zone = content.zone,
                 firedFmt = firedFmt,
                 onToggle = { enabled ->
                     viewModel.update(card.rule.copy(enabled = enabled))
                     if (enabled) somethingTurnedOn()
                 },
-                onOpen = { onEdit(card.rule.id) }
+                onOpen = { onEdit(card.rule.id) },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
         }
 
@@ -252,24 +260,51 @@ private fun AlertsContent(
                     )
                 )
             }
+            // A template whose rule already exists — same conditions, whatever the
+            // reader renamed it — is marked as added rather than offered again: tapping
+            // it a second time made two identical "Bike" rules (review, 8 set 2026).
+            val existing = content.rules.map { it.rule.conditions }.toSet()
             items(RuleText.templates.size) { index ->
                 val template = RuleText.templates[index]
+                val added = template.conditions in existing
                 ListItem(
                     headlineContent = { Text(stringResource(template.titleRes)) },
                     supportingContent = { Text(stringResource(template.descriptionRes)) },
                     trailingContent = {
-                        Icon(
-                            imageVector = Icons.Outlined.Add,
-                            contentDescription = null, // the row itself is the action
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        if (added) {
+                            Icon(
+                                imageVector = Icons.Outlined.Check,
+                                contentDescription = stringResource(R.string.tpl_already_added),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Outlined.Add,
+                                contentDescription = null, // the row itself is the action
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     },
-                    modifier = Modifier.clickable {
-                        viewModel.addFromTemplate(template) { created ->
-                            somethingTurnedOn()
-                            onEdit(created.id)
+                    modifier = if (added) {
+                        Modifier
+                    } else {
+                        Modifier.clickable {
+                            viewModel.addFromTemplate(template) { created ->
+                                somethingTurnedOn()
+                                onEdit(created.id)
+                            }
                         }
                     }
+                )
+            }
+        } else {
+            // The templates used to vanish without a word at the cap (review, 8 set).
+            item {
+                Text(
+                    text = stringResource(R.string.alerts_max_reached, MaxRules),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 )
             }
         }
@@ -301,42 +336,59 @@ private fun ReadySwitch(
     )
 }
 
-/** A rule's card: its sentence in words, its state, and when it last fired. */
+/**
+ * A rule's card (VISION §5.4): its name, its sentence in words, when it last fired, and
+ * its switch. A `Surface` on `surfaceContainer` like the details tiles, since the review
+ * of 8 set 2026 — as a list row it was the ready-made switches' twin, and a row with a
+ * switch does not say "I open". The whole card opens the editor; the switch is its own
+ * target, as before. [zone] is the place's: "last fired" is a time on this place's
+ * clock, like every other hour in the app.
+ */
 @Composable
 private fun RuleCard(
     card: RuleCardModel,
     units: UnitSettings,
+    zone: ZoneId,
     firedFmt: DateTimeFormatter,
     onToggle: (Boolean) -> Unit,
-    onOpen: () -> Unit
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val res = LocalContext.current.resources
     val sentence = card.rule.conditions.joinToString(
         separator = " " + stringResource(R.string.rule_and) + " "
     ) { RuleText.sentence(res, it, units) }
     val fired = card.lastFired?.let {
-        stringResource(
-            R.string.rule_last_fired,
-            it.atZone(ZoneId.systemDefault()).format(firedFmt)
-        )
+        stringResource(R.string.rule_last_fired, it.atZone(zone).format(firedFmt))
     } ?: stringResource(R.string.rule_never_fired)
-    ListItem(
-        headlineContent = { Text(card.rule.name) },
-        supportingContent = {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(stringResource(R.string.rule_sentence_prefix) + " " + sentence)
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = MaterialTheme.shapes.medium,
+        modifier = modifier.fillMaxWidth().clickable(onClick = onOpen)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 12.dp, bottom = 12.dp)
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(text = card.rule.name, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = stringResource(R.string.rule_sentence_prefix) + " " + sentence,
+                    style = MaterialTheme.typography.bodyMedium
+                )
                 Text(
                     text = fired,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        },
-        trailingContent = {
             Switch(checked = card.rule.enabled, onCheckedChange = onToggle)
-        },
-        modifier = Modifier.clickable(onClick = onOpen)
-    )
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------------
@@ -553,7 +605,14 @@ private fun RuleEditorSheet(
                         RulePreview.NoData -> stringResource(R.string.rule_preview_no_data)
                     },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    // "It would fire, and here is what it would say" is the answer the
+                    // reader pressed the button for, in full ink; the three quiet
+                    // answers stay quiet (review, 8 set 2026).
+                    color = if (result is RulePreview.WouldFire) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
                 )
             }
 
@@ -818,7 +877,15 @@ private fun OperatorPickerDialog(
     onPick: (RuleOp) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val options = if (boolean) listOf(RuleOp.EQ, RuleOp.NEQ) else RuleOp.entries.toList()
+    // A yes/no reads "is" or "is not"; a continuous quantity never "equals" a threshold
+    // — "temperature equal to 20°" is a rule that all but never fires, the nonsense
+    // threshold the pickers exist to make unwritable (review, 8 set 2026). A rule that
+    // already carries one keeps it; the picker just stops offering it.
+    val options = if (boolean) {
+        listOf(RuleOp.EQ, RuleOp.NEQ)
+    } else {
+        RuleOp.entries.filter { it != RuleOp.EQ && it != RuleOp.NEQ }
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.rule_pick_operator)) },

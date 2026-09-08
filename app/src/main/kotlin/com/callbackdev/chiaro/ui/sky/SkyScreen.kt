@@ -50,6 +50,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -64,11 +65,13 @@ import com.callbackdev.chiaro.domain.sky.MoonQuarterKind
 import com.callbackdev.chiaro.domain.sky.SkyJob
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyLead
+import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.components.VerdictChip
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
+import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.theme.GroupTop
@@ -318,8 +321,10 @@ private fun SkyContent(
 
     if (catalogOpen) {
         CatalogSheet(
-            subscribedIds = content.moments.map { it.job.id }.toSet() +
-                content.events.mapNotNull { e -> e.lead?.let { e.job.id } }.toSet(),
+            // The store's own set, not one rebuilt from the rows on screen: a subscribed
+            // job with no row (an eclipse search that finds nothing ahead) used to show
+            // as unsubscribed here and offer to be added twice (review, 8 set 2026).
+            subscribedIds = content.subscribedIds,
             onAdd = viewModel::addMoment,
             onRemove = viewModel::removeMoment,
             onDismiss = { catalogOpen = false }
@@ -406,9 +411,18 @@ private fun TonightCard(tonight: Tonight, zone: ZoneId, timeFmt: DateTimeFormatt
                 style = MaterialTheme.typography.titleSmall
             )
             if (window == null) {
-                // A fact about the latitude and the season, stated as such.
+                // A fact about the latitude and the season, stated as such — and the
+                // RIGHT fact: an empty window is also the deep polar night, where it is
+                // dark at noon and "never gets fully dark" would be the reverse of the
+                // truth (8 set 2026). The engine tells the two apart; the card repeats it.
                 Text(
-                    text = stringResource(R.string.sky_tonight_no_darkness),
+                    text = stringResource(
+                        if (tonight.reason == SkyNotScheduled.DARK_ALL_DAY) {
+                            R.string.sky_tonight_dark_all_day
+                        } else {
+                            R.string.sky_tonight_no_darkness
+                        }
+                    ),
                     style = MaterialTheme.typography.titleMedium
                 )
                 return@Card
@@ -482,17 +496,25 @@ private fun MomentRow(
     // line (device finding, 3 set). Only the fixed-width bell trails.
     ListItem(
         leadingContent = {
+            // Its own colors and the timeline's rung (review, 8 set 2026): these were
+            // 26dp silhouettes in `onSurfaceVariant`, the one place left where the
+            // family was tinted flat — and tinted flat the full moon and the new moon
+            // are the same disc, a sunrise and a sunset the same horizon. §13.1 holds
+            // here as on Today: the icons depict the world and keep their palette.
             Icon(
                 imageVector = momentIcon(moment),
                 contentDescription = null,
-                tint = quiet,
-                modifier = Modifier.size(26.dp)
+                tint = Color.Unspecified,
+                modifier = Modifier.size(WeatherIconSize.Timeline)
             )
         },
         headlineContent = { Text(text = name) },
         supportingContent = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(listOfNotNull(dayMark, timeLine).joinToString(" · "))
+                Text(
+                    text = listOfNotNull(dayMark, timeLine).joinToString(" · "),
+                    color = quiet
+                )
                 moment.verdict?.let { verdict ->
                     VerdictChip(
                         kind = SkyText.chipKind(verdict.kind),
@@ -531,8 +553,8 @@ private fun EventRow(
             Icon(
                 imageVector = eventIcon(event),
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(26.dp)
+                tint = Color.Unspecified, // as in MomentRow: the family's own colors
+                modifier = Modifier.size(WeatherIconSize.Timeline)
             )
         },
         headlineContent = { Text(name) },

@@ -77,19 +77,30 @@
     <string name="rain_chart_caption">Chance of rain</string>
     <string name="rain_chart_desc">Chance of rain from %1$s to %2$s on a scale of 0 to 100%%, peaking at %3$d%% around %4$s</string>
 
-    <!-- Details grid: labels. One line beside the tile's 30dp icon, which on a
-         360dp screen is a budget of 88dp (94 until the icons grew, 6 set): a label
-         written past it wraps and pushes its own value down while the tile next to
-         it stays put. The widest one shipped is 76.7dp. -->
+    <!-- Details grid: labels. One line beside the tile's 34dp icon, which on a
+         360dp screen is a budget of 84dp (94 until the icons grew on 6 set, 88 until
+         their third step on 8 set): a label written past it wraps and pushes its own
+         value down while the tile next to it stays put. The widest one shipped is
+         76.7dp. -->
     <string name="metric_uv">UV</string>
     <string name="metric_wind">Wind</string>
     <string name="metric_humidity">Humidity</string>
-    <string name="metric_dew">Dew point</string>
     <string name="metric_pressure">Pressure</string>
     <string name="metric_visibility">Visibility</string>
     <string name="metric_air">Air quality</string>
-    <string name="metric_air_value">%1$d AQI</string>
     <string name="metric_pollen">Pollen</string>
+
+    <!-- Details grid: the facts under a value (card review, 8 set 2026). The pollen
+         families are lowercase so they can be listed mid-sentence; the tile
+         capitalises the first. -->
+    <string name="wind_from">from %1$s</string>
+    <string name="wind_gusts">Gusts up to %1$s</string>
+    <string name="humidity_dew_note">Dew point %1$s</string>
+    <string name="pollen_family_grass">grass</string>
+    <string name="pollen_family_tree">trees</string>
+    <string name="pollen_family_weed">weeds</string>
+    <string name="list_two">%1$s and %2$s</string>
+    <string name="list_three">%1$s, %2$s and %3$s</string>
 
     <!-- Details grid: the meaning lines (§1.2 — every number says what to do with it) -->
     <string name="uv_meaning_low">No protection needed</string>
@@ -102,10 +113,6 @@
     <string name="wind_meaning_moderate">Noticeable, not a bother</string>
     <string name="wind_meaning_strong">Hold on to your hat</string>
     <string name="wind_meaning_gale">Hard to walk against</string>
-    <string name="humidity_meaning_dry">Dry air</string>
-    <string name="humidity_meaning_comfortable">Comfortable</string>
-    <string name="humidity_meaning_humid">A little sticky</string>
-    <string name="humidity_meaning_oppressive">Heavy, muggy air</string>
     <string name="dew_meaning_dry">Dry, crisp air</string>
     <string name="dew_meaning_pleasant">Pleasant</string>
     <string name="dew_meaning_sticky">Slightly sticky</string>
@@ -347,7 +354,7 @@
     <string name="guide_journal_entries_title">What is written there</string>
     <string name="guide_journal_entries_body">How the forecast moved for the days ahead, which of your alerts fired and when, which sky moments were actually observed and with what verdict — and the updates that did not make it, with the reason. A failed update is an entry, not a silence. When a day is over, one more line closes it: what the rain was given at, and whether it rained.</string>
     <string name="guide_journal_drift_title">How the week has been moving</string>
-    <string name="guide_journal_drift_body">One row per day ahead, one column per six hours, the colour on the metric\'s own scale: rain, or the highs. A slot no update landed in stays empty, so a night with the phone off looks like the gap it was. A day whose forecast minimum is at or below zero carries a mark beside its name, with those days named underneath: freezing is a threshold, not a drift, so it gets a mark and a sentence rather than a scale of its own. It answers the question anyone planning a weekend actually asks — is this getting better or worse? Tap it to see the numbers behind the colours.</string>
+    <string name="guide_journal_drift_body">One row for today and each day ahead, one column per six hours, the colour on the metric\'s own scale: rain, or the highs. A slot no update landed in stays empty, so a night with the phone off looks like the gap it was. A day whose forecast minimum is at or below zero carries a mark beside its name, with those days named underneath: freezing is a threshold, not a drift, so it gets a mark and a sentence rather than a scale of its own. It answers the question anyone planning a weekend actually asks — is this getting better or worse? Tap it to see the numbers behind the colours.</string>
     <string name="guide_journal_drift_caption">An example: three days, six slots, on the rain scale.</string>
 
     <string name="guide_places_title">Your places</string>
@@ -397,6 +404,10 @@
     <string name="sky_tonight_label">Tonight</string>
     <string name="sky_tonight_window">Dark from %1$s to %2$s</string>
     <string name="sky_tonight_no_darkness">The sky never gets fully dark tonight: at this latitude, in this season, it happens.</string>
+    <!-- The opposite sky with the same empty window: the deep polar night, where it is
+         dark at noon (above 84.6° at the solstice). The card and the row say it. -->
+    <string name="sky_tonight_dark_all_day">It is dark all day here, at this latitude, in this season: there is no night to wait for, it is already here.</string>
+    <string name="sky_none_dark_all_day">It is dark all day: the sun never climbs back up to twilight</string>
     <string name="sky_tonight_moon">The moon is up, %1$d%% lit</string>
     <string name="sky_moon_line">%1$s · %2$d%% lit</string>
     <string name="sky_too_far">Too far out to say</string>
@@ -676,6 +687,8 @@
     <string name="alert_summary_title">The morning summary</string>
     <string name="alert_summary_desc">Once a day, between 6 and 12: today\'s sky, low, high and rain.</string>
     <string name="alerts_templates_title">Start from an idea</string>
+    <string name="alerts_max_reached">You already have the most alerts the app keeps, %1$d: remove one to add another.</string>
+    <string name="tpl_already_added">Already added</string>
     <string name="rule_sentence_prefix">When</string>
     <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
     <string name="rule_and">and</string>
@@ -802,7 +815,12 @@
     <string name="journal_no_place_body">Add a place and the journal starts writing itself: every update leaves a line.</string>
     <string name="journal_empty">Nothing written yet. The journal fills up as the updates come in.</string>
     <string name="journal_yesterday">Yesterday</string>
-    <string name="journal_at_time">at %1$s</string>
+    <!-- A journal day's revisions of one target day fold into one line; this says
+         how many the line stands for (only shown past one). -->
+    <plurals name="journal_shift_revisions">
+        <item quantity="one">in one update</item>
+        <item quantity="other">across %d updates</item>
+    </plurals>
     <string name="journal_drift_title">How the week has been moving</string>
     <string name="journal_metric_rain">Rain</string>
     <string name="journal_metric_high">Highs</string>

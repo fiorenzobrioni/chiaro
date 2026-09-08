@@ -73,7 +73,7 @@ fun DayRow(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            // §10 asks for ≥ 48dp of target and the row draws 42 (a 34dp icon, 4dp of
+            // §10 asks for ≥ 48dp of target and the row draws 46 (a 38dp icon, 4dp of
             // gap, the 4dp ribbon). It clears the floor anyway and not by luck:
             // Compose expands a pointer node's bounds to the platform's minimum touch
             // target, so `clickable` is already 48. What that expansion does NOT do is
@@ -130,8 +130,10 @@ private fun RowScope.DayAndSky(
     ConditionIcon(
         glyph = condition,
         // Between the strip and the timeline on the family's ladder, sized to
-        // the row it sits in. The ribbon below still starts at 52dp (the day
-        // label's 44 plus the 8 beside it), which the icon's size never touched.
+        // the row it sits in: the row is as tall as the icon, so every step of
+        // the ladder is a step in the week's height too. The ribbon below still
+        // starts at 52dp (the day label's 44 plus the 8 beside it), which the
+        // icon's size never touched.
         modifier = Modifier.size(WeatherIconSize.Week)
     )
     Text(

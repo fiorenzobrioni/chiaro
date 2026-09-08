@@ -17,13 +17,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
@@ -64,6 +67,7 @@ import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.ui.theme.ChiaroColors
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.forText
+import com.callbackdev.chiaro.ui.theme.tabular
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -182,36 +186,48 @@ private fun JournalBody(content: JournalContent, units: UnitSettings) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         if (content.drift != null) {
             item { JournalSectionTitle(stringResource(R.string.journal_drift_title)) }
+            // One card for the whole drift (review, 8 set 2026): the chips, the strip,
+            // the frost line and the sentence were five things stacked on the page and
+            // read as five; on the same `surfaceContainer` as the details tiles they
+            // read as one object with one job.
             item {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
                 ) {
-                    FilterChip(
-                        selected = metric == DriftMetric.RAIN,
-                        onClick = { metric = DriftMetric.RAIN },
-                        label = { Text(stringResource(R.string.journal_metric_rain)) }
-                    )
-                    FilterChip(
-                        selected = metric == DriftMetric.HIGH,
-                        onClick = { metric = DriftMetric.HIGH },
-                        label = { Text(stringResource(R.string.journal_metric_high)) }
-                    )
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(
+                                selected = metric == DriftMetric.RAIN,
+                                onClick = { metric = DriftMetric.RAIN },
+                                label = { Text(stringResource(R.string.journal_metric_rain)) }
+                            )
+                            FilterChip(
+                                selected = metric == DriftMetric.HIGH,
+                                onClick = { metric = DriftMetric.HIGH },
+                                label = { Text(stringResource(R.string.journal_metric_high)) }
+                            )
+                        }
+                        DriftStrip(
+                            drift = content.drift,
+                            metric = metric,
+                            zone = content.zone,
+                            units = units,
+                            locale = locale,
+                            timeFmt = timeFmt,
+                            onOpenTable = { tableOpen = true }
+                        )
+                        FrostLine(content.drift, units, locale)
+                        DriftSentence(content.drift, metric, units, locale)
+                    }
                 }
             }
-            item {
-                DriftStrip(
-                    drift = content.drift,
-                    metric = metric,
-                    zone = content.zone,
-                    units = units,
-                    locale = locale,
-                    timeFmt = timeFmt,
-                    onOpenTable = { tableOpen = true }
-                )
-            }
-            item { FrostLine(content.drift, units, locale) }
-            item { DriftSentence(content.drift, metric, units, locale) }
         } else if (content.days.isNotEmpty()) {
             item {
                 Text(
@@ -247,7 +263,9 @@ private fun JournalBody(content: JournalContent, units: UnitSettings) {
             drift = content.drift,
             metric = metric,
             units = units,
+            zone = content.zone,
             locale = locale,
+            timeFmt = timeFmt,
             onDismiss = { tableOpen = false }
         )
     }
@@ -287,27 +305,41 @@ private fun EntryRow(
     units: UnitSettings,
     locale: Locale
 ) {
+    // The hour trails the row as a label rather than ending the sentence with "· at
+    // 21:54" (review, 8 set 2026): a log is scanned by the hour, and a column of hours
+    // down the right edge is what makes it scannable. The outcome line has no hour —
+    // it is about the day.
     val time = entry.at.atZone(zone).format(timeFmt)
     when (entry) {
         is JournalEntry.ForecastShift -> {
             val details = JournalText.shiftDetails(entry.shifts, units, locale)
-            val at = stringResource(R.string.journal_at_time, time)
+            // How many updates the folded line stands for, when more than one.
+            val count = if (entry.revisions > 1) {
+                pluralStringResource(
+                    R.plurals.journal_shift_revisions, entry.revisions, entry.revisions
+                )
+            } else {
+                null
+            }
             EntryItem(
-                icon = ChiaroIcons.cloud,
+                icon = Icons.Outlined.Edit,
                 headline = JournalText.shiftHeadline(entry, locale),
                 // A revision this screen has no words for keeps its row — the Journal
-                // is the log, and "something moved at 21:54" is still the truth — but
-                // it does not keep the separator in front of the hour.
-                supporting = if (details.isBlank()) at else "$details · $at"
+                // is the log, and "something moved at 21:54" is still the truth.
+                supporting = listOfNotNull(details.takeIf { it.isNotBlank() }, count)
+                    .joinToString(" · ")
+                    .ifBlank { null },
+                time = time
             )
         }
         is JournalEntry.RuleFired -> EntryItem(
             icon = Icons.Outlined.Notifications,
             headline = stringResource(R.string.journal_rule_fired, entry.name),
-            supporting = stringResource(R.string.journal_at_time, time)
+            supporting = null,
+            time = time
         )
         is JournalEntry.SkyObserved -> EntryItem(
-            icon = ChiaroIcons.star,
+            icon = Icons.Outlined.Star,
             headline = stringResource(SkyText.nameRes(entry.jobId)),
             supporting = when {
                 entry.verdict != null -> buildString {
@@ -316,12 +348,10 @@ private fun EntryRow(
                         append(", ")
                         append(stringResource(R.string.sky_evidence_cloud).format(it))
                     }
-                    append(" · ")
-                    append(stringResource(R.string.journal_at_time, time))
                 }
-                else -> stringResource(R.string.journal_sky_skipped) +
-                    " · " + stringResource(R.string.journal_at_time, time)
-            }
+                else -> stringResource(R.string.journal_sky_skipped)
+            },
+            time = time
         )
         // The loop closed: what the app said, against what it then saw. The check is
         // "this day has been checked", not a verdict — green and red would be a
@@ -354,7 +384,8 @@ private fun EntryRow(
                         entry.coveredHours
                     )
                 )
-            }.joinToString(" · ")
+            }.joinToString(" · "),
+            time = null
         )
         is JournalEntry.FetchFailed -> EntryItem(
             icon = Icons.Outlined.Warning,
@@ -365,13 +396,22 @@ private fun EntryRow(
                     FetchFailureReason.SERVICE -> R.string.error_service
                     FetchFailureReason.UNKNOWN -> R.string.error_unknown
                 }
-            ) + " · " + stringResource(R.string.journal_at_time, time)
+            ),
+            time = time
         )
     }
 }
 
+/**
+ * One line of the log. The glyph names the CATEGORY of the line — a revision, a sky
+ * moment observed, an alert fired, a day checked, an update missed — and is a Material
+ * silhouette in `onSurfaceVariant` for all five (review, 8 set 2026): two of them used
+ * to be Meteocons tinted flat, the same silhouettes taken off the Sky screen that day,
+ * and here they were not weather but categories, so §13.1 does not reach them and a
+ * monochrome set is the consistent one.
+ */
 @Composable
-private fun EntryItem(icon: ImageVector, headline: String, supporting: String) {
+private fun EntryItem(icon: ImageVector, headline: String, supporting: String?, time: String?) {
     ListItem(
         leadingContent = {
             Icon(
@@ -382,7 +422,16 @@ private fun EntryItem(icon: ImageVector, headline: String, supporting: String) {
             )
         },
         headlineContent = { Text(headline) },
-        supportingContent = { Text(supporting) }
+        supportingContent = supporting?.let { { Text(it) } },
+        trailingContent = time?.let {
+            {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.labelSmall.tabular(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     )
 }
 
@@ -430,10 +479,9 @@ private fun DriftStrip(
         verticalArrangement = Arrangement.spacedBy(2.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
             // Both gestures open the table. An empty onClick left a ripple that did
             // nothing and, worse, gave TalkBack a "double tap to activate" for an
-            // action that was not there.
+            // action that was not there. The margins are the card's now.
             .combinedClickable(onClick = onOpenTable, onLongClick = onOpenTable)
             .semantics(mergeDescendants = true) { contentDescription = stripDescription }
     ) {
@@ -575,8 +623,7 @@ private fun FrostLine(drift: DriftModel, units: UnitSettings, locale: Locale) {
     if (days.isEmpty()) return
     Row(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = ChiaroIcons.frost,
@@ -656,11 +703,7 @@ private fun DriftSentence(
             }
         }
     }
-    Text(
-        text = sentence,
-        style = MaterialTheme.typography.bodyMedium,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-    )
+    Text(text = sentence, style = MaterialTheme.typography.bodyMedium)
 }
 
 /** What one row of the strip did: where it started, where it ended, and how far it
@@ -684,25 +727,71 @@ private fun <T : Comparable<T>> move(date: LocalDate, cells: List<T?>): DriftMov
 private const val RAIN_MOVE_PCT = 10
 private const val HIGH_MOVE_C = 1.0
 
-/** The numbers behind the colors (DESIGN §9.3): a picture of a number is not a
- * number. One line per target day, values in column order, absence as a dot. */
+/**
+ * The numbers behind the colors (DESIGN §9.3): a picture of a number is not a number.
+ *
+ * A grid, not a line of arrows (review, 8 set 2026): fourteen values joined by "→"
+ * wrapped three times inside a dialog and lost the one thing a table has, the column.
+ * One row per target day, one column per slot with the slot's own hour over it — the
+ * fetch's when there was one, the slot's nominal hour when the slot is empty — in
+ * tabular figures, scrolling sideways when the strip is wider than the dialog. Absence
+ * stays a dash, never a zero.
+ */
 @Composable
 private fun DriftTableDialog(
     drift: DriftModel,
     metric: DriftMetric,
     units: UnitSettings,
+    zone: ZoneId,
     locale: Locale,
+    timeFmt: DateTimeFormatter,
     onDismiss: () -> Unit
 ) {
     val dayFmt = remember(locale) { DateTimeFormatter.ofPattern("EEE d", locale) }
+    val slotDayFmt = remember(locale) { DateTimeFormatter.ofPattern("EEE", locale) }
+    val cellStyle = MaterialTheme.typography.labelMedium.tabular()
+    val quiet = MaterialTheme.colorScheme.onSurfaceVariant
+    val labelWidth = 56.dp.forText()
+    val cellWidth = 52.dp.forText()
+    // Each column's moment: the fetch it holds, or where the empty slot would have
+    // fallen — the strip's axis is time, so an empty column still has an hour.
+    val slotTimes = drift.columns.indices.map { col ->
+        drift.columns[col]
+            ?: drift.newest.minusSeconds((drift.columns.lastIndex - col) * drift.columnHours * 3600)
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.journal_drift_table_title)) },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.verticalScroll(rememberScrollState())
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .horizontalScroll(rememberScrollState())
             ) {
+                // Two header lines: the slot's day, then its hour.
+                Row {
+                    Box(modifier = Modifier.width(labelWidth))
+                    slotTimes.forEach { at ->
+                        Text(
+                            text = at.atZone(zone).format(slotDayFmt),
+                            style = cellStyle,
+                            color = quiet,
+                            modifier = Modifier.width(cellWidth)
+                        )
+                    }
+                }
+                Row {
+                    Box(modifier = Modifier.width(labelWidth))
+                    slotTimes.forEach { at ->
+                        Text(
+                            text = at.atZone(zone).format(timeFmt),
+                            style = cellStyle,
+                            color = quiet,
+                            modifier = Modifier.width(cellWidth)
+                        )
+                    }
+                }
                 drift.dates.forEachIndexed { row, date ->
                     val values = when (metric) {
                         DriftMetric.RAIN -> drift.rain[row].map { cell ->
@@ -713,10 +802,17 @@ private fun DriftTableDialog(
                                 ?: JournalText.MISSING
                         }
                     }
-                    Text(
-                        text = date.format(dayFmt) + "  " + values.joinToString(" → "),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Row {
+                        Text(
+                            text = date.format(dayFmt),
+                            style = cellStyle,
+                            color = quiet,
+                            modifier = Modifier.width(labelWidth)
+                        )
+                        values.forEach { value ->
+                            Text(text = value, style = cellStyle, modifier = Modifier.width(cellWidth))
+                        }
+                    }
                 }
             }
         },

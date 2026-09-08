@@ -154,6 +154,7 @@ object SkyText {
         SkyNotScheduled.POLAR_NIGHT -> R.string.sky_none_polar_night
         SkyNotScheduled.MOON_ABSENT -> R.string.sky_none_moon
         SkyNotScheduled.NO_DARKNESS -> R.string.sky_none_no_darkness
+        SkyNotScheduled.DARK_ALL_DAY -> R.string.sky_none_dark_all_day
         SkyNotScheduled.DARKNESS_ALL_YEAR -> R.string.sky_none_darkness_all_year
         SkyNotScheduled.ECLIPTIC_TOO_FLAT -> R.string.sky_none_ecliptic_flat
         SkyNotScheduled.CORE_TOO_LOW -> R.string.sky_none_core_too_low

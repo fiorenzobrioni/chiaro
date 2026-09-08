@@ -575,9 +575,59 @@ strip is a `LazyRow` that composes what fits and the week is seven. **Not the wi
 and not by choice: `RemoteViews` cannot run an `AnimatedVectorDrawable` at all.
 
 **What it costs**, and why the answer is the platform's rather than a promise made here:
-an AVD stops when its host stops being visible — `ImageView.onVisibilityAggregated` calls
-`setVisible(false)`, and the platform pauses the animator set. Scrolling a cell away or
-backgrounding the app therefore stops the work without a lifecycle observer of our own.
+a view that is not drawn is a render node hwui does not prepare, and the animators of a
+node it does not prepare do not run. Scrolling a cell away or backgrounding the app
+therefore stops the work without a lifecycle observer of our own. (Corrected 9 set 2026:
+this paragraph used to credit `ImageView.onVisibilityAggregated` → `setVisible(false)`
+with pausing the animator set. It does call it, but the RenderThread animator's `pause()`
+and `resume()` are two TODOs in AOSP, so on that thread the call is a no-op — it is not
+being drawn that stops the work, and that is enough.)
+
+**The weather holds still while the page moves** (9 set 2026, after the device still
+reported a slight hitch with the loops on). The remaining cost was the RenderThread's:
+about fourteen vector loops re-rasterized at every vsync while the same thread moves the
+layers of the scroll. For as long as a scroll is in progress — Today's list, the hour
+strip's row, or the pager between places (`LocalMotionPaused`) — each moving icon hides
+its animated twin and shows its still drawing, which is composed underneath it at all
+times so that the first frame of a scroll composes nothing. Hidden, not paused, for the
+reason above; and not stopped, because `stop()` jumps the drawing to the loop's end frame
+(for the rain, the frame with no drops in it) and `start()` would replay from the cloud at
+every rest. When the page stops the twin is drawn again and its loop is where the clock
+puts it, because the animators run on frame time. The visible price is a change of pose
+at the two ends of a scroll: the moving drawing snaps to its still pose as the finger
+moves, and back when it stops.
+
+**Why an `ImageView` and not a Compose painter** — corrected 8 set 2026. The first
+version of this section said Compose's `AnimatedImageVector` could not play an endless
+loop; it can (its parser reads `repeatCount="infinite"` and builds an infinite
+`repeatable`), and the reason it is not used is a better one: it animates by recomposing
+the vector's tree every frame and rasterizing it on the UI thread, and the UI thread is
+what a scroll needs. The platform's `AnimatedVectorDrawable` in a hardware-accelerated
+`ImageView` runs on the RenderThread (`VectorDrawableAnimatorRT`, verified in the AOSP
+source), so while the icons move the UI thread pays nothing per frame.
+
+**What the interop costs instead**, measured in the source after the strip and the page
+were reported "slightly choppy" (8 set 2026), and what was done about each:
+
+- Every `AndroidView` in a lazy list gets `View.layout()` called on every scroll frame —
+  Compose's `AndroidViewHolder` does it from `onGloballyPositioned` — and lazy items are
+  otherwise placed on layers and moved without redrawing. Inherent to the interop, small
+  per icon, left alone.
+- The drawable was `mutate()`d after `getDrawable`, which for an AVD is a second deep copy
+  of the vector tree: the private constructor already copies it for every instance
+  (`AnimatedVectorDrawableState(copy, …)` in AOSP). Removed.
+- A recycled cell threw its drawable away in `onReset` and re-inflated on reuse even when
+  the weather was the same. It now only stops the loop, and `ConditionIcon`'s
+  `MovingIconView` restarts it when the resource matches; the drawable goes in `onRelease`.
+- The strip's cells were keyed by position, so at the top of every hour all the visible
+  cells changed content and re-inflated in one frame. `HourCell.key` is the hour now.
+- The week was one lazy item, so its seven icons were inflated in the frame it entered.
+  It is seven items now, one per row, on the same 12dp rhythm the list already had, so
+  the prefetcher takes them one at a time.
+
+What remains is the animation itself: about fourteen vector caches re-rasterized on the
+RenderThread every vsync while they are on screen. That is the price of the feature, the
+one lever on it is how many move at once, and it is measured on a device, not here.
 
 **How the conversion works**, because it is the only place in the app where a file format
 was translated rather than copied. Four SMIL forms appear in the family, all linear, all
@@ -603,7 +653,14 @@ Each entry is the contract; the Compose signatures land in Fase 1.
 
 **8.1 SkyCanvas** — the gradient (§3), the place name, `heroTemperature`, condition,
 feels-like, the daylight ribbon, the headline sentence, the scrim (§3.6). Collapses on
-scroll into the app bar, keeping place and temperature.
+scroll into the app bar, keeping place and temperature. **At least 280dp plus the status
+bar, and taller when its text needs it** (8 set 2026): everything on it is measured in sp
+and the block was measured in dp, so at 100% type a two-line sentence left 2dp before the
+hero climbed into the place row, and at 115% they overlapped by 30dp. The row and the hero
+are the two ends of one column now, `SpaceBetween` on a floor rather than two things
+aligned to opposite edges of a fixed box. The bottom edge is straight (4 set, kept on
+review 8 set): every other surface on the page is inset and rounded, and the one that is
+not is the ground the page opens on, not a card floating over it.
 
 **8.2 FreshnessChip** — appears only when the data is older than the update interval.
 Warning role, the real age ("3 hours ago"), tappable to retry, with a progress state while
@@ -611,7 +668,11 @@ retrying. Never a toast: a toast is gone before it is read.
 
 **8.3 HourStrip** — horizontal, 24 cells from the next full hour, each 56dp wide: hour,
 icon, temperature (tabular), rain probability on the ink ramp (§2.3), zero included; an
-hour the provider gave no probability for prints nothing at all.
+hour the provider gave no probability for prints nothing at all. **Edge to edge** (8 set
+2026): the page margin is the row's `contentPadding`, so the first cell starts on the 16dp
+line and the rest slide under the screen's edge — cut on a line 16dp inside it, as they
+were, the strip read as a box. A cell is 112dp tall at 100% type (16 + 6 + 42 + 6 + 20 + 6
++ 16), and the skeleton quotes that.
 
 **8.3b RainChart** — under the strip, the same 24 hours as one series: 2px line on the
 **ink** ramp (a mark has its own 3:1 floor, and the fill ramp's light end clears neither
@@ -633,17 +694,32 @@ week** so the week has a shape, filled with the diverging temperature ramp (§2.
 anchored at 15 °C; the low and high are printed at its ends in tabular figures, because a
 colored bar is not a number.
 
-**8.6 MetricTile** — icon, label, value (`titleMedium`, tabular), meaning line
-(`bodySmall`, `onSurfaceVariant`). Never ships without the meaning line (§1.2). Tapping
-opens the details sheet at that metric. The icon is drawn **untinted** like every other
+**8.6 MetricTile** — icon and label; the value as a **reading** (`ReadingValue`: Inter
+Light 24sp on a 32sp line, tabular — the hero's voice at a tile's scale, since the card
+review of 8 set 2026; at `titleMedium` the value barely outranked its own 14sp label and
+the eye went to the icon); where the metric has a scale the world uses, a **4dp track**
+in `outlineVariant` filled in `primary` up to the value (UV on 0–11, humidity on 0–100,
+air on 0–300 — one hue, anchored to the world, the number printed above it, §9; pressure
+and visibility get none, one being a narrow band around 1013 and the other logarithmic);
+then the **facts behind the value** in `bodyMedium` — where the wind comes from in words
+with an arrow for where it goes, the gusts on the days they matter, the dew point under
+the humidity, which pollen — and last the meaning line (`bodySmall`, `onSurfaceVariant`).
+Never ships without the meaning line (§1.2). Tapping opens the details sheet at that
+metric. Two tiles became one that day: the dew point said "pleasant" under the
+humidity's "comfortable", the same fact in two cards, and the dew point is the better
+predictor of how the air feels, so it writes the humidity tile's meaning and stays on it
+as a note. The air index lost its acronym — "AQI" was the one piece of jargon on a
+screen built to have none — and the wind lost its compass abbreviation for the words the
+Sky screen already uses for a bearing. The icon is drawn **untinted** like every other
 weather icon (§13.1): a flat tint turns the family into silhouettes, and two metrics
 whose drawings differ only inside — humidity's drop and its %, the barometer's needle —
-become one mark. The label is one line: beside a 30dp icon two columns of a 360dp screen
-leave it 88dp, and a label is written to fit that rather than trimmed to it. (It was 94dp
-beside a 24dp icon until the family's ladder went up on 6 set 2026; the widest label the
-app ships measures 76.7dp, so the six the icon took cost nothing and left 11dp of margin.
-The contract is a 360dp contract: narrower than that the labels wrap and keep their words,
-as they already did at 320dp beside the 24dp icon.)
+become one mark. The label is one line: beside a 34dp icon two columns of a 360dp screen
+leave it 84dp, and a label is written to fit that rather than trimmed to it. (It was 94dp
+beside a 24dp icon until the family's ladder went up on 6 set 2026 and 88dp beside 30
+until the third step on 8 set; the widest label the app ships measures 76.7dp, so the ten
+the icon took cost nothing and left 7.3dp of margin, which is where the ladder stops for
+this rung. The contract is a 360dp contract: narrower than that the labels wrap and keep
+their words, as they already did at 320dp beside the 24dp icon.)
 
 **8.7 VerdictChip** — glyph + word + evidence, in that order: `✓ Great · 12% cloud`. The
 container is the verdict container color, the text is the ink color. **Never the color
@@ -651,6 +727,12 @@ alone** (§2.3), never a bare dot, never a number without the word.
 
 **8.8 MomentCard** — a sky event: name in plain words ("Golden hour, evening"), time,
 verdict chip, the number behind it, a bell for a reminder. The dotted job id never appears.
+The leading glyph is the weather family in its own colors at the timeline's rung (34dp),
+on the moments, the calendar ahead and the guide's index alike (review, 8 set 2026): it
+was a 26dp silhouette in `onSurfaceVariant`, the last place the family was tinted flat,
+and tinted flat the full moon and the new moon are the same disc. The catalog's check
+marks come from the subscription store, not from the rows on screen, so a subscribed job
+with no row today still shows as subscribed.
 
 **8.9 RuleSentence** — the alert builder as a sentence of tappable chips: *Notify me when*
 `[rain, next 6 h]` *is* `[above]` `[70%]`. Every chip opens a picker; no free-text field
@@ -658,11 +740,20 @@ for a value with a range, which is how tweather's "a syntax error is not writabl
 survives into a UI with no syntax.
 
 **8.10 JournalEntry** and **DriftStrip** — an entry is a line of prose with its numbers.
-The drift strip is one row per target day and one column per fetch, colored on **the
-metric's own ramp** (rain on the rain ramp, temperature on the diverging one) rather than
-on a good/bad scale: whether Saturday got "better" is a judgement, and the judgement
-belongs in the sentence beside the strip, not in the color. Legend always present, cells
-≥ 8dp, and a table view behind a long press for anyone who cannot read the colors at all.
+The drift strip is one row per target day — today included while it runs (8 set 2026) —
+and one column per six-hour slot, colored on **the metric's own ramp** (rain on the rain
+ramp, temperature on the diverging one) rather than on a good/bad scale: whether Saturday
+got "better" is a judgement, and the judgement belongs in the sentence beside the strip,
+not in the color. Legend always present, cells ≥ 8dp, and a table view behind a tap or a
+long press for anyone who cannot read the colors at all — a grid with the slot's hour over
+each column, not a line of arrows. The strip, its chips, the frost line and the sentence
+sit in one `surfaceContainer` card. An entry's glyph names its **category** (a revision, a
+sky moment observed, an alert fired, a day checked, an update missed) and is a Material
+silhouette in `onSurfaceVariant` for all five: these are not weather icons, so §13.1's
+"keep their colors" does not reach them, and a monochrome set is the consistent one. The
+hour trails the row as a label. A journal day's revisions of one target day fold into one
+line, first value to last, saying how many updates it took; a value that came back where
+it started is not a change.
 
 **8.11 States** — empty ("no place yet", with the one action that fixes it), error (what
 failed, in plain language, and a retry), stale (§8.2), loading (a shimmer that cannot be
@@ -733,7 +824,7 @@ number.
   and their current value. Every row that can be removed can be removed without a gesture
   (`customActions`, Fase 9's predecessor pass).
 - **Reduced motion**: §7. **Touch targets**: ≥ 48dp, always. Two things the app draws are
-  smaller than that — the week row is 42dp (a 34dp icon, 4dp of gap, the 4dp ribbon) and
+  smaller than that — the week row is 46dp (a 38dp icon, 4dp of gap, the 4dp ribbon) and
   the freshness chip 32dp — and the Fase 9 pass went to fix them and found nothing to fix:
   Compose expands a pointer node's bounds to the platform's minimum touch target, so a
   `clickable` of any size is already 48dp to a finger. Worth writing down because the
@@ -868,18 +959,26 @@ a valid animator and only a person can say the rain falls downward.
    audience that scans) and the argument held while the sizes were small; the sizes
    moved, so the default did too.
    **The sizes are one ladder, `ui/icons/WeatherIconSize`**, and not four numbers spread
-   over four components: hour strip **38dp**, week row **34dp**, timeline row and metric
-   tile **30dp**. Each is 6dp above what it was until 6 set 2026 — 4dp, then 2 more on a
-   second look — when the drawings asked to be examined rather than recognised on a
-   device; the step changed no padding, no arrangement and no column width, so every
-   section kept the rhythm it was tuned to. What it spends instead are the three elastic
-   measures beside the icons, each measured at 360dp: the 56dp hour cell keeps 9dp of air
-   per side, the week's temperature bar and the timeline's prose give up 6dp apiece
-   (112→106dp, 232→226dp), and the tile's label budget goes 94→88dp against a widest
-   label of 76.7dp. That last margin is the ladder's ceiling, and it is why a further
-   step would have to be argued rather than assumed. The order of the rungs is the
-   reading order: the strip is scanned sideways and carries the most weight, the week is
-   read down, a line of prose leads with the smallest glyph.
+   over four components: hour strip **42dp**, week row **38dp**, timeline row and metric
+   tile **34dp**. Each is 10dp above what it was until 6 set 2026 — 4dp, then 2 more on
+   a second look that day, then 4 more on 8 set — when the drawings asked to be examined
+   rather than recognised on a device; no step changed a padding, an arrangement or a
+   column width, so every section kept the rhythm it was tuned to. What they spend
+   instead are the elastic measures beside the icons, each measured at 360dp: the 56dp
+   hour cell keeps 7dp of air per side and the same 112dp height (the third step took
+   over the icon's 2dp of vertical padding), the week's temperature bar and the
+   timeline's prose give up 10dp apiece (112→102dp, 232→222dp), and the tile's label
+   budget goes 94→84dp against a widest label of 76.7dp. That last margin, 7.3dp, is the
+   ladder's ceiling: a fourth step would put «Qualità aria» on two lines at the reference
+   width. The third step was argued with a measurement first (8 set 2026): the obvious
+   alternative was to let the drawings fill more of their own 64-unit box, and the ink of
+   the 18 condition icons, measured over the whole animation loop, uses it — x 6.0–61.6,
+   y 8.0–60.0, drops falling to y 60 and the drifting overcast reaching x 61.6 — so a
+   uniform crop could take 2.4 units, under 4%, and would move the optical centres. The
+   size moved and the viewport did not. What makes the family read small is the plain
+   cloud: 30 units tall in a 64 box, 20dp of drawing in a 42dp icon. The order of the
+   rungs is the reading order: the strip is scanned sideways and carries the most weight,
+   the week is read down, a line of prose leads with the smallest glyph.
    Gradients are flattened to their face color (a two-stop ramp is invisible at
    30–38dp, and was at the 24–32 of the import) and hairline edge strokes are dropped.
    **The SMIL is no longer dropped** (7 set 2026): each of the four sets has an animated

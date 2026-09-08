@@ -15,6 +15,7 @@ import com.callbackdev.chiaro.domain.sky.SkyJob
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyJobKind
 import com.callbackdev.chiaro.domain.sky.SkyLead
+import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyScheduler
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
@@ -41,17 +42,29 @@ sealed interface SkyUiState {
         val moments: List<Moment>,
         val events: List<UpcomingEvent>,
         val defaultLead: SkyLead,
-        val notifyOnFail: Boolean
+        val notifyOnFail: Boolean,
+        /**
+         * The enabled subscriptions, by job id — the store's answer, for the catalog's
+         * check marks. The sheet used to rebuild this set from the rows on screen, and a
+         * subscribed job with no row (an eclipse search that finds nothing ahead) then
+         * showed as unsubscribed and offered to be added again (review, 8 set 2026).
+         */
+        val subscribedIds: Set<String> = emptySet()
     ) : SkyUiState
 }
 
 /**
  * The hero: whether the dark window is worth planning around. [window] is null when
- * the sky never gets fully dark tonight — a fact about the latitude, stated as such.
+ * the sky has no dark window tonight, and [reason] says which of the two opposite
+ * skies that is (8 set 2026): the one that never gets fully dark, or the deep polar
+ * night that never gets light. A fact about the latitude either way, stated as such —
+ * the card used to say "never gets fully dark" for both, which at the pole in June is
+ * the reverse of the truth.
  */
 data class Tonight(
     val window: SkyOccurrence.At?,
-    val verdict: SkyVerdict?
+    val verdict: SkyVerdict?,
+    val reason: SkyNotScheduled? = null
 )
 
 /** When a moment's occurrence lands — the word the row prints before the time. */
@@ -147,7 +160,8 @@ object SkyStateBuilder {
             moments = moments(subscriptions, settings, city, zone, now, ::judge),
             events = events(subscriptions, settings, city, zone, now, ::judge),
             defaultLead = SkyLead.ofMinutes(settings.skyNotifyDefaultMin),
-            notifyOnFail = settings.skyNotifyOnFail
+            notifyOnFail = settings.skyNotifyOnFail,
+            subscribedIds = subscriptions.filter { it.enabled }.map { it.jobId }.toSet()
         )
     }
 
@@ -165,8 +179,12 @@ object SkyStateBuilder {
         judge: (SkyJob, SkyOccurrence.At) -> SkyVerdict?
     ): Tonight {
         val job = SkyJobCatalog.DarknessWindow
-        val at = SkyUpcoming.of(job, now, zone, city.coordinates).at
-            ?: return Tonight(window = null, verdict = null)
+        val upcoming = SkyUpcoming.of(job, now, zone, city.coordinates)
+        val at = upcoming.at ?: return Tonight(
+            window = null,
+            verdict = null,
+            reason = (upcoming.occurrence as? SkyOccurrence.None)?.reason
+        )
         return Tonight(window = at, verdict = judge(job, at))
     }
 

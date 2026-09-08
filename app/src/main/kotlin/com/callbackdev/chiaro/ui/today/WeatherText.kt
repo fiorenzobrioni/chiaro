@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.ui.today
 import androidx.annotation.StringRes
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.model.PollenLevel
+import com.callbackdev.chiaro.domain.model.PollenReport
 
 /**
  * The WMO vocabulary and the meaning lines, as string resources — which is the whole
@@ -53,6 +54,11 @@ object WeatherText {
         else -> R.string.uv_meaning_extreme
     }
 
+    /**
+     * Said for the wind a body feels, which on a gusty day is the gust: the tile passes
+     * the gust here when [gustsMaterial] says it counts, because "noticeable, not a
+     * bother" over a line reading "gusts up to 45 km/h" is the tile arguing with itself.
+     */
     @StringRes
     fun windMeaning(speedKph: Double): Int = when {
         speedKph < 5 -> R.string.wind_meaning_calm
@@ -62,15 +68,22 @@ object WeatherText {
         else -> R.string.wind_meaning_gale
     }
 
-    @StringRes
-    fun humidityMeaning(pct: Int): Int = when {
-        pct < 30 -> R.string.humidity_meaning_dry
-        pct <= 60 -> R.string.humidity_meaning_comfortable
-        pct <= 80 -> R.string.humidity_meaning_humid
-        else -> R.string.humidity_meaning_oppressive
-    }
+    /**
+     * Whether the gusts earn a line of their own (card review, 8 set 2026): at least
+     * 25 km/h, and at least half again the steady wind. Below that the two numbers say
+     * the same thing and the second is noise; above it the gust is the number that
+     * takes the hat, and hiding it would be the tile understating the day.
+     */
+    fun gustsMaterial(speedKph: Double, gustKph: Double): Boolean =
+        gustKph >= 25.0 && gustKph >= speedKph * 1.5
 
-    /** The comfort scale that humidity alone cannot honestly claim. */
+    /**
+     * The comfort scale that humidity alone cannot honestly claim — and, since the card
+     * review of 8 set 2026, the meaning line of the ONE humidity tile: the dew point is
+     * the better predictor of how the air feels, and two tiles saying "comfortable" and
+     * "pleasant" one under the other were the same fact told twice. The dew point itself
+     * stays on the tile as a printed note.
+     */
     @StringRes
     fun dewPointMeaning(celsius: Double): Int = when {
         celsius < 10 -> R.string.dew_meaning_dry
@@ -121,5 +134,26 @@ object WeatherText {
         PollenLevel.LOW -> R.string.pollen_meaning_low
         PollenLevel.MODERATE -> R.string.pollen_meaning_moderate
         PollenLevel.HIGH -> R.string.pollen_meaning_high
+    }
+
+    /** The level the pollen tile prints: the worst of the three families. */
+    fun pollenWorst(pollen: PollenReport): PollenLevel =
+        listOf(pollen.grass, pollen.tree, pollen.weed).maxBy { it.ordinal }
+
+    /**
+     * WHICH pollen is at that level, in the catalog's order (card review, 8 set 2026):
+     * "high" alone tells an allergic reader nothing they can act on, "grass" does.
+     * Empty when nothing is in the air, so the tile prints no line rather than naming
+     * three absent families.
+     */
+    @StringRes
+    fun pollenFamiliesAtWorst(pollen: PollenReport): List<Int> {
+        val worst = pollenWorst(pollen)
+        if (worst == PollenLevel.NONE) return emptyList()
+        return buildList {
+            if (pollen.grass == worst) add(R.string.pollen_family_grass)
+            if (pollen.tree == worst) add(R.string.pollen_family_tree)
+            if (pollen.weed == worst) add(R.string.pollen_family_weed)
+        }
     }
 }
