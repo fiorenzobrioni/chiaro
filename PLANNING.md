@@ -3805,8 +3805,18 @@ di `SKY_FLOOR` modificato e tabella non rigenerata. L'aritmetica OKLCh e il bord
 gamut sono riscritti in Kotlin apposta perché possano dissentire da `color_math.py`.
 
 DESIGN.md §3.7: tabella aggiornata sulle tre righe, la clausola stampata, il perché
-misurato. **La verifica su device è del committente**: il cielo della sera è la cosa che
-cambia, e un foglio renderizzato non è un telefono in mano.
+misurato — e `PaletteDocTest`, che rilegge quella sezione e la confronta con quello che
+il canvas disegna davvero, è il test che tiene le due cose insieme.
+
+Suite intera verde: `:app` 188 (erano 186: i due test nuovi), `:core:domain` 166,
+`:core:data` 174, `:core:sync` 5. `ScrimContractTest` continua a passare senza che sia
+stato toccato, ed era il rischio vero del pavimento: spazza entrambe le tabelle a ogni
+mezzo grado, e lo stop più luminoso — `#AFE0FF`, quello contro cui la misura è fatta —
+è fra quelli che il pavimento non muove. Lint a zero errori e 61 avvisi, come prima. CI
+verde su `claude/palette-settings-bug-343c6z`.
+
+**La verifica su device è del committente**: il cielo della sera è la cosa che cambia, e
+un foglio renderizzato non è un telefono in mano.
 
 ---
 
