@@ -71,19 +71,30 @@
     <string name="rain_chart_caption">Probabilità di pioggia</string>
     <string name="rain_chart_desc">Probabilità di pioggia dalle %1$s alle %2$s su una scala da 0 a 100%%, con picco %3$d%% verso le %4$s</string>
 
-    <!-- Griglia dettagli: etichette. Una riga sola accanto all'icona da 30dp:
-         su uno schermo da 360dp sono 88dp (erano 94 con l'icona da 24, 6 set).
-         «Punto di rugiada» (111) e «Qualità dell'aria» (105) sforavano e andavano
-         a capo; la più larga che l'app spedisce, «Qualità aria», misura 76,7. -->
+    <!-- Griglia dettagli: etichette. Una riga sola accanto all'icona da 34dp:
+         su uno schermo da 360dp sono 84dp (erano 94 con l'icona da 24 il 6 set e
+         88 con quella da 30 fino all'8 set). «Punto di rugiada» (111) e «Qualità
+         dell'aria» (105) sforavano e andavano a capo; la più larga che l'app
+         spedisce, «Qualità aria», misura 76,7. -->
     <string name="metric_uv">UV</string>
     <string name="metric_wind">Vento</string>
     <string name="metric_humidity">Umidità</string>
-    <string name="metric_dew">Rugiada</string>
     <string name="metric_pressure">Pressione</string>
     <string name="metric_visibility">Visibilità</string>
     <string name="metric_air">Qualità aria</string>
-    <string name="metric_air_value">%1$d AQI</string>
     <string name="metric_pollen">Pollini</string>
+
+    <!-- Griglia dettagli: i fatti sotto un valore (revisione delle card, 8 set 2026).
+         Le famiglie di polline sono minuscole per stare in un elenco; la card mette
+         la maiuscola alla prima. -->
+    <string name="wind_from">da %1$s</string>
+    <string name="wind_gusts">Raffiche a %1$s</string>
+    <string name="humidity_dew_note">Rugiada %1$s</string>
+    <string name="pollen_family_grass">graminacee</string>
+    <string name="pollen_family_tree">alberi</string>
+    <string name="pollen_family_weed">erbe</string>
+    <string name="list_two">%1$s e %2$s</string>
+    <string name="list_three">%1$s, %2$s e %3$s</string>
 
     <!-- Griglia dettagli: le righe di significato (§1.2 — ogni numero dice cosa farne) -->
     <string name="uv_meaning_low">Nessuna protezione necessaria</string>
@@ -96,10 +107,6 @@
     <string name="wind_meaning_moderate">Si sente, non dà fastidio</string>
     <string name="wind_meaning_strong">Tieni il cappello</string>
     <string name="wind_meaning_gale">Difficile camminarci contro</string>
-    <string name="humidity_meaning_dry">Aria secca</string>
-    <string name="humidity_meaning_comfortable">Confortevole</string>
-    <string name="humidity_meaning_humid">Un po\' appiccicosa</string>
-    <string name="humidity_meaning_oppressive">Afa pesante</string>
     <string name="dew_meaning_dry">Aria asciutta e frizzante</string>
     <string name="dew_meaning_pleasant">Gradevole</string>
     <string name="dew_meaning_sticky">Leggermente appiccicosa</string>

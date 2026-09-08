@@ -41,7 +41,14 @@ sealed interface SkyUiState {
         val moments: List<Moment>,
         val events: List<UpcomingEvent>,
         val defaultLead: SkyLead,
-        val notifyOnFail: Boolean
+        val notifyOnFail: Boolean,
+        /**
+         * The enabled subscriptions, by job id — the store's answer, for the catalog's
+         * check marks. The sheet used to rebuild this set from the rows on screen, and a
+         * subscribed job with no row (an eclipse search that finds nothing ahead) then
+         * showed as unsubscribed and offered to be added again (review, 8 set 2026).
+         */
+        val subscribedIds: Set<String> = emptySet()
     ) : SkyUiState
 }
 
@@ -147,7 +154,8 @@ object SkyStateBuilder {
             moments = moments(subscriptions, settings, city, zone, now, ::judge),
             events = events(subscriptions, settings, city, zone, now, ::judge),
             defaultLead = SkyLead.ofMinutes(settings.skyNotifyDefaultMin),
-            notifyOnFail = settings.skyNotifyOnFail
+            notifyOnFail = settings.skyNotifyOnFail,
+            subscribedIds = subscriptions.filter { it.enabled }.map { it.jobId }.toSet()
         )
     }
 

@@ -77,19 +77,30 @@
     <string name="rain_chart_caption">Chance of rain</string>
     <string name="rain_chart_desc">Chance of rain from %1$s to %2$s on a scale of 0 to 100%%, peaking at %3$d%% around %4$s</string>
 
-    <!-- Details grid: labels. One line beside the tile's 30dp icon, which on a
-         360dp screen is a budget of 88dp (94 until the icons grew, 6 set): a label
-         written past it wraps and pushes its own value down while the tile next to
-         it stays put. The widest one shipped is 76.7dp. -->
+    <!-- Details grid: labels. One line beside the tile's 34dp icon, which on a
+         360dp screen is a budget of 84dp (94 until the icons grew on 6 set, 88 until
+         their third step on 8 set): a label written past it wraps and pushes its own
+         value down while the tile next to it stays put. The widest one shipped is
+         76.7dp. -->
     <string name="metric_uv">UV</string>
     <string name="metric_wind">Wind</string>
     <string name="metric_humidity">Humidity</string>
-    <string name="metric_dew">Dew point</string>
     <string name="metric_pressure">Pressure</string>
     <string name="metric_visibility">Visibility</string>
     <string name="metric_air">Air quality</string>
-    <string name="metric_air_value">%1$d AQI</string>
     <string name="metric_pollen">Pollen</string>
+
+    <!-- Details grid: the facts under a value (card review, 8 set 2026). The pollen
+         families are lowercase so they can be listed mid-sentence; the tile
+         capitalises the first. -->
+    <string name="wind_from">from %1$s</string>
+    <string name="wind_gusts">Gusts up to %1$s</string>
+    <string name="humidity_dew_note">Dew point %1$s</string>
+    <string name="pollen_family_grass">grass</string>
+    <string name="pollen_family_tree">trees</string>
+    <string name="pollen_family_weed">weeds</string>
+    <string name="list_two">%1$s and %2$s</string>
+    <string name="list_three">%1$s, %2$s and %3$s</string>
 
     <!-- Details grid: the meaning lines (§1.2 — every number says what to do with it) -->
     <string name="uv_meaning_low">No protection needed</string>
@@ -102,10 +113,6 @@
     <string name="wind_meaning_moderate">Noticeable, not a bother</string>
     <string name="wind_meaning_strong">Hold on to your hat</string>
     <string name="wind_meaning_gale">Hard to walk against</string>
-    <string name="humidity_meaning_dry">Dry air</string>
-    <string name="humidity_meaning_comfortable">Comfortable</string>
-    <string name="humidity_meaning_humid">A little sticky</string>
-    <string name="humidity_meaning_oppressive">Heavy, muggy air</string>
     <string name="dew_meaning_dry">Dry, crisp air</string>
     <string name="dew_meaning_pleasant">Pleasant</string>
     <string name="dew_meaning_sticky">Slightly sticky</string>

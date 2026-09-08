@@ -76,5 +76,20 @@ val HeroTemperature = TextStyle(
     fontFeatureSettings = Tabular
 )
 
+/**
+ * A reading in a tile (DESIGN §8.6, 8 set 2026): the same voice as [HeroTemperature] at
+ * a tile's scale — light, tabular, 24sp on a 32sp line. Until then the value stood at
+ * `titleMedium`, 16sp against a 14sp label and a 34dp icon, and the eye went to the icon;
+ * a reading has to be the first thing seen, and the argument for the hero's weight holds
+ * here too: a number in a body weight reads as a headline, not as a reading.
+ */
+val ReadingValue = TextStyle(
+    fontFamily = InterFamily,
+    fontWeight = FontWeight.Light,
+    fontSize = 24.sp,
+    lineHeight = 32.sp,
+    fontFeatureSettings = Tabular
+)
+
 /** Any style, with the figures made tabular. */
 fun TextStyle.tabular(): TextStyle = copy(fontFeatureSettings = Tabular)

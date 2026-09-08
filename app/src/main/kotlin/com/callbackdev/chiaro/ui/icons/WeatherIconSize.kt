@@ -11,44 +11,61 @@ import androidx.compose.ui.unit.dp
  *
  * **The step up of 6 set 2026** (committente, from a device): at 24–32dp the drawings had
  * to be *examined* rather than recognised, which is the one thing an icon may not ask.
- * Every rung grows by **6dp** — 4dp, then 2 more on a second look — and **nothing else
- * moves**: no padding, no arrangement, no column width, so each section keeps the rhythm
- * it was tuned to and only the drawings get bigger. The rungs stay in order, because the
- * order is the reading order: the hour strip is scanned sideways and carries the most
- * weight, the week rows are read down, a line of prose or a tile label leads with the
- * smallest glyph of the three.
+ * Every rung grew by **6dp** — 4dp, then 2 more on a second look — and **nothing else
+ * moved**: no padding, no arrangement, no column width, so each section kept the rhythm
+ * it was tuned to and only the drawings got bigger.
  *
- * What the growth spends is the three elastic measures beside the icons, and each was
- * checked at 360dp before the second step: the hour cell is fixed at 56dp and keeps 9dp
- * of air per side, the week's temperature bar and the timeline's prose are `weight(1f)`
- * and pay 6dp each (112→106dp and 232→226dp), and the tile's label budget is the one
- * with a written contract — see [Tile].
+ * **The third step, 8 set 2026** (committente: "slightly bigger, without touching the
+ * spacing"), +4dp on every rung, argued with a measurement first. The question was
+ * whether the drawings could simply fill more of their own box instead: the ink of the
+ * 18 condition icons was measured over the whole animation loop, and it uses the box —
+ * x 6.0–61.6 and y 8.0–60.0 of 64 (drops fall to y 60, the drifting overcast reaches
+ * x 61.6, the sun starts at y 8). A uniform crop could take 2.4 units, under 4%, and
+ * would move the optical centres; so the size moves and the viewport does not. The
+ * plain cloud is why they read small: it is 30 units tall in a 64 box, 18dp of drawing
+ * in a 38dp icon with 10dp of air above and below it.
+ *
+ * What the third step spends, each measured at 360dp:
+ * - the **strip** pays nothing: the icon takes over the 2dp of vertical padding it used
+ *   to sit in, so the cell stays 112dp tall, and the 56dp cell keeps 7dp of air per side
+ *   instead of 9;
+ * - the **week** row grows 4dp (its height is the icon's) and the temperature bar, a
+ *   `weight(1f)`, goes 106→102dp;
+ * - the **timeline** row grows 4dp and its prose goes 226→222dp;
+ * - the **tile**'s header row grows 4dp and its label budget goes 88→84dp against the
+ *   widest label the app ships, 76.7dp — see [Tile] for where that contract stops.
+ *
+ * The rungs stay in order, because the order is the reading order: the hour strip is
+ * scanned sideways and carries the most weight, the week rows are read down, a line of
+ * prose or a tile label leads with the smallest glyph of the three.
  *
  * The widgets are not on this ladder: a Glance cell sizes its icon against the cell
  * (Fase 8), and the navigation bar's silhouettes are Material's own 24dp.
  */
 object WeatherIconSize {
 
-    /** Hour strip: the largest rung, in a 56dp cell — 9dp of air each side. The cell
+    /** Hour strip: the largest rung, in a 56dp cell — 7dp of air each side. The cell
      * width never moved, so the strip still fits the same hours on the same screen. */
-    val Strip: Dp = 38.dp
+    val Strip: Dp = 42.dp
 
     /** Week rows: under the strip, over the prose, sized to the row it sits in. */
-    val Week: Dp = 34.dp
+    val Week: Dp = 38.dp
 
     /** Rest of the day: a leading glyph for one line of `bodyMedium`. */
-    val Timeline: Dp = 30.dp
+    val Timeline: Dp = 34.dp
 
     /**
      * Details grid: the label beside it keeps a measured budget (DESIGN.md §8.6) —
-     * `(360 − 32 − 12) / 2 − 32 − 38 = 88dp` on a 360dp screen, against the widest label
-     * the app ships ("Qualità aria", 76.7dp in Inter 14sp). 11dp of margin left, which is
-     * what says this rung could take the second step and where it stops: a third one
-     * spends the margin, not the air.
+     * `(360 − 32 − 12) / 2 − 32 − 42 = 84dp` on a 360dp screen (half the row minus the
+     * tile's padding minus the icon and the 8dp beside it), against the widest label
+     * the app ships ("Qualità aria", 76.7dp in Inter 14sp). 7.3dp of margin left, and
+     * that is where this rung stops: a fourth step would put the widest label on two
+     * lines at 360dp, which is the honest failure §10 chose for narrow screens and not
+     * one to buy on the reference width.
      *
      * The contract is a **360dp** contract and always was. Below that the labels wrap and
      * keep their words — the honest failure already chosen for them — and they did so at
      * 320dp with the original 24dp icon too (74dp of budget against the same 76.7).
      */
-    val Tile: Dp = 30.dp
+    val Tile: Dp = 34.dp
 }

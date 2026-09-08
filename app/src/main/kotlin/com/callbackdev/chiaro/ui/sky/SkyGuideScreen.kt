@@ -34,6 +34,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.sky.SkyJob
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
+import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.GroupTop
 import com.callbackdev.chiaro.ui.theme.SectionBottom
@@ -151,8 +153,10 @@ private fun SkyGuideIndex(onOpen: (String) -> Unit, modifier: Modifier = Modifie
                         Icon(
                             imageVector = jobIcon(job),
                             contentDescription = null, // the name is right beside it
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(26.dp)
+                            // Its own colors, like every weather icon (§13.1): tinted
+                            // flat, the full moon and the new moon were the same disc.
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(WeatherIconSize.Timeline)
                         )
                     },
                     headlineContent = { Text(name) },
@@ -207,8 +211,9 @@ internal fun SkyEventPage(
             Icon(
                 imageVector = jobIcon(job),
                 contentDescription = null, // the name is right beside it
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(36.dp)
+                // The page's one glyph: the family's largest rung, in its own colors.
+                tint = Color.Unspecified,
+                modifier = Modifier.size(WeatherIconSize.Strip)
             )
             Column {
                 Text(
@@ -277,10 +282,14 @@ private fun RelatedEvents(ids: List<String>, onOpen: (String) -> Unit) {
                 onClick = { onOpen(id) },
                 label = { Text(stringResource(SkyText.nameRes(id))) },
                 leadingIcon = {
+                    // A Meteocon draws inside about three quarters of its box, so at the
+                    // chip's default 18dp it was 13dp of ink; 24 keeps it a chip icon
+                    // and legible, in its own colors like the rest of the family.
                     Icon(
                         imageVector = jobIcon(job),
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             )

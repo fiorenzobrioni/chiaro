@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,22 +36,30 @@ const val SkyCanvasTopScrimEnd = 0.25f
  * 4.5:1 for every altitude the palette can produce, which is why it is a constant here
  * and not a parameter — one constant, both bands.
  *
- * The bottom edge is STRAIGHT (committente, 4 set): the canvas carried a 28dp round
- * on its two bottom corners until then, which read as a card floating over the scroll
- * rather than as the sky the screen opens on. The sky has no corners, so neither does
- * the block that draws it.
+ * The bottom edge is STRAIGHT (committente, 4 set; reconsidered and kept, 8 set): the
+ * canvas carried a 28dp round on its two bottom corners until then, which read as a
+ * card floating over the scroll rather than as the sky the screen opens on. The sky has
+ * no corners, so neither does the block that draws it — every other surface on the page
+ * is inset by 16dp and rounded, and the one that is not is the ground, not a card.
+ *
+ * [minHeight] is a floor, not a size (8 set 2026): the canvas holds text measured in sp
+ * — the 64sp temperature, a 22sp sentence that runs to two lines in Italian — inside a
+ * height that used to be fixed in dp, and at 100% type a two-line sentence left 2dp of
+ * room before the hero climbed into the place row; at 115% they overlapped by 30dp. The
+ * block is now at least this tall and grows with what it holds, and the scrim bands
+ * scale with it because they are fractions.
  */
 @Composable
 fun SkyCanvas(
     gradient: SkyGradient,
     modifier: Modifier = Modifier,
-    height: Dp = 280.dp,
+    minHeight: Dp = 280.dp,
     content: @Composable BoxScope.() -> Unit
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(height)
+            .heightIn(min = minHeight)
             .background(Brush.verticalGradient(gradient.stops()))
             .background(
                 Brush.verticalGradient(
@@ -72,7 +80,7 @@ private fun SkyCanvasPreview() {
         androidx.compose.foundation.layout.Column {
             listOf(50.0 to "mezzogiorno", 3.0 to "ora d'oro", -4.0 to "ora blu", -30.0 to "notte")
                 .forEach { (altitude, label) ->
-                    SkyCanvas(gradient = SkyPalette.Paper.gradient(altitude), height = 100.dp) {
+                    SkyCanvas(gradient = SkyPalette.Paper.gradient(altitude), minHeight = 100.dp) {
                         androidx.compose.material3.Text(
                             text = label,
                             color = Color.White,
