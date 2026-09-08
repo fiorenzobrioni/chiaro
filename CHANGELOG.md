@@ -308,6 +308,72 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   side, so it ended up sitting noticeably further in than the neighbouring widget's. The
   inset is halved; the day's high and low keep the trailing edge they were given.
 
+- **The Now widget has three forms, and the size you give it picks one.** Laid out
+  against the launcher's own weather widget at four sizes: a one-row card at two or three
+  cells is the glyph, the temperature and the place; at four cells the day's sentence
+  joins them against the far edge, right-aligned and centred on the row; a two-row card
+  puts the glyph alone in the top corner and stacks number, sentence and place under it.
+  The sentence is the one Today opens with — the umbrella, the thunderstorm — in a
+  register short enough for three lines of fourteen characters, and when there is nothing
+  to warn about the slot says what the sky is doing now instead, which is not a filler
+  but the thing the card is for. The two switches the widget used to offer are gone: the
+  sky's state beside the number, because the grant now decides whether there is room for
+  the sentence, and the day's high and low, which competed with it for the same edge and
+  are a tap away in the app (the Today widget keeps its own). Every edge is inset for what
+  sits against it — 4 dp where a glyph does, because a Meteocons drawing carries its own
+  margin, 14 dp where words do — and the two-cell card gives the glyph a little less
+  height so the place name is not cut to «Dergan…». The picker shows the four-cell form,
+  which is also where a new widget now lands.
+
+- **The Now widget's words grow a step, and so does the position pin.** On the device,
+  beside the launcher's own widget, the sentence at 14 sp and the place at 15 read small
+  against its 17: both are 16 now, told apart by weight and ink rather than size. The
+  brief register gains its last two forms — «per il resto del giorno» for the rain and
+  the snow that do not stop today — because at 16 sp «della giornata» was the one sentence
+  that no longer fit two lines on a square card. The pin before a position's name grows
+  from nine tenths of the text to its full size, which puts its ink where the
+  neighbour's sits: a cap height and a descender, not a cap height alone.
+
+- **The Sky widget is laid out again, on the Now widget's grammar.** The moment's time
+  is the hero number now, its name under it with the day marker before it, the glyph
+  filling the height beside them; on a four-cell card the verdict stands against the far
+  edge as its word in the measured container with the number that decided it underneath,
+  and on a three-cell card, where a word would push «Domani · Sorge la luna» off the card,
+  it is the series' own mark — `✓ ~ ✗ ?` in the verdict's colors — before the name. A
+  two-row card keeps that as its head and lists the moments after it, one per row with
+  its small glyph, name, time and verdict, the word on a wide card and the mark on a
+  narrow one, as many rows as the height holds and never more than you subscribed to.
+  For a window that is open right now the number shown is when it ends, because that is
+  the next thing that happens. The picker shows the four-cell form, where a new widget
+  now lands; the message a widget shows when every subscription is off is centred like
+  the other empty states.
+
+- **The widgets have names.** In the launcher's picker they were «Chiaro · Now», «Chiaro
+  · Today» and «Chiaro · Sky»; they are **At a glance**, **The hours ahead** and **Sky
+  moments** now («Colpo d'occhio», «Le prossime ore», «Momenti del cielo»), which say what
+  each one shows rather than repeating the app's name above them.
+
+- **The day's sentence can be turned off, per widget.** A switch in the widget's own
+  settings, for At a glance and for The hours ahead, on by default: a reader who wants the
+  bare number has it. Whether there is room for the sentence stays the card's decision;
+  the switch can only take it away.
+
+- **At a glance can be laid the other way round.** Its settings offer a second
+  arrangement for the one-row card: the glyph in the trailing corner, and on the leading
+  side the temperature with the sentence at its shoulder — two lines at most, centred on
+  the number — and the place under both. It is the tall card's composition pressed into
+  a row, for a home screen that wants the two to match; the sentence appears at the same
+  widths as the other way round, and a tall card is the same either way.
+
+- **The hours ahead is laid out again on the same grammar.** Its head is At a glance's
+  wide row — glyph filling the hero band, temperature over place, the day's sentence
+  against the far edge, the day's high and low under the sentence when asked for — and
+  the hour strip hangs under it. The line the sentence used to take under the hero goes to
+  the glyph, which grows from ~45 to ~76 dp on a four-by-two card; the temperature drops
+  from 36 to 34 sp to match its sibling. The strip keeps its rules and gains one: the rain
+  row also has to fit, and yields to the hero's words when a stale marker takes their
+  third line rather than being cut at the card's edge.
+
 - **About is complete.** The section now names the developer, the copyright and the
   licence, and credits everything the app is built out of: Open-Meteo's data under
   CC BY 4.0, the Meteocons weather icons, the Inter typeface and Google's interface

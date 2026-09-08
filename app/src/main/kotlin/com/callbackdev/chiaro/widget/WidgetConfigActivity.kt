@@ -113,9 +113,8 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
     val cityStore = remember { ServiceLocator.cityStore(context) }
     val widgetCityStore = remember { ServiceLocator.widgetCityStore(context) }
     val lookStore = remember { WidgetLookStore.get(context) }
-    // Content options are not the same for all three: only the Now widget can put the
-    // state beside its number, and only Now and Today carry a day at all. A switch that
-    // changes nothing must not be offered.
+    // Content options are not the same for all three: only the Today widget carries a
+    // day's range, and a switch that changes nothing must not be offered.
     val kind = remember(appWidgetId) { ChiaroWidgets.kindOf(context, appWidgetId) }
 
     val cities by cityStore.cities.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -232,22 +231,42 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
                 )
             }
 
+            // Now and Today carry the day's sentence and may hide it; only Today carries
+            // the day's range; only Now has a one-row card that can be laid two ways.
+            // The Sky widget's content is its subscriptions, chosen on the Sky screen,
+            // so it has no content switch to offer here.
             if (kind == WidgetKind.NOW || kind == WidgetKind.TODAY) {
                 SectionLabel(stringResource(R.string.widget_config_content))
-                if (kind == WidgetKind.NOW) {
+                SwitchRow(
+                    label = stringResource(R.string.widget_config_show_sentence),
+                    note = stringResource(R.string.widget_config_show_sentence_note),
+                    checked = current.showSentence,
+                    onToggle = { save(current.copy(showSentence = it)) }
+                )
+                if (kind == WidgetKind.TODAY) {
                     SwitchRow(
-                        label = stringResource(R.string.widget_config_show_condition),
-                        note = stringResource(R.string.widget_config_show_condition_note),
-                        checked = current.showCondition,
-                        onToggle = { save(current.copy(showCondition = it)) }
+                        label = stringResource(R.string.widget_config_show_range),
+                        note = stringResource(R.string.widget_config_show_range_note),
+                        checked = current.showDayRange,
+                        onToggle = { save(current.copy(showDayRange = it)) }
                     )
                 }
-                SwitchRow(
-                    label = stringResource(R.string.widget_config_show_range),
-                    note = stringResource(R.string.widget_config_show_range_note),
-                    checked = current.showDayRange,
-                    onToggle = { save(current.copy(showDayRange = it)) }
+            }
+            if (kind == WidgetKind.NOW) {
+                SectionLabel(stringResource(R.string.widget_config_arrangement))
+                val arrangements = listOf(
+                    WidgetArrangement.ICON_START to
+                        stringResource(R.string.widget_arrangement_icon_start),
+                    WidgetArrangement.ICON_END to
+                        stringResource(R.string.widget_arrangement_icon_end)
                 )
+                arrangements.forEach { (arrangement, label) ->
+                    ChoiceRow(
+                        label = label,
+                        selected = current.arrangement == arrangement,
+                        onPick = { save(current.copy(arrangement = arrangement)) }
+                    )
+                }
             }
         }
 

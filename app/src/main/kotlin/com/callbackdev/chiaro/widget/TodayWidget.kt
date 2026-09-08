@@ -2,7 +2,7 @@ package com.callbackdev.chiaro.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -26,24 +26,25 @@ import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
-import com.callbackdev.chiaro.ui.today.HeadlineText
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import java.time.Instant
 import java.util.Locale
 
 /**
- * The Today widget (VISION §5.9): the Now block, the headline sentence when there is
- * one, and the next hours — all straight out of [com.callbackdev.chiaro.ui.today
- * .TodayStateBuilder], so the widget and the app can never tell two stories about
- * the same afternoon.
+ * The Today widget (VISION §5.9): now plus the next hours — the Now widget's one-row
+ * form as the head of the card, and under it the hour strip, all straight out of
+ * [com.callbackdev.chiaro.ui.today.TodayStateBuilder], so the widget and the app can
+ * never tell two stories about the same afternoon. Laid out again on 8 set 2026 on the
+ * Now widget's grammar ([TodayWidgetLayout.kt] carries the budget and the reasons).
  */
 class TodayWidget : GlanceAppWidget() {
 
-    /** Exact sizing so [LocalSize] is the width the launcher really granted — the
-     * strip reads it to decide how many hours honestly fit. */
+    /** Exact sizing so [LocalSize] is the size the launcher really granted: the strip
+     * reads the width for its hour count, the hero band the height for its glyph. */
     override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -62,186 +63,181 @@ class TodayWidget : GlanceAppWidget() {
                 context, model.settings.dynamicColor, model.settings.palette
             )
             val skyBitmap = rememberSkyBitmap(model)
-            WidgetCard(model, schemes, skyBitmap) { palette ->
-                when (val content = model.content) {
-                    null -> if (model.city == null) {
-                        NoPlaceContent(palette)
-                    } else {
-                        NoDataContent(palette)
-                    }
-                    else -> TodayContent(content, model, palette)
+            val content = model.content
+            // The Now widget's edge rule: the glyph leads the hero row and owns the top,
+            // so those two edges take the glyph's insets; the far edge carries words and
+            // the bottom the strip's, so those take the words'. Empty states: words only.
+            WidgetCard(
+                model, schemes, skyBitmap,
+                contentPaddingStart =
+                    if (content != null) WidgetCardPaddingLeading else WidgetCardPadding,
+                contentPaddingEnd = WidgetCardPaddingTrailing,
+                contentPaddingTop = if (content != null) WidgetCardPaddingSnug else WidgetCardPadding,
+                contentPaddingBottom = WidgetCardPadding
+            ) { palette ->
+                when {
+                    content == null && model.city == null -> NoPlaceContent(palette)
+                    content == null -> NoDataContent(palette)
+                    else -> TodayContent(content, model, palette, LocalSize.current)
                 }
             }
         }
     }
+}
 
-    private companion object {
-        /** The hero number's size, named because the ink balance beside it is
-         * measured off the leading this size carries. */
-        const val TemperatureSp = 36f
+@Composable
+private fun TodayContent(
+    content: TodayUiState.Content,
+    model: WidgetModel,
+    palette: WidgetPalette,
+    size: DpSize
+) {
+    val context = LocalContext.current
+    val locale = Locale.getDefault()
+    val is24h = android.text.format.DateFormat.is24HourFormat(context)
+    val fontScale = fontScale(context)
+    val cells = todayStripCells(size.width)
+    val shown = content.strip.take(cells)
+    val today = content.week.firstOrNull()?.forecast
+    val range = today?.takeIf { model.look.showDayRange }
+    // The rain row appears when any visible hour has something to report — then EVERY
+    // cell prints its figure, because a 0% next to an 80% is information (the app
+    // strip's own rule) — and when it fits under the hero's words (the budget's).
+    val showRain = shown.any { (it.hour.precipChancePct ?: 0) > 0 } &&
+        todayShowRain(
+            size, fontScale, content.isStale,
+            sentence = model.look.showSentence, range = range != null
+        )
+    val icon = todayHeroIconSize(size, fontScale, showRain)
+    val withSentence = model.look.showSentence && todayIsWide(size, icon)
+    // The range wants the far edge too (committente, 4 set: «at the far edge, level with
+    // the temperature»); with the sentence there it sits under it, and without a sentence
+    // column to hold it — a card too narrow for one — it stays home rather than crowding
+    // the number, which is the reason it left that spot on the third device pass.
+    val trailing = withSentence || (range != null && todayIsWide(size, icon))
 
-        /** What the sentence and the hour strip need under the hero row, so the
-         * icon can take the rest of the granted height (device review, 3 set). */
-        val HeroReserve = 116.dp
-
-        /** The strip sizes itself to the width the launcher actually granted: a
-         * cell under this width squeezes its numbers, and fewer than four hours is
-         * no longer an afternoon. At the 4-cell minimum this lands on the same five
-         * cells the strip always had; wider widgets get their sixth and seventh. */
-        val StripCellMin = 38.dp
-        val StripCellSpacing = 6.dp
-        const val StripCellsFloor = 4
-        const val StripCellsCeiling = 7
-    }
-
-    @Composable
-    private fun TodayContent(
-        content: TodayUiState.Content,
-        model: WidgetModel,
-        palette: WidgetPalette
-    ) {
-        val context = LocalContext.current
-        val locale = Locale.getDefault()
-        val is24h = android.text.format.DateFormat.is24HourFormat(context)
-        val timeFmt = Formats.timeFormatter(is24h, locale)
-        val current = content.report.current
-
-        Column(modifier = GlanceModifier.fillMaxSize()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = GlanceModifier.fillMaxWidth()
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = GlanceModifier.fillMaxWidth()
+        ) {
+            Image(
+                provider = ImageProvider(
+                    ChiaroIcons.conditionRes(
+                        content.report.current.condition.wmoCode, content.night,
+                        model.iconStyle, palette.darkGround,
+                        model.settings.palette
+                    )
+                ),
+                contentDescription = null, // the temperature and the sentence say it
+                modifier = GlanceModifier.size(icon)
+            )
+            // The bottom padding balances the leading above the temperature, so the
+            // words' ink lines up with the glyph's rather than the two boxes lining up
+            // (the Now widget's finding, 5th device pass).
+            Column(
+                modifier = GlanceModifier
+                    .padding(start = IconTextGap, bottom = textInkBalance(context, TemperatureSp))
+                    .defaultWeight()
             ) {
-                Image(
-                    provider = ImageProvider(
-                        ChiaroIcons.conditionRes(
-                            current.condition.wmoCode, content.night,
-                            model.iconStyle, palette.darkGround,
-                            model.settings.palette
-                        )
+                Text(
+                    text = Formats.temperature(
+                        content.report.current.tempC, model.settings.units.temperature, locale
                     ),
-                    contentDescription = null,
-                    modifier = GlanceModifier.size(
-                        heroIconSize(
-                            LocalSize.current.height - WidgetCardPadding * 2 - HeroReserve
-                        )
-                    )
+                    style = TextStyle(
+                        color = palette.primary,
+                        fontSize = TemperatureSp.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    maxLines = 1
                 )
-                // The bottom padding balances the leading above the temperature, so
-                // the words' ink lines up with the glyph's rather than the two boxes
-                // lining up (the Now widget's finding, 5th device pass).
-                Column(
-                    modifier = GlanceModifier
-                        .padding(start = 12.dp, bottom = textInkBalance(context, TemperatureSp))
-                ) {
-                    // The temperature and the place, and nothing between them: the
-                    // day's range left the hero here and on the Now widget in the third
-                    // device pass, and came back in the fourth against the far edge
-                    // instead of under the number — the position was the problem, not
-                    // the pair.
+                PlaceLine(
+                    name = content.city.name,
+                    fromGps = model.fromGps,
+                    palette = palette,
+                    size = PlaceSp.sp
+                )
+                if (content.isStale) {
                     Text(
-                        text = Formats.temperature(
-                            current.tempC, model.settings.units.temperature, locale
-                        ),
-                        style = TextStyle(
-                            color = palette.primary,
-                            fontSize = TemperatureSp.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    )
-                    PlaceLine(
-                        name = content.city.name,
-                        fromGps = model.fromGps,
-                        palette = palette,
-                        size = 16.sp
+                        text = staleText(context, content.lastSync, Instant.now()),
+                        style = TextStyle(color = palette.stale, fontSize = StaleSp.sp),
+                        maxLines = 1
                     )
                 }
-                Spacer(modifier = GlanceModifier.defaultWeight())
-                // Both trailing facts share the edge, the range over the age: they are
-                // read at the same glance and would fight for the same corner otherwise.
-                Column(horizontalAlignment = Alignment.End) {
-                    content.week.firstOrNull()?.forecast
-                        ?.takeIf { model.look.showDayRange }
-                        ?.let { day ->
-                            DayRange(day.highC, day.lowC, model.settings.units, palette)
-                        }
-                    if (content.isStale) {
+            }
+            if (trailing) {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    modifier = GlanceModifier
+                        .padding(start = SentenceGap)
+                        .defaultWeight()
+                ) {
+                    if (withSentence) {
                         Text(
-                            text = staleText(context, content.lastSync, Instant.now()),
-                            style = TextStyle(color = palette.stale, fontSize = 11.sp)
+                            text = sentence(context, content),
+                            style = sentenceStyle(palette, TextAlign.End),
+                            maxLines = TallSentenceMaxLines,
+                            modifier = GlanceModifier.fillMaxWidth()
                         )
+                    }
+                    range?.let { day ->
+                        DayRange(day.highC, day.lowC, model.settings.units, palette)
                     }
                 }
             }
+        }
 
-            HeadlineText.of(context, content.headline, timeFmt)?.let { sentence ->
-                Text(
-                    text = sentence,
-                    style = TextStyle(
-                        color = palette.primary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    ),
-                    maxLines = 2,
-                    modifier = GlanceModifier.padding(top = 6.dp)
-                )
-            }
+        // The strip hangs from the bottom; whatever the grant leaves beyond the budget
+        // is air between the two, never padding inside either.
+        Spacer(modifier = GlanceModifier.defaultWeight())
+        Spacer(modifier = GlanceModifier.height(StripGap))
 
-            Spacer(modifier = GlanceModifier.defaultWeight())
-
-            val cells = (
-                (LocalSize.current.width - WidgetCardPadding * 2 + StripCellSpacing) /
-                    (StripCellMin + StripCellSpacing)
-                ).toInt().coerceIn(StripCellsFloor, StripCellsCeiling)
-            val shown = content.strip.take(cells)
-            // The rain row appears when any visible hour has something to report:
-            // then EVERY cell prints its figure (a 0% next to an 80% is information),
-            // and on a dry stretch the whole row stays home — the app strip's rule,
-            // sized for a launcher.
-            val showRain = shown.any { (it.hour.precipChancePct ?: 0) > 0 }
-            Row(modifier = GlanceModifier.fillMaxWidth()) {
-                shown.forEachIndexed { index, strip ->
-                    if (index > 0) Spacer(modifier = GlanceModifier.width(StripCellSpacing))
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = GlanceModifier.defaultWeight()
-                    ) {
-                        Text(
-                            text = Formats.hourLabel(strip.hour.time, is24h, locale),
-                            style = secondaryStyle(palette, 12.sp)
-                        )
-                        Spacer(modifier = GlanceModifier.height(2.dp))
-                        Image(
-                            provider = ImageProvider(
-                                ChiaroIcons.conditionRes(
-                                    strip.hour.condition.wmoCode,
-                                    strip.night,
-                                    model.iconStyle,
-                                    palette.darkGround,
-                                    model.settings.palette
-                                )
-                            ),
-                            contentDescription = null,
-                            modifier = GlanceModifier.size(32.dp)
-                        )
-                        Spacer(modifier = GlanceModifier.height(2.dp))
-                        Text(
-                            text = Formats.temperature(
-                                strip.hour.tempC, model.settings.units.temperature, locale
-                            ),
-                            style = TextStyle(color = palette.primary, fontSize = 14.sp)
-                        )
-                        // An hour with no forecast chance prints nothing under it
-                        // rather than a 0% it was never told (Fase 26).
-                        val pct = strip.hour.precipChancePct
-                        if (showRain && pct != null) {
-                            Text(
-                                text = Formats.percent(pct, locale),
-                                style = TextStyle(
-                                    color = rainInk(pct, palette),
-                                    fontSize = 11.sp
-                                )
+        Row(modifier = GlanceModifier.fillMaxWidth().padding(start = StripStartInset)) {
+            shown.forEachIndexed { index, strip ->
+                if (index > 0) Spacer(modifier = GlanceModifier.width(StripCellSpacing))
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = GlanceModifier.defaultWeight()
+                ) {
+                    Text(
+                        text = Formats.hourLabel(strip.hour.time, is24h, locale),
+                        style = secondaryStyle(palette, StripHourSp.sp),
+                        maxLines = 1
+                    )
+                    Spacer(modifier = GlanceModifier.height(StripInnerGap))
+                    Image(
+                        provider = ImageProvider(
+                            ChiaroIcons.conditionRes(
+                                strip.hour.condition.wmoCode,
+                                strip.night,
+                                model.iconStyle,
+                                palette.darkGround,
+                                model.settings.palette
                             )
-                        }
+                        ),
+                        contentDescription = null,
+                        modifier = GlanceModifier.size(StripIconSize)
+                    )
+                    Spacer(modifier = GlanceModifier.height(StripInnerGap))
+                    Text(
+                        text = Formats.temperature(
+                            strip.hour.tempC, model.settings.units.temperature, locale
+                        ),
+                        style = TextStyle(color = palette.primary, fontSize = StripTempSp.sp),
+                        maxLines = 1
+                    )
+                    // An hour with no forecast chance prints nothing under it rather
+                    // than a 0% it was never told (Fase 26).
+                    val pct = strip.hour.precipChancePct
+                    if (showRain && pct != null) {
+                        Text(
+                            text = Formats.percent(pct, locale),
+                            style = TextStyle(
+                                color = rainInk(pct, palette),
+                                fontSize = StripRainSp.sp
+                            ),
+                            maxLines = 1
+                        )
                     }
                 }
             }

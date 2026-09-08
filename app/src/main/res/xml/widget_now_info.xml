@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The Now widget (VISION §5.9): icon, temperature, place. updatePeriodMillis is 0
-     on purpose — the shared periodic job drives every repaint, at the reader's own
-     update frequency, instead of a second clock the battery pays for.
+<!-- The Now widget (VISION §5.9): icon, temperature, place, and the day's sentence
+     where the grant has room. updatePeriodMillis is 0 on purpose — the shared periodic
+     job drives every repaint, at the reader's own update frequency, instead of a second
+     clock the battery pays for.
+
+     Four cells by one as the default placement (8 set 2026, from three): that is the
+     one-row form that carries the sentence, and the size the launcher's own weather
+     widget opens at, so a reader meets the card with everything it can say. Two cells
+     is still the floor (minWidth), and the reader can drag it anywhere from there.
 
      previewLayout is what the picker shows: Glance has no preview of its own, so
      without it the host advertises the generic loading card and all three widgets look
@@ -12,7 +18,7 @@
     android:previewLayout="@layout/widget_now_preview"
     android:minWidth="110dp"
     android:minHeight="40dp"
-    android:targetCellWidth="3"
+    android:targetCellWidth="4"
     android:targetCellHeight="1"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"

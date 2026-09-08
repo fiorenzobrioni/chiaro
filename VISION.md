@@ -406,18 +406,32 @@ first time the reader turns on something that needs them, never at startup.
 
 Glance, three sizes, matching the app's dynamic color:
 
-- **Now**: icon, temperature, place — and nothing else; the weather icon fills the height the
-  launcher grants, because at arm's length it is the first thing to read. The sky's state can join
-  the temperature, and is off until the reader turns it on in the widget's own settings: the
-  standard dress stays the one tuned on device, and a widget that rewrote itself while its handles
-  were being dragged would be one nobody could aim.
-- **Today**: now plus the next hours strip plus the headline sentence.
+- **Now**: icon, temperature, place — and, where the card has room, the day's sentence: the same
+  headline Today opens with, in a shorter register, or the sky's present state when there is
+  nothing to warn about. The weather icon fills the height the launcher grants, because at arm's
+  length it is the first thing to read. The card has three forms and the grant picks one — a
+  one-row card at two or three cells names the place, at four it adds the sentence against its far
+  edge, and a two-row card stacks glyph, number, sentence and place — so resizing changes what
+  fits, never what is true. (This replaced a per-widget switch on 8 set 2026: the state used to be
+  a setting precisely so a card would not rewrite itself under a reader's fingers, and a season of
+  living beside the launcher's own weather widget, which reflows, showed that reflowing is what the
+  reader expects a widget to do.)
+- **Today**: now plus the next hours strip. Since 8 set 2026 the head of the card IS the Now
+  widget's wide row — glyph, temperature over place, the day's sentence against the far edge and
+  the day's high and low under it when asked for — and the strip hangs under it; the line the
+  sentence used to take goes to the glyph.
+- Both Now and Today let the reader turn the sentence off per widget, and Now can lay its one-row
+  card the other way round — glyph in the trailing corner, the sentence at the number's shoulder,
+  the tall card's composition pressed into one row — so a home screen can carry the two looks.
 - **Sky**: the moments in front of the reader and their verdicts, with the day named when it is not
-  today — the widget nobody else ships. The first keeps the glyph and the verdict pill; a taller
-  grant adds compact rows off the same ordered list the Sky screen reads, as many as honestly fit
-  and never more than the reader subscribed to. Every verdict on a widget wears its chip: the
-  app's verdict inks are measured against the app's own surface, and a card whose ground is a
-  scrimmed sky or a wallpaper has to bring its own.
+  today — the widget nobody else ships. Laid out on the Now widget's grammar (8 set 2026): the
+  moment's time is the hero number, its name under it, the glyph beside them; the verdict is the
+  word chip over the number that decided it against the far edge where the card is wide, and the
+  series' own mark (`✓ ~ ✗ ?`) before the name where it is not. A taller grant adds compact rows
+  off the same ordered list the Sky screen reads, as many as honestly fit and never more than the
+  reader subscribed to. Every verdict on a widget wears its container: the app's verdict inks are
+  measured against the app's own surface, and a card whose ground is a scrimmed sky or a wallpaper
+  has to bring its own.
 
 A widget never invents: with stale data it says how old it is, with no place configured it says so
 and opens the app, and no layout ever pads itself out to fill the space it was given.

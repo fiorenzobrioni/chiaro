@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.widget
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -18,6 +19,7 @@ import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
@@ -29,16 +31,17 @@ import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
-import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.sky.SkyText
+import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -49,21 +52,19 @@ import java.util.Locale
  * in the same fixed colors the app uses; when the forecast cannot judge yet, the
  * widget says that instead of guessing.
  *
- * **As many moments as the grant has room for** (committente, 4 set). It used to
- * print exactly one at every size, and could not have done otherwise: it was the one
- * widget of the three left on the default [SizeMode.Single], so [LocalSize] reported
- * the MINIMUM size from the provider and the widget never learned it had been made
- * bigger. On `Exact` it is measured, and the height decides — one cell is the hero
- * alone, exactly as before, and every cell after that adds compact rows off the same
- * ordered list ([com.callbackdev.chiaro.ui.sky.SkyUpcoming.allAt]) the Sky screen
- * reads. The list is never padded: four subscriptions draw four rows on a widget with
- * room for six, because inventing a fifth moment is the one thing this widget must
- * not do.
+ * Three forms, one per kind of grant, laid out on the Now widget's grammar
+ * ([SkyWidgetLayout.kt]): the moment's time as the hero number over its name, the
+ * glyph filling the height, the verdict against the far edge where the card is wide
+ * and as a mark before the name where it is not, and on a tall card the moments after
+ * this one as a list — as many as the height honestly holds, never more than the
+ * reader subscribed to. All of it off the same ordered list the Sky screen reads
+ * ([com.callbackdev.chiaro.ui.sky.SkyUpcoming.allAt]), so home and screen cannot print
+ * two different sunrises.
  */
 class SkyWidget : GlanceAppWidget() {
 
-    /** Exact sizing so [LocalSize] is the height the launcher really granted: the
-     * number of moments is read off it (committente, 4 set). */
+    /** Exact sizing so [LocalSize] is the size the launcher really granted: the form,
+     * the glyph and the row count are all read off it. */
     override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -82,14 +83,32 @@ class SkyWidget : GlanceAppWidget() {
                 context, model.settings.dynamicColor, model.settings.palette
             )
             val skyBitmap = rememberSkyBitmap(model)
+            val size = LocalSize.current
+            val hasContent = model.city != null && model.moments.isNotEmpty()
+            val tall = hasContent && skyIsTall(size)
+            // The same edge rule as the Now widget: a glyph edge takes the glyph's inset,
+            // a words edge the words'. The glyph leads every form and owns the top; the
+            // far edge always carries words or a chip; the bottom is the glyph's on one
+            // row and the last row's words on a tall card. Empty states are words only.
             WidgetCard(
                 model, schemes, skyBitmap,
-                contentPadding = WidgetCardPaddingTight
+                contentPaddingStart =
+                    if (hasContent) WidgetCardPaddingLeading else WidgetCardPadding,
+                contentPaddingEnd = WidgetCardPaddingTrailing,
+                contentPaddingTop = if (hasContent) WidgetCardPaddingSnug else WidgetCardPadding,
+                contentPaddingBottom =
+                    if (hasContent && !tall) WidgetCardPaddingSnug else WidgetCardPadding
             ) { palette ->
                 when {
                     model.city == null -> NoPlaceContent(palette)
                     model.moments.isEmpty() -> NoMomentContent(palette)
-                    else -> SkyContent(model, palette)
+                    tall -> TallContent(model, palette, size)
+                    else -> HeroRow(
+                        model, model.moments.first(), palette,
+                        glyph = skyHeroIconSize(size),
+                        wide = skyIsWide(size),
+                        modifier = GlanceModifier.fillMaxSize()
+                    )
                 }
             }
         }
@@ -97,138 +116,184 @@ class SkyWidget : GlanceAppWidget() {
 }
 
 /**
- * The hero moment, then as many compact rows as the granted height honestly fits.
+ * The moment in front of the reader, as one row: the glyph; the clock over the name,
+ * with the day marker before the name when the moment is not today's; and the verdict.
  *
- * The budget is arithmetic on the card's own numbers rather than a table of cell
- * sizes: launchers disagree about what a cell is, and the one thing they all report
- * truthfully is how many dp they handed over.
+ * On a wide card the verdict is the word chip over the number that decided it, in a
+ * column of its own against the far edge, centred on the row like the Now widget's
+ * sentence. On a narrow card it is the mark — the series' `✓ ~ ✗ ?` in the verdict's
+ * own container — before the name, where a word chip would push «Domani · Sorge la
+ * luna» off the card. A verdict is a glyph and a word before it is a color (DESIGN
+ * §2.3); the narrow card keeps the glyph, the wide one adds the word and the number,
+ * and the color rides along on both.
  */
 @Composable
-private fun SkyContent(model: WidgetModel, palette: WidgetPalette) {
-    val moment = model.moments.first()
-    val extra = skyExtraRows(
-        granted = LocalSize.current.height,
-        heroHasVerdict = moment.verdict != null,
-        available = model.moments.size - 1
-    )
-
-    Column(modifier = GlanceModifier.fillMaxSize()) {
-        // A list that runs out before the card does leaves real space, and the block
-        // sits in the middle of it rather than clinging to the top edge: four
-        // subscriptions on a widget with room for six should look composed, not
-        // interrupted (committente, 4 set). With no list the pill keeps the bottom
-        // edge it was tuned against on device (3 set).
-        if (extra > 0) Spacer(modifier = GlanceModifier.defaultWeight())
-        HeroMoment(model, moment, palette)
-        if (extra == 0) Spacer(modifier = GlanceModifier.defaultWeight())
-        moment.verdict?.let { verdict ->
-            if (extra > 0) Spacer(modifier = GlanceModifier.height(RowGap))
-            VerdictPill(verdict, palette)
-        }
-        if (extra > 0) {
-            Spacer(modifier = GlanceModifier.height(ListGap))
-            model.moments.drop(1).take(extra).forEachIndexed { index, next ->
-                if (index > 0) Spacer(modifier = GlanceModifier.height(RowGap))
-                CompactMoment(model, next, palette)
-            }
-            Spacer(modifier = GlanceModifier.defaultWeight())
-        }
-    }
-}
-
-/** The moment in front of the reader: the big glyph, the name, the clock. */
-@Composable
-private fun HeroMoment(model: WidgetModel, moment: NextMoment, palette: WidgetPalette) {
+private fun HeroRow(
+    model: WidgetModel,
+    moment: NextMoment,
+    palette: WidgetPalette,
+    glyph: Dp,
+    wide: Boolean,
+    modifier: GlanceModifier
+) {
     val context = LocalContext.current
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Image(
-            provider = ImageProvider(
-                skyJobIconRes(
-                    moment, model.iconStyle, palette.darkGround,
-                    model.settings.palette
-                )
-            ),
-            contentDescription = null,
-            modifier = GlanceModifier.size(HeroIconSize)
-        )
-        Column(modifier = GlanceModifier.padding(start = 12.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
+        MomentGlyph(model, moment, palette, glyph)
+        // The bottom padding balances the leading above the clock's digits, so the
+        // words' ink and the glyph's ink share a centre line (the Now widget's finding,
+        // 5th device pass).
+        Column(
+            modifier = GlanceModifier
+                .padding(start = IconTextGap, bottom = textInkBalance(context, SkyTimeSp))
+                .defaultWeight()
+        ) {
             Text(
-                text = context.getString(SkyText.nameRes(moment.job.id)),
+                text = heroClock(context, model, moment),
                 style = TextStyle(
                     color = palette.primary,
-                    fontSize = 15.sp,
+                    fontSize = SkyTimeSp.sp,
                     fontWeight = FontWeight.Medium
                 ),
                 maxLines = 1
             )
-            Text(
-                text = timeLine(context, model, moment, range = true),
-                style = secondaryStyle(palette, 12.sp)
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (!wide) {
+                    moment.verdict?.let { verdict ->
+                        VerdictMark(verdict, palette)
+                        Spacer(modifier = GlanceModifier.width(MarkGap))
+                    }
+                }
+                Text(
+                    text = heroLabel(context, model, moment),
+                    style = secondaryStyle(palette, SkyNameSp.sp),
+                    maxLines = 1
+                )
+            }
+        }
+        if (wide) {
+            moment.verdict?.let { verdict ->
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    modifier = GlanceModifier
+                        .padding(start = SentenceGap)
+                        .width(SkyVerdictColumn)
+                ) {
+                    VerdictChip(verdict, palette)
+                    evidence(context, verdict)?.let { number ->
+                        Text(
+                            text = number,
+                            style = TextStyle(
+                                color = palette.secondary,
+                                fontSize = SkyEvidenceSp.sp,
+                                textAlign = TextAlign.End
+                            ),
+                            maxLines = 1,
+                            modifier = GlanceModifier.fillMaxWidth().padding(top = 2.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
 /**
- * One further moment on a single line: small glyph, name, when, and the verdict as a
- * chip of its own.
- *
- * **A chip and not a bare word** (committente, 4 set — the bare green was hard to read
- * on a dark card). The reason is the same one that bit the see-through ink: the app's
- * verdict inks are measured against the app's SURFACE, and a widget's ground is a
- * scrimmed sky, a wallpaper, or whatever the reader chose. Ink and container are a
- * measured PAIR (`PaletteContrastTest`), so a chip carries its own ground with it and
- * is legible on any card — which is exactly why the hero's pill was one from the start.
- *
- * The chip holds the word and nothing else: a row this size fits one of the three
- * things a verdict is, and DESIGN §2.3 is explicit about which — a glyph and a word
- * before it is a color. The arithmetic stays one tap away, on the screen with room to
- * print it.
- *
- * Name and time share a size so their baselines line up under centre alignment (two
- * sizes centred are two baselines that miss, which is what the device showed), the row
- * fills the width so the name's weight actually pushes the time to the right, and only
- * the name gives ground when the card is narrow: the clock carries the day marker, and
- * dropping either would hand back the bug of 3 set, where a bare "06:47" on a home
- * screen read as this morning's.
+ * The tall card: the hero row at the head, and under it the moments behind it, one per
+ * row, as many as [skyRows] says the height holds. The block sits in the middle of the
+ * room it does not fill (committente, 4 set): four subscriptions on a card with room
+ * for six should look composed, not interrupted.
  */
 @Composable
-private fun CompactMoment(model: WidgetModel, moment: NextMoment, palette: WidgetPalette) {
+private fun TallContent(model: WidgetModel, palette: WidgetPalette, size: DpSize) {
+    val context = LocalContext.current
+    val wide = skyIsWide(size)
+    val rows = skyRows(size, fontScale(context), available = model.moments.size - 1)
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        Spacer(modifier = GlanceModifier.defaultWeight())
+        HeroRow(
+            model, model.moments.first(), palette,
+            glyph = SkyTallHeroIcon,
+            wide = wide,
+            modifier = GlanceModifier.fillMaxWidth()
+        )
+        if (rows > 0) {
+            Spacer(modifier = GlanceModifier.height(SkyListGap))
+            model.moments.drop(1).take(rows).forEachIndexed { index, next ->
+                if (index > 0) Spacer(modifier = GlanceModifier.height(SkyRowGap))
+                CompactRow(model, next, palette, wide)
+            }
+        }
+        Spacer(modifier = GlanceModifier.defaultWeight())
+    }
+}
+
+/**
+ * One further moment on a single line: small glyph, name, when, verdict. Name and time
+ * share a size so their baselines meet under centre alignment; only the name gives
+ * ground on a narrow card, because the clock carries the day marker and a bare «06:47»
+ * on a home screen reads as this morning's (committente, 3 set). The verdict is the
+ * word chip where the card is wide and the mark where it is not — the same rule as
+ * the hero above it, so a card speaks one register top to bottom.
+ */
+@Composable
+private fun CompactRow(
+    model: WidgetModel,
+    moment: NextMoment,
+    palette: WidgetPalette,
+    wide: Boolean
+) {
     val context = LocalContext.current
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = GlanceModifier.fillMaxWidth()
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .height(SkyRowHeight)
+            .padding(start = SkyRowIndent)
     ) {
-        Image(
-            provider = ImageProvider(
-                skyJobIconRes(
-                    moment, model.iconStyle, palette.darkGround,
-                    model.settings.palette
-                )
-            ),
-            contentDescription = null,
-            modifier = GlanceModifier.size(CompactIconSize)
-        )
+        MomentGlyph(model, moment, palette, SkyRowGlyph)
         Text(
             text = context.getString(SkyText.nameRes(moment.job.id)),
-            style = TextStyle(color = palette.primary, fontSize = CompactSp),
+            style = TextStyle(color = palette.primary, fontSize = SkyCompactSp.sp),
             maxLines = 1,
-            modifier = GlanceModifier.padding(start = 10.dp).defaultWeight()
+            modifier = GlanceModifier.padding(start = 8.dp).defaultWeight()
         )
         Text(
-            text = timeLine(context, model, moment, range = false),
-            style = secondaryStyle(palette, CompactSp),
+            text = rowClock(context, model, moment),
+            style = secondaryStyle(palette, SkyCompactSp.sp),
             maxLines = 1,
-            modifier = GlanceModifier.padding(start = 8.dp)
+            modifier = GlanceModifier.padding(start = MarkGap)
         )
         moment.verdict?.let { verdict ->
-            Spacer(modifier = GlanceModifier.width(8.dp))
-            VerdictChip(verdict, palette)
+            Spacer(modifier = GlanceModifier.width(MarkGap))
+            if (wide) VerdictChip(verdict, palette) else VerdictMark(verdict, palette)
         }
     }
 }
 
-/** The pill's small sibling: same measured ink-and-container pair, word only. */
+@Composable
+private fun MomentGlyph(
+    model: WidgetModel,
+    moment: NextMoment,
+    palette: WidgetPalette,
+    size: Dp
+) {
+    Image(
+        provider = ImageProvider(
+            skyJobIconRes(moment, model.iconStyle, palette.darkGround, model.settings.palette)
+        ),
+        contentDescription = null, // the name says it in words
+        modifier = GlanceModifier.size(size)
+    )
+}
+
+/**
+ * The word, in its measured container (committente, 4 set — a bare green was hard to
+ * read on a dark card). The app's verdict inks are measured against the app's SURFACE,
+ * and a widget's ground is a scrimmed sky, a wallpaper, or whatever the reader chose;
+ * ink and container are a PAIR (`PaletteContrastTest`), so a chip carries its own
+ * ground and is legible on any card. The word and nothing else: the number sits under
+ * it on the hero, and one tap away in a row.
+ */
 @Composable
 private fun VerdictChip(verdict: SkyVerdict, palette: WidgetPalette) {
     val context = LocalContext.current
@@ -236,14 +301,14 @@ private fun VerdictChip(verdict: SkyVerdict, palette: WidgetPalette) {
     Row(
         modifier = GlanceModifier
             .background(verdictContainer(verdict.kind, night, palette.dress))
-            .cornerRadius(8.dp)
-            .padding(horizontal = 7.dp, vertical = 2.dp)
+            .cornerRadius(10.dp)
+            .padding(horizontal = 7.dp, vertical = 3.dp)
     ) {
         Text(
             text = context.getString(SkyText.verdictWordRes(verdict.kind)),
             style = TextStyle(
                 color = verdictInk(verdict.kind, night, palette.dress),
-                fontSize = 11.sp
+                fontSize = SkyChipSp.sp
             ),
             maxLines = 1
         )
@@ -251,106 +316,92 @@ private fun VerdictChip(verdict: SkyVerdict, palette: WidgetPalette) {
 }
 
 /**
- * When the moment happens, in the Sky screen's own words: at nine in the evening the
- * next sunrise is TOMORROW's, and a bare "06:47" on a home screen reads as this
- * morning's (committente, 3 set). Today's moments carry no marker; anything past
- * tomorrow carries its date, because a word for it would be a guess at how the reader
- * counts days. [range] prints a window's closing time too — the hero has the width
- * for it, a compact row does not.
+ * The mark: the verdict's own glyph — `✓ ~ ✗ ?`, the series' vocabulary and the same
+ * characters the app's chip opens with — alone in a round container of the verdict's
+ * colors. It is the verdict at the size a narrow card can afford: still a shape before
+ * it is a color, which is what keeps it readable under deuteranopia (DESIGN §2.3), and
+ * the word is one form up or one tap away. A fixed box, so a fallback font's taller
+ * check mark cannot make one row bounce against the next.
  */
-private fun timeLine(
-    context: Context,
-    model: WidgetModel,
-    moment: NextMoment,
-    range: Boolean
-): String {
-    val locale = Locale.getDefault()
-    val timeFmt = Formats.timeFormatter(
-        android.text.format.DateFormat.is24HourFormat(context), locale
-    )
-    val start = moment.start.atZone(model.zone).format(timeFmt)
-    val clock = moment.end
-        ?.takeIf { range }
-        ?.let { "$start – ${it.atZone(model.zone).format(timeFmt)}" }
-        ?: start
+@Composable
+private fun VerdictMark(verdict: SkyVerdict, palette: WidgetPalette) {
+    val context = LocalContext.current
+    val night = isNight(context)
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = GlanceModifier
+            .size(SkyMarkChip)
+            .background(verdictContainer(verdict.kind, night, palette.dress))
+            .cornerRadius(SkyMarkChip / 2)
+    ) {
+        Text(
+            text = verdict.kind.glyph,
+            style = TextStyle(
+                color = verdictInk(verdict.kind, night, palette.dress),
+                fontSize = SkyMarkSp.sp,
+                fontWeight = FontWeight.Medium
+            ),
+            maxLines = 1
+        )
+    }
+}
+
+/** The air between a mark and the words beside it, and before a row's clock. */
+private val MarkGap = 6.dp
+
+/**
+ * The hero number. The moment's start, as a rule; for a window that is open right
+ * now, its END — the next thing that happens, and the one a reader standing in the
+ * golden hour wants to know. The label under it says «Adesso», so the two read as
+ * «now, until 20:20». Windows print their start alone otherwise: «19:55 – 20:20» at
+ * 30 sp is 200 dp, and the closing time is on the screen one tap away.
+ */
+private fun heroClock(context: Context, model: WidgetModel, moment: NextMoment): String {
+    val at: Instant = moment.end?.takeIf { moment.inProgress } ?: moment.start
+    return at.atZone(model.zone).format(timeFormatter(context))
+}
+
+/**
+ * Under the clock: the day marker, then the name — in that order, so when the column
+ * runs out it is the name's tail that goes, never the word that says WHICH day. Today's
+ * moments carry no marker; a time with nothing before it means today, as on the Sky
+ * screen. Anything past tomorrow carries its date, because a word for it would be a
+ * guess at how the reader counts days.
+ */
+private fun heroLabel(context: Context, model: WidgetModel, moment: NextMoment): String {
+    val name = context.getString(SkyText.nameRes(moment.job.id))
+    return listOfNotNull(dayMark(context, model, moment), name).joinToString(" · ")
+}
+
+/** A row's clock: the day marker and the start, the Sky screen's own phrase. */
+private fun rowClock(context: Context, model: WidgetModel, moment: NextMoment): String {
+    val start = moment.start.atZone(model.zone).format(timeFormatter(context))
+    return listOfNotNull(dayMark(context, model, moment), start).joinToString(" · ")
+}
+
+private fun dayMark(context: Context, model: WidgetModel, moment: NextMoment): String? {
     val date = moment.start.atZone(model.zone).toLocalDate()
     val today = LocalDate.now(model.zone)
-    val dayMark = when {
+    return when {
         moment.inProgress -> context.getString(R.string.sky_moment_now)
         date == today -> null
         date == today.plusDays(1) -> context.getString(R.string.sky_day_tomorrow)
-        else -> date.format(DateTimeFormatter.ofPattern("d MMM", locale))
+        else -> date.format(DateTimeFormatter.ofPattern("d MMM", Locale.getDefault()))
     }
-    return listOfNotNull(dayMark, clock).joinToString(" · ")
 }
+
+private fun timeFormatter(context: Context): DateTimeFormatter = Formats.timeFormatter(
+    android.text.format.DateFormat.is24HourFormat(context), Locale.getDefault()
+)
 
 /**
- * How many further moments fit under the hero, given the height the launcher really
- * granted. Pure, so the budget can be pinned by a table rather than by a screenshot
- * of one phone's idea of a cell (`SkyWidgetRowsTest`).
- *
- * [available] is how many moments there ARE beyond the first: the widget never draws
- * more rows than the reader subscribed to, whatever the room.
+ * The number under the word chip: the one that decided the verdict, in the Sky
+ * screen's own words («nuvole 10%»). Null for an UNKNOWN — not knowing has no
+ * arithmetic, and its reason is a sentence the screen has room for and this card has
+ * not; the word «Presto per dirlo» is the honest whole of what the card can say.
  */
-internal fun skyExtraRows(granted: Dp, heroHasVerdict: Boolean, available: Int): Int {
-    val content = granted - WidgetCardPaddingTight * 2
-    val hero = HeroRowHeight + if (heroHasVerdict) RowGap + VerdictPillHeight else 0.dp
-    // ListGap is charged up front rather than per row: the air that separates the
-    // moment from its list is paid once, and charging it inside the loop would make
-    // the budget depend on its own answer.
-    return ((content - hero - ListGap) / (CompactRowHeight + RowGap))
-        .toInt()
-        .coerceIn(0, available.coerceAtLeast(0))
-}
-
-// The heights the row budget is arithmetic on. Each is the box its content really
-// occupies, not a guess: the hero row is its icon, the pill is its 12sp text plus the
-// 4dp it is padded by top and bottom, a compact row is its 20dp glyph.
-private val HeroIconSize = 48.dp
-private val HeroRowHeight = HeroIconSize
-private val VerdictPillHeight = 26.dp
-private val CompactIconSize = 20.dp
-
-/** The row is its glyph plus the air its chip needs not to touch the next one. */
-private val CompactRowHeight = 22.dp
-private val CompactSp = 13.sp
-private val RowGap = 6.dp
-
-/** What separates the moment in front of the reader from the ones behind it. */
-private val ListGap = 10.dp
-
-
-/** DESIGN §8.7 on the launcher: the word first, the number beside it, the color
- * third — a bare colored dot on a home screen would tell some readers nothing. */
-@Composable
-private fun VerdictPill(verdict: SkyVerdict, palette: WidgetPalette) {
-    val context = LocalContext.current
-    val night = isNight(context)
-    val word = context.getString(SkyText.verdictWordRes(verdict.kind))
-    val detail = if (verdict.kind == SkyVerdictKind.UNKNOWN) {
-        SkyText.unknownReason(context.resources, verdict)
-    } else {
-        SkyText.chipEvidence(context.resources, verdict)
-    }
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = GlanceModifier
-            .background(verdictContainer(verdict.kind, night, palette.dress))
-            // 48dp icon and a 4dp-tall pill: on a one-cell grant the first cut
-            // (54dp, 5dp) left the pill's bottom outside the card (screenshot, 3 set).
-            .cornerRadius(12.dp)
-            .padding(horizontal = 10.dp, vertical = 4.dp)
-    ) {
-        Text(
-            text = if (detail != null) "$word · $detail" else word,
-            style = TextStyle(
-                color = verdictInk(verdict.kind, night, palette.dress),
-                fontSize = 12.sp
-            ),
-            maxLines = 1
-        )
-    }
-}
+private fun evidence(context: Context, verdict: SkyVerdict): String? =
+    SkyText.chipEvidence(context.resources, verdict)
 
 /** The moon's day-moment gets its real phase; everything else its family glyph. */
 private fun skyJobIconRes(
@@ -384,11 +435,15 @@ private fun skyJobIconRes(
     else -> ChiaroIcons.styledRes(R.drawable.mc_falling_stars, style, darkGround, appPalette)
 }
 
-/** Subscriptions emptied by hand: the widget says why it is quiet, never blanks. */
+/** Subscriptions emptied by hand: the widget says why it is quiet, never blanks —
+ * centred on the card like every other empty state (committente, 7 set). */
 @Composable
 private fun NoMomentContent(palette: WidgetPalette) {
     val context = LocalContext.current
-    Column {
+    Column(
+        modifier = GlanceModifier.fillMaxSize(),
+        verticalAlignment = Alignment.Vertical.CenterVertically
+    ) {
         Text(
             text = context.getString(R.string.widget_sky_empty),
             style = secondaryStyle(palette, 12.sp)

@@ -23,6 +23,13 @@
     <string name="headline_wet_now">Rain for the rest of the day</string>
     <string name="headline_snow_now_stopping">Snow should stop around %1$s</string>
     <string name="headline_snow_now">Snow for the rest of the day</string>
+    <!-- The brief register (the Now widget, 8 set 2026): the same two facts in a card
+         three lines of fourteen characters wide. The other sentences are brief already. -->
+    <string name="headline_wet_now_stopping_brief">Rain until about %1$s</string>
+    <string name="headline_snow_now_stopping_brief">Snow until about %1$s</string>
+    <!-- Already brief in English; Italian shortens «della giornata» to «del giorno». -->
+    <string name="headline_wet_now_brief">Rain for the rest of the day</string>
+    <string name="headline_snow_now_brief">Snow for the rest of the day</string>
 
     <!-- Freshness and errors: the real age, the real reason -->
     <plurals name="freshness_minutes_ago">
@@ -354,7 +361,7 @@
 
     <string name="guide_widgets_title">The home widgets</string>
     <string name="guide_widgets_three_title">Three of them</string>
-    <string name="guide_widgets_three_body">Now: icon, temperature, place. Today: that, plus the day\'s sentence and the next hours. Sky: the moment in front of you and its verdict — the same one the Sky screen shows.</string>
+    <string name="guide_widgets_three_body">At a glance: icon, temperature, place — and on a wide or a tall card the day\'s sentence, or the sky\'s state when there is nothing to warn about; resize it and it shows what fits, and its settings can lay it the other way round. The hours ahead: that, plus the next hours. Sky moments: the moment in front of you, when, and its verdict — the same one the Sky screen shows — and the ones after it on a taller card.</string>
     <string name="guide_widgets_config_title">Setting one up</string>
     <string name="guide_widgets_config_body">Press and hold a widget to open its own settings: which place it watches (the active one, or a fixed place of its own), its background — including the same computed sky the app draws — how solid that background is, and which weather icons it draws with.</string>
     <string name="guide_widgets_honest_title">They never invent</string>
@@ -836,12 +843,12 @@
     <string name="today_changed_open">The whole story is in the Journal</string>
 
     <!-- The home widgets (Fase 8) -->
-    <string name="widget_now_label">Chiaro · Now</string>
-    <string name="widget_now_desc">The sky right now: icon, temperature, place</string>
-    <string name="widget_today_label">Chiaro · Today</string>
+    <string name="widget_now_label">At a glance</string>
+    <string name="widget_now_desc">The sky right now: icon, temperature, place — and the day\'s sentence where there is room</string>
+    <string name="widget_today_label">The hours ahead</string>
     <string name="widget_today_desc">Now, the day\'s sentence, and the next hours</string>
-    <string name="widget_sky_label">Chiaro · Sky</string>
-    <string name="widget_sky_desc">The next sky moment and its verdict</string>
+    <string name="widget_sky_label">Sky moments</string>
+    <string name="widget_sky_desc">The next sky moment, when, and its verdict — and the ones after it on a taller card</string>
     <string name="widget_no_place_hint">Tap to open Chiaro and add one</string>
     <string name="widget_no_data">Getting the first forecast…</string>
     <string name="widget_sky_empty">No sky moment coming up. Tap to follow one.</string>
@@ -854,10 +861,13 @@
     <string name="widget_bg_sky">The sky right now</string>
     <string name="widget_config_opacity">Background opacity</string>
     <string name="widget_config_content">Content</string>
-    <string name="widget_config_show_condition">Sky state beside the temperature</string>
-    <string name="widget_config_show_condition_note">Needs a wide widget: on a narrow one the words are cut off.</string>
     <string name="widget_config_show_range">Today\'s high and low</string>
-    <string name="widget_config_show_range_note">At the far edge, level with the temperature.</string>
+    <string name="widget_config_show_range_note">At the far edge, under the day\'s sentence.</string>
+    <string name="widget_config_show_sentence">The day\'s sentence</string>
+    <string name="widget_config_show_sentence_note">An umbrella around five, a thunderstorm at three — or, when there is nothing to warn about, what the sky is doing now. Shown where the card has room for it.</string>
+    <string name="widget_config_arrangement">Arrangement</string>
+    <string name="widget_arrangement_icon_start">Icon on the left, sentence at the far edge</string>
+    <string name="widget_arrangement_icon_end">Icon on the right, sentence beside the temperature</string>
     <string name="widget_config_icons">Weather icons</string>
     <string name="widget_icons_app">Follow the app</string>
 

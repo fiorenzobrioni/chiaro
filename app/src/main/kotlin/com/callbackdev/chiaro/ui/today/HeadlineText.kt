@@ -8,12 +8,24 @@ import java.time.format.DateTimeFormatter
 
 /**
  * The headline sentence in words, on top of [HeadlineEngine]'s language-free answer.
- * A plain function on a [Context] so the Today screen and the Today widget (Fase 8)
- * speak from the same mapping — two copies of "umbrella around 17:00" would drift.
+ * A plain function on a [Context] so the Today screen and the two widgets that print
+ * it (Fase 8) speak from the same mapping — two copies of "umbrella around 17:00"
+ * would drift.
+ *
+ * [brief] is the same sentence for a card that has three lines of fourteen characters
+ * (the Now widget, 8 set 2026): the umbrella keeps its hour and drops the clearing
+ * clause, and "rain should stop around 17:00" becomes "rain until about 17:00". Same
+ * fact, same hour, same hedge; it lives HERE rather than in the widget so the two
+ * registers can never disagree about which sentence a forecast earns.
  */
 object HeadlineText {
 
-    fun of(context: Context, headline: Headline?, timeFmt: DateTimeFormatter): String? {
+    fun of(
+        context: Context,
+        headline: Headline?,
+        timeFmt: DateTimeFormatter,
+        brief: Boolean = false
+    ): String? {
         fun t(at: LocalDateTime): String = at.format(timeFmt)
         return when (headline) {
             null -> null
@@ -26,23 +38,36 @@ object HeadlineText {
                 },
                 t(headline.at)
             )
-            is Headline.WetSoon -> when {
-                headline.snow && headline.clearsAt != null -> context.getString(
-                    R.string.headline_snow_soon_clearing, t(headline.at), t(headline.clearsAt)
-                )
-                headline.snow -> context.getString(R.string.headline_snow_soon, t(headline.at))
-                headline.clearsAt != null -> context.getString(
-                    R.string.headline_wet_soon_clearing, t(headline.at), t(headline.clearsAt)
-                )
-                else -> context.getString(R.string.headline_wet_soon, t(headline.at))
+            is Headline.WetSoon -> {
+                val clearsAt = headline.clearsAt?.takeUnless { brief }
+                when {
+                    headline.snow && clearsAt != null -> context.getString(
+                        R.string.headline_snow_soon_clearing, t(headline.at), t(clearsAt)
+                    )
+                    headline.snow -> context.getString(R.string.headline_snow_soon, t(headline.at))
+                    clearsAt != null -> context.getString(
+                        R.string.headline_wet_soon_clearing, t(headline.at), t(clearsAt)
+                    )
+                    else -> context.getString(R.string.headline_wet_soon, t(headline.at))
+                }
             }
             is Headline.WetNow -> when {
-                headline.snow && headline.stopsAt != null ->
-                    context.getString(R.string.headline_snow_now_stopping, t(headline.stopsAt))
-                headline.snow -> context.getString(R.string.headline_snow_now)
-                headline.stopsAt != null ->
-                    context.getString(R.string.headline_wet_now_stopping, t(headline.stopsAt))
-                else -> context.getString(R.string.headline_wet_now)
+                headline.snow && headline.stopsAt != null -> context.getString(
+                    if (brief) R.string.headline_snow_now_stopping_brief
+                    else R.string.headline_snow_now_stopping,
+                    t(headline.stopsAt)
+                )
+                headline.snow -> context.getString(
+                    if (brief) R.string.headline_snow_now_brief else R.string.headline_snow_now
+                )
+                headline.stopsAt != null -> context.getString(
+                    if (brief) R.string.headline_wet_now_stopping_brief
+                    else R.string.headline_wet_now_stopping,
+                    t(headline.stopsAt)
+                )
+                else -> context.getString(
+                    if (brief) R.string.headline_wet_now_brief else R.string.headline_wet_now
+                )
             }
         }
     }
