@@ -406,11 +406,16 @@ first time the reader turns on something that needs them, never at startup.
 
 Glance, three sizes, matching the app's dynamic color:
 
-- **Now**: icon, temperature, place — and nothing else; the weather icon fills the height the
-  launcher grants, because at arm's length it is the first thing to read. The sky's state can join
-  the temperature, and is off until the reader turns it on in the widget's own settings: the
-  standard dress stays the one tuned on device, and a widget that rewrote itself while its handles
-  were being dragged would be one nobody could aim.
+- **Now**: icon, temperature, place — and, where the card has room, the day's sentence: the same
+  headline Today opens with, in a shorter register, or the sky's present state when there is
+  nothing to warn about. The weather icon fills the height the launcher grants, because at arm's
+  length it is the first thing to read. The card has three forms and the grant picks one — a
+  one-row card at two or three cells names the place, at four it adds the sentence against its far
+  edge, and a two-row card stacks glyph, number, sentence and place — so resizing changes what
+  fits, never what is true. (This replaced a per-widget switch on 8 set 2026: the state used to be
+  a setting precisely so a card would not rewrite itself under a reader's fingers, and a season of
+  living beside the launcher's own weather widget, which reflows, showed that reflowing is what the
+  reader expects a widget to do.)
 - **Today**: now plus the next hours strip plus the headline sentence.
 - **Sky**: the moments in front of the reader and their verdicts, with the day named when it is not
   today — the widget nobody else ships. The first keeps the glyph and the verdict pill; a taller

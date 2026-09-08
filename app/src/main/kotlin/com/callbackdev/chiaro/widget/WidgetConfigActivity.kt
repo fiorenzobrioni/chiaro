@@ -113,9 +113,8 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
     val cityStore = remember { ServiceLocator.cityStore(context) }
     val widgetCityStore = remember { ServiceLocator.widgetCityStore(context) }
     val lookStore = remember { WidgetLookStore.get(context) }
-    // Content options are not the same for all three: only the Now widget can put the
-    // state beside its number, and only Now and Today carry a day at all. A switch that
-    // changes nothing must not be offered.
+    // Content options are not the same for all three: only the Today widget carries a
+    // day's range, and a switch that changes nothing must not be offered.
     val kind = remember(appWidgetId) { ChiaroWidgets.kindOf(context, appWidgetId) }
 
     val cities by cityStore.cities.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -232,16 +231,11 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
                 )
             }
 
-            if (kind == WidgetKind.NOW || kind == WidgetKind.TODAY) {
+            // Today only (8 set 2026): the Now widget decides what it shows from the
+            // size it was given (see NowWidgetLayout), so it has no content switch
+            // left to offer, and the Sky widget never had a day to show.
+            if (kind == WidgetKind.TODAY) {
                 SectionLabel(stringResource(R.string.widget_config_content))
-                if (kind == WidgetKind.NOW) {
-                    SwitchRow(
-                        label = stringResource(R.string.widget_config_show_condition),
-                        note = stringResource(R.string.widget_config_show_condition_note),
-                        checked = current.showCondition,
-                        onToggle = { save(current.copy(showCondition = it)) }
-                    )
-                }
                 SwitchRow(
                     label = stringResource(R.string.widget_config_show_range),
                     note = stringResource(R.string.widget_config_show_range_note),

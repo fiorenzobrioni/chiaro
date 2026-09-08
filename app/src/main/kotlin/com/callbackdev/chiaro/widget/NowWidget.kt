@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -15,18 +16,20 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
-import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
+import com.callbackdev.chiaro.ui.today.HeadlineText
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import com.callbackdev.chiaro.ui.today.WeatherText
 import java.time.Instant
@@ -34,13 +37,15 @@ import java.util.Locale
 
 /**
  * The Now widget (VISION §5.9): icon, temperature, place — the glance in the word's
- * old sense, drawn big enough to be one (device review, 3 set). Stale data states
- * its age; no place says so; nothing here is ever a guess.
+ * old sense, drawn big enough to be one (device review, 3 set) — and, where the grant
+ * has room, the day's sentence. Three forms, one per kind of grant ([NowLayout]); the
+ * launcher's size picks the form and nothing else does. Stale data states its age; no
+ * place says so; nothing here is ever a guess.
  */
 class NowWidget : GlanceAppWidget() {
 
-    /** Exact sizing so [LocalSize] is the height the launcher really granted: the
-     * icon fills it (device review, 3 set — a fixed size fits one cell only). */
+    /** Exact sizing so [LocalSize] is the size the launcher really granted: the form,
+     * the glyph and the sentence's line count are all read off it. */
     override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -60,156 +65,246 @@ class NowWidget : GlanceAppWidget() {
             )
             val skyBitmap = rememberSkyBitmap(model)
             val content = model.content
+            val size = LocalSize.current
+            val layout = if (content == null) null else nowLayout(size)
+            // Each edge is inset for what sits against it — a glyph brings a margin of
+            // its own, words bring none (the numbers are in [WidgetCardPaddingLeading]).
+            // One-row forms: the glyph leads the row and owns the height, so 4 dp before
+            // it, 6 above and below, and the words' 14 at the far edge. The tall form:
+            // the glyph sits in the top trailing corner, so those two edges take the
+            // glyph's numbers and the other two the words'. An empty state has no glyph,
+            // only words, and words get the words' inset on every side.
+            val paddingStart = when (layout) {
+                NowLayout.NARROW, NowLayout.WIDE -> WidgetCardPaddingLeading
+                NowLayout.TALL, null -> WidgetCardPadding
+            }
+            val paddingEnd = when (layout) {
+                NowLayout.TALL -> WidgetCardPaddingLeading
+                NowLayout.NARROW, NowLayout.WIDE, null -> WidgetCardPaddingTrailing
+            }
+            val paddingTop = when (layout) {
+                NowLayout.NARROW, NowLayout.WIDE, NowLayout.TALL -> WidgetCardPaddingSnug
+                null -> WidgetCardPadding
+            }
+            val paddingBottom = when (layout) {
+                NowLayout.NARROW, NowLayout.WIDE -> WidgetCardPaddingSnug
+                NowLayout.TALL, null -> WidgetCardPadding
+            }
             WidgetCard(
                 model, schemes, skyBitmap,
-                contentPadding = WidgetCardPaddingSnug,
-                // Snug above and below — the glyph is the hero and owns the height —
-                // but a real inset on both sides, sized for what leans on each of
-                // them (committente, 7 set; the numbers are in [WidgetCardPaddingLeading]).
-                //
-                // The smaller leading inset exists BECAUSE a glyph leads the row and
-                // brings a margin of its own. An empty state has no glyph, only words,
-                // and words have none — so it gets the same inset as the words on the
-                // other side, and the message lines up with where a place name would be.
-                contentPaddingStart =
-                    if (content != null) WidgetCardPaddingLeading else WidgetCardPaddingTrailing,
-                contentPaddingEnd = WidgetCardPaddingTrailing
+                contentPaddingStart = paddingStart,
+                contentPaddingEnd = paddingEnd,
+                contentPaddingTop = paddingTop,
+                contentPaddingBottom = paddingBottom
             ) { palette ->
-                when (content) {
-                    null -> if (model.city == null) {
-                        NoPlaceContent(palette)
-                    } else {
-                        NoDataContent(palette)
-                    }
-                    else -> NowContent(content, model, palette)
+                when {
+                    content == null && model.city == null -> NoPlaceContent(palette)
+                    content == null -> NoDataContent(palette)
+                    layout == NowLayout.TALL -> TallContent(content, model, palette, size)
+                    else -> RowContent(
+                        content, model, palette, size,
+                        withSentence = layout == NowLayout.WIDE
+                    )
                 }
             }
         }
     }
 }
 
-/** The hero number's size, named because the ink balance below is measured off it. */
-private const val TemperatureSp = 34f
-
 /**
- * The state's size and the air around it (committente, 4 set: at the place name's
- * 15sp and 6dp away it read as an afterthought stuck to the degree sign).
- *
- * 20sp is roughly three fifths of the hero, which puts three clear steps on the card
- * — 34 for the number, 20 for what the sky is doing, 15 for where — instead of two
- * sizes competing and one of them losing. The gap is the card's own 12, and the
- * degree sign donates a little more optical space on top of it.
+ * The one-row card: glyph, then the temperature over the place, then — on a card wide
+ * enough ([NowLayout.WIDE]) — the day's sentence against the far edge. The two text
+ * columns split the row's slack evenly ([nowSentenceColumnWidth]), so the temperature
+ * block keeps its place at the glyph's side, the sentence keeps the far edge, and the
+ * empty space lands in the middle, which is where the reference widget puts it too.
  */
-private const val ConditionSp = 20f
-private val ConditionGap = 12.dp
-
 @Composable
-private fun NowContent(
+private fun RowContent(
     content: TodayUiState.Content,
     model: WidgetModel,
-    palette: WidgetPalette
+    palette: WidgetPalette,
+    size: DpSize,
+    withSentence: Boolean
 ) {
     val context = LocalContext.current
-    val locale = Locale.getDefault()
-    val current = content.report.current
-    // The recency-trimmed day, so a report that outlived today describes no day at
-    // all rather than yesterday's (§1.1).
-    val today = content.week.firstOrNull()?.forecast
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier.fillMaxSize()
     ) {
-        Image(
-            provider = ImageProvider(
-                ChiaroIcons.conditionRes(
-                    current.condition.wmoCode, content.night,
-                    model.iconStyle, palette.darkGround,
-                    model.settings.palette
-                )
-            ),
-            contentDescription = null, // the temperature and place say it in words
-            // One row, one hero: the icon takes the whole height the card is not
-            // using, floor 56dp so a squeezed grant stays legible.
-            modifier = GlanceModifier.size(
-                heroIconSize(
-                    LocalSize.current.height - WidgetCardPaddingSnug * 2,
-                    min = 56.dp
-                )
-            )
-        )
-        // 8dp, not 12: the glyph leaves 9 to 12.5 dp of its own box empty on that side
-        // too, so the gap the eye reads is 17 to 20. The bottom balances the leading above
-        // "23°", so the words' ink and the glyph's ink share a centre line instead of
-        // the two boxes sharing one (committente, 5th device pass — the icon read high
-        // by exactly half that band).
+        HeroIcon(content, model, palette, nowRowIconSize(size))
+        // The bottom padding balances the leading above "23°", so the words' ink and
+        // the glyph's ink share a centre line instead of the two boxes sharing one
+        // (committente, 5th device pass — the icon read high by exactly half that band).
         Column(
             modifier = GlanceModifier
-                .padding(start = 8.dp, bottom = textInkBalance(context, TemperatureSp))
+                .padding(start = IconTextGap, bottom = textInkBalance(context, TemperatureSp))
                 .defaultWeight()
         ) {
-            // Icon, temperature, place — VISION §5.9's three, and only those: the
-            // day's range next to the number read as clutter on the home screen
-            // (committente, 3 set) and it is one tap away in the app.
-            //
-            // The fourth thing, the sky's state, is beside the number and OFF unless
-            // the reader asked for it in the widget's own settings (committente,
-            // 4 set): the standard dress is the one tuned on device, and this is the
-            // room a wide widget can spend rather than a size the layout reacts to.
-            // Optically centred, not bottom- or baseline-aligned (committente, 4 set
-            // — bottom-aligned and small, the word read as something stuck on the
-            // number rather than said with it). Glance has no baseline alignment; but
-            // at these two sizes the system font puts each block's visible ink almost
-            // exactly at the centre of its own box, so centring the two boxes centres
-            // the two inks — which is the treatment a small label beside a big numeral
-            // wants anyway.
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = GlanceModifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = Formats.temperature(
-                        current.tempC, model.settings.units.temperature, locale
-                    ),
-                    style = TextStyle(
-                        color = palette.primary,
-                        fontSize = TemperatureSp.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                )
-                // The state takes the slack and clips into it; the range keeps its
-                // own width against the far edge. Weighting the words rather than
-                // spacing them is what decides who gives ground on a narrow card, and
-                // a state that wins the argument would push the numbers off the widget.
-                if (model.look.showCondition) {
-                    Text(
-                        text = context.getString(
-                            WeatherText.condition(current.condition.wmoCode)
-                        ),
-                        style = secondaryStyle(palette, ConditionSp.sp),
-                        maxLines = 1,
-                        modifier = GlanceModifier
-                            .padding(start = ConditionGap, end = ConditionGap)
-                            .defaultWeight()
-                    )
-                } else {
-                    Spacer(modifier = GlanceModifier.defaultWeight())
-                }
-                today?.takeIf { model.look.showDayRange }?.let { day ->
-                    DayRange(day.highC, day.lowC, model.settings.units, palette)
-                }
-            }
+            Temperature(content, model, palette)
             PlaceLine(
                 name = content.city.name,
                 fromGps = model.fromGps,
                 palette = palette,
-                size = 15.sp
+                size = PlaceSp.sp
             )
-            if (content.isStale) {
+            StaleLine(content, palette)
+        }
+        if (withSentence) {
+            // Right-aligned and centred on the row, as the reference draws it. The
+            // TextView fills its column so a one-line sentence still sits at the far
+            // edge rather than floating where its own width ends.
+            Column(
+                horizontalAlignment = Alignment.End,
+                modifier = GlanceModifier
+                    .padding(start = SentenceGap)
+                    .defaultWeight()
+            ) {
                 Text(
-                    text = staleText(context, content.lastSync, Instant.now()),
-                    style = TextStyle(color = palette.stale, fontSize = 11.sp)
+                    text = sentence(context, content),
+                    style = sentenceStyle(palette, TextAlign.End),
+                    maxLines = nowSentenceLines(size, fontScale(context)),
+                    modifier = GlanceModifier.fillMaxWidth()
                 )
             }
         }
     }
 }
+
+/**
+ * The two-row card: the glyph alone in the top trailing corner, the words stacked
+ * against the bottom leading one — temperature, sentence, place, in the order the
+ * reference stacks them and the order the app's own Today reads.
+ *
+ * A [Box] rather than a [Column], so the glyph is sized by [nowTallIconSize] and
+ * anchored to the top while the words hang from the bottom: the two may share the
+ * temperature's empty leading band (the budget counts on it), which a Column that
+ * stacks boxes could never let them do. Horizontally they do not meet either — the
+ * glyph is on the trailing side, the number on the leading one — so the only place
+ * the two could touch is a band that is empty by construction.
+ */
+@Composable
+private fun TallContent(
+    content: TodayUiState.Content,
+    model: WidgetModel,
+    palette: WidgetPalette,
+    size: DpSize
+) {
+    val context = LocalContext.current
+    Box(
+        contentAlignment = Alignment.TopEnd,
+        modifier = GlanceModifier.fillMaxSize()
+    ) {
+        HeroIcon(
+            content, model, palette,
+            nowTallIconSize(size, fontScale(context), content.isStale)
+        )
+        // The words stop at the words' inset on the trailing side too: the card's
+        // end padding is the glyph's 4, so the column pays the difference itself.
+        Column(
+            verticalAlignment = Alignment.Bottom,
+            horizontalAlignment = Alignment.Start,
+            modifier = GlanceModifier
+                .fillMaxSize()
+                .padding(end = WidgetCardPadding - WidgetCardPaddingLeading)
+        ) {
+            Temperature(content, model, palette)
+            Text(
+                text = sentence(context, content),
+                style = sentenceStyle(palette, TextAlign.Start),
+                maxLines = TallSentenceMaxLines,
+                modifier = GlanceModifier.fillMaxWidth()
+            )
+            PlaceLine(
+                name = content.city.name,
+                fromGps = model.fromGps,
+                palette = palette,
+                size = PlaceSp.sp
+            )
+            StaleLine(content, palette)
+        }
+    }
+}
+
+@Composable
+private fun HeroIcon(
+    content: TodayUiState.Content,
+    model: WidgetModel,
+    palette: WidgetPalette,
+    size: androidx.compose.ui.unit.Dp
+) {
+    val current = content.report.current
+    Image(
+        provider = ImageProvider(
+            ChiaroIcons.conditionRes(
+                current.condition.wmoCode, content.night,
+                model.iconStyle, palette.darkGround,
+                model.settings.palette
+            )
+        ),
+        contentDescription = null, // the temperature and the sentence say it in words
+        modifier = GlanceModifier.size(size)
+    )
+}
+
+@Composable
+private fun Temperature(
+    content: TodayUiState.Content,
+    model: WidgetModel,
+    palette: WidgetPalette
+) {
+    Text(
+        text = Formats.temperature(
+            content.report.current.tempC, model.settings.units.temperature, Locale.getDefault()
+        ),
+        style = TextStyle(
+            color = palette.primary,
+            fontSize = TemperatureSp.sp,
+            fontWeight = FontWeight.Medium
+        ),
+        maxLines = 1
+    )
+}
+
+/** The stale marker (VISION §5.9): with old data the widget says how old, under the
+ * place, on every form. */
+@Composable
+private fun StaleLine(content: TodayUiState.Content, palette: WidgetPalette) {
+    if (!content.isStale) return
+    val context = LocalContext.current
+    Text(
+        text = staleText(context, content.lastSync, Instant.now()),
+        style = TextStyle(color = palette.stale, fontSize = StaleSp.sp),
+        maxLines = 1
+    )
+}
+
+/**
+ * What the sentence slot says: the day's headline when there is one — the same
+ * [HeadlineText] Today opens with, in its brief register, so the widget and the screen
+ * never tell two stories about the same afternoon — and the sky's present state when
+ * there is nothing to warn about. The fallback is not a filler: «Poco nuvoloso» is a
+ * true thing about the sky right now, which is what this card is for, and a slot that
+ * went blank on every quiet day would read as a card that failed to load.
+ */
+private fun sentence(context: Context, content: TodayUiState.Content): String {
+    val locale = Locale.getDefault()
+    val timeFmt = Formats.timeFormatter(
+        android.text.format.DateFormat.is24HourFormat(context), locale
+    )
+    return HeadlineText.of(context, content.headline, timeFmt, brief = true)
+        ?: context.getString(WeatherText.condition(content.report.current.condition.wmoCode))
+}
+
+/** The sentence's dress on both forms: the Today widget's own 14 sp Medium in the
+ * strong ink — the second thing read after the number, and the same sentence the other
+ * widget prints, so it wears the same clothes there and here. */
+private fun sentenceStyle(palette: WidgetPalette, align: TextAlign): TextStyle = TextStyle(
+    color = palette.primary,
+    fontSize = SentenceSp.sp,
+    fontWeight = FontWeight.Medium,
+    textAlign = align
+)
+
+/** Read off a Context rather than a composition local for the reason [isNight] is:
+ * there is no `LocalConfiguration` on the launcher's side of the fence. */
+private fun fontScale(context: Context): Float = context.resources.configuration.fontScale

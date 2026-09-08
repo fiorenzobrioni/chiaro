@@ -308,6 +308,23 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   side, so it ended up sitting noticeably further in than the neighbouring widget's. The
   inset is halved; the day's high and low keep the trailing edge they were given.
 
+- **The Now widget has three forms, and the size you give it picks one.** Laid out
+  against the launcher's own weather widget at four sizes: a one-row card at two or three
+  cells is the glyph, the temperature and the place; at four cells the day's sentence
+  joins them against the far edge, right-aligned and centred on the row; a two-row card
+  puts the glyph alone in the top corner and stacks number, sentence and place under it.
+  The sentence is the one Today opens with — the umbrella, the thunderstorm — in a
+  register short enough for three lines of fourteen characters, and when there is nothing
+  to warn about the slot says what the sky is doing now instead, which is not a filler
+  but the thing the card is for. The two switches the widget used to offer are gone: the
+  sky's state beside the number, because the grant now decides whether there is room for
+  the sentence, and the day's high and low, which competed with it for the same edge and
+  are a tap away in the app (the Today widget keeps its own). Every edge is inset for what
+  sits against it — 4 dp where a glyph does, because a Meteocons drawing carries its own
+  margin, 14 dp where words do — and the two-cell card gives the glyph a little less
+  height so the place name is not cut to «Dergan…». The picker shows the four-cell form,
+  which is also where a new widget now lands.
+
 - **About is complete.** The section now names the developer, the copyright and the
   licence, and credits everything the app is built out of: Open-Meteo's data under
   CC BY 4.0, the Meteocons weather icons, the Inter typeface and Google's interface

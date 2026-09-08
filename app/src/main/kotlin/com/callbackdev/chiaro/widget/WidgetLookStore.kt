@@ -48,28 +48,22 @@ data class WidgetLook(
     val background: WidgetBackground = WidgetBackground.SKY,
     val opacityPct: Int = DEFAULT_OPACITY,
     /**
-     * The Now widget prints the sky's state beside the temperature (committente,
-     * 4 set). **Off by default, and a choice rather than a measurement**: the widget
-     * could tell from its granted width whether the words fit, but then it would
-     * change what it says while the reader drags its handles, and a widget that
-     * rewrites itself mid-resize is not one you can aim. The reader asks for it once;
-     * on a narrow card the line simply clips, which is a thing they can see and undo.
-     * Off by default so every widget already on a home screen keeps the layout it was
-     * placed with.
-     */
-    val showCondition: Boolean = false,
-    /**
-     * The day's high and low, anchored to the trailing edge (committente, 4 set). The
-     * pair was on these two widgets until the third device pass took it off, and the
-     * reason it went was WHERE it was: printed under a 34sp number it read as clutter.
-     * Against the far edge, level with the state, it is the thing every weather widget
-     * carries and the hero keeps its air.
+     * The day's high and low on the Today widget, anchored to the trailing edge
+     * (committente, 4 set). The pair was on both one-row widgets until the third device
+     * pass took it off, and the reason it went was WHERE it was: printed under a 34sp
+     * number it read as clutter. Against the far edge, level with the temperature, it
+     * is the thing every weather widget carries and the hero keeps its air.
      *
-     * **Off by default since 7 set 2026** (committente), which is the third position
-     * this pair has held and the one that matches the rest of the card: the bare number
-     * is the hero, and the range is a tap away for whoever wants it. A widget already on
-     * a home screen that never had this edited follows the new default — that is what a
-     * default is, and moving it for those readers is the point of moving it.
+     * **Off by default since 7 set 2026** (committente): the bare number is the hero,
+     * and the range is a tap away for whoever wants it. **Today only since 8 set**: the
+     * Now widget is a glance at what the sky is doing now, and on it the pair competed
+     * with the sentence for the same edge; the reader who wants the day's range on the
+     * home screen has the widget that carries the day.
+     *
+     * There used to be a second switch here, the sky's state beside the Now widget's
+     * temperature. It went the same day: the state's slot is now the day's sentence,
+     * and whether there is room for it is decided by the grant ([NowLayout]), not by a
+     * setting — see that file for the reversal and its reason.
      */
     val showDayRange: Boolean = false,
     /**
@@ -106,7 +100,6 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
         return WidgetLook(
             background = background,
             opacityPct = opacity,
-            showCondition = prefs[conditionKey(appWidgetId)] ?: false,
             showDayRange = prefs[rangeKey(appWidgetId)] ?: false,
             icons = prefs[iconsKey(appWidgetId)]
                 ?.let { name -> WidgetIcons.entries.firstOrNull { it.name == name } }
@@ -118,7 +111,6 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
         dataStore.edit { prefs ->
             prefs[backgroundKey(appWidgetId)] = look.background.name
             prefs[opacityKey(appWidgetId)] = look.opacityPct.coerceIn(0, 100)
-            prefs[conditionKey(appWidgetId)] = look.showCondition
             prefs[rangeKey(appWidgetId)] = look.showDayRange
             prefs[iconsKey(appWidgetId)] = look.icons.name
         }
@@ -130,18 +122,20 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             appWidgetIds.forEach {
                 prefs.remove(backgroundKey(it))
                 prefs.remove(opacityKey(it))
-                prefs.remove(conditionKey(it))
                 prefs.remove(rangeKey(it))
                 prefs.remove(iconsKey(it))
+                // The switch this key belonged to is gone (8 set 2026); a widget placed
+                // while it existed still carries the key, and leaves with it.
+                prefs.remove(legacyConditionKey(it))
             }
         }
     }
 
     private fun backgroundKey(id: Int) = stringPreferencesKey("bg_$id")
     private fun opacityKey(id: Int) = intPreferencesKey("opacity_$id")
-    private fun conditionKey(id: Int) = booleanPreferencesKey("condition_$id")
     private fun rangeKey(id: Int) = booleanPreferencesKey("range_$id")
     private fun iconsKey(id: Int) = stringPreferencesKey("icons_$id")
+    private fun legacyConditionKey(id: Int) = booleanPreferencesKey("condition_$id")
 
     companion object {
         @Volatile

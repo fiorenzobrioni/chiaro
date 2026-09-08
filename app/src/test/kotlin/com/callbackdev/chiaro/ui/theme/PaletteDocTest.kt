@@ -37,7 +37,10 @@ class PaletteDocTest {
     private val design: String by lazy {
         val file = File("../DESIGN.md")
         assertTrue("no DESIGN.md at ${file.absolutePath}", file.isFile)
-        file.readText()
+        // A Windows checkout under `core.autocrlf` hands the file back with CRLF, and
+        // the ramp regexes below match "```\n" literally: normalise, so the suite says
+        // the same thing on every machine it runs on (8 set 2026).
+        file.readText().replace("\r\n", "\n")
     }
 
     /** One numbered subsection, heading included, up to the next heading of any depth. */

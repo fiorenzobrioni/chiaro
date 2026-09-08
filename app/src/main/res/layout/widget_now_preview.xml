@@ -9,6 +9,12 @@
   the DEFAULT dress baked in: the computed sky under its scrim, white ink, the vivid
   line icons a fresh install draws with. It is the same card, one moment of it.
 
+  The moment drawn is the wide one-row form (the default placement is four cells by one
+  since 8 set): glyph, temperature over place, and the day's sentence against the far
+  edge — the two text columns sharing the row's slack evenly, exactly as NowWidget lays
+  them out. Same insets as the widget: 4dp before the glyph, 6 above and below, 14 at
+  the words' edge (WidgetCardPaddingLeading / Snug / Trailing).
+
   Sample data only: a preview is a drawing of the product, never a reading. What the
   widget itself must never invent, it still never invents — the moment the launcher
   binds it, this layout is gone.
@@ -22,7 +28,7 @@
     android:orientation="horizontal"
     android:paddingStart="4dp"
     android:paddingTop="6dp"
-    android:paddingEnd="12dp"
+    android:paddingEnd="14dp"
     android:paddingBottom="6dp"
     tools:ignore="HardcodedText">
 
@@ -35,10 +41,12 @@
         android:src="@drawable/mcn_partly_cloudy_day" />
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:orientation="vertical"
-        android:paddingStart="8dp">
+        android:paddingStart="8dp"
+        android:paddingEnd="0dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -57,4 +65,21 @@
             android:textColor="@color/widget_preview_ink_dim"
             android:textSize="15sp" />
     </LinearLayout>
+
+    <!-- The sentence: the Today preview's sample, in the dress the widget gives it —
+         14sp medium, strong ink, right-aligned, two lines. -->
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="end"
+        android:maxLines="2"
+        android:paddingStart="12dp"
+        android:paddingEnd="0dp"
+        android:text="@string/widget_preview_headline"
+        android:textAlignment="viewEnd"
+        android:textColor="@color/widget_preview_ink"
+        android:textSize="14sp" />
 </LinearLayout>

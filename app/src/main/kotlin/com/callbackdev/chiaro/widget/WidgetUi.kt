@@ -232,35 +232,32 @@ val WidgetCardPaddingTight = 12.dp
 val WidgetCardPaddingSnug = 6.dp
 
 /**
- * The Now widget's two horizontal insets, which are neither the vertical one nor each
- * other (committente, 7 set: the icon a little too close to the leading edge, the high
- * and the low decidedly close to the trailing one).
+ * The Now widget's two kinds of edge, which are not each other (committente, 7 set: the
+ * icon a little too close to the leading edge, the words decidedly close to the trailing
+ * one). An edge carries either a glyph or words, and the two need different numbers.
  *
- * The two edges carry different things, so one number was never going to be right for
- * both. Text has almost no side bearing, so at [WidgetCardPaddingSnug] the low's degree
- * sign really did stop 6 dp from the card; it takes [WidgetCardPaddingTight], the inset
- * the other one-cell widget already writes at. A Meteocons glyph brings a margin of its
- * own — measured by rasterising all 160 condition drawables, 6.5/64 of the box at the
- * tightest (`partly_cloudy_day`) and 9/64 at the median, which is 9 to 12.5 dp at the
- * ~89 dp box the launcher's one-cell grant leaves. So the leading edge does not need
- * the same number: it needs the difference.
+ * **A glyph edge takes 4 dp.** A Meteocons glyph brings a margin of its own — measured
+ * by rasterising all 160 condition drawables, 6.5/64 of the box at the tightest
+ * (`partly_cloudy_day`) and 9/64 at the median, which is 9 to 12.5 dp at the ~89 dp box
+ * a one-cell grant leaves — so the edge only needs the difference. 4 dp since 8 set 2026,
+ * halved from 8 with the home screen beside a second weather widget for scale: the
+ * previous pass read the margin off the family's median, and the median is not what a
+ * night home screen shows — `clear_night`, the crescent, keeps 22.5% of its box empty on
+ * that side, so at 8 dp its ink stopped ~22 dp in while the neighbour's moon stopped at
+ * 16. At 4 the crescent lands within a dp or two of it and the median glyph still clears
+ * the edge by ~12. Since the three-form layout (8 set, evening) the same 4 dp is also
+ * the tall card's trailing inset, because there it is the glyph that meets that edge.
  *
- * **4 dp since 8 set 2026** (committente, with the home screen beside a second weather
- * widget for scale), which halves the 8 dp the previous pass wrote. That pass read the
- * glyph margin off the FAMILY — 9/64 at the median — and the family's median is not what
- * anybody is looking at: `clear_night`, the crescent, keeps 22.5% of its box empty on
- * the leading side, roughly two and a half times the median, so at 8 dp its ink stopped
- * about 22 dp in while the neighbouring widget's moon stopped at 16. The inset that
- * corrects a median glyph over-corrects the widest-margined ones, and those are the ones
- * a night home screen shows.
- *
- * At 4 dp the crescent lands within a dp or two of the widget the report was measured
- * against, and the median glyph still clears the edge by ~12 dp — more than the 6 dp of
- * bare text it started from, which was the complaint that opened this. The words' column
- * gets 4 dp back, which is 4 dp of the optional high/low it was already short of.
+ * **A words edge takes [WidgetCardPadding], 14 dp** — the inset every widget's words
+ * write at, since the same evening. It was 12 (the other one-cell widget's) while the
+ * only thing on that edge was an optional high/low pair; a right-aligned sentence block
+ * is a bigger thing to sit against a corner, and the reference widget insets its own
+ * description by ~25 dp on a card with a much larger radius. Fourteen on a 24 dp corner
+ * keeps the block clear of the curve, and the two dp came out of a column that no longer
+ * has the pair to pay for.
  */
 val WidgetCardPaddingLeading = 4.dp
-val WidgetCardPaddingTrailing = WidgetCardPaddingTight
+val WidgetCardPaddingTrailing = WidgetCardPadding
 
 /**
  * The card every widget lives in. The sky dress is a bitmap of the same gradient the
@@ -284,6 +281,12 @@ fun WidgetCard(
      */
     contentPaddingStart: Dp = contentPadding,
     contentPaddingEnd: Dp = contentPadding,
+    /**
+     * The two vertical edges on their own for the same reason: the Now widget's tall
+     * form has a glyph against its top edge and words against its bottom one.
+     */
+    contentPaddingTop: Dp = contentPadding,
+    contentPaddingBottom: Dp = contentPadding,
     content: @Composable (WidgetPalette) -> Unit
 ) {
     val look = model.look
@@ -335,9 +338,9 @@ fun WidgetCard(
         Box(
             modifier = GlanceModifier.fillMaxSize().padding(
                 start = contentPaddingStart,
-                top = contentPadding,
+                top = contentPaddingTop,
                 end = contentPaddingEnd,
-                bottom = contentPadding
+                bottom = contentPaddingBottom
             )
         ) {
             content(palette(ink, schemes))
@@ -579,12 +582,31 @@ fun staleText(context: Context, lastSync: Instant, now: Instant): String {
  * and a per-icon table to "fix" it would be the app arguing with its own artwork.
  */
 fun textInkBalance(context: Context, fontSizeSp: Float): Dp =
-    (fontSizeSp * LeadingAboveCaps * context.resources.configuration.fontScale).dp
+    textInkBalance(fontSizeSp, context.resources.configuration.fontScale)
+
+/** The same band as pure arithmetic, so a layout budget can be pinned by a test. */
+fun textInkBalance(fontSizeSp: Float, fontScale: Float): Dp =
+    (fontSizeSp * LeadingAboveCaps * fontScale).dp
 
 /** Ascender minus cap height, as a fraction of the font size. The device's own font
  * measures about 0.30 em; 0.24 is the value taken, because a last line that ends
  * without a descender gives part of the band back at the bottom. */
 private const val LeadingAboveCaps = 0.24f
+
+/**
+ * The height one line of text really occupies in a Glance `Text`: the TextView keeps
+ * `includeFontPadding`, so a line is the font's top-to-bottom box rather than its
+ * ascent plus descent — about 1.32 em for the system font (Roboto: 2146 + 555 units
+ * of 2048) — scaled by the reader's font size. Used where a layout has to reserve for
+ * words it cannot measure (the Now widget's tall form) and where it counts how many
+ * lines a height holds. An estimate, and named as one: the budgets that rest on it
+ * keep a band of slack ([textInkBalance]) that absorbs a font whose box is a few
+ * hundredths taller.
+ */
+fun textLineHeight(fontSizeSp: Float, fontScale: Float): Dp =
+    (fontSizeSp * LineBoxEm * fontScale).dp
+
+private const val LineBoxEm = 1.32f
 
 fun heroIconSize(
     available: Dp,

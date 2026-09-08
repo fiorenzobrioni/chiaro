@@ -89,8 +89,10 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   background, and a failed fix keeps the last position rather than replacing real numbers
   with an error
 - 🏠 **Widgets**, in Glance: **Now** (icon, temperature, place, with the weather glyph
-  growing into the height the launcher grants), **Today** (now plus the day's sentence and
-  the next hours) and **Sky** (the moments in front of you and their verdicts, as many
+  growing into the height the launcher grants, and the day's sentence when the card is
+  wide or tall enough to hold it: three forms, and the size you give it picks one),
+  **Today** (now plus the whole sentence and the next hours) and **Sky** (the moments in
+  front of you and their verdicts, as many
   rows as honestly fit and never more than you subscribed to), which is the widget nobody
   else ships. Each one is configured on its own: which place, the background (the sky
   itself, light, dark or follow the system), its opacity, and what the card carries. They

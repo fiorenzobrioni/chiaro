@@ -2845,6 +2845,137 @@ sopra); `:app:compileDebugKotlin` pulito.
 
 ---
 
+## Il widget «Ora» in tre forme (committente, 8 set 2026, sera)
+
+Richiesta, con lo screenshot della home accanto al widget meteo del launcher a quattro
+misure (4×1, 3×1, 2×1, 2×2): togliere minima e massima («un utente guarda i dettagli
+aprendo l'app, il widget è un'info rapida sullo stato attuale»); al posto della stringa
+dello stato una descrizione della giornata come quella del vicino («Probabili temporali
+stanotte»), con lo stato come ripiego; e un layout che **cambi con la dimensione** come
+fa il suo, con testi allineati e visibili dove c'è spazio. Lo sfondo resta il nostro.
+
+### Misure prese dallo screenshot (923 px di larghezza, ≈2,35 px/dp)
+
+| | Card | Glifo (inchiostro) | Temperatura | Descrizione |
+|---|---|---|---|---|
+| Vicino 4×1 | ~340 × 74 dp | ~40 dp, a 17 dp dal bordo | ~27 sp | 2 righe ~16 sp, a destra, a ~25 dp dal bordo |
+| Vicino 3×1 e 2×1 | ~250 / ~159 × 74 dp | come sopra | come sopra | **assente** |
+| Vicino 2×2 | ~159 × 189 dp | ~64 dp, in alto a destra | ~30 sp | 2 righe sotto il numero, poi il luogo |
+| Chiaro 4×1 (prima) | ~340 × 82 dp | ~64 dp | 34 sp | «Poco nuvoloso» a 20 sp accanto al numero |
+
+Quindi una cella del launcher concede ~82 dp d'altezza al widget (i ~101 della quarta
+passata erano la cella, non la concessione), due celle ~159 dp di larghezza, tre ~250,
+quattro ~340.
+
+### Le tre forme (`NowWidgetLayout.kt`, puro, con tabella in `NowWidgetLayoutTest`)
+
+- **Stretta** (una riga, due o tre celle): glifo, temperatura, luogo. Come prima, meno
+  le opzioni.
+- **Larga** (una riga, quattro celle o più): la stessa riga, e la **frase del giorno**
+  contro il bordo opposto, allineata a destra e centrata sulla riga. Le due colonne di
+  testo si dividono lo spazio a metà (`nowSentenceColumnWidth`): Glance non misura il
+  testo, e la metà è anche quello che fa il vicino — il suo blocco di descrizione è largo
+  quanto quello del numero, e il vuoto cade in mezzo dove l'occhio se lo aspetta. La frase
+  compare quando la sua colonna ha almeno 96 dp (≈14 caratteri a 14 sp): a quattro celle
+  sono 116, a tre 71.
+- **Alta** (due righe o più, `TallMinHeight` 150 dp): il glifo da solo nell'angolo in alto
+  a destra, sotto temperatura, frase (due righe) e luogo impilati a sinistra — l'ordine del
+  vicino e l'ordine in cui legge Oggi. Un `Box` e non una `Column`: il glifo è ancorato in
+  alto, le parole pendono dal basso, e le due scatole **possono condividere la banda vuota
+  sopra le maiuscole della temperatura** (`textInkBalance`, 8 dp), che il glifo riempie
+  solo col proprio margine (9–12 dp di scatola vuota in basso). In orizzontale non si
+  incontrano comunque: il glifo a destra, il numero a sinistra. Sul 2×2 del device il
+  glifo viene ~75 dp di scatola (~54 d'inchiostro contro i 64 del vicino) dove una pila
+  semplice ne avrebbe lasciati 67.
+
+### Decisioni
+
+- **La frase è quella di Oggi, in registro breve.** `HeadlineText.of(…, brief = true)`:
+  l'ombrello tiene la sua ora e perde la coda «schiarisce dopo le…», «la pioggia dovrebbe
+  smettere verso le 17:00» diventa «pioggia fino alle 17:00 circa» (due stringhe nuove,
+  IT/EN; le altre erano già brevi). Stesso fatto, stessa ora, stessa cautela; vive **nello
+  stesso oggetto** della frase intera perché i due registri non possano mai disaccordarsi
+  su quale frase merita una previsione. Il widget Oggi tiene la frase intera: ha la
+  larghezza.
+- **Il ripiego è lo stato del cielo, non il vuoto.** «Poco nuvoloso» è una cosa vera sul
+  cielo di adesso — è quello per cui la card esiste — e uno slot che restasse bianco ogni
+  giorno tranquillo si leggerebbe come una card che non ha finito di caricare. Non è il
+  riempitivo che la frase di Oggi rifiuta: lì il vuoto sta sopra un canvas che già dice
+  tutto, qui starebbe accanto a un numero nudo.
+- **Il contenuto segue la dimensione: rovesciata la decisione del 4 set.** Allora la
+  comparsa automatica dello stato al ridimensionamento era stata proposta e respinta
+  («un widget che si riscrive mentre lo si dimensiona non si può mirare»). Vissuta accanto
+  a un widget che lo fa, la regola opposta è quella che il lettore si aspetta: mostrare
+  quello che ci sta alla dimensione data è la grammatica dei widget del launcher. Quindi
+  l'interruttore «stato accanto alla temperatura» **esce** (campo, chiave, riga di
+  configurazione, due stringhe; `forget` rimuove ancora la chiave orfana di un widget
+  piazzato quando c'era).
+- **Minima e massima escono dal widget Ora** e restano su Oggi, dove la riga di
+  configurazione compare ora **solo** per quel widget. Sul widget Ora contendevano alla
+  frase lo stesso bordo, e sono a un tocco di distanza nell'app.
+- **Il glifo a due celle cede un po' d'altezza alle parole** (`nowRowIconSize`): a 159 dp
+  un glifo alto quanto la riga lasciava al luogo ~65 dp, cioè «Dergan…». La colonna delle
+  parole tiene 84 dp dove può («−12°» a 34 sp sono ~72, un nome di dieci lettere col pin
+  ~84) e il glifo prende il resto fino al proprio pavimento: 56 dp su quella card, 68 su
+  una griglia da 178. Da tre celle in su comanda l'altezza, come prima.
+- **Le righe della frase sulla riga larga sono quante l'altezza ne tiene, massimo tre**
+  (`nowSentenceLines`): due tagliavano «Pioggia per il resto della giornata» nella colonna
+  più stretta che qualifica, e la riga l'altezza la ha (tre righe ≈56 dp contro i ~70 che
+  la card lascia). Con la scala font del lettore il conto scende invece di sbordare. Sulla
+  forma alta sono due, come il vicino: la terza costerebbe al glifo 19 dp e a 20 caratteri
+  per riga due bastano al registro breve. Glance mette l'ellissi («…»), verificato nello
+  stile `Glance.AppWidget.Text` delle risorse fuse.
+- **Un numero per bordo, deciso da cosa ci sta contro.** Glifo: 4 dp (`Leading`, misura
+  dell'8 set mattina, ora anche il bordo destro della forma alta) e 6 sopra/sotto
+  (`Snug`, anche il bordo alto della forma alta). Parole: **14 dp** (`WidgetCardPadding`,
+  l'inset di Oggi) su ogni bordo che toccano — il destro della riga, sinistro e basso
+  della forma alta, tutti e quattro degli stati vuoti. Il bordo destro passa da 12 a 14: i
+  12 erano quelli dell'altro widget da una cella quando su quel bordo stava al più la
+  coppia opzionale; un blocco di frase allineato a destra è una cosa più grande da mettere
+  contro un angolo (il vicino la tiene a ~25 dp su un raggio molto maggiore), e i due dp
+  escono da una colonna che la coppia non deve più pagare.
+- **Corpi**: temperatura 34 sp Medium (l'eroe tarato in cinque passate, su tutte le
+  forme), frase 14 sp Medium in inchiostro pieno (la veste che la stessa frase ha sul
+  widget Oggi: seconda cosa che si legge dopo il numero, e un blocco multiriga accanto a un
+  34 sp vuole il corpo del testo, non uno di display), luogo 15 sp attenuato, marcatore di
+  età 11 sp sotto il luogo su ogni forma (e nella forma alta il budget del glifo lo paga
+  quando c'è).
+- **Piazzamento predefinito a 4×1** (`targetCellWidth` da 3 a 4): è la forma a una riga
+  che porta la frase e la misura a cui si apre il widget del vicino; il minimo resta due
+  celle. L'anteprima del picker disegna la stessa forma con gli stessi inset.
+- **Glance e le metriche**: `textLineHeight` (1,32 em, la scatola top-to-bottom di Roboto
+  con `includeFontPadding`) è una stima dichiarata; i budget che ci poggiano tengono la
+  banda di `textInkBalance` come gioco. A scala font 1,3 sul 2×2 il testo supera lo
+  spazio, il pavimento di 52 dp tiene e il margine del glifo assorbe i pochi dp di
+  sovrapposizione — verificato a mano sulla geometria, non su device.
+
+### Rimasto aperto
+
+- **Su device.** La soglia dei 150 dp per la forma alta e i 96 dp per la colonna della
+  frase sono tarate sulle concessioni misurate qui e su una griglia a cinque colonne
+  (320 dp per quattro celle, che qualifica per mezzo dp); un launcher che concede meno di
+  ~316 dp a quattro celle mostrerebbe la forma stretta. Se succede, il numero da toccare
+  è `SentenceColumnMin`, con la tabella dietro.
+- **Il nome del luogo si tronca a metà colonna** sulla forma larga («Cavenago di Bri…»):
+  è il costo della divisione a metà, scelto perché l'alternativa — la colonna del numero a
+  misura — lasciava alla frase quello che il nome non prendeva, e un nome lungo la
+  cancellava. Se disturba, la via è pesare 2:3 invece di 1:1, non misurare.
+
+### Verifica
+
+Suite `:app` verde (165 test, 8 nuovi in `NowWidgetLayoutTest`: la forma per ciascuna
+delle concessioni misurate, le due larghezze di colonna, il glifo della riga vincolato
+dall'altezza o dalla larghezza, le righe della frase alle due scale font, il glifo della
+forma alta con e senza marcatore di età, pavimento e soffitto). `:app:lintDebug` a zero
+errori; i due `RtlSymmetry` che l'anteprima nuova aveva introdotto sono chiusi sul posto.
+APK di debug costruito; **la verifica su device è del committente**, alle quattro misure
+dello screenshot più il 2×2 con un luogo lungo.
+
+Trovato di passaggio, e corretto: `PaletteDocTest` era rosso **solo su Windows** —
+`core.autocrlf` consegna `DESIGN.md` con CRLF e le regex delle rampe cercano
+«```\n» letterale. Il test normalizza i fine riga prima di leggere; CI su Linux non lo
+aveva mai visto.
+
 ---
 
 ## Note trasversali
