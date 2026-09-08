@@ -174,7 +174,7 @@ private fun TodayContent(
                 ) {
                     if (withSentence) {
                         Text(
-                            text = sentence(context, content),
+                            text = sentence(context, content, model.settings.units),
                             style = sentenceStyle(palette, TextAlign.End),
                             maxLines = TallSentenceMaxLines,
                             modifier = GlanceModifier.fillMaxWidth()

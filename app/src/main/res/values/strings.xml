@@ -30,6 +30,17 @@
     <!-- Already brief in English; Italian shortens «della giornata» to «del giorno». -->
     <string name="headline_wet_now_brief">Rain for the rest of the day</string>
     <string name="headline_snow_now_brief">Snow for the rest of the day</string>
+    <!-- The sentence looks ahead (9 set 2026): rain possible today, rain likely tomorrow,
+         frost by morning, fog on the way, a strong wind now. -->
+    <string name="headline_wet_maybe">Rain possible around %1$s</string>
+    <string name="headline_snow_maybe">Snow possible around %1$s</string>
+    <string name="headline_wet_tomorrow">Umbrella tomorrow from %1$s</string>
+    <string name="headline_snow_tomorrow">Snow tomorrow from %1$s</string>
+    <string name="headline_frost">Frost around %1$s, low %2$s</string>
+    <string name="headline_frost_brief">Frost around %1$s</string>
+    <string name="headline_fog">Fog around %1$s</string>
+    <string name="headline_wind">Strong wind, up to %1$s</string>
+    <string name="headline_wind_brief">Wind up to %1$s</string>
 
     <!-- Freshness and errors: the real age, the real reason -->
     <plurals name="freshness_minutes_ago">
@@ -296,7 +307,7 @@
     <string name="guide_today_title">Today</string>
     <string name="guide_today_p1">The sky at the top is not a photograph: it is computed for this minute from the height of the sun, the clouds, the rain and the moon, so at three in the morning under a clear sky it is the same deep blue you would see outside. The thin band under it is the day itself, from first light to last, with the hour you are in marked on it.</string>
     <string name="guide_today_headline_title">The sentence</string>
-    <string name="guide_today_headline_body">When there is something worth saying — an umbrella around five, a thunderstorm at three — it is written above every number. When there is nothing to say, no sentence appears: quiet is an answer too.</string>
+    <string name="guide_today_headline_body">When there is something worth saying — an umbrella around five, a thunderstorm at three, frost by morning, fog on the way, or tomorrow\'s umbrella — it is written above every number. The sentence looks ahead: what is happening now, the big number already says. When there is nothing to say, no sentence appears: quiet is an answer too.</string>
     <string name="guide_today_rain_title">Is it about to rain?</string>
     <string name="guide_today_rain_body">Two places answer that: the sentence at the top and, right below it, the chances hour by hour, with the peak of the coming hours marked on the small rain curve. Chiaro describes rain the way its data arrives — how likely, how much, from when to when.</string>
     <string name="guide_today_fresh_title">How fresh the numbers are</string>

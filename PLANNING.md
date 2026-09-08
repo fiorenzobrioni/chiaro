@@ -3660,6 +3660,69 @@ Suite verdi; lint invariato; APK di debug costruito; PR aperta sul branch.
 
 ---
 
+## La frase anticipa (committente, 9 set 2026)
+
+Osservazione dal device, sul widget: «Pioggia fino alle 18:00 circa» va bene, ma se non
+sta piovendo e potrebbe piovere tra qualche ora, o oggi, o domani, la frase non lo dice;
+e in generale sarebbe bello che anticipasse quello che sta per accadere e merita
+attenzione, non solo la pioggia. Chiesto di verificare, e nel caso implementare.
+
+### Verificato: era così
+
+`HeadlineEngine` aveva tre gradini — un codice severo entro 12 ore, pioggia adesso,
+pioggia **entro 6 ore** sopra la soglia della notifica (70%) — e poi silenzio. Quindi un
+mattino asciutto prima di una sera bagnata, un giorno asciutto prima di un domani
+bagnato, un pomeriggio al 60%, una notte di gelo: niente. La frase era nata come sorella
+della notifica (stesse soglie, stesso orizzonte), e la notifica ha ragione a guardare
+sei ore; la frase in cima alla pagina no.
+
+### La scala, primo che combacia vince
+
+1. Codice severo entro 12 ore (com'era).
+2. Pioggia adesso, con quando smette (com'era).
+3. **Pioggia probabile oggi** (≥ 70%): l'orizzonte è il resto del giorno locale, e mai
+   meno delle sei ore del notificatore — alle 22:00 la pioggia delle 03:00 è ancora di
+   stanotte, e la frase la dice come «Ombrello verso le 03:00».
+4. **Gelo entro domattina**: l'ora più fredda da adesso alle 10:00 di domani, se è a zero
+   o sotto (la soglia della striscia di deriva) e **adesso non gela**. Solo
+   anticipazione: un pomeriggio a −2° è già il numero dell'eroe, ripeterlo sarebbe la
+   pagina che dice due volte la stessa cosa.
+5. **Nebbia in arrivo** entro 12 ore, solo se adesso non c'è: «Nebbia» adesso è già la
+   parola della condizione sotto il numero.
+6. **Vento forte adesso**: sostenuto ≥ 39 km/h (la fascia «tieni il cappello» del tile)
+   o raffiche ≥ 60. L'unico «adesso» che la frase porta, perché l'eroe non ha il vento e
+   il modello non ha il vento orario: qui non può guardare avanti come gli altri.
+7. **Pioggia possibile oggi**: almeno il 50%, sotto la soglia dell'ombrello. Il 50 è la
+   soglia che il motore già aveva per «il cielo ha smesso di promettere pioggia», letta
+   al contrario. Registro onesto: «Possibile pioggia verso le 17:00».
+8. **Pioggia probabile domani**: la prima ora di domani sopra il 70%. «Domani ombrello
+   dalle 09:00».
+9. Niente: resta la risposta di un giorno senza niente di tutto questo.
+
+Cosa NON c'è, e perché: il caldo e l'UV alto sparerebbero ogni giorno d'estate e la
+frase smetterebbe di significare qualcosa; il vento di domani non è nel modello.
+
+### Il testo
+
+Nuove parole in entrambe le lingue, nel registro pieno e in quello breve del widget:
+possibile pioggia/neve, domani ombrello/neve, gelo con la minima (breve senza), nebbia,
+vento forte fino a X (breve «Vento fino a X»). Gelo e vento stampano un numero con la
+sua unità, quindi `HeadlineText.of` prende `UnitSettings`; i due widget lo passano dal
+loro modello. La guida («La frase») elenca i nuovi esempi e dice che la frase anticipa.
+
+### Verifica
+
+`HeadlineEngineTest` riscritto come scala: 19 casi (erano 10) — ogni gradino con la sua
+frase e con chi vince su chi, il test «oltre sei ore non è ancora notizia» diventato
+«più tardi oggi è l'ombrello», la mezzanotte con e senza le sei ore, il gelo che tace se
+gela già o se arriva dopo le dieci, la nebbia che tace se c'è già, le tre soglie del
+vento. Suite `:app` verde (186). Lint a zero errori e 61 avvisi, come prima. APK di debug
+costruito; branch `claude/headline-looks-ahead-p2x7mn` e PR per la CI: **la verifica su
+device è del committente**, in particolare il widget «Ora» con le frasi nuove nel suo
+registro breve.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae
