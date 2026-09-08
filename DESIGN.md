@@ -575,9 +575,27 @@ strip is a `LazyRow` that composes what fits and the week is seven. **Not the wi
 and not by choice: `RemoteViews` cannot run an `AnimatedVectorDrawable` at all.
 
 **What it costs**, and why the answer is the platform's rather than a promise made here:
-an AVD stops when its host stops being visible — `ImageView.onVisibilityAggregated` calls
-`setVisible(false)`, and the platform pauses the animator set. Scrolling a cell away or
-backgrounding the app therefore stops the work without a lifecycle observer of our own.
+a view that is not drawn is a render node hwui does not prepare, and the animators of a
+node it does not prepare do not run. Scrolling a cell away or backgrounding the app
+therefore stops the work without a lifecycle observer of our own. (Corrected 9 set 2026:
+this paragraph used to credit `ImageView.onVisibilityAggregated` → `setVisible(false)`
+with pausing the animator set. It does call it, but the RenderThread animator's `pause()`
+and `resume()` are two TODOs in AOSP, so on that thread the call is a no-op — it is not
+being drawn that stops the work, and that is enough.)
+
+**The weather holds still while the page moves** (9 set 2026, after the device still
+reported a slight hitch with the loops on). The remaining cost was the RenderThread's:
+about fourteen vector loops re-rasterized at every vsync while the same thread moves the
+layers of the scroll. For as long as a scroll is in progress — Today's list, the hour
+strip's row, or the pager between places (`LocalMotionPaused`) — each moving icon hides
+its animated twin and shows its still drawing, which is composed underneath it at all
+times so that the first frame of a scroll composes nothing. Hidden, not paused, for the
+reason above; and not stopped, because `stop()` jumps the drawing to the loop's end frame
+(for the rain, the frame with no drops in it) and `start()` would replay from the cloud at
+every rest. When the page stops the twin is drawn again and its loop is where the clock
+puts it, because the animators run on frame time. The visible price is a change of pose
+at the two ends of a scroll: the moving drawing snaps to its still pose as the finger
+moves, and back when it stops.
 
 **Why an `ImageView` and not a Compose painter** — corrected 8 set 2026. The first
 version of this section said Compose's `AnimatedImageVector` could not play an endless

@@ -5,12 +5,14 @@ import android.graphics.drawable.AnimatedVectorDrawable
 import android.view.View
 import android.widget.ImageView
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -43,6 +45,18 @@ data class ConditionGlyph(val wmoCode: Int, val night: Boolean = false)
 val LocalAnimatedIcons = staticCompositionLocalOf { false }
 
 /**
+ * The page is moving, so the weather holds still (DESIGN.md §7.1, 9 set 2026).
+ *
+ * Provided true by whatever is scrolling — Today's list, the hour strip's row, the pager
+ * between places — for as long as the scroll is in progress. While it is true a moving
+ * icon shows its still drawing and its animated twin is not drawn at all, which is the
+ * one way to take the loops off the RenderThread while that thread is busy moving the
+ * layers of the scroll (see [MovingIconView.setPaused] for why it cannot simply be
+ * paused). At rest the loop reappears where the clock puts it. Default false.
+ */
+val LocalMotionPaused = staticCompositionLocalOf { false }
+
+/**
  * The weather, drawn: the still glyph, or the illustrator's own motion where the family
  * has it and the reader has asked for it.
  *
@@ -57,6 +71,12 @@ val LocalAnimatedIcons = staticCompositionLocalOf { false }
  *
  * Nothing here gates information: the still and the moving drawings are the same
  * drawing, and a reader with motion off sees the same weather at the same moment (§7).
+ *
+ * A moving icon is drawn as two things in one box: the still drawing, and the moving
+ * twin over it. Both are always composed — composing fourteen painters at the first
+ * frame of a scroll would be the hitch this exists to remove — and [LocalMotionPaused]
+ * says which one shows: the still one at alpha 1 with the twin hidden while the page
+ * moves, the twin over a transparent still one at rest.
  */
 @Composable
 fun ConditionIcon(glyph: ConditionGlyph, modifier: Modifier = Modifier) {
@@ -71,13 +91,21 @@ fun ConditionIcon(glyph: ConditionGlyph, modifier: Modifier = Modifier) {
     } else {
         null
     }
+    val still = ImageVector.vectorResource(ChiaroIcons.styledRes(lineRes, style, darkGround, palette))
     if (moving != null) {
-        MovingIcon(moving, modifier)
+        val paused = LocalMotionPaused.current
+        Box(modifier = modifier) {
+            Icon(
+                imageVector = still,
+                contentDescription = null, // the row it sits in speaks once, via its semantics
+                tint = Color.Unspecified, // Meteocons carry their own measured colors
+                modifier = Modifier.matchParentSize().alpha(if (paused) 1f else 0f)
+            )
+            MovingIcon(moving, paused, Modifier.matchParentSize())
+        }
     } else {
         Icon(
-            imageVector = ImageVector.vectorResource(
-                ChiaroIcons.styledRes(lineRes, style, darkGround, palette)
-            ),
+            imageVector = still,
             contentDescription = null, // the row it sits in speaks once, via its semantics
             tint = Color.Unspecified, // Meteocons carry their own measured colors
             modifier = modifier
@@ -111,22 +139,31 @@ fun ConditionIcon(glyph: ConditionGlyph, modifier: Modifier = Modifier) {
  *   inflated — a stretch of sunny hours costs one inflation, not one per cell;
  * - the drawable is let go in `onRelease`, when the View itself is discarded.
  *
- * Nothing here starts a timer that outlives the view: the platform stops an AVD when its
- * host stops being visible (`ImageView.onVisibilityAggregated` → `setVisible(false)`), so
- * scrolling a cell away or backgrounding the app pauses it without a lifecycle observer
- * of our own. That is the battery answer, and it is the platform's, not a promise made
- * here.
+ * What it pays PER FRAME is the RenderThread re-rasterizing every visible loop at every
+ * vsync, and that is what [paused] takes away while the page moves (9 set 2026).
+ *
+ * Nothing here starts a timer that outlives the view. A view that is not drawn is a
+ * render node hwui does not prepare, and the animators of a node it does not prepare do
+ * not run: scrolling a cell away or backgrounding the app stops the work without a
+ * lifecycle observer of our own. (Not, as this note used to say, because the platform
+ * pauses the animator set: `ImageView.onVisibilityAggregated` does call
+ * `setVisible(false)`, but on the RenderThread animator that is a no-op — see
+ * [MovingIconView.setPaused].)
  */
 @Composable
-private fun MovingIcon(@DrawableRes res: Int, modifier: Modifier) {
+private fun MovingIcon(@DrawableRes res: Int, paused: Boolean, modifier: Modifier) {
     AndroidView(
         modifier = modifier,
         factory = { context -> MovingIconView(context) },
         // `update` runs again on any recomposition that touches this node; `show` is
         // written so that a repeat with the same resource is a no-op — rebuilding the
         // drawable there would restart the loop, a raindrop that jumps back to the
-        // cloud every time the temperature beside it changes.
-        update = { view -> view.show(res) },
+        // cloud every time the temperature beside it changes. `setPaused` is a no-op
+        // when nothing changed too.
+        update = { view ->
+            view.show(res)
+            view.setPaused(paused)
+        },
         // Lazy lists recycle these; a view handed back with the previous hour's weather
         // still running is the bug this exists to prevent. The drawing stays for the
         // next `show`, which may well be the same weather.
@@ -176,6 +213,26 @@ private class MovingIconView(context: Context) : ImageView(context) {
                 current.start()
             }
         }
+    }
+
+    /**
+     * Hidden, not paused, while the page moves (9 set 2026) — because the RenderThread
+     * animator cannot be paused: in AOSP `VectorDrawableAnimatorRT.pause()` and
+     * `resume()` are two TODOs, so the `setVisible(false)` the platform sends an
+     * off-screen `ImageView` stops nothing on that thread. `stop()` would, but it jumps
+     * the drawing to the loop's end frame — for the rain that is the frame with no drops
+     * in it — and `start()` would replay from the cloud at every rest.
+     *
+     * What does stop the work is not being drawn: an INVISIBLE child is skipped by its
+     * parent, its render node leaves the display list, and hwui does not tick the
+     * animators of a node it is not preparing. The still drawing under this view shows
+     * meanwhile ([ConditionIcon]), and when the view is drawn again the loop is where
+     * the clock says it should be — the animators run on frame time — not where it was
+     * left, so nothing replays.
+     */
+    fun setPaused(paused: Boolean) {
+        val target = if (paused) INVISIBLE else VISIBLE
+        if (visibility != target) visibility = target
     }
 
     fun rest() {

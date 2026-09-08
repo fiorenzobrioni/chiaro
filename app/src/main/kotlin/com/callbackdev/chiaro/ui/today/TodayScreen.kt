@@ -49,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -97,6 +98,7 @@ import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
+import com.callbackdev.chiaro.ui.icons.LocalMotionPaused
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.theme.ChiaroMotion
@@ -252,6 +254,9 @@ private fun PagedToday(
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
+            // A swipe between places moves whole pages: the weather holds still on both
+            // of them while it does (DESIGN §7.1); each page adds its own list's scroll.
+            CompositionLocalProvider(LocalMotionPaused provides pagerState.isScrollInProgress) {
             HorizontalPager(
                 state = pagerState,
                 key = { pages[it].key },
@@ -279,6 +284,7 @@ private fun PagedToday(
                     isCurrent = index == pagerState.currentPage,
                     onCanvasBehindBar = { canvasBehindBar = it }
                 )
+            }
             }
             SnackbarHost(
                 hostState = snackbar,
@@ -718,6 +724,12 @@ private fun ContentState(
     // Both halves are the reader's own gesture and nothing else (Fase 3b): the pull
     // indicator means "doing what you just asked", so an automatic fetch and an
     // automatic re-fix leave it alone — VISION §5.2, refresh silent.
+    // While the page moves the weather holds still (DESIGN §7.1, 9 set 2026): the
+    // moving icons hide behind their still drawings for as long as the list is in
+    // motion, so the RenderThread spends its frames on the scroll and not on fourteen
+    // vector loops. The pager's swipe says the same thing one level up.
+    val pageMoving = LocalMotionPaused.current || listState.isScrollInProgress
+    CompositionLocalProvider(LocalMotionPaused provides pageMoving) {
     PullToRefreshBox(
         isRefreshing = content.userRefreshing || locating,
         onRefresh = onRefresh
@@ -789,6 +801,7 @@ private fun ContentState(
             item { Details(content.report, units, locale) }
             item { DataFooter(content, timeFmt) }
         }
+    }
     }
 }
 

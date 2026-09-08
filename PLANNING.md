@@ -3603,6 +3603,63 @@ branch pushato: la CI produce quello da provare.
 
 ---
 
+## Il meteo sta fermo mentre la pagina si muove (committente, 9 set 2026)
+
+APK provato: «tutto ok». Richiesta: provare la soluzione proposta per lo scatto residuo
+di Oggi, pushare e aprire la PR.
+
+### Quello che AOSP ha detto prima di scrivere
+
+La proposta era `setVisible(false)` sul drawable durante lo scroll, perché
+`AnimatedVectorDrawable.setVisible` mette in pausa un loop infinito. Letto il sorgente
+prima di fidarsi: `VectorDrawableAnimatorRT.pause()` e `resume()` sono **due TODO** in
+AOSP. Sul RenderThread la pausa non esiste, e con essa cade anche una frase che DESIGN
+§7.1 e il KDoc ripetevano dal 7 set — «la piattaforma mette in pausa l'animatore quando
+la view non è più visibile». Non è vero: quello che ferma il lavoro è **non essere
+disegnati**, perché hwui non prepara un nodo fuori dalla display list e non ne fa girare
+gli animatori. Il risultato pratico era comunque giusto (una cella fuori schermo non
+costa); la spiegazione no, ed è corretta in entrambi i posti.
+
+Neanche `stop()` va bene: porta il disegno al fotogramma finale del loop, che per la
+pioggia è quello **senza gocce**, e `start()` alla ripresa rifarebbe partire tutto dalla
+nuvola.
+
+### Cosa fa adesso
+
+- `LocalMotionPaused`, in `ConditionIcon.kt`: vero finché uno scroll è in corso. Lo
+  forniscono la lista di Oggi (`listState.isScrollInProgress`), la riga della striscia
+  (`rowState`, in OR con quello che la pagina già dice) e il pager tra i luoghi
+  (`pagerState.isScrollInProgress`).
+- Un'icona animata è **due cose in una scatola**: il disegno fermo e il gemello animato
+  sopra. Sono composti sempre entrambi — comporre quattordici painter al primo frame di
+  uno scroll sarebbe lo scatto che si vuole togliere — e il locale decide chi si vede: il
+  fermo ad alpha 1 con la `ImageView` `INVISIBLE` mentre la pagina si muove, il gemello
+  sopra un fermo trasparente da ferma.
+- Una View `INVISIBLE` il padre non la disegna, il suo nodo esce dalla display list e
+  hwui non ne tocca gli animatori: il RenderThread spende i frame dello scroll sui layer
+  e non sui vettori. Alla ripresa il loop è dove lo mette l'orologio — gli animatori
+  vanno a tempo di frame — non dove era rimasto: niente replay.
+- Il prezzo visibile: un cambio di posa alle due estremità di uno scroll, il disegno
+  animato scatta nella posa ferma quando il dito si muove e torna quando si ferma. È il
+  compromesso già detto nella risposta di ieri, con «fermo nella posa da fermo» al posto
+  di «congelato».
+
+DESIGN §7.1 e il KDoc di `ConditionIcon` corretti sulla pausa e aggiornati sul nuovo
+comportamento.
+
+### Rimasto aperto (su device)
+
+- Lo scatto è sparito, o ridotto? Se resta identico, il collo non era il RenderThread e
+  l'A/B `animator_duration_scale 0` resta il modo di dirlo.
+- Il cambio di posa a inizio e fine scroll: se disturba più dello scatto, si può limitare
+  al solo fling (drag in corso → `interactionSource` della lista) o togliere del tutto.
+
+### Verifica
+
+Suite verdi; lint invariato; APK di debug costruito; PR aperta sul branch.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae
