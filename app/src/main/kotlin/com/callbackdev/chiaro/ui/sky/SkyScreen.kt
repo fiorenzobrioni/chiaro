@@ -65,6 +65,7 @@ import com.callbackdev.chiaro.domain.sky.MoonQuarterKind
 import com.callbackdev.chiaro.domain.sky.SkyJob
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyLead
+import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.components.VerdictChip
@@ -410,9 +411,18 @@ private fun TonightCard(tonight: Tonight, zone: ZoneId, timeFmt: DateTimeFormatt
                 style = MaterialTheme.typography.titleSmall
             )
             if (window == null) {
-                // A fact about the latitude and the season, stated as such.
+                // A fact about the latitude and the season, stated as such — and the
+                // RIGHT fact: an empty window is also the deep polar night, where it is
+                // dark at noon and "never gets fully dark" would be the reverse of the
+                // truth (8 set 2026). The engine tells the two apart; the card repeats it.
                 Text(
-                    text = stringResource(R.string.sky_tonight_no_darkness),
+                    text = stringResource(
+                        if (tonight.reason == SkyNotScheduled.DARK_ALL_DAY) {
+                            R.string.sky_tonight_dark_all_day
+                        } else {
+                            R.string.sky_tonight_no_darkness
+                        }
+                    ),
                     style = MaterialTheme.typography.titleMedium
                 )
                 return@Card

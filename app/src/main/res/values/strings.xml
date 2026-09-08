@@ -354,7 +354,7 @@
     <string name="guide_journal_entries_title">What is written there</string>
     <string name="guide_journal_entries_body">How the forecast moved for the days ahead, which of your alerts fired and when, which sky moments were actually observed and with what verdict — and the updates that did not make it, with the reason. A failed update is an entry, not a silence. When a day is over, one more line closes it: what the rain was given at, and whether it rained.</string>
     <string name="guide_journal_drift_title">How the week has been moving</string>
-    <string name="guide_journal_drift_body">One row per day ahead, one column per six hours, the colour on the metric\'s own scale: rain, or the highs. A slot no update landed in stays empty, so a night with the phone off looks like the gap it was. A day whose forecast minimum is at or below zero carries a mark beside its name, with those days named underneath: freezing is a threshold, not a drift, so it gets a mark and a sentence rather than a scale of its own. It answers the question anyone planning a weekend actually asks — is this getting better or worse? Tap it to see the numbers behind the colours.</string>
+    <string name="guide_journal_drift_body">One row for today and each day ahead, one column per six hours, the colour on the metric\'s own scale: rain, or the highs. A slot no update landed in stays empty, so a night with the phone off looks like the gap it was. A day whose forecast minimum is at or below zero carries a mark beside its name, with those days named underneath: freezing is a threshold, not a drift, so it gets a mark and a sentence rather than a scale of its own. It answers the question anyone planning a weekend actually asks — is this getting better or worse? Tap it to see the numbers behind the colours.</string>
     <string name="guide_journal_drift_caption">An example: three days, six slots, on the rain scale.</string>
 
     <string name="guide_places_title">Your places</string>
@@ -404,6 +404,10 @@
     <string name="sky_tonight_label">Tonight</string>
     <string name="sky_tonight_window">Dark from %1$s to %2$s</string>
     <string name="sky_tonight_no_darkness">The sky never gets fully dark tonight: at this latitude, in this season, it happens.</string>
+    <!-- The opposite sky with the same empty window: the deep polar night, where it is
+         dark at noon (above 84.6° at the solstice). The card and the row say it. -->
+    <string name="sky_tonight_dark_all_day">It is dark all day here, at this latitude, in this season: there is no night to wait for, it is already here.</string>
+    <string name="sky_none_dark_all_day">It is dark all day: the sun never climbs back up to twilight</string>
     <string name="sky_tonight_moon">The moon is up, %1$d%% lit</string>
     <string name="sky_moon_line">%1$s · %2$d%% lit</string>
     <string name="sky_too_far">Too far out to say</string>
@@ -683,6 +687,8 @@
     <string name="alert_summary_title">The morning summary</string>
     <string name="alert_summary_desc">Once a day, between 6 and 12: today\'s sky, low, high and rain.</string>
     <string name="alerts_templates_title">Start from an idea</string>
+    <string name="alerts_max_reached">You already have the most alerts the app keeps, %1$d: remove one to add another.</string>
+    <string name="tpl_already_added">Already added</string>
     <string name="rule_sentence_prefix">When</string>
     <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
     <string name="rule_and">and</string>
@@ -809,7 +815,12 @@
     <string name="journal_no_place_body">Add a place and the journal starts writing itself: every update leaves a line.</string>
     <string name="journal_empty">Nothing written yet. The journal fills up as the updates come in.</string>
     <string name="journal_yesterday">Yesterday</string>
-    <string name="journal_at_time">at %1$s</string>
+    <!-- A journal day's revisions of one target day fold into one line; this says
+         how many the line stands for (only shown past one). -->
+    <plurals name="journal_shift_revisions">
+        <item quantity="one">in one update</item>
+        <item quantity="other">across %d updates</item>
+    </plurals>
     <string name="journal_drift_title">How the week has been moving</string>
     <string name="journal_metric_rain">Rain</string>
     <string name="journal_metric_high">Highs</string>

@@ -69,6 +69,67 @@ class JournalStateBuilderTest {
         assertEquals("30", rain.new)
     }
 
+    /**
+     * The Journal folds a day's revisions of one target day into one line (8 set 2026):
+     * three hourly fetches that walked Saturday's high 24 → 25 → 27 and its rain
+     * 70 → 60 → 30 are one sentence, first value to last, that says it took three
+     * updates. Today's "what changed" still reads the newest fetch alone.
+     */
+    @Test
+    fun `a day's revisions of one target day fold into one line`() {
+        val rows = listOf(
+            row(at(3, 9), forecast(precip = 30, high = 27.0)),
+            row(at(3, 8), forecast(precip = 60, high = 25.0)),
+            row(at(3, 7), forecast(precip = 70, high = 24.0)),
+            row(at(2, 7), forecast(precip = 70, high = 24.0))
+        )
+        val content = build(rows)
+
+        val shift = content.days.flatMap { it.entries }
+            .filterIsInstance<JournalEntry.ForecastShift>()
+            .single()
+        assertEquals(at(3, 9), shift.at)
+        assertEquals(2, shift.revisions) // the 07:00 fetch changed nothing
+        assertEquals("70", shift.shifts.first { it.field == "precip_pct" }.old)
+        assertEquals("30", shift.shifts.first { it.field == "precip_pct" }.new)
+        assertEquals("24.0", shift.shifts.first { it.field == "high_c" }.old)
+        assertEquals("27.0", shift.shifts.first { it.field == "high_c" }.new)
+        assertEquals(true, shift.better)
+
+        // Today's list is per fetch: the newest one moved rain by 30 and the high by 2.
+        val latest = JournalStateBuilder.latestShifts(rows).single()
+        assertEquals(1, latest.revisions)
+        assertEquals("60", latest.shifts.first { it.field == "precip_pct" }.old)
+    }
+
+    @Test
+    fun `a value that came back where it started is not a change`() {
+        // Rain 70 → 30 → 70 within the day: nothing to say about rain. The high moved
+        // 24 → 26 and stayed, so the line survives with the high alone and no verdict.
+        val rows = listOf(
+            row(at(3, 9), forecast(precip = 70, high = 26.0)),
+            row(at(3, 8), forecast(precip = 30, high = 26.0)),
+            row(at(2, 7), forecast(precip = 70, high = 24.0))
+        )
+        val shift = build(rows).days.flatMap { it.entries }
+            .filterIsInstance<JournalEntry.ForecastShift>()
+            .single()
+        assertEquals(listOf("high_c"), shift.shifts.map { it.field })
+        assertNull(shift.better)
+
+        // And when every field comes back, the day has no line at all.
+        val quiet = listOf(
+            row(at(3, 9), forecast(precip = 70, high = 24.0)),
+            row(at(3, 8), forecast(precip = 30, high = 26.0)),
+            row(at(2, 7), forecast(precip = 70, high = 24.0))
+        )
+        assertTrue(
+            build(quiet).days.flatMap { it.entries }
+                .filterIsInstance<JournalEntry.ForecastShift>()
+                .isEmpty()
+        )
+    }
+
     @Test
     fun `a day entering the horizon is not a revision worth a sentence`() {
         val content = build(listOf(row(at(2, 7), forecast(precip = 70, high = 24.0))))

@@ -21,15 +21,19 @@ class WeatherSnapshotsTest {
         sampleWeatherReport().copy(daily = days.toList())
 
     @Test
-    fun `forecast flatten keeps the next seven days, keyed by date`() {
+    fun `forecast flatten keeps today and the next seven days, keyed by date`() {
         val report = reportWithDaily(
-            DailyForecast(today, 21.0, 14.0, sunny, 0, 5, "Moderate ☀️"),               // today: out
+            DailyForecast(today, 21.0, 14.0, sunny, 0, 5, "Moderate ☀️"),               // today: in (8 set 2026)
             DailyForecast(today.plusDays(1), 20.0, 12.0, rainy, 85, 2, "Low"),  // tomorrow
             DailyForecast(today.plusDays(2), 16.0, 10.0, sunny, 20, 4, "Moderate ☀️"),  // day after
             DailyForecast(today.plusDays(8), 19.0, 13.0, sunny, 10, 6, "High ☀️")   // beyond: out
         )
         assertEquals(
             mapOf(
+                "2023-10-27.status" to "Sunny ☀️",
+                "2023-10-27.high_c" to "21.0",
+                "2023-10-27.low_c" to "14.0",
+                "2023-10-27.precip_pct" to "0",
                 "2023-10-28.status" to "Rainy 🌧️",
                 "2023-10-28.high_c" to "20.0",
                 "2023-10-28.low_c" to "12.0",

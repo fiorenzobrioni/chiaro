@@ -41,19 +41,23 @@ object WeatherSnapshots {
     }
 
     /**
-     * Flattens the daily forecast for the next seven target dates (tomorrow through
-     * a week out, in the city's local time) into `<ISO date>.<field>` keys, e.g.
-     * `2026-08-18.high_c`. Absolute dates keep consecutive snapshots aligned on the
-     * same target day, so the drift comparisons run between two predictions of the
-     * same future moment. Values stay English and metric like [flatten].
+     * Flattens the daily forecast for today and the next seven target dates (in the
+     * city's local time) into `<ISO date>.<field>` keys, e.g. `2026-08-18.high_c`.
+     * Absolute dates keep consecutive snapshots aligned on the same target day, so the
+     * drift comparisons run between two predictions of the same future moment. Values
+     * stay English and metric like [flatten].
      *
      * Upstream keeps two dates (its Logs only ever showed two); Chiaro stores the
      * week because the Journal's drift strip and Today's "what changed" (Fase 7)
-     * are ABOUT the week — "Saturday improved" needs Saturday on disk.
+     * are ABOUT the week — "Saturday improved" needs Saturday on disk. **Today is in
+     * the horizon since 8 set 2026**: "has today's rain been going up?" is the
+     * morning's question, and the drift strip could not answer it with today's own
+     * forecast never written down. `ForecastDiff.dayLabel` still names the earliest
+     * date "tomorrow"; that label is upstream's and nothing in Chiaro reads it.
      */
     fun flattenForecast(report: WeatherReport): Map<String, String> = buildMap {
         val today = report.location.localTime.toLocalDate()
-        val horizon = (1L..7L).map { today.plusDays(it) }.toSet()
+        val horizon = (0L..7L).map { today.plusDays(it) }.toSet()
         report.daily.filter { it.date in horizon }.forEach { day ->
             val prefix = day.date.toString()
             put("$prefix.status", day.condition.label)

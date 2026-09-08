@@ -346,7 +346,7 @@
     <string name="guide_journal_entries_title">Cosa c\'è scritto</string>
     <string name="guide_journal_entries_body">Come si è mossa la previsione per i giorni che vengono, quali dei tuoi avvisi sono scattati e quando, quali momenti del cielo sono stati osservati davvero e con che verdetto — e gli aggiornamenti che non sono passati, col loro motivo. Un aggiornamento fallito è una riga, non un silenzio. E quando una giornata è finita, una riga in più la chiude: a quanto era data la pioggia, e se ha piovuto.</string>
     <string name="guide_journal_drift_title">Come si muove la settimana</string>
-    <string name="guide_journal_drift_body">Una riga per ogni giorno davanti, una colonna ogni sei ore, il colore sulla scala della grandezza: la pioggia, oppure le massime. Una casella dove non è arrivato nessun aggiornamento resta vuota, così una notte a telefono spento si vede per il buco che è stato. Un giorno la cui minima prevista è a zero o sotto porta un segno accanto al nome, e sotto la striscia quei giorni sono elencati: il gelo è una soglia, non una deriva, quindi prende un segno e una frase invece di una scala tutta sua. Risponde alla domanda che si fa davvero chi organizza un fine settimana: sta migliorando o peggiorando? Toccala per vedere i numeri dietro ai colori.</string>
+    <string name="guide_journal_drift_body">Una riga per oggi e per ogni giorno davanti, una colonna ogni sei ore, il colore sulla scala della grandezza: la pioggia, oppure le massime. Una casella dove non è arrivato nessun aggiornamento resta vuota, così una notte a telefono spento si vede per il buco che è stato. Un giorno la cui minima prevista è a zero o sotto porta un segno accanto al nome, e sotto la striscia quei giorni sono elencati: il gelo è una soglia, non una deriva, quindi prende un segno e una frase invece di una scala tutta sua. Risponde alla domanda che si fa davvero chi organizza un fine settimana: sta migliorando o peggiorando? Toccala per vedere i numeri dietro ai colori.</string>
     <string name="guide_journal_drift_caption">Un esempio: tre giorni, sei fasce, sulla scala della pioggia.</string>
 
     <string name="guide_places_title">I tuoi luoghi</string>
@@ -396,6 +396,10 @@
     <string name="sky_tonight_label">Stanotte</string>
     <string name="sky_tonight_window">Buio dalle %1$s alle %2$s</string>
     <string name="sky_tonight_no_darkness">Stanotte il cielo non diventa mai del tutto buio: a questa latitudine, in questa stagione, capita.</string>
+    <!-- Il cielo opposto con la stessa finestra vuota: la notte polare profonda, dove
+         è buio a mezzogiorno (sopra gli 84,6° al solstizio). La card e la riga lo dicono. -->
+    <string name="sky_tonight_dark_all_day">Qui, a questa latitudine, in questa stagione, è buio tutto il giorno: non c\'è una notte da aspettare, c\'è già.</string>
+    <string name="sky_none_dark_all_day">È buio tutto il giorno: il sole non risale fino al crepuscolo</string>
     <string name="sky_tonight_moon">C\'è la luna, illuminata al %1$d%%</string>
     <string name="sky_moon_line">%1$s · illuminata al %2$d%%</string>
     <string name="sky_too_far">Troppo lontano per dirlo</string>
@@ -675,6 +679,8 @@
     <string name="alert_summary_title">Il riepilogo del mattino</string>
     <string name="alert_summary_desc">Una volta al giorno, tra le 6 e le 12: il cielo di oggi, minima, massima e pioggia.</string>
     <string name="alerts_templates_title">Parti da un\'idea</string>
+    <string name="alerts_max_reached">Hai già il massimo di avvisi che l\'app tiene, %1$d: togline uno per aggiungerne un altro.</string>
+    <string name="tpl_already_added">Già aggiunto</string>
     <string name="rule_sentence_prefix">Quando</string>
     <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
     <string name="rule_and">e</string>
@@ -800,7 +806,12 @@
     <string name="journal_no_place_body">Aggiungi un luogo e il diario comincia a scriversi da solo: ogni aggiornamento lascia una riga.</string>
     <string name="journal_empty">Ancora niente da raccontare. Il diario si riempie man mano che arrivano gli aggiornamenti.</string>
     <string name="journal_yesterday">Ieri</string>
-    <string name="journal_at_time">alle %1$s</string>
+    <!-- Le revisioni di un giorno bersaglio dentro un giorno del diario diventano una
+         riga; questo dice quante ne raccoglie (mostrato solo oltre una). -->
+    <plurals name="journal_shift_revisions">
+        <item quantity="one">in un aggiornamento</item>
+        <item quantity="other">in %d aggiornamenti</item>
+    </plurals>
     <string name="journal_drift_title">Come si sta muovendo la settimana</string>
     <string name="journal_metric_rain">Pioggia</string>
     <string name="journal_metric_high">Massime</string>

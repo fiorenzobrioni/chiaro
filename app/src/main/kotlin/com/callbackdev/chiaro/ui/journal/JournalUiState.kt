@@ -41,7 +41,11 @@ sealed interface JournalEntry {
         override val at: Instant,
         val date: LocalDate,
         val better: Boolean?,
-        val shifts: List<FieldShift>
+        val shifts: List<FieldShift>,
+        /** How many updates this line folds (the Journal's entries fold a journal day's
+         * revisions of one target day into one line; Today's "what changed" never
+         * folds, so there it is always 1). */
+        val revisions: Int = 1
     ) : JournalEntry
 
     data class RuleFired(override val at: Instant, val name: String) : JournalEntry
@@ -167,7 +171,7 @@ object JournalStateBuilder {
     ): JournalContent {
         val zone = zoneOf(city)
         val entries = buildList {
-            addAll(forecastShifts(rows))
+            addAll(forecastShifts(rows, zone))
             addAll(outcomes(rows, zone, now))
             rows.forEach { row ->
                 row.firedRules.forEach { add(JournalEntry.RuleFired(row.at, it)) }
@@ -207,7 +211,7 @@ object JournalStateBuilder {
      */
     fun latestShifts(rows: List<JournalRow>, limit: Int = 3): List<JournalEntry.ForecastShift> {
         val newest = rows.maxOfOrNull { it.at } ?: return emptyList()
-        return forecastShifts(rows)
+        return revisions(rows)
             .filter { it.at == newest }
             .sortedByDescending { shift ->
                 val rain = shift.shifts.firstOrNull { it.field == "precip_pct" }
@@ -221,9 +225,10 @@ object JournalStateBuilder {
     /**
      * The inherited diff, read as prose: only hunks WITH a baseline become entries —
      * a day entering the horizon is a fact about the calendar, not a revision worth
-     * a sentence.
+     * a sentence. One entry per fetch and target day: Today's "what changed" reads
+     * these as they are, the Journal folds them ([forecastShifts]).
      */
-    private fun forecastShifts(rows: List<JournalRow>): List<JournalEntry.ForecastShift> {
+    private fun revisions(rows: List<JournalRow>): List<JournalEntry.ForecastShift> {
         val fetches = rows
             .filter { it.forecast.isNotEmpty() }
             .sortedBy { it.at }
@@ -244,6 +249,52 @@ object JournalStateBuilder {
                     )
                 }
         }
+    }
+
+    /**
+     * The Journal's entries: the revisions of one target day inside one journal day,
+     * folded into one line (review, 8 set 2026). At the hourly cadence and over seven
+     * target days, every fetch that moved a high by a degree or the rain by ten points
+     * was a line of its own — a dozen or more a day of the same tenor, "Friday's high
+     * went from 24° to 25°", and the diary stopped being readable. Each field now runs
+     * from the first value the day heard to the last, the line says how many updates
+     * that took, and a field that came back to where it started is not a change at
+     * all — the drift sentence already reasoned that way ("went up and down"), the
+     * prose did not. A day whose every field came back leaves no line.
+     */
+    private fun forecastShifts(rows: List<JournalRow>, zone: ZoneId): List<JournalEntry.ForecastShift> =
+        revisions(rows)
+            .groupBy { it.at.atZone(zone).toLocalDate() to it.date }
+            .values
+            .mapNotNull { group -> fold(group.sortedBy { it.at }) }
+
+    private fun fold(group: List<JournalEntry.ForecastShift>): JournalEntry.ForecastShift? {
+        val last = group.last()
+        val fields = group.flatMap { it.shifts }.map { it.field }.distinct()
+        val shifts = fields.mapNotNull { field ->
+            val first = group.firstNotNullOfOrNull { it.shifts.firstOrNull { s -> s.field == field } }
+            val newest = group.asReversed()
+                .firstNotNullOfOrNull { it.shifts.firstOrNull { s -> s.field == field } }
+            if (first == null || newest == null || sameValue(first.old, newest.new)) null
+            else FieldShift(field, first.old, newest.new)
+        }
+        if (shifts.isEmpty()) return null
+        return JournalEntry.ForecastShift(
+            at = last.at,
+            date = last.date,
+            better = judgement(shifts),
+            shifts = shifts,
+            revisions = group.size
+        )
+    }
+
+    /** Numbers compare as numbers ("24.0" is "24"), anything else as text; an absent
+     * old value is never the same as a present new one. */
+    private fun sameValue(old: String?, new: String): Boolean {
+        if (old == null) return false
+        val a = old.toDoubleOrNull()
+        val b = new.toDoubleOrNull()
+        return if (a != null && b != null) a == b else old == new
     }
 
     /** The other half of the loop: what the app said, checked against what it then
@@ -324,7 +375,11 @@ object JournalStateBuilder {
             .distinct()
             .sorted()
             .mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }
-            .filter { it.isAfter(today) }
+            // Today included while it runs (review, 8 set 2026): "has today's rain
+            // been going up?" is the morning's question, and the row was the one the
+            // strip did not have. Days gone by still fall off — a strip of the past
+            // is not the week ahead.
+            .filter { !it.isBefore(today) }
         if (dates.isEmpty()) return null
         fun cell(date: LocalDate, field: String): List<String?> =
             columns.map { it?.forecast?.get("$date.$field") }

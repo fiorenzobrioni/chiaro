@@ -722,11 +722,20 @@ for a value with a range, which is how tweather's "a syntax error is not writabl
 survives into a UI with no syntax.
 
 **8.10 JournalEntry** and **DriftStrip** — an entry is a line of prose with its numbers.
-The drift strip is one row per target day and one column per fetch, colored on **the
-metric's own ramp** (rain on the rain ramp, temperature on the diverging one) rather than
-on a good/bad scale: whether Saturday got "better" is a judgement, and the judgement
-belongs in the sentence beside the strip, not in the color. Legend always present, cells
-≥ 8dp, and a table view behind a long press for anyone who cannot read the colors at all.
+The drift strip is one row per target day — today included while it runs (8 set 2026) —
+and one column per six-hour slot, colored on **the metric's own ramp** (rain on the rain
+ramp, temperature on the diverging one) rather than on a good/bad scale: whether Saturday
+got "better" is a judgement, and the judgement belongs in the sentence beside the strip,
+not in the color. Legend always present, cells ≥ 8dp, and a table view behind a tap or a
+long press for anyone who cannot read the colors at all — a grid with the slot's hour over
+each column, not a line of arrows. The strip, its chips, the frost line and the sentence
+sit in one `surfaceContainer` card. An entry's glyph names its **category** (a revision, a
+sky moment observed, an alert fired, a day checked, an update missed) and is a Material
+silhouette in `onSurfaceVariant` for all five: these are not weather icons, so §13.1's
+"keep their colors" does not reach them, and a monochrome set is the consistent one. The
+hour trails the row as a label. A journal day's revisions of one target day fold into one
+line, first value to last, saying how many updates it took; a value that came back where
+it started is not a change.
 
 **8.11 States** — empty ("no place yet", with the one action that fixes it), error (what
 failed, in plain language, and a retry), stale (§8.2), loading (a shimmer that cannot be

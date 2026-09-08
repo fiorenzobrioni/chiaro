@@ -3401,6 +3401,208 @@ striscia a filo, l'eroe a testo grande, Cielo con le icone a colori.
 
 ---
 
+## La notte polare corretta, e la review di Avvisi e Diario (committente, 8 set 2026, tarda sera)
+
+APK della CI provato: «ottimo». Richiesta: correggere la notte polare trovata nella
+review di Cielo; poi la stessa passata, funzionale ed estetica, sulle ultime due
+schermate — Avvisi e Diario — con particolare attenzione al funzionamento del Diario e
+alle correzioni da proporre.
+
+### La notte polare: corretta nel core, e registrata in UPSTREAM
+
+`SkyScheduler.darkness()` rispondeva `NO_DARKNESS` per due cieli opposti: il sole che non
+scende mai 18° sotto l'orizzonte (la notte bianca) e il sole che non **risale** mai fino a
+18° sotto (la notte polare profonda, dove è buio a mezzogiorno). La card Stanotte diceva
+«il cielo non diventa mai del tutto buio» anche sul secondo, che è il contrario. Prima di
+correggere, il conto di dove capita: il sole resta sotto i −18° tutto il giorno solo se a
+mezzogiorno solare `90 − |φ − δ| < −18`, cioè oltre **84,6°** di latitudine al solstizio
+— nessun paese abitato, le stazioni polari sì. Corretto comunque, perché è il motore che
+chiama una notte polare con il nome di una notte bianca:
+
+- nuovo motivo `SkyNotScheduled.DARK_ALL_DAY`; `darkness()` lo restituisce quando il
+  giorno è senza sole (`sunDownAllDay`) **e** l'altezza del sole al mezzogiorno solare è
+  sotto il crepuscolo astronomico. Il giorno di confine con un solo estremo nullo resta
+  `NO_DARKNESS`, che è la risposta giusta anche lì;
+- la Via Lattea propaga il motivo della finestra invece di riscriverlo `NO_DARKNESS`;
+- `Tonight.reason` porta il motivo alla card, che stampa la frase giusta
+  (`sky_tonight_dark_all_day`); le righe `∅` hanno la loro (`sky_none_dark_all_day`);
+- `SkySchedulerTest`: a −89,5° al solstizio di giugno la finestra è `DARK_ALL_DAY`,
+  Copenaghen lo stesso giorno resta `NO_DARKNESS`;
+- **UPSTREAM.md**: è un bug anche a monte — `sky.crontab` stampa lo stesso `∅` — e la
+  voce dice che la correzione va portata di là (motivo, ramo, test).
+
+### Avvisi: la review
+
+**Funziona.** Interruttori pronti con la frase di cosa mandano e quando; regole del
+lettore come frase di chip con picker e mai un campo libero per un valore con un
+intervallo; «Prova adesso» che risponde senza notificare e si azzera quando una
+condizione cambia; permesso chiesto al primo interruttore acceso; cancellazione
+confermata; il template crea una regola vera e apre subito l'editor. Tutto coerente con
+VISION §5.4. Da correggere o migliorare, in ordine:
+
+1. **«Scattato l'ultima volta» è nel fuso del telefono** (`ZoneId.systemDefault()`),
+   l'unica ora dell'app che non è del luogo. Per il proprio luogo coincidono; per
+   Palermo letta da Reykjavík no. Portare `zone` in `AlertsUiState.Content`.
+2. **Il picker degli operatori offre «uguale a» e «diverso da» sulle grandezze
+   continue**: «temperatura uguale a 20°» non scatta quasi mai ed è la soglia senza
+   senso che i picker esistono per rendere non scrivibile. Nascondere i due per
+   `NUMBER`, `TEMPERATURE`, `SPEED`; restano per i sì/no.
+3. **Un template si può aggiungere due volte** e produce due regole «Bici» identiche.
+   Un template le cui condizioni esistono già tra le regole va segnato come aggiunto
+   (o nascosto), come fa il catalogo di Cielo con la spunta.
+4. **Al massimo delle regole i template spariscono senza una parola**: una riga «Hai già
+   il massimo di N avvisi: togline uno per aggiungerne un altro» dove stavano.
+5. **Estetica**: le regole del lettore sono `ListItem` identici agli interruttori pronti,
+   e il titolo di gruppo è l'unica cosa che le distingue. VISION le chiama *card*: una
+   `Surface` `surfaceContainer` come le card dei dettagli — nome, frase, ultimo scatto,
+   interruttore — separa i due gruppi a colpo d'occhio e dice che la card si apre, cosa
+   che una riga con interruttore non dice.
+6. **La risposta di «Prova adesso»** è tutta in `onSurfaceVariant`: quando scatterebbe è
+   la risposta che il lettore cercava e merita l'inchiostro pieno; «resterebbe zitto»
+   può restare quieto.
+
+### Diario: la review
+
+**Verificato leggendo il costruttore e i due motori** (`ForecastDiff`, `ForecastOutcome`):
+le revisioni diventano righe solo con una baseline (un giorno che entra nell'orizzonte
+non è una revisione); il giudizio lo dà la pioggia e la temperatura resta neutra; l'esito
+di una giornata finita si dichiara «ha piovuto» con una sola osservazione bagnata e «non
+ha piovuto» solo con 16 ore coperte; la deriva ha l'asse del tempo a fasce di 6 ore, il
+buco resta buco, la testata parte dove parte l'evidenza e il gelo segna il giorno
+sull'ultima previsione; i giorni si raggruppano nel fuso del luogo e la schermata si
+sveglia solo alla sua mezzanotte. Nessun errore di logica trovato. Le proposte, in
+ordine di resa:
+
+1. **Comprimere le revisioni per giorno bersaglio.** Ogni fetch che sposta la massima di
+   un giorno di 1 °C o la pioggia di 10 punti fa una riga; a cadenza oraria e su sette
+   giorni bersaglio questo può essere una decina o più di righe al giorno dello stesso
+   tenore («la massima di venerdì è passata da 24° a 25°»), e il diario smette di essere
+   leggibile. Proposta: nel costruttore, per ogni coppia (giorno del diario, giorno
+   bersaglio) una riga sola con primo → ultimo valore e «in N aggiornamenti», e nessuna
+   riga quando il valore è tornato dov'era — la frase della deriva già ragiona così
+   («è andato su e giù»), la prosa no. Il Diario di Oggi («Cosa è cambiato») resta
+   sull'ultimo fetch com'è.
+2. **Oggi nella deriva.** Le righe sono i giorni «ancora avanti» e oggi è escluso, ma «la
+   pioggia di oggi è salita nelle ultime ore?» è la domanda del mattino. Includere oggi
+   come prima riga finché la giornata corre.
+3. **La copertura dell'esito.** Ogni osservazione copre l'ora precedente, fissa: a
+   cadenza di 2 ore (il massimo dell'intervallo) una giornata copre al più 12 ore e il
+   verdetto «non ha piovuto» non arriva **mai**; a cadenza oraria basta una notte in
+   Doze per scendere sotto le 16. Proposta, in `ForecastOutcome`: ogni osservazione copre
+   il tempo dal fetch precedente, con un tetto (3 ore), così la copertura misura quanto
+   l'app ha davvero guardato e non quante volte. Da verificare su device prima: se «Ieri»
+   riceve la sua riga di esito alla cadenza del committente.
+4. **La tabella dei numeri** unisce quattordici valori con frecce in una riga di dialogo
+   che va a capo male. Una griglia con l'ora della fascia in testa, o le sole fasce con
+   un valore.
+5. **Le icone delle righe**: nuvola e stella sono Meteocons tinti in grigio a 24dp, la
+   stessa silhouette tolta a Cielo. Qui però il glifo è la **categoria** della riga, non
+   il tempo: la scelta coerente è un set Material monocromo per tutte e cinque le
+   categorie (revisione, cielo osservato, avviso scattato, esito, aggiornamento
+   mancato), come campanella, spunta e triangolo già sono. La regola §13.1 riguarda le
+   icone del meteo, e queste non lo sarebbero più.
+6. **L'ora come etichetta in coda** alla riga (`trailingContent`, `labelSmall`) invece
+   che «· alle 21:54» in fondo alla frase: un registro si scorre per ora.
+7. **La deriva in una card** `surfaceContainer` con i chip dentro: cinque elementi
+   impilati (titolo, chip, striscia, gelo, frase) diventano un oggetto.
+
+Nessuna di queste è implementata: sono proposte, con il numero 1 e il numero 3 come le
+due che cambiano quello che il Diario dice.
+
+### Verifica
+
+`:core:domain` verde (166 test, uno nuovo), `:core:data` verde (171), `:app` verde (175).
+`:app:lintDebug` a zero errori e 60 avvisi. APK di debug costruito. La correzione è nel
+working tree del branch della CI, **non ancora pushata**: la CI riparte quando il
+committente lo dice.
+
+---
+
+## Avvisi e Diario: le proposte applicate (committente, 9 set 2026, notte)
+
+Richiesta: applicare tutte le correzioni e le proposte della review di Avvisi e Diario;
+sullo scatto residuo dello scroll di Oggi solo una risposta, senza codice; poi push
+perché riparta la CI.
+
+### Avvisi
+
+1. **«Scattato l'ultima volta» nel fuso del luogo**: `AlertsUiState.Content.zone`, letto
+   dalla città attiva con il fallback del telefono, e la card lo usa.
+2. **Niente «uguale a» / «diverso da» sulle grandezze continue**: il picker li offre
+   solo ai sì/no. Una regola che già li porta li tiene; il picker smette di proporli.
+3. **Un template già presente è segnato** con la spunta in `primary` e non è più
+   toccabile: il confronto è sulle condizioni (`RuleCondition` è una data class), così
+   vale anche se il lettore ha rinominato la regola. Stringa `tpl_already_added`.
+4. **Al massimo delle regole** una riga lo dice (`alerts_max_reached`, con `MaxRules`),
+   dove prima i template sparivano e basta.
+5. **Le regole sono card**: `Surface` `surfaceContainer` con angolo `medium`, nome in
+   `titleMedium`, frase, ultimo scatto in `bodySmall` grigio, interruttore a destra;
+   tutta la card apre l'editor, l'interruttore resta il suo bersaglio. Item con chiave
+   sull'id della regola, così un toggle anima la riga invece di ricostruirla.
+6. **La risposta di «Prova adesso»** è in `onSurface` quando scatterebbe, quieta negli
+   altri tre casi.
+
+### Diario
+
+1. **Le revisioni si piegano** per coppia (giorno del diario, giorno bersaglio):
+   `JournalStateBuilder.forecastShifts(rows, zone)` raggruppa le revisioni per fetch
+   (`revisions`, che resta quello che legge «Cosa è cambiato» su Oggi) e per ogni campo
+   tiene il primo valore vecchio e l'ultimo nuovo; un campo tornato dov'era non è un
+   cambiamento (confronto numerico dove i valori sono numeri), un giorno i cui campi
+   sono tutti tornati non ha riga. `ForecastShift.revisions` dice quante ne raccoglie e
+   la riga lo stampa oltre uno (`journal_shift_revisions`, plurale). Due test nuovi in
+   `JournalStateBuilderTest`: la piega su tre fetch, e il ritorno che cancella.
+2. **Oggi nella deriva.** Le righe sono `!isBefore(today)`. Ma il giorno corrente non
+   era su disco: `WeatherSnapshots.flattenForecast` salvava da domani a sette giorni,
+   ora salva **da oggi** (`0L..7L`). È una divergenza in più dal core di tweather ed è
+   in UPSTREAM con la sua cucitura: `ForecastDiff.dayLabel` chiama «tomorrow» la prima
+   data salvata, e quell'etichetta è dei Logs di tweather, niente qui la legge.
+   `WeatherSnapshotsTest` aggiornato. Effetto collaterale voluto: anche «Cosa è
+   cambiato» su Oggi può ora dire che la previsione di oggi si è mossa.
+3. **La copertura dell'esito** (`ForecastOutcome`): una lettura copre il tempo dalla
+   lettura precedente, con un tetto di **due ore** — la cadenza massima dell'app — e la
+   prima lettura copre la sua ora. Prima ogni lettura copriva un'ora fissa, quindi a
+   cadenza di due ore una giornata guardata da cima a fondo copriva dodici ore e il
+   verdetto «non ha piovuto» non arrivava mai. La pioggia resta sull'ora che i
+   millimetri descrivono, non sulla finestra di copertura: una lettura bagnata all'1:30
+   che copre fino a ieri non bagna ieri. Tre test nuovi in `ForecastOutcomeTest` e uno
+   adattato (tre letture a 9, 10 e 16: quattro ore coperte, non tre). Il tetto è una
+   scelta: due ore è quanto l'app stessa promette di guardare, sei ore di sonno ne
+   coprono due. In UPSTREAM.
+4. **La tabella dei numeri è una griglia**: intestazione a due righe (giorno e ora
+   dello slot, del fetch se c'è, nominale se lo slot è vuoto), una riga per giorno
+   bersaglio, cifre tabulari, scorrimento laterale quando è più larga del dialogo.
+5. **Icone monocrome Material** per le cinque categorie: matita per la revisione,
+   stella per il cielo osservato, campanella, spunta, triangolo. Nuvola e stella
+   Meteocons tinte grigie erano l'ultima silhouette rimasta; qui il glifo è la categoria
+   e non il tempo, quindi §13.1 non lo raggiunge.
+6. **L'ora in coda alla riga** come `labelSmall` tabulare; l'esito, che è del giorno,
+   non ne ha. Via «· alle 21:54» dalle frasi e via la stringa `journal_at_time`.
+7. **La deriva in una card** `surfaceContainer`: chip, striscia, gelo e frase in una
+   `Column` con 16dp di margine e 12 di passo; la striscia, il gelo e la frase perdono i
+   margini propri. Il titolo di sezione resta fuori.
+
+DESIGN §8.10 e la guida («una riga per oggi e per ogni giorno davanti») aggiornati.
+
+### Lo scatto residuo di Oggi, solo una risposta
+
+Quello che resta è del RenderThread: ~14 vettori animati rirasterizzati a ogni vsync
+mentre lo stesso thread muove i layer dello scroll. L'unica leva che non tocca né i
+disegni né i loro animatori è **fermare i loop mentre la lista è in movimento**
+(`isScrollInProgress` → `setVisible(false)` sul drawable, che mette in pausa un AVD
+infinito; ripresa da dove era a lista ferma). Costa zero da ferma e toglie tutto il
+lavoro vettoriale dai frame dello scroll; il prezzo è che le icone si congelano durante
+un trascinamento lento. Da misurare prima con l'A/B `animator_duration_scale 0`. Non
+applicato: il committente ha chiesto solo la risposta.
+
+### Verifica
+
+`:core:domain` verde (166), `:core:data` verde (174, tre nuovi), `:app` verde (177, due
+nuovi). `:app:lintDebug` a zero errori e 61 avvisi (uno in più). APK di debug costruito e
+branch pushato: la CI produce quello da provare.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae

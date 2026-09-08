@@ -69,7 +69,9 @@ class ForecastOutcomeTest {
         val outcome = compute(fetches).single()
 
         assertTrue(outcome.rained)
-        assertEquals(3, outcome.coveredHours)
+        // 09:00 vouches for its own hour, 10:00 for the hour since, 16:00 for two of
+        // the six since 10:00 — the cap — so four hours, not three (8 set 2026).
+        assertEquals(4, outcome.coveredHours)
     }
 
     @Test
@@ -97,6 +99,43 @@ class ForecastOutcomeTest {
             ForecastOutcome.Fetch(at(saturday, 15, it * 3), emptyMap(), observation(3, 0.0))
         }
         assertTrue(compute(listOf(baseline()) + spree).isEmpty())
+    }
+
+    /**
+     * A day watched every two hours — the top of the update range — is a day watched:
+     * each reading vouches for the time since the one before it, up to two hours, so
+     * twelve readings cover the day instead of half of it (8 set 2026). Before this a
+     * reader at that cadence never saw a dry day called dry.
+     */
+    @Test
+    fun `a day watched every two hours is covered, not half covered`() {
+        val outcome = compute(listOf(baseline()) + watched(0..22 step 2)).single()
+        assertEquals(false, outcome.rained)
+        // The midnight reading's time belongs to Friday; the other eleven cover two
+        // hours each.
+        assertEquals(22, outcome.coveredHours)
+    }
+
+    @Test
+    fun `a night the phone slept through stays uncovered beyond the cap`() {
+        // Readings at 00:00 and 06:00, then hourly: the six-hour gap earns two hours,
+        // not six, so the day covers 2 + 17 = 19 and not 23.
+        val outcome = compute(listOf(baseline()) + watched(listOf(0, 6) + (7..23))).single()
+        assertEquals(19, outcome.coveredHours)
+    }
+
+    @Test
+    fun `the rain stays on the hour the millimetres describe, not on the coverage window`() {
+        // A wet reading at 01:30 on Sunday, two hours after the previous one: its
+        // coverage reaches back into Saturday, its millimetres do not — they are the
+        // hour 00:30–01:30, all Sunday. Saturday stays dry.
+        val fetches = listOf(baseline()) + watched(0..23) + listOf(
+            ForecastOutcome.Fetch(at(sunday, 1, 30), emptyMap(), observation(63, 2.0))
+        )
+        val saturdayOutcome = ForecastOutcome
+            .compute(fetches, zone, today = sunday.plusDays(1))
+            .single { it.date == saturday }
+        assertEquals(false, saturdayOutcome.rained)
     }
 
     @Test
