@@ -391,8 +391,10 @@ headroom, it is luck.
 
 The reader's palette (§2.5) picks the band table too, because the canvas is the loudest
 thing on the screen and a vivid app with a muted sky would be a mixed message. Same nine
-anchors, same altitudes, same mixing rules — derived from §3.2 by §2.5's one rule, so
-their luminances are §3.2's luminances:
+anchors, same altitudes, same mixing rules — derived from §3.2 by §2.5's one rule **and
+one clause the semantic tokens do not get**, so their luminances are §3.2's luminances:
+
+> and never below **0.65** of the chroma sRGB holds at that band's own luminance.
 
 | Band | Altitude | top | mid | bottom |
 |---|---|---|---|---|
@@ -401,9 +403,28 @@ their luminances are §3.2's luminances:
 | Golden hour | 4° | `#007DE5` | `#F49C00` | `#FFD083` |
 | Horizon | 0° | `#006FDC` | `#E58800` | `#FFC268` |
 | Civil / blue hour | −6° | `#003698` | `#2C52DB` | `#9571DE` |
-| Nautical | −12° | `#0D1D65` | `#193190` | `#374AB0` |
-| Astronomical | −18° | `#091449` | `#0C1B5D` | `#162770` |
-| Night | ≤ −90° | `#08112F` | `#09183C` | `#0F2047` |
+| Nautical | −12° | `#0D1D65` | `#172F95` | `#3445C0` |
+| Astronomical | −18° | `#09144B` | `#0C1B5E` | `#142479` |
+| Night | ≤ −90° | `#050E3C` | `#051645` | `#041B5F` |
+
+That clause was added on 8 set 2026, and the reason is an accident in the shape of the
+first rule rather than a change of mind about it. ×1.8 is a **multiple of paper's
+chroma**, which is exactly right for a token: it is what keeps a deliberately
+near-neutral one near-neutral. A sky is not a token. Paper draws the night with the
+least chroma of any band, so the multiplier was handing the least to the bands where the
+gamut has the most left over — measured as a fraction of what sRGB holds at each band's
+luminance, the vivid day sky ran at **1.00** of it and vivid midnight at **0.44**. The
+dress was at its loudest on the one sky that is already bright, and at its quietest on
+the sky the reader opens the app under all evening. The floor is a fraction of the gamut
+rather than a multiple of paper precisely so that it can only ever raise a band the
+multiplier left flat.
+
+It moves three rows and no others: day, low sun, both golden anchors, the horizon and
+the blue hour were already above 0.65 and come out of the generator byte for byte as
+before. So the scrim measurement below did not move, and neither did the brown dusk two
+paragraphs down. 0.65 was picked the way 1.8 was, by rendering the sheet and looking at
+it (`tools/palette_sheet.py`); at 0.75 midnight starts reading as a royal blue rather
+than as a night.
 
 Every claim §3 makes about the canvas is a claim about brightness — darker after sunset,
 an overcast midnight is not a dusk, a clear full moon out-shines a cloudy one — so held
@@ -880,7 +901,7 @@ ui/theme/
 
 Three generators sit behind those files and none of their output is hand-edited:
 `tools/gen_scheme.py` (the four schemes), `tools/gen_vivid.py` (the vivid semantic tokens
-and sky bands) and `tools/gen_vivid_icons.py` (the `mcn_*` icon set), all three on the
+under §2.5's ceiling, and the sky bands under that ceiling plus §3.7's floor) and `tools/gen_vivid_icons.py` (the `mcn_*` icon set), all three on the
 shared color arithmetic in `tools/color_math.py`.
 
 Seven tests keep this document from rotting, in the series' habit of turning a design rule

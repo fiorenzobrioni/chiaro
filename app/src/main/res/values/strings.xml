@@ -237,7 +237,12 @@
     <string name="settings_palette">Palette</string>
     <string name="settings_palette_paper">Paper</string>
     <string name="settings_palette_vivid">Vivid</string>
-    <string name="settings_palette_note">Paper is warm white and amber. Vivid is cool white and azure, with brighter weather icons.</string>
+    <string name="settings_palette_note">Paper is warm white and amber. Vivid is cool white and azure.</string>
+    <!-- Appended to the note above, because the palette only reaches the icons in one of
+         the two icon sets (DESIGN.md §13.1) and a reader on the other one was being
+         promised a change that never came. -->
+    <string name="settings_palette_note_icons_line">With outlined icons, Vivid brightens them on the dark theme too.</string>
+    <string name="settings_palette_note_icons_fill">Filled icons keep their own colors, so the palette leaves them alone.</string>
     <string name="settings_weather_icons">Weather icons</string>
     <string name="settings_icons_fill">Filled</string>
     <string name="settings_icons_line">Outlined</string>

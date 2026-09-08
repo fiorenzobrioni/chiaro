@@ -3723,6 +3723,93 @@ registro breve.
 
 ---
 
+## La palette che non si vedeva: la nota che mentiva, la notte smorta (committente, 9 set 2026)
+
+Due screenshot dello stesso tramonto di Londra, uno con Carta e uno con Brillante:
+canvas identico, icone identiche. La domanda era se la palette funzionasse.
+
+### Verificato: funziona, ed è la prova che serviva
+
+Misurati i pixel dei due screenshot contro le tabelle in `Scheme.kt` e `SkyPalette.kt`.
+Superficie `#0D141C` contro `#16130E`, pill della navigazione `#624000` contro
+`#004C70`, testo `#B9C8DF` contro `#CCC6BA`: sono `VividDarkScheme` e `ChiaroDarkScheme`
+esatti. La ribbon cambia dove deve: banda del giorno `#2BB8FF` contro `#54B7F0`, ora blu
+`#2241B5` contro `#354A89`. La palette arriva ovunque. Nessun bug di wiring.
+
+Il canvas era identico **per aritmetica, non per un guasto**. Londra alle 19:33, sole a
+circa 0°, copertura 100%: agli anchor di 4° e 0° i due stop centrale e basso sono gli
+stessi esadecimali in entrambe le tabelle (`#F49C04`, `#FFD083`, `#E58800`, `#FFC268`),
+perché `gen_vivid.py` tocca il bordo del gamut prima di arrivare a ×1.8 — lo stesso
+fatto che §2.5 registra già per gli ambra. Resta solo lo stop alto, e il 100% di nuvole
+gli toglie il 70% di quel che gli era rimasto (`CloudDesaturation`), sotto lo scrim
+superiore. Calcolato: paper `#535F6E #917A57 #B8A992`, vivid `#395571 #917A57 #B8A992`.
+Due stop su tre byte per byte.
+
+### Le icone: la nota mentiva davvero
+
+`ChiaroIcons.styledRes` legge la palette solo sul ramo `style != FILL`. Il set pieno è
+la tavolozza di Meteocons e non ha un fratello vivid (§13.1, ed è voluto). Lo screenshot
+era sul set pieno — luna campionata `#86C2DA`, cioè `mcfn_clear_night`. Quindi la nota
+delle impostazioni, «con icone del meteo più vivaci», prometteva a quel lettore una cosa
+che non sarebbe successa. Contro la regola che lo schermo non mente.
+
+`settings_palette_note` ora dice solo quello che vale sempre, e `paletteNote()` gli
+appende la frase giusta per il set icone attivo: a linea, «Brillante le schiarisce anche
+sul tema scuro»; piene, «tengono i colori loro, quindi la palette non le tocca».
+
+### Il pavimento del cielo: perché Brillante era smorto di notte
+
+Misurata ogni banda come frazione della cromia che sRGB regge alla sua luminanza:
+
+| | giorno | 8° | ora d'oro | ora blu | −12° | −18° | notte |
+|---|---|---|---|---|---|---|---|
+| paper | 1.00 | 0.81 | 0.59/1.00 | 0.59 | 0.36 | 0.34 | 0.25 |
+| vivid ×1.8 | 1.00 | 1.00 | 1.00 | 1.00/0.78 | 0.65 | 0.63 | **0.44** |
+
+Il vestito era al massimo esattamente sul cielo che è già luminoso e al minimo su quello
+sotto cui si apre l'app la sera. Non è una scelta: è la forma della regola. ×1.8 è un
+**multiplo della cromia di paper**, giusto per un token — è quello che tiene neutro un
+token deliberatamente neutro — e paper la notte l'ha disegnata con la cromia più bassa
+di tutte. Il moltiplicatore dava il meno dove il gamut aveva il più.
+
+`SKY_FLOOR = 0.65` in `gen_vivid.py`: nessuna banda sotto quella frazione del gamut alla
+propria luminanza. Essendo una frazione del gamut e non un multiplo di paper, può solo
+alzare le bande che il moltiplicatore aveva lasciato piatte. Sposta **tre righe e nient'
+altro**: giorno, sole basso, i due anchor dorati, orizzonte e ora blu erano già sopra e
+escono dal generatore identici — quindi la misura dello scrim di §3.7 non si muove, e
+nemmeno il crepuscolo bruno che quella sezione registra. I token semantici non lo
+ricevono: `VividLightColors` e `VividDarkColors` escono invariati.
+
+0.65 scelto come fu scelto 1.8: renderizzando il foglio e guardandolo
+(`tools/palette_sheet.py`, chromium headless). A 0.75 la mezzanotte comincia a leggersi
+come un blu reale invece che come una notte.
+
+### Considerato e scartato
+
+**Un anchor in più all'ora d'oro**, il rimedio che §3.7 stessa indica. Misurato: agli
+stop dorati la cromia disponibile alla luminanza tenuta è 1.00–1.01 volte quella di
+paper. Non c'è un secondo ambra da avere, quindi un anchor in più interpolerebbe tra due
+colori identici. Il rimedio di §3.7 vale per il crepuscolo bruno, che questo cambiamento
+non tocca; qui non ci sarebbe niente da separare.
+
+### Verifica
+
+`SkyPaletteTest` guadagna il limite inferiore che gli mancava. C'era solo
+`Paper.gradient(-6.0) != Vivid.gradient(-6.0)`: una singola altitudine, che qualunque
+collasso parziale supera indisturbato. Adesso ogni stop che **può** differire deve
+differire, e ogni stop che coincide deve esibire il gamut come scusa (cromia di paper
+entro il 5% del tetto) — più un tetto sul numero di coincidenze, perché il controllo
+stop-per-stop passerebbe anche se i due vestiti diventassero uno. Il secondo test
+rimisura la regola di §3.7 sugli esadecimali emessi, che è l'unico modo di accorgersi
+di `SKY_FLOOR` modificato e tabella non rigenerata. L'aritmetica OKLCh e il bordo del
+gamut sono riscritti in Kotlin apposta perché possano dissentire da `color_math.py`.
+
+DESIGN.md §3.7: tabella aggiornata sulle tre righe, la clausola stampata, il perché
+misurato. **La verifica su device è del committente**: il cielo della sera è la cosa che
+cambia, e un foglio renderizzato non è un telefono in mano.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae

@@ -192,4 +192,149 @@ class SkyPaletteTest {
             SkyPalette.Paper.gradient(-6.0) != SkyPalette.Vivid.gradient(-6.0)
         )
     }
+
+    /**
+     * §3.7's rule, re-measured on the emitted hexes rather than trusted from the
+     * generator — the habit `PaletteContrastTest` keeps: assert the outcome, not the
+     * method. It is the only check that would notice `SKY_FLOOR` being edited in
+     * `tools/gen_vivid.py` and the table not being regenerated.
+     */
+    @Test
+    fun `every vivid band is the chroma section 3 7 asks for`() {
+        SkyPalette.Paper.anchors.zip(SkyPalette.Vivid.anchors).forEach { (p, v) ->
+            p.second.stops().zip(v.second.stops()).forEachIndexed { stop, (paper, vivid) ->
+                val (_, paperChroma, hue) = oklch(paper)
+                if (paperChroma < 1e-4) return@forEachIndexed
+                val ceiling = chromaCeiling(luminance(paper), hue)
+                val asked = minOf(ceiling, maxOf(paperChroma * BOOST, ceiling * SKY_FLOOR))
+                val got = oklch(vivid).second
+                assertEquals(
+                    "the ${p.first}° band's stop $stop should hold %.4f of chroma, holds %.4f"
+                        .format(asked, got),
+                    asked, got, 0.008
+                )
+            }
+        }
+    }
+
+    /**
+     * The lower bound the suite was missing until 8 set 2026, and the one a device
+     * report went looking for: two screenshots of the same sunset under two dresses,
+     * pixel-identical over the mid and bottom stops.
+     *
+     * They were RIGHT to be identical — `#F49C04` and `#E58800` are already on the sRGB
+     * gamut edge at the luminance §3.2 drew them at, so there is no second amber to
+     * have. But nothing in this file said so, and the previous check ("the vivid table
+     * must not BE the paper table") asked at exactly one altitude, which any collapse
+     * short of a total one walks straight past. Now every stop that CAN differ must,
+     * and every stop that does not has to show the gamut as its excuse.
+     */
+    @Test
+    fun `where the two skies coincide, sRGB is the reason`() {
+        var coincidences = 0
+        SkyPalette.Paper.anchors.zip(SkyPalette.Vivid.anchors).forEach { (p, v) ->
+            p.second.stops().zip(v.second.stops()).forEachIndexed { stop, (paper, vivid) ->
+                val (_, paperChroma, hue) = oklch(paper)
+                if (paperChroma < 1e-4) return@forEachIndexed
+                val headroom = chromaCeiling(luminance(paper), hue) / paperChroma
+                if (paper == vivid) {
+                    coincidences++
+                    assertTrue(
+                        "the ${p.first}° band's stop $stop is the same color in both dresses " +
+                            "with %.2fx of chroma still available — a dress that does not ".format(headroom) +
+                            "change the loudest thing on the screen is not a dress",
+                        headroom < 1.05
+                    )
+                } else if (headroom > 1.10) {
+                    // The other direction: a stop with room to move must have moved by
+                    // more than the 8-bit step the gamut solve alone can produce. The
+                    // 4° amber differs by one unit of blue with 1.004x of headroom, so
+                    // the bound is asked only of the stops that had somewhere to go.
+                    assertTrue(
+                        "the ${p.first}° band's stop $stop had %.2fx of room and took ".format(headroom) +
+                            "almost none of it",
+                        oklch(vivid).second > oklch(paper).second * 1.10
+                    )
+                }
+            }
+        }
+        // A guard on the guard: if a future retune made every band coincide, the loop
+        // above would still pass one stop at a time while the two dresses became one.
+        assertTrue(
+            "$coincidences of 27 stops are shared, which is no longer two skies",
+            coincidences <= 6
+        )
+    }
+
+    private companion object {
+        /** §2.5's ceiling and §3.7's floor, as this file measures them. Duplicated from
+         * `tools/gen_vivid.py` on purpose: a test that imported the generator's constant
+         * would agree with it by definition. */
+        const val BOOST = 1.8
+        const val SKY_FLOOR = 0.65
+    }
+
+    // ---- OKLCh and the sRGB gamut, the arithmetic `tools/color_math.py` uses, written
+    // ---- out a second time so the two can disagree.
+
+    private fun oklch(c: androidx.compose.ui.graphics.Color): Triple<Double, Double, Double> {
+        val r = channel(c.red)
+        val g = channel(c.green)
+        val b = channel(c.blue)
+        val l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b)
+        val m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b)
+        val s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)
+        val lightness = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s
+        val a = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s
+        val bb = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s
+        return Triple(lightness, kotlin.math.hypot(a, bb), kotlin.math.atan2(bb, a))
+    }
+
+    private fun oklchToLinear(lightness: Double, chroma: Double, hue: Double): DoubleArray {
+        val a = chroma * kotlin.math.cos(hue)
+        val b = chroma * kotlin.math.sin(hue)
+        val l = (lightness + 0.3963377774 * a + 0.2158037573 * b).pow(3)
+        val m = (lightness - 0.1055613458 * a - 0.0638541728 * b).pow(3)
+        val s = (lightness - 0.0894841775 * a - 1.2914855480 * b).pow(3)
+        return doubleArrayOf(
+            4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+            -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+            -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
+        )
+    }
+
+    private fun encode(v: Double) =
+        if (v <= 0.0031308) 12.92 * v else 1.055 * v.pow(1 / 2.4) - 0.055
+
+    /** The most chroma sRGB holds at this Oklab lightness and hue. */
+    private fun maxChroma(lightness: Double, hue: Double): Double {
+        var lo = 0.0
+        var hi = 0.5
+        repeat(40) {
+            val mid = (lo + hi) / 2
+            val rgb = oklchToLinear(lightness, mid, hue).map { encode(it) }
+            if (rgb.all { it >= -1e-4 && it <= 1 + 1e-4 }) lo = mid else hi = mid
+        }
+        return lo
+    }
+
+    /**
+     * The most chroma sRGB holds at this hue once the WCAG luminance is FIXED — which is
+     * the question §2.5's rule actually asks, and not the same as [maxChroma]: holding a
+     * luminance means solving for the Oklab lightness first.
+     */
+    private fun chromaCeiling(targetY: Double, hue: Double): Double {
+        var lo = 0.0
+        var hi = 1.0
+        repeat(48) {
+            val mid = (lo + hi) / 2
+            val rgb = oklchToLinear(mid, maxChroma(mid, hue), hue)
+                .map { encode(it).coerceIn(0.0, 1.0) }
+            val y = 0.2126 * channel(rgb[0].toFloat()) +
+                0.7152 * channel(rgb[1].toFloat()) +
+                0.0722 * channel(rgb[2].toFloat())
+            if (y < targetY) lo = mid else hi = mid
+        }
+        return maxChroma((lo + hi) / 2, hue)
+    }
 }

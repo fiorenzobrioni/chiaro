@@ -37,8 +37,8 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   about store screenshots.
 - A second palette, chosen in Settings → Appearance: **Paper**, the warm identity, and
   **Vivid**, the same app at the brightest colors a screen holds — a cool white, an azure
-  accent, saturated quantity ramps, a saturated sky and brighter weather icons on dark
-  grounds. One choice picks the Material scheme, the semantic tokens, the sky bands and
+  accent, saturated quantity ramps, a saturated sky and, for the outlined icon set,
+  brighter weather icons on dark grounds. One choice picks the Material scheme, the semantic tokens, the sky bands and
   the icon set together, and it holds even under wallpaper colors, because the ramps and
   the canvas never followed the wallpaper. The vivid tokens are generated from the paper
   ones by one rule — same hue, held luminance, chroma to the sRGB gamut edge or ×1.8 —
@@ -245,6 +245,18 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 
 ### Changed
 
+- **The Vivid sky is now vivid at night too.** The vivid band table takes its chroma to
+  ×1.8 of the paper one, which is the right rule for a token and the wrong one for a
+  sky: paper draws the night with the least chroma of any band, so a multiplier handed
+  the least to the bands where sRGB has the most left. Measured as a fraction of the
+  chroma the gamut holds at each band's own luminance, the vivid day sky ran at 1.00 of
+  it and vivid midnight at 0.44 — the dress was loudest on the one sky that is already
+  bright and quietest on the sky an evening reader actually opens the app under. The
+  generator now also holds every band at or above 0.65 of that gamut, which moves the
+  nautical, astronomical and night rows and leaves every other band byte for byte as it
+  was, scrim measurement included. Paper is untouched, and so are the vivid semantic
+  tokens: the floor is the sky's clause alone.
+
 - **The drift strip is drawn on time, not on updates.** It used to be one column per
   update, so at the default hour of polling it showed fourteen hours under a heading that
   says "how the week has been moving", printed "14 updates, Sat 5 to Sat 5" underneath,
@@ -421,6 +433,13 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   the language it was written in.
 
 ### Fixed
+
+- **The palette note promised icons it does not always change.** "Vivid is cool white and
+  azure, with brighter weather icons" was shown to every reader, but the dress only
+  reaches the weather icons through the outlined set's dark-ground siblings — the filled
+  set is Meteocons' own palette and is the same drawing under both dresses. A reader on
+  filled icons was being told a change would happen when they tapped, and none would.
+  The note now says which of the two they are in.
 
 - **A temperature just below zero no longer prints "-0°".** Anything from −0.5 °C up to
   zero rounds away to a whole degree that kept its minus sign, so a frosty dawn at −0.4

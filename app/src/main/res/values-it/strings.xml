@@ -231,7 +231,9 @@
     <string name="settings_palette">Palette</string>
     <string name="settings_palette_paper">Carta</string>
     <string name="settings_palette_vivid">Brillante</string>
-    <string name="settings_palette_note">Carta è bianco caldo e ambra. Brillante è bianco freddo e azzurro, con icone del meteo più vivaci.</string>
+    <string name="settings_palette_note">Carta è bianco caldo e ambra. Brillante è bianco freddo e azzurro.</string>
+    <string name="settings_palette_note_icons_line">Con le icone a tratto, Brillante le schiarisce anche sul tema scuro.</string>
+    <string name="settings_palette_note_icons_fill">Le icone piene tengono i colori loro, quindi la palette non le tocca.</string>
     <string name="settings_weather_icons">Icone del meteo</string>
     <string name="settings_icons_fill">Piene</string>
     <string name="settings_icons_line">A tratto</string>
