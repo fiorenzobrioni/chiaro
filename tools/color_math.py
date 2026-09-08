@@ -122,3 +122,15 @@ def at_gamut_edge(target_y: float, hue: float, chroma_cap: float | None = None):
         c = min(c, chroma_cap)
     rgb = tuple(min(1.0, max(0.0, v)) for v in oklch_to_rgb(L, c, hue))
     return rgb if abs(luminance(rgb) - target_y) < 5e-3 else None
+
+
+def chroma_ceiling(target_y: float, hue: float) -> float | None:
+    """How much chroma sRGB holds at this hue once the luminance is fixed at `target_y`.
+
+    The denominator the sky's floor is a fraction of. It is NOT `max_chroma`: that one
+    is asked at an Oklab lightness, and holding a WCAG luminance means solving for the
+    lightness first, which is what [at_gamut_edge] does. Returns None where no color of
+    this hue reaches that luminance at all.
+    """
+    rgb = at_gamut_edge(target_y, hue)
+    return None if rgb is None else rgb_to_oklch(rgb)[1]

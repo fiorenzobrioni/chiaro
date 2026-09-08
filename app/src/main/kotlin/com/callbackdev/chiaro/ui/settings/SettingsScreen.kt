@@ -332,7 +332,7 @@ private fun SettingsList(
         )
         SettingsDialog.PALETTE -> RadioDialog(
             title = stringResource(R.string.settings_palette),
-            explanation = stringResource(R.string.settings_palette_note),
+            explanation = paletteNote(settings.weatherIcons),
             options = AppPalette.entries.map { it to paletteLabel(it) },
             selected = settings.palette,
             onSelect = { viewModel.setPalette(it); dialog = null },
@@ -471,6 +471,24 @@ private fun iconStyleLabel(style: WeatherIcons): String = when (style) {
     WeatherIcons.FILL -> stringResource(R.string.settings_icons_fill)
     WeatherIcons.LINE -> stringResource(R.string.settings_icons_line)
 }
+
+/**
+ * What the palette actually does, told to the reader in front of it.
+ *
+ * The dress reaches the weather icons only through the LINE set's dark-ground sibling
+ * (`mcn_*`, DESIGN.md §13.1); the fill set is Meteocons' own palette and the same files
+ * under both dresses. The note used to promise "brighter weather icons" to everybody,
+ * which is a screen telling a reader on the fill set something that will not happen
+ * when they tap — so it now says which of the two they are in.
+ */
+@Composable
+private fun paletteNote(icons: WeatherIcons): String = stringResource(R.string.settings_palette_note) +
+    " " + stringResource(
+        when (icons) {
+            WeatherIcons.LINE -> R.string.settings_palette_note_icons_line
+            WeatherIcons.FILL -> R.string.settings_palette_note_icons_fill
+        }
+    )
 
 @Composable
 private fun paletteLabel(palette: AppPalette): String = when (palette) {

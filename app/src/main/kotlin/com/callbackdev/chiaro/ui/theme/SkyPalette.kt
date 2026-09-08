@@ -126,7 +126,16 @@ class SkyPalette internal constructor(
         /**
          * The same nine anchors of §3.7, GENERATED from [Paper] by `tools/gen_vivid.py`:
          * same hue, same WCAG luminance, chroma to the sRGB gamut edge or ×1.8, whichever
-         * comes first.
+         * comes first — and never below 0.65 of what the gamut holds at that band's own
+         * luminance, which is the clause the sky has and the semantic tokens do not.
+         *
+         * The floor was added on 8 set 2026 and it moves the last three rows and nothing
+         * else. ×1.8 is a multiple of paper's chroma, and paper drew the night with the
+         * least of it, so the multiplier was handing the least to the bands where the
+         * gamut has the most left: measured as a fraction of that gamut, the day sky ran
+         * at 1.00 and midnight at 0.44. The dress was loudest on the one sky that is
+         * already bright. Everything from the blue hour up was above the floor already
+         * and comes out unchanged, so §3.7's scrim measurement did not move.
          *
          * Holding the luminance is what makes a second sky cheap rather than frightening.
          * Every claim §3 makes is a claim about brightness — darker after sunset, an
@@ -145,9 +154,9 @@ class SkyPalette internal constructor(
                 4.0 to SkyGradient(Color(0xFF007DE5), Color(0xFFF49C00), Color(0xFFFFD083)),
                 0.0 to SkyGradient(Color(0xFF006FDC), Color(0xFFE58800), Color(0xFFFFC268)),
                 -6.0 to SkyGradient(Color(0xFF003698), Color(0xFF2C52DB), Color(0xFF9571DE)),
-                -12.0 to SkyGradient(Color(0xFF0D1D65), Color(0xFF193190), Color(0xFF374AB0)),
-                -18.0 to SkyGradient(Color(0xFF091449), Color(0xFF0C1B5D), Color(0xFF162770)),
-                -90.0 to SkyGradient(Color(0xFF08112F), Color(0xFF09183C), Color(0xFF0F2047))
+                -12.0 to SkyGradient(Color(0xFF0D1D65), Color(0xFF172F95), Color(0xFF3445C0)),
+                -18.0 to SkyGradient(Color(0xFF09144B), Color(0xFF0C1B5E), Color(0xFF142479)),
+                -90.0 to SkyGradient(Color(0xFF050E3C), Color(0xFF051645), Color(0xFF041B5F))
             )
         )
 

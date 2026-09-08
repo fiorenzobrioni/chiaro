@@ -8,6 +8,10 @@ paper already has**:
     keep the hue, hold the WCAG luminance, and take the chroma to the sRGB gamut edge
     — or to BOOST times paper's chroma, whichever comes first.
 
+The sky bands get one clause more, SKY_FLOOR: never below that fraction of the chroma
+sRGB holds at the band's own luminance. A multiplier gives the least to the bands paper
+drew quietest, which for a sky means the night — see SKY_FLOOR on what that measured.
+
 Holding luminance is what makes this safe rather than brave. WCAG contrast is a
 function of luminance alone, so every ratio DESIGN.md prints, every monotonic ramp,
 every "darker after sunset" ordering and the scrim contract of §3.6 hold for the
@@ -37,6 +41,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 from color_math import (  # noqa: E402
     at_gamut_edge,
+    chroma_ceiling,
     contrast,
     hex_to_rgb,
     luminance,
@@ -52,6 +57,26 @@ THEME = pathlib.Path("app/src/main/kotlin/com/callbackdev/chiaro/ui/theme")
 #: 2.0 the near-neutrals start acquiring a hue and the diverging ramp's midpoint stops
 #: being a midpoint.
 BOOST = 1.8
+
+#: The sky gets the ceiling above AND a floor of its own: no band may sit below this
+#: fraction of the chroma sRGB holds at its luminance (DESIGN.md §3.7).
+#:
+#: BOOST is a MULTIPLE of paper's chroma, and that is the right shape for a token —
+#: it is what keeps a deliberately near-neutral one near-neutral. Applied to the sky it
+#: has an accident in it: the night bands are the ones paper drew with the least chroma,
+#: so a multiplier leaves them the least, exactly where the gamut has the most to give.
+#: Measured before this floor existed, as a fraction of what sRGB holds at each band's
+#: luminance: the day sky ran at 1.00 of it and midnight at 0.44. The vivid dress was at
+#: its most vivid on the one sky that is already bright and at its least on the one the
+#: reader opens the app under in the evening.
+#:
+#: 0.65 was picked by rendering the sheet and looking at it, the way 1.8 was. It is the
+#: value that moves the three night bands and NOTHING else: day, low sun, both golden
+#: anchors, the horizon and the blue hour are already above it and come out of the
+#: generator byte for byte as before, so §3.7's scrim measurement and the brown dusk it
+#: records are untouched. At 0.75 midnight starts reading as a royal blue rather than as
+#: a night.
+SKY_FLOOR = 0.65
 
 VERDICT = re.compile(r"(\w+) = VerdictColors\(Color\(0xFF([0-9A-Fa-f]{6})\), Color\(0xFF([0-9A-Fa-f]{6})\)\)")
 RAMP = re.compile(r"(rainRamp|rainInkRamp|temperatureRamp) = listOf\((.*?)\)\s*\n", re.S)
@@ -69,13 +94,24 @@ def read(name: str) -> str:
     return path.read_text()
 
 
-def vivid(paper_hex: str) -> str:
-    """The one rule."""
+def vivid(paper_hex: str, floor: float = 0.0) -> str:
+    """The one rule, with the sky's floor as an optional second half.
+
+    `floor` is a fraction of the gamut rather than a multiple of paper, so it can only
+    ever raise a band the multiplier left flat; a token asks for it at 0.0 and gets the
+    rule §2.5 prints, unchanged.
+    """
     rgb = hex_to_rgb(paper_hex)
     _, chroma, hue = rgb_to_oklch(rgb)
     if chroma < 1e-4:
         return paper_hex.upper()
-    got = at_gamut_edge(luminance(rgb), hue, chroma * BOOST)
+    target_y = luminance(rgb)
+    cap = chroma * BOOST
+    if floor:
+        ceiling = chroma_ceiling(target_y, hue)
+        if ceiling is not None:
+            cap = max(cap, ceiling * floor)
+    got = at_gamut_edge(target_y, hue, cap)
     return paper_hex.upper() if got is None else rgb_to_hex(got)
 
 
@@ -157,7 +193,7 @@ def main() -> None:
 
     print("// VIVID SKY ANCHORS")
     for altitude, stops in paper_sky():
-        got = [vivid(s) for s in stops]
+        got = [vivid(s, SKY_FLOOR) for s in stops]
         print(f"        {altitude} to SkyGradient(Color(0xFF{got[0].lstrip('#')}), "
               f"Color(0xFF{got[1].lstrip('#')}), Color(0xFF{got[2].lstrip('#')})),")
         report.append(f"sky {altitude:>6s}  {' '.join(stops)}  ->  {' '.join(got)}")
