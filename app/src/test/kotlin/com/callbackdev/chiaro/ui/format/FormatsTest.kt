@@ -29,6 +29,25 @@ class FormatsTest {
         assertEquals("0°", Formats.temperature(0.4, TemperatureUnit.CELSIUS, it))
     }
 
+    /**
+     * The sub-zero end, where `%f` used to keep the sign of a value it had just
+     * rounded away: −0.4 °C printed "-0°". Both sides of the boundary and both
+     * precisions, because the fix has to leave every other negative alone.
+     */
+    @Test
+    fun `a temperature that rounds away to zero is zero, not minus zero`() {
+        assertEquals("0°", Formats.temperature(-0.4, TemperatureUnit.CELSIUS, it))
+        assertEquals("0°", Formats.temperature(-0.4, TemperatureUnit.CELSIUS, en))
+        // The other side of HALF_UP still rounds, and still carries its sign.
+        assertEquals("-1°", Formats.temperature(-0.5, TemperatureUnit.CELSIUS, en))
+        assertEquals("-1°", Formats.temperature(-1.0, TemperatureUnit.CELSIUS, en))
+        // Fahrenheit crosses its own zero somewhere else, and behaves the same there.
+        assertEquals("0°", Formats.temperature(-17.75, TemperatureUnit.FAHRENHEIT, en))
+        // One decimal: the rule follows the precision the caller asked for.
+        assertEquals("0,0°", Formats.temperature(-0.04, TemperatureUnit.CELSIUS, it, decimals = 1))
+        assertEquals("-0,4°", Formats.temperature(-0.4, TemperatureUnit.CELSIUS, it, decimals = 1))
+    }
+
     @Test
     fun `Fahrenheit converts, it does not relabel`() {
         assertEquals("68°", Formats.temperature(20.0, TemperatureUnit.FAHRENHEIT, en))

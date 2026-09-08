@@ -2766,6 +2766,18 @@ Nove rilievi su una schermata sola, più la funzione che le mancava. In ordine d
   Vento e millimetri non esistono in `DailyForecast` e costerebbero modello, mapper,
   schema e migrazione: si valutano per conto loro, non si infilano qui.
 
+### Coda dell'intervento (committente, 8 set 2026) — il sottozero
+
+- [x] **`Formats.temperature` stampava `-0°`.** Domanda del committente sulle minime
+      sottozero; la risposta è che escono senza filtri né clamp (`temperature_2m_min` è
+      un `Double` non-nullable che arriva intatto a schermo, e lo slider degli avvisi va
+      da −30 a +45 °C, quindi «minima sotto 0» è scrivibile). Cercando la conferma è
+      saltato fuori un difetto vero: `%f` conserva il segno di un valore che ha appena
+      arrotondato via, quindi −0,4 °C stampava `-0°`. Verificato sulla JVM prima e dopo:
+      `-0,4 → "0°"`, `-0,5 → "-1°"`, `-3,4 → "-3°"`. Vale per ogni temperatura di ogni
+      schermata, perché passano tutte da lì. Sette asserzioni nuove in `FormatsTest`,
+      su entrambe le lingue, entrambe le unità e due precisioni.
+
 ### Rimasto aperto
 
 - **Il Diario del GPS si azzera se ti sposti.** `cacheKey` è lat/lon arrotondati a due
@@ -2774,6 +2786,15 @@ Nove rilievi su una schermata sola, più la funzione che le mancava. In ordine d
   sotto un'altra chiave. Non toccato di proposito: quella chiave governa cache, cache su
   disco, avvisi, cielo e widget, e re-inchiavarla è una decisione di prodotto con una
   migrazione dietro, non una rifinitura del Diario.
+- **Sotto −5 °C il colore satura, il numero no.** `temperatureAt` è ancorata a −5/35
+  con `coerceIn`, e la usano due superfici: la striscia di deriva sulle massime e — cosa
+  che la review aveva mancato — la barra di intervallo della settimana
+  (`WeatherCharts.kt:292`). Quindi il capo sinistro della barra a −5 e a −12 è dello
+  stesso blu. La barra però non mente: il numero stampato accanto è esatto e la
+  posizione è giusta, perché quella scala è il min/max della settimana e non le ancore
+  della rampa. È il costo dichiarato di DESIGN §9.1 (una scala ancorata al mondo, non a
+  ciò che c'è a schermo), non un difetto da correggere di nascosto: se le ancore vanno
+  allargate è una decisione di design, con le sue misure di contrasto da rifare.
 - **`AlertKind.PRECIPITATION` tiene il suo `?: 0`**: lì la probabilità viene dall'ora che
   ha superato la soglia, quindi è non-nulla per costruzione e il fallback non può
   scattare. Lasciato com'è per non allargare la modifica.

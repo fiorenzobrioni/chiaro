@@ -347,6 +347,13 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 
 ### Fixed
 
+- **A temperature just below zero no longer prints "-0°".** Anything from −0.5 °C up to
+  zero rounds away to a whole degree that kept its minus sign, so a frosty dawn at −0.4
+  read as a value nobody writes by hand. At that precision the reading is zero and now
+  says so; −0.5 still rounds to −1°, and every other negative keeps its sign. It ran
+  through every temperature on every surface — the week rows, the journal, the
+  notifications, the widgets — because they all print through one formatter.
+
 - **The drift legend printed ends the scale does not have.** The temperature swatches
   were labelled −10 °C and 40 °C while the ramp itself stops at −5 and 35: measured, the
   two end swatches were exact duplicates of their neighbours and the two numbers under
