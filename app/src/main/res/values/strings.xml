@@ -364,6 +364,11 @@
     <string name="guide_alerts_message_body">Chiaro never rewrites it and never translates it. Words in braces become numbers when it fires: {trigger.value} is what set it off, {trigger.time} is when. Anything an alert can watch can be printed the same way, and the list under the message writes it for you.</string>
     <string name="guide_alerts_battery_title">What it costs</string>
     <string name="guide_alerts_battery_body">Nothing extra: the checks ride the weather update you already asked for, at the rhythm you chose in the settings. Android asks for notification permission the first time you turn an alert on.</string>
+    <string name="guide_alerts_official_title">Official warnings</string>
+    <string name="guide_alerts_official_body">In Italy the authority is the Dipartimento della Protezione Civile. Every afternoon, usually by 16:00, it grades each of its warning zones for the day and the next: hydraulic risk, hydrogeological risk and thunderstorms, on four levels — none, yellow, orange, red. Chiaro finds the zone your place falls in, reads the bulletin and shows it: the banner on Today when there is something to say, the grid and the Dipartimento\'s own words in the sheet behind it, and a line in the Journal each time a level moves. The words of the authority are quoted, never translated. Nothing is shown for places outside Italy, because nobody has graded them.</string>
+    <string name="guide_alerts_official_credit">Source: Dipartimento della Protezione Civile, CC BY 4.0.</string>
+    <string name="settings_credit_warnings">Official warnings</string>
+    <string name="settings_credit_warnings_note">Dipartimento della Protezione Civile, CC BY 4.0</string>
 
     <string name="guide_journal_title">Journal</string>
     <string name="guide_journal_p1">Every update leaves a line. The Journal is that record read as prose, newest first, grouped by day.</string>
@@ -837,6 +842,59 @@
     <string name="warning_meaning_yellow">Fenomeni localizzati e possibili disagi.</string>
     <string name="warning_meaning_orange">Fenomeni diffusi o intensi e possibili danni.</string>
     <string name="warning_meaning_red">Fenomeni molto intensi e pericolo per le persone.</string>
+
+    <!-- The warning on a screen (Fase 11, third step): the banner and the sheet on
+         Today, the group in Alerts, the Journal's lines. The issuer's own words (the
+         meanings above, the bulletin's note) stay in Italian in both languages and are
+         labelled as the source's; levels, hazards, days and zones are ours and localize. -->
+    <string name="headline_warning_today">%1$s for %2$s, today</string>
+    <string name="headline_warning_tomorrow">%1$s for %2$s, tomorrow</string>
+    <string name="headline_warning_brief">%1$s · %2$s</string>
+    <string name="warning_clause_first">%1$s for %2$s</string>
+    <string name="warning_clause_more">%1$s for %2$s</string>
+    <string name="warning_clause_join">", "</string>
+    <string name="warning_adjective_yellow">yellow</string>
+    <string name="warning_adjective_orange">orange</string>
+    <string name="warning_adjective_red">red</string>
+    <string name="warning_day_today_short">today</string>
+    <string name="warning_day_tomorrow_short">tomorrow</string>
+    <!-- Thirteen zones were never given a name by their Region and the files repeat the
+         code; a code must never reach a screen, so those print their region instead. -->
+    <string name="warning_zone_unnamed">a zone in the %1$s region</string>
+    <string name="warning_banner_detail">%1$s · %2$s</string>
+    <string name="warning_banner_source">Protezione Civile, bulletin of %1$s</string>
+    <string name="warning_sheet_title">Warning for %1$s</string>
+    <string name="warning_sheet_tomorrow">Tomorrow</string>
+    <string name="warning_sheet_meaning_title">What it means</string>
+    <string name="warning_sheet_note_title">Bulletin note</string>
+    <string name="warning_sheet_source">Dipartimento della Protezione Civile · bulletin of %1$s, %2$s · CC BY 4.0</string>
+    <string name="warning_sheet_open">Open the bulletin</string>
+
+    <!-- Alerts: the official group, in front of the two the reader owns. Here the
+         absence IS the answer somebody came for, so all three quiet states are drawn —
+         which is exactly what Today must never do (DESIGN §1.1). -->
+    <string name="alerts_group_warnings">Official warnings</string>
+    <string name="warning_card_none">No warning for %1$s</string>
+    <string name="warning_card_none_detail">Bulletin of %1$s</string>
+    <string name="warning_card_stale">No bulletin for today</string>
+    <string name="warning_card_stale_detail">The last one is from %1$s · the next usually comes out by 16:00</string>
+    <string name="warning_card_waiting">No bulletin yet</string>
+    <string name="warning_card_waiting_detail">The first one arrives with the next update.</string>
+    <string name="warning_card_unavailable">Official warnings are available for places in Italy</string>
+    <string name="warning_card_unavailable_detail">They are issued by the Dipartimento della Protezione Civile, which grades Italian territory only.</string>
+    <string name="warning_switch_title">Official warnings</string>
+    <string name="warning_switch_desc">When the Protezione Civile issues a warning for this zone, as soon as the bulletin is out, usually between 15:00 and 17:00. Never more than one per bulletin.</string>
+    <string name="warning_from_title">Notify me from</string>
+    <string name="warning_from_yellow">Yellow</string>
+    <string name="warning_from_orange">Orange</string>
+
+    <!-- Journal: what moved between two bulletins, and the day the bulletin was not reached -->
+    <string name="journal_warning_raised">%1$s for %2$s, %3$s</string>
+    <string name="journal_warning_cleared">Warning lifted: nothing graded for %1$s</string>
+    <string name="journal_warning_source">Protezione Civile, bulletin of %1$s</string>
+    <string name="journal_warning_missed">Bulletin not reached</string>
+    <string name="journal_warning_missed_held">The one from %1$s still stands</string>
+    <string name="journal_warning_missed_empty">No bulletin held yet</string>
     <string name="notif_severe_title">Severe weather ahead · %1$s</string>
     <string name="notif_severe_body">%1$s around %2$s</string>
     <string name="notif_rain_fragment">, rain at %1$d%%</string>

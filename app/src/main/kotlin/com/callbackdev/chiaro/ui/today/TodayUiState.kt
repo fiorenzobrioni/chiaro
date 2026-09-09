@@ -7,6 +7,8 @@ import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
+import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.components.LightPhase
 import java.time.Instant
 import java.time.LocalDateTime
@@ -63,7 +65,14 @@ sealed interface TodayUiState {
          * tapping opens the Journal. Filled by the ViewModel, not the builder —
          * it comes from the history, which the builder deliberately never reads. */
         val whatChanged: List<com.callbackdev.chiaro.ui.journal.JournalEntry.ForecastShift> =
-            emptyList()
+            emptyList(),
+        /**
+         * The official warning for this place (Fase 11), or null where there is none to
+         * draw — abroad, no bulletin, or a bulletin whose days are over. Green is null
+         * HERE and a value in Avvisi: on this screen an absence is not drawn (§1.1),
+         * on that one it is the answer somebody came for.
+         */
+        val warnings: PlaceWarnings? = null
     ) : TodayUiState
 }
 
@@ -123,13 +132,20 @@ object TodayStateBuilder {
 
     private const val RAIN_TURN_PCT = 50
 
+    /**
+     * [warnings] is what the official-warnings step last wrote for this place. It reaches
+     * the builder rather than being read here for the reason `whatChanged` does not:
+     * this object never touches a store. A warning with nothing above NONE is dropped on
+     * the way in — the banner is not drawn for a green day, and neither is the sentence.
+     */
     fun build(
         city: City,
         report: WeatherReport,
         now: Instant,
         updateFrequencyMin: Int,
         userRefreshing: Boolean,
-        error: TodayError?
+        error: TodayError?,
+        warnings: PlaceWarnings? = null
     ): TodayUiState {
         val zone = runCatching { ZoneId.of(report.location.timezone) }
             .getOrDefault(ZoneId.systemDefault())
@@ -143,6 +159,7 @@ object TodayStateBuilder {
         val today = AstronomyEngine.solarDay(local.toLocalDate(), zone, coords)
         val currentHour = trimmed.hourly.first()
         val moon = AstronomyEngine.moonIllumination(now)
+        val graded = warnings?.takeIf { it.maxLevel != WarningLevel.NONE }
 
         return TodayUiState.Content(
             city = city,
@@ -159,14 +176,15 @@ object TodayStateBuilder {
                 phases = DaylightPhases.phases(today, zone),
                 nowFraction = DaylightPhases.fraction(local)
             ),
-            headline = HeadlineEngine.headline(trimmed, local),
+            headline = HeadlineEngine.headline(trimmed, local, graded),
             strip = trimmed.hourly.drop(1).take(STRIP_HOURS).map { stripHour(it, zone, coords) },
             timeline = timeline(trimmed, today, zone, local),
             week = week(trimmed, zone, coords),
             lastSync = report.systemInfo.lastSync,
             isStale = WeatherFreshness.isStale(report.systemInfo.lastSync, updateFrequencyMin, now),
             userRefreshing = userRefreshing,
-            error = error
+            error = error,
+            warnings = graded
         )
     }
 

@@ -15,6 +15,26 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 
 ### Added
 
+- **Official warnings from the Protezione Civile** (Fase 11), for places in Italy. The
+  Dipartimento's criticality bulletin is discovered from its own files, read from its CAP,
+  and matched to a place by geometry: the 187 warning zones ship inside the app as
+  simplified polygons (284 KB at a 500 m tolerance), so the lookup works offline, works
+  for the device position, and does not depend on how a municipality's name is spelled.
+  On Today a banner sits between the freshness chip and the guide card when there is
+  something to say — the level, what it is for, which day, and the hour of the bulletin —
+  and opens a sheet with the arithmetic: one row per risk and one column per day, every
+  cell a word inside its own colour, the Dipartimento's own definition of the level, the
+  bulletin's note when it names the place's region, the CC BY 4.0 attribution and the way
+  back to the bulletin. Orange and red also take the sentence at the top of the screen;
+  yellow does not, because in an Italian autumn yellow is frequent and a sentence that
+  repeats stops being read. Alerts leads with the whole answer, absence included ("no
+  warning for this zone", "no bulletin for today yet", "official warnings are for places
+  in Italy"), plus the notification switch and the level to be told from. The Journal
+  writes a line whenever a level moves, and one a day at most when the bulletin could not
+  be reached. Three new colour pairs in `ChiaroColors`, measured: the ink at 8.5:1 in
+  light and 11.0:1 in dark, and a deuteranope simulation showing that one of the two
+  carriers collapses in each scheme — which is why a level is always a word and a glyph
+  before it is a colour.
 - A fourth home widget, **The day's arc**: the sun's real path over the reader's place,
   computed by the same astronomy engine that paints the sky, drawn over the sky of every
   hour as bands; the moon's path and its disc in tonight's real phase; each hour's rain

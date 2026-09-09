@@ -256,6 +256,20 @@ private fun SettingsList(
                 onClick = { openUrl(context, "https://open-meteo.com") }
             )
         }
+        // The official warnings' attribution (Fase 11): CC BY 4.0 asks for it, and the
+        // sheet that shows a warning carries the same line where the reader meets it.
+        item {
+            ValueRow(
+                label = stringResource(R.string.settings_credit_warnings),
+                value = stringResource(R.string.settings_credit_warnings_note),
+                onClick = {
+                    openUrl(
+                        context,
+                        "https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita/"
+                    )
+                }
+            )
+        }
         item {
             ValueRow(
                 label = stringResource(R.string.settings_credit_icons),

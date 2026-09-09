@@ -54,6 +54,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.DisposableEffect
@@ -96,6 +97,8 @@ import com.callbackdev.chiaro.ui.components.SkyCanvasTopScrimEnd
 import com.callbackdev.chiaro.ui.components.WindArrow
 import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.warnings.WarningBanner
+import com.callbackdev.chiaro.ui.warnings.WarningSheet
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
 import com.callbackdev.chiaro.ui.icons.LocalMotionPaused
@@ -706,6 +709,22 @@ private fun ContentState(
         mutableStateOf<java.time.LocalDate?>(null)
     }
 
+    // The warning's own sheet, hoisted here for the same reason the week's expansion is:
+    // the banner is a lazy item and its state must outlive being scrolled off.
+    var warningSheetOpen by rememberSaveable(content.warnings?.bulletinId) {
+        mutableStateOf(false)
+    }
+    content.warnings?.let { warning ->
+        if (warningSheetOpen) {
+            WarningSheet(
+                warnings = warning,
+                today = content.now.toLocalDate(),
+                timeFmt = timeFmt,
+                onDismiss = { warningSheetOpen = false }
+            )
+        }
+    }
+
     // "What changed", written out here because a `LazyListScope` cannot call a
     // composable and these sentences need the string table. A revision whose fields
     // this screen has no words for (a condition code, say) produces NO line: on device
@@ -755,6 +774,24 @@ private fun ContentState(
                     FreshnessChip(
                         age = freshnessAge(content.lastSync),
                         onRetry = onRefresh,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                }
+            }
+            // The official warning (Fase 11, DESIGN §8.13): after the chip, which
+            // qualifies the hero, and before the guide card, because it opens the
+            // content rather than annotating the sky. Never drawn for a green day —
+            // `warnings` is null there — and never drawn as an error.
+            content.warnings?.let { warning ->
+                item {
+                    WarningBanner(
+                        warnings = warning,
+                        // The PLACE's day, like every other date on this screen: the
+                        // bulletin's own days are the issuer's, and for an Italian
+                        // place the two are the same one.
+                        today = content.now.toLocalDate(),
+                        timeFmt = timeFmt,
+                        onOpen = { warningSheetOpen = true },
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }

@@ -457,6 +457,20 @@ object ChiaroIcons {
         }
     )
 
+    /**
+     * The official warning's mark (Fase 11, DESIGN §8.13): one drawing, at the verdict
+     * marks' weight, for every surface that carries a level — the banner, the sheet, the
+     * card in Avvisi, the Journal's line and the widgets' chip. It is tinted with the
+     * level's ink and never recoloured, and it is a drawing for the reason the verdict
+     * marks are: ⚠ is not in the app's face.
+     */
+    @DrawableRes
+    fun warningMarkRes(): Int = R.drawable.ic_warning
+
+    /** The same mark as a vector, for the app's own screens. */
+    val warning: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_warning)
+
     /** The styled vector for a line id: the one seam every accessor below shares. */
     @Composable
     private fun styled(@DrawableRes lineRes: Int): ImageVector =

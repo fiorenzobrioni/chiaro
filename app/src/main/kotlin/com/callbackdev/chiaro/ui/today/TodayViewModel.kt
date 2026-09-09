@@ -14,10 +14,14 @@ import com.callbackdev.chiaro.data.PowerSaveState
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.SettingsStore
 import com.callbackdev.chiaro.data.WorkspaceStore
+import com.callbackdev.chiaro.data.warnings.OfficialWarningReader
+import com.callbackdev.chiaro.data.warnings.PlaceWarningState
+import com.callbackdev.chiaro.data.warnings.StoredBulletin
 import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.warnings.WarningZone
 import com.callbackdev.chiaro.ui.journal.JournalEntry
 import com.callbackdev.chiaro.ui.journal.JournalRow
 import com.callbackdev.chiaro.ui.journal.JournalStateBuilder
@@ -84,6 +88,7 @@ class TodayViewModel(
     private val workspaceStore: WorkspaceStore,
     private val fetchLogStore: FetchLogStore,
     private val locationProvider: LocationProvider,
+    private val warnings: OfficialWarningReader? = null,
     private val clock: Clock = Clock.systemUTC(),
     private val powerSave: PowerSaveState = PowerSaveState.Off
 ) : ViewModel() {
@@ -308,6 +313,14 @@ class TodayViewModel(
             var error: TodayError? = null
             var report = repository.cachedReport(city)
             var whatChanged: List<JournalEntry.ForecastShift> = emptyList()
+            // The official warning for this place (Fase 11). The zone is looked up once —
+            // it decodes a 290 KB asset the first time and cannot change under a place —
+            // and only for a place that might be in one: a reader whose places are all
+            // abroad never pays for the index at all.
+            var warningState: PlaceWarningState = PlaceWarningState.Unavailable
+            var bulletin: StoredBulletin? = null
+            var zone: WarningZone? = null
+            var zoneResolved = false
 
             suspend fun push() {
                 val current = report
@@ -317,7 +330,8 @@ class TodayViewModel(
                     } else {
                         val built = TodayStateBuilder.build(
                             city, current, clock.instant(), updateFrequencyMin,
-                            userRefreshing, error
+                            userRefreshing, error,
+                            (warningState as? PlaceWarningState.Current)?.warnings
                         )
                         if (built is TodayUiState.Content) {
                             built.copy(whatChanged = whatChanged)
@@ -399,6 +413,23 @@ class TodayViewModel(
             push()
             refreshChanged()
             push()
+            // The bulletin follows the store: the job writes it, this re-reads it, and
+            // nothing on this screen ever asks the network for one. The day it is read
+            // against is the ISSUER's, and the minute tick above re-evaluates it, so a
+            // page left open over midnight stops showing yesterday's grades.
+            warnings?.let { reader ->
+                launch {
+                    reader.bulletin.collect { stored: StoredBulletin? ->
+                        if (!zoneResolved) {
+                            zone = runCatching { reader.zoneOf(city) }.getOrNull()
+                            zoneResolved = true
+                        }
+                        bulletin = stored
+                        warningState = reader.state(zone, stored, reader.today())
+                        push()
+                    }
+                }
+            }
             launch { fetch(userAsked = false) }
             launch {
                 refreshRequests.filter { it == city.cacheKey }.collect { fetch(userAsked = true) }
@@ -420,6 +451,15 @@ class TodayViewModel(
                     }
                     if (age != null && age >= WeatherFreshness.ProviderResolution) {
                         fetch(userAsked = false)
+                    }
+                    // The bulletin ages with the clock the way the report does: past
+                    // midnight yesterday's "tomorrow" is today and the day after it is
+                    // gone, and neither costs a byte to re-decide.
+                    warnings?.let { reader ->
+                        // The document in hand, not a fresh read: the collector above
+                        // holds it, and a tick that hit the disk once a minute for a
+                        // value that changes once a day is the cost this app does not pay.
+                        warningState = reader.state(zone, bulletin, reader.today())
                     }
                     push()
                 }
@@ -446,6 +486,7 @@ class TodayViewModel(
                     workspaceStore = ServiceLocator.workspaceStore(app),
                     fetchLogStore = ServiceLocator.fetchLogStore(app),
                     locationProvider = ServiceLocator.locationProvider(app),
+                    warnings = ServiceLocator.warningReader(app),
                     powerSave = PowerSaveState.of(app)
                 )
             }

@@ -153,6 +153,47 @@ Ratios are against the surface of §2.2; ink-on-container is 5.6:1 or better in 
 schemes. `unknown` is deliberately the one hueless entry: not knowing is not a state with
 a color, and a gray chip reads as "no answer" without anyone having to be taught it.
 
+**Warning levels** (§8.13, Fase 11). The three grades of an official warning get a pair
+each, and deliberately not the verdicts under other names: `unstable` says "this data is
+old", a yellow warning is an authority grading tomorrow, and the two must be free to move
+apart. One rule for all three, so the only thing that changes between them is the hue —
+the ink at **8.5:1** on the surface in light and **11.0:1** in dark, the container at the
+sRGB gamut edge for that hue at a held luminance:
+
+| Level | ink (light) | container (light) | ink (dark) | container (dark) |
+|---|---|---|---|---|
+| yellow | `#5C4700` 8.5:1 | `#FCC800` | `#F4C100` 11.0:1 | `#534000` |
+| orange | `#763900` 8.5:1 | `#FFC299` | `#FFB889` 11.0:1 | `#6B3300` |
+| red | `#990003` 8.5:1 | `#FFBFB5` | `#FFB5AA` 11.0:1 | `#8B0003` |
+
+Ink on container is 5.7:1 in light and 5.9:1 in dark. The containers sit **lower than the
+verdicts'** — luminance .62 against their .78 — for a measured reason: up at .78, sRGB
+holds .099, .046 and .038 of chroma for these three hues, so orange and red come out the
+same pale pink; at .62 the three ceilings are .175, .088 and .075, and the yellow is a
+yellow. The light red ink lands two units off `fail`'s `#950700`, which is what a shared
+hue at a shared contrast does, and the pair is still its own token because the statements
+are not the same one.
+
+The separation between them, simulated for a deuteranope (Viénot, Brettel and Mollon 1999)
+and measured in ΔE\*ab, with what a full-colour reader gets in brackets. A just-noticeable
+difference on that scale is 2.3:
+
+| Carrier | yellow ↔ orange | orange ↔ red | yellow ↔ red |
+|---|---|---|---|
+| light ink | 1.6 (21.2) | 2.7 (31.3) | 4.4 (52.6) |
+| light container | 53.3 (56.4) | 15.4 (15.8) | 68.6 (72.2) |
+| dark ink | 45.4 (50.5) | 18.5 (18.4) | 63.8 (68.9) |
+| dark container | 1.7 (20.0) | 2.8 (29.1) | 4.5 (49.1) |
+
+In each scheme **one of the two carriers keeps about nine tenths of its distance and the
+other keeps under a tenth**: the ink collapses on paper, the container collapses in the
+dark, and orange↔red is the weak pair either way. So a level is **a word and a glyph
+before it is a colour**, exactly as a verdict is (§8.7) — the banner of §8.13 never says
+"orange" in orange alone, and `PaletteContrastTest` asserts the collapse rather than
+hoping for it. (The `unstable`↔`fail` figure above comes from tweather's own validator on
+its own scale; it is not comparable with this table, and the two are kept apart on
+purpose.)
+
 **Rain** — a quantity, so a single hue, light to dark, monotonic in luminance (verified,
 §12):
 
@@ -191,8 +232,10 @@ dark   #63B8EA  #1791D2  #0070AB  #4A4740  #985E00  #C87400  #F29300
 Luminance peaks at the midpoint in light and troughs at it in dark, so in both schemes the
 middle recedes and the extremes come forward.
 
-**Freshness / warning**: the `unstable` pair above, reused deliberately — "this data is old"
-and "the sky is iffy" are the same class of statement and should not learn two colors.
+**Freshness**: the `unstable` pair above, reused deliberately — "this data is old" and
+"the sky is iffy" are the same class of statement and should not learn two colors. English
+overloads the word, so: an official *warning* is an authority grading a day and wears the
+three level pairs above, never this one.
 
 ### 2.5 The second dress
 
@@ -247,6 +290,18 @@ The verdicts, measured against the surfaces above:
 | unstable | `#7A5200` 6.6:1 | `#FFE5A8` | `#FFBC27` 11.0:1 | `#3F2F00` |
 | fail | `#950700` 8.7:1 | `#FFDCD7` | `#FFB4AB` 10.9:1 | `#590001` |
 | unknown | `#4C535E` 7.4:1 | `#E7E7E2` | `#A4ADBD` 8.2:1 | `#2B2B30` |
+
+The three warning levels, measured against the same surfaces:
+
+| Level | ink (light) | container (light) | ink (dark) | container (dark) |
+|---|---|---|---|---|
+| yellow | `#5C4700` 8.5:1 | `#FCC800` | `#F4C100` 11.0:1 | `#534000` |
+| orange | `#763900` 8.5:1 | `#FFC299` | `#FFB889` 11.0:1 | `#6B3300` |
+| red | `#990003` 8.5:1 | `#FFBFB5` | `#FFB5AA` 11.0:1 | `#8B0003` |
+
+All six come through the generator unchanged, for the reason the next paragraph gives
+about the inks: §2.3 picked every one of them AT the gamut edge for its hue, so there is
+nothing left for a ×1.8 to take.
 
 **Three of those inks are the paper values, unchanged, and that is the honest result
 rather than an omission.** After the 3 set color pass the light inks already sat ON the
@@ -786,6 +841,50 @@ mistaken for a value, §1.1).
 
 **8.12 Navigation** — a Material 3 `NavigationBar` with four destinations, a place switcher
 in the app bar with a dots indicator, and a horizontal pager between saved places.
+
+**8.13 WarningBanner**, **WarningSheet** and the level chip (Fase 11) — an official warning
+as it reaches a screen.
+
+The **banner** sits on Today between the freshness chip and the guide card: the chip
+qualifies the hero and talks about the data, the banner talks about the world, so it opens
+the content rather than annotating the sky. A `Surface` the full width of `PagePadding`,
+`shapes.medium`, the container of the **highest** level in it, 56dp minimum height;
+`ic_warning` at 24dp in that level's ink on the left, then `titleSmall` — "Allerta
+arancione per temporali", and with more than one grade "Allerta arancione per temporali,
+gialla per rischio idrogeologico", ordered by level and then by the issuer's own tie-break
+— over `bodySmall`: "Oggi fino a mezzanotte · Protezione Civile, bollettino delle 15:19".
+**One** TalkBack announcement for the whole thing, never four. It is drawn only when the
+highest level over the days still ahead is at least yellow and the bulletin has not
+expired; green is not announced here at all (§1.1), it is answered in Avvisi where somebody
+came to ask.
+
+`ic_warning` is **a drawing, never the character ⚠**, at the verdict marks' own 2.4 stroke
+in a 24 box, for the reason those exist: the character is not in the app's face and the
+phone draws it from whatever fallback it has. It is the mark of one category everywhere it
+appears — banner, sheet, journal line, widget chip — and it is tinted, never recoloured.
+
+The **sheet** (`ModalBottomSheet`) is the arithmetic behind the banner. Title "Allerta per
+*Nodo Idraulico di Milano*" with the region under it; then a grid, one row per hazard and
+one column per day, each cell the **word** of its level inside that level's container —
+"nessuna" in `unknown` grey, never an empty cell and never a colour on its own. Then "Cosa
+vuol dire" for the highest level, in the issuer's own terms; then the bulletin's note, only
+when it names this zone or its region, quoted and labelled as the bulletin's; then the
+attribution the licence requires — "Dipartimento della Protezione Civile · bollettino
+dell'8 settembre, 15:19 · CC BY 4.0" — and the link to the bulletin itself.
+
+The **chip** is the same statement where a banner does not fit (Avvisi's card leads with
+it, the widgets take it in Fase 11's fourth step): `ic_warning` at 12dp in the level's ink
+plus the level's word at 11sp on the level's container, 10dp corner, 7/3 padding — the
+`VerdictChip` grammar at the widget's size.
+
+No zone code, no bulletin identifier and no CAP acronym reaches any of these surfaces. For
+the thirteen zones whose Region never gave them a name — the seven of Basilicata and the
+six of the Marche, whose `name` IS their code — a sentence names the region instead
+("Allerta per una zona della regione Marche"), and the notification's "Zona di allerta:"
+line, which has nothing left to put after the colon, is simply not drawn: a line without
+its data is not drawn anywhere in this app. The noun is inside the string on purpose —
+Italian wants "in Basilicata" and "nelle Marche", and those two Regions are exactly the
+thirteen.
 
 ---
 

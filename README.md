@@ -66,6 +66,22 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   on boot and after every edit, and suppressed when the sky is going to hide the event
   unless you ask for it anyway. The notification speaks your language and carries the
   verdict with the number behind it
+- 🇮🇹 **Official warnings**: in Italy the authority is the Dipartimento della Protezione
+  Civile, and Chiaro reads its criticality bulletin. The 187 warning zones are bundled as
+  geometry, so the place you are looking at is located by where it is rather than by how
+  its name is spelled, offline and for the device position too. When there is something to
+  say, a banner sits on Today under the sky: the level, what it is for, which day, and the
+  hour the bulletin was issued. Behind it a sheet gives the arithmetic, one row per risk
+  and one column per day, every cell a word inside its colour and never a colour alone,
+  with the Dipartimento's own definition of the level, the bulletin's note when it names
+  your region, and the attribution the licence asks for. Orange and red also take the
+  sentence at the top of the screen; yellow does not, because a sentence that says the
+  same thing one autumn day in three stops being read. Alerts carries the whole answer,
+  including the three quiet ones ("no warning for this zone", "no bulletin for today yet",
+  "official warnings are for places in Italy"), the switch for the notification and the
+  level to be told from. The Journal gets a line every time a level moves. A level is
+  always a word and a glyph before it is a colour: the three of them do not separate under
+  deuteranopia, and DESIGN.md prints the measurement
 - ⚠️ **Alerts**: three ready-made switches that say exactly what they send and when
   (severe weather in the next 12 hours, at most once per storm; rain past 70% likely
   within 6 hours, at most twice a day; the morning summary, once between 6 and 12). Then
@@ -169,10 +185,14 @@ cards, taught the headline to look ahead, tuned the second palette and added the
 widget, each round recorded with its measurements. **Fase 10** is the store: final icon,
 screenshots, listing, and v1.0.0.
 
+**Fase 11**, after v1.0.0, is the official warnings: the Protezione Civile's criticality
+bulletin, read from its own files, located by geometry and shown on Today, in Alerts and in
+the Journal. Fase 12 adds MeteoAlarm behind the same model for the rest of Europe, and in
+Italy the Protezione Civile keeps precedence.
+
 Deliberately out of scope for v1: radar and satellite imagery (the provider has none, and
-that is a stated position rather than a gap to hide), government severe-weather bulletins,
-tides, aurora, air-quality forecasting beyond the current index, Wear OS, sharing, and a
-second provider. The phased plan, with every decision and every deviation and its reason,
+that is a stated position rather than a gap to hide), tides, aurora, air-quality
+forecasting beyond the current index, Wear OS, sharing, and a second provider. The phased plan, with every decision and every deviation and its reason,
 is in [PLANNING.md](./PLANNING.md).
 
 ## Install
@@ -270,8 +290,8 @@ it, is in [DESIGN.md](./DESIGN.md).
   drawn on a Compose canvas rather than by a charting library
 - **Meteocons** v2.0.0 as vector drawables, imported and recolored by
   `tools/import_meteocons.py`; **Inter** as a bundled variable font
-- 580 unit tests on the JVM across four modules (235 in `:app`, 166 in `:core:domain`, 174
-  in `:core:data`, 5 in `:core:sync`), Robolectric where Android is unavoidable, including
+- 731 unit tests on the JVM across four modules (290 in `:app`, 213 in `:core:domain`, 207
+  in `:core:data`, 21 in `:core:sync`), Robolectric where Android is unavoidable, including
   painting the arc widget's bitmap for real and reading its pixels back
 
 ```text

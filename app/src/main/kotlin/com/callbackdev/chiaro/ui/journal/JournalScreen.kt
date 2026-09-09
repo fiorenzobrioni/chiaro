@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -57,7 +58,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.FetchFailureReason
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.warnings.WarningText
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
@@ -71,6 +74,7 @@ import com.callbackdev.chiaro.ui.theme.tabular
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Locale
 
 /**
@@ -387,8 +391,42 @@ private fun EntryRow(
             }.joinToString(" · "),
             time = null
         )
-        is JournalEntry.FetchFailed -> EntryItem(
+        // The authority's own line (Fase 11). The Material warning triangle is this
+        // category's — an authority grading a day is the warning in this diary — which
+        // is why the two "an update did not arrive" lines below moved to Refresh: the
+        // glyph names the category, so two categories cannot share one.
+        is JournalEntry.WarningChanged -> EntryItem(
             icon = Icons.Outlined.Warning,
+            headline = if (entry.to == WarningLevel.NONE) {
+                stringResource(R.string.journal_warning_cleared, warningDay(entry.day, zone))
+            } else {
+                stringResource(
+                    R.string.journal_warning_raised,
+                    stringResource(WarningText.phraseRes(entry.to)),
+                    stringResource(WarningText.hazardRes(entry.hazard)),
+                    warningDay(entry.day, zone)
+                )
+            },
+            supporting = entry.issuedAt?.let {
+                stringResource(R.string.journal_warning_source, it.toLocalTime().format(timeFmt))
+            },
+            time = time
+        )
+        is JournalEntry.BulletinMissed -> EntryItem(
+            icon = Icons.Outlined.Refresh,
+            headline = stringResource(R.string.journal_warning_missed),
+            supporting = entry.heldFrom?.let {
+                stringResource(
+                    R.string.journal_warning_missed_held,
+                    it.toLocalDate().format(
+                        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
+                    )
+                )
+            } ?: stringResource(R.string.journal_warning_missed_empty),
+            time = time
+        )
+        is JournalEntry.FetchFailed -> EntryItem(
+            icon = Icons.Outlined.Refresh,
             headline = stringResource(R.string.journal_fetch_failed),
             supporting = stringResource(
                 when (entry.reason) {
@@ -403,12 +441,33 @@ private fun EntryRow(
 }
 
 /**
+ * The day a level concerns, in the words the rest of the diary uses. [zone] is the
+ * PLACE's, like every other date on this screen.
+ */
+@Composable
+private fun warningDay(day: LocalDate, zone: ZoneId): String {
+    val today = LocalDate.now(zone)
+    return when (day) {
+        today -> stringResource(R.string.warning_day_today_short)
+        today.plusDays(1) -> stringResource(R.string.warning_day_tomorrow_short)
+        else -> day.format(
+            DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.getDefault())
+        )
+    }
+}
+
+/**
  * One line of the log. The glyph names the CATEGORY of the line — a revision, a sky
- * moment observed, an alert fired, a day checked, an update missed — and is a Material
- * silhouette in `onSurfaceVariant` for all five (review, 8 set 2026): two of them used
- * to be Meteocons tinted flat, the same silhouettes taken off the Sky screen that day,
- * and here they were not weather but categories, so §13.1 does not reach them and a
- * monochrome set is the consistent one.
+ * moment observed, an alert fired, a day checked, an official warning, an update that
+ * did not arrive — and is a Material silhouette in `onSurfaceVariant` for all of them
+ * (review, 8 set 2026): two used to be Meteocons tinted flat, the same silhouettes
+ * taken off the Sky screen that day, and here they were not weather but categories, so
+ * §13.1 does not reach them and a monochrome set is the consistent one.
+ *
+ * The triangle moved on 9 set 2026, when the official warnings arrived (Fase 11): it is
+ * the mark of a warning everywhere else in the app, so it belongs to the line an
+ * authority wrote. A fetch that failed and a bulletin that was not reached are one
+ * category — something the app went for and did not get — and share `Refresh`.
  */
 @Composable
 private fun EntryItem(icon: ImageVector, headline: String, supporting: String?, time: String?) {

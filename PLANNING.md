@@ -4306,23 +4306,23 @@ nessuna sigla CAP raggiunge lo schermo: c'è un test per questo, come per gli id
       `shouldRun`, così un lettore che vuole solo le allerte tiene vivo il job
 - [x] `SyncNotifiers.notifyOfficialWarning(...): Boolean`, `OfficialWarningNotifier` in `:app`,
       due canali, impronta bruciata solo su `true`; il fake in `WeatherSyncWorkerTest` cresce
-- [ ] Oggi: `WarningBanner` tra il chip di freschezza e le prossime ore; `WarningSheet`; il
+- [x] Oggi: `WarningBanner` tra il chip di freschezza e le prossime ore; `WarningSheet`; il
       gradino in cima alla scala di `HeadlineEngine` per arancione e rosso, con la sua riga in
       `HeadlineText` nei due registri
-- [ ] Avvisi: il gruppo «Allerte ufficiali» in testa, con la card, i tre stati onesti,
+- [x] Avvisi: il gruppo «Allerte ufficiali» in testa, con la card, i tre stati onesti,
       l'interruttore delle notifiche e il livello di partenza
-- [ ] Diario: la riga quando il livello cambia tra due bollettini, con il suo glifo di categoria;
+- [x] Diario: la riga quando il livello cambia tra due bollettini, con il suo glifo di categoria;
       la riga «bollettino non raggiunto», una al giorno al massimo
 - [ ] Widget: il chip su Ora, Oggi e Arco, l'interruttore per istanza (`showWarning`, acceso),
       le regole di layout pure con tabella, il conteggio dei figli di Glance
-- [ ] DESIGN.md: §2.3 i tre token di livello misurati (giallo, arancione, rosso: inchiostro e
+- [x] DESIGN.md: §2.3 i tre token di livello misurati (giallo, arancione, rosso: inchiostro e
       contenitore, chiaro e scuro, ΔE fra loro sotto deuteranopia — il rosso può essere la
       coppia `fail`, il giallo NON è `unstable`: l'ambra della freschezza e il giallo di
       un'allerta sono due affermazioni diverse); §8.13 `WarningBanner`, `WarningSheet`, il chip;
       `ic_warning` disegnato con il peso dei segni di verdetto, mai il carattere ⚠
-- [ ] Guida: un paragrafo nel capitolo Avvisi (cos'è, chi la emette, quando arriva);
+- [x] Guida: un paragrafo nel capitolo Avvisi (cos'è, chi la emette, quando arriva);
       attribuzione «Dipartimento della Protezione Civile, CC BY 4.0» nel foglio e in Informazioni
-- [ ] Stringhe IT/EN (`warning_*`, `notif_warning_*`, `notif_channel_warning_*`),
+- [x] Stringhe IT/EN (`warning_*`, `notif_warning_*`, `notif_channel_warning_*`),
       `StringsParityTest` verde; `OfficialWarningNotifierTest` sul modello di `SkyNotifierTest`
 - [ ] Verifica su device, in Italia, per una settimana dopo il merge: confronto col bollettino
       regionale e col cielo. Il default del livello di notifica si conferma o si alza dopo quella
@@ -4784,6 +4784,92 @@ sync 21 (+10), app 260 (+9) — e lint 0 errori. Un solo giro rosso, per due svi
 non del codice: il CAP dell'8 set dava il Versante Jonico Settentrionale giallo su tutti e tre i
 rischi, non sul solo idraulico come il test supponeva (il file ha ragione, il test è stato
 corretto e dice perché); e `cancelAll` va chiamato sul gestore vero, non sulla shadow.
+
+### Il terzo PR: Oggi, il foglio, Avvisi, il Diario, la guida, i token, le stringhe (9 set 2026)
+
+Branch `claude/adoring-bell-viiqyl`, impilato sui primi due. Sei caselle della lista: le
+superfici. Da qui il bollettino si vede, e da qui parte la settimana di collaudo.
+
+**I tre token di livello, misurati.** Una regola sola per tutti e tre, così l'unica cosa
+che cambia fra loro è la tinta: l'inchiostro a **8,5:1** sul fondo chiaro e a **11,0:1** su
+quello scuro, il contenitore al bordo del gamut sRGB per la sua tinta a luminanza tenuta.
+I contenitori stanno **più in basso di quelli dei verdetti** (luminanza .62 contro .78) e
+il motivo è una misura: a .78 sRGB tiene .099, .046 e .038 di croma per queste tre tinte e
+arancione e rosso escono lo stesso rosa pallido; a .62 i tre tetti sono .175, .088 e .075 e
+il giallo è un giallo. L'inchiostro rosso chiaro cade a due unità da `fail` (`#990003`
+contro `#950700`) — è quello che fanno una tinta condivisa e un contrasto condiviso — e
+resta un token suo, perché le due affermazioni non sono la stessa. Tutti e sei escono dal
+generatore identici: `gen_vivid.py` cresce a sette coppie (`PAIRS`) e non ha niente da
+prendere su valori già al bordo.
+
+**La deuteranopia si misura, non si cita.** `Deuteranopia.kt` nei sorgenti di test è il
+validatore: simulazione Viénot–Brettel–Mollon 1999 su sRGB lineare, distanza in ΔE\*ab
+(CIE76), soglia percettiva 2,3. Il risultato in tabella in DESIGN §2.3: **in ogni schema uno
+dei due portanti tiene circa nove decimi della sua distanza e l'altro ne tiene meno di un
+decimo** — l'inchiostro collassa su carta, il contenitore collassa sullo scuro, e
+arancione↔rosso è la coppia debole in entrambi i casi. `PaletteContrastTest` asserisce il
+collasso come *tetto* (l'unica asserzione al contrario del file) e `PaletteDocTest` legge i
+numeri stampati. Il ΔE 0,7 che §2.3 cita per `unstable`↔`fail` viene dal validatore di
+tweather su una scala che qui non si riproduce (questo ne misura 6,4): la frase resta com'è
+e il documento dice che le due cifre non sono confrontabili, invece di riscrivere una
+misura che non si può rifare.
+
+**Le tredici zone senza nome** (le sette della Basilicata, le sei delle Marche) sono la
+decisione che il primo PR ha rinviato qui. In una frase si nomina la regione — «Allerta per
+**una zona della regione Marche**» — e nella notifica la riga «Zona di allerta:», che dopo i
+due punti non avrebbe altro che un codice, **non si disegna**: è la regola che quella
+notifica già segue per ogni riga. Il sostantivo sta dentro la stringa apposta, perché
+l'italiano vuole «in Basilicata» e «nelle Marche» e quelle due Regioni sono esattamente le
+tredici.
+
+**Il gradino zero della frase** prende arancione e rosso, mai il giallo, e il giorno lo
+sceglie oggi prima di domani; i rischi nominati sono quelli **al picco del giorno
+nominato**, così «arancione per temporali» non diventa «per temporali e rischio
+idrogeologico» perché il secondo era giallo. Le due forme sono parallele («… , oggi» / «… ,
+domani») invece della «Domani allerta rossa …» che il piano dava: stessa frase in due
+lingue senza far girare le maiuscole, e il registro breve dei widget resta «Allerta
+arancione · temporali».
+
+**Il verde è un valore, e vale in un posto solo.** `TodayStateBuilder` scarta un bollettino
+tutto NESSUNA prima di costruire: niente banner e niente frase (§1.1). Avvisi disegna tutti
+e quattro gli stati di `PlaceWarningState` — non in zona, nessun bollettino ancora,
+bollettino non più valido per oggi, e quello corrente anche se verde — perché lì l'assenza
+**è** la risposta cercata. È la stessa lettura in due screen con due regole opposte, ed è
+il motivo per cui lo stato è un tipo (`OfficialWarningReader.state`, puro, sei casi in
+tabella) e non un `PlaceWarnings?`.
+
+**Il glifo del Diario si è mosso.** Il triangolo di Material passa alla riga dell'autorità —
+è il segno dell'allerta in tutto il resto dell'app — e le due righe «un aggiornamento non è
+arrivato» (il fetch fallito, il bollettino non raggiunto) prendono `Refresh` e condividono
+una categoria sola. La regola del Diario non cambia: il glifo nomina la categoria, quindi
+due categorie non possono averne uno.
+
+**Il vocabolario è uno**, `ui/warnings/WarningText`, e la notifica del secondo PR ci si è
+appoggiata invece di tenersi le sue mappature: due copie di «Allerta arancione per
+temporali» divergono, e la divergenza si vede come una notifica e un banner che parlano di
+bollettini diversi. Da lì `PlaceWarnings.ranked` e `peakDays` sono saliti nel dominio, dove
+il widget del quarto PR li troverà già scritti.
+
+**La lettura non chiede mai rete.** `OfficialWarningReader` segue lo store; l'indice delle
+zone è un *fornitore* e non un campo, così un lettore con tutti i luoghi all'estero non
+decodifica mai i 290 KB dell'asset. Il giorno con cui si legge è quello dell'**emittente**,
+e il minuto di Oggi lo rivaluta: una pagina lasciata aperta oltre la mezzanotte smette di
+mostrare i livelli di ieri.
+
+**Rinviata al quarto passo, con la misura: la vigilanza.** Il secondo PR l'aveva mandata
+qui «col foglio». Misurato il 9 set: il TopoJSON delle 71 zone pesa **807 KB grezzi**, è in
+TopoJSON (archi delta-codificati con `transform`, 1 893 archi) e non in shapefile, quindi
+l'importatore della criticità non lo legge — gli manca un decodificatore di archi che non
+ha mai avuto — e le sue proprietà sono `Nome_Zona`, `comuni`, `id_classificazione`,
+`Quantitativi_previsti`: **non c'è `id_zona`**, che è il geocodice con cui il CAP della
+vigilanza nomina le zone, quindi il join va rimisurato prima di scriverlo. Sono un asset
+nuovo da costruire e da pesare, un secondo documento nello store, una seconda cadenza e una
+seconda sorgente, per una riga del foglio: è un PR suo, e ci va con la sua ricerca, non
+appoggiato a una funzione finita.
+
+Verifica del PR: suite completa come la CI, **731 test** — dominio 213 (invariato), dati
+207 (+6), sync 21 (invariato), app 290 (+30) — e lint 0 errori, nessun avviso sui file nuovi (l'unico che era comparso,
+`UseKtx` su `WarningSheet`, è stato tolto passando a `String.toUri()`).
 
 ### Verifica
 

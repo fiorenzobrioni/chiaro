@@ -353,6 +353,11 @@
     <string name="guide_alerts_message_body">Chiaro non lo riscrive e non lo traduce mai. Le parole tra graffe diventano numeri quando scatta: {trigger.value} è ciò che l\'ha fatto scattare, {trigger.time} è quando. Ogni valore che un avviso può guardare si può stampare allo stesso modo, e la lista sotto il messaggio lo scrive al posto tuo.</string>
     <string name="guide_alerts_battery_title">Quanto costa</string>
     <string name="guide_alerts_battery_body">Niente in più: i controlli viaggiano sull\'aggiornamento del meteo che hai già chiesto, al ritmo scelto nelle impostazioni. Android chiede il permesso per le notifiche la prima volta che accendi un avviso.</string>
+    <string name="guide_alerts_official_title">Le allerte ufficiali</string>
+    <string name="guide_alerts_official_body">In Italia fa fede il Dipartimento della Protezione Civile. Ogni pomeriggio, di solito entro le 16, valuta ciascuna zona di allerta per oggi e per domani: rischio idraulico, rischio idrogeologico e temporali, su quattro livelli — nessuno, giallo, arancione, rosso. Chiaro trova la zona in cui cade il tuo luogo, legge il bollettino e lo mostra: il riquadro in Oggi quando c\'è qualcosa da dire, la griglia e le parole del Dipartimento nel foglio dietro, e una riga nel Diario ogni volta che un livello si muove. Le parole dell\'autorità sono citate, mai tradotte. Per i luoghi fuori dall\'Italia non compare nulla, perché nessuno li ha valutati.</string>
+    <string name="guide_alerts_official_credit">Fonte: Dipartimento della Protezione Civile, CC BY 4.0.</string>
+    <string name="settings_credit_warnings">Allerte ufficiali</string>
+    <string name="settings_credit_warnings_note">Dipartimento della Protezione Civile, CC BY 4.0</string>
 
     <string name="guide_journal_title">Diario</string>
     <string name="guide_journal_p1">Ogni aggiornamento lascia una riga. Il Diario è quel registro letto come prosa, dal più recente, raggruppato per giorno.</string>
@@ -823,6 +828,49 @@
     <string name="warning_meaning_yellow">Fenomeni localizzati e possibili disagi.</string>
     <string name="warning_meaning_orange">Fenomeni diffusi o intensi e possibili danni.</string>
     <string name="warning_meaning_red">Fenomeni molto intensi e pericolo per le persone.</string>
+
+    <string name="headline_warning_today">%1$s per %2$s, oggi</string>
+    <string name="headline_warning_tomorrow">%1$s per %2$s, domani</string>
+    <string name="headline_warning_brief">%1$s · %2$s</string>
+    <string name="warning_clause_first">%1$s per %2$s</string>
+    <string name="warning_clause_more">%1$s per %2$s</string>
+    <string name="warning_clause_join">", "</string>
+    <string name="warning_adjective_yellow">gialla</string>
+    <string name="warning_adjective_orange">arancione</string>
+    <string name="warning_adjective_red">rossa</string>
+    <string name="warning_day_today_short">oggi</string>
+    <string name="warning_day_tomorrow_short">domani</string>
+    <string name="warning_zone_unnamed">una zona della regione %1$s</string>
+    <string name="warning_banner_detail">%1$s · %2$s</string>
+    <string name="warning_banner_source">Protezione Civile, bollettino delle %1$s</string>
+    <string name="warning_sheet_title">Allerta per %1$s</string>
+    <string name="warning_sheet_tomorrow">Domani</string>
+    <string name="warning_sheet_meaning_title">Cosa vuol dire</string>
+    <string name="warning_sheet_note_title">Nota del bollettino</string>
+    <string name="warning_sheet_source">Dipartimento della Protezione Civile · bollettino del %1$s, %2$s · CC BY 4.0</string>
+    <string name="warning_sheet_open">Apri il bollettino</string>
+
+    <string name="alerts_group_warnings">Allerte ufficiali</string>
+    <string name="warning_card_none">Nessuna allerta per %1$s</string>
+    <string name="warning_card_none_detail">Bollettino delle %1$s</string>
+    <string name="warning_card_stale">Nessun bollettino per oggi</string>
+    <string name="warning_card_stale_detail">L\'ultimo è del %1$s · il prossimo esce di solito entro le 16</string>
+    <string name="warning_card_waiting">Ancora nessun bollettino</string>
+    <string name="warning_card_waiting_detail">Il primo arriva con il prossimo aggiornamento.</string>
+    <string name="warning_card_unavailable">Le allerte ufficiali sono disponibili per i luoghi in Italia</string>
+    <string name="warning_card_unavailable_detail">Le emette il Dipartimento della Protezione Civile, che valuta il solo territorio italiano.</string>
+    <string name="warning_switch_title">Allerte ufficiali</string>
+    <string name="warning_switch_desc">Quando la Protezione Civile emette un\'allerta per questa zona, appena esce il bollettino, di solito tra le 15 e le 17. Mai più di una per bollettino.</string>
+    <string name="warning_from_title">Avvisami da</string>
+    <string name="warning_from_yellow">Gialla</string>
+    <string name="warning_from_orange">Arancione</string>
+
+    <string name="journal_warning_raised">%1$s per %2$s, %3$s</string>
+    <string name="journal_warning_cleared">Allerta rientrata: nessuna criticità per %1$s</string>
+    <string name="journal_warning_source">Protezione Civile, bollettino delle %1$s</string>
+    <string name="journal_warning_missed">Bollettino non raggiunto</string>
+    <string name="journal_warning_missed_held">Resta valido quello del %1$s</string>
+    <string name="journal_warning_missed_empty">Nessun bollettino in memoria</string>
     <string name="notif_severe_title">Maltempo in arrivo · %1$s</string>
     <string name="notif_severe_body">%1$s verso le %2$s</string>
     <string name="notif_rain_fragment">, pioggia al %1$d%%</string>

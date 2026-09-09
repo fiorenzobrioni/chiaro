@@ -11,10 +11,17 @@ import com.callbackdev.chiaro.data.FetchLogStore
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.SettingsStore
 import com.callbackdev.chiaro.data.WeatherRepository
+import com.callbackdev.chiaro.data.local.WarningRecordDao
+import com.callbackdev.chiaro.data.local.WarningRecordEntity
+import com.callbackdev.chiaro.data.local.WarningRecordKind
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.warnings.WarningHazard
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import kotlinx.coroutines.Dispatchers
@@ -56,6 +63,7 @@ class JournalViewModel(
     private val repository: WeatherRepository,
     private val cityStore: CityStore,
     private val fetchLogStore: FetchLogStore,
+    private val warningRecords: WarningRecordDao?,
     settingsStore: SettingsStore
 ) : ViewModel() {
 
@@ -74,8 +82,11 @@ class JournalViewModel(
                 combine(
                     repository.historyFlowFor(city, limit = HISTORY_SCAN),
                     fetchLogStore.failures,
-                    dayBoundaries(JournalStateBuilder.zoneOf(city))
-                ) { entries, failures, _ ->
+                    dayBoundaries(JournalStateBuilder.zoneOf(city)),
+                    // Its own table and its own flow: a bulletin has to show up in the
+                    // diary on days no fetch landed, so it cannot ride on the commits.
+                    warningRecords?.observeFor(city.cacheKey, WARNING_SCAN) ?: flowOf(emptyList())
+                ) { entries, failures, _, warnings ->
                     val rows = entries.map { entry ->
                         JournalRow(
                             at = Instant.ofEpochSecond(entry.timestampEpochSeconds),
@@ -90,7 +101,8 @@ class JournalViewModel(
                             city = city,
                             rows = rows,
                             failures = failures.filter { it.cityKey == city.cacheKey },
-                            now = Instant.now()
+                            now = Instant.now(),
+                            warnings = warnings.mapNotNull { it.toRow() }
                         )
                     )
                 }
@@ -115,6 +127,26 @@ class JournalViewModel(
         }
     }
 
+    /**
+     * A stored row into what the builder reads. Names and ISO strings are decoded HERE,
+     * at the edge: a row a later build wrote with a hazard or a kind this one does not
+     * know is dropped, rather than reaching the screen as a half-sentence.
+     */
+    private fun WarningRecordEntity.toRow(): WarningRecordRow? {
+        val decoded = WarningRecordKind.entries.firstOrNull { it.name == kind } ?: return null
+        fun <T> parse(block: () -> T): T? = runCatching(block).getOrNull()
+        return WarningRecordRow(
+            at = Instant.ofEpochSecond(recordedEpochSeconds),
+            kind = decoded,
+            issuedAt = issuedAt?.let { raw -> parse { LocalDateTime.parse(raw) } },
+            zoneName = zoneName,
+            day = day?.let { raw -> parse { LocalDate.parse(raw) } },
+            hazard = WarningHazard.entries.firstOrNull { it.name == hazard },
+            from = WarningLevel.entries.firstOrNull { it.name == fromLevel },
+            to = WarningLevel.entries.firstOrNull { it.name == toLevel }
+        )
+    }
+
     private fun ActiveSource.cityOrNull(): City? = when (this) {
         is ActiveSource.Saved -> city
         is ActiveSource.Gps -> lastFix
@@ -130,6 +162,9 @@ class JournalViewModel(
          */
         private const val HISTORY_SCAN = WeatherRepository.HISTORY_RETENTION
 
+        /** The whole per-place warning diary — the step prunes it to the same depth. */
+        private const val WARNING_SCAN = 100
+
         val Factory = viewModelFactory {
             initializer {
                 val app = checkNotNull(this[APPLICATION_KEY])
@@ -137,6 +172,7 @@ class JournalViewModel(
                     repository = ServiceLocator.weatherRepository(app),
                     cityStore = ServiceLocator.cityStore(app),
                     fetchLogStore = ServiceLocator.fetchLogStore(app),
+                    warningRecords = ServiceLocator.warningRecordDao(app),
                     settingsStore = ServiceLocator.settingsStore(app)
                 )
             }

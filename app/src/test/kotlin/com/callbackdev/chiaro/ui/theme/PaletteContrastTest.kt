@@ -41,6 +41,15 @@ class PaletteContrastTest {
         "pass" to pass, "unstable" to unstable, "fail" to fail, "unknown" to unknown
     )
 
+    /** The three official-warning levels of §2.3, in severity order (Fase 11). */
+    private fun ChiaroColors.levels() = listOf(
+        "yellow" to warningYellow, "orange" to warningOrange, "red" to warningRed
+    )
+
+    /** Every ink/container pair the palette holds — the four verdicts and the three
+     * levels are the same shape and must clear the same floors. */
+    private fun ChiaroColors.pairs() = verdicts() + levels()
+
     /** `paletteFor` looks a dress up by enum value and throws if there is not one. A
      * palette added to the store without one is a crash on the first frame, so the map
      * is checked against the enum rather than against the two entries it happens to
@@ -66,10 +75,10 @@ class PaletteContrastTest {
     @Test
     fun `verdict ink reads on its surface in every scheme`() {
         dresses.forEach { (dress, palette) ->
-            palette.lightColors.verdicts().forEach { (name, v) ->
+            palette.lightColors.pairs().forEach { (name, v) ->
                 assertAtLeast(4.5, v.ink, palette.lightScheme.surface, "$dress light $name ink")
             }
-            palette.darkColors.verdicts().forEach { (name, v) ->
+            palette.darkColors.pairs().forEach { (name, v) ->
                 assertAtLeast(4.5, v.ink, palette.darkScheme.surface, "$dress dark $name ink")
             }
         }
@@ -79,9 +88,55 @@ class PaletteContrastTest {
     fun `verdict ink reads on its own container`() {
         dresses.forEach { (dress, palette) ->
             listOf(palette.lightColors, palette.darkColors).forEach { colors ->
-                colors.verdicts().forEach { (name, v) ->
+                colors.pairs().forEach { (name, v) ->
                     assertAtLeast(4.5, v.ink, v.container, "$dress $name ink on container")
                 }
+            }
+        }
+    }
+
+    /**
+     * §2.3's claim about the three levels, and the reason a banner never says a level in
+     * colour alone: under a deuteranope simulation ONE of the two carriers collapses in
+     * each scheme — the ink on paper, the container in the dark — keeping under a tenth
+     * of the distance a full-colour reader gets from the same pair.
+     *
+     * A fraction and not an absolute floor, because the absolute number is not the point:
+     * `#5C4700` and `#763900` are 21.2 apart in full colour and 1.6 apart to a
+     * deuteranope, and it is the ratio that says "this carrier stopped carrying".
+     */
+    @Test
+    fun `in every scheme one of a level's two carriers collapses under deuteranopia`() {
+        dresses.forEach { (dress, palette) ->
+            listOf(
+                "$dress light ink" to palette.lightColors.levels().map { it.second.ink },
+                "$dress dark container" to palette.darkColors.levels().map { it.second.container }
+            ).forEach { (what, colors) ->
+                colors.indices.forEach { i ->
+                    colors.indices.drop(i + 1).forEach { j ->
+                        val full = Deuteranopia.deltaE(colors[i], colors[j])
+                        val left = Deuteranopia.separation(colors[i], colors[j])
+                        assertTrue(
+                            "$what keeps %.0f%% of %.1f between two levels: colour would be a carrier"
+                                .format(100 * left / full, full),
+                            left / full < 0.12
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /** The other half of the same measurement: with normal colour vision the three ARE
+     * three colours, so the palette is not simply giving up on colour. */
+    @Test
+    fun `the three levels are three colours to a reader who sees all of them`() {
+        sets().forEach { (name, colors, _) ->
+            colors.levels().map { it.second }.zipWithNext().forEach { (a, b) ->
+                assertTrue(
+                    "$name: two level containers are indistinguishable even in full colour",
+                    Deuteranopia.deltaE(a.container, b.container) > 10.0
+                )
             }
         }
     }
@@ -236,7 +291,7 @@ class PaletteContrastTest {
         ).forEach { (mode, pair) ->
             val (paper, vivid) = pair
             val tokens = { c: ChiaroColors ->
-                c.verdicts().flatMap { (_, v) -> listOf(v.ink, v.container) } +
+                c.pairs().flatMap { (_, v) -> listOf(v.ink, v.container) } +
                     c.rainRamp + c.rainInkRamp + c.temperatureRamp
             }
             val before = tokens(paper)

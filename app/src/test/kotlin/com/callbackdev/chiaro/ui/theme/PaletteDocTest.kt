@@ -153,6 +153,78 @@ class PaletteDocTest {
         }
     }
 
+    /** §2.3 and §2.5 print the three warning levels in the same shape as the verdicts,
+     * with the same claim: these hexes and these ratios, or the document is stale. */
+    @Test
+    fun `each level table is that dress's warning palette`() {
+        documented.forEach { dress ->
+            val row = Regex(
+                """^\| (yellow|orange|red) \| `(#[0-9A-Fa-f]{6})` ([\d.]+):1 \| `(#[0-9A-Fa-f]{6})` """ +
+                    """\| `(#[0-9A-Fa-f]{6})` ([\d.]+):1 \| `(#[0-9A-Fa-f]{6})` \|""",
+                RegexOption.MULTILINE
+            )
+            val rows = row.findAll(semanticSection(dress)).toList()
+            assertEquals("${dress.name} should print three levels", 3, rows.size)
+
+            rows.forEach { match ->
+                val g = match.groupValues
+                val name = g[1]
+                val light = level(dress.lightColors, name)
+                val dark = level(dress.darkColors, name)
+                assertEquals("${dress.name} $name light ink", g[2].uppercase(), hex(light.ink))
+                assertEquals("${dress.name} $name light container", g[4].uppercase(), hex(light.container))
+                assertEquals("${dress.name} $name dark ink", g[5].uppercase(), hex(dark.ink))
+                assertEquals("${dress.name} $name dark container", g[7].uppercase(), hex(dark.container))
+                assertEquals("${dress.name} $name light ratio", g[3], printed(contrast(light.ink, dress.light.surface)))
+                assertEquals("${dress.name} $name dark ratio", g[6], printed(contrast(dark.ink, dress.dark.surface)))
+            }
+        }
+    }
+
+    /**
+     * The table §2.3 prints for the deuteranope simulation. It is the one measurement in
+     * the document that argues an upper bound — "this carrier stopped carrying" — so it
+     * is exactly the one a re-picked hue could quietly falsify.
+     */
+    @Test
+    fun `the deuteranopia table of section 2 3 is what the validator measures`() {
+        val text = section("2.3")
+        val cell = """([\d.]+) \(([\d.]+)\)"""
+        val row = Regex(
+            """^\| (light|dark) (ink|container) \| $cell \| $cell \| $cell \|""",
+            RegexOption.MULTILINE
+        )
+        val rows = row.findAll(text).toList()
+        assertEquals("§2.3 should print four carriers", 4, rows.size)
+        rows.forEach { match ->
+            val g = match.groupValues
+            val colors = when (g[1]) {
+                "light" -> ChiaroLightColors
+                else -> ChiaroDarkColors
+            }.let { c -> listOf(c.warningYellow, c.warningOrange, c.warningRed) }
+                .map { if (g[2] == "ink") it.ink else it.container }
+            val pairs = listOf(0 to 1, 1 to 2, 0 to 2)
+            pairs.forEachIndexed { i, (a, b) ->
+                val simulated = Deuteranopia.separation(colors[a], colors[b])
+                val full = Deuteranopia.deltaE(colors[a], colors[b])
+                assertEquals(
+                    "§2.3 ${g[1]} ${g[2]}, pair ${a + 1}-${b + 1}, deuteranope",
+                    g[3 + i * 2], printed(simulated)
+                )
+                assertEquals(
+                    "§2.3 ${g[1]} ${g[2]}, pair ${a + 1}-${b + 1}, full colour",
+                    g[4 + i * 2], printed(full)
+                )
+            }
+        }
+    }
+
+    private fun level(colors: ChiaroColors, name: String) = when (name) {
+        "yellow" -> colors.warningYellow
+        "orange" -> colors.warningOrange
+        else -> colors.warningRed
+    }
+
     private fun verdict(colors: ChiaroColors, name: String) = when (name) {
         "pass" -> colors.pass
         "unstable" -> colors.unstable
