@@ -6,7 +6,6 @@ import androidx.annotation.DrawableRes
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.WeatherIcons
-import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.sky.SkyText
@@ -117,18 +116,19 @@ internal object ArcText {
      * card's icon family. Meteocons has no rainbow, so the row that promises one shows
      * the weather a rainbow is made of — the screen's own reasoning.
      *
-     * The moon's rows are the exception (device report, 9 set 2026: «the moon is cut off
-     * at the bottom»). Meteocons draws moonrise and moonset as a disc clipped by the
-     * horizon with a 2-unit line under it; the screen shows them at 34 dp, where the line
-     * is a dp wide and the picture reads, but at a row's 20 dp the line is 0.6 dp and
-     * vanishes, leaving a moon with its bottom missing. The row draws the moon in its real
-     * phase at [at] instead — whole, and the same moon the arc itself paints — and the
-     * words say whether it rises or sets.
+     * The moon's rows are the exception, twice over (device reports, 9 set 2026). Meteocons
+     * draws moonrise and moonset as a disc clipped by the horizon: whole at the screen's
+     * 34 dp, «cut off at the bottom» at a row's 20. The second try drew the moon in its real
+     * phase, and the device answered with the new moon's glyph — a faint dotted circle,
+     * which in a row reads as «nothing here» rather than as a moon (the new moon of 11 Sep
+     * was two days off). So the row draws the one moon everybody reads at any size, the
+     * clear night's crescent — the symbol, as the sun's rows draw a sun and not the sun's
+     * state — and the words say whether it rises or sets. The arc itself keeps painting
+     * the real phase, where there is room to read it.
      */
     @DrawableRes
     fun rowIconRes(
         kind: TimelineKind,
-        at: Instant,
         style: WeatherIcons,
         darkGround: Boolean,
         palette: AppPalette
@@ -139,8 +139,7 @@ internal object ArcText {
             TimelineKind.SUNSET -> R.drawable.mc_sunset
             TimelineKind.BLUE_EVENING -> R.drawable.mc_star
             TimelineKind.DARK -> R.drawable.mc_starry_night
-            TimelineKind.MOONRISE, TimelineKind.MOONSET ->
-                return ChiaroIcons.moonPhaseRes(MoonPhase.at(at), style, darkGround, palette)
+            TimelineKind.MOONRISE, TimelineKind.MOONSET -> R.drawable.mc_clear_night
             TimelineKind.RAINBOW -> R.drawable.mc_partly_cloudy_day_rain
             TimelineKind.RAIN_START -> R.drawable.mc_raindrops
             TimelineKind.RAIN_STOP -> R.drawable.mc_cloudy

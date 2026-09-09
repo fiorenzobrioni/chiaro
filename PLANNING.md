@@ -4027,6 +4027,69 @@ settimana in fondo e quattro righe, la luna intera nelle righe, la strip a 4×1 
 
 ---
 
+## L'arco su device, secondo giro: la luna nuova, il segno di verdetto, l'audit dei glifi (committente, 9 set 2026)
+
+Secondo screenshot: la settimana c'è e le quattro righe pure. Due domande: la luna della riga
+«è corretta così?», e il segno di verdetto — la ✗ nel cerchio rosa — «non mi piace, troppo
+forte, deve restare un avviso ma tenue».
+
+### La luna: corretta per l'astronomia, sbagliata come icona
+
+Il glifo era quello di Meteocons per la **luna nuova**: un cerchio tratteggiato sottile. Il
+classificatore aveva ragione — la luna nuova è l'11 settembre, la sera del 9 mancavano meno
+di due giorni, ed è dentro il quarto d'onda che `MoonPhase.at` chiama NEW_MOON — ma in una
+riga di agenda un cerchietto tratteggiato si legge «qui non c'è niente», non «luna». Lo
+stesso disegno funziona nel dettaglio della schermata Oggi, dove è grande e accanto c'è la
+parola «Luna nuova»; qui sta a 20 dp accanto a «Tramonta la luna», e la fase non è il fatto
+della riga. Le righe della luna disegnano ora **la falce della notte serena**
+(`mc_clear_night`), lo stesso glifo che il widget Ora mostra ogni notte limpida: il simbolo
+della luna, come le righe del sole mostrano un sole e non lo stato del sole. La fase vera
+resta nel grafico, dove c'è spazio per leggerla.
+
+### L'audit dei glifi
+
+Ogni glifo che il widget può mostrare, verificato nel drawable e nelle tre tabelle di
+`ChiaroIcons` (piene, piene su fondo scuro, a linea su fondo scuro):
+
+| riga | glifo | a 20 dp |
+|---|---|---|
+| alba, tramonto | `mc_sunrise`, `mc_sunset` | mezzo sole (clip a 39,5/64), riga di 2 unità = 1,7 px, freccia di 4,5 unità: si vede appena; il verso lo dice la parola |
+| ora d'oro | `mc_horizon` | mezzo sole con la riga: leggibile (nello screenshot si vede) |
+| ora blu | `mc_star` | stella a tratto 3: leggibile |
+| buio pieno | `mc_starry_night` | falce e tre stelline: le stelline sono punti, la falce regge |
+| sorge/tramonta la luna | `mc_clear_night` | falce a tratto 3 = 2,6 px: leggibile |
+| arcobaleno | `mc_partly_cloudy_day_rain` | sole, nube, pioggia: leggibile |
+| pioggia probabile / smette | `mc_raindrops`, `mc_cloudy` | leggibili |
+| settimana | `conditionRes(codice, notte = false)` | 22 dp, la stessa mappa della card Oggi |
+
+Tutte e undici le famiglie hanno le quattro varianti (`mc_`, `mcn_`, `mcf_`, `mcfn_`) e sono
+nelle tabelle: un glifo senza fratello sarebbe stato un crash al primo lettore che sceglie le
+icone piene (`getValue` lancia). `ArcTextTest` ora lo pinza: ogni tipo di riga, in ogni
+famiglia, su entrambi i fondi, in entrambe le palette.
+
+### Il segno di verdetto
+
+Era la pillola del widget Cielo, riusata com'era: cerchio pieno di 22 dp nel colore del
+contenitore e la ✗ nell'inchiostro del verdetto. Due cose la rendevano un pugno: **la coppia
+di colori era quella del tema chiaro** — scelta con `isNight`, e il telefono era in tema
+chiaro — su una card che è scura qualunque cosa faccia il telefono (il cielo sotto lo scrim,
+o la card scura), quindi un rosa pallido pieno sul fondo più scuro dello schermo; e **la
+pillola è l'eroe della card Cielo**, mentre qui è una nota accanto a un orario. Ora la riga
+porta il solo glifo della serie — `✓ ~ ✗ ?`, una forma prima che un colore (§2.3), che è la
+parte che regge la deuteranopia — nell'inchiostro del verdetto **scelto per il fondo della
+card** (`palette.darkGround`), a 13 sp Medium come le parole della riga, in una colonna di
+14 dp riservata per tutte le righe appena una ha un verdetto. Gli inchiostri del set scuro
+sono quelli misurati contro una superficie scura: il glifo si legge dove sta, ed è la cosa
+che mancava al «verde nudo» che il 4 set aveva fatto crescere il contenitore sul widget
+Cielo. Il widget Cielo resta com'è: lì il verdetto è il soggetto.
+
+### Verifica
+
+`:app` 234 (+1 in `ArcTextTest`, l'audit dei glifi), lint a zero errori. Stesso branch.
+**Su device**: la falce nelle righe della luna e la ✗ tenue accanto a «Ora d'oro».
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae

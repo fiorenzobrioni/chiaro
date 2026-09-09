@@ -313,6 +313,14 @@ internal const val WeekDaySp = 11f
 internal const val WeekHighSp = 12f
 internal const val WeekLowSp = 11f
 
+/**
+ * The verdict mark's column at the end of an agenda row: the glyph alone («✓ ~ ✗ ?») in the
+ * verdict's ink, set at the row's own size. 14 dp holds the widest of the four at 13 sp
+ * Medium with air either side. The Sky widget's filled pill was tried here first and came
+ * back from the device as «a punch in the eye» (9 set 2026): the pill is the Sky card's
+ * hero, and a list row wants a note, not a hero.
+ */
+internal val AgendaMarkSlot = 14.dp
 internal val AgendaRowAir = 3.dp
 /** The Sky widget's row glyph, so the two cards' lists read as siblings; 20 since the
  * device pass of 9 set 2026 (from 18). */

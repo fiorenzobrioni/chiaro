@@ -35,6 +35,7 @@ import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.format.Formats
@@ -44,10 +45,9 @@ import com.callbackdev.chiaro.widget.ChiaroWidgetReceiver
 import com.callbackdev.chiaro.widget.DayRange
 import com.callbackdev.chiaro.widget.NoDataContent
 import com.callbackdev.chiaro.widget.NoPlaceContent
+import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.widget.PlaceLine
-import com.callbackdev.chiaro.widget.SkyMarkChip
 import com.callbackdev.chiaro.widget.StaleSp
-import com.callbackdev.chiaro.widget.VerdictMark
 import com.callbackdev.chiaro.widget.WidgetCard
 import com.callbackdev.chiaro.widget.WidgetCardPadding
 import com.callbackdev.chiaro.widget.WidgetData
@@ -61,6 +61,7 @@ import com.callbackdev.chiaro.widget.rememberWidgetSchemes
 import com.callbackdev.chiaro.widget.secondaryStyle
 import com.callbackdev.chiaro.widget.sentence
 import com.callbackdev.chiaro.widget.staleText
+import com.callbackdev.chiaro.widget.verdictInk
 import java.time.Instant
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -339,8 +340,7 @@ private fun StackedStripContent(
                     Image(
                         provider = ImageProvider(
                             ArcText.rowIconRes(
-                                next.item.kind, next.at, model.iconStyle, palette.darkGround,
-                                model.settings.palette
+                                next.item.kind, model.iconStyle, palette.darkGround, model.settings.palette
                             )
                         ),
                         contentDescription = ArcText.heroLabel(context, next.item),
@@ -535,7 +535,7 @@ private fun Agenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, palette
     val rows = series.events.take(plan.agendaRows)
     // A slot for the mark on every row as soon as one row has a verdict, so the clocks
     // stand in a column (device report, 9 set 2026: «19:07» sat left of the «19:00»
-    // above it, pushed by its own mark).
+    // above it, pushed by its own mark). The mark itself is quiet — see [AgendaMark].
     val marks = rows.any { it.verdict != null }
     // ONE child of the card's column whatever the row count, and the gaps between rows
     // as padding rather than spacers: Glance draws at most ten children per container
@@ -556,8 +556,7 @@ private fun Agenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, palette
                 Image(
                     provider = ImageProvider(
                         ArcText.rowIconRes(
-                            event.item.kind, event.at, model.iconStyle, palette.darkGround,
-                            model.settings.palette
+                            event.item.kind, model.iconStyle, palette.darkGround, model.settings.palette
                         )
                     ),
                     contentDescription = null, // the words beside it say it
@@ -580,14 +579,43 @@ private fun Agenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, palette
                     Spacer(modifier = GlanceModifier.width(MarkGap))
                     Box(
                         contentAlignment = Alignment.Center,
-                        modifier = GlanceModifier.size(SkyMarkChip)
+                        modifier = GlanceModifier.width(AgendaMarkSlot)
                     ) {
-                        event.verdict?.let { VerdictMark(it, palette) }
+                        event.verdict?.let { AgendaMark(it, palette, plan.textScale) }
                     }
                 }
             }
         }
     }
+}
+
+/**
+ * The verdict beside an agenda row: the series' own glyph — `✓ ~ ✗ ?`, a shape before it
+ * is a color (DESIGN §2.3) — in the verdict's ink, at the row's size, and nothing else. The
+ * Sky widget's filled pill was here first and came back from the device as «a punch in
+ * the eye» (committente, 9 set 2026): on that card the verdict is the hero, on this one it
+ * is a note beside a time, and a note is set like the words around it.
+ *
+ * The ink is picked for the CARD'S ground, not the phone's theme: the pill's pale container
+ * on a dark card was the light theme's pair, chosen by `isNight`, on a card that is dark
+ * whatever the phone is doing (the sky under its scrim, or a dark card). The dark set's
+ * inks are the ones measured against a dark surface, so the glyph is readable where it
+ * sits — and a bare glyph in the wrong set was exactly what made the Sky widget grow its
+ * container in the first place (4 set).
+ */
+@Composable
+private fun AgendaMark(verdict: SkyVerdict, palette: WidgetPalette, textScale: Float) {
+    Text(
+        text = verdict.kind.glyph,
+        style = TextStyle(
+            color = verdictInk(verdict.kind, palette.darkGround, palette.dress),
+            fontSize = (AgendaSp * textScale).sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center
+        ),
+        maxLines = 1,
+        modifier = GlanceModifier.fillMaxWidth()
+    )
 }
 
 /** The week at the foot of a four-row card: seven columns of day, glyph, high, low. */

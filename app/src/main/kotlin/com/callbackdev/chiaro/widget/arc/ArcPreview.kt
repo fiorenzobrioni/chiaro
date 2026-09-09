@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -55,7 +55,6 @@ import com.callbackdev.chiaro.widget.resolveWidgetPalette
 import com.callbackdev.chiaro.widget.sentence
 import com.callbackdev.chiaro.widget.skyGradientBitmap
 import com.callbackdev.chiaro.widget.staleText
-import com.callbackdev.chiaro.widget.verdictContainer
 import com.callbackdev.chiaro.widget.verdictInk
 import com.callbackdev.chiaro.widget.widgetCardFill
 import com.callbackdev.chiaro.widget.widgetSchemes
@@ -261,7 +260,7 @@ private fun PreviewBody(
                             Image(
                                 painter = painterResource(
                                     ArcText.rowIconRes(
-                                        next.item.kind, next.at, model.iconStyle,
+                                        next.item.kind, model.iconStyle,
                                         inks.palette.darkGround, model.settings.palette
                                     )
                                 ),
@@ -373,7 +372,7 @@ private fun PreviewAgenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, 
                 Image(
                     painter = painterResource(
                         ArcText.rowIconRes(
-                            event.item.kind, event.at, model.iconStyle,
+                            event.item.kind, model.iconStyle,
                             inks.palette.darkGround, model.settings.palette
                         )
                     ),
@@ -392,8 +391,8 @@ private fun PreviewAgenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, 
                 PText(ArcText.clock(context, event.at, model.zone), inks.secondary, AgendaSp * plan.textScale)
                 if (marks) {
                     Spacer(modifier = Modifier.width(6.dp))
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(22.dp)) {
-                        event.verdict?.let { PreviewVerdictMark(it, inks) }
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.width(AgendaMarkSlot)) {
+                        event.verdict?.let { PreviewVerdictMark(it, inks, plan.textScale) }
                     }
                 }
             }
@@ -438,24 +437,19 @@ private fun PreviewWeek(
     }
 }
 
-/** The Sky widget's mark, in Compose: the verdict's glyph in its own container. */
+/** The agenda's quiet mark, in Compose: the verdict's glyph in its ink, the card's ground
+ * deciding which set (see the widget's `AgendaMark`). */
 @Composable
-private fun PreviewVerdictMark(verdict: SkyVerdict, inks: PreviewInks) {
+private fun PreviewVerdictMark(verdict: SkyVerdict, inks: PreviewInks, textScale: Float) {
     val context = LocalContext.current
-    val night = isNight(context)
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(22.dp)
-            .background(verdictContainer(verdict.kind, night, inks.palette.dress).getColor(context), CircleShape)
-    ) {
-        Text(
-            text = verdict.kind.glyph,
-            color = verdictInk(verdict.kind, night, inks.palette.dress).getColor(context),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium
-        )
-    }
+    Text(
+        text = verdict.kind.glyph,
+        color = verdictInk(verdict.kind, inks.palette.darkGround, inks.palette.dress).getColor(context),
+        fontSize = (AgendaSp * textScale).sp,
+        fontWeight = FontWeight.Medium,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @Composable

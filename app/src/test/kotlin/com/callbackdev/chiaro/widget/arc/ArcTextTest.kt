@@ -68,20 +68,47 @@ class ArcTextTest {
     }
 
     @Test
-    fun `the moon's rows draw the whole moon in its phase, the sun's their own glyphs`() {
-        val at = LocalDateTime.of(2026, 9, 9, 19, 0).atZone(zone).toInstant()
-        val moonset = ArcText.rowIconRes(TimelineKind.MOONSET, at, WeatherIcons.LINE, true, AppPalette.VIVID)
-        val moonrise = ArcText.rowIconRes(TimelineKind.MOONRISE, at, WeatherIcons.LINE, true, AppPalette.VIVID)
-        assertEquals(moonset, moonrise)
-        assertFalse(moonset == R.drawable.mc_moonset || moonset == R.drawable.mcn_moonset)
+    fun `the moon's rows draw the crescent whatever the phase, the sun's their own glyphs`() {
+        // The clear night's moon, in the card's family and for its ground: the same
+        // drawable the Now widget shows on a clear night.
+        assertEquals(
+            R.drawable.mcn_clear_night,
+            ArcText.rowIconRes(TimelineKind.MOONSET, WeatherIcons.LINE, true, AppPalette.VIVID)
+        )
+        assertEquals(
+            R.drawable.mcfn_clear_night,
+            ArcText.rowIconRes(TimelineKind.MOONRISE, WeatherIcons.FILL, true, AppPalette.VIVID)
+        )
+        assertEquals(
+            R.drawable.mc_clear_night,
+            ArcText.rowIconRes(TimelineKind.MOONRISE, WeatherIcons.LINE, false, AppPalette.PAPER)
+        )
         assertEquals(
             R.drawable.mcn_sunset,
-            ArcText.rowIconRes(TimelineKind.SUNSET, at, WeatherIcons.LINE, true, AppPalette.VIVID)
+            ArcText.rowIconRes(TimelineKind.SUNSET, WeatherIcons.LINE, true, AppPalette.VIVID)
         )
         assertEquals(
             R.drawable.mc_sunset,
-            ArcText.rowIconRes(TimelineKind.SUNSET, at, WeatherIcons.LINE, false, AppPalette.VIVID)
+            ArcText.rowIconRes(TimelineKind.SUNSET, WeatherIcons.LINE, false, AppPalette.VIVID)
         )
+    }
+
+    /** Every glyph a row can show, in every family on every ground: a missing sibling in
+     * ChiaroIcons' tables would be a crash the moment a reader picks filled icons. */
+    @Test
+    fun `every agenda glyph exists in every family and on both grounds`() {
+        TimelineKind.entries.forEach { kind ->
+            WeatherIcons.entries.forEach { style ->
+                listOf(true, false).forEach { dark ->
+                    AppPalette.entries.forEach { palette ->
+                        assertTrue(
+                            "$kind $style dark=$dark $palette",
+                            ArcText.rowIconRes(kind, style, dark, palette) != 0
+                        )
+                    }
+                }
+            }
+        }
     }
 
     @Test
