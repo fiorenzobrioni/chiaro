@@ -22,6 +22,7 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
@@ -44,6 +45,7 @@ import com.callbackdev.chiaro.widget.DayRange
 import com.callbackdev.chiaro.widget.NoDataContent
 import com.callbackdev.chiaro.widget.NoPlaceContent
 import com.callbackdev.chiaro.widget.PlaceLine
+import com.callbackdev.chiaro.widget.SkyMarkChip
 import com.callbackdev.chiaro.widget.StaleSp
 import com.callbackdev.chiaro.widget.VerdictMark
 import com.callbackdev.chiaro.widget.WidgetCard
@@ -271,7 +273,7 @@ private fun DialContent(
     bitmap: Bitmap
 ) {
     val context = LocalContext.current
-    val next = series.next
+    val next = series.nextLight
     val figure = when {
         arc.dialFigure == ArcDialFigure.NEXT_TIME && next != null ->
             ArcText.clock(context, next.at, model.zone)
@@ -326,7 +328,7 @@ private fun StackedStripContent(
                 maxLines = 1
             )
             Spacer(modifier = GlanceModifier.defaultWeight())
-            val next = series.next
+            val next = series.nextLight
             when {
                 content.isStale -> Text(
                     text = staleText(context, content.lastSync, Instant.now()),
@@ -337,7 +339,8 @@ private fun StackedStripContent(
                     Image(
                         provider = ImageProvider(
                             ArcText.rowIconRes(
-                                next.item.kind, model.iconStyle, palette.darkGround, model.settings.palette
+                                next.item.kind, next.at, model.iconStyle, palette.darkGround,
+                                model.settings.palette
                             )
                         ),
                         contentDescription = ArcText.heroLabel(context, next.item),
@@ -374,30 +377,47 @@ private fun RowStripContent(
         verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier.fillMaxSize()
     ) {
+        // The words: the number, then the moment's name, then — when the height holds a
+        // third line — its clock and countdown; a taller font joins the last two into
+        // «Tramonto · 19:42». Stale data takes the second line instead: the age of the
+        // numbers outranks the moment (VISION §5.9).
         Column(modifier = GlanceModifier.width(StripTextColumn)) {
             Text(
                 text = temperature(content, model),
                 style = strongStyle(palette, StripTempSp * plan.textScale),
                 maxLines = 1
             )
-            val next = series.next
+            val next = series.nextLight
+            val lineSp = (StripLineSp * plan.textScale).sp
             when {
                 content.isStale -> Text(
                     text = staleText(context, content.lastSync, Instant.now()),
                     style = TextStyle(color = palette.stale, fontSize = StaleSp.sp),
                     maxLines = 1
                 )
+                arc.hero == ArcHero.NEXT_MOMENT && next != null && plan.heroLines >= 2 -> {
+                    Text(
+                        text = ArcText.heroName(context, next),
+                        style = TextStyle(color = palette.primary, fontSize = lineSp, fontWeight = FontWeight.Medium),
+                        maxLines = 1
+                    )
+                    Text(
+                        text = ArcText.clockLine(context, series, next, model.zone),
+                        style = secondaryStyle(palette, lineSp),
+                        maxLines = 1
+                    )
+                }
                 arc.hero == ArcHero.NEXT_MOMENT && next != null -> Text(
                     text = ArcText.heroShort(context, next, model.zone),
-                    style = secondaryStyle(palette, (StripLineSp * plan.textScale).sp),
+                    style = secondaryStyle(palette, lineSp),
                     maxLines = 1
                 )
                 arc.hero == ArcHero.HEADLINE -> Text(
                     text = sentence(context, content, model.settings.units),
-                    style = secondaryStyle(palette, (StripLineSp * plan.textScale).sp),
-                    maxLines = 1
+                    style = secondaryStyle(palette, lineSp),
+                    maxLines = plan.heroLines
                 )
-                else -> PlaceLine(content.city.name, model.fromGps, palette, (StripLineSp * plan.textScale).sp)
+                else -> PlaceLine(content.city.name, model.fromGps, palette, lineSp)
             }
         }
         Spacer(modifier = GlanceModifier.width(StripGraphicGap))
@@ -455,7 +475,7 @@ private fun PanelContent(
     bitmap: Bitmap
 ) {
     val context = LocalContext.current
-    val next = series.next
+    val next = series.nextLight
     Column(modifier = GlanceModifier.fillMaxSize()) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -512,38 +532,59 @@ private fun Agenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, palette
     if (plan.agendaRows <= 0) return
     val context = LocalContext.current
     val rowHeight = arcAgendaRowHeight(fontScale(context), plan.textScale)
-    Spacer(modifier = GlanceModifier.height(ArcGap))
-    series.events.take(plan.agendaRows).forEachIndexed { index, event ->
-        if (index > 0) Spacer(modifier = GlanceModifier.height(ArcRowGap))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = GlanceModifier.fillMaxWidth().height(rowHeight)
-        ) {
-            Image(
-                provider = ImageProvider(
-                    ArcText.rowIconRes(
-                        event.item.kind, model.iconStyle, palette.darkGround, model.settings.palette
-                    )
-                ),
-                contentDescription = null, // the words beside it say it
-                modifier = GlanceModifier.size(AgendaGlyph)
-            )
-            val name = ArcText.rowLabel(context, event.item)
-            Text(
-                text = if (event.tomorrow) context.getString(R.string.arc_tomorrow_name, name) else name,
-                style = TextStyle(color = palette.primary, fontSize = (AgendaSp * plan.textScale).sp),
-                maxLines = 1,
-                modifier = GlanceModifier.padding(start = 8.dp).defaultWeight()
-            )
-            Text(
-                text = ArcText.clock(context, event.at, model.zone),
-                style = secondaryStyle(palette, (AgendaSp * plan.textScale).sp),
-                maxLines = 1,
-                modifier = GlanceModifier.padding(start = 8.dp)
-            )
-            event.verdict?.let { verdict ->
-                Spacer(modifier = GlanceModifier.width(6.dp))
-                VerdictMark(verdict, palette)
+    val rows = series.events.take(plan.agendaRows)
+    // A slot for the mark on every row as soon as one row has a verdict, so the clocks
+    // stand in a column (device report, 9 set 2026: «19:07» sat left of the «19:00»
+    // above it, pushed by its own mark).
+    val marks = rows.any { it.verdict != null }
+    // ONE child of the card's column whatever the row count, and the gaps between rows
+    // as padding rather than spacers: Glance draws at most ten children per container
+    // and drops the rest without a word. The first four-by-four on a device (9 set 2026)
+    // showed three rows and no week — the header, the arc and six spacers had used the
+    // ten, and the fourth row, the last spacer and the week were simply not there. The
+    // Compose preview has no such limit, which is why it showed them.
+    Column(modifier = GlanceModifier.fillMaxWidth().padding(top = ArcGap)) {
+        rows.forEachIndexed { index, event ->
+            val gap = if (index > 0) ArcRowGap else 0.dp
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .height(rowHeight + gap)
+                    .padding(top = gap)
+            ) {
+                Image(
+                    provider = ImageProvider(
+                        ArcText.rowIconRes(
+                            event.item.kind, event.at, model.iconStyle, palette.darkGround,
+                            model.settings.palette
+                        )
+                    ),
+                    contentDescription = null, // the words beside it say it
+                    modifier = GlanceModifier.size(AgendaGlyph)
+                )
+                val name = ArcText.rowLabel(context, event.item)
+                Text(
+                    text = if (event.tomorrow) context.getString(R.string.arc_tomorrow_name, name) else name,
+                    style = TextStyle(color = palette.primary, fontSize = (AgendaSp * plan.textScale).sp),
+                    maxLines = 1,
+                    modifier = GlanceModifier.padding(start = 8.dp).defaultWeight()
+                )
+                Text(
+                    text = ArcText.clock(context, event.at, model.zone),
+                    style = secondaryStyle(palette, (AgendaSp * plan.textScale).sp),
+                    maxLines = 1,
+                    modifier = GlanceModifier.padding(start = 8.dp)
+                )
+                if (marks) {
+                    Spacer(modifier = GlanceModifier.width(MarkGap))
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = GlanceModifier.size(SkyMarkChip)
+                    ) {
+                        event.verdict?.let { VerdictMark(it, palette) }
+                    }
+                }
             }
         }
     }
@@ -626,7 +667,7 @@ internal fun heroText(
     arc: ArcSettings,
     series: ArcSeries
 ): String {
-    val next = series.next
+    val next = series.nextLight
     return if (arc.hero == ArcHero.NEXT_MOMENT && next != null) {
         ArcText.heroSentence(context, next, model.zone)
     } else {
@@ -649,3 +690,6 @@ private fun strongStyle(palette: WidgetPalette, sizeSp: Float): TextStyle = Text
 private const val Separator = " · "
 
 private val StripGlyph = 16.dp
+
+/** The air before a row's verdict mark: the Sky widget's own. */
+private val MarkGap = 6.dp

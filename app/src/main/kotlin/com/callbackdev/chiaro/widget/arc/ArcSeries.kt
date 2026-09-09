@@ -82,6 +82,17 @@ internal data class ArcSeries(
     /** The moment in front of the reader; null when the agenda is empty. */
     val next: ArcEvent? get() = events.firstOrNull()
 
+    /**
+     * The next moment of the LIGHT — the sun's or the moon's — which is what the hero
+     * names (device report, 9 set 2026: «Forse un arcobaleno alle 17:00» at the head of
+     * the card). The setting calls it «the next light moment», and a rainbow's chance is
+     * weather, not a moment the day turns on: the agenda keeps every kind, the hero takes
+     * the first that has a job behind it, and falls back to whatever is ahead when
+     * nothing of the light is.
+     */
+    val nextLight: ArcEvent?
+        get() = events.firstOrNull { jobIdsFor(it.item.kind).isNotEmpty() } ?: events.firstOrNull()
+
     /** The forecast hour starting exactly at [at], if the window has it. */
     fun hourAt(at: Instant): ArcHour? = hours.firstOrNull { it.at == at }
 

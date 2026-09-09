@@ -1,0 +1,100 @@
+package com.callbackdev.chiaro.widget.arc
+
+import android.content.Context
+import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.data.AppPalette
+import com.callbackdev.chiaro.data.WeatherIcons
+import com.callbackdev.chiaro.ui.today.TimelineItem
+import com.callbackdev.chiaro.ui.today.TimelineKind
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+
+/**
+ * The arc's sentences (9 set 2026, after the first device pass): the countdown is coarse
+ * on purpose, the rainbow row is two facts rather than a line of prose, and the moon's
+ * rows draw a whole moon.
+ */
+@RunWith(RobolectricTestRunner::class)
+class ArcTextTest {
+
+    private val context: Context get() = RuntimeEnvironment.getApplication()
+    private val zone = ZoneId.of("Europe/Rome")
+    private val now: Instant = LocalDateTime.of(2026, 9, 9, 9, 17).atZone(zone).toInstant()
+
+    @Test
+    fun `the countdown rounds to the hour, because the card repaints by the hour`() {
+        // 7 h 43 min → «in 8 h»; 7 h 20 → «in 7 h»; exactly 1 h → «in 1 h».
+        assertEquals(
+            context.getString(R.string.arc_in_hours, 8),
+            ArcText.countdown(context, now, now.plus(Duration.ofMinutes(7 * 60 + 43)))
+        )
+        assertEquals(
+            context.getString(R.string.arc_in_hours, 7),
+            ArcText.countdown(context, now, now.plus(Duration.ofMinutes(7 * 60 + 20)))
+        )
+        assertEquals(
+            context.getString(R.string.arc_in_hours, 1),
+            ArcText.countdown(context, now, now.plus(Duration.ofHours(1)))
+        )
+        // Under an hour it says only that; at hand, that.
+        assertEquals(
+            context.getString(R.string.arc_within_hour),
+            ArcText.countdown(context, now, now.plus(Duration.ofMinutes(43)))
+        )
+        assertEquals(
+            context.getString(R.string.arc_in_moments),
+            ArcText.countdown(context, now, now.plus(Duration.ofSeconds(30)))
+        )
+    }
+
+    @Test
+    fun `the rainbow row is the chance and where to look, not the screen's sentence`() {
+        val item = TimelineItem(LocalDateTime.of(2026, 9, 9, 17, 0), TimelineKind.RAINBOW, pct = 88, bearingDeg = 270.0)
+        val row = ArcText.rowLabel(context, item)
+        assertTrue(row, row.contains("88%"))
+        assertTrue(row, row.contains(context.getString(R.string.compass_w)))
+        assertFalse(row, row.contains(":"))
+        // The hero keeps the short name and no figure.
+        assertEquals(context.getString(R.string.arc_rainbow_short), ArcText.heroLabel(context, item))
+    }
+
+    @Test
+    fun `the moon's rows draw the whole moon in its phase, the sun's their own glyphs`() {
+        val at = LocalDateTime.of(2026, 9, 9, 19, 0).atZone(zone).toInstant()
+        val moonset = ArcText.rowIconRes(TimelineKind.MOONSET, at, WeatherIcons.LINE, true, AppPalette.VIVID)
+        val moonrise = ArcText.rowIconRes(TimelineKind.MOONRISE, at, WeatherIcons.LINE, true, AppPalette.VIVID)
+        assertEquals(moonset, moonrise)
+        assertFalse(moonset == R.drawable.mc_moonset || moonset == R.drawable.mcn_moonset)
+        assertEquals(
+            R.drawable.mcn_sunset,
+            ArcText.rowIconRes(TimelineKind.SUNSET, at, WeatherIcons.LINE, true, AppPalette.VIVID)
+        )
+        assertEquals(
+            R.drawable.mc_sunset,
+            ArcText.rowIconRes(TimelineKind.SUNSET, at, WeatherIcons.LINE, false, AppPalette.VIVID)
+        )
+    }
+
+    @Test
+    fun `tomorrow's moments say so before their name`() {
+        val sunrise = TimelineItem(LocalDateTime.of(2026, 9, 10, 6, 50), TimelineKind.SUNRISE)
+        val event = ArcEvent(sunrise, sunrise.at.atZone(zone).toInstant(), tomorrow = true, verdict = null)
+        assertEquals(
+            context.getString(R.string.arc_tomorrow_name, context.getString(R.string.tl_sunrise)),
+            ArcText.heroName(context, event)
+        )
+        assertEquals(
+            context.getString(R.string.arc_next_tomorrow_at, context.getString(R.string.tl_sunrise), ArcText.clock(context, event.at, zone)),
+            ArcText.heroSentence(context, event, zone)
+        )
+    }
+}

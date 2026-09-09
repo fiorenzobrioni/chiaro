@@ -3953,6 +3953,80 @@ committente**.
 
 ---
 
+## L'arco su device: la colonna da dieci figli, la luna tagliata, la review (committente, 9 set 2026)
+
+Primo screenshot del 4×4 (One UI, 923 px, ~2,35 px/dp), due appunti e una richiesta di
+review. «Ottimo widget» a parte, quello che c'era da correggere.
+
+### Il 4×4 senza settimana (e senza la quarta riga)
+
+Lo screenshot mostrava tre righe di agenda, niente settimana e mezza card vuota, mentre
+l'anteprima nelle impostazioni mostrava tutto. La misura della card (800×950 px ≈ 340×404 dp)
+e l'altezza del grafico (~129 dp) dicono che il piano era quello giusto, BOARD a quattro righe
+con settimana: quello che mancava era stato **scartato in disegno**. Glance disegna al massimo
+**dieci figli per contenitore** e i successivi li lascia cadere senza una parola. La colonna
+della card ne aveva tredici: intestazione, spaziatore, grafico, poi per l'agenda uno
+spaziatore in testa e uno tra ogni riga (1 + 4 righe + 3 spaziatori = 8), lo spaziatore a peso
+e la settimana. I primi dieci finiscono esattamente alla terza riga più il suo spaziatore:
+la quarta riga, il peso e la settimana erano l'undicesimo, il dodicesimo e il tredicesimo.
+Compose non ha quel limite, ed è per questo che l'anteprima mentiva.
+
+Ora l'agenda è **un figlio solo** (`Column`), con gli spazi tra le righe come padding e non
+come spaziatori: la colonna della card ne ha sei, quella dell'agenda al massimo sei. Nessun
+altro contenitore del widget supera i dieci (settimana: sette colonne; riga di agenda:
+cinque figli). L'anteprima ora dice la verità per costruzione: stesso piano, stessi limiti.
+
+### La luna tagliata in basso
+
+`mc_moonset` è, per disegno, un disco **ritagliato dall'orizzonte** (`clip-path` a 39,5/64)
+con sotto una linea di 2 unità e una freccia. Nella schermata Oggi sta a 34 dp e la linea è
+un dp: si legge «luna che tramonta». Nella riga del widget stava a 18 dp: la linea era 0,56 dp,
+invisibile, e restava un disco con il fondo mancante — esattamente l'appunto. Le righe della
+luna ora disegnano la **luna nella sua fase vera** all'istante della riga
+(`ChiaroIcons.moonPhaseRes(MoonPhase.at(at))`): intera, la stessa luna che il grafico dipinge,
+e la parola accanto dice se sorge o tramonta. I glifi di alba e tramonto restano i loro: i
+raggi li fanno leggere anche a 20 dp. Il glifo di riga passa da 18 a 20 dp, quello del widget
+Cielo, così le due liste sono sorelle.
+
+### La review: cosa ho trovato e cosa ho cambiato
+
+- **Il conto alla rovescia mentiva con il passare del tempo.** «tra 7 h 43 min» era esatto
+  al minuto al momento del disegno, e il widget si ridisegna a ogni sync — ogni ora per
+  default, mai al minuto: un'ora dopo diceva ancora 7 h 43. Ora è **grossolano di proposito**:
+  ore arrotondate («tra 8 h»), «entro un'ora» sotto i sessanta minuti, «a momenti» sotto il
+  minuto. L'ora esatta accanto («alle 19:42») è il fatto che non invecchia. Le due stringhe
+  al minuto sono uscite da entrambe le lingue.
+- **L'eroe era l'arcobaleno.** «Forse un arcobaleno alle 17:00» in testa alla card: la
+  probabilità di un fenomeno meteo, non un momento della luce, che è quello che l'impostazione
+  promette. `ArcSeries.nextLight`: il primo evento con un job del cielo dietro (sole o luna);
+  l'agenda tiene tutto; se non c'è niente della luce davanti, l'eroe prende quello che c'è.
+  Test in `ArcSeriesTest`.
+- **La riga dell'arcobaleno era troncata** («…un arcobaleno stareb…»): la frase della
+  schermata è prosa da riga intera. La riga ora stampa i due fatti, «Forse un arcobaleno a
+  ovest (88%)» (`arc_rainbow_row`, con `SkyText.bearingRes`).
+- **Gli orari dell'agenda non stavano in colonna**: «19:07» slittava a sinistra dei «19:00»
+  sopra, spinto dal suo segno di verdetto. Ora, appena una riga ha un verdetto, ogni riga
+  riserva il posto del segno (22 dp + 6): gli orari sono una colonna.
+- **La strip a 3-4 celle troncava la seconda riga**: «Tramonta la luna · 19:00» a 12 sp è
+  ~130 dp, la colonna ne aveva 100. Colonna a 110, numero a 22 sp (da 24) e **tre righe**
+  dove l'altezza le regge (62 − 29,04 = 32,96 ≥ 2 × 15,84): il nome del momento a 12 sp Medium,
+  sotto «19:00 · tra 8 h» in inchiostro secondario; a font scale 1,3 le due si fondono in
+  «Tramonto · 19:00». Il grafico perde 10 dp (112 e 202). `ArcLayoutTest` aggiornato.
+- Guardato e lasciato: le barre della pioggia sopra il tratto del sole sotto l'orizzonte
+  (si sovrappongono a destra nello screenshot, ma il tratteggio resta leggibile e la barra è
+  il dato); il segno di verdetto coi colori del tema chiaro su card scura (è una coppia
+  misurata, come nel widget Cielo); il velo del passato che al mattino copre un terzo della
+  card (è il disegno: il giorno è passato per un terzo).
+
+### Verifica
+
+`:app` 233 (+1 `ArcSeriesTest`, +4 `ArcTextTest` con Robolectric per le frasi), il resto
+invariato. Lint a zero errori. `ArcPainter` non è cambiato, quindi i fotogrammi valgono
+ancora. Stesso branch, CI. **La verifica su device è del committente**: il 4×4 con la
+settimana in fondo e quattro righe, la luna intera nelle righe, la strip a 4×1 con tre righe.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae

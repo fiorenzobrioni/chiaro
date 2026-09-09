@@ -910,10 +910,10 @@
     <string name="arc_tomorrow_name">Domani · %1$s</string>
     <string name="arc_rain_likely">Pioggia probabile</string>
     <string name="arc_rainbow_short">Forse un arcobaleno</string>
+    <string name="arc_rainbow_row">Forse un arcobaleno a %2$s (%1$d%%)</string>
     <string name="arc_in_moments">a momenti</string>
-    <string name="arc_in_minutes">tra %1$d min</string>
+    <string name="arc_within_hour">entro un\'ora</string>
     <string name="arc_in_hours">tra %1$d h</string>
-    <string name="arc_in_hours_minutes">tra %1$d h %2$d min</string>
     <string name="arc_desc_next">%1$s, %2$s</string>
     <string name="arc_desc_no_moment">Nessun momento della luce nelle prossime ventiquattro ore</string>
     <string name="arc_config_preview">Anteprima</string>
@@ -969,5 +969,5 @@
     <string name="arc_density_compact">Compatta: una riga in più dove ci sta</string>
     <string name="arc_config_reset">Ripristina le impostazioni predefinite di questo widget</string>
     <string name="widget_preview_arc_hero">Tramonto alle 19:42</string>
-    <string name="widget_preview_arc_sub">Milano · tra 2 h 10 min</string>
+    <string name="widget_preview_arc_sub">Milano · tra 8 h</string>
 </resources>

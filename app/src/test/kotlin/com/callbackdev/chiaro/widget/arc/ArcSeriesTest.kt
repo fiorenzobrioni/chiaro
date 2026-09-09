@@ -41,7 +41,7 @@ class ArcSeriesTest {
     private val date: LocalDate = LocalDate.of(2026, 9, 2)
     private val clear = WeatherCondition(0, "Clear", "☀️")
 
-    private fun report(fetchedAt: LocalDateTime, hours: Int = 48) =
+    private fun report(fetchedAt: LocalDateTime, hours: Int = 48, wetFrom: Int? = null) =
         sampleWeatherReport().copy(
             location = sampleWeatherReport().location.copy(
                 city = "Milano",
@@ -54,7 +54,7 @@ class ArcSeriesTest {
                     time = fetchedAt.withMinute(0).plusHours(it.toLong()),
                     tempC = 20.0,
                     condition = clear,
-                    precipChancePct = 10,
+                    precipChancePct = if (wetFrom != null && it >= wetFrom) 70 else 10,
                     cloudCoverPct = 20
                 )
             },
@@ -66,8 +66,11 @@ class ArcSeriesTest {
             )
         )
 
-    private fun content(now: Instant, fetched: LocalDateTime = LocalDateTime.of(2026, 9, 2, 12, 0)) =
-        TodayStateBuilder.build(milan, report(fetched), now, 60, false, null) as TodayUiState.Content
+    private fun content(
+        now: Instant,
+        fetched: LocalDateTime = LocalDateTime.of(2026, 9, 2, 12, 0),
+        wetFrom: Int? = null
+    ) = TodayStateBuilder.build(milan, report(fetched, wetFrom = wetFrom), now, 60, false, null) as TodayUiState.Content
 
     private fun at(hour: Int, minute: Int = 0, day: LocalDate = date): Instant =
         day.atTime(LocalTime.of(hour, minute)).atZone(zone).toInstant()
@@ -157,6 +160,26 @@ class ArcSeriesTest {
         val sunrise = s.events.first { it.item.kind == TimelineKind.SUNRISE }
         assertTrue(sunrise.tomorrow)
         assertFalse(s.events.first { it.item.kind == TimelineKind.SUNSET }.tomorrow)
+    }
+
+    @Test
+    fun `the hero is the next moment of the light, the agenda keeps the rain`() {
+        // Rain gets likely at 16:00 — and with the sun low enough, a rainbow's window opens
+        // at the same hour: the rain's family heads the agenda either way, and not the hero.
+        val now = at(15)
+        val s = ArcSeries.build(content(now, wetFrom = 4), emptyList(), milan.coordinates, now, ArcSettings())
+        assertTrue(s.next!!.item.kind in setOf(TimelineKind.RAIN_START, TimelineKind.RAINBOW))
+        assertTrue(ArcSeries.jobIdsFor(s.next!!.item.kind).isEmpty())
+        val hero = s.nextLight!!
+        assertTrue(ArcSeries.jobIdsFor(hero.item.kind).isNotEmpty())
+        assertTrue(hero.at.isAfter(s.next!!.at))
+        // With the sun and the moon turned off there is no light moment to name, and the
+        // hero falls back to what is ahead rather than to nothing.
+        val rainOnly = ArcSeries.build(
+            content(now, wetFrom = 4), emptyList(), milan.coordinates, now,
+            ArcSettings(agendaSun = false, agendaMoon = false)
+        )
+        assertEquals(rainOnly.next, rainOnly.nextLight)
     }
 
     @Test

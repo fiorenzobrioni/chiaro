@@ -84,18 +84,25 @@ class ArcLayoutTest {
     }
 
     @Test
-    fun `three and four cells by one put the arc beside a 100 dp column of words`() {
+    fun `three and four cells by one put the arc beside a 110 dp column of words`() {
         val three = plan(DpSize(250.dp, 82.dp))
         assertFalse(three.stacked)
-        assertEquals(122f, three.graphic.width.value, 0.01f)
+        assertEquals(112f, three.graphic.width.value, 0.01f)
         assertEquals(62f, three.graphic.height.value, 0.01f)
         assertTrue(three.hourLabels)
         assertFalse(three.temperatures)
         assertEquals(6, three.tickStepHours)
+        // 62 − 29.04 (the 22 sp number) = 32.96 holds two 12 sp lines (31.68): the
+        // moment's name, and its clock under it.
+        assertEquals(2, three.heroLines)
 
         val four = plan(DpSize(340.dp, 82.dp))
-        assertEquals(212f, four.graphic.width.value, 0.01f)
+        assertEquals(202f, four.graphic.width.value, 0.01f)
         assertEquals(4, four.tickStepHours)
+        // At the largest font the two lines need 41.2 and the words get 24.25: one line.
+        assertEquals(1, plan(DpSize(340.dp, 82.dp), fontScale = 1.3f).heroLines)
+        // The stacked strip has no column of words to fill.
+        assertEquals(1, plan(DpSize(159.dp, 82.dp)).heroLines)
     }
 
     @Test

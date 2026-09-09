@@ -217,7 +217,7 @@ private fun PreviewBody(
 ) {
     val context = LocalContext.current
     val scale = plan.textScale
-    val next = series.next
+    val next = series.nextLight
     val temperature = Formats.temperature(
         content.report.current.tempC, model.settings.units.temperature, Locale.getDefault()
     )
@@ -261,7 +261,7 @@ private fun PreviewBody(
                             Image(
                                 painter = painterResource(
                                     ArcText.rowIconRes(
-                                        next.item.kind, model.iconStyle,
+                                        next.item.kind, next.at, model.iconStyle,
                                         inks.palette.darkGround, model.settings.palette
                                     )
                                 ),
@@ -284,10 +284,17 @@ private fun PreviewBody(
                     when {
                         content.isStale ->
                             PText(staleText(context, content.lastSync, Instant.now()), inks.stale, StaleSp)
+                        arc.hero == ArcHero.NEXT_MOMENT && next != null && plan.heroLines >= 2 -> {
+                            PText(ArcText.heroName(context, next), inks.primary, StripLineSp * scale, medium = true)
+                            PText(ArcText.clockLine(context, series, next, model.zone), inks.secondary, StripLineSp * scale)
+                        }
                         arc.hero == ArcHero.NEXT_MOMENT && next != null ->
                             PText(ArcText.heroShort(context, next, model.zone), inks.secondary, StripLineSp * scale)
                         arc.hero == ArcHero.HEADLINE ->
-                            PText(sentence(context, content, model.settings.units), inks.secondary, StripLineSp * scale)
+                            PText(
+                                sentence(context, content, model.settings.units), inks.secondary,
+                                StripLineSp * scale, maxLines = plan.heroLines
+                            )
                         else -> PlaceText(content.city.name, model.fromGps, inks, StripLineSp * scale)
                     }
                 }
@@ -354,35 +361,41 @@ private fun PreviewAgenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, 
     if (plan.agendaRows <= 0) return
     val context = LocalContext.current
     val rowHeight = arcAgendaRowHeight(fontScale(context), plan.textScale)
-    Spacer(modifier = Modifier.height(ArcGap))
-    series.events.take(plan.agendaRows).forEachIndexed { index, event ->
-        if (index > 0) Spacer(modifier = Modifier.height(ArcRowGap))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().height(rowHeight)
-        ) {
-            Image(
-                painter = painterResource(
-                    ArcText.rowIconRes(
-                        event.item.kind, model.iconStyle, inks.palette.darkGround, model.settings.palette
-                    )
-                ),
-                contentDescription = null,
-                modifier = Modifier.size(AgendaGlyph)
-            )
-            val name = ArcText.rowLabel(context, event.item)
-            Text(
-                text = if (event.tomorrow) context.getString(R.string.arc_tomorrow_name, name) else name,
-                color = inks.primary,
-                fontSize = (AgendaSp * plan.textScale).sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(start = 8.dp).weight(1f)
-            )
-            PText(ArcText.clock(context, event.at, model.zone), inks.secondary, AgendaSp * plan.textScale)
-            event.verdict?.let { verdict ->
-                Spacer(modifier = Modifier.width(6.dp))
-                PreviewVerdictMark(verdict, inks)
+    val rows = series.events.take(plan.agendaRows)
+    val marks = rows.any { it.verdict != null }
+    Column(modifier = Modifier.fillMaxWidth().padding(top = ArcGap)) {
+        rows.forEachIndexed { index, event ->
+            if (index > 0) Spacer(modifier = Modifier.height(ArcRowGap))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().height(rowHeight)
+            ) {
+                Image(
+                    painter = painterResource(
+                        ArcText.rowIconRes(
+                            event.item.kind, event.at, model.iconStyle,
+                            inks.palette.darkGround, model.settings.palette
+                        )
+                    ),
+                    contentDescription = null,
+                    modifier = Modifier.size(AgendaGlyph)
+                )
+                val name = ArcText.rowLabel(context, event.item)
+                Text(
+                    text = if (event.tomorrow) context.getString(R.string.arc_tomorrow_name, name) else name,
+                    color = inks.primary,
+                    fontSize = (AgendaSp * plan.textScale).sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(start = 8.dp).weight(1f)
+                )
+                PText(ArcText.clock(context, event.at, model.zone), inks.secondary, AgendaSp * plan.textScale)
+                if (marks) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(22.dp)) {
+                        event.verdict?.let { PreviewVerdictMark(it, inks) }
+                    }
+                }
             }
         }
     }

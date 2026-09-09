@@ -6,6 +6,7 @@ import androidx.annotation.DrawableRes
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.WeatherIcons
+import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.sky.SkyText
@@ -35,8 +36,11 @@ internal object ArcText {
         TimelineKind.DARK -> context.getString(R.string.tl_dark)
         TimelineKind.MOONRISE -> context.getString(R.string.tl_moonrise)
         TimelineKind.MOONSET -> context.getString(R.string.tl_moonset)
+        // The screen's sentence («Sole basso e pioggia (88%): un arcobaleno starebbe a
+        // ovest») is a line of prose the card has no width for (device report, 9 set: cut
+        // at «stareb…»); the row keeps its two facts, the chance and where to look.
         TimelineKind.RAINBOW -> context.getString(
-            R.string.timeline_rainbow,
+            R.string.arc_rainbow_row,
             item.pct ?: 0,
             context.getString(SkyText.bearingRes(item.bearingDeg ?: 0.0))
         )
@@ -55,6 +59,20 @@ internal object ArcText {
         else -> rowLabel(context, item)
     }
 
+    /** The moment's name with its day marker before it: «Tomorrow · Sunrise». */
+    fun heroName(context: Context, event: ArcEvent): String {
+        val name = heroLabel(context, event.item)
+        return if (event.tomorrow) context.getString(R.string.arc_tomorrow_name, name) else name
+    }
+
+    /** «19:42 · in 8 h»: the clock and the countdown on one line, for the one-row card. */
+    fun clockLine(context: Context, series: ArcSeries, event: ArcEvent, zone: ZoneId): String =
+        context.getString(
+            R.string.arc_next_short,
+            clock(context, event.at, zone),
+            countdown(context, series.now, event.at)
+        )
+
     /** «Sunset at 19:42», or «Sunrise tomorrow at 06:50» for a moment past midnight. */
     fun heroSentence(context: Context, event: ArcEvent, zone: ZoneId): String = context.getString(
         if (event.tomorrow) R.string.arc_next_tomorrow_at else R.string.arc_next_at,
@@ -63,31 +81,23 @@ internal object ArcText {
     )
 
     /** The one-row card's version: «Sunset · 19:42», the day marker before the name. */
-    fun heroShort(context: Context, event: ArcEvent, zone: ZoneId): String {
-        val name = heroLabel(context, event.item)
-        val label = if (event.tomorrow) {
-            context.getString(R.string.arc_tomorrow_name, name)
-        } else {
-            name
-        }
-        return context.getString(R.string.arc_next_short, label, clock(context, event.at, zone))
-    }
+    fun heroShort(context: Context, event: ArcEvent, zone: ZoneId): String =
+        context.getString(R.string.arc_next_short, heroName(context, event), clock(context, event.at, zone))
 
     /**
-     * «in 2 h 10 min»: how far off the moment is. Whole hours print without the
-     * minutes, under an hour without the hours, and a moment already at hand says so.
-     * The count is against the clock, not the forecast, so it is right even when the
-     * report is stale.
+     * «in 8 h»: how far off the moment is, COARSELY. A widget repaints when a sync lands
+     * — hourly by default, never by the minute — so «in 7 h 43 min» would still be on the
+     * card an hour later, exact to the minute and wrong by an hour (the first version
+     * printed exactly that, 9 set 2026). Hours are rounded to the nearest, under an hour
+     * says only «within the hour», and a moment at hand says so; the clock time beside
+     * it is the exact fact, and it never goes stale.
      */
     fun countdown(context: Context, now: Instant, at: Instant): String {
         val minutes = Duration.between(now, at).toMinutes()
-        val hours = minutes / 60
-        val rest = (minutes % 60).toInt()
         return when {
             minutes < 1 -> context.getString(R.string.arc_in_moments)
-            minutes < 60 -> context.getString(R.string.arc_in_minutes, minutes.toInt())
-            rest == 0 -> context.getString(R.string.arc_in_hours, hours.toInt())
-            else -> context.getString(R.string.arc_in_hours_minutes, hours.toInt(), rest)
+            minutes < 60 -> context.getString(R.string.arc_within_hour)
+            else -> context.getString(R.string.arc_in_hours, ((minutes + 30) / 60).toInt())
         }
     }
 
@@ -106,10 +116,19 @@ internal object ArcText {
      * The glyph before an agenda row: the Today screen's own choice per kind, in the
      * card's icon family. Meteocons has no rainbow, so the row that promises one shows
      * the weather a rainbow is made of — the screen's own reasoning.
+     *
+     * The moon's rows are the exception (device report, 9 set 2026: «the moon is cut off
+     * at the bottom»). Meteocons draws moonrise and moonset as a disc clipped by the
+     * horizon with a 2-unit line under it; the screen shows them at 34 dp, where the line
+     * is a dp wide and the picture reads, but at a row's 20 dp the line is 0.6 dp and
+     * vanishes, leaving a moon with its bottom missing. The row draws the moon in its real
+     * phase at [at] instead — whole, and the same moon the arc itself paints — and the
+     * words say whether it rises or sets.
      */
     @DrawableRes
     fun rowIconRes(
         kind: TimelineKind,
+        at: Instant,
         style: WeatherIcons,
         darkGround: Boolean,
         palette: AppPalette
@@ -120,8 +139,8 @@ internal object ArcText {
             TimelineKind.SUNSET -> R.drawable.mc_sunset
             TimelineKind.BLUE_EVENING -> R.drawable.mc_star
             TimelineKind.DARK -> R.drawable.mc_starry_night
-            TimelineKind.MOONRISE -> R.drawable.mc_moonrise
-            TimelineKind.MOONSET -> R.drawable.mc_moonset
+            TimelineKind.MOONRISE, TimelineKind.MOONSET ->
+                return ChiaroIcons.moonPhaseRes(MoonPhase.at(at), style, darkGround, palette)
             TimelineKind.RAINBOW -> R.drawable.mc_partly_cloudy_day_rain
             TimelineKind.RAIN_START -> R.drawable.mc_raindrops
             TimelineKind.RAIN_STOP -> R.drawable.mc_cloudy
@@ -135,7 +154,7 @@ internal object ArcText {
      * nothing but a figure.
      */
     fun description(context: Context, series: ArcSeries, zone: ZoneId): String {
-        val next = series.next ?: return context.getString(R.string.arc_desc_no_moment)
+        val next = series.nextLight ?: return context.getString(R.string.arc_desc_no_moment)
         return context.getString(
             R.string.arc_desc_next,
             heroSentence(context, next, zone),

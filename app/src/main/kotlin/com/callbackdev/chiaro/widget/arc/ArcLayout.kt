@@ -77,7 +77,8 @@ internal data class ArcPlan(
     /** The hours between two labels, the plot's preferred value; the painter may widen
      * it when the labels it measures would collide. */
     val tickStepHours: Int,
-    /** How many lines the hero sentence may take in the header. */
+    /** How many lines the hero sentence may take in the header; on a one-row card, how
+     * many lines of words sit under the temperature (the name, then its clock). */
     val heroLines: Int,
     val agendaRows: Int,
     val week: Boolean,
@@ -131,6 +132,10 @@ internal fun arcPlan(
                 DpSize(innerW - StripTextColumn - StripGraphicGap, innerH)
             }
             val labels = settings.hourLabels && graphic.height >= HourLabelsMinHeight
+            // Beside the arc the words get the moment's name and, when the height holds a
+            // third line, its clock and countdown under it (62 − 29.04 = 32.96 ≥ 2 × 15.84
+            // at the default font size; at 1.3 it does not, and the two join on one line).
+            val wordLines = if (!stacked && innerH - line(StripTempSp) >= line(StripLineSp) * 2) 2 else 1
             ArcPlan(
                 form, columns, rows, stacked,
                 paddingHorizontal = ArcPadTight, paddingVertical = ArcPadTight,
@@ -139,7 +144,7 @@ internal fun arcPlan(
                 temperatures = labels && settings.temperatures &&
                     graphic.height >= TemperaturesMinHeight,
                 tickStepHours = arcTickStep(graphic.width),
-                heroLines = 0, agendaRows = 0, week = false, textScale = scale
+                heroLines = wordLines, agendaRows = 0, week = false, textScale = scale
             )
         }
         ArcForm.CARD, ArcForm.PANEL, ArcForm.BOARD -> {
@@ -244,9 +249,11 @@ internal val ArcRowGap = 4.dp
 internal const val DialAspect = 0.62f
 internal val DialGraphicMin = 12.dp
 
-/** The words' column of a one-row card beside its arc: «−12°» at 24 sp Medium is
- * ~51 dp, «Tramonto · 19:42» at 12 sp ~95. */
-internal val StripTextColumn = 100.dp
+/** The words' column of a one-row card beside its arc: «−12°» at 22 sp Medium is
+ * ~47 dp, and the longest moment's name in Italian, «Tramonta la luna», ~100 dp at 12 sp
+ * (device report, 9 set 2026: the first cut was 100, and «Tramonta la luna · 19:00» did
+ * not fit it; the name now has a line of its own and the clock the next). */
+internal val StripTextColumn = 110.dp
 internal val StripGraphicGap = 8.dp
 
 /** What the number needs beside the hero sentence on a panel: «−12°» at 30 sp Medium
@@ -289,7 +296,9 @@ internal const val PanelAgendaMaxRows = 2
 // one-cell figure 22 — each the largest that leaves its words their column (measured
 // with the system font, see ArcLayoutTest for the widths).
 internal const val DialFigureSp = 22f
-internal const val StripTempSp = 24f
+/** 22 since the device pass of 9 set 2026 (from 24): the number gives its two points to
+ * the third line of words, the clock under the moment's name. */
+internal const val StripTempSp = 22f
 internal const val StripStackedTempSp = 20f
 internal const val StripLineSp = 12f
 internal const val CardTempSp = 28f
@@ -305,6 +314,8 @@ internal const val WeekHighSp = 12f
 internal const val WeekLowSp = 11f
 
 internal val AgendaRowAir = 3.dp
-internal val AgendaGlyph = 18.dp
+/** The Sky widget's row glyph, so the two cards' lists read as siblings; 20 since the
+ * device pass of 9 set 2026 (from 18). */
+internal val AgendaGlyph = 20.dp
 internal val WeekIcon = 22.dp
 internal val WeekInnerGap = 2.dp
