@@ -23,7 +23,22 @@ data class City(
     val region: String?,   // Open-Meteo admin1
     val country: String?,
     val coordinates: Coordinates,
-    val timezone: String?
+    val timezone: String?,
+    /**
+     * ISO 3166-1 alpha-2 (`"IT"`), 9 set 2026: the official warnings are issued per
+     * country and "Italia"/"Italy" in [country] is a localized name, not a
+     * discriminator. Open-Meteo has always sent `country_code` and the mapper used to
+     * drop it; the position path takes it from the geocoder. Nullable with a default so
+     * every saved list written before this field decodes unchanged.
+     */
+    val countryCode: String? = null,
+    /**
+     * The municipality, 9 set 2026: Open-Meteo's `admin3` ("Comune di Segrate", for the
+     * hamlet of Redecesio too), the geocoder's locality for the position. It is the
+     * warning-zone index's fallback for a point on a zone border — never a display
+     * name, which [name] already is.
+     */
+    val admin3: String? = null
 ) {
     val label: String
         get() = listOfNotNull(name, region ?: country).joinToString(", ")

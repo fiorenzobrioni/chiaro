@@ -26,6 +26,21 @@ class GpsLocationTest {
     }
 
     @Test
+    fun `toGpsCity carries the country code and the municipality when the geocoder knew them`() {
+        val fix = GeoFix(
+            Coordinates(45.48, 9.27), "Redecesio", "Lombardia", "Italia",
+            countryCode = "IT", admin3 = "Segrate"
+        )
+        val city = fix.toGpsCity()
+        assertEquals("IT", city.countryCode)
+        assertEquals("Segrate", city.admin3)
+        // Written before the fields existed: still a fix, with nothing invented.
+        val old = GeoFix(Coordinates(45.46, 9.19), "Milano", "Lombardia", "Italy").toGpsCity()
+        assertNull(old.countryCode)
+        assertNull(old.admin3)
+    }
+
+    @Test
     fun `toGpsCity falls back to coordinate label without geocoding`() {
         val city = GeoFix(Coordinates(45.46, 9.19), null, null, null).toGpsCity()
         assertEquals("45.46N 9.19E", city.name)

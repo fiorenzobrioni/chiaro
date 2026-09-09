@@ -185,7 +185,9 @@ class AndroidLocationProvider(private val context: Context) : LocationProvider {
             ),
             placeName = place.name,
             region = place.region,
-            country = place.country
+            country = place.country,
+            countryCode = place.countryCode,
+            admin3 = place.admin3
         )
     }
 
@@ -259,7 +261,14 @@ private const val NanosPerSecond = 1_000_000_000.0
 internal data class GeocodedPlace(
     val name: String?,
     val region: String?,
-    val country: String?
+    val country: String?,
+    /** ISO 3166-1 alpha-2, the one field of the ladder that is not a localized name. */
+    val countryCode: String? = null,
+    /**
+     * The municipality: the first `locality` on the ladder, which in Italy is the comune
+     * even when [name] is a quarter or a hamlet (9 set 2026, for the warning zones).
+     */
+    val admin3: String? = null
 )
 
 /**
@@ -278,7 +287,9 @@ internal fun geocodedPlace(addresses: List<Address>): GeocodedPlace = GeocodedPl
         ?: addresses.pick { it.subLocality }
         ?: addresses.pick { it.subAdminArea },
     region = addresses.pick { it.adminArea },
-    country = addresses.pick { it.countryName }
+    country = addresses.pick { it.countryName },
+    countryCode = addresses.pick { it.countryCode },
+    admin3 = addresses.pick { it.locality }
 )
 
 /** The first non-blank [field] on the ladder; blank strings are not answers. */

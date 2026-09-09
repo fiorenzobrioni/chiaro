@@ -35,7 +35,11 @@ data class GeoFix(
     val coordinates: Coordinates,
     val placeName: String?,
     val region: String?,
-    val country: String?
+    val country: String?,
+    /** ISO 3166-1 alpha-2 from the geocoder (9 set 2026), see [City.countryCode]. */
+    val countryCode: String? = null,
+    /** The geocoder's locality — the municipality (9 set 2026), see [City.admin3]. */
+    val admin3: String? = null
 )
 
 /** The GPS pseudo-city rendered by the editor; never stored in the saved list. */
@@ -45,7 +49,9 @@ fun GeoFix.toGpsCity(): City = City(
     region = region,
     country = country,
     coordinates = coordinates,
-    timezone = null // the forecast API resolves timezone=auto from the coordinates
+    timezone = null, // the forecast API resolves timezone=auto from the coordinates
+    countryCode = countryCode,
+    admin3 = admin3
 )
 
 /** `"45.46N 9.19E"` — display name fallback when reverse geocoding fails. */

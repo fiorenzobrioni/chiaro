@@ -179,6 +179,19 @@ is short on purpose — three edits, each with its reason in the file:
   pairs the two copies. Code identical; the comment was given one wording.
 - `ServiceLocator.overrideForTests` takes a `fetchLogStore` (9 set 2026), for
   `WeatherSyncWorkerTest`. Chiaro-only because the store is.
+- `City.countryCode` and `City.admin3` (9 set 2026, the first PR of Fase 11): nullable
+  with defaults, so every saved list written before them decodes unchanged, and filled
+  on both roads. `GeoResultDto` gained `admin3` (`country_code` was already received and
+  dropped) and `toCity` passes both; `GeoFix` grew the same two fields, `toGpsCity`
+  carries them, `adoptGpsFix` treats them like the name (a fix that knows them updates
+  them, one that does not leaves them alone), and `geocodedPlace` reads
+  `Address.countryCode` and the first `locality` of the ladder. **This makes
+  `LocationProvider.kt` differ from upstream for the first time on purpose**, by the
+  two fields of `GeocodedPlace` and the two lines that fill them; everything else in the
+  file is still byte-identical and must stay so. `country_code` would help upstream for
+  the same reason (its `City.country` is a localized name too), the change is additive,
+  and carrying it there restores the identity — recommended, not done. Four tests gained a
+  case: `GpsLocationTest`, `CityStoreTest`, `LocationProviderTest`, `SearchLanguageTest`.
 
 ## The known debt
 
@@ -351,6 +364,19 @@ before the code exists so the code has something to be measured against:
   two DPC READMEs still say "repository in fase di caricamento", as they have since 2020: the
   adapter treats a missing or malformed bulletin as "keep the last one and say its date", never
   as an error the reader has to see.
+
+**Landed, first PR (9 set 2026):** `domain/warnings/` (the model, `WarningZoneIndex`,
+`OfficialWarningEngine`, two test classes), `tools/build_warning_zones.py`, the asset
+`warning_zones_it.json` (284 KB, 187 zones — the plan said 156: the bulletin's own DBF has
+187 codes, 187 names and one polygon record each, and PLANNING records the correction),
+`data/warnings/WarningZoneAssets` (the one Android line that opens the asset) and the `City`
+fields listed above. Two of the debts measured on 9 set turned out smaller on the files this
+PR reads: the criticality TopoJSON's 8 182 municipality entries carry **zero** U+FFFD (the
+"Citt� Sant'Angelo" damage is in the vigilance layer, which Fase 11's second PR reads), and
+the only codepage damage in the zone names is a lost apostrophe in two Valle d'Aosta names,
+which the importer restores. One new debt: thirteen zones (Basilicata's seven, Marche's six)
+have their code as their only name, so "no zone code reaches the screen" needs a rule for
+them before the sheet exists.
 
 ## When to extract
 

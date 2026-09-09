@@ -4272,20 +4272,20 @@ si chiama `warnings/` (`OfficialWarning`, `WarningLevel`, `WarningHazard`), perc
 degli avvisi integrati. Nessun codice di zona (`Abru-A`), nessun identificativo di bollettino,
 nessuna sigla CAP raggiunge lo schermo: c'è un test per questo, come per gli id del cielo.
 
-- [ ] `:core:domain/warnings/`: il modello (`WarningBulletin`, `ZoneWarning`, `PlaceWarnings`,
+- [x] `:core:domain/warnings/`: il modello (`WarningBulletin`, `ZoneWarning`, `PlaceWarnings`,
       `WarningLevel { NONE, YELLOW, ORANGE, RED }`, `WarningHazard { HYDRAULIC, HYDROGEOLOGICAL,
       THUNDERSTORM }` — i quattordici tipi di MeteoAlarm si aggiungono in Fase 12), l'indice
       delle zone (`WarningZoneIndex`: punto-nel-poligono sulle 156 zone, con il comune come
       ripiego) e il motore (`OfficialWarningEngine.forPlace` → `PlaceWarnings?`, `null` quando
       non c'è nulla da dire; `notificationFor(...)` con la sua impronta). Tutto puro, con
       tabella di test
-- [ ] `tools/build_warning_zones.py`, l'importatore di riferimento (come `import_meteocons.py`):
+- [x] `tools/build_warning_zones.py`, l'importatore di riferimento (come `import_meteocons.py`):
       dallo shapefile del bollettino (`Zona_all`, `Nome_zona`, geometria) e dal TopoJSON
       (`Comuni`) produce `core/data/src/main/assets/warning_zones_it.json` — codice, nome,
       regione, poligoni semplificati, comuni normalizzati. **Misurare**: obiettivo ≤ 400 KB
       grezzi; il numero finisce qui. `WarningZoneIndexTest` colloca venti comuni noti (coordinate
       dal geocoding, fissate nel test) nella loro zona, e tre punti in mare in nessuna
-- [ ] `City` cresce di `countryCode` e `admin3` (nullable, con default), riempiti su entrambe le
+- [x] `City` cresce di `countryCode` e `admin3` (nullable, con default), riempiti su entrambe le
       strade: `GeoResultDto`, che li riceve già e li scarta per `ignoreUnknownKeys`, e `GeoFix`
       della posizione. Registrato in `UPSTREAM.md`
 - [ ] `:core:data/warnings/`: `WarningSource` (interfaccia) e `DpcBulletinSource` — scoperta,
@@ -4593,6 +4593,109 @@ i due campi di `City`, la voce in `UPSTREAM.md`; (2) sorgente, store, tabella e 
 nel job, notifier con il suo test; (3) Oggi, foglio, Avvisi, Diario, guida, token in DESIGN,
 stringhe; (4) widget, con il giro di screenshot su device. La settimana di collaudo parte al
 merge del (3).
+
+### Il primo PR: dominio, importatore, asset, i due campi di `City` (9 set 2026)
+
+Branch `claude/warnings-domain-9set-k3p8q1`. Tutto misurato sui file veri del bollettino
+`20260908_1519`, scaricati quel giorno.
+
+**Le zone sono 187, non 156.** Il DBF dello shapefile ha 187 record, 187 codici `Zona_all`
+distinti e 187 nomi distinti, un record (multi-parte) per zona; i 187 nomi del TopoJSON sono
+gli stessi. Il «156 zone (187 poligoni)» della tabella delle misure era un conteggio sbagliato:
+niente cambia nel modello, cambia il numero che si legge qui. Le altre misure di quel giorno
+reggono, con due precisazioni sui file che questo PR legge: nei 8 182 nomi di comune del
+TopoJSON della criticità **non c'è nessun U+FFFD** (il «Citt� Sant'Angelo» sta nella vigilanza,
+che legge il secondo PR), e l'unico danno di codepage nei nomi di zona è un apostrofo perso in
+due nomi della Valle d'Aosta (`Valle d?Aosta`), che l'importatore ripara perché un `?` fra due
+lettere in un toponimo non può essere altro. **Tredici zone hanno per nome il loro codice**
+(sette della Basilicata, sei delle Marche: «Basi-A1», «Marc-4»): la Regione non ha mai dato
+loro un nome, e «nessun codice di zona raggiunge lo schermo» dovrà fare i conti con loro prima
+che il foglio esista — decisione del terzo PR, registrata qui perché la misura è di questo.
+Altre due misure che servono a chi scrive il foglio: 273 comuni stanno in più di una zona
+(Roma in cinque), e per Reggio Calabria il Dipartimento scrive «Reggio di Calabria» dove
+Open-Meteo dice «Reggio Calabria» — il ripiego per nome fallisce e la geometria vince, che è
+la prova di «geometria prima dei nomi» su un capoluogo.
+
+**L'importatore** (`tools/build_warning_zones.py`, solo libreria standard: DBF e SHP letti a
+mano, come `import_meteocons.py` non chiede pacchetti). La regione viene dal prefisso del
+codice (venti prefissi, tabella nel file; un prefisso ignoto ferma la build). La geometria:
+Douglas-Peucker per anello in un riferimento metrico (la longitudine scalata a 42°N), poi
+quantizzazione a 10⁻⁴ gradi (11 m di latitudine, 8 di longitudine) con codifica a differenze
+lungo l'anello; gli anelli che collassano sotto il triangolo si scartano (633 → 457: scogli e
+isolotti). La tolleranza è scritta nell'asset e l'indice la conosce.
+
+| Tolleranza | Punti | Asset (con 8 295 chiavi di comune, ~130 KB) |
+|---|---|---|
+| grezzo | 136 562 | — |
+| 100 m | 73 067 | 630 KB |
+| 250 m | 34 260 | 389 KB |
+| **500 m** | **18 723** | **284 KB** |
+| 1000 m | 10 130 | 219 KB |
+
+**Scelti 500 m**: 250 m spende tutto il budget dei 400 KB; la strada della posizione arrotonda
+già il fix su una griglia di ~1,1 km (`City.cacheKey`, fino a 680 m di spostamento) e un
+comune geocodificato sta a chilometri dal bordo della sua zona, quindi niente che l'app
+localizzi è più fino di mezzo chilometro. La fascia di bordo che l'indice cede al comune è
+larga quanto la tolleranza in ogni caso. Il JSON usa chiavi leggibili (`code`, `name`,
+`region`, `rings`, `comuni`): abbreviarle avrebbe reso ~8 KB. I nomi dei comuni sono
+normalizzati una volta, nell'importatore, e allo stesso modo nel dominio
+(`WarningZoneIndex.normalizeComune`, con il commento «cambiare entrambi»): NFD senza segni
+combinanti, minuscolo, apostrofi raddrizzati, spazi compressi; i nomi bilingui
+(`Bolzano/Bozen`) si indicizzano per metà (8 182 voci → 8 295 chiavi); solo il lato della
+ricerca toglie un «Comune di » iniziale, che è come Open-Meteo scrive `admin3` (ma «Roma» e
+«Genova» arrivano senza).
+
+**L'indice** (`WarningZoneIndex`, puro, decodifica il JSON con kotlinx.serialization in
+0,12 s nel test compresi 10 casi). `locate(punto, comune?)` decide in tre passi, ognuno solo
+se il precedente non ha deciso: (1) una zona che contiene il punto a più della tolleranza dal
+suo bordo è certa (due zone certe sarebbero una sovrapposizione della sorgente: il comune, poi
+la più profonda); (2) nella fascia di bordo — dentro un poligono o entro la tolleranza da uno
+— decide il comune se nomina esattamente una delle zone lì, altrimenti la zona in cui il punto
+è più dentro, altrimenti la più vicina (una spiaggia che la costa semplificata ha spostato a
+terra); (3) fuori da ogni poligono il comune da solo, se appartiene a una zona sola. Il
+contenimento è pari-impari su tutti gli anelli della zona, così i buchi si contano da soli e
+l'orientamento non serve; il filtro sul riquadro (allargato della tolleranza) viene prima.
+`WarningZoneIndexTest` legge **il file che l'app spedisce** (la cartella degli asset di
+`:core:data` è una risorsa di test di `:core:domain`, dichiarata in `build.gradle.kts` con il
+motivo), e fissa 22 capoluoghi e comuni con le coordinate del geocoding del 9 set: tutti per
+sola geometria, tra cui Perugia nella fascia di bordo (decide la profondità, 172 m) e Palermo
+sulla costa (decide il comune); tre punti in mare e Lugano in nessuna zona; il confine
+Piemonte/Lombardia a 45.0353 N 8.8225 E dove il comune sposta il punto da una parte o
+dall'altra e un comune di un'altra zona non lo sposta; Genova 3 km al largo per nome; Roma per
+nome da sola in nessuna zona perché è in cinque; `Forlì`/`FORLI`/`Comune di Forlì` e `Bozen`.
+
+**Il modello** (`warnings/WarningModel.kt`): `WarningLevel` in ordine di gravità così `maxOf` e
+`>=` dicono quel che dicono; `WarningHazard` con `displayOrder` = la precedenza del Dipartimento
+a pari livello (Idraulico, Temporali, Idrogeologico, dal README dello shapefile), che tutte le
+superfici useranno; `ZoneWarning` è la riga piatta (zona, giorno, rischio, livello) e
+`WarningBulletin` elenca solo le righe sopra NESSUNA — quel che non nomina è verde, come le zone
+assenti dal CAP; `PlaceWarnings` porta la zona, i giorni ancora davanti con tutti e tre i
+rischi per giorno, e la nota. **Il verde è un valore**: `forPlace` torna `null` solo senza zona
+o con tutti i giorni passati; una zona verde torna con tutto a NESSUNA, che è la riga «Nessuna
+allerta» di Avvisi. I giorni passati si tolgono (prima delle 15:30 il «domani» di ieri è
+l'unico giorno). La nota viaggia solo se nomina la regione della zona **o la zona stessa** (le
+due zone trentine si chiamano come la loro provincia autonoma), confrontata normalizzata e
+senza trattini («Friuli Venezia Giulia» nella nota, «Friuli-Venezia Giulia» nell'indice).
+`notificationFor` costruisce l'impronta `"$cityKey:warn:$bulletinId:$maxLevel"` e legge le
+impronte bruciate **per prefisso**: stesso bollettino a un livello uguale o più alto già
+notificato → silenzio, così l'«Aggiornamento» che sale è notizia e la correzione che scende è
+del Diario. `OfficialWarningEngineTest`, 18 casi in tabella.
+
+**`City` e le due strade.** `countryCode` e `admin3`, nullable con default (le liste salvate
+prima decodificano identiche; `encodeDefaults` è falso, quindi i null non si scrivono).
+`GeoResultDto` ha `admin3` (il `country_code` arrivava già), `toCity` passa entrambi;
+`GeoFix` ha gli stessi due campi, `toGpsCity` li porta, `adoptGpsFix` li tratta come il nome
+(li aggiorna se il fix li sa, li tiene se no), `geocodedPlace` legge `Address.countryCode` e
+la prima `locality` della scala — il comune anche quando il nome è un quartiere. **È la prima
+divergenza voluta di `LocationProvider.kt` da tweather**, quattro righe additive, registrata
+in `UPSTREAM.md` con la raccomandazione di portarle a monte.
+
+**`WarningZoneAssets`** in `:core:data/warnings/` è l'unica riga Android: apre l'asset e lo
+passa al dominio; il suo test Robolectric prova che l'asset è nella libreria e si apre.
+
+Verifica del PR: `:core:domain` 195 test, `:core:data` 182, tutti verdi al primo giro; la suite
+completa come la CI (`test :app:testDebugUnitTest :app:lintDebug`) 639 test — dominio 195, dati 182,
+sync 11, app 251 — e lint 0 errori, nessun avviso sui file nuovi.
 
 ### Verifica
 

@@ -279,7 +279,9 @@ class CityStore(
                 previous.copy(
                     name = fix.placeName ?: previous.name,
                     region = fix.region ?: previous.region,
-                    country = fix.country ?: previous.country
+                    country = fix.country ?: previous.country,
+                    countryCode = fix.countryCode ?: previous.countryCode,
+                    admin3 = fix.admin3 ?: previous.admin3
                 )
             }
             prefs[GpsCityJson] = json.encodeToString(adopted)
