@@ -27,13 +27,16 @@ object ForecastDiff {
     data class Fetch(val timestampEpochSeconds: Long, val forecast: Map<String, String>)
 
     /**
-     * One target date's changes inside a revision. [baselineEpochSeconds] is the
-     * fetch time of the prediction being replaced, null for a first appearance.
-     * [lines] carry bare field keys (`high_c`, not `2026-08-18.high_c`).
+     * One target date's changes inside a revision. [date] is the ISO target day —
+     * the hunk header names it at render time, in the reader's locale, because a
+     * relative word could not: a hunk is written once and read for as long as the
+     * commit lives, and "tomorrow" stops being true the next morning (Fase 28).
+     * [baselineEpochSeconds] is the fetch time of the prediction being replaced,
+     * null for a first appearance. [lines] carry bare field keys (`high_c`, not
+     * `2026-08-18.high_c`).
      */
     data class Hunk(
         val date: String,
-        val dayLabel: String,
         val baselineEpochSeconds: Long?,
         val lines: List<SnapshotDiff.Line>
     )
@@ -47,9 +50,7 @@ object ForecastDiff {
             fetches.forEachIndexed { index, fetch ->
                 val dates = fetch.forecast.keys.map { it.substringBefore('.') }
                     .distinct().sorted()
-                val hunks = dates.mapNotNull { date ->
-                    hunkFor(date, dayLabel(dates, date), fetch, baselines)
-                }
+                val hunks = dates.mapNotNull { date -> hunkFor(date, fetch, baselines) }
                 if (hunks.isNotEmpty()) add(Revision(index, hunks))
             }
         }
@@ -57,7 +58,6 @@ object ForecastDiff {
 
     private fun hunkFor(
         date: String,
-        dayLabel: String,
         fetch: Fetch,
         baselines: MutableMap<String, Fetch>
     ): Hunk? {
@@ -67,7 +67,6 @@ object ForecastDiff {
             baselines[date] = fetch
             return Hunk(
                 date = date,
-                dayLabel = dayLabel,
                 baselineEpochSeconds = null,
                 lines = current.map { (key, value) ->
                     SnapshotDiff.Line(SnapshotDiff.Type.ADDED, key, value)
@@ -83,7 +82,6 @@ object ForecastDiff {
         baselines[date] = fetch
         return Hunk(
             date = date,
-            dayLabel = dayLabel,
             baselineEpochSeconds = baseline.timestampEpochSeconds,
             lines = buildList {
                 current.forEach { (key, value) ->
@@ -123,17 +121,5 @@ object ForecastDiff {
         val newValue = new.toDoubleOrNull()
         if (oldValue == null || newValue == null) return old != new
         return kotlin.math.abs(newValue - oldValue) >= threshold
-    }
-
-    /**
-     * The horizon starts at tomorrow (city-local at fetch time), so the earliest
-     * date in this fetch IS tomorrow and every other label is a date distance from
-     * it — position-independent, which matters now that the horizon holds a week
-     * and a day can drop out of the middle without shifting its neighbours' names.
-     */
-    private fun dayLabel(sortedDates: List<String>, date: String): String {
-        val first = java.time.LocalDate.parse(sortedDates.first())
-        val n = java.time.temporal.ChronoUnit.DAYS.between(first, java.time.LocalDate.parse(date)) + 1
-        return if (n == 1L) "tomorrow" else "in $n days"
     }
 }

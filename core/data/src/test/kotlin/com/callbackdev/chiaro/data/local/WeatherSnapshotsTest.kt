@@ -7,6 +7,7 @@ import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WeatherSnapshotsTest {
@@ -70,6 +71,57 @@ class WeatherSnapshotsTest {
             flat.keys
         )
         assertNull(flat["2023-10-28.precip_pct"])
+    }
+
+    /**
+     * The 6 set 2026 review made the chance nullable, and `.toString()` on the null
+     * had been writing the literal word "null" into every commit — a value no reader
+     * of the snapshot can turn back into a number.
+     */
+    @Test
+    fun `the current snapshot leaves the chance out when the model carries none`() {
+        val report = sampleWeatherReport()
+        assertEquals(
+            report.current.precipitation.chancePct.toString(),
+            WeatherSnapshots.flatten(report)["current.precip_chance_pct"]
+        )
+        val without = report.copy(
+            current = report.current.copy(
+                precipitation = report.current.precipitation.copy(chancePct = null)
+            )
+        )
+        assertNull(WeatherSnapshots.flatten(without)["current.precip_chance_pct"])
+    }
+
+    @Test
+    fun `location falls back to the country, like the entry above it`() {
+        val report = sampleWeatherReport()
+        val withRegion = report.copy(location = report.location.copy(region = "NY"))
+        val withoutRegion = report.copy(
+            location = report.location.copy(
+                city = "Singapore", region = null, country = "Singapore"
+            )
+        )
+
+        assertEquals("New York, NY", WeatherSnapshots.flatten(withRegion)["location"])
+        assertEquals("Singapore, Singapore", WeatherSnapshots.flatten(withoutRegion)["location"])
+    }
+
+    /** The sky block whole, daylight included; and a polar day leaves its keys out
+     * rather than writing the word "null" for a sunrise that did not happen. */
+    @Test
+    fun `the sky block carries the daylight span and leaves an absent sunrise out`() {
+        val full = sampleWeatherReport()
+        assertEquals("10h 52m", WeatherSnapshots.flatten(full)["astronomical.daylight_duration"])
+
+        val polar = full.copy(
+            astronomical = full.astronomical.copy(sunrise = null, sunset = null, daylightDuration = null)
+        )
+        val flat = WeatherSnapshots.flatten(polar)
+        assertNull(flat["astronomical.sunrise"])
+        assertNull(flat["astronomical.sunset"])
+        assertNull(flat["astronomical.daylight_duration"])
+        assertTrue(flat.values.none { it == "null" })
     }
 
     @Test

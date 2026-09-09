@@ -4162,6 +4162,99 @@ i chip della schermata Cielo.
 
 ---
 
+## Il riallineamento dei due repo (committente, 9 set 2026)
+
+Richiesta: «controlla i file `UPSTREAM.md` dei due repo e, prima di toccare il codice,
+fammi un elenco delle implementazioni da fare per riallineare i due repo»; poi
+«esegui i punti che hai proposto nell'ordine proposto».
+
+### Il confronto
+
+tweather non ha un `UPSTREAM.md`: il suo registro sono le fasi che citano Chiaro nel
+suo `PLANNING.md`. Il confronto è stato quindi meccanico — la riscrittura di
+`tools/seed_core.py` applicata a tweather HEAD e diffata file per file con `:core` —
+e poi ogni differenza letta contro quello che i due registri dichiarano. Prima: 55
+file identici su 86 condivisi, 30 diversi, più 2 solo a monte e 10 solo qui. Dopo: 66
+identici, e ogni differenza rimasta ha la sua riga in `UPSTREAM.md`: la classificazione
+file per file sta nell'elenco «What is NOT the same as upstream» e la passata è
+raccontata nella sezione «The second pass». Il confronto si ripete con la riscrittura
+di `tools/seed_core.py` applicata a un checkout di tweather e un diff dei due alberi.
+
+### Portato a monte (in tweather), e la base che era vecchia
+
+Due correzioni che `UPSTREAM.md` segnava come «bug anche a monte» e che a monte
+mancavano ancora: `DailyForecast.precipPct` nullable (con `WeatherCodes.FIRST_PRECIP_CODE`
+e `isPrecipitation`, così il mapper torna identico e non diverso per una riga) e
+`SkyNotScheduled.DARK_ALL_DAY`. Ogni file toccato in `:core` è di nuovo identico; le
+superfici a valle in tweather (`WeatherReadme`, `WeatherJson`, `SkyDocument` e le sue
+note) sono state adattate nel suo registro. Lì è la **Fase 29**.
+
+La terza, la stringa `"null"` che `WeatherSnapshots.flatten` scriveva in
+`current.precip_chance_pct`, è stata portata e poi **ritirata**: il confronto era stato
+fatto su un `main` locale di tweather fermo al 6 set, e il rebase della PR gemella ha
+trovato le Fasi 27–28c a monte, fra cui la 28 che sullo stesso punto aveva deciso il
+contrario e di proposito — `history.diff` è un diff di `weather_data.json`, un valore
+assente è una riga che dice `null`, con `NullValue` nominato e insieme di chiavi fisso.
+Qui il Diario è prosa e le sue «shift» accoppiano le chiavi, quindi la chiave assente
+resta omessa, ora anche per `sunrise` e `sunset` che scrivevano ancora la parola:
+stessa realtà, due registri, due file, e `UPSTREAM.md` lo dice. Dalla stessa Fase 28
+sono invece tornati a valle i fatti: `Duration.hhMm()` nel dominio, `ForecastDiff` senza
+`dayLabel` (con il suo test), il `location` che ripiega sul paese come `City.label`, la
+chiave `astronomical.daylight_duration`. La lezione è di procedura, e sta in memoria:
+`git fetch` e confronto con `origin/main` in tutti e due i repo prima di misurare.
+
+### Fatto qui
+
+- **`UPSTREAM.md`** registra le divergenze che erano nate senza una riga
+  (`SearchHistoryStore.remove/restore`, `WeatherHistoryDao.observeFor` e
+  `historyFlowFor`, la collocazione di `WeatherFreshnessTest` in `:core:data`, il nome
+  del file di `PowerSaveState`, il `fetchLogStore` in `overrideForTests`), segna come
+  portate le tre correzioni, e ha una sezione nuova sulla passata.
+- **I tre test che tweather aveva e Chiaro no.** `SkyAlarmSchedulerTest` è un porting
+  diretto in `:app` (Robolectric, `ShadowAlarmManager`: inesatto, `RTC_WAKEUP`, una
+  sola sveglia, il boot la riarma, un promemoria non consegnabile riarma comunque).
+  `WeatherSyncWorkerTest` è un porting in `:core:sync`, che per questo ha ora un banco
+  Robolectric (`isIncludeAndroidResources`, `work-testing`, e le librerie del layer dati
+  come `testImplementation`, perché arrivano a `main` attraverso `:core:data` come
+  `implementation` e il classpath dei test non le vede): i notificatori e i widget sono
+  fake dietro `SyncDependencies`, e due casi sono di Chiaro — un fetch fallito scrive
+  nel `FetchLogStore` con la sua ragione, e ridisegna i widget perché il marcatore di
+  vecchiaia possa apparire. Per il primo `ServiceLocator.overrideForTests` ha imparato
+  il `fetchLogStore`. `SkyNotifierTest` tiene la struttura del test di tweather e
+  nessuna parola: i due corpi, la localizzazione, e il controllo che nessun id puntato
+  raggiunga la notifica. **L'orologio è asserito per forma e non per valore**:
+  `SkyNotifier` segue l'impostazione 12/24 ore del dispositivo, che è del lettore e non
+  del test.
+- **`WeatherSnapshotsTest`** ha il caso della chance assente (identico a quello portato a
+  monte).
+- **I commenti dei file condivisi**, una sola formulazione datata in entrambi i repo:
+  `LocationProvider` (i tre «Fase 3b» diventano «4 set 2026», e il paragrafo di testa
+  dice che il file è tenuto identico e perché), `WeatherFreshness`, `PowerSaveState`, il
+  doc di `getWeather` in `WeatherRepository`, e i cinque punti del porting (`precipPct`,
+  `FIRST_PRECIP_CODE`, il mapper, le due chiavi dello snapshot, il test del mapper) dove
+  la formulazione di Chiaro citava `ForecastOutcome`, «il seed» o il §1.1. Decisione:
+  **nei file condivisi si data, non si numera** — i due PLANNING numerano lo stesso
+  lavoro in modo diverso e lo faranno sempre. I commenti che nominano una superficie di
+  una sola app (`RuleEngine`, `NotificationRule`) restano diversi di proposito.
+
+### Deciso e non fatto
+
+- `adoptGpsFix` con `gps_fixed_at` e `CachedLocationProvider` restano di Chiaro:
+  tweather li ha rifiutati esplicitamente nella sua Fase 20 e la decisione è sua.
+- L'estrazione di `weather-core`: il registro dice che il grilletto è scattato il 5 set.
+  È una decisione, non un'implementazione, e resta al committente.
+
+### Verifica
+
+`:core` 354 test, `:app` 251, lint 0 errori. tweather, sul branch ribasato: 726 test e
+lint 0 errori, con tre casi che su questa macchina falliscono anche su `origin/main`
+pulito (la CI di `main` è verde) e sono dell'ambiente, non del riallineamento. Due PR,
+una per repo, sullo stesso
+branch `claude/core-realignment-9set-a4k7m2`: il committente le fonde e cancella i
+branch.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae

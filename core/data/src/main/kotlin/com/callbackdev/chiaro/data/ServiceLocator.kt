@@ -163,7 +163,8 @@ object ServiceLocator {
         ruleStore: RuleStore? = null,
         ruleStateStore: RuleStateStore? = null,
         skySubscriptionStore: SkySubscriptionStore? = null,
-        skyAlertStateStore: SkyAlertStateStore? = null
+        skyAlertStateStore: SkyAlertStateStore? = null,
+        fetchLogStore: FetchLogStore? = null
     ) {
         this.repository = repository
         this.cityStore = cityStore
@@ -174,6 +175,7 @@ object ServiceLocator {
         this.ruleStateStore = ruleStateStore
         this.skySubscriptionStore = skySubscriptionStore
         this.skyAlertStateStore = skyAlertStateStore
+        this.fetchLogStore = fetchLogStore
     }
 
     /**

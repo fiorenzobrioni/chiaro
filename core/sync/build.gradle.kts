@@ -34,6 +34,12 @@ android {
         }
     }
 
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
+
     sourceSets {
         getByName("main") { java.srcDirs("src/main/kotlin") }
         getByName("test") { java.srcDirs("src/test/kotlin") }
@@ -47,4 +53,16 @@ dependencies {
     implementation(libs.androidx.work.runtime)
 
     testImplementation(libs.junit)
+    // WeatherSyncWorkerTest (9 set 2026, ported from tweather): the worker runs on
+    // Robolectric against the real repository pointed at an unreachable host, so the
+    // test builds that repository itself — the data layer's libraries, test-only here.
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.junit)
+    testImplementation(libs.androidx.work.testing)
+    testImplementation(libs.androidx.datastore.preferences)
+    testImplementation(libs.androidx.room.runtime)
+    testImplementation(libs.kotlinx.serialization.json)
+    testImplementation(libs.retrofit)
+    testImplementation(libs.retrofit.converter.kotlinx.serialization)
+    testImplementation(libs.okhttp)
 }

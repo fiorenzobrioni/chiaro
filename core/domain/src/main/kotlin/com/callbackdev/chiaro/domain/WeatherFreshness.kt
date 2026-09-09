@@ -21,8 +21,8 @@ object WeatherFreshness {
     /**
      * How long a fetched report is still the provider's own answer for "now" — the
      * cache TTL of [com.callbackdev.chiaro.data.WeatherRepository], and the whole of
-     * the 6 set 2026 fix (device report: the hero read like the last hour, not this
-     * minute).
+     * the 6 set 2026 fix (device report: the current block read like the last hour,
+     * not this minute).
      *
      * Open-Meteo publishes the `current` block on a 15-minute grid: every response
      * carries `"interval": 900` beside it, and `current.time` is the last quarter
@@ -34,11 +34,10 @@ object WeatherFreshness {
      * It is deliberately NOT `update_frequency_min`, which is what it used to be. That
      * setting is the BACKGROUND polling interval — a battery choice, 15/30/60/120 with
      * 60 the default — and using it as the TTL let it decide something it was never
-     * offered for: how old the hero temperature may be with the reader looking
-     * straight at it. An hour by default, two at the top of the range, and the
-     * freshness chip said nothing because a hit was never counted as stale. Battery is
-     * a feature, but the periodic job is where that is paid; a screen the reader just
-     * opened is not.
+     * offered for: how old the numbers may be with the reader looking straight at
+     * them. An hour by default, two at the top of the range, and nothing said so
+     * because a hit was never counted as stale. Battery is a feature, but the periodic
+     * job is where that is paid; a screen the reader just opened is not.
      *
      * Below every [staleAfter] this object can return (the shortest is 2 × 15 = 30
      * minutes), so a cache hit still cannot be stale.

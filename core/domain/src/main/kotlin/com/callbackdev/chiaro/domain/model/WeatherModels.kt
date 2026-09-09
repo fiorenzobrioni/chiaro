@@ -125,6 +125,17 @@ data class Astronomical(
     val daylightDuration: Duration?
 )
 
+/**
+ * `"10h 52m"` — how every surface writes a span of daylight.
+ *
+ * Lives in the domain rather than next to `weather_data.json`'s builder because it
+ * has three readers in two layers now: the JSON, `README.md`'s `## Astronomy`, and
+ * the history snapshot that `history.diff` is a diff OF. A second copy of the format
+ * is a second answer to "how long was today", which is the one thing the sky module
+ * was built not to have.
+ */
+fun Duration.hhMm(): String = "${toHours()}h ${toMinutesPart()}m"
+
 data class HourlyForecast(
     val time: LocalDateTime,
     val tempC: Double,
@@ -170,11 +181,12 @@ data class DailyForecast(
     val condition: WeatherCondition,
     /**
      * The day's peak probability of precipitation, **null when the model behind this
-     * response does not carry one** (§1.1, Fase 26 for the hourly field): the seed
-     * coerced it to `0`, which is the one value a probability must never be invented
-     * as — a zero is a forecast of no rain, and "we were not told" is not that. Null
-     * travels to the screen, where the week row prints nothing, the snapshot omits
-     * the key and the drift strip draws absence.
+     * response does not carry one** — the hourly field has travelled that way since
+     * the 6 set 2026 review of the provider's codes, and the daily one used to be
+     * coerced to `0`, which is the one value a probability must never be invented as:
+     * a zero is a forecast of no rain, and "we were not told" is not that. Null goes
+     * all the way to the surfaces, which print absence rather than a number nobody
+     * forecast, and the snapshot leaves the key out.
      */
     val precipPct: Int?,
     /**

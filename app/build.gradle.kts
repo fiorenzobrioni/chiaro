@@ -130,5 +130,9 @@ dependencies {
     testImplementation(libs.androidx.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.compose.ui.test.junit4)
+    // SkyAlarmSchedulerTest builds the stores it overrides on temp files: the data
+    // layer's own libraries, test-only here (they reach main code through :core:data).
+    testImplementation(libs.androidx.datastore.preferences)
+    testImplementation(libs.kotlinx.serialization.json)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

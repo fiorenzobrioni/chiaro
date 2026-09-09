@@ -58,8 +58,9 @@ private const val HOURLY_WINDOW = OpenMeteoForecastApi.FORECAST_DAYS * 24
 /** Days of daily forecast carried — the whole response, like [HOURLY_WINDOW]. */
 private const val DAILY_WINDOW = OpenMeteoForecastApi.FORECAST_DAYS
 
-/** The WMO precipitation floor, which now lives in the domain beside the code table
- * because `ForecastOutcome` reads the same boundary to judge a past hour. */
+/** The WMO precipitation floor, kept in the domain beside the code table so that every
+ * reader of the boundary — the day's label here, a past hour's judgement elsewhere —
+ * reads one number. */
 private const val FIRST_PRECIP_CODE = WeatherCodes.FIRST_PRECIP_CODE
 
 /** WMO 45; Open-Meteo derives 48 in its enum but never emits it. */
@@ -224,9 +225,10 @@ object WeatherReportMapper {
                     ),
                     isDay = true
                 ),
-                // NOT `?: 0` (§1.1): `precipitation_probability_max` is model-dependent,
-                // and the seed's zero was a forecast of no rain put in the mouth of a
-                // model that never spoke. Null travels to the screen.
+                // NOT `?: 0`: `precipitation_probability_max` is model-dependent, and
+                // the old zero was a forecast of no rain put in the mouth of a model
+                // that never spoke. Null travels to the surfaces, like the hourly
+                // probability beside it.
                 precipPct = daily.precipitationProbabilityMaxPct.getOrNull(i),
                 uvIndexMax = uvMax,
                 uvDescription = WeatherCodes.uvDescription(uvMax)

@@ -92,22 +92,40 @@ is short on purpose — three edits, each with its reason in the file:
 - `WeatherSnapshots.flattenForecast` stores SEVEN target dates here, two upstream
   (Fase 7): tweather's Logs only ever showed tomorrow and the day after, Chiaro's
   drift strip and "what changed" are about the week — "Saturday improved" needs
-  Saturday on disk. `ForecastDiff` is per-date and unchanged; its `dayLabel` now
-  derives from date distance instead of list position (same output on two dates,
-  correct on seven). If tweather ever widens its Logs, this belongs upstream too.
+  Saturday on disk. `ForecastDiff` is per-date and unchanged (its `dayLabel` derived
+  from date distance here for a while; upstream's Fase 28 removed the field — a hunk
+  carries its date, not a relative word — and the removal was carried here on 9 set
+  2026, so the two files are identical again). If tweather ever widens its Logs, the
+  horizon belongs upstream too.
 - `DailyForecast.precipPct` is **nullable** here, non-null upstream (Fase 7b): the
   seed maps `precipitation_probability_max` with `?: 0`, and a zero is a forecast of
   no rain put in the mouth of a model that never gave one. Chiaro's §1.1 already
   carried the hourly probability nullable to the screen; the daily one now travels the
   same way — the week row prints nothing, `flattenForecast` omits the key, the drift
   strip draws absence and the morning summary drops the clause. This is a bug upstream
-  too and the fix belongs there.
+  too and the fix belongs there. **Carried upstream on 9 set 2026**, together with
+  `WeatherCodes.FIRST_PRECIP_CODE` / `isPrecipitation` (the WMO floor the mapper
+  reads, moved out of the mapper here so `ForecastOutcome` could read it too):
+  `WeatherModels`, `RuleVariables`, the mapper and their tests are byte-identical
+  again. tweather's README prints `?` for a day with no probability and its JSON
+  `null`, as both already did for the hour.
 - `WeatherSnapshots.flatten` writes two keys the seed does not (Fase 7b):
   `current.wmo_code` and `current.precip_last_hour_mm`. `ForecastOutcome` needs to ask
   a past commit "was it raining when you looked", and the answer has to be a number the
   domain can read rather than the English label matched back by hand. The same pass
   fixed an inherited leak beside them: `current.precip_chance_pct` was written with
   `.toString()` on a nullable Int and had been storing the literal string `"null"`.
+  **Here the two copies of `flatten` diverge on purpose (9 set 2026).** Upstream met
+  the same word on the same day (its Fase 28, 6 set) and decided the opposite:
+  `history.diff` is a diff OF `weather_data.json`, so a value the model did not fill
+  is a LINE saying `null` — a named `NullValue`, a fixed key set, the widget and the
+  Logs reading it as absence. Chiaro's Journal is prose: its shifts pair keys and a
+  missing one is silence, so the key is left out here, for `precip_chance_pct`,
+  `sunrise`, `sunset` and `daylight_duration` alike. Same fact, two registers, two
+  files — the surfaces rule, not the identity rule. What did travel from that Fase 28
+  is the rest of it: `location` falls back on the country like `City.label`, and the
+  sky block carries `astronomical.daylight_duration` (via `Duration.hhMm()`, now a
+  domain function in both).
 - `ForecastOutcome` is new and Chiaro-only (Fase 7b): what the app predicted for a
   finished day, checked against what it then observed. Upstream's Logs render commits;
   reading two of them against each other to say "it rained" is a Chiaro surface.
@@ -128,18 +146,39 @@ is short on purpose — three edits, each with its reason in the file:
   saw it; it is still the engine calling a polar night a white night. **This is a bug
   upstream too** — `sky.crontab` prints the same `∅` reason — and the fix belongs there
   as well: the new reason, the branch, and `SkySchedulerTest`'s near-pole case.
+  **Carried upstream on 9 set 2026**: `SkyScheduler.kt` and `SkySchedulerTest.kt` are
+  byte-identical again, and `sky.crontab`'s ∅ column gained its own sentence for it
+  (`note_sky_dark_all_day`, EN/IT), because its `when` over the reasons is exhaustive
+  and the new one had to be said somewhere.
 - `WeatherSnapshots.flattenForecast` stores **today** as well as the seven days after it
   (8 set 2026): the Journal's drift strip gained a row for the day in progress, and a row
-  needs its day on disk. Chiaro-only, like the seven-day horizon before it. One inherited
-  seam to know about: `ForecastDiff.dayLabel` still calls the earliest stored date
-  "tomorrow"; that label is upstream's Logs vocabulary and nothing in Chiaro reads it,
-  so it was left as it is rather than re-taught for a screen that does not exist here.
+  needs its day on disk. Chiaro-only, like the seven-day horizon before it. (The seam
+  this note used to describe — `ForecastDiff.dayLabel` calling the earliest stored
+  date "tomorrow" — is gone: upstream removed the field in its Fase 28.)
 - `ForecastOutcome` (Chiaro-only, above) changed what a reading vouches for (8 set
   2026): the time since the previous reading, capped at two hours — the app's own longest
   cadence — instead of a fixed hour. At the two-hour cadence a day watched end to end
   covered twelve hours and never reached the sixteen-hour floor, so a dry day at that
   setting was never called dry. The rain itself still counts only for the hour its
   millimetres describe. `ForecastOutcomeTest` has the three cases.
+- `SearchHistoryStore.remove(term)` and `restore(terms)` (7 set 2026, recorded here
+  on 9 set): Places' recent searches can be removed one by one and the removal
+  undone. `restore` writes the list back in the order it is given rather than
+  replaying `add`, which would have filed yesterday's search as the newest one.
+  Additive, six tests; Chiaro-only, since upstream's `history -c` only ever clears.
+- `WeatherHistoryDao.observeFor` and `WeatherRepository.historyFlowFor` (Fase 7b,
+  recorded here on 9 set): the Journal follows one city's commits as a Flow instead
+  of re-reading the table on a timer. Chiaro-only; the fake DAO in
+  `SearchLanguageTest` grew the override, as it did for `pruneCity`.
+- `WeatherFreshnessTest` lives in `:core:data` here and in the domain test tree
+  upstream: it iterates `UpdateFrequencies`, which belongs to the store, and
+  `:core:domain` cannot see the store. Same test, different tree — the seed diff
+  will always list it as missing on one side and extra on the other.
+- `PowerSaveState` was in a file called `PowerSaving.kt` upstream until 9 set 2026,
+  when it was renamed there after its class like every other file, so the seed diff
+  pairs the two copies. Code identical; the comment was given one wording.
+- `ServiceLocator.overrideForTests` takes a `fetchLogStore` (9 set 2026), for
+  `WeatherSyncWorkerTest`. Chiaro-only because the store is.
 
 ## The known debt
 
@@ -221,6 +260,53 @@ each repo.
 same bug has to be fixed in both apps for the second time, and the position path is now
 that file: fixed here on 4 set and carried upstream, wrong again in both on 5 set. The
 trigger has fired; what it is waiting on is a decision, not another occurrence.
+
+## The second pass (9 set 2026)
+
+The first full re-read of both trees since the seed, done with `tools/seed_core.py`'s
+own rewrite applied to tweather HEAD and the result diffed against `:core` file by
+file. Three things came out of it.
+
+**Two fixes the ledger already said belonged upstream were still missing there**,
+and are now carried: the nullable day probability (with `FIRST_PRECIP_CODE` moving
+into the domain) and `DARK_ALL_DAY`. Every file they touch in `:core` is byte-identical
+again; the surfaces downstream of them in tweather (`WeatherReadme`, `WeatherJson`,
+`SkyDocument` and its notes) were adapted in tweather's own register. A third one, the
+`"null"` in the snapshot, was carried and then **withdrawn**: the comparison had been
+made against a tweather `main` three days stale, and the rebase of the tweather PR
+found its Fase 28 had already met that word and decided the other way (above).
+
+**The stale base cut the other way too.** Four upstream changes of 6 set were not here
+and are now: `Duration.hhMm()` in the domain, `ForecastDiff` without `dayLabel` (with
+its test), and in `flatten` the `location` fallback and the daylight key — the parts
+of Fase 28 that are facts rather than the diff's register. The lesson is procedural
+and is written down where it will be read: fetch and compare with `origin/main` in
+both repositories before measuring anything.
+
+**The shared files had drifted in their comments only** — a phase number on one side
+(`Fase 20`, `Fase 25`) and another on the other (`Fase 3b`), a surface name here
+(`the hero`) and there (`the FAB`). `LocationProvider`, `WeatherFreshness`,
+`PowerSaveState` and the shared paragraphs of `WeatherRepository` now carry one
+wording in both repositories, dated rather than numbered: the two PLANNING files
+number the same work differently and always will, the calendar does not. Comments
+that name a surface that exists in one app only (`RuleEngine`'s "try it now",
+`NotificationRule`'s card title) stay different on purpose.
+
+**tweather's guards for the near-verbatim ports were not here.** `SkyAlarmScheduler`
+and `SkyAlarmReceiver` had no test in Chiaro; `WeatherSyncWorker` had none either.
+`SkyAlarmSchedulerTest` is now a straight port into `:app`; `WeatherSyncWorkerTest`
+a port into `:core:sync`, with the notifiers and the widgets as fakes behind
+`SyncDependencies` and two cases of its own for the failure log and the repaint;
+`SkyNotifierTest` keeps upstream's structure and none of its words, since the words
+are the one thing the two notifiers do not share — and adds the check that no dotted
+id reaches the notification. Two spellings were unified while there: the timezone
+fallback (`City.timezone` is nullable in both; tweather passed it to `ZoneId.of`
+through the platform type) and the parameter order of `shouldRun`, both now as in
+Chiaro.
+
+What still differs after the pass is exactly the list above, each entry with its
+reason: 66 of the 86 shared files are byte-identical (55 before the pass), and as of
+9 set 2026 nothing is pending in either direction.
 
 ## When to extract
 
