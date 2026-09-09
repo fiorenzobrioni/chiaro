@@ -290,24 +290,11 @@ fun WidgetCard(
     content: @Composable (WidgetPalette) -> Unit
 ) {
     val look = model.look
-    val effectiveBackground =
-        if (look.background == WidgetBackground.SKY && skyBitmap == null) {
-            WidgetBackground.SYSTEM
-        } else {
-            look.background
-        }
+    val effectiveBackground = effectiveWidgetBackground(look, hasSky = skyBitmap != null)
     val alpha = look.opacityPct / 100f
     val context = LocalContext.current
     val night = isNight(context)
-    // The wallpaper is asked only when the card is see-through enough to matter AND
-    // the reader has not already named an ink by picking a light or a dark card: it is
-    // a binder round-trip, and [widgetInk] would throw the answer away in every other
-    // case anyway.
-    val delegatesInk = effectiveBackground == WidgetBackground.SKY ||
-        effectiveBackground == WidgetBackground.SYSTEM
-    val wallpaperCarriesDarkInk = look.opacityPct < InkTrustFloorPct && delegatesInk &&
-        wallpaperWantsDarkInk(context)
-    val ink = widgetInk(effectiveBackground, look.opacityPct, night, wallpaperCarriesDarkInk)
+    val resolved = resolveWidgetPalette(context, look, schemes, hasSky = skyBitmap != null)
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
@@ -323,16 +310,7 @@ fun WidgetCard(
                 modifier = GlanceModifier.fillMaxSize()
             )
         } else {
-            val fill = when (effectiveBackground) {
-                WidgetBackground.LIGHT ->
-                    FixedColorProvider(schemes.light.surface.copy(alpha = alpha))
-                WidgetBackground.DARK ->
-                    FixedColorProvider(schemes.dark.surface.copy(alpha = alpha))
-                else -> FixedColorProvider(
-                    (if (night) schemes.dark.surface else schemes.light.surface)
-                        .copy(alpha = alpha)
-                )
-            }
+            val fill = FixedColorProvider(widgetCardFill(effectiveBackground, schemes, night, alpha))
             Box(modifier = GlanceModifier.fillMaxSize().background(fill)) {}
         }
         Box(
@@ -343,9 +321,51 @@ fun WidgetCard(
                 bottom = contentPaddingBottom
             )
         ) {
-            content(palette(ink, schemes))
+            content(resolved)
         }
     }
+}
+
+/** The ground a card really paints: SKY with no report yet has no sky to show, and
+ * falls back to the system card rather than inventing a weather-less gradient. */
+fun effectiveWidgetBackground(look: WidgetLook, hasSky: Boolean): WidgetBackground =
+    if (look.background == WidgetBackground.SKY && !hasSky) WidgetBackground.SYSTEM else look.background
+
+/**
+ * The inks a card writes with, resolved exactly as [WidgetCard] resolves them — shared
+ * with the arc widget's configuration preview (9 set 2026), so the preview cannot pick
+ * an ink the launcher would not.
+ *
+ * The wallpaper is asked only when the card is see-through enough to matter AND the
+ * reader has not already named an ink by picking a light or a dark card: it is a binder
+ * round-trip, and [widgetInk] would throw the answer away in every other case anyway.
+ */
+fun resolveWidgetPalette(
+    context: Context,
+    look: WidgetLook,
+    schemes: WidgetSchemes,
+    hasSky: Boolean
+): WidgetPalette {
+    val effectiveBackground = effectiveWidgetBackground(look, hasSky)
+    val night = isNight(context)
+    val delegatesInk = effectiveBackground == WidgetBackground.SKY ||
+        effectiveBackground == WidgetBackground.SYSTEM
+    val wallpaperCarriesDarkInk = look.opacityPct < InkTrustFloorPct && delegatesInk &&
+        wallpaperWantsDarkInk(context)
+    val ink = widgetInk(effectiveBackground, look.opacityPct, night, wallpaperCarriesDarkInk)
+    return palette(ink, schemes)
+}
+
+/** A plain card's fill for a background that is not the sky, at the reader's opacity. */
+fun widgetCardFill(
+    background: WidgetBackground,
+    schemes: WidgetSchemes,
+    night: Boolean,
+    alpha: Float
+): Color = when (background) {
+    WidgetBackground.LIGHT -> schemes.light.surface.copy(alpha = alpha)
+    WidgetBackground.DARK -> schemes.dark.surface.copy(alpha = alpha)
+    else -> (if (night) schemes.dark.surface else schemes.light.surface).copy(alpha = alpha)
 }
 
 /**

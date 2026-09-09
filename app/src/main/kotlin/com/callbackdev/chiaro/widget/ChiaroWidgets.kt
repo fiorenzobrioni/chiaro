@@ -10,6 +10,9 @@ import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.sync.SyncScheduler
 import com.callbackdev.chiaro.sync.SyncWidgets
+import com.callbackdev.chiaro.widget.arc.ArcSettingsStore
+import com.callbackdev.chiaro.widget.arc.ArcWidget
+import com.callbackdev.chiaro.widget.arc.ArcWidgetReceiver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -31,15 +34,17 @@ import kotlinx.coroutines.launch
  * live composition without re-running `provideGlance`, so on its own it repaints the
  * OLD model (see [WidgetRefresh] for the whole of it).
  */
-/** The three, as the reconfigure screen needs to tell them apart. */
-enum class WidgetKind { NOW, TODAY, SKY }
+/** The four, as the reconfigure screen needs to tell them apart. ARC has a
+ * configuration screen of its own (`widget/arc`) and only passes through here. */
+enum class WidgetKind { NOW, TODAY, SKY, ARC }
 
 object ChiaroWidgets {
 
     private val household: List<Pair<Class<*>, () -> GlanceAppWidget>> = listOf(
         NowWidgetReceiver::class.java to { NowWidget() },
         TodayWidgetReceiver::class.java to { TodayWidget() },
-        SkyWidgetReceiver::class.java to { SkyWidget() }
+        SkyWidgetReceiver::class.java to { SkyWidget() },
+        ArcWidgetReceiver::class.java to { ArcWidget() }
     )
 
     fun hasWidgets(context: Context): Boolean {
@@ -63,6 +68,7 @@ object ChiaroWidgets {
             NowWidgetReceiver::class.java.name -> WidgetKind.NOW
             TodayWidgetReceiver::class.java.name -> WidgetKind.TODAY
             SkyWidgetReceiver::class.java.name -> WidgetKind.SKY
+            ArcWidgetReceiver::class.java.name -> WidgetKind.ARC
             else -> null
         }
 
@@ -143,6 +149,7 @@ abstract class ChiaroWidgetReceiver : GlanceAppWidgetReceiver() {
         scope.launch {
             runCatching { ServiceLocator.widgetCityStore(appContext).forget(appWidgetIds) }
             runCatching { WidgetLookStore.get(appContext).forget(appWidgetIds) }
+            runCatching { ArcSettingsStore.get(appContext).forget(appWidgetIds) }
         }
     }
 }

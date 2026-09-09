@@ -3820,6 +3820,139 @@ un foglio renderizzato non è un telefono in mano.
 
 ---
 
+## Il quarto widget: «L'arco del giorno» (committente, 9 set 2026)
+
+Richiesta: un widget nuovo, «moderno, in stile professionale, con qualcosa di speciale che
+lo distingua dai classici widget meteo», ridimensionabile da 1×1 a 4×4 e che si riconfiguri
+per informazioni e per layout a ogni misura, con una pagina di impostazioni completa. Libertà
+creativa dichiarata («dimentica le regole»); la sola regola tenuta è quella che tiene verde la
+CI, perché l'APK da provare esce da lì.
+
+### Cos'è
+
+Il percorso del sole sopra il luogo del lettore, **calcolato** dallo stesso motore
+astronomico che dipinge il canvas: non un'icona di alba e tramonto, la traiettoria vera,
+campionata ogni quarto d'ora (97 campioni, pochi millisecondi). Sotto, il cielo di ogni ora
+come bande: la stessa `SkyPalette.gradient()` del canvas, con la copertura nuvolosa e la
+pioggia dell'ora prevista dove il report ha l'ora, sotto lo stesso scrim §3.6 della card. La
+luna: il suo percorso punteggiato mentre è alta e il disco nella **fase vera** (frazione
+illuminata ed elongazione da `AstronomyEngine.moonIllumination`, terminatore come semiellisse,
+lato illuminato a destra nell'emisfero nord e a sinistra in quello sud). La pioggia: la
+probabilità di ogni ora come barra che sale dal suolo verso l'orizzonte (100% tocca
+l'orizzonte; rampa `rainAt`). Il presente segnato, il passato velato. Le ore sotto, e sotto le
+ore la temperatura prevista dove il report ce l'ha: il passato stampa l'ora e nessun numero.
+
+In parole: il **prossimo momento della luce** con la sua ora («Tramonto alle 19:42») e il
+conto alla rovescia («tra 2 h 10 min», contato sull'orologio, giusto anche con dati vecchi);
+l'agenda delle prossime ventiquattro ore, riga per riga, con il **verdetto** del widget Cielo
+accanto alle righe che sono anche momenti seguiti; sulla card a quattro righe, la settimana.
+
+### Le cinque forme (`ArcLayout.kt`, puro, tabella in `ArcLayoutTest`)
+
+Colonne dalla larghezza (soglie 120/210/300 dp), righe dall'altezza (150/245/340): stanno
+negli spazi vuoti tra le griglie misurate (una cella ~70-101 dp, due ~150-180, tre ~230-260,
+quattro ~320-360; una riga ~82-101, due ~189, tre ~290, quattro ~390).
+
+- **DIAL** (una colonna): l'arco e un numero sotto, temperatura o ora del prossimo momento a
+  scelta. 85×82 → arco 65×28,96 dp (62 − 29,04 la riga a 22 sp − 4). Con dati vecchi la riga
+  «stale» toglie i suoi 14,52 all'arco: il segno che i dati sono vecchi vince sul disegno, e
+  il pavimento dell'arco è 12 dp.
+- **STRIP** (una riga): a due celle le parole **sopra** l'arco (139×31,6: 47 dp di larghezza
+  non sono un giorno); a tre e quattro accanto, colonna di parole 100 dp («Tramonto · 19:42»
+  a 12 sp è ~95), arco 122×62 e 212×62 con le etichette delle ore (≥ 52 dp) senza temperature
+  (< 76).
+- **CARD** (due colonne, due o più righe): numero 28 sp, luogo, frase su due righe a 13 sp,
+  arco, agenda. 159×189: header 88,44, arco 66,56, nessuna riga; 159×290: 3 righe, arco
+  84,08 con le temperature.
+- **PANEL** (tre o quattro colonne, due righe): una riga sola in testa, il numero a 30 sp e
+  accanto la frase a 15 sp con luogo · conto alla rovescia (· stale) a 12 sp sotto; la frase
+  prende due righe sotto i 190 dp di colonna («Golden hour ends at 09:15» a 15 sp Medium è
+  ~165). 340×189: header 39,6, arco 59,08, **2 righe di agenda** (il pannello preferisce le
+  righe: 56 dp di arco preferiti); 250×189: frase su due righe, header 55,44, arco 70,4, 1 riga.
+- **BOARD** (tre o quattro colonne, tre o quattro righe): l'arco preferisce 110 dp e prende
+  fino a 150. 340×290: arco 132,92 e 3 righe; 340×390: settimana in fondo (70,88 dp: nome,
+  glifo 22, massima, minima), arco 128,88 e 4 righe.
+
+Il budget è sempre `righe = ⌊(spazio − arco preferito − gap + gapRiga) / (riga + gapRiga)⌋`,
+mai più delle righe che esistono; l'arco prende il resto fino al suo tetto. Riga agenda =
+13 sp × 1,32 + 6 = 23,16 dp; a font scale 1,3 il conteggio scende (1 riga sul 4×2) invece di
+sforare. Densità compatta = testi al 90%: riga 21,44, e sul 4×3 quattro righe invece di tre.
+
+### Le impostazioni (`ArcSettings`, DataStore `widget_arc`, per istanza)
+
+Finestra (oggi da mezzanotte a mezzanotte, o le prossime 24 ore); suolo (bande, nastro
+della luce, niente); strati (sole, luna, pioggia, presente, passato velato, ore,
+temperature); parole (prossimo momento / frase del giorno / solo il numero; la cifra della
+card 1×1; massima e minima dal look condiviso); agenda (sole, luna, pioggia, verdetti);
+settimana; densità. Diciassette chiavi, codec puro (`ArcSettingsCodec`, tabella in
+`ArcSettingsTest`): un valore di un'altra versione torna al suo default e non porta giù la
+card. Più il look condiviso (sfondo, opacità, icone) e il luogo, come gli altri tre.
+
+La pagina è sua (`ArcConfigActivity`): si apre su un'**anteprima viva** della card a otto
+misure (1×1, 2×1, 4×1, 2×2, 4×2, 4×3, 2×4, 4×4, le misure del device di riferimento),
+disegnata dallo stesso `ArcPainter` e dallo stesso `arcPlan` del launcher, con una frase che
+dice cosa mostra quella misura; ogni tocco salva, ridisegna il widget e aggiorna l'anteprima;
+un tasto riporta ai default.
+
+### Decisioni
+
+- **La grafica è un bitmap** (`ArcPainter`, `android.graphics`): RemoteViews non disegna una
+  curva in nessun altro modo, ed è quello che permette all'anteprima di mostrare la stessa
+  immagine del launcher. Le parole restano `Text` di Glance (localizzazione, font scale,
+  accessibilità); nel bitmap solo le etichette delle ore e le temperature, perché devono
+  stare a una x precisa, con le misure del testo fatte davvero (`Paint.measureText`: il passo
+  si allarga finché «12 PM» non collide). La `contentDescription` dell'immagine dice il
+  prossimo momento e quando: l'equivalente testuale (§9.3) anche sulla card da una cella.
+- **Sole e luna con esadecimali** in `ui/theme/ArcPalette.kt`, il solo file della feature
+  che ne ha (`NoRawColorTest`); tutto il resto sono ruoli e tabelle: percorso ed etichette
+  negli inchiostri della card, bande dalle tabelle del cielo, pioggia dalla rampa §2.3.
+- **Niente curva della temperatura.** Due scale su un grafico sono un doppio asse (§9.1): i
+  numeri sotto le ore fanno il lavoro, e la card «Le prossime ore» ha già la striscia.
+- **Finestra «oggi» di default**: è l'arco che tutti riconoscono; «le prossime 24 ore» in
+  opzione parte 30 minuti prima di adesso, perché il disco del sole stia nel riquadro e
+  l'ultima mezz'ora si legga come appena passata.
+- **L'agenda guarda sempre 24 ore avanti**, qualunque sia la finestra: la regola è una,
+  `TodayStateBuilder.agenda`, resa pubblica e finestrata; il `timeline` di Oggi è la stessa
+  regola tagliata a mezzanotte (test in `TodayStateBuilderTest`). Il widget e la schermata
+  hanno già stampato due albe diverse una volta, e la cura è una regola in un posto solo.
+- **Verdetto sulla riga**: match per id del job (`sun.set`, `golden_hour.am` per la fine
+  dell'ora d'oro del mattino, `twilight.astronomical.pm` o `darkness.window` per il buio
+  pieno…) e ±20 minuti sull'inizio o sulla fine del momento. Le svolte della pioggia e
+  l'arcobaleno non hanno job: nessuno si abbona a un rovescio.
+- **Sotto i 40 dp il disegno si asciuga** (dial, strip a due celle): bande, arco, disco,
+  presente; niente luna, pioggia, sole sotto l'orizzonte. Visto ai pixel: a 29 dp erano
+  rumore.
+- **Il velo del passato copre solo il suolo** (bande o nastro), mai la card nuda: con il
+  nastro copriva un blocco grigio (visto ai pixel), ora è alto quanto il nastro; il percorso
+  del sole nel passato si attenua da solo (alpha × 0,45).
+- **Refactor condiviso, piccolo**: `resolveWidgetPalette`, `effectiveWidgetBackground` e
+  `widgetCardFill` estratti da `WidgetCard` (l'anteprima non può scegliere un inchiostro che
+  il launcher non sceglierebbe); `VerdictMark`/`VerdictChip` e le righe della pagina di
+  configurazione (`SectionLabel`, `SwitchRow`, `ChoiceRow`) da private a internal.
+- La guida dice «quattro» e aggiunge una frase sull'arco; README e CHANGELOG aggiornati.
+
+### Rimasto aperto (su device)
+
+- Le misure sul launcher vero: il 1×1 su griglie da 70 dp, il 4×4 (bitmap 858×~355 px), le
+  font scale grandi, le etichette in 12 ore. L'anteprima Compose approssima la tipografia di
+  Glance (line height diverse di qualche dp): è un'anteprima, non uno screenshot.
+- L'icona del picker e la voce nel menu «widget» del launcher con la quarta card.
+- VISION §5.9/§6 e DESIGN registrano tre widget: da aggiornare quando la card avrà passato la
+  prova su device, come per gli altri tre.
+
+### Verifica
+
+Suite intera verde: `:app` 228 (erano 188: +16 `ArcLayoutTest`, +12 `ArcSeriesTest`, +6
+`ArcSettingsTest`, +5 `ArcPainterTest` — Robolectric in grafica nativa, che dipinge il bitmap
+davvero e ne legge i pixel, e con `CHIARO_RENDER_DIR` salva i fotogrammi in PNG per
+guardarli, che è come sono stati trovati il blocco grigio del nastro e il rumore del dial —
++1 `TodayStateBuilderTest`; `WidgetPreviewTest` sa che i widget sono quattro), `:core:domain`
+166, `:core:data` 174, `:core:sync` 5. Lint a zero errori. APK debug costruito in locale;
+branch `claude/day-arc-widget-7k2m9q` e PR per la CI: **la verifica su device è del
+committente**.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae

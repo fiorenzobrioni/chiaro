@@ -88,6 +88,30 @@
                 android:resource="@xml/widget_sky_info" />
         </receiver>
 
+        <!-- The day's arc (9 set 2026): the fourth widget, one cell to sixteen, with a
+             configuration screen of its own: it has far more to configure than the
+             other three, and its screen previews the card as the choices change. -->
+        <receiver
+            android:name=".widget.arc.ArcWidgetReceiver"
+            android:exported="false"
+            android:label="@string/widget_arc_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_arc_info" />
+        </receiver>
+        <activity
+            android:name=".widget.arc.ArcConfigActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.Chiaro">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <!-- The one alarm of the sky reminders (Fase 5), plus the boot re-arm.
              exported=false: BOOT_COMPLETED is a protected broadcast the system is
              exempt from the export check for, and our own alarm intent is explicit,

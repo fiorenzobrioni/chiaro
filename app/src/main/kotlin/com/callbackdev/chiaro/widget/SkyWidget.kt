@@ -295,7 +295,7 @@ private fun MomentGlyph(
  * it on the hero, and one tap away in a row.
  */
 @Composable
-private fun VerdictChip(verdict: SkyVerdict, palette: WidgetPalette) {
+internal fun VerdictChip(verdict: SkyVerdict, palette: WidgetPalette) {
     val context = LocalContext.current
     val night = isNight(context)
     Row(
@@ -324,7 +324,7 @@ private fun VerdictChip(verdict: SkyVerdict, palette: WidgetPalette) {
  * check mark cannot make one row bounce against the next.
  */
 @Composable
-private fun VerdictMark(verdict: SkyVerdict, palette: WidgetPalette) {
+internal fun VerdictMark(verdict: SkyVerdict, palette: WidgetPalette) {
     val context = LocalContext.current
     val night = isNight(context)
     Box(

@@ -98,4 +98,24 @@ class TodayStateBuilderTest {
             assertEquals(date, it.at.toLocalDate())
         }
     }
+
+    /** The arc widget's window (9 set 2026): the same rule, cut a day later, and the
+     * timeline is exactly its first day. */
+    @Test
+    fun `the agenda reaches past midnight and the timeline is its first day`() {
+        val fetched = LocalDateTime.of(2026, 9, 2, 12, 0)
+        val nowLocal = LocalDateTime.of(2026, 9, 2, 21, 0)
+        val report = report(fetched)
+        val agenda = TodayStateBuilder.agenda(report, zone, nowLocal, nowLocal.plusHours(24))
+        assertTrue(
+            "tomorrow's sunrise is in the next twenty-four hours",
+            agenda.any { it.kind == TimelineKind.SUNRISE && it.at.toLocalDate() == date.plusDays(1) }
+        )
+        assertTrue(agenda.all { it.at.isAfter(nowLocal) && !it.at.isAfter(nowLocal.plusHours(24)) })
+        assertEquals(agenda.sortedBy { it.at }, agenda)
+        val content = TodayStateBuilder.build(
+            milan, report, nowLocal.atZone(zone).toInstant(), 60, false, null
+        ) as TodayUiState.Content
+        assertEquals(content.timeline, agenda.filter { it.at.toLocalDate() == date })
+    }
 }

@@ -34,7 +34,7 @@ class WidgetPreviewTest {
     @Test
     fun `every widget provider names a preview layout that exists`() {
         val providers = xml.listFiles { file -> file.name.startsWith("widget_") }.orEmpty()
-        assertTrue("no widget providers found at ${xml.absolutePath}", providers.size == 3)
+        assertTrue("no widget providers found at ${xml.absolutePath}", providers.size == 4)
 
         providers.forEach { provider ->
             val name = previewAttribute.find(provider.readText())?.groupValues?.get(1)
@@ -49,7 +49,7 @@ class WidgetPreviewTest {
     @Test
     fun `a preview layout only uses views RemoteViews knows`() {
         val previews = layout.listFiles { file -> file.name.endsWith("_preview.xml") }.orEmpty()
-        assertEquals("one preview per widget", 3, previews.size)
+        assertEquals("one preview per widget", 4, previews.size)
 
         previews.forEach { preview ->
             val unsupported = tag.findAll(preview.readText())
