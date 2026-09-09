@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- The official-warnings step asks whether the active network is metered before
+         taking the Dipartimento's 4.7 MB fallback archive (Fase 11). WorkManager's own
+         manifest already merges this permission in; it is declared here because this
+         is the module that reads it. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+</manifest>

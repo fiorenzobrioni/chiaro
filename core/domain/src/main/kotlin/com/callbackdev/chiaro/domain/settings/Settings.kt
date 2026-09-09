@@ -37,5 +37,15 @@ data class NotificationSettings(
     val severeWeatherAlerts: Boolean = true,
     val dailySummary: Boolean = false,
     val precipitationWarning: Boolean = true,
-    val userRules: Boolean = true
+    val userRules: Boolean = true,
+    /**
+     * The official warnings (9 set 2026, Fase 11): whether the Protezione Civile's
+     * bulletin is announced when it grades the active place's zone, and from which
+     * level. On by default and from yellow — the level the Dipartimento itself calls
+     * "prestare attenzione"; both are held or raised after the week of live use the
+     * phase ends with, with real bulletins counted, not before.
+     */
+    val officialWarnings: Boolean = true,
+    val officialWarningsFrom: com.callbackdev.chiaro.domain.warnings.WarningLevel =
+        com.callbackdev.chiaro.domain.warnings.WarningLevel.YELLOW
 )

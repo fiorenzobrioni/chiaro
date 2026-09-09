@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import com.callbackdev.chiaro.domain.settings.NotificationSettings
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
@@ -135,7 +136,9 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                     severeWeatherAlerts = prefs[SevereAlerts] ?: true,
                     dailySummary = prefs[DailySummary] ?: false,
                     precipitationWarning = prefs[PrecipWarning] ?: true,
-                    userRules = prefs[UserRules] ?: true
+                    userRules = prefs[UserRules] ?: true,
+                    officialWarnings = prefs[OfficialWarnings] ?: true,
+                    officialWarningsFrom = enumOrDefault(prefs[OfficialWarningsFrom], WarningLevel.YELLOW)
                 ),
                 themeMode = enumOrDefault(prefs[Theme], ThemeMode.SYSTEM),
                 dynamicColor = prefs[DynamicColor] ?: false,
@@ -161,6 +164,8 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setDailySummary(enabled: Boolean) = set(DailySummary, enabled)
     suspend fun setPrecipitationWarning(enabled: Boolean) = set(PrecipWarning, enabled)
     suspend fun setUserRules(enabled: Boolean) = set(UserRules, enabled)
+    suspend fun setOfficialWarnings(enabled: Boolean) = set(OfficialWarnings, enabled)
+    suspend fun setOfficialWarningsFrom(level: WarningLevel) = set(OfficialWarningsFrom, level.name)
     suspend fun setThemeMode(mode: ThemeMode) = set(Theme, mode.name)
     suspend fun setDynamicColor(enabled: Boolean) = set(DynamicColor, enabled)
     suspend fun setPalette(palette: AppPalette) = set(Palette, palette.name)
@@ -198,6 +203,8 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
         private val DailySummary = booleanPreferencesKey("notif_daily_summary")
         private val PrecipWarning = booleanPreferencesKey("notif_precip_warning")
         private val UserRules = booleanPreferencesKey("notif_user_rules")
+        private val OfficialWarnings = booleanPreferencesKey("notif_official_warnings")
+        private val OfficialWarningsFrom = stringPreferencesKey("notif_official_warnings_from")
         private val Theme = stringPreferencesKey("appearance_theme_mode")
         private val DynamicColor = booleanPreferencesKey("appearance_dynamic_color")
         private val Palette = stringPreferencesKey("appearance_palette")

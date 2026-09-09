@@ -192,6 +192,20 @@ is short on purpose — three edits, each with its reason in the file:
   the same reason (its `City.country` is a localized name too), the change is additive,
   and carrying it there restores the identity — recommended, not done. Four tests gained a
   case: `GpsLocationTest`, `CityStoreTest`, `LocationProviderTest`, `SearchLanguageTest`.
+- The official warnings' second PR (9 set 2026) touched five shared files, each by a few
+  lines and each additive: `NotificationSettings` gained `officialWarnings` and
+  `officialWarningsFrom` (with `SettingsStore`'s two keys); `ChiaroDatabase` went 4 → 5 with
+  a new table and `MIGRATIONS`, the one list the builder and the tests share
+  (`weather_history` untouched, as promised above); `ServiceLocator` hoisted the OkHttp client
+  and the database into fields so the warnings source and DAO could share them, and grew four
+  accessors; `WeatherSyncWorker` gained one `runCatching` call to `OfficialWarningsStep`,
+  placed BEFORE the alerts gate because the bulletin is content for Oggi and the widgets,
+  not only a notification; `SyncNotifiers` gained `notifyOfficialWarning`, and so did the
+  fake in `WeatherSyncWorkerTest`. `SyncScheduler.alertsWanted` counts the new switch.
+  Everything else is new and Chiaro-only: `domain/warnings/{CapDocument, DpcBulletinReader,
+  WarningFetchPolicy, WarningDiff}`, `data/warnings/{CapParser, WarningSource,
+  DpcBulletinSource, OfficialWarningStore}`, `data/local/WarningRecords`,
+  `sync/OfficialWarningsStep`, `notifications/OfficialWarningNotifier`.
 
 ## The known debt
 
@@ -377,6 +391,17 @@ the only codepage damage in the zone names is a lost apostrophe in two Valle d'A
 which the importer restores. One new debt: thirteen zones (Basilicata's seven, Marche's six)
 have their code as their only name, so "no zone code reaches the screen" needs a rule for
 them before the sheet exists.
+
+**Landed, second PR (9 set 2026):** the source, the store, the table, the step and the
+notifier (the shared-file bullet above lists the divergences). Three facts measured that
+afternoon corrected the plan's own estimates and are recorded in PLANNING: GitHub's commit
+Atom honours `If-None-Match` (a 304 with no body, so the hourly re-check is free); a commit's
+`.diff` is ~200 B only for the preview PNGs — a mid-pipeline GeoJSON commit's weighs 5.5 MB,
+so the source reads one line and hangs up; and `latest_all.zip` carries the CAP, so the
+unmetered fallback works. The first non-Kotlin fixtures sit under
+`core/data/src/test/resources/dpc`: the real CAP of 8 set, the real Atom of 9 set, one real
+diff. The vigilance layer is deferred to the third PR (it needs a second zone asset and its
+only surface is the sheet).
 
 ## When to extract
 

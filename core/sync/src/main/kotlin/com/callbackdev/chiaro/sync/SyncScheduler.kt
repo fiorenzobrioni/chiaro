@@ -30,7 +30,9 @@ object SyncScheduler {
     /**
      * Whether the job would post anything: gates the alert evaluation in the worker.
      * User rules count only while some exist and their master switch is on — an
-     * empty rule list must not keep the phone polling.
+     * empty rule list must not keep the phone polling. The official warnings count
+     * on their own (Fase 11): a reader who wants nothing but the Protezione Civile's
+     * bulletin keeps the job alive with that switch alone.
      */
     fun alertsWanted(
         settings: NotificationSettings,
@@ -40,7 +42,8 @@ object SyncScheduler {
         notificationsEnabled &&
             (
                 settings.severeWeatherAlerts || settings.dailySummary ||
-                    settings.precipitationWarning || (settings.userRules && hasEnabledRules)
+                    settings.precipitationWarning || settings.officialWarnings ||
+                    (settings.userRules && hasEnabledRules)
                 )
 
     /**

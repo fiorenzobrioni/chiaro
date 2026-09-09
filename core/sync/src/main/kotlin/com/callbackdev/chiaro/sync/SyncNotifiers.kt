@@ -40,6 +40,17 @@ interface SyncNotifiers {
     /** Re-arm the sky reminder alarm: the periodic run is its safety net — an alarm
      * lost to a force-stop comes back at the next fetch instead of never. */
     suspend fun rearmSkyReminders()
+
+    /**
+     * An official warning for [city] (Fase 11). [today] is the ISSUER's day, so the
+     * notification can call a day "oggi" with the bulletin's own calendar. Returns
+     * whether it posted: the fingerprint burns only on `true`, like every other.
+     */
+    fun notifyOfficialWarning(
+        notification: com.callbackdev.chiaro.domain.warnings.WarningNotification,
+        city: com.callbackdev.chiaro.domain.model.City,
+        today: java.time.LocalDate
+    ): Boolean
 }
 
 /**

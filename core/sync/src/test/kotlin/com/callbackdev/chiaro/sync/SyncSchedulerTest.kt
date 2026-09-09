@@ -12,8 +12,25 @@ class SyncSchedulerTest {
         severeWeatherAlerts = false,
         dailySummary = false,
         precipitationWarning = false,
-        userRules = false
+        userRules = false,
+        officialWarnings = false
     )
+
+    /** Fase 11: a reader who wants nothing but the Protezione Civile's bulletin keeps
+     * the job alive with that one switch. */
+    @Test
+    fun `the official warnings keep the job alive on their own`() {
+        assertTrue(
+            SyncScheduler.alertsWanted(
+                allOff.copy(officialWarnings = true), notificationsEnabled = true
+            )
+        )
+        assertFalse(
+            SyncScheduler.alertsWanted(
+                allOff.copy(officialWarnings = true), notificationsEnabled = false
+            )
+        )
+    }
 
     @Test
     fun `system notifications off means nothing is wanted`() {

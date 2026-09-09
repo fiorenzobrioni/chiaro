@@ -83,6 +83,11 @@ class WeatherSyncWorkerTest {
             units: UnitSettings
         ) = true
         override suspend fun rearmSkyReminders() = Unit
+        override fun notifyOfficialWarning(
+            notification: com.callbackdev.chiaro.domain.warnings.WarningNotification,
+            city: City,
+            today: java.time.LocalDate
+        ) = true
     }
 
     private class FakeWidgets : SyncWidgets {
@@ -149,6 +154,7 @@ class WeatherSyncWorkerTest {
         settingsStore.setSevereWeatherAlerts(false)
         settingsStore.setDailySummary(false)
         settingsStore.setPrecipitationWarning(false)
+        settingsStore.setOfficialWarnings(false)
     }
 
     private fun periodicStates(): List<WorkInfo.State> = WorkManager.getInstance(context)
