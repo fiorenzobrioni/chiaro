@@ -92,9 +92,11 @@ is short on purpose — three edits, each with its reason in the file:
 - `WeatherSnapshots.flattenForecast` stores SEVEN target dates here, two upstream
   (Fase 7): tweather's Logs only ever showed tomorrow and the day after, Chiaro's
   drift strip and "what changed" are about the week — "Saturday improved" needs
-  Saturday on disk. `ForecastDiff` is per-date and unchanged; its `dayLabel` now
-  derives from date distance instead of list position (same output on two dates,
-  correct on seven). If tweather ever widens its Logs, this belongs upstream too.
+  Saturday on disk. `ForecastDiff` is per-date and unchanged (its `dayLabel` derived
+  from date distance here for a while; upstream's Fase 28 removed the field — a hunk
+  carries its date, not a relative word — and the removal was carried here on 9 set
+  2026, so the two files are identical again). If tweather ever widens its Logs, the
+  horizon belongs upstream too.
 - `DailyForecast.precipPct` is **nullable** here, non-null upstream (Fase 7b): the
   seed maps `precipitation_probability_max` with `?: 0`, and a zero is a forecast of
   no rain put in the mouth of a model that never gave one. Chiaro's §1.1 already
@@ -113,9 +115,17 @@ is short on purpose — three edits, each with its reason in the file:
   domain can read rather than the English label matched back by hand. The same pass
   fixed an inherited leak beside them: `current.precip_chance_pct` was written with
   `.toString()` on a nullable Int and had been storing the literal string `"null"`.
-  That leak was still live upstream on 9 set 2026 — its widget reads the key and
-  would have printed `Rain null%` — and was carried there the same day, with a test
-  in both `WeatherSnapshotsTest`s. The two Chiaro-only keys stay here.
+  **Here the two copies of `flatten` diverge on purpose (9 set 2026).** Upstream met
+  the same word on the same day (its Fase 28, 6 set) and decided the opposite:
+  `history.diff` is a diff OF `weather_data.json`, so a value the model did not fill
+  is a LINE saying `null` — a named `NullValue`, a fixed key set, the widget and the
+  Logs reading it as absence. Chiaro's Journal is prose: its shifts pair keys and a
+  missing one is silence, so the key is left out here, for `precip_chance_pct`,
+  `sunrise`, `sunset` and `daylight_duration` alike. Same fact, two registers, two
+  files — the surfaces rule, not the identity rule. What did travel from that Fase 28
+  is the rest of it: `location` falls back on the country like `City.label`, and the
+  sky block carries `astronomical.daylight_duration` (via `Duration.hhMm()`, now a
+  domain function in both).
 - `ForecastOutcome` is new and Chiaro-only (Fase 7b): what the app predicted for a
   finished day, checked against what it then observed. Upstream's Logs render commits;
   reading two of them against each other to say "it rained" is a Chiaro surface.
@@ -142,10 +152,9 @@ is short on purpose — three edits, each with its reason in the file:
   and the new one had to be said somewhere.
 - `WeatherSnapshots.flattenForecast` stores **today** as well as the seven days after it
   (8 set 2026): the Journal's drift strip gained a row for the day in progress, and a row
-  needs its day on disk. Chiaro-only, like the seven-day horizon before it. One inherited
-  seam to know about: `ForecastDiff.dayLabel` still calls the earliest stored date
-  "tomorrow"; that label is upstream's Logs vocabulary and nothing in Chiaro reads it,
-  so it was left as it is rather than re-taught for a screen that does not exist here.
+  needs its day on disk. Chiaro-only, like the seven-day horizon before it. (The seam
+  this note used to describe — `ForecastDiff.dayLabel` calling the earliest stored
+  date "tomorrow" — is gone: upstream removed the field in its Fase 28.)
 - `ForecastOutcome` (Chiaro-only, above) changed what a reading vouches for (8 set
   2026): the time since the previous reading, capped at two hours — the app's own longest
   cadence — instead of a fixed hour. At the two-hour cadence a day watched end to end
@@ -258,12 +267,21 @@ The first full re-read of both trees since the seed, done with `tools/seed_core.
 own rewrite applied to tweather HEAD and the result diffed against `:core` file by
 file. Three things came out of it.
 
-**Three fixes the ledger already said belonged upstream were still missing there**,
+**Two fixes the ledger already said belonged upstream were still missing there**,
 and are now carried: the nullable day probability (with `FIRST_PRECIP_CODE` moving
-into the domain), the `"null"` written into every commit's `current.precip_chance_pct`
-(live in tweather's widget), and `DARK_ALL_DAY`. Every file they touch in `:core` is
-byte-identical again; the surfaces downstream of them in tweather (`WeatherReadme`,
-`WeatherJson`, `SkyDocument` and its notes) were adapted in tweather's own register.
+into the domain) and `DARK_ALL_DAY`. Every file they touch in `:core` is byte-identical
+again; the surfaces downstream of them in tweather (`WeatherReadme`, `WeatherJson`,
+`SkyDocument` and its notes) were adapted in tweather's own register. A third one, the
+`"null"` in the snapshot, was carried and then **withdrawn**: the comparison had been
+made against a tweather `main` three days stale, and the rebase of the tweather PR
+found its Fase 28 had already met that word and decided the other way (above).
+
+**The stale base cut the other way too.** Four upstream changes of 6 set were not here
+and are now: `Duration.hhMm()` in the domain, `ForecastDiff` without `dayLabel` (with
+its test), and in `flatten` the `location` fallback and the daylight key — the parts
+of Fase 28 that are facts rather than the diff's register. The lesson is procedural
+and is written down where it will be read: fetch and compare with `origin/main` in
+both repositories before measuring anything.
 
 **The shared files had drifted in their comments only** — a phase number on one side
 (`Fase 20`, `Fase 25`) and another on the other (`Fase 3b`), a surface name here
@@ -287,8 +305,8 @@ through the platform type) and the parameter order of `shouldRun`, both now as i
 Chiaro.
 
 What still differs after the pass is exactly the list above, each entry with its
-reason. The one direction with nothing pending is tweather → Chiaro: every commit
-upstream since the seed that touched its domain or data has its twin here.
+reason: 66 of the 86 shared files are byte-identical (55 before the pass), and as of
+9 set 2026 nothing is pending in either direction.
 
 ## When to extract
 

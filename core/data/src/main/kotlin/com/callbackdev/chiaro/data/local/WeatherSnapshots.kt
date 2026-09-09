@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.data.local
 
 import com.callbackdev.chiaro.domain.model.WeatherReport
+import com.callbackdev.chiaro.domain.model.hhMm
 import java.security.MessageDigest
 
 /**
@@ -11,8 +12,13 @@ import java.security.MessageDigest
 object WeatherSnapshots {
 
     fun flatten(report: WeatherReport): Map<String, String> = buildMap {
-        put("location", listOfNotNull(report.location.city, report.location.region)
-            .joinToString(", "))
+        // `region ?: country`, exactly like City.label — which is what the Journal's
+        // entry prints above this one (upstream's Fase 28, 6 set 2026). A place with no
+        // admin1 (Singapore, Monaco, the Vatican) had the two disagree.
+        put("location", listOfNotNull(
+            report.location.city,
+            report.location.region ?: report.location.country
+        ).joinToString(", "))
         put("current.status", report.current.condition.label)
         // The code, not only its English label: `ForecastOutcome` asks a past commit
         // "was it raining when you looked", and the answer has to be a number the
@@ -35,9 +41,19 @@ object WeatherSnapshots {
         report.current.precipitation.chancePct
             ?.let { put("current.precip_chance_pct", it.toString()) }
         report.airQuality?.let { put("air_quality.aqi", it.aqiIndex.toString()) }
-        put("astronomical.sunrise", report.astronomical.sunrise.toString())
-        put("astronomical.sunset", report.astronomical.sunset.toString())
+        // Chiaro's rule for a value the model or the sky does not carry: the key is
+        // left out, never the word "null" — the Journal draws absence and its shifts
+        // pair keys, so a missing one is silence. Upstream decided the opposite for
+        // its diff (a bare `null` line, fixed key set, its Fase 28); UPSTREAM.md says why
+        // the two copies of this file differ here on purpose.
+        report.astronomical.sunrise?.let { put("astronomical.sunrise", it.toString()) }
+        report.astronomical.sunset?.let { put("astronomical.sunset", it.toString()) }
         put("astronomical.moon_phase", report.astronomical.moonPhase.text)
+        // The fourth field of the sky block, and the one this snapshot was missing
+        // (upstream's Fase 28): sunrise and sunset were kept and the span between them
+        // was not. Formatted `10h 52m` like every surface, which also truncates the
+        // engine's sub-second precision so it changes once a day, with its two ends.
+        report.astronomical.daylightDuration?.let { put("astronomical.daylight_duration", it.hhMm()) }
     }
 
     /**

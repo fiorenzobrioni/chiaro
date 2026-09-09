@@ -4173,23 +4173,35 @@ fammi un elenco delle implementazioni da fare per riallineare i due repo»; poi
 tweather non ha un `UPSTREAM.md`: il suo registro sono le fasi che citano Chiaro nel
 suo `PLANNING.md`. Il confronto è stato quindi meccanico — la riscrittura di
 `tools/seed_core.py` applicata a tweather HEAD e diffata file per file con `:core` —
-e poi ogni differenza letta contro quello che i due registri dichiarano. Prima: 46
-file identici su 87 condivisi, 30 diversi, 1 solo a monte e 10 solo qui. Dopo: 55
+e poi ogni differenza letta contro quello che i due registri dichiarano. Prima: 55
+file identici su 86 condivisi, 30 diversi, più 2 solo a monte e 10 solo qui. Dopo: 66
 identici, e ogni differenza rimasta ha la sua riga in `UPSTREAM.md`: la classificazione
 file per file sta nell'elenco «What is NOT the same as upstream» e la passata è
 raccontata nella sezione «The second pass». Il confronto si ripete con la riscrittura
 di `tools/seed_core.py` applicata a un checkout di tweather e un diff dei due alberi.
 
-### Portato a monte (in tweather)
+### Portato a monte (in tweather), e la base che era vecchia
 
-Tre correzioni che `UPSTREAM.md` segnava come «bug anche a monte» e che a monte
+Due correzioni che `UPSTREAM.md` segnava come «bug anche a monte» e che a monte
 mancavano ancora: `DailyForecast.precipPct` nullable (con `WeatherCodes.FIRST_PRECIP_CODE`
-e `isPrecipitation`, così il mapper torna identico e non diverso per una riga), la
-stringa `"null"` che `WeatherSnapshots.flatten` scriveva in `current.precip_chance_pct`
-(a monte il widget la stampava: `Rain null%`), e `SkyNotScheduled.DARK_ALL_DAY`. Ogni
-file toccato in `:core` è di nuovo identico; le superfici a valle in tweather
-(`WeatherReadme`, `WeatherJson`, `SkyDocument` e le sue note) sono state adattate nel
-suo registro. Lì è la Fase 27.
+e `isPrecipitation`, così il mapper torna identico e non diverso per una riga) e
+`SkyNotScheduled.DARK_ALL_DAY`. Ogni file toccato in `:core` è di nuovo identico; le
+superfici a valle in tweather (`WeatherReadme`, `WeatherJson`, `SkyDocument` e le sue
+note) sono state adattate nel suo registro. Lì è la **Fase 29**.
+
+La terza, la stringa `"null"` che `WeatherSnapshots.flatten` scriveva in
+`current.precip_chance_pct`, è stata portata e poi **ritirata**: il confronto era stato
+fatto su un `main` locale di tweather fermo al 6 set, e il rebase della PR gemella ha
+trovato le Fasi 27–28c a monte, fra cui la 28 che sullo stesso punto aveva deciso il
+contrario e di proposito — `history.diff` è un diff di `weather_data.json`, un valore
+assente è una riga che dice `null`, con `NullValue` nominato e insieme di chiavi fisso.
+Qui il Diario è prosa e le sue «shift» accoppiano le chiavi, quindi la chiave assente
+resta omessa, ora anche per `sunrise` e `sunset` che scrivevano ancora la parola:
+stessa realtà, due registri, due file, e `UPSTREAM.md` lo dice. Dalla stessa Fase 28
+sono invece tornati a valle i fatti: `Duration.hhMm()` nel dominio, `ForecastDiff` senza
+`dayLabel` (con il suo test), il `location` che ripiega sul paese come `City.label`, la
+chiave `astronomical.daylight_duration`. La lezione è di procedura, e sta in memoria:
+`git fetch` e confronto con `origin/main` in tutti e due i repo prima di misurare.
 
 ### Fatto qui
 
@@ -4234,9 +4246,12 @@ suo registro. Lì è la Fase 27.
 
 ### Verifica
 
-`:core` 352 test, `:app` 251, lint 0 errori. tweather: 684 verdi con la JVM in
-en-US, lint 0 errori. **Nessun push**: i due alberi di lavoro sono modificati e non
-committati, come da prassi.
+`:core` 354 test, `:app` 251, lint 0 errori. tweather, sul branch ribasato: 726 test e
+lint 0 errori, con tre casi che su questa macchina falliscono anche su `origin/main`
+pulito (la CI di `main` è verde) e sono dell'ambiente, non del riallineamento. Due PR,
+una per repo, sullo stesso
+branch `claude/core-realignment-9set-a4k7m2`: il committente le fonde e cancella i
+branch.
 
 ---
 
