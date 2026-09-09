@@ -5,6 +5,10 @@ import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.model.Wind
 import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
+import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
+import com.callbackdev.chiaro.domain.warnings.WarningHazard
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
+import com.callbackdev.chiaro.domain.warnings.WarningZone
 import java.time.LocalDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -60,6 +64,92 @@ class HeadlineEngineTest {
         }
 
     private fun quiet(hours: Int = 36) = List(hours) { clear at 10 }
+
+    // ------------------------------------------------------------ step zero
+
+    private val zone = WarningZone("Lomb-09", "Nodo Idraulico di Milano", "Lombardia")
+
+    private fun levels(
+        hydraulic: WarningLevel = WarningLevel.NONE,
+        hydrogeological: WarningLevel = WarningLevel.NONE,
+        thunderstorm: WarningLevel = WarningLevel.NONE
+    ) = mapOf(
+        WarningHazard.HYDRAULIC to hydraulic,
+        WarningHazard.HYDROGEOLOGICAL to hydrogeological,
+        WarningHazard.THUNDERSTORM to thunderstorm
+    )
+
+    private fun warnings(
+        today: Map<WarningHazard, WarningLevel> = levels(),
+        tomorrow: Map<WarningHazard, WarningLevel> = levels()
+    ) = PlaceWarnings(
+        zone = zone,
+        bulletinId = "DPC_BULLETIN_2026_09_02_1",
+        issuedAt = now.toLocalDate().atTime(15, 46),
+        days = listOf(
+            PlaceWarnings.DayWarnings(now.toLocalDate(), today),
+            PlaceWarnings.DayWarnings(now.toLocalDate().plusDays(1), tomorrow)
+        ),
+        note = null
+    )
+
+    @Test
+    fun `an orange warning outranks everything the model has to say`() {
+        // A thunderstorm inside the severe window would otherwise be rung one.
+        val severe = report(List(6) { storm at 90 })
+        val headline = HeadlineEngine.headline(
+            severe, now, warnings(today = levels(thunderstorm = WarningLevel.ORANGE))
+        )
+        val official = headline as Headline.Official
+        assertEquals(WarningLevel.ORANGE, official.level)
+        assertEquals(listOf(WarningHazard.THUNDERSTORM), official.hazards)
+        assertTrue(official.today)
+    }
+
+    @Test
+    fun `yellow never takes the sentence, however the day looks`() {
+        val yellow = warnings(today = levels(hydraulic = WarningLevel.YELLOW))
+        assertNull(HeadlineEngine.headline(report(quiet()), now, yellow))
+    }
+
+    @Test
+    fun `a green bulletin leaves the ladder exactly as it was`() {
+        assertNull(HeadlineEngine.headline(report(quiet()), now, warnings()))
+    }
+
+    /** Today before tomorrow when both carry the peak: a sentence about now beats one
+     * about later, and only the day named decides which hazards are printed. */
+    @Test
+    fun `today wins the day and only the peak hazards are named`() {
+        val both = warnings(
+            today = levels(thunderstorm = WarningLevel.RED, hydrogeological = WarningLevel.YELLOW),
+            tomorrow = levels(hydraulic = WarningLevel.RED)
+        )
+        val official = HeadlineEngine.headline(report(quiet()), now, both) as Headline.Official
+        assertTrue(official.today)
+        assertEquals(listOf(WarningHazard.THUNDERSTORM), official.hazards)
+    }
+
+    @Test
+    fun `a peak that falls only tomorrow says so`() {
+        val tomorrow = warnings(tomorrow = levels(hydraulic = WarningLevel.ORANGE))
+        val official = HeadlineEngine.headline(report(quiet()), now, tomorrow) as Headline.Official
+        assertEquals(false, official.today)
+        assertEquals(listOf(WarningHazard.HYDRAULIC), official.hazards)
+    }
+
+    /** Two hazards at the same level print in the issuer's own tie-break, not in
+     * declaration order: hydraulic, thunderstorms, hydrogeological. */
+    @Test
+    fun `hazards sharing the peak keep the issuer's order`() {
+        val two = warnings(
+            today = levels(hydrogeological = WarningLevel.ORANGE, hydraulic = WarningLevel.ORANGE)
+        )
+        val official = HeadlineEngine.headline(report(quiet()), now, two) as Headline.Official
+        assertEquals(
+            listOf(WarningHazard.HYDRAULIC, WarningHazard.HYDROGEOLOGICAL), official.hazards
+        )
+    }
 
     @Test
     fun `a quiet day says nothing`() {

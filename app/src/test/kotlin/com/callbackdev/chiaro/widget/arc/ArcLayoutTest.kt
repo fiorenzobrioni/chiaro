@@ -2,6 +2,8 @@ package com.callbackdev.chiaro.widget.arc
 
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
+import com.callbackdev.chiaro.widget.WarningSlot
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -26,8 +28,10 @@ class ArcLayoutTest {
         fontScale: Float = 1f,
         stale: Boolean = false,
         agenda: Int = 6,
-        week: Boolean = true
-    ) = arcPlan(size, fontScale, settings, stale, agenda, week)
+        week: Boolean = true,
+        heroIsHeadline: Boolean = false,
+        level: WarningLevel? = null
+    ) = arcPlan(size, fontScale, settings, stale, agenda, week, heroIsHeadline, level)
 
     @Test
     fun `the grant picks the form`() {
@@ -234,5 +238,93 @@ class ArcLayoutTest {
     fun `the week strip is four lines and a glyph`() {
         // 14.52 + 22 + 15.84 + 14.52 + 2 × 2 = 70.88.
         assertEquals(70.88f, arcWeekHeight(1f, 1f).value, 0.01f)
+    }
+
+    // ------------------------------------------------- the warning chip (Fase 11)
+
+    private val panel = DpSize(340.dp, 189.dp)
+    private val card = DpSize(159.dp, 189.dp)
+    private val dial = DpSize(85.dp, 82.dp)
+    private val strip = DpSize(250.dp, 82.dp)
+
+    /** The two forms with a line to spare take it; the two with one line each do not,
+     * because a chip on those would be the whole card. */
+    @Test
+    fun `only the card and the panel ever carry a chip`() {
+        assertEquals(WarningSlot.OWN_ROW, plan(panel, level = WarningLevel.YELLOW).warning)
+        assertEquals(WarningSlot.OWN_ROW, plan(card, level = WarningLevel.YELLOW).warning)
+        assertEquals(WarningSlot.NONE, plan(dial, level = WarningLevel.RED).warning)
+        assertEquals(WarningSlot.NONE, plan(strip, level = WarningLevel.RED).warning)
+    }
+
+    /**
+     * The arc's sentence slot is not always the day's headline. With the hero on the
+     * next light moment — the default — the card says nothing about a warning, so
+     * orange gets the chip; switch the hero to the headline and the sentence IS the
+     * warning, so the chip goes.
+     */
+    @Test
+    fun `orange is silent only where the hero really is the headline`() {
+        assertEquals(
+            WarningSlot.NONE,
+            plan(
+                panel, settings = defaults.copy(hero = ArcHero.HEADLINE),
+                heroIsHeadline = true, level = WarningLevel.ORANGE
+            ).warning
+        )
+        assertEquals(
+            WarningSlot.SENTENCE,
+            plan(
+                panel, settings = defaults.copy(hero = ArcHero.NEXT_MOMENT),
+                heroIsHeadline = false, level = WarningLevel.ORANGE
+            ).warning
+        )
+        // A card set to the next moment with none left falls back to the headline, and
+        // the chip goes with it.
+        assertEquals(
+            WarningSlot.NONE,
+            plan(
+                panel, settings = defaults.copy(hero = ArcHero.NEXT_MOMENT),
+                heroIsHeadline = true, level = WarningLevel.ORANGE
+            ).warning
+        )
+        // With no hero line at all there is no slot to stand in, so it takes its own.
+        assertEquals(
+            WarningSlot.OWN_ROW,
+            plan(panel, settings = defaults.copy(hero = ArcHero.NONE), level = WarningLevel.ORANGE).warning
+        )
+    }
+
+    @Test
+    fun `the switch and a green bulletin both draw nothing`() {
+        assertEquals(
+            WarningSlot.NONE,
+            plan(panel, settings = defaults.copy(warning = false), level = WarningLevel.RED).warning
+        )
+        assertEquals(WarningSlot.NONE, plan(panel, level = WarningLevel.NONE).warning)
+        assertEquals(WarningSlot.NONE, plan(panel, level = null).warning)
+    }
+
+    /**
+     * A chip on its own line costs the header its block, and the card pays for it where
+     * a card of this shape has slack: on the reference panel the header goes 39.6 → 64.1
+     * and the agenda drops from two rows to one, while the arc keeps the 56 dp it
+     * prefers. The agenda yields before the drawing does, which is the order the panel's
+     * own budget already used.
+     */
+    @Test
+    fun `the chip is paid for out of the agenda, not out of the arc`() {
+        val quiet = plan(panel)
+        val warned = plan(panel, level = WarningLevel.YELLOW)
+        assertEquals(2, quiet.agendaRows)
+        assertEquals(1, warned.agendaRows)
+        assertTrue(warned.graphic.height >= GraphicPreferredPanel)
+    }
+
+    /** A grant with nothing left keeps the drawing and drops the chip. */
+    @Test
+    fun `a card with no room left drops the chip rather than the arc`() {
+        val squeezed = plan(DpSize(159.dp, 150.dp), stale = true, level = WarningLevel.YELLOW)
+        assertTrue(squeezed.graphic.height >= GraphicFloor)
     }
 }

@@ -99,20 +99,60 @@ class NowWidget : GlanceAppWidget() {
                 contentPaddingBottom = paddingBottom
             ) { palette ->
                 val sentenceOn = model.look.showSentence
+                val level = model.warning?.maxLevel
+                val stale = content?.isStale == true
+                val scale = fontScale(context)
                 when {
                     content == null && model.city == null -> NoPlaceContent(palette)
                     content == null -> NoDataContent(palette)
-                    layout == NowLayout.TALL ->
-                        TallContent(content, model, palette, size, withSentence = sentenceOn)
-                    mirrored -> MirroredRowContent(
+                    layout == NowLayout.TALL -> TallContent(
                         content, model, palette, size,
-                        withSentence = sentenceOn &&
-                            nowMirroredSentenceWidth(size) >= SentenceColumnMin
+                        withSentence = sentenceOn,
+                        // A tall card always HAS a sentence slot, so orange and red take
+                        // it whenever the reader turned the sentence off; a line of its
+                        // own is the budget's answer, not the form's.
+                        warning = warningSlot(
+                            level = level,
+                            enabled = model.look.showWarning,
+                            headlineShown = sentenceOn,
+                            sentenceSlot = true,
+                            ownRow = nowTallHasWarningRow(size, scale, stale, sentenceOn)
+                        )
                     )
-                    else -> RowContent(
-                        content, model, palette, size,
-                        withSentence = sentenceOn && layout == NowLayout.WIDE
-                    )
+                    mirrored -> {
+                        val fits = nowMirroredSentenceWidth(size) >= SentenceColumnMin
+                        MirroredRowContent(
+                            content, model, palette, size,
+                            withSentence = sentenceOn && fits,
+                            // The mirrored row has no line to spare: the leading column
+                            // is already the number, the place and the stale marker in
+                            // ~82 dp. The chip only ever stands where the sentence would.
+                            warning = warningSlot(
+                                level = level,
+                                enabled = model.look.showWarning,
+                                headlineShown = sentenceOn && fits,
+                                sentenceSlot = fits,
+                                ownRow = false
+                            )
+                        )
+                    }
+                    else -> {
+                        val wide = layout == NowLayout.WIDE
+                        RowContent(
+                            content, model, palette, size,
+                            withSentence = sentenceOn && wide,
+                            // The narrow form has no sentence column at all, so it has
+                            // nowhere to put a warning either: two or three cells are the
+                            // glyph, the number and the place, and that is the whole card.
+                            warning = warningSlot(
+                                level = level,
+                                enabled = model.look.showWarning,
+                                headlineShown = sentenceOn && wide,
+                                sentenceSlot = wide,
+                                ownRow = wide && nowRowHasWarningRow(size, scale, sentenceOn)
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -133,7 +173,8 @@ private fun RowContent(
     model: WidgetModel,
     palette: WidgetPalette,
     size: DpSize,
-    withSentence: Boolean
+    withSentence: Boolean,
+    warning: WarningSlot = WarningSlot.NONE
 ) {
     val context = LocalContext.current
     Row(
@@ -158,26 +199,36 @@ private fun RowContent(
             )
             StaleLine(content, palette)
         }
-        if (withSentence) {
+        if (withSentence || warning.drawn) {
             // Right-aligned and centred on the row, as the reference draws it. The
             // TextView fills its column so a one-line sentence still sits at the far
-            // edge rather than floating where its own width ends.
+            // edge rather than floating where its own width ends. Three children at
+            // most, well under Glance's ten per container.
             Column(
                 horizontalAlignment = Alignment.End,
                 modifier = GlanceModifier
                     .padding(start = SentenceGap)
                     .defaultWeight()
             ) {
-                Text(
-                    text = sentence(context, content, model.settings.units),
-                    style = sentenceStyle(palette, TextAlign.End),
-                    maxLines = nowSentenceLines(size, fontScale(context)),
-                    modifier = GlanceModifier.fillMaxWidth()
-                )
+                if (withSentence) {
+                    Text(
+                        text = sentence(context, content, model.settings.units),
+                        style = sentenceStyle(palette, TextAlign.End),
+                        // The chip takes a line off the sentence when it sits under it.
+                        maxLines = nowSentenceLines(
+                            size, fontScale(context), warning == WarningSlot.OWN_ROW
+                        ),
+                        modifier = GlanceModifier.fillMaxWidth()
+                    )
+                }
+                model.warning?.maxLevel?.takeIf { warning.drawn }?.let { level ->
+                    WarningChipRow(level, palette, if (withSentence) WarningChipGap else 0.dp)
+                }
             }
         }
     }
 }
+
 
 /**
  * The one-row card the other way round ([WidgetArrangement.ICON_END]): the tall card's
@@ -194,7 +245,8 @@ private fun MirroredRowContent(
     model: WidgetModel,
     palette: WidgetPalette,
     size: DpSize,
-    withSentence: Boolean
+    withSentence: Boolean,
+    warning: WarningSlot = WarningSlot.NONE
 ) {
     val context = LocalContext.current
     Row(
@@ -222,6 +274,12 @@ private fun MirroredRowContent(
                             .padding(start = SentenceGap)
                             .defaultWeight()
                     )
+                }
+                // Only ever in the sentence's place here, so it costs the row nothing.
+                model.warning?.maxLevel?.takeIf { warning.drawn }?.let { level ->
+                    Box(modifier = GlanceModifier.padding(start = SentenceGap).defaultWeight()) {
+                        WarningChip(level, palette)
+                    }
                 }
             }
             PlaceLine(
@@ -255,7 +313,8 @@ private fun TallContent(
     model: WidgetModel,
     palette: WidgetPalette,
     size: DpSize,
-    withSentence: Boolean
+    withSentence: Boolean,
+    warning: WarningSlot = WarningSlot.NONE
 ) {
     val context = LocalContext.current
     Box(
@@ -264,7 +323,9 @@ private fun TallContent(
     ) {
         HeroIcon(
             content, model, palette,
-            nowTallIconSize(size, fontScale(context), content.isStale, withSentence)
+            nowTallIconSize(
+                size, fontScale(context), content.isStale, withSentence, warning.drawn
+            )
         )
         // The words stop at the words' inset on the trailing side too: the card's
         // end padding is the glyph's 4, so the column pays the difference itself.
@@ -283,6 +344,10 @@ private fun TallContent(
                     maxLines = TallSentenceMaxLines,
                     modifier = GlanceModifier.fillMaxWidth()
                 )
+            }
+            // Five children at most in this column, against Glance's ten.
+            model.warning?.maxLevel?.takeIf { warning.drawn }?.let { level ->
+                WarningChipRow(level, palette, if (withSentence) WarningChipGap else 0.dp)
             }
             PlaceLine(
                 name = content.city.name,

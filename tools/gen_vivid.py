@@ -78,6 +78,12 @@ BOOST = 1.8
 #: a night.
 SKY_FLOOR = 0.65
 
+#: Every `VerdictColors` pair `ChiaroColors` holds, in declaration order: the four
+#: verdicts of §2.3 and, since Fase 11, the three official-warning levels. One list,
+#: because the derivation rule is the same for all seven and the parser counts them.
+PAIRS = ("pass", "unstable", "fail", "unknown",
+         "warningYellow", "warningOrange", "warningRed")
+
 VERDICT = re.compile(r"(\w+) = VerdictColors\(Color\(0xFF([0-9A-Fa-f]{6})\), Color\(0xFF([0-9A-Fa-f]{6})\)\)")
 RAMP = re.compile(r"(rainRamp|rainInkRamp|temperatureRamp) = listOf\((.*?)\)\s*\n", re.S)
 HEX = re.compile(r"0xFF([0-9A-Fa-f]{6})")
@@ -133,8 +139,9 @@ def paper_semantics() -> dict:
         chunk = block(text, name)
         verdicts = {n: (f"#{i.upper()}", f"#{c.upper()}") for n, i, c in VERDICT.findall(chunk)}
         ramps = {n: [f"#{h.upper()}" for h in HEX.findall(body)] for n, body in RAMP.findall(chunk)}
-        if len(verdicts) != 4 or len(ramps) != 3:
-            sys.exit(f"{label}: parsed {len(verdicts)} verdicts and {len(ramps)} ramps, expected 4 and 3")
+        if len(verdicts) != len(PAIRS) or len(ramps) != 3:
+            sys.exit(f"{label}: parsed {len(verdicts)} pairs and {len(ramps)} ramps, "
+                     f"expected {len(PAIRS)} and 3")
         out[label] = {"verdicts": verdicts, **ramps}
     return out
 
@@ -170,13 +177,13 @@ def main() -> None:
         name = "VividLightColors" if label == "light" else "VividDarkColors"
         ground = surface("VividLightScheme" if label == "light" else "VividDarkScheme")
         print(f"internal val {name} = ChiaroColors(")
-        for verdict in ("pass", "unstable", "fail", "unknown"):
-            p_ink, p_container = paper[label]["verdicts"][verdict]
+        for pair in PAIRS:
+            p_ink, p_container = paper[label]["verdicts"][pair]
             ink, container = vivid(p_ink), vivid(p_container)
-            print(f"    {verdict} = VerdictColors("
+            print(f"    {pair} = VerdictColors("
                   f"Color(0xFF{ink.lstrip('#')}), Color(0xFF{container.lstrip('#')})),")
             report.append(
-                f"{label:5s} {verdict:9s} ink {p_ink}->{ink} "
+                f"{label:5s} {pair:13s} ink {p_ink}->{ink} "
                 f"{contrast(hex_to_rgb(ink), hex_to_rgb(ground)):5.2f}:1   "
                 f"container {p_container}->{container} "
                 f"on-container {contrast(hex_to_rgb(ink), hex_to_rgb(container)):5.2f}:1"

@@ -12,6 +12,8 @@ import com.callbackdev.chiaro.data.RuleStore
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.SettingsStore
 import com.callbackdev.chiaro.data.WeatherRepository
+import com.callbackdev.chiaro.data.warnings.OfficialWarningReader
+import com.callbackdev.chiaro.data.warnings.PlaceWarningState
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.rules.MaxRules
 import com.callbackdev.chiaro.domain.rules.NotificationRule
@@ -20,6 +22,7 @@ import com.callbackdev.chiaro.domain.rules.RuleEngine
 import com.callbackdev.chiaro.domain.rules.RuleMessages
 import com.callbackdev.chiaro.domain.settings.NotificationSettings
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.sync.SyncScheduler
 import java.time.Instant
 import java.time.ZoneId
@@ -29,6 +32,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -62,7 +66,14 @@ sealed interface AlertsUiState {
         val units: UnitSettings,
         /** The active place's zone, for "last fired" — every other hour in the app is the
          * place's, and this one was the phone's (review, 8 set 2026). */
-        val zone: ZoneId = ZoneId.systemDefault()
+        val zone: ZoneId = ZoneId.systemDefault(),
+        /**
+         * The official warnings for the active place (Fase 11). Never null and never
+         * hidden: this is the one screen where "there is no warning" is the answer the
+         * reader came for, so all four states are drawn — which is the opposite of what
+         * Today does with the same value (DESIGN §1.1).
+         */
+        val warnings: PlaceWarningState = PlaceWarningState.Unavailable
     ) : AlertsUiState
 }
 
@@ -76,14 +87,16 @@ class AlertsViewModel(
     private val settingsStore: SettingsStore,
     private val ruleStore: RuleStore,
     private val cityStore: CityStore,
-    private val repository: WeatherRepository
+    private val repository: WeatherRepository,
+    private val warningReader: OfficialWarningReader?
 ) : ViewModel() {
 
     val state: StateFlow<AlertsUiState> = combine(
         settingsStore.settings,
         ruleStore.rules,
-        cityStore.activeSource
-    ) { settings, rules, active ->
+        cityStore.activeSource,
+        warningReader?.bulletin ?: flowOf(null)
+    ) { settings, rules, active, bulletin ->
         val city = active.cityOrNull()
         val lastFired = city?.let { lastFiredByName(it) } ?: emptyMap()
         AlertsUiState.Content(
@@ -93,7 +106,15 @@ class AlertsViewModel(
             zone = city?.timezone?.let { runCatching { ZoneId.of(it) }.getOrNull() }
                 ?: ZoneId.systemDefault(),
             canAdd = rules.size < MaxRules,
-            units = settings.units
+            units = settings.units,
+            // The zone lookup decodes a 290 KB asset the first time and runs on
+            // Dispatchers.Default with the rest of this block; a place outside Italy
+            // costs one bounding-box test and answers Unavailable.
+            warnings = warningReader?.takeIf { city != null }?.let { reader ->
+                runCatching {
+                    reader.state(reader.zoneOf(city!!), bulletin, reader.today())
+                }.getOrDefault(PlaceWarningState.Unavailable)
+            } ?: PlaceWarningState.Unavailable
         )
     }
         .flowOn(Dispatchers.Default)
@@ -108,6 +129,14 @@ class AlertsViewModel(
         mutate { settingsStore.setPrecipitationWarning(enabled) }
 
     fun setDailySummary(enabled: Boolean) = mutate { settingsStore.setDailySummary(enabled) }
+
+    // The official warnings (Fase 11). They live here and not in Settings for Fase 6's
+    // reason: a switch belongs next to what it governs.
+    fun setOfficialWarnings(enabled: Boolean) =
+        mutate { settingsStore.setOfficialWarnings(enabled) }
+
+    fun setOfficialWarningsFrom(level: WarningLevel) =
+        mutate { settingsStore.setOfficialWarningsFrom(level) }
 
     // ------------------------------------------------------------- the reader's
 
@@ -196,7 +225,8 @@ class AlertsViewModel(
                     settingsStore = ServiceLocator.settingsStore(app),
                     ruleStore = ServiceLocator.ruleStore(app),
                     cityStore = ServiceLocator.cityStore(app),
-                    repository = ServiceLocator.weatherRepository(app)
+                    repository = ServiceLocator.weatherRepository(app),
+                    warningReader = ServiceLocator.warningReader(app)
                 )
             }
         }

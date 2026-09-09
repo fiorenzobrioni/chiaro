@@ -71,6 +71,13 @@ data class ArcSettings(
     val agendaVerdicts: Boolean = true,
     /** The week's seven days at the foot of a four-row card. */
     val week: Boolean = true,
+    /**
+     * The official warning's chip (Fase 11), on the two forms with a line to spare — the
+     * card and the panel. On by default, for the reason
+     * [com.callbackdev.chiaro.widget.WidgetLook.showWarning] gives: on a quiet day it
+     * costs nothing, and on the other kind it is the line worth keeping.
+     */
+    val warning: Boolean = true,
     val density: ArcDensity = ArcDensity.COMFORTABLE
 ) {
     /** The factor every text size on the card is multiplied by. */
@@ -107,11 +114,13 @@ object ArcSettingsCodec {
     const val AGENDA_RAIN = "agenda_rain"
     const val AGENDA_VERDICTS = "agenda_verdicts"
     const val WEEK = "week"
+    const val WARNING = "warning"
     const val DENSITY = "density"
 
     val keys: List<String> = listOf(
         SPAN, GROUND, SUN_PATH, MOON, RAIN, HOUR_LABELS, TEMPERATURES, NOW_MARKER, FADE_PAST,
-        HERO, DIAL_FIGURE, AGENDA_SUN, AGENDA_MOON, AGENDA_RAIN, AGENDA_VERDICTS, WEEK, DENSITY
+        HERO, DIAL_FIGURE, AGENDA_SUN, AGENDA_MOON, AGENDA_RAIN, AGENDA_VERDICTS, WEEK,
+        WARNING, DENSITY
     )
 
     fun encode(settings: ArcSettings): Map<String, String> = mapOf(
@@ -131,6 +140,7 @@ object ArcSettingsCodec {
         AGENDA_RAIN to settings.agendaRain.toString(),
         AGENDA_VERDICTS to settings.agendaVerdicts.toString(),
         WEEK to settings.week.toString(),
+        WARNING to settings.warning.toString(),
         DENSITY to settings.density.name
     )
 
@@ -157,6 +167,7 @@ object ArcSettingsCodec {
             agendaRain = flag(AGENDA_RAIN, defaults.agendaRain),
             agendaVerdicts = flag(AGENDA_VERDICTS, defaults.agendaVerdicts),
             week = flag(WEEK, defaults.week),
+            warning = flag(WARNING, defaults.warning),
             density = named(DENSITY, defaults.density, ArcDensity.entries)
         )
     }

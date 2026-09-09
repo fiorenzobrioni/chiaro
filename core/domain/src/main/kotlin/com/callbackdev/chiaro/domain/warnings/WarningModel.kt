@@ -50,7 +50,15 @@ data class WarningZone(
     val code: String,
     val name: String,
     val region: String
-)
+) {
+    /**
+     * Whether the zone has a name of its own to print. False for the thirteen the
+     * Region never named, where [name] IS [code]: a surface asks this and prints the
+     * region instead ("Zona di allerta in Basilicata"), because "nothing here is a zone
+     * code" is a rule about the screen, not about the file (DESIGN §8.13).
+     */
+    val named: Boolean get() = name != code
+}
 
 /** One row of a bulletin: one level, for one hazard, in one zone, on one day. */
 data class ZoneWarning(
@@ -124,6 +132,30 @@ data class PlaceWarnings(
     /** Midnight closing the last day covered. */
     val expiresAt: LocalDateTime
         get() = days.maxOf { it.date }.plusDays(1).atStartOfDay()
+
+    /**
+     * The days that carry [maxLevel] — what the banner and the notification say the
+     * warning is FOR ("oggi fino a mezzanotte", "oggi e domani"). One rule, so the two
+     * can never name different days.
+     */
+    val peakDays: List<DayWarnings>
+        get() = days.filter { it.maxLevel == maxLevel }
+
+    /**
+     * Every hazard graded above NONE anywhere in [days], at the highest level it reaches,
+     * ordered exactly as a day's own [DayWarnings.ranked] is: level first, then the
+     * Dipartimento's tie-break. This is the banner's first line ("Allerta arancione per
+     * temporali, gialla per rischio idrogeologico") and the order every other surface
+     * lists hazards in.
+     */
+    val ranked: List<Pair<WarningHazard, WarningLevel>>
+        get() = WarningHazard.entries
+            .map { hazard -> hazard to days.maxOf { it.levels.getValue(hazard) } }
+            .filter { it.second != WarningLevel.NONE }
+            .sortedWith(
+                compareByDescending<Pair<WarningHazard, WarningLevel>> { it.second }
+                    .thenBy { WarningHazard.displayOrder.indexOf(it.first) }
+            )
 
     /** The levels of one day, one per hazard, always all three. */
     data class DayWarnings(

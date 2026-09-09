@@ -3,8 +3,13 @@ package com.callbackdev.chiaro.widget.arc
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.widget.StaleSp
+import com.callbackdev.chiaro.widget.WarningChipGap
+import com.callbackdev.chiaro.widget.WarningSlot
 import com.callbackdev.chiaro.widget.textLineHeight
+import com.callbackdev.chiaro.widget.warningChipHeight
+import com.callbackdev.chiaro.widget.warningSlot
 
 /**
  * The five forms of the day's arc, and the grant that picks one. The widget goes from
@@ -82,6 +87,12 @@ internal data class ArcPlan(
     val heroLines: Int,
     val agendaRows: Int,
     val week: Boolean,
+    /**
+     * Where the official warning's chip goes on this card (Fase 11). Only the card and
+     * the panel ever carry one: the dial has one figure and the strip one line, and a
+     * chip on either would be the card's only subject.
+     */
+    val warning: WarningSlot,
     /** [ArcSettings.textScale], carried so every text on the card reads it from one place. */
     val textScale: Float
 )
@@ -97,7 +108,16 @@ internal fun arcPlan(
     settings: ArcSettings,
     stale: Boolean,
     agendaAvailable: Int,
-    weekAvailable: Boolean
+    weekAvailable: Boolean,
+    /**
+     * Whether the header's sentence is the day's headline rather than the next light
+     * moment. It is a parameter and not `settings.hero == HEADLINE` because the card
+     * falls back to the headline when there is no moment left ([heroIsHeadline]), and
+     * the warning's rule turns on what the slot is REALLY printing.
+     */
+    heroIsHeadline: Boolean = false,
+    /** What the bulletin grades this place at, or null when there is nothing to draw. */
+    warningLevel: WarningLevel? = null
 ): ArcPlan {
     val form = arcForm(size)
     val columns = arcColumns(size.width)
@@ -119,7 +139,8 @@ internal fun arcPlan(
                 paddingHorizontal = ArcPadTight, paddingVertical = ArcPadTight,
                 graphic = DpSize(innerW, height),
                 hourLabels = false, temperatures = false, tickStepHours = 0,
-                heroLines = 0, agendaRows = 0, week = false, textScale = scale
+                heroLines = 0, agendaRows = 0, week = false,
+                warning = WarningSlot.NONE, textScale = scale
             )
         }
         ArcForm.STRIP -> {
@@ -144,29 +165,57 @@ internal fun arcPlan(
                 temperatures = labels && settings.temperatures &&
                     graphic.height >= TemperaturesMinHeight,
                 tickStepHours = arcTickStep(graphic.width),
-                heroLines = wordLines, agendaRows = 0, week = false, textScale = scale
+                heroLines = wordLines, agendaRows = 0, week = false,
+                warning = WarningSlot.NONE, textScale = scale
             )
         }
         ArcForm.CARD, ArcForm.PANEL, ArcForm.BOARD -> {
             val innerW = size.width - ArcPad * 2
             val innerH = size.height - ArcPad * 2
-            val heroLines: Int
-            val header: Dp
+            val wantedHeroLines: Int
             if (form == ArcForm.CARD) {
                 // Number over place over the sentence, all against the leading edge.
-                heroLines = if (settings.hero == ArcHero.NONE) 0 else CardHeroMaxLines
-                header = line(CardTempSp) + line(PlaceSp) + line(CardHeroSp) * heroLines +
-                    (if (stale) line(StaleSp) else 0.dp)
+                wantedHeroLines = if (settings.hero == ArcHero.NONE) 0 else CardHeroMaxLines
             } else {
                 // One row: the number, then the sentence with the place and the countdown
                 // under it. The sentence takes two lines where its column is narrow.
                 val heroColumn = innerW - TemperatureColumn - HeroGap
-                heroLines = when {
+                wantedHeroLines = when {
                     settings.hero == ArcHero.NONE -> 0
                     heroColumn < HeroOneLineMin -> 2
                     else -> 1
                 }
-                header = maxOf(line(PanelTempSp), line(HeroSp) * heroLines + line(HeroSubSp))
+            }
+            // The warning (Fase 11). The arc's sentence slot is not always the day's
+            // headline — a reader who left the hero on the next light moment has a card
+            // that says nothing about a warning — so `headlineShown` asks what the slot
+            // is REALLY printing, not merely whether a slot exists.
+            var warning = warningSlot(
+                level = warningLevel,
+                enabled = settings.warning,
+                headlineShown = heroIsHeadline && wantedHeroLines > 0,
+                sentenceSlot = wantedHeroLines > 0,
+                ownRow = true
+            )
+            fun headerFor(slot: WarningSlot): Pair<Int, Dp> {
+                val lines = if (slot == WarningSlot.SENTENCE) 0 else wantedHeroLines
+                val chip = if (slot.drawn) warningChipHeight(fontScale) + WarningChipGap else 0.dp
+                val height = if (form == ArcForm.CARD) {
+                    line(CardTempSp) + line(PlaceSp) + line(CardHeroSp) * lines +
+                        (if (stale) line(StaleSp) else 0.dp) + chip
+                } else {
+                    maxOf(line(PanelTempSp), line(HeroSp) * lines + line(HeroSubSp)) + chip
+                }
+                return lines to height
+            }
+            var (heroLines, header) = headerFor(warning)
+            // The chip yields to the drawing, not the other way round: a card whose arc
+            // would fall under its floor keeps the arc and drops the chip.
+            if (warning.drawn && innerH - header - ArcGap < GraphicFloor) {
+                warning = WarningSlot.NONE
+                val fallback = headerFor(warning)
+                heroLines = fallback.first
+                header = fallback.second
             }
             val afterHeader = innerH - header - ArcGap
             val week = form == ArcForm.BOARD && rows >= 4 && settings.week && weekAvailable
@@ -204,6 +253,7 @@ internal fun arcPlan(
                 heroLines = heroLines,
                 agendaRows = agendaRows,
                 week = week,
+                warning = warning,
                 textScale = scale
             )
         }

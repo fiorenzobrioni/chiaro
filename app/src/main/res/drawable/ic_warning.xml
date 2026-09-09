@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The official warning's mark (Fase 11), drawn and never the character ⚠: Roboto has
+     no U+26A0 and the phone would fetch it from whatever symbol font it has, in a hand
+     of its own — the same reason ic_verdict_* exist. Same 2.4 stroke, same 24 box, same
+     round caps and joins, so a warning line sits beside a verdict mark without either
+     looking heavier. Tinted with the level's ink wherever it is shown (DESIGN §8.13). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M12,4 L21,19.4 L3,19.4 Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.4" />
+    <path
+        android:pathData="M12,10.2 L12,13.8"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.4" />
+    <path
+        android:pathData="M12,16.7 L12,16.7"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.4" />
+</vector>

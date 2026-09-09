@@ -15,6 +15,40 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 
 ### Added
 
+- **Official warnings from the Protezione Civile** (Fase 11), for places in Italy. The
+  Dipartimento's criticality bulletin is discovered from its own files, read from its CAP,
+  and matched to a place by geometry: the 187 warning zones ship inside the app as
+  simplified polygons (284 KB at a 500 m tolerance), so the lookup works offline, works
+  for the device position, and does not depend on how a municipality's name is spelled.
+  On Today a banner sits between the freshness chip and the guide card when there is
+  something to say — the level, what it is for, which day, and the hour of the bulletin —
+  and opens a sheet with the arithmetic: one row per risk and one column per day, every
+  cell a word inside its own colour, the Dipartimento's own definition of the level, the
+  bulletin's note when it names the place's region, the CC BY 4.0 attribution and the way
+  back to the bulletin. Orange and red also take the sentence at the top of the screen;
+  yellow does not, because in an Italian autumn yellow is frequent and a sentence that
+  repeats stops being read. Alerts leads with the whole answer, absence included ("no
+  warning for this zone", "no bulletin for today yet", "official warnings are for places
+  in Italy"), plus the notification switch and the level to be told from. The Journal
+  writes a line whenever a level moves, and one a day at most when the bulletin could not
+  be reached. Three new colour pairs in `ChiaroColors`, measured: the ink at 8.5:1 in
+  light and 11.0:1 in dark, and a deuteranope simulation showing that one of the two
+  carriers collapses in each scheme — which is why a level is always a word and a glyph
+  before it is a colour.
+
+  On the home screen the level reaches the Now, Today and day's-arc widgets as a chip,
+  by one rule the four cards share: orange and red are already in the day's sentence, so
+  the chip appears only where that sentence is not, and yellow, which the sentence never
+  carries, takes a line of its own where the card has one to spare. Each widget can turn
+  it off on its own, and it is on by default.
+- **Two Glance containers that were losing children.** Glance draws at most ten children
+  per container and drops the rest without a word. Counting them for the warning chip
+  found two already over: the Today widget's hour strip (seven cells with six spacers
+  between them is thirteen, on exactly the four-cell card the widget is designed around,
+  so the last two hours were being dropped in silence) and the Sky widget's tall card
+  (thirteen with five rows under the hero). Both now space with padding rather than with
+  spacers, the cure the arc widget already used: the geometry does not move, and each row
+  is one child instead of two.
 - A fourth home widget, **The day's arc**: the sun's real path over the reader's place,
   computed by the same astronomy engine that paints the sky, drawn over the sky of every
   hour as bands; the moon's path and its disc in tonight's real phase; each hour's rain

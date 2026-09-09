@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.widget
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -100,21 +101,39 @@ private fun TodayContent(
     val shown = content.strip.take(cells)
     val today = content.week.firstOrNull()?.forecast
     val range = today?.takeIf { model.look.showDayRange }
+    val sentenceOn = model.look.showSentence
+    val anyRain = shown.any { (it.hour.precipChancePct ?: 0) > 0 }
+    // The warning's chip (Fase 11) is settled on the card the reader would have WITHOUT
+    // it: the layout depends on the budget and the budget on the layout, and one of the
+    // two has to go first — the same knot the rain row unties by asking the switch
+    // rather than the resolved sentence. The trailing column is the only place a chip
+    // can stand on this card, so a card too narrow for one carries no warning either.
+    val baseRain = anyRain &&
+        todayShowRain(size, fontScale, content.isStale, sentenceOn, range != null)
+    val wide = todayIsWide(size, todayHeroIconSize(size, fontScale, baseRain))
+    val warning = warningSlot(
+        level = model.warning?.maxLevel,
+        enabled = model.look.showWarning,
+        headlineShown = sentenceOn && wide,
+        sentenceSlot = wide,
+        ownRow = wide &&
+            todayHasWarningRow(size, fontScale, content.isStale, sentenceOn, range != null)
+    )
     // The rain row appears when any visible hour has something to report — then EVERY
     // cell prints its figure, because a 0% next to an 80% is information (the app
     // strip's own rule) — and when it fits under the hero's words (the budget's).
-    val showRain = shown.any { (it.hour.precipChancePct ?: 0) > 0 } &&
+    val showRain = anyRain &&
         todayShowRain(
             size, fontScale, content.isStale,
-            sentence = model.look.showSentence, range = range != null
+            sentence = sentenceOn, range = range != null, warning = warning.drawn
         )
     val icon = todayHeroIconSize(size, fontScale, showRain)
-    val withSentence = model.look.showSentence && todayIsWide(size, icon)
+    val withSentence = sentenceOn && todayIsWide(size, icon)
     // The range wants the far edge too (committente, 4 set: «at the far edge, level with
     // the temperature»); with the sentence there it sits under it, and without a sentence
     // column to hold it — a card too narrow for one — it stays home rather than crowding
     // the number, which is the reason it left that spot on the third device pass.
-    val trailing = withSentence || (range != null && todayIsWide(size, icon))
+    val trailing = withSentence || warning.drawn || (range != null && todayIsWide(size, icon))
 
     Column(modifier = GlanceModifier.fillMaxSize()) {
         Row(
@@ -180,6 +199,11 @@ private fun TodayContent(
                             modifier = GlanceModifier.fillMaxWidth()
                         )
                     }
+                    // Under the sentence and over the range: four children at most in
+                    // this column, against Glance's ten.
+                    model.warning?.maxLevel?.takeIf { warning.drawn }?.let { level ->
+                        WarningChipRow(level, palette, if (withSentence) WarningChipGap else 0.dp)
+                    }
                     range?.let { day ->
                         DayRange(day.highC, day.lowC, model.settings.units, palette)
                     }
@@ -192,12 +216,22 @@ private fun TodayContent(
         Spacer(modifier = GlanceModifier.defaultWeight())
         Spacer(modifier = GlanceModifier.height(StripGap))
 
+        // The gaps between cells are PADDING, not spacers (Fase 11, while counting this
+        // card's containers): Glance draws at most ten children per container and drops
+        // the rest without a word, and seven cells with six spacers between them is
+        // thirteen — the last two hours of the strip were being dropped in silence on
+        // exactly the four-cell card the widget is designed around. Seven children now.
+        //
+        // Half the gap on each side of every cell rather than the whole of it between
+        // them, so the cells stay one grid: the strip's ink gives up 3 dp at each end,
+        // which is the whole visible difference on a 340 dp card.
         Row(modifier = GlanceModifier.fillMaxWidth().padding(start = StripStartInset)) {
-            shown.forEachIndexed { index, strip ->
-                if (index > 0) Spacer(modifier = GlanceModifier.width(StripCellSpacing))
+            shown.forEach { strip ->
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = GlanceModifier.defaultWeight()
+                    modifier = GlanceModifier
+                        .padding(horizontal = StripCellSpacing / 2)
+                        .defaultWeight()
                 ) {
                     Text(
                         text = Formats.hourLabel(strip.hour.time, is24h, locale),

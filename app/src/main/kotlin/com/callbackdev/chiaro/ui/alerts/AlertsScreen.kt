@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -67,6 +68,7 @@ import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.ui.theme.reducedMotion
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.data.warnings.PlaceWarningState
 import com.callbackdev.chiaro.domain.rules.MaxConditions
 import com.callbackdev.chiaro.domain.rules.MaxRules
 import com.callbackdev.chiaro.domain.rules.NotificationRule
@@ -76,8 +78,14 @@ import com.callbackdev.chiaro.domain.rules.RuleOp
 import com.callbackdev.chiaro.domain.rules.RuleVariableKind
 import com.callbackdev.chiaro.domain.rules.RuleVariables
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
+import com.callbackdev.chiaro.ui.warnings.WarningText
+import com.callbackdev.chiaro.ui.warnings.WarningSheet
+import com.callbackdev.chiaro.ui.warnings.WarningBanner
+import com.callbackdev.chiaro.ui.format.Formats
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -201,7 +209,58 @@ private fun AlertsContent(
         DateTimeFormatter.ofPattern(if (is24h) "d MMM, HH:mm" else "d MMM, h:mm a", locale)
     }
 
+    // The active place's own hour, like every other hour in the app.
+    val issuedFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
+    var warningSheetOpen by rememberSaveable { mutableStateOf(false) }
+    val current = content.warnings as? PlaceWarningState.Current
+    // The place's own day, like the "last fired" hour above it.
+    val placeToday = LocalDate.now(content.zone)
+    if (warningSheetOpen && current != null) {
+        WarningSheet(
+            warnings = current.warnings,
+            today = placeToday,
+            timeFmt = issuedFmt,
+            onDismiss = { warningSheetOpen = false }
+        )
+    }
+
     LazyColumn(modifier = Modifier.fillMaxSize()) {
+        // VISION §5.4 and Fase 11: the authority's warnings lead, because they are the
+        // only ones on this screen nobody chose — and because the reader who opens
+        // Avvisi in an autumn afternoon is usually here to check exactly this.
+        item { GroupTitle(stringResource(R.string.alerts_group_warnings)) }
+        item {
+            OfficialWarningCard(
+                state = content.warnings,
+                today = placeToday,
+                timeFmt = issuedFmt,
+                onOpenSheet = { warningSheetOpen = true },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+        }
+        // The switch is a setting, not a property of the place on screen: it stays put
+        // when the active place is abroad, because hiding a setting behind today's
+        // choice of city is how a setting becomes unfindable. The card above is what
+        // says whether this place has a zone at all.
+        item {
+            ReadySwitch(
+                title = stringResource(R.string.warning_switch_title),
+                description = stringResource(R.string.warning_switch_desc),
+                checked = content.notifications.officialWarnings,
+                onChange = { viewModel.setOfficialWarnings(it); if (it) somethingTurnedOn() }
+            )
+        }
+        // The other honest road to the same choice: the two channels let the system
+        // silence the yellow, this lets the app never send it (DESIGN §8.13, Fase 11).
+        if (content.notifications.officialWarnings) {
+            item {
+                WarningFromRow(
+                    from = content.notifications.officialWarningsFrom,
+                    onChange = viewModel::setOfficialWarningsFrom
+                )
+            }
+        }
+
         item { GroupTitle(stringResource(R.string.alerts_group_ready)) }
         item {
             ReadySwitch(
@@ -307,6 +366,132 @@ private fun AlertsContent(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 )
             }
+        }
+    }
+}
+
+/**
+ * The official warnings for the active place: the banner when there is one, and
+ * otherwise the honest state (DESIGN §8.13). This is the screen where an absence is a
+ * value — "nessuna allerta per Milano, bollettino delle 15:19" is the answer somebody
+ * came for — which is exactly why Today draws nothing at all in the same case (§1.1).
+ */
+@Composable
+private fun OfficialWarningCard(
+    state: PlaceWarningState,
+    today: LocalDate,
+    timeFmt: DateTimeFormatter,
+    onOpenSheet: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val locale = Locale.getDefault()
+    val dateFmt = remember(locale) {
+        DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.LONG).withLocale(locale)
+    }
+    val context = LocalContext.current
+    when (state) {
+        is PlaceWarningState.Current -> {
+            val warnings = state.warnings
+            if (warnings.maxLevel != WarningLevel.NONE) {
+                WarningBanner(
+                    warnings = warnings,
+                    today = today,
+                    timeFmt = timeFmt,
+                    onOpen = onOpenSheet,
+                    modifier = modifier
+                )
+            } else {
+                QuietState(
+                    title = stringResource(
+                        R.string.warning_card_none,
+                        WarningText.zoneLabel(context, warnings.zone)
+                    ),
+                    detail = stringResource(
+                        R.string.warning_card_none_detail,
+                        warnings.issuedAt.toLocalTime().format(timeFmt)
+                    ),
+                    onClick = onOpenSheet,
+                    modifier = modifier
+                )
+            }
+        }
+        is PlaceWarningState.Stale -> QuietState(
+            title = stringResource(R.string.warning_card_stale),
+            detail = stringResource(
+                R.string.warning_card_stale_detail,
+                state.issuedAt.toLocalDate().format(dateFmt)
+            ),
+            onClick = null,
+            modifier = modifier
+        )
+        is PlaceWarningState.Waiting -> QuietState(
+            title = stringResource(R.string.warning_card_waiting),
+            detail = stringResource(R.string.warning_card_waiting_detail),
+            onClick = null,
+            modifier = modifier
+        )
+        PlaceWarningState.Unavailable -> QuietState(
+            title = stringResource(R.string.warning_card_unavailable),
+            detail = stringResource(R.string.warning_card_unavailable_detail),
+            onClick = null,
+            modifier = modifier
+        )
+    }
+}
+
+/** The three states the banner must never draw: a fact and its reason, on the neutral
+ * container the details tiles use — not a warning colour for the absence of a warning. */
+@Composable
+private fun QuietState(
+    title: String,
+    detail: String,
+    onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = MaterialTheme.shapes.medium,
+        modifier = modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
+        ) {
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            Text(
+                text = detail,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/** «Avvisami da: gialla / arancione» — two chips, because it is two values and a
+ * dialog for two values is a screen nobody needs. */
+@Composable
+private fun WarningFromRow(from: WarningLevel, onChange: (WarningLevel) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.warning_from_title),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        listOf(
+            WarningLevel.YELLOW to R.string.warning_from_yellow,
+            WarningLevel.ORANGE to R.string.warning_from_orange
+        ).forEach { (level, labelRes) ->
+            FilterChip(
+                selected = from == level,
+                onClick = { onChange(level) },
+                label = { Text(stringResource(labelRes)) }
+            )
         }
     }
 }

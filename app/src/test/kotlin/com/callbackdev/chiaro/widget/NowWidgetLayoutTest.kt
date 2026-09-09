@@ -3,6 +3,8 @@ package com.callbackdev.chiaro.widget
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -134,5 +136,50 @@ class NowWidgetLayoutTest {
         // …and three cells do not (76): the mirrored card shows the number and the
         // place alone, exactly as the standard one does at that width.
         assertEquals(76f, nowMirroredSentenceWidth(threeByOne).value, 0.01f)
+    }
+
+    // ------------------------------------------------- the warning chip (Fase 11)
+
+    /** The chip's box at the default font size, the one number every budget below
+     * subtracts: the 11 sp word's line (14.52) over the 12 dp mark, plus 3 either side,
+     * and 4 dp of air above it. */
+    private val chipBlock = warningChipHeight(1f) + WarningChipGap
+
+    @Test
+    fun `the chip takes a line off the wide card's sentence, never its last one`() {
+        assertEquals(3, nowSentenceLines(fourByOne, 1f))
+        assertEquals(2, nowSentenceLines(fourByOne, 1f, withWarning = true))
+        // A reader at 1.3 has two lines and keeps one under the chip.
+        assertEquals(2, nowSentenceLines(fourByOne, 1.3f))
+        assertEquals(1, nowSentenceLines(fourByOne, 1.3f, withWarning = true))
+    }
+
+    @Test
+    fun `a one-row card has room for a line of sentence and the chip`() {
+        assertTrue(nowRowHasWarningRow(fourByOne, 1f, withSentence = true))
+        assertTrue(nowRowHasWarningRow(fourByOne, 1f, withSentence = false))
+        // A row the launcher granted 45 dp of is not a row with a line to spare.
+        assertFalse(nowRowHasWarningRow(DpSize(340.dp, 45.dp), 1f, withSentence = true))
+    }
+
+    /**
+     * The two-by-two is the card the chip does NOT fit on with the sentence up: 68.9 dp
+     * of room for the glyph, 24.5 of which the chip would want, leaves 44.4 against the
+     * family's 52 dp floor. Turn the sentence off and its two lines pay for the chip
+     * twice over.
+     */
+    @Test
+    fun `a tall card gives the chip a line only when the glyph can spare it`() {
+        assertFalse(nowTallHasWarningRow(twoByTwo, 1f, stale = false, withSentence = true))
+        assertTrue(nowTallHasWarningRow(twoByTwo, 1f, stale = false, withSentence = false))
+        // Three rows: room for everything.
+        assertTrue(nowTallHasWarningRow(DpSize(159.dp, 290.dp), 1f, false, withSentence = true))
+    }
+
+    @Test
+    fun `a drawn chip costs the tall glyph exactly its own block`() {
+        val without = nowTallIconRoom(DpSize(159.dp, 290.dp), 1f, false, withSentence = true, withWarning = false)
+        val with = nowTallIconRoom(DpSize(159.dp, 290.dp), 1f, false, withSentence = true, withWarning = true)
+        assertEquals(chipBlock.value, (without - with).value, 0.01f)
     }
 }

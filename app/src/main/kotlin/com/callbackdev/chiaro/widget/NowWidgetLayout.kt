@@ -115,9 +115,33 @@ internal val SentenceColumnMin = 96.dp
  * ~63 dp against the ~70 the card leaves — so the cap is the sentence's, not the card's.
  * A reader's larger font scale lowers the count rather than overflowing.
  */
-internal fun nowSentenceLines(size: DpSize, fontScale: Float): Int {
-    val room = size.height - WidgetCardPaddingSnug * 2
+internal fun nowSentenceLines(
+    size: DpSize,
+    fontScale: Float,
+    withWarning: Boolean = false
+): Int {
+    val room = size.height - WidgetCardPaddingSnug * 2 - warningBlock(fontScale, withWarning)
     return (room / textLineHeight(SentenceSp, fontScale)).toInt().coerceIn(1, RowSentenceMaxLines)
+}
+
+/** What a drawn chip costs a budget: its own box and the air above it, or nothing. */
+internal fun warningBlock(fontScale: Float, drawn: Boolean): Dp =
+    if (drawn) warningChipHeight(fontScale) + WarningChipGap else 0.dp
+
+/**
+ * Whether a one-row card's sentence column has room for the warning chip on a line of
+ * its OWN — a line more than it is already using, which is what
+ * [com.callbackdev.chiaro.widget.WarningSlot.OWN_ROW] means. The column must still hold
+ * a line of sentence where one is drawn: a chip that pushed the sentence out would not
+ * be an extra line, it would be a swap the reader did not ask for. On the reference
+ * 82 dp row that leaves 70 dp against the 45.6 a line and a chip need, so a wide card
+ * carries both; the narrow form has no column at all and never gets here.
+ */
+internal fun nowRowHasWarningRow(size: DpSize, fontScale: Float, withSentence: Boolean): Boolean {
+    val room = size.height - WidgetCardPaddingSnug * 2
+    val needed = (if (withSentence) textLineHeight(SentenceSp, fontScale) else 0.dp) +
+        warningChipHeight(fontScale) + WarningChipGap
+    return room >= needed
 }
 
 internal const val RowSentenceMaxLines = 3
@@ -147,16 +171,51 @@ internal fun nowTallIconSize(
     size: DpSize,
     fontScale: Float,
     stale: Boolean,
-    withSentence: Boolean = true
+    withSentence: Boolean = true,
+    withWarning: Boolean = false
+): Dp = heroIconSize(nowTallIconRoom(size, fontScale, stale, withSentence, withWarning))
+
+/**
+ * The same arithmetic before the family's floor and ceiling are applied. The RAW number
+ * is what [nowTallHasWarningRow] has to see: `heroIconSize` clamps at 52 dp, so a card
+ * that has already run out of room and one that has 20 dp to spare come back identical.
+ */
+internal fun nowTallIconRoom(
+    size: DpSize,
+    fontScale: Float,
+    stale: Boolean,
+    withSentence: Boolean,
+    withWarning: Boolean
 ): Dp {
     val text = textLineHeight(TemperatureSp, fontScale) +
         (if (withSentence) textLineHeight(SentenceSp, fontScale) * TallSentenceMaxLines else 0.dp) +
         textLineHeight(PlaceSp, fontScale) +
-        (if (stale) textLineHeight(StaleSp, fontScale) else 0.dp)
-    val room = size.height - WidgetCardPaddingSnug - WidgetCardPadding - text +
+        (if (stale) textLineHeight(StaleSp, fontScale) else 0.dp) +
+        warningBlock(fontScale, withWarning)
+    return size.height - WidgetCardPaddingSnug - WidgetCardPadding - text +
         textInkBalance(TemperatureSp, fontScale)
-    return heroIconSize(room)
 }
+
+/**
+ * Whether a tall card can give the chip a line of its own: what the budget leaves once
+ * the chip is paid for, against the glyph's own floor. On the reference two-by-two
+ * (159 × 189 dp) with the sentence on it does NOT — 68.96 dp of room minus the chip's
+ * 24.5 is 44.5, under the family's 52 — and the yellow chip stays home rather than
+ * pushing the glyph below the size at which Meteocons stops being legible. Turn the
+ * sentence off on that same card and the two lines it gives back pay for the chip twice
+ * over. A section that does not fit is not drawn: the Today widget's own rule.
+ */
+internal fun nowTallHasWarningRow(
+    size: DpSize,
+    fontScale: Float,
+    stale: Boolean,
+    withSentence: Boolean
+): Boolean =
+    nowTallIconRoom(size, fontScale, stale, withSentence, withWarning = true) >= HeroIconFloor
+
+/** The floor `heroIconSize` clamps to, named here so the budget above can compare
+ * against it rather than against a number it cannot see. */
+internal val HeroIconFloor = 52.dp
 
 /** The hero number's size, named because two budgets are measured off it. */
 internal const val TemperatureSp = 34f

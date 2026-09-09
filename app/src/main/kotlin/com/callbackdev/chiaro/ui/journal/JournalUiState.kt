@@ -5,12 +5,16 @@ import com.callbackdev.chiaro.data.FetchFailureReason
 import com.callbackdev.chiaro.data.local.ForecastDiff
 import com.callbackdev.chiaro.data.local.ForecastOutcome
 import com.callbackdev.chiaro.data.local.SnapshotDiff
+import com.callbackdev.chiaro.data.local.WarningRecordKind
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.sky.SkyRun
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
+import com.callbackdev.chiaro.domain.warnings.WarningHazard
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
 
 /**
@@ -25,6 +29,22 @@ data class JournalRow(
     /** The commit's `current.*` snapshot — what the app FOUND when it looked, which
      * is the evidence [JournalEntry.DayOutcome] judges a finished day against. */
     val snapshot: Map<String, String> = emptyMap()
+)
+
+/**
+ * One `warning_records` row, already decoded by the ViewModel: names and ISO strings
+ * become enums and dates at the edge, so a row written by a future build with a hazard
+ * this one does not know is dropped there and the builder below stays total.
+ */
+data class WarningRecordRow(
+    val at: Instant,
+    val kind: WarningRecordKind,
+    val issuedAt: LocalDateTime?,
+    val zoneName: String?,
+    val day: LocalDate?,
+    val hazard: WarningHazard?,
+    val from: WarningLevel?,
+    val to: WarningLevel?
 )
 
 /** One line of the Journal's prose, newest first inside its day (VISION §5.5). */
@@ -62,6 +82,28 @@ sealed interface JournalEntry {
     data class FetchFailed(
         override val at: Instant,
         val reason: FetchFailureReason
+    ) : JournalEntry
+
+    /**
+     * A level that appeared, rose or fell for this place between two bulletins (Fase
+     * 11). [to] NONE is the warning coming down — the sentence says "rientrata" and the
+     * notification deliberately never fires for it (the engine's own rule).
+     */
+    data class WarningChanged(
+        override val at: Instant,
+        val day: LocalDate,
+        val hazard: WarningHazard,
+        val from: WarningLevel,
+        val to: WarningLevel,
+        val issuedAt: LocalDateTime?
+    ) : JournalEntry
+
+    /** The day's bulletin was looked for after the publication hour and not reached.
+     * One a day at most, which is the step's rule, not this one's. */
+    data class BulletinMissed(
+        override val at: Instant,
+        /** The bulletin still in hand, if any: what the app is still standing by. */
+        val heldFrom: LocalDateTime?
     ) : JournalEntry
 
     /**
@@ -167,7 +209,8 @@ object JournalStateBuilder {
         city: City,
         rows: List<JournalRow>,
         failures: List<FetchFailure>,
-        now: Instant
+        now: Instant,
+        warnings: List<WarningRecordRow> = emptyList()
     ): JournalContent {
         val zone = zoneOf(city)
         val entries = buildList {
@@ -188,6 +231,34 @@ object JournalStateBuilder {
             }
             failures.forEach {
                 add(JournalEntry.FetchFailed(Instant.ofEpochSecond(it.atEpochSeconds), it.reason))
+            }
+            // The official warnings' own rows (Fase 11). They come from their own table
+            // and not from a fetch: a bulletin has to appear in the diary on days no
+            // fetch succeeded, which is the whole reason that table exists.
+            warnings.forEach { record ->
+                when (record.kind) {
+                    WarningRecordKind.LEVEL_CHANGE -> {
+                        val day = record.day
+                        val hazard = record.hazard
+                        val to = record.to
+                        // A row this build cannot read is not guessed at: the edge
+                        // dropped what it could not decode, and a half-row is not a line.
+                        if (day != null && hazard != null && to != null) {
+                            add(
+                                JournalEntry.WarningChanged(
+                                    at = record.at,
+                                    day = day,
+                                    hazard = hazard,
+                                    from = record.from ?: WarningLevel.NONE,
+                                    to = to,
+                                    issuedAt = record.issuedAt
+                                )
+                            )
+                        }
+                    }
+                    WarningRecordKind.BULLETIN_MISSED ->
+                        add(JournalEntry.BulletinMissed(record.at, record.issuedAt))
+                }
             }
         }
         val days = entries

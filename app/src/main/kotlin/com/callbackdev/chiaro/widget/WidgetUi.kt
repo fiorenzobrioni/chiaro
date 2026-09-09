@@ -33,6 +33,8 @@ import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
+import androidx.glance.semantics.contentDescription
+import androidx.glance.semantics.semantics
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
@@ -53,12 +55,15 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.theme.ChiaroColors
 import com.callbackdev.chiaro.ui.theme.ChiaroPalette
 import com.callbackdev.chiaro.ui.theme.SkyPalette
 import com.callbackdev.chiaro.ui.theme.paletteFor
 import com.callbackdev.chiaro.ui.today.SkySnapshot
+import com.callbackdev.chiaro.ui.warnings.WarningText
 import java.time.Duration
 import java.time.Instant
 import java.util.Locale
@@ -651,6 +656,72 @@ private val HeroIconMax = 104.dp
  * fill ramp never carries text (its light end is 1.3:1 on paper). */
 fun rainInk(pct: Int, palette: WidgetPalette): androidx.glance.unit.ColorProvider =
     FixedColorProvider(palette.colors.rainInkAt(pct))
+
+/**
+ * The official warning's chip (Fase 11, DESIGN §8.13): `ic_warning` in the level's ink
+ * and the level's word, on the level's container — the Sky card's `VerdictChip` grammar
+ * at the size a home-screen card can afford. One TalkBack string for the pair, because a
+ * screen reader should say «Allerta gialla», never «triangle, Allerta gialla».
+ *
+ * The colours come from [WidgetPalette.colors], which is the dress read against the
+ * ground THIS CARD really has — not against the phone's theme. A light card under a dark
+ * system theme is the trap: theme-resolved colours put a dark-mode ink on a light-mode
+ * container, and the pair stops being the measured pair.
+ */
+@Composable
+fun WarningChip(level: WarningLevel, palette: WidgetPalette) {
+    val context = LocalContext.current
+    val colors = palette.colors
+    val pair = when (level) {
+        WarningLevel.RED -> colors.warningRed
+        WarningLevel.ORANGE -> colors.warningOrange
+        else -> colors.warningYellow
+    }
+    val word = context.getString(WarningText.phraseRes(level))
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = GlanceModifier
+            .background(FixedColorProvider(pair.container))
+            .cornerRadius(WarningChipCorner)
+            .padding(horizontal = WarningChipPadH, vertical = WarningChipPadV)
+            .semantics { contentDescription = word }
+    ) {
+        Image(
+            provider = ImageProvider(ChiaroIcons.warningMarkRes()),
+            contentDescription = null, // the row's own semantics say the word
+            colorFilter = ColorFilter.tint(FixedColorProvider(pair.ink)),
+            modifier = GlanceModifier.size(WarningChipGlyph)
+        )
+        Spacer(modifier = GlanceModifier.width(WarningChipTextGap))
+        Text(
+            text = word,
+            style = TextStyle(
+                color = FixedColorProvider(pair.ink),
+                fontSize = WarningChipSp.sp,
+                fontWeight = FontWeight.Medium
+            ),
+            maxLines = 1
+        )
+    }
+}
+
+/**
+ * The chip with the air above it, as ONE child of whatever column it joins: the gap is
+ * the wrapper's padding rather than a `Spacer`, for the reason the arc's agenda gives —
+ * Glance draws at most ten children per container and drops the rest without a word, so
+ * a line that costs two children costs twice what it looks like. The padding is on the
+ * box and not on the chip because a chip's own padding sits INSIDE its background, and
+ * a tinted gap is not a gap.
+ */
+@Composable
+fun WarningChipRow(level: WarningLevel, palette: WidgetPalette, topGap: Dp = 0.dp) {
+    Box(modifier = GlanceModifier.padding(top = topGap)) {
+        WarningChip(level, palette)
+    }
+}
+
+/** The air between the mark and its word, the Sky chip's own. */
+private val WarningChipTextGap = 4.dp
 
 /** The verdict pair, resolved at render time like every other widget color: same
  * fixed semantics as in the app — a verdict means the same thing whatever the

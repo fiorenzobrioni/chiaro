@@ -219,9 +219,13 @@ private fun TallContent(model: WidgetModel, palette: WidgetPalette, size: DpSize
         )
         if (rows > 0) {
             Spacer(modifier = GlanceModifier.height(SkyListGap))
+            // The air between rows is PADDING, not a spacer (Fase 11, while counting
+            // every card's containers): Glance draws at most ten children per container
+            // and drops the rest without a word. With spacers this column ran to
+            // thirteen at the five rows a three-row card can hold — the weight and the
+            // last rows were being dropped in silence. Nine now, at the widest.
             model.moments.drop(1).take(rows).forEachIndexed { index, next ->
-                if (index > 0) Spacer(modifier = GlanceModifier.height(SkyRowGap))
-                CompactRow(model, next, palette, wide)
+                CompactRow(model, next, palette, wide, topGap = if (index > 0) SkyRowGap else 0.dp)
             }
         }
         Spacer(modifier = GlanceModifier.defaultWeight())
@@ -241,15 +245,19 @@ private fun CompactRow(
     model: WidgetModel,
     moment: NextMoment,
     palette: WidgetPalette,
-    wide: Boolean
+    wide: Boolean,
+    /** The air above this row, taken as padding INSIDE a taller box (the arc widget's
+     * own cure): the row still occupies its height plus the gap, and the column still
+     * has one child per row rather than two. */
+    topGap: Dp = 0.dp
 ) {
     val context = LocalContext.current
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier
             .fillMaxWidth()
-            .height(SkyRowHeight)
-            .padding(start = SkyRowIndent)
+            .height(SkyRowHeight + topGap)
+            .padding(top = topGap, start = SkyRowIndent)
     ) {
         MomentGlyph(model, moment, palette, SkyRowGlyph)
         Text(

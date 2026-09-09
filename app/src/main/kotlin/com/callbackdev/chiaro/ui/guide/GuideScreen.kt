@@ -226,6 +226,14 @@ private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifi
             stringResource(R.string.guide_alerts_battery_title),
             stringResource(R.string.guide_alerts_battery_body)
         )
+        // Fase 11: what an official warning is, who issues it and when it arrives. The
+        // attribution is not decoration — CC BY 4.0 requires it, and it is also the only
+        // place a reader learns where the warning came from.
+        Feature(
+            stringResource(R.string.guide_alerts_official_title),
+            stringResource(R.string.guide_alerts_official_body)
+        )
+        Caption(stringResource(R.string.guide_alerts_official_credit))
 
         Chapter(Icons.Outlined.DateRange, stringResource(R.string.guide_journal_title))
         Paragraph(stringResource(R.string.guide_journal_p1))

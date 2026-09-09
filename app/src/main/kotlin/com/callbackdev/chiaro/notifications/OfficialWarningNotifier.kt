@@ -14,10 +14,10 @@ import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningHazard
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.domain.warnings.WarningNotification
+import com.callbackdev.chiaro.ui.warnings.WarningText
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.Locale
 
 /**
  * An official warning as a system notification (Fase 11). The title is the level and
@@ -67,7 +67,7 @@ object OfficialWarningNotifier {
             .setContentTitle(
                 context.getString(
                     R.string.notif_warning_title,
-                    context.getString(phraseRes(level)),
+                    context.getString(WarningText.phraseRes(level)),
                     city.name
                 )
             )
@@ -94,15 +94,12 @@ object OfficialWarningNotifier {
      */
     internal fun collapsed(context: Context, warnings: PlaceWarnings, today: LocalDate): String {
         val level = warnings.maxLevel
-        val peakDays = warnings.days.filter { it.maxLevel == level }
+        val peakDays = warnings.peakDays
         val hazards = WarningHazard.displayOrder.filter { hazard ->
             peakDays.any { it.levels[hazard] == level }
         }
-        val hazardWords = hazards
-            .map { context.getString(hazardRes(it)) }
-            .joinToString(context.getString(R.string.warning_hazard_join))
-            .replaceFirstChar { it.titlecase(Locale.getDefault()) }
-        val dayPhrase = dayPhrase(context, peakDays.map { it.date }, today)
+        val hazardWords = WarningText.hazards(context, hazards, capitalize = true)
+        val dayPhrase = WarningText.days(context, peakDays.map { it.date }, today)
         return context.getString(
             R.string.notif_warning_collapsed,
             hazardWords,
@@ -118,7 +115,7 @@ object OfficialWarningNotifier {
                 val ranked = day.ranked
                 if (ranked.isEmpty()) return@forEach
                 val levels = ranked.joinToString(" · ") { (hazard, level) ->
-                    context.getString(shortHazardRes(hazard)) + " " + context.getString(levelWordRes(level))
+                    context.getString(WarningText.shortHazardRes(hazard)) + " " + context.getString(WarningText.levelWordRes(level))
                 }
                 add(
                     when (day.date) {
@@ -132,23 +129,16 @@ object OfficialWarningNotifier {
                     }
                 )
             }
-            add(context.getString(R.string.notif_warning_zone, warnings.zone.name))
-            add(context.getString(R.string.notif_warning_meaning, context.getString(meaningRes(warnings.maxLevel))))
+            // The zone's own line, and only when the zone HAS a name: for the thirteen
+            // the Region never named there is nothing to print here that is not a code,
+            // and a line without its data is not drawn (this notifier's own rule).
+            warnings.zone.takeIf { it.named }?.let {
+                add(context.getString(R.string.notif_warning_zone, it.name))
+            }
+            add(context.getString(R.string.notif_warning_meaning, context.getString(WarningText.meaningRes(warnings.maxLevel))))
             warnings.note?.let { add(context.getString(R.string.notif_warning_note, it)) }
             add(context.getString(R.string.notif_warning_source, issuedTime(context, warnings)))
         }
-
-    private fun dayPhrase(context: Context, days: List<LocalDate>, today: LocalDate): String {
-        val hasToday = today in days
-        val hasTomorrow = today.plusDays(1) in days
-        return when {
-            hasToday && hasTomorrow -> context.getString(R.string.notif_warning_today_and_tomorrow)
-            hasTomorrow -> context.getString(R.string.notif_warning_tomorrow)
-            hasToday -> context.getString(R.string.notif_warning_today)
-            // A bulletin that starts after tomorrow does not exist; the date is the honest fallback.
-            else -> days.first().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
-        }
-    }
 
     private fun issuedTime(context: Context, warnings: PlaceWarnings): String =
         warnings.issuedAt.toLocalTime().format(clockFormat(context))
@@ -162,38 +152,6 @@ object OfficialWarningNotifier {
      */
     internal fun notificationId(city: City): Int =
         if (city.id == GpsCityId) 3000 else 3000 + (city.id % 1000).toInt()
-
-    internal fun phraseRes(level: WarningLevel): Int = when (level) {
-        WarningLevel.RED -> R.string.warning_phrase_red
-        WarningLevel.ORANGE -> R.string.warning_phrase_orange
-        else -> R.string.warning_phrase_yellow
-    }
-
-    internal fun levelWordRes(level: WarningLevel): Int = when (level) {
-        WarningLevel.RED -> R.string.warning_level_red
-        WarningLevel.ORANGE -> R.string.warning_level_orange
-        WarningLevel.YELLOW -> R.string.warning_level_yellow
-        WarningLevel.NONE -> R.string.warning_level_none
-    }
-
-    internal fun hazardRes(hazard: WarningHazard): Int = when (hazard) {
-        WarningHazard.HYDRAULIC -> R.string.warning_hazard_hydraulic
-        WarningHazard.HYDROGEOLOGICAL -> R.string.warning_hazard_hydrogeological
-        WarningHazard.THUNDERSTORM -> R.string.warning_hazard_thunderstorm
-    }
-
-    internal fun shortHazardRes(hazard: WarningHazard): Int = when (hazard) {
-        WarningHazard.HYDRAULIC -> R.string.warning_hazard_short_hydraulic
-        WarningHazard.HYDROGEOLOGICAL -> R.string.warning_hazard_short_hydrogeological
-        WarningHazard.THUNDERSTORM -> R.string.warning_hazard_short_thunderstorm
-    }
-
-    /** The Dipartimento's own words for a level, quoted and not translated (VISION §8). */
-    internal fun meaningRes(level: WarningLevel): Int = when (level) {
-        WarningLevel.RED -> R.string.warning_meaning_red
-        WarningLevel.ORANGE -> R.string.warning_meaning_orange
-        else -> R.string.warning_meaning_yellow
-    }
 
     private fun ensureChannels(context: Context, manager: NotificationManagerCompat) {
         manager.createNotificationChannel(

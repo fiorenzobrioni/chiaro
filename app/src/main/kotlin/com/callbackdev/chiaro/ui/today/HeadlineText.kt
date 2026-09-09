@@ -5,6 +5,7 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.warnings.WarningText
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -37,6 +38,23 @@ object HeadlineText {
         fun t(at: LocalDateTime): String = at.format(timeFmt)
         return when (headline) {
             null -> null
+            // Step zero (Fase 11): an authority's orange or red, in the same shape in
+            // both registers — the brief one drops the day, which the widget's own row
+            // does not have room for, and keeps the level and what it is for.
+            is Headline.Official -> {
+                val phrase = context.getString(WarningText.phraseRes(headline.level))
+                val hazards = WarningText.hazards(context, headline.hazards)
+                if (brief) {
+                    context.getString(R.string.headline_warning_brief, phrase, hazards)
+                } else {
+                    context.getString(
+                        if (headline.today) R.string.headline_warning_today
+                        else R.string.headline_warning_tomorrow,
+                        phrase,
+                        hazards
+                    )
+                }
+            }
             is Headline.Severe -> context.getString(
                 when (headline.bucket) {
                     AlertEngine.SevereBucket.THUNDER -> R.string.headline_severe_thunder

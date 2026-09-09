@@ -76,6 +76,11 @@ class OfficialWarningsStep(private val context: Context) {
                     held = StoredBulletin(source.id, result.stamp, result.bulletin)
                     store.setBulletin(held)
                     store.setFeedTag(source.id, result.feedTag)
+                    // The home screen carries the level too (Fase 11, fourth step), and
+                    // a bulletin can land on a run whose weather came from the cache —
+                    // no commit, so the repository's own hook never fires. This is the
+                    // only road from a new bulletin to a repainted card.
+                    SyncDependencies.widgets?.repaintAll()
                 }
                 is WarningFetchResult.Unchanged -> store.setFeedTag(source.id, result.feedTag)
                 is WarningFetchResult.Failed -> {

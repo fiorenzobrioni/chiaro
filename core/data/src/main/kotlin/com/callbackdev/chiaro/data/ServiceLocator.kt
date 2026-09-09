@@ -12,6 +12,7 @@ import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoGeocodingApi
 import com.callbackdev.chiaro.data.warnings.DpcBulletinSource
+import com.callbackdev.chiaro.data.warnings.OfficialWarningReader
 import com.callbackdev.chiaro.data.warnings.OfficialWarningStore
 import com.callbackdev.chiaro.data.warnings.WarningSource
 import com.callbackdev.chiaro.data.warnings.WarningZoneAssets
@@ -83,6 +84,9 @@ object ServiceLocator {
     @Volatile
     private var warningRecordDao: WarningRecordDao? = null
 
+    @Volatile
+    private var warningReader: OfficialWarningReader? = null
+
     // The two things more than one graph node needs (Fase 11 hoisted them out of
     // build(): the warnings source shares the OkHttp client for its User-Agent, the
     // warnings DAO shares the database).
@@ -108,6 +112,19 @@ object ServiceLocator {
     fun warningSource(context: Context): WarningSource =
         warningSource ?: synchronized(this) {
             warningSource ?: DpcBulletinSource(okHttp()).also { warningSource = it }
+        }
+
+    /**
+     * The screens' side of the warnings (Fase 11, third step). The index is passed as a
+     * supplier, not resolved here: a reader whose places are all abroad opens Today and
+     * Avvisi without ever decoding the asset.
+     */
+    fun warningReader(context: Context): OfficialWarningReader =
+        warningReader ?: synchronized(this) {
+            warningReader ?: OfficialWarningReader(
+                store = warningStore(context),
+                index = { warningZoneIndex(context) }
+            ).also { warningReader = it }
         }
 
     fun warningRecordDao(context: Context): WarningRecordDao =
@@ -232,6 +249,7 @@ object ServiceLocator {
         this.skyAlertStateStore = skyAlertStateStore
         this.fetchLogStore = fetchLogStore
         this.warningStore = warningStore
+        this.warningReader = null
         this.warningZoneIndex = warningZoneIndex
         this.warningSource = warningSource
         this.warningRecordDao = warningRecordDao

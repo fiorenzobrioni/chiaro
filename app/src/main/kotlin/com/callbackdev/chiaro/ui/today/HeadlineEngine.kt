@@ -3,6 +3,9 @@ package com.callbackdev.chiaro.ui.today
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
+import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
+import com.callbackdev.chiaro.domain.warnings.WarningHazard
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import java.time.LocalDateTime
 import java.time.LocalTime
 
@@ -19,6 +22,23 @@ import java.time.LocalTime
  * and says the first one it finds, in this order.
  */
 sealed interface Headline {
+
+    /**
+     * An official warning at orange or red for the place (Fase 11). Step zero of the
+     * ladder: an authority grading the day outranks anything the model says about it.
+     *
+     * Yellow deliberately never gets here. In an Italian autumn yellow is a frequent
+     * state, and a sentence that says the same thing one day in three stops being read;
+     * the banner under the hero carries yellow, where it is one line among the day's
+     * facts rather than the day's headline.
+     */
+    data class Official(
+        val level: WarningLevel,
+        /** At [level], in the issuer's own order — the banner and the notification agree. */
+        val hazards: List<WarningHazard>,
+        /** Whether the day carrying [level] is the one the reader is in. */
+        val today: Boolean
+    ) : Headline
 
     /** A severe hour ahead (the same table the notifier uses — one definition of
      * "severe" in the whole app). */
@@ -65,6 +85,8 @@ sealed interface Headline {
  *
  * The ladder, first match wins:
  *
+ * 0. an official warning at **orange or red** for the place (Fase 11) — an authority
+ *    grading the day outranks a model's reading of it;
  * 1. a severe hour inside [AlertEngine.SEVERE_LOOKAHEAD_HOURS];
  * 2. wet now — when it stops;
  * 3. rain likely later **today** (or inside six hours, past midnight) — the umbrella;
@@ -112,7 +134,19 @@ object HeadlineEngine {
     private const val WIND_STRONG_KPH = 39.0
     private const val GUST_STRONG_KPH = 60.0
 
-    fun headline(report: WeatherReport, now: LocalDateTime): Headline? {
+    /**
+     * [warnings] is what the official-warnings step last wrote for this place, or null
+     * where there is nothing (abroad, no bulletin, a bulletin whose days are over). It
+     * is a parameter with a default so the widgets that call this can pick it up one
+     * step at a time; the ladder below is the same either way.
+     */
+    fun headline(
+        report: WeatherReport,
+        now: LocalDateTime,
+        warnings: PlaceWarnings? = null
+    ): Headline? {
+        official(warnings, now)?.let { return it }
+
         val hours = report.hourly
         if (hours.isEmpty()) return null
         val ahead = hours.filter { !it.time.isBefore(now) }
@@ -209,6 +243,24 @@ object HeadlineEngine {
             }
 
         return null
+    }
+
+    /**
+     * Step zero. Today before tomorrow when both carry the peak — a sentence about now
+     * beats a sentence about later — and the hazards are the ones AT the peak on the
+     * day named, not every hazard the day carries: "orange for thunderstorms" must not
+     * become "orange for thunderstorms and hydrogeological risk" because the second was
+     * yellow.
+     */
+    private fun official(warnings: PlaceWarnings?, now: LocalDateTime): Headline.Official? {
+        if (warnings == null) return null
+        val level = warnings.maxLevel
+        if (level < WarningLevel.ORANGE) return null
+        val today = now.toLocalDate()
+        val day = warnings.peakDays.firstOrNull { it.date == today } ?: warnings.peakDays.first()
+        val hazards = WarningHazard.displayOrder.filter { day.levels[it] == level }
+        if (hazards.isEmpty()) return null
+        return Headline.Official(level = level, hazards = hazards, today = day.date == today)
     }
 
     /** A missing chance meets no threshold (§1.1): it is not a zero, it is silence. */

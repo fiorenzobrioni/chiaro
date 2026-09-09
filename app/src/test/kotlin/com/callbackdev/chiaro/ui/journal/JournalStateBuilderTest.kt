@@ -4,7 +4,10 @@ import com.callbackdev.chiaro.data.FetchFailure
 import com.callbackdev.chiaro.data.FetchFailureReason
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
+import com.callbackdev.chiaro.data.local.WarningRecordKind
 import com.callbackdev.chiaro.domain.sky.SkyRun
+import com.callbackdev.chiaro.domain.warnings.WarningHazard
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -48,8 +51,78 @@ class JournalStateBuilderTest {
     private fun build(
         rows: List<JournalRow>,
         failures: List<FetchFailure> = emptyList(),
-        now: Instant = this.now
-    ) = JournalStateBuilder.build(milan, rows, failures, now)
+        now: Instant = this.now,
+        warnings: List<WarningRecordRow> = emptyList()
+    ) = JournalStateBuilder.build(milan, rows, failures, now, warnings)
+
+    // ------------------------------------------------- the official warnings (Fase 11)
+
+    private fun warningRow(
+        at: Instant = this.at(3, 16),
+        kind: WarningRecordKind = WarningRecordKind.LEVEL_CHANGE,
+        day: LocalDate? = LocalDate.of(2026, 9, 4),
+        hazard: WarningHazard? = WarningHazard.THUNDERSTORM,
+        from: WarningLevel? = WarningLevel.NONE,
+        to: WarningLevel? = WarningLevel.ORANGE,
+        issuedAt: java.time.LocalDateTime? = LocalDate.of(2026, 9, 3).atTime(15, 46)
+    ) = WarningRecordRow(at, kind, issuedAt, "Nodo Idraulico di Milano", day, hazard, from, to)
+
+    private fun entries(warnings: List<WarningRecordRow>) =
+        build(rows = emptyList(), warnings = warnings).days.flatMap { it.entries }
+
+    @Test
+    fun `a level that rose becomes a line of its own, on its own day`() {
+        val entry = entries(listOf(warningRow())).single() as JournalEntry.WarningChanged
+        assertEquals(WarningLevel.ORANGE, entry.to)
+        assertEquals(WarningLevel.NONE, entry.from)
+        assertEquals(LocalDate.of(2026, 9, 4), entry.day)
+        assertEquals(LocalDate.of(2026, 9, 3), entry.at.atZone(zone).toLocalDate())
+    }
+
+    /** A level coming down is the Journal's business precisely because it is not the
+     * notifier's: the engine never fires for it, so this is where it is recorded. */
+    @Test
+    fun `a level that fell to NONE is still a line`() {
+        val entry = entries(
+            listOf(warningRow(from = WarningLevel.ORANGE, to = WarningLevel.NONE))
+        ).single() as JournalEntry.WarningChanged
+        assertEquals(WarningLevel.NONE, entry.to)
+    }
+
+    @Test
+    fun `a bulletin that was not reached is its own kind, with what still stands`() {
+        val entry = entries(
+            listOf(
+                warningRow(
+                    kind = WarningRecordKind.BULLETIN_MISSED,
+                    day = null, hazard = null, from = null, to = null
+                )
+            )
+        ).single() as JournalEntry.BulletinMissed
+        assertEquals(LocalDate.of(2026, 9, 3).atTime(15, 46), entry.heldFrom)
+    }
+
+    /** A row a later build wrote with a hazard this one cannot read is dropped, not
+     * guessed at: half a sentence is worse than no line. */
+    @Test
+    fun `a level change missing what it is about is not drawn`() {
+        assertTrue(entries(listOf(warningRow(hazard = null))).isEmpty())
+        assertTrue(entries(listOf(warningRow(day = null))).isEmpty())
+        assertTrue(entries(listOf(warningRow(to = null))).isEmpty())
+    }
+
+    @Test
+    fun `warning lines share the day with everything else that happened`() {
+        val content = build(
+            rows = listOf(row(at(3, 9), forecast(70, 24.0)), row(at(3, 15), forecast(30, 24.0))),
+            warnings = listOf(warningRow())
+        )
+        val day = content.days.single { it.date == LocalDate.of(2026, 9, 3) }
+        assertTrue(day.entries.any { it is JournalEntry.WarningChanged })
+        assertTrue(day.entries.any { it is JournalEntry.ForecastShift })
+        // Newest first inside a day: 16:00 leads 15:00.
+        assertTrue(day.entries.first() is JournalEntry.WarningChanged)
+    }
 
     @Test
     fun `a rain drop reads as Saturday improved, with the numbers`() {

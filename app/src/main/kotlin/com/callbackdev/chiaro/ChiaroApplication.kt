@@ -67,8 +67,12 @@ class ChiaroApplication : Application() {
         appScope.launch {
             combine(
                 ServiceLocator.cityStore(this@ChiaroApplication).activeSource,
-                ServiceLocator.settingsStore(this@ChiaroApplication).settings
-            ) { active, settings -> active to settings }
+                ServiceLocator.settingsStore(this@ChiaroApplication).settings,
+                // The official warnings' store joins the collector (Fase 11): the
+                // bulletin is content on the cards, and it changes on its own clock —
+                // once an afternoon, on a run that may not have fetched anything else.
+                ServiceLocator.warningReader(this@ChiaroApplication).bulletin
+            ) { active, settings, bulletin -> Triple(active, settings, bulletin) }
                 .drop(1) // the first emission is startup, not a change
                 .collect {
                     runCatching { ChiaroWidgets.updateAll(this@ChiaroApplication) }

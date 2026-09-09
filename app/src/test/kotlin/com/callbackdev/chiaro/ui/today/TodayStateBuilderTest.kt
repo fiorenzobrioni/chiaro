@@ -6,6 +6,10 @@ import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
+import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
+import com.callbackdev.chiaro.domain.warnings.WarningHazard
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
+import com.callbackdev.chiaro.domain.warnings.WarningZone
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -47,6 +51,60 @@ class TodayStateBuilderTest {
                 lastSync = fetchedAt.atZone(zone).toInstant()
             )
         )
+
+    // -------------------------------------------------- the official warning (Fase 11)
+
+    private fun warnings(level: WarningLevel) = PlaceWarnings(
+        zone = WarningZone("Lomb-09", "Nodo Idraulico di Milano", "Lombardia"),
+        bulletinId = "DPC_BULLETIN_2026_09_02_1",
+        issuedAt = date.atTime(15, 46),
+        days = listOf(
+            PlaceWarnings.DayWarnings(
+                date,
+                mapOf(
+                    WarningHazard.HYDRAULIC to WarningLevel.NONE,
+                    WarningHazard.HYDROGEOLOGICAL to WarningLevel.NONE,
+                    WarningHazard.THUNDERSTORM to level
+                )
+            )
+        ),
+        note = null
+    )
+
+    private fun content(warnings: PlaceWarnings?): TodayUiState.Content {
+        val fetched = LocalDateTime.of(2026, 9, 2, 12, 0)
+        val now = LocalDateTime.of(2026, 9, 2, 12, 30).atZone(zone).toInstant()
+        return TodayStateBuilder.build(milan, report(fetched), now, 60, false, null, warnings)
+            as TodayUiState.Content
+    }
+
+    /** A green bulletin is an answer in Avvisi and NOTHING on this screen: no banner,
+     * no sentence, no card with a dash in it (DESIGN §1.1). */
+    @Test
+    fun `a bulletin with nothing above NONE draws no banner and no sentence`() {
+        val built = content(warnings(WarningLevel.NONE))
+        assertEquals(null, built.warnings)
+        assertTrue(built.headline !is Headline.Official)
+    }
+
+    @Test
+    fun `a yellow warning reaches the banner and not the sentence`() {
+        val built = content(warnings(WarningLevel.YELLOW))
+        assertEquals(WarningLevel.YELLOW, built.warnings?.maxLevel)
+        assertTrue(built.headline !is Headline.Official)
+    }
+
+    @Test
+    fun `an orange warning reaches both`() {
+        val built = content(warnings(WarningLevel.ORANGE))
+        assertEquals(WarningLevel.ORANGE, built.warnings?.maxLevel)
+        assertEquals(WarningLevel.ORANGE, (built.headline as Headline.Official).level)
+    }
+
+    @Test
+    fun `no bulletin at all leaves the screen exactly as it was`() {
+        assertEquals(null, content(null).warnings)
+    }
 
     @Test
     fun `a fresh report builds content with the strip starting at the next full hour`() {

@@ -165,4 +165,20 @@ class OfficialWarningNotifierTest {
         assertFalse(everything, everything.contains("Lomb-09"))
         assertFalse(everything, everything.contains("DPC_BULLETIN"))
     }
+
+    /**
+     * The thirteen zones the Region never named (Basilicata's seven, the Marche's six)
+     * carry their code as their name. The zone line has nothing to print that is not a
+     * code, so it is not printed — the same rule every other line here follows — and
+     * the rest of the notification is unchanged (Fase 11, third step).
+     */
+    @Test
+    fun `an unnamed zone loses its line instead of leaking its code`() {
+        val unnamed = warnings().copy(zone = WarningZone("Basi-A1", "Basi-A1", "Basilicata"))
+        post(unnamed)
+        val everything = listOf(title(), collapsed(), expanded()).joinToString("\n")
+        assertFalse(everything, everything.contains("Basi-A1"))
+        assertFalse(everything, everything.contains("Warning zone:"))
+        assertTrue(everything, everything.contains("What it means:"))
+    }
 }

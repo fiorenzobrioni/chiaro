@@ -39,7 +39,7 @@ class DpcBulletinSource(
 
     override val id: String = ID
 
-    override val zone: ZoneId = ZoneId.of("Europe/Rome")
+    override val zone: ZoneId = ZONE
 
     override suspend fun fetch(
         known: WarningFetchState,
@@ -147,6 +147,11 @@ class DpcBulletinSource(
 
     companion object {
         const val ID = "dpc"
+
+        /** The issuer's clock. A companion value because the reader side
+         * ([OfficialWarningReader]) needs it without building a source. */
+        val ZONE: ZoneId = ZoneId.of("Europe/Rome")
+
         const val REPO = "pcm-dpc/DPC-Bollettini-Criticita-Idrogeologica-Idraulica"
         const val SITE_BASE = "https://github.com/$REPO"
         const val RAW_BASE = "https://raw.githubusercontent.com/$REPO/master/files"

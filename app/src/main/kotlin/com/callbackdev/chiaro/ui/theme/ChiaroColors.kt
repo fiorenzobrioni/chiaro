@@ -25,6 +25,16 @@ data class ChiaroColors(
     val unstable: VerdictColors,
     val fail: VerdictColors,
     val unknown: VerdictColors,
+    /**
+     * The three levels of an official warning (Fase 11), one `VerdictColors` each
+     * because they are the same shape of statement: a mark in the ink, a ground in the
+     * container. They are NOT the verdict tokens under other names — `unstable` says
+     * "this data is old", a yellow warning is an authority grading a day — and §2.3
+     * carries the measurement that says the color cannot be the carrier anyway.
+     */
+    val warningYellow: VerdictColors,
+    val warningOrange: VerdictColors,
+    val warningRed: VerdictColors,
     /** Five steps, one hue, monotonic in luminance. Index 0 is "almost none".
      * This is the ramp of the MARKS — a sparkline, a drift cell, a swatch. It never
      * carries text: its light end is a fill on paper, not an ink (§2.3). */
@@ -84,6 +94,9 @@ internal val ChiaroLightColors = ChiaroColors(
     unstable = VerdictColors(Color(0xFF7A5200), Color(0xFFFDE5AE)),
     fail = VerdictColors(Color(0xFF950700), Color(0xFFFFDCD7)),
     unknown = VerdictColors(Color(0xFF4F5359), Color(0xFFE7E7E4)),
+    warningYellow = VerdictColors(Color(0xFF5C4700), Color(0xFFFCC800)),
+    warningOrange = VerdictColors(Color(0xFF763900), Color(0xFFFFC299)),
+    warningRed = VerdictColors(Color(0xFF990003), Color(0xFFFFBFB5)),
     rainRamp = listOf(
         Color(0xFFDFEFFC), Color(0xFFAFD9F6), Color(0xFF76BCEC),
         Color(0xFF2E97DE), Color(0xFF006FAC)
@@ -103,6 +116,9 @@ internal val ChiaroDarkColors = ChiaroColors(
     unstable = VerdictColors(Color(0xFFFFBC27), Color(0xFF3F2F00)),
     fail = VerdictColors(Color(0xFFFFB4AB), Color(0xFF560705)),
     unknown = VerdictColors(Color(0xFFA8ADB6), Color(0xFF2B2B2E)),
+    warningYellow = VerdictColors(Color(0xFFF4C100), Color(0xFF534000)),
+    warningOrange = VerdictColors(Color(0xFFFFB889), Color(0xFF6B3300)),
+    warningRed = VerdictColors(Color(0xFFFFB5AA), Color(0xFF8B0003)),
     rainRamp = listOf(
         Color(0xFF0E2E44), Color(0xFF004B6F), Color(0xFF006C98),
         Color(0xFF0092C8), Color(0xFF55BCEC)
@@ -140,6 +156,9 @@ internal val VividLightColors = ChiaroColors(
     unstable = VerdictColors(Color(0xFF7A5200), Color(0xFFFFE5A8)),
     fail = VerdictColors(Color(0xFF950700), Color(0xFFFFDCD7)),
     unknown = VerdictColors(Color(0xFF4C535E), Color(0xFFE7E7E2)),
+    warningYellow = VerdictColors(Color(0xFF5C4700), Color(0xFFFCC800)),
+    warningOrange = VerdictColors(Color(0xFF763900), Color(0xFFFFC299)),
+    warningRed = VerdictColors(Color(0xFF990003), Color(0xFFFFBFB5)),
     rainRamp = listOf(
         Color(0xFFDCEFFF), Color(0xFFA4DAFF), Color(0xFF57BEFF),
         Color(0xFF0097E8), Color(0xFF006FAC)
@@ -159,6 +178,9 @@ internal val VividDarkColors = ChiaroColors(
     unstable = VerdictColors(Color(0xFFFFBC27), Color(0xFF3F2F00)),
     fail = VerdictColors(Color(0xFFFFB4AB), Color(0xFF590001)),
     unknown = VerdictColors(Color(0xFFA4ADBD), Color(0xFF2B2B30)),
+    warningYellow = VerdictColors(Color(0xFFF4C100), Color(0xFF534000)),
+    warningOrange = VerdictColors(Color(0xFFFFB889), Color(0xFF6B3300)),
+    warningRed = VerdictColors(Color(0xFFFFB5AA), Color(0xFF8B0003)),
     rainRamp = listOf(
         Color(0xFF002E4A), Color(0xFF004B6F), Color(0xFF006C98),
         Color(0xFF0092C8), Color(0xFF00BEFD)
