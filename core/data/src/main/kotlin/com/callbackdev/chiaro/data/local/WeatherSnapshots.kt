@@ -30,8 +30,8 @@ object WeatherSnapshots {
         put("current.uv_index", report.current.uvIndex.toString())
         put("current.wind_kph", report.current.wind.speedKph.toString())
         put("current.wind_dir", report.current.wind.directionCompass)
-        // Nullable since Fase 26 — `.toString()` on the null had been writing the
-        // literal string "null" into the commit.
+        // Nullable since the 6 set 2026 review — `.toString()` on the null had been
+        // writing the literal string "null" into the commit.
         report.current.precipitation.chancePct
             ?.let { put("current.precip_chance_pct", it.toString()) }
         report.airQuality?.let { put("air_quality.aqi", it.aqiIndex.toString()) }
@@ -64,7 +64,7 @@ object WeatherSnapshots {
             put("$prefix.high_c", day.highC.toString())
             put("$prefix.low_c", day.lowC.toString())
             // Absent when the model carried no probability: a key that is not there
-            // is the drift strip's absence and the diff's silence. Never a "0".
+            // is a diff that says nothing and an absence a surface can draw. Never a "0".
             day.precipPct?.let { put("$prefix.precip_pct", it.toString()) }
         }
     }

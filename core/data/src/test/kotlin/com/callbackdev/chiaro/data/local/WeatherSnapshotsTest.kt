@@ -72,6 +72,26 @@ class WeatherSnapshotsTest {
         assertNull(flat["2023-10-28.precip_pct"])
     }
 
+    /**
+     * The 6 set 2026 review made the chance nullable, and `.toString()` on the null
+     * had been writing the literal word "null" into every commit — a value no reader
+     * of the snapshot can turn back into a number.
+     */
+    @Test
+    fun `the current snapshot leaves the chance out when the model carries none`() {
+        val report = sampleWeatherReport()
+        assertEquals(
+            report.current.precipitation.chancePct.toString(),
+            WeatherSnapshots.flatten(report)["current.precip_chance_pct"]
+        )
+        val without = report.copy(
+            current = report.current.copy(
+                precipitation = report.current.precipitation.copy(chancePct = null)
+            )
+        )
+        assertNull(WeatherSnapshots.flatten(without)["current.precip_chance_pct"])
+    }
+
     @Test
     fun `the current snapshot carries the code and the hour behind it`() {
         val flat = WeatherSnapshots.flatten(sampleWeatherReport())

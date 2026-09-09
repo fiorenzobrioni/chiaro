@@ -41,8 +41,8 @@ object WeatherCodes {
     /**
      * Below [FIRST_PRECIP_CODE] the WMO scale carries only sky states and fog; from it
      * up every code is a precipitation of some kind (drizzle, rain, snow, showers,
-     * thunderstorm). The mapper reads it to decide the day's label; `ForecastOutcome`
-     * reads it to decide whether a past hour was wet. One number, one home.
+     * thunderstorm). The mapper reads it to decide the day's label, and whoever has to
+     * say whether a past hour was wet reads the same boundary. One number, one home.
      */
     const val FIRST_PRECIP_CODE = 51
 
