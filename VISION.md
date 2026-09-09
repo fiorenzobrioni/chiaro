@@ -300,6 +300,21 @@ The spine of the product, one vertical scroll, in this order:
    of small cards, each with its number and its one-line meaning (§3.3). Cards for data the region
    does not have are not drawn (pollen outside Europe simply is not there).
 
+**The official warning** sits between 2 and 3, and only on the days there is one (decided 9 set
+2026, §12.8): a full-width banner in the level's own color carrying, in this order, a drawn warning
+mark, the level as a *word* ("Allerta arancione"), the hazard ("per temporali"), the day it covers
+("oggi fino a mezzanotte", "domani") and who says so with the time they said it ("Protezione Civile,
+bollettino delle 15:19"). It is the card of record and the tap target: a sheet behind it lays out
+every hazard for today and tomorrow, the zone the place falls in, what the level means in the
+issuer's own words, the bulletin's note when it has one, and a way to open the bulletin itself. The
+freshness chip stays where it is because it qualifies the hero; the banner is about the world, so it
+leads the content. An orange or red level also takes the headline sentence (the top rung of its
+ladder); a yellow one does not — in an Italian autumn yellow is a frequent state, and a sentence
+that says the same thing every third day stops being read. Green is not drawn here: the absence of a
+warning is stated once, on the Alerts screen, where it is the answer somebody came for. The week's
+rows carry no marker for it (measured out of room at 360dp, DESIGN §8.5) — the banner names the
+day.
+
 ### 5.3 Sky
 
 The differentiator with the most engineering already behind it.
@@ -335,8 +350,18 @@ notation never appears.
 
 ### 5.4 Alerts
 
-Two groups, one screen.
+Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen opened with two).
 
+- **Official** (first, because it is the one nobody wrote): the warning in force for the place's
+  zone, as the same banner Today shows, opening the same sheet — and the three states the banner
+  never has to draw, because here the absence *is* the answer: "No warning for *Nodo idraulico di
+  Milano* · bulletin of 15:19", "Yesterday's bulletin; the next one usually lands by 16:00", and
+  "Official warnings are available for places in Italy" until MeteoAlarm lands (Fase 12). With it,
+  the switch for its notifications and a plain description of what they send and when — "when the
+  Protezione Civile issues a warning for this zone, as soon as the bulletin is out, usually between
+  15:00 and 17:00; never more than one per bulletin" — and the level it starts from (yellow or
+  orange). The switch lives here and not in Settings for the reason Fase 6 gave: next to what it
+  governs.
 - **Ready-made**: severe weather, rain in the next hours, morning summary — switches with a plain
   description of what each will actually send and when.
 - **Yours**: the rules engine, approached from the answer rather than the syntax.
@@ -359,6 +384,9 @@ by day:
 - "Saturday's forecast improved: rain 70% → 30%, high 24° → 27°"
 - "Your alert *bike* fired at 07:12"
 - "Sunrise, seen: clear sky, 8% cloud"
+- "Orange warning for thunderstorms tomorrow — Protezione Civile, 15:19" (and, the day it lifts,
+  "Warning lifted: no criticality tomorrow"): a level that appears, rises or falls between two
+  bulletins is a change in what the reader was told, which is exactly what this screen keeps
 
 And one chart the rest of the store does not have: **forecast drift** — how the next seven days'
 forecast changed over the last several days, as a compact heat strip (one row per target day, one
@@ -436,6 +464,17 @@ Glance, three sizes, matching the app's dynamic color:
 A widget never invents: with stale data it says how old it is, with no place configured it says so
 and opens the app, and no layout ever pads itself out to fill the space it was given.
 
+**The official warning on a widget** (§12.8, 9 set 2026) follows the launcher's own habit — the
+system weather widgets this app lives beside show a warning line when the national service issues
+one — and follows the app's sentence rule. On an orange or red day the sentence already *is* the
+warning, so the widget adds a chip only where the sentence is off, in the sentence's slot. A yellow
+warning, which the sentence never carries, gets a chip of its own — the drawn mark and the level as
+a word on the level's container color — where the form has room for one more line (the wide and
+tall Now, Today's hero row, the arc's panel) and nowhere on the one-row cards. Now, Today and the
+arc offer the chip and have it on by default: it draws nothing on a day without a warning, and on a
+day with one it is the line a reader would least want a widget to leave out. Sky does not offer it —
+that card is about the sky's moments, and a chip about the ground would be a second subject.
+
 ---
 
 ## 6. Parity map
@@ -455,6 +494,7 @@ Nothing in tweather is dropped. Everything moves to the surface that fits a Mate
 | `HELP.md` + `$ tweather init` | **Guide** + first run |
 | widget (`tweather --now`, terminal tiers) | **Widgets** (Now / Today / Sky) |
 | theme profiles Obsidian/Dracula/Monokai | dynamic color + curated palette, light and dark |
+| — (nothing: tweather reads no official feed) | **Official warnings** — Protezione Civile in Italy (Fase 11), MeteoAlarm elsewhere (Fase 12); the one feature that is Chiaro's before it is the series' (§12.8) |
 
 ---
 
@@ -464,9 +504,11 @@ Nothing in tweather is dropped. Everything moves to the surface that fits a Mate
 
 ```
 :core:domain    pure Kotlin/JVM. models, WMO codes, freshness/recency,
-                AlertEngine, rules/, sky/ (ephemeris, catalog, verdicts, reminders)
+                AlertEngine, rules/, sky/ (ephemeris, catalog, verdicts, reminders),
+                warnings/ (the official-warning model, the zone index, the level engine — Fase 11)
 :core:data      Android library. Open-Meteo APIs + DTOs + mapper, WeatherRepository,
-                Room history, disk cache, DataStore stores, LocationProvider
+                Room history, disk cache, DataStore stores, LocationProvider,
+                warnings/ (one adapter per issuer: the Protezione Civile bulletins, then MeteoAlarm)
 :core:sync      Android library. the single WorkManager job, the alarm scheduler,
                 the notification *decisions* (never the notification copy)
 :app            everything visible: Compose UI, Glance widgets, notification rendering, strings
@@ -551,6 +593,14 @@ Two consequences worth stating. Identifiers (`golden_hour.pm`, `current.temp_c`)
 the code and never surface — if one ever does, that is a bug with a test. And the user's own alert
 messages are user content: never translated, ever.
 
+A third arrived with the official warnings (§12.8): **an issuer's words are quoted, never
+translated.** The structured part of a warning — the level, the hazard, the day, the zone's name as
+data — localizes like everything else, so an English reader sees "Orange warning for thunderstorms".
+The free text an authority wrote (the Protezione Civile's note, a MeteoAlarm description or
+instruction) is shown in the language the authority wrote it, labelled as theirs; where the issuer
+publishes two languages, as MeteoAlarm does, the reader's is picked. A machine translation of a
+civil-protection instruction is a sentence nobody signed.
+
 ---
 
 ## 9. Data, battery, privacy
@@ -564,6 +614,14 @@ messages are user content: never translated, ever.
 - **Offline**: the last successful report per place is kept with no TTL and carries a week of
   forecast, so the app is never blank; recency drops the hours that have already happened, and the
   freshness chip says how old the answer is.
+- **Official warnings** (§12.8): Open-Meteo has none, so they come from the issuers themselves, free
+  and without a key. In Italy the Dipartimento della Protezione Civile's daily bulletins (criticality
+  by 16:00, vigilance by 15:00; CC BY 4.0, attributed on the sheet and in the guide), a few
+  kilobytes of CAP a day fetched inside the same periodic job, never on their own timer; elsewhere,
+  from Fase 12, MeteoAlarm's per-country Atom and CAP feeds (terms equivalent to CC BY 4.0 plus the
+  issuer's name and the time of issue, both of which the banner prints anyway). In Italy the
+  Protezione Civile is the only voice: MeteoAlarm's Italian feed says of itself that it is not the
+  official alert.
 - **Privacy**: no account, no analytics, no crash reporting that leaves the device without consent,
   no advertising ID, coarse location only and only when the reader turns it on. The privacy policy
   fits in a paragraph, and that paragraph is a feature on the store page.
@@ -585,14 +643,20 @@ ribbon spec, the icon decision. Compose theme and the component kit.
 **Fase 8** — Widgets (Now, Today, Sky).
 **Fase 9** — Accessibility and performance pass with numbers (§3.3.6), IT/EN sweep.
 **Fase 10** — Store assets, screenshots, listing, v1.0.0 release.
+**Fase 11** — Official warnings, first layer: the Protezione Civile bulletins for places in Italy —
+model, zone index, banner and sheet, the Alerts group, notifications, the widget chip, the Journal
+line (§12.8; planned 9 set 2026).
+**Fase 12** — Official warnings, second layer: MeteoAlarm for places outside Italy, behind the same
+model and the same surfaces.
 
 **MVP is Fase 0–5 plus Fase 8**: an everyday weather app with the sky planner and a widget. Alerts
 and Journal are v1.0 targets and not MVP targets only because their engines are already written and
 their UI can land late without blocking anything else.
 
-**Deliberately out of scope for v1**: radar and satellite imagery (no provider), severe-weather
-government bulletins, tides, aurora, air-quality forecasting beyond the current index, Wear OS,
-sharing, a second provider.
+**Deliberately out of scope for v1**: radar and satellite imagery (no provider), tides, aurora,
+air-quality forecasting beyond the current index, Wear OS, sharing, a second forecast provider.
+Severe-weather government bulletins were on this list until 9 set 2026; they are Fase 11–12 now,
+after v1.0.0 (§12.8).
 
 ---
 
@@ -639,7 +703,31 @@ The first is settled and recorded here with its reason, as the series does. The 
 4. **The shared core** (§7.3): confirm copy-now, or pay for the extraction up front.
 5. **Radar.** The most-requested feature Chiaro cannot have with this provider. Decide whether v2
    adds a second provider for imagery, or whether "no radar" stays a stated position.
+   **Re-examined 9 set 2026, and left open on purpose.** A free, official, no-key source exists for
+   Italy: the Protezione Civile's Radar-DPC platform (WMTS tiles of the national mosaic, a REST API
+   for the raw GeoTIFF every 5 minutes, CC BY-SA; measured that day — a zoom-6 tile is 3.5 KB, the
+   VMI GeoTIFF 619 KB at 1 km, the latest frame 11 minutes old, and the tile service serves *only*
+   the latest frame whatever its documentation says about `time`). It would cost a map component
+   Chiaro does not have, a palette that is not Chiaro's, and it covers one country. The committente
+   chose to build nothing and change nothing for now; the numbers are in `PLANNING.md` (Fase 11,
+   «Le misure») so the decision, when it comes, starts from facts.
 6. **Monetization.** Free with no ads is assumed. If that ever changes, the honest form is a paid
    version, never an ad slot or a subscription wall in front of data that is free upstream.
 7. **Whether the two editions cross-link** on the store, and how much of tweather's story to tell on
    Chiaro's listing.
+8. **Official warnings — decided 9 set 2026: yes, in two layers, the Protezione Civile first.**
+   Open-Meteo has no warnings and its maintainer has said he has no plans for them; the WMO's
+   Severe Weather Information Centre is a viewer with no API; Alert-Hub's free country feed for
+   Italy held a hundred Slovenian and Swiss alerts and not one Italian on the day it was measured.
+   Two sources survived: MeteoAlarm (33 European countries, open Atom and CAP, bilingual text,
+   CC BY 4.0-equivalent terms) and, for Italy, the Dipartimento della Protezione Civile's own daily
+   bulletins on GitHub (CC BY 4.0, a CAP file per bulletin, the 156 alert zones with their
+   municipalities). The order is the committente's, and it inverts the first proposal for three
+   reasons: MeteoAlarm's Italian feed states in its own CAP that it is *not* the official alert of
+   the Servizio Nazionale di Protezione Civile, so leading with it would have put the wrong voice in
+   front of the readers the app is tested with; the Protezione Civile's bulletin can be checked
+   against the sky and the regional bulletin the same afternoon, which MeteoAlarm cannot; and "in
+   Italy the Protezione Civile is the only voice" is one precedence rule per country, not a merge.
+   One model in `:core:domain`, one adapter per issuer, one set of surfaces (§5.2, §5.4, §5.5, §5.9);
+   Fase 12 adds an adapter and a line, not a screen. Recorded with its measurements in
+   `PLANNING.md`, Fase 11 and 12.

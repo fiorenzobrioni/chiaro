@@ -4255,6 +4255,426 @@ branch.
 
 ---
 
+## Fase 11 — Allerte ufficiali, primo strato: la Protezione Civile
+
+Pianificata il 9 set 2026 (committente), dopo v1.0.0. Il perimetro sta in VISION §5.2, §5.4,
+§5.5, §5.9 e §12.8; questa è la fase che lo realizza per i luoghi in Italia. La regola che la
+governa: **in Italia fa fede la Protezione Civile**. L'ordine — prima questa, poi MeteoAlarm
+(Fase 12) — è del committente e inverte la prima proposta, con tre motivi che VISION §12.8
+registra per esteso: il CAP italiano di MeteoAlarm dichiara da solo di non essere l'allerta
+ufficiale del Servizio Nazionale di Protezione Civile; il bollettino si verifica il pomeriggio
+stesso contro il cielo e contro il bollettino regionale, cioè dove l'app viene collaudata; e «in
+Italia una sola voce» è una regola di precedenza per paese, non una fusione di fonti.
+
+Le parole, prima del codice. **«Allerta»** è quella che emette l'autorità (EN *warning*);
+**«Avvisi»** restano quelli che il lettore scrive o accende (EN *alerts*). In codice la famiglia
+si chiama `warnings/` (`OfficialWarning`, `WarningLevel`, `WarningHazard`), perché `Alert` è già
+degli avvisi integrati. Nessun codice di zona (`Abru-A`), nessun identificativo di bollettino,
+nessuna sigla CAP raggiunge lo schermo: c'è un test per questo, come per gli id del cielo.
+
+- [ ] `:core:domain/warnings/`: il modello (`WarningBulletin`, `ZoneWarning`, `PlaceWarnings`,
+      `WarningLevel { NONE, YELLOW, ORANGE, RED }`, `WarningHazard { HYDRAULIC, HYDROGEOLOGICAL,
+      THUNDERSTORM }` — i quattordici tipi di MeteoAlarm si aggiungono in Fase 12), l'indice
+      delle zone (`WarningZoneIndex`: punto-nel-poligono sulle 156 zone, con il comune come
+      ripiego) e il motore (`OfficialWarningEngine.forPlace` → `PlaceWarnings?`, `null` quando
+      non c'è nulla da dire; `notificationFor(...)` con la sua impronta). Tutto puro, con
+      tabella di test
+- [ ] `tools/build_warning_zones.py`, l'importatore di riferimento (come `import_meteocons.py`):
+      dallo shapefile del bollettino (`Zona_all`, `Nome_zona`, geometria) e dal TopoJSON
+      (`Comuni`) produce `core/data/src/main/assets/warning_zones_it.json` — codice, nome,
+      regione, poligoni semplificati, comuni normalizzati. **Misurare**: obiettivo ≤ 400 KB
+      grezzi; il numero finisce qui. `WarningZoneIndexTest` colloca venti comuni noti (coordinate
+      dal geocoding, fissate nel test) nella loro zona, e tre punti in mare in nessuna
+- [ ] `City` cresce di `countryCode` e `admin3` (nullable, con default), riempiti su entrambe le
+      strade: `GeoResultDto`, che li riceve già e li scarta per `ignoreUnknownKeys`, e `GeoFix`
+      della posizione. Registrato in `UPSTREAM.md`
+- [ ] `:core:data/warnings/`: `WarningSource` (interfaccia) e `DpcBulletinSource` — scoperta,
+      download, parser. Zip con `java.util.zip`, CAP con un pull-parser sottile che produce un
+      intermedio piatto; la lettura di livelli e rischi dalle etichette («ORDINARIA CRITICITA'
+      PER RISCHIO IDRAULICO / ALLERTA GIALLA») sta nel dominio, per parole chiave, con test su un
+      CAP vero salvato come fixture (il primo file non Kotlin sotto `src/test`, e va bene così: un
+      CAP inventato non proverebbe niente)
+- [ ] La scoperta del bollettino di criticità: Atom dei commit (18 KB) → `.diff` dell'ultimo
+      commit (≈200 B) → `AAAAMMGG_HHMM` → `files/xml/<stamp>.zip` (7 KB). Ripiego
+      `files/all/latest_all.zip` (4,7 MB) solo su rete non a consumo. La vigilanza non ha bisogno
+      di scoperta: `files/<AAAAMMGG>.json` e `files/xml/<AAAAMMGG>.zip`
+- [ ] Persistenza: `OfficialWarningStore` (DataStore `warnings`: il bollettino corrente per fonte
+      come JSON, più l'anello delle impronte notificate, mai dentro `settings`) e la tabella Room
+      `warning_records` (migrazione 4→5, additiva) che il Diario legge
+- [ ] Il passo nel job: `OfficialWarningsStep`, chiamato da `WeatherSyncWorker` dopo il fetch,
+      dentro `runCatching`, con la sua cadenza (sotto) e il suo motivo in `alertsWanted` e
+      `shouldRun`, così un lettore che vuole solo le allerte tiene vivo il job
+- [ ] `SyncNotifiers.notifyOfficialWarning(...): Boolean`, `OfficialWarningNotifier` in `:app`,
+      due canali, impronta bruciata solo su `true`; il fake in `WeatherSyncWorkerTest` cresce
+- [ ] Oggi: `WarningBanner` tra il chip di freschezza e le prossime ore; `WarningSheet`; il
+      gradino in cima alla scala di `HeadlineEngine` per arancione e rosso, con la sua riga in
+      `HeadlineText` nei due registri
+- [ ] Avvisi: il gruppo «Allerte ufficiali» in testa, con la card, i tre stati onesti,
+      l'interruttore delle notifiche e il livello di partenza
+- [ ] Diario: la riga quando il livello cambia tra due bollettini, con il suo glifo di categoria;
+      la riga «bollettino non raggiunto», una al giorno al massimo
+- [ ] Widget: il chip su Ora, Oggi e Arco, l'interruttore per istanza (`showWarning`, acceso),
+      le regole di layout pure con tabella, il conteggio dei figli di Glance
+- [ ] DESIGN.md: §2.3 i tre token di livello misurati (giallo, arancione, rosso: inchiostro e
+      contenitore, chiaro e scuro, ΔE fra loro sotto deuteranopia — il rosso può essere la
+      coppia `fail`, il giallo NON è `unstable`: l'ambra della freschezza e il giallo di
+      un'allerta sono due affermazioni diverse); §8.13 `WarningBanner`, `WarningSheet`, il chip;
+      `ic_warning` disegnato con il peso dei segni di verdetto, mai il carattere ⚠
+- [ ] Guida: un paragrafo nel capitolo Avvisi (cos'è, chi la emette, quando arriva);
+      attribuzione «Dipartimento della Protezione Civile, CC BY 4.0» nel foglio e in Informazioni
+- [ ] Stringhe IT/EN (`warning_*`, `notif_warning_*`, `notif_channel_warning_*`),
+      `StringsParityTest` verde; `OfficialWarningNotifierTest` sul modello di `SkyNotifierTest`
+- [ ] Verifica su device, in Italia, per una settimana dopo il merge: confronto col bollettino
+      regionale e col cielo. Il default del livello di notifica si conferma o si alza dopo quella
+      settimana, non prima
+
+### Le misure che hanno deciso (9 set 2026)
+
+Tutto verificato dal vivo quel giorno, non letto in una documentazione.
+
+| Cosa | Misura |
+|---|---|
+| Bollettino di criticità | Entro le 16 (quello dell'8 set: emesso 15:19, su GitHub alle 15:43), oggi e domani, 156 zone di allerta (187 poligoni), tre rischi (idraulico, idrogeologico, temporali), quattro livelli — i temporali non hanno il rosso |
+| Il suo CAP | `files/xml/<stamp>.zip` 7 KB → `Cap_<stamp>.xml` 45 KB; 8 blocchi `info` (rischio × livello × giorno), 209 aree con geocodice `Zona di Allerta` (es. `Cala-5`, `Abru-A`), **nessun poligono**: le zone assenti sono verdi; `<note>` con i rinvii ai bollettini regionali (Lombardia, Campania, Liguria quel giorno) |
+| Il join | I 187 nomi del TopoJSON sono unici e contengono tutti i 209 `areaDesc` del CAP; il DBF dello shapefile porta il codice (`Zona_all`) accanto al nome: è da lì che l'indice prende codice, nome e geometria |
+| I comuni | Il TopoJSON elenca i comuni di ogni zona; encoding sporco («Citt� Sant'Angelo») e nomi troncati nella vigilanza («Belv», «Bidon», «Buddus») |
+| Geocoding | `admin3` = «Comune di Segrate» anche per la frazione (Redecesio → Segrate, Bovisa → Milano); `country_code` ricevuto e oggi scartato da `toCity` |
+| Scoperta | Atom dei commit 18 KB con titoli generici («Published by DPC Github Pipeline»), ~12 commit per bollettino, l'ultimo è la preview PNG; `.diff` del commit ≈200 B col nome del file; `files/all/latest_all.zip` è stabile ma pesa 4,7 MB (shapefile e PDF dentro); `files/xml/latest*.zip` non esiste |
+| Vigilanza | Entro le 15, tre giorni, 71 zone con comuni, CAP 5 KB con la sola categoria «Precipitazioni previste» a quattro gradini (assenti, deboli, moderati, elevati); temperature, venti, visibilità e mare sono **prosa nazionale**, più un livello di 42 punti con `id_fenomeno` e 25 icone senza legenda testuale |
+| GitHub dai telefoni | L'API REST ha 60 richieste l'ora per IP e gli operatori mobili condividono un IP fra migliaia di utenti: **non si usa**. Il raw e l'Atom dei commit sono il sito, non l'API |
+| Il sito delle mappe | Nessun endpoint «ultimo bollettino» (cercato nel markup: niente) |
+| Licenza | CC BY 4.0 per entrambi i repository; i README dicono «in fase di caricamento» dal 2020 |
+| Radar (per memoria, VISION §12.5) | Radar-DPC: tile WMTS 3,5 KB a zoom 6, GeoTIFF VMI 619 KB a 1 km, ultimo frame vecchio di 11 minuti, 40 radar su 50 attivi, il parametro `time` ignorato dalle tile (tre richieste, tre immagini identiche byte per byte). Non si fa niente, per scelta del committente |
+
+### La cadenza del passo
+
+Il passo vive nel job condiviso e spende rete solo quando è dovuto; non ha un orologio suo.
+
+- **Criticità**: dalle 15:30 locali finché non c'è un bollettino di oggi; poi un ricontrollo l'ora
+  fino alle 21 (l'Atom: 18 KB) per cogliere un «Aggiornamento»; dopo le 21 niente fino a domani.
+  Prima delle 15:30 il «domani» del bollettino di ieri **è** oggi: non c'è nulla da scaricare.
+- **Vigilanza**: dalle 14:30, stesso schema; il nome è la data, un 404 vuol dire «non ancora».
+- **All'apertura** di Oggi, se è passata l'ora e il bollettino di oggi non c'è: in silenzio, con
+  lo stesso cancello del risparmio energetico della rilettura silenziosa; un trascinamento per
+  aggiornare lo forza. Il passo è uno per dispositivo, non per luogo: un bollettino copre tutti.
+- **Con l'intervallo a 120 minuti** il caso peggiore è vedere il bollettino due ore dopo: accettato
+  e dichiarato, perché il banner stampa l'ora del bollettino, non l'ora della lettura.
+- **Il passo è inerte** se nessun luogo salvato cade in una zona italiana (indice: prima il
+  riquadro, poi il poligono).
+- **Un fallimento** tiene il bollettino precedente e dice la sua data; una riga nel Diario al
+  giorno, non a tentativo. Mai un errore che il lettore debba leggere in Oggi.
+
+### Dove e quando si vede
+
+**Oggi.** Il `WarningBanner` sta dopo il chip di freschezza e prima della card della guida: il
+chip qualifica l'eroe (parla dei dati), il banner parla del mondo, quindi apre il contenuto.
+`Surface` a tutta larghezza dentro `PagePadding`, angolo `medium`, contenitore del livello più
+alto, altezza minima 56dp; a sinistra `ic_warning` 24dp nell'inchiostro del livello; prima riga
+`titleSmall` «Allerta arancione per temporali» (più rischi: «Allerta arancione per temporali,
+gialla per rischio idrogeologico», in ordine di livello); seconda riga `bodySmall` «Oggi fino a
+mezzanotte · Protezione Civile, bollettino delle 15:19» — oppure «Domani · …», «Oggi e domani · …».
+Un solo annuncio TalkBack. Tocco → il foglio. Si disegna solo se per oggi o domani il livello
+massimo è almeno giallo e il bollettino non è scaduto (scade a mezzanotte del suo «domani»);
+altrimenti non esiste, e il verde non si annuncia qui. Arancione e rosso prendono anche la frase
+in cima — gradino zero della scala di `HeadlineEngine`, oggi prima di domani — «Allerta arancione
+per temporali, oggi» / «Domani allerta rossa per rischio idraulico»; il giallo no, perché in
+autunno il giallo è uno stato frequente e una frase uguale un giorno su tre smette di essere
+letta. Le righe della settimana non portano segni: il budget della `DayRow` a 360dp è già speso
+(DESIGN §8.5) e il banner nomina il giorno.
+
+**Il foglio** (`WarningSheet`, un `ModalBottomSheet`). Titolo «Allerta per *Nodo idraulico di
+Milano*» con la regione sotto. Una griglia: una riga per rischio, due colonne (Oggi, Domani), in
+ogni cella la **parola** del livello nel suo contenitore — «nessuna» in grigio `unknown`, mai una
+cella vuota, mai un colore da solo. Poi «Cosa vuol dire», il significato del livello più alto con
+le parole del Dipartimento (la fonte citata nel commento della stringa: gialla, fenomeni
+localizzati e possibili disagi; arancione, fenomeni diffusi o intensi e possibili danni; rossa,
+fenomeni molto intensi e pericolo per le persone) — è la riga «ogni numero dice cosa farne» di
+questa superficie. Poi la `<note>` del bollettino, solo se nomina la regione del luogo,
+etichettata «Nota del bollettino» e citata com'è. Poi, quando c'è, la vigilanza: «Precipitazioni
+previste: elevate domani» per la zona di vigilanza del luogo. In coda la fonte con la data e
+l'ora («Dipartimento della Protezione Civile · bollettino dell'8 settembre, 15:19 · CC BY 4.0») e
+«Apri il bollettino», che porta alla pagina del bollettino sul sito del Dipartimento.
+
+**Avvisi.** Un terzo gruppo, in testa, «Allerte ufficiali»: la stessa card del banner, che apre lo
+stesso foglio, oppure uno dei tre stati che il banner non deve mai disegnare perché qui l'assenza
+è la risposta cercata: «Nessuna allerta per *Nodo idraulico di Milano* · bollettino delle 15:19»;
+«Bollettino di ieri: il prossimo esce di solito entro le 16»; «Le allerte ufficiali sono
+disponibili per i luoghi in Italia» (la riga che la Fase 12 cambia). Sotto, l'interruttore delle
+notifiche con la descrizione esatta di cosa manda e quando — «Quando la Protezione Civile emette
+un'allerta per questa zona, appena esce il bollettino, di solito tra le 15 e le 17. Mai più di
+una per bollettino» — e la riga «Avvisami da: gialla / arancione». Vive qui e non nelle
+Impostazioni per il motivo della Fase 6: accanto a ciò che governa. Il permesso si chiede al
+primo interruttore che si accende, come per gli altri tre.
+
+**Diario e guida.** Una riga quando, per il luogo attivo, un livello compare, sale o scende tra due
+bollettini consecutivi — «Allerta arancione per temporali, domani (Protezione Civile, 15:19)»,
+«Allerta rientrata: nessuna criticità per domani» — con un glifo di categoria suo, silhouette
+Material come le altre cinque; e la riga del bollettino non raggiunto. La guida aggiunge un
+paragrafo al capitolo Avvisi che dice cosa è un'allerta, chi la emette e quando arriva; non
+giustifica l'assenza fuori dall'Italia, dice cosa fa in Italia.
+
+### Le notifiche
+
+**Quando.** All'ingestione di un bollettino — nuovo identificativo, oppure stesso identificativo
+con un livello massimo più alto (l'«Aggiornamento») — se per il luogo attivo il massimo tra oggi
+e domani è almeno il livello scelto e l'impronta `"$cityKey:warn:$bulletinId:$maxLevel"` non è
+ancora bruciata. Un livello che scende non notifica: lo scrive il Diario. Il luogo attivo e basta,
+come tutto il resto del job; le città appuntate ai widget restano fuori, registrato sotto.
+
+**Due canali**: `warning_high` («Allerte arancioni e rosse», `IMPORTANCE_HIGH`) e
+`warning_yellow` («Allerte gialle», `IMPORTANCE_DEFAULT`). Due perché Android permette al lettore
+di zittire il giallo dal sistema senza perdere l'arancione, e la riga «Avvisami da» fa lo stesso
+dall'interno: due strade oneste per la stessa scelta. Id fisso `3000 + (cityId % 1000)`, `3000`
+per la posizione: una notifica per luogo alla volta, un bollettino nuovo sostituisce il vecchio.
+Categoria `STATUS`, icona piccola dell'app, nessun colore e nessuna azione, come le altre.
+
+**Chiusa.** Titolo «Allerta arancione · Milano». Testo, una riga: «Temporali, oggi fino a
+mezzanotte · bollettino delle 15:19»; con due rischi «Temporali e rischio idrogeologico, oggi ·
+…»; per domani «Temporali, domani · …».
+
+**Espansa** (`BigTextStyle`). La prima riga è la frase chiusa — il test del non-scostamento di
+`SkyNotifierTest` vale anche qui — poi una riga vuota, poi un fatto per riga, ciascuna presente
+solo se ha i suoi dati, in quest'ordine:
+- «Oggi: temporali arancione · idrogeologico giallo»
+- «Domani: temporali giallo»
+- «Zona di allerta: Nodo idraulico di Milano»
+- «Cosa vuol dire: …» — il significato del livello più alto, le parole del Dipartimento
+- «Nota del bollettino: …» — solo se la nota nomina la regione del luogo
+- «Dipartimento della Protezione Civile · bollettino delle 15:19» — sempre ultima
+
+Il tocco apre l'app su Oggi, dove il banner è la prima cosa sotto la tela: nessun deep link, che
+oggi non esiste e non serve qui. `OfficialWarningNotifierTest` come `SkyNotifierTest`: la forma
+della chiusa, le righe dell'espansa, `@Config(qualifiers = "it")`, la chiusa uguale alla prima
+riga dell'espansa, e nessun codice di zona o identificativo nel testo.
+
+### I widget
+
+I widget del sistema accanto ai quali Chiaro vive mostrano una riga quando il servizio nazionale
+emette un'allerta: è un'abitudine del lettore, non un'invenzione. La regola segue quella della
+frase, e si scrive come funzioni pure con tabella (`*LayoutTest`), come tutto il resto:
+
+- **Arancione e rosso**: la frase (`HeadlineText`, registro breve: «Allerta arancione · temporali»)
+  già lo dice. Con la frase accesa nessun chip — sarebbe la stessa cosa detta due volte; con la
+  frase spenta il chip prende lo slot della frase, così l'allerta arriva sul widget comunque.
+- **Giallo**: la frase non lo porta mai, quindi il chip ha una riga sua dove la forma ha spazio
+  per una riga in più — Ora largo e alto, la riga eroe di Oggi (sotto la frase), il pannello e la
+  card dell'Arco — e mai sulle forme a una riga, né sul quadrante e sulle strisce dell'Arco.
+- **Il chip**: `ic_warning` 12dp nell'inchiostro del livello più la parola («Allerta gialla»)
+  a 11sp sul contenitore del livello, angolo 10dp, padding 7/3 — la grammatica del `VerdictChip`
+  del widget Cielo. `contentDescription` in parole. I colori passano da
+  `palette.dress.colors(palette.darkGround)`: il fondo della card, non il tema del telefono (la
+  trappola già documentata nel widget Cielo). Contare i figli di ogni contenitore Glance toccato.
+- **L'interruttore per istanza**: `WidgetLook.showWarning` (Ora, Oggi) e `ArcSettings.warning`
+  (Arco), **accesi** di default: in un giorno senza allerta non cambiano nulla, e in un giorno con
+  l'allerta sono la riga che un lettore meno vorrebbe che il widget tacesse. Cielo non lo offre:
+  quella card parla dei momenti del cielo, e un chip sul suolo sarebbe un secondo soggetto. Le
+  anteprime del picker non cambiano: l'allerta non è lo stato che si pubblicizza.
+- **I dati**: `WidgetModel.warning: PlaceWarnings?` caricato in `WidgetData.load` dallo store,
+  mai dalla rete al momento del disegno; il passo che scrive lo store chiama `repaintAll`, e lo
+  store entra nel collettore di processo di `ChiaroApplication`.
+
+### Decisioni della fase (prese in pianificazione, 9 set 2026)
+
+- **Geometria prima dei nomi.** I nomi dei comuni nei file sono sporchi (encoding, troncature) e
+  una frazione non è un comune; il punto-nel-poligono sulle zone semplificate funziona anche per
+  la posizione GPS e non dipende da nessuna stringa. Il comune resta il ripiego per un punto sul
+  confine. Il costo è un asset da misurare (≤ 400 KB) e un algoritmo puro con la sua tabella.
+- **La scoperta passa dal sito, non dall'API**, per il tetto per IP condiviso dagli operatori
+  mobili. Atom più diff: due richieste piccole al giorno per dispositivo. `latest_all.zip` è il
+  ripiego, non la via, per i suoi 4,7 MB.
+- **Store più tabella**, non una colonna su `weather_history`: un bollettino è un documento con
+  una validità, non un'osservazione di un fetch (l'argomento di `sky_runs` non si applica), e
+  deve comparire in Oggi anche nei giorni in cui nessun fetch è riuscito. La tabella è per il
+  Diario e per «cosa è cambiato tra due bollettini».
+- **La frase la prendono arancione e rosso, non il giallo.** Motivo sopra: frequenza. Il banner
+  copre il giallo.
+- **Il verde si dice una volta, in Avvisi.** In Oggi l'assenza non si disegna (DESIGN §1.1);
+  in Avvisi è la risposta a chi è venuto a controllare.
+- **Default del livello di notifica: gialla.** È il livello che il Dipartimento stesso
+  definisce «prestare attenzione» ed è quello che i lettori italiani sentono nominare; il canale
+  a importanza normale evita l'heads-up. Si tiene o si alza dopo la settimana di collaudo, con i
+  bollettini veri contati.
+- **Il luogo attivo e basta**, come il resto del job. Le città appuntate ai widget non notificano
+  (registrato in «Rimasto fuori»).
+- **Nessun deep link**: Oggi mostra il banner per primo. Quando una superficie lo pretenderà, il
+  costo è `MainActivity` più `ShellTab`, e sarà quella fase a pagarlo.
+- **Vigilanza: solo la classe delle precipitazioni, solo nel foglio, senza notifica.** Non è
+  un'allerta ed è l'unica parte strutturata; il livello dei fenomeni ha 25 icone senza una
+  legenda testuale documentata, e inventarne una sarebbe una schermata che mente.
+- **Le parole dell'autorità si citano, non si traducono** (VISION §8). Nota, significati e
+  descrizioni restano in italiano anche per il lettore inglese, etichettate come della fonte;
+  livello, rischio, giorno e zona localizzano.
+- **Il giallo non è l'ambra.** `unstable` dice «dato vecchio» e «cielo incerto»; un'allerta gialla
+  è un'affermazione di un'autorità. Tre coppie nuove in `ChiaroColors`, misurate; il rosso può
+  coincidere con `fail` se la misura lo permette, e si scrive se lo fa.
+- **Attribuzione** CC BY 4.0 nel foglio, in Informazioni e nella guida: è un obbligo della
+  licenza, ed è anche l'unico posto in cui il lettore scopre da dove viene l'allerta.
+- **Confermate dal committente il 9 set 2026** le tre scelte che il piano dava per provvisorie:
+  il default dalla gialla, il solo luogo attivo, il chip dei widget acceso.
+
+### Rimasto fuori, con il motivo
+
+- Le notifiche per le città appuntate ai widget: il job notifica il luogo attivo, e cambiare
+  questo per le allerte sole sarebbe una regola in più da spiegare.
+- I bollettini regionali (ogni Regione ha il suo sito e il suo formato) e gli orari di validità
+  che il nazionale rimanda a loro: il foglio mostra la nota e si ferma.
+- Il livello dei fenomeni della vigilanza (punti e icone) e la prosa nazionale su venti e
+  temperature: senza legenda e senza un luogo, non c'è modo onesto di legarli a una città.
+- IT-alert: è cell broadcast del sistema, non un feed.
+- Una mappa delle zone: Chiaro non ha una mappa, e la decisione sul radar (VISION §12.5) è
+  aperta apposta.
+
+### Riferimenti per chi apre la fase (raccolti il 9 set 2026)
+
+**Gli URL.** Base raw `https://raw.githubusercontent.com/pcm-dpc/<repo>/master/files/`, con
+`<repo>` = `DPC-Bollettini-Criticita-Idrogeologica-Idraulica` oppure
+`DPC-Bollettini-Vigilanza-Meteorologica`. Lo User-Agent dell'app passa dall'interceptor
+condiviso: su `raw.githubusercontent.com` è l'unico host dove conta davvero.
+
+- Criticità: `xml/<stamp>.zip` (dentro `Cap_<stamp>.xml`, `BCR_testo_DCAT_AP_IT.xml`,
+  `README.txt`); `shp/<stamp>_shp.zip` (DBF con `Zona_all`, `Nome_zona`, `Criticita`, `Idrogeo`,
+  `Temporali`, `Idraulico`; 187 record; è la sorgente dell'importatore); `topojson/<stamp>_today.json`
+  e `_tomorrow.json` (proprietà `Nome zona`, `Comuni`, `Per rischio idraulico|temporali|idrogeologico`,
+  `Rappresentata nella mappa`; 1,2 MB); `<stamp>.json` l'indice; `all/latest_all.zip` il ripiego.
+  `<stamp>` = `AAAAMMGG_HHMM`; **`20260908_1519` è la fixture di test**, riscaricabile.
+- Scoperta: `https://github.com/pcm-dpc/<repo>/commits/master.atom`, poi
+  `https://github.com/pcm-dpc/<repo>/commit/<sha>.diff` del primo `<entry>`: la prima riga
+  (`diff --git a/files/preview/<stamp>_domani.png …`) porta lo stamp. Entrambi dal sito, non
+  dall'API.
+- Vigilanza: `<AAAAMMGG>.json` (chiavi `today`, `tomorrow`, `aftertomorrow`, ciascuna con
+  `attachment[]`, `topo_json[]`, `html_description`); `xml/<AAAAMMGG>.zip` (dentro
+  `Cap_<AAAAMMGG>.xml`); `topojson/<AAAAMMGG>_oggi.json` (proprietà `Nome_Zona`, `comuni`,
+  `id_classificazione`, `Quantitativi_previsti`; 71 zone).
+
+**Il CAP della criticità.** `<identifier>DPC_BULLETIN_2026_09_08_6471</identifier>`,
+`<sender>2.49.0.0.380.1</sender>`, `<sent>` con offset locale, un `<note>` nazionale con i
+rinvii regionali; 8 `<info>`, ognuno con `<event>` nella forma «ORDINARIA CRITICITA' PER RISCHIO
+IDRAULICO / ALLERTA GIALLA:» (parole chiave: IDRAULICO, IDROGEOLOGICO, TEMPORALI; GIALLA,
+ARANCIONE, ROSSA), `<onset>`/`<expires>` che dicono il giorno, `<severity>` Moderate o Severe, e
+le `<area>` con `<areaDesc>` = nome della zona e `<geocode>` `Zona di Allerta` = codice. Nei
+file le etichette dei livelli sono «Assenza di fenomeni significativi prevedibili / NESSUNA
+ALLERTA», «Ordinaria / ALLERTA GIALLA», «Moderata / ALLERTA ARANCIONE», «Elevata / ALLERTA
+ROSSA».
+
+**Il CAP della vigilanza.** 10 `<info>`, `<category>Precipitazioni previste</category>`,
+`<event>` fra «Assenti o non rilevanti», «Deboli», «Moderati», «Elevati», `<geocode>` `id_zona`
+numerico, `<onset>`/`<expires>` per il giorno.
+
+**Punti d'aggancio nel codice** (stato al 9 set 2026, da rileggere prima di toccarli):
+
+- `core/sync`: `SyncNotifiers.kt` (l'interfaccia e `SyncDependencies`); `WeatherSyncWorker.kt`
+  (i passi: fetch → fuso e `cityKey` → `AlertEngine` → `RuleEngine` → città appuntate → cielo;
+  il nuovo passo va dopo `AlertEngine`); `SyncScheduler.alertsWanted` e `shouldRun`.
+- `app/notifications`: `AlertNotifier.kt` (canali creati pigramente, id fissi 1001-1003,
+  `BigTextStyle`, `openApp`); `SkyNotifierTest.kt` (il modello del test); `ChiaroNotifiers.kt`.
+- `core/data`: `ServiceLocator.build()` (l'OkHttp condiviso è una variabile locale: va issato in
+  un campo per il quarto host; `overrideForTests`); `remote/dto/GeocodingDto.kt` e
+  `WeatherRepository.toCity` (dove `country_code` si perde); `domain/model/GpsLocation.kt` e
+  `CityStore.adoptGpsFix` (la seconda strada di `City`); `local/WeatherHistory.kt` (migrazioni
+  1→4 e `ChiaroDatabaseMigrationTest`, che fissa a mano gli schemi vecchi); `AlertStateStore.kt`
+  (l'idioma dell'anello di impronte in un DataStore suo).
+- `app/ui/today`: `TodayUiState.kt` (`Content.whatChanged`, il modello per un campo riempito dal
+  ViewModel e non dal builder); `TodayScreen.kt` `ContentState` (la `LazyColumn`: il banner dopo
+  `FreshnessChip`, prima di `GuideCard`); `HeadlineEngine.kt` (la scala, primo che combacia
+  vince) e `HeadlineText.kt` (i due registri).
+- `app/ui/alerts`: `AlertsScreen.kt` (`ReadySwitch`, `somethingTurnedOn()` per il permesso);
+  `AlertsViewModel.mutate` (riconcilia il job dopo ogni modifica).
+- `app/ui/theme`: `ChiaroColors.kt` (quattro palette, le due Brillante generate da
+  `tools/gen_vivid.py`: non si ritoccano a mano); `PaletteContrastTest`; `PaletteDocTest` (legge
+  i rapporti stampati in DESIGN §2.3); `NoRawColorTest`; `ui/StringsParityTest`; `ui/format/Formats`.
+- `app/widget`: `WidgetLookStore.kt` (`WidgetLook`, chiavi `*_$id`, `forget`);
+  `arc/ArcSettings.kt` (`ArcSettingsCodec`, il test che il codec scrive esattamente le chiavi che
+  legge); `WidgetData.kt` (`WidgetModel`, `load`); `WidgetUi.kt` (`verdictInk`/`verdictContainer`
+  con il fondo della card, non il tema); `SkyWidget.kt` `VerdictChip` (la grammatica del chip);
+  i quattro `*LayoutTest`.
+
+**Sequenza suggerita, un PR per passo**, ognuno verde da solo: (1) dominio, importatore, asset,
+i due campi di `City`, la voce in `UPSTREAM.md`; (2) sorgente, store, tabella e migrazione, passo
+nel job, notifier con il suo test; (3) Oggi, foglio, Avvisi, Diario, guida, token in DESIGN,
+stringhe; (4) widget, con il giro di screenshot su device. La settimana di collaudo parte al
+merge del (3).
+
+### Verifica
+
+Da compilare a fine fase: conteggio test per modulo, lint, APK debug, e la settimana di collaudo
+in Italia con i bollettini veri accanto.
+
+## Fase 12 — Allerte ufficiali, secondo strato: MeteoAlarm
+
+Pianificata il 9 set 2026 insieme alla Fase 11; parte quando la 11 ha passato la sua settimana.
+Aggiunge un adattatore e cambia una riga: il modello, le superfici, le notifiche e i widget sono
+quelli della Fase 11. **In Italia continua a fare fede la Protezione Civile**: il feed italiano di
+MeteoAlarm non si legge mai.
+
+- [ ] Spike, prima di tutto: l'API EDR di MeteoAlarm (geometrie GeoJSON, filtri per livello, tipo
+      e lingua, query per località) risponde 401 senza credenziali e il portale annuncia l'accesso
+      pubblico via MeteoGate come «coming soon» (misurato 9 set 2026). Se all'inizio della fase è
+      aperta, le geometrie delle aree EMMA vengono da lì; altrimenti si costruisce una tabella
+      `EMMA_ID` ↔ area dai feed stessi (l'`areaDesc` è il nome della regione) incrociata con
+      l'`admin1` del geocoding, paese per paese, e si registra la copertura ottenuta
+- [ ] `MeteoAlarmSource`: un Atom per ogni paese dei luoghi salvati fuori dall'Italia
+      (`meteoalarm-legacy-atom-<paese>`, ~80 KB per l'Italia oggi), con richieste condizionali
+      (ETag / If-Modified-Since — da verificare nello spike: ogni giro del job che scarica 80 KB
+      per paese è 2 MB al giorno, un 304 costa niente); il CAP solo per le voci dell'area del
+      luogo; lo stesso pull-parser della Fase 11, perché il CAP è lo stesso CAP 1.2
+- [ ] La mappatura: `awareness_level` 2/3/4 → giallo/arancione/rosso; `awareness_type` →
+      `WarningHazard`, che cresce dei quattordici tipi (vento, neve e ghiaccio, temporali,
+      nebbia, caldo, freddo, eventi costieri, incendi, valanghe, pioggia, alluvione,
+      pioggia-alluvione, pericolo marino, siccità) con le loro parole in IT e EN
+- [ ] I testi: i blocchi `info` arrivano in inglese e nella lingua nazionale; si sceglie quella
+      del lettore se c'è, altrimenti l'inglese, e si cita (VISION §8). `onset` ed `expires` sono
+      ore precise: la riga «dalle 11 alle 23» sostituisce «oggi» nel banner e nella notifica
+- [ ] Precedenza per `countryCode`: `IT` → solo DPC; altrove MeteoAlarm; la riga «disponibili per
+      i luoghi in Italia» di Avvisi diventa «in Italia e in 32 paesi europei», e fuori da entrambi
+      resta onesta
+- [ ] Attribuzione come i termini chiedono: il servizio nazionale (`senderName`) e l'ora di
+      emissione nel banner, nel foglio e nella notifica; «EUMETNET – MeteoAlarm» solo se mai si
+      mostrassero più paesi insieme, cosa che un luogo alla volta non fa
+- [ ] Impronte con l'identificativo CAP e il livello; stesse due canali, stessi id
+- [ ] Widget e Diario: nessun lavoro, stesso modello — ed è il test che la Fase 11 ha disegnato
+      bene
+
+### Decisioni già prese
+
+- **MeteoAlarm e non gli aggregatori**: il WMO Severe Weather Information Centre è un sito senza
+  API (il suo JSON interno è piatto, senza geometrie, e rilancia i feed nazionali); l'Alert-Hub
+  filtra per rettangolo e il feed Italia conteneva cento allerte slovene e svizzere e zero
+  italiane il giorno della misura; OpenWeatherMap chiede una chiave, contro la promessa del
+  prodotto. Misure del 9 set 2026, VISION §12.8.
+- **Il feed italiano di MeteoAlarm non si legge**, nemmeno come complemento per vento e caldo che
+  il bollettino di criticità non copre: la regola «una sola voce» vale più di due rischi in più, e
+  il CAP stesso dice di non essere l'allerta ufficiale.
+
+### Da sciogliere all'inizio della fase
+
+- L'accesso all'EDR (sopra). Cambia il costo della fase, non il suo perimetro.
+- Se le richieste condizionali non sono onorate dai feed: un Atom per paese per ogni giro del job
+  è troppo a 15 minuti; in quel caso la cadenza del passo scende a una lettura l'ora per paese,
+  e si dichiara.
+
+### Riferimenti (raccolti il 9 set 2026)
+
+- Feed: `https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-<paese>` (l'italiano,
+  `-italy`, serve solo a leggere il formato: in Italia non si usa). Ogni `<entry>` porta
+  `cap:geocode` `EMMA_ID` (es. `IT019`), `cap:areaDesc`, `cap:event` («Orange Wind Warning»),
+  `cap:sent`/`effective`/`onset`/`expires`, `cap:severity`, `cap:message_type` (Alert, Update) e
+  il link `application/cap+xml` a `https://feeds.meteoalarm.org/api/v1/warnings/feeds-<paese>/<uuid>`;
+  il feed dichiara i termini in `<rights>` e un hub PubSubHubbub che non ci riguarda.
+- CAP: un `<info>` per lingua (`en-GB` più la nazionale), `<parameter>` `awareness_level`
+  («3; orange; Severe») e `awareness_type` («1; Wind»), `<senderName>`, `<description>`,
+  `<instruction>`, `<web>`, `<area>` con `EMMA_ID` e nessun poligono.
+- Livelli: 2 yellow Moderate, 3 orange Severe, 4 red Extreme. Tipi: 1 Wind, 2 snow-ice,
+  3 Thunderstorm, 4 Fog, 5 high-temperature, 6 low-temperature, 7 coastalevent, 8 forest-fire,
+  9 avalanches, 10 Rain, 12 flooding, 13 rain-flood, 14 Marine-Hazard, 15 Drought (l'11 non
+  esiste).
+- API: `https://api.meteoalarm.org/edr/v1/collections?f=json` risponde senza chiave e descrive
+  i filtri; `…/collections/warnings/locations` risponde 401; `…/metadata/v1` è il portale.
+  Stato del servizio `https://status.meteoalarm.org`; termini
+  `https://meteoalarm.org/en/page/terms-and-conditions`; profilo CAP v2.0 nel progetto GitLab
+  `meteoalarm-pm-group/documents`.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae
@@ -4264,4 +4684,8 @@ branch.
   foreground, nessuna posizione in background. Vale già da adesso, non da una fase di
   ottimizzazione.
 - **Niente radar**: il provider non ha immagini. È una posizione dichiarata, non una
-  mancanza da nascondere.
+  mancanza da nascondere. Riesaminata il 9 set 2026 (Radar-DPC esiste, è libero, copre l'Italia:
+  le misure sono nella Fase 11) e lasciata così per scelta del committente.
+- **Le allerte ufficiali si citano, non si traducono** (VISION §8, dal 9 set 2026): livello,
+  rischio, giorno e zona localizzano; le parole di un'autorità restano sue, nella sua lingua,
+  etichettate come tali. E in Italia fa fede la Protezione Civile, sempre.

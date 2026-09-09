@@ -308,6 +308,50 @@ What still differs after the pass is exactly the list above, each entry with its
 reason: 66 of the 86 shared files are byte-identical (55 before the pass), and as of
 9 set 2026 nothing is pending in either direction.
 
+## What Chiaro has and tweather does not: the official warnings (planned 9 set 2026)
+
+Fase 11 and 12 add the first capability that did not come from upstream: **official weather
+warnings** — the Dipartimento della Protezione Civile's daily bulletins for places in Italy,
+MeteoAlarm for the rest of Europe. Nothing in tweather reads an official feed, and it never did
+on purpose (VISION §10 had "severe-weather government bulletins" out of scope until 9 set 2026;
+the decision and its reasons are VISION §12.8). What the ledger has to say about it, written
+before the code exists so the code has something to be measured against:
+
+- **New, not diverged.** `domain/warnings/` (the model, the zone index, the level engine),
+  `data/warnings/` (one source per issuer, the CAP pull-parser, the zip reader, the bundled
+  zones asset and its importer of record `tools/build_warning_zones.py`), the `warnings`
+  DataStore and the `warning_records` Room table. None of it has an upstream twin. The model is
+  issuer-agnostic and every surface is in `:app`, so if tweather ever wants warnings the two
+  directories move as they are — which is the same property `:core:*` was split for (below).
+- **Shared files that will diverge, and how little.** `WeatherSyncWorker` gains one guarded call
+  (the step itself lives in its own class); `SyncNotifiers` gains one method, and so does the
+  fake in `WeatherSyncWorkerTest`; `ChiaroDatabase` goes 4 → 5 with an **additive** migration —
+  a new table, the inherited `weather_history` untouched. The sky-runs argument for a column
+  rather than a table (`WeatherHistory.kt`) is about what a *fetch observed*; a bulletin is a
+  document with a validity window that outlives any fetch and must be shown on days nothing was
+  fetched, which is `ReportDiskCache`'s kind of thing, not `sky_runs`'. `City` gains
+  `countryCode` and `admin3`, nullable with defaults, filled on both roads: `GeoResultDto`,
+  which already receives `country_code` and drops it (`toCity` keeps the localized name, and
+  "Italia"/"Italy" is not a discriminator), and `GeoFix` for the position. Each divergence is a
+  few lines; each is registered here the day it lands, with the same dated comment in both
+  repositories if tweather takes the fields too — `country_code` would help upstream for the
+  same reason.
+- **Not shared and not meant to be: the words.** Levels, hazards and their meanings are string
+  resources in `:app`; the issuer's own text is quoted in the language it was written
+  (VISION §8), so no translation table for it exists in `:core` to keep in step.
+- **A debt that travels with the data, measured on 9 set 2026.** The DPC files carry cp1252
+  damage in a few names ("Citt� Sant'Angelo") and truncated municipality names in the vigilance
+  layer ("Belv", "Bidon", "Buddus"). The zone index therefore matches a place by **geometry
+  first** and by municipality name only as a fallback; the importer normalizes names and prints
+  the count it could not match, so the debt is re-measured every time the asset is rebuilt.
+- **Obligations that travel with the data.** CC BY 4.0 for both DPC repositories — attribution on
+  the warning sheet, in the guide and in Informazioni. MeteoAlarm's terms are equivalent to
+  CC BY 4.0 plus three requirements: the issuer's name, the time of issue (both of which the
+  banner prints anyway) and no modification of the text, which is the quoting rule again. The
+  two DPC READMEs still say "repository in fase di caricamento", as they have since 2020: the
+  adapter treats a missing or malformed bulletin as "keep the last one and say its date", never
+  as an error the reader has to see.
+
 ## When to extract
 
 The rule from VISION.md §7.3: copy now, extract `weather-core` into its own repo when
