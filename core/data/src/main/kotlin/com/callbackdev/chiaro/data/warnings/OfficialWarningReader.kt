@@ -3,12 +3,14 @@ package com.callbackdev.chiaro.data.warnings
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.warnings.OfficialWarningEngine
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.domain.warnings.WarningZone
 import com.callbackdev.chiaro.domain.warnings.WarningZoneIndex
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 /**
  * What a SCREEN may say about the official warnings for one place (Fase 11, third step).
@@ -60,6 +62,22 @@ class OfficialWarningReader(
 
     /** Today in the issuer's zone — the date every rule below is written against. */
     fun today(): LocalDate = LocalDate.now(issuerZone)
+
+    /**
+     * The warning worth DRAWING for [city]: what the current bulletin grades it at when
+     * something is above NONE, and null for everything else — no bulletin, no zone, or a
+     * zone the bulletin leaves green. It is the widgets' whole question, and Today's.
+     *
+     * The store is asked FIRST and the index only after. The job's step is inert when no
+     * saved place falls in a graded zone, so a reader whose places are all abroad has no
+     * bulletin stored at all, and this never decodes the 290 KB asset on their behalf.
+     */
+    suspend fun graded(city: City): PlaceWarnings? {
+        val stored = bulletin.first() ?: return null
+        val zone = runCatching { zoneOf(city) }.getOrNull() ?: return null
+        val current = state(zone, stored, today()) as? PlaceWarningState.Current ?: return null
+        return current.warnings.takeIf { it.maxLevel != WarningLevel.NONE }
+    }
 
     /**
      * The state of one place, pure: everything that varies is a parameter, so the four

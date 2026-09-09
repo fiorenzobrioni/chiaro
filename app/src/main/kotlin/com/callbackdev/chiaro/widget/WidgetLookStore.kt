@@ -90,6 +90,14 @@ data class WidgetLook(
      * layout, this one is on by default and decides only the content.
      */
     val showSentence: Boolean = true,
+    /**
+     * The official warning's chip on the Now and Today widgets (Fase 11). **On by
+     * default**: on a day without a warning it changes nothing at all, and on a day with
+     * one it is the line a reader would least want their home screen to keep quiet about.
+     * The launcher's own weather widgets show a line when the national service issues a
+     * warning, so this follows a habit rather than inventing one.
+     */
+    val showWarning: Boolean = true,
     /** Which way round the Now widget's one-row card is laid; see [WidgetArrangement]. */
     val arrangement: WidgetArrangement = WidgetArrangement.ICON_START,
     /**
@@ -128,6 +136,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             opacityPct = opacity,
             showDayRange = prefs[rangeKey(appWidgetId)] ?: false,
             showSentence = prefs[sentenceKey(appWidgetId)] ?: true,
+            showWarning = prefs[warningKey(appWidgetId)] ?: true,
             arrangement = prefs[arrangementKey(appWidgetId)]
                 ?.let { name -> WidgetArrangement.entries.firstOrNull { it.name == name } }
                 ?: WidgetArrangement.ICON_START,
@@ -143,6 +152,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             prefs[opacityKey(appWidgetId)] = look.opacityPct.coerceIn(0, 100)
             prefs[rangeKey(appWidgetId)] = look.showDayRange
             prefs[sentenceKey(appWidgetId)] = look.showSentence
+            prefs[warningKey(appWidgetId)] = look.showWarning
             prefs[arrangementKey(appWidgetId)] = look.arrangement.name
             prefs[iconsKey(appWidgetId)] = look.icons.name
         }
@@ -156,6 +166,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 prefs.remove(opacityKey(it))
                 prefs.remove(rangeKey(it))
                 prefs.remove(sentenceKey(it))
+                prefs.remove(warningKey(it))
                 prefs.remove(arrangementKey(it))
                 prefs.remove(iconsKey(it))
                 // The switch this key belonged to is gone (8 set 2026); a widget placed
@@ -169,6 +180,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
     private fun opacityKey(id: Int) = intPreferencesKey("opacity_$id")
     private fun rangeKey(id: Int) = booleanPreferencesKey("range_$id")
     private fun sentenceKey(id: Int) = booleanPreferencesKey("sentence_$id")
+    private fun warningKey(id: Int) = booleanPreferencesKey("warning_$id")
     private fun arrangementKey(id: Int) = stringPreferencesKey("arrangement_$id")
     private fun iconsKey(id: Int) = stringPreferencesKey("icons_$id")
     private fun legacyConditionKey(id: Int) = booleanPreferencesKey("condition_$id")

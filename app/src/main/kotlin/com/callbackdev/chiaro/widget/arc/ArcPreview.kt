@@ -34,6 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,6 +44,14 @@ import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.theme.paletteFor
 import com.callbackdev.chiaro.ui.today.TodayUiState
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
+import com.callbackdev.chiaro.ui.warnings.WarningText
+import com.callbackdev.chiaro.widget.WarningChipCorner
+import com.callbackdev.chiaro.widget.WarningChipGap
+import com.callbackdev.chiaro.widget.WarningChipGlyph
+import com.callbackdev.chiaro.widget.WarningChipPadH
+import com.callbackdev.chiaro.widget.WarningChipPadV
+import com.callbackdev.chiaro.widget.WarningChipSp
 import com.callbackdev.chiaro.widget.StaleSp
 import com.callbackdev.chiaro.widget.WidgetBackground
 import com.callbackdev.chiaro.widget.WidgetModel
@@ -168,7 +177,9 @@ private fun ArcPreviewCard(model: WidgetModel?, arc: ArcSettings?, size: DpSize)
                     size, fontScale(context), arc,
                     stale = content.isStale,
                     agendaAvailable = series.events.size,
-                    weekAvailable = content.week.isNotEmpty()
+                    weekAvailable = content.week.isNotEmpty(),
+                    heroIsHeadline = heroIsHeadline(arc, series),
+                    warningLevel = model.warning?.maxLevel
                 )
                 val bitmap = remember(series, arc, plan, palette) {
                     paintArc(context, model, arc, series, plan, palette)
@@ -310,6 +321,9 @@ private fun PreviewBody(
                     inks.primary, CardHeroSp * scale, medium = true, maxLines = plan.heroLines
                 )
             }
+            model.warning?.maxLevel?.takeIf { plan.warning.drawn }?.let { level ->
+                PreviewWarningChip(level, inks, if (plan.heroLines > 0) WarningChipGap else 0.dp)
+            }
             Spacer(modifier = Modifier.height(ArcGap))
             graphic()
             PreviewAgenda(model, series, plan, inks)
@@ -344,6 +358,9 @@ private fun PreviewBody(
                         PText(Formats.temperature(series.lowC, units, Locale.getDefault()), inks.secondary, 16f)
                     }
                 }
+            }
+            model.warning?.maxLevel?.takeIf { plan.warning.drawn }?.let { level ->
+                PreviewWarningChip(level, inks, WarningChipGap)
             }
             Spacer(modifier = Modifier.height(ArcGap))
             graphic()
@@ -433,6 +450,38 @@ private fun PreviewWeek(
                 PText(Formats.temperature(day.forecast.lowC, units, locale), inks.secondary, WeekLowSp * plan.textScale)
             }
         }
+    }
+}
+
+/**
+ * The official warning's chip, in Compose (Fase 11). The preview draws what the card
+ * draws, from the same plan and the same slot: a settings screen that showed a chip the
+ * home screen would not is the failure this file exists to avoid.
+ */
+@Composable
+private fun PreviewWarningChip(level: WarningLevel, inks: PreviewInks, topGap: Dp) {
+    val context = LocalContext.current
+    val colors = inks.palette.colors
+    val pair = when (level) {
+        WarningLevel.RED -> colors.warningRed
+        WarningLevel.ORANGE -> colors.warningOrange
+        else -> colors.warningYellow
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .padding(top = topGap)
+            .background(pair.container, RoundedCornerShape(WarningChipCorner))
+            .padding(horizontal = WarningChipPadH, vertical = WarningChipPadV)
+    ) {
+        Image(
+            painter = painterResource(ChiaroIcons.warningMarkRes()),
+            contentDescription = null,
+            colorFilter = ColorFilter.tint(pair.ink),
+            modifier = Modifier.size(WarningChipGlyph)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        PText(context.getString(WarningText.phraseRes(level)), pair.ink, WarningChipSp, medium = true)
     }
 }
 

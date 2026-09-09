@@ -116,4 +116,24 @@ class OfficialWarningReaderTest {
         // The other zone's red is not this place's business.
         assertEquals(WarningLevel.ORANGE, state.warnings.maxLevel)
     }
+
+    // ------------------------------------------- what a widget asks (Fase 11, step four)
+
+    private val milano = com.callbackdev.chiaro.domain.model.City(
+        id = 1L, name = "Milano", region = "Lombardia", country = "Italia",
+        coordinates = com.callbackdev.chiaro.domain.model.Coordinates(45.4643, 9.1895),
+        timezone = "Europe/Rome", countryCode = "IT", admin3 = "Comune di Milano"
+    )
+
+    /**
+     * The index supplier in this file throws, and that is the assertion: with no
+     * bulletin in the store, `graded` must answer before it ever asks for the zones.
+     * The job's step is inert where no saved place falls in a graded zone, so a reader
+     * whose places are all abroad has no bulletin — and must never pay 290 KB of JSON
+     * decoding on a home-screen repaint for a warning that cannot exist.
+     */
+    @Test
+    fun `with nothing stored the index is never even asked for`() = kotlinx.coroutines.runBlocking {
+        assertEquals(null, reader.graded(milano))
+    }
 }

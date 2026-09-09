@@ -44,14 +44,40 @@ internal fun todayHeroTextHeight(
     fontScale: Float,
     stale: Boolean,
     sentence: Boolean,
-    range: Boolean
+    range: Boolean,
+    warning: Boolean = false
 ): Dp {
     val leading = textLineHeight(TemperatureSp, fontScale) + textLineHeight(PlaceSp, fontScale) +
         (if (stale) textLineHeight(StaleSp, fontScale) else 0.dp) +
         textInkBalance(TemperatureSp, fontScale)
     val trailing = (if (sentence) textLineHeight(SentenceSp, fontScale) * TallSentenceMaxLines else 0.dp) +
+        warningBlock(fontScale, warning) +
         (if (range) textLineHeight(PlaceSp, fontScale) else 0.dp)
     return maxOf(leading, trailing)
+}
+
+/**
+ * Whether the warning chip fits on a line of its own under the sentence (Fase 11). It
+ * grows the hero's trailing column, and what it must not do is push the strip off the
+ * card — the strip IS this widget. On the reference four-by-two the chip is free: the
+ * leading column (74.2 dp, the number over the place plus its leading band) is taller
+ * than the trailing one even with the chip on it, so the row does not grow at all. With
+ * the day's range on as well the row grows to 87.8 and the strip still fits in the 73.2
+ * that leaves, without its rain line. A section that does not fit is not drawn.
+ */
+internal fun todayHasWarningRow(
+    size: DpSize,
+    fontScale: Float,
+    stale: Boolean,
+    sentence: Boolean,
+    range: Boolean
+): Boolean {
+    val hero = maxOf(
+        RowIconMin,
+        todayHeroTextHeight(fontScale, stale, sentence, range, warning = true)
+    )
+    val room = size.height - WidgetCardPaddingSnug - WidgetCardPadding - hero - StripGap
+    return room >= todayStripHeight(fontScale, rain = false)
 }
 
 /**
@@ -67,9 +93,10 @@ internal fun todayShowRain(
     fontScale: Float,
     stale: Boolean,
     sentence: Boolean,
-    range: Boolean
+    range: Boolean,
+    warning: Boolean = false
 ): Boolean {
-    val hero = maxOf(RowIconMin, todayHeroTextHeight(fontScale, stale, sentence, range))
+    val hero = maxOf(RowIconMin, todayHeroTextHeight(fontScale, stale, sentence, range, warning))
     val room = size.height - WidgetCardPaddingSnug - WidgetCardPadding - hero - StripGap
     return room >= todayStripHeight(fontScale, rain = true)
 }

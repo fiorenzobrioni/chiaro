@@ -81,7 +81,11 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   "official warnings are for places in Italy"), the switch for the notification and the
   level to be told from. The Journal gets a line every time a level moves. A level is
   always a word and a glyph before it is a colour: the three of them do not separate under
-  deuteranopia, and DESIGN.md prints the measurement
+  deuteranopia, and DESIGN.md prints the measurement. On the home screen the level reaches
+  the Now, Today and day's-arc widgets as a chip, by one rule the cards share: orange and
+  red are already in the day's sentence, so the chip only appears where that sentence is
+  not, and yellow, which the sentence never carries, takes a line of its own where the
+  card has one to spare
 - ⚠️ **Alerts**: three ready-made switches that say exactly what they send and when
   (severe weather in the next 12 hours, at most once per storm; rain past 70% likely
   within 6 hours, at most twice a day; the morning summary, once between 6 and 12). Then
@@ -290,7 +294,7 @@ it, is in [DESIGN.md](./DESIGN.md).
   drawn on a Compose canvas rather than by a charting library
 - **Meteocons** v2.0.0 as vector drawables, imported and recolored by
   `tools/import_meteocons.py`; **Inter** as a bundled variable font
-- 731 unit tests on the JVM across four modules (290 in `:app`, 213 in `:core:domain`, 207
+- 754 unit tests on the JVM across four modules (312 in `:app`, 213 in `:core:domain`, 208
   in `:core:data`, 21 in `:core:sync`), Robolectric where Android is unavoidable, including
   painting the arc widget's bitmap for real and reading its pixels back
 

@@ -48,6 +48,8 @@ import com.callbackdev.chiaro.widget.NoPlaceContent
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.widget.PlaceLine
 import com.callbackdev.chiaro.widget.StaleSp
+import com.callbackdev.chiaro.widget.WarningChipGap
+import com.callbackdev.chiaro.widget.WarningChipRow
 import com.callbackdev.chiaro.widget.WidgetCard
 import com.callbackdev.chiaro.widget.WidgetCardPadding
 import com.callbackdev.chiaro.widget.WidgetData
@@ -121,7 +123,9 @@ class ArcWidget : GlanceAppWidget() {
                     size, fontScale(context), arc,
                     stale = content.isStale,
                     agendaAvailable = series.events.size,
-                    weekAvailable = content.week.isNotEmpty()
+                    weekAvailable = content.week.isNotEmpty(),
+                    heroIsHeadline = heroIsHeadline(arc, series),
+                    warningLevel = model.warning?.maxLevel
                 )
             } else {
                 null
@@ -453,6 +457,11 @@ private fun CardContent(
                 maxLines = plan.heroLines
             )
         }
+        // Eight children at most in this column, against Glance's ten: the chip is one
+        // of them, gap included (see [WarningChipRow]).
+        model.warning?.maxLevel?.takeIf { plan.warning.drawn }?.let { level ->
+            WarningChipRow(level, palette, if (plan.heroLines > 0) WarningChipGap else 0.dp)
+        }
         Spacer(modifier = GlanceModifier.height(ArcGap))
         ArcGraphic(bitmap, plan, series, model)
         Agenda(model, series, plan, palette)
@@ -518,6 +527,11 @@ private fun PanelContent(
                 Spacer(modifier = GlanceModifier.width(HeroGap))
                 DayRange(series.highC, series.lowC, model.settings.units, palette)
             }
+        }
+        // A line of its own under the hero row, before the drawing. Seven children at
+        // most in this column.
+        model.warning?.maxLevel?.takeIf { plan.warning.drawn }?.let { level ->
+            WarningChipRow(level, palette, WarningChipGap)
         }
         Spacer(modifier = GlanceModifier.height(ArcGap))
         ArcGraphic(bitmap, plan, series, model)
@@ -692,6 +706,15 @@ private fun StaleLine(content: TodayUiState.Content, palette: WidgetPalette) {
  * (the Now widget's own sentence, in its brief register). When the agenda is empty the
  * next-moment hero falls back to the headline rather than to a blank line.
  */
+/**
+ * Whether that sentence is the day's HEADLINE rather than the next light moment — which
+ * for an orange or a red warning means the card is already saying it (Fase 11). It is
+ * not simply the reader's choice: a card set to the next moment with no moment left
+ * falls back to the headline, and a chip beside it would be the same thing twice.
+ */
+internal fun heroIsHeadline(arc: ArcSettings, series: ArcSeries): Boolean =
+    arc.hero != ArcHero.NONE && !(arc.hero == ArcHero.NEXT_MOMENT && series.nextLight != null)
+
 internal fun heroText(
     context: Context,
     model: WidgetModel,

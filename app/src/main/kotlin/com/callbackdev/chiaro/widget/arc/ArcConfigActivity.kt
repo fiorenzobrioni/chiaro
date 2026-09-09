@@ -395,6 +395,15 @@ private fun ArcConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () ->
                 onToggle = { saveArc(current.copy(agendaVerdicts = it)) }
             )
 
+            // ---- The official warning (Fase 11). ----
+            SectionLabel(stringResource(R.string.arc_config_warning))
+            SwitchRow(
+                label = stringResource(R.string.arc_warning_switch),
+                note = stringResource(R.string.arc_config_warning_note),
+                checked = current.warning,
+                onToggle = { saveArc(current.copy(warning = it)) }
+            )
+
             // ---- The week. ----
             SectionLabel(stringResource(R.string.arc_config_week))
             SwitchRow(

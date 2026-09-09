@@ -87,4 +87,49 @@ class TodayWidgetLayoutTest {
         // (250 − 4 − 76 − 8 − 14 − 12) / 2 = 68.
         assertFalse(todayIsWide(threeByTwo, icon = 76.dp))
     }
+
+    // ------------------------------------------------- the warning chip (Fase 11)
+
+    /**
+     * On the reference four-by-two the chip is FREE: the hero's leading column (the
+     * 34 sp number, the place and the leading band, 74.16 dp) is taller than its
+     * trailing one even once the chip has joined it (42.24 + 24.52 = 66.76), so the row
+     * does not grow and nothing else on the card moves.
+     */
+    @Test
+    fun `the chip is free where the number's column is the taller one`() {
+        val without = todayHeroTextHeight(1f, stale = false, sentence = true, range = false)
+        val with = todayHeroTextHeight(1f, stale = false, sentence = true, range = false, warning = true)
+        assertEquals(74.16f, without.value, 0.01f)
+        assertEquals(without.value, with.value, 0.01f)
+    }
+
+    /** With the day's range as well the trailing column wins, and the row grows to
+     * 87.88 — which the card still holds, without the rain line. */
+    @Test
+    fun `with the range too the row grows and the strip still fits`() {
+        assertEquals(
+            87.88f,
+            todayHeroTextHeight(1f, stale = false, sentence = true, range = true, warning = true).value,
+            0.01f
+        )
+        assertTrue(todayHasWarningRow(fourByTwo, 1f, stale = false, sentence = true, range = true))
+    }
+
+    /** The rain row is the one that yields: it is the last thing the budget pays for,
+     * and a section that does not fit is not drawn. */
+    @Test
+    fun `the rain row yields to the chip before the strip does`() {
+        assertTrue(todayShowRain(fourByTwo, 1f, stale = false, sentence = true, range = false, warning = true))
+        assertTrue(todayShowRain(fourByTwo, 1f, stale = false, sentence = true, range = true, warning = false))
+        assertFalse(todayShowRain(fourByTwo, 1f, stale = false, sentence = true, range = true, warning = true))
+    }
+
+    /** A card too short for the strip without its rain line has no line to spare. */
+    @Test
+    fun `a card with no room left carries no chip`() {
+        assertFalse(
+            todayHasWarningRow(DpSize(340.dp, 150.dp), 1f, stale = true, sentence = true, range = true)
+        )
+    }
 }

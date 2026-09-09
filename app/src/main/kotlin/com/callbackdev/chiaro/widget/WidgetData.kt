@@ -13,6 +13,7 @@ import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.domain.sky.SkyVerdictEngine
+import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.ui.sky.SkyUpcoming
 import com.callbackdev.chiaro.ui.today.TodayStateBuilder
 import com.callbackdev.chiaro.ui.today.TodayUiState
@@ -49,7 +50,14 @@ data class WidgetModel(
      * no home screen is tall enough for more.
      */
     val moments: List<NextMoment>,
-    val zone: ZoneId
+    val zone: ZoneId,
+    /**
+     * The official warning for [city] (Fase 11), or null when there is nothing to draw:
+     * no bulletin, a place in no graded zone, or a zone the bulletin leaves green. Read
+     * from the store the periodic job writes — never from the network at render time,
+     * like everything else on a card.
+     */
+    val warning: PlaceWarnings? = null
 ) {
     /** The one a one-cell widget shows, and the head of every taller one. */
     val nextMoment: NextMoment? get() = moments.firstOrNull()
@@ -101,10 +109,20 @@ object WidgetData {
         }
         val now = Instant.now()
         val report = ServiceLocator.weatherRepository(context).cachedReport(city)
+        // Before the content, because the content is built FROM it: the day's sentence
+        // is [TodayStateBuilder]'s, and its step zero is the official warning (Fase 11).
+        // A card whose sentence did not carry the warning would then draw the chip
+        // beside a sentence that says nothing about it — the widget and the app telling
+        // two stories about one afternoon, which is the thing this object exists to
+        // prevent. Never lets a card fail to draw: a store that cannot be read is a line
+        // missing, not a home screen with a hole.
+        val warning = runCatching {
+            ServiceLocator.warningReader(context).graded(city)
+        }.getOrNull()
         val content = report?.let {
             TodayStateBuilder.build(
                 city, it, now, settings.updateFrequencyMin,
-                userRefreshing = false, error = null
+                userRefreshing = false, error = null, warnings = warning
             ) as? TodayUiState.Content
         }
         return WidgetModel(
@@ -114,7 +132,8 @@ object WidgetData {
             fromGps = active is ActiveSource.Gps,
             content = content,
             moments = moments(context, city, zone, now, report, settings),
-            zone = zone
+            zone = zone,
+            warning = warning
         )
     }
 

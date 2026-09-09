@@ -251,6 +251,14 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
                         onToggle = { save(current.copy(showDayRange = it)) }
                     )
                 }
+                // Fase 11: on by default, and on a day with no warning it changes
+                // nothing at all — which is the whole argument for leaving it on.
+                SwitchRow(
+                    label = stringResource(R.string.widget_config_show_warning),
+                    note = stringResource(R.string.widget_config_show_warning_note),
+                    checked = current.showWarning,
+                    onToggle = { save(current.copy(showWarning = it)) }
+                )
             }
             if (kind == WidgetKind.NOW) {
                 SectionLabel(stringResource(R.string.widget_config_arrangement))

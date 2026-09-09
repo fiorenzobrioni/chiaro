@@ -4313,7 +4313,7 @@ nessuna sigla CAP raggiunge lo schermo: c'è un test per questo, come per gli id
       l'interruttore delle notifiche e il livello di partenza
 - [x] Diario: la riga quando il livello cambia tra due bollettini, con il suo glifo di categoria;
       la riga «bollettino non raggiunto», una al giorno al massimo
-- [ ] Widget: il chip su Ora, Oggi e Arco, l'interruttore per istanza (`showWarning`, acceso),
+- [x] Widget: il chip su Ora, Oggi e Arco, l'interruttore per istanza (`showWarning`, acceso),
       le regole di layout pure con tabella, il conteggio dei figli di Glance
 - [x] DESIGN.md: §2.3 i tre token di livello misurati (giallo, arancione, rosso: inchiostro e
       contenitore, chiaro e scuro, ΔE fra loro sotto deuteranopia — il rosso può essere la
@@ -4870,6 +4870,90 @@ appoggiato a una funzione finita.
 Verifica del PR: suite completa come la CI, **731 test** — dominio 213 (invariato), dati
 207 (+6), sync 21 (invariato), app 290 (+30) — e lint 0 errori, nessun avviso sui file nuovi (l'unico che era comparso,
 `UseKtx` su `WarningSheet`, è stato tolto passando a `String.toUri()`).
+
+### Il quarto PR: il chip sui widget, e due contenitori Glance che perdevano figli (9 set 2026)
+
+Branch `claude/adoring-bell-viiqyl`, sopra il terzo. L'ultima casella di codice della
+fase: l'allerta sulla schermata home.
+
+**La regola è una tabella, e sta in un posto solo** (`WidgetWarning.kt`, `warningSlot`).
+Quattro card dovevano essere d'accordo su quando la frase sta già dicendo l'allerta, e
+quattro copie di una regola sono quattro occasioni per non esserlo. Decide quello che la
+card **sta già dicendo**: la frase del giorno nel registro breve *è* l'arancione e il
+rosso, quindi dove quella frase c'è la pastiglia non si disegna; dove non c'è — il lettore
+l'ha spenta, o l'eroe dell'Arco sta mostrando il prossimo momento di luce — la pastiglia
+prende il suo posto e la card non cresce di niente. Il giallo la frase non lo porta mai,
+quindi vuole una riga sua e compare solo dove la forma ne ha una in più.
+
+**La frase del widget ora porta davvero l'allerta.** `WidgetData.load` costruiva il
+contenuto senza passare il bollettino a `TodayStateBuilder`, quindi il gradino zero della
+frase non arrivava mai su una card: la pastiglia si sarebbe disegnata accanto a una frase
+che dell'allerta non diceva niente — il widget e l'app che raccontano due pomeriggi
+diversi, che è la cosa che quell'oggetto esiste per impedire. Il bollettino si legge ora
+**prima** del contenuto, e il contenuto si costruisce con quello.
+
+**Il costo è un numero solo** (`warningChipHeight`, 20,52 dp alla dimensione di default,
+più 4 di aria) e ogni budget lo sottrae. Dove la riga non c'è, la pastiglia non si
+disegna: sul 2×2 di riferimento del widget Ora con la frase accesa il glifo scenderebbe a
+44,4 dp contro il pavimento di 52 della famiglia, quindi il giallo resta a casa; con la
+frase spenta le sue due righe la pagano due volte. Su Oggi la riga della pioggia cede per
+prima, come già cede al marcatore di dato vecchio. Sull'Arco l'agenda molla una riga prima
+che il disegno molli un pixel (pannello di riferimento: intestazione 39,6 → 64,1, agenda
+2 → 1, arco fermo ai suoi 56 preferiti).
+
+**I colori vengono dal fondo della card** (`WidgetPalette.colors`), mai dal tema del
+telefono: una card chiara sotto un tema scuro porterebbe l'inchiostro del set scuro sul
+contenitore di quello chiaro, e la coppia smetterebbe di essere quella misurata. È la
+stessa correzione che il segno dell'agenda dell'Arco ha già avuto il 9 set.
+
+**Contando i figli di Glance sono venuti fuori due contenitori che ne perdevano.** Il
+limite è dieci per contenitore e oltre quello Glance lascia cadere senza dire niente (la
+scoperta del 9 set sull'Arco). Misurati tutti quelli che questa fase tocca, e due erano
+già oltre:
+
+| Contenitore | Prima | Ora |
+|---|---|---|
+| Striscia delle ore di Oggi | 7 celle + 6 spaziatori = **13** | 7 |
+| Colonna della card Cielo (forma alta) | 3 + 5 righe + 4 spaziatori + 1 = **13** | 9 |
+| Colonna della frase di Ora (largo) | 1 | 2 |
+| Colonna delle parole di Ora (alto) | 4 | 5 |
+| Colonna di coda di Oggi | 2 | 3 |
+| Colonna della card dell'Arco | 6 | 7 |
+| Colonna del pannello dell'Arco | 6 | 7 |
+
+Sulla striscia di Oggi il conto è **esattamente la card su cui il widget è disegnato**:
+quattro celle sul dispositivo di riferimento danno sette ore, e le ultime due erano
+scartate in silenzio. Sul Cielo servono cinque righe sotto l'eroe, che una card da tre
+righe con sei sottoscrizioni ha. La cura è quella che l'Arco ha già usato: gli spazi come
+**padding dentro una scatola più alta**, non come spaziatori — la geometria non cambia di
+un dp e il contenitore ha un figlio per riga invece di due. Le celle della striscia
+prendono metà spazio per lato invece dell'intero tra l'una e l'altra, così restano una
+griglia sola: l'inchiostro della striscia cede 3 dp per capo, ed è tutta la differenza
+visibile su una card da 340. La pastiglia è **un figlio solo** per la stessa ragione
+(`WarningChipRow`: l'aria sopra è il padding del contenitore, non uno spaziatore).
+
+**L'interruttore per istanza è acceso** su tutte e tre: `WidgetLook.showWarning` (Ora,
+Oggi) e `ArcSettings.warning` (Arco, diciottesima chiave del codec). Cielo non lo offre —
+quella card parla dei momenti del cielo, e una pastiglia sul suolo sarebbe un secondo
+soggetto. Le anteprime del picker non cambiano. L'anteprima dell'Arco sì, e deve: disegna
+dallo stesso piano e dallo stesso slot, perché una schermata di impostazioni che mostra
+una pastiglia che la home non disegnerebbe è esattamente il bug che quel file esiste per
+non avere.
+
+**Il ridisegno.** Il passo che scrive il bollettino chiama `repaintAll` — un bollettino può
+arrivare in un giro il cui meteo veniva dalla cache, e allora il gancio del commit del
+repository non scatta mai — e lo store entra nel collettore di processo di
+`ChiaroApplication`, accanto al luogo attivo e alle impostazioni.
+
+**Il lettore non paga l'asset se non deve.** `OfficialWarningReader.graded` chiede prima
+allo store e solo dopo all'indice: il passo è inerte se nessun luogo salvato cade in una
+zona, quindi chi ha tutti i luoghi all'estero non ha nessun bollettino in memoria e non
+decodifica mai i 290 KB su un ridisegno della home. Il test lo prova con un fornitore
+dell'indice che lancia.
+
+Verifica del PR: suite completa come la CI, **754 test** — dominio 213, dati 208 (+1),
+sync 21, app 312 (+22) — e lint 0 errori, nessun avviso sui file nuovi. Resta il giro di
+screenshot su device, che è del committente.
 
 ### Verifica
 

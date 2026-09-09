@@ -996,6 +996,8 @@
     <string name="widget_config_show_range_note">At the far edge, under the day\'s sentence.</string>
     <string name="widget_config_show_sentence">The day\'s sentence</string>
     <string name="widget_config_show_sentence_note">An umbrella around five, a thunderstorm at three — or, when there is nothing to warn about, what the sky is doing now. Shown where the card has room for it.</string>
+    <string name="widget_config_show_warning">Official warnings</string>
+    <string name="widget_config_show_warning_note">The Protezione Civile\'s level for this place, as a chip. Orange and red are already in the day\'s sentence, so the chip appears where that sentence is not; yellow, which the sentence never carries, takes a line of its own where the card has one to spare.</string>
     <string name="widget_config_arrangement">Arrangement</string>
     <string name="widget_arrangement_icon_start">Icon on the left, sentence at the far edge</string>
     <string name="widget_arrangement_icon_end">Icon on the right, sentence beside the temperature</string>
@@ -1070,6 +1072,9 @@
     <string name="arc_agenda_rain_note">When rain gets likely or should ease off, and a rainbow\'s window.</string>
     <string name="arc_agenda_verdicts">Verdicts</string>
     <string name="arc_agenda_verdicts_note">Beside a row you also follow on the Sky screen, the mark the Sky widget would print.</string>
+    <string name="arc_config_warning">Official warnings</string>
+    <string name="arc_config_warning_note">The Protezione Civile\'s level, as a chip on the card and the panel. The dial and the strip have one line each, and a chip on either would be the whole card.</string>
+    <string name="arc_warning_switch">Show the level</string>
     <string name="arc_config_week">The week</string>
     <string name="arc_week_switch">The seven days</string>
     <string name="arc_week_note">At the foot of a card four rows tall.</string>

@@ -29,6 +29,7 @@ class ArcSettingsTest {
         agendaRain = false,
         agendaVerdicts = false,
         week = false,
+        warning = false,
         density = ArcDensity.COMPACT
     )
 
@@ -43,6 +44,9 @@ class ArcSettingsTest {
         assertEquals(ArcDialFigure.TEMPERATURE, defaults.dialFigure)
         assertTrue(defaults.agendaSun && defaults.agendaMoon && defaults.agendaRain && defaults.agendaVerdicts)
         assertTrue(defaults.week)
+        // The official warning's chip is on by default (Fase 11): on a quiet day it
+        // draws nothing, and on the other kind it is the line worth keeping.
+        assertTrue(defaults.warning)
         assertEquals(ArcDensity.COMFORTABLE, defaults.density)
         assertEquals(1f, defaults.textScale)
     }
@@ -56,7 +60,7 @@ class ArcSettingsTest {
     @Test
     fun `the codec writes exactly the keys it reads`() {
         assertEquals(ArcSettingsCodec.keys.toSet(), ArcSettingsCodec.encode(ArcSettings()).keys)
-        assertEquals(17, ArcSettingsCodec.keys.size)
+        assertEquals(18, ArcSettingsCodec.keys.size)
     }
 
     @Test

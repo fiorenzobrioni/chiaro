@@ -872,10 +872,36 @@ when it names this zone or its region, quoted and labelled as the bulletin's; th
 attribution the licence requires — "Dipartimento della Protezione Civile · bollettino
 dell'8 settembre, 15:19 · CC BY 4.0" — and the link to the bulletin itself.
 
-The **chip** is the same statement where a banner does not fit (Avvisi's card leads with
-it, the widgets take it in Fase 11's fourth step): `ic_warning` at 12dp in the level's ink
-plus the level's word at 11sp on the level's container, 10dp corner, 7/3 padding — the
-`VerdictChip` grammar at the widget's size.
+The **chip** is the same statement where a banner does not fit: `ic_warning` at 12dp in
+the level's ink plus the level's word at 11sp on the level's container, 10dp corner, 7/3
+padding — the `VerdictChip` grammar at the widget's size. Avvisi's card leads with it, and
+the home-screen widgets carry it.
+
+**On a widget** the rule is what the card is ALREADY saying (`warningSlot`, one table for
+all four cards). The day's sentence in its brief register IS the orange and the red
+(«Allerta arancione · temporali»), so where that sentence is on the card there is no chip;
+where it is not — the reader turned it off, or the arc's hero is showing the next light
+moment instead — the chip takes the sentence's place and the card grows by nothing.
+**Yellow is never in the sentence** and needs a line of its own, so it appears only where
+the form has one to spare: the Now widget wide and tall, the Today widget's hero row under
+the sentence, the arc's card and panel. Never on a form with one line — the Now widget's
+narrow card, the arc's dial and strips — and never on the Sky card, whose subject is the
+moments of the sky and where a chip about the ground would be a second one.
+
+The chip is a **line the card pays for**, and every budget subtracts the same number
+(`warningChipHeight`, 20.52dp at the default font size, plus 4 of air). Where the line is
+not there, the chip is not drawn: on the reference two-by-two Now card with its sentence
+up, the glyph would fall to 44dp against the family's 52dp floor, so the yellow chip stays
+home; turn the sentence off and its two lines pay for the chip twice over. The Today
+widget's rain row yields first, as it already does to a stale marker. The arc's agenda
+gives up a row before the drawing gives up a pixel.
+
+Its colours come from the pair the CARD's ground selects (`WidgetPalette.colors`), never
+from the phone's theme: a light card under a dark system theme would otherwise wear a
+dark-mode ink on a light-mode container, and the pair would stop being the measured pair.
+Each chip is **one child** of its container — the gap above it is the wrapper's padding,
+not a `Spacer` — because Glance draws at most ten children per container and drops the
+rest without a word.
 
 No zone code, no bulletin identifier and no CAP acronym reaches any of these surfaces. For
 the thirteen zones whose Region never gave them a name — the seven of Basilicata and the

@@ -971,6 +971,8 @@
     <string name="widget_config_show_range_note">Al bordo opposto, sotto la frase del giorno.</string>
     <string name="widget_config_show_sentence">La frase del giorno</string>
     <string name="widget_config_show_sentence_note">Ombrello verso le cinque, temporale alle tre — o, quando non c\'è niente da segnalare, cosa fa il cielo adesso. Compare dove la card ha spazio.</string>
+    <string name="widget_config_show_warning">Le allerte ufficiali</string>
+    <string name="widget_config_show_warning_note">Il livello della Protezione Civile per questo luogo, come pastiglia. Arancione e rosso stanno già nella frase del giorno, quindi la pastiglia compare dove quella frase non c\'è; il giallo, che la frase non porta mai, prende una riga sua dove la card ne ha una in più.</string>
     <string name="widget_config_arrangement">Disposizione</string>
     <string name="widget_arrangement_icon_start">Icona a sinistra, frase al bordo opposto</string>
     <string name="widget_arrangement_icon_end">Icona a destra, frase accanto alla temperatura</string>
@@ -1045,6 +1047,9 @@
     <string name="arc_agenda_rain_note">Quando la pioggia diventa probabile o dovrebbe smettere, e la finestra di un arcobaleno.</string>
     <string name="arc_agenda_verdicts">Verdetti</string>
     <string name="arc_agenda_verdicts_note">Accanto a una riga che segui anche nella schermata Cielo, il segno che stamperebbe il widget Cielo.</string>
+    <string name="arc_config_warning">Le allerte ufficiali</string>
+    <string name="arc_config_warning_note">Il livello della Protezione Civile, come pastiglia sulla card e sul pannello. Il quadrante e le strisce hanno una riga sola, e una pastiglia lì sarebbe tutta la card.</string>
+    <string name="arc_warning_switch">Mostra il livello</string>
     <string name="arc_config_week">La settimana</string>
     <string name="arc_week_switch">I sette giorni</string>
     <string name="arc_week_note">In fondo a una card alta quattro righe.</string>
