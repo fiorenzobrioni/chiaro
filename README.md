@@ -40,13 +40,17 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
 
 - 🌤️ **Today**: one vertical scroll that starts with the sky. The **canvas** (a gradient
   computed from the real position of the sun, the cloud cover and the moon) carries the
-  place, the temperature, the condition and the **headline sentence**, which is absent
-  when there is nothing worth saying because quiet is an answer too. Under it: the next 24
+  place, the temperature, the condition and the **headline sentence**, which looks ahead
+  (an umbrella around 17:00, rain possible this afternoon, tomorrow's rain from 09:00,
+  frost by morning, fog on its way, a strong wind right now) and is absent when there is
+  nothing worth saying because quiet is an answer too. Under it: the next 24
   hours with a rain sparkline (not drawn on a dry day, because a chart of zeroes says
   nothing), the **rest of the day** as one merged timeline of sun, moon and weather turns,
   **what changed** when the last update moved the week, the seven days on one shared
   temperature scale with each day's ribbon of light, and a details grid where every number
-  carries its meaning: UV 8 is "burns in about 15 minutes, cover up", not an 8
+  carries its meaning: UV 8 is "burns in about 15 minutes, cover up", not an 8. The page
+  ends with the line that says when its numbers arrived and where from ("Updated at
+  18:45, Open-Meteo data")
 - 🌅 **Sky**: tonight's verdict on the dark window (**Great**, **So-so**, **No chance**,
   **Not sure yet**) with the numbers that decided it, and the moon named when the moon was
   the reason. The **moments ahead** are an agenda rather than a log: resolved in the
@@ -68,7 +72,11 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   your own: five templates that create a real rule already switched on, and a builder that
   is a sentence of tappable chips (*when* **rain in the next 6 hours** *is* **above**
   **70%**), with an optional second condition and your own message. Values are picked and
-  never typed, so an alert cannot be written wrong. **Try it now** runs the rule against
+  never typed, so an alert cannot be written wrong, and a comparison is only offered where
+  it means something ("equals" on a yes or no, never on a temperature). Your rules are
+  cards that say their sentence, their state and when they last fired, in the place's own
+  time zone; a template already on the list is marked and cannot be added twice, and the
+  list says so when it is full. **Try it now** runs the rule against
   the forecast already on the phone and says what it would have done, with nothing posted
   and nothing recorded. Your message is your content: it is never rewritten and never
   translated
@@ -101,8 +109,9 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   rising from the ground, the next light moment with its countdown, the agenda after it and,
   on the tallest card, the week: it resizes from one cell to sixteen and reshapes itself at
   every step, and it has a settings screen of its own with a live preview at eight sizes).
-  Each one is configured on its own: which place, the background (the sky
-  itself, light, dark or follow the system), its opacity, and what the card carries. They
+  Each one is configured on its own: which place, the background (the sky itself, light,
+  dark or follow the system), its opacity, which icon family, and what the card carries.
+  They
   read the same builders the app reads, so the home screen and the app cannot print two
   different sunrises; they repaint on every data commit, state their age when stale, and
   say "no place yet" instead of showing a number they do not have
@@ -116,14 +125,19 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   own components shown as examples, each captioned as one, and it never teaches a control:
   a control that needs explaining is a bug in this edition. Reachable from Settings
   forever, pointed at once by a dismissable card on Today
-- 🎨 **Appearance**: dynamic color from the wallpaper, or Chiaro's own generated scheme as
-  the fallback, in light, dark or whatever the system is doing. Two weather-icon themes,
-  outlined by default or filled, both re-anchored to clear a measured 3:1 against the
-  surface they are drawn on
-- ⚙️ **Settings**: units (temperature, wind), appearance, update frequency (15, 30, 60 or
-  120 minutes, 60 by default), the system per-app language picker, the data source and the
-  privacy position, and a reset that says exactly what it restores and what it leaves
-  alone
+- 🎨 **Appearance**: two palettes, **Paper** (the warm identity) and **Vivid** (the same
+  app at the brightest colors a screen holds, the default), each choosing the Material
+  scheme, the semantic tokens, the sky bands and the icon set together, in light, dark or
+  whatever the system is doing; dynamic color from the wallpaper stays one switch away.
+  Two weather-icon themes, outlined by default or filled, both re-anchored to clear a
+  measured 3:1 against the surface they are drawn on, and the condition icons move with
+  Meteocons' own animations: still when the phone asks for less motion, and paused while
+  a page scrolls, so a scroll never stutters
+- ⚙️ **Settings**: units (temperature, wind), appearance (theme, palette, icon family,
+  animated icons, wallpaper colors), update frequency (15, 30, 60 or 120 minutes, 60 by
+  default), the system per-app language picker, an About group where the version, the
+  license, the data source and every credit are a tap away, the privacy position, and a
+  reset that says exactly what it restores and what it leaves alone
 - 📴 **Offline, honestly**: the last successful report per place is kept with no TTL and
   carries a week of forecast, so the app is never blank and yesterday's fetch still holds
   today. The hours that have already happened are dropped first, stale data states its
@@ -149,7 +163,10 @@ accessibility and performance pass with its numbers attached. That last one is t
 pass and the weather-icon pass, then the sweep that answers "remove animations", keeps
 every value whole at 200% type, gives the two undersized tap targets their 48dp, and reads
 the whole app in both languages. Cold start and the canvas budget were measured on device
-and both come in well under their ceilings. **Fase 10** is the store: final icon,
+and both come in well under their ceilings. After it, a run of device reviews (8 and 9
+September 2026) reshaped every widget on the launcher's own grammar, redrew the details
+cards, taught the headline to look ahead, tuned the second palette and added the fourth
+widget, each round recorded with its measurements. **Fase 10** is the store: final icon,
 screenshots, listing, and v1.0.0.
 
 Deliberately out of scope for v1: radar and satellite imagery (the provider has none, and
@@ -213,15 +230,19 @@ deliberately left behind.
 
 ## Design
 
-Material 3 committed to rather than defaulted to: a generated color scheme (dynamic color
-from the wallpaper, with the app's own three source hues as the fallback), light and dark,
-the expressive type and shape scales, spring motion, and Inter bundled as a variable font.
+Material 3 committed to rather than defaulted to: a generated color scheme in two dresses,
+Paper and Vivid (the vivid tokens are generated from the paper ones by one rule, same hue
+and held luminance with the chroma pushed towards the gamut's edge, so every measured
+contrast ratio holds in both), dynamic color from the wallpaper as an option, light and
+dark, the expressive type and shape scales, spring motion, and Inter bundled as a variable
+font.
 
 Two elements are Chiaro's own, and both are computed rather than decorative. **The sky
 canvas** is drawn from the real position of the sun, the cloud cover and the moon, so it
 cannot disagree with the forecast below it: it comes off the same engine. **The daylight
 ribbon** is a thin band of night, twilight, the golden hours and daylight, used on the
-canvas and on every row of the week.
+canvas and on every row of the week. On the home screen the day's arc widget paints that
+same sky hour by hour under the sun's computed path, from the same tables.
 
 The rules that get broken by accident are enforced by tests rather than by good
 intentions: no composable outside `ui/theme/` names a color literal (`NoRawColorTest`),
@@ -232,8 +253,9 @@ goes the other way and reads the design document itself (`PaletteDocTest`): ever
 every printed ratio in it has to be the one the app actually holds, which is how a value
 that was retuned in the code and left stale on the page gets caught. A verdict is a glyph
 and a word before it is a color, because green, amber and red do not separate under
-deuteranopia. Every value, with the number that was measured for it, is in
-[DESIGN.md](./DESIGN.md).
+deuteranopia, and the glyph is a small vector of the app's own rather than a character,
+so every phone draws the same mark. Every value, with the number that was measured for
+it, is in [DESIGN.md](./DESIGN.md).
 
 ## Tech stack
 
@@ -248,8 +270,9 @@ deuteranopia. Every value, with the number that was measured for it, is in
   drawn on a Compose canvas rather than by a charting library
 - **Meteocons** v2.0.0 as vector drawables, imported and recolored by
   `tools/import_meteocons.py`; **Inter** as a bundled variable font
-- 362 unit tests on the JVM (Robolectric where Android is unavoidable), across four
-  modules
+- 580 unit tests on the JVM across four modules (235 in `:app`, 166 in `:core:domain`, 174
+  in `:core:data`, 5 in `:core:sync`), Robolectric where Android is unavoidable, including
+  painting the arc widget's bitmap for real and reading its pixels back
 
 ```text
 Compose UI → ViewModel → :core:data (repository, stores) → Open-Meteo · Room · DataStore
