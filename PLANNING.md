@@ -4094,6 +4094,35 @@ fase, e la prima falce si vedrà dal 13 settembre.
 
 ---
 
+## Il segno di verdetto, terza volta: un disegno, non un carattere (committente, 9 set 2026)
+
+«Ora va bene perché è tenue, però la X scritta così, come un font in stile scrittura a mano,
+non mi piace». Aveva ragione, e il motivo è preciso: i glifi della serie `✓ ✗` sono U+2713 e
+U+2717, che **Roboto non ha**. Android li prende da un font di fallback per i simboli — su
+One UI di taglio calligrafico, su un Pixel un altro — quindi il segno non era mai stato nella
+mano del widget, né nel widget Cielo né qui. L'alternativa a costo zero, il segno di
+moltiplicazione «×» di Roboto per il FAIL, avrebbe lasciato la ✓ al font di fallback: due
+segni della stessa famiglia in due mani diverse.
+
+Quattro vettori (`ic_verdict_pass`, `_unstable`, `_fail`, `_unknown`): un peso di linea solo,
+2,4 su 24 — 1,2 dp ai 12 dp a cui stanno, il tratto di un 13 sp Medium — punte arrotondate,
+nessun colore proprio: tinti con l'inchiostro del verdetto dove compaiono (`ColorFilter.tint`),
+scelto per il fondo della card come prima. 12 dp è l'altezza delle minuscole delle parole
+accanto, così la croce sta nella riga come una lettera e non come un'icona. La regola resta
+quella di §2.3: una forma prima che un colore, e un disegno per verdetto, mai due verdetti su
+una forma (test in `ArcTextTest`). La `contentDescription` del segno è la parola del verdetto,
+così la riga si legge «Ora d'oro, 19:07, no».
+
+Il widget Cielo usa ancora il carattere, dentro il suo contenitore: stessa mano calligrafica.
+Non toccato — è il disegno che il committente ha approvato il 4 set — ma i quattro vettori sono
+pronti anche per lui, se lo vorrà: una riga in `VerdictMark`.
+
+### Verifica
+
+`:app` 235, lint a zero errori. Stesso branch. **Su device**: la croce nella riga «Ora d'oro».
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae

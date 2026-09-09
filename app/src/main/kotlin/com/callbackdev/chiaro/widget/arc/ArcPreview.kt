@@ -33,7 +33,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -392,7 +391,7 @@ private fun PreviewAgenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, 
                 if (marks) {
                     Spacer(modifier = Modifier.width(6.dp))
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.width(AgendaMarkSlot)) {
-                        event.verdict?.let { PreviewVerdictMark(it, inks, plan.textScale) }
+                        event.verdict?.let { PreviewVerdictMark(it, inks) }
                     }
                 }
             }
@@ -437,18 +436,18 @@ private fun PreviewWeek(
     }
 }
 
-/** The agenda's quiet mark, in Compose: the verdict's glyph in its ink, the card's ground
- * deciding which set (see the widget's `AgendaMark`). */
+/** The agenda's quiet mark, in Compose: the verdict's drawing in its ink, the card's
+ * ground deciding which set (see the widget's `AgendaMark`). */
 @Composable
-private fun PreviewVerdictMark(verdict: SkyVerdict, inks: PreviewInks, textScale: Float) {
+private fun PreviewVerdictMark(verdict: SkyVerdict, inks: PreviewInks) {
     val context = LocalContext.current
-    Text(
-        text = verdict.kind.glyph,
-        color = verdictInk(verdict.kind, inks.palette.darkGround, inks.palette.dress).getColor(context),
-        fontSize = (AgendaSp * textScale).sp,
-        fontWeight = FontWeight.Medium,
-        textAlign = TextAlign.Center,
-        modifier = Modifier.fillMaxWidth()
+    Image(
+        painter = painterResource(ArcText.markRes(verdict.kind)),
+        contentDescription = null,
+        colorFilter = ColorFilter.tint(
+            verdictInk(verdict.kind, inks.palette.darkGround, inks.palette.dress).getColor(context)
+        ),
+        modifier = Modifier.size(AgendaMarkGlyph)
     )
 }
 

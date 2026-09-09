@@ -5,6 +5,7 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.model.MoonPhase
+import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.today.TimelineItem
 import com.callbackdev.chiaro.ui.today.TimelineKind
@@ -118,6 +119,15 @@ class ArcTextTest {
             }
         }
         assertEquals(MoonPhase.entries.toSet(), days.map { MoonPhase.at(it) }.toSet())
+    }
+
+    /** The four marks are drawings of their own, one per verdict, none shared: a shared
+     * drawing would be two verdicts with one shape, which is the deuteranopia case. */
+    @Test
+    fun `every verdict has a mark of its own`() {
+        val marks = SkyVerdictKind.entries.map { ArcText.markRes(it) }
+        assertEquals(SkyVerdictKind.entries.size, marks.toSet().size)
+        assertTrue(marks.all { it != 0 })
     }
 
     @Test

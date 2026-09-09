@@ -321,6 +321,10 @@ internal const val WeekLowSp = 11f
  * hero, and a list row wants a note, not a hero.
  */
 internal val AgendaMarkSlot = 14.dp
+
+/** The mark's drawing inside its slot: 12 dp is the x-height of the 13 sp words beside
+ * it, so the cross stands in the line like a letter and not like an icon. */
+internal val AgendaMarkGlyph = 12.dp
 internal val AgendaRowAir = 3.dp
 /** The Sky widget's row glyph, so the two cards' lists read as siblings; 20 since the
  * device pass of 9 set 2026 (from 18). */

@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
@@ -35,7 +36,6 @@ import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
-import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.format.Formats
@@ -583,7 +583,7 @@ private fun Agenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, palette
                         contentAlignment = Alignment.Center,
                         modifier = GlanceModifier.width(AgendaMarkSlot)
                     ) {
-                        event.verdict?.let { AgendaMark(it, palette, plan.textScale) }
+                        event.verdict?.let { AgendaMark(it, palette) }
                     }
                 }
             }
@@ -592,31 +592,32 @@ private fun Agenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, palette
 }
 
 /**
- * The verdict beside an agenda row: the series' own glyph — `✓ ~ ✗ ?`, a shape before it
- * is a color (DESIGN §2.3) — in the verdict's ink, at the row's size, and nothing else. The
- * Sky widget's filled pill was here first and came back from the device as «a punch in
- * the eye» (committente, 9 set 2026): on that card the verdict is the hero, on this one it
- * is a note beside a time, and a note is set like the words around it.
+ * The verdict beside an agenda row: the series' own mark — `✓ ~ ✗ ?`, a shape before it is
+ * a color (DESIGN §2.3) — drawn ([ArcText.markRes]) in the verdict's ink, at the words'
+ * x-height, and nothing else. The Sky widget's filled pill was here first and came back
+ * from the device as «a punch in the eye» (committente, 9 set 2026): on that card the
+ * verdict is the hero, on this one it is a note beside a time, and a note is set like the
+ * words around it. The character came next and came back as «handwriting»: it was a
+ * fallback font's, not Roboto's, hence the drawings.
  *
  * The ink is picked for the CARD'S ground, not the phone's theme: the pill's pale container
  * on a dark card was the light theme's pair, chosen by `isNight`, on a card that is dark
  * whatever the phone is doing (the sky under its scrim, or a dark card). The dark set's
- * inks are the ones measured against a dark surface, so the glyph is readable where it
+ * inks are the ones measured against a dark surface, so the mark is readable where it
  * sits — and a bare glyph in the wrong set was exactly what made the Sky widget grow its
  * container in the first place (4 set).
  */
 @Composable
-private fun AgendaMark(verdict: SkyVerdict, palette: WidgetPalette, textScale: Float) {
-    Text(
-        text = verdict.kind.glyph,
-        style = TextStyle(
-            color = verdictInk(verdict.kind, palette.darkGround, palette.dress),
-            fontSize = (AgendaSp * textScale).sp,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center
+private fun AgendaMark(verdict: SkyVerdict, palette: WidgetPalette) {
+    val context = LocalContext.current
+    Image(
+        provider = ImageProvider(ArcText.markRes(verdict.kind)),
+        // The word for it, so the row reads «Golden hour, 19:07, fail».
+        contentDescription = context.getString(
+            com.callbackdev.chiaro.ui.sky.SkyText.verdictWordRes(verdict.kind)
         ),
-        maxLines = 1,
-        modifier = GlanceModifier.fillMaxWidth()
+        colorFilter = ColorFilter.tint(verdictInk(verdict.kind, palette.darkGround, palette.dress)),
+        modifier = GlanceModifier.size(AgendaMarkGlyph)
     )
 }
 
