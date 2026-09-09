@@ -308,5 +308,9 @@ private fun GeoResultDto.toCity() = City(
     region = admin1,
     country = country ?: countryCode,
     coordinates = Coordinates(latitude, longitude),
-    timezone = timezone
+    timezone = timezone,
+    // Both received all along and dropped here until 9 set 2026: the official warnings
+    // need the country as a code and the municipality as the zone index's fallback.
+    countryCode = countryCode,
+    admin3 = admin3
 )

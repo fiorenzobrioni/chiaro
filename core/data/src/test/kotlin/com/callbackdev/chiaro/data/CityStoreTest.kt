@@ -313,6 +313,33 @@ class CityStoreTest {
         assertEquals("Italy", adopted.country)
     }
 
+    /** The country code and the municipality follow the same rule as the name (9 set
+     * 2026): a fix that knows them updates them, one that does not leaves them alone. */
+    @Test
+    fun `a nearby fix updates the municipality it knows and keeps the one it does not`() =
+        runBlocking {
+            val store = store()
+            val known = GeoFix(
+                Coordinates(45.46, 9.19), "Milano", "Lombardia", "Italy",
+                countryCode = "IT", admin3 = "Milano"
+            )
+            store.adoptGpsFix(known, fixedAt)
+
+            val nameless = GeoFix(Coordinates(45.467, 9.19), null, null, null)
+            val kept = store.adoptGpsFix(nameless, fixedAt.plusSeconds(600))
+            assertEquals("IT", kept.countryCode)
+            assertEquals("Milano", kept.admin3)
+
+            // Still under the adoption distance, now over the municipal border.
+            val overTheBorder = GeoFix(
+                Coordinates(45.475, 9.19), "Milano Due", "Lombardia", "Italy",
+                countryCode = "IT", admin3 = "Segrate"
+            )
+            val updated = store.adoptGpsFix(overTheBorder, fixedAt.plusSeconds(1_200))
+            assertEquals("Segrate", updated.admin3)
+            assertEquals(gpsCity.coordinates, updated.coordinates)
+        }
+
     /** The instant is what makes a cold start free, so it is written on every fix —
      * including the ones that changed nothing about the place. */
     @Test

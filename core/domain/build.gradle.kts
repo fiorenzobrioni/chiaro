@@ -21,6 +21,16 @@ kotlin {
     }
 }
 
+// The warning-zone asset ships from :core:data (it is an Android asset there) and is
+// read by the domain's WarningZoneIndex as a string. Its test lives here, with the
+// index, and reads the very file the app ships rather than a copy that could drift:
+// hence the data module's assets directory as a TEST resource of this module.
+sourceSets {
+    test {
+        resources.srcDir("../data/src/main/assets")
+    }
+}
+
 dependencies {
     implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.junit)

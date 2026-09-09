@@ -26,13 +26,15 @@ class LocationProviderTest {
         subLocality: String? = null,
         subAdminArea: String? = null,
         adminArea: String? = null,
-        countryName: String? = null
+        countryName: String? = null,
+        countryCode: String? = null
     ) = Address(Locale.ITALY).apply {
         this.locality = locality
         this.subLocality = subLocality
         this.subAdminArea = subAdminArea
         this.adminArea = adminArea
         this.countryName = countryName
+        this.countryCode = countryCode
     }
 
     // --- the name -----------------------------------------------------------------
@@ -107,6 +109,28 @@ class LocationProviderTest {
         assertEquals("Segrate", place.name)
         assertEquals("Lombardia", place.region)
         assertEquals("Italia", place.country)
+    }
+
+    @Test
+    fun `the municipality is the first locality even when the name is a quarter`() {
+        val place = geocodedPlace(
+            listOf(
+                address(subLocality = "Redecesio"),
+                address(locality = "Segrate", countryCode = "IT")
+            )
+        )
+        // The name prefers the town, and the town is there two rungs down.
+        assertEquals("Segrate", place.name)
+        assertEquals("Segrate", place.admin3)
+        assertEquals("IT", place.countryCode)
+    }
+
+    @Test
+    fun `no locality on the ladder leaves the municipality null, never the province`() {
+        val place = geocodedPlace(listOf(address(subAdminArea = "Provincia di Monza e della Brianza")))
+        assertEquals("Provincia di Monza e della Brianza", place.name)
+        assertNull(place.admin3)
+        assertNull(place.countryCode)
     }
 
     // --- which known position wins ------------------------------------------------

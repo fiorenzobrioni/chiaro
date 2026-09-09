@@ -48,6 +48,7 @@ class SearchLanguageTest {
                         country = "Italia",
                         countryCode = "IT",
                         admin1 = "Toscana",
+                        admin3 = "Comune di Firenze",
                         timezone = "Europe/Rome"
                     )
                 )
@@ -113,6 +114,15 @@ class SearchLanguageTest {
         repository.searchCities("Florence")
 
         assertEquals("en", geocodingApi.lastLanguage)
+    }
+
+    /** Received all along, dropped until 9 set 2026: the warning-zone index needs both. */
+    @Test
+    fun `the country code and the municipality reach the City`() = runBlocking {
+        val city = repository().searchCities("Firenze").single()
+        assertEquals("IT", city.countryCode)
+        assertEquals("Comune di Firenze", city.admin3)
+        assertEquals("Italia", city.country)
     }
 
     @Test
