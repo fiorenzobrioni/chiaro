@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The verdict marks of the arc widget's agenda (9 set 2026): the series' «✓ ~ ✗ ?» as
-     drawings rather than characters. U+2713 and U+2717 are not in Roboto; the device
+<!-- The verdict marks (9 set 2026): the series' «✓ ~ ✗ ?» as drawings rather than
+     characters, on the app's chip and on both widgets (ChiaroIcons.verdictMarkRes). U+2713 and U+2717 are not in Roboto; the device
      draws them from a symbol fallback font, calligraphic on One UI, and the committente
      read the X as handwriting. Four paths at one line weight (2.4 of 24, ~1.2 dp at the
      12 dp they are shown at, the weight of a 13 sp Medium stroke), round caps, tinted at

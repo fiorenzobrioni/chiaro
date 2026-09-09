@@ -96,8 +96,9 @@ internal const val SkyNameSp = 15f
  * fits [SkyVerdictColumn]; 12 would not. Same size on the hero and in the rows. */
 internal const val SkyChipSp = 11f
 
-/** The mark's glyph, a little larger than the chip's word: it is alone in its box. */
-internal const val SkyMarkSp = 12f
+/** The mark's drawing inside its 22 dp container: 12 dp, the size the glyph had as a
+ * character, and the same the arc widget's rows use. */
+internal val SkyMarkGlyph = 12.dp
 
 /** The number under the word chip: «pioggia 100%» is 83 dp at this size. */
 internal const val SkyEvidenceSp = 14f

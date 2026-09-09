@@ -744,7 +744,11 @@ their words, as they already did at 320dp beside the 24dp icon.)
 
 **8.7 VerdictChip** — glyph + word + evidence, in that order: `✓ Great · 12% cloud`. The
 container is the verdict container color, the text is the ink color. **Never the color
-alone** (§2.3), never a bare dot, never a number without the word.
+alone** (§2.3), never a bare dot, never a number without the word. The glyph is a drawing
+(`ic_verdict_pass/unstable/fail/unknown`, one line weight, tinted with the ink), not the
+`✓ ✗` characters: Roboto has neither, and a phone's symbol fallback font draws them in a
+hand of its own (calligraphic on One UI, seen 9 set 2026). The same four marks serve the
+chip, the Sky widget's round mark and the arc widget's agenda rows.
 
 **8.8 MomentCard** — a sky event: name in plain words ("Golden hour, evening"), time,
 verdict chip, the number behind it, a bell for a reminder. The dotted job id never appears.

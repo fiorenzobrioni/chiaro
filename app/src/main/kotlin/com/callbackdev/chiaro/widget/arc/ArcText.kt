@@ -7,7 +7,6 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.model.MoonPhase
-import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.sky.SkyText
@@ -149,22 +148,6 @@ internal object ArcText {
             TimelineKind.RAIN_STOP -> R.drawable.mc_cloudy
         }
         return ChiaroIcons.styledRes(line, style, darkGround, palette)
-    }
-
-    /**
-     * The verdict's mark as a drawing (committente, 9 set 2026: the «✗» «looks like
-     * handwriting»). The series' glyphs `✓ ✗` are U+2713 and U+2717, which Roboto does not
-     * carry; the device draws them from a symbol fallback font — calligraphic on One UI,
-     * something else on a Pixel — so the mark was never in the widget's own hand. Four
-     * paths at one line weight, tinted with the verdict's ink where they are shown: the
-     * same shape-before-color rule (DESIGN §2.3), now in the card's own line.
-     */
-    @DrawableRes
-    fun markRes(kind: SkyVerdictKind): Int = when (kind) {
-        SkyVerdictKind.PASS -> R.drawable.ic_verdict_pass
-        SkyVerdictKind.UNSTABLE -> R.drawable.ic_verdict_unstable
-        SkyVerdictKind.FAIL -> R.drawable.ic_verdict_fail
-        SkyVerdictKind.UNKNOWN -> R.drawable.ic_verdict_unknown
     }
 
     /**

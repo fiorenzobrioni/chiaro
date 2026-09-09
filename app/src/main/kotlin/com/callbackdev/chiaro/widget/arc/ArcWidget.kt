@@ -598,7 +598,8 @@ private fun Agenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, palette
  * from the device as «a punch in the eye» (committente, 9 set 2026): on that card the
  * verdict is the hero, on this one it is a note beside a time, and a note is set like the
  * words around it. The character came next and came back as «handwriting»: it was a
- * fallback font's, not Roboto's, hence the drawings.
+ * fallback font's, not Roboto's, hence the drawings ([ChiaroIcons.verdictMarkRes]), which
+ * the Sky widget and the app's chip now share.
  *
  * The ink is picked for the CARD'S ground, not the phone's theme: the pill's pale container
  * on a dark card was the light theme's pair, chosen by `isNight`, on a card that is dark
@@ -611,7 +612,7 @@ private fun Agenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, palette
 private fun AgendaMark(verdict: SkyVerdict, palette: WidgetPalette) {
     val context = LocalContext.current
     Image(
-        provider = ImageProvider(ArcText.markRes(verdict.kind)),
+        provider = ImageProvider(ChiaroIcons.verdictMarkRes(verdict.kind)),
         // The word for it, so the row reads «Golden hour, 19:07, fail».
         contentDescription = context.getString(
             com.callbackdev.chiaro.ui.sky.SkyText.verdictWordRes(verdict.kind)

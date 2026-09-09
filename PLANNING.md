@@ -4123,6 +4123,45 @@ pronti anche per lui, se lo vorrà: una riga in `VerdictMark`.
 
 ---
 
+## I quattro segni ovunque: widget Cielo, chip dell'app, tabella in `ChiaroIcons` (committente, 9 set 2026)
+
+«Usa i 4 vettori anche nel widget Cielo e poi verifica in tutta l'app se ci sono altri
+punti in cui si potrebbero utilizzare.»
+
+Cercati tutti i punti che stampano i glifi del verdetto come caratteri (`.glyph`, `✓`,
+`✗`, `"~"`): erano **due**, e ora sono zero.
+
+- **`VerdictMark` del widget Cielo**: il carattere `verdict.kind.glyph` a 12 sp dentro il
+  contenitore rotondo di 22 dp. Ora il disegno a 12 dp (`SkyMarkGlyph`, che sostituisce
+  `SkyMarkSp`), tinto con l'inchiostro del verdetto come prima, con la parola del verdetto
+  come `contentDescription`. Il contenitore resta: lì il verdetto è il soggetto della card,
+  ed è il disegno approvato il 4 set.
+- **`VerdictChip` dell'app** (`ui/components`), cioè la schermata Cielo (le card dei
+  momenti e il calendario), la guida e ogni riga che apre con `✓ Ottimo · 12% nuvole`: il
+  `Text(glyph)` a `labelLarge` diventa una `Icon` di 14 dp scalata con il font del lettore
+  (`forText()`), tinta con l'inchiostro del chip. La semantica non cambia: il chip
+  annunciava già solo «ottimo, 12% nuvole» e mai il segno.
+
+La tabella sta in un posto solo, `ChiaroIcons.verdictMarkRes`, in due forme — per il
+`VerdictKind` della UI e per lo `SkyVerdictKind` del dominio — perché i widget hanno in
+mano verdetti e il chip ha in mano il suo enum; `ArcText.markRes` sparisce e i due widget e
+il chip leggono la stessa riga. Il test in `ArcTextTest` verifica che le due forme diano gli
+stessi quattro disegni e che nessun verdetto ne condivida uno con un altro.
+
+Dove i vettori **non** servono, verificato: le notifiche (solo testo, il segno non c'è),
+il Diario (parole, nessun glifo), le stringhe (nessuna contiene `✓` o `✗`). Il dominio
+tiene il suo `glyph` in `SkyVerdictKind`: è il vocabolario di tweather, che li stampa come
+codice, e nessuno in Chiaro lo legge più.
+
+DESIGN.md §8.7 registra che il glifo è un disegno e perché.
+
+### Verifica
+
+`:app` 235, lint a zero errori. Stesso branch. **Su device**: il segno nel widget Cielo e
+i chip della schermata Cielo.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae

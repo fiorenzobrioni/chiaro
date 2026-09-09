@@ -6,6 +6,7 @@ import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
+import com.callbackdev.chiaro.ui.components.VerdictKind
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.today.TimelineItem
 import com.callbackdev.chiaro.ui.today.TimelineKind
@@ -125,9 +126,15 @@ class ArcTextTest {
      * drawing would be two verdicts with one shape, which is the deuteranopia case. */
     @Test
     fun `every verdict has a mark of its own`() {
-        val marks = SkyVerdictKind.entries.map { ArcText.markRes(it) }
+        val marks = SkyVerdictKind.entries.map { ChiaroIcons.verdictMarkRes(it) }
         assertEquals(SkyVerdictKind.entries.size, marks.toSet().size)
         assertTrue(marks.all { it != 0 })
+        // The app's chip and the widgets draw the same four, from either kind.
+        assertEquals(marks.toSet(), VerdictKind.entries.map { ChiaroIcons.verdictMarkRes(it) }.toSet())
+        assertEquals(
+            ChiaroIcons.verdictMarkRes(VerdictKind.FAIL),
+            ChiaroIcons.verdictMarkRes(SkyVerdictKind.FAIL)
+        )
     }
 
     @Test

@@ -6,6 +6,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
@@ -317,11 +318,13 @@ internal fun VerdictChip(verdict: SkyVerdict, palette: WidgetPalette) {
 
 /**
  * The mark: the verdict's own glyph — `✓ ~ ✗ ?`, the series' vocabulary and the same
- * characters the app's chip opens with — alone in a round container of the verdict's
- * colors. It is the verdict at the size a narrow card can afford: still a shape before
- * it is a color, which is what keeps it readable under deuteranopia (DESIGN §2.3), and
- * the word is one form up or one tap away. A fixed box, so a fallback font's taller
- * check mark cannot make one row bounce against the next.
+ * mark the app's chip opens with — alone in a round container of the verdict's colors. It
+ * is the verdict at the size a narrow card can afford: still a shape before it is a
+ * color, which is what keeps it readable under deuteranopia (DESIGN §2.3), and the word
+ * is one form up or one tap away. A drawing since 9 set 2026 ([ChiaroIcons.verdictMarkRes])
+ * rather than the character, which Roboto has not and a fallback font drew in its own
+ * calligraphic hand — the arc widget's rows found it first, and the two cards share one
+ * mark. A fixed box, so no row bounces against the next.
  */
 @Composable
 internal fun VerdictMark(verdict: SkyVerdict, palette: WidgetPalette) {
@@ -334,14 +337,11 @@ internal fun VerdictMark(verdict: SkyVerdict, palette: WidgetPalette) {
             .background(verdictContainer(verdict.kind, night, palette.dress))
             .cornerRadius(SkyMarkChip / 2)
     ) {
-        Text(
-            text = verdict.kind.glyph,
-            style = TextStyle(
-                color = verdictInk(verdict.kind, night, palette.dress),
-                fontSize = SkyMarkSp.sp,
-                fontWeight = FontWeight.Medium
-            ),
-            maxLines = 1
+        Image(
+            provider = ImageProvider(ChiaroIcons.verdictMarkRes(verdict.kind)),
+            contentDescription = context.getString(SkyText.verdictWordRes(verdict.kind)),
+            colorFilter = ColorFilter.tint(verdictInk(verdict.kind, night, palette.dress)),
+            modifier = GlanceModifier.size(SkyMarkGlyph)
         )
     }
 }

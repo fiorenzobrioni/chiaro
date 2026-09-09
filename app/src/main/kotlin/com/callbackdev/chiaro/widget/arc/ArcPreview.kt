@@ -442,7 +442,7 @@ private fun PreviewWeek(
 private fun PreviewVerdictMark(verdict: SkyVerdict, inks: PreviewInks) {
     val context = LocalContext.current
     Image(
-        painter = painterResource(ArcText.markRes(verdict.kind)),
+        painter = painterResource(ChiaroIcons.verdictMarkRes(verdict.kind)),
         contentDescription = null,
         colorFilter = ColorFilter.tint(
             verdictInk(verdict.kind, inks.palette.darkGround, inks.palette.dress).getColor(context)
