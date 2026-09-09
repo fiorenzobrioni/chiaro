@@ -4288,23 +4288,23 @@ nessuna sigla CAP raggiunge lo schermo: c'è un test per questo, come per gli id
 - [x] `City` cresce di `countryCode` e `admin3` (nullable, con default), riempiti su entrambe le
       strade: `GeoResultDto`, che li riceve già e li scarta per `ignoreUnknownKeys`, e `GeoFix`
       della posizione. Registrato in `UPSTREAM.md`
-- [ ] `:core:data/warnings/`: `WarningSource` (interfaccia) e `DpcBulletinSource` — scoperta,
+- [x] `:core:data/warnings/`: `WarningSource` (interfaccia) e `DpcBulletinSource` — scoperta,
       download, parser. Zip con `java.util.zip`, CAP con un pull-parser sottile che produce un
       intermedio piatto; la lettura di livelli e rischi dalle etichette («ORDINARIA CRITICITA'
       PER RISCHIO IDRAULICO / ALLERTA GIALLA») sta nel dominio, per parole chiave, con test su un
       CAP vero salvato come fixture (il primo file non Kotlin sotto `src/test`, e va bene così: un
       CAP inventato non proverebbe niente)
-- [ ] La scoperta del bollettino di criticità: Atom dei commit (18 KB) → `.diff` dell'ultimo
+- [x] La scoperta del bollettino di criticità: Atom dei commit (18 KB) → `.diff` dell'ultimo
       commit (≈200 B) → `AAAAMMGG_HHMM` → `files/xml/<stamp>.zip` (7 KB). Ripiego
       `files/all/latest_all.zip` (4,7 MB) solo su rete non a consumo. La vigilanza non ha bisogno
       di scoperta: `files/<AAAAMMGG>.json` e `files/xml/<AAAAMMGG>.zip`
-- [ ] Persistenza: `OfficialWarningStore` (DataStore `warnings`: il bollettino corrente per fonte
+- [x] Persistenza: `OfficialWarningStore` (DataStore `warnings`: il bollettino corrente per fonte
       come JSON, più l'anello delle impronte notificate, mai dentro `settings`) e la tabella Room
       `warning_records` (migrazione 4→5, additiva) che il Diario legge
-- [ ] Il passo nel job: `OfficialWarningsStep`, chiamato da `WeatherSyncWorker` dopo il fetch,
+- [x] Il passo nel job: `OfficialWarningsStep`, chiamato da `WeatherSyncWorker` dopo il fetch,
       dentro `runCatching`, con la sua cadenza (sotto) e il suo motivo in `alertsWanted` e
       `shouldRun`, così un lettore che vuole solo le allerte tiene vivo il job
-- [ ] `SyncNotifiers.notifyOfficialWarning(...): Boolean`, `OfficialWarningNotifier` in `:app`,
+- [x] `SyncNotifiers.notifyOfficialWarning(...): Boolean`, `OfficialWarningNotifier` in `:app`,
       due canali, impronta bruciata solo su `true`; il fake in `WeatherSyncWorkerTest` cresce
 - [ ] Oggi: `WarningBanner` tra il chip di freschezza e le prossime ore; `WarningSheet`; il
       gradino in cima alla scala di `HeadlineEngine` per arancione e rosso, con la sua riga in
@@ -4696,6 +4696,94 @@ passa al dominio; il suo test Robolectric prova che l'asset è nella libreria e 
 Verifica del PR: `:core:domain` 195 test, `:core:data` 182, tutti verdi al primo giro; la suite
 completa come la CI (`test :app:testDebugUnitTest :app:lintDebug`) 639 test — dominio 195, dati 182,
 sync 11, app 251 — e lint 0 errori, nessun avviso sui file nuovi.
+
+### Il secondo PR: sorgente, store, tabella, passo nel job, notifier (9 set 2026)
+
+Branch `claude/warnings-source-9set-m7r2v4`, impilato sul primo (il #24 non era ancora fuso).
+Quattro caselle in più della lista: `:core:data/warnings/`, la scoperta, la persistenza con la
+migrazione, il passo nel job, `SyncNotifiers` e il notifier. Le stringhe del notifier entrano
+qui (`notif_warning_*`, `notif_channel_warning_*`, `warning_*`), `StringsParityTest` verde.
+
+**Misure nuove, dal vivo il 9 set.** Il bollettino del giorno è uscito alle 15:46
+(`20260909_1546`, su GitHub alle 15:56): CAP di 79 KB, 10 blocchi, 385 aree, nota «Regioni
+Lombardia e Liguria … ai rispettivi bollettini regionali». **L'Atom dei commit onora
+`If-None-Match`**: la richiesta condizionale torna 304 con zero byte, quindi il ricontrollo
+orario di un bollettino già in mano non costa niente (`WarningFetchState.feedTag`, l'ETag
+salvato nello store). **Il `.diff` di un commit non è sempre 200 B**: quello di un commit di
+metà pipeline (il GeoJSON) pesa 5,5 MB. La sorgente legge la prima riga e chiude la
+connessione — lo stamp sta nel nome del file, qualunque file sia — e prova in ordine i tre
+commit più recenti, saltando quelli senza stamp (un commit al README). `latest_all.zip`
+contiene il CAP accanto a shapefile e PDF, quindi il ripiego su rete non a consumo funziona e
+lo stamp si legge dal nome dell'entry. Un 404 su `xml/<stamp>.zip` vuol dire «pipeline non
+arrivata»: si tiene il bollettino precedente e si dimentica l'ETag, così il giro dopo rilegge
+l'Atom per intero.
+
+**La sorgente** (`WarningSource`, `DpcBulletinSource`): scoperta dal sito, mai dall'API;
+`CapParser` è un pull-parser sottile (`android.util.Xml`) che produce il `CapAlert` piatto e
+non sa nulla di livelli; `DpcBulletinReader`, nel dominio, legge rischio e livello dalle
+etichette per parole chiave (IDRAULIC, IDROGEOLOGIC, TEMPORAL; GIALLA, ARANCIONE, ROSSA,
+NESSUNA ALLERTA) e **salta un blocco che non sa leggere invece di indovinarlo**. I giorni del
+bollettino sono gli onset dei blocchi uniti al giorno d'emissione e al successivo, perché un
+giorno tutto verde non ha blocchi in cui trovarsi. Le fixture sono file veri: il CAP dell'8 set
+(45 KB), l'Atom del 9 (18 KB) e il diff del primo commit (216 B), i primi file non Kotlin sotto
+`src/test`; il test della sorgente usa un interceptor OkHttp come trasporto e **asserisce le
+richieste fatte**, non solo il risultato (tre per un bollettino nuovo, una per il 304).
+
+**La cadenza è pura** (`WarningFetchPolicy`, tabella): niente in mano → ogni giro chiede;
+bollettino di ieri prima delle 15:30 → no; dalle 15:30 finché non c'è quello di oggi → sì;
+quello di oggi in mano → un'occhiata l'ora fino alle 21. **Il confronto fra due bollettini è
+puro** (`WarningDiff`): il primo bollettino che un luogo vede è il suo stato, non una notizia
+— nessuna riga nel Diario; un giorno che il vecchio non copriva parte da verde; un cambio di
+zona non si confronta.
+
+**Il passo** (`OfficialWarningsStep`, in `:core:sync`) gira **prima del cancello
+`alertsWanted`**, subito dopo il fetch riuscito, dentro `runCatching`: il bollettino è contenuto
+per Oggi e per i widget, non solo una notifica, e se parlare lo decide il suo interruttore.
+`alertsWanted` include `officialWarnings`, così chi vuole solo le allerte tiene vivo il job.
+Inerte se nessun luogo salvato cade in una zona. La rete a consumo si legge da
+`ConnectivityManager.isActiveNetworkMetered` (permesso dichiarato nel manifest di `:core:sync`,
+già fuso da WorkManager). La riga «bollettino non raggiunto» si scrive solo dopo le 15:30, se
+quello di oggi manca, una volta al giorno (`failureLoggedOn` nello store). **Accettato**: un
+fetch meteo fallito salta anche il passo (offline lo sono entrambi; un `ApiError` di Open-Meteo
+fa uscire il worker prima) e il giro successivo recupera.
+
+**Le impostazioni**: `NotificationSettings.officialWarnings` (acceso) e `officialWarningsFrom`
+(gialla), chiavi `notif_official_warnings` e `notif_official_warnings_from`, additive; i loro
+interruttori in Avvisi sono del terzo PR. **Lo store** (`OfficialWarningStore`, DataStore
+`warnings`): il bollettino corrente per sorgente come JSON con le date ISO, l'ETag, l'ultimo
+tentativo, il giorno dell'ultima riga di fallimento, l'anello delle impronte (40). Una riga con
+un rischio o un livello che questa build non conosce si scarta in lettura, non si indovina.
+**La tabella** `warning_records` (migrazione 4→5, additiva; `ChiaroDatabase.MIGRATIONS` è ora
+l'unica lista, condivisa da builder e test) porta `kind` (`LEVEL_CHANGE` o `BULLETIN_MISSED`),
+il bollettino, la zona, il giorno, il rischio e i due livelli, tutti come nomi e stringhe ISO:
+il Diario li rende nella lingua del lettore al momento della lettura.
+
+**Il notifier** (`OfficialWarningNotifier`): due canali (`warning_high` alta, `warning_yellow`
+normale), id `3000 + id % 1000` e `3000` per la posizione, titolo «Allerta arancione · Milano»,
+chiusa «Temporali, oggi fino a mezzanotte · bollettino delle 15:46», espansa con la chiusa in
+testa e poi un fatto per riga (i livelli per giorno, la zona, «Cosa vuol dire», la nota se c'è,
+la fonte per ultima). Due grammatiche per il livello: la frase è «Allerta gialla», il colore
+nelle righe dei giorni è «temporali giallo». **I significati dei livelli sono il riassunto che
+il piano dava, in italiano nelle due lingue** (`warning_meaning_*`): non una citazione
+letterale; se il committente vuole le parole esatte del Dipartimento con la loro fonte, il
+terzo PR sostituisce tre stringhe. `OfficialWarningNotifierTest` sul modello di
+`SkyNotifierTest`, con il controllo che né codice di zona né identificativo raggiungano il
+testo.
+
+**Rinviato al terzo PR, con il motivo: la vigilanza.** Vuole un secondo asset (le 71 zone di
+vigilanza dal TopoJSON `_oggi.json`, con i loro comuni) che il primo PR non ha costruito, un
+secondo documento nello store e la sua cadenza dalle 14:30; la sua unica superficie è una riga
+del foglio. Entra con il foglio, non prima.
+
+**`ServiceLocator`** issa OkHttp e il database in campi (la sorgente condivide il client per lo
+User-Agent, il DAO condivide il database) e cresce di quattro accessori e di quattro parametri
+in `overrideForTests`.
+
+Verifica del PR: suite completa come la CI, **695 test** — dominio 213 (+18), dati 201 (+19),
+sync 21 (+10), app 260 (+9) — e lint 0 errori. Un solo giro rosso, per due sviste del test e
+non del codice: il CAP dell'8 set dava il Versante Jonico Settentrionale giallo su tutti e tre i
+rischi, non sul solo idraulico come il test supponeva (il file ha ragione, il test è stato
+corretto e dice perché); e `cancelAll` va chiamato sul gestore vero, non sulla shadow.
 
 ### Verifica
 

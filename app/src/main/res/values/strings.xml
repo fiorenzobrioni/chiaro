@@ -798,6 +798,45 @@
     <string name="notif_channel_precip">Incoming rain</string>
     <string name="notif_channel_summary">Morning summary</string>
     <string name="notif_channel_rules">Your alerts</string>
+
+    <!-- Official warnings (Fase 11): the Protezione Civile's bulletin as a notification.
+         Levels, hazards and days localize; the Dipartimento's own words (the meanings,
+         the note) are quoted in Italian in both languages (VISION §8). -->
+    <string name="notif_channel_warning_high">Orange and red warnings</string>
+    <string name="notif_channel_warning_yellow">Yellow warnings</string>
+    <string name="notif_warning_title">%1$s · %2$s</string>
+    <string name="notif_warning_collapsed">%1$s, %2$s · %3$s</string>
+    <string name="notif_warning_today">today until midnight</string>
+    <string name="notif_warning_tomorrow">tomorrow</string>
+    <string name="notif_warning_today_and_tomorrow">today and tomorrow</string>
+    <string name="notif_warning_bulletin_at">bulletin of %1$s</string>
+    <string name="notif_warning_day_today">Today: %1$s</string>
+    <string name="notif_warning_day_tomorrow">Tomorrow: %1$s</string>
+    <string name="notif_warning_day_other">%1$s: %2$s</string>
+    <string name="notif_warning_zone">Warning zone: %1$s</string>
+    <string name="notif_warning_meaning">What it means: %1$s</string>
+    <string name="notif_warning_note">Bulletin note: %1$s</string>
+    <string name="notif_warning_source">Dipartimento della Protezione Civile · bulletin of %1$s</string>
+    <string name="warning_phrase_yellow">Yellow warning</string>
+    <string name="warning_phrase_orange">Orange warning</string>
+    <string name="warning_phrase_red">Red warning</string>
+    <string name="warning_level_none">none</string>
+    <string name="warning_level_yellow">yellow</string>
+    <string name="warning_level_orange">orange</string>
+    <string name="warning_level_red">red</string>
+    <string name="warning_hazard_hydraulic">hydraulic risk</string>
+    <string name="warning_hazard_hydrogeological">hydrogeological risk</string>
+    <string name="warning_hazard_thunderstorm">thunderstorms</string>
+    <string name="warning_hazard_short_hydraulic">hydraulic</string>
+    <string name="warning_hazard_short_hydrogeological">hydrogeological</string>
+    <string name="warning_hazard_short_thunderstorm">thunderstorms</string>
+    <string name="warning_hazard_join">" and "</string>
+    <!-- The Dipartimento's classification of the three levels, summarized in its own
+         terms and left in Italian on purpose: the authority's words are quoted, not
+         translated (PLANNING, Fase 11, «Le parole dell'autorità si citano»). -->
+    <string name="warning_meaning_yellow">Fenomeni localizzati e possibili disagi.</string>
+    <string name="warning_meaning_orange">Fenomeni diffusi o intensi e possibili danni.</string>
+    <string name="warning_meaning_red">Fenomeni molto intensi e pericolo per le persone.</string>
     <string name="notif_severe_title">Severe weather ahead · %1$s</string>
     <string name="notif_severe_body">%1$s around %2$s</string>
     <string name="notif_rain_fragment">, rain at %1$d%%</string>

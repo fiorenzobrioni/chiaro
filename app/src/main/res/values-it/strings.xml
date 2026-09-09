@@ -787,6 +787,42 @@
     <string name="notif_channel_precip">Pioggia in arrivo</string>
     <string name="notif_channel_summary">Riepilogo del mattino</string>
     <string name="notif_channel_rules">I tuoi avvisi</string>
+
+    <!-- Allerte ufficiali (Fase 11): il bollettino della Protezione Civile come notifica. -->
+    <string name="notif_channel_warning_high">Allerte arancioni e rosse</string>
+    <string name="notif_channel_warning_yellow">Allerte gialle</string>
+    <string name="notif_warning_title">%1$s · %2$s</string>
+    <string name="notif_warning_collapsed">%1$s, %2$s · %3$s</string>
+    <string name="notif_warning_today">oggi fino a mezzanotte</string>
+    <string name="notif_warning_tomorrow">domani</string>
+    <string name="notif_warning_today_and_tomorrow">oggi e domani</string>
+    <string name="notif_warning_bulletin_at">bollettino delle %1$s</string>
+    <string name="notif_warning_day_today">Oggi: %1$s</string>
+    <string name="notif_warning_day_tomorrow">Domani: %1$s</string>
+    <string name="notif_warning_day_other">%1$s: %2$s</string>
+    <string name="notif_warning_zone">Zona di allerta: %1$s</string>
+    <string name="notif_warning_meaning">Cosa vuol dire: %1$s</string>
+    <string name="notif_warning_note">Nota del bollettino: %1$s</string>
+    <string name="notif_warning_source">Dipartimento della Protezione Civile · bollettino delle %1$s</string>
+    <string name="warning_phrase_yellow">Allerta gialla</string>
+    <string name="warning_phrase_orange">Allerta arancione</string>
+    <string name="warning_phrase_red">Allerta rossa</string>
+    <!-- Il livello come colore («temporali giallo»); la frase «Allerta gialla» sta sopra. -->
+    <string name="warning_level_none">nessuno</string>
+    <string name="warning_level_yellow">giallo</string>
+    <string name="warning_level_orange">arancione</string>
+    <string name="warning_level_red">rosso</string>
+    <string name="warning_hazard_hydraulic">rischio idraulico</string>
+    <string name="warning_hazard_hydrogeological">rischio idrogeologico</string>
+    <string name="warning_hazard_thunderstorm">temporali</string>
+    <string name="warning_hazard_short_hydraulic">idraulico</string>
+    <string name="warning_hazard_short_hydrogeological">idrogeologico</string>
+    <string name="warning_hazard_short_thunderstorm">temporali</string>
+    <string name="warning_hazard_join">" e "</string>
+    <!-- Le parole del Dipartimento per i tre livelli: citate, uguali nelle due lingue. -->
+    <string name="warning_meaning_yellow">Fenomeni localizzati e possibili disagi.</string>
+    <string name="warning_meaning_orange">Fenomeni diffusi o intensi e possibili danni.</string>
+    <string name="warning_meaning_red">Fenomeni molto intensi e pericolo per le persone.</string>
     <string name="notif_severe_title">Maltempo in arrivo · %1$s</string>
     <string name="notif_severe_body">%1$s verso le %2$s</string>
     <string name="notif_rain_fragment">, pioggia al %1$d%%</string>

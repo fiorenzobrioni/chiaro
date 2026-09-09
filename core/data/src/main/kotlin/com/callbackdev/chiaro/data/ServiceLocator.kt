@@ -6,10 +6,16 @@ import androidx.room.Room
 import com.callbackdev.chiaro.core.data.BuildConfig
 import com.callbackdev.chiaro.data.local.ReportDiskCache
 import com.callbackdev.chiaro.data.local.ChiaroDatabase
+import com.callbackdev.chiaro.data.local.WarningRecordDao
 import java.io.File
 import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoGeocodingApi
+import com.callbackdev.chiaro.data.warnings.DpcBulletinSource
+import com.callbackdev.chiaro.data.warnings.OfficialWarningStore
+import com.callbackdev.chiaro.data.warnings.WarningSource
+import com.callbackdev.chiaro.data.warnings.WarningZoneAssets
+import com.callbackdev.chiaro.domain.warnings.WarningZoneIndex
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -64,6 +70,51 @@ object ServiceLocator {
 
     @Volatile
     private var fetchLogStore: FetchLogStore? = null
+
+    @Volatile
+    private var warningStore: OfficialWarningStore? = null
+
+    @Volatile
+    private var warningZoneIndex: WarningZoneIndex? = null
+
+    @Volatile
+    private var warningSource: WarningSource? = null
+
+    @Volatile
+    private var warningRecordDao: WarningRecordDao? = null
+
+    // The two things more than one graph node needs (Fase 11 hoisted them out of
+    // build(): the warnings source shares the OkHttp client for its User-Agent, the
+    // warnings DAO shares the database).
+    @Volatile
+    private var okHttp: OkHttpClient? = null
+
+    @Volatile
+    private var database: ChiaroDatabase? = null
+
+    fun warningStore(context: Context): OfficialWarningStore =
+        warningStore ?: synchronized(this) {
+            warningStore ?: OfficialWarningStore.create(context.applicationContext, json)
+                .also { warningStore = it }
+        }
+
+    /** Decodes ~290 KB of JSON the first time: call it off the main thread. */
+    fun warningZoneIndex(context: Context): WarningZoneIndex =
+        warningZoneIndex ?: synchronized(this) {
+            warningZoneIndex ?: WarningZoneAssets.load(context.applicationContext)
+                .also { warningZoneIndex = it }
+        }
+
+    fun warningSource(context: Context): WarningSource =
+        warningSource ?: synchronized(this) {
+            warningSource ?: DpcBulletinSource(okHttp()).also { warningSource = it }
+        }
+
+    fun warningRecordDao(context: Context): WarningRecordDao =
+        warningRecordDao ?: synchronized(this) {
+            warningRecordDao ?: database(context.applicationContext).warningRecordDao()
+                .also { warningRecordDao = it }
+        }
 
     fun weatherRepository(context: Context): WeatherRepository =
         repository ?: synchronized(this) {
@@ -164,7 +215,11 @@ object ServiceLocator {
         ruleStateStore: RuleStateStore? = null,
         skySubscriptionStore: SkySubscriptionStore? = null,
         skyAlertStateStore: SkyAlertStateStore? = null,
-        fetchLogStore: FetchLogStore? = null
+        fetchLogStore: FetchLogStore? = null,
+        warningStore: OfficialWarningStore? = null,
+        warningZoneIndex: WarningZoneIndex? = null,
+        warningSource: WarningSource? = null,
+        warningRecordDao: WarningRecordDao? = null
     ) {
         this.repository = repository
         this.cityStore = cityStore
@@ -176,6 +231,10 @@ object ServiceLocator {
         this.skySubscriptionStore = skySubscriptionStore
         this.skyAlertStateStore = skyAlertStateStore
         this.fetchLogStore = fetchLogStore
+        this.warningStore = warningStore
+        this.warningZoneIndex = warningZoneIndex
+        this.warningSource = warningSource
+        this.warningRecordDao = warningRecordDao
     }
 
     /**
@@ -205,23 +264,47 @@ object ServiceLocator {
         this.historyListener = onHistoryCommitted
     }
 
-    private fun build(appContext: Context): WeatherRepository {
-        val okHttp = OkHttpClient.Builder()
-            .addInterceptor { chain ->
-                chain.proceed(
-                    chain.request().newBuilder()
-                        .header("User-Agent", userAgent)
-                        .build()
-                )
-            }
-            .apply {
-                if (BuildConfig.DEBUG) {
-                    addInterceptor(
-                        HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC)
+    /**
+     * The one HTTP client, shared by the four hosts the app talks to (three of
+     * Open-Meteo's, GitHub's for the official warnings): the User-Agent interceptor is
+     * what makes it one — on `raw.githubusercontent.com` it is the only host where a
+     * named agent matters (Fase 11).
+     */
+    private fun okHttp(): OkHttpClient =
+        okHttp ?: synchronized(this) {
+            okHttp ?: OkHttpClient.Builder()
+                .addInterceptor { chain ->
+                    chain.proceed(
+                        chain.request().newBuilder()
+                            .header("User-Agent", userAgent)
+                            .build()
                     )
                 }
-            }
-            .build()
+                .apply {
+                    if (BuildConfig.DEBUG) {
+                        addInterceptor(
+                            HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC)
+                        )
+                    }
+                }
+                .build()
+                .also { okHttp = it }
+        }
+
+    private fun database(appContext: Context): ChiaroDatabase =
+        database ?: synchronized(this) {
+            database ?: Room.databaseBuilder(
+                appContext,
+                ChiaroDatabase::class.java,
+                "chiaro.db"
+            )
+                .addMigrations(*ChiaroDatabase.MIGRATIONS)
+                .build()
+                .also { database = it }
+        }
+
+    private fun build(appContext: Context): WeatherRepository {
+        val okHttp = okHttp()
 
         fun retrofit(baseUrl: String): Retrofit = Retrofit.Builder()
             .baseUrl(baseUrl)
@@ -229,17 +312,7 @@ object ServiceLocator {
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
 
-        val database = Room.databaseBuilder(
-            appContext,
-            ChiaroDatabase::class.java,
-            "chiaro.db"
-        )
-            .addMigrations(
-                ChiaroDatabase.MIGRATION_1_2,
-                ChiaroDatabase.MIGRATION_2_3,
-                ChiaroDatabase.MIGRATION_3_4
-            )
-            .build()
+        val database = database(appContext)
 
         return WeatherRepository(
             forecastApi = retrofit(OpenMeteoForecastApi.BASE_URL)

@@ -3,10 +3,13 @@ package com.callbackdev.chiaro.notifications
 import android.content.Context
 import androidx.core.app.NotificationManagerCompat
 import com.callbackdev.chiaro.domain.Alert
+import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.rules.RuleTrigger
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.warnings.WarningNotification
 import com.callbackdev.chiaro.sync.SyncNotifiers
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 /**
@@ -37,4 +40,10 @@ class ChiaroNotifiers(private val context: Context) : SyncNotifiers {
     override suspend fun rearmSkyReminders() {
         runCatching { SkyAlarmScheduler.reschedule(context) }
     }
+
+    override fun notifyOfficialWarning(
+        notification: WarningNotification,
+        city: City,
+        today: LocalDate
+    ): Boolean = OfficialWarningNotifier.notify(context, notification, city, today)
 }

@@ -86,6 +86,25 @@ class WeatherSyncWorker(
             return Result.success() // next period is at most one interval away
         }
 
+        // Stable identity, not cacheKey: the GPS pseudo-city's cacheKey moves with
+        // the fix (~1.1 km grid) and would re-notify the same storm at every commute
+        // leg; ids never move.
+        val cityKey = if (city.id == GpsCityId) "gps" else city.id.toString()
+
+        // The official warnings (Fase 11): one step per device, after the fetch and
+        // BEFORE the alerts gate — the bulletin is content for Oggi and the widgets,
+        // not only a notification, and whether it speaks is its own switch inside.
+        // Inert when no saved place is in a graded zone; never lets a failure out.
+        runCatching {
+            OfficialWarningsStep(context).run(
+                active = city,
+                cityKey = cityKey,
+                others = ServiceLocator.cityStore(context).cities.first(),
+                settings = settings.notifications,
+                notifiers = notifiers
+            )
+        }
+
         // A widget-only sync fetches (the repository's commit hook repaints) but
         // must never evaluate or post alerts.
         if (!alertsWanted) return Result.success()
@@ -94,10 +113,6 @@ class WeatherSyncWorker(
         val zone = runCatching { ZoneId.of(report.location.timezone) }
             .getOrDefault(ZoneId.systemDefault())
         val now = ZonedDateTime.now(zone).toLocalDateTime()
-        // Stable identity, not cacheKey: the GPS pseudo-city's cacheKey moves with
-        // the fix (~1.1 km grid) and would re-notify the same storm at every commute
-        // leg; ids never move.
-        val cityKey = if (city.id == GpsCityId) "gps" else city.id.toString()
 
         val stateStore = ServiceLocator.alertStateStore(context)
         val alerts = AlertEngine.evaluate(

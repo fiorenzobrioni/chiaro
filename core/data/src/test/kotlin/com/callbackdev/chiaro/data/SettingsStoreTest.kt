@@ -63,6 +63,21 @@ class SettingsStoreTest {
         assertEquals(DefaultWidgetOpacityPct, settings.widgetOpacityPct)
     }
 
+    /** Fase 11: on by default and from yellow, held or raised after the week of live use. */
+    @Test
+    fun `the official warnings default to on from yellow and round-trip`() = runBlocking {
+        val store = SettingsStore(dataStore())
+        val defaults = store.settings.first().notifications
+        assertEquals(true, defaults.officialWarnings)
+        assertEquals(com.callbackdev.chiaro.domain.warnings.WarningLevel.YELLOW, defaults.officialWarningsFrom)
+
+        store.setOfficialWarnings(false)
+        store.setOfficialWarningsFrom(com.callbackdev.chiaro.domain.warnings.WarningLevel.ORANGE)
+        val edited = store.settings.first().notifications
+        assertEquals(false, edited.officialWarnings)
+        assertEquals(com.callbackdev.chiaro.domain.warnings.WarningLevel.ORANGE, edited.officialWarningsFrom)
+    }
+
     @Test
     fun `choices round-trip`() = runBlocking {
         val store = SettingsStore(dataStore())

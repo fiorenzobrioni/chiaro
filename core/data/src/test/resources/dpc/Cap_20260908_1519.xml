@@ -1,0 +1,1569 @@
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+  <identifier>DPC_BULLETIN_2026_09_08_6471</identifier>
+  <sender>2.49.0.0.380.1</sender>
+  <sent>2026-09-08T15:19:00+02:00</sent>
+  <status>Actual</status>
+  <msgType>Alert</msgType>
+  <scope>Public</scope>
+  <note>Per la giornata di oggi: Regione Lombardia e Campania: per la validità temporale delle criticità si rimanda al bollettino regionale.
+Per la giornata di domani: Regione Liguria: per la validità temporale delle criticità si rimanda al bollettino regionale.</note>
+  <info>
+    <category>Met</category>
+    <event>ORDINARIA CRITICITA' PER RISCHIO IDRAULICO / ALLERTA GIALLA:</event>
+    <responseType>Prepare</responseType>
+    <urgency>Expected</urgency>
+    <severity>Moderate</severity>
+    <certainty>Likely</certainty>
+    <onset>2026-09-08T12:00:00+02:00</onset>
+    <expires>2026-09-08T23:59:59+02:00</expires>
+    <senderName>DIPARTIMENTO DI PROTEZIONE CIVILE</senderName>
+    <description>all_GIALLA PER OGGI SU:</description>
+    <area>
+      <areaDesc>Versante Jonico Settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-5</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Centro-settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-6</value>
+      </geocode>
+    </area>
+  </info>
+  <info>
+    <category>Met</category>
+    <event>ORDINARIA CRITICITA' PER RISCHIO TEMPORALI / ALLERTA GIALLA:</event>
+    <responseType>Prepare</responseType>
+    <urgency>Expected</urgency>
+    <severity>Moderate</severity>
+    <certainty>Likely</certainty>
+    <onset>2026-09-08T12:00:00+02:00</onset>
+    <expires>2026-09-08T23:59:59+02:00</expires>
+    <senderName>DIPARTIMENTO DI PROTEZIONE CIVILE</senderName>
+    <description>all_GIALLA PER OGGI SU:</description>
+    <area>
+      <areaDesc>Bacino dell'Aterno</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacini Tordino Vomano</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino Alto del Sangro</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-D1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino del Pescara</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Marsica</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-E</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basi-B</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Basi-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basi-C</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Basi-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basi-D</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Basi-D</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basi-A2</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Basi-A2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basi-A1</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Basi-A1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-5</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Centro-settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-6</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alto Volturno e Matese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Penisola sorrentino-amalfitana, Monti di Sarno e Monti Picentini</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Tusciano e Alto Sele</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-5</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Tanagro</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-7</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basso Cilento</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-8</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alta Irpinia e Sannio</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-4</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Appennino di Rieti</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lazi-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Media-bassa Valtellina</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-02</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Laghi e Prealpi Varesine</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-04</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Valchiavenna</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-01</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alta Valtellina</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-03</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Laghi e Prealpi orientali</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-08</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alta pianura orientale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-11</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bassa pianura centro-occidentale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-13</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Lario e Prealpi occidentali</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-05</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Orobie bergamasche</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-06</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Valcamonica</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-07</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bassa pianura occidentale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-12</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Nodo Idraulico di Milano</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-09</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bassa pianura centro-orientale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-14</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura centrale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-10</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bassa pianura orientale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-15</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alto Volturno - Medio Sangro</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Moli-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Frentani - Sannio - Matese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Moli-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Sub-Appennino Dauno</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-H</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basso Ofanto</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-G</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Puglia Centrale Bradanica</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-F</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacini del Lato e del Lenne</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-E</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Puglia Centrale Adriatica</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Provincia Autonoma di Trento</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tren-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Trasimeno - Nestore</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Umbr-E</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Nera - Corno</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Umbr-D</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alto Tevere</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Umbr-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Chiani - Paglia</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Umbr-F</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Chiascio - Topino</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Umbr-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Medio Tevere</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Umbr-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Valle di Cogne, Valsavarenche e Valle di Rhêmes</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>VDAo-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Dorsale settentrionale e nord-occidentale, Valgrisenche e Valdigne</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>VDAo-D</value>
+      </geocode>
+    </area>
+  </info>
+  <info>
+    <category>Met</category>
+    <event>ORDINARIA CRITICITA' PER RISCHIO IDROGEOLOGICO / ALLERTA GIALLA:</event>
+    <responseType>Prepare</responseType>
+    <urgency>Expected</urgency>
+    <severity>Moderate</severity>
+    <certainty>Likely</certainty>
+    <onset>2026-09-08T12:00:00+02:00</onset>
+    <expires>2026-09-08T23:59:59+02:00</expires>
+    <senderName>DIPARTIMENTO DI PROTEZIONE CIVILE</senderName>
+    <description>all_GIALLA PER OGGI SU:</description>
+    <area>
+      <areaDesc>Versante Jonico Settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-5</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Centro-settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-6</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Provincia Autonoma di Trento</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tren-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Valle di Cogne, Valsavarenche e Valle di Rhêmes</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>VDAo-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Dorsale settentrionale e nord-occidentale, Valgrisenche e Valdigne</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>VDAo-D</value>
+      </geocode>
+    </area>
+  </info>
+  <info>
+    <category>Met</category>
+    <event>MODERATA CRITICITA' PER RISCHIO TEMPORALI / ALLERTA ARANCIONE:</event>
+    <responseType>Prepare</responseType>
+    <urgency>Expected</urgency>
+    <severity>Severe</severity>
+    <certainty>Likely</certainty>
+    <onset>2026-09-09T00:00:00+02:00</onset>
+    <expires>2026-09-09T23:59:59+02:00</expires>
+    <senderName>DIPARTIMENTO DI PROTEZIONE CIVILE</senderName>
+    <description>all_ARANCIONE PER DOMANI SU:</description>
+    <area>
+      <areaDesc>Alta collina piacentino-parmense</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-G1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Montagna piacentino-parmense</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-G2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura piacentino-parmense</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-H2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bassa collina piacentino-parmense</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-H1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura centrale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-10</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Lario e Prealpi occidentali</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-05</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Laghi e Prealpi orientali</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-08</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bassa pianura centro-orientale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-14</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Orobie bergamasche</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-06</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bassa pianura orientale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-15</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Appennino pavese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-16</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Laghi e Prealpi Varesine</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-04</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bassa pianura occidentale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-12</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bassa pianura centro-occidentale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-13</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Nodo Idraulico di Milano</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-09</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alta pianura orientale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-11</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Prealpi vicentine Altopiano dei Sette Comuni - Bacini Brenta Bacchiglione Agno</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-B2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pedemontana e alta pianura centrale - Bacini Brenta Bacchiglione Agno-Guà Alpone</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-B3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Lessinia meridionale e alta pianura veronese - Bacino Adige</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-C2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Feltrino - Bacino Cismon</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-B1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Prealpi orientali, Baldo e Lessinia settentrionale - Bacino Adige</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-C1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura centrale - Bacini Brenta Bacchiglione, Muson, Scolante in Laguna</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-E1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Colli Euganei e Colli Berici - Bacini Bacchiglione Fratta-Gorzone</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-E2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura centro meridionale e Bassa padovana - Bacini Fratta-Gorzone, Adige, Scolante in Laguna</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-E3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Costa centro meridionale - Bacini Brenta Bacchiglione, Fratta-Gorzone, Adige, Scolante in Laguna</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-E4</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura orientale - Bacini Livenza, Lemene, Pianura tra Livenza e Piave</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-G1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Costa orientale Bacini Livenza, Lemene, Tagliamento, Pianura tra Livenza e Piave</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-G2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Polesine occidentale, Bassa Veronese e Valli Grandi Veronesi - Bacini Fissero Tartaro Canalbianco, Po, Adige</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-D1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura polesana centrale - Bacini Fissero Tartaro Canalbianco,Po, Adige</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-D2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Costa meridionale e Delta Po - Bacini Fissero Tartaro Canalbianco, Po, Adige</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-D3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura centro meridionale - Bacini Bacchiglione Fratta-Gorzone, Adige, Scolante in Laguna, Fissero Tartaro Canalbianco</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-E5</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura centro-orientale - Bacini del Piave, Sile, Scolante in Laguna, Pianura tra Livenza e Piave</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-F1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Costa centro-orientale - Bacini del Piave, Sile, Scolante in Laguna, Pianura tra Livenza e Piave</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-F2</value>
+      </geocode>
+    </area>
+  </info>
+  <info>
+    <category>Met</category>
+    <event>MODERATA CRITICITA' PER RISCHIO IDROGEOLOGICO / ALLERTA ARANCIONE:</event>
+    <responseType>Prepare</responseType>
+    <urgency>Expected</urgency>
+    <severity>Severe</severity>
+    <certainty>Likely</certainty>
+    <onset>2026-09-09T00:00:00+02:00</onset>
+    <expires>2026-09-09T23:59:59+02:00</expires>
+    <senderName>DIPARTIMENTO DI PROTEZIONE CIVILE</senderName>
+    <description>all_ARANCIONE PER DOMANI SU:</description>
+    <area>
+      <areaDesc>Pianura centrale - Bacini Brenta Bacchiglione, Muson, Scolante in Laguna</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-E1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Colli Euganei e Colli Berici - Bacini Bacchiglione Fratta-Gorzone</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-E2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura centro meridionale e Bassa padovana - Bacini Fratta-Gorzone, Adige, Scolante in Laguna</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-E3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Costa centro meridionale - Bacini Brenta Bacchiglione, Fratta-Gorzone, Adige, Scolante in Laguna</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-E4</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Polesine occidentale, Bassa Veronese e Valli Grandi Veronesi - Bacini Fissero Tartaro Canalbianco, Po, Adige</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-D1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura polesana centrale - Bacini Fissero Tartaro Canalbianco,Po, Adige</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-D2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Costa meridionale e Delta Po - Bacini Fissero Tartaro Canalbianco, Po, Adige</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-D3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura centro meridionale - Bacini Bacchiglione Fratta-Gorzone, Adige, Scolante in Laguna, Fissero Tartaro Canalbianco</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-E5</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura centro-orientale - Bacini del Piave, Sile, Scolante in Laguna, Pianura tra Livenza e Piave</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-F1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Costa centro-orientale - Bacini del Piave, Sile, Scolante in Laguna, Pianura tra Livenza e Piave</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-F2</value>
+      </geocode>
+    </area>
+  </info>
+  <info>
+    <category>Met</category>
+    <event>ORDINARIA CRITICITA' PER RISCHIO IDRAULICO / ALLERTA GIALLA:</event>
+    <responseType>Prepare</responseType>
+    <urgency>Expected</urgency>
+    <severity>Moderate</severity>
+    <certainty>Likely</certainty>
+    <onset>2026-09-09T00:00:00+02:00</onset>
+    <expires>2026-09-09T23:59:59+02:00</expires>
+    <senderName>DIPARTIMENTO DI PROTEZIONE CIVILE</senderName>
+    <description>all_GIALLA PER DOMANI SU:</description>
+    <area>
+      <areaDesc>Versante Jonico Settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-5</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Centro-settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-6</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alta collina romagnola</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-A2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Costa romagnola</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-B2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alta collina piacentino-parmense</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-G1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Montagna piacentino-parmense</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-G2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura piacentino-parmense</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-H2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bassa collina e pianura romagnola</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-B1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Montagna romagnola</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-A1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Collina bolognese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-C2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Montagna bolognese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-C1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Montagna emiliana centrale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-E1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Collina emiliana centrale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-E2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bassa collina piacentino-parmense</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-H1</value>
+      </geocode>
+    </area>
+  </info>
+  <info>
+    <category>Met</category>
+    <event>ORDINARIA CRITICITA' PER RISCHIO TEMPORALI / ALLERTA GIALLA:</event>
+    <responseType>Prepare</responseType>
+    <urgency>Expected</urgency>
+    <severity>Moderate</severity>
+    <certainty>Likely</certainty>
+    <onset>2026-09-09T00:00:00+02:00</onset>
+    <expires>2026-09-09T23:59:59+02:00</expires>
+    <senderName>DIPARTIMENTO DI PROTEZIONE CIVILE</senderName>
+    <description>all_GIALLA PER DOMANI SU:</description>
+    <area>
+      <areaDesc>Versante Jonico Settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-5</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Centro-settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-6</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura ferrarese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-D3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alta collina romagnola</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-A2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura modenese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-F1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Costa romagnola</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-B2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura bolognese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-D1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bassa collina e pianura romagnola</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-B1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Montagna romagnola</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-A1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Collina bolognese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-C2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura reggiana</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-F2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Montagna bolognese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-C1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Montagna emiliana centrale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-E1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Collina emiliana centrale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-E2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Costa ferrarese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-D2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura reggiana di Po</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-F3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino dell'Isonzo e Pianura di Udine e Gorizia</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Friu-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino di Levante / Carso</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Friu-D</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino del Livenza e del Lemene</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Friu-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacini Liguri Marittimi di Levante</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Ligu-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacini Liguri Padani di Ponente</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Ligu-D</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacini Liguri Padani di Levante</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Ligu-E</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacini Liguri Marittimi di Centro</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Ligu-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Valcamonica</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-07</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alta Valtellina</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-03</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Media-bassa Valtellina</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-02</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Valchiavenna</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-01</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Toce</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Val Sesia, Cervo e Chiusella</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-I</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura Torinese e Colline</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-L</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Belbo e Bormida</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-G</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura Cuneese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-M</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Valle Tanaro</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-F</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Scrivia</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-H</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Serchio-Garfagnana-Lima</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tosc-S1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Lunigiana</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tosc-L</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Serchio-Lucca</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tosc-S2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Serchio-Costa</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tosc-S3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versilia</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tosc-V</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Provincia Autonoma di Bolzano</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tren-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Provincia Autonoma di Trento</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tren-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Nera - Corno</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Umbr-D</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Trasimeno - Nestore</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Umbr-E</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Medio Tevere</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Umbr-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alto Tevere</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Umbr-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Chiani - Paglia</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Umbr-F</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Chiascio - Topino</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Umbr-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Valle di Cogne, Valsavarenche e Valle di Rhêmes</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>VDAo-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Dorsale settentrionale e nord-occidentale, Valgrisenche e Valdigne</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>VDAo-D</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Prealpi bellunesi Valbelluna/Feltrino - Bacino Piave</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-H1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Prealpi trevigiane - Bacino Piave</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-H3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Dolomiti orientali: Cadore, Comelico</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-A1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Dolomiti Occidentali: Agordino, Zoldano, alta Val Boite</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-A2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alpago Cansiglio - Bacino Piave</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-H2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alta pianura trevigiana occidentale - Bacini Piave, Sile, Scolante in Laguna</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-H4</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Prealpi trevigiane - Bacino Livenza</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-H5</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alta pianura trevigiana orientale - Bacino Livenza</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-H6</value>
+      </geocode>
+    </area>
+  </info>
+  <info>
+    <category>Met</category>
+    <event>ORDINARIA CRITICITA' PER RISCHIO IDROGEOLOGICO / ALLERTA GIALLA:</event>
+    <responseType>Prepare</responseType>
+    <urgency>Expected</urgency>
+    <severity>Moderate</severity>
+    <certainty>Likely</certainty>
+    <onset>2026-09-09T00:00:00+02:00</onset>
+    <expires>2026-09-09T23:59:59+02:00</expires>
+    <senderName>DIPARTIMENTO DI PROTEZIONE CIVILE</senderName>
+    <description>all_GIALLA PER DOMANI SU:</description>
+    <area>
+      <areaDesc>Versante Jonico Settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-5</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Centro-settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-6</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alta collina romagnola</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-A2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alta collina piacentino-parmense</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-G1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Montagna piacentino-parmense</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-G2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bassa collina e pianura romagnola</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-B1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Montagna romagnola</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-A1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Collina bolognese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-C2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Montagna bolognese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-C1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bassa collina piacentino-parmense</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Emil-H1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino dell'Isonzo e Pianura di Udine e Gorizia</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Friu-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino di Levante / Carso</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Friu-D</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Lario e Prealpi occidentali</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-05</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Laghi e Prealpi orientali</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-08</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Orobie bergamasche</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-06</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Valcamonica</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-07</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Laghi e Prealpi Varesine</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-04</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Media-bassa Valtellina</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-02</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Nodo Idraulico di Milano</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Lomb-09</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Toce</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Val Sesia, Cervo e Chiusella</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-I</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura Torinese e Colline</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-L</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Belbo e Bormida</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-G</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura Cuneese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-M</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Valle Tanaro</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-F</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Scrivia</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Piem-H</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Serchio-Garfagnana-Lima</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tosc-S1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Lunigiana</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tosc-L</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Serchio-Lucca</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tosc-S2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Serchio-Costa</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tosc-S3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versilia</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tosc-V</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Provincia Autonoma di Trento</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Tren-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Valle di Cogne, Valsavarenche e Valle di Rhêmes</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>VDAo-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Dorsale settentrionale e nord-occidentale, Valgrisenche e Valdigne</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>VDAo-D</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Pianura orientale - Bacini Livenza, Lemene, Pianura tra Livenza e Piave</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-G1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Costa orientale Bacini Livenza, Lemene, Tagliamento, Pianura tra Livenza e Piave</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Vene-G2</value>
+      </geocode>
+    </area>
+  </info>
+</alert>

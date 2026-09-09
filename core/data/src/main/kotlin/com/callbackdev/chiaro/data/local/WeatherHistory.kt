@@ -116,11 +116,20 @@ interface WeatherHistoryDao {
     suspend fun setSkyRunsOnLatest(cityKey: String, skyRunsJson: String)
 }
 
-@Database(entities = [WeatherHistoryEntry::class], version = 4, exportSchema = false)
+@Database(
+    entities = [WeatherHistoryEntry::class, WarningRecordEntity::class],
+    version = 5,
+    exportSchema = false
+)
 abstract class ChiaroDatabase : RoomDatabase() {
     abstract fun weatherHistoryDao(): WeatherHistoryDao
+    abstract fun warningRecordDao(): WarningRecordDao
 
     companion object {
+        /** Every migration, in order: the one list the builder and the tests share. */
+        val MIGRATIONS: Array<Migration>
+            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+
         /** v2 (Fase 9h): forecast snapshot alongside the current-conditions one. */
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -148,6 +157,25 @@ abstract class ChiaroDatabase : RoomDatabase() {
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE weather_history ADD COLUMN sky_runs TEXT")
+            }
+        }
+
+        /**
+         * v5 (Fase 11, 9 set 2026): the official warnings' Journal rows. Additive — a
+         * new table, `weather_history` untouched — for the reason [WarningRecordEntity]
+         * gives: a bulletin is a document with a validity window, not something a fetch
+         * observed, and its rows must exist on days no fetch succeeded.
+         */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `warning_records` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`city_key` TEXT NOT NULL, `recorded_epoch_s` INTEGER NOT NULL, " +
+                        "`kind` TEXT NOT NULL, `bulletin_id` TEXT, `issued_at` TEXT, " +
+                        "`zone_name` TEXT, `day` TEXT, `hazard` TEXT, " +
+                        "`from_level` TEXT, `to_level` TEXT)"
+                )
             }
         }
     }
