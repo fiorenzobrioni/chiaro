@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The verdict marks (9 set 2026): the series' «✓ ~ ✗ ?» as drawings rather than
+     characters, on the app's chip and on both widgets (ChiaroIcons.verdictMarkRes). U+2713 and U+2717 are not in Roboto; the device
+     draws them from a symbol fallback font, calligraphic on One UI, and the committente
+     read the X as handwriting. Four paths at one line weight (2.4 of 24, ~1.2 dp at the
+     12 dp they are shown at, the weight of a 13 sp Medium stroke), round caps, tinted at
+     use with the verdict's ink — the color is applied there, never here. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M4.5,12.5 L9.5,17.5 L19.5,7"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.4" />
+</vector>

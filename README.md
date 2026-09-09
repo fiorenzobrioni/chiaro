@@ -95,7 +95,13 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   front of you and their verdicts: the moment's time as the big number, its name under it,
   the verdict as a word with the number that decided it or, on a narrower card, as the
   series' own mark, and on a taller card as many further moments as honestly fit and never
-  more than you subscribed to), which is the widget nobody else ships. Each one is configured on its own: which place, the background (the sky
+  more than you subscribed to), which is the widget nobody else ships, and **The day's arc**
+  (the sun's real path over your place, drawn from the same astronomy the app computes its
+  sky with, over the sky of every hour as bands, with the moon in its real phase, the rain
+  rising from the ground, the next light moment with its countdown, the agenda after it and,
+  on the tallest card, the week: it resizes from one cell to sixteen and reshapes itself at
+  every step, and it has a settings screen of its own with a live preview at eight sizes).
+  Each one is configured on its own: which place, the background (the sky
   itself, light, dark or follow the system), its opacity, and what the card carries. They
   read the same builders the app reads, so the home screen and the app cannot print two
   different sunrises; they repaint on every data commit, state their age when stale, and
@@ -138,7 +144,7 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
 
 Fase 0 to 9 are done and on device: the engines and their test suite, the design system in
 code, Today, Places and first run, Settings and the guide, Sky with its reminders, Alerts
-with `:core:sync`, the Journal with the drift strip, the three widgets, and the
+with `:core:sync`, the Journal with the drift strip, the four widgets, and the
 accessibility and performance pass with its numbers attached. That last one is the colour
 pass and the weather-icon pass, then the sweep that answers "remove animations", keeps
 every value whole at 200% type, gives the two undersized tap targets their 48dp, and reads
@@ -286,7 +292,7 @@ chiaro/
 │       ├── MainActivity.kt           # the single activity: edge to edge, theme, shell
 │       ├── ChiaroApplication.kt      # process start: service locator, sync scheduling
 │       ├── notifications/            # alert, rule and sky notifiers; the reminder alarms
-│       ├── widget/                   # Glance: Now, Today, Sky, per-widget configuration
+│       ├── widget/                   # Glance: Now, Today, Sky and (arc/) the day's arc
 │       └── ui/
 │           ├── theme/                # generated scheme, sky palette, type, shape, motion
 │           ├── components/           # sky canvas, daylight ribbon, verdict chip, tiles, charts

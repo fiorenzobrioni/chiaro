@@ -15,6 +15,18 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 
 ### Added
 
+- A fourth home widget, **The day's arc**: the sun's real path over the reader's place,
+  computed by the same astronomy engine that paints the sky, drawn over the sky of every
+  hour as bands; the moon's path and its disc in tonight's real phase; each hour's rain
+  chance rising from the ground; the present marked and the past veiled; the hours under
+  the plot with their forecast temperatures. In words, the next light moment with its time
+  and countdown, the agenda of the next twenty-four hours with the Sky widget's verdict
+  beside the rows the reader also follows, and on the tallest card the week. It resizes
+  from one cell to sixteen and reshapes itself at every step (a dial, a strip, a card, a
+  panel, a board), and it has a settings screen of its own with a live preview at eight
+  sizes: what the arc spans, what it is drawn on, every layer, the words, the agenda's
+  families, the week, the density. The Today screen's timeline rule became a windowed
+  agenda so the widget and the screen keep reading one rule.
 - The project: Gradle skeleton with `:app`, `:core:domain` (pure Kotlin/JVM) and
   `:core:data`, CI that runs every module's tests and lint before any APK, the shared
   debug keystore and the release signing config behind the four `CHIARO_KEYSTORE*`

@@ -4,18 +4,23 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.VerdictColors
+import com.callbackdev.chiaro.ui.theme.forText
 import com.callbackdev.chiaro.ui.theme.tabular
 
 /** The four answers the sky can give. The UI's own enum, not the domain's: the domain
@@ -27,6 +32,11 @@ enum class VerdictKind { PASS, UNSTABLE, FAIL, UNKNOWN }
  * DESIGN.md §8.7. A verdict is **a glyph and a word before it is a color**: green, amber
  * and red separate by ΔE 0.7 under deuteranopia (measured, §2.3), so a colored dot would
  * be telling a third of some readers nothing at all.
+ *
+ * The glyph is a drawing since 9 set 2026 ([ChiaroIcons.verdictMarkRes]), not the `✓ ✗`
+ * characters: Roboto has neither, and the phone drew them from a symbol fallback font in
+ * a hand of its own. Sized on the label's text so it grows with the reader's font, as
+ * the letters beside it do.
  *
  * [evidence] is the number that decided it, and it is not optional by accident: the
  * series' rule is that a verdict always ships with its arithmetic. Pass null only where
@@ -45,12 +55,6 @@ fun VerdictChip(
         VerdictKind.FAIL -> ChiaroTheme.colors.fail
         VerdictKind.UNKNOWN -> ChiaroTheme.colors.unknown
     }
-    val glyph = when (kind) {
-        VerdictKind.PASS -> "✓"
-        VerdictKind.UNSTABLE -> "~"
-        VerdictKind.FAIL -> "✗"
-        VerdictKind.UNKNOWN -> "?"
-    }
     val spoken = listOfNotNull(label, evidence).joinToString(", ")
     Row(
         modifier = modifier
@@ -62,7 +66,12 @@ fun VerdictChip(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(glyph, style = MaterialTheme.typography.labelLarge, color = colors.ink)
+        Icon(
+            painter = painterResource(ChiaroIcons.verdictMarkRes(kind)),
+            contentDescription = null, // the row's own semantics say the word
+            tint = colors.ink,
+            modifier = Modifier.size(VerdictMarkSize.forText())
+        )
         Text(label, style = MaterialTheme.typography.labelLarge, color = colors.ink)
         if (evidence != null) {
             Text(
@@ -73,6 +82,10 @@ fun VerdictChip(
         }
     }
 }
+
+/** The mark's box beside a `labelLarge` (14 sp) word: 14 dp, of which the drawing fills
+ * ~15/24 — the cap height of the letters next to it. */
+private val VerdictMarkSize = 14.dp
 
 @Preview(name = "Verdicts", showBackground = true)
 @Composable

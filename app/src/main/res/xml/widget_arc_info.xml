@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The day's arc (9 set 2026): the sun's path over the reader's place, the sky of every
+     hour, the moon, the rain, the next light moment and its agenda. One cell to sixteen:
+     minWidth/minHeight and the two minResize values are 40dp, which is the platform's
+     formula for one cell (70 × n − 30), and the card reshapes itself at every size
+     (ArcLayout.kt). Four by two as the default placement: the panel form, the one that
+     carries the hero line, the arc with its hours and a row or two of agenda.
+
+     updatePeriodMillis is 0 on purpose, like the other three: the shared periodic job
+     drives every repaint. The configuration activity is this widget's own, because it has
+     far more to decide than the shared screen offers. previewLayout: see
+     `layout/widget_arc_preview.xml`, and widget_now_info for why a Glance widget needs
+     one. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_arc_desc"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:previewLayout="@layout/widget_arc_preview"
+    android:minWidth="40dp"
+    android:minHeight="40dp"
+    android:minResizeWidth="40dp"
+    android:minResizeHeight="40dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0"
+    android:configure="com.callbackdev.chiaro.widget.arc.ArcConfigActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional"
+    android:widgetCategory="home_screen" />

@@ -30,4 +30,13 @@
     <color name="widget_preview_rain_75">#42C1FF</color>
     <color name="widget_preview_verdict_ink">#00E079</color>
     <color name="widget_preview_verdict_container">#003F23</color>
+
+    <!-- The arc preview (9 set 2026), same arithmetic: the night band's mid stop
+         (#111A2D) and the horizon's (#E58800) under the §3.6 scrim, the veil the painter
+         lays over the past (black at 40%), and the sun's two inks from ArcPalette. -->
+    <color name="widget_preview_arc_night">#101620</color>
+    <color name="widget_preview_arc_dawn">#70470C</color>
+    <color name="widget_preview_arc_veil">#66000000</color>
+    <color name="widget_preview_sun">#F9B233</color>
+    <color name="widget_preview_sun_glow">#FFD27A</color>
 </resources>

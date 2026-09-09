@@ -11,6 +11,8 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.model.MoonPhase
+import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
+import com.callbackdev.chiaro.ui.components.VerdictKind
 import com.callbackdev.chiaro.ui.theme.LocalAppPalette
 
 /**
@@ -426,6 +428,34 @@ object ChiaroIcons {
         ImageVector.vectorResource(
             moonPhaseRes(phase, LocalWeatherIcons.current, darkGround(), LocalAppPalette.current)
         )
+
+    /**
+     * The verdict's mark as a drawing (9 set 2026): the series' `✓ ~ ✗ ?`, one path each,
+     * at one line weight, tinted with the verdict's ink wherever it is shown. They were
+     * characters until a device pass read the X as handwriting — U+2713 and U+2717 are not
+     * in Roboto, and the phone draws them from a symbol fallback font in a hand of its own
+     * (calligraphic on One UI, another on a Pixel). A drawing is the same shape on every
+     * phone, and the shape is the point: a verdict is a glyph and a word before it is a
+     * color (DESIGN §2.3, §8.7). One drawing per verdict, never two on one shape.
+     */
+    @DrawableRes
+    fun verdictMarkRes(kind: VerdictKind): Int = when (kind) {
+        VerdictKind.PASS -> R.drawable.ic_verdict_pass
+        VerdictKind.UNSTABLE -> R.drawable.ic_verdict_unstable
+        VerdictKind.FAIL -> R.drawable.ic_verdict_fail
+        VerdictKind.UNKNOWN -> R.drawable.ic_verdict_unknown
+    }
+
+    /** The same, for the domain's own kind — the widgets hold verdicts, not chip kinds. */
+    @DrawableRes
+    fun verdictMarkRes(kind: SkyVerdictKind): Int = verdictMarkRes(
+        when (kind) {
+            SkyVerdictKind.PASS -> VerdictKind.PASS
+            SkyVerdictKind.UNSTABLE -> VerdictKind.UNSTABLE
+            SkyVerdictKind.FAIL -> VerdictKind.FAIL
+            SkyVerdictKind.UNKNOWN -> VerdictKind.UNKNOWN
+        }
+    )
 
     /** The styled vector for a line id: the one seam every accessor below shares. */
     @Composable

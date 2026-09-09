@@ -383,8 +383,8 @@
     <string name="guide_places_order_body">Move a place up or down and the swipe on Today follows that order. Swipe a place away to remove it, with a moment to undo if it was a mistake.</string>
 
     <string name="guide_widgets_title">The home widgets</string>
-    <string name="guide_widgets_three_title">Three of them</string>
-    <string name="guide_widgets_three_body">At a glance: icon, temperature, place — and on a wide or a tall card the day\'s sentence, or the sky\'s state when there is nothing to warn about; resize it and it shows what fits, and its settings can lay it the other way round. The hours ahead: that, plus the next hours. Sky moments: the moment in front of you, when, and its verdict — the same one the Sky screen shows — and the ones after it on a taller card.</string>
+    <string name="guide_widgets_three_title">Four of them</string>
+    <string name="guide_widgets_three_body">At a glance: icon, temperature, place — and on a wide or a tall card the day\'s sentence, or the sky\'s state when there is nothing to warn about; resize it and it shows what fits, and its settings can lay it the other way round. The hours ahead: that, plus the next hours. Sky moments: the moment in front of you, when, and its verdict — the same one the Sky screen shows — and the ones after it on a taller card. The day\'s arc: the sun\'s path over your place with the sky of every hour under it, the moon and the rain, the next light moment and the agenda after it — from one cell to sixteen, reshaping itself at every size, with a settings screen of its own.</string>
     <string name="guide_widgets_config_title">Setting one up</string>
     <string name="guide_widgets_config_body">Press and hold a widget to open its own settings: which place it watches (the active one, or a fixed place of its own), its background — including the same computed sky the app draws — how solid that background is, and which weather icons it draws with.</string>
     <string name="guide_widgets_honest_title">They never invent</string>
@@ -912,4 +912,74 @@
     <!-- The evidence half of the sample verdict, written the way `sky_evidence_cloud`
          writes a real one — the preview must not print a shape the widget never does. -->
     <string name="widget_preview_evidence">cloud 10%</string>
+    <!-- The day's arc widget (9 set 2026): the card, its configuration screen, its
+         picker preview. The agenda rows reuse the timeline strings above. -->
+    <string name="widget_arc_label">The day\'s arc</string>
+    <string name="widget_arc_desc">The sun\'s path over your place, the sky of every hour, the moon, the rain, and the next light moment with its agenda — from one cell to sixteen</string>
+    <string name="arc_next_at">%1$s at %2$s</string>
+    <string name="arc_next_tomorrow_at">%1$s tomorrow at %2$s</string>
+    <string name="arc_next_short">%1$s · %2$s</string>
+    <string name="arc_tomorrow_name">Tomorrow · %1$s</string>
+    <string name="arc_rain_likely">Rain gets likely</string>
+    <string name="arc_rainbow_short">A rainbow, maybe</string>
+    <string name="arc_rainbow_row">A rainbow, maybe, to the %2$s (%1$d%%)</string>
+    <string name="arc_in_moments">any moment now</string>
+    <string name="arc_within_hour">within the hour</string>
+    <string name="arc_in_hours">in %1$d h</string>
+    <string name="arc_desc_next">%1$s, %2$s</string>
+    <string name="arc_desc_no_moment">No light moment in the next twenty-four hours</string>
+    <string name="arc_config_preview">Preview</string>
+    <string name="arc_form_dial">One cell: the arc, and one figure under it.</string>
+    <string name="arc_form_strip">One row: the number and the next moment beside the arc — over it on two cells.</string>
+    <string name="arc_form_card">Two cells wide: number, place, the next moment, the arc, and the agenda where the height allows.</string>
+    <string name="arc_form_panel">Two rows: the number with the next moment and its countdown, the arc with its hours, and a row or two of agenda.</string>
+    <string name="arc_form_board">Three rows and up: a taller arc, more agenda, and on four rows the week.</string>
+    <string name="arc_config_span">What the arc spans</string>
+    <string name="arc_span_today">Today, midnight to midnight</string>
+    <string name="arc_span_ahead">The next twenty-four hours</string>
+    <string name="arc_config_ground">Under the arc</string>
+    <string name="arc_ground_bands">The sky of every hour</string>
+    <string name="arc_ground_ribbon">The daylight ribbon</string>
+    <string name="arc_ground_none">Nothing: the paths alone</string>
+    <string name="arc_config_layers">What the arc draws</string>
+    <string name="arc_layer_sun">The sun\'s path</string>
+    <string name="arc_layer_sun_note">Strong above the horizon, faint below it, with the sun where it stands right now.</string>
+    <string name="arc_layer_moon">The moon</string>
+    <string name="arc_layer_moon_note">Its path while it is up, and its disc in tonight\'s real phase.</string>
+    <string name="arc_layer_rain">The rain</string>
+    <string name="arc_layer_rain_note">Each hour\'s chance, rising from the ground towards the horizon.</string>
+    <string name="arc_layer_now">The present</string>
+    <string name="arc_layer_now_note">A mark at the current moment.</string>
+    <string name="arc_layer_fade">Dim what has passed</string>
+    <string name="arc_layer_fade_note">The hours already behind you are veiled, so the eye lands on what is still to come.</string>
+    <string name="arc_layer_hours">The hours</string>
+    <string name="arc_layer_hours_note">Hour labels under the arc, where the card is tall enough for them.</string>
+    <string name="arc_layer_temperatures">Temperatures under the hours</string>
+    <string name="arc_layer_temperatures_note">The forecast temperature under each labelled hour, where there is room.</string>
+    <string name="arc_config_words">Words</string>
+    <string name="arc_hero_next">The next light moment, with its time</string>
+    <string name="arc_hero_headline">The day\'s sentence</string>
+    <string name="arc_hero_none">Only the number</string>
+    <string name="arc_range_note">At the far edge of the top row, on cards three cells wide or more.</string>
+    <string name="arc_config_dial">On a one-cell card</string>
+    <string name="arc_dial_temperature">The temperature</string>
+    <string name="arc_dial_next_time">The next moment\'s time</string>
+    <string name="arc_config_agenda">Agenda</string>
+    <string name="arc_agenda_sun">The sun</string>
+    <string name="arc_agenda_sun_note">Sunrise, the golden hours, sunset, the blue hour, full darkness.</string>
+    <string name="arc_agenda_moon">The moon</string>
+    <string name="arc_agenda_moon_note">Moonrise and moonset.</string>
+    <string name="arc_agenda_rain">The rain</string>
+    <string name="arc_agenda_rain_note">When rain gets likely or should ease off, and a rainbow\'s window.</string>
+    <string name="arc_agenda_verdicts">Verdicts</string>
+    <string name="arc_agenda_verdicts_note">Beside a row you also follow on the Sky screen, the mark the Sky widget would print.</string>
+    <string name="arc_config_week">The week</string>
+    <string name="arc_week_switch">The seven days</string>
+    <string name="arc_week_note">At the foot of a card four rows tall.</string>
+    <string name="arc_config_density">Text size</string>
+    <string name="arc_density_comfortable">Comfortable</string>
+    <string name="arc_density_compact">Compact: one more row where it fits</string>
+    <string name="arc_config_reset">Restore this widget\'s defaults</string>
+    <string name="widget_preview_arc_hero">Sunset at 19:42</string>
+    <string name="widget_preview_arc_sub">Milan · in 8 h</string>
 </resources>

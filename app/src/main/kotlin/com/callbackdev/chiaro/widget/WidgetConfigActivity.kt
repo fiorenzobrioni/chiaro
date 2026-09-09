@@ -282,7 +282,7 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
 }
 
 @Composable
-private fun SectionLabel(text: String) {
+internal fun SectionLabel(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleSmall,
@@ -294,7 +294,7 @@ private fun SectionLabel(text: String) {
 /** A toggle with the sentence that says what it costs — the same shape the Settings
  * screen gives every switch, so a reader meets one control, not two. */
 @Composable
-private fun SwitchRow(
+internal fun SwitchRow(
     label: String,
     note: String,
     checked: Boolean,
@@ -320,7 +320,7 @@ private fun SwitchRow(
 }
 
 @Composable
-private fun ChoiceRow(label: String, selected: Boolean, onPick: () -> Unit) {
+internal fun ChoiceRow(label: String, selected: Boolean, onPick: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier

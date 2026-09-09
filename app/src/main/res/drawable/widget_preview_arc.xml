@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The arc as the picker preview draws it (9 set 2026): a still of the composition
+     ArcPainter paints for a four-by-two card at mid-afternoon — the sky of the day as
+     bands (night, dawn, noon, dusk, night, under the §3.6 scrim), the horizon, the sun's
+     path with the present at 15:00 and the sun on it, the past veiled, two hours of rain
+     rising from the ground. A drawing of the product, never a reading: the running widget
+     computes every one of these from the sky above the reader's place. Colors in
+     values/colors.xml, with the others of the picker previews. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:width="312dp"
+    android:height="46dp"
+    android:viewportWidth="312"
+    android:viewportHeight="46"
+    tools:ignore="VectorRaster">
+
+    <!-- The bands, as one gradient left to right. -->
+    <path android:pathData="M8,0 H304 A8,8 0 0 1 312,8 V38 A8,8 0 0 1 304,46 H8 A8,8 0 0 1 0,38 V8 A8,8 0 0 1 8,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="23"
+                android:endX="312"
+                android:endY="23"
+                android:type="linear">
+                <item android:color="@color/widget_preview_arc_night" android:offset="0" />
+                <item android:color="@color/widget_preview_arc_night" android:offset="0.22" />
+                <item android:color="@color/widget_preview_arc_dawn" android:offset="0.29" />
+                <item android:color="@color/widget_preview_sky_mid" android:offset="0.42" />
+                <item android:color="@color/widget_preview_sky_mid" android:offset="0.62" />
+                <item android:color="@color/widget_preview_arc_dawn" android:offset="0.78" />
+                <item android:color="@color/widget_preview_arc_night" android:offset="0.86" />
+                <item android:color="@color/widget_preview_arc_night" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- The past, veiled: everything before 15:00 (x = 195). -->
+    <path
+        android:fillColor="@color/widget_preview_arc_veil"
+        android:pathData="M8,0 H195 V46 H8 A8,8 0 0 1 0,38 V8 A8,8 0 0 1 8,0 Z" />
+
+    <!-- Two hours of rain, rising from the ground: 40% and 70%. -->
+    <path
+        android:fillColor="@color/widget_preview_rain_50"
+        android:fillAlpha="0.85"
+        android:pathData="M222,39.6 H233 A1.5,1.5 0 0 1 234.5,41.1 V46 H220.5 V41.1 A1.5,1.5 0 0 1 222,39.6 Z" />
+    <path
+        android:fillColor="@color/widget_preview_rain_75"
+        android:fillAlpha="0.85"
+        android:pathData="M235,35 H246 A1.5,1.5 0 0 1 247.5,36.5 V46 H233.5 V36.5 A1.5,1.5 0 0 1 235,35 Z" />
+
+    <!-- The horizon. -->
+    <path
+        android:pathData="M0,29.5 H312"
+        android:strokeColor="@color/widget_preview_ink_dim"
+        android:strokeAlpha="0.5"
+        android:strokeWidth="1" />
+
+    <!-- The sun's path: below the horizon before dawn and after dusk, dashed and faint. -->
+    <path
+        android:pathData="M0,44 Q40,42 78,29.5"
+        android:strokeAlpha="0.5"
+        android:strokeColor="@color/widget_preview_ink_dim"
+        android:strokeWidth="1" />
+    <path
+        android:pathData="M240,29.5 Q272,42 312,44"
+        android:strokeAlpha="0.5"
+        android:strokeColor="@color/widget_preview_ink_dim"
+        android:strokeWidth="1" />
+
+    <!-- Above it: the arch, the past half dimmed, the half to come at full ink. -->
+    <path
+        android:pathData="M78,29.5 Q140,-20 195,10.4"
+        android:strokeAlpha="0.45"
+        android:strokeColor="@color/widget_preview_ink"
+        android:strokeLineCap="round"
+        android:strokeWidth="2" />
+    <path
+        android:pathData="M195,10.4 Q222,26 240,29.5"
+        android:strokeColor="@color/widget_preview_ink"
+        android:strokeLineCap="round"
+        android:strokeWidth="2" />
+
+    <!-- The present. -->
+    <path
+        android:pathData="M195,2 V44"
+        android:strokeAlpha="0.8"
+        android:strokeColor="@color/widget_preview_ink"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.5" />
+
+    <!-- The sun where it stands: the halo, then the disc. -->
+    <path
+        android:fillAlpha="0.35"
+        android:fillColor="@color/widget_preview_sun_glow"
+        android:pathData="M195,1.4 A9,9 0 1 1 194.99,1.4 Z" />
+    <path
+        android:fillColor="@color/widget_preview_sun"
+        android:pathData="M195,5.4 A5,5 0 1 1 194.99,5.4 Z" />
+</vector>

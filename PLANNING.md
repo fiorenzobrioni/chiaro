@@ -3820,6 +3820,348 @@ un foglio renderizzato non è un telefono in mano.
 
 ---
 
+## Il quarto widget: «L'arco del giorno» (committente, 9 set 2026)
+
+Richiesta: un widget nuovo, «moderno, in stile professionale, con qualcosa di speciale che
+lo distingua dai classici widget meteo», ridimensionabile da 1×1 a 4×4 e che si riconfiguri
+per informazioni e per layout a ogni misura, con una pagina di impostazioni completa. Libertà
+creativa dichiarata («dimentica le regole»); la sola regola tenuta è quella che tiene verde la
+CI, perché l'APK da provare esce da lì.
+
+### Cos'è
+
+Il percorso del sole sopra il luogo del lettore, **calcolato** dallo stesso motore
+astronomico che dipinge il canvas: non un'icona di alba e tramonto, la traiettoria vera,
+campionata ogni quarto d'ora (97 campioni, pochi millisecondi). Sotto, il cielo di ogni ora
+come bande: la stessa `SkyPalette.gradient()` del canvas, con la copertura nuvolosa e la
+pioggia dell'ora prevista dove il report ha l'ora, sotto lo stesso scrim §3.6 della card. La
+luna: il suo percorso punteggiato mentre è alta e il disco nella **fase vera** (frazione
+illuminata ed elongazione da `AstronomyEngine.moonIllumination`, terminatore come semiellisse,
+lato illuminato a destra nell'emisfero nord e a sinistra in quello sud). La pioggia: la
+probabilità di ogni ora come barra che sale dal suolo verso l'orizzonte (100% tocca
+l'orizzonte; rampa `rainAt`). Il presente segnato, il passato velato. Le ore sotto, e sotto le
+ore la temperatura prevista dove il report ce l'ha: il passato stampa l'ora e nessun numero.
+
+In parole: il **prossimo momento della luce** con la sua ora («Tramonto alle 19:42») e il
+conto alla rovescia («tra 2 h 10 min», contato sull'orologio, giusto anche con dati vecchi);
+l'agenda delle prossime ventiquattro ore, riga per riga, con il **verdetto** del widget Cielo
+accanto alle righe che sono anche momenti seguiti; sulla card a quattro righe, la settimana.
+
+### Le cinque forme (`ArcLayout.kt`, puro, tabella in `ArcLayoutTest`)
+
+Colonne dalla larghezza (soglie 120/210/300 dp), righe dall'altezza (150/245/340): stanno
+negli spazi vuoti tra le griglie misurate (una cella ~70-101 dp, due ~150-180, tre ~230-260,
+quattro ~320-360; una riga ~82-101, due ~189, tre ~290, quattro ~390).
+
+- **DIAL** (una colonna): l'arco e un numero sotto, temperatura o ora del prossimo momento a
+  scelta. 85×82 → arco 65×28,96 dp (62 − 29,04 la riga a 22 sp − 4). Con dati vecchi la riga
+  «stale» toglie i suoi 14,52 all'arco: il segno che i dati sono vecchi vince sul disegno, e
+  il pavimento dell'arco è 12 dp.
+- **STRIP** (una riga): a due celle le parole **sopra** l'arco (139×31,6: 47 dp di larghezza
+  non sono un giorno); a tre e quattro accanto, colonna di parole 100 dp («Tramonto · 19:42»
+  a 12 sp è ~95), arco 122×62 e 212×62 con le etichette delle ore (≥ 52 dp) senza temperature
+  (< 76).
+- **CARD** (due colonne, due o più righe): numero 28 sp, luogo, frase su due righe a 13 sp,
+  arco, agenda. 159×189: header 88,44, arco 66,56, nessuna riga; 159×290: 3 righe, arco
+  84,08 con le temperature.
+- **PANEL** (tre o quattro colonne, due righe): una riga sola in testa, il numero a 30 sp e
+  accanto la frase a 15 sp con luogo · conto alla rovescia (· stale) a 12 sp sotto; la frase
+  prende due righe sotto i 190 dp di colonna («Golden hour ends at 09:15» a 15 sp Medium è
+  ~165). 340×189: header 39,6, arco 59,08, **2 righe di agenda** (il pannello preferisce le
+  righe: 56 dp di arco preferiti); 250×189: frase su due righe, header 55,44, arco 70,4, 1 riga.
+- **BOARD** (tre o quattro colonne, tre o quattro righe): l'arco preferisce 110 dp e prende
+  fino a 150. 340×290: arco 132,92 e 3 righe; 340×390: settimana in fondo (70,88 dp: nome,
+  glifo 22, massima, minima), arco 128,88 e 4 righe.
+
+Il budget è sempre `righe = ⌊(spazio − arco preferito − gap + gapRiga) / (riga + gapRiga)⌋`,
+mai più delle righe che esistono; l'arco prende il resto fino al suo tetto. Riga agenda =
+13 sp × 1,32 + 6 = 23,16 dp; a font scale 1,3 il conteggio scende (1 riga sul 4×2) invece di
+sforare. Densità compatta = testi al 90%: riga 21,44, e sul 4×3 quattro righe invece di tre.
+
+### Le impostazioni (`ArcSettings`, DataStore `widget_arc`, per istanza)
+
+Finestra (oggi da mezzanotte a mezzanotte, o le prossime 24 ore); suolo (bande, nastro
+della luce, niente); strati (sole, luna, pioggia, presente, passato velato, ore,
+temperature); parole (prossimo momento / frase del giorno / solo il numero; la cifra della
+card 1×1; massima e minima dal look condiviso); agenda (sole, luna, pioggia, verdetti);
+settimana; densità. Diciassette chiavi, codec puro (`ArcSettingsCodec`, tabella in
+`ArcSettingsTest`): un valore di un'altra versione torna al suo default e non porta giù la
+card. Più il look condiviso (sfondo, opacità, icone) e il luogo, come gli altri tre.
+
+La pagina è sua (`ArcConfigActivity`): si apre su un'**anteprima viva** della card a otto
+misure (1×1, 2×1, 4×1, 2×2, 4×2, 4×3, 2×4, 4×4, le misure del device di riferimento),
+disegnata dallo stesso `ArcPainter` e dallo stesso `arcPlan` del launcher, con una frase che
+dice cosa mostra quella misura; ogni tocco salva, ridisegna il widget e aggiorna l'anteprima;
+un tasto riporta ai default.
+
+### Decisioni
+
+- **La grafica è un bitmap** (`ArcPainter`, `android.graphics`): RemoteViews non disegna una
+  curva in nessun altro modo, ed è quello che permette all'anteprima di mostrare la stessa
+  immagine del launcher. Le parole restano `Text` di Glance (localizzazione, font scale,
+  accessibilità); nel bitmap solo le etichette delle ore e le temperature, perché devono
+  stare a una x precisa, con le misure del testo fatte davvero (`Paint.measureText`: il passo
+  si allarga finché «12 PM» non collide). La `contentDescription` dell'immagine dice il
+  prossimo momento e quando: l'equivalente testuale (§9.3) anche sulla card da una cella.
+- **Sole e luna con esadecimali** in `ui/theme/ArcPalette.kt`, il solo file della feature
+  che ne ha (`NoRawColorTest`); tutto il resto sono ruoli e tabelle: percorso ed etichette
+  negli inchiostri della card, bande dalle tabelle del cielo, pioggia dalla rampa §2.3.
+- **Niente curva della temperatura.** Due scale su un grafico sono un doppio asse (§9.1): i
+  numeri sotto le ore fanno il lavoro, e la card «Le prossime ore» ha già la striscia.
+- **Finestra «oggi» di default**: è l'arco che tutti riconoscono; «le prossime 24 ore» in
+  opzione parte 30 minuti prima di adesso, perché il disco del sole stia nel riquadro e
+  l'ultima mezz'ora si legga come appena passata.
+- **L'agenda guarda sempre 24 ore avanti**, qualunque sia la finestra: la regola è una,
+  `TodayStateBuilder.agenda`, resa pubblica e finestrata; il `timeline` di Oggi è la stessa
+  regola tagliata a mezzanotte (test in `TodayStateBuilderTest`). Il widget e la schermata
+  hanno già stampato due albe diverse una volta, e la cura è una regola in un posto solo.
+- **Verdetto sulla riga**: match per id del job (`sun.set`, `golden_hour.am` per la fine
+  dell'ora d'oro del mattino, `twilight.astronomical.pm` o `darkness.window` per il buio
+  pieno…) e ±20 minuti sull'inizio o sulla fine del momento. Le svolte della pioggia e
+  l'arcobaleno non hanno job: nessuno si abbona a un rovescio.
+- **Sotto i 40 dp il disegno si asciuga** (dial, strip a due celle): bande, arco, disco,
+  presente; niente luna, pioggia, sole sotto l'orizzonte. Visto ai pixel: a 29 dp erano
+  rumore.
+- **Il velo del passato copre solo il suolo** (bande o nastro), mai la card nuda: con il
+  nastro copriva un blocco grigio (visto ai pixel), ora è alto quanto il nastro; il percorso
+  del sole nel passato si attenua da solo (alpha × 0,45).
+- **Refactor condiviso, piccolo**: `resolveWidgetPalette`, `effectiveWidgetBackground` e
+  `widgetCardFill` estratti da `WidgetCard` (l'anteprima non può scegliere un inchiostro che
+  il launcher non sceglierebbe); `VerdictMark`/`VerdictChip` e le righe della pagina di
+  configurazione (`SectionLabel`, `SwitchRow`, `ChoiceRow`) da private a internal.
+- La guida dice «quattro» e aggiunge una frase sull'arco; README e CHANGELOG aggiornati.
+
+### Rimasto aperto (su device)
+
+- Le misure sul launcher vero: il 1×1 su griglie da 70 dp, il 4×4 (bitmap 858×~355 px), le
+  font scale grandi, le etichette in 12 ore. L'anteprima Compose approssima la tipografia di
+  Glance (line height diverse di qualche dp): è un'anteprima, non uno screenshot.
+- L'icona del picker e la voce nel menu «widget» del launcher con la quarta card.
+- VISION §5.9/§6 e DESIGN registrano tre widget: da aggiornare quando la card avrà passato la
+  prova su device, come per gli altri tre.
+
+### Verifica
+
+Suite intera verde: `:app` 228 (erano 188: +16 `ArcLayoutTest`, +12 `ArcSeriesTest`, +6
+`ArcSettingsTest`, +5 `ArcPainterTest` — Robolectric in grafica nativa, che dipinge il bitmap
+davvero e ne legge i pixel, e con `CHIARO_RENDER_DIR` salva i fotogrammi in PNG per
+guardarli, che è come sono stati trovati il blocco grigio del nastro e il rumore del dial —
++1 `TodayStateBuilderTest`; `WidgetPreviewTest` sa che i widget sono quattro), `:core:domain`
+166, `:core:data` 174, `:core:sync` 5. Lint a zero errori. APK debug costruito in locale;
+branch `claude/day-arc-widget-7k2m9q` e PR per la CI: **la verifica su device è del
+committente**.
+
+---
+
+## L'arco su device: la colonna da dieci figli, la luna tagliata, la review (committente, 9 set 2026)
+
+Primo screenshot del 4×4 (One UI, 923 px, ~2,35 px/dp), due appunti e una richiesta di
+review. «Ottimo widget» a parte, quello che c'era da correggere.
+
+### Il 4×4 senza settimana (e senza la quarta riga)
+
+Lo screenshot mostrava tre righe di agenda, niente settimana e mezza card vuota, mentre
+l'anteprima nelle impostazioni mostrava tutto. La misura della card (800×950 px ≈ 340×404 dp)
+e l'altezza del grafico (~129 dp) dicono che il piano era quello giusto, BOARD a quattro righe
+con settimana: quello che mancava era stato **scartato in disegno**. Glance disegna al massimo
+**dieci figli per contenitore** e i successivi li lascia cadere senza una parola. La colonna
+della card ne aveva tredici: intestazione, spaziatore, grafico, poi per l'agenda uno
+spaziatore in testa e uno tra ogni riga (1 + 4 righe + 3 spaziatori = 8), lo spaziatore a peso
+e la settimana. I primi dieci finiscono esattamente alla terza riga più il suo spaziatore:
+la quarta riga, il peso e la settimana erano l'undicesimo, il dodicesimo e il tredicesimo.
+Compose non ha quel limite, ed è per questo che l'anteprima mentiva.
+
+Ora l'agenda è **un figlio solo** (`Column`), con gli spazi tra le righe come padding e non
+come spaziatori: la colonna della card ne ha sei, quella dell'agenda al massimo sei. Nessun
+altro contenitore del widget supera i dieci (settimana: sette colonne; riga di agenda:
+cinque figli). L'anteprima ora dice la verità per costruzione: stesso piano, stessi limiti.
+
+### La luna tagliata in basso
+
+`mc_moonset` è, per disegno, un disco **ritagliato dall'orizzonte** (`clip-path` a 39,5/64)
+con sotto una linea di 2 unità e una freccia. Nella schermata Oggi sta a 34 dp e la linea è
+un dp: si legge «luna che tramonta». Nella riga del widget stava a 18 dp: la linea era 0,56 dp,
+invisibile, e restava un disco con il fondo mancante — esattamente l'appunto. Le righe della
+luna ora disegnano la **luna nella sua fase vera** all'istante della riga
+(`ChiaroIcons.moonPhaseRes(MoonPhase.at(at))`): intera, la stessa luna che il grafico dipinge,
+e la parola accanto dice se sorge o tramonta. I glifi di alba e tramonto restano i loro: i
+raggi li fanno leggere anche a 20 dp. Il glifo di riga passa da 18 a 20 dp, quello del widget
+Cielo, così le due liste sono sorelle.
+
+### La review: cosa ho trovato e cosa ho cambiato
+
+- **Il conto alla rovescia mentiva con il passare del tempo.** «tra 7 h 43 min» era esatto
+  al minuto al momento del disegno, e il widget si ridisegna a ogni sync — ogni ora per
+  default, mai al minuto: un'ora dopo diceva ancora 7 h 43. Ora è **grossolano di proposito**:
+  ore arrotondate («tra 8 h»), «entro un'ora» sotto i sessanta minuti, «a momenti» sotto il
+  minuto. L'ora esatta accanto («alle 19:42») è il fatto che non invecchia. Le due stringhe
+  al minuto sono uscite da entrambe le lingue.
+- **L'eroe era l'arcobaleno.** «Forse un arcobaleno alle 17:00» in testa alla card: la
+  probabilità di un fenomeno meteo, non un momento della luce, che è quello che l'impostazione
+  promette. `ArcSeries.nextLight`: il primo evento con un job del cielo dietro (sole o luna);
+  l'agenda tiene tutto; se non c'è niente della luce davanti, l'eroe prende quello che c'è.
+  Test in `ArcSeriesTest`.
+- **La riga dell'arcobaleno era troncata** («…un arcobaleno stareb…»): la frase della
+  schermata è prosa da riga intera. La riga ora stampa i due fatti, «Forse un arcobaleno a
+  ovest (88%)» (`arc_rainbow_row`, con `SkyText.bearingRes`).
+- **Gli orari dell'agenda non stavano in colonna**: «19:07» slittava a sinistra dei «19:00»
+  sopra, spinto dal suo segno di verdetto. Ora, appena una riga ha un verdetto, ogni riga
+  riserva il posto del segno (22 dp + 6): gli orari sono una colonna.
+- **La strip a 3-4 celle troncava la seconda riga**: «Tramonta la luna · 19:00» a 12 sp è
+  ~130 dp, la colonna ne aveva 100. Colonna a 110, numero a 22 sp (da 24) e **tre righe**
+  dove l'altezza le regge (62 − 29,04 = 32,96 ≥ 2 × 15,84): il nome del momento a 12 sp Medium,
+  sotto «19:00 · tra 8 h» in inchiostro secondario; a font scale 1,3 le due si fondono in
+  «Tramonto · 19:00». Il grafico perde 10 dp (112 e 202). `ArcLayoutTest` aggiornato.
+- Guardato e lasciato: le barre della pioggia sopra il tratto del sole sotto l'orizzonte
+  (si sovrappongono a destra nello screenshot, ma il tratteggio resta leggibile e la barra è
+  il dato); il segno di verdetto coi colori del tema chiaro su card scura (è una coppia
+  misurata, come nel widget Cielo); il velo del passato che al mattino copre un terzo della
+  card (è il disegno: il giorno è passato per un terzo).
+
+### Verifica
+
+`:app` 233 (+1 `ArcSeriesTest`, +4 `ArcTextTest` con Robolectric per le frasi), il resto
+invariato. Lint a zero errori. `ArcPainter` non è cambiato, quindi i fotogrammi valgono
+ancora. Stesso branch, CI. **La verifica su device è del committente**: il 4×4 con la
+settimana in fondo e quattro righe, la luna intera nelle righe, la strip a 4×1 con tre righe.
+
+---
+
+## L'arco su device, secondo giro: la luna nuova, il segno di verdetto, l'audit dei glifi (committente, 9 set 2026)
+
+Secondo screenshot: la settimana c'è e le quattro righe pure. Due domande: la luna della riga
+«è corretta così?», e il segno di verdetto — la ✗ nel cerchio rosa — «non mi piace, troppo
+forte, deve restare un avviso ma tenue».
+
+### La luna: corretta per l'astronomia, e il committente la tiene così
+
+Il glifo era quello di Meteocons per la **luna nuova**: un cerchio tratteggiato sottile. Il
+classificatore aveva ragione — la luna nuova è l'11 settembre, la sera del 9 mancavano meno
+di due giorni, ed è dentro l'ottavo di ciclo che `MoonPhase.at` chiama NEW_MOON. Il dubbio
+era che in una riga un cerchietto tratteggiato si legga «qui non c'è niente»; l'alternativa
+provata è stata la falce della notte serena (`mc_clear_night`) come simbolo fisso, il modo in
+cui le righe del sole mostrano un sole e non lo stato del sole. Spiegato il perché del
+cerchietto, **il committente ha scelto la fase vera**: «si vedrebbe lo spicchio o la luna
+piena nel momento giusto? allora meglio lasciare così». Sì: ogni nome copre 45° di
+elongazione centrati sul proprio istante, quindi il mezzo disco compare intorno ai quarti e
+il disco pieno intorno al plenilunio, ciascuno entro circa un giorno e tre quarti
+dall'istante esatto; il cerchietto tratteggiato resta i due-tre giorni al mese in cui la
+luna non si vede, che è quello che disegna. La stessa fase che il grafico dipinge.
+
+### L'audit dei glifi
+
+Ogni glifo che il widget può mostrare, verificato nel drawable e nelle tre tabelle di
+`ChiaroIcons` (piene, piene su fondo scuro, a linea su fondo scuro):
+
+| riga | glifo | a 20 dp |
+|---|---|---|
+| alba, tramonto | `mc_sunrise`, `mc_sunset` | mezzo sole (clip a 39,5/64), riga di 2 unità = 1,7 px, freccia di 4,5 unità: si vede appena; il verso lo dice la parola |
+| ora d'oro | `mc_horizon` | mezzo sole con la riga: leggibile (nello screenshot si vede) |
+| ora blu | `mc_star` | stella a tratto 3: leggibile |
+| buio pieno | `mc_starry_night` | falce e tre stelline: le stelline sono punti, la falce regge |
+| sorge/tramonta la luna | `moonPhaseRes(MoonPhase.at(istante))` | otto glifi a tratto 2-3: falci, quarti, gibbose e disco pieno leggibili; la luna nuova è il cerchietto tratteggiato, scelto |
+| arcobaleno | `mc_partly_cloudy_day_rain` | sole, nube, pioggia: leggibile |
+| pioggia probabile / smette | `mc_raindrops`, `mc_cloudy` | leggibili |
+| settimana | `conditionRes(codice, notte = false)` | 22 dp, la stessa mappa della card Oggi |
+
+Tutte le famiglie di glifi hanno le quattro varianti (`mc_`, `mcn_`, `mcf_`, `mcfn_`), le
+otto fasi della luna comprese, e sono nelle tabelle: un glifo senza fratello sarebbe stato
+un crash al primo lettore che sceglie le icone piene (`getValue` lancia). `ArcTextTest` ora
+lo pinza: ogni tipo di riga, in ogni famiglia, su entrambi i fondi, in entrambe le palette,
+su trenta giorni di luna.
+
+### Il segno di verdetto
+
+Era la pillola del widget Cielo, riusata com'era: cerchio pieno di 22 dp nel colore del
+contenitore e la ✗ nell'inchiostro del verdetto. Due cose la rendevano un pugno: **la coppia
+di colori era quella del tema chiaro** — scelta con `isNight`, e il telefono era in tema
+chiaro — su una card che è scura qualunque cosa faccia il telefono (il cielo sotto lo scrim,
+o la card scura), quindi un rosa pallido pieno sul fondo più scuro dello schermo; e **la
+pillola è l'eroe della card Cielo**, mentre qui è una nota accanto a un orario. Ora la riga
+porta il solo glifo della serie — `✓ ~ ✗ ?`, una forma prima che un colore (§2.3), che è la
+parte che regge la deuteranopia — nell'inchiostro del verdetto **scelto per il fondo della
+card** (`palette.darkGround`), a 13 sp Medium come le parole della riga, in una colonna di
+14 dp riservata per tutte le righe appena una ha un verdetto. Gli inchiostri del set scuro
+sono quelli misurati contro una superficie scura: il glifo si legge dove sta, ed è la cosa
+che mancava al «verde nudo» che il 4 set aveva fatto crescere il contenitore sul widget
+Cielo. Il widget Cielo resta com'è: lì il verdetto è il soggetto.
+
+### Verifica
+
+`:app` 234 (+1 in `ArcTextTest`, l'audit dei glifi), lint a zero errori. Stesso branch.
+**Su device**: la ✗ tenue accanto a «Ora d'oro»; la luna delle righe cambia da sola con la
+fase, e la prima falce si vedrà dal 13 settembre.
+
+---
+
+## Il segno di verdetto, terza volta: un disegno, non un carattere (committente, 9 set 2026)
+
+«Ora va bene perché è tenue, però la X scritta così, come un font in stile scrittura a mano,
+non mi piace». Aveva ragione, e il motivo è preciso: i glifi della serie `✓ ✗` sono U+2713 e
+U+2717, che **Roboto non ha**. Android li prende da un font di fallback per i simboli — su
+One UI di taglio calligrafico, su un Pixel un altro — quindi il segno non era mai stato nella
+mano del widget, né nel widget Cielo né qui. L'alternativa a costo zero, il segno di
+moltiplicazione «×» di Roboto per il FAIL, avrebbe lasciato la ✓ al font di fallback: due
+segni della stessa famiglia in due mani diverse.
+
+Quattro vettori (`ic_verdict_pass`, `_unstable`, `_fail`, `_unknown`): un peso di linea solo,
+2,4 su 24 — 1,2 dp ai 12 dp a cui stanno, il tratto di un 13 sp Medium — punte arrotondate,
+nessun colore proprio: tinti con l'inchiostro del verdetto dove compaiono (`ColorFilter.tint`),
+scelto per il fondo della card come prima. 12 dp è l'altezza delle minuscole delle parole
+accanto, così la croce sta nella riga come una lettera e non come un'icona. La regola resta
+quella di §2.3: una forma prima che un colore, e un disegno per verdetto, mai due verdetti su
+una forma (test in `ArcTextTest`). La `contentDescription` del segno è la parola del verdetto,
+così la riga si legge «Ora d'oro, 19:07, no».
+
+Il widget Cielo usa ancora il carattere, dentro il suo contenitore: stessa mano calligrafica.
+Non toccato — è il disegno che il committente ha approvato il 4 set — ma i quattro vettori sono
+pronti anche per lui, se lo vorrà: una riga in `VerdictMark`.
+
+### Verifica
+
+`:app` 235, lint a zero errori. Stesso branch. **Su device**: la croce nella riga «Ora d'oro».
+
+---
+
+## I quattro segni ovunque: widget Cielo, chip dell'app, tabella in `ChiaroIcons` (committente, 9 set 2026)
+
+«Usa i 4 vettori anche nel widget Cielo e poi verifica in tutta l'app se ci sono altri
+punti in cui si potrebbero utilizzare.»
+
+Cercati tutti i punti che stampano i glifi del verdetto come caratteri (`.glyph`, `✓`,
+`✗`, `"~"`): erano **due**, e ora sono zero.
+
+- **`VerdictMark` del widget Cielo**: il carattere `verdict.kind.glyph` a 12 sp dentro il
+  contenitore rotondo di 22 dp. Ora il disegno a 12 dp (`SkyMarkGlyph`, che sostituisce
+  `SkyMarkSp`), tinto con l'inchiostro del verdetto come prima, con la parola del verdetto
+  come `contentDescription`. Il contenitore resta: lì il verdetto è il soggetto della card,
+  ed è il disegno approvato il 4 set.
+- **`VerdictChip` dell'app** (`ui/components`), cioè la schermata Cielo (le card dei
+  momenti e il calendario), la guida e ogni riga che apre con `✓ Ottimo · 12% nuvole`: il
+  `Text(glyph)` a `labelLarge` diventa una `Icon` di 14 dp scalata con il font del lettore
+  (`forText()`), tinta con l'inchiostro del chip. La semantica non cambia: il chip
+  annunciava già solo «ottimo, 12% nuvole» e mai il segno.
+
+La tabella sta in un posto solo, `ChiaroIcons.verdictMarkRes`, in due forme — per il
+`VerdictKind` della UI e per lo `SkyVerdictKind` del dominio — perché i widget hanno in
+mano verdetti e il chip ha in mano il suo enum; `ArcText.markRes` sparisce e i due widget e
+il chip leggono la stessa riga. Il test in `ArcTextTest` verifica che le due forme diano gli
+stessi quattro disegni e che nessun verdetto ne condivida uno con un altro.
+
+Dove i vettori **non** servono, verificato: le notifiche (solo testo, il segno non c'è),
+il Diario (parole, nessun glifo), le stringhe (nessuna contiene `✓` o `✗`). Il dominio
+tiene il suo `glyph` in `SkyVerdictKind`: è il vocabolario di tweather, che li stampa come
+codice, e nessuno in Chiaro lo legge più.
+
+DESIGN.md §8.7 registra che il glifo è un disegno e perché.
+
+### Verifica
+
+`:app` 235, lint a zero errori. Stesso branch. **Su device**: il segno nel widget Cielo e
+i chip della schermata Cielo.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae

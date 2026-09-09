@@ -173,34 +173,65 @@ object TodayStateBuilder {
     /**
      * The merged rest of the day (VISION §5.2.4): today's remaining sun and moon
      * moments plus the hours where rain becomes likely or stops being. The reader's
-     * own alerts join this list in Fase 6, through the same [TimelineItem].
+     * own alerts join this list in Fase 6, through the same [TimelineItem]. The rule
+     * itself lives in [agenda]; this is that rule cut at midnight.
      */
     private fun timeline(
         report: WeatherReport,
         today: com.callbackdev.chiaro.domain.sky.SolarDay,
         zone: ZoneId,
         now: LocalDateTime
+    ): List<TimelineItem> =
+        agenda(report, zone, now, until = now.toLocalDate().atTime(java.time.LocalTime.MAX), today = today)
+
+    /**
+     * The merged agenda of everything still ahead between [now] and [until]: the sun's
+     * moments and the moon's of every date the window touches, the rainbow windows, and
+     * the hours where the rain chance crosses half either way. Public and windowed since
+     * the day's arc widget (9 set 2026), which lists the next twenty-four hours rather than
+     * the rest of today — the widget and the screen printed two different sunrises once
+     * before, and the cure was one rule in one place. [today] is the solar day the caller
+     * has already computed for [now]'s date, if it has; the others are computed here.
+     */
+    fun agenda(
+        report: WeatherReport,
+        zone: ZoneId,
+        now: LocalDateTime,
+        until: LocalDateTime,
+        today: com.callbackdev.chiaro.domain.sky.SolarDay? = null
     ): List<TimelineItem> {
+        val coords = report.location.coordinates
         val items = mutableListOf<TimelineItem>()
         fun sun(at: Instant?, kind: TimelineKind) {
             at?.let { items += TimelineItem(LocalDateTime.ofInstant(it, zone), kind) }
         }
-        sun(today.sunrise, TimelineKind.SUNRISE)
-        sun(today.goldenHourMorningEnd, TimelineKind.GOLDEN_MORNING_END)
-        sun(today.goldenHourEveningStart, TimelineKind.GOLDEN_EVENING)
-        sun(today.sunset, TimelineKind.SUNSET)
-        sun(today.blueHourEveningStart, TimelineKind.BLUE_EVENING)
-        sun(today.astronomicalDusk, TimelineKind.DARK)
+        val firstDate = now.toLocalDate()
+        val lastDate = until.toLocalDate()
+        var date = firstDate
+        while (!date.isAfter(lastDate)) {
+            val solar = if (date == firstDate && today != null) {
+                today
+            } else {
+                AstronomyEngine.solarDay(date, zone, coords)
+            }
+            sun(solar.sunrise, TimelineKind.SUNRISE)
+            sun(solar.goldenHourMorningEnd, TimelineKind.GOLDEN_MORNING_END)
+            sun(solar.goldenHourEveningStart, TimelineKind.GOLDEN_EVENING)
+            sun(solar.sunset, TimelineKind.SUNSET)
+            sun(solar.blueHourEveningStart, TimelineKind.BLUE_EVENING)
+            sun(solar.astronomicalDusk, TimelineKind.DARK)
 
-        val lunar = AstronomyEngine.lunarDay(now.toLocalDate(), zone, report.location.coordinates)
-        sun(lunar.moonrise, TimelineKind.MOONRISE)
-        sun(lunar.moonset, TimelineKind.MOONSET)
+            val lunar = AstronomyEngine.lunarDay(date, zone, coords)
+            sun(lunar.moonrise, TimelineKind.MOONRISE)
+            sun(lunar.moonset, TimelineKind.MOONSET)
+            date = date.plusDays(1)
+        }
 
-        // The rainbow windows of the rest of today: geometry (the sun under 42°) and
-        // weather (rain likely, sky not shut) at the same time. A possibility, printed
-        // with the number it rests on — never a promise (RainbowWindow's own rule).
+        // The rainbow windows of the window: geometry (the sun under 42°) and weather
+        // (rain likely, sky not shut) at the same time. A possibility, printed with the
+        // number it rests on — never a promise (RainbowWindow's own rule).
         com.callbackdev.chiaro.domain.sky.RainbowWindow
-            .windows(report.hourly, zone, report.location.coordinates)
+            .windows(report.hourly, zone, coords)
             .forEach { rainbow ->
                 items += TimelineItem(
                     at = LocalDateTime.ofInstant(rainbow.start, zone),
@@ -210,9 +241,12 @@ object TodayStateBuilder {
                 )
             }
 
-        // Rain turns: the hours where the chance crosses half, up or down, today.
-        val todayHours = report.hourly.filter { it.time.toLocalDate() == now.toLocalDate() }
-        todayHours.zipWithNext().forEach { (a, b) ->
+        // Rain turns: the hours where the chance crosses half, up or down.
+        val hours = report.hourly.filter {
+            val day = it.time.toLocalDate()
+            !day.isBefore(firstDate) && !day.isAfter(lastDate)
+        }
+        hours.zipWithNext().forEach { (a, b) ->
             // A turn needs two hours that both said something: an hour with no
             // forecast chance cannot start the rain and cannot stop it (Fase 26).
             val from = a.precipChancePct ?: return@forEach
@@ -226,7 +260,7 @@ object TodayStateBuilder {
         }
 
         return items
-            .filter { it.at.isAfter(now) && it.at.toLocalDate() == now.toLocalDate() }
+            .filter { it.at.isAfter(now) && !it.at.isAfter(until) }
             .sortedBy { it.at }
     }
 
