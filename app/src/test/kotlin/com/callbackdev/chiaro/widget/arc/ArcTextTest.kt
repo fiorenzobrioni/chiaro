@@ -4,6 +4,8 @@ import android.content.Context
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.WeatherIcons
+import com.callbackdev.chiaro.domain.model.MoonPhase
+import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.today.TimelineItem
 import com.callbackdev.chiaro.ui.today.TimelineKind
 import java.time.Duration
@@ -68,47 +70,54 @@ class ArcTextTest {
     }
 
     @Test
-    fun `the moon's rows draw the crescent whatever the phase, the sun's their own glyphs`() {
-        // The clear night's moon, in the card's family and for its ground: the same
-        // drawable the Now widget shows on a clear night.
+    fun `the moon's rows draw the real phase, the sun's their own glyphs`() {
+        // 9 Sep 2026, two days before the new moon of the 11th: the new moon's glyph, in
+        // the card's family and for its ground — and the full disc a fortnight later.
+        val nearNew = LocalDateTime.of(2026, 9, 9, 19, 0).atZone(zone).toInstant()
+        assertEquals(MoonPhase.NEW_MOON, MoonPhase.at(nearNew))
         assertEquals(
-            R.drawable.mcn_clear_night,
-            ArcText.rowIconRes(TimelineKind.MOONSET, WeatherIcons.LINE, true, AppPalette.VIVID)
+            ChiaroIcons.moonPhaseRes(MoonPhase.NEW_MOON, WeatherIcons.LINE, true, AppPalette.VIVID),
+            ArcText.rowIconRes(TimelineKind.MOONSET, nearNew, WeatherIcons.LINE, true, AppPalette.VIVID)
         )
+        val nearFull = LocalDateTime.of(2026, 9, 26, 21, 0).atZone(zone).toInstant()
+        assertEquals(MoonPhase.FULL_MOON, MoonPhase.at(nearFull))
         assertEquals(
-            R.drawable.mcfn_clear_night,
-            ArcText.rowIconRes(TimelineKind.MOONRISE, WeatherIcons.FILL, true, AppPalette.VIVID)
-        )
-        assertEquals(
-            R.drawable.mc_clear_night,
-            ArcText.rowIconRes(TimelineKind.MOONRISE, WeatherIcons.LINE, false, AppPalette.PAPER)
+            ChiaroIcons.moonPhaseRes(MoonPhase.FULL_MOON, WeatherIcons.FILL, true, AppPalette.VIVID),
+            ArcText.rowIconRes(TimelineKind.MOONRISE, nearFull, WeatherIcons.FILL, true, AppPalette.VIVID)
         )
         assertEquals(
             R.drawable.mcn_sunset,
-            ArcText.rowIconRes(TimelineKind.SUNSET, WeatherIcons.LINE, true, AppPalette.VIVID)
+            ArcText.rowIconRes(TimelineKind.SUNSET, nearNew, WeatherIcons.LINE, true, AppPalette.VIVID)
         )
         assertEquals(
             R.drawable.mc_sunset,
-            ArcText.rowIconRes(TimelineKind.SUNSET, WeatherIcons.LINE, false, AppPalette.VIVID)
+            ArcText.rowIconRes(TimelineKind.SUNSET, nearNew, WeatherIcons.LINE, false, AppPalette.VIVID)
         )
     }
 
-    /** Every glyph a row can show, in every family on every ground: a missing sibling in
-     * ChiaroIcons' tables would be a crash the moment a reader picks filled icons. */
+    /** Every glyph a row can show, in every family on every ground, and every phase of the
+     * moon: a missing sibling in ChiaroIcons' tables would be a crash the moment a reader
+     * picks filled icons. */
     @Test
     fun `every agenda glyph exists in every family and on both grounds`() {
+        val start = LocalDateTime.of(2026, 9, 9, 12, 0).atZone(zone).toInstant()
+        // Thirty days, one a day: every eighth of the moon's cycle is visited.
+        val days = (0 until 30).map { start.plus(Duration.ofDays(it.toLong())) }
         TimelineKind.entries.forEach { kind ->
             WeatherIcons.entries.forEach { style ->
                 listOf(true, false).forEach { dark ->
                     AppPalette.entries.forEach { palette ->
-                        assertTrue(
-                            "$kind $style dark=$dark $palette",
-                            ArcText.rowIconRes(kind, style, dark, palette) != 0
-                        )
+                        days.forEach { at ->
+                            assertTrue(
+                                "$kind $style dark=$dark $palette $at",
+                                ArcText.rowIconRes(kind, at, style, dark, palette) != 0
+                            )
+                        }
                     }
                 }
             }
         }
+        assertEquals(MoonPhase.entries.toSet(), days.map { MoonPhase.at(it) }.toSet())
     }
 
     @Test

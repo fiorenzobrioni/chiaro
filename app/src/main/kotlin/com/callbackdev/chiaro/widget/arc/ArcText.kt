@@ -6,6 +6,7 @@ import androidx.annotation.DrawableRes
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.WeatherIcons
+import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.sky.SkyText
@@ -116,19 +117,20 @@ internal object ArcText {
      * card's icon family. Meteocons has no rainbow, so the row that promises one shows
      * the weather a rainbow is made of — the screen's own reasoning.
      *
-     * The moon's rows are the exception, twice over (device reports, 9 set 2026). Meteocons
-     * draws moonrise and moonset as a disc clipped by the horizon: whole at the screen's
-     * 34 dp, «cut off at the bottom» at a row's 20. The second try drew the moon in its real
-     * phase, and the device answered with the new moon's glyph — a faint dotted circle,
-     * which in a row reads as «nothing here» rather than as a moon (the new moon of 11 Sep
-     * was two days off). So the row draws the one moon everybody reads at any size, the
-     * clear night's crescent — the symbol, as the sun's rows draw a sun and not the sun's
-     * state — and the words say whether it rises or sets. The arc itself keeps painting
-     * the real phase, where there is room to read it.
+     * The moon's rows are the exception (device reports, 9 set 2026). Meteocons draws
+     * moonrise and moonset as a disc clipped by the horizon: whole at the screen's 34 dp,
+     * «cut off at the bottom» at a row's 20. So the row draws the moon in its REAL phase at
+     * [at] — `MoonPhase.at` names the eighth of the cycle the instant falls in, so the half
+     * disc shows around the quarters and the full disc around the full moon, each within
+     * about a day and three quarters of the exact instant — and the words say whether it
+     * rises or sets. Near the new moon that glyph is Meteocons' dotted circle, a moon you
+     * cannot see: honest, and the committente chose it knowingly over a fixed crescent
+     * («the explanation is right; leave the real phase»). The arc paints the same phase.
      */
     @DrawableRes
     fun rowIconRes(
         kind: TimelineKind,
+        at: Instant,
         style: WeatherIcons,
         darkGround: Boolean,
         palette: AppPalette
@@ -139,7 +141,8 @@ internal object ArcText {
             TimelineKind.SUNSET -> R.drawable.mc_sunset
             TimelineKind.BLUE_EVENING -> R.drawable.mc_star
             TimelineKind.DARK -> R.drawable.mc_starry_night
-            TimelineKind.MOONRISE, TimelineKind.MOONSET -> R.drawable.mc_clear_night
+            TimelineKind.MOONRISE, TimelineKind.MOONSET ->
+                return ChiaroIcons.moonPhaseRes(MoonPhase.at(at), style, darkGround, palette)
             TimelineKind.RAINBOW -> R.drawable.mc_partly_cloudy_day_rain
             TimelineKind.RAIN_START -> R.drawable.mc_raindrops
             TimelineKind.RAIN_STOP -> R.drawable.mc_cloudy

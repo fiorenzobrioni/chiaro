@@ -260,7 +260,7 @@ private fun PreviewBody(
                             Image(
                                 painter = painterResource(
                                     ArcText.rowIconRes(
-                                        next.item.kind, model.iconStyle,
+                                        next.item.kind, next.at, model.iconStyle,
                                         inks.palette.darkGround, model.settings.palette
                                     )
                                 ),
@@ -372,7 +372,7 @@ private fun PreviewAgenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, 
                 Image(
                     painter = painterResource(
                         ArcText.rowIconRes(
-                            event.item.kind, model.iconStyle,
+                            event.item.kind, event.at, model.iconStyle,
                             inks.palette.darkGround, model.settings.palette
                         )
                     ),

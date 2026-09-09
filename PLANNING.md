@@ -4033,18 +4033,20 @@ Secondo screenshot: la settimana c'è e le quattro righe pure. Due domande: la l
 «è corretta così?», e il segno di verdetto — la ✗ nel cerchio rosa — «non mi piace, troppo
 forte, deve restare un avviso ma tenue».
 
-### La luna: corretta per l'astronomia, sbagliata come icona
+### La luna: corretta per l'astronomia, e il committente la tiene così
 
 Il glifo era quello di Meteocons per la **luna nuova**: un cerchio tratteggiato sottile. Il
 classificatore aveva ragione — la luna nuova è l'11 settembre, la sera del 9 mancavano meno
-di due giorni, ed è dentro il quarto d'onda che `MoonPhase.at` chiama NEW_MOON — ma in una
-riga di agenda un cerchietto tratteggiato si legge «qui non c'è niente», non «luna». Lo
-stesso disegno funziona nel dettaglio della schermata Oggi, dove è grande e accanto c'è la
-parola «Luna nuova»; qui sta a 20 dp accanto a «Tramonta la luna», e la fase non è il fatto
-della riga. Le righe della luna disegnano ora **la falce della notte serena**
-(`mc_clear_night`), lo stesso glifo che il widget Ora mostra ogni notte limpida: il simbolo
-della luna, come le righe del sole mostrano un sole e non lo stato del sole. La fase vera
-resta nel grafico, dove c'è spazio per leggerla.
+di due giorni, ed è dentro l'ottavo di ciclo che `MoonPhase.at` chiama NEW_MOON. Il dubbio
+era che in una riga un cerchietto tratteggiato si legga «qui non c'è niente»; l'alternativa
+provata è stata la falce della notte serena (`mc_clear_night`) come simbolo fisso, il modo in
+cui le righe del sole mostrano un sole e non lo stato del sole. Spiegato il perché del
+cerchietto, **il committente ha scelto la fase vera**: «si vedrebbe lo spicchio o la luna
+piena nel momento giusto? allora meglio lasciare così». Sì: ogni nome copre 45° di
+elongazione centrati sul proprio istante, quindi il mezzo disco compare intorno ai quarti e
+il disco pieno intorno al plenilunio, ciascuno entro circa un giorno e tre quarti
+dall'istante esatto; il cerchietto tratteggiato resta i due-tre giorni al mese in cui la
+luna non si vede, che è quello che disegna. La stessa fase che il grafico dipinge.
 
 ### L'audit dei glifi
 
@@ -4057,15 +4059,16 @@ Ogni glifo che il widget può mostrare, verificato nel drawable e nelle tre tabe
 | ora d'oro | `mc_horizon` | mezzo sole con la riga: leggibile (nello screenshot si vede) |
 | ora blu | `mc_star` | stella a tratto 3: leggibile |
 | buio pieno | `mc_starry_night` | falce e tre stelline: le stelline sono punti, la falce regge |
-| sorge/tramonta la luna | `mc_clear_night` | falce a tratto 3 = 2,6 px: leggibile |
+| sorge/tramonta la luna | `moonPhaseRes(MoonPhase.at(istante))` | otto glifi a tratto 2-3: falci, quarti, gibbose e disco pieno leggibili; la luna nuova è il cerchietto tratteggiato, scelto |
 | arcobaleno | `mc_partly_cloudy_day_rain` | sole, nube, pioggia: leggibile |
 | pioggia probabile / smette | `mc_raindrops`, `mc_cloudy` | leggibili |
 | settimana | `conditionRes(codice, notte = false)` | 22 dp, la stessa mappa della card Oggi |
 
-Tutte e undici le famiglie hanno le quattro varianti (`mc_`, `mcn_`, `mcf_`, `mcfn_`) e sono
-nelle tabelle: un glifo senza fratello sarebbe stato un crash al primo lettore che sceglie le
-icone piene (`getValue` lancia). `ArcTextTest` ora lo pinza: ogni tipo di riga, in ogni
-famiglia, su entrambi i fondi, in entrambe le palette.
+Tutte le famiglie di glifi hanno le quattro varianti (`mc_`, `mcn_`, `mcf_`, `mcfn_`), le
+otto fasi della luna comprese, e sono nelle tabelle: un glifo senza fratello sarebbe stato
+un crash al primo lettore che sceglie le icone piene (`getValue` lancia). `ArcTextTest` ora
+lo pinza: ogni tipo di riga, in ogni famiglia, su entrambi i fondi, in entrambe le palette,
+su trenta giorni di luna.
 
 ### Il segno di verdetto
 
@@ -4086,7 +4089,8 @@ Cielo. Il widget Cielo resta com'è: lì il verdetto è il soggetto.
 ### Verifica
 
 `:app` 234 (+1 in `ArcTextTest`, l'audit dei glifi), lint a zero errori. Stesso branch.
-**Su device**: la falce nelle righe della luna e la ✗ tenue accanto a «Ora d'oro».
+**Su device**: la ✗ tenue accanto a «Ora d'oro»; la luna delle righe cambia da sola con la
+fase, e la prima falce si vedrà dal 13 settembre.
 
 ---
 
