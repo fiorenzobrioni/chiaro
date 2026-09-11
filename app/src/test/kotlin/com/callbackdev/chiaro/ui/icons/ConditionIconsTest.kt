@@ -22,7 +22,7 @@ class ConditionIconsTest {
     /** Ogni codice che Open-Meteo può servire, e il disegno che gli tocca di giorno. */
     private val byDay = mapOf(
         0 to R.drawable.mc3_clear_day,
-        1 to R.drawable.mc3_mostly_clear_day,
+        1 to R.drawable.mc3_clear_day,
         2 to R.drawable.mc3_partly_cloudy_day,
         3 to R.drawable.mc3_overcast,
         45 to R.drawable.mc3_fog_day,
@@ -54,7 +54,7 @@ class ConditionIconsTest {
     /** I codici che di notte cambiano disegno, e in cosa. */
     private val byNight = mapOf(
         0 to R.drawable.mc3_clear_night,
-        1 to R.drawable.mc3_mostly_clear_night,
+        1 to R.drawable.mc3_clear_night,
         2 to R.drawable.mc3_partly_cloudy_night,
         45 to R.drawable.mc3_fog_night,
         48 to R.drawable.mc3_fog_night,
@@ -91,17 +91,26 @@ class ConditionIconsTest {
     }
 
     /**
-     * Il difetto che ha aperto la fase, in una riga. Il codice 1 è «quasi sereno» — 25%
-     * di copertura mediana, misurata su 1 680 ore — e il 2 è «poco nuvoloso», 64%. Fino
-     * alla Fase 13 disegnavano la stessa cosa.
+     * Il difetto che ha aperto la fase, in una riga, e la scelta che gli è seguita.
+     *
+     * Il codice 1 è «quasi sereno» — 25% di copertura mediana, misurata su 1 680 ore — e
+     * il 2 è «poco nuvoloso», 64%. Fino alla Fase 13 disegnavano **la stessa cosa**, ed è
+     * quella la confusione che non deve poter tornare: sono le due metà opposte del cielo
+     * sereno.
+     *
+     * Che il codice 1 prenda invece il **sole pieno**, insieme allo 0, è una decisione del
+     * committente dell'11 set 2026 e non un ripiego: il disegno «quasi sereno» esiste nella
+     * libreria ed è lasciato apposta da parte, perché disegna un cielo più nuvoloso del suo
+     * nome (la sua nuvola è 56 unità su 128 contro le 80 di «poco nuvoloso»). Il test lo
+     * fissa in tutte e due le direzioni, così nessuna delle due cose si perde per caso.
      */
     @Test
-    fun `mostly clear is not partly cloudy, and neither is clear`() {
+    fun `mostly clear takes the plain sun, and is still not partly cloudy`() {
         listOf(false, true).forEach { night ->
             val clear = ChiaroIcons.conditionLineRes(0, night)
             val mostly = ChiaroIcons.conditionLineRes(1, night)
             val partly = ChiaroIcons.conditionLineRes(2, night)
-            assertNotEquals("sereno e quasi sereno sono lo stesso disegno", clear, mostly)
+            assertEquals("quasi sereno deve prendere il sole pieno, come sereno", clear, mostly)
             assertNotEquals("quasi sereno e poco nuvoloso sono lo stesso disegno", mostly, partly)
         }
     }

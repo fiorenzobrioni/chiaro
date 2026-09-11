@@ -5867,6 +5867,43 @@ VectorDrawable non ha `stroke-dasharray`) più `moonrise` e `moonset` a 4 e 5 pi
 guardati al grande sono identici alla sorgente: è rumore di soglia. La famiglia dei pollini
 è sparita dall'elenco, che è esattamente quel che doveva succedere.
 
+
+### Il codice 1 prende il sole pieno (11 set 2026)
+
+Decisione del committente, contro il mio consiglio, e con una ragione che si e' rivelata
+migliore dell'argomento con cui l'avevo difesa io.
+
+Io dicevo: abbiamo il disegno del «quasi sereno», usiamolo. Lui diceva: quel disegno **dà
+l'idea del nuvoloso** anche quando significa il contrario. Misurato nella sorgente, ha
+ragione con un margine netto:
+
+| | nuvola | disco del sole |
+|---|---|---|
+| `clear-day` | — | 36 |
+| **`mostly-clear-day`** | **56** | **23** |
+| `partly-cloudy-day` | 80 | 18 |
+
+La nuvola del «quasi sereno» è il **70%** di quella del «poco nuvoloso**, per un cielo che
+ne ha il 39% della copertura (25% mediana contro 64%). E il sole rimpicciolisce da 36 a 23
+unità, un terzo in meno, mentre a un quarto di cielo coperto il sole è fuori tutto. Il
+disegno è più nuvoloso del suo nome: usato per il codice 1 rifaceva il difetto originale in
+forma mite, sovrastimando la nuvola invece di sottostimare il sole.
+
+**Il costo, scritto e non aggirato:** la striscia oraria e la riga della settimana non hanno
+parole, quindi lì 0 e 1 ora si somigliano, e sono il 17,2% delle ore disegnate come cielo
+terso su un cielo coperto per un quarto. Nella scheda in alto le parole li distinguono
+ancora.
+
+Quasi tutte le app fanno lo stesso collasso, ma per una ragione più povera: non hanno il
+disegno. L'integrazione Open-Meteo di Home Assistant mappa 0 e 1 entrambi su `sunny`, e la
+sorgente di Open-Meteo mette il codice 1 a 20–49% di copertura. Qui è una scelta, non un
+limite di vocabolario: **il disegno resta nel repo e in `PLANNED`**, pronto se un giorno la
+scelta si rivede.
+
+`ConditionIconsTest` fissa tutte e due le metà: il codice 1 **deve** essere uguale allo 0, e
+**deve** restare diverso dal 2 — che è la confusione da cui è nata la fase e che non deve
+poter tornare per distrazione.
+
 ### Le caselle
 
 ### Blocco A — il convertitore, fatto (11 set 2026)
@@ -5966,7 +6003,7 @@ riscritti: sono le funzioni di `import_meteocons.py`, importate e usate tali e q
 | WMO | parola già a schermo | icona v3 (giorno / notte) |
 |---|---|---|
 | 0 | Sereno | `clear-day` / `clear-night` |
-| 1 | Quasi sereno | **`mostly-clear-day` / `mostly-clear-night`** |
+| 1 | Quasi sereno | `clear-day` / `clear-night` (deciso l'11 set 2026, sotto) |
 | 2 | Poco nuvoloso | `partly-cloudy-day` / `partly-cloudy-night` |
 | 3 | Coperto | `overcast` |
 | 45, 48 | Nebbia | `fog-day` / `fog-night` |

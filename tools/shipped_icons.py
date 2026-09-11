@@ -22,7 +22,7 @@ gira per sempre e' decorazione.
 #: Cielo e dell'agenda: tutto quello che oggi arriva su uno schermo.
 SHIPPED = [
     "smoke",
-    "clear-day", "clear-night", "mostly-clear-day", "mostly-clear-night",
+    "clear-day", "clear-night",
     "partly-cloudy-day", "partly-cloudy-night", "overcast", "cloudy", "fog-day",
     "fog-night", "overcast-drizzle", "overcast-rain", "overcast-sleet",
     "overcast-snow", "partly-cloudy-day-rain", "partly-cloudy-night-rain",
@@ -48,6 +48,9 @@ SHIPPED = [
 #: barometro, la scala Beaufort, i momenti del giorno, i tipi di allerta della Fase 12.
 #: Spostarne una in SHIPPED e' la meta' del lavoro che serve a usarla.
 PLANNED = [
+    # il disegno del «quasi sereno»: esiste, ed e' scelta del committente non usarlo
+    # (11 set 2026) — vedi ChiaroIcons.conditionLineRes
+    "mostly-clear-day", "mostly-clear-night",
     "raindrop", "umbrella", "dust", "pollen-grass-very-high",
     "pollen-tree-very-high", "pollen-weed-very-high", "barometer-very-high",
     "barometer-extreme", "windsock", "windsock-calm", "windsock-weak",

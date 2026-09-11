@@ -22,8 +22,6 @@ internal object MeteoconsSets {
         R.drawable.mc3_smoke to R.drawable.mc3n_smoke,
         R.drawable.mc3_clear_day to R.drawable.mc3n_clear_day,
         R.drawable.mc3_clear_night to R.drawable.mc3n_clear_night,
-        R.drawable.mc3_mostly_clear_day to R.drawable.mc3n_mostly_clear_day,
-        R.drawable.mc3_mostly_clear_night to R.drawable.mc3n_mostly_clear_night,
         R.drawable.mc3_partly_cloudy_day to R.drawable.mc3n_partly_cloudy_day,
         R.drawable.mc3_partly_cloudy_night to R.drawable.mc3n_partly_cloudy_night,
         R.drawable.mc3_overcast to R.drawable.mc3n_overcast,
@@ -107,8 +105,6 @@ internal object MeteoconsSets {
         R.drawable.mc3_smoke to R.drawable.mc3f_smoke,
         R.drawable.mc3_clear_day to R.drawable.mc3f_clear_day,
         R.drawable.mc3_clear_night to R.drawable.mc3f_clear_night,
-        R.drawable.mc3_mostly_clear_day to R.drawable.mc3f_mostly_clear_day,
-        R.drawable.mc3_mostly_clear_night to R.drawable.mc3f_mostly_clear_night,
         R.drawable.mc3_partly_cloudy_day to R.drawable.mc3f_partly_cloudy_day,
         R.drawable.mc3_partly_cloudy_night to R.drawable.mc3f_partly_cloudy_night,
         R.drawable.mc3_overcast to R.drawable.mc3f_overcast,
@@ -192,8 +188,6 @@ internal object MeteoconsSets {
         R.drawable.mc3_smoke to R.drawable.mc3fn_smoke,
         R.drawable.mc3_clear_day to R.drawable.mc3fn_clear_day,
         R.drawable.mc3_clear_night to R.drawable.mc3fn_clear_night,
-        R.drawable.mc3_mostly_clear_day to R.drawable.mc3fn_mostly_clear_day,
-        R.drawable.mc3_mostly_clear_night to R.drawable.mc3fn_mostly_clear_night,
         R.drawable.mc3_partly_cloudy_day to R.drawable.mc3fn_partly_cloudy_day,
         R.drawable.mc3_partly_cloudy_night to R.drawable.mc3fn_partly_cloudy_night,
         R.drawable.mc3_overcast to R.drawable.mc3fn_overcast,
@@ -298,14 +292,6 @@ internal object MeteoconsSets {
             R.drawable.mc3a_clear_night, R.drawable.mc3an_clear_night,
             R.drawable.mc3fa_clear_night, R.drawable.mc3fan_clear_night
         ),
-        R.drawable.mc3_mostly_clear_day to Moving(
-            R.drawable.mc3a_mostly_clear_day, R.drawable.mc3an_mostly_clear_day,
-            R.drawable.mc3fa_mostly_clear_day, R.drawable.mc3fan_mostly_clear_day
-        ),
-        R.drawable.mc3_mostly_clear_night to Moving(
-            R.drawable.mc3a_mostly_clear_night, R.drawable.mc3an_mostly_clear_night,
-            R.drawable.mc3fa_mostly_clear_night, R.drawable.mc3fan_mostly_clear_night
-        ),
         R.drawable.mc3_partly_cloudy_day to Moving(
             R.drawable.mc3a_partly_cloudy_day, R.drawable.mc3an_partly_cloudy_day,
             R.drawable.mc3fa_partly_cloudy_day, R.drawable.mc3fan_partly_cloudy_day
@@ -393,8 +379,6 @@ internal object MeteoconsSets {
         "smoke" to R.drawable.mc3_smoke,
         "clear-day" to R.drawable.mc3_clear_day,
         "clear-night" to R.drawable.mc3_clear_night,
-        "mostly-clear-day" to R.drawable.mc3_mostly_clear_day,
-        "mostly-clear-night" to R.drawable.mc3_mostly_clear_night,
         "partly-cloudy-day" to R.drawable.mc3_partly_cloudy_day,
         "partly-cloudy-night" to R.drawable.mc3_partly_cloudy_night,
         "overcast" to R.drawable.mc3_overcast,

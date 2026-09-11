@@ -1306,6 +1306,26 @@ a valid animator and only a person can say the rain falls downward.
    is at this size — a mark of colour, not a figure. The value is printed under it in
    32sp, which is where a reader reads it.
 
+   **Code 1 takes the plain sun, and the `mostly-clear` drawing is imported and left on
+   the shelf** (committente, 11 set 2026). The family has it — half the reason the import
+   was redone — and it is deliberately unused, because it draws a sky cloudier than its own
+   name. Measured in the source: its cloud is **56 units of 128 against partly-cloudy's
+   80**, so 70% of the cloud for a sky that carries 39% of the cover (25% median against
+   64%), and the sun's disc shrinks from 36 units to 23 while at a quarter of cover the sun
+   is fully out. Used for code 1 it reproduced the original defect in a milder form —
+   overstating cloud instead of understating sun — and on a strip scanned at a glance it
+   read as the cloudy end of the sky rather than the clear one.
+
+   The cost is real and is written here rather than waved past: the hour strip and the week
+   row carry no words, so **0 and 1 now look the same there**, and that is 17.2% of hours
+   drawn as a clear sky over a quarter-covered one. Today's hero still tells them apart in
+   words. Most apps make the same collapse for a poorer reason, having no such drawing at
+   all — Home Assistant's Open-Meteo integration maps both 0 and 1 to `sunny` — and Open-
+   Meteo's own source puts code 1 at 20–49% of cover. Here it is a choice and not a
+   vocabulary limit, the drawing stays in `res/drawable` and in `PLANNED`, and
+   `ConditionIconsTest` pins both halves: code 1 must equal code 0, and must still differ
+   from code 2, which is the confusion that opened the phase and must never come back.
+
    **The golden hour lost its horizon line** (11 set 2026, from a screenshot).
    `sunrise`, `horizon` and `sunset` are one drawing apart from a bump in the middle of
    the line — **6 units in a 128 box**, 1.6dp at the agenda's 34 — so «Ora d'oro» at

@@ -97,12 +97,28 @@ object ChiaroIcons {
      * The line drawing for a WMO code, before any style or ground is applied: the seam
      * [movingRes] and [styledRes] are both keyed on.
      *
-     * **Codes 1 and 2 are different drawings again** (Fase 13). They had shared one
-     * since Fase 2, because Meteocons v2 had no "mostly clear" and the nearest thing was
-     * the partly-cloudy sky; measured on 1 680 hours, code 1 carries a median 25% of
-     * cloud and code 2 a median 64%, and the two buckets do not overlap between their
-     * tenth and ninetieth percentiles. One hour in six was drawn half again cloudier
-     * than forecast, under a word (`cond_mostly_clear`) that said otherwise.
+     * **Codes 1 and 2 are different drawings again** (Fase 13), which was the defect that
+     * opened the phase: they had shared one since Fase 2, and measured on 1 680 hours code
+     * 1 carries a median 25% of cloud against code 2's 64%, two buckets that do not overlap
+     * between their tenth and ninetieth percentiles. One hour in six was drawn half again
+     * cloudier than forecast, under a word (`cond_mostly_clear`) that said otherwise.
+     *
+     * **Code 1 takes the plain sun, and `mostly-clear` is imported but not used**
+     * (committente, 11 set 2026). The family HAS the drawing — that is half of why the
+     * import was redone — and it is deliberately left on the shelf, because it draws a
+     * sky cloudier than its own name: measured in the source, its cloud is **56 units of
+     * 128 against partly-cloudy's 80**, so 70% of the cloud for a sky that carries 39% of
+     * the cover, and its sun shrinks from a 36-unit disc to 23 while at a quarter of cover
+     * the sun is fully out. Used for code 1 it reproduced the original defect in a milder
+     * form, overstating cloud rather than understating sun.
+     *
+     * What it costs is real and is written down rather than waved past: in the hour strip
+     * and the week row there are no words, so **0 and 1 now look the same there** — one
+     * hour in six (17,2% of them) shows a clear sky over a quarter-covered one. On Today's
+     * hero the words still tell them apart. Most apps make the same collapse and for a
+     * poorer reason, having no such drawing at all: Home Assistant's Open-Meteo
+     * integration maps both 0 and 1 to `sunny`. Here it is a choice, not a vocabulary
+     * limit, and the drawing stays in the repo for the day the choice is revisited.
      *
      * Rain, drizzle and snow take their cloud with them (`overcast-*`) rather than
      * falling out of nothing: from the same hours, when it rains the sky IS closed —
@@ -116,8 +132,7 @@ object ChiaroIcons {
      */
     @DrawableRes
     fun conditionLineRes(wmoCode: Int, night: Boolean = false): Int = when (wmoCode) {
-        0 -> if (night) R.drawable.mc3_clear_night else R.drawable.mc3_clear_day
-        1 -> if (night) R.drawable.mc3_mostly_clear_night else R.drawable.mc3_mostly_clear_day
+        0, 1 -> if (night) R.drawable.mc3_clear_night else R.drawable.mc3_clear_day
         2 -> if (night) R.drawable.mc3_partly_cloudy_night else R.drawable.mc3_partly_cloudy_day
         3 -> R.drawable.mc3_overcast
         45, 48 -> if (night) R.drawable.mc3_fog_night else R.drawable.mc3_fog_day
