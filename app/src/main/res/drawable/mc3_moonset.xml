@@ -7,14 +7,14 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <path android:pathData="M37,91.986 L53.746,91.986 A6,6,0,0,1,57.696,93.471 L62.025,97.258 A3,3,0,0,0,65.975,97.258 L70.303,93.471 A6,6,0,0,1,74.254,91.986 L91,91.986 Z"
+    <path android:pathData="M37,91.986 L53.746,91.986 A6,6,0,0,1,57.696,93.471 L62.025,97.258 A3,3,0,0,0,65.975,97.258 L70.303,93.471 A6,6,0,0,1,74.254,91.986 L91,91.986"
                 android:strokeColor="#1a2232"
                 android:strokeWidth="4"
                 android:strokeLineCap="round"/>
     <group>
         <clip-path android:pathData="M0,9 L128,9 L128,86 L73.22,86 A6,6,0,0,0,69.315,87.445 L64,92 L58.685,87.445 A6,6,0,0,0,54.781,86 L0,86 Z"/>
         <group android:name="g1moon" android:pivotX="63.6" android:pivotY="66.2">
-            <path android:pathData="M58.4,36.416 C54.92,57.226,72.526,76.453,93.223,76.12 C88.98,87.698,77.763,96,64.536,96 C47.646,96,34,82.497,34,65.898 C34,51.368,44.46,39.218,58.4,36.416 Z"
+            <path android:pathData="M58.4,36.416 C54.92,57.226,72.526,76.453,93.223,76.12 C88.98,87.698,77.763,96,64.536,96 C47.646,96,34,82.497,34,65.898 C34,51.368,44.46,39.218,58.4,36.416"
                         android:strokeColor="#327b95"
                         android:strokeWidth="4"
                         android:strokeLineCap="round"

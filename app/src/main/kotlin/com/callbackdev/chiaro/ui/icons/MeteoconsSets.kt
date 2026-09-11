@@ -19,7 +19,6 @@ internal object MeteoconsSets {
 
     /** line, fondo scuro. */
     val lineDarkOf: Map<Int, Int> = mapOf(
-        R.drawable.mc3_wind_direction_needle to R.drawable.mc3n_wind_direction_needle,
         R.drawable.mc3_clear_day to R.drawable.mc3n_clear_day,
         R.drawable.mc3_clear_night to R.drawable.mc3n_clear_night,
         R.drawable.mc3_mostly_clear_day to R.drawable.mc3n_mostly_clear_day,
@@ -85,9 +84,7 @@ internal object MeteoconsSets {
         R.drawable.mc3_uv_index_10 to R.drawable.mc3n_uv_index_10,
         R.drawable.mc3_uv_index_11 to R.drawable.mc3n_uv_index_11,
         R.drawable.mc3_uv_index_11_plus to R.drawable.mc3n_uv_index_11_plus,
-        R.drawable.mc3_barometer_low to R.drawable.mc3n_barometer_low,
         R.drawable.mc3_barometer_moderate to R.drawable.mc3n_barometer_moderate,
-        R.drawable.mc3_barometer_high to R.drawable.mc3n_barometer_high,
         R.drawable.mc3_pollen_grass to R.drawable.mc3n_pollen_grass,
         R.drawable.mc3_pollen_tree to R.drawable.mc3n_pollen_tree,
         R.drawable.mc3_pollen_weed to R.drawable.mc3n_pollen_weed,
@@ -106,7 +103,6 @@ internal object MeteoconsSets {
 
     /** flat, fondo chiaro. */
     val flatOf: Map<Int, Int> = mapOf(
-        R.drawable.mc3_wind_direction_needle to R.drawable.mc3f_wind_direction_needle,
         R.drawable.mc3_clear_day to R.drawable.mc3f_clear_day,
         R.drawable.mc3_clear_night to R.drawable.mc3f_clear_night,
         R.drawable.mc3_mostly_clear_day to R.drawable.mc3f_mostly_clear_day,
@@ -172,9 +168,7 @@ internal object MeteoconsSets {
         R.drawable.mc3_uv_index_10 to R.drawable.mc3f_uv_index_10,
         R.drawable.mc3_uv_index_11 to R.drawable.mc3f_uv_index_11,
         R.drawable.mc3_uv_index_11_plus to R.drawable.mc3f_uv_index_11_plus,
-        R.drawable.mc3_barometer_low to R.drawable.mc3f_barometer_low,
         R.drawable.mc3_barometer_moderate to R.drawable.mc3f_barometer_moderate,
-        R.drawable.mc3_barometer_high to R.drawable.mc3f_barometer_high,
         R.drawable.mc3_pollen_grass to R.drawable.mc3f_pollen_grass,
         R.drawable.mc3_pollen_tree to R.drawable.mc3f_pollen_tree,
         R.drawable.mc3_pollen_weed to R.drawable.mc3f_pollen_weed,
@@ -193,7 +187,6 @@ internal object MeteoconsSets {
 
     /** flat, fondo scuro. */
     val flatDarkOf: Map<Int, Int> = mapOf(
-        R.drawable.mc3_wind_direction_needle to R.drawable.mc3fn_wind_direction_needle,
         R.drawable.mc3_clear_day to R.drawable.mc3fn_clear_day,
         R.drawable.mc3_clear_night to R.drawable.mc3fn_clear_night,
         R.drawable.mc3_mostly_clear_day to R.drawable.mc3fn_mostly_clear_day,
@@ -259,9 +252,7 @@ internal object MeteoconsSets {
         R.drawable.mc3_uv_index_10 to R.drawable.mc3fn_uv_index_10,
         R.drawable.mc3_uv_index_11 to R.drawable.mc3fn_uv_index_11,
         R.drawable.mc3_uv_index_11_plus to R.drawable.mc3fn_uv_index_11_plus,
-        R.drawable.mc3_barometer_low to R.drawable.mc3fn_barometer_low,
         R.drawable.mc3_barometer_moderate to R.drawable.mc3fn_barometer_moderate,
-        R.drawable.mc3_barometer_high to R.drawable.mc3fn_barometer_high,
         R.drawable.mc3_pollen_grass to R.drawable.mc3fn_pollen_grass,
         R.drawable.mc3_pollen_tree to R.drawable.mc3fn_pollen_tree,
         R.drawable.mc3_pollen_weed to R.drawable.mc3fn_pollen_weed,
@@ -396,7 +387,6 @@ internal object MeteoconsSets {
      * l'illustratore, non con un id numerico che non si legge.
      */
     val byName: Map<String, Int> = mapOf(
-        "wind-direction-needle" to R.drawable.mc3_wind_direction_needle,
         "clear-day" to R.drawable.mc3_clear_day,
         "clear-night" to R.drawable.mc3_clear_night,
         "mostly-clear-day" to R.drawable.mc3_mostly_clear_day,
@@ -462,9 +452,7 @@ internal object MeteoconsSets {
         "uv-index-10" to R.drawable.mc3_uv_index_10,
         "uv-index-11" to R.drawable.mc3_uv_index_11,
         "uv-index-11-plus" to R.drawable.mc3_uv_index_11_plus,
-        "barometer-low" to R.drawable.mc3_barometer_low,
         "barometer-moderate" to R.drawable.mc3_barometer_moderate,
-        "barometer-high" to R.drawable.mc3_barometer_high,
         "pollen-grass" to R.drawable.mc3_pollen_grass,
         "pollen-tree" to R.drawable.mc3_pollen_tree,
         "pollen-weed" to R.drawable.mc3_pollen_weed,

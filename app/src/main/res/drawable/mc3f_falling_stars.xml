@@ -21,7 +21,7 @@
                 android:strokeWidth="3"
                 android:strokeLineCap="round"/>
     <group android:name="g4moon" android:pivotX="63.9" android:pivotY="64">
-        <path android:pathData="M61.253,42.587 C57.938,57.201,70.673,71.102,85.321,70.027 C82.652,78.963,74.298,85.5,64.368,85.5 C52.285,85.5,42.5,75.835,42.5,63.93 C42.5,53.067,50.647,44.08,61.253,42.587 Z"
+        <path android:pathData="M61.253,42.587 C57.938,57.201,70.673,71.102,85.321,70.027 C82.652,78.963,74.298,85.5,64.368,85.5 C52.285,85.5,42.5,75.835,42.5,63.93 C42.5,53.067,50.647,44.08,61.253,42.587"
                     android:fillColor="#437f95"
                     android:strokeColor="#317994"
                     android:strokeWidth="1"

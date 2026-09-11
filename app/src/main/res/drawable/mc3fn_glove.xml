@@ -7,7 +7,7 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <path android:pathData="M43.197,59.697 A6,6,0,0,1,51.682,59.697 L58.046,66.061 L49.561,74.546 L43.197,68.182 A6,6,0,0,1,43.197,59.697 Z"
+    <path android:pathData="M43.197,59.697 A6,6,0,0,1,51.682,59.697 L58.046,66.061 L49.561,74.546 L43.197,68.182 A6,6,0,0,1,43.197,59.697"
                 android:fillColor="#ff7064"/>
     <path android:pathData="M49,56 C49,47.716,55.716,41,64,41 C72.284,41,79,47.716,79,56 L79,76 L49,76 Z"
                 android:fillColor="#ff867e"/>

@@ -256,7 +256,6 @@ object ChiaroIcons {
     val humidity: ImageVector @Composable get() = styled(R.drawable.mc3_humidity)
     val visibility: ImageVector @Composable get() = styled(R.drawable.mc3_mist)
     val uv: ImageVector @Composable get() = styled(R.drawable.mc3_uv_index)
-    val pressure: ImageVector @Composable get() = styled(R.drawable.mc3_barometer)
 
     /**
      * The graded marks (Fase 13). Meteocons v3 draws these metrics at their own levels,
@@ -289,15 +288,19 @@ object ChiaroIcons {
         R.drawable.mc3_uv_index_10, R.drawable.mc3_uv_index_11
     )
 
-    /** The three bands `WeatherText.pressureMeaning` says, and no more. */
-    @Composable
-    fun pressure(millibars: Double): ImageVector = styled(
-        when {
-            millibars < 1000 -> R.drawable.mc3_barometer_low
-            millibars <= 1020 -> R.drawable.mc3_barometer_moderate
-            else -> R.drawable.mc3_barometer_high
-        }
-    )
+    /**
+     * The pressure mark is **not** graded, and the reason is the rule's missing half
+     * (11 set 2026, from a device report: «non ha indicazione»).
+     *
+     * Meteocons draws five barometers and the app has three bands, so the arithmetic
+     * lined up — but the thing that grades them is a needle **2 units wide in a 128-unit
+     * box**, which at the tile's 34dp is half a device-independent pixel. The grade was
+     * arithmetically right and optically absent: a dial that looks like it should be
+     * pointing at something and is not. §1.2's rule needed the other half, now written
+     * down: a glyph may only say a level the tile already says in words **and that a
+     * reader can actually see**. The band is in «Nella norma», where it reads.
+     */
+    val pressure: ImageVector @Composable get() = styled(R.drawable.mc3_barometer)
 
     /**
      * The air between the reader and the horizon, at the strength the tile names.
@@ -323,12 +326,6 @@ object ChiaroIcons {
      * the metric, not the drawing» is for. */
     val dewPoint: ImageVector @Composable get() = styled(R.drawable.mc3_thermometer)
 
-    /**
-     * The compass needle alone — `wind-direction-n` with its `Letters` group left behind
-     * by the importer, because those letters are English paths and this product
-     * localizes everything on a screen. `WindArrow` turns it by the real degrees.
-     */
-    val windNeedle: ImageVector @Composable get() = styled(R.drawable.mc3_wind_direction_needle)
     val precipitation: ImageVector @Composable get() = styled(R.drawable.mc3_raindrops)
 
     /** Freezing, not snow: the Journal's drift strip marks the days whose forecast

@@ -38,7 +38,11 @@ TOKEN = re.compile(r"[MmLlHhVvCcSsQqTtAaZz]|-?\d*\.?\d+(?:[eE][-+]?\d+)?")
 
 
 def parse_segments(d: str):
-    """`d` -> sottopercorsi [(punto iniziale, [segmenti])], tutto in assoluto.
+    """`d` -> sottopercorsi `[punto iniziale, [segmenti], chiuso]`, tutto in assoluto.
+
+    Il terzo campo non e' un dettaglio: un percorso **aperto** che venisse riscritto con
+    uno `Z` in fondo si chiuderebbe, e su una forma tracciata quella chiusura e' una riga
+    che torna indietro. Sul ricciolo del vento si e' vista (11 set 2026).
 
     Segmento: ('L', p) | ('C', c1, c2, p) | ('Q', c, p) | ('A', rx, ry, rot, laf, sf, p).
     Le abbreviazioni (H V S T) sono espanse, perche' un segmento va poi girato.
@@ -63,6 +67,7 @@ def parse_segments(d: str):
             i += 1
             if cmd in ("Z", "z"):
                 if cur:
+                    cur[2] = True
                     subs.append(cur)
                 cur = None
                 x, y = sx, sy
@@ -76,7 +81,7 @@ def parse_segments(d: str):
                 ax, ay = x + ax, y + ay
             if cur:
                 subs.append(cur)
-            cur = [(ax, ay), []]
+            cur = [(ax, ay), [], False]
             x, y = sx, sy = ax, ay
             prev_c = prev_q = None
             continue
@@ -143,7 +148,7 @@ def reverse_subpath(sub):
     estremi; un arco tiene raggi e rotazione, tiene `large-arc` e **inverte `sweep`**,
     perche' e' il verso di percorrenza a cambiare, non l'ellisse.
     """
-    start, segs = sub
+    start, segs, closed = sub
     pts = [start] + [s[-1] for s in segs]
     out_start = pts[-1]
     out = []
@@ -158,7 +163,7 @@ def reverse_subpath(sub):
         elif seg[0] == "A":
             _, rx, ry, rot, laf, sf, _ = seg
             out.append(("A", rx, ry, rot, laf, 1 - sf, p_from))
-    return [out_start, out]
+    return [out_start, out, closed]
 
 
 def fmt(v: float) -> str:
@@ -168,7 +173,7 @@ def fmt(v: float) -> str:
 
 def emit_path(subs) -> str:
     bits = []
-    for start, segs in subs:
+    for start, segs, closed in subs:
         bits.append(f"M{fmt(start[0])},{fmt(start[1])}")
         for seg in segs:
             if seg[0] == "L":
@@ -182,7 +187,8 @@ def emit_path(subs) -> str:
                 _, rx, ry, rot, laf, sf, p = seg
                 bits.append(
                     f"A{fmt(rx)},{fmt(ry)},{fmt(rot)},{laf},{sf},{fmt(p[0])},{fmt(p[1])}")
-        bits.append("Z")
+        if closed:
+            bits.append("Z")
     return " ".join(bits)
 
 
@@ -242,7 +248,7 @@ def polyline(d: str, steps: int = DASH_STEPS):
     servono solo le forme chiuse delle maschere. Qui i tratteggi sono quasi tutti
     segmenti dritti, cioe' esattamente il caso che quel filtro buttava via."""
     out = []
-    for start, segs in parse_segments(d):
+    for start, segs, _closed in parse_segments(d):
         pts = [start]
         for seg in segs:
             p0 = pts[-1]

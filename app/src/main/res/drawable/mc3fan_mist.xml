@@ -11,21 +11,21 @@
             android:viewportWidth="128"
             android:viewportHeight="128">
             <group android:name="g1line3">
-                <path android:pathData="M34,50 L94,50 Z"
+                <path android:pathData="M34,50 L94,50"
                     android:strokeColor="#d6dfe9"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"
                     android:strokeMiterLimit="10"/>
             </group>
             <group android:name="g2line2">
-                <path android:pathData="M34,64 L94,64 Z"
+                <path android:pathData="M34,64 L94,64"
                     android:strokeColor="#d6dfe9"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"
                     android:strokeMiterLimit="10"/>
             </group>
             <group android:name="g3line1">
-                <path android:pathData="M34,78 L94,78 Z"
+                <path android:pathData="M34,78 L94,78"
                     android:strokeColor="#d6dfe9"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"

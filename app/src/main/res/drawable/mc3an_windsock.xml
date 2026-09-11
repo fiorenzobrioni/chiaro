@@ -10,10 +10,10 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <path android:pathData="M44.5,30 A2.5,2.5,0,0,1,46.867,33.303 C46.563,34.195,46,35.05,46,35.993 L46,96 L43,96 L43,35.993 C43,35.05,42.437,34.195,42.133,33.303 A2.5,2.5,0,0,1,44.5,30 Z"
+            <path android:pathData="M44.5,30 A2.5,2.5,0,0,1,46.867,33.303 C46.563,34.195,46,35.05,46,35.993 L46,96 L43,96 L43,35.993 C43,35.05,42.437,34.195,42.133,33.303 A2.5,2.5,0,0,1,44.5,30"
                 android:fillColor="#cbd5e1"/>
             <group android:name="g1sock" android:pivotX="44.5" android:pivotY="41">
-                <path android:pathData="M50,35.21 L47.129,36.722 A4.2,4.2,0,0,0,45.392,38.437 A5.37,5.37,0,0,0,45.392,43.563 A4.2,4.2,0,0,0,47.129,45.278 L50,46.79 Z"
+                <path android:pathData="M50,35.21 L47.129,36.722 A4.2,4.2,0,0,0,45.392,38.437 A5.37,5.37,0,0,0,45.392,43.563 A4.2,4.2,0,0,0,47.129,45.278 L50,46.79"
                     android:strokeColor="#8fa0b9"
                     android:strokeWidth="1"
                     android:strokeLineCap="round"

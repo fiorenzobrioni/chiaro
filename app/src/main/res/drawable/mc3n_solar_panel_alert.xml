@@ -12,7 +12,7 @@
         <path android:pathData="M44,40 L68,40 A5,5,0,0,1,73,45 L73,83 A5,5,0,0,1,68,88 L44,88 A5,5,0,0,1,39,83 L39,45 A5,5,0,0,1,44,40 Z"
                     android:strokeColor="#6884b8"
                     android:strokeWidth="2"/>
-        <path android:pathData="M40,55.526 L72,55.526 Z M40,71.263 L72,71.263 Z M56,41 L56,87 Z"
+        <path android:pathData="M40,55.526 L72,55.526 M40,71.263 L72,71.263 M56,41 L56,87"
                     android:strokeColor="#6884b8"
                     android:strokeWidth="2"/>
     </group>

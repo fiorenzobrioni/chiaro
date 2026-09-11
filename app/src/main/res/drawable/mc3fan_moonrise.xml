@@ -10,14 +10,14 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <path android:pathData="M37,92 L53.746,92 A6,6,0,0,0,57.696,90.516 L62.025,86.729 A3,3,0,0,1,65.975,86.729 L70.303,90.516 A6,6,0,0,0,74.254,92 L91,92 Z"
+            <path android:pathData="M37,92 L53.746,92 A6,6,0,0,0,57.696,90.516 L62.025,86.729 A3,3,0,0,1,65.975,86.729 L70.303,90.516 A6,6,0,0,0,74.254,92 L91,92"
                 android:strokeColor="#646e81"
                 android:strokeWidth="4"
                 android:strokeLineCap="round"/>
             <group>
                 <clip-path android:pathData="M0,9 L128,9 L128,86 L75.052,86 A3,3,0,0,1,73.178,85.343 L67.748,80.999 A6,6,0,0,0,60.252,80.999 L54.822,85.343 A3,3,0,0,1,52.948,86 L0,86 Z"/>
                 <group android:name="g1moon" android:pivotX="64" android:pivotY="66">
-                    <path android:pathData="M60.962,34 C44.676,35.758,32,49.362,32,65.898 C32,83.627,46.567,98,64.536,98 C79.682,98,92.373,87.775,96,73.95 C74.381,76.266,55.329,55.463,60.962,34 Z"
+                    <path android:pathData="M60.962,34 C44.676,35.758,32,49.362,32,65.898 C32,83.627,46.567,98,64.536,98 C79.682,98,92.373,87.775,96,73.95 C74.381,76.266,55.329,55.463,60.962,34"
                         android:fillColor="#89d0ed"/>
                 </group>
             </group>

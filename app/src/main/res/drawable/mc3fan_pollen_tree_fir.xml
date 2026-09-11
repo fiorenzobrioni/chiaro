@@ -23,37 +23,37 @@
             <path android:pathData="M61.559,37.418 A3,3,0,0,1,66.441,37.418 L70.611,43.256 C72.03,45.242,70.611,48,68.171,48 L59.83,48 C57.39,48,55.97,45.242,57.388,43.256 Z"
                 android:fillColor="#4eca6f"/>
             <group android:name="g1pollen7">
-                <path android:pathData="M90,53 A3,3,0,1,0,90,47 A3,3,0,0,0,90,53 Z"
+                <path android:pathData="M90,53 A3,3,0,1,0,90,47 A3,3,0,0,0,90,53"
                     android:name="g2p"
                     android:fillColor="#ffd64f"/>
             </group>
             <group android:name="g3pollen6">
-                <path android:pathData="M80,42 A2,2,0,1,0,80,38 A2,2,0,0,0,80,42 Z"
+                <path android:pathData="M80,42 A2,2,0,1,0,80,38 A2,2,0,0,0,80,42"
                     android:name="g4p"
                     android:fillColor="#ffd64f"/>
             </group>
             <group android:name="g5pollen5">
-                <path android:pathData="M74,52 A4,4,0,1,0,74,44 A4,4,0,0,0,74,52 Z"
+                <path android:pathData="M74,52 A4,4,0,1,0,74,44 A4,4,0,0,0,74,52"
                     android:name="g6p"
                     android:fillColor="#ffd64f"/>
             </group>
             <group android:name="g7pollen4">
-                <path android:pathData="M64,41 A3,3,0,1,0,64,35 A3,3,0,0,0,64,41 Z"
+                <path android:pathData="M64,41 A3,3,0,1,0,64,35 A3,3,0,0,0,64,41"
                     android:name="g8p"
                     android:fillColor="#ffd64f"/>
             </group>
             <group android:name="g9pollen3">
-                <path android:pathData="M54,52 A4,4,0,1,0,54,44 A4,4,0,0,0,54,52 Z"
+                <path android:pathData="M54,52 A4,4,0,1,0,54,44 A4,4,0,0,0,54,52"
                     android:name="g10p"
                     android:fillColor="#ffd64f"/>
             </group>
             <group android:name="g11pollen2">
-                <path android:pathData="M48,42 A2,2,0,1,0,48,38 A2,2,0,0,0,48,42 Z"
+                <path android:pathData="M48,42 A2,2,0,1,0,48,38 A2,2,0,0,0,48,42"
                     android:name="g12p"
                     android:fillColor="#ffd64f"/>
             </group>
             <group android:name="g13pollen1">
-                <path android:pathData="M38,53 A3,3,0,1,0,38,47 A3,3,0,0,0,38,53 Z"
+                <path android:pathData="M38,53 A3,3,0,1,0,38,47 A3,3,0,0,0,38,53"
                     android:name="g14p"
                     android:fillColor="#ffd64f"/>
             </group>

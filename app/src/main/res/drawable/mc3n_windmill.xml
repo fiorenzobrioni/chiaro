@@ -8,13 +8,13 @@
     android:viewportWidth="128"
     android:viewportHeight="128">
     <group>
-        <clip-path android:pathData="M128,0 L0,0 L0,128 L128,128 Z M64,66 A5,5,0,0,1,64,56 A5,5,0,1,1,64,66 Z"/>
+        <clip-path android:pathData="M128,0 L0,0 L0,128 L128,128 Z M64,66 A5,5,0,0,1,64,56 A5,5,0,1,1,64,66"/>
         <path android:pathData="M62,96 L62,64 L66,64 L66,96 Z"
                     android:fillColor="#cbd5e1"
                     android:fillType="evenOdd"/>
     </group>
     <group>
-        <clip-path android:pathData="M128,0 L0,0 L0,128 L128,128 Z M64,66 A5,5,0,0,1,64,56 A5,5,0,1,1,64,66 Z"/>
+        <clip-path android:pathData="M128,0 L0,0 L0,128 L128,128 Z M64,66 A5,5,0,0,1,64,56 A5,5,0,1,1,64,66"/>
         <group android:name="g1blades" android:pivotX="64" android:pivotY="61">
             <path android:pathData="M64,34.5 C64.546,34.5,65.32,35.017,65.485,36.523 L67.478,54.658 C67.565,55.452,67.395,56.191,67.088,56.718 C66.777,57.25,66.372,57.5,65.991,57.5 L62.01,57.5 C61.63,57.5,61.224,57.25,60.913,56.718 C60.606,56.191,60.436,55.451,60.523,54.658 L62.516,36.523 C62.681,35.016,63.456,34.5,64.001,34.5 Z"
                         android:fillColor="#fff"

@@ -21,8 +21,6 @@ gira per sempre e' decorazione.
 #: I cieli che `ChiaroIcons.conditionLineRes` puo' restituire, i marchi delle schede, del
 #: Cielo e dell'agenda: tutto quello che oggi arriva su uno schermo.
 SHIPPED = [
-    # l'ago della rosa dei venti, senza le sue lettere inglesi (vedi PARTIALS nel tool)
-    "wind-direction-needle",
     "clear-day", "clear-night", "mostly-clear-day", "mostly-clear-night",
     "partly-cloudy-day", "partly-cloudy-night", "overcast", "cloudy", "fog-day",
     "fog-night", "overcast-drizzle", "overcast-rain", "overcast-sleet",
@@ -37,8 +35,8 @@ SHIPPED = [
     "moon-waning-gibbous", "moon-last-quarter", "moon-waning-crescent", "rainbow",
     "uv-index-1", "uv-index-2", "uv-index-3", "uv-index-4", "uv-index-5",
     "uv-index-6", "uv-index-7", "uv-index-8", "uv-index-9", "uv-index-10",
-    "uv-index-11", "uv-index-11-plus", "barometer-low", "barometer-moderate",
-    "barometer-high", "pollen-grass", "pollen-tree", "pollen-weed",
+    "uv-index-11", "uv-index-11-plus", "barometer-moderate",
+    "pollen-grass", "pollen-tree", "pollen-weed",
     "pollen-grass-low", "pollen-grass-moderate", "pollen-grass-high",
     "pollen-tree-low", "pollen-tree-moderate", "pollen-tree-high", "pollen-weed-low",
     "pollen-weed-moderate", "pollen-weed-high", "haze", "fog",

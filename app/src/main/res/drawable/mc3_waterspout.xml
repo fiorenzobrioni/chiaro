@@ -8,35 +8,35 @@
     android:viewportWidth="128"
     android:viewportHeight="128">
     <group android:name="g1line5">
-        <path android:pathData="M56,90 L72,90 Z"
+        <path android:pathData="M56,90 L72,90"
                     android:strokeColor="#0428b4"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"
                     android:strokeMiterLimit="10"/>
     </group>
     <group android:name="g2line4">
-        <path android:pathData="M47,77 L81,77 Z"
+        <path android:pathData="M47,77 L81,77"
                     android:strokeColor="#0428b4"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"
                     android:strokeMiterLimit="10"/>
     </group>
     <group android:name="g3line3">
-        <path android:pathData="M42,64 L87,64 Z"
+        <path android:pathData="M42,64 L87,64"
                     android:strokeColor="#0428b4"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"
                     android:strokeMiterLimit="10"/>
     </group>
     <group android:name="g4line2">
-        <path android:pathData="M37,51 L91,51 Z"
+        <path android:pathData="M37,51 L91,51"
                     android:strokeColor="#0428b4"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"
                     android:strokeMiterLimit="10"/>
     </group>
     <group android:name="g5line1">
-        <path android:pathData="M32,38 L96,38 Z"
+        <path android:pathData="M32,38 L96,38"
                     android:strokeColor="#0428b4"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"

@@ -16,7 +16,7 @@
         </group>
     </group>
     <group android:name="g2arrow">
-        <path android:pathData="M64,43 L64,25 Z M64,25 L58,31.9 Z M64,25 L70,31.9 Z"
+        <path android:pathData="M64,43 L64,25 M64,25 L58,31.9 M64,25 L70,31.9"
                     android:strokeColor="#1a2232"
                     android:strokeWidth="3"
                     android:strokeLineCap="round"

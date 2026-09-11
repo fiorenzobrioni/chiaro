@@ -10,7 +10,7 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <path android:pathData="M87.79,40.135 C93.976,33.347,105,38.405,105,47.446 C105,53.275,100.522,58,95,58 L24,58 Z"
+            <path android:pathData="M87.79,40.135 C93.976,33.347,105,38.405,105,47.446 C105,53.275,100.522,58,95,58 L24,58"
                 android:name="g1p"
                 android:strokeColor="#898e95"
                 android:strokeWidth="4"
@@ -18,7 +18,7 @@
                 android:strokeMiterLimit="10"
                 android:trimPathStart="0"
                 android:trimPathEnd="0.4495"/>
-            <path android:pathData="M60.128,87.868 C66.42,94.518,78,89.872,78,80.556 C78,74.726,73.35,70,67.615,70 L24,70 Z"
+            <path android:pathData="M60.128,87.868 C66.42,94.518,78,89.872,78,80.556 C78,74.726,73.35,70,67.615,70 L24,70"
                 android:name="g2p"
                 android:strokeColor="#898e95"
                 android:strokeWidth="4"

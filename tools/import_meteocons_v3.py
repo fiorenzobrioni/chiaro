@@ -99,6 +99,11 @@ COLOR_ATTR = re.compile(r'(android:(?:fill|stroke)Color=")(#[0-9a-fA-F]{6})(")')
 
 #: Icone che si importano a **meta'**: nome nuovo -> (sorgente, gruppo da tenere).
 #:
+#: **L'unico caso finora, e non e' spedito** (11 set 2026): l'ago e' stato costruito, messo
+#: nella scheda del vento e poi tolto, perche' a sedici dp non era bello e la direzione era
+#: gia' scritta accanto. La macchina resta, con la sua icona, perche' il problema che
+#: risolve — prendere meta' di un disegno — si ripresentera'.
+#:
 #: `wind-direction-n` e' una rosa dei venti con l'ago a nord, e porta le lettere **N E S
 #: W disegnate come path**. In italiano l'ovest e' O: sono testo inglese dentro
 #: un'immagine, non traducibili, contro la regola per cui in questo prodotto tutto quello
@@ -482,15 +487,30 @@ def walk(el, em, out, depth, gradients, notes, alpha=()):
             on, off = paths.dash_pattern(el.get("stroke-dasharray"))
             sweeping = [a for a in alpha
                         if a.get("attributeName") == "stroke-dashoffset"]
-            if em.animated and sweeping:
-                trim = paths.trim_window(d, on, off)
-            if trim is None:
-                d = paths.dash_split(d, on, off)
-                notes.add("tratteggio ridisegnato a segmenti")
+            if sweeping:
+                # Un tratteggio il cui offset e' animato **non e' un tratteggio**: e' una
+                # finestra che corre, e il disegno e' il tratto intero. Nel gemello
+                # animato diventa `trimPath`; nel disegno FERMO resta **pieno**, ed e' la
+                # stessa conclusione dell'importatore v2 («il tratteggio li' esisteva solo
+                # per essere animato»).
+                #
+                # Spezzarlo anche da fermo era il primo tentativo, e sul dispositivo si e'
+                # visto perche' e' sbagliato (11 set 2026): il marchio del vento nella
+                # scheda non si anima mai — DESIGN §7.1, solo le condizioni si muovono —
+                # quindi quel che il lettore vede per sempre e' il primo fotogramma di
+                # un'animazione che non parte, cioe' meta' riga e un pezzo di ricciolo.
+                # Sembrava rotto perche' lo era.
+                if em.animated:
+                    trim = paths.trim_window(d, on, off)
+                if trim is not None:
+                    attrs.append(f'android:trimPathStart="{fmt(trim[0])}"')
+                    attrs.append(f'android:trimPathEnd="{fmt(trim[1])}"')
+                    notes.add("tratteggio come finestra di trimPath")
+                else:
+                    notes.add("tratteggio spazzolato reso pieno (il fermo)")
             else:
-                attrs.append(f'android:trimPathStart="{fmt(trim[0])}"')
-                attrs.append(f'android:trimPathEnd="{fmt(trim[1])}"')
-                notes.add("tratteggio come finestra di trimPath")
+                d = paths.dash_split(d, on, off)
+                notes.add("tratteggio fermo ridisegnato a segmenti")
         pname = em.gid("p") if (alpha or trim) else None
         bits = [f'{ind}<path android:pathData="{d}"']
         if pname:

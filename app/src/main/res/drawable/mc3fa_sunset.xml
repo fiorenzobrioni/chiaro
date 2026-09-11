@@ -10,7 +10,7 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <path android:pathData="M37,91.986 L53.746,91.986 A6,6,0,0,1,57.696,93.471 L62.025,97.258 A3,3,0,0,0,65.975,97.258 L70.303,93.471 A6,6,0,0,1,74.254,91.986 L91,91.986 Z"
+            <path android:pathData="M37,91.986 L53.746,91.986 A6,6,0,0,1,57.696,93.471 L62.025,97.258 A3,3,0,0,0,65.975,97.258 L70.303,93.471 A6,6,0,0,1,74.254,91.986 L91,91.986"
                 android:strokeColor="#1a2232"
                 android:strokeWidth="4"
                 android:strokeLineCap="round"/>

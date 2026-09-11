@@ -151,13 +151,7 @@ private fun MetricTilePreview() {
                 icon = ChiaroIcons.wind,
                 label = "Vento", value = "12 km/h", meaning = "Tieni il cappello",
                 detail = {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        WindArrow(fromDegrees = 45)
-                        Text(text = "da nord-est", style = MaterialTheme.typography.bodyMedium)
-                    }
+                    Text(text = "da nord-est", style = MaterialTheme.typography.bodyMedium)
                 },
                 note = "Raffiche fino a 45 km/h"
             )

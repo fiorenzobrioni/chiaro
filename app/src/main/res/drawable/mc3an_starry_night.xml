@@ -20,7 +20,7 @@
                 android:name="g3p"
                 android:fillColor="#fde68a"/>
             <group android:name="g4moon" android:pivotX="63.7" android:pivotY="64.2">
-                <path android:pathData="M59.997,43.821 C57.731,58.078,69.747,71.2,83.911,71.085 C80.965,78.908,73.344,84.5,64.368,84.5 C52.824,84.5,43.5,75.27,43.5,63.93 C43.5,54.064,50.559,45.804,59.997,43.821 Z"
+                <path android:pathData="M59.997,43.821 C57.731,58.078,69.747,71.2,83.911,71.085 C80.965,78.908,73.344,84.5,64.368,84.5 C52.824,84.5,43.5,75.27,43.5,63.93 C43.5,54.064,50.559,45.804,59.997,43.821"
                     android:strokeColor="#88cfec"
                     android:strokeWidth="3"
                     android:strokeLineCap="round"

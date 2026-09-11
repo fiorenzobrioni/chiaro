@@ -1224,27 +1224,42 @@ a valid animator and only a person can say the rain falls downward.
    uneven points — the raindrops, which fall out of step rather than in a chorus line.
 
    **The graded marks** (Fase 13). v3 draws several metrics at their own levels, and the
-   rule for using one is the rule a second verdict has to pass (§1.2): **a glyph may only
-   say a level the tile already computes and already says in words.** So the pollen mark
-   names the plant at its level (three levels above nothing, not Meteocons' four), the UV
-   mark is graded per unit because the tile prints the integer, the barometer takes the
-   three bands `pressureMeaning` has and not the five drawn, and visibility's two hazy
-   bands share one drawing because a glyph that under-claims is honest where one that
-   over-claims is not. **The wind tile stays generic** by the same rule: `windMeaning` has
-   five bands, the windsocks are three, and the Beaufort number is said nowhere on screen.
+   rule for using one is the rule a second verdict has to pass (§1.2). It has **two**
+   halves, and the second was learned from a device report on 11 set 2026: a glyph may
+   only say a level the tile already computes and already says in words, **and that a
+   reader can actually see.**
 
-   **The wind needle is one drawing turned, not one of eight.** Meteocons' eight
-   `wind-direction-*` glyphs were weighed and turned down for three reasons in the drawing
-   itself: eight fixed points would round a bearing this app already shows exactly into
-   45° buckets; each of them carries **N E S W drawn as paths**, and in Italian the west
-   is O, which is English text inside an image in a product where everything on a screen
-   localizes; and Meteocons' needle points where the wind comes FROM, the opposite of the
-   convention `WindArrow` records. So the importer keeps that drawing's `Pointer` group
-   and drops its `Letters` one, crops it to a 48-unit window centred on the **hub** — the
-   point it turns about, not the centre of its ink, because uncropped it is thirteen units
-   of ink in a hundred and twenty-eight and at 16dp a splinter — and `WindArrow` turns it
-   by the real degrees, at the 16dp the hand-drawn arrow had, so no measure in the tile
-   moves.
+   So the pollen mark names the plant at its level (three levels above nothing, not
+   Meteocons' four), the UV mark is graded per unit because the tile prints the integer,
+   and visibility's two hazy bands share one drawing because a glyph that under-claims is
+   honest where one that over-claims is not.
+
+   **Two metrics are deliberately not graded**, one by each half of the rule. The wind
+   fails the first: `windMeaning` has five bands, the windsocks are three, and the
+   Beaufort number is said nowhere on screen. The **barometer** fails the second, and it
+   is the one that had to be seen to be believed: Meteocons draws five dials and the app
+   has three bands, so the arithmetic lined up, but what tells them apart is a needle
+   **2 units wide in a 128-unit box**, half a device-independent pixel at the tile's 34dp.
+   Arithmetically right and optically absent, a dial that looks like it should be pointing
+   at something and is not. It ships ungraded, and the band stays where it reads, in
+   «Nella norma».
+
+   **The wind direction is words, and the arrow beside them is gone** (11 set 2026). It
+   had been a hand-drawn arrow since 8 set and then, briefly, Meteocons' own needle: the
+   eight `wind-direction-*` glyphs were turned down because eight fixed points would round
+   a bearing this app shows exactly into 45° buckets, because each of them carries **N E S
+   W drawn as paths** and in Italian the west is O, and because Meteocons' needle points
+   where the wind comes FROM, the opposite of the convention the row records. So the
+   importer learned to take half a drawing — `PARTIALS`, keeping the `Pointer` group and
+   dropping `Letters`, cropped to a window centred on the hub — and the needle was turned
+   by the real degrees.
+
+   Then it was looked at in the tile and taken out. Not because it said too little: it
+   said MORE than the sixteen-point label beside it. Because at 16dp it was not good
+   looking, and in a tile where everything else is a line of text it was the one thing
+   that drew the eye for the wrong reason. The direction was already written, so nothing
+   was lost but a drawing. The `PARTIALS` machinery stays, unused and documented: taking
+   half a drawing is a problem that will come back.
 
 
    **The one ground no icon set clears, declared** (7 set 2026, from a device report that

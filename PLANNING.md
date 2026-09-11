@@ -5620,6 +5620,58 @@ chiuso per aritmetica e non per concessione: un set che deve una superficie sola
 che un set che ne deve due non ha. È il guadagno della decisione del Blocco C, arrivato
 dove non lo si cercava.
 
+
+### La prova sul dispositivo, e le due cose che ha rovesciato (11 set 2026)
+
+Il committente ha installato l'APK e guardato striscia oraria, fasce dei giorni, Cielo e
+widget: **vanno**. Le schede Dettagli no, e in due punti aveva ragione lui.
+
+**Il vento sembrava rotto perché lo era.** Il marchio usciva come mezza riga e un pezzo di
+ricciolo. La causa è una mia scelta sbagliata del blocco sui tratteggi: avevo deciso che un
+tratteggio fermo si ridisegna a segmenti *sempre*, anche quando il tratteggio è la finestra
+di una spazzolata. Ma i marchi delle schede **non si animano mai** (§7.1), quindi quel che
+il lettore vede per sempre è il primo fotogramma di un'animazione che non parte. L'importatore
+v2 lo aveva già capito e messo per iscritto — «il tratteggio lì esisteva solo per essere
+animato» — e io l'ho scavalcato con una regola generale. Ora il fermo esce **pieno** e solo
+il gemello animato porta la finestra di `trimPath`.
+
+Rimettendolo pieno è venuto fuori un difetto vero che il tratteggio nascondeva:
+`emit_path` chiudeva **ogni** sottopercorso con uno `Z`, e su un tratto aperto quella
+chiusura è una riga che torna indietro. Sui segmenti spezzati era invisibile (ogni tratto
+tornava su se stesso), sul ricciolo intero sarebbe stata una diagonale in mezzo all'icona.
+`parse_segments` adesso si ricorda se un sottopercorso era chiuso.
+
+**La regola sulle icone graduate aveva una metà in meno.** Diceva: un glifo può dire solo
+un livello che il tile già calcola e già dice a parole. Il barometro la passava — Meteocons
+ne disegna cinque, l'app ha tre bande — ma quel che distingue i cinque quadranti è un ago
+**largo 2 unità su 128**, cioè mezzo dp ai 34 del tile. Aritmeticamente giusto e otticamente
+assente: un quadrante che sembra dover indicare qualcosa e non indica niente, ed è esattamente
+come l'ha descritto il committente («non ha indicazione»). La regola ora ha la sua seconda
+metà — **e che un lettore possa vederlo** — e la pressione spedisce il quadrante generico.
+
+**La freccia della direzione del vento è stata tolta** (committente). Non perché dicesse
+troppo poco: diceva *più* dell'etichetta a sedici punte accanto. Perché a 16 dp non era
+bella, e in un tile fatto di righe di testo era l'unica cosa che si notava per il motivo
+sbagliato. La macchina che prende metà disegno (`PARTIALS`) resta, documentata e inutilizzata:
+è un problema che tornerà.
+
+**E una domanda a cui la misura risponde di no.** Il committente ha chiesto se, con la v3, si
+possa togliere la pausa delle animazioni durante lo scroll (§7.1, messa l'8 set perché lo
+scroll era scattoso). Misurati i nodi di percorso delle icone che si animano davvero:
+
+| | icone | nodi, mediana | nodi, totale |
+|---|---|---|---|
+| v2 (`mca_*`) | 18 | 24 | 561 |
+| **v3 (`mc3a_*`, spedite)** | 23 | **71** | **2 079** |
+
+Il costo per fotogramma sul RenderThread è la rasterizzazione di quei percorsi, e la v3 ne
+ha **circa il triplo**. La ragione per cui la pausa esiste non è venuta meno: è cresciuta. Il
+conteggio dei nodi è un indizio e non un tempo di fotogramma, quindi la risposta certa resta
+una prova sul dispositivo — ma la misura punta dalla parte opposta a quella sperata.
+
+- [ ] Se si vuole comunque provare: `LocalMotionPaused` è un punto solo, e un APK con la
+      pausa tolta si costruisce in un minuto. Da fare guardando, non discutendo
+
 ### Le caselle
 
 ### Blocco A — il convertitore, fatto (11 set 2026)

@@ -19,17 +19,17 @@
                 android:strokeColor="#9b7962"
                 android:strokeWidth="1"/>
             <group android:name="g1smoke1">
-                <path android:pathData="M63.5,48 A7.5,7.5,0,1,0,63.5,33 A7.5,7.5,0,0,0,63.5,48 Z"
+                <path android:pathData="M63.5,48 A7.5,7.5,0,1,0,63.5,33 A7.5,7.5,0,0,0,63.5,48"
                     android:name="g2p"
                     android:fillColor="#afbed4"/>
             </group>
             <group android:name="g3smoke2">
-                <path android:pathData="M63.5,48 A7.5,7.5,0,1,0,63.5,33 A7.5,7.5,0,0,0,63.5,48 Z"
+                <path android:pathData="M63.5,48 A7.5,7.5,0,1,0,63.5,33 A7.5,7.5,0,0,0,63.5,48"
                     android:name="g4p"
                     android:fillColor="#afbed4"/>
             </group>
             <group android:name="g5smoke3">
-                <path android:pathData="M63.5,48 A7.5,7.5,0,1,0,63.5,33 A7.5,7.5,0,0,0,63.5,48 Z"
+                <path android:pathData="M63.5,48 A7.5,7.5,0,1,0,63.5,33 A7.5,7.5,0,0,0,63.5,48"
                     android:name="g6p"
                     android:fillColor="#afbed4"/>
             </group>

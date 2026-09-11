@@ -22,25 +22,25 @@
                 </group>
             </group>
             <group android:name="g4clouds">
-                <path android:pathData="M82.472,70.34 C84.056,63.809,80.723,56.741,74.506,54.066 C68.326,51.406,61.033,53.896,57.586,59.631 C54.578,57.771,50.675,57.885,47.776,59.911 C44.841,61.962,43.356,65.645,43.945,69.166 C38.975,70.132,35.585,74.94,36.043,79.933 C36.501,84.919,40.709,89.001,45.767,89 C58.137,89,70.512,88.989,82.884,89 C87.94,89,92,84.654,92,79.66 C92,74.503,87.689,70.107,82.472,70.34 Z"
+                <path android:pathData="M82.472,70.34 C84.056,63.809,80.723,56.741,74.506,54.066 C68.326,51.406,61.033,53.896,57.586,59.631 C54.578,57.771,50.675,57.885,47.776,59.911 C44.841,61.962,43.356,65.645,43.945,69.166 C38.975,70.132,35.585,74.94,36.043,79.933 C36.501,84.919,40.709,89.001,45.767,89 C58.137,89,70.512,88.989,82.884,89 C87.94,89,92,84.654,92,79.66 C92,74.503,87.689,70.107,82.472,70.34"
                     android:fillColor="#88909c"/>
             </group>
             <group android:name="g5raindrop1">
-                <path android:pathData="M52,83 L52,95 Z"
+                <path android:pathData="M52,83 L52,95"
                     android:name="g6p"
                     android:strokeColor="#003d9a"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"/>
             </group>
             <group android:name="g7raindrop2">
-                <path android:pathData="M64,83 L64,95 Z"
+                <path android:pathData="M64,83 L64,95"
                     android:name="g8p"
                     android:strokeColor="#003d9a"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"/>
             </group>
             <group android:name="g9raindrop3">
-                <path android:pathData="M76,83 L76,95 Z"
+                <path android:pathData="M76,83 L76,95"
                     android:name="g10p"
                     android:strokeColor="#003d9a"
                     android:strokeWidth="4"
