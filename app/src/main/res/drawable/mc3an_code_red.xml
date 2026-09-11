@@ -10,17 +10,19 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <group android:translateX="64" android:translateY="63.2">
-                <group android:name="g1g">
-                    <group android:translateX="-64" android:translateY="-63.2">
-                        <path android:pathData="M87.53,80.02 L65.743,41.264 C64.979,39.904,63.021,39.904,62.257,41.264 L40.47,80.02 C39.72,81.353,40.684,83,42.213,83 L85.787,83 C87.317,83,88.28,81.353,87.53,80.02 M69.23,39.304 C66.937,35.224,61.063,35.224,58.77,39.304 L36.983,78.06 C34.735,82.06,37.625,87,42.213,87 L85.787,87 C90.375,87,93.265,82.06,91.017,78.06 Z"
-                            android:fillColor="#ff6f63"
-                            android:fillType="evenOdd"/>
+            <group android:name="mc3scale" android:scaleX="1.727" android:scaleY="1.727" android:pivotX="64" android:pivotY="64">
+                <group android:translateX="64" android:translateY="63.2">
+                    <group android:name="g1g">
+                        <group android:translateX="-64" android:translateY="-63.2">
+                            <path android:pathData="M87.53,80.02 L65.743,41.264 C64.979,39.904,63.021,39.904,62.257,41.264 L40.47,80.02 C39.72,81.353,40.684,83,42.213,83 L85.787,83 C87.317,83,88.28,81.353,87.53,80.02 M69.23,39.304 C66.937,35.224,61.063,35.224,58.77,39.304 L36.983,78.06 C34.735,82.06,37.625,87,42.213,87 L85.787,87 C90.375,87,93.265,82.06,91.017,78.06 Z"
+                                android:fillColor="#ff6f63"
+                                android:fillType="evenOdd"/>
+                        </group>
                     </group>
                 </group>
+                <path android:pathData="M65.264,68.65 L62.774,68.65 L61.364,60.28 L61.364,54.64 L66.644,54.64 L66.644,60.28 Z M66.674,76 L61.334,76 L61.334,70.99 L66.674,70.99 Z"
+                    android:fillColor="#ff6f63"/>
             </group>
-            <path android:pathData="M65.264,68.65 L62.774,68.65 L61.364,60.28 L61.364,54.64 L66.644,54.64 L66.644,60.28 Z M66.674,76 L61.334,76 L61.334,70.99 L66.674,70.99 Z"
-                android:fillColor="#ff6f63"/>
         </vector>
     </aapt:attr>
     <target android:name="g1g">

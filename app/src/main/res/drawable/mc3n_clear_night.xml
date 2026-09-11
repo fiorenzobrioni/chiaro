@@ -7,11 +7,13 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <group android:name="g1moon" android:pivotX="63.6" android:pivotY="64.2">
-        <path android:pathData="M58.4,34.416 C54.92,55.226,72.526,74.453,93.223,74.12 C88.98,85.698,77.763,94,64.536,94 C47.646,94,34,80.497,34,63.898 C34,49.368,44.46,37.218,58.4,34.416"
-                    android:strokeColor="#88cfec"
-                    android:strokeWidth="4"
-                    android:strokeLineCap="round"
-                    android:strokeLineJoin="round"/>
+    <group android:name="mc3scale" android:scaleX="1.5" android:scaleY="1.5" android:pivotX="64" android:pivotY="64">
+        <group android:name="g1moon" android:pivotX="63.6" android:pivotY="64.2">
+            <path android:pathData="M58.4,34.416 C54.92,55.226,72.526,74.453,93.223,74.12 C88.98,85.698,77.763,94,64.536,94 C47.646,94,34,80.497,34,63.898 C34,49.368,44.46,37.218,58.4,34.416"
+                        android:strokeColor="#88cfec"
+                        android:strokeWidth="4"
+                        android:strokeLineCap="round"
+                        android:strokeLineJoin="round"/>
+        </group>
     </group>
 </vector>

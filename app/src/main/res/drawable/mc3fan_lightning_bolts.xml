@@ -10,12 +10,14 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <path android:pathData="M54,43 L46,65.91 L54,65.91 L50,85 L70,58.273 L58,58.273 L66,43 Z"
-                android:name="g1p"
-                android:fillColor="#ffbf64"/>
-            <path android:pathData="M74,43 L70,54.455 L74,54.455 L72,64 L82,50.636 L76,50.636 L80,43 Z"
-                android:name="g2p"
-                android:fillColor="#ffbf64"/>
+            <group android:name="mc3scale" android:scaleX="2.2857" android:scaleY="2.2857" android:pivotX="64" android:pivotY="64">
+                <path android:pathData="M54,43 L46,65.91 L54,65.91 L50,85 L70,58.273 L58,58.273 L66,43 Z"
+                    android:name="g1p"
+                    android:fillColor="#ffbf64"/>
+                <path android:pathData="M74,43 L70,54.455 L74,54.455 L72,64 L82,50.636 L76,50.636 L80,43 Z"
+                    android:name="g2p"
+                    android:fillColor="#ffbf64"/>
+            </group>
         </vector>
     </aapt:attr>
     <target android:name="g1p">

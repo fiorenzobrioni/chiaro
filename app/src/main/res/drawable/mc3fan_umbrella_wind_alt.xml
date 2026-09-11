@@ -10,29 +10,31 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <group android:name="g1umbrella" android:pivotX="75.5" android:pivotY="49.3">
-                <path android:pathData="M38.148,77.125 C36.324,78.948,35.267,81.935,37.483,84.153 C39.7,86.369,42.688,85.312,44.512,83.489 L86.627,41.373"
-                    android:strokeColor="#71717a"
+            <group android:name="mc3scale" android:scaleX="0.9619" android:scaleY="0.9619" android:pivotX="64" android:pivotY="64">
+                <group android:name="g1umbrella" android:pivotX="75.5" android:pivotY="49.3">
+                    <path android:pathData="M38.148,77.125 C36.324,78.948,35.267,81.935,37.483,84.153 C39.7,86.369,42.688,85.312,44.512,83.489 L86.627,41.373"
+                        android:strokeColor="#71717a"
+                        android:strokeWidth="3"
+                        android:strokeLineCap="round"
+                        android:strokeLineJoin="round"/>
+                    <path android:pathData="M82.57,30.509 C85.288,37.613,90.296,42.678,97.491,45.431 A2.13,2.13,0,0,1,98.714,46.631 Q99.029,47.426,99.369,48.201 C90.727,60.234,71.071,56.929,71.071,56.929 C71.071,56.929,67.767,37.278,79.796,28.634 Q80.575,28.974,81.37,29.287 C81.924,29.507,82.356,29.953,82.57,30.509"
+                        android:fillColor="#f1f5f9"/>
+                    <path android:pathData="M113.598,65.284 C102.565,73.469,84.246,70.104,71.071,56.929 C71.071,56.929,90.726,60.234,99.369,48.201 C101.972,54.136,105.717,59.125,112.039,61.742 L113.078,62.158 C114.419,62.693,114.76,64.422,113.598,65.284 M71.071,56.929 C57.896,43.754,54.531,25.435,62.716,14.402 C63.578,13.24,65.306,13.581,65.842,14.922 L66.258,15.962 C68.795,22.378,73.905,26.069,79.796,28.634 C67.767,37.278,71.07,56.93,71.07,56.93"
+                        android:fillColor="#ff867e"/>
+                </group>
+                <path android:pathData="M44.351,47.844 C47.101,44.934,52,47.102,52,50.977 C52,53.475,50.01,55.5,47.556,55.5 L16,55.5"
+                    android:name="g2p"
+                    android:strokeColor="#e2e8f0"
                     android:strokeWidth="3"
                     android:strokeLineCap="round"
-                    android:strokeLineJoin="round"/>
-                <path android:pathData="M82.57,30.509 C85.288,37.613,90.296,42.678,97.491,45.431 A2.13,2.13,0,0,1,98.714,46.631 Q99.029,47.426,99.369,48.201 C90.727,60.234,71.071,56.929,71.071,56.929 C71.071,56.929,67.767,37.278,79.796,28.634 Q80.575,28.974,81.37,29.287 C81.924,29.507,82.356,29.953,82.57,30.509"
-                    android:fillColor="#f1f5f9"/>
-                <path android:pathData="M113.598,65.284 C102.565,73.469,84.246,70.104,71.071,56.929 C71.071,56.929,90.726,60.234,99.369,48.201 C101.972,54.136,105.717,59.125,112.039,61.742 L113.078,62.158 C114.419,62.693,114.76,64.422,113.598,65.284 M71.071,56.929 C57.896,43.754,54.531,25.435,62.716,14.402 C63.578,13.24,65.306,13.581,65.842,14.922 L66.258,15.962 C68.795,22.378,73.905,26.069,79.796,28.634 C67.767,37.278,71.07,56.93,71.07,56.93"
-                    android:fillColor="#ff867e"/>
+                    android:strokeMiterLimit="10"/>
+                <path android:pathData="M32.057,69.158 C34.853,72.008,40,70.016,40,66.024 C40,63.526,37.934,61.5,35.385,61.5 L16,61.5"
+                    android:name="g3p"
+                    android:strokeColor="#e2e8f0"
+                    android:strokeWidth="3"
+                    android:strokeLineCap="round"
+                    android:strokeMiterLimit="10"/>
             </group>
-            <path android:pathData="M44.351,47.844 C47.101,44.934,52,47.102,52,50.977 C52,53.475,50.01,55.5,47.556,55.5 L16,55.5"
-                android:name="g2p"
-                android:strokeColor="#e2e8f0"
-                android:strokeWidth="3"
-                android:strokeLineCap="round"
-                android:strokeMiterLimit="10"/>
-            <path android:pathData="M32.057,69.158 C34.853,72.008,40,70.016,40,66.024 C40,63.526,37.934,61.5,35.385,61.5 L16,61.5"
-                android:name="g3p"
-                android:strokeColor="#e2e8f0"
-                android:strokeWidth="3"
-                android:strokeLineCap="round"
-                android:strokeMiterLimit="10"/>
         </vector>
     </aapt:attr>
     <target android:name="g1umbrella">

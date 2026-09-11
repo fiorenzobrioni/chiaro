@@ -156,7 +156,7 @@ private fun SkyGuideIndex(onOpen: (String) -> Unit, modifier: Modifier = Modifie
                             // Its own colors, like every weather icon (§13.1): tinted
                             // flat, the full moon and the new moon were the same disc.
                             tint = Color.Unspecified,
-                            modifier = Modifier.size(WeatherIconSize.Timeline)
+                            modifier = Modifier.size(WeatherIconSize.Sky)
                         )
                     },
                     headlineContent = { Text(name) },

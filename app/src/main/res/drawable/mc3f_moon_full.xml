@@ -7,8 +7,10 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <group android:name="g1moon" android:pivotX="64" android:pivotY="64">
-        <path android:pathData="M32,64 A32,32,0,1,1,96,64 A32,32,0,1,1,32,64 Z"
-                    android:fillColor="#317994"/>
+    <group android:name="mc3scale" android:scaleX="1.5" android:scaleY="1.5" android:pivotX="64" android:pivotY="64">
+        <group android:name="g1moon" android:pivotX="64" android:pivotY="64">
+            <path android:pathData="M32,64 A32,32,0,1,1,96,64 A32,32,0,1,1,32,64 Z"
+                        android:fillColor="#317994"/>
+        </group>
     </group>
 </vector>

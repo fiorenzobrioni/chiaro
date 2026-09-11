@@ -7,19 +7,21 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <path android:pathData="M62,96 L62,64 L66,64 L66,96 Z"
-                android:fillColor="#818a95"
-                android:fillType="evenOdd"/>
-    <group android:name="g1blades" android:pivotX="64" android:pivotY="61">
-        <path android:pathData="M50.667,73 C44.774,73,40,67.627,40,61 L64,61 L64,73 Z"
-                    android:fillColor="#0428b4"/>
-        <path android:pathData="M76,74.333 C76,80.224,70.627,85,64,85 L64,61 L76,61 Z"
-                    android:fillColor="#a18200"/>
-        <path android:pathData="M77.333,49 C83.224,49,88,54.373,88,61 L64,61 L64,49 Z"
-                    android:fillColor="#006e2d"/>
-        <path android:pathData="M52,47.667 C52,41.776,57.373,37,64,37 L64,61 L52,61 Z"
-                    android:fillColor="#9e000c"/>
+    <group android:name="mc3scale" android:scaleX="1.6271" android:scaleY="1.6271" android:pivotX="64" android:pivotY="64">
+        <path android:pathData="M62,96 L62,64 L66,64 L66,96 Z"
+                    android:fillColor="#818a95"
+                    android:fillType="evenOdd"/>
+        <group android:name="g1blades" android:pivotX="64" android:pivotY="61">
+            <path android:pathData="M50.667,73 C44.774,73,40,67.627,40,61 L64,61 L64,73 Z"
+                        android:fillColor="#0428b4"/>
+            <path android:pathData="M76,74.333 C76,80.224,70.627,85,64,85 L64,61 L76,61 Z"
+                        android:fillColor="#a18200"/>
+            <path android:pathData="M77.333,49 C83.224,49,88,54.373,88,61 L64,61 L64,49 Z"
+                        android:fillColor="#006e2d"/>
+            <path android:pathData="M52,47.667 C52,41.776,57.373,37,64,37 L64,61 L52,61 Z"
+                        android:fillColor="#9e000c"/>
+        </group>
+        <path android:pathData="M60,61 A4,4,0,1,1,68,61 A4,4,0,1,1,60,61 Z"
+                    android:fillColor="#fff"/>
     </group>
-    <path android:pathData="M60,61 A4,4,0,1,1,68,61 A4,4,0,1,1,60,61 Z"
-                android:fillColor="#fff"/>
 </vector>

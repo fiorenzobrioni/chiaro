@@ -10,20 +10,22 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <group android:translateX="64" android:translateY="78">
-                <group android:name="g1g">
-                    <group android:translateX="-64" android:translateY="-78">
-                        <path android:pathData="M34,58.5 A3,3,0,0,1,35.2,56.1 L40.075,52.444 A3,3,0,0,1,43.827,52.566 L47.047,55.326 A3,3,0,0,0,50.952,55.326 L54.172,52.566 A3,3,0,0,1,57.925,52.444 L62.2,55.65 A3,3,0,0,0,65.8,55.65 L70.075,52.444 A3,3,0,0,1,73.827,52.566 L77.047,55.326 A3,3,0,0,0,80.952,55.326 L84.172,52.566 A3,3,0,0,1,87.925,52.444 L92.8,56.1 A3,3,0,0,1,94,58.5 L94,72 A6,6,0,0,1,88,78 L40,78 A6,6,0,0,1,34,72 Z"
-                            android:fillColor="#0039bb"/>
+            <group android:name="mc3scale" android:scaleX="1.6" android:scaleY="1.6" android:pivotX="64" android:pivotY="64">
+                <group android:translateX="64" android:translateY="78">
+                    <group android:name="g1g">
+                        <group android:translateX="-64" android:translateY="-78">
+                            <path android:pathData="M34,58.5 A3,3,0,0,1,35.2,56.1 L40.075,52.444 A3,3,0,0,1,43.827,52.566 L47.047,55.326 A3,3,0,0,0,50.952,55.326 L54.172,52.566 A3,3,0,0,1,57.925,52.444 L62.2,55.65 A3,3,0,0,0,65.8,55.65 L70.075,52.444 A3,3,0,0,1,73.827,52.566 L77.047,55.326 A3,3,0,0,0,80.952,55.326 L84.172,52.566 A3,3,0,0,1,87.925,52.444 L92.8,56.1 A3,3,0,0,1,94,58.5 L94,72 A6,6,0,0,1,88,78 L40,78 A6,6,0,0,1,34,72 Z"
+                                android:fillColor="#0039bb"/>
+                        </group>
                     </group>
                 </group>
-            </group>
-            <group android:name="g2arrow">
-                <path android:pathData="M64,26 L64,44 M64,44 L58,37.1 M64,44 L70,37.1"
-                    android:strokeColor="#1a2232"
-                    android:strokeWidth="3"
-                    android:strokeLineCap="round"
-                    android:strokeLineJoin="round"/>
+                <group android:name="g2arrow">
+                    <path android:pathData="M64,26 L64,44 M64,44 L58,37.1 M64,44 L70,37.1"
+                        android:strokeColor="#1a2232"
+                        android:strokeWidth="3"
+                        android:strokeLineCap="round"
+                        android:strokeLineJoin="round"/>
+                </group>
             </group>
         </vector>
     </aapt:attr>

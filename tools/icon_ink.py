@@ -4,8 +4,13 @@ l'ha cambiato.
 
 Nasce da una domanda del committente (11 set 2026), guardando «In arrivo» nel Cielo: la
 luna piena e la luna con le stelle cadenti hanno taglie molto diverse, **e' l'importatore
-che ridimensiona?** La risposta e' un numero, non un'opinione, e questo strumento la
-calcola nei due modi che servono:
+che ridimensiona?** La risposta era no: le differenze erano dell'illustratore, e le
+misurava questo strumento. Lo stesso giorno sono diventate un difetto da togliere, e
+allora **e' questo strumento a decidere di quanto**: [scales] e' la tabella che
+`import_meteocons_v3.py` cuoce nei drawable come gruppo `mc3scale`, e `--confronto` e'
+diventato la prova che l'importazione non fa **nient'altro** che quella scala.
+
+I modi in cui misura:
 
 - `--sorgente` misura le SVG di Meteocons, cioe' il disegno dell'illustratore;
 - `--confronto` misura le stesse icone **dopo** l'importazione e mette le due misure
@@ -215,7 +220,10 @@ def ink_svg(path: pathlib.Path, only: str | None = None):
             if not pts or (only is not None and not here):
                 continue
             stroke, sw = attrs.get("stroke"), attrs.get("stroke-width")
-            pad = float(sw) / 2 if (stroke and stroke != "none" and sw) else 0.0
+            # `stroke-width` assente vuol dire 1, non zero (SVG 1.1 §11.4) — ed e' cosi'
+            # che l'importatore lo scrive. Leggerlo come zero faceva risultare 18 icone
+            # convertite piu' grandi della loro sorgente (misurato, 11 set 2026).
+            pad = float(sw or 1) / 2 if (stroke and stroke != "none") else 0.0
             box.add([apply(here_m, p) for p in pts], pad)
 
     walk(root, {}, False, IDENT)
@@ -245,12 +253,108 @@ def ink_vd(path: pathlib.Path):
                     continue
                 sw = ch.get(A + "strokeWidth")
                 stroke = ch.get(A + "strokeColor")
-                pad = float(sw) / 2 if (stroke and sw) else 0.0
+                # Il tratto vive nello spazio del gruppo, quindi si scala con lui: il
+                # mezzo tratto va misurato DOPO la trasformazione, o un'icona dentro
+                # `mc3scale` risulta piu' stretta di quel che disegna.
+                grow = math.sqrt(abs(m[0] * m[3] - m[1] * m[2])) or 1.0
+                pad = (float(sw) / 2) * grow if (stroke and sw) else 0.0
                 pts = [apply(m, p) for sub in flatten(d) for p in sub]
                 box.add(pts, pad)
 
     walk(root, IDENT)
     return None if box.empty else box.frac(vw, vh)
+
+
+# --------------------------------------------------------------- la normalizzazione
+
+#: La frazione di scatola a cui ogni disegno viene portato (DESIGN §13.1). E' il valore
+#: che la famiglia piu' grande gia' ha — `clear-day`, `sunrise`, la scala UV — quindi i
+#: disegni che oggi stanno bene non si muovono e tutti gli altri salgono fino a loro.
+TARGET = 0.75
+
+
+def ink_box(pkg: pathlib.Path, name: str) -> tuple[Box, float, float] | None:
+    """Il riquadro dell'inchiostro di un'icona **in unita' di viewport**, preso come
+    unione di tutti gli stili.
+
+    L'unione e non uno stile solo: `line` sborda di mezzo tratto dove `flat` no, e una
+    scala diversa per stile farebbe cambiare taglia all'icona quando il lettore cambia
+    stile in Impostazioni — che e' l'opposto di quel che la scala serve a fare.
+    """
+    box = Box()
+    vw = vh = 0.0
+    for style in STYLES:
+        p = pkg / style / f"{name}.svg"
+        if not p.exists():
+            continue
+        vb = [float(v) for v in ET.parse(p).getroot().get("viewBox").split()]
+        vw, vh = vb[2], vb[3]
+        b = _ink_box_one(p)
+        if not b.empty:
+            box.add([(b.x0, b.y0), (b.x1, b.y1)])
+    return None if box.empty or not vw else (box, vw, vh)
+
+
+def _ink_box_one(path: pathlib.Path) -> Box:
+    """Lo stesso attraversamento di [ink_svg], ma il riquadro invece della frazione."""
+    root = ET.parse(path).getroot()
+    box = Box()
+
+    def walk(el, inherited, m):
+        for ch in el:
+            if ch.tag == SVG_NS + "defs":
+                continue
+            attrs = dict(inherited)
+            for k in ("stroke", "stroke-width"):
+                if ch.get(k) is not None:
+                    attrs[k] = ch.get(k)
+            here_m = m
+            if ch.get("transform"):
+                here_m = mat_mul(m, paths.parse_transform(ch.get("transform")))
+            if ch.tag == SVG_NS + "g":
+                walk(ch, attrs, here_m)
+                continue
+            pts = svg_points(ch)
+            if not pts:
+                continue
+            stroke, sw = attrs.get("stroke"), attrs.get("stroke-width")
+            pad = float(sw or 1) / 2 if (stroke and stroke != "none") else 0.0
+            box.add([apply(here_m, p) for p in pts], pad)
+
+    walk(root, {}, IDENT)
+    return box
+
+
+def scale_of(box: Box, vw: float, vh: float, target: float = TARGET) -> float:
+    """La scala che porta il lato dell'inchiostro a [target] della scatola.
+
+    **Il perno e' il centro della scatola**, non il centro del disegno: ricentrare
+    sposterebbe le composizioni che sono volutamente fuori centro (il sole di `sunrise`
+    sta basso perche' sorge da una linea) e cambierebbe il centraggio ottico su cui la
+    striscia oraria e' stata messa a punto. La conseguenza e' che un disegno fuori centro
+    tocca il bordo prima di arrivare a [target], e li' la scala si ferma: meglio un'icona
+    un po' sotto misura che una tagliata.
+    """
+    side = max(box.x1 - box.x0, box.y1 - box.y0) / max(vw, vh)
+    if side <= 0:
+        return 1.0
+    cx, cy = vw / 2, vh / 2
+    reach = max(cx - box.x0, box.x1 - cx, cy - box.y0, box.y1 - cy)
+    ceiling = (min(cx, cy) / reach) if reach > 0 else 1.0
+    return min(target / side, ceiling)
+
+
+def scales(pkg: pathlib.Path, target: float = TARGET) -> dict[str, float]:
+    """{nome icona: scala} per tutta la famiglia. E' quel che l'importatore cuoce nei
+    drawable, ed e' la sola cosa che il repo aggiunge al disegno dell'illustratore."""
+    out = {}
+    for svg in sorted((pkg / "line").glob("*.svg")):
+        measured = ink_box(pkg, svg.stem)
+        if measured is None:
+            continue
+        box, vw, vh = measured
+        out[svg.stem] = round(scale_of(box, vw, vh, target), 4)
+    return out
 
 
 # ------------------------------------------------------------------- la copertura
@@ -349,11 +453,18 @@ def report_source(pkg, names, style="line", box_dp=34.0, only=None):
 
 
 def report_diff(pkg, names, box_dp=34.0):
-    """Sorgente contro convertito. Zero righe fuori tolleranza = l'importazione non
-    ridimensiona niente."""
+    """Sorgente contro convertito, **al netto della scala dichiarata**.
+
+    Il drawable spedito porta il gruppo `mc3scale` (l'importatore, §4b), quindi il
+    confronto giusto non e' «sorgente uguale a convertito» ma «convertito uguale a
+    sorgente per la sua scala»: se una riga non pareggia, l'importazione ha toccato la
+    geometria oltre a quel fattore, che e' la sola cosa che ha il permesso di fare.
+    """
     bad = 0
-    print(f"{'icona':26s} {'stile':5s}  sorgente      convertito    scarto")
+    ks = scales(pkg)
+    print(f"{'icona':26s} {'stile':5s}  attesa        convertito    scarto")
     for n in names:
+        k = ks.get(n, 1.0)
         for style in STYLES:
             src = pkg / style / f"{n}.svg"
             vd = DRAWABLE / f"{PREFIX[style]}{n.replace('-', '_')}.xml"
@@ -362,12 +473,13 @@ def report_diff(pkg, names, box_dp=34.0):
             a, b = ink_svg(src), ink_vd(vd)
             if a is None or b is None:
                 continue
-            d = max(abs(a[0] - b[0]), abs(a[1] - b[1]))
+            want = (a[0] * k, a[1] * k)
+            d = max(abs(want[0] - b[0]), abs(want[1] - b[1]))
             flag = "  <-- DIVERSO" if d > TOL else ""
             if flag:
                 bad += 1
             if flag or "-v" in sys.argv:
-                print(f"{n:26s} {style:5s}  {a[0]:.3f} x {a[1]:.3f}  "
+                print(f"{n:26s} {style:5s}  {want[0]:.3f} x {want[1]:.3f}  "
                       f"{b[0]:.3f} x {b[1]:.3f}  {d:.4f}{flag}")
     print(f"{NL}{bad} icone fuori tolleranza ({TOL})")
     return bad

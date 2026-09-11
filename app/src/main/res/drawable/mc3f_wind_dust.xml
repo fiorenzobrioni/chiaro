@@ -7,61 +7,63 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <path android:pathData="M87.79,40.135 C93.976,33.347,105,38.405,105,47.446 C105,53.275,100.522,58,95,58 L24,58"
-                android:name="g1p"
-                android:strokeColor="#898e95"
-                android:strokeWidth="4"
-                android:strokeLineCap="round"
-                android:strokeMiterLimit="10"/>
-    <path android:pathData="M60.128,87.868 C66.42,94.518,78,89.872,78,80.556 C78,74.726,73.35,70,67.615,70 L24,70"
-                android:name="g2p"
-                android:strokeColor="#898e95"
-                android:strokeWidth="4"
-                android:strokeLineCap="round"
-                android:strokeMiterLimit="10"/>
-    <group android:name="g3dust1">
-        <path android:pathData="M45,64 A3,3,0,1,1,51,64 A3,3,0,1,1,45,64 Z"
-                    android:name="g4p"
-                    android:fillColor="#a68700"/>
-    </group>
-    <group android:name="g5dust2">
-        <path android:pathData="M66,64 A3,3,0,1,1,72,64 A3,3,0,1,1,66,64 Z"
-                    android:name="g6p"
-                    android:fillColor="#a68700"/>
-    </group>
-    <group android:name="g7dust3">
-        <path android:pathData="M87,64 A3,3,0,1,1,93,64 A3,3,0,1,1,87,64 Z"
-                    android:name="g8p"
-                    android:fillColor="#a68700"/>
-    </group>
-    <group android:name="g9dust4">
-        <path android:pathData="M36,50 A3,3,0,1,1,42,50 A3,3,0,1,1,36,50 Z"
-                    android:name="g10p"
-                    android:fillColor="#a68700"/>
-    </group>
-    <group android:name="g11dust5">
-        <path android:pathData="M54,50 A3,3,0,1,1,60,50 A3,3,0,1,1,54,50 Z"
-                    android:name="g12p"
-                    android:fillColor="#a68700"/>
-    </group>
-    <group android:name="g13dust6">
-        <path android:pathData="M72,50 A3,3,0,1,1,78,50 A3,3,0,1,1,72,50 Z"
-                    android:name="g14p"
-                    android:fillColor="#a68700"/>
-    </group>
-    <group android:name="g15dust7">
-        <path android:pathData="M36,78 A3,3,0,1,1,42,78 A3,3,0,1,1,36,78 Z"
-                    android:name="g16p"
-                    android:fillColor="#a68700"/>
-    </group>
-    <group android:name="g17dust8">
-        <path android:pathData="M54,78 A3,3,0,1,1,60,78 A3,3,0,1,1,54,78 Z"
-                    android:name="g18p"
-                    android:fillColor="#a68700"/>
-    </group>
-    <group android:name="g19dust9">
-        <path android:pathData="M72,78 A3,3,0,1,1,78,78 A3,3,0,1,1,72,78 Z"
-                    android:name="g20p"
-                    android:fillColor="#a68700"/>
+    <group android:name="mc3scale" android:scaleX="1.1294" android:scaleY="1.1294" android:pivotX="64" android:pivotY="64">
+        <path android:pathData="M87.79,40.135 C93.976,33.347,105,38.405,105,47.446 C105,53.275,100.522,58,95,58 L24,58"
+                    android:name="g1p"
+                    android:strokeColor="#898e95"
+                    android:strokeWidth="4"
+                    android:strokeLineCap="round"
+                    android:strokeMiterLimit="10"/>
+        <path android:pathData="M60.128,87.868 C66.42,94.518,78,89.872,78,80.556 C78,74.726,73.35,70,67.615,70 L24,70"
+                    android:name="g2p"
+                    android:strokeColor="#898e95"
+                    android:strokeWidth="4"
+                    android:strokeLineCap="round"
+                    android:strokeMiterLimit="10"/>
+        <group android:name="g3dust1">
+            <path android:pathData="M45,64 A3,3,0,1,1,51,64 A3,3,0,1,1,45,64 Z"
+                        android:name="g4p"
+                        android:fillColor="#a68700"/>
+        </group>
+        <group android:name="g5dust2">
+            <path android:pathData="M66,64 A3,3,0,1,1,72,64 A3,3,0,1,1,66,64 Z"
+                        android:name="g6p"
+                        android:fillColor="#a68700"/>
+        </group>
+        <group android:name="g7dust3">
+            <path android:pathData="M87,64 A3,3,0,1,1,93,64 A3,3,0,1,1,87,64 Z"
+                        android:name="g8p"
+                        android:fillColor="#a68700"/>
+        </group>
+        <group android:name="g9dust4">
+            <path android:pathData="M36,50 A3,3,0,1,1,42,50 A3,3,0,1,1,36,50 Z"
+                        android:name="g10p"
+                        android:fillColor="#a68700"/>
+        </group>
+        <group android:name="g11dust5">
+            <path android:pathData="M54,50 A3,3,0,1,1,60,50 A3,3,0,1,1,54,50 Z"
+                        android:name="g12p"
+                        android:fillColor="#a68700"/>
+        </group>
+        <group android:name="g13dust6">
+            <path android:pathData="M72,50 A3,3,0,1,1,78,50 A3,3,0,1,1,72,50 Z"
+                        android:name="g14p"
+                        android:fillColor="#a68700"/>
+        </group>
+        <group android:name="g15dust7">
+            <path android:pathData="M36,78 A3,3,0,1,1,42,78 A3,3,0,1,1,36,78 Z"
+                        android:name="g16p"
+                        android:fillColor="#a68700"/>
+        </group>
+        <group android:name="g17dust8">
+            <path android:pathData="M54,78 A3,3,0,1,1,60,78 A3,3,0,1,1,54,78 Z"
+                        android:name="g18p"
+                        android:fillColor="#a68700"/>
+        </group>
+        <group android:name="g19dust9">
+            <path android:pathData="M72,78 A3,3,0,1,1,78,78 A3,3,0,1,1,72,78 Z"
+                        android:name="g20p"
+                        android:fillColor="#a68700"/>
+        </group>
     </group>
 </vector>

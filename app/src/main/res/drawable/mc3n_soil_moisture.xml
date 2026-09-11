@@ -7,18 +7,20 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <path android:pathData="M46,68 A9,9,0,0,0,37,77 L37,83 A9,9,0,0,0,46,92 L82,92 A9,9,0,0,0,91,83 L91,77 A9,9,0,0,0,82,68 Z M46,76 A7,7,0,1,0,46,90 L82,90 A7,7,0,1,0,82,76 Z"
-                android:fillColor="#9b7962"
-                android:fillType="evenOdd"/>
-    <path android:pathData="M71,81 A1,1,0,1,1,69,81 A1,1,0,0,1,71,81 M65,85 A1,1,0,1,1,63,85 A1,1,0,0,1,65,85 M53,85 A1,1,0,1,1,51,85 A1,1,0,0,1,53,85 M59,81 A1,1,0,1,1,57,81 A1,1,0,0,1,59,81 M77,85 A1,1,0,1,1,75,85 A1,1,0,0,1,77,85"
-                android:fillColor="#9b7962"/>
-    <group android:translateX="64" android:translateY="47.4">
-        <group android:name="g1g">
-            <group android:translateX="-64" android:translateY="-47.4">
-                <path android:pathData="M64,36.785 C66.065,39.835,67.742,42.339,68.946,44.565 C70.305,47.075,71,49.122,71,51.07 C71,54.89,67.876,58,64,58 C60.124,58,57,54.88,57,51.07 C57,49.127,57.695,47.083,59.054,44.572 C60.258,42.346,61.934,39.839,64,36.785 Z"
-                            android:strokeColor="#5a8cff"
-                            android:strokeWidth="2"
-                            android:strokeMiterLimit="10"/>
+    <group android:name="mc3scale" android:scaleX="1.6842" android:scaleY="1.6842" android:pivotX="64" android:pivotY="64">
+        <path android:pathData="M46,68 A9,9,0,0,0,37,77 L37,83 A9,9,0,0,0,46,92 L82,92 A9,9,0,0,0,91,83 L91,77 A9,9,0,0,0,82,68 Z M46,76 A7,7,0,1,0,46,90 L82,90 A7,7,0,1,0,82,76 Z"
+                    android:fillColor="#9b7962"
+                    android:fillType="evenOdd"/>
+        <path android:pathData="M71,81 A1,1,0,1,1,69,81 A1,1,0,0,1,71,81 M65,85 A1,1,0,1,1,63,85 A1,1,0,0,1,65,85 M53,85 A1,1,0,1,1,51,85 A1,1,0,0,1,53,85 M59,81 A1,1,0,1,1,57,81 A1,1,0,0,1,59,81 M77,85 A1,1,0,1,1,75,85 A1,1,0,0,1,77,85"
+                    android:fillColor="#9b7962"/>
+        <group android:translateX="64" android:translateY="47.4">
+            <group android:name="g1g">
+                <group android:translateX="-64" android:translateY="-47.4">
+                    <path android:pathData="M64,36.785 C66.065,39.835,67.742,42.339,68.946,44.565 C70.305,47.075,71,49.122,71,51.07 C71,54.89,67.876,58,64,58 C60.124,58,57,54.88,57,51.07 C57,49.127,57.695,47.083,59.054,44.572 C60.258,42.346,61.934,39.839,64,36.785 Z"
+                                android:strokeColor="#5a8cff"
+                                android:strokeWidth="2"
+                                android:strokeMiterLimit="10"/>
+                </group>
             </group>
         </group>
     </group>

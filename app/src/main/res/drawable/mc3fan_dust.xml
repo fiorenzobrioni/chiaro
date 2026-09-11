@@ -10,70 +10,72 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <group>
-                <clip-path android:pathData="M0,0 L128,0 L0,128 Z"/>
-                <path android:pathData="M90.389,63.086 C92.684,53.882,87.741,44.136,79.009,40.482 C70.265,36.824,59.828,40.138,54.837,48.212 C50.537,45.625,44.975,45.778,40.824,48.599 C36.684,51.413,34.5,56.514,35.35,61.454 C28.393,62.769,23.393,69.339,24.061,76.408 C24.729,83.477,30.871,89.002,37.953,89 L90.977,89 C98.045,89,104,83.119,104,76.028 C104,68.701,97.677,62.768,90.389,63.086"
-                    android:fillColor="#e6effc"/>
-            </group>
-            <group android:name="g1dust1">
-                <path android:pathData="M51,87 A3,3,0,1,1,57,87 A3,3,0,1,1,51,87 Z"
-                    android:name="g2p"
-                    android:fillColor="#ffde75"/>
-            </group>
-            <group android:name="g3dust2">
-                <path android:pathData="M60,87 A3,3,0,1,1,66,87 A3,3,0,1,1,60,87 Z"
-                    android:name="g4p"
-                    android:fillColor="#ffde75"/>
-            </group>
-            <group android:name="g5dust3">
-                <path android:pathData="M60,78 A3,3,0,1,1,66,78 A3,3,0,1,1,60,78 Z"
-                    android:name="g6p"
-                    android:fillColor="#ffde75"/>
-            </group>
-            <group android:name="g7dust4">
-                <path android:pathData="M69,78 A3,3,0,1,1,75,78 A3,3,0,1,1,69,78 Z"
-                    android:name="g8p"
-                    android:fillColor="#ffde75"/>
-            </group>
-            <group android:name="g9dust5">
-                <path android:pathData="M69,69 A3,3,0,1,1,75,69 A3,3,0,1,1,69,69 Z"
-                    android:name="g10p"
-                    android:fillColor="#ffde75"/>
-            </group>
-            <group android:name="g11dust6">
-                <path android:pathData="M78,69 A3,3,0,1,1,84,69 A3,3,0,1,1,78,69 Z"
-                    android:name="g12p"
-                    android:fillColor="#ffde75"/>
-            </group>
-            <group android:name="g13dust7">
-                <path android:pathData="M78,60 A3,3,0,1,1,84,60 A3,3,0,1,1,78,60 Z"
-                    android:name="g14p"
-                    android:fillColor="#ffde75"/>
-            </group>
-            <group android:name="g15dust8">
-                <path android:pathData="M87,60 A3,3,0,1,1,93,60 A3,3,0,1,1,87,60 Z"
-                    android:name="g16p"
-                    android:fillColor="#ffde75"/>
-            </group>
-            <group android:name="g17dust9">
-                <path android:pathData="M87,51 A3,3,0,1,1,93,51 A3,3,0,1,1,87,51 Z"
-                    android:name="g18p"
-                    android:fillColor="#ffde75"/>
-            </group>
-            <group android:name="g19dust10">
-                <path android:pathData="M96,51 A3,3,0,1,1,102,51 A3,3,0,1,1,96,51 Z"
-                    android:name="g20p"
-                    android:fillColor="#ffde75"/>
-            </group>
-            <group android:name="g21dust11">
-                <path android:pathData="M96,42 A3,3,0,1,1,102,42 A3,3,0,1,1,96,42 Z"
-                    android:name="g22p"
-                    android:fillColor="#ffde75"/>
-            </group>
-            <group android:name="g23dust12">
-                <path android:pathData="M105,42 A3,3,0,1,1,111,42 A3,3,0,1,1,105,42 Z"
-                    android:name="g24p"
-                    android:fillColor="#ffde75"/>
+            <group android:name="mc3scale" android:scaleX="1.1035" android:scaleY="1.1035" android:pivotX="64" android:pivotY="64">
+                <group>
+                    <clip-path android:pathData="M0,0 L128,0 L0,128 Z"/>
+                    <path android:pathData="M90.389,63.086 C92.684,53.882,87.741,44.136,79.009,40.482 C70.265,36.824,59.828,40.138,54.837,48.212 C50.537,45.625,44.975,45.778,40.824,48.599 C36.684,51.413,34.5,56.514,35.35,61.454 C28.393,62.769,23.393,69.339,24.061,76.408 C24.729,83.477,30.871,89.002,37.953,89 L90.977,89 C98.045,89,104,83.119,104,76.028 C104,68.701,97.677,62.768,90.389,63.086"
+                        android:fillColor="#e6effc"/>
+                </group>
+                <group android:name="g1dust1">
+                    <path android:pathData="M51,87 A3,3,0,1,1,57,87 A3,3,0,1,1,51,87 Z"
+                        android:name="g2p"
+                        android:fillColor="#ffde75"/>
+                </group>
+                <group android:name="g3dust2">
+                    <path android:pathData="M60,87 A3,3,0,1,1,66,87 A3,3,0,1,1,60,87 Z"
+                        android:name="g4p"
+                        android:fillColor="#ffde75"/>
+                </group>
+                <group android:name="g5dust3">
+                    <path android:pathData="M60,78 A3,3,0,1,1,66,78 A3,3,0,1,1,60,78 Z"
+                        android:name="g6p"
+                        android:fillColor="#ffde75"/>
+                </group>
+                <group android:name="g7dust4">
+                    <path android:pathData="M69,78 A3,3,0,1,1,75,78 A3,3,0,1,1,69,78 Z"
+                        android:name="g8p"
+                        android:fillColor="#ffde75"/>
+                </group>
+                <group android:name="g9dust5">
+                    <path android:pathData="M69,69 A3,3,0,1,1,75,69 A3,3,0,1,1,69,69 Z"
+                        android:name="g10p"
+                        android:fillColor="#ffde75"/>
+                </group>
+                <group android:name="g11dust6">
+                    <path android:pathData="M78,69 A3,3,0,1,1,84,69 A3,3,0,1,1,78,69 Z"
+                        android:name="g12p"
+                        android:fillColor="#ffde75"/>
+                </group>
+                <group android:name="g13dust7">
+                    <path android:pathData="M78,60 A3,3,0,1,1,84,60 A3,3,0,1,1,78,60 Z"
+                        android:name="g14p"
+                        android:fillColor="#ffde75"/>
+                </group>
+                <group android:name="g15dust8">
+                    <path android:pathData="M87,60 A3,3,0,1,1,93,60 A3,3,0,1,1,87,60 Z"
+                        android:name="g16p"
+                        android:fillColor="#ffde75"/>
+                </group>
+                <group android:name="g17dust9">
+                    <path android:pathData="M87,51 A3,3,0,1,1,93,51 A3,3,0,1,1,87,51 Z"
+                        android:name="g18p"
+                        android:fillColor="#ffde75"/>
+                </group>
+                <group android:name="g19dust10">
+                    <path android:pathData="M96,51 A3,3,0,1,1,102,51 A3,3,0,1,1,96,51 Z"
+                        android:name="g20p"
+                        android:fillColor="#ffde75"/>
+                </group>
+                <group android:name="g21dust11">
+                    <path android:pathData="M96,42 A3,3,0,1,1,102,42 A3,3,0,1,1,96,42 Z"
+                        android:name="g22p"
+                        android:fillColor="#ffde75"/>
+                </group>
+                <group android:name="g23dust12">
+                    <path android:pathData="M105,42 A3,3,0,1,1,111,42 A3,3,0,1,1,105,42 Z"
+                        android:name="g24p"
+                        android:fillColor="#ffde75"/>
+                </group>
             </group>
         </vector>
     </aapt:attr>

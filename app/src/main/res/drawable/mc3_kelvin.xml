@@ -7,6 +7,8 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <path android:pathData="M76.158,76 L68.568,76 L62,66.034 L59.954,68.179 L59.954,76 L53.783,76 L53.783,52.504 L59.953,52.504 L59.953,60.754 L67.478,52.504 L75.167,52.504 L66.323,61.909 Z"
-                android:fillColor="#1a2232"/>
+    <group android:name="mc3scale" android:scaleX="4.0858" android:scaleY="4.0858" android:pivotX="64" android:pivotY="64">
+        <path android:pathData="M76.158,76 L68.568,76 L62,66.034 L59.954,68.179 L59.954,76 L53.783,76 L53.783,52.504 L59.953,52.504 L59.953,60.754 L67.478,52.504 L75.167,52.504 L66.323,61.909 Z"
+                    android:fillColor="#1a2232"/>
+    </group>
 </vector>
