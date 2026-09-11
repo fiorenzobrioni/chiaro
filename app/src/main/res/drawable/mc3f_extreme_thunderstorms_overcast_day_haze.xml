@@ -30,14 +30,14 @@
                     android:fillColor="#e6effc"/>
     </group>
     <group android:name="g6line2">
-        <path android:pathData="M40,95 L88,95 Z"
+        <path android:pathData="M40,95 L52,95 M61,95 L73,95 M82,95 L88,95"
                     android:strokeColor="#e2e8f0"
                     android:strokeWidth="3"
                     android:strokeLineCap="round"
                     android:strokeMiterLimit="10"/>
     </group>
     <group android:name="g7line1">
-        <path android:pathData="M40,103 L88,103 Z"
+        <path android:pathData="M40,103 L52,103 M61,103 L73,103 M82,103 L88,103"
                     android:strokeColor="#e2e8f0"
                     android:strokeWidth="3"
                     android:strokeLineCap="round"

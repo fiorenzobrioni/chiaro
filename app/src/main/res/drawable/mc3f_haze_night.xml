@@ -15,14 +15,14 @@
         </group>
     </group>
     <group android:name="g2line2">
-        <path android:pathData="M40,81 L88,81 Z"
+        <path android:pathData="M40,81 L52,81 M61,81 L73,81 M82,81 L88,81"
                     android:strokeColor="#e2e8f0"
                     android:strokeWidth="3"
                     android:strokeLineCap="round"
                     android:strokeMiterLimit="10"/>
     </group>
     <group android:name="g3line1">
-        <path android:pathData="M40,89 L88,89 Z"
+        <path android:pathData="M40,89 L52,89 M61,89 L73,89 M82,89 L88,89"
                     android:strokeColor="#e2e8f0"
                     android:strokeWidth="3"
                     android:strokeLineCap="round"

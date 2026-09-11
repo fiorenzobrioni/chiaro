@@ -11,63 +11,98 @@
             android:viewportWidth="128"
             android:viewportHeight="128">
             <path android:pathData="M87.79,40.135 C93.976,33.347,105,38.405,105,47.446 C105,53.275,100.522,58,95,58 L24,58 Z"
+                android:name="g1p"
                 android:strokeColor="#e2e8f0"
                 android:strokeWidth="4"
                 android:strokeLineCap="round"
-                android:strokeMiterLimit="10"/>
+                android:strokeMiterLimit="10"
+                android:trimPathStart="0"
+                android:trimPathEnd="0.4495"/>
             <path android:pathData="M60.128,87.868 C66.42,94.518,78,89.872,78,80.556 C78,74.726,73.35,70,67.615,70 L24,70 Z"
+                android:name="g2p"
                 android:strokeColor="#e2e8f0"
                 android:strokeWidth="4"
                 android:strokeLineCap="round"
-                android:strokeMiterLimit="10"/>
-            <group android:name="g1dust1">
+                android:strokeMiterLimit="10"
+                android:trimPathStart="0"
+                android:trimPathEnd="0.59"/>
+            <group android:name="g3dust1">
                 <path android:pathData="M45,64 A3,3,0,1,1,51,64 A3,3,0,1,1,45,64 Z"
-                    android:name="g2p"
-                    android:fillColor="#fcd966"/>
-            </group>
-            <group android:name="g3dust2">
-                <path android:pathData="M66,64 A3,3,0,1,1,72,64 A3,3,0,1,1,66,64 Z"
                     android:name="g4p"
                     android:fillColor="#fcd966"/>
             </group>
-            <group android:name="g5dust3">
-                <path android:pathData="M87,64 A3,3,0,1,1,93,64 A3,3,0,1,1,87,64 Z"
+            <group android:name="g5dust2">
+                <path android:pathData="M66,64 A3,3,0,1,1,72,64 A3,3,0,1,1,66,64 Z"
                     android:name="g6p"
                     android:fillColor="#fcd966"/>
             </group>
-            <group android:name="g7dust4">
-                <path android:pathData="M36,50 A3,3,0,1,1,42,50 A3,3,0,1,1,36,50 Z"
+            <group android:name="g7dust3">
+                <path android:pathData="M87,64 A3,3,0,1,1,93,64 A3,3,0,1,1,87,64 Z"
                     android:name="g8p"
                     android:fillColor="#fcd966"/>
             </group>
-            <group android:name="g9dust5">
-                <path android:pathData="M54,50 A3,3,0,1,1,60,50 A3,3,0,1,1,54,50 Z"
+            <group android:name="g9dust4">
+                <path android:pathData="M36,50 A3,3,0,1,1,42,50 A3,3,0,1,1,36,50 Z"
                     android:name="g10p"
                     android:fillColor="#fcd966"/>
             </group>
-            <group android:name="g11dust6">
-                <path android:pathData="M72,50 A3,3,0,1,1,78,50 A3,3,0,1,1,72,50 Z"
+            <group android:name="g11dust5">
+                <path android:pathData="M54,50 A3,3,0,1,1,60,50 A3,3,0,1,1,54,50 Z"
                     android:name="g12p"
                     android:fillColor="#fcd966"/>
             </group>
-            <group android:name="g13dust7">
-                <path android:pathData="M36,78 A3,3,0,1,1,42,78 A3,3,0,1,1,36,78 Z"
+            <group android:name="g13dust6">
+                <path android:pathData="M72,50 A3,3,0,1,1,78,50 A3,3,0,1,1,72,50 Z"
                     android:name="g14p"
                     android:fillColor="#fcd966"/>
             </group>
-            <group android:name="g15dust8">
-                <path android:pathData="M54,78 A3,3,0,1,1,60,78 A3,3,0,1,1,54,78 Z"
+            <group android:name="g15dust7">
+                <path android:pathData="M36,78 A3,3,0,1,1,42,78 A3,3,0,1,1,36,78 Z"
                     android:name="g16p"
                     android:fillColor="#fcd966"/>
             </group>
-            <group android:name="g17dust9">
-                <path android:pathData="M72,78 A3,3,0,1,1,78,78 A3,3,0,1,1,72,78 Z"
+            <group android:name="g17dust8">
+                <path android:pathData="M54,78 A3,3,0,1,1,60,78 A3,3,0,1,1,54,78 Z"
                     android:name="g18p"
+                    android:fillColor="#fcd966"/>
+            </group>
+            <group android:name="g19dust9">
+                <path android:pathData="M72,78 A3,3,0,1,1,78,78 A3,3,0,1,1,72,78 Z"
+                    android:name="g20p"
                     android:fillColor="#fcd966"/>
             </group>
         </vector>
     </aapt:attr>
-    <target android:name="g1dust1">
+    <target android:name="g1p">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="667"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="trimPathOffset"
+                android:valueFrom="1"
+                android:valueTo="0"/>
+        </aapt:attr>
+    </target>
+    <target android:name="g2p">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="508"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="trimPathOffset">
+                <propertyValuesHolder android:propertyName="trimPathOffset">
+                    <keyframe android:fraction="0" android:value="0.5927"/>
+                    <keyframe android:fraction="0.5927" android:value="0"/>
+                    <keyframe android:fraction="0.5937" android:value="1"/>
+                    <keyframe android:fraction="1" android:value="0.5927"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g3dust1">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -79,7 +114,7 @@
                 android:valueTo="8"/>
         </aapt:attr>
     </target>
-    <target android:name="g1dust1">
+    <target android:name="g3dust1">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -91,7 +126,7 @@
                 android:valueTo="-4"/>
         </aapt:attr>
     </target>
-    <target android:name="g2p">
+    <target android:name="g4p">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -108,7 +143,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g3dust2">
+    <target android:name="g5dust2">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -125,7 +160,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g3dust2">
+    <target android:name="g5dust2">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -142,7 +177,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g4p">
+    <target android:name="g6p">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -160,7 +195,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g5dust3">
+    <target android:name="g7dust3">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -177,7 +212,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g5dust3">
+    <target android:name="g7dust3">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -194,7 +229,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g6p">
+    <target android:name="g8p">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -211,7 +246,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g7dust4">
+    <target android:name="g9dust4">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -228,7 +263,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g7dust4">
+    <target android:name="g9dust4">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -245,7 +280,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g8p">
+    <target android:name="g10p">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -263,7 +298,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g9dust5">
+    <target android:name="g11dust5">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -280,7 +315,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g9dust5">
+    <target android:name="g11dust5">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -297,7 +332,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g10p">
+    <target android:name="g12p">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -315,7 +350,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g11dust6">
+    <target android:name="g13dust6">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -332,7 +367,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g11dust6">
+    <target android:name="g13dust6">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -349,7 +384,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g12p">
+    <target android:name="g14p">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -367,7 +402,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g13dust7">
+    <target android:name="g15dust7">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -384,7 +419,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g13dust7">
+    <target android:name="g15dust7">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -401,7 +436,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g14p">
+    <target android:name="g16p">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -419,7 +454,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g15dust8">
+    <target android:name="g17dust8">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -436,7 +471,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g15dust8">
+    <target android:name="g17dust8">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -453,7 +488,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g16p">
+    <target android:name="g18p">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -471,7 +506,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g17dust9">
+    <target android:name="g19dust9">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -488,7 +523,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g17dust9">
+    <target android:name="g19dust9">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"
@@ -505,7 +540,7 @@
             </objectAnimator>
         </aapt:attr>
     </target>
-    <target android:name="g18p">
+    <target android:name="g20p">
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:duration="3000"

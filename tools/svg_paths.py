@@ -227,3 +227,119 @@ def circle_to_path(cx: float, cy: float, r: float) -> str:
     return (f"M{fmt(cx - r)},{fmt(cy)} "
             f"A{fmt(r)},{fmt(r)},0,1,1,{fmt(cx + r)},{fmt(cy)} "
             f"A{fmt(r)},{fmt(r)},0,1,1,{fmt(cx - r)},{fmt(cy)} Z")
+
+
+# --------------------------------------------------------------------- tratteggi
+
+#: Quanto finemente si campiona una curva per misurarla o spezzarla. A 128 unita' di
+#: scatola e 34-42 dp di resa, 64 passi per segmento sono sotto il decimo di pixel.
+DASH_STEPS = 64
+
+
+def polyline(d: str, steps: int = DASH_STEPS):
+    """Il percorso come polilinee, **anche se aperto** — a differenza di
+    `raster.flatten`, che scarta i sottopercorsi con meno di tre punti perche' li'
+    servono solo le forme chiuse delle maschere. Qui i tratteggi sono quasi tutti
+    segmenti dritti, cioe' esattamente il caso che quel filtro buttava via."""
+    out = []
+    for start, segs in parse_segments(d):
+        pts = [start]
+        for seg in segs:
+            p0 = pts[-1]
+            if seg[0] == "L":
+                pts.append(seg[1])
+            elif seg[0] == "C":
+                for i in range(1, steps + 1):
+                    t = i / steps
+                    u = 1 - t
+                    pts.append((
+                        u**3*p0[0] + 3*u*u*t*seg[1][0] + 3*u*t*t*seg[2][0] + t**3*seg[3][0],
+                        u**3*p0[1] + 3*u*u*t*seg[1][1] + 3*u*t*t*seg[2][1] + t**3*seg[3][1]))
+            elif seg[0] == "Q":
+                for i in range(1, steps + 1):
+                    t = i / steps
+                    u = 1 - t
+                    pts.append((u*u*p0[0] + 2*u*t*seg[1][0] + t*t*seg[2][0],
+                                u*u*p0[1] + 2*u*t*seg[1][1] + t*t*seg[2][1]))
+            else:
+                pts.append(seg[-1])
+        out.append(pts)
+    return out
+
+
+def path_length(d: str) -> float:
+    import math
+    return sum(sum(math.dist(a, b) for a, b in zip(p, p[1:])) for p in polyline(d))
+
+
+def dash_pattern(value: str):
+    """`stroke-dasharray` -> la coppia (acceso, spento). Un valore solo vuole dire che
+    acceso e spento sono uguali, come dice la specifica SVG."""
+    nums = [float(v) for v in value.replace(",", " ").split()]
+    if not nums:
+        return None
+    if len(nums) == 1:
+        return nums[0], nums[0]
+    if len(nums) == 2:
+        return nums[0], nums[1]
+    raise ValueError(f"stroke-dasharray con {len(nums)} valori")
+
+
+def dash_split(d: str, on: float, off: float) -> str:
+    """Il tratteggio **ridisegnato**, come segmenti veri.
+
+    VectorDrawable non ha `stroke-dasharray`, e l'importatore della v2 aveva gia' preso
+    questa strada (la sua dipartenza n. 3: «i tratteggi si ridisegnano, non si emulano»).
+    Per i tratteggi di Meteocons v3 e' anche esatta e non approssimata: sono 70 righe
+    dritte per stile (la foschia, la nebbia, il fumo), e spezzare una retta in tratti da
+    12 unita' ogni 9 non perde niente.
+    """
+    import math
+    period = on + off
+    if period <= 0:
+        return d
+    bits = []
+    for pts in polyline(d):
+        dist = 0.0
+        pen = None
+        for a, b in zip(pts, pts[1:]):
+            seg = math.dist(a, b)
+            if seg <= 0:
+                continue
+            travelled = 0.0
+            while travelled < seg:
+                pos = (dist + travelled) % period
+                lit = pos < on
+                room = (on - pos) if lit else (period - pos)
+                step = min(room, seg - travelled)
+                t0 = (travelled) / seg
+                t1 = (travelled + step) / seg
+                p0 = (a[0] + (b[0]-a[0])*t0, a[1] + (b[1]-a[1])*t0)
+                p1 = (a[0] + (b[0]-a[0])*t1, a[1] + (b[1]-a[1])*t1)
+                if lit:
+                    if pen is None or math.dist(pen, p0) > 1e-6:
+                        bits.append(f"M{fmt(p0[0])},{fmt(p0[1])}")
+                    bits.append(f"L{fmt(p1[0])},{fmt(p1[1])}")
+                    pen = p1
+                else:
+                    pen = None
+                travelled += step
+            dist += seg
+    return " ".join(bits)
+
+
+def trim_window(d: str, on: float, off: float):
+    """Il tratteggio come **finestra di `trimPath`**, che VectorDrawable invece ha.
+
+    Un `stroke-dasharray` con il suo `stroke-dashoffset` animato non e' un tratteggio: e'
+    una finestra che corre lungo il tratto — la raffica che passa sulla riga del vento.
+    `trimPathStart`/`trimPathEnd` sono frazioni della lunghezza totale e
+    `trimPathOffset` le fa scorrere, che e' la stessa cosa detta con le parole di Android.
+
+    Torna `(start, end, lunghezza)`; `None` quando il percorso e' piu' corto del primo
+    trattino, perche' li' il tratteggio non si vede e la finestra sarebbe tutto.
+    """
+    total = path_length(d)
+    if total <= 0 or on >= total:
+        return None
+    return 0.0, min(1.0, on / total), total

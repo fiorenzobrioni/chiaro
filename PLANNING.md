@@ -5532,12 +5532,25 @@ riscritti: sono le funzioni di `import_meteocons.py`, importate e usate tali e q
       (17 icone su 519: tutte `compass*` e `wind-direction-*`, un'ombra portata fatta di
       `feFlood` + `feOffset` + `feComposite` + `feBlend`). Se un giorno si importasse fill, si
       **lasciano cadere**: l'ombra non porta informazione e VectorDrawable non ha filtri
-- [~] **I tratteggi**: su tutte e 519 sono 56 con `stroke-dasharray` e 42 che animano
-      `stroke-dashoffset`, ma **nel sottoinsieme sono due icone sole** — `wind` e
-      `wind-beaufort-5` — e quattro animazioni. VectorDrawable non ha il tratteggio; il tool
-      già ridisegna i tratteggi statici di v2 (dipartenza n. 3), e per l'animazione c'è
-      `trimPathStart/End/Offset` da provare. Su due icone è un problema piccolo: se non regge,
-      restano ferme e si dice quali
+- [x] **I tratteggi**, chiusi l'11 set 2026 — ed erano **due problemi diversi**, non uno:
+
+      | | quanti | cos'è | come si dice in Android |
+      |---|---|---|---|
+      | `stroke-dasharray="12 9"` | 112 | tratteggio fermo, tutte **rette** (foschia, nebbia, fumo) | si **ridisegna** a segmenti veri |
+      | `stroke-dasharray="50"` + `stroke-dashoffset` animato | 34 | non è un tratteggio: è una **finestra che corre** lungo la riga del vento | `trimPathStart/End` + `trimPathOffset` animato |
+
+      Il primo caso è esatto e non approssimato: una retta di 48 unità spezzata 12 acceso /
+      9 spento dà `M40,95 L52,95 M61,95 L73,95 M82,95 L88,95`, che è quel che l'SVG
+      disegnerebbe. Il secondo lo è quasi: `trimPath` ha **una** finestra, quindi dove il
+      tratto è più lungo del periodo (100 unità; il più lungo misura 111) l'SVG ne
+      mostrerebbe due. Le due grandezze non hanno né unità né verso in comune — l'offset
+      SVG è in unità di disegno e crescendo sposta il motivo **all'indietro**,
+      `trimPathOffset` è una frazione e crescendo lo sposta **in avanti** — quindi la
+      corsa si converte in giri di percorso e si anima da 1 a 0.
+      Le icone che animano salgono da 470 a **484 per stile**: le quattordici del vento
+      avevano solo quella. E `icon_filmstrip.py` ha imparato a ridisegnare `trimPath*`
+      come il tratteggio da cui viene (con `pathLength="1"` le frazioni di Android **sono**
+      le unità del dasharray), quindi la spazzolata si è potuta guardare: scorre
 - [x] **I gradienti**: con flat + line il problema **sparisce** — sulle 519 sono **15 icone**, appiattite sul colore di faccia e dichiarate nel rapporto. Era il
       motivo della dipartenza n. 4 del tool, che a questo punto si può togliere anziché
       riscrivere. Resta da decidere solo per le tre di flat: appiattire come oggi, o portarle

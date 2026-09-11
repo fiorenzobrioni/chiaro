@@ -121,6 +121,18 @@ def svg_shape(el: ET.Element, now: dict, out: list[str], clips: list[str]) -> No
                 bits.append(f'{svg_name}="{attr(el, avd_name)}"')
         if "strokeAlpha" in animated:
             bits.append(f'stroke-opacity="{animated["strokeAlpha"]}"')
+        # `trimPath*` torna a essere il tratteggio da cui e' venuto (Fase 13). Con
+        # `pathLength="1"` le frazioni di Android SONO le unita' del dasharray, quindi
+        # la finestra si ridisegna senza misurare niente.
+        start = float(attr(el, "trimPathStart", 0) or 0)
+        end = float(attr(el, "trimPathEnd", 1) or 1)
+        offset = animated.get("trimPathOffset",
+                              float(attr(el, "trimPathOffset", 0) or 0))
+        if (start, end) != (0.0, 1.0) or offset:
+            span = max(0.0, end - start)
+            bits.append('pathLength="1"')
+            bits.append(f'stroke-dasharray="{span} {max(1e-6, 1 - span)}"')
+            bits.append(f'stroke-dashoffset="{-(start + offset)}"')
     out.append("<path " + " ".join(bits) + "/>")
 
 

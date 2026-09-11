@@ -152,10 +152,14 @@ def rotate_keyframes(times, values, phase):
 # ------------------------------------------------------------------------ emissione
 
 class Emitter:
-    def __init__(self, clips=None):
+    def __init__(self, clips=None, animated=False):
         self.targets: list[str] = []
         self.interpolators: set = set()
         self.clips = clips or {}
+        #: Il disegno fermo e quello che si muove non dicono il tratteggio allo stesso
+        #: modo: fermo lo si ridisegna a segmenti, in movimento diventa una finestra di
+        #: `trimPath` che corre. Da cui due passate sullo stesso albero.
+        self.animated = animated
         self.n = 0
 
     def gid(self, hint: str) -> str:
@@ -334,12 +338,6 @@ def paint(el, gradients, notes):
                               ("stroke-opacity", "strokeAlpha")):
             if el.get(svg_name):
                 out.append(f'android:{avd}="{el.get(svg_name)}"')
-        if el.get("stroke-dasharray"):
-            # VectorDrawable non ha il tratteggio. v2 ridisegnava i tratteggi come
-            # segmenti veri (dipartenza n. 3); qui si dichiara e basta, perche' un
-            # tratto reso solido e' un disegno diverso e chi legge il rapporto deve
-            # saperlo.
-            notes.add("tratteggio reso solido")
     return out
 
 
@@ -392,14 +390,8 @@ def walk(el, em, out, depth, gradients, notes, alpha=()):
         # l'esterno per prima — l'ordine in cui SMIL le moltiplica.
         transforms = [a for a in anims if a.tag == SVG_NS + "animateTransform"]
         fades = [a for a in anims if a not in transforms]
-        for a in list(fades):
-            if a.get("attributeName") == "stroke-dashoffset":
-                # Le formiche in marcia di un tratto tratteggiato. VectorDrawable non ha
-                # il tratteggio (vedi `paint`), quindi non c'e' niente da far marciare:
-                # si perde l'animazione, non l'icona, e lo si dichiara.
-                notes.add("animazione del tratteggio persa")
-                fades.remove(a)
-            elif a.get("attributeName") != "opacity":
+        for a in fades:
+            if a.get("attributeName") not in ("opacity", "stroke-dashoffset"):
                 raise Unsupported(f"animate {a.get('attributeName')!r}")
 
         opened = 0
@@ -429,14 +421,28 @@ def walk(el, em, out, depth, gradients, notes, alpha=()):
             ind += "    "
         d = shape_data(el, gradients, notes)
         attrs = paint(el, gradients, notes)
-        pname = em.gid("p") if alpha else None
+        trim = None
+        if el.get("stroke-dasharray"):
+            on, off = paths.dash_pattern(el.get("stroke-dasharray"))
+            sweeping = [a for a in alpha
+                        if a.get("attributeName") == "stroke-dashoffset"]
+            if em.animated and sweeping:
+                trim = paths.trim_window(d, on, off)
+            if trim is None:
+                d = paths.dash_split(d, on, off)
+                notes.add("tratteggio ridisegnato a segmenti")
+            else:
+                attrs.append(f'android:trimPathStart="{fmt(trim[0])}"')
+                attrs.append(f'android:trimPathEnd="{fmt(trim[1])}"')
+                notes.add("tratteggio come finestra di trimPath")
+        pname = em.gid("p") if (alpha or trim) else None
         bits = [f'{ind}<path android:pathData="{d}"']
         if pname:
             bits.append(f'{ind}    android:name="{pname}"')
         bits += [f"{ind}    {a}" for a in attrs]
         out.append(NL.join(bits) + "/>")
         if pname:
-            _fade(el, pname, em, alpha, attrs)
+            _fade(el, pname, em, alpha, attrs, trim)
         for _ in wrappers:
             ind = ind[:-4]
             out.append(ind + "</group>")
@@ -476,17 +482,46 @@ def _transform_group(a, el, em, out, depth):
         raise Unsupported(f"animateTransform {kind!r}")
 
 
-def _fade(el, pname, em, alpha, attrs):
+def _fade(el, pname, em, alpha, attrs, trim=None):
+    """Le animazioni che in AVD sono proprieta' del **path** e non del gruppo."""
     has_fill = any(a.startswith("android:fillColor") for a in attrs)
     has_stroke = any(a.startswith("android:strokeColor") for a in attrs)
     for a in alpha:
-        controls = [float(v) for v in a.get("values").split(";")]
         dur = parse_time(a.get("dur"))
         interp = em.interpolator(a.get("keySplines"))
+        controls = [float(v) for v in a.get("values").split(";")]
+        if a.get("attributeName") == "stroke-dashoffset":
+            if trim is None:
+                continue
+            _sweep(a, pname, em, controls, dur, interp, trim)
+            continue
         for prop, present in (("fillAlpha", has_fill), ("strokeAlpha", has_stroke)):
             if present:
                 em.animate(pname, prop, controls, dur, interp,
                            smil_phase(a, dur), smil_key_times(a))
+
+
+def _sweep(a, pname, em, controls, dur, interp, trim):
+    """`stroke-dashoffset` che cresce -> `trimPathOffset` che scorre.
+
+    Le due grandezze non hanno la stessa unita' ne' lo stesso verso. In SVG l'offset si
+    misura in unita' del disegno e, crescendo, sposta il motivo **all'indietro** lungo il
+    tratto; `trimPathOffset` e' una frazione della lunghezza totale e, crescendo, sposta
+    la finestra in avanti. Quindi si converte la corsa in giri di percorso e si anima da
+    1 a 0. La durata e' quella di UN giro, ripetuta: il ciclo SMIL ne fa piu' d'uno
+    (mille unita' su un tratto lungo ottantacinque sono quasi dodici raffiche).
+    """
+    _, _, total = trim
+    swept = abs(controls[-1] - controls[0])
+    if swept <= 0 or total <= 0:
+        return
+    lap = round(dur * total / swept)          # quanto dura un giro intero
+    begin = parse_time(a.get("begin", "0s"))
+    phase = 0.0
+    if begin < 0:
+        # dove si trovava la finestra all'apertura della pagina, in giri
+        phase = (((-begin) * swept / dur) % total) / total
+    em.animate(pname, "trimPathOffset", [1.0, 0.0], lap, interp, phase)
 
 
 def _masked_group(el, mask, em, out, depth, gradients, notes, alpha):
@@ -543,15 +578,25 @@ def convert(svg_path: pathlib.Path):
     gradients = {g.get("id"): g for g in root.iter()
                  if g.tag in (SVG_NS + "linearGradient", SVG_NS + "radialGradient")}
     notes: set[str] = set()
-    clip_paths = {c.get('id'): c for c in root.iter(SVG_NS + 'clipPath')}
-    em = Emitter(clip_paths)
-    body: list[str] = []
-    for child in root:
-        if child.tag == SVG_NS + "defs":
-            continue
-        walk(child, em, body, 3, gradients, notes)
+    clip_paths = {c.get("id"): c for c in root.iter(SVG_NS + "clipPath")}
 
-    inner = NL.join(body)
+    # Due passate sullo stesso albero, e il motivo e' il tratteggio: fermo si ridisegna a
+    # segmenti veri, in movimento diventa una finestra di `trimPath` che corre. Tutto il
+    # resto esce identico, e per le 463 icone senza tratteggio la seconda passata produce
+    # esattamente il disegno della prima.
+    def pass_(animated):
+        em = Emitter(clip_paths, animated=animated)
+        body: list[str] = []
+        for child in root:
+            if child.tag == SVG_NS + "defs":
+                continue
+            walk(child, em, body, 3, gradients, notes)
+        return em, body
+
+    em, body = pass_(False)
+    em_anim, body_anim = pass_(True)
+
+    inner = NL.join(body_anim)
     static = HEADER + NL.join([
         '<vector xmlns:android="http://schemas.android.com/apk/res/android"',
         '    android:width="24dp"',
@@ -563,7 +608,8 @@ def convert(svg_path: pathlib.Path):
     ]) + NL
 
     animated = None
-    if em.targets:
+    em = em_anim if em_anim.targets else em
+    if em_anim.targets:
         animated = HEADER + NL.join([
             '<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"',
             '    xmlns:aapt="http://schemas.android.com/aapt">',
@@ -576,7 +622,7 @@ def convert(svg_path: pathlib.Path):
             inner,
             "        </vector>",
             "    </aapt:attr>",
-            NL.join(em.targets),
+            NL.join(em_anim.targets),
             "</animated-vector>",
         ]) + NL
     return static, animated, notes, em.interpolators
