@@ -1,6 +1,10 @@
+# Meteocons, @meteocons/svg 3.0.0-next.10 (github.com/basmilius/meteocons)
+# Imported by tools/import_meteocons_v3.py; see DESIGN.md 13.1 for what the import
+# changes and why. The text below is the package's own LICENSE, verbatim.
+
 MIT License
 
-Copyright (c) 2020-2021 Bas Milius
+Copyright (c) 2020-present Bas Milius
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -149,8 +149,8 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   app at the brightest colors a screen holds, the default), each choosing the Material
   scheme, the semantic tokens, the sky bands and the icon set together, in light, dark or
   whatever the system is doing; dynamic color from the wallpaper stays one switch away.
-  Two weather-icon themes, outlined by default or filled, both re-anchored to clear a
-  measured 3:1 against the surface they are drawn on, and the condition icons move with
+  Two weather-icon themes, outlined by default or filled, each shipped twice and picked by
+  the ground it lands on so it clears a measured 3:1 there, and the condition icons move with
   Meteocons' own animations: still when the phone asks for less motion, and paused while
   a page scrolls, so a scroll never stutters
 - ⚙️ **Settings**: units (temperature, wind), appearance (theme, palette, icon family,
@@ -292,10 +292,12 @@ it, is in [DESIGN.md](./DESIGN.md).
   framework (the app is small enough that Hilt would cost more than it saves), the four
   destinations as a saveable enum in the shell rather than a nav graph, and the charts
   drawn on a Compose canvas rather than by a charting library
-- **Meteocons** v2.0.0 as vector drawables, imported and recolored by
-  `tools/import_meteocons.py`; **Inter** as a bundled variable font
-- 754 unit tests on the JVM across four modules (312 in `:app`, 213 in `:core:domain`, 208
-  in `:core:data`, 21 in `:core:sync`), Robolectric where Android is unavoidable, including
+- **Meteocons** v3 as vector drawables, imported and re-anchored by
+  `tools/import_meteocons_v3.py`. The whole family of 519 drawings lives in the repo and
+  only what a screen names reaches the APK, which is what `shrinkResources` is for.
+  **Inter** as a bundled variable font
+- 765 unit tests on the JVM across four modules (320 in `:app`, 213 in `:core:domain`, 208
+  in `:core:data`, 24 in `:core:sync`), Robolectric where Android is unavoidable, including
   painting the arc widget's bitmap for real and reading its pixels back
 
 ```text

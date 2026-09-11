@@ -5276,7 +5276,7 @@ Chiaro ne spedisce oggi 268 file XML, 1,7 MB: 49 icone × 4 set statici (`mc_`, 
 Tre domande, e finché non hanno risposta la fase non parte. La prima è l'unica che può
 fermarla.
 
-- [ ] **Le maschere.** v3 usa `<mask>`, che VectorDrawable non ha. Sul sottoinsieme delle 70
+- [x] **Le maschere.** v3 usa `<mask>`, che VectorDrawable non ha. Sul sottoinsieme delle 70
       icone che Chiaro metterebbe a schermo: **line 31, flat 31, monochrome 31, fill 12**. Per
       `line` sono quasi tutti i cieli composti — `mostly-clear-day/night`,
       `partly-cloudy-day/night`, `overcast`, `fog-day/night`, gli `overcast-*`, i
@@ -5329,12 +5329,15 @@ fermarla.
       guardata invece che calcolata.
       Quel che resta al telefono: che hwui renda la coppia annidata come la rende il
       filmstrip. Il rischio è sceso da «la fase può cadere» a «una verifica di resa».
-- [ ] **I colori originali su carta.** La misura sotto. Lo spike produce il filmstrip delle
+- [x] **I colori originali su carta.** La misura sotto. Lo spike produce il filmstrip delle
       due ipotesi (originali / riancorati) e si decide guardando.
-- [ ] **La prerelease.** `@meteocons/svg` su npm ha `latest` = **0.1.0** e `next` =
+- [x] **La prerelease.** `@meteocons/svg` su npm ha `latest` = **0.1.0** e `next` =
       **3.0.0-next.10**: v3 non è ancora stabile. Verificare se esce una `3.0.0` prima di
       aprire le caselle; se non esce, si appunta la versione esatta come si è appuntato il tag
       v2.0.0, e `UPSTREAM.md` dice che è una prerelease e perché.
+      **Sciolto l'11 set 2026**: la 3.0.0 non e' uscita, quindi si appunta la
+      prerelease esatta — `@meteocons/svg@3.0.0-next.10` — come si appuntava il tag
+      v2.0.0, e `licenses/Meteocons-MIT.txt` dice da quale pacchetto viene il testo.
 
 ### Il commento sui colori originali, con i numeri
 
@@ -5384,8 +5387,8 @@ la regola:
       tutti: **flat** può quasi tenere gli originali sullo scuro (5% di inchiostro sotto
       soglia), **line no** (13%, per i contorni `#1e293b`). Quindi quattro set come oggi, e
       quanto rimappaggio serva a ciascuno lo dice la misura, non la simmetria
-- [ ] Se invece si vogliono gli originali dappertutto, la terza strada è **dare all'icona un
-      fondo suo** (una pastiglia tenue sotto il glifo nella striscia e nella settimana): fa
+- [~] **Non presa**, e si scrive perché era la terza strada: dare all'icona un
+      **fondo suo** (una pastiglia tenue sotto il glifo nella striscia e nella settimana): fa
       passare il 3:1 senza toccare un colore. È una decisione di design, non di conversione —
       va in DESIGN §13.1, non qui
 
@@ -5523,9 +5526,9 @@ per il confronto al filmstrip; non si spediscono.
 **Il costo, misurato:** 4 004 drawable, 39 MB nel repo, e nell'APK di release
 **+257 996 B** (64 byte l'uno, lo stesso numero della misura precedente), cioè il 4%.
 
-- [ ] **39 MB nel repo** è la cosa da decidere, non da subire: se pesano, la stessa
-      tabella `ICONS` che oggi è la lista di spedizione può diventare anche la lista di
-      **conversione**, e il set completo resta a un comando di distanza invece che in git
+- [x] **39 MB nel repo**: **decisi l'11 set 2026 dal committente — non pesano.** La
+      famiglia intera resta in git, e la lista di spedizione resta il filtro verso l'APK.
+      Se un giorno pesassero, la stessa lista può diventare anche lista di *conversione*
 
 
 ### Blocco B — la cucitura Kotlin, fatta (11 set 2026)
@@ -5582,11 +5585,40 @@ stessa modifica che le dà una schermata.
 Il mezzo mega in più compra 24 cieli invece di 18, i disegni di v3 che sono più
 dettagliati, e i quattro set riancorati.
 
-- [ ] **Le schede Dettagli** (il prossimo blocco): `pollen-grass/tree/weed` nei quattro
-      livelli al posto di `mc3_pollen`, `uv-index-1…11`, le bande del barometro, la
-      Beaufort — ognuna sposta una riga da `PLANNED` a `SHIPPED`
-- [ ] **L'ago del vento**: `wind-direction-n` tenendo solo il gruppo `Pointer`, ruotato
-      come `WindArrow` ruota già
+- [x] **Le schede Dettagli**: pollini per pianta e livello, UV per unità (il tile stampa
+      l'intero), le **tre** bande del barometro che `pressureMeaning` dice e non le cinque
+      disegnate, e `mist`/`haze`/`fog` per la visibilità. Il vento **non** è graduato, per la
+      stessa regola: `windMeaning` ha cinque bande, i windsock sono tre e la Beaufort non è
+      detta da nessuna parte a schermo
+- [x] **L'ago del vento**: `wind-direction-n` col solo gruppo `Pointer`, ritagliato su una
+      finestra di 48 unità centrata sul **mozzo** (senza ritaglio è tredici unità
+      d'inchiostro su centoventotto, e a 16 dp una scheggia — guardato, non supposto), ruotato
+      come `WindArrow` ruotava già. Resta a 16 dp, così nessuna misura del tile si muove
+
+
+### Blocco D — i documenti, e un numero che è migliorato (11 set 2026)
+
+`DESIGN.md` §13.1 era la sezione più lunga del documento e citava v2.0.0, i 64 unit, le
+tre dipartenze del tool e il quarto set del vestito vivid: riscritta. Con lei §7.1, la
+nota dei generatori e `README.md` (che non prende trattini lunghi, ed è stato ricontrollato
+riga per riga).
+
+**L'eccezione dichiarata del widget Cielo è stata rimisurata, e si è mossa parecchio.**
+Quel fondo è il cielo scurito, al più chiaro `#5C6E7B`, Y 0,149: un mezzotono, dove un
+inchiostro passa il 3:1 solo sopra Y 0,546 o sotto Y 0,016, e in mezzo non c'è niente.
+
+| | sotto 3:1 su `#5C6E7B` | il sole |
+|---|---|---|
+| v2 line (`mc_*`) | 8 su 8 | 1,57:1 |
+| v2 line vivid (`mcn_*`) | 8 su 8 | 2,68:1 |
+| **v3 line scuro (`mc3n_*`)** | **17 su 34** | **3,31:1** |
+| **v3 flat scuro (`mc3fn_*`)** | **20 su 38** | **3,33:1** |
+
+**L'icona che il lettore guarda davvero adesso passa**, e non era mai successo. Metà dei
+colori resta sotto, quindi l'eccezione resta un'eccezione — ma il caso che conta si è
+chiuso per aritmetica e non per concessione: un set che deve una superficie sola ha spazio
+che un set che ne deve due non ha. È il guadagno della decisione del Blocco C, arrivato
+dove non lo si cercava.
 
 ### Le caselle
 
@@ -5624,11 +5656,13 @@ annidati; i `clip-path` interni, saltando quello grande quanto la tela che Figma
 addosso a quasi ogni icona. La fase negativa, i `keyTimes` e i keyframe **non** sono stati
 riscritti: sono le funzioni di `import_meteocons.py`, importate e usate tali e quali.
 
-- [ ] **Il tool v2 si ritira** quando `ChiaroIcons` passa alla v3 (Blocco B): fino ad allora
-      è lui a produrre le icone spedite, e i due convivono
-- [ ] **Il tratteggio**: ridisegnare i 112 come fece v2, o dichiarare per iscritto quali
+- [x] **Il tool v2 resta, i suoi drawable no.** `import_meteocons.py` non produce più niente
+      di spedito, ma `import_meteocons_v3.py` ne importa `loop_keyframes`: la rotazione dei
+      keyframe per una fase negativa è scritta lì ed è valida identica sulla v3
+- [x] **Il tratteggio**: ridisegnare i 112 come fece v2, o dichiarare per iscritto quali
       restano pieni. Non si spedisce `wind` con una riga che il disegnatore aveva tratteggiato
       senza dirlo
+      **Fatto**, e in due modi diversi perche' erano due problemi: vedi sopra.
 - [x] **Il tool**: `import_meteocons.py` legge da `@meteocons/svg` / `@meteocons/svg-static`
       (versione appuntata, tarball con checksum, o CDN versionato) invece che da un clone del
       repo. Oggi il tool accetta `g`, `circle`, `path`, `defs` ed esce su tutto il resto; gli
@@ -5680,7 +5714,7 @@ riscritti: sono le funzioni di `import_meteocons.py`, importate e usate tali e q
       coprire nel sottoinsieme: `translate` 151, `opacity` 106, `rotate` 42, `scale` 4,
       `stroke-dashoffset` 4. I primi tre il tool li fa già, `scale` è un attributo di
       `<group>`, gli ultimi quattro sono le due icone del tratteggio
-- [ ] **La mappatura WMO**, finalmente 1:1 con quello che il provider dice (punto 4):
+- [x] **La mappatura WMO**, finalmente 1:1 con quello che il provider dice (punto 4):
 
 | WMO | parola già a schermo | icona v3 (giorno / notte) |
 |---|---|---|
@@ -5705,12 +5739,14 @@ riscritti: sono le funzioni di `import_meteocons.py`, importate e usate tali e q
   dalle stesse 1 680 ore: quando piove il cielo **è** chiuso (codice 51: copertura minima 88,
   p50 100; codice 61: minima 87, p50 100; codice 80: minima 71, p50 100). Disegnare la
   pioggia senza la sua nuvola sarebbe sottrarre un fatto, non semplificare
-- [ ] **Un test sulla tabella**, che oggi non c'è: ogni codice WMO che il provider può
+- [x] **Un test sulla tabella**, che oggi non c'è: ogni codice WMO che il provider può
       servire → il suo drawable, per giorno e per notte, e il fallback su `not-available`.
       È la casella che impedisce alla prossima fusione silenziosa di ripetersi
-- [ ] **La lista di spedizione: 143 icone**, verificate una per una presenti in **entrambi**
-      gli stili del pacchetto `3.0.0-next.10`. È la nuova tabella `ICONS` del tool (punti 2 e 3
-      della richiesta):
+- [x] **La lista di spedizione.** Era di 143, verificate una per una presenti in entrambi
+      gli stili; misurando si è divisa in **83 spedite e 61 pronte** (`SHIPPED` e `PLANNED`
+      in `tools/shipped_icons.py`), perché spedire un disegno che nessuna schermata nomina
+      costa e non si vede. Il gruppo qui sotto è la scelta di partenza (punti 2 e 3 della
+      richiesta); la colonna che conta è se una schermata la disegna:
 
 | gruppo | n | note |
 |---|---|---|
@@ -5726,16 +5762,16 @@ riscritti: sono le funzioni di `import_meteocons.py`, importate e usate tali e q
 | **Arcobaleno e momenti del giorno** | 11 | `rainbow`, `rainbow-clear`, `rainbow-cloud`, `time-morning…late-night` |
 | **Allerte, per tipo di rischio** | 14 | `weather-alert(-day/-night)`, `wind-alert`, `thermometer-alert`, `uv-index-alert`, `water-alert`, `fire-alert`, `avalanche-danger-alert`, `tornado`, `hurricane`, `cyclone`, `waterspout`, `falling-rocks-alert` |
 
-- [ ] **Due debiti che questa lista salda**, e sono scritti nel codice, non dedotti:
+- [x] **Due debiti che questa lista salda**, e sono scritti nel codice, non dedotti:
       `ChiaroIcons.pollen` oggi disegna `mc_dust` e il suo commento dice «Meteocons v2 non ha
       un'icona per i pollini (**v3 sì**) … serve finché la famiglia v3 non si stabilizza»;
       `ChiaroIcons.rainbow` disegna `mc_partly_cloudy_day_rain` e dice «Meteocons v2 non ha un
       arcobaleno». Sono le due caselle che la Fase 2 ha lasciato aperte e che qui si chiudono
-- [ ] **La regola sulle icone graduate**: si spedisce un glifo per banda **solo dove la banda
+- [x] **La regola sulle icone graduate**: si spedisce un glifo per banda **solo dove la banda
       è già calcolata e già detta a parole** (`WeatherText.uvMeaning`, `pressureMeaning`,
       `windMeaning`, `pollenLevel`). Se il glifo dicesse un livello che la riga accanto non
       dice, sarebbe un secondo verdetto senza la sua aritmetica (DESIGN §1.2)
-- [ ] **La direzione del vento: una sola icona, ruotata** (deciso l'11 set 2026, dopo che il
+- [x] **La direzione del vento: una sola icona, ruotata** (deciso l'11 set 2026, dopo che il
       committente aveva chiesto se usare le otto). Non si spediscono le otto, e le ragioni
       sono tre, tutte lette nel codice e nel disegno, non dedotte:
       1. **sarebbe un passo indietro, non un'approssimazione.** `ui/components/WindArrow.kt`
@@ -5760,22 +5796,26 @@ riscritti: sono le funzioni di `import_meteocons.py`, importate e usate tali e q
       `ic_warning` tinto: DESIGN §8.13 ha scelto un disegno al peso dei segni di verdetto
       apposta, e `code-yellow/orange/red` di Meteocons sono icone a colori pieni che in quello
       slot non ci stanno. Importarle sarebbe disfare una decisione, non aggiungere un'opzione
-- [ ] **Le dimensioni non si toccano** (punto 7): la scatola passa da 64 a 128, ma è
+- [~] **Le dimensioni non si toccano** (punto 7): la scatola passa da 64 a 128, ma è
       `viewportWidth`/`viewportHeight` nell'XML e i dp della scala restano quelli
       (`WeatherIconSize`: striscia 42, settimana 38, riga e tile 34). **Da verificare sul
       dispositivo**, non solo sulla carta: v3 è un disegno nuovo e potrebbe riempire la sua
       scatola diversamente, e DESIGN §13.1 dice che è la nuvola semplice a decidere come si
       legge la famiglia in piccolo. Se il peso ottico cambia, si dichiara e si rimisura la
       scala — non si cambia un padding
-- [ ] **Lo stile**: **line + flat**, per gli argomenti della sezione sopra, con **line
+- [x] **Lo stile**: **line + flat**, per gli argomenti della sezione sopra, con **line
       predefinito** come oggi. Si costruiscono insieme, perché condividono il convertitore di
       maschere e non hanno nient'altro da convertire. Se lo spike delle maschere fallisce non
       cade un secondo stile: **cade la fase**, perché senza maschere il line non ha i cieli
       composti. È per questo che lo spike sta prima di tutto
-- [ ] **La licenza**: `licenses/Meteocons-MIT.txt` va riscritto sulla versione nuova, e
-      `UPSTREAM.md` va aggiornato — v3 non è il v2 che il file descrive
-- [ ] **DESIGN §13.1 e CLAUDE.md** si riscrivono a lavoro finito, non prima: la sezione cita
-      v2.0.0, i 64 unit, la SMIL e le tre dipartenze del tool, e ognuna di quelle frasi cambia
+- [x] **La licenza**: `licenses/Meteocons-MIT.txt` porta il testo della v3 (il copyright
+      passa da «2020-2021» a «2020-present») e dice da quale pacchetto viene. `UPSTREAM.md`
+      **non** andava toccato: parla solo di `:core`, e le icone sono `:app`
+- [x] **DESIGN §13.1 riscritta**, e con lei §7.1 (l'importatore ha un nome nuovo), la nota
+      dei generatori (erano tre, `gen_vivid_icons.py` è stato cancellato: un set per fondo gli
+      ha tolto il lavoro) e **l'eccezione dichiarata del widget Cielo, rimisurata** — vedi
+      sotto. `CLAUDE.md` dice che niente sotto `res/drawable/mc3*` e `MeteoconsSets.kt` si
+      modifica a mano, e `README.md` conta 765 test invece di 754
 
 ### Quel che non si è potuto misurare
 
