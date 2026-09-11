@@ -4327,8 +4327,8 @@ nessuna sigla CAP raggiunge lo schermo: c'è un test per questo, come per gli id
 - [x] Verifica su device, in Italia: chiusa dal committente l'11 set 2026 su varie località, due
       giorni dopo il merge invece dei sette previsti; il default del livello di notifica resta
       **gialla**. Quel che quei due giorni non hanno attraversato è sotto, in «Verifica»
-- [ ] **Aperto, trovato l'11 set 2026**: il passo non gira mai fuori dal job periodico — vedi
-      «La lacuna dell'apertura» sotto. Riguarda anche l'Italia
+- [x] **La lacuna dell'apertura**, trovata e chiusa l'11 set 2026: il passo non girava mai
+      fuori dal job periodico. `WarningRefresh` è l'ingresso che mancava (sotto)
 
 ### Le misure che hanno deciso (9 set 2026)
 
@@ -4990,9 +4990,34 @@ WorkManager non fa scattare il job, e con l'intervallo di default (`DefaultUpdat
 = **60**) può essere un'ora. Il collaudo italiano non l'ha vista perché l'app era in uso da
 giorni e il job aveva già girato; si è vista solo installando l'APK e guardando subito.
 
-Non è un difetto di correttezza — il dato arriva, tardi — ma è quello che rende la funzione
-impossibile da provare in trenta secondi, e va chiuso prima di qualunque altra cosa sulle
-allerte. Il parametro `force` del passo esiste già ed è proprio per questo.
+Non era un difetto di correttezza — il dato arrivava, tardi — ma rendeva la funzione
+impossibile da provare in trenta secondi.
+
+**Chiusa lo stesso giorno** con `sync/WarningRefresh`, l'unico ingresso che permette a una
+schermata di far girare la gamba delle allerte del job. Oggi lo chiama all'apertura e sul
+trascinamento; il parametro `force` del passo esisteva già ed era proprio per questo.
+
+Tre decisioni, ognuna piccola e ognuna con il suo motivo:
+
+- **Scarica, non parla.** Il passo accetta ora `notifiers: SyncNotifiers?` e **null vuol dire
+  «questa esecuzione non parla»** — un concetto solo invece di un flag più un oggetto finto.
+  È la stessa divisione che il resto dell'app segue già: aprire Oggi scarica il meteo e non
+  ha mai mandato una notifica; parlare è del job. L'impronta resta **non bruciata**, quindi
+  se il lettore chiude l'app prima di accorgersene il job glielo dice lo stesso.
+- **Una alla volta.** Oggi è un pager: atterrarci sottoscrive un flusso per luogo salvato e
+  ognuno chiede. La cadenza **non** li ferma su un'installazione fresca, dove `shouldFetch`
+  risponde sì finché non c'è un bollettino in mano — cinque luoghi sarebbero stati cinque
+  download dello stesso documento. Il primo vince, gli altri tornano subito: volevano tutti
+  lo stesso documento, e il collettore dello store lo consegna a ogni pagina comunque.
+- **Il risparmio energetico vale qui come per il meteo**: l'esecuzione che nessuno ha chiesto
+  si salta sotto risparmio, mai il trascinamento e mai una pagina che non ha ancora nessun
+  bollettino.
+
+Verifica: **757 test** (sync 21 → 24), lint 0 errori. I tre test nuovi fissano quel che conta
+— un'esecuzione muta tiene il contenuto, non parla, non brucia l'impronta, e scrive lo stesso
+nel Diario, perché il diario è contenuto e non parola. **Non testato**: il cablaggio dentro
+`TodayViewModel`, che non ha test perché quella classe non è mai stata costruita in un test;
+le tre righe stanno alla stessa copertura del `fetch` che hanno accanto.
 
 ## Fase 12 — Allerte ufficiali, secondo strato: MeteoAlarm
 

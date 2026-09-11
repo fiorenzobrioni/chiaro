@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.callbackdev.chiaro.sync.WarningRefresh
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
 import com.callbackdev.chiaro.data.FetchFailureReason
@@ -89,6 +90,12 @@ class TodayViewModel(
     private val fetchLogStore: FetchLogStore,
     private val locationProvider: LocationProvider,
     private val warnings: OfficialWarningReader? = null,
+    /**
+     * Asks the warnings leg of the job to run for the active place, `force` skipping its
+     * cadence (11 set 2026). A function and not a Context because this class has never
+     * held one: the factory binds it, and a test hands in a recorder.
+     */
+    private val fetchWarnings: (suspend (force: Boolean) -> Unit)? = null,
     private val clock: Clock = Clock.systemUTC(),
     private val powerSave: PowerSaveState = PowerSaveState.Off
 ) : ViewModel() {
@@ -406,6 +413,23 @@ class TodayViewModel(
                 }
             }
 
+            // The bulletin, asked for by THIS SCREEN (11 set 2026). Until now the step
+            // ran only from the periodic job, so a fresh install showed nothing official
+            // for up to an hour and a pull to refresh did not help — the behaviour Fase
+            // 11's plan specified and never wired.
+            //
+            // It runs silently in both senses: no notification (speaking stays the
+            // job's, as it is for the weather's own alerts) and no spinner, because the
+            // bulletin is not what the reader pulled for. The result arrives through the
+            // store collector below, like every other bulletin. Battery saver postpones
+            // the one nobody asked for, the same gate `fetch` uses — but never a pull,
+            // and never a page that has no bulletin at all yet.
+            suspend fun refreshWarnings(userAsked: Boolean) {
+                val ask = fetchWarnings ?: return
+                if (!userAsked && bulletin != null && powerSave.isOn()) return
+                runCatching { ask(userAsked) }
+            }
+
             // The cached report goes out FIRST (Fase 3b). The revisions need a Room
             // query and a dozen JSON decodes, and they feed a section far down the
             // page: waiting for them held the whole screen on its skeleton for work
@@ -413,10 +437,10 @@ class TodayViewModel(
             push()
             refreshChanged()
             push()
-            // The bulletin follows the store: the job writes it, this re-reads it, and
-            // nothing on this screen ever asks the network for one. The day it is read
-            // against is the ISSUER's, and the minute tick above re-evaluates it, so a
-            // page left open over midnight stops showing yesterday's grades.
+            // The bulletin follows the store: the step writes it, this re-reads it. The
+            // day it is read against is the ISSUER's, and the minute tick above
+            // re-evaluates it, so a page left open over midnight stops showing
+            // yesterday's grades.
             warnings?.let { reader ->
                 launch {
                     reader.bulletin.collect { stored: StoredBulletin? ->
@@ -431,8 +455,12 @@ class TodayViewModel(
                 }
             }
             launch { fetch(userAsked = false) }
+            launch { refreshWarnings(userAsked = false) }
             launch {
-                refreshRequests.filter { it == city.cacheKey }.collect { fetch(userAsked = true) }
+                refreshRequests.filter { it == city.cacheKey }.collect {
+                    fetch(userAsked = true)
+                    refreshWarnings(userAsked = true)
+                }
             }
             // The minute tick: the stated age, the staleness verdict and the recency
             // trim all move with the clock even when no new data does.
@@ -487,6 +515,7 @@ class TodayViewModel(
                     fetchLogStore = ServiceLocator.fetchLogStore(app),
                     locationProvider = ServiceLocator.locationProvider(app),
                     warnings = ServiceLocator.warningReader(app),
+                    fetchWarnings = { force -> WarningRefresh.run(app, force) },
                     powerSave = PowerSaveState.of(app)
                 )
             }

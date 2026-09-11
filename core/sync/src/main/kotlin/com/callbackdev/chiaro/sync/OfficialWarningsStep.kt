@@ -38,6 +38,11 @@ class OfficialWarningsStep(private val context: Context) {
      * @param active the place the job evaluates, [cityKey] its notification key
      * @param others the other saved places, for the inertness check only
      * @param force skip the cadence (a pull to refresh)
+     * @param notifiers who may speak, or **null for a run that does not speak** — which is
+     *   what a SCREEN asking for the bulletin passes ([WarningRefresh]). In this app the
+     *   screen fetches content and the job notifies, the same division the weather itself
+     *   follows: opening Today never posts an alert. A silent run also leaves the
+     *   fingerprint unburnt, so the job can still say it if the reader has walked away.
      * @param now the instant, injectable so the cadence is testable
      */
     suspend fun run(
@@ -45,7 +50,7 @@ class OfficialWarningsStep(private val context: Context) {
         cityKey: String,
         others: List<City>,
         settings: NotificationSettings,
-        notifiers: SyncNotifiers,
+        notifiers: SyncNotifiers?,
         force: Boolean = false,
         now: Instant = Instant.now()
     ) {
@@ -119,7 +124,7 @@ class OfficialWarningsStep(private val context: Context) {
             dao.pruneCity(active.cacheKey, RETENTION)
         }
 
-        if (!settings.officialWarnings) return
+        if (notifiers == null || !settings.officialWarnings) return
         val notification = OfficialWarningEngine.notificationFor(
             warnings = after,
             minLevel = settings.officialWarningsFrom,
