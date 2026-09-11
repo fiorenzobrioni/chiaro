@@ -4324,9 +4324,11 @@ nessuna sigla CAP raggiunge lo schermo: c'è un test per questo, come per gli id
       attribuzione «Dipartimento della Protezione Civile, CC BY 4.0» nel foglio e in Informazioni
 - [x] Stringhe IT/EN (`warning_*`, `notif_warning_*`, `notif_channel_warning_*`),
       `StringsParityTest` verde; `OfficialWarningNotifierTest` sul modello di `SkyNotifierTest`
-- [ ] Verifica su device, in Italia, per una settimana dopo il merge: confronto col bollettino
-      regionale e col cielo. Il default del livello di notifica si conferma o si alza dopo quella
-      settimana, non prima
+- [x] Verifica su device, in Italia: chiusa dal committente l'11 set 2026 su varie località, due
+      giorni dopo il merge invece dei sette previsti; il default del livello di notifica resta
+      **gialla**. Quel che quei due giorni non hanno attraversato è sotto, in «Verifica»
+- [ ] **Aperto, trovato l'11 set 2026**: il passo non gira mai fuori dal job periodico — vedi
+      «La lacuna dell'apertura» sotto. Riguarda anche l'Italia
 
 ### Le misure che hanno deciso (9 set 2026)
 
@@ -4957,8 +4959,40 @@ screenshot su device, che è del committente.
 
 ### Verifica
 
-Da compilare a fine fase: conteggio test per modulo, lint, APK debug, e la settimana di collaudo
-in Italia con i bollettini veri accanto.
+Suite come la CI: **754 test** — dominio 213, dati 208, sync 21, app 312 — e lint 0 errori
+(quarto PR, 9 set 2026).
+
+**Il collaudo, chiuso dal committente l'11 set 2026.** Doveva durare una settimana ed è durato
+due giorni: varie località verificate contro i bollettini veri. Quel che questo conferma e quel
+che non conferma, perché la differenza conta:
+
+- **Confermato**: la zona che l'indice trova per un luogo, il banner e il foglio su bollettini
+  veri, il livello di notifica di partenza (**gialla**, non si alza).
+- **Non attraversato**, perché due giorni di settembre non li contengono: un'allerta rossa, un
+  «Aggiornamento» che alza il livello a bollettino invariato, la riga «bollettino non raggiunto»,
+  e il passaggio di mezzanotte con la pagina aperta. Restano coperti dai test e non dal campo,
+  ed è giusto che il documento lo dica invece di far passare due giorni per una settimana.
+
+### La lacuna dell'apertura (trovata l'11 set 2026, ancora aperta)
+
+Il piano della fase diceva, in «La cadenza del passo»: «**All'apertura** di Oggi, se è passata
+l'ora e il bollettino di oggi non c'è: in silenzio… un trascinamento per aggiornare lo forza».
+**Non è mai stato cablato.** Verificato l'11 set cercando tutti i chiamanti:
+
+- `OfficialWarningsStep` è invocato da **un posto solo**, `WeatherSyncWorker`;
+- `SyncScheduler.reconcile` accoda solo lavoro **periodico** (`enqueueUniquePeriodicWork`), mai
+  un colpo singolo;
+- il trascinamento di Oggi chiama `repository.getWeather(forceRefresh = true)` e **non tocca il
+  passo**.
+
+Conseguenza: su un'installazione fresca non compare **nessuna** allerta — italiana o no — finché
+WorkManager non fa scattare il job, e con l'intervallo di default (`DefaultUpdateFrequencyMin`
+= **60**) può essere un'ora. Il collaudo italiano non l'ha vista perché l'app era in uso da
+giorni e il job aveva già girato; si è vista solo installando l'APK e guardando subito.
+
+Non è un difetto di correttezza — il dato arriva, tardi — ma è quello che rende la funzione
+impossibile da provare in trenta secondi, e va chiuso prima di qualunque altra cosa sulle
+allerte. Il parametro `force` del passo esiste già ed è proprio per questo.
 
 ## Fase 12 — Allerte ufficiali, secondo strato: MeteoAlarm
 
@@ -4967,12 +5001,12 @@ Aggiunge un adattatore e cambia una riga: il modello, le superfici, le notifiche
 quelli della Fase 11. **In Italia continua a fare fede la Protezione Civile**: il feed italiano di
 MeteoAlarm non si legge mai.
 
-- [ ] Spike, prima di tutto: l'API EDR di MeteoAlarm (geometrie GeoJSON, filtri per livello, tipo
-      e lingua, query per località) risponde 401 senza credenziali e il portale annuncia l'accesso
-      pubblico via MeteoGate come «coming soon» (misurato 9 set 2026). Se all'inizio della fase è
-      aperta, le geometrie delle aree EMMA vengono da lì; altrimenti si costruisce una tabella
-      `EMMA_ID` ↔ area dai feed stessi (l'`areaDesc` è il nome della regione) incrociata con
-      l'`admin1` del geocoding, paese per paese, e si registra la copertura ottenuta
+- [x] Spike, fatto l'11 set 2026 (sotto). L'EDR è ancora chiuso, il ripiego per nome che questa
+      casella dava non regge alla misura, e le geometrie esistono pubblicate altrove
+- [ ] **Prima di riaprire la fase**: la lacuna dell'apertura della Fase 11 (sopra), e il
+      «fallire chiuso» che il prototipo ha dimostrato mancante (sotto). Le caselle che seguono
+      sono state tutte scritte e misurate su un branch l'11 set 2026, e **non sono state fuse**:
+      il motivo è in «Il prototipo, e perché non è stato fuso»
 - [ ] `MeteoAlarmSource`: un Atom per ogni paese dei luoghi salvati fuori dall'Italia
       (`meteoalarm-legacy-atom-<paese>`, ~80 KB per l'Italia oggi), con richieste condizionali
       (ETag / If-Modified-Since — da verificare nello spike: ogni giro del job che scarica 80 KB
@@ -4994,6 +5028,109 @@ MeteoAlarm non si legge mai.
 - [ ] Impronte con l'identificativo CAP e il livello; stesse due canali, stessi id
 - [ ] Widget e Diario: nessun lavoro, stesso modello — ed è il test che la Fase 11 ha disegnato
       bene
+
+### Lo spike, e le tre cose che ha cambiato (11 set 2026)
+
+Misurato dal vivo quel giorno, non letto in una documentazione. Lo spike doveva sciogliere una
+domanda (l'EDR è aperto?) e ne ha sciolte tre, due delle quali cambiano il piano.
+
+| Cosa | Misura |
+|---|---|
+| EDR | Ancora **chiuso**: `/edr/v1/collections?f=json` risponde 200 e descrive i filtri, `/edr/v1/collections/warnings/locations` risponde **401 `{"error":"Unauthorized"}`**. Invariato dal 9 set |
+| Richieste condizionali | **Non onorate.** Nessun `ETag` e nessun `Last-Modified` su **nessuno** dei 39 feed; `If-Modified-Since` torna 200 col corpo intero; `Range: bytes=0-1023` torna 200 col corpo intero; `Accept-Encoding: gzip` non comprime (85 251 B chiesti, 85 251 B serviti). `cache-control: max-age=0, private, must-revalidate`, e nessun validatore da rivalidare |
+| `HEAD` | Funziona e dà `content-length`. **Scartato come validatore**: «Yellow» e «Orange» hanno le stesse sei lettere, quindi il salto di livello — il caso che più conta — non muove la lunghezza |
+| Il feed `<updated>` | **È un timestamp di contenuto, non di generazione**: 5 letture in 2 minuti su IT, AT e FR danno lo stesso `<updated>` e corpi identici byte per byte. Sta a un offset stabile di **1 381–1 385 B**, cioè dentro la prima `recv` |
+| I 39 feed | 24 h di misura: 22 attivi, 17 vuoti (986 B). Totale 1 295 KB, media 33 KB, massimo **200 KB** (Israele), poi Austria 182, Slovenia 170 |
+| `cap:event` | **60 forme distinte** fra i 22 feed attivi: «Yellow Thunderstorm Warning», «Thunderstormwarning», «Thunderstorms Level 1», «EXTREME HIGH TEMP», «near gale», e un produttore che perde il suo template (**`awareness_type=5, awareness_level=2`**, 47 voci). Inutilizzabile |
+| `cap:severity` | Moderate 592, Severe 87, **Minor 28**: tre valori per quattro livelli, e il Minor non è nessuno dei tre colori. Inutilizzabile |
+| I geocodici del feed | `EMMA_ID` in 14 paesi, **`NUTS3`** in FR/RO/MK, **`NUTS2`** in HU, **nessun geocodice** in EE/IL/NO/SI e in parte LV/NL. L'unico campo che c'è sempre è `cap:areaDesc` |
+| `areaDesc` = la regione? | **No.** È admin1 solo in IT, RO e PT; altrove sono distretti (AT: 86 Bezirke), dipartimenti (FR), zone meteo (ES: «Costa - Ibiza y Formentera»), **bacini fluviali** (SI: «Gradaščica», «Ljubljanica») o **aree di mare** (NO, FI, EE, LV) |
+| Le geometrie, dove sono | `MeteoAlarm_Geocodes_2026_07_31.json` nel progetto GitLab `meteoalarm-pm-group/documents` che i riferimenti già citavano per il profilo CAP: **33 MB di GeoJSON, 2 006 poligoni veri, 30 paesi, 935 750 punti**, proprietà `code`/`country`/`name`/`type`, tutti `EMMA_ID`, CRS84, CC BY 4.0. Quattro versioni datate nel repo, la più recente del 31 lug 2026 |
+| La copertura | Incrociando i 707 avvisi dei 22 feed attivi con quel file: **413 per codice, 68 per nome, 226 non risolti = 68,0%**. Ma per paese: **17 paesi su 22 risolvono il 100%**; i non risolti sono EE (0/57), IL (0/77), NO (0/8), SI (0/73) e LV (9/20), e i loro nomi sono «Port of Tallinn», «Sea - Center», «Northern Baltic Sea», «Morje» — **mare e bacini fluviali, non luoghi in cui si abita** |
+
+**Le tre cose che cambiano.**
+
+1. **Le geometrie ci sono, e non dall'EDR.** La casella diceva «se l'EDR è aperto, di là;
+   altrimenti una tabella di nomi». L'EDR è chiuso e la tabella di nomi non regge (riga
+   `areaDesc` sopra): funzionerebbe per tre paesi su ventidue. La terza strada — un file
+   ufficiale, pubblicato, versionato per data, con i poligoni veri e la stessa licenza dei feed —
+   fa quello che l'EDR avrebbe fatto e lo fa offline. È la stessa forma della Fase 11: un
+   importatore, un asset, un indice puro punto-nel-poligono.
+2. **Il livello e il rischio si leggono solo dal CAP.** Il piano supponeva che `cap:event`
+   («Orange Wind Warning») bastasse a evitare di scaricare il CAP per ogni voce. Con 60 forme e
+   un produttore che stampa il proprio template, leggere il colore dall'`event` vuol dire
+   sbagliarlo in silenzio: `awareness_level` e `awareness_type` nei `<parameter>` del CAP sono
+   gli unici campi codificati, e sono quelli che si leggono. Il CAP si scarica sempre, per le sole
+   voci dell'area del luogo (2,9 KB l'uno, misurato su AT).
+3. **La cadenza non scende a un'ora.** «Da sciogliere» prevedeva che senza richieste condizionali
+   il passo scendesse a una lettura l'ora per paese. Non serve: il `<updated>` del feed è un
+   timestamp di contenuto e sta nei primi 1 385 byte, quindi la sorgente legge il prefisso,
+   confronta e **chiude la connessione** — lo stesso idioma con cui `DpcBulletinSource` legge
+   la prima riga di un `.diff` da 5,5 MB. Una lettura invariata costa una `recv`, non 33 KB.
+
+**Quel che lo spike non ha potuto misurare**, e va detto: 17 dei 39 feed erano vuoti quel giorno
+(fra loro CH, SE, UK, UA, LU, AD), quindi la loro forma di geocodice non è osservata, solo
+supposta dal file delle geometrie. E EE, IL e NO non sono **proprio** nel file delle geometrie:
+per loro la fase non promette niente, e lo dice.
+
+### Il prototipo dell'11 set 2026, e perché non è stato fuso
+
+La fase è stata scritta per intero su `claude/meteoalarm-domain-11set-t4k9w2` — dominio,
+importatore, 28 asset, sorgente, store, passo, superfici, 847 test verdi, lint 0 errori, CI
+verde, APK installato — e **il committente ha deciso di non fonderla**. Il branch è stato
+cancellato. Quel che segue è il motivo, perché è la parte che vale più del codice.
+
+**Il difetto non era la Slovenia, era come falliva il join.** Quando l'area di una voce non si
+collocava, lo schermo non taceva: **affermava**. Lubiana, provata su device, aveva 73 allerte
+attive — una *Severe Rain Warning* — e l'app diceva «Nessuna allerta». Non un buco, una frase
+falsa su un'informazione di sicurezza. E il guasto era **invisibile**: nessun errore, nessuna
+riga nel Diario, niente che distinguesse «qui è tranquillo» da «non ho saputo collocare
+nessuna delle 73 voci».
+
+Vale per ogni paese e per sempre: se un servizio nazionale rinomina le sue aree, o MeteoAlarm
+ripubblica il file dei geocodici con un'altra numerazione, ogni lettore di quel paese passa in
+silenzio a «nessuna allerta».
+
+**La misura che ha deciso.** Un audit che replica la logica di join contro i feed dal vivo,
+28 paesi, 11 set 2026:
+
+| Esito | Paesi |
+|---|---|
+| join verificato funzionante | 10 — AT, BA, BG, FR, GR, HU, MK, PT, RO, RS |
+| **rotto** | 1 — **SI** |
+| parziale, e **corretto**: perde solo le aree marine scartate di proposito | 6 — DE, ES, FI, HR, LT, PL |
+| feed vuoto quel giorno, quindi mai osservato | 11 — BE, CY, CZ, DK, IE, IS, MD, ME, MT, NL, SK |
+
+**Diciassette paesi su 28 erano una promessa non verificata**, mentre la schermata Avvisi
+stampava con sicurezza «in Italia e in 28 paesi europei». Il numero era più sicuro di sé dei
+dati dietro.
+
+**Il caso sloveno, per chi riaprirà.** Il feed nomina le sue aree `Slovenia / Central`,
+`Slovenia / North-East`; l'asset le chiama `Central`, `Northeast`. Il confronto falliva su due
+cose insieme: il prefisso `<paese> / ` e il trattino. Riparabile — non serviva escludere la
+Slovenia — ma il commento di `MeteoAlarmCountries` **dichiarava la Slovenia esclusa** e il
+codice la spediva lo stesso, e nessun test se n'è accorto perché le assenze erano un elenco
+scritto a mano che non la conteneva. È l'errore da non ripetere: la tabella dei paesi non va
+verificata contro un elenco, va verificata **contro i feed veri**.
+
+**Le due cose che renderebbero la fase fondibile**, e nessuna riguarda la Slovenia:
+
+1. **Fallire chiuso.** Se un feed ha voci e **nessuna** si colloca, quello non è «nessuna
+   allerta», è «non coperto». Si calcola con i dati già in mano, e trasforma una bugia
+   silenziosa in un'assenza onesta. È la correzione che conta.
+2. **L'audit come strumento ripetibile**, da lanciare prima di un rilascio e quando MeteoAlarm
+   ripubblica il file dei geocodici. Fuori dalla CI: dipende dalla rete e dal meteo del giorno.
+
+Con quelle due, la frase a schermo smette di essere «28 paesi» e diventa quello che è davvero:
+i paesi in cui *adesso* sappiamo collocare un'allerta. La fragilità dei dati resta — è nella
+natura di trenta produttori indipendenti — ma smette di essere silenziosa, che è l'unica cosa
+che la rende accettabile per una funzione di sicurezza.
+
+**Quel che il prototipo ha dimostrato che funziona**, e che non va rifatto da zero: il modello
+a due emittenti in `:core:domain` (l'Italia isolata da `WarningIssuer.of(countryCode)` e mai
+toccata), la richiesta condizionale costruita sul `<updated>` del feed, l'importatore con il
+blocco marino, e il fatto che le superfici della Fase 11 reggono un secondo emittente senza
+essere riscritte. Le misure sono tutte qui sotto e nello spike.
 
 ### Decisioni già prese
 

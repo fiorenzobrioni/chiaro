@@ -403,6 +403,24 @@ unmetered fallback works. The first non-Kotlin fixtures sit under
 diff. The vigilance layer is deferred to the third PR (it needs a second zone asset and its
 only surface is the sheet).
 
+**Fase 12 was prototyped on 11 set 2026 and deliberately not landed**, so nothing in this
+ledger changed for it. Two debts it measured are worth keeping here anyway, because they
+belong to the data and will be found again by whoever reopens the phase:
+
+- **MeteoAlarm publishes no geometry with its warnings.** Seven producers sampled, zero
+  `<polygon>` and zero `<circle>` in any CAP; the areas are named and coded only. The shapes
+  exist in a separate published file (`meteoalarm-pm-group/documents`, versioned by date), and
+  its own outlines put **Helsinki inside "Western Gulf of Finland" and inside no Finnish land
+  area at all** — so a marine block has to be excluded before anything is indexed.
+- **`cap:event` is not a vocabulary**: sixty spellings across twenty-two producers, including
+  one that prints its own template (`awareness_type=5, awareness_level=2`). Level and hazard
+  can only come from the CAP's coded `awareness_level` / `awareness_type`.
+
+The prototype also found a gap in **Fase 11's own shipped code**, which is in this repository:
+`OfficialWarningsStep` runs only from `WeatherSyncWorker`, so nothing fetches a bulletin when
+the app is opened or pulled to refresh — the behaviour the phase's plan specified and never
+wired. It is recorded in `PLANNING.md` under Fase 11.
+
 ## When to extract
 
 The rule from VISION.md §7.3: copy now, extract `weather-core` into its own repo when

@@ -731,3 +731,59 @@ The first is settled and recorded here with its reason, as the series does. The 
    One model in `:core:domain`, one adapter per issuer, one set of surfaces (§5.2, §5.4, §5.5, §5.9);
    Fase 12 adds an adapter and a line, not a screen. Recorded with its measurements in
    `PLANNING.md`, Fase 11 and 12.
+
+   **Layer two was built and not shipped (11 set 2026), and the reason is worth more than the
+   code.** The whole of Fase 12 was written on a branch — twenty-eight countries, real polygons,
+   847 green tests — and then dropped. Not because it failed to work, but because of *how* it
+   failed when it did: where a warning's area could not be matched, the screen said "no warning"
+   instead of "not covered". Ljubljana, tried on a device, had seventy-three live warnings and
+   the app asserted calm. A silent false negative is the one failure a safety feature may not
+   have, and the app's own rule (§1.1, §5.4) already says so: an absence is stated, never
+   implied. Before that layer returns it needs to **fail closed** — a feed with entries and no
+   match is an uncovered place, not a quiet one — and it needs its country table verified against
+   the live feeds rather than against a hand-written list. `PLANNING.md`, Fase 12, carries the
+   measurements, the audit and the Slovenian case in full.
+
+9. **Global warnings — examined 11 set 2026, and the answer is that MeteoAlarm is not the thing
+   to replace.** Two WMO properties were weighed while Fase 12 was on the bench.
+
+   The **World Weather Information Service** (`worldweather.wmo.int`) is worldwide and carries
+   **no warnings at all**: its per-city JSON holds a five-to-seven-day forecast and monthly
+   climate normals, and five payloads were read field by field without finding a severity, an
+   onset or a hazard anywhere. Its coverage is also uneven in a way that would embarrass a
+   screen — 3 597 cities across 173 countries, but 590 of them in Belgium, 30 in Italy, **none
+   in the United Kingdom**, and several answering with zero forecast days. Wrong service,
+   nothing to adapt.
+
+   The **Register of Alerting Authorities** (`alertingauthority.wmo.int`) is the real thing in
+   that family: the official list of who may issue an alert, with each authority's CAP feed.
+   Measured — 303 authorities over 200 countries, but only **158 declare a feed**, covering
+   **129 countries**, and 21 of the 220 URLs are plain `http`. Fourteen sampled feeds all
+   answered. Two findings decide the matter:
+
+   - **In Europe the Register points back at MeteoAlarm.** Several European members declare
+     `feeds.meteoalarm.org` as their own feed, so "replacing MeteoAlarm with the Register"
+     would add an indirection to reach the same bytes.
+   - **Outside Europe the national CAPs carry their geometry inline** — 104 polygons in one
+     Colombian document, 6 Saudi, 2 Canadian, 2 Kuwaiti, against **zero** in seven MeteoAlarm
+     producers. So the Register would not repeat the United Kingdom problem; it would have a
+     different one.
+
+   **They are not alternatives, they are different layers.** MeteoAlarm is a *harmoniser*:
+   thirty services reduced to one awareness scale, one taxonomy of fourteen hazards, one
+   profile — and it still leaks (sixty spellings of `event`). The Register harmonises nothing;
+   it is a directory. The debts differ in kind: MeteoAlarm's missing geometry is a **one-off**,
+   paid once and checkable at build time, while heterogeneity across 129 producers is
+   **continuous and unbounded**.
+
+   The argument that settles it is not technical. Chiaro is an app for the weather where you
+   live, and its warnings are a safety feature for that place, not an atlas. Patchy global
+   coverage reintroduces exactly the silence the reader cannot read — "calm" or "not covered" —
+   which is the same defect that kept Fase 12 off `main`. **So: no replacement, ever, as a
+   matter of architecture.** If global is ever wanted it is added per country behind the same
+   `WarningSource` seam. Two caveats kept on the record: MeteoAlarm is run by a **single
+   operator** (GeoSphere Austria), so a degradation there degrades twenty-eight countries at
+   once, which is the one respect in which the Register is more resilient; and the harmonisation
+   argument weakens if MeteoAlarm ever proves poor in the field. The one piece of the Register
+   worth taking regardless is small and additive: it is the authoritative answer to **who the
+   alerting authority is** in a country.
