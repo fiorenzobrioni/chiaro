@@ -5806,6 +5806,41 @@ bordo) sono **35 su 519**, e sono due gruppi soli, entrambi voluti e già scritt
 Nient'altro. Il `transform` sul `<clipPath>` era l'unica classe di perdita silenziosa, e
 non ne restano.
 
+
+### «Le icone sembrano sproporzionate fra loro» — non e' la taglia, e' il tratto (11 set 2026)
+
+Segnalazione dal dispositivo, su «Il resto della giornata» e «La settimana»: il sole e la
+luna sembrano grandi, le nuvole piccole. Cercata la causa in tre misure, e le prime due
+dicono di no.
+
+**Non e' la dimensione della scatola.** Il lato dell'inchiostro in frazione di scatola
+sulla famiglia dei cieli: v2 andava da 0,32 a 0,70 (escursione **2,17×**), v3 va da 0,47 a
+0,73 (**1,58×**). La v3 è *più* uniforme di quella che spediva prima, e le masse sono quasi
+tutte più grandi. L'unica che si è rimpicciolita è `fog-day` (0,70 → 0,49).
+
+**Non è l'inchiostro totale.** Rasterizzate e contate le coperture: `partly-cloudy-day` ne
+mette a schermo **più** di `clear-day` (8,3% contro 7,7% della cella). Eppure sembra più
+leggera, quindi non è quello che l'occhio pesa.
+
+**È lo spessore del tratto.** In v2 la nuvola era un tratto dichiarato: **3 unità su una
+scatola di 64, il 4,69%**. In v3 la nuvola della famiglia `line` è un **anello riempito
+evenodd**, e l'anello è spesso **4 unità su 128, il 3,13%**. Cioè un terzo più sottile in
+proporzione: a 42 dp sono **1,3 dp di linea contro i 2,0 di prima**. Accanto a un sole che
+è un disco pieno con i raggi pieni, un anello di 1,3 dp pesa meno — ed è esattamente quel
+che si vede.
+
+Va aggiunto che una parte di quello che si nota è il disegno che fa il suo mestiere:
+`mostly-clear` **deve** pesare meno di `clear`, ed è la distinzione per cui questa fase è
+stata aperta.
+
+- [ ] **La decisione è del committente**, perché le tre strade portano a lavori diversi:
+      lasciare così (è il disegno dell'illustratore, e un contorno pesa meno di un pieno);
+      passare allo stile **flat**, dove tutto è pieno e la riga si pareggia — un tocco in
+      Impostazioni, zero codice; oppure **ispessire gli anelli** della famiglia line
+      aggiungendo un tratto dello stesso colore al path riempito, che è meccanico ed esatto
+      (4 → 6 unità riporterebbe il peso relativo a quello della v2) ma è una dipartenza vera
+      dal «si usa l'originale»
+
 ### Le caselle
 
 ### Blocco A — il convertitore, fatto (11 set 2026)
