@@ -21,6 +21,7 @@ gira per sempre e' decorazione.
 #: I cieli che `ChiaroIcons.conditionLineRes` puo' restituire, i marchi delle schede, del
 #: Cielo e dell'agenda: tutto quello che oggi arriva su uno schermo.
 SHIPPED = [
+    "smoke",
     "clear-day", "clear-night", "mostly-clear-day", "mostly-clear-night",
     "partly-cloudy-day", "partly-cloudy-night", "overcast", "cloudy", "fog-day",
     "fog-night", "overcast-drizzle", "overcast-rain", "overcast-sleet",

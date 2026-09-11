@@ -425,8 +425,9 @@ private fun skyJobIconRes(
         ChiaroIcons.conditionRes(
             0, night = false, style = style, darkGround = darkGround
         )
+    // L'ora d'oro perde la linea dell'orizzonte: vedi ChiaroIcons.goldenHour
     "golden_hour.am", "golden_hour.pm" ->
-        ChiaroIcons.styledRes(R.drawable.mc3_horizon, style, darkGround)
+        ChiaroIcons.styledRes(R.drawable.mc3_clear_day, style, darkGround)
     "blue_hour.am", "blue_hour.pm",
     "twilight.nautical.am", "twilight.nautical.pm" ->
         ChiaroIcons.styledRes(R.drawable.mc3_star, style, darkGround)

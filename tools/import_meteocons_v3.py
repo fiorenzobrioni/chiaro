@@ -121,6 +121,26 @@ PARTIALS = {
     "wind-direction-needle": ("wind-direction-n", "Pointer", (40, 40, 48)),
 }
 
+#: Icone che si importano intere ma **in una finestra piu' stretta**: `(x, y, lato)`.
+#:
+#: Meteocons non disegna tutte le sue icone alla stessa taglia dentro la scatola, e a una
+#: misura sola in dp questo si vede. Misurata la frazione di scatola che ogni marchio
+#: delle schede occupa, va da 0,33 (`smoke-particles`) a 1,00 (`uv-index`): non e' una
+#: svista, e' come sono disegnate, e appiattirla tutta sarebbe far diventare una goccia
+#: grande come un sole.
+#:
+#: L'unico caso in cui si interviene e' una **regressione misurata**: la famiglia dei
+#: pollini riempie 0,53 della sua scatola, dove `dust` — il ripiego che sostituisce, con
+#: cui la griglia era stata messa a punto — ne riempiva 0,76. Il ritaglio e' **uno solo
+#: per tutta la famiglia**, calcolato sull'unione dei tredici inchiostri, cosi' i livelli
+#: e le piante non ballano l'uno rispetto all'altro.
+CROPS = dict.fromkeys(
+    ["pollen", "pollen-grass", "pollen-tree", "pollen-weed"]
+    + [f"pollen-{f}-{l}" for f in ("grass", "tree", "weed")
+       for l in ("low", "moderate", "high", "very-high")],
+    (25, 24, 89),
+)
+
 
 def recolor(xml: str, mapping: dict) -> str:
     """Lo stesso disegno, un'altra tavolozza. Si sostituiscono solo i due attributi di
@@ -863,6 +883,8 @@ def main() -> int:
             name = stem.replace("-", "_")
             group = spec[1] if isinstance(spec, tuple) else None
             crop = spec[2] if isinstance(spec, tuple) and len(spec) > 2 else None
+            if crop is None:
+                crop = CROPS.get(stem)
             try:
                 static, animated, notes, interps = convert(svg, group, crop)
             except Unsupported as e:

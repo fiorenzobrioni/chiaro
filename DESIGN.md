@@ -1234,6 +1234,13 @@ a valid animator and only a person can say the rain falls downward.
    and visibility's two hazy bands share one drawing because a glyph that under-claims is
    honest where one that over-claims is not.
 
+   The air-quality mark is `smoke` and not `smoke-particles` (11 set 2026,
+   committente): the particles drawn alone fill a third of their box and are the
+   smallest, mutest thing in the grid, while `smoke` is the same particles with the air
+   they hang in. The cost is declared — in visibility's hazy band the tile beside it
+   draws a cloud with lines while this one draws a cloud with dots, and at 34dp those
+   are close — and it is paid below 10km, where the words differ anyway.
+
    **Two metrics are deliberately not graded**, one by each half of the rule. The wind
    fails the first: `windMeaning` has five bands, the windsocks are three, and the
    Beaufort number is said nowhere on screen. The **barometer** fails the second, and it
@@ -1243,6 +1250,38 @@ a valid animator and only a person can say the rain falls downward.
    Arithmetically right and optically absent, a dial that looks like it should be pointing
    at something and is not. It ships ungraded, and the band stays where it reads, in
    «Nella norma».
+
+   **One drawing is cropped, and only one** (11 set 2026). Meteocons does not draw every
+   icon at the same size inside its box, and at a single dp rung that shows: measured
+   across the tile marks, the ink fills from **0.33** of the box (`smoke-particles`) to
+   **1.00** (`uv-index`). That is how they are drawn, not an oversight, and flattening it
+   would make a raindrop as big as a sun. The one place it is corrected is a measured
+   regression: the pollen family fills **0.53**, where `dust` — the stand-in it replaces,
+   the drawing the grid was tuned against — filled **0.76**. So the importer takes the
+   family in an 89-unit window instead of 128, **one window for all thirteen** computed
+   from the union of their ink, so the plants and levels do not shuffle against each
+   other. The rung does not move for it.
+
+   **And the rung did not move for the badges either**, which is worth writing down
+   because it was asked for. `uv-index-*` and `pollen-*-*` carry the value as a badge, and
+   the badge is **30 × 30 units in a 128 box** in both — 8dp at the tile's 34, with a digit
+   inside about 3.2dp. The budget in [WeatherIconSize] allows exactly one more step (38dp
+   leaves 80dp of label against the 76.7dp «Qualità aria» needs, 42dp leaves 76 and
+   wraps), and one step buys the digit **0.4dp**. It is not enough to make a number
+   readable and it spends more than half the margin, so the badge stays what it honestly
+   is at this size — a mark of colour, not a figure. The value is printed under it in
+   32sp, which is where a reader reads it.
+
+   **The golden hour lost its horizon line** (11 set 2026, from a screenshot).
+   `sunrise`, `horizon` and `sunset` are one drawing apart from a bump in the middle of
+   the line — **6 units in a 128 box**, 1.6dp at the agenda's 34 — so «Ora d'oro» at
+   19:02 and «Tramonto» at 19:41 were two rows carrying one picture. Meteocons has no
+   golden-hour drawing; the plain sun says the thing that actually separates them, which
+   is that in the golden hour the sun is still **above** the horizon while at sunrise and
+   sunset it is crossing it. Whoever crosses keeps the line. **The blue hour's plain
+   star is left as it is and known to be weak**: it reads as a rating star more than as
+   the first star of the evening, and nothing in v3 is better without taking a drawing
+   another row already owns.
 
    **The wind direction is words, and the arrow beside them is gone** (11 set 2026). It
    had been a hand-drawn arrow since 8 set and then, briefly, Meteocons' own needle: the

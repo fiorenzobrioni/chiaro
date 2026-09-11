@@ -333,7 +333,16 @@ object ChiaroIcons {
      * The accessor names the metric (§13.1), which is why it is not called
      * `snowflake`. */
     val frost: ImageVector @Composable get() = styled(R.drawable.mc3_snowflake)
-    val airQuality: ImageVector @Composable get() = styled(R.drawable.mc3_smoke_particles)
+    /**
+     * `smoke`, not `smoke-particles` (11 set 2026, committente). Meteocons draws the
+     * particles alone as three specks that fill a third of their box — the smallest mark
+     * in the grid, and mute beside the sun and the grass. `smoke` is the same particles
+     * with the air they hang in, twice the ink, and it is what an air-quality reading is
+     * about. The one cost is declared: when visibility drops into its hazy band the tile
+     * beside this one draws a cloud with lines while this one draws a cloud with dots,
+     * and at 34dp those are close. Below 10km, and the words differ.
+     */
+    val airQuality: ImageVector @Composable get() = styled(R.drawable.mc3_smoke)
 
     /**
      * A real pollen drawing at last (Fase 13). It was `dust` from Fase 2 to here, with
@@ -401,6 +410,17 @@ object ChiaroIcons {
     val moonrise: ImageVector @Composable get() = styled(R.drawable.mc3_moonrise)
     val moonset: ImageVector @Composable get() = styled(R.drawable.mc3_moonset)
     val horizon: ImageVector @Composable get() = styled(R.drawable.mc3_horizon)
+
+    /**
+     * The golden hour, and it is **not** the horizon glyph any more (11 set 2026, from a
+     * screenshot): `sunrise`, `horizon` and `sunset` are the same drawing apart from a
+     * bump in the middle of the line, **6 units in a 128 box** — 1.6dp at the agenda's
+     * 34dp — so «Ora d'oro» at 19:02 and «Tramonto» at 19:41 were two rows carrying one
+     * picture. Meteocons has no golden-hour drawing, but the plain sun says the thing
+     * that actually separates them: in the golden hour the sun is still **above** the
+     * horizon, at sunrise and sunset it is crossing it. Whoever crosses keeps the line.
+     */
+    val goldenHour: ImageVector @Composable get() = styled(R.drawable.mc3_clear_day)
     val star: ImageVector @Composable get() = styled(R.drawable.mc3_star)
     val starryNight: ImageVector @Composable get() = styled(R.drawable.mc3_starry_night)
     val fallingStars: ImageVector @Composable get() = styled(R.drawable.mc3_falling_stars)

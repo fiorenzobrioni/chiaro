@@ -1207,8 +1207,8 @@ private fun RestOfDay(content: TodayUiState.Content, timeFmt: DateTimeFormatter)
 @Composable
 private fun timelineIcon(kind: TimelineKind) = when (kind) {
     TimelineKind.SUNRISE -> ChiaroIcons.sunrise
-    TimelineKind.GOLDEN_MORNING_END -> ChiaroIcons.horizon
-    TimelineKind.GOLDEN_EVENING -> ChiaroIcons.horizon
+    TimelineKind.GOLDEN_MORNING_END -> ChiaroIcons.goldenHour
+    TimelineKind.GOLDEN_EVENING -> ChiaroIcons.goldenHour
     TimelineKind.SUNSET -> ChiaroIcons.sunset
     TimelineKind.BLUE_EVENING -> ChiaroIcons.star
     TimelineKind.DARK -> ChiaroIcons.starryNight

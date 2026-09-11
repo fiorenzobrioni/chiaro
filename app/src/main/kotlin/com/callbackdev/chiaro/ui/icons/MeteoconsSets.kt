@@ -19,6 +19,7 @@ internal object MeteoconsSets {
 
     /** line, fondo scuro. */
     val lineDarkOf: Map<Int, Int> = mapOf(
+        R.drawable.mc3_smoke to R.drawable.mc3n_smoke,
         R.drawable.mc3_clear_day to R.drawable.mc3n_clear_day,
         R.drawable.mc3_clear_night to R.drawable.mc3n_clear_night,
         R.drawable.mc3_mostly_clear_day to R.drawable.mc3n_mostly_clear_day,
@@ -103,6 +104,7 @@ internal object MeteoconsSets {
 
     /** flat, fondo chiaro. */
     val flatOf: Map<Int, Int> = mapOf(
+        R.drawable.mc3_smoke to R.drawable.mc3f_smoke,
         R.drawable.mc3_clear_day to R.drawable.mc3f_clear_day,
         R.drawable.mc3_clear_night to R.drawable.mc3f_clear_night,
         R.drawable.mc3_mostly_clear_day to R.drawable.mc3f_mostly_clear_day,
@@ -187,6 +189,7 @@ internal object MeteoconsSets {
 
     /** flat, fondo scuro. */
     val flatDarkOf: Map<Int, Int> = mapOf(
+        R.drawable.mc3_smoke to R.drawable.mc3fn_smoke,
         R.drawable.mc3_clear_day to R.drawable.mc3fn_clear_day,
         R.drawable.mc3_clear_night to R.drawable.mc3fn_clear_night,
         R.drawable.mc3_mostly_clear_day to R.drawable.mc3fn_mostly_clear_day,
@@ -387,6 +390,7 @@ internal object MeteoconsSets {
      * l'illustratore, non con un id numerico che non si legge.
      */
     val byName: Map<String, Int> = mapOf(
+        "smoke" to R.drawable.mc3_smoke,
         "clear-day" to R.drawable.mc3_clear_day,
         "clear-night" to R.drawable.mc3_clear_night,
         "mostly-clear-day" to R.drawable.mc3_mostly_clear_day,

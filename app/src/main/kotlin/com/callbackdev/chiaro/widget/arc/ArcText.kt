@@ -136,7 +136,15 @@ internal object ArcText {
     ): Int {
         val line = when (kind) {
             TimelineKind.SUNRISE -> R.drawable.mc3_sunrise
-            TimelineKind.GOLDEN_MORNING_END, TimelineKind.GOLDEN_EVENING -> R.drawable.mc3_horizon
+            // L'ora d'oro perde la linea dell'orizzonte (11 set 2026, da uno screenshot):
+            // `sunrise`, `horizon` e `sunset` sono lo STESSO disegno a meno di una gobba
+            // di 6 unita' su 128 in mezzo alla linea — 1,6 dp alla misura della riga — e
+            // due righe di fila a trentanove minuti di distanza portavano lo stesso
+            // glifo. Meteocons non ha un disegno per l'ora d'oro; il sole pieno pero'
+            // dice la cosa giusta, perche' la differenza vera e' quella: nell'ora d'oro
+            // il sole e' ancora **sopra** l'orizzonte, all'alba e al tramonto lo sta
+            // attraversando. Chi ha la linea la merita.
+            TimelineKind.GOLDEN_MORNING_END, TimelineKind.GOLDEN_EVENING -> R.drawable.mc3_clear_day
             TimelineKind.SUNSET -> R.drawable.mc3_sunset
             TimelineKind.BLUE_EVENING -> R.drawable.mc3_star
             TimelineKind.DARK -> R.drawable.mc3_starry_night

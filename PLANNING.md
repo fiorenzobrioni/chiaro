@@ -5672,6 +5672,60 @@ una prova sul dispositivo — ma la misura punta dalla parte opposta a quella sp
 - [ ] Se si vuole comunque provare: `LocalMotionPaused` è un punto solo, e un APK con la
       pausa tolta si costruisce in un minuto. Da fare guardando, non discutendo
 
+
+### Il secondo giro sulle schede (11 set 2026)
+
+Tre domande del committente dopo la prima prova, e tre risposte misurate.
+
+**Qualità aria: `smoke` invece di `smoke-particles`.** D'accordo, e c'è un numero dietro:
+le particelle da sole riempiono **0,33** della loro scatola, il marchio più piccolo della
+griglia; `smoke` è le stesse particelle con l'aria in cui stanno, **0,62**. Il costo si
+dichiara: quando la visibilità scende nella sua banda di foschia il tile accanto disegna
+una nuvola con le righe e questo una nuvola con i puntini, e a 34 dp si somigliano. Succede
+sotto i 10 km, dove le parole comunque differiscono.
+
+**Ora d'oro e Tramonto: erano lo stesso disegno, ed è colpa del set.** `sunrise`,
+`horizon` e `sunset` differiscono per una gobba in mezzo alla linea dell'orizzonte, **6
+unità su 128**, cioè 1,6 dp alla misura della riga. Invisibile. Meteocons v3 non ha un
+disegno per l'ora d'oro — cercati e scartati `sun-hot` (legge «caldo»), `haze-day` (legge
+«foschia»), i `time-*` (portano un intervallo di ore stampato, che contraddirebbe l'ora
+della riga) — ma **il sole pieno dice la cosa giusta**: nell'ora d'oro il sole è ancora
+sopra l'orizzonte, all'alba e al tramonto lo sta attraversando. Chi attraversa tiene la
+linea.
+
+L'ora blu resta la stella vuota e **si dichiara debole**: legge più come un «preferito»
+che come la prima stella della sera, e in v3 non c'è di meglio senza rubare un disegno a
+un'altra riga.
+
+**Le dimensioni: la scala non si è mossa, e il motivo è aritmetico.** Meteocons non disegna
+tutte le icone alla stessa taglia dentro la scatola: misurata la frazione occupata dai
+marchi delle schede, va da **0,33** a **1,00**. Non è una svista, è come sono disegnate, e
+appiattirla vorrebbe dire una goccia grande come un sole.
+
+| | riempimento della scatola |
+|---|---|
+| `uv-index` | 1,00 |
+| `barometer` | 0,80 |
+| `wind` | 0,63 |
+| **`pollen-*`** | **0,53** (era 0,76 con `dust`) |
+| `mist`, `raindrops` | 0,47 |
+| `humidity` | 0,42 |
+| `smoke-particles` | 0,33 |
+
+Un solo caso si corregge, ed è una **regressione misurata**: i pollini riempiono 0,53
+dove `dust` — il ripiego che sostituiscono, il disegno con cui la griglia era stata messa
+a punto — ne riempiva 0,76. Si importano in una finestra di 89 unità invece di 128, **una
+sola per tutte e tredici**, calcolata sull'unione dei loro inchiostri così che piante e
+livelli non ballino fra loro.
+
+**Il badge del numero non si salva ingrandendo.** In `uv-index-*` e `pollen-*-*` il badge è
+**30 × 30 unità su 128** in entrambi: 8 dp ai 34 del tile, con dentro una cifra di circa
+**3,2 dp**. Il budget dell'etichetta concede esattamente un gradino (a 38 dp restano 80 dp
+contro i 76,7 che «Qualità aria» chiede; a 42 ne restano 76 e va a capo), e quel gradino
+comprerebbe alla cifra **0,4 dp**. Non basta a renderla leggibile e spende più di metà del
+margine. Il badge resta quello che a questa misura è onestamente: un segno di colore, non
+una cifra. Il valore è stampato sotto in 32 sp, che è dove si legge.
+
 ### Le caselle
 
 ### Blocco A — il convertitore, fatto (11 set 2026)
