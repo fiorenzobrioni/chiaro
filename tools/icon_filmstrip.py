@@ -116,6 +116,12 @@ def svg_shape(el: ET.Element, now: dict, out: list[str], clips: list[str]) -> No
     bits = [f'd="{attr(el, "pathData")}"']
     fill = attr(el, "fillColor")
     bits.append(f'fill="{fill}"' if fill else 'fill="none"')
+    # `fillType="evenOdd"` non e' un dettaglio: nella famiglia `line` di Meteocons v3 un
+    # contorno E' un anello disegnato con quella regola, e disegnarlo senza la riempie
+    # piena. Questo strumento lo ignorava, e faceva sembrare diverse dalla loro sorgente
+    # tutte le nuvole (trovato con la griglia in differenza, 11 set 2026).
+    if attr(el, "fillType") == "evenOdd":
+        bits.append('fill-rule="evenodd"')
     if fill and "fillAlpha" in animated:
         bits.append(f'fill-opacity="{animated["fillAlpha"]}"')
     stroke = attr(el, "strokeColor")

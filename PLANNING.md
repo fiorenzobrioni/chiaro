@@ -5760,6 +5760,52 @@ l'aritmetica ha ragione. Il tile passa a **38 dp**. Costa alla scala il suo ordi
 — il tile adesso pareggia la riga della settimana invece di starle sotto — e un'etichetta
 di scheda accanto a una riga della settimana non è un confronto che un lettore fa mai.
 
+
+### «Il ritaglio può aver rotto altro?» — cercato, e no (11 set 2026)
+
+Domanda del committente dopo il difetto del barometro. La risposta non è un'opinione:
+sono due verifiche, una sulla forma del convertitore e una sul risultato.
+
+**Primo: l'inventario.** Enumerati tutti gli elementi e tutti gli attributi che compaiono
+nelle 519 × 4 sorgenti, e confrontati con quel che l'importatore legge davvero. Cinque
+sospetti, e quattro erano fantasmi:
+
+| sospetto | occorrenze | esito |
+|---|---|---|
+| `filter` come **attributo** di un gruppo (io rifiuto solo l'elemento) | **0** | non esiste |
+| `clip-rule` dentro un `<clipPath>` | **0** | non esiste |
+| forme diverse da `<rect>` dentro un `<clipPath>` | **0** | sono tutti rettangoli |
+| `stop-opacity`, primo stop con offset ≠ 0 | **0** | non esistono |
+| `additive="sum"` su `animateTransform` | 84 | **corretto per costruzione** |
+
+L'ultimo meritava la verifica vera, fatta attraversando l'albero e non con una regex: in
+tutte e 519 non c'è **un solo** elemento con un `transform` statico più un'animazione che
+lo sostituisca, né due animazioni di cui la seconda non additiva. L'annidamento di gruppi
+che l'importatore fa è sempre la composizione giusta.
+
+**Secondo: il risultato, non le intenzioni.** `tools/diff_against_source.py` sovrappone
+ogni icona convertita alla sua sorgente con `mix-blend-mode: difference` in una griglia a
+posizione nota, fa scattare Chrome, decodifica il PNG e conta i pixel accesi cella per
+cella. Due accortezze senza le quali il numero non vuol dire niente: l'antialiasing va
+spento (un pixel a metà trasparenza non dà zero sotto `difference`, e senza
+`crispEdges` brillano tutte e 519 le celle), e la **linea di base** va misurata e
+sottratta confrontando la sorgente con se stessa.
+
+Il primo giro diceva 443 celle diverse su 519. Non erano icone rotte: era il filmstrip.
+**`icon_filmstrip.py` ignorava `fillType="evenOdd"`**, e nella famiglia `line` di v3 un
+contorno *è* un anello disegnato con quella regola — quindi lo strumento riempiva piene
+tutte le nuvole. Difetto suo, corretto, e vale anche per ogni figura che questa fase ha
+mostrato finora.
+
+Corretto quello, le icone con una **forma intera** di differenza (picco ≥ 200, cioè non un
+bordo) sono **35 su 519**, e sono due gruppi soli, entrambi voluti e già scritti:
+
+- i **16 pollini**, che sono ritagliati apposta in una finestra di 89 unità;
+- le **19 del vento**, dove il tratteggio spazzolato esce pieno nel disegno fermo.
+
+Nient'altro. Il `transform` sul `<clipPath>` era l'unica classe di perdita silenziosa, e
+non ne restano.
+
 ### Le caselle
 
 ### Blocco A — il convertitore, fatto (11 set 2026)
