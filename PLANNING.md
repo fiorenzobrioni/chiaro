@@ -5904,6 +5904,78 @@ scelta si rivede.
 **deve** restare diverso dal 2 — che è la confusione da cui è nata la fase e che non deve
 poter tornare per distrazione.
 
+### «È l'importazione che ridimensiona?» — no, ed è misurato sulle 519 (11 set 2026)
+
+Segnalazione dal dispositivo, sul Cielo → **In arrivo**: la luna piena e la luna delle
+stelle cadenti hanno taglie molto diverse, e la domanda è se sia l'importatore a fare un
+resize dell'originale.
+
+**La risposta è no, e non è un'opinione.** `tools/icon_ink.py --confronto` misura il
+riquadro dell'inchiostro sulla sorgente SVG e sul vector drawable generato e mette le due
+misure accanto: **519 icone × 2 stili, 0 fuori tolleranza** (un centesimo di unità su 128,
+che è il rumore dell'appiattimento delle curve). L'importatore copia il `viewBox` e le
+coordinate così come sono — `convert()` scrive `viewportWidth` dal `viewBox` e basta — e
+dal 964e01a non esiste più nemmeno la macchina che poteva ritagliare (`CROPS`, `PARTIALS`).
+
+La coppia segnalata, vista da vicino, è la prova più corta:
+
+| | sorgente Meteocons | drawable spedito |
+|---|---|---|
+| `moon-full` | `<circle cx=64 cy=64 r=30.5>` | `M33.5,64 A30.5,30.5,…` |
+| `falling-stars`, la luna | `M59.997 43.821 c-2.266 14.257…` | `M59.997,43.821 C57.731,58.078,…` |
+
+Stessi numeri. L'unica cosa che cambia è il colore (`#72b9d5` → `#88cfec`), che è il
+riancoraggio al 3:1 del fondo scuro e non tocca la geometria.
+
+**Quel che succede davvero è che l'illustratore rimpicciolisce la luna quando il disegno
+ne contiene anche altro**, e lo fa a scalini netti. Misurato con `--dentro moon`, il lato
+della sola luna in frazione di scatola:
+
+| la luna sta | lato | su 34 dp |
+|---|---|---|
+| da sola (`moon-full`, `clear-night`, `moonrise`, `moonset`) | 0,49–0,51 | ~17,0 dp |
+| con due o tre compagni (`falling-stars`, `starry-night`, `fog-night`) | **0,34** | **11,6 dp** |
+| dietro una nuvola (`partly-cloudy-night`, `thunderstorms-night`) | 0,20 | 6,9 dp |
+
+Quindi la luna piena ha **1,47×** il diametro della luna dei Draconidi, e in copertura
+d'inchiostro il disegno intero ne ha 2,27× (19,7% della scatola contro 8,7%). È
+esattamente quel che l'occhio vede, ed è dell'illustratore.
+
+**Dove si nota, e perché proprio lì.** «In arrivo» è l'unico posto del prodotto dove
+icone di **famiglie diverse** stanno incolonnate una sotto l'altra a 34 dp, quindi il
+lettore le confronta davvero. In quella colonna il lato dell'inchiostro va da 0,75
+(`sunrise`, `horizon` — gli equinozi e i solstizi) a 0,37 (`starry-night`), cioè **da 25,5
+a 12,6 dp, un'escursione di 2,02×**. Sull'intera lista di spedizione va da 0,33
+(`smoke-particles`) a 0,81 (`uv-index-11-plus`): **2,48×**.
+
+Vale la pena scriverlo perché ribalta l'istinto: `falling-stars` **non** è un'icona
+piccola. Il suo riquadro è 0,63 largo, più largo della luna piena; è alto 0,36 perché la
+composizione è una diagonale in una scatola quadrata. È piccola la **luna dentro**, ed è
+alto poco il disegno: due cose diverse, e la prima è quella che si è notata.
+
+- [ ] **La decisione è del committente**, perché il «lato uguale per tutti» qui non è la
+      regola giusta e va detto con i numeri:
+      **lasciare così** — è il disegno dell'illustratore, e la regola senza eccezioni del
+      964e01a vale ancora;
+      **normalizzare sul lato** (la regola da manuale) **peggiora proprio questa coppia**:
+      `falling-stars` è già 0,63 e crescerebbe meno della luna piena a 0,50, portando le
+      due lune da 1,47× a 1,85×;
+      **normalizzare sull'inchiostro** (una scala per icona, `k = √(copertura obiettivo /
+      copertura)`, applicata al disegno dentro una scatola che non si muove, quindi zero
+      effetti sul layout) le pareggia. Alla copertura mediana della lista, 14,8%, e sullo
+      stile flat: la luna piena va da 17,0 a **14,7 dp**, quella dei Draconidi da 11,4 a
+      **14,9 dp**. Costa una tabella generata dall'importatore e un fattore di scala ai
+      quattro punti di disegno; tocca ogni icona dell'app (`smoke-particles` × 2,02,
+      `clear-day` × 1,05), e tre icone arriverebbero al bordo della scatola
+
+**Un difetto trovato costruendo la misura**, che vale oltre lo strumento:
+`spike_mask_clip.flatten` **scarta i sottopercorsi di due punti**, ed è giusto là dove
+nasce (deve provare delle maschere, che sono forme chiuse) ma qui faceva sparire la scia
+di `falling-stars` — 0,25 di scatola — e rendeva `mist` «senza inchiostro». `icon_ink.py`
+ha quindi il suo `flatten`, che tiene i segmenti e passa gli archi per la
+parametrizzazione centrale del modulo delle maschere. Chi riusa quella funzione altrove
+lo tenga presente.
+
 ### Le caselle
 
 ### Blocco A — il convertitore, fatto (11 set 2026)
