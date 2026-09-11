@@ -1,0 +1,186 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <group android:name="g1smoke1">
+                <path android:pathData="M62.5,85 A4.5,4.5,0,1,0,62.5,76 A4.5,4.5,0,0,0,62.5,85 Z"
+                    android:name="g2p"
+                    android:fillColor="#aebed3"/>
+            </group>
+            <group android:name="g3smoke2">
+                <path android:pathData="M53.5,76 A7.5,7.5,0,1,0,53.5,61 A7.5,7.5,0,0,0,53.5,76 Z"
+                    android:name="g4p"
+                    android:fillColor="#aebed3"/>
+            </group>
+            <group android:name="g5smoke3">
+                <path android:pathData="M71.5,64 C77.299,64,82,59.299,82,53.5 C82,47.701,77.299,43,71.5,43 C65.701,43,61,47.701,61,53.5 C61,59.299,65.701,64,71.5,64 Z"
+                    android:name="g6p"
+                    android:fillColor="#aebed3"/>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="g1smoke1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateX">
+                <propertyValuesHolder android:propertyName="translateX">
+                    <keyframe android:fraction="0" android:value="7.7333"/>
+                    <keyframe android:fraction="0.0333" android:value="8"/>
+                    <keyframe android:fraction="0.0343" android:value="0"/>
+                    <keyframe android:fraction="1" android:value="7.7333"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g1smoke1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateY">
+                <propertyValuesHolder android:propertyName="translateY">
+                    <keyframe android:fraction="0" android:value="-3.8667"/>
+                    <keyframe android:fraction="0.0333" android:value="-4"/>
+                    <keyframe android:fraction="0.0343" android:value="0"/>
+                    <keyframe android:fraction="1" android:value="-3.8667"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g2p">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="fillAlpha">
+                <propertyValuesHolder android:propertyName="fillAlpha">
+                    <keyframe android:fraction="0" android:value="0.1667"/>
+                    <keyframe android:fraction="0.0333" android:value="0"/>
+                    <keyframe android:fraction="0.2333" android:value="1"/>
+                    <keyframe android:fraction="0.8333" android:value="1"/>
+                    <keyframe android:fraction="1" android:value="0.1667"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g3smoke2">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateX">
+                <propertyValuesHolder android:propertyName="translateX">
+                    <keyframe android:fraction="0" android:value="6.6667"/>
+                    <keyframe android:fraction="0.1667" android:value="8"/>
+                    <keyframe android:fraction="0.1677" android:value="0"/>
+                    <keyframe android:fraction="1" android:value="6.6667"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g3smoke2">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateY">
+                <propertyValuesHolder android:propertyName="translateY">
+                    <keyframe android:fraction="0" android:value="-3.3333"/>
+                    <keyframe android:fraction="0.1667" android:value="-4"/>
+                    <keyframe android:fraction="0.1677" android:value="0"/>
+                    <keyframe android:fraction="1" android:value="-3.3333"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g4p">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="fillAlpha">
+                <propertyValuesHolder android:propertyName="fillAlpha">
+                    <keyframe android:fraction="0" android:value="0.8333"/>
+                    <keyframe android:fraction="0.1667" android:value="0"/>
+                    <keyframe android:fraction="0.3667" android:value="1"/>
+                    <keyframe android:fraction="0.9667" android:value="1"/>
+                    <keyframe android:fraction="1" android:value="0.8333"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g5smoke3">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateX">
+                <propertyValuesHolder android:propertyName="translateX">
+                    <keyframe android:fraction="0" android:value="5.6"/>
+                    <keyframe android:fraction="0.3" android:value="8"/>
+                    <keyframe android:fraction="0.301" android:value="0"/>
+                    <keyframe android:fraction="1" android:value="5.6"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g5smoke3">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateY">
+                <propertyValuesHolder android:propertyName="translateY">
+                    <keyframe android:fraction="0" android:value="-2.8"/>
+                    <keyframe android:fraction="0.3" android:value="-4"/>
+                    <keyframe android:fraction="0.301" android:value="0"/>
+                    <keyframe android:fraction="1" android:value="-2.8"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g6p">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="fillAlpha">
+                <propertyValuesHolder android:propertyName="fillAlpha">
+                    <keyframe android:fraction="0" android:value="1"/>
+                    <keyframe android:fraction="0.1" android:value="1"/>
+                    <keyframe android:fraction="0.3" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="1"/>
+                    <keyframe android:fraction="1" android:value="1"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

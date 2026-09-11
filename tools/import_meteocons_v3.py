@@ -65,6 +65,7 @@ def _load(name, path):
 
 
 paths = _load("svg_paths", HERE / "svg_paths.py")
+reanchor = _load("reanchor", HERE / "reanchor.py")
 #: La fase negativa e la rotazione dei keyframe NON sono novita' di v3: le ha risolte
 #: l'importatore della v2 e le sue funzioni valgono qui identiche. Riusarle e' anche la
 #: prova che il passaggio alla v3 e' un trasloco, non una riscrittura.
@@ -72,13 +73,46 @@ v2 = _load("v2", HERE / "import_meteocons.py")
 
 fmt = paths.fmt
 
-#: prefisso statico, prefisso animato — per stile.
+#: (statico, animato) per stile e per **fondo**, con lo stesso schema della v2: il set
+#: senza suffisso e' quello dei fondi chiari, quello con la `n` e' per i fondi scuri.
+#: `ChiaroIcons.styledRes` sceglie per fondo, e ogni set incontra solo la superficie
+#: contro cui e' stato misurato.
 PREFIXES = {
-    "line": ("mc3_", "mc3a_"),
-    "flat": ("mc3f_", "mc3fa_"),
-    "fill": ("mc3p_", "mc3pa_"),
-    "monochrome": ("mc3m_", "mc3ma_"),
+    ("line", "light"): ("mc3_", "mc3a_"),
+    ("line", "dark"): ("mc3n_", "mc3an_"),
+    ("flat", "light"): ("mc3f_", "mc3fa_"),
+    ("flat", "dark"): ("mc3fn_", "mc3fan_"),
+    ("fill", "light"): ("mc3p_", "mc3pa_"),
+    ("fill", "dark"): ("mc3pn_", "mc3pan_"),
+    ("monochrome", "light"): ("mc3m_", "mc3ma_"),
+    ("monochrome", "dark"): ("mc3mn_", "mc3man_"),
 }
+
+#: I colori dell'illustratore, senza riancoraggio: non si spediscono (sulla carta sono
+#: fantasmi), ma servono al filmstrip per il confronto che decide.
+ORIGINAL = {"line": ("mc3o_", "mc3oa_"), "flat": ("mc3fo_", "mc3foa_")}
+
+COLOR_ATTR = re.compile(r'(android:(?:fill|stroke)Color=")(#[0-9a-fA-F]{6})(")')
+
+
+def recolor(xml: str, mapping: dict) -> str:
+    """Lo stesso disegno, un'altra tavolozza. Si sostituiscono solo i due attributi di
+    colore, mai il testo libero: il `pathData` puo' contenere qualunque cosa."""
+    return COLOR_ATTR.sub(
+        lambda m: m.group(1) + mapping.get(m.group(2).lower(), m.group(2)) + m.group(3),
+        xml)
+
+
+def palette_of(folder: pathlib.Path) -> set:
+    """Ogni colore che uno stile mette a schermo, **maschere escluse**: li' `#fff` e
+    `#000` non sono inchiostro, sono la maschera, e contarli falsava la misura."""
+    out = set()
+    for svg in folder.glob("*.svg"):
+        text = re.sub(r"<mask.*?</mask>", "", svg.read_text(encoding="utf8"),
+                      flags=re.S)
+        out |= {c.lower() for c in
+                re.findall(r'(?:stroke|fill|stop-color)="(#[0-9a-fA-F]{6})"', text)}
+    return out
 
 HEADER = (
     "<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3\n"
@@ -632,8 +666,10 @@ def main() -> int:
     if len(sys.argv) < 2:
         print(__doc__)
         return 2
-    src = pathlib.Path(sys.argv[1])
-    styles = sys.argv[2:] or ["line", "flat"]
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    keep_original = "--original" in sys.argv
+    src = pathlib.Path(args[0])
+    styles = args[1:] or ["line", "flat"]
     OUT.mkdir(parents=True, exist_ok=True)
     INTERPOLATORS.mkdir(parents=True, exist_ok=True)
 
@@ -645,7 +681,20 @@ def main() -> int:
         folder = src / style
         if not folder.is_dir():
             sys.exit(f"manca {folder}")
-        stat_p, anim_p = PREFIXES[style]
+        # La tavolozza si riancora UNA volta per stile, non per icona: una famiglia di
+        # tinte si sposta intera, e l'ordine dentro una nuvola si conserva solo se la
+        # regola vede tutti i suoi grigi insieme.
+        palette = palette_of(folder)
+        maps = {"light": reanchor.reanchor(palette, reanchor.LIGHT),
+                "dark": reanchor.reanchor(palette, reanchor.DARK)}
+        for ground, m in maps.items():
+            kept, bad = reanchor.report(m, reanchor.LIGHT if ground == "light"
+                                        else reanchor.DARK)
+            counts[f"{style}:{ground}:identici"] = kept
+            if bad:
+                report[f"SOTTO 3:1 dopo il riancoraggio ({style}/{ground})"] += [
+                    f"{a}->{b}" for a, b, _ in bad]
+
         for svg in sorted(folder.glob("*.svg")):
             name = svg.stem.replace("-", "_")
             try:
@@ -654,14 +703,24 @@ def main() -> int:
                 report[str(e)].append(f"{style}/{svg.stem}")
                 counts[style + ":saltate"] += 1
                 continue
-            except Exception as e:  # un errore vero, ma una sola icona non ferma le altre
+            except Exception as e:  # una sola icona non ferma le altre cinquecento
                 report[f"ERRORE {type(e).__name__}: {e}"].append(f"{style}/{svg.stem}")
                 counts[style + ":saltate"] += 1
                 continue
-            (OUT / f"{stat_p}{name}.xml").write_text(static, encoding="utf8")
+            for ground in ("light", "dark"):
+                stat_p, anim_p = PREFIXES[(style, ground)]
+                (OUT / f"{stat_p}{name}.xml").write_text(
+                    recolor(static, maps[ground]), encoding="utf8")
+                if animated:
+                    (OUT / f"{anim_p}{name}.xml").write_text(
+                        recolor(animated, maps[ground]), encoding="utf8")
+            if keep_original and style in ORIGINAL:
+                stat_p, anim_p = ORIGINAL[style]
+                (OUT / f"{stat_p}{name}.xml").write_text(static, encoding="utf8")
+                if animated:
+                    (OUT / f"{anim_p}{name}.xml").write_text(animated, encoding="utf8")
             counts[style + ":statiche"] += 1
             if animated:
-                (OUT / f"{anim_p}{name}.xml").write_text(animated, encoding="utf8")
                 counts[style + ":animate"] += 1
             all_interps |= interps
             for n in notes:
@@ -677,8 +736,8 @@ def main() -> int:
 
     print("--- convertite")
     for k in sorted(counts):
-        print(f"    {k:<22} {counts[k]}")
-    print(f"    interpolatori          {len(all_interps)}")
+        print(f"    {k:<26} {counts[k]}")
+    print(f"    interpolatori              {len(all_interps)}")
     if report:
         print("--- da sapere")
         for reason, who in sorted(report.items(), key=lambda kv: -len(kv[1])):

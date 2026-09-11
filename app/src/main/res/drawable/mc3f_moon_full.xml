@@ -9,6 +9,6 @@
     android:viewportHeight="128">
     <group android:name="g1moon" android:pivotX="64" android:pivotY="64">
         <path android:pathData="M32,64 A32,32,0,1,1,96,64 A32,32,0,1,1,32,64 Z"
-                    android:fillColor="#72b9d5"/>
+                    android:fillColor="#317994"/>
     </group>
 </vector>

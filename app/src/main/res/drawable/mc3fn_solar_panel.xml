@@ -1,0 +1,14 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <path android:pathData="M52,39 L76,39 A6,6,0,0,1,82,45 L82,83 A6,6,0,0,1,76,89 L52,89 A6,6,0,0,1,46,83 L46,45 A6,6,0,0,1,52,39 Z"
+                android:fillColor="#646f83"/>
+    <path android:pathData="M64.5,39 L64.5,54.5 L82,54.5 L82,55.5 L64.5,55.5 L64.5,71.5 L82,71.5 L82,72.5 L64.5,72.5 L64.5,89 L63.5,89 L63.5,72.5 L46,72.5 L46,71.5 L63.5,71.5 L63.5,55.5 L46,55.5 L46,54.5 L63.5,54.5 L63.5,39 Z"
+                android:fillColor="#6984b9"/>
+</vector>

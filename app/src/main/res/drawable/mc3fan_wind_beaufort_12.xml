@@ -1,0 +1,62 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <path android:pathData="M87.79,40.135 C93.976,33.347,105,38.405,105,47.446 C105,53.275,100.522,58,95,58 L24,58 Z"
+                android:name="g1p"
+                android:strokeColor="#e2e8f0"
+                android:strokeWidth="4"
+                android:strokeLineCap="round"
+                android:strokeMiterLimit="10"
+                android:trimPathStart="0"
+                android:trimPathEnd="0.4495"/>
+            <path android:pathData="M60.128,87.868 C66.42,94.518,78,89.872,78,80.556 C78,74.726,73.35,70,67.615,70 L24,70 Z"
+                android:name="g2p"
+                android:strokeColor="#e2e8f0"
+                android:strokeWidth="4"
+                android:strokeLineCap="round"
+                android:strokeMiterLimit="10"
+                android:trimPathStart="0"
+                android:trimPathEnd="0.59"/>
+            <path android:pathData="M97.334,91 L93.968,91 L93.968,82.99 L90.8,82.99 L90.8,80.74 L91.34,80.74 Q92.726,80.74,93.536,80.146 Q94.292,79.588,94.526,78.328 L94.562,78.184 L97.334,78.184 Z M110.462,91 L100.31,91 Q100.31,89.29,101.048,88.138 Q101.786,87.022,103.748,85.672 L105.728,84.268 Q106.484,83.746,106.79,83.278 Q107.114,82.81,107.114,82.216 Q107.114,81.442,106.646,81.01 Q106.178,80.56,105.368,80.56 Q103.532,80.56,103.532,82.702 L103.532,82.972 L100.49,82.972 L100.49,82.576 Q100.49,80.362,101.786,79.12 Q103.082,77.878,105.458,77.878 Q107.726,77.878,109.058,78.976 Q110.408,80.092,110.408,82.018 Q110.408,83.26,109.76,84.25 Q109.13,85.24,107.726,86.14 L105.512,87.544 Q104.882,87.958,104.828,88.246 L110.462,88.246 Z"
+                android:fillColor="#646e81"/>
+        </vector>
+    </aapt:attr>
+    <target android:name="g1p">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="334"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="trimPathOffset"
+                android:valueFrom="1"
+                android:valueTo="0"/>
+        </aapt:attr>
+    </target>
+    <target android:name="g2p">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="254"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="trimPathOffset">
+                <propertyValuesHolder android:propertyName="trimPathOffset">
+                    <keyframe android:fraction="0" android:value="0.9861"/>
+                    <keyframe android:fraction="0.9861" android:value="0"/>
+                    <keyframe android:fraction="0.9871" android:value="1"/>
+                    <keyframe android:fraction="1" android:value="0.9861"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

@@ -9,12 +9,12 @@
     android:viewportHeight="128">
     <group android:name="g1clouds">
         <path android:pathData="M90.388,63.086 C92.684,53.882,87.741,44.136,79.008,40.482 C70.265,36.824,59.828,40.138,54.837,48.212 C50.537,45.625,44.975,45.778,40.824,48.599 C36.684,51.413,34.5,56.514,35.35,61.454 C28.392,62.769,23.393,69.339,24.061,76.408 C24.729,83.477,30.871,89.002,37.953,89 L90.977,89 C98.044,89,104,83.119,104,76.028 C104,68.701,97.677,62.768,90.388,63.086 Z"
-                    android:fillColor="#e6effc"/>
+                    android:fillColor="#88909c"/>
     </group>
     <path android:pathData="M54,68 L46,90.91 L54,90.91 L50,110 L70,83.273 L58,83.273 L66,68 Z"
                 android:name="g2p"
-                android:fillColor="#f6a823"/>
+                android:fillColor="#a06a00"/>
     <path android:pathData="M74,68 L70,79.455 L74,79.455 L72,89 L82,75.636 L76,75.636 L80,68 Z"
                 android:name="g3p"
-                android:fillColor="#f6a823"/>
+                android:fillColor="#a06a00"/>
 </vector>

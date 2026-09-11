@@ -1,0 +1,35 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <group>
+        <clip-path android:pathData="M0,0 L128,0 L128,75 L0,75 Z"/>
+        <path android:pathData="M52.5,72 A11.5,11.5,0,1,1,75.5,72 A11.5,11.5,0,1,1,52.5,72 Z"
+                    android:strokeColor="#ffc25e"
+                    android:strokeWidth="3"/>
+        <group android:name="g1rays" android:pivotX="64" android:pivotY="72">
+            <path android:pathData="M64,40 C64.736,40,65.333,40.597,65.333,41.333 L65.333,49.333 A1.333,1.333,0,1,1,62.667,49.333 L62.667,41.333 C62.667,40.597,63.264,40,64,40 Z M41.373,49.373 C41.893,48.852,42.737,48.852,43.258,49.373 L48.915,55.029 A1.333,1.333,0,1,1,47.029,56.915 L41.373,51.258 A1.333,1.333,0,0,1,41.373,49.373 Z M86.627,49.373 C87.148,49.893,87.148,50.737,86.627,51.258 L80.971,56.915 A1.333,1.333,0,0,1,79.085,55.029 L84.742,49.373 C85.262,48.852,86.107,48.852,86.627,49.373 Z M32,72 C32,71.264,32.597,70.667,33.333,70.667 L41.333,70.667 A1.333,1.333,0,1,1,41.333,73.333 L33.333,73.333 A1.333,1.333,0,0,1,32,72 Z M85.333,72 C85.333,71.264,85.93,70.667,86.667,70.667 L94.667,70.667 A1.333,1.333,0,0,1,94.667,73.333 L86.667,73.333 A1.333,1.333,0,0,1,85.333,72 Z M48.915,87.085 C49.435,87.605,49.435,88.45,48.915,88.971 L43.258,94.627 A1.333,1.333,0,1,1,41.373,92.742 L47.029,87.085 C47.55,86.565,48.394,86.565,48.915,87.085 Z M79.085,87.085 C79.605,86.565,80.45,86.565,80.971,87.085 L86.627,92.742 A1.333,1.333,0,1,1,84.742,94.627 L79.085,88.971 A1.333,1.333,0,0,1,79.085,87.085 Z M64,93.333 C64.736,93.333,65.333,93.93,65.333,94.667 L65.333,102.667 A1.333,1.333,0,0,1,62.667,102.667 L62.667,94.667 C62.667,93.93,63.264,93.333,64,93.333 Z"
+                        android:fillColor="#ffc25e"
+                        android:fillType="evenOdd"/>
+        </group>
+    </group>
+    <group android:name="g2line2">
+        <path android:pathData="M40,81 L88,81 Z"
+                    android:strokeColor="#e2e8f0"
+                    android:strokeWidth="3"
+                    android:strokeLineCap="round"
+                    android:strokeMiterLimit="10"/>
+    </group>
+    <group android:name="g3line1">
+        <path android:pathData="M40,89 L88,89 Z"
+                    android:strokeColor="#e2e8f0"
+                    android:strokeWidth="3"
+                    android:strokeLineCap="round"
+                    android:strokeMiterLimit="10"/>
+    </group>
+</vector>

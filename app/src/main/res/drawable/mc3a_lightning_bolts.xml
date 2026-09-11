@@ -12,10 +12,10 @@
             android:viewportHeight="128">
             <path android:pathData="M54,43 L46,65.91 L54,65.91 L50,85 L70,58.273 L58,58.273 L66,43 Z"
                 android:name="g1p"
-                android:fillColor="#f6a823"/>
+                android:fillColor="#a26b00"/>
             <path android:pathData="M74,43 L70,54.455 L74,54.455 L72,64 L82,50.636 L76,50.636 L80,43 Z"
                 android:name="g2p"
-                android:fillColor="#f6a823"/>
+                android:fillColor="#a26b00"/>
         </vector>
     </aapt:attr>
     <target android:name="g1p">

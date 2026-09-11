@@ -16,7 +16,7 @@
                     <group android:name="g1g">
                         <group android:translateX="-54.5" android:translateY="-64">
                             <path android:pathData="M54.5,34 C42.63,52,35,63.25,35,74.175 C35,85.1,43.726,94,54.5,94 C65.274,94,74,85.125,74,74.175 C74,63.225,66.37,51.975,54.5,34 Z"
-                                android:fillColor="#2563eb"/>
+                                android:fillColor="#0039bb"/>
                         </group>
                     </group>
                 </group>
@@ -25,7 +25,7 @@
                 <group android:name="g2g">
                     <group android:translateX="-74.5" android:translateY="-64">
                         <path android:pathData="M74.5,34 C62.63,52,55,63.25,55,74.175 C55,85.1,63.726,94,74.5,94 C85.274,94,94,85.125,94,74.175 C94,63.225,86.37,51.975,74.5,34 Z"
-                            android:fillColor="#2563eb"/>
+                            android:fillColor="#0039bb"/>
                     </group>
                 </group>
             </group>

@@ -15,41 +15,41 @@
                 <group android:name="g2maskhold">
                     <group android:name="g3moon" android:pivotX="37" android:pivotY="47">
                         <path android:pathData="M35.766,34 C29.15,34.714,24,40.241,24,46.959 C24,54.16,29.918,60,37.218,60 C43.37,60,48.527,55.846,50,50.23 C41.217,51.171,33.477,42.72,35.766,34 Z"
-                            android:fillColor="#72b9d5"/>
+                            android:fillColor="#317994"/>
                     </group>
                 </group>
             </group>
             <group android:name="g4clouds">
                 <path android:pathData="M90.388,63.086 C92.684,53.882,87.741,44.136,79.008,40.482 C70.265,36.824,59.828,40.138,54.837,48.212 C50.537,45.625,44.975,45.778,40.824,48.599 C36.684,51.413,34.5,56.514,35.35,61.454 C28.392,62.769,23.393,69.339,24.061,76.408 C24.729,83.477,30.871,89.002,37.953,89 L90.977,89 C98.044,89,104,83.119,104,76.028 C104,68.701,97.677,62.768,90.388,63.086 Z"
-                    android:fillColor="#e6effc"/>
+                    android:fillColor="#88909c"/>
             </group>
             <group android:name="g5raindrop1">
                 <path android:pathData="M52,83 L52,95 Z"
                     android:name="g6p"
-                    android:strokeColor="#0a5ad4"
+                    android:strokeColor="#003d9a"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"/>
             </group>
             <group android:name="g7raindrop2">
                 <path android:pathData="M64,83 L64,95 Z"
                     android:name="g8p"
-                    android:strokeColor="#0a5ad4"
+                    android:strokeColor="#003d9a"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"/>
             </group>
             <group android:name="g9raindrop3">
                 <path android:pathData="M76,83 L76,95 Z"
                     android:name="g10p"
-                    android:strokeColor="#0a5ad4"
+                    android:strokeColor="#003d9a"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"/>
             </group>
             <path android:pathData="M54,68 L46,90.91 L54,90.91 L50,110 L70,83.273 L58,83.273 L66,68 Z"
                 android:name="g11p"
-                android:fillColor="#f6a823"/>
+                android:fillColor="#a06a00"/>
             <path android:pathData="M74,68 L70,79.455 L74,79.455 L72,89 L82,75.636 L76,75.636 L80,68 Z"
                 android:name="g12p"
-                android:fillColor="#f6a823"/>
+                android:fillColor="#a06a00"/>
         </vector>
     </aapt:attr>
     <target android:name="g3moon">

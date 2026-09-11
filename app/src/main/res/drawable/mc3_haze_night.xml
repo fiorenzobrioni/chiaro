@@ -11,7 +11,7 @@
         <clip-path android:pathData="M0,0 L128,0 L128,75 L0,75 Z"/>
         <group android:name="g1moon" android:pivotX="63.7" android:pivotY="62.2">
             <path android:pathData="M59.997,41.821 C57.731,56.078,69.747,69.2,83.911,69.085 C80.965,76.908,73.344,82.5,64.368,82.5 C52.824,82.5,43.5,73.27,43.5,61.93 C43.5,52.064,50.559,43.804,59.997,41.821 Z"
-                        android:strokeColor="#72b9d5"
+                        android:strokeColor="#327b95"
                         android:strokeWidth="3"
                         android:strokeLineCap="round"
                         android:strokeLineJoin="round"/>
@@ -19,14 +19,14 @@
     </group>
     <group android:name="g2line2">
         <path android:pathData="M40,81 L52,81 M61,81 L73,81 M82,81 L88,81"
-                    android:strokeColor="#e2e8f0"
+                    android:strokeColor="#898e95"
                     android:strokeWidth="3"
                     android:strokeLineCap="round"
                     android:strokeMiterLimit="10"/>
     </group>
     <group android:name="g3line1">
         <path android:pathData="M40,89 L52,89 M61,89 L73,89 M82,89 L88,89"
-                    android:strokeColor="#e2e8f0"
+                    android:strokeColor="#898e95"
                     android:strokeWidth="3"
                     android:strokeLineCap="round"
                     android:strokeMiterLimit="10"/>

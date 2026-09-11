@@ -9,23 +9,23 @@
     android:viewportHeight="128">
     <group android:name="g1clouds">
         <path android:pathData="M90.389,63.086 C92.684,53.882,87.741,44.136,79.009,40.482 C70.265,36.824,59.828,40.138,54.837,48.212 C50.537,45.625,44.975,45.778,40.824,48.599 C36.684,51.413,34.5,56.514,35.35,61.454 C28.393,62.769,23.393,69.339,24.062,76.408 C24.73,83.478,30.872,89.002,37.953,89 L90.977,89 C98.045,89,104,83.119,104,76.028 C104,68.701,97.678,62.768,90.389,63.086 Z"
-                    android:fillColor="#e6effc"/>
+                    android:fillColor="#88909c"/>
     </group>
     <group android:name="g2line2">
         <path android:pathData="M40,95 L88,95 Z"
-                    android:strokeColor="#e2e8f0"
+                    android:strokeColor="#898e95"
                     android:strokeWidth="3"
                     android:strokeLineCap="round"
                     android:strokeMiterLimit="10"/>
     </group>
     <group android:name="g3line1">
         <path android:pathData="M40,103 L88,103 Z"
-                    android:strokeColor="#e2e8f0"
+                    android:strokeColor="#898e95"
                     android:strokeWidth="3"
                     android:strokeLineCap="round"
                     android:strokeMiterLimit="10"/>
     </group>
     <path android:pathData="M60,68 L52,90.91 L60,90.91 L56,110 L76,83.273 L64,83.273 L72,68 Z"
                 android:name="g4p"
-                android:fillColor="#f6a823"/>
+                android:fillColor="#a06a00"/>
 </vector>

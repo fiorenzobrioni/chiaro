@@ -13,17 +13,17 @@
             <group android:name="g1smoke1">
                 <path android:pathData="M62.5,85 A4.5,4.5,0,1,0,62.5,76 A4.5,4.5,0,0,0,62.5,85 Z"
                     android:name="g2p"
-                    android:fillColor="#94a3b8"/>
+                    android:fillColor="#5c6a7d"/>
             </group>
             <group android:name="g3smoke2">
                 <path android:pathData="M53.5,76 A7.5,7.5,0,1,0,53.5,61 A7.5,7.5,0,0,0,53.5,76 Z"
                     android:name="g4p"
-                    android:fillColor="#94a3b8"/>
+                    android:fillColor="#5c6a7d"/>
             </group>
             <group android:name="g5smoke3">
                 <path android:pathData="M71.5,64 C77.299,64,82,59.299,82,53.5 C82,47.701,77.299,43,71.5,43 C65.701,43,61,47.701,61,53.5 C61,59.299,65.701,64,71.5,64 Z"
                     android:name="g6p"
-                    android:fillColor="#94a3b8"/>
+                    android:fillColor="#5c6a7d"/>
             </group>
         </vector>
     </aapt:attr>

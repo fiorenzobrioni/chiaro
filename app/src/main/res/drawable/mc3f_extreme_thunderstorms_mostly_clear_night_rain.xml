@@ -12,39 +12,39 @@
         <group android:name="g2maskhold">
             <group android:name="g3moon" android:pivotX="55" android:pivotY="64">
                 <path android:pathData="M52.912,42 C41.715,43.208,33,52.562,33,63.93 C33,76.118,43.015,86,55.368,86 C65.782,86,74.507,78.97,77,69.465 C62.137,71.059,49.039,56.757,52.912,42 Z"
-                            android:fillColor="#72b9d5"/>
+                            android:fillColor="#317994"/>
             </group>
         </group>
     </group>
     <group android:name="g4clouds">
         <path android:pathData="M82.472,70.34 C84.056,63.809,80.723,56.741,74.506,54.066 C68.326,51.406,61.033,53.896,57.586,59.631 C54.578,57.771,50.674,57.885,47.776,59.911 C44.841,61.962,43.356,65.645,43.945,69.166 C38.975,70.132,35.585,74.94,36.043,79.933 C36.501,84.919,40.709,89.001,45.767,89 C58.137,89,70.512,88.989,82.884,89 C87.94,89,92,84.654,92,79.66 C92,74.503,87.689,70.107,82.472,70.34 Z"
-                    android:fillColor="#e6effc"/>
+                    android:fillColor="#88909c"/>
     </group>
     <group android:name="g5raindrop1">
         <path android:pathData="M52,83 L52,95 Z"
                     android:name="g6p"
-                    android:strokeColor="#0a5ad4"
+                    android:strokeColor="#003d9a"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"/>
     </group>
     <group android:name="g7raindrop2">
         <path android:pathData="M64,83 L64,95 Z"
                     android:name="g8p"
-                    android:strokeColor="#0a5ad4"
+                    android:strokeColor="#003d9a"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"/>
     </group>
     <group android:name="g9raindrop3">
         <path android:pathData="M76,83 L76,95 Z"
                     android:name="g10p"
-                    android:strokeColor="#0a5ad4"
+                    android:strokeColor="#003d9a"
                     android:strokeWidth="4"
                     android:strokeLineCap="round"/>
     </group>
     <path android:pathData="M54,68 L46,90.91 L54,90.91 L50,110 L70,83.273 L58,83.273 L66,68 Z"
                 android:name="g11p"
-                android:fillColor="#f6a823"/>
+                android:fillColor="#a06a00"/>
     <path android:pathData="M74,68 L70,79.455 L74,79.455 L72,89 L82,75.636 L76,75.636 L80,68 Z"
                 android:name="g12p"
-                android:fillColor="#f6a823"/>
+                android:fillColor="#a06a00"/>
 </vector>

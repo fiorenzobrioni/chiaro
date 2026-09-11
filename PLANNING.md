@@ -5375,10 +5375,10 @@ Quindi la risposta alla domanda «i colori originali possono causare problemi»:
 sempre, e su fondo scuro anche per line**. La proposta, che non blocca il lavoro e non butta
 la regola:
 
-- [ ] Il tool importa **con i colori originali** come uscita di riferimento, e il rimappaggio
-      resta un **passo successivo** sullo stesso albero. Si generano entrambi e si sceglie
+- [x] Il tool importa **con i colori originali** come uscita di riferimento (`--original`), e il
+      rimappaggio è un **passo successivo** sullo stesso albero: si generano entrambi e si sceglie
       davanti al filmstrip, anziché decidere prima
-- [ ] L'architettura «due set scelti dal fondo» (`styledRes(darkGround)`) **resta**: è già
+- [x] L'architettura «due set scelti dal fondo» (`styledRes(darkGround)`) **resta**: è già
       scritta, ha superato una revisione di design, e con i numeri qui sopra è esattamente la
       forma giusta. Ma la regola non è «originali sullo scuro, riancorati sulla carta» per
       tutti: **flat** può quasi tenere gli originali sullo scuro (5% di inchiostro sotto
@@ -5476,6 +5476,56 @@ E c'è la terza strada, che è quella giusta e che il progetto ha già configura
 Quindi «totale» va inteso sul **convertitore**, non sull'APK: il tool deve saper convertire
 qualunque delle 519 e dimostrarlo, e la tabella `ICONS` resta la lista di spedizione.
 Crescerla è una riga.
+
+
+### Blocco C — il colore, fatto (11 set 2026)
+
+`tools/reanchor.py`. La regola della v2 era una **tabella a mano** (`REMAP`, `FILL_REMAP`,
+`FILL_NIGHT`): una riga per ogni hex. La v3 ha il doppio dei colori e ne avrà altri,
+quindi qui la regola è scritta come funzione e la tabella è il suo risultato.
+
+Si tiene la tinta e si sposta la **luminanza**, perché il contrasto WCAG dipende solo da
+quella: è l'unica leva che cambia il rapporto, ed è quella che si vede di meno. Due cose
+però cambiano rispetto alla v2, e la seconda è un guadagno:
+
+1. **Non si sposta un colore, si comprime una famiglia.** Una nuvola è tre grigi, e una
+   regola applicata a ciascuno per conto suo può scambiarli. I colori si raggruppano per
+   tinta (i neutri, sotto 0,03 di croma, stanno insieme) e la famiglia si comprime
+   intera, tenendo fermo **l'estremo che già va bene**: contro un tetto resta fermo il più
+   scuro e scende il più chiaro, contro un pavimento resta fermo il più chiaro e sale il
+   più scuro. Ordine e spaziatura in L di Oklab si conservano.
+2. **Ogni set deve una sola superficie.** v2 chiedeva a un set di reggere entrambe, il che
+   lo inchiodava nella banda Y ∈ [0,120, 0,283] — ed è il motivo per cui il suo sole è un
+   bronzo: a quella luminanza in sRGB il giallo non c'è. Qui il vincolo è un tetto
+   (carta) **oppure** un pavimento (scuro), mai tutti e due, e sul fondo scuro il sole
+   resta un oro vero (`#f8af18` → `#ffc25e`).
+
+| | colori | identici all'originale | sotto 3:1 dopo |
+|---|---|---|---|
+| line, carta | 57 | 2 | **0** |
+| line, scuro | 57 | 10 | **0** |
+| flat, carta | 62 | 2 | **0** |
+| flat, scuro | 62 | 12 | **0** |
+
+Un colore che già reggeva e che la compressione lascia dov'era esce **identico**: il giro
+per Oklch e ritorno sposterebbe l'ultima cifra, e cambiare un hex che non ne aveva bisogno
+è rumore in un diff che qualcuno dovrà leggere. E la soglia non si dà per raggiunta: dopo
+aver costruito il colore si **misura** il rapporto e si corregge di un passo alla volta
+finché passa, che è la stessa regola con cui `PaletteContrastTest` asserisce l'esito e non
+la ricetta.
+
+I quattro set escono con lo schema della v2 — `mc3_`/`mc3n_` (line, carta e scuro),
+`mc3f_`/`mc3fn_` (flat) più i loro gemelli animati — e il riancoraggio si applica **una
+volta per stile**, non per icona, perché una famiglia si può spostare solo se la regola
+vede tutti i suoi grigi insieme. Il flag `--original` emette anche i set non riancorati,
+per il confronto al filmstrip; non si spediscono.
+
+**Il costo, misurato:** 4 004 drawable, 39 MB nel repo, e nell'APK di release
+**+257 996 B** (64 byte l'uno, lo stesso numero della misura precedente), cioè il 4%.
+
+- [ ] **39 MB nel repo** è la cosa da decidere, non da subire: se pesano, la stessa
+      tabella `ICONS` che oggi è la lista di spedizione può diventare anche la lista di
+      **conversione**, e il set completo resta a un comando di distanza invece che in git
 
 ### Le caselle
 
