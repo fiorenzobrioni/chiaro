@@ -372,8 +372,7 @@ private fun HeroIcon(
         provider = ImageProvider(
             ChiaroIcons.conditionRes(
                 current.condition.wmoCode, content.night,
-                model.iconStyle, palette.darkGround,
-                model.settings.palette
+                model.iconStyle, palette.darkGround
             )
         ),
         contentDescription = null, // the temperature and the sentence say it in words

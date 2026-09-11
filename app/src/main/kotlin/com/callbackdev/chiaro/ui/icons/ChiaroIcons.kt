@@ -8,342 +8,70 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import com.callbackdev.chiaro.R
-import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.model.MoonPhase
+import com.callbackdev.chiaro.domain.model.PollenLevel
+import com.callbackdev.chiaro.domain.model.PollenReport
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.components.VerdictKind
-import com.callbackdev.chiaro.ui.theme.LocalAppPalette
+import com.callbackdev.chiaro.ui.today.WeatherText
 
 /**
  * The reader's icon style, provided by `MainActivity` from the settings alongside the
  * theme. LINE is the default a fresh install sees (6 set 2026); the accessors below read
  * this so every screen switches together, with no screen ever asked to care.
+ *
+ * `WeatherIcons.FILL` means Meteocons' **`flat`** since Fase 13, and the enum kept its
+ * name on purpose: `flat` is what this app already shipped as its filled set — the v2
+ * `fill` with every gradient flattened to its face color by the importer. Renaming the
+ * constant would migrate a stored preference and rewrite a settings string, both to
+ * describe the same drawing.
  */
 val LocalWeatherIcons = staticCompositionLocalOf { WeatherIcons.LINE }
 
 /**
- * The weather icon set, behind one lookup (DESIGN.md §4.5, §13.1): **Meteocons**
+ * The weather icon set, behind one lookup (DESIGN.md §4.5, §13.1): **Meteocons v3**
  * (github.com/basmilius/meteocons, MIT), imported as vector drawables by
- * `tools/import_meteocons.py` from the v2.0.0 LINE and FILL sets, recolored for a
- * measured 3:1 on the ground each set is picked for — the line set on both
- * surfaces, the fill set as TWO sets (re-anchored for light grounds, Meteocons' own
- * palette for dark ones), chosen here by ground. The tool carries the measured
- * tables and `IconContrastTest` re-measures the emitted XML per set.
+ * `tools/import_meteocons_v3.py` from the `line` and `flat` styles and re-anchored by
+ * `tools/reanchor.py` for the ground each set is picked for. The tables are generated
+ * into [MeteoconsSets] from `tools/shipped_icons.py`; the policy — which weather code
+ * gets which drawing, which metric gets which mark — is here, by hand, because it is
+ * the part a person has to argue about.
  *
- * The `*Res` functions are the actual mapping and stay plain functions on purpose:
- * they are unit-testable without Compose, and the Glance widgets (Fase 8) need
- * resource ids, not ImageVectors — which is also why they take the style as a
- * parameter, while the `@Composable` accessors read [LocalWeatherIcons].
+ * **Four sets, chosen by style and ground, and the dress no longer comes into it.**
+ * Until Fase 13 the line set owed BOTH surfaces at once, which pinned every color into
+ * Y ∈ [0.120, 0.283] and is why its sun was a bronze; the vivid palette got a second
+ * line set to escape that ceiling on dark grounds. v3 ships a set per ground, so each
+ * one only ever meets the surface it was measured against, the ceiling is gone on dark
+ * (the sun is a real gold there), and `AppPalette` has nothing left to decide about an
+ * icon. That is why these functions no longer take one.
+ *
+ * The `*Res` functions stay plain functions on purpose: they are unit-testable without
+ * Compose, and the Glance widgets need resource ids, not ImageVectors — which is also
+ * why they take the style as a parameter, while the `@Composable` accessors read
+ * [LocalWeatherIcons].
  */
 object ChiaroIcons {
 
-    /** Every line drawable and its fill sibling: one table, so a missing sibling is a
-     * loud [NoSuchElementException] in tests instead of a quiet mixed family. */
-    private val fillOf = mapOf(
-        R.drawable.mc_clear_day to R.drawable.mcf_clear_day,
-        R.drawable.mc_clear_night to R.drawable.mcf_clear_night,
-        R.drawable.mc_partly_cloudy_day to R.drawable.mcf_partly_cloudy_day,
-        R.drawable.mc_partly_cloudy_night to R.drawable.mcf_partly_cloudy_night,
-        R.drawable.mc_overcast to R.drawable.mcf_overcast,
-        R.drawable.mc_cloudy to R.drawable.mcf_cloudy,
-        R.drawable.mc_fog_day to R.drawable.mcf_fog_day,
-        R.drawable.mc_fog_night to R.drawable.mcf_fog_night,
-        R.drawable.mc_drizzle to R.drawable.mcf_drizzle,
-        R.drawable.mc_rain to R.drawable.mcf_rain,
-        R.drawable.mc_sleet to R.drawable.mcf_sleet,
-        R.drawable.mc_snow to R.drawable.mcf_snow,
-        R.drawable.mc_partly_cloudy_day_rain to R.drawable.mcf_partly_cloudy_day_rain,
-        R.drawable.mc_partly_cloudy_night_rain to R.drawable.mcf_partly_cloudy_night_rain,
-        R.drawable.mc_partly_cloudy_day_snow to R.drawable.mcf_partly_cloudy_day_snow,
-        R.drawable.mc_partly_cloudy_night_snow to R.drawable.mcf_partly_cloudy_night_snow,
-        R.drawable.mc_thunderstorms to R.drawable.mcf_thunderstorms,
-        R.drawable.mc_thunderstorms_rain to R.drawable.mcf_thunderstorms_rain,
-        R.drawable.mc_not_available to R.drawable.mcf_not_available,
-        R.drawable.mc_wind to R.drawable.mcf_wind,
-        R.drawable.mc_humidity to R.drawable.mcf_humidity,
-        R.drawable.mc_uv_index to R.drawable.mcf_uv_index,
-        R.drawable.mc_thermometer to R.drawable.mcf_thermometer,
-        R.drawable.mc_barometer to R.drawable.mcf_barometer,
-        R.drawable.mc_raindrop to R.drawable.mcf_raindrop,
-        R.drawable.mc_raindrops to R.drawable.mcf_raindrops,
-        R.drawable.mc_mist to R.drawable.mcf_mist,
-        R.drawable.mc_umbrella to R.drawable.mcf_umbrella,
-        R.drawable.mc_snowflake to R.drawable.mcf_snowflake,
-        R.drawable.mc_dust to R.drawable.mcf_dust,
-        R.drawable.mc_smoke_particles to R.drawable.mcf_smoke_particles,
-        R.drawable.mc_compass to R.drawable.mcf_compass,
-        R.drawable.mc_sunrise to R.drawable.mcf_sunrise,
-        R.drawable.mc_sunset to R.drawable.mcf_sunset,
-        R.drawable.mc_horizon to R.drawable.mcf_horizon,
-        R.drawable.mc_star to R.drawable.mcf_star,
-        R.drawable.mc_starry_night to R.drawable.mcf_starry_night,
-        R.drawable.mc_falling_stars to R.drawable.mcf_falling_stars,
-        R.drawable.mc_solar_eclipse to R.drawable.mcf_solar_eclipse,
-        R.drawable.mc_moonrise to R.drawable.mcf_moonrise,
-        R.drawable.mc_moonset to R.drawable.mcf_moonset,
-        R.drawable.mc_moon_new to R.drawable.mcf_moon_new,
-        R.drawable.mc_moon_waxing_crescent to R.drawable.mcf_moon_waxing_crescent,
-        R.drawable.mc_moon_first_quarter to R.drawable.mcf_moon_first_quarter,
-        R.drawable.mc_moon_waxing_gibbous to R.drawable.mcf_moon_waxing_gibbous,
-        R.drawable.mc_moon_full to R.drawable.mcf_moon_full,
-        R.drawable.mc_moon_waning_gibbous to R.drawable.mcf_moon_waning_gibbous,
-        R.drawable.mc_moon_last_quarter to R.drawable.mcf_moon_last_quarter,
-        R.drawable.mc_moon_waning_crescent to R.drawable.mcf_moon_waning_crescent,
-    )
-
-    /** The dark-ground fill siblings (mcfn_*): Meteocons' own palette, on the
-     * kind of backdrop it was drawn for. Same one-table rule as [fillOf]. */
-    private val fillNightOf = mapOf(
-        R.drawable.mc_clear_day to R.drawable.mcfn_clear_day,
-        R.drawable.mc_clear_night to R.drawable.mcfn_clear_night,
-        R.drawable.mc_partly_cloudy_day to R.drawable.mcfn_partly_cloudy_day,
-        R.drawable.mc_partly_cloudy_night to R.drawable.mcfn_partly_cloudy_night,
-        R.drawable.mc_overcast to R.drawable.mcfn_overcast,
-        R.drawable.mc_cloudy to R.drawable.mcfn_cloudy,
-        R.drawable.mc_fog_day to R.drawable.mcfn_fog_day,
-        R.drawable.mc_fog_night to R.drawable.mcfn_fog_night,
-        R.drawable.mc_drizzle to R.drawable.mcfn_drizzle,
-        R.drawable.mc_rain to R.drawable.mcfn_rain,
-        R.drawable.mc_sleet to R.drawable.mcfn_sleet,
-        R.drawable.mc_snow to R.drawable.mcfn_snow,
-        R.drawable.mc_partly_cloudy_day_rain to R.drawable.mcfn_partly_cloudy_day_rain,
-        R.drawable.mc_partly_cloudy_night_rain to R.drawable.mcfn_partly_cloudy_night_rain,
-        R.drawable.mc_partly_cloudy_day_snow to R.drawable.mcfn_partly_cloudy_day_snow,
-        R.drawable.mc_partly_cloudy_night_snow to R.drawable.mcfn_partly_cloudy_night_snow,
-        R.drawable.mc_thunderstorms to R.drawable.mcfn_thunderstorms,
-        R.drawable.mc_thunderstorms_rain to R.drawable.mcfn_thunderstorms_rain,
-        R.drawable.mc_not_available to R.drawable.mcfn_not_available,
-        R.drawable.mc_wind to R.drawable.mcfn_wind,
-        R.drawable.mc_humidity to R.drawable.mcfn_humidity,
-        R.drawable.mc_uv_index to R.drawable.mcfn_uv_index,
-        R.drawable.mc_thermometer to R.drawable.mcfn_thermometer,
-        R.drawable.mc_barometer to R.drawable.mcfn_barometer,
-        R.drawable.mc_raindrop to R.drawable.mcfn_raindrop,
-        R.drawable.mc_raindrops to R.drawable.mcfn_raindrops,
-        R.drawable.mc_mist to R.drawable.mcfn_mist,
-        R.drawable.mc_umbrella to R.drawable.mcfn_umbrella,
-        R.drawable.mc_snowflake to R.drawable.mcfn_snowflake,
-        R.drawable.mc_dust to R.drawable.mcfn_dust,
-        R.drawable.mc_smoke_particles to R.drawable.mcfn_smoke_particles,
-        R.drawable.mc_compass to R.drawable.mcfn_compass,
-        R.drawable.mc_sunrise to R.drawable.mcfn_sunrise,
-        R.drawable.mc_sunset to R.drawable.mcfn_sunset,
-        R.drawable.mc_horizon to R.drawable.mcfn_horizon,
-        R.drawable.mc_star to R.drawable.mcfn_star,
-        R.drawable.mc_starry_night to R.drawable.mcfn_starry_night,
-        R.drawable.mc_falling_stars to R.drawable.mcfn_falling_stars,
-        R.drawable.mc_solar_eclipse to R.drawable.mcfn_solar_eclipse,
-        R.drawable.mc_moonrise to R.drawable.mcfn_moonrise,
-        R.drawable.mc_moonset to R.drawable.mcfn_moonset,
-        R.drawable.mc_moon_new to R.drawable.mcfn_moon_new,
-        R.drawable.mc_moon_waxing_crescent to R.drawable.mcfn_moon_waxing_crescent,
-        R.drawable.mc_moon_first_quarter to R.drawable.mcfn_moon_first_quarter,
-        R.drawable.mc_moon_waxing_gibbous to R.drawable.mcfn_moon_waxing_gibbous,
-        R.drawable.mc_moon_full to R.drawable.mcfn_moon_full,
-        R.drawable.mc_moon_waning_gibbous to R.drawable.mcfn_moon_waning_gibbous,
-        R.drawable.mc_moon_last_quarter to R.drawable.mcfn_moon_last_quarter,
-        R.drawable.mc_moon_waning_crescent to R.drawable.mcfn_moon_waning_crescent,
-    )
-
     /**
-     * The line set's dark-ground sibling (`mcn_*`, generated by
-     * `tools/gen_vivid_icons.py`), which only the VIVID palette reaches for. The
-     * shipped line set owes 3:1 on both surfaces at once, and that ceiling — Y ≤ 0.283
-     * — is why its sun is a bronze: at that brightness sRGB has no yellow. On a dark
-     * ground the ceiling is not there, so this set is the same drawings with it lifted.
-     * Paper keeps the both-grounds set on purpose: one muted, consistent line family is
-     * part of what paper means.
-     */
-    private val lineNightOf = mapOf(
-        R.drawable.mc_clear_day to R.drawable.mcn_clear_day,
-        R.drawable.mc_clear_night to R.drawable.mcn_clear_night,
-        R.drawable.mc_partly_cloudy_day to R.drawable.mcn_partly_cloudy_day,
-        R.drawable.mc_partly_cloudy_night to R.drawable.mcn_partly_cloudy_night,
-        R.drawable.mc_overcast to R.drawable.mcn_overcast,
-        R.drawable.mc_cloudy to R.drawable.mcn_cloudy,
-        R.drawable.mc_fog_day to R.drawable.mcn_fog_day,
-        R.drawable.mc_fog_night to R.drawable.mcn_fog_night,
-        R.drawable.mc_drizzle to R.drawable.mcn_drizzle,
-        R.drawable.mc_rain to R.drawable.mcn_rain,
-        R.drawable.mc_sleet to R.drawable.mcn_sleet,
-        R.drawable.mc_snow to R.drawable.mcn_snow,
-        R.drawable.mc_partly_cloudy_day_rain to R.drawable.mcn_partly_cloudy_day_rain,
-        R.drawable.mc_partly_cloudy_night_rain to R.drawable.mcn_partly_cloudy_night_rain,
-        R.drawable.mc_partly_cloudy_day_snow to R.drawable.mcn_partly_cloudy_day_snow,
-        R.drawable.mc_partly_cloudy_night_snow to R.drawable.mcn_partly_cloudy_night_snow,
-        R.drawable.mc_thunderstorms to R.drawable.mcn_thunderstorms,
-        R.drawable.mc_thunderstorms_rain to R.drawable.mcn_thunderstorms_rain,
-        R.drawable.mc_not_available to R.drawable.mcn_not_available,
-        R.drawable.mc_wind to R.drawable.mcn_wind,
-        R.drawable.mc_humidity to R.drawable.mcn_humidity,
-        R.drawable.mc_uv_index to R.drawable.mcn_uv_index,
-        R.drawable.mc_thermometer to R.drawable.mcn_thermometer,
-        R.drawable.mc_barometer to R.drawable.mcn_barometer,
-        R.drawable.mc_raindrop to R.drawable.mcn_raindrop,
-        R.drawable.mc_raindrops to R.drawable.mcn_raindrops,
-        R.drawable.mc_mist to R.drawable.mcn_mist,
-        R.drawable.mc_umbrella to R.drawable.mcn_umbrella,
-        R.drawable.mc_snowflake to R.drawable.mcn_snowflake,
-        R.drawable.mc_dust to R.drawable.mcn_dust,
-        R.drawable.mc_smoke_particles to R.drawable.mcn_smoke_particles,
-        R.drawable.mc_compass to R.drawable.mcn_compass,
-        R.drawable.mc_sunrise to R.drawable.mcn_sunrise,
-        R.drawable.mc_sunset to R.drawable.mcn_sunset,
-        R.drawable.mc_horizon to R.drawable.mcn_horizon,
-        R.drawable.mc_star to R.drawable.mcn_star,
-        R.drawable.mc_starry_night to R.drawable.mcn_starry_night,
-        R.drawable.mc_falling_stars to R.drawable.mcn_falling_stars,
-        R.drawable.mc_solar_eclipse to R.drawable.mcn_solar_eclipse,
-        R.drawable.mc_moonrise to R.drawable.mcn_moonrise,
-        R.drawable.mc_moonset to R.drawable.mcn_moonset,
-        R.drawable.mc_moon_new to R.drawable.mcn_moon_new,
-        R.drawable.mc_moon_waxing_crescent to R.drawable.mcn_moon_waxing_crescent,
-        R.drawable.mc_moon_first_quarter to R.drawable.mcn_moon_first_quarter,
-        R.drawable.mc_moon_waxing_gibbous to R.drawable.mcn_moon_waxing_gibbous,
-        R.drawable.mc_moon_full to R.drawable.mcn_moon_full,
-        R.drawable.mc_moon_waning_gibbous to R.drawable.mcn_moon_waning_gibbous,
-        R.drawable.mc_moon_last_quarter to R.drawable.mcn_moon_last_quarter,
-        R.drawable.mc_moon_waning_crescent to R.drawable.mcn_moon_waning_crescent,
-    )
-
-    /**
-     * The four moving siblings of a drawing that has any (`mca_*`, `mcan_*`, `mcaf_*`,
-     * `mcafn_*`), in the same order the static sets are picked in: line on a light
-     * ground, line on a dark one, fill on a light one, fill on a dark one.
-     */
-    private class Moving(
-        @DrawableRes val line: Int,
-        @DrawableRes val lineNight: Int,
-        @DrawableRes val fill: Int,
-        @DrawableRes val fillNight: Int
-    )
-
-    /**
-     * Which drawings move (DESIGN.md §7.1). The condition family and only it: a metric
-     * tile's mark labels a quantity, and a barometer that spins forever is decoration.
-     * `mc_not_available` is absent because Meteocons draws it still — the family has no
-     * animation for "we do not know", which is the right amount of motion for it.
+     * The style applied to a line resource id: the sibling for the style the reader
+     * chose and the ground the icon will sit on. [darkGround] is the applied theme in
+     * the app and the card's own ground in a widget (WidgetPalette).
      *
-     * One table, so a missing sibling is a loud absence at the call site rather than a
-     * quiet mixed family, and `AnimatedIconTest` walks it against the resources.
-     */
-    private val movingOf = mapOf(
-        R.drawable.mc_clear_day to Moving(
-            R.drawable.mca_clear_day, R.drawable.mcan_clear_day,
-            R.drawable.mcaf_clear_day, R.drawable.mcafn_clear_day
-        ),
-        R.drawable.mc_clear_night to Moving(
-            R.drawable.mca_clear_night, R.drawable.mcan_clear_night,
-            R.drawable.mcaf_clear_night, R.drawable.mcafn_clear_night
-        ),
-        R.drawable.mc_partly_cloudy_day to Moving(
-            R.drawable.mca_partly_cloudy_day, R.drawable.mcan_partly_cloudy_day,
-            R.drawable.mcaf_partly_cloudy_day, R.drawable.mcafn_partly_cloudy_day
-        ),
-        R.drawable.mc_partly_cloudy_night to Moving(
-            R.drawable.mca_partly_cloudy_night, R.drawable.mcan_partly_cloudy_night,
-            R.drawable.mcaf_partly_cloudy_night, R.drawable.mcafn_partly_cloudy_night
-        ),
-        R.drawable.mc_overcast to Moving(
-            R.drawable.mca_overcast, R.drawable.mcan_overcast,
-            R.drawable.mcaf_overcast, R.drawable.mcafn_overcast
-        ),
-        R.drawable.mc_cloudy to Moving(
-            R.drawable.mca_cloudy, R.drawable.mcan_cloudy,
-            R.drawable.mcaf_cloudy, R.drawable.mcafn_cloudy
-        ),
-        R.drawable.mc_fog_day to Moving(
-            R.drawable.mca_fog_day, R.drawable.mcan_fog_day,
-            R.drawable.mcaf_fog_day, R.drawable.mcafn_fog_day
-        ),
-        R.drawable.mc_fog_night to Moving(
-            R.drawable.mca_fog_night, R.drawable.mcan_fog_night,
-            R.drawable.mcaf_fog_night, R.drawable.mcafn_fog_night
-        ),
-        R.drawable.mc_drizzle to Moving(
-            R.drawable.mca_drizzle, R.drawable.mcan_drizzle,
-            R.drawable.mcaf_drizzle, R.drawable.mcafn_drizzle
-        ),
-        R.drawable.mc_sleet to Moving(
-            R.drawable.mca_sleet, R.drawable.mcan_sleet,
-            R.drawable.mcaf_sleet, R.drawable.mcafn_sleet
-        ),
-        R.drawable.mc_rain to Moving(
-            R.drawable.mca_rain, R.drawable.mcan_rain,
-            R.drawable.mcaf_rain, R.drawable.mcafn_rain
-        ),
-        R.drawable.mc_snow to Moving(
-            R.drawable.mca_snow, R.drawable.mcan_snow,
-            R.drawable.mcaf_snow, R.drawable.mcafn_snow
-        ),
-        R.drawable.mc_partly_cloudy_day_rain to Moving(
-            R.drawable.mca_partly_cloudy_day_rain, R.drawable.mcan_partly_cloudy_day_rain,
-            R.drawable.mcaf_partly_cloudy_day_rain, R.drawable.mcafn_partly_cloudy_day_rain
-        ),
-        R.drawable.mc_partly_cloudy_night_rain to Moving(
-            R.drawable.mca_partly_cloudy_night_rain, R.drawable.mcan_partly_cloudy_night_rain,
-            R.drawable.mcaf_partly_cloudy_night_rain, R.drawable.mcafn_partly_cloudy_night_rain
-        ),
-        R.drawable.mc_partly_cloudy_day_snow to Moving(
-            R.drawable.mca_partly_cloudy_day_snow, R.drawable.mcan_partly_cloudy_day_snow,
-            R.drawable.mcaf_partly_cloudy_day_snow, R.drawable.mcafn_partly_cloudy_day_snow
-        ),
-        R.drawable.mc_partly_cloudy_night_snow to Moving(
-            R.drawable.mca_partly_cloudy_night_snow, R.drawable.mcan_partly_cloudy_night_snow,
-            R.drawable.mcaf_partly_cloudy_night_snow, R.drawable.mcafn_partly_cloudy_night_snow
-        ),
-        R.drawable.mc_thunderstorms to Moving(
-            R.drawable.mca_thunderstorms, R.drawable.mcan_thunderstorms,
-            R.drawable.mcaf_thunderstorms, R.drawable.mcafn_thunderstorms
-        ),
-        R.drawable.mc_thunderstorms_rain to Moving(
-            R.drawable.mca_thunderstorms_rain, R.drawable.mcan_thunderstorms_rain,
-            R.drawable.mcaf_thunderstorms_rain, R.drawable.mcafn_thunderstorms_rain
-        ),
-    )
-
-    /**
-     * The style applied to a line resource id: for FILL, the sibling for the ground the
-     * icon will sit on; for LINE, the shipped set, or its dark-ground sibling when the
-     * reader is wearing the vivid dress. [darkGround] is the applied theme in the app
-     * and the card's own ground in a widget (WidgetPalette).
-     *
-     * On a LIGHT ground the vivid palette gets the same files as paper, and that is the
-     * gamut talking rather than an omission: a mark owes 3:1 against a near-white
-     * surface (§10), which caps it at Y ≤ 0.284, and there is no bright yellow down
-     * there to give it.
+     * `getValue` and not `get`: a drawing that reached a screen without being in the
+     * shipping list is a loud failure in a test, never a silent blank.
      */
     @DrawableRes
     fun styledRes(
         @DrawableRes lineRes: Int,
         style: WeatherIcons,
-        darkGround: Boolean = false,
-        palette: AppPalette = AppPalette.PAPER
+        darkGround: Boolean = false
     ): Int = when {
-        style != WeatherIcons.FILL ->
-            if (palette == AppPalette.VIVID && darkGround) {
-                lineNightOf.getValue(lineRes)
-            } else {
-                lineRes
-            }
-        darkGround -> fillNightOf.getValue(lineRes)
-        else -> fillOf.getValue(lineRes)
+        style == WeatherIcons.FILL && darkGround -> MeteoconsSets.flatDarkOf.getValue(lineRes)
+        style == WeatherIcons.FILL -> MeteoconsSets.flatOf.getValue(lineRes)
+        darkGround -> MeteoconsSets.lineDarkOf.getValue(lineRes)
+        else -> lineRes
     }
-
-    /**
-     * The icon for a WMO weather code. [night] picks the nocturnal variant where one
-     * exists — a clear night is not a sunny day, and that is the only place in the
-     * mapping where the distinction changes anything.
-     */
-    @DrawableRes
-    fun conditionRes(
-        wmoCode: Int,
-        night: Boolean = false,
-        style: WeatherIcons = WeatherIcons.LINE,
-        darkGround: Boolean = false,
-        palette: AppPalette = AppPalette.PAPER
-    ): Int = styledRes(conditionLineRes(wmoCode, night), style, darkGround, palette)
 
     /**
      * The moving sibling of a static drawing, or **null** when this family has none —
@@ -355,49 +83,100 @@ object ChiaroIcons {
     fun movingRes(
         @DrawableRes lineRes: Int,
         style: WeatherIcons,
-        darkGround: Boolean = false,
-        palette: AppPalette = AppPalette.PAPER
-    ): Int? = movingOf[lineRes]?.let {
+        darkGround: Boolean = false
+    ): Int? = MeteoconsSets.movingOf[lineRes]?.let {
         when {
-            style == WeatherIcons.FILL -> if (darkGround) it.fillNight else it.fill
-            palette == AppPalette.VIVID && darkGround -> it.lineNight
+            style == WeatherIcons.FILL && darkGround -> it.flatDark
+            style == WeatherIcons.FILL -> it.flat
+            darkGround -> it.lineDark
             else -> it.line
         }
     }
 
-    /** The line drawing for a WMO code, before any style or ground is applied: the seam
-     * [movingRes] and [styledRes] are both keyed on. */
+    /**
+     * The line drawing for a WMO code, before any style or ground is applied: the seam
+     * [movingRes] and [styledRes] are both keyed on.
+     *
+     * **Codes 1 and 2 are different drawings again** (Fase 13), which was the defect that
+     * opened the phase: they had shared one since Fase 2, and measured on 1 680 hours code
+     * 1 carries a median 25% of cloud against code 2's 64%, two buckets that do not overlap
+     * between their tenth and ninetieth percentiles. One hour in six was drawn half again
+     * cloudier than forecast, under a word (`cond_mostly_clear`) that said otherwise.
+     *
+     * **Code 1 takes the plain sun, and `mostly-clear` is imported but not used**
+     * (committente, 11 set 2026). The family HAS the drawing — that is half of why the
+     * import was redone — and it is deliberately left on the shelf, because it draws a
+     * sky cloudier than its own name: measured in the source, its cloud is **56 units of
+     * 128 against partly-cloudy's 80**, so 70% of the cloud for a sky that carries 39% of
+     * the cover, and its sun shrinks from a 36-unit disc to 23 while at a quarter of cover
+     * the sun is fully out. Used for code 1 it reproduced the original defect in a milder
+     * form, overstating cloud rather than understating sun.
+     *
+     * What it costs is real and is written down rather than waved past: in the hour strip
+     * and the week row there are no words, so **0 and 1 now look the same there** — one
+     * hour in six (17,2% of them) shows a clear sky over a quarter-covered one. On Today's
+     * hero the words still tell them apart. Most apps make the same collapse and for a
+     * poorer reason, having no such drawing at all: Home Assistant's Open-Meteo
+     * integration maps both 0 and 1 to `sunny`. Here it is a choice, not a vocabulary
+     * limit, and the drawing stays in the repo for the day the choice is revisited.
+     *
+     * Rain, drizzle and snow take their cloud with them (`overcast-*`) rather than
+     * falling out of nothing: from the same hours, when it rains the sky IS closed —
+     * code 51 never below 88% of cover, code 61 never below 87%. Showers keep the
+     * partly-cloudy sky, because a shower is the sky that lets the sun back between two
+     * of them.
+     *
+     * An unrecognised code draws **`not-available`**, not a cloud. The word beside it
+     * already says "unknown conditions", and a cloud there would be the screen
+     * inventing weather nobody forecast.
+     */
     @DrawableRes
     fun conditionLineRes(wmoCode: Int, night: Boolean = false): Int = when (wmoCode) {
-        0 -> if (night) R.drawable.mc_clear_night else R.drawable.mc_clear_day
-        1, 2 -> if (night) R.drawable.mc_partly_cloudy_night else R.drawable.mc_partly_cloudy_day
-        3 -> R.drawable.mc_overcast
-        45, 48 -> if (night) R.drawable.mc_fog_night else R.drawable.mc_fog_day
-        51, 53, 55 -> R.drawable.mc_drizzle
-        56, 57, 66, 67 -> R.drawable.mc_sleet
-        61, 63, 65, 82 -> R.drawable.mc_rain
-        71, 73, 75, 77 -> R.drawable.mc_snow
+        0, 1 -> if (night) R.drawable.mc3_clear_night else R.drawable.mc3_clear_day
+        2 -> if (night) R.drawable.mc3_partly_cloudy_night else R.drawable.mc3_partly_cloudy_day
+        3 -> R.drawable.mc3_overcast
+        45, 48 -> if (night) R.drawable.mc3_fog_night else R.drawable.mc3_fog_day
+        51, 53, 55 -> R.drawable.mc3_overcast_drizzle
+        56, 57, 66, 67 -> R.drawable.mc3_overcast_sleet
+        61, 63, 65 -> R.drawable.mc3_overcast_rain
+        71, 73, 75, 77 -> R.drawable.mc3_overcast_snow
         80, 81 -> if (night) {
-            R.drawable.mc_partly_cloudy_night_rain
+            R.drawable.mc3_partly_cloudy_night_rain
         } else {
-            R.drawable.mc_partly_cloudy_day_rain
+            R.drawable.mc3_partly_cloudy_day_rain
         }
+        82 -> R.drawable.mc3_extreme_rain
         85, 86 -> if (night) {
-            R.drawable.mc_partly_cloudy_night_snow
+            R.drawable.mc3_partly_cloudy_night_snow
         } else {
-            R.drawable.mc_partly_cloudy_day_snow
+            R.drawable.mc3_partly_cloudy_day_snow
         }
-        95 -> R.drawable.mc_thunderstorms
-        96, 99 -> R.drawable.mc_thunderstorms_rain
-        else -> R.drawable.mc_cloudy
+        95 -> if (night) R.drawable.mc3_thunderstorms_night else R.drawable.mc3_thunderstorms_day
+        96, 99 -> if (night) {
+            R.drawable.mc3_thunderstorms_night_hail
+        } else {
+            R.drawable.mc3_thunderstorms_day_hail
+        }
+        else -> R.drawable.mc3_not_available
     }
+
+    /**
+     * The icon for a WMO code. [night] picks the nocturnal variant where one exists — a
+     * clear night is not a sunny day, and that is the only place in the mapping where
+     * the distinction changes anything.
+     */
+    @DrawableRes
+    fun conditionRes(
+        wmoCode: Int,
+        night: Boolean = false,
+        style: WeatherIcons = WeatherIcons.LINE,
+        darkGround: Boolean = false
+    ): Int = styledRes(conditionLineRes(wmoCode, night), style, darkGround)
 
     @Composable
     fun condition(wmoCode: Int, night: Boolean = false): ImageVector =
         ImageVector.vectorResource(
-            conditionRes(
-                wmoCode, night, LocalWeatherIcons.current, darkGround(), LocalAppPalette.current
-            )
+            conditionRes(wmoCode, night, LocalWeatherIcons.current, darkGround())
         )
 
     /** One drawing per [MoonPhase] name — the same classifier the report carries. */
@@ -405,28 +184,26 @@ object ChiaroIcons {
     fun moonPhaseRes(
         phase: MoonPhase,
         style: WeatherIcons = WeatherIcons.LINE,
-        darkGround: Boolean = false,
-        palette: AppPalette = AppPalette.PAPER
+        darkGround: Boolean = false
     ): Int = styledRes(
         when (phase) {
-            MoonPhase.NEW_MOON -> R.drawable.mc_moon_new
-            MoonPhase.WAXING_CRESCENT -> R.drawable.mc_moon_waxing_crescent
-            MoonPhase.FIRST_QUARTER -> R.drawable.mc_moon_first_quarter
-            MoonPhase.WAXING_GIBBOUS -> R.drawable.mc_moon_waxing_gibbous
-            MoonPhase.FULL_MOON -> R.drawable.mc_moon_full
-            MoonPhase.WANING_GIBBOUS -> R.drawable.mc_moon_waning_gibbous
-            MoonPhase.LAST_QUARTER -> R.drawable.mc_moon_last_quarter
-            MoonPhase.WANING_CRESCENT -> R.drawable.mc_moon_waning_crescent
+            MoonPhase.NEW_MOON -> R.drawable.mc3_moon_new
+            MoonPhase.WAXING_CRESCENT -> R.drawable.mc3_moon_waxing_crescent
+            MoonPhase.FIRST_QUARTER -> R.drawable.mc3_moon_first_quarter
+            MoonPhase.WAXING_GIBBOUS -> R.drawable.mc3_moon_waxing_gibbous
+            MoonPhase.FULL_MOON -> R.drawable.mc3_moon_full
+            MoonPhase.WANING_GIBBOUS -> R.drawable.mc3_moon_waning_gibbous
+            MoonPhase.LAST_QUARTER -> R.drawable.mc3_moon_last_quarter
+            MoonPhase.WANING_CRESCENT -> R.drawable.mc3_moon_waning_crescent
         },
         style,
-        darkGround,
-        palette
+        darkGround
     )
 
     @Composable
     fun moonPhase(phase: MoonPhase): ImageVector =
         ImageVector.vectorResource(
-            moonPhaseRes(phase, LocalWeatherIcons.current, darkGround(), LocalAppPalette.current)
+            moonPhaseRes(phase, LocalWeatherIcons.current, darkGround())
         )
 
     /**
@@ -463,6 +240,11 @@ object ChiaroIcons {
      * card in Avvisi, the Journal's line and the widgets' chip. It is tinted with the
      * level's ink and never recoloured, and it is a drawing for the reason the verdict
      * marks are: ⚠ is not in the app's face.
+     *
+     * Meteocons v3 HAS `code-yellow`/`code-orange`/`code-red`, and they are deliberately
+     * not used here: they are full-colour illustrations, and this slot wants a mark at
+     * the verdict weight that takes the level's ink. The family's `*-alert` drawings are
+     * imported for the **kind** of hazard instead, which is a different question.
      */
     @DrawableRes
     fun warningMarkRes(): Int = R.drawable.ic_warning
@@ -474,9 +256,7 @@ object ChiaroIcons {
     /** The styled vector for a line id: the one seam every accessor below shares. */
     @Composable
     private fun styled(@DrawableRes lineRes: Int): ImageVector =
-        ImageVector.vectorResource(
-            styledRes(lineRes, LocalWeatherIcons.current, darkGround(), LocalAppPalette.current)
-        )
+        ImageVector.vectorResource(styledRes(lineRes, LocalWeatherIcons.current, darkGround()))
 
     /** The ground the icon is about to sit on: the APPLIED theme's surface, read off
      * the scheme itself — a reader can force the theme against the system, and the
@@ -487,11 +267,70 @@ object ChiaroIcons {
 
     // The details grid. Each accessor names the METRIC, not the drawing, so a better
     // drawing later is a one-line change here and nothing else.
-    val wind: ImageVector @Composable get() = styled(R.drawable.mc_wind)
-    val humidity: ImageVector @Composable get() = styled(R.drawable.mc_humidity)
-    val visibility: ImageVector @Composable get() = styled(R.drawable.mc_mist)
-    val uv: ImageVector @Composable get() = styled(R.drawable.mc_uv_index)
-    val pressure: ImageVector @Composable get() = styled(R.drawable.mc_barometer)
+    val wind: ImageVector @Composable get() = styled(R.drawable.mc3_wind)
+    val humidity: ImageVector @Composable get() = styled(R.drawable.mc3_humidity)
+    val visibility: ImageVector @Composable get() = styled(R.drawable.mc3_mist)
+    val uv: ImageVector @Composable get() = styled(R.drawable.mc3_uv_index)
+
+    /**
+     * The graded marks (Fase 13). Meteocons v3 draws these metrics at their own levels,
+     * and the rule for using one is the same rule a second verdict has to pass
+     * (DESIGN §1.2): **a glyph may only say a level the tile already computes and says in
+     * words.** Where the family's grades and the app's bands do not line up, the generic
+     * mark stays — that is why the wind tile below is not graded, and why `very-high`
+     * and `extreme` are imported but not shipped: `pressureMeaning` has three bands and
+     * `pollenLevel` has three levels above nothing, not five and four.
+     */
+    @Composable
+    fun uv(index: Int): ImageVector = styled(
+        when {
+            index <= 0 -> R.drawable.mc3_uv_index
+            index >= 12 -> R.drawable.mc3_uv_index_11_plus
+            else -> UV_GRADES[index - 1]
+        }
+    )
+
+    /**
+     * The UV mark carries the number, so it may be graded per unit rather than per band:
+     * the tile prints "7" and the drawing says 7. A band-graded glyph beside a printed
+     * integer would be the picture and the number disagreeing about how precise the
+     * forecast is.
+     */
+    private val UV_GRADES = intArrayOf(
+        R.drawable.mc3_uv_index_1, R.drawable.mc3_uv_index_2, R.drawable.mc3_uv_index_3,
+        R.drawable.mc3_uv_index_4, R.drawable.mc3_uv_index_5, R.drawable.mc3_uv_index_6,
+        R.drawable.mc3_uv_index_7, R.drawable.mc3_uv_index_8, R.drawable.mc3_uv_index_9,
+        R.drawable.mc3_uv_index_10, R.drawable.mc3_uv_index_11
+    )
+
+    /**
+     * The pressure mark is **not** graded, and the reason is the rule's missing half
+     * (11 set 2026, from a device report: «non ha indicazione»).
+     *
+     * Meteocons draws five barometers and the app has three bands, so the arithmetic
+     * lined up — but the thing that grades them is a needle **2 units wide in a 128-unit
+     * box**, which at the tile's 34dp is half a device-independent pixel. The grade was
+     * arithmetically right and optically absent: a dial that looks like it should be
+     * pointing at something and is not. §1.2's rule needed the other half, now written
+     * down: a glyph may only say a level the tile already says in words **and that a
+     * reader can actually see**. The band is in «Nella norma», where it reads.
+     */
+    val pressure: ImageVector @Composable get() = styled(R.drawable.mc3_barometer)
+
+    /**
+     * The air between the reader and the horizon, at the strength the tile names.
+     * `visibilityMeaning`'s two hazy bands share one drawing on purpose: they are the
+     * same phenomenon at two strengths and the words already tell them apart, and a
+     * glyph that under-claims is honest where one that over-claims is not.
+     */
+    @Composable
+    fun visibility(kilometres: Double): ImageVector = styled(
+        when {
+            kilometres >= 10 -> R.drawable.mc3_mist
+            kilometres >= 1 -> R.drawable.mc3_haze
+            else -> R.drawable.mc3_fog
+        }
+    )
 
     /** The thermometer, not the raindrop (4 set 2026). Meteocons draws `humidity` as
      * `raindrop` with a % laid over it, so the two tiles that sit one under the other
@@ -500,43 +339,116 @@ object ChiaroIcons {
      * A dew point is a temperature, so it gets the instrument that reads one; the
      * drop stays the humidity mark alone. This is what §13.1's «the accessor names
      * the metric, not the drawing» is for. */
-    val dewPoint: ImageVector @Composable get() = styled(R.drawable.mc_thermometer)
-    val precipitation: ImageVector @Composable get() = styled(R.drawable.mc_raindrops)
+    val dewPoint: ImageVector @Composable get() = styled(R.drawable.mc3_thermometer)
+
+    val precipitation: ImageVector @Composable get() = styled(R.drawable.mc3_raindrops)
 
     /** Freezing, not snow: the Journal's drift strip marks the days whose forecast
      * minimum is at or below zero, and the question there is ice, not precipitation.
      * The accessor names the metric (§13.1), which is why it is not called
      * `snowflake`. */
-    val frost: ImageVector @Composable get() = styled(R.drawable.mc_snowflake)
-    val airQuality: ImageVector @Composable get() = styled(R.drawable.mc_smoke_particles)
+    val frost: ImageVector @Composable get() = styled(R.drawable.mc3_snowflake)
+    /**
+     * `smoke`, not `smoke-particles` (11 set 2026, committente). Meteocons draws the
+     * particles alone as three specks that fill a third of their box — the smallest mark
+     * in the grid, and mute beside the sun and the grass. `smoke` is the same particles
+     * with the air they hang in, twice the ink, and it is what an air-quality reading is
+     * about. The one cost is declared: when visibility drops into its hazy band the tile
+     * beside this one draws a cloud with lines while this one draws a cloud with dots,
+     * and at 34dp those are close. Below 10km, and the words differ.
+     */
+    val airQuality: ImageVector @Composable get() = styled(R.drawable.mc3_smoke)
 
-    /** Meteocons v2 has no pollen icon (v3 does, but it is a different drawing and
-     * cannot be mixed in). Airborne grains are the dust icon's literal subject, so it
-     * serves until the v3 family stabilizes — recorded in PLANNING.md Fase 2. */
-    val pollen: ImageVector @Composable get() = styled(R.drawable.mc_dust)
+    /**
+     * A real pollen drawing at last (Fase 13). It was `dust` from Fase 2 to here, with
+     * a note saying so: Meteocons v2 had no pollen icon and airborne grains are the
+     * dust icon's literal subject, which made it an honest stand-in rather than a lie.
+     * v3 has the family, in three plants and four levels, and `WeatherText.pollenWorst`
+     * already computes exactly that — so the tile can name the plant instead of the
+     * dust in the air.
+     */
+    val pollen: ImageVector @Composable get() = styled(R.drawable.mc3_pollen)
+
+    /**
+     * The plant, at its level. The tile already computes both — `pollenWorst` for the
+     * level and `pollenFamiliesAtWorst` for who is at it — and already prints them, so
+     * the drawing is allowed to say the same thing.
+     *
+     * Ties go to the catalogue's order, the same order the note lists them in, so the
+     * glyph names the first plant the sentence names. `NONE` keeps the generic mark:
+     * there is no "no pollen" drawing, and inventing one would be a level the tile does
+     * not have.
+     */
+    @Composable
+    fun pollen(report: PollenReport): ImageVector {
+        val worst = WeatherText.pollenWorst(report)
+        val family = when (worst) {
+            PollenLevel.NONE -> null
+            report.grass -> Plant.GRASS
+            report.tree -> Plant.TREE
+            else -> Plant.WEED
+        }
+        return styled(
+            when {
+                family == null -> R.drawable.mc3_pollen
+                worst == PollenLevel.LOW -> family.low
+                worst == PollenLevel.MODERATE -> family.moderate
+                else -> family.high
+            }
+        )
+    }
+
+    private enum class Plant(
+        @DrawableRes val low: Int,
+        @DrawableRes val moderate: Int,
+        @DrawableRes val high: Int
+    ) {
+        GRASS(
+            R.drawable.mc3_pollen_grass_low, R.drawable.mc3_pollen_grass_moderate,
+            R.drawable.mc3_pollen_grass_high
+        ),
+        TREE(
+            R.drawable.mc3_pollen_tree_low, R.drawable.mc3_pollen_tree_moderate,
+            R.drawable.mc3_pollen_tree_high
+        ),
+        WEED(
+            R.drawable.mc3_pollen_weed_low, R.drawable.mc3_pollen_weed_moderate,
+            R.drawable.mc3_pollen_weed_high
+        )
+    }
 
     // The day's timeline and the Sky screen.
     /** The rain-over glyph: a cloud with nothing falling out of it. */
-    val cloud: ImageVector @Composable get() = styled(R.drawable.mc_cloudy)
-    val sunrise: ImageVector @Composable get() = styled(R.drawable.mc_sunrise)
-    val sunset: ImageVector @Composable get() = styled(R.drawable.mc_sunset)
-    val moonrise: ImageVector @Composable get() = styled(R.drawable.mc_moonrise)
-    val moonset: ImageVector @Composable get() = styled(R.drawable.mc_moonset)
-    val horizon: ImageVector @Composable get() = styled(R.drawable.mc_horizon)
-    val star: ImageVector @Composable get() = styled(R.drawable.mc_star)
-    val starryNight: ImageVector @Composable get() = styled(R.drawable.mc_starry_night)
-    val fallingStars: ImageVector @Composable get() = styled(R.drawable.mc_falling_stars)
-
-    /** The moon over the sun: the one eclipse drawing Meteocons v2 has (Fase 19). */
-    val solarEclipse: ImageVector @Composable get() = styled(R.drawable.mc_solar_eclipse)
+    val cloud: ImageVector @Composable get() = styled(R.drawable.mc3_cloudy)
+    val sunrise: ImageVector @Composable get() = styled(R.drawable.mc3_sunrise)
+    val sunset: ImageVector @Composable get() = styled(R.drawable.mc3_sunset)
+    val moonrise: ImageVector @Composable get() = styled(R.drawable.mc3_moonrise)
+    val moonset: ImageVector @Composable get() = styled(R.drawable.mc3_moonset)
+    val horizon: ImageVector @Composable get() = styled(R.drawable.mc3_horizon)
 
     /**
-     * Meteocons v2 has no rainbow, and the sun-behind-a-shower drawing is not a
-     * substitute for one: it is literally the weather a rainbow is made of, which is
-     * what the row it marks says.
+     * The golden hour, and it is **not** the horizon glyph any more (11 set 2026, from a
+     * screenshot): `sunrise`, `horizon` and `sunset` are the same drawing apart from a
+     * bump in the middle of the line, **6 units in a 128 box** — 1.6dp at the agenda's
+     * 34dp — so «Ora d'oro» at 19:02 and «Tramonto» at 19:41 were two rows carrying one
+     * picture. Meteocons has no golden-hour drawing, but the plain sun says the thing
+     * that actually separates them: in the golden hour the sun is still **above** the
+     * horizon, at sunrise and sunset it is crossing it. Whoever crosses keeps the line.
      */
-    val rainbow: ImageVector
-        @Composable get() = styled(R.drawable.mc_partly_cloudy_day_rain)
+    val goldenHour: ImageVector @Composable get() = styled(R.drawable.mc3_clear_day)
+    val star: ImageVector @Composable get() = styled(R.drawable.mc3_star)
+    val starryNight: ImageVector @Composable get() = styled(R.drawable.mc3_starry_night)
+    val fallingStars: ImageVector @Composable get() = styled(R.drawable.mc3_falling_stars)
+
+    /** The moon over the sun: the one eclipse drawing the family has (Fase 19). */
+    val solarEclipse: ImageVector @Composable get() = styled(R.drawable.mc3_solar_eclipse)
+
+    /**
+     * An actual rainbow (Fase 13). Until v3 this was `partly-cloudy-day-rain` under a
+     * note admitting it was not a substitute — it is literally the weather a rainbow is
+     * made of, which is what the row it marks says, but it is not the thing.
+     */
+    val rainbow: ImageVector @Composable get() = styled(R.drawable.mc3_rainbow)
 
     // The navigation bar. Deliberately NOT styled (decision, 3 set): these are
     // silhouettes the bar tints to one color, so fill-vs-line would change nothing

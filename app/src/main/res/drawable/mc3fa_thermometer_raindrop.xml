@@ -1,0 +1,87 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <path android:pathData="M55,83 A9,9,0,1,1,73,83 A9,9,0,1,1,55,83 Z"
+                android:fillColor="#9d000c"/>
+            <group android:name="g1value">
+                <path android:pathData="M64,50 L64,50 A3,3,0,0,1,67,53 L67,76 A3,3,0,0,1,64,79 L64,79 A3,3,0,0,1,61,76 L61,53 A3,3,0,0,1,64,50 Z"
+                    android:fillColor="#9d000c"/>
+            </group>
+            <group>
+                <clip-path android:pathData="M128,0 L0,0 L0,128 L128,128 Z M46,83.201 A17.55,17.55,0,0,1,48.04,74.936 A17.9,17.9,0,0,1,52,69.902 L52,38.78 A11.67,11.67,0,0,1,55.555,30.41 A12.12,12.12,0,0,1,64,27 A12.12,12.12,0,0,1,72.445,30.412 C74.708,32.611,76,35.62,76,38.78 L76,69.901 A17.9,17.9,0,0,1,79.96,74.935 C81.309,77.486,82.01,80.321,82,83.201 C81.995,93.09,73.906,101,64,101 C54.094,101,46.005,93.089,46,83.201"/>
+                <group android:translateX="78" android:translateY="57">
+                    <group android:name="g2g">
+                        <group android:translateX="-78" android:translateY="-57">
+                            <path android:pathData="M78,39 C70.695,49.8,66,56.55,66,63.105 C66,69.66,71.37,75,78,75 C84.63,75,90,69.675,90,63.105 C90,56.535,85.305,49.785,78,39"
+                                android:fillColor="#0039bb"/>
+                        </group>
+                    </group>
+                </group>
+            </group>
+            <path android:pathData="M50.5,83.191 A13.05,13.05,0,0,1,52.023,77.051 A13.5,13.5,0,0,1,56.284,72.275 A0.5,0.5,0,0,0,56.5,71.865 L56.5,38.778 C56.5,36.852,57.286,35.002,58.691,33.636 A7.62,7.62,0,0,1,64,31.5 C65.993,31.5,67.903,32.27,69.309,33.637 A7.17,7.17,0,0,1,71.5,38.779 L71.5,42.047 L65,42.047 A0.5,0.5,0,0,0,65,43.047 L71.5,43.047 L71.5,49.827 L65,49.827 A0.5,0.5,0,1,0,65,50.827 L71.5,50.827 L71.5,57.605 L65,57.605 A0.5,0.5,0,0,0,65,58.605 L71.5,58.605 L71.5,71.84 A0.5,0.5,0,0,0,71.716,72.251 A13.5,13.5,0,0,1,75.982,77.038 A13.05,13.05,0,0,1,77.5,83.19 L77.5,83.192 C77.5,90.543,71.48,96.5,64,96.5 C56.52,96.5,50.5,90.543,50.5,83.192 Z"
+                android:fillColor="#8391a3"
+                android:fillAlpha=".25"
+                android:strokeColor="#708aaa"
+                android:strokeWidth="1"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round"/>
+        </vector>
+    </aapt:attr>
+    <target android:name="g1value">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateY">
+                <propertyValuesHolder android:propertyName="translateY">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="-2"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g2g">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="scaleX">
+                <propertyValuesHolder android:propertyName="scaleX">
+                    <keyframe android:fraction="0" android:value="1"/>
+                    <keyframe android:fraction="0.5" android:value="1.1"/>
+                    <keyframe android:fraction="1" android:value="1"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g2g">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="scaleY">
+                <propertyValuesHolder android:propertyName="scaleY">
+                    <keyframe android:fraction="0" android:value="1"/>
+                    <keyframe android:fraction="0.5" android:value="1.1"/>
+                    <keyframe android:fraction="1" android:value="1"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

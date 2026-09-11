@@ -1,0 +1,45 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <group android:name="g1pollen7">
+        <path android:pathData="M90,73 A3,3,0,1,0,90,67 A3,3,0,0,0,90,73"
+                    android:name="g2p"
+                    android:fillColor="#ffd64f"/>
+    </group>
+    <group android:name="g3pollen6">
+        <path android:pathData="M80,62 A2,2,0,1,0,80,58 A2,2,0,0,0,80,62"
+                    android:name="g4p"
+                    android:fillColor="#ffd64f"/>
+    </group>
+    <group android:name="g5pollen5">
+        <path android:pathData="M74,72 A4,4,0,1,0,74,64 A4,4,0,0,0,74,72"
+                    android:name="g6p"
+                    android:fillColor="#ffd64f"/>
+    </group>
+    <group android:name="g7pollen4">
+        <path android:pathData="M64,61 A3,3,0,1,0,64,55 A3,3,0,0,0,64,61"
+                    android:name="g8p"
+                    android:fillColor="#ffd64f"/>
+    </group>
+    <group android:name="g9pollen3">
+        <path android:pathData="M54,72 A4,4,0,1,0,54,64 A4,4,0,0,0,54,72"
+                    android:name="g10p"
+                    android:fillColor="#ffd64f"/>
+    </group>
+    <group android:name="g11pollen2">
+        <path android:pathData="M48,62 A2,2,0,1,0,48,58 A2,2,0,0,0,48,62"
+                    android:name="g12p"
+                    android:fillColor="#ffd64f"/>
+    </group>
+    <group android:name="g13pollen1">
+        <path android:pathData="M38,73 A3,3,0,1,0,38,67 A3,3,0,0,0,38,73"
+                    android:name="g14p"
+                    android:fillColor="#ffd64f"/>
+    </group>
+</vector>

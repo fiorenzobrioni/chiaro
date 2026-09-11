@@ -132,22 +132,29 @@ internal object ArcText {
         kind: TimelineKind,
         at: Instant,
         style: WeatherIcons,
-        darkGround: Boolean,
-        palette: AppPalette
+        darkGround: Boolean
     ): Int {
         val line = when (kind) {
-            TimelineKind.SUNRISE -> R.drawable.mc_sunrise
-            TimelineKind.GOLDEN_MORNING_END, TimelineKind.GOLDEN_EVENING -> R.drawable.mc_horizon
-            TimelineKind.SUNSET -> R.drawable.mc_sunset
-            TimelineKind.BLUE_EVENING -> R.drawable.mc_star
-            TimelineKind.DARK -> R.drawable.mc_starry_night
+            TimelineKind.SUNRISE -> R.drawable.mc3_sunrise
+            // L'ora d'oro perde la linea dell'orizzonte (11 set 2026, da uno screenshot):
+            // `sunrise`, `horizon` e `sunset` sono lo STESSO disegno a meno di una gobba
+            // di 6 unita' su 128 in mezzo alla linea — 1,6 dp alla misura della riga — e
+            // due righe di fila a trentanove minuti di distanza portavano lo stesso
+            // glifo. Meteocons non ha un disegno per l'ora d'oro; il sole pieno pero'
+            // dice la cosa giusta, perche' la differenza vera e' quella: nell'ora d'oro
+            // il sole e' ancora **sopra** l'orizzonte, all'alba e al tramonto lo sta
+            // attraversando. Chi ha la linea la merita.
+            TimelineKind.GOLDEN_MORNING_END, TimelineKind.GOLDEN_EVENING -> R.drawable.mc3_clear_day
+            TimelineKind.SUNSET -> R.drawable.mc3_sunset
+            TimelineKind.BLUE_EVENING -> R.drawable.mc3_star
+            TimelineKind.DARK -> R.drawable.mc3_starry_night
             TimelineKind.MOONRISE, TimelineKind.MOONSET ->
-                return ChiaroIcons.moonPhaseRes(MoonPhase.at(at), style, darkGround, palette)
-            TimelineKind.RAINBOW -> R.drawable.mc_partly_cloudy_day_rain
-            TimelineKind.RAIN_START -> R.drawable.mc_raindrops
-            TimelineKind.RAIN_STOP -> R.drawable.mc_cloudy
+                return ChiaroIcons.moonPhaseRes(MoonPhase.at(at), style, darkGround)
+            TimelineKind.RAINBOW -> R.drawable.mc3_rainbow
+            TimelineKind.RAIN_START -> R.drawable.mc3_raindrops
+            TimelineKind.RAIN_STOP -> R.drawable.mc3_cloudy
         }
-        return ChiaroIcons.styledRes(line, style, darkGround, palette)
+        return ChiaroIcons.styledRes(line, style, darkGround)
     }
 
     /**

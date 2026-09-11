@@ -1,0 +1,85 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <group>
+                <clip-path android:pathData="M0,0 L128,0 L128,75 L0,75 Z"/>
+                <group android:name="g1moon" android:pivotX="64" android:pivotY="62">
+                    <path android:pathData="M61.912,40 C50.715,41.208,42,50.562,42,61.93 C42,74.118,52.015,84,64.368,84 C74.782,84,83.507,76.97,86,67.465 C71.137,69.059,58.039,54.757,61.912,40"
+                        android:fillColor="#317994"/>
+                </group>
+            </group>
+            <group android:name="g2line2">
+                <path android:pathData="M40,81 L88,81"
+                    android:strokeColor="#898e95"
+                    android:strokeWidth="3"
+                    android:strokeLineCap="round"
+                    android:strokeMiterLimit="10"/>
+            </group>
+            <group android:name="g3line1">
+                <path android:pathData="M40,89 L88,89"
+                    android:strokeColor="#898e95"
+                    android:strokeWidth="3"
+                    android:strokeLineCap="round"
+                    android:strokeMiterLimit="10"/>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="g1moon">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="rotation">
+                <propertyValuesHolder android:propertyName="rotation">
+                    <keyframe android:fraction="0" android:value="-6"/>
+                    <keyframe android:fraction="0.5" android:value="6"/>
+                    <keyframe android:fraction="1" android:value="-6"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g2line2">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateX">
+                <propertyValuesHolder android:propertyName="translateX">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="3"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g3line1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateX">
+                <propertyValuesHolder android:propertyName="translateX">
+                    <keyframe android:fraction="0" android:value="0.4"/>
+                    <keyframe android:fraction="0.0667" android:value="0"/>
+                    <keyframe android:fraction="0.5667" android:value="3"/>
+                    <keyframe android:fraction="1" android:value="0.4"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

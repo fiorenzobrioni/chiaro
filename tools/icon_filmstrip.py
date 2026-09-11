@@ -31,7 +31,10 @@ FRAMES = 9
 SPAN = 1.0
 
 #: The ground each set is drawn on here, so a dark-ground set is looked at on one.
-GROUNDS = {"mca_": "#F6FAFF", "mcaf_": "#F6FAFF", "mcafn_": "#0D141B", "mcan_": "#0D141B"}
+GROUNDS = {"mca_": "#F6FAFF", "mcaf_": "#F6FAFF", "mcafn_": "#0D141B", "mcan_": "#0D141B",
+           # Fase 13: le icone v3 dello spike, guardate su entrambe le superfici vere
+           # dell'app (DESIGN §2.2) perche' portano i colori ORIGINALI di Meteocons.
+           "spike_": "#FCF9F3", "spike-dark_": "#16130E"}
 
 
 def attr(el: ET.Element, name: str, default=None):
@@ -80,11 +83,19 @@ def svg_shape(el: ET.Element, now: dict, out: list[str], clips: list[str]) -> No
     animated = now.get(name, {})
     if tag == "group":
         px, py = float(attr(el, "pivotX", 0)), float(attr(el, "pivotY", 0))
-        tx, ty = animated.get("translateX", 0.0), animated.get("translateY", 0.0)
-        rotation = animated.get("rotation", 0.0)
+        # Un gruppo puo' portare la trasformazione scritta nell'XML, quella animata, o
+        # tutte e due: dalla Fase 13 l'importatore emette anche quelle statiche (i
+        # `transform` di Figma, e il riquadro dei ritagli), e leggendo solo le animate
+        # questo strumento disegnava il vuoto.
+        tx = float(attr(el, "translateX", 0)) + animated.get("translateX", 0.0)
+        ty = float(attr(el, "translateY", 0)) + animated.get("translateY", 0.0)
+        rotation = float(attr(el, "rotation", 0)) + animated.get("rotation", 0.0)
+        sx = animated.get("scaleX", float(attr(el, "scaleX", 1)))
+        sy = animated.get("scaleY", float(attr(el, "scaleY", 1)))
         # The order a VectorDrawable composes a group in: about the pivot, then moved.
         out.append(
-            f'<g transform="translate({px + tx} {py + ty}) rotate({rotation}) translate({-px} {-py})">'
+            f'<g transform="translate({px + tx} {py + ty}) rotate({rotation}) '
+            f'scale({sx} {sy}) translate({-px} {-py})">'
         )
         inner_clips: list[str] = []
         body: list[str] = []
@@ -105,6 +116,12 @@ def svg_shape(el: ET.Element, now: dict, out: list[str], clips: list[str]) -> No
     bits = [f'd="{attr(el, "pathData")}"']
     fill = attr(el, "fillColor")
     bits.append(f'fill="{fill}"' if fill else 'fill="none"')
+    # `fillType="evenOdd"` non e' un dettaglio: nella famiglia `line` di Meteocons v3 un
+    # contorno E' un anello disegnato con quella regola, e disegnarlo senza la riempie
+    # piena. Questo strumento lo ignorava, e faceva sembrare diverse dalla loro sorgente
+    # tutte le nuvole (trovato con la griglia in differenza, 11 set 2026).
+    if attr(el, "fillType") == "evenOdd":
+        bits.append('fill-rule="evenodd"')
     if fill and "fillAlpha" in animated:
         bits.append(f'fill-opacity="{animated["fillAlpha"]}"')
     stroke = attr(el, "strokeColor")
@@ -118,6 +135,18 @@ def svg_shape(el: ET.Element, now: dict, out: list[str], clips: list[str]) -> No
                 bits.append(f'{svg_name}="{attr(el, avd_name)}"')
         if "strokeAlpha" in animated:
             bits.append(f'stroke-opacity="{animated["strokeAlpha"]}"')
+        # `trimPath*` torna a essere il tratteggio da cui e' venuto (Fase 13). Con
+        # `pathLength="1"` le frazioni di Android SONO le unita' del dasharray, quindi
+        # la finestra si ridisegna senza misurare niente.
+        start = float(attr(el, "trimPathStart", 0) or 0)
+        end = float(attr(el, "trimPathEnd", 1) or 1)
+        offset = animated.get("trimPathOffset",
+                              float(attr(el, "trimPathOffset", 0) or 0))
+        if (start, end) != (0.0, 1.0) or offset:
+            span = max(0.0, end - start)
+            bits.append('pathLength="1"')
+            bits.append(f'stroke-dasharray="{span} {max(1e-6, 1 - span)}"')
+            bits.append(f'stroke-dashoffset="{-(start + offset)}"')
     out.append("<path " + " ".join(bits) + "/>")
 
 
@@ -131,7 +160,10 @@ def frame(path: pathlib.Path, seconds: float) -> str:
     clips: list[str] = []
     for child in vector:
         svg_shape(child, now, body, clips)
-    return ('<svg viewBox="0 0 64 64" width="52" height="52">' + "".join(body) + "</svg>")
+    vw = attr(vector, "viewportWidth", "64")
+    vh = attr(vector, "viewportHeight", "64")
+    return (f'<svg viewBox="0 0 {vw} {vh}" width="52" height="52">'
+            + "".join(body) + "</svg>")
 
 
 def main() -> None:
@@ -144,15 +176,16 @@ def main() -> None:
           ".row{display:flex;align-items:center;gap:2px;padding:2px 12px}"
           ".n{width:190px;font-size:11px;opacity:.75}"
           "</style></head><body>")
-    wanted = sys.argv[1:] or list(GROUNDS)
+    wanted = sys.argv[1:] or [p for p in GROUNDS if not p.startswith("spike")]
     unknown = [p for p in wanted if p not in GROUNDS]
     if unknown:
         sys.exit(f"no such set: {unknown} — pick from {list(GROUNDS)}")
     for prefix in wanted:
         ground = GROUNDS[prefix]
-        files = sorted(DRAWABLE.glob(f"{prefix}*.xml"))
+        glob = "spike_*_anim.xml" if prefix.startswith("spike") else f"{prefix}*.xml"
+        files = sorted(DRAWABLE.glob(glob))
         if not files:
-            sys.exit(f"no {prefix}*.xml — run tools/import_meteocons.py")
+            sys.exit(f"no {glob} — run the importer first")
         print(f"<h2>{prefix}* on {ground}</h2>")
         for path in files:
             cells = "".join(

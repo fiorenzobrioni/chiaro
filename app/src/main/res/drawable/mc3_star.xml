@@ -1,0 +1,14 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <path android:pathData="M62.573,37.245 C63.023,35.863,64.978,35.863,65.427,37.245 L69.982,51.265 A4.5,4.5,0,0,0,74.262,54.375 L89.005,54.375 C90.458,54.375,91.062,56.235,89.887,57.089 L77.959,65.755 A4.5,4.5,0,0,0,76.325,70.786 L80.881,84.806 C81.33,86.189,79.748,87.338,78.572,86.484 L66.645,77.818 A4.5,4.5,0,0,0,61.355,77.818 L49.428,86.484 C48.252,87.338,46.67,86.189,47.119,84.807 L51.675,70.787 A4.5,4.5,0,0,0,50.041,65.755 L38.113,57.089 C36.938,56.235,37.543,54.375,38.995,54.375 L53.738,54.375 A4.5,4.5,0,0,0,58.018,51.265 Z"
+                android:name="g1p"
+                android:strokeColor="#a58f30"
+                android:strokeWidth="3"/>
+</vector>

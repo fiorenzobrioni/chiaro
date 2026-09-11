@@ -1,0 +1,54 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <path android:pathData="M38.565,64.378 C40.877,63.484,46.862,61.607,53.839,65.63 C57.415,67.692,59.472,70.285,60.683,72.627 L63.386,77.855 L61.528,78.493 C58.838,79.417,53.467,80.567,47.279,76.987 C40.325,72.963,38.947,66.809,38.564,64.377 Z M63.515,65.836 L63.022,65.39 C60.858,63.435,57.468,59.412,57.468,52.538 C57.468,44.49,62.097,40.238,64.014,38.68 C65.942,40.24,70.614,44.468,70.614,52.538 C70.614,59.434,67.224,63.443,65.061,65.391 L64.565,65.838 L64.565,77.82 L67.392,72.484 C68.612,70.181,70.656,67.651,74.162,65.63 C81.137,61.607,87.122,63.483,89.435,64.378 C89.052,66.809,87.675,72.963,80.721,76.988 C74.59,80.534,69.26,79.438,66.547,78.518 L64.565,77.848 L64.565,89.045 C64.565,89.247,64.38,89.5,64.041,89.5 C63.701,89.5,63.516,89.247,63.516,89.045 Z"
+                android:strokeColor="#416d00"
+                android:strokeWidth="3"
+                android:strokeLineCap="round"
+                android:strokeMiterLimit="10"/>
+    <path android:pathData="M80,71 L92,71 A9,9,0,0,1,101,80 L101,92 A9,9,0,0,1,92,101 L80,101 A9,9,0,0,1,71,92 L71,80 A9,9,0,0,1,80,71 Z"
+                android:fillColor="#a75b00"/>
+    <path android:pathData="M88.397,85.472 Q89.621,85.692,90.301,86.492 Q90.981,87.274,90.981,88.447 Q90.981,90.13,89.706,91.235 Q88.414,92.323,86.119,92.323 Q83.722,92.323,82.413,91.133 Q81.122,89.943,81.036,87.852 L83.943,87.852 Q84.045,89.926,86,89.926 Q86.867,89.926,87.36,89.501 Q87.87,89.076,87.87,88.345 Q87.87,87.597,87.343,87.206 Q86.816,86.816,85.847,86.815 L84.997,86.815 L84.997,84.707 L85.897,84.707 Q86.697,84.707,87.122,84.35 Q87.564,83.993,87.564,83.33 Q87.564,82.667,87.122,82.31 Q86.698,81.936,85.898,81.936 Q85.116,81.936,84.708,82.327 Q84.3,82.717,84.232,83.602 L81.41,83.602 Q81.58,79.607,86,79.607 Q88.091,79.607,89.264,80.525 Q90.437,81.443,90.437,82.871 Q90.437,83.823,89.893,84.52 Q89.366,85.217,88.397,85.472"
+                android:fillColor="#fff"/>
+    <group android:name="g1pollen7">
+        <path android:pathData="M90,53 A3,3,0,1,0,90,47 A3,3,0,0,0,90,53"
+                    android:name="g2p"
+                    android:fillColor="#a18200"/>
+    </group>
+    <group android:name="g3pollen6">
+        <path android:pathData="M80,42 A2,2,0,1,0,80,38 A2,2,0,0,0,80,42"
+                    android:name="g4p"
+                    android:fillColor="#a18200"/>
+    </group>
+    <group android:name="g5pollen5">
+        <path android:pathData="M74,52 A4,4,0,1,0,74,44 A4,4,0,0,0,74,52"
+                    android:name="g6p"
+                    android:fillColor="#a18200"/>
+    </group>
+    <group android:name="g7pollen4">
+        <path android:pathData="M64,41 A3,3,0,1,0,64,35 A3,3,0,0,0,64,41"
+                    android:name="g8p"
+                    android:fillColor="#a18200"/>
+    </group>
+    <group android:name="g9pollen3">
+        <path android:pathData="M54,52 A4,4,0,1,0,54,44 A4,4,0,0,0,54,52"
+                    android:name="g10p"
+                    android:fillColor="#a18200"/>
+    </group>
+    <group android:name="g11pollen2">
+        <path android:pathData="M48,42 A2,2,0,1,0,48,38 A2,2,0,0,0,48,42"
+                    android:name="g12p"
+                    android:fillColor="#a18200"/>
+    </group>
+    <group android:name="g13pollen1">
+        <path android:pathData="M38,53 A3,3,0,1,0,38,47 A3,3,0,0,0,38,53"
+                    android:name="g14p"
+                    android:fillColor="#a18200"/>
+    </group>
+</vector>

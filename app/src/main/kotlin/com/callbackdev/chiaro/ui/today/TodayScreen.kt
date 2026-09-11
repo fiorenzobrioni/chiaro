@@ -94,7 +94,6 @@ import com.callbackdev.chiaro.ui.components.RainChart
 import com.callbackdev.chiaro.ui.components.RainHour
 import com.callbackdev.chiaro.ui.components.SkyCanvas
 import com.callbackdev.chiaro.ui.components.SkyCanvasTopScrimEnd
-import com.callbackdev.chiaro.ui.components.WindArrow
 import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.warnings.WarningBanner
@@ -1208,8 +1207,8 @@ private fun RestOfDay(content: TodayUiState.Content, timeFmt: DateTimeFormatter)
 @Composable
 private fun timelineIcon(kind: TimelineKind) = when (kind) {
     TimelineKind.SUNRISE -> ChiaroIcons.sunrise
-    TimelineKind.GOLDEN_MORNING_END -> ChiaroIcons.horizon
-    TimelineKind.GOLDEN_EVENING -> ChiaroIcons.horizon
+    TimelineKind.GOLDEN_MORNING_END -> ChiaroIcons.goldenHour
+    TimelineKind.GOLDEN_EVENING -> ChiaroIcons.goldenHour
     TimelineKind.SUNSET -> ChiaroIcons.sunset
     TimelineKind.BLUE_EVENING -> ChiaroIcons.star
     TimelineKind.DARK -> ChiaroIcons.starryNight
@@ -1367,7 +1366,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
         if (today != null) {
             add(
                 Tile(
-                    icon = { ChiaroIcons.uv },
+                    icon = { ChiaroIcons.uv(today.uvIndexMax) },
                     label = R.string.metric_uv,
                     value = today.uvIndexMax.toString(),
                     meaning = WeatherText.uvMeaning(today.uvIndexMax),
@@ -1422,7 +1421,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
         current.visibilityKm?.let { km ->
             add(
                 Tile(
-                    icon = { ChiaroIcons.visibility },
+                    icon = { ChiaroIcons.visibility(km) },
                     label = R.string.metric_visibility,
                     value = Formats.kilometers(km, locale),
                     meaning = WeatherText.visibilityMeaning(km)
@@ -1446,7 +1445,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
             val families = WeatherText.pollenFamiliesAtWorst(pollen).map { stringResource(it) }
             add(
                 Tile(
-                    icon = { ChiaroIcons.pollen },
+                    icon = { ChiaroIcons.pollen(pollen) },
                     label = R.string.metric_pollen,
                     value = stringResource(WeatherText.pollenLevel(worst)),
                     meaning = WeatherText.pollenMeaning(worst),
@@ -1512,21 +1511,25 @@ private const val AqiScaleTop = 300f
  * eighth of the compass is `SkyText`'s vocabulary — the same "north-east" the Sky screen
  * says for a rainbow — because a general audience reads "from the north-east" and
  * decodes "NNE"; the 16-point label the model carries stays in the data. */
+/**
+ * Da dove viene il vento, **a parole e basta** (committente, 11 set 2026).
+ *
+ * C'era una freccia accanto, disegnata a mano e poi diventata l'ago di Meteocons: girava
+ * dei gradi veri, quindi diceva la direzione con piu' precisione dell'etichetta a sedici
+ * punte che le sta accanto. Non e' stata tolta perche' diceva troppo poco: e' stata tolta
+ * perche' a sedici o diciotto dp non era bella, e in un tile dove tutto il resto e' una
+ * riga di testo era l'unica cosa che si notava per il motivo sbagliato. La direzione era
+ * gia' scritta, quindi non si perde niente se non un disegno.
+ */
 @Composable
 private fun WindDirection(fromDegrees: Int) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        WindArrow(fromDegrees = fromDegrees)
-        Text(
-            text = stringResource(
-                R.string.wind_from,
-                stringResource(SkyText.bearingRes(fromDegrees.toDouble()))
-            ),
-            style = MaterialTheme.typography.bodyMedium
-        )
-    }
+    Text(
+        text = stringResource(
+            R.string.wind_from,
+            stringResource(SkyText.bearingRes(fromDegrees.toDouble()))
+        ),
+        style = MaterialTheme.typography.bodyMedium
+    )
 }
 
 private data class Tile(

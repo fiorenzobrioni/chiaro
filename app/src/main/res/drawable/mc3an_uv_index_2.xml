@@ -1,0 +1,45 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <group>
+                <clip-path android:pathData="M128,0 L0,0 L0,128 L64,128 L64,85 C64,73.402,73.402,64,85,64 L128,64 Z"/>
+                <path android:pathData="M46,64 A18,18,0,1,1,82,64 A18,18,0,1,1,46,64 Z"
+                    android:strokeColor="#ffc25e"
+                    android:strokeWidth="4"/>
+                <group android:name="g1rays" android:pivotX="64" android:pivotY="64">
+                    <path android:pathData="M64,16 A2,2,0,0,1,66,18 L66,30 A2,2,0,1,1,62,30 L62,18 A2,2,0,0,1,64,16 M30.059,30.059 A2,2,0,0,1,32.887,30.059 L41.373,38.544 A2,2,0,0,1,38.544,41.373 L30.059,32.887 A2,2,0,0,1,30.059,30.059 M97.941,30.059 A2,2,0,0,1,97.941,32.887 L89.456,41.373 A2,2,0,0,1,86.627,38.544 L95.113,30.059 A2,2,0,0,1,97.941,30.059 M16,64 A2,2,0,0,1,18,62 L30,62 A2,2,0,1,1,30,66 L18,66 A2,2,0,0,1,16,64 M96,64 A2,2,0,0,1,98,62 L110,62 A2,2,0,1,1,110,66 L98,66 A2,2,0,0,1,96,64 M41.373,86.627 A2,2,0,0,1,41.373,89.456 L32.887,97.941 A2,2,0,1,1,30.059,95.113 L38.544,86.627 A2,2,0,0,1,41.373,86.627 M86.627,86.627 A2,2,0,0,1,89.456,86.627 L97.941,95.113 A2,2,0,1,1,95.113,97.941 L86.627,89.456 A2,2,0,0,1,86.627,86.627 M64,96 A2,2,0,0,1,66,98 L66,110 A2,2,0,1,1,62,110 L62,98 A2,2,0,0,1,64,96"
+                        android:fillColor="#ffc25e"
+                        android:fillType="evenOdd"/>
+                </group>
+                <path android:pathData="M63.5,83.5 C64.036,72.03,71.756,63.831,83.5,63.5"
+                    android:strokeColor="#ffc25e"
+                    android:strokeWidth="6"/>
+            </group>
+            <path android:pathData="M88,79 L100,79 A9,9,0,0,1,109,88 L109,100 A9,9,0,0,1,100,109 L88,109 A9,9,0,0,1,79,100 L79,88 A9,9,0,0,1,88,79 Z"
+                android:fillColor="#a5dc33"/>
+            <path android:pathData="M98.794,100 L89.206,100 Q89.206,98.385,89.903,97.297 Q90.601,96.243,92.453,94.968 L94.323,93.642 Q95.037,93.149,95.326,92.707 A1.72,1.72,0,0,0,95.632,91.704 Q95.632,90.974,95.19,90.565 Q94.748,90.14,93.983,90.14 Q92.249,90.14,92.249,92.163 L92.249,92.418 L89.376,92.418 L89.376,92.044 Q89.376,89.953,90.6,88.78 Q91.824,87.607,94.068,87.607 Q96.21,87.607,97.468,88.644 Q98.743,89.698,98.743,91.517 Q98.743,92.69,98.131,93.625 Q97.536,94.56,96.21,95.41 L94.119,96.736 Q93.524,97.126,93.473,97.399 L98.793,97.399 Z"
+                android:fillColor="#fff"/>
+        </vector>
+    </aapt:attr>
+    <target android:name="g1rays">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="6000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="rotation"
+                android:valueFrom="0"
+                android:valueTo="360"/>
+        </aapt:attr>
+    </target>
+</animated-vector>

@@ -1,0 +1,84 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <group android:name="g1line3">
+                <path android:pathData="M34,50 L94,50"
+                    android:strokeColor="#d6dfe9"
+                    android:strokeWidth="4"
+                    android:strokeLineCap="round"
+                    android:strokeMiterLimit="10"/>
+            </group>
+            <group android:name="g2line2">
+                <path android:pathData="M34,64 L94,64"
+                    android:strokeColor="#d6dfe9"
+                    android:strokeWidth="4"
+                    android:strokeLineCap="round"
+                    android:strokeMiterLimit="10"/>
+            </group>
+            <group android:name="g3line1">
+                <path android:pathData="M34,78 L94,78"
+                    android:strokeColor="#d6dfe9"
+                    android:strokeWidth="4"
+                    android:strokeLineCap="round"
+                    android:strokeMiterLimit="10"/>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="g1line3">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateX">
+                <propertyValuesHolder android:propertyName="translateX">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="2"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g2line2">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateX">
+                <propertyValuesHolder android:propertyName="translateX">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="4"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g3line1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateX">
+                <propertyValuesHolder android:propertyName="translateX">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="6"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

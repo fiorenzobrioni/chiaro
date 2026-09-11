@@ -1,0 +1,78 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <group>
+                <clip-path android:pathData="M128,0 L0,0 L0,128 L64,128 L64,85 C64,73.402,73.402,64,85,64 L128,64 Z"/>
+                <path android:pathData="M44,64 A20,20,0,1,1,84,64 A20,20,0,1,1,44,64 Z"
+                    android:fillColor="#a06f00"/>
+                <group android:name="g1rays" android:pivotX="64" android:pivotY="64">
+                    <path android:pathData="M61,19 A3,3,0,1,1,67,19 L67,33 A3,3,0,0,1,61,33 Z M93.699,30.059 A3,3,0,1,1,97.94,34.3 L88.04,44.2 A3,3,0,1,1,83.798,39.957 Z M109,61 A3,3,0,1,1,109,67 L95,67 A3,3,0,1,1,95,61 Z M97.941,93.699 A3,3,0,1,1,93.698,97.941 L83.799,88.041 A3,3,0,1,1,88.042,83.799 Z M61,95 A3,3,0,1,1,67,95 L67,109 A3,3,0,1,1,61,109 Z M39.958,83.799 A3,3,0,1,1,44.201,88.042 L34.301,97.942 A3,3,0,1,1,30.059,93.699 Z M33,61 A3,3,0,1,1,33,67 L19,67 A3,3,0,0,1,19,61 Z M44.201,39.958 A3,3,0,1,1,39.958,44.201 L30.058,34.301 A3,3,0,1,1,34.301,30.059 Z"
+                        android:fillColor="#a06f00"/>
+                </group>
+            </group>
+            <path android:pathData="M91.402,79.5 C92.557,77.5,95.443,77.5,96.598,79.5 L108.722,100.5 C109.877,102.5,108.434,105,106.124,105 L81.876,105 C79.566,105,78.123,102.5,79.278,100.5 Z"
+                android:name="g2p"
+                android:fillColor="#1a2232"/>
+            <path android:pathData="M94.758,95.59 L93.264,95.59 L92.418,90.568 L92.418,87.184 L95.586,87.184 L95.586,90.568 Z M95.604,100 L92.4,100 L92.4,96.994 L95.604,96.994 Z"
+                android:name="g3p"
+                android:fillColor="#fff"/>
+        </vector>
+    </aapt:attr>
+    <target android:name="g1rays">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="6000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="rotation"
+                android:valueFrom="0"
+                android:valueTo="360"/>
+        </aapt:attr>
+    </target>
+    <target android:name="g2p">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="1000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="fillAlpha">
+                <propertyValuesHolder android:propertyName="fillAlpha">
+                    <keyframe android:fraction="0" android:value="1"/>
+                    <keyframe android:fraction="0.294" android:value="1"/>
+                    <keyframe android:fraction="0.5" android:value="0"/>
+                    <keyframe android:fraction="0.794" android:value="0"/>
+                    <keyframe android:fraction="1" android:value="1"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g3p">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="1000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="fillAlpha">
+                <propertyValuesHolder android:propertyName="fillAlpha">
+                    <keyframe android:fraction="0" android:value="1"/>
+                    <keyframe android:fraction="0.294" android:value="1"/>
+                    <keyframe android:fraction="0.5" android:value="0"/>
+                    <keyframe android:fraction="0.794" android:value="0"/>
+                    <keyframe android:fraction="1" android:value="1"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

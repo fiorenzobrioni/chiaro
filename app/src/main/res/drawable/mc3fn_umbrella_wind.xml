@@ -1,0 +1,33 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <group android:name="g1umbrella" android:pivotX="66.2" android:pivotY="58.6">
+        <path android:pathData="M38.148,77.125 C36.324,78.948,35.267,81.935,37.483,84.153 C39.7,86.369,42.688,85.312,44.511,83.489 L86.627,41.373"
+                    android:strokeColor="#71717a"
+                    android:strokeWidth="3"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round"/>
+        <path android:pathData="M60.208,52.87 C67.312,55.59,72.376,60.598,75.13,67.793 A2.13,2.13,0,0,0,76.329,69.015 Q77.125,69.33,77.899,69.67 C89.932,61.028,86.628,41.373,86.628,41.373 C86.628,41.373,66.977,38.069,58.333,50.097 Q58.672,50.877,58.986,51.671 C59.205,52.225,59.651,52.658,60.208,52.871"
+                    android:fillColor="#f1f5f9"/>
+        <path android:pathData="M94.983,83.9 C103.167,72.867,99.802,54.547,86.627,41.373 C86.627,41.373,89.932,61.028,77.899,69.67 C83.834,72.274,88.824,76.019,91.441,82.34 L91.856,83.38 C92.392,84.72,94.121,85.062,94.983,83.9 M86.627,41.373 C73.453,28.198,55.133,24.833,44.1,33.017 C42.938,33.879,43.28,35.608,44.62,36.144 L45.66,36.559 C52.077,39.097,55.768,44.206,58.333,50.097 C66.976,38.069,86.627,41.373,86.627,41.373"
+                    android:fillColor="#ff867e"/>
+    </group>
+    <path android:pathData="M44.351,47.844 C47.101,44.934,52,47.102,52,50.977 C52,53.475,50.01,55.5,47.556,55.5 L16,55.5"
+                android:name="g2p"
+                android:strokeColor="#e2e8f0"
+                android:strokeWidth="3"
+                android:strokeLineCap="round"
+                android:strokeMiterLimit="10"/>
+    <path android:pathData="M32.057,69.158 C34.853,72.008,40,70.016,40,66.024 C40,63.526,37.934,61.5,35.385,61.5 L16,61.5"
+                android:name="g3p"
+                android:strokeColor="#e2e8f0"
+                android:strokeWidth="3"
+                android:strokeLineCap="round"
+                android:strokeMiterLimit="10"/>
+</vector>

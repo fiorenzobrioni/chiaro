@@ -28,7 +28,7 @@
             android:layout_width="76dp"
             android:layout_height="76dp"
             android:importantForAccessibility="no"
-            android:src="@drawable/mcn_partly_cloudy_day" />
+            android:src="@drawable/mc3n_partly_cloudy_day" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -106,7 +106,7 @@
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mcn_partly_cloudy_day" />
+                android:src="@drawable/mc3n_partly_cloudy_day" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"
@@ -133,7 +133,7 @@
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mcn_partly_cloudy_day" />
+                android:src="@drawable/mc3n_partly_cloudy_day" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"
@@ -160,7 +160,7 @@
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mcn_cloudy" />
+                android:src="@drawable/mc3n_cloudy" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"
@@ -187,7 +187,7 @@
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mcn_partly_cloudy_day_rain" />
+                android:src="@drawable/mc3n_partly_cloudy_day_rain" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"
@@ -214,7 +214,7 @@
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mcn_rain" />
+                android:src="@drawable/mc3n_overcast_rain" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"

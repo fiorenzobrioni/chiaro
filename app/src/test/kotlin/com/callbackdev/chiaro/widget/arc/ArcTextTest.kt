@@ -78,22 +78,22 @@ class ArcTextTest {
         val nearNew = LocalDateTime.of(2026, 9, 9, 19, 0).atZone(zone).toInstant()
         assertEquals(MoonPhase.NEW_MOON, MoonPhase.at(nearNew))
         assertEquals(
-            ChiaroIcons.moonPhaseRes(MoonPhase.NEW_MOON, WeatherIcons.LINE, true, AppPalette.VIVID),
-            ArcText.rowIconRes(TimelineKind.MOONSET, nearNew, WeatherIcons.LINE, true, AppPalette.VIVID)
+            ChiaroIcons.moonPhaseRes(MoonPhase.NEW_MOON, WeatherIcons.LINE, true),
+            ArcText.rowIconRes(TimelineKind.MOONSET, nearNew, WeatherIcons.LINE, true)
         )
         val nearFull = LocalDateTime.of(2026, 9, 26, 21, 0).atZone(zone).toInstant()
         assertEquals(MoonPhase.FULL_MOON, MoonPhase.at(nearFull))
         assertEquals(
-            ChiaroIcons.moonPhaseRes(MoonPhase.FULL_MOON, WeatherIcons.FILL, true, AppPalette.VIVID),
-            ArcText.rowIconRes(TimelineKind.MOONRISE, nearFull, WeatherIcons.FILL, true, AppPalette.VIVID)
+            ChiaroIcons.moonPhaseRes(MoonPhase.FULL_MOON, WeatherIcons.FILL, true),
+            ArcText.rowIconRes(TimelineKind.MOONRISE, nearFull, WeatherIcons.FILL, true)
         )
         assertEquals(
-            R.drawable.mcn_sunset,
-            ArcText.rowIconRes(TimelineKind.SUNSET, nearNew, WeatherIcons.LINE, true, AppPalette.VIVID)
+            R.drawable.mc3n_sunset,
+            ArcText.rowIconRes(TimelineKind.SUNSET, nearNew, WeatherIcons.LINE, true)
         )
         assertEquals(
-            R.drawable.mc_sunset,
-            ArcText.rowIconRes(TimelineKind.SUNSET, nearNew, WeatherIcons.LINE, false, AppPalette.VIVID)
+            R.drawable.mc3_sunset,
+            ArcText.rowIconRes(TimelineKind.SUNSET, nearNew, WeatherIcons.LINE, false)
         )
     }
 
@@ -108,13 +108,14 @@ class ArcTextTest {
         TimelineKind.entries.forEach { kind ->
             WeatherIcons.entries.forEach { style ->
                 listOf(true, false).forEach { dark ->
-                    AppPalette.entries.forEach { palette ->
-                        days.forEach { at ->
-                            assertTrue(
-                                "$kind $style dark=$dark $palette $at",
-                                ArcText.rowIconRes(kind, at, style, dark, palette) != 0
-                            )
-                        }
+                    // Il vestito non e' piu' fra le variabili: dalla Fase 13 un'icona la
+                    // scelgono stile e fondo, e i quattro set di v3 rendono `AppPalette`
+                    // irrilevante qui.
+                    days.forEach { at ->
+                        assertTrue(
+                            "$kind $style dark=$dark $at",
+                            ArcText.rowIconRes(kind, at, style, dark) != 0
+                        )
                     }
                 }
             }

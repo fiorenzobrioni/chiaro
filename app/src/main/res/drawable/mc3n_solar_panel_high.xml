@@ -1,0 +1,25 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <path android:pathData="M44,40 L68,40 A5,5,0,0,1,73,45 L73,83 A5,5,0,0,1,68,88 L44,88 A5,5,0,0,1,39,83 L39,45 A5,5,0,0,1,44,40 Z"
+                android:strokeColor="#6884b8"
+                android:strokeWidth="2"/>
+    <path android:pathData="M40,55.526 L72,55.526 M40,71.263 L72,71.263 M56,41 L56,87"
+                android:strokeColor="#6884b8"
+                android:strokeWidth="2"/>
+    <path android:pathData="M87,87 L87,89 L83,89 L83,87 Z M88,86 L88,82 A1,1,0,0,0,87,81 L83,81 A1,1,0,0,0,82,82 L82,86 A1,1,0,0,0,83,87 L83,89 A3,3,0,0,1,80.004,86.154 L80,86 L80,82 A3,3,0,0,1,83,79 L87,79 L87.154,79.004 A3,3,0,0,1,90,82 L90,86 L89.996,86.154 A3,3,0,0,1,87.154,88.996 L87,89 L87,87 A1,1,0,0,0,88,86"
+                android:name="g1p"
+                android:fillColor="#ffc25e"/>
+    <path android:pathData="M87,74 L87,76 L83,76 L83,74 Z M88,73 L88,69 A1,1,0,0,0,87,68 L83,68 A1,1,0,0,0,82,69 L82,73 A1,1,0,0,0,83,74 L83,76 A3,3,0,0,1,80.004,73.154 L80,73 L80,69 A3,3,0,0,1,83,66 L87,66 L87.154,66.004 A3,3,0,0,1,90,69 L90,73 L89.996,73.154 A3,3,0,0,1,87.154,75.996 L87,76 L87,74 A1,1,0,0,0,88,73"
+                android:name="g2p"
+                android:fillColor="#ffc25e"/>
+    <path android:pathData="M87,61 L87,63 L83,63 L83,61 Z M88,60 L88,56 A1,1,0,0,0,87,55 L83,55 A1,1,0,0,0,82,56 L82,60 A1,1,0,0,0,83,61 L83,63 A3,3,0,0,1,80.004,60.154 L80,60 L80,56 A3,3,0,0,1,83,53 L87,53 L87.154,53.004 A3,3,0,0,1,90,56 L90,60 L89.996,60.154 A3,3,0,0,1,87.154,62.996 L87,63 L87,61 A1,1,0,0,0,88,60"
+                android:name="g3p"
+                android:fillColor="#ffc25e"/>
+</vector>

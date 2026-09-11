@@ -19,7 +19,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.viewinterop.AndroidView
-import com.callbackdev.chiaro.ui.theme.LocalAppPalette
 import com.callbackdev.chiaro.ui.theme.reducedMotion
 
 /**
@@ -28,8 +27,7 @@ import com.callbackdev.chiaro.ui.theme.reducedMotion
  * The screens used to build an `ImageVector` where they built their row, which meant the
  * drawing was chosen before anything knew whether it was allowed to move. Keeping the
  * code and the hour of day instead lets [ConditionIcon] decide at the point of drawing,
- * where the style, the ground, the palette and the reader's motion setting are all in
- * scope at once.
+ * where the style, the ground and the reader's motion setting are all in scope at once.
  */
 @Immutable
 data class ConditionGlyph(val wmoCode: Int, val night: Boolean = false)
@@ -81,17 +79,16 @@ val LocalMotionPaused = staticCompositionLocalOf { false }
 @Composable
 fun ConditionIcon(glyph: ConditionGlyph, modifier: Modifier = Modifier) {
     val style = LocalWeatherIcons.current
-    val palette = LocalAppPalette.current
     // The ground the icon is about to sit on: the APPLIED theme's surface, read off the
     // scheme itself — the same question `ChiaroIcons` asks for the static sets.
     val darkGround = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val lineRes = ChiaroIcons.conditionLineRes(glyph.wmoCode, glyph.night)
     val moving = if (LocalAnimatedIcons.current && !reducedMotion() && !LocalInspectionMode.current) {
-        ChiaroIcons.movingRes(lineRes, style, darkGround, palette)
+        ChiaroIcons.movingRes(lineRes, style, darkGround)
     } else {
         null
     }
-    val still = ImageVector.vectorResource(ChiaroIcons.styledRes(lineRes, style, darkGround, palette))
+    val still = ImageVector.vectorResource(ChiaroIcons.styledRes(lineRes, style, darkGround))
     if (moving != null) {
         val paused = LocalMotionPaused.current
         Box(modifier = modifier) {

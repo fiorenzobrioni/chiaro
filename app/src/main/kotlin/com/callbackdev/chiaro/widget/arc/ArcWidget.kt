@@ -344,9 +344,7 @@ private fun StackedStripContent(
                     Image(
                         provider = ImageProvider(
                             ArcText.rowIconRes(
-                                next.item.kind, next.at, model.iconStyle, palette.darkGround,
-                                model.settings.palette
-                            )
+                                next.item.kind, next.at, model.iconStyle, palette.darkGround)
                         ),
                         contentDescription = ArcText.heroLabel(context, next.item),
                         modifier = GlanceModifier.size(StripGlyph)
@@ -571,9 +569,7 @@ private fun Agenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, palette
                 Image(
                     provider = ImageProvider(
                         ArcText.rowIconRes(
-                            event.item.kind, event.at, model.iconStyle, palette.darkGround,
-                            model.settings.palette
-                        )
+                            event.item.kind, event.at, model.iconStyle, palette.darkGround)
                     ),
                     contentDescription = null, // the words beside it say it
                     modifier = GlanceModifier.size(AgendaGlyph)
@@ -663,7 +659,7 @@ private fun WeekStrip(
                     provider = ImageProvider(
                         ChiaroIcons.conditionRes(
                             day.forecast.condition.wmoCode, false,
-                            model.iconStyle, palette.darkGround, model.settings.palette
+                            model.iconStyle, palette.darkGround
                         )
                     ),
                     contentDescription = null,

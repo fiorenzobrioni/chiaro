@@ -1,0 +1,33 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <path android:pathData="M52.601,45.556 C53.991,42.802,56.323,41,60.024,41 L67.976,41 C71.676,41,74.008,42.802,75.399,45.556 L81.049,60.714 A90,90,0,0,0,87.969,75.184 L97.325,90.961 C99.747,95.76,94.35,101,87.902,101 L40.098,101 C33.65,101,28.252,95.759,30.675,90.961 L40.031,75.184 A90,90,0,0,0,46.951,60.714 Z"
+                android:fillColor="#482b16"/>
+    <path android:pathData="M51.748,45.907 A8,8,0,0,1,59.125,41 L68.875,41 A8,8,0,0,1,76.252,45.907 L81.812,59.167 A2.043,2.043,0,0,1,79.928,62 C79.119,62,78.387,62.477,78.059,63.217 L76.672,66.353 C75.543,68.905,71.921,68.905,70.792,66.353 L70.417,65.507 A2.59,2.59,0,0,0,66.191,64.749 A2.59,2.59,0,0,1,62.207,64.42 L61.073,62.79 A4.23,4.23,0,0,0,55.993,61.291 L55.811,61.366 A4.38,4.38,0,0,0,53.538,63.5 L53.389,63.806 C51.816,67.039,47.179,66.951,45.731,63.66 A4.22,4.22,0,0,1,45.701,60.327 Z"
+                android:fillColor="#5b3d27"/>
+    <path android:pathData="M57.927,42 L70.542,42 A2.96,2.96,0,0,1,72.064,42.422 C72.516,42.693,72.887,43.079,73.082,43.485 C73.272,43.882,73.291,44.278,73.095,44.648 C72.359,46.038,70.689,47.013,68.823,47.641 C66.977,48.261,65.061,48.5,64,48.5 C62.986,48.5,61.19,48.282,59.42,47.72 C57.634,47.153,55.978,46.268,55.12,45.004 C54.824,44.568,54.834,44.09,55.073,43.612 C55.321,43.119,55.809,42.654,56.395,42.362 C56.87,42.123,57.395,42,57.927,42 Z"
+                android:fillColor="#4e2f11"
+                android:strokeColor="#482b16"
+                android:strokeWidth="1"/>
+    <group android:name="g1smoke1">
+        <path android:pathData="M63.5,48 A7.5,7.5,0,1,0,63.5,33 A7.5,7.5,0,0,0,63.5,48"
+                    android:name="g2p"
+                    android:fillColor="#5c6a7d"/>
+    </group>
+    <group android:name="g3smoke2">
+        <path android:pathData="M63.5,48 A7.5,7.5,0,1,0,63.5,33 A7.5,7.5,0,0,0,63.5,48"
+                    android:name="g4p"
+                    android:fillColor="#5c6a7d"/>
+    </group>
+    <group android:name="g5smoke3">
+        <path android:pathData="M63.5,48 A7.5,7.5,0,1,0,63.5,33 A7.5,7.5,0,0,0,63.5,48"
+                    android:name="g6p"
+                    android:fillColor="#5c6a7d"/>
+    </group>
+</vector>

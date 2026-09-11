@@ -626,7 +626,7 @@ internal fun jobIcon(job: SkyJob) = when (job.id) {
     "sun.rise", "twilight.civil.am", "sun.latest_rise" -> ChiaroIcons.sunrise
     "sun.set", "twilight.civil.pm", "sun.earliest_set" -> ChiaroIcons.sunset
     "solar.noon", "earth.perihelion", "earth.aphelion" -> ChiaroIcons.condition(0, night = false)
-    "golden_hour.am", "golden_hour.pm" -> ChiaroIcons.horizon
+    "golden_hour.am", "golden_hour.pm" -> ChiaroIcons.goldenHour
     "blue_hour.am", "blue_hour.pm",
     "twilight.nautical.am", "twilight.nautical.pm" -> ChiaroIcons.star
     "twilight.astronomical.am", "twilight.astronomical.pm",

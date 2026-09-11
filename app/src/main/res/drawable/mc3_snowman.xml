@@ -1,0 +1,52 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <path android:pathData="M52.44,58.465 A21.1,21.1,0,0,0,47.654,62.815 A6.5,6.5,0,0,1,49.874,64.843 A18.1,18.1,0,0,1,54.986,60.416 A17,17,0,0,1,52.44,58.466 M73.014,60.417 A18.1,18.1,0,0,1,78.126,64.844 A6.5,6.5,0,0,1,80.346,62.816 A21.1,21.1,0,0,0,75.56,58.466 A17,17,0,0,1,73.014,60.417 M81.962,74.817 Q82,75.405,82,76 C82,85.941,73.941,94,64,94 C54.059,94,46,85.941,46,76 Q46,75.404,46.038,74.817 A6.5,6.5,0,0,1,43.032,74.834 A21,21,0,0,0,43,76 C43,87.598,52.402,97,64,97 C75.598,97,85,87.598,85,76 Q85,75.413,84.968,74.834 A6.5,6.5,0,0,1,81.962,74.817"
+                android:fillColor="#88909c"
+                android:fillType="evenOdd"/>
+    <path android:pathData="M62,69 A2,2,0,1,1,66,69 A2,2,0,1,1,62,69 Z"
+                android:fillColor="#223857"/>
+    <path android:pathData="M62,75 A2,2,0,1,1,66,75 A2,2,0,1,1,62,75 Z"
+                android:fillColor="#223857"/>
+    <path android:pathData="M62,81 A2,2,0,1,1,66,81 A2,2,0,1,1,62,81 Z"
+                android:fillColor="#223857"/>
+    <path android:pathData="M80.5,68.5 A3,3,0,1,1,86.5,68.5 A3,3,0,1,1,80.5,68.5 Z"
+                android:strokeColor="#88909c"
+                android:strokeWidth="3"
+                android:strokeMiterLimit="10"/>
+    <path android:pathData="M41.5,68.5 A3,3,0,1,1,47.5,68.5 A3,3,0,1,1,41.5,68.5 Z"
+                android:strokeColor="#88909c"
+                android:strokeWidth="3"
+                android:strokeMiterLimit="10"/>
+    <path android:pathData="M50.5,46 A13.5,13.5,0,1,1,77.5,46 A13.5,13.5,0,1,1,50.5,46 Z"
+                android:strokeColor="#88909c"
+                android:strokeWidth="3"
+                android:strokeMiterLimit="10"/>
+    <path android:pathData="M59.5,51.5 L60.345,51.875 A9,9,0,0,0,67.655,51.875 L68.5,51.5"
+                android:strokeColor="#223857"
+                android:strokeWidth="2"
+                android:strokeLineCap="round"/>
+    <path android:pathData="M57.156,48.995 C55.973,49.097,55.536,47.729,56.621,47.321 L63.561,45.077 C63.841,44.972,64.141,44.979,64.398,45.07 C64.932,45.26,64.928,45.942,64.79,46.49 C64.653,47.04,64.77,47.727,64.368,48.125 A1.1,1.1,0,0,1,63.677,48.431 Z"
+                android:fillColor="#ac5900"/>
+    <path android:pathData="M57,42 A2,2,0,1,1,61,42 A2,2,0,1,1,57,42 Z"
+                android:fillColor="#223857"/>
+    <path android:pathData="M67,42 A2,2,0,1,1,71,42 A2,2,0,1,1,67,42 Z"
+                android:fillColor="#223857"/>
+    <path android:pathData="M59,22 L69,22 A2,2,0,0,1,71,24 L71,35 A2,2,0,0,1,69,37 L59,37 A2,2,0,0,1,57,35 L57,24 A2,2,0,0,1,59,22 Z"
+                android:fillColor="#1a2232"/>
+    <path android:pathData="M53,31 L75,31 A2,2,0,0,1,77,33 L77,35 A2,2,0,0,1,75,37 L53,37 A2,2,0,0,1,51,35 L51,33 A2,2,0,0,1,53,31 Z"
+                android:fillColor="#1a2232"/>
+    <path android:pathData="M57,31.5 L71,31.5"
+                android:strokeColor="#9e000c"
+                android:strokeWidth="1"/>
+    <path android:pathData="M70,58 L72,58 A2,2,0,0,1,74,60 L74,65 A2,2,0,0,1,72,67 L70,67 A2,2,0,0,1,68,65 L68,60 A2,2,0,0,1,70,58 Z"
+                android:fillColor="#b00019"/>
+    <path android:pathData="M52,56.18 A1,1,0,0,1,53.164,55.194 L57.095,55.849 C61.667,56.611,66.333,56.611,70.905,55.849 L74.835,55.194 A1,1,0,0,1,76,56.18 L76,59.153 A1,1,0,0,1,75.164,60.139 L70.904,60.849 A42,42,0,0,1,57.095,60.849 L52.835,60.139 A1,1,0,0,1,52,59.153 Z"
+                android:fillColor="#b00019"/>
+</vector>

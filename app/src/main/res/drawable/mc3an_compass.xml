@@ -1,0 +1,47 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <group>
+                <clip-path android:pathData="M24,24 L104,24 L104,104 L24,104 Z"/>
+                <path android:pathData="M25.5,64 A38.5,38.5,0,1,1,102.5,64 A38.5,38.5,0,1,1,25.5,64 Z"
+                    android:strokeColor="#616e84"
+                    android:strokeWidth="3"/>
+            </group>
+            <group android:name="g1pointer" android:pivotX="64" android:pivotY="64">
+                <path android:pathData="M67.453,69.451 L49.455,79.646 C48.494,80.19,47.31,79.006,47.855,78.046 L58.049,60.047 A1,1,0,0,1,59.626,59.833 L67.666,67.873 A1,1,0,0,1,67.453,69.451"
+                    android:fillColor="#d6dfe9"/>
+                <path android:pathData="M70.658,66.246 L80.853,48.248 C81.397,47.287,80.213,46.103,79.253,46.648 L61.254,56.841 A1,1,0,0,0,61.039,58.418 L69.08,66.458 A1,1,0,0,0,70.657,66.245"
+                    android:fillColor="#ff857d"/>
+                <group android:rotation="45" android:pivotX="64" android:pivotY="63.5">
+                    <path android:pathData="M60,63.5 A4,4,0,1,1,68,63.5 A4,4,0,1,1,60,63.5 Z"
+                        android:fillColor="#7d8ca2"/>
+                </group>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="g1pointer">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="rotation">
+                <propertyValuesHolder android:propertyName="rotation">
+                    <keyframe android:fraction="0" android:value="-6"/>
+                    <keyframe android:fraction="0.5" android:value="6"/>
+                    <keyframe android:fraction="1" android:value="-6"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>
