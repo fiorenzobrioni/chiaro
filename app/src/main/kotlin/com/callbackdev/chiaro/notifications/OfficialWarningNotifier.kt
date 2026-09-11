@@ -104,7 +104,7 @@ object OfficialWarningNotifier {
             R.string.notif_warning_collapsed,
             hazardWords,
             dayPhrase,
-            context.getString(R.string.notif_warning_bulletin_at, issuedTime(context, warnings))
+            context.getString(R.string.notif_warning_bulletin_at, issued(context, warnings, today))
         )
     }
 
@@ -137,11 +137,15 @@ object OfficialWarningNotifier {
             }
             add(context.getString(R.string.notif_warning_meaning, context.getString(WarningText.meaningRes(warnings.maxLevel))))
             warnings.note?.let { add(context.getString(R.string.notif_warning_note, it)) }
-            add(context.getString(R.string.notif_warning_source, issuedTime(context, warnings)))
+            add(context.getString(R.string.notif_warning_source, issued(context, warnings, today)))
         }
 
-    private fun issuedTime(context: Context, warnings: PlaceWarnings): String =
-        warnings.issuedAt.toLocalTime().format(clockFormat(context))
+    /** «delle 15:07», «di ieri alle 15:07» — the same phrase every surface says it with
+     * (`WarningText.issued`). A notification usually carries the bulletin that has just
+     * arrived, so it is normally today's; it is the same helper because a notification
+     * read the morning after is the case the hour alone got wrong. */
+    private fun issued(context: Context, warnings: PlaceWarnings, today: LocalDate): String =
+        WarningText.issued(context, warnings.issuedAt, today, clockFormat(context))
 
     private fun channelFor(level: WarningLevel): String =
         if (level >= WarningLevel.ORANGE) CHANNEL_HIGH else CHANNEL_YELLOW

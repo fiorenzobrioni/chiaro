@@ -858,6 +858,18 @@ highest level over the days still ahead is at least yellow and the bulletin has 
 expired; green is not announced here at all (§1.1), it is answered in Avvisi where somebody
 came to ask.
 
+**When the bulletin was issued says its day only when that day is not today**
+(`WarningText.issued`, committente 11 set 2026): "bollettino delle 15:07", "bollettino di
+ieri alle 15:07", "bollettino del 10 set 2026 alle 15:07". The hour alone was what every
+surface printed, and it lied by omission on the most ordinary reading there is: the
+Dipartimento publishes in the afternoon for today **and tomorrow**, so a reader who opens
+the app in the morning is looking at yesterday's bulletin — and a banner read at 12:33
+saying "delle 15:07" named an hour that had not happened yet that day. One phrase, four
+surfaces: the banner, Avvisi's quiet card, the notification, the Journal's warning line
+(which compares against its own entry's day, not the reader's). **The sheet is the
+exception and always carries the full date**, because it is the provenance surface and
+the attribution the licence asks for should not depend on when it is read.
+
 `ic_warning` is **a drawing, never the character ⚠**, at the verdict marks' own 2.4 stroke
 in a 24 box, for the reason those exist: the character is not in the app's face and the
 phone draws it from whatever fallback it has. It is the mark of one category everywhere it

@@ -814,14 +814,14 @@
     <string name="notif_warning_today">today until midnight</string>
     <string name="notif_warning_tomorrow">tomorrow</string>
     <string name="notif_warning_today_and_tomorrow">today and tomorrow</string>
-    <string name="notif_warning_bulletin_at">bulletin of %1$s</string>
+    <string name="notif_warning_bulletin_at">bulletin %1$s</string>
     <string name="notif_warning_day_today">Today: %1$s</string>
     <string name="notif_warning_day_tomorrow">Tomorrow: %1$s</string>
     <string name="notif_warning_day_other">%1$s: %2$s</string>
     <string name="notif_warning_zone">Warning zone: %1$s</string>
     <string name="notif_warning_meaning">What it means: %1$s</string>
     <string name="notif_warning_note">Bulletin note: %1$s</string>
-    <string name="notif_warning_source">Dipartimento della Protezione Civile · bulletin of %1$s</string>
+    <string name="notif_warning_source">Dipartimento della Protezione Civile · bulletin %1$s</string>
     <string name="warning_phrase_yellow">Yellow warning</string>
     <string name="warning_phrase_orange">Orange warning</string>
     <string name="warning_phrase_red">Red warning</string>
@@ -862,7 +862,13 @@
          code; a code must never reach a screen, so those print their region instead. -->
     <string name="warning_zone_unnamed">a zone in the %1$s region</string>
     <string name="warning_banner_detail">%1$s · %2$s</string>
-    <string name="warning_banner_source">Protezione Civile, bulletin of %1$s</string>
+    <string name="warning_banner_source">Protezione Civile, bulletin %1$s</string>
+    <!-- When the bulletin was issued, preposition included: the day is said only when
+         it is not today. The hour alone read as today's to a reader meeting the
+         previous afternoon's bulletin, which is the normal morning case. -->
+    <string name="warning_issued_time">of %1$s</string>
+    <string name="warning_issued_yesterday">of yesterday at %1$s</string>
+    <string name="warning_issued_dated">of %1$s, %2$s</string>
     <string name="warning_sheet_title">Warning for %1$s</string>
     <string name="warning_sheet_tomorrow">Tomorrow</string>
     <string name="warning_sheet_meaning_title">What it means</string>
@@ -875,7 +881,7 @@
          which is exactly what Today must never do (DESIGN §1.1). -->
     <string name="alerts_group_warnings">Official warnings</string>
     <string name="warning_card_none">No warning for %1$s</string>
-    <string name="warning_card_none_detail">Bulletin of %1$s</string>
+    <string name="warning_card_none_detail">Bulletin %1$s</string>
     <string name="warning_card_stale">No bulletin for today</string>
     <string name="warning_card_stale_detail">The last one is from %1$s · the next usually comes out by 16:00</string>
     <string name="warning_card_waiting">No bulletin yet</string>
@@ -891,7 +897,7 @@
     <!-- Journal: what moved between two bulletins, and the day the bulletin was not reached -->
     <string name="journal_warning_raised">%1$s for %2$s, %3$s</string>
     <string name="journal_warning_cleared">Warning lifted: nothing graded for %1$s</string>
-    <string name="journal_warning_source">Protezione Civile, bulletin of %1$s</string>
+    <string name="journal_warning_source">Protezione Civile, bulletin %1$s</string>
     <string name="journal_warning_missed">Bulletin not reached</string>
     <string name="journal_warning_missed_held">The one from %1$s still stands</string>
     <string name="journal_warning_missed_empty">No bulletin held yet</string>

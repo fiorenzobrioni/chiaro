@@ -6118,6 +6118,56 @@ Il gradino del Cielo resta a 51 dp: l'inchiostro di un disegno quadrato passa da
 si attenua ma non sparisce.
 
 
+### L'ora del bollettino senza il suo giorno (committente, 11 set 2026)
+
+Da uno screenshot: alle **12:33** il banner diceva «Protezione Civile, bollettino delle
+15:07» per un bollettino emesso il **pomeriggio prima**. Un'ora che quel giorno non era
+ancora arrivata, quindi l'unica lettura che si poteva escludere era quella vera.
+
+**Non è un caso di bordo, è il caso normale.** Il Dipartimento pubblica nel pomeriggio e il
+bollettino copre *oggi e domani*: chi apre l'app la mattina sta guardando il bollettino di
+ieri, tutte le mattine. L'ora da sola non poteva dirlo.
+
+La regola è quella proposta dal committente: **il giorno si dice solo quando non è oggi.**
+Una data accanto a ogni ora sarebbe rumore sulla superficie che porta l'allerta, e l'ora di
+oggi è già inequivocabile quando il giorno è quello di chi legge.
+
+Una frase sola, `WarningText.issued`, con dentro la sua preposizione — «delle 15:07», «di
+ieri alle 15:07», «del 10 set 2026 alle 15:07» — perché un `%1$s` che a volte è un'ora e a
+volte una data con l'ora rompe la grammatica di chi la ospita.
+
+**Dove c'era il difetto, verificato superficie per superficie** (la seconda metà della
+domanda era proprio «guarda anche in Avvisi»):
+
+| superficie | prima | adesso |
+|---|---|---|
+| banner su Oggi | solo l'ora | la frase |
+| Avvisi, card con allerta (riusa il banner) | solo l'ora | la frase |
+| Avvisi, card «nessuna allerta» | solo l'ora | la frase |
+| notifica, riga compatta e riga della fonte | solo l'ora | la frase |
+| Diario, riga dell'allerta | solo l'ora | la frase, confrontata con **il giorno della voce**, non con quello di chi legge |
+| Avvisi, card «nessun bollettino per oggi» | solo la **data** | invariata: il difetto non ce l'aveva |
+| scheda dell'allerta | data **e** ora, sempre | invariata, ed è voluto |
+
+La scheda resta l'eccezione perché è la superficie della provenienza: l'attribuzione che la
+licenza chiede non deve dipendere da quando la si legge.
+
+**Il giorno di confronto è quello dell'emittente**, `LocalDate.now(zone del luogo)` — lo
+stesso che `WarningText.days` già usa — così un telefono all'estero non trasforma in «di
+ieri» un bollettino italiano di oggi. Un bollettino datato **avanti** (un orologio che non
+torna) prende la data invece di passare per quello di oggi: quattro test in
+`WarningTextTest` fissano i quattro rami.
+
+### La scheda Rugiada: era voluta, e sta scritto (8 set 2026)
+
+Domanda del committente nello stesso giro. Non è un errore: è la review delle card dell'**8
+set 2026**, sezione «Le card, com'erano e come sono» più su in questo file. Umidità e
+Rugiada dicevano la stessa cosa una sotto l'altra («Confortevole» / «Gradevole»), e
+«Rugiada» è la parola meno capita dello schermo. La card Umidità tiene la percentuale e la
+traccia, **prende la frase dal punto di rugiada** — che è il predittore migliore di come si
+sta — e stampa «Rugiada 12°» come nota: il dato non si è perso, il titolo sì. Via
+`metric_dew` e le quattro `humidity_meaning_*`.
+
 ### Le caselle
 
 ### Blocco A — il convertitore, fatto (11 set 2026)

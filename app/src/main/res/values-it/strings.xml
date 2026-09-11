@@ -801,14 +801,14 @@
     <string name="notif_warning_today">oggi fino a mezzanotte</string>
     <string name="notif_warning_tomorrow">domani</string>
     <string name="notif_warning_today_and_tomorrow">oggi e domani</string>
-    <string name="notif_warning_bulletin_at">bollettino delle %1$s</string>
+    <string name="notif_warning_bulletin_at">bollettino %1$s</string>
     <string name="notif_warning_day_today">Oggi: %1$s</string>
     <string name="notif_warning_day_tomorrow">Domani: %1$s</string>
     <string name="notif_warning_day_other">%1$s: %2$s</string>
     <string name="notif_warning_zone">Zona di allerta: %1$s</string>
     <string name="notif_warning_meaning">Cosa vuol dire: %1$s</string>
     <string name="notif_warning_note">Nota del bollettino: %1$s</string>
-    <string name="notif_warning_source">Dipartimento della Protezione Civile · bollettino delle %1$s</string>
+    <string name="notif_warning_source">Dipartimento della Protezione Civile · bollettino %1$s</string>
     <string name="warning_phrase_yellow">Allerta gialla</string>
     <string name="warning_phrase_orange">Allerta arancione</string>
     <string name="warning_phrase_red">Allerta rossa</string>
@@ -842,7 +842,14 @@
     <string name="warning_day_tomorrow_short">domani</string>
     <string name="warning_zone_unnamed">una zona della regione %1$s</string>
     <string name="warning_banner_detail">%1$s · %2$s</string>
-    <string name="warning_banner_source">Protezione Civile, bollettino delle %1$s</string>
+    <string name="warning_banner_source">Protezione Civile, bollettino %1$s</string>
+    <!-- Quando il bollettino è stato emesso, con la sua preposizione dentro: il giorno
+         si dice solo se non è oggi (committente, 11 set 2026). La sola ora, che era
+         quel che stampavamo, faceva leggere «delle 15:07» a mezzogiorno per un
+         bollettino del pomeriggio prima. -->
+    <string name="warning_issued_time">delle %1$s</string>
+    <string name="warning_issued_yesterday">di ieri alle %1$s</string>
+    <string name="warning_issued_dated">del %1$s alle %2$s</string>
     <string name="warning_sheet_title">Allerta per %1$s</string>
     <string name="warning_sheet_tomorrow">Domani</string>
     <string name="warning_sheet_meaning_title">Cosa vuol dire</string>
@@ -852,7 +859,7 @@
 
     <string name="alerts_group_warnings">Allerte ufficiali</string>
     <string name="warning_card_none">Nessuna allerta per %1$s</string>
-    <string name="warning_card_none_detail">Bollettino delle %1$s</string>
+    <string name="warning_card_none_detail">Bollettino %1$s</string>
     <string name="warning_card_stale">Nessun bollettino per oggi</string>
     <string name="warning_card_stale_detail">L\'ultimo è del %1$s · il prossimo esce di solito entro le 16</string>
     <string name="warning_card_waiting">Ancora nessun bollettino</string>
@@ -867,7 +874,7 @@
 
     <string name="journal_warning_raised">%1$s per %2$s, %3$s</string>
     <string name="journal_warning_cleared">Allerta rientrata: nessuna criticità per %1$s</string>
-    <string name="journal_warning_source">Protezione Civile, bollettino delle %1$s</string>
+    <string name="journal_warning_source">Protezione Civile, bollettino %1$s</string>
     <string name="journal_warning_missed">Bollettino non raggiunto</string>
     <string name="journal_warning_missed_held">Resta valido quello del %1$s</string>
     <string name="journal_warning_missed_empty">Nessun bollettino in memoria</string>

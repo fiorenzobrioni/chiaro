@@ -408,7 +408,7 @@ private fun OfficialWarningCard(
                     ),
                     detail = stringResource(
                         R.string.warning_card_none_detail,
-                        warnings.issuedAt.toLocalTime().format(timeFmt)
+                        WarningText.issued(context, warnings.issuedAt, today, timeFmt)
                     ),
                     onClick = onOpenSheet,
                     modifier = modifier
