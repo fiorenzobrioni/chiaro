@@ -1134,17 +1134,17 @@ a valid animator and only a person can say the rain falls downward.
 
    **The sizes are one ladder, `ui/icons/WeatherIconSize`** — hour strip **42dp**, week
    row **38dp**, metric tile **38dp** since 11 set 2026, timeline row **34dp** — and the
-   move to v3 did not touch them: the box went 64 → 128 but that is `viewportWidth`, and a dp is a dp. The
-   measurements behind the ladder are the ones the 8 set 2026 pass made and they stand:
-   the 56dp hour cell keeps 7dp of air per side and the week's temperature bar and the
-   timeline's prose give up 10dp apiece. **The tile rung did move**, once, on 11 set 2026:
-   v3's drawings are worth looking at and were asking to be bigger. Its label budget is
-   `118 − icon` on a 360dp screen against a widest label of 76.7dp, so the ceiling is
-   **41.3dp**; 38dp leaves 3.3dp of margin, 40dp leaves 1.3, 42dp wraps. The note that
-   stood here said a fourth step would wrap the label — the arithmetic says one step fits,
-   and the arithmetic is right. What it costs is the ladder's strict order: the tile now
-   equals the week row instead of sitting under it, and a tile label beside a week row is
-   not a comparison a reader ever makes. The order of the rungs is the reading order: the strip is
+   move to v3 did not touch them: the box went 64 → 128 but that is `viewportWidth`, and a
+   dp is a dp. The measurements behind the ladder are the ones the 8 set 2026 pass made and
+   they stand: the 56dp hour cell keeps 7dp of air per side and the week's temperature bar
+   and the timeline's prose give up 10dp apiece. **The tile rung did move**, once, on 11 set
+   2026: v3's drawings are worth looking at and were asking to be bigger. Its label budget
+   is `118 − icon` on a 360dp screen against a widest label of 76.7dp, so the ceiling is
+   **41.3dp**; 38dp leaves 3.3dp of margin, 40dp leaves 1.3, 42dp wraps. The note that stood
+   here said a fourth step would wrap the label — the arithmetic says one step fits, and the
+   arithmetic is right. What it costs is the ladder's strict order: the tile now equals the
+   week row instead of sitting under it, and a tile label beside a week row is not a
+   comparison a reader ever makes. The order of the rungs is the reading order: the strip is
    scanned sideways and carries the most weight, the week is read down, a line of prose
    leads with the smallest glyph.
 
@@ -1188,10 +1188,11 @@ a valid animator and only a person can say the rain falls downward.
      rotated 45°, and without the rotation it landed in the top-left corner and **erased
      the needle**. Twenty drawings, every `barometer*` and `compass*`, two of them
      shipped — and «the dial has no indicator» is exactly how it was reported.
-   - **A group can be left behind**: `DROP_GROUPS`. `compass` carries **N E S W drawn as
-     paths**, and in Italian the west is O — the same English-text-inside-an-image the
-     `wind-direction-*` glyphs were turned down for. Its `Letters` group is dropped, which
-     also returns it to the v2 drawing (housing and needle) the places row was tuned with.
+   - **A group can be left behind**: `DROP_GROUPS`, and it is about language, never about
+     size. `compass` carries **N E S W drawn as paths**, and in Italian the west is O — the
+     same English-text-inside-an-image the `wind-direction-*` glyphs were turned down for.
+     Its `Letters` group is dropped, which also returns it to the v2 drawing (housing and
+     needle) the places row was tuned with.
    - **Two drawings do not convert**: `pressure-high-alt` and `pressure-low-alt`, whose
      mask is a Figma stroke outline applied to a single shape. Neither is shipped.
 
@@ -1269,16 +1270,31 @@ a valid animator and only a person can say the rain falls downward.
    at something and is not. It ships ungraded, and the band stays where it reads, in
    «Nella norma».
 
-   **One drawing is cropped, and only one** (11 set 2026). Meteocons does not draw every
-   icon at the same size inside its box, and at a single dp rung that shows: measured
-   across the tile marks, the ink fills from **0.33** of the box (`smoke-particles`) to
-   **1.00** (`uv-index`). That is how they are drawn, not an oversight, and flattening it
-   would make a raindrop as big as a sun. The one place it is corrected is a measured
-   regression: the pollen family fills **0.53**, where `dust` — the stand-in it replaces,
-   the drawing the grid was tuned against — filled **0.76**. So the importer takes the
-   family in an 89-unit window instead of 128, **one window for all thirteen** computed
-   from the union of their ink, so the plants and levels do not shuffle against each
-   other. The rung does not move for it.
+   **The illustrator's box is never touched** (committente, 11 set 2026). Meteocons does
+   not draw every icon at the same size inside its 128-unit square, and at a single dp rung
+   that shows: measured across the sky family, the ink spans from **38%** of the box
+   (`fog-night`) to **73%** (`clear-day`), a 1.96× range, which at the strip's 42dp is
+   15.8dp of drawing against 30.8dp.
+
+   That range is the drawing, not the conversion — the source-difference check
+   (`tools/diff_against_source.py`) finds no geometric difference on any of them. So it is
+   kept: **every icon is imported in the window the illustrator drew it in, at size 1, with
+   no crop and no per-icon scale.** A crop existed for the pollen family for half a day, to
+   undo a measured shrink against the `dust` stand-in it replaced (0.53 of the box where
+   `dust` filled 0.76); it is gone, and the machinery with it. One rule with no exceptions
+   is worth more than the evenness it bought, because an exception is a thing to remember
+   and this section is already long.
+
+   **What the reader actually notices is weight, not extent**, and that is worth recording
+   because it sends any future attempt to the right place. The moon fills 0.47 of its box
+   and the partly-cloudy sky 0.66, yet the moon reads heavier: a solid shape outweighs a
+   hollow one. In v2 a cloud was a declared stroke, **3 units in a 64 box, 4.69%**; in v3's
+   `line` it is a filled `evenOdd` ring **4 units in 128, 3.13%** — a third thinner in
+   proportion, 1.3dp of line at 42dp against 2.0dp before. Next to a sun that is a filled
+   disc with filled rays, that ring weighs less. The `flat` style does not have the problem
+   at all, and it is one tap away in Settings; thickening the rings (a stroke of the fill's
+   own colour on the filled path, mechanical and exact) is the other lever and has not been
+   taken.
 
    **And the rung did not move for the badges either**, which is worth writing down
    because it was asked for. `uv-index-*` and `pollen-*-*` carry the value as a badge, and
@@ -1307,16 +1323,16 @@ a valid animator and only a person can say the rain falls downward.
    a bearing this app shows exactly into 45° buckets, because each of them carries **N E S
    W drawn as paths** and in Italian the west is O, and because Meteocons' needle points
    where the wind comes FROM, the opposite of the convention the row records. So the
-   importer learned to take half a drawing — `PARTIALS`, keeping the `Pointer` group and
-   dropping `Letters`, cropped to a window centred on the hub — and the needle was turned
-   by the real degrees.
+   importer learned to take half a drawing — keeping the `Pointer` group, dropping
+   `Letters`, cropped to a window centred on the hub — and the needle was turned by the
+   real degrees.
 
    Then it was looked at in the tile and taken out. Not because it said too little: it
    said MORE than the sixteen-point label beside it. Because at 16dp it was not good
    looking, and in a tile where everything else is a line of text it was the one thing
    that drew the eye for the wrong reason. The direction was already written, so nothing
-   was lost but a drawing. The `PARTIALS` machinery stays, unused and documented: taking
-   half a drawing is a problem that will come back.
+   was lost but a drawing. The machinery went with it when the illustrator's box became
+   untouchable: it cropped, and nothing crops any more.
 
 
    **The one ground no icon set clears, declared** (7 set 2026, from a device report that

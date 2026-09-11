@@ -5841,6 +5841,32 @@ stata aperta.
       (4 → 6 unità riporterebbe il peso relativo a quello della v2) ma è una dipartenza vera
       dal «si usa l'originale»
 
+
+### La regola sulla scatola: quella dell'illustratore, senza eccezioni (11 set 2026)
+
+Decisione del committente, e sostituisce quella che avevo preso io il giorno prima: **ogni
+icona si importa nella finestra in cui è disegnata a monte, "a dimensione 1"**, senza
+ritagli e senza scale per-icona. Le differenze di taglia che ne risultano sono
+dell'illustratore, e si tengono.
+
+Quindi il ritaglio dei pollini è stato **tolto** — tornano a 0,52 della loro scatola, cioè
+più piccoli di come li avevo messi — e con lui è sparita la macchina che lo permetteva
+(`CROPS`, e `PARTIALS` che era l'unica altra cosa a ritagliare e non aveva più utenti da
+quando la freccia del vento è uscita). Resta `DROP_GROUPS`, che non è una questione di
+taglia ma di lingua: toglie le lettere inglesi dalla bussola.
+
+Il conto di quel che si perde, perché è giusto averlo scritto: i pollini erano il caso in
+cui il ripiego della v2 (`dust`) riempiva 0,76 della scatola e il disegno vero ne riempie
+0,53. Il pareggio che il ritaglio comprava valeva meno di una regola senza eccezioni, e
+un'eccezione è una cosa da ricordare.
+
+**La verifica dice che la fedeltà è ora completa.** Rifatto il confronto con le sorgenti
+dopo la rimozione, le icone con una forma intera di differenza sono **19 su 519**, e sono
+17 del vento (il tratteggio spazzolato reso pieno nel disegno fermo, inevitabile perché
+VectorDrawable non ha `stroke-dasharray`) più `moonrise` e `moonset` a 4 e 5 pixel, che
+guardati al grande sono identici alla sorgente: è rumore di soglia. La famiglia dei pollini
+è sparita dall'elenco, che è esattamente quel che doveva succedere.
+
 ### Le caselle
 
 ### Blocco A — il convertitore, fatto (11 set 2026)

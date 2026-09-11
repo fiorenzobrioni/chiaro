@@ -99,43 +99,7 @@ COLOR_ATTR = re.compile(r'(android:(?:fill|stroke)Color=")(#[0-9a-fA-F]{6})(")')
 
 #: Icone che si importano a **meta'**: nome nuovo -> (sorgente, gruppo da tenere).
 #:
-#: **L'unico caso finora, e non e' spedito** (11 set 2026): l'ago e' stato costruito, messo
-#: nella scheda del vento e poi tolto, perche' a sedici dp non era bello e la direzione era
-#: gia' scritta accanto. La macchina resta, con la sua icona, perche' il problema che
-#: risolve — prendere meta' di un disegno — si ripresentera'.
-#:
-#: `wind-direction-n` e' una rosa dei venti con l'ago a nord, e porta le lettere **N E S
-#: W disegnate come path**. In italiano l'ovest e' O: sono testo inglese dentro
-#: un'immagine, non traducibili, contro la regola per cui in questo prodotto tutto quello
-#: che sta a schermo si localizza. Ma l'ago da solo non dice nessuna lingua, e ruotato dei
-#: gradi veri dice la direzione **esatta** invece degli otto punti dei glifi fissi — che
-#: sarebbe stato un passo indietro, perche' `ui/components/WindArrow.kt` la disegna gia'
-#: esatta. Quindi si tiene il gruppo `Pointer` e si butta il gruppo `Letters`.
-#: Il terzo campo e' il **ritaglio**: `(x, y, lato)` della finestra da tenere. Senza,
-#: l'ago resterebbe disegnato nella scatola della rosa, larga 128 unita' per tredici di
-#: ago, e a 18 dp sarebbe una scheggia — guardato al filmstrip l'11 set 2026. Il ritaglio
-#: e' un quadrato centrato sul **mozzo** (64, 63.5), cioe' sul punto attorno a cui la
-#: freccia deve girare, e non sul centro dell'inchiostro: un ago si impernia dove e'
-#: fissato.
-PARTIALS = {
-    "wind-direction-needle": ("wind-direction-n", "Pointer", (40, 40, 48)),
-}
-
-#: Icone che si importano intere ma **in una finestra piu' stretta**: `(x, y, lato)`.
-#:
-#: Meteocons non disegna tutte le sue icone alla stessa taglia dentro la scatola, e a una
-#: misura sola in dp questo si vede. Misurata la frazione di scatola che ogni marchio
-#: delle schede occupa, va da 0,33 (`smoke-particles`) a 1,00 (`uv-index`): non e' una
-#: svista, e' come sono disegnate, e appiattirla tutta sarebbe far diventare una goccia
-#: grande come un sole.
-#:
-#: L'unico caso in cui si interviene e' una **regressione misurata**: la famiglia dei
-#: pollini riempie 0,53 della sua scatola, dove `dust` — il ripiego che sostituisce, con
-#: cui la griglia era stata messa a punto — ne riempiva 0,76. Il ritaglio e' **uno solo
-#: per tutta la famiglia**, calcolato sull'unione dei tredici inchiostri, cosi' i livelli
-#: e le piante non ballano l'uno rispetto all'altro.
-#: Gruppi da **lasciare indietro**, per icona. Diverso da `PARTIALS`, che ne tiene uno
-#: solo: qui si converte tutto tranne quello che si nomina.
+#: Gruppi da **lasciare indietro**, per icona: si converte tutto tranne quel che si nomina.
 #:
 #: `compass` porta le lettere **N E S W disegnate come path**, e in italiano l'ovest e' O:
 #: e' testo inglese dentro un'immagine, in un prodotto dove tutto quel che sta a schermo
@@ -146,12 +110,6 @@ DROP_GROUPS = {
     "compass": ("Letters",),
 }
 
-CROPS = dict.fromkeys(
-    ["pollen", "pollen-grass", "pollen-tree", "pollen-weed"]
-    + [f"pollen-{f}-{l}" for f in ("grass", "tree", "weed")
-       for l in ("low", "moderate", "high", "very-high")],
-    (25, 24, 89),
-)
 
 
 def recolor(xml: str, mapping: dict) -> str:
@@ -703,13 +661,15 @@ def _masked_group(el, mask, em, out, depth, gradients, notes, alpha):
 
 # ------------------------------------------------------------------------ file
 
-def convert(svg_path: pathlib.Path, only_group: str | None = None, crop=None, drop=()):
+def convert(svg_path: pathlib.Path, drop=()):
     """Un SVG -> (xml statico, xml animato o None, note, interpolatori).
 
-    Con [only_group] si converte **un gruppo solo** dell'icona, per i casi di `PARTIALS`:
-    stesse coordinate, tutto il resto del disegno lasciato indietro. Con [crop]
-    `(x, y, lato)` si stringe anche la finestra, perche' un frammento lasciato nella
-    scatola dell'intero disegno arriva a schermo grande un decimo di quello che dovrebbe.
+    Con [drop] si lasciano indietro dei gruppi per nome. **La finestra invece non si
+    tocca mai**: ogni icona esce nella scatola in cui l'illustratore l'ha disegnata, e le
+    differenze di taglia che ne risultano sono sue (decisione del committente, 11 set
+    2026). Un ritaglio per una sola famiglia c'e' stato per mezza giornata e non c'e' piu':
+    era un'eccezione da ricordare, e la regola senza eccezioni vale di piu' del pareggio
+    che comprava.
     """
     root = ET.parse(svg_path).getroot()
     vb = [float(v) for v in root.get("viewBox").split()]
@@ -723,11 +683,6 @@ def convert(svg_path: pathlib.Path, only_group: str | None = None, crop=None, dr
     # resto esce identico, e per le 463 icone senza tratteggio la seconda passata produce
     # esattamente il disegno della prima.
     roots = [c for c in root if c.tag != SVG_NS + "defs"]
-    if only_group is not None:
-        roots = [g for g in root.iter(SVG_NS + "g")
-                 if (g.get("id") or "").split("__")[-1] == only_group]
-        if len(roots) != 1:
-            raise Unsupported(f"gruppo {only_group!r} trovato {len(roots)} volte")
 
     def pass_(animated):
         em = Emitter(clip_paths, animated=animated, drop=drop)
@@ -739,14 +694,6 @@ def convert(svg_path: pathlib.Path, only_group: str | None = None, crop=None, dr
     em, body = pass_(False)
     em_anim, body_anim = pass_(True)
 
-    if crop is not None:
-        cx, cy, side = crop
-        vb = [0.0, 0.0, float(side), float(side)]
-        def framed(lines):
-            return ([f'            <group android:translateX="{fmt(-cx)}" '
-                     f'android:translateY="{fmt(-cy)}">']
-                    + ["    " + l for l in lines] + ["            </group>"])
-        body, body_anim = framed(body), framed(body_anim)
     inner = NL.join(body_anim)
     static = HEADER + NL.join([
         '<vector xmlns:android="http://schemas.android.com/apk/res/android"',
@@ -912,18 +859,11 @@ def main() -> int:
                 report[f"SOTTO 3:1 dopo il riancoraggio ({style}/{ground})"] += [
                     f"{a}->{b}" for a, b, _ in bad]
 
-        jobs = [(svg, svg.stem, None) for svg in sorted(folder.glob("*.svg"))]
-        jobs += [(folder / f"{spec[0]}.svg", out, spec)
-                 for out, spec in sorted(PARTIALS.items())]
-        for svg, stem, spec in jobs:
+        for svg in sorted(folder.glob("*.svg")):
+            stem = svg.stem
             name = stem.replace("-", "_")
-            group = spec[1] if isinstance(spec, tuple) else None
-            crop = spec[2] if isinstance(spec, tuple) and len(spec) > 2 else None
-            if crop is None:
-                crop = CROPS.get(stem)
             try:
-                static, animated, notes, interps = convert(
-                    svg, group, crop, DROP_GROUPS.get(stem, ()))
+                static, animated, notes, interps = convert(svg, DROP_GROUPS.get(stem, ()))
             except Unsupported as e:
                 report[str(e)].append(f"{style}/{stem}")
                 counts[style + ":saltate"] += 1

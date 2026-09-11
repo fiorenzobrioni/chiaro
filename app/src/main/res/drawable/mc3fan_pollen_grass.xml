@@ -8,54 +8,52 @@
         <vector
             android:width="24dp"
             android:height="24dp"
-            android:viewportWidth="89"
-            android:viewportHeight="89">
-            <group android:translateX="-25" android:translateY="-24">
-                <path android:pathData="M65.792,91 C65.818,87.857,66.006,67.902,66.435,63.198 C66.944,58.094,69.383,50.838,70.857,45.332 C72.331,39.827,68.606,37,68.606,37 C68.606,37,71.197,39.827,65.971,52.187 C60.959,64,61.218,88.89,61.353,91 Z"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <path android:pathData="M65.792,91 C65.818,87.857,66.006,67.902,66.435,63.198 C66.944,58.094,69.383,50.838,70.857,45.332 C72.331,39.827,68.606,37,68.606,37 C68.606,37,71.197,39.827,65.971,52.187 C60.959,64,61.218,88.89,61.353,91 Z"
                 android:fillColor="#4be078"/>
-                <path android:pathData="M74.465,69.063 C69.962,77.205,69.373,87.288,69.32,91 L73.823,91 C73.448,86.866,73.885,74.885,78.468,68.304 C84.096,60.224,88.001,61.554,88.001,61.554 C88.001,61.554,80.041,58.874,74.439,69.063 Z"
+            <path android:pathData="M74.465,69.063 C69.962,77.205,69.373,87.288,69.32,91 L73.823,91 C73.448,86.866,73.885,74.885,78.468,68.304 C84.096,60.224,88.001,61.554,88.001,61.554 C88.001,61.554,80.041,58.874,74.439,69.063 Z"
                 android:fillColor="#4be078"/>
-                <path android:pathData="M64.987,90.999 L69.418,90.999 C69.82,86.548,70.348,72.457,73.698,65.054 C77.718,56.194,74.85,46.934,74.85,46.934 C74.85,46.934,75.351,56.025,70.018,65.707 C65.462,73.934,65.255,87.223,64.988,90.999"
+            <path android:pathData="M64.987,90.999 L69.418,90.999 C69.82,86.548,70.348,72.457,73.698,65.054 C77.718,56.194,74.85,46.934,74.85,46.934 C74.85,46.934,75.351,56.025,70.018,65.707 C65.462,73.934,65.255,87.223,64.988,90.999"
                 android:fillColor="#4eca6f"/>
-                <path android:pathData="M57.842,90.998 L63.264,90.998 C62.728,88.551,60.002,71.655,56.089,65.474 C51.855,58.851,47.72,55.75,40,53.388 C40,53.388,49.434,56.573,53.856,70.895 C56.007,77.515,56.672,84.227,57.842,90.998"
+            <path android:pathData="M57.842,90.998 L63.264,90.998 C62.728,88.551,60.002,71.655,56.089,65.474 C51.855,58.851,47.72,55.75,40,53.388 C40,53.388,49.434,56.573,53.856,70.895 C56.007,77.515,56.672,84.227,57.842,90.998"
                 android:fillColor="#4eca6f"/>
-                <path android:pathData="M58.922,90.999 C57.85,86.991,53.642,73.744,43.136,70.032 C43.136,70.032,47.979,74.968,50.82,80.41 C52.463,83.823,53.588,87.378,54.17,90.999 Z"
+            <path android:pathData="M58.922,90.999 C57.85,86.991,53.642,73.744,43.136,70.032 C43.136,70.032,47.979,74.968,50.82,80.41 C52.463,83.823,53.588,87.378,54.17,90.999 Z"
                 android:fillColor="#4be078"/>
-                <group android:name="g1pollen7">
-                    <path android:pathData="M90,53 A3,3,0,1,0,90,47 A3,3,0,0,0,90,53"
+            <group android:name="g1pollen7">
+                <path android:pathData="M90,53 A3,3,0,1,0,90,47 A3,3,0,0,0,90,53"
                     android:name="g2p"
                     android:fillColor="#ffd64f"/>
-                </group>
-                <group android:name="g3pollen6">
-                    <path android:pathData="M80,42 A2,2,0,1,0,80,38 A2,2,0,0,0,80,42"
+            </group>
+            <group android:name="g3pollen6">
+                <path android:pathData="M80,42 A2,2,0,1,0,80,38 A2,2,0,0,0,80,42"
                     android:name="g4p"
                     android:fillColor="#ffd64f"/>
-                </group>
-                <group android:name="g5pollen5">
-                    <path android:pathData="M74,52 A4,4,0,1,0,74,44 A4,4,0,0,0,74,52"
+            </group>
+            <group android:name="g5pollen5">
+                <path android:pathData="M74,52 A4,4,0,1,0,74,44 A4,4,0,0,0,74,52"
                     android:name="g6p"
                     android:fillColor="#ffd64f"/>
-                </group>
-                <group android:name="g7pollen4">
-                    <path android:pathData="M64,41 A3,3,0,1,0,64,35 A3,3,0,0,0,64,41"
+            </group>
+            <group android:name="g7pollen4">
+                <path android:pathData="M64,41 A3,3,0,1,0,64,35 A3,3,0,0,0,64,41"
                     android:name="g8p"
                     android:fillColor="#ffd64f"/>
-                </group>
-                <group android:name="g9pollen3">
-                    <path android:pathData="M54,52 A4,4,0,1,0,54,44 A4,4,0,0,0,54,52"
+            </group>
+            <group android:name="g9pollen3">
+                <path android:pathData="M54,52 A4,4,0,1,0,54,44 A4,4,0,0,0,54,52"
                     android:name="g10p"
                     android:fillColor="#ffd64f"/>
-                </group>
-                <group android:name="g11pollen2">
-                    <path android:pathData="M48,42 A2,2,0,1,0,48,38 A2,2,0,0,0,48,42"
+            </group>
+            <group android:name="g11pollen2">
+                <path android:pathData="M48,42 A2,2,0,1,0,48,38 A2,2,0,0,0,48,42"
                     android:name="g12p"
                     android:fillColor="#ffd64f"/>
-                </group>
-                <group android:name="g13pollen1">
-                    <path android:pathData="M38,53 A3,3,0,1,0,38,47 A3,3,0,0,0,38,53"
+            </group>
+            <group android:name="g13pollen1">
+                <path android:pathData="M38,53 A3,3,0,1,0,38,47 A3,3,0,0,0,38,53"
                     android:name="g14p"
                     android:fillColor="#ffd64f"/>
-                </group>
             </group>
         </vector>
     </aapt:attr>
