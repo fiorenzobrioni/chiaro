@@ -5198,6 +5198,482 @@ essere riscritte. Le misure sono tutte qui sotto e nello spike.
 
 ---
 
+## Fase 13 — Le icone, da zero: Meteocons v3
+
+Aperta l'11 set 2026 da una segnalazione del committente: dove Open-Meteo e le altre app
+mostrano il sole, Chiaro mostra il sole dietro una nuvola. La verifica ha dato ragione alla
+segnalazione e ha trovato sotto una causa più grande di quel singolo glifo — **il repo è
+fermo a Meteocons v2.0.0, e la famiglia nel frattempo è stata rifatta**. Questa fase non
+ripara una riga: rifà l'importazione.
+
+### Il difetto che l'ha aperta
+
+`ChiaroIcons.conditionLineRes` (riga 373) dà **lo stesso disegno** ai codici WMO 1 e 2:
+
+```kotlin
+1, 2 -> if (night) mc_partly_cloudy_night else mc_partly_cloudy_day
+```
+
+Non sono vicini: sono i due estremi della metà serena del cielo. La soglia di Open-Meteo è
+già scritta in questo repo, in `WeatherReportMapper.skyCode` (riga 369) — 0 sotto il 20% di
+copertura, 1 fra 20 e 49, 2 fra 50 e 79, 3 da 80 in su. Misurato dal vivo l'11 set 2026 su
+10 città × 7 giorni = **1 680 ore** (`weather_code` + `cloud_cover`):
+
+| codice | quota ore | copertura p10 / p50 / p90 |
+|---|---|---|
+| 0 | 28% | 0 / 0 / 10 |
+| 1 | **17,2%** | **10 / 25 / 46** |
+| 2 | 20% | 47 / 64 / 80 |
+| 3 | 31% | 82 / 98 / 100 |
+
+I due secchi non si toccano nemmeno fra il decimo e il novantesimo percentile. **Un'ora su
+sei** viene disegnata al 64% di cielo chiuso quando ne ha il 25%. E la parola accanto dice
+già la cosa giusta (`WeatherText.condition`: 1 → `cond_mostly_clear`, «Quasi sereno»),
+quindi sull'hero il disegno **contraddice una parola visibile**; nella striscia oraria e
+nella riga della settimana la parola non è visibile affatto (sta solo nella
+`contentDescription`: `HourStrip.kt:97`, `TodayScreen.kt:1315`), quindi lì il glifo sbagliato
+è l'unico portatore che il lettore ha.
+
+Due difetti minori nella stessa tabella: il fallback `else -> mc_cloudy` disegna una nuvola
+mentre la parola dice «Condizioni sconosciute» (`mc_not_available` è importato in tutti e
+quattro i set e la mappatura dei codici non lo usa mai); e l'82 (rovesci violenti) va su
+`rain` mentre 80 e 81 vanno su `partly_cloudy_*_rain`. E **la tabella non ha un solo test**:
+`AnimatedIconTest` cammina `movingOf`, `IconContrastTest` misura i colori, `WidgetIconsTest`
+copre la scelta dello stile, nessuno chiede mai che disegno prenda un codice. È per questo
+che 1 e 2 hanno potuto fondersi senza che niente diventasse rosso.
+
+### Perché si riparte da zero e non si tocca la riga
+
+Meteocons v2.0.0 **non ha un disegno per «quasi sereno»**: `production/line/all` sono 122
+icone e nella famiglia del cielo ci sono solo clear, partly-cloudy, overcast (+ day/night) e
+cloudy. Misurato sugli SVG originali, in una scatola di 64: il sole di `clear-day` ha r 10.5
+al centro; quello di `partly-cloudy-day` ha **r 4.5** (−82% di area del disco) sotto una
+nuvola che occupa x 16→53.5, y 23.5→45.5; `overcast-day` è la stessa nuvola con un secondo
+strato sopra, cioè **più** nuvoloso, non meno. Non c'è un gradino intermedio da scegliere.
+
+**In v3 c'è.** La categoria si chiama `Mostly Clear` ed esiste in 18 varianti. Il resto della
+famiglia è cresciuto nello stesso modo: `pollen-grass/tree/weed` nei quattro livelli,
+`uv-index-1…11`, `barometer-low…extreme`, `windsock-calm/weak/moderate`,
+`wind-beaufort-0…12`, `compass-n…nw`, `code-yellow/orange/red` e `weather-alert` — cioè
+esattamente le bande che le schede Dettagli, il tile pollini e le allerte della Fase 11
+calcolano già e disegnano con un glifo generico.
+
+| | v2.0.0 (oggi) | v3 |
+|---|---|---|
+| Icone | 122 (line) | **519**, in 16 categorie |
+| Stili | line, fill | **fill, flat, line, monochrome** |
+| Formati | SVG con SMIL | SVG con SMIL (`@meteocons/svg`), SVG statico (`@meteocons/svg-static`), **Lottie** (`@meteocons/lottie`) |
+| Scatola | 64 × 64 | 128 × 128 |
+| Distribuzione | clone del repo al tag | npm + CDN `cdn.meteocons.com/{versione}/{formato}/{stile}/{icona}.{est}`, con `manifest.json` |
+| Licenza | MIT | MIT |
+| Importate in Chiaro | 49 su 122 | — |
+
+Chiaro ne spedisce oggi 268 file XML, 1,7 MB: 49 icone × 4 set statici (`mc_`, `mcn_`,
+`mcf_`, `mcfn_`) + 18 × 4 set animati (`mca_`, `mcan_`, `mcaf_`, `mcafn_`).
+
+### Lo spike, prima di aprire le caselle
+
+Tre domande, e finché non hanno risposta la fase non parte. La prima è l'unica che può
+fermarla.
+
+- [ ] **Le maschere.** v3 usa `<mask>`, che VectorDrawable non ha. Sul sottoinsieme delle 70
+      icone che Chiaro metterebbe a schermo: **line 31, flat 31, monochrome 31, fill 12**. Per
+      `line` sono quasi tutti i cieli composti — `mostly-clear-day/night`,
+      `partly-cloudy-day/night`, `overcast`, `fog-day/night`, gli `overcast-*`, i
+      `partly-cloudy-*-rain/snow`, `extreme-rain`, i `thunderstorms-day/night` — quindi
+      **il convertitore di maschere è obbligatorio**, non una comodità, e lo è qualunque sia
+      il secondo stile.
+      Il fatto che salva: sono **tutte `mask-type:alpha` con riempimenti binari bianco/nero,
+      nessuna maschera in gradiente**, e la stragrande maggioranza usa `evenodd`. Una maschera
+      «tutta la tela meno questa forma» si riscrive come `<clip-path>` se si **inverte il
+      verso** della sottoforma (il parser Android applica NON-ZERO e `<clip-path>` non ha
+      `fillType`). La maschera però **si muove** (porta la sua `animateTransform`: è la nuvola
+      che va su e giù) mentre il sole sotto sta fermo, e in VectorDrawable la trasformazione di
+      un gruppo si applica **sia al clip sia ai figli**. Serve quindi la coppia annidata:
+
+      ```xml
+      <group android:translateY="@anim">        <!-- muove il clip -->
+          <clip-path android:pathData="tela meno nuvola"/>
+          <group android:translateY="@anim-inverso">   <!-- rimette fermo il sole -->
+              … il sole …
+          </group>
+      </group>
+      ```
+
+      **Fatto l'11 set 2026, e la geometria regge: 1 345 maschere su 1 345 identiche.**
+      `tools/spike_mask_clip.py` non guarda un disegno, rasterizza: appiattisce ogni maschera
+      dei quattro stili (bezier, archi e abbreviazioni comprese), calcola con una scanline
+      l'area **evenodd dell'originale** e l'area **nonzero della versione convertita**, e le
+      confronta su una griglia di 128 × 128. **Zero pixel di differenza**, su tutte e 519 le
+      icone × 4 stili: 1 236 maschere a due sottopercorsi (tela + forma, quelle che hanno
+      bisogno dell'inversione) e 109 a uno solo (dove le due regole già coincidono). 12,7
+      secondi in tutto.
+      **Anche la maschera che si muove regge, e si è guardata** (stesso giorno).
+      `tools/spike_v3_convert.py` è il prototipo del convertitore: converte davvero un SVG
+      v3 in `<vector>` + `<animated-vector>`, con l'inversione fatta **sui comandi** e non
+      sulla polilinea (una cubica girata è `P1,C2,C1,P0`; un arco tiene i raggi e
+      **inverte `sweep`**), e ri-rasterizza ogni conversione prima di scriverla. Quattro
+      icone `line` — `clear-day`, `mostly-clear-day`, `partly-cloudy-day`, `overcast` —
+      più `partly-cloudy-day-rain` e `thunderstorms-day`.
+      **`./gradlew :app:assembleDebug` passa**: aapt accetta il viewport 128, il
+      `clip-path`, i gruppi annidati, `fillType="evenOdd"` e i `pathInterpolator` generati
+      dai `keySplines`.
+      E `tools/icon_filmstrip.py` — insegnato a leggere il viewport invece dei 64 fissi —
+      le ha disegnate a nove istanti del ciclo su **entrambe** le superfici: la nuvola
+      va su e giù, **il sole sotto resta fermo**, i raggi sono tagliati dove passa la
+      nuvola. La coppia di gruppi annidati fa quello che doveva fare.
+      Due cose che il filmstrip ha reso visibili e che nessun numero aveva reso ovvie:
+      la scala 0 → 1 → 2 → 3 finalmente **si legge come una scala** (sole pieno, sole con
+      nuvoletta, sole dietro la nuvola, nuvola sola); e i colori originali sulla carta
+      sono **fantasmi**, mentre sul fondo scuro sono nitidi. La misura del 73% / 13%
+      guardata invece che calcolata.
+      Quel che resta al telefono: che hwui renda la coppia annidata come la rende il
+      filmstrip. Il rischio è sceso da «la fase può cadere» a «una verifica di resa».
+- [ ] **I colori originali su carta.** La misura sotto. Lo spike produce il filmstrip delle
+      due ipotesi (originali / riancorati) e si decide guardando.
+- [ ] **La prerelease.** `@meteocons/svg` su npm ha `latest` = **0.1.0** e `next` =
+      **3.0.0-next.10**: v3 non è ancora stabile. Verificare se esce una `3.0.0` prima di
+      aprire le caselle; se non esce, si appunta la versione esatta come si è appuntato il tag
+      v2.0.0, e `UPSTREAM.md` dice che è una prerelease e perché.
+
+### Il commento sui colori originali, con i numeri
+
+«Lasciare i colori originali» semplificherebbe moltissimo: farebbe cadere il motivo per cui
+oggi esistono quattro set statici invece di due. Ma non regge sulla superficie chiara.
+
+Misurato sulle 70 icone che Chiaro metterebbe su uno schermo, contro le due superfici di
+DESIGN §2.2 (carta `#FCF9F3`, scura `#16130E`), soglia 3:1 di §10. **I riempimenti delle
+maschere sono esclusi**: `#fff` e `#000` lì dentro non sono inchiostro, e contarli gonfiava
+il conto nella prima stesura di questa fase. «Inchiostro sotto soglia» pesa ogni colore per
+quante volte è usato, che è la domanda vera:
+
+| | fill | flat | line | monochrome |
+|---|---|---|---|---|
+| colori distinti | 44 | 35 | 31 | **1** |
+| passano 3:1 su **entrambe** | 10 | 10 | 7 | 0 |
+| inchiostro sotto soglia su **carta** | **77%** | **73%** | **73%** | 100% |
+| inchiostro sotto soglia su **scura** | 7% | 5% | **13%** | 0% |
+
+I più usati sono corpi e contorni di nuvola: `#e6effc` (26 usi in line) **1,10:1** su carta,
+`#e2e8f0` (15 usi) **1,17:1**, `#86c3db` (27 usi) **1,84:1**, `#f8af18` — il sole — (33 usi)
+**1,79:1**. Non sono «un po' chiari»: sono invisibili, ed è lo stesso difetto che
+`import_meteocons.py` documenta per v2 (`#E5E7EB`, 1,18:1) — v3 non l'ha risolto perché
+Meteocons è disegnato per un fondo neutro, non per la carta.
+
+Una differenza fra gli stili che conta: **`line` è l'unico che fallisce in modo materiale
+anche sul fondo scuro** (13% dell'inchiostro contro il 5–7% degli altri), per via di
+`#1e293b` (29 usi, **1,27:1** su scuro) con cui disegna i contorni scuri. Quindi line va
+riancorato su **entrambe** le superfici, fill e flat praticamente solo su carta. Che è
+esattamente la forma dei quattro set che ci sono già.
+
+E `monochrome` è la via di fuga che nessuno ha chiesto ma che va scritta: **un solo colore**,
+quindi tingibile con un ruolo e conforme per costruzione. Non si prende, e il motivo è già in
+DESIGN §13.1 — «una tinta piatta trasforma la famiglia in sagome». Resta lì come opzione se
+un giorno servisse un set che non costa nulla in contrasto.
+
+Quindi la risposta alla domanda «i colori originali possono causare problemi»: **sì, su carta
+sempre, e su fondo scuro anche per line**. La proposta, che non blocca il lavoro e non butta
+la regola:
+
+- [ ] Il tool importa **con i colori originali** come uscita di riferimento, e il rimappaggio
+      resta un **passo successivo** sullo stesso albero. Si generano entrambi e si sceglie
+      davanti al filmstrip, anziché decidere prima
+- [ ] L'architettura «due set scelti dal fondo» (`styledRes(darkGround)`) **resta**: è già
+      scritta, ha superato una revisione di design, e con i numeri qui sopra è esattamente la
+      forma giusta. Ma la regola non è «originali sullo scuro, riancorati sulla carta» per
+      tutti: **flat** può quasi tenere gli originali sullo scuro (5% di inchiostro sotto
+      soglia), **line no** (13%, per i contorni `#1e293b`). Quindi quattro set come oggi, e
+      quanto rimappaggio serva a ciascuno lo dice la misura, non la simmetria
+- [ ] Se invece si vogliono gli originali dappertutto, la terza strada è **dare all'icona un
+      fondo suo** (una pastiglia tenue sotto il glifo nella striscia e nella settimana): fa
+      passare il 3:1 senza toccare un colore. È una decisione di design, non di conversione —
+      va in DESIGN §13.1, non qui
+
+### I due stili: **flat + line**, e perché non fill
+
+Il committente aveva detto «fill e flat», poi si è corretto in «fill e line», poi ha chiesto
+se non fosse meglio «flat e line». La misura dà ragione alla terza versione, e per un motivo
+più forte del conteggio delle maschere.
+
+**v3 `flat` è quello che Chiaro già spedisce.** L'attuale set `mcf_*` è lo stile fill di v2
+con **ogni gradiente appiattito sul colore di faccia** dal tool (dipartenza n. 4 nell'intestazione
+di `import_meteocons.py`). Lo stile `flat` di v3 è esattamente quel disegno, ma **disegnato
+così a monte** invece che derivato da noi. Scegliere `fill` vorrebbe dire o tenere i gradienti
+— una capacità nuova, un rischio nuovo e un cambio visivo rispetto a oggi — o riappiattirli,
+cioè rifare a valle un lavoro che l'illustratore pubblica già fatto. È il punto 5 della
+richiesta («riusare le originali senza ricrearle») portato al massimo.
+
+Misurato sulle 70 icone del sottoinsieme:
+
+| | fill | flat | line |
+|---|---|---|---|
+| maschere da convertire | 12 | 31 | 31 |
+| filtri da lasciar cadere | 1 (`compass`) | **0** | **0** |
+| gradienti da appiattire o portare | 65 | 3 | **0** |
+| tratteggi da ridisegnare | 2 | 2 | 2 |
+| animazioni | identiche | identiche | identiche |
+
+**La coppia flat + line è quella che chiede al tool il minor numero di riscritture**: zero
+filtri, zero o quasi gradienti, e le maschere che servirebbero comunque perché `line` — lo
+stile predefinito, quello che il lettore vede appena installa — ne ha 31 su 70. Una volta
+costruito il convertitore per line, flat non costa una riga in più. Il conteggio delle
+maschere, che nella prima stesura di questa fase faceva preferire fill, **smette di essere un
+argomento** nel momento in cui line è uno dei due: va costruito comunque.
+
+Va anche detto cos'è il `line` di v3, perché non è il `line` di v2: non è un contorno
+tracciato, è **una forma riempita con `fill-rule="evenodd"`** — una ciambella. Per Android è
+una buona notizia (`android:fillType="evenOdd"` esiste dall'API 24, e non c'è nessun tratto
+da convertire); per il contrasto è la stessa notizia di sempre, perché quella ciambella è
+riempita di `#e6effc`.
+
+E la simmetria con oggi si conserva: **line resta il predefinito, flat è l'alternativa in
+Impostazioni → Aspetto**, esattamente come line/fill adesso. Nessuna stringa da riscrivere,
+nessuna scelta da spiegare di nuovo al lettore.
+
+### Il commento sulla «reimportazione totale»
+
+519 icone × 2 stili × (statica + animata) non stanno nell'app. Misurato sul repo: un
+drawable statico pesa **~1,7×** il suo SVG, un animato **~3,5×**; l'SVG v3 medio è 4,1 KB,
+quindi ~7 KB statico e ~14 KB animato.
+
+Vale anche la regola di DESIGN §7.1, che dimezza il conto: **muove solo la famiglia delle
+condizioni**, perché «il marchio di un tile etichetta una quantità, e un barometro che gira
+per sempre è decorazione». Quindi 24 icone hanno il gemello animato e le altre 119 no.
+
+| scenario | file | XML su disco |
+|---|---|---|
+| oggi (v2, 49 icone, 4 set statici + 4 animati) | 268 | 1,7 MB |
+| **le 143 della lista, line + flat, 2 set per fondo** | **668** | **~5,2 MB** |
+| le 143, line + flat, 1 solo set di colori | 334 | ~2,6 MB |
+| tutte e 519, 2 stili, 1 set | 2 076 | ~21,8 MB |
+| tutte e 519, 2 stili, 2 set per fondo | 4 152 | ~43,6 MB |
+
+Tre volte il peso di oggi per tre volte le icone.
+
+**Ma il peso su disco non è il peso nell'APK, e cambia la conclusione.** Misurato dentro
+`app-debug.apk`: i 736 drawable della famiglia pesano 972 KB non compressi e **371 KB
+compressi**, cioè **516 B l'uno** — l'XML binario più il deflate valgono un fattore 4,6
+contro il testo su disco. Rifatto il conto in quella moneta: la lista da 143 aggiunge
+**~1,2 MB** all'APK di release, il set completo da 519 ne aggiungerebbe **~3,5 MB**.
+
+E c'è la terza strada, che è quella giusta e che il progetto ha già configurata
+(`isShrinkResources = true`, `app/build.gradle.kts:63`):
+
+- [x] **Si converte il set completo (519 × 2 stili), si generano le tabelle Kotlin solo per
+      la lista di spedizione.** Un drawable che nessuna tabella nomina non è referenziato, e
+      `shrinkResources` lo toglie dalla release: **zero byte** di costo per le icone non
+      ancora usate, ~15 MB nel repo, e promuoverne una a «spedita» è **una riga**, senza
+      reimportare niente e senza rete. Il repo diventa il set completo, l'APK resta la lista.
+      **Provato l'11 set 2026 sul set intero, e «zero byte» era sbagliato.** Con tutte le
+      1 974 icone v3 in `res/drawable/` e nessuna riga di Kotlin che le nomini, l'A/B di
+      due build di release dà **6 676 125 B contro 6 548 541 B: +127 583 B**, cioè
+      **65 byte a drawable**. E stanno *tutti* in `resources.arsc` (+127 464 B): i file in
+      `res/` sono **1 565 in entrambe**, identici — AGP butta il disegno e tiene la voce
+      in tabella. Quindi il set completo costa **125 KB, il 2% dell'APK**, non zero.
+      L'argomento regge lo stesso e il ripiego previsto non serve, ma il numero è questo
+      e non quello che avevo scritto
+
+Quindi «totale» va inteso sul **convertitore**, non sull'APK: il tool deve saper convertire
+qualunque delle 519 e dimostrarlo, e la tabella `ICONS` resta la lista di spedizione.
+Crescerla è una riga.
+
+### Le caselle
+
+### Blocco A — il convertitore, fatto (11 set 2026)
+
+`tools/import_meteocons_v3.py`, con la geometria dei percorsi estratta in
+`tools/svg_paths.py` perché serve anche alla prova (`spike_mask_clip.py`). Legge il
+tarball di `@meteocons/svg`, non un clone.
+
+| | line | flat |
+|---|---|---|
+| statiche convertite | **517 / 519** | **517 / 519** |
+| animate | 470 | 470 |
+| saltate | 2 | 2 |
+
+Le due che saltano sono `pressure-high-alt` e `pressure-low-alt`: una maschera di contorno
+alla Figma (un `<mask>` applicato a una forma sola, non a un gruppo), e non sono nella
+lista di spedizione. **1 974 file, 20 MB nel repo**, `:app:assembleDebug` verde.
+
+Quel che il rapporto del tool dichiara invece di tacere, ed è debito vero:
+
+- **112 icone con il tratteggio reso solido.** VectorDrawable non ha `stroke-dasharray`.
+  L'importatore v2 li **ridisegnava** come segmenti veri (la sua dipartenza n. 3) e qui
+  quel lavoro non è stato rifatto: per ora la riga tratteggiata esce piena, che è un
+  disegno diverso. Nella lista di spedizione tocca `wind` e `wind-beaufort-*`
+- **42 animazioni del tratteggio perse** (`stroke-dashoffset`, le formiche in marcia). Si
+  perde l'animazione, non l'icona, ed è la conseguenza del punto sopra
+- **15 gradienti appiattiti** sul colore di faccia: è voluto, ed è la dipartenza n. 4 di v2
+  per lo stesso motivo. Con line e flat sono un caso di bordo, non lo stile
+
+Cose che il porting ha richiesto e che v2 non aveva: i rettangoli ad angoli arrotondati
+(149 icone, fra cui tutti i `barometer*`) come quattro archi veri; le trasformazioni
+statiche (`rotate(45 cx cy)` è `rotation` più il pivot, alla lettera) come gruppi
+annidati; i `clip-path` interni, saltando quello grande quanto la tela che Figma mette
+addosso a quasi ogni icona. La fase negativa, i `keyTimes` e i keyframe **non** sono stati
+riscritti: sono le funzioni di `import_meteocons.py`, importate e usate tali e quali.
+
+- [ ] **Il tool v2 si ritira** quando `ChiaroIcons` passa alla v3 (Blocco B): fino ad allora
+      è lui a produrre le icone spedite, e i due convivono
+- [ ] **Il tratteggio**: ridisegnare i 112 come fece v2, o dichiarare per iscritto quali
+      restano pieni. Non si spedisce `wind` con una riga che il disegnatore aveva tratteggiato
+      senza dirlo
+- [x] **Il tool**: `import_meteocons.py` legge da `@meteocons/svg` / `@meteocons/svg-static`
+      (versione appuntata, tarball con checksum, o CDN versionato) invece che da un clone del
+      repo. Oggi il tool accetta `g`, `circle`, `path`, `defs` ed esce su tutto il resto; gli
+      elementi nuovi da gestire, misurati su tutte e 519, sono `<rect>` (598, quasi sempre il
+      rettangolo del `clipPath` di tela), `<mask>`, `<line>` (2) e — solo nello stile fill —
+      `<filter>` + `<fe*>` (17). Va gestito anche `fill-rule="evenodd"`, che in `line` è il
+      modo stesso in cui è disegnato il contorno: `android:fillType="evenOdd"`, dall'API 24
+- [x] **Le maschere**: la conversione dello spike, estesa e verificata icona per icona. È il
+      punto 5 della richiesta: dove *non* si può riusare l'originale, il tool lo dice e il
+      motivo finisce in `UPSTREAM.md`
+- [x] **I filtri**: nel sottoinsieme, con flat + line, sono **zero** — confermato sull'importazione intera, nessuna icona line o flat ne usa. Restano nello stile fill
+      (17 icone su 519: tutte `compass*` e `wind-direction-*`, un'ombra portata fatta di
+      `feFlood` + `feOffset` + `feComposite` + `feBlend`). Se un giorno si importasse fill, si
+      **lasciano cadere**: l'ombra non porta informazione e VectorDrawable non ha filtri
+- [~] **I tratteggi**: su tutte e 519 sono 56 con `stroke-dasharray` e 42 che animano
+      `stroke-dashoffset`, ma **nel sottoinsieme sono due icone sole** — `wind` e
+      `wind-beaufort-5` — e quattro animazioni. VectorDrawable non ha il tratteggio; il tool
+      già ridisegna i tratteggi statici di v2 (dipartenza n. 3), e per l'animazione c'è
+      `trimPathStart/End/Offset` da provare. Su due icone è un problema piccolo: se non regge,
+      restano ferme e si dice quali
+- [x] **I gradienti**: con flat + line il problema **sparisce** — sulle 519 sono **15 icone**, appiattite sul colore di faccia e dichiarate nel rapporto. Era il
+      motivo della dipartenza n. 4 del tool, che a questo punto si può togliere anziché
+      riscrivere. Resta da decidere solo per le tre di flat: appiattire come oggi, o portarle
+      davvero (VectorDrawable **sa fare i gradienti** con `aapt:attr` su `android:fillColor`);
+      se si portano, va verificato che reggano dentro i widget Glance, che caricano il
+      drawable nel processo del launcher
+- [x] **Le animazioni restano quelle di Meteocons** (punto 6 della richiesta — 470 icone animate per stile):
+      `@meteocons/svg` è ancora **SMIL**, quindi la strada SMIL → `AnimatedVectorDrawable` che
+      il tool percorre già regge. Il Lottie di v3 sarebbe l'altra strada e **non si prende**:
+      vorrebbe `lottie-android` come dipendenza, non gira in un widget Glance, e si porterebbe
+      dietro un runtime per un'icona da 34 dp.
+      **Le animazioni sono identiche nei quattro stili** — stessi tipi, stessi conteggi, stessi
+      tempi; cambia solo che negli stili mascherati la maschera porta il proprio `translate`.
+      Quindi «le line animate vanno bene?» ha la stessa risposta di qualunque altro stile, e la
+      risposta è sì: animano **485 icone su 519**, e **68 su 70** nel sottoinsieme. Tipi da
+      coprire nel sottoinsieme: `translate` 151, `opacity` 106, `rotate` 42, `scale` 4,
+      `stroke-dashoffset` 4. I primi tre il tool li fa già, `scale` è un attributo di
+      `<group>`, gli ultimi quattro sono le due icone del tratteggio
+- [ ] **La mappatura WMO**, finalmente 1:1 con quello che il provider dice (punto 4):
+
+| WMO | parola già a schermo | icona v3 (giorno / notte) |
+|---|---|---|
+| 0 | Sereno | `clear-day` / `clear-night` |
+| 1 | Quasi sereno | **`mostly-clear-day` / `mostly-clear-night`** |
+| 2 | Poco nuvoloso | `partly-cloudy-day` / `partly-cloudy-night` |
+| 3 | Coperto | `overcast` |
+| 45, 48 | Nebbia | `fog-day` / `fog-night` |
+| 51, 53, 55 | Pioviggine | `overcast-drizzle` |
+| 56, 57 | Pioviggine gelata | `overcast-sleet` |
+| 61, 63, 65 | Pioggia | `overcast-rain` |
+| 66, 67 | Pioggia gelata | `overcast-sleet` |
+| 71, 73, 75, 77 | Neve | `overcast-snow` |
+| 80, 81 | Rovesci | `partly-cloudy-day-rain` / `-night-rain` |
+| 82 | Rovesci violenti | `extreme-rain` |
+| 85, 86 | Rovesci di neve | `partly-cloudy-day-snow` / `-night-snow` |
+| 95 | Temporale | `thunderstorms-day` / `thunderstorms-night` |
+| 96, 99 | Temporale con grandine | `thunderstorms-day-hail` / `-night-hail` |
+| altro | Condizioni sconosciute | **`not-available`**, non una nuvola |
+
+  Le righe `overcast-*` invece delle piatte `drizzle`/`rain`/`snow` hanno una misura dietro,
+  dalle stesse 1 680 ore: quando piove il cielo **è** chiuso (codice 51: copertura minima 88,
+  p50 100; codice 61: minima 87, p50 100; codice 80: minima 71, p50 100). Disegnare la
+  pioggia senza la sua nuvola sarebbe sottrarre un fatto, non semplificare
+- [ ] **Un test sulla tabella**, che oggi non c'è: ogni codice WMO che il provider può
+      servire → il suo drawable, per giorno e per notte, e il fallback su `not-available`.
+      È la casella che impedisce alla prossima fusione silenziosa di ripetersi
+- [ ] **La lista di spedizione: 143 icone**, verificate una per una presenti in **entrambi**
+      gli stili del pacchetto `3.0.0-next.10`. È la nuova tabella `ICONS` del tool (punti 2 e 3
+      della richiesta):
+
+| gruppo | n | note |
+|---|---|---|
+| Cieli, la mappatura WMO | 24 | la tabella sopra, `not-available` compreso |
+| Dettagli, i marchi di oggi | 13 | `wind`, `humidity`, `uv-index`, `thermometer`, `barometer`, `raindrop(s)`, `mist`, `umbrella`, `snowflake`, `dust`, `smoke-particles`, `compass` |
+| **Pollini** | 16 | `pollen`, `pollen-grass/tree/weed` e i loro `-low/-moderate/-high/-very-high` |
+| **UV graduato** | 12 | `uv-index-1…11` e `-11-plus` |
+| **Pressione graduata** | 5 | `barometer-low/moderate/high/very-high/extreme` |
+| **Vento graduato** | 18 | `windsock(-calm/-weak/-moderate)`, `wind-beaufort-0…12`, `umbrella-wind` |
+| **Visibilità e temperatura** | 5 | `haze`, `fog`, `smoke`, `thermometer-warmer/-colder` |
+| **Direzione del vento** | 8 | `wind-direction-n…nw` — vedi la riserva sotto |
+| Cielo e agenda, di oggi | 17 | alba/tramonto, luna e sue fasi, orizzonte, stelle, eclissi |
+| **Arcobaleno e momenti del giorno** | 11 | `rainbow`, `rainbow-clear`, `rainbow-cloud`, `time-morning…late-night` |
+| **Allerte, per tipo di rischio** | 14 | `weather-alert(-day/-night)`, `wind-alert`, `thermometer-alert`, `uv-index-alert`, `water-alert`, `fire-alert`, `avalanche-danger-alert`, `tornado`, `hurricane`, `cyclone`, `waterspout`, `falling-rocks-alert` |
+
+- [ ] **Due debiti che questa lista salda**, e sono scritti nel codice, non dedotti:
+      `ChiaroIcons.pollen` oggi disegna `mc_dust` e il suo commento dice «Meteocons v2 non ha
+      un'icona per i pollini (**v3 sì**) … serve finché la famiglia v3 non si stabilizza»;
+      `ChiaroIcons.rainbow` disegna `mc_partly_cloudy_day_rain` e dice «Meteocons v2 non ha un
+      arcobaleno». Sono le due caselle che la Fase 2 ha lasciato aperte e che qui si chiudono
+- [ ] **La regola sulle icone graduate**: si spedisce un glifo per banda **solo dove la banda
+      è già calcolata e già detta a parole** (`WeatherText.uvMeaning`, `pressureMeaning`,
+      `windMeaning`, `pollenLevel`). Se il glifo dicesse un livello che la riga accanto non
+      dice, sarebbe un secondo verdetto senza la sua aritmetica (DESIGN §1.2)
+- [ ] **La direzione del vento: una sola icona, ruotata** (deciso l'11 set 2026, dopo che il
+      committente aveva chiesto se usare le otto). Non si spediscono le otto, e le ragioni
+      sono tre, tutte lette nel codice e nel disegno, non dedotte:
+      1. **sarebbe un passo indietro, non un'approssimazione.** `ui/components/WindArrow.kt`
+         disegna già la direzione **esatta**, ruotando di `fromDegrees + 180` in continuo:
+         non sedici punti, infiniti. Otto glifi fissi vorrebbero dire secchi da 45°;
+      2. i glifi hanno **le lettere N/E/S/W disegnate come path**. In italiano l'ovest è
+         **O**, non W: è testo inglese dentro un'immagine, non traducibile, contro la regola
+         che in questo prodotto tutto ciò che sta a schermo si localizza;
+      3. l'ago di Meteocons punta da **dove il vento viene**; Chiaro punta **dove l'aria
+         va**, con la sua motivazione scritta (revisione delle schede, 8 set 2026).
+         Importarlo così rovescerebbe in silenzio una decisione presa.
+
+      Quel che si fa invece, e che dà lo stesso guadagno visivo: si importa
+      `wind-direction-n` **tenendo solo il gruppo `Pointer`** — l'ago è un path solo, bbox
+      x 57,5–70,5 e y 40,5–84,0 in una scatola di 128, simmetrico sul centro — si butta il
+      gruppo `Letters`, e lo si ruota come `WindArrow` ruota già. Risultato: l'ago di
+      Meteocons, nella mano della famiglia, esatto al grado, senza lettere inglesi e con la
+      convenzione di Chiaro intatta. Da guardare al filmstrip: l'ago è più dettagliato della
+      freccia disegnata a mano e il tile lo mostra a **16 dp**
+- [ ] **Riserva sulle allerte**: le `Alarms` entrano per il **tipo** di rischio (i quattordici
+      `WarningHazard` della Fase 12), **non per il livello**. Giallo/arancione/rosso restano
+      `ic_warning` tinto: DESIGN §8.13 ha scelto un disegno al peso dei segni di verdetto
+      apposta, e `code-yellow/orange/red` di Meteocons sono icone a colori pieni che in quello
+      slot non ci stanno. Importarle sarebbe disfare una decisione, non aggiungere un'opzione
+- [ ] **Le dimensioni non si toccano** (punto 7): la scatola passa da 64 a 128, ma è
+      `viewportWidth`/`viewportHeight` nell'XML e i dp della scala restano quelli
+      (`WeatherIconSize`: striscia 42, settimana 38, riga e tile 34). **Da verificare sul
+      dispositivo**, non solo sulla carta: v3 è un disegno nuovo e potrebbe riempire la sua
+      scatola diversamente, e DESIGN §13.1 dice che è la nuvola semplice a decidere come si
+      legge la famiglia in piccolo. Se il peso ottico cambia, si dichiara e si rimisura la
+      scala — non si cambia un padding
+- [ ] **Lo stile**: **line + flat**, per gli argomenti della sezione sopra, con **line
+      predefinito** come oggi. Si costruiscono insieme, perché condividono il convertitore di
+      maschere e non hanno nient'altro da convertire. Se lo spike delle maschere fallisce non
+      cade un secondo stile: **cade la fase**, perché senza maschere il line non ha i cieli
+      composti. È per questo che lo spike sta prima di tutto
+- [ ] **La licenza**: `licenses/Meteocons-MIT.txt` va riscritto sulla versione nuova, e
+      `UPSTREAM.md` va aggiornato — v3 non è il v2 che il file descrive
+- [ ] **DESIGN §13.1 e CLAUDE.md** si riscrivono a lavoro finito, non prima: la sezione cita
+      v2.0.0, i 64 unit, la SMIL e le tre dipartenze del tool, e ognuna di quelle frasi cambia
+
+### Quel che non si è potuto misurare
+
+Le maschere non sono state **convertite**, solo lette: che la riscrittura clip-path + verso
+invertito, con la coppia di gruppi annidati che tiene fermo il sole, renda identica
+l'originale **non è dimostrato**, ed è il rischio numero uno della fase — per questo è uno
+spike e non una casella, e per questo ora può far cadere la fase intera invece che un solo
+stile. I gradienti dentro un widget Glance non sono stati provati.
+
+E le 519 non sono state **guardate**: sono state contate, misurate sul colore, sull'elemento
+e sull'animazione, mai messe su uno schermo. Vale in particolare per la scelta line + flat,
+che è argomentata sulle conversioni risparmiate e **non** su come i due disegni stanno
+accanto nella striscia a 42 dp. `tools/icon_filmstrip.py` esiste già ed è quello che chiude
+ognuna di queste caselle.
+
+Una correzione a questa stessa fase, registrata perché è la regola della serie: la prima
+stesura contava `#fff` e `#000` fra i colori del disegno e ne ricavava che fill fosse il più
+sicuro. Erano i riempimenti delle **maschere**, non inchiostro. Rimisurato a maschere escluse,
+sul sottoinsieme giusto, la conclusione si è rovesciata.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae

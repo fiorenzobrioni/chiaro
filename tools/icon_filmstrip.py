@@ -31,7 +31,10 @@ FRAMES = 9
 SPAN = 1.0
 
 #: The ground each set is drawn on here, so a dark-ground set is looked at on one.
-GROUNDS = {"mca_": "#F6FAFF", "mcaf_": "#F6FAFF", "mcafn_": "#0D141B", "mcan_": "#0D141B"}
+GROUNDS = {"mca_": "#F6FAFF", "mcaf_": "#F6FAFF", "mcafn_": "#0D141B", "mcan_": "#0D141B",
+           # Fase 13: le icone v3 dello spike, guardate su entrambe le superfici vere
+           # dell'app (DESIGN §2.2) perche' portano i colori ORIGINALI di Meteocons.
+           "spike_": "#FCF9F3", "spike-dark_": "#16130E"}
 
 
 def attr(el: ET.Element, name: str, default=None):
@@ -131,7 +134,10 @@ def frame(path: pathlib.Path, seconds: float) -> str:
     clips: list[str] = []
     for child in vector:
         svg_shape(child, now, body, clips)
-    return ('<svg viewBox="0 0 64 64" width="52" height="52">' + "".join(body) + "</svg>")
+    vw = attr(vector, "viewportWidth", "64")
+    vh = attr(vector, "viewportHeight", "64")
+    return (f'<svg viewBox="0 0 {vw} {vh}" width="52" height="52">'
+            + "".join(body) + "</svg>")
 
 
 def main() -> None:
@@ -144,15 +150,16 @@ def main() -> None:
           ".row{display:flex;align-items:center;gap:2px;padding:2px 12px}"
           ".n{width:190px;font-size:11px;opacity:.75}"
           "</style></head><body>")
-    wanted = sys.argv[1:] or list(GROUNDS)
+    wanted = sys.argv[1:] or [p for p in GROUNDS if not p.startswith("spike")]
     unknown = [p for p in wanted if p not in GROUNDS]
     if unknown:
         sys.exit(f"no such set: {unknown} — pick from {list(GROUNDS)}")
     for prefix in wanted:
         ground = GROUNDS[prefix]
-        files = sorted(DRAWABLE.glob(f"{prefix}*.xml"))
+        glob = "spike_*_anim.xml" if prefix.startswith("spike") else f"{prefix}*.xml"
+        files = sorted(DRAWABLE.glob(glob))
         if not files:
-            sys.exit(f"no {prefix}*.xml — run tools/import_meteocons.py")
+            sys.exit(f"no {glob} — run the importer first")
         print(f"<h2>{prefix}* on {ground}</h2>")
         for path in files:
             cells = "".join(

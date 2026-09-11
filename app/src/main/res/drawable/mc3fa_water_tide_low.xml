@@ -1,0 +1,78 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <group android:translateX="64" android:translateY="78">
+                <group android:name="g1g">
+                    <group android:translateX="-64" android:translateY="-78">
+                        <path android:pathData="M34,58.5 A3,3,0,0,1,35.2,56.1 L40.075,52.444 A3,3,0,0,1,43.827,52.566 L47.047,55.326 A3,3,0,0,0,50.952,55.326 L54.172,52.566 A3,3,0,0,1,57.925,52.444 L62.2,55.65 A3,3,0,0,0,65.8,55.65 L70.075,52.444 A3,3,0,0,1,73.827,52.566 L77.047,55.326 A3,3,0,0,0,80.952,55.326 L84.172,52.566 A3,3,0,0,1,87.925,52.444 L92.8,56.1 A3,3,0,0,1,94,58.5 L94,72 A6,6,0,0,1,88,78 L40,78 A6,6,0,0,1,34,72 Z"
+                            android:fillColor="#2563eb"/>
+                    </group>
+                </group>
+            </group>
+            <group android:name="g2arrow">
+                <path android:pathData="M64,26 L64,44 Z M64,44 L58,37.1 Z M64,44 L70,37.1 Z"
+                    android:strokeColor="#202939"
+                    android:strokeWidth="3"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round"/>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="g1g">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="scaleX">
+                <propertyValuesHolder android:propertyName="scaleX">
+                    <keyframe android:fraction="0" android:value="1"/>
+                    <keyframe android:fraction="0.5" android:value="1"/>
+                    <keyframe android:fraction="1" android:value="1"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g1g">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="scaleY">
+                <propertyValuesHolder android:propertyName="scaleY">
+                    <keyframe android:fraction="0" android:value="1"/>
+                    <keyframe android:fraction="0.5" android:value="1.08"/>
+                    <keyframe android:fraction="1" android:value="1"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g2arrow">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="2000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateY">
+                <propertyValuesHolder android:propertyName="translateY">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="-4"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

@@ -1,0 +1,44 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <path android:pathData="M55,83 A9,9,0,1,1,73,83 A9,9,0,1,1,55,83 Z"
+                android:fillColor="#dc2626"/>
+            <group android:name="g1value">
+                <path android:pathData="M64,50 L64,50 A3,3,0,0,1,67,53 L67,76 A3,3,0,0,1,64,79 L64,79 A3,3,0,0,1,61,76 L61,53 A3,3,0,0,1,64,50 Z"
+                    android:fillColor="#dc2626"/>
+            </group>
+            <path android:pathData="M51,83.19 A12.55,12.55,0,0,1,52.465,77.286 A13,13,0,0,1,56.568,72.686 A1,1,0,0,0,57,71.864 L57,38.78 C57,36.992,57.73,35.27,59.04,33.996 A7.12,7.12,0,0,1,64,32 C65.865,32,67.65,32.72,68.96,33.995 A6.67,6.67,0,0,1,71,38.78 L71,41.548 L65,41.548 A1,1,0,0,0,65,43.548 L71,43.548 L71,49.328 L65,49.328 A1,1,0,1,0,65,51.328 L71,51.328 L71,57.106 L65,57.106 A1,1,0,0,0,65,59.106 L71,59.106 L71,71.84 A1,1,0,0,0,71.432,72.663 A13,13,0,0,1,75.54,77.272 A12.55,12.55,0,0,1,77,83.188 L77,83.192 C77,90.261,71.21,96,64,96 C56.79,96,51,90.26,51,83.192 Z"
+                android:strokeColor="#bfdbfe"
+                android:strokeWidth="2"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round"/>
+            <path android:pathData="M84.768,61.926 Q83.742,62.97,82.158,62.97 Q80.574,62.97,79.548,61.926 Q78.522,60.9,78.522,59.316 Q78.522,57.75,79.548,56.724 Q80.574,55.698,82.158,55.698 Q83.742,55.698,84.768,56.724 Q85.794,57.75,85.794,59.316 Q85.794,60.9,84.768,61.926 Z M80.988,60.522 Q81.456,60.99,82.158,60.99 Q82.878,60.99,83.346,60.522 Q83.796,60.072,83.796,59.316 Q83.796,58.596,83.328,58.146 Q82.878,57.678,82.158,57.678 Q81.438,57.678,80.988,58.146 Q80.538,58.596,80.538,59.316 Q80.538,60.072,80.988,60.522 Z M93.191,69.414 Q90.473,69.414,88.745,67.56 Q87.017,65.706,87.017,62.628 Q87.017,59.532,88.763,57.714 Q90.491,55.878,93.209,55.878 Q95.657,55.878,97.187,57.174 Q98.717,58.488,98.969,60.738 L95.693,60.738 Q95.531,59.73,94.901,59.19 Q94.289,58.65,93.299,58.65 Q91.913,58.65,91.139,59.694 Q90.383,60.738,90.383,62.61 Q90.383,64.554,91.139,65.616 Q91.913,66.66,93.299,66.66 Q95.387,66.66,95.693,64.41 L98.969,64.41 Q98.789,66.768,97.241,68.082 Q95.657,69.414,93.191,69.414 Z"
+                android:fillColor="#202939"/>
+        </vector>
+    </aapt:attr>
+    <target android:name="g1value">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateY">
+                <propertyValuesHolder android:propertyName="translateY">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="-2"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

@@ -1,0 +1,81 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <path android:pathData="M83.106,71.067 A0.5,0.5,0,0,0,83.134,70.962 L82.639,67 L83.626,67 L84.126,70.838 L84.138,70.838 A1.5,1.5,0,0,1,84.038,71.427 A1.5,1.5,0,0,1,82.638,72.387 L81.001,72.387 A1.5,1.5,0,0,1,79.501,70.837 L80,67 L81,67 L80.5,70.906 A0.5,0.5,0,0,0,80.805,71.348 A0.5,0.5,0,0,0,81,71.388 L82.639,71.388 A0.5,0.5,0,0,0,83.106,71.068 Z"
+                android:fillColor="#654427"
+                android:fillType="evenOdd"/>
+            <path android:pathData="M81.02,39.312 A1.106,1.106,0,0,1,82.945,39.314 L89.71,54.629 L89.71,54.628 A0.8,0.8,0,0,0,89.839,54.826 C91.637,58.196,90.694,62.408,87.69,64.613 L87.39,64.823 L86.281,65.553 A7.7,7.7,0,0,1,83.288,66.743 A1,1,0,0,1,83.188,66.75 L80.823,66.75 A1,1,0,0,1,80.712,66.741 A7.9,7.9,0,0,1,77.718,65.554 L77.718,65.554 L76.612,64.824 C73.326,62.638,72.276,58.186,74.236,54.687 L74.253,54.655 L74.268,54.622 Z"
+                android:strokeColor="#16a34a"
+                android:strokeWidth="1.5"
+                android:strokeLineCap="round"
+                android:strokeMiterLimit="10"/>
+            <group>
+                <clip-path android:pathData="M60.757,71 L34,71 L34,98 L45,98 C45,86.42,51.35,76.323,60.757,71 Z"/>
+                <group android:translateX="64" android:translateY="96.5">
+                    <group android:name="g1g">
+                        <group android:translateX="-64" android:translateY="-96.5">
+                            <path android:pathData="M85.15,73.705 A1.5,1.5,0,0,1,87.025,73.644 L91.9,77.3 C92.278,77.583,92.5,78.028,92.5,78.5 L92.5,92 A4.5,4.5,0,0,1,88,96.5 L40,96.5 A4.5,4.5,0,0,1,35.5,92 L35.5,78.5 A1.5,1.5,0,0,1,36.1,77.3 L40.975,73.644 A1.5,1.5,0,0,1,42.851,73.705 L46.071,76.465 A4.5,4.5,0,0,0,51.929,76.465 L55.149,73.705 A1.5,1.5,0,0,1,57.025,73.644 L61.3,76.85 A4.5,4.5,0,0,0,66.7,76.85 L70.975,73.644 A1.5,1.5,0,0,1,72.851,73.705 L76.071,76.465 A4.5,4.5,0,0,0,81.929,76.465 Z"
+                                android:strokeColor="#1d4ed8"
+                                android:strokeWidth="3"
+                                android:strokeMiterLimit="10"/>
+                        </group>
+                    </group>
+                </group>
+            </group>
+            <path android:pathData="M76,72.5 L88,72.5 A4.5,4.5,0,0,1,92.5,77 L92.5,92 A4.5,4.5,0,0,1,88,96.5 L50.545,96.5 C51.309,83.332,62.063,72.845,75.342,72.509 Z"
+                android:strokeColor="#edc38b"
+                android:strokeWidth="3"/>
+            <path android:pathData="M59.351,41.844 C62.101,38.934,67,41.102,67,44.977 C67,47.475,65.01,49.5,62.556,49.5 L31,49.5 Z"
+                android:strokeColor="#e2e8f0"
+                android:strokeWidth="3"
+                android:strokeLineCap="round"
+                android:strokeMiterLimit="10"/>
+            <path android:pathData="M47.057,63.158 C49.853,66.008,55,64.016,55,60.024 C55,57.526,52.934,55.5,50.385,55.5 L31,55.5 Z"
+                android:strokeColor="#e2e8f0"
+                android:strokeWidth="3"
+                android:strokeLineCap="round"
+                android:strokeMiterLimit="10"/>
+        </vector>
+    </aapt:attr>
+    <target android:name="g1g">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="scaleX">
+                <propertyValuesHolder android:propertyName="scaleX">
+                    <keyframe android:fraction="0" android:value="1"/>
+                    <keyframe android:fraction="0.5" android:value="1"/>
+                    <keyframe android:fraction="1" android:value="1"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g1g">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="scaleY">
+                <propertyValuesHolder android:propertyName="scaleY">
+                    <keyframe android:fraction="0" android:value="1"/>
+                    <keyframe android:fraction="0.5" android:value="1.08"/>
+                    <keyframe android:fraction="1" android:value="1"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

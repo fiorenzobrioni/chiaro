@@ -1,0 +1,64 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <path android:pathData="M50.5,83.191 A13.05,13.05,0,0,1,52.023,77.051 A13.5,13.5,0,0,1,56.284,72.275 A0.5,0.5,0,0,0,56.5,71.865 L56.5,38.778 C56.5,36.852,57.286,35.002,58.691,33.636 A7.62,7.62,0,0,1,64,31.5 C65.994,31.5,67.903,32.27,69.309,33.637 A7.17,7.17,0,0,1,71.5,38.779 L71.5,42.047 L65,42.047 A0.5,0.5,0,0,0,65,43.047 L71.5,43.047 L71.5,49.827 L65,49.827 A0.5,0.5,0,1,0,65,50.827 L71.5,50.827 L71.5,57.605 L65,57.605 A0.5,0.5,0,0,0,65,58.605 L71.5,58.605 L71.5,71.84 A0.5,0.5,0,0,0,71.716,72.251 A13.5,13.5,0,0,1,75.982,77.038 A13.05,13.05,0,0,1,77.5,83.19 L77.5,83.192 C77.5,90.543,71.48,96.5,64,96.5 C56.52,96.5,50.5,90.543,50.5,83.192 Z"
+                android:fillColor="#dbeafe"
+                android:fillAlpha=".25"
+                android:strokeColor="#bfdbfe"
+                android:strokeWidth="1"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round"/>
+            <path android:pathData="M91.402,48.5 C92.557,46.5,95.443,46.5,96.598,48.5 L108.722,69.5 C109.877,71.5,108.434,74,106.124,74 L81.876,74 C79.566,74,78.123,71.5,79.278,69.5 Z"
+                android:name="g1p"
+                android:fillColor="#202939"/>
+            <path android:pathData="M94.758,64.59 L93.264,64.59 L92.418,59.568 L92.418,56.184 L95.586,56.184 L95.586,59.568 Z M95.604,69 L92.4,69 L92.4,65.994 L95.604,65.994 Z"
+                android:name="g2p"
+                android:fillColor="#fff"/>
+        </vector>
+    </aapt:attr>
+    <target android:name="g1p">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="1000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="fillAlpha">
+                <propertyValuesHolder android:propertyName="fillAlpha">
+                    <keyframe android:fraction="0" android:value="1"/>
+                    <keyframe android:fraction="0.294" android:value="1"/>
+                    <keyframe android:fraction="0.5" android:value="0"/>
+                    <keyframe android:fraction="0.794" android:value="0"/>
+                    <keyframe android:fraction="1" android:value="1"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g2p">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="1000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="fillAlpha">
+                <propertyValuesHolder android:propertyName="fillAlpha">
+                    <keyframe android:fraction="0" android:value="1"/>
+                    <keyframe android:fraction="0.294" android:value="1"/>
+                    <keyframe android:fraction="0.5" android:value="0"/>
+                    <keyframe android:fraction="0.794" android:value="0"/>
+                    <keyframe android:fraction="1" android:value="1"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

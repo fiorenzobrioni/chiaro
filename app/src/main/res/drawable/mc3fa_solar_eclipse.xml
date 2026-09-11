@@ -1,0 +1,56 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <group>
+                <clip-path android:pathData="M90,32 L26,32 L26,96 L90,96 Z M71,81 C61.611,81,54,73.389,54,64 C54,54.611,61.611,47,71,47 C90,47,90,47,90,64 C90,81,90,81,71,81 Z"/>
+                <path android:pathData="M45,64 A13,13,0,1,1,71,64 A13,13,0,1,1,45,64 Z"
+                    android:fillColor="#f8af18"/>
+                <group android:name="g1rays" android:pivotX="58" android:pivotY="64">
+                    <path android:pathData="M56,34 A2,2,0,1,1,60,34 L60,43.333 A2,2,0,1,1,56,43.333 Z M77.799,41.373 A2,2,0,1,1,80.627,44.201 L74.027,50.801 A2,2,0,0,1,71.199,47.972 Z M88,62 A2,2,0,1,1,88,66 L78.667,66 A2,2,0,1,1,78.667,62 Z M80.627,83.799 A2,2,0,1,1,77.799,86.627 L71.199,80.027 A2,2,0,0,1,74.028,77.199 Z M56,84.667 A2,2,0,1,1,60,84.667 L60,94 A2,2,0,1,1,56,94 Z M41.972,77.2 A2,2,0,0,1,44.801,80.028 L38.201,86.628 A2,2,0,1,1,35.373,83.799 Z M37.333,62 A2,2,0,1,1,37.333,66 L28,66 A2,2,0,1,1,28,62 Z M44.8,47.972 A2,2,0,0,1,41.972,50.801 L35.372,44.201 A2,2,0,1,1,38.201,41.373 Z"
+                        android:fillColor="#f8af18"/>
+                </group>
+            </group>
+            <group android:name="g2moon" android:pivotX="71" android:pivotY="64">
+                <path android:pathData="M58,64 A13,13,0,1,1,84,64 A13,13,0,1,1,58,64 Z"
+                    android:fillColor="#72b9d5"/>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="g1rays">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="6000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="rotation"
+                android:valueFrom="0"
+                android:valueTo="360"/>
+        </aapt:attr>
+    </target>
+    <target android:name="g2moon">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="rotation">
+                <propertyValuesHolder android:propertyName="rotation">
+                    <keyframe android:fraction="0" android:value="-6"/>
+                    <keyframe android:fraction="0.5" android:value="6"/>
+                    <keyframe android:fraction="1" android:value="-6"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

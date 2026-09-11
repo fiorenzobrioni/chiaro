@@ -1,0 +1,38 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <group android:name="g1clouds">
+        <path android:pathData="M90.389,63.086 C92.684,53.882,87.741,44.136,79.009,40.482 C70.265,36.824,59.828,40.138,54.837,48.212 C50.537,45.625,44.975,45.778,40.824,48.599 C36.684,51.413,34.5,56.514,35.35,61.454 C28.393,62.769,23.393,69.339,24.062,76.408 C24.73,83.478,30.872,89.002,37.953,89 L90.977,89 C98.045,89,104,83.119,104,76.028 C104,68.701,97.678,62.768,90.389,63.086 Z"
+                    android:fillColor="#e6effc"/>
+    </group>
+    <group android:name="g2raindrop1">
+        <path android:pathData="M52,87 L52,90 Z"
+                    android:name="g3p"
+                    android:strokeColor="#0a5ad4"
+                    android:strokeWidth="4"
+                    android:strokeLineCap="round"/>
+    </group>
+    <group android:name="g4raindrop2">
+        <path android:pathData="M64,87 L64,90 Z"
+                    android:name="g5p"
+                    android:strokeColor="#0a5ad4"
+                    android:strokeWidth="4"
+                    android:strokeLineCap="round"/>
+    </group>
+    <group android:name="g6raindrop3">
+        <path android:pathData="M76,87 L76,90 Z"
+                    android:name="g7p"
+                    android:strokeColor="#0a5ad4"
+                    android:strokeWidth="4"
+                    android:strokeLineCap="round"/>
+    </group>
+    <path android:pathData="M60,68 L52,90.91 L60,90.91 L56,110 L76,83.273 L64,83.273 L72,68 Z"
+                android:name="g8p"
+                android:fillColor="#f6a823"/>
+</vector>

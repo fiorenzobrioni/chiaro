@@ -1,0 +1,22 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <path android:pathData="M87.79,40.135 C93.976,33.347,105,38.405,105,47.446 C105,53.275,100.522,58,95,58 L24,58 Z"
+                android:strokeColor="#e2e8f0"
+                android:strokeWidth="4"
+                android:strokeLineCap="round"
+                android:strokeMiterLimit="10"/>
+    <path android:pathData="M60.128,87.868 C66.42,94.518,78,89.872,78,80.556 C78,74.726,73.35,70,67.615,70 L24,70 Z"
+                android:strokeColor="#e2e8f0"
+                android:strokeWidth="4"
+                android:strokeLineCap="round"
+                android:strokeMiterLimit="10"/>
+    <path android:pathData="M106.99,87.22 Q106.99,89.128,105.514,90.226 Q104.038,91.324,101.5,91.324 Q98.98,91.324,97.504,90.226 Q96.028,89.128,96.028,87.22 Q96.028,86.032,96.676,85.24 Q97.342,84.43,98.53,84.142 L98.53,84.088 A2.83,2.83,0,0,1,97.126,83.062 A2.93,2.93,0,0,1,96.622,81.37 Q96.622,79.732,97.9,78.814 Q99.196,77.878,101.5,77.878 Q103.822,77.878,105.118,78.814 Q106.414,79.732,106.414,81.37 Q106.414,82.342,105.892,83.08 A2.64,2.64,0,0,1,104.506,84.088 L104.506,84.142 Q105.694,84.448,106.342,85.24 Q106.99,86.032,106.99,87.22 Z M101.518,83.242 Q102.454,83.242,102.976,82.828 Q103.516,82.414,103.516,81.676 Q103.516,80.956,102.994,80.578 Q102.472,80.182,101.518,80.182 Q99.502,80.182,99.502,81.676 Q99.502,82.414,100.024,82.828 Q100.564,83.242,101.518,83.242 Z M101.518,88.912 Q102.58,88.912,103.192,88.444 Q103.804,87.958,103.804,87.112 Q103.804,86.266,103.192,85.798 Q102.598,85.312,101.518,85.312 Q100.42,85.312,99.808,85.798 Q99.196,86.266,99.196,87.112 Q99.196,87.958,99.808,88.444 Q100.438,88.912,101.518,88.912 Z"
+                android:fillColor="#202939"/>
+</vector>

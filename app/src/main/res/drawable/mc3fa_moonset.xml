@@ -1,0 +1,42 @@
+<!-- Generato da tools/import_meteocons_v3.py da Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Colori dell'illustratore, non ancora
+     riancorati alle superfici dell'app. Non modificare a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <path android:pathData="M37,91.986 L53.746,91.986 A6,6,0,0,1,57.696,93.471 L62.025,97.258 A3,3,0,0,0,65.975,97.258 L70.303,93.471 A6,6,0,0,1,74.254,91.986 L91,91.986 Z"
+                android:strokeColor="#202939"
+                android:strokeWidth="4"
+                android:strokeLineCap="round"/>
+            <group>
+                <clip-path android:pathData="M0,9 L128,9 L128,86 L73.22,86 A6,6,0,0,0,69.315,87.445 L64,92 L58.685,87.445 A6,6,0,0,0,54.781,86 L0,86 Z"/>
+                <group android:name="g1moon" android:pivotX="64" android:pivotY="66">
+                    <path android:pathData="M60.962,34 C44.676,35.758,32,49.362,32,65.898 C32,83.627,46.567,98,64.536,98 C79.682,98,92.373,87.775,96,73.95 C74.381,76.266,55.329,55.463,60.962,34 Z"
+                        android:fillColor="#72b9d5"/>
+                </group>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="g1moon">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="rotation">
+                <propertyValuesHolder android:propertyName="rotation">
+                    <keyframe android:fraction="0" android:value="-6"/>
+                    <keyframe android:fraction="0.5" android:value="6"/>
+                    <keyframe android:fraction="1" android:value="-6"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>
