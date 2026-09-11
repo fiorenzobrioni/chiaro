@@ -118,14 +118,15 @@ class OfficialWarningsStepTest {
         city: City = milano,
         at: LocalDateTime,
         settings: NotificationSettings = NotificationSettings(),
-        force: Boolean = false
+        force: Boolean = false,
+        silent: Boolean = false
     ) = runBlocking {
         OfficialWarningsStep(context).run(
             active = city,
             cityKey = city.id.toString(),
             others = listOf(city),
             settings = settings,
-            notifiers = notifiers,
+            notifiers = if (silent) null else notifiers,
             force = force,
             now = at.atZone(rome).toInstant()
         )
@@ -223,6 +224,49 @@ class OfficialWarningsStepTest {
         run(at = sept9.atTime(16, 0))
         assertEquals("20260908_1519", runBlocking { store.state("dpc").first() }.current?.stamp)
         assertEquals(1, records().count { it.kind == WarningRecordKind.BULLETIN_MISSED.name })
+    }
+
+    // --- the screen's own run (11 set 2026): fetches, never speaks -------------------
+
+    @Test
+    fun `a run with no notifiers keeps the bulletin and says nothing`() {
+        val orange = bulletin(sept9.atTime(15, 46), "B1", row(sept9, WarningHazard.THUNDERSTORM, WarningLevel.ORANGE))
+        source.next = fresh(orange)
+        run(at = sept9.atTime(16, 0), silent = true)
+
+        // The content landed: this is the whole point of the screen being able to ask.
+        assertEquals("20260909_1546", runBlocking { store.state("dpc").first() }.current?.stamp)
+        assertEquals(0, notifiers.warnings.size)
+    }
+
+    @Test
+    fun `a silent run leaves the fingerprint unburnt, so the job can still speak`() {
+        val orange = bulletin(sept9.atTime(15, 46), "B1", row(sept9, WarningHazard.THUNDERSTORM, WarningLevel.ORANGE))
+        source.next = fresh(orange)
+        run(at = sept9.atTime(16, 0), silent = true)
+        assertEquals(0, notifiers.warnings.size)
+
+        // The reader walked away; the job runs next and the warning is still news.
+        source.next = WarningFetchResult.Unchanged("\"tag\"")
+        run(at = sept9.atTime(17, 5))
+        assertEquals(1, notifiers.warnings.size)
+    }
+
+    @Test
+    fun `a silent run still writes the Journal, because a level moved either way`() {
+        source.next = fresh(bulletin(sept9.atTime(15, 46), "B1", row(sept9, WarningHazard.THUNDERSTORM, WarningLevel.YELLOW)))
+        run(at = sept9.atTime(16, 0), silent = true)
+        val first = records().size
+
+        source.next = fresh(
+            bulletin(sept9.atTime(17, 0), "B2", row(sept9, WarningHazard.THUNDERSTORM, WarningLevel.ORANGE)),
+            stamp = "20260909_1700"
+        )
+        run(at = sept9.atTime(17, 30), force = true, silent = true)
+        assertTrue(
+            "the diary is content, not speech",
+            records().count { it.kind == WarningRecordKind.LEVEL_CHANGE.name } > first
+        )
     }
 
     @Test
