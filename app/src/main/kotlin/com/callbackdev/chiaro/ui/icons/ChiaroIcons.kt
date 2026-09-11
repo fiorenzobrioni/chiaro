@@ -10,8 +10,11 @@ import androidx.compose.ui.res.vectorResource
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.model.MoonPhase
+import com.callbackdev.chiaro.domain.model.PollenLevel
+import com.callbackdev.chiaro.domain.model.PollenReport
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.components.VerdictKind
+import com.callbackdev.chiaro.ui.today.WeatherText
 
 /**
  * The reader's icon style, provided by `MainActivity` from the settings alongside the
@@ -255,6 +258,62 @@ object ChiaroIcons {
     val uv: ImageVector @Composable get() = styled(R.drawable.mc3_uv_index)
     val pressure: ImageVector @Composable get() = styled(R.drawable.mc3_barometer)
 
+    /**
+     * The graded marks (Fase 13). Meteocons v3 draws these metrics at their own levels,
+     * and the rule for using one is the same rule a second verdict has to pass
+     * (DESIGN §1.2): **a glyph may only say a level the tile already computes and says in
+     * words.** Where the family's grades and the app's bands do not line up, the generic
+     * mark stays — that is why the wind tile below is not graded, and why `very-high`
+     * and `extreme` are imported but not shipped: `pressureMeaning` has three bands and
+     * `pollenLevel` has three levels above nothing, not five and four.
+     */
+    @Composable
+    fun uv(index: Int): ImageVector = styled(
+        when {
+            index <= 0 -> R.drawable.mc3_uv_index
+            index >= 12 -> R.drawable.mc3_uv_index_11_plus
+            else -> UV_GRADES[index - 1]
+        }
+    )
+
+    /**
+     * The UV mark carries the number, so it may be graded per unit rather than per band:
+     * the tile prints "7" and the drawing says 7. A band-graded glyph beside a printed
+     * integer would be the picture and the number disagreeing about how precise the
+     * forecast is.
+     */
+    private val UV_GRADES = intArrayOf(
+        R.drawable.mc3_uv_index_1, R.drawable.mc3_uv_index_2, R.drawable.mc3_uv_index_3,
+        R.drawable.mc3_uv_index_4, R.drawable.mc3_uv_index_5, R.drawable.mc3_uv_index_6,
+        R.drawable.mc3_uv_index_7, R.drawable.mc3_uv_index_8, R.drawable.mc3_uv_index_9,
+        R.drawable.mc3_uv_index_10, R.drawable.mc3_uv_index_11
+    )
+
+    /** The three bands `WeatherText.pressureMeaning` says, and no more. */
+    @Composable
+    fun pressure(millibars: Double): ImageVector = styled(
+        when {
+            millibars < 1000 -> R.drawable.mc3_barometer_low
+            millibars <= 1020 -> R.drawable.mc3_barometer_moderate
+            else -> R.drawable.mc3_barometer_high
+        }
+    )
+
+    /**
+     * The air between the reader and the horizon, at the strength the tile names.
+     * `visibilityMeaning`'s two hazy bands share one drawing on purpose: they are the
+     * same phenomenon at two strengths and the words already tell them apart, and a
+     * glyph that under-claims is honest where one that over-claims is not.
+     */
+    @Composable
+    fun visibility(kilometres: Double): ImageVector = styled(
+        when {
+            kilometres >= 10 -> R.drawable.mc3_mist
+            kilometres >= 1 -> R.drawable.mc3_haze
+            else -> R.drawable.mc3_fog
+        }
+    )
+
     /** The thermometer, not the raindrop (4 set 2026). Meteocons draws `humidity` as
      * `raindrop` with a % laid over it, so the two tiles that sit one under the other
      * in the details grid were the same drawing twice — told apart only by a white
@@ -263,6 +322,13 @@ object ChiaroIcons {
      * drop stays the humidity mark alone. This is what §13.1's «the accessor names
      * the metric, not the drawing» is for. */
     val dewPoint: ImageVector @Composable get() = styled(R.drawable.mc3_thermometer)
+
+    /**
+     * The compass needle alone — `wind-direction-n` with its `Letters` group left behind
+     * by the importer, because those letters are English paths and this product
+     * localizes everything on a screen. `WindArrow` turns it by the real degrees.
+     */
+    val windNeedle: ImageVector @Composable get() = styled(R.drawable.mc3_wind_direction_needle)
     val precipitation: ImageVector @Composable get() = styled(R.drawable.mc3_raindrops)
 
     /** Freezing, not snow: the Journal's drift strip marks the days whose forecast
@@ -281,6 +347,54 @@ object ChiaroIcons {
      * dust in the air.
      */
     val pollen: ImageVector @Composable get() = styled(R.drawable.mc3_pollen)
+
+    /**
+     * The plant, at its level. The tile already computes both — `pollenWorst` for the
+     * level and `pollenFamiliesAtWorst` for who is at it — and already prints them, so
+     * the drawing is allowed to say the same thing.
+     *
+     * Ties go to the catalogue's order, the same order the note lists them in, so the
+     * glyph names the first plant the sentence names. `NONE` keeps the generic mark:
+     * there is no "no pollen" drawing, and inventing one would be a level the tile does
+     * not have.
+     */
+    @Composable
+    fun pollen(report: PollenReport): ImageVector {
+        val worst = WeatherText.pollenWorst(report)
+        val family = when (worst) {
+            PollenLevel.NONE -> null
+            report.grass -> Plant.GRASS
+            report.tree -> Plant.TREE
+            else -> Plant.WEED
+        }
+        return styled(
+            when {
+                family == null -> R.drawable.mc3_pollen
+                worst == PollenLevel.LOW -> family.low
+                worst == PollenLevel.MODERATE -> family.moderate
+                else -> family.high
+            }
+        )
+    }
+
+    private enum class Plant(
+        @DrawableRes val low: Int,
+        @DrawableRes val moderate: Int,
+        @DrawableRes val high: Int
+    ) {
+        GRASS(
+            R.drawable.mc3_pollen_grass_low, R.drawable.mc3_pollen_grass_moderate,
+            R.drawable.mc3_pollen_grass_high
+        ),
+        TREE(
+            R.drawable.mc3_pollen_tree_low, R.drawable.mc3_pollen_tree_moderate,
+            R.drawable.mc3_pollen_tree_high
+        ),
+        WEED(
+            R.drawable.mc3_pollen_weed_low, R.drawable.mc3_pollen_weed_moderate,
+            R.drawable.mc3_pollen_weed_high
+        )
+    }
 
     // The day's timeline and the Sky screen.
     /** The rain-over glyph: a cloud with nothing falling out of it. */

@@ -21,6 +21,8 @@ gira per sempre e' decorazione.
 #: I cieli che `ChiaroIcons.conditionLineRes` puo' restituire, i marchi delle schede, del
 #: Cielo e dell'agenda: tutto quello che oggi arriva su uno schermo.
 SHIPPED = [
+    # l'ago della rosa dei venti, senza le sue lettere inglesi (vedi PARTIALS nel tool)
+    "wind-direction-needle",
     "clear-day", "clear-night", "mostly-clear-day", "mostly-clear-night",
     "partly-cloudy-day", "partly-cloudy-night", "overcast", "cloudy", "fog-day",
     "fog-night", "overcast-drizzle", "overcast-rain", "overcast-sleet",
@@ -33,6 +35,13 @@ SHIPPED = [
     "star", "starry-night", "falling-stars", "solar-eclipse", "moon-new",
     "moon-waxing-crescent", "moon-first-quarter", "moon-waxing-gibbous", "moon-full",
     "moon-waning-gibbous", "moon-last-quarter", "moon-waning-crescent", "rainbow",
+    "uv-index-1", "uv-index-2", "uv-index-3", "uv-index-4", "uv-index-5",
+    "uv-index-6", "uv-index-7", "uv-index-8", "uv-index-9", "uv-index-10",
+    "uv-index-11", "uv-index-11-plus", "barometer-low", "barometer-moderate",
+    "barometer-high", "pollen-grass", "pollen-tree", "pollen-weed",
+    "pollen-grass-low", "pollen-grass-moderate", "pollen-grass-high",
+    "pollen-tree-low", "pollen-tree-moderate", "pollen-tree-high", "pollen-weed-low",
+    "pollen-weed-moderate", "pollen-weed-high", "haze", "fog",
 ]
 
 #: Scelte, verificate presenti a monte, e **non spedite**: nessuna schermata le disegna
@@ -40,27 +49,20 @@ SHIPPED = [
 #: barometro, la scala Beaufort, i momenti del giorno, i tipi di allerta della Fase 12.
 #: Spostarne una in SHIPPED e' la meta' del lavoro che serve a usarla.
 PLANNED = [
-    "raindrop", "umbrella", "dust", "pollen-grass", "pollen-tree", "pollen-weed",
-    "pollen-grass-low", "pollen-grass-moderate", "pollen-grass-high",
-    "pollen-grass-very-high", "pollen-tree-low", "pollen-tree-moderate",
-    "pollen-tree-high", "pollen-tree-very-high", "pollen-weed-low",
-    "pollen-weed-moderate", "pollen-weed-high", "pollen-weed-very-high",
-    "uv-index-1", "uv-index-2", "uv-index-3", "uv-index-4", "uv-index-5",
-    "uv-index-6", "uv-index-7", "uv-index-8", "uv-index-9", "uv-index-10",
-    "uv-index-11", "uv-index-11-plus", "barometer-low", "barometer-moderate",
-    "barometer-high", "barometer-very-high", "barometer-extreme", "windsock",
-    "windsock-calm", "windsock-weak", "windsock-moderate", "wind-beaufort-0",
-    "wind-beaufort-1", "wind-beaufort-2", "wind-beaufort-3", "wind-beaufort-4",
-    "wind-beaufort-5", "wind-beaufort-6", "wind-beaufort-7", "wind-beaufort-8",
-    "wind-beaufort-9", "wind-beaufort-10", "wind-beaufort-11", "wind-beaufort-12",
-    "umbrella-wind", "haze", "fog", "smoke", "thermometer-warmer",
-    "thermometer-colder", "wind-direction-n", "wind-direction-ne",
-    "wind-direction-e", "wind-direction-se", "wind-direction-s", "wind-direction-sw",
-    "wind-direction-w", "wind-direction-nw", "rainbow-clear", "rainbow-cloud",
-    "time-morning", "time-late-morning", "time-afternoon", "time-late-afternoon",
-    "time-evening", "time-late-evening", "time-night", "time-late-night",
-    "weather-alert", "weather-alert-day", "weather-alert-night", "wind-alert",
-    "thermometer-alert", "uv-index-alert", "water-alert", "fire-alert",
+    "raindrop", "umbrella", "dust", "pollen-grass-very-high",
+    "pollen-tree-very-high", "pollen-weed-very-high", "barometer-very-high",
+    "barometer-extreme", "windsock", "windsock-calm", "windsock-weak",
+    "windsock-moderate", "wind-beaufort-0", "wind-beaufort-1", "wind-beaufort-2",
+    "wind-beaufort-3", "wind-beaufort-4", "wind-beaufort-5", "wind-beaufort-6",
+    "wind-beaufort-7", "wind-beaufort-8", "wind-beaufort-9", "wind-beaufort-10",
+    "wind-beaufort-11", "wind-beaufort-12", "umbrella-wind", "smoke",
+    "thermometer-warmer", "thermometer-colder", "wind-direction-n",
+    "wind-direction-ne", "wind-direction-e", "wind-direction-se", "wind-direction-s",
+    "wind-direction-sw", "wind-direction-w", "wind-direction-nw", "rainbow-clear",
+    "rainbow-cloud", "time-morning", "time-late-morning", "time-afternoon",
+    "time-late-afternoon", "time-evening", "time-late-evening", "time-night",
+    "time-late-night", "weather-alert", "weather-alert-day", "weather-alert-night",
+    "wind-alert", "thermometer-alert", "uv-index-alert", "water-alert", "fire-alert",
     "avalanche-danger-alert", "tornado", "hurricane", "cyclone", "waterspout",
     "falling-rocks-alert",
 ]

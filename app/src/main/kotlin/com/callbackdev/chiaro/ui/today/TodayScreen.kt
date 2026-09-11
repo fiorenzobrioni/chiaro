@@ -1367,7 +1367,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
         if (today != null) {
             add(
                 Tile(
-                    icon = { ChiaroIcons.uv },
+                    icon = { ChiaroIcons.uv(today.uvIndexMax) },
                     label = R.string.metric_uv,
                     value = today.uvIndexMax.toString(),
                     meaning = WeatherText.uvMeaning(today.uvIndexMax),
@@ -1411,7 +1411,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
         )
         add(
             Tile(
-                icon = { ChiaroIcons.pressure },
+                icon = { ChiaroIcons.pressure(current.pressureMb) },
                 label = R.string.metric_pressure,
                 value = Formats.pressure(current.pressureMb, locale),
                 meaning = WeatherText.pressureMeaning(current.pressureMb)
@@ -1422,7 +1422,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
         current.visibilityKm?.let { km ->
             add(
                 Tile(
-                    icon = { ChiaroIcons.visibility },
+                    icon = { ChiaroIcons.visibility(km) },
                     label = R.string.metric_visibility,
                     value = Formats.kilometers(km, locale),
                     meaning = WeatherText.visibilityMeaning(km)
@@ -1446,7 +1446,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
             val families = WeatherText.pollenFamiliesAtWorst(pollen).map { stringResource(it) }
             add(
                 Tile(
-                    icon = { ChiaroIcons.pollen },
+                    icon = { ChiaroIcons.pollen(pollen) },
                     label = R.string.metric_pollen,
                     value = stringResource(WeatherText.pollenLevel(worst)),
                     meaning = WeatherText.pollenMeaning(worst),

@@ -83,11 +83,19 @@ def svg_shape(el: ET.Element, now: dict, out: list[str], clips: list[str]) -> No
     animated = now.get(name, {})
     if tag == "group":
         px, py = float(attr(el, "pivotX", 0)), float(attr(el, "pivotY", 0))
-        tx, ty = animated.get("translateX", 0.0), animated.get("translateY", 0.0)
-        rotation = animated.get("rotation", 0.0)
+        # Un gruppo puo' portare la trasformazione scritta nell'XML, quella animata, o
+        # tutte e due: dalla Fase 13 l'importatore emette anche quelle statiche (i
+        # `transform` di Figma, e il riquadro dei ritagli), e leggendo solo le animate
+        # questo strumento disegnava il vuoto.
+        tx = float(attr(el, "translateX", 0)) + animated.get("translateX", 0.0)
+        ty = float(attr(el, "translateY", 0)) + animated.get("translateY", 0.0)
+        rotation = float(attr(el, "rotation", 0)) + animated.get("rotation", 0.0)
+        sx = animated.get("scaleX", float(attr(el, "scaleX", 1)))
+        sy = animated.get("scaleY", float(attr(el, "scaleY", 1)))
         # The order a VectorDrawable composes a group in: about the pivot, then moved.
         out.append(
-            f'<g transform="translate({px + tx} {py + ty}) rotate({rotation}) translate({-px} {-py})">'
+            f'<g transform="translate({px + tx} {py + ty}) rotate({rotation}) '
+            f'scale({sx} {sy}) translate({-px} {-py})">'
         )
         inner_clips: list[str] = []
         body: list[str] = []
