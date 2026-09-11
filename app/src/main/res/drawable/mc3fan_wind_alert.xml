@@ -10,28 +10,30 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <path android:pathData="M98.402,70.5 C99.557,68.5,102.443,68.5,103.598,70.5 L115.722,91.5 C116.877,93.5,115.434,96,113.124,96 L88.876,96 C86.566,96,85.123,93.5,86.278,91.5 Z"
-                android:name="g1p"
-                android:fillColor="#646e81"/>
-            <path android:pathData="M101.758,86.59 L100.264,86.59 L99.418,81.568 L99.418,78.184 L102.586,78.184 L102.586,81.568 Z M102.604,91 L99.4,91 L99.4,87.994 L102.604,87.994 Z"
-                android:name="g2p"
-                android:fillColor="#fff"/>
-            <path android:pathData="M87.79,40.135 C93.976,33.347,105,38.405,105,47.446 C105,53.275,100.522,58,95,58 L24,58"
-                android:name="g3p"
-                android:strokeColor="#e2e8f0"
-                android:strokeWidth="4"
-                android:strokeLineCap="round"
-                android:strokeMiterLimit="10"
-                android:trimPathStart="0"
-                android:trimPathEnd="0.4495"/>
-            <path android:pathData="M60.128,87.868 C66.42,94.518,78,89.872,78,80.556 C78,74.726,73.35,70,67.615,70 L24,70"
-                android:name="g4p"
-                android:strokeColor="#e2e8f0"
-                android:strokeWidth="4"
-                android:strokeLineCap="round"
-                android:strokeMiterLimit="10"
-                android:trimPathStart="0"
-                android:trimPathEnd="0.59"/>
+            <group android:name="mc3scale" android:scaleX="1.1656" android:scaleY="1.1656" android:pivotX="64" android:pivotY="64">
+                <path android:pathData="M98.402,70.5 C99.557,68.5,102.443,68.5,103.598,70.5 L115.722,91.5 C116.877,93.5,115.434,96,113.124,96 L88.876,96 C86.566,96,85.123,93.5,86.278,91.5 Z"
+                    android:name="g1p"
+                    android:fillColor="#646e81"/>
+                <path android:pathData="M101.758,86.59 L100.264,86.59 L99.418,81.568 L99.418,78.184 L102.586,78.184 L102.586,81.568 Z M102.604,91 L99.4,91 L99.4,87.994 L102.604,87.994 Z"
+                    android:name="g2p"
+                    android:fillColor="#fff"/>
+                <path android:pathData="M87.79,40.135 C93.976,33.347,105,38.405,105,47.446 C105,53.275,100.522,58,95,58 L24,58"
+                    android:name="g3p"
+                    android:strokeColor="#e2e8f0"
+                    android:strokeWidth="4"
+                    android:strokeLineCap="round"
+                    android:strokeMiterLimit="10"
+                    android:trimPathStart="0"
+                    android:trimPathEnd="0.4495"/>
+                <path android:pathData="M60.128,87.868 C66.42,94.518,78,89.872,78,80.556 C78,74.726,73.35,70,67.615,70 L24,70"
+                    android:name="g4p"
+                    android:strokeColor="#e2e8f0"
+                    android:strokeWidth="4"
+                    android:strokeLineCap="round"
+                    android:strokeMiterLimit="10"
+                    android:trimPathStart="0"
+                    android:trimPathEnd="0.59"/>
+            </group>
         </vector>
     </aapt:attr>
     <target android:name="g1p">

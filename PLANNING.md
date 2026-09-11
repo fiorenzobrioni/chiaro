@@ -5904,6 +5904,270 @@ scelta si rivede.
 **deve** restare diverso dal 2 — che è la confusione da cui è nata la fase e che non deve
 poter tornare per distrazione.
 
+### «È l'importazione che ridimensiona?» — no, ed è misurato sulle 519 (11 set 2026)
+
+Segnalazione dal dispositivo, sul Cielo → **In arrivo**: la luna piena e la luna delle
+stelle cadenti hanno taglie molto diverse, e la domanda è se sia l'importatore a fare un
+resize dell'originale.
+
+**La risposta è no, e non è un'opinione.** `tools/icon_ink.py --confronto` misura il
+riquadro dell'inchiostro sulla sorgente SVG e sul vector drawable generato e mette le due
+misure accanto: **519 icone × 2 stili, 0 fuori tolleranza** (un centesimo di unità su 128,
+che è il rumore dell'appiattimento delle curve). L'importatore copia il `viewBox` e le
+coordinate così come sono — `convert()` scrive `viewportWidth` dal `viewBox` e basta — e
+dal 964e01a non esiste più nemmeno la macchina che poteva ritagliare (`CROPS`, `PARTIALS`).
+
+La coppia segnalata, vista da vicino, è la prova più corta:
+
+| | sorgente Meteocons | drawable spedito |
+|---|---|---|
+| `moon-full` | `<circle cx=64 cy=64 r=30.5>` | `M33.5,64 A30.5,30.5,…` |
+| `falling-stars`, la luna | `M59.997 43.821 c-2.266 14.257…` | `M59.997,43.821 C57.731,58.078,…` |
+
+Stessi numeri. L'unica cosa che cambia è il colore (`#72b9d5` → `#88cfec`), che è il
+riancoraggio al 3:1 del fondo scuro e non tocca la geometria.
+
+**Quel che succede davvero è che l'illustratore rimpicciolisce la luna quando il disegno
+ne contiene anche altro**, e lo fa a scalini netti. Misurato con `--dentro moon`, il lato
+della sola luna in frazione di scatola:
+
+| la luna sta | lato | su 34 dp |
+|---|---|---|
+| da sola (`moon-full`, `clear-night`, `moonrise`, `moonset`) | 0,49–0,51 | ~17,0 dp |
+| con due o tre compagni (`falling-stars`, `starry-night`, `fog-night`) | **0,34** | **11,6 dp** |
+| dietro una nuvola (`partly-cloudy-night`, `thunderstorms-night`) | 0,20 | 6,9 dp |
+
+Quindi la luna piena ha **1,47×** il diametro della luna dei Draconidi, e in copertura
+d'inchiostro il disegno intero ne ha 2,27× (19,7% della scatola contro 8,7%). È
+esattamente quel che l'occhio vede, ed è dell'illustratore.
+
+**Dove si nota, e perché proprio lì.** «In arrivo» è l'unico posto del prodotto dove
+icone di **famiglie diverse** stanno incolonnate una sotto l'altra a 34 dp, quindi il
+lettore le confronta davvero. In quella colonna il lato dell'inchiostro va da 0,75
+(`sunrise`, `horizon` — gli equinozi e i solstizi) a 0,37 (`starry-night`), cioè **da 25,5
+a 12,6 dp, un'escursione di 2,02×**. Sull'intera lista di spedizione va da 0,33
+(`smoke-particles`) a 0,81 (`uv-index-11-plus`): **2,48×**.
+
+Vale la pena scriverlo perché ribalta l'istinto: `falling-stars` **non** è un'icona
+piccola. Il suo riquadro è 0,63 largo, più largo della luna piena; è alto 0,36 perché la
+composizione è una diagonale in una scatola quadrata. È piccola la **luna dentro**, ed è
+alto poco il disegno: due cose diverse, e la prima è quella che si è notata.
+
+- [x] **Deciso lo stesso giorno**: si normalizza, su tutte le icone — sezione qui sotto,
+      dove c'è anche il motivo per cui la strada scelta NON è quella che consigliavo qui.
+      I numeri delle tre strade restano scritti perché sono la ragione della scelta:
+      **lasciare così** — è il disegno dell'illustratore, e la regola senza eccezioni del
+      964e01a vale ancora;
+      **normalizzare sul lato** (la regola da manuale) **peggiora proprio questa coppia**:
+      `falling-stars` è già 0,63 e crescerebbe meno della luna piena a 0,50, portando le
+      due lune da 1,47× a 1,85×;
+      **normalizzare sull'inchiostro** (una scala per icona, `k = √(copertura obiettivo /
+      copertura)`, applicata al disegno dentro una scatola che non si muove, quindi zero
+      effetti sul layout) le pareggia. Alla copertura mediana della lista, 14,8%, e sullo
+      stile flat: la luna piena va da 17,0 a **14,7 dp**, quella dei Draconidi da 11,4 a
+      **14,9 dp**. Costa una tabella generata dall'importatore e un fattore di scala ai
+      quattro punti di disegno; tocca ogni icona dell'app (`smoke-particles` × 2,02,
+      `clear-day` × 1,05), e tre icone arriverebbero al bordo della scatola
+
+**Un difetto trovato costruendo la misura**, che vale oltre lo strumento:
+`spike_mask_clip.flatten` **scarta i sottopercorsi di due punti**, ed è giusto là dove
+nasce (deve provare delle maschere, che sono forme chiuse) ma qui faceva sparire la scia
+di `falling-stars` — 0,25 di scatola — e rendeva `mist` «senza inchiostro». `icon_ink.py`
+ha quindi il suo `flatten`, che tiene i segmenti e passa gli archi per la
+parametrizzazione centrale del modulo delle maschere. Chi riusa quella funzione altrove
+lo tenga presente.
+
+### La taglia si pareggia: ogni disegno a una misura comune (11 set 2026)
+
+> La prima versione di questa regola normalizzava il **lato più lungo** a 0,75 ed è
+> durata mezza giornata: la sezione che segue la racconta com'è stata presa, e quella
+> dopo dice perché il lato non bastava e cosa la sostituisce.
+
+Decisione del committente, e **rovescia quella sua del mattino** («la scatola è quella
+dell'illustratore, senza eccezioni»): le differenze di taglia fra i disegni di Meteocons,
+misurate poche ore prima, si leggono come un difetto dell'app e vanno tolte, su tutte le
+icone.
+
+**La regola che avevo proposto io non regge, e l'ho scoperta provandola.** Avevo suggerito
+di normalizzare sull'**inchiostro** (`k = √(copertura obiettivo / copertura)`) perché
+pareggiava la coppia segnalata a 0,2 dp. Applicata a tutte le famiglie si rompe subito: le
+otto fasi lunari sono **una sola geometria** — tutte 0,50 di scatola — con undici volte la
+massa fra gli estremi, `moon-new` al **1,71%** della scatola e `moon-full` al **19,70%**.
+Normalizzare sulla massa spedirebbe una luna nuova **3,4×** la luna piena. Qualunque
+formula che contenga un termine di massa muore sullo stesso scoglio, quindi la massa non
+entra.
+
+**Quel che si spedisce è la normalizzazione sul lato**, l'unica che sta in piedi su tutte
+le famiglie (le fasi lunari restano insieme a 1,50; la scala UV resta insieme a 1,00):
+
+| | prima | dopo |
+|---|---|---|
+| lato dell'inchiostro, lista di spedizione | 0,33 – 0,81 (**2,48×**) | 0,727 – 0,750 (**1,03×**) |
+| `moon-full` a 34 dp | 17,0 dp | 25,5 dp |
+| `falling-stars` | 21,3 dp | 25,5 dp |
+| `starry-night` | 12,6 dp | 25,5 dp |
+| `clear-day`, `sunrise` | 25,5 dp | 25,5 dp (fermi: sono il riferimento) |
+
+`tools/import_meteocons_v3.py` avvolge ogni drawable in un gruppo `mc3scale`, su misure di
+`tools/icon_ink.py`. **502 delle 517** ne hanno preso uno; le altre erano già a misura. La
+finestra non si tocca ancora: il `viewBox` è quello dell'illustratore e non c'è nessun
+ritaglio. `--confronto` continua a provarlo, ora al netto della scala dichiarata: **519
+icone × 2 stili, 0 fuori tolleranza**.
+
+Tre cose sono decisioni, non dettagli:
+
+- **Una scala per disegno, non per stile**, misurata sull'unione di `line` e `flat`: un'icona
+  che cambia taglia quando il lettore cambia stile in Impostazioni sarebbe l'opposto di quel
+  che la scala serve a fare.
+- **Il perno è il centro della scatola, non quello dell'inchiostro.** Ricentrare sposterebbe
+  le composizioni volutamente fuori centro (il sole di `sunrise` sta basso perché sorge da
+  una linea) e cambierebbe il centraggio ottico su cui la striscia oraria è stata messa a
+  punto. Il prezzo: un disegno fuori centro tocca il bordo prima di arrivare a 0,75 e lì si
+  ferma — `sunrise`, `sunset`, `horizon` e `humidity` si fermano a **0,727**.
+- **Il pennello si scala col disegno.** Metà della famiglia `line` disegna i contorni come
+  anelli riempiti `evenOdd` e non come tratti, e un anello non si può riassottigliare;
+  compensare gli uni e non gli altri renderebbe disuniforme la famiglia invece delle icone.
+  Il costo, scritto: alla scala massima della lista (`smoke-particles`, **2,29×**) la linea è
+  più del doppio di quella di `clear-day`, che resta a 1,00.
+
+**Quel che la normalizzazione NON risolve**, ed è la metà della segnalazione che va detta
+chiara: Meteocons rimpicciolisce la luna quando il disegno contiene anche altro — 0,50 da
+sola, **0,34** con due o tre compagni, **0,20** dietro una nuvola — e quella è una scelta di
+composizione, non di taglia. Dopo la scala la luna piena porta 25,5 dp e la luna dei
+Draconidi 14,0 dp: il rapporto passa da 1,47× a 1,82×, perché `falling-stars` era già più
+larga della luna piena e quindi cresce meno. Le due **icone** ora pareggiano; le due lune no,
+e nessuna regola di taglia può farlo senza rompere le fasi lunari. L'unica leva che resta è
+quale disegno una schermata chiede.
+
+`MeteoconScaleTest` tiene le tre cose che si rompono per distrazione: le quattro facce di un
+disegno portano la stessa scala, il gemello animato porta quella del fermo (altrimenti
+l'icona salta di taglia quando parte l'animazione) e il perno è il centro della scatola.
+
+### Il Cielo prende un suo gradino: 51 dp (11 set 2026)
+
+Richiesta del committente subito dopo, «anche 1,5× se c'è spazio»: le icone del Cielo
+crescono da `WeatherIconSize.Timeline` (34 dp) a un gradino nuovo, `Sky` = **51 dp**, nelle
+righe dei momenti, in quelle di «In arrivo» e nell'indice della guida.
+
+Lo spazio c'è, misurato a 360 dp prima di prenderlo. Il budget di testo di una riga è
+`360 − 16 − icona − 16 − 48 (la campanella) − 16`, quindi passa da **230 a 213 dp**; una riga
+di «In arrivo» senza campanella passa da 278 a 261. L'altezza non si muove: le righe sono già
+a tre righe di testo (nome, ora, pastiglia), e 51 dp stanno dentro gli 88 dp di una riga
+Material a tre righe con 18 dp d'aria per lato, dentro i 72 dp di una a due righe con 10,5.
+
+**Il mio parere, scritto perché è stato chiesto e perché il numero non lo dice da solo.** Le
+due modifiche si moltiplicano, e la seconda è stata chiesta guardando l'app *prima* della
+prima: la normalizzazione da sola porta già la luna del Cielo da 17,0 a 25,5 dp e i
+Draconidi da 12,6 a 25,5, cioè l'ingrandimento di 1,5× che la richiesta chiedeva, per le
+icone che sembravano piccole. Sommandoci il gradino, a 51 dp l'inchiostro diventa **35,2 dp**
+su un disegno quadrato (i numeri sono aggiornati alla media geometrica della sezione
+seguente; con la regola sul lato erano 38,3), contro i **29** della striscia oraria: il Cielo
+resta la superficie con i disegni più grandi dell'app, e rovescia l'ordine di lettura per cui
+i gradini di `WeatherIconSize` sono ordinati — la striscia porta il peso maggiore e dovrebbe
+restare davanti.
+
+- [ ] **Da guardare sul dispositivo e decidere.** Spedito a 51 dp come chiesto, e la prova
+      del committente non l'ha contestato. Se un giorno risulta troppo, **44 dp** (30 dp
+      d'inchiostro) rimette la striscia davanti tenendo il Cielo sopra il resto della
+      giornata, ed è una riga in `WeatherIconSize.Sky`. L'altra cosa da guardare nello stesso giro sono le righe con la
+      frase lunga («8 Ottobre · La previsione non arriva ancora così lontano»): a 213 dp una
+      come quella può passare da due righe a tre
+
+### La media geometrica, e perché il lato più lungo non bastava (11 set 2026)
+
+Prova sul dispositivo, subito dopo la normalizzazione. Due segnalazioni, e sono la stessa:
+**le lune senza nuvole sembrano grandi** e **le stelle cadenti un po' piccole**.
+
+Hanno ragione, ed è un difetto della regola, non delle icone. Normalizzare `max(w, h)` a
+0,75 è la regola da manuale e ha un vizio che si vede solo su uno schermo: **in una scatola
+quadrata un disegno quadrato arriva alla misura anche in altezza, uno piatto no**. Misurato
+sulle icone della striscia:
+
+| | dopo la regola sul lato | dopo la media geometrica |
+|---|---|---|
+| `clear-night`, `moon-full` | 0,75 × **0,75** | 0,69 × **0,69** |
+| `overcast` | 0,75 × **0,45** | 0,88 × **0,52** |
+| `cloudy` | 0,75 × 0,47 | 0,87 × 0,55 |
+| `falling-stars` | 0,75 × **0,43** | 0,88 × **0,50** |
+| `rainbow` | 0,75 × 0,38 | 0,88 × 0,44 |
+| `clear-day`, `sunrise` | 0,75 × 0,75 | 0,69 × 0,69 |
+
+La luna riempiva la scatola in tutte e due le direzioni e la nuvola in una sola: da lì
+«grande» e «piccola», che erano la stessa cosa vista da due parti. La media geometrica
+legge i due lati insieme, tira giù i quadrati e su i piatti, e li fa incontrare.
+
+**Perché la media e non qualcos'altro**, con i tentativi scartati scritti perché costano
+tempo a rifarli:
+
+- la **massa** (copertura) è morta di nuovo sulle fasi lunari, come la prima volta;
+- la **sagoma** (l'unione dei sottopercorsi riempiti, che avrebbe dovuto salvare la luna
+  nuova rendendola un disco) non la salva: in `flat` Meteocons disegna **solo la parte
+  illuminata**, quindi la sagoma della luna nuova è 1,76% della scatola contro il 19,65%
+  della piena — è coperura sotto un altro nome;
+- **l'altezza da sola** non si può: una nuvola alta quanto la luna sarebbe larga 1,27 volte
+  la scatola, cioè tagliata.
+
+La regola finale è il minore di tre vincoli: **media geometrica a 0,69**, **ingombro
+massimo 0,88** (senza il tetto `rainbow` arrivava a 0,97 di larghezza, a filo di scatola) e
+**il bordo**. Sulla lista di spedizione la media geometrica sta fra **0,49 e 0,69** (1,41×)
+dove la sorgente spaziava di 2,48×; 72 icone su 79 le decide la media, 7 il tetto, il bordo
+nessuna. `--confronto` continua a dire 519 × 2, 0 fuori tolleranza.
+
+Il gradino del Cielo resta a 51 dp: l'inchiostro di un disegno quadrato passa da 38,3 a
+**35,2 dp**, contro i 29 della striscia oraria. La riserva scritta nella sezione precedente
+si attenua ma non sparisce.
+
+
+### L'ora del bollettino senza il suo giorno (committente, 11 set 2026)
+
+Da uno screenshot: alle **12:33** il banner diceva «Protezione Civile, bollettino delle
+15:07» per un bollettino emesso il **pomeriggio prima**. Un'ora che quel giorno non era
+ancora arrivata, quindi l'unica lettura che si poteva escludere era quella vera.
+
+**Non è un caso di bordo, è il caso normale.** Il Dipartimento pubblica nel pomeriggio e il
+bollettino copre *oggi e domani*: chi apre l'app la mattina sta guardando il bollettino di
+ieri, tutte le mattine. L'ora da sola non poteva dirlo.
+
+La regola è quella proposta dal committente: **il giorno si dice solo quando non è oggi.**
+Una data accanto a ogni ora sarebbe rumore sulla superficie che porta l'allerta, e l'ora di
+oggi è già inequivocabile quando il giorno è quello di chi legge.
+
+Una frase sola, `WarningText.issued`, con dentro la sua preposizione — «delle 15:07», «di
+ieri alle 15:07», «del 10 set 2026 alle 15:07» — perché un `%1$s` che a volte è un'ora e a
+volte una data con l'ora rompe la grammatica di chi la ospita.
+
+**Dove c'era il difetto, verificato superficie per superficie** (la seconda metà della
+domanda era proprio «guarda anche in Avvisi»):
+
+| superficie | prima | adesso |
+|---|---|---|
+| banner su Oggi | solo l'ora | la frase |
+| Avvisi, card con allerta (riusa il banner) | solo l'ora | la frase |
+| Avvisi, card «nessuna allerta» | solo l'ora | la frase |
+| notifica, riga compatta e riga della fonte | solo l'ora | la frase |
+| Diario, riga dell'allerta | solo l'ora | la frase, confrontata con **il giorno della voce**, non con quello di chi legge |
+| Avvisi, card «nessun bollettino per oggi» | solo la **data** | invariata: il difetto non ce l'aveva |
+| scheda dell'allerta | data **e** ora, sempre | invariata, ed è voluto |
+
+La scheda resta l'eccezione perché è la superficie della provenienza: l'attribuzione che la
+licenza chiede non deve dipendere da quando la si legge.
+
+**Il giorno di confronto è quello dell'emittente**, `LocalDate.now(zone del luogo)` — lo
+stesso che `WarningText.days` già usa — così un telefono all'estero non trasforma in «di
+ieri» un bollettino italiano di oggi. Un bollettino datato **avanti** (un orologio che non
+torna) prende la data invece di passare per quello di oggi: quattro test in
+`WarningTextTest` fissano i quattro rami.
+
+### La scheda Rugiada: era voluta, e sta scritto (8 set 2026)
+
+Domanda del committente nello stesso giro. Non è un errore: è la review delle card dell'**8
+set 2026**, sezione «Le card, com'erano e come sono» più su in questo file. Umidità e
+Rugiada dicevano la stessa cosa una sotto l'altra («Confortevole» / «Gradevole»), e
+«Rugiada» è la parola meno capita dello schermo. La card Umidità tiene la percentuale e la
+traccia, **prende la frase dal punto di rugiada** — che è il predittore migliore di come si
+sta — e stampa «Rugiada 12°» come nota: il dato non si è perso, il titolo sì. Via
+`metric_dew` e le quattro `humidity_meaning_*`.
+
 ### Le caselle
 
 ### Blocco A — il convertitore, fatto (11 set 2026)

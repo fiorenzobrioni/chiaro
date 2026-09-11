@@ -7,13 +7,15 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <group android:translateX="64.5" android:translateY="64.8">
-        <group android:name="g1g">
-            <group android:translateX="-64.5" android:translateY="-64.8">
-                <path android:pathData="M64.501,37.635 C69.691,45.495,73.916,51.938,76.933,57.655 C80.259,63.962,82,69.172,82,74.175 C82,84.052,74.138,92,64.5,92 C54.864,92,47,84.028,47,74.175 C47,69.185,48.74,63.981,52.067,57.674 C55.084,51.955,59.309,45.506,64.501,37.634 Z"
-                            android:strokeColor="#5a8cff"
-                            android:strokeWidth="4"
-                            android:strokeMiterLimit="10"/>
+    <group android:name="mc3scale" android:scaleX="1.8258" android:scaleY="1.8258" android:pivotX="64" android:pivotY="64">
+        <group android:translateX="64.5" android:translateY="64.8">
+            <group android:name="g1g">
+                <group android:translateX="-64.5" android:translateY="-64.8">
+                    <path android:pathData="M64.501,37.635 C69.691,45.495,73.916,51.938,76.933,57.655 C80.259,63.962,82,69.172,82,74.175 C82,84.052,74.138,92,64.5,92 C54.864,92,47,84.028,47,74.175 C47,69.185,48.74,63.981,52.067,57.674 C55.084,51.955,59.309,45.506,64.501,37.634 Z"
+                                android:strokeColor="#5a8cff"
+                                android:strokeWidth="4"
+                                android:strokeMiterLimit="10"/>
+                </group>
             </group>
         </group>
     </group>

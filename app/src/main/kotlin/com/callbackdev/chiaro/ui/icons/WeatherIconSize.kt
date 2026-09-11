@@ -55,6 +55,34 @@ object WeatherIconSize {
     val Timeline: Dp = 34.dp
 
     /**
+     * The Sky's own rung, **51dp since 11 set 2026** (committente: "even 1.5x if there
+     * is room"). It is the one place the ladder is broken on purpose, and the reason is
+     * that the Sky is the only surface where icons from different families stand in one
+     * column — a sunrise over a moon over a meteor shower — so it is the only place a
+     * reader compares them at all.
+     *
+     * **Read it together with the normalisation of the same day**: every drawing is taken
+     * to a geometric mean of 0.69 of its box, so this rung carries **35.2dp of ink** on a
+     * square drawing, against the hour strip's 29dp at its 42dp box. The Sky therefore has
+     * the largest drawings in the app, which inverts the reading order the rungs above are
+     * sorted by. That is the committente's call and it is written here rather than smoothed
+     * over; 44dp (30dp of ink) is the value that would put the strip back in front, and it
+     * is one number away.
+     *
+     * The room was measured at 360dp before it was taken. The text budget of a moment
+     * row is `360 − 16 − icon − 16 − 48 (the bell) − 16`, so it goes from **230dp to
+     * 213dp**; an event row with no bell goes from 278 to 261. The rows are already
+     * three-line (name, time, chip), so their height does not move: a 51dp leading slot
+     * fits inside Material's 88dp three-line row with 18dp of air each side, and inside
+     * a two-line 72dp row with 10.5dp.
+     *
+     * What it costs is the long supporting lines: "8 Ottobre · La previsione non arriva
+     * ancora così lontano" already wraps to two lines at 230dp, and 7% less width can
+     * push a row like it to three.
+     */
+    val Sky: Dp = 51.dp
+
+    /**
      * Details grid: the label beside it keeps a measured budget (DESIGN.md §8.6) —
      * `(360 − 32 − 12) / 2 − 32 − (icon + 8)` on a 360dp screen, which is half the row
      * minus the tile's padding minus the icon and the 8dp beside it, so **the budget is

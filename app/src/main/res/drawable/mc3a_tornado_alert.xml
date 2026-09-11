@@ -10,50 +10,52 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <group>
-                <clip-path android:pathData="M128,128 L0,128 L0,0 L128,0 Z M97.196,67 C94.886,63,89.113,63,86.804,67 L74.68,88 C72.37,92,75.257,97,79.876,97 L104.124,97 C108.743,97,111.63,92,109.32,88 Z"/>
-                <group android:name="g1line5">
-                    <path android:pathData="M56,90 L72,90"
-                        android:strokeColor="#5d6b7e"
-                        android:strokeWidth="4"
-                        android:strokeLineCap="round"
-                        android:strokeMiterLimit="10"/>
+            <group android:name="mc3scale" android:scaleX="1.3205" android:scaleY="1.3205" android:pivotX="64" android:pivotY="64">
+                <group>
+                    <clip-path android:pathData="M128,128 L0,128 L0,0 L128,0 Z M97.196,67 C94.886,63,89.113,63,86.804,67 L74.68,88 C72.37,92,75.257,97,79.876,97 L104.124,97 C108.743,97,111.63,92,109.32,88 Z"/>
+                    <group android:name="g1line5">
+                        <path android:pathData="M56,90 L72,90"
+                            android:strokeColor="#5d6b7e"
+                            android:strokeWidth="4"
+                            android:strokeLineCap="round"
+                            android:strokeMiterLimit="10"/>
+                    </group>
+                    <group android:name="g2line4">
+                        <path android:pathData="M47,77 L81,77"
+                            android:strokeColor="#5d6b7e"
+                            android:strokeWidth="4"
+                            android:strokeLineCap="round"
+                            android:strokeMiterLimit="10"/>
+                    </group>
+                    <group android:name="g3line3">
+                        <path android:pathData="M42,64 L87,64"
+                            android:strokeColor="#5d6b7e"
+                            android:strokeWidth="4"
+                            android:strokeLineCap="round"
+                            android:strokeMiterLimit="10"/>
+                    </group>
+                    <group android:name="g4line2">
+                        <path android:pathData="M37,51 L91,51"
+                            android:strokeColor="#5d6b7e"
+                            android:strokeWidth="4"
+                            android:strokeLineCap="round"
+                            android:strokeMiterLimit="10"/>
+                    </group>
+                    <group android:name="g5line1">
+                        <path android:pathData="M32,38 L96,38"
+                            android:strokeColor="#5d6b7e"
+                            android:strokeWidth="4"
+                            android:strokeLineCap="round"
+                            android:strokeMiterLimit="10"/>
+                    </group>
                 </group>
-                <group android:name="g2line4">
-                    <path android:pathData="M47,77 L81,77"
-                        android:strokeColor="#5d6b7e"
-                        android:strokeWidth="4"
-                        android:strokeLineCap="round"
-                        android:strokeMiterLimit="10"/>
-                </group>
-                <group android:name="g3line3">
-                    <path android:pathData="M42,64 L87,64"
-                        android:strokeColor="#5d6b7e"
-                        android:strokeWidth="4"
-                        android:strokeLineCap="round"
-                        android:strokeMiterLimit="10"/>
-                </group>
-                <group android:name="g4line2">
-                    <path android:pathData="M37,51 L91,51"
-                        android:strokeColor="#5d6b7e"
-                        android:strokeWidth="4"
-                        android:strokeLineCap="round"
-                        android:strokeMiterLimit="10"/>
-                </group>
-                <group android:name="g5line1">
-                    <path android:pathData="M32,38 L96,38"
-                        android:strokeColor="#5d6b7e"
-                        android:strokeWidth="4"
-                        android:strokeLineCap="round"
-                        android:strokeMiterLimit="10"/>
-                </group>
+                <path android:pathData="M89.402,68.5 C90.557,66.5,93.443,66.5,94.598,68.5 L106.722,89.5 C107.877,91.5,106.434,94,104.124,94 L79.876,94 C77.566,94,76.123,91.5,77.278,89.5 Z"
+                    android:name="g6p"
+                    android:fillColor="#1a2232"/>
+                <path android:pathData="M92.758,84.59 L91.264,84.59 L90.418,79.568 L90.418,76.184 L93.586,76.184 L93.586,79.568 Z M93.604,89 L90.4,89 L90.4,85.994 L93.604,85.994 Z"
+                    android:name="g7p"
+                    android:fillColor="#fff"/>
             </group>
-            <path android:pathData="M89.402,68.5 C90.557,66.5,93.443,66.5,94.598,68.5 L106.722,89.5 C107.877,91.5,106.434,94,104.124,94 L79.876,94 C77.566,94,76.123,91.5,77.278,89.5 Z"
-                android:name="g6p"
-                android:fillColor="#1a2232"/>
-            <path android:pathData="M92.758,84.59 L91.264,84.59 L90.418,79.568 L90.418,76.184 L93.586,76.184 L93.586,79.568 Z M93.604,89 L90.4,89 L90.4,85.994 L93.604,85.994 Z"
-                android:name="g7p"
-                android:fillColor="#fff"/>
         </vector>
     </aapt:attr>
     <target android:name="g1line5">

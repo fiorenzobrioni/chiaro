@@ -7,10 +7,12 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <path android:pathData="M44.5,30 A2.5,2.5,0,0,1,46.867,33.303 C46.563,34.195,46,35.05,46,35.993 L46,96 L43,96 L43,35.993 C43,35.05,42.437,34.195,42.133,33.303 A2.5,2.5,0,0,1,44.5,30"
-                android:fillColor="#cbd5e1"/>
-    <path android:pathData="M53,32 L71,32 A3,3,0,0,1,74,35 L74,53 A3,3,0,0,1,71,56 L53,56 A3,3,0,0,1,50,53 L50,35 A3,3,0,0,1,53,32 Z"
-                android:fillColor="#f1f5f9"/>
-    <path android:pathData="M59,40 L65,40 A1,1,0,0,1,66,41 L66,47 A1,1,0,0,1,65,48 L59,48 A1,1,0,0,1,58,47 L58,41 A1,1,0,0,1,59,40 Z"
-                android:fillColor="#000"/>
+    <group android:name="mc3scale" android:scaleX="1.7067" android:scaleY="1.7067" android:pivotX="64" android:pivotY="64">
+        <path android:pathData="M44.5,30 A2.5,2.5,0,0,1,46.867,33.303 C46.563,34.195,46,35.05,46,35.993 L46,96 L43,96 L43,35.993 C43,35.05,42.437,34.195,42.133,33.303 A2.5,2.5,0,0,1,44.5,30"
+                    android:fillColor="#cbd5e1"/>
+        <path android:pathData="M53,32 L71,32 A3,3,0,0,1,74,35 L74,53 A3,3,0,0,1,71,56 L53,56 A3,3,0,0,1,50,53 L50,35 A3,3,0,0,1,53,32 Z"
+                    android:fillColor="#f1f5f9"/>
+        <path android:pathData="M59,40 L65,40 A1,1,0,0,1,66,41 L66,47 A1,1,0,0,1,65,48 L59,48 A1,1,0,0,1,58,47 L58,41 A1,1,0,0,1,59,40 Z"
+                    android:fillColor="#000"/>
+    </group>
 </vector>

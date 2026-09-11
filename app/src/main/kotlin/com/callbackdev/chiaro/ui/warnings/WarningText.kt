@@ -12,6 +12,7 @@ import com.callbackdev.chiaro.domain.warnings.WarningZone
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.VerdictColors
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
@@ -124,6 +125,45 @@ object WarningText {
             hasToday -> context.getString(R.string.notif_warning_today)
             // A bulletin starting after tomorrow does not exist; the date is the honest fallback.
             else -> days.first().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+        }
+    }
+
+    /**
+     * **When the bulletin was issued**, as a phrase that carries its own preposition:
+     * «delle 15:07», «di ieri alle 15:07», «del 10 set 2026 alle 15:07».
+     *
+     * The hour alone was what every surface printed until 11 set 2026, and on a device
+     * it lied by omission: a banner read at 12:33 said «bollettino delle 15:07» for a
+     * bulletin issued the afternoon BEFORE — an hour still to come that day, so the one
+     * reading that could be ruled out was the true one. The Dipartimento publishes in the
+     * afternoon and the bulletin covers the next day too, so a reader meets yesterday's
+     * bulletin every morning: this is the normal case, not the edge one.
+     *
+     * The rule is the reader's own (committente): **the day only when it is not today.**
+     * A date beside every hour would be noise on the surface that carries the warning
+     * itself, and today's hour is unambiguous the moment the day is the reader's own.
+     *
+     * [today] is the ISSUER's day, the same one [days] compares against, so a phone
+     * abroad does not turn an Italian bulletin into yesterday's.
+     */
+    fun issued(
+        context: Context,
+        issuedAt: LocalDateTime,
+        today: LocalDate,
+        timeFmt: DateTimeFormatter
+    ): String {
+        val day = issuedAt.toLocalDate()
+        val time = issuedAt.toLocalTime().format(timeFmt)
+        return when (day) {
+            today -> context.getString(R.string.warning_issued_time, time)
+            today.minusDays(1) -> context.getString(R.string.warning_issued_yesterday, time)
+            // Anything else, the date says it — a bulletin dated ahead of the reader's
+            // day included, which is a clock disagreeing and is better shown than hidden.
+            else -> context.getString(
+                R.string.warning_issued_dated,
+                day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)),
+                time
+            )
         }
     }
 

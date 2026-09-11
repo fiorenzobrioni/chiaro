@@ -314,6 +314,7 @@ private fun EntryRow(
     // down the right edge is what makes it scannable. The outcome line has no hour —
     // it is about the day.
     val time = entry.at.atZone(zone).format(timeFmt)
+    val context = LocalContext.current
     when (entry) {
         is JournalEntry.ForecastShift -> {
             val details = JournalText.shiftDetails(entry.shifts, units, locale)
@@ -407,8 +408,15 @@ private fun EntryRow(
                     warningDay(entry.day, zone)
                 )
             },
+            // Il giorno del bollettino solo quando non e' quello della riga: una voce
+            // del diario sta gia' sotto la sua data, quindi «delle 15:07» li' vuol dire
+            // quel giorno — a meno che il bollettino non sia di prima, ed e' il caso che
+            // l'ora da sola sbagliava (11 set 2026).
             supporting = entry.issuedAt?.let {
-                stringResource(R.string.journal_warning_source, it.toLocalTime().format(timeFmt))
+                stringResource(
+                    R.string.journal_warning_source,
+                    WarningText.issued(context, it, entry.at.atZone(zone).toLocalDate(), timeFmt)
+                )
             },
             time = time
         )

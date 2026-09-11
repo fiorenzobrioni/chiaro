@@ -7,14 +7,16 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <path android:pathData="M44,39 L68,39 A6,6,0,0,1,74,45 L74,83 A6,6,0,0,1,68,89 L44,89 A6,6,0,0,1,38,83 L38,45 A6,6,0,0,1,44,39 Z"
-                android:fillColor="#1a2333"/>
-    <path android:pathData="M56.5,39 L56.5,54.5 L74,54.5 L74,55.5 L56.5,55.5 L56.5,71.5 L74,71.5 L74,72.5 L56.5,72.5 L56.5,89 L55.5,89 L55.5,72.5 L38,72.5 L38,71.5 L55.5,71.5 L55.5,55.5 L38,55.5 L38,54.5 L55.5,54.5 L55.5,39 Z"
-                android:fillColor="#1d3362"/>
-    <path android:pathData="M87,89 L83,89 A3,3,0,0,1,80.004,86.154 L80,86 L80,82 A3,3,0,0,1,83,79 L87,79 L87.154,79.004 A3,3,0,0,1,90,82 L90,86 L89.996,86.154 A3,3,0,0,1,87.154,88.996 Z"
-                android:name="g1p"
-                android:fillColor="#a06f00"/>
-    <path android:pathData="M87,76 L83,76 A3,3,0,0,1,80.004,73.154 L80,73 L80,69 A3,3,0,0,1,83,66 L87,66 L87.154,66.004 A3,3,0,0,1,90,69 L90,73 L89.996,73.154 A3,3,0,0,1,87.154,75.996 Z"
-                android:name="g2p"
-                android:fillColor="#a06f00"/>
+    <group android:name="mc3scale" android:scaleX="1.7321" android:scaleY="1.7321" android:pivotX="64" android:pivotY="64">
+        <path android:pathData="M44,39 L68,39 A6,6,0,0,1,74,45 L74,83 A6,6,0,0,1,68,89 L44,89 A6,6,0,0,1,38,83 L38,45 A6,6,0,0,1,44,39 Z"
+                    android:fillColor="#1a2333"/>
+        <path android:pathData="M56.5,39 L56.5,54.5 L74,54.5 L74,55.5 L56.5,55.5 L56.5,71.5 L74,71.5 L74,72.5 L56.5,72.5 L56.5,89 L55.5,89 L55.5,72.5 L38,72.5 L38,71.5 L55.5,71.5 L55.5,55.5 L38,55.5 L38,54.5 L55.5,54.5 L55.5,39 Z"
+                    android:fillColor="#1d3362"/>
+        <path android:pathData="M87,89 L83,89 A3,3,0,0,1,80.004,86.154 L80,86 L80,82 A3,3,0,0,1,83,79 L87,79 L87.154,79.004 A3,3,0,0,1,90,82 L90,86 L89.996,86.154 A3,3,0,0,1,87.154,88.996 Z"
+                    android:name="g1p"
+                    android:fillColor="#a06f00"/>
+        <path android:pathData="M87,76 L83,76 A3,3,0,0,1,80.004,73.154 L80,73 L80,69 A3,3,0,0,1,83,66 L87,66 L87.154,66.004 A3,3,0,0,1,90,69 L90,73 L89.996,73.154 A3,3,0,0,1,87.154,75.996 Z"
+                    android:name="g2p"
+                    android:fillColor="#a06f00"/>
+    </group>
 </vector>

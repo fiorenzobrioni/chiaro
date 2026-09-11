@@ -858,6 +858,18 @@ highest level over the days still ahead is at least yellow and the bulletin has 
 expired; green is not announced here at all (§1.1), it is answered in Avvisi where somebody
 came to ask.
 
+**When the bulletin was issued says its day only when that day is not today**
+(`WarningText.issued`, committente 11 set 2026): "bollettino delle 15:07", "bollettino di
+ieri alle 15:07", "bollettino del 10 set 2026 alle 15:07". The hour alone was what every
+surface printed, and it lied by omission on the most ordinary reading there is: the
+Dipartimento publishes in the afternoon for today **and tomorrow**, so a reader who opens
+the app in the morning is looking at yesterday's bulletin — and a banner read at 12:33
+saying "delle 15:07" named an hour that had not happened yet that day. One phrase, four
+surfaces: the banner, Avvisi's quiet card, the notification, the Journal's warning line
+(which compares against its own entry's day, not the reader's). **The sheet is the
+exception and always carries the full date**, because it is the provenance surface and
+the attribution the licence asks for should not depend on when it is read.
+
 `ic_warning` is **a drawing, never the character ⚠**, at the verdict marks' own 2.4 stroke
 in a 24 box, for the reason those exist: the character is not in the app's face and the
 phone draws it from whatever fallback it has. It is the mark of one category everywhere it
@@ -1270,20 +1282,62 @@ a valid animator and only a person can say the rain falls downward.
    at something and is not. It ships ungraded, and the band stays where it reads, in
    «Nella norma».
 
-   **The illustrator's box is never touched** (committente, 11 set 2026). Meteocons does
-   not draw every icon at the same size inside its 128-unit square, and at a single dp rung
-   that shows: measured across the sky family, the ink spans from **38%** of the box
-   (`fog-night`) to **73%** (`clear-day`), a 1.96× range, which at the strip's 42dp is
-   15.8dp of drawing against 30.8dp.
+   **The window is the illustrator's; the size inside it is the app's** (committente,
+   11 set 2026, reversing his own rule of that morning). Meteocons does not draw every
+   icon at the same size inside its 128-unit square, and at a single dp rung that shows:
+   measured over the whole shipping list, the ink spanned from **33%** of the box
+   (`smoke-particles`) to **81%** (`uv-index-11-plus`), a **2.48×** range — 11.2dp of
+   drawing against 27.6dp at the agenda's 34dp.
 
-   That range is the drawing, not the conversion — the source-difference check
-   (`tools/diff_against_source.py`) finds no geometric difference on any of them. So it is
-   kept: **every icon is imported in the window the illustrator drew it in, at size 1, with
-   no crop and no per-icon scale.** A crop existed for the pollen family for half a day, to
-   undo a measured shrink against the `dust` stand-in it replaced (0.53 of the box where
-   `dust` filled 0.76); it is gone, and the machinery with it. One rule with no exceptions
-   is worth more than the evenness it bought, because an exception is a thing to remember
-   and this section is already long.
+   That range is the drawing, not the conversion: `tools/icon_ink.py --confronto` measures
+   the ink box on the source SVG and on the generated drawable and finds **519 icons × 2
+   styles, 0 out of tolerance**. It is kept where it is honest and removed where it is not.
+   The window is still never cropped and the `viewBox` still comes over untouched; what the
+   importer adds is one wrapper group, `mc3scale`. **What it equalises is the geometric mean
+   of the two ink sides, taken to 0.69**, under a ceiling that keeps the longer side at or
+   under 0.88 and a second that keeps the ink inside the box.
+
+   **The mean and not the longer side**, and the reason is the half-day the first version
+   lasted (committente, from a device, 11 set 2026). Normalising `max(w, h)` to 0.75 is the
+   textbook rule and it has a defect that only shows on a screen: inside a square box a
+   square drawing reaches the target **in height as well**, a flat one reaches it in width
+   and stays 0.43 tall. So the moons came out big and the clouds, the meteor shower and the
+   rainbow came out low — the same complaint the normalisation was meant to end, moved to a
+   different pair of icons. The geometric mean reads the two sides together: it takes the
+   square drawings down and the flat ones up until they meet. Measured over the shipping
+   list, it lands between **0.49 and 0.69** (1.41×) where the source spanned 2.48×, with the
+   width between 0.37 and 0.88 and the height between 0.27 and 0.88.
+
+   Four things about the rule, each of which was a decision:
+
+   - **One scale per drawing, not per style.** It is measured on the union of `line` and
+     `flat`, because an icon that changed size when the reader changes style in Settings
+     would be the opposite of what the scale is for.
+   - **A ceiling on extent, 0.88.** The mean alone pushes a very flat drawing almost to the
+     edge of its box (`rainbow` measured 0.97 wide). It binds 7 of the 79 shipped icons; the
+     mean decides the other 72.
+   - **The pivot is the centre of the box, not the centre of the ink.** Re-centring would
+     move the compositions that are deliberately off-centre (`sunrise` sits low because the
+     sun comes up off a line) and would shift the optical centring the hour strip was tuned
+     on. The third constraint — nothing leaves the box — is what makes that safe, and with
+     the mean in charge it binds nothing.
+   - **The pen scales with the drawing.** Half of the `line` family draws its outlines as
+     filled `evenOdd` rings rather than strokes, and a ring cannot be thinned back;
+     compensating the strokes and not the rings would make the family uneven in place of the
+     icons. So the whole drawing is zoomed, brush included, and the cost is declared: at the
+     shipping list's largest scale (`smoke-particles`, 2.27×) the line is more than twice
+     `clear-day`'s, which sits at 0.92.
+
+   **What no size rule can fix**, and the measurement that settles it: a rule based on ink
+   *mass* rather than extent was tried first and is unusable, because the eight moon phases
+   are one geometry with eleven times the mass between them (`moon-new` covers 1.71% of its
+   box, `moon-full` 19.70%) — normalising on mass would ship a new moon 3.4× the size of a
+   full one. And extent cannot reach inside a composition: Meteocons shrinks the moon when
+   the drawing holds anything else, in three clean steps — **0.50 of the box alone, 0.34
+   with two or three companions (`falling-stars`, `starry-night`), 0.20 behind a cloud** —
+   so the moon of a meteor shower stays smaller than the moon that is the whole icon. That
+   is a composition choice of the illustrator's, it survives the normalisation, and the only
+   lever on it is which drawing a screen asks for.
 
    **What the reader actually notices is weight, not extent**, and that is worth recording
    because it sends any future attempt to the right place. The moon fills 0.47 of its box

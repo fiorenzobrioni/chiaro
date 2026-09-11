@@ -7,10 +7,12 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <path android:pathData="M55,83 A9,9,0,1,1,73,83 A9,9,0,1,1,55,83 Z"
-                android:fillColor="#9e000c"/>
-    <group android:name="g1value">
-        <path android:pathData="M64,50 L64,50 A3,3,0,0,1,67,53 L67,76 A3,3,0,0,1,64,79 L64,79 A3,3,0,0,1,61,76 L61,53 A3,3,0,0,1,64,50 Z"
+    <group android:name="mc3scale" android:scaleX="2.2857" android:scaleY="2.2857" android:pivotX="64" android:pivotY="64">
+        <path android:pathData="M55,83 A9,9,0,1,1,73,83 A9,9,0,1,1,55,83 Z"
                     android:fillColor="#9e000c"/>
+        <group android:name="g1value">
+            <path android:pathData="M64,50 L64,50 A3,3,0,0,1,67,53 L67,76 A3,3,0,0,1,64,79 L64,79 A3,3,0,0,1,61,76 L61,53 A3,3,0,0,1,64,50 Z"
+                        android:fillColor="#9e000c"/>
+        </group>
     </group>
 </vector>

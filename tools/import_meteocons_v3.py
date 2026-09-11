@@ -33,6 +33,14 @@ quella spedita. Le differenze che contano, e perche':
    scelta fatta qui: si generano entrambi e si decide guardando. Questo e' il motivo
    per cui i nomi portano `mc3`: non sono ancora i set spediti.
 
+4b. **La taglia no** (11 set 2026, decisione del committente che rovescia la sua del
+   mattino). Meteocons disegna ogni icona alla taglia che le serve — dal 33% della
+   scatola all'81% — e incolonnate nel Cielo quelle differenze si leggono come un
+   difetto dell'app. Ogni drawable spedito esce quindi avvolto in un gruppo che porta la
+   **media geometrica** dei due lati del suo inchiostro a 0,69, sotto un tetto
+   sull'ingombro: [with_scale], su misure di `tools/icon_ink.py`. La finestra resta
+   quella dell'illustratore, il disegno dentro no.
+
 5. **Gli `interpolator`.** v2 era tutta lineare; v3 usa `calcMode="spline"` con
    `keySplines`, che e' esattamente un `<pathInterpolator>`. Se ne genera uno per ogni
    coppia di controlli distinta, in `res/interpolator/`.
@@ -69,6 +77,7 @@ def _load(name, path):
 paths = _load("svg_paths", HERE / "svg_paths.py")
 reanchor = _load("reanchor", HERE / "reanchor.py")
 shipped = _load("shipped_icons", HERE / "shipped_icons.py")
+ink = _load("icon_ink", HERE / "icon_ink.py")
 #: La fase negativa e la rotazione dei keyframe NON sono novita' di v3: le ha risolte
 #: l'importatore della v2 e le sue funzioni valgono qui identiche. Riusarle e' anche la
 #: prova che il passaggio alla v3 e' un trasloco, non una riscrittura.
@@ -659,17 +668,62 @@ def _masked_group(el, mask, em, out, depth, gradients, notes, alpha):
             em.animate(hold, axis, [-v for v in col], dur, interp, phase, times)
 
 
+# ------------------------------------------------------------------- la scala
+
+def with_scale(xml: str, k: float, vw: float, vh: float) -> str:
+    """Lo stesso disegno, portato alla taglia comune: un `<group>` che scala tutto
+    attorno al centro della scatola.
+
+    **Questa e' la sola cosa che il repo aggiunge al disegno dell'illustratore**, ed e'
+    una decisione del committente dell'11 set 2026 che rovescia quella del mattino («la
+    scatola e' quella dell'illustratore, senza eccezioni»): Meteocons disegna ogni icona
+    alla taglia che le serve, dal 33% della scatola (`smoke-particles`) all'81%
+    (`uv-index-11-plus`), e incolonnate a 34 dp nel Cielo quelle differenze si leggono
+    come un difetto dell'app. La scala la decide [icon_ink.scale_of] — la media
+    geometrica dei due lati dell'inchiostro a 0,69, con un tetto sull'ingombro — misurata
+    sull'unione degli stili perche' cambiare stile non deve cambiare taglia.
+
+    La prima versione normalizzava il **lato piu' lungo** ed e' durata mezza giornata: in
+    una scatola quadrata un disegno quadrato arriva alla misura anche in altezza e uno
+    piatto no, quindi le lune uscivano grandi e le nuvole basse. La media geometrica e'
+    la correzione, verificata sul dispositivo.
+
+    **Il tratto si scala col disegno**, e non e' una svista: meta' della famiglia `line`
+    disegna i contorni come anelli riempiti `evenOdd`, non come tratti, e quelli non si
+    possono compensare. Compensare gli uni e non gli altri renderebbe la famiglia
+    disuniforme al posto delle icone; qui si zooma il disegno intero, pennello compreso.
+    Il prezzo, misurato: alla scala massima della lista di spedizione (`smoke-particles`,
+    2,29x) la linea e' piu' del doppio di quella di `clear-day`, che resta a 1,00.
+    """
+    if abs(k - 1.0) < 5e-4:
+        return xml
+    lines = xml.split(NL)
+    open_at = next(i for i, l in enumerate(lines) if "android:viewportHeight=" in l)
+    close_at = len(lines) - 1 - next(
+        i for i, l in enumerate(reversed(lines)) if l.strip() == "</vector>")
+    pad = " " * (len(lines[close_at]) - len(lines[close_at].lstrip()) + 4)
+    body = [("    " + l if l.strip() else l) for l in lines[open_at + 1:close_at]]
+    group = (f'{pad}<group android:name="mc3scale"'
+             f' android:scaleX="{fmt(k)}" android:scaleY="{fmt(k)}"'
+             f' android:pivotX="{fmt(vw / 2)}" android:pivotY="{fmt(vh / 2)}">')
+    return NL.join(lines[:open_at + 1] + [group] + body + [f"{pad}</group>"]
+                   + lines[close_at:])
+
+
 # ------------------------------------------------------------------------ file
 
 def convert(svg_path: pathlib.Path, drop=()):
-    """Un SVG -> (xml statico, xml animato o None, note, interpolatori).
+    """Un SVG -> (xml statico, xml animato o None, note, interpolatori, viewBox).
 
-    Con [drop] si lasciano indietro dei gruppi per nome. **La finestra invece non si
-    tocca mai**: ogni icona esce nella scatola in cui l'illustratore l'ha disegnata, e le
-    differenze di taglia che ne risultano sono sue (decisione del committente, 11 set
-    2026). Un ritaglio per una sola famiglia c'e' stato per mezza giornata e non c'e' piu':
-    era un'eccezione da ricordare, e la regola senza eccezioni vale di piu' del pareggio
-    che comprava.
+    Con [drop] si lasciano indietro dei gruppi per nome. **La finestra non si tocca mai**:
+    ogni icona esce nella scatola in cui l'illustratore l'ha disegnata, senza ritagli, e
+    il `viewBox` di qui e' il `viewBox` di la'. Un ritaglio per una sola famiglia c'e'
+    stato per mezza giornata e non c'e' piu': era un'eccezione da ricordare.
+
+    Quel che **cambia** e' la taglia del disegno DENTRO quella finestra, e non succede
+    qui: [with_scale] avvolge il risultato in un gruppo che porta ogni icona allo stesso
+    lato d'inchiostro. E' un passo separato apposta, perche' cosi' il set `--original`
+    (il riferimento con cui `diff_against_source.py` prova la fedelta') puo' uscire senza.
     """
     root = ET.parse(svg_path).getroot()
     vb = [float(v) for v in root.get("viewBox").split()]
@@ -723,7 +777,7 @@ def convert(svg_path: pathlib.Path, drop=()):
             NL.join(em_anim.targets),
             "</animated-vector>",
         ]) + NL
-    return static, animated, notes, em.interpolators
+    return static, animated, notes, em.interpolators, (vb[2], vb[3])
 
 
 def write_kotlin(emitted: set) -> int:
@@ -836,6 +890,11 @@ def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     INTERPOLATORS.mkdir(parents=True, exist_ok=True)
 
+    # Le scale si misurano **una volta**, sull'unione degli stili: un'icona ha una
+    # taglia sola, e leggerla per stile la farebbe cambiare quando il lettore cambia
+    # stile in Impostazioni.
+    scale_of = ink.scales(src)
+
     all_interps: set = set()
     emitted: set = set()
     report: dict[str, list] = collections.defaultdict(list)
@@ -863,7 +922,8 @@ def main() -> int:
             stem = svg.stem
             name = stem.replace("-", "_")
             try:
-                static, animated, notes, interps = convert(svg, DROP_GROUPS.get(stem, ()))
+                static, animated, notes, interps, vb = convert(
+                    svg, DROP_GROUPS.get(stem, ()))
             except Unsupported as e:
                 report[str(e)].append(f"{style}/{stem}")
                 counts[style + ":saltate"] += 1
@@ -872,19 +932,24 @@ def main() -> int:
                 report[f"ERRORE {type(e).__name__}: {e}"].append(f"{style}/{stem}")
                 counts[style + ":saltate"] += 1
                 continue
+            k = scale_of.get(stem, 1.0)
+            sized = with_scale(static, k, *vb)
+            sized_anim = with_scale(animated, k, *vb) if animated else None
             for ground in ("light", "dark"):
                 stat_p, anim_p = PREFIXES[(style, ground)]
                 (OUT / f"{stat_p}{name}.xml").write_text(
-                    recolor(static, maps[ground]), encoding="utf8")
-                if animated:
+                    recolor(sized, maps[ground]), encoding="utf8")
+                if sized_anim:
                     (OUT / f"{anim_p}{name}.xml").write_text(
-                        recolor(animated, maps[ground]), encoding="utf8")
+                        recolor(sized_anim, maps[ground]), encoding="utf8")
             if keep_original and style in ORIGINAL:
                 stat_p, anim_p = ORIGINAL[style]
                 (OUT / f"{stat_p}{name}.xml").write_text(static, encoding="utf8")
                 if animated:
                     (OUT / f"{anim_p}{name}.xml").write_text(animated, encoding="utf8")
             counts[style + ":statiche"] += 1
+            if abs(k - 1.0) >= 5e-4:
+                counts[style + ":riportate a misura"] += 1
             if style == "line":
                 emitted.add(name)
             if animated:

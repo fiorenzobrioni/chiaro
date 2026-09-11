@@ -7,26 +7,28 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <group>
-        <clip-path android:pathData="M69.65,34 L35,34 L35,94 L61.466,94 A23.93,23.93,0,0,1,51,74.175 C51,67.768,53.242,61.544,56.76,54.875 C60.575,47.646,65.096,40.801,69.65,34"/>
-        <group android:translateX="54.5" android:translateY="64.8">
-            <group android:name="g1g">
-                <group android:translateX="-54.5" android:translateY="-64.8">
-                    <path android:pathData="M54.501,37.635 C59.691,45.495,63.916,51.938,66.933,57.655 C70.259,63.962,72,69.172,72,74.175 C72,84.052,64.138,92,54.5,92 C44.864,92,37,84.028,37,74.175 C37,69.185,38.74,63.981,42.067,57.674 C45.084,51.955,49.309,45.506,54.501,37.634 Z"
+    <group android:name="mc3scale" android:scaleX="1.4844" android:scaleY="1.4844" android:pivotX="64" android:pivotY="64">
+        <group>
+            <clip-path android:pathData="M69.65,34 L35,34 L35,94 L61.466,94 A23.93,23.93,0,0,1,51,74.175 C51,67.768,53.242,61.544,56.76,54.875 C60.575,47.646,65.096,40.801,69.65,34"/>
+            <group android:translateX="54.5" android:translateY="64.8">
+                <group android:name="g1g">
+                    <group android:translateX="-54.5" android:translateY="-64.8">
+                        <path android:pathData="M54.501,37.635 C59.691,45.495,63.916,51.938,66.933,57.655 C70.259,63.962,72,69.172,72,74.175 C72,84.052,64.138,92,54.5,92 C44.864,92,37,84.028,37,74.175 C37,69.185,38.74,63.981,42.067,57.674 C45.084,51.955,49.309,45.506,54.501,37.634 Z"
+                                    android:strokeColor="#5a8cff"
+                                    android:strokeWidth="4"
+                                    android:strokeMiterLimit="10"/>
+                    </group>
+                </group>
+            </group>
+        </group>
+        <group android:translateX="74.5" android:translateY="64.8">
+            <group android:name="g2g">
+                <group android:translateX="-74.5" android:translateY="-64.8">
+                    <path android:pathData="M74.501,37.635 C79.691,45.495,83.916,51.938,86.933,57.655 C90.259,63.962,92,69.172,92,74.175 C92,84.052,84.138,92,74.5,92 C64.864,92,57,84.028,57,74.175 C57,69.185,58.74,63.981,62.067,57.674 C65.084,51.955,69.309,45.506,74.501,37.634 Z"
                                 android:strokeColor="#5a8cff"
                                 android:strokeWidth="4"
                                 android:strokeMiterLimit="10"/>
                 </group>
-            </group>
-        </group>
-    </group>
-    <group android:translateX="74.5" android:translateY="64.8">
-        <group android:name="g2g">
-            <group android:translateX="-74.5" android:translateY="-64.8">
-                <path android:pathData="M74.501,37.635 C79.691,45.495,83.916,51.938,86.933,57.655 C90.259,63.962,92,69.172,92,74.175 C92,84.052,84.138,92,74.5,92 C64.864,92,57,84.028,57,74.175 C57,69.185,58.74,63.981,62.067,57.674 C65.084,51.955,69.309,45.506,74.501,37.634 Z"
-                            android:strokeColor="#5a8cff"
-                            android:strokeWidth="4"
-                            android:strokeMiterLimit="10"/>
             </group>
         </group>
     </group>

@@ -7,25 +7,27 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <group android:name="g1line3">
-        <path android:pathData="M34,50 L94,50"
-                    android:strokeColor="#848c96"
-                    android:strokeWidth="4"
-                    android:strokeLineCap="round"
-                    android:strokeMiterLimit="10"/>
-    </group>
-    <group android:name="g2line2">
-        <path android:pathData="M34,64 L94,64"
-                    android:strokeColor="#848c96"
-                    android:strokeWidth="4"
-                    android:strokeLineCap="round"
-                    android:strokeMiterLimit="10"/>
-    </group>
-    <group android:name="g3line1">
-        <path android:pathData="M34,78 L94,78"
-                    android:strokeColor="#848c96"
-                    android:strokeWidth="4"
-                    android:strokeLineCap="round"
-                    android:strokeMiterLimit="10"/>
+    <group android:name="mc3scale" android:scaleX="1.76" android:scaleY="1.76" android:pivotX="64" android:pivotY="64">
+        <group android:name="g1line3">
+            <path android:pathData="M34,50 L94,50"
+                        android:strokeColor="#848c96"
+                        android:strokeWidth="4"
+                        android:strokeLineCap="round"
+                        android:strokeMiterLimit="10"/>
+        </group>
+        <group android:name="g2line2">
+            <path android:pathData="M34,64 L94,64"
+                        android:strokeColor="#848c96"
+                        android:strokeWidth="4"
+                        android:strokeLineCap="round"
+                        android:strokeMiterLimit="10"/>
+        </group>
+        <group android:name="g3line1">
+            <path android:pathData="M34,78 L94,78"
+                        android:strokeColor="#848c96"
+                        android:strokeWidth="4"
+                        android:strokeLineCap="round"
+                        android:strokeMiterLimit="10"/>
+        </group>
     </group>
 </vector>

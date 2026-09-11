@@ -7,34 +7,36 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <group android:translateX="64" android:translateY="63">
-        <group android:name="g1g">
-            <group android:translateX="-64" android:translateY="-63">
-                <path android:pathData="M59.206,39.549 C61.308,35.809,66.692,35.809,68.794,39.549 L90.58,78.305 C92.641,81.971,89.992,86.5,85.786,86.5 L42.213,86.5 C38.007,86.5,35.358,81.97,37.419,78.305 Z"
-                            android:fillColor="#ff7064"
-                            android:strokeColor="#ff7064"
-                            android:strokeWidth="1"/>
+    <group android:name="mc3scale" android:scaleX="1.6628" android:scaleY="1.6628" android:pivotX="64" android:pivotY="64">
+        <group android:translateX="64" android:translateY="63">
+            <group android:name="g1g">
+                <group android:translateX="-64" android:translateY="-63">
+                    <path android:pathData="M59.206,39.549 C61.308,35.809,66.692,35.809,68.794,39.549 L90.58,78.305 C92.641,81.971,89.992,86.5,85.786,86.5 L42.213,86.5 C38.007,86.5,35.358,81.97,37.419,78.305 Z"
+                                android:fillColor="#ff7064"
+                                android:strokeColor="#ff7064"
+                                android:strokeWidth="1"/>
+                </group>
             </group>
         </group>
-    </group>
-    <group>
-        <clip-path android:pathData="M62.251,43.03 C63.014,41.657,64.986,41.657,65.749,43.03 L85.744,79.019 C86.487,80.356,85.522,82,83.996,82 L44.004,82 C42.478,82,41.513,80.356,42.256,79.019 Z"/>
-        <path android:pathData="M42,42 L86,42 L86,82 L42,82 Z"
-                    android:fillColor="#f3f7fe"/>
-        <path android:pathData="M48,83 L87,67 L87,83 Z"
-                    android:fillColor="#4eca6f"/>
-        <group android:name="g2cube" android:pivotX="61.1" android:pivotY="71.1">
-            <path android:pathData="M56.033,70.56 A2,2,0,0,1,57.115,67.946 L61.735,66.033 A2,2,0,0,1,64.348,67.115 L66.261,71.735 A2,2,0,0,1,65.179,74.348 L60.559,76.261 A2,2,0,0,1,57.946,75.179 Z"
+        <group>
+            <clip-path android:pathData="M62.251,43.03 C63.014,41.657,64.986,41.657,65.749,43.03 L85.744,79.019 C86.487,80.356,85.522,82,83.996,82 L44.004,82 C42.478,82,41.513,80.356,42.256,79.019 Z"/>
+            <path android:pathData="M42,42 L86,42 L86,82 L42,82 Z"
+                        android:fillColor="#f3f7fe"/>
+            <path android:pathData="M48,83 L87,67 L87,83 Z"
+                        android:fillColor="#4eca6f"/>
+            <group android:name="g2cube" android:pivotX="61.1" android:pivotY="71.1">
+                <path android:pathData="M56.033,70.56 A2,2,0,0,1,57.115,67.946 L61.735,66.033 A2,2,0,0,1,64.348,67.115 L66.261,71.735 A2,2,0,0,1,65.179,74.348 L60.559,76.261 A2,2,0,0,1,57.946,75.179 Z"
+                            android:fillColor="#a8a29e"/>
+            </group>
+            <path android:pathData="M51,77.5 A1.5,1.5,0,1,1,54,77.5 A1.5,1.5,0,1,1,51,77.5 Z"
+                        android:name="g3p"
+                        android:fillColor="#a8a29e"/>
+            <path android:pathData="M72,70.5 A1.5,1.5,0,1,1,75,70.5 A1.5,1.5,0,1,1,72,70.5 Z"
+                        android:name="g4p"
+                        android:fillColor="#a8a29e"/>
+            <path android:pathData="M70.037,66.186 A1,1,0,0,1,70.578,64.879 L74.274,63.349 A1,1,0,0,1,75.58,63.89 L75.963,64.814 A1,1,0,0,1,75.422,66.12 L71.726,67.651 A1,1,0,0,1,70.42,67.11 Z"
+                        android:name="g5p"
                         android:fillColor="#a8a29e"/>
         </group>
-        <path android:pathData="M51,77.5 A1.5,1.5,0,1,1,54,77.5 A1.5,1.5,0,1,1,51,77.5 Z"
-                    android:name="g3p"
-                    android:fillColor="#a8a29e"/>
-        <path android:pathData="M72,70.5 A1.5,1.5,0,1,1,75,70.5 A1.5,1.5,0,1,1,72,70.5 Z"
-                    android:name="g4p"
-                    android:fillColor="#a8a29e"/>
-        <path android:pathData="M70.037,66.186 A1,1,0,0,1,70.578,64.879 L74.274,63.349 A1,1,0,0,1,75.58,63.89 L75.963,64.814 A1,1,0,0,1,75.422,66.12 L71.726,67.651 A1,1,0,0,1,70.42,67.11 Z"
-                    android:name="g5p"
-                    android:fillColor="#a8a29e"/>
     </group>
 </vector>

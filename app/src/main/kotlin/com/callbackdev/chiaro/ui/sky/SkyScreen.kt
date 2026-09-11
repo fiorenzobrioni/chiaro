@@ -505,7 +505,7 @@ private fun MomentRow(
                 imageVector = momentIcon(moment),
                 contentDescription = null,
                 tint = Color.Unspecified,
-                modifier = Modifier.size(WeatherIconSize.Timeline)
+                modifier = Modifier.size(WeatherIconSize.Sky)
             )
         },
         headlineContent = { Text(text = name) },
@@ -554,7 +554,7 @@ private fun EventRow(
                 imageVector = eventIcon(event),
                 contentDescription = null,
                 tint = Color.Unspecified, // as in MomentRow: the family's own colors
-                modifier = Modifier.size(WeatherIconSize.Timeline)
+                modifier = Modifier.size(WeatherIconSize.Sky)
             )
         },
         headlineContent = { Text(name) },

@@ -10,25 +10,27 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <path android:pathData="M62,96 L62,64 L66,64 L66,96 Z"
-                android:fillColor="#cbd5e1"
-                android:fillType="evenOdd"/>
-            <group android:name="g1blades" android:pivotX="64" android:pivotY="61">
-                <path android:pathData="M64,34.5 C64.546,34.5,65.32,35.017,65.485,36.523 L67.478,54.658 C67.565,55.452,67.395,56.191,67.088,56.718 C66.777,57.25,66.372,57.5,65.991,57.5 L62.01,57.5 C61.63,57.5,61.224,57.25,60.913,56.718 C60.606,56.191,60.436,55.451,60.523,54.658 L62.516,36.523 C62.681,35.016,63.456,34.5,64.001,34.5 Z"
-                    android:fillColor="#f1f5f9"
-                    android:strokeColor="#f1f5f9"
-                    android:strokeWidth="1"/>
-                <path android:pathData="M86.95,74.25 C86.677,74.722,85.842,75.135,84.455,74.525 L67.753,67.182 C67.023,66.862,66.467,66.344,66.164,65.815 C65.859,65.28,65.845,64.804,66.035,64.475 L68.027,61.025 C68.217,60.696,68.636,60.47,69.252,60.467 C69.862,60.464,70.587,60.687,71.231,61.159 L85.941,71.952 C87.162,72.849,87.222,73.778,86.949,74.25 Z"
-                    android:fillColor="#f1f5f9"
-                    android:strokeColor="#f1f5f9"
-                    android:strokeWidth="1"/>
-                <path android:pathData="M41.05,74.25 C40.777,73.778,40.838,72.849,42.059,71.952 L56.769,61.159 C57.412,60.687,58.139,60.464,58.747,60.467 C59.364,60.47,59.783,60.697,59.973,61.026 L61.964,64.475 C62.154,64.804,62.141,65.28,61.835,65.815 C61.533,66.345,60.977,66.861,60.246,67.183 L43.544,74.525 C42.158,75.135,41.323,74.722,41.05,74.25 Z"
-                    android:fillColor="#f1f5f9"
-                    android:strokeColor="#f1f5f9"
-                    android:strokeWidth="1"/>
+            <group android:name="mc3scale" android:scaleX="1.6332" android:scaleY="1.6332" android:pivotX="64" android:pivotY="64">
+                <path android:pathData="M62,96 L62,64 L66,64 L66,96 Z"
+                    android:fillColor="#cbd5e1"
+                    android:fillType="evenOdd"/>
+                <group android:name="g1blades" android:pivotX="64" android:pivotY="61">
+                    <path android:pathData="M64,34.5 C64.546,34.5,65.32,35.017,65.485,36.523 L67.478,54.658 C67.565,55.452,67.395,56.191,67.088,56.718 C66.777,57.25,66.372,57.5,65.991,57.5 L62.01,57.5 C61.63,57.5,61.224,57.25,60.913,56.718 C60.606,56.191,60.436,55.451,60.523,54.658 L62.516,36.523 C62.681,35.016,63.456,34.5,64.001,34.5 Z"
+                        android:fillColor="#f1f5f9"
+                        android:strokeColor="#f1f5f9"
+                        android:strokeWidth="1"/>
+                    <path android:pathData="M86.95,74.25 C86.677,74.722,85.842,75.135,84.455,74.525 L67.753,67.182 C67.023,66.862,66.467,66.344,66.164,65.815 C65.859,65.28,65.845,64.804,66.035,64.475 L68.027,61.025 C68.217,60.696,68.636,60.47,69.252,60.467 C69.862,60.464,70.587,60.687,71.231,61.159 L85.941,71.952 C87.162,72.849,87.222,73.778,86.949,74.25 Z"
+                        android:fillColor="#f1f5f9"
+                        android:strokeColor="#f1f5f9"
+                        android:strokeWidth="1"/>
+                    <path android:pathData="M41.05,74.25 C40.777,73.778,40.838,72.849,42.059,71.952 L56.769,61.159 C57.412,60.687,58.139,60.464,58.747,60.467 C59.364,60.47,59.783,60.697,59.973,61.026 L61.964,64.475 C62.154,64.804,62.141,65.28,61.835,65.815 C61.533,66.345,60.977,66.861,60.246,67.183 L43.544,74.525 C42.158,75.135,41.323,74.722,41.05,74.25 Z"
+                        android:fillColor="#f1f5f9"
+                        android:strokeColor="#f1f5f9"
+                        android:strokeWidth="1"/>
+                </group>
+                <path android:pathData="M59,61 A5,5,0,1,1,69,61 A5,5,0,1,1,59,61 Z"
+                    android:fillColor="#e2e8f0"/>
             </group>
-            <path android:pathData="M59,61 A5,5,0,1,1,69,61 A5,5,0,1,1,59,61 Z"
-                android:fillColor="#e2e8f0"/>
         </vector>
     </aapt:attr>
     <target android:name="g1blades">

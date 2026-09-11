@@ -7,17 +7,19 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <path android:pathData="M37,92 L91,92"
-                android:strokeColor="#646e81"
-                android:strokeWidth="4"
-                android:strokeLineCap="round"/>
-    <group>
-        <clip-path android:pathData="M0,9 L128,9 L128,86 L0,86 Z"/>
-        <path android:pathData="M44,82 A20,20,0,1,1,84,82 A20,20,0,1,1,44,82 Z"
-                    android:fillColor="#ffc362"/>
-        <group android:name="g1rays" android:pivotX="64" android:pivotY="82">
-            <path android:pathData="M61,37 A3,3,0,1,1,67,37 L67,51 A3,3,0,0,1,61,51 Z M93.699,48.059 A3,3,0,1,1,97.941,52.302 L88.041,62.201 A3,3,0,1,1,83.799,57.958 Z M109,79 A3,3,0,1,1,109,85 L95,85 A3,3,0,1,1,95,79 Z M97.941,111.698 A3,3,0,0,1,93.698,115.941 L83.799,106.042 A3,3,0,0,1,88.042,101.799 Z M61,113 A3,3,0,1,1,67,113 L67,127 A3,3,0,1,1,61,127 Z M39.958,101.799 A3,3,0,1,1,44.201,106.042 L34.301,115.941 A3,3,0,1,1,30.059,111.698 Z M33,79 A3,3,0,1,1,33,85 L19,85 A3,3,0,0,1,19,79 Z M44.201,57.958 A3,3,0,1,1,39.958,62.201 L30.058,52.301 A3,3,0,1,1,34.301,48.059 Z"
+    <group android:name="mc3scale" android:scaleX="0.92" android:scaleY="0.92" android:pivotX="64" android:pivotY="64">
+        <path android:pathData="M37,92 L91,92"
+                    android:strokeColor="#646e81"
+                    android:strokeWidth="4"
+                    android:strokeLineCap="round"/>
+        <group>
+            <clip-path android:pathData="M0,9 L128,9 L128,86 L0,86 Z"/>
+            <path android:pathData="M44,82 A20,20,0,1,1,84,82 A20,20,0,1,1,44,82 Z"
                         android:fillColor="#ffc362"/>
+            <group android:name="g1rays" android:pivotX="64" android:pivotY="82">
+                <path android:pathData="M61,37 A3,3,0,1,1,67,37 L67,51 A3,3,0,0,1,61,51 Z M93.699,48.059 A3,3,0,1,1,97.941,52.302 L88.041,62.201 A3,3,0,1,1,83.799,57.958 Z M109,79 A3,3,0,1,1,109,85 L95,85 A3,3,0,1,1,95,79 Z M97.941,111.698 A3,3,0,0,1,93.698,115.941 L83.799,106.042 A3,3,0,0,1,88.042,101.799 Z M61,113 A3,3,0,1,1,67,113 L67,127 A3,3,0,1,1,61,127 Z M39.958,101.799 A3,3,0,1,1,44.201,106.042 L34.301,115.941 A3,3,0,1,1,30.059,111.698 Z M33,79 A3,3,0,1,1,33,85 L19,85 A3,3,0,0,1,19,79 Z M44.201,57.958 A3,3,0,1,1,39.958,62.201 L30.058,52.301 A3,3,0,1,1,34.301,48.059 Z"
+                            android:fillColor="#ffc362"/>
+            </group>
         </group>
     </group>
 </vector>

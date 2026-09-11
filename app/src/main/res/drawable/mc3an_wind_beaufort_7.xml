@@ -10,24 +10,26 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <path android:pathData="M87.79,40.135 C93.976,33.347,105,38.405,105,47.446 C105,53.275,100.522,58,95,58 L24,58"
-                android:name="g1p"
-                android:strokeColor="#e2e8f0"
-                android:strokeWidth="4"
-                android:strokeLineCap="round"
-                android:strokeMiterLimit="10"
-                android:trimPathStart="0"
-                android:trimPathEnd="0.4495"/>
-            <path android:pathData="M60.128,87.868 C66.42,94.518,78,89.872,78,80.556 C78,74.726,73.35,70,67.615,70 L24,70"
-                android:name="g2p"
-                android:strokeColor="#e2e8f0"
-                android:strokeWidth="4"
-                android:strokeLineCap="round"
-                android:strokeMiterLimit="10"
-                android:trimPathStart="0"
-                android:trimPathEnd="0.59"/>
-            <path android:pathData="M102.094,91 L98.512,91 Q98.512,88.57,99.682,85.852 A15.8,15.8,0,0,1,102.868,81.082 L96.55,81.082 L96.55,78.184 L106.45,78.184 L106.45,80.794 Q104.254,83.134,103.21,85.564 Q102.166,88.012,102.094,91"
-                android:fillColor="#636e81"/>
+            <group android:name="mc3scale" android:scaleX="1.2579" android:scaleY="1.2579" android:pivotX="64" android:pivotY="64">
+                <path android:pathData="M87.79,40.135 C93.976,33.347,105,38.405,105,47.446 C105,53.275,100.522,58,95,58 L24,58"
+                    android:name="g1p"
+                    android:strokeColor="#e2e8f0"
+                    android:strokeWidth="4"
+                    android:strokeLineCap="round"
+                    android:strokeMiterLimit="10"
+                    android:trimPathStart="0"
+                    android:trimPathEnd="0.4495"/>
+                <path android:pathData="M60.128,87.868 C66.42,94.518,78,89.872,78,80.556 C78,74.726,73.35,70,67.615,70 L24,70"
+                    android:name="g2p"
+                    android:strokeColor="#e2e8f0"
+                    android:strokeWidth="4"
+                    android:strokeLineCap="round"
+                    android:strokeMiterLimit="10"
+                    android:trimPathStart="0"
+                    android:trimPathEnd="0.59"/>
+                <path android:pathData="M102.094,91 L98.512,91 Q98.512,88.57,99.682,85.852 A15.8,15.8,0,0,1,102.868,81.082 L96.55,81.082 L96.55,78.184 L106.45,78.184 L106.45,80.794 Q104.254,83.134,103.21,85.564 Q102.166,88.012,102.094,91"
+                    android:fillColor="#636e81"/>
+            </group>
         </vector>
     </aapt:attr>
     <target android:name="g1p">
