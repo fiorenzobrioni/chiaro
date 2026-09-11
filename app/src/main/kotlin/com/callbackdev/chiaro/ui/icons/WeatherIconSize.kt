@@ -56,16 +56,25 @@ object WeatherIconSize {
 
     /**
      * Details grid: the label beside it keeps a measured budget (DESIGN.md §8.6) —
-     * `(360 − 32 − 12) / 2 − 32 − 42 = 84dp` on a 360dp screen (half the row minus the
-     * tile's padding minus the icon and the 8dp beside it), against the widest label
-     * the app ships ("Qualità aria", 76.7dp in Inter 14sp). 7.3dp of margin left, and
-     * that is where this rung stops: a fourth step would put the widest label on two
-     * lines at 360dp, which is the honest failure §10 chose for narrow screens and not
-     * one to buy on the reference width.
+     * `(360 − 32 − 12) / 2 − 32 − (icon + 8)` on a 360dp screen, which is half the row
+     * minus the tile's padding minus the icon and the 8dp beside it, so **the budget is
+     * `118 − icon`**. Against the widest label the app ships ("Qualità aria", 76.7dp in
+     * Inter 14sp) that puts the ceiling at **41.3dp**.
+     *
+     * **38dp since 11 set 2026** (committente, from a device: v3's drawings are worth
+     * looking at and were asking to be bigger). It leaves 80dp of label, 3.3dp of margin,
+     * and it is the last step with a margin worth the name: 40dp leaves 1.3dp and 42dp
+     * wraps. The note that used to stand here said a fourth step would wrap the label; the
+     * arithmetic above says one step fits, and the arithmetic is right.
+     *
+     * What it costs is the ladder's strict order: this rung now **equals** [Week] instead
+     * of sitting under it. The order it must keep is the reading order — the strip carries
+     * the most weight and still leads — and a tile label beside a week row is not a
+     * comparison a reader ever makes.
      *
      * The contract is a **360dp** contract and always was. Below that the labels wrap and
      * keep their words — the honest failure already chosen for them — and they did so at
-     * 320dp with the original 24dp icon too (74dp of budget against the same 76.7).
+     * 320dp with the original 24dp icon too.
      */
-    val Tile: Dp = 34.dp
+    val Tile: Dp = 38.dp
 }

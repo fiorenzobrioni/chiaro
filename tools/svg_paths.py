@@ -349,3 +349,81 @@ def trim_window(d: str, on: float, off: float):
     if total <= 0 or on >= total:
         return None
     return 0.0, min(1.0, on / total), total
+
+
+# ------------------------------------------------------- trasformazioni, cotte nel path
+
+def parse_transform(value: str):
+    """Un `transform` SVG -> la matrice affine `(a, b, c, d, e, f)`.
+
+    Serve per i `<clipPath>`: VectorDrawable non ha un `transform` sul `<clip-path>` e
+    metterlo sul gruppo lo applicherebbe **anche ai figli**, che e' il contrario di quel
+    che si vuole. Quindi si cuoce nelle coordinate.
+    """
+    import math
+    a, b, c, d, e, f = 1.0, 0.0, 0.0, 1.0, 0.0, 0.0
+
+    def mul(m, n):
+        return (m[0]*n[0] + m[2]*n[1], m[1]*n[0] + m[3]*n[1],
+                m[0]*n[2] + m[2]*n[3], m[1]*n[2] + m[3]*n[3],
+                m[0]*n[4] + m[2]*n[5] + m[4], m[1]*n[4] + m[3]*n[5] + m[5])
+
+    for fn, args in re.findall(r"(\w+)\s*\(([^)]*)\)", value):
+        v = [float(x) for x in args.replace(",", " ").split()]
+        if fn == "translate":
+            n = (1, 0, 0, 1, v[0], v[1] if len(v) > 1 else 0)
+        elif fn == "rotate":
+            t = math.radians(v[0])
+            cs, sn = math.cos(t), math.sin(t)
+            n = (cs, sn, -sn, cs, 0, 0)
+            if len(v) == 3:
+                n = mul(mul((1, 0, 0, 1, v[1], v[2]), n), (1, 0, 0, 1, -v[1], -v[2]))
+        elif fn == "scale":
+            sx = v[0]
+            sy = v[1] if len(v) > 1 else v[0]
+            n = (sx, 0, 0, sy, 0, 0)
+        elif fn == "matrix":
+            n = tuple(v)
+        else:
+            raise ValueError(f"transform {fn}() non gestito")
+        a, b, c, d, e, f = mul((a, b, c, d, e, f), n)
+    return a, b, c, d, e, f
+
+
+def transform_path(subs, m):
+    """Gli stessi sottopercorsi, in un altro sistema di riferimento.
+
+    Un arco resta un arco solo se la trasformazione e' **rigida** (rotazione, traslazione,
+    scala uniforme): i raggi si scalano, l'inclinazione ruota, il verso non cambia perche'
+    una rotazione non ribalta il piano. Una scala non uniforme cambierebbe l'ellisse e qui
+    si rifiuta invece di sbagliare in silenzio.
+    """
+    import math
+    a, b, c, d, e, f = m
+    det = a * d - b * c
+    sx = math.hypot(a, b)
+    sy = math.hypot(c, d)
+    rigid = abs(sx - sy) < 1e-6 and abs(a * c + b * d) < 1e-6
+    angle = math.degrees(math.atan2(b, a))
+
+    def pt(p):
+        return (a * p[0] + c * p[1] + e, b * p[0] + d * p[1] + f)
+
+    out = []
+    for start, segs, closed in subs:
+        new = []
+        for seg in segs:
+            if seg[0] == "L":
+                new.append(("L", pt(seg[1])))
+            elif seg[0] == "C":
+                new.append(("C", pt(seg[1]), pt(seg[2]), pt(seg[3])))
+            elif seg[0] == "Q":
+                new.append(("Q", pt(seg[1]), pt(seg[2])))
+            else:
+                _, rx, ry, rot, laf, sf, p = seg
+                if not rigid:
+                    raise ValueError("arco sotto una trasformazione non rigida")
+                new.append(("A", rx * sx, ry * sx, rot + angle, laf,
+                            sf if det > 0 else 1 - sf, pt(p)))
+        out.append([pt(start), new, closed])
+    return out

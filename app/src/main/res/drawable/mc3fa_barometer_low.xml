@@ -41,7 +41,7 @@
                 android:strokeWidth="2"
                 android:strokeLineCap="round"/>
             <group>
-                <clip-path android:pathData="M0,0 L10,0 L10,48 L0,48 Z"/>
+                <clip-path android:pathData="M50.565,84.5047 L43.4939,77.4336 L77.4351,43.4925 L84.5061,50.5636 Z"/>
                 <group android:name="g1pointer" android:pivotX="64" android:pivotY="64">
                     <group android:rotation="-135" android:pivotX="64" android:pivotY="64">
                         <path android:pathData="M59,64 A5,5,0,1,1,69,64 A5,5,0,1,1,59,64 Z"

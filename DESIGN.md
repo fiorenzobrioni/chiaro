@@ -1133,13 +1133,18 @@ a valid animator and only a person can say the rain falls downward.
    all.
 
    **The sizes are one ladder, `ui/icons/WeatherIconSize`** — hour strip **42dp**, week
-   row **38dp**, timeline row and metric tile **34dp** — and the move to v3 did not touch
-   them: the box went 64 → 128 but that is `viewportWidth`, and a dp is a dp. The
+   row **38dp**, metric tile **38dp** since 11 set 2026, timeline row **34dp** — and the
+   move to v3 did not touch them: the box went 64 → 128 but that is `viewportWidth`, and a dp is a dp. The
    measurements behind the ladder are the ones the 8 set 2026 pass made and they stand:
-   the 56dp hour cell keeps 7dp of air per side, the week's temperature bar and the
-   timeline's prose give up 10dp apiece, and the tile's label budget leaves 7.3dp against
-   a widest label of 76.7dp — the ceiling, because a fourth step would put «Qualità aria»
-   on two lines at 360dp. The order of the rungs is the reading order: the strip is
+   the 56dp hour cell keeps 7dp of air per side and the week's temperature bar and the
+   timeline's prose give up 10dp apiece. **The tile rung did move**, once, on 11 set 2026:
+   v3's drawings are worth looking at and were asking to be bigger. Its label budget is
+   `118 − icon` on a 360dp screen against a widest label of 76.7dp, so the ceiling is
+   **41.3dp**; 38dp leaves 3.3dp of margin, 40dp leaves 1.3, 42dp wraps. The note that
+   stood here said a fourth step would wrap the label — the arithmetic says one step fits,
+   and the arithmetic is right. What it costs is the ladder's strict order: the tile now
+   equals the week row instead of sitting under it, and a tile label beside a week row is
+   not a comparison a reader ever makes. The order of the rungs is the reading order: the strip is
    scanned sideways and carries the most weight, the week is read down, a line of prose
    leads with the smallest glyph.
 
@@ -1174,6 +1179,19 @@ a valid animator and only a person can say the rain falls downward.
      With line and flat this is a corner and not the style: **15 drawings out of 1 038**.
    - **Filters are dropped** — a drop shadow on `compass*`, and VectorDrawable has none.
      Neither line nor flat uses one at all.
+   - **A `<clipPath>` shape can carry a transform, and it has to be baked in.**
+     VectorDrawable's `<clip-path>` has no transform of its own, and hanging one on the
+     enclosing group would move the drawing along with the clip. So the matrix is cooked
+     into the coordinates (an arc keeps its radii under a rigid transform and turns its
+     axis; a non-uniform scale is refused rather than drawn wrong). Ignoring it was a
+     real defect, found on a device on 11 set 2026: the barometer's clip is a rectangle
+     rotated 45°, and without the rotation it landed in the top-left corner and **erased
+     the needle**. Twenty drawings, every `barometer*` and `compass*`, two of them
+     shipped — and «the dial has no indicator» is exactly how it was reported.
+   - **A group can be left behind**: `DROP_GROUPS`. `compass` carries **N E S W drawn as
+     paths**, and in Italian the west is O — the same English-text-inside-an-image the
+     `wind-direction-*` glyphs were turned down for. Its `Letters` group is dropped, which
+     also returns it to the v2 drawing (housing and needle) the places row was tuned with.
    - **Two drawings do not convert**: `pressure-high-alt` and `pressure-low-alt`, whose
      mask is a Figma stroke outline applied to a single shape. Neither is shipped.
 

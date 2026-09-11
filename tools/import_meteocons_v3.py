@@ -134,6 +134,18 @@ PARTIALS = {
 #: cui la griglia era stata messa a punto — ne riempiva 0,76. Il ritaglio e' **uno solo
 #: per tutta la famiglia**, calcolato sull'unione dei tredici inchiostri, cosi' i livelli
 #: e le piante non ballano l'uno rispetto all'altro.
+#: Gruppi da **lasciare indietro**, per icona. Diverso da `PARTIALS`, che ne tiene uno
+#: solo: qui si converte tutto tranne quello che si nomina.
+#:
+#: `compass` porta le lettere **N E S W disegnate come path**, e in italiano l'ovest e' O:
+#: e' testo inglese dentro un'immagine, in un prodotto dove tutto quel che sta a schermo
+#: si localizza. E' la stessa ragione per cui le otto `wind-direction-*` sono state
+#: scartate. La bussola della v2 era cerchio piu' ago e basta, quindi toglierle e' anche
+#: tornare al disegno con cui la riga dei luoghi era stata messa a punto.
+DROP_GROUPS = {
+    "compass": ("Letters",),
+}
+
 CROPS = dict.fromkeys(
     ["pollen", "pollen-grass", "pollen-tree", "pollen-weed"]
     + [f"pollen-{f}-{l}" for f in ("grass", "tree", "weed")
@@ -233,10 +245,11 @@ def rotate_keyframes(times, values, phase):
 # ------------------------------------------------------------------------ emissione
 
 class Emitter:
-    def __init__(self, clips=None, animated=False):
+    def __init__(self, clips=None, animated=False, drop=()):
         self.targets: list[str] = []
         self.interpolators: set = set()
         self.clips = clips or {}
+        self.drop = tuple(drop)
         #: Il disegno fermo e quello che si muove non dicono il tratteggio allo stesso
         #: modo: fermo lo si ridisegna a segmenti, in movimento diventa una finestra di
         #: `trimPath` che corre. Da cui due passate sullo stesso albero.
@@ -342,7 +355,7 @@ def child_anims(el):
                          SVG_NS + "animateMotion")]
 
 
-def shape_data(el, gradients, notes):
+def shape_data(el, gradients, notes, bake_transform: bool = False):
     """Una forma SVG -> il suo `pathData`. Cerchi, rettangoli e segmenti diventano
     percorsi, perche' VectorDrawable conosce solo quelli."""
     tag = el.tag
@@ -378,6 +391,27 @@ def shape_data(el, gradients, notes):
     if tag == SVG_NS + "path":
         return paths.emit_path(paths.parse_segments(el.get("d")))
     raise Unsupported(f"<{tag.replace(SVG_NS, '')}>")
+
+
+def clip_data(el, gradients, notes) -> str:
+    """La forma di un `<clipPath>`, col suo `transform` **cotto nelle coordinate**.
+
+    `<clip-path>` in VectorDrawable non ha un `transform`, e appoggiarlo al gruppo che lo
+    contiene lo applicherebbe anche ai figli — cioe' muoverebbe il disegno insieme al
+    ritaglio. Ignorarlo era il difetto trovato sul telefono l'11 set 2026: il `clipPath`
+    del barometro e' un rettangolo ruotato di 45°, e senza la rotazione finiva nell'angolo
+    in alto a sinistra e **cancellava l'ago**. Venti icone, tutte `barometer*` e
+    `compass*`, e due di queste si spediscono.
+    """
+    d = shape_data(el, gradients, notes)
+    t = el.get("transform")
+    if not t:
+        return d
+    try:
+        m = paths.parse_transform(t)
+        return paths.emit_path(paths.transform_path(paths.parse_segments(d), m))
+    except ValueError as err:
+        raise Unsupported(f"clip-path con {err}")
 
 
 def paint(el, gradients, notes):
@@ -434,6 +468,8 @@ def walk(el, em, out, depth, gradients, notes, alpha=()):
         raise Unsupported(f"<{tag.replace(SVG_NS, '')}>")
 
     if tag == SVG_NS + "g":
+        if em.drop and (el.get("id") or "").split("__")[-1] in em.drop:
+            return
         wrappers = transform_groups(el.get("transform")) if el.get("transform") else []
         clip_shape = canvas_clip(el, em.clips)
         if wrappers or clip_shape is not None:
@@ -443,7 +479,7 @@ def walk(el, em, out, depth, gradients, notes, alpha=()):
             if clip_shape is not None:
                 out.append("    " * depth + "<group>")
                 out.append("    " * (depth + 1) + '<clip-path android:pathData="'
-                           + shape_data(clip_shape, gradients, notes) + '"/>')
+                           + clip_data(clip_shape, gradients, notes) + '"/>')
                 depth += 1
                 wrappers = wrappers + [None]
             bare = ET.Element(SVG_NS + "g", {k: v for k, v in el.attrib.items()
@@ -667,7 +703,7 @@ def _masked_group(el, mask, em, out, depth, gradients, notes, alpha):
 
 # ------------------------------------------------------------------------ file
 
-def convert(svg_path: pathlib.Path, only_group: str | None = None, crop=None):
+def convert(svg_path: pathlib.Path, only_group: str | None = None, crop=None, drop=()):
     """Un SVG -> (xml statico, xml animato o None, note, interpolatori).
 
     Con [only_group] si converte **un gruppo solo** dell'icona, per i casi di `PARTIALS`:
@@ -694,7 +730,7 @@ def convert(svg_path: pathlib.Path, only_group: str | None = None, crop=None):
             raise Unsupported(f"gruppo {only_group!r} trovato {len(roots)} volte")
 
     def pass_(animated):
-        em = Emitter(clip_paths, animated=animated)
+        em = Emitter(clip_paths, animated=animated, drop=drop)
         body: list[str] = []
         for child in roots:
             walk(child, em, body, 3, gradients, notes)
@@ -886,7 +922,8 @@ def main() -> int:
             if crop is None:
                 crop = CROPS.get(stem)
             try:
-                static, animated, notes, interps = convert(svg, group, crop)
+                static, animated, notes, interps = convert(
+                    svg, group, crop, DROP_GROUPS.get(stem, ()))
             except Unsupported as e:
                 report[str(e)].append(f"{style}/{stem}")
                 counts[style + ":saltate"] += 1

@@ -11,7 +11,7 @@
             android:viewportWidth="128"
             android:viewportHeight="128">
             <group>
-                <clip-path android:pathData="M0,0 L80,0 L80,80 L0,80 Z"/>
+                <clip-path android:pathData="M24,24 L104,24 L104,104 L24,104 Z"/>
                 <path android:pathData="M25.5,64 A38.5,38.5,0,1,1,102.5,64 A38.5,38.5,0,1,1,25.5,64 Z"
                     android:strokeColor="#616e84"
                     android:strokeWidth="3"/>

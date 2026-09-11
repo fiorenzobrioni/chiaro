@@ -5726,6 +5726,40 @@ comprerebbe alla cifra **0,4 dp**. Non basta a renderla leggibile e spende più 
 margine. Il badge resta quello che a questa misura è onestamente: un segno di colore, non
 una cifra. Il valore è stampato sotto in 32 sp, che è dove si legge.
 
+
+### Il terzo giro: l'ago che non c'era, e un gradino (11 set 2026)
+
+**«All'icona della pressione manca l'indicatore» era un difetto di conversione, non una
+scelta.** Tutti i barometri di Meteocons hanno il loro ago; il `<clipPath>` che li
+accompagna però è un rettangolo con un `transform="rotate(45 …)"`, e il convertitore
+**ignorava quel transform**. Il ritaglio finiva nell'angolo in alto a sinistra e cancellava
+l'ago. `<clip-path>` in VectorDrawable non ha un transform suo, e appoggiarlo al gruppo lo
+applicherebbe anche ai figli — cioè muoverebbe il disegno insieme al ritaglio — quindi la
+matrice si cuoce nelle coordinate (un arco tiene i raggi sotto una trasformazione rigida e
+ruota l'inclinazione; una scala non uniforme viene rifiutata invece che disegnata male).
+
+Venti disegni toccati, tutti `barometer*` e `compass*`, due dei quali si spediscono. E
+qui sta la lezione: **il giro precedente aveva concluso che il barometro «non si può
+graduare perché l'ago è mezzo dp»**. L'ago era invece assente del tutto, e la conclusione
+poggiava su un difetto scambiato per una proprietà del disegno. La decisione di non
+graduarlo resta — quattro quadranti che differiscono per l'angolo di un ago da 1 dp non
+sono quattro cose diverse per un lettore — ma ora è presa sul disegno vero.
+
+**La bussola ha perso le sue lettere.** Riparando il ritaglio sono diventate visibili le
+**N E S W disegnate come path** che la `compass` di v3 porta, e in italiano l'ovest è O:
+è lo stesso testo inglese dentro un'immagine per cui erano state scartate le otto
+`wind-direction-*`. Il tool sa ora lasciare indietro un gruppo (`DROP_GROUPS`), e togliere
+`Letters` riporta la bussola al disegno della v2 — cerchio e ago — con cui la riga dei
+luoghi era stata messa a punto.
+
+**E il gradino c'era davvero.** Il budget dell'etichetta è `118 − icona` su 360 dp contro i
+76,7 dp che «Qualità aria» chiede, quindi il tetto è **41,3 dp**: 38 lascia 3,3 dp di
+margine, 40 ne lascia 1,3, 42 manda a capo. La nota che stava lì diceva che un quarto
+gradino avrebbe mandato a capo l'etichetta; l'aritmetica dice che un gradino ci sta, e
+l'aritmetica ha ragione. Il tile passa a **38 dp**. Costa alla scala il suo ordine stretto
+— il tile adesso pareggia la riga della settimana invece di starle sotto — e un'etichetta
+di scheda accanto a una riga della settimana non è un confronto che un lettore fa mai.
+
 ### Le caselle
 
 ### Blocco A — il convertitore, fatto (11 set 2026)

@@ -69,7 +69,7 @@ fun MetricTile(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             // The header holds one line by construction, never by truncation: on a
-            // 360dp screen the two columns leave the label 84dp beside the 34dp icon
+            // 360dp screen the two columns leave the label 80dp beside the 38dp icon
             // (94 before the ladder's first step on 6 set, 88 before its third on 8
             // set), so the eight labels are written to fit that budget rather than
             // trimmed with an ellipsis — the widest of them, «Qualità aria», measures

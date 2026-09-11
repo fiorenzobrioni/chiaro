@@ -11,7 +11,7 @@
             android:viewportWidth="128"
             android:viewportHeight="128">
             <group>
-                <clip-path android:pathData="M0,0 L18,0 L18,36 L0,36 Z"/>
+                <clip-path android:pathData="M32,46 L50,46 L50,82 L32,82 Z"/>
                 <path android:pathData="M40,70.197 C40.663,70.197,41,70.725,41,71.377 L41,73.737 C41,76.998,43.687,80,47,80 L48.8,80 C49.463,80,50,80.348,50,81 C50,81.652,49.463,82,48.8,82 L47,82 C42.361,82,39,78.3,39,73.738 L39,71.356 C39,70.704,39.337,70.197,40,70.197"
                     android:fillColor="#1a2232"/>
                 <path android:pathData="M32,57 A4,4,0,0,1,36,53 L44,53 A4,4,0,0,1,48,57 L48,65 A7,7,0,0,1,41,72 L39,72 A7,7,0,0,1,32,65 Z"
