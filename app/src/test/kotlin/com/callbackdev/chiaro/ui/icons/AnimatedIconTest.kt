@@ -23,14 +23,22 @@ import org.junit.Test
  * 4. **Every loop is a loop.** `repeatCount="infinite"`, a positive duration, and
  *    keyframes that go forwards.
  *
- * The four sets are the four the app can reach: line and fill, on a light ground and on
- * a dark one (§13.1, §2.5).
+ * The four sets are the four the app can reach: line and flat, on a light ground and on
+ * a dark one (§13.1).
+ *
+ * **One deliberate exception to «same drawing, moving»**: an icon whose dash is a window
+ * running along the stroke (`wind`, the Beaufort scale — DESIGN §13.1) does NOT have the
+ * same `pathData` in both files. The still one has the dashes cut into it as real
+ * segments, because that is what the illustrator's static frame shows; the moving one
+ * carries the whole line and a `trimPath` window that runs along it, because that is the
+ * only way Android says «a gust passing». Those files are skipped below, by the presence
+ * of `trimPath` and nothing else, so the exception cannot quietly widen.
  */
 class AnimatedIconTest {
 
     /** still prefix to moving prefix, for each ground and style the app can pick. */
     private val sets = listOf(
-        "mc_" to "mca_", "mcn_" to "mcan_", "mcf_" to "mcaf_", "mcfn_" to "mcafn_"
+        "mc3_" to "mc3a_", "mc3n_" to "mc3an_", "mc3f_" to "mc3fa_", "mc3fn_" to "mc3fan_"
     )
 
     private val drawables = File("src/main/res/drawable")
@@ -49,7 +57,7 @@ class AnimatedIconTest {
         val stems = sets.map { (_, prefix) ->
             moving(prefix).map { it.name.removePrefix(prefix) }.toSet()
         }
-        assertTrue("no animated drawables — run tools/import_meteocons.py", stems.first().isNotEmpty())
+        assertTrue("no animated drawables — run tools/import_meteocons_v3.py", stems.first().isNotEmpty())
         stems.forEach { assertEquals("the animated sets must hold the same icons", stems.first(), it) }
     }
 
@@ -61,6 +69,8 @@ class AnimatedIconTest {
                 assertTrue("${file.name} has no still sibling at ${sibling.name}", sibling.isFile)
                 val a = file.readText()
                 val b = sibling.readText()
+                // Il tratteggio che corre: la finestra e' l'eccezione dichiarata in testa.
+                if (a.contains("android:trimPath")) return@forEach
                 assertEquals(
                     "${file.name} draws different geometry from ${sibling.name}",
                     pathData.findAll(b).map { it.groupValues[1] }.toList(),
@@ -134,11 +144,30 @@ class AnimatedIconTest {
                         "${file.name} has a zero-length animator",
                         duration!!.groupValues[1].toInt() > 0
                     )
-                    // Meteocons' motion is linear; an eased loop would pulse at the seam.
+                    // Fino alla v2 il moto di Meteocons era tutto lineare e questo test
+                    // lo pretendeva. La v3 usa `calcMode="spline"`, e un `keySplines` E'
+                    // esattamente un `<pathInterpolator>`: l'importatore ne genera uno per
+                    // ogni coppia di controlli distinta invece di appiattire la curva. Qui
+                    // si pretende allora la cosa che conta davvero — che l'interpolatore
+                    // sia dichiarato, e che se e' uno dei nostri il file esista.
+                    val interpolator = Regex("""android:interpolator="([^"]+)"""").find(block)
                     assertTrue(
-                        "${file.name} has an animator that is not linear",
-                        """android:interpolator="@android:anim/linear_interpolator"""" in block
+                        "${file.name} has an animator with no interpolator",
+                        interpolator != null
                     )
+                    val res = interpolator!!.groupValues[1]
+                    assertTrue(
+                        "${file.name} uses an interpolator that is neither linear nor ours: $res",
+                        res == "@android:anim/linear_interpolator" ||
+                            res.startsWith("@interpolator/")
+                    )
+                    if (res.startsWith("@interpolator/")) {
+                        val generated = File("src/main/res/interpolator/${res.substringAfterLast('/')}.xml")
+                        assertTrue(
+                            "${file.name} points at ${generated.name}, which was not generated",
+                            generated.isFile
+                        )
+                    }
                 }
                 var previous = -1.0
                 Regex("""<keyframe android:fraction="([\d.]+)"""").findAll(text).forEach {

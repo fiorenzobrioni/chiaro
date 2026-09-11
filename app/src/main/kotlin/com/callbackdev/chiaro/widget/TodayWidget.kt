@@ -144,8 +144,7 @@ private fun TodayContent(
                 provider = ImageProvider(
                     ChiaroIcons.conditionRes(
                         content.report.current.condition.wmoCode, content.night,
-                        model.iconStyle, palette.darkGround,
-                        model.settings.palette
+                        model.iconStyle, palette.darkGround
                     )
                 ),
                 contentDescription = null, // the temperature and the sentence say it
@@ -245,8 +244,7 @@ private fun TodayContent(
                                 strip.hour.condition.wmoCode,
                                 strip.night,
                                 model.iconStyle,
-                                palette.darkGround,
-                                model.settings.palette
+                                palette.darkGround
                             )
                         ),
                         contentDescription = null,

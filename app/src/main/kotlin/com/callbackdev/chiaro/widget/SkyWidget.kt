@@ -288,7 +288,7 @@ private fun MomentGlyph(
 ) {
     Image(
         provider = ImageProvider(
-            skyJobIconRes(moment, model.iconStyle, palette.darkGround, model.settings.palette)
+            skyJobIconRes(moment, model.iconStyle, palette.darkGround)
         ),
         contentDescription = null, // the name says it in words
         modifier = GlanceModifier.size(size)
@@ -415,32 +415,30 @@ private fun evidence(context: Context, verdict: SkyVerdict): String? =
 private fun skyJobIconRes(
     moment: NextMoment,
     style: WeatherIcons,
-    darkGround: Boolean,
-    appPalette: AppPalette
+    darkGround: Boolean
 ): Int = when (moment.job.id) {
     "sun.rise", "twilight.civil.am" ->
-        ChiaroIcons.styledRes(R.drawable.mc_sunrise, style, darkGround, appPalette)
+        ChiaroIcons.styledRes(R.drawable.mc3_sunrise, style, darkGround)
     "sun.set", "twilight.civil.pm" ->
-        ChiaroIcons.styledRes(R.drawable.mc_sunset, style, darkGround, appPalette)
+        ChiaroIcons.styledRes(R.drawable.mc3_sunset, style, darkGround)
     "solar.noon" ->
         ChiaroIcons.conditionRes(
-            0, night = false, style = style, darkGround = darkGround,
-            palette = appPalette
+            0, night = false, style = style, darkGround = darkGround
         )
     "golden_hour.am", "golden_hour.pm" ->
-        ChiaroIcons.styledRes(R.drawable.mc_horizon, style, darkGround, appPalette)
+        ChiaroIcons.styledRes(R.drawable.mc3_horizon, style, darkGround)
     "blue_hour.am", "blue_hour.pm",
     "twilight.nautical.am", "twilight.nautical.pm" ->
-        ChiaroIcons.styledRes(R.drawable.mc_star, style, darkGround, appPalette)
+        ChiaroIcons.styledRes(R.drawable.mc3_star, style, darkGround)
     "twilight.astronomical.am", "twilight.astronomical.pm", "darkness.window" ->
-        ChiaroIcons.styledRes(R.drawable.mc_starry_night, style, darkGround, appPalette)
-    "moon.rise" -> ChiaroIcons.styledRes(R.drawable.mc_moonrise, style, darkGround, appPalette)
-    "moon.set" -> ChiaroIcons.styledRes(R.drawable.mc_moonset, style, darkGround, appPalette)
+        ChiaroIcons.styledRes(R.drawable.mc3_starry_night, style, darkGround)
+    "moon.rise" -> ChiaroIcons.styledRes(R.drawable.mc3_moonrise, style, darkGround)
+    "moon.set" -> ChiaroIcons.styledRes(R.drawable.mc3_moonset, style, darkGround)
     "moon.today", "moon.phase" ->
-        ChiaroIcons.moonPhaseRes(MoonPhase.FULL_MOON, style, darkGround, appPalette)
+        ChiaroIcons.moonPhaseRes(MoonPhase.FULL_MOON, style, darkGround)
     "equinox.spring", "solstice.summer", "equinox.autumn", "solstice.winter" ->
-        ChiaroIcons.styledRes(R.drawable.mc_horizon, style, darkGround, appPalette)
-    else -> ChiaroIcons.styledRes(R.drawable.mc_falling_stars, style, darkGround, appPalette)
+        ChiaroIcons.styledRes(R.drawable.mc3_horizon, style, darkGround)
+    else -> ChiaroIcons.styledRes(R.drawable.mc3_falling_stars, style, darkGround)
 }
 
 /** Subscriptions emptied by hand: the widget says why it is quiet, never blanks —

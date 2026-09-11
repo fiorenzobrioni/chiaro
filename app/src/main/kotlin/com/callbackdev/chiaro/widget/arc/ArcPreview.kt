@@ -271,8 +271,7 @@ private fun PreviewBody(
                                 painter = painterResource(
                                     ArcText.rowIconRes(
                                         next.item.kind, next.at, model.iconStyle,
-                                        inks.palette.darkGround, model.settings.palette
-                                    )
+                                        inks.palette.darkGround)
                                 ),
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp)
@@ -389,8 +388,7 @@ private fun PreviewAgenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, 
                     painter = painterResource(
                         ArcText.rowIconRes(
                             event.item.kind, event.at, model.iconStyle,
-                            inks.palette.darkGround, model.settings.palette
-                        )
+                            inks.palette.darkGround)
                     ),
                     contentDescription = null,
                     modifier = Modifier.size(AgendaGlyph)
@@ -438,7 +436,7 @@ private fun PreviewWeek(
                     painter = painterResource(
                         ChiaroIcons.conditionRes(
                             day.forecast.condition.wmoCode, false,
-                            model.iconStyle, inks.palette.darkGround, model.settings.palette
+                            model.iconStyle, inks.palette.darkGround
                         )
                     ),
                     contentDescription = null,

@@ -5527,6 +5527,67 @@ per il confronto al filmstrip; non si spediscono.
       tabella `ICONS` che oggi è la lista di spedizione può diventare anche la lista di
       **conversione**, e il set completo resta a un comando di distanza invece che in git
 
+
+### Blocco B — la cucitura Kotlin, fatta (11 set 2026)
+
+L'app disegna la v3. `tools/import_meteocons.py` e i 268 drawable della v2 escono di
+scena; il tool v2 resta in `tools/` perché `import_meteocons_v3.py` ne importa
+`loop_keyframes` — la rotazione dei keyframe per una fase negativa, scritta per la v2 e
+valida qui identica.
+
+- [x] **`ChiaroIcons` ora è politica, non tabelle.** Le quattro mappe stanno in
+      `ui/icons/MeteoconsSets.kt`, **generato** dal tool su `tools/shipped_icons.py`: 143
+      icone per quattro set sono 595 righe in cui un refuso non si vede, e il tool sa già
+      quali file ha scritto. Quel che resta in `ChiaroIcons` è la parte su cui si discute:
+      quale codice prende quale disegno, quale metrica quale marchio
+- [x] **Il vestito non sceglie più un'icona.** `styledRes` prendeva `AppPalette` perché il
+      set line della v2 doveva **entrambe** le superfici (banda Y ∈ [0,120, 0,283], da cui
+      il sole bronzo) e serviva un secondo set perché il vestito vivid potesse scappare da
+      quel tetto sui fondi scuri. Con quattro set scelti da stile e fondo il parametro non
+      decideva più niente: è stato tolto da `styledRes`, `conditionRes`, `movingRes`,
+      `moonPhaseRes`, `ArcText.rowIconRes` e `SkyWidget.skyJobIconRes`
+- [x] **`WeatherIcons.FILL` ora è il `flat` di v3, e l'enum tiene il suo nome**: `flat` è
+      quello che l'app già spediva come set pieno (il fill v2 coi gradienti appiattiti dal
+      tool). Rinominare la costante avrebbe migrato una preferenza salvata e riscritto una
+      stringa delle impostazioni per descrivere lo stesso disegno
+- [x] **La mappatura WMO** è quella della tabella sopra, `not-available` compreso
+- [x] **Il test che non c'era**: `ConditionIconsTest`. Ogni codice che il provider può
+      servire → il suo disegno, di giorno e di notte; il fallback; e una riga che dice
+      esplicitamente che 0, 1 e 2 sono tre disegni diversi — il difetto che ha aperto la
+      fase, in un'asserzione
+- [x] **`IconContrastTest` e `AnimatedIconTest`** guardano i set v3. Il primo ha perso la
+      frase «il set line deve entrambe le superfici», che dalla Fase 13 non è più vera; il
+      secondo ha imparato due cose: che un `keySplines` è un `<pathInterpolator>` e non un
+      difetto (pretendeva che ogni animatore fosse lineare, vero solo per la v2), e che
+      un'icona il cui tratteggio è diventato una finestra **non** ha lo stesso `pathData`
+      del suo gemello fermo — eccezione dichiarata, riconosciuta dalla presenza di
+      `trimPath` e da nient'altro, così non può allargarsi in silenzio
+- [x] **`MeteoconsSetsTest`**, la guardia del confine. Aggiungere un `R.drawable.mc3_…` a
+      una schermata senza aggiungerlo alla lista compila benissimo e poi lancia in faccia
+      al lettore, perché `styledRes` usa `getValue`: il test legge i sorgenti e lo impedisce
+
+**E la lista di spedizione si è ristretta, dopo averlo misurato.** Era di 143; le icone
+che una schermata disegna davvero oggi sono **53**. Spedire anche le altre 90 — i pollini
+graduati, l'UV, le bande del barometro, la Beaufort, i momenti del giorno, i tipi di
+allerta — costava **570 KB su 6,8 MB, l'8% dell'APK, per disegni che nessun lettore
+vedeva**. Stanno in `PLANNED` nello stesso file, e ognuna si sposta in `SHIPPED` nella
+stessa modifica che le dà una schermata.
+
+| | APK di release |
+|---|---|
+| prima della fase (v2, 49 icone) | 6 548 541 B |
+| v3 con 53 spedite | **7 141 284 B** (+593 KB) |
+| v3 con 143 spedite | 7 724 737 B (+1,12 MB) |
+
+Il mezzo mega in più compra 24 cieli invece di 18, i disegni di v3 che sono più
+dettagliati, e i quattro set riancorati.
+
+- [ ] **Le schede Dettagli** (il prossimo blocco): `pollen-grass/tree/weed` nei quattro
+      livelli al posto di `mc3_pollen`, `uv-index-1…11`, le bande del barometro, la
+      Beaufort — ognuna sposta una riga da `PLANNED` a `SHIPPED`
+- [ ] **L'ago del vento**: `wind-direction-n` tenendo solo il gruppo `Pointer`, ruotato
+      come `WindArrow` ruota già
+
 ### Le caselle
 
 ### Blocco A — il convertitore, fatto (11 set 2026)

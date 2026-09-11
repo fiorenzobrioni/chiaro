@@ -53,6 +53,8 @@ import xml.etree.ElementTree as ET
 HERE = pathlib.Path(__file__).resolve().parent
 OUT = HERE.parent / "app" / "src" / "main" / "res" / "drawable"
 INTERPOLATORS = HERE.parent / "app" / "src" / "main" / "res" / "interpolator"
+KOTLIN = (HERE.parent / "app" / "src" / "main" / "kotlin" / "com" / "callbackdev"
+          / "chiaro" / "ui" / "icons" / "MeteoconsSets.kt")
 SVG_NS = "{http://www.w3.org/2000/svg}"
 NL = chr(10)
 
@@ -66,6 +68,7 @@ def _load(name, path):
 
 paths = _load("svg_paths", HERE / "svg_paths.py")
 reanchor = _load("reanchor", HERE / "reanchor.py")
+shipped = _load("shipped_icons", HERE / "shipped_icons.py")
 #: La fase negativa e la rotazione dei keyframe NON sono novita' di v3: le ha risolte
 #: l'importatore della v2 e le sue funzioni valgono qui identiche. Riusarle e' anche la
 #: prova che il passaggio alla v3 e' un trasloco, non una riscrittura.
@@ -662,6 +665,105 @@ def convert(svg_path: pathlib.Path):
     return static, animated, notes, em.interpolators
 
 
+def write_kotlin(emitted: set) -> int:
+    """Le tabelle Kotlin, generate — e **solo per la lista di spedizione**.
+
+    E' questo che tiene l'APK alla misura della lista mentre il repo tiene la famiglia
+    intera: un drawable che nessuna tabella nomina non e' referenziato, e
+    `shrinkResources` lo toglie dalla release. Crescere la lista e' una riga in
+    `tools/shipped_icons.py`.
+
+    Generarle invece di scriverle a mano non e' pigrizia: 143 icone per quattro set piu'
+    i gemelli animati sono 595 righe in cui un refuso non si vede, e il tool sa gia' quali
+    file ha scritto davvero.
+    """
+    names = [n for n in shipped.SHIPPED if n.replace("-", "_") in emitted]
+    missing = [n for n in shipped.SHIPPED if n.replace("-", "_") not in emitted]
+    if missing:
+        sys.exit("la lista di spedizione nomina icone che non sono state convertite: "
+                 + ", ".join(missing))
+
+    def rows(pairs, indent=8):
+        return NL.join(" " * indent + p + "," for p in pairs)
+
+    def pair(prefix_a, prefix_b, n):
+        k = n.replace("-", "_")
+        return f"R.drawable.{prefix_a}{k} to R.drawable.{prefix_b}{k}"
+
+    anim = [n for n in names if n in shipped.ANIMATED]
+    body = f'''package com.callbackdev.chiaro.ui.icons
+
+import androidx.annotation.DrawableRes
+import com.callbackdev.chiaro.R
+
+/**
+ * Le quattro facce di ogni disegno di Meteocons, e i gemelli che si muovono.
+ *
+ * **File generato da `tools/import_meteocons_v3.py` — non si modifica a mano.** La lista
+ * sta in `tools/shipped_icons.py`; questo e' il suo risultato, ed e' anche la ragione per
+ * cui l'APK pesa quanto la lista mentre il repo tiene la famiglia intera: un drawable che
+ * nessuna tabella qui nomina non e' referenziato, e `shrinkResources` lo toglie dalla
+ * release.
+ *
+ * La chiave e' sempre l'id del set **line su fondo chiaro**: e' la cucitura su cui
+ * `ChiaroIcons` fa girare stile e fondo, la stessa che aveva la v2.
+ */
+internal object MeteoconsSets {{
+
+    /** line, fondo scuro. */
+    val lineDarkOf: Map<Int, Int> = mapOf(
+{rows(pair("mc3_", "mc3n_", n) for n in names)}
+    )
+
+    /** flat, fondo chiaro. */
+    val flatOf: Map<Int, Int> = mapOf(
+{rows(pair("mc3_", "mc3f_", n) for n in names)}
+    )
+
+    /** flat, fondo scuro. */
+    val flatDarkOf: Map<Int, Int> = mapOf(
+{rows(pair("mc3_", "mc3fn_", n) for n in names)}
+    )
+
+    /**
+     * I quattro gemelli animati di un disegno che ne ha, nello stesso ordine in cui si
+     * scelgono i set fermi: line chiaro, line scuro, flat chiaro, flat scuro.
+     */
+    class Moving(
+        @DrawableRes val line: Int,
+        @DrawableRes val lineDark: Int,
+        @DrawableRes val flat: Int,
+        @DrawableRes val flatDark: Int
+    )
+
+    /**
+     * Quali disegni si muovono (DESIGN §7.1): la famiglia delle condizioni e solo quella,
+     * perche' il marchio di un tile etichetta una quantita' e un barometro che gira per
+     * sempre e' decorazione. `not-available` non c'e': Meteocons lo disegna fermo, ed e'
+     * la quantita' di movimento giusta per «non lo sappiamo».
+     */
+    val movingOf: Map<Int, Moving> = mapOf(
+{NL.join(f"        R.drawable.mc3_{n.replace('-', '_')} to Moving(" + NL +
+         f"            R.drawable.mc3a_{n.replace('-', '_')}, R.drawable.mc3an_{n.replace('-', '_')}," + NL +
+         f"            R.drawable.mc3fa_{n.replace('-', '_')}, R.drawable.mc3fan_{n.replace('-', '_')}" + NL +
+         "        )," for n in anim)}
+    )
+
+    /**
+     * Il nome che l'icona ha a monte, per i test: una tabella che dice «questo codice
+     * WMO prende questo disegno» deve poter nominare il disegno come lo nomina
+     * l'illustratore, non con un id numerico che non si legge.
+     */
+    val byName: Map<String, Int> = mapOf(
+{rows('"' + n + '" to R.drawable.mc3_' + n.replace("-", "_") for n in names)}
+    )
+}}
+'''
+    KOTLIN.parent.mkdir(parents=True, exist_ok=True)
+    KOTLIN.write_text(body, encoding="utf8")
+    return len(names)
+
+
 def main() -> int:
     if len(sys.argv) < 2:
         print(__doc__)
@@ -674,6 +776,7 @@ def main() -> int:
     INTERPOLATORS.mkdir(parents=True, exist_ok=True)
 
     all_interps: set = set()
+    emitted: set = set()
     report: dict[str, list] = collections.defaultdict(list)
     counts = collections.Counter()
 
@@ -720,6 +823,8 @@ def main() -> int:
                 if animated:
                     (OUT / f"{anim_p}{name}.xml").write_text(animated, encoding="utf8")
             counts[style + ":statiche"] += 1
+            if style == "line":
+                emitted.add(name)
             if animated:
                 counts[style + ":animate"] += 1
             all_interps |= interps
@@ -734,6 +839,8 @@ def main() -> int:
             f'    android:controlX2="{x2}" android:controlY2="{y2}"/>',
         ]) + NL, encoding="utf8")
 
+    if "line" in styles and "flat" in styles:
+        counts["tabelle Kotlin (spedite)"] = write_kotlin(emitted)
     print("--- convertite")
     for k in sorted(counts):
         print(f"    {k:<26} {counts[k]}")

@@ -160,7 +160,7 @@
             android:layout_width="18dp"
             android:layout_height="18dp"
             android:importantForAccessibility="no"
-            android:src="@drawable/mcn_star" />
+            android:src="@drawable/mc3n_star" />
 
         <TextView
             android:layout_width="0dp"
@@ -192,7 +192,7 @@
             android:layout_width="18dp"
             android:layout_height="18dp"
             android:importantForAccessibility="no"
-            android:src="@drawable/mcn_starry_night" />
+            android:src="@drawable/mc3n_starry_night" />
 
         <TextView
             android:layout_width="0dp"
