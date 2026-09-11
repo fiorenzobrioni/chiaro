@@ -5977,7 +5977,11 @@ ha quindi il suo `flatten`, che tiene i segmenti e passa gli archi per la
 parametrizzazione centrale del modulo delle maschere. Chi riusa quella funzione altrove
 lo tenga presente.
 
-### La taglia si pareggia: ogni disegno a 0,75 della scatola (11 set 2026)
+### La taglia si pareggia: ogni disegno a una misura comune (11 set 2026)
+
+> La prima versione di questa regola normalizzava il **lato più lungo** a 0,75 ed è
+> durata mezza giornata: la sezione che segue la racconta com'è stata presa, e quella
+> dopo dice perché il lato non bastava e cosa la sostituisce.
 
 Decisione del committente, e **rovescia quella sua del mattino** («la scatola è quella
 dell'illustratore, senza eccezioni»): le differenze di taglia fra i disegni di Meteocons,
@@ -6055,18 +6059,64 @@ Material a tre righe con 18 dp d'aria per lato, dentro i 72 dp di una a due righ
 due modifiche si moltiplicano, e la seconda è stata chiesta guardando l'app *prima* della
 prima: la normalizzazione da sola porta già la luna del Cielo da 17,0 a 25,5 dp e i
 Draconidi da 12,6 a 25,5, cioè l'ingrandimento di 1,5× che la richiesta chiedeva, per le
-icone che sembravano piccole. Sommandoci il gradino, a 51 dp l'inchiostro diventa **38,3 dp**,
-contro i **31,5** della striscia oraria (0,75 × 42): il Cielo diventa la superficie con i
-disegni più grandi dell'app, e rovescia l'ordine di lettura per cui i gradini di
-`WeatherIconSize` sono ordinati — la striscia porta il peso maggiore e dovrebbe restare
-davanti.
+icone che sembravano piccole. Sommandoci il gradino, a 51 dp l'inchiostro diventa **35,2 dp**
+su un disegno quadrato (i numeri sono aggiornati alla media geometrica della sezione
+seguente; con la regola sul lato erano 38,3), contro i **29** della striscia oraria: il Cielo
+resta la superficie con i disegni più grandi dell'app, e rovescia l'ordine di lettura per cui
+i gradini di `WeatherIconSize` sono ordinati — la striscia porta il peso maggiore e dovrebbe
+restare davanti.
 
-- [ ] **Da guardare sul dispositivo e decidere.** Spedito a 51 dp come chiesto. Se sul
-      telefono risulta troppo, **44 dp** (33 dp d'inchiostro) è il valore che rimette la
-      striscia davanti tenendo il Cielo sopra il resto della giornata, ed è una riga in
-      `WeatherIconSize.Sky`. L'altra cosa da guardare nello stesso giro sono le righe con la
+- [ ] **Da guardare sul dispositivo e decidere.** Spedito a 51 dp come chiesto, e la prova
+      del committente non l'ha contestato. Se un giorno risulta troppo, **44 dp** (30 dp
+      d'inchiostro) rimette la striscia davanti tenendo il Cielo sopra il resto della
+      giornata, ed è una riga in `WeatherIconSize.Sky`. L'altra cosa da guardare nello stesso giro sono le righe con la
       frase lunga («8 Ottobre · La previsione non arriva ancora così lontano»): a 213 dp una
       come quella può passare da due righe a tre
+
+### La media geometrica, e perché il lato più lungo non bastava (11 set 2026)
+
+Prova sul dispositivo, subito dopo la normalizzazione. Due segnalazioni, e sono la stessa:
+**le lune senza nuvole sembrano grandi** e **le stelle cadenti un po' piccole**.
+
+Hanno ragione, ed è un difetto della regola, non delle icone. Normalizzare `max(w, h)` a
+0,75 è la regola da manuale e ha un vizio che si vede solo su uno schermo: **in una scatola
+quadrata un disegno quadrato arriva alla misura anche in altezza, uno piatto no**. Misurato
+sulle icone della striscia:
+
+| | dopo la regola sul lato | dopo la media geometrica |
+|---|---|---|
+| `clear-night`, `moon-full` | 0,75 × **0,75** | 0,69 × **0,69** |
+| `overcast` | 0,75 × **0,45** | 0,88 × **0,52** |
+| `cloudy` | 0,75 × 0,47 | 0,87 × 0,55 |
+| `falling-stars` | 0,75 × **0,43** | 0,88 × **0,50** |
+| `rainbow` | 0,75 × 0,38 | 0,88 × 0,44 |
+| `clear-day`, `sunrise` | 0,75 × 0,75 | 0,69 × 0,69 |
+
+La luna riempiva la scatola in tutte e due le direzioni e la nuvola in una sola: da lì
+«grande» e «piccola», che erano la stessa cosa vista da due parti. La media geometrica
+legge i due lati insieme, tira giù i quadrati e su i piatti, e li fa incontrare.
+
+**Perché la media e non qualcos'altro**, con i tentativi scartati scritti perché costano
+tempo a rifarli:
+
+- la **massa** (copertura) è morta di nuovo sulle fasi lunari, come la prima volta;
+- la **sagoma** (l'unione dei sottopercorsi riempiti, che avrebbe dovuto salvare la luna
+  nuova rendendola un disco) non la salva: in `flat` Meteocons disegna **solo la parte
+  illuminata**, quindi la sagoma della luna nuova è 1,76% della scatola contro il 19,65%
+  della piena — è coperura sotto un altro nome;
+- **l'altezza da sola** non si può: una nuvola alta quanto la luna sarebbe larga 1,27 volte
+  la scatola, cioè tagliata.
+
+La regola finale è il minore di tre vincoli: **media geometrica a 0,69**, **ingombro
+massimo 0,88** (senza il tetto `rainbow` arrivava a 0,97 di larghezza, a filo di scatola) e
+**il bordo**. Sulla lista di spedizione la media geometrica sta fra **0,49 e 0,69** (1,41×)
+dove la sorgente spaziava di 2,48×; 72 icone su 79 le decide la media, 7 il tetto, il bordo
+nessuna. `--confronto` continua a dire 519 × 2, 0 fuori tolleranza.
+
+Il gradino del Cielo resta a 51 dp: l'inchiostro di un disegno quadrato passa da 38,3 a
+**35,2 dp**, contro i 29 della striscia oraria. La riserva scritta nella sezione precedente
+si attenua ma non sparisce.
+
 
 ### Le caselle
 

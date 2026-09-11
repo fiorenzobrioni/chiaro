@@ -61,12 +61,13 @@ object WeatherIconSize {
      * column — a sunrise over a moon over a meteor shower — so it is the only place a
      * reader compares them at all.
      *
-     * **Read it together with the normalisation of the same day**: every drawing now
-     * fills 0.75 of its box, so this rung carries **38.3dp of ink**, against the hour
-     * strip's 31.5dp at its 42dp box. The Sky therefore has the largest drawings in the
-     * app, which inverts the reading order the rungs above are sorted by. That is the
-     * committente's call and it is written here rather than smoothed over; 44dp (33dp of
-     * ink) is the value that would keep the strip in front, and it is one number away.
+     * **Read it together with the normalisation of the same day**: every drawing is taken
+     * to a geometric mean of 0.69 of its box, so this rung carries **35.2dp of ink** on a
+     * square drawing, against the hour strip's 29dp at its 42dp box. The Sky therefore has
+     * the largest drawings in the app, which inverts the reading order the rungs above are
+     * sorted by. That is the committente's call and it is written here rather than smoothed
+     * over; 44dp (30dp of ink) is the value that would put the strip back in front, and it
+     * is one number away.
      *
      * The room was measured at 360dp before it was taken. The text budget of a moment
      * row is `360 − 16 − icon − 16 − 48 (the bell) − 16`, so it goes from **230dp to

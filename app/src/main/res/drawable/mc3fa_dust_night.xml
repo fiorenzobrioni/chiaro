@@ -10,7 +10,7 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <group android:name="mc3scale" android:scaleX="1.2152" android:scaleY="1.2152" android:pivotX="64" android:pivotY="64">
+            <group android:name="mc3scale" android:scaleX="1.2421" android:scaleY="1.2421" android:pivotX="64" android:pivotY="64">
                 <group>
                     <clip-path android:pathData="M0,0 L128,0 L0,128 Z"/>
                     <group android:name="g1moon" android:pivotX="64" android:pivotY="64">

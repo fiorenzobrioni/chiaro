@@ -7,7 +7,7 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <group android:name="mc3scale" android:scaleX="1.92" android:scaleY="1.92" android:pivotX="64" android:pivotY="64">
+    <group android:name="mc3scale" android:scaleX="2.0817" android:scaleY="2.0817" android:pivotX="64" android:pivotY="64">
         <path android:pathData="M52,40 L76,40 A5,5,0,0,1,81,45 L81,83 A5,5,0,0,1,76,88 L52,88 A5,5,0,0,1,47,83 L47,45 A5,5,0,0,1,52,40 Z"
                     android:strokeColor="#1d3462"
                     android:strokeWidth="2"/>

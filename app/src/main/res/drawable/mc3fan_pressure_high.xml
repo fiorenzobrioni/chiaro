@@ -10,7 +10,7 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <group android:name="mc3scale" android:scaleX="3.6922" android:scaleY="3.6922" android:pivotX="64" android:pivotY="64">
+            <group android:name="mc3scale" android:scaleX="4.3301" android:scaleY="4.3301" android:pivotX="64" android:pivotY="64">
                 <path android:pathData="M70.668,76.997 A1.33,1.33,0,0,1,69.725,76.609 L64.001,70.916 L58.276,76.611 C58.02,76.861,57.683,77.001,57.333,77.001 C56.983,77.001,56.646,76.861,56.391,76.611 A1.3,1.3,0,0,1,56.101,76.185 A1.33,1.33,0,0,1,56.391,74.735 L63.057,68.103 C63.313,67.853,63.65,67.714,64,67.714 C64.35,67.714,64.687,67.854,64.943,68.104 L71.609,74.736 C71.733,74.856,71.831,75.001,71.899,75.162 A1.33,1.33,0,0,1,71.609,76.612 C71.355,76.862,71.018,77,70.668,76.997"
                     android:name="g1p"
                     android:fillColor="#ff867e"/>

@@ -7,7 +7,7 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <group android:name="mc3scale" android:scaleX="1.6271" android:scaleY="1.6271" android:pivotX="64" android:pivotY="64">
+    <group android:name="mc3scale" android:scaleX="1.5945" android:scaleY="1.5945" android:pivotX="64" android:pivotY="64">
         <group android:name="g1maskmove">
             <clip-path android:pathData="M128,0 L0,0 L0,128 L128,128 Z M45.766,92.974 C38.521,92.975,32.695,87.199,32.058,80.28 C31.528,74.502,34.688,68.84,39.878,66.326 C40.247,62.511,42.231,58.899,45.485,56.626 C48.651,54.414,52.628,53.774,56.265,54.747 C61.172,49.404,69.122,47.396,76.085,50.39 C82.787,53.273,86.825,59.99,86.861,66.953 C92.21,68.707,95.999,73.88,95.999,79.641 C95.999,86.699,90.286,92.974,82.882,92.974 L82.879,92.974 C74.634,92.966,66.39,92.969,58.145,92.971 L58.14,92.971 Q51.955,92.974,45.767,92.974 Z"/>
             <group android:name="g2maskhold">

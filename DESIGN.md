@@ -1281,27 +1281,40 @@ a valid animator and only a person can say the rain falls downward.
    the ink box on the source SVG and on the generated drawable and finds **519 icons × 2
    styles, 0 out of tolerance**. It is kept where it is honest and removed where it is not.
    The window is still never cropped and the `viewBox` still comes over untouched; what the
-   importer adds is one wrapper group, `mc3scale`, that takes every drawing to **0.75 of its
-   box** — the value the largest family (`clear-day`, `sunrise`, the UV scale) already had,
-   so the icons that looked right do not move and the rest come up to them. After it, the
-   shipped range is **0.727 to 0.750**, a 1.03× spread.
+   importer adds is one wrapper group, `mc3scale`. **What it equalises is the geometric mean
+   of the two ink sides, taken to 0.69**, under a ceiling that keeps the longer side at or
+   under 0.88 and a second that keeps the ink inside the box.
 
-   Three things about the rule, each of which was a decision:
+   **The mean and not the longer side**, and the reason is the half-day the first version
+   lasted (committente, from a device, 11 set 2026). Normalising `max(w, h)` to 0.75 is the
+   textbook rule and it has a defect that only shows on a screen: inside a square box a
+   square drawing reaches the target **in height as well**, a flat one reaches it in width
+   and stays 0.43 tall. So the moons came out big and the clouds, the meteor shower and the
+   rainbow came out low — the same complaint the normalisation was meant to end, moved to a
+   different pair of icons. The geometric mean reads the two sides together: it takes the
+   square drawings down and the flat ones up until they meet. Measured over the shipping
+   list, it lands between **0.49 and 0.69** (1.41×) where the source spanned 2.48×, with the
+   width between 0.37 and 0.88 and the height between 0.27 and 0.88.
+
+   Four things about the rule, each of which was a decision:
 
    - **One scale per drawing, not per style.** It is measured on the union of `line` and
      `flat`, because an icon that changed size when the reader changes style in Settings
      would be the opposite of what the scale is for.
+   - **A ceiling on extent, 0.88.** The mean alone pushes a very flat drawing almost to the
+     edge of its box (`rainbow` measured 0.97 wide). It binds 7 of the 79 shipped icons; the
+     mean decides the other 72.
    - **The pivot is the centre of the box, not the centre of the ink.** Re-centring would
      move the compositions that are deliberately off-centre (`sunrise` sits low because the
      sun comes up off a line) and would shift the optical centring the hour strip was tuned
-     on. The price is that an off-centre drawing reaches the edge before it reaches 0.75 and
-     stops there: `sunrise`, `sunset`, `horizon` and `humidity` land at 0.727.
+     on. The third constraint — nothing leaves the box — is what makes that safe, and with
+     the mean in charge it binds nothing.
    - **The pen scales with the drawing.** Half of the `line` family draws its outlines as
      filled `evenOdd` rings rather than strokes, and a ring cannot be thinned back;
      compensating the strokes and not the rings would make the family uneven in place of the
      icons. So the whole drawing is zoomed, brush included, and the cost is declared: at the
-     shipping list's largest scale (`smoke-particles`, 2.29×) the line is more than twice
-     `clear-day`'s, which stays at 1.00.
+     shipping list's largest scale (`smoke-particles`, 2.27×) the line is more than twice
+     `clear-day`'s, which sits at 0.92.
 
    **What no size rule can fix**, and the measurement that settles it: a rule based on ink
    *mass* rather than extent was tried first and is unusable, because the eight moon phases

@@ -13,7 +13,7 @@ import org.junit.Test
  * (`smoke-particles`) all'**81%** (`uv-index-11-plus`), e incolonnate nel Cielo quelle
  * differenze si leggono come un difetto dell'app, non come una scelta dell'illustratore.
  * `tools/import_meteocons_v3.py` avvolge quindi ogni drawable in un gruppo `mc3scale`
- * che porta tutte a **0,75**.
+ * che porta la **media geometrica** dei due lati a 0,69, sotto un tetto sull'ingombro.
  *
  * Quel che un test JVM puo' dire di un disegno che non sa disegnare non e' «e' della
  * taglia giusta» — quella la misura `tools/icon_ink.py` sulla sorgente — ma le tre cose
@@ -27,9 +27,9 @@ import org.junit.Test
  * 3. **Il perno e' il centro della scatola**, perche' e' l'unico che non sposta il
  *    centraggio ottico su cui la striscia oraria e' stata messa a punto.
  *
- * Un'icona **senza** gruppo `mc3scale` non e' un errore: vuol dire che era gia' a 0,75
- * (la famiglia di `clear-day`, la scala UV) e che l'importatore non ha scritto un gruppo
- * che non serviva. Quel che non deve succedere e' che ce l'abbia una faccia sola.
+ * Un'icona **senza** gruppo `mc3scale` non e' un errore: vuol dire che era gia' a misura
+ * e che l'importatore non ha scritto un gruppo che non serviva. Quel che non deve
+ * succedere e' che ce l'abbia una faccia sola.
  */
 class MeteoconScaleTest {
 
@@ -119,7 +119,7 @@ class MeteoconScaleTest {
     }
 
     /** Il gruppo della scala avvolge **tutto**: se ne restasse fuori un pezzo, quel pezzo
-     * resterebbe alla taglia dell'illustratore accanto al resto riportato a 0,75. */
+     * resterebbe alla taglia dell'illustratore accanto al resto riportato a misura. */
     @Test
     fun `the scale group wraps the whole drawing`() {
         val leaks = drawables.listFiles { f -> f.name.startsWith("mc3") && f.extension == "xml" }

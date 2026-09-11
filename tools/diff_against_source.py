@@ -18,8 +18,8 @@ Due accortezze, e senza di esse il conto non vuol dire niente:
 Si confronta contro il set `mc3o_*` (i colori dell'illustratore, generati da
 `import_meteocons_v3.py --original`): contro i set riancorati la differenza si accenderebbe
 ovunque, per una ragione che e' voluta. Dall'11 set 2026 quel set e' anche l'unico **senza
-la scala**: i set spediti portano il gruppo `mc3scale` che li riporta tutti a 0,75 della
-scatola (DESIGN §13.1), e confrontare quelli con la sorgente misurerebbe la
+la scala**: i set spediti portano il gruppo `mc3scale` che li riporta tutti a una misura
+comune (DESIGN §13.1), e confrontare quelli con la sorgente misurerebbe la
 normalizzazione invece della fedelta'. Il confronto delle taglie ha il suo strumento,
 `tools/icon_ink.py --confronto`, che sa della scala e la mette nel conto.
 

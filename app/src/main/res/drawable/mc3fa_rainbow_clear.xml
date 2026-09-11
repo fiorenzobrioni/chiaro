@@ -10,7 +10,7 @@
             android:height="24dp"
             android:viewportWidth="128"
             android:viewportHeight="128">
-            <group android:name="mc3scale" android:scaleX="1.0105" android:scaleY="1.0105" android:pivotX="64" android:pivotY="64">
+            <group android:name="mc3scale" android:scaleX="1.1857" android:scaleY="1.1857" android:pivotX="64" android:pivotY="64">
                 <path android:pathData="M27,54 A9,9,0,1,1,45,54 A9,9,0,1,1,27,54 Z"
                     android:fillColor="#a06f00"/>
                 <group android:name="g1rays" android:pivotX="36" android:pivotY="54">

@@ -36,9 +36,10 @@ quella spedita. Le differenze che contano, e perche':
 4b. **La taglia no** (11 set 2026, decisione del committente che rovescia la sua del
    mattino). Meteocons disegna ogni icona alla taglia che le serve — dal 33% della
    scatola all'81% — e incolonnate nel Cielo quelle differenze si leggono come un
-   difetto dell'app. Ogni drawable spedito esce quindi avvolto in un gruppo che porta il
-   lato del suo inchiostro a 0,75 della scatola: [with_scale], su misure di
-   `tools/icon_ink.py`. La finestra resta quella dell'illustratore, il disegno dentro no.
+   difetto dell'app. Ogni drawable spedito esce quindi avvolto in un gruppo che porta la
+   **media geometrica** dei due lati del suo inchiostro a 0,69, sotto un tetto
+   sull'ingombro: [with_scale], su misure di `tools/icon_ink.py`. La finestra resta
+   quella dell'illustratore, il disegno dentro no.
 
 5. **Gli `interpolator`.** v2 era tutta lineare; v3 usa `calcMode="spline"` con
    `keySplines`, che e' esattamente un `<pathInterpolator>`. Se ne genera uno per ogni
@@ -678,9 +679,14 @@ def with_scale(xml: str, k: float, vw: float, vh: float) -> str:
     scatola e' quella dell'illustratore, senza eccezioni»): Meteocons disegna ogni icona
     alla taglia che le serve, dal 33% della scatola (`smoke-particles`) all'81%
     (`uv-index-11-plus`), e incolonnate a 34 dp nel Cielo quelle differenze si leggono
-    come un difetto dell'app. La scala e' `0,75 / lato dell'inchiostro`, misurata in
-    [icon_ink.scales] sull'unione degli stili perche' cambiare stile non deve cambiare
-    taglia.
+    come un difetto dell'app. La scala la decide [icon_ink.scale_of] — la media
+    geometrica dei due lati dell'inchiostro a 0,69, con un tetto sull'ingombro — misurata
+    sull'unione degli stili perche' cambiare stile non deve cambiare taglia.
+
+    La prima versione normalizzava il **lato piu' lungo** ed e' durata mezza giornata: in
+    una scatola quadrata un disegno quadrato arriva alla misura anche in altezza e uno
+    piatto no, quindi le lune uscivano grandi e le nuvole basse. La media geometrica e'
+    la correzione, verificata sul dispositivo.
 
     **Il tratto si scala col disegno**, e non e' una svista: meta' della famiglia `line`
     disegna i contorni come anelli riempiti `evenOdd`, non come tratti, e quelli non si
@@ -943,7 +949,7 @@ def main() -> int:
                     (OUT / f"{anim_p}{name}.xml").write_text(animated, encoding="utf8")
             counts[style + ":statiche"] += 1
             if abs(k - 1.0) >= 5e-4:
-                counts[style + ":riportate a 0,75"] += 1
+                counts[style + ":riportate a misura"] += 1
             if style == "line":
                 emitted.add(name)
             if animated:

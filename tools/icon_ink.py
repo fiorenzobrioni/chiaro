@@ -267,10 +267,20 @@ def ink_vd(path: pathlib.Path):
 
 # --------------------------------------------------------------- la normalizzazione
 
-#: La frazione di scatola a cui ogni disegno viene portato (DESIGN §13.1). E' il valore
-#: che la famiglia piu' grande gia' ha — `clear-day`, `sunrise`, la scala UV — quindi i
-#: disegni che oggi stanno bene non si muovono e tutti gli altri salgono fino a loro.
-TARGET = 0.75
+#: La taglia comune, misurata sulla **media geometrica** dei due lati dell'inchiostro.
+#:
+#: Il primo tentativo normalizzava il lato piu' lungo a 0,75 e aveva un difetto che si e'
+#: visto solo sul dispositivo (committente, 11 set 2026): dentro una scatola quadrata un
+#: disegno quadrato arriva a 0,75 **in altezza**, uno piatto ci arriva solo in larghezza e
+#: resta alto 0,43 — quindi le lune venivano grandi e le nuvole, le stelle cadenti e
+#: l'arcobaleno piccoli. La media geometrica guarda i due lati insieme: tira giu' i
+#: quadrati e su i piatti, e li fa incontrare.
+TARGET = 0.69
+
+#: Il tetto sull'ingombro, perche' la media geometrica da sola porta un disegno molto
+#: piatto quasi a filo di scatola (`rainbow` a 0,97 di larghezza, misurato). Vincola 7
+#: icone della lista di spedizione; le altre 72 le decide la media.
+EXTENT_CAP = 0.88
 
 
 def ink_box(pkg: pathlib.Path, name: str) -> tuple[Box, float, float] | None:
@@ -325,23 +335,30 @@ def _ink_box_one(path: pathlib.Path) -> Box:
     return box
 
 
-def scale_of(box: Box, vw: float, vh: float, target: float = TARGET) -> float:
-    """La scala che porta il lato dell'inchiostro a [target] della scatola.
+def scale_of(box: Box, vw: float, vh: float, target: float = TARGET,
+             cap: float = EXTENT_CAP) -> float:
+    """La scala comune di un disegno: il minore di tre vincoli.
+
+    1. **La media geometrica** dei due lati dell'inchiostro va a [target]. E' la misura
+       che pareggia un disco e una nuvola, che il lato piu' lungo non pareggia.
+    2. **L'ingombro** non supera [cap], cosi' un disegno molto piatto non finisce a filo
+       di scatola.
+    3. **Il bordo**: scalando attorno al centro della scatola, l'inchiostro non esce.
 
     **Il perno e' il centro della scatola**, non il centro del disegno: ricentrare
     sposterebbe le composizioni che sono volutamente fuori centro (il sole di `sunrise`
     sta basso perche' sorge da una linea) e cambierebbe il centraggio ottico su cui la
-    striscia oraria e' stata messa a punto. La conseguenza e' che un disegno fuori centro
-    tocca il bordo prima di arrivare a [target], e li' la scala si ferma: meglio un'icona
-    un po' sotto misura che una tagliata.
+    striscia oraria e' stata messa a punto. Meglio un'icona un po' sotto misura che una
+    tagliata, ed e' il terzo vincolo a garantirlo.
     """
-    side = max(box.x1 - box.x0, box.y1 - box.y0) / max(vw, vh)
-    if side <= 0:
+    w = (box.x1 - box.x0) / vw
+    h = (box.y1 - box.y0) / vh
+    if w <= 0 or h <= 0:
         return 1.0
     cx, cy = vw / 2, vh / 2
     reach = max(cx - box.x0, box.x1 - cx, cy - box.y0, box.y1 - cy)
     ceiling = (min(cx, cy) / reach) if reach > 0 else 1.0
-    return min(target / side, ceiling)
+    return min(target / math.sqrt(w * h), cap / max(w, h), ceiling)
 
 
 def scales(pkg: pathlib.Path, target: float = TARGET) -> dict[str, float]:
