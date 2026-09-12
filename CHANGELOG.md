@@ -291,6 +291,25 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 
 ### Changed
 
+- **«Quasi sereno» has a drawing of its own, and the app composes it.** WMO code 1 is a
+  quarter-covered sky — a median 25% of cloud against code 2's 64%, measured on 1 680
+  hours — and it had been drawn twice wrong: first as «poco nuvoloso», then, since the
+  drawing Meteocons offers for it carries 72% of that cloud, as the plain sun. The plain
+  sun is honest where there are words and mute where there are none, and the hour strip
+  and the week row have none: one hour in six showed a clear sky over a quarter-covered
+  one. It now takes a drawing this repo composes from two the family already has —
+  `clear-day` untouched, same size and same place, plus `cloudy`'s silhouette shrunk into
+  the bottom-right corner and cut out of the sun by the mask «poco nuvoloso» already
+  carries. Between «sereno» and «quasi sereno» exactly one thing changes now, and it is
+  the thing that changes in the sky. Measured: the cloud is 43.1 units of the 128-unit box
+  against «poco nuvoloso»'s 99.2, the air between cloud and rays is 1.80 to 2.45 against
+  Meteocons' own 2.48, and the cloud is re-stroked at the family's 4 units rather than
+  shrunk to a 2.0 wisp beside a 3.7 sun. The night keeps the same cloud in the same place,
+  with `clear-night`'s moon in front of it. Nothing is hand-drawn: `tools/compose_sun_cloud.py`
+  writes all sixteen files (four faces, day and night, and their animated twins, where the
+  rays turn and the cloud bobs), and a test compares the result with its sources path by
+  path so a later re-import cannot leave it behind.
+
 - **The Vivid sky is now vivid at night too.** The vivid band table takes its chroma to
   ×1.8 of the paper one, which is the right rule for a token and the wrong one for a
   sky: paper draws the night with the least chroma of any band, so a multiplier handed

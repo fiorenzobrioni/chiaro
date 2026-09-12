@@ -87,9 +87,17 @@ def svg_shape(el: ET.Element, now: dict, out: list[str], clips: list[str]) -> No
         # tutte e due: dalla Fase 13 l'importatore emette anche quelle statiche (i
         # `transform` di Figma, e il riquadro dei ritagli), e leggendo solo le animate
         # questo strumento disegnava il vuoto.
-        tx = float(attr(el, "translateX", 0)) + animated.get("translateX", 0.0)
-        ty = float(attr(el, "translateY", 0)) + animated.get("translateY", 0.0)
-        rotation = float(attr(el, "rotation", 0)) + animated.get("rotation", 0.0)
+        #
+        # **La animata SOSTITUISCE la statica, non ci si somma** (12 set 2026). Un
+        # `objectAnimator` chiama il setter della proprieta' del gruppo, quindi il valore
+        # scritto nell'XML e' solo il punto di partenza finche' l'animazione non parte.
+        # Questo strumento le sommava, il che sui file dell'importatore non si vedeva —
+        # nessun gruppo animato porta anche una trasformazione statica — e ha lasciato
+        # passare una nuvola composta che sul telefono partiva per la tangente. Lo
+        # strumento esiste per guardare: se mente, non serve a niente.
+        tx = animated.get("translateX", float(attr(el, "translateX", 0)))
+        ty = animated.get("translateY", float(attr(el, "translateY", 0)))
+        rotation = animated.get("rotation", float(attr(el, "rotation", 0)))
         sx = animated.get("scaleX", float(attr(el, "scaleX", 1)))
         sy = animated.get("scaleY", float(attr(el, "scaleY", 1)))
         # The order a VectorDrawable composes a group in: about the pivot, then moved.

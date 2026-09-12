@@ -1132,13 +1132,33 @@ a valid animator and only a person can say the rain falls downward.
    (the Lottie build is the other road and was not taken: it wants a runtime dependency
    for a 34dp glyph and does not run inside a Glance widget at all).
 
-   **The tools are four, and each one is a seam.** `tools/import_meteocons_v3.py` is the
+   **The tools are five, and each one is a seam.** `tools/import_meteocons_v3.py` is the
    importer of record — re-running it IS the import; `tools/svg_paths.py` holds the path
    arithmetic and the mask conversion; `tools/reanchor.py` holds the colour rule;
-   `tools/shipped_icons.py` holds the list. The Kotlin lookup tables are **generated**
-   into `ui/icons/MeteoconsSets.kt`; what stays hand-written in `ChiaroIcons` is the
-   policy — which weather code gets which drawing, which metric gets which mark — because
-   that is the part a person argues about.
+   `tools/shipped_icons.py` holds the list; `tools/compose_sun_cloud.py` composes the one
+   drawing the family does not have (below). The Kotlin lookup tables are **generated**
+   into `ui/icons/MeteoconsSets.kt` and `ui/icons/ComposedIcons.kt`; what stays
+   hand-written in `ChiaroIcons` is the policy — which weather code gets which drawing,
+   which metric gets which mark — because that is the part a person argues about.
+
+   **One drawing is composed here, not imported** (12 set 2026): `sun-one-cloud-day` and
+   `-night`, which WMO code 1 takes. It is `clear-day` untouched — the same paths, the
+   same 0.92 scale, the same place — plus `cloudy`'s silhouette at 48.88% in the
+   bottom-right corner, cut out of the sun by the very mask `partly-cloudy` already
+   carries. Every piece stays its original **to the letter** and only the mask's hole is
+   computed, so `ComposedIconsTest` compares the composed file with its sources path by
+   path: that is what catches a re-import changing the drawings underneath, and it says to
+   re-run the composer rather than leaving it quietly behind. Measured: the cloud is
+   **43.1 units against partly-cloudy's 99.2** (43%; Meteocons' own `mostly-clear`, which
+   this replaces, sits at 72%, which is why it is on the shelf), the air between cloud and
+   rays is **1.80–2.45** against Meteocons' own 2.48, and the line style **re-strokes** the
+   cloud at the family's 4 units (`strokeWidth` = 4 / scale) instead of shrinking a ring to
+   2.0 beside a 3.7 sun. It is also the one drawing that is **not normalised**: no
+   `mc3scale` group, ink at **0.711** of the box against the family's 0.690, because
+   normalising it would shrink the sun and then it would not be `clear-day` any more. The
+   3% is under the family's own 0.88 extent cap. `ComposedIcons.kt` is a separate file from
+   `MeteoconsSets.kt` for the reason that makes the whole thing safe: the importer rewrites
+   that one on every run and never touches this one.
 
    **The repo carries the whole family; the APK carries the list.** All 519 drawings are
    converted into `res/drawable`; only the ones a screen actually names appear in the

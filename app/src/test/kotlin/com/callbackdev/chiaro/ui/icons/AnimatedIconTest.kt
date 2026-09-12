@@ -125,6 +125,52 @@ class AnimatedIconTest {
         }
     }
 
+    /**
+     * **Un gruppo non anima una proprieta' che porta gia' scritta nell'XML.**
+     *
+     * Un `objectAnimator` chiama il setter della proprieta': il valore statico non e' un
+     * punto di partenza a cui l'animazione si somma, e' un valore che l'animazione
+     * **sostituisce**. Un gruppo con `translateY="30.5"` e un `translateY` animato da 0 a
+     * -3 sta fermo finche' l'icona e' ferma e salta di trenta unita' appena parte.
+     *
+     * Nessuna icona importata lo fa — i gruppi che Meteocons anima sono gusci vuoti — e
+     * per questo il difetto e' passato: `tools/icon_filmstrip.py` sommava le due cose e
+     * quindi disegnava la posizione giusta. E' costato un giro sul telefono (12 set 2026,
+     * il «quasi sereno» composto), e da qui in poi lo dice la suite. La regola d'oro resta
+     * quella dell'importatore: il gruppo che si muove non porta trasformazioni sue, e chi
+     * ha bisogno di tutte e due usa due gruppi annidati.
+     */
+    @Test
+    fun `an animated property is never also written on its group`() {
+        val groupLine = Regex("""<group\b[^>]*>""")
+        sets.forEach { (_, prefix) ->
+            moving(prefix).forEach { file ->
+                val text = file.readText()
+                val drawing = text.substringBefore("</aapt:attr>")
+                val statics = buildMap {
+                    groupLine.findAll(drawing).forEach { g ->
+                        val name = names.find(g.value)?.groupValues?.get(1) ?: return@forEach
+                        put(name, groupProperties.filter { """android:$it="""" in g.value })
+                    }
+                }
+                targets.findAll(text).forEach { target ->
+                    val name = target.groupValues[1]
+                    val block = text.substring(target.range.first).substringBefore("</target>")
+                    Regex("""android:propertyName="([^"]*)"""").findAll(block)
+                        .map { it.groupValues[1] }
+                        .forEach { property ->
+                            assertTrue(
+                                "${file.name}: il gruppo '$name' anima $property e lo porta " +
+                                    "anche scritto — l'animazione lo sostituisce, e il " +
+                                    "disegno salta appena parte",
+                                property !in statics[name].orEmpty()
+                            )
+                        }
+                }
+            }
+        }
+    }
+
     @Test
     fun `every loop is a loop`() {
         val animator = Regex("""<objectAnimator\b[^>]*""", RegexOption.DOT_MATCHES_ALL)

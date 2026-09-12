@@ -86,11 +86,16 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
   (`golden_hour.pm`, `current.temp_c`) stay in the code and never reach a screen.
 - **No emoji as iconography.** The weather icons are a vector family (`DESIGN.md` §13.1):
   Meteocons v3, imported by `tools/import_meteocons_v3.py` (+ `svg_paths.py`,
-  `reanchor.py`, `shipped_icons.py`). **Nothing under `res/drawable/mc3*` or
-  `ui/icons/MeteoconsSets.kt` is edited by hand** — re-running the importer IS the import.
-  The repo carries all 519 drawings; only what a screen names reaches the APK, so adding
-  one to a screen means adding it to `shipped_icons.py` and re-running, and
-  `MeteoconsSetsTest` fails the build if you forget.
+  `reanchor.py`, `shipped_icons.py`). **Nothing under `res/drawable/mc3*`,
+  `ui/icons/MeteoconsSets.kt` or `ui/icons/ComposedIcons.kt` is edited by hand** —
+  re-running the tool IS the drawing. Two tools write there and they do not overlap: the
+  importer owns every name that exists in Meteocons, and `tools/compose_sun_cloud.py` owns
+  `sun-one-cloud-*`, the «quasi sereno» this repo composes from `clear-day` and `cloudy`
+  because the family has no honest drawing for WMO code 1. Run the composer again after
+  any re-import: `ComposedIconsTest` compares the composed drawing with its sources path by
+  path and fails when they drift. The repo carries all 519 drawings; only what a screen
+  names reaches the APK, so adding one to a screen means adding it to `shipped_icons.py`
+  and re-running, and `MeteoconsSetsTest` fails the build if you forget.
 - **Localization**: everything on screen is prose or data, so **everything localizes**
   (IT/EN, system per-app language picker). There is no code register in this product to
   protect, which is the one rule of the terminal line that does not survive the reskin.
