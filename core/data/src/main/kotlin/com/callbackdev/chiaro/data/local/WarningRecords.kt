@@ -74,4 +74,30 @@ interface WarningRecordDao {
             "ORDER BY recorded_epoch_s DESC, id DESC LIMIT :keep)"
     )
     suspend fun pruneCity(cityKey: String, keep: Int)
+
+    /**
+     * The backstop this table did not have, and `weather_history` did (12 set 2026).
+     * [pruneCity] bounds the place it is handed and no other, so every key that stops
+     * being handed to it — a removed place, and every ~1.1 km cell the GPS pseudo-city
+     * has ever minted — kept its rows for the life of the install: the only table in
+     * the app with no ceiling at all. Same shape and same size as the history's, for
+     * the same reason: it must never be what truncates a place somebody still follows.
+     */
+    @Query(
+        "DELETE FROM warning_records WHERE id NOT IN " +
+            "(SELECT id FROM warning_records ORDER BY recorded_epoch_s DESC, id DESC LIMIT :keep)"
+    )
+    suspend fun prune(keep: Int)
+
+    /**
+     * Rows of places the app no longer follows, dropped once the place has been gone
+     * long enough to be gone for real — the twin of `WeatherHistoryDao.pruneForeign`,
+     * all or nothing per key for the reason given there.
+     */
+    @Query(
+        "DELETE FROM warning_records WHERE city_key NOT IN (:liveKeys) AND city_key IN " +
+            "(SELECT city_key FROM warning_records GROUP BY city_key " +
+            "HAVING MAX(recorded_epoch_s) < :cutoffEpochSeconds)"
+    )
+    suspend fun pruneForeign(liveKeys: List<String>, cutoffEpochSeconds: Long)
 }

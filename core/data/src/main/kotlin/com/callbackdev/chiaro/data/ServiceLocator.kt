@@ -6,6 +6,7 @@ import androidx.room.Room
 import com.callbackdev.chiaro.core.data.BuildConfig
 import com.callbackdev.chiaro.data.local.ReportDiskCache
 import com.callbackdev.chiaro.data.local.ChiaroDatabase
+import com.callbackdev.chiaro.data.local.StoredDataSweep
 import com.callbackdev.chiaro.data.local.WarningRecordDao
 import java.io.File
 import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
@@ -17,6 +18,7 @@ import com.callbackdev.chiaro.data.warnings.OfficialWarningStore
 import com.callbackdev.chiaro.data.warnings.WarningSource
 import com.callbackdev.chiaro.data.warnings.WarningZoneAssets
 import com.callbackdev.chiaro.domain.warnings.WarningZoneIndex
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -331,6 +333,13 @@ object ServiceLocator {
             .build()
 
         val database = database(appContext)
+        // Survives process death so cold starts inside the TTL cost zero GETs
+        val diskCache = ReportDiskCache(File(appContext.filesDir, "report_cache"), json)
+        val sweep = StoredDataSweep(
+            historyDao = database.weatherHistoryDao(),
+            warningRecordDao = warningRecordDao(appContext),
+            diskCache = diskCache
+        )
 
         return WeatherRepository(
             forecastApi = retrofit(OpenMeteoForecastApi.BASE_URL)
@@ -340,12 +349,30 @@ object ServiceLocator {
             geocodingApi = retrofit(OpenMeteoGeocodingApi.BASE_URL)
                 .create(OpenMeteoGeocodingApi::class.java),
             historyDao = database.weatherHistoryDao(),
-            // Survives process death so cold starts inside the TTL cost zero GETs
-            diskCache = ReportDiskCache(File(appContext.filesDir, "report_cache"), json),
+            diskCache = diskCache,
             json = json,
             // Every fetch that commits new data notifies whoever installed us — the
             // widget repaint, in the app. The data layer does not know that.
-            onHistoryCommitted = { historyListener() }
+            onHistoryCommitted = { historyListener() },
+            // ...and the same commit is where the storage tidies up after itself. The
+            // live set is read here and not inside the sweep because the sweep is in
+            // `local/` and has no business knowing about the saved-places store.
+            onHousekeeping = { sweep.run(liveCityKeys(appContext)) }
         )
+    }
+
+    /**
+     * Every `City.cacheKey` the app still has a use for: the saved places and, when
+     * there is one, the current GPS fix. Widget pins resolve city ids against that
+     * same saved list (or the GPS sentinel), so they add nothing here — and the GPS
+     * cells the reader drove through yesterday are deliberately NOT in it, which is
+     * the whole point of [StoredDataSweep].
+     */
+    private suspend fun liveCityKeys(appContext: Context): Set<String> {
+        val store = cityStore(appContext)
+        return buildSet {
+            store.cities.first().forEach { add(it.cacheKey) }
+            store.locationSettings.first().gpsCity?.let { add(it.cacheKey) }
+        }
     }
 }

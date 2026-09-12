@@ -65,6 +65,7 @@ class SearchLanguageTest {
             emptyFlow()
         override suspend fun pruneCity(cityKey: String, keep: Int) = Unit
         override suspend fun prune(keep: Int) = Unit
+        override suspend fun pruneForeign(liveKeys: List<String>, cutoffEpochSeconds: Long) = Unit
         override suspend fun setFiredRulesOnLatest(cityKey: String, firedRulesJson: String) = Unit
         override suspend fun setSkyRunsOnLatest(cityKey: String, skyRunsJson: String) = Unit
     }
