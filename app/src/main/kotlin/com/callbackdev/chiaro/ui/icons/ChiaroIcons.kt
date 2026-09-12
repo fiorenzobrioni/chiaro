@@ -54,12 +54,29 @@ val LocalWeatherIcons = staticCompositionLocalOf { WeatherIcons.LINE }
 object ChiaroIcons {
 
     /**
+     * The face of a drawing in one of the four sets: the composed drawings first, the
+     * imported family after.
+     *
+     * Two tables and not one because only one of them is rewritten by
+     * `tools/import_meteocons_v3.py` on every run; [ComposedIcons] is written by
+     * `tools/compose_sun_cloud.py` and has to survive that. The order matters in one
+     * direction only — no name is in both — so a composed drawing is found first and an
+     * imported one falls through.
+     *
+     * `getValue` on the family and not `get`: a drawing that reached a screen without
+     * being in the shipping list is a loud failure in a test, never a silent blank.
+     */
+    @DrawableRes
+    private fun faceOf(
+        @DrawableRes lineRes: Int,
+        composed: Map<Int, Int>,
+        family: Map<Int, Int>
+    ): Int = composed[lineRes] ?: family.getValue(lineRes)
+
+    /**
      * The style applied to a line resource id: the sibling for the style the reader
      * chose and the ground the icon will sit on. [darkGround] is the applied theme in
      * the app and the card's own ground in a widget (WidgetPalette).
-     *
-     * `getValue` and not `get`: a drawing that reached a screen without being in the
-     * shipping list is a loud failure in a test, never a silent blank.
      */
     @DrawableRes
     fun styledRes(
@@ -67,9 +84,12 @@ object ChiaroIcons {
         style: WeatherIcons,
         darkGround: Boolean = false
     ): Int = when {
-        style == WeatherIcons.FILL && darkGround -> MeteoconsSets.flatDarkOf.getValue(lineRes)
-        style == WeatherIcons.FILL -> MeteoconsSets.flatOf.getValue(lineRes)
-        darkGround -> MeteoconsSets.lineDarkOf.getValue(lineRes)
+        style == WeatherIcons.FILL && darkGround ->
+            faceOf(lineRes, ComposedIcons.flatDarkOf, MeteoconsSets.flatDarkOf)
+        style == WeatherIcons.FILL ->
+            faceOf(lineRes, ComposedIcons.flatOf, MeteoconsSets.flatOf)
+        darkGround ->
+            faceOf(lineRes, ComposedIcons.lineDarkOf, MeteoconsSets.lineDarkOf)
         else -> lineRes
     }
 
@@ -84,7 +104,7 @@ object ChiaroIcons {
         @DrawableRes lineRes: Int,
         style: WeatherIcons,
         darkGround: Boolean = false
-    ): Int? = MeteoconsSets.movingOf[lineRes]?.let {
+    ): Int? = (ComposedIcons.movingOf[lineRes] ?: MeteoconsSets.movingOf[lineRes])?.let {
         when {
             style == WeatherIcons.FILL && darkGround -> it.flatDark
             style == WeatherIcons.FILL -> it.flat
@@ -97,28 +117,36 @@ object ChiaroIcons {
      * The line drawing for a WMO code, before any style or ground is applied: the seam
      * [movingRes] and [styledRes] are both keyed on.
      *
-     * **Codes 1 and 2 are different drawings again** (Fase 13), which was the defect that
-     * opened the phase: they had shared one since Fase 2, and measured on 1 680 hours code
-     * 1 carries a median 25% of cloud against code 2's 64%, two buckets that do not overlap
-     * between their tenth and ninetieth percentiles. One hour in six was drawn half again
-     * cloudier than forecast, under a word (`cond_mostly_clear`) that said otherwise.
+     * **Codes 0, 1 and 2 are three different drawings** (12 set 2026), and it took three
+     * goes. They shared one until Fase 13, which was the defect that opened the phase:
+     * measured on 1 680 hours, code 1 carries a median 25% of cloud against code 2's 64%,
+     * two buckets that do not overlap between their tenth and ninetieth percentiles. One
+     * hour in six was drawn half again cloudier than forecast, under a word
+     * (`cond_mostly_clear`) that said otherwise.
      *
-     * **Code 1 takes the plain sun, and `mostly-clear` is imported but not used**
-     * (committente, 11 set 2026). The family HAS the drawing — that is half of why the
-     * import was redone — and it is deliberately left on the shelf, because it draws a
-     * sky cloudier than its own name: measured in the source, its cloud is **56 units of
-     * 128 against partly-cloudy's 80**, so 70% of the cloud for a sky that carries 39% of
-     * the cover, and its sun shrinks from a 36-unit disc to 23 while at a quarter of cover
-     * the sun is fully out. Used for code 1 it reproduced the original defect in a milder
-     * form, overstating cloud rather than understating sun.
+     * Fase 13 gave code 1 Meteocons' own `mostly-clear`, and that was wrong the other way
+     * round: measured in the source its cloud is **56 units of 128 against
+     * partly-cloudy's 80** — 70% of the cloud for a sky that carries 39% of the cover —
+     * and its sun shrinks from a 36-unit disc to 23, while at a quarter of cover the sun
+     * is fully out. So on 11 set 2026 code 1 was given the plain sun instead: honest in
+     * the words, mute in the hour strip and the week row, where there are none. That cost
+     * was written down rather than waved past — 0 and 1 drew the same sky for 17,2% of
+     * hours — and it is the reason this came back.
      *
-     * What it costs is real and is written down rather than waved past: in the hour strip
-     * and the week row there are no words, so **0 and 1 now look the same there** — one
-     * hour in six (17,2% of them) shows a clear sky over a quarter-covered one. On Today's
-     * hero the words still tell them apart. Most apps make the same collapse and for a
-     * poorer reason, having no such drawing at all: Home Assistant's Open-Meteo
-     * integration maps both 0 and 1 to `sunny`. Here it is a choice, not a vocabulary
-     * limit, and the drawing stays in the repo for the day the choice is revisited.
+     * **Code 1 now takes `sun-one-cloud`, which this repo composes rather than imports**
+     * (committente, 12 set 2026; the recipe and its measurements are in the head of
+     * `tools/compose_sun_cloud.py`). It is `clear-day` untouched — the same paths, the
+     * same 0,92 scale, the same place — plus `cloudy`'s silhouette at 48,88% in the
+     * bottom-right corner, cut out of the sun by the very mask `partly-cloudy` already
+     * uses. Measured: the cloud is **43,1 units against partly-cloudy's 99,2** (43%,
+     * where the shelved `mostly-clear` sits at 72%), the air between cloud and rays is
+     * 1,80 to 2,45 against Meteocons' own 2,48, and the sun keeps seven rays of eight —
+     * the south-east one stands behind the cloud. Between 0 and 1 exactly one thing
+     * changes, and it is the thing that changes in the sky.
+     *
+     * The imported `mostly-clear` stays in the repo, unused, for the day the choice is
+     * revisited again. Most apps collapse 0 and 1 for a poorer reason, having no such
+     * drawing at all: Home Assistant's Open-Meteo integration maps both to `sunny`.
      *
      * Rain, drizzle and snow take their cloud with them (`overcast-*`) rather than
      * falling out of nothing: from the same hours, when it rains the sky IS closed —
@@ -132,7 +160,8 @@ object ChiaroIcons {
      */
     @DrawableRes
     fun conditionLineRes(wmoCode: Int, night: Boolean = false): Int = when (wmoCode) {
-        0, 1 -> if (night) R.drawable.mc3_clear_night else R.drawable.mc3_clear_day
+        0 -> if (night) R.drawable.mc3_clear_night else R.drawable.mc3_clear_day
+        1 -> if (night) ComposedIcons.mostlyClearNight else ComposedIcons.mostlyClearDay
         2 -> if (night) R.drawable.mc3_partly_cloudy_night else R.drawable.mc3_partly_cloudy_day
         3 -> R.drawable.mc3_overcast
         45, 48 -> if (night) R.drawable.mc3_fog_night else R.drawable.mc3_fog_day

@@ -1,0 +1,26 @@
+<!-- Composto da tools/compose_sun_cloud.py dai disegni gia' importati di
+     Meteocons v3 (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Il sole e' clear-night alla sua scala, la nuvola
+     e' cloudy al 48.88% ri-tracciata. Non modificare a mano: ri-eseguire lo
+     strumento E' la composizione. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <group android:name="g1maskmove">
+        <clip-path android:pathData="M128,0 L0,0 L0,128 L128,128 Z M78.7683,111.17 C74.3085,111.171,67.9695,105.4536,67.5472,100.9835 C67.1806,97.1059,69.9402,91.8226,73.4204,90.3929 C73.5412,87.8233,75.5052,84.7624,77.6696,83.2916 C79.8237,81.8277,83.2897,81.1454,85.7142,81.948 C88.9085,78.2204,95.9366,76.9684,100.5528,78.8991 C105.0126,80.7649,108.826,86.1121,108.6124,90.829 C112.2198,91.7084,115.501,96.466,115.501,100.3793 C115.501,104.9373,109.2078,111.17,104.6854,111.17 L78.7677,111.17"/>
+        <group android:name="g2maskhold">
+            <group android:name="g3sun" android:scaleX="1.38" android:scaleY="1.38" android:pivotX="64" android:pivotY="64">
+                <group android:name="g4moon" android:pivotX="64" android:pivotY="64">
+                    <path android:pathData="M60.962,32 C44.676,33.758,32,47.362,32,63.898 C32,81.627,46.567,96,64.536,96 C79.682,96,92.373,85.775,96,71.95 C74.381,74.266,55.329,53.463,60.962,32"
+                          android:fillColor="#317994"/>
+                </group>
+            </group>
+        </group>
+    </group>
+    <group android:name="g5cloud" android:scaleX="0.4888" android:scaleY="0.4888" android:translateX="27.5" android:translateY="30.5" android:pivotX="64" android:pivotY="64">
+        <path android:pathData="M90.389,63.086 C92.684,53.882,87.741,44.136,79.009,40.482 C70.265,36.824,59.828,40.138,54.837,48.212 C50.537,45.625,44.975,45.778,40.824,48.599 C36.684,51.413,34.5,56.514,35.35,61.454 C28.393,62.769,23.393,69.339,24.061,76.408 C24.729,83.477,30.871,89.002,37.953,89 L90.977,89 C98.045,89,104,83.119,104,76.028 C104,68.701,97.677,62.768,90.389,63.086"
+              android:fillColor="#88909c"/>
+    </group>
+</vector>

@@ -5904,6 +5904,67 @@ scelta si rivede.
 **deve** restare diverso dal 2 — che è la confusione da cui è nata la fase e che non deve
 poter tornare per distrazione.
 
+### Il quasi sereno diventa un disegno suo (12 set 2026)
+
+Il committente torna sulla decisione del giorno prima, e la riapre dalla parte giusta: il
+sole pieno per il codice 1 è onesto sulla parola e muto sul disegno, «mi spiace però non
+visualizzare questo stato meteo correttamente». La domanda è se si possa **comporre**
+un'icona partendo da quella di `clear` e aggiungendo la nuvola rimpicciolita in basso a
+destra, invece di scegliere fra due disegni che sbagliano in due direzioni opposte.
+
+Si può, e non serve disegnare niente a mano: tutti i pezzi sono già importati.
+`tools/compose_sun_cloud.py` li mette insieme, e la regola che lo rende sicuro è che **i
+percorsi restano identici alla lettera ai loro originali** — il sole è `clear-day` con i
+suoi path e il suo gruppo di scala, la nuvola è la silhouette di `cloudy`. L'unico
+percorso calcolato è il buco della maschera, ed è anche l'unico misurato riga per riga.
+
+**Tre cose sono state decise guardando, e una quarta misurando.**
+
+1. **La taglia della nuvola.** Tre misure renderizzate a 42 dp (la striscia oraria) e
+   confrontate con il poco nuvoloso: 37,3 / 43,1 / 48,8 unità, cioè il 38% / 43% / 49%
+   della sua nuvola. Scelta la mediana. Per riferimento, la nuvola dello scartato
+   `mostly-clear` ne vale il **72%**: è quella la ragione per cui il disegno della
+   libreria non si usa.
+2. **La nuvola è ri-tracciata, non rimpicciolita.** Scalare l'anello di `cloudy` scala
+   anche il suo contorno: a metà taglia sarebbe largo 2,0 contro i 3,7 del sole, e la
+   nuvoletta si legge come uno sbaffo. Il gruppo porta `strokeWidth` = 4 / scala, così il
+   tratto torna esattamente a 4. `ComposedIconsTest` tiene fermo quel prodotto.
+3. **Due composizioni, e ha vinto quella che cambia meno.** A: sole all'85%, spostato in
+   alto a sinistra, inchiostro esattamente sullo 0,690 di famiglia. B: `clear-day`
+   **intatto** — stessa taglia, stesso posto — e la nuvola nell'angolo. Scelta B dal
+   committente: fra sereno e quasi sereno cambia una cosa sola, ed è la cosa che cambia
+   nel cielo. Si paga con un inchiostro a **0,711** invece di 0,690 (il 3% sopra, ben
+   sotto il tetto di 0,88) e con il raggio di sud-est che resta dietro la nuvola.
+4. **La notte porta la stessa nuvola, e non lo faceva da sola.** Segnalata dal
+   committente guardando i provini: nel disegno la nuvola era già nello stesso punto, ma
+   la normalizzazione della taglia la spostava, perché una luna occupa meno di un sole
+   con i raggi (`mc3scale` 1,138 contro 0,980) e la stessa nuvola usciva 50,1 unità
+   invece di 43,1. Nella composizione A la correzione era dare alla coppia una scala sola
+   e alla luna la taglia che porta anche la notte a 0,69 — veniva l'85% di `clear-night`,
+   cioè **la stessa percentuale a cui sta il sole**. In B il problema non si pone: non
+   c'è normalizzazione, la luna è `clear-night` intatta e la nuvola cade sullo stesso
+   pixel in tutte e due.
+
+**L'aria fra la nuvola e i raggi** è l'unica misura che la composizione deve inventare,
+perché la maschera della sorgente è dilatata di 4 e scalata con la nuvola varrebbe 1,96.
+Si riparte da quella e si scosta lungo le normali: misurata dove il sole arriva davvero,
+esce **1,80–2,45** (mediana 2,29), contro i 2,48 che Meteocons lascia nel poco nuvoloso.
+
+**Il difetto trovato dallo strumento, non dall'occhio.** Al primo piazzamento (centro
+della nuvola a 86,7) il buco tagliava il raggio di sud **per il lungo** e lasciava una
+scheggia larga mezzo tratto accanto alla nuvola. `ray_report()` la misura raggio per
+raggio — quanto ne resta e quanto è largo quel che resta — e `slivers()` si rifiuta di
+scrivere i file finché c'è. Spostata la nuvola di 3,2 unità a destra: sette raggi interi,
+il sud-est dietro la nuvola, nessuna scheggia.
+
+**Cosa resta dov'era:** il `mostly-clear` di Meteocons resta nel repo e in `PLANNED`,
+inutilizzato; le parole sullo schermo non cambiano; `MeteoconsSets.kt` non è stato
+toccato, perché il composto vive in `ComposedIcons.kt`, che l'importatore non riscrive.
+`ConditionIconsTest` ora fissa tre distanze invece di due (0 ≠ 1, 1 ≠ 2, 0 ≠ 2) e
+`ComposedIconsTest` confronta il composto con le sue sorgenti percorso per percorso: se
+una ri-importazione cambia i disegni da cui viene, il test dice di ri-eseguire lo
+strumento invece di lasciare il composto indietro in silenzio.
+
 ### «È l'importazione che ridimensiona?» — no, ed è misurato sulle 519 (11 set 2026)
 
 Segnalazione dal dispositivo, sul Cielo → **In arrivo**: la luna piena e la luna delle

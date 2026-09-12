@@ -22,7 +22,7 @@ class ConditionIconsTest {
     /** Ogni codice che Open-Meteo può servire, e il disegno che gli tocca di giorno. */
     private val byDay = mapOf(
         0 to R.drawable.mc3_clear_day,
-        1 to R.drawable.mc3_clear_day,
+        1 to R.drawable.mc3_sun_one_cloud_day,
         2 to R.drawable.mc3_partly_cloudy_day,
         3 to R.drawable.mc3_overcast,
         45 to R.drawable.mc3_fog_day,
@@ -54,7 +54,7 @@ class ConditionIconsTest {
     /** I codici che di notte cambiano disegno, e in cosa. */
     private val byNight = mapOf(
         0 to R.drawable.mc3_clear_night,
-        1 to R.drawable.mc3_clear_night,
+        1 to R.drawable.mc3_sun_one_cloud_night,
         2 to R.drawable.mc3_partly_cloudy_night,
         45 to R.drawable.mc3_fog_night,
         48 to R.drawable.mc3_fog_night,
@@ -91,27 +91,34 @@ class ConditionIconsTest {
     }
 
     /**
-     * Il difetto che ha aperto la fase, in una riga, e la scelta che gli è seguita.
+     * Il difetto che ha aperto la fase, in una riga, e le due decisioni che gli sono
+     * seguite.
      *
      * Il codice 1 è «quasi sereno» — 25% di copertura mediana, misurata su 1 680 ore — e
      * il 2 è «poco nuvoloso», 64%. Fino alla Fase 13 disegnavano **la stessa cosa**, ed è
      * quella la confusione che non deve poter tornare: sono le due metà opposte del cielo
-     * sereno.
+     * sereno. L'11 set 2026 il codice 1 ha preso il sole pieno, perché il disegno che
+     * Meteocons chiama `mostly-clear` porta il 72% della nuvola del poco nuvoloso; e così
+     * 0 e 1 si sono ritrovati uguali dove non ci sono parole, cioè nella striscia oraria.
      *
-     * Che il codice 1 prenda invece il **sole pieno**, insieme allo 0, è una decisione del
-     * committente dell'11 set 2026 e non un ripiego: il disegno «quasi sereno» esiste nella
-     * libreria ed è lasciato apposta da parte, perché disegna un cielo più nuvoloso del suo
-     * nome (la sua nuvola è 56 unità su 128 contro le 80 di «poco nuvoloso»). Il test lo
-     * fissa in tutte e due le direzioni, così nessuna delle due cose si perde per caso.
+     * Dal 12 set 2026 sono **tre disegni diversi**: il codice 1 prende `sun-one-cloud`,
+     * che questo repo compone (il sereno intatto più una nuvoletta nell'angolo,
+     * `tools/compose_sun_cloud.py`). Il test fissa le tre distanze, così nessuna delle
+     * due confusioni può tornare per caso.
      */
     @Test
-    fun `mostly clear takes the plain sun, and is still not partly cloudy`() {
+    fun `mostly clear is its own drawing, neither clear nor partly cloudy`() {
         listOf(false, true).forEach { night ->
             val clear = ChiaroIcons.conditionLineRes(0, night)
             val mostly = ChiaroIcons.conditionLineRes(1, night)
             val partly = ChiaroIcons.conditionLineRes(2, night)
-            assertEquals("quasi sereno deve prendere il sole pieno, come sereno", clear, mostly)
+            assertNotEquals("quasi sereno e sereno sono lo stesso disegno", clear, mostly)
             assertNotEquals("quasi sereno e poco nuvoloso sono lo stesso disegno", mostly, partly)
+            assertNotEquals("sereno e poco nuvoloso sono lo stesso disegno", clear, partly)
+            assertTrue(
+                "il quasi sereno non è il disegno composto",
+                mostly in ComposedIcons.byName.values
+            )
         }
     }
 

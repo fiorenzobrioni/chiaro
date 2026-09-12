@@ -20,6 +20,11 @@ gira per sempre e' decorazione.
 
 #: I cieli che `ChiaroIcons.conditionLineRes` puo' restituire, i marchi delle schede, del
 #: Cielo e dell'agenda: tutto quello che oggi arriva su uno schermo.
+#:
+#: **Non tutto quel che arriva a uno schermo e' qui**: `sun-one-cloud-day` e `-night` non
+#: sono disegni di Meteocons ma composizioni di questo repo (`tools/compose_sun_cloud.py`),
+#: e hanno la loro lista li'. Questa resta la lista di **cosa importare**, e un nome che
+#: non esiste a monte la farebbe fallire.
 SHIPPED = [
     "smoke",
     "clear-day", "clear-night",
@@ -48,8 +53,11 @@ SHIPPED = [
 #: barometro, la scala Beaufort, i momenti del giorno, i tipi di allerta della Fase 12.
 #: Spostarne una in SHIPPED e' la meta' del lavoro che serve a usarla.
 PLANNED = [
-    # il disegno del «quasi sereno»: esiste, ed e' scelta del committente non usarlo
-    # (11 set 2026) — vedi ChiaroIcons.conditionLineRes
+    # il disegno del «quasi sereno» di Meteocons: esiste, e resta sullo scaffale. Dal
+    # 12 set 2026 il codice 1 prende `sun-one-cloud-*`, che `tools/compose_sun_cloud.py`
+    # compone dal sereno piu' una nuvoletta, perche' questo disegno porta il 72% della
+    # nuvola del «poco nuvoloso» per un cielo che ne ha il 39% di copertura — vedi
+    # ChiaroIcons.conditionLineRes
     "mostly-clear-day", "mostly-clear-night",
     "raindrop", "umbrella", "dust", "pollen-grass-very-high",
     "pollen-tree-very-high", "pollen-weed-very-high", "barometer-very-high",
