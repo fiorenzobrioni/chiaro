@@ -122,6 +122,7 @@ class OfficialWarningsStep(private val context: Context) {
                 )
             }
             dao.pruneCity(active.cacheKey, RETENTION)
+            dao.prune(RETENTION * PLACES)
         }
 
         if (notifiers == null || !settings.officialWarnings) return
@@ -138,7 +139,8 @@ class OfficialWarningsStep(private val context: Context) {
     }
 
     private suspend fun recordMissed(active: City, now: Instant, held: StoredBulletin?) {
-        ServiceLocator.warningRecordDao(context).insert(
+        val dao = ServiceLocator.warningRecordDao(context)
+        dao.insert(
             WarningRecordEntity(
                 cityKey = active.cacheKey,
                 recordedEpochSeconds = now.epochSecond,
@@ -147,6 +149,12 @@ class OfficialWarningsStep(private val context: Context) {
                 issuedAt = held?.bulletin?.issuedAt?.toString()
             )
         )
+        // This path writes and, until 12 set 2026, pruned nothing: the retention above
+        // runs only when a bulletin actually MOVES, and an issuer that cannot be
+        // reached for a season is exactly when it never does. A row a day is slow, but
+        // slow and unbounded is still unbounded.
+        dao.pruneCity(active.cacheKey, RETENTION)
+        dao.prune(RETENTION * PLACES)
     }
 
     /** The 4.7 MB fallback archive is for Wi-Fi; a metered network gets the small files only. */
@@ -156,5 +164,11 @@ class OfficialWarningsStep(private val context: Context) {
     companion object {
         /** Rows kept per place — the depth of one place's warning diary, like the history's. */
         const val RETENTION = 100
+
+        /** How many places the table is sized for before its global backstop bites —
+         * `WeatherRepository.HISTORY_CITIES`'s twin, and generous for its reason: the
+         * backstop exists to bound rows left behind by places that are gone, never to
+         * shorten a place somebody still follows. */
+        private const val PLACES = 8
     }
 }

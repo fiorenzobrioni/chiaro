@@ -6567,3 +6567,107 @@ diverso, o Meteocons ridisegnasse una delle due, il rapporto cambierebbe e il co
 Misura anche il distintivo prima di confrontarlo, perché la premessa «è lo stesso quadrato»
 è la metà che si rompe in silenzio. `NowWidgetLayoutTest` fissa il tetto del punto 1 a tre
 altezze di riga (70, 82, 85, 130 dp) e la densità rimisurata sta nella sua intestazione.
+
+---
+
+## La review della base dati: cosa cresce, cosa non se ne va mai (committente, 12 set 2026)
+
+La domanda era tre domande: c'è una logica che cancella i dati vecchi dopo una certa
+data, il database cresce e basta giorno dopo giorno, e ci sono isole di dati che non
+vengono mai cancellate. Le risposte, nell'ordine: **no e va bene così**, **no**, **sì, ed
+erano quattro**.
+
+### Quel che c'era già, e perché una scadenza a tempo sarebbe stata sbagliata
+
+Nessuna retention dell'app è a tempo, e non è una dimenticanza. `weather_history` tiene
+gli ultimi 100 commit **per luogo** (`pruneCity`) con un tetto globale a 800 righe
+(`prune`), `warning_records` teneva 100 righe per luogo, `ReportDiskCache` tiene 16 file e
+butta quelli oltre l'orizzonte della previsione, e i cinque store di impronte
+(`AlertStateStore`, `RuleStateStore`, `SkyAlertStateStore`, `FetchLogStore`,
+`OfficialWarningStore`) sono anelli limitati a 16-40 voci. Un conteggio, non una data: un
+telefono spento per una settimana deve ritrovare il suo Diario, e «cancella tutto quel che
+ha più di N giorni» glielo svuoterebbe proprio nel caso in cui l'utente ne ha più bisogno.
+Il volume, del resto, non è il problema — 800 commit da ~1,6 KB sono ~1,3 MB, e ci si
+arriva solo con otto luoghi attivi.
+
+Il problema è un altro, e il conteggio per luogo non lo vede: **le righe di un luogo che
+non esiste più**. Non sono vecchie, sono orfane, e nessuna lettura futura le toccherà mai.
+
+### Le quattro isole
+
+1. **`warning_records` non aveva nessun tetto globale.** `pruneCity` limita il luogo che
+   gli viene passato e nessun altro, quindi ogni chiave che smetteva di essergli passata
+   — un luogo tolto dalla lista, e soprattutto ognuna delle celle da ~1,1 km che la
+   pseudo-città GPS conia — si teneva le sue righe per la vita dell'installazione. Era
+   l'unica tabella dell'app senza soffitto.
+2. **Il ramo «bollettino non raggiunto» scriveva senza potare.** `pruneCity` stava solo
+   nel ramo in cui un bollettino si muove davvero, e un emittente irraggiungibile per una
+   stagione è esattamente quando non si muove. Una riga al giorno è lenta, ma lenta e
+   illimitata è comunque illimitata.
+3. **Nessuna delle due tabelle si chiedeva *di chi* fossero le righe.** Il backstop
+   globale della cronologia sfratta per età globale, quindi le righe di una cella
+   abbandonata venivano evicted alla stessa velocità di quelle di una città seguita: la
+   domanda sbagliata. Stessa cosa per i file di `ReportDiskCache`, che è limitato per
+   numero e pota solo in scrittura.
+4. **`WidgetCityStore.forget` dimenticava la chiave `widget_sky_`.** La riga del cielo è
+   arrivata dopo (Fase 16e) e non è mai stata aggiunta a `forget`: ogni widget rimosso
+   lasciava il suo flag nel file per sempre, e un widget nuovo a cui il sistema avesse
+   dato quell'id si ritrovava una riga che nessuno aveva chiesto.
+
+### Quel che si è fatto
+
+`StoredDataSweep` (`:core:data`, `local/`) è la terza retention, e la sola che guarda la
+chiave invece del conteggio: **una chiave che l'app non segue più, ferma da `Grace`, se ne
+va tutta intera**. Le regole, e il perché di ognuna:
+
+- *Non segue più* è la lista dei luoghi salvati più il fix GPS corrente, niente altro. I
+  pin dei widget si risolvono contro quella stessa lista (o contro il sentinella GPS),
+  quindi non hanno voce in capitolo; le celle attraversate ieri **non** ci sono, ed è
+  tutto il punto.
+- *Ferma da `Grace`* si misura dalla riga **più recente** della chiave, e la cancellazione
+  è tutto-o-niente per chiave. Lo swipe di rimozione ha un undo e ri-aggiungere un luogo è
+  un tap: un Diario che tornasse con le pagine di mezzo strappate sarebbe peggio di uno
+  che torna vuoto.
+- `Grace` è **sette giorni**, la stessa settimana che la previsione raggiunge: abbastanza
+  perché un undo, un ripensamento o un telefono in un cassetto non costino il Diario a
+  nessuno, abbastanza poco perché due settimane di pendolarismo non lascino due settimane
+  di celle morte.
+- Un insieme di chiavi vive **vuoto** è uno stato vero (l'ultimo luogo tolto, GPS spento)
+  e vuol dire «qui non è vivo niente», non «stai fermo». Room espande una lista vuota in
+  `NOT IN ()`, che SQLite non parsa, quindi passa un sentinella (`""`) che nessuna
+  `cacheKey` — sempre `<int>:<int>` — può valere.
+
+Gira **dove già girano le altre due**, cioè nel punto unico in cui atterrano dati nuovi
+(`WeatherRepository.recordHistory`), dietro un `onHousekeeping` iniettato da
+`ServiceLocator` come già faceva `onHistoryCommitted`: la spazzata ha bisogno della lista
+dei luoghi salvati, che il repository per scelta non conosce. È `bestEffort` per conto suo
+e non dentro il blocco dell'altro hook, perché una pulizia che fallisce deve comunque
+lasciare al widget il suo repaint.
+
+Accanto, tre riparazioni puntuali: il backstop globale di `warning_records`
+(`RETENTION * PLACES` = 800, gemello di quello della cronologia e generoso per la stessa
+ragione), la potatura anche sul ramo del bollettino mancato, e `widget_sky_` dentro
+`forget`.
+
+### Quel che si è visto e NON si è toccato
+
+- **`WidgetCityStore.remap` è codice morto.** Nessuno lo chiama: il receiver non ha un
+  `onRestored`, e `allowBackup` è `true` senza `dataExtractionRules`. Dopo un ripristino
+  da backup ogni widget prende un id nuovo, quindi i pin restano appesi ai vecchi id (che
+  non se ne vanno mai) e i widget ripristinati perdono la loro città. È un bug vero, ma
+  ripararlo davvero vuol dire decidere anche per `WidgetLookStore` e `ArcSettingsStore`,
+  che un `remap` non ce l'hanno affatto: è una scelta di prodotto, non una pulizia, e sta
+  qui in attesa.
+- **Nessun indice su `city_key`** in nessuna delle due tabelle: ogni `historyFor`,
+  `observeFor` e `pruneCity` è una scansione completa. A 800 righe non si misura, e
+  comprarlo costa una versione di schema: si rivaluta se i tetti crescono.
+- **`ReportDiskCache.prune()` gira solo in scrittura.** La spazzata ora copre il caso che
+  contava (i file orfani); quello che resta — un'app che non fetcha più e tiene i suoi
+  file — è un'app che non sta girando.
+- **I tetti a conteggio restano conteggi.** `HISTORY_CITIES = 8` è generoso apposta, e con
+  le chiavi morte tolte di mezzo la pressione sul backstop globale sparisce quasi del
+  tutto.
+
+Tre test nuovi in `:core:data`: `StoredDataSweepTest` (sei casi, compreso il tutto-o-niente
+per chiave e l'insieme vivo vuoto), `WarningRecordDaoTest` per il backstop che mancava, e
+un caso in più in `WidgetCityStoreTest` per la chiave del cielo. Suite a **793 verdi**.
