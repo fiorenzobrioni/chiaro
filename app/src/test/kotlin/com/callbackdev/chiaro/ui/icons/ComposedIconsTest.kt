@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.ui.icons
 
+import com.callbackdev.chiaro.data.WeatherIcons
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -177,6 +178,35 @@ class ComposedIconsTest {
         assertEquals("flat chiaro", keys, ComposedIcons.flatOf.keys)
         assertEquals("flat scuro", keys, ComposedIcons.flatDarkOf.keys)
         assertEquals("animati", keys, ComposedIcons.movingOf.keys)
+    }
+
+    /**
+     * **Il codice 1 arriva davvero al disegno composto, per tutte le strade.**
+     *
+     * `conditionLineRes` è solo la prima: `styledRes` deve trovare la faccia per lo stile
+     * e il fondo, e `movingRes` il gemello animato. Sono tre tabelle diverse, e una
+     * dimenticata qui non rompe la compilazione — lascia un'icona vuota a chi cambia
+     * stile, o una che non si muove a chi accende il movimento.
+     */
+    @Test
+    fun `il quasi sereno si trova in tutte e quattro le facce, ferma e animata`() {
+        listOf(false, true).forEach { night ->
+            val line = ChiaroIcons.conditionLineRes(1, night)
+            assertTrue("il codice 1 non prende il disegno composto",
+                line in ComposedIcons.byName.values)
+            listOf(WeatherIcons.LINE, WeatherIcons.FILL).forEach { style ->
+                listOf(false, true).forEach { dark ->
+                    assertTrue(
+                        "nessuna faccia ferma per il quasi sereno ($style, scuro=$dark)",
+                        ChiaroIcons.styledRes(line, style, dark) != 0
+                    )
+                    assertNotNull(
+                        "il quasi sereno non ha il gemello animato ($style, scuro=$dark)",
+                        ChiaroIcons.movingRes(line, style, dark)
+                    )
+                }
+            }
+        }
     }
 
     /** Nessun nome sta in tutte e due le tabelle: se ci finisse, `styledRes` prenderebbe
