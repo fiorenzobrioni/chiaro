@@ -214,8 +214,14 @@ is short on purpose — three edits, each with its reason in the file:
   install — `weather_history` has had a global `prune` since the seed and this table
   never did.
 - `WeatherHistoryDao.pruneForeign`, `ReportDiskCache.forgetForeign` and the
-  `StoredDataSweep` that drives them (12 set 2026) are **new here and belong upstream
-  too**; the dated section below says what the port is and what it is waiting on.
+  `StoredDataSweep` that drives them (12 set 2026) were **new here and belonged upstream
+  too**; they were carried the same day (tweather's Fase 30), so the two copies are in
+  step again — with two named exceptions: `StoredDataSweep` has two arms upstream and
+  three here (there is no `warning_records` there), and `WidgetCityStore.remap` carries
+  the sky-line key upstream and not here. The second is not a drift: `remap` is live code
+  upstream (its provider has an `onRestored`) and dead code here, where fixing it for
+  real means deciding for `WidgetLookStore` and `ArcSettingsStore` too. The dated section
+  below has the whole story.
 
 ## The known debt
 
@@ -450,7 +456,8 @@ Those rows are not old. They are orphaned, and no future read will ever touch th
 missed-bulletin path wrote without pruning; both are fixed, and both are Chiaro-only
 because the table is (above). `OfficialWarningsStep` likewise.
 
-**What belongs upstream, and is NOT yet carried.** Three things, all additive:
+**What belongs upstream, and was carried on 12 set 2026** (tweather's Fase 30). Three
+things, all additive:
 
 - `StoredDataSweep` (`data/local/`) — a key the app no longer follows, quiet for a week,
   leaves entirely; all-or-nothing per key, measured from the key's newest row. Upstream
@@ -470,25 +477,29 @@ housekeeping hook and the existing commit hook each get their own guarded call. 
 own that is gratuitous drift in a file whose paragraphs are deliberately worded the same
 in both; with the sweep it is the same refactor in both.
 
-**Two things this pass could NOT check, and did not guess.** The session that wrote it
-had no tweather checkout and no read access to the repository, so:
+**The two things this pass could NOT check, checked on the tree.** The session that
+wrote the port notes had no tweather checkout and no read access to the repository, so
+both were marked as guesses; both held:
 
-- Whether `WidgetCityStore` upstream carries the per-widget sky-line key. Here `forget`
-  had been dropping the pinned city and leaving `widget_sky_` behind since Fase 16e, so
-  every removed widget left a flag in the file and a widget later handed that id
-  inherited it. If the store has the same key upstream it has the same leak, and the
-  one-line fix is the same one-line fix.
-- Whether upstream's `CityStore` exposes the live set through the same two reads
-  Chiaro's `ServiceLocator.liveCityKeys` uses (the saved list, plus the GPS city). The
-  concepts exist in both; the accessors around the GPS one diverged in Fase 3b
-  (`adoptGpsFix` against upstream's `updateGpsCity`), so the port has to look rather
-  than assume.
+- `WidgetCityStore` upstream carries the same per-widget sky-line key and had the same
+  leak in `forget`, and the one-line fix was the same one-line fix (see below for the
+  one place the two copies of that file now part).
+- Upstream's `CityStore` does expose the live set through the same two reads
+  (`cities`, `locationSettings.gpsCity`), so `liveCityKeys` ported unchanged. The Fase 3b
+  divergence is in the WRITE accessors (`adoptGpsFix` against `updateGpsCity`), which the
+  sweep does not touch.
 
-The port notes, with the code ready to apply, were handed over with the review. Nothing
-of it is landed upstream, so **this entry is a debt, not a record**. Carrying it will
-also be the third time one bug had to be fixed in both apps: the extraction trigger
-below fired on the position path on 5 set and is still waiting on a decision, not on
-another occurrence.
+**What the port found that this pass could not see.** `WidgetCityStore.remap` has the
+same omission `forget` had, and **upstream it is live code**: tweather's widget provider
+has an `onRestored` and calls it, so a restored widget came back without its sky line and
+left the old flag behind. Fixed there, in the same shape as `forget`. Here `remap` is
+unreachable (no `onRestored`, and the product decision it waits on is recorded in
+`PLANNING.md`), so this file now differs between the two apps at that method — a
+divergence from a real difference between the apps, not a drift.
+
+**This entry is now a record, not a debt.** Carrying it was the third time one bug had to
+be fixed in both apps: the extraction trigger below fired on the position path on 5 set
+and is still waiting on a decision, not on another occurrence.
 
 ## When to extract
 
