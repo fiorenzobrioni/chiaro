@@ -75,6 +75,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -101,6 +102,7 @@ import com.callbackdev.chiaro.ui.warnings.WarningSheet
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
 import com.callbackdev.chiaro.ui.icons.LocalMotionPaused
+import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.theme.ChiaroMotion
@@ -1370,7 +1372,11 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
                     label = R.string.metric_uv,
                     value = today.uvIndexMax.toString(),
                     meaning = WeatherText.uvMeaning(today.uvIndexMax),
-                    scale = today.uvIndexMax / UvScaleTop
+                    scale = today.uvIndexMax / UvScaleTop,
+                    // The one tile whose glyph is not on the ladder's tile rung: the
+                    // drawing carries the index as a badge, and at 38dp that badge read
+                    // smaller than the pollen tile's. See [WeatherIconSize.TileUv].
+                    iconSize = WeatherIconSize.TileUv
                 )
             )
         }
@@ -1488,6 +1494,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
                         scale = tile.scale,
                         detail = tile.detail,
                         note = tile.note,
+                        iconSize = tile.iconSize,
                         modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                 }
@@ -1542,5 +1549,7 @@ private data class Tile(
     /** A composed fact about the value (the wind's arrow and source). */
     val detail: (@Composable () -> Unit)? = null,
     /** A printed fact about the value (gusts, dew point, which pollen). */
-    val note: String? = null
+    val note: String? = null,
+    /** The glyph's box, where it is not the ladder's tile rung (UV, and only UV). */
+    val iconSize: Dp = WeatherIconSize.Tile
 )

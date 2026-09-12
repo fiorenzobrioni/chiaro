@@ -141,4 +141,64 @@ class MeteoconScaleTest {
             leaks.isEmpty()
         )
     }
+
+    /**
+     * **Il numero del tile UV e quello del tile Pollini leggono uguale** (committente,
+     * 12 set 2026, dal dispositivo).
+     *
+     * Le due famiglie disegnano lo stesso distintivo — un quadrato stondato di 30 unita'
+     * su 128, col valore dentro — e a parita' di scatola escono di taglia diversa perche'
+     * la normalizzazione le scala diverso: il sole UV arriva gia' agli angoli e prende
+     * 0,92, la spiga dei pollini e' compatta e prende 1,3382. Il pareggio non e' quindi
+     * una proprieta' dei disegni, e' `WeatherIconSize.TileUv / Tile` che deve valere il
+     * rapporto inverso delle due scale.
+     *
+     * Il test misura le scale nei drawable spediti invece di fidarsi dei numeri scritti
+     * nel commento: se un giorno l'importatore rigirasse con un `TARGET` diverso, o
+     * Meteocons ridisegnasse una delle due, il rapporto cambierebbe **e il commento no**.
+     * La tolleranza e' il 3%: sotto, la differenza non si vede, e i pollini degli alberi
+     * (1,3109) ci stanno dentro insieme all'erba e alle infestanti.
+     */
+    @Test
+    fun `the UV tile's badge reads the size of the pollen tile's`() {
+        val uvFile = File(drawables, "mc3_uv_index_5.xml")
+        val pollenFile = File(drawables, "mc3_pollen_grass_low.xml")
+        val uv = scaleOf(uvFile)?.toFloat()
+        val pollen = scaleOf(pollenFile)?.toFloat()
+        assertTrue("i drawable del confronto non ci sono piu'", uv != null && pollen != null)
+        // La premessa, prima del confronto: e' lo stesso distintivo in tutt'e due.
+        val uvSide = badgeSide(uvFile) ?: 0f
+        val pollenSide = badgeSide(pollenFile) ?: 0f
+        assertEquals("il distintivo dell'UV non e' piu' quello letto", BADGE, uvSide, 0.01f)
+        assertEquals("il distintivo dei pollini non e' quello letto", BADGE, pollenSide, 0.01f)
+        // Il distintivo in dp: (scala x lato / 128) x la scatola del suo tile.
+        val uvBadge = uv!! * uvSide / BOX * WeatherIconSize.TileUv.value
+        val pollenBadge = pollen!! * pollenSide / BOX * WeatherIconSize.Tile.value
+        assertEquals(
+            "il numero dell'UV non legge piu' come quello dei pollini — rimisura " +
+                "WeatherIconSize.TileUv: e' Tile x $pollen / $uv",
+            pollenBadge, uvBadge, pollenBadge * 0.03f
+        )
+    }
+
+    /**
+     * Il lato del quadrato stondato del distintivo, in unita' di viewport, o null se il
+     * disegno non ne porta uno. Si riconosce dagli angoli: quattro archi di raggio 9 su
+     * un percorso che parte con `M<x>,<y> L<x>,<y> A9,9`. Il lato e' l'escursione delle
+     * ascisse dei suoi vertici, non il primo segmento: quello va da un angolo all'altro
+     * e misura 30 meno i due raggi. Si leggono i `M` e i `L`, mai i parametri di un
+     * arco: `A9,9,0,0,1,109,88` porta un `0` che non e' un'ascissa.
+     */
+    private fun badgeSide(file: File): Float? =
+        badge.find(file.readText())?.groupValues?.get(1)?.let { d ->
+            val xs = corner.findAll(d).map { it.groupValues[1].toFloat() }.toList()
+            if (xs.isEmpty()) null else xs.max() - xs.min()
+        }
+
+    private val badge = Regex("""android:pathData="(M\d+,\d+ L\d+,\d+ A9,9,[^"]*)"""")
+    private val corner = Regex("""[ML](\d+),(\d+)""")
+
+    /** Il lato del distintivo e la scatola in cui e' disegnato, in unita' di viewport. */
+    private val BADGE = 30f
+    private val BOX = 128f
 }
