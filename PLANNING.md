@@ -6400,3 +6400,90 @@ sul sottoinsieme giusto, la conclusione si è rovesciata.
 - **Le allerte ufficiali si citano, non si traducono** (VISION §8, dal 9 set 2026): livello,
   rischio, giorno e zona localizzano; le parole di un'autorità restano sue, nella sua lingua,
   etichettate come tali. E in Italia fa fede la Protezione Civile, sempre.
+
+### Tre taglie, guardate sul dispositivo (committente, 12 set 2026)
+
+Tre richieste da tre screenshot, e la densità del dispositivo di riferimento rimisurata
+per strada. **È 2,8125 px/dp, non 2,75**: sullo screenshot di Oggi il margine da 16 dp dei
+tile misura 45 px e la gronda da 12 ne misura 34, quindi lo schermo è largo **384 dp** e un
+tile è `(384 − 32 − 12) / 2 = 170` dp, cioè i 478 px misurati. Tutti i numeri sotto sono
+letti a quella scala.
+
+**1. L'icona del widget è «un po' grande».** Vero, ed era il modo in cui la misura era
+scritta: il glifo di una scheda a una riga prendeva tutta l'altezza concessa meno i
+paddings, e basta. Sulla scheda a quattro celle del dispositivo la riga è ~85 dp, quindi il
+glifo usciva a **73 dp** — con accanto un blocco di parole alto 66, cioè la riga della
+temperatura (34 sp × 1,32) più quella del posto (16 × 1,32). Il tetto nuovo,
+`RowIconMax = 66 dp`, è quel blocco: **il glifo non supera le parole che gli stanno
+accanto**. Sulla scheda di riferimento toglie il 10% (50,5 → 45,5 dp d'inchiostro sulla
+media geometrica 0,69 della famiglia) e, come effetto secondario che vale da solo, rende
+uguale il glifo di ogni riga da ~78 dp in su: prima un launcher che concede righe da 101 dp
+lo portava a 89 senza che nulla accanto crescesse. È lo stesso tetto che il widget Cielo si
+era dato l'8 set (`SkyHeroIconMax`, 72 dp contro un orologio da 30 sp), letto sull'ancora di
+questa scheda invece che su quella. Le schede strette non si muovono: a due celle lega la
+larghezza, sotto il tetto. La colonna della frase guadagna i 4 dp che il glifo lascia
+(116 → 118 a quattro celle).
+
+**2. La pastiglia del Cielo va a capo troppo facilmente.** La misura dice perché:
+`supportingContent` è la colonna di testo della riga Material, e una colonna di testo
+finisce dove comincia lo slot in coda. Material spende **163 dp** di una riga con
+campanella in margini e slot fissi: `16 (bordo) + 51 (il glifo) + 16 + 16 + 48 (la
+campanella) + 16`. **Il quarto 16 è vero e mancava ai conti scritti l'11 set**: sullo
+screenshot del dispositivo la pastiglia finisce a 303,6 dp e la scatola da 48 della
+campanella è centrata a 344, quindi fra le due ci sono 16,4 dp. La nota su
+`WeatherIconSize.Sky` è corretta di conseguenza — il budget di una riga con campanella
+passava da 214 a 197 dp, non da 230 a 213; quello di una riga senza («In arrivo» senza
+promemoria) non ha quel gap ed era giusto, 278 → 261.
+
+Restano quindi **221 dp** a 384 e 197 a 360. «✗ Niente da fare  nuvole 66%» ne misura
+**223**: 24 di padding, 14 di segno, due gap da 6, 92,4 di parola e 77 di numero, più 3,8
+di margini laterali letti sulla pastiglia «✓ Bello  nuvole 0%» che le sta sotto e che su
+una riga ci sta, a 154. **Ha sbagliato di due dp**, e quel che è andato a capo è il numero
+sotto la parola: esattamente la coppia che DESIGN §8.7 non lascia separare. Due dp non sono
+un margine, ed è questo che vuol dire «non va a capo facilmente»: la coppia più larga che
+l'app possa stampare, «Niente da fare» con «pioggia 100%», ne vuole ~236.
+
+La pastiglia scende quindi su una riga sua, sotto tutta la riga della lista, e siccome
+della campanella lì non arriva niente **si prende anche la sua colonna**: `schermo − 99`,
+cioè 285 dp a 384 e 261 a 360, sopra i 236 del caso peggiore in tutt'e due. Le alternative
+sono state misurate prima di scartarle, e nessuna compra un margine: una campanella da
+40 dp vale 8 dp (il bersaglio da 48 resta, `IconButton` lo estende oltre i propri limiti),
+una pastiglia più stretta ne vale 4, e i 51 dp del glifo sono una decisione dell'11 set,
+non del gioco. Il prezzo è verticale e va scritto: senza la pastiglia dentro, la riga
+diventa a due righe di testo, quindi Material centra i suoi 44 dp nei 72 di minimo e
+**l'aria sopra la pastiglia passa da 6 a ~14 dp**, con la riga che cresce di ~6. Vale per
+i momenti e per «In arrivo».
+
+**3. Il numero dell'UV deve leggersi come quello dei Pollini.** Le due icone portano lo
+**stesso** distintivo — un quadrato stondato di 30 unità su 128, col valore dentro — e
+escono diverse per via della normalizzazione, non del disegno: il sole dell'UV arriva già
+agli angoli e prende scala **0,92**, la spiga dei pollini è compatta e prende **1,3382**.
+A parità di scatola il distintivo dei pollini è quindi 1,45× quello dell'UV, ed è quel che
+si misura sullo screenshot: 33 px contro 40.
+
+La sola leva rimasta al punto di chiamata è la scatola, e la scatola è quel che si muove:
+`WeatherIconSize.TileUv = 55 dp` (`38 × 1,3382 / 0,92 = 55,3`) mette i due distintivi a
+**11,85 contro 11,92 dp**, lo 0,6% di distanza. I pollini degli alberi sono scalati 1,3109,
+quindi il loro distintivo è 11,68 e l'UV gli sta l'1,5% sopra invece che sotto; il
+confronto chiesto era con l'erba, che è quel che lo screenshot mostrava.
+
+Quel che costa, scritto perché è una deroga vera alla scala di §13.1: **questo gradino sta
+il 45% sopra `Tile`**, quindi il glifo dell'UV è l'oggetto più grande della griglia dei
+dettagli, e la sua riga d'intestazione cresce di 17 dp — che paga anche il tile accanto,
+perché una coppia condivide un'altezza. Quel che **non** costa è il budget dell'etichetta,
+che era la ragione per cui il gradino dei tile si era fermato a 38: `118 − 55` lascia 63 dp
+a 360 dp per le due lettere «UV», la più corta che l'app spedisca.
+
+- [ ] **Da guardare sul dispositivo.** Le tre sono aritmetica, non disegno: il widget a 66
+      dp, l'aria sopra la pastiglia del Cielo, e soprattutto se l'UV a 55 dp accanto a un
+      Vento a 38 si legge come una gerarchia o come un errore. Se è la seconda, la strada
+      che resta non è un numero intermedio (non pareggerebbe niente) ma chiedere
+      all'importatore una scala per famiglia — cioè un'eccezione dichiarata dentro
+      `icon_ink.scale_of`, non al punto di chiamata
+
+`MeteoconScaleTest` tiene il pareggio del punto 3 misurando le due scale **nei drawable
+spediti**, non nei numeri di questa pagina: se l'importatore rigirasse con un `TARGET`
+diverso, o Meteocons ridisegnasse una delle due, il rapporto cambierebbe e il commento no.
+Misura anche il distintivo prima di confrontarlo, perché la premessa «è lo stesso quadrato»
+è la metà che si rompe in silenzio. `NowWidgetLayoutTest` fissa il tetto del punto 1 a tre
+altezze di riga (70, 82, 85, 130 dp) e la densità rimisurata sta nella sua intestazione.

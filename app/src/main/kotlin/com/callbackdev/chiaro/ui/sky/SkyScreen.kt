@@ -8,6 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -493,42 +494,96 @@ private fun MomentRow(
     }
     // The chip lives UNDER the name, never beside it: in a trailing slot a wide
     // verdict ("Niente da fare · nuvole 100%") squeezed the name to one letter per
-    // line (device finding, 3 set). Only the fixed-width bell trails.
-    ListItem(
-        leadingContent = {
-            // Its own colors and the timeline's rung (review, 8 set 2026): these were
-            // 26dp silhouettes in `onSurfaceVariant`, the one place left where the
-            // family was tinted flat — and tinted flat the full moon and the new moon
-            // are the same disc, a sunrise and a sunset the same horizon. §13.1 holds
-            // here as on Today: the icons depict the world and keep their palette.
-            Icon(
-                imageVector = momentIcon(moment),
-                contentDescription = null,
-                tint = Color.Unspecified,
-                modifier = Modifier.size(WeatherIconSize.Sky)
-            )
-        },
-        headlineContent = { Text(text = name) },
-        supportingContent = {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    // line (device finding, 3 set). Only the fixed-width bell trails. Since 12 set it
+    // lives under the whole list item too — see [SkyVerdictLine].
+    Column {
+        ListItem(
+            leadingContent = {
+                // Its own colors and the Sky's own rung (review, 8 set 2026): these were
+                // 26dp silhouettes in `onSurfaceVariant`, the one place left where the
+                // family was tinted flat — and tinted flat the full moon and the new moon
+                // are the same disc, a sunrise and a sunset the same horizon. §13.1 holds
+                // here as on Today: the icons depict the world and keep their palette.
+                Icon(
+                    imageVector = momentIcon(moment),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(WeatherIconSize.Sky)
+                )
+            },
+            headlineContent = { Text(text = name) },
+            supportingContent = {
                 Text(
                     text = listOfNotNull(dayMark, timeLine).joinToString(" · "),
                     color = quiet
                 )
-                moment.verdict?.let { verdict ->
-                    VerdictChip(
-                        kind = SkyText.chipKind(verdict.kind),
-                        label = stringResource(SkyText.verdictWordRes(verdict.kind)),
-                        evidence = SkyText.chipEvidence(res, verdict)
-                    )
-                }
+            },
+            trailingContent = {
+                BellButton(lead = moment.lead, name = name, onClick = onBell)
             }
-        },
-        trailingContent = {
-            BellButton(lead = moment.lead, name = name, onClick = onBell)
+        )
+        moment.verdict?.let { verdict ->
+            SkyVerdictLine {
+                VerdictChip(
+                    kind = SkyText.chipKind(verdict.kind),
+                    label = stringResource(SkyText.verdictWordRes(verdict.kind)),
+                    evidence = SkyText.chipEvidence(res, verdict)
+                )
+            }
         }
-    )
+    }
 }
+
+/**
+ * The verdict's own line under a Sky row: it starts where the row's text starts and runs
+ * to the card's far inset, the bell's column included.
+ *
+ * **Why it is not in the list item's `supportingContent` any more** (committente, 12 set
+ * 2026, from a device: "can the chip have more room, so the text does not wrap so
+ * easily?"). That slot is the item's text column, and a text column stops where the
+ * trailing slot begins. Material spends **163 dp** of a row with a bell on insets and
+ * fixed slots — `16 (edge) + 51 (the glyph) + 16 + 16 + 48 (the bell) + 16`, and the
+ * fourth 16 is real: measured on the device's own screenshot, the chip ends at 303.6 dp
+ * and the bell's 48 dp box is centred at 344, so there are 16.4 dp between them. (The
+ * note on [WeatherIconSize.Sky] counted one 16 too few until this pass; a row without a
+ * bell, which is where its other figure comes from, has no such gap and was right.)
+ *
+ * That leaves **221 dp** for the column on this 384 dp screen and 197 at 360. The chip
+ * measured on the same screenshot — «✗ Niente da fare  nuvole 66%» — wants **223**:
+ * 24 of padding, 14 of mark, two 6 dp gaps, 92.4 of word and 77 of number, with 3.8 of
+ * side bearings read off the «✓ Bello  nuvole 0%» chip beside it, which fits on one
+ * line at 154. So it missed by **two dp**, and what wrapped was the number under the
+ * word — the one pair this app may not break apart (§8.7: a verdict ships with its
+ * arithmetic). Two dp is not a margin, which is what "does not wrap so easily" means:
+ * the widest pair the app can print, «Niente da fare» with «pioggia 100%», wants ~236.
+ *
+ * Nothing of the bell reaches this line, so the line may have the bell's 48 dp and the
+ * gap before it: the chip's room becomes `screen − 83 − 16`, which is **285 dp** here
+ * and **261 at 360** — clear of the worst 236 on both. What it costs is height and air:
+ * the item is now a two-line item, so Material centres its 44 dp of text in its own
+ * 72 dp minimum and the gap over the chip goes from 6 dp to ~14, and the row grows about
+ * 6 dp. The alternatives were measured before being dropped, and none of them buys a
+ * margin: a 40 dp bell is worth 8 dp (the 48 dp touch target survives, `IconButton`
+ * extends it past its own bounds), a tighter chip 4, and the Sky's 51 dp glyph is a
+ * decision of 11 set, not slack.
+ *
+ * [SkyChipIndent] is Material's own list-item arithmetic — 16 to the leading edge, the
+ * glyph, 16 more to the text — so the chip's mark lines up under the name above it.
+ */
+@Composable
+private fun SkyVerdictLine(chip: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier.padding(
+            start = SkyChipIndent, end = SkyRowInset, bottom = SkyChipBottom
+        )
+    ) {
+        chip()
+    }
+}
+
+private val SkyRowInset = 16.dp
+private val SkyChipIndent = SkyRowInset + WeatherIconSize.Sky + SkyRowInset
+private val SkyChipBottom = 8.dp
 
 @Composable
 private fun EventRow(
@@ -547,38 +602,43 @@ private fun EventRow(
     val verdictLine = event.verdict?.let { verdict ->
         SkyText.unknownReason(res, verdict)
     }
-    // Same rule as MomentRow: the chip goes under the text, only the bell trails.
-    ListItem(
-        leadingContent = {
-            Icon(
-                imageVector = eventIcon(event),
-                contentDescription = null,
-                tint = Color.Unspecified, // as in MomentRow: the family's own colors
-                modifier = Modifier.size(WeatherIconSize.Sky)
-            )
-        },
-        headlineContent = { Text(name) },
-        supportingContent = {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(listOfNotNull(date, verdictLine).joinToString(" · "))
-                // An eclipse says which kind it is and the number that decides it,
-                // the same way a verdict carries its own arithmetic.
-                eclipseLine(res, event)?.let { Text(it) }
-                event.verdict?.takeIf { it.kind != SkyVerdictKind.UNKNOWN }?.let { verdict ->
-                    VerdictChip(
-                        kind = SkyText.chipKind(verdict.kind),
-                        label = stringResource(SkyText.verdictWordRes(verdict.kind)),
-                        evidence = SkyText.chipEvidence(res, verdict)
-                    )
+    // Same rule as MomentRow: the chip goes under the text on a line of its own
+    // ([SkyVerdictLine]), only the bell trails.
+    Column {
+        ListItem(
+            leadingContent = {
+                Icon(
+                    imageVector = eventIcon(event),
+                    contentDescription = null,
+                    tint = Color.Unspecified, // as in MomentRow: the family's own colors
+                    modifier = Modifier.size(WeatherIconSize.Sky)
+                )
+            },
+            headlineContent = { Text(name) },
+            supportingContent = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(listOfNotNull(date, verdictLine).joinToString(" · "))
+                    // An eclipse says which kind it is and the number that decides it,
+                    // the same way a verdict carries its own arithmetic.
+                    eclipseLine(res, event)?.let { Text(it) }
+                }
+            },
+            trailingContent = {
+                if (onBell != null && event.lead != null) {
+                    BellButton(lead = event.lead, name = name, onClick = onBell)
                 }
             }
-        },
-        trailingContent = {
-            if (onBell != null && event.lead != null) {
-                BellButton(lead = event.lead, name = name, onClick = onBell)
+        )
+        event.verdict?.takeIf { it.kind != SkyVerdictKind.UNKNOWN }?.let { verdict ->
+            SkyVerdictLine {
+                VerdictChip(
+                    kind = SkyText.chipKind(verdict.kind),
+                    label = stringResource(SkyText.verdictWordRes(verdict.kind)),
+                    evidence = SkyText.chipEvidence(res, verdict)
+                )
             }
         }
-    )
+    }
 }
 
 /** The eclipse sentence of an event row, or null when the row is not an eclipse. */

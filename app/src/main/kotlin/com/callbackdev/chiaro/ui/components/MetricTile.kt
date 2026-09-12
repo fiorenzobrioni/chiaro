@@ -21,6 +21,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
@@ -57,6 +58,12 @@ fun MetricTile(
     detail: (@Composable () -> Unit)? = null,
     /** A printed fact about the value: the gusts, the dew point, which pollen. */
     note: String? = null,
+    /**
+     * The glyph's box. [WeatherIconSize.Tile] for every tile but UV, which draws its own
+     * value inside the drawing and needs [WeatherIconSize.TileUv] for that value to read
+     * at the size the pollen tile's does — the arithmetic is there, not here.
+     */
+    iconSize: Dp = WeatherIconSize.Tile,
     onClick: (() -> Unit)? = null
 ) {
     Surface(
@@ -74,7 +81,9 @@ fun MetricTile(
             // set), so the eight labels are written to fit that budget rather than
             // trimmed with an ellipsis — the widest of them, «Qualità aria», measures
             // 76.7dp. A label that outgrows the budget (a huge font scale) wraps and
-            // keeps its words, which is the honest way to fail.
+            // keeps its words, which is the honest way to fail. UV spends 17dp more of
+            // that budget than the rest ([WeatherIconSize.TileUv], 12 set 2026) and can
+            // afford to: its label is the two letters «UV».
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -91,7 +100,7 @@ fun MetricTile(
                     // air-quality mark merge into one blob. Reported from a device
                     // (4 set 2026): «due sembrano uguali».
                     tint = Color.Unspecified,
-                    modifier = Modifier.size(WeatherIconSize.Tile)
+                    modifier = Modifier.size(iconSize)
                 )
                 Text(
                     text = label,

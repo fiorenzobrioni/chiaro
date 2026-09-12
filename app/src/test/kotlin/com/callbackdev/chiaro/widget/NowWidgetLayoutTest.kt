@@ -17,6 +17,12 @@ import org.junit.Test
  * The 101 dp row is the other figure the launcher has been seen to grant (4th device
  * pass), and 320 is four cells on a five-column grid. The form is arithmetic on dp
  * precisely so it can be pinned here rather than by one phone's idea of a cell.
+ *
+ * **The density was re-read on 12 set 2026** and the reference device is 2.8125 px/dp,
+ * not 2.75: on the Today screenshot its 16 dp tile inset measures 45 px and its 12 dp
+ * gutter 34, so the screen is 384 dp wide and the one-row card is ~85 dp rather than
+ * ~82. The fixtures below keep their old figures — every one of them is on the same
+ * side of every threshold at either reading — and the 85 dp row is pinned beside them.
  */
 class NowWidgetLayoutTest {
 
@@ -51,25 +57,32 @@ class NowWidgetLayoutTest {
 
     @Test
     fun `the sentence column is the row's slack split in two`() {
-        // 340 − 4 (glyph edge) − 70 (glyph) − 8 (gap) − 14 (words' edge) − 12 (sentence
-        // gap) = 232, half of which is 116 for each text column.
-        assertEquals(116f, nowSentenceColumnWidth(fourByOne).value, 0.01f)
-        // At three cells the same arithmetic leaves 71: under the 96 a sentence needs.
-        assertEquals(71f, nowSentenceColumnWidth(threeByOne).value, 0.01f)
+        // 340 − 4 (glyph edge) − 66 (glyph) − 8 (gap) − 14 (words' edge) − 12 (sentence
+        // gap) = 236, half of which is 118 for each text column.
+        assertEquals(118f, nowSentenceColumnWidth(fourByOne).value, 0.01f)
+        // At three cells the same arithmetic leaves 73: under the 96 a sentence needs.
+        assertEquals(73f, nowSentenceColumnWidth(threeByOne).value, 0.01f)
     }
 
     @Test
     fun `the one-row glyph fills the height, unless the words would lose their minimum`() {
-        // 82 − 6 − 6 = 70: height-bound at three and four cells.
-        assertEquals(70f, nowRowIconSize(threeByOne).value, 0.01f)
-        assertEquals(70f, nowRowIconSize(fourByOne).value, 0.01f)
+        // 82 − 6 − 6 = 70, and the words' block caps it at 66: three and four cells draw
+        // the same glyph, and so does every taller row (committente, 12 set 2026).
+        assertEquals(66f, nowRowIconSize(threeByOne).value, 0.01f)
+        assertEquals(66f, nowRowIconSize(fourByOne).value, 0.01f)
         // At two cells the width binds — 159 − 4 − 8 − 14 − 84 = 49 — and the floor
         // wins over it: 56 is where the Meteocons art stops reading.
         assertEquals(56f, nowRowIconSize(twoByOne).value, 0.01f)
-        // A wider two-cell grid (178 dp) lands between the two: 178 − 110 = 68.
-        assertEquals(68f, nowRowIconSize(DpSize(178.dp, 82.dp)).value, 0.01f)
-        // The ceiling holds for a tall one-row grant.
-        assertEquals(104f, nowRowIconSize(DpSize(340.dp, 130.dp)).value, 0.01f)
+        // A wider two-cell grid (178 dp) still lands between the two: 178 − 110 = 68,
+        // over the cap, so the cap takes it — the width only binds under 66 now.
+        assertEquals(66f, nowRowIconSize(DpSize(178.dp, 82.dp)).value, 0.01f)
+        // The words' cap, not the family's 104, is what a tall one-row grant meets.
+        assertEquals(66f, nowRowIconSize(DpSize(340.dp, 130.dp)).value, 0.01f)
+        // The reference device's own row (~85 dp, read off the screenshot at 2.8125
+        // px/dp) drew 73 before the cap.
+        assertEquals(66f, nowRowIconSize(DpSize(340.dp, 85.dp)).value, 0.01f)
+        // Under the cap the height still leads: a 70 dp row gives 58.
+        assertEquals(58f, nowRowIconSize(DpSize(340.dp, 70.dp)).value, 0.01f)
     }
 
     @Test
@@ -128,14 +141,14 @@ class NowWidgetLayoutTest {
 
     @Test
     fun `the other way round, the sentence gets the row less number, glyph, gaps and insets`() {
-        // 340 − 14 (words' edge) − 66 (number) − 12 (gap) − 8 (gap) − 70 (glyph) − 4
-        // (glyph's edge) = 166: room for two lines of 16 sp beside the number.
-        assertEquals(166f, nowMirroredSentenceWidth(fourByOne).value, 0.01f)
-        // Four cells on a five-column grid still qualify (146 ≥ 96)…
-        assertEquals(146f, nowMirroredSentenceWidth(DpSize(320.dp, 82.dp)).value, 0.01f)
-        // …and three cells do not (76): the mirrored card shows the number and the
+        // 340 − 14 (words' edge) − 66 (number) − 12 (gap) − 8 (gap) − 66 (glyph) − 4
+        // (glyph's edge) = 170: room for two lines of 16 sp beside the number.
+        assertEquals(170f, nowMirroredSentenceWidth(fourByOne).value, 0.01f)
+        // Four cells on a five-column grid still qualify (150 ≥ 96)…
+        assertEquals(150f, nowMirroredSentenceWidth(DpSize(320.dp, 82.dp)).value, 0.01f)
+        // …and three cells do not (80): the mirrored card shows the number and the
         // place alone, exactly as the standard one does at that width.
-        assertEquals(76f, nowMirroredSentenceWidth(threeByOne).value, 0.01f)
+        assertEquals(80f, nowMirroredSentenceWidth(threeByOne).value, 0.01f)
     }
 
     // ------------------------------------------------- the warning chip (Fase 11)

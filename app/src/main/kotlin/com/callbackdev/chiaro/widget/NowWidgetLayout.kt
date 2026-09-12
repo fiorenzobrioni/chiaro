@@ -45,13 +45,13 @@ internal val TallMinHeight = 150.dp
  * left the place name ~65 dp, which is «Dergan…»; the words' column now keeps
  * [WordsColumnMin] where it can, and the glyph takes what is left down to its own
  * floor — 56 dp on that card, 68 on a 178 dp two-cell grid, against the ~70 the height
- * alone would give. Three cells and up are height-bound as before.
+ * alone would give. Three cells and up were height-bound until [RowIconMax].
  */
 internal fun nowRowIconSize(size: DpSize): Dp {
     val byHeight = size.height - WidgetCardPaddingSnug * 2
     val byWidth = size.width - WidgetCardPaddingLeading - IconTextGap -
         WidgetCardPaddingTrailing - WordsColumnMin
-    return heroIconSize(minOf(byHeight, byWidth), min = RowIconMin)
+    return heroIconSize(minOf(byHeight, byWidth), min = RowIconMin, max = RowIconMax)
 }
 
 /**
@@ -63,6 +63,33 @@ internal val WordsColumnMin = 84.dp
 
 /** A squeezed grant stays legible: below this the Meteocons art loses its detail. */
 internal val RowIconMin = 56.dp
+
+/**
+ * **The glyph never outgrows the block of words beside it** (committente, 12 set 2026,
+ * from a device: "the widget's icon is a bit big"). The block is the temperature's line
+ * over the place's, and it is arithmetic already in this file:
+ * `34 × 1.32 + 16 × 1.32 = 66` ([textLineHeight] of [TemperatureSp] and [PlaceSp]).
+ *
+ * Until here the one-row glyph was bound only by the height, and a launcher that grants
+ * a taller row made it bigger with nothing beside it growing: on the reference device's
+ * four-cell card (measured off the screenshot at 2.8125 px/dp — 1080 px over a 384 dp
+ * screen, 16 dp of tile inset reading 45 px and the 12 dp gutter 34) the row is ~85 dp,
+ * so the glyph was **73 dp** against a 66 dp block of words, and 89 dp on the 101 dp row
+ * the other launcher grants. The cap takes the reference card to 66 — about 10% off the
+ * drawing, 50.5 → 45.5 dp of ink on the family's 0.69 geometric mean — and makes every
+ * one-row card from ~78 dp of height upwards draw the same glyph, which is the property
+ * the height alone never had.
+ *
+ * The Sky widget capped its own row glyph for the same reason on 8 set
+ * ([com.callbackdev.chiaro.widget.SkyHeroIconMax], 72 dp against a 30 sp clock); this is
+ * the Now card's version of that number, read off its own anchor.
+ *
+ * A plain constant and not a function of the reader's font scale: a larger scale grows
+ * the words, but the card has no more height to give the glyph anyway — `byHeight` is
+ * already the binding constraint there — so following the scale would only move a number
+ * that nothing reads. Narrow cards are untouched: at two cells the width binds first.
+ */
+internal val RowIconMax = 66.dp
 
 /**
  * The width each of the two text columns gets on a [NowLayout.WIDE] card: the row's
@@ -87,8 +114,8 @@ internal fun nowSentenceColumnWidth(size: DpSize): Dp {
  * inset on the leading edge and the glyph the glyph's on the trailing one, the same two
  * numbers as the standard row on swapped edges; the sentence gets what is left after
  * the number's own column ([TemperatureColumnMin]) and the gap between them. Compared
- * against [SentenceColumnMin] like the standard row's column: 166 dp on the reference
- * four-cell card, 146 on a five-column grid's four cells, 76 on three cells — where the
+ * against [SentenceColumnMin] like the standard row's column: 170 dp on the reference
+ * four-cell card, 150 on a five-column grid's four cells, 80 on three cells — where the
  * sentence stays home, exactly as it does the other way round.
  */
 internal fun nowMirroredSentenceWidth(size: DpSize): Dp =
@@ -103,8 +130,8 @@ internal val TemperatureColumnMin = 66.dp
  * and three lines of twelve hold every sentence the widget can say in its brief
  * register (measured with the system font: «Pioggia gelata verso le 15:00» wraps to
  * three at 96 dp and fits). On the reference device a four-cell card (~340 dp) gives
- * each column ~116 dp — where every brief sentence takes two lines — and a three-cell
- * card (~250 dp) ~71, so the threshold sits well clear of both.
+ * each column ~118 dp — where every brief sentence takes two lines — and a three-cell
+ * card (~250 dp) ~73, so the threshold sits well clear of both.
  */
 internal val SentenceColumnMin = 96.dp
 

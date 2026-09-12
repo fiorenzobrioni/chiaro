@@ -69,12 +69,17 @@ object WeatherIconSize {
      * over; 44dp (30dp of ink) is the value that would put the strip back in front, and it
      * is one number away.
      *
-     * The room was measured at 360dp before it was taken. The text budget of a moment
-     * row is `360 − 16 − icon − 16 − 48 (the bell) − 16`, so it goes from **230dp to
-     * 213dp**; an event row with no bell goes from 278 to 261. The rows are already
-     * three-line (name, time, chip), so their height does not move: a 51dp leading slot
-     * fits inside Material's 88dp three-line row with 18dp of air each side, and inside
-     * a two-line 72dp row with 10.5dp.
+     * The room was measured at 360dp before it was taken. **The figure for a row with a
+     * bell was one 16dp inset short and is corrected here (12 set 2026)**: Material puts
+     * a gap between the text column and the trailing slot as well as one after the
+     * leading slot, so the budget is `360 − 16 − icon − 16 − 16 − 48 (the bell) − 16`
+     * and it went from **214dp to 197dp**, not 230 to 213. (Read off the device's own
+     * screenshot: the chip ends at 303.6dp and the bell's 48dp box is centred at 344 on
+     * a 384dp screen.) An event row with no bell has no such gap and its figures stood:
+     * 278 to 261. The rows were three-line (name, time, chip) when this was taken, so
+     * their height did not move — a 51dp leading slot fits inside Material's 88dp
+     * three-line row with 18dp of air each side, and inside a two-line 72dp row with
+     * 10.5dp, which is what they are since the chip took a line of its own (§8.8).
      *
      * What it costs is the long supporting lines: "8 Ottobre · La previsione non arriva
      * ancora così lontano" already wraps to two lines at 230dp, and 7% less width can
@@ -105,4 +110,33 @@ object WeatherIconSize {
      * 320dp with the original 24dp icon too.
      */
     val Tile: Dp = 38.dp
+
+    /**
+     * **The UV tile's own rung, 55dp since 12 set 2026** (committente, from a device:
+     * the UV glyph should grow "until the number it shows is the same size as the one
+     * on the pollen icon"). It is the one rung aimed at a detail inside a drawing rather
+     * than at the drawing, and that is the whole reason it exists.
+     *
+     * Both families draw the same badge: a 30-unit rounded square in a 128 box, with the
+     * value in it (`M88,79 … A9,9` on `uv-index-*`, `M80,71 … A9,9` on `pollen-*-low`).
+     * What differs is the `mc3scale` the importer cooks in to bring every drawing to the
+     * same ink (§13.1): the UV sun spreads its rays to the corners so it is already big
+     * and is scaled **0.92**, the pollen sprig is compact and is scaled **1.3382** — so
+     * at one box size the pollen badge is 1.45× the UV one. Measured on the device's own
+     * screenshot at 2.8125 px/dp: 33 px of UV badge against 40 of pollen.
+     *
+     * The lever left at the call site is the box, and this is it:
+     * `38 × 1.3382 / 0.92 = 55.3`. At 55dp the UV badge is **11.85dp** against the grass
+     * and weed badge's 11.92 at [Tile] — 0.6% apart, which no eye separates. The tree
+     * pollens are scaled 1.3109, so their badge is 11.68 and the UV one lands 1.5% over
+     * instead of under; the grass badge is the one the request was measured against.
+     *
+     * What it costs, and it is not nothing: this rung is 45% over the ladder's [Tile]
+     * step, so the UV glyph is plainly the biggest thing in the details grid, and the
+     * header row it sits in grows 17dp — which its neighbour in the same row pays too,
+     * because a pair of tiles shares one height. The label budget is not what it costs:
+     * `(384 − 32 − 12) / 2 − 32 − (55 + 8)` leaves 75dp on this device and 63 at 360dp
+     * for a label that is the two letters «UV», the shortest the app ships.
+     */
+    val TileUv: Dp = 55.dp
 }

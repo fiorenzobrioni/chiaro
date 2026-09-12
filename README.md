@@ -296,7 +296,7 @@ it, is in [DESIGN.md](./DESIGN.md).
   `tools/import_meteocons_v3.py`. The whole family of 519 drawings lives in the repo and
   only what a screen names reaches the APK, which is what `shrinkResources` is for.
   **Inter** as a bundled variable font
-- 765 unit tests on the JVM across four modules (320 in `:app`, 213 in `:core:domain`, 208
+- 775 unit tests on the JVM across four modules (330 in `:app`, 213 in `:core:domain`, 208
   in `:core:data`, 24 in `:core:sync`), Robolectric where Android is unavoidable, including
   painting the arc widget's bitmap for real and reading its pixels back
 

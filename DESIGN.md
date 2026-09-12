@@ -807,12 +807,24 @@ chip, the Sky widget's round mark and the arc widget's agenda rows.
 
 **8.8 MomentCard** — a sky event: name in plain words ("Golden hour, evening"), time,
 verdict chip, the number behind it, a bell for a reminder. The dotted job id never appears.
-The leading glyph is the weather family in its own colors at the timeline's rung (34dp),
-on the moments, the calendar ahead and the guide's index alike (review, 8 set 2026): it
-was a 26dp silhouette in `onSurfaceVariant`, the last place the family was tinted flat,
-and tinted flat the full moon and the new moon are the same disc. The catalog's check
-marks come from the subscription store, not from the rows on screen, so a subscribed job
-with no row today still shows as subscribed.
+The leading glyph is the weather family in its own colors at the Sky's own rung (51dp
+since 11 set 2026), on the moments, the calendar ahead and the guide's index alike
+(review, 8 set 2026): it was a 26dp silhouette in `onSurfaceVariant`, the last place the
+family was tinted flat, and tinted flat the full moon and the new moon are the same disc.
+The catalog's check marks come from the subscription store, not from the rows on screen,
+so a subscribed job with no row today still shows as subscribed.
+
+**The chip gets a line of its own, under the whole row** (12 set 2026). Inside the list
+item's text column it had `screen − 163` — the row's insets and fixed slots, `16 + 51
+(the glyph) + 16 + 16 + 48 (the bell) + 16` — which is 221dp on a 384dp screen and 197 at
+360. "✗ Niente da fare  nuvole 66%" measures 223, so it missed by **two dp** and what
+wrapped was the number under the word: the one pair §8.7 does not allow to come apart.
+Two dp is not a margin, and the widest pair the app can print ("Niente da fare" with
+"pioggia 100%") wants about 236. Nothing of the bell reaches that line, so the line takes
+the bell's column too: `screen − 99`, which is 285dp at 384 and 261 at 360, clear of 236
+on both. It costs about 6dp of row height and puts 14dp of air over the chip instead of 6,
+and those were the cheapest dp on the row: a 40dp bell would have bought 8 and a tighter
+chip 4, neither of them a margin.
 
 **8.9 RuleSentence** — the alert builder as a sentence of tappable chips: *Notify me when*
 `[rain, next 6 h]` *is* `[above]` `[70%]`. Every chip opens a picker; no free-text field
@@ -1145,7 +1157,8 @@ a valid animator and only a person can say the rain falls downward.
    all.
 
    **The sizes are one ladder, `ui/icons/WeatherIconSize`** — hour strip **42dp**, week
-   row **38dp**, metric tile **38dp** since 11 set 2026, timeline row **34dp** — and the
+   row **38dp**, metric tile **38dp** since 11 set 2026, timeline row **34dp**, with the
+   Sky's own **51dp** rung off to the side (§8.8) — and the
    move to v3 did not touch them: the box went 64 → 128 but that is `viewportWidth`, and a
    dp is a dp. The measurements behind the ladder are the ones the 8 set 2026 pass made and
    they stand: the 56dp hour cell keeps 7dp of air per side and the week's temperature bar
@@ -1159,6 +1172,20 @@ a valid animator and only a person can say the rain falls downward.
    comparison a reader ever makes. The order of the rungs is the reading order: the strip is
    scanned sideways and carries the most weight, the week is read down, a line of prose
    leads with the smallest glyph.
+
+   **One tile is off the ladder, and it is aimed at a detail rather than at a drawing**:
+   UV, at **55dp** since 12 set 2026. Its glyph carries the index as a badge, and the
+   pollen glyph carries its level the same way — the same 30-unit rounded square in the
+   same 128 box — but the normalisation scales the two drawings differently (the UV sun
+   already reaches the corners and takes 0.92; the pollen sprig is compact and takes
+   1.3382), so at one box size the pollen badge is 1.45× the UV one. On a device the UV
+   number read small next to it. The only lever left at the call site is the box, so the
+   box is what moved: `38 × 1.3382 / 0.92 = 55.3`, which puts the two badges 0.6% apart.
+   What it costs is that the UV glyph is plainly the biggest thing in the details grid and
+   its header row grows 17dp, which its neighbour pays too — a pair of tiles shares one
+   height. What it does not cost is the label budget: `118 − 55` still leaves 63dp at
+   360dp for the two letters "UV". `MeteoconScaleTest` measures the two badges in the
+   shipped drawables rather than trusting the numbers in this paragraph.
 
    **What the conversion cannot say verbatim, and what is done instead.** Each of these
    is a departure from «use the original», and each is declared by the importer's own
