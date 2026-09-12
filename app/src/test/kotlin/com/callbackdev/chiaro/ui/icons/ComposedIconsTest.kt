@@ -50,7 +50,7 @@ class ComposedIconsTest {
         """<group android:name="g3sun" android:scaleX="([\d.]+)" android:scaleY="([\d.]+)""""
     )
     private val cloudGroup = Regex(
-        """<group android:name="g5cloud" android:scaleX="([\d.]+)" android:scaleY="([\d.]+)""""
+        """<group android:name="g6cloudplace" android:scaleX="([\d.]+)" android:scaleY="([\d.]+)""""
     )
     private val strokeWidth = Regex("""android:strokeWidth="([\d.]+)"""")
 
@@ -138,6 +138,10 @@ class ComposedIconsTest {
      * gruppo la porta a meno di meta' taglia, e se il tratto scendesse con lei
      * resterebbe largo 2,0 contro i 3,7 del sole, cioe' uno sbaffo. Lo strumento scrive
      * `strokeWidth` = 4 / scala apposta, e questo e' il numero che non deve tornare a 4.
+     *
+     * La scala sta su `g6cloudplace` e non sul guscio `g5cloud`: e' il guscio che porta
+     * il dondolio, e un gruppo animato non puo' portare anche trasformazioni sue
+     * (`AnimatedIconTest`).
      */
     @Test
     fun `il contorno della nuvola resta la linea della famiglia`() {

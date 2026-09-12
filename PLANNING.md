@@ -5957,6 +5957,25 @@ raggio — quanto ne resta e quanto è largo quel che resta — e `slivers()` si
 scrivere i file finché c'è. Spostata la nuvola di 3,2 unità a destra: sette raggi interi,
 il sud-est dietro la nuvola, nessuna scheggia.
 
+**Il difetto che si vedeva solo sul telefono (12 set 2026).** Con le icone animate accese
+la nuvoletta partiva per la tangente; ferma era al suo posto. La causa è una regola di
+`AnimatedVectorDrawable` che non avevo in mente: un `objectAnimator` **sostituisce** la
+proprietà del gruppo, non ci si somma. Il gruppo della nuvola portava
+`translateY="30.5"` (il posto) e un `translateY` animato da 0 a −3 (il dondolio): appena
+l'animazione parte, il 30,5 sparisce e la nuvola sale di trenta unità, mentre il buco
+della maschera resta dov'era. Ora i gruppi sono due — un guscio vuoto che porta solo
+l'animazione, e dentro quello che porta taglia e posto — che è poi la forma che
+l'importatore dà a tutte le sue, e per questo nessuna icona importata aveva mai mostrato
+il problema.
+
+**Perché non l'aveva visto il filmstrip**, che esiste apposta per guardare le animate:
+`tools/icon_filmstrip.py` **sommava** la trasformazione statica e quella animata. Sui file
+dell'importatore le due non convivono mai, quindi la somma dava sempre la risposta giusta
+e il difetto è passato. Corretto lì (sostituisce, non somma) e fissato in
+`AnimatedIconTest`: nessun gruppo anima una proprietà che porta anche scritta, su tutta la
+famiglia. La misura di quanto fosse cieco il controllo: 8 file su 519 × 4 set la
+violavano, ed erano tutti e soli i composti.
+
 **Cosa resta dov'era:** il `mostly-clear` di Meteocons resta nel repo e in `PLANNED`,
 inutilizzato; le parole sullo schermo non cambiano; `MeteoconsSets.kt` non è stato
 toccato, perché il composto vive in `ComposedIcons.kt`, che l'importatore non riscrive.

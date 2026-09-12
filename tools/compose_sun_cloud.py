@@ -389,13 +389,17 @@ def path_xml(p: dict, indent: str) -> str:
 
 def group_open(name: str, indent: str, scale: float = None, pivot=(64, 64),
                translate=(0, 0)) -> str:
+    """Un gruppo. `pivot=None` per un gruppo che non trasforma niente: e' il guscio su cui
+    si appende un'animazione, e **deve restare vuoto di trasformazioni statiche** (vedi
+    [drawing])."""
     bits = [f'android:name="{name}"']
     if scale is not None:
         bits.append(f'android:scaleX="{fmt(scale)}" android:scaleY="{fmt(scale)}"')
     if translate != (0, 0):
         bits.append(f'android:translateX="{fmt(translate[0])}" '
                     f'android:translateY="{fmt(translate[1])}"')
-    bits.append(f'android:pivotX="{fmt(pivot[0])}" android:pivotY="{fmt(pivot[1])}"')
+    if pivot is not None:
+        bits.append(f'android:pivotX="{fmt(pivot[0])}" android:pivotY="{fmt(pivot[1])}"')
     return indent + "<group " + " ".join(bits) + ">"
 
 
@@ -432,9 +436,19 @@ def drawing(prefix: str, face: str, night: bool) -> list[str]:
         " " * 12 + "</group>",
         "        </group>",
         "    </group>",
-        group_open("g5cloud", " " * 4, scale=CLOUD_SCALE,
+        # **Due gruppi per la nuvola, e non uno.** In un `<animated-vector>` un
+        # `objectAnimator` **sostituisce** la proprieta' del gruppo, non la somma: un
+        # `translateY` animato su un gruppo che ne porta gia' uno statico lo azzera, e la
+        # nuvola parte per la tangente appena l'animazione comincia (visto sul telefono,
+        # 12 set 2026). Quindi il guscio esterno e' vuoto di trasformazioni ed e' l'unico
+        # che l'animazione tocca; quello interno porta la taglia e il posto e non si
+        # muove. Il dondolio resta cosi' in unita' della scatola invece di finire diviso
+        # per la scala della nuvola.
+        group_open("g5cloud", " " * 4, pivot=None),
+        group_open("g6cloudplace", " " * 8, scale=CLOUD_SCALE,
                    translate=(CLOUD_CENTRE[0] - 64, CLOUD_CENTRE[1] - 64)),
-        path_xml(cloud_element(prefix, face), " " * 8),
+        path_xml(cloud_element(prefix, face), " " * 12),
+        "        </group>",
         "    </group>",
     ]
     return lines
