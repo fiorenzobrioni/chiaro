@@ -6671,3 +6671,78 @@ ragione), la potatura anche sul ramo del bollettino mancato, e `widget_sky_` den
 Tre test nuovi in `:core:data`: `StoredDataSweepTest` (sei casi, compreso il tutto-o-niente
 per chiave e l'insieme vivo vuoto), `WarningRecordDaoTest` per il backstop che mancava, e
 un caso in più in `WidgetCityStoreTest` per la chiave del cielo. Suite a **793 verdi**.
+
+---
+
+## L'intestazione di Oggi che non scorre via (committente, 18 set 2026)
+
+Due richieste dal dispositivo, una per schermata e una per tutta l'app. La prima:
+«l'intestazione con il nome della città su Oggi deve restare ferma, come nelle altre
+schermate». La seconda: «sulla gesture back voglio la stessa dissolvenza fra le schermate
+che c'è in Saldo» — fatta, guardata sul dispositivo e **ritirata dal committente stesso**
+poche ore dopo, quindi di quel lavoro non resta niente in APK (sotto, cosa era e cos'è
+tornato indietro).
+
+### La riga del luogo, appuntata
+
+Cielo, Allerte e Diario tengono la loro intestazione **fuori** dalla lista, in una `Column`
+sopra di essa, quindi non scorre. Oggi no: la riga del luogo era il primo pezzo del
+`CanvasHeader`, cioè del primo item della `LazyColumn`, e se ne andava in alto con il cielo.
+Il modo più corto di pareggiare le altre tre — una riga sopra la lista, su `surface` — però
+costava il cielo a filo dello schermo: il canvas possiede il bordo superiore da Fase 3
+(DESIGN §3.6) e la fascia di scrim in cima esiste proprio per la riga del luogo e le icone
+di stato.
+
+Si è fatta invece la cosa che DESIGN §8.1 aveva già scritto («collapses on scroll into the
+app bar, keeping place and temperature»): la riga è **appuntata sopra la lista**, dentro il
+`PullToRefreshBox` così che l'indicatore del pull le scenda davanti, e ha **due terreni**.
+
+- In cima alla pagina non ha terreno: bianco sulla fascia di scrim, che è dove §3.6 misura
+  i suoi 5,27:1.
+- Dal **primo pixel** di scroll prende `surface` e l'inchiostro del tema, con la molla
+  `effects` di §7 a fare il passaggio.
+
+Niente di intermedio, e questa è la decisione da ricordare: la soglia misurata che c'era
+prima (`SkyCanvasTopScrimEnd` sull'altezza reale del canvas) teneva il bianco finché la
+fascia stava dietro la **status bar**, e la riga del luogo scende 48dp più in basso della
+status bar — con quella soglia, per qualche decina di dp, il nome della città sarebbe stato
+bianco su cielo non scrimmato. Ora la soglia è una sola, sta in `atTop`, e le icone della
+status bar la seguono perché quel che sta dietro la status bar **è** questa barra.
+
+Il canvas tiene il posto della riga con uno `Spacer` alto quanto la barra **misurata**
+(`onSizeChanged`), non quanto una costante: la riga cresce con la scala del testo, con i
+pallini del pager e con l'ora del luogo, e `PlainHeaderHeight` (48 + 8 + 8) è solo il
+pavimento su cui sta prima del primo layout. Con lo `SpaceBetween` che c'era già, l'eroe
+atterra dove atterrava prima e il bordo inferiore del canvas resta a `status + 280dp`: lo
+scheletro, che quella somma la quotava già (`CanvasBaseHeight - PlainHeaderHeight`), non è
+stato toccato e continua a combaciare.
+
+Gli stati senza report (scheletro, nessun luogo, vuoto) avevano già l'intestazione ferma
+sopra il contenuto e sono rimasti come erano.
+
+### La dissolvenza fra le schermate: fatta, e tolta lo stesso giorno
+
+La seconda richiesta è stata implementata e poi **rimossa su richiesta del committente**,
+che ha preferito lo scambio istantaneo di prima. Sta qui perché il tentativo è un dato,
+non per rimpianto: se la domanda torna, questo è quel che c'era.
+
+Chiaro non ha un nav graph (due enum di stato e un `BackHandler`, scelta di Fase 4), quindi
+la forma di Saldo — fade + slide di un sesto di schermo — era stata ottenuta con un
+`AnimatedContent` su un `SeekableTransitionState` in un solo composable riusabile
+(`ui/shell/ScreenSwap.kt`), con un `PredictiveBackHandler` che faceva `seekTo` a ogni evento
+del gesto: è l'unico modo di far seguire il dito alla transizione invece di farla partire a
+gesto concluso. Tre chiamanti: lo shell (i quattro tab, Impostazioni, la guida), il tab
+Cielo e la guida (tonight/tour ↔ documento degli eventi). Aveva richiesto anche di stringere
+il `BackHandler` di `SkyGuideRoute` al solo livello pagina → indice, perché un handler che
+chiude se stesso consuma il gesto e non anima nulla.
+
+Il ritorno è pulito e verificato come tale: i quattro file toccati (`ChiaroRoot.kt`,
+`SkyScreen.kt`, `SkyGuideScreen.kt`, `GuideScreen.kt`) sono **identici byte per byte** alla
+versione precedente, `ScreenSwap.kt` non esiste, e DESIGN §7 è tornato alle sue quattro
+animazioni. Di questa richiesta resta solo la riga del luogo appuntata, che è l'altra.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 793 test.
+Il resto — che il nome della città non scorra più via e che la barra cambi terreno quando
+deve — è una prova da dispositivo: qui non c'è.
