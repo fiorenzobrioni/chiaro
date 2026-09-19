@@ -6746,3 +6746,337 @@ animazioni. Di questa richiesta resta solo la riga del luogo appuntata, che è l
 `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 793 test.
 Il resto — che il nome della città non scorra più via e che la barra cambi terreno quando
 deve — è una prova da dispositivo: qui non c'è.
+
+---
+
+## Il widget senza niente di disegnato (committente, 19 set 2026)
+
+«Crea un nuovo widget 4x1 (ridimensionabile) ma con informazioni solo testuali. Niente
+icona meteo o altra grafica. Decidi tu, per ogni tipologia di informazione da visualizzare,
+il modo migliore per: layout, dimensione testo, testo grassetto, ecc. Deve risultare una
+tipografia ordinata e leggibile con info principali in primo piano.»
+
+È il quinto widget della casa e il primo che non disegna niente. Si chiama **«In parole»**
+(`In words` in inglese), `TextWidget` nel codice.
+
+### La cosa da capire prima di scrivere una riga
+
+Il primo istinto è «il widget Ora senza l'icona», e sarebbe sbagliato. Le altre quattro
+schede prendono la gerarchia **dal disegno**: il glifo Meteocons riempie l'altezza che il
+launcher concede ed è la prima cosa che si legge a distanza di braccio — sta scritto in
+VISION §5.9 e la taglia del glifo è aritmetica in tre file di layout. Togli il disegno e la
+scheda resta senza primo piano: un 34 sp e un 16 sp uno sopra l'altro non sono una
+gerarchia, sono due righe.
+
+Quindi la gerarchia si è **ricostruita con il carattere**, e la regola che tiene tutto in
+piedi è una sola: **quattro ranghi che si distinguono per taglia E peso E inchiostro,** mai
+per uno solo dei tre. Un rango che si distinguesse solo per taglia si sfalda quando il
+lettore alza il font di sistema; uno che si distinguesse solo per inchiostro sparisce su una
+carta semitrasparente.
+
+| rango | cosa | taglia | peso | inchiostro |
+|---|---|---|---|---|
+| 1 | la temperatura | 30…56 sp, scalata alla concessione | **Bold** | forte |
+| 2 | la frase del giorno | 17 sp | Medium | forte |
+| 3 | il luogo, massima/minima, la parola dell'allerta, le temperature delle ore | 14 sp | Regular il luogo, Medium le cifre | quieto il luogo, forte le cifre |
+| 4 | il marcatore di vecchiaia, le etichette delle ore | 11 sp | Regular | freschezza il marcatore, quieto le etichette |
+
+**Il numero è il disegno, adesso.** Bold dove tutta la casa scrive Medium — il peso è uno
+dei tre assi, e il rango in cima è l'unico che può permetterseli tutti e tre — e soprattutto
+**scalato alla concessione**, esattamente come le altre quattro scalano il glifo. Una
+taglia fissa può essere giusta su una sola dimensione di cella: `heroIconSize` risolve il
+problema per un disegno, `textSizeForLine` (nuovo in `WidgetUi.kt`, l'inverso di
+`textLineHeight`) lo risolve per una cifra. Sulla riga di riferimento da 85 dp il numero
+esce a **41,3 sp** contro i 34 che il widget Ora stampa accanto al suo glifo; su una scheda
+alta arriva al soffitto di 56.
+
+I 17 sp della frase sono un punto sopra il 16 della casa, e il punto è pagato dall'assenza
+del disegno: su questa scheda la frase **è** la seconda cosa da leggere, non la didascalia
+di un'immagine. Due punti no: a 18 la colonna da 174 dp della scheda a quattro celle smette
+di tenere «Pioggia gelata verso le 15:00» in due righe.
+
+### Le tre forme, e la cella che si guadagna
+
+Stessa grammatica di `NowLayout`, perché le schede stanno sullo stesso schermo:
+
+- **`LINE`** — una riga troppo stretta per due colonne: luogo, numero, vecchiaia. Basta.
+- **`ROW`** — una riga con la seconda colonna, che è la collocazione 4×1 di default: il
+  luogo sopra il numero a sinistra, e al bordo opposto la frase con sotto l'allerta e la
+  massima/minima.
+- **`STACK`** — due righe in su: una colonna sola, centrata sull'altezza che non riempie,
+  con le prossime ore stampate come cifre dove l'altezza le regge.
+
+**A tre celle questa scheda porta già la frase, il widget Ora no** (`NowLayout.NARROW` a
+250 dp). Non è una scelta di gusto, è la stessa aritmetica con un addendo in meno: i 66 dp
+di glifo più gli 8 di distacco che quella scheda spende prima della prima lettera, questa
+non li ha. Il test lo mette una accanto all'altra, perché è la differenza che giustifica
+l'esistenza di due widget.
+
+La colonna di sinistra è una **quota** (42%) e non la metà esatta che usa il widget Ora: le
+due colonne non fanno lo stesso lavoro, una tiene un numero e un nome — entrambi corti — e
+l'altra tiene prosa, che è la cosa che ha bisogno di misura. Sulla scheda di riferimento a
+quattro celle fa 126 dp contro 174; sotto c'è un pavimento di 96 dp, che è quel che serve a
+«−12°» al piano del numero e a un nome di dieci lettere.
+
+### L'ordine in cui si spende, che è la gerarchia scritta
+
+Su scheda alta il budget compra in quest'ordine, e l'ordine **è** l'argomento di layout:
+
+1. il numero, prenotato subito a 40 sp — su una scheda alta è il titolo della pagina, e un
+   titolo che si rimpicciolisce perché ci stia una nota a piè di pagina è la scheda che
+   litiga con sé stessa;
+2. le due righe di frase;
+3. la parola dell'allerta;
+4. massima e minima;
+5. le prossime ore;
+6. quel che avanza torna al numero, fino a 56 sp.
+
+Il luogo e il marcatore di vecchiaia non sono nell'ordine perché non sono mai facoltativi:
+una scheda senza luogo è un numero su nessun posto, e una senza età mente su quanto è
+vecchia (VISION §5.9). Sulla riga da 85 dp il marcatore si paga con il numero, che scende a
+30,3 sp — il pavimento, centrato lì apposta.
+
+**Due righe di frase e mai tre** su scheda alta: è il numero della scheda alta del widget
+Ora (`TallSentenceMaxLines`) e lo stesso argomento — lì la terza riga costava 21 dp al
+glifo, qui costa 13 sp al numero. Sulla 4×2 di riferimento è la differenza fra un 56 sp e un
+43 sp, per una riga che nel registro breve a 340 dp di misura non serve quasi mai. Sulla
+riga singola invece la terza riga resta, perché lì non c'è nessun numero che la paghi: la
+colonna la usa solo se non c'è altro da dire.
+
+### Le due cose che un disegno diceva e ora dicono le parole
+
+- **La posizione del telefono** era il segnaposto (`ic_place_pin`) su tutte le altre schede.
+  Qui è `widget_text_place_gps`, «Milano · la mia posizione»: da dove viene un numero fa
+  parte della sua verità (la regola dell'intestazione di Oggi, §5.1), e una scheda senza
+  glifi deve dirlo invece di marcarlo.
+- **L'allerta ufficiale** era una pastiglia. La pastiglia esiste per una ragione misurata,
+  non decorativa: il terreno di un widget è un cielo con lo scrim o lo sfondo di qualcun
+  altro, e **una parola colorata nuda su uno di quei terreni è risultata illeggibile** (4
+  set, sui verdetti della scheda Cielo — «un verde nudo era difficile da leggere su una
+  scheda scura»). La pastiglia risponde portandosi dietro il proprio terreno misurato.
+  Una scheda il cui presupposto è che non si disegna niente **non può portarselo**, quindi
+  rinuncia al colore e non alla leggibilità: stampa «Allerta gialla» nell'inchiostro forte
+  della scheda, al rango 3. Non è uno sconto sulla regola ma il suo pavimento — DESIGN §2.3
+  fa della parola il vettore e del colore il rinforzo, e qui c'è solo il vettore. Per il
+  resto decide la stessa tabella `warningSlot` delle altre quattro: arancione e rosso stanno
+  già nella frase, il giallo prende una riga sua dove ce n'è una in più.
+
+### Cosa si è deciso di NON mettere
+
+- **La riga della pioggia sotto le ore.** Le ore stampano etichetta e temperatura, non la
+  probabilità. La pioggia, quando conta, è già nella frase del giorno («Pioggia verso le
+  cinque»): una seconda affermazione sulla pioggia in cifre, a un rango più basso, sarebbe
+  la stessa cosa detta due volte — che è l'argomento con cui la tabella dell'allerta tiene
+  la pastiglia fuori dalle schede arancioni.
+- **Il maiuscoletto per il nome del luogo.** Tipograficamente un'etichetta tutta maiuscola
+  sopra un numero grande funziona, ma TalkBack su alcune versioni la compita lettera per
+  lettera, e un nome proprio accentato in maiuscolo è una decisione sulla lingua che questo
+  file non ha titolo di prendere. Il rango basta a farla leggere come etichetta.
+- **Lo sfondo.** Resta quello della casa (il cielo calcolato, di default, più chiaro/scuro/
+  sistema e l'opacità), perché è il vestito della scheda e non il suo contenuto, ed è
+  misurato: lo scrim §3.6 esiste perché l'inchiostro bianco tenga il suo pavimento. Chi
+  vuole la tipografia pura su carta piatta la sceglie dalle impostazioni della scheda, che
+  sono un tocco lungo di distanza.
+- **La famiglia di icone** non viene più offerta nella schermata di configurazione quando la
+  scheda è questa: un interruttore che non cambia niente non si offre (la riga che c'era
+  già per la massima/minima del widget Oggi). Massima/minima invece **viene** offerta anche
+  qui, e per la stessa ragione per cui la offre Oggi: c'è una colonna di fatti in cui
+  metterla, dove sul widget Ora c'era solo il bordo della frase da affollare.
+
+### I contenitori di Glance, contati di nuovo
+
+Glance disegna al massimo dieci figli per contenitore e **scarta il resto senza dire
+niente** (Fase 11, dove aveva già mangiato le ultime due ore della striscia di Oggi). La
+colonna della forma `STACK` ne ha sette al massimo, le due colonne della `ROW` tre ciascuna,
+la riga delle ore sei — e sei è il soffitto di `textHourCells` proprio per quello. Ogni
+distacco è **padding**, mai uno `Spacer`: una riga che costa due figli costa il doppio di
+quel che sembra.
+
+### Quel che è cambiato fuori dal widget
+
+- `WidgetUi.kt`: `textSizeForLine`, l'inverso di `textLineHeight`, e un parametro `size` su
+  `DayRange` (era fissa a 16 sp; qui la coppia sta al rango 3, a 14).
+- `ChiaroWidgets`: `WidgetKind.TEXT`, il ricevitore, la famiglia. `WidgetConfigActivity`:
+  niente icone per questa scheda, sì frase/allerta/massima e minima.
+- `WidgetPreviewTest` conta cinque provider e cinque anteprime invece di quattro. È un
+  conteggio asserito e non derivato apposta: un provider aggiunto senza anteprima deve
+  fallire lì e non sullo schermo di casa di qualcuno.
+
+### Come è stato verificato
+
+`./gradlew :app:compileDebugKotlin`, `test :app:testDebugUnitTest`, `:app:lintDebug` e
+`:app:assembleDebug` verdi, **808 test** (i 793 di prima più i 15 di
+`TextWidgetLayoutTest`), lint senza un rilievo sui file nuovi, e l'APK contiene
+`res/xml/widget_text_info.xml` e `res/layout/widget_text_preview.xml`. Il resto — come legge
+davvero la scheda su uno schermo di casa, a quali taglie il launcher la concede, se 41 sp
+sono i 41 sp giusti — è una prova da dispositivo: qui non c'è.
+
+### Il secondo giro, dal dispositivo (committente, 19 set 2026)
+
+Quattro richieste dopo la prima prova su schermo di casa, con screenshot: la card 4×1 sul
+cielo notturno, «Ornago · la mia posizi…» troncato, «24°», «Quasi sereno», «25° / 16°».
+
+**1. Il segnaposto torna.** «Invece della scritta "la mia posizione" metti il simbolo del
+GPS davanti alla località.» La prima versione l'aveva messa a parole apposta — una scheda
+che non disegna niente dice quel che le altre marcano — e lo screenshot ha mostrato il costo
+esatto di quella coerenza: la riga era **tutta** la nota, e il nome del posto ci finiva
+dentro troncato. Il segno costa 16 dp di inchiostro, dice la stessa cosa e lascia il nome
+intero. È lo stesso `ic_place_pin` della schermata e delle altre quattro schede, quindi le
+cinque non possono litigare su che aspetto ha «la mia posizione».
+
+Da qui una regola che vale anche per il punto 2 e che adesso sta nell'intestazione di
+`TextWidget.kt`: **un segno alla misura della riga cui appartiene, tinto con l'inchiostro di
+quella riga, è punteggiatura, non grafica.** «Niente icona meteo o altra grafica» resta
+intero: sulla scheda non c'è nessun disegno del meteo, nessuna pastiglia, nessuna
+illustrazione.
+
+**2. Le frecce su e giù.** «Temperatura max e min un po' più grandi e con le frecce su e giù
+ad indicare massima e minima.» Sono due `vector` nuovi (`ic_range_high`, `ic_range_low`) e
+non i caratteri ↑ e ↓, per la ragione già misurata il 9 set sui marchi dei verdetti: un
+carattere che il font di sistema non ha lo disegna un font di ripiego, con la sua mano e il
+suo peso, e il committente lesse la ✗ come scrittura a mano. Stessa costruzione dei marchi:
+un tracciato a 2.4 di 24, cuspidi tonde, ≈1.6 dp alla taglia a cui si mostrano.
+
+La coppia resta **un solo composable**, `DayRange`, con un parametro `marks`. Non due
+grammatiche per la stessa cosa: è la stessa frase a due budget. I segni costano ~25 dp, che
+la colonna da 174 dp del widget testuale porta e quella da 113 dp del widget Oggi no — quindi
+Oggi tiene la barra e la scheda che ha lo spazio lo dice per esteso. L'enfasi non cambia in
+nessuno dei due casi: la massima prima e forte, la minima dopo e smorzata, e ogni segno
+prende l'inchiostro della cifra davanti a cui sta.
+
+**3. Il rango 3 sale, e il pavimento dell'eroe scende.** «La località un pochino più
+grande», e le due temperature pure. Il rango 3 va da 14 a **16 sp**, che è il numero con cui
+tutte le altre schede stampano un luogo e una massima/minima: le cinque adesso sono d'accordo
+su quanto è grande un fatto. Ma 17 sopra 16 non è un rango, è un arrotondamento, quindi la
+frase del giorno sale a **18**. Due punti, con Medium contro Regular e forte contro quieto,
+è il salto più piccolo che si ordina ancora a distanza di braccio; a 19 la colonna da 174 dp
+smette di tenere «Pioggia gelata verso le 15:00» in due righe, ed è la misura che ha fermato
+il numero lì.
+
+Il seguito è aritmetico e va detto perché è il genere di cosa che si rompe in silenzio: la
+riga del luogo è cresciuta di 2,6 dp, quindi su una riga da 85 dp con il marcatore di
+vecchiaia il numero resta con 37,4 dp, cioè 28,3 sp — **sotto il vecchio pavimento di 30**.
+Un pavimento che non si può pagare non è un pavimento, è una riga tagliata. È sceso a **26**,
+e così torna a essere quel che deve essere: il punto sotto il quale una scheda strizzata
+smette di rimpicciolire la cifra, non una taglia che una concessione misurata raggiunge. Con
+dati freschi quella stessa riga legge 39,3 sp.
+
+**4. Lo sfondo colorato.** «Possibilità di mettere uno sfondo colorato: blu, blu chiaro,
+verde…» Sei colori — blu, blu chiaro, verde, verde acqua, viola, terracotta — accanto alle
+quattro scelte che c'erano già, e **su tutti e cinque i widget**, non solo su questo: il
+colore è una proprietà della scheda, non di quel che ci sta stampato sopra.
+
+Due decisioni dentro la decisione.
+
+- **Nessun inchiostro nuovo.** Inchiostro e terreno sono una coppia (§2.3), e quanto costa
+  spezzarla è stato misurato il 4 set sui verdetti della scheda Cielo. Quindi invece di sei
+  terne di inchiostri, ogni colore è scelto **abbastanza scuro da portare la coppia che
+  l'app ha già e ha già misurato**: il bianco §3.6 del cielo con lo scrim, pieno per
+  l'inchiostro, 75% per quello quieto, 85% per quello della freschezza. Diciotto misure in
+  DESIGN §2.6, asserite da `PaletteContrastTest` e confrontate con il documento da
+  `PaletteDocTest`. Il pavimento che conta è il quieto, perché porta un'etichetta d'ora da
+  11 sp: il peggiore dei sei dà 5,2:1 contro i 4,5 che servono.
+- **Sei colori devono essere sei colori.** Nessuna coppia sotto **13 ΔE**, altrimenti a
+  scegliere è il nome e non il colore. Il blu del primo tentativo (`#14477A`) stava a 9,4 dal
+  blu chiaro accanto: è sceso a `#0F3B6B`, che è anche il blu che un lettore si aspetta di
+  vedere quando l'altro si chiama «blu chiaro».
+
+`WidgetBackground` prende **un** valore nuovo, `COLOR`, e non sei: quale colore è una seconda
+domanda, e la si fa solo a chi ha scelto COLOR (`WidgetLook.cardColor`), così ogni `when` su
+quell'enum resta di quattro righe. Sotto `InkTrustFloorPct` una scheda colorata passa la
+domanda dell'inchiostro alla carta da parati come fanno il cielo e la scheda di sistema:
+scegliere un colore è scegliere un **terreno**, non nominare un inchiostro, e al 20% di
+solidità quel terreno in gran parte non c'è. Chiaro e scuro continuano a decidere a qualsiasi
+solidità, perché quelli sì sono il lettore che nomina un inchiostro.
+
+Le due schermate di configurazione stampavano già le stesse quattro righe da due copie della
+stessa lista, ed è esattamente il posto in cui un quinto tipo lascia indietro una delle due
+copie: adesso c'è un `BackgroundSection` solo, usato da entrambe, con le righe dei colori
+annidate sotto la scelta «Un colore» e una pastiglia del colore in fondo a ognuna — con il
+nome davanti, perché una pastiglia non è un'etichetta (§10).
+
+### Come è stato verificato (secondo giro)
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **812 test**
+(i 15 del widget più 4 nuovi: le diciotto misure dei colori, la distanza fra i sei, il fatto
+che nessuna scheda solida interroghi la carta da parati, e il confronto fra la tabella di
+§2.6 e il codice). Lint senza rilievi. Come legge la scheda colorata su uno schermo di casa
+resta una prova da dispositivo.
+
+### Il terzo giro: le ore se ne vanno, il pannello, e il nome intero (committente, 19 set 2026)
+
+Screenshot con le due schede affiancate — 4×1 e 4×2, sfondo blu — e tre richieste.
+
+**1. Le temperature orarie via, e sempre.** «Praticamente facciamo sempre senza temperature
+orarie.» Erano l'unica cosa che la scheda alta guadagnava in più, ed è la prima volta che
+una feature di questa serie viene tolta per come **legge** e non per un difetto: sullo
+schermo di casa le sei colonne sotto il blocco di testo si leggevano come un secondo widget
+pinzato sotto il primo. La scheda che esiste per le ore è il widget Oggi, e ce l'ha con i
+glifi. Via `textHourCells`, `textHoursHeight`, `TextHourTempSp`, i quattro numeri della
+cella e il campo `showHours` del piano.
+
+**2. Allineato in basso, e un pannello da quattro colonne in su.** «Allinea in basso testo e
+(se impostata) temperatura minima e massima. Se la dimensione poi è su 2 righe e le colonne
+sono almeno 4 valuta di cambiare il layout con la temperatura allineata in basso con font un
+po' più grande e testo e temperature max e min allineate a destra in basso.»
+
+Le due righe adesso **appuntano il luogo in cima** e tutto il resto **in fondo**, con l'aria
+in mezzo. È quel che l'altezza compra al posto delle ore, ed è la differenza fra una
+composizione e un elenco che è finito: `Spacer` pesato fra l'occhiello e il blocco, un figlio
+solo (Glance ne disegna dieci per contenitore e scarta il resto senza dirlo).
+
+Da quattro celle in su c'è una forma nuova, `TextForm.PANEL`: l'occhiello a tutta larghezza
+in cima, e lungo il fondo il numero a sinistra con la frase e la massima/minima allineate a
+destra, le due colonne **allineate in basso** così che la linea di base del numero e quella
+della coppia cadano insieme — che è tutto il senso di «allineate a destra in basso».
+
+E qui il numero può essere più grande, con una ragione e non a occhio: nelle altre forme sta
+**sotto** le parole, qui sta **accanto**. Vale la regola che il widget Ora scrive per il suo
+glifo (`RowIconMax`: l'eroe non supera mai il blocco che gli sta a fianco), letta su un
+blocco diverso — due righe di frase più la parola dell'allerta più la coppia fanno 89,8 dp, e
+64 sp hanno una scatola di riga di 84,5. Quindi tre soffitti, uno per forma: **44** dove sta
+sotto il luogo con una colonna di prosa a fianco, **56** sulla scheda alta stretta dove sta
+sopra la sua frase, **64** sul pannello.
+
+La soglia «almeno 4 colonne» è 300 dp (`TextPanelMinWidth`), misurata come `TallMinHeight`:
+quattro celle sono ~340 dp sul dispositivo di riferimento e ~320 su una griglia da cinque
+colonne, tre sono ~250. Un widget non sa quante celle ha avuto.
+
+La colonna di sinistra del pannello è **fissa** a 140 dp e non è `textLeadingColumn`: lì
+dentro ci sta una cifra, non un nome — il nome è l'occhiello sopra entrambe le colonne — e
+140 è «−12°» al soffitto (134,4) più un paio di dp, così a decidere la taglia del numero è il
+soffitto e non la larghezza.
+
+**3. Il nome lungo, intero.** «Quando è su una riga vorrei che si riesca a vedere
+completamente una località lunga come "Cavenago di Brianza" lasciando così il layout e le
+dimensioni dei vari testi.»
+
+La colonna di sinistra era il 42% dello slack della riga: 126 dp, contro i 165 che
+«⌖ Cavenago di Brianza» vuole (145 misurati di nome a 16 sp, più la scatola del segnaposto e
+la sua aria). Il risultato era «Cavenago di Bri…» su una riga che aveva 174 dp di bianco
+nell'altra colonna. **Una quota non può risolverlo**, perché le due colonne non vogliono la
+stessa cosa: quella di sinistra vuole esattamente quanto le serve al nome che tiene, quella
+di destra vuole una misura.
+
+Quindi: ogni dp oltre il minimo della frase va al nome finché il nome è soddisfatto.
+
+```
+lead = (slack − 104).coerceAtMost(168).coerceAtLeast(96)
+```
+
+Quattro celle: 168 contro 132 (prima 126 contro 174). Tre celle: 106, e la frase resta
+esattamente sul suo minimo — la forma che questa scheda guadagna a tre celle non viene
+restituita. Due celle: il pavimento, e 23 dp di avanzo, che non è una colonna. Niente
+cambia nelle taglie dei testi né nella disposizione, che era la condizione.
+
+Un controllo che valeva la pena fare: la coppia con le frecce a 16 sp misura ~95 dp con due
+numeri a due cifre e ~113 con due «−12°», quindi ci sta nei 132 della colonna nuova senza
+tagli.
+
+### Come è stato verificato (terzo giro)
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **814 test**,
+di cui 17 sul layout di questa scheda — fra questi uno che, per ogni concessione che è un
+pannello, con e senza marcatore di vecchiaia e a due scale di font, ricalcola le due colonne
+e verifica che la più alta stia dentro la card. Lint senza rilievi. Come legge davvero il
+pannello su uno schermo di casa resta una prova da dispositivo.

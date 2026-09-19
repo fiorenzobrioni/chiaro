@@ -61,7 +61,9 @@ import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.theme.ChiaroColors
 import com.callbackdev.chiaro.ui.theme.ChiaroPalette
 import com.callbackdev.chiaro.ui.theme.SkyPalette
+import com.callbackdev.chiaro.ui.theme.WidgetCardColor
 import com.callbackdev.chiaro.ui.theme.paletteFor
+import com.callbackdev.chiaro.ui.theme.widgetCardContainer
 import com.callbackdev.chiaro.ui.today.SkySnapshot
 import com.callbackdev.chiaro.ui.warnings.WarningText
 import java.time.Duration
@@ -315,7 +317,9 @@ fun WidgetCard(
                 modifier = GlanceModifier.fillMaxSize()
             )
         } else {
-            val fill = FixedColorProvider(widgetCardFill(effectiveBackground, schemes, night, alpha))
+            val fill = FixedColorProvider(
+                widgetCardFill(effectiveBackground, schemes, night, alpha, look.cardColor)
+            )
             Box(modifier = GlanceModifier.fillMaxSize().background(fill)) {}
         }
         Box(
@@ -361,15 +365,23 @@ fun resolveWidgetPalette(
     return palette(ink, schemes)
 }
 
-/** A plain card's fill for a background that is not the sky, at the reader's opacity. */
+/**
+ * A plain card's fill for a background that is not the sky, at the reader's opacity. A
+ * coloured card ([WidgetBackground.COLOR], 19 set 2026) takes its ground from the table in
+ * `ui/theme` rather than from either scheme: it is a colour the reader chose for this card,
+ * not a surface the generator produced, and it does not follow the phone's mode for the
+ * same reason the sky does not (DESIGN §2.6).
+ */
 fun widgetCardFill(
     background: WidgetBackground,
     schemes: WidgetSchemes,
     night: Boolean,
-    alpha: Float
+    alpha: Float,
+    cardColor: WidgetCardColor
 ): Color = when (background) {
     WidgetBackground.LIGHT -> schemes.light.surface.copy(alpha = alpha)
     WidgetBackground.DARK -> schemes.dark.surface.copy(alpha = alpha)
+    WidgetBackground.COLOR -> widgetCardContainer(cardColor).copy(alpha = alpha)
     else -> (if (night) schemes.dark.surface else schemes.light.surface).copy(alpha = alpha)
 }
 
@@ -419,36 +431,96 @@ fun skyGradientBitmap(sky: SkySnapshot, opacityPct: Int, table: SkyPalette): Bit
  * says which is which without a word for it. Nothing is drawn at all when the report
  * has no day left to describe (§1.1).
  *
- * Tabular figures are not available to Glance, so the pair is three Texts rather than
+ * Tabular figures are not available to Glance, so the pair is several Texts rather than
  * one: it is also the only way to give the two numbers two inks.
+ *
+ * **[marks]** (committente, 19 set 2026: «con le frecce su e giù ad indicare massima e
+ * minima») puts the up and down marks before the two figures instead of a slash between
+ * them. One composable and two dresses rather than two composables, because it is one
+ * statement at two budgets: the marks add about 25 dp, which the text widget's 174 dp
+ * trailing column carries easily and the Today widget's 113 dp one does not — so Today
+ * keeps the slash, and the card with the room says it outright. The emphasis does not
+ * change either way: the high leads and is strong, the low follows and is dimmed, and each
+ * mark takes the ink of the figure it stands before.
  */
 @Composable
-fun DayRange(highC: Double, lowC: Double, units: UnitSettings, palette: WidgetPalette) {
+fun DayRange(
+    highC: Double,
+    lowC: Double,
+    units: UnitSettings,
+    palette: WidgetPalette,
+    /** The pair's size. The default is the place name's, which is the rank the pair sits
+     * at on every card that draws a place beside it. */
+    size: TextUnit = DayRangeSp,
+    marks: Boolean = false
+) {
     val locale = Locale.getDefault()
+    val context = LocalContext.current
     Row(verticalAlignment = Alignment.CenterVertically) {
+        if (marks) RangeMark(high = true, ink = palette.primary, size = size, context = context)
         Text(
             text = Formats.temperature(highC, units.temperature, locale),
             style = TextStyle(
                 color = palette.primary,
-                fontSize = DayRangeSp,
+                fontSize = size,
                 fontWeight = FontWeight.Medium
             ),
             maxLines = 1
         )
-        // Punctuation, not prose: a slash between two temperatures reads the same in
-        // every language this app speaks, so it stays in the code.
-        Text(
-            text = " / ",
-            style = secondaryStyle(palette, DayRangeSp),
-            maxLines = 1
-        )
+        if (marks) {
+            // The air between the two halves is the mark's own leading padding, so the
+            // row stays four children rather than five (Glance drops the eleventh child
+            // of a container without a word, and every widget here counts them).
+            RangeMark(
+                high = false, ink = palette.secondary, size = size, context = context,
+                leading = RangeMarkGap
+            )
+        } else {
+            // Punctuation, not prose: a slash between two temperatures reads the same in
+            // every language this app speaks, so it stays in the code.
+            Text(
+                text = " / ",
+                style = secondaryStyle(palette, size),
+                maxLines = 1
+            )
+        }
         Text(
             text = Formats.temperature(lowC, units.temperature, locale),
-            style = secondaryStyle(palette, DayRangeSp),
+            style = secondaryStyle(palette, size),
             maxLines = 1
         )
     }
 }
+
+/**
+ * One of the two marks, sized on the figure's own text size and the reader's font scale —
+ * like the position pin, and for the reason that one gives: a glyph that stays put while
+ * the words grow stops being part of the same line. It carries the words that name it, so
+ * a screen reader says «massima 25°» rather than reading a number with no subject.
+ */
+@Composable
+private fun RangeMark(
+    high: Boolean,
+    ink: androidx.glance.unit.ColorProvider,
+    size: TextUnit,
+    context: Context,
+    leading: Dp = 0.dp
+) {
+    val box = (size.value * context.resources.configuration.fontScale).dp
+    Image(
+        provider = ImageProvider(ChiaroIcons.rangeMarkRes(high)),
+        contentDescription = context.getString(
+            if (high) R.string.widget_range_high else R.string.widget_range_low
+        ),
+        colorFilter = ColorFilter.tint(ink),
+        modifier = GlanceModifier.padding(start = leading, end = RangeMarkTextGap).size(box)
+    )
+}
+
+/** The air between a mark and its figure, and between the high's figure and the low's
+ * mark: the same two numbers the place pin uses, one step apart. */
+private val RangeMarkTextGap = 2.dp
+private val RangeMarkGap = 8.dp
 
 /** The pair sits at the place name's size: it is the same order of fact. */
 private val DayRangeSp = 16.sp
@@ -638,6 +710,17 @@ private const val LeadingAboveCaps = 0.24f
  */
 fun textLineHeight(fontSizeSp: Float, fontScale: Float): Dp =
     (fontSizeSp * LineBoxEm * fontScale).dp
+
+/**
+ * [textLineHeight] the other way round: the biggest text size whose line box still fits
+ * [room]. The four cards with a drawing on them size that drawing to the grant
+ * ([heroIconSize]); the text widget has no drawing and sizes its NUMBER to the grant
+ * instead, which is the same question asked about a figure — and it needs the same
+ * arithmetic read backwards. Never negative: a budget that has run out asks for 0 sp and
+ * gets it, and the caller's own floor decides what to do about that.
+ */
+fun textSizeForLine(room: Dp, fontScale: Float): Float =
+    (room.value / (LineBoxEm * fontScale.coerceAtLeast(0.1f))).coerceAtLeast(0f)
 
 private const val LineBoxEm = 1.32f
 

@@ -5,8 +5,11 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -31,8 +34,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -42,6 +48,8 @@ import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.ThemeMode
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
+import com.callbackdev.chiaro.ui.theme.WidgetCardColor
+import com.callbackdev.chiaro.ui.theme.widgetCardContainer
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -113,8 +121,8 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
     val cityStore = remember { ServiceLocator.cityStore(context) }
     val widgetCityStore = remember { ServiceLocator.widgetCityStore(context) }
     val lookStore = remember { WidgetLookStore.get(context) }
-    // Content options are not the same for all three: only the Today widget carries a
-    // day's range, and a switch that changes nothing must not be offered.
+    // Content options are not the same for all of them: the Sky card has none, the text
+    // card draws no icons, and a switch that changes nothing must not be offered.
     val kind = remember(appWidgetId) { ChiaroWidgets.kindOf(context, appWidgetId) }
 
     val cities by cityStore.cities.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -158,26 +166,12 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
         }
 
         look?.let { current ->
-            SectionLabel(stringResource(R.string.widget_config_background))
-            val options = listOf(
-                WidgetBackground.SKY to stringResource(R.string.widget_bg_sky),
-                WidgetBackground.LIGHT to stringResource(R.string.settings_theme_light),
-                WidgetBackground.DARK to stringResource(R.string.settings_theme_dark),
-                WidgetBackground.SYSTEM to stringResource(R.string.settings_theme_system)
-            )
-            options.forEach { (background, label) ->
-                ChoiceRow(
-                    label = label,
-                    selected = current.background == background,
-                    onPick = {
-                        val next = current.copy(background = background)
-                        look = next
-                        scope.launch {
-                            lookStore.set(appWidgetId, next)
-                            repaint()
-                        }
-                    }
-                )
+            BackgroundSection(current) { next ->
+                look = next
+                scope.launch {
+                    lookStore.set(appWidgetId, next)
+                    repaint()
+                }
             }
 
             SectionLabel(stringResource(R.string.widget_config_opacity))
@@ -214,28 +208,33 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
                 }
             }
 
-            // Offered on all three, unlike the content switches below: every card draws
-            // weather glyphs, and the reason to pick a family here is the card's own —
-            // its size, its ground, the wallpaper behind it (see [WidgetIcons]).
-            SectionLabel(stringResource(R.string.widget_config_icons))
-            val iconOptions = listOf(
-                WidgetIcons.APP to stringResource(R.string.widget_icons_app),
-                WidgetIcons.FILL to stringResource(R.string.settings_icons_fill),
-                WidgetIcons.LINE to stringResource(R.string.settings_icons_line)
-            )
-            iconOptions.forEach { (icons, label) ->
-                ChoiceRow(
-                    label = label,
-                    selected = current.icons == icons,
-                    onPick = { save(current.copy(icons = icons)) }
+            // Offered on every card that draws weather glyphs, and the reason to pick a
+            // family here is the card's own — its size, its ground, the wallpaper behind
+            // it (see [WidgetIcons]). Not on the text widget, which draws none: a switch
+            // that changes nothing must not be offered.
+            if (kind != WidgetKind.TEXT) {
+                SectionLabel(stringResource(R.string.widget_config_icons))
+                val iconOptions = listOf(
+                    WidgetIcons.APP to stringResource(R.string.widget_icons_app),
+                    WidgetIcons.FILL to stringResource(R.string.settings_icons_fill),
+                    WidgetIcons.LINE to stringResource(R.string.settings_icons_line)
                 )
+                iconOptions.forEach { (icons, label) ->
+                    ChoiceRow(
+                        label = label,
+                        selected = current.icons == icons,
+                        onPick = { save(current.copy(icons = icons)) }
+                    )
+                }
             }
 
-            // Now and Today carry the day's sentence and may hide it; only Today carries
-            // the day's range; only Now has a one-row card that can be laid two ways.
-            // The Sky widget's content is its subscriptions, chosen on the Sky screen,
-            // so it has no content switch to offer here.
-            if (kind == WidgetKind.NOW || kind == WidgetKind.TODAY) {
+            // Now, Today and the text card carry the day's sentence and may hide it;
+            // Today and the text card carry the day's range (the text card earns it the
+            // same way Today does — it has a column of facts to put it in, where the Now
+            // card had only the sentence's own edge to crowd); only Now has a one-row card
+            // that can be laid two ways. The Sky widget's content is its subscriptions,
+            // chosen on the Sky screen, so it has no content switch to offer here.
+            if (kind == WidgetKind.NOW || kind == WidgetKind.TODAY || kind == WidgetKind.TEXT) {
                 SectionLabel(stringResource(R.string.widget_config_content))
                 SwitchRow(
                     label = stringResource(R.string.widget_config_show_sentence),
@@ -243,7 +242,7 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
                     checked = current.showSentence,
                     onToggle = { save(current.copy(showSentence = it)) }
                 )
-                if (kind == WidgetKind.TODAY) {
+                if (kind == WidgetKind.TODAY || kind == WidgetKind.TEXT) {
                     SwitchRow(
                         label = stringResource(R.string.widget_config_show_range),
                         note = stringResource(R.string.widget_config_show_range_note),
@@ -286,6 +285,85 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
         ) {
             Text(stringResource(R.string.action_done))
         }
+    }
+}
+
+/**
+ * The background choices, shared by this screen and the arc widget's own (19 set 2026):
+ * the sky, light, dark, the system — and a colour, whose six options only appear once the
+ * reader has picked it. Nested rather than six more rows in the same list, because the
+ * question is really two: what KIND of card, and then which colour, and a flat list of ten
+ * makes the first question look like a colour picker with four odd entries in it.
+ *
+ * Shared because the two screens were already printing the same four rows from two copies
+ * of the same list, and a fifth kind is exactly the change that makes one of the copies
+ * quietly out of date.
+ */
+@Composable
+internal fun BackgroundSection(look: WidgetLook, onPick: (WidgetLook) -> Unit) {
+    SectionLabel(stringResource(R.string.widget_config_background))
+    listOf(
+        WidgetBackground.SKY to stringResource(R.string.widget_bg_sky),
+        WidgetBackground.LIGHT to stringResource(R.string.settings_theme_light),
+        WidgetBackground.DARK to stringResource(R.string.settings_theme_dark),
+        WidgetBackground.SYSTEM to stringResource(R.string.settings_theme_system),
+        WidgetBackground.COLOR to stringResource(R.string.widget_bg_color)
+    ).forEach { (background, label) ->
+        ChoiceRow(
+            label = label,
+            selected = look.background == background,
+            onPick = { onPick(look.copy(background = background)) }
+        )
+    }
+    if (look.background == WidgetBackground.COLOR) {
+        listOf(
+            WidgetCardColor.BLUE to stringResource(R.string.widget_color_blue),
+            WidgetCardColor.AZURE to stringResource(R.string.widget_color_azure),
+            WidgetCardColor.GREEN to stringResource(R.string.widget_color_green),
+            WidgetCardColor.TEAL to stringResource(R.string.widget_color_teal),
+            WidgetCardColor.PLUM to stringResource(R.string.widget_color_plum),
+            WidgetCardColor.CLAY to stringResource(R.string.widget_color_clay)
+        ).forEach { (color, label) ->
+            ColorRow(
+                label = label,
+                color = widgetCardContainer(color),
+                selected = look.cardColor == color,
+                onPick = { onPick(look.copy(cardColor = color)) }
+            )
+        }
+    }
+}
+
+/**
+ * A colour's row: the radio, the name, and a swatch of the colour itself at the end. The
+ * swatch is the one place in this app where a colour is offered as a colour, so it is also
+ * the one place the name alone would not be enough — and the name is still there, in front
+ * of it, because a swatch is not a label (DESIGN §10: a fill that carries meaning has a
+ * word beside it).
+ */
+@Composable
+private fun ColorRow(label: String, color: Color, selected: Boolean, onPick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectable(selected = selected, onClick = onPick, role = Role.RadioButton)
+            .padding(vertical = 10.dp)
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 12.dp, end = 12.dp)
+        )
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
     }
 }
 

@@ -13,6 +13,10 @@ import org.junit.Test
  *
  * So the two things that can go wrong quietly are pinned here: a provider that forgot to
  * name its preview, and a preview that reaches for a view `RemoteViews` does not know.
+ *
+ * The counts are the household's: five providers and five previews since the text widget
+ * landed (19 set 2026). They are asserted rather than derived so that a provider added
+ * without a preview fails here rather than on somebody's home screen.
  */
 class WidgetPreviewTest {
 
@@ -34,7 +38,7 @@ class WidgetPreviewTest {
     @Test
     fun `every widget provider names a preview layout that exists`() {
         val providers = xml.listFiles { file -> file.name.startsWith("widget_") }.orEmpty()
-        assertTrue("no widget providers found at ${xml.absolutePath}", providers.size == 4)
+        assertTrue("no widget providers found at ${xml.absolutePath}", providers.size == 5)
 
         providers.forEach { provider ->
             val name = previewAttribute.find(provider.readText())?.groupValues?.get(1)
@@ -49,7 +53,7 @@ class WidgetPreviewTest {
     @Test
     fun `a preview layout only uses views RemoteViews knows`() {
         val previews = layout.listFiles { file -> file.name.endsWith("_preview.xml") }.orEmpty()
-        assertEquals("one preview per widget", 4, previews.size)
+        assertEquals("one preview per widget", 5, previews.size)
 
         previews.forEach { preview ->
             val unsupported = tag.findAll(preview.readText())

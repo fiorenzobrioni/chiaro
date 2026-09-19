@@ -9,13 +9,19 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.callbackdev.chiaro.data.WeatherIcons
+import com.callbackdev.chiaro.ui.theme.WidgetCardColor
 import kotlinx.coroutines.flow.first
 
 private val Context.widgetLookDataStore by preferencesDataStore(name = "widget_look")
 
-/** What a widget wears: the sky gradient (the app's own hero, the default), or a
- * plain card in light, dark, or whatever the phone says. */
-enum class WidgetBackground { SKY, LIGHT, DARK, SYSTEM }
+/** What a widget wears: the sky gradient (the app's own hero, the default), a plain card
+ * in light, dark, or whatever the phone says — or, since 19 set 2026, one of the card
+ * colours of [com.callbackdev.chiaro.ui.theme.WidgetCardColor] (committente: «possibilità
+ * di mettere uno sfondo colorato: blu, blu chiaro, verde…»). [COLOR] is one value and not
+ * six, because which colour is a second question and only the reader who picked COLOR is
+ * ever asked it: every `when` over this enum stays four lines long, and `WidgetLook` keeps
+ * the answer in [WidgetLook.cardColor]. */
+enum class WidgetBackground { SKY, LIGHT, DARK, SYSTEM, COLOR }
 
 /**
  * Which weather drawings a widget uses (committente, 8 set): the app's own choice, or
@@ -105,7 +111,14 @@ data class WidgetLook(
      * Settings choice — which is the default, and what every widget placed before this
      * option existed keeps doing.
      */
-    val icons: WidgetIcons = WidgetIcons.APP
+    val icons: WidgetIcons = WidgetIcons.APP,
+    /**
+     * Which colour a [WidgetBackground.COLOR] card is painted (19 set 2026). It is kept
+     * even while the background is something else, so a reader who tries the sky and comes
+     * back finds the colour they picked rather than the default: a stored choice that
+     * forgets itself on the way past is a choice the reader has to make twice.
+     */
+    val cardColor: WidgetCardColor = WidgetCardColor.BLUE
 ) {
     companion object {
         /** 100 since 7 set 2026 (committente): a solid card. The reader can thin it
@@ -142,7 +155,10 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 ?: WidgetArrangement.ICON_START,
             icons = prefs[iconsKey(appWidgetId)]
                 ?.let { name -> WidgetIcons.entries.firstOrNull { it.name == name } }
-                ?: WidgetIcons.APP
+                ?: WidgetIcons.APP,
+            cardColor = prefs[cardColorKey(appWidgetId)]
+                ?.let { name -> WidgetCardColor.entries.firstOrNull { it.name == name } }
+                ?: WidgetCardColor.BLUE
         )
     }
 
@@ -155,6 +171,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             prefs[warningKey(appWidgetId)] = look.showWarning
             prefs[arrangementKey(appWidgetId)] = look.arrangement.name
             prefs[iconsKey(appWidgetId)] = look.icons.name
+            prefs[cardColorKey(appWidgetId)] = look.cardColor.name
         }
     }
 
@@ -169,6 +186,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 prefs.remove(warningKey(it))
                 prefs.remove(arrangementKey(it))
                 prefs.remove(iconsKey(it))
+                prefs.remove(cardColorKey(it))
                 // The switch this key belonged to is gone (8 set 2026); a widget placed
                 // while it existed still carries the key, and leaves with it.
                 prefs.remove(legacyConditionKey(it))
@@ -183,6 +201,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
     private fun warningKey(id: Int) = booleanPreferencesKey("warning_$id")
     private fun arrangementKey(id: Int) = stringPreferencesKey("arrangement_$id")
     private fun iconsKey(id: Int) = stringPreferencesKey("icons_$id")
+    private fun cardColorKey(id: Int) = stringPreferencesKey("card_color_$id")
     private fun legacyConditionKey(id: Int) = booleanPreferencesKey("condition_$id")
 
     companion object {

@@ -2,8 +2,10 @@ package com.callbackdev.chiaro.widget
 
 /**
  * Which set of inks a widget writes with. [OVER_SKY] is the white-over-scrim pair the
- * app's own canvas uses (DESIGN §3.6); the other two are the schemes' own pairs, named
- * after the GROUND they are written on, not after the mode they come from.
+ * app's own canvas uses (DESIGN §3.6) — and, since 19 set 2026, the pair a coloured card
+ * writes with too, because every shipped card colour is picked dark enough to carry it
+ * (`WidgetCardPalette`, §2.6); the other two are the schemes' own pairs, named after the
+ * GROUND they are written on, not after the mode they come from.
  */
 enum class WidgetInk {
     OVER_SKY,
@@ -51,13 +53,18 @@ fun widgetInk(
         return when (background) {
             WidgetBackground.LIGHT -> WidgetInk.ON_LIGHT
             WidgetBackground.DARK -> WidgetInk.ON_DARK
-            WidgetBackground.SKY, WidgetBackground.SYSTEM ->
+            // COLOR belongs with these two and not with LIGHT and DARK: picking a colour
+            // is choosing a GROUND, not naming an ink, and at 20% solidity that ground
+            // is mostly the wallpaper anyway — so the question goes where it can be
+            // answered, exactly as it does for the sky.
+            WidgetBackground.SKY, WidgetBackground.SYSTEM, WidgetBackground.COLOR ->
                 if (wallpaperCarriesDarkInk) WidgetInk.ON_LIGHT else WidgetInk.ON_DARK
         }
     }
     return when (background) {
-        // The scrim makes the ground dark whatever the sky above it is doing.
-        WidgetBackground.SKY -> WidgetInk.OVER_SKY
+        // The scrim makes the ground dark whatever the sky above it is doing, and a card
+        // colour is chosen dark for the same reason: both carry the §3.6 white pair.
+        WidgetBackground.SKY, WidgetBackground.COLOR -> WidgetInk.OVER_SKY
         WidgetBackground.LIGHT -> WidgetInk.ON_LIGHT
         WidgetBackground.DARK -> WidgetInk.ON_DARK
         WidgetBackground.SYSTEM -> if (night) WidgetInk.ON_DARK else WidgetInk.ON_LIGHT

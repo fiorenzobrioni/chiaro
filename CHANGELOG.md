@@ -11,10 +11,72 @@ as the body of the GitHub Release, so a version's entry is written **before** it
 
 Nothing released yet. The engines are in and verified, the design system is code, and
 the everyday surface — Today, places, first run, settings, the guide, the Sky screen
-with its reminders, the alerts, the Journal, the home widgets — is built. See `PLANNING.md` for where the work actually is.
+with its reminders, the alerts, the Journal, the five home widgets — is built. See `PLANNING.md` for where the work actually is.
 
 ### Added
 
+- **A card colour for every widget.** Beside the computed sky, light, dark and follow-the-
+  system, a widget's card can now be one of six colours: blue, light blue, green, sea
+  green, violet, terracotta. It is the one place in this product where colour is offered as
+  colour rather than as meaning, and it ships with no new inks — each colour is picked dark
+  enough to carry the white pair the sky card already writes with, measured at no worse
+  than 7.9:1 for the ink, 5.2:1 for the quiet one and 6.2:1 for the freshness one, so even
+  the 11 sp lines clear what small text needs. No two of the six are closer than 13 ΔE, so
+  picking one over another is picking a colour and not a word. The two configuration
+  screens now print the same background section from one place rather than from two copies
+  of the same list, and the colour rows carry a swatch behind their name.
+- **A fifth home widget, «In parole» / "In words"**: the Now widget's facts with nothing
+  drawn on the card. No weather glyph, no position pin, no warning chip, no verdict mark —
+  words and figures, and the whole hierarchy built out of type. It is not the Now widget
+  with the icon deleted: a card that loses its drawing loses the thing that made it
+  readable across a room, so the temperature becomes the drawing — Bold where the
+  household writes Medium, and grown into the grant the way the other four grow their
+  glyph, from 30 sp on a squeezed row to 56 on a tall card — with the place two ranks under
+  it as the card's eyebrow, the day's sentence at its shoulder, and the official warning
+  and the day's high and low as facts under that. Four ranks that differ by size AND weight
+  AND ink, never by one of the three on its own.
+
+  Four cells by one is the default placement and it resizes both ways from there. Three
+  cells already carry the sentence, one cell better than the Now card manages, for an
+  arithmetic reason: the 66 dp of glyph and its gap that card spends before its first
+  letter, this one does not have. Two cells fall back to the number and its place. Two rows
+  and up become one centred column with the next hours printed as figures where the height
+  holds them, and the order the budget spends in is the hierarchy written down: the number
+  is reserved first, the footnotes are bought last, and a section that does not fit is not
+  drawn. The two things a drawing used to say now say themselves in words: the phone's own
+  position, which was the pin, and the warning's level, which was a chip. The chip is the
+  device that carries its own measured ground — a bare coloured word on a scrimmed sky or
+  somebody's wallpaper was measured unreadable on the Sky card back on 4 set — and a card
+  with nothing drawn on it cannot bring one, so it gives up the colour rather than the
+  legibility and prints the level as a word in the card's own ink. DESIGN §2.3 makes the
+  word the carrier anyway.
+
+  Everything else is the household's: the same `WidgetData` model, the same brief sentence
+  Today and Now print, the same `warningSlot` table, the same per-widget place, background,
+  opacity and content switches (minus the icon family, which would change nothing here).
+  Its budget is pure arithmetic on dp and sp with a table pinning it, like the other four.
+
+  Redrawn twice the same day on a device. The second pass took the hourly temperatures off
+  the tall card for good — they read as a second widget stapled under the first, and the
+  card that exists for the hours is the Today widget — and gave the height back to the
+  composition: the place is pinned to the top of the card as its eyebrow and everything else
+  to the bottom, with the air between them. From four cells up a two-row card becomes a
+  panel: the number on the leading side at 64 sp, which it can afford because it stands
+  BESIDE the words rather than under them, and the sentence and the day's high and low
+  right-aligned against the far edge, bottom-aligned with it. The one-row card's leading
+  column stopped being a share of the row and became what the place name actually needs
+  (168 dp against the sentence's 104 minimum), so «Cavenago di Brianza» is printed whole
+  where it used to be «Cavenago di Bri…» beside a column with 174 dp of white space in it.
+
+  The first pass: the place and the facts moved up to the household's
+  16 sp and the sentence to 18, so the ranks still sort by size as well as by weight and
+  ink; the position pin came back in front of a place the phone is standing in, where the
+  first pass spelled it out in words and the words ate the place name («Ornago · la mia
+  posizi…»); and the day's high and low each got a mark drawn at the verdict marks' weight
+  rather than sharing a slash. A mark at the size of its own line, in that line's ink, is
+  punctuation, and the card still carries no picture. The hero's floor dropped from 30 sp
+  to 26 to pay for the bigger place line, which is what keeps a stale one-row card from
+  clipping instead of shrinking.
 - **Official warnings from the Protezione Civile** (Fase 11), for places in Italy. The
   Dipartimento's criticality bulletin is discovered from its own files, read from its CAP,
   and matched to a place by geometry: the 187 warning zones ship inside the app as

@@ -278,6 +278,16 @@ object ChiaroIcons {
     @DrawableRes
     fun warningMarkRes(): Int = R.drawable.ic_warning
 
+    /**
+     * The marks for a day's high and low (committente, 19 set 2026), at the verdict marks'
+     * weight and drawn for the same reason: ↑ and ↓ are not reliably in the app's face, and
+     * a fallback font draws them in its own hand at its own weight. Tinted at use with the
+     * ink of the figure each one stands before.
+     */
+    @DrawableRes
+    fun rangeMarkRes(high: Boolean): Int =
+        if (high) R.drawable.ic_range_high else R.drawable.ic_range_low
+
     /** The same mark as a vector, for the app's own screens. */
     val warning: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_warning)

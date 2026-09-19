@@ -158,7 +158,10 @@ private fun ArcPreviewCard(model: WidgetModel?, arc: ArcSettings?, size: DpSize)
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
-                        widgetCardFill(background, schemes, isNight(context), model.look.opacityPct / 100f)
+                        widgetCardFill(
+                            background, schemes, isNight(context),
+                            model.look.opacityPct / 100f, model.look.cardColor
+                        )
                     )
             )
         }

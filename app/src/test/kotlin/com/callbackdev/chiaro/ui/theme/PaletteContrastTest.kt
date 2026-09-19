@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import com.callbackdev.chiaro.data.AppPalette
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -70,6 +71,47 @@ class PaletteContrastTest {
             "the two dresses must not share a sky",
             paletteFor(AppPalette.PAPER).sky !== paletteFor(AppPalette.VIVID).sky
         )
+    }
+
+    /**
+     * §2.6: a widget's card colour ships without new inks because every one of the six is
+     * picked dark enough to carry the pair the app already measured — the §3.6 white over
+     * the scrimmed sky, full strength for the ink, 75% for the quiet one and 85% for the
+     * freshness one. That claim is the whole argument for having card colours at all, so
+     * it is measured rather than asserted in a comment.
+     *
+     * The floors are the printed ones and they are well over what the guidelines ask: the
+     * quiet ink carries an 11 sp hour label, which needs 4.5:1, and comes in at 5.2:1 on
+     * the worst of the six.
+     */
+    @Test
+    fun `every card colour carries the white pair`() {
+        WidgetCardColor.entries.forEach { choice ->
+            val ground = widgetCardContainer(choice)
+            assertAtLeast(7.8, Color.White, ground, "$choice: white ink")
+            assertAtLeast(5.2, Color.White.copy(alpha = 0.75f).compositeOver(ground), ground,
+                "$choice: quiet ink")
+            assertAtLeast(6.1, Color.White.copy(alpha = 0.85f).compositeOver(ground), ground,
+                "$choice: freshness ink")
+        }
+    }
+
+    /** Six names on a radio row have to be six colours, or the names are doing all the
+     * work — and a reader picking "blue" over "light blue" would be picking a word. */
+    @Test
+    fun `the six card colours are six colours`() {
+        val all = WidgetCardColor.entries.map { it to widgetCardContainer(it) }
+        all.indices.forEach { i ->
+            all.indices.drop(i + 1).forEach { j ->
+                val (a, ca) = all[i]
+                val (b, cb) = all[j]
+                assertTrue(
+                    "$a and $b are %.1f apart: too close to be two choices"
+                        .format(Deuteranopia.deltaE(ca, cb)),
+                    Deuteranopia.deltaE(ca, cb) > 10.0
+                )
+            }
+        }
     }
 
     @Test

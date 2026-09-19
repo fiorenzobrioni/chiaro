@@ -332,6 +332,50 @@ light  #006FAC  #00A6EB  #7BCCFF  #E0D7C3  #FFBB66  #E67E00  #B85100
 dark   #2FBAFF  #0091D5  #0070AB  #4C473A  #985E00  #C87400  #F29300
 ```
 
+### 2.6 The card colours a widget can wear
+
+A home-screen widget's card is furniture on somebody's wallpaper, and since 19 set 2026 the
+reader can choose what colour that piece of furniture is (committente: «possibilità di
+mettere uno sfondo colorato: blu, blu chiaro, verde…»), beside the four choices that were
+already there — the computed sky, light, dark, follow the system. It applies to all five
+widgets, because a colour is a property of the card and not of what is printed on it.
+
+This is the one table in the app that is **colour offered as colour**, and it is deliberate
+rather than a hole in §2.1: the generated scheme answers "what does this role mean", and
+this answers "what colour is this object", which is a different question and the reader's to
+answer. Hence hexes, in `ui/theme/WidgetCardPalette.kt`, and a name in front of every swatch
+on the configuration screen (§10: a fill that carries meaning has a word beside it).
+
+**No new inks ship with them.** Ink and ground are a pair (§2.3), so six colours without
+their inks would be half a decision — and the Sky card measured what the other half costs
+on 4 set, when a bare verdict colour on a card whose ground the app does not control came
+back unreadable from a device. Instead every colour is picked dark enough to carry the pair
+the app already has: **the §3.6 white over the scrimmed sky**, full strength for the ink,
+75% for the quiet one, 85% for the freshness one.
+
+| Card | ground | white ink | quiet 75% | freshness 85% |
+|---|---|---|---|---|
+| blue | `#0F3B6B` | 11.3:1 | 7.1:1 | 8.6:1 |
+| light blue | `#0F5580` | 8.0:1 | 5.2:1 | 6.3:1 |
+| green | `#17572E` | 8.6:1 | 5.6:1 | 6.7:1 |
+| sea green | `#0F5B5B` | 7.9:1 | 5.2:1 | 6.2:1 |
+| violet | `#4A2C63` | 11.5:1 | 7.2:1 | 8.8:1 |
+| terracotta | `#7A3320` | 9.0:1 | 5.8:1 | 7.0:1 |
+
+The quiet ink is the floor that matters: it carries an 11 sp hour label, which needs 4.5:1,
+and the worst of the six gives 5.2. `PaletteContrastTest` asserts all eighteen numbers and
+`PaletteDocTest` asserts that this table is the code's.
+
+Six, and no two closer than **13 ΔE**, so picking one over another is picking a colour and
+not a word — the blue is deeper than its first draft for exactly that reason: next to the
+light blue it measured 9.4, and two names were doing the work a colour should do.
+
+A coloured card thins with the reader's opacity exactly as the sky does, and below
+`InkTrustFloorPct` it hands the ink question to the wallpaper for the same reason the sky
+does: choosing a colour is choosing a **ground**, not naming an ink, and at 20% solidity
+that ground is mostly not there. Light and dark keep deciding at any solidity, because
+those two ARE the reader naming an ink (`widgetInk`).
+
 ### 2.4 Rules for using color
 
 - Roles, never hexes (§2.1). A role means the same thing in both dresses (§2.5); a
@@ -539,6 +583,36 @@ typographic equivalent of a wobbling table, and this app has a lot of columns.
 Rounding is a rule, not a call: temperatures to whole degrees everywhere except the
 current one and the feels-like, which carry one decimal because the source does;
 probabilities to whole percent; wind to whole units; distances to one decimal below 10.
+
+**The widgets' own scale** is not this one and cannot be: a home-screen card is drawn by
+`RemoteViews` at whatever size the launcher granted, so its sizes are arithmetic on the
+grant rather than named roles (`WidgetUi.kt`, and a `*WidgetLayout.kt` per card). Four of
+the five cards get their hierarchy from the weather glyph, which fills the height and is
+the first thing read; the text widget (19 set 2026) has no glyph and builds the same
+hierarchy out of type alone, in **four ranks that differ by size and weight and ink, never
+by one of the three on its own** (`TextWidgetLayout.kt`): the temperature at 26 to 64sp
+Bold in the strong ink, scaled to the grant the way the other cards scale their drawing;
+the day's sentence at 18sp Medium, two points over the household's 16 because there is no
+drawing left to carry the card at arm's length; the place, the day's range and the
+warning's word at 16sp, where ink and weight go on sorting inside the rank; the stale
+marker at 11sp. The order the budget spends in is the hierarchy written down: the number is
+reserved first and the footnotes are bought last, and a section that does not fit is not
+drawn.
+
+**Which ceiling the number gets is a question about what it stands next to** — the rule
+§13.1's glyphs live by (`RowIconMax`: the hero never outgrows the block beside it), read off
+three different blocks. 44sp where it stands under the place with a column of prose beside
+it; 56 on a narrow tall card, where it stands over its own sentence; 64 on the two-row form
+from four cells up, where it stands BESIDE the words and the block beside it is 89.8dp tall.
+
+Two **marks** sit inline with that type and do not break it (19 set 2026): the position pin
+in front of a place the phone is standing in, and `ic_range_high`/`ic_range_low` before the
+day's high and low — drawn rather than the characters ↑ and ↓, at the verdict marks' 2.4-of-24
+weight, for the reason §13.1 gives about ✓ and ✗. A mark at the size of its own line, in
+that line's ink, is punctuation; the card still carries no picture. What the card does not
+carry at all is the next hours as figures: it had them on a tall form for a day, and on a
+device they read as a second widget stapled under the first — the card that exists for the
+hours is the Today widget.
 
 ---
 
@@ -920,7 +994,7 @@ padding — the `VerdictChip` grammar at the widget's size. Avvisi's card leads 
 the home-screen widgets carry it.
 
 **On a widget** the rule is what the card is ALREADY saying (`warningSlot`, one table for
-all four cards). The day's sentence in its brief register IS the orange and the red
+all five cards). The day's sentence in its brief register IS the orange and the red
 («Allerta arancione · temporali»), so where that sentence is on the card there is no chip;
 where it is not — the reader turned it off, or the arc's hero is showing the next light
 moment instead — the chip takes the sentence's place and the card grows by nothing.
@@ -937,6 +1011,17 @@ up, the glyph would fall to 44dp against the family's 52dp floor, so the yellow 
 home; turn the sentence off and its two lines pay for the chip twice over. The Today
 widget's rain row yields first, as it already does to a stale marker. The arc's agenda
 gives up a row before the drawing gives up a pixel.
+
+**The text widget has no chip**, and says the level as a word instead (19 set 2026). The
+chip exists because a widget's ground is a scrimmed sky or somebody's wallpaper and a bare
+coloured word on one of those was measured unreadable (the Sky card's verdicts, 4 set); a
+chip answers that by bringing its own measured ground. A card whose whole premise is that
+nothing is drawn on it cannot bring one, so it gives up the colour rather than the
+legibility and prints «Allerta gialla» in the card's own strong ink at its rank-3 size.
+That is not a downgrade of the rule but the rule's own floor: §2.3 makes the word the
+carrier and the colour the reinforcement, and here there is only the carrier. Everything
+else is unchanged — the same `warningSlot` table decides whether it appears at all, and it
+costs that card a line of `TextFactSp` where the others pay `warningChipHeight`.
 
 Its colours come from the pair the CARD's ground selects (`WidgetPalette.colors`), never
 from the phone's theme: a light card under a dark system theme would otherwise wear a

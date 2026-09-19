@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The text widget as the launcher's picker draws it (19 set 2026).
+
+  A Glance widget has no picker preview of its own: without `previewLayout` the host shows
+  the generic loading layout, which is why every one of ours names a static one. The picker
+  never runs `provideGlance` — there is no place, no report and no composition on that
+  screen — so this is sample values with the DEFAULT dress baked in: the computed sky under
+  its scrim, white ink. It is the same card, one moment of it.
+
+  The moment drawn is the wide one-row form, which is the default 4×1 placement: the place
+  over the temperature on the leading side, the day's sentence against the far edge. Same
+  numbers as the widget — 14dp at both words' edges and 6 above and below
+  (WidgetCardPadding / WidgetCardPaddingSnug), the columns 168dp for the name and the rest
+  for the sentence (textLeadingColumn), the ranks at 39sp bold, 18sp medium and 16sp
+  regular (TextWidgetLayout).
+
+  The sample place is a saved city, so there is no position pin on it: the running card
+  draws one in front of a place the phone is standing in, and a preview that showed the pin
+  over a name the reader never chose would be advertising a state, not a card.
+
+  Sample data only: a preview is a drawing of the product, never a reading. What the widget
+  itself must never invent, it still never invents — the moment the launcher binds it, this
+  layout is gone.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_preview_sky"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="14dp"
+    android:paddingTop="6dp"
+    android:paddingEnd="14dp"
+    android:paddingBottom="6dp"
+    tools:ignore="HardcodedText">
+
+    <!-- Rank 3 over rank 1: the name says what the number is about, and is set two ranks
+         under it so it cannot compete for the eye. -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="168"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:text="@string/widget_preview_place"
+            android:textColor="@color/widget_preview_ink_dim"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            android:text="25°"
+            android:textColor="@color/widget_preview_ink"
+            android:textSize="39sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Rank 2: the same sample sentence the other previews print, in this card's dress —
+         18sp medium, strong ink, right-aligned, two lines. -->
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="144"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="end"
+        android:maxLines="2"
+        android:paddingStart="12dp"
+        android:paddingEnd="0dp"
+        android:text="@string/widget_preview_headline"
+        android:textAlignment="viewEnd"
+        android:textColor="@color/widget_preview_ink"
+        android:textSize="18sp" />
+</LinearLayout>
