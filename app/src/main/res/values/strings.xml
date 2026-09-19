@@ -988,7 +988,9 @@
     <string name="widget_sky_desc">The next sky moment, when, and its verdict — and the ones after it on a taller card</string>
     <!-- The text widget (19 set 2026): the one card with nothing drawn on it. -->
     <string name="widget_text_label">In words</string>
-    <string name="widget_text_desc">Words and figures only, no icons and nothing drawn: the temperature big, the place above it, the day\'s sentence beside them — and, on a taller card, the next hours</string>
+    <string name="widget_text_desc">Words and figures: the temperature big, the place above it, the day\'s sentence beside them, and the weather icon only if you ask for it</string>
+    <string name="widget_config_show_icon">The weather icon</string>
+    <string name="widget_config_show_icon_note">A drawing of the sky right now, in the space the card already leaves empty: beside the number on a one-row card, over the words on a two-row one. It never takes a line away from anything else, so where there is no room it simply is not drawn. Off, the card is words and figures alone.</string>
     <!-- The two range marks say what they are, for a screen reader: a number with no
          subject is not a forecast. -->
     <string name="widget_range_high">Today\'s high</string>

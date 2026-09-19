@@ -6,6 +6,8 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.appwidget.GlanceAppWidget
@@ -13,20 +15,26 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.today.TodayUiState
+import com.callbackdev.chiaro.ui.today.WeatherText
 import com.callbackdev.chiaro.ui.warnings.WarningText
 import java.time.Instant
 import java.util.Locale
@@ -46,8 +54,15 @@ import java.util.Locale
  * device). The position pin comes back in front of a place the phone is standing in, where
  * the first pass spelled it out in words and the words ate the place name; and the day's
  * high and low get the up and down marks. Neither contradicts the card's premise: a mark at
- * the size of the line it belongs to, tinted with that line's ink, is punctuation, and this
- * card still has no picture on it — no weather glyph, no chip, no illustration.
+ * the size of the line it belongs to, tinted with that line's ink, is punctuation.
+ *
+ * **The weather glyph is the one picture, and it is the reader's to ask for**
+ * ([WidgetLook.showIcon], off by default, committente 20 set 2026). It is drawn ONLY into
+ * space the card already leaves empty — [TextWidgetLayout]'s four slot functions return a
+ * size or nothing, and none of them is an input to a plan — so turning it on costs no line
+ * of sentence, no warning, no range and no dp of number. Where the card has no such space,
+ * it is simply not drawn, which is why three cells on one row and two cells on two stay
+ * text-only whatever the switch says.
  *
  * What the words still have to say that a drawing said before:
  *
@@ -99,8 +114,16 @@ class TextWidget : GlanceAppWidget() {
             } else {
                 WidgetCardPadding
             }
+            // A glyph edge takes 4 dp and a words edge 14 ([TextIconEdgeGive]). On every
+            // form but ROW — where the glyph is interior, inside the name's column — the
+            // drawing is what meets the trailing edge, so the card gives it the glyph's
+            // inset and each text that reached that edge pays the 10 dp back. Nothing the
+            // reader can read moves by a dp either way.
+            val glyphEdge = model.look.showIcon && form != null && form != TextForm.ROW
             WidgetCard(
                 model, schemes, skyBitmap,
+                contentPaddingEnd =
+                    if (glyphEdge) WidgetCardPaddingLeading else WidgetCardPadding,
                 contentPaddingTop = vertical,
                 contentPaddingBottom = vertical
             ) { palette ->
@@ -132,16 +155,24 @@ private fun LineContent(
     size: DpSize
 ) {
     val context = LocalContext.current
-    Column(
-        verticalAlignment = Alignment.Vertical.CenterVertically,
-        modifier = GlanceModifier.fillMaxSize()
-    ) {
-        PlaceLineText(content, model, palette)
-        HeroTemperature(
-            content, model, palette,
-            textRowHeroSp(size, fontScale(context), content.isStale)
-        )
-        StaleLineText(content, palette)
+    val icon = if (model.look.showIcon) textRowIconSize(size, fontScale(context)) else 0.dp
+    // A Box and not a Row: in a Row the glyph would take its width off the column, and the
+    // place name — the one line this card fought to print whole — would start truncating
+    // again. Overlaid, the words keep every dp they had and the glyph sits in the corner
+    // the number leaves empty, under the place line and beside the figure.
+    Box(contentAlignment = Alignment.BottomEnd, modifier = GlanceModifier.fillMaxSize()) {
+        Column(
+            verticalAlignment = Alignment.Vertical.CenterVertically,
+            modifier = GlanceModifier.fillMaxSize()
+        ) {
+            PlaceLineText(content, model, palette)
+            HeroTemperature(
+                content, model, palette,
+                textRowHeroSp(size, fontScale(context), content.isStale)
+            )
+            StaleLineText(content, palette)
+        }
+        ConditionGlyph(content, model, palette, icon)
     }
 }
 
@@ -187,12 +218,25 @@ private fun RowContent(
         verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier.fillMaxSize()
     ) {
-        Column(modifier = GlanceModifier.width(textLeadingColumn(size))) {
-            PlaceLineText(content, model, palette)
-            HeroTemperature(
-                content, model, palette, textRowHeroSp(size, scale, content.isStale)
+        // Overlaid on the name's column for the reason the narrow form gives: a glyph that
+        // took its width out of the column would truncate the place name. Here it sits
+        // against the column's trailing edge, under the place line and beside the number,
+        // which is space the widest temperature this card can print still leaves empty.
+        Box(
+            contentAlignment = Alignment.BottomEnd,
+            modifier = GlanceModifier.width(textLeadingColumn(size))
+        ) {
+            Column {
+                PlaceLineText(content, model, palette)
+                HeroTemperature(
+                    content, model, palette, textRowHeroSp(size, scale, content.isStale)
+                )
+                StaleLineText(content, palette)
+            }
+            ConditionGlyph(
+                content, model, palette,
+                if (model.look.showIcon) textRowIconSize(size, scale) else 0.dp
             )
-            StaleLineText(content, palette)
         }
         Column(
             horizontalAlignment = Alignment.End,
@@ -258,19 +302,36 @@ private fun StackContent(
         warning = warning.drawn,
         range = model.look.showDayRange && today != null
     )
+    val icon = if (model.look.showIcon) {
+        textStackIconSize(size, scale, plan.heroSp)
+    } else {
+        0.dp
+    }
     Column(
         horizontalAlignment = Alignment.Start,
         modifier = GlanceModifier.fillMaxSize()
     ) {
         PlaceLineText(content, model, palette)
         Spacer(modifier = GlanceModifier.defaultWeight())
-        HeroTemperature(content, model, palette, plan.heroSp)
+        // The glyph rides the number's own line and is never taller than it, so the row it
+        // shares is exactly the line the budget already paid for.
+        Row(verticalAlignment = Alignment.Bottom, modifier = GlanceModifier.fillMaxWidth()) {
+            HeroTemperature(content, model, palette, plan.heroSp)
+            if (icon > 0.dp) {
+                Spacer(modifier = GlanceModifier.defaultWeight())
+                ConditionGlyph(content, model, palette, icon)
+            }
+        }
         if (plan.sentenceLines > 0) {
             Text(
                 text = sentence(context, content, model.settings.units),
                 style = textSentenceStyle(palette, TextAlign.Start),
                 maxLines = plan.sentenceLines,
-                modifier = GlanceModifier.fillMaxWidth()
+                // The 10 dp the card's edge gave the glyph, given back: the sentence wraps
+                // against exactly the width it wrapped against before.
+                modifier = GlanceModifier
+                    .padding(end = if (icon > 0.dp) TextIconEdgeGive else 0.dp)
+                    .fillMaxWidth()
             )
         }
         model.warning?.maxLevel?.takeIf { plan.showWarning }?.let { level ->
@@ -325,6 +386,7 @@ private fun PanelContent(
         warning = warning.drawn,
         range = model.look.showDayRange && today != null
     )
+    val icon = if (model.look.showIcon) textPanelIconSize(size, scale, plan) else 0.dp
     Column(modifier = GlanceModifier.fillMaxSize()) {
         PlaceLineText(content, model, palette)
         Spacer(modifier = GlanceModifier.defaultWeight())
@@ -336,30 +398,83 @@ private fun PanelContent(
                 HeroTemperature(content, model, palette, plan.heroSp)
                 StaleLineText(content, palette)
             }
+            // The glyph goes INSIDE the trailing column, over the words, and not beside
+            // this row as its own line: a line of its own would be height the card has to
+            // find, and the whole promise is that it finds none. Here the column grows
+            // upward into the band the weighted spacer was holding, the row's bottom
+            // alignment keeps the number exactly where it was, and
+            // [textPanelIconSize] is precisely the height that band had.
             Column(
                 horizontalAlignment = Alignment.End,
                 modifier = GlanceModifier.padding(start = SentenceGap).defaultWeight()
             ) {
-                if (plan.sentenceLines > 0) {
-                    Text(
-                        text = sentence(context, content, model.settings.units),
-                        style = textSentenceStyle(palette, TextAlign.End),
-                        maxLines = plan.sentenceLines,
-                        modifier = GlanceModifier.fillMaxWidth()
-                    )
-                }
-                model.warning?.maxLevel?.takeIf { plan.showWarning }?.let { level ->
-                    WarningWord(level, palette, TextAlign.End)
-                }
-                today?.takeIf { plan.showRange }?.let { day ->
-                    DayRange(
-                        day.highC, day.lowC, model.settings.units, palette,
-                        size = TextFactSp.sp, marks = true
-                    )
+                ConditionGlyph(content, model, palette, icon)
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    // The 10 dp the card's edge gave the glyph, given back to the words:
+                    // the column they wrap against is the column it always was.
+                    modifier = GlanceModifier
+                        .padding(end = if (icon > 0.dp) TextIconEdgeGive else 0.dp)
+                ) {
+                    if (plan.sentenceLines > 0) {
+                        Text(
+                            text = sentence(context, content, model.settings.units),
+                            style = textSentenceStyle(palette, TextAlign.End),
+                            maxLines = plan.sentenceLines,
+                            modifier = GlanceModifier.fillMaxWidth()
+                        )
+                    }
+                    model.warning?.maxLevel?.takeIf { plan.showWarning }?.let { level ->
+                        WarningWord(level, palette, TextAlign.End)
+                    }
+                    today?.takeIf { plan.showRange }?.let { day ->
+                        DayRange(
+                            day.highC, day.lowC, model.settings.units, palette,
+                            size = TextFactSp.sp, marks = true
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+/**
+ * The one picture on the card, and only where the card had room for it already
+ * ([TextWidgetLayout]'s slot functions, which answer 0 dp when it does not). It is the
+ * household's own drawing — the same family, the same day/night and ground resolution the
+ * other four cards use through [WidgetModel.iconStyle] — so five widgets on one home screen
+ * cannot draw two different skies.
+ *
+ * It says nothing to a screen reader while the sentence is drawn, because the sentence says
+ * it in words and saying it twice is worse than not saying it. With the sentence turned off
+ * the glyph is the only thing on the card that names the sky, so it takes the condition's
+ * own word: a drawing with no name is the one thing this card must not become.
+ */
+@Composable
+private fun ConditionGlyph(
+    content: TodayUiState.Content,
+    model: WidgetModel,
+    palette: WidgetPalette,
+    size: Dp
+) {
+    if (size <= 0.dp) return
+    val context = LocalContext.current
+    val current = content.report.current
+    Image(
+        provider = ImageProvider(
+            ChiaroIcons.conditionRes(
+                current.condition.wmoCode, content.night,
+                model.iconStyle, palette.darkGround
+            )
+        ),
+        contentDescription = if (model.look.showSentence) {
+            null
+        } else {
+            context.getString(WeatherText.condition(current.condition.wmoCode))
+        },
+        modifier = GlanceModifier.size(size)
+    )
 }
 
 /**

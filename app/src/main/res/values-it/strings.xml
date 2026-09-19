@@ -964,7 +964,9 @@
     <string name="widget_sky_desc">Il prossimo momento del cielo, quando, e il suo verdetto — e quelli dopo su una card più alta</string>
     <!-- Il widget testuale (19 set 2026): l'unica scheda senza niente di disegnato. -->
     <string name="widget_text_label">In parole</string>
-    <string name="widget_text_desc">Solo parole e numeri, nessuna icona e niente di disegnato: la temperatura grande, il luogo sopra, la frase del giorno accanto — e, su una card più alta, le prossime ore</string>
+    <string name="widget_text_desc">Parole e numeri: la temperatura grande, il luogo sopra, la frase del giorno accanto, e l\'icona del meteo solo se la chiedi</string>
+    <string name="widget_config_show_icon">L\'icona del meteo</string>
+    <string name="widget_config_show_icon_note">Un disegno del cielo di adesso, nello spazio che la card lascia già vuoto: accanto al numero su una riga, sopra le parole su due. Non toglie mai una riga a nient\'altro, quindi dove non c\'è spazio semplicemente non compare. Spenta, la card resta parole e numeri.</string>
     <!-- I due segni della massima e della minima dicono cosa sono, per chi legge con
          TalkBack: un numero senza soggetto non è una previsione. -->
     <string name="widget_range_high">La massima di oggi</string>

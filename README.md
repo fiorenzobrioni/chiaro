@@ -126,7 +126,11 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   weight and ink at once: the temperature is the drawing now, set bold and grown into the
   grant the way the other cards grow their glyph, with the place above it as the card's
   eyebrow, the day's sentence at its shoulder, and the warning and the day's high and low
-  as facts under that, the high and the low each behind their own arrow. Three cells
+  as facts under that, the high and the low each behind their own arrow. The weather icon is
+  a switch on the card itself, off to begin with, and it is drawn only into space the card
+  was already leaving empty, so turning it on never costs a line of anything: beside the
+  number where its line has room, over the words on a two row card, and nowhere at all where
+  there is no room for it. Three cells
   already carry the sentence here, one better than **Now** manages, because there is no
   icon to pay for first, and the name gets the column width it actually needs, so a place
   as long as "Cavenago di Brianza" is printed whole. Two rows pin the place to the top and

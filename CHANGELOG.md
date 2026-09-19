@@ -15,6 +15,23 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
 
 ### Added
 
+- **The weather icon on the text widget, as a switch on the card** (off by default). It is
+  not a section the card makes room for: all four of that widget's layout plans are computed
+  without it, and the glyph is then drawn only into space they already leave empty — so
+  turning it on costs no line of sentence, no warning's word, no high-and-low and no dp of
+  number, and where there is no such space there is no drawing. Two slots, one per kind of
+  air: beside the number, in the rest of its own line (which is air because a temperature is
+  at most 2.1 ems wide, measured against «−12°» and never against the number being printed),
+  and on the two-row four-cell panel over the words, in the band that form keeps empty by
+  pinning its eyebrow to the top and its block to the bottom. That works out to 52 dp on the
+  reference four-cell row, 58 on the taller row one launcher grants, 71 on the panel and 104
+  on a three-row card; three cells on one row and two cells on two stay words, which is the
+  width those forms already spend on the sentence. The glyph meets the card at a glyph's
+  4 dp edge rather than the words' 14, and each text that reached that edge pays the 10 dp
+  back, so every line still wraps against exactly the width it wrapped against before.
+  Turning it on also brings back the icon-family choice for that card, and the drawing takes
+  the condition's own word for a screen reader when the sentence is off and nothing else
+  names the sky.
 - **A card colour for every widget.** Beside the computed sky, light, dark and follow-the-
   system, a widget's card can now be one of six colours: blue, light blue, green, sea
   green, violet, terracotta. It is the one place in this product where colour is offered as
@@ -67,6 +84,8 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
   column stopped being a share of the row and became what the place name actually needs
   (168 dp against the sentence's 104 minimum), so «Cavenago di Brianza» is printed whole
   where it used to be «Cavenago di Bri…» beside a column with 174 dp of white space in it.
+  Its picker description stopped promising the hourly temperatures, which went in the same
+  pass.
 
   The first pass: the place and the facts moved up to the household's
   16 sp and the sentence to 18, so the ranks still sort by size as well as by weight and

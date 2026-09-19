@@ -466,7 +466,12 @@ Glance, five cards, matching the app's dynamic color:
   there for a day, and on a device they read as a second widget stapled under the first — the card
   that exists for the hours is the Today widget. The warning's chip
   becomes the level's word alone, because a chip is the device that carries its own measured ground
-  and this card has no ground to draw. Two marks stay, both asked for from the device on 19 set
+  and this card has no ground to draw. The weather glyph is an option the reader turns on per
+  widget (20 set 2026), and it is drawn into air rather than into a slot: all four plans are
+  computed without it, so it costs no line of anything, and where the card leaves no room it
+  simply is not drawn — beside the number where its line has room to spare, over the words
+  in the panel's own empty band, and nowhere at three cells on one row or two cells on two.
+  Two marks stay, both asked for from the device on 19 set
   2026: the position pin in front of a place the phone is standing in — the first pass spelled it
   out in words and the words ate the place name — and the up and down marks before the day's high
   and low. A mark at the size of its own line, in that line's ink, is punctuation; the card still

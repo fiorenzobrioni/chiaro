@@ -7080,3 +7080,123 @@ di cui 17 sul layout di questa scheda — fra questi uno che, per ogni concessio
 pannello, con e senza marcatore di vecchiaia e a due scale di font, ricalcola le due colonne
 e verifica che la più alta stia dentro la card. Lint senza rilievi. Come legge davvero il
 pannello su uno schermo di casa resta una prova da dispositivo.
+
+## L'icona del meteo sul widget testuale, disegnata nell'aria (committente, 20 set 2026)
+
+«Per ogni layout/dimensione del widget senza cambiare assolutamente niente del testo che c'è
+adesso, dove si potrebbe aggiungere anche l'icona del meteo attuale, attivabile da
+un'impostazione.» E, in coda: se viene bene si potrebbe togliere «A colpo d'occhio».
+
+### La condizione detta bene, perché è tutto il progetto
+
+«Senza cambiare niente del testo» non vuol dire «con le stesse taglie». Vuol dire che
+**nessun budget può cambiare**: se il glifo fosse una sezione per cui la card fa spazio,
+qualcuno pagherebbe — una riga di frase, la parola dell'allerta, la coppia max/min, o dp di
+numero. Quindi l'impianto è rovesciato rispetto alle altre quattro schede.
+
+Le altre quattro **prenotano il disegno per primo** e sistemano le parole intorno. Questa
+calcola tutti e quattro i suoi piani **come se il glifo non esistesse**, e solo dopo chiede
+se quel che avanza basta a tenerne uno. Le quattro funzioni nuove in `TextWidgetLayout`
+(`textIconSize`, `textRowIconSize`, `textStackIconSize`, `textPanelIconSize`) restituiscono
+**una taglia o niente**, e nessuna di loro è input di un piano. Dove non c'è aria non c'è
+disegno: è la regola «una sezione che non ci sta non si disegna», applicata alla cosa che
+questa card era nata per non avere.
+
+### I due posti dove l'aria c'è già
+
+**Accanto al numero** (`LINE`, `ROW`, `STACK`). Una temperatura è larga al massimo
+[TempEmWidth] = 2,1 em — «−12°» — e il resto della sua riga è aria. Misurata contro il
+numero **più largo che l'app possa stampare**, mai contro quello che sta stampando: la
+regola che il widget Cielo scrive per le sue forme, perché una card che cambia forma con la
+previsione non si può mirare.
+
+**Sopra le parole** (`PANEL`). Quella forma appunta l'occhiello in cima e il blocco in fondo,
+quindi la fascia in mezzo è vuota per costruzione: è quel che l'altezza compra da quando le
+ore se ne sono andate. Il glifo ci si appende.
+
+Su una riga il glifo è **sovrapposto** (`Box`) e non affiancato (`Row`): in una `Row` si
+prenderebbe la sua larghezza dalla colonna, e il nome del posto — la riga che questa card ha
+combattuto per stampare intera due giri fa — tornerebbe a troncarsi. Sovrapposto, le parole
+tengono ogni dp e il glifo sta nell'angolo che il numero lascia vuoto.
+
+Sul panel invece il glifo è il **primo figlio della colonna di destra**, non una riga fra lo
+spacer e il blocco. La prima versione l'ho scritta come riga a sé e **era sbagliata**: in una
+`Column` l'altezza si somma, quindi occhiello + glifo + riga bassa sforava di 15,8 dp sulla
+4×2. Dentro la colonna di destra invece la colonna cresce **verso l'alto** dentro la fascia
+che lo spacer teneva, l'allineamento in basso della riga lascia il numero esattamente dov'era
+(verificato: 76,5..161 con e senza glifo, e 62,1..161 con il marcatore di vecchiaia), e
+`textPanelIconSize` è per costruzione l'altezza che quella fascia aveva.
+
+### Quel che ne esce, misurato
+
+| forma | grant | glifo |
+|---|---|---|
+| LINE 1 cella | 110×85 | niente (0 dp d'aria) |
+| LINE 2 celle | 159×85 | **51,9 dp** |
+| ROW 3 celle | 250×85 | niente (23,5 dp) |
+| ROW 3,5 celle | 300×85 | **51,9 dp** |
+| ROW 4 celle | 340×85 | **51,9 dp** |
+| ROW 4 celle, riga alta | 340×101 | **58,1 dp** |
+| STACK 2 celle | 159×189 | niente (27,7 dp) |
+| STACK 2,5 celle | 205×189 | **71,2 dp** |
+| PANEL 4×2 | 340×189 | **71,2 dp** |
+| PANEL 4×2 con allerta | 340×189 | **50,1 dp** |
+| PANEL 4×3 | 340×293 | **104 dp** (soffitto) |
+
+Due cose sono cambiate rispetto alla valutazione che avevo dato in chat, e vanno dette:
+il pavimento unico a 48 dp fa sì che **nella giornata con allerta il panel il glifo lo
+tiene** (50,1 dp) invece di perderlo, e il marcatore di vecchiaia **non costa niente al
+glifo del panel**, perché vive nella colonna di sinistra mentre la fascia si misura su
+quella di destra.
+
+Il pavimento è 48 e non i 52 della famiglia, di un passo: sulle altre quattro schede il glifo
+**è** l'eroe e 52 è dove smette di reggere la card a distanza di braccio; qui l'eroe è il
+numero e il glifo è il suo accompagnatore, alla taglia ottica del numero — 48 dp di scatola
+sono ~33 di inchiostro, che è quel che una cifra da 39 sp mette sulla stessa riga.
+
+### Il bordo, che sono dieci dp e una regola vecchia
+
+Un bordo con un glifo prende 4 dp, uno con parole 14 (`WidgetCardPaddingLeading`, misurato
+sul widget Ora il 7 set: i disegni portano 9–12,5 dp di margine loro). Sulle tre forme in cui
+è il disegno a toccare il bordo della card — tutte tranne `ROW`, dove il glifo è interno alla
+colonna del nome — la card gli dà il bordo del glifo e **il testo restituisce i dieci dp**
+(`TextIconEdgeGive`). Così ogni riga si misura contro esattamente la larghezza di prima: è la
+promessa «non si muove niente» scritta come un numero solo. Senza, il glifo si sarebbe
+fermato ~10 dp più dentro della frase sopra cui sta, che è il difetto che il repo ha già
+registrato una volta.
+
+### L'interruttore
+
+`WidgetLook.showIcon`, **spento di default**, nella schermata della singola card (pressione
+lunga → matita), in cima alla sezione «Contenuto» perché decide che **tipo** di card è e non
+cosa la card dice. Spento di default è il nome della scheda che mantiene la parola: «In
+parole» deve essere vero nel momento in cui la si posa. Per widget e non nelle impostazioni
+dell'app, come tutti gli altri interruttori di contenuto, così lo stesso schermo può portare
+la stessa card due volte, una con il glifo e una senza — che è metà del perché l'opzione vale.
+
+Acceso, riappare anche la scelta della famiglia di icone per questa scheda, nascosta finché
+non disegnava niente. E il glifo prende la parola della condizione per chi legge con TalkBack
+**solo quando la frase è spenta**: con la frase accesa lo direbbe due volte, senza frase
+sarebbe un disegno senza nome.
+
+### «Togliamo A colpo d'occhio?» — no, e non per estetica
+
+Il fattore che decide non è il design: togliere `NowWidgetReceiver` dal manifest
+**orfanizza ogni widget già posato**, perché Android non ha migrazione fra provider. Oltre a
+quello si perderebbero la disposizione speculare, il glifo a 2 e 3 celle su una riga, e i
+66 dp contro 52 sulla riga a quattro celle. Decisione del committente: si tiene.
+
+### Una stringa che mentiva
+
+`widget_text_desc` prometteva ancora «e, su una card più alta, le prossime ore», tolte il
+19 set. Corretta nello stesso giro, in entrambe le lingue.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **821 test**
+(sette nuovi). Due di quei sette non controllano dove va il glifo ma **quanto costa**: per
+ogni forma, a tre scale di font e con e senza marcatore di vecchiaia, rifanno l'aritmetica
+della card e verificano che il glifo stia sotto la riga del luogo, non copra il numero al suo
+più largo, lasci sei em al marcatore, e che il panel non cresca per farlo entrare. È il
+genere di rottura che nessuno segnala come bug: una riga di frase tagliata il giorno in cui
+si accende un interruttore.
