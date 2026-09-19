@@ -1011,7 +1011,7 @@ private fun CanvasHeader(
             ) {
                 Text(
                     text = Formats.temperature(current.tempC, units.temperature, locale, decimals = 1),
-                    style = com.callbackdev.chiaro.ui.theme.HeroTemperature,
+                    style = com.callbackdev.chiaro.ui.theme.LocalChiaroType.current.heroTemperature,
                     color = Color.White
                 )
                 // Two type sizes on one line align by BASELINE, not by top: top-aligned

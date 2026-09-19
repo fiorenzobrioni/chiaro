@@ -234,6 +234,11 @@
     <string name="settings_palette_note">Carta è bianco caldo e ambra. Brillante è bianco freddo e azzurro.</string>
     <string name="settings_palette_note_icons_line">Con le icone a tratto, Brillante le schiarisce anche sul tema scuro.</string>
     <string name="settings_palette_note_icons_fill">Le icone piene tengono i colori loro, quindi la palette non le tocca.</string>
+    <string name="settings_font">Carattere</string>
+    <string name="settings_font_inter">Inter</string>
+    <string name="settings_font_google_sans">Google Sans</string>
+    <string name="settings_font_system">Di sistema</string>
+    <string name="settings_font_note">Google Sans e Inter vengono con l\'app, quindi si vedono uguali su ogni telefono. Di sistema prende il carattere impostato sul telefono: è quello che più si avvicina ai widget, ma non sempre coincide, perché i widget li disegna la schermata principale e non l\'app.</string>
     <string name="settings_weather_icons">Icone del meteo</string>
     <string name="settings_icons_fill">Piene</string>
     <string name="settings_icons_line">A tratto</string>
@@ -262,8 +267,10 @@
     <string name="settings_data_source_note">Previsioni, qualità dell\'aria e ricerca dei luoghi di Open-Meteo, CC BY 4.0</string>
     <string name="settings_credit_icons">Set di icone del meteo</string>
     <string name="settings_credit_icons_note">Meteocons di Bas Milius, MIT</string>
-    <string name="settings_credit_font">Carattere</string>
-    <string name="settings_credit_font_note">Inter di Rasmus Andersson, SIL Open Font License 1.1</string>
+    <string name="settings_credit_font">Caratteri</string>
+    <string name="settings_credit_font_note">Inter di Rasmus Andersson e Google Sans di Google, entrambi SIL Open Font License 1.1</string>
+    <string name="settings_credit_font_inuse">in uso: %1$s</string>
+    <string name="settings_credit_font_inuse_system">in uso: il carattere impostato sul telefono</string>
     <string name="settings_credit_ui_icons">Icone dell\'interfaccia</string>
     <string name="settings_credit_ui_icons_note">Material Icons di Google, Apache 2.0</string>
     <string name="settings_source_code">Codice sorgente</string>

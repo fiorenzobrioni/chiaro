@@ -37,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.data.AppFont
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.ThemeMode
@@ -94,7 +95,8 @@ class ArcConfigActivity : ComponentActivity() {
                     ThemeMode.SYSTEM, null -> isSystemInDarkTheme()
                 },
                 dynamicColor = settings?.dynamicColor ?: false,
-                palette = settings?.palette ?: AppPalette.VIVID
+                palette = settings?.palette ?: AppPalette.VIVID,
+                font = settings?.font ?: AppFont.GOOGLE_SANS
             ) {
                 Scaffold(
                     topBar = {

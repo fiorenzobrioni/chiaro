@@ -7200,3 +7200,241 @@ della card e verificano che il glifo stia sotto la riga del luogo, non copra il 
 più largo, lasci sei em al marcatore, e che il panel non cresca per farlo entrare. È il
 genere di rottura che nessuno segnala come bug: una riga di frase tagliata il giorno in cui
 si accende un interruttore.
+
+---
+
+## Il carattere dell'app, che ora si sceglie (committente, 20 set 2026)
+
+«L'app usa il font Inter mentre il widget penso usi il font di sistema: è corretto? Mi piace
+il font usato dal widget "In parole" e anche il bold usato per la temperatura. Vorrei che
+anche l'app utilizzi questo font… magari si potrebbe mettere nelle opzioni un parametro per
+impostare quale font utilizzare.»
+
+### La diagnosi era giusta, e una metà non è il font
+
+L'app è in Inter, incluso nell'APK come font variabile (`Type.kt`, `res/font/inter_variable.ttf`,
+880 KB, OFL). Le card sono nel carattere di sistema **e non per scelta**: Glance disegna
+attraverso `RemoteViews`, che non ha un'API di famiglia, quindi `androidx.glance.text.TextStyle`
+ha colore, dimensione e peso e basta. Il codice lo dava già per scontato in due punti —
+`TextWidgetLayout` misura «−12°» su Roboto Bold (`TempEmWidth`), `ArcPainter` dipinge con
+`Typeface.DEFAULT`.
+
+La parte che va detta perché non si perda: **fra la temperatura del widget e quella dell'app
+la differenza più grande non è la famiglia, è il peso.** La card la stampa in Bold, la
+schermata in Light 300 a 64 sp, e il Light è una decisione scritta (§5: «un numero in un peso
+da testo si legge come un titolo, non come una lettura»). Questo giro non la tocca: l'opzione
+sposta la famiglia e **nient'altro** (`TypographyFamilyTest` verifica che dimensioni, pesi e
+interlinee siano identici nelle due risposte), così se dopo il peso dell'eroe va cambiato lo
+si cambia da solo, sapendo che cosa si sta cambiando. Resta aperto.
+
+### La coerenza si può ottenere solo spostando l'app
+
+Non esiste il verso opposto. Portare Inter dentro i quattro widget Glance si potrebbe solo con
+`AndroidRemoteViews` e una `SpannableString` con `TypefaceSpan`, cioè rifacendo a mano ogni
+forma di ogni card e rinunciando a quel che Glance dà: fragile, e per di più andrebbe contro
+le larghezze in em già misurate. Il quinto, l'arco, dipinge su Canvas e tecnicamente potrebbe
+(`Typeface` da `ResourcesCompat.getFont`), ma sarebbe l'unica card diversa dalle altre quattro,
+che è peggio dell'incoerenza che risolve. Quindi: la si ottiene muovendo l'app, o non la si
+ottiene.
+
+### Quel che costa il carattere di sistema, tutto in silenzio
+
+Tre cose, ed è per queste che il predefinito resta Inter e non diventa «di sistema»:
+
+1. **I pesi sono quelli che il dispositivo ha.** Dove manca, Android lo sintetizza spalmando
+   gli outline — esattamente il difetto che il commento in `Type.kt` dice di aver evitato
+   includendo il variabile. Il candidato è proprio il 300 dell'eroe.
+2. **`tnum` può non fare niente.** Una famiglia senza cifre tabulari ignora la feature senza
+   errore: nessun crash, solo colonne di numeri che smettono di essere colonne. Inter ce l'ha;
+   di un font OEM non si sa, e **non è verificabile da qui**: va guardato sul dispositivo.
+3. **Le colonne in dp erano misurate su Inter** (`TextScale.kt`: i 44/36/34/34 della riga
+   della settimana, la cella dell'ora, l'orologio della timeline). Una faccia più larga le fa
+   riflettere un passo prima. Non taglia niente — in `ui/` non c'è un solo `maxLines`, ed è
+   deliberato — ma un valore può andare a capo prima di quanto dica la misura.
+
+E una quarta che non è un costo ma una conseguenza: l'app smette di avere un aspetto suo. È lo
+stesso scambio del colore dinamico, fatto sul carattere invece che sul colore, e si risolve
+allo stesso modo: la cosa dell'app di default, la cosa del telefono a richiesta.
+
+### Come è fatto
+
+`AppFont { INTER, SYSTEM }` accanto a `ThemeMode` e `AppPalette` in `:core:data` — solo UI,
+nessun motore la legge — con la chiave `appearance_font` e il solito ritorno al default per un
+valore che questa versione non conosce. `ChiaroTheme` prende un parametro `font` e da lì
+scendono entrambe le metà della scala: i quindici ruoli Material (`chiaroTypography`) e i due
+che Material non ha (`LocalChiaroType`, come `LocalChiaroColors`). Quei due erano `val` di
+primo livello che nominavano `InterFamily`: costruiti all'init della classe, avrebbero
+continuato a stampare Inter sotto un lettore che aveva chiesto il sistema — è la rottura che il
+test copre per seconda. Le tre activity che montano il tema (`MainActivity` e le due di
+configurazione dei widget, che sono schermate dell'app) passano la scelta.
+
+La riga sta in Aspetto, subito dopo Palette, perché è la stessa domanda dell'abito. Il foglio
+di scelta porta la spiegazione: che Inter viene con l'app ed è uguale su ogni telefono, che «di
+sistema» è il carattere del telefono ed è anche quello con cui sono scritte le card.
+
+Un dettaglio che non è cosmetico: **la riga dei crediti non può dire Inter a chi non lo sta
+leggendo.** Inter resta incluso comunque (è il predefinito ed è il fallback), quindi
+l'attribuzione resta; a chi ha scelto il sistema la riga aggiunge «incluso, ma non in uso». È
+§1.1 applicata ai crediti, la stessa lezione della nota della palette.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **826 test**
+(cinque nuovi) e lint a zero errori. I cinque sono `TypographyFamilyTest`; `SettingsStoreTest`
+guadagna tre verifiche dentro i test che già aveva (il default, il giro completo, il valore
+sconosciuto). Il test dei ruoli li chiede a Material per
+riflessione invece di elencarli: un ruolo aggiunto da una versione futura di Material 3 e non
+copiato fallisce lì, invece di stampare una riga dell'app in un secondo carattere senza che
+nessuno se ne accorga.
+
+**Quel che resta da guardare sul dispositivo**, perché una JVM non lo può dire: se il carattere
+di sistema del telefono porta le cifre tabulari (le colonne del Diario e della settimana sono
+il posto dove si vede), e se il 300 dell'eroe è disegnato o sintetizzato.
+
+---
+
+## Il secondo carattere: Google Sans, e la temperatura in grassetto (committente, 20 set 2026)
+
+«Invece di avere un font di sistema che cambia di marca in marca forse meglio provare un
+font fisso oltre Inter. Cosa ne dici di provare Google Sans? Dovrebbe essere free e con
+licenza valida per utilizzo, controlla. […] Possiamo anche provare a mettere in un bel bold
+la temperatura attuale dandogli un bel look.»
+
+### La licenza, controllata alla fonte e non sulla scheda
+
+Google Sans sta in `google/fonts` nella cartella **`ofl/googlesans`**: `license: "OFL"`,
+`OFL.txt` con «Copyright 2025 The Google Sans Project Authors», e **nessun Reserved Font
+Name dichiarato** nella riga di copyright. Quindi si puo' impacchettare, ridurre e
+ridistribuire dentro un'app GPL tenendo la licenza accanto — che e' quel che il repo fa
+gia' per Inter. Il testo e' in `licenses/GoogleSans-OFL.txt` e la riga in
+`licenses/README.md`.
+
+Va detto anche quel che la licenza **non** dice: Google Sans e' il carattere con cui sono
+scritti Android e le app di Google, e un'app di terzi che lo indossa si fa somigliare a
+loro. E' legittimo e non e' un problema legale; e' una scelta di prodotto, ed e' del
+committente.
+
+### Cinque mega non entrano in un APK
+
+Il file a monte pesa **4 974 940 byte** — 8 311 glifi e una ventina di scritture che questa
+app non stampa. `tools/import_google_sans.py` lo riduce a **306 664 byte**, cioe' **un terzo
+di Inter** (880 KB, che e' il file come lo pubblica il suo autore). Come per i disegni del
+meteo, il file sotto `res/font/` non si modifica a mano: rifare girare lo strumento E'
+l'importazione, e `--controlla` rifa' la riduzione e confronta i byte (per questo lo
+strumento scrive `recalcTimestamp=False`: senza, due esecuzioni identiche darebbero due file
+diversi per via dell'ora dentro `head`).
+
+Cosa viene fissato e perche' sta nell'intestazione dello strumento. Le tre cose da ricordare
+qui:
+
+- **`GRAD` a 0 e `opsz` a 18.** Il primo e' un asse di compensazione ottica che l'app non ha
+  un posto dove decidere; il secondo, in questo file, va da 17 a 18: un punto.
+- **`wght` resta variabile, ma parte da 400.** In Google Sans **il 300 non esiste**. Inter
+  arriva a 100, questo no, quindi la famiglia dichiara quattro pesi invece di cinque e chi
+  chiede Light prende il 400. Non si dichiara un peso che il file non sa disegnare: sarebbe
+  la sbavatura per cui Inter era stato impacchettato variabile.
+- **`tnum` c'e'**, verificato sul file e non sulla scheda del sito. Era la condizione: DESIGN
+  §5 dice che ogni cifra in colonna e' tabulare, e una famiglia senza cifre tabulari fa
+  ballare il Diario e la settimana **senza dare un errore**. Se non l'avesse avuto, Google
+  Sans non sarebbe entrato.
+
+Le scritture tenute sono quelle che Inter porta gia' (latino esteso, greco, cirillico): i
+nomi dei luoghi arrivano dal geocoder e non sono tutti italiani. Quel che resta fuori cade
+sul carattere di sistema glifo per glifo, che e' come Android gestisce da sempre un buco.
+
+### Il grassetto, che e' il ribaltamento di una regola scritta
+
+`heroTemperature` passa da **300 a 700**, e la regola vecchia va riscritta invece che
+aggirata. Diceva: «un numero in un peso da testo si legge come un titolo, non come una
+lettura». A 24 sp regge ancora, e infatti `readingValue` **non si tocca**. A 64 sp no: quel
+numero non e' una lettura fra le altre, e' la cosa per cui la schermata esiste, e un filo
+d'inchiostro steso sopra un cielo dipinto si legge come ornamento. La card sulla schermata
+principale lo stampa in Bold dal giorno in cui e' nata: l'app che dava un peso diverso allo
+stesso numero era l'osservazione da cui e' partito tutto.
+
+Grassetto e basta sarebbe stato meta' del lavoro. A quella misura la spaziatura predefinita
+e' disegnata per un paragrafo, e le cifre si mettono in mezzo fra loro: **−0,02 em** (−1,28
+sp a 64) e' quel che rimette il peso dentro un numero. La formula di Inter si assesta
+intorno a −0,022 a questa taglia; ci si ferma appena prima perche' lo stesso numero deve
+stare anche in Google Sans, che e' piu' tondo e si chiude prima. **Da guardare sul
+dispositivo**: se a 64 sp il numero sembra ancora largo, il passo successivo e' −0,022, non
+un'altra taglia.
+
+### Le tre risposte, e perche' «di sistema» resta
+
+Inter (predefinito), Google Sans, di sistema. La terza si poteva togliere — il committente
+l'aveva messa in discussione — e si tiene per una ragione sola: **e' l'unica che fa leggere
+l'app esattamente come le card**, che e' la domanda da cui e' nata la settimana. Le altre due
+sono lo stesso disegno su ogni telefono, che e' la ragione per cui una delle due e' il
+default e la terza non lo sara' mai.
+
+La riga dei crediti adesso nomina **tutti e due** i font inclusi, sempre, perche' tutti e due
+viaggiano nell'APK qualunque cosa dica l'impostazione, e poi dice quale dei due e' sullo
+schermo. Il tocco porta alla pagina del font in uso, o — quando il carattere e' quello del
+telefono e non c'e' nessuno da accreditare — alla licenza che i due inclusi condividono.
+
+### Come e' stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **832 test**
+(undici fra i due file di tipografia, sei nuovi in questo giro) e lint a zero errori.
+
+`FontAssetTest` e' il test che conta, e legge i **file**, non il codice: si apre il `.ttf`,
+si cammina la tabella delle tabelle e si chiede all'asse `wght` se copre davvero ogni peso
+che la famiglia dichiara, alla `GSUB` se `tnum` c'e', e al file quanto pesa. Niente nella
+catena di build lo controlla: chiedere un peso fuori dall'asse non e' un errore, e' un
+rendering diverso, ed e' il modo in cui un difetto di tipografia arriva a chi legge senza
+che nessuno se ne accorga.
+
+### Il predefinito passa a Google Sans, e una promessa da correggere (committente, dal dispositivo)
+
+«Fai Google Sans il predefinito. Va benissimo, vedi screenshot.»
+
+Fatto, e il costo va scritto perche' e' reale: **l'argomento che Inter aveva era la misura.**
+Le colonne fisse di `TextScale.kt` — i 44/36/34/34 della riga della settimana, la cella
+dell'ora, l'orologio della timeline — sono larghezze di Inter. Google Sans e' un filo piu'
+largo e piu' tondo, quindi quelle colonne incontrano il loro punto di riflusso un passo prima
+di quanto dica il commento accanto. Non taglia niente (in `ui/` non c'e' un `maxLines`), ma i
+numeri da rimisurare, quando qualcuno lo fara', sono quelli. L'argomento che ha vinto e'
+quello che ha deciso ogni altro default di questa app: che cosa si vede quando la si apre.
+
+Un'installazione che non ha mai aperto l'impostazione cambia carattere all'aggiornamento. E'
+quel che e' un default, ed e' esattamente la stessa riga scritta il 6 set per le icone a
+tratto: spostarlo per quei lettori e' il punto del cambio.
+
+### «Se seleziono il font di sistema i numeri non sembrano uguali a quelli del widget»
+
+Domanda giusta, e la risposta e' **no, non e' garantito che coincidano** — la promessa era
+mia e la stringa la faceva a schermo, quindi la stringa e' stata corretta (§1.1: lo schermo
+non mente, e questa era una frase che prometteva una cosa che il dispositivo ha smentito).
+
+Tre meccanismi, indipendenti, e bastano il primo o il secondo da soli:
+
+1. **La card non la disegna l'app.** Le `RemoteViews` di un widget vengono gonfiate dal
+   **launcher**, nel suo processo e sotto il suo tema; `FontFamily.Default` invece risolve il
+   typeface predefinito **dentro il processo dell'app**. Su molte ROM il carattere
+   dell'interfaccia di sistema e quello che ricevono le app non sono lo stesso file, e in quel
+   caso nessuna impostazione dell'app puo' farli coincidere.
+2. **L'app chiede le cifre tabulari, la card non puo' chiedere niente.** `tnum` seleziona una
+   serie di cifre diversa da quella predefinita, e in molte famiglie la cifra che cambia di
+   piu' e' proprio l'1. Stesso font, due disegni della stessa cifra: e' il meccanismo che
+   spiega perche' a non somigliarsi siano **i numeri** e non le lettere.
+3. **Il peso e la spaziatura.** L'eroe dell'app e' Bold con −0,02 em; la card e' Bold senza
+   spaziatura, ed e' un altro corpo. Non cambia il disegno del glifo, cambia come si legge.
+
+**Come distinguere 1 da 2 in dieci secondi, sul telefono**: con «di sistema» attivo, confronta
+le **lettere** invece delle cifre — il nome del luogo nell'intestazione dell'app e quello
+sulla card. Se le lettere coincidono e solo le cifre no, e' `tnum` (caso 2) e si risolve
+togliendo le tabulari all'eroe, che e' un numero solo e non una colonna. Se non coincidono
+nemmeno le lettere, sono due font diversi (caso 1) e non c'e' niente da togliere: e' il
+sistema operativo.
+
+Non e' stato toccato niente su questo se non la stringa: quale dei due casi sia, lo dice il
+dispositivo, e il rimedio del caso 2 (l'eroe senza `tnum`) ha un costo suo — l'eroe e' il
+numero che si aggiorna sul posto, e senza cifre tabulari oscilla quando 19,4 diventa 19,5.
+
+### Come e' stato verificato (secondo giro)
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, 832 test,
+lint a zero errori. Il giro di `SettingsStoreTest` e' stato cambiato apposta: con Google Sans
+come default, un test che salvava Google Sans e lo rileggeva non provava piu' niente, quindi
+ora salva Inter.

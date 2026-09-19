@@ -15,6 +15,20 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
 
 ### Added
 
+- **The typeface is a choice now** (Settings → Appearance → Typeface), with three answers.
+  **Google Sans is the new default**: the open-licensed upstream font, bundled like Inter and
+  so the same drawing on every phone, cut down to the letters this app prints, which is 307KB
+  in the app against 5MB at the source. **Inter** is one tap away and stays the face the type
+  scale was measured against. The third answer is the phone's own font, which is the closest
+  the app gets to the home-screen widgets — closest, not identical: a widget is drawn by the
+  launcher rather than by the app, so on a phone whose system interface runs a different face
+  from the one apps get, the two still differ. The choice swaps the family under all seventeen
+  type roles and moves nothing else, not one size, weight or line height, and the credits name
+  both bundled fonts, always, then say which one is on the screen. Worth knowing before
+  picking the phone's font: a weight the device does not carry is synthesised rather than
+  drawn, and a font with no tabular figures quietly ignores the request for them, so columns
+  of numbers can stop lining up. Both bundled fonts were checked for tabular figures on the
+  files themselves.
 - **The weather icon on the text widget, as a switch on the card** (off by default). It is
   not a section the card makes room for: all four of that widget's layout plans are computed
   without it, and the glyph is then drawn only into space they already leave empty — so
@@ -371,6 +385,13 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
   past.
 
 ### Changed
+
+- **The current temperature is bold**, and tracked in with it. At 64sp a hairline figure laid
+  over a painted sky reads as ornament rather than as the reading the whole screen is for,
+  and the home-screen card has printed the same number bold since the day it shipped. The
+  tighter letter spacing is half of the change: at that size the default spacing is drawn for
+  a paragraph, and without it bold reads as shouting. The smaller readings in the metric
+  tiles are untouched — at their size the old argument still holds.
 
 - **Today's place row no longer scrolls away.** The city these numbers belong to used to be
   the first thing to leave the screen: the row sat inside the sky canvas, which is the first

@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
-import com.callbackdev.chiaro.ui.theme.ReadingValue
+import com.callbackdev.chiaro.ui.theme.LocalChiaroType
 
 /**
  * DESIGN.md §8.6 and §1.2: a number plus what to do about it.
@@ -36,7 +36,7 @@ import com.callbackdev.chiaro.ui.theme.ReadingValue
  * about 25 minutes" is.
  *
  * The tile's lines, top to bottom, since the card review of 8 set 2026: the icon and
- * the label; the value as a **reading** (`ReadingValue`, 24sp light tabular — the hero's
+ * the label; the value as a **reading** (`ChiaroType.readingValue`, 24sp light tabular — the hero's
  * voice at a tile's scale, because at 16sp the value barely outranked its own label); an
  * optional [scale], a 4dp track on a scale anchored to the world (UV 0–11, humidity
  * 0–100, air 0–300) so the eye gets "how much" before the number is read — one hue,
@@ -108,7 +108,7 @@ fun MetricTile(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Text(text = value, style = ReadingValue)
+            Text(text = value, style = LocalChiaroType.current.readingValue)
             scale?.let { QuantityTrack(fraction = it, modifier = Modifier.padding(vertical = 2.dp)) }
             detail?.invoke()
             note?.let { Text(text = it, style = MaterialTheme.typography.bodyMedium) }
