@@ -91,7 +91,7 @@ class SettingsStoreTest {
         store.setDynamicColor(true)
         store.setPalette(AppPalette.PAPER)
         store.setWeatherIcons(WeatherIcons.FILL)
-        store.setFont(AppFont.SYSTEM)
+        store.setFont(AppFont.GOOGLE_SANS)
         store.setAnimatedIcons(false)
         store.setUpdateFrequency(30)
 
@@ -102,7 +102,7 @@ class SettingsStoreTest {
         assertEquals(true, settings.dynamicColor)
         assertEquals(AppPalette.PAPER, settings.palette)
         assertEquals(WeatherIcons.FILL, settings.weatherIcons)
-        assertEquals(AppFont.SYSTEM, settings.font)
+        assertEquals(AppFont.GOOGLE_SANS, settings.font)
         assertEquals(false, settings.animatedIcons)
         assertEquals(30, settings.updateFrequencyMin)
     }

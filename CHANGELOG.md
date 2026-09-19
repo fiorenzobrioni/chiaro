@@ -15,18 +15,20 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
 
 ### Added
 
-- **The typeface is a choice now** (Settings → Appearance → Typeface). Inter stays the
-  default: it ships inside the app, so every weight is drawn rather than synthesised and it
-  looks the same on every phone. The other answer is the phone's own font, which is the one
-  the home-screen widgets are drawn in and always will be: a widget is drawn by RemoteViews,
-  which has no way to be handed a font family, so an app and its cards can only read alike
-  by moving the app. The choice swaps the family under all seventeen type roles and moves
-  nothing else, not one size, weight or line height, and the credits row says "included, but
-  not in use" once Inter is no longer the font on the screen. Three things come with the
-  system font and are worth knowing before picking it: a weight the device does not carry is
-  synthesised rather than drawn, a font with no tabular figures quietly ignores the request
-  for them and columns of numbers can stop lining up, and the fixed columns of the week and
-  the hour strip were measured against Inter, so a wider face reflows them a step sooner.
+- **The typeface is a choice now** (Settings → Appearance → Typeface), with three answers.
+  Inter stays the default. **Google Sans** is the second, bundled like Inter and so the same
+  drawing on every phone: the open-licensed upstream font, cut down to the letters this app
+  prints, which is 307KB in the app against 5MB at the source. The third is the phone's own
+  font, which is what the home-screen widgets are drawn in and always will be, since a widget
+  cannot be handed a font family at all — an app and its cards can only read alike by moving
+  the app. The choice swaps the family under all seventeen type roles and moves nothing else,
+  not one size, weight or line height, and the credits name both bundled fonts, always, then
+  say which one is on the screen. Worth knowing before picking the phone's font: a weight the
+  device does not carry is synthesised rather than drawn, a font with no tabular figures
+  quietly ignores the request for them and columns of numbers can stop lining up, and the
+  fixed columns of the week and the hour strip were measured against Inter, so a wider face
+  reflows them a step sooner. Both bundled fonts were checked for tabular figures on the
+  files themselves.
 - **The weather icon on the text widget, as a switch on the card** (off by default). It is
   not a section the card makes room for: all four of that widget's layout plans are computed
   without it, and the glyph is then drawn only into space they already leave empty — so
@@ -383,6 +385,13 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
   past.
 
 ### Changed
+
+- **The current temperature is bold**, and tracked in with it. At 64sp a hairline figure laid
+  over a painted sky reads as ornament rather than as the reading the whole screen is for,
+  and the home-screen card has printed the same number bold since the day it shipped. The
+  tighter letter spacing is half of the change: at that size the default spacing is drawn for
+  a paragraph, and without it bold reads as shouting. The smaller readings in the metric
+  tiles are untouched — at their size the old argument still holds.
 
 - **Today's place row no longer scrolls away.** The city these numbers belong to used to be
   the first thing to leave the screen: the row sat inside the sky canvas, which is the first

@@ -9,15 +9,19 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppFont
 
 /**
- * DESIGN.md §5. Inter, bundled as a variable font (OFL, `licenses/Inter-OFL.txt`)
- * rather than fetched from a font provider: a downloadable font is a runtime dependency
- * on Play Services, and an app that renders wrong on a de-Googled phone is an app that
- * renders wrong.
+ * DESIGN.md §5. The app's type, in the family the reader chose ([AppFont]).
+ *
+ * Both faces on offer are **bundled as variable fonts** (OFL, `licenses/`) rather than
+ * fetched from a font provider: a downloadable font is a runtime dependency on Play
+ * Services, and an app that renders wrong on a de-Googled phone is an app that renders
+ * wrong. The third answer takes the phone's own sans, which is a different bargain and
+ * says so at [SystemFamily].
  *
  * Never a monospace. The terminal line owns that, and Chiaro must not read as its
  * sibling.
@@ -26,44 +30,76 @@ import com.callbackdev.chiaro.data.AppFont
 // whole point of bundling a VARIABLE font: without it Android synthesises the weights
 // by smearing the outlines, which is exactly the look Inter was chosen to avoid.
 @OptIn(ExperimentalTextApi::class)
-private fun inter(weight: Int) = Font(
-    resId = R.font.inter_variable,
+private fun variable(resId: Int, weight: Int) = Font(
+    resId = resId,
     weight = FontWeight(weight),
     variationSettings = FontVariation.Settings(FontVariation.weight(weight))
 )
+
+private fun inter(weight: Int) = variable(R.font.inter_variable, weight)
 
 val InterFamily = FontFamily(
     inter(300), inter(400), inter(500), inter(600), inter(700)
 )
 
+private fun googleSans(weight: Int) = variable(R.font.google_sans_variable, weight)
+
 /**
- * The other answer the reader may give ([AppFont.SYSTEM], 20 set 2026): whatever sans
- * the phone is wearing. It is `FontFamily.Default`, so it resolves to the device's own
- * typeface — Roboto on one phone, the OEM's on another, and on the phones with a font
- * picker the one the reader chose there.
+ * The second bundled family ([AppFont.GOOGLE_SANS], 20 set 2026): Google Sans, OFL 1.1,
+ * imported and cut down to what this app prints by `tools/import_google_sans.py`. Like
+ * the weather drawings, **the file under `res/font/` is not edited by hand — re-running
+ * the tool IS the import**, and the tool's header holds the provenance, the hashes and
+ * every value it pins.
  *
- * It is not the same KIND of value as [InterFamily] and the difference is the whole
- * argument of the setting: Inter is one font this app can measure, and this is a
- * different font on every device. Three things are therefore true of it and are not
- * true of the default, and each of them is a cost the reader is choosing to pay:
+ * **Four weights, not five, and that is the font's own doing**: its `wght` axis starts
+ * at 400. Inter's goes down to 100, this one does not go below Regular, so this family
+ * declares exactly the faces the file can draw and a request for Light lands on 400 by
+ * Compose's own nearest-weight rule. Declaring a 300 face here would have been asking
+ * the rasteriser to invent one, which is the smearing the comment above exists to avoid.
+ *
+ * It is the answer to the thing the system font could not do (committente, 20 set 2026:
+ * «invece di avere un font di sistema che cambia di marca in marca forse meglio provare
+ * un font fisso oltre Inter»): a second face that is the same drawing on every phone,
+ * and — since it is the type Google's own apps are set in — one that reads as if it
+ * belonged to the phone without being hostage to who made the phone.
+ */
+val GoogleSansFamily = FontFamily(
+    googleSans(400), googleSans(500), googleSans(600), googleSans(700)
+)
+
+/**
+ * The third answer ([AppFont.SYSTEM], 20 set 2026): whatever sans the phone is wearing.
+ * It is `FontFamily.Default`, so it resolves to the device's own typeface — Roboto on
+ * one phone, the OEM's on another, and on the phones with a font picker the one the
+ * reader chose there.
+ *
+ * It is not the same KIND of value as the two bundled families, and the difference is
+ * the whole argument of the setting: those are fonts this app can measure, and this is a
+ * different font on every device. It is kept because it is still the only answer that
+ * matches the home-screen cards exactly, which is where this question started.
+ *
+ * Three things are true of it that are not true of a bundled family, and each is a
+ * cost the reader is choosing to pay:
  *
  * - **The weights are the ones the device has.** Where a weight is missing Android
  *   synthesises it, which is the smearing the comment above says Inter was bundled to
- *   avoid; [HeroWeight] at 300 is the line most likely to meet it.
+ *   avoid; [ReadingWeight] at 300 is the line most likely to meet it.
  * - **[Tabular] may do nothing.** `tnum` on a font that does not carry the feature is
  *   ignored in silence — no error, just columns of figures that stop being a column.
- *   Inter has it; a given system font may not.
+ *   Both bundled families have it, checked on the files themselves; a given system
+ *   font may not.
  * - **The columns measured in dp were measured against Inter** (`TextScale.kt`: the
  *   week row's 44/36/34/34, the hour cell, the timeline's clock). A wider face wraps
  *   them sooner. Nothing clips — this app has no `maxLines` — but a value can reflow a
  *   step earlier than the measurement says.
  *
- * All three are why [AppFont.INTER] is the default and this is the choice.
+ * All three are why a bundled family is the default and this is only ever a choice.
  */
 val SystemFamily = FontFamily.Default
 
 internal fun familyFor(font: AppFont): FontFamily = when (font) {
     AppFont.INTER -> InterFamily
+    AppFont.GOOGLE_SANS -> GoogleSansFamily
     AppFont.SYSTEM -> SystemFamily
 }
 
@@ -71,9 +107,39 @@ internal fun familyFor(font: AppFont): FontFamily = when (font) {
  * the typographic equivalent of a wobbling table, and this app is mostly columns. */
 private const val Tabular = "tnum"
 
-/** The one weight the type scale states twice (the hero and the reading): light, because
- * a number in a body weight reads as a headline instead of as a reading. */
-private val HeroWeight = FontWeight.Light
+/**
+ * **The hero's weight, bold since 20 set 2026** (committente, on the device: «possiamo
+ * anche provare a mettere in un bel bold la temperatura attuale»), from Light 300.
+ *
+ * The old argument was that a number in a body weight reads as a headline rather than as
+ * a reading, and at a tile's 24sp it still holds — [ReadingWeight] below is unchanged.
+ * At 64sp it does not: that number is not one reading among others, it is the thing the
+ * screen is FOR, and a hairline 64sp figure reads as an ornament laid over the sky rather
+ * than as the temperature. The card on the home screen has printed it Bold since the day
+ * it shipped, and the app disagreeing with its own widget about the same number was the
+ * observation that opened all of this.
+ *
+ * Bold is also the one weight both bundled families draw the same way round: Google Sans
+ * starts at 400, so the old 300 was never going to survive a family switch intact.
+ */
+private val HeroWeight = FontWeight.Bold
+
+/**
+ * The hero's tracking: **−0.02 em, which is −1.28sp at 64**.
+ *
+ * Bold at display size needs negative tracking or the figures sit in their own way — the
+ * default spacing is drawn for a paragraph, not for four glyphs that fill a quarter of
+ * the screen. Inter's own tracking formula settles at about −0.022 em by this size;
+ * this stops just short of it because the same number has to sit in Google Sans too,
+ * whose rounder shapes close up sooner. Em and not sp so it stays proportional when the reader
+ * scales their type.
+ */
+private val HeroTracking = (-0.02).em
+
+/** The tile reading stays light (DESIGN §8.6): at 24sp the old argument is still the
+ * right one. In Google Sans it lands on 400, the lightest that family has — see
+ * [GoogleSansFamily]. */
+private val ReadingWeight = FontWeight.Light
 
 /**
  * The scale of DESIGN §5, in a family. Every role is named: a role left out would take
@@ -109,12 +175,15 @@ internal fun typographyFor(family: FontFamily): Typography = Typography().run {
 /** The scale in Inter: the default, and what the design system is measured against. */
 val ChiaroTypography: Typography = typographyFor(InterFamily)
 
+private val GoogleSansTypography: Typography = typographyFor(GoogleSansFamily)
+
 private val SystemTypography: Typography = typographyFor(SystemFamily)
 
-/** Both scales are built once and picked, never rebuilt per composition: a `Typography`
- * is fifteen `TextStyle`s and the reader changes this setting about once. */
+/** The three scales are built once and picked, never rebuilt per composition: a
+ * `Typography` is fifteen `TextStyle`s and the reader changes this setting about once. */
 fun chiaroTypography(font: AppFont): Typography = when (font) {
     AppFont.INTER -> ChiaroTypography
+    AppFont.GOOGLE_SANS -> GoogleSansTypography
     AppFont.SYSTEM -> SystemTypography
 }
 
@@ -131,8 +200,9 @@ fun chiaroTypography(font: AppFont): Typography = when (font) {
 data class ChiaroType(
     /**
      * The current temperature is the largest thing on the screen and it is a number, so
-     * it is light, tight and tabular — `displayLarge` with a body weight would read as a
-     * headline instead of as a reading.
+     * it is bold, tracked in and tabular ([HeroWeight], [HeroTracking]): `displayLarge`
+     * would give it a paragraph's weight and a paragraph's spacing at four times a
+     * paragraph's size.
      */
     val heroTemperature: TextStyle,
     /**
@@ -152,11 +222,12 @@ private fun chiaroTypeFor(family: FontFamily) = ChiaroType(
         fontWeight = HeroWeight,
         fontSize = 64.sp,
         lineHeight = 68.sp,
+        letterSpacing = HeroTracking,
         fontFeatureSettings = Tabular
     ),
     readingValue = TextStyle(
         fontFamily = family,
-        fontWeight = HeroWeight,
+        fontWeight = ReadingWeight,
         fontSize = 24.sp,
         lineHeight = 32.sp,
         fontFeatureSettings = Tabular
@@ -165,10 +236,13 @@ private fun chiaroTypeFor(family: FontFamily) = ChiaroType(
 
 private val InterType = chiaroTypeFor(InterFamily)
 
+private val GoogleSansType = chiaroTypeFor(GoogleSansFamily)
+
 private val SystemType = chiaroTypeFor(SystemFamily)
 
 internal fun chiaroType(font: AppFont): ChiaroType = when (font) {
     AppFont.INTER -> InterType
+    AppFont.GOOGLE_SANS -> GoogleSansType
     AppFont.SYSTEM -> SystemType
 }
 

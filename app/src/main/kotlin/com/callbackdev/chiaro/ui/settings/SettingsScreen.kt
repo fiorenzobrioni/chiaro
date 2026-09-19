@@ -289,7 +289,7 @@ private fun SettingsList(
             ValueRow(
                 label = stringResource(R.string.settings_credit_font),
                 value = fontCreditNote(settings.font),
-                onClick = { openUrl(context, "https://rsms.me/inter/") }
+                onClick = { openUrl(context, fontCreditUrl(settings.font)) }
             )
         }
         item {
@@ -501,25 +501,36 @@ private fun windLabel(unit: WindSpeedUnit): String = when (unit) {
 @Composable
 private fun fontLabel(font: AppFont): String = when (font) {
     AppFont.INTER -> stringResource(R.string.settings_font_inter)
+    AppFont.GOOGLE_SANS -> stringResource(R.string.settings_font_google_sans)
     AppFont.SYSTEM -> stringResource(R.string.settings_font_system)
 }
 
 /**
- * The typeface credit, told to the reader who may have turned it off.
+ * The typefaces credit, and which of them the reader is actually reading.
  *
- * Inter ships in the APK whichever answer they gave — it is the default and the fallback
- * — so the attribution stays either way. What changes is whether it is the font on the
- * screen in front of them, and a credits row that said "Inter" to somebody reading the
- * app in Roboto would be the screen telling them something that is not true (DESIGN §1.1,
- * the same rule the palette note learned).
+ * Both bundled faces travel in the APK whatever the setting says — one is the default,
+ * the other is one tap away — so the OFL attribution names both, always. What the choice
+ * changes is which one is on the screen, and a credits row that said "Inter" to somebody
+ * reading the app in Google Sans would be the screen telling them something that is not
+ * true (DESIGN §1.1, the same rule the palette note learned).
  */
 @Composable
 private fun fontCreditNote(font: AppFont): String {
     val credit = stringResource(R.string.settings_credit_font_note)
-    return when (font) {
-        AppFont.INTER -> credit
-        AppFont.SYSTEM -> credit + " — " + stringResource(R.string.settings_credit_font_unused)
+    val inUse = when (font) {
+        AppFont.SYSTEM -> stringResource(R.string.settings_credit_font_inuse_system)
+        else -> stringResource(R.string.settings_credit_font_inuse, fontLabel(font))
     }
+    return "$credit — $inUse"
+}
+
+/** The tap goes where the credit points: to the face being read, or — when that face is
+ * the phone's and belongs to nobody this app can credit — to the licence the two bundled
+ * ones share. */
+private fun fontCreditUrl(font: AppFont): String = when (font) {
+    AppFont.INTER -> "https://rsms.me/inter/"
+    AppFont.GOOGLE_SANS -> "https://fonts.google.com/specimen/Google+Sans"
+    AppFont.SYSTEM -> "https://openfontlicense.org"
 }
 
 @Composable

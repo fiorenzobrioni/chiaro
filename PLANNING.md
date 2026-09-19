@@ -7290,3 +7290,97 @@ nessuno se ne accorga.
 **Quel che resta da guardare sul dispositivo**, perché una JVM non lo può dire: se il carattere
 di sistema del telefono porta le cifre tabulari (le colonne del Diario e della settimana sono
 il posto dove si vede), e se il 300 dell'eroe è disegnato o sintetizzato.
+
+---
+
+## Il secondo carattere: Google Sans, e la temperatura in grassetto (committente, 20 set 2026)
+
+«Invece di avere un font di sistema che cambia di marca in marca forse meglio provare un
+font fisso oltre Inter. Cosa ne dici di provare Google Sans? Dovrebbe essere free e con
+licenza valida per utilizzo, controlla. […] Possiamo anche provare a mettere in un bel bold
+la temperatura attuale dandogli un bel look.»
+
+### La licenza, controllata alla fonte e non sulla scheda
+
+Google Sans sta in `google/fonts` nella cartella **`ofl/googlesans`**: `license: "OFL"`,
+`OFL.txt` con «Copyright 2025 The Google Sans Project Authors», e **nessun Reserved Font
+Name dichiarato** nella riga di copyright. Quindi si puo' impacchettare, ridurre e
+ridistribuire dentro un'app GPL tenendo la licenza accanto — che e' quel che il repo fa
+gia' per Inter. Il testo e' in `licenses/GoogleSans-OFL.txt` e la riga in
+`licenses/README.md`.
+
+Va detto anche quel che la licenza **non** dice: Google Sans e' il carattere con cui sono
+scritti Android e le app di Google, e un'app di terzi che lo indossa si fa somigliare a
+loro. E' legittimo e non e' un problema legale; e' una scelta di prodotto, ed e' del
+committente.
+
+### Cinque mega non entrano in un APK
+
+Il file a monte pesa **4 974 940 byte** — 8 311 glifi e una ventina di scritture che questa
+app non stampa. `tools/import_google_sans.py` lo riduce a **306 664 byte**, cioe' **un terzo
+di Inter** (880 KB, che e' il file come lo pubblica il suo autore). Come per i disegni del
+meteo, il file sotto `res/font/` non si modifica a mano: rifare girare lo strumento E'
+l'importazione, e `--controlla` rifa' la riduzione e confronta i byte (per questo lo
+strumento scrive `recalcTimestamp=False`: senza, due esecuzioni identiche darebbero due file
+diversi per via dell'ora dentro `head`).
+
+Cosa viene fissato e perche' sta nell'intestazione dello strumento. Le tre cose da ricordare
+qui:
+
+- **`GRAD` a 0 e `opsz` a 18.** Il primo e' un asse di compensazione ottica che l'app non ha
+  un posto dove decidere; il secondo, in questo file, va da 17 a 18: un punto.
+- **`wght` resta variabile, ma parte da 400.** In Google Sans **il 300 non esiste**. Inter
+  arriva a 100, questo no, quindi la famiglia dichiara quattro pesi invece di cinque e chi
+  chiede Light prende il 400. Non si dichiara un peso che il file non sa disegnare: sarebbe
+  la sbavatura per cui Inter era stato impacchettato variabile.
+- **`tnum` c'e'**, verificato sul file e non sulla scheda del sito. Era la condizione: DESIGN
+  §5 dice che ogni cifra in colonna e' tabulare, e una famiglia senza cifre tabulari fa
+  ballare il Diario e la settimana **senza dare un errore**. Se non l'avesse avuto, Google
+  Sans non sarebbe entrato.
+
+Le scritture tenute sono quelle che Inter porta gia' (latino esteso, greco, cirillico): i
+nomi dei luoghi arrivano dal geocoder e non sono tutti italiani. Quel che resta fuori cade
+sul carattere di sistema glifo per glifo, che e' come Android gestisce da sempre un buco.
+
+### Il grassetto, che e' il ribaltamento di una regola scritta
+
+`heroTemperature` passa da **300 a 700**, e la regola vecchia va riscritta invece che
+aggirata. Diceva: «un numero in un peso da testo si legge come un titolo, non come una
+lettura». A 24 sp regge ancora, e infatti `readingValue` **non si tocca**. A 64 sp no: quel
+numero non e' una lettura fra le altre, e' la cosa per cui la schermata esiste, e un filo
+d'inchiostro steso sopra un cielo dipinto si legge come ornamento. La card sulla schermata
+principale lo stampa in Bold dal giorno in cui e' nata: l'app che dava un peso diverso allo
+stesso numero era l'osservazione da cui e' partito tutto.
+
+Grassetto e basta sarebbe stato meta' del lavoro. A quella misura la spaziatura predefinita
+e' disegnata per un paragrafo, e le cifre si mettono in mezzo fra loro: **−0,02 em** (−1,28
+sp a 64) e' quel che rimette il peso dentro un numero. La formula di Inter si assesta
+intorno a −0,022 a questa taglia; ci si ferma appena prima perche' lo stesso numero deve
+stare anche in Google Sans, che e' piu' tondo e si chiude prima. **Da guardare sul
+dispositivo**: se a 64 sp il numero sembra ancora largo, il passo successivo e' −0,022, non
+un'altra taglia.
+
+### Le tre risposte, e perche' «di sistema» resta
+
+Inter (predefinito), Google Sans, di sistema. La terza si poteva togliere — il committente
+l'aveva messa in discussione — e si tiene per una ragione sola: **e' l'unica che fa leggere
+l'app esattamente come le card**, che e' la domanda da cui e' nata la settimana. Le altre due
+sono lo stesso disegno su ogni telefono, che e' la ragione per cui una delle due e' il
+default e la terza non lo sara' mai.
+
+La riga dei crediti adesso nomina **tutti e due** i font inclusi, sempre, perche' tutti e due
+viaggiano nell'APK qualunque cosa dica l'impostazione, e poi dice quale dei due e' sullo
+schermo. Il tocco porta alla pagina del font in uso, o — quando il carattere e' quello del
+telefono e non c'e' nessuno da accreditare — alla licenza che i due inclusi condividono.
+
+### Come e' stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **832 test**
+(undici fra i due file di tipografia, sei nuovi in questo giro) e lint a zero errori.
+
+`FontAssetTest` e' il test che conta, e legge i **file**, non il codice: si apre il `.ttf`,
+si cammina la tabella delle tabelle e si chiede all'asse `wght` se copre davvero ogni peso
+che la famiglia dichiara, alla `GSUB` se `tnum` c'e', e al file quanto pesa. Niente nella
+catena di build lo controlla: chiedere un peso fuori dall'asse non e' un errore, e' un
+rendering diverso, ed e' il modo in cui un difetto di tipografia arriva a chi legge senza
+che nessuno se ne accorga.

@@ -249,8 +249,9 @@
          and the cards read alike. -->
     <string name="settings_font">Typeface</string>
     <string name="settings_font_inter">Inter</string>
+    <string name="settings_font_google_sans">Google Sans</string>
     <string name="settings_font_system">System</string>
-    <string name="settings_font_note">Inter comes with the app and looks the same on every phone. System uses the font your phone is set in, which is also the one the home-screen widgets are drawn in.</string>
+    <string name="settings_font_note">Inter and Google Sans come with the app and look the same on every phone. System uses the font your phone is set in, which is also the one the home-screen widgets are drawn in.</string>
     <string name="settings_weather_icons">Weather icons</string>
     <string name="settings_icons_fill">Filled</string>
     <string name="settings_icons_line">Outlined</string>
@@ -281,9 +282,10 @@
     <string name="settings_data_source_note">Forecasts, air quality and place search by Open-Meteo, CC BY 4.0</string>
     <string name="settings_credit_icons">Weather icon set</string>
     <string name="settings_credit_icons_note">Meteocons by Bas Milius, MIT</string>
-    <string name="settings_credit_font">Typeface</string>
-    <string name="settings_credit_font_note">Inter by Rasmus Andersson, SIL Open Font License 1.1</string>
-    <string name="settings_credit_font_unused">included, but not in use: you chose the system font</string>
+    <string name="settings_credit_font">Typefaces</string>
+    <string name="settings_credit_font_note">Inter by Rasmus Andersson and Google Sans by Google, both SIL Open Font License 1.1</string>
+    <string name="settings_credit_font_inuse">in use: %1$s</string>
+    <string name="settings_credit_font_inuse_system">in use: the font your phone is set in</string>
     <string name="settings_credit_ui_icons">Interface icons</string>
     <string name="settings_credit_ui_icons_note">Material Icons by Google, Apache 2.0</string>
     <string name="settings_source_code">Source code</string>

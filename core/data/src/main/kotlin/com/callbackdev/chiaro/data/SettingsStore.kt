@@ -39,24 +39,27 @@ enum class AppPalette { PAPER, VIVID }
 /**
  * Which typeface the app sets itself in (DESIGN §5), **INTER by default**.
  *
- * [INTER] is the one the design system is measured against and the only one that is the
- * same on every phone: it ships inside the APK as a variable font, so every weight is
- * drawn rather than synthesised and a device with no font provider renders it too.
- * [SYSTEM] hands the app to whatever sans the phone is wearing — Roboto on one, the
- * OEM's own on another, and on the phones with a font picker the one the reader chose
- * there.
+ * Two of the three answers are **bundled**, so they are the same drawing on every phone:
+ * [INTER], which the type scale is measured against, and [GOOGLE_SANS], added 20 set
+ * 2026 (committente: «invece di avere un font di sistema che cambia di marca in marca
+ * forse meglio provare un font fisso oltre Inter»). Both ship as variable fonts inside
+ * the APK, so every weight is drawn rather than synthesised and a device with no font
+ * provider renders them too. [SYSTEM] is the other bargain: whatever sans the phone is
+ * wearing — Roboto on one, the OEM's own on another, and on the phones with a font
+ * picker the one the reader chose there.
  *
- * It exists because the widgets have no such choice (committente, 20 set 2026: «mi piace
- * il font usato dal widget… vorrei che anche l'app utilizzi questo font»). A home-screen
- * card is drawn by `RemoteViews`, which has no font-family API for Glance to expose, so
- * the five cards are always in the system's type — see `TextWidgetLayout`, which measures
- * its temperature against Roboto Bold, and `ArcPainter`, which paints with
- * `Typeface.DEFAULT`. The app and the cards can therefore only speak in one voice by
- * moving the app, never by moving the cards, and this setting is that move.
+ * The question was opened by the widgets, which have no such choice (committente, same
+ * week: «mi piace il font usato dal widget… vorrei che anche l'app utilizzi questo
+ * font»). A home-screen card is drawn by `RemoteViews`, which has no font-family API for
+ * Glance to expose, so the five cards are always in the system's type — see
+ * `TextWidgetLayout`, which measures its temperature against Roboto Bold, and
+ * `ArcPainter`, which paints with `Typeface.DEFAULT`. The app and the cards can
+ * therefore only speak in one voice by moving the app, never by moving the cards, and
+ * [SYSTEM] stays on offer because it is the only answer that does it exactly.
  *
  * UI-only, like [ThemeMode] and [AppPalette]: no engine reads it.
  */
-enum class AppFont { INTER, SYSTEM }
+enum class AppFont { INTER, GOOGLE_SANS, SYSTEM }
 
 /**
  * Everything the Settings screen edits. The engine inputs ([units], [notifications],
@@ -99,11 +102,12 @@ data class AppSettings(
     val palette: AppPalette = AppPalette.VIVID,
     /**
      * The typeface (20 set 2026). INTER by default and deliberately: a default has to be
-     * the thing the layout was measured against and the thing that looks the same on
-     * every device, and [AppFont.SYSTEM] is neither — it is a different font per phone,
-     * its missing weights are synthesised, and `tnum` is ignored in silence by a font
-     * that has no tabular figures. What it buys is the one thing Inter cannot: an app
-     * that reads like the home-screen cards beside it.
+     * the thing the layout was measured against, and Inter is it. [AppFont.GOOGLE_SANS]
+     * is the second bundled face — same drawing everywhere, one third of Inter's weight
+     * on disk once cut to what this app prints, and it carries `tnum`, which is what
+     * made it admissible at all. [AppFont.SYSTEM] is the loose one: a different font per
+     * phone, missing weights synthesised, and tabular figures that may silently not
+     * exist. What only it buys is an app that reads like the home-screen cards beside it.
      */
     val font: AppFont = AppFont.INTER,
     /** LINE by default (decision, 6 set 2026 — the default moves, the choice stays).

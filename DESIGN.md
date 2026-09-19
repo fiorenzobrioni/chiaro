@@ -560,14 +560,15 @@ forbids rainbows for data.
 
 ## 5. Typography
 
-**Inter** (variable, OFL), with the platform sans as fallback — **or the platform sans
-itself, where the reader asks for it** (Settings → Appearance → Typeface, 20 set 2026).
-Never a monospace: the terminal line owns that, and Chiaro must not read as its sibling.
-The one exception is nothing — there is no exception.
+**Inter** (variable, OFL) by default, with **Google Sans** (variable, OFL) as the second
+bundled face and the platform sans as the third answer and the fallback — the reader
+picks (Settings → Appearance → Typeface, 20 set 2026). Never a monospace: the terminal
+line owns that, and Chiaro must not read as its sibling. The one exception is nothing —
+there is no exception.
 
 | Role | Size / line | Weight | Where |
 |---|---|---|---|
-| `heroTemperature` (extended) | 64 / 68 | 300 | the canvas' current temperature |
+| `heroTemperature` (extended) | 64 / 68, −0.02em | 700 | the canvas' current temperature |
 | `displaySmall` | 36 / 44 | 400 | a day's high in the expanded day sheet |
 | `titleLarge` | 22 / 28 | 500 | the headline sentence |
 | `titleMedium` | 16 / 24 | 600 | section titles, metric values |
@@ -581,23 +582,49 @@ The one exception is nothing — there is no exception.
 strip, the week rows, the journal's deltas. Proportional digits in a column are the
 typographic equivalent of a wobbling table, and this app has a lot of columns.
 
+**The hero is bold, and the bold is tracked in** (20 set 2026, from 300). The old rule
+said a number in a body weight reads as a headline rather than as a reading, and at the
+tile's 24sp it still stands — `readingValue` is untouched. At 64sp it did not: that figure
+is not one reading among several, it is what the screen is for, and a hairline of it laid
+over a painted sky read as ornament. The home-screen card has printed the same number Bold
+since the day it shipped, and the app disagreeing with its own widget about it is what
+opened the question. Bold alone would have been half the change: at display size the
+default letter spacing is drawn for a paragraph, so the figures sit in their own way, and
+−0.02em (−1.28sp at 64) is what turns the weight back into a number. Inter's own tracking
+formula settles at about −0.022em by this size; this stops just short of it because the same
+number must sit in Google Sans too, whose rounder shapes close up sooner.
+
 **The typeface is a setting, and Inter is the default** (20 set 2026). The scale above is
 one family deep: the choice swaps the family under all seventeen roles — Material's fifteen
 plus `heroTemperature` and the tile's reading — and moves nothing else, not a size, not a
 weight, not a line height (`TypographyFamilyTest` asks Material what its roles are by
 reflection, so a role nobody copied fails there instead of quietly setting one line of the
-app in a second font). The choice exists because the widgets never had one: `RemoteViews`
-has no font-family API for Glance to expose, so a home-screen card is always drawn in the
-phone's own sans, and the only way to make the app and the cards read alike is to move the
-app. Three things are then true that are not true of the default, and each is a cost taken
-on knowingly: the weights are whichever the device carries, and a missing one is synthesised
-rather than drawn — which is the smearing Inter was bundled to avoid, and the 300 of the
-hero is where it would show; `tnum` is ignored in silence by a face with no tabular figures,
-so a column of figures can stop being a column with nothing to report it; and the dp columns
-of §10 were measured against Inter, so a wider face reflows them a step earlier. Inter ships
-either way, as the default and as the fallback, and the credits row says which: it adds
-"included, but not in use" for the reader who turned it off, because crediting a font that
-is not on the screen is §1.1's kind of lie.
+app in a second font). The question was opened by the widgets, which never had a choice:
+`RemoteViews` has no font-family API for Glance to expose, so a home-screen card is always
+drawn in the phone's own sans, and the only way to make the app and the cards read alike is
+to move the app.
+
+Three answers, and the first two are **bundled**, which is the property that matters: the
+same drawing on every phone.
+
+- **Inter**, the default, because the scale and the dp columns of §10 were measured
+  against it.
+- **Google Sans** (OFL 1.1, `ofl/googlesans`), imported by `tools/import_google_sans.py`
+  and cut down to what this app prints: the unused axes pinned (`GRAD=0`, and `opsz`,
+  whose whole range here is one point), the glyph set reduced to Latin, Greek, Cyrillic
+  and the punctuation a weather screen can print. That is 5.0MB upstream against 307KB in
+  the APK, a third of Inter's own 880. Its `wght` axis **starts at 400**, so the family
+  declares four faces where Inter declares five and a request for Light lands on Regular
+  rather than on an invented weight; `FontAssetTest` reads both facts off the file, along
+  with the `tnum` that made the face admissible at all.
+- **The phone's own sans**, which is a different font per device — missing weights
+  synthesised rather than drawn, tabular figures that may silently not exist, and columns
+  measured against a face that is not this one. It stays on offer for the one thing it
+  alone does: match the home-screen cards exactly.
+
+Both bundled faces travel in the APK whatever the setting says, so the credits name both,
+always, and then say which one is on the screen — crediting a font the reader is not
+reading is §1.1's kind of lie.
 
 Rounding is a rule, not a call: temperatures to whole degrees everywhere except the
 current one and the feels-like, which carry one decimal because the source does;

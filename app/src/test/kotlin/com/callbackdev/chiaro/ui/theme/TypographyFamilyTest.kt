@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.ui.theme
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import com.callbackdev.chiaro.data.AppFont
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -63,27 +64,63 @@ class TypographyFamilyTest {
      * move nothing but the drawing of the letters. */
     @Test
     fun `the scale itself does not move with the family`() {
-        val inter = chiaroTypography(AppFont.INTER)
-        val system = chiaroTypography(AppFont.SYSTEM)
-        roles(inter).forEach { (role, style) ->
-            val other = roles(system).getValue(role)
-            assertEquals("$role size", style.fontSize, other.fontSize)
-            assertEquals("$role line", style.lineHeight, other.lineHeight)
-            assertEquals("$role weight", style.fontWeight, other.fontWeight)
+        val reference = roles(chiaroTypography(AppFont.INTER))
+        AppFont.entries.forEach { font ->
+            roles(chiaroTypography(font)).forEach { (role, style) ->
+                val expected = reference.getValue(role)
+                assertEquals("$role size under $font", expected.fontSize, style.fontSize)
+                assertEquals("$role line under $font", expected.lineHeight, style.lineHeight)
+                assertEquals("$role weight under $font", expected.fontWeight, style.fontWeight)
+            }
+            val type = chiaroType(font)
+            val inter = chiaroType(AppFont.INTER)
+            assertEquals("hero size under $font", inter.heroTemperature.fontSize, type.heroTemperature.fontSize)
+            assertEquals("hero weight under $font", inter.heroTemperature.fontWeight, type.heroTemperature.fontWeight)
+            assertEquals("hero tracking under $font", inter.heroTemperature.letterSpacing, type.heroTemperature.letterSpacing)
         }
-        assertEquals(
-            chiaroType(AppFont.INTER).heroTemperature.fontSize,
-            chiaroType(AppFont.SYSTEM).heroTemperature.fontSize
-        )
     }
 
-    /** And the setting has to do something: the two answers are two different families,
-     * and the default is the bundled one. */
+    /**
+     * The hero, bold since 20 set 2026 and tracked in with it. Both halves are the
+     * decision, not one: bold at 64sp with a paragraph's letter spacing is the thing
+     * that reads as shouting, and the tracking is what turns it back into a number.
+     */
     @Test
-    fun `the two answers differ and Inter is the default`() {
-        assertNotEquals(InterFamily, SystemFamily)
+    fun `the hero temperature is bold, tracked in and tabular`() {
+        AppFont.entries.forEach { font ->
+            val hero = chiaroType(font).heroTemperature
+            assertEquals("weight under $font", FontWeight.Bold, hero.fontWeight)
+            assertEquals("tabular under $font", "tnum", hero.fontFeatureSettings)
+            assertTrue(
+                "tracking under $font is ${hero.letterSpacing}",
+                hero.letterSpacing.value < 0f
+            )
+        }
+    }
+
+    /** The tile reading keeps the light weight the hero gave up (DESIGN §8.6): the old
+     * argument still holds at a tile's size, and only there. */
+    @Test
+    fun `the tile reading stays lighter than the hero`() {
+        AppFont.entries.forEach { font ->
+            val type = chiaroType(font)
+            assertTrue(
+                "reading under $font",
+                type.readingValue.fontWeight!!.weight < type.heroTemperature.fontWeight!!.weight
+            )
+        }
+    }
+
+    /** And the setting has to do something: three answers, three different families, and
+     * the default is a bundled one. */
+    @Test
+    fun `the three answers differ and Inter is the default`() {
+        val families = AppFont.entries.map { familyFor(it) }
+        assertEquals("one family per answer", families.size, families.toSet().size)
+        assertNotEquals(InterFamily, GoogleSansFamily)
         assertEquals(FontFamily.Default, SystemFamily)
         assertEquals(InterFamily, familyFor(AppFont.INTER))
+        assertEquals(GoogleSansFamily, familyFor(AppFont.GOOGLE_SANS))
     }
 
     /** Reflection, so the test asks Material what its roles are instead of trusting a list
