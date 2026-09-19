@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
                 darkTheme = darkTheme,
                 dynamicColor = settings?.dynamicColor ?: false,
                 palette = settings?.palette ?: AppPalette.VIVID,
-                font = settings?.font ?: AppFont.INTER
+                font = settings?.font ?: AppFont.GOOGLE_SANS
             ) {
                 CompositionLocalProvider(
                     LocalWeatherIcons provides (settings?.weatherIcons ?: WeatherIcons.LINE),

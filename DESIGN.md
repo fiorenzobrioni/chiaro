@@ -560,9 +560,9 @@ forbids rainbows for data.
 
 ## 5. Typography
 
-**Inter** (variable, OFL) by default, with **Google Sans** (variable, OFL) as the second
-bundled face and the platform sans as the third answer and the fallback — the reader
-picks (Settings → Appearance → Typeface, 20 set 2026). Never a monospace: the terminal
+**Google Sans** (variable, OFL) by default, with **Inter** (variable, OFL) the second
+bundled face and the scale's own reference, and the platform sans as the third answer —
+the reader picks (Settings → Appearance → Typeface, 20 set 2026). Never a monospace: the terminal
 line owns that, and Chiaro must not read as its sibling. The one exception is nothing —
 there is no exception.
 
@@ -594,7 +594,7 @@ default letter spacing is drawn for a paragraph, so the figures sit in their own
 formula settles at about −0.022em by this size; this stops just short of it because the same
 number must sit in Google Sans too, whose rounder shapes close up sooner.
 
-**The typeface is a setting, and Inter is the default** (20 set 2026). The scale above is
+**The typeface is a setting, and Google Sans is the default** (20 set 2026). The scale above is
 one family deep: the choice swaps the family under all seventeen roles — Material's fifteen
 plus `heroTemperature` and the tile's reading — and moves nothing else, not a size, not a
 weight, not a line height (`TypographyFamilyTest` asks Material what its roles are by
@@ -607,20 +607,29 @@ to move the app.
 Three answers, and the first two are **bundled**, which is the property that matters: the
 same drawing on every phone.
 
-- **Inter**, the default, because the scale and the dp columns of §10 were measured
-  against it.
-- **Google Sans** (OFL 1.1, `ofl/googlesans`), imported by `tools/import_google_sans.py`
-  and cut down to what this app prints: the unused axes pinned (`GRAD=0`, and `opsz`,
-  whose whole range here is one point), the glyph set reduced to Latin, Greek, Cyrillic
-  and the punctuation a weather screen can print. That is 5.0MB upstream against 307KB in
-  the APK, a third of Inter's own 880. Its `wght` axis **starts at 400**, so the family
-  declares four faces where Inter declares five and a request for Light lands on Regular
-  rather than on an invented weight; `FontAssetTest` reads both facts off the file, along
-  with the `tnum` that made the face admissible at all.
-- **The phone's own sans**, which is a different font per device — missing weights
-  synthesised rather than drawn, tabular figures that may silently not exist, and columns
-  measured against a face that is not this one. It stays on offer for the one thing it
-  alone does: match the home-screen cards exactly.
+- **Google Sans** (OFL 1.1, `ofl/googlesans`), the default since the device pass of the
+  same day. Imported by `tools/import_google_sans.py` and cut down to what this app
+  prints: the unused axes pinned (`GRAD=0`, and `opsz`, whose whole range here is one
+  point), the glyph set reduced to Latin, Greek, Cyrillic and the punctuation a weather
+  screen can print. That is 5.0MB upstream against 307KB in the APK, a third of Inter's
+  own 880. Its `wght` axis **starts at 400**, so the family declares four faces where
+  Inter declares five and a request for Light lands on Regular rather than on an invented
+  weight; `FontAssetTest` reads both facts off the file, along with the `tnum` that made
+  the face admissible at all.
+- **Inter**, one tap away, and still the face this scale and the dp columns of §10 were
+  measured against. That measurement is the one thing the default gives up, and it is
+  worth naming: Google Sans is a shade wider and rounder, so the fixed columns of the
+  week row and the hour strip meet their reflow a step sooner than their comments say.
+  Nothing clips — there is no `maxLines` in `ui/` — and the numbers to re-measure, when
+  somebody does, are those.
+- **The phone's own sans**, which is a different font per device: missing weights
+  synthesised rather than drawn, tabular figures that may silently not exist, columns
+  measured against a face that is not this one. It stays on offer as the **closest** the
+  app can get to the home-screen cards, and closest is the honest word — a card is
+  inflated by the launcher, in its process and under its theme, so on a ROM whose system
+  UI runs a different face from the one apps get, the card and the app still differ. The
+  app also asks for tabular figures where a card cannot ask for anything, so even one
+  font can draw the two differently (measured on a device, 20 set 2026: they did).
 
 Both bundled faces travel in the APK whatever the setting says, so the credits name both,
 always, and then say which one is on the screen — crediting a font the reader is not

@@ -40,7 +40,7 @@ fun ChiaroTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     palette: AppPalette = AppPalette.PAPER,
-    font: AppFont = AppFont.INTER,
+    font: AppFont = AppFont.GOOGLE_SANS,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current

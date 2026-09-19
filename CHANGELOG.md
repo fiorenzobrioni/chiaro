@@ -16,18 +16,18 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
 ### Added
 
 - **The typeface is a choice now** (Settings → Appearance → Typeface), with three answers.
-  Inter stays the default. **Google Sans** is the second, bundled like Inter and so the same
-  drawing on every phone: the open-licensed upstream font, cut down to the letters this app
-  prints, which is 307KB in the app against 5MB at the source. The third is the phone's own
-  font, which is what the home-screen widgets are drawn in and always will be, since a widget
-  cannot be handed a font family at all — an app and its cards can only read alike by moving
-  the app. The choice swaps the family under all seventeen type roles and moves nothing else,
-  not one size, weight or line height, and the credits name both bundled fonts, always, then
-  say which one is on the screen. Worth knowing before picking the phone's font: a weight the
-  device does not carry is synthesised rather than drawn, a font with no tabular figures
-  quietly ignores the request for them and columns of numbers can stop lining up, and the
-  fixed columns of the week and the hour strip were measured against Inter, so a wider face
-  reflows them a step sooner. Both bundled fonts were checked for tabular figures on the
+  **Google Sans is the new default**: the open-licensed upstream font, bundled like Inter and
+  so the same drawing on every phone, cut down to the letters this app prints, which is 307KB
+  in the app against 5MB at the source. **Inter** is one tap away and stays the face the type
+  scale was measured against. The third answer is the phone's own font, which is the closest
+  the app gets to the home-screen widgets — closest, not identical: a widget is drawn by the
+  launcher rather than by the app, so on a phone whose system interface runs a different face
+  from the one apps get, the two still differ. The choice swaps the family under all seventeen
+  type roles and moves nothing else, not one size, weight or line height, and the credits name
+  both bundled fonts, always, then say which one is on the screen. Worth knowing before
+  picking the phone's font: a weight the device does not carry is synthesised rather than
+  drawn, and a font with no tabular figures quietly ignores the request for them, so columns
+  of numbers can stop lining up. Both bundled fonts were checked for tabular figures on the
   files themselves.
 - **The weather icon on the text widget, as a switch on the card** (off by default). It is
   not a section the card makes room for: all four of that widget's layout plans are computed

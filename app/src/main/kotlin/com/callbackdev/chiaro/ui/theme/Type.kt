@@ -45,7 +45,8 @@ val InterFamily = FontFamily(
 private fun googleSans(weight: Int) = variable(R.font.google_sans_variable, weight)
 
 /**
- * The second bundled family ([AppFont.GOOGLE_SANS], 20 set 2026): Google Sans, OFL 1.1,
+ * The family the app opens in ([AppFont.GOOGLE_SANS], **the default since the device
+ * pass of 20 set 2026**): Google Sans, OFL 1.1,
  * imported and cut down to what this app prints by `tools/import_google_sans.py`. Like
  * the weather drawings, **the file under `res/font/` is not edited by hand — re-running
  * the tool IS the import**, and the tool's header holds the provenance, the hashes and
@@ -59,9 +60,11 @@ private fun googleSans(weight: Int) = variable(R.font.google_sans_variable, weig
  *
  * It is the answer to the thing the system font could not do (committente, 20 set 2026:
  * «invece di avere un font di sistema che cambia di marca in marca forse meglio provare
- * un font fisso oltre Inter»): a second face that is the same drawing on every phone,
- * and — since it is the type Google's own apps are set in — one that reads as if it
- * belonged to the phone without being hostage to who made the phone.
+ * un font fisso oltre Inter»): a face that is the same drawing on every phone, and —
+ * since it is the type Google's own apps are set in — one that reads as if it belonged
+ * to the phone without being hostage to who made the phone. On the screenshots it was
+ * kept and made the default the same day; [InterFamily] stays one tap away and stays
+ * what the dp columns were measured against.
  */
 val GoogleSansFamily = FontFamily(
     googleSans(400), googleSans(500), googleSans(600), googleSans(700)
@@ -75,8 +78,16 @@ val GoogleSansFamily = FontFamily(
  *
  * It is not the same KIND of value as the two bundled families, and the difference is
  * the whole argument of the setting: those are fonts this app can measure, and this is a
- * different font on every device. It is kept because it is still the only answer that
- * matches the home-screen cards exactly, which is where this question started.
+ * different font on every device.
+ *
+ * It is kept as the closest the app can get to the home-screen cards, which is where this
+ * question started — **closest, and not identical, which the device pass of 20 set 2026
+ * showed**. A card's views are inflated by the launcher, in the launcher's process and
+ * under the launcher's theme; this resolves the default typeface inside the app's own
+ * process. Where a ROM gives its system UI a different face from the one apps get, the
+ * two are different fonts and no setting here can make them one. The app also asks for
+ * [Tabular] figures on the numbers and a card cannot ask for anything, so even one font
+ * can draw the two differently.
  *
  * Three things are true of it that are not true of a bundled family, and each is a
  * cost the reader is choosing to pay:
@@ -246,9 +257,9 @@ internal fun chiaroType(font: AppFont): ChiaroType = when (font) {
     AppFont.SYSTEM -> SystemType
 }
 
-/** Inter by default, so a preview or any composable outside [ChiaroTheme] still reads the
- * app's own voice rather than the host's. */
-val LocalChiaroType = staticCompositionLocalOf { InterType }
+/** The app's own default, so a preview or any composable outside [ChiaroTheme] still
+ * reads the app's voice rather than the host's. */
+val LocalChiaroType = staticCompositionLocalOf { GoogleSansType }
 
 /** Any style, with the figures made tabular. */
 fun TextStyle.tabular(): TextStyle = copy(fontFeatureSettings = Tabular)

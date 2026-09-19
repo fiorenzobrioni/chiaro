@@ -238,7 +238,7 @@
     <string name="settings_font_inter">Inter</string>
     <string name="settings_font_google_sans">Google Sans</string>
     <string name="settings_font_system">Di sistema</string>
-    <string name="settings_font_note">Inter e Google Sans vengono con l\'app e si vedono uguali su ogni telefono. Di sistema usa il carattere impostato sul tuo telefono, che è anche quello con cui sono scritti i widget sulla schermata principale.</string>
+    <string name="settings_font_note">Google Sans e Inter vengono con l\'app, quindi si vedono uguali su ogni telefono. Di sistema prende il carattere impostato sul telefono: è quello che più si avvicina ai widget, ma non sempre coincide, perché i widget li disegna la schermata principale e non l\'app.</string>
     <string name="settings_weather_icons">Icone del meteo</string>
     <string name="settings_icons_fill">Piene</string>
     <string name="settings_icons_line">A tratto</string>

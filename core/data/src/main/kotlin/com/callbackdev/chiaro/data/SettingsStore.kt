@@ -37,7 +37,7 @@ enum class WeatherIcons { FILL, LINE }
 enum class AppPalette { PAPER, VIVID }
 
 /**
- * Which typeface the app sets itself in (DESIGN §5), **INTER by default**.
+ * Which typeface the app sets itself in (DESIGN §5), **GOOGLE_SANS by default**.
  *
  * Two of the three answers are **bundled**, so they are the same drawing on every phone:
  * [INTER], which the type scale is measured against, and [GOOGLE_SANS], added 20 set
@@ -54,8 +54,12 @@ enum class AppPalette { PAPER, VIVID }
  * Glance to expose, so the five cards are always in the system's type — see
  * `TextWidgetLayout`, which measures its temperature against Roboto Bold, and
  * `ArcPainter`, which paints with `Typeface.DEFAULT`. The app and the cards can
- * therefore only speak in one voice by moving the app, never by moving the cards, and
- * [SYSTEM] stays on offer because it is the only answer that does it exactly.
+ * therefore only speak in one voice by moving the app, never by moving the cards.
+ * [SYSTEM] stays on offer as the closest that gets — closest, and not the same: a card's
+ * views are inflated by the LAUNCHER, in its process and under its theme, while this
+ * setting picks the default typeface inside the app's own. On a ROM where the two are
+ * different files, the card and the app read differently even with this switched on
+ * (device pass, 20 set 2026, where they visibly did).
  *
  * UI-only, like [ThemeMode] and [AppPalette]: no engine reads it.
  */
@@ -101,15 +105,25 @@ data class AppSettings(
      */
     val palette: AppPalette = AppPalette.VIVID,
     /**
-     * The typeface (20 set 2026). INTER by default and deliberately: a default has to be
-     * the thing the layout was measured against, and Inter is it. [AppFont.GOOGLE_SANS]
-     * is the second bundled face — same drawing everywhere, one third of Inter's weight
-     * on disk once cut to what this app prints, and it carries `tnum`, which is what
-     * made it admissible at all. [AppFont.SYSTEM] is the loose one: a different font per
-     * phone, missing weights synthesised, and tabular figures that may silently not
-     * exist. What only it buys is an app that reads like the home-screen cards beside it.
+     * The typeface (20 set 2026). **GOOGLE_SANS by default since the device pass of the
+     * same day** (committente, on the screenshots: «fai Google Sans il predefinito, va
+     * benissimo»), from [AppFont.INTER].
+     *
+     * The argument Inter had was that a default should be the face the layout was
+     * measured against — the dp columns of `TextScale.kt` are its widths. It loses to
+     * the one that decided every other default in this app: what the product looks like
+     * when somebody opens it. Google Sans is bundled too, so it is the same drawing on
+     * every phone, it carries `tnum` (checked on the file, `FontAssetTest`), and its
+     * rounder figures are what the reader saw and kept. Inter stays one tap away and
+     * stays the fallback the scale was built on, so the measurement is not lost, only
+     * demoted; what to watch is in DESIGN §5.
+     *
+     * [AppFont.SYSTEM] is the loose one: a different font per phone, missing weights
+     * synthesised, tabular figures that may silently not exist — and not even a
+     * guaranteed match with the home-screen cards, which are drawn by the launcher and
+     * not by this app.
      */
-    val font: AppFont = AppFont.INTER,
+    val font: AppFont = AppFont.GOOGLE_SANS,
     /** LINE by default (decision, 6 set 2026 — the default moves, the choice stays).
      * The outlined drawings keep one weight of ink on a screen whose hero is already a
      * painted sky, and at the sizes Today now uses (§13.1's ladder, 30-38dp) they read
@@ -178,7 +192,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 themeMode = enumOrDefault(prefs[Theme], ThemeMode.SYSTEM),
                 dynamicColor = prefs[DynamicColor] ?: false,
                 palette = enumOrDefault(prefs[Palette], AppPalette.VIVID),
-                font = enumOrDefault(prefs[FontChoice], AppFont.INTER),
+                font = enumOrDefault(prefs[FontChoice], AppFont.GOOGLE_SANS),
                 weatherIcons = enumOrDefault(prefs[IconStyle], WeatherIcons.LINE),
                 animatedIcons = prefs[AnimatedIcons] ?: true,
                 skyEnabled = prefs[SkyEnabled] ?: true,

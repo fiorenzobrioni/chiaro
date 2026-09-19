@@ -112,9 +112,9 @@ class TypographyFamilyTest {
     }
 
     /** And the setting has to do something: three answers, three different families, and
-     * the default is a bundled one. */
+     * the two bundled ones are the two the app can vouch for. */
     @Test
-    fun `the three answers differ and Inter is the default`() {
+    fun `the three answers are three different families`() {
         val families = AppFont.entries.map { familyFor(it) }
         assertEquals("one family per answer", families.size, families.toSet().size)
         assertNotEquals(InterFamily, GoogleSansFamily)

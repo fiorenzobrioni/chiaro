@@ -251,7 +251,7 @@
     <string name="settings_font_inter">Inter</string>
     <string name="settings_font_google_sans">Google Sans</string>
     <string name="settings_font_system">System</string>
-    <string name="settings_font_note">Inter and Google Sans come with the app and look the same on every phone. System uses the font your phone is set in, which is also the one the home-screen widgets are drawn in.</string>
+    <string name="settings_font_note">Google Sans and Inter come with the app, so they look the same on every phone. System takes the font your phone is set in: closest to the home-screen widgets, though not always identical, because a widget is drawn by the launcher and not by the app.</string>
     <string name="settings_weather_icons">Weather icons</string>
     <string name="settings_icons_fill">Filled</string>
     <string name="settings_icons_line">Outlined</string>

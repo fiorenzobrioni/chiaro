@@ -96,7 +96,7 @@ class WidgetConfigActivity : ComponentActivity() {
                 },
                 dynamicColor = settings?.dynamicColor ?: false,
                 palette = settings?.palette ?: AppPalette.VIVID,
-                font = settings?.font ?: AppFont.INTER
+                font = settings?.font ?: AppFont.GOOGLE_SANS
             ) {
                 Scaffold(
                     topBar = {

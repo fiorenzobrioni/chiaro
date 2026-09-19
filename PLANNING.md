@@ -7384,3 +7384,57 @@ che la famiglia dichiara, alla `GSUB` se `tnum` c'e', e al file quanto pesa. Nie
 catena di build lo controlla: chiedere un peso fuori dall'asse non e' un errore, e' un
 rendering diverso, ed e' il modo in cui un difetto di tipografia arriva a chi legge senza
 che nessuno se ne accorga.
+
+### Il predefinito passa a Google Sans, e una promessa da correggere (committente, dal dispositivo)
+
+«Fai Google Sans il predefinito. Va benissimo, vedi screenshot.»
+
+Fatto, e il costo va scritto perche' e' reale: **l'argomento che Inter aveva era la misura.**
+Le colonne fisse di `TextScale.kt` — i 44/36/34/34 della riga della settimana, la cella
+dell'ora, l'orologio della timeline — sono larghezze di Inter. Google Sans e' un filo piu'
+largo e piu' tondo, quindi quelle colonne incontrano il loro punto di riflusso un passo prima
+di quanto dica il commento accanto. Non taglia niente (in `ui/` non c'e' un `maxLines`), ma i
+numeri da rimisurare, quando qualcuno lo fara', sono quelli. L'argomento che ha vinto e'
+quello che ha deciso ogni altro default di questa app: che cosa si vede quando la si apre.
+
+Un'installazione che non ha mai aperto l'impostazione cambia carattere all'aggiornamento. E'
+quel che e' un default, ed e' esattamente la stessa riga scritta il 6 set per le icone a
+tratto: spostarlo per quei lettori e' il punto del cambio.
+
+### «Se seleziono il font di sistema i numeri non sembrano uguali a quelli del widget»
+
+Domanda giusta, e la risposta e' **no, non e' garantito che coincidano** — la promessa era
+mia e la stringa la faceva a schermo, quindi la stringa e' stata corretta (§1.1: lo schermo
+non mente, e questa era una frase che prometteva una cosa che il dispositivo ha smentito).
+
+Tre meccanismi, indipendenti, e bastano il primo o il secondo da soli:
+
+1. **La card non la disegna l'app.** Le `RemoteViews` di un widget vengono gonfiate dal
+   **launcher**, nel suo processo e sotto il suo tema; `FontFamily.Default` invece risolve il
+   typeface predefinito **dentro il processo dell'app**. Su molte ROM il carattere
+   dell'interfaccia di sistema e quello che ricevono le app non sono lo stesso file, e in quel
+   caso nessuna impostazione dell'app puo' farli coincidere.
+2. **L'app chiede le cifre tabulari, la card non puo' chiedere niente.** `tnum` seleziona una
+   serie di cifre diversa da quella predefinita, e in molte famiglie la cifra che cambia di
+   piu' e' proprio l'1. Stesso font, due disegni della stessa cifra: e' il meccanismo che
+   spiega perche' a non somigliarsi siano **i numeri** e non le lettere.
+3. **Il peso e la spaziatura.** L'eroe dell'app e' Bold con −0,02 em; la card e' Bold senza
+   spaziatura, ed e' un altro corpo. Non cambia il disegno del glifo, cambia come si legge.
+
+**Come distinguere 1 da 2 in dieci secondi, sul telefono**: con «di sistema» attivo, confronta
+le **lettere** invece delle cifre — il nome del luogo nell'intestazione dell'app e quello
+sulla card. Se le lettere coincidono e solo le cifre no, e' `tnum` (caso 2) e si risolve
+togliendo le tabulari all'eroe, che e' un numero solo e non una colonna. Se non coincidono
+nemmeno le lettere, sono due font diversi (caso 1) e non c'e' niente da togliere: e' il
+sistema operativo.
+
+Non e' stato toccato niente su questo se non la stringa: quale dei due casi sia, lo dice il
+dispositivo, e il rimedio del caso 2 (l'eroe senza `tnum`) ha un costo suo — l'eroe e' il
+numero che si aggiorna sul posto, e senza cifre tabulari oscilla quando 19,4 diventa 19,5.
+
+### Come e' stato verificato (secondo giro)
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, 832 test,
+lint a zero errori. Il giro di `SettingsStoreTest` e' stato cambiato apposta: con Google Sans
+come default, un test che salvava Google Sans e lo rileggeva non provava piu' niente, quindi
+ora salva Inter.
