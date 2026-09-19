@@ -56,7 +56,19 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
   opacity and content switches (minus the icon family, which would change nothing here).
   Its budget is pure arithmetic on dp and sp with a table pinning it, like the other four.
 
-  Redrawn the same day on a device: the place and the facts moved up to the household's
+  Redrawn twice the same day on a device. The second pass took the hourly temperatures off
+  the tall card for good — they read as a second widget stapled under the first, and the
+  card that exists for the hours is the Today widget — and gave the height back to the
+  composition: the place is pinned to the top of the card as its eyebrow and everything else
+  to the bottom, with the air between them. From four cells up a two-row card becomes a
+  panel: the number on the leading side at 64 sp, which it can afford because it stands
+  BESIDE the words rather than under them, and the sentence and the day's high and low
+  right-aligned against the far edge, bottom-aligned with it. The one-row card's leading
+  column stopped being a share of the row and became what the place name actually needs
+  (168 dp against the sentence's 104 minimum), so «Cavenago di Brianza» is printed whole
+  where it used to be «Cavenago di Bri…» beside a column with 174 dp of white space in it.
+
+  The first pass: the place and the facts moved up to the household's
   16 sp and the sentence to 18, so the ranks still sort by size as well as by weight and
   ink; the position pin came back in front of a place the phone is standing in, where the
   first pass spelled it out in words and the words ate the place name («Ornago · la mia

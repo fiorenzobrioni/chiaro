@@ -590,14 +590,29 @@ grant rather than named roles (`WidgetUi.kt`, and a `*WidgetLayout.kt` per card)
 the five cards get their hierarchy from the weather glyph, which fills the height and is
 the first thing read; the text widget (19 set 2026) has no glyph and builds the same
 hierarchy out of type alone, in **four ranks that differ by size and weight and ink, never
-by one of the three on its own** (`TextWidgetLayout.kt`): the temperature at 30 to 56sp
+by one of the three on its own** (`TextWidgetLayout.kt`): the temperature at 26 to 64sp
 Bold in the strong ink, scaled to the grant the way the other cards scale their drawing;
-the day's sentence at 17sp Medium, one point over the household's 16 because there is no
-drawing left to carry the card at arm's length; the place, the day's range, the warning's
-word and the hours' own temperatures at 14sp, where ink and weight go on sorting inside the
-rank; the stale marker and the hour labels at 11sp. The order the budget
-spends in is the hierarchy written down: the number is reserved first and the footnotes
-are bought last, and a section that does not fit is not drawn.
+the day's sentence at 18sp Medium, two points over the household's 16 because there is no
+drawing left to carry the card at arm's length; the place, the day's range and the
+warning's word at 16sp, where ink and weight go on sorting inside the rank; the stale
+marker at 11sp. The order the budget spends in is the hierarchy written down: the number is
+reserved first and the footnotes are bought last, and a section that does not fit is not
+drawn.
+
+**Which ceiling the number gets is a question about what it stands next to** — the rule
+§13.1's glyphs live by (`RowIconMax`: the hero never outgrows the block beside it), read off
+three different blocks. 44sp where it stands under the place with a column of prose beside
+it; 56 on a narrow tall card, where it stands over its own sentence; 64 on the two-row form
+from four cells up, where it stands BESIDE the words and the block beside it is 89.8dp tall.
+
+Two **marks** sit inline with that type and do not break it (19 set 2026): the position pin
+in front of a place the phone is standing in, and `ic_range_high`/`ic_range_low` before the
+day's high and low — drawn rather than the characters ↑ and ↓, at the verdict marks' 2.4-of-24
+weight, for the reason §13.1 gives about ✓ and ✗. A mark at the size of its own line, in
+that line's ink, is punctuation; the card still carries no picture. What the card does not
+carry at all is the next hours as figures: it had them on a tall form for a day, and on a
+device they read as a second widget stapled under the first — the card that exists for the
+hours is the Today widget.
 
 ---
 

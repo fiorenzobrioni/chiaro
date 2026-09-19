@@ -15,6 +15,7 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
+import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
@@ -32,14 +33,14 @@ import java.util.Locale
 
 /**
  * The text widget (committente, 19 set 2026): the same facts the Now widget carries, with
- * nothing drawn — no weather glyph, no position pin, no chip, no mark. A card of words and
+ * no picture drawn on it — no weather glyph, no chip, no illustration. A card of words and
  * figures, and its whole hierarchy built out of type.
  *
  * It is not the Now widget with the icon deleted. A card that loses its drawing loses the
  * thing that made it readable across a room, so this one rebuilds that at the only place
  * left: the temperature is the drawing now, sized to the grant the way the other four size
  * their glyph, in Bold where the household writes Medium, over a place set two ranks below
- * it. [TextWidgetLayout] carries the four ranks, the three forms and every number's reason.
+ * it. [TextWidgetLayout] carries the four ranks, the four forms and every number's reason.
  *
  * **Two marks are drawn, and both were asked for** (committente, 19 set 2026, on the
  * device). The position pin comes back in front of a place the phone is standing in, where
@@ -106,6 +107,7 @@ class TextWidget : GlanceAppWidget() {
                 when {
                     content == null && model.city == null -> NoPlaceContent(palette)
                     content == null -> NoDataContent(palette)
+                    form == TextForm.PANEL -> PanelContent(content, model, palette, size)
                     form == TextForm.STACK -> StackContent(content, model, palette, size)
                     form == TextForm.ROW -> RowContent(content, model, palette, size)
                     else -> LineContent(content, model, palette, size)
@@ -218,14 +220,15 @@ private fun RowContent(
 }
 
 /**
- * Two rows and up: one column against the leading edge, centred on the height it does not
- * fill. Place, number, sentence, the facts, the next hours as figures, and the age of the
- * data at the foot — the order a page is read in, each rank one step quieter than the one
- * above it.
+ * Two rows and up, under four cells wide: one column against the leading edge, with the
+ * place pinned to the TOP of the card as its eyebrow and everything else pinned to the
+ * bottom (committente, 19 set 2026: «allinea in basso testo e, se impostata, temperatura
+ * minima e massima»). The air lands between the two, which is what turns a short column
+ * into a composition instead of a list that ran out.
  *
- * Seven children at most against Glance's ten, and the gaps are padding rather than
- * spacers for the same reason (Fase 11: a container that goes over the limit drops the
- * overflow without a word).
+ * Six children at most against Glance's ten, and no spacers: the air is a weighted
+ * [Spacer] between the eyebrow and the block, one child, for the reason Fase 11 records —
+ * a container that goes over the limit drops the overflow without a word.
  */
 @Composable
 private fun StackContent(
@@ -235,7 +238,6 @@ private fun StackContent(
     size: DpSize
 ) {
     val context = LocalContext.current
-    val locale = Locale.getDefault()
     val scale = fontScale(context)
     val sentenceOn = model.look.showSentence
     val today = content.week.firstOrNull()?.forecast
@@ -249,21 +251,19 @@ private fun StackContent(
         sentenceSlot = true,
         ownRow = textStackHasFactLine(size, scale, content.isStale, sentenceOn)
     )
-    val hours = content.strip.take(textHourCells(size.width))
     val plan = textStackPlan(
         size, scale,
         stale = content.isStale,
         sentence = sentenceOn,
         warning = warning.drawn,
-        range = model.look.showDayRange && today != null,
-        hours = hours.isNotEmpty()
+        range = model.look.showDayRange && today != null
     )
     Column(
-        verticalAlignment = Alignment.Vertical.CenterVertically,
         horizontalAlignment = Alignment.Start,
         modifier = GlanceModifier.fillMaxSize()
     ) {
         PlaceLineText(content, model, palette)
+        Spacer(modifier = GlanceModifier.defaultWeight())
         HeroTemperature(content, model, palette, plan.heroSp)
         if (plan.sentenceLines > 0) {
             Text(
@@ -282,40 +282,83 @@ private fun StackContent(
                 size = TextFactSp.sp, marks = true
             )
         }
-        if (plan.showHours) {
-            val is24h = android.text.format.DateFormat.is24HourFormat(context)
-            Row(
-                modifier = GlanceModifier.fillMaxWidth().padding(top = TextHoursGap)
+        StaleLineText(content, palette)
+    }
+}
+
+/**
+ * Two rows and up, four cells or wider (committente, 19 set 2026, second device pass): the
+ * place as a full-width eyebrow at the top, and along the bottom the number on the leading
+ * side with the sentence and the day's range right-aligned beside it.
+ *
+ * It is the one-row card's composition given a second dimension, and the reason to have it
+ * is the number: standing BESIDE the words rather than under them, it can be as tall as
+ * the whole block beside it ([TextHeroPanelMax], 64 sp against the row form's 44) without
+ * becoming an ornament. The eyebrow moving to the full width is the other half of the
+ * trade — «Cavenago di Brianza» has nothing to compete with up there.
+ *
+ * The two columns are bottom-aligned, not centred: the number's baseline and the range's
+ * end up on one line, which is the whole point of «allineate a destra in basso».
+ */
+@Composable
+private fun PanelContent(
+    content: TodayUiState.Content,
+    model: WidgetModel,
+    palette: WidgetPalette,
+    size: DpSize
+) {
+    val context = LocalContext.current
+    val scale = fontScale(context)
+    val sentenceOn = model.look.showSentence
+    val today = content.week.firstOrNull()?.forecast
+    val warning = warningSlot(
+        level = model.warning?.maxLevel,
+        enabled = model.look.showWarning,
+        headlineShown = sentenceOn,
+        sentenceSlot = true,
+        ownRow = textPanelHasFactLine(size, scale, sentenceOn)
+    )
+    val plan = textPanelPlan(
+        size, scale,
+        stale = content.isStale,
+        sentence = sentenceOn,
+        warning = warning.drawn,
+        range = model.look.showDayRange && today != null
+    )
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        PlaceLineText(content, model, palette)
+        Spacer(modifier = GlanceModifier.defaultWeight())
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            modifier = GlanceModifier.fillMaxWidth()
+        ) {
+            Column(modifier = GlanceModifier.width(TextPanelLeading)) {
+                HeroTemperature(content, model, palette, plan.heroSp)
+                StaleLineText(content, palette)
+            }
+            Column(
+                horizontalAlignment = Alignment.End,
+                modifier = GlanceModifier.padding(start = SentenceGap).defaultWeight()
             ) {
-                hours.forEach { strip ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = GlanceModifier
-                            .padding(horizontal = TextHourCellGap / 2)
-                            .defaultWeight()
-                    ) {
-                        Text(
-                            text = Formats.hourLabel(strip.hour.time, is24h, locale),
-                            style = secondaryStyle(palette, TextStaleSp.sp),
-                            maxLines = 1
-                        )
-                        Text(
-                            text = Formats.temperature(
-                                strip.hour.tempC, model.settings.units.temperature, locale
-                            ),
-                            style = TextStyle(
-                                color = palette.primary,
-                                fontSize = TextHourTempSp.sp,
-                                fontWeight = FontWeight.Medium
-                            ),
-                            maxLines = 1,
-                            modifier = GlanceModifier.padding(top = TextHoursInnerGap)
-                        )
-                    }
+                if (plan.sentenceLines > 0) {
+                    Text(
+                        text = sentence(context, content, model.settings.units),
+                        style = textSentenceStyle(palette, TextAlign.End),
+                        maxLines = plan.sentenceLines,
+                        modifier = GlanceModifier.fillMaxWidth()
+                    )
+                }
+                model.warning?.maxLevel?.takeIf { plan.showWarning }?.let { level ->
+                    WarningWord(level, palette, TextAlign.End)
+                }
+                today?.takeIf { plan.showRange }?.let { day ->
+                    DayRange(
+                        day.highC, day.lowC, model.settings.units, palette,
+                        size = TextFactSp.sp, marks = true
+                    )
                 }
             }
         }
-        StaleLineText(content, palette)
     }
 }
 

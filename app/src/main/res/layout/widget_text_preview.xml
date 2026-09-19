@@ -11,9 +11,9 @@
   The moment drawn is the wide one-row form, which is the default 4×1 placement: the place
   over the temperature on the leading side, the day's sentence against the far edge. Same
   numbers as the widget — 14dp at both words' edges and 6 above and below
-  (WidgetCardPadding / WidgetCardPaddingSnug), the two columns split 42/58
-  (textLeadingColumn), the ranks at 39sp bold, 18sp medium and 16sp regular
-  (TextWidgetLayout).
+  (WidgetCardPadding / WidgetCardPaddingSnug), the columns 168dp for the name and the rest
+  for the sentence (textLeadingColumn), the ranks at 39sp bold, 18sp medium and 16sp
+  regular (TextWidgetLayout).
 
   The sample place is a saved city, so there is no position pin on it: the running card
   draws one in front of a place the phone is standing in, and a preview that showed the pin
@@ -41,7 +41,7 @@
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="42"
+        android:layout_weight="168"
         android:orientation="vertical">
 
         <TextView
@@ -68,7 +68,7 @@
     <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="58"
+        android:layout_weight="144"
         android:ellipsize="end"
         android:fontFamily="sans-serif-medium"
         android:gravity="end"

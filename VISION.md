@@ -457,7 +457,14 @@ Glance, five cards, matching the app's dynamic color:
   place set two ranks under it as the card's eyebrow, the day's sentence at its shoulder, and the
   official warning and the day's high and low as facts under that. Three cells already carry the
   sentence here, one better than the Now card manages, because there is no glyph to pay for first;
-  two rows turn the card into a centred column with the next hours as figures. The warning's chip
+  and the leading column is sized to the NAME rather than to a share of the row, so a place as long
+  as «Cavenago di Brianza» is printed whole. Two rows pin the place to the top of the card and
+  everything else to the bottom, with the air between them — one column under four cells, and from
+  four up a panel: the number on the leading side at a size the one-row card cannot afford (it
+  stands beside the words there rather than under them), the sentence and the day's range
+  right-aligned against the far edge. There are no hourly temperatures on any form: they were
+  there for a day, and on a device they read as a second widget stapled under the first — the card
+  that exists for the hours is the Today widget. The warning's chip
   becomes the level's word alone, because a chip is the device that carries its own measured ground
   and this card has no ground to draw. Two marks stay, both asked for from the device on 19 set
   2026: the position pin in front of a place the phone is standing in — the first pass spelled it

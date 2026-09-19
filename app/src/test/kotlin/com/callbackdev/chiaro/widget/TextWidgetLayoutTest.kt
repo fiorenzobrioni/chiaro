@@ -8,8 +8,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The text widget's forms, its type scale and the order its budget spends in (committente,
- * 19 set 2026).
+ * The text widget's forms, its type scale and the order its budgets spend in (committente,
+ * 19 set 2026, over two device passes).
  *
  * The card has nothing drawn on it, so there is no screenshot that says whether it is
  * right — only the arithmetic, which is exactly why the arithmetic lives in
@@ -26,6 +26,7 @@ class TextWidgetLayoutTest {
     private val tallRow = DpSize(340.dp, 101.dp)
     private val fourByTwo = DpSize(340.dp, 189.dp)
     private val twoByTwo = DpSize(159.dp, 189.dp)
+    private val threeByTwo = DpSize(250.dp, 189.dp)
     private val fourByThree = DpSize(340.dp, 293.dp)
 
     @Test
@@ -46,23 +47,38 @@ class TextWidgetLayoutTest {
     }
 
     @Test
-    fun `two rows are the stack whatever the width`() {
+    fun `two rows are the panel from four cells and the stack under it`() {
+        assertEquals(TextForm.PANEL, textForm(fourByTwo))
+        assertEquals(TextForm.PANEL, textForm(fourByThree))
+        // Four cells on a five-column grid still qualifies; three cells do not.
+        assertEquals(TextForm.PANEL, textForm(DpSize(320.dp, 189.dp)))
+        assertEquals(TextForm.STACK, textForm(threeByTwo))
         assertEquals(TextForm.STACK, textForm(twoByTwo))
-        assertEquals(TextForm.STACK, textForm(fourByTwo))
-        assertEquals(TextForm.STACK, textForm(DpSize(340.dp, 150.dp)))
+        // The height threshold is the household's, and one dp under it is still a row.
+        assertEquals(TextForm.PANEL, textForm(DpSize(340.dp, 150.dp)))
         assertEquals(TextForm.ROW, textForm(DpSize(340.dp, 149.dp)))
     }
 
+    /**
+     * The leading column is not a share of the row: it is what a long place name needs,
+     * bounded below by [TextWordsMin] and above by the sentence's own minimum. The device
+     * pass that asked for this printed «Cavenago di Bri…» in a 126 dp column while the
+     * other column held 174 dp of white space.
+     */
     @Test
-    fun `the leading column is a share of the slack, with a floor under it`() {
-        // 340 − 14 − 14 − 12 = 300, and 42% of that is 126 for the number and its place.
-        assertEquals(126f, textLeadingColumn(fourByOne).value, 0.01f)
-        assertEquals(174f, textSentenceColumn(fourByOne).value, 0.01f)
-        // Three cells: the share would be 88.2, so the floor carries it and the sentence
-        // still clears its own minimum of 104.
-        assertEquals(TextWordsMin.value, textLeadingColumn(threeByOne).value, 0.01f)
-        assertEquals(114f, textSentenceColumn(threeByOne).value, 0.01f)
-        // Two cells: the floor again, and 23 dp left over, which is no column at all.
+    fun `the leading column is what the place name needs, not a share of the row`() {
+        // 340 − 14 − 14 − 12 = 300 of words; the sentence keeps 104 and the name takes
+        // what it wants, which is 168.
+        assertEquals(TextPlaceColumnIdeal.value, textLeadingColumn(fourByOne).value, 0.01f)
+        assertEquals(132f, textSentenceColumn(fourByOne).value, 0.01f)
+        // «⌖ Cavenago di Brianza» is 145 dp of name plus the pin's box and its air.
+        assertTrue(textLeadingColumn(fourByOne) >= 145.dp + TextFactSp.dp + 4.dp)
+        // Three cells: 210 of words, so the name gets 106 and the sentence lands exactly
+        // on its minimum — the form this card gains at three cells is not given back.
+        assertEquals(106f, textLeadingColumn(threeByOne).value, 0.01f)
+        assertEquals(TextSentenceColumnMin.value, textSentenceColumn(threeByOne).value, 0.01f)
+        assertEquals(TextForm.ROW, textForm(threeByOne))
+        // Two cells: the floor, and 23 dp left over, which is no column at all.
         assertEquals(TextWordsMin.value, textLeadingColumn(twoByOne).value, 0.01f)
         assertEquals(23f, textSentenceColumn(twoByOne).value, 0.01f)
     }
@@ -73,7 +89,7 @@ class TextWidgetLayoutTest {
         assertEquals(39.303f, textRowHeroSp(fourByOne, 1f, stale = false), 0.01f)
         // A stale marker is never dropped, so it is paid for out of the number: 37.36 dp
         // left, 28.3 sp — over the floor, which is the whole reason the floor moved to 26
-        // when rank 3 grew (19 set 2026).
+        // when rank 3 grew.
         assertEquals(28.303f, textRowHeroSp(fourByOne, 1f, stale = true), 0.01f)
         assertTrue(textRowHeroSp(fourByOne, 1f, stale = true) > TextHeroFloor)
         // The taller row the other launcher grants would print 51 sp without the cap.
@@ -91,7 +107,6 @@ class TextWidgetLayoutTest {
      * column: the narrow one-row form and a one-cell-wide tall card. */
     @Test
     fun `the number is capped by the column it really has`() {
-        // Four cells: 126 dp of leading column, and the height is what binds.
         assertEquals(39.303f, textRowHeroSp(fourByOne, 1f, stale = false), 0.01f)
         // One cell wide, one row: no second column, so the whole 110 − 28 = 82 dp is the
         // measure, and 82 / 2.1 = 39.05 sp — just under what the height would have given.
@@ -101,7 +116,7 @@ class TextWidgetLayoutTest {
         // otherwise have taken the number to its ceiling.
         val narrowStack = textStackPlan(
             DpSize(110.dp, 189.dp), 1f,
-            stale = false, sentence = true, warning = false, range = false, hours = true
+            stale = false, sentence = true, warning = false, range = false
         )
         assertEquals(39.048f, narrowStack.heroSp, 0.01f)
     }
@@ -123,11 +138,6 @@ class TextWidgetLayoutTest {
             TextRowPlan(sentenceLines = 1, showWarning = true, showRange = true),
             textRowPlan(fourByOne, 1f, sentence = true, warning = true, range = true)
         )
-        // The taller row the other launcher grants buys the same three things.
-        assertEquals(
-            TextRowPlan(sentenceLines = 1, showWarning = true, showRange = true),
-            textRowPlan(tallRow, 1f, sentence = true, warning = true, range = true)
-        )
         // With the sentence switched off the column is facts alone, and nothing pads it.
         assertEquals(
             TextRowPlan(sentenceLines = 0, showWarning = true, showRange = true),
@@ -144,95 +154,126 @@ class TextWidgetLayoutTest {
         assertFalse(textRowHasFactLine(DpSize(340.dp, 50.dp), 1f, sentence = true))
     }
 
+    /**
+     * The panel's number stands beside the words, not under them, so it may be as tall as
+     * the block beside it — two lines of sentence, the warning and the range is 89.8 dp
+     * against the 84.5 a 64 sp line box occupies.
+     */
     @Test
-    fun `a tall card pays the number first and the hours last`() {
-        val plan = textStackPlan(
+    fun `the panel's number is as tall as the column beside it`() {
+        val plan = textPanelPlan(
             fourByTwo, 1f,
-            stale = false, sentence = true, warning = false, range = true, hours = true
+            stale = false, sentence = true, warning = false, range = true
         )
-        // 189 − 28 − 21.12 (place) = 139.88; the number reserves 52.8, two lines of
-        // sentence take 47.52 and the range 21.12, which leaves 18.44 — under the 47.64
-        // the hours block and its air need, so the hours stay home and the leftover goes
-        // back to the number.
-        assertEquals(53.97f, plan.heroSp, 0.01f)
+        assertEquals(TextHeroPanelMax, plan.heroSp, 0.01f)
         assertEquals(2, plan.sentenceLines)
         assertTrue(plan.showRange)
-        assertFalse(plan.showHours)
+        // The block it must not outgrow, at its fullest.
+        val block = textLineHeight(TextSentenceSp, 1f) * TextPanelSentenceMaxLines +
+            textLineHeight(TextFactSp, 1f) * 2
+        assertTrue(textLineHeight(TextHeroPanelMax, 1f) <= block)
+        // And it is bigger than anything a one-row card can print, which is the point.
+        assertTrue(plan.heroSp > TextHeroRowMax)
+    }
 
-        // Three rows buy the hours, and the number is still at its ceiling.
-        val taller = textStackPlan(
-            fourByThree, 1f,
-            stale = false, sentence = true, warning = false, range = true, hours = true
-        )
-        assertEquals(TextHeroMax, taller.heroSp, 0.01f)
-        assertTrue(taller.showHours)
+    /** Neither of the panel's columns can overflow: the left is paid out of the height
+     * without the place and the stale marker, the right without the place. */
+    @Test
+    fun `the panel fits at every grant that is one`() {
+        listOf(
+            DpSize(300.dp, 150.dp), DpSize(320.dp, 189.dp), fourByTwo, fourByThree,
+            DpSize(520.dp, 400.dp)
+        ).forEach { size ->
+            listOf(false, true).forEach { stale ->
+                listOf(1f, 1.3f).forEach { scale ->
+                    val plan = textPanelPlan(
+                        size, scale, stale = stale,
+                        sentence = true, warning = true, range = true
+                    )
+                    val place = textLineHeight(TextFactSp, scale)
+                    val left = textLineHeight(plan.heroSp, scale) +
+                        (if (stale) textLineHeight(TextStaleSp, scale) else 0.dp)
+                    val right = textLineHeight(TextSentenceSp, scale) * plan.sentenceLines +
+                        (if (plan.showWarning) textLineHeight(TextFactSp, scale) else 0.dp) +
+                        (if (plan.showRange) textLineHeight(TextFactSp, scale) else 0.dp)
+                    val used = place + maxOf(left, right)
+                    assertTrue(
+                        "$size at scale $scale (stale=$stale) needs ${used.value} of " +
+                            "${(size.height - WidgetCardPadding * 2).value}",
+                        used <= size.height - WidgetCardPadding * 2
+                    )
+                }
+            }
+        }
+    }
 
-        // Turn the sentence off on the four-by-two and its two lines pay for the hours.
-        val bare = textStackPlan(
-            fourByTwo, 1f,
-            stale = false, sentence = false, warning = false, range = false, hours = true
-        )
-        assertEquals(0, bare.sentenceLines)
-        assertTrue(bare.showHours)
+    /** The panel's leading column is fixed, because what stands in it is one figure: it
+     * holds «−12°» at the ceiling with a couple of dp to spare, and the rest goes to the
+     * sentence. */
+    @Test
+    fun `the panel splits its width for the figure, not for a name`() {
+        assertTrue(TextPanelLeading.value >= TextHeroPanelMax * 2.1f)
+        assertEquals(160f, textPanelSentenceColumn(fourByTwo).value, 0.01f)
+        // The narrowest card that is a panel at all still clears the sentence's minimum.
+        assertTrue(textPanelSentenceColumn(DpSize(TextPanelMinWidth, 189.dp)) >= TextSentenceColumnMin)
     }
 
     @Test
-    fun `on a tall card the warning outranks the day's range`() {
+    fun `a narrow tall card pays the number first and the facts after`() {
         val plan = textStackPlan(
-            fourByTwo, 1f,
-            stale = true, sentence = true, warning = true, range = true, hours = true
+            twoByTwo, 1f,
+            stale = false, sentence = true, warning = false, range = true
+        )
+        // 189 − 28 − 21.12 (place) = 139.88; the number reserves 52.8, two lines of
+        // sentence take 47.52 and the range 21.12, and the 18.44 left over goes back to
+        // the number.
+        assertEquals(53.97f, plan.heroSp, 0.01f)
+        assertEquals(2, plan.sentenceLines)
+        assertTrue(plan.showRange)
+    }
+
+    @Test
+    fun `on a narrow tall card the warning outranks the day's range`() {
+        val plan = textStackPlan(
+            twoByTwo, 1f,
+            stale = true, sentence = true, warning = true, range = true
         )
         assertTrue(plan.showWarning)
         assertFalse(plan.showRange)
-        assertFalse(plan.showHours)
         // The stale marker and the warning both cost the number, and it stays well over
-        // its floor: 42.97 sp.
+        // its floor.
         assertEquals(42.97f, plan.heroSp, 0.01f)
     }
 
     @Test
-    fun `the tall card asks for the warning's line the way the one-row card does`() {
-        assertTrue(textStackHasFactLine(fourByTwo, 1f, stale = false, sentence = true))
+    fun `both tall forms ask for the warning's line the way the one-row card does`() {
         assertTrue(textStackHasFactLine(twoByTwo, 1f, stale = false, sentence = true))
+        assertTrue(textPanelHasFactLine(fourByTwo, 1f, sentence = true))
     }
 
-    /** Never three: the Now widget's tall card made the same call for the same reason,
-     * and here the third line is worth 13 sp of hero on the reference four-by-two. */
+    /** Never three on a tall card: the Now widget's tall card made the same call for the
+     * same reason, and here the third line is worth more to the number than to the prose. */
     @Test
-    fun `the tall card's sentence stops at two lines`() {
-        listOf(fourByTwo, fourByThree, DpSize(340.dp, 397.dp)).forEach { size ->
+    fun `a tall card's sentence stops at two lines`() {
+        listOf(twoByTwo, DpSize(159.dp, 293.dp), DpSize(159.dp, 397.dp)).forEach { size ->
             val plan = textStackPlan(
-                size, 1f,
-                stale = false, sentence = true, warning = false, range = true, hours = true
+                size, 1f, stale = false, sentence = true, warning = false, range = true
             )
             assertEquals(TextStackSentenceMaxLines, plan.sentenceLines)
         }
-    }
-
-    @Test
-    fun `the hours strip takes what the width honestly holds`() {
-        assertEquals(TextHourCellsFloor, textHourCells(159.dp))
-        assertEquals(5, textHourCells(250.dp))
-        assertEquals(TextHourCellsCeiling, textHourCells(340.dp))
-        // Every cell it hands out still holds «−12°» at rank 3 (33.6 dp) once the gap it
-        // shares with its neighbours is paid.
-        listOf(159.dp, 250.dp, 340.dp).forEach { width ->
-            val cell = (width - WidgetCardPadding * 2) / textHourCells(width)
-            assertTrue(
-                "a cell of ${cell.value} dp at $width cannot hold the figure",
-                cell - TextHourCellGap >= (TextHourTempSp * 2.1f).dp
+        listOf(fourByTwo, fourByThree, DpSize(340.dp, 397.dp)).forEach { size ->
+            val plan = textPanelPlan(
+                size, 1f, stale = false, sentence = true, warning = false, range = true
             )
+            assertEquals(TextPanelSentenceMaxLines, plan.sentenceLines)
         }
-        // Glance drops the eleventh child of a container without a word, so the ceiling
-        // holds however wide the grant gets.
-        assertEquals(TextHourCellsCeiling, textHourCells(720.dp))
     }
 
     /** The inverse the whole file rests on: a size asked for a line box, and the line box
      * asked back for the size. */
     @Test
     fun `the line box inverts`() {
-        listOf(11f, 14f, 17f, 30f, 56f).forEach { sp ->
+        listOf(11f, 16f, 18f, 30f, 64f).forEach { sp ->
             listOf(1f, 1.3f, 0.85f).forEach { scale ->
                 assertEquals(sp, textSizeForLine(textLineHeight(sp, scale), scale), 0.001f)
             }
@@ -247,8 +288,7 @@ class TextWidgetLayoutTest {
         assertTrue(TextHeroFloor > TextSentenceSp)
         assertTrue(TextSentenceSp > TextFactSp)
         assertTrue(TextFactSp > TextStaleSp)
-        // The hours' own figures are rank 3 too, and not a fifth size.
-        assertEquals(TextFactSp, TextHourTempSp, 0.001f)
         assertTrue(TextHeroStackFloor in TextHeroFloor..TextHeroMax)
+        assertTrue(TextHeroMax < TextHeroPanelMax)
     }
 }

@@ -16,17 +16,17 @@ import androidx.compose.ui.unit.dp
  *
  * | rank | what | size | weight | ink |
  * |---|---|---|---|---|
- * | 1 | the temperature | [TextHeroFloor]…[TextHeroMax], scaled to the grant | Bold | strong |
+ * | 1 | the temperature | [TextHeroFloor]…[TextHeroPanelMax], scaled to the grant | Bold | strong |
  * | 2 | the day's sentence | [TextSentenceSp] | Medium | strong |
- * | 3 | the place, the day's range, the warning's word | [TextFactSp] | Regular (Medium for the warning) | quiet (strong for the warning) |
- * | 4 | the stale marker, the hour labels | [TextStaleSp] | Regular | the freshness ink for the marker, the quiet one for the labels |
+ * | 3 | the place, the day's range, the warning's word | [TextFactSp] | Regular (Medium for the figures) | quiet (strong for the figures) |
+ * | 4 | the stale marker | [TextStaleSp] | Regular | the freshness ink |
  *
  * **The number is sized by the grant, the way the other cards size their glyph.** A fixed
  * hero could only ever be right on one cell size; [heroIconSize] solves that for a drawing
  * and this file solves the same problem for a figure, with the same shape of answer — what
  * the height leaves once the lines around it are paid, between a floor and a ceiling.
  *
- * Three forms, picked by the grant like [NowLayout]'s:
+ * Four forms, picked by the grant like [NowLayout]'s:
  *
  * - [TextForm.LINE] — one row too narrow for two columns: the place, the number, the
  *   stale marker, and nothing else.
@@ -36,8 +36,19 @@ import androidx.compose.ui.unit.dp
  *   Three cells is one cell better than the Now widget manages, and for a plain reason —
  *   the 66 dp of glyph and its gap that card spends before the first letter, this one does
  *   not have.
- * - [TextForm.STACK] — two rows and up: one centred column, place over number over
- *   sentence over the facts, and the next hours as figures where the height holds them.
+ * - [TextForm.STACK] — two rows and up, under four cells wide: the place as an eyebrow at
+ *   the top, and everything else against the BOTTOM edge with the air between them.
+ * - [TextForm.PANEL] — two rows and up, four cells or wider (committente, 19 set 2026,
+ *   second device pass): the same eyebrow, and along the bottom the number on the leading
+ *   side at a size the one-row card cannot afford, with the sentence and the day's range
+ *   right-aligned beside it.
+ *
+ * **There are no hourly temperatures on any form** (same pass: «praticamente facciamo
+ * sempre senza temperature orarie»). The first draft printed the next hours as figures on
+ * a tall card; on a device it read as a second widget stapled under the first, and the
+ * card that exists for the hours is the Today widget. What the height buys instead is air
+ * between the eyebrow and the block, which is what makes the bottom alignment read as a
+ * composition rather than as a list that ran out.
  *
  * Everything here is arithmetic on dp and sp so a table can pin it
  * (`TextWidgetLayoutTest`) rather than a screenshot of one launcher's idea of a cell. The
@@ -45,25 +56,46 @@ import androidx.compose.ui.unit.dp
  * card is ~85 dp tall (and ~101 on the other launcher seen to grant one), two cells are
  * ~159 dp wide, three ~250, four ~340, and a four-by-two is ~340 × 189.
  */
-internal enum class TextForm { LINE, ROW, STACK }
+internal enum class TextForm { LINE, ROW, STACK, PANEL }
 
 internal fun textForm(size: DpSize): TextForm = when {
+    size.height >= TallMinHeight && size.width >= TextPanelMinWidth -> TextForm.PANEL
     size.height >= TallMinHeight -> TextForm.STACK
     textSentenceColumn(size) >= TextSentenceColumnMin -> TextForm.ROW
     else -> TextForm.LINE
 }
 
 /**
- * The leading column of a one-row card: a share of the row's slack, and never less than
- * [TextWordsMin]. A share rather than the even split the Now widget uses, because the two
- * columns are not doing the same work here — the leading one holds a number and a name,
- * both of them short, and the trailing one holds prose, which is the thing that needs
- * measure. 0.42 leaves the reference four-cell card 126 dp against 174 (the Now widget
- * gives its two columns 118 each), and the floor is what carries the narrow cards.
+ * Four cells, on every grid this has been measured on: four cells are ~340 dp on the
+ * reference device and ~320 on a five-column grid, three are ~250. A dp threshold and not
+ * a cell count because a widget is never told how many cells it got — [TallMinHeight] is
+ * the same kind of number for the same reason.
+ */
+internal val TextPanelMinWidth = 300.dp
+
+/**
+ * The leading column of a one-row card: **what a long place name needs, but never out of
+ * the sentence's minimum.**
+ *
+ * It was a flat 42% of the row's slack until 19 set 2026, and on a device that column was
+ * 126 dp against the 165 «⌖ Cavenago di Brianza» wants — so the card printed «Cavenago di
+ * Bri…» on a row with 174 dp of white space in its other column (committente: «vorrei che
+ * si riesca a vedere completamente una località lunga… lasciando così il layout e le
+ * dimensioni dei vari testi»). A share cannot fix that, because the two columns do not
+ * want the same thing: the leading one wants exactly as much as the name it is holding,
+ * and the trailing one wants a measure.
+ *
+ * So every dp past [TextSentenceColumnMin] goes to the name until the name is satisfied
+ * ([TextPlaceColumnIdeal]), and the floor under it is what a narrow card falls back to.
+ * On the reference four-cell card that is 168 dp against 132 — where a flat share gave 126
+ * against 174 — and three cells still land exactly on the sentence's minimum, so the form
+ * this card gains at three cells is not given back.
  */
 internal fun textLeadingColumn(size: DpSize): Dp {
     val words = size.width - WidgetCardPadding * 2 - SentenceGap
-    return maxOf(words * TextLeadingShare, TextWordsMin)
+    return (words - TextSentenceColumnMin)
+        .coerceAtMost(TextPlaceColumnIdeal)
+        .coerceAtLeast(TextWordsMin)
 }
 
 /** What is left for the sentence once the leading column and the gap are paid. Negative
@@ -71,11 +103,19 @@ internal fun textLeadingColumn(size: DpSize): Dp {
 internal fun textSentenceColumn(size: DpSize): Dp =
     size.width - WidgetCardPadding * 2 - SentenceGap - textLeadingColumn(size)
 
-private const val TextLeadingShare = 0.42f
+/**
+ * What the place column wants: «Cavenago di Brianza» is 145 dp at [TextFactSp] (measured,
+ * and the same number `NowWidgetLayout` records for the same name at the same size), plus
+ * the position pin's box and the air after it — 165 dp, rounded up to 168 so a name a
+ * letter longer still lands inside it. Past this the column stops growing and the sentence
+ * takes the rest: a column wider than the longest name it will ever hold is white space
+ * taken from prose.
+ */
+internal val TextPlaceColumnIdeal = 168.dp
 
 /**
- * What the leading column must keep: «−12°» at the hero's floor is ~63 dp and a ten-letter
- * place at [TextFactSp] ~73, so 96 is where the column stops being able to hold the number
+ * What the leading column must keep: «−12°» at the hero's floor is ~55 dp and a ten-letter
+ * place with its pin ~93, so 96 is where the column stops being able to hold the number
  * AND a name worth reading — the Now widget's [WordsColumnMin] argument, at this card's
  * sizes.
  */
@@ -83,10 +123,10 @@ internal val TextWordsMin = 96.dp
 
 /**
  * The narrowest column worth a sentence: [SentenceColumnMin] is the household's number for
- * 16 sp, and this card sets prose one point larger, so it asks for one step more room.
- * 104 dp is about eleven characters of 17 sp, and three lines of eleven hold every
- * sentence the brief register can say. The reference three-cell card gives 114 and
- * qualifies; two cells give 23 and do not.
+ * 16 sp, and this card sets prose two points larger, so it asks for one step more room.
+ * 104 dp is about eleven characters of 18 sp, and three lines of eleven hold every sentence
+ * the brief register can say. The reference three-cell card lands exactly here; two cells
+ * give 23 and stay on the narrow form.
  */
 internal val TextSentenceColumnMin = 104.dp
 
@@ -96,14 +136,13 @@ internal val TextSentenceColumnMin = 104.dp
  *
  * The stale marker sits in THIS column rather than under the sentence, and pays for itself
  * out of the number: a card whose data is old says so before it says anything else loudly,
- * and on the reference 85 dp row that still leaves the floor exactly (30.3 sp). The number
- * is 41 sp on the same row when the data is fresh, against the 34 the Now widget prints
- * beside its glyph.
+ * and on the reference 85 dp row that still leaves 28.3 sp. The number is 39.3 sp on the
+ * same row when the data is fresh, against the 34 the Now widget prints beside its glyph.
  *
  * The column it must not overflow is [textLeadingColumn] where there is a second column to
  * share the row with, and the whole width where there is not: the narrow form has no
- * trailing column, so pretending it did would hand the number 96 dp on a card that only has
- * 82 — and «−12°» at 41 sp is 87.
+ * trailing column, so pretending it did would hand the number 96 dp on a card that only
+ * has 82.
  */
 internal fun textRowHeroSp(size: DpSize, fontScale: Float, stale: Boolean): Float {
     val room = size.height - WidgetCardPaddingSnug * 2 -
@@ -120,10 +159,10 @@ internal fun textRowHeroSp(size: DpSize, fontScale: Float, stale: Boolean): Floa
 /**
  * **The number never outgrows the block beside it** — the rule [RowIconMax] states for the
  * Now widget's glyph, read off this card's own anchor. The trailing column of a one-row
- * card carries two lines of sentence and a line of fact, which is 2 × 22.44 + 18.48 ≈
- * 63 dp; 44 sp has a line box of 58, and 48 would already be taller than everything it
+ * card carries two lines of sentence and a line of fact, which is 2 × 23.76 + 21.12 ≈
+ * 68 dp; 44 sp has a line box of 58, and 52 would already be taller than everything it
  * stands next to. Without the cap the 101 dp row the other launcher grants would print a
- * 53 sp number beside a 17 sp sentence, which is a poster, not a hierarchy.
+ * 51 sp number beside an 18 sp sentence, which is a poster, not a hierarchy.
  */
 internal const val TextHeroRowMax = 44f
 
@@ -150,25 +189,14 @@ internal fun textRowPlan(
     sentence: Boolean,
     warning: Boolean,
     range: Boolean
-): TextRowPlan {
-    val line = textLineHeight(TextSentenceSp, fontScale)
-    val fact = textLineHeight(TextFactSp, fontScale)
-    var room = size.height - WidgetCardPaddingSnug * 2
-    var lines = 0
-    if (sentence && room >= line) {
-        room -= line
-        lines = 1
-    }
-    val showWarning = warning && room >= fact
-    if (showWarning) room -= fact
-    val showRange = range && room >= fact
-    if (showRange) room -= fact
-    while (lines in 1 until TextRowSentenceMaxLines && room >= line) {
-        room -= line
-        lines++
-    }
-    return TextRowPlan(lines, showWarning, showRange)
-}
+): TextRowPlan = fillColumn(
+    room = size.height - WidgetCardPaddingSnug * 2,
+    fontScale = fontScale,
+    sentence = sentence,
+    warning = warning,
+    range = range,
+    maxLines = TextRowSentenceMaxLines
+).asRowPlan()
 
 internal const val TextRowSentenceMaxLines = 3
 
@@ -182,38 +210,122 @@ internal fun textRowHasFactLine(size: DpSize, fontScale: Float, sentence: Boolea
     textRowPlan(size, fontScale, sentence, warning = true, range = false).showWarning
 
 /**
- * The plan for a two-row card: what the height buys, in the order it buys it.
+ * The two-column tall card (committente, 19 set 2026: «se la dimensione poi è su 2 righe e
+ * le colonne sono almeno 4 valuta di cambiare il layout con la temperatura allineata in
+ * basso con font un po' più grande e testo e temperature max e min allineate a destra in
+ * basso»).
  *
- * The order IS the hierarchy, and it is the whole of this widget's layout argument. The
- * number is reserved first at [TextHeroStackFloor] — on a tall card it is the page's
- * title, and a title that shrank so a footnote could fit would be the card arguing with
- * itself. Then the sentence's two lines, then the warning's word, then the day's range,
- * then the hours; whatever is left over grows the number, up to [TextHeroMax]. A section
- * that does not fit is not drawn (`DESIGN` §1.1) — the Today widget's own rule for its
- * rain row, applied to four things instead of one.
+ * The place stays at the top as the card's eyebrow, on the full width — which is where a
+ * long name finally has nothing to compete with — and everything else sits on the BOTTOM
+ * edge: the number on the leading side, the sentence and the day's range right-aligned
+ * beside it. The air lands in the middle, between the two, which is what makes the card
+ * read as a composition instead of a column that ran out of things to say.
  *
- * Two lines of sentence and never three, which is the Now widget's tall card's number
- * ([TallSentenceMaxLines]) and its argument too: there the third line would have cost the
- * glyph 21 dp, here it costs the number 17 sp. On the reference four-by-two it is the
- * difference between a 56 sp hero and a 43 sp one, for a line the brief register almost
- * never needs at 340 dp of measure.
+ * The two columns are budgeted separately and neither can overflow by construction: the
+ * left one is paid out of `height − place − stale` and the right one out of
+ * `height − place`, so whichever is taller is still inside the card.
+ */
+internal data class TextPanelPlan(
+    val heroSp: Float,
+    val sentenceLines: Int,
+    val showWarning: Boolean,
+    val showRange: Boolean
+)
+
+internal fun textPanelPlan(
+    size: DpSize,
+    fontScale: Float,
+    stale: Boolean,
+    sentence: Boolean,
+    warning: Boolean,
+    range: Boolean
+): TextPanelPlan {
+    val top = size.height - WidgetCardPadding * 2 - textLineHeight(TextFactSp, fontScale)
+    val column = fillColumn(
+        room = top,
+        fontScale = fontScale,
+        sentence = sentence,
+        warning = warning,
+        range = range,
+        maxLines = TextPanelSentenceMaxLines
+    )
+    val heroRoom = top - (if (stale) textLineHeight(TextStaleSp, fontScale) else 0.dp)
+    return TextPanelPlan(
+        heroSp = heroSp(heroRoom, TextPanelLeading, fontScale, TextHeroPanelMax),
+        sentenceLines = column.sentenceLines,
+        showWarning = column.showWarning,
+        showRange = column.showRange
+    )
+}
+
+/** [textRowHasFactLine] for the panel: the same question, asked of the same card without
+ * the warning on it. */
+internal fun textPanelHasFactLine(
+    size: DpSize,
+    fontScale: Float,
+    sentence: Boolean
+): Boolean = textPanelPlan(
+    size, fontScale, stale = false, sentence = sentence, warning = true, range = false
+).showWarning
+
+/**
+ * The panel's leading column: fixed, because what stands in it is one figure and not a
+ * measure. 140 dp is «−12°» at [TextHeroPanelMax] (134.4) plus a couple of dp of slack, so
+ * the ceiling and not the width is what decides the number's size on every grant. The
+ * sentence takes the rest — 160 dp on the reference four-by-two, 120 at the narrowest card
+ * that qualifies as a panel at all.
+ *
+ * It is NOT [textLeadingColumn]: that column is sized for a place name, and on this form
+ * the place is not in it. The name is the full-width eyebrow above both columns.
+ */
+internal val TextPanelLeading = 140.dp
+
+internal fun textPanelSentenceColumn(size: DpSize): Dp =
+    size.width - WidgetCardPadding * 2 - SentenceGap - TextPanelLeading
+
+/**
+ * The panel's number, and the reason it may be bigger than any other form's: it does not
+ * stand under the words, it stands BESIDE them, so the rule is the one [TextHeroRowMax]
+ * states — the number never outgrows the block beside it. That block at its fullest is two
+ * lines of sentence, the warning's word and the day's range, 89.8 dp; 64 sp has a line box
+ * of 84.5, so the number is as tall as the column beside it and no taller.
+ *
+ * On every grant a launcher makes, this ceiling is what decides. The height bound in
+ * [textPanelPlan] is the guard behind it: a card squeezed to the two-row minimum with a
+ * stale marker on it gives 65.4 sp, and anything shorter than that is not a panel.
+ */
+internal const val TextHeroPanelMax = 64f
+
+/** Two lines on the panel, like the stack and for the same reason the Now widget's tall
+ * card gives: the third line is worth more to the number than to the prose, and at 160 dp
+ * of measure the brief register almost never asks for it. */
+internal const val TextPanelSentenceMaxLines = 2
+
+/**
+ * The plan for a tall card too narrow for two columns: what the height buys, in the order
+ * it buys it.
+ *
+ * The order IS the hierarchy, and it is this widget's whole layout argument. The number is
+ * reserved first at [TextHeroStackFloor] — on a tall card it is the page's title, and a
+ * title that shrank so a footnote could fit would be the card arguing with itself. Then
+ * the sentence's two lines, then the warning's word, then the day's range; whatever is left
+ * over grows the number, up to [TextHeroMax]. A section that does not fit is not drawn
+ * (`DESIGN` §1.1) — the Today widget's own rule for its rain row.
  *
  * The place and the stale marker are never in the order, because they are never optional:
  * a card that dropped its place would be a number about nowhere, and one that dropped its
  * age would be lying about how old it is (VISION §5.9).
  *
  * The sentence's lines are RESERVED, not measured — Glance cannot measure text — so a
- * one-line sentence leaves its second line as air. The column is centred on the card
- * ([TextWidget]'s own composition), so that air lands evenly above and below the block
- * rather than as a hole in the middle of it, which is the Sky widget's finding about its
- * own short lists (committente, 4 set).
+ * one-line sentence leaves its second line as air. Since 19 set 2026 that air lands
+ * between the eyebrow and the block rather than inside the block, because the place is
+ * pinned to the top of the card and everything else to the bottom.
  */
 internal data class TextStackPlan(
     val heroSp: Float,
     val sentenceLines: Int,
     val showWarning: Boolean,
-    val showRange: Boolean,
-    val showHours: Boolean
+    val showRange: Boolean
 )
 
 internal fun textStackPlan(
@@ -222,52 +334,101 @@ internal fun textStackPlan(
     stale: Boolean,
     sentence: Boolean,
     warning: Boolean,
-    range: Boolean,
-    hours: Boolean
+    range: Boolean
 ): TextStackPlan {
-    val fact = textLineHeight(TextFactSp, fontScale)
-    val line = textLineHeight(TextSentenceSp, fontScale)
-    var room = size.height - WidgetCardPadding * 2 - fact -
-        (if (stale) textLineHeight(TextStaleSp, fontScale) else 0.dp)
     val floor = textLineHeight(TextHeroStackFloor, fontScale)
-    room -= floor
-    var lines = 0
-    while (sentence && lines < TextStackSentenceMaxLines && room >= line) {
-        room -= line
-        lines++
-    }
-    val showWarning = warning && room >= fact
-    if (showWarning) room -= fact
-    val showRange = range && room >= fact
-    if (showRange) room -= fact
-    val showHours = hours && room >= textHoursHeight(fontScale) + TextHoursGap
-    if (showHours) room -= textHoursHeight(fontScale) + TextHoursGap
+    val room = size.height - WidgetCardPadding * 2 -
+        textLineHeight(TextFactSp, fontScale) -
+        (if (stale) textLineHeight(TextStaleSp, fontScale) else 0.dp) -
+        floor
+    val column = fillColumn(
+        room = room,
+        fontScale = fontScale,
+        sentence = sentence,
+        warning = warning,
+        range = range,
+        maxLines = TextStackSentenceMaxLines,
+        growSentenceLast = false
+    )
     return TextStackPlan(
         heroSp = heroSp(
-            floor + room.coerceAtLeast(0.dp),
+            floor + column.left.coerceAtLeast(0.dp),
             size.width - WidgetCardPadding * 2,
             fontScale,
             TextHeroMax
         ),
-        sentenceLines = lines,
-        showWarning = showWarning,
-        showRange = showRange,
-        showHours = showHours
+        sentenceLines = column.sentenceLines,
+        showWarning = column.showWarning,
+        showRange = column.showRange
     )
 }
 
 internal const val TextStackSentenceMaxLines = 2
 
-/** [textRowHasFactLine]'s answer for a tall card, asked the same way and for the same
- * reason: the plan without the warning says whether there is a line for one. */
+/** [textRowHasFactLine]'s answer for a narrow tall card, asked the same way and for the
+ * same reason: the plan without the warning says whether there is a line for one. */
 internal fun textStackHasFactLine(
     size: DpSize,
     fontScale: Float,
     stale: Boolean,
     sentence: Boolean
 ): Boolean = textStackPlan(
-    size, fontScale, stale, sentence, warning = true, range = false, hours = false
+    size, fontScale, stale, sentence, warning = true, range = false
 ).showWarning
+
+/**
+ * The one piece of arithmetic all three budgets share: fill a column of prose and facts
+ * out of [room], in the order the hierarchy spends in.
+ *
+ * One line of sentence first, then the warning's word, then the day's range, and then —
+ * where [growSentenceLast] is on — as many more lines of sentence as what is left will
+ * hold. The stack turns that last step off because there the leftover belongs to the
+ * number instead, which is the one thing that form does differently.
+ */
+private data class FilledColumn(
+    val sentenceLines: Int,
+    val showWarning: Boolean,
+    val showRange: Boolean,
+    val left: Dp
+)
+
+private fun fillColumn(
+    room: Dp,
+    fontScale: Float,
+    sentence: Boolean,
+    warning: Boolean,
+    range: Boolean,
+    maxLines: Int,
+    growSentenceLast: Boolean = true
+): FilledColumn {
+    val line = textLineHeight(TextSentenceSp, fontScale)
+    val fact = textLineHeight(TextFactSp, fontScale)
+    var left = room
+    var lines = 0
+    if (sentence && left >= line) {
+        left -= line
+        lines = 1
+    }
+    if (!growSentenceLast) {
+        while (sentence && lines < maxLines && left >= line) {
+            left -= line
+            lines++
+        }
+    }
+    val showWarning = warning && left >= fact
+    if (showWarning) left -= fact
+    val showRange = range && left >= fact
+    if (showRange) left -= fact
+    if (growSentenceLast) {
+        while (lines in 1 until maxLines && left >= line) {
+            left -= line
+            lines++
+        }
+    }
+    return FilledColumn(lines, showWarning, showRange, left)
+}
+
+private fun FilledColumn.asRowPlan() = TextRowPlan(sentenceLines, showWarning, showRange)
 
 /**
  * The number's size, given the height it may occupy and the column it must not overflow.
@@ -300,13 +461,13 @@ private const val TempEmWidth = 2.1f
  */
 internal const val TextHeroFloor = 26f
 
-/** A tall card reserves this much for its number before anything optional is paid: the
- * rank-1 line of a page, not what is left after the footnotes. */
+/** A narrow tall card reserves this much for its number before anything optional is paid:
+ * the rank-1 line of a page, not what is left after the footnotes. */
 internal const val TextHeroStackFloor = 40f
 
-/** The ceiling, and the reason there is one: past this a temperature stops being read as
- * a number and starts being read as an ornament, and the card is meant to be typography,
- * not a poster. 56 sp is four lines of [TextFactSp] tall. */
+/** The narrow tall card's ceiling: past this a temperature set OVER its own sentence stops
+ * being read as a number and starts being read as an ornament. The panel's is higher
+ * ([TextHeroPanelMax]), because there the number stands beside the words instead. */
 internal const val TextHeroMax = 56f
 
 /**
@@ -319,58 +480,23 @@ internal const val TextHeroMax = 56f
  * household's 16 in the same pass and 17 over 16 is not a rank, it is a rounding error. Two
  * points, with Medium against Regular and the strong ink against the quiet one, is the
  * smallest gap that still sorts at arm's length. At 18 the reference four-cell card's
- * 174 dp column still holds «Pioggia gelata verso le 15:00» in two lines, which is the
+ * trailing column still holds «Pioggia gelata verso le 15:00» in two lines, which is the
  * measurement that stopped it going to 19.
  */
 internal const val TextSentenceSp = 18f
 
 /**
- * Rank 3, the facts: the place, the day's high and low, the warning's word and the hours'
- * own temperatures. **16 sp since 19 set 2026** (committente, on the device: «la località
- * un pochino più grande», «max e min un po' più grandi»), from 14 — which lands it on the
- * household's own 16, the size every other card prints a place and a range at, so the five
- * widgets now agree about what rank a fact is.
+ * Rank 3, the facts: the place, the day's high and low, the warning's word. **16 sp since
+ * 19 set 2026** (committente, on the device: «la località un pochino più grande», «max e
+ * min un po' più grandi»), from 14 — which lands it on the household's own 16, the size
+ * every other card prints a place and a range at, so the five widgets now agree about what
+ * rank a fact is.
  *
  * Inside the rank the other two axes still do the sorting: the place is Regular in the
  * quiet ink, the figures Medium in the strong one, and the range carries its two marks.
  */
 internal const val TextFactSp = 16f
 
-/** Rank 4, the footnotes: the stale marker and the hour labels, at the household's own
- * stale size. The marker keeps the freshness ink it wears on every other card; the labels
- * take the quiet one, like the Today widget's strip. */
+/** Rank 4, the footnote: the stale marker, at the household's own stale size and in the
+ * freshness ink it wears on every other card. */
 internal const val TextStaleSp = 11f
-
-/** The hours' temperatures are rank 3, not a fifth size: they are the thing the row is
- * for, and a row of figures set smaller than the label over them would read as a legend
- * rather than as a forecast. Named separately only so the budget below can say which line
- * it is measuring. */
-internal const val TextHourTempSp = TextFactSp
-
-/** How many hours a tall card prints, by the width it has. A cell is «−12°» at
- * [TextHourTempSp] (~34 dp) plus the gap it shares with its neighbours, so 38 is the width
- * below which a cell starts clipping its own figure; six is the ceiling because the strip
- * is one Glance container and Glance draws at most ten children per container (the Today
- * widget lost the last two hours of its own strip to that rule, Fase 11), and three is the
- * floor because fewer is no longer a stretch of the day. */
-internal fun textHourCells(width: Dp): Int =
-    ((width - WidgetCardPadding * 2 + TextHourCellGap) / (TextHourCellMin + TextHourCellGap))
-        .toInt()
-        .coerceIn(TextHourCellsFloor, TextHourCellsCeiling)
-
-internal val TextHourCellMin = 38.dp
-internal val TextHourCellGap = 6.dp
-internal const val TextHourCellsFloor = 3
-internal const val TextHourCellsCeiling = 6
-
-/** The hours block: the label's line over the temperature's, with the hairline of air
- * between them that keeps the two from reading as one word. */
-internal fun textHoursHeight(fontScale: Float): Dp =
-    textLineHeight(TextStaleSp, fontScale) + TextHoursInnerGap +
-        textLineHeight(TextHourTempSp, fontScale)
-
-internal val TextHoursInnerGap = 2.dp
-
-/** The air between the block of prose and the figures under it: enough that the hours
- * read as a second thing, not as the sentence's last line. */
-internal val TextHoursGap = 10.dp

@@ -128,8 +128,11 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   eyebrow, the day's sentence at its shoulder, and the warning and the day's high and low
   as facts under that, the high and the low each behind their own arrow. Three cells
   already carry the sentence here, one better than **Now** manages, because there is no
-  icon to pay for first, and two rows turn it into a centred column with the next hours as
-  figures) and **Sky** (the moments in
+  icon to pay for first, and the name gets the column width it actually needs, so a place
+  as long as "Cavenago di Brianza" is printed whole. Two rows pin the place to the top and
+  everything else to the bottom: one column on a narrow card, and from four cells up the
+  number on the left at a size the one-row card cannot afford, with the sentence and the
+  day's high and low right aligned beside it) and **Sky** (the moments in
   front of you and their verdicts: the moment's time as the big number, its name under it,
   the verdict as a word with the number that decided it or, on a narrower card, as the
   series' own mark, and on a taller card as many further moments as honestly fit and never

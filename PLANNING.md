@@ -7002,3 +7002,81 @@ nome davanti, perché una pastiglia non è un'etichetta (§10).
 che nessuna scheda solida interroghi la carta da parati, e il confronto fra la tabella di
 §2.6 e il codice). Lint senza rilievi. Come legge la scheda colorata su uno schermo di casa
 resta una prova da dispositivo.
+
+### Il terzo giro: le ore se ne vanno, il pannello, e il nome intero (committente, 19 set 2026)
+
+Screenshot con le due schede affiancate — 4×1 e 4×2, sfondo blu — e tre richieste.
+
+**1. Le temperature orarie via, e sempre.** «Praticamente facciamo sempre senza temperature
+orarie.» Erano l'unica cosa che la scheda alta guadagnava in più, ed è la prima volta che
+una feature di questa serie viene tolta per come **legge** e non per un difetto: sullo
+schermo di casa le sei colonne sotto il blocco di testo si leggevano come un secondo widget
+pinzato sotto il primo. La scheda che esiste per le ore è il widget Oggi, e ce l'ha con i
+glifi. Via `textHourCells`, `textHoursHeight`, `TextHourTempSp`, i quattro numeri della
+cella e il campo `showHours` del piano.
+
+**2. Allineato in basso, e un pannello da quattro colonne in su.** «Allinea in basso testo e
+(se impostata) temperatura minima e massima. Se la dimensione poi è su 2 righe e le colonne
+sono almeno 4 valuta di cambiare il layout con la temperatura allineata in basso con font un
+po' più grande e testo e temperature max e min allineate a destra in basso.»
+
+Le due righe adesso **appuntano il luogo in cima** e tutto il resto **in fondo**, con l'aria
+in mezzo. È quel che l'altezza compra al posto delle ore, ed è la differenza fra una
+composizione e un elenco che è finito: `Spacer` pesato fra l'occhiello e il blocco, un figlio
+solo (Glance ne disegna dieci per contenitore e scarta il resto senza dirlo).
+
+Da quattro celle in su c'è una forma nuova, `TextForm.PANEL`: l'occhiello a tutta larghezza
+in cima, e lungo il fondo il numero a sinistra con la frase e la massima/minima allineate a
+destra, le due colonne **allineate in basso** così che la linea di base del numero e quella
+della coppia cadano insieme — che è tutto il senso di «allineate a destra in basso».
+
+E qui il numero può essere più grande, con una ragione e non a occhio: nelle altre forme sta
+**sotto** le parole, qui sta **accanto**. Vale la regola che il widget Ora scrive per il suo
+glifo (`RowIconMax`: l'eroe non supera mai il blocco che gli sta a fianco), letta su un
+blocco diverso — due righe di frase più la parola dell'allerta più la coppia fanno 89,8 dp, e
+64 sp hanno una scatola di riga di 84,5. Quindi tre soffitti, uno per forma: **44** dove sta
+sotto il luogo con una colonna di prosa a fianco, **56** sulla scheda alta stretta dove sta
+sopra la sua frase, **64** sul pannello.
+
+La soglia «almeno 4 colonne» è 300 dp (`TextPanelMinWidth`), misurata come `TallMinHeight`:
+quattro celle sono ~340 dp sul dispositivo di riferimento e ~320 su una griglia da cinque
+colonne, tre sono ~250. Un widget non sa quante celle ha avuto.
+
+La colonna di sinistra del pannello è **fissa** a 140 dp e non è `textLeadingColumn`: lì
+dentro ci sta una cifra, non un nome — il nome è l'occhiello sopra entrambe le colonne — e
+140 è «−12°» al soffitto (134,4) più un paio di dp, così a decidere la taglia del numero è il
+soffitto e non la larghezza.
+
+**3. Il nome lungo, intero.** «Quando è su una riga vorrei che si riesca a vedere
+completamente una località lunga come "Cavenago di Brianza" lasciando così il layout e le
+dimensioni dei vari testi.»
+
+La colonna di sinistra era il 42% dello slack della riga: 126 dp, contro i 165 che
+«⌖ Cavenago di Brianza» vuole (145 misurati di nome a 16 sp, più la scatola del segnaposto e
+la sua aria). Il risultato era «Cavenago di Bri…» su una riga che aveva 174 dp di bianco
+nell'altra colonna. **Una quota non può risolverlo**, perché le due colonne non vogliono la
+stessa cosa: quella di sinistra vuole esattamente quanto le serve al nome che tiene, quella
+di destra vuole una misura.
+
+Quindi: ogni dp oltre il minimo della frase va al nome finché il nome è soddisfatto.
+
+```
+lead = (slack − 104).coerceAtMost(168).coerceAtLeast(96)
+```
+
+Quattro celle: 168 contro 132 (prima 126 contro 174). Tre celle: 106, e la frase resta
+esattamente sul suo minimo — la forma che questa scheda guadagna a tre celle non viene
+restituita. Due celle: il pavimento, e 23 dp di avanzo, che non è una colonna. Niente
+cambia nelle taglie dei testi né nella disposizione, che era la condizione.
+
+Un controllo che valeva la pena fare: la coppia con le frecce a 16 sp misura ~95 dp con due
+numeri a due cifre e ~113 con due «−12°», quindi ci sta nei 132 della colonna nuova senza
+tagli.
+
+### Come è stato verificato (terzo giro)
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **814 test**,
+di cui 17 sul layout di questa scheda — fra questi uno che, per ogni concessione che è un
+pannello, con e senza marcatore di vecchiaia e a due scale di font, ricalcola le due colonne
+e verifica che la più alta stia dentro la card. Lint senza rilievi. Come legge davvero il
+pannello su uno schermo di casa resta una prova da dispositivo.
