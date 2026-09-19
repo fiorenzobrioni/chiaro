@@ -36,6 +36,14 @@ data class UnitSettings(
 data class NotificationSettings(
     val severeWeatherAlerts: Boolean = true,
     val dailySummary: Boolean = false,
+    /**
+     * The evening summary (21 set 2026): once between 18:00 and 23:00, TOMORROW —
+     * the night rides along in the expanded notification. Off by default like its
+     * morning twin: a digest nobody asked for is the one notification a weather app
+     * gets uninstalled over, so both start silent and the reader turns on the one
+     * that fits their day.
+     */
+    val eveningSummary: Boolean = false,
     val precipitationWarning: Boolean = true,
     val userRules: Boolean = true,
     /**

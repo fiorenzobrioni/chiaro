@@ -130,6 +130,9 @@ class AlertsViewModel(
 
     fun setDailySummary(enabled: Boolean) = mutate { settingsStore.setDailySummary(enabled) }
 
+    fun setEveningSummary(enabled: Boolean) =
+        mutate { settingsStore.setEveningSummary(enabled) }
+
     // The official warnings (Fase 11). They live here and not in Settings for Fase 6's
     // reason: a switch belongs next to what it governs.
     fun setOfficialWarnings(enabled: Boolean) =

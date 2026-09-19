@@ -93,6 +93,26 @@ object WeatherText {
         else -> R.string.dew_meaning_oppressive
     }
 
+    /**
+     * What a night's lowest hour asks of the reader, for the evening summary — the one
+     * place the app talks about a temperature nobody is standing in yet.
+     *
+     * The bands are the decisions, not the thermometer: at or under zero there is ice
+     * to scrape and plants to cover (the same 0 °C the drift strip and the headline
+     * call frost — a third definition of freezing is a third answer); under 5 the cold
+     * reaches what is left outside; under 13 it reaches a body that goes out; under 21
+     * it is the night a window can stay open on; above it, the night that does not
+     * cool down, which is the only reason the number matters at all.
+     */
+    @StringRes
+    fun nightMeaning(lowC: Double): Int = when {
+        lowC <= 0 -> R.string.night_meaning_freezing
+        lowC < 5 -> R.string.night_meaning_cold
+        lowC < 13 -> R.string.night_meaning_cool
+        lowC < 21 -> R.string.night_meaning_mild
+        else -> R.string.night_meaning_warm
+    }
+
     /** Tendencies, not forecasts: absolute pressure only says which way to lean. */
     @StringRes
     fun pressureMeaning(mb: Double): Int = when {
