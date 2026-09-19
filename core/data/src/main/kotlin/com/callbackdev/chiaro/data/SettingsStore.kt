@@ -37,6 +37,28 @@ enum class WeatherIcons { FILL, LINE }
 enum class AppPalette { PAPER, VIVID }
 
 /**
+ * Which typeface the app sets itself in (DESIGN §5), **INTER by default**.
+ *
+ * [INTER] is the one the design system is measured against and the only one that is the
+ * same on every phone: it ships inside the APK as a variable font, so every weight is
+ * drawn rather than synthesised and a device with no font provider renders it too.
+ * [SYSTEM] hands the app to whatever sans the phone is wearing — Roboto on one, the
+ * OEM's own on another, and on the phones with a font picker the one the reader chose
+ * there.
+ *
+ * It exists because the widgets have no such choice (committente, 20 set 2026: «mi piace
+ * il font usato dal widget… vorrei che anche l'app utilizzi questo font»). A home-screen
+ * card is drawn by `RemoteViews`, which has no font-family API for Glance to expose, so
+ * the five cards are always in the system's type — see `TextWidgetLayout`, which measures
+ * its temperature against Roboto Bold, and `ArcPainter`, which paints with
+ * `Typeface.DEFAULT`. The app and the cards can therefore only speak in one voice by
+ * moving the app, never by moving the cards, and this setting is that move.
+ *
+ * UI-only, like [ThemeMode] and [AppPalette]: no engine reads it.
+ */
+enum class AppFont { INTER, SYSTEM }
+
+/**
  * Everything the Settings screen edits. The engine inputs ([units], [notifications],
  * the sky keys) are typed in `:core:domain`; the rest is presentation and stays here.
  */
@@ -75,6 +97,15 @@ data class AppSettings(
      * were chosen together and neither says much without the other.
      */
     val palette: AppPalette = AppPalette.VIVID,
+    /**
+     * The typeface (20 set 2026). INTER by default and deliberately: a default has to be
+     * the thing the layout was measured against and the thing that looks the same on
+     * every device, and [AppFont.SYSTEM] is neither — it is a different font per phone,
+     * its missing weights are synthesised, and `tnum` is ignored in silence by a font
+     * that has no tabular figures. What it buys is the one thing Inter cannot: an app
+     * that reads like the home-screen cards beside it.
+     */
+    val font: AppFont = AppFont.INTER,
     /** LINE by default (decision, 6 set 2026 — the default moves, the choice stays).
      * The outlined drawings keep one weight of ink on a screen whose hero is already a
      * painted sky, and at the sizes Today now uses (§13.1's ladder, 30-38dp) they read
@@ -143,6 +174,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 themeMode = enumOrDefault(prefs[Theme], ThemeMode.SYSTEM),
                 dynamicColor = prefs[DynamicColor] ?: false,
                 palette = enumOrDefault(prefs[Palette], AppPalette.VIVID),
+                font = enumOrDefault(prefs[FontChoice], AppFont.INTER),
                 weatherIcons = enumOrDefault(prefs[IconStyle], WeatherIcons.LINE),
                 animatedIcons = prefs[AnimatedIcons] ?: true,
                 skyEnabled = prefs[SkyEnabled] ?: true,
@@ -169,6 +201,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setThemeMode(mode: ThemeMode) = set(Theme, mode.name)
     suspend fun setDynamicColor(enabled: Boolean) = set(DynamicColor, enabled)
     suspend fun setPalette(palette: AppPalette) = set(Palette, palette.name)
+    suspend fun setFont(font: AppFont) = set(FontChoice, font.name)
     suspend fun setWeatherIcons(style: WeatherIcons) = set(IconStyle, style.name)
     suspend fun setAnimatedIcons(enabled: Boolean) = set(AnimatedIcons, enabled)
     suspend fun setSkyEnabled(enabled: Boolean) = set(SkyEnabled, enabled)
@@ -208,6 +241,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
         private val Theme = stringPreferencesKey("appearance_theme_mode")
         private val DynamicColor = booleanPreferencesKey("appearance_dynamic_color")
         private val Palette = stringPreferencesKey("appearance_palette")
+        private val FontChoice = stringPreferencesKey("appearance_font")
         private val IconStyle = stringPreferencesKey("appearance_weather_icons")
         private val AnimatedIcons = booleanPreferencesKey("appearance_animated_icons")
         private val SkyEnabled = booleanPreferencesKey("sky_enabled")

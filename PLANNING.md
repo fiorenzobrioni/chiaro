@@ -7200,3 +7200,93 @@ della card e verificano che il glifo stia sotto la riga del luogo, non copra il 
 più largo, lasci sei em al marcatore, e che il panel non cresca per farlo entrare. È il
 genere di rottura che nessuno segnala come bug: una riga di frase tagliata il giorno in cui
 si accende un interruttore.
+
+---
+
+## Il carattere dell'app, che ora si sceglie (committente, 20 set 2026)
+
+«L'app usa il font Inter mentre il widget penso usi il font di sistema: è corretto? Mi piace
+il font usato dal widget "In parole" e anche il bold usato per la temperatura. Vorrei che
+anche l'app utilizzi questo font… magari si potrebbe mettere nelle opzioni un parametro per
+impostare quale font utilizzare.»
+
+### La diagnosi era giusta, e una metà non è il font
+
+L'app è in Inter, incluso nell'APK come font variabile (`Type.kt`, `res/font/inter_variable.ttf`,
+880 KB, OFL). Le card sono nel carattere di sistema **e non per scelta**: Glance disegna
+attraverso `RemoteViews`, che non ha un'API di famiglia, quindi `androidx.glance.text.TextStyle`
+ha colore, dimensione e peso e basta. Il codice lo dava già per scontato in due punti —
+`TextWidgetLayout` misura «−12°» su Roboto Bold (`TempEmWidth`), `ArcPainter` dipinge con
+`Typeface.DEFAULT`.
+
+La parte che va detta perché non si perda: **fra la temperatura del widget e quella dell'app
+la differenza più grande non è la famiglia, è il peso.** La card la stampa in Bold, la
+schermata in Light 300 a 64 sp, e il Light è una decisione scritta (§5: «un numero in un peso
+da testo si legge come un titolo, non come una lettura»). Questo giro non la tocca: l'opzione
+sposta la famiglia e **nient'altro** (`TypographyFamilyTest` verifica che dimensioni, pesi e
+interlinee siano identici nelle due risposte), così se dopo il peso dell'eroe va cambiato lo
+si cambia da solo, sapendo che cosa si sta cambiando. Resta aperto.
+
+### La coerenza si può ottenere solo spostando l'app
+
+Non esiste il verso opposto. Portare Inter dentro i quattro widget Glance si potrebbe solo con
+`AndroidRemoteViews` e una `SpannableString` con `TypefaceSpan`, cioè rifacendo a mano ogni
+forma di ogni card e rinunciando a quel che Glance dà: fragile, e per di più andrebbe contro
+le larghezze in em già misurate. Il quinto, l'arco, dipinge su Canvas e tecnicamente potrebbe
+(`Typeface` da `ResourcesCompat.getFont`), ma sarebbe l'unica card diversa dalle altre quattro,
+che è peggio dell'incoerenza che risolve. Quindi: la si ottiene muovendo l'app, o non la si
+ottiene.
+
+### Quel che costa il carattere di sistema, tutto in silenzio
+
+Tre cose, ed è per queste che il predefinito resta Inter e non diventa «di sistema»:
+
+1. **I pesi sono quelli che il dispositivo ha.** Dove manca, Android lo sintetizza spalmando
+   gli outline — esattamente il difetto che il commento in `Type.kt` dice di aver evitato
+   includendo il variabile. Il candidato è proprio il 300 dell'eroe.
+2. **`tnum` può non fare niente.** Una famiglia senza cifre tabulari ignora la feature senza
+   errore: nessun crash, solo colonne di numeri che smettono di essere colonne. Inter ce l'ha;
+   di un font OEM non si sa, e **non è verificabile da qui**: va guardato sul dispositivo.
+3. **Le colonne in dp erano misurate su Inter** (`TextScale.kt`: i 44/36/34/34 della riga
+   della settimana, la cella dell'ora, l'orologio della timeline). Una faccia più larga le fa
+   riflettere un passo prima. Non taglia niente — in `ui/` non c'è un solo `maxLines`, ed è
+   deliberato — ma un valore può andare a capo prima di quanto dica la misura.
+
+E una quarta che non è un costo ma una conseguenza: l'app smette di avere un aspetto suo. È lo
+stesso scambio del colore dinamico, fatto sul carattere invece che sul colore, e si risolve
+allo stesso modo: la cosa dell'app di default, la cosa del telefono a richiesta.
+
+### Come è fatto
+
+`AppFont { INTER, SYSTEM }` accanto a `ThemeMode` e `AppPalette` in `:core:data` — solo UI,
+nessun motore la legge — con la chiave `appearance_font` e il solito ritorno al default per un
+valore che questa versione non conosce. `ChiaroTheme` prende un parametro `font` e da lì
+scendono entrambe le metà della scala: i quindici ruoli Material (`chiaroTypography`) e i due
+che Material non ha (`LocalChiaroType`, come `LocalChiaroColors`). Quei due erano `val` di
+primo livello che nominavano `InterFamily`: costruiti all'init della classe, avrebbero
+continuato a stampare Inter sotto un lettore che aveva chiesto il sistema — è la rottura che il
+test copre per seconda. Le tre activity che montano il tema (`MainActivity` e le due di
+configurazione dei widget, che sono schermate dell'app) passano la scelta.
+
+La riga sta in Aspetto, subito dopo Palette, perché è la stessa domanda dell'abito. Il foglio
+di scelta porta la spiegazione: che Inter viene con l'app ed è uguale su ogni telefono, che «di
+sistema» è il carattere del telefono ed è anche quello con cui sono scritte le card.
+
+Un dettaglio che non è cosmetico: **la riga dei crediti non può dire Inter a chi non lo sta
+leggendo.** Inter resta incluso comunque (è il predefinito ed è il fallback), quindi
+l'attribuzione resta; a chi ha scelto il sistema la riga aggiunge «incluso, ma non in uso». È
+§1.1 applicata ai crediti, la stessa lezione della nota della palette.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **826 test**
+(cinque nuovi) e lint a zero errori. I cinque sono `TypographyFamilyTest`; `SettingsStoreTest`
+guadagna tre verifiche dentro i test che già aveva (il default, il giro completo, il valore
+sconosciuto). Il test dei ruoli li chiede a Material per
+riflessione invece di elencarli: un ruolo aggiunto da una versione futura di Material 3 e non
+copiato fallisce lì, invece di stampare una riga dell'app in un secondo carattere senza che
+nessuno se ne accorga.
+
+**Quel che resta da guardare sul dispositivo**, perché una JVM non lo può dire: se il carattere
+di sistema del telefono porta le cifre tabulari (le colonne del Diario e della settimana sono
+il posto dove si vede), e se il 300 dell'eroe è disegnato o sintetizzato.

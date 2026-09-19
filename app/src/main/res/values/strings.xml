@@ -243,6 +243,14 @@
          promised a change that never came. -->
     <string name="settings_palette_note_icons_line">With outlined icons, Vivid brightens them on the dark theme too.</string>
     <string name="settings_palette_note_icons_fill">Filled icons keep their own colors, so the palette leaves them alone.</string>
+    <!-- The typeface (20 set 2026). Inter is the default because the whole type scale is
+         measured against it and it looks the same on every phone; the system font is what
+         the home-screen widgets are always drawn in, so it is the only way to make the app
+         and the cards read alike. -->
+    <string name="settings_font">Typeface</string>
+    <string name="settings_font_inter">Inter</string>
+    <string name="settings_font_system">System</string>
+    <string name="settings_font_note">Inter comes with the app and looks the same on every phone. System uses the font your phone is set in, which is also the one the home-screen widgets are drawn in.</string>
     <string name="settings_weather_icons">Weather icons</string>
     <string name="settings_icons_fill">Filled</string>
     <string name="settings_icons_line">Outlined</string>
@@ -275,6 +283,7 @@
     <string name="settings_credit_icons_note">Meteocons by Bas Milius, MIT</string>
     <string name="settings_credit_font">Typeface</string>
     <string name="settings_credit_font_note">Inter by Rasmus Andersson, SIL Open Font License 1.1</string>
+    <string name="settings_credit_font_unused">included, but not in use: you chose the system font</string>
     <string name="settings_credit_ui_icons">Interface icons</string>
     <string name="settings_credit_ui_icons_note">Material Icons by Google, Apache 2.0</string>
     <string name="settings_source_code">Source code</string>

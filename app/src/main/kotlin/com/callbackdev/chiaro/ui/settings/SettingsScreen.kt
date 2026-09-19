@@ -45,6 +45,7 @@ import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.BuildConfig
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.data.AppFont
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.data.ThemeMode
@@ -150,6 +151,13 @@ private fun SettingsList(
                 label = stringResource(R.string.settings_palette),
                 value = paletteLabel(settings.palette),
                 onClick = { dialog = SettingsDialog.PALETTE }
+            )
+        }
+        item {
+            ValueRow(
+                label = stringResource(R.string.settings_font),
+                value = fontLabel(settings.font),
+                onClick = { dialog = SettingsDialog.FONT }
             )
         }
         item {
@@ -280,7 +288,7 @@ private fun SettingsList(
         item {
             ValueRow(
                 label = stringResource(R.string.settings_credit_font),
-                value = stringResource(R.string.settings_credit_font_note),
+                value = fontCreditNote(settings.font),
                 onClick = { openUrl(context, "https://rsms.me/inter/") }
             )
         }
@@ -352,6 +360,14 @@ private fun SettingsList(
             onSelect = { viewModel.setPalette(it); dialog = null },
             onDismiss = { dialog = null }
         )
+        SettingsDialog.FONT -> RadioDialog(
+            title = stringResource(R.string.settings_font),
+            explanation = stringResource(R.string.settings_font_note),
+            options = AppFont.entries.map { it to fontLabel(it) },
+            selected = settings.font,
+            onSelect = { viewModel.setFont(it); dialog = null },
+            onDismiss = { dialog = null }
+        )
         SettingsDialog.ICONS -> RadioDialog(
             title = stringResource(R.string.settings_weather_icons),
             explanation = stringResource(R.string.settings_weather_icons_note),
@@ -390,7 +406,9 @@ private fun SettingsList(
     }
 }
 
-private enum class SettingsDialog { TEMPERATURE, WIND, THEME, PALETTE, ICONS, FREQUENCY, RESET }
+private enum class SettingsDialog {
+    TEMPERATURE, WIND, THEME, PALETTE, FONT, ICONS, FREQUENCY, RESET
+}
 
 @Composable
 private fun GroupHeader(text: String) {
@@ -478,6 +496,30 @@ private fun temperatureLabel(unit: TemperatureUnit): String = when (unit) {
 private fun windLabel(unit: WindSpeedUnit): String = when (unit) {
     WindSpeedUnit.KMH -> stringResource(R.string.settings_wind_kmh)
     WindSpeedUnit.MPH -> stringResource(R.string.settings_wind_mph)
+}
+
+@Composable
+private fun fontLabel(font: AppFont): String = when (font) {
+    AppFont.INTER -> stringResource(R.string.settings_font_inter)
+    AppFont.SYSTEM -> stringResource(R.string.settings_font_system)
+}
+
+/**
+ * The typeface credit, told to the reader who may have turned it off.
+ *
+ * Inter ships in the APK whichever answer they gave — it is the default and the fallback
+ * — so the attribution stays either way. What changes is whether it is the font on the
+ * screen in front of them, and a credits row that said "Inter" to somebody reading the
+ * app in Roboto would be the screen telling them something that is not true (DESIGN §1.1,
+ * the same rule the palette note learned).
+ */
+@Composable
+private fun fontCreditNote(font: AppFont): String {
+    val credit = stringResource(R.string.settings_credit_font_note)
+    return when (font) {
+        AppFont.INTER -> credit
+        AppFont.SYSTEM -> credit + " — " + stringResource(R.string.settings_credit_font_unused)
+    }
 }
 
 @Composable

@@ -560,9 +560,10 @@ forbids rainbows for data.
 
 ## 5. Typography
 
-**Inter** (variable, OFL), with the platform sans as fallback. Never a monospace: the
-terminal line owns that, and Chiaro must not read as its sibling. The one exception is
-nothing — there is no exception.
+**Inter** (variable, OFL), with the platform sans as fallback — **or the platform sans
+itself, where the reader asks for it** (Settings → Appearance → Typeface, 20 set 2026).
+Never a monospace: the terminal line owns that, and Chiaro must not read as its sibling.
+The one exception is nothing — there is no exception.
 
 | Role | Size / line | Weight | Where |
 |---|---|---|---|
@@ -579,6 +580,24 @@ nothing — there is no exception.
 **Every figure that sits in a column is tabular** (`FontFeatureSetting("tnum")`): the hour
 strip, the week rows, the journal's deltas. Proportional digits in a column are the
 typographic equivalent of a wobbling table, and this app has a lot of columns.
+
+**The typeface is a setting, and Inter is the default** (20 set 2026). The scale above is
+one family deep: the choice swaps the family under all seventeen roles — Material's fifteen
+plus `heroTemperature` and the tile's reading — and moves nothing else, not a size, not a
+weight, not a line height (`TypographyFamilyTest` asks Material what its roles are by
+reflection, so a role nobody copied fails there instead of quietly setting one line of the
+app in a second font). The choice exists because the widgets never had one: `RemoteViews`
+has no font-family API for Glance to expose, so a home-screen card is always drawn in the
+phone's own sans, and the only way to make the app and the cards read alike is to move the
+app. Three things are then true that are not true of the default, and each is a cost taken
+on knowingly: the weights are whichever the device carries, and a missing one is synthesised
+rather than drawn — which is the smearing Inter was bundled to avoid, and the 300 of the
+hero is where it would show; `tnum` is ignored in silence by a face with no tabular figures,
+so a column of figures can stop being a column with nothing to report it; and the dp columns
+of §10 were measured against Inter, so a wider face reflows them a step earlier. Inter ships
+either way, as the default and as the fallback, and the credits row says which: it adds
+"included, but not in use" for the reader who turned it off, because crediting a font that
+is not on the screen is §1.1's kind of lie.
 
 Rounding is a rule, not a call: temperatures to whole degrees everywhere except the
 current one and the feels-like, which carry one decimal because the source does;

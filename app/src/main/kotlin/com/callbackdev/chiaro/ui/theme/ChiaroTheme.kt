@@ -8,6 +8,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
+import com.callbackdev.chiaro.data.AppFont
 import com.callbackdev.chiaro.data.AppPalette
 
 /**
@@ -25,6 +26,12 @@ import com.callbackdev.chiaro.data.AppPalette
  * still decides the verdicts, the quantity ramps and the sky even while Material's roles
  * are coming from their photo of a sunset.
  *
+ * [font] picks the typeface (§5, 20 set 2026): Inter, which the whole scale is measured
+ * against, or the phone's own sans, which is what the home-screen cards are drawn in and
+ * cannot not be. It is the same shape of question as dynamic color — how much of this
+ * phone does the app take on — asked about type instead of color, and it is answered the
+ * same way: the app's own thing by default, the phone's thing by choice.
+ *
  * It also carries the reader's motion setting (§7, [LocalReducedMotion]): a theme is
  * where the app asks the system what it prefers, and motion is one of those answers.
  */
@@ -33,6 +40,7 @@ fun ChiaroTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     palette: AppPalette = AppPalette.PAPER,
+    font: AppFont = AppFont.INTER,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
@@ -51,13 +59,16 @@ fun ChiaroTheme(
         LocalAppPalette provides palette,
         LocalChiaroColors provides dress.colors(darkTheme),
         LocalSkyPalette provides dress.sky,
+        // The two roles Material has no slot for, in the family [font] names: the
+        // Typography below carries the other fifteen.
+        LocalChiaroType provides chiaroType(font),
         // §7: the reader's answer to "less motion", read once here and asked at every
         // place the app moves. Live, because the toggle lives outside the app.
         LocalReducedMotion provides rememberReducedMotion(context)
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = ChiaroTypography,
+            typography = chiaroTypography(font),
             shapes = ChiaroShapes,
             content = content
         )

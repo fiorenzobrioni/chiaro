@@ -55,6 +55,9 @@ class SettingsStoreTest {
         // chosen together and neither says much without the other.
         assertEquals(AppPalette.VIVID, settings.palette)
         assertEquals(WeatherIcons.LINE, settings.weatherIcons)
+        // The typeface the whole scale is measured against (20 set 2026): the system
+        // font is a choice, never what a fresh install reads.
+        assertEquals(AppFont.INTER, settings.font)
         assertEquals(true, settings.animatedIcons)
         assertEquals(true, settings.skyEnabled)
         assertNull(settings.skyNotifyDefaultMin)
@@ -88,6 +91,7 @@ class SettingsStoreTest {
         store.setDynamicColor(true)
         store.setPalette(AppPalette.PAPER)
         store.setWeatherIcons(WeatherIcons.FILL)
+        store.setFont(AppFont.SYSTEM)
         store.setAnimatedIcons(false)
         store.setUpdateFrequency(30)
 
@@ -98,6 +102,7 @@ class SettingsStoreTest {
         assertEquals(true, settings.dynamicColor)
         assertEquals(AppPalette.PAPER, settings.palette)
         assertEquals(WeatherIcons.FILL, settings.weatherIcons)
+        assertEquals(AppFont.SYSTEM, settings.font)
         assertEquals(false, settings.animatedIcons)
         assertEquals(30, settings.updateFrequencyMin)
     }
@@ -110,12 +115,14 @@ class SettingsStoreTest {
             it[stringPreferencesKey("units_temperature")] = "KELVIN"
             it[stringPreferencesKey("appearance_theme_mode")] = "OBSIDIAN"
             it[stringPreferencesKey("appearance_palette")] = "NEON"
+            it[stringPreferencesKey("appearance_font")] = "COMIC"
         }
 
         val settings = SettingsStore(ds).settings.first()
         assertEquals(TemperatureUnit.CELSIUS, settings.units.temperature)
         assertEquals(ThemeMode.SYSTEM, settings.themeMode)
         assertEquals(AppPalette.VIVID, settings.palette)
+        assertEquals(AppFont.INTER, settings.font)
     }
 
     /** An interval outside the offered set reads as the default, same rule as the enums. */
