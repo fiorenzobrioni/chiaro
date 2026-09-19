@@ -113,8 +113,8 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
     val cityStore = remember { ServiceLocator.cityStore(context) }
     val widgetCityStore = remember { ServiceLocator.widgetCityStore(context) }
     val lookStore = remember { WidgetLookStore.get(context) }
-    // Content options are not the same for all three: only the Today widget carries a
-    // day's range, and a switch that changes nothing must not be offered.
+    // Content options are not the same for all of them: the Sky card has none, the text
+    // card draws no icons, and a switch that changes nothing must not be offered.
     val kind = remember(appWidgetId) { ChiaroWidgets.kindOf(context, appWidgetId) }
 
     val cities by cityStore.cities.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -214,28 +214,33 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
                 }
             }
 
-            // Offered on all three, unlike the content switches below: every card draws
-            // weather glyphs, and the reason to pick a family here is the card's own —
-            // its size, its ground, the wallpaper behind it (see [WidgetIcons]).
-            SectionLabel(stringResource(R.string.widget_config_icons))
-            val iconOptions = listOf(
-                WidgetIcons.APP to stringResource(R.string.widget_icons_app),
-                WidgetIcons.FILL to stringResource(R.string.settings_icons_fill),
-                WidgetIcons.LINE to stringResource(R.string.settings_icons_line)
-            )
-            iconOptions.forEach { (icons, label) ->
-                ChoiceRow(
-                    label = label,
-                    selected = current.icons == icons,
-                    onPick = { save(current.copy(icons = icons)) }
+            // Offered on every card that draws weather glyphs, and the reason to pick a
+            // family here is the card's own — its size, its ground, the wallpaper behind
+            // it (see [WidgetIcons]). Not on the text widget, which draws none: a switch
+            // that changes nothing must not be offered.
+            if (kind != WidgetKind.TEXT) {
+                SectionLabel(stringResource(R.string.widget_config_icons))
+                val iconOptions = listOf(
+                    WidgetIcons.APP to stringResource(R.string.widget_icons_app),
+                    WidgetIcons.FILL to stringResource(R.string.settings_icons_fill),
+                    WidgetIcons.LINE to stringResource(R.string.settings_icons_line)
                 )
+                iconOptions.forEach { (icons, label) ->
+                    ChoiceRow(
+                        label = label,
+                        selected = current.icons == icons,
+                        onPick = { save(current.copy(icons = icons)) }
+                    )
+                }
             }
 
-            // Now and Today carry the day's sentence and may hide it; only Today carries
-            // the day's range; only Now has a one-row card that can be laid two ways.
-            // The Sky widget's content is its subscriptions, chosen on the Sky screen,
-            // so it has no content switch to offer here.
-            if (kind == WidgetKind.NOW || kind == WidgetKind.TODAY) {
+            // Now, Today and the text card carry the day's sentence and may hide it;
+            // Today and the text card carry the day's range (the text card earns it the
+            // same way Today does — it has a column of facts to put it in, where the Now
+            // card had only the sentence's own edge to crowd); only Now has a one-row card
+            // that can be laid two ways. The Sky widget's content is its subscriptions,
+            // chosen on the Sky screen, so it has no content switch to offer here.
+            if (kind == WidgetKind.NOW || kind == WidgetKind.TODAY || kind == WidgetKind.TEXT) {
                 SectionLabel(stringResource(R.string.widget_config_content))
                 SwitchRow(
                     label = stringResource(R.string.widget_config_show_sentence),
@@ -243,7 +248,7 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
                     checked = current.showSentence,
                     onToggle = { save(current.copy(showSentence = it)) }
                 )
-                if (kind == WidgetKind.TODAY) {
+                if (kind == WidgetKind.TODAY || kind == WidgetKind.TEXT) {
                     SwitchRow(
                         label = stringResource(R.string.widget_config_show_range),
                         note = stringResource(R.string.widget_config_show_range_note),

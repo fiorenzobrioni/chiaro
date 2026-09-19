@@ -986,6 +986,11 @@
     <string name="widget_today_desc">Now, the day\'s sentence, and the next hours</string>
     <string name="widget_sky_label">Sky moments</string>
     <string name="widget_sky_desc">The next sky moment, when, and its verdict — and the ones after it on a taller card</string>
+    <!-- The text widget (19 set 2026): the one card with nothing drawn on it. -->
+    <string name="widget_text_label">In words</string>
+    <string name="widget_text_desc">Words and figures only, no icons and nothing drawn: the temperature big, the place above it, the day\'s sentence beside them — and, on a taller card, the next hours</string>
+    <!-- The position pin the other cards draw, said in words: this one draws nothing. -->
+    <string name="widget_text_place_gps">%1$s · my position</string>
     <string name="widget_no_place_hint">Tap to open Chiaro and add one</string>
     <string name="widget_no_data">Getting the first forecast…</string>
     <string name="widget_sky_empty">No sky moment coming up. Tap to follow one.</string>

@@ -432,7 +432,7 @@ first time the reader turns on something that needs them, never at startup.
 
 ### 5.9 Widgets
 
-Glance, three sizes, matching the app's dynamic color:
+Glance, five cards, matching the app's dynamic color:
 
 - **Now**: icon, temperature, place — and, where the card has room, the day's sentence: the same
   headline Today opens with, in a shorter register, or the sky's present state when there is
@@ -448,8 +448,22 @@ Glance, three sizes, matching the app's dynamic color:
   widget's wide row — glyph, temperature over place, the day's sentence against the far edge and
   the day's high and low under it when asked for — and the strip hangs under it; the line the
   sentence used to take goes to the glyph.
-- Both Now and Today let the reader turn the sentence off per widget, and Now can lay its one-row
-  card the other way round — glyph in the trailing corner, the sentence at the number's shoulder,
+- **In words** (19 set 2026, committente: «un widget 4x1, ridimensionabile, con informazioni solo
+  testuali»): the Now widget's facts with nothing drawn on the card — no weather glyph, no position
+  pin, no chip, no mark. It is not the Now widget with the icon deleted: a card that loses its
+  drawing loses the thing that made it readable across a room, so the hierarchy is rebuilt out of
+  type, in four ranks that differ by size and weight and ink at once. The temperature is the
+  drawing now — Bold, and sized to the grant the way the other cards size their glyph — with the
+  place set two ranks under it as the card's eyebrow, the day's sentence at its shoulder, and the
+  official warning and the day's high and low as facts under that. Three cells already carry the
+  sentence here, one better than the Now card manages, because there is no glyph to pay for first;
+  two rows turn the card into a centred column with the next hours as figures. The position pin
+  becomes words and the warning's chip becomes the level's word alone, because a chip is the device
+  that carries its own measured ground and this card has no ground to draw. Everything else is the
+  household's: the same model, the same sentence, the same warning table, the same refusal to
+  invent.
+- Now, Today and In words let the reader turn the sentence off per widget, and Now can lay its
+  one-row card the other way round — glyph in the trailing corner, the sentence at the number's shoulder,
   the tall card's composition pressed into one row — so a home screen can carry the two looks.
 - **Sky**: the moments in front of the reader and their verdicts, with the day named when it is not
   today — the widget nobody else ships. Laid out on the Now widget's grammar (8 set 2026): the
@@ -470,9 +484,12 @@ one — and follows the app's sentence rule. On an orange or red day the sentenc
 warning, so the widget adds a chip only where the sentence is off, in the sentence's slot. A yellow
 warning, which the sentence never carries, gets a chip of its own — the drawn mark and the level as
 a word on the level's container color — where the form has room for one more line (the wide and
-tall Now, Today's hero row, the arc's panel) and nowhere on the one-row cards. Now, Today and the
-arc offer the chip and have it on by default: it draws nothing on a day without a warning, and on a
-day with one it is the line a reader would least want a widget to leave out. Sky does not offer it —
+tall Now, Today's hero row, the arc's panel) and nowhere on the one-row cards. On the text widget
+the same table decides and the level is the word by itself in the card's own ink: a chip is the
+device that brings its own measured ground, and that card cannot bring one without drawing it.
+Now, Today, In words and the arc offer the warning and have it on by default: it draws nothing on a
+day without a warning, and on a day with one it is the line a reader would least want a widget to
+leave out. Sky does not offer it —
 that card is about the sky's moments, and a chip about the ground would be a second subject.
 
 ---
@@ -492,7 +509,7 @@ Nothing in tweather is dropped. Everything moves to the surface that fits a Mate
 | built-in alert toggles | **Alerts → Ready-made** |
 | `history.diff` + `forecast.diff` + `sky_runs.log` + fired-rule check lines | **Journal** (one entry per fetch) + the forecast-drift chart |
 | `HELP.md` + `$ tweather init` | **Guide** + first run |
-| widget (`tweather --now`, terminal tiers) | **Widgets** (Now / Today / Sky) |
+| widget (`tweather --now`, terminal tiers) | **Widgets** (Now / Today / In words / Sky / the day's arc) |
 | theme profiles Obsidian/Dracula/Monokai | dynamic color + curated palette, light and dark |
 | — (nothing: tweather reads no official feed) | **Official warnings** — Protezione Civile in Italy (Fase 11), MeteoAlarm elsewhere (Fase 12); the one feature that is Chiaro's before it is the series' (§12.8) |
 

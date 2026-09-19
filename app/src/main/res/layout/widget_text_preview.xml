@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The text widget as the launcher's picker draws it (19 set 2026).
+
+  A Glance widget has no picker preview of its own: without `previewLayout` the host shows
+  the generic loading layout, which is why every one of ours names a static one. The picker
+  never runs `provideGlance` — there is no place, no report and no composition on that
+  screen — so this is sample values with the DEFAULT dress baked in: the computed sky under
+  its scrim, white ink. It is the same card, one moment of it.
+
+  The moment drawn is the wide one-row form, which is the default 4×1 placement: the place
+  over the temperature on the leading side, the day's sentence against the far edge. Same
+  numbers as the widget — 14dp at both words' edges and 6 above and below
+  (WidgetCardPadding / WidgetCardPaddingSnug), the two columns split 42/58
+  (textLeadingColumn), the ranks at 41sp bold, 17sp medium and 14sp regular
+  (TextWidgetLayout).
+
+  Sample data only: a preview is a drawing of the product, never a reading. What the widget
+  itself must never invent, it still never invents — the moment the launcher binds it, this
+  layout is gone.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_preview_sky"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="14dp"
+    android:paddingTop="6dp"
+    android:paddingEnd="14dp"
+    android:paddingBottom="6dp"
+    tools:ignore="HardcodedText">
+
+    <!-- Rank 3 over rank 1: the name says what the number is about, and is set two ranks
+         under it so it cannot compete for the eye. -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="42"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:text="@string/widget_preview_place"
+            android:textColor="@color/widget_preview_ink_dim"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            android:text="25°"
+            android:textColor="@color/widget_preview_ink"
+            android:textSize="41sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Rank 2: the same sample sentence the other previews print, in this card's dress —
+         17sp medium, strong ink, right-aligned, two lines. -->
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="58"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="end"
+        android:maxLines="2"
+        android:paddingStart="12dp"
+        android:paddingEnd="0dp"
+        android:text="@string/widget_preview_headline"
+        android:textAlignment="viewEnd"
+        android:textColor="@color/widget_preview_ink"
+        android:textSize="17sp" />
+</LinearLayout>

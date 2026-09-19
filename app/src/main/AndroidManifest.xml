@@ -52,8 +52,9 @@
             </intent-filter>
         </activity>
 
-        <!-- The home widgets (Fase 8): Now, Today, Sky. exported=false — the system
-             delivers APPWIDGET_* regardless, and nothing else needs in. -->
+        <!-- The home widgets (Fase 8): Now, Today, Sky, and since 19 set 2026 the text
+             card. exported=false — the system delivers APPWIDGET_* regardless, and
+             nothing else needs in. -->
         <receiver
             android:name=".widget.NowWidgetReceiver"
             android:exported="false"
@@ -86,6 +87,20 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_sky_info" />
+        </receiver>
+
+        <!-- The text widget (19 set 2026): the fifth, and the one with nothing drawn on
+             it. Same shared configuration screen as the three above. -->
+        <receiver
+            android:name=".widget.TextWidgetReceiver"
+            android:exported="false"
+            android:label="@string/widget_text_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_text_info" />
         </receiver>
 
         <!-- The day's arc (9 set 2026): the fourth widget, one cell to sixteen, with a

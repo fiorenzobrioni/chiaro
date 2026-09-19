@@ -540,6 +540,21 @@ Rounding is a rule, not a call: temperatures to whole degrees everywhere except 
 current one and the feels-like, which carry one decimal because the source does;
 probabilities to whole percent; wind to whole units; distances to one decimal below 10.
 
+**The widgets' own scale** is not this one and cannot be: a home-screen card is drawn by
+`RemoteViews` at whatever size the launcher granted, so its sizes are arithmetic on the
+grant rather than named roles (`WidgetUi.kt`, and a `*WidgetLayout.kt` per card). Four of
+the five cards get their hierarchy from the weather glyph, which fills the height and is
+the first thing read; the text widget (19 set 2026) has no glyph and builds the same
+hierarchy out of type alone, in **four ranks that differ by size and weight and ink, never
+by one of the three on its own** (`TextWidgetLayout.kt`): the temperature at 30 to 56sp
+Bold in the strong ink, scaled to the grant the way the other cards scale their drawing;
+the day's sentence at 17sp Medium, one point over the household's 16 because there is no
+drawing left to carry the card at arm's length; the place, the day's range, the warning's
+word and the hours' own temperatures at 14sp, where ink and weight go on sorting inside the
+rank; the stale marker and the hour labels at 11sp. The order the budget
+spends in is the hierarchy written down: the number is reserved first and the footnotes
+are bought last, and a section that does not fit is not drawn.
+
 ---
 
 ## 6. Shape, elevation, spacing
@@ -920,7 +935,7 @@ padding — the `VerdictChip` grammar at the widget's size. Avvisi's card leads 
 the home-screen widgets carry it.
 
 **On a widget** the rule is what the card is ALREADY saying (`warningSlot`, one table for
-all four cards). The day's sentence in its brief register IS the orange and the red
+all five cards). The day's sentence in its brief register IS the orange and the red
 («Allerta arancione · temporali»), so where that sentence is on the card there is no chip;
 where it is not — the reader turned it off, or the arc's hero is showing the next light
 moment instead — the chip takes the sentence's place and the card grows by nothing.
@@ -937,6 +952,17 @@ up, the glyph would fall to 44dp against the family's 52dp floor, so the yellow 
 home; turn the sentence off and its two lines pay for the chip twice over. The Today
 widget's rain row yields first, as it already does to a stale marker. The arc's agenda
 gives up a row before the drawing gives up a pixel.
+
+**The text widget has no chip**, and says the level as a word instead (19 set 2026). The
+chip exists because a widget's ground is a scrimmed sky or somebody's wallpaper and a bare
+coloured word on one of those was measured unreadable (the Sky card's verdicts, 4 set); a
+chip answers that by bringing its own measured ground. A card whose whole premise is that
+nothing is drawn on it cannot bring one, so it gives up the colour rather than the
+legibility and prints «Allerta gialla» in the card's own strong ink at its rank-3 size.
+That is not a downgrade of the rule but the rule's own floor: §2.3 makes the word the
+carrier and the colour the reinforcement, and here there is only the carrier. Everything
+else is unchanged — the same `warningSlot` table decides whether it appears at all, and it
+costs that card a line of `TextFactSp` where the others pay `warningChipHeight`.
 
 Its colours come from the pair the CARD's ground selects (`WidgetPalette.colors`), never
 from the phone's theme: a light card under a dark system theme would otherwise wear a

@@ -82,7 +82,8 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   level to be told from. The Journal gets a line every time a level moves. A level is
   always a word and a glyph before it is a colour: the three of them do not separate under
   deuteranopia, and DESIGN.md prints the measurement. On the home screen the level reaches
-  the Now, Today and day's-arc widgets as a chip, by one rule the cards share: orange and
+  the Now, Today and day's-arc widgets as a chip, and the text widget as a word, by one
+  rule the cards share: orange and
   red are already in the day's sentence, so the chip only appears where that sentence is
   not, and yellow, which the sentence never carries, takes a line of its own where the
   card has one to spare
@@ -119,7 +120,15 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
 - 🏠 **Widgets**, in Glance: **Now** (icon, temperature, place, with the weather glyph
   growing into the height the launcher grants, and the day's sentence when the card is
   wide or tall enough to hold it: three forms, and the size you give it picks one),
-  **Today** (that same row as the head of the card, and the next hours under it) and **Sky** (the moments in
+  **Today** (that same row as the head of the card, and the next hours under it),
+  **In words** (the same facts with nothing drawn on the card at all: no weather icon, no
+  position pin, no chip. The hierarchy is built out of type instead, in four ranks that
+  differ by size and weight and ink at once: the temperature is the drawing now, set bold
+  and grown into the grant the way the other cards grow their glyph, with the place above
+  it as the card's eyebrow, the day's sentence at its shoulder, and the warning and the
+  day's high and low as facts under that. Three cells already carry the sentence here,
+  one better than **Now** manages, because there is no icon to pay for first, and two rows
+  turn it into a centred column with the next hours as figures) and **Sky** (the moments in
   front of you and their verdicts: the moment's time as the big number, its name under it,
   the verdict as a word with the number that decided it or, on a narrower card, as the
   series' own mark, and on a taller card as many further moments as honestly fit and never
@@ -130,7 +139,8 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   on the tallest card, the week: it resizes from one cell to sixteen and reshapes itself at
   every step, and it has a settings screen of its own with a live preview at eight sizes).
   Each one is configured on its own: which place, the background (the sky itself, light,
-  dark or follow the system), its opacity, which icon family, and what the card carries.
+  dark or follow the system), its opacity, which icon family where the card draws icons,
+  and what the card carries.
   They
   read the same builders the app reads, so the home screen and the app cannot print two
   different sunrises; they repaint on every data commit, state their age when stale, and
@@ -178,7 +188,7 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
 
 Fase 0 to 9 are done and on device: the engines and their test suite, the design system in
 code, Today, Places and first run, Settings and the guide, Sky with its reminders, Alerts
-with `:core:sync`, the Journal with the drift strip, the four widgets, and the
+with `:core:sync`, the Journal with the drift strip, the five widgets, and the
 accessibility and performance pass with its numbers attached. That last one is the colour
 pass and the weather-icon pass, then the sweep that answers "remove animations", keeps
 every value whole at 200% type, gives the two undersized tap targets their 48dp, and reads
@@ -341,7 +351,7 @@ chiaro/
 │       ├── MainActivity.kt           # the single activity: edge to edge, theme, shell
 │       ├── ChiaroApplication.kt      # process start: service locator, sync scheduling
 │       ├── notifications/            # alert, rule and sky notifiers; the reminder alarms
-│       ├── widget/                   # Glance: Now, Today, Sky and (arc/) the day's arc
+│       ├── widget/                   # Glance: Now, Today, In words, Sky and (arc/) the day's arc
 │       └── ui/
 │           ├── theme/                # generated scheme, sky palette, type, shape, motion
 │           ├── components/           # sky canvas, daylight ribbon, verdict chip, tiles, charts

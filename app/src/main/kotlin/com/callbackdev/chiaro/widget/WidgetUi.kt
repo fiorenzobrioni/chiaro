@@ -423,14 +423,23 @@ fun skyGradientBitmap(sky: SkySnapshot, opacityPct: Int, table: SkyPalette): Bit
  * one: it is also the only way to give the two numbers two inks.
  */
 @Composable
-fun DayRange(highC: Double, lowC: Double, units: UnitSettings, palette: WidgetPalette) {
+fun DayRange(
+    highC: Double,
+    lowC: Double,
+    units: UnitSettings,
+    palette: WidgetPalette,
+    /** The pair's size. The default is the place name's, which is the rank the pair sits
+     * at on every card that draws a place beside it; the text widget passes its own,
+     * because there the ranks are one step apart all the way down. */
+    size: TextUnit = DayRangeSp
+) {
     val locale = Locale.getDefault()
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = Formats.temperature(highC, units.temperature, locale),
             style = TextStyle(
                 color = palette.primary,
-                fontSize = DayRangeSp,
+                fontSize = size,
                 fontWeight = FontWeight.Medium
             ),
             maxLines = 1
@@ -439,12 +448,12 @@ fun DayRange(highC: Double, lowC: Double, units: UnitSettings, palette: WidgetPa
         // every language this app speaks, so it stays in the code.
         Text(
             text = " / ",
-            style = secondaryStyle(palette, DayRangeSp),
+            style = secondaryStyle(palette, size),
             maxLines = 1
         )
         Text(
             text = Formats.temperature(lowC, units.temperature, locale),
-            style = secondaryStyle(palette, DayRangeSp),
+            style = secondaryStyle(palette, size),
             maxLines = 1
         )
     }
@@ -638,6 +647,17 @@ private const val LeadingAboveCaps = 0.24f
  */
 fun textLineHeight(fontSizeSp: Float, fontScale: Float): Dp =
     (fontSizeSp * LineBoxEm * fontScale).dp
+
+/**
+ * [textLineHeight] the other way round: the biggest text size whose line box still fits
+ * [room]. The four cards with a drawing on them size that drawing to the grant
+ * ([heroIconSize]); the text widget has no drawing and sizes its NUMBER to the grant
+ * instead, which is the same question asked about a figure — and it needs the same
+ * arithmetic read backwards. Never negative: a budget that has run out asks for 0 sp and
+ * gets it, and the caller's own floor decides what to do about that.
+ */
+fun textSizeForLine(room: Dp, fontScale: Float): Float =
+    (room.value / (LineBoxEm * fontScale.coerceAtLeast(0.1f))).coerceAtLeast(0f)
 
 private const val LineBoxEm = 1.32f
 
