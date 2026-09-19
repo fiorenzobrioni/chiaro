@@ -6910,3 +6910,95 @@ quel che sembra.
 `res/xml/widget_text_info.xml` e `res/layout/widget_text_preview.xml`. Il resto — come legge
 davvero la scheda su uno schermo di casa, a quali taglie il launcher la concede, se 41 sp
 sono i 41 sp giusti — è una prova da dispositivo: qui non c'è.
+
+### Il secondo giro, dal dispositivo (committente, 19 set 2026)
+
+Quattro richieste dopo la prima prova su schermo di casa, con screenshot: la card 4×1 sul
+cielo notturno, «Ornago · la mia posizi…» troncato, «24°», «Quasi sereno», «25° / 16°».
+
+**1. Il segnaposto torna.** «Invece della scritta "la mia posizione" metti il simbolo del
+GPS davanti alla località.» La prima versione l'aveva messa a parole apposta — una scheda
+che non disegna niente dice quel che le altre marcano — e lo screenshot ha mostrato il costo
+esatto di quella coerenza: la riga era **tutta** la nota, e il nome del posto ci finiva
+dentro troncato. Il segno costa 16 dp di inchiostro, dice la stessa cosa e lascia il nome
+intero. È lo stesso `ic_place_pin` della schermata e delle altre quattro schede, quindi le
+cinque non possono litigare su che aspetto ha «la mia posizione».
+
+Da qui una regola che vale anche per il punto 2 e che adesso sta nell'intestazione di
+`TextWidget.kt`: **un segno alla misura della riga cui appartiene, tinto con l'inchiostro di
+quella riga, è punteggiatura, non grafica.** «Niente icona meteo o altra grafica» resta
+intero: sulla scheda non c'è nessun disegno del meteo, nessuna pastiglia, nessuna
+illustrazione.
+
+**2. Le frecce su e giù.** «Temperatura max e min un po' più grandi e con le frecce su e giù
+ad indicare massima e minima.» Sono due `vector` nuovi (`ic_range_high`, `ic_range_low`) e
+non i caratteri ↑ e ↓, per la ragione già misurata il 9 set sui marchi dei verdetti: un
+carattere che il font di sistema non ha lo disegna un font di ripiego, con la sua mano e il
+suo peso, e il committente lesse la ✗ come scrittura a mano. Stessa costruzione dei marchi:
+un tracciato a 2.4 di 24, cuspidi tonde, ≈1.6 dp alla taglia a cui si mostrano.
+
+La coppia resta **un solo composable**, `DayRange`, con un parametro `marks`. Non due
+grammatiche per la stessa cosa: è la stessa frase a due budget. I segni costano ~25 dp, che
+la colonna da 174 dp del widget testuale porta e quella da 113 dp del widget Oggi no — quindi
+Oggi tiene la barra e la scheda che ha lo spazio lo dice per esteso. L'enfasi non cambia in
+nessuno dei due casi: la massima prima e forte, la minima dopo e smorzata, e ogni segno
+prende l'inchiostro della cifra davanti a cui sta.
+
+**3. Il rango 3 sale, e il pavimento dell'eroe scende.** «La località un pochino più
+grande», e le due temperature pure. Il rango 3 va da 14 a **16 sp**, che è il numero con cui
+tutte le altre schede stampano un luogo e una massima/minima: le cinque adesso sono d'accordo
+su quanto è grande un fatto. Ma 17 sopra 16 non è un rango, è un arrotondamento, quindi la
+frase del giorno sale a **18**. Due punti, con Medium contro Regular e forte contro quieto,
+è il salto più piccolo che si ordina ancora a distanza di braccio; a 19 la colonna da 174 dp
+smette di tenere «Pioggia gelata verso le 15:00» in due righe, ed è la misura che ha fermato
+il numero lì.
+
+Il seguito è aritmetico e va detto perché è il genere di cosa che si rompe in silenzio: la
+riga del luogo è cresciuta di 2,6 dp, quindi su una riga da 85 dp con il marcatore di
+vecchiaia il numero resta con 37,4 dp, cioè 28,3 sp — **sotto il vecchio pavimento di 30**.
+Un pavimento che non si può pagare non è un pavimento, è una riga tagliata. È sceso a **26**,
+e così torna a essere quel che deve essere: il punto sotto il quale una scheda strizzata
+smette di rimpicciolire la cifra, non una taglia che una concessione misurata raggiunge. Con
+dati freschi quella stessa riga legge 39,3 sp.
+
+**4. Lo sfondo colorato.** «Possibilità di mettere uno sfondo colorato: blu, blu chiaro,
+verde…» Sei colori — blu, blu chiaro, verde, verde acqua, viola, terracotta — accanto alle
+quattro scelte che c'erano già, e **su tutti e cinque i widget**, non solo su questo: il
+colore è una proprietà della scheda, non di quel che ci sta stampato sopra.
+
+Due decisioni dentro la decisione.
+
+- **Nessun inchiostro nuovo.** Inchiostro e terreno sono una coppia (§2.3), e quanto costa
+  spezzarla è stato misurato il 4 set sui verdetti della scheda Cielo. Quindi invece di sei
+  terne di inchiostri, ogni colore è scelto **abbastanza scuro da portare la coppia che
+  l'app ha già e ha già misurato**: il bianco §3.6 del cielo con lo scrim, pieno per
+  l'inchiostro, 75% per quello quieto, 85% per quello della freschezza. Diciotto misure in
+  DESIGN §2.6, asserite da `PaletteContrastTest` e confrontate con il documento da
+  `PaletteDocTest`. Il pavimento che conta è il quieto, perché porta un'etichetta d'ora da
+  11 sp: il peggiore dei sei dà 5,2:1 contro i 4,5 che servono.
+- **Sei colori devono essere sei colori.** Nessuna coppia sotto **13 ΔE**, altrimenti a
+  scegliere è il nome e non il colore. Il blu del primo tentativo (`#14477A`) stava a 9,4 dal
+  blu chiaro accanto: è sceso a `#0F3B6B`, che è anche il blu che un lettore si aspetta di
+  vedere quando l'altro si chiama «blu chiaro».
+
+`WidgetBackground` prende **un** valore nuovo, `COLOR`, e non sei: quale colore è una seconda
+domanda, e la si fa solo a chi ha scelto COLOR (`WidgetLook.cardColor`), così ogni `when` su
+quell'enum resta di quattro righe. Sotto `InkTrustFloorPct` una scheda colorata passa la
+domanda dell'inchiostro alla carta da parati come fanno il cielo e la scheda di sistema:
+scegliere un colore è scegliere un **terreno**, non nominare un inchiostro, e al 20% di
+solidità quel terreno in gran parte non c'è. Chiaro e scuro continuano a decidere a qualsiasi
+solidità, perché quelli sì sono il lettore che nomina un inchiostro.
+
+Le due schermate di configurazione stampavano già le stesse quattro righe da due copie della
+stessa lista, ed è esattamente il posto in cui un quinto tipo lascia indietro una delle due
+copie: adesso c'è un `BackgroundSection` solo, usato da entrambe, con le righe dei colori
+annidate sotto la scelta «Un colore» e una pastiglia del colore in fondo a ognuna — con il
+nome davanti, perché una pastiglia non è un'etichetta (§10).
+
+### Come è stato verificato (secondo giro)
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **812 test**
+(i 15 del widget più 4 nuovi: le diciotto misure dei colori, la distanza fra i sei, il fatto
+che nessuna scheda solida interroghi la carta da parati, e il confronto fra la tabella di
+§2.6 e il codice). Lint senza rilievi. Come legge la scheda colorata su uno schermo di casa
+resta una prova da dispositivo.

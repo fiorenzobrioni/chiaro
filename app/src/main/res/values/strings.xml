@@ -989,8 +989,17 @@
     <!-- The text widget (19 set 2026): the one card with nothing drawn on it. -->
     <string name="widget_text_label">In words</string>
     <string name="widget_text_desc">Words and figures only, no icons and nothing drawn: the temperature big, the place above it, the day\'s sentence beside them — and, on a taller card, the next hours</string>
-    <!-- The position pin the other cards draw, said in words: this one draws nothing. -->
-    <string name="widget_text_place_gps">%1$s · my position</string>
+    <!-- The two range marks say what they are, for a screen reader: a number with no
+         subject is not a forecast. -->
+    <string name="widget_range_high">Today\'s high</string>
+    <string name="widget_range_low">Today\'s low</string>
+    <string name="widget_bg_color">A colour</string>
+    <string name="widget_color_blue">Blue</string>
+    <string name="widget_color_azure">Light blue</string>
+    <string name="widget_color_green">Green</string>
+    <string name="widget_color_teal">Sea green</string>
+    <string name="widget_color_plum">Violet</string>
+    <string name="widget_color_clay">Terracotta</string>
     <string name="widget_no_place_hint">Tap to open Chiaro and add one</string>
     <string name="widget_no_data">Getting the first forecast…</string>
     <string name="widget_sky_empty">No sky moment coming up. Tap to follow one.</string>

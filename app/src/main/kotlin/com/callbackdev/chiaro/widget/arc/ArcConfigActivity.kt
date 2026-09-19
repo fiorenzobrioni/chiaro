@@ -41,6 +41,7 @@ import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.ThemeMode
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
+import com.callbackdev.chiaro.widget.BackgroundSection
 import com.callbackdev.chiaro.widget.ChiaroWidgets
 import com.callbackdev.chiaro.widget.ChoiceRow
 import com.callbackdev.chiaro.widget.SectionLabel
@@ -218,19 +219,7 @@ private fun ArcConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () ->
 
         // ---- The card: the look every widget shares. ----
         look?.let { current ->
-            SectionLabel(stringResource(R.string.widget_config_background))
-            listOf(
-                WidgetBackground.SKY to stringResource(R.string.widget_bg_sky),
-                WidgetBackground.LIGHT to stringResource(R.string.settings_theme_light),
-                WidgetBackground.DARK to stringResource(R.string.settings_theme_dark),
-                WidgetBackground.SYSTEM to stringResource(R.string.settings_theme_system)
-            ).forEach { (background, label) ->
-                ChoiceRow(
-                    label = label,
-                    selected = current.background == background,
-                    onPick = { saveLook(current.copy(background = background)) }
-                )
-            }
+            BackgroundSection(current) { next -> saveLook(next) }
 
             SectionLabel(stringResource(R.string.widget_config_opacity))
             Text(

@@ -23,7 +23,6 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
-import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.today.TodayUiState
@@ -42,11 +41,15 @@ import java.util.Locale
  * their glyph, in Bold where the household writes Medium, over a place set two ranks below
  * it. [TextWidgetLayout] carries the four ranks, the three forms and every number's reason.
  *
- * What the words have to say that a drawing said before:
+ * **Two marks are drawn, and both were asked for** (committente, 19 set 2026, on the
+ * device). The position pin comes back in front of a place the phone is standing in, where
+ * the first pass spelled it out in words and the words ate the place name; and the day's
+ * high and low get the up and down marks. Neither contradicts the card's premise: a mark at
+ * the size of the line it belongs to, tinted with that line's ink, is punctuation, and this
+ * card still has no picture on it — no weather glyph, no chip, no illustration.
  *
- * - **the place the phone is standing in** was the position pin on the other cards, and is
- *   [R.string.widget_text_place_gps] here: the provenance of a number is part of its truth
- *   (§5.1's header rule), and a card with no glyphs has to say it rather than mark it;
+ * What the words still have to say that a drawing said before:
+ *
  * - **the official warning** was a chip, which carries its own measured ground precisely
  *   because a widget's ground is a scrimmed sky or a wallpaper and a bare coloured word on
  *   one of those was found unreadable (committente, 4 set, on the Sky card's verdicts).
@@ -205,7 +208,10 @@ private fun RowContent(
                 WarningWord(level, palette, TextAlign.End)
             }
             content.week.firstOrNull()?.forecast?.takeIf { plan.showRange }?.let { day ->
-                DayRange(day.highC, day.lowC, model.settings.units, palette, TextFactSp.sp)
+                DayRange(
+                    day.highC, day.lowC, model.settings.units, palette,
+                    size = TextFactSp.sp, marks = true
+                )
             }
         }
     }
@@ -271,7 +277,10 @@ private fun StackContent(
             WarningWord(level, palette, TextAlign.Start)
         }
         today?.takeIf { plan.showRange }?.let { day ->
-            DayRange(day.highC, day.lowC, model.settings.units, palette, TextFactSp.sp)
+            DayRange(
+                day.highC, day.lowC, model.settings.units, palette,
+                size = TextFactSp.sp, marks = true
+            )
         }
         if (plan.showHours) {
             val is24h = android.text.format.DateFormat.is24HourFormat(context)
@@ -346,10 +355,20 @@ private fun textSentenceStyle(palette: WidgetPalette, align: TextAlign): TextSty
 )
 
 /**
- * Rank 3, the place — and, where the place is the phone's own, the words the other cards
- * draw as a pin. It is the eyebrow of the card rather than a line under the number: with
- * nothing drawn, the reader needs to know what the big figure is ABOUT before reading it,
- * and a name set two ranks down cannot compete with it for the eye.
+ * Rank 3, the place, with the position pin in front of it when the place is the phone's own
+ * — the household's own [PlaceLine], at this card's fact size.
+ *
+ * It is the eyebrow of the card rather than a line under the number: with nothing drawn,
+ * the reader needs to know what the big figure is ABOUT before reading it, and a name set
+ * two ranks down cannot compete with it for the eye.
+ *
+ * **The pin, from 19 set 2026** (committente, on the device). The first pass said «la mia
+ * posizione» in words, on the argument that a card with nothing drawn should say what the
+ * other cards mark — and on the device the words were the whole line: «Ornago · la mia
+ * posizi…», a place name truncated by its own footnote. The mark is 16 dp of ink that says
+ * the same thing and leaves the name whole, and it is the same drawing the app screen and
+ * the other four cards put there, so the five cards cannot disagree about what "my
+ * position" looks like.
  */
 @Composable
 private fun PlaceLineText(
@@ -357,15 +376,11 @@ private fun PlaceLineText(
     model: WidgetModel,
     palette: WidgetPalette
 ) {
-    val context = LocalContext.current
-    Text(
-        text = if (model.fromGps) {
-            context.getString(R.string.widget_text_place_gps, content.city.name)
-        } else {
-            content.city.name
-        },
-        style = secondaryStyle(palette, TextFactSp.sp),
-        maxLines = 1
+    PlaceLine(
+        name = content.city.name,
+        fromGps = model.fromGps,
+        palette = palette,
+        size = TextFactSp.sp
     )
 }
 

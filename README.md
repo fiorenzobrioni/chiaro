@@ -121,14 +121,15 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   growing into the height the launcher grants, and the day's sentence when the card is
   wide or tall enough to hold it: three forms, and the size you give it picks one),
   **Today** (that same row as the head of the card, and the next hours under it),
-  **In words** (the same facts with nothing drawn on the card at all: no weather icon, no
-  position pin, no chip. The hierarchy is built out of type instead, in four ranks that
-  differ by size and weight and ink at once: the temperature is the drawing now, set bold
-  and grown into the grant the way the other cards grow their glyph, with the place above
-  it as the card's eyebrow, the day's sentence at its shoulder, and the warning and the
-  day's high and low as facts under that. Three cells already carry the sentence here,
-  one better than **Now** manages, because there is no icon to pay for first, and two rows
-  turn it into a centred column with the next hours as figures) and **Sky** (the moments in
+  **In words** (the same facts with no picture on the card at all: no weather icon, no
+  chip. The hierarchy is built out of type instead, in four ranks that differ by size and
+  weight and ink at once: the temperature is the drawing now, set bold and grown into the
+  grant the way the other cards grow their glyph, with the place above it as the card's
+  eyebrow, the day's sentence at its shoulder, and the warning and the day's high and low
+  as facts under that, the high and the low each behind their own arrow. Three cells
+  already carry the sentence here, one better than **Now** manages, because there is no
+  icon to pay for first, and two rows turn it into a centred column with the next hours as
+  figures) and **Sky** (the moments in
   front of you and their verdicts: the moment's time as the big number, its name under it,
   the verdict as a word with the number that decided it or, on a narrower card, as the
   series' own mark, and on a taller card as many further moments as honestly fit and never
@@ -139,8 +140,9 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   on the tallest card, the week: it resizes from one cell to sixteen and reshapes itself at
   every step, and it has a settings screen of its own with a live preview at eight sizes).
   Each one is configured on its own: which place, the background (the sky itself, light,
-  dark or follow the system), its opacity, which icon family where the card draws icons,
-  and what the card carries.
+  dark, follow the system, or one of six colours: blue, light blue, green, sea green,
+  violet, terracotta), its opacity, which icon family where the card draws icons, and what
+  the card carries.
   They
   read the same builders the app reads, so the home screen and the app cannot print two
   different sunrises; they repaint on every data commit, state their age when stale, and

@@ -12,8 +12,12 @@
   over the temperature on the leading side, the day's sentence against the far edge. Same
   numbers as the widget — 14dp at both words' edges and 6 above and below
   (WidgetCardPadding / WidgetCardPaddingSnug), the two columns split 42/58
-  (textLeadingColumn), the ranks at 41sp bold, 17sp medium and 14sp regular
+  (textLeadingColumn), the ranks at 39sp bold, 18sp medium and 16sp regular
   (TextWidgetLayout).
+
+  The sample place is a saved city, so there is no position pin on it: the running card
+  draws one in front of a place the phone is standing in, and a preview that showed the pin
+  over a name the reader never chose would be advertising a state, not a card.
 
   Sample data only: a preview is a drawing of the product, never a reading. What the widget
   itself must never invent, it still never invents — the moment the launcher binds it, this
@@ -46,7 +50,7 @@
             android:singleLine="true"
             android:text="@string/widget_preview_place"
             android:textColor="@color/widget_preview_ink_dim"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -55,12 +59,12 @@
             android:singleLine="true"
             android:text="25°"
             android:textColor="@color/widget_preview_ink"
-            android:textSize="41sp"
+            android:textSize="39sp"
             android:textStyle="bold" />
     </LinearLayout>
 
     <!-- Rank 2: the same sample sentence the other previews print, in this card's dress —
-         17sp medium, strong ink, right-aligned, two lines. -->
+         18sp medium, strong ink, right-aligned, two lines. -->
     <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -74,5 +78,5 @@
         android:text="@string/widget_preview_headline"
         android:textAlignment="viewEnd"
         android:textColor="@color/widget_preview_ink"
-        android:textSize="17sp" />
+        android:textSize="18sp" />
 </LinearLayout>

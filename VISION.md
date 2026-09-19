@@ -457,11 +457,14 @@ Glance, five cards, matching the app's dynamic color:
   place set two ranks under it as the card's eyebrow, the day's sentence at its shoulder, and the
   official warning and the day's high and low as facts under that. Three cells already carry the
   sentence here, one better than the Now card manages, because there is no glyph to pay for first;
-  two rows turn the card into a centred column with the next hours as figures. The position pin
-  becomes words and the warning's chip becomes the level's word alone, because a chip is the device
-  that carries its own measured ground and this card has no ground to draw. Everything else is the
-  household's: the same model, the same sentence, the same warning table, the same refusal to
-  invent.
+  two rows turn the card into a centred column with the next hours as figures. The warning's chip
+  becomes the level's word alone, because a chip is the device that carries its own measured ground
+  and this card has no ground to draw. Two marks stay, both asked for from the device on 19 set
+  2026: the position pin in front of a place the phone is standing in — the first pass spelled it
+  out in words and the words ate the place name — and the up and down marks before the day's high
+  and low. A mark at the size of its own line, in that line's ink, is punctuation; the card still
+  carries no picture. Everything else is the household's: the same model, the same sentence, the
+  same warning table, the same refusal to invent.
 - Now, Today and In words let the reader turn the sentence off per widget, and Now can lay its
   one-row card the other way round — glyph in the trailing corner, the sentence at the number's shoulder,
   the tall card's composition pressed into one row — so a home screen can carry the two looks.
@@ -477,6 +480,13 @@ Glance, five cards, matching the app's dynamic color:
 
 A widget never invents: with stale data it says how old it is, with no place configured it says so
 and opens the app, and no layout ever pads itself out to fill the space it was given.
+
+**The card each one wears** is the reader's, per widget: the computed sky (the default), a light
+card, a dark one, one that follows the phone — and, since 19 set 2026, one of six colours
+(committente: «possibilità di mettere uno sfondo colorato: blu, blu chiaro, verde…»). The colours
+are the one place in this product where colour is offered as colour rather than as meaning, and
+they ship with no new inks: each one is picked dark enough to carry the white pair the sky card
+already uses, and DESIGN §2.6 prints the eighteen measurements that say so.
 
 **The official warning on a widget** (§12.8, 9 set 2026) follows the launcher's own habit — the
 system weather widgets this app lives beside show a warning line when the national service issues

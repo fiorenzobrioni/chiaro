@@ -287,10 +287,18 @@ private fun heroSp(room: Dp, column: Dp, fontScale: Float, max: Float): Float {
  * Bold, rounded up so the guard errs towards the smaller number. */
 private const val TempEmWidth = 2.1f
 
-/** Below this a temperature stops being a hero and becomes just another line; the
- * reference 85 dp row with a stale marker on it lands at 30.3, so the floor is what a
- * squeezed one-row card falls back to rather than a number anything usually hits. */
-internal const val TextHeroFloor = 30f
+/**
+ * Below this a temperature stops being a hero and becomes just another line.
+ *
+ * **26 since 19 set 2026**, from 30, and the reason is arithmetic rather than taste: rank 3
+ * went from 14 sp to 16, so the place's line grew by 2.6 dp and the stale marker's budget
+ * with it. On the reference 85 dp row a stale card now leaves 37.4 dp, which is 28.3 sp —
+ * under the old floor, and a floor that cannot be paid is not a floor, it is a clipped
+ * line. At 26 the same card keeps its real number and the floor goes back to being what it
+ * is meant to be: the point below which a squeezed card stops shrinking the figure, not a
+ * size any measured grant reaches. Fresh data on that row still reads 39.3 sp.
+ */
+internal const val TextHeroFloor = 26f
 
 /** A tall card reserves this much for its number before anything optional is paid: the
  * rank-1 line of a page, not what is left after the footnotes. */
@@ -302,21 +310,31 @@ internal const val TextHeroStackFloor = 40f
 internal const val TextHeroMax = 56f
 
 /**
- * Rank 2, the day's sentence: 17 sp Medium in the strong ink, one point above the
+ * Rank 2, the day's sentence: 18 sp Medium in the strong ink, two points above the
  * household's 16. The other cards put the sentence beside a drawing, and the drawing is
- * what carries the card at arm's length; here the sentence IS the second thing to read,
- * so it takes the step the glyph's absence pays for. One point and not two: at 18 the
- * reference four-cell card's 174 dp column stops holding «Pioggia gelata verso le 15:00»
- * in two lines.
+ * what carries the card at arm's length; here the sentence IS the second thing to read, so
+ * it takes the step the glyph's absence pays for.
+ *
+ * **18 since 19 set 2026** (committente, on the device), from 17: rank 3 went up to the
+ * household's 16 in the same pass and 17 over 16 is not a rank, it is a rounding error. Two
+ * points, with Medium against Regular and the strong ink against the quiet one, is the
+ * smallest gap that still sorts at arm's length. At 18 the reference four-cell card's
+ * 174 dp column still holds «Pioggia gelata verso le 15:00» in two lines, which is the
+ * measurement that stopped it going to 19.
  */
-internal const val TextSentenceSp = 17f
+internal const val TextSentenceSp = 18f
 
-/** Rank 3, the facts: the place, the day's high and low, the warning's word and the hours'
- * own temperatures. 14 sp — the app's own `bodyMedium`, and far enough under 17 that the
- * eye sorts the two without having to compare them. Inside the rank the ink and the weight
- * still do their work: the place is Regular in the quiet ink, the figures Medium in the
- * strong one. */
-internal const val TextFactSp = 14f
+/**
+ * Rank 3, the facts: the place, the day's high and low, the warning's word and the hours'
+ * own temperatures. **16 sp since 19 set 2026** (committente, on the device: «la località
+ * un pochino più grande», «max e min un po' più grandi»), from 14 — which lands it on the
+ * household's own 16, the size every other card prints a place and a range at, so the five
+ * widgets now agree about what rank a fact is.
+ *
+ * Inside the rank the other two axes still do the sorting: the place is Regular in the
+ * quiet ink, the figures Medium in the strong one, and the range carries its two marks.
+ */
+internal const val TextFactSp = 16f
 
 /** Rank 4, the footnotes: the stale marker and the hour labels, at the household's own
  * stale size. The marker keeps the freshness ink it wears on every other card; the labels
@@ -330,8 +348,9 @@ internal const val TextStaleSp = 11f
 internal const val TextHourTempSp = TextFactSp
 
 /** How many hours a tall card prints, by the width it has. A cell is «−12°» at
- * [TextHourTempSp] (~29 dp) with air either side; six is the ceiling because the strip is
- * one Glance container and Glance draws at most ten children per container (the Today
+ * [TextHourTempSp] (~34 dp) plus the gap it shares with its neighbours, so 38 is the width
+ * below which a cell starts clipping its own figure; six is the ceiling because the strip
+ * is one Glance container and Glance draws at most ten children per container (the Today
  * widget lost the last two hours of its own strip to that rule, Fase 11), and three is the
  * floor because fewer is no longer a stretch of the day. */
 internal fun textHourCells(width: Dp): Int =
@@ -339,7 +358,7 @@ internal fun textHourCells(width: Dp): Int =
         .toInt()
         .coerceIn(TextHourCellsFloor, TextHourCellsCeiling)
 
-internal val TextHourCellMin = 36.dp
+internal val TextHourCellMin = 38.dp
 internal val TextHourCellGap = 6.dp
 internal const val TextHourCellsFloor = 3
 internal const val TextHourCellsCeiling = 6

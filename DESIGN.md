@@ -332,6 +332,50 @@ light  #006FAC  #00A6EB  #7BCCFF  #E0D7C3  #FFBB66  #E67E00  #B85100
 dark   #2FBAFF  #0091D5  #0070AB  #4C473A  #985E00  #C87400  #F29300
 ```
 
+### 2.6 The card colours a widget can wear
+
+A home-screen widget's card is furniture on somebody's wallpaper, and since 19 set 2026 the
+reader can choose what colour that piece of furniture is (committente: «possibilità di
+mettere uno sfondo colorato: blu, blu chiaro, verde…»), beside the four choices that were
+already there — the computed sky, light, dark, follow the system. It applies to all five
+widgets, because a colour is a property of the card and not of what is printed on it.
+
+This is the one table in the app that is **colour offered as colour**, and it is deliberate
+rather than a hole in §2.1: the generated scheme answers "what does this role mean", and
+this answers "what colour is this object", which is a different question and the reader's to
+answer. Hence hexes, in `ui/theme/WidgetCardPalette.kt`, and a name in front of every swatch
+on the configuration screen (§10: a fill that carries meaning has a word beside it).
+
+**No new inks ship with them.** Ink and ground are a pair (§2.3), so six colours without
+their inks would be half a decision — and the Sky card measured what the other half costs
+on 4 set, when a bare verdict colour on a card whose ground the app does not control came
+back unreadable from a device. Instead every colour is picked dark enough to carry the pair
+the app already has: **the §3.6 white over the scrimmed sky**, full strength for the ink,
+75% for the quiet one, 85% for the freshness one.
+
+| Card | ground | white ink | quiet 75% | freshness 85% |
+|---|---|---|---|---|
+| blue | `#0F3B6B` | 11.3:1 | 7.1:1 | 8.6:1 |
+| light blue | `#0F5580` | 8.0:1 | 5.2:1 | 6.3:1 |
+| green | `#17572E` | 8.6:1 | 5.6:1 | 6.7:1 |
+| sea green | `#0F5B5B` | 7.9:1 | 5.2:1 | 6.2:1 |
+| violet | `#4A2C63` | 11.5:1 | 7.2:1 | 8.8:1 |
+| terracotta | `#7A3320` | 9.0:1 | 5.8:1 | 7.0:1 |
+
+The quiet ink is the floor that matters: it carries an 11 sp hour label, which needs 4.5:1,
+and the worst of the six gives 5.2. `PaletteContrastTest` asserts all eighteen numbers and
+`PaletteDocTest` asserts that this table is the code's.
+
+Six, and no two closer than **13 ΔE**, so picking one over another is picking a colour and
+not a word — the blue is deeper than its first draft for exactly that reason: next to the
+light blue it measured 9.4, and two names were doing the work a colour should do.
+
+A coloured card thins with the reader's opacity exactly as the sky does, and below
+`InkTrustFloorPct` it hands the ink question to the wallpaper for the same reason the sky
+does: choosing a colour is choosing a **ground**, not naming an ink, and at 20% solidity
+that ground is mostly not there. Light and dark keep deciding at any solidity, because
+those two ARE the reader naming an ink (`widgetInk`).
+
 ### 2.4 Rules for using color
 
 - Roles, never hexes (§2.1). A role means the same thing in both dresses (§2.5); a

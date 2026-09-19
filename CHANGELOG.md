@@ -15,6 +15,16 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
 
 ### Added
 
+- **A card colour for every widget.** Beside the computed sky, light, dark and follow-the-
+  system, a widget's card can now be one of six colours: blue, light blue, green, sea
+  green, violet, terracotta. It is the one place in this product where colour is offered as
+  colour rather than as meaning, and it ships with no new inks — each colour is picked dark
+  enough to carry the white pair the sky card already writes with, measured at no worse
+  than 7.9:1 for the ink, 5.2:1 for the quiet one and 6.2:1 for the freshness one, so even
+  the 11 sp lines clear what small text needs. No two of the six are closer than 13 ΔE, so
+  picking one over another is picking a colour and not a word. The two configuration
+  screens now print the same background section from one place rather than from two copies
+  of the same list, and the colour rows carry a swatch behind their name.
 - **A fifth home widget, «In parole» / "In words"**: the Now widget's facts with nothing
   drawn on the card. No weather glyph, no position pin, no warning chip, no verdict mark —
   words and figures, and the whole hierarchy built out of type. It is not the Now widget
@@ -45,6 +55,16 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
   Today and Now print, the same `warningSlot` table, the same per-widget place, background,
   opacity and content switches (minus the icon family, which would change nothing here).
   Its budget is pure arithmetic on dp and sp with a table pinning it, like the other four.
+
+  Redrawn the same day on a device: the place and the facts moved up to the household's
+  16 sp and the sentence to 18, so the ranks still sort by size as well as by weight and
+  ink; the position pin came back in front of a place the phone is standing in, where the
+  first pass spelled it out in words and the words ate the place name («Ornago · la mia
+  posizi…»); and the day's high and low each got a mark drawn at the verdict marks' weight
+  rather than sharing a slash. A mark at the size of its own line, in that line's ink, is
+  punctuation, and the card still carries no picture. The hero's floor dropped from 30 sp
+  to 26 to pay for the bigger place line, which is what keeps a stale one-row card from
+  clipping instead of shrinking.
 - **Official warnings from the Protezione Civile** (Fase 11), for places in Italy. The
   Dipartimento's criticality bulletin is discovered from its own files, read from its CAP,
   and matched to a place by geometry: the 187 warning zones ship inside the app as
