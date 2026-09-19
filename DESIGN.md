@@ -727,16 +727,34 @@ already flattened. Two things SMIL has that AVD does not:
 
 Each entry is the contract; the Compose signatures land in Fase 1.
 
-**8.1 SkyCanvas** — the gradient (§3), the place name, `heroTemperature`, condition,
-feels-like, the daylight ribbon, the headline sentence, the scrim (§3.6). Collapses on
-scroll into the app bar, keeping place and temperature. **At least 280dp plus the status
+**8.1 SkyCanvas** — the gradient (§3), `heroTemperature`, condition, feels-like, the
+daylight ribbon, the headline sentence, the scrim (§3.6). **At least 280dp plus the status
 bar, and taller when its text needs it** (8 set 2026): everything on it is measured in sp
 and the block was measured in dp, so at 100% type a two-line sentence left 2dp before the
-hero climbed into the place row, and at 115% they overlapped by 30dp. The row and the hero
-are the two ends of one column now, `SpaceBetween` on a floor rather than two things
+hero climbed into the place row, and at 115% they overlapped by 30dp. The row's seat and
+the hero are the two ends of one column, `SpaceBetween` on a floor rather than two things
 aligned to opposite edges of a fixed box. The bottom edge is straight (4 set, kept on
 review 8 set): every other surface on the page is inset and rounded, and the one that is
 not is the ground the page opens on, not a card floating over it.
+
+**8.1b The place row** — name, chevron, the place's own day and hour, the pager dots, the
+gear. It is **pinned** (18 set 2026, device request): the city these numbers belong to must
+not scroll away, which is the rule the other three tabs already kept by drawing their
+header above their list. On Today it is an overlay and not a row above the list, because
+the canvas still owns the top edge of the screen (§3.6) and the row still stands on the sky
+when the page is at rest — so it is the one bar in the app with two grounds:
+
+- **at the very top**: no ground of its own, white ink over the canvas' top scrim band,
+  which is exactly where §3.6 measures its 5.27:1;
+- **from the first scrolled pixel**: the page's own `surface` and theme ink, crossing over
+  on §7's effects spring. Nothing in between, because in between is white ink over
+  unscrimmed sky — the state the old flip allowed for the row while it protected the clock.
+
+The status-bar icons follow the same flip, because what is behind the status bar IS this
+bar. The canvas keeps the row's seat empty with a spacer as tall as the bar really is,
+measured and not quoted (the row grows with the type scale, with the dots and with the
+place's hour), so the hero lands where it always did and can never climb under a bar it no
+longer belongs to.
 
 **8.2 FreshnessChip** — appears only when the data is older than the update interval.
 Warning role, the real age ("3 hours ago"), tappable to retry, with a progress state while

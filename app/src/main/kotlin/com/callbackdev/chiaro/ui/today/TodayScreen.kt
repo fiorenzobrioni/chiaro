@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.ui.today
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -65,6 +67,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -94,7 +97,6 @@ import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.components.RainChart
 import com.callbackdev.chiaro.ui.components.RainHour
 import com.callbackdev.chiaro.ui.components.SkyCanvas
-import com.callbackdev.chiaro.ui.components.SkyCanvasTopScrimEnd
 import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.warnings.WarningBanner
@@ -247,9 +249,10 @@ private fun PagedToday(
         onLocationErrorShown()
     }
 
-    // The status bar icons follow what is under them: white while the canvas' top
-    // scrim still backs the bar, theme ink over the plain states AND once the scroll
-    // has carried the scrim past it — white icons over scrolled-up light content
+    // The status bar icons follow what is under them, which since 18 set 2026 is the
+    // pinned place row: white while that row is still transparent over the canvas' top
+    // scrim, theme ink over the plain states AND from the first scrolled pixel, where
+    // the row takes the page's own surface — white icons over scrolled-up light content
     // were unreadable (device report, 3 set).
     val currentPage = pages.getOrNull(pagerState.currentPage.coerceIn(0, pages.lastIndex))
     val currentState = currentPage?.let { stateFor(it).collectAsStateWithLifecycle().value }
@@ -680,27 +683,59 @@ private fun ContentState(
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val timeFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
 
-    // White status-bar icons hold only while the canvas' top scrim band is still
-    // behind the bar: past that offset the sky under the clock is unscrimmed, then
-    // gone altogether, and the bar must return to theme ink. The band is a fraction
-    // of the canvas, and the canvas grows with its text (8 set 2026), so the flip is
-    // measured on the canvas item's real height and falls back to the floor only
-    // before the first layout.
+    // The place row is PINNED over the list since 18 set 2026 (device request): the
+    // city these numbers belong to must not scroll away, which is the rule the other
+    // three tabs already kept by drawing their header above their list. Here it is an
+    // overlay rather than a row above the list, because the canvas still owns the top
+    // edge of the screen (§3.6) and the row still stands on the sky when the page
+    // is at rest.
+    //
+    // So this is the one bar in the app with two grounds, and the flip between them is
+    // the flip the status-bar icons used to measure for themselves: at the very top the
+    // bar is transparent over the canvas' top scrim band, which is exactly where §3.6
+    // measures its white; from the FIRST scrolled pixel it carries the page's own
+    // surface and theme ink. Nothing in between, because in between is white ink over
+    // unscrimmed sky.
     val listState = rememberLazyListState()
     val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val density = LocalDensity.current
-    val statusTopPx = with(density) { statusTop.toPx() }
-    val canvasFloorPx = with(density) { (CanvasBaseHeight + statusTop).toPx() }
-    val behindBar by remember(statusTopPx, canvasFloorPx) {
+    val atTop by remember {
         derivedStateOf {
-            val canvasPx = listState.layoutInfo.visibleItemsInfo.firstOrNull()
-                ?.takeIf { it.index == 0 }?.size?.toFloat() ?: canvasFloorPx
-            val flipAtPx = (canvasPx * SkyCanvasTopScrimEnd - statusTopPx).coerceAtLeast(0f)
-            listState.firstVisibleItemIndex == 0 &&
-                listState.firstVisibleItemScrollOffset <= flipAtPx
+            listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
         }
     }
-    LaunchedEffect(isCurrent, behindBar) { if (isCurrent) onCanvasBehindBar(behindBar) }
+    // The status bar shows what is behind it, and what is behind it is this bar.
+    LaunchedEffect(isCurrent, atTop) { if (isCurrent) onCanvasBehindBar(atTop) }
+
+    // The canvas keeps the row's seat empty: a spacer as tall as the bar really is,
+    // measured rather than quoted because the row grows with the type scale, with the
+    // pager dots and with the place's own hour. [PlainHeaderHeight] is only the floor it
+    // stands on before the first layout.
+    val reduced = reducedMotion()
+    var headerHeight by remember(statusTop) { mutableStateOf(statusTop + PlainHeaderHeight) }
+    val headerInk by animateColorAsState(
+        targetValue = if (atTop) Color.White else MaterialTheme.colorScheme.onSurface,
+        animationSpec = ChiaroMotion.effects(reduced),
+        label = "place row ink"
+    )
+    val headerDotInk by animateColorAsState(
+        targetValue = if (atTop) {
+            Color.White.copy(alpha = 0.4f)
+        } else {
+            MaterialTheme.colorScheme.outlineVariant
+        },
+        animationSpec = ChiaroMotion.effects(reduced),
+        label = "place row dots"
+    )
+    // The transparent end is the surface at zero alpha, not `Color.Transparent`: colors
+    // interpolate perceptually here, so fading in from a transparent BLACK would draw a
+    // dark veil across a light page on the way.
+    val surface = MaterialTheme.colorScheme.surface
+    val headerGround by animateColorAsState(
+        targetValue = if (atTop) surface.copy(alpha = 0f) else surface,
+        animationSpec = ChiaroMotion.effects(reduced),
+        label = "place row ground"
+    )
 
     // Which day of the week is open, hoisted out of the week because the week is no
     // longer one composable: each row is its own lazy item (8 set 2026), so the seven
@@ -760,12 +795,7 @@ private fun ContentState(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = WindowInsets.navigationBars.asPaddingValues()
         ) {
-            item {
-                CanvasHeader(
-                    content, title, isGps, dots, units, timeFmt, locale,
-                    onOpenPlaces, onOpenSettings
-                )
-            }
+            item { CanvasHeader(content, units, timeFmt, locale, headerHeight) }
 
             if (content.error != null) {
                 item { ErrorBanner(content.error, onRefresh) }
@@ -839,6 +869,34 @@ private fun ContentState(
             item { Details(content.report, units, locale) }
             item { DataFooter(content, timeFmt) }
         }
+
+        // After the list so it stands over it, inside the pull box so the refresh
+        // indicator still comes down in front of it.
+        PlaceHeader(
+            title = title,
+            isGps = isGps,
+            localNow = if (isGps) {
+                null
+            } else {
+                "${Formats.dayLong(content.now.toLocalDate(), locale)} · " +
+                    content.now.format(timeFmt)
+            },
+            dots = dots,
+            onOpenPlaces = onOpenPlaces,
+            onOpenSettings = onOpenSettings,
+            contentColor = headerInk,
+            dotInactive = headerDotInk,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                // First in the chain: what the canvas must leave empty is the whole bar,
+                // status-bar inset and padding included.
+                .onSizeChanged { size ->
+                    headerHeight = with(density) { size.height.toDp() }
+                }
+                .background(headerGround)
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = HeaderVerticalPadding)
+        )
     }
     }
 }
@@ -901,21 +959,19 @@ private fun SectionTitle(text: String) {
  * temperature, a 22sp sentence that runs to two lines in Italian) and the block was
  * measured in dp: at 100% type a two-line sentence left 2dp before the hero climbed into
  * the place row, and at 115% the two overlapped by 30dp. The canvas is now at least this
- * tall and grows with what it holds — see [CanvasHeader].
+ * tall and grows with what it holds — see [CanvasHeader]. The place row is pinned over
+ * the list rather than scrolling inside the canvas (18 set 2026), and the canvas holds a
+ * spacer its height in its place, so this floor still measures the same block.
  */
 private val CanvasBaseHeight = 280.dp
 
 @Composable
 private fun CanvasHeader(
     content: TodayUiState.Content,
-    title: String,
-    isGps: Boolean,
-    dots: Pair<Int, Int>?,
     units: UnitSettings,
     timeFmt: DateTimeFormatter,
     locale: Locale,
-    onOpenPlaces: () -> Unit,
-    onOpenSettings: () -> Unit
+    placeRowHeight: Dp
 ) {
     val sky = content.sky
     val current = content.report.current
@@ -933,32 +989,20 @@ private fun CanvasHeader(
         ),
         minHeight = floor
     ) {
-        // One column with the place row at the top and the hero at the bottom, rather
-        // than two children aligned to opposite edges of a fixed box: `SpaceBetween` on
-        // a floor keeps them apart when there is room and stacks them when there is
-        // not, and a fixed box let them overlap instead.
+        // One column with the place row's seat at the top and the hero at the bottom,
+        // rather than two children aligned to opposite edges of a fixed box:
+        // `SpaceBetween` on a floor keeps them apart when there is room and stacks them
+        // when there is not, and a fixed box let them overlap instead.
+        //
+        // The seat and not the row: the row is pinned over the list now, and the sky is
+        // still the thing it stands on. A spacer as tall as the real bar keeps the
+        // geometry the row used to make for itself — the hero lands where it always did,
+        // and it cannot climb under a bar it no longer belongs to.
         Column(
             modifier = Modifier.fillMaxWidth().heightIn(min = floor),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            PlaceHeader(
-                title = title,
-                isGps = isGps,
-                localNow = if (isGps) {
-                    null
-                } else {
-                    "${Formats.dayLong(content.now.toLocalDate(), locale)} · " +
-                        content.now.format(timeFmt)
-                },
-                dots = dots,
-                onOpenPlaces = onOpenPlaces,
-                onOpenSettings = onOpenSettings,
-                contentColor = Color.White,
-                dotInactive = Color.White.copy(alpha = 0.4f),
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = HeaderVerticalPadding)
-            )
+            Spacer(modifier = Modifier.height(placeRowHeight))
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

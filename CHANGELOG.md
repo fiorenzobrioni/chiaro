@@ -291,6 +291,15 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 
 ### Changed
 
+- **Today's place row no longer scrolls away.** The city these numbers belong to used to be
+  the first thing to leave the screen: the row sat inside the sky canvas, which is the first
+  item of the scroll. It is pinned now, the way Sky, Alerts and the Journal already kept
+  their own header, and it is the one bar in the app with two grounds — white over the
+  canvas' scrim while the page is at rest, the page's own surface and theme ink from the
+  first scrolled pixel, with the status-bar icons following the same flip because that bar is
+  what is behind them. The canvas keeps the row's seat with a spacer as tall as the bar
+  really is, so the hero lands exactly where it did before and the skeleton still matches.
+
 - **«Quasi sereno» has a drawing of its own, and the app composes it.** WMO code 1 is a
   quarter-covered sky — a median 25% of cloud against code 2's 64%, measured on 1 680
   hours — and it had been drawn twice wrong: first as «poco nuvoloso», then, since the
