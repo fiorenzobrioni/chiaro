@@ -113,6 +113,18 @@ data class WidgetLook(
      */
     val icons: WidgetIcons = WidgetIcons.APP,
     /**
+     * The weather glyph on the text widget (committente, 20 set 2026). **Off by default**,
+     * and that is the card's name keeping its word: «In parole» has to be true the moment it
+     * is placed, and a reader who wants the drawing turns it on. It is per widget rather
+     * than an app setting for the reason every other content switch here is — so one home
+     * screen can carry the same card twice, once with the glyph and once without, which is
+     * half of why the option is worth having.
+     *
+     * It changes nothing on the other four cards, which have always drawn their glyph, and
+     * it is only offered on the one it means something to (`WidgetConfigActivity`).
+     */
+    val showIcon: Boolean = false,
+    /**
      * Which colour a [WidgetBackground.COLOR] card is painted (19 set 2026). It is kept
      * even while the background is something else, so a reader who tries the sky and comes
      * back finds the colour they picked rather than the default: a stored choice that
@@ -156,6 +168,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             icons = prefs[iconsKey(appWidgetId)]
                 ?.let { name -> WidgetIcons.entries.firstOrNull { it.name == name } }
                 ?: WidgetIcons.APP,
+            showIcon = prefs[iconShownKey(appWidgetId)] ?: false,
             cardColor = prefs[cardColorKey(appWidgetId)]
                 ?.let { name -> WidgetCardColor.entries.firstOrNull { it.name == name } }
                 ?: WidgetCardColor.BLUE
@@ -171,6 +184,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             prefs[warningKey(appWidgetId)] = look.showWarning
             prefs[arrangementKey(appWidgetId)] = look.arrangement.name
             prefs[iconsKey(appWidgetId)] = look.icons.name
+            prefs[iconShownKey(appWidgetId)] = look.showIcon
             prefs[cardColorKey(appWidgetId)] = look.cardColor.name
         }
     }
@@ -186,6 +200,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 prefs.remove(warningKey(it))
                 prefs.remove(arrangementKey(it))
                 prefs.remove(iconsKey(it))
+                prefs.remove(iconShownKey(it))
                 prefs.remove(cardColorKey(it))
                 // The switch this key belonged to is gone (8 set 2026); a widget placed
                 // while it existed still carries the key, and leaves with it.
@@ -201,6 +216,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
     private fun warningKey(id: Int) = booleanPreferencesKey("warning_$id")
     private fun arrangementKey(id: Int) = stringPreferencesKey("arrangement_$id")
     private fun iconsKey(id: Int) = stringPreferencesKey("icons_$id")
+    private fun iconShownKey(id: Int) = booleanPreferencesKey("icon_shown_$id")
     private fun cardColorKey(id: Int) = stringPreferencesKey("card_color_$id")
     private fun legacyConditionKey(id: Int) = booleanPreferencesKey("condition_$id")
 

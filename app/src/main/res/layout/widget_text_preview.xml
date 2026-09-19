@@ -15,6 +15,10 @@
   for the sentence (textLeadingColumn), the ranks at 39sp bold, 18sp medium and 16sp
   regular (TextWidgetLayout).
 
+  No weather glyph either: it is a switch on the card and it starts off (WidgetLook.showIcon),
+  so a card the reader has just placed is exactly this one, and a preview that advertised the
+  drawing would be advertising a state.
+
   The sample place is a saved city, so there is no position pin on it: the running card
   draws one in front of a place the phone is standing in, and a preview that showed the pin
   over a name the reader never chose would be advertising a state, not a card.

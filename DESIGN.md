@@ -605,6 +605,18 @@ three different blocks. 44sp where it stands under the place with a column of pr
 it; 56 on a narrow tall card, where it stands over its own sentence; 64 on the two-row form
 from four cells up, where it stands BESIDE the words and the block beside it is 89.8dp tall.
 
+**The weather glyph is optional here, and it is drawn into air rather than into a slot**
+(20 set 2026). Every other card budgets for its drawing first and arranges the words around
+it; this one computes all four of its plans without the glyph and then asks whether what is
+left over is big enough to hold one (`TextWidgetLayout`'s four slot functions, which answer
+a size or nothing). So turning it on costs no line of sentence, no warning, no range and no
+dp of number, and where there is no air there is no drawing: three cells on one row and two
+cells on two stay words whatever the switch says. Two slots, one per kind of empty space:
+**beside the number**, in the rest of its line, which is air because a temperature is at
+most 2.1 ems wide; and on the panel **over the words**, in the band that form keeps empty by
+pinning its eyebrow to the top and its block to the bottom. 48 to 104 dp, one step under the
+family's hero floor at the bottom end because here the glyph is not the hero, the number is.
+
 Two **marks** sit inline with that type and do not break it (19 set 2026): the position pin
 in front of a place the phone is standing in, and `ic_range_high`/`ic_range_low` before the
 day's high and low — drawn rather than the characters ↑ and ↓, at the verdict marks' 2.4-of-24

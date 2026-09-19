@@ -210,9 +210,10 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
 
             // Offered on every card that draws weather glyphs, and the reason to pick a
             // family here is the card's own — its size, its ground, the wallpaper behind
-            // it (see [WidgetIcons]). Not on the text widget, which draws none: a switch
-            // that changes nothing must not be offered.
-            if (kind != WidgetKind.TEXT) {
+            // it (see [WidgetIcons]). On the text widget it appears only once the glyph
+            // has been turned on below: a switch that changes nothing must not be offered,
+            // and until then that card draws none.
+            if (kind != WidgetKind.TEXT || current.showIcon) {
                 SectionLabel(stringResource(R.string.widget_config_icons))
                 val iconOptions = listOf(
                     WidgetIcons.APP to stringResource(R.string.widget_icons_app),
@@ -236,6 +237,17 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
             // chosen on the Sky screen, so it has no content switch to offer here.
             if (kind == WidgetKind.NOW || kind == WidgetKind.TODAY || kind == WidgetKind.TEXT) {
                 SectionLabel(stringResource(R.string.widget_config_content))
+                // The text card's one picture, and the first thing to decide about it —
+                // above the sentence, because it is the switch that changes what KIND of
+                // card this is rather than what the card says (committente, 20 set 2026).
+                if (kind == WidgetKind.TEXT) {
+                    SwitchRow(
+                        label = stringResource(R.string.widget_config_show_icon),
+                        note = stringResource(R.string.widget_config_show_icon_note),
+                        checked = current.showIcon,
+                        onToggle = { save(current.copy(showIcon = it)) }
+                    )
+                }
                 SwitchRow(
                     label = stringResource(R.string.widget_config_show_sentence),
                     note = stringResource(R.string.widget_config_show_sentence_note),

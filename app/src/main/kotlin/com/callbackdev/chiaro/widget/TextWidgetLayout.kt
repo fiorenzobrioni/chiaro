@@ -431,6 +431,124 @@ private fun fillColumn(
 private fun FilledColumn.asRowPlan() = TextRowPlan(sentenceLines, showWarning, showRange)
 
 /**
+ * **Where the weather glyph goes, when the reader asks for one** (committente, 20 set 2026:
+ * «per ogni layout/dimensione del widget senza cambiare assolutamente niente del testo che
+ * c'è adesso… dove si potrebbe aggiungere anche l'icona del meteo attuale»).
+ *
+ * The condition is the whole design: **no budget above this line changes.** The glyph is
+ * not a section the card makes room for — it is drawn only into space the card already
+ * leaves empty, so a reader who turns it on loses no line of sentence, no warning, no
+ * range, and no dp of number. Every one of the four functions below therefore returns a
+ * size or nothing; none of them is an input to a plan.
+ *
+ * There are two slots, and which one a form uses depends on where its empty space is:
+ *
+ * - **Beside the number** ([textRowIconSize], [textStackIconSize]). The number is at most
+ *   [TempEmWidth] ems wide («−12°»), and on a wide enough card the rest of its line is air.
+ *   The glyph fills that air, against the trailing edge of the column, and never grows the
+ *   line it sits on.
+ * - **Over the words** ([textPanelIconSize]). The panel pins its eyebrow to the top and its
+ *   block to the bottom, so the band between them is empty by construction; the glyph
+ *   hangs at the end of that band, directly over the sentence.
+ *
+ * Both are geometric — measured against the WIDEST temperature this app can print, never
+ * against the one it is printing — for the reason the Sky widget states about its own
+ * forms: a card that changed shape with the forecast could not be aimed.
+ */
+internal fun textIconSize(slot: Dp): Dp =
+    if (slot >= TextIconMin) heroIconSize(slot, min = TextIconMin) else 0.dp
+
+/**
+ * The glyph on a one-row card: the number's own line box, and whatever the column has left
+ * beside the widest number it could print.
+ *
+ * Measured against the FRESH number on purpose. A stale card prints a smaller one and puts
+ * the marker under it, and the band below the place line is the same height either way
+ * (the column fills the row by construction) — so sizing on the fresh number gives a glyph
+ * that neither overflows the stale card nor changes size when the data ages.
+ *
+ * On the reference four-cell row that is 51.9 dp, and 58.1 on the 101 dp row the other
+ * launcher grants. **At three cells it is nothing** (23.5 dp of air, against 48 needed), and
+ * that is the form's own trade rather than a failure: at three cells this card spends its
+ * width on the sentence, which the Now widget at three cells does not have.
+ */
+internal fun textRowIconSize(size: DpSize, fontScale: Float): Dp {
+    val hero = textRowHeroSp(size, fontScale, stale = false)
+    val column = if (textForm(size) == TextForm.LINE) {
+        // The narrow form has no second column, so the glyph meets the card's own edge and
+        // that edge is a glyph's (4 dp), not a word's — see [TextIconEdgeGive].
+        size.width - WidgetCardPadding - WidgetCardPaddingLeading
+    } else {
+        textLeadingColumn(size)
+    }
+    return textIconSize(
+        minOf(textLineHeight(hero, fontScale), column - heroWidth(hero, fontScale))
+    )
+}
+
+/**
+ * The glyph on a narrow tall card: the same slot, beside the number, against the card's own
+ * trailing edge. [heroSp] is the plan's, not the fresh card's, because here the number
+ * really does shrink when the marker appears and the glyph shrinks with it — the two sit on
+ * one line and the line is what the budget already paid for.
+ *
+ * Two cells is nothing (27.7 dp against 48 needed) and there is no honest way round it: the
+ * stack spends every leftover dp on the number, so there is no air to take and taking it
+ * from the number would be changing the text. Two and a half cells upwards it is 48 to 71 dp.
+ */
+internal fun textStackIconSize(size: DpSize, fontScale: Float, heroSp: Float): Dp {
+    val column = size.width - WidgetCardPadding - WidgetCardPaddingLeading
+    return textIconSize(
+        minOf(textLineHeight(heroSp, fontScale), column - heroWidth(heroSp, fontScale))
+    )
+}
+
+/**
+ * The glyph on the panel: the band between the eyebrow and the block, at the end of it, over
+ * the words.
+ *
+ * The band is `height − the place's line − the trailing column`, and the trailing column is
+ * the only thing under the glyph — so the stale marker, which lives in the LEADING column,
+ * never costs the glyph a dp. On the reference four-by-two that is 71.2 dp, and 50.1 on a
+ * day with a warning, which is the one thing that does take from it: the warning's word is
+ * a line the card grew for a reason, and a drawing yields to it.
+ */
+internal fun textPanelIconSize(size: DpSize, fontScale: Float, plan: TextPanelPlan): Dp {
+    val fact = textLineHeight(TextFactSp, fontScale)
+    val trailing = textLineHeight(TextSentenceSp, fontScale) * plan.sentenceLines +
+        (if (plan.showWarning) fact else 0.dp) +
+        (if (plan.showRange) fact else 0.dp)
+    val band = size.height - WidgetCardPadding * 2 - fact - trailing
+    return textIconSize(minOf(band, textPanelSentenceColumn(size) + TextIconEdgeGive))
+}
+
+/** The widest this app can print a temperature at [sp]: see [TempEmWidth]. */
+private fun heroWidth(sp: Float, fontScale: Float): Dp = (sp * TempEmWidth * fontScale).dp
+
+/**
+ * The smallest glyph this card draws, one step under the family's own hero floor
+ * ([heroIconSize] clamps at 52). The step is deliberate and it is not a relaxation of
+ * `DESIGN` §13.1: on the other four cards the glyph IS the hero and 52 is where it stops
+ * carrying the card at arm's length. Here the hero is the number and the glyph is its
+ * companion, at the number's own optical size — 48 dp of box is about 33 of ink, which is
+ * what a 39 sp figure puts on the same line.
+ */
+internal val TextIconMin = 48.dp
+
+/**
+ * What the card gives back at its trailing edge when a glyph meets it.
+ *
+ * A glyph edge takes [WidgetCardPaddingLeading] and a words edge [WidgetCardPadding] —
+ * the Now widget's measured rule, and the drawings carry 9 to 12.5 dp of margin of their
+ * own, so a glyph at the words' inset reads about 10 dp further in than it should. On the
+ * three forms whose glyph meets the card (everything but [TextForm.ROW], where it is
+ * interior) the card's end padding becomes the glyph's and **the text pays the difference
+ * back**, so every line measures exactly as it did without the glyph. That is the whole
+ * "nothing moves" promise, written as one number.
+ */
+internal val TextIconEdgeGive = WidgetCardPadding - WidgetCardPaddingLeading
+
+/**
  * The number's size, given the height it may occupy and the column it must not overflow.
  * [textSizeForLine] inverts the line box; the width guard is the other half of
  * [nowRowIconSize]'s `minOf(byHeight, byWidth)`, at this card's units — the widest
@@ -446,7 +564,7 @@ private fun heroSp(room: Dp, column: Dp, fontScale: Float, max: Float): Float {
 
 /** «−12°»: a minus (~0.55 em), two digits (~0.57 each) and a degree sign (~0.4) of Roboto
  * Bold, rounded up so the guard errs towards the smaller number. */
-private const val TempEmWidth = 2.1f
+internal const val TempEmWidth = 2.1f
 
 /**
  * Below this a temperature stops being a hero and becomes just another line.

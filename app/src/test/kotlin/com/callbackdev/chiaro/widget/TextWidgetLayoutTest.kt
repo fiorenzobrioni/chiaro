@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.widget
 
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
@@ -19,6 +20,15 @@ import org.junit.Test
  * three ~250, four ~340, and a four-by-two is ~340 × 189.
  */
 class TextWidgetLayoutTest {
+
+    /** A slot and the space it has to fit in are two routes through the same arithmetic, so
+     * they land on the same dp and meet exactly. A hundredth of a dp of float slack, because
+     * an estimate to that precision is not a layout claim. */
+    private fun assertFits(what: String, taken: Dp, available: Dp) =
+        assertTrue(
+            "$what: ${taken.value} dp into ${available.value}",
+            taken.value <= available.value + 0.01f
+        )
 
     private val twoByOne = DpSize(159.dp, 85.dp)
     private val threeByOne = DpSize(250.dp, 85.dp)
@@ -267,6 +277,191 @@ class TextWidgetLayoutTest {
             )
             assertEquals(TextPanelSentenceMaxLines, plan.sentenceLines)
         }
+    }
+
+    /**
+     * The weather glyph (committente, 20 set 2026) is drawn only into space the card
+     * already leaves empty, so the promise worth pinning is not where it goes but what it
+     * costs: **nothing**. Every plan on this card is computed without it, and these are the
+     * sizes that fall out of the air that is left.
+     */
+    @Test
+    fun `the glyph rides in the air beside the number on a one-row card`() {
+        // 340: the name's column is 168, the widest number it can print is 82.5, and the
+        // number's own line box caps what is left at 51.9.
+        assertEquals(51.88f, textRowIconSize(fourByOne, 1f).value, 0.01f)
+        assertEquals(51.88f, textRowIconSize(DpSize(320.dp, 85.dp), 1f).value, 0.01f)
+        assertEquals(51.88f, textRowIconSize(DpSize(430.dp, 85.dp), 1f).value, 0.01f)
+        // The taller row the other launcher grants has a taller line to fill.
+        assertEquals(58.08f, textRowIconSize(tallRow, 1f).value, 0.01f)
+        // Two cells: no second column, so the whole width is the number's and there is
+        // room for a glyph at the card's own trailing edge.
+        assertEquals(51.88f, textRowIconSize(twoByOne, 1f).value, 0.01f)
+    }
+
+    /**
+     * Option A (committente, 20 set 2026): at three cells there is no glyph, and it is the
+     * form's own trade rather than a failure — that is the width this card spends on the
+     * sentence, which the Now widget at three cells does not have.
+     */
+    @Test
+    fun `three cells on one row stay words`() {
+        assertEquals(TextForm.ROW, textForm(threeByOne))
+        assertEquals(0f, textRowIconSize(threeByOne, 1f).value, 0.001f)
+        // 272 dp: 45.5 dp of air, still under the 48 the family's smallest drawing needs.
+        assertEquals(0f, textRowIconSize(DpSize(272.dp, 85.dp), 1f).value, 0.001f)
+        // And it comes back as soon as the column really has the room.
+        assertTrue(textRowIconSize(DpSize(300.dp, 85.dp), 1f) >= TextIconMin)
+        // One cell: the number fills its own column, so there is nothing to give.
+        assertEquals(0f, textRowIconSize(DpSize(110.dp, 85.dp), 1f).value, 0.001f)
+        // A reader's larger font scale grows the text and shrinks the air, and the glyph
+        // yields rather than the words.
+        assertEquals(0f, textRowIconSize(fourByOne, 1.3f).value, 0.001f)
+    }
+
+    @Test
+    fun `the narrow tall card gives the glyph the number's line, where it has one`() {
+        val plan = textStackPlan(
+            threeByTwo, 1f, stale = false, sentence = true, warning = false, range = true
+        )
+        assertEquals(71.24f, textStackIconSize(threeByTwo, 1f, plan.heroSp).value, 0.01f)
+        // Two cells: the number takes every leftover dp, so there is no air to take and
+        // taking it from the number would be changing the text.
+        val narrow = textStackPlan(
+            twoByTwo, 1f, stale = false, sentence = true, warning = false, range = true
+        )
+        assertEquals(0f, textStackIconSize(twoByTwo, 1f, narrow.heroSp).value, 0.001f)
+    }
+
+    @Test
+    fun `the panel hangs the glyph in the band it keeps empty by construction`() {
+        val plan = textPanelPlan(
+            fourByTwo, 1f, stale = false, sentence = true, warning = false, range = true
+        )
+        assertEquals(71.24f, textPanelIconSize(fourByTwo, 1f, plan).value, 0.01f)
+        // The stale marker lives in the LEADING column, under the number, so it never
+        // costs the glyph a dp — which is the reason the band is measured against the
+        // trailing column and not against the taller of the two.
+        val stale = textPanelPlan(
+            fourByTwo, 1f, stale = true, sentence = true, warning = false, range = true
+        )
+        assertEquals(71.24f, textPanelIconSize(fourByTwo, 1f, stale).value, 0.01f)
+        // A warning's word is a line the card grew for a reason, and the drawing yields.
+        val warned = textPanelPlan(
+            fourByTwo, 1f, stale = false, sentence = true, warning = true, range = true
+        )
+        assertTrue(textPanelIconSize(fourByTwo, 1f, warned) < textPanelIconSize(fourByTwo, 1f, plan))
+        // Three rows: all band, so the family's own ceiling is what stops it.
+        val tall = textPanelPlan(
+            fourByThree, 1f, stale = false, sentence = true, warning = false, range = true
+        )
+        assertEquals(104f, textPanelIconSize(fourByThree, 1f, tall).value, 0.01f)
+        // The shortest card that is a panel at all has no band to spare.
+        val squeezed = DpSize(300.dp, 150.dp)
+        val tight = textPanelPlan(
+            squeezed, 1f, stale = false, sentence = true, warning = false, range = true
+        )
+        assertEquals(0f, textPanelIconSize(squeezed, 1f, tight).value, 0.001f)
+    }
+
+    /**
+     * The promise the whole feature rests on, asserted rather than reviewed: **the glyph
+     * fits in space the card was already leaving empty.** The failure mode is not an ugly
+     * card, it is a line of sentence or a stale marker quietly clipped on somebody's home
+     * screen the day they turn the switch on — which is exactly the kind of thing nobody
+     * reports as a bug.
+     */
+    @Test
+    fun `the glyph never takes a dp from anything the card already drew`() {
+        val oneRow = listOf(twoByOne, threeByOne, fourByOne, tallRow, DpSize(300.dp, 85.dp))
+        oneRow.forEach { size ->
+            listOf(1f, 1.3f, 0.85f).forEach { scale ->
+                val icon = textRowIconSize(size, scale)
+                if (icon <= 0.dp) return@forEach
+                val column = if (textForm(size) == TextForm.LINE) {
+                    size.width - WidgetCardPadding - WidgetCardPaddingLeading
+                } else {
+                    textLeadingColumn(size)
+                }
+                listOf(false, true).forEach { stale ->
+                    val hero = textRowHeroSp(size, scale, stale)
+                    // Under the place's line, on a fresh card and on a stale one: the band
+                    // the glyph sits in is everything the column holds below that line.
+                    val band = textLineHeight(hero, scale) +
+                        (if (stale) textLineHeight(TextStaleSp, scale) else 0.dp)
+                    assertFits("$size/$scale stale=$stale: glyph over the place line", icon, band)
+                    // And clear of the number itself, at its widest.
+                    assertFits(
+                        "$size/$scale stale=$stale: glyph over the number",
+                        icon, column - (hero * TempEmWidth * scale).dp
+                    )
+                }
+                // Clear of the stale marker too: six ems of its own size is «7 giorni fa»
+                // with room to spare, and the glyph never comes within that of the start.
+                assertTrue(
+                    "$size/$scale: glyph over the stale marker",
+                    column - icon >= (TextStaleSp * 6f).dp
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `neither tall form grows to make room for the glyph`() {
+        listOf(twoByTwo, threeByTwo, DpSize(250.dp, 293.dp)).forEach { size ->
+            listOf(1f, 1.3f).forEach { scale ->
+                listOf(false, true).forEach { stale ->
+                    val plan = textStackPlan(
+                        size, scale, stale, sentence = true, warning = true, range = true
+                    )
+                    val icon = textStackIconSize(size, scale, plan.heroSp)
+                    // It rides the number's own line and is never taller than it, so the
+                    // row it shares is the line the budget already paid for.
+                    assertFits(
+                        "$size/$scale: glyph taller than the number's line",
+                        icon, textLineHeight(plan.heroSp, scale)
+                    )
+                    assertFits(
+                        "$size/$scale: glyph over the number", icon,
+                        size.width - WidgetCardPadding - WidgetCardPaddingLeading -
+                            (plan.heroSp * TempEmWidth * scale).dp
+                    )
+                }
+            }
+        }
+        listOf(fourByTwo, fourByThree, DpSize(320.dp, 189.dp), DpSize(300.dp, 150.dp)).forEach { size ->
+            listOf(1f, 1.3f).forEach { scale ->
+                listOf(false, true).forEach { stale ->
+                    val plan = textPanelPlan(
+                        size, scale, stale, sentence = true, warning = true, range = true
+                    )
+                    val icon = textPanelIconSize(size, scale, plan)
+                    val fact = textLineHeight(TextFactSp, scale)
+                    val trailing = textLineHeight(TextSentenceSp, scale) * plan.sentenceLines +
+                        (if (plan.showWarning) fact else 0.dp) +
+                        (if (plan.showRange) fact else 0.dp)
+                    // The glyph grows the trailing column upward into the band the spacer
+                    // was holding, and the eyebrow plus the whole column still fit.
+                    assertFits(
+                        "$size/$scale stale=$stale: the panel grew for the glyph",
+                        fact + icon + trailing, size.height - WidgetCardPadding * 2
+                    )
+                    assertFits(
+                        "$size/$scale: glyph wider than the column it sits in",
+                        icon, textPanelSentenceColumn(size) + TextIconEdgeGive
+                    )
+                }
+            }
+        }
+    }
+
+    /** A glyph that met the card's edge at the words' inset would read 10 dp too far in
+     * (the Now widget measured it); the card gives it the glyph's inset and every text that
+     * reached that edge pays the difference back, which is what keeps the promise literal. */
+    @Test
+    fun `the edge the glyph meets is a glyph's edge`() {
+        assertEquals(10f, TextIconEdgeGive.value, 0.001f)
+        assertEquals(WidgetCardPadding, WidgetCardPaddingLeading + TextIconEdgeGive)
     }
 
     /** The inverse the whole file rests on: a size asked for a line box, and the line box
