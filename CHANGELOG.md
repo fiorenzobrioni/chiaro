@@ -15,6 +15,18 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
 
 ### Added
 
+- **The typeface is a choice now** (Settings → Appearance → Typeface). Inter stays the
+  default: it ships inside the app, so every weight is drawn rather than synthesised and it
+  looks the same on every phone. The other answer is the phone's own font, which is the one
+  the home-screen widgets are drawn in and always will be: a widget is drawn by RemoteViews,
+  which has no way to be handed a font family, so an app and its cards can only read alike
+  by moving the app. The choice swaps the family under all seventeen type roles and moves
+  nothing else, not one size, weight or line height, and the credits row says "included, but
+  not in use" once Inter is no longer the font on the screen. Three things come with the
+  system font and are worth knowing before picking it: a weight the device does not carry is
+  synthesised rather than drawn, a font with no tabular figures quietly ignores the request
+  for them and columns of numbers can stop lining up, and the fixed columns of the week and
+  the hour strip were measured against Inter, so a wider face reflows them a step sooner.
 - **The weather icon on the text widget, as a switch on the card** (off by default). It is
   not a section the card makes room for: all four of that widget's layout plans are computed
   without it, and the glyph is then drawn only into space they already leave empty — so
