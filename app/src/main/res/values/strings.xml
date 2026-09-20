@@ -391,7 +391,7 @@
     <string name="guide_sky_events_title">Coming up</string>
     <string name="guide_sky_events_body">The calendar ahead, in two tiers. On top, everything you follow: an eclipse two years out still has its row, with its year and its hours, and a line the sky skips — a shower peaking on a night that never gets dark here — keeps its row and says why. Under it, the nearest events for everybody: meteor peaks, the next full moon, solstices and equinoxes. A verdict where the forecast reaches that far, an honest “too far out to say” where it does not. One instant, one row: two showers that peak on the same night share one, and both are named.</string>
     <string name="guide_sky_catalog_title">Add a moment</string>
-    <string name="guide_sky_catalog_body">Sixty moments, grouped by sun, night, moon, planets, eclipses, seasons and meteor showers, each with the one line that says what it is and a page that explains it properly. The field at the top searches the names and those lines, which is the short way to the Perseids. This is the place to find out what a blue hour actually is, or earthshine: by adding one, or by reading about it first.</string>
+    <string name="guide_sky_catalog_body">Sixty moments, grouped by sun, night, moon, planets, eclipses, seasons and meteor showers, each with the one line that says what it is and a page that explains it properly. The field at the top searches the names and those lines, which is the short way to the Perseids — and “photo” brings up the nine that carry the camera. This is the place to find out what a blue hour actually is, or earthshine: by adding one, or by reading about it first.</string>
 
     <string name="guide_alerts_title">Alerts</string>
     <string name="guide_alerts_p1">Two kinds live here: the ones already written, and the ones you write. Nothing arrives that you did not switch on.</string>
@@ -466,6 +466,10 @@
     <string name="sky_catalog_search">Search the events</string>
     <string name="sky_catalog_search_clear">Clear the search</string>
     <string name="sky_catalog_no_match">Nothing here matches «%1$s».</string>
+    <!-- Fase 28b: le parole che tirano fuori i nove eventi col marchio della
+         macchina fotografica. Una lista per lingua, e il marchio resta l'unica
+         verita': la parola non entra nelle descrizioni, dove potrebbe divergere. -->
+    <string name="sky_catalog_search_photo_terms" translatable="true">photo photos photograph photographs photography photographing camera cameras shot shoot</string>
     <string name="sky_moment_now">Now</string>
     <string name="sky_day_today">Today</string>
     <string name="sky_day_tomorrow">Tomorrow</string>

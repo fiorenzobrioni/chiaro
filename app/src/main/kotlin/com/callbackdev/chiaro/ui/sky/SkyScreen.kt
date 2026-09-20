@@ -990,7 +990,12 @@ private fun CatalogSheet(
                     val subscribed = job.id in subscribedIds
                     val name = stringResource(SkyText.nameRes(job.id))
                     ListItem(
-                        headlineContent = { Text(name) },
+                        // The mark goes here as well as on the agenda rows, and this is
+                        // the place it earns most: the catalog is where somebody BROWSES
+                        // for an event worth going out for, and a mark that only appears
+                        // once the line is already subscribed is a mark that arrives after
+                        // the decision it was meant to help with (committente, Fase 28b).
+                        headlineContent = { SkyHeadline(name, job.photographic) },
                         supportingContent = { Text(stringResource(SkyText.explanationRes(job.id))) },
                         trailingContent = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1058,12 +1063,50 @@ private fun CatalogSearchField(query: String, onQuery: (String) -> Unit) {
  * phone keyboard is not going to reach for the right diacritic and should not have to.
  */
 @Composable
-private fun matchesQuery(job: SkyJob, query: String): Boolean {
-    val needle = query.foldForSearch()
-    val name = stringResource(SkyText.nameRes(job.id)).foldForSearch()
-    val explanation = stringResource(SkyText.explanationRes(job.id)).foldForSearch()
-    return needle in name || needle in explanation
+private fun matchesQuery(job: SkyJob, query: String): Boolean = matchesSearch(
+    query = query,
+    name = stringResource(SkyText.nameRes(job.id)),
+    explanation = stringResource(SkyText.explanationRes(job.id)),
+    photographic = job.photographic,
+    photoTerms = stringResource(R.string.sky_catalog_search_photo_terms)
+)
+
+/**
+ * The matching itself, pure so a test can reach it (Fase 28b).
+ *
+ * **Why the camera is matched off the FLAG and not off a word in the prose.** The
+ * committente asked whether «da fotografare» should go into the one-line explanation
+ * of the nine, so that searching «foto» would find them. The goal is right and the
+ * mechanism would not have been: those one-liners exist to say what a thing IS — «la
+ * sera in cui la luna piena sorge mentre il cielo è ancora colorato» is a definition,
+ * and «, da fotografare» bolted onto it is worse prose that repeats the glyph sitting
+ * on the very same row. Worse, the word would become a SECOND source of truth for
+ * something [SkyJob.photographic] already knows, free to drift from it the first time
+ * somebody edits one of nine strings — the same reason the guide's «when it happens»
+ * lines are read off the job rather than written twice.
+ *
+ * So the flag answers the query directly. [photoTerms] is a space-separated list of
+ * the words a reader might type for it, per language, and a term matches on its
+ * PREFIX from three letters up: «fot» finds them, «a» does not find everything.
+ */
+internal fun matchesSearch(
+    query: String,
+    name: String,
+    explanation: String,
+    photographic: Boolean,
+    photoTerms: String
+): Boolean {
+    // Trimmed, not just folded: a field a reader has typed a space into is a field
+    // with no query in it, and «   » is not a substring anybody meant to look for.
+    val needle = query.trim().foldForSearch()
+    if (needle.isEmpty()) return true
+    if (needle in name.foldForSearch() || needle in explanation.foldForSearch()) return true
+    if (!photographic || needle.length < MIN_TERM_LENGTH) return false
+    return photoTerms.foldForSearch().split(' ').any { it.isNotEmpty() && it.startsWith(needle) }
 }
+
+/** Below three letters a prefix matches half the dictionary and teaches nothing. */
+private const val MIN_TERM_LENGTH = 3
 
 /** Lower case, accents stripped: «Luce cinerea» and «luce cinerea» are one word here. */
 private fun String.foldForSearch(): String =

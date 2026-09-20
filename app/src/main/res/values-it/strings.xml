@@ -372,7 +372,7 @@
     <string name="guide_sky_events_title">In arrivo</string>
     <string name="guide_sky_events_body">Il calendario davanti, in due strati. Sopra, tutto quello che segui: anche un\'eclissi fra due anni ha la sua riga, con l\'anno e le ore, e una riga che il cielo salta — uno sciame che culmina in una notte che qui non diventa mai buia — resta lì e dice perché. Sotto, i prossimi eventi per tutti: picchi degli sciami, la prossima luna piena, solstizi ed equinozi. Il verdetto dove la previsione arriva, e un onesto «troppo lontano per dirlo» dove non arriva. Un istante, una riga: due sciami che culminano la stessa notte ne condividono una, e tutti e due sono nominati.</string>
     <string name="guide_sky_catalog_title">Aggiungi un momento</string>
-    <string name="guide_sky_catalog_body">Sessanta momenti, raggruppati in sole, notte, luna, pianeti, eclissi, stagioni e sciami meteorici, ognuno con la riga che dice cos\'è e una pagina che lo spiega per bene. Il campo in cima cerca fra i nomi e quelle righe, che è la strada corta per arrivare alle Perseidi. È il posto dove si scopre cos\'è davvero un\'ora blu, o la luce cinerea: aggiungendola, o leggendone prima.</string>
+    <string name="guide_sky_catalog_body">Sessanta momenti, raggruppati in sole, notte, luna, pianeti, eclissi, stagioni e sciami meteorici, ognuno con la riga che dice cos\'è e una pagina che lo spiega per bene. Il campo in cima cerca fra i nomi e quelle righe, che è la strada corta per arrivare alle Perseidi — e «foto» tira fuori i nove che portano la macchina fotografica. È il posto dove si scopre cos\'è davvero un\'ora blu, o la luce cinerea: aggiungendola, o leggendone prima.</string>
 
     <string name="guide_alerts_title">Avvisi</string>
     <string name="guide_alerts_p1">Qui vivono due specie: quelli già scritti e quelli che scrivi tu. Non arriva niente che non abbia acceso tu.</string>
@@ -447,6 +447,10 @@
     <string name="sky_catalog_search">Cerca tra gli eventi</string>
     <string name="sky_catalog_search_clear">Cancella la ricerca</string>
     <string name="sky_catalog_no_match">Qui non c\'è niente che corrisponda a «%1$s».</string>
+    <!-- Fase 28b: le parole che tirano fuori i nove eventi col marchio della
+         macchina fotografica. Una lista per lingua, e il marchio resta l'unica
+         verita': la parola non entra nelle descrizioni, dove potrebbe divergere. -->
+    <string name="sky_catalog_search_photo_terms" translatable="true">foto fotografia fotografie fotografare fotografico fotografica macchina obiettivo scatto scattare</string>
     <string name="sky_moment_now">Adesso</string>
     <string name="sky_day_today">Oggi</string>
     <string name="sky_day_tomorrow">Domani</string>

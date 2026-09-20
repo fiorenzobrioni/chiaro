@@ -8958,3 +8958,68 @@ l'arcobaleno e «In parole», che nessuna rilettura del solo testo avrebbe trova
 che non è fotografica e non ha una direzione da stampare, quindi l'esempio resta vero.
 
 `./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, 1639 test, lint a zero errori.
+
+## Fase 28b — «Foto» non trovava niente, e il marchio non c'era dove si sceglie (committente, 20 set 2026)
+
+Chiesto se «luna piena al crepuscolo» non dovesse dire nella descrizione breve che è un evento
+fotografabile, così che un fotografo amatoriale lo trovi senza aprire la pagina, e così che una
+ricerca per «foto» lo peschi. Chiesto esplicitamente di rispondere solo se d'accordo.
+
+**L'obiettivo era giusto e ha scoperto due buchi della Fase 28, ma il meccanismo proposto no.**
+
+### I due buchi
+
+- **Il marchio non era sulla riga del catalogo.** `SkyHeadline` era finito su `MomentRow` e su
+  `EventRow` e non sulla riga della tendina «Aggiungi un momento» — cioè sull'unica schermata dove
+  uno **sfoglia per scegliere**. Un marchio che compare solo dopo che la riga è già sottoscritta
+  arriva dopo la decisione che doveva aiutare. Adesso c'è.
+- **La ricerca non sapeva niente del flag.** `matchesQuery` confrontava nome e spiegazione, quindi
+  cercare «foto» non restituiva niente mentre nove righe portavano la macchina fotografica. Una
+  ricerca e un flag costruiti nella stessa fase e mai presentati.
+
+### Perché non la parola nella descrizione
+
+La riga breve del catalogo esiste per dire **che cos'è** una cosa. «La sera in cui la luna piena
+sorge mentre il cielo è ancora colorato» è una definizione; «, da fotografare» attaccato in fondo è
+prosa peggiore che ripete il glifo seduto sulla stessa riga.
+
+E soprattutto: la parola diventerebbe una **seconda verità** per qualcosa che `SkyJob.photographic`
+già sa, libera di divergerne la prima volta che qualcuno tocca una delle nove stringhe. È
+esattamente la ragione per cui le righe «quando capita» della guida si leggono dal job invece di
+essere scritte due volte.
+
+Quindi la ricerca interroga il flag. `sky_catalog_search_photo_terms` è una lista di parole per
+lingua («foto fotografia fotografare macchina obiettivo scatto…»), e un termine risponde **per
+prefisso da tre lettere in su**: «fot» li trova, «fo» no. La soglia guarda i TERMINI e non il
+testo — «m» continua a pescare la riga perché sta dentro «mentre», che è la regola della
+sottostringa che fa il suo lavoro.
+
+### Come è stato verificato
+
+`matchesSearch` è stata tirata fuori dal composable come funzione pura apposta per poterla provare:
+`SkySearchTest` fissa che «foto» arriva solo a una riga marcata, che la prosa non porta la parola,
+che un prefisso di due lettere non tira dentro tutto, e che accenti e maiuscole non contano.
+
+Due test sono falliti al primo giro e solo **uno** era un difetto: una query di soli spazi non
+veniva ripulita, e la funzione la trattava come una sottostringa da cercare (in pratica non ci
+arrivava mai, perché il chiamante filtra già su `isBlank`, ma il contratto è il contratto).
+L'altro era il test a sbagliare: asseriva che «m» non trovasse una riga marcata, mentre «m» sta
+dentro «mentre» e trovarla è il comportamento giusto. Corretto il test, non il codice.
+
+### Nota sulla sezione «In arrivo», chiesta nella stessa occasione
+
+Il criterio del secondo strato, messo a verbale perché non era scritto da nessuna parte in
+italiano: sono **solo i job ANNUALI del catalogo** (le quattro stagioni, perielio e afelio,
+tramonto più presto e alba più tardi, le due notti bianche, la luna piena più vicina, i tredici
+sciami: ventiquattro in tutto), non sottoscritti, risolti alla prossima occorrenza, **i più vicini
+per data**, a riempire fino a sei righe con un pavimento di tre. Più la prossima luna piena, che
+c'è per tutti.
+
+La conseguenza da sapere: **eclissi, congiunzioni, luce cinerea, Venere e Giove non compaiono mai
+se non li segui.** Per gli aperiodici è voluto e costoso da cambiare (una ricerca di congiunzioni
+cammina tre anni: farla per chi non ha chiesto niente sarebbe batteria spesa per nessuno); per i
+giornalieri è giusto, perché il loro posto è «I prossimi momenti» e non il calendario. Resta che
+una Venere-Giove a 0,6° è invisibile a chi non sapeva di doverla cercare, ed è un candidato onesto
+per un giro futuro.
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1649 test**, lint a zero errori.
