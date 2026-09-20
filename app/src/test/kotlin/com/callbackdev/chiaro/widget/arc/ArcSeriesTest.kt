@@ -52,6 +52,7 @@ class ArcSeriesTest {
             hourly = (0 until hours).map {
                 HourlyForecast(
                     time = fetchedAt.withMinute(0).plusHours(it.toLong()),
+                    at = fetchedAt.withMinute(0).plusHours(it.toLong()).atZone(zone).toInstant(),
                     tempC = 20.0,
                     condition = clear,
                     precipChancePct = if (wetFrom != null && it >= wetFrom) 70 else 10,
@@ -59,7 +60,7 @@ class ArcSeriesTest {
                 )
             },
             daily = (0 until 7).map {
-                DailyForecast(date.plusDays(it.toLong()), 24.0, 14.0, clear, 10, 5, "Moderate")
+                DailyForecast(date.plusDays(it.toLong()), 24.0, 14.0, clear, 10, 5)
             },
             systemInfo = sampleWeatherReport().systemInfo.copy(
                 lastSync = fetchedAt.atZone(zone).toInstant()

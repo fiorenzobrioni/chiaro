@@ -7,6 +7,7 @@ import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.sky.SkyJob
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
@@ -102,13 +103,19 @@ object WidgetData {
         // on a card that is deliberately watching somewhere else.
         val active = if (pinned == null) activeSource(context) else null
         val city = pinned ?: activeCity(active)
-        val zone = city?.timezone?.let { runCatching { ZoneId.of(it) }.getOrNull() }
-            ?: ZoneId.systemDefault()
         if (city == null) {
-            return WidgetModel(settings, look, null, false, null, emptyList(), zone)
+            return WidgetModel(
+                settings, look, null, false, null, emptyList(), ZoneId.systemDefault()
+            )
         }
         val now = Instant.now()
         val report = ServiceLocator.weatherRepository(context).cachedReport(city)
+        // AFTER the report, and not before it (20 set 2026). The position's City carries
+        // no timezone on purpose, so this used to fall through to the device's while the
+        // content below — built by TodayStateBuilder, which reads the report — used the
+        // place's. One card, two clocks, which is the exact thing the note above says
+        // this object exists to prevent.
+        val zone = placeZone(report, city)
         // Before the content, because the content is built FROM it: the day's sentence
         // is [TodayStateBuilder]'s, and its step zero is the official warning (Fase 11).
         // A card whose sentence did not carry the warning would then draw the chip

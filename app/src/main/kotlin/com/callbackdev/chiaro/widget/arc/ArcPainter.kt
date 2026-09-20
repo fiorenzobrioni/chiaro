@@ -283,6 +283,12 @@ internal object ArcPainter {
             val hour = series.hourCovering(series.window.at(i / (n - 1f)))
             val gradient = inks.sky.gradient(
                 sunAltitudeDeg = series.sun[i].toDouble(),
+                // Zero is "do not modulate", not "clear": `SkyPalette.gradient` lerps
+                // by `cloudPct / 100`, so 0 leaves the altitude band exactly as the
+                // sun drew it. For a sample the report has no hour for — past the
+                // forecast's horizon on a phone that has been offline for days — that
+                // is the honest answer: the arc knows the light and says nothing about
+                // the weather. Any other value would be a sky it was never told.
                 cloudPct = hour?.hour?.cloudCoverPct ?: 0,
                 precipPct = hour?.hour?.precipChancePct ?: 0,
                 moonIllumination = series.moonLight.illuminatedFraction,

@@ -22,6 +22,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
 
 /**
  * The PRD's `weather_data.json_full_sample.json` as a domain object, for `@Preview`s
@@ -74,17 +75,17 @@ fun sampleWeatherReport(): WeatherReport {
         // rendered anywhere, but a sample whose sunny hour is 90% overcast would be a
         // trap for the first sky verdict written against it.
         hourly = listOf(
-            HourlyForecast(baseDate.atTime(15, 0), 19.0, sunny, 0, 5),
-            HourlyForecast(baseDate.atTime(16, 0), 18.0, sunny, 0, 10),
-            HourlyForecast(baseDate.atTime(17, 0), 17.0, partlyCloudy, 5, 45),
-            HourlyForecast(baseDate.atTime(18, 0), 15.0, partlyCloudy, 10, 55),
-            HourlyForecast(baseDate.atTime(19, 0), 14.0, clearNight, 0, 8)
+            sampleHour(baseDate.atTime(15, 0), 19.0, sunny, 0, 5),
+            sampleHour(baseDate.atTime(16, 0), 18.0, sunny, 0, 10),
+            sampleHour(baseDate.atTime(17, 0), 17.0, partlyCloudy, 5, 45),
+            sampleHour(baseDate.atTime(18, 0), 15.0, partlyCloudy, 10, 55),
+            sampleHour(baseDate.atTime(19, 0), 14.0, clearNight, 0, 8)
         ),
         daily = listOf(
-            DailyForecast(baseDate.plusDays(3), 20.0, 12.0, sunny, 0, 5, "Moderate ☀️"),
-            DailyForecast(baseDate.plusDays(4), 18.0, 11.0, WeatherCondition(63, "Rainy", "🌧️"), 85, 2, "Low"),
-            DailyForecast(baseDate.plusDays(5), 16.0, 10.0, WeatherCondition(3, "Cloudy", "☁️"), 20, 3, "Moderate ☀️"),
-            DailyForecast(baseDate.plusDays(6), 19.0, 13.0, partlyCloudy, 10, 6, "High ☀️")
+            DailyForecast(baseDate.plusDays(3), 20.0, 12.0, sunny, 0, 5),
+            DailyForecast(baseDate.plusDays(4), 18.0, 11.0, WeatherCondition(63, "Rainy", "🌧️"), 85, 2),
+            DailyForecast(baseDate.plusDays(5), 16.0, 10.0, WeatherCondition(3, "Cloudy", "☁️"), 20, 3),
+            DailyForecast(baseDate.plusDays(6), 19.0, 13.0, partlyCloudy, 10, 6)
         ),
         systemInfo = SystemInfo(
             source = "Open-Meteo API",
@@ -94,3 +95,26 @@ fun sampleWeatherReport(): WeatherReport {
         )
     )
 }
+
+/**
+ * One sample hour, with its [HourlyForecast.at] derived from the sample's own zone —
+ * the one thing a hand-written row cannot be allowed to make up, since the strip keys
+ * its cells on it and the day/night flag is read from it.
+ */
+private fun sampleHour(
+    time: LocalDateTime,
+    tempC: Double,
+    condition: WeatherCondition,
+    precipChancePct: Int?,
+    cloudCoverPct: Int
+) = HourlyForecast(
+    time = time,
+    at = time.atZone(SampleZone).toInstant(),
+    tempC = tempC,
+    condition = condition,
+    precipChancePct = precipChancePct,
+    cloudCoverPct = cloudCoverPct
+)
+
+/** The sample's city, as a zone: `America/New_York`, like its `location.timezone`. */
+private val SampleZone: ZoneId = ZoneId.of("America/New_York")

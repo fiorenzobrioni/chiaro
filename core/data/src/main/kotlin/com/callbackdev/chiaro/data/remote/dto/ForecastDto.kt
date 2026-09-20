@@ -8,6 +8,34 @@ data class ForecastResponseDto(
     val latitude: Double,
     val longitude: Double,
     val timezone: String,
+    /**
+     * The offset every timestamp in this response is expressed on — and it is ONE
+     * offset for the whole week, not [timezone]'s rules applied hour by hour.
+     *
+     * Read since 20 set 2026, and the field that repairs the app's oldest wrong
+     * assumption about the provider. With `timezone=auto` Open-Meteo builds the
+     * series as `UTC + utc_offset_seconds`, taking the offset in force at REQUEST
+     * time and holding it: measured on a 16-day Sydney forecast across the 4 Oct
+     * 2026 spring-forward, the response carries `utc_offset_seconds: 36000` and
+     * `timezone_abbreviation: "GMT+10"` for every day of it, every calendar day
+     * holds exactly 24 values, and `2026-10-04T02:00` — an hour that does not
+     * exist in `Australia/Sydney` — is one of them. Matched hour by hour against
+     * the same request with `timezone=UTC`: **0 mismatches out of 384** under a
+     * fixed `+10`, **53 out of 69** under the real wall clock after the change.
+     * The response's own `daily.sunrise` for 4 Oct says 05:28, where the clock in
+     * Sydney says 06:28.
+     *
+     * So a `hourly.time` value is not a local time in [timezone]'s sense, and
+     * treating it as one — which the app did until this field arrived — puts every
+     * row after a DST change one hour off. [com.callbackdev.chiaro.data.mapper.WeatherReportMapper]
+     * re-expresses them; see `ProviderClock` there.
+     *
+     * Nullable with a default because [com.callbackdev.chiaro.data.local.ReportDiskCache]
+     * stores this DTO verbatim: an entry written before today must still decode, and
+     * a null means "no offset was recorded", which the mapper answers with the old
+     * behaviour rather than with a guess.
+     */
+    @SerialName("utc_offset_seconds") val utcOffsetSeconds: Int? = null,
     val current: CurrentDto,
     val hourly: HourlyDto,
     val daily: DailyDto
@@ -63,9 +91,20 @@ data class DailyDto(
     @SerialName("weather_code") val weatherCode: List<Int>,
     @SerialName("temperature_2m_max") val temperatureMaxC: List<Double>,
     @SerialName("temperature_2m_min") val temperatureMinC: List<Double>,
-    val sunrise: List<String>,
-    val sunset: List<String>,
-    @SerialName("daylight_duration") val daylightDurationSec: List<Double>,
     @SerialName("precipitation_probability_max") val precipitationProbabilityMaxPct: List<Int?>,
-    @SerialName("uv_index_max") val uvIndexMax: List<Double>
+    /**
+     * Nullable elements since 20 set 2026, like `precipitation_probability_max` beside
+     * it and `visibility` in the hourly block — the third model-dependent field to be
+     * found out, and the first to be found out BEFORE it broke something.
+     *
+     * Verified on the live endpoint: `uv_index_max` comes back `[null, null, null]`
+     * under `models=icon_seamless` and `models=jma_seamless`, and for past dates even
+     * under `best_match` (Milan, 1-3 July). Chiaro passes neither `models=` nor
+     * `past_days`, so it has never met one — but a non-nullable `List<Double>` here
+     * does not degrade a tile when it does, it throws inside the deserializer and
+     * takes the WHOLE report with it: the week of forecast, the current block, the
+     * hours. `best_match` picks its model per region and Open-Meteo changes those
+     * picks; the cost of being wrong is the app showing nothing.
+     */
+    @SerialName("uv_index_max") val uvIndexMax: List<Double?>
 )

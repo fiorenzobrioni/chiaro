@@ -50,9 +50,22 @@ interface OpenMeteoForecastApi {
         const val HOURLY_VARIABLES =
             "temperature_2m,weather_code,precipitation,precipitation_probability," +
                 "is_day,visibility,cloud_cover"
+        /**
+         * `sunrise`, `sunset` and `daylight_duration` left this list on 20 set 2026,
+         * having been asked for and dropped on the floor since Fase 16e handed the
+         * astronomy to [com.callbackdev.chiaro.domain.sky.AstronomyEngine]. They were
+         * kept because "they cost nothing", which was true of the bytes and false of
+         * everything else: they are written into every `ReportDiskCache` entry, they
+         * are three more non-nullable fields a response has to satisfy for the whole
+         * report to parse, and — since the provider writes them on the fixed offset
+         * `utc_offset_seconds` names — a contributor who found `daily.sunrise` sitting
+         * in the DTO and used it would reintroduce the hour that fix removed. The
+         * response's own sunrise for Sydney on 4 Oct 2026 says 05:28 where the clock
+         * there says 06:28.
+         */
         const val DAILY_VARIABLES =
-            "weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset," +
-                "daylight_duration,precipitation_probability_max,uv_index_max"
+            "weather_code,temperature_2m_max,temperature_2m_min," +
+                "precipitation_probability_max,uv_index_max"
     }
 }
 

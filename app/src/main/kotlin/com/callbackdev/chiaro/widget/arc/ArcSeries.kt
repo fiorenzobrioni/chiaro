@@ -159,7 +159,7 @@ internal data class ArcSeries(
                 AstronomyEngine.moonAltitude(window.at(i / (MoonSamples - 1f)), coords).toFloat()
             }
             val hours = content.report.hourly.mapNotNull { hour ->
-                val at = hour.time.atZone(zone).toInstant()
+                val at = hour.at
                 if (at in window) ArcHour(hour, at, window.fraction(at)) else null
             }
             val local = LocalDateTime.ofInstant(now, zone)

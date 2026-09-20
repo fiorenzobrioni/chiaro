@@ -45,9 +45,24 @@ class SkyStateBuilderTest {
         precipPct: Int = 5,
         syncedAt: LocalDateTime = fetched
     ) = sampleWeatherReport().copy(
+        // The sample is a New York report, and until 20 set 2026 this fixture handed it
+        // to a Milan city and left the mismatch standing: the builder resolved its zone
+        // from the CITY, so nothing noticed. It resolves it from the report now — the
+        // better source, and the only one the position has — and a report whose location
+        // is not its city's is a pairing the repository cannot produce, since `map()`
+        // writes the location from the very city it was asked about.
+        location = sampleWeatherReport().location.copy(
+            city = milan.name,
+            region = milan.region,
+            country = milan.country,
+            coordinates = milan.coordinates,
+            timezone = zone.id,
+            localTime = fetched
+        ),
         hourly = (0 until 48).map {
             HourlyForecast(
                 time = fetched.plusHours(it.toLong()),
+                at = fetched.plusHours(it.toLong()).atZone(zone).toInstant(),
                 tempC = 20.0,
                 condition = clear,
                 precipChancePct = precipPct,

@@ -32,6 +32,7 @@ class EveningDetailsTest {
     ): List<HourlyForecast> = temp.indices.map { i ->
         HourlyForecast(
             time = start.plusHours(i.toLong()),
+            at = start.plusHours(i.toLong()).atZone(zone).toInstant(),
             tempC = temp[i],
             condition = WeatherCondition(2, "x", "x"),
             precipChancePct = rain[i],

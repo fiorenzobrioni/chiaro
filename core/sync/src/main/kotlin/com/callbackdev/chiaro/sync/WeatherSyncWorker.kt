@@ -9,6 +9,7 @@ import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.WeatherFreshness
+import com.callbackdev.chiaro.domain.zone
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.GpsCityId
 import com.callbackdev.chiaro.domain.model.WeatherReport
@@ -17,7 +18,6 @@ import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyRunRecorder
 import java.time.Duration
 import java.time.Instant
-import java.time.ZoneId
 import java.time.ZonedDateTime
 import kotlinx.coroutines.flow.first
 
@@ -110,8 +110,7 @@ class WeatherSyncWorker(
         if (!alertsWanted) return Result.success()
 
         // Alerts and rules run in the CITY's timezone, not the device's.
-        val zone = runCatching { ZoneId.of(report.location.timezone) }
-            .getOrDefault(ZoneId.systemDefault())
+        val zone = report.zone()
         val now = ZonedDateTime.now(zone).toLocalDateTime()
 
         val stateStore = ServiceLocator.alertStateStore(context)
@@ -218,8 +217,7 @@ class WeatherSyncWorker(
         val repository = ServiceLocator.weatherRepository(context)
         val history = repository.historyFor(city, limit = 2)
         val previous = history.getOrNull(1) ?: return
-        val zone = runCatching { ZoneId.of(report.location.timezone) }
-            .getOrDefault(ZoneId.systemDefault())
+        val zone = report.zone()
         val runs = SkyRunRecorder.runsSince(
             since = Instant.ofEpochSecond(previous.timestampEpochSeconds),
             now = report.systemInfo.lastSync,

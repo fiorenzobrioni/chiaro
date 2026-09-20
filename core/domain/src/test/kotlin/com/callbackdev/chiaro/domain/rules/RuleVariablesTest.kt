@@ -7,6 +7,7 @@ import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
 import java.time.LocalDateTime
+import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -69,6 +70,8 @@ class RuleVariablesTest {
         val thunder = report.copy(
             hourly = report.hourly + HourlyForecast(
                 time = LocalDateTime.of(2023, 10, 27, 20, 0),
+                at = LocalDateTime.of(2023, 10, 27, 20, 0)
+                    .atZone(ZoneId.of("America/New_York")).toInstant(),
                 tempC = 13.0,
                 condition = WeatherCondition(95, "Thunderstorm", "⛈️"),
                 precipChancePct = 90,

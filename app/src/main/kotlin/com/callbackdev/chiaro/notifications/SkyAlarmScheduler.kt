@@ -8,12 +8,12 @@ import androidx.core.content.getSystemService
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyLead
 import com.callbackdev.chiaro.domain.sky.SkyReminder
 import com.callbackdev.chiaro.domain.sky.SkyReminderPlanner
 import java.time.Instant
-import java.time.ZoneId
 import kotlinx.coroutines.flow.first
 
 /**
@@ -78,9 +78,11 @@ object SkyAlarmScheduler {
                 }
             }
         if (jobs.isEmpty()) return null
-        val zone = city.timezone
-            ?.let { runCatching { ZoneId.of(it) }.getOrNull() }
-            ?: ZoneId.systemDefault()
+        // The place's own zone, the report's answer first: a reminder armed on the
+        // device's clock for a position whose City carries none would fire the Sky
+        // screen's moment at the wrong local hour.
+        val report = ServiceLocator.weatherRepository(context).cachedReport(city)
+        val zone = placeZone(report, city)
         return SkyReminderPlanner.next(jobs, now, zone, city.coordinates)
     }
 

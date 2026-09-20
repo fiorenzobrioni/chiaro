@@ -27,10 +27,12 @@ class SkyRunRecorderTest {
 
     private fun hours(from: String, count: Int = 48, cloud: Int = 8) =
         (0 until count).map { i ->
-            HourlyForecast(
-                LocalDateTime.parse(from).plusHours(i.toLong()), 20.0,
-                WeatherCondition(0, "Clear", "☀️"), 0, cloud
-            )
+            LocalDateTime.parse(from).plusHours(i.toLong()).let { t ->
+                HourlyForecast(
+                    t, t.atZone(rome).toInstant(), 20.0,
+                    WeatherCondition(0, "Clear", "☀️"), 0, cloud
+                )
+            }
         }
 
     private fun record(

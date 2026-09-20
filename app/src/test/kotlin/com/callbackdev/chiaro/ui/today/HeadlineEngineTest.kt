@@ -10,6 +10,7 @@ import com.callbackdev.chiaro.domain.warnings.WarningHazard
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.domain.warnings.WarningZone
 import java.time.LocalDateTime
+import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -54,6 +55,7 @@ class HeadlineEngineTest {
                 hourly = hours.mapIndexed { i, hour ->
                     HourlyForecast(
                         time = start.plusHours(i.toLong()),
+                        at = start.plusHours(i.toLong()).atZone(rome).toInstant(),
                         tempC = hour.tempC,
                         condition = hour.condition,
                         precipChancePct = hour.pct,
@@ -66,6 +68,9 @@ class HeadlineEngineTest {
     private fun quiet(hours: Int = 36) = List(hours) { clear at 10 }
 
     // ------------------------------------------------------------ step zero
+
+    /** The fixture city's zone: the hours carry their own instant now. */
+    private val rome: ZoneId = ZoneId.of("Europe/Rome")
 
     private val zone = WarningZone("Lomb-09", "Nodo Idraulico di Milano", "Lombardia")
 
