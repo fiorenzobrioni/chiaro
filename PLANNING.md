@@ -8261,3 +8261,130 @@ l'endpoint di previsione accetta `start_date` solo per circa tre mesi indietro e
 non arriva a gennaio. Tentata oggi: `HTTP 429, Daily API request limit exceeded` — la quota
 gratuita dell'IP di questo ambiente era già esaurita dalle quindici località della review. Da
 riprendere con la quota libera; è un giro suo, non una riga di codice.
+
+---
+
+## Gli avvisi che non potevano suonare, e due widget che aprivano la schermata sbagliata (committente, 21 set 2026)
+
+> «Quando si installa l'app alcuni Avvisi sono già attivi ma il permesso per le notifiche non è
+> mai stato chiesto e quindi questi avvisi non scattano mai. [...] Ora l'unico modo per fare il
+> consenso al permesso è disattivare e poi riattivare un avviso.»
+
+La segnalazione è esatta e il difetto è più vecchio della schermata: `NotificationSettings` nasce
+con `severeWeatherAlerts`, `precipitationWarning`, `userRules` e `officialWarnings` a **true**, e
+`POST_NOTIFICATIONS` veniva chiesto solo dentro `somethingTurnedOn()` — cioè dall'**atto** di
+accendere un interruttore. Un'installazione nuova non accende niente: trova tutto già acceso. Quindi
+quattro promesse fatte e nessuna richiesta fatta, e l'unica strada al dialogo di sistema era
+spegnere e riaccendere, che non è una strada che qualcuno trova.
+
+VISION §5.8 diceva «le notifiche sono richieste la prima volta che il lettore accende qualcosa che
+ne ha bisogno, mai all'avvio». Era onesta sul *quando* e sbagliata sul *se*: la regola vale solo se
+i predefiniti sono spenti, e non lo sono. Due modi di chiuderla, e ci vogliono **entrambi**.
+
+### Perché il dialogo di sistema, da solo, non è la riparazione
+
+Android 13 mostra quel dialogo **al massimo due volte per installazione**. Dopo, `launch()` torna
+`false` senza disegnare niente. E c'è un secondo vicolo cieco che si legge uguale da uno schermo e
+si ripara in un posto opposto: permesso **concesso** e notifiche spente dalle impostazioni di
+sistema — lì `launch()` torna `true` immediatamente, sempre senza disegnare niente. In tutti e due
+i casi un pulsante cablato al dialogo è un pulsante morto, che è esattamente lo stato che stiamo
+cercando di finire.
+
+Quindi la domanda giusta non è «ho il permesso» ma `NotificationManagerCompat.areNotificationsEnabled()`:
+*una notifica postata adesso arriverebbe?*. È quella che ogni schermata chiede
+(`NotificationPermission.allowed`). Le due strade morte sono chiuse così:
+
+- permesso già concesso e notifiche spente → si va **dritti** alle impostazioni di sistema, e il
+  pulsante lo dice («Apri le impostazioni»);
+- rifiuto che torna indietro con `shouldShowRequestPermissionRationale` **falso** → il sistema non
+  ha più un dialogo da mostrare, e si consegna la pagina delle impostazioni **nello stesso tap**.
+
+Quel `shouldShowRequestPermissionRationale` non distingue «mai chiesto» da «rifiutato per sempre»:
+è falso per tutti e due. Per questo si legge **dopo** il rifiuto e non prima della richiesta — che
+è anche il motivo per cui non serve persistere nessun flag «gliel'ho già chiesto». Dopo un primo
+rifiuto è vero, quindi un «no» è preso per un no e nessuno viene buttato nelle impostazioni.
+
+### La riparazione che resta: la card (DESIGN §8.14)
+
+Su Avvisi, sopra tutto, e **solo mentre la schermata starebbe mentendo**: qualcosa è acceso e il
+telefono non lo lascia passare. È la metà che conta, perché a differenza del dialogo può essere
+rioffertà ogni volta, dice cosa non va prima di offrire il rimedio, e sparisce da sola quando il
+permesso arriva. Si rilegge a ogni `ON_RESUME`, perché la riparazione avviene **fuori** dall'app e
+una card ancora lì dopo il consenso è la stessa bugia al contrario.
+
+Con tutto spento non è disegnata: non c'è nessuna promessa da rompere, e una card che rimprovera
+per un permesso che non serve a niente sta inventando un problema — lo stesso difetto dall'altra
+parte. `notificationsPromised()` è quella domanda, ed è un test: se i predefiniti si muovono,
+`NotificationsPromisedTest` è dove si vede.
+
+**Anche Cielo**, per la stessa ragione e con la soglia sua: `remindersArmed()`, cioè una campanella
+davvero armata. Lì nessun promemoria nasce acceso, quindi un'installazione nuova non promette niente
+e la card non c'è; ma dal momento che una campanella c'è e il permesso manca, la riga mostra una
+campanella per qualcosa che non può suonare, che è la stessa bugia di Avvisi.
+
+### E il primo avvio: sì, ma dopo il luogo, e a parole
+
+`FirstRun` ha un terzo stato, `Notifications`, fra `Pending` e `Done`. È un passo **suo** e non una
+riga sulla schermata del luogo, perché una notifica è una promessa **su un luogo** e lì il luogo
+non c'è ancora. Ed è una schermata di parole con un «Consenti» esplicito, mai il dialogo di sistema
+all'arrivo: quel dialogo si ha due volte in tutta la vita dell'installazione, quindi si spende su un
+tap che l'ha chiesto. «Non ora» è una risposta vera e non costa niente — non tocca il dialogo, e
+Avvisi tiene la stessa offerta finché è vera.
+
+Tre regole al contorno, tutte e tre nel `CityStore` e tutte e tre con un test:
+
+- **saltare il luogo salta anche questo**, in una sola `edit` (`markFirstRunSkipped`): due edit
+  emetterebbero `Notifications` per un frame lungo la strada, e chi ha appena rifiutato di dare un
+  luogo non ha niente su cui ricevere un avviso. «Salta» non può voler dire «salta uno dei due».
+- **un aggiornamento non viene mai fermato**: `migrateFirstRun` scrive `notify_asked` insieme a
+  `init_done` per le installazioni usate, e — il caso che il `return@edit` in cima si sarebbe perso
+  — lo **riempie** anche per un'installazione già migrata dalla build precedente, che altrimenti
+  avrebbe trovato una schermata intera alla prima apertura. È esattamente quello che quel controllo
+  è stato scritto per evitare.
+- **se le notifiche sono già permesse il passo non si vede**: non c'è niente da chiedere, quindi non
+  si chiede niente.
+
+### I due widget che aprivano la schermata sbagliata
+
+> «Nei widget "Momenti del cielo" e "Arco del giorno" al tap aprire l'app direttamente nella
+> schermata Cielo, che dovrebbe essere più corretto rispetto alle informazioni che i widget
+> visualizzano.»
+
+Giusto, ed è il principio a essere giusto: quei due disegnano materiale della schermata Cielo — i
+momenti, i verdetti, il prossimo momento della luce, l'agenda — e atterrare su Oggi chiedeva al
+lettore di andare a ritrovare quello che aveva appena letto sullo schermo di casa.
+
+`WidgetCard` prende un `destination: ShellTab?` — `null` resta «apri l'app», che atterra dove il
+lettore l'ha lasciata, ed è quello che fanno ancora le altre tre card. La destinazione viaggia
+nell'**azione** dell'intent oltre che in un extra: gli extra non entrano in `Intent.filterEquals`,
+che è la chiave della cache dei `PendingIntent`, e l'azione è quella che resta leggibile in un
+intent a cui gli extra non sono sopravvissuti. (Glance timbra già un `data` unico per widget, quindi
+le due cose sono cintura e bretelle; verificato leggendo il bytecode di `ApplyActionKt`, che usa
+`PendingIntent.getActivity` con il **nostro** intent, azione e flag compresi.)
+
+I flag sono la ricetta di un deep link in un'app a un task solo: `CLEAR_TOP or SINGLE_TOP` consegna
+l'intent all'istanza già viva via `onNewIntent` invece di finirla e ricostruirla. Senza, il **primo**
+tap avrebbe funzionato e tutti quelli dopo no — l'app sarebbe tornata avanti sulla scheda di prima,
+che è il caso che un lettore incontra ogni volta tranne una. Il tab è stato, non una rotta, quindi
+`MainActivity` tiene la richiesta e la passa alla shell, che la consuma e **chiude gli overlay**:
+atterrare su Cielo sotto una pagina Impostazioni aperta sarebbe rispondere al tap e nascondere la
+risposta. Una richiesta arrivata prima che il primo avvio abbia risposto non si perde: resta lì
+finché le schede esistono.
+
+Le altre tre card sono rimaste come stavano. Lo stesso principio le manderebbe su Oggi, ma non è
+stato chiesto e non è un difetto: «apri l'app» è una risposta onesta per una card che mostra il
+tempo di adesso.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1587 test** (18 nuovi nell'app,
+4+2 nel `CityStore`), lint a zero errori. `:app:assembleDebug` e `:app:assembleRelease
+-PsignReleaseWithDebugKey` costruiscono, così l'R8 è passato anche lui. `ShellDestinationTest`
+costruisce davvero il `PendingIntent` sopra l'intent, perché un intent implicito sarebbe rifiutato
+in faccia su questo minSdk.
+
+Quel che **non** è coperto da un test e va guardato su un dispositivo: il dialogo di sistema non
+esiste in Robolectric, quindi il percorso «rifiuta due volte → il tap seguente apre le impostazioni»
+è ragionato sul contratto di `ActivityResultContracts.RequestPermission` e non misurato. Da provare
+su un telefono: installare, arrivare al passo due, dire di no due volte, e controllare che il
+pulsante su Avvisi porti nelle impostazioni di sistema e non da nessuna parte.

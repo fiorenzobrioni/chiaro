@@ -400,6 +400,15 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
 
 ### Changed
 
+- **"Momenti del cielo" and "L'arco del giorno" open the Sky screen** (asked for from the
+  device). Everything those two cards draw is the Sky screen's own material — the moments,
+  their verdicts, the next light moment, the agenda that follows — and landing on Today
+  asked the reader to go and find again what they had just read on the home screen. The
+  other three cards open the app as they always did, wherever it was left. A tap on a
+  running app moves the tab rather than restarting the app, and takes any open Settings or
+  guide page down with it: landing on Sky underneath one would be answering the tap and
+  hiding the answer.
+
 - **The place name on the wide "Colpo d'occhio" card takes the room the sentence is not
   using.** The row split its slack in half between the number-and-place column and the
   sentence, because Glance cannot measure text — so a four-cell card printed «Cavenago di
@@ -691,6 +700,28 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
   the language it was written in.
 
 ### Fixed
+
+- **The alerts that could never ring.** Four ready-made alerts ship switched on — severe
+  weather, rain in the next hours, official warnings and your own rules — and Android's
+  notification permission was only ever asked by the act of switching one on, which a
+  fresh install never does. So the switches said yes, the phone said nothing, and the
+  only road to the permission dialog was to turn an alert off and on again. Two repairs,
+  and it takes both. **First run asks, once**, on a step of its own after the place has
+  been answered: a notification is a promise about a place, and there is no place on the
+  screen before it. It is a screen of words with an explicit "Allow" and a "Not now" that
+  costs nothing, never the system dialog on arrival — Android shows that dialog at most
+  twice per install and then does nothing at all, so it is spent on a tap that asked for
+  it. Skipping the place skips this with it, and an upgrade is never stopped by it.
+  **And Alerts says so in place**, in a card above the list, for as long as something is
+  switched on that the phone will not deliver — with the one button that fixes it, which
+  names the door it opens: the permission dialog where the system will still show one,
+  this app's page in the system notification settings where it will not (the other dead
+  end: permission held, notifications switched off in Settings, where asking again
+  returns "granted" and draws nothing). Unlike the dialog the card can be offered again
+  every time, and it goes away by itself the moment the permission arrives. The Sky
+  screen carries the same card once a reminder is really armed. With every switch off
+  neither screen draws anything: there is no promise to break, and a card that scolds you
+  about a permission you need for nothing is inventing a problem.
 
 - **The palette note promised icons it does not always change.** "Vivid is cool white and
   azure, with brighter weather icons" was shown to every reader, but the dress only

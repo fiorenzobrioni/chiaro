@@ -432,8 +432,27 @@ where the answer to "is it about to rain?" actually lives, belongs in the tour o
 
 One screen, two answers: use my location, or search for a place. Skipping is allowed and lands on a
 real "no place yet" state, exactly as tweather's `ActiveSource.None`. No carousel, no account, no
-permission asked before the sentence explaining why it is asked. Notifications are requested the
-first time the reader turns on something that needs them, never at startup.
+permission asked before the sentence explaining why it is asked.
+
+**And then one more screen, for notifications** (21 set 2026). The rule this section used to state —
+"requested the first time the reader turns on something that needs them, never at startup" — was
+honest about the *when* and wrong about the *whether*, because four ready-made alerts ship switched
+ON (§5.4). A fresh install therefore never turns anything on, so the permission was never asked, and
+the switches promised four notifications that could not arrive. The only road to the dialog was to
+turn an alert off and on again, which is not a road anybody finds.
+
+So the question is put, once, on a step of its own after the place has been answered — a notification
+is a promise about a place, and on the screen before it there is no place yet. It is a screen of
+words with an explicit «Consenti», never the system dialog on arrival: Android shows that dialog at
+most twice per install and after that it does nothing at all, so it is spent on a tap that asked for
+it. «Non ora» is a real answer and costs nothing. Skipping the place skips this too, and an upgrade
+is never stopped by it.
+
+The standing repair is on the screen that makes the promise: Avvisi (and Sky, for its reminders)
+draws a card for as long as something is switched on that the phone will not deliver, with the one
+button that fixes it — the runtime dialog where the system will still show one, the app's own page in
+the system settings where it will not (DESIGN §8.14). Unlike the dialog it can be offered again every
+time, and it disappears by itself the moment the permission is granted.
 
 ### 5.9 Widgets
 
@@ -497,6 +516,12 @@ Glance, five cards, matching the app's dynamic color:
 
 A widget never invents: with stale data it says how old it is, with no place configured it says so
 and opens the app, and no layout ever pads itself out to fill the space it was given.
+
+**A tap opens the screen the card was showing** (21 set 2026, committente): **Sky** and **the day's
+arc** are the Sky screen's own material — its moments, its verdicts, its next light moment, its
+agenda — so they land on Sky rather than on Today, which was asking the reader to go and find again
+what they had just read on the home screen. The other three cards open the app as they always did,
+wherever the reader left it.
 
 **The card each one wears** is the reader's, per widget: the computed sky (the default), a light
 card, a dark one, one that follows the phone — and, since 19 set 2026, one of six colours

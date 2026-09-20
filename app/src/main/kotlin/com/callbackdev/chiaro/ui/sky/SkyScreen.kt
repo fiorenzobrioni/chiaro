@@ -1,11 +1,6 @@
 package com.callbackdev.chiaro.ui.sky
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -57,10 +52,12 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.ui.components.NotificationsOffCard
+import com.callbackdev.chiaro.ui.components.rememberNotificationRequest
+import com.callbackdev.chiaro.ui.components.rememberNotificationsAllowed
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.sky.MoonQuarterKind
 import com.callbackdev.chiaro.domain.sky.SkyJob
@@ -211,17 +208,25 @@ private fun SkyContent(
 
     // POST_NOTIFICATIONS is asked the first time a reminder is switched on (VISION
     // §5.8), never at startup: the tap that needs it is the sentence that explains it.
-    val context = LocalContext.current
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { }
+    // And once a bell IS set, the card above the list says so for as long as the phone
+    // cannot ring it — the same repair Avvisi carries, for the same reason.
+    val notificationsAllowed by rememberNotificationsAllowed()
+    val request = rememberNotificationRequest()
     fun leadChosen(minutes: Int?) {
-        if (minutes != null && minutes > 0 && !notificationsAllowed(context)) {
-            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
+        if (minutes != null && minutes > 0 && !notificationsAllowed) request.ask()
     }
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
+        if (!notificationsAllowed && remindersArmed(content)) {
+            item {
+                NotificationsOffCard(
+                    body = stringResource(R.string.notifications_off_sky),
+                    onAllow = request.ask,
+                    settingsOnly = request.settingsOnly,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+        }
         item {
             TonightCard(
                 tonight = content.tonight,
@@ -361,9 +366,15 @@ private fun SkyContent(
     }
 }
 
-private fun notificationsAllowed(context: Context): Boolean =
-    ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
-        PackageManager.PERMISSION_GRANTED
+/**
+ * Whether any bell on this screen is really set: a subscribed moment, or a row of the
+ * calendar ahead, with a lead other than «mai». The default lead on its own is not a
+ * promise — it is what a moment adopts when it is subscribed to — so a screen with no
+ * armed row has nothing to warn about.
+ */
+internal fun remindersArmed(content: SkyUiState.Content): Boolean =
+    content.moments.any { it.lead != SkyLead.OFF } ||
+        content.events.any { it.lead != null && it.lead != SkyLead.OFF }
 
 @Composable
 private fun SkySectionTitle(text: String) {

@@ -1,10 +1,5 @@
 package com.callbackdev.chiaro.ui.alerts
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -60,7 +55,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.callbackdev.chiaro.ui.theme.GroupTop
@@ -68,6 +62,9 @@ import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.ui.theme.reducedMotion
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.ui.components.NotificationsOffCard
+import com.callbackdev.chiaro.ui.components.rememberNotificationRequest
+import com.callbackdev.chiaro.ui.components.rememberNotificationsAllowed
 import com.callbackdev.chiaro.data.warnings.PlaceWarningState
 import com.callbackdev.chiaro.domain.rules.MaxConditions
 import com.callbackdev.chiaro.domain.rules.MaxRules
@@ -192,19 +189,17 @@ private fun AlertsContent(
     viewModel: AlertsViewModel,
     onEdit: (Long) -> Unit
 ) {
-    val context = LocalContext.current
-    // Asked the first time something that needs it is switched on (VISION §5.8).
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { }
+    // Asked the first time something that needs it is switched on (VISION §5.8) — and
+    // stated in a card above the list for as long as it is missing, because on this
+    // screen the switches themselves are the promise (see [notificationsPromised]).
+    val notificationsAllowed by rememberNotificationsAllowed()
+    val request = rememberNotificationRequest()
     fun somethingTurnedOn() {
-        if (!notificationsAllowed(context)) {
-            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
+        if (!notificationsAllowed) request.ask()
     }
 
     val locale = Locale.getDefault()
-    val is24h = android.text.format.DateFormat.is24HourFormat(context)
+    val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val firedFmt = remember(locale, is24h) {
         DateTimeFormatter.ofPattern(if (is24h) "d MMM, HH:mm" else "d MMM, h:mm a", locale)
     }
@@ -225,6 +220,19 @@ private fun AlertsContent(
     }
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
+        // Above everything, and only while the screen would otherwise be lying: the
+        // switches below say an alert will arrive, and with notifications off none of
+        // them can. With nothing switched on there is no promise to break and no card.
+        if (!notificationsAllowed && notificationsPromised(content)) {
+            item {
+                NotificationsOffCard(
+                    body = stringResource(R.string.notifications_off_alerts),
+                    onAllow = request.ask,
+                    settingsOnly = request.settingsOnly,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+        }
         // VISION §5.4 and Fase 11: the authority's warnings lead, because they are the
         // only ones on this screen nobody chose — and because the reader who opens
         // Avvisi in an autumn afternoon is usually here to check exactly this.
@@ -1162,6 +1170,17 @@ private fun ValuePickerDialog(
     )
 }
 
-private fun notificationsAllowed(context: Context): Boolean =
-    ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
-        PackageManager.PERMISSION_GRANTED
+/**
+ * Whether anything on this screen has promised the reader a notification: one of the
+ * ready-made switches, the official warnings, or a rule of their own that is enabled.
+ *
+ * This is the question the card is drawn on, and it is the whole reason the card
+ * exists: four of these ship switched **on**, so a fresh install carries four promises
+ * before anybody has touched anything — and the permission used to be asked only by
+ * the act of switching one on, which that install never does.
+ */
+internal fun notificationsPromised(content: AlertsUiState.Content): Boolean =
+    with(content.notifications) {
+        severeWeatherAlerts || precipitationWarning || dailySummary || eveningSummary ||
+            officialWarnings || (userRules && content.rules.any { it.rule.enabled })
+    }

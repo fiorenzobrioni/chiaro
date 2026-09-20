@@ -1,6 +1,10 @@
 package com.callbackdev.chiaro.data
 
+import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.GeoFix
@@ -38,12 +42,12 @@ class CityStoreTest {
     private val fixedAt: Instant = Instant.parse("2026-09-04T10:15:00Z")
     private val milan = CityStore.DefaultCity
 
-    private fun store(): CityStore = CityStore(
+    private fun preferences(): DataStore<Preferences> =
         PreferenceDataStoreFactory.create(scope = scope) {
             tmp.newFile("cities-${System.nanoTime()}.preferences_pb")
-        },
-        Json
-    )
+        }
+
+    private fun store(): CityStore = CityStore(preferences(), Json)
 
     @After
     fun tearDown() {
@@ -257,10 +261,111 @@ class CityStoreTest {
         val store = store()
         store.migrateFirstRun(hasHistory = false)
 
-        store.markInitDone()
+        store.markFirstRunSkipped()
 
         assertEquals(FirstRun.Done, store.firstRun.first())
         assertEquals(ActiveSource.None, store.activeSource.first())
+    }
+
+    // ---- 21 set 2026: the notification step, and who is asked ----
+
+    /**
+     * A place answered is not the whole of first run any more: the notification step
+     * follows it, because four ready-made alerts ship switched ON and the permission
+     * they need was never asked of a fresh install. The order is the point — a
+     * notification is a promise about a place, so it cannot be asked before there is
+     * one.
+     */
+    @Test
+    fun `answering the place question leads to the notification step`() = runBlocking {
+        val store = store()
+        store.migrateFirstRun(hasHistory = false)
+        assertEquals(FirstRun.Pending, store.firstRun.first())
+
+        store.markInitDone()
+        assertEquals(FirstRun.Notifications, store.firstRun.first())
+
+        store.markNotificationsAsked()
+        assertEquals(FirstRun.Done, store.firstRun.first())
+    }
+
+    /** Skipping is one answer to both: a reader who declined to name a place has
+     * nothing for an alert to be about, and «salta» must not mean «salta uno dei due». */
+    @Test
+    fun `skipping the place skips the notification step with it`() = runBlocking {
+        val store = store()
+        store.migrateFirstRun(hasHistory = false)
+
+        store.markFirstRunSkipped()
+
+        assertEquals(FirstRun.Done, store.firstRun.first())
+    }
+
+    /**
+     * An upgrade inherits the step as answered, both ways an install can be a used
+     * one. The alternative is a full-screen question at the next launch for somebody
+     * who has been using the app for months, which is the app interrupting a reader
+     * to ask something the Avvisi screen can say in place, where it is already true.
+     */
+    @Test
+    fun `an upgrade is never stopped by the notification step`() = runBlocking {
+        val fetching = store()
+        fetching.migrateFirstRun(hasHistory = true)
+        assertEquals(FirstRun.Done, fetching.firstRun.first())
+
+        val configured = store()
+        configured.add(turin)
+        configured.migrateFirstRun(hasHistory = false)
+        assertEquals(FirstRun.Done, configured.firstRun.first())
+    }
+
+    /**
+     * The upgrade that the check's own `return@edit` would have missed: an install
+     * already migrated, from before the step existed. It has answered the place
+     * question, so it must not meet a full-screen question at the next launch.
+     */
+    @Test
+    fun `an install migrated before the step existed inherits it as answered`() = runBlocking {
+        val prefs = preferences()
+        val store = CityStore(prefs, Json)
+        store.migrateFirstRun(hasHistory = true)
+        // Exactly the state the old build left behind: migrated and answered, with
+        // no notion of a notification step at all.
+        prefs.edit { it.remove(booleanPreferencesKey("notify_asked")) }
+        assertEquals(FirstRun.Notifications, store.firstRun.first())
+
+        store.migrateFirstRun(hasHistory = true) // the first launch of the new build
+
+        assertEquals(FirstRun.Done, store.firstRun.first())
+    }
+
+    /** ...and an install that had not answered the place question yet still gets both,
+     * in order: the notification step is not skipped for somebody who never saw it. */
+    @Test
+    fun `an unanswered install migrated before the step still gets both questions`() =
+        runBlocking {
+            val store = store()
+            store.migrateFirstRun(hasHistory = false)
+
+            store.migrateFirstRun(hasHistory = false)
+            assertEquals(FirstRun.Pending, store.firstRun.first())
+
+            store.markInitDone()
+            assertEquals(FirstRun.Notifications, store.firstRun.first())
+        }
+
+    /** The step records that the QUESTION was put, never the answer: the permission
+     * is the system's to hold, and a reader who said no is not asked again here. */
+    @Test
+    fun `the notification step is put once and never again`() = runBlocking {
+        val store = store()
+        store.migrateFirstRun(hasHistory = false)
+        store.markInitDone()
+
+        store.markNotificationsAsked()
+        store.markInitDone() // choosing another place later, from the places sheet
+
+        assertEquals(FirstRun.Done, store.firstRun.first())
     }
 
     /**
