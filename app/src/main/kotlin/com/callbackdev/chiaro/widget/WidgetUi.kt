@@ -9,7 +9,9 @@ import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Shader
+import android.graphics.Typeface
 import android.os.Build
+import android.util.TypedValue
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -626,6 +628,60 @@ fun PlaceLine(
         Text(text = name, style = secondaryStyle(palette, size), maxLines = 1)
     }
 }
+
+/**
+ * The width one line of a widget's text really takes, **measured and not estimated**
+ * (20 set 2026). Glance cannot measure text and a layout that has to share a row between
+ * two blocks of words has to know how wide one of them is, so the measuring happens where
+ * it can: a `Paint` in this process, at the size and weight the `Text` will be given.
+ *
+ * The face is [Typeface.DEFAULT] — the system font — because that is what a widget is
+ * drawn in: a home-screen card is inflated by the launcher from `RemoteViews` and never
+ * sees the app's own bundled face, which is the whole reason Settings' «the phone's font»
+ * is the closest the app gets to its own widgets. So this is the same font, the same size
+ * and the same weight the reader will see, not a guess about them.
+ *
+ * What it cannot promise: a launcher on a phone whose system interface runs a different
+ * face from the one apps get measures a few percent off ours. That is why every caller
+ * keeps [RowFitSlack] and why nothing here is a hard bound — a name that comes out wider
+ * than we measured ellipsises exactly as it did before, which is the state we started from.
+ *
+ * The size is resolved through [TypedValue] rather than `scaledDensity` so that a reader's
+ * non-linear font scale is the one the platform will really apply.
+ */
+fun measureWidgetText(context: Context, text: String, sizeSp: Float, medium: Boolean): Dp {
+    val metrics = context.resources.displayMetrics
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        typeface = if (medium) WidgetMediumTypeface else Typeface.DEFAULT
+        textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sizeSp, metrics)
+    }
+    return (paint.measureText(text) / metrics.density).dp
+}
+
+/** `sans-serif-medium`, the family Glance's [FontWeight.Medium] resolves to on the
+ * launcher's side: measuring Medium text with the Regular face reads ~2% narrow.
+ *
+ * `by lazy` and not a plain initializer: this file's top-level properties are read by the
+ * pure layout tests, and a `Typeface` built while the class loads would drag the whole of
+ * `WidgetUi` onto a device. Nothing constructs it until something really measures. */
+private val WidgetMediumTypeface: Typeface by lazy {
+    Typeface.create("sans-serif-medium", Typeface.NORMAL)
+}
+
+/**
+ * The whole place line, pin included: what [PlaceLine] occupies on one line. The pin is
+ * sized on the name's own text size, exactly as [placePinSize] sizes it, so a reader's
+ * font scale moves the mark and the measurement together.
+ */
+fun placeLineWidth(context: Context, name: String, fromGps: Boolean, sizeSp: Float): Dp {
+    val text = measureWidgetText(context, name, sizeSp, medium = false)
+    return if (fromGps) text + placePinSize(context, sizeSp) + PlacePinGap else text
+}
+
+/** The air a measured width is given before it is used as a width: the launcher's font
+ * is not this process's font, and a block that asks for exactly what it measured wraps
+ * or ellipsises on the first phone that rounds the other way. */
+val RowFitSlack = 4.dp
 
 /** The app screen puts a 20dp pin before a 22sp title; the ratio travels, the numbers
  * do not — a widget's name is 16sp. */

@@ -7770,6 +7770,109 @@ finirebbe su quattro widget su cinque senza che nessuno se ne accorga.
 
 ### Come è stato verificato
 
-`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **1512 test**
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **1515 test**
 (tre nuovi), lint a zero errori. Le larghezze del Bold contro il Medium sono misurate sui due
 `.ttf` inclusi con `fontTools`, non stimate.
+
+*(Il messaggio di commit dice 1512: la variante `release` non aveva ancora rigirato i tre test
+nuovi quando è stato contato. Il numero giusto è 1515.)*
+
+---
+
+## Il nome del luogo, e la colonna che se lo prendeva a metà (committente, 20 set 2026)
+
+> «Nello screenshot "Colpo d'occhio" vedi che il nome della località è troncato? Sì che questo
+> esempio è lungo, ma si riuscirebbe a visualizzarlo per completo senza penalizzare il testo a
+> destra nel caso la frase da visualizzare sia lunga? Modifica solo se non rovina il layout.»
+
+La condizione è la parte interessante, ed è quella che ha deciso la forma della soluzione.
+
+### Che cosa faceva davvero la riga larga
+
+Le due colonne di testo di una card a una riga si dividevano **la metà esatta** della luce che
+resta dopo il glifo (`nowSentenceColumnWidth`). Sulla card di riferimento da quattro celle sono
+236 dp, cioè 118 per una. «Cavenago di Brianza» col segnaposto è ~167 dp: troncato. E accanto,
+nei suoi 118 dp, c'era **«Sereno»**, che ne occupa 47.
+
+Metà era la prima risposta giusta e la ragione regge ancora: è quel che fa il widget di
+riferimento, il suo blocco di descrizione è largo quanto il suo blocco del numero, e lo spazio
+vuoto cade in mezzo dove l'occhio se lo aspetta. Quel che metà non sa fare è **accorgersi che
+una delle due colonne non è piena**.
+
+### Perché non è una quota fissa più grande
+
+La soluzione ovvia — dare alle parole 140 dp invece di 118 — è quella che il committente ha
+escluso nella stessa frase: quei 22 dp li pagherebbe **ogni** frase lunga, anche sulle card
+dove il nome del luogo è «Rho». E non basterebbe comunque: 140 − 20 di segnaposto = 120 dp di
+nome, e «Cavenago di Brianza» ne vuole 147.
+
+Quindi la domanda va girata: non «quanto do alle parole», ma **quanto chiedono i due blocchi**.
+
+### Misurare, non stimare
+
+Glance non sa misurare il testo, ed è la ragione per cui questa riga si divideva a metà. Ma il
+testo si può misurare **dove si può**: `measureWidgetText` apre un `Paint` in questo processo,
+alla taglia e al peso che il `Text` avrà, e chiede la larghezza. La faccia è
+`Typeface.DEFAULT` — **il carattere di sistema, che è esattamente quello con cui una card viene
+disegnata**: un widget lo gonfia il launcher da `RemoteViews` e non vede mai il font incluso
+nell'APK, che è tutto il motivo per cui in Impostazioni «il carattere del telefono» è la scelta
+che avvicina di più l'app alle sue card. Non è una stima della larghezza: è la larghezza, nello
+stesso font e alla stessa taglia.
+
+Quel che non può promettere sta nel suo KDoc: su un telefono la cui interfaccia di sistema gira
+una faccia diversa da quella che ricevono le app, il launcher misura qualche punto percentuale
+diverso da noi. Per questo ogni chiamante tiene `RowFitSlack` (4 dp) e **niente qui è un
+vincolo**: un nome che viene fuori più largo di quel che abbiamo misurato va in ellissi
+esattamente come faceva prima, che è lo stato da cui siamo partiti.
+
+Una trappola trovata dai test e vale la pena scriverla: il `Typeface` era un `val` di primo
+livello, e i test puri del layout leggono altre proprietà di primo livello dello stesso file —
+l'inizializzatore della classe partiva sotto JUnit e `Typeface.create` sull'`android.jar`
+stubbato esplode. È `by lazy`: niente si costruisce finché qualcosa non misura davvero.
+
+### Le tre regole, e l'ordine è la promessa
+
+`nowWordsColumnWidth` è aritmetica pura (quindi `NowWidgetLayoutTest` la fissa a tavolino):
+
+1. **La frase tiene quel che chiede, e mai meno di quel che le dava la metà.** Quel che chiede è
+   la sua larghezza misurata su **una riga**, tagliata alla metà: così una frase lunga non può
+   essere stretta, viene tagliata prima di poterlo essere, e la card ricade esattamente sul
+   layout che ha oggi. È la condizione del committente, scritta come un `coerceAtMost`.
+2. **Le parole prendono quel che serve alla riga del luogo**, mai meno di `WordsColumnMin`,
+   perché in quella colonna ci vive anche la temperatura e troncare un numero è un guasto
+   peggiore che troncare un nome.
+3. **Le parole non portano mai la frase sotto il suo pavimento**: quel che resta dopo la 1.
+
+Il risultato non è mai più piccolo della metà, quindi **nessuna card perde un dp di quelli che
+ha oggi**; l'unica cosa che si muove è lo spazio che la frase teneva senza usarlo.
+
+Simulato sulle facce incluse (che sono più larghe del Roboto con cui il launcher disegna
+davvero, quindi è il caso peggiore), card da quattro celle:
+
+| luogo | frase | parole | frase | esito |
+|---|---|---:|---:|---|
+| Cavenago di Brianza | Sereno | 171 | 65 | nome **intero**, frase su una riga |
+| Cavenago di Brianza | Poco nuvoloso | 123 | 113 | nome quasi intero, frase su una riga |
+| Cavenago di Brianza | Pioggia gelata verso le 15:00 | 118 | 118 | **identico a oggi** |
+| Milano | Pioggia in arrivo verso le cinque. | 118 | 118 | **identico a oggi** |
+
+Con la pastiglia dell'allerta nella colonna di destra non si misura niente e si torna alla
+metà: una pastiglia è un blocco di inchiostro fisso che non sa andare a capo né in ellissi, e
+il giorno di un'allerta non è il giorno per cercare il bordo di un'aritmetica.
+
+### Quel che NON è stato toccato
+
+- **La disposizione a glifo destro** (`MirroredRowContent`), che il committente dice già legge
+  il nome per intero: lì la colonna delle parole è tutta la riga meno il glifo, e non c'è
+  niente da dividere.
+- **Il widget «Le prossime ore»**, che ha la stessa divisione a metà nella sua riga dell'eroe.
+  Non era nella richiesta e la sua colonna di destra porta anche massima/minima, quindi «quel
+  che la frase chiede» lì è una domanda con due risposte. Si estende quando lo si chiede.
+- **Le anteprime del selettore**, che restano corrette: il loro luogo di esempio è «Milano» e la
+  loro frase è lunga, cioè esattamente il caso in cui la nuova regola ricade sulla metà.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **1523 test**
+(quattro nuovi in questo giro, sette in tutto sul ramo), lint a zero errori. Le larghezze della
+tabella qui sopra sono calcolate dai due `.ttf` inclusi con `fontTools`, non stimate a occhio.

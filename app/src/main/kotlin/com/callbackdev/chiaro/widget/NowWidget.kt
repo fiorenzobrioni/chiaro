@@ -23,6 +23,7 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
+import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
@@ -162,10 +163,15 @@ class NowWidget : GlanceAppWidget() {
 /**
  * The one-row card in the standard arrangement: glyph, then the temperature over the
  * place, then — on a card wide enough ([NowLayout.WIDE]) and unless the reader turned it
- * off — the day's sentence against the far edge. The two text columns split the row's
- * slack evenly ([nowSentenceColumnWidth]), so the temperature block keeps its place at
- * the glyph's side, the sentence keeps the far edge, and the empty space lands in the
- * middle, which is where the reference widget puts it too.
+ * off — the day's sentence against the far edge. The temperature block keeps its place at
+ * the glyph's side, the sentence keeps the far edge, and the slack between them lands in
+ * the middle, which is where the reference widget puts it too.
+ *
+ * **Where the boundary between the two falls is [nowWordsColumnWidth]'s** and no longer a
+ * straight half (20 set 2026): the place name takes the room the sentence measured and did
+ * not need, and stops the moment the sentence would start losing any. Both blocks are
+ * measured here, with the face and size the launcher will draw them in, because this is
+ * the one place in the composition that can measure anything.
  */
 @Composable
 private fun RowContent(
@@ -177,6 +183,26 @@ private fun RowContent(
     warning: WarningSlot = WarningSlot.NONE
 ) {
     val context = LocalContext.current
+    val trailing = withSentence || warning.drawn
+    // Built once: it is measured below and then printed, and building it twice would
+    // build the clock formatter twice with it.
+    val headline = if (withSentence) sentence(context, content, model.settings.units) else null
+    // Measured only where there are two columns to divide: the narrow form and a card
+    // whose reader turned the sentence off have one, and it is the whole row.
+    val words = if (!trailing) null else nowWordsColumnWidth(
+        size,
+        placeLine = placeLineWidth(context, content.city.name, model.fromGps, PlaceSp) +
+            RowFitSlack,
+        // What the sentence asks to keep. With a chip in that column the answer is the
+        // even share and nothing is measured: a chip is a fixed block of ink that cannot
+        // wrap or ellipsise, and a warning day is not the day to find the edge of an
+        // arithmetic.
+        sentenceKeep = if (headline == null || warning.drawn) {
+            nowSentenceColumnWidth(size)
+        } else {
+            measureWidgetText(context, headline, SentenceSp, medium = true) + RowFitSlack
+        }
+    )
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier.fillMaxSize()
@@ -185,10 +211,23 @@ private fun RowContent(
         // The bottom padding balances the leading above "23°", so the words' ink and
         // the glyph's ink share a centre line instead of the two boxes sharing one
         // (committente, 5th device pass — the icon read high by exactly half that band).
+        //
+        // A width and not a weight the moment there is something beside it: two weights
+        // are a straight half, which is the thing that truncated the name. [IconTextGap]
+        // is inside the column's own width, so it is added to the figure the layout
+        // computed for the words themselves. With nothing beside it the column is the
+        // row (the NARROW form, and a WIDE card whose reader turned the sentence off),
+        // and a weight is the honest way to say so.
         Column(
             modifier = GlanceModifier
                 .padding(start = IconTextGap, bottom = textInkBalance(context, TemperatureSp))
-                .defaultWeight()
+                .then(
+                    if (words != null) {
+                        GlanceModifier.width(IconTextGap + words)
+                    } else {
+                        GlanceModifier.defaultWeight()
+                    }
+                )
         ) {
             Temperature(content, model, palette)
             PlaceLine(
@@ -199,7 +238,7 @@ private fun RowContent(
             )
             StaleLine(content, palette)
         }
-        if (withSentence || warning.drawn) {
+        if (trailing) {
             // Right-aligned and centred on the row, as the reference draws it. The
             // TextView fills its column so a one-line sentence still sits at the far
             // edge rather than floating where its own width ends. Three children at
@@ -210,9 +249,9 @@ private fun RowContent(
                     .padding(start = SentenceGap)
                     .defaultWeight()
             ) {
-                if (withSentence) {
+                if (headline != null) {
                     Text(
-                        text = sentence(context, content, model.settings.units),
+                        text = headline,
                         style = sentenceStyle(palette, TextAlign.End),
                         // The chip takes a line off the sentence when it sits under it.
                         maxLines = nowSentenceLines(
@@ -222,7 +261,7 @@ private fun RowContent(
                     )
                 }
                 model.warning?.maxLevel?.takeIf { warning.drawn }?.let { level ->
-                    WarningChipRow(level, palette, if (withSentence) WarningChipGap else 0.dp)
+                    WarningChipRow(level, palette, if (headline != null) WarningChipGap else 0.dp)
                 }
             }
         }

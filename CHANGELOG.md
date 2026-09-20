@@ -400,6 +400,20 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
 
 ### Changed
 
+- **The place name on the wide "Colpo d'occhio" card takes the room the sentence is not
+  using.** The row split its slack in half between the number-and-place column and the
+  sentence, because Glance cannot measure text — so a four-cell card printed «Cavenago di
+  Bri…» in 118dp next to a column holding «Sereno», which is 47dp of ink in 118dp of room.
+  Both blocks are measured now, with a `Paint` in the app's process at the size, weight and
+  face the launcher will draw them in, and the boundary falls where they ask for it: the
+  sentence keeps its measured width capped at the even share, so a long sentence is never
+  squeezed and the card falls back to exactly the layout it has today; the words then take
+  what the name needs, never past what the sentence kept and never below what the temperature
+  needs. Nothing ever comes out narrower than before, so no card loses room it has — the only
+  space that moves is space one column was holding empty. A warning chip turns the measuring
+  off and restores the even share: a chip cannot wrap or ellipsise. The mirrored arrangement
+  (glyph on the trailing side) is untouched, since there the words already have the whole row.
+
 - **The hero temperature is Bold on every card whose hero it is.** The Now and Today widgets
   printed theirs at 34sp Medium, which is the weight everything else on those cards is set in —
   the sentence, the place, the day's high and low — so beside the text widget's Bold hero the

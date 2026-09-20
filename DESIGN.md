@@ -672,6 +672,24 @@ most 2.1 ems wide; and on the panel **over the words**, in the band that form ke
 pinning its eyebrow to the top and its block to the bottom. 48 to 104 dp, one step under the
 family's hero floor at the bottom end because here the glyph is not the hero, the number is.
 
+**A widget may measure its own text, and where two blocks share a row it must** (20 set
+2026). Glance cannot measure text, which is why the Now card's wide row split its slack in
+half: 118dp to the number and the place, 118 to the sentence. On a four-cell card that
+printed «Cavenago di Brianza» as «Cavenago di Bri…» next to a column holding the word
+«Sereno», 47dp of ink in 118dp of room. The measuring happens where it can — a `Paint` in
+the app's process, at the size and weight the `Text` will get, in `Typeface.DEFAULT`, which
+IS the face a widget is drawn in (a card is inflated by the launcher from `RemoteViews` and
+never sees the app's bundled font: §5's own point about the widgets' scale, read the other
+way). The rule that split then follows, in this order: the sentence keeps its measured
+one-line width, capped at the even share, so a long sentence is never squeezed and the card
+falls back to the layout it already had; the words take what the place line needs, never
+below their own minimum, because the temperature lives in that column too; and the words
+stop at whatever the sentence kept. Nothing ever comes out smaller than the even split, so
+no card loses a dp it has today — the only space that moves is space one column was holding
+and not using. A launcher whose system font differs from the one apps get measures a few
+percent off ours, so every caller carries 4dp of slack and nothing here is a bound: a name
+wider than measured ellipsises exactly as it did before.
+
 **A hero temperature is Bold** (20 set 2026, committente, with the cards side by side on
 the home screen). It was the text widget's own weight for a day, on the argument that a
 card with no drawing needs all three of size, weight and ink at its top rank; beside it the
