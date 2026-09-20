@@ -437,6 +437,8 @@
     <string name="sky_no_place_body">Aggiungi un luogo per vedere cosa ha in programma il suo cielo.</string>
     <string name="sky_section_moments">I prossimi momenti</string>
     <string name="sky_section_events">In arrivo</string>
+    <!-- Fase 27: due sciami che culminano la stessa notte stanno su una riga sola. -->
+    <string name="sky_event_and">%1$s e %2$s</string>
     <string name="sky_section_reminders">Promemoria</string>
     <string name="sky_add_moment">Aggiungi un momento</string>
     <string name="sky_moment_now">Adesso</string>
@@ -449,7 +451,11 @@
          è buio a mezzogiorno (sopra gli 84,6° al solstizio). La card e la riga lo dicono. -->
     <string name="sky_tonight_dark_all_day">Qui, a questa latitudine, in questa stagione, è buio tutto il giorno: non c\'è una notte da aspettare, c\'è già.</string>
     <string name="sky_none_dark_all_day">È buio tutto il giorno: il sole non risale fino al crepuscolo</string>
-    <string name="sky_tonight_moon">C\'è la luna, %1$d%% illuminata</string>
+    <!-- Fase 27: la finestra di buio e' la notte astronomica MENO le ore in cui la luna
+         e' su, cosi' la card puo' dire che cosa l'ha accorciata - o presa tutta. -->
+    <string name="sky_tonight_moon_sets">La luna resta su fino alle %1$s, %2$d%% illuminata</string>
+    <string name="sky_tonight_moon_rises">La luna torna su alle %1$s, %2$d%% illuminata</string>
+    <string name="sky_tonight_moon_all_night">La luna è su dal crepuscolo all\'alba, %1$d%% illuminata: stanotte non c\'è una finestra davvero buia. Il cielo è comunque scuro dalle %2$s alle %3$s.</string>
     <string name="sky_moon_line">%1$s · %2$d%% illuminata</string>
     <string name="sky_too_far">Troppo lontano per dirlo</string>
 
@@ -469,6 +475,7 @@
     <string name="sky_none_polar_night">Il sole non sorge</string>
     <string name="sky_none_moon">La luna lo salta, come capita circa una volta al mese</string>
     <string name="sky_none_no_darkness">Il cielo non diventa mai del tutto buio</string>
+    <string name="sky_none_moon_all_night">La luna è su tutta la notte</string>
 
     <!-- Promemoria: inesatti di proposito, e lo schermo lo dice -->
     <string name="sky_default_lead">Promemoria abituale</string>

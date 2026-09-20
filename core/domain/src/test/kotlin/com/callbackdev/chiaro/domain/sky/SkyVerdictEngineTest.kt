@@ -185,6 +185,36 @@ class SkyVerdictEngineTest {
         assertEquals(0, verdict.cloudPct)
     }
 
+    /**
+     * Fase 27. A moon that is up for part of a window does not get to fail all of it,
+     * and until this phase it did: the share of the window was computed and then
+     * thrown away, so one sample in five weighed exactly as much as five.
+     *
+     * Same night, same moon, same 98 % of it lit — 26 August 2026 over Milan, where it
+     * rises at about 19:35 and stays up till dawn. A window that ends just after it
+     * rises is mostly moonless; one that sits under it is not.
+     */
+    @Test
+    fun `a moon that is up for part of the window does not spoil all of it`() {
+        val mostlyBeforeMoonrise = evaluate(
+            job = SkyJobCatalog.DarknessWindow,
+            start = "2026-08-26T17:00",
+            end = "2026-08-26T21:00",
+            hours = hours(count = 96, cloud = { 0 })
+        )
+        assertEquals(SkyVerdictKind.PASS, mostlyBeforeMoonrise.kind)
+        assertNull("the moon is down for most of it", mostlyBeforeMoonrise.note)
+
+        val underTheMoon = evaluate(
+            job = SkyJobCatalog.DarknessWindow,
+            start = "2026-08-26T22:00",
+            end = "2026-08-27T02:00",
+            hours = hours(count = 96, cloud = { 0 })
+        )
+        assertEquals(SkyVerdictKind.UNSTABLE, underTheMoon.kind)
+        assertEquals(SkyVerdictNote.MOONLIGHT, underTheMoon.note)
+    }
+
     @Test
     fun `the moon leaves a job that does not need darkness alone`() {
         val verdict = evaluate(

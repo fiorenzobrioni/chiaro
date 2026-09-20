@@ -320,8 +320,11 @@ day.
 The differentiator with the most engineering already behind it.
 
 - **Tonight**: a hero verdict — *Great* / *So-so* / *No chance* / *Not sure yet* — for the dark
-  window, with the numbers that decided it and the reason when it was not the clouds ("the moon is
-  up, 94% lit").
+  window, with the numbers that decided it. The dark window is the astronomical night **minus the
+  hours the moon is up** (Fase 27): the intersection the guide page always described, so the card
+  says "dark from 01:11 to 04:42" on a night the moon owns the first half, names what took the rest
+  ("the moon is up until 01:11, 75% lit"), and states the sky it cannot offer at all when the moon
+  is up from dusk to dawn.
 - **The moments ahead**: a list of the reader's subscribed events (sunrise, golden hour, sunset,
   dark window, moon by default — four to five, never the full catalog), each a card with time,
   verdict chip, evidence, and a bell for a reminder. The list is an agenda, not a log: a moment
@@ -329,12 +332,17 @@ The differentiator with the most engineering already behind it.
   in progress says "Now", and the moon's day-moment stays today's because it is a statement about
   today rather than an appointment. The Sky widget resolves its moment by the same rule, so the
   home screen and the app can never print two different sunrises.
-- **Next events**: the calendar ahead — meteor peaks with their dates, full moon, solstice,
-  equinox — with the verdict where the forecast reaches that far and an honest "too far out to
-  say" where it does not.
-- **Add a moment**: the 32-job catalog, grouped (Sun · Moon · Night · Seasons · Meteor showers),
-  each with a one-line explanation of what it is. This is where a person learns what a blue hour is,
-  by adding one.
+- **Next events**: the calendar ahead, in two tiers (Fase 27). **Every subscribed line is there**,
+  however far out — an eclipse years away is a row with its year and its contact times, and a line
+  the sky skips keeps its row and says why. Under them, the nearest annual events for everybody:
+  meteor peaks with their dates, full moon, solstice, equinox. The verdict travels with each where
+  the forecast reaches that far, and an honest "too far out to say" where it does not. One instant
+  is one row: two showers that peak on the same night share it and both are named.
+- **Add a moment**: the 51-job catalog, grouped (Sun · Night · Moon · Eclipses · Seasons · Meteor
+  showers), each with a one-line explanation of what it is. This is where a person learns what a
+  blue hour is, by adding one. (It read "32-job" and five groups until Fase 27: that was the count
+  at Fase 5, and Fase 19 added the dark-sky pair, the named quarters, the two eclipses, the annual
+  facts and three showers without this line following. §6 has said 51 all along.)
 - **The guide to the events**: a page for every entry in that catalog — what it is, when it happens,
   what the clouds have to do with it, and what to read next. It has two doors, and neither is
   redundant: the info button beside a catalog entry, which opens the page *inside* the sheet so the

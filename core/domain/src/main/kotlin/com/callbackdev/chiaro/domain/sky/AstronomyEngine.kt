@@ -298,6 +298,24 @@ object AstronomyEngine {
         aboveAltitude(from, to, coords, 0.0, Body.MOON)
 
     /**
+     * Every stretch of `[from, to]` during which the moon is **below the horizon** —
+     * the other half of the dark window, and the one `darkness.window` is an
+     * intersection with (Fase 27).
+     *
+     * A list rather than one range, because a night really can hold two of them: a
+     * moon that rises at ten and sets at three leaves the sliver before it and the
+     * hours after it, and returning only the first would hand a reader the shorter
+     * one about half the time.
+     *
+     * The threshold is the moon's own rise threshold, parallax and all — the same one
+     * [lunarDay] crosses for `moon.rise` and `moon.set`. It has to be: a window that
+     * said the moon was down at an hour the row above it calls moonrise would be the
+     * screen arguing with itself.
+     */
+    fun moonDownRuns(from: Instant, to: Instant, coords: Coordinates): List<ClosedRange<Instant>> =
+        belowThresholdRuns(from, to, coords, Body.MOON)
+
+    /**
      * The stretch of `[from, to]` during which the galactic core stands at least
      * [minAltitudeDeg] above the horizon, or null when it never does — which is a
      * fact about the latitude at high northern ones, where the core barely clears
@@ -533,6 +551,49 @@ object AstronomyEngine {
             at = at.plus(GRID)
         }
         return start?.let { it..to }
+    }
+
+    /**
+     * Every sub-interval of `[from, to]` where [body] is under its own rise threshold,
+     * in order, each end clipped to the interval when the body is already there.
+     *
+     * The complement of [aboveAltitude], and a list rather than its first answer: the
+     * caller that needs this ([moonDownRuns]) needs the longest run, not the earliest.
+     * Same grid-then-bisect pattern, and the threshold is re-read at every sample
+     * because the moon's moves with its parallax.
+     */
+    private fun belowThresholdRuns(
+        from: Instant,
+        to: Instant,
+        coords: Coordinates,
+        body: Body
+    ): List<ClosedRange<Instant>> {
+        if (!from.isBefore(to)) return emptyList()
+        // Negative while the body is DOWN, so the edges read the same way round as
+        // every other hunt in this file: a sign change from negative is a rise.
+        fun offset(at: Instant) = altitudeOf(body, at, coords) - riseThreshold(body, null, at)
+        val runs = mutableListOf<ClosedRange<Instant>>()
+        var start: Instant? = if (offset(from) < 0) from else null
+        var previousAt = from
+        var previous = offset(previousAt)
+        var at = from.plus(GRID)
+        while (true) {
+            val bounded = if (at.isAfter(to)) to else at
+            val current = offset(bounded)
+            if (start != null && previous < 0 && current >= 0) {
+                // Rising edge: the run ends where the body crosses back up.
+                runs += start!!..bisect(previousAt, bounded) { offset(it) }
+                start = null
+            } else if (start == null && previous >= 0 && current < 0) {
+                start = bisect(previousAt, bounded) { -offset(it) }
+            }
+            if (bounded == to) break
+            previousAt = bounded
+            previous = current
+            at = at.plus(GRID)
+        }
+        start?.let { runs += it..to }
+        return runs
     }
 
     private val GRID: Duration = Duration.ofMinutes(10)

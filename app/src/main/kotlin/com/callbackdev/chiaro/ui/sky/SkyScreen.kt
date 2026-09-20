@@ -202,6 +202,10 @@ private fun SkyContent(
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val timeFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
     val dateFmt = remember(locale) { DateTimeFormatter.ofPattern("d MMMM", locale) }
+    // The same date with its year, for a row that is not in this one: the aperiodic
+    // searches reach years out and "2 agosto" alone was a date the reader could not
+    // place (Fase 27).
+    val yearFmt = remember(locale) { DateTimeFormatter.ofPattern("d MMMM yyyy", locale) }
 
     var catalogOpen by remember { mutableStateOf(false) }
     var leadDialog by remember { mutableStateOf<LeadDialog?>(null) }
@@ -288,6 +292,8 @@ private fun SkyContent(
                 event = event,
                 zone = content.zone,
                 dateFmt = dateFmt,
+                yearFmt = yearFmt,
+                timeFmt = timeFmt,
                 onBell = event.lead?.let { lead ->
                     { leadDialog = LeadDialog.ForMoment(event.job.id, lead, event.followsDefault) }
                 }
@@ -427,16 +433,27 @@ private fun TonightCard(tonight: Tonight, zone: ZoneId, timeFmt: DateTimeFormatt
                 // RIGHT fact: an empty window is also the deep polar night, where it is
                 // dark at noon and "never gets fully dark" would be the reverse of the
                 // truth (8 set 2026). The engine tells the two apart; the card repeats it.
-                Text(
-                    text = stringResource(
-                        if (tonight.reason == SkyNotScheduled.DARK_ALL_DAY) {
-                            R.string.sky_tonight_dark_all_day
-                        } else {
-                            R.string.sky_tonight_no_darkness
-                        }
-                    ),
-                    style = MaterialTheme.typography.titleMedium
-                )
+                //
+                // Since Fase 27 there is a third empty sky and it is the common one: a
+                // moon up from dusk to dawn. It gets its own sentence, with the night it
+                // did NOT cancel stated after it — the sky is still dark, it is just not
+                // dark enough to plan a faint thing around, and a card that said only
+                // "no dark window" would have the reader believe the sun is misbehaving.
+                val night = tonight.night
+                val moonPct = tonight.moonIlluminationPct
+                val text = when {
+                    tonight.reason == SkyNotScheduled.MOON_ALL_NIGHT &&
+                        night?.end != null && moonPct != null -> stringResource(
+                        R.string.sky_tonight_moon_all_night,
+                        moonPct,
+                        night.start.atZone(zone).format(timeFmt),
+                        night.end!!.atZone(zone).format(timeFmt)
+                    )
+                    tonight.reason == SkyNotScheduled.DARK_ALL_DAY ->
+                        stringResource(R.string.sky_tonight_dark_all_day)
+                    else -> stringResource(R.string.sky_tonight_no_darkness)
+                }
+                Text(text = text, style = MaterialTheme.typography.titleMedium)
                 return@Card
             }
             Text(
@@ -451,14 +468,34 @@ private fun TonightCard(tonight: Tonight, zone: ZoneId, timeFmt: DateTimeFormatt
                 ),
                 style = MaterialTheme.typography.bodyMedium
             )
+            // What the moon took out of the night, when it took something (Fase 27).
+            // It is read off the window's edges against the night's, not off the
+            // verdict: the window IS the moonless part now, so the moon is a fact
+            // about where it opens rather than a downgrade applied afterwards.
+            val moonPct = tonight.moonIlluminationPct
+            val moonLine = when {
+                moonPct == null -> null
+                tonight.moonHeldTheStart -> stringResource(
+                    R.string.sky_tonight_moon_sets,
+                    window.start.atZone(zone).format(timeFmt),
+                    moonPct
+                )
+                tonight.moonTookTheEnd -> stringResource(
+                    R.string.sky_tonight_moon_rises,
+                    (window.end ?: window.start).atZone(zone).format(timeFmt),
+                    moonPct
+                )
+                else -> null
+            }
+            moonLine?.let { Text(text = it, style = MaterialTheme.typography.bodyMedium) }
             // The arithmetic, always (DESIGN §8.7): the number that decided it, or
-            // the reason there is no number yet.
+            // the reason there is no number yet — and on its own line, beside the
+            // moon rather than instead of it. The two used to share one slot with the
+            // moon winning, so a card that blamed the moon printed no cloud figure at
+            // all, which is half an answer to the one question this card exists for.
             val evidence = verdict?.let { SkyText.chipEvidence(res, it) }
             val reason = verdict?.let { SkyText.unknownReason(res, it) }
-            val moonLine = if (verdict?.moonPct != null) {
-                stringResource(R.string.sky_tonight_moon, verdict.moonPct!!)
-            } else null
-            (moonLine ?: evidence ?: reason)?.let {
+            (evidence ?: reason)?.let {
                 Text(text = it, style = MaterialTheme.typography.bodyMedium)
             }
         }
@@ -601,18 +638,31 @@ private fun EventRow(
     event: UpcomingEvent,
     zone: ZoneId,
     dateFmt: DateTimeFormatter,
+    yearFmt: DateTimeFormatter,
+    timeFmt: DateTimeFormatter,
     onBell: (() -> Unit)?
 ) {
     val res = LocalContext.current.resources
-    val name = if (event.quarter == MoonQuarterKind.FULL_MOON) {
-        stringResource(R.string.moon_phase_full)
-    } else {
-        stringResource(SkyText.nameRes(event.job.id))
+    // The name, and the names of anything sharing this instant: the delta Aquariids
+    // and the alpha Capricornids peak on one night, so they get one row (Fase 27).
+    val name = eventName(event)
+    // A `∅` says its reason where the date would go. The row is kept rather than
+    // dropped because the reader asked for this line, and "the sky never gets fully
+    // dark here in August" is the answer to it — the same rule the moments list above
+    // has always followed.
+    val whenLine = when (val occurrence = event.occurrence) {
+        is SkyOccurrence.At -> {
+            val date = occurrence.start.atZone(zone).toLocalDate()
+                .format(if (event.showYear) yearFmt else dateFmt)
+            // The hour, for the one kind of event whose hour is the whole content. A
+            // shower's row is a night nine hours wide and a solstice is a date; an
+            // eclipse is ninety minutes you either step outside for or miss.
+            val window = eclipseWindow(event, zone, timeFmt)
+            listOfNotNull(date, window).joinToString(" · ")
+        }
+        is SkyOccurrence.None -> stringResource(SkyText.notScheduledRes(occurrence.reason))
     }
-    val date = event.occurrence.start.atZone(zone).toLocalDate().format(dateFmt)
-    val verdictLine = event.verdict?.let { verdict ->
-        SkyText.unknownReason(res, verdict)
-    }
+    val verdictLine = event.verdict?.let { verdict -> SkyText.unknownReason(res, verdict) }
     // Same rule as MomentRow: the chip goes under the text on a line of its own
     // ([SkyVerdictLine]), only the bell trails.
     Column {
@@ -620,15 +670,15 @@ private fun EventRow(
             leadingContent = {
                 Icon(
                     imageVector = eventIcon(event),
-                    contentDescription = null,
-                    tint = Color.Unspecified, // as in MomentRow: the family's own colors
+                    contentDescription = null, // as in MomentRow: the family's own colors
+                    tint = Color.Unspecified,
                     modifier = Modifier.size(WeatherIconSize.Sky)
                 )
             },
             headlineContent = { Text(name) },
             supportingContent = {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(listOfNotNull(date, verdictLine).joinToString(" · "))
+                    Text(listOfNotNull(whenLine, verdictLine).joinToString(" · "))
                     // An eclipse says which kind it is and the number that decides it,
                     // the same way a verdict carries its own arithmetic.
                     eclipseLine(res, event)?.let { Text(it) }
@@ -650,6 +700,40 @@ private fun EventRow(
             }
         }
     }
+}
+
+/**
+ * The row's headline: its own name, plus anything that peaks on the same night.
+ *
+ * Two names are joined with the locale's own conjunction; three or more — which the
+ * shower table cannot currently produce, but the collapse rule does not know that —
+ * fall back to a comma list with the conjunction on the last, which is how both
+ * languages write one.
+ */
+@Composable
+private fun eventName(event: UpcomingEvent): String {
+    val own = if (event.quarter == MoonQuarterKind.FULL_MOON) {
+        stringResource(R.string.moon_phase_full)
+    } else {
+        stringResource(SkyText.nameRes(event.job.id))
+    }
+    if (event.sharesNightWith.isEmpty()) return own
+    val others = event.sharesNightWith.map { stringResource(SkyText.nameRes(it.id)) }
+    val head = (listOf(own) + others.dropLast(1)).joinToString(", ")
+    return stringResource(R.string.sky_event_and, head, others.last())
+}
+
+/** The contact window of an eclipse row, or null for every other kind of event. */
+@Composable
+private fun eclipseWindow(
+    event: UpcomingEvent,
+    zone: ZoneId,
+    timeFmt: DateTimeFormatter
+): String? {
+    val at = event.at ?: return null
+    if (event.lunarEclipse == null && event.solarEclipse == null) return null
+    val end = at.end ?: return at.start.atZone(zone).format(timeFmt)
+    return "${at.start.atZone(zone).format(timeFmt)} – ${end.atZone(zone).format(timeFmt)}"
 }
 
 /** The eclipse sentence of an event row, or null when the row is not an eclipse. */

@@ -159,6 +159,7 @@ object SkyText {
         SkyNotScheduled.ECLIPTIC_TOO_FLAT -> R.string.sky_none_ecliptic_flat
         SkyNotScheduled.CORE_TOO_LOW -> R.string.sky_none_core_too_low
         SkyNotScheduled.NO_ECLIPSE_AHEAD -> R.string.sky_none_no_eclipse
+        SkyNotScheduled.MOON_ALL_NIGHT -> R.string.sky_none_moon_all_night
     }
 
     /**

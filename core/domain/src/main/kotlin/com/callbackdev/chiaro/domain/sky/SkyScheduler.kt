@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.domain.sky
 
 import com.callbackdev.chiaro.domain.model.Coordinates
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -42,7 +43,16 @@ enum class SkyNotScheduled {
     CORE_TOO_LOW,
 
     /** No eclipse of this kind is visible from here inside the search horizon. */
-    NO_ECLIPSE_AHEAD
+    NO_ECLIPSE_AHEAD,
+
+    /**
+     * The sky gets astronomically dark tonight and the moon is up for every minute of
+     * it, so there is no genuinely dark window (Fase 27). A fact about where the moon
+     * is in its cycle, and the one the guide page has always described: "some nights
+     * the window is the whole night, some nights it is ninety minutes, and some
+     * nights there is none at all."
+     */
+    MOON_ALL_NIGHT
 }
 
 /**
@@ -252,12 +262,69 @@ object SkyScheduler {
     }
 
     /**
+     * The astronomical night of [date] and the genuinely dark window inside it
+     * (Fase 27).
+     *
+     * Two answers because the screen needs both and they are not the same fact: the
+     * hero prints the dark window, and the line under it can only say WHY the window
+     * is short — or missing — if it still knows how long the night was.
+     */
+    data class DarkNight(
+        /** Astronomical dusk to tomorrow's dawn, or the reason there is none. */
+        val night: SkyOccurrence,
+        /** The longest moonless stretch of it: the job's own answer. */
+        val moonless: SkyOccurrence
+    )
+
+    /**
+     * The dark window of [date]: astronomical night **minus the hours the moon is up**.
+     *
+     * The intersection is the whole point of the line, and until Fase 27 it was only
+     * ever in the prose: the guide page promised "the sun far enough down AND the moon
+     * not up", the card printed dusk-to-dawn whatever the moon was doing, and the moon
+     * came back at the far end as a verdict the window itself contradicted. A gibbous
+     * moon washes out a faint galaxy as thoroughly as twilight does, so an hour with
+     * one in the sky is not part of a dark window and never was.
+     *
+     * The **longest** moonless run, not the first: a moon that rises at ten and sets at
+     * three leaves a sliver before it and the hours after it, and handing over the
+     * sliver because it happens first would be the answer nobody wants about half the
+     * time.
+     *
+     * No floor on the length. A twelve-minute window is a strange thing to be told and
+     * it is true, and inventing a threshold under which the app calls it `∅` would
+     * trade a fact for a tidier screen — the trade this module exists to refuse.
+     */
+    fun darkNight(date: LocalDate, zone: ZoneId, coords: Coordinates): DarkNight {
+        val night = astronomicalNight(SkyJobCatalog.DarknessWindow, date, zone, coords)
+        if (night !is SkyOccurrence.At) return DarkNight(night, night)
+        val end = night.end ?: night.start
+        val moonless = AstronomyEngine.moonDownRuns(night.start, end, coords)
+            .maxByOrNull { Duration.between(it.start, it.endInclusive) }
+            ?: return DarkNight(
+                night,
+                SkyOccurrence.None(SkyJobCatalog.DarknessWindow, SkyNotScheduled.MOON_ALL_NIGHT)
+            )
+        return DarkNight(
+            night,
+            SkyOccurrence.At(SkyJobCatalog.DarknessWindow, moonless.start, moonless.endInclusive)
+        )
+    }
+
+    private fun darkness(
+        job: SkyJob,
+        date: LocalDate,
+        zone: ZoneId,
+        coords: Coordinates
+    ): SkyOccurrence = darkNight(date, zone, coords).moonless.retarget(job)
+
+    /**
      * Astronomical dusk tonight to astronomical dawn tomorrow. Deliberately NOT the
      * dusk-to-dawn pair inside one calendar day: those are the two ends of two
      * different nights, and a window that ran from tonight's dusk back to this
      * morning's dawn would be a negative-length night rendered as a fact.
      */
-    private fun darkness(
+    private fun astronomicalNight(
         job: SkyJob,
         date: LocalDate,
         zone: ZoneId,
@@ -302,7 +369,9 @@ object SkyScheduler {
         coords: Coordinates
     ): SkyOccurrence {
         // No dark window, no core: the window's own reason travels with the answer,
-        // so a polar night is not renamed a white night on the way through.
+        // so a polar night is not renamed a white night on the way through — and
+        // since Fase 27 a moonlit night reaches here as `MOON_ALL_NIGHT` rather than
+        // as a core window nobody could have seen through the moonlight.
         val dark = when (val tonight = darkness(job, date, zone, coords)) {
             is SkyOccurrence.At -> tonight
             is SkyOccurrence.None -> return tonight
@@ -486,6 +555,17 @@ object SkyScheduler {
         SkyJobCatalog.MoonLastQuarter.id to MoonQuarterKind.LAST_QUARTER
     )
 
+    /**
+     * The same occurrence, attributed to [job]. [darkNight] answers about the dark
+     * window itself, and `milky_way.core` asks it the same question for its own line:
+     * without this the core's `∅` would arrive carrying the dark window's name.
+     */
+    private fun SkyOccurrence.retarget(job: SkyJob): SkyOccurrence = when {
+        this.job.id == job.id -> this
+        this is SkyOccurrence.At -> SkyOccurrence.At(job, start, end)
+        else -> SkyOccurrence.None(job, (this as SkyOccurrence.None).reason)
+    }
+
     private fun polarReason(day: SolarDay): SkyNotScheduled = when {
         day.sunUpAllDay -> SkyNotScheduled.POLAR_DAY
         day.sunDownAllDay -> SkyNotScheduled.POLAR_NIGHT
@@ -504,7 +584,7 @@ object SkyScheduler {
     private const val ECLIPTIC_MIN_STAND = 50.0
 
     /** How long the zodiacal light is worth looking for after (or before) the dark. */
-    private val ZODIACAL_WINDOW: java.time.Duration = java.time.Duration.ofMinutes(90)
+    private val ZODIACAL_WINDOW: Duration = Duration.ofMinutes(90)
 
     /**
      * Ceiling on the day-by-day walk. A daily job answers every day, `∅` included, so

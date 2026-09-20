@@ -9,6 +9,7 @@ import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.LunarEclipse
+import com.callbackdev.chiaro.domain.sky.MeteorShowerTable
 import com.callbackdev.chiaro.domain.sky.MoonQuarterKind
 import com.callbackdev.chiaro.domain.sky.SkyAlmanac
 import com.callbackdev.chiaro.domain.sky.SolarEclipse
@@ -56,17 +57,32 @@ sealed interface SkyUiState {
 
 /**
  * The hero: whether the dark window is worth planning around. [window] is null when
- * the sky has no dark window tonight, and [reason] says which of the two opposite
- * skies that is (8 set 2026): the one that never gets fully dark, or the deep polar
- * night that never gets light. A fact about the latitude either way, stated as such —
- * the card used to say "never gets fully dark" for both, which at the pole in June is
- * the reverse of the truth.
+ * the sky has no dark window tonight, and [reason] says which of the three skies that
+ * is: the one that never gets fully dark, the deep polar night that never gets light
+ * (8 set 2026 — the card used to say "never gets fully dark" for both, which at the
+ * pole in June is the reverse of the truth), or, since Fase 27, a moon that is up for
+ * every minute of an otherwise perfectly dark night.
+ *
+ * [night] is the astronomical night the window sits inside, and it is carried for one
+ * reason: the window is the night MINUS the moon, so without the night beside it the
+ * card can print a two-hour window and no account of where the other five hours went.
+ * [moonIlluminationPct] is the number that account rests on.
  */
 data class Tonight(
     val window: SkyOccurrence.At?,
     val verdict: SkyVerdict?,
-    val reason: SkyNotScheduled? = null
-)
+    val reason: SkyNotScheduled? = null,
+    val night: SkyOccurrence.At? = null,
+    val moonIlluminationPct: Int? = null
+) {
+    /** True when the moon is what opens the window late: the night started earlier. */
+    val moonHeldTheStart: Boolean
+        get() = window != null && night != null && window.start.isAfter(night.start)
+
+    /** True when the moon is what closes it early. */
+    val moonTookTheEnd: Boolean
+        get() = window?.end != null && night?.end != null && window.end!!.isBefore(night.end!!)
+}
 
 /** When a moment's occurrence lands — the word the row prints before the time. */
 enum class MomentTiming { NOW, TODAY, TOMORROW }
@@ -98,10 +114,15 @@ data class Moment(
  * One entry of the calendar ahead: the next meteor peaks, the next full moon, the
  * next solstice or equinox. [verdict] where the forecast reaches that far; the
  * honest "too far out" lives in the verdict's own UNKNOWN note otherwise.
+ *
+ * [occurrence] is a plain [SkyOccurrence] and not its `At` since Fase 27: a `∅` on a
+ * line the reader subscribed to is an answer — "the Perseids peak on a night that
+ * never gets dark here" — and this list used to drop it on the floor while the
+ * moments list beside it printed the same kind of fact with its reason.
  */
 data class UpcomingEvent(
     val job: SkyJob,
-    val occurrence: SkyOccurrence.At,
+    val occurrence: SkyOccurrence,
     val verdict: SkyVerdict?,
     /** Set when this entry is the moon reaching a named quarter. */
     val quarter: MoonQuarterKind? = null,
@@ -114,8 +135,28 @@ data class UpcomingEvent(
      * live in `SkyText` with every other word on the screen.
      */
     val lunarEclipse: LunarEclipse? = null,
-    val solarEclipse: SolarEclipse? = null
-)
+    val solarEclipse: SolarEclipse? = null,
+    /**
+     * The other events this one shares its instant with (Fase 27). The delta
+     * Aquariids and the alpha Capricornids are both pinned to solar longitude 127.0°
+     * — the IMO list really does put them there — so they resolve to the same
+     * instant, the same night and the same icon, and the screen printed them as two
+     * rows a reader could only read as a bug. One night, one row, both names.
+     */
+    val sharesNightWith: List<SkyJob> = emptyList(),
+    /**
+     * Whether the row has to print the year (Fase 27). The list used to format every
+     * date as `d MMMM`, and the aperiodic rows reach years out — `EclipseEngine`
+     * searches six of them for a solar eclipse — so "2 agosto" was a row that left out
+     * the one fact a reader needed to know whether to care.
+     *
+     * Decided here rather than in the row because the clock lives here: the builder is
+     * pure and takes `now`, a composable would have to be handed one.
+     */
+    val showYear: Boolean = false
+) {
+    val at: SkyOccurrence.At? get() = occurrence as? SkyOccurrence.At
+}
 
 /**
  * city + cached report + subscriptions + settings + now → the whole screen. Pure on
@@ -127,6 +168,14 @@ object SkyStateBuilder {
     /** How many rows the calendar ahead shows: enough to always reach past the
      * forecast's horizon, few enough that the next real event is not buried. */
     private const val EVENT_ROWS = 6
+
+    /**
+     * And how much of the shared calendar survives a reader with many subscriptions.
+     * The subscribed lines are never capped — they were asked for — but a screen that
+     * dropped the next meteor peak entirely because somebody follows seven eclipse-ish
+     * things would have traded one hole for another.
+     */
+    private const val MIN_CALENDAR_ROWS = 3
 
     fun build(
         city: City,
@@ -180,12 +229,30 @@ object SkyStateBuilder {
     ): Tonight {
         val job = SkyJobCatalog.DarknessWindow
         val upcoming = SkyUpcoming.of(job, now, zone, city.coordinates)
+        // The night around the window, asked for the same local day the window came
+        // from: since Fase 27 the window is the night minus the moon, and the card
+        // cannot explain a short window without the night it was cut out of.
+        val night = SkyScheduler.darkNight(upcoming.date, zone, city.coordinates).night
+            as? SkyOccurrence.At
+        val moonPct = night?.let {
+            val middle = it.start.plus(
+                Duration.between(it.start, it.end ?: it.start).dividedBy(2)
+            )
+            (AstronomyEngine.moonIllumination(middle).illuminatedFraction * 100).roundToInt()
+        }
         val at = upcoming.at ?: return Tonight(
             window = null,
             verdict = null,
-            reason = (upcoming.occurrence as? SkyOccurrence.None)?.reason
+            reason = (upcoming.occurrence as? SkyOccurrence.None)?.reason,
+            night = night,
+            moonIlluminationPct = moonPct
         )
-        return Tonight(window = at, verdict = judge(job, at))
+        return Tonight(
+            window = at,
+            verdict = judge(job, at),
+            night = night,
+            moonIlluminationPct = moonPct
+        )
     }
 
     /**
@@ -243,20 +310,32 @@ object SkyStateBuilder {
     }
 
     /**
-     * The calendar ahead (VISION §5.3): every annual job's next occurrence, the
-     * subscribed aperiodic ones, and the next full moon, nearest first.
+     * The calendar ahead (VISION §5.3), in two tiers — and the tiers are the fix for
+     * a hole this screen had from the day it shipped (Fase 27).
      *
-     * The annual half is catalog-wide, not subscription-bound — a Perseid peak is
-     * coming whether or not it is a line of yours; the bell rides only the subscribed
-     * rows. The **aperiodic** half is the opposite and has to be: an eclipse search
-     * walks years of new moons, and running two of them for a reader who never asked
-     * would be a battery cost with nothing on the screen to show for it.
+     * **Tier one is the reader's own lines**: every subscribed job that is not daily,
+     * always, with no competition for the slot. Before this the list was six rows
+     * chosen by date across the whole catalog, so a subscribed line only appeared if
+     * it happened to be among the six nearest events in the world. Measured at Milan
+     * on 20 set 2026 the six were an equinox, a full moon and four meteor showers,
+     * covering seven weeks — and a reader who had subscribed to `eclipse.solar` (next
+     * one here: 2 ago 2027) got a check mark in the catalog, a reminder that fired,
+     * and no row anywhere. The bell and the screen disagreed about what the reader
+     * was following, which is the very defect [SkyUpcoming] was written to close.
      *
-     * That half is also the fix for a hole (found 4 set 2026): a `POLLING` job used to
-     * have no home on this screen at all. `moments` takes the daily jobs and this took
-     * the annual ones, so a subscribed `moon.phase` was in the catalog, in the widget
-     * and in the reminders, and nowhere here. The four named quarters and the two
-     * eclipses would have fallen into the same gap.
+     * A `∅` stays in this tier with its reason, exactly as it does in [moments]: the
+     * Perseids at Stockholm peak on a night with no astronomical darkness, and
+     * "the sky never gets fully dark" is the answer, not a row to delete.
+     *
+     * **Tier two is the calendar everyone gets**: the nearest annual events that are
+     * not already tier one, so a reader who has subscribed to nothing still opens the
+     * screen on the next meteor peak and the next solstice. Only dated rows here — an
+     * unsubscribed `∅` is somebody else's fact, and printing thirteen of them at a
+     * white-night latitude would bury the list it is meant to fill.
+     *
+     * The **aperiodic** half stays subscription-bound, as it always was: an eclipse
+     * search walks years of new moons, and running two of them for a reader who never
+     * asked would be a battery cost with nothing on the screen to show for it.
      */
     private fun events(
         subscriptions: List<SkySubscription>,
@@ -267,62 +346,55 @@ object SkyStateBuilder {
         judge: (SkyJob, SkyOccurrence.At) -> SkyVerdict?
     ): List<UpcomingEvent> {
         val subscribed = subscriptions.filter { it.enabled }.associateBy { it.jobId }
-        fun leadOf(job: SkyJob): Pair<SkyLead?, Boolean> {
-            val sub = subscribed[job.id] ?: return null to true
-            return SkyLead.ofMinutes(sub.notifyLeadMinutes ?: settings.skyNotifyDefaultMin) to
-                (sub.notifyLeadMinutes == null)
+        val today = now.atZone(zone).toLocalDate()
+
+        fun entry(job: SkyJob, occurrence: SkyOccurrence): UpcomingEvent {
+            val sub = subscribed[job.id]
+            val at = occurrence as? SkyOccurrence.At
+            return UpcomingEvent(
+                job = job,
+                occurrence = occurrence,
+                showYear = at != null &&
+                    at.start.atZone(zone).toLocalDate().year != today.year,
+                verdict = at?.let { judge(job, it) },
+                lead = sub?.let {
+                    SkyLead.ofMinutes(it.notifyLeadMinutes ?: settings.skyNotifyDefaultMin)
+                },
+                followsDefault = sub?.notifyLeadMinutes == null,
+                lunarEclipse = if (at != null && job.id == SkyJobCatalog.LunarEclipse.id) {
+                    SkyAlmanac.nextLunarEclipse(today, zone, city.coordinates)?.eclipse
+                } else {
+                    null
+                },
+                solarEclipse = if (at != null && job.id == SkyJobCatalog.SolarEclipse.id) {
+                    SkyAlmanac.nextSolarEclipse(today, zone, city.coordinates)
+                } else {
+                    null
+                }
+            )
         }
 
-        val annual = SkyJobCatalog.all
-            .filter { it.kind == SkyJobKind.ANNUAL }
-            .mapNotNull { job ->
-                SkyScheduler.next(job, now, zone, city.coordinates, limit = 1)
-                    .filterIsInstance<SkyOccurrence.At>()
-                    .firstOrNull()
-                    ?.let { at ->
-                        val (lead, followsDefault) = leadOf(job)
-                        UpcomingEvent(
-                            job = job,
-                            occurrence = at,
-                            verdict = judge(job, at),
-                            lead = lead,
-                            followsDefault = followsDefault
-                        )
-                    }
-            }
+        /** The occurrence this list should show for [job]: annual walks, polling steps. */
+        fun nextOf(job: SkyJob): SkyOccurrence? = when (job.kind) {
+            SkyJobKind.ANNUAL ->
+                SkyScheduler.next(job, now, zone, city.coordinates, limit = 1).firstOrNull()
+            SkyJobKind.POLLING -> SkyUpcoming.of(job, now, zone, city.coordinates).occurrence
+            // The daily ones are the moments list; they are not events ahead.
+            SkyJobKind.DAILY -> null
+        }
 
-        val today = now.atZone(zone).toLocalDate()
-        val aperiodic = subscriptions
+        val mine = subscriptions
             .filter { it.enabled }
-            .mapNotNull { sub -> SkyJobCatalog.byId(sub.jobId) }
-            .filter { it.kind == SkyJobKind.POLLING }
-            .mapNotNull { job ->
-                val at = SkyUpcoming.of(job, now, zone, city.coordinates).at ?: return@mapNotNull null
-                val (lead, followsDefault) = leadOf(job)
-                UpcomingEvent(
-                    job = job,
-                    occurrence = at,
-                    verdict = judge(job, at),
-                    lead = lead,
-                    followsDefault = followsDefault,
-                    lunarEclipse = if (job.id == SkyJobCatalog.LunarEclipse.id) {
-                        SkyAlmanac.nextLunarEclipse(today, zone, city.coordinates)?.eclipse
-                    } else {
-                        null
-                    },
-                    solarEclipse = if (job.id == SkyJobCatalog.SolarEclipse.id) {
-                        SkyAlmanac.nextSolarEclipse(today, zone, city.coordinates)
-                    } else {
-                        null
-                    }
-                )
-            }
+            .mapNotNull { SkyJobCatalog.byId(it.jobId) }
+            .filter { it.kind != SkyJobKind.DAILY }
+            .mapNotNull { job -> nextOf(job)?.let { entry(job, it) } }
+        val mineIds = mine.map { it.job.id }.toSet()
 
         // The next full moon, for everyone. It is the one moment of the moon's cycle
         // people ask about by name, so the calendar carries it whether or not it is a
         // subscribed line — unless it IS one, and then the subscribed row wins,
         // because that one has a bell.
-        val fullMoon = if (SkyJobCatalog.MoonFull.id in subscribed) {
+        val fullMoon = if (SkyJobCatalog.MoonFull.id in mineIds) {
             null
         } else {
             nextFullMoon(now)?.let { at ->
@@ -330,13 +402,76 @@ object SkyStateBuilder {
                     job = SkyJobCatalog.MoonFull,
                     occurrence = SkyOccurrence.At(SkyJobCatalog.MoonFull, at),
                     verdict = null, // a phase is a fact about the day, not a sight to judge
-                    quarter = MoonQuarterKind.FULL_MOON
+                    quarter = MoonQuarterKind.FULL_MOON,
+                    showYear = at.atZone(zone).toLocalDate().year != today.year
                 )
             }
         }
-        return (annual + aperiodic + listOfNotNull(fullMoon))
-            .sortedBy { it.occurrence.start }
-            .take(EVENT_ROWS)
+
+        // The shared calendar fills what is left, the full-moon row included in the
+        // count: the cap is on the screen, not on one of its two sources.
+        val everyones = SkyJobCatalog.all
+            .filter { it.kind == SkyJobKind.ANNUAL && it.id !in mineIds }
+            .mapNotNull { job ->
+                SkyScheduler.next(job, now, zone, city.coordinates, limit = 1)
+                    .filterIsInstance<SkyOccurrence.At>()
+                    .firstOrNull()
+                    ?.let { entry(job, it) }
+            }
+            .sortedBy { it.at!!.start }
+            .take(
+                (EVENT_ROWS - mine.size - (if (fullMoon != null) 1 else 0))
+                    .coerceAtLeast(MIN_CALENDAR_ROWS)
+            )
+
+        val dated = (mine + everyones + listOfNotNull(fullMoon)).filter { it.at != null }
+        // Only tier one can be undated: the shared calendar took its `At`s only.
+        val undated = mine.filter { it.at == null }
+        return collapseSameInstant(dated).sortedBy { it.at!!.start } +
+            undated.sortedBy { SkyJobCatalog.orderOf(it.job) }
+    }
+
+    /**
+     * One instant, one row (Fase 27).
+     *
+     * Two showers really can peak on the same night — the delta Aquariids and the
+     * alpha Capricornids share solar longitude 127.0° — and two rows with the same
+     * date, the same window and the same icon read as a defect however true they are.
+     * Those merge and keep both names. Everything else that collides is the same
+     * event asked for twice: `moon.phase` resolving to a full moon the reader also
+     * follows by name, or the year's closest full moon landing on the plain full-moon
+     * row. There the more specific line wins, and a line with a bell beats one without
+     * — dropping the row the reader subscribed to would take its bell off the screen.
+     */
+    private fun collapseSameInstant(events: List<UpcomingEvent>): List<UpcomingEvent> =
+        events.groupBy { it.at!!.start }.values.map { group ->
+            when {
+                group.size == 1 -> group.single()
+                group.all { MeteorShowerTable.showerOf(it.job.id) != null } -> {
+                    // The row that survives is the one with the bell, not whichever
+                    // came first: when only one of the pair is subscribed, keeping the
+                    // other would take the reader's own reminder off the screen.
+                    val kept = group.maxByOrNull { if (it.lead != null) 1 else 0 }!!
+                    kept.copy(sharesNightWith = group.filter { it !== kept }.map { it.job })
+                }
+                else -> group.maxWith(
+                    compareBy({ if (it.lead != null) 1 else 0 }, ::specificity)
+                )
+            }
+        }
+
+    /**
+     * How much a row says, for [collapseSameInstant]. `moon.phase` names no phase at
+     * all ("the next quarter, whichever it is"), the appended full-moon row has a name
+     * and no bell, and anything else is a catalog line the reader asked for by name —
+     * with the year's closest full moon above the plain one, because "the biggest full
+     * moon of the year" is the whole of the other row plus a reason.
+     */
+    private fun specificity(event: UpcomingEvent): Int = when {
+        event.job.id == SkyJobCatalog.MoonPhase.id -> 0
+        event.quarter != null -> 1
+        event.job.id == SkyJobCatalog.MoonFull.id -> 2
+        else -> 3
     }
 
     /** Walks the quarter series to the next full moon: at most four steps away. */

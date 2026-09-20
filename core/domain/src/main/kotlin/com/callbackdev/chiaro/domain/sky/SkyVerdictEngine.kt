@@ -173,9 +173,18 @@ object SkyVerdictEngine {
         if (verdict.kind == SkyVerdictKind.FAIL) return verdict
         // Sampled across the window, not at its start: a moon that sets an hour in
         // leaves most of the night usable, and one that rises does the opposite.
+        //
+        // That sentence was here from the start and the code did not keep it (review,
+        // Fase 27): the samples were taken, filtered to the ones with the moon up, and
+        // then only their brightest illumination was read — so a moon up for one sample
+        // in five downgraded a window exactly as hard as one up for all five. The
+        // illumination is the wrong variable to measure across a window, because it
+        // barely moves in a night; the share of the window the moon is up for is the
+        // one that does, and it is now what decides.
         val samples = samplesOf(start, end)
         val up = samples.filter { AstronomyEngine.moonAltitude(it, coordinates) > 0 }
         if (up.isEmpty()) return verdict
+        if (up.size * 100 < MOON_SHARE_PCT * samples.size) return verdict
         val illumination = up.maxOf { AstronomyEngine.moonIllumination(it).illuminatedFraction }
         val moonPct = (illumination * 100).roundToInt()
         if (moonPct < MOON_WASH_PCT) return verdict
@@ -226,6 +235,21 @@ object SkyVerdictEngine {
         else SkyVerdictNote.NO_COVERAGE
     }
 
-    /** Points sampled across a window when asking where the moon is. */
-    private const val MOON_SAMPLES = 5
+    /**
+     * How much of a window the moon has to be up for before it gets to spoil it.
+     *
+     * Half, because that is what the rule means: a night whose darker half is moonless
+     * is a night you can go out on, and one whose moonless part is a sliver is not.
+     * There is no finer number available honestly — the samples below quantise it to
+     * an eighth — and a stricter one would fail the many nights the moon sets early.
+     */
+    private const val MOON_SHARE_PCT = 50
+
+    /**
+     * Points sampled across a window when asking where the moon is. Nine since Fase
+     * 27, from five: the share of the window matters now, and five samples measured it
+     * in steps of a fifth. Nine positions of the moon is still nothing next to the
+     * hourly walk above it.
+     */
+    private const val MOON_SAMPLES = 9
 }

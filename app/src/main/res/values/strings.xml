@@ -456,6 +456,8 @@
     <string name="sky_no_place_body">Add a place to see what its sky has planned.</string>
     <string name="sky_section_moments">The moments ahead</string>
     <string name="sky_section_events">Coming up</string>
+    <!-- Fase 27: two showers that peak on the same night share one row. -->
+    <string name="sky_event_and">%1$s and %2$s</string>
     <string name="sky_section_reminders">Reminders</string>
     <string name="sky_add_moment">Add a moment</string>
     <string name="sky_moment_now">Now</string>
@@ -468,7 +470,11 @@
          dark at noon (above 84.6° at the solstice). The card and the row say it. -->
     <string name="sky_tonight_dark_all_day">It is dark all day here, at this latitude, in this season: there is no night to wait for, it is already here.</string>
     <string name="sky_none_dark_all_day">It is dark all day: the sun never climbs back up to twilight</string>
-    <string name="sky_tonight_moon">The moon is up, %1$d%% lit</string>
+    <!-- Fase 27: the dark window is the astronomical night MINUS the hours the moon
+         is up, so the card can say what shortened it — or took it all. -->
+    <string name="sky_tonight_moon_sets">The moon is up until %1$s, %2$d%% lit</string>
+    <string name="sky_tonight_moon_rises">The moon comes back up at %1$s, %2$d%% lit</string>
+    <string name="sky_tonight_moon_all_night">The moon is up from dusk to dawn, %1$d%% lit: no genuinely dark window tonight. The sky is dark from %2$s to %3$s all the same.</string>
     <string name="sky_moon_line">%1$s · %2$d%% lit</string>
     <string name="sky_too_far">Too far out to say</string>
 
@@ -488,6 +494,7 @@
     <string name="sky_none_polar_night">The sun doesn\'t rise</string>
     <string name="sky_none_moon">The moon skips it, as it does about once a month</string>
     <string name="sky_none_no_darkness">The sky never gets fully dark</string>
+    <string name="sky_none_moon_all_night">The moon is up all night</string>
 
     <!-- Reminders: inexact by design, and the screen says so -->
     <string name="sky_default_lead">Usual reminder</string>

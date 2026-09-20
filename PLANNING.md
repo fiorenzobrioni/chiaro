@@ -7860,6 +7860,23 @@ Con la pastiglia dell'allerta nella colonna di destra non si misura niente e si 
 metà: una pastiglia è un blocco di inchiostro fisso che non sa andare a capo né in ellissi, e
 il giorno di un'allerta non è il giorno per cercare il bordo di un'aritmetica.
 
+### La regressione che ① si portava dietro, trovata rileggendo il proprio diff
+
+Da quando la finestra di buio è la notte meno la luna, è `∅` ogni notte in cui la luna è su dal
+crepuscolo all'alba — e quelle notti vengono **in fila**. `SkyReminderPlanner` chiedeva
+`next(limit = 3)` e filtrava gli `At`: tre `∅` di fila e il promemoria del buio spariva senza dire
+niente. Misurato sul 2026, corsa più lunga di notti piene: **Milano 9, Palermo 6, Copenaghen 10,
+Edimburgo 11**. Un promemoria muto per una settimana e mezza sarebbe stato un guasto peggiore di
+quello che questa fase ripara.
+
+La correzione non alza e basta la costante: cerca **prima a tre e poi a sedici**, così la camminata
+profonda si paga solo quando quella corta non ha trovato niente — che è il caso della finestra di
+buio e di nient'altro. Alzarla per tutti avrebbe voluto dire sedici giorni di almanacco per ogni
+sottoscrizione a ogni re-arm, per un caso su cinquantuno.
+
+Sedici copre la corsa peggiore misurata più un preavviso da un giorno, con un margine che non è
+una coincidenza da rimisurare ogni anno.
+
 ### Quel che NON è stato toccato
 
 - **La disposizione a glifo destro** (`MirroredRowContent`), che il committente dice già legge
@@ -8530,3 +8547,174 @@ null» (l'avviso pioggia, postato dopo, gli aveva riscritto gli extra), mentre i
 restavano verdi. È esattamente il motivo per cui il primo test esiste nella forma che ha.
 
 `./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1609 test**, lint a zero errori.
+
+## Revisione della schermata Cielo: sette difetti, e uno era la promessa della guida (committente, 20 set 2026)
+
+Chiesta una revisione delle feature e degli eventi del cielo: che cosa è sbagliato, come sono
+resi, che cosa manca. Ne sono usciti sette punti, affrontati nell'ordine che il committente ha
+dato — ① ③ ④, poi ② ⑤ ⑥ ⑦ — e il primo non era un difetto di calcolo: era il codice che diceva
+una cosa diversa dalla propria guida.
+
+### ① La finestra di buio non era l'intersezione che la guida descrive
+
+`sky_about_darkness` promette, in tutte e due le lingue, «la notte astronomica — il sole a più di
+18° sotto l'orizzonte — **con in più la luna sotto l'orizzonte**», la chiama «l'unico evento qui
+dentro che sia un'intersezione invece di un attraversamento», e chiude con la frase che ha deciso
+la correzione: «certe notti la finestra è tutta la notte, certe notti è novanta minuti, e certe
+notti non c'è affatto». L'aiuto della card Stanotte dice la stessa cosa: «le ore in cui il cielo è
+davvero scuro **e la luna è fuori dai piedi**».
+
+`SkyScheduler.darkness()` restituiva crepuscolo astronomico → alba astronomica, e basta. La luna
+non entrava nella finestra: rientrava all'altro capo come declassamento del verdetto. Quindi la
+finestra non era **mai** di novanta minuti e non mancava **mai** per la luna, e la card stampava
+«Buio dalle 21:47 alle 05:12» anche con la luna piena alta per sei di quelle ore. Non è una
+sfumatura: è la riga che la guida indica come la ragione per cui questa parte dell'app esiste.
+
+La correzione è un'intersezione, non un motore. `AstronomyEngine` guadagna `moonDownRuns`, che è il
+complemento di `aboveAltitude` già in casa — una **lista** di tratti e non il primo, perché una
+notte può averne due (luna che sorge alle dieci e tramonta alle tre lascia la scheggia prima e le
+ore dopo, e dare la scheggia perché viene prima sarebbe la risposta sbagliata una volta su due).
+La soglia è quella di sorgere della luna, parallasse compresa, la stessa che attraversano
+`moon.rise` e `moon.set`: una finestra che dicesse la luna giù a un'ora che la riga sopra chiama
+moonrise sarebbe lo schermo che litiga con se stesso.
+
+`SkyScheduler.darkNight(date)` torna **due** risposte — la notte e la finestra — perché lo schermo
+ha bisogno di tutte e due: la card stampa la finestra, e la riga sotto può dire *perché* è corta
+solo se sa ancora quanto era lunga la notte. `darkness()` è la seconda; `milkyWayCore` passa da lì,
+quindi il nucleo galattico eredita il filtro lunare, che è come doveva essere (una luna gibbosa
+cancella il centro della Via Lattea esattamente come il crepuscolo).
+
+**Nessun pavimento sulla durata.** Una finestra di dodici minuti è una cosa strana da sentirsi dire
+ed è vera; inventare una soglia sotto la quale l'app la chiama `∅` sarebbe barattare un fatto per
+uno schermo più ordinato, cioè il baratto che questo modulo esiste per rifiutare.
+
+Misurato a Milano, agosto 2026, ed è la frase della guida diventata tabella:
+
+| notte | illuminata | finestra |
+|---|---|---|
+| 12 ago | 0% | 22:33 → 04:23, tutta la notte |
+| 23 ago | 82% | 01:11 → 04:42, 152 minuti |
+| 24 ago | 89% | 03:17 → 04:45, **88 minuti** |
+| 26-30 ago | 98% | `∅` — la luna è su dal crepuscolo all'alba |
+
+Il terzo stato di card vuoto è nuovo (`MOON_ALL_NIGHT`) e ha la sua frase, che dice anche la notte
+che la luna **non** ha cancellato: il cielo è comunque scuro dalle 22:01 alle 04:49, e una card che
+dicesse solo «niente finestra di buio» farebbe credere che a sbagliare sia il sole.
+
+Effetto collaterale, e riparazione di un secondo rilievo della revisione: la card mostrava **un
+numero solo** (`moonLine ?: evidence ?: reason`), quindi quando decideva la luna la percentuale di
+nuvole spariva. Adesso la luna è un fatto sui bordi della finestra e non un declassamento, e sta
+su una riga sua; l'aritmetica del verdetto sta sotto, sempre.
+
+### ③ e ④ «In arrivo» buttava via i `∅`, e non garantiva una riga a chi si era iscritto
+
+Sono due facce della stessa lista, quindi una correzione sola.
+
+`events()` faceva `filterIsInstance<SkyOccurrence.At>()`: un `∅` spariva. Ma `SkyScheduler` ha una
+dottrina scritta e opposta («un giorno il cui risultato è `∅` è **riportato**, non saltato») e la
+lista `moments` accanto la rispetta. Misurato: le **Perseidi a Stoccolma** danno `NO_DARKNESS` nel
+2026 e nel 2027, e `next(limit = 1)` restituisce quel `∅`, quindi non si guardava nemmeno l'anno
+dopo. Lo sciame più famoso dell'anno semplicemente non esisteva, senza una parola.
+
+E le sei righe erano scelte **per data su tutto il catalogo**. Misurato a Milano il 20 settembre
+2026: equinozio, luna piena, Draconidi, Tauridi australi, Orionidi, Tauridi boreali. Sette
+settimane, tre sciami minori su sei righe, e fuori le Geminidi (14 dicembre), il solstizio, il
+tramonto più presto, la luna piena più vicina dell'anno e tutte e due le eclissi — la solare da
+Milano è il **2 agosto 2027**, diciottesima per data. Chi si iscriveva a «Eclissi di Sole» aveva
+la spunta nel catalogo, **un promemoria che funzionava davvero** (`SkyAlarmScheduler` pesca tutte
+le sottoscrizioni) e nessuna riga da nessuna parte. La campanella e lo schermo non erano d'accordo
+su che cosa il lettore stesse seguendo, che è esattamente il difetto per cui `SkyUpcoming` era
+stato scritto.
+
+Adesso la lista ha **due strati**. Il primo sono le righe del lettore: ogni sottoscrizione non
+giornaliera, sempre, `∅` compresi con la loro ragione. Il secondo è il calendario di tutti, i
+prossimi eventi annuali che non sono già nel primo, a riempire fino a sei — con un pavimento di
+tre, perché uno schermo che cancellasse il prossimo sciame per far posto a sette iscrizioni
+avrebbe scambiato un buco con un altro. Nel secondo strato i `∅` non entrano: un `∅` che nessuno
+ha chiesto è un fatto di qualcun altro, e stamparne tredici a una latitudine da notti bianche
+seppellirebbe la lista che deve riempire.
+
+La metà **aperiodica** resta legata alle sottoscrizioni come sempre: una ricerca di eclissi cammina
+anni di lune nuove, e farne due per chi non ha chiesto niente sarebbe batteria spesa per niente.
+
+### ⑤ La riga non diceva né l'anno né l'ora
+
+`d MMMM`, su una lista che arriva anni avanti: `EclipseEngine` cerca sei anni una solare, e
+«2 agosto» era una data che il lettore non poteva collocare. L'anno lo decide il builder e non la
+riga (`UpcomingEvent.showYear`), perché l'orologio sta lì: il builder è puro e prende `now`, un
+composable dovrebbe farselo passare.
+
+L'ora la stampano **le sole eclissi**, e la regola è scritta dov'è: la riga di uno sciame è una
+notte larga nove ore e un solstizio è una data, un'eclissi è novanta minuti per cui uno esce di
+casa o li perde.
+
+### ⑥ Due righe per un evento solo
+
+Tre collisioni, una regola. Le **Delta Aquaridi e le Alfa Capricornidi** hanno tutte e due
+longitudine solare 127.0° — la lista IMO le mette davvero lì — quindi stesso istante, stessa
+notte, stessa icona: misurato, `2027-07-29 23:05` per entrambe. Quelle si **fondono** e tengono
+tutti e due i nomi. Le altre due sono lo stesso evento chiesto due volte (`moon.phase` che risolve
+su una luna piena che il lettore segue anche per nome; la luna piena più vicina dell'anno che
+cade sulla riga della luna piena semplice): lì vince la riga più specifica, e una riga con la
+campanella batte una senza — togliere di mezzo quella a cui il lettore si è iscritto gli
+porterebbe via la campanella dallo schermo.
+
+### ② `withMoon` non faceva quel che diceva la sua KDoc
+
+«Sampled across the window, not at its start: a moon che tramonta un'ora dopo lascia usabile gran
+parte della notte». Il codice prendeva cinque campioni, filtrava quelli con la luna su e poi
+leggeva solo la loro **illuminazione massima**: quanti campioni fossero su veniva buttato. Una luna
+su per un campione su cinque declassava quanto una su per cinque su cinque.
+
+L'illuminazione è la variabile sbagliata da misurare lungo una finestra, perché in una notte non si
+muove; la **quota di finestra** con la luna sopra l'orizzonte è quella che si muove, ed è quella che
+decide adesso. Soglia alla metà — una notte la cui metà più buia è senza luna è una notte in cui si
+esce — e campioni da cinque a nove, perché cinque quantizzavano la quota a un quinto.
+
+Nota d'ordine: dopo ① la finestra di buio e il nucleo galattico sono senza luna per costruzione,
+quindi `withMoon` non scatta più per loro. Resta dov'era sempre servito: sciami e luce zodiacale.
+
+### ⑦ VISION §5.3 era ferma a Fase 5
+
+Diceva «the 32-job catalog» e cinque gruppi: sono 51 in sei (mancava Eclissi), e §6 dice 51 da
+sempre. Era il conto giusto alla Fase 5, e la Fase 19 ha aggiunto la coppia di cielo buio, i
+quarti per nome, le due eclissi, i fatti annuali e tre sciami senza che questa riga seguisse. La
+riga di Fase 5 qui sotto resta com'è: è un log, e alla Fase 5 trentadue era vero.
+
+### Quel che NON è stato toccato
+
+Dalla stessa revisione erano uscite tre proposte che non sono difetti e non entrano in questo giro:
+la media delle nuvole su otto-dieci ore come riassunto della notte (buttare via il tratto buono che
+l'app ha, ora per ora), il catalogo da 51 voci senza ricerca, e quattro eventi nuovi (finestra
+senza luna — che ① adesso rende possibile —, luna piena che sorge al crepuscolo, luce cinerea,
+azimut del tramonto). Restano da decidere.
+
+### Come è stato verificato
+
+Le misure di questa voce non sono ragionate: `:core:domain` compilato e interrogato con test
+usa-e-getta, poi rimossi, che stampano la lista «In arrivo» come la costruisce lo schermo, la
+tabella delle finestre di agosto e l'altezza della luna ora per ora sulla notte usata dalle
+fixture.
+
+Test nuovi, tutti su fatti misurati e non su numeri scelti: la notte astronomica resta dusk →
+dawn di domani (`darkNight().night`), la finestra è la notte meno la luna e si apre al **moonset
+al minuto** della riga che la stampa, la luna piena può prendersela tutta, a luna nuova è la notte
+intera; una sottoscrizione lontana ha comunque la sua riga con l'anno, una che il cielo salta tiene
+riga e ragione e sta in fondo, due sciami di una notte stanno su una riga; e la luna che occupa
+parte della finestra non la rovina tutta.
+
+Un'asserzione è stata **riscritta dopo averla vista fallire per il motivo giusto**: dentro la
+finestra la luna si misura contro l'altezza del bordo della finestra, non contro zero, perché la
+luna tramonta col centro un filo **sopra** l'orizzonte geometrico (la parallasse batte rifrazione e
+semidiametro messi insieme, Meeus 15.1) e lo zero non è la linea su cui quella finestra è tagliata.
+
+Dalla rilettura avversariale del proprio diff sono usciti altri due punti, piccoli e veri: la riga
+fusa dei due sciami teneva la **prima** del gruppo e non quella con la campanella (con un solo
+sciame dei due sottoscritto si sarebbe portata via il promemoria del lettore dallo schermo), e la
+lista degli `∅` sommava una sorgente che per costruzione non può averne.
+
+`ItalianArticleTest` ha bocciato la prima stesura delle stringhe nuove («illuminata al %d%%»):
+riscritte nella forma che l'app già usa, «%d%% illuminata». È la regola del 22 settembre che fa il
+suo lavoro su chi non la conosceva.
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1620 test**, lint a zero errori.
