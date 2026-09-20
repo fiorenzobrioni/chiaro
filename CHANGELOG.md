@@ -413,6 +413,10 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
   space that moves is space one column was holding empty. A warning chip turns the measuring
   off and restores the even share: a chip cannot wrap or ellipsise. The mirrored arrangement
   (glyph on the trailing side) is untouched, since there the words already have the whole row.
+  **"Le prossime ore" shares the rule**, on the one arithmetic both cards now call: what its
+  trailing column asks to keep is the widest of what it carries, because one of that column's
+  tenants — the day's high and low — cannot wrap, and a range given less than it measures is a
+  range with a digit cut off its end.
 
 - **The hero temperature is Bold on every card whose hero it is.** The Now and Today widgets
   printed theirs at 34sp Medium, which is the weight everything else on those cards is set in —
@@ -426,16 +430,23 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
   Bold costs +2.3% of Medium's advance in Google Sans and +2.0% in Inter over «−12°», about
   1.5dp at 34sp, which the Now card's 66dp number column absorbs with 3dp to spare.
 
-- **The day's low is no longer the smaller-looking number when it has an arrow in front of
-  it.** The pair was already the same size — same text size for both figures, and the up and
-  down marks are one geometry mirrored — but the low was set in Regular on the quiet ink, and
-  on a home screen that does not read as "this one is secondary", it reads as a smaller
-  number. Where the marks are drawn (the text widget, which has the column for them) both
-  halves are now set alike, marks included: ↑ and ↓ already say which is which, so the dimming
-  was saying it a second time and charging the low a figure's worth of presence for it. Where
-  the slash is drawn instead (the Today widget, whose 113dp column will not take the marks)
-  nothing changes: with no mark to carry the distinction, the ink stays the thing that sorts
-  the pair.
+- **The day's low is the same size as the day's high, and now it is also drawn that way.**
+  Two things were wrong and only one of them was visible as a decision. The low figure was
+  set in Regular on the quiet ink while the high was Medium on the strong one, which on a
+  home screen does not read as "this one is secondary" but as a smaller number; where the
+  marks are drawn (the text widget, which has the column for them) both halves are now set
+  alike, because ↑ and ↓ already say which is which and the dimming was saying it a second
+  time. Where the slash is drawn instead (the Today widget, whose column will not take the
+  marks) nothing changes: with no mark to carry the distinction, the ink stays the thing
+  that sorts the pair.
+
+  The other thing was **the mark itself, and it was a bug**: Glance's `padding` is
+  `setViewPadding` on the same view the size lands on, and an `Image` scales its drawing to
+  fit what the padding leaves. The mark asked for a 16dp box with 8dp of leading air and
+  2 of trailing and got a **6dp arrow**, next to a high mark that had only the 2 to pay and
+  drew at 14 — 43% of the ink at the same nominal size. The air is on a wrapper now, which
+  is what `PlaceLine`'s pin and the warning chip's own gap already did, and what
+  `WidgetGlyphBoxTest` holds for every drawing in the widgets from here on.
 
 - **The severe and rain warnings are whole sentences again.** The storm alert was built as a
   stem plus an optional «, pioggia al 90%» fragment, which cost it the full stop every other

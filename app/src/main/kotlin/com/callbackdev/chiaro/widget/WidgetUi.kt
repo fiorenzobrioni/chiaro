@@ -434,9 +434,12 @@ fun skyGradientBitmap(sky: SkySnapshot, opacityPct: Int, table: SkyPalette): Bit
  * **[marks]** (committente, 19 set 2026: «con le frecce su e giù ad indicare massima e
  * minima») puts the up and down marks before the two figures instead of a slash between
  * them. One composable and two dresses rather than two composables, because it is one
- * statement at two budgets: the marks add about 25 dp, which the text widget's 174 dp
- * trailing column carries easily and the Today widget's 113 dp one does not — so Today
- * keeps the slash, and the card with the room says it outright.
+ * statement at two budgets: the marks dress is ~87 dp at 16 sp against the slash's ~56
+ * («27°» and «15°»; ~100 at the widest pair the scale prints), which the text widget's
+ * 174 dp trailing column carries easily and the Today widget's 113 dp one does not — so
+ * Today keeps the slash, and the card with the room says it outright. The two figures rose
+ * by 12 dp on 20 set when each mark stopped paying its own air out of its own box, and the
+ * column that carries them has 30 dp to spare at the widest.
  *
  * **Which dress it wears decides how the two figures are sorted**, and that is the whole
  * difference between them (committente, 20 set 2026, on the device: the low read as the
@@ -509,6 +512,20 @@ fun DayRange(
  * like the position pin, and for the reason that one gives: a glyph that stays put while
  * the words grow stops being part of the same line. It carries the words that name it, so
  * a screen reader says «massima 25°» rather than reading a number with no subject.
+ *
+ * **The air is on a wrapper and never on the mark** (20 set 2026), and this is the whole of
+ * the «la freccia della minima è più piccola» the committente reported twice. Glance's
+ * `padding` is `RemoteViews.setViewPadding` on the SAME view the size lands on, and an
+ * `Image` scales its drawing to Fit what is left: an `ImageView` asked for a 16 dp box with
+ * 8 dp of leading air and 2 of trailing drew the arrow in **6 dp**, beside a high mark that
+ * had only the 2 to pay and drew at 14. Less than half the ink, at the same nominal size,
+ * from a modifier that reads like it adds space. It was never the ink, which is why
+ * repainting the low in the strong colour did not fix it.
+ *
+ * It is the same trap [WarningChipRow] records for the chip — «a chip's own padding sits
+ * INSIDE its background, and a tinted gap is not a gap» — and the reason [PlaceLine] spaces
+ * its pin with a `Spacer` instead. A `Box` and not a `Spacer` here only because the row
+ * counts its children: this keeps the pair at four.
  */
 @Composable
 private fun RangeMark(
@@ -519,14 +536,39 @@ private fun RangeMark(
     leading: Dp = 0.dp
 ) {
     val box = (size.value * context.resources.configuration.fontScale).dp
-    Image(
-        provider = ImageProvider(ChiaroIcons.rangeMarkRes(high)),
-        contentDescription = context.getString(
-            if (high) R.string.widget_range_high else R.string.widget_range_low
-        ),
-        colorFilter = ColorFilter.tint(ink),
-        modifier = GlanceModifier.padding(start = leading, end = RangeMarkTextGap).size(box)
-    )
+    Box(modifier = GlanceModifier.padding(start = leading, end = RangeMarkTextGap)) {
+        Image(
+            provider = ImageProvider(ChiaroIcons.rangeMarkRes(high)),
+            contentDescription = context.getString(
+                if (high) R.string.widget_range_high else R.string.widget_range_low
+            ),
+            colorFilter = ColorFilter.tint(ink),
+            modifier = GlanceModifier.size(box)
+        )
+    }
+}
+
+/**
+ * What a [DayRange] occupies on its line, so a layout that has to leave room for one can
+ * ask rather than guess ([measureWidgetText]'s own argument). It mirrors the composable
+ * above it piece by piece — change one and this has to change with it.
+ */
+fun dayRangeWidth(
+    context: Context,
+    highC: Double,
+    lowC: Double,
+    units: UnitSettings,
+    size: TextUnit = DayRangeSp,
+    marks: Boolean = false
+): Dp {
+    val locale = Locale.getDefault()
+    val high = Formats.temperature(highC, units.temperature, locale)
+    val low = Formats.temperature(lowC, units.temperature, locale)
+    val figures = measureWidgetText(context, high, size.value, medium = true) +
+        measureWidgetText(context, low, size.value, medium = marks)
+    if (!marks) return figures + measureWidgetText(context, " / ", size.value, medium = false)
+    val box = (size.value * context.resources.configuration.fontScale).dp
+    return figures + (box + RangeMarkTextGap) * 2 + RangeMarkGap
 }
 
 /** The air between a mark and its figure, and between the high's figure and the low's

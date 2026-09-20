@@ -92,12 +92,38 @@ internal val RowIconMin = 56.dp
 internal val RowIconMax = 66.dp
 
 /**
- * Everything on a one-row card that is not the glyph or an edge: the two text columns and
- * the gap between them.
+ * Everything on a hero row that is not the glyph or an edge: the two text columns and the
+ * gap between them. Shared with the Today card, whose hero row is this one with a strip
+ * under it — «the two cards now say it with one grammar» (`TodayWidgetLayout`), and a
+ * grammar written twice is a grammar that drifts.
  */
+internal fun heroRowWordsWidth(width: Dp, icon: Dp): Dp =
+    width - WidgetCardPaddingLeading - icon - IconTextGap - WidgetCardPaddingTrailing
+
+/** The even share of [heroRowWordsWidth]: what each text column got before 20 set 2026,
+ * and what the sentence is still guaranteed. */
+internal fun heroRowEvenColumn(width: Dp, icon: Dp): Dp =
+    (heroRowWordsWidth(width, icon) - SentenceGap) / 2
+
+/**
+ * Where the boundary between a hero row's two text columns really falls. The rules, and
+ * why they are in this order, are [nowWordsColumnWidth]'s; this is the arithmetic both
+ * cards call.
+ */
+internal fun heroWordsColumnWidth(
+    width: Dp,
+    icon: Dp,
+    placeLine: Dp,
+    sentenceKeep: Dp
+): Dp {
+    val slack = heroRowWordsWidth(width, icon) - SentenceGap
+    val even = slack / 2
+    val keep = sentenceKeep.coerceAtMost(even)
+    return maxOf(placeLine, WordsColumnMin).coerceIn(even, slack - keep)
+}
+
 internal fun nowRowWordsWidth(size: DpSize): Dp =
-    size.width - WidgetCardPaddingLeading - nowRowIconSize(size) -
-        IconTextGap - WidgetCardPaddingTrailing
+    heroRowWordsWidth(size.width, nowRowIconSize(size))
 
 /**
  * The EVEN share of a [NowLayout.WIDE] card's two text columns: the row's slack after the
@@ -113,7 +139,8 @@ internal fun nowRowWordsWidth(size: DpSize): Dp =
  *
  * Negative when the card is too narrow to hold both; the caller compares, never draws.
  */
-internal fun nowSentenceColumnWidth(size: DpSize): Dp = (nowRowWordsWidth(size) - SentenceGap) / 2
+internal fun nowSentenceColumnWidth(size: DpSize): Dp =
+    heroRowEvenColumn(size.width, nowRowIconSize(size))
 
 /**
  * Where the boundary between the two columns of a [NowLayout.WIDE] card really falls
@@ -144,12 +171,8 @@ internal fun nowSentenceColumnWidth(size: DpSize): Dp = (nowRowWordsWidth(size) 
  * Both inputs are measured by the caller and carry [RowFitSlack] already: this function is
  * arithmetic so `NowWidgetLayoutTest` can pin the three rules at a table of sizes.
  */
-internal fun nowWordsColumnWidth(size: DpSize, placeLine: Dp, sentenceKeep: Dp): Dp {
-    val slack = nowRowWordsWidth(size) - SentenceGap
-    val even = slack / 2
-    val keep = sentenceKeep.coerceAtMost(even)
-    return maxOf(placeLine, WordsColumnMin).coerceIn(even, slack - keep)
-}
+internal fun nowWordsColumnWidth(size: DpSize, placeLine: Dp, sentenceKeep: Dp): Dp =
+    heroWordsColumnWidth(size.width, nowRowIconSize(size), placeLine, sentenceKeep)
 
 /**
  * The sentence's room on a one-row card laid the other way round

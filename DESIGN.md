@@ -712,6 +712,18 @@ slash (the Today card, whose 113dp column will not take the marks) there is no m
 carry it, so there the ink stays the thing that sorts the pair: high first and strong, low
 after it and dimmed, which is the week rows' own emphasis.
 
+**Air around a drawing is a wrapper, never the drawing's own padding.** Glance's `padding`
+is `RemoteViews.setViewPadding` on the same view its size lands on, and an `Image` scales
+its provider to fit what is left, so `padding(start = 8, end = 2).size(16)` is a **6dp**
+drawing rather than a 16dp one with air beside it. That is what made the day's low mark
+read smaller than the high one — it was the half carrying the 8dp that separates the pair,
+and it drew at 43% of its neighbour at the same nominal size, through two device passes
+where the symptom looked like colour. The pin before a place name and the gap over a
+warning chip already used a `Spacer` and a wrapper `Box` and say why in their own words;
+`WidgetGlyphBoxTest` now holds it for every drawing in the widgets. A padded container of
+a fixed WIDTH is a different thing and a correct one — a layout's padding comes out of its
+children, not out of a bitmap.
+
 Two **marks** sit inline with that type and do not break it (19 set 2026): the position pin
 in front of a place the phone is standing in, and `ic_range_high`/`ic_range_low` before the
 day's high and low — drawn rather than the characters ↑ and ↓, at the verdict marks' 2.4-of-24

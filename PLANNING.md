@@ -7876,3 +7876,78 @@ il giorno di un'allerta non è il giorno per cercare il bordo di un'aritmetica.
 `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **1523 test**
 (quattro nuovi in questo giro, sette in tutto sul ramo), lint a zero errori. Le larghezze della
 tabella qui sopra sono calcolate dai due `.ttf` inclusi con `fontTools`, non stimate a occhio.
+
+---
+
+## La freccia era davvero più piccola, e non era l'inchiostro (committente, 20 set 2026)
+
+> «Sul widget "In parole" la freccia temperatura minima è ancora piccola e anche il testo mi
+> sembra più piccolo: mi sono perso qualcosa?»
+
+No: si era perso qualcosa chi ha guardato. Il giro precedente aveva trovato una differenza
+vera — massima in Medium sull'inchiostro forte, minima in Regular su quello quieto — l'ha
+corretta, e si è fermato lì perché la geometria *sul file* era identica: `ic_range_high` e
+`ic_range_low` sono la stessa asta da 14 unità su 24, specchiata. Misurare il disegno e non
+quel che arriva sullo schermo è esattamente l'errore che quella segnalazione ha scoperto.
+
+### Che cosa succedeva davvero
+
+`padding` di Glance è `RemoteViews.setViewPadding` **sulla stessa view** su cui atterra la
+misura (verificato nel bytecode di `ApplyModifiersKt`), e un `Image` scala il disegno per
+entrare in quel che il padding lascia (`ContentScale.Fit`, il default — verificato in
+`ImageKt`). Quindi:
+
+```kotlin
+GlanceModifier.padding(start = 8.dp, end = 2.dp).size(16.dp)
+```
+
+non è un segno da 16 dp con dell'aria intorno: è **un segno da 6 dp**. `RangeMark` chiedeva
+proprio quello, e l'aria fra le due metà della coppia — gli 8 dp di `RangeMarkGap` — la
+pagava il segno della minima, di tasca sua. Risultato: freccia in giù disegnata a 6 dp,
+freccia in su (che paga solo i 2 dp di coda) a 14. **Il 43% dell'inchiostro, alla stessa
+misura nominale.** Il committente lo ha visto due volte e aveva ragione due volte.
+
+Il codice attorno lo sapeva già e lo dice a parole sue in due punti: il segnaposto di
+`PlaceLine` si distanzia con uno `Spacer`, e `WarningChipRow` ha il commento «il padding sta
+sulla scatola e non sulla pastiglia, perché il padding di una pastiglia sta DENTRO il suo
+sfondo, e un'aria colorata non è un'aria». `RangeMark` era l'unico posto che non lo seguiva,
+e il commento accanto spiegava perché: evitare uno `Spacer` per tenere la riga a quattro
+figli. Adesso l'aria sta su un `Box` che avvolge il segno — quattro figli lo stesso, e il
+disegno alla misura che chiede.
+
+La coppia con le frecce cresce di 12 dp (da ~75 a ~87 a 16 sp, ~100 sulla coppia più larga
+della scala): la colonna del widget testuale che la porta ne ha 132, quindi restano 30 dp di
+margine anche nel caso peggiore.
+
+**`WidgetGlyphBoxTest`** legge i sorgenti e fallisce se una catena di `GlanceModifier` mette
+insieme `.size(` e `.padding(`. `width` e `height` non ci sono apposta: un contenitore a
+larghezza fissa con del padding è un'altra cosa ed è giusta — il padding di un layout lo
+pagano i suoi figli, non una bitmap. **Verificato rompendolo**: rimettendo il padding
+sull'`Image` di `RangeMark` il test fallisce e nomina il file e la riga.
+
+### E «anche il testo mi sembra più piccolo»
+
+Quello era il giro precedente e ora è a posto: con le frecce le due metà sono vestite uguali,
+stessa taglia, stesso peso, stesso inchiostro. Se lo screenshot è di una build anteriore a
+`4dd8221` la differenza c'è ancora; se è posteriore, resta solo la freccia, che è questo giro.
+
+## Le due colonne dell'eroe, anche su «Le prossime ore»
+
+> «Sì, fallo anche su "Le prossime ore".»
+
+La grammatica era scritta due volte — `todayIsWide` si ricalcolava in casa la stessa divisione
+a metà di `nowSentenceColumnWidth` — e una grammatica scritta due volte è una grammatica che
+diverge. Adesso c'è una sola aritmetica, `heroRowWordsWidth` / `heroRowEvenColumn` /
+`heroWordsColumnWidth`, e le due card la chiamano.
+
+Le tre regole e il loro ordine sono quelle del giro precedente. Quel che cambia è **che cosa
+deve coprire «quel che la colonna di destra chiede»**: sulla card «Colpo d'occhio» quella
+colonna tiene della prosa, che va a capo; qui può tenere anche massima e minima del giorno,
+che **non** vanno a capo — una coppia più stretta di quel che misura è una coppia con una
+cifra tagliata via. Quindi si misura il più largo dei due inquilini invece di riservare per
+entrambi, e con la pastiglia dell'allerta non si misura niente e resta la metà.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **1529 test**
+(sei nuovi in questo giro, tredici sul ramo), lint a zero errori.
