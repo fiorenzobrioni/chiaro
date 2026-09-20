@@ -8,12 +8,16 @@ import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AlertEngineTest {
+
+    /** The zone the fixture hours are written on, so each carries a real instant. */
+    private val rome: ZoneId = ZoneId.of("Europe/Rome")
 
     private val now: LocalDateTime = LocalDateTime.of(2023, 10, 27, 9, 0)
     private val cityKey = "4546:919"
@@ -23,6 +27,7 @@ class AlertEngineTest {
 
     private fun hour(plusHours: Long, wmoCode: Int = 2, precipPct: Int = 0) = HourlyForecast(
         time = now.plusHours(plusHours),
+        at = now.plusHours(plusHours).atZone(rome).toInstant(),
         tempC = 18.0,
         condition = WeatherCondition(wmoCode, "desc-$wmoCode", "⛅"),
         precipChancePct = precipPct,

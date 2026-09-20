@@ -13,10 +13,10 @@ import com.callbackdev.chiaro.domain.AlertKind
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.zone
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.today.HeadlineEngine
 import com.callbackdev.chiaro.ui.today.WeatherText
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.absoluteValue
@@ -280,8 +280,7 @@ object AlertNotifier {
     ): List<String> = buildList {
         val locale = Locale.getDefault()
         val clock = clockFormat(context)
-        val zone = runCatching { ZoneId.of(report.location.timezone) }
-            .getOrDefault(ZoneId.systemDefault())
+        val zone = report.zone()
         val now = report.location.localTime
         val tomorrow = alert.forDate ?: now.toLocalDate().plusDays(1)
         val coords = report.location.coordinates

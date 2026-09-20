@@ -79,6 +79,7 @@
 
     <!-- La strip oraria -->
     <string name="hour_cell_desc">Alle %1$s, %2$s, %3$s, pioggia %4$d%%</string>
+    <string name="hour_cell_desc_no_rain">Alle %1$s, %2$s, %3$s</string>
     <string name="rain_chart_caption">Probabilità di pioggia</string>
     <string name="rain_chart_desc">Probabilità di pioggia dalle %1$s alle %2$s su una scala da 0 a 100%%, con picco %3$d%% verso le %4$s</string>
 
@@ -101,6 +102,7 @@
     <string name="wind_from">da %1$s</string>
     <string name="wind_gusts">Raffiche a %1$s</string>
     <string name="humidity_dew_note">Rugiada %1$s</string>
+    <string name="uv_peak_today">Massimo oggi %1$d</string>
     <string name="pollen_family_grass">graminacee</string>
     <string name="pollen_family_tree">alberi</string>
     <string name="pollen_family_weed">erbe</string>

@@ -71,6 +71,7 @@ class AlertNotifierTest {
                 val time = today.atTime(20, 0).plusHours(i.toLong())
                 HourlyForecast(
                     time = time,
+                    at = time.atZone(zone).toInstant(),
                     tempC = nightAndDay[i],
                     condition = cloudy,
                     precipChancePct = when (time.hour) {

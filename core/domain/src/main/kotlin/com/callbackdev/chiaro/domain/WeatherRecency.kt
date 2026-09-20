@@ -2,7 +2,6 @@ package com.callbackdev.chiaro.domain
 
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import java.time.Instant
-import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
 /**
@@ -34,8 +33,7 @@ object WeatherRecency {
      * `hourly[0]` is "the hour we are in" by contract).
      */
     fun trim(report: WeatherReport, now: Instant): WeatherReport {
-        val zone = runCatching { ZoneId.of(report.location.timezone) }
-            .getOrDefault(ZoneId.systemDefault())
+        val zone = report.zone()
         val local = now.atZone(zone).toLocalDateTime()
         val hour = local.truncatedTo(ChronoUnit.HOURS)
         val today = local.toLocalDate()

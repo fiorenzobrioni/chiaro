@@ -15,6 +15,7 @@ import com.callbackdev.chiaro.data.WeatherRepository
 import com.callbackdev.chiaro.data.warnings.OfficialWarningReader
 import com.callbackdev.chiaro.data.warnings.PlaceWarningState
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.rules.MaxRules
 import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.rules.RuleCheck
@@ -99,12 +100,15 @@ class AlertsViewModel(
     ) { settings, rules, active, bulletin ->
         val city = active.cityOrNull()
         val lastFired = city?.let { lastFiredByName(it) } ?: emptyMap()
+        // Read for its timezone only, and read here because the position's City has
+        // none: an in-memory hit in the ordinary case, and this block already goes to
+        // the history table one line above.
+        val report = city?.let { runCatching { repository.cachedReport(it) }.getOrNull() }
         AlertsUiState.Content(
             placeName = city?.name,
             notifications = settings.notifications,
             rules = rules.map { RuleCardModel(it, lastFired[it.name]) },
-            zone = city?.timezone?.let { runCatching { ZoneId.of(it) }.getOrNull() }
-                ?: ZoneId.systemDefault(),
+            zone = placeZone(report, city),
             canAdd = rules.size < MaxRules,
             units = settings.units,
             // The zone lookup decodes a 290 KB asset the first time and runs on
@@ -168,8 +172,7 @@ class AlertsViewModel(
     suspend fun preview(rule: NotificationRule): RulePreview {
         val city = cityStore.activeSource.first().cityOrNull() ?: return RulePreview.NoData
         val report = repository.cachedReport(city) ?: return RulePreview.NoData
-        val zone = city.timezone?.let { runCatching { ZoneId.of(it) }.getOrNull() }
-            ?: ZoneId.systemDefault()
+        val zone = placeZone(report, city)
         val now = ZonedDateTime.now(zone).toLocalDateTime()
         return when (val check = RuleEngine.check(rule, report, now)) {
             is RuleCheck.Fires -> RulePreview.WouldFire(

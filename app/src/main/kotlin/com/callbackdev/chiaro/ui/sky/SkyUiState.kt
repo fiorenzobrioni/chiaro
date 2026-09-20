@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.ui.sky
 import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.data.SkySubscription
 import com.callbackdev.chiaro.domain.WeatherFreshness
+import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.model.WeatherReport
@@ -134,8 +135,7 @@ object SkyStateBuilder {
         settings: AppSettings,
         now: Instant
     ): SkyUiState.Content {
-        val zone = city.timezone?.let { runCatching { ZoneId.of(it) }.getOrNull() }
-            ?: ZoneId.systemDefault()
+        val zone = placeZone(report, city)
         val staleAfter = WeatherFreshness.staleAfter(settings.updateFrequencyMin)
         val dataAge = report?.let { Duration.between(it.systemInfo.lastSync, now) }
 

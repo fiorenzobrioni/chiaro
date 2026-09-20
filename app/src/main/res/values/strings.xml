@@ -85,6 +85,9 @@
 
     <!-- The hour strip -->
     <string name="hour_cell_desc">At %1$s, %2$s, %3$s, rain %4$d%%</string>
+    <!-- Spoken for an hour the provider forecast no chance for: the cell prints
+         nothing there, so the announcement says nothing either. -->
+    <string name="hour_cell_desc_no_rain">At %1$s, %2$s, %3$s</string>
     <string name="rain_chart_caption">Chance of rain</string>
     <string name="rain_chart_desc">Chance of rain from %1$s to %2$s on a scale of 0 to 100%%, peaking at %3$d%% around %4$s</string>
 
@@ -107,6 +110,9 @@
     <string name="wind_from">from %1$s</string>
     <string name="wind_gusts">Gusts up to %1$s</string>
     <string name="humidity_dew_note">Dew point %1$s</string>
+    <!-- The UV tile prints the index of RIGHT NOW; this carries the day's peak when
+         it is still ahead of it, the way the wind tile carries its gusts. -->
+    <string name="uv_peak_today">Peak today %1$d</string>
     <string name="pollen_family_grass">grass</string>
     <string name="pollen_family_tree">trees</string>
     <string name="pollen_family_weed">weeds</string>

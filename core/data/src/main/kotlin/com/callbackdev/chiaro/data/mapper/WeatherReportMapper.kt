@@ -27,6 +27,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
 
@@ -100,6 +101,54 @@ private val HazardCodes = setOf(56, 57, 65, 66, 67, 75, 82, 86, 95, 96, 99)
 private const val WET_DAY_MM = 1.0
 private const val WET_DAY_HOURS = 3
 
+/**
+ * The frame Open-Meteo's timestamps are written in, and the city's real clock beside it.
+ *
+ * With `timezone=auto` the provider does NOT apply [zone]'s rules hour by hour: it takes
+ * the offset in force when the request lands and builds the whole series as
+ * `UTC + that offset`, which it reports back as `utc_offset_seconds`. Every calendar day
+ * of the response therefore holds exactly 24 values, including the day a zone springs
+ * forward — `2026-10-04T02:00` is in an `Australia/Sydney` response although that hour
+ * never happens there. Measured 20 set 2026 against the same request on `timezone=UTC`:
+ * zero mismatches in 384 hours under the fixed offset, 53 of 69 under the real clock
+ * after the change. See `ForecastResponseDto.utcOffsetSeconds` for the full reading.
+ *
+ * So the app had a whole week of rows hanging off an assumption that is true for 363
+ * days a year. Around each change — the seven days a fetch's horizon reaches across it —
+ * every hour after the transition sat one row late: the temperature under «08:00» was
+ * 07:00's, the sky verdict for a 02:00 meteor peak read 03:00's cloud, `WeatherRecency`
+ * kept an hour that was over. The app's own sunrise was right through all of it
+ * ([AstronomyEngine] never saw the provider's times), which is what made the disagreement
+ * visible on the screen rather than merely wrong underneath it.
+ *
+ * [offsetSeconds] null is a [com.callbackdev.chiaro.data.local.ReportDiskCache] entry
+ * written before the field was read. It is answered with the old behaviour and not with
+ * a guess: an offline phone keeps the forecast it has, at worst as accurate as yesterday.
+ */
+private class ProviderClock(timezone: String, offsetSeconds: Int?) {
+
+    /** The city's real zone, DST rules and all. Falls back to the device's, like every
+     * other reader of `location.timezone` in the app. */
+    val zone: ZoneId = runCatching { ZoneId.of(timezone) }.getOrDefault(ZoneId.systemDefault())
+
+    private val offset: ZoneOffset? = offsetSeconds
+        ?.let { runCatching { ZoneOffset.ofTotalSeconds(it) }.getOrNull() }
+
+    /** The moment a provider label names. Exact: the label plus the offset it was
+     * written on, with no zone rule to consult and no ambiguity to resolve. */
+    fun instantOf(providerLocal: LocalDateTime): Instant =
+        offset?.let { providerLocal.toInstant(it) } ?: providerLocal.atZone(zone).toInstant()
+
+    /**
+     * That same moment on the city's clock — the value every surface prints.
+     *
+     * Identical to its input for all but the two days a year [zone] changes offset,
+     * which is why this lands as a fix and not as a week of moved numbers.
+     */
+    fun localOf(providerLocal: LocalDateTime): LocalDateTime =
+        offset?.let { LocalDateTime.ofInstant(providerLocal.toInstant(it), zone) } ?: providerLocal
+}
+
 object WeatherReportMapper {
 
     const val SOURCE = "Open-Meteo API"
@@ -113,14 +162,20 @@ object WeatherReportMapper {
         cacheStatus: CacheStatus
     ): WeatherReport {
         val current = forecast.current
-        val localTime = LocalDateTime.parse(current.time)
+        val clock = ProviderClock(forecast.timezone, forecast.utcOffsetSeconds)
         val isDay = current.isDay == 1
 
-        val hourlyTimes = forecast.hourly.time.map(LocalDateTime::parse)
+        // The provider's own labels, kept in the provider's own frame. Every
+        // comparison BETWEEN response values happens here, where they all share one
+        // offset and the arithmetic is exact; only the values that leave this function
+        // are re-expressed on the city's clock.
+        val providerNow = LocalDateTime.parse(current.time)
+        val providerTimes = forecast.hourly.time.map(LocalDateTime::parse)
         val hourlyCodes = forecast.hourly.repairedCodes()
-        val currentHour = localTime.truncatedTo(ChronoUnit.HOURS)
-        val currentHourIndex = hourlyTimes.indexOfFirst { !it.isBefore(currentHour) }
+        val currentHour = providerNow.truncatedTo(ChronoUnit.HOURS)
+        val currentHourIndex = providerTimes.indexOfFirst { !it.isBefore(currentHour) }
             .coerceAtLeast(0)
+        val localTime = clock.localOf(providerNow)
 
         return WeatherReport(
             location = Location(
@@ -164,9 +219,9 @@ object WeatherReportMapper {
             ),
             airQuality = airQuality?.toAirQuality(),
             pollen = airQuality?.toPollenReport(),
-            astronomical = mapAstronomical(city, forecast, localTime, fetchedAt),
-            hourly = mapHourly(forecast, hourlyTimes, hourlyCodes, currentHourIndex),
-            daily = mapDaily(forecast, hourlyTimes, hourlyCodes),
+            astronomical = mapAstronomical(city, clock, localTime, fetchedAt),
+            hourly = mapHourly(forecast, providerTimes, clock, hourlyCodes, currentHourIndex),
+            daily = mapDaily(forecast, providerTimes, hourlyCodes),
             systemInfo = SystemInfo(
                 source = SOURCE,
                 lastSync = fetchedAt,
@@ -179,6 +234,7 @@ object WeatherReportMapper {
     private fun mapHourly(
         forecast: ForecastResponseDto,
         times: List<LocalDateTime>,
+        clock: ProviderClock,
         codes: List<Int>,
         fromIndex: Int
     ): List<HourlyForecast> {
@@ -186,7 +242,11 @@ object WeatherReportMapper {
         return (fromIndex until (fromIndex + HOURLY_WINDOW).coerceAtMost(times.size))
             .map { i ->
                 HourlyForecast(
-                    time = times[i],
+                    // [times] holds the provider's labels; the row carries the city's
+                    // clock and the moment itself. They differ only across a DST
+                    // change, which is exactly where the old code was an hour out.
+                    time = clock.localOf(times[i]),
+                    at = clock.instantOf(times[i]),
                     tempC = hourly.temperatureC[i],
                     condition = WeatherCodes.condition(
                         codes[i],
@@ -201,13 +261,25 @@ object WeatherReportMapper {
             }
     }
 
+    /**
+     * [providerTimes] and not the re-expressed ones on purpose: a row of `daily` is the
+     * provider's aggregate over the provider's OWN day, and [dailyCode] re-derives that
+     * row's label from the hours it aggregated. Grouping by the city's clock instead
+     * would hand the day a 25th hour that its max and min never saw.
+     *
+     * What survives of the fixed offset is therefore one hour at each end of the two
+     * days a year a zone changes: the label of 26 Oct is derived from 23:00 on the 25th
+     * through 22:00 on the 26th. That is the provider's own window, it is what
+     * `daily.weather_code` would have said anyway, and it is two orders of magnitude
+     * smaller than the error it replaces.
+     */
     private fun mapDaily(
         forecast: ForecastResponseDto,
-        hourlyTimes: List<LocalDateTime>,
+        providerTimes: List<LocalDateTime>,
         hourlyCodes: List<Int>
     ): List<DailyForecast> {
         val daily = forecast.daily
-        val hoursByDate = hourlyTimes.indices.groupBy { hourlyTimes[it].toLocalDate() }
+        val hoursByDate = providerTimes.indices.groupBy { providerTimes[it].toLocalDate() }
         return daily.time.take(DAILY_WINDOW).mapIndexed { i, date ->
             val day = LocalDate.parse(date)
             val uvMax = daily.uvIndexMax.getOrNull(i)?.roundToInt() ?: 0
@@ -391,11 +463,11 @@ object WeatherReportMapper {
      */
     private fun mapAstronomical(
         city: City,
-        forecast: ForecastResponseDto,
+        clock: ProviderClock,
         localTime: LocalDateTime,
         fetchedAt: Instant
     ): Astronomical {
-        val zone = runCatching { ZoneId.of(forecast.timezone) }.getOrDefault(ZoneId.systemDefault())
+        val zone = clock.zone
         val day = AstronomyEngine.solarDay(localTime.toLocalDate(), zone, city.coordinates)
         // Truncated to the minute, and not for tidiness. Every surface renders these
         // as `HH:mm`, but `WeatherSnapshots.flatten` writes `sunrise.toString()` into

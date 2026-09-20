@@ -152,7 +152,31 @@ data class Astronomical(
 fun Duration.hhMm(): String = "${toHours()}h ${toMinutesPart()}m"
 
 data class HourlyForecast(
+    /**
+     * The hour on the city's own clock, which is what every surface prints and what
+     * the engines compare against a local `now`.
+     *
+     * It is **not** the string the provider sent (20 set 2026). Open-Meteo builds its
+     * series as `UTC + utc_offset_seconds` with ONE offset for the whole response, so
+     * after a DST change its labels drift an hour from the real wall clock; the mapper
+     * re-expresses them through [at]. See `ForecastResponseDto.utcOffsetSeconds`.
+     *
+     * Consequence worth knowing before writing anything that indexes on this: on the
+     * day a zone falls back, **two consecutive hours carry the same value** (02:00
+     * twice), and on the day it springs forward one is missing. It is a label, not an
+     * identity — [at] is the identity.
+     */
     val time: LocalDateTime,
+    /**
+     * The same hour as the moment it actually is (20 set 2026).
+     *
+     * Unique across the list where [time] is not, so it is what a `LazyRow` key and
+     * any other identity must be built from; exact where `time.atZone(zone)` only
+     * guesses, since that call has to pick one of the two offsets an ambiguous local
+     * hour can wear. Four readers were re-deriving it and now read it: the strip's
+     * day/night flag, the arc widget's series, and `RainbowWindow`'s two ends.
+     */
+    val at: Instant,
     val tempC: Double,
     val condition: WeatherCondition,
     /**

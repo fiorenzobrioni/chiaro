@@ -50,7 +50,9 @@ class WeatherRecencyTest {
             pollen = null,
             astronomical = Astronomical(null, null, MoonPhase.FULL_MOON, null),
             hourly = List(hours) {
-                HourlyForecast(fetchLocal.plusHours(it.toLong()), 20.0, clear, 0, 0)
+                fetchLocal.plusHours(it.toLong()).let { t ->
+                    HourlyForecast(t, t.atZone(rome).toInstant(), 20.0, clear, 0, 0)
+                }
             },
             daily = List(days) {
                 DailyForecast(

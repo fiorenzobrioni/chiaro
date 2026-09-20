@@ -1219,18 +1219,25 @@ private fun StripHour.toCell(units: UnitSettings, is24h: Boolean, locale: Locale
     val temp = Formats.temperature(hour.tempC, units.temperature, locale)
     val word = stringResource(WeatherText.condition(hour.condition.wmoCode))
     return HourCell(
-        // The hour itself, not its label: unique across the strip's 24 and a day's 24.
-        key = hour.time.toString(),
+        // The MOMENT, not its label (20 set 2026). The label was unique across the
+        // strip's 24 and a day's 24 only while the app read the provider's fixed-offset
+        // timestamps as local times; now that they are re-expressed on the city's clock,
+        // the day a zone falls back really does hold 02:00 twice — and a `LazyRow` with
+        // two equal keys does not draw a duplicate row, it throws.
+        key = hour.at.toString(),
         hourLabel = hourLabel,
         condition = ConditionGlyph(hour.condition.wmoCode, night),
         temperature = temp,
         rainPct = hour.precipChancePct,
         rainLabel = hour.precipChancePct?.let { Formats.percent(it, locale) },
-        description = stringResource(
-            // Spoken as 0 only when the forecast says 0; an hour with no chance at
-            // all reads without the rain clause, like the cell itself.
-            R.string.hour_cell_desc, hourLabel, word, temp, hour.precipChancePct ?: 0
-        )
+        // Two forms, like the week row below (§1.1). The single form read "rain 0%"
+        // through a `?: 0` for an hour the provider forecast no chance for — the cell
+        // printed nothing and the announcement invented a forecast, which is the one
+        // value a probability must never be given. Spoken as 0 only when 0 is what
+        // was forecast.
+        description = hour.precipChancePct?.let { pct ->
+            stringResource(R.string.hour_cell_desc, hourLabel, word, temp, pct)
+        } ?: stringResource(R.string.hour_cell_desc_no_rain, hourLabel, word, temp)
     )
 }
 
@@ -1409,21 +1416,43 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
     val current = report.current
     val today = report.daily.firstOrNull()
     val tiles = buildList {
-        if (today != null) {
-            add(
-                Tile(
-                    icon = { ChiaroIcons.uv(today.uvIndexMax) },
-                    label = R.string.metric_uv,
-                    value = today.uvIndexMax.toString(),
-                    meaning = WeatherText.uvMeaning(today.uvIndexMax),
-                    scale = today.uvIndexMax / UvScaleTop,
-                    // The one tile whose glyph is not on the ladder's tile rung: the
-                    // drawing carries the index as a badge, and at 38dp that badge read
-                    // smaller than the pollen tile's. See [WeatherIconSize.TileUv].
-                    iconSize = WeatherIconSize.TileUv
-                )
+        // The UV tile says NOW, like every other tile in this grid (20 set 2026).
+        //
+        // It printed `uv_index_max` — the day's PEAK — under the bare label "UV" and
+        // under a meaning line written for the present: at 23:00 on a July day it read
+        // «UV 8 — Scotta in circa 25 minuti, copriti», advice about a sun that had set
+        // four hours earlier. `DailyForecast.uvIndexMax` defends the peak "under a Today
+        // heading" and it is right to; this grid is not that heading, it is the wind,
+        // the humidity and the pressure of this minute.
+        //
+        // So the value is the current index — fetched since the first commit and
+        // rendered nowhere until now — and the peak rides along as a note, the way the
+        // wind tile carries its gusts: the planning number kept, the consequence line
+        // no longer wearing it.
+        //
+        // The tile is still drawn at night, deliberately. §1.2: a metric whose value
+        // asks nothing of the reader today still gets its band's line, because
+        // "nothing to do about it" is also an answer — and «UV 0, nessuna protezione
+        // necessaria» at midnight is exactly that answer, where the old line was a
+        // different one about a different hour.
+        val uvNow = current.uvIndex
+        add(
+            Tile(
+                icon = { ChiaroIcons.uv(uvNow) },
+                label = R.string.metric_uv,
+                value = uvNow.toString(),
+                meaning = WeatherText.uvMeaning(uvNow),
+                scale = uvNow / UvScaleTop,
+                // Only while it is news: a peak that equals the reading is the tile
+                // printing its own number twice.
+                note = today?.uvIndexMax?.takeIf { it > uvNow }
+                    ?.let { stringResource(R.string.uv_peak_today, it) },
+                // The one tile whose glyph is not on the ladder's tile rung: the
+                // drawing carries the index as a badge, and at 38dp that badge read
+                // smaller than the pollen tile's. See [WeatherIconSize.TileUv].
+                iconSize = WeatherIconSize.TileUv
             )
-        }
+        )
         val wind = current.wind
         val gusty = WeatherText.gustsMaterial(wind.speedKph, wind.gustKph)
         add(

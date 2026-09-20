@@ -38,6 +38,7 @@ class TodayStateBuilderTest {
             hourly = (0 until hours).map {
                 HourlyForecast(
                     time = fetchedAt.withMinute(0).plusHours(it.toLong()),
+                    at = fetchedAt.withMinute(0).plusHours(it.toLong()).atZone(zone).toInstant(),
                     tempC = 20.0,
                     condition = clear,
                     precipChancePct = 10,

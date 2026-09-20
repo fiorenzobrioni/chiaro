@@ -162,6 +162,7 @@ class SkyNewJobsTest {
         val day = LocalDate.of(2026, 6, 21)
         fun hour(at: Int, precip: Int, cloud: Int) = HourlyForecast(
             time = LocalDateTime.of(day, java.time.LocalTime.of(at, 0)),
+            at = LocalDateTime.of(day, java.time.LocalTime.of(at, 0)).atZone(rome).toInstant(),
             tempC = 22.0,
             condition = WeatherCondition(80, "Rovesci", "\uD83C\uDF26\uFE0F"),
             precipChancePct = precip,
@@ -169,11 +170,10 @@ class SkyNewJobsTest {
         )
         // Noon: rain, broken cloud, and a sun far too high for a bow to clear the
         // horizon. Nothing to promise.
-        assertTrue(RainbowWindow.windows(listOf(hour(12, 80, 60)), rome, milan).isEmpty())
+        assertTrue(RainbowWindow.windows(listOf(hour(12, 80, 60)), milan).isEmpty())
 
         val windows = RainbowWindow.windows(
             listOf(hour(12, 80, 60), hour(19, 70, 60), hour(20, 60, 70), hour(23, 90, 50)),
-            rome,
             milan
         )
         assertEquals("expected one merged window, got $windows", 1, windows.size)
@@ -188,9 +188,9 @@ class SkyNewJobsTest {
             window.lookTowardsDeg in 90.0..180.0
         )
 
-        val dry = RainbowWindow.windows(listOf(hour(19, 10, 60)), rome, milan)
+        val dry = RainbowWindow.windows(listOf(hour(19, 10, 60)), milan)
         assertTrue("no rain, no bow: $dry", dry.isEmpty())
-        val overcast = RainbowWindow.windows(listOf(hour(19, 90, 100)), rome, milan)
+        val overcast = RainbowWindow.windows(listOf(hour(19, 90, 100)), milan)
         assertTrue("shut sky, no bow: $overcast", overcast.isEmpty())
     }
 

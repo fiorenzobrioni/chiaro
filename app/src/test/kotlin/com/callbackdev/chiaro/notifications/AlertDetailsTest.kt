@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.notifications
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import java.time.LocalDateTime
+import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -15,6 +16,9 @@ import org.junit.Test
  */
 class AlertDetailsTest {
 
+    /** The zone the fixture hours are written on, so each carries a real instant. */
+    private val rome: ZoneId = ZoneId.of("Europe/Rome")
+
     private val day = LocalDateTime.of(2026, 9, 4, 0, 0)
 
     /** [codes] is one WMO code per hour from 12:00, [rain] its chance, [temp] its degrees. */
@@ -25,6 +29,7 @@ class AlertDetailsTest {
     ): List<HourlyForecast> = codes.indices.map { i ->
         HourlyForecast(
             time = day.withHour(12).plusHours(i.toLong()),
+            at = day.withHour(12).plusHours(i.toLong()).atZone(rome).toInstant(),
             tempC = temp[i],
             condition = WeatherCondition(codes[i], "x", "x"),
             precipChancePct = rain[i],
