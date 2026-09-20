@@ -7438,3 +7438,256 @@ numero che si aggiorna sul posto, e senza cifre tabulari oscilla quando 19,4 div
 lint a zero errori. Il giro di `SettingsStoreTest` e' stato cambiato apposta: con Google Sans
 come default, un test che salvava Google Sans e lo rileggeva non provava piu' niente, quindi
 ora salva Inter.
+
+## Il riepilogo della sera, e una revisione di tutti i messaggi (committente, 21 set 2026)
+
+«Vorrei aggiungere un nuovo avviso dal nome simile a "Il riepilogo della sera", gemello di
+"Il riepilogo del mattino". Cosa ne pensi onestamente? Deve dare info sulla serata/notte e
+una panoramica su domani. Meglio spezzarlo in due avvisi? È un'aggiunta che serve davvero?»
+
+### La risposta onesta, prima del codice
+
+**Serve, ma non per la ragione della domanda.** Le due metà dell'idea non valgono uguale.
+
+La panoramica su domani è **l'avviso con l'argomento più forte di tutta la sezione Pronti**,
+più forte del riepilogo del mattino che già c'è. Alle otto del mattino «oggi massima 18°»
+arriva mentre la giornata è già cominciata: le decisioni che quel numero governa (come
+vestirsi, se portare l'ombrello, a che ora suona la sveglia) sono già state prese. Alle otto
+di sera le stesse decisioni sono **ancora tutte da prendere**, ed è l'unico momento della
+giornata in cui un'app meteo può cambiarne una senza che il lettore la apra.
+
+La serata e la notte, da sole, sono l'esatto contrario: **non valgono un avviso.** Alle 21 la
+serata è fuori dalla finestra, e la notte è un dato con un solo consumatore vero — quanto
+scende, perché decide il ghiaccio sul parabrezza, le piante sul balcone e la finestra aperta.
+Un avviso solo per quello sarebbe una notifica al giorno per dire una cosa sola, e il gelo ha
+già la sua strada in questa app: «Ghiaccio domattina» è uno dei cinque modelli di regola.
+
+Quindi: **un avviso solo, non due**, e le ragioni sono scritte perché sono la decisione.
+
+1. Due notifiche nella stessa ora sono esattamente il rumore contro cui è scritta ogni altra
+   regola di questa sezione («al massimo uno per perturbazione», «al massimo due volte al
+   giorno»). Spezzare in due significherebbe che chi li accende entrambi ne riceve due a
+   venti minuti di distanza, sullo stesso luogo, con metà del contenuto in comune.
+2. **La notte e domani sono una decisione sola presa in un momento solo.** Non si decide la
+   notte e poi separatamente domani: si guarda fuori una volta e si decide la sera.
+3. La sezione Pronti passerebbe da quattro interruttori a cinque, due dei quali quasi
+   identici a leggersi. Una lista di interruttori smette di essere scorribile molto prima di
+   quanto si creda.
+4. Le due metà hanno **pesi diversi**, e un avviso solo lo può dire: domani sta nella riga
+   chiusa, la notte sta sotto, dove va a finire quel che non decide da solo se aprire la
+   notifica. Due avvisi pari le dichiarerebbero equivalenti, che non sono.
+
+### Il nome
+
+Resta **«Il riepilogo della sera»**, gemello di «Il riepilogo del mattino», anche se il suo
+argomento è domani e non la sera. L'alternativa onesta era «Come sarà domani», più informativa
+e più precisa — ed è stata scartata: nella lista i due interruttori si leggono uno sotto
+l'altro, e la coppia *è* l'informazione. Chi ha appena letto «tra le 6 e le 12» capisce al
+volo cosa sia «tra le 18 e le 23»; «Come sarà domani» sarebbe una terza cosa da imparare, e
+nasconderebbe la notte che l'avviso porta davvero. La descrizione dice la verità intera:
+«Una volta al giorno, tra le 18 e le 23: il cielo di domani, minima, massima e pioggia.
+Aprendolo, anche la notte che c'è in mezzo.»
+
+### Cosa mostra, e da dove viene
+
+La riga chiusa è **la frase del gemello, identica**: `Coperto. Minima −1°, massima 9°,
+pioggia 80%.` A separarli c'è il titolo, «Domani · Milano» contro «Oggi · Milano», ed è
+l'unica cosa che deve separarli. Il giorno si dice una volta, dove va detto.
+
+Aperta, cinque righe possibili, per valore decrescente, ognuna disegnata solo se ha il suo
+dato (§1.1 — mai un trattino al posto di un valore, mai uno zero inventato):
+
+| riga | quando compare | perché è lì |
+| --- | --- | --- |
+| `Stanotte fino a −1° verso le 03:00 · Gelo: ghiaccio sui vetri al mattino` | sempre, se il report ha ore dentro la notte | è l'unica temperatura di cui l'app parla prima che qualcuno ci stia dentro, e la fascia è la decisione, non il termometro |
+| `Pioggia stanotte fino al 60%, il peggio verso le 03:00` | picco ≥ 50% | sotto metà la riga direbbe «probabilmente no», che non è una notizia |
+| `Domani pioggia dalle 14:00 alle 16:00, fino al 80%` | domani tocca la soglia ombrello (70%) | è la decisione dell'ombrello, cioè il motivo per cui si legge un riepilogo la sera |
+| `Domani alba 07:58, tramonto 17:07 · 1 minuto di luce in più di oggi` | alba e tramonto esistono entrambi | è l'edizione della luce del giorno: nessun'altra app stampa quel delta |
+| `Domani UV massimo 5 · Scotta in circa 45 minuti` | UV ≥ 3 | alle 21 un «nessuna protezione necessaria» non risponde a nessuna domanda |
+
+Tre cose vanno messe a verbale perché sono deviazioni consapevoli.
+
+**Nessuna soglia nuova per la pioggia.** L'app ne ha due — 70% (l'ombrello, `AlertEngine`) e
+50% (il «possibile», `HeadlineEngine.CLEAR_BELOW_PCT`) — e questo avviso usa quelle. La
+seconda è diventata `internal` apposta: una terza soglia sarebbe una terza opinione della
+stessa app sullo stesso cielo.
+
+**La finestra della pioggia di domani è calcolata sulle sole ore di domani.** Una pioggia che
+comincia alle 23 di stasera è la pioggia di stasera, e la riga che la stampa dice «domani».
+Una che scavalca la mezzanotte successiva torna quindi aperta («dalle 21:00 in poi»), che è
+quel che dicono i dati quando l'unità è il giorno.
+
+**L'UV è condizionale qui e incondizionato nel gemello del mattino.** È una divergenza fra i
+due, voluta: `WeatherText`'s KDoc dice che «non c'è niente da fare» è anch'essa una risposta,
+ed è vera alle 8, quando il lettore ha in mano la domanda. Alle 21 nessuno la sta facendo.
+
+**La finestra 18–23** ha un vincolo duro dentro: il tetto delle 23 è quel che tiene onesta la
+parola «domani». Passata la mezzanotte «domani» è il giorno dopo quello per cui i numeri sono
+stati letti, e un riepilogo che arriva alle 00:10 sbaglia di un giorno. Cinque ore di
+larghezza perché il job periodico ci cade dentro anche all'intervallo più lento consentito
+dalle impostazioni (120 minuti).
+
+**Non parte se il report non ha domani.** Non è una guardia difensiva: una cache può
+sopravvivere alla propria settimana, e un riepilogo la cui frase chiusa sarebbe fatta tutta
+di trattini è lo schermo che mente nell'unico posto in cui il lettore non può verificarlo.
+
+### Quel che è costato altrove
+
+- `AlertState` ha una **casella di dedup separata** per i due riepiloghi. Condividerla
+  avrebbe significato un riepilogo al giorno, il primo che arriva: alle 20 quello del mattino
+  ha già scritto la data di oggi.
+- `Alert.forDate` è nuovo: il notificatore deve sapere di che giorno parla e **non** può
+  ricavarlo dall'orologio del dispositivo, che può essere un giorno più in là del calendario
+  della città.
+- `EveningDetails` è puro come `AlertDetails`, e prende `from` come parametro invece di
+  leggere `hours.first().time`: **il report del worker non è tagliato da `WeatherRecency`**
+  (il taglio vive nel livello UI, in `TodayUiState`), quindi senza quel parametro la «notte»
+  sarebbe partita dall'ora più fredda di stamattina. È il tipo di errore che sarebbe passato
+  in produzione dicendo un numero plausibile e sbagliato.
+- L'alba e il tramonto di domani li calcola `AstronomyEngine`, non il provider: il blocco
+  `astronomical` del report è del giorno del report, e alle 20 l'alba di oggi è l'unico dato
+  che non serve a nessuno. Due `sunCrossing` una volta al giorno, e funziona offline.
+
+### La revisione di tutti i messaggi, chiesta insieme
+
+Letti tutti e sei i notificatori, chiuso e aperto. Due difetti veri, entrambi corretti.
+
+**1. L'avviso di maltempo era l'unico senza il punto finale**, e per un motivo strutturale:
+era un tronco (`%1$s verso le %2$s`) più un frammento opzionale (`, pioggia al 90%`). Un
+frammento incollato in inglese non è un frammento che ogni lingua mette lì, ed è anche quel
+che gli toglieva la punteggiatura. Ora è **una frase intera per forma**.
+
+**2. Lo stesso pezzo di codice stampava `time ?: ""` e `precipPct ?: 0`.** Con l'ora assente
+usciva «Temporale verso le» — una frase rotta — e con la probabilità assente «pioggia al 0%»,
+che è uno zero inventato, cioè esattamente ciò contro cui è scritto §1.1. Irraggiungibile
+oggi, perché il motore àncora entrambi gli avvisi su un'ora che ha letto davvero; ora
+irraggiungibile anche nel testo, che sceglie una frase che di quel dato non ha bisogno.
+
+Il resto della revisione, per completezza, non ha prodotto cambi:
+
+- **Chiuso ≠ aperto** vale per tutti e sei. Maltempo e pioggia aggiungono la finestra vera,
+  l'ora peggiore e l'escursione; il riepilogo del mattino aggiunge i fatti del giorno; le
+  regole aggiungono l'aritmetica che le ha fatte scattare; il cielo aggiunge la frase del
+  catalogo su cosa sia quel momento; le allerte ufficiali aggiungono i livelli per giorno, la
+  zona, il significato e la fonte. `AlertNotifierTest` ora lo **impone** per ogni tipo
+  incorporato, così un quinto non può uscire come titolo senza niente sotto.
+- Il riepilogo del mattino apre con «Adesso», mentre maltempo e pioggia mettono «Adesso»
+  penultimo. È una differenza d'ordine e non un difetto: alle 8 «adesso» è la cosa più
+  azionabile che ci sia; sotto una finestra di temporale sarebbe la riga sbagliata in cima.
+- Il promemoria del cielo aggiunge **una** riga sola quando lo si apre. È poco, ma è la riga
+  giusta: chi si è iscritto all'«ora blu» una volta e non ricorda cosa sia, lì lo ritrova.
+- L'avviso pioggia e il riepilogo della sera possono coincidere: alle 20 la finestra a sei ore
+  del primo arriva alle 2 di notte, che è la notte di cui parla il secondo. Non si sopprimono
+  a vicenda, di proposito — uno è un allarme, l'altro è un riassunto, stanno su due canali e
+  due id diversi, e chi vuole solo uno dei due lo spegne.
+
+**Una cosa segnalata e rimandata al committente**: in italiano «fino al 80%» andrebbe elisa
+in «fino all'80%». È diventata il lavoro del giorno dopo, qui sotto.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, lint a zero errori. Tre file di
+test nuovi o cresciuti:
+
+- `AlertEngineTest` — la finestra 18–23 ai bordi, il dedup separato dai due riepiloghi, il
+  fatto che il mattino non cada mai nella finestra della sera e viceversa, e che senza domani
+  nel report non parta niente.
+- `EveningDetailsTest` — la notte è l'ora più fredda fra adesso e l'alba (con la prova che
+  l'ora più fredda di *stamattina*, che nel report del worker c'è ancora, non viene contata),
+  la finestra di pioggia di domani è di domani sola, l'alba di domani nella zona della città,
+  il ripiego alle 6 dentro la notte polare, e il delta di luce che coincide con la sottrazione
+  delle due durate.
+- `AlertNotifierTest` — **nuovo**, e la parte di questo lavoro che resterà utile più a lungo:
+  rende la regola «aperto dice più di chiuso» una cosa che la build controlla, per ogni tipo,
+  invece di una cosa scritta in un KDoc.
+
+
+## L'elisione, e perché non è un helper (committente, 22 set 2026)
+
+«Sistema anche le stringhe che necessitano l'elisione. Applica la soluzione migliore dal punto
+di vista del codice. Dove dici che "marcisce" non mi sembra la soluzione migliore, giusto?»
+
+Giusto. E il dubbio era ben riposto: la strada dell'helper è quella sbagliata, ma non per la
+ragione che avevo scritto ieri.
+
+### Quanto è grande davvero
+
+Prima di decidere, contate. Non erano tre stringhe né cinque: sono **diciotto**, e stanno in
+tre posti diversi dell'app.
+
+- **Dodici con `%d`**, cioè un numero che mette l'app: otto nelle notifiche e **quattro nella
+  schermata Cielo**, che ieri non avevo nemmeno guardato («illuminata al 80%», «il 80% della
+  Luna nell'ombra»).
+- **Due con `%s` che portano una percentuale già formattata**: gli esiti del Diario, «Pioggia
+  data al 80%».
+- **Quattro con `%s` che portano una data**: «bollettino del 8 set 2026», che vuole «dell'8».
+  Questa classe non l'avevo vista affatto, ed è quella che rende il problema una regola e non
+  una svista: non riguarda le percentuali, riguarda **qualunque valore che comincia per cifra**.
+
+Dentro 0–100 i numeri che cominciano per vocale sono esattamente 1, 8, 11 e 80–89. Cioè:
+«pioggia al %d%%» era giusta nove volte su dieci e sbagliata la decima, in silenzio, in una
+notifica che nessuno può correggere. È il difetto peggiore da avere, perché non si manifesta
+mai quando lo cerchi.
+
+### Le tre strade, e perché la terza
+
+**1. Una funzione in `Formats` che sa quali numeri elidono.** È quella che ieri ho chiamato
+«marcisce», e il committente aveva ragione a non fidarsi della motivazione: «marcisce» non è
+un argomento, è un'etichetta. L'argomento vero è che sarebbe **un fatto sulla lingua italiana
+scritto in Kotlin**, applicato a — o saltato per — ogni altra lingua in cui l'app finirà. Chi
+traduce apre `values-xx/strings.xml`, non `Formats.kt`: la regola sarebbe in un posto in cui
+nessuno di quelli che ne hanno bisogno la troverà.
+
+**2. Due varianti per frase, scelte da una lista di numeri elidenti tenuta nelle risorse.**
+Sembra la versione buona della 1 — la grammatica torna dentro il file della lingua, e un
+traduttore catalano ci mette la sua lista. È stata scartata per una ragione più netta:
+comporre una frase da un frammento («al 70%») più il resto **è esattamente la forma da cui
+l'avviso di maltempo è stato riscritto via un commit fa**, perché una subordinata incollata in
+inglese non è una subordinata che ogni lingua mette lì. Comprare l'elisione con quella forma
+sarebbe disfare la decisione di ieri il giorno dopo averla presa. Il costo secondario, 18 × 2
+stringhe italiane più altrettante inglesi identiche a coppie per via di `StringsParityTest`,
+da solo non avrebbe deciso niente; questo sì.
+
+**3. Scrivere la frase in modo che nessun articolo tocchi il numero.** Scelta. Non ha codice,
+**non può essere sbagliata in nessuna lingua**, presente o futura, e non è nemmeno una nuova
+idea in questa app: `notif_summary_body` dice «pioggia 80%» dal giorno in cui è stata scritta.
+Erano le altre a essere l'eccezione, non questa.
+
+Le uscite usate, tutte e tre invariabili:
+
+- **Via l'articolo** dove la frase regge senza: «pioggia 80%», «Parziale: 80% della Luna».
+- **Preposizione scempia**, che non elide mai: «fino a 80%», «coperto per 80%». Questo è il
+  punto che rende la soluzione una regola e non un trucco: `a`, `di`, `da`, `in`, `su` non
+  chiedono apostrofo davanti a nessun numero, e nemmeno i plurali (`alle 8`, `delle 8`, `dei`).
+  Solo il singolare `il/lo/la` e le sue contrazioni elidono.
+- **L'articolo agganciato a una parola**, per le date: «bollettino **del giorno** 8 set 2026».
+  «del» ora concorda con *giorno*, che non cambia mai. Una sola frase è stata girata invece
+  che allungata, perché ci guadagnava: «L'ultimo è del 8 set» è diventata «L'ultimo **risale a**
+  8 set».
+
+Il Cielo ha preso la forma che l'inglese aveva già: «%d%% illuminata» contro «%d%% lit»,
+invece di «illuminata al %d%%». Due lingue che dicono la stessa cosa nello stesso ordine sono
+anche due stringhe che non divergono alla prossima modifica.
+
+### La regola è un test, non una convenzione
+
+`ItalianArticleTest` fallisce la build se una stringa italiana rimette un articolo elidibile
+subito prima di un `%d`, negli `<string>` e dentro gli `<item>` dei plurali. **Il test è stato
+verificato rompendo la regola apposta** e guardandolo fallire: un test di questo tipo che non
+sia stato visto fallire non sorveglia niente.
+
+Ed è il posto giusto per l'unico pezzo di grammatica italiana che resta nel repository: un
+test non entra in nessun APK, non raggiunge nessun'altra lingua, e sta dove chi aggiunge una
+stringa lo incontra. È la differenza fra sapere l'italiano in produzione — la strada 1 — e
+saperlo nella build.
+
+Quel che il test **non** può controllare è scritto nel suo KDoc: un argomento `%s` porta una
+stringa che ha formattato qualcun altro, e se cominci per cifra lo decide il chiamante, non la
+risorsa. Le sei di quella classe sono corrette a mano e nominate lì, così chi ne aggiunge una
+settima legge perché esistono.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, 1509 test,
+lint a zero errori. Nessun file Kotlin di produzione toccato: la correzione è diciotto stringhe
+e un test, che è esattamente la dimensione che questo problema doveva avere.

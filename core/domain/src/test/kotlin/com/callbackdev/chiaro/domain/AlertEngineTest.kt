@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.domain
 
 import com.callbackdev.chiaro.domain.settings.NotificationSettings
+import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.model.WeatherReport
@@ -28,15 +29,32 @@ class AlertEngineTest {
         cloudCoverPct = 50
     )
 
-    private fun report(hourly: List<HourlyForecast>): WeatherReport =
-        sampleWeatherReport().copy(hourly = hourly)
+    /** The sample's own daily block starts three days out; the evening summary asks
+     * for TOMORROW by date, so these tests say which days the report carries. */
+    private fun day(date: LocalDate) = DailyForecast(
+        date = date,
+        highC = 18.0,
+        lowC = 7.0,
+        condition = WeatherCondition(2, "Partly Cloudy", "⛅"),
+        precipPct = 20,
+        uvIndexMax = 4,
+        uvDescription = "Moderate"
+    )
+
+    private fun report(
+        hourly: List<HourlyForecast>,
+        daily: List<DailyForecast>? = null
+    ): WeatherReport = sampleWeatherReport().let { sample ->
+        sample.copy(hourly = hourly, daily = daily ?: sample.daily)
+    }
 
     private fun evaluate(
         hourly: List<HourlyForecast>,
         settings: NotificationSettings = allOn,
         state: AlertState = AlertState(),
-        at: LocalDateTime = now
-    ) = AlertEngine.evaluate(report(hourly), settings, state, at, cityKey)
+        at: LocalDateTime = now,
+        daily: List<DailyForecast>? = null
+    ) = AlertEngine.evaluate(report(hourly, daily), settings, state, at, cityKey)
 
     // --- severe ---
 
@@ -172,6 +190,97 @@ class AlertEngineTest {
         assertTrue(at(6, 0) != null)
         assertTrue(at(12, 0) != null)
         assertNull(at(12, 1))
+    }
+
+    // --- evening summary ---
+
+    private val evening: LocalDateTime = now.withHour(20)
+    private val tomorrow: LocalDate = now.toLocalDate().plusDays(1)
+    private val withTomorrow = listOf(day(now.toLocalDate()), day(tomorrow))
+
+    @Test
+    fun `the evening summary fires once, and it is about tomorrow`() {
+        val alert = evaluate(
+            emptyList(), settings = allOn.copy(eveningSummary = true),
+            at = evening, daily = withTomorrow
+        ).single { it.kind == AlertKind.EVENING_SUMMARY }
+        // The fingerprint is the EVENING's date — "has tonight's gone out" — while the
+        // numbers are tomorrow's. The two dates are deliberately different values.
+        assertEquals(now.toLocalDate().toString(), alert.fingerprint)
+        assertEquals(tomorrow, alert.forDate)
+        assertEquals(18.0, alert.highC!!, 0.001)
+        assertEquals(7.0, alert.lowC!!, 0.001)
+
+        assertNull(
+            evaluate(
+                emptyList(), settings = allOn.copy(eveningSummary = true),
+                state = AlertState(eveningDate = now.toLocalDate()),
+                at = evening, daily = withTomorrow
+            ).find { it.kind == AlertKind.EVENING_SUMMARY }
+        )
+    }
+
+    @Test
+    fun `the evening summary respects the 18-23 window edges`() {
+        fun at(hour: Int, minute: Int) = evaluate(
+            emptyList(), settings = allOn.copy(eveningSummary = true),
+            at = now.withHour(hour).withMinute(minute), daily = withTomorrow
+        ).find { it.kind == AlertKind.EVENING_SUMMARY }
+        assertNull(at(17, 59))
+        assertTrue(at(18, 0) != null)
+        assertTrue(at(23, 0) != null)
+        assertNull(at(23, 1))
+    }
+
+    @Test
+    fun `no tomorrow in the report, no evening summary`() {
+        // A cached report that has outlived its own week would otherwise send a
+        // sentence made entirely of dashes (DESIGN §1.1).
+        assertNull(
+            evaluate(
+                emptyList(), settings = allOn.copy(eveningSummary = true),
+                at = evening, daily = listOf(day(now.toLocalDate()))
+            ).find { it.kind == AlertKind.EVENING_SUMMARY }
+        )
+    }
+
+    @Test
+    fun `the two summaries keep separate dedup slots`() {
+        // The morning one has already burned today's date by 20:00: a shared slot
+        // would mean one summary a day, whichever got there first.
+        val both = allOn.copy(dailySummary = true, eveningSummary = true)
+        val alerts = evaluate(
+            emptyList(), settings = both,
+            state = AlertState(summaryDate = now.toLocalDate()),
+            at = evening, daily = withTomorrow
+        )
+        assertTrue(alerts.any { it.kind == AlertKind.EVENING_SUMMARY })
+        assertNull(alerts.find { it.kind == AlertKind.DAILY_SUMMARY })
+    }
+
+    @Test
+    fun `the morning summary never lands in the evening window, and the reverse`() {
+        val both = allOn.copy(dailySummary = true, eveningSummary = true)
+        assertEquals(
+            listOf(AlertKind.EVENING_SUMMARY),
+            evaluate(emptyList(), settings = both, at = evening, daily = withTomorrow)
+                .map { it.kind }
+        )
+        assertEquals(
+            listOf(AlertKind.DAILY_SUMMARY),
+            evaluate(emptyList(), settings = both, at = now, daily = withTomorrow)
+                .map { it.kind }
+        )
+    }
+
+    @Test
+    fun `the evening summary has its own switch`() {
+        assertNull(
+            evaluate(
+                emptyList(), settings = allOn.copy(eveningSummary = false),
+                at = evening, daily = withTomorrow
+            ).find { it.kind == AlertKind.EVENING_SUMMARY }
+        )
     }
 
     // --- gating ---

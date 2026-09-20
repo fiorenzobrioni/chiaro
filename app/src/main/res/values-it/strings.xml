@@ -118,6 +118,13 @@
     <string name="wind_meaning_moderate">Si sente, non dà fastidio</string>
     <string name="wind_meaning_strong">Tieni il cappello</string>
     <string name="wind_meaning_gale">Difficile camminarci contro</string>
+    <!-- Le fasce della notte (21 set 2026): l\'unica temperatura di cui l\'app parla
+         prima che qualcuno ci stia dentro, quindi ogni fascia è una decisione di stasera. -->
+    <string name="night_meaning_freezing">Gelo: ghiaccio sui vetri al mattino</string>
+    <string name="night_meaning_cold">Notte fredda, cappotto se esci</string>
+    <string name="night_meaning_cool">Notte fresca, basta una felpa</string>
+    <string name="night_meaning_mild">Notte mite, si può lasciare la finestra aperta</string>
+    <string name="night_meaning_warm">Notte calda: non rinfresca</string>
     <string name="dew_meaning_dry">Aria asciutta e frizzante</string>
     <string name="dew_meaning_pleasant">Gradevole</string>
     <string name="dew_meaning_sticky">Leggermente appiccicosa</string>
@@ -425,8 +432,8 @@
          è buio a mezzogiorno (sopra gli 84,6° al solstizio). La card e la riga lo dicono. -->
     <string name="sky_tonight_dark_all_day">Qui, a questa latitudine, in questa stagione, è buio tutto il giorno: non c\'è una notte da aspettare, c\'è già.</string>
     <string name="sky_none_dark_all_day">È buio tutto il giorno: il sole non risale fino al crepuscolo</string>
-    <string name="sky_tonight_moon">C\'è la luna, illuminata al %1$d%%</string>
-    <string name="sky_moon_line">%1$s · illuminata al %2$d%%</string>
+    <string name="sky_tonight_moon">C\'è la luna, %1$d%% illuminata</string>
+    <string name="sky_moon_line">%1$s · %2$d%% illuminata</string>
     <string name="sky_too_far">Troppo lontano per dirlo</string>
 
     <!-- L\'evidenza dei verdetti: il numero che ha deciso la parola accanto -->
@@ -673,11 +680,11 @@
     <string name="sky_none_core_too_low">Stanotte il centro della Via Lattea resta troppo basso</string>
     <string name="sky_none_no_eclipse">Nessuna eclissi visibile da qui per anni</string>
     <string name="sky_eclipse_lunar_total">Totale: la Luna entra tutta nell\'ombra</string>
-    <string name="sky_eclipse_lunar_partial">Parziale: il %1$d%% della Luna nell\'ombra</string>
+    <string name="sky_eclipse_lunar_partial">Parziale: %1$d%% della Luna nell\'ombra</string>
     <string name="sky_eclipse_lunar_penumbral">Debole: la Luna sfiora appena l\'ombra</string>
     <string name="sky_eclipse_solar_total">Totale da qui</string>
     <string name="sky_eclipse_solar_annular">Da qui resta un anello di Sole</string>
-    <string name="sky_eclipse_solar_partial">Da qui il Sole è coperto al %1$d%%</string>
+    <string name="sky_eclipse_solar_partial">Da qui il Sole è coperto per %1$d%%</string>
     <string name="sky_eclipse_solar_warning">Mai guardare il Sole senza un filtro adatto</string>
 
     <!-- Fase 19: da che parte guardare, per la riga dell\'arcobaleno -->
@@ -703,6 +710,8 @@
     <string name="alert_precip_desc" formatted="false">Un avviso quando la pioggia supera il 70% di probabilità entro 6 ore. Al massimo due volte al giorno.</string>
     <string name="alert_summary_title">Il riepilogo del mattino</string>
     <string name="alert_summary_desc">Una volta al giorno, tra le 6 e le 12: il cielo di oggi, minima, massima e pioggia.</string>
+    <string name="alert_evening_title">Il riepilogo della sera</string>
+    <string name="alert_evening_desc">Una volta al giorno, tra le 18 e le 23: il cielo di domani, minima, massima e pioggia. Aprendolo, anche la notte che c\'è in mezzo.</string>
     <string name="alerts_templates_title">Parti da un\'idea</string>
     <string name="alerts_max_reached">Hai già il massimo di avvisi che l\'app tiene, %1$d: togline uno per aggiungerne un altro.</string>
     <string name="tpl_already_added">Già aggiunto</string>
@@ -798,6 +807,7 @@
     <string name="notif_channel_severe">Maltempo</string>
     <string name="notif_channel_precip">Pioggia in arrivo</string>
     <string name="notif_channel_summary">Riepilogo del mattino</string>
+    <string name="notif_channel_evening">Riepilogo della sera</string>
     <string name="notif_channel_rules">I tuoi avvisi</string>
 
     <!-- Allerte ufficiali (Fase 11): il bollettino della Protezione Civile come notifica. -->
@@ -856,19 +866,19 @@
          bollettino del pomeriggio prima. -->
     <string name="warning_issued_time">delle %1$s</string>
     <string name="warning_issued_yesterday">di ieri alle %1$s</string>
-    <string name="warning_issued_dated">del %1$s alle %2$s</string>
+    <string name="warning_issued_dated">del giorno %1$s alle %2$s</string>
     <string name="warning_sheet_title">Allerta per %1$s</string>
     <string name="warning_sheet_tomorrow">Domani</string>
     <string name="warning_sheet_meaning_title">Cosa vuol dire</string>
     <string name="warning_sheet_note_title">Nota del bollettino</string>
-    <string name="warning_sheet_source">Dipartimento della Protezione Civile · bollettino del %1$s, %2$s · CC BY 4.0</string>
+    <string name="warning_sheet_source">Dipartimento della Protezione Civile · bollettino del giorno %1$s, %2$s · CC BY 4.0</string>
     <string name="warning_sheet_open">Apri il bollettino</string>
 
     <string name="alerts_group_warnings">Allerte ufficiali</string>
     <string name="warning_card_none">Nessuna allerta per %1$s</string>
     <string name="warning_card_none_detail">Bollettino %1$s</string>
     <string name="warning_card_stale">Nessun bollettino per oggi</string>
-    <string name="warning_card_stale_detail">L\'ultimo è del %1$s · il prossimo esce di solito entro le 16</string>
+    <string name="warning_card_stale_detail">L\'ultimo risale a %1$s · il prossimo esce di solito entro le 16</string>
     <string name="warning_card_waiting">Ancora nessun bollettino</string>
     <string name="warning_card_waiting_detail">Il primo arriva con il prossimo aggiornamento.</string>
     <string name="warning_card_unavailable">Le allerte ufficiali sono disponibili per i luoghi in Italia</string>
@@ -883,16 +893,24 @@
     <string name="journal_warning_cleared">Allerta rientrata: nessuna criticità per %1$s</string>
     <string name="journal_warning_source">Protezione Civile, bollettino %1$s</string>
     <string name="journal_warning_missed">Bollettino non raggiunto</string>
-    <string name="journal_warning_missed_held">Resta valido quello del %1$s</string>
+    <string name="journal_warning_missed_held">Resta valido quello del giorno %1$s</string>
     <string name="journal_warning_missed_empty">Nessun bollettino in memoria</string>
     <string name="notif_severe_title">Maltempo in arrivo · %1$s</string>
-    <string name="notif_severe_body">%1$s verso le %2$s</string>
-    <string name="notif_rain_fragment">, pioggia al %1$d%%</string>
+    <!-- Una frase intera per forma invece di un tronco più un frammento (21 set 2026):
+         una subordinata incollata in inglese non è una subordinata che ogni lingua mette
+         lì, ed è il frammento ad aver lasciato questo avviso senza il punto finale. -->
+    <string name="notif_severe_body">%1$s verso le %2$s.</string>
+    <string name="notif_severe_body_rain">%1$s verso le %2$s, pioggia %3$d%%.</string>
+    <string name="notif_severe_body_soon">%1$s in arrivo.</string>
     <string name="notif_precip_title">Pioggia in arrivo · %1$s</string>
-    <string name="notif_precip_body">Ombrello verso le %1$s: pioggia al %2$d%%.</string>
+    <string name="notif_precip_body">Ombrello verso le %1$s: pioggia %2$d%%.</string>
+    <string name="notif_precip_body_plain">Pioggia probabile nelle prossime ore.</string>
     <string name="notif_summary_title">Oggi · %1$s</string>
     <string name="notif_summary_body">%1$s. Minima %2$s, massima %3$s, pioggia %4$d%%.</string>
     <string name="notif_summary_body_no_rain">%1$s. Minima %2$s, massima %3$s.</string>
+    <!-- Il gemello della sera dice la stessa frase sotto un giorno diverso: li separa
+         il titolo, ed è l\'unica cosa che deve separarli. -->
+    <string name="notif_evening_title">Domani · %1$s</string>
     <string name="notif_rule_title">«%1$s» · %2$s</string>
 
     <!-- La notifica espansa (Fase 6b): la riga chiusa è la frase, sotto un fatto per
@@ -901,13 +919,32 @@
     <string name="notif_detail_window">Dalle %1$s alle %2$s</string>
     <string name="notif_detail_from">Dalle %1$s in poi</string>
     <string name="notif_detail_hour">Verso le %1$s</string>
-    <string name="notif_detail_rain_peak">Pioggia fino al %1$d%%, il peggio verso le %2$s</string>
+    <string name="notif_detail_rain_peak">Pioggia fino a %1$d%%, il peggio verso le %2$s</string>
     <string name="notif_detail_temp_range">Temperatura da %1$s a %2$s</string>
     <string name="notif_detail_now">Adesso %1$s · %2$s</string>
     <string name="notif_detail_sun">Alba %1$s, tramonto %2$s</string>
     <string name="notif_detail_uv">UV massimo %1$d · %2$s</string>
     <string name="notif_detail_wind">Vento adesso %1$s · %2$s</string>
     <string name="notif_detail_air">Qualità dell\'aria %1$d · %2$s</string>
+    <!-- Le righe del riepilogo della sera: la notte che separa da domani, e le parti di
+         domani su cui si può già fare qualcosa stasera. -->
+    <string name="notif_detail_night">Stanotte fino a %1$s verso le %2$s · %3$s</string>
+    <string name="notif_detail_night_rain">Pioggia stanotte fino a %1$d%%, il peggio verso le %2$s</string>
+    <string name="notif_detail_tomorrow_rain">Domani pioggia dalle %1$s alle %2$s, fino a %3$d%%</string>
+    <string name="notif_detail_tomorrow_rain_from">Domani pioggia dalle %1$s in poi, fino a %2$d%%</string>
+    <string name="notif_detail_tomorrow_rain_hour">Domani pioggia verso le %1$s, fino a %2$d%%</string>
+    <string name="notif_detail_tomorrow_rain_maybe">Domani pioggia possibile, fino a %1$d%% verso le %2$s</string>
+    <string name="notif_detail_sun_tomorrow">Domani alba %1$s, tramonto %2$s</string>
+    <string name="notif_detail_sun_tomorrow_delta">Domani alba %1$s, tramonto %2$s · %3$s</string>
+    <plurals name="notif_detail_daylight_more">
+        <item quantity="one">%d minuto di luce in più di oggi</item>
+        <item quantity="other">%d minuti di luce in più di oggi</item>
+    </plurals>
+    <plurals name="notif_detail_daylight_less">
+        <item quantity="one">%d minuto di luce in meno di oggi</item>
+        <item quantity="other">%d minuti di luce in meno di oggi</item>
+    </plurals>
+    <string name="notif_detail_uv_tomorrow">Domani UV massimo %1$d · %2$s</string>
     <string name="notif_rule_why">Perché è scattata</string>
     <string name="notif_rule_condition">%1$s — valore %2$s</string>
 
@@ -944,8 +981,8 @@
     <string name="journal_drift_desc">tocca per i numeri</string>
     <string name="journal_drift_a11y">Come si sta muovendo la settimana, %1$s. %2$s</string>
     <string name="journal_outcome_high">massima prevista %1$s, vista %2$s</string>
-    <string name="journal_outcome_dry">Pioggia data al %1$s: non ha piovuto</string>
-    <string name="journal_outcome_rained">Pioggia data al %1$s: ha piovuto</string>
+    <string name="journal_outcome_dry">Pioggia data %1$s: non ha piovuto</string>
+    <string name="journal_outcome_rained">Pioggia data %1$s: ha piovuto</string>
     <string name="journal_drift_high_swing">%1$s: la massima è andata su e giù, fra %2$s e %3$s.</string>
     <string name="journal_drift_rain_swing">%1$s è andato su e giù: pioggia fra %2$s e %3$s.</string>
     <string name="journal_drift_table_title">I numeri dietro i colori</string>

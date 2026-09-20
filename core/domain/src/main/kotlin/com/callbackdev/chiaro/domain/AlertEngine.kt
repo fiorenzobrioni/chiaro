@@ -7,7 +7,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
-enum class AlertKind { SEVERE, PRECIPITATION, DAILY_SUMMARY }
+enum class AlertKind { SEVERE, PRECIPITATION, DAILY_SUMMARY, EVENING_SUMMARY }
 
 /**
  * One notification-worthy finding. Domain data stays canonical English; the
@@ -23,7 +23,15 @@ data class Alert(
     val at: LocalDateTime? = null,
     val precipPct: Int? = null,
     val highC: Double? = null,
-    val lowC: Double? = null
+    val lowC: Double? = null,
+    /**
+     * The DAY the summaries are about, in the city's calendar: today for
+     * [AlertKind.DAILY_SUMMARY], tomorrow for [AlertKind.EVENING_SUMMARY]. The
+     * notifier needs it and must not derive it from the device clock, which can be
+     * a day off the city's own (a place east of the date line, a phone still on
+     * holiday time): the numbers above were read off that day and no other.
+     */
+    val forDate: LocalDate? = null
 )
 
 /**
@@ -31,13 +39,16 @@ data class Alert(
  * Severe and precipitation are per-kind sets rather than single slots: their
  * fingerprints embed the city, so a single slot would be clobbered every time the
  * evaluated city changes (alternating saved cities), re-notifying events already
- * notified. The daily summary is one per date across all cities, so a bare date
- * is enough.
+ * notified. The two summaries are one per date across all cities, so a bare date
+ * is enough — and they keep SEPARATE slots: the morning one has already burned
+ * today's date by the time the evening one is due, and sharing a slot would mean
+ * one summary a day, whichever came first.
  */
 data class AlertState(
     val severeFingerprints: Set<String> = emptySet(),
     val precipFingerprints: Set<String> = emptySet(),
-    val summaryDate: LocalDate? = null
+    val summaryDate: LocalDate? = null,
+    val eveningDate: LocalDate? = null
 )
 
 /**
@@ -73,6 +84,17 @@ object AlertEngine {
     val SummaryWindowStart: LocalTime = LocalTime.of(6, 0)
     val SummaryWindowEnd: LocalTime = LocalTime.of(12, 0)
 
+    /**
+     * The evening summary's window. The 18:00 floor is where "this evening" starts
+     * being true in the shortest days of the year; the 23:00 cap is what keeps the
+     * word "domani" honest — past midnight it means the day after the one the
+     * numbers were read for, and a summary that lands at 00:10 saying "tomorrow"
+     * is off by a day. Five hours wide, so the periodic job lands inside it even
+     * at the slowest polling interval the settings allow (120 min).
+     */
+    val EveningWindowStart: LocalTime = LocalTime.of(18, 0)
+    val EveningWindowEnd: LocalTime = LocalTime.of(23, 0)
+
     fun evaluate(
         report: WeatherReport,
         settings: NotificationSettings,
@@ -92,6 +114,9 @@ object AlertEngine {
         }
         if (settings.dailySummary) {
             findDailySummary(report, state, now)?.let(::add)
+        }
+        if (settings.eveningSummary) {
+            findEveningSummary(report, state, now)?.let(::add)
         }
     }
 
@@ -163,7 +188,44 @@ object AlertEngine {
             condition = today.condition,
             precipPct = today.precipPct,
             highC = today.highC,
-            lowC = today.lowC
+            lowC = today.lowC,
+            forDate = today.date
+        )
+    }
+
+    /**
+     * The evening's twin of [findDailySummary], and its subject is TOMORROW: at
+     * 20:00 the day is over and the only summary left worth sending is the one you
+     * can still act on — the alarm, the coat by the door, the umbrella. The night
+     * itself rides along in the expanded notification, where the notifier reads it
+     * off the same hours this report carries.
+     *
+     * It does not fire when the report has no tomorrow in it. That is not a defensive
+     * null check: a cached report can outlive its own week, and an evening summary
+     * whose entire collapsed sentence would be dashes is the screen lying (DESIGN
+     * §1.1) in the one place the reader cannot check it.
+     */
+    private fun findEveningSummary(
+        report: WeatherReport,
+        state: AlertState,
+        now: LocalDateTime
+    ): Alert? {
+        val time = now.toLocalTime()
+        if (time < EveningWindowStart || time > EveningWindowEnd) return null
+        if (state.eveningDate == now.toLocalDate()) return null
+        val tomorrowDate = now.toLocalDate().plusDays(1)
+        val tomorrow = report.daily.firstOrNull { it.date == tomorrowDate } ?: return null
+        return Alert(
+            kind = AlertKind.EVENING_SUMMARY,
+            // The ISO date of the EVENING, not of the day described: the dedup slot
+            // answers "has tonight's summary gone out", and tonight is today.
+            fingerprint = now.toLocalDate().toString(),
+            cityLabel = report.location.city,
+            condition = tomorrow.condition,
+            precipPct = tomorrow.precipPct,
+            highC = tomorrow.highC,
+            lowC = tomorrow.lowC,
+            forDate = tomorrow.date
         )
     }
 }

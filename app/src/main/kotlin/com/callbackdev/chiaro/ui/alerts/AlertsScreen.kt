@@ -286,6 +286,17 @@ private fun AlertsContent(
                 onChange = { viewModel.setDailySummary(it); if (it) somethingTurnedOn() }
             )
         }
+        // Immediately under its twin, and never anywhere else: the pair is the point,
+        // and a reader who has just read "tra le 6 e le 12" is exactly the reader who
+        // wants to know there is an evening one.
+        item {
+            ReadySwitch(
+                title = stringResource(R.string.alert_evening_title),
+                description = stringResource(R.string.alert_evening_desc),
+                checked = content.notifications.eveningSummary,
+                onChange = { viewModel.setEveningSummary(it); if (it) somethingTurnedOn() }
+            )
+        }
 
         item { GroupTitle(stringResource(R.string.alerts_group_yours)) }
         // The reader's rules are CARDS (VISION §5.4), since the review of 8 set 2026:

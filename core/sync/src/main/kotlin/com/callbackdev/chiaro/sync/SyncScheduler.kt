@@ -42,7 +42,8 @@ object SyncScheduler {
         notificationsEnabled &&
             (
                 settings.severeWeatherAlerts || settings.dailySummary ||
-                    settings.precipitationWarning || settings.officialWarnings ||
+                    settings.eveningSummary || settings.precipitationWarning ||
+                    settings.officialWarnings ||
                     (settings.userRules && hasEnabledRules)
                 )
 

@@ -15,6 +15,20 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
 
 ### Added
 
+- **The evening summary** (Alerts → Ready-made, off by default), the twin of the morning one.
+  Once a day between 18:00 and 23:00, and its subject is **tomorrow**: by eight in the evening
+  today is no longer a decision, and the alarm, the coat by the door and the umbrella are.
+  Collapsed it is the same sentence its morning twin says, under a title that reads «Domani»
+  instead of «Oggi» — the day is stated once, where it belongs. Opened, it carries what the
+  collapsed line has no room for and what nothing else in the app tells you at that hour: how
+  cold the night gets and when, with what that asks of you (ice on the glass, a coat, a window
+  that can stay open); whether water falls on it; tomorrow's rain as a window with its peak, on
+  the same 70% bar the rain warning fires at; tomorrow's sunrise and sunset **with the change in
+  daylight against today**, which is the line this app exists to print; and tomorrow's peak UV
+  once it asks for anything. Every one of those lines is drawn only when it has its data, and it
+  does not fire at all when the report has no tomorrow left in it. It is deliberately one alert
+  and not two: the night and tomorrow are one decision taken at one moment, and two notifications
+  in the same hour is the noise every other rule in this app is written to avoid.
 - **The typeface is a choice now** (Settings → Appearance → Typeface), with three answers.
   **Google Sans is the new default**: the open-licensed upstream font, bundled like Inter and
   so the same drawing on every phone, cut down to the letters this app prints, which is 307KB
@@ -385,6 +399,26 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
   past.
 
 ### Changed
+
+- **The severe and rain warnings are whole sentences again.** The storm alert was built as a
+  stem plus an optional «, pioggia al 90%» fragment, which cost it the full stop every other
+  built-in alert ends with and fixed the clause order in English for every language that
+  translates it. Both are now one complete sentence per shape, and an alert with no hour or no
+  forecast chance picks a sentence that needs neither: the old code printed «Temporale verso
+  le» and «pioggia al 0%», a broken sentence and an invented zero, in the one place the reader
+  cannot check either. Unreachable today, because the engine anchors both alerts on an hour it
+  has actually read, and now unreachable in the text too.
+
+- **Italian no longer puts an article where a number may force it to elide.** «al 70%» is
+  right and «al 80%» is not, because eighty is *ottanta*: inside 0 to 100 the vowel-initial
+  numbers are 1, 8, 11 and 80 to 89, so eighteen sentences across the notifications, the Sky
+  screen and the Journal were right nine times out of ten and quietly wrong the tenth. They
+  are now written so no article touches the value: «pioggia 80%», the form this app's own
+  morning summary has used since the day it shipped; «fino a 80%» and «coperto per 80%», with
+  the bare prepositions that never elide; and «bollettino del giorno 8 set 2026» for the dates,
+  where the article was given a word to agree with instead of a number. No helper and no
+  locale-specific branch: a rule about Italian belongs in the Italian file, and what remains of
+  it lives in a test that fails the build if an article comes back.
 
 - **The current temperature is bold**, and tracked in with it. At 64sp a hairline figure laid
   over a painted sky reads as ornament rather than as the reading the whole screen is for,

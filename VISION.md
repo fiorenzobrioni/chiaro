@@ -362,8 +362,13 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
   15:00 and 17:00; never more than one per bulletin" — and the level it starts from (yellow or
   orange). The switch lives here and not in Settings for the reason Fase 6 gave: next to what it
   governs.
-- **Ready-made**: severe weather, rain in the next hours, morning summary — switches with a plain
-  description of what each will actually send and when.
+- **Ready-made**: severe weather, rain in the next hours, the morning summary and the evening one
+  — switches with a plain description of what each will actually send and when. The two summaries
+  are twins and say so: same sentence, different day. The morning's subject is today, between 6
+  and 12; the evening's is **tomorrow**, between 18 and 23, because by 20:00 today is no longer a
+  decision and tomorrow is. The night in between is not a fifth switch: it rides in the evening
+  one's expanded notification, where the low, its hour and what it asks of the reader sit above
+  tomorrow's umbrella window and tomorrow's sunrise. Both are off by default.
 - **Yours**: the rules engine, approached from the answer rather than the syntax.
   - **Templates first**: "Tell me when I can ride", "Ice tomorrow morning", "A window to run",
     "High UV", "A clear night". Picking one creates a real rule with sensible thresholds, already on.

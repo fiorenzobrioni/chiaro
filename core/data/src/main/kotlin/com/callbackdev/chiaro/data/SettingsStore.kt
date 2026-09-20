@@ -184,6 +184,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 notifications = NotificationSettings(
                     severeWeatherAlerts = prefs[SevereAlerts] ?: true,
                     dailySummary = prefs[DailySummary] ?: false,
+                    eveningSummary = prefs[EveningSummary] ?: false,
                     precipitationWarning = prefs[PrecipWarning] ?: true,
                     userRules = prefs[UserRules] ?: true,
                     officialWarnings = prefs[OfficialWarnings] ?: true,
@@ -212,6 +213,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setWindSpeedUnit(unit: WindSpeedUnit) = set(WindSpeed, unit.name)
     suspend fun setSevereWeatherAlerts(enabled: Boolean) = set(SevereAlerts, enabled)
     suspend fun setDailySummary(enabled: Boolean) = set(DailySummary, enabled)
+    suspend fun setEveningSummary(enabled: Boolean) = set(EveningSummary, enabled)
     suspend fun setPrecipitationWarning(enabled: Boolean) = set(PrecipWarning, enabled)
     suspend fun setUserRules(enabled: Boolean) = set(UserRules, enabled)
     suspend fun setOfficialWarnings(enabled: Boolean) = set(OfficialWarnings, enabled)
@@ -252,6 +254,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
         private val WindSpeed = stringPreferencesKey("units_wind_speed")
         private val SevereAlerts = booleanPreferencesKey("notif_severe_alerts")
         private val DailySummary = booleanPreferencesKey("notif_daily_summary")
+        private val EveningSummary = booleanPreferencesKey("notif_evening_summary")
         private val PrecipWarning = booleanPreferencesKey("notif_precip_warning")
         private val UserRules = booleanPreferencesKey("notif_user_rules")
         private val OfficialWarnings = booleanPreferencesKey("notif_official_warnings")

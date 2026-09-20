@@ -124,6 +124,13 @@
     <string name="wind_meaning_moderate">Noticeable, not a bother</string>
     <string name="wind_meaning_strong">Hold on to your hat</string>
     <string name="wind_meaning_gale">Hard to walk against</string>
+    <!-- The night bands (21 set 2026): the only temperature the app talks about
+         before anybody is standing in it, so every band is a decision taken tonight. -->
+    <string name="night_meaning_freezing">Freezing: ice on the glass by morning</string>
+    <string name="night_meaning_cold">A cold night, a coat if you go out</string>
+    <string name="night_meaning_cool">A cool night, a sweater is enough</string>
+    <string name="night_meaning_mild">A mild night, the window can stay open</string>
+    <string name="night_meaning_warm">A warm night: it won\'t cool down</string>
     <string name="dew_meaning_dry">Dry, crisp air</string>
     <string name="dew_meaning_pleasant">Pleasant</string>
     <string name="dew_meaning_sticky">Slightly sticky</string>
@@ -718,6 +725,8 @@
     <string name="alert_precip_desc" formatted="false">A heads-up when rain gets past 70% likely within 6 hours. At most twice a day.</string>
     <string name="alert_summary_title">The morning summary</string>
     <string name="alert_summary_desc">Once a day, between 6 and 12: today\'s sky, low, high and rain.</string>
+    <string name="alert_evening_title">The evening summary</string>
+    <string name="alert_evening_desc">Once a day, between 18 and 23: tomorrow\'s sky, low, high and rain. Open it for the night in between.</string>
     <string name="alerts_templates_title">Start from an idea</string>
     <string name="alerts_max_reached">You already have the most alerts the app keeps, %1$d: remove one to add another.</string>
     <string name="tpl_already_added">Already added</string>
@@ -813,6 +822,7 @@
     <string name="notif_channel_severe">Severe weather</string>
     <string name="notif_channel_precip">Incoming rain</string>
     <string name="notif_channel_summary">Morning summary</string>
+    <string name="notif_channel_evening">Evening summary</string>
     <string name="notif_channel_rules">Your alerts</string>
 
     <!-- Official warnings (Fase 11): the Protezione Civile's bulletin as a notification.
@@ -913,13 +923,21 @@
     <string name="journal_warning_missed_held">The one from %1$s still stands</string>
     <string name="journal_warning_missed_empty">No bulletin held yet</string>
     <string name="notif_severe_title">Severe weather ahead · %1$s</string>
-    <string name="notif_severe_body">%1$s around %2$s</string>
-    <string name="notif_rain_fragment">, rain at %1$d%%</string>
+    <!-- One whole sentence per shape rather than a stem and a fragment (21 set 2026):
+         a clause glued on in English is not a clause every language puts there, and the
+         fragment is what left this one alert without its full stop. -->
+    <string name="notif_severe_body">%1$s around %2$s.</string>
+    <string name="notif_severe_body_rain">%1$s around %2$s, rain at %3$d%%.</string>
+    <string name="notif_severe_body_soon">%1$s on the way.</string>
     <string name="notif_precip_title">Rain on the way · %1$s</string>
     <string name="notif_precip_body">Umbrella around %1$s: rain at %2$d%%.</string>
+    <string name="notif_precip_body_plain">Rain likely in the next hours.</string>
     <string name="notif_summary_title">Today · %1$s</string>
     <string name="notif_summary_body">%1$s. Low %2$s, high %3$s, rain %4$d%%.</string>
     <string name="notif_summary_body_no_rain">%1$s. Low %2$s, high %3$s.</string>
+    <!-- The evening twin says the same sentence under a different day: only the title
+         separates them, and it is the only thing that has to. -->
+    <string name="notif_evening_title">Tomorrow · %1$s</string>
     <string name="notif_rule_title">“%1$s” · %2$s</string>
 
     <!-- The expanded notification (Fase 6b): the collapsed line is the sentence, and
@@ -936,6 +954,25 @@
     <string name="notif_detail_uv">Peak UV %1$d · %2$s</string>
     <string name="notif_detail_wind">Wind right now %1$s · %2$s</string>
     <string name="notif_detail_air">Air quality %1$d · %2$s</string>
+    <!-- The evening summary\'s own lines: the night between here and tomorrow, then the
+         parts of tomorrow worth acting on tonight. -->
+    <string name="notif_detail_night">Overnight down to %1$s around %2$s · %3$s</string>
+    <string name="notif_detail_night_rain">Rain overnight up to %1$d%%, worst around %2$s</string>
+    <string name="notif_detail_tomorrow_rain">Tomorrow rain from %1$s to %2$s, up to %3$d%%</string>
+    <string name="notif_detail_tomorrow_rain_from">Tomorrow rain from %1$s on, up to %2$d%%</string>
+    <string name="notif_detail_tomorrow_rain_hour">Tomorrow rain around %1$s, up to %2$d%%</string>
+    <string name="notif_detail_tomorrow_rain_maybe">Tomorrow rain possible, up to %1$d%% around %2$s</string>
+    <string name="notif_detail_sun_tomorrow">Tomorrow sunrise %1$s, sunset %2$s</string>
+    <string name="notif_detail_sun_tomorrow_delta">Tomorrow sunrise %1$s, sunset %2$s · %3$s</string>
+    <plurals name="notif_detail_daylight_more">
+        <item quantity="one">%d minute more light than today</item>
+        <item quantity="other">%d minutes more light than today</item>
+    </plurals>
+    <plurals name="notif_detail_daylight_less">
+        <item quantity="one">%d minute less light than today</item>
+        <item quantity="other">%d minutes less light than today</item>
+    </plurals>
+    <string name="notif_detail_uv_tomorrow">Tomorrow\'s peak UV %1$d · %2$s</string>
     <string name="notif_rule_why">Why it fired</string>
     <string name="notif_rule_condition">%1$s — value %2$s</string>
 

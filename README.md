@@ -87,9 +87,11 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   red are already in the day's sentence, so the chip only appears where that sentence is
   not, and yellow, which the sentence never carries, takes a line of its own where the
   card has one to spare
-- ⚠️ **Alerts**: three ready-made switches that say exactly what they send and when
+- ⚠️ **Alerts**: four ready-made switches that say exactly what they send and when
   (severe weather in the next 12 hours, at most once per storm; rain past 70% likely
-  within 6 hours, at most twice a day; the morning summary, once between 6 and 12). Then
+  within 6 hours, at most twice a day; the morning summary, once between 6 and 12; the
+  evening summary, once between 18 and 23, whose subject is tomorrow, with the night in
+  between, tomorrow's umbrella and tomorrow's sunrise under it when you open it). Then
   your own: five templates that create a real rule already switched on, and a builder that
   is a sentence of tappable chips (*when* **rain in the next 6 hours** *is* **above**
   **70%**), with an optional second condition and your own message. Values are picked and
