@@ -8902,3 +8902,59 @@ apostrofi italiani e ha trasformato i `\n\n` dei capoversi in a capo veri. AAPT 
 nudi e capoversi.
 
 `./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1639 test**, lint a zero errori.
+
+## L'aiuto in-app, riletto contro quel che l'app fa davvero (committente, 20 set 2026)
+
+Chiesto di verificare che la guida fosse aggiornata. Sette punti, e **due non venivano dalle Fasi
+27 e 28**: erano già lì.
+
+### Quel che era rimasto indietro sul Cielo
+
+- **«Stanotte»** diceva «le ore in cui il cielo è davvero scuro e la luna è fuori dai piedi», che
+  fino alla Fase 27 era una bugia e adesso è vero. Ma la card nel frattempo ha imparato altre tre
+  cose che la guida non nominava: quel che la luna si è presa, lo stato in cui non c'è finestra
+  affatto, e il tratto più sereno della Fase 28.
+- **«In arrivo»** descriveva la lista a uno strato. Ne ha due dalla Fase 27, tiene i `∅` con la
+  loro ragione, stampa anno e ore sulle righe lontane e fonde due sciami di una notte: la parte
+  più cambiata della schermata, e la guida non ne diceva niente.
+- **«Aggiungi un momento»** aveva il conto e i gruppi già corretti (aggiornati nella Fase 28
+  stessa) e non nominava **il campo di ricerca**, che è nuovo.
+- **Il marchio della macchina fotografica non era spiegato da nessuna parte.** È il difetto più
+  serio dei quattro, perché l'ora dorata della sera è una delle quattro sottoscrizioni
+  predefinite: un lettore lo incontra **su un'installazione appena fatta**, e un marchio che
+  nessuno ha spiegato è un marchio di cui nessuno si fida. Ha un blocco suo, subito dopo l'esempio
+  di riga, e dice anche perché l'eclissi di Sole non ce l'ha.
+
+### I due che erano già lì, e non li aveva messi la Fase 28
+
+- **Il widget «In parole» non esisteva nella guida.** VISION §5.9 dice «cinque card», il manifest
+  lo chiama in un commento «the fifth, and the one with nothing drawn on it», la schermata delle
+  impostazioni lo offre — e il capitolo dei widget ne descriveva quattro. Il widget del 19
+  settembre non è mai entrato nell'aiuto. Adesso c'è, con la frase che lo distingue davvero (il
+  disegno è la temperatura, e il nome del luogo è stampato per intero).
+- **La riga dell'arcobaleno su Oggi non era nominata.** `TimelineKind.RAINBOW` è nella linea del
+  tempo con il suo azimut, ed è una delle righe più caratteristiche dell'app — l'unica di quella
+  schermata che arriva con una direzione. La guida elencava alba, ore dorate, buio, luna e pioggia,
+  e si fermava lì.
+- E **due impostazioni non erano elencate**: il carattere e l'animazione delle icone, mentre nella
+  stessa frase erano nominate la palette e i due disegni delle icone.
+
+### Una chiave che mentiva da due giri
+
+`guide_widgets_three_title` conteneva già «Sono quattro»: il testo era stato aggiornato quando il
+quarto widget è arrivato, la chiave no. Con il quinto sarebbe mentita una terza volta, quindi è
+diventata `guide_widgets_all_title` (e `_body`). Non è un dettaglio di stile: una chiave che dice
+un numero è una chiave che invecchia, e chi la rilegge fra sei mesi crede al nome.
+
+### Come è stato verificato
+
+Non rileggendo la guida e annuendo, ma confrontando ogni affermazione verificabile con la sua
+sorgente: i widget contro i `receiver` del manifest e le etichette in `strings.xml`, le voci delle
+impostazioni contro le `settings_*` che la schermata risolve davvero, la linea del tempo contro
+`TimelineKind`, il conto del catalogo contro `SkyJobCatalog.all`. È così che sono saltati fuori
+l'arcobaleno e «In parole», che nessuna rilettura del solo testo avrebbe trovato.
+
+`MomentSample` non è stato toccato e non ne aveva bisogno: costruisce a mano una riga di `sun.rise`,
+che non è fotografica e non ha una direzione da stampare, quindi l'esempio resta vero.
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, 1639 test, lint a zero errori.
