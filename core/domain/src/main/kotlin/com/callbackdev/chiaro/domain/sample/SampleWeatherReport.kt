@@ -82,10 +82,10 @@ fun sampleWeatherReport(): WeatherReport {
             sampleHour(baseDate.atTime(19, 0), 14.0, clearNight, 0, 8)
         ),
         daily = listOf(
-            DailyForecast(baseDate.plusDays(3), 20.0, 12.0, sunny, 0, 5, "Moderate ☀️"),
-            DailyForecast(baseDate.plusDays(4), 18.0, 11.0, WeatherCondition(63, "Rainy", "🌧️"), 85, 2, "Low"),
-            DailyForecast(baseDate.plusDays(5), 16.0, 10.0, WeatherCondition(3, "Cloudy", "☁️"), 20, 3, "Moderate ☀️"),
-            DailyForecast(baseDate.plusDays(6), 19.0, 13.0, partlyCloudy, 10, 6, "High ☀️")
+            DailyForecast(baseDate.plusDays(3), 20.0, 12.0, sunny, 0, 5),
+            DailyForecast(baseDate.plusDays(4), 18.0, 11.0, WeatherCondition(63, "Rainy", "🌧️"), 85, 2),
+            DailyForecast(baseDate.plusDays(5), 16.0, 10.0, WeatherCondition(3, "Cloudy", "☁️"), 20, 3),
+            DailyForecast(baseDate.plusDays(6), 19.0, 13.0, partlyCloudy, 10, 6)
         ),
         systemInfo = SystemInfo(
             source = "Open-Meteo API",

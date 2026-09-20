@@ -229,13 +229,27 @@ data class DailyForecast(
      */
     val precipPct: Int?,
     /**
-     * The day's PEAK UV (Open-Meteo `uv_index_max`), with [uvDescription] its label
-     * — never the instant reading [CurrentConditions.uvIndex]: under a "Today"
-     * heading only the maximum says anything, since at 23:52 the current index is 0
-     * whatever the day was (which is exactly what the README used to print).
+     * The day's PEAK UV (Open-Meteo `uv_index_max`) — never the instant reading
+     * [CurrentConditions.uvIndex]: under a "Today" heading only the maximum says
+     * anything, since at 23:52 the current index is 0 whatever the day was (which is
+     * exactly what the README used to print). On Today's own details grid the current
+     * reading is the value and this rides as a note, which is a different question and
+     * `TodayScreen.Details` answers it there.
+     *
+     * **Null when the model behind this response does not carry one** (20 set 2026).
+     * It was coerced to `0` — and a zero UV is not an absence, it is a forecast of a
+     * sun that cannot burn, printed under "Nessuna protezione necessaria". The same
+     * sentence [precipPct] carries, for the same reason, about the field beside it in
+     * the same block.
+     *
+     * It used to travel with a `uvDescription` label. That was tweather's JSON
+     * vocabulary — English, never localized, and read by nothing in this app but the
+     * test that asserted the mapper had written it, the way `WeatherCondition.description`
+     * is (see `WeatherText`'s own note). A nullable index forced the question of what
+     * its label should say when there is no index, and the honest answer was that
+     * nobody was asking.
      */
-    val uvIndexMax: Int,
-    val uvDescription: String
+    val uvIndexMax: Int?
 )
 
 enum class CacheStatus { HIT, MISS }

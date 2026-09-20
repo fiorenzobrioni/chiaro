@@ -82,8 +82,8 @@ class AlertNotifierTest {
                 )
             },
             daily = listOf(
-                DailyForecast(today, 6.0, 1.0, cloudy, 10, 1, "Low"),
-                DailyForecast(tomorrow, 9.0, -1.0, cloudy, 80, 5, "Moderate")
+                DailyForecast(today, 6.0, 1.0, cloudy, 10, 1),
+                DailyForecast(tomorrow, 9.0, -1.0, cloudy, 80, 5)
             )
         )
     }

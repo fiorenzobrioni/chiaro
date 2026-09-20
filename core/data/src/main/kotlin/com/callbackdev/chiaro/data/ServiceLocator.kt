@@ -9,6 +9,7 @@ import com.callbackdev.chiaro.data.local.ChiaroDatabase
 import com.callbackdev.chiaro.data.local.StoredDataSweep
 import com.callbackdev.chiaro.data.local.WarningRecordDao
 import java.io.File
+import java.time.Duration
 import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoGeocodingApi
@@ -293,6 +294,16 @@ object ServiceLocator {
     private fun okHttp(): OkHttpClient =
         okHttp ?: synchronized(this) {
             okHttp ?: OkHttpClient.Builder()
+                // OkHttp's defaults bound each PHASE — 10s to connect, 10s between
+                // bytes — and nothing bounds the call. A connection that dribbles a
+                // byte before every read timeout never trips one, which on a screen
+                // the reader just opened is a refresh that never resolves and in
+                // `WeatherSyncWorker` is a worker held open on somebody's battery.
+                // Thirty seconds is past the worst honest case (connect plus a slow
+                // read of a 10 KB response) and well inside what the app can absorb:
+                // every caller already falls back to the cached report, and a pull to
+                // refresh is one gesture away.
+                .callTimeout(Duration.ofSeconds(30))
                 .addInterceptor { chain ->
                     chain.proceed(
                         chain.request().newBuilder()

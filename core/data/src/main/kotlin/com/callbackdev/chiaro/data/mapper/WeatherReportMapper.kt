@@ -282,7 +282,11 @@ object WeatherReportMapper {
         val hoursByDate = providerTimes.indices.groupBy { providerTimes[it].toLocalDate() }
         return daily.time.take(DAILY_WINDOW).mapIndexed { i, date ->
             val day = LocalDate.parse(date)
-            val uvMax = daily.uvIndexMax.getOrNull(i)?.roundToInt() ?: 0
+            // NOT `?: 0`, for the reason the line below already gives about the
+            // probability: the old zero was a sun that cannot burn, put in the mouth
+            // of a model that never spoke. Out of bounds and a null element collapse
+            // to the same answer here, which is the right one for both.
+            val uvMax = daily.uvIndexMax.getOrNull(i)?.roundToInt()
             DailyForecast(
                 date = day,
                 highC = daily.temperatureMaxC[i],
@@ -302,8 +306,7 @@ object WeatherReportMapper {
                 // that never spoke. Null travels to the surfaces, like the hourly
                 // probability beside it.
                 precipPct = daily.precipitationProbabilityMaxPct.getOrNull(i),
-                uvIndexMax = uvMax,
-                uvDescription = WeatherCodes.uvDescription(uvMax)
+                uvIndexMax = uvMax
             )
         }
     }
@@ -449,9 +452,11 @@ object WeatherReportMapper {
      * Sun and moon from [AstronomyEngine], not from the provider's daily block
      * (Fase 16e).
      *
-     * The provider's values are still fetched — `daily.sunrise` feeds nothing now,
-     * but it costs nothing and the contract test compares the two. The engine wins
-     * for the reason `VISION_SKY.md` §9.2 gives: the same figure appears in the JSON
+     * The provider's values are not even fetched any more (20 set 2026): they fed
+     * nothing, and a `daily.sunrise` left lying in the DTO is now a trap, since the
+     * provider writes it on the response's fixed offset and it drifts an hour from the
+     * clock after a DST change. See `OpenMeteoForecastApi.DAILY_VARIABLES`. The engine
+     * wins for the reason `VISION_SKY.md` §9.2 gives: the same figure appears in the JSON
      * tab, in the README and on a `sky.crontab` line that is computed anyway, and a
      * document showing 06:31 in one tab and 06:32 in another because one of them
      * waited for the network is exactly what "one engine is the source of truth" was

@@ -57,7 +57,7 @@ class WeatherRecencyTest {
             daily = List(days) {
                 DailyForecast(
                     LocalDate.parse("2026-08-26").plusDays(it.toLong()),
-                    28.0, 18.0, clear, 0, 5, "Moderate ☀️"
+                    28.0, 18.0, clear, 0, 5
                 )
             },
             systemInfo = SystemInfo("Open-Meteo API", fetchedAt, CacheStatus.HIT, 100)

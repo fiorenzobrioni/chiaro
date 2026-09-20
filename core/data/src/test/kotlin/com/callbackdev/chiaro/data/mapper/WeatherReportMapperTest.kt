@@ -78,9 +78,6 @@ class WeatherReportMapperTest {
                 weatherCode = List(dailyCount) { 3 },
                 temperatureMaxC = List(dailyCount) { 28.0 + it },
                 temperatureMinC = List(dailyCount) { 18.0 + it },
-                sunrise = List(dailyCount) { "2026-08-13T06:07" },
-                sunset = List(dailyCount) { "2026-08-13T19:52" },
-                daylightDurationSec = List(dailyCount) { 49_500.0 },
                 precipitationProbabilityMaxPct = List(dailyCount) { if (it == 0) 55 else null },
                 uvIndexMax = List(dailyCount) { 6.0 }
             )
@@ -196,7 +193,6 @@ class WeatherReportMapperTest {
         // uv_index_max was fetched and parsed all along but never mapped, so the
         // README's "Today" section fell back to the instant reading (Aug 2026 fix)
         assertEquals(6, daily.first().uvIndexMax)
-        assertEquals("High ☀️", daily.first().uvDescription)
     }
 
     /**
@@ -423,9 +419,10 @@ class WeatherReportMapperTest {
      */
     @Test
     fun `astronomical is computed rather than read off the provider`() {
-        // New York on 13 Aug 2026. The fixture's own `daily.sunrise` says 06:07 and
-        // 19:52 — numbers a test author typed, not measured ones — and the engine's
-        // 06:04/19:56 is what the sky actually does there that day.
+        // New York on 13 Aug 2026. The provider's sunrise is not even fetched any
+        // more (20 set 2026) — it fed nothing, and its fixed offset made it a trap —
+        // so there is no second opinion left to disagree with: 06:04/19:56 is what
+        // the engine says the sky does there that day.
         val astro = map().astronomical
         assertEquals(LocalTime.of(6, 4), astro.sunrise)
         assertEquals(LocalTime.of(19, 56), astro.sunset)
@@ -589,9 +586,6 @@ class WeatherReportMapperTest {
                 weatherCode = List(3) { 3 },
                 temperatureMaxC = List(3) { 28.0 },
                 temperatureMinC = List(3) { 18.0 },
-                sunrise = List(3) { "2026-10-04T05:28" },
-                sunset = List(3) { "2026-10-04T18:04" },
-                daylightDurationSec = List(3) { 45_000.0 },
                 precipitationProbabilityMaxPct = List(3) { 10 },
                 uvIndexMax = List(3) { 6.0 }
             )
@@ -701,5 +695,38 @@ class WeatherReportMapperTest {
             report.hourly.first().time.atZone(java.time.ZoneId.of("America/New_York")).toInstant(),
             report.hourly.first().at
         )
+    }
+
+    /**
+     * A model that carries no UV must cost the reader a tile, not the whole week.
+     *
+     * Reproduces what the live endpoint serves under `models=icon_seamless` and
+     * `models=jma_seamless`: `uv_index_max` all null. Before 20 set 2026 the DTO
+     * declared `List<Double>` and this response did not fail to map — it failed to
+     * **deserialize**, which takes the current block, the hours and the seven days
+     * with it. Now the day maps, and says it does not know.
+     */
+    @Test
+    fun `a model with no uv index costs a tile, not the report`() {
+        val base = forecast()
+        val report = map(
+            base.copy(daily = base.daily.copy(uvIndexMax = base.daily.time.map { null }))
+        )
+        assertEquals(7, report.daily.size)
+        assertNull(report.daily.first().uvIndexMax)
+        // Everything else in the response is untouched: the failure mode this replaces
+        // was total, so the test says so.
+        assertEquals(22.4, report.current.tempC, 0.001)
+        assertEquals(48 - 14, report.hourly.size)
+    }
+
+    /** A day past the end of a short `uv_index_max` is the same answer as a null in
+     * it: out of bounds and "the model did not say" are both absence, never a zero. */
+    @Test
+    fun `a day the uv list does not reach has no index either`() {
+        val base = forecast()
+        val report = map(base.copy(daily = base.daily.copy(uvIndexMax = listOf(6.0))))
+        assertEquals(6, report.daily.first().uvIndexMax)
+        assertNull(report.daily[1].uvIndexMax)
     }
 }

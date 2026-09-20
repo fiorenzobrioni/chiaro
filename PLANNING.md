@@ -8139,3 +8139,125 @@ mapper, tutti e quattro verificati rompendo il codice), lint a zero errori.
   misurare a parte, con lo stesso metodo delle 161 giornate-città della Fase 26.
 - **Nessun `callTimeout` su OkHttp**: restano i 10s di default per connect/read/write, e due
   GET in `coroutineScope` possono sommarsi oltre quel che uno schermo appena aperto sostiene.
+
+## Secondo giro sulla review: i punti 5-9, e uno che era sbagliato io (20 set 2026)
+
+> «I punti dal 5 al 9 pensi sia il caso di farli ora? Se sì parti. Decidi per ogni punto cosa
+> è meglio fare (o non fare).»
+
+Quattro fatti, uno no. Quello che non è stato fatto è quello la cui premessa, letta bene, era
+sbagliata.
+
+### 5. `uv_index_max` nullable fino in fondo — **fatto**
+
+La fragilità era vera e vale la pena dirla per esteso, perché il modo in cui fallisce non è
+quello che sembra: `DailyDto.uvIndexMax` era `List<Double>`, e un `null` lì dentro non
+degrada un tile, **fa lanciare il deserializzatore e si porta via l'intero report** — la
+settimana di previsione, il blocco corrente, le ore. Verificato sull'endpoint vero:
+`uv_index_max` torna `[null, null, null]` con `models=icon_seamless` e `models=jma_seamless`,
+e per date passate anche con `best_match` (Milano, 1-3 luglio). Chiaro non passa né `models=`
+né `past_days`, quindi non l'ha mai incontrato; ma `best_match` sceglie il modello per regione
+e Open-Meteo cambia quelle scelte, e il prezzo di sbagliarsi è l'app che non mostra niente.
+
+Il campo prende elementi nullable, come `precipitation_probability_max` che gli sta accanto e
+`visibility` nel blocco orario: è il terzo campo model-dependent scoperto, e il primo scoperto
+**prima** che rompesse qualcosa. Il `?: 0` nel mapper se ne va per la stessa frase che il file
+scrive due righe sotto a proposito della probabilità: uno zero UV non è un'assenza, è la
+previsione di un sole che non scotta, stampata sotto «Nessuna protezione necessaria».
+`DailyForecast.uvIndexMax` diventa `Int?`, e i quattro lettori lo gestiscono nel modo ovvio —
+le due righe UV delle notifiche semplicemente non si dicono, e `today.uv_max` non si risolve,
+che è quel che una regola fa col silenzio.
+
+**`DailyForecast.uvDescription` è stato tolto.** Era vocabolario JSON di tweather — inglese,
+mai localizzato, letto da niente in quest'app tranne il test che verificava che il mapper lo
+avesse scritto, esattamente come `WeatherCondition.description` (lo dice già il KDoc di
+`WeatherText`). Un indice nullable ha costretto la domanda «e la sua etichetta cosa dice
+quando l'indice non c'è», e la risposta onesta era che non la stava chiedendo nessuno.
+`CurrentConditions.uvDescription` resta, morto allo stesso modo: lì non c'è niente che
+costringa, e toglierlo sarebbe scope creep. Resta scritto qui.
+
+Due test nuovi, e il primo dice a parole la modalità di fallimento che sostituisce: il report
+mappa tutti e sette i giorni, il giorno dice di non sapere, e corrente e ore sono intatte.
+
+### 6. `sunrise`, `sunset`, `daylight_duration` fuori dalla richiesta — **fatto**
+
+Chiesti al provider, deserializzati, scritti in ogni voce di `ReportDiskCache` e letti da
+nessuno in produzione da quando la Fase 16e ha dato l'astronomia ad `AstronomyEngine`. Erano
+rimasti perché «non costano niente», che è vero dei byte e falso di tutto il resto: sono tre
+campi non-nullable in più che una risposta deve soddisfare perché l'intero report faccia
+parse, e — questa è la ragione che ha deciso — **sono una trappola da ieri**. Il provider li
+scrive sull'offset fisso che `utc_offset_seconds` nomina, quindi dopo un cambio d'ora
+derivano di un'ora dall'orologio: chi trovasse `daily.sunrise` lì nel DTO e lo usasse
+reintrodurrebbe esattamente l'ora che il giro precedente ha tolto. La risposta per Sydney del
+4 ottobre dichiara un'alba alle 05:28 dove l'orologio lì dice 06:28.
+
+Nessuna migrazione: `ignoreUnknownKeys` fa decodificare le voci di cache già scritte, che
+quelle chiavi ce l'hanno ancora. Verificata la richiesta ridotta contro l'API vera — 168 ore,
+7 giorni, le cinque variabili giornaliere che servono e nient'altro.
+
+### 7. L'arco che dipinge sereno dove non sa — **non fatto, e la segnalazione era sbagliata**
+
+`ArcPainter` passa `cloudPct = hour?.hour?.cloudCoverPct ?: 0` per un campione che il report
+non copre, e sembrava «sereno disegnato dove non si sa». Leggendo `SkyPalette.gradient`: il
+mix nuvole è `lerp(stop, grigio, CloudDesaturation * cloudPct/100)` più un `dim` che vale
+`1 - CloudDarkening * cloudPct/100`. **A zero il lerp non fa niente e il dim vale 1**: zero non
+è «sereno», è *nessuna modulazione* — la banda di altitudine esattamente come il sole l'ha
+disegnata.
+
+Che è la risposta onesta, non una svista: per un'ora oltre l'orizzonte della previsione l'arco
+conosce la luce e non dice niente del tempo. Qualunque altro valore sarebbe un cielo che non
+gli è stato detto (50 % non è «non so», è «mezzo nuvoloso»). Resta un commento al call site,
+perché il prossimo lettore inciampi meno di quanto ci sia inciampato io.
+
+### 8. Il `mapNotNull` morto in `SkyVerdictEngine` — **fatto**
+
+`window.mapNotNull { it.cloudCoverPct }` su un `Int` non-nullable non filtrava niente, e il
+ramo `NO_COVERAGE` sotto era irraggiungibile perché `window()` rifiuta già la lista vuota. Era
+una nullabilità che il tipo non ha, scritta dentro codice che suggerisce di averla — e il KDoc
+di `HourlyForecast.cloudCoverPct` spiega per intero perché quella nullabilità è stata tolta
+apposta. Il valore d'enum resta: `horizonNote` è dove la domanda trova davvero risposta.
+
+### 9. `callTimeout` su OkHttp — **fatto, 30 secondi**
+
+I default di OkHttp limitano ogni **fase** — 10s per connettere, 10s fra un byte e l'altro — e
+niente limita la chiamata. Una connessione che sgocciola un byte prima di ogni read timeout non
+ne fa scattare mai uno: su uno schermo appena aperto è un refresh che non si risolve, e dentro
+`WeatherSyncWorker` è un worker tenuto aperto sulla batteria di qualcuno. Trenta secondi stanno
+oltre il caso peggiore onesto (connessione più lettura lenta di 10 KB) e dentro quel che l'app
+assorbe: ogni chiamante ha già il report in cache come ripiego, e il pull to refresh è un
+gesto.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **1541 test**
+(quattro nuovi nel giro precedente, due in questo), lint a zero errori. La richiesta ridotta
+ricontrollata contro l'endpoint vero, e il caso «modello senza UV» ricontrollato con
+`models=jma_seamless` perché il test riproduca l'API e non la mia idea dell'API.
+
+### Punto 10, la soglia della neve: cosa sarebbe, e perché non è in questo giro
+
+`WET_DAY_MM = 1.0` è **millimetri di equivalente in acqua**, e `precipitation` di Open-Meteo
+somma pioggia e neve in quell'unità. Un millimetro d'acqua è circa un centimetro di neve
+fresca: la stessa soglia pesa dieci volte di più quando quel che cade resta per terra. E i
+codici neve 71 (debole), 73 (moderata), 77 (granelli) e 85 (rovesci deboli) **non** sono in
+`HazardCodes` — ci sono solo 75 e 86, i «forte». Quindi due ore di neve moderata con 0,9 mm
+w.e. non superano né il millimetro né le tre ore, e la giornata viene etichettata dalla
+nuvolosità: «Coperto» su un giorno con un centimetro a terra.
+
+La valvola delle tre ore copre il caso lungo e non questo, ed è il motivo per cui non è una
+correzione ovvia: la soglia com'è è **misurata** (161 giornate-città, 23 città, Fase 26) e ha
+risolto un difetto vero, quindi cambiarla a intuito vale meno di lasciarla. La domanda giusta
+non è «alzare o abbassare» ma *quante giornate di neve vere l'attuale ne manca*, e si risponde
+con lo stesso metodo: un mese d'inverno su una decina di città nevose (Mosca, Helsinki, Oslo,
+Sapporo, Québec, Innsbruck, Denver, Harbin, Tromsø), `dailyCode` ricalcolato su ogni
+giornata-città, contate quelle in cui i codici neve ci sono ma l'etichetta va al cielo, e
+incrociate con `snowfall` in centimetri — che è il campo che dice se per terra c'era qualcosa.
+Se sono poche, la soglia resta e questa nota è la risposta; se sono molte, la correzione
+candidata è una soglia in acqua più bassa quando i codici della giornata sono di neve, non un
+numero diverso per tutti.
+
+**È una misura che si può fare, ma richiede l'archivio** (`archive-api.open-meteo.com`), perché
+l'endpoint di previsione accetta `start_date` solo per circa tre mesi indietro e a settembre
+non arriva a gennaio. Tentata oggi: `HTTP 429, Daily API request limit exceeded` — la quota
+gratuita dell'IP di questo ambiente era già esaurita dalle quindici località della review. Da
+riprendere con la quota libera; è un giro suo, non una riga di codice.

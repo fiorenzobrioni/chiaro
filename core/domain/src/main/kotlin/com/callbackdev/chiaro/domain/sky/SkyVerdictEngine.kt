@@ -135,11 +135,12 @@ object SkyVerdictEngine {
         // Mean over the window for cloud (the event is the whole window, not one
         // minute of it) and MAX for rain: an hour of it inside a two-hour window is
         // not averaged away, it is the thing that ruins the event.
-        val clouds = window.mapNotNull { it.cloudCoverPct }
-        if (clouds.isEmpty()) {
-            return SkyVerdict(SkyVerdictKind.UNKNOWN, note = SkyVerdictNote.NO_COVERAGE)
-        }
-        val cloudPct = clouds.average().roundToInt()
+        // `cloudCoverPct` is not nullable and `window()` has already refused an empty
+        // list, so there is nothing to filter and nothing to guard: this read a
+        // `mapNotNull` and a NO_COVERAGE branch that could not be reached, which is a
+        // nullability the type does not have written into code that suggests it does.
+        // The note itself stays — `horizonNote` below is where it is really answered.
+        val cloudPct = window.map { it.cloudCoverPct }.average().roundToInt()
         // An hour with no forecast chance contributes nothing to the worst case:
         // a verdict is never made worse by what the app was not told (Fase 26).
         val precipPct = window.maxOf { it.precipChancePct ?: 0 }

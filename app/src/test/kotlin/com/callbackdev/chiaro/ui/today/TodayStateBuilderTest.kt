@@ -46,7 +46,7 @@ class TodayStateBuilderTest {
                 )
             },
             daily = (0 until 7).map {
-                DailyForecast(date.plusDays(it.toLong()), 24.0, 14.0, clear, 10, 5, "Moderate")
+                DailyForecast(date.plusDays(it.toLong()), 24.0, 14.0, clear, 10, 5)
             },
             systemInfo = sampleWeatherReport().systemInfo.copy(
                 lastSync = fetchedAt.atZone(zone).toInstant()

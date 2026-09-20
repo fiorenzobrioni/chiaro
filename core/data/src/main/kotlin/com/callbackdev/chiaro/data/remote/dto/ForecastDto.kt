@@ -91,9 +91,20 @@ data class DailyDto(
     @SerialName("weather_code") val weatherCode: List<Int>,
     @SerialName("temperature_2m_max") val temperatureMaxC: List<Double>,
     @SerialName("temperature_2m_min") val temperatureMinC: List<Double>,
-    val sunrise: List<String>,
-    val sunset: List<String>,
-    @SerialName("daylight_duration") val daylightDurationSec: List<Double>,
     @SerialName("precipitation_probability_max") val precipitationProbabilityMaxPct: List<Int?>,
-    @SerialName("uv_index_max") val uvIndexMax: List<Double>
+    /**
+     * Nullable elements since 20 set 2026, like `precipitation_probability_max` beside
+     * it and `visibility` in the hourly block — the third model-dependent field to be
+     * found out, and the first to be found out BEFORE it broke something.
+     *
+     * Verified on the live endpoint: `uv_index_max` comes back `[null, null, null]`
+     * under `models=icon_seamless` and `models=jma_seamless`, and for past dates even
+     * under `best_match` (Milan, 1-3 July). Chiaro passes neither `models=` nor
+     * `past_days`, so it has never met one — but a non-nullable `List<Double>` here
+     * does not degrade a tile when it does, it throws inside the deserializer and
+     * takes the WHOLE report with it: the week of forecast, the current block, the
+     * hours. `best_match` picks its model per region and Open-Meteo changes those
+     * picks; the cost of being wrong is the app showing nothing.
+     */
+    @SerialName("uv_index_max") val uvIndexMax: List<Double?>
 )

@@ -42,8 +42,7 @@ class AlertEngineTest {
         lowC = 7.0,
         condition = WeatherCondition(2, "Partly Cloudy", "⛅"),
         precipPct = 20,
-        uvIndexMax = 4,
-        uvDescription = "Moderate"
+        uvIndexMax = 4
     )
 
     private fun report(
