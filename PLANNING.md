@@ -8388,3 +8388,109 @@ esiste in Robolectric, quindi il percorso «rifiuta due volte → il tap seguent
 è ragionato sul contratto di `ActivityResultContracts.RequestPermission` e non misurato. Da provare
 su un telefono: installare, arrivare al passo due, dire di no due volte, e controllare che il
 pulsante su Avvisi porti nelle impostazioni di sistema e non da nessuna parte.
+
+---
+
+## Quattro predefiniti, e due task che erano tre (committente, 21 set 2026, dal dispositivo)
+
+Installazione da zero, provata: il permesso notifiche viene chiesto e la card su Avvisi fa il resto.
+Da lì, quattro predefiniti da spostare e due difetti veri trovati usando l'app.
+
+### I predefiniti
+
+**I due riepiloghi, accesi.** `dailySummary` e `eveningSummary` nascevano a `false` su un argomento
+scritto per intero nel KDoc: «un digest che nessuno ha chiesto è l'unica notifica per cui un'app
+meteo viene disinstallata». È l'argomento giusto su *un digest* e quello sbagliato su questi due.
+Sono l'app: una frase prima di qualunque numero, detta all'ora in cui la giornata è ancora una
+decisione. Un'installazione che non apre mai Avvisi prendeva le allerte e niente della lettura. Il
+tetto è una notifica ciascuno, a ore fisse, e si spengono in due tap.
+
+**La card blu al posto del cielo.** Il gradiente resta l'eroe dell'app ed è a una riga di distanza.
+Quel che non è, è la cosa giusta da incontrare su una schermata di casa che non ha mai visto: è una
+fotografia del tempo dietro una card di fatti, e su uno sfondo carico i due terreni litigano — che
+è esattamente quel che lo scrim e il cursore dell'opacità servono a governare, e un predefinito non
+dovrebbe aver bisogno di essere governato. Una card piatta colorata è la grammatica del launcher,
+si legge a distanza di braccio su qualunque wallpaper, e il colore è una riga sotto.
+
+**Massima e minima su «In parole».** Questo è l'unico campo che risponde **diverso per card**, e per
+questo `WidgetLook.defaultsFor(kind)` esiste invece di cinque costanti: un predefinito che varia è
+precisamente quello che finisce scritto due volte — nello store e nella schermata impostazioni — e
+poi divergono. «In parole» non ha un disegno da proteggere: la sua gerarchia è costruita di tipo, in
+ranghi di fatti, e la massima e minima sono un rango già progettato. Lasciarlo vuoto è l'unica card
+che ci perde. Sulle altre vale il KDoc di sempre: il numero nudo è l'eroe.
+
+Due fixture si appoggiavano ai vecchi predefiniti e adesso nominano tutto quel che dichiarano —
+`SyncSchedulerTest.allOff`, `AlertEngineTest.allOn`/`none` e `WeatherSyncWorkerTest.allTogglesOff`,
+che si chiamava «tutti spenti» e ne lasciava uno acceso. Una fixture che dipende da un predefinito
+smette di dire la verità il giorno che il predefinito si muove, in silenzio.
+
+### I due task che erano tre
+
+> «Se apro le proprietà di un widget e poi la chiudo con lo swipe dal basso e poi apro l'app, con
+> la gesture back invece di tornare alla home mi ricompare la schermata proprietà.»
+> «Alcune volte mi trovo ad avere due schermate principali dell'app.»
+
+Stessa famiglia, e la diagnosi è una riga: **Android identifica un task dall'intent che lo ha
+creato**, e questa app entrava da tre porte diverse con tre intent scritti a mano.
+
+`WidgetConfigActivity` e `ArcConfigActivity` avevano l'affinità del pacchetto, quindi stavano nel
+**task dell'app**. Chiuderle con lo swipe le lasciava lì; il lancio successivo dell'app metteva la
+schermata principale sopra, e il back usciva su una schermata che il lettore aveva già congedato.
+Ora hanno `taskAffinity=""` — nessuna affinità, mai quel task — e `noHistory="true"`, così una
+schermata scacciata è finita e non un task che nessuno vede e nessuno può chiudere. Non si perde
+niente: ogni scelta lì è scritta nell'istante in cui è toccata, e «Fatto» chiude solo la porta. Ed è
+sicuro verso l'host perché tutti e cinque i provider dichiarano `configuration_optional`: quella
+schermata non gira mai al momento del piazzamento, quindi nessun widget aspetta il suo risultato.
+C'è un test che tiene ferma quella parola, perché è la premessa del `noHistory`.
+
+Le due schermate principali sono l'altra metà, ed è **colpa del giro precedente**. Avevo messo la
+destinazione nell'**azione** dell'intent, ragionando che gli extra non entrano in `filterEquals` e
+quindi non distinguono due `PendingIntent`. Il ragionamento era giusto e la conclusione rovesciata:
+non entrare in `filterEquals` è **esattamente** il motivo per cui l'extra è l'unico posto dove la
+destinazione può viaggiare senza che il task smetta di somigliare a quello del launcher. Con
+un'azione nostra, il tap sull'icona non riconosceva più il task aperto dal widget e ne apriva un
+secondo — la sovrapposizione nello screenshot.
+
+Quindi: **una porta sola**, e **è l'intent del launcher** — `ACTION_MAIN`, `CATEGORY_LAUNCHER`, il
+nostro componente, più l'extra quando c'è una destinazione. Ci passano tutti e cinque i widget
+(anche i tre che non chiedono una scheda) e tutti e quattro i notificatori, che avevano ciascuno il
+proprio `Intent(context, MainActivity)`. E `MainActivity` è `singleTask`: è quel che l'app **è** —
+una sola activity, con Impostazioni e la guida che sono stato al suo interno — e senza, la
+piattaforma ne faceva un secondo task ogni volta che l'intent non era quello del launcher. I flag
+scritti a mano nel giro precedente (`CLEAR_TOP`, `SINGLE_TOP`) facevano metà di quel lavoro a mano e
+non potevano fare l'altra metà, che è garantire che ci sia **una** istanza a cui consegnare. Resta
+`NEW_TASK`, che la piattaforma pretende da un `PendingIntent`.
+
+### Gli angoli bianchi: la stessa causa, e come verificarlo
+
+> «Quando stacco il dito e l'app fa l'animazione completa di chiusura vedo gli angoli arrotondati
+> bianchi e non più trasparenti. Sembra che lo fa solo quando l'app è stata aperta dal widget.»
+
+«Solo quando è stata aperta dal widget» è la diagnosi dentro la segnalazione, ed è la ragione per
+cui non è un problema di `windowBackground`: quello è lo stesso da qualunque porta si entri. Quel
+che cambia con la porta è **quale animazione di chiusura sceglie il sistema**. Il back predittivo,
+con il dito giù, anima la superficie viva dell'activity e la ritaglia: fuori dal ritaglio non c'è
+niente, quindi trasparente. Al rilascio parte la transizione vera, e su un task che il launcher
+riconosce come una delle sue icone è il launcher a disegnarla — quella che rientra nell'icona. Su un
+task che non riconosce, il sistema usa la chiusura generica, che dipinge il colore di fondo del task
+(preso da `windowBackground`, bianco in chiaro) dietro la superficie che si rimpicciolisce, angoli
+arrotondati compresi.
+
+Con una porta sola che è l'intent del launcher, e `singleTask` sopra, quel task non esiste più. **È
+la correzione che mi aspetto risolva anche questo**, e va detto chiaramente che è l'unico dei
+quattro punti che non ho potuto misurare: l'animazione di chiusura non esiste in Robolectric.
+
+Da provare sul telefono, nell'ordine: (1) riavvio pulito, tap sul widget con app chiusa, back →
+gli angoli devono essere trasparenti come da icona; (2) apri da icona, poi da widget, poi back due
+volte → deve uscire alla home, non su una seconda schermata principale; (3) matita del widget,
+swipe in alto, apri l'app, back → home. Se il punto (1) resta bianco mentre (2) e (3) sono a posto,
+la causa non è il task e la leva successiva è `android:windowBackground`, che oggi è quello di
+`Theme.DeviceDefault.DayNight` — con la nota che renderlo trasparente si paga con qualche frame di
+launcher visibile all'avvio a freddo, che è precisamente il motivo per cui quel tema è lì.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1599 test** (12 nuovi: la porta
+riscritta, i predefiniti delle card, e tre attributi di manifest che nessun test sugli intent può
+vedere), lint a zero errori. `:app:assembleDebug` e `:app:assembleRelease -PsignReleaseWithDebugKey`
+costruiscono.

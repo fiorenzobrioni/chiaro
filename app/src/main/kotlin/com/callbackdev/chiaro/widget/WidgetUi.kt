@@ -31,7 +31,6 @@ import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
-import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
@@ -318,18 +317,16 @@ fun WidgetCard(
             .fillMaxSize()
             .appWidgetBackground()
             .cornerRadius(24.dp)
+            // One door for all five cards, destination or not (21 set 2026): the intent
+            // is what tells the platform which TASK this is, and a card that opened the
+            // app with an intent of its own was opening a second one. The Intent
+            // overload is the appwidget artifact's, not the base one's — qualified
+            // rather than imported, because the two names would sit side by side and
+            // the base one takes a ComponentName.
             .clickable(
-                if (destination == null) {
-                    actionStartActivity<MainActivity>()
-                } else {
-                    // The Intent overload is the appwidget artifact's, not the base
-                    // one's — qualified rather than imported, because the two names
-                    // would sit side by side and the base one takes a ComponentName,
-                    // which is where the destination would be silently dropped.
-                    androidx.glance.appwidget.action.actionStartActivity(
-                        ShellDestination.intent(context, MainActivity::class.java, destination)
-                    )
-                }
+                androidx.glance.appwidget.action.actionStartActivity(
+                    ShellDestination.intent(context, MainActivity::class.java, destination)
+                )
             )
     ) {
         if (effectiveBackground == WidgetBackground.SKY && skyBitmap != null) {

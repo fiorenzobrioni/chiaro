@@ -2,11 +2,11 @@ package com.callbackdev.chiaro.notifications
 
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.callbackdev.chiaro.MainActivity
+import com.callbackdev.chiaro.ui.shell.ShellDestination
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
@@ -130,8 +130,8 @@ object SkyNotifier {
     private fun openApp(context: Context): PendingIntent = PendingIntent.getActivity(
         context,
         0,
-        Intent(context, MainActivity::class.java)
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+        // The same door the widgets use; see [ShellDestination].
+        ShellDestination.intent(context, MainActivity::class.java),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
 

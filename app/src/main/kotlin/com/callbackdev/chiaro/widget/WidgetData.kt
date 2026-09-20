@@ -96,7 +96,8 @@ object WidgetData {
      */
     suspend fun load(context: Context, appWidgetId: Int): WidgetModel {
         val settings = ServiceLocator.settingsStore(context).settings.first()
-        val look = WidgetLookStore.get(context).lookFor(appWidgetId)
+        val look = WidgetLookStore.get(context)
+            .lookFor(appWidgetId, ChiaroWidgets.kindOf(context, appWidgetId))
         val pinned = pinnedCity(context, appWidgetId)
         // The active source is only asked for when nothing is pinned: a pin answers
         // the question on its own, and asking anyway would let a GPS fix put its pin

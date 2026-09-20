@@ -133,7 +133,7 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
     }
     val pinnedId by pinnedFlow.collectAsStateWithLifecycle(initialValue = null)
     var look by remember { mutableStateOf<WidgetLook?>(null) }
-    LaunchedEffect(appWidgetId) { look = lookStore.lookFor(appWidgetId) }
+    LaunchedEffect(appWidgetId) { look = lookStore.lookFor(appWidgetId, kind) }
 
     fun repaint() = scope.launch { runCatching { ChiaroWidgets.updateOne(context, appWidgetId) } }
 

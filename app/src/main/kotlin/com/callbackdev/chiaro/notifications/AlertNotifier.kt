@@ -2,11 +2,11 @@ package com.callbackdev.chiaro.notifications
 
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.callbackdev.chiaro.MainActivity
+import com.callbackdev.chiaro.ui.shell.ShellDestination
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.AlertKind
@@ -491,8 +491,11 @@ object AlertNotifier {
         PendingIntent.getActivity(
             context,
             requestCode,
-            Intent(context, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            // The same door the widgets use: the intent identifies the TASK, and a
+            // notification that opened the app with one of its own opened a second
+            // one (21 set 2026). No tab named — a notification hands the reader the
+            // app, and leaves it where they left it.
+            ShellDestination.intent(context, MainActivity::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 }

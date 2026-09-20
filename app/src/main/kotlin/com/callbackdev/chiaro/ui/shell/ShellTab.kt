@@ -7,45 +7,55 @@ import android.content.Intent
 enum class ShellTab { TODAY, SKY, ALERTS, JOURNAL }
 
 /**
- * A tap from outside the app that names the screen it should land on — today only the
- * home widgets (21 set 2026), which open the tab whose information they were showing:
- * «Momenti del cielo» and «L'arco del giorno» are the Sky screen's own material, and
- * landing on Today from them asked the reader to find their way back to what they had
- * just been reading.
+ * **The one door into the app from outside it** — every widget and every notification —
+ * and the tab it asks for, when it asks for one.
  *
- * The destination travels as the intent's **action** as well as an extra. Extras are
- * not part of `Intent.filterEquals`, which is what the `PendingIntent` cache keys on,
- * so an extra on its own is the piece of this that a cache hit could carry over from
- * another card. Glance already guards that by stamping a unique `data` URI on an
- * intent that has none, so the two are belt and braces — but the belt is the one that
- * survives being read back from an intent nobody reassembled, and it costs a string.
+ * It is one door because of what the alternative cost, found on a device on 21 set
+ * 2026. Android identifies a task by the intent that created it, and an app that is
+ * entered through three hand-rolled intents is an app with three kinds of task. The
+ * reader saw both halves of that: two copies of the home screen, one behind the other,
+ * after opening the app from a widget and then from the launcher icon; and a closing
+ * animation with opaque rounded corners instead of the launcher's own, which is the
+ * animation the system plays for a task the launcher does not recognise as one of its
+ * icons.
  *
- * The flags are the ones a deep link needs into a single-task app: `CLEAR_TOP` plus
- * `SINGLE_TOP` hand the intent to the instance that is already running (through
- * `onNewIntent`) instead of finishing and rebuilding it, so tapping a widget while the
- * app is open moves the tab rather than restarting the app.
+ * So this intent **is** the launcher's intent — `ACTION_MAIN`, `CATEGORY_LAUNCHER`, our
+ * own component — plus, where there is one, the destination as an extra. A tap on a
+ * widget asks for the same task the icon asks for, and there is only ever one.
+ *
+ * The extra is safe to be the only carrier: Glance builds these with
+ * `PendingIntent.FLAG_UPDATE_CURRENT`, which replaces the extras of a cached intent
+ * rather than keeping the old ones, and stamps a `data` URI of its own per widget so
+ * two cards never share an entry. Putting the destination in the ACTION instead — which
+ * is what the first pass did — is precisely what stopped the task looking like the
+ * launcher's.
+ *
+ * `FLAG_ACTIVITY_NEW_TASK` is here because a `PendingIntent` starts from outside an
+ * activity and the platform requires it. Nothing else is needed: [ShellTab] arrives at
+ * a `singleTask` activity (`AndroidManifest.xml`), so the platform routes every one of
+ * these to the single live instance through `onNewIntent` and clears whatever sits
+ * above it. `CLEAR_TOP` and `SINGLE_TOP` were doing that job by hand in the first pass
+ * and could not do the other half of it, which is guaranteeing there is one instance to
+ * route to.
  */
 object ShellDestination {
 
-    private const val ACTION_PREFIX = "com.callbackdev.chiaro.action.OPEN_"
     private const val EXTRA_TAB = "com.callbackdev.chiaro.extra.TAB"
 
-    /** The intent that opens [tab], for a widget's `actionStartActivity`. */
-    fun intent(context: Context, activity: Class<*>, tab: ShellTab): Intent =
+    /**
+     * The intent that opens the app — on [tab], or wherever the reader left it when
+     * [tab] is null, which is what a card showing today's weather honestly asks for.
+     */
+    fun intent(context: Context, activity: Class<*>, tab: ShellTab? = null): Intent =
         Intent(context, activity)
-            .setAction(ACTION_PREFIX + tab.name)
-            .putExtra(EXTRA_TAB, tab.name)
-            .addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_SINGLE_TOP
-            )
+            .setAction(Intent.ACTION_MAIN)
+            .addCategory(Intent.CATEGORY_LAUNCHER)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            .apply { if (tab != null) putExtra(EXTRA_TAB, tab.name) }
 
     /** The tab [intent] asks for, or null when it names none — a plain launch. */
     fun of(intent: Intent?): ShellTab? {
-        val name = intent?.getStringExtra(EXTRA_TAB)
-            ?: intent?.action?.takeIf { it.startsWith(ACTION_PREFIX) }?.removePrefix(ACTION_PREFIX)
-            ?: return null
+        val name = intent?.getStringExtra(EXTRA_TAB) ?: return null
         return ShellTab.entries.firstOrNull { it.name == name }
     }
 }

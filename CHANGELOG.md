@@ -400,6 +400,20 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
 
 ### Changed
 
+- **Four defaults moved, on a fresh install from the device.** The **morning summary** and the
+  **evening summary** now ship **on**: they used to start silent on the argument that a digest
+  nobody asked for is the one notification a weather app gets uninstalled over, which is the
+  right argument about a digest and the wrong one about these two — a sentence before any
+  number, said at the hour the day is still a decision, is what this app is for, and an install
+  that never opened Alerts was getting the warnings and none of the reading. One notification
+  each, at fixed hours, off in two taps. Every widget is now **a blue card** where it was the
+  computed sky: the sky is still the app's own hero and one row away, but it is a photograph of
+  the weather behind a card of facts, and on a busy wallpaper the two grounds argue — which is
+  what the scrim and the opacity slider exist to manage, and a default should not need managing.
+  And **"In parole" starts with the day's high and low**, alone among the five: it is the card
+  with no drawing to protect, its hierarchy is built out of type in ranks of facts, and that
+  rank is already designed.
+
 - **"Momenti del cielo" and "L'arco del giorno" open the Sky screen** (asked for from the
   device). Everything those two cards draw is the Sky screen's own material — the moments,
   their verdicts, the next light moment, the agenda that follows — and landing on Today
@@ -700,6 +714,23 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
   the language it was written in.
 
 ### Fixed
+
+- **Two copies of the app, and a settings screen that came back from under it.** Android
+  identifies a task by the intent that created it, and this app was entered through three
+  hand-rolled intents — the widgets', the notifications', and the launcher's. So opening it
+  from a widget and then from the home-screen icon built a *second* task: two home screens,
+  one behind the other, and back came out onto the first. Every door in is now one intent and
+  it is the launcher's own, with the destination riding as an extra where it changes nothing
+  about which task this is; the activity is `singleTask`, which is what the app already was —
+  one screen, with Settings and the guide as state inside it. The widget settings screens had
+  the same illness from the other side: with the app's own task affinity they sat *in* the
+  app's task, so closing one with a swipe to home left it there and the next launch put the
+  home screen on top of it. They now have no affinity at all and do not outlive being swiped
+  away — nothing is lost, because every choice there is written the moment it is tapped. The
+  same fix is expected to settle the closing animation drawing opaque rounded corners after a
+  back gesture, which happened only when the app had been opened from a widget: that is the
+  generic task-close animation, which the system plays for a task the launcher does not
+  recognise as one of its icons.
 
 - **The alerts that could never ring.** Four ready-made alerts ship switched on — severe
   weather, rain in the next hours, official warnings and your own rules — and Android's

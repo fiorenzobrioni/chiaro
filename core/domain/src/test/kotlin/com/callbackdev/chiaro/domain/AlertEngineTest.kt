@@ -22,7 +22,11 @@ class AlertEngineTest {
     private val now: LocalDateTime = LocalDateTime.of(2023, 10, 27, 9, 0)
     private val cityKey = "4546:919"
     private val allOn = NotificationSettings(
-        severeWeatherAlerts = true, dailySummary = true, precipitationWarning = true
+        severeWeatherAlerts = true, dailySummary = true, precipitationWarning = true,
+        // Named on purpose: every test below that wants the evening summary asks for
+        // it by name, so this fixture keeps meaning what it meant before the default
+        // flipped on 21 set 2026.
+        eveningSummary = false
     )
 
     private fun hour(plusHours: Long, wmoCode: Int = 2, precipPct: Int = 0) = HourlyForecast(
@@ -293,7 +297,8 @@ class AlertEngineTest {
     fun `each toggle gates its own rule`() {
         val stormyRainyMorning = listOf(hour(2, wmoCode = 75, precipPct = 90))
         val none = NotificationSettings(
-            severeWeatherAlerts = false, dailySummary = false, precipitationWarning = false
+            severeWeatherAlerts = false, dailySummary = false, precipitationWarning = false,
+            eveningSummary = false
         )
         assertTrue(evaluate(stormyRainyMorning, settings = none).isEmpty())
 

@@ -6,7 +6,6 @@ import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
 import com.callbackdev.chiaro.MainActivity
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -14,28 +13,43 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * The widget-to-screen link (21 set 2026). Three things can break it quietly, and a
- * broken deep link looks exactly like a working one from the home screen: the app
- * opens, just on the wrong tab.
+ * The one door into the app from outside it, and the promise it makes (21 set 2026).
  *
- * 1. **The extra alone carries no weight in the `PendingIntent` cache**, which keys on
- *    `Intent.filterEquals` and ignores extras. Glance stamps a unique `data` URI on an
- *    intent that has none, so the cards are already told apart; the destination rides
- *    the ACTION as well so that it is still legible in an intent whose extras did not
- *    survive, which is what the second and third tests pin.
- * 2. **The flags.** Without `CLEAR_TOP or SINGLE_TOP` a tap on a running app brings
- *    the task forward and delivers nothing, so the tab never moves — the exact case a
- *    reader hits every time after the first.
- * 3. **An intent that names nothing** must stay null, not fall back to a tab: a plain
- *    launch lands where the reader left off.
+ * The promise is the first test and it is the whole fix: **this intent is the launcher's
+ * intent**. Android identifies a task by the intent that created it, so a widget or a
+ * notification that opens the app with an intent of its own opens a SECOND task — which
+ * is what the reader saw, as two copies of the home screen one behind the other, and as
+ * a closing animation the launcher did not own. `filterEquals` is the platform's own
+ * comparison for that, which is why it is what is asserted rather than the fields.
+ *
+ * The first pass put the destination in the intent's ACTION, on the argument that extras
+ * are not part of `filterEquals`. That argument was right and the conclusion was
+ * backwards: not being part of `filterEquals` is exactly why the extra is the only place
+ * the destination can ride without the task stopping to look like the launcher's.
  */
 @RunWith(RobolectricTestRunner::class)
 class ShellDestinationTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
 
-    private fun intentFor(tab: ShellTab) =
+    private fun intentFor(tab: ShellTab? = null) =
         ShellDestination.intent(context, MainActivity::class.java, tab)
+
+    /** What the home screen's own icon sends. */
+    private fun launcherIntent() = Intent(Intent.ACTION_MAIN)
+        .addCategory(Intent.CATEGORY_LAUNCHER)
+        .setComponent(android.content.ComponentName(context, MainActivity::class.java))
+
+    @Test
+    fun `every door asks for the same task the launcher icon asks for`() {
+        assertTrue("a plain open", launcherIntent().filterEquals(intentFor()))
+        ShellTab.entries.forEach { tab ->
+            assertTrue(
+                "$tab must not make a task of its own",
+                launcherIntent().filterEquals(intentFor(tab))
+            )
+        }
+    }
 
     @Test
     fun `every tab survives the trip through an intent`() {
@@ -45,54 +59,37 @@ class ShellDestinationTest {
     }
 
     @Test
-    fun `two destinations are two different intents for the PendingIntent cache`() {
-        val sky = intentFor(ShellTab.SKY)
-        val today = intentFor(ShellTab.TODAY)
-        assertFalse(
-            "filterEquals ignores extras: without the action these would share a PendingIntent",
-            sky.filterEquals(today)
-        )
-    }
-
-    @Test
-    fun `the action alone is enough to read the destination back`() {
-        // What a PendingIntent the system rebuilt from its cache can be left holding.
-        val stripped = Intent(intentFor(ShellTab.SKY)).replaceExtras(null as android.os.Bundle?)
-        assertEquals(ShellTab.SKY, ShellDestination.of(stripped))
-    }
-
-    @Test
-    fun `the intent reaches a running activity instead of rebuilding it`() {
-        val flags = intentFor(ShellTab.SKY).flags
-        assertTrue("CLEAR_TOP", flags and Intent.FLAG_ACTIVITY_CLEAR_TOP != 0)
-        assertTrue("SINGLE_TOP", flags and Intent.FLAG_ACTIVITY_SINGLE_TOP != 0)
-        assertTrue("NEW_TASK", flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
-    }
-
-    @Test
     fun `an intent that names no tab asks for none`() {
         assertNull(ShellDestination.of(null))
+        assertNull(ShellDestination.of(intentFor(tab = null)))
         assertNull(ShellDestination.of(Intent(context, MainActivity::class.java)))
-        assertNull(ShellDestination.of(Intent(Intent.ACTION_MAIN)))
     }
 
     @Test
     fun `an unknown destination is read as none rather than guessed`() {
-        val unknown = Intent(context, MainActivity::class.java)
-            .setAction("com.callbackdev.chiaro.action.OPEN_ATLANTIS")
+        val unknown = intentFor(ShellTab.SKY)
+            .putExtra("com.callbackdev.chiaro.extra.TAB", "ATLANTIS")
         assertNull(ShellDestination.of(unknown))
     }
 
-    /** The widget really does hand this to the system: a `PendingIntent` built from it
-     * must be immutable-safe and land on our own activity, not on a component someone
-     * else could name. */
+    /** A `PendingIntent` starts from outside an activity, and the platform refuses that
+     * without `NEW_TASK`. Nothing else is set: `singleTask` in the manifest is what
+     * routes the intent to the one live instance, and doing it here by hand as well was
+     * the first pass papering over the missing half. */
     @Test
-    fun `the destination intent is explicit`() {
+    fun `the only flag is the one the platform requires`() {
+        val flags = intentFor(ShellTab.SKY).flags
+        assertTrue("NEW_TASK", flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
+        assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, flags)
+    }
+
+    @Test
+    fun `the door is explicit, and a PendingIntent can be built over it`() {
         val intent = intentFor(ShellTab.SKY)
         assertEquals(MainActivity::class.java.name, intent.component?.className)
         assertEquals(context.packageName, intent.component?.packageName)
-        // Building it is the other half of the contract: a PendingIntent over an
-        // implicit intent is refused outright on this minSdk.
+        // An implicit intent is refused outright on this minSdk, so building it is
+        // half the contract.
         PendingIntent.getActivity(
             context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
