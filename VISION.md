@@ -368,7 +368,13 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
   and 12; the evening's is **tomorrow**, between 18 and 23, because by 20:00 today is no longer a
   decision and tomorrow is. The night in between is not a fifth switch: it rides in the evening
   one's expanded notification, where the low, its hour and what it asks of the reader sit above
-  tomorrow's umbrella window and tomorrow's sunrise. Both are off by default.
+  tomorrow's umbrella window and tomorrow's sunrise. **Both are on by default** (21 set 2026,
+  committente), where they shipped silent. The old argument — a digest nobody asked for is the one
+  notification a weather app gets uninstalled over — is the right argument about a digest and the
+  wrong one about these two: a sentence before any number, said at the hour the day is still a
+  decision, is what this app is for, and an install that never opened Avvisi was getting the
+  warnings and none of the reading. The pair is capped at one notification each, at fixed hours,
+  and off in two taps.
 - **Yours**: the rules engine, approached from the answer rather than the syntax.
   - **Templates first**: "Tell me when I can ride", "Ice tomorrow morning", "A window to run",
     "High UV", "A clear night". Picking one creates a real rule with sensible thresholds, already on.
@@ -432,8 +438,27 @@ where the answer to "is it about to rain?" actually lives, belongs in the tour o
 
 One screen, two answers: use my location, or search for a place. Skipping is allowed and lands on a
 real "no place yet" state, exactly as tweather's `ActiveSource.None`. No carousel, no account, no
-permission asked before the sentence explaining why it is asked. Notifications are requested the
-first time the reader turns on something that needs them, never at startup.
+permission asked before the sentence explaining why it is asked.
+
+**And then one more screen, for notifications** (21 set 2026). The rule this section used to state —
+"requested the first time the reader turns on something that needs them, never at startup" — was
+honest about the *when* and wrong about the *whether*, because four ready-made alerts ship switched
+ON (§5.4). A fresh install therefore never turns anything on, so the permission was never asked, and
+the switches promised four notifications that could not arrive. The only road to the dialog was to
+turn an alert off and on again, which is not a road anybody finds.
+
+So the question is put, once, on a step of its own after the place has been answered — a notification
+is a promise about a place, and on the screen before it there is no place yet. It is a screen of
+words with an explicit «Consenti», never the system dialog on arrival: Android shows that dialog at
+most twice per install and after that it does nothing at all, so it is spent on a tap that asked for
+it. «Non ora» is a real answer and costs nothing. Skipping the place skips this too, and an upgrade
+is never stopped by it.
+
+The standing repair is on the screen that makes the promise: Avvisi (and Sky, for its reminders)
+draws a card for as long as something is switched on that the phone will not deliver, with the one
+button that fixes it — the runtime dialog where the system will still show one, the app's own page in
+the system settings where it will not (DESIGN §8.14). Unlike the dialog it can be offered again every
+time, and it disappears by itself the moment the permission is granted.
 
 ### 5.9 Widgets
 
@@ -498,12 +523,35 @@ Glance, five cards, matching the app's dynamic color:
 A widget never invents: with stale data it says how old it is, with no place configured it says so
 and opens the app, and no layout ever pads itself out to fill the space it was given.
 
-**The card each one wears** is the reader's, per widget: the computed sky (the default), a light
-card, a dark one, one that follows the phone — and, since 19 set 2026, one of six colours
+**A tap opens the screen the card was showing** (21 set 2026, committente): **Sky** and **the day's
+arc** are the Sky screen's own material — its moments, its verdicts, its next light moment, its
+agenda — so they land on Sky rather than on Today, which was asking the reader to go and find again
+what they had just read on the home screen. The other three cards open the app as they always did,
+wherever the reader left it.
+
+All five open it through **one intent, and it is the launcher's own** (`ShellDestination`, the same
+day, from the device) — and so does every notification, which lands on the screen it is about by the
+same rule: a sky reminder on Sky, a fired rule and an official warning on Alerts, where their cards
+and the warning's arithmetic are, and the four built-in alerts on Today, because storms, rain and
+both summaries ARE the weather and Alerts is only where the switch that sent them lives. Android identifies a task by the intent that made it, so a card that opened
+the app its own way opened a second copy of the app — which the reader saw, as two home screens one
+behind the other, and as a closing animation the launcher did not own. The destination rides as an
+extra, where it changes nothing about which task this is, and the activity is `singleTask` so there
+is one instance to route to.
+
+**The card each one wears** is the reader's, per widget: a blue card (the default since 21 set 2026,
+committente), the computed sky, a light card, a dark one, one that follows the phone — and, since
+19 set 2026, one of six colours
 (committente: «possibilità di mettere uno sfondo colorato: blu, blu chiaro, verde…»). The colours
 are the one place in this product where colour is offered as colour rather than as meaning, and
 they ship with no new inks: each one is picked dark enough to carry the white pair the sky card
 already uses, and DESIGN §2.6 prints the eighteen measurements that say so.
+
+The sky was the default until 21 set 2026 and is still the app's own hero, one row away. What it is
+not is the right thing to meet on a home screen it has never seen: it is a photograph of the
+weather behind a card of facts, and on a busy wallpaper the two grounds argue — which is what the
+scrim and the opacity slider exist to manage, and a default should not need managing. A flat
+coloured card is the launcher's own grammar and reads at arm's length on any wallpaper.
 
 **The official warning on a widget** (§12.8, 9 set 2026) follows the launcher's own habit — the
 system weather widgets this app lives beside show a warning line when the national service issues

@@ -400,6 +400,40 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
 
 ### Changed
 
+- **Four defaults moved, on a fresh install from the device.** The **morning summary** and the
+  **evening summary** now ship **on**: they used to start silent on the argument that a digest
+  nobody asked for is the one notification a weather app gets uninstalled over, which is the
+  right argument about a digest and the wrong one about these two — a sentence before any
+  number, said at the hour the day is still a decision, is what this app is for, and an install
+  that never opened Alerts was getting the warnings and none of the reading. One notification
+  each, at fixed hours, off in two taps. Every widget is now **a blue card** where it was the
+  computed sky: the sky is still the app's own hero and one row away, but it is a photograph of
+  the weather behind a card of facts, and on a busy wallpaper the two grounds argue — which is
+  what the scrim and the opacity slider exist to manage, and a default should not need managing.
+  And **"In parole" starts with the day's high and low**, alone among the five: it is the card
+  with no drawing to protect, its hierarchy is built out of type in ranks of facts, and that
+  rank is already designed.
+
+- **A tapped notification opens the screen it is about**, by the same rule the widgets follow.
+  A sky reminder lands on **Cielo**, where the moment's row, its bell and the verdict with the
+  number that decided it are. A fired rule and an official warning land on **Avvisi**: the rule
+  card with the hour it last fired, and the warning card that opens the sheet with the grid of
+  hazards by day, what the level means and the attribution — Oggi carries a banner too, but only
+  from yellow up and only while the bulletin is live, and says nothing at all about a zone that
+  is green. The four built-in alerts — severe weather, rain in the next hours and both summaries
+  — land on **Oggi**, because they are the weather itself: its hours, its rain, its sentence.
+  Avvisi is where the switch that sent them lives, which is not what the reader who tapped
+  "Pioggia alle 17" came for.
+
+- **"Momenti del cielo" and "L'arco del giorno" open the Sky screen** (asked for from the
+  device). Everything those two cards draw is the Sky screen's own material — the moments,
+  their verdicts, the next light moment, the agenda that follows — and landing on Today
+  asked the reader to go and find again what they had just read on the home screen. The
+  other three cards open the app as they always did, wherever it was left. A tap on a
+  running app moves the tab rather than restarting the app, and takes any open Settings or
+  guide page down with it: landing on Sky underneath one would be answering the tap and
+  hiding the answer.
+
 - **The place name on the wide "Colpo d'occhio" card takes the room the sentence is not
   using.** The row split its slack in half between the number-and-place column and the
   sentence, because Glance cannot measure text — so a four-cell card printed «Cavenago di
@@ -691,6 +725,45 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
   the language it was written in.
 
 ### Fixed
+
+- **Two copies of the app, and a settings screen that came back from under it.** Android
+  identifies a task by the intent that created it, and this app was entered through three
+  hand-rolled intents — the widgets', the notifications', and the launcher's. So opening it
+  from a widget and then from the home-screen icon built a *second* task: two home screens,
+  one behind the other, and back came out onto the first. Every door in is now one intent and
+  it is the launcher's own, with the destination riding as an extra where it changes nothing
+  about which task this is; the activity is `singleTask`, which is what the app already was —
+  one screen, with Settings and the guide as state inside it. The widget settings screens had
+  the same illness from the other side: with the app's own task affinity they sat *in* the
+  app's task, so closing one with a swipe to home left it there and the next launch put the
+  home screen on top of it. They now have no affinity at all and do not outlive being swiped
+  away — nothing is lost, because every choice there is written the moment it is tapped. The
+  same fix is expected to settle the closing animation drawing opaque rounded corners after a
+  back gesture, which happened only when the app had been opened from a widget: that is the
+  generic task-close animation, which the system plays for a task the launcher does not
+  recognise as one of its icons.
+
+- **The alerts that could never ring.** Four ready-made alerts ship switched on — severe
+  weather, rain in the next hours, official warnings and your own rules — and Android's
+  notification permission was only ever asked by the act of switching one on, which a
+  fresh install never does. So the switches said yes, the phone said nothing, and the
+  only road to the permission dialog was to turn an alert off and on again. Two repairs,
+  and it takes both. **First run asks, once**, on a step of its own after the place has
+  been answered: a notification is a promise about a place, and there is no place on the
+  screen before it. It is a screen of words with an explicit "Allow" and a "Not now" that
+  costs nothing, never the system dialog on arrival — Android shows that dialog at most
+  twice per install and then does nothing at all, so it is spent on a tap that asked for
+  it. Skipping the place skips this with it, and an upgrade is never stopped by it.
+  **And Alerts says so in place**, in a card above the list, for as long as something is
+  switched on that the phone will not deliver — with the one button that fixes it, which
+  names the door it opens: the permission dialog where the system will still show one,
+  this app's page in the system notification settings where it will not (the other dead
+  end: permission held, notifications switched off in Settings, where asking again
+  returns "granted" and draws nothing). Unlike the dialog the card can be offered again
+  every time, and it goes away by itself the moment the permission arrives. The Sky
+  screen carries the same card once a reminder is really armed. With every switch off
+  neither screen draws anything: there is no promise to break, and a card that scolds you
+  about a permission you need for nothing is inventing a problem.
 
 - **The palette note promised icons it does not always change.** "Vivid is cool white and
   azure, with brighter weather icons" was shown to every reader, but the dress only

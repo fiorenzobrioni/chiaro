@@ -2,11 +2,12 @@ package com.callbackdev.chiaro.notifications
 
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.callbackdev.chiaro.MainActivity
+import com.callbackdev.chiaro.ui.shell.ShellDestination
+import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.GpsCityId
@@ -175,13 +176,20 @@ object OfficialWarningNotifier {
             if (android.text.format.DateFormat.is24HourFormat(context)) "HH:mm" else "h:mm a"
         )
 
-    /** Oggi shows the banner first under the canvas: no deep link needed (PLANNING, Fase 11). */
     private fun openApp(context: Context, requestCode: Int): PendingIntent =
         PendingIntent.getActivity(
             context,
             requestCode,
-            Intent(context, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            // Avvisi (21 set 2026), which is the screen this is about: it leads with
+            // the place's warning card and opens the sheet with the arithmetic — the
+            // grid of hazards by day, what the level means, the attribution. Oggi
+            // carries the banner too, but only from yellow up and only while the
+            // bulletin is live, and it says nothing at all about a zone that is green
+            // (DESIGN §8.13): Avvisi is where somebody came to ask.
+            //
+            // The request code is load-bearing now that the destination rides in the
+            // extras: see [ShellDestination]. These are the warning ids, 3000-3999.
+            ShellDestination.intent(context, MainActivity::class.java, ShellTab.ALERTS),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 }

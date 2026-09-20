@@ -58,8 +58,20 @@ enum class FirstRun {
      * the first-run screen at a long-time user would be answering for them. */
     Unknown,
 
-    /** The first-run screen still owes an answer. */
+    /** The place question still owes an answer. */
     Pending,
+
+    /**
+     * The place is answered and the notification question is not (21 set 2026). It is
+     * a step of its own and not a line on the first screen, because it can only be
+     * asked honestly AFTER there is a place for an alert to be about; and it exists at
+     * all because four ready-made alerts ship switched ON, so an install that is never
+     * asked carries four promises the phone cannot keep.
+     *
+     * Skipping the place skips this too, and so does an upgrade ([migrateFirstRun]):
+     * neither is a fresh reader standing in front of the first screen.
+     */
+    Notifications,
 
     /** Answered — with a city, with GPS, or by skipping — or inherited by an upgrade. */
     Done
@@ -111,8 +123,9 @@ class CityStore(
         .map { prefs ->
             when {
                 prefs[Migrated] != true -> FirstRun.Unknown
-                prefs[InitDone] == true -> FirstRun.Done
-                else -> FirstRun.Pending
+                prefs[InitDone] != true -> FirstRun.Pending
+                prefs[NotifyAsked] != true -> FirstRun.Notifications
+                else -> FirstRun.Done
             }
         }
         .distinctUntilChanged()
@@ -128,7 +141,18 @@ class CityStore(
      */
     suspend fun migrateFirstRun(hasHistory: Boolean) {
         dataStore.edit { prefs ->
-            if (prefs[Migrated] == true) return@edit
+            if (prefs[Migrated] == true) {
+                // An install that was migrated BEFORE the notification step existed
+                // (21 set 2026) has answered the place question already, so the new
+                // step is not its to be stopped by — without this it would meet a
+                // full-screen question at the next launch, which is the very thing
+                // this check was written to prevent. Its road to the permission is
+                // the card Avvisi draws while the promise is unkept (DESIGN §8.14).
+                if (prefs[InitDone] == true && prefs[NotifyAsked] == null) {
+                    prefs[NotifyAsked] = true
+                }
+                return@edit
+            }
             prefs[Migrated] = true
             val used = hasHistory ||
                 prefs[CitiesJson] != null ||
@@ -137,15 +161,43 @@ class CityStore(
                 prefs[GpsCityJson] != null
             if (!used) return@edit
             prefs[InitDone] = true
+            // An upgrade inherits the notification step as answered: the reader has
+            // been using the app for months and a new full-screen question at launch
+            // would be the app interrupting them to ask something Avvisi can say in
+            // place, where it is already true (see the card of DESIGN §8.14).
+            prefs[NotifyAsked] = true
             if (prefs[CitiesJson] == null) {
                 prefs[CitiesJson] = json.encodeToString(listOf(DefaultCity))
             }
         }
     }
 
-    /** First-run has been answered — skipping it counts as an answer. */
+    /** The place question has been answered — the notification step follows. */
     suspend fun markInitDone() {
         dataStore.edit { it[InitDone] = true }
+    }
+
+    /**
+     * The notification step has been passed — granted, refused, or simply left for
+     * later. It records that the QUESTION was put, never the answer: the permission
+     * itself is the system's to hold, and the app reads it from the system every time
+     * rather than remembering a yes that can be taken back from Settings.
+     */
+    suspend fun markNotificationsAsked() {
+        dataStore.edit { it[NotifyAsked] = true }
+    }
+
+    /**
+     * Skipping the first screen: one edit, both answers. Two edits would emit
+     * [FirstRun.Notifications] for a frame on the way past, and a reader who just
+     * declined to name a place is not the reader to stop with a second question —
+     * with no place there is nothing for an alert to be about yet.
+     */
+    suspend fun markFirstRunSkipped() {
+        dataStore.edit {
+            it[InitDone] = true
+            it[NotifyAsked] = true
+        }
     }
 
     /**
@@ -309,6 +361,9 @@ class CityStore(
 
         /** The first-run screen has been answered. */
         private val InitDone = booleanPreferencesKey("init_done")
+
+        /** The first run's notification step has been put to the reader. */
+        private val NotifyAsked = booleanPreferencesKey("notify_asked")
         private val GpsCityJson = stringPreferencesKey("gps_city_json")
 
         /** When [GpsCityJson] was taken, so the interval survives the process. */

@@ -229,6 +229,21 @@
     <string name="first_run_search">Search for a city</string>
     <string name="first_run_skip">Not now</string>
 
+    <!-- First run, step two: the notification question, in words before the system
+         puts it in a dialog. See FirstRunNotificationsRoute. -->
+    <string name="first_run_notify_title">Let the alerts through</string>
+    <string name="first_run_notify_body">Severe weather, rain in the next hours, official warnings and your own alerts are already switched on. Android asks for your permission before an app can show a notification: without it, they stay silent.</string>
+    <string name="first_run_notify_where">You can change your mind at any time, from Alerts.</string>
+    <string name="first_run_notify_later">Not now</string>
+
+    <!-- The standing repair (DESIGN 8.14): drawn on Alerts and on Sky whenever
+         something is switched on that the phone is not allowed to deliver. -->
+    <string name="notifications_off_title">Notifications are off</string>
+    <string name="notifications_off_alerts">The alerts below are switched on, but this phone is not letting Chiaro show a notification, so none of them can arrive.</string>
+    <string name="notifications_off_sky">Your reminders are set, but this phone is not letting Chiaro show a notification, so none of them can arrive.</string>
+    <string name="notifications_off_allow">Allow notifications</string>
+    <string name="notifications_off_open_settings">Open settings</string>
+
     <!-- Settings (Fase 4). Groups appear WITH the feature they control: notifications
          join in Fase 6, widgets in Fase 8 — a switch that changes nothing would be
          the screen lying (DESIGN §1.1). -->
@@ -387,7 +402,7 @@
     <string name="guide_alerts_message_title">The message is yours</string>
     <string name="guide_alerts_message_body">Chiaro never rewrites it and never translates it. Words in braces become numbers when it fires: {trigger.value} is what set it off, {trigger.time} is when. Anything an alert can watch can be printed the same way, and the list under the message writes it for you.</string>
     <string name="guide_alerts_battery_title">What it costs</string>
-    <string name="guide_alerts_battery_body">Nothing extra: the checks ride the weather update you already asked for, at the rhythm you chose in the settings. Android asks for notification permission the first time you turn an alert on.</string>
+    <string name="guide_alerts_battery_body">Nothing extra: the checks ride the weather update you already asked for, at the rhythm you chose in the settings. Android asks for notification permission once, on the first run, and again the first time you turn an alert on. Alerts says so in plain words whenever something is switched on that the phone is not letting through.</string>
     <string name="guide_alerts_official_title">Official warnings</string>
     <string name="guide_alerts_official_body">In Italy the authority is the Dipartimento della Protezione Civile. Every afternoon, usually by 16:00, it grades each of its warning zones for the day and the next: hydraulic risk, hydrogeological risk and thunderstorms, on four levels — none, yellow, orange, red. Chiaro finds the zone your place falls in, reads the bulletin and shows it: the banner on Today when there is something to say, the grid and the Dipartimento\'s own words in the sheet behind it, and a line in the Journal each time a level moves. The words of the authority are quoted, never translated. Nothing is shown for places outside Italy, because nobody has graded them.</string>
     <string name="guide_alerts_official_credit">Source: Dipartimento della Protezione Civile, CC BY 4.0.</string>

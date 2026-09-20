@@ -183,8 +183,8 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 ),
                 notifications = NotificationSettings(
                     severeWeatherAlerts = prefs[SevereAlerts] ?: true,
-                    dailySummary = prefs[DailySummary] ?: false,
-                    eveningSummary = prefs[EveningSummary] ?: false,
+                    dailySummary = prefs[DailySummary] ?: true,
+                    eveningSummary = prefs[EveningSummary] ?: true,
                     precipitationWarning = prefs[PrecipWarning] ?: true,
                     userRules = prefs[UserRules] ?: true,
                     officialWarnings = prefs[OfficialWarnings] ?: true,

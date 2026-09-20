@@ -219,6 +219,21 @@
     <string name="first_run_search">Cerca una città</string>
     <string name="first_run_skip">Non ora</string>
 
+    <!-- Primo avvio, passo due: la domanda sulle notifiche, in parole prima che la
+         chieda il sistema. Vedi FirstRunNotificationsRoute. -->
+    <string name="first_run_notify_title">Fai passare gli avvisi</string>
+    <string name="first_run_notify_body">Maltempo in arrivo, pioggia nelle prossime ore, allerte ufficiali e i tuoi avvisi sono già attivi. Android chiede il tuo permesso prima che un\'app possa mostrare una notifica: senza, restano in silenzio.</string>
+    <string name="first_run_notify_where">Puoi cambiare idea quando vuoi, dalla schermata Avvisi.</string>
+    <string name="first_run_notify_later">Non ora</string>
+
+    <!-- La riparazione che resta (DESIGN 8.14): disegnata su Avvisi e su Cielo ogni
+         volta che c\'è qualcosa di attivo che il telefono non lascia arrivare. -->
+    <string name="notifications_off_title">Le notifiche sono spente</string>
+    <string name="notifications_off_alerts">Gli avvisi qui sotto sono attivi, ma questo telefono non permette a Chiaro di mostrare una notifica: nessuno di loro può arrivare.</string>
+    <string name="notifications_off_sky">I tuoi promemoria sono impostati, ma questo telefono non permette a Chiaro di mostrare una notifica: nessuno di loro può arrivare.</string>
+    <string name="notifications_off_allow">Consenti le notifiche</string>
+    <string name="notifications_off_open_settings">Apri le impostazioni</string>
+
     <!-- Impostazioni (Fase 4). I gruppi compaiono CON la funzione che governano:
          le notifiche arrivano in Fase 6, i widget in Fase 8 — un interruttore che
          non cambia niente sarebbe lo schermo che mente (DESIGN §1.1). -->
@@ -368,7 +383,7 @@
     <string name="guide_alerts_message_title">Il messaggio è tuo</string>
     <string name="guide_alerts_message_body">Chiaro non lo riscrive e non lo traduce mai. Le parole tra graffe diventano numeri quando scatta: {trigger.value} è ciò che l\'ha fatto scattare, {trigger.time} è quando. Ogni valore che un avviso può guardare si può stampare allo stesso modo, e la lista sotto il messaggio lo scrive al posto tuo.</string>
     <string name="guide_alerts_battery_title">Quanto costa</string>
-    <string name="guide_alerts_battery_body">Niente in più: i controlli viaggiano sull\'aggiornamento del meteo che hai già chiesto, al ritmo scelto nelle impostazioni. Android chiede il permesso per le notifiche la prima volta che accendi un avviso.</string>
+    <string name="guide_alerts_battery_body">Niente in più: i controlli viaggiano sull\'aggiornamento del meteo che hai già chiesto, al ritmo scelto nelle impostazioni. Android chiede il permesso per le notifiche una volta al primo avvio, e di nuovo la prima volta che accendi un avviso. La schermata Avvisi lo dice a chiare lettere ogni volta che c\'è qualcosa di attivo che il telefono non lascia passare.</string>
     <string name="guide_alerts_official_title">Le allerte ufficiali</string>
     <string name="guide_alerts_official_body">In Italia fa fede il Dipartimento della Protezione Civile. Ogni pomeriggio, di solito entro le 16, valuta ciascuna zona di allerta per oggi e per domani: rischio idraulico, rischio idrogeologico e temporali, su quattro livelli — nessuno, giallo, arancione, rosso. Chiaro trova la zona in cui cade il tuo luogo, legge il bollettino e lo mostra: il riquadro in Oggi quando c\'è qualcosa da dire, la griglia e le parole del Dipartimento nel foglio dietro, e una riga nel Diario ogni volta che un livello si muove. Le parole dell\'autorità sono citate, mai tradotte. Per i luoghi fuori dall\'Italia non compare nulla, perché nessuno li ha valutati.</string>
     <string name="guide_alerts_official_credit">Fonte: Dipartimento della Protezione Civile, CC BY 4.0.</string>

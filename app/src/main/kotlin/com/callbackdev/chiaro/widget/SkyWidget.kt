@@ -41,6 +41,7 @@ import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
+import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.ui.sky.SkyText
 import java.time.Instant
 import java.time.LocalDate
@@ -98,7 +99,10 @@ class SkyWidget : GlanceAppWidget() {
                 contentPaddingEnd = WidgetCardPaddingTrailing,
                 contentPaddingTop = if (hasContent) WidgetCardPaddingSnug else WidgetCardPadding,
                 contentPaddingBottom =
-                    if (hasContent && !tall) WidgetCardPaddingSnug else WidgetCardPadding
+                    if (hasContent && !tall) WidgetCardPaddingSnug else WidgetCardPadding,
+                // Every moment and every verdict on this card is the Sky screen's own
+                // (21 set 2026): a tap lands where the rest of the answer is.
+                destination = ShellTab.SKY
             ) { palette ->
                 when {
                     model.city == null -> NoPlaceContent(palette)

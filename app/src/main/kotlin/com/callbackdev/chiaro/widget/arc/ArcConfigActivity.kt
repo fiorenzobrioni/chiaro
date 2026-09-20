@@ -50,6 +50,7 @@ import com.callbackdev.chiaro.widget.SwitchRow
 import com.callbackdev.chiaro.widget.WidgetBackground
 import com.callbackdev.chiaro.widget.WidgetData
 import com.callbackdev.chiaro.widget.WidgetIcons
+import com.callbackdev.chiaro.widget.WidgetKind
 import com.callbackdev.chiaro.widget.WidgetLook
 import com.callbackdev.chiaro.widget.WidgetLookStore
 import com.callbackdev.chiaro.widget.WidgetModel
@@ -131,7 +132,7 @@ private fun ArcConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () ->
     var look by remember { mutableStateOf<WidgetLook?>(null) }
     var arc by remember { mutableStateOf<ArcSettings?>(null) }
     LaunchedEffect(appWidgetId) {
-        look = lookStore.lookFor(appWidgetId)
+        look = lookStore.lookFor(appWidgetId, WidgetKind.ARC)
         arc = arcStore.settingsFor(appWidgetId)
     }
     // The preview's model: the widget's own loader, re-run when the place changes. The

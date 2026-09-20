@@ -11,6 +11,10 @@ class SyncSchedulerTest {
     private val allOff = NotificationSettings(
         severeWeatherAlerts = false,
         dailySummary = false,
+        // Named rather than left to the default, which is what «allOff» means: the
+        // two summaries went ON by default on 21 set 2026 and this fixture would have
+        // quietly stopped being all off.
+        eveningSummary = false,
         precipitationWarning = false,
         userRules = false,
         officialWarnings = false

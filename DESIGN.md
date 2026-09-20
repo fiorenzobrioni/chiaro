@@ -1158,6 +1158,46 @@ its data is not drawn anywhere in this app. The noun is inside the string on pur
 Italian wants "in Basilicata" and "nelle Marche", and those two Regions are exactly the
 thirteen.
 
+**8.14 NotificationsOffCard** (21 set 2026) — the one card in the kit that is about the app
+rather than about the weather: the screen is promising a notification the phone will not
+deliver, and says so.
+
+It is the standing repair for a hole VISION §5.8 left open. Four ready-made alerts ship
+switched ON, and the permission was asked only by the act of switching one on — which a
+fresh install never does. The switches said yes, the phone said nothing, and the only road
+to the runtime dialog was to turn an alert off and on again. The dialog alone could not be
+the repair either: Android shows it at most twice per install and then `launch()` returns
+refused without drawing anything, and where the permission is held but notifications were
+switched off in Settings it returns granted without drawing anything — a button that does
+nothing, twice over. A card can be offered again every time, and says what is wrong before
+it offers the fix.
+
+A `Card` on `secondaryContainer` at the page's 16dp margin, above everything else on the
+screen: `titleSmall` — "Le notifiche sono spente" — over `bodySmall` naming what is
+promised and why it cannot arrive, then a `TextButton`. **The button says which door it
+opens**: «Consenti le notifiche» where the system will still show its dialog, «Apri le
+impostazioni» where it will not, because a button that promises a dialog and silently hands
+over a settings screen is the same broken promise one layer down. A refusal that comes back
+with no dialog left to show opens the settings screen in that same tap; one refusal is
+taken as a refusal and forces nothing.
+
+It is `secondaryContainer` and not the warning or error roles for the reason §1.1 gives
+Avvisi's quiet card: this is a state of the app, not a state of the world, and the warning
+inks belong to the weather. No icon, like the guide card it is shaped after — the words
+carry it, and §2.3 wants the carrier before the colour.
+
+**It is drawn only while something is really on**, and both halves of that are the rule.
+On Avvisi: any ready-made switch, the official warnings, or an enabled rule of the reader's
+own. On Sky: any subscribed moment or calendar row whose lead is not «mai» — the default
+lead on its own is what a moment *adopts*, not a promise anybody has been made. With
+everything off there is no promise to break and no card, because a screen that scolds a
+reader about a permission it needs for nothing is inventing a problem, which is the same
+fault in the other direction.
+
+It re-reads the system on every `ON_RESUME`, because the repair usually happens **outside**
+the app — in the settings page the card sent them to — and a card still sitting there after
+the permission was granted is the same lie the other way round.
+
 ---
 
 ## 9. Charts and quantities

@@ -8261,3 +8261,272 @@ l'endpoint di previsione accetta `start_date` solo per circa tre mesi indietro e
 non arriva a gennaio. Tentata oggi: `HTTP 429, Daily API request limit exceeded` — la quota
 gratuita dell'IP di questo ambiente era già esaurita dalle quindici località della review. Da
 riprendere con la quota libera; è un giro suo, non una riga di codice.
+
+---
+
+## Gli avvisi che non potevano suonare, e due widget che aprivano la schermata sbagliata (committente, 21 set 2026)
+
+> «Quando si installa l'app alcuni Avvisi sono già attivi ma il permesso per le notifiche non è
+> mai stato chiesto e quindi questi avvisi non scattano mai. [...] Ora l'unico modo per fare il
+> consenso al permesso è disattivare e poi riattivare un avviso.»
+
+La segnalazione è esatta e il difetto è più vecchio della schermata: `NotificationSettings` nasce
+con `severeWeatherAlerts`, `precipitationWarning`, `userRules` e `officialWarnings` a **true**, e
+`POST_NOTIFICATIONS` veniva chiesto solo dentro `somethingTurnedOn()` — cioè dall'**atto** di
+accendere un interruttore. Un'installazione nuova non accende niente: trova tutto già acceso. Quindi
+quattro promesse fatte e nessuna richiesta fatta, e l'unica strada al dialogo di sistema era
+spegnere e riaccendere, che non è una strada che qualcuno trova.
+
+VISION §5.8 diceva «le notifiche sono richieste la prima volta che il lettore accende qualcosa che
+ne ha bisogno, mai all'avvio». Era onesta sul *quando* e sbagliata sul *se*: la regola vale solo se
+i predefiniti sono spenti, e non lo sono. Due modi di chiuderla, e ci vogliono **entrambi**.
+
+### Perché il dialogo di sistema, da solo, non è la riparazione
+
+Android 13 mostra quel dialogo **al massimo due volte per installazione**. Dopo, `launch()` torna
+`false` senza disegnare niente. E c'è un secondo vicolo cieco che si legge uguale da uno schermo e
+si ripara in un posto opposto: permesso **concesso** e notifiche spente dalle impostazioni di
+sistema — lì `launch()` torna `true` immediatamente, sempre senza disegnare niente. In tutti e due
+i casi un pulsante cablato al dialogo è un pulsante morto, che è esattamente lo stato che stiamo
+cercando di finire.
+
+Quindi la domanda giusta non è «ho il permesso» ma `NotificationManagerCompat.areNotificationsEnabled()`:
+*una notifica postata adesso arriverebbe?*. È quella che ogni schermata chiede
+(`NotificationPermission.allowed`). Le due strade morte sono chiuse così:
+
+- permesso già concesso e notifiche spente → si va **dritti** alle impostazioni di sistema, e il
+  pulsante lo dice («Apri le impostazioni»);
+- rifiuto che torna indietro con `shouldShowRequestPermissionRationale` **falso** → il sistema non
+  ha più un dialogo da mostrare, e si consegna la pagina delle impostazioni **nello stesso tap**.
+
+Quel `shouldShowRequestPermissionRationale` non distingue «mai chiesto» da «rifiutato per sempre»:
+è falso per tutti e due. Per questo si legge **dopo** il rifiuto e non prima della richiesta — che
+è anche il motivo per cui non serve persistere nessun flag «gliel'ho già chiesto». Dopo un primo
+rifiuto è vero, quindi un «no» è preso per un no e nessuno viene buttato nelle impostazioni.
+
+### La riparazione che resta: la card (DESIGN §8.14)
+
+Su Avvisi, sopra tutto, e **solo mentre la schermata starebbe mentendo**: qualcosa è acceso e il
+telefono non lo lascia passare. È la metà che conta, perché a differenza del dialogo può essere
+rioffertà ogni volta, dice cosa non va prima di offrire il rimedio, e sparisce da sola quando il
+permesso arriva. Si rilegge a ogni `ON_RESUME`, perché la riparazione avviene **fuori** dall'app e
+una card ancora lì dopo il consenso è la stessa bugia al contrario.
+
+Con tutto spento non è disegnata: non c'è nessuna promessa da rompere, e una card che rimprovera
+per un permesso che non serve a niente sta inventando un problema — lo stesso difetto dall'altra
+parte. `notificationsPromised()` è quella domanda, ed è un test: se i predefiniti si muovono,
+`NotificationsPromisedTest` è dove si vede.
+
+**Anche Cielo**, per la stessa ragione e con la soglia sua: `remindersArmed()`, cioè una campanella
+davvero armata. Lì nessun promemoria nasce acceso, quindi un'installazione nuova non promette niente
+e la card non c'è; ma dal momento che una campanella c'è e il permesso manca, la riga mostra una
+campanella per qualcosa che non può suonare, che è la stessa bugia di Avvisi.
+
+### E il primo avvio: sì, ma dopo il luogo, e a parole
+
+`FirstRun` ha un terzo stato, `Notifications`, fra `Pending` e `Done`. È un passo **suo** e non una
+riga sulla schermata del luogo, perché una notifica è una promessa **su un luogo** e lì il luogo
+non c'è ancora. Ed è una schermata di parole con un «Consenti» esplicito, mai il dialogo di sistema
+all'arrivo: quel dialogo si ha due volte in tutta la vita dell'installazione, quindi si spende su un
+tap che l'ha chiesto. «Non ora» è una risposta vera e non costa niente — non tocca il dialogo, e
+Avvisi tiene la stessa offerta finché è vera.
+
+Tre regole al contorno, tutte e tre nel `CityStore` e tutte e tre con un test:
+
+- **saltare il luogo salta anche questo**, in una sola `edit` (`markFirstRunSkipped`): due edit
+  emetterebbero `Notifications` per un frame lungo la strada, e chi ha appena rifiutato di dare un
+  luogo non ha niente su cui ricevere un avviso. «Salta» non può voler dire «salta uno dei due».
+- **un aggiornamento non viene mai fermato**: `migrateFirstRun` scrive `notify_asked` insieme a
+  `init_done` per le installazioni usate, e — il caso che il `return@edit` in cima si sarebbe perso
+  — lo **riempie** anche per un'installazione già migrata dalla build precedente, che altrimenti
+  avrebbe trovato una schermata intera alla prima apertura. È esattamente quello che quel controllo
+  è stato scritto per evitare.
+- **se le notifiche sono già permesse il passo non si vede**: non c'è niente da chiedere, quindi non
+  si chiede niente.
+
+### I due widget che aprivano la schermata sbagliata
+
+> «Nei widget "Momenti del cielo" e "Arco del giorno" al tap aprire l'app direttamente nella
+> schermata Cielo, che dovrebbe essere più corretto rispetto alle informazioni che i widget
+> visualizzano.»
+
+Giusto, ed è il principio a essere giusto: quei due disegnano materiale della schermata Cielo — i
+momenti, i verdetti, il prossimo momento della luce, l'agenda — e atterrare su Oggi chiedeva al
+lettore di andare a ritrovare quello che aveva appena letto sullo schermo di casa.
+
+`WidgetCard` prende un `destination: ShellTab?` — `null` resta «apri l'app», che atterra dove il
+lettore l'ha lasciata, ed è quello che fanno ancora le altre tre card. La destinazione viaggia
+nell'**azione** dell'intent oltre che in un extra: gli extra non entrano in `Intent.filterEquals`,
+che è la chiave della cache dei `PendingIntent`, e l'azione è quella che resta leggibile in un
+intent a cui gli extra non sono sopravvissuti. (Glance timbra già un `data` unico per widget, quindi
+le due cose sono cintura e bretelle; verificato leggendo il bytecode di `ApplyActionKt`, che usa
+`PendingIntent.getActivity` con il **nostro** intent, azione e flag compresi.)
+
+I flag sono la ricetta di un deep link in un'app a un task solo: `CLEAR_TOP or SINGLE_TOP` consegna
+l'intent all'istanza già viva via `onNewIntent` invece di finirla e ricostruirla. Senza, il **primo**
+tap avrebbe funzionato e tutti quelli dopo no — l'app sarebbe tornata avanti sulla scheda di prima,
+che è il caso che un lettore incontra ogni volta tranne una. Il tab è stato, non una rotta, quindi
+`MainActivity` tiene la richiesta e la passa alla shell, che la consuma e **chiude gli overlay**:
+atterrare su Cielo sotto una pagina Impostazioni aperta sarebbe rispondere al tap e nascondere la
+risposta. Una richiesta arrivata prima che il primo avvio abbia risposto non si perde: resta lì
+finché le schede esistono.
+
+Le altre tre card sono rimaste come stavano. Lo stesso principio le manderebbe su Oggi, ma non è
+stato chiesto e non è un difetto: «apri l'app» è una risposta onesta per una card che mostra il
+tempo di adesso.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1587 test** (18 nuovi nell'app,
+4+2 nel `CityStore`), lint a zero errori. `:app:assembleDebug` e `:app:assembleRelease
+-PsignReleaseWithDebugKey` costruiscono, così l'R8 è passato anche lui. `ShellDestinationTest`
+costruisce davvero il `PendingIntent` sopra l'intent, perché un intent implicito sarebbe rifiutato
+in faccia su questo minSdk.
+
+Quel che **non** è coperto da un test e va guardato su un dispositivo: il dialogo di sistema non
+esiste in Robolectric, quindi il percorso «rifiuta due volte → il tap seguente apre le impostazioni»
+è ragionato sul contratto di `ActivityResultContracts.RequestPermission` e non misurato. Da provare
+su un telefono: installare, arrivare al passo due, dire di no due volte, e controllare che il
+pulsante su Avvisi porti nelle impostazioni di sistema e non da nessuna parte.
+
+---
+
+## Quattro predefiniti, e due task che erano tre (committente, 21 set 2026, dal dispositivo)
+
+Installazione da zero, provata: il permesso notifiche viene chiesto e la card su Avvisi fa il resto.
+Da lì, quattro predefiniti da spostare e due difetti veri trovati usando l'app.
+
+### I predefiniti
+
+**I due riepiloghi, accesi.** `dailySummary` e `eveningSummary` nascevano a `false` su un argomento
+scritto per intero nel KDoc: «un digest che nessuno ha chiesto è l'unica notifica per cui un'app
+meteo viene disinstallata». È l'argomento giusto su *un digest* e quello sbagliato su questi due.
+Sono l'app: una frase prima di qualunque numero, detta all'ora in cui la giornata è ancora una
+decisione. Un'installazione che non apre mai Avvisi prendeva le allerte e niente della lettura. Il
+tetto è una notifica ciascuno, a ore fisse, e si spengono in due tap.
+
+**La card blu al posto del cielo.** Il gradiente resta l'eroe dell'app ed è a una riga di distanza.
+Quel che non è, è la cosa giusta da incontrare su una schermata di casa che non ha mai visto: è una
+fotografia del tempo dietro una card di fatti, e su uno sfondo carico i due terreni litigano — che
+è esattamente quel che lo scrim e il cursore dell'opacità servono a governare, e un predefinito non
+dovrebbe aver bisogno di essere governato. Una card piatta colorata è la grammatica del launcher,
+si legge a distanza di braccio su qualunque wallpaper, e il colore è una riga sotto.
+
+**Massima e minima su «In parole».** Questo è l'unico campo che risponde **diverso per card**, e per
+questo `WidgetLook.defaultsFor(kind)` esiste invece di cinque costanti: un predefinito che varia è
+precisamente quello che finisce scritto due volte — nello store e nella schermata impostazioni — e
+poi divergono. «In parole» non ha un disegno da proteggere: la sua gerarchia è costruita di tipo, in
+ranghi di fatti, e la massima e minima sono un rango già progettato. Lasciarlo vuoto è l'unica card
+che ci perde. Sulle altre vale il KDoc di sempre: il numero nudo è l'eroe.
+
+Due fixture si appoggiavano ai vecchi predefiniti e adesso nominano tutto quel che dichiarano —
+`SyncSchedulerTest.allOff`, `AlertEngineTest.allOn`/`none` e `WeatherSyncWorkerTest.allTogglesOff`,
+che si chiamava «tutti spenti» e ne lasciava uno acceso. Una fixture che dipende da un predefinito
+smette di dire la verità il giorno che il predefinito si muove, in silenzio.
+
+### I due task che erano tre
+
+> «Se apro le proprietà di un widget e poi la chiudo con lo swipe dal basso e poi apro l'app, con
+> la gesture back invece di tornare alla home mi ricompare la schermata proprietà.»
+> «Alcune volte mi trovo ad avere due schermate principali dell'app.»
+
+Stessa famiglia, e la diagnosi è una riga: **Android identifica un task dall'intent che lo ha
+creato**, e questa app entrava da tre porte diverse con tre intent scritti a mano.
+
+`WidgetConfigActivity` e `ArcConfigActivity` avevano l'affinità del pacchetto, quindi stavano nel
+**task dell'app**. Chiuderle con lo swipe le lasciava lì; il lancio successivo dell'app metteva la
+schermata principale sopra, e il back usciva su una schermata che il lettore aveva già congedato.
+Ora hanno `taskAffinity=""` — nessuna affinità, mai quel task — e `noHistory="true"`, così una
+schermata scacciata è finita e non un task che nessuno vede e nessuno può chiudere. Non si perde
+niente: ogni scelta lì è scritta nell'istante in cui è toccata, e «Fatto» chiude solo la porta. Ed è
+sicuro verso l'host perché tutti e cinque i provider dichiarano `configuration_optional`: quella
+schermata non gira mai al momento del piazzamento, quindi nessun widget aspetta il suo risultato.
+C'è un test che tiene ferma quella parola, perché è la premessa del `noHistory`.
+
+Le due schermate principali sono l'altra metà, ed è **colpa del giro precedente**. Avevo messo la
+destinazione nell'**azione** dell'intent, ragionando che gli extra non entrano in `filterEquals` e
+quindi non distinguono due `PendingIntent`. Il ragionamento era giusto e la conclusione rovesciata:
+non entrare in `filterEquals` è **esattamente** il motivo per cui l'extra è l'unico posto dove la
+destinazione può viaggiare senza che il task smetta di somigliare a quello del launcher. Con
+un'azione nostra, il tap sull'icona non riconosceva più il task aperto dal widget e ne apriva un
+secondo — la sovrapposizione nello screenshot.
+
+Quindi: **una porta sola**, e **è l'intent del launcher** — `ACTION_MAIN`, `CATEGORY_LAUNCHER`, il
+nostro componente, più l'extra quando c'è una destinazione. Ci passano tutti e cinque i widget
+(anche i tre che non chiedono una scheda) e tutti e quattro i notificatori, che avevano ciascuno il
+proprio `Intent(context, MainActivity)`. E `MainActivity` è `singleTask`: è quel che l'app **è** —
+una sola activity, con Impostazioni e la guida che sono stato al suo interno — e senza, la
+piattaforma ne faceva un secondo task ogni volta che l'intent non era quello del launcher. I flag
+scritti a mano nel giro precedente (`CLEAR_TOP`, `SINGLE_TOP`) facevano metà di quel lavoro a mano e
+non potevano fare l'altra metà, che è garantire che ci sia **una** istanza a cui consegnare. Resta
+`NEW_TASK`, che la piattaforma pretende da un `PendingIntent`.
+
+### Gli angoli bianchi: la stessa causa, e come verificarlo
+
+> «Quando stacco il dito e l'app fa l'animazione completa di chiusura vedo gli angoli arrotondati
+> bianchi e non più trasparenti. Sembra che lo fa solo quando l'app è stata aperta dal widget.»
+
+«Solo quando è stata aperta dal widget» è la diagnosi dentro la segnalazione, ed è la ragione per
+cui non è un problema di `windowBackground`: quello è lo stesso da qualunque porta si entri. Quel
+che cambia con la porta è **quale animazione di chiusura sceglie il sistema**. Il back predittivo,
+con il dito giù, anima la superficie viva dell'activity e la ritaglia: fuori dal ritaglio non c'è
+niente, quindi trasparente. Al rilascio parte la transizione vera, e su un task che il launcher
+riconosce come una delle sue icone è il launcher a disegnarla — quella che rientra nell'icona. Su un
+task che non riconosce, il sistema usa la chiusura generica, che dipinge il colore di fondo del task
+(preso da `windowBackground`, bianco in chiaro) dietro la superficie che si rimpicciolisce, angoli
+arrotondati compresi.
+
+Con una porta sola che è l'intent del launcher, e `singleTask` sopra, quel task non esiste più. **È
+la correzione che mi aspetto risolva anche questo**, e va detto chiaramente che è l'unico dei
+quattro punti che non ho potuto misurare: l'animazione di chiusura non esiste in Robolectric.
+
+Da provare sul telefono, nell'ordine: (1) riavvio pulito, tap sul widget con app chiusa, back →
+gli angoli devono essere trasparenti come da icona; (2) apri da icona, poi da widget, poi back due
+volte → deve uscire alla home, non su una seconda schermata principale; (3) matita del widget,
+swipe in alto, apri l'app, back → home. Se il punto (1) resta bianco mentre (2) e (3) sono a posto,
+la causa non è il task e la leva successiva è `android:windowBackground`, che oggi è quello di
+`Theme.DeviceDefault.DayNight` — con la nota che renderlo trasparente si paga con qualche frame di
+launcher visibile all'avvio a freddo, che è precisamente il motivo per cui quel tema è lì.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1599 test** (12 nuovi: la porta
+riscritta, i predefiniti delle card, e tre attributi di manifest che nessun test sugli intent può
+vedere), lint a zero errori. `:app:assembleDebug` e `:app:assembleRelease -PsignReleaseWithDebugKey`
+costruiscono.
+
+### Le notifiche atterrano dove devono (committente, stessa giornata)
+
+Chiuso il giro, restava la riga che la porta unica aveva reso gratis: la stessa regola dei widget,
+**la schermata di cui la notifica parla**.
+
+- Il promemoria del cielo → **Cielo**: è la riga di quel momento, la sua campanella, il verdetto con
+  il numero che l'ha deciso e la frase del catalogo su cosa sia quel momento.
+- Una regola che è scattata → **Avvisi**: la card di quella regola è lì, con l'ora dell'ultimo
+  scatto, che questa notifica ha appena cambiato.
+- Un'allerta ufficiale → **Avvisi**, non Oggi. Il banner su Oggi c'è, ma solo da gialla in su e solo
+  finché il bollettino è vivo, e di una zona verde non dice niente (DESIGN §8.13). Avvisi è la
+  schermata dove uno è andato a chiedere, e da lì si apre il foglio con l'aritmetica: la griglia
+  rischio per giorno, cosa vuol dire quel livello, l'attribuzione.
+- I quattro avvisi predefiniti → **Oggi**. Sono il tempo: le ore, la pioggia, la frase. Avvisi è
+  dove sta l'**interruttore** che li ha mandati, che non è quel che cerca chi ha toccato «Pioggia
+  alle 17».
+
+C'è un costo nascosto nell'aver fatto una porta sola, e va scritto perché è invisibile: adesso i
+quattro intent sono `filterEquals`-identici, e `PendingIntent` chiave la cache **su quello**. Gli
+extra non li vede. Quindi il **request code** è l'unica cosa che tiene separate due destinazioni, e
+con `FLAG_UPDATE_CURRENT` due chiamanti che ne condividono uno fanno sì che il secondo riscriva la
+destinazione del primo — sotto una notifica già sulla tendina. I quattro passano il proprio id di
+notifica, e quei quattro intervalli erano già disgiunti e documentati dove sono calcolati
+(1001-1004 gli avvisi predefiniti, 2000-2999 le regole, 3000-3999 le allerte, 7000+ il cielo).
+`SkyNotifier` era l'unico che non lo faceva: passava `0` fisso, che prima non voleva dire niente e
+adesso sarebbe stato il buco.
+
+`NotificationDestinationTest` posta **tutte e quattro sullo stesso manager** e rilegge le
+destinazioni dopo, non una alla volta: una collisione si vede solo quando le quattro coesistono.
+Verificato che il test serva davvero, rompendolo apposta — messo `1002` come request code del cielo,
+il test combinato fallisce con «the sky reminder must be the only one on Cielo, expected 1 but was
+null» (l'avviso pioggia, postato dopo, gli aveva riscritto gli extra), mentre i quattro test singoli
+restavano verdi. È esattamente il motivo per cui il primo test esiste nella forma che ha.
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1609 test**, lint a zero errori.
