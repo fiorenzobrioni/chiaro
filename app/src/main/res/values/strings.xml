@@ -389,7 +389,7 @@
     <string name="guide_sky_events_title">Coming up</string>
     <string name="guide_sky_events_body">The calendar ahead: meteor peaks with their dates, the next full moon, solstices and equinoxes — with a verdict where the forecast reaches that far and an honest “too far out to say” where it does not.</string>
     <string name="guide_sky_catalog_title">Add a moment</string>
-    <string name="guide_sky_catalog_body">Some fifty moments, grouped by sun, night, moon, eclipses, seasons and meteor showers, each with the one line that says what it is and a page that explains it properly. This is the place to find out what a blue hour actually is, or the zodiacal light: by adding one, or by reading about it first.</string>
+    <string name="guide_sky_catalog_body">Sixty moments, grouped by sun, night, moon, planets, eclipses, seasons and meteor showers, each with the one line that says what it is and a page that explains it properly. This is the place to find out what a blue hour actually is, or the zodiacal light: by adding one, or by reading about it first.</string>
 
     <string name="guide_alerts_title">Alerts</string>
     <string name="guide_alerts_p1">Two kinds live here: the ones already written, and the ones you write. Nothing arrives that you did not switch on.</string>
@@ -460,6 +460,10 @@
     <string name="sky_event_and">%1$s and %2$s</string>
     <string name="sky_section_reminders">Reminders</string>
     <string name="sky_add_moment">Add a moment</string>
+    <!-- Fase 28: sessanta voci in un foglio erano uno scroll. -->
+    <string name="sky_catalog_search">Search the events</string>
+    <string name="sky_catalog_search_clear">Clear the search</string>
+    <string name="sky_catalog_no_match">Nothing here matches «%1$s».</string>
     <string name="sky_moment_now">Now</string>
     <string name="sky_day_today">Today</string>
     <string name="sky_day_tomorrow">Tomorrow</string>
@@ -475,6 +479,7 @@
     <string name="sky_tonight_moon_sets">The moon is up until %1$s, %2$d%% lit</string>
     <string name="sky_tonight_moon_rises">The moon comes back up at %1$s, %2$d%% lit</string>
     <string name="sky_tonight_moon_all_night">The moon is up from dusk to dawn, %1$d%% lit: no genuinely dark window tonight. The sky is dark from %2$s to %3$s all the same.</string>
+    <string name="sky_tonight_clear_between">Clearest between %1$s and %2$s</string>
     <string name="sky_moon_line">%1$s · %2$d%% lit</string>
     <string name="sky_too_far">Too far out to say</string>
 
@@ -495,6 +500,47 @@
     <string name="sky_none_moon">The moon skips it, as it does about once a month</string>
     <string name="sky_none_no_darkness">The sky never gets fully dark</string>
     <string name="sky_none_moon_all_night">The moon is up all night</string>
+
+    <!-- Fase 28: i nuovi eventi (luna piena al crepuscolo, luce cinerea, Venere,
+         Giove, le tre congiunzioni), le loro ragioni di assenza, il marchio
+         fotografico e la direzione in cui guardare. -->
+    <string name="sky_group_planets">Planets</string>
+    <string name="sky_name_moon_full_at_dusk">Full moon at dusk</string>
+    <string name="sky_expl_moon_full_at_dusk">The evening the full moon comes up while the sky is still coloured.</string>
+    <string name="sky_about_moon_full_at_dusk">Once a month the moon rises within a few minutes of sunset, and for half an hour it is a huge orange disc against a sky that has not gone dark yet. It is the same moon that will be small and white and high at midnight: the size is an illusion your eye plays near the horizon, and the colour is real, made the same way a red sunset is.\n\nAn almanac answers the full moon with an instant â «full moon, 03:14» â which is the moment of the geometry and not an evening anybody would go outside for. This is the evening. The app looks for a moonrise that falls inside the twilight with the disc already reading as round, which is sometimes the night of the full moon and often the one before it.</string>
+    <string name="sky_name_earthshine_pm">Earthshine, evening</string>
+    <string name="sky_expl_earthshine_pm">The thin crescent with the rest of the disc faintly lit, low in the west.</string>
+    <string name="sky_about_earthshine_pm">For a few evenings after the new moon there is a thin crescent low in the west, and if the sky is clear you can see the whole disc: the dark part glows faintly grey. That glow is sunlight that hit the earth, bounced, and landed on the moon. It is called earthshine, and it is the only sight in this list where what you are looking at is your own planet’s light coming back.\n\nIt needs a thin crescent and nothing else. Past about a fifth of the disc the lit limb is too bright and the ashen light drowns in it, which is why the window is only a few evenings long each month and why this entry disappears in between. Look while the sky still has some blue in it: once it is properly dark the moon is usually already down.</string>
+    <string name="sky_name_earthshine_am">Earthshine, morning</string>
+    <string name="sky_expl_earthshine_am">The same ashen light before dawn, low in the east.</string>
+    <string name="sky_about_earthshine_am">The same sight on the other side of the month: a few mornings before the new moon, a waning crescent comes up in the east ahead of the sun with the rest of its disc faintly lit by earthlight.\n\nIt asks for the same thing the evening one does — a thin crescent and a clear horizon — and costs an early alarm instead of an evening, which is why most people have only ever seen the evening half. The dark part of the disc is a little brighter in spring than in autumn, because the part of the earth doing the reflecting has more cloud and ocean under the sun.</string>
+    <string name="sky_name_venus_evening">Venus, evening star</string>
+    <string name="sky_expl_venus_evening">The brightest thing in the west after sunset, and not a star.</string>
+    <string name="sky_about_venus_evening">The bright, steady point low in the west after sunset is a planet. It is brighter than anything in the sky except the sun and the moon, it does not twinkle the way stars do, and it is the single most common thing people photograph and then ask about.\n\nVenus is closer to the sun than we are, so it never gets far from it: it is only ever visible for a few hours after sunset or a few before sunrise, never at midnight. That is why this entry comes and goes — for months at a time Venus is an evening star, then it passes between us and the sun and spends the next stretch as a morning one.</string>
+    <string name="sky_name_venus_morning">Venus, morning star</string>
+    <string name="sky_expl_venus_morning">The same planet on the other side of the year, before dawn in the east.</string>
+    <string name="sky_about_venus_morning">The same planet, the other half of its cycle: for months at a time Venus rises ahead of the sun and is the brightest thing in the eastern sky before dawn.\n\nThe ancients took the two for two different objects and gave them two names, which is a reasonable mistake to make — nothing about an evening star tells you it is the same light you saw at dawn eight months ago. It is the same planet, going round faster than we do on a smaller track, and what changes is which side of the sun it is on.</string>
+    <string name="sky_name_jupiter_night">Jupiter tonight</string>
+    <string name="sky_expl_jupiter_night">Steady, yellow-white, brighter than any star: when it is up, and where.</string>
+    <string name="sky_about_jupiter_night">After Venus and the moon, Jupiter is the brightest thing in a night sky, and unlike Venus it can be up at midnight — it is further from the sun than we are, so it is not tied to the twilight. A steady yellow-white point that does not twinkle: that is it.\n\nIt is also the easiest thing in the sky to turn into more than a point. Any pair of binoculars held steady shows up to four of its moons as a little line of dots beside it, and they move enough between two nights that you can see they are going round. That is the observation that lost Galileo his freedom and it costs nothing.</string>
+    <string name="sky_name_conjunction_moon_venus">The moon beside Venus</string>
+    <string name="sky_expl_conjunction_moon_venus">The evenings the crescent and the bright planet stand next to each other.</string>
+    <string name="sky_about_conjunction_moon_venus">Every month or so the moon, going round us, passes the place Venus happens to be, and for a night the two brightest points in the twilight stand a couple of degrees apart. Hold a finger out at arm’s length: that is about a degree wide. A close pass fits behind one.\n\nThey are not near each other in any real sense — the moon is a light-second away and Venus is minutes — and that is the whole charm of it: two objects at completely different distances, lined up by where you happen to be standing. The app only lists a pass that can actually be seen from here, because about half of them happen with both of them behind the sun.</string>
+    <string name="sky_name_conjunction_moon_jupiter">The moon beside Jupiter</string>
+    <string name="sky_expl_conjunction_moon_jupiter">The nights the moon passes the brightest planet of the night sky.</string>
+    <string name="sky_about_conjunction_moon_jupiter">The same monthly pass, with the other planet this app knows by name. Because Jupiter can be up at any hour, this one is not tied to the twilight the way the Venus pass is: it can happen high and late, which makes it the better of the two to photograph.\n\nIf the moon is a crescent, this is the night to look at Jupiter through binoculars — it is easy to find because the moon is pointing at it, and the same field of view will usually hold the moons as well.</string>
+    <string name="sky_name_conjunction_venus_jupiter">Venus beside Jupiter</string>
+    <string name="sky_expl_conjunction_venus_jupiter">The two brightest planets in one patch of sky: rare, and unmistakable.</string>
+    <string name="sky_about_conjunction_venus_jupiter">The two brightest planets, close enough to cover with a thumb. It happens roughly every thirteen months, and only some of those are visible from any given place, so a good one is a few years apart rather than a few months.\n\nIt is worth putting in a calendar when it comes. Two points of that brightness, that close together, is a sight people notice without being told to look — it is the most reported «strange light in the sky» there is.</string>
+    <string name="sky_none_moon_not_crescent">The moon is not a thin crescent now</string>
+    <string name="sky_none_planet_too_low">Too low to see, this close to the sun</string>
+    <string name="sky_none_no_conjunction">No close pass visible from here for years yet</string>
+    <string name="sky_none_no_moonrise_at_dusk">No full moon rises inside the twilight here</string>
+    <string name="sky_guide_when_photographic">Worth bringing a camera.</string>
+    <string name="sky_photographic_desc">Worth a photograph</string>
+    <string name="sky_bearing_towards">towards %1$s</string>
+    <string name="sky_conjunction_apart">%1$d° apart</string>
+    <string name="sky_conjunction_very_close">less than a degree apart</string>
 
     <!-- Reminders: inexact by design, and the screen says so -->
     <string name="sky_default_lead">Usual reminder</string>

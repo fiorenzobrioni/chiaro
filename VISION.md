@@ -320,7 +320,9 @@ day.
 The differentiator with the most engineering already behind it.
 
 - **Tonight**: a hero verdict — *Great* / *So-so* / *No chance* / *Not sure yet* — for the dark
-  window, with the numbers that decided it. The dark window is the astronomical night **minus the
+  window, with the numbers that decided it, and since Fase 28 the answer to *yes, but when*: the
+  clearest run of hours inside the window, when that is not the whole of it. A verdict is one
+  word over eight hours and the app has those hours. The dark window is the astronomical night **minus the
   hours the moon is up** (Fase 27): the intersection the guide page always described, so the card
   says "dark from 01:11 to 04:42" on a night the moon owns the first half, names what took the rest
   ("the moon is up until 01:11, 75% lit"), and states the sky it cannot offer at all when the moon
@@ -338,11 +340,30 @@ The differentiator with the most engineering already behind it.
   meteor peaks with their dates, full moon, solstice, equinox. The verdict travels with each where
   the forecast reaches that far, and an honest "too far out to say" where it does not. One instant
   is one row: two showers that peak on the same night share it and both are named.
-- **Add a moment**: the 51-job catalog, grouped (Sun · Night · Moon · Eclipses · Seasons · Meteor
-  showers), each with a one-line explanation of what it is. This is where a person learns what a
-  blue hour is, by adding one. (It read "32-job" and five groups until Fase 27: that was the count
-  at Fase 5, and Fase 19 added the dark-sky pair, the named quarters, the two eclipses, the annual
-  facts and three showers without this line following. §6 has said 51 all along.)
+- **Add a moment**: the 60-job catalog, grouped (Sun · Night · Moon · Planets · Eclipses ·
+  Seasons · Meteor showers), searchable by the words the rows print, each with a one-line
+  explanation of what it is. This is where a person learns what a blue hour is, by adding one.
+  (It read "32-job" and five groups until Fase 27: that was the count at Fase 5, and Fase 19
+  added the dark-sky pair, the named quarters, the two eclipses, the annual facts and three
+  showers without this line following. Fase 28 added the nine below and the search field.)
+- **The nine sights of Fase 28**, which are what the section was always for — an event somebody
+  can be sent outside to look at, in a sentence with a direction in it:
+  - **The full moon at dusk**, the evening it comes up inside the twilight as a huge orange disc.
+    An almanac answers the full moon with "03:14"; this is the evening.
+  - **Earthshine**, evening and morning: the thin crescent with the rest of the disc lit by the
+    earth. Most people have never been told it is a thing they can see.
+  - **Venus and Jupiter** — morning star, evening star, and Jupiter's night — which are the two
+    points of light a passer-by picks out without being taught, and the answer to "what is that
+    bright star". They reopen a Fase 19 decision that planets were a project of their own; that
+    is true of the category and not of these two (§7, `PlanetMath`).
+  - **Three conjunctions**: the moon beside each planet, and the two planets beside each other —
+    listed only when the pair can actually be seen from here, because about half of them happen
+    behind the sun.
+- **The camera mark**: nine of the sixty carry it, and it is deliberately scarce — on a third of
+  the catalog it would say nothing. It is also never an opinion: the rows that carry it print
+  **which way to turn** ("towards west-north-west"), because a flag saying an event is worth
+  photographing with no direction to point in is a taste, and this app does not render those.
+  The solar eclipse is the one exclusion decided on safety rather than on the sight.
 - **The guide to the events**: a page for every entry in that catalog — what it is, when it happens,
   what the clouds have to do with it, and what to read next. It has two doors, and neither is
   redundant: the info button beside a catalog entry, which opens the page *inside* the sheet so the

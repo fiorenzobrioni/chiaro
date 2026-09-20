@@ -52,7 +52,26 @@ enum class SkyNotScheduled {
      * the window is the whole night, some nights it is ninety minutes, and some
      * nights there is none at all."
      */
-    MOON_ALL_NIGHT
+    MOON_ALL_NIGHT,
+
+    /**
+     * The moon is not the thin crescent earthshine needs (Fase 28): either it is out
+     * of the sky's glare and too fat for the ashen light to show, or it is so new that
+     * it is still inside the sun's.
+     */
+    MOON_NOT_CRESCENT,
+
+    /**
+     * The planet is in the sky but not high enough to be a sight — usually because it
+     * is on its way behind the sun. A fact about where it is this month.
+     */
+    PLANET_TOO_LOW,
+
+    /** No close approach of this pair is visible from here inside the search horizon. */
+    NO_CONJUNCTION_AHEAD,
+
+    /** No full moon rises inside the twilight here inside the search window. */
+    NO_MOONRISE_AT_DUSK
 }
 
 /**
@@ -145,6 +164,32 @@ object SkyScheduler {
             )
             SkyJobCatalog.MoonClosestFull.id -> yearly(job, date, zone, coords) {
                 YearEvents.closestFullMoon(date.year)
+            }
+            SkyJobCatalog.MoonFullAtDusk.id ->
+                SkyAlmanac.fullMoonAtDusk(date, zone, coords)
+                    ?.let { SkyOccurrence.At(job, it) }
+                    ?: SkyOccurrence.None(job, SkyNotScheduled.NO_MOONRISE_AT_DUSK)
+            SkyJobCatalog.EarthshinePm.id ->
+                sight(job, SkySights.earthshine(date, zone, coords, evening = true))
+            SkyJobCatalog.EarthshineAm.id ->
+                sight(job, SkySights.earthshine(date, zone, coords, evening = false))
+            SkyJobCatalog.VenusEvening.id -> sight(
+                job, SkySights.planetWindow(Planet.VENUS, date, zone, coords, evening = true)
+            )
+            SkyJobCatalog.VenusMorning.id -> sight(
+                job, SkySights.planetWindow(Planet.VENUS, date, zone, coords, evening = false)
+            )
+            SkyJobCatalog.JupiterNight.id -> sight(
+                job,
+                SkySights.planetWindow(
+                    Planet.JUPITER, date, zone, coords, evening = true, wholeNight = true
+                )
+            )
+            in ConjunctionJobs.keys -> {
+                val (a, b) = ConjunctionJobs.getValue(job.id)
+                SkyAlmanac.conjunction(a, b, date, zone, coords)
+                    ?.let { SkyOccurrence.At(job, it.at) }
+                    ?: SkyOccurrence.None(job, SkyNotScheduled.NO_CONJUNCTION_AHEAD)
             }
             SkyJobCatalog.LunarEclipse.id -> lunarEclipse(job, date, zone, coords)
             SkyJobCatalog.SolarEclipse.id -> solarEclipse(job, date, zone, coords)
@@ -527,6 +572,28 @@ object SkyScheduler {
                         SkyOccurrence.At(job, eclipse.contacts.start, eclipse.contacts.endInclusive)
                     } ?: SkyOccurrence.None(job, SkyNotScheduled.NO_ECLIPSE_AHEAD)
 
+                job.id == SkyJobCatalog.MoonFullAtDusk.id ->
+                    SkySights.nextFullMoonAtDusk(at.atZone(zone).toLocalDate(), zone, coords)
+                        ?.let { moonrise ->
+                            // The next one is a month away; step past this evening so the
+                            // walk does not find the same moonrise again.
+                            at = moonrise.plus(Duration.ofDays(1))
+                            SkyOccurrence.At(job, moonrise)
+                        } ?: SkyOccurrence.None(job, SkyNotScheduled.NO_MOONRISE_AT_DUSK)
+
+                job.id in ConjunctionJobs -> {
+                    val (a, b) = ConjunctionJobs.getValue(job.id)
+                    // Through the almanac, not straight at the search: a conjunction
+                    // walk is three years at six-hour steps with a moon position in
+                    // each, and this runs on every rebuild of the screen. Asked by the
+                    // local DAY, which is the memo's key and is exact here — two
+                    // conjunctions of one pair are never the same day.
+                    conjunctionFrom(a, b, at, zone, coords)?.let { close ->
+                        at = close.at.plus(Duration.ofDays(1))
+                        SkyOccurrence.At(job, close.at)
+                    } ?: SkyOccurrence.None(job, SkyNotScheduled.NO_CONJUNCTION_AHEAD)
+                }
+
                 // `nextMoonQuarter` is strictly-after, so feeding it its own answer
                 // walks the series. That guard lives in the engine rather than here,
                 // where the second caller to need it would have had to remember it.
@@ -546,6 +613,39 @@ object SkyScheduler {
         }
         return results
     }
+
+    /**
+     * The next conjunction of the pair strictly after [at], through [SkyAlmanac].
+     *
+     * The memo is keyed on a local date, and the date of [at] can hold a conjunction
+     * that is already behind it — which is exactly the case the walk hits, since it
+     * steps forward from the one it just returned. One more day, at most once.
+     */
+    private fun conjunctionFrom(
+        a: SkyBody,
+        b: SkyBody,
+        at: Instant,
+        zone: ZoneId,
+        coords: Coordinates
+    ): Conjunction? {
+        val date = at.atZone(zone).toLocalDate()
+        val first = SkyAlmanac.conjunction(a, b, date, zone, coords)
+        if (first != null && first.at.isAfter(at)) return first
+        return SkyAlmanac.conjunction(a, b, date.plusDays(1), zone, coords)
+    }
+
+    /** One of [SkySights]' answers, attributed to the job that asked for it. */
+    private fun sight(job: SkyJob, result: SkySights.SightResult): SkyOccurrence = when (result) {
+        is SkySights.SightResult.At -> SkyOccurrence.At(job, result.start, result.end)
+        is SkySights.SightResult.None -> SkyOccurrence.None(job, result.reason)
+    }
+
+    /** The three pairs a conjunction line can be about, and which bodies each one means. */
+    val ConjunctionJobs: Map<String, Pair<SkyBody, SkyBody>> = mapOf(
+        SkyJobCatalog.MoonVenus.id to (SkyBody.MOON to SkyBody.VENUS),
+        SkyJobCatalog.MoonJupiter.id to (SkyBody.MOON to SkyBody.JUPITER),
+        SkyJobCatalog.VenusJupiter.id to (SkyBody.VENUS to SkyBody.JUPITER)
+    )
 
     /** The four named quarters and the elongation each one is. */
     private val QuarterJobs: Map<String, MoonQuarterKind> = mapOf(

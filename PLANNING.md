@@ -8718,3 +8718,187 @@ riscritte nella forma che l'app già usa, «%d%% illuminata». È la regola del 
 suo lavoro su chi non la conosceva.
 
 `./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1620 test**, lint a zero errori.
+
+## Fase 28 — Nove eventi nuovi, due pianeti, e un marchio che non è un'opinione (committente, 20 set 2026)
+
+Chiesto di implementare le tre proposte rimaste della revisione, i quattro eventi nuovi, e —
+riaprendo esplicitamente una decisione a verbale — Venere e Giove. In più, la domanda diretta:
+segnalare che un evento si presta alla fotografia è utile o è rumore?
+
+### La risposta sul marchio fotografico, prima del codice
+
+**Sì, ma a due condizioni**, e senza di quelle sarebbe esattamente il rumore che il committente
+temeva.
+
+Le ragioni per cui non lo è: il catalogo ha già proprietà leggibili dalla macchina
+(`observable`, `visibilityDependent`, `needsDarkness`) che generano da sole le righe «quando
+capita» nella guida, e un flag viaggia sullo stesso binario senza poter divergere dalla prosa;
+l'ora d'oro e l'ora blu **sono già nel catalogo solo per la fotografia**, quindi l'app ha già
+quel lettore e semplicemente non lo nomina; e non aggiunge righe, quindi per chi non fotografa
+costa zero.
+
+Le due condizioni:
+
+1. **Scarso.** Su venti eventi su sessanta non direbbe niente. Sono **nove**: le quattro ore del
+   fotografo, la luna piena al crepuscolo, le due finestre di luce cinerea, il nucleo della Via
+   Lattea e l'eclissi **lunare**. Il conto è un test (`SkyJobCatalogTest`), non una buona
+   intenzione di chi aggiunge il prossimo job, e i casi che non devono mai prenderlo sono
+   nominati: mezzogiorno solare, equinozio, perielio, fase lunare.
+2. **Deve portare un'informazione, non un'etichetta.** «Bello da fotografare» è un'opinione e
+   quest'app non ne stampa. Quel che serve è **dove puntare**, e quindi il flag e l'azimut sono
+   una cosa sola: il marchio dice *porta la macchina*, la riga accanto dice *verso ovest-nordovest*.
+   `SkySights.bearing` risponde `null` sulla maggior parte delle righe apposta — un equinozio non
+   capita in una direzione, e «il sole sorge verso est» non insegna niente a nessuno — ed è un
+   test che ogni evento fotografico ne abbia invece una.
+
+**L'eclissi solare è l'unica esclusione decisa sulla sicurezza e non sulla vista.** La riga che
+l'app già stampa su di essa è un avvertimento — non guardare mai il sole senza un filtro adatto —
+e «porta la macchina fotografica» accanto a un avvertimento si legge come un permesso. Non lo è:
+un obiettivo puntato al sole senza filtro solare distrugge il sensore dietro, e attraverso un
+mirino ottico distrugge l'occhio dietro quello. Il marchio serve a mandare qualcuno fuori con una
+macchina, quindi l'unico evento in cui questo richiede attrezzatura che l'app non può verificare
+non lo prende.
+
+Il disegno è nostro (`ic_photographic.xml`), nella stessa mano di `ic_verdict_*` e `ic_range_*`:
+tratti da 2.4 su 24, capi tondi, ~1.8 dp ai 18 a cui la riga lo mostra. Non un'icona Material,
+per due motivi che valgono entrambi: il progetto non porta `material-icons-extended` e non
+aggiunge un megabyte di glifi per un marchio, e ogni pezzo di grafica di servizio che quest'app
+disegna da sé vive già in quella cartella in una mano sola.
+
+### I due pianeti, e la decisione riaperta
+
+`PLANNING.md` aveva messo a verbale alla Fase 19: «pianeti e congiunzioni = un progetto a sé (una
+VSOP87 troncata e i suoi test)». Vero della **categoria**, falso di questi due, ed è l'argomento
+con cui il committente l'ha riaperta: Venere e Giove sono gli unici punti di luce che un passante
+distingue senza che glielo spieghi nessuno, sono la risposta a «cos'è quella stella luminosa», e
+per arrivarci a qualche primo d'arco servono elementi orbitali, non una serie per pianeta. Gli
+altri sei restano fuori per il motivo che non è cambiato: Marte chiede del suo colore, Mercurio
+non è mai cielo scuro, e Saturno, Urano e Nettuno sono roba da telescopio, che §3.2 mette fuori.
+
+Il modello sono **elementi kepleriani con derive secolari** — la tabella JPL/Caltech degli
+elementi approssimati dei pianeti maggiori, valida 1800-2050 — risolti attraverso l'equazione di
+Keplero, riferiti all'eclittica media J2000, precessati all'eclittica della data, corretti per il
+tempo-luce una volta e poi passati alle stesse primitive di obliquità, altezza e azimut che usa
+ogni altro corpo del modulo.
+
+**Buono a qualche primo d'arco**, che è la taglia giusta per le due domande che l'app fa: se un
+pianeta è su e abbastanza alto da essere la cosa che qualcuno sta indicando, e quanto dista dalla
+luna quando si incrociano — una separazione che questa app stampa in gradi interi e mai in primi.
+Non è un'effemeride: niente occultazioni, niente transiti, e niente qui va reso al secondo.
+
+### Misurato, non affermato — e la catena conta
+
+Una tabella di coefficienti che nessuno ha verificato è una diceria (la regola a cui è stato
+tenuto `EclipseEngine`). Ma anche una riga di effemeride **ricordata** è una diceria, quindi la
+verifica è una catena di invarianti e non un elenco di date:
+
+1. Gli elementi della **Terra** rispondono alla longitudine solare di questo stesso modulo, che è
+   a sua volta misurata contro l'alba di Open-Meteo a trenta secondi. Il Sole visto da qui **è**
+   la longitudine eliocentrica della Terra girata di mezzo giro, quindi quell'unica asserzione
+   copre elementi, Keplero, la precessione e il cambio di sistema in un colpo solo. Misurato:
+   **meno di tre primi** su sette date fra il 2000 e il 2030.
+2. I pianeti rispondono agli invarianti che una tabella sbagliata non può soddisfare: la massima
+   elongazione di Venere (che non lascia mai il crepuscolo, ed è il motivo per cui è solo stella
+   della sera o del mattino) fra 44° e 48°; Giove che arriva davvero all'opposizione; i due
+   periodi **sinodici** entro tre giorni dai pubblicati; i due periodi siderali; e l'intervallo di
+   distanza dal Sole che ciascuna orbita consente.
+
+Due asserzioni sono state **riscritte dopo averle viste fallire per il motivo giusto**, ed è il
+tipo di cosa che vale più del test:
+
+- Il periodo sinodico di Venere è uscito **292,28 giorni**. Non è un difetto del modello: è
+  583,92 ÷ 2, perché Venere passa davanti al Sole **due volte** per ciclo — congiunzione inferiore
+  e superiore — e contare ogni minimo di elongazione misura mezzo periodo con grande sicurezza.
+  Le due metà si distinguono da quanto è lontana.
+- Quello di Giove è uscito **381,6** contro 398,88. Anche qui il rilevatore: la separazione è un
+  angolo di cerchio massimo, quindi il vagare in latitudine eclittica ci mette dentro minimi
+  locali. Passato alla definizione vera — l'attraversamento dello zero della differenza segnata in
+  ascensione retta, con i tripli passaggi della retrogradazione deduplicati a cento giorni.
+
+Una conferma indipendente arrivata gratis dalle misure: le finestre di Venere fanno passare il
+pianeta da stella della sera a stella del mattino fra fine ottobre e novembre 2026, che è
+esattamente attorno alla congiunzione inferiore del 26 ottobre 2026 (la precedente più 583,92
+giorni). Nessun test la chiede; è il modello che si comporta come il sistema solare.
+
+### I nove eventi
+
+- **Luna piena al crepuscolo** (`moon.full_at_dusk`). L'intersezione: disco già abbastanza tondo
+  E sorgere dentro il crepuscolo. Misurato a Milano dal 20 settembre 2026: **25 settembre, 18:35**,
+  cioè la sera **prima** della luna piena (26 settembre 18:49) — che è spesso la migliore, ed è il
+  motivo per cui la ricerca è una finestra e non l'istante della geometria.
+- **Luce cinerea**, sera e mattina (`earthshine.pm/am`). Falce fra l'1% e il 18%: sotto è ancora
+  dentro il bagliore del Sole, sopra il bordo illuminato annega la luce di cenere, che è tutta la
+  vista. Misurato: **12, 13 e 14 ottobre 2026** a Milano, con la finestra che cresce da 22 a 64
+  minuti mentre la luna tramonta più tardi.
+- **Venere sera / Venere mattina / Giove stanotte**. Soglie di altezza (5° per Venere, 10° per
+  Giove) perché un pianeta a tre gradi è dietro le case, e dire «c'è Venere» a qualcuno in una via
+  sarebbe inventare una vista. Deliberatamente **non** `needsDarkness`: Giove a magnitudine −2 è
+  ovvio in un cielo di periferia e Venere è ovvio di giorno, quindi una luna piena non li rovina —
+  e dire che lo facesse sarebbe prendere in prestito una regola delle cose deboli per le due più
+  luminose.
+- **Tre congiunzioni**. La seconda metà della definizione non è un vezzo: la luna passa accanto a
+  Venere ogni mese e **circa la metà** di quelle volte capita con tutti e due dietro il Sole, dove
+  l'evento è reale, calcolabile e invisibile — e una riga che lo annunciasse manderebbe qualcuno
+  fuori a guardare la luce del giorno. Quindi un candidato torna solo quando esiste un tratto di
+  notte o crepuscolo con tutti e due davvero su. Misurato da Milano: luna-Giove a **0,2°** il 6
+  ottobre 2026, luna-Venere a 1,0° il 7 novembre, e Venere-Giove a **0,6° il 10 novembre 2028** —
+  che è la distanza fra «ogni mese» e «vale la pena segnarsela».
+
+Nessuna icona nuova da importare, e non è una scorciatoia: **un pianeta a occhio nudo è un punto
+luminoso**, quindi `star` — già spedita — è il disegno onesto. Meteocons non ha pianeti e
+inventarne uno sarebbe un dischetto che nessuno vede.
+
+### Le due proposte rimaste
+
+- **Il tratto più sereno** (`SkyVerdictEngine.clearStretch`). Il verdetto è una media su otto-dieci
+  ore, che è il numero giusto per una parola sola e un pessimo riassunto di una notte: un cielo
+  sereno fino all'una e chiuso dopo esce «così così», e la metà buona — che l'app ha, ora per ora,
+  e ha già scaricato — veniva buttata. Adesso la card la nomina. Derivato e non inventato: una
+  corsa di ore consecutive che passerebbero ognuna da sola. `null` quasi sempre, apposta — quando
+  nessuna ora passa, quando la corsa è tutta la finestra (il verdetto l'ha già detto), e quando sta
+  sotto l'ora, perché «sereno dalle 02:10 alle 02:40» è una promessa che questa previsione non può
+  mantenere.
+- **La ricerca nel catalogo**. Sessanta voci in sei gruppi erano uno scroll per chi cercava
+  «Perseidi» per nome. Filtra sulle due stringhe che la riga **già stampa** — nome e riga di
+  spiegazione — senza accenti e senza maiuscole, e mai sull'id puntato, che su questo schermo non
+  compare e non comparirà (VISION §5.3). Non un `SearchBar`: dentro un bottom sheet che già tiene
+  una lista sarebbe una seconda superficie che scorre sopra la prima.
+
+### Come è stato verificato
+
+Ogni numero di questa voce è uscito da un test usa-e-getta poi rimosso, non da una stima: la
+tabella delle finestre di luce cinerea, le congiunzioni con la loro separazione e la loro finestra
+di visibilità, le finestre di Venere e Giove nell'arco di duecento giorni.
+
+I test nuovi verificano **quel che il codice dichiara**, non il suo output: la luna piena al
+crepuscolo è davvero quasi piena e sorge davvero dentro il crepuscolo, al minuto del sorgere che
+la riga accanto stampa; la luce cinerea capita solo su una falce sottile e la finestra sta dentro
+il crepuscolo; Venere non è mai stella della sera e del mattino lo stesso giorno, e in 400 giorni è
+entrambe; una congiunzione è chiusa (un giorno prima e uno dopo sono più larghi) e tutti e due i
+corpi sono davvero su, col Sole giù, dentro la sua finestra.
+
+I test della guida non hanno avuto bisogno di modifiche e sono passati al primo colpo sulle nove
+pagine nuove, il che è il loro scopo: iterano il catalogo, quindi «ogni evento ha una pagina»,
+«ogni pagina è due paragrafi veri», «ogni pagina è davvero tradotta» e «nessuna pagina dice un id
+a voce alta» valgono anche per quel che non esisteva quando sono stati scritti.
+
+Dalla rilettura avversariale del proprio diff sono usciti due punti, e nessuno dei due sarebbe
+stato trovato da un test:
+
+- La riga di una congiunzione prendeva la separazione da una **seconda ricerca** («la prossima
+  congiunzione da oggi») mentre la sua data veniva da `SkyUpcoming`, che scavalca un evento
+  finito. Due domande, due risposte, una riga sola: è lo stesso difetto per cui `SkyUpcoming`
+  esiste, alla terza occorrenza. Adesso la separazione si misura **sull'istante della riga**, dove
+  di risposte ce n'è una.
+- La camminata aperiodica chiamava la ricerca diretta invece dell'almanacco: tre anni a passi di
+  sei ore con una posizione della Luna a ogni passo, a ogni ricostruzione della schermata, nel
+  giorno dopo una congiunzione. Passa dal memo, chiesta per giorno locale — che è esatto, perché
+  due congiunzioni della stessa coppia non cadono mai lo stesso giorno.
+
+Una sbadataggine da registrare perché costa tempo a chiunque la rifaccia: le trentasei stringhe
+nuove sono state generate con un `unicode_escape` di Python, che si è mangiato i `\'` degli
+apostrofi italiani e ha trasformato i `\n\n` dei capoversi in a capo veri. AAPT lo segnala come
+«Invalid unicode escape sequence», che non è la causa. Riparate e ricontrollate contando apostrofi
+nudi e capoversi.
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1639 test**, lint a zero errori.

@@ -18,9 +18,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -33,6 +35,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -48,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -79,6 +83,7 @@ import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.roundToInt
 
 /**
  * Sky (VISION §5.3): tonight's verdict, the day's subscribed moments, the calendar
@@ -488,6 +493,19 @@ private fun TonightCard(tonight: Tonight, zone: ZoneId, timeFmt: DateTimeFormatt
                 else -> null
             }
             moonLine?.let { Text(text = it, style = MaterialTheme.typography.bodyMedium) }
+            // And WHEN, on a night the verdict had to average (Fase 28): the clearest
+            // run of hours inside the window, which is the half of "so-so" a reader can
+            // actually act on. Absent on most nights, by design.
+            tonight.clearStretch?.let { stretch ->
+                Text(
+                    text = stringResource(
+                        R.string.sky_tonight_clear_between,
+                        stretch.start.atZone(zone).format(timeFmt),
+                        stretch.endInclusive.atZone(zone).format(timeFmt)
+                    ),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
             // The arithmetic, always (DESIGN §8.7): the number that decided it, or
             // the reason there is no number yet — and on its own line, beside the
             // moon rather than instead of it. The two used to share one slot with the
@@ -559,10 +577,11 @@ private fun MomentRow(
                     modifier = Modifier.size(WeatherIconSize.Sky)
                 )
             },
-            headlineContent = { Text(text = name) },
+            headlineContent = { SkyHeadline(name, moment.job.photographic) },
             supportingContent = {
                 Text(
-                    text = listOfNotNull(dayMark, timeLine).joinToString(" · "),
+                    text = listOfNotNull(dayMark, timeLine, bearingLine(moment.bearingDeg))
+                        .joinToString(" · "),
                     color = quiet
                 )
             },
@@ -675,10 +694,17 @@ private fun EventRow(
                     modifier = Modifier.size(WeatherIconSize.Sky)
                 )
             },
-            headlineContent = { Text(name) },
+            headlineContent = { SkyHeadline(name, event.job.photographic) },
             supportingContent = {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(listOfNotNull(whenLine, verdictLine).joinToString(" · "))
+                    Text(
+                        listOfNotNull(
+                            whenLine,
+                            conjunctionLine(event),
+                            bearingLine(event.bearingDeg),
+                            verdictLine
+                        ).joinToString(" · ")
+                    )
                     // An eclipse says which kind it is and the number that decides it,
                     // the same way a verdict carries its own arithmetic.
                     eclipseLine(res, event)?.let { Text(it) }
@@ -741,6 +767,63 @@ private fun eclipseLine(res: android.content.res.Resources, event: UpcomingEvent
     event.lunarEclipse?.let { SkyText.lunarEclipseLine(res, it) }
         ?: event.solarEclipse?.let { SkyText.solarEclipseLine(res, it) }
 
+/**
+ * A row's name, with the camera mark after it when the catalog says the event is one
+ * somebody would bring a camera to (Fase 28).
+ *
+ * A Material glyph rather than one of the weather family, and that is on purpose: the
+ * weather icons depict the sky and keep their own palette (§13.1), while this is
+ * chrome — it says something about the ROW, the way the bell beside it does, and it is
+ * tinted like chrome. Eighteen density-independent pixels, quiet ink, after the name
+ * and never before it: the name is what the reader is scanning for.
+ */
+@Composable
+private fun SkyHeadline(name: String, photographic: Boolean) {
+    if (!photographic) {
+        Text(name)
+        return
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(name, modifier = Modifier.weight(1f, fill = false))
+        Icon(
+            painter = painterResource(R.drawable.ic_photographic),
+            contentDescription = stringResource(R.string.sky_photographic_desc),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .padding(start = 6.dp)
+                .size(18.dp)
+        )
+    }
+}
+
+/**
+ * Which way to turn, in words — «verso ovest-nordovest», never «verso 292°».
+ *
+ * The half of the camera mark that is actually useful: a flag saying an event is worth
+ * photographing and no direction to point in is an opinion, and this app does not print
+ * those. Null on most rows by design ([SkySights.bearing]): an equinox does not happen
+ * in a direction.
+ */
+@Composable
+private fun bearingLine(bearingDeg: Double?): String? = bearingDeg?.let {
+    stringResource(R.string.sky_bearing_towards, stringResource(SkyText.bearingRes(it)))
+}
+
+/**
+ * How close a pair gets, which is the whole content of a conjunction row. Under a
+ * degree it is said in words: «0°» would read as a collision, and the app would be
+ * printing a rounding as if it were the fact.
+ */
+@Composable
+private fun conjunctionLine(event: UpcomingEvent): String? =
+    event.conjunctionSeparationDeg?.let { degrees ->
+        if (degrees < 1.0) {
+            stringResource(R.string.sky_conjunction_very_close)
+        } else {
+            stringResource(R.string.sky_conjunction_apart, degrees.roundToInt())
+        }
+    }
+
 @Composable
 private fun BellButton(lead: SkyLead, name: String, onClick: () -> Unit) {
     val on = lead != SkyLead.OFF
@@ -799,6 +882,16 @@ internal fun jobIcon(job: SkyJob) = when (job.id) {
     "moon.today", "moon.phase", "moon.full",
     "moon.closest_full", "eclipse.lunar" -> ChiaroIcons.moonPhase(MoonPhase.FULL_MOON)
     "eclipse.solar" -> ChiaroIcons.solarEclipse
+    // A moonrise is what the full moon at dusk IS, so it borrows the drawing.
+    "moon.full_at_dusk" -> ChiaroIcons.moonrise
+    "earthshine.pm" -> ChiaroIcons.moonPhase(MoonPhase.WAXING_CRESCENT)
+    "earthshine.am" -> ChiaroIcons.moonPhase(MoonPhase.WANING_CRESCENT)
+    // A planet to the naked eye IS a bright point of light, so the family's own star
+    // is the honest drawing for it — Meteocons has no planets and inventing one would
+    // be a disk nobody sees. The pairs take it too: two points, one of them this.
+    "venus.evening", "venus.morning", "jupiter.night",
+    "conjunction.moon_venus", "conjunction.moon_jupiter",
+    "conjunction.venus_jupiter" -> ChiaroIcons.star
     "equinox.spring", "solstice.summer",
     "equinox.autumn", "solstice.winter" -> ChiaroIcons.horizon
     else -> ChiaroIcons.fallingStars // the meteor showers
@@ -832,6 +925,7 @@ private fun CatalogSheet(
     onDismiss: () -> Unit
 ) {
     var openId by rememberSaveable { mutableStateOf<String?>(null) }
+    var query by rememberSaveable { mutableStateOf("") }
     ModalBottomSheet(onDismissRequest = onDismiss) {
         val open = openId?.let { SkyJobCatalog.byId(it) }
         if (open != null) {
@@ -856,8 +950,31 @@ private fun CatalogSheet(
             )
             return@ModalBottomSheet
         }
+        // Sixty entries in six groups is a long scroll for a reader who came looking for
+        // «Perseidi» by name (review, Fase 28). The field filters on the words the rows
+        // already print — the name and the one line under it — and never on the dotted
+        // id, which does not appear on this screen and never will (VISION §5.3).
+        val filtered = SkyGuide.groups.map { group ->
+            group to group.jobs.filter { job ->
+                query.isBlank() || matchesQuery(job, query)
+            }
+        }
+        CatalogSearchField(query = query, onQuery = { query = it })
         LazyColumn {
-            SkyGuide.groups.forEach { group ->
+            if (filtered.all { it.second.isEmpty() }) {
+                item {
+                    // The honest empty state: absence stated, never an empty list that
+                    // reads as a broken screen.
+                    Text(
+                        text = stringResource(R.string.sky_catalog_no_match, query),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp)
+                    )
+                }
+            }
+            filtered.forEach { (group, jobs) ->
+                if (jobs.isEmpty()) return@forEach
                 item {
                     Text(
                         text = stringResource(group.titleRes),
@@ -868,8 +985,8 @@ private fun CatalogSheet(
                         )
                     )
                 }
-                items(group.jobs.size) { index ->
-                    val job = group.jobs[index]
+                items(jobs.size) { index ->
+                    val job = jobs[index]
                     val subscribed = job.id in subscribedIds
                     val name = stringResource(SkyText.nameRes(job.id))
                     ListItem(
@@ -903,6 +1020,56 @@ private fun CatalogSheet(
         }
     }
 }
+
+/**
+ * The catalog's search field. Its own composable so the sheet's list stays a list.
+ *
+ * Not a `SearchBar`: that component brings its own expanding surface and its own
+ * results pane, and inside a bottom sheet already holding a list it would be a second
+ * scrolling surface over the first. A plain field over the list is what this is.
+ */
+@Composable
+private fun CatalogSearchField(query: String, onQuery: (String) -> Unit) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQuery,
+        singleLine = true,
+        label = { Text(stringResource(R.string.sky_catalog_search)) },
+        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQuery("") }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = stringResource(R.string.sky_catalog_search_clear)
+                    )
+                }
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    )
+}
+
+/**
+ * Whether a catalog row answers the query, matched on the two strings the row itself
+ * prints — accent- and case-insensitively, because a reader typing «perseidi» on a
+ * phone keyboard is not going to reach for the right diacritic and should not have to.
+ */
+@Composable
+private fun matchesQuery(job: SkyJob, query: String): Boolean {
+    val needle = query.foldForSearch()
+    val name = stringResource(SkyText.nameRes(job.id)).foldForSearch()
+    val explanation = stringResource(SkyText.explanationRes(job.id)).foldForSearch()
+    return needle in name || needle in explanation
+}
+
+/** Lower case, accents stripped: «Luce cinerea» and «luce cinerea» are one word here. */
+private fun String.foldForSearch(): String =
+    java.text.Normalizer.normalize(this, java.text.Normalizer.Form.NFD)
+        .replace(Regex("\\p{Mn}+"), "")
+        .lowercase(Locale.getDefault())
 
 /** The one button of an event's page inside the sheet: filled to add, outlined to
  * undo — the same weight order every destructive-ish action in the app uses. */

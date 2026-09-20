@@ -78,6 +78,15 @@ object SkyText {
         "meteor.alpha_capricornids.peak" -> R.string.sky_name_alpha_capricornids
         "meteor.southern_taurids.peak" -> R.string.sky_name_southern_taurids
         "meteor.northern_taurids.peak" -> R.string.sky_name_northern_taurids
+        "moon.full_at_dusk" -> R.string.sky_name_moon_full_at_dusk
+        "earthshine.pm" -> R.string.sky_name_earthshine_pm
+        "earthshine.am" -> R.string.sky_name_earthshine_am
+        "venus.evening" -> R.string.sky_name_venus_evening
+        "venus.morning" -> R.string.sky_name_venus_morning
+        "jupiter.night" -> R.string.sky_name_jupiter_night
+        "conjunction.moon_venus" -> R.string.sky_name_conjunction_moon_venus
+        "conjunction.moon_jupiter" -> R.string.sky_name_conjunction_moon_jupiter
+        "conjunction.venus_jupiter" -> R.string.sky_name_conjunction_venus_jupiter
         else -> error("no words for sky job $jobId")
     }
 
@@ -134,6 +143,15 @@ object SkyText {
         "meteor.alpha_capricornids.peak" -> R.string.sky_expl_alpha_capricornids
         "meteor.southern_taurids.peak" -> R.string.sky_expl_southern_taurids
         "meteor.northern_taurids.peak" -> R.string.sky_expl_northern_taurids
+        "moon.full_at_dusk" -> R.string.sky_expl_moon_full_at_dusk
+        "earthshine.pm" -> R.string.sky_expl_earthshine_pm
+        "earthshine.am" -> R.string.sky_expl_earthshine_am
+        "venus.evening" -> R.string.sky_expl_venus_evening
+        "venus.morning" -> R.string.sky_expl_venus_morning
+        "jupiter.night" -> R.string.sky_expl_jupiter_night
+        "conjunction.moon_venus" -> R.string.sky_expl_conjunction_moon_venus
+        "conjunction.moon_jupiter" -> R.string.sky_expl_conjunction_moon_jupiter
+        "conjunction.venus_jupiter" -> R.string.sky_expl_conjunction_venus_jupiter
         else -> error("no words for sky job $jobId")
     }
 
@@ -160,6 +178,10 @@ object SkyText {
         SkyNotScheduled.CORE_TOO_LOW -> R.string.sky_none_core_too_low
         SkyNotScheduled.NO_ECLIPSE_AHEAD -> R.string.sky_none_no_eclipse
         SkyNotScheduled.MOON_ALL_NIGHT -> R.string.sky_none_moon_all_night
+        SkyNotScheduled.MOON_NOT_CRESCENT -> R.string.sky_none_moon_not_crescent
+        SkyNotScheduled.PLANET_TOO_LOW -> R.string.sky_none_planet_too_low
+        SkyNotScheduled.NO_CONJUNCTION_AHEAD -> R.string.sky_none_no_conjunction
+        SkyNotScheduled.NO_MOONRISE_AT_DUSK -> R.string.sky_none_no_moonrise_at_dusk
     }
 
     /**

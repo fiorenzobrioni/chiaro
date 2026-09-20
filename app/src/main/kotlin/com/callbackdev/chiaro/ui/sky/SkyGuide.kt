@@ -10,7 +10,7 @@ import com.callbackdev.chiaro.domain.sky.SkyJobKind
 import com.callbackdev.chiaro.domain.sky.SkyJobShape
 
 /**
- * The guide to the sky events: a page for every one of the fifty-one the app can
+ * The guide to the sky events: a page for every one of the sixty the app can
  * follow (VISION §5.3 — "this is where a person learns what a blue hour is").
  *
  * The catalog already carried a name and one line each, and one line is enough to
@@ -38,7 +38,7 @@ import com.callbackdev.chiaro.domain.sky.SkyJobShape
 object SkyGuide {
 
     /** The catalog as the reader meets it, and the order the guide's index follows.
-     * Shared with the "Add a moment" sheet: two lists of the same fifty-one events in
+     * Shared with the "Add a moment" sheet: two lists of the same sixty events in
      * two different orders would be the app disagreeing with itself. */
     val groups: List<SkyGuideGroup> = with(SkyJobCatalog) {
         listOf(
@@ -61,7 +61,18 @@ object SkyGuide {
                 R.string.sky_group_moon,
                 listOf(
                     MoonRise, MoonSet, MoonToday, MoonPhase,
-                    MoonNew, MoonFirstQuarter, MoonFull, MoonLastQuarter, MoonClosestFull
+                    MoonNew, MoonFirstQuarter, MoonFull, MoonLastQuarter, MoonClosestFull,
+                    MoonFullAtDusk, EarthshinePm, EarthshineAm
+                )
+            ),
+            // The planets are their own heading rather than more of the moon's: what
+            // they answer is a different question ("what is that bright star"), and a
+            // reader looking for it would not think to open «Luna».
+            SkyGuideGroup(
+                R.string.sky_group_planets,
+                listOf(
+                    VenusEvening, VenusMorning, JupiterNight,
+                    MoonVenus, MoonJupiter, VenusJupiter
                 )
             ),
             SkyGuideGroup(R.string.sky_group_eclipses, listOf(LunarEclipse, SolarEclipse)),
@@ -135,6 +146,15 @@ object SkyGuide {
         "meteor.leonids.peak" -> R.string.sky_about_leonids
         "meteor.geminids.peak" -> R.string.sky_about_geminids
         "meteor.ursids.peak" -> R.string.sky_about_ursids
+        "moon.full_at_dusk" -> R.string.sky_about_moon_full_at_dusk
+        "earthshine.pm" -> R.string.sky_about_earthshine_pm
+        "earthshine.am" -> R.string.sky_about_earthshine_am
+        "venus.evening" -> R.string.sky_about_venus_evening
+        "venus.morning" -> R.string.sky_about_venus_morning
+        "jupiter.night" -> R.string.sky_about_jupiter_night
+        "conjunction.moon_venus" -> R.string.sky_about_conjunction_moon_venus
+        "conjunction.moon_jupiter" -> R.string.sky_about_conjunction_moon_jupiter
+        "conjunction.venus_jupiter" -> R.string.sky_about_conjunction_venus_jupiter
         else -> error("no page for sky job $jobId")
     }
 
@@ -169,6 +189,12 @@ object SkyGuide {
         if (job.needsDarkness) {
             add(resources.getString(R.string.sky_guide_when_darkness))
         }
+        // Read off [SkyJob.photographic] like every other line here, so the page can
+        // never claim a camera is worth bringing to an event the catalog does not
+        // mark — and can never quietly stop saying so on one it does.
+        if (job.photographic) {
+            add(resources.getString(R.string.sky_guide_when_photographic))
+        }
     }
 
     /**
@@ -196,7 +222,15 @@ object SkyGuide {
             MilkyWayCore.id to listOf(ZodiacalPm.id),
             ZodiacalPm.id to listOf(ZodiacalAm.id),
             ZodiacalAm.id to listOf(EquinoxAutumn.id),
-            MoonRise.id to listOf(MoonSet.id, MoonToday.id),
+            MoonRise.id to listOf(MoonSet.id, MoonToday.id, MoonFullAtDusk.id),
+            MoonFullAtDusk.id to listOf(MoonFull.id, GoldenPm.id),
+            EarthshinePm.id to listOf(EarthshineAm.id, MoonNew.id),
+            EarthshineAm.id to listOf(MoonNew.id),
+            VenusEvening.id to listOf(VenusMorning.id, MoonVenus.id, BluePm.id),
+            VenusMorning.id to listOf(MoonVenus.id, BlueAm.id),
+            JupiterNight.id to listOf(MoonJupiter.id, VenusJupiter.id),
+            MoonVenus.id to listOf(MoonJupiter.id),
+            VenusJupiter.id to listOf(VenusEvening.id),
             MoonToday.id to listOf(MoonPhase.id),
             MoonPhase.id to listOf(
                 MoonNew.id, MoonFirstQuarter.id, MoonFull.id, MoonLastQuarter.id

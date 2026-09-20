@@ -20,6 +20,7 @@ import com.callbackdev.chiaro.domain.sky.SkyLead
 import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyScheduler
+import com.callbackdev.chiaro.domain.sky.SkySights
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.domain.sky.SkyVerdictEngine
 import java.time.Duration
@@ -73,7 +74,14 @@ data class Tonight(
     val verdict: SkyVerdict?,
     val reason: SkyNotScheduled? = null,
     val night: SkyOccurrence.At? = null,
-    val moonIlluminationPct: Int? = null
+    val moonIlluminationPct: Int? = null,
+    /**
+     * The clearest run of hours inside the window, when it is not the whole of it
+     * (Fase 28). The verdict is a mean over eight to ten hours, which is the right
+     * number for one word and a poor answer to "yes, but when" — and the app has the
+     * hours. Null on most nights: see [SkyVerdictEngine.clearStretch].
+     */
+    val clearStretch: ClosedRange<Instant>? = null
 ) {
     /** True when the moon is what opens the window late: the night started earlier. */
     val moonHeldTheStart: Boolean
@@ -107,7 +115,13 @@ data class Moment(
     val timing: MomentTiming,
     /** For the moon's day-moment: the phase is the value, not a verdict. */
     val moonPhase: MoonPhase? = null,
-    val moonIlluminationPct: Int? = null
+    val moonIlluminationPct: Int? = null,
+    /**
+     * Which way to turn, degrees from north, on the rows where that is the half a
+     * reader cannot work out from a time (Fase 28). Null on most of them, deliberately
+     * — see [SkySights.bearing].
+     */
+    val bearingDeg: Double? = null
 )
 
 /**
@@ -153,10 +167,30 @@ data class UpcomingEvent(
      * Decided here rather than in the row because the clock lives here: the builder is
      * pure and takes `now`, a composable would have to be handed one.
      */
-    val showYear: Boolean = false
+    val showYear: Boolean = false,
+    /** As [Moment.bearingDeg]: where to look, where that is worth saying. */
+    val bearingDeg: Double? = null,
+    /**
+     * How close the pair gets, degrees — the whole content of a conjunction row.
+     *
+     * Measured at **this row's own instant** rather than fetched from a second search,
+     * and that is not a micro-optimisation: the row's occurrence comes from
+     * [SkyUpcoming], which rolls past an event that is over, while a fresh "next
+     * conjunction from today" answers about the one that has just passed. Two
+     * questions, two answers, one row — the defect this screen has now been bitten by
+     * twice. From the instant there is only one answer.
+     */
+    val conjunctionSeparationDeg: Double? = null
 ) {
     val at: SkyOccurrence.At? get() = occurrence as? SkyOccurrence.At
 }
+
+/**
+ * The instant a window is best asked about: its middle, or the instant itself. The
+ * bearing of a two-hour window taken at its start is not the bearing of the window.
+ */
+private val SkyOccurrence.At.middle: Instant
+    get() = end?.let { start.plus(Duration.between(start, it).dividedBy(2)) } ?: start
 
 /**
  * city + cached report + subscriptions + settings + now → the whole screen. Pure on
@@ -205,7 +239,9 @@ object SkyStateBuilder {
         return SkyUiState.Content(
             placeName = city.name,
             zone = zone,
-            tonight = tonight(city, zone, now, ::judge),
+            tonight = tonight(city, zone, now, ::judge) { at ->
+                SkyVerdictEngine.clearStretch(at.start, at.end, report?.hourly.orEmpty(), zone)
+            },
             moments = moments(subscriptions, settings, city, zone, now, ::judge),
             events = events(subscriptions, settings, city, zone, now, ::judge),
             defaultLead = SkyLead.ofMinutes(settings.skyNotifyDefaultMin),
@@ -225,7 +261,8 @@ object SkyStateBuilder {
         city: City,
         zone: ZoneId,
         now: Instant,
-        judge: (SkyJob, SkyOccurrence.At) -> SkyVerdict?
+        judge: (SkyJob, SkyOccurrence.At) -> SkyVerdict?,
+        clearStretch: (SkyOccurrence.At) -> ClosedRange<Instant>?
     ): Tonight {
         val job = SkyJobCatalog.DarknessWindow
         val upcoming = SkyUpcoming.of(job, now, zone, city.coordinates)
@@ -251,7 +288,8 @@ object SkyStateBuilder {
             window = at,
             verdict = judge(job, at),
             night = night,
-            moonIlluminationPct = moonPct
+            moonIlluminationPct = moonPct,
+            clearStretch = clearStretch(at)
         )
     }
 
@@ -297,7 +335,11 @@ object SkyStateBuilder {
                     moonIlluminationPct = if (isMoonDay && at != null) {
                         (AstronomyEngine.moonIllumination(at.start).illuminatedFraction * 100)
                             .roundToInt()
-                    } else null
+                    } else null,
+                    // Measured at the middle of a window rather than at its start: the
+                    // sun moves 15° an hour, so a golden hour's bearing taken at its
+                    // opening points a good deal north of where it ends up.
+                    bearingDeg = at?.let { SkySights.bearing(job, it.middle, city.coordinates) }
                 )
             }
             .sortedWith(
@@ -368,6 +410,13 @@ object SkyStateBuilder {
                 },
                 solarEclipse = if (at != null && job.id == SkyJobCatalog.SolarEclipse.id) {
                     SkyAlmanac.nextSolarEclipse(today, zone, city.coordinates)
+                } else {
+                    null
+                },
+                bearingDeg = at?.let { SkySights.bearing(job, it.middle, city.coordinates) },
+                conjunctionSeparationDeg = if (at != null && job.id in SkyScheduler.ConjunctionJobs) {
+                    val (first, second) = SkyScheduler.ConjunctionJobs.getValue(job.id)
+                    AstronomyEngine.separation(first, second, at.start)
                 } else {
                     null
                 }

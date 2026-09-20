@@ -370,7 +370,7 @@
     <string name="guide_sky_events_title">In arrivo</string>
     <string name="guide_sky_events_body">Il calendario davanti: i picchi degli sciami meteorici con la loro data, la prossima luna piena, solstizi ed equinozi — col verdetto dove la previsione arriva e un onesto «troppo lontano per dirlo» dove non arriva.</string>
     <string name="guide_sky_catalog_title">Aggiungi un momento</string>
-    <string name="guide_sky_catalog_body">Una cinquantina di momenti, raggruppati in sole, notte, luna, eclissi, stagioni e sciami meteorici, ognuno con la riga che dice cos\'è e una pagina che lo spiega per bene. È il posto dove si scopre cos\'è davvero un\'ora blu, o la luce zodiacale: aggiungendola, o leggendone prima.</string>
+    <string name="guide_sky_catalog_body">Sessanta momenti, raggruppati in sole, notte, luna, pianeti, eclissi, stagioni e sciami meteorici, ognuno con la riga che dice cos\'è e una pagina che lo spiega per bene. È il posto dove si scopre cos\'è davvero un\'ora blu, o la luce zodiacale: aggiungendola, o leggendone prima.</string>
 
     <string name="guide_alerts_title">Avvisi</string>
     <string name="guide_alerts_p1">Qui vivono due specie: quelli già scritti e quelli che scrivi tu. Non arriva niente che non abbia acceso tu.</string>
@@ -441,6 +441,10 @@
     <string name="sky_event_and">%1$s e %2$s</string>
     <string name="sky_section_reminders">Promemoria</string>
     <string name="sky_add_moment">Aggiungi un momento</string>
+    <!-- Fase 28: sessanta voci in un foglio erano uno scroll. -->
+    <string name="sky_catalog_search">Cerca tra gli eventi</string>
+    <string name="sky_catalog_search_clear">Cancella la ricerca</string>
+    <string name="sky_catalog_no_match">Qui non c\'è niente che corrisponda a «%1$s».</string>
     <string name="sky_moment_now">Adesso</string>
     <string name="sky_day_today">Oggi</string>
     <string name="sky_day_tomorrow">Domani</string>
@@ -456,6 +460,7 @@
     <string name="sky_tonight_moon_sets">La luna resta su fino alle %1$s, %2$d%% illuminata</string>
     <string name="sky_tonight_moon_rises">La luna torna su alle %1$s, %2$d%% illuminata</string>
     <string name="sky_tonight_moon_all_night">La luna è su dal crepuscolo all\'alba, %1$d%% illuminata: stanotte non c\'è una finestra davvero buia. Il cielo è comunque scuro dalle %2$s alle %3$s.</string>
+    <string name="sky_tonight_clear_between">Più sereno tra le %1$s e le %2$s</string>
     <string name="sky_moon_line">%1$s · %2$d%% illuminata</string>
     <string name="sky_too_far">Troppo lontano per dirlo</string>
 
@@ -476,6 +481,47 @@
     <string name="sky_none_moon">La luna lo salta, come capita circa una volta al mese</string>
     <string name="sky_none_no_darkness">Il cielo non diventa mai del tutto buio</string>
     <string name="sky_none_moon_all_night">La luna è su tutta la notte</string>
+
+    <!-- Fase 28: i nuovi eventi (luna piena al crepuscolo, luce cinerea, Venere,
+         Giove, le tre congiunzioni), le loro ragioni di assenza, il marchio
+         fotografico e la direzione in cui guardare. -->
+    <string name="sky_group_planets">Pianeti</string>
+    <string name="sky_name_moon_full_at_dusk">Luna piena al crepuscolo</string>
+    <string name="sky_expl_moon_full_at_dusk">La sera in cui la luna piena sorge mentre il cielo è ancora colorato.</string>
+    <string name="sky_about_moon_full_at_dusk">Una volta al mese la luna sorge a pochi minuti dal tramonto, e per mezz\'ora è un disco arancione enorme contro un cielo che non è ancora diventato scuro. È la stessa luna che a mezzanotte sarà piccola, bianca e alta: la dimensione è un\'illusione che l\'occhio fa vicino all\'orizzonte, il colore invece è vero e nasce come nasce un tramonto rosso.\n\nUn almanacco risponde «luna piena, 03:14», che è l\'istante della geometria e non una sera in cui qualcuno uscirebbe di casa. Questa è la sera. L\'app cerca un sorgere della luna che cada dentro il crepuscolo con il disco già abbastanza tondo: a volte è la notte della luna piena, spesso è quella prima.</string>
+    <string name="sky_name_earthshine_pm">Luce cinerea, sera</string>
+    <string name="sky_expl_earthshine_pm">La falce sottile con il resto del disco appena illuminato, bassa a ovest.</string>
+    <string name="sky_about_earthshine_pm">Per qualche sera dopo la luna nuova c\'è una falce sottile bassa a ovest, e se il cielo è pulito si vede tutto il disco: la parte scura brilla di un grigio debolissimo. Quel chiarore è luce del sole che ha colpito la Terra, è rimbalzata ed è finita sulla luna. Si chiama luce cinerea, ed è l\'unica cosa in questo elenco in cui quello che stai guardando è la luce del tuo pianeta che torna indietro.\n\nServe una falce sottile e nient\'altro. Oltre circa un quinto del disco il bordo illuminato è troppo forte e la luce di cenere ci annega dentro: per questo la finestra dura poche sere al mese e per questo questa voce sparisce nel mezzo. Guarda quando il cielo ha ancora del blu: quando è buio davvero, la luna di solito è già tramontata.</string>
+    <string name="sky_name_earthshine_am">Luce cinerea, mattina</string>
+    <string name="sky_expl_earthshine_am">La stessa luce di cenere prima dell\'alba, bassa a est.</string>
+    <string name="sky_about_earthshine_am">La stessa cosa dall\'altra parte del mese: qualche mattina prima della luna nuova una falce calante sorge a est davanti al sole, con il resto del disco appena illuminato dalla luce della Terra.\n\nChiede le stesse cose della versione serale — una falce sottile e un orizzonte pulito — e costa una sveglia presto invece di una serata, che è il motivo per cui quasi tutti hanno visto solo l\'altra metà. La parte scura del disco è un po\' più chiara in primavera che in autunno, perché la parte di Terra che fa da specchio ha più nuvole e più oceano sotto il sole.</string>
+    <string name="sky_name_venus_evening">Venere, stella della sera</string>
+    <string name="sky_expl_venus_evening">La cosa più luminosa a ovest dopo il tramonto, e non è una stella.</string>
+    <string name="sky_about_venus_evening">Quel punto luminoso e fermo basso a ovest dopo il tramonto è un pianeta. È più brillante di qualunque cosa nel cielo a parte il sole e la luna, non tremola come fanno le stelle, ed è in assoluto la cosa che la gente fotografa e poi chiede che cos\'era.\n\nVenere sta più vicino al sole di noi, quindi non se ne allontana mai molto: si vede solo per qualche ora dopo il tramonto o per qualcuna prima dell\'alba, mai a mezzanotte. Ecco perché questa voce va e viene — per mesi Venere è la stella della sera, poi passa tra noi e il sole e per il periodo dopo diventa quella del mattino.</string>
+    <string name="sky_name_venus_morning">Venere, stella del mattino</string>
+    <string name="sky_expl_venus_morning">Lo stesso pianeta dall\'altra parte dell\'anno, prima dell\'alba a est.</string>
+    <string name="sky_about_venus_morning">Lo stesso pianeta, l\'altra metà del suo giro: per mesi Venere sorge prima del sole ed è la cosa più luminosa del cielo a est prima dell\'alba.\n\nGli antichi li presero per due oggetti diversi e diedero loro due nomi, che è un errore ragionevole — niente, in una stella della sera, dice che è la stessa luce vista all\'alba otto mesi prima. È lo stesso pianeta, che gira più in fretta di noi su una pista più stretta, e quel che cambia è da che parte del sole si trova.</string>
+    <string name="sky_name_jupiter_night">Giove stanotte</string>
+    <string name="sky_expl_jupiter_night">Fermo, bianco-giallo, più luminoso di ogni stella: quando è su, e dove.</string>
+    <string name="sky_about_jupiter_night">Dopo Venere e la luna, Giove è la cosa più luminosa di un cielo notturno, e a differenza di Venere può stare su a mezzanotte — è più lontano dal sole di noi, quindi non è legato al crepuscolo. Un punto fermo, bianco-giallo, che non tremola: è lui.\n\nÈ anche la cosa più facile del cielo da trasformare in qualcosa di più di un punto. Un binocolo qualsiasi tenuto fermo mostra fino a quattro delle sue lune come una fila di puntini di fianco, e tra una notte e l\'altra si spostano abbastanza da farti vedere che stanno girando. È l\'osservazione che è costata la libertà a Galileo, e non costa niente.</string>
+    <string name="sky_name_conjunction_moon_venus">La luna accanto a Venere</string>
+    <string name="sky_expl_conjunction_moon_venus">Le sere in cui la falce e il pianeta luminoso stanno uno di fianco all\'altro.</string>
+    <string name="sky_about_conjunction_moon_venus">Circa una volta al mese la luna, girando intorno a noi, passa dal punto in cui si trova Venere, e per una sera i due punti più luminosi del crepuscolo stanno a un paio di gradi di distanza. Tieni un dito a braccio teso: è largo circa un grado. Un passaggio ravvicinato ci sta dietro.\n\nNon sono vicini in nessun senso reale — la luna è a un secondo luce, Venere a qualche minuto — ed è tutto il bello della cosa: due oggetti a distanze completamente diverse, allineati da dove ti trovi tu. L\'app elenca solo i passaggi che da qui si possono davvero vedere, perché circa la metà capita con tutti e due dietro il sole.</string>
+    <string name="sky_name_conjunction_moon_jupiter">La luna accanto a Giove</string>
+    <string name="sky_expl_conjunction_moon_jupiter">Le notti in cui la luna passa accanto al pianeta più luminoso della notte.</string>
+    <string name="sky_about_conjunction_moon_jupiter">Lo stesso passaggio mensile, con l\'altro pianeta che quest\'app conosce per nome. Siccome Giove può essere su a qualsiasi ora, questo non è legato al crepuscolo come quello di Venere: può capitare alto e tardi, il che lo rende il migliore dei due da fotografare.\n\nSe la luna è una falce, è la notte giusta per guardare Giove col binocolo — è facile da trovare perché la luna te lo sta indicando, e nello stesso campo visivo di solito ci stanno anche le sue lune.</string>
+    <string name="sky_name_conjunction_venus_jupiter">Venere accanto a Giove</string>
+    <string name="sky_expl_conjunction_venus_jupiter">I due pianeti più luminosi nello stesso pezzo di cielo: raro, e inconfondibile.</string>
+    <string name="sky_about_conjunction_venus_jupiter">I due pianeti più luminosi, abbastanza vicini da coprirli con un pollice. Capita circa ogni tredici mesi, e solo alcune volte è visibile da un posto preciso, quindi tra una buona e l\'altra passano anni e non mesi.\n\nQuando arriva vale la pena segnarsela. Due punti di quella luminosità, così vicini, sono una cosa che la gente nota senza che nessuno gliel\'abbia detto — è in assoluto la «strana luce nel cielo» più segnalata che ci sia.</string>
+    <string name="sky_none_moon_not_crescent">La luna adesso non è una falce sottile</string>
+    <string name="sky_none_planet_too_low">Troppo basso per vederlo, così vicino al sole</string>
+    <string name="sky_none_no_conjunction">Nessun passaggio ravvicinato visibile da qui per anni</string>
+    <string name="sky_none_no_moonrise_at_dusk">Qui nessuna luna piena sorge dentro il crepuscolo</string>
+    <string name="sky_guide_when_photographic">Vale la pena portare la macchina fotografica.</string>
+    <string name="sky_photographic_desc">Vale la pena fotografarlo</string>
+    <string name="sky_bearing_towards">verso %1$s</string>
+    <string name="sky_conjunction_apart">%1$d° di distanza</string>
+    <string name="sky_conjunction_very_close">meno di un grado di distanza</string>
 
     <!-- Promemoria: inesatti di proposito, e lo schermo lo dice -->
     <string name="sky_default_lead">Promemoria abituale</string>

@@ -102,7 +102,39 @@ class SkyJobCatalogTest {
             SkyJobCatalog.all.map { it.id },
             SkyJobCatalog.all.sortedBy { SkyJobCatalog.orderOf(it) }.map { it.id }
         )
-        assertEquals(MeteorShowerTable.all.size + 38, SkyJobCatalog.all.size)
+        // 38 until Fase 28, which added the full moon at dusk, the two earthshine
+        // windows, three planet lines and three conjunctions.
+        assertEquals(MeteorShowerTable.all.size + 47, SkyJobCatalog.all.size)
+    }
+
+    /**
+     * The photographic flag is only a feature while it is SCARCE (Fase 28). On a third
+     * of the catalog it would say nothing at all, so the count is asserted rather than
+     * left to whoever adds the next job — and the events it must never reach are named,
+     * because "this is worth a photograph" about an instant of pure geometry is the app
+     * printing an opinion, which it does not do.
+     */
+    @Test
+    fun `the photographic flag stays scarce, and off the geometry`() {
+        val photographic = SkyJobCatalog.all.filter { it.photographic }.map { it.id }.toSet()
+        assertEquals(9, photographic.size)
+        listOf(
+            "golden_hour.am", "golden_hour.pm", "blue_hour.am", "blue_hour.pm",
+            "moon.full_at_dusk", "earthshine.pm", "earthshine.am", "milky_way.core",
+            "eclipse.lunar"
+        ).forEach { assertTrue("$it should be photographic", it in photographic) }
+        listOf(
+            "solar.noon", "equinox.spring", "earth.perihelion", "moon.phase",
+            "sun.rise", "darkness.window"
+        ).forEach { assertTrue("$it must not be photographic", it !in photographic) }
+        // The solar eclipse is the one exclusion decided on safety: the app's line about
+        // it is a warning, and "bring a camera" beside a warning reads as permission.
+        assertTrue(
+            "the solar eclipse must not be flagged photographic",
+            "eclipse.solar" !in photographic
+        )
+        // Nothing unobservable may carry it: you cannot photograph a moment of geometry.
+        assertTrue(SkyJobCatalog.all.none { it.photographic && !it.observable })
     }
 
     @Test

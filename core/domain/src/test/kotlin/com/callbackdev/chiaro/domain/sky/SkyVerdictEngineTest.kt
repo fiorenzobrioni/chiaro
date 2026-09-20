@@ -8,6 +8,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -264,6 +265,80 @@ class SkyVerdictEngineTest {
         )
         assertEquals(SkyVerdictKind.FAIL, verdict.kind)
         assertEquals("the clouds keep the blame", 90, verdict.cloudPct)
+    }
+
+    // ------------------------------------------------------- the clearest stretch
+
+    /**
+     * Fase 28. A verdict is one word over eight hours; this is the answer to "yes, but
+     * when". Derived, never invented: a run of forecast hours that would each pass on
+     * their own, clipped to the window.
+     */
+    @Test
+    fun `the clearest stretch is the run of hours that would pass on their own`() {
+        // Clear from midnight to 03:00, then shut. The fixture's hours start at
+        // 2026-08-26T00:00, so hour i is that hour of that day.
+        val hours = hours(count = 48, cloud = { i -> if (i < 3) 0 else 90 })
+        val stretch = SkyVerdictEngine.clearStretch(
+            start = at("2026-08-26T00:00"),
+            end = at("2026-08-26T06:00"),
+            hours = hours,
+            zone = rome
+        )
+        assertNotNull("three clear hours in a six-hour window is something to say", stretch)
+        assertEquals(at("2026-08-26T00:00"), stretch!!.start)
+        assertEquals(at("2026-08-26T03:00"), stretch.endInclusive)
+    }
+
+    @Test
+    fun `a window that is clear throughout has nothing to add`() {
+        // The verdict already said "clear"; repeating it as a stretch would be the card
+        // printing the same fact twice in two shapes.
+        assertNull(
+            SkyVerdictEngine.clearStretch(
+                start = at("2026-08-26T00:00"),
+                end = at("2026-08-26T06:00"),
+                hours = hours(count = 48, cloud = { 0 }),
+                zone = rome
+            )
+        )
+    }
+
+    @Test
+    fun `a stretch under an hour is a rounding, not a plan`() {
+        // One clear hour, and the window clipped so only a sliver of it is inside.
+        val hours = hours(count = 48, cloud = { i -> if (i == 2) 0 else 90 })
+        assertNull(
+            SkyVerdictEngine.clearStretch(
+                start = at("2026-08-26T02:40"),
+                end = at("2026-08-26T06:00"),
+                hours = hours,
+                zone = rome
+            )
+        )
+    }
+
+    @Test
+    fun `rain closes a stretch even under a clear sky`() {
+        // Cloudless throughout, but the middle hours carry a real chance of rain.
+        val hours = hours(
+            count = 48,
+            cloud = { 0 },
+            rain = { i -> if (i in 2..3) 80 else 0 }
+        )
+        val stretch = SkyVerdictEngine.clearStretch(
+            start = at("2026-08-26T00:00"),
+            end = at("2026-08-26T06:00"),
+            hours = hours,
+            zone = rome
+        )
+        assertNotNull(stretch)
+        // The longest run is the one AFTER the rain: 04:00 to 06:00 beats 00:00 to 02:00
+        // only by a tie, so what is asserted is that the wet hours are outside it.
+        assertTrue(
+            "the stretch must not contain the wet hours",
+            !stretch!!.contains(at("2026-08-26T02:30"))
+        )
     }
 
     // ------------------------------------------------- the four ways of not knowing

@@ -158,6 +158,75 @@ object SkyVerdictEngine {
     }
 
     /**
+     * The longest run of hours inside the window that would pass on their own — the
+     * answer to "yes, but when" (Fase 28).
+     *
+     * A dark window is eight to ten hours long and the verdict averages the cloud over
+     * all of it, which is the right number for a single word and a poor summary of a
+     * night: a sky that is clear until one and shut afterwards comes out «so-so», and
+     * the good half — which the app has, hour by hour, and already downloaded — is
+     * thrown away. This is that half, and it is derived rather than invented: a run of
+     * consecutive forecast hours each of which passes [CLOUD_PASS_PCT] and stays under
+     * [PRECIP_UNSTABLE_PCT], clipped to the window it was asked about.
+     *
+     * **Null when there is nothing to add**, which is most of the time: when no hour
+     * passes, when the run is the whole window (the verdict already said so), or when
+     * it is under an hour, because "clear from 02:10 to 02:40" is a promise this
+     * forecast cannot keep.
+     */
+    fun clearStretch(
+        start: Instant,
+        end: Instant?,
+        hours: List<HourlyForecast>,
+        zone: ZoneId
+    ): ClosedRange<Instant>? {
+        val closes = end ?: return null
+        val inWindow = window(start, closes, hours, zone) ?: return null
+        if (inWindow.size < 2) return null
+
+        var bestFrom: HourlyForecast? = null
+        var bestTo: HourlyForecast? = null
+        var bestLength = 0
+        var runFrom: HourlyForecast? = null
+        var length = 0
+        fun close() {
+            if (length > bestLength && runFrom != null) {
+                bestLength = length
+                bestFrom = runFrom
+                bestTo = inWindow[inWindow.indexOf(runFrom!!) + length - 1]
+            }
+            runFrom = null
+            length = 0
+        }
+        inWindow.forEach { hour ->
+            val passes = hour.cloudCoverPct <= CLOUD_PASS_PCT &&
+                (hour.precipChancePct ?: 0) < PRECIP_UNSTABLE_PCT
+            if (passes) {
+                if (runFrom == null) runFrom = hour
+                length++
+            } else {
+                close()
+            }
+        }
+        close()
+
+        val from = bestFrom ?: return null
+        val to = bestTo ?: return null
+        // The forecast's hours are buckets, so the run ends an hour after its last one
+        // starts; both ends are then clipped to the window that was asked about.
+        val opens = maxOf(from.at, start)
+        val shuts = minOf(to.at.plus(Duration.ofHours(1)), closes)
+        if (!shuts.isAfter(opens)) return null
+        if (Duration.between(opens, shuts) < MIN_STRETCH) return null
+        // Nothing to say when the good part IS the window: the verdict covered it.
+        if (!opens.isAfter(start) && !shuts.isBefore(closes)) return null
+        return opens..shuts
+    }
+
+    /** Under this a stretch is not a plan, it is a rounding: no row prints one. */
+    private val MIN_STRETCH: Duration = Duration.ofHours(1)
+
+    /**
      * The moon condition (`VISION_SKY.md` §6), and the one place this module is
      * genuinely more useful than a weather app: a Geminid peak under a full moon is a
      * failed build under a perfectly clear sky. It can only make a verdict WORSE, and
