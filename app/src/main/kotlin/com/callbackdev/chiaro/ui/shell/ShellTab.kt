@@ -30,6 +30,18 @@ enum class ShellTab { TODAY, SKY, ALERTS, JOURNAL }
  * is what the first pass did — is precisely what stopped the task looking like the
  * launcher's.
  *
+ * **One intent has one consequence worth knowing**: a `PendingIntent` built over it is
+ * told apart from another only by its REQUEST CODE, because `filterEquals` — which the
+ * cache keys on — cannot see the extra the destination rides in. With
+ * `FLAG_UPDATE_CURRENT`, two callers sharing a request code would have the second
+ * rewrite the first's destination, under a notification already sitting on the shade.
+ * The four notifiers pass their own notification id, and those four id ranges are
+ * disjoint and documented where each one is computed (1001-1004 the built-in alerts,
+ * 2000-2999 the reader's rules, 3000-3999 the official warnings, 7000+ the sky
+ * reminders); `NotificationDestinationTest` posts all four and reads the destinations
+ * back, which is what a collision would break. The widgets are out of this: Glance
+ * stamps a `data` URI of its own per card, and `data` IS part of `filterEquals`.
+ *
  * `FLAG_ACTIVITY_NEW_TASK` is here because a `PendingIntent` starts from outside an
  * activity and the platform requires it. Nothing else is needed: [ShellTab] arrives at
  * a `singleTask` activity (`AndroidManifest.xml`), so the platform routes every one of

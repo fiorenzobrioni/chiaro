@@ -414,6 +414,17 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
   with no drawing to protect, its hierarchy is built out of type in ranks of facts, and that
   rank is already designed.
 
+- **A tapped notification opens the screen it is about**, by the same rule the widgets follow.
+  A sky reminder lands on **Cielo**, where the moment's row, its bell and the verdict with the
+  number that decided it are. A fired rule and an official warning land on **Avvisi**: the rule
+  card with the hour it last fired, and the warning card that opens the sheet with the grid of
+  hazards by day, what the level means and the attribution — Oggi carries a banner too, but only
+  from yellow up and only while the bulletin is live, and says nothing at all about a zone that
+  is green. The four built-in alerts — severe weather, rain in the next hours and both summaries
+  — land on **Oggi**, because they are the weather itself: its hours, its rain, its sentence.
+  Avvisi is where the switch that sent them lives, which is not what the reader who tapped
+  "Pioggia alle 17" came for.
+
 - **"Momenti del cielo" and "L'arco del giorno" open the Sky screen** (asked for from the
   device). Everything those two cards draw is the Sky screen's own material — the moments,
   their verdicts, the next light moment, the agenda that follows — and landing on Today

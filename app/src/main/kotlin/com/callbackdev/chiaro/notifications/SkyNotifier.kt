@@ -7,6 +7,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.callbackdev.chiaro.MainActivity
 import com.callbackdev.chiaro.ui.shell.ShellDestination
+import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
@@ -72,7 +73,7 @@ object SkyNotifier {
                             .joinToString("\n")
                     )
             )
-            .setContentIntent(openApp(context))
+            .setContentIntent(openApp(context, notificationId(jobId)))
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_EVENT)
             .build()
@@ -127,13 +128,24 @@ object SkyNotifier {
     private fun notificationId(jobId: String): Int =
         7000 + SkyJobCatalog.all.indexOfFirst { it.id == jobId }.coerceAtLeast(0)
 
-    private fun openApp(context: Context): PendingIntent = PendingIntent.getActivity(
-        context,
-        0,
-        // The same door the widgets use; see [ShellDestination].
-        ShellDestination.intent(context, MainActivity::class.java),
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-    )
+    /**
+     * Cielo (21 set 2026), which is where this reminder comes from and where the rest
+     * of the answer is: the moment's row with its bell, the verdict with the number
+     * that decided it, and the catalog's sentence on what the moment even is.
+     *
+     * [requestCode] is the notification's own id and not the `0` it was, now that the
+     * destination rides in the extras: every door into this app is one intent, and
+     * `PendingIntent` tells two of them apart by the request code alone — a shared
+     * `0` would let `FLAG_UPDATE_CURRENT` rewrite another notifier's destination under
+     * a notification already on the shade. See [ShellDestination].
+     */
+    private fun openApp(context: Context, requestCode: Int): PendingIntent =
+        PendingIntent.getActivity(
+            context,
+            requestCode,
+            ShellDestination.intent(context, MainActivity::class.java, ShellTab.SKY),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
     private fun ensureChannel(context: Context, manager: NotificationManagerCompat) {
         manager.createNotificationChannel(

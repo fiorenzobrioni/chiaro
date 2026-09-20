@@ -7,6 +7,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.callbackdev.chiaro.MainActivity
 import com.callbackdev.chiaro.ui.shell.ShellDestination
+import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.AlertKind
@@ -491,11 +492,15 @@ object AlertNotifier {
         PendingIntent.getActivity(
             context,
             requestCode,
-            // The same door the widgets use: the intent identifies the TASK, and a
-            // notification that opened the app with one of its own opened a second
-            // one (21 set 2026). No tab named — a notification hands the reader the
-            // app, and leaves it where they left it.
-            ShellDestination.intent(context, MainActivity::class.java),
+            // The same door the widgets use, and the screen these four are about
+            // (21 set 2026): storms, the rain in the next hours and both summaries are
+            // the weather, and the weather is Oggi — its hours, its rain, its sentence.
+            // Avvisi is where the SWITCH that sent this lives, which is not what the
+            // reader who tapped «Pioggia alle 17» came for.
+            //
+            // The request code is load-bearing now that the destination rides in the
+            // extras: see [ShellDestination]. These are the alert ids, 1001-1004.
+            ShellDestination.intent(context, MainActivity::class.java, ShellTab.TODAY),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 }

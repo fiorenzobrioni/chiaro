@@ -8494,3 +8494,39 @@ launcher visibile all'avvio a freddo, che è precisamente il motivo per cui quel
 riscritta, i predefiniti delle card, e tre attributi di manifest che nessun test sugli intent può
 vedere), lint a zero errori. `:app:assembleDebug` e `:app:assembleRelease -PsignReleaseWithDebugKey`
 costruiscono.
+
+### Le notifiche atterrano dove devono (committente, stessa giornata)
+
+Chiuso il giro, restava la riga che la porta unica aveva reso gratis: la stessa regola dei widget,
+**la schermata di cui la notifica parla**.
+
+- Il promemoria del cielo → **Cielo**: è la riga di quel momento, la sua campanella, il verdetto con
+  il numero che l'ha deciso e la frase del catalogo su cosa sia quel momento.
+- Una regola che è scattata → **Avvisi**: la card di quella regola è lì, con l'ora dell'ultimo
+  scatto, che questa notifica ha appena cambiato.
+- Un'allerta ufficiale → **Avvisi**, non Oggi. Il banner su Oggi c'è, ma solo da gialla in su e solo
+  finché il bollettino è vivo, e di una zona verde non dice niente (DESIGN §8.13). Avvisi è la
+  schermata dove uno è andato a chiedere, e da lì si apre il foglio con l'aritmetica: la griglia
+  rischio per giorno, cosa vuol dire quel livello, l'attribuzione.
+- I quattro avvisi predefiniti → **Oggi**. Sono il tempo: le ore, la pioggia, la frase. Avvisi è
+  dove sta l'**interruttore** che li ha mandati, che non è quel che cerca chi ha toccato «Pioggia
+  alle 17».
+
+C'è un costo nascosto nell'aver fatto una porta sola, e va scritto perché è invisibile: adesso i
+quattro intent sono `filterEquals`-identici, e `PendingIntent` chiave la cache **su quello**. Gli
+extra non li vede. Quindi il **request code** è l'unica cosa che tiene separate due destinazioni, e
+con `FLAG_UPDATE_CURRENT` due chiamanti che ne condividono uno fanno sì che il secondo riscriva la
+destinazione del primo — sotto una notifica già sulla tendina. I quattro passano il proprio id di
+notifica, e quei quattro intervalli erano già disgiunti e documentati dove sono calcolati
+(1001-1004 gli avvisi predefiniti, 2000-2999 le regole, 3000-3999 le allerte, 7000+ il cielo).
+`SkyNotifier` era l'unico che non lo faceva: passava `0` fisso, che prima non voleva dire niente e
+adesso sarebbe stato il buco.
+
+`NotificationDestinationTest` posta **tutte e quattro sullo stesso manager** e rilegge le
+destinazioni dopo, non una alla volta: una collisione si vede solo quando le quattro coesistono.
+Verificato che il test serva davvero, rompendolo apposta — messo `1002` come request code del cielo,
+il test combinato fallisce con «the sky reminder must be the only one on Cielo, expected 1 but was
+null» (l'avviso pioggia, postato dopo, gli aveva riscritto gli extra), mentre i quattro test singoli
+restavano verdi. È esattamente il motivo per cui il primo test esiste nella forma che ha.
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1609 test**, lint a zero errori.

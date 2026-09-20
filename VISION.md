@@ -530,7 +530,10 @@ what they had just read on the home screen. The other three cards open the app a
 wherever the reader left it.
 
 All five open it through **one intent, and it is the launcher's own** (`ShellDestination`, the same
-day, from the device). Android identifies a task by the intent that made it, so a card that opened
+day, from the device) — and so does every notification, which lands on the screen it is about by the
+same rule: a sky reminder on Sky, a fired rule and an official warning on Alerts, where their cards
+and the warning's arithmetic are, and the four built-in alerts on Today, because storms, rain and
+both summaries ARE the weather and Alerts is only where the switch that sent them lives. Android identifies a task by the intent that made it, so a card that opened
 the app its own way opened a second copy of the app — which the reader saw, as two home screens one
 behind the other, and as a closing animation the launcher did not own. The destination rides as an
 extra, where it changes nothing about which task this is, and the activity is `singleTask` so there
