@@ -64,6 +64,84 @@ class NowWidgetLayoutTest {
         assertEquals(73f, nowSentenceColumnWidth(threeByOne).value, 0.01f)
     }
 
+    // ------------------------------- where the two columns really meet (20 set 2026)
+
+    /**
+     * The reference four-cell row has 236 dp of slack, 118 to each column under the old
+     * even split. The measurements below are the ones this card really meets: the place
+     * line of «Cavenago di Brianza» with its position pin is ~167 dp at 16 sp, «Sereno»
+     * is ~47 and «Pioggia gelata verso le 15:00» ~200 — all measured on the bundled
+     * faces, which is the widest of the readings a launcher's system font can give.
+     */
+    private val longPlace = 167.dp
+    private val shortPlace = 68.dp
+    private val shortSentence = 47.dp
+    private val longSentence = 200.dp
+
+    @Test
+    fun `a long name takes the room a short sentence is not using`() {
+        // The sentence keeps its 47 and the words take the rest: the name fits whole,
+        // which is the entire point (committente, 20 set 2026, from the home screen).
+        assertEquals(
+            167f,
+            nowWordsColumnWidth(fourByOne, longPlace, shortSentence).value,
+            0.01f
+        )
+        // And what is left is still more than the sentence asked for.
+        assertTrue(236f - 167f >= shortSentence.value)
+    }
+
+    @Test
+    fun `a long sentence keeps every dp the even split gave it`() {
+        // The promise that made the change safe: a sentence that would use its half
+        // keeps its half, whatever the name would like, so no card loses room it has.
+        assertEquals(
+            118f,
+            nowWordsColumnWidth(fourByOne, longPlace, longSentence).value,
+            0.01f
+        )
+        // Exactly at the boundary too: a sentence asking for its own share gets it.
+        assertEquals(
+            118f,
+            nowWordsColumnWidth(fourByOne, longPlace, 118.dp).value,
+            0.01f
+        )
+    }
+
+    @Test
+    fun `a short name never shrinks the words column below the even split`() {
+        // Nothing moves on a card that was already fine: the words keep their half even
+        // when the name would fit in 68, because the number lives in that column too and
+        // the composition is the reference's.
+        assertEquals(
+            118f,
+            nowWordsColumnWidth(fourByOne, shortPlace, shortSentence).value,
+            0.01f
+        )
+        // The floor is the words' own minimum, not the name: a three-letter place on a
+        // card with no sentence beside it still holds «−12°».
+        assertTrue(
+            nowWordsColumnWidth(fourByOne, 20.dp, shortSentence) >= WordsColumnMin
+        )
+    }
+
+    @Test
+    fun `the words never take more than the row has`() {
+        // A name wider than the whole card asks for everything and gets what is left
+        // once the sentence keeps what it measured — never a negative, never an overflow.
+        val widest = nowWordsColumnWidth(fourByOne, 500.dp, shortSentence)
+        assertEquals(236f - shortSentence.value, widest.value, 0.01f)
+        assertTrue(widest <= nowRowWordsWidth(fourByOne) - SentenceGap)
+        // Four cells on a five-column grid: 216 of slack, 108 each, and the same rules.
+        val narrower = DpSize(320.dp, 82.dp)
+        assertEquals(108f, nowSentenceColumnWidth(narrower).value, 0.01f)
+        assertEquals(
+            216f - shortSentence.value,
+            nowWordsColumnWidth(narrower, 500.dp, shortSentence).value,
+            0.01f
+        )
+    }
+
     @Test
     fun `the one-row glyph fills the height, unless the words would lose their minimum`() {
         // 82 − 6 − 6 = 70, and the words' block caps it at 66: three and four cells draw

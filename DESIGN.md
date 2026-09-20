@@ -672,6 +672,58 @@ most 2.1 ems wide; and on the panel **over the words**, in the band that form ke
 pinning its eyebrow to the top and its block to the bottom. 48 to 104 dp, one step under the
 family's hero floor at the bottom end because here the glyph is not the hero, the number is.
 
+**A widget may measure its own text, and where two blocks share a row it must** (20 set
+2026). Glance cannot measure text, which is why the Now card's wide row split its slack in
+half: 118dp to the number and the place, 118 to the sentence. On a four-cell card that
+printed «Cavenago di Brianza» as «Cavenago di Bri…» next to a column holding the word
+«Sereno», 47dp of ink in 118dp of room. The measuring happens where it can — a `Paint` in
+the app's process, at the size and weight the `Text` will get, in `Typeface.DEFAULT`, which
+IS the face a widget is drawn in (a card is inflated by the launcher from `RemoteViews` and
+never sees the app's bundled font: §5's own point about the widgets' scale, read the other
+way). The rule that split then follows, in this order: the sentence keeps its measured
+one-line width, capped at the even share, so a long sentence is never squeezed and the card
+falls back to the layout it already had; the words take what the place line needs, never
+below their own minimum, because the temperature lives in that column too; and the words
+stop at whatever the sentence kept. Nothing ever comes out smaller than the even split, so
+no card loses a dp it has today — the only space that moves is space one column was holding
+and not using. A launcher whose system font differs from the one apps get measures a few
+percent off ours, so every caller carries 4dp of slack and nothing here is a bound: a name
+wider than measured ellipsises exactly as it did before.
+
+**A hero temperature is Bold** (20 set 2026, committente, with the cards side by side on
+the home screen). It was the text widget's own weight for a day, on the argument that a
+card with no drawing needs all three of size, weight and ink at its top rank; beside it the
+Now and Today cards' 34sp Medium read as one more fact rather than as the thing the card is
+for. The rule is the household's now and it names the *hero*, not the quantity: Now, Today
+and the text card set the current temperature Bold, and the arc card does not, because
+there the hero is the drawing and the number is one line of the strip beside it. The Today
+strip's own hours stay Regular for the same reason — seven bold figures under a bold hero
+is two heroes. The re-measure the change owes: Bold costs +2.3% of Medium's advance in
+Google Sans and +2.0% in Inter over «−12°», ~1.5dp at 34sp, which the Now card's 66dp
+number column absorbs (`TemperatureColumnMin`).
+
+**The day's high and low are sorted by their marks where they have them** (20 set 2026).
+`DayRange` has two dresses and they no longer share an emphasis: with ↑ and ↓ in front of
+the figures both halves are set alike — same size, same weight, same ink, marks tinted with
+it — because §2.3's rule holds at this scale too, the mark carries the meaning and the ink
+only seconds it. Dimming the low there was saying it twice and charging the low a figure's
+worth of presence for it: on the device it simply read as the smaller number. With the
+slash (the Today card, whose 113dp column will not take the marks) there is no mark to
+carry it, so there the ink stays the thing that sorts the pair: high first and strong, low
+after it and dimmed, which is the week rows' own emphasis.
+
+**Air around a drawing is a wrapper, never the drawing's own padding.** Glance's `padding`
+is `RemoteViews.setViewPadding` on the same view its size lands on, and an `Image` scales
+its provider to fit what is left, so `padding(start = 8, end = 2).size(16)` is a **6dp**
+drawing rather than a 16dp one with air beside it. That is what made the day's low mark
+read smaller than the high one — it was the half carrying the 8dp that separates the pair,
+and it drew at 43% of its neighbour at the same nominal size, through two device passes
+where the symptom looked like colour. The pin before a place name and the gap over a
+warning chip already used a `Spacer` and a wrapper `Box` and say why in their own words;
+`WidgetGlyphBoxTest` now holds it for every drawing in the widgets. A padded container of
+a fixed WIDTH is a different thing and a correct one — a layout's padding comes out of its
+children, not out of a bitmap.
+
 Two **marks** sit inline with that type and do not break it (19 set 2026): the position pin
 in front of a place the phone is standing in, and `ic_range_high`/`ic_range_low` before the
 day's high and low — drawn rather than the characters ↑ and ↓, at the verdict marks' 2.4-of-24

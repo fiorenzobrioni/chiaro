@@ -92,19 +92,87 @@ internal val RowIconMin = 56.dp
 internal val RowIconMax = 66.dp
 
 /**
- * The width each of the two text columns gets on a [NowLayout.WIDE] card: the row's
- * slack after the glyph, split evenly between the temperature block and the sentence.
- * Even rather than measured because Glance cannot measure text, and even is what the
- * reference widget does — its description block is about as wide as its number block,
- * and the empty space lands in the middle where the eye expects it.
+ * Everything on a hero row that is not the glyph or an edge: the two text columns and the
+ * gap between them. Shared with the Today card, whose hero row is this one with a strip
+ * under it — «the two cards now say it with one grammar» (`TodayWidgetLayout`), and a
+ * grammar written twice is a grammar that drifts.
+ */
+internal fun heroRowWordsWidth(width: Dp, icon: Dp): Dp =
+    width - WidgetCardPaddingLeading - icon - IconTextGap - WidgetCardPaddingTrailing
+
+/** The even share of [heroRowWordsWidth]: what each text column got before 20 set 2026,
+ * and what the sentence is still guaranteed. */
+internal fun heroRowEvenColumn(width: Dp, icon: Dp): Dp =
+    (heroRowWordsWidth(width, icon) - SentenceGap) / 2
+
+/**
+ * Where the boundary between a hero row's two text columns really falls. The rules, and
+ * why they are in this order, are [nowWordsColumnWidth]'s; this is the arithmetic both
+ * cards call.
+ */
+internal fun heroWordsColumnWidth(
+    width: Dp,
+    icon: Dp,
+    placeLine: Dp,
+    sentenceKeep: Dp
+): Dp {
+    val slack = heroRowWordsWidth(width, icon) - SentenceGap
+    val even = slack / 2
+    val keep = sentenceKeep.coerceAtMost(even)
+    return maxOf(placeLine, WordsColumnMin).coerceIn(even, slack - keep)
+}
+
+internal fun nowRowWordsWidth(size: DpSize): Dp =
+    heroRowWordsWidth(size.width, nowRowIconSize(size))
+
+/**
+ * The EVEN share of a [NowLayout.WIDE] card's two text columns: the row's slack after the
+ * glyph, halved. It is two things and no longer three — the gate that decides whether a
+ * card is wide enough to carry a sentence at all ([nowLayout]), and the floor the sentence
+ * column is guaranteed ([nowWordsColumnWidth]) — but it is no longer, by itself, where the
+ * boundary between the two columns is drawn.
+ *
+ * Even was the right first answer and the reason is still true: it is what the reference
+ * widget does, its description block is about as wide as its number block, and the empty
+ * space lands in the middle where the eye expects it. What it could not do is notice that
+ * the two columns are not always both full.
  *
  * Negative when the card is too narrow to hold both; the caller compares, never draws.
  */
-internal fun nowSentenceColumnWidth(size: DpSize): Dp {
-    val words = size.width - WidgetCardPaddingLeading - nowRowIconSize(size) -
-        IconTextGap - WidgetCardPaddingTrailing
-    return (words - SentenceGap) / 2
-}
+internal fun nowSentenceColumnWidth(size: DpSize): Dp =
+    heroRowEvenColumn(size.width, nowRowIconSize(size))
+
+/**
+ * Where the boundary between the two columns of a [NowLayout.WIDE] card really falls
+ * (committente, 20 set 2026, from the home screen: «il nome della località è troncato… si
+ * riusciarebbe a visualizzarlo per completo senza penalizzare il testo a destra nel caso la
+ * frase da visualizzare sia lunga?»).
+ *
+ * The even split truncated «Cavenago di Brianza» at ~118 dp with the sentence beside it
+ * reading «Sereno» in 47 — half a column of nothing next to a name cut in half. The answer
+ * is not a bigger fixed share for the words, which would take those dp off every long
+ * sentence too; it is to ask both blocks what they need, which is possible now that
+ * [measureWidgetText] measures them.
+ *
+ * Three rules, and the order is the promise:
+ *
+ * 1. **The sentence keeps what it asks for, and never less than the even split gave it.**
+ *    [sentenceKeep] is its own measured width — what it takes on ONE line — capped at the
+ *    even share. So a long sentence is never squeezed: it is capped before it can be, and
+ *    the card falls back to exactly the layout it has today.
+ * 2. **The words take what the place line needs**, never less than [WordsColumnMin],
+ *    because the temperature lives in that column too and truncating a number is a worse
+ *    failure than truncating a name.
+ * 3. **The words never take the sentence below its floor**: whatever is left after rule 1.
+ *
+ * The result is never smaller than the even split, so no card loses a dp it has today; the
+ * only thing that moves is space the sentence was holding and not using.
+ *
+ * Both inputs are measured by the caller and carry [RowFitSlack] already: this function is
+ * arithmetic so `NowWidgetLayoutTest` can pin the three rules at a table of sizes.
+ */
+internal fun nowWordsColumnWidth(size: DpSize, placeLine: Dp, sentenceKeep: Dp): Dp =
+    heroWordsColumnWidth(size.width, nowRowIconSize(size), placeLine, sentenceKeep)
 
 /**
  * The sentence's room on a one-row card laid the other way round
@@ -122,7 +190,16 @@ internal fun nowMirroredSentenceWidth(size: DpSize): Dp =
     size.width - WidgetCardPaddingTrailing - TemperatureColumnMin - SentenceGap -
         IconTextGap - nowRowIconSize(size) - WidgetCardPaddingLeading
 
-/** What the number needs beside a sentence: «−12°» at 34 sp Medium is ~62 dp. */
+/**
+ * What the number needs beside a sentence: «−12°», the widest reading this card prints,
+ * measured at ~62 dp with the system font at 34 sp Medium.
+ *
+ * **Re-checked when the hero went Bold** (20 set 2026): the two bundled faces put Bold at
+ * +2.3% (Google Sans) and +2.0% (Inter) of Medium's advance over that string, which is ~63
+ * dp here — still 3 dp inside the column, so the number stands. It is a reservation and
+ * not a bound in any case: Glance lays the row out with weights, and this figure only
+ * decides whether there is a sentence worth putting beside the number at all.
+ */
 internal val TemperatureColumnMin = 66.dp
 
 /**

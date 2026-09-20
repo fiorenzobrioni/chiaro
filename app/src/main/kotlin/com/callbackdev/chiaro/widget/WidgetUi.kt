@@ -9,7 +9,9 @@ import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Shader
+import android.graphics.Typeface
 import android.os.Build
+import android.util.TypedValue
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -425,23 +427,33 @@ fun skyGradientBitmap(sky: SkySnapshot, opacityPct: Int, table: SkyPalette): Bit
 /**
  * The day's high and low, as the trailing edge of a hero row (committente, 4 set).
  *
- * High first and in the strong ink, low after it and dimmed — which is the app's own
- * emphasis, not a borrowed convention: the week's rows print the low in
- * `onSurfaceVariant` and the high in the plain one for exactly this reason, so the pair
- * says which is which without a word for it. Nothing is drawn at all when the report
- * has no day left to describe (§1.1).
- *
  * Tabular figures are not available to Glance, so the pair is several Texts rather than
- * one: it is also the only way to give the two numbers two inks.
+ * one: it is also the only way to give the two numbers two dresses. Nothing is drawn at
+ * all when the report has no day left to describe (§1.1).
  *
  * **[marks]** (committente, 19 set 2026: «con le frecce su e giù ad indicare massima e
  * minima») puts the up and down marks before the two figures instead of a slash between
  * them. One composable and two dresses rather than two composables, because it is one
- * statement at two budgets: the marks add about 25 dp, which the text widget's 174 dp
- * trailing column carries easily and the Today widget's 113 dp one does not — so Today
- * keeps the slash, and the card with the room says it outright. The emphasis does not
- * change either way: the high leads and is strong, the low follows and is dimmed, and each
- * mark takes the ink of the figure it stands before.
+ * statement at two budgets: the marks dress is ~87 dp at 16 sp against the slash's ~56
+ * («27°» and «15°»; ~100 at the widest pair the scale prints), which the text widget's
+ * 174 dp trailing column carries easily and the Today widget's 113 dp one does not — so
+ * Today keeps the slash, and the card with the room says it outright. The two figures rose
+ * by 12 dp on 20 set when each mark stopped paying its own air out of its own box, and the
+ * column that carries them has 30 dp to spare at the widest.
+ *
+ * **Which dress it wears decides how the two figures are sorted**, and that is the whole
+ * difference between them (committente, 20 set 2026, on the device: the low read as the
+ * smaller number of the two, and it was never meant to be a smaller number).
+ *
+ * - **With the marks**, both halves are set alike — same size, same weight, same ink, and
+ *   the two marks tinted with it. ↑ and ↓ already say which is which, so the dimming was
+ *   saying it a second time and charging a figure for it: §2.3's rule about verdicts read
+ *   at this scale — the mark carries the meaning, the ink only ever seconds it, and where
+ *   the mark is there the ink is free to stop shouting.
+ * - **With the slash** there is no mark to carry it, so the ink stays the thing that sorts
+ *   the pair: the high first and strong, the low after it and dimmed. That is the app's own
+ *   emphasis, not a borrowed convention — the week's rows print the low in
+ *   `onSurfaceVariant` and the high in the plain one for exactly this reason.
  */
 @Composable
 fun DayRange(
@@ -456,15 +468,18 @@ fun DayRange(
 ) {
     val locale = Locale.getDefault()
     val context = LocalContext.current
+    // One dress for both figures in the marks form, and it is the high's: see the header
+    // for why the low stops being dimmed the moment a ↓ stands in front of it.
+    val strong = TextStyle(
+        color = palette.primary,
+        fontSize = size,
+        fontWeight = FontWeight.Medium
+    )
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (marks) RangeMark(high = true, ink = palette.primary, size = size, context = context)
         Text(
             text = Formats.temperature(highC, units.temperature, locale),
-            style = TextStyle(
-                color = palette.primary,
-                fontSize = size,
-                fontWeight = FontWeight.Medium
-            ),
+            style = strong,
             maxLines = 1
         )
         if (marks) {
@@ -472,7 +487,7 @@ fun DayRange(
             // row stays four children rather than five (Glance drops the eleventh child
             // of a container without a word, and every widget here counts them).
             RangeMark(
-                high = false, ink = palette.secondary, size = size, context = context,
+                high = false, ink = palette.primary, size = size, context = context,
                 leading = RangeMarkGap
             )
         } else {
@@ -486,7 +501,7 @@ fun DayRange(
         }
         Text(
             text = Formats.temperature(lowC, units.temperature, locale),
-            style = secondaryStyle(palette, size),
+            style = if (marks) strong else secondaryStyle(palette, size),
             maxLines = 1
         )
     }
@@ -497,6 +512,20 @@ fun DayRange(
  * like the position pin, and for the reason that one gives: a glyph that stays put while
  * the words grow stops being part of the same line. It carries the words that name it, so
  * a screen reader says «massima 25°» rather than reading a number with no subject.
+ *
+ * **The air is on a wrapper and never on the mark** (20 set 2026), and this is the whole of
+ * the «la freccia della minima è più piccola» the committente reported twice. Glance's
+ * `padding` is `RemoteViews.setViewPadding` on the SAME view the size lands on, and an
+ * `Image` scales its drawing to Fit what is left: an `ImageView` asked for a 16 dp box with
+ * 8 dp of leading air and 2 of trailing drew the arrow in **6 dp**, beside a high mark that
+ * had only the 2 to pay and drew at 14. Less than half the ink, at the same nominal size,
+ * from a modifier that reads like it adds space. It was never the ink, which is why
+ * repainting the low in the strong colour did not fix it.
+ *
+ * It is the same trap [WarningChipRow] records for the chip — «a chip's own padding sits
+ * INSIDE its background, and a tinted gap is not a gap» — and the reason [PlaceLine] spaces
+ * its pin with a `Spacer` instead. A `Box` and not a `Spacer` here only because the row
+ * counts its children: this keeps the pair at four.
  */
 @Composable
 private fun RangeMark(
@@ -507,14 +536,39 @@ private fun RangeMark(
     leading: Dp = 0.dp
 ) {
     val box = (size.value * context.resources.configuration.fontScale).dp
-    Image(
-        provider = ImageProvider(ChiaroIcons.rangeMarkRes(high)),
-        contentDescription = context.getString(
-            if (high) R.string.widget_range_high else R.string.widget_range_low
-        ),
-        colorFilter = ColorFilter.tint(ink),
-        modifier = GlanceModifier.padding(start = leading, end = RangeMarkTextGap).size(box)
-    )
+    Box(modifier = GlanceModifier.padding(start = leading, end = RangeMarkTextGap)) {
+        Image(
+            provider = ImageProvider(ChiaroIcons.rangeMarkRes(high)),
+            contentDescription = context.getString(
+                if (high) R.string.widget_range_high else R.string.widget_range_low
+            ),
+            colorFilter = ColorFilter.tint(ink),
+            modifier = GlanceModifier.size(box)
+        )
+    }
+}
+
+/**
+ * What a [DayRange] occupies on its line, so a layout that has to leave room for one can
+ * ask rather than guess ([measureWidgetText]'s own argument). It mirrors the composable
+ * above it piece by piece — change one and this has to change with it.
+ */
+fun dayRangeWidth(
+    context: Context,
+    highC: Double,
+    lowC: Double,
+    units: UnitSettings,
+    size: TextUnit = DayRangeSp,
+    marks: Boolean = false
+): Dp {
+    val locale = Locale.getDefault()
+    val high = Formats.temperature(highC, units.temperature, locale)
+    val low = Formats.temperature(lowC, units.temperature, locale)
+    val figures = measureWidgetText(context, high, size.value, medium = true) +
+        measureWidgetText(context, low, size.value, medium = marks)
+    if (!marks) return figures + measureWidgetText(context, " / ", size.value, medium = false)
+    val box = (size.value * context.resources.configuration.fontScale).dp
+    return figures + (box + RangeMarkTextGap) * 2 + RangeMarkGap
 }
 
 /** The air between a mark and its figure, and between the high's figure and the low's
@@ -616,6 +670,60 @@ fun PlaceLine(
         Text(text = name, style = secondaryStyle(palette, size), maxLines = 1)
     }
 }
+
+/**
+ * The width one line of a widget's text really takes, **measured and not estimated**
+ * (20 set 2026). Glance cannot measure text and a layout that has to share a row between
+ * two blocks of words has to know how wide one of them is, so the measuring happens where
+ * it can: a `Paint` in this process, at the size and weight the `Text` will be given.
+ *
+ * The face is [Typeface.DEFAULT] — the system font — because that is what a widget is
+ * drawn in: a home-screen card is inflated by the launcher from `RemoteViews` and never
+ * sees the app's own bundled face, which is the whole reason Settings' «the phone's font»
+ * is the closest the app gets to its own widgets. So this is the same font, the same size
+ * and the same weight the reader will see, not a guess about them.
+ *
+ * What it cannot promise: a launcher on a phone whose system interface runs a different
+ * face from the one apps get measures a few percent off ours. That is why every caller
+ * keeps [RowFitSlack] and why nothing here is a hard bound — a name that comes out wider
+ * than we measured ellipsises exactly as it did before, which is the state we started from.
+ *
+ * The size is resolved through [TypedValue] rather than `scaledDensity` so that a reader's
+ * non-linear font scale is the one the platform will really apply.
+ */
+fun measureWidgetText(context: Context, text: String, sizeSp: Float, medium: Boolean): Dp {
+    val metrics = context.resources.displayMetrics
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        typeface = if (medium) WidgetMediumTypeface else Typeface.DEFAULT
+        textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sizeSp, metrics)
+    }
+    return (paint.measureText(text) / metrics.density).dp
+}
+
+/** `sans-serif-medium`, the family Glance's [FontWeight.Medium] resolves to on the
+ * launcher's side: measuring Medium text with the Regular face reads ~2% narrow.
+ *
+ * `by lazy` and not a plain initializer: this file's top-level properties are read by the
+ * pure layout tests, and a `Typeface` built while the class loads would drag the whole of
+ * `WidgetUi` onto a device. Nothing constructs it until something really measures. */
+private val WidgetMediumTypeface: Typeface by lazy {
+    Typeface.create("sans-serif-medium", Typeface.NORMAL)
+}
+
+/**
+ * The whole place line, pin included: what [PlaceLine] occupies on one line. The pin is
+ * sized on the name's own text size, exactly as [placePinSize] sizes it, so a reader's
+ * font scale moves the mark and the measurement together.
+ */
+fun placeLineWidth(context: Context, name: String, fromGps: Boolean, sizeSp: Float): Dp {
+    val text = measureWidgetText(context, name, sizeSp, medium = false)
+    return if (fromGps) text + placePinSize(context, sizeSp) + PlacePinGap else text
+}
+
+/** The air a measured width is given before it is used as a width: the launcher's font
+ * is not this process's font, and a block that asks for exactly what it measured wraps
+ * or ellipsises on the first phone that rounds the other way. */
+val RowFitSlack = 4.dp
 
 /** The app screen puts a 20dp pin before a 22sp title; the ratio travels, the numbers
  * do not — a widget's name is 16sp. */

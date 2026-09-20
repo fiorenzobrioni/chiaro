@@ -303,6 +303,32 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
 }
 
 /**
+ * What the background question offers, in the order it asks it: the sky, light, dark, the
+ * system, and a colour. Data rather than a list built inside the composable, so that
+ * `WidgetConfigChoicesTest` can hold the one promise this section makes — **every kind of
+ * card, on every widget** — without a screenshot. A [WidgetBackground] added without a row
+ * here now fails the build rather than going missing from five settings screens at once.
+ */
+internal val WidgetBackgroundChoices: List<Pair<WidgetBackground, Int>> = listOf(
+    WidgetBackground.SKY to R.string.widget_bg_sky,
+    WidgetBackground.LIGHT to R.string.settings_theme_light,
+    WidgetBackground.DARK to R.string.settings_theme_dark,
+    WidgetBackground.SYSTEM to R.string.settings_theme_system,
+    WidgetBackground.COLOR to R.string.widget_bg_color
+)
+
+/** The six colours a [WidgetBackground.COLOR] card can wear, in the order they are asked,
+ * and pinned the same way: a [WidgetCardColor] with no row is a colour no reader can pick. */
+internal val WidgetCardColorChoices: List<Pair<WidgetCardColor, Int>> = listOf(
+    WidgetCardColor.BLUE to R.string.widget_color_blue,
+    WidgetCardColor.AZURE to R.string.widget_color_azure,
+    WidgetCardColor.GREEN to R.string.widget_color_green,
+    WidgetCardColor.TEAL to R.string.widget_color_teal,
+    WidgetCardColor.PLUM to R.string.widget_color_plum,
+    WidgetCardColor.CLAY to R.string.widget_color_clay
+)
+
+/**
  * The background choices, shared by this screen and the arc widget's own (19 set 2026):
  * the sky, light, dark, the system — and a colour, whose six options only appear once the
  * reader has picked it. Nested rather than six more rows in the same list, because the
@@ -311,35 +337,25 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
  *
  * Shared because the two screens were already printing the same four rows from two copies
  * of the same list, and a fifth kind is exactly the change that makes one of the copies
- * quietly out of date.
+ * quietly out of date. It is ONE composable for all five widgets on purpose: the card is
+ * furniture on somebody's wallpaper whatever is printed on it, so the question is the same
+ * question on every one of them, and «Un colore» has been on all five since the day it
+ * landed (committente, 20 set 2026, asking for exactly that — it was already true).
  */
 @Composable
 internal fun BackgroundSection(look: WidgetLook, onPick: (WidgetLook) -> Unit) {
     SectionLabel(stringResource(R.string.widget_config_background))
-    listOf(
-        WidgetBackground.SKY to stringResource(R.string.widget_bg_sky),
-        WidgetBackground.LIGHT to stringResource(R.string.settings_theme_light),
-        WidgetBackground.DARK to stringResource(R.string.settings_theme_dark),
-        WidgetBackground.SYSTEM to stringResource(R.string.settings_theme_system),
-        WidgetBackground.COLOR to stringResource(R.string.widget_bg_color)
-    ).forEach { (background, label) ->
+    WidgetBackgroundChoices.forEach { (background, labelRes) ->
         ChoiceRow(
-            label = label,
+            label = stringResource(labelRes),
             selected = look.background == background,
             onPick = { onPick(look.copy(background = background)) }
         )
     }
     if (look.background == WidgetBackground.COLOR) {
-        listOf(
-            WidgetCardColor.BLUE to stringResource(R.string.widget_color_blue),
-            WidgetCardColor.AZURE to stringResource(R.string.widget_color_azure),
-            WidgetCardColor.GREEN to stringResource(R.string.widget_color_green),
-            WidgetCardColor.TEAL to stringResource(R.string.widget_color_teal),
-            WidgetCardColor.PLUM to stringResource(R.string.widget_color_plum),
-            WidgetCardColor.CLAY to stringResource(R.string.widget_color_clay)
-        ).forEach { (color, label) ->
+        WidgetCardColorChoices.forEach { (color, labelRes) ->
             ColorRow(
-                label = label,
+                label = stringResource(labelRes),
                 color = widgetCardContainer(color),
                 selected = look.cardColor == color,
                 onPick = { onPick(look.copy(cardColor = color)) }

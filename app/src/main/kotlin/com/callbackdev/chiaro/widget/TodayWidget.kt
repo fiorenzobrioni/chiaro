@@ -134,6 +134,30 @@ private fun TodayContent(
     // column to hold it — a card too narrow for one — it stays home rather than crowding
     // the number, which is the reason it left that spot on the third device pass.
     val trailing = withSentence || warning.drawn || (range != null && todayIsWide(size, icon))
+    // Built once: measured below and then printed.
+    val headline = if (withSentence) sentence(context, content, model.settings.units) else null
+    // Where the hero row's two columns meet (committente, 20 set 2026, after the same
+    // change on the Now card). What the trailing column asks to keep is the WIDEST of
+    // what it carries, because one of its tenants cannot wrap: the sentence goes to a
+    // second line in a narrower column, the day's high and low simply lose a digit.
+    // With a chip in there nothing is measured and the even share stands — a chip
+    // cannot wrap or ellipsise either, and a warning day is not the day to find the
+    // edge of an arithmetic.
+    val words = if (!trailing) null else todayWordsColumnWidth(
+        size, icon,
+        placeLine = placeLineWidth(context, content.city.name, model.fromGps, PlaceSp) +
+            RowFitSlack,
+        trailingKeep = if (warning.drawn) {
+            heroRowEvenColumn(size.width, icon)
+        } else {
+            maxOf(
+                headline?.let { measureWidgetText(context, it, SentenceSp, medium = true) }
+                    ?: 0.dp,
+                range?.let { dayRangeWidth(context, it.highC, it.lowC, model.settings.units) }
+                    ?: 0.dp
+            ) + RowFitSlack
+        }
+    )
 
     Column(modifier = GlanceModifier.fillMaxSize()) {
         Row(
@@ -153,11 +177,26 @@ private fun TodayContent(
             // The bottom padding balances the leading above the temperature, so the
             // words' ink lines up with the glyph's rather than the two boxes lining up
             // (the Now widget's finding, 5th device pass).
+            // A width and not a weight the moment there is a second column: two weights
+            // are a straight half, which is what truncated the place name. [IconTextGap]
+            // is inside the column's own width, so it is added to the figure the layout
+            // computed for the words themselves.
             Column(
                 modifier = GlanceModifier
                     .padding(start = IconTextGap, bottom = textInkBalance(context, TemperatureSp))
-                    .defaultWeight()
+                    .then(
+                        if (words != null) {
+                            GlanceModifier.width(IconTextGap + words)
+                        } else {
+                            GlanceModifier.defaultWeight()
+                        }
+                    )
             ) {
+                // Bold, like the Now card's hero and the text card's: the three cards
+                // whose hero IS the temperature set it in the one weight nothing else on
+                // them wears (committente, 20 set 2026). The hours in the strip below
+                // stay Regular — they are the card's subject, not its hero, and a strip
+                // of seven bold figures would be a second hero under the first.
                 Text(
                     text = Formats.temperature(
                         content.report.current.tempC, model.settings.units.temperature, locale
@@ -165,7 +204,7 @@ private fun TodayContent(
                     style = TextStyle(
                         color = palette.primary,
                         fontSize = TemperatureSp.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Bold
                     ),
                     maxLines = 1
                 )
@@ -190,9 +229,9 @@ private fun TodayContent(
                         .padding(start = SentenceGap)
                         .defaultWeight()
                 ) {
-                    if (withSentence) {
+                    if (headline != null) {
                         Text(
-                            text = sentence(context, content, model.settings.units),
+                            text = headline,
                             style = sentenceStyle(palette, TextAlign.End),
                             maxLines = TallSentenceMaxLines,
                             modifier = GlanceModifier.fillMaxWidth()

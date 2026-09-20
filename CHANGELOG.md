@@ -400,6 +400,54 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
 
 ### Changed
 
+- **The place name on the wide "Colpo d'occhio" card takes the room the sentence is not
+  using.** The row split its slack in half between the number-and-place column and the
+  sentence, because Glance cannot measure text — so a four-cell card printed «Cavenago di
+  Bri…» in 118dp next to a column holding «Sereno», which is 47dp of ink in 118dp of room.
+  Both blocks are measured now, with a `Paint` in the app's process at the size, weight and
+  face the launcher will draw them in, and the boundary falls where they ask for it: the
+  sentence keeps its measured width capped at the even share, so a long sentence is never
+  squeezed and the card falls back to exactly the layout it has today; the words then take
+  what the name needs, never past what the sentence kept and never below what the temperature
+  needs. Nothing ever comes out narrower than before, so no card loses room it has — the only
+  space that moves is space one column was holding empty. A warning chip turns the measuring
+  off and restores the even share: a chip cannot wrap or ellipsise. The mirrored arrangement
+  (glyph on the trailing side) is untouched, since there the words already have the whole row.
+  **"Le prossime ore" shares the rule**, on the one arithmetic both cards now call: what its
+  trailing column asks to keep is the widest of what it carries, because one of that column's
+  tenants — the day's high and low — cannot wrap, and a range given less than it measures is a
+  range with a digit cut off its end.
+
+- **The hero temperature is Bold on every card whose hero it is.** The Now and Today widgets
+  printed theirs at 34sp Medium, which is the weight everything else on those cards is set in —
+  the sentence, the place, the day's high and low — so beside the text widget's Bold hero the
+  number read as one more fact rather than as the thing the card exists for. It is a household
+  rule now and it names the hero, not the quantity: the arc card keeps its Medium, because
+  there the hero is the drawing and the number is one line of the strip beside it, and the
+  Today strip's own hours stay Regular because seven bold figures under a bold hero is two
+  heroes. The picker previews carry the same weight, since a preview that advertises a
+  different one is advertising a product that does not exist. Re-measured where it mattered:
+  Bold costs +2.3% of Medium's advance in Google Sans and +2.0% in Inter over «−12°», about
+  1.5dp at 34sp, which the Now card's 66dp number column absorbs with 3dp to spare.
+
+- **The day's low is the same size as the day's high, and now it is also drawn that way.**
+  Two things were wrong and only one of them was visible as a decision. The low figure was
+  set in Regular on the quiet ink while the high was Medium on the strong one, which on a
+  home screen does not read as "this one is secondary" but as a smaller number; where the
+  marks are drawn (the text widget, which has the column for them) both halves are now set
+  alike, because ↑ and ↓ already say which is which and the dimming was saying it a second
+  time. Where the slash is drawn instead (the Today widget, whose column will not take the
+  marks) nothing changes: with no mark to carry the distinction, the ink stays the thing
+  that sorts the pair.
+
+  The other thing was **the mark itself, and it was a bug**: Glance's `padding` is
+  `setViewPadding` on the same view the size lands on, and an `Image` scales its drawing to
+  fit what the padding leaves. The mark asked for a 16dp box with 8dp of leading air and
+  2 of trailing and got a **6dp arrow**, next to a high mark that had only the 2 to pay and
+  drew at 14 — 43% of the ink at the same nominal size. The air is on a wrapper now, which
+  is what `PlaceLine`'s pin and the warning chip's own gap already did, and what
+  `WidgetGlyphBoxTest` holds for every drawing in the widgets from here on.
+
 - **The severe and rain warnings are whole sentences again.** The storm alert was built as a
   stem plus an optional «, pioggia al 90%» fragment, which cost it the full stop every other
   built-in alert ends with and fixed the clause order in English for every language that

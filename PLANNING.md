@@ -7691,3 +7691,263 @@ settima legge perché esistono.
 `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, 1509 test,
 lint a zero errori. Nessun file Kotlin di produzione toccato: la correzione è diciotto stringhe
 e un test, che è esattamente la dimensione che questo problema doveva avere.
+
+---
+
+## Le tre note dallo schermo di casa: il peso del numero (committente, 20 set 2026)
+
+Uno screenshot con due card una sopra l'altra — «In parole» su fondo blu e «Colpo d'occhio»
+sul cielo — e tre righe:
+
+> «widget "In parole": la temperatura minima e la relativa freccia sono più piccole della
+> temperatura massima. È una cosa voluta? […] widget "Colpo d'occhio" e "Le prossime ore":
+> la temperatura sarebbe bello se visualizzata in bold come nel widget "In parole". […] in
+> tutti i widget vorrei nelle impostazioni la voce "Un colore".»
+
+### La minima non era più piccola: era più debole, ed è lo stesso difetto
+
+Misurata, la coppia era già alla stessa taglia: stesso `size` per i due numeri, e i due
+vettori `ic_range_high`/`ic_range_low` sono la stessa geometria specchiata, 14 unità di
+asta su 24 tutt'e due. Quel che cambiava erano **peso e inchiostro**: massima in Medium
+sull'inchiostro forte, minima in Regular su quello quieto, e la freccia tinta come il numero
+che accompagna. Sul dispositivo quella differenza non si legge come «questa è la secondaria»:
+si legge come **un numero più piccolo**, che è precisamente la segnalazione.
+
+Da qui la decisione, che non è «togliere la gerarchia» ma **chiedersi chi la porta**.
+`DayRange` ha due abiti e adesso non condividono più un'enfasi:
+
+- **Con le frecce** (il widget testuale, che ha i 174 dp di colonna per portarle) le due metà
+  sono vestite uguali: stessa taglia, stesso peso, stesso inchiostro, frecce tinte con lui.
+  ↑ e ↓ dicono già quale è quale, quindi l'attenuazione lo diceva una seconda volta e la
+  faceva pagare alla minima in presenza. È §2.3 letta a questa scala: **il segno porta il
+  significato, il colore al massimo lo asseconda.**
+- **Con la barra** (il widget Oggi, la cui colonna da 113 dp le frecce non le prende) non c'è
+  nessun segno a portarlo, e lì l'inchiostro resta la cosa che ordina la coppia: massima
+  prima e forte, minima dopo e attenuata — l'enfasi delle righe della settimana.
+
+Una sola `DayRange` con un parametro, come prima: è sempre una frase a due budget, e adesso
+anche a due grammatiche.
+
+### Il grassetto sale da una card a una regola
+
+`heroTemperature` sull'app era passata in Bold il 20 set; il widget testuale ci stava dal
+giorno in cui è nato. Le card «Colpo d'occhio» e «Le prossime ore» stampavano ancora 34 sp
+Medium, che è **il peso con cui su quelle card è scritto ogni fatto** — la frase, il luogo,
+massima e minima. Accanto al Bold del widget testuale il numero non leggeva come l'eroe della
+card: leggeva come un fatto un po' più grande degli altri.
+
+La regola scritta in DESIGN §5 nomina l'**eroe**, non la grandezza: le tre card in cui la
+temperatura *è* l'eroe la stampano in Bold, la card dell'arco no, perché lì l'eroe è il
+disegno e il numero è una riga della striscia accanto. E le ore in fondo al widget Oggi
+restano Regular per la stessa ragione: sette cifre in grassetto sotto un eroe in grassetto
+sono due eroi.
+
+**Rimisurato, perché il Bold è più largo del Medium e un budget ci stava appoggiato.**
+`TemperatureColumnMin` (66 dp) riserva la colonna del numero quando accanto c'è una frase, sui
+~62 dp di «−12°» a 34 sp col carattere di sistema. Sui due file inclusi il Bold costa **+2,3%**
+(Google Sans) e **+2,0%** (Inter) sull'avanzamento del Medium per quella stringa: ~1,5 dp, cioè
+~63 dp, e la colonna resta con 3 dp di margine. Il numero non si tocca; il commento accanto sì,
+perché diceva «Medium».
+
+Le due anteprime del selettore (`widget_now_preview.xml`, `widget_today_preview.xml`) passano
+in `textStyle="bold"`: un'anteprima che mostra un peso diverso da quello della card sta
+pubblicizzando un prodotto che non esiste.
+
+### «Un colore»: c'era già, e adesso è un test
+
+La terza riga chiedeva una cosa **già vera dal 19 set**: `BackgroundSection` è un composable
+solo, `WidgetConfigActivity` (che configura Colpo d'occhio, Le prossime ore, Momenti del cielo
+e In parole) e `ArcConfigActivity` lo chiamano tutt'e due senza nessuna condizione sul tipo di
+card, e la riga «Un colore» con i suoi sei colori sta lì dentro. Si raggiunge tenendo premuta
+la card sulla schermata di casa e toccando l'ingranaggio, poi **Sfondo → Un colore**.
+
+Quel che mancava non era la voce: era qualcosa che tenesse la promessa. Le due liste diventano
+dati (`WidgetBackgroundChoices`, `WidgetCardColorChoices`) e `WidgetConfigChoicesTest` controlla
+tre cose: che ogni valore di `WidgetBackground` abbia la sua riga e nell'ordine giusto, che ogni
+`WidgetCardColor` ce l'abbia, e che le due schermate passino davvero dalla sezione condivisa
+invece di stamparsi ciascuna la propria lista — che è esattamente il modo in cui «Un colore»
+finirebbe su quattro widget su cinque senza che nessuno se ne accorga.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **1515 test**
+(tre nuovi), lint a zero errori. Le larghezze del Bold contro il Medium sono misurate sui due
+`.ttf` inclusi con `fontTools`, non stimate.
+
+*(Il messaggio di commit dice 1512: la variante `release` non aveva ancora rigirato i tre test
+nuovi quando è stato contato. Il numero giusto è 1515.)*
+
+---
+
+## Il nome del luogo, e la colonna che se lo prendeva a metà (committente, 20 set 2026)
+
+> «Nello screenshot "Colpo d'occhio" vedi che il nome della località è troncato? Sì che questo
+> esempio è lungo, ma si riuscirebbe a visualizzarlo per completo senza penalizzare il testo a
+> destra nel caso la frase da visualizzare sia lunga? Modifica solo se non rovina il layout.»
+
+La condizione è la parte interessante, ed è quella che ha deciso la forma della soluzione.
+
+### Che cosa faceva davvero la riga larga
+
+Le due colonne di testo di una card a una riga si dividevano **la metà esatta** della luce che
+resta dopo il glifo (`nowSentenceColumnWidth`). Sulla card di riferimento da quattro celle sono
+236 dp, cioè 118 per una. «Cavenago di Brianza» col segnaposto è ~167 dp: troncato. E accanto,
+nei suoi 118 dp, c'era **«Sereno»**, che ne occupa 47.
+
+Metà era la prima risposta giusta e la ragione regge ancora: è quel che fa il widget di
+riferimento, il suo blocco di descrizione è largo quanto il suo blocco del numero, e lo spazio
+vuoto cade in mezzo dove l'occhio se lo aspetta. Quel che metà non sa fare è **accorgersi che
+una delle due colonne non è piena**.
+
+### Perché non è una quota fissa più grande
+
+La soluzione ovvia — dare alle parole 140 dp invece di 118 — è quella che il committente ha
+escluso nella stessa frase: quei 22 dp li pagherebbe **ogni** frase lunga, anche sulle card
+dove il nome del luogo è «Rho». E non basterebbe comunque: 140 − 20 di segnaposto = 120 dp di
+nome, e «Cavenago di Brianza» ne vuole 147.
+
+Quindi la domanda va girata: non «quanto do alle parole», ma **quanto chiedono i due blocchi**.
+
+### Misurare, non stimare
+
+Glance non sa misurare il testo, ed è la ragione per cui questa riga si divideva a metà. Ma il
+testo si può misurare **dove si può**: `measureWidgetText` apre un `Paint` in questo processo,
+alla taglia e al peso che il `Text` avrà, e chiede la larghezza. La faccia è
+`Typeface.DEFAULT` — **il carattere di sistema, che è esattamente quello con cui una card viene
+disegnata**: un widget lo gonfia il launcher da `RemoteViews` e non vede mai il font incluso
+nell'APK, che è tutto il motivo per cui in Impostazioni «il carattere del telefono» è la scelta
+che avvicina di più l'app alle sue card. Non è una stima della larghezza: è la larghezza, nello
+stesso font e alla stessa taglia.
+
+Quel che non può promettere sta nel suo KDoc: su un telefono la cui interfaccia di sistema gira
+una faccia diversa da quella che ricevono le app, il launcher misura qualche punto percentuale
+diverso da noi. Per questo ogni chiamante tiene `RowFitSlack` (4 dp) e **niente qui è un
+vincolo**: un nome che viene fuori più largo di quel che abbiamo misurato va in ellissi
+esattamente come faceva prima, che è lo stato da cui siamo partiti.
+
+Una trappola trovata dai test e vale la pena scriverla: il `Typeface` era un `val` di primo
+livello, e i test puri del layout leggono altre proprietà di primo livello dello stesso file —
+l'inizializzatore della classe partiva sotto JUnit e `Typeface.create` sull'`android.jar`
+stubbato esplode. È `by lazy`: niente si costruisce finché qualcosa non misura davvero.
+
+### Le tre regole, e l'ordine è la promessa
+
+`nowWordsColumnWidth` è aritmetica pura (quindi `NowWidgetLayoutTest` la fissa a tavolino):
+
+1. **La frase tiene quel che chiede, e mai meno di quel che le dava la metà.** Quel che chiede è
+   la sua larghezza misurata su **una riga**, tagliata alla metà: così una frase lunga non può
+   essere stretta, viene tagliata prima di poterlo essere, e la card ricade esattamente sul
+   layout che ha oggi. È la condizione del committente, scritta come un `coerceAtMost`.
+2. **Le parole prendono quel che serve alla riga del luogo**, mai meno di `WordsColumnMin`,
+   perché in quella colonna ci vive anche la temperatura e troncare un numero è un guasto
+   peggiore che troncare un nome.
+3. **Le parole non portano mai la frase sotto il suo pavimento**: quel che resta dopo la 1.
+
+Il risultato non è mai più piccolo della metà, quindi **nessuna card perde un dp di quelli che
+ha oggi**; l'unica cosa che si muove è lo spazio che la frase teneva senza usarlo.
+
+Simulato sulle facce incluse (che sono più larghe del Roboto con cui il launcher disegna
+davvero, quindi è il caso peggiore), card da quattro celle:
+
+| luogo | frase | parole | frase | esito |
+|---|---|---:|---:|---|
+| Cavenago di Brianza | Sereno | 171 | 65 | nome **intero**, frase su una riga |
+| Cavenago di Brianza | Poco nuvoloso | 123 | 113 | nome quasi intero, frase su una riga |
+| Cavenago di Brianza | Pioggia gelata verso le 15:00 | 118 | 118 | **identico a oggi** |
+| Milano | Pioggia in arrivo verso le cinque. | 118 | 118 | **identico a oggi** |
+
+Con la pastiglia dell'allerta nella colonna di destra non si misura niente e si torna alla
+metà: una pastiglia è un blocco di inchiostro fisso che non sa andare a capo né in ellissi, e
+il giorno di un'allerta non è il giorno per cercare il bordo di un'aritmetica.
+
+### Quel che NON è stato toccato
+
+- **La disposizione a glifo destro** (`MirroredRowContent`), che il committente dice già legge
+  il nome per intero: lì la colonna delle parole è tutta la riga meno il glifo, e non c'è
+  niente da dividere.
+- **Il widget «Le prossime ore»**, che ha la stessa divisione a metà nella sua riga dell'eroe.
+  Non era nella richiesta e la sua colonna di destra porta anche massima/minima, quindi «quel
+  che la frase chiede» lì è una domanda con due risposte. Si estende quando lo si chiede.
+- **Le anteprime del selettore**, che restano corrette: il loro luogo di esempio è «Milano» e la
+  loro frase è lunga, cioè esattamente il caso in cui la nuova regola ricade sulla metà.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **1523 test**
+(quattro nuovi in questo giro, sette in tutto sul ramo), lint a zero errori. Le larghezze della
+tabella qui sopra sono calcolate dai due `.ttf` inclusi con `fontTools`, non stimate a occhio.
+
+---
+
+## La freccia era davvero più piccola, e non era l'inchiostro (committente, 20 set 2026)
+
+> «Sul widget "In parole" la freccia temperatura minima è ancora piccola e anche il testo mi
+> sembra più piccolo: mi sono perso qualcosa?»
+
+No: si era perso qualcosa chi ha guardato. Il giro precedente aveva trovato una differenza
+vera — massima in Medium sull'inchiostro forte, minima in Regular su quello quieto — l'ha
+corretta, e si è fermato lì perché la geometria *sul file* era identica: `ic_range_high` e
+`ic_range_low` sono la stessa asta da 14 unità su 24, specchiata. Misurare il disegno e non
+quel che arriva sullo schermo è esattamente l'errore che quella segnalazione ha scoperto.
+
+### Che cosa succedeva davvero
+
+`padding` di Glance è `RemoteViews.setViewPadding` **sulla stessa view** su cui atterra la
+misura (verificato nel bytecode di `ApplyModifiersKt`), e un `Image` scala il disegno per
+entrare in quel che il padding lascia (`ContentScale.Fit`, il default — verificato in
+`ImageKt`). Quindi:
+
+```kotlin
+GlanceModifier.padding(start = 8.dp, end = 2.dp).size(16.dp)
+```
+
+non è un segno da 16 dp con dell'aria intorno: è **un segno da 6 dp**. `RangeMark` chiedeva
+proprio quello, e l'aria fra le due metà della coppia — gli 8 dp di `RangeMarkGap` — la
+pagava il segno della minima, di tasca sua. Risultato: freccia in giù disegnata a 6 dp,
+freccia in su (che paga solo i 2 dp di coda) a 14. **Il 43% dell'inchiostro, alla stessa
+misura nominale.** Il committente lo ha visto due volte e aveva ragione due volte.
+
+Il codice attorno lo sapeva già e lo dice a parole sue in due punti: il segnaposto di
+`PlaceLine` si distanzia con uno `Spacer`, e `WarningChipRow` ha il commento «il padding sta
+sulla scatola e non sulla pastiglia, perché il padding di una pastiglia sta DENTRO il suo
+sfondo, e un'aria colorata non è un'aria». `RangeMark` era l'unico posto che non lo seguiva,
+e il commento accanto spiegava perché: evitare uno `Spacer` per tenere la riga a quattro
+figli. Adesso l'aria sta su un `Box` che avvolge il segno — quattro figli lo stesso, e il
+disegno alla misura che chiede.
+
+La coppia con le frecce cresce di 12 dp (da ~75 a ~87 a 16 sp, ~100 sulla coppia più larga
+della scala): la colonna del widget testuale che la porta ne ha 132, quindi restano 30 dp di
+margine anche nel caso peggiore.
+
+**`WidgetGlyphBoxTest`** legge i sorgenti e fallisce se una catena di `GlanceModifier` mette
+insieme `.size(` e `.padding(`. `width` e `height` non ci sono apposta: un contenitore a
+larghezza fissa con del padding è un'altra cosa ed è giusta — il padding di un layout lo
+pagano i suoi figli, non una bitmap. **Verificato rompendolo**: rimettendo il padding
+sull'`Image` di `RangeMark` il test fallisce e nomina il file e la riga.
+
+### E «anche il testo mi sembra più piccolo»
+
+Quello era il giro precedente e ora è a posto: con le frecce le due metà sono vestite uguali,
+stessa taglia, stesso peso, stesso inchiostro. Se lo screenshot è di una build anteriore a
+`4dd8221` la differenza c'è ancora; se è posteriore, resta solo la freccia, che è questo giro.
+
+## Le due colonne dell'eroe, anche su «Le prossime ore»
+
+> «Sì, fallo anche su "Le prossime ore".»
+
+La grammatica era scritta due volte — `todayIsWide` si ricalcolava in casa la stessa divisione
+a metà di `nowSentenceColumnWidth` — e una grammatica scritta due volte è una grammatica che
+diverge. Adesso c'è una sola aritmetica, `heroRowWordsWidth` / `heroRowEvenColumn` /
+`heroWordsColumnWidth`, e le due card la chiamano.
+
+Le tre regole e il loro ordine sono quelle del giro precedente. Quel che cambia è **che cosa
+deve coprire «quel che la colonna di destra chiede»**: sulla card «Colpo d'occhio» quella
+colonna tiene della prosa, che va a capo; qui può tenere anche massima e minima del giorno,
+che **non** vanno a capo — una coppia più stretta di quel che misura è una coppia con una
+cifra tagliata via. Quindi si misura il più largo dei due inquilini invece di riservare per
+entrambi, e con la pastiglia dell'allerta non si misura niente e resta la metà.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **1529 test**
+(sei nuovi in questo giro, tredici sul ramo), lint a zero errori.

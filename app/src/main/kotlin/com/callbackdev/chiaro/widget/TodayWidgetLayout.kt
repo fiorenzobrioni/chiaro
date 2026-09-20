@@ -112,14 +112,31 @@ internal fun todayHeroIconSize(size: DpSize, fontScale: Float, rain: Boolean): D
 
 /**
  * Whether the hero row has room for the sentence column against its far edge: the same
- * geometry as the Now widget's wide form ([nowSentenceColumnWidth]), with this card's
- * glyph. On the reference four-by-two each text column gets ~113 dp; at the provider's
- * three-cell minimum ~68, and the row is the number and the place alone.
+ * geometry as the Now widget's wide form, with this card's glyph — and since 20 set 2026
+ * literally the same arithmetic ([heroRowEvenColumn]) rather than a second copy of it. On
+ * the reference four-by-two each text column gets ~113 dp; at the provider's three-cell
+ * minimum ~68, and the row is the number and the place alone.
  */
-internal fun todayIsWide(size: DpSize, icon: Dp): Boolean {
-    val words = size.width - WidgetCardPaddingLeading - icon - IconTextGap - WidgetCardPaddingTrailing
-    return (words - SentenceGap) / 2 >= SentenceColumnMin
-}
+internal fun todayIsWide(size: DpSize, icon: Dp): Boolean =
+    heroRowEvenColumn(size.width, icon) >= SentenceColumnMin
+
+/**
+ * Where this card's two hero columns really meet (committente, 20 set 2026, after the same
+ * change on the Now card: «sì, fallo anche su "Le prossime ore"»). Three rules and their
+ * order are [nowWordsColumnWidth]'s; what differs is what the trailing column holds, and
+ * therefore what «the sentence asks to keep» has to cover.
+ *
+ * On the Now card that column holds prose, which wraps. Here it may also hold the day's
+ * high and low, which do NOT: a range given less than it measures is a range with a digit
+ * cut off its end. So [trailingKeep] is the WIDEST of what that column carries, and the
+ * caller measures each piece rather than reserving for all of them.
+ */
+internal fun todayWordsColumnWidth(
+    size: DpSize,
+    icon: Dp,
+    placeLine: Dp,
+    trailingKeep: Dp
+): Dp = heroWordsColumnWidth(size.width, icon, placeLine, trailingKeep)
 
 /** The strip's texts start at the words' inset, not the glyph's: the card's start
  * padding is the glyph's 4 dp, so the strip pays the other 10 itself. */

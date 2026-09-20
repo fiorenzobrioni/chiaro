@@ -13,7 +13,8 @@
   since 8 set): glyph, temperature over place, and the day's sentence against the far
   edge — the two text columns sharing the row's slack evenly, exactly as NowWidget lays
   them out. Same insets as the widget: 4dp before the glyph, 6 above and below, 14 at
-  the words' edge (WidgetCardPaddingLeading / Snug / Trailing).
+  the words' edge (WidgetCardPaddingLeading / Snug / Trailing), and the same weights:
+  the hero bold since 20 set 2026, the sentence medium, the place regular.
 
   Sample data only: a preview is a drawing of the product, never a reading. What the
   widget itself must never invent, it still never invents — the moment the launcher
@@ -51,11 +52,11 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
             android:includeFontPadding="false"
             android:text="25°"
             android:textColor="@color/widget_preview_ink"
-            android:textSize="34sp" />
+            android:textSize="34sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
