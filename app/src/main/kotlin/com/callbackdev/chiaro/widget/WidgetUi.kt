@@ -425,23 +425,30 @@ fun skyGradientBitmap(sky: SkySnapshot, opacityPct: Int, table: SkyPalette): Bit
 /**
  * The day's high and low, as the trailing edge of a hero row (committente, 4 set).
  *
- * High first and in the strong ink, low after it and dimmed — which is the app's own
- * emphasis, not a borrowed convention: the week's rows print the low in
- * `onSurfaceVariant` and the high in the plain one for exactly this reason, so the pair
- * says which is which without a word for it. Nothing is drawn at all when the report
- * has no day left to describe (§1.1).
- *
  * Tabular figures are not available to Glance, so the pair is several Texts rather than
- * one: it is also the only way to give the two numbers two inks.
+ * one: it is also the only way to give the two numbers two dresses. Nothing is drawn at
+ * all when the report has no day left to describe (§1.1).
  *
  * **[marks]** (committente, 19 set 2026: «con le frecce su e giù ad indicare massima e
  * minima») puts the up and down marks before the two figures instead of a slash between
  * them. One composable and two dresses rather than two composables, because it is one
  * statement at two budgets: the marks add about 25 dp, which the text widget's 174 dp
  * trailing column carries easily and the Today widget's 113 dp one does not — so Today
- * keeps the slash, and the card with the room says it outright. The emphasis does not
- * change either way: the high leads and is strong, the low follows and is dimmed, and each
- * mark takes the ink of the figure it stands before.
+ * keeps the slash, and the card with the room says it outright.
+ *
+ * **Which dress it wears decides how the two figures are sorted**, and that is the whole
+ * difference between them (committente, 20 set 2026, on the device: the low read as the
+ * smaller number of the two, and it was never meant to be a smaller number).
+ *
+ * - **With the marks**, both halves are set alike — same size, same weight, same ink, and
+ *   the two marks tinted with it. ↑ and ↓ already say which is which, so the dimming was
+ *   saying it a second time and charging a figure for it: §2.3's rule about verdicts read
+ *   at this scale — the mark carries the meaning, the ink only ever seconds it, and where
+ *   the mark is there the ink is free to stop shouting.
+ * - **With the slash** there is no mark to carry it, so the ink stays the thing that sorts
+ *   the pair: the high first and strong, the low after it and dimmed. That is the app's own
+ *   emphasis, not a borrowed convention — the week's rows print the low in
+ *   `onSurfaceVariant` and the high in the plain one for exactly this reason.
  */
 @Composable
 fun DayRange(
@@ -456,15 +463,18 @@ fun DayRange(
 ) {
     val locale = Locale.getDefault()
     val context = LocalContext.current
+    // One dress for both figures in the marks form, and it is the high's: see the header
+    // for why the low stops being dimmed the moment a ↓ stands in front of it.
+    val strong = TextStyle(
+        color = palette.primary,
+        fontSize = size,
+        fontWeight = FontWeight.Medium
+    )
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (marks) RangeMark(high = true, ink = palette.primary, size = size, context = context)
         Text(
             text = Formats.temperature(highC, units.temperature, locale),
-            style = TextStyle(
-                color = palette.primary,
-                fontSize = size,
-                fontWeight = FontWeight.Medium
-            ),
+            style = strong,
             maxLines = 1
         )
         if (marks) {
@@ -472,7 +482,7 @@ fun DayRange(
             // row stays four children rather than five (Glance drops the eleventh child
             // of a container without a word, and every widget here counts them).
             RangeMark(
-                high = false, ink = palette.secondary, size = size, context = context,
+                high = false, ink = palette.primary, size = size, context = context,
                 leading = RangeMarkGap
             )
         } else {
@@ -486,7 +496,7 @@ fun DayRange(
         }
         Text(
             text = Formats.temperature(lowC, units.temperature, locale),
-            style = secondaryStyle(palette, size),
+            style = if (marks) strong else secondaryStyle(palette, size),
             maxLines = 1
         )
     }

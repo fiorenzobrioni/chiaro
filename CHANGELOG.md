@@ -400,6 +400,29 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
 
 ### Changed
 
+- **The hero temperature is Bold on every card whose hero it is.** The Now and Today widgets
+  printed theirs at 34sp Medium, which is the weight everything else on those cards is set in —
+  the sentence, the place, the day's high and low — so beside the text widget's Bold hero the
+  number read as one more fact rather than as the thing the card exists for. It is a household
+  rule now and it names the hero, not the quantity: the arc card keeps its Medium, because
+  there the hero is the drawing and the number is one line of the strip beside it, and the
+  Today strip's own hours stay Regular because seven bold figures under a bold hero is two
+  heroes. The picker previews carry the same weight, since a preview that advertises a
+  different one is advertising a product that does not exist. Re-measured where it mattered:
+  Bold costs +2.3% of Medium's advance in Google Sans and +2.0% in Inter over «−12°», about
+  1.5dp at 34sp, which the Now card's 66dp number column absorbs with 3dp to spare.
+
+- **The day's low is no longer the smaller-looking number when it has an arrow in front of
+  it.** The pair was already the same size — same text size for both figures, and the up and
+  down marks are one geometry mirrored — but the low was set in Regular on the quiet ink, and
+  on a home screen that does not read as "this one is secondary", it reads as a smaller
+  number. Where the marks are drawn (the text widget, which has the column for them) both
+  halves are now set alike, marks included: ↑ and ↓ already say which is which, so the dimming
+  was saying it a second time and charging the low a figure's worth of presence for it. Where
+  the slash is drawn instead (the Today widget, whose 113dp column will not take the marks)
+  nothing changes: with no mark to carry the distinction, the ink stays the thing that sorts
+  the pair.
+
 - **The severe and rain warnings are whole sentences again.** The storm alert was built as a
   stem plus an optional «, pioggia al 90%» fragment, which cost it the full stop every other
   built-in alert ends with and fixed the clause order in English for every language that

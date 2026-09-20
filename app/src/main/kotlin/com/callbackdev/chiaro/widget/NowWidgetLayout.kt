@@ -122,7 +122,16 @@ internal fun nowMirroredSentenceWidth(size: DpSize): Dp =
     size.width - WidgetCardPaddingTrailing - TemperatureColumnMin - SentenceGap -
         IconTextGap - nowRowIconSize(size) - WidgetCardPaddingLeading
 
-/** What the number needs beside a sentence: «−12°» at 34 sp Medium is ~62 dp. */
+/**
+ * What the number needs beside a sentence: «−12°», the widest reading this card prints,
+ * measured at ~62 dp with the system font at 34 sp Medium.
+ *
+ * **Re-checked when the hero went Bold** (20 set 2026): the two bundled faces put Bold at
+ * +2.3% (Google Sans) and +2.0% (Inter) of Medium's advance over that string, which is ~63
+ * dp here — still 3 dp inside the column, so the number stands. It is a reservation and
+ * not a bound in any case: Glance lays the row out with weights, and this figure only
+ * decides whether there is a sentence worth putting beside the number at all.
+ */
 internal val TemperatureColumnMin = 66.dp
 
 /**

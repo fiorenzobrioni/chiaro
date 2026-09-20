@@ -380,6 +380,16 @@ private fun HeroIcon(
     )
 }
 
+/**
+ * The hero number. **Bold since 20 set 2026** (committente, with the two cards side by
+ * side on the home screen): it was Medium, which is the weight every fact on these cards
+ * is set in, and beside the text widget's Bold hero it read as one more fact rather than
+ * as the thing the card is for. The rule is now the household's and not that one card's:
+ * on the three cards where the temperature IS the hero it is Bold, and the weight sorts
+ * it from the sentence and the place under it the way size and ink already did.
+ *
+ * One line, always — a temperature that wrapped would have stopped being a number.
+ */
 @Composable
 private fun Temperature(
     content: TodayUiState.Content,
@@ -393,7 +403,7 @@ private fun Temperature(
         style = TextStyle(
             color = palette.primary,
             fontSize = TemperatureSp.sp,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Bold
         ),
         maxLines = 1
     )

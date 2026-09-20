@@ -47,8 +47,11 @@ import java.util.Locale
  * It is not the Now widget with the icon deleted. A card that loses its drawing loses the
  * thing that made it readable across a room, so this one rebuilds that at the only place
  * left: the temperature is the drawing now, sized to the grant the way the other four size
- * their glyph, in Bold where the household writes Medium, over a place set two ranks below
- * it. [TextWidgetLayout] carries the four ranks, the four forms and every number's reason.
+ * their glyph, in Bold, over a place set two ranks below it. [TextWidgetLayout] carries the
+ * four ranks, the four forms and every number's reason. (The Bold was this card's alone
+ * until 20 set 2026, when the committente asked for it on the Now and Today cards too: it
+ * is the household's weight for a hero number now, and this card's rank 1 is still two
+ * ranks clear of everything beside it on size and ink.)
  *
  * **Two marks are drawn, and both were asked for** (committente, 19 set 2026, on the
  * device). The position pin comes back in front of a place the phone is standing in, where
@@ -478,8 +481,10 @@ private fun ConditionGlyph(
 }
 
 /**
- * Rank 1. Bold, where every other card writes its hero Medium: weight is one of the three
- * things a rank is made of here, and the top rank is the one that can afford all three.
+ * Rank 1. Bold: weight is one of the three things a rank is made of here, and the top rank
+ * is the one that can afford all three. Since 20 set 2026 the Now and Today cards set their
+ * hero the same way, which costs this card nothing — there the number is 34 sp against a
+ * 16 sp fact, here it is 26 to 64 against the same 16, and the rank is the distance.
  * One line, always — a temperature that wrapped would have stopped being a number.
  */
 @Composable

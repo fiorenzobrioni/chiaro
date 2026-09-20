@@ -158,6 +158,11 @@ private fun TodayContent(
                     .padding(start = IconTextGap, bottom = textInkBalance(context, TemperatureSp))
                     .defaultWeight()
             ) {
+                // Bold, like the Now card's hero and the text card's: the three cards
+                // whose hero IS the temperature set it in the one weight nothing else on
+                // them wears (committente, 20 set 2026). The hours in the strip below
+                // stay Regular — they are the card's subject, not its hero, and a strip
+                // of seven bold figures would be a second hero under the first.
                 Text(
                     text = Formats.temperature(
                         content.report.current.tempC, model.settings.units.temperature, locale
@@ -165,7 +170,7 @@ private fun TodayContent(
                     style = TextStyle(
                         color = palette.primary,
                         fontSize = TemperatureSp.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Bold
                     ),
                     maxLines = 1
                 )

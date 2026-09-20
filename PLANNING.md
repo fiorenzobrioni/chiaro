@@ -7691,3 +7691,85 @@ settima legge perché esistono.
 `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, 1509 test,
 lint a zero errori. Nessun file Kotlin di produzione toccato: la correzione è diciotto stringhe
 e un test, che è esattamente la dimensione che questo problema doveva avere.
+
+---
+
+## Le tre note dallo schermo di casa: il peso del numero (committente, 20 set 2026)
+
+Uno screenshot con due card una sopra l'altra — «In parole» su fondo blu e «Colpo d'occhio»
+sul cielo — e tre righe:
+
+> «widget "In parole": la temperatura minima e la relativa freccia sono più piccole della
+> temperatura massima. È una cosa voluta? […] widget "Colpo d'occhio" e "Le prossime ore":
+> la temperatura sarebbe bello se visualizzata in bold come nel widget "In parole". […] in
+> tutti i widget vorrei nelle impostazioni la voce "Un colore".»
+
+### La minima non era più piccola: era più debole, ed è lo stesso difetto
+
+Misurata, la coppia era già alla stessa taglia: stesso `size` per i due numeri, e i due
+vettori `ic_range_high`/`ic_range_low` sono la stessa geometria specchiata, 14 unità di
+asta su 24 tutt'e due. Quel che cambiava erano **peso e inchiostro**: massima in Medium
+sull'inchiostro forte, minima in Regular su quello quieto, e la freccia tinta come il numero
+che accompagna. Sul dispositivo quella differenza non si legge come «questa è la secondaria»:
+si legge come **un numero più piccolo**, che è precisamente la segnalazione.
+
+Da qui la decisione, che non è «togliere la gerarchia» ma **chiedersi chi la porta**.
+`DayRange` ha due abiti e adesso non condividono più un'enfasi:
+
+- **Con le frecce** (il widget testuale, che ha i 174 dp di colonna per portarle) le due metà
+  sono vestite uguali: stessa taglia, stesso peso, stesso inchiostro, frecce tinte con lui.
+  ↑ e ↓ dicono già quale è quale, quindi l'attenuazione lo diceva una seconda volta e la
+  faceva pagare alla minima in presenza. È §2.3 letta a questa scala: **il segno porta il
+  significato, il colore al massimo lo asseconda.**
+- **Con la barra** (il widget Oggi, la cui colonna da 113 dp le frecce non le prende) non c'è
+  nessun segno a portarlo, e lì l'inchiostro resta la cosa che ordina la coppia: massima
+  prima e forte, minima dopo e attenuata — l'enfasi delle righe della settimana.
+
+Una sola `DayRange` con un parametro, come prima: è sempre una frase a due budget, e adesso
+anche a due grammatiche.
+
+### Il grassetto sale da una card a una regola
+
+`heroTemperature` sull'app era passata in Bold il 20 set; il widget testuale ci stava dal
+giorno in cui è nato. Le card «Colpo d'occhio» e «Le prossime ore» stampavano ancora 34 sp
+Medium, che è **il peso con cui su quelle card è scritto ogni fatto** — la frase, il luogo,
+massima e minima. Accanto al Bold del widget testuale il numero non leggeva come l'eroe della
+card: leggeva come un fatto un po' più grande degli altri.
+
+La regola scritta in DESIGN §5 nomina l'**eroe**, non la grandezza: le tre card in cui la
+temperatura *è* l'eroe la stampano in Bold, la card dell'arco no, perché lì l'eroe è il
+disegno e il numero è una riga della striscia accanto. E le ore in fondo al widget Oggi
+restano Regular per la stessa ragione: sette cifre in grassetto sotto un eroe in grassetto
+sono due eroi.
+
+**Rimisurato, perché il Bold è più largo del Medium e un budget ci stava appoggiato.**
+`TemperatureColumnMin` (66 dp) riserva la colonna del numero quando accanto c'è una frase, sui
+~62 dp di «−12°» a 34 sp col carattere di sistema. Sui due file inclusi il Bold costa **+2,3%**
+(Google Sans) e **+2,0%** (Inter) sull'avanzamento del Medium per quella stringa: ~1,5 dp, cioè
+~63 dp, e la colonna resta con 3 dp di margine. Il numero non si tocca; il commento accanto sì,
+perché diceva «Medium».
+
+Le due anteprime del selettore (`widget_now_preview.xml`, `widget_today_preview.xml`) passano
+in `textStyle="bold"`: un'anteprima che mostra un peso diverso da quello della card sta
+pubblicizzando un prodotto che non esiste.
+
+### «Un colore»: c'era già, e adesso è un test
+
+La terza riga chiedeva una cosa **già vera dal 19 set**: `BackgroundSection` è un composable
+solo, `WidgetConfigActivity` (che configura Colpo d'occhio, Le prossime ore, Momenti del cielo
+e In parole) e `ArcConfigActivity` lo chiamano tutt'e due senza nessuna condizione sul tipo di
+card, e la riga «Un colore» con i suoi sei colori sta lì dentro. Si raggiunge tenendo premuta
+la card sulla schermata di casa e toccando l'ingranaggio, poi **Sfondo → Un colore**.
+
+Quel che mancava non era la voce: era qualcosa che tenesse la promessa. Le due liste diventano
+dati (`WidgetBackgroundChoices`, `WidgetCardColorChoices`) e `WidgetConfigChoicesTest` controlla
+tre cose: che ogni valore di `WidgetBackground` abbia la sua riga e nell'ordine giusto, che ogni
+`WidgetCardColor` ce l'abbia, e che le due schermate passino davvero dalla sezione condivisa
+invece di stamparsi ciascuna la propria lista — che è esattamente il modo in cui «Un colore»
+finirebbe su quattro widget su cinque senza che nessuno se ne accorga.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **1512 test**
+(tre nuovi), lint a zero errori. Le larghezze del Bold contro il Medium sono misurate sui due
+`.ttf` inclusi con `fontTools`, non stimate.
