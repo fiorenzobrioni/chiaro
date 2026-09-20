@@ -188,6 +188,13 @@ private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifi
         )
         MomentSample()
         Caption(stringResource(R.string.guide_sky_moment_caption))
+        // Fase 28 put a glyph on nine rows and a bearing under them, and a reader meets
+        // the camera on a fresh install — the evening golden hour is a default line.
+        // A mark nobody explained is a mark nobody trusts.
+        Feature(
+            stringResource(R.string.guide_sky_camera_title),
+            stringResource(R.string.guide_sky_camera_body)
+        )
         Feature(
             stringResource(R.string.guide_sky_bell_title),
             stringResource(R.string.guide_sky_bell_body)
@@ -265,8 +272,8 @@ private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifi
 
         Chapter(Icons.Outlined.Home, stringResource(R.string.guide_widgets_title))
         Feature(
-            stringResource(R.string.guide_widgets_three_title),
-            stringResource(R.string.guide_widgets_three_body)
+            stringResource(R.string.guide_widgets_all_title),
+            stringResource(R.string.guide_widgets_all_body)
         )
         Feature(
             stringResource(R.string.guide_widgets_config_title),

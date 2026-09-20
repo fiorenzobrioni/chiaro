@@ -29,10 +29,12 @@ object SkyJobCatalog {
     val AstronomicalPm = twilight("twilight.astronomical.pm")
 
     // The photographer's hours ------------------------------------------------
-    val GoldenAm = visibleRange("golden_hour.am")
-    val GoldenPm = visibleRange("golden_hour.pm")
-    val BlueAm = visibleRange("blue_hour.am")
-    val BluePm = visibleRange("blue_hour.pm")
+    // These four are in the catalog BECAUSE of photography and have been since Fase 5;
+    // `photographic` (Fase 28) only says out loud what the group's own name says.
+    val GoldenAm = visibleRange("golden_hour.am", photographic = true)
+    val GoldenPm = visibleRange("golden_hour.pm", photographic = true)
+    val BlueAm = visibleRange("blue_hour.am", photographic = true)
+    val BluePm = visibleRange("blue_hour.pm", photographic = true)
 
     /**
      * Astronomical dusk → dawn, with the moonless part of it named in the comment.
@@ -61,7 +63,7 @@ object SkyJobCatalog {
      */
     val MilkyWayCore = SkyJob(
         "milky_way.core", SkyJobKind.DAILY, SkyJobShape.RANGE,
-        visibilityDependent = true, needsDarkness = true
+        visibilityDependent = true, needsDarkness = true, photographic = true
     )
     val ZodiacalAm = darkSky("zodiacal.am")
     val ZodiacalPm = darkSky("zodiacal.pm")
@@ -88,6 +90,76 @@ object SkyJobCatalog {
     val MoonLastQuarter = quarter("moon.last_quarter")
 
     /**
+     * The evening the full moon comes up while the sky is still coloured (Fase 28).
+     *
+     * Once a month the moon rises within minutes of sunset and hangs there, huge and
+     * orange, against a sky that has not gone dark yet. An almanac answers this with
+     * "full moon 03:14", which is the instant of the geometry and not the evening
+     * anybody would go out for. This is the evening.
+     *
+     * Aperiodic by construction — it is an intersection detected by looking, not a
+     * recurrence with a rule — so it is [SkyJobKind.POLLING] like the eclipses.
+     */
+    val MoonFullAtDusk = SkyJob(
+        "moon.full_at_dusk", SkyJobKind.POLLING, SkyJobShape.INSTANT,
+        visibilityDependent = true, photographic = true
+    )
+
+    /**
+     * Earthshine: the thin crescent with the rest of the disc faintly lit — by the
+     * earth, which is where the name comes from and why it is worth a line. A few
+     * evenings after new moon low in the west, a few mornings before it in the east,
+     * and most people have never been told it is a thing they can see.
+     */
+    val EarthshinePm = SkyJob(
+        "earthshine.pm", SkyJobKind.DAILY, SkyJobShape.RANGE,
+        visibilityDependent = true, photographic = true
+    )
+    val EarthshineAm = SkyJob(
+        "earthshine.am", SkyJobKind.DAILY, SkyJobShape.RANGE,
+        visibilityDependent = true, photographic = true
+    )
+
+    // Planets ------------------------------------------------------------------
+
+    /**
+     * Venus and Jupiter, and no others (Fase 28, reopening a Fase 19 decision — see
+     * [PlanetMath] for the argument and for what is still out).
+     *
+     * These are the two points of light a passer-by picks out without being taught,
+     * and the two the app can answer "what is that bright star" with. Venus is only
+     * ever a morning or an evening star, so it gets one line each way; Jupiter can be
+     * up all night, so it gets one line for the night.
+     *
+     * Deliberately NOT [SkyJob.needsDarkness]: Jupiter at magnitude −2 is obvious in a
+     * suburban sky and Venus is obvious in daylight, so a full moon does not spoil
+     * either — and saying it did would be the app borrowing a rule from the faint
+     * things and applying it to the two brightest.
+     */
+    val VenusEvening = SkyJob(
+        "venus.evening", SkyJobKind.DAILY, SkyJobShape.RANGE, visibilityDependent = true
+    )
+    val VenusMorning = SkyJob(
+        "venus.morning", SkyJobKind.DAILY, SkyJobShape.RANGE, visibilityDependent = true
+    )
+    val JupiterNight = SkyJob(
+        "jupiter.night", SkyJobKind.DAILY, SkyJobShape.RANGE, visibilityDependent = true
+    )
+
+    /**
+     * The three pairs worth naming when they pass close (Fase 28): the moon beside
+     * each planet, which happens about monthly and is the sight that makes somebody
+     * look up and ask, and the two planets beside each other, which is rarer and
+     * better.
+     *
+     * Aperiodic, and resolved only when the pair can actually be SEEN from here: the
+     * moon meets Venus every month and half of those happen behind the sun.
+     */
+    val MoonVenus = conjunction("conjunction.moon_venus")
+    val MoonJupiter = conjunction("conjunction.moon_jupiter")
+    val VenusJupiter = conjunction("conjunction.venus_jupiter")
+
+    /**
      * The full moon of the year that comes nearest to the earth — about 14 % wider and
      * 30 % brighter than the farthest one, and the only honest reading of a word the
      * internet hands out three or four times a year.
@@ -108,7 +180,21 @@ object SkyJobCatalog {
      * shower is worth setting an alarm for, and do not decide that about an eclipse.
      * People travel for these.
      */
-    val LunarEclipse = SkyJob("eclipse.lunar", SkyJobKind.POLLING, SkyJobShape.RANGE)
+    val LunarEclipse = SkyJob(
+        "eclipse.lunar", SkyJobKind.POLLING, SkyJobShape.RANGE, photographic = true
+    )
+
+    /**
+     * And the solar one is deliberately **not** [SkyJob.photographic], which is the one
+     * place that flag is decided on safety rather than on what the event looks like.
+     *
+     * The app's own line about a solar eclipse is a warning — never look at the sun
+     * without a proper filter — and "bring a camera" printed beside it reads as
+     * permission. It is not: a lens pointed at the sun without a solar filter destroys
+     * the sensor behind it, and through an optical viewfinder it destroys the eye
+     * behind that. The flag exists to send somebody outside with a camera, so the one
+     * event where that needs equipment this app cannot check for does not get it.
+     */
     val SolarEclipse = SkyJob("eclipse.solar", SkyJobKind.POLLING, SkyJobShape.RANGE)
 
     // Seasons -----------------------------------------------------------------
@@ -164,7 +250,9 @@ object SkyJobCatalog {
         add(DarknessWindow); add(MilkyWayCore); add(ZodiacalPm); add(ZodiacalAm)
         add(MoonRise); add(MoonSet); add(MoonToday); add(MoonPhase)
         add(MoonNew); add(MoonFirstQuarter); add(MoonFull); add(MoonLastQuarter)
-        add(MoonClosestFull)
+        add(MoonClosestFull); add(MoonFullAtDusk); add(EarthshinePm); add(EarthshineAm)
+        add(VenusEvening); add(VenusMorning); add(JupiterNight)
+        add(MoonVenus); add(MoonJupiter); add(VenusJupiter)
         add(LunarEclipse); add(SolarEclipse)
         add(EquinoxSpring); add(SolsticeSummer); add(EquinoxAutumn); add(SolsticeWinter)
         add(Perihelion); add(Aphelion)
@@ -188,8 +276,15 @@ object SkyJobCatalog {
     private fun twilight(id: String) =
         SkyJob(id, SkyJobKind.DAILY, SkyJobShape.INSTANT, visibilityDependent = false)
 
-    private fun visibleRange(id: String) =
-        SkyJob(id, SkyJobKind.DAILY, SkyJobShape.RANGE, visibilityDependent = true)
+    private fun visibleRange(id: String, photographic: Boolean = false) = SkyJob(
+        id, SkyJobKind.DAILY, SkyJobShape.RANGE,
+        visibilityDependent = true, photographic = photographic
+    )
+
+    /** A close approach of two naked-eye bodies: aperiodic, and an instant. */
+    private fun conjunction(id: String) = SkyJob(
+        id, SkyJobKind.POLLING, SkyJobShape.INSTANT, visibilityDependent = true
+    )
 
     /** A window that wants a clear sky AND a dark one. */
     private fun darkSky(id: String) = SkyJob(

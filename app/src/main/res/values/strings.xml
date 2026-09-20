@@ -360,7 +360,7 @@
     <string name="guide_today_hours_title">The next hours</string>
     <string name="guide_today_hours_body">Twenty-four hours of temperature, sky and rain chance, starting from the hour after this one: the hour you are in is the big number at the top.</string>
     <string name="guide_today_rest_title">The rest of the day</string>
-    <string name="guide_today_rest_body">One timeline for everything still ahead: sunrise or sunset, the golden and blue hours, the moment the sky goes fully dark, moonrise and moonset, and the hours rain is expected to start and ease off.</string>
+    <string name="guide_today_rest_body">One timeline for everything still ahead: sunrise or sunset, the golden and blue hours, the moment the sky goes fully dark, moonrise and moonset, the hours rain is expected to start and ease off, and — when the sun is low and rain is likely in front of it — the window a rainbow could stand in, with the direction to turn and look.</string>
     <string name="guide_today_week_title">The week</string>
     <string name="guide_today_week_body">Seven days on one shared temperature scale, so the same bar length means the same thing on every row. The stripe under each day is its light, from dawn to dusk. Tap a day to open its hours.</string>
     <string name="guide_today_details_title">The details</string>
@@ -372,9 +372,9 @@
     <string name="guide_today_places_body">Swipe sideways to move between your places; the dots under the sky say where you are. For a place that is not the one you are standing in, the header says what day and what hour it is there.</string>
 
     <string name="guide_sky_title">Sky</string>
-    <string name="guide_sky_p1">This is the screen no other weather app ships. It takes the moments worth waiting for — a sunrise, a golden hour, a night of stars, a meteor peak — and says whether tonight is one of the good ones. Everything on it is computed on your phone, so it works with no connection at all.</string>
+    <string name="guide_sky_p1">This is the screen no other weather app ships. It takes the moments worth waiting for — a sunrise, a golden hour, a night of stars, a meteor peak, the bright planet standing in the west after sunset — and says whether tonight is one of the good ones. Everything on it is computed on your phone, so it works with no connection at all.</string>
     <string name="guide_sky_tonight_title">Tonight</string>
-    <string name="guide_sky_tonight_body">The card at the top is the dark window: the hours when the sky is genuinely dark and the moon is out of the way. It carries the verdict, the two hours it runs between, and the number that decided it.</string>
+    <string name="guide_sky_tonight_body">The card at the top is the dark window: the hours when the sky is genuinely dark AND the moon is out of the way. It is an intersection rather than a timetable, so some nights it is the whole night, some nights it is ninety minutes, and some nights there is none at all — when the moon is up from dusk to dawn the card says so, and says between which hours the sky is dark all the same. It carries the verdict, the number that decided it, what the moon took if it took anything, and, when the night is not all alike, the stretch where it is clearest.</string>
     <string name="guide_verdicts_p1">A verdict is a word, a small sign and the number behind it — never a colour alone:</string>
     <string name="guide_verdicts_caption">An example: a night of stars, judged by its clouds.</string>
     <string name="guide_verdicts_p2">The number next to the word is the evidence that decided it, so you can weigh the answer yourself. When the forecast does not reach that far, or the last one that arrived is too old to trust, the answer is the honest one: a grey “not sure yet”, never a guess dressed up as a verdict.</string>
@@ -384,12 +384,14 @@
     <string name="guide_sky_moments_title">The moments ahead</string>
     <string name="guide_sky_moments_body">The moments you follow, in the order they happen. One that is over is replaced by its next occurrence and the row says which day it is; one that is happening right now says so. It is the same moment the Sky widget shows on your home screen, resolved the same way.</string>
     <string name="guide_sky_moment_caption">An example: tomorrow\'s sunrise, judged by its clouds.</string>
+    <string name="guide_sky_camera_title">The camera mark</string>
+    <string name="guide_sky_camera_body">A few events carry a small camera beside their name: the nine genuinely worth carrying one for — the golden and blue hours, the full moon at dusk, earthshine morning and evening, the heart of the Milky Way, and the eclipse of the moon. It is not a matter of taste, and that is why those rows also say which way to look: a time of day is half an answer without a direction. The eclipse of the sun deliberately does not carry it — that one is only ever watched through a proper filter, and a lens needs one just as much as an eye does.</string>
     <string name="guide_sky_bell_title">The bell</string>
     <string name="guide_sky_bell_body">Each moment can remind you, with its own lead time or the usual one. Reminders are deliberately loose — they can arrive a few minutes early or late — and that looseness is exactly what keeps them off your battery. A reminder for something the clouds are going to hide stays quiet, unless you ask for it anyway.</string>
     <string name="guide_sky_events_title">Coming up</string>
-    <string name="guide_sky_events_body">The calendar ahead: meteor peaks with their dates, the next full moon, solstices and equinoxes — with a verdict where the forecast reaches that far and an honest “too far out to say” where it does not.</string>
+    <string name="guide_sky_events_body">The calendar ahead, in two tiers. On top, everything you follow: an eclipse two years out still has its row, with its year and its hours, and a line the sky skips — a shower peaking on a night that never gets dark here — keeps its row and says why. Under it, the nearest events for everybody: meteor peaks, the next full moon, solstices and equinoxes. A verdict where the forecast reaches that far, an honest “too far out to say” where it does not. One instant, one row: two showers that peak on the same night share one, and both are named.</string>
     <string name="guide_sky_catalog_title">Add a moment</string>
-    <string name="guide_sky_catalog_body">Some fifty moments, grouped by sun, night, moon, eclipses, seasons and meteor showers, each with the one line that says what it is and a page that explains it properly. This is the place to find out what a blue hour actually is, or the zodiacal light: by adding one, or by reading about it first.</string>
+    <string name="guide_sky_catalog_body">Sixty moments, grouped by sun, night, moon, planets, eclipses, seasons and meteor showers, each with the one line that says what it is and a page that explains it properly. The field at the top searches the names and those lines, which is the short way to the Perseids — and “photo” brings up the nine that carry the camera. This is the place to find out what a blue hour actually is, or earthshine: by adding one, or by reading about it first.</string>
 
     <string name="guide_alerts_title">Alerts</string>
     <string name="guide_alerts_p1">Two kinds live here: the ones already written, and the ones you write. Nothing arrives that you did not switch on.</string>
@@ -427,15 +429,15 @@
     <string name="guide_places_order_body">Move a place up or down and the swipe on Today follows that order. Swipe a place away to remove it, with a moment to undo if it was a mistake.</string>
 
     <string name="guide_widgets_title">The home widgets</string>
-    <string name="guide_widgets_three_title">Four of them</string>
-    <string name="guide_widgets_three_body">At a glance: icon, temperature, place — and on a wide or a tall card the day\'s sentence, or the sky\'s state when there is nothing to warn about; resize it and it shows what fits, and its settings can lay it the other way round. The hours ahead: that, plus the next hours. Sky moments: the moment in front of you, when, and its verdict — the same one the Sky screen shows — and the ones after it on a taller card. The day\'s arc: the sun\'s path over your place with the sky of every hour under it, the moon and the rain, the next light moment and the agenda after it — from one cell to sixteen, reshaping itself at every size, with a settings screen of its own.</string>
+    <string name="guide_widgets_all_title">Five of them</string>
+    <string name="guide_widgets_all_body">At a glance: icon, temperature, place — and on a wide or a tall card the day\'s sentence, or the sky\'s state when there is nothing to warn about; resize it and it shows what fits, and its settings can lay it the other way round. The hours ahead: that, plus the next hours. Sky moments: the moment in front of you, when, and its verdict — the same one the Sky screen shows — and the ones after it on a taller card. In words: the same facts with nothing drawn on the card at all — no glyph, no pin, no mark — where the temperature is the drawing and the place is printed whole however long its name. The day\'s arc: the sun\'s path over your place with the sky of every hour under it, the moon and the rain, the next light moment and the agenda after it — from one cell to sixteen, reshaping itself at every size, with a settings screen of its own.</string>
     <string name="guide_widgets_config_title">Setting one up</string>
     <string name="guide_widgets_config_body">Press and hold a widget to open its own settings: which place it watches (the active one, or a fixed place of its own), its background — including the same computed sky the app draws — how solid that background is, and which weather icons it draws with.</string>
     <string name="guide_widgets_honest_title">They never invent</string>
     <string name="guide_widgets_honest_body">Old data says how old it is, a widget with no place says so, and none of them shows a number it does not have. They repaint when an update lands, so they cost no battery of their own.</string>
 
     <string name="guide_settings_title">Settings</string>
-    <string name="guide_settings_body">Units for temperature and wind. Appearance, where the theme, the palette, the two drawings of the weather icons and the wallpaper colors live. How often to look for a new forecast. The app language, on Android\'s own picker. Restoring the defaults puts units, appearance and frequency back as they started and leaves your places and your history exactly where they are.</string>
+    <string name="guide_settings_body">Units for temperature and wind. Appearance, where the theme, the palette, the typeface, the two drawings of the weather icons, whether they move, and the wallpaper colors live. How often to look for a new forecast. The app language, on Android\'s own picker. Restoring the defaults puts units, appearance and frequency back as they started and leaves your places and your history exactly where they are.</string>
 
     <string name="guide_data_title">Where the numbers come from</string>
     <string name="guide_data_p1">Forecasts, air quality and place search come from Open-Meteo, an open weather service: free, no account, no API key. The weather request is the only thing that leaves your phone.</string>
@@ -456,8 +458,18 @@
     <string name="sky_no_place_body">Add a place to see what its sky has planned.</string>
     <string name="sky_section_moments">The moments ahead</string>
     <string name="sky_section_events">Coming up</string>
+    <!-- Fase 27: two showers that peak on the same night share one row. -->
+    <string name="sky_event_and">%1$s and %2$s</string>
     <string name="sky_section_reminders">Reminders</string>
     <string name="sky_add_moment">Add a moment</string>
+    <!-- Fase 28: sessanta voci in un foglio erano uno scroll. -->
+    <string name="sky_catalog_search">Search the events</string>
+    <string name="sky_catalog_search_clear">Clear the search</string>
+    <string name="sky_catalog_no_match">Nothing here matches «%1$s».</string>
+    <!-- Fase 28b: le parole che tirano fuori i nove eventi col marchio della
+         macchina fotografica. Una lista per lingua, e il marchio resta l'unica
+         verita': la parola non entra nelle descrizioni, dove potrebbe divergere. -->
+    <string name="sky_catalog_search_photo_terms" translatable="true">photo photos photograph photographs photography photographing camera cameras shot shoot</string>
     <string name="sky_moment_now">Now</string>
     <string name="sky_day_today">Today</string>
     <string name="sky_day_tomorrow">Tomorrow</string>
@@ -468,7 +480,12 @@
          dark at noon (above 84.6° at the solstice). The card and the row say it. -->
     <string name="sky_tonight_dark_all_day">It is dark all day here, at this latitude, in this season: there is no night to wait for, it is already here.</string>
     <string name="sky_none_dark_all_day">It is dark all day: the sun never climbs back up to twilight</string>
-    <string name="sky_tonight_moon">The moon is up, %1$d%% lit</string>
+    <!-- Fase 27: the dark window is the astronomical night MINUS the hours the moon
+         is up, so the card can say what shortened it — or took it all. -->
+    <string name="sky_tonight_moon_sets">The moon is up until %1$s, %2$d%% lit</string>
+    <string name="sky_tonight_moon_rises">The moon comes back up at %1$s, %2$d%% lit</string>
+    <string name="sky_tonight_moon_all_night">The moon is up from dusk to dawn, %1$d%% lit: no genuinely dark window tonight. The sky is dark from %2$s to %3$s all the same.</string>
+    <string name="sky_tonight_clear_between">Clearest between %1$s and %2$s</string>
     <string name="sky_moon_line">%1$s · %2$d%% lit</string>
     <string name="sky_too_far">Too far out to say</string>
 
@@ -488,6 +505,48 @@
     <string name="sky_none_polar_night">The sun doesn\'t rise</string>
     <string name="sky_none_moon">The moon skips it, as it does about once a month</string>
     <string name="sky_none_no_darkness">The sky never gets fully dark</string>
+    <string name="sky_none_moon_all_night">The moon is up all night</string>
+
+    <!-- Fase 28: i nuovi eventi (luna piena al crepuscolo, luce cinerea, Venere,
+         Giove, le tre congiunzioni), le loro ragioni di assenza, il marchio
+         fotografico e la direzione in cui guardare. -->
+    <string name="sky_group_planets">Planets</string>
+    <string name="sky_name_moon_full_at_dusk">Full moon at dusk</string>
+    <string name="sky_expl_moon_full_at_dusk">The evening the full moon comes up while the sky is still coloured.</string>
+    <string name="sky_about_moon_full_at_dusk">Once a month the moon rises within a few minutes of sunset, and for half an hour it is a huge orange disc against a sky that has not gone dark yet. It is the same moon that will be small and white and high at midnight: the size is an illusion your eye plays near the horizon, and the colour is real, made the same way a red sunset is.\n\nAn almanac answers the full moon with an instant â «full moon, 03:14» â which is the moment of the geometry and not an evening anybody would go outside for. This is the evening. The app looks for a moonrise that falls inside the twilight with the disc already reading as round, which is sometimes the night of the full moon and often the one before it.</string>
+    <string name="sky_name_earthshine_pm">Earthshine, evening</string>
+    <string name="sky_expl_earthshine_pm">The thin crescent with the rest of the disc faintly lit, low in the west.</string>
+    <string name="sky_about_earthshine_pm">For a few evenings after the new moon there is a thin crescent low in the west, and if the sky is clear you can see the whole disc: the dark part glows faintly grey. That glow is sunlight that hit the earth, bounced, and landed on the moon. It is called earthshine, and it is the only sight in this list where what you are looking at is your own planet’s light coming back.\n\nIt needs a thin crescent and nothing else. Past about a fifth of the disc the lit limb is too bright and the ashen light drowns in it, which is why the window is only a few evenings long each month and why this entry disappears in between. Look while the sky still has some blue in it: once it is properly dark the moon is usually already down.</string>
+    <string name="sky_name_earthshine_am">Earthshine, morning</string>
+    <string name="sky_expl_earthshine_am">The same ashen light before dawn, low in the east.</string>
+    <string name="sky_about_earthshine_am">The same sight on the other side of the month: a few mornings before the new moon, a waning crescent comes up in the east ahead of the sun with the rest of its disc faintly lit by earthlight.\n\nIt asks for the same thing the evening one does — a thin crescent and a clear horizon — and costs an early alarm instead of an evening, which is why most people have only ever seen the evening half. The dark part of the disc is a little brighter in spring than in autumn, because the part of the earth doing the reflecting has more cloud and ocean under the sun.</string>
+    <string name="sky_name_venus_evening">Venus, evening star</string>
+    <string name="sky_expl_venus_evening">The brightest thing in the west after sunset, and not a star.</string>
+    <string name="sky_about_venus_evening">The bright, steady point low in the west after sunset is a planet. It is brighter than anything in the sky except the sun and the moon, it does not twinkle the way stars do, and it is the single most common thing people photograph and then ask about.\n\nVenus is closer to the sun than we are, so it never gets far from it: it is only ever visible for a few hours after sunset or a few before sunrise, never at midnight. That is why this entry comes and goes — for months at a time Venus is an evening star, then it passes between us and the sun and spends the next stretch as a morning one.</string>
+    <string name="sky_name_venus_morning">Venus, morning star</string>
+    <string name="sky_expl_venus_morning">The same planet on the other side of the year, before dawn in the east.</string>
+    <string name="sky_about_venus_morning">The same planet, the other half of its cycle: for months at a time Venus rises ahead of the sun and is the brightest thing in the eastern sky before dawn.\n\nThe ancients took the two for two different objects and gave them two names, which is a reasonable mistake to make — nothing about an evening star tells you it is the same light you saw at dawn eight months ago. It is the same planet, going round faster than we do on a smaller track, and what changes is which side of the sun it is on.</string>
+    <string name="sky_name_jupiter_night">Jupiter tonight</string>
+    <string name="sky_expl_jupiter_night">Steady, yellow-white, brighter than any star: when it is up, and where.</string>
+    <string name="sky_about_jupiter_night">After Venus and the moon, Jupiter is the brightest thing in a night sky, and unlike Venus it can be up at midnight — it is further from the sun than we are, so it is not tied to the twilight. A steady yellow-white point that does not twinkle: that is it.\n\nIt is also the easiest thing in the sky to turn into more than a point. Any pair of binoculars held steady shows up to four of its moons as a little line of dots beside it, and they move enough between two nights that you can see they are going round. That is the observation that lost Galileo his freedom and it costs nothing.</string>
+    <string name="sky_name_conjunction_moon_venus">The moon beside Venus</string>
+    <string name="sky_expl_conjunction_moon_venus">The evenings the crescent and the bright planet stand next to each other.</string>
+    <string name="sky_about_conjunction_moon_venus">Every month or so the moon, going round us, passes the place Venus happens to be, and for a night the two brightest points in the twilight stand a couple of degrees apart. Hold a finger out at arm’s length: that is about a degree wide. A close pass fits behind one.\n\nThey are not near each other in any real sense — the moon is a light-second away and Venus is minutes — and that is the whole charm of it: two objects at completely different distances, lined up by where you happen to be standing. The app only lists a pass that can actually be seen from here, because about half of them happen with both of them behind the sun.</string>
+    <string name="sky_name_conjunction_moon_jupiter">The moon beside Jupiter</string>
+    <string name="sky_expl_conjunction_moon_jupiter">The nights the moon passes the brightest planet of the night sky.</string>
+    <string name="sky_about_conjunction_moon_jupiter">The same monthly pass, with the other planet this app knows by name. Because Jupiter can be up at any hour, this one is not tied to the twilight the way the Venus pass is: it can happen high and late, which makes it the better of the two to photograph.\n\nIf the moon is a crescent, this is the night to look at Jupiter through binoculars — it is easy to find because the moon is pointing at it, and the same field of view will usually hold the moons as well.</string>
+    <string name="sky_name_conjunction_venus_jupiter">Venus beside Jupiter</string>
+    <string name="sky_expl_conjunction_venus_jupiter">The two brightest planets in one patch of sky: rare, and unmistakable.</string>
+    <string name="sky_about_conjunction_venus_jupiter">The two brightest planets, close enough to cover with a thumb. It happens roughly every thirteen months, and only some of those are visible from any given place, so a good one is a few years apart rather than a few months.\n\nIt is worth putting in a calendar when it comes. Two points of that brightness, that close together, is a sight people notice without being told to look — it is the most reported «strange light in the sky» there is.</string>
+    <string name="sky_none_moon_not_crescent">The moon is not a thin crescent now</string>
+    <string name="sky_none_planet_too_low">Too low to see, this close to the sun</string>
+    <string name="sky_none_no_conjunction">No close pass visible from here for years yet</string>
+    <string name="sky_none_no_moonrise_at_dusk">No full moon rises inside the twilight here</string>
+    <string name="sky_guide_when_photographic">Worth bringing a camera.</string>
+    <string name="sky_photographic_desc">Worth a photograph</string>
+    <string name="sky_bearing_towards">towards %1$s</string>
+    <string name="sky_conjunction_apart">%1$d° apart</string>
+    <string name="sky_conjunction_very_close">less than a degree apart</string>
 
     <!-- Reminders: inexact by design, and the screen says so -->
     <string name="sky_default_lead">Usual reminder</string>

@@ -54,6 +54,29 @@ object SkyAlmanac {
     }.value
 
     /**
+     * The next full moon rising inside the twilight, and the next visible close
+     * approach of a pair (Fase 28).
+     *
+     * Memoized for the reason the eclipses are: a conjunction search walks up to three
+     * years at six-hour steps with two positions per step, and the screen, the widget
+     * and the reminder planner all ask the same question on the same day.
+     */
+    fun fullMoonAtDusk(date: LocalDate, zone: ZoneId, coords: Coordinates): Instant? =
+        fullMoonDusk.get(Key(date, zone, coords)) {
+            Optional(SkySights.nextFullMoonAtDusk(date, zone, coords))
+        }.value
+
+    fun conjunction(
+        a: SkyBody,
+        b: SkyBody,
+        date: LocalDate,
+        zone: ZoneId,
+        coords: Coordinates
+    ): Conjunction? = conjunctions.get(PairKey(a, b, Key(date, zone, coords))) {
+        Optional(SkySights.nextConjunction(a, b, date.atStartOfDay(zone).toInstant(), zone, coords))
+    }.value
+
+    /**
      * A once-a-year search, remembered per job, year and place (Fase 19).
      *
      * The annual jobs were free to recompute while they were four solstices out of a
@@ -78,6 +101,8 @@ object SkyAlmanac {
         lunarEclipse.clear()
         solarEclipse.clear()
         yearly.clear()
+        fullMoonDusk.clear()
+        conjunctions.clear()
     }
 
     /**
@@ -164,6 +189,31 @@ object SkyAlmanac {
      */
     private val lunarEclipse = Memo<Optional<EclipseEngine.LocalLunarEclipse>>(ECLIPSE_ENTRIES)
     private val solarEclipse = Memo<Optional<SolarEclipse>>(ECLIPSE_ENTRIES)
+
+    /** Same shape, same reason: one date in flight and a dear search behind it. */
+    private val fullMoonDusk = Memo<Optional<Instant>>(ECLIPSE_ENTRIES)
+
+    /** Three pairs times the handful of dates in flight. */
+    private val conjunctions = PairMemo(3 * ECLIPSE_ENTRIES)
+
+    /** A pair of bodies on top of the usual date-zone-place key. */
+    private data class PairKey(val a: SkyBody, val b: SkyBody, val key: Key)
+
+    /** [Memo] again on the pair key; see [YearMemo] on why these are not one generic. */
+    private class PairMemo(private val maxEntries: Int) {
+        private val entries =
+            object : LinkedHashMap<PairKey, Optional<Conjunction>>(16, 0.75f, true) {
+                override fun removeEldestEntry(
+                    eldest: MutableMap.MutableEntry<PairKey, Optional<Conjunction>>?
+                ): Boolean = size > maxEntries
+            }
+
+        fun get(key: PairKey, compute: () -> Optional<Conjunction>): Optional<Conjunction> =
+            synchronized(entries) { entries[key] }
+                ?: compute().also { synchronized(entries) { entries[key] = it } }
+
+        fun clear() = synchronized(entries) { entries.clear() }
+    }
 
     /** Eight annual jobs over a couple of years and places. */
     private val yearly = YearMemo(64)

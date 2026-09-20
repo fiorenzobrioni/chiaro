@@ -134,20 +134,90 @@ class SkySchedulerTest {
     }
 
     /**
-     * The darkness window runs from tonight's dusk to TOMORROW's dawn. Taking both
+     * The astronomical night runs from tonight's dusk to TOMORROW's dawn. Taking both
      * ends from one calendar day would pair tonight's dusk with this morning's dawn:
      * a night of negative length, rendered as a fact.
      */
     @Test
-    fun `the darkness window is one night, not one calendar day`() {
-        val occurrence = SkyScheduler.resolve(
-            SkyJobCatalog.DarknessWindow, LocalDate.of(2026, 8, 26), rome, milan
-        ) as SkyOccurrence.At
-        val end = requireNotNull(occurrence.end)
-        assertTrue("window runs backwards", end.isAfter(occurrence.start))
-        assertEquals(26, occurrence.start.atZone(rome).dayOfMonth)
+    fun `the astronomical night is one night, not one calendar day`() {
+        val night = SkyScheduler.darkNight(LocalDate.of(2026, 8, 26), rome, milan).night
+                as SkyOccurrence.At
+        val end = requireNotNull(night.end)
+        assertTrue("night runs backwards", end.isAfter(night.start))
+        assertEquals(26, night.start.atZone(rome).dayOfMonth)
         assertEquals(27, end.atZone(rome).dayOfMonth)
-        assertTrue("a night is not this long", Duration.between(occurrence.start, end).toHours() < 12)
+        assertTrue("a night is not this long", Duration.between(night.start, end).toHours() < 12)
+    }
+
+    /**
+     * And the WINDOW is that night minus the moon (Fase 27). Six days before the full
+     * moon of 28 August the moon is up at dusk and sets at 01:11, so the dark window
+     * opens at moonset and not at dusk — which is the whole claim the guide page makes
+     * and the card printed the opposite of until this phase.
+     */
+    @Test
+    fun `the dark window is the night minus the moon`() {
+        val date = LocalDate.of(2026, 8, 22)
+        val both = SkyScheduler.darkNight(date, rome, milan)
+        val night = both.night as SkyOccurrence.At
+        val window = both.moonless as SkyOccurrence.At
+
+        assertTrue("the window must sit inside the night", !window.start.isBefore(night.start))
+        assertTrue(
+            "the window must sit inside the night",
+            !requireNotNull(window.end).isAfter(requireNotNull(night.end))
+        )
+        assertTrue(
+            "a waxing gibbous moon is up at dusk, so the window opens later",
+            window.start.isAfter(night.start)
+        )
+        // It opens when the moon goes down, to the minute the moonset row prints.
+        val moonset = requireNotNull(
+            SkyAlmanac.lunarDay(date.plusDays(1), rome, milan).moonset
+        )
+        assertTrue(
+            "the window opens at moonset, not at an hour of its own",
+            Duration.between(moonset, window.start).abs().toMinutes() <= 1
+        )
+        // And nothing inside it has the moon up any more. Measured against the
+        // altitude at the window's own edge rather than against zero: the moon sets
+        // when its centre is a touch ABOVE the geometric horizon (its parallax beats
+        // refraction and semidiameter together, Meeus 15.1), so zero is not the line
+        // this window was cut on and asserting it would test the wrong number.
+        val edge = AstronomyEngine.moonAltitude(window.start, milan)
+        listOf(0.05, 0.25, 0.5, 0.75, 0.95).forEach { fraction ->
+            val span = Duration.between(window.start, window.end)
+            val at = window.start.plus(Duration.ofMillis((span.toMillis() * fraction).toLong()))
+            assertTrue(
+                "the moon is back up inside the dark window at $fraction",
+                AstronomyEngine.moonAltitude(at, milan) < edge
+            )
+        }
+    }
+
+    /**
+     * The night the guide promised and the app never had: a full moon that is up from
+     * dusk to dawn leaves no dark window at all, and the reason says which sky that is
+     * rather than borrowing the polar one.
+     */
+    @Test
+    fun `a full moon can take the whole dark window`() {
+        val both = SkyScheduler.darkNight(LocalDate.of(2026, 8, 28), rome, milan)
+        assertTrue("the night itself is there", both.night is SkyOccurrence.At)
+        assertEquals(
+            SkyOccurrence.None(SkyJobCatalog.DarknessWindow, SkyNotScheduled.MOON_ALL_NIGHT),
+            both.moonless
+        )
+    }
+
+    /** At new moon nothing is taken: the window is the night, end to end. */
+    @Test
+    fun `at new moon the window is the whole night`() {
+        val both = SkyScheduler.darkNight(LocalDate.of(2026, 8, 12), rome, milan)
+        val night = both.night as SkyOccurrence.At
+        val window = both.moonless as SkyOccurrence.At
+        assertEquals(night.start, window.start)
+        assertEquals(night.end, window.end)
     }
 
     /**
