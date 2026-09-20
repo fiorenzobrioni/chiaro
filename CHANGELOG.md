@@ -409,6 +409,17 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
   cannot check either. Unreachable today, because the engine anchors both alerts on an hour it
   has actually read, and now unreachable in the text too.
 
+- **Italian no longer puts an article where a number may force it to elide.** «al 70%» is
+  right and «al 80%» is not, because eighty is *ottanta*: inside 0 to 100 the vowel-initial
+  numbers are 1, 8, 11 and 80 to 89, so eighteen sentences across the notifications, the Sky
+  screen and the Journal were right nine times out of ten and quietly wrong the tenth. They
+  are now written so no article touches the value: «pioggia 80%», the form this app's own
+  morning summary has used since the day it shipped; «fino a 80%» and «coperto per 80%», with
+  the bare prepositions that never elide; and «bollettino del giorno 8 set 2026» for the dates,
+  where the article was given a word to agree with instead of a number. No helper and no
+  locale-specific branch: a rule about Italian belongs in the Italian file, and what remains of
+  it lives in a test that fails the build if an article comes back.
+
 - **The current temperature is bold**, and tracked in with it. At 64sp a hairline figure laid
   over a painted sky reads as ornament rather than as the reading the whole screen is for,
   and the home-screen card has printed the same number bold since the day it shipped. The

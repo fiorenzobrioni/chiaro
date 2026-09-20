@@ -7581,12 +7581,8 @@ Il resto della revisione, per completezza, non ha prodotto cambi:
   a vicenda, di proposito — uno è un allarme, l'altro è un riassunto, stanno su due canali e
   due id diversi, e chi vuole solo uno dei due lo spegne.
 
-**Una cosa non corretta, e va detta**: in italiano «fino al 80%» andrebbe elisa in «fino
-all'80%». Riguarda solo i numeri che si dicono con una vocale iniziale (80–89), è un pattern
-che l'app ha già in tre stringhe da prima di questo lavoro, e le mie nuove lo seguono per
-coerenza. Correggerlo vuol dire o un helper con un ramo solo per l'italiano dentro
-`Formats` — il tipo di cosa che marcisce — o riscrivere cinque frasi per togliere
-l'articolo. È una scelta editoriale del committente, non mia: segnalata, non fatta.
+**Una cosa segnalata e rimandata al committente**: in italiano «fino al 80%» andrebbe elisa
+in «fino all'80%». È diventata il lavoro del giorno dopo, qui sotto.
 
 ### Come è stato verificato
 
@@ -7604,3 +7600,94 @@ test nuovi o cresciuti:
 - `AlertNotifierTest` — **nuovo**, e la parte di questo lavoro che resterà utile più a lungo:
   rende la regola «aperto dice più di chiuso» una cosa che la build controlla, per ogni tipo,
   invece di una cosa scritta in un KDoc.
+
+
+## L'elisione, e perché non è un helper (committente, 22 set 2026)
+
+«Sistema anche le stringhe che necessitano l'elisione. Applica la soluzione migliore dal punto
+di vista del codice. Dove dici che "marcisce" non mi sembra la soluzione migliore, giusto?»
+
+Giusto. E il dubbio era ben riposto: la strada dell'helper è quella sbagliata, ma non per la
+ragione che avevo scritto ieri.
+
+### Quanto è grande davvero
+
+Prima di decidere, contate. Non erano tre stringhe né cinque: sono **diciotto**, e stanno in
+tre posti diversi dell'app.
+
+- **Dodici con `%d`**, cioè un numero che mette l'app: otto nelle notifiche e **quattro nella
+  schermata Cielo**, che ieri non avevo nemmeno guardato («illuminata al 80%», «il 80% della
+  Luna nell'ombra»).
+- **Due con `%s` che portano una percentuale già formattata**: gli esiti del Diario, «Pioggia
+  data al 80%».
+- **Quattro con `%s` che portano una data**: «bollettino del 8 set 2026», che vuole «dell'8».
+  Questa classe non l'avevo vista affatto, ed è quella che rende il problema una regola e non
+  una svista: non riguarda le percentuali, riguarda **qualunque valore che comincia per cifra**.
+
+Dentro 0–100 i numeri che cominciano per vocale sono esattamente 1, 8, 11 e 80–89. Cioè:
+«pioggia al %d%%» era giusta nove volte su dieci e sbagliata la decima, in silenzio, in una
+notifica che nessuno può correggere. È il difetto peggiore da avere, perché non si manifesta
+mai quando lo cerchi.
+
+### Le tre strade, e perché la terza
+
+**1. Una funzione in `Formats` che sa quali numeri elidono.** È quella che ieri ho chiamato
+«marcisce», e il committente aveva ragione a non fidarsi della motivazione: «marcisce» non è
+un argomento, è un'etichetta. L'argomento vero è che sarebbe **un fatto sulla lingua italiana
+scritto in Kotlin**, applicato a — o saltato per — ogni altra lingua in cui l'app finirà. Chi
+traduce apre `values-xx/strings.xml`, non `Formats.kt`: la regola sarebbe in un posto in cui
+nessuno di quelli che ne hanno bisogno la troverà.
+
+**2. Due varianti per frase, scelte da una lista di numeri elidenti tenuta nelle risorse.**
+Sembra la versione buona della 1 — la grammatica torna dentro il file della lingua, e un
+traduttore catalano ci mette la sua lista. È stata scartata per una ragione più netta:
+comporre una frase da un frammento («al 70%») più il resto **è esattamente la forma da cui
+l'avviso di maltempo è stato riscritto via un commit fa**, perché una subordinata incollata in
+inglese non è una subordinata che ogni lingua mette lì. Comprare l'elisione con quella forma
+sarebbe disfare la decisione di ieri il giorno dopo averla presa. Il costo secondario, 18 × 2
+stringhe italiane più altrettante inglesi identiche a coppie per via di `StringsParityTest`,
+da solo non avrebbe deciso niente; questo sì.
+
+**3. Scrivere la frase in modo che nessun articolo tocchi il numero.** Scelta. Non ha codice,
+**non può essere sbagliata in nessuna lingua**, presente o futura, e non è nemmeno una nuova
+idea in questa app: `notif_summary_body` dice «pioggia 80%» dal giorno in cui è stata scritta.
+Erano le altre a essere l'eccezione, non questa.
+
+Le uscite usate, tutte e tre invariabili:
+
+- **Via l'articolo** dove la frase regge senza: «pioggia 80%», «Parziale: 80% della Luna».
+- **Preposizione scempia**, che non elide mai: «fino a 80%», «coperto per 80%». Questo è il
+  punto che rende la soluzione una regola e non un trucco: `a`, `di`, `da`, `in`, `su` non
+  chiedono apostrofo davanti a nessun numero, e nemmeno i plurali (`alle 8`, `delle 8`, `dei`).
+  Solo il singolare `il/lo/la` e le sue contrazioni elidono.
+- **L'articolo agganciato a una parola**, per le date: «bollettino **del giorno** 8 set 2026».
+  «del» ora concorda con *giorno*, che non cambia mai. Una sola frase è stata girata invece
+  che allungata, perché ci guadagnava: «L'ultimo è del 8 set» è diventata «L'ultimo **risale a**
+  8 set».
+
+Il Cielo ha preso la forma che l'inglese aveva già: «%d%% illuminata» contro «%d%% lit»,
+invece di «illuminata al %d%%». Due lingue che dicono la stessa cosa nello stesso ordine sono
+anche due stringhe che non divergono alla prossima modifica.
+
+### La regola è un test, non una convenzione
+
+`ItalianArticleTest` fallisce la build se una stringa italiana rimette un articolo elidibile
+subito prima di un `%d`, negli `<string>` e dentro gli `<item>` dei plurali. **Il test è stato
+verificato rompendo la regola apposta** e guardandolo fallire: un test di questo tipo che non
+sia stato visto fallire non sorveglia niente.
+
+Ed è il posto giusto per l'unico pezzo di grammatica italiana che resta nel repository: un
+test non entra in nessun APK, non raggiunge nessun'altra lingua, e sta dove chi aggiunge una
+stringa lo incontra. È la differenza fra sapere l'italiano in produzione — la strada 1 — e
+saperlo nella build.
+
+Quel che il test **non** può controllare è scritto nel suo KDoc: un argomento `%s` porta una
+stringa che ha formattato qualcun altro, e se cominci per cifra lo decide il chiamante, non la
+risorsa. Le sei di quella classe sono corrette a mano e nominate lì, così chi ne aggiunge una
+settima legge perché esistono.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, 1509 test,
+lint a zero errori. Nessun file Kotlin di produzione toccato: la correzione è diciotto stringhe
+e un test, che è esattamente la dimensione che questo problema doveva avere.
