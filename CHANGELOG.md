@@ -726,6 +726,54 @@ with its reminders, the alerts, the Journal, the five home widgets — is built.
 
 ### Fixed
 
+- **The Sky widget drew twenty-five moments as meteor showers.** «Momenti del cielo» and
+  the Sky screen each carried their own table of which drawing a subscribed moment gets.
+  The catalog grew twice — the planets and the pairs, the eclipses, the four quarter moons,
+  the earthshine, the zodiacal light, the white nights, the Milky Way, the earliest sunset
+  and latest sunrise, the perihelion and the aphelion, and the full moon rising at dusk —
+  and only the screen's table was kept up. An id nobody listed is a perfectly legal `when`
+  with an `else`, so nothing ever went red: the card drew a falling star over every one of
+  them, and the same subscription showed two different pictures on the home screen and in
+  the app. There is one table now, in the object that owns which drawing a thing gets, and
+  a test walks the catalog so that a moment added without an icon fails the build instead
+  of shipping a meteor shower over an eclipse.
+
+- **And the moon's own moment drew a full moon every night.** «La luna oggi» is a different
+  shape every evening, and the Sky screen has always drawn the real one; the widget printed
+  a full disc whatever the sky was doing, which is a picture of a moon nobody could see. It
+  carries the phase now, from the same classifier the screen reads.
+
+- **The full moon at dusk lends its verdict to the day arc's moonrise row.** «Luna piena al
+  crepuscolo» IS that evening's moonrise — the search that finds it returns the moonrise
+  instant — but «L'arco del giorno» matched that row against `moon.rise` alone, so a reader
+  who followed exactly that moment found the row bare on the one evening it was about.
+
+- **«In parole» printed its place and its temperature against the wrong edge.** On the
+  default 4×1 card the name and the number sat at the *trailing* edge of their own column
+  instead of the card's leading inset, so «Manchester» floated in the middle of the card
+  with the inset empty behind it. A name long enough to fill that column — the «Cavenago
+  di Brianza» the column is measured for — hid it completely, which is why the same card
+  looked right in one place and wrong in another. Glance's `Box` has no per-child
+  alignment: the `BottomEnd` written for the weather glyph landed on the words' column
+  too, and that column had no width of its own to resist it. It fills its column now, and
+  the card draws what its own picker preview had been promising all along. The same fix
+  takes a second fault with it, one no reader had met yet because the glyph starts off:
+  the drawing is sized out of what the widest number leaves *measured from the leading
+  edge*, so with a short name and the glyph switched on it landed on top of the
+  temperature.
+
+- **The same card gave its trailing edge to a drawing it was never going to make.** Where
+  the glyph meets the card, «In parole» insets that edge at 4 dp instead of 14 and every
+  line that reaches it pays the 10 dp back, so nothing a reader can read moves either way.
+  The two halves were decided by two different conditions, though: the card handed the
+  edge over on the reader's switch alone, while the words paid it back only where a glyph
+  really came out — and none comes out on a two-cell stack at any font scale, on the
+  reference panel at a 1.3 font scale, or on a narrow one-row card at 1.3. On exactly
+  those cards, switching the glyph on moved every line 10 dp into a 24 dp corner and drew
+  nothing there. The inset and the give-back are one function now, with a test holding
+  them together, and the place name joins the lines that pay it: on the two tall forms it
+  is the full-width eyebrow, which is precisely the line that reaches that edge.
+
 - **Two copies of the app, and a settings screen that came back from under it.** Android
   identifies a task by the intent that created it, and this app was entered through three
   hand-rolled intents — the widgets', the notifications', and the launcher's. So opening it

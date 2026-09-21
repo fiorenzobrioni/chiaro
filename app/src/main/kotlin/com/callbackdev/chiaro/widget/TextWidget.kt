@@ -121,22 +121,25 @@ class TextWidget : GlanceAppWidget() {
             // form but ROW — where the glyph is interior, inside the name's column — the
             // drawing is what meets the trailing edge, so the card gives it the glyph's
             // inset and each text that reached that edge pays the 10 dp back. Nothing the
-            // reader can read moves by a dp either way.
-            val glyphEdge = model.look.showIcon && form != null && form != TextForm.ROW
+            // reader can read moves by a dp either way, which is why the inset and the
+            // give-back are two readings of ONE condition ([textCardPaddingEnd]) rather
+            // than two conditions free to disagree — see there for the day they did.
+            val give = textEdgeGive(form, model.look.showIcon)
             WidgetCard(
                 model, schemes, skyBitmap,
-                contentPaddingEnd =
-                    if (glyphEdge) WidgetCardPaddingLeading else WidgetCardPadding,
+                contentPaddingEnd = textCardPaddingEnd(form, model.look.showIcon),
                 contentPaddingTop = vertical,
                 contentPaddingBottom = vertical
             ) { palette ->
                 when {
                     content == null && model.city == null -> NoPlaceContent(palette)
                     content == null -> NoDataContent(palette)
-                    form == TextForm.PANEL -> PanelContent(content, model, palette, size)
-                    form == TextForm.STACK -> StackContent(content, model, palette, size)
+                    form == TextForm.PANEL ->
+                        PanelContent(content, model, palette, size, give)
+                    form == TextForm.STACK ->
+                        StackContent(content, model, palette, size, give)
                     form == TextForm.ROW -> RowContent(content, model, palette, size)
-                    else -> LineContent(content, model, palette, size)
+                    else -> LineContent(content, model, palette, size, give)
                 }
             }
         }
@@ -155,7 +158,8 @@ private fun LineContent(
     content: TodayUiState.Content,
     model: WidgetModel,
     palette: WidgetPalette,
-    size: DpSize
+    size: DpSize,
+    edgeGive: Dp
 ) {
     val context = LocalContext.current
     val icon = if (model.look.showIcon) textRowIconSize(size, fontScale(context)) else 0.dp
@@ -166,7 +170,10 @@ private fun LineContent(
     Box(contentAlignment = Alignment.BottomEnd, modifier = GlanceModifier.fillMaxSize()) {
         Column(
             verticalAlignment = Alignment.Vertical.CenterVertically,
-            modifier = GlanceModifier.fillMaxSize()
+            // The words keep the words' inset while the glyph meets the card at the
+            // glyph's: the card's end padding is the drawing's here, so the column that
+            // holds every line pays the difference back in one place.
+            modifier = GlanceModifier.fillMaxSize().padding(end = edgeGive)
         ) {
             PlaceLineText(content, model, palette)
             HeroTemperature(
@@ -229,7 +236,27 @@ private fun RowContent(
             contentAlignment = Alignment.BottomEnd,
             modifier = GlanceModifier.width(textLeadingColumn(size))
         ) {
-            Column {
+            // **The width and the alignment are both written out, and the width is the
+            // fix** (committente, 21 set 2026, on the device: «sembra che testo e
+            // temperatura siano allineati a destra e non a sinistra»). Glance has no
+            // per-child `align`, so a Box's `contentAlignment` lands on EVERY child of
+            // it — and this column had no width of its own, so `BottomEnd` laid the
+            // words out at their own width against the column's trailing edge. The card
+            // opened with an empty leading inset and «Manchester» floating in the middle
+            // of it; only a name long enough to fill the column — the «Cavenago di
+            // Brianza» the column was measured for — hid it, which is why it read as a
+            // card that was right on one place and wrong on another.
+            //
+            // Filling the width puts the words back on the card's own edge and leaves
+            // `BottomEnd` to the one child it was written for. That is also what keeps
+            // the two apart: [textRowIconSize] sizes the glyph out of what the widest
+            // number this column can print leaves, and that arithmetic starts from a
+            // number at the LEADING edge — against the trailing one a short name put the
+            // drawing straight over the figure.
+            Column(
+                horizontalAlignment = Alignment.Start,
+                modifier = GlanceModifier.fillMaxWidth()
+            ) {
                 PlaceLineText(content, model, palette)
                 HeroTemperature(
                     content, model, palette, textRowHeroSp(size, scale, content.isStale)
@@ -282,7 +309,8 @@ private fun StackContent(
     content: TodayUiState.Content,
     model: WidgetModel,
     palette: WidgetPalette,
-    size: DpSize
+    size: DpSize,
+    edgeGive: Dp
 ) {
     val context = LocalContext.current
     val scale = fontScale(context)
@@ -314,7 +342,13 @@ private fun StackContent(
         horizontalAlignment = Alignment.Start,
         modifier = GlanceModifier.fillMaxSize()
     ) {
-        PlaceLineText(content, model, palette)
+        // The give is paid line by line here and not on the whole column, because the
+        // glyph is INSIDE it, on the number's row: a column that paid it once would have
+        // moved the drawing off the edge it was measured against. The place is the one
+        // line besides the sentence long enough to reach that edge — a name at the
+        // glyph's 4 dp would ellipsise 10 dp further out than the prose under it, into
+        // the corner's own radius.
+        PlaceLineText(content, model, palette, GlanceModifier.padding(end = edgeGive))
         Spacer(modifier = GlanceModifier.defaultWeight())
         // The glyph rides the number's own line and is never taller than it, so the row it
         // shares is exactly the line the budget already paid for.
@@ -331,9 +365,12 @@ private fun StackContent(
                 style = textSentenceStyle(palette, TextAlign.Start),
                 maxLines = plan.sentenceLines,
                 // The 10 dp the card's edge gave the glyph, given back: the sentence wraps
-                // against exactly the width it wrapped against before.
+                // against exactly the width it wrapped against before. It is [edgeGive]
+                // and not `icon > 0` — the card hands its edge over on the switch alone,
+                // and on a two-cell stack there is no room for a glyph, so that test paid
+                // back nothing on precisely the cards that had nothing drawn on them.
                 modifier = GlanceModifier
-                    .padding(end = if (icon > 0.dp) TextIconEdgeGive else 0.dp)
+                    .padding(end = edgeGive)
                     .fillMaxWidth()
             )
         }
@@ -369,7 +406,8 @@ private fun PanelContent(
     content: TodayUiState.Content,
     model: WidgetModel,
     palette: WidgetPalette,
-    size: DpSize
+    size: DpSize,
+    edgeGive: Dp
 ) {
     val context = LocalContext.current
     val scale = fontScale(context)
@@ -391,7 +429,10 @@ private fun PanelContent(
     )
     val icon = if (model.look.showIcon) textPanelIconSize(size, scale, plan) else 0.dp
     Column(modifier = GlanceModifier.fillMaxSize()) {
-        PlaceLineText(content, model, palette)
+        // The eyebrow runs the full width, so it is one of the lines that reaches the
+        // trailing edge and it pays the glyph's 10 dp back like the prose below it —
+        // and here the edge it would otherwise meet is the top corner's.
+        PlaceLineText(content, model, palette, GlanceModifier.padding(end = edgeGive))
         Spacer(modifier = GlanceModifier.defaultWeight())
         Row(
             verticalAlignment = Alignment.Bottom,
@@ -415,9 +456,10 @@ private fun PanelContent(
                 Column(
                     horizontalAlignment = Alignment.End,
                     // The 10 dp the card's edge gave the glyph, given back to the words:
-                    // the column they wrap against is the column it always was.
-                    modifier = GlanceModifier
-                        .padding(end = if (icon > 0.dp) TextIconEdgeGive else 0.dp)
+                    // the column they wrap against is the column it always was. Off
+                    // [edgeGive] for the reason the stack gives — the reference panel at
+                    // a 1.3 font scale asks for a glyph and has no band to draw one in.
+                    modifier = GlanceModifier.padding(end = edgeGive)
                 ) {
                     if (plan.sentenceLines > 0) {
                         Text(
@@ -537,13 +579,17 @@ private fun textSentenceStyle(palette: WidgetPalette, align: TextAlign): TextSty
 private fun PlaceLineText(
     content: TodayUiState.Content,
     model: WidgetModel,
-    palette: WidgetPalette
+    palette: WidgetPalette,
+    /** What this line owes the card's trailing edge, where the glyph took it
+     * ([textEdgeGive]). Nothing on the forms whose edge is still the words'. */
+    modifier: GlanceModifier = GlanceModifier
 ) {
     PlaceLine(
         name = content.city.name,
         fromGps = model.fromGps,
         palette = palette,
-        size = TextFactSp.sp
+        size = TextFactSp.sp,
+        modifier = modifier
     )
 }
 

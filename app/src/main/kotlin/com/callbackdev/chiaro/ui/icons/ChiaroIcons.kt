@@ -214,26 +214,105 @@ object ChiaroIcons {
         phase: MoonPhase,
         style: WeatherIcons = WeatherIcons.LINE,
         darkGround: Boolean = false
-    ): Int = styledRes(
-        when (phase) {
-            MoonPhase.NEW_MOON -> R.drawable.mc3_moon_new
-            MoonPhase.WAXING_CRESCENT -> R.drawable.mc3_moon_waxing_crescent
-            MoonPhase.FIRST_QUARTER -> R.drawable.mc3_moon_first_quarter
-            MoonPhase.WAXING_GIBBOUS -> R.drawable.mc3_moon_waxing_gibbous
-            MoonPhase.FULL_MOON -> R.drawable.mc3_moon_full
-            MoonPhase.WANING_GIBBOUS -> R.drawable.mc3_moon_waning_gibbous
-            MoonPhase.LAST_QUARTER -> R.drawable.mc3_moon_last_quarter
-            MoonPhase.WANING_CRESCENT -> R.drawable.mc3_moon_waning_crescent
-        },
-        style,
-        darkGround
-    )
+    ): Int = styledRes(moonPhaseLineRes(phase), style, darkGround)
+
+    /** The undressed drawing for a phase, so [skyJobLineRes] can name a moon by its
+     * phase without going through a ground it has not been told about yet. */
+    @DrawableRes
+    private fun moonPhaseLineRes(phase: MoonPhase): Int = when (phase) {
+        MoonPhase.NEW_MOON -> R.drawable.mc3_moon_new
+        MoonPhase.WAXING_CRESCENT -> R.drawable.mc3_moon_waxing_crescent
+        MoonPhase.FIRST_QUARTER -> R.drawable.mc3_moon_first_quarter
+        MoonPhase.WAXING_GIBBOUS -> R.drawable.mc3_moon_waxing_gibbous
+        MoonPhase.FULL_MOON -> R.drawable.mc3_moon_full
+        MoonPhase.WANING_GIBBOUS -> R.drawable.mc3_moon_waning_gibbous
+        MoonPhase.LAST_QUARTER -> R.drawable.mc3_moon_last_quarter
+        MoonPhase.WANING_CRESCENT -> R.drawable.mc3_moon_waning_crescent
+    }
 
     @Composable
     fun moonPhase(phase: MoonPhase): ImageVector =
         ImageVector.vectorResource(
             moonPhaseRes(phase, LocalWeatherIcons.current, darkGround())
         )
+
+    /**
+     * **The drawing for a sky moment, by its job id — and there is one table, not two**
+     * (21 set 2026, committente, from a home screen: «l'icona dell'evento "Luna piena al
+     * crepuscolo" non sembra corretta ed è diversa da quella che compare nell'app»).
+     *
+     * It was exactly that. The Sky screen and the Sky widget each carried their own
+     * `when`, the screen's was kept up with the catalog and the widget's was not, and
+     * Fase 19 and Fase 28 between them added twenty-five jobs the widget had never heard
+     * of — the planets, the pairs, the eclipses, the four moons the calendar names, the
+     * earthshine, the zodiacal light, the white nights, the Milky Way, the earliest sunset
+     * and the latest sunrise, the perihelion and the aphelion, and the full moon at dusk
+     * the reader was looking at.
+     * All of them fell through to the meteor shower's drawing, so a card and a screen
+     * showing the same subscription showed two different pictures of it.
+     *
+     * So the policy lives here now, once, in the one object that owns which drawing a
+     * thing gets, and `SkyScreen` and `SkyWidget` both read it. `SkyMomentIconTest` walks
+     * [com.callbackdev.chiaro.domain.sky.SkyJobCatalog] and fails the build when a job is
+     * added without one, because the way this drifted was silence: an unlisted id is a
+     * legal `when` and a wrong picture.
+     *
+     * The fallback is the meteor shower's own drawing, which is what it is FOR: the
+     * catalog's thirteen `meteor.*.peak` jobs are the arm that has no other name.
+     */
+    @DrawableRes
+    fun skyJobLineRes(jobId: String): Int = when (jobId) {
+        "sun.rise", "twilight.civil.am", "sun.latest_rise" -> R.drawable.mc3_sunrise
+        "sun.set", "twilight.civil.pm", "sun.earliest_set" -> R.drawable.mc3_sunset
+        // The plain sun: the star itself, where the moment is about where it stands
+        // rather than about a horizon it is crossing.
+        "solar.noon", "earth.perihelion", "earth.aphelion" -> conditionLineRes(0)
+        // The golden hour keeps the sun and loses the horizon line — see [goldenHour]
+        // for the 6 units in a 128 box that made three moments one picture.
+        "golden_hour.am", "golden_hour.pm" -> R.drawable.mc3_clear_day
+        "blue_hour.am", "blue_hour.pm",
+        "twilight.nautical.am", "twilight.nautical.pm" -> R.drawable.mc3_star
+        "twilight.astronomical.am", "twilight.astronomical.pm",
+        "darkness.window", "milky_way.core",
+        "night.white.start", "night.white.end" -> R.drawable.mc3_starry_night
+        // The zodiacal light is a glow standing out of the horizon, which is the one
+        // drawing in the family that says exactly that.
+        "zodiacal.am", "zodiacal.pm" -> R.drawable.mc3_horizon
+        "moon.rise" -> R.drawable.mc3_moonrise
+        "moon.set" -> R.drawable.mc3_moonset
+        "moon.new" -> moonPhaseLineRes(MoonPhase.NEW_MOON)
+        "moon.first_quarter" -> moonPhaseLineRes(MoonPhase.FIRST_QUARTER)
+        "moon.last_quarter" -> moonPhaseLineRes(MoonPhase.LAST_QUARTER)
+        // A lunar eclipse happens at a full moon, so the full moon IS its picture.
+        "moon.today", "moon.phase", "moon.full",
+        "moon.closest_full", "eclipse.lunar" -> moonPhaseLineRes(MoonPhase.FULL_MOON)
+        "eclipse.solar" -> R.drawable.mc3_solar_eclipse
+        // A moonrise is what the full moon at dusk IS, so it borrows the drawing.
+        "moon.full_at_dusk" -> R.drawable.mc3_moonrise
+        "earthshine.pm" -> moonPhaseLineRes(MoonPhase.WAXING_CRESCENT)
+        "earthshine.am" -> moonPhaseLineRes(MoonPhase.WANING_CRESCENT)
+        // A planet to the naked eye IS a bright point of light, so the family's own star
+        // is the honest drawing for it — Meteocons has no planets and inventing one would
+        // be a disk nobody sees. The pairs take it too: two points, one of them this.
+        "venus.evening", "venus.morning", "jupiter.night",
+        "conjunction.moon_venus", "conjunction.moon_jupiter",
+        "conjunction.venus_jupiter" -> R.drawable.mc3_star
+        "equinox.spring", "solstice.summer",
+        "equinox.autumn", "solstice.winter" -> R.drawable.mc3_horizon
+        else -> R.drawable.mc3_falling_stars // the meteor showers
+    }
+
+    /** [skyJobLineRes] dressed for a ground: what the Glance widgets ask for. */
+    @DrawableRes
+    fun skyJobRes(
+        jobId: String,
+        style: WeatherIcons = WeatherIcons.LINE,
+        darkGround: Boolean = false
+    ): Int = styledRes(skyJobLineRes(jobId), style, darkGround)
+
+    /** The same, for the app's own screens. */
+    @Composable
+    fun skyJob(jobId: String): ImageVector = styled(skyJobLineRes(jobId))
 
     /**
      * The verdict's mark as a drawing (9 set 2026): the series' `✓ ~ ✗ ?`, one path each,

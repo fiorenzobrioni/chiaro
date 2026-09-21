@@ -7,6 +7,7 @@ import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.sky.SkyJob
@@ -82,7 +83,15 @@ data class NextMoment(
     val start: Instant,
     val end: Instant?,
     val verdict: SkyVerdict?,
-    val inProgress: Boolean
+    val inProgress: Boolean,
+    /**
+     * The moon's shape on the day-moment, and null on every other job — the Sky screen's
+     * own rule ([com.callbackdev.chiaro.ui.sky.Moment.moonPhase]): for «La luna oggi» the
+     * phase IS the value, so it is what the card draws. Until 21 set 2026 the widget drew
+     * a full moon there whatever the sky was doing, which is a picture of a moon nobody
+     * could see.
+     */
+    val moonPhase: MoonPhase? = null
 )
 
 object WidgetData {
@@ -201,7 +210,14 @@ object WidgetData {
                 } else {
                     null
                 }
-                NextMoment(at.job, at.start, at.end, verdict, upcoming.inProgress)
+                NextMoment(
+                    at.job, at.start, at.end, verdict, upcoming.inProgress,
+                    moonPhase = if (at.job.id == SkyJobCatalog.MoonToday.id) {
+                        MoonPhase.at(at.start)
+                    } else {
+                        null
+                    }
+                )
             }
     }
 

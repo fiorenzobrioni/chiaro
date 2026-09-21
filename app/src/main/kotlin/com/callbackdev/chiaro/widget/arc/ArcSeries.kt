@@ -225,6 +225,13 @@ internal data class ArcSeries(
          * hour's END is the end of the `golden_hour.am` range; full darkness is the end of
          * astronomical twilight or the start of the darkness window; the rest are instants.
          * The rain's turns and the rainbow have no job: nobody subscribes to a shower.
+         *
+         * **`moon.full_at_dusk` sits beside `moon.rise` since 21 set 2026**, and it is not
+         * an approximation: `SkySights.nextFullMoonAtDusk` RETURNS a moonrise — that
+         * evening's, when the moon comes up full inside the twilight — so the two name one
+         * instant. Without it the reader who followed exactly that moment found the
+         * moonrise row bare on the one evening it was about. Follow both and the row takes
+         * whichever the list reaches first; both are honest answers to the same question.
          */
         fun jobIdsFor(kind: TimelineKind): List<String> = when (kind) {
             TimelineKind.SUNRISE -> listOf("sun.rise")
@@ -233,7 +240,7 @@ internal data class ArcSeries(
             TimelineKind.SUNSET -> listOf("sun.set")
             TimelineKind.BLUE_EVENING -> listOf("blue_hour.pm")
             TimelineKind.DARK -> listOf("twilight.astronomical.pm", "darkness.window")
-            TimelineKind.MOONRISE -> listOf("moon.rise")
+            TimelineKind.MOONRISE -> listOf("moon.rise", "moon.full_at_dusk")
             TimelineKind.MOONSET -> listOf("moon.set")
             TimelineKind.RAIN_START, TimelineKind.RAIN_STOP, TimelineKind.RAINBOW -> emptyList()
         }
