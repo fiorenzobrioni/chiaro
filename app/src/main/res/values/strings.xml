@@ -319,7 +319,7 @@
     <string name="settings_source_code">Source code</string>
     <string name="settings_source_code_note">Free software, GPL-3.0, on GitHub</string>
     <string name="settings_privacy">Privacy</string>
-    <string name="settings_privacy_note">No account, no ads, no tracking.</string>
+    <string name="settings_privacy_note">No account, no ads, no tracking. A forecast has to be of somewhere, so the place goes to Open-Meteo: your position rounded to about a kilometre, with no account and no device identifier attached to it. Nothing else leaves the phone, and a backup carries your places and settings but never the journal of what you looked at.</string>
     <string name="settings_reset">Restore default settings</string>
     <string name="settings_reset_dialog_title">Restore default settings?</string>
     <string name="settings_reset_dialog_body">Units, appearance and update frequency go back to their defaults. Your places and your history are not affected.</string>
@@ -440,7 +440,7 @@
     <string name="guide_settings_body">Units for temperature and wind. Appearance, where the theme, the palette, the typeface, the two drawings of the weather icons, whether they move, and the wallpaper colors live. How often to look for a new forecast. The app language, on Android\'s own picker. Restoring the defaults puts units, appearance and frequency back as they started and leaves your places and your history exactly where they are.</string>
 
     <string name="guide_data_title">Where the numbers come from</string>
-    <string name="guide_data_p1">Forecasts, air quality and place search come from Open-Meteo, an open weather service: free, no account, no API key. The weather request is the only thing that leaves your phone.</string>
+    <string name="guide_data_p1">Forecasts, air quality and place search come from Open-Meteo, an open weather service: free, no account, no API key. The weather request is the only thing Chiaro sends anywhere.</string>
     <string name="guide_data_p2">Sunrise, sunset, the moon and the whole sky module are computed right on your phone. That is why they are correct even with no connection at all.</string>
     <string name="guide_data_p3">When an update cannot get through, nothing goes blank: Chiaro keeps the last forecast that arrived, tells you how old it is, and quietly sets aside the hours that have already passed. What you see is always something the data really said.</string>
 

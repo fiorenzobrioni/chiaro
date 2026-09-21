@@ -9,12 +9,25 @@ Free, no account, no ads, no tracking, no API key.
 
 ![Platform](https://img.shields.io/badge/platform-Android-2E6B3E?labelColor=FCFAF6)
 ![CI](https://img.shields.io/github/actions/workflow/status/fiorenzobrioni/chiaro/android-ci.yml?branch=main&label=CI&labelColor=FCFAF6&color=2E6B3E)
-![Status](https://img.shields.io/badge/status-v1.0.0%20in%20preparation-8C857A?labelColor=FCFAF6)
+![Release](https://img.shields.io/github/v/release/fiorenzobrioni/chiaro?label=release&labelColor=FCFAF6&color=2E6B3E)
 ![License](https://img.shields.io/badge/license-GPL--3.0-007DB6?labelColor=FCFAF6)
 ![minSdk](https://img.shields.io/badge/minSdk-33-70569C?labelColor=FCFAF6)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.2-F1A000?labelColor=FCFAF6)
 ![Compose](https://img.shields.io/badge/UI-Compose%20Material%203-007DB6?labelColor=FCFAF6)
 ![API key](https://img.shields.io/badge/API%20key-none%20needed-2E6B3E?labelColor=FCFAF6)
+
+<table>
+<tr>
+<td width="33%"><img src="docs/screenshots/today-now.jpg" alt="Today: the computed sky, the next hours and the rest of the day"></td>
+<td width="33%"><img src="docs/screenshots/sky-tonight.jpg" alt="Sky: tonight's verdict and the moments ahead"></td>
+<td width="33%"><img src="docs/screenshots/widget-day-arc.jpg" alt="The day's arc widget on the home screen"></td>
+</tr>
+<tr>
+<td align="center"><sub><b>Today</b>: the sky, then the numbers</sub></td>
+<td align="center"><sub><b>Sky</b>: tonight, and what is coming</sub></td>
+<td align="center"><sub><b>The day's arc</b>, on the home screen</sub></td>
+</tr>
+</table>
 
 </div>
 
@@ -38,6 +51,57 @@ name is spelled, and shown next to the forecast they concern.
 
 It works offline with the last data it managed to fetch, and it says how old that data is
 instead of pretending. Nothing on the screen is there because a layout needed filling.
+
+## Screenshots
+
+Italian, on a phone, with real data over Cortina d'Ampezzo. The app ships in Italian and
+English through the system per-app language picker.
+
+**Today**, one vertical scroll that starts with the sky:
+
+<table>
+<tr>
+<td width="33%"><img src="docs/screenshots/today-now.jpg" alt="The sky canvas with the temperature, the condition and the daylight ribbon, the next hours, and the rest of the day"></td>
+<td width="33%"><img src="docs/screenshots/today-week.jpg" alt="The week on one shared temperature scale, each day with its ribbon of light"></td>
+<td width="33%"><img src="docs/screenshots/today-details.jpg" alt="The details grid: humidity, pressure, visibility, air quality and pollen, each with the line that says what to do with it"></td>
+</tr>
+<tr>
+<td align="center"><sub>The computed sky, the next hours, the rest of the day</sub></td>
+<td align="center"><sub>The week on one temperature scale, with each day's light</sub></td>
+<td align="center"><sub>Every number carries its consequence, never a bare value</sub></td>
+</tr>
+</table>
+
+**Sky**, the agenda of the sun and the sky with a verdict on each moment:
+
+<table>
+<tr>
+<td width="33%"><img src="docs/screenshots/sky-tonight.jpg" alt="Tonight's verdict with the numbers that decided it, and the moments ahead each with its own verdict"></td>
+<td width="33%"><img src="docs/screenshots/sky-ahead.jpg" alt="The calendar ahead: the equinox, the full moon at dusk, and the meteor peaks past the forecast horizon"></td>
+<td width="33%"><img src="docs/screenshots/guide.jpg" alt="The guide: a tour of the four screens, what each one answers and what it cannot say out loud"></td>
+</tr>
+<tr>
+<td align="center"><sub>Tonight, and the moments ahead. A camera marks the nine worth photographing</sub></td>
+<td align="center"><sub>The calendar ahead, with an honest "too far out to say"</sub></td>
+<td align="center"><sub>The guide, reachable from Settings forever</sub></td>
+</tr>
+</table>
+
+**Alerts, Settings and the home screen**: what the app sends, how it looks, and what it
+puts on the launcher:
+
+<table>
+<tr>
+<td width="33%"><img src="docs/screenshots/alerts.jpg" alt="Alerts: the official Protezione Civile bulletin for the zone, and the ready-made switches with what each one sends and when"></td>
+<td width="33%"><img src="docs/screenshots/settings.jpg" alt="Settings: units, theme, palette, typeface and the weather icon family"></td>
+<td width="33%"><img src="docs/screenshots/widgets-home.jpg" alt="Four widgets on the home screen: Now, Today, Sky and the next hours"></td>
+</tr>
+<tr>
+<td align="center"><sub>The official bulletin, then switches that say exactly what they send</sub></td>
+<td align="center"><sub>Two palettes, three typefaces, two icon families</sub></td>
+<td align="center"><sub>Widgets in Glance, each configured on its own</sub></td>
+</tr>
+</table>
 
 ## Features
 
@@ -219,10 +283,10 @@ rather than by hand, and an accessibility and performance pass with its numbers 
 Between those rounds sit some fifty device reviews, each recorded with what it measured and
 what it changed.
 
-**What is left before v1.0.0** is the store phase: the final icon, the screenshots, the
-listing, and the `## [1.0.0]` section of the changelog, which the release workflow reads
-and uses as the body of the release. The signing key and the release pipeline are already
-in place and were rehearsed end to end on a throwaway tag.
+**v1.0.0 is that work, tagged.** The launcher icon is drawn and measured, the screenshots
+above are the shipping build, and the `## [1.0.0]` section of the changelog is written: the
+release workflow reads it and uses it as the body of the release. The signing key and the
+release pipeline were in place first and were rehearsed end to end on a throwaway tag.
 
 **After v1.0.0**: MeteoAlarm behind the same warning model for the rest of Europe, with the
 Protezione Civile keeping precedence in Italy.
@@ -235,15 +299,15 @@ plan, with every decision and every deviation and its reason, is in
 
 ## Install
 
-Android 13 (API 33) or newer. **v1.0.0 is not tagged yet.**
+Android 13 (API 33) or newer. The signed APK is on the
+[Releases](https://github.com/fiorenzobrioni/chiaro/releases) page.
 
-When it is, `.github/workflows/release.yml` builds it from the tag: tests and lint first,
-then the minified APK signed with the release key, published on the
-[Releases](https://github.com/fiorenzobrioni/chiaro/releases) page together with its R8
-mapping and with the matching [CHANGELOG.md](./CHANGELOG.md) section as the body. A tag
-with a hyphen in it goes out marked as a prerelease, which is what SemVer says it is.
+`.github/workflows/release.yml` builds it from the tag: tests and lint first, then the
+minified APK signed with the release key, published together with its R8 mapping and with
+the matching [CHANGELOG.md](./CHANGELOG.md) section as the body. A tag with a hyphen in it
+goes out marked as a prerelease, which is what SemVer says it is.
 
-Until then the debug APK of every green build is attached to its run under
+The debug APK of every green build is attached to its run under
 [Actions](https://github.com/fiorenzobrioni/chiaro/actions), and building from source is
 the three commands below.
 
@@ -255,7 +319,7 @@ the three commands below.
 | 💬 **One sentence before any number** | the top of Today is a computed line. Numbers follow, for the people who want them |
 | 🔢 **Every number says what to do with it** | a metric is a value plus its consequence. A number with no honest second line lives one tap deeper, not on the home screen |
 | 📴 **Offline-first** | the cached report renders before the network is asked; no core answer needs a connection, and the astronomy needs one at no point at all |
-| 🔒 **Privacy-first** | no account, no analytics, no advertising id, no crash reporting that leaves the device. Coarse location only, optional, and never in the background |
+| 🔒 **Privacy-first** | no account, no analytics, no advertising id, no crash reporting that leaves the device. Coarse location only, optional, and never in the background. A forecast has to be of somewhere, so the place does go to Open-Meteo, with no account and no device identifier attached to it; nothing else leaves the phone, and a backup is an allowlist that carries your places and settings and never the journal of what you looked at |
 | 🔋 **Battery is a feature** | one shared periodic job, inexact alarms, no foreground service and no push service. It is a constraint from the first commit, not an optimization phase |
 
 ## The data
@@ -317,7 +381,7 @@ it, is in [DESIGN.md](./DESIGN.md).
   only what a screen names reaches the APK, which is what `shrinkResources` is for.
   **Google Sans** and **Inter** as bundled variable fonts, the first cut down by
   `tools/import_google_sans.py` from 5MB at the source to 307KB in the app
-- 946 unit tests on the JVM across four modules (450 in `:app`, 243 in `:core:domain`, 229
+- 952 unit tests on the JVM across four modules (456 in `:app`, 243 in `:core:domain`, 229
   in `:core:data`, 24 in `:core:sync`), Robolectric where Android is unavoidable, including
   painting the arc widget's bitmap for real and reading its pixels back
 
@@ -407,6 +471,7 @@ in the wrong module.
 | [PLANNING.md](./PLANNING.md) | the phased plan with checkable steps, and the honest account of where the work actually is |
 | [UPSTREAM.md](./UPSTREAM.md) | how the engines in `:core` were seeded, how to reproduce the seed, and the debt it left behind |
 | [CHANGELOG.md](./CHANGELOG.md) | what shipped, per version; a section is written before its tag |
+| [docs/CHANGELOG-1.0.0.md](./docs/CHANGELOG-1.0.0.md) | the entry-by-entry development record behind 1.0.0, kept out of the release body |
 | [CLAUDE.md](./CLAUDE.md) | the operating rules for AI-assisted development in this repo |
 
 ## License

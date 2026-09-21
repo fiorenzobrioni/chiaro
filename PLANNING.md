@@ -9173,3 +9173,204 @@ stessa domanda.
 
 `./gradlew test :app:testDebugUnitTest` e `:app:lintDebug` verdi, **1661 test**, lint a zero
 errori.
+
+## La 1.0.0: le schermate nel README, e una review prima del tag (committente, 21 set 2026)
+
+Tre richieste in una: mettere nel README le schermate appena aggiunte in `docs/screenshots`,
+rileggere l'app prima di pubblicare — «soprattutto nelle stringhe e nei glifi e
+l'onboarding» — e poi portare la release il più avanti possibile.
+
+### Le schermate
+
+Dieci file, `Screenshot_20260921_*.jpg`, 1080x2340, con lo spazio nel nome (quelle dello
+schermo di casa si chiamavano `... One UI Home.jpg`): rinominati con `git mv` in nomi che
+dicono cosa mostrano, perché un `src=` con uno spazio dentro è una riga che si rompe al
+primo che la tocca. `today-now`, `today-week`, `today-details`, `sky-tonight`, `sky-ahead`,
+`alerts`, `settings`, `guide`, `widgets-home`, `widget-day-arc`.
+
+Due posti nel README, non uno. Un **trittico** dentro il blocco centrato dell'intestazione,
+sotto i badge: Oggi, Cielo e l'arco del giorno sullo schermo di casa, che è la gamma del
+prodotto in tre immagini prima di quattrocento righe di prosa. E una sezione
+**`## Screenshots`** fra «What Chiaro is» e «Features», tre tabelle da tre con una didascalia
+per immagine: la lettura di Oggi (il cielo, la settimana, la griglia dei numeri), il Cielo
+con la guida accanto, e la riga di Avvisi, Impostazioni e lo schermo di casa. Le didascalie
+stanno in `<sub>`, sotto la loro colonna, e ogni immagine porta un `alt` che descrive la
+schermata e non il file.
+
+La sezione apre dicendo che le schermate sono in italiano: l'app spedisce in due lingue e
+una pagina in inglese che mostra dieci schermate in italiano senza dirlo lascia il lettore a
+indovinare. La regola della punteggiatura del README (niente lineette) vale anche qui, ed è
+stata verificata sul file intero dopo ogni inserimento.
+
+**Il Diario non c'è, ed è una scelta del committente**: senza dati passati la schermata è
+vuota, e una schermata vuota in vetrina non dice cosa fa il Diario, dice che non fa niente.
+È la regola §1.1 applicata al README invece che a un layout: una sezione senza dati non si
+disegna. La sezione non promette le quattro schermate, quindi non mente nominandone tre; il
+punto elenco del Diario resta dov'è, nelle funzioni, a raccontarlo a parole.
+
+### La review
+
+**Le stringhe.** 1016 in inglese contro 1013 in italiano: le tre di scarto sono le sole
+`translatable="false"` (`app_name`, e le due note dei crediti), quindi la parità è piena.
+Zero orfane dall'altra parte. Gli argomenti di formato confrontati uno a uno sui due file
+con un matcher stretto — il primo giro, scritto largo, dava 22 falsi positivi leggendo
+«70% chance» come una specifica `%c`, che è esattamente l'errore che il flag spazio fa fare
+— e sono **zero** divergenze reali: nessun `%1$s` perso, nessuna quantità in più o in meno.
+Zero doppi spazi, zero spazi di bordo. Nessun accento mancante e nessun apostrofo tipografico
+nell'italiano. Nessun `TODO`, nessun segnaposto, nessun testo di prova.
+
+Va detto che questo giro **non ha trovato niente che i test non guardassero già**:
+`StringsParityTest` controlla parità, nomi doppi e argomenti di formato, ed è verde. La
+review ha confermato il guardiano dall'esterno, il che è il massimo che potesse dare.
+
+**I glifi.** La tabella è una sola e sta in `ChiaroIcons.skyJobLineRes`, con
+`SkyMomentIconTest` che cammina `SkyJobCatalog` e fallisce su un job senza disegno: è la
+correzione del 21 set, e regge. `MeteoconsSetsTest` e `ComposedIconsTest` verdi, quindi
+`shipped_icons.py` e il compositore non sono andati alla deriva. Controllate a occhio sulle
+schermate le scelte che sembrano strane e non lo sono: la stella dell'ora blu e dei pianeti
+(la famiglia non ha pianeti, e un punto di luce è quel che si vede davvero), l'orizzonte
+degli equinozi e dei solstizi, il sorgere di luna prestato alla luna piena al crepuscolo.
+
+Una cosa che sembrava un difetto e non lo è: sulla schermata Cielo la luna di stanotte è
+al 78% e «La luna di oggi» al 73%. Sono due istanti diversi — adesso, e la finestra di buio
+sei ore più tardi — su una luna che cresce verso il plenilunio del 26. Ognuna porta il suo
+contesto scritto sopra. È precisione, non incoerenza.
+
+**L'onboarding.** Due passi e nessun carosello. Il primo chiede il luogo con la frase del
+perché già sullo schermo prima che il dito tocchi il pulsante; il secondo chiede le
+notifiche a parole prima che il sistema le chieda col dialogo, e «Non ora» è una risposta
+vera che non spende il dialogo. Le stringhe dei due passi sono piene e giuste in entrambe le
+lingue. Niente da correggere.
+
+**Lint: zero errori.** Dei 3669 avvisi, 3606 sono `UnusedResources` sui 519 disegni che il
+repo porta apposta e che solo `shipped_icons.py` fa arrivare nell'APK — è la politica, non
+un difetto. Dei restanti nessuno tocca la release: i cinque `ContentDescription` sono
+immagini decorative del `widget_today_preview` (l'anteprima del selettore, non una schermata),
+`UnsafeProtectedBroadcastReceiver` è il receiver del boot che è già `exported="false"`, e
+gli undici `MissingQuantity` chiedono la categoria `many` italiana, che in CLDR scatta sui
+numeri compatti (i milioni) e che Android risolve comunque su `other`, cioè sulla frase
+giusta. Restano tre avvisi di dipendenze più nuove, che non si toccano alla vigilia di un tag.
+
+### Quel che serviva davvero al tag, e che mancava
+
+Due cose, e la review le ha trovate perché le cercava:
+
+- **`versionName` era ancora `0.1.0`.** L'APK della 1.0.0 si sarebbe presentato come 0.1.0
+  nella schermata Info e nello `User-Agent` che il data layer manda a Open-Meteo, perché
+  entrambi leggono `BuildConfig.VERSION_NAME`: un posto solo da cambiare, ed era quello.
+  `versionCode` resta **1**: non c'è mai stato un tag pubblicato (la prova end-to-end era su
+  un tag usa e getta, poi cancellato), quindi la prima release è davvero la prima.
+- **Il `## [1.0.0]` del changelog non esisteva.** `release.yml` legge la sezione col nome del
+  tag e la usa come corpo della release; senza, il workflow non fallisce — scrive un warning
+  e ripiega sulle note generate — ma la pagina della 1.0.0 sarebbe uscita con un elenco di
+  commit al posto di quel che l'app è. `## [Unreleased]` è diventato `## [1.0.0] - 2026-09-21`,
+  con sopra un `## [Unreleased]` vuoto e, in testa alla sezione, i tre paragrafi che dicono
+  cos'è Chiaro e cosa c'è dentro: chi arriva dalla pagina della release non ha un README
+  davanti. L'estrazione è stata provata girando l'`awk` del workflow sul file vero: 1063
+  righe, 83 KB, sotto il limite di 125 000 caratteri che GitHub mette al corpo di una release.
+
+Nella stessa passata il README ha smesso di dire tre cose diventate false: il badge di stato
+(«v1.0.0 in preparation», scritto a mano, che sarebbe invecchiato il giorno del tag) è
+adesso il badge dinamico di `shields.io` che legge le release del repo e non può mentire in
+nessuna delle due direzioni; il paragrafo della roadmap dava per mancanti l'icona e le
+schermate, che ci sono (l'icona adattiva col layer monocromatico è disegnata e misurata da
+settembre); e «Install» diceva «v1.0.0 is not tagged yet». Corretto anche il numero dei test,
+fermo a 946 con 450 in `:app`: sono **952** con **456** in `:app`.
+
+### Dove si ferma
+
+Il tag no. `v1.0.0` fa partire `release.yml`, che pubblica una release vera e visibile a
+tutti, e va messo su `main` dopo il merge, non su un ramo di lavoro: è la decisione del
+committente, non una cosa da prendersi. Da verificare prima i quattro secret
+(`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`), che dal repo non si
+leggono.
+
+`./gradlew test :app:testDebugUnitTest` e `:app:lintDebug` verdi, **1661 test**, lint a zero
+errori; `:app:assembleRelease` minificato verde, quindi R8 regge il bump.
+
+## Il backup diventa una decisione, e la riga della privacy dice quel che succede (committente, 21 set 2026)
+
+Dal lint della vigilia: `DataExtractionRules`, un avviso solo, che chiedeva perché
+`allowBackup="true"` stesse lì senza regole accanto. La risposta era «perché è il
+default», che in questo repo non è una risposta.
+
+### Perché non `allowBackup="false"`
+
+Sembrava l'opzione pulita e non lo è. La documentazione Android dice che per le app che
+targettano API 31 e oltre — noi siamo a 36 — quel valore «su dispositivi di alcuni
+produttori disabilita il backup cloud **ma non disabilita i trasferimenti
+dispositivo-a-dispositivo**». Un'istruzione il cui effetto dipende da chi ha fatto il
+telefono non è una decisione: sarebbe stata l'unica riga non deterministica del progetto.
+
+L'altra cosa che cambia il quadro, e che va detta perché ridimensiona il problema: il
+backup cloud è **cifrato end-to-end col PIN del dispositivo da Android 9**. Google tiene
+un blob che non può leggere. Con minSdk 33 vale sempre.
+
+### La regola, e il motivo che non è la privacy
+
+`res/xml/data_extraction_rules.xml`, una allowlist di una riga per ciascuno dei due
+flussi: solo `files/datastore`, che è dove scrivono tutti i `preferencesDataStore` di
+`:core:data` — `cities` (i luoghi salvati), `settings`, `rules`, `sky`, `sky_alerts`, i
+quattro store dei widget e il resto. Quel che non è nominato resta fuori, e quel che
+resta fuori è il database Room.
+
+Il Room esce **prima di tutto per correttezza**. Dentro ci sono le previsioni in cache e
+il Diario: roba con un timestamp sopra. Ripristinarlo su un telefono configurato una
+settimana dopo consegna all'app ore già passate, che `WeatherRecency` butta e
+`WeatherFreshness` marca stale a vista: peso trasportato per scartarlo al primo avvio.
+Poi, sì, c'è anche l'altra faccia: `weather_history` è una riga per fetch per luogo, con
+la data, e letta di fila è il registro di quali posti il lettore ha guardato e quando. È
+la cosa che un backup ha meno motivo di copiare, e non vale niente dall'altra parte.
+
+Due flussi identici di proposito: `<cloud-backup>` e `<device-transfer>` si configurano
+indipendentemente, e non c'è ragione di concedere a uno quel che si nega all'altro. Chi
+cambia telefono si ritrova luoghi, avvisi e impostazioni; nessuno si ritrova la cache.
+
+### La riga della privacy diceva cinque parole
+
+«Nessun account, nessuna pubblicità, nessun tracciamento.» Vero, e muto sulla sola
+domanda che uno va a cercare in quella riga: un'app che chiede la posizione, la posizione
+dove la manda? La guida lo diceva già, e bene (`guide_places_gps_body`,
+`guide_data_p1`): era Impostazioni a essere l'unico posto dove non si diceva. Adesso la
+riga porta i tre fatti — una previsione deve pur essere di un posto, quindi il posto va a
+Open-Meteo arrotondato al chilometro e senza account né identificativo del dispositivo
+attaccato; non esce altro; e il backup porta luoghi e impostazioni ma mai il diario.
+
+Nella stessa passata una precisazione in `guide_data_p1`, che diceva «la richiesta del
+meteo è l'unica cosa che esce dal telefono». Con la regola di backup appena scritta non è
+più esatto alla lettera: un backup di sistema esce dal telefono, solo che a mandarlo è
+Android e non Chiaro. Adesso dice «l'unica cosa che **Chiaro** manda da qualche parte»,
+che è la stessa promessa detta con precisione.
+
+**Il posizionamento privacy-first resta**, ed è la risposta alla domanda del committente.
+Non vuol dire «niente esce dal dispositivo»: vuol dire che dove una scelta c'era è stata
+presa dal lato privato, e le scelte c'erano sette volte (account, analytics, advertising
+id, crash reporting, posizione in background, fine invece di coarse, obbligatoria invece
+di opzionale). Sulla coordinata verso Open-Meteo una scelta non c'era: una previsione per
+«qui» richiede di dire dov'è «qui». Quel che si poteva fare era minimizzarla, ed è fatto.
+
+### La revisione di «Informazioni»
+
+Il blocco è completo e non mancava niente: versione (da `BuildConfig`, quindi 1.0.0 senza
+altro da toccare), sviluppatore, copyright, licenza, Open-Meteo, Protezione Civile,
+Meteocons, i caratteri con «in uso: X», le icone di interfaccia, il codice sorgente, la
+privacy. Undici righe, ognuna col suo link. Due cose però non tornavano:
+
+- **Il link di Meteocons puntava a `basmilius/weather-icons`**, mentre il README, i tre
+  tool e il file di licenza usano tutti `basmilius/meteocons`. Funziona, ma solo per il
+  redirect che GitHub tiene sui repo rinominati: un giorno che qualcuno registra quel
+  nome, l'attribuzione di una licenza punta altrove. Portato allo slug canonico.
+- **`licenses/README.md` era fermo a due giri fa.** Dava Meteocons **v2.0.0** convertito
+  in `res/drawable/mc_*.xml` da `tools/import_meteocons.py`: di `mc_*` nel repo ce ne sono
+  **zero**, di `mc3_*` **519**, e il file di licenza accanto dichiara già
+  `@meteocons/svg 3.0.0-next.10`. La tabella contraddiceva il file che le sta a fianco.
+  Corretta, e aggiunta la riga che mancava del tutto: la **geometria delle 187 zone di
+  allerta** (`warning_zones_it.json`, 284 KB, CC BY 4.0), che è dato di terzi che viaggia
+  dentro l'APK, cioè esattamente quel che quella tabella dichiara di elencare. Corretta
+  anche la chiusa, che diceva che l'attribuzione «appartiene alla guida»: sta in
+  Impostazioni → Informazioni, una riga per ciascuna, con il link.
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleRelease` verdi,
+**1661 test**, lint a zero errori e l'avviso `DataExtractionRules` sparito. Verificato
+sull'APK vero: `versionName="1.0.0"`, `dataExtractionRules` presente, e l'XML delle regole
+dentro il pacchetto con le due allowlist come scritte.

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  What survives a new phone, decided rather than inherited (21 set 2026).
+
+  Without this file the platform backs up everything the app owns, which is the
+  default and not a choice. Two reasons it had to become one.
+
+  The first is correctness. The Room database is the cached reports and the
+  Journal: forecasts with a timestamp on them. Restoring those onto a phone set
+  up a week later hands the app hours that have already happened, which
+  `WeatherRecency` drops and `WeatherFreshness` marks stale on sight — weight
+  carried across a device transfer to be discarded at the first launch.
+
+  The second is that `weather_history` is one row per fetch per place, dated:
+  read end to end it is a record of which places the reader watched and when.
+  It is the one thing this app holds that a backup has no business copying, and
+  it is worth nothing on the other side.
+
+  So an allowlist, not a blocklist: only `files/datastore`, which is where every
+  `preferencesDataStore` in `:core:data` writes (`cities` — the saved places —
+  plus `settings`, `rules`, `sky`, `sky_alerts`, the four widget stores and the
+  rest). Small, and exactly what somebody wants back: their places, their alerts
+  and how they set the app up. Everything not named here, the database included,
+  is left behind by the fact of not being named.
+
+  The same allowlist twice on purpose. `<cloud-backup>` is the copy that goes to
+  Google Drive (end-to-end encrypted with the device's own PIN since Android 9,
+  so it is a blob Google cannot read); `<device-transfer>` is the direct
+  phone-to-phone move. The two are configured independently, and there is no
+  reason to grant one what the other is refused.
+
+  NOT `android:allowBackup="false"`, which would have been the blunter answer:
+  on API 31+ it stops the cloud copy but, on devices from some manufacturers,
+  leaves device-to-device transfer running anyway. An instruction whose effect
+  depends on who made the phone is not a decision, and this file is one.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="datastore" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="datastore" />
+    </device-transfer>
+</data-extraction-rules>
