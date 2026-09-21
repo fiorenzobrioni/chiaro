@@ -9067,3 +9067,55 @@ Fase 11 come futura mentre l'elenco delle funzioni la descrive al presente, e i 
 test erano fermi a 775 su quattro moduli (oggi 946, contati per modulo e non per compito:
 `:app`, `:core:data` e `:core:sync` girano la stessa suite in debug e in release, che è il
 motivo per cui la riga finale di Gradle ne annuncia 1649).
+
+## Il widget «In parole»: la colonna che si era allineata a destra (committente, 21 set 2026)
+
+Segnalato con due schermate della stessa card 4×1, quella con la frase: «sembra che testo e
+temperatura siano allineati a destra e non a sinistra. Con Manchester ad esempio si vede che
+l'allineamento è a destra mentre con Cavenago di Brianza che è lungo non si nota». È esattamente
+quello che succedeva, e la seconda metà della frase è anche la ragione per cui era passato: la
+colonna di sinistra è larga `textLeadingColumn`, 168 dp sulla card di riferimento, misurati su
+«⌖ Cavenago di Brianza». Un nome che la riempie non lascia vedere niente; «Manchester» sono
+~90 dp, e gli altri ~78 restavano vuoti a sinistra col nome e il numero appoggiati al bordo
+interno della colonna, in mezzo alla card.
+
+**La causa.** Il `Box` di Glance non è quello di Compose: non esiste un `Modifier.align` per
+figlio, quindi `contentAlignment` vale per TUTTI i figli. Il `BottomEnd` era scritto per il glifo
+del meteo, che in questa forma sta in fondo alla colonna del nome; la colonna delle parole, che
+non aveva una larghezza propria, se lo prendeva anche lei. Le altre tre forme non lo mostravano
+perché lì la colonna ha già `fillMaxSize` (la forma stretta) o non sta dentro un Box (stack e
+pannello) — e il `TallContent` di «Colpo d'occhio», che risolve lo stesso problema, scrive
+`fillMaxSize()` e `horizontalAlignment = Alignment.Start` per esteso da sempre. Anche l'anteprima
+del selettore (`widget_text_preview.xml`) disegna il layout giusto: la card in esecuzione
+contraddiceva la propria anteprima, che è il modo più chiaro di dire che nessuno l'aveva voluto.
+
+**La correzione è una larghezza**: `fillMaxWidth()` sulla colonna delle parole, con
+l'allineamento scritto per esteso perché si legga a colpo d'occhio che non è quello del Box. Con
+essa rientra un secondo difetto che nessuno aveva ancora visto perché l'icona è spenta di
+default: `textRowIconSize` dimensiona il glifo su quello che il numero più largo lascia libero
+**partendo dal bordo interno**, quindi con un nome corto e l'icona accesa il disegno finiva
+esattamente sopra la temperatura.
+
+### Il bordo che la card regalava anche dove non disegnava niente
+
+Controllando il resto del file, come chiesto nella stessa occasione, ne è uscito un secondo
+difetto indipendente. Il bordo destro passa da 14 dp a 4 quando è il glifo a incontrarlo, e ogni
+testo che arriva fin lì restituisce i 10 dp di differenza: è la promessa «non si muove niente»
+scritta come un numero solo (`TextIconEdgeGive`). Solo che le due metà erano decise da due
+condizioni diverse — la card regalava il bordo sull'interruttore del lettore, i testi
+restituivano solo dove `textIconSize` aveva davvero prodotto un disegno. E quella funzione
+risponde 0 dp su ogni misura troppo piccola per il glifo: lo stack di due celle a qualunque scala
+del carattere, il pannello di riferimento a scala 1,3, la card stretta a una riga a 1,3. Su
+quelle, esattamente, accendere l'icona spostava ogni riga 10 dp verso un angolo di raggio 24 e
+non ci disegnava niente.
+
+Adesso le due metà sono una condizione sola letta due volte (`textCardPaddingEnd` e
+`textEdgeGive`), e due test le tengono insieme: la somma fa `WidgetCardPadding` su ogni forma e
+da entrambe le parti dell'interruttore, e le due misure che chiedono il glifo senza averne lo
+spazio scrivono comunque a 14. Nello stesso passaggio la riga del luogo entra fra i testi che
+pagano il resto: sulle tre forme col glifo al bordo era l'unica a non farlo, e su stack e
+pannello è l'occhiello a tutta larghezza, cioè proprio la riga che quel bordo lo raggiunge — un
+nome tagliato a 4 dp dall'angolo, 10 più in là della frase sotto di lui.
+
+`./gradlew test :app:testDebugUnitTest` e `:app:lintDebug` verdi, **1653 test**, lint a zero
+errori.

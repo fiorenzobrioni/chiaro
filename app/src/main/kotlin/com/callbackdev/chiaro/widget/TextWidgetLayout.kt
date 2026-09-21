@@ -549,6 +549,35 @@ internal val TextIconMin = 48.dp
 internal val TextIconEdgeGive = WidgetCardPadding - WidgetCardPaddingLeading
 
 /**
+ * **The card's trailing inset and the give-back that answers it, settled together** —
+ * one condition, because the two drifted the moment they were two (21 set 2026).
+ *
+ * The edge went to the glyph on the strength of the reader's switch alone, while each
+ * text paid the 10 dp back only where a glyph really came out of [textIconSize] — and
+ * that function answers 0 dp on every grant too small for one: a two-cell stack at any
+ * font scale, the reference panel at 1.3, a narrow one-row card at 1.3. On exactly those
+ * cards turning the glyph ON moved every line 10 dp towards a 24 dp corner and drew
+ * nothing there at all, which is the reverse of what the switch promises.
+ *
+ * So the pair is decided off the FORM and the switch and nothing else. Whether this grant
+ * has room for the drawing is the drawing's business; the inset's business is that the
+ * words measure at [WidgetCardPadding] on every card, with a glyph and without one.
+ */
+internal fun textCardPaddingEnd(form: TextForm?, showIcon: Boolean): Dp =
+    if (textGlyphMeetsEdge(form, showIcon)) WidgetCardPaddingLeading else WidgetCardPadding
+
+/** What a text that reaches the trailing edge pays back so that its measure is the one it
+ * had without the glyph: [WidgetCardPadding] less whatever the card kept for itself. */
+internal fun textEdgeGive(form: TextForm?, showIcon: Boolean): Dp =
+    WidgetCardPadding - textCardPaddingEnd(form, showIcon)
+
+/** [TextForm.ROW] keeps the words' edge whatever the switch says: there the glyph is
+ * interior, inside the name's own column, and never touches the card. A null form is a
+ * card with no report yet, which has no glyph to make room for either. */
+private fun textGlyphMeetsEdge(form: TextForm?, showIcon: Boolean): Boolean =
+    showIcon && form != null && form != TextForm.ROW
+
+/**
  * The number's size, given the height it may occupy and the column it must not overflow.
  * [textSizeForLine] inverts the line box; the width guard is the other half of
  * [nowRowIconSize]'s `minOf(byHeight, byWidth)`, at this card's units — the widest
