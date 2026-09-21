@@ -9162,6 +9162,37 @@ volte. (Contati per modulo e non per compito: `:app`, `:core:data` e `:core:sync
 stessa suite in debug e in release, che è il motivo per cui la riga finale di Gradle ne annuncia
 1649.)
 
+### Il marchio della macchina fotografica arriva anche nel README (committente, 21 set 2026)
+
+> «pensi onestamente si potrebbe aggiungere un riferimento che l'app dice anche se ci sono
+> eventi da fotografare? O meglio non aggiungere niente per non dare troppa enfasi a questo
+> aspetto rispetto al resto dell'app?»
+
+Controllato: il README non ne diceva **niente**, né del marchio sui nove momenti né della
+finestra dell'arcobaleno, e per di più la riga del catalogo era rimasta a «32 moments grouped
+by Sun, Night, Moon, Seasons and Meteor showers» mentre l'app ne dice sessanta in sette
+gruppi, pianeti ed eclissi compresi. Quest'ultima cosa da sola bastava a riaprire il punto; una
+volta lì, tacere del marchio non è misura, è sottovendere per omissione: una pagina che elenca
+il catalogo e non dice che nove righe ti danno anche la direzione sta nascondendo la cosa più
+concreta che quella schermata fa.
+
+Aggiunto quindi **dentro i punti che c'erano già**, non come voce nuova e senza titolo proprio:
+una coda alla frase del catalogo nel punto Cielo (i nove, la direzione, e l'eclissi di Sole che
+di proposito non lo porta perché va guardata col filtro) e una parentesi nella frase della
+timeline nel punto Oggi, per la finestra dell'arcobaleno.
+
+Le due cose che **non** si fanno, e sono la ragione per cui la frase sta dov'è:
+
+- **Niente voce a sé.** Un punto elenco tutto suo trasformerebbe il marchio nella promessa di
+  un pianificatore fotografico, che quest'app non è: non ha bussola, né realtà aumentata, né
+  tempi di posa. È la stessa misura che VISION §3.2 tiene sull'astronomia («plans the
+  naked-eye sky»).
+- **Mai «ti dice quando ci sarà un arcobaleno».** `RainbowWindow` calcola la finestra in cui il
+  cielo è disposto per farne uno, e il suo stesso commento dice «never a promise that there
+  will be a rainbow». Il README dice «the windows where the geometry and the forecast line up
+  for a rainbow»: la pagina che elenca la regola dell'onestà non può essere il posto dove la si
+  rompe.
+
 ### L'altra domanda della stessa occasione
 
 > «nel momento che è uscito quel messaggio avevo riacceso il telefono ed ero offline. Se ero

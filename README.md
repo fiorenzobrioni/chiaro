@@ -47,8 +47,10 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   frost by morning, fog on its way, a strong wind right now) and is absent when there is
   nothing worth saying because quiet is an answer too. Under it: the next 24
   hours with a rain sparkline (not drawn on a dry day, because a chart of zeroes says
-  nothing), the **rest of the day** as one merged timeline of sun, moon and weather turns,
-  **what changed** when the last update moved the week, the seven days on one shared
+  nothing), the **rest of the day** as one merged timeline of sun, moon and weather turns
+  (the windows where the geometry and the forecast line up for a rainbow among them, the
+  one row on the page that comes with a direction to look in), **what changed** when the
+  last update moved the week, the seven days on one shared
   temperature scale with each day's ribbon of light, and a details grid where every number
   carries its meaning: UV 8 is "burns in about 15 minutes, cover up", not an 8. The page
   ends with the line that says when its numbers arrived and where from ("Updated at
@@ -59,8 +61,12 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   place's own timezone, a moment that is over is replaced by its next occurrence and says
   "Tomorrow", a window in progress says "Now". Then the calendar ahead (meteor peaks, the
   next full moon, solstices and equinoxes) with an honest "too far out to say" past the
-  forecast's horizon, and a catalog of 32 moments grouped by Sun, Night, Moon, Seasons and
-  Meteor showers, each teaching what it is in one line. This is where a person finds out
+  forecast's horizon, and a catalog of 60 moments grouped by Sun, Night, Moon, Planets,
+  Eclipses, Seasons and Meteor showers, each teaching what it is in one line. Nine of them
+  carry a camera, the golden and blue hours, earthshine, the heart of the Milky Way and the
+  lunar eclipse among them, and those rows also say which way to look, because a time is
+  half an answer without a direction. The eclipse of the sun does not carry it, on purpose:
+  that one is only ever watched through a proper filter. This is where a person finds out
   what a blue hour is, by adding one. All of it is computed on the device and works with
   no network at all
 - 🔔 **Sky reminders**: a bell on any moment, plus a default lead. Delivered by a single
