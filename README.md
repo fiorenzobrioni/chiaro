@@ -471,6 +471,7 @@ in the wrong module.
 | [PLANNING.md](./PLANNING.md) | the phased plan with checkable steps, and the honest account of where the work actually is |
 | [UPSTREAM.md](./UPSTREAM.md) | how the engines in `:core` were seeded, how to reproduce the seed, and the debt it left behind |
 | [CHANGELOG.md](./CHANGELOG.md) | what shipped, per version; a section is written before its tag |
+| [docs/CHANGELOG-1.0.0.md](./docs/CHANGELOG-1.0.0.md) | the entry-by-entry development record behind 1.0.0, kept out of the release body |
 | [CLAUDE.md](./CLAUDE.md) | the operating rules for AI-assisted development in this repo |
 
 ## License
