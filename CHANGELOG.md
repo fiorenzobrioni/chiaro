@@ -9,9 +9,31 @@ as the body of the GitHub Release, so a version's entry is written **before** it
 
 ## [Unreleased]
 
-Nothing released yet. The engines are in and verified, the design system is code, and
-the everyday surface — Today, places, first run, settings, the guide, the Sky screen
-with its reminders, the alerts, the Journal, the five home widgets — is built. See `PLANNING.md` for where the work actually is.
+Nothing yet.
+
+## [1.0.0] - 2026-09-21
+
+**The first release.** Chiaro answers the question people actually have: is it worth
+going outside, and when. A computed sky as the hero, one sentence before any number, an
+agenda of the day's sun and sky with a verdict on each moment, a journal of how the
+forecast changed, and alerts the reader writes themselves. Free, no account, no ads, no
+tracking, no API key.
+
+What ships in it: **Today**, one scroll that starts with the sky and ends with the line
+saying when its numbers arrived; **Sky**, sixty moments computed on the device with
+their verdicts and their reminders; **Alerts**, four ready-made switches that say
+exactly what they send plus a builder for your own rules; the **Journal**, the forecast's
+own history read as prose with the drift strip under it; the **official Protezione
+Civile warnings**, located by geometry rather than by how a place name is spelled; five
+**home-screen widgets** in Glance; the **guide**; two palettes, three typefaces and two
+weather-icon families; **Italian and English** through the system per-app language
+picker; and an offline-first data layer that states the age of what it shows instead of
+pretending.
+
+Android 13 (API 33) or newer. The APK on this page is minified and signed with the
+release key; `mapping.txt` beside it is what makes a stack trace from it readable.
+
+Everything below is the work that got there, recorded as it happened.
 
 ### Added
 

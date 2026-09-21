@@ -9173,3 +9173,117 @@ stessa domanda.
 
 `./gradlew test :app:testDebugUnitTest` e `:app:lintDebug` verdi, **1661 test**, lint a zero
 errori.
+
+## La 1.0.0: le schermate nel README, e una review prima del tag (committente, 21 set 2026)
+
+Tre richieste in una: mettere nel README le schermate appena aggiunte in `docs/screenshots`,
+rileggere l'app prima di pubblicare — «soprattutto nelle stringhe e nei glifi e
+l'onboarding» — e poi portare la release il più avanti possibile.
+
+### Le schermate
+
+Dieci file, `Screenshot_20260921_*.jpg`, 1080x2340, con lo spazio nel nome (quelle dello
+schermo di casa si chiamavano `... One UI Home.jpg`): rinominati con `git mv` in nomi che
+dicono cosa mostrano, perché un `src=` con uno spazio dentro è una riga che si rompe al
+primo che la tocca. `today-now`, `today-week`, `today-details`, `sky-tonight`, `sky-ahead`,
+`alerts`, `settings`, `guide`, `widgets-home`, `widget-day-arc`.
+
+Due posti nel README, non uno. Un **trittico** dentro il blocco centrato dell'intestazione,
+sotto i badge: Oggi, Cielo e l'arco del giorno sullo schermo di casa, che è la gamma del
+prodotto in tre immagini prima di quattrocento righe di prosa. E una sezione
+**`## Screenshots`** fra «What Chiaro is» e «Features», tre tabelle da tre con una didascalia
+per immagine: la lettura di Oggi (il cielo, la settimana, la griglia dei numeri), il Cielo
+con la guida accanto, e la riga di Avvisi, Impostazioni e lo schermo di casa. Le didascalie
+stanno in `<sub>`, sotto la loro colonna, e ogni immagine porta un `alt` che descrive la
+schermata e non il file.
+
+La sezione apre dicendo che le schermate sono in italiano: l'app spedisce in due lingue e
+una pagina in inglese che mostra dieci schermate in italiano senza dirlo lascia il lettore a
+indovinare. La regola della punteggiatura del README (niente lineette) vale anche qui, ed è
+stata verificata sul file intero dopo ogni inserimento.
+
+**Il Diario non c'è, ed è una scelta del committente**: senza dati passati la schermata è
+vuota, e una schermata vuota in vetrina non dice cosa fa il Diario, dice che non fa niente.
+È la regola §1.1 applicata al README invece che a un layout: una sezione senza dati non si
+disegna. La sezione non promette le quattro schermate, quindi non mente nominandone tre; il
+punto elenco del Diario resta dov'è, nelle funzioni, a raccontarlo a parole.
+
+### La review
+
+**Le stringhe.** 1016 in inglese contro 1013 in italiano: le tre di scarto sono le sole
+`translatable="false"` (`app_name`, e le due note dei crediti), quindi la parità è piena.
+Zero orfane dall'altra parte. Gli argomenti di formato confrontati uno a uno sui due file
+con un matcher stretto — il primo giro, scritto largo, dava 22 falsi positivi leggendo
+«70% chance» come una specifica `%c`, che è esattamente l'errore che il flag spazio fa fare
+— e sono **zero** divergenze reali: nessun `%1$s` perso, nessuna quantità in più o in meno.
+Zero doppi spazi, zero spazi di bordo. Nessun accento mancante e nessun apostrofo tipografico
+nell'italiano. Nessun `TODO`, nessun segnaposto, nessun testo di prova.
+
+Va detto che questo giro **non ha trovato niente che i test non guardassero già**:
+`StringsParityTest` controlla parità, nomi doppi e argomenti di formato, ed è verde. La
+review ha confermato il guardiano dall'esterno, il che è il massimo che potesse dare.
+
+**I glifi.** La tabella è una sola e sta in `ChiaroIcons.skyJobLineRes`, con
+`SkyMomentIconTest` che cammina `SkyJobCatalog` e fallisce su un job senza disegno: è la
+correzione del 21 set, e regge. `MeteoconsSetsTest` e `ComposedIconsTest` verdi, quindi
+`shipped_icons.py` e il compositore non sono andati alla deriva. Controllate a occhio sulle
+schermate le scelte che sembrano strane e non lo sono: la stella dell'ora blu e dei pianeti
+(la famiglia non ha pianeti, e un punto di luce è quel che si vede davvero), l'orizzonte
+degli equinozi e dei solstizi, il sorgere di luna prestato alla luna piena al crepuscolo.
+
+Una cosa che sembrava un difetto e non lo è: sulla schermata Cielo la luna di stanotte è
+al 78% e «La luna di oggi» al 73%. Sono due istanti diversi — adesso, e la finestra di buio
+sei ore più tardi — su una luna che cresce verso il plenilunio del 26. Ognuna porta il suo
+contesto scritto sopra. È precisione, non incoerenza.
+
+**L'onboarding.** Due passi e nessun carosello. Il primo chiede il luogo con la frase del
+perché già sullo schermo prima che il dito tocchi il pulsante; il secondo chiede le
+notifiche a parole prima che il sistema le chieda col dialogo, e «Non ora» è una risposta
+vera che non spende il dialogo. Le stringhe dei due passi sono piene e giuste in entrambe le
+lingue. Niente da correggere.
+
+**Lint: zero errori.** Dei 3669 avvisi, 3606 sono `UnusedResources` sui 519 disegni che il
+repo porta apposta e che solo `shipped_icons.py` fa arrivare nell'APK — è la politica, non
+un difetto. Dei restanti nessuno tocca la release: i cinque `ContentDescription` sono
+immagini decorative del `widget_today_preview` (l'anteprima del selettore, non una schermata),
+`UnsafeProtectedBroadcastReceiver` è il receiver del boot che è già `exported="false"`, e
+gli undici `MissingQuantity` chiedono la categoria `many` italiana, che in CLDR scatta sui
+numeri compatti (i milioni) e che Android risolve comunque su `other`, cioè sulla frase
+giusta. Restano tre avvisi di dipendenze più nuove, che non si toccano alla vigilia di un tag.
+
+### Quel che serviva davvero al tag, e che mancava
+
+Due cose, e la review le ha trovate perché le cercava:
+
+- **`versionName` era ancora `0.1.0`.** L'APK della 1.0.0 si sarebbe presentato come 0.1.0
+  nella schermata Info e nello `User-Agent` che il data layer manda a Open-Meteo, perché
+  entrambi leggono `BuildConfig.VERSION_NAME`: un posto solo da cambiare, ed era quello.
+  `versionCode` resta **1**: non c'è mai stato un tag pubblicato (la prova end-to-end era su
+  un tag usa e getta, poi cancellato), quindi la prima release è davvero la prima.
+- **Il `## [1.0.0]` del changelog non esisteva.** `release.yml` legge la sezione col nome del
+  tag e la usa come corpo della release; senza, il workflow non fallisce — scrive un warning
+  e ripiega sulle note generate — ma la pagina della 1.0.0 sarebbe uscita con un elenco di
+  commit al posto di quel che l'app è. `## [Unreleased]` è diventato `## [1.0.0] - 2026-09-21`,
+  con sopra un `## [Unreleased]` vuoto e, in testa alla sezione, i tre paragrafi che dicono
+  cos'è Chiaro e cosa c'è dentro: chi arriva dalla pagina della release non ha un README
+  davanti. L'estrazione è stata provata girando l'`awk` del workflow sul file vero: 1063
+  righe, 83 KB, sotto il limite di 125 000 caratteri che GitHub mette al corpo di una release.
+
+Nella stessa passata il README ha smesso di dire tre cose diventate false: il badge di stato
+(«v1.0.0 in preparation», scritto a mano, che sarebbe invecchiato il giorno del tag) è
+adesso il badge dinamico di `shields.io` che legge le release del repo e non può mentire in
+nessuna delle due direzioni; il paragrafo della roadmap dava per mancanti l'icona e le
+schermate, che ci sono (l'icona adattiva col layer monocromatico è disegnata e misurata da
+settembre); e «Install» diceva «v1.0.0 is not tagged yet». Corretto anche il numero dei test,
+fermo a 946 con 450 in `:app`: sono **952** con **456** in `:app`.
+
+### Dove si ferma
+
+Il tag no. `v1.0.0` fa partire `release.yml`, che pubblica una release vera e visibile a
+tutti, e va messo su `main` dopo il merge, non su un ramo di lavoro: è la decisione del
+committente, non una cosa da prendersi. Da verificare prima i quattro secret
+(`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`), che dal repo non si
+leggono.
+
+`./gradlew test :app:testDebugUnitTest` e `:app:lintDebug` verdi, **1661 test**, lint a zero
+errori; `:app:assembleRelease` minificato verde, quindi R8 regge il bump.
