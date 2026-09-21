@@ -9067,3 +9067,109 @@ Fase 11 come futura mentre l'elenco delle funzioni la descrive al presente, e i 
 test erano fermi a 775 su quattro moduli (oggi 946, contati per modulo e non per compito:
 `:app`, `:core:data` e `:core:sync` girano la stessa suite in debug e in release, che è il
 motivo per cui la riga finale di Gradle ne annuncia 1649).
+
+## Il widget «In parole»: la colonna che si era allineata a destra (committente, 21 set 2026)
+
+Segnalato con due schermate della stessa card 4×1, quella con la frase: «sembra che testo e
+temperatura siano allineati a destra e non a sinistra. Con Manchester ad esempio si vede che
+l'allineamento è a destra mentre con Cavenago di Brianza che è lungo non si nota». È esattamente
+quello che succedeva, e la seconda metà della frase è anche la ragione per cui era passato: la
+colonna di sinistra è larga `textLeadingColumn`, 168 dp sulla card di riferimento, misurati su
+«⌖ Cavenago di Brianza». Un nome che la riempie non lascia vedere niente; «Manchester» sono
+~90 dp, e gli altri ~78 restavano vuoti a sinistra col nome e il numero appoggiati al bordo
+interno della colonna, in mezzo alla card.
+
+**La causa.** Il `Box` di Glance non è quello di Compose: non esiste un `Modifier.align` per
+figlio, quindi `contentAlignment` vale per TUTTI i figli. Il `BottomEnd` era scritto per il glifo
+del meteo, che in questa forma sta in fondo alla colonna del nome; la colonna delle parole, che
+non aveva una larghezza propria, se lo prendeva anche lei. Le altre tre forme non lo mostravano
+perché lì la colonna ha già `fillMaxSize` (la forma stretta) o non sta dentro un Box (stack e
+pannello) — e il `TallContent` di «Colpo d'occhio», che risolve lo stesso problema, scrive
+`fillMaxSize()` e `horizontalAlignment = Alignment.Start` per esteso da sempre. Anche l'anteprima
+del selettore (`widget_text_preview.xml`) disegna il layout giusto: la card in esecuzione
+contraddiceva la propria anteprima, che è il modo più chiaro di dire che nessuno l'aveva voluto.
+
+**La correzione è una larghezza**: `fillMaxWidth()` sulla colonna delle parole, con
+l'allineamento scritto per esteso perché si legga a colpo d'occhio che non è quello del Box. Con
+essa rientra un secondo difetto che nessuno aveva ancora visto perché l'icona è spenta di
+default: `textRowIconSize` dimensiona il glifo su quello che il numero più largo lascia libero
+**partendo dal bordo interno**, quindi con un nome corto e l'icona accesa il disegno finiva
+esattamente sopra la temperatura.
+
+### Il bordo che la card regalava anche dove non disegnava niente
+
+Controllando il resto del file, come chiesto nella stessa occasione, ne è uscito un secondo
+difetto indipendente. Il bordo destro passa da 14 dp a 4 quando è il glifo a incontrarlo, e ogni
+testo che arriva fin lì restituisce i 10 dp di differenza: è la promessa «non si muove niente»
+scritta come un numero solo (`TextIconEdgeGive`). Solo che le due metà erano decise da due
+condizioni diverse — la card regalava il bordo sull'interruttore del lettore, i testi
+restituivano solo dove `textIconSize` aveva davvero prodotto un disegno. E quella funzione
+risponde 0 dp su ogni misura troppo piccola per il glifo: lo stack di due celle a qualunque scala
+del carattere, il pannello di riferimento a scala 1,3, la card stretta a una riga a 1,3. Su
+quelle, esattamente, accendere l'icona spostava ogni riga 10 dp verso un angolo di raggio 24 e
+non ci disegnava niente.
+
+Adesso le due metà sono una condizione sola letta due volte (`textCardPaddingEnd` e
+`textEdgeGive`), e due test le tengono insieme: la somma fa `WidgetCardPadding` su ogni forma e
+da entrambe le parti dell'interruttore, e le due misure che chiedono il glifo senza averne lo
+spazio scrivono comunque a 14. Nello stesso passaggio la riga del luogo entra fra i testi che
+pagano il resto: sulle tre forme col glifo al bordo era l'unica a non farlo, e su stack e
+pannello è l'occhiello a tutta larghezza, cioè proprio la riga che quel bordo lo raggiunge — un
+nome tagliato a 4 dp dall'angolo, 10 più in là della frase sotto di lui.
+
+`./gradlew test :app:testDebugUnitTest` e `:app:lintDebug` verdi, **1653 test**, lint a zero
+errori.
+
+## Il cielo sul widget: una tabella sola per le icone (committente, 21 set 2026)
+
+Segnalato da una schermata home: «l'icona dell'evento "Luna piena al crepuscolo" non sembra
+corretta ed è diversa da quella che compare nell'app». Vero, e il modo in cui è successo conta
+più del singolo disegno.
+
+La schermata Cielo (`SkyScreen.jobIcon`) e il widget «Momenti del cielo»
+(`SkyWidget.skyJobIconRes`) avevano ciascuno il proprio `when` sugli id dei job. Il catalogo è
+cresciuto due volte — Fase 19 (le eclissi, i quattro quarti di luna, tramonto più presto e alba
+più tardi, perielio e afelio) e Fase 28 (Venere, Giove, le tre congiunzioni, la luce cinerea, la
+luna piena al crepuscolo, la Via Lattea, le notti bianche, la luce zodiacale) — e solo la tabella
+della schermata è stata tenuta al passo. **Venticinque id su quarantasette** cadevano nell'`else`
+del widget, che è il disegno dello sciame meteorico: la stessa sottoscrizione mostrava due
+immagini diverse sulla home e dentro l'app.
+
+Ed è passato per una ragione precisa, che vale la pena mettere a verbale: **un id non elencato è
+un `when` perfettamente legale.** Non c'è niente che diventi rosso, il compilatore è contento, e
+la sola prova possibile era guardare la card.
+
+**La correzione è strutturale, non una riga.** La politica — quale disegno tocca a quale momento
+— sta adesso in `ChiaroIcons.skyJobLineRes`, cioè nell'unico oggetto che in questo repo decide
+che disegno prende una cosa, e la schermata e il widget la leggono entrambi: `skyJob` per un
+`ImageVector`, `skyJobRes` per il res id che serve a Glance. `SkyMomentIconTest` cammina
+`SkyJobCatalog.all` e fallisce se un job ci finisce senza icona: l'unico arm che può prendere il
+`falling-stars` sono i tredici sciami, che è il disegno di cui portano il nome. Un momento nuovo
+va adesso aggiunto in due posti, e il secondo è il test.
+
+**Nella stessa passata, la luna di oggi.** Il widget disegnava una luna piena su «La luna oggi»
+qualunque fosse la fase, mentre la schermata ha sempre disegnato quella vera (`Moment.moonPhase`).
+`NextMoment` porta adesso la fase, dallo stesso classificatore e con la stessa regola (solo il
+job del giorno, null su tutti gli altri), e il commento del widget — «The moon's day-moment gets
+its real phase» — smette di essere falso.
+
+### La seconda domanda: «L'arco del giorno» e gli eventi seguiti
+
+«Nel widget "L'arco del giorno" non compare l'evento personalizzato "Luna piena al crepuscolo": è
+corretto così?» **Sì, ed è di proposito.** L'agenda dell'arco è la giornata di luce del posto —
+`TodayStateBuilder.agenda` sulle prossime 24 ore (`AgendaReach`), filtrata dai tre interruttori
+del lettore — non l'elenco dei momenti seguiti. La card che porta le sottoscrizioni è «Momenti
+del cielo», ed è la ragione per cui quella esiste. Quell'evento poi cadeva il 25 settembre,
+quattro giorni oltre la portata dell'agenda: nessun layout lo avrebbe mostrato.
+
+Quello che invece non andava, ed è stato corretto, è **il verdetto**. `jobIdsFor` dice quali job
+del Cielo «nominano lo stesso momento» di una riga dell'agenda, e per il sorgere della luna
+elencava solo `moon.rise`. Ma `SkySights.nextFullMoonAtDusk` **restituisce un sorgere di luna** —
+quello della sera in cui la luna piena viene su dentro il crepuscolo — quindi i due sono lo
+stesso istante, calcolato dallo stesso motore. Il lettore che seguiva proprio quel momento
+trovava la riga nuda nella sola sera di cui parlava. Adesso il verdetto ci arriva; chi segue
+entrambi i momenti vede quello che la lista incontra per primo, e sono due risposte oneste alla
+stessa domanda.
+
+`./gradlew test :app:testDebugUnitTest` e `:app:lintDebug` verdi, **1661 test**, lint a zero
+errori.

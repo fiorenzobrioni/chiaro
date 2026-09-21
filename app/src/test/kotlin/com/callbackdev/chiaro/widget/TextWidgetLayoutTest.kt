@@ -464,6 +464,51 @@ class TextWidgetLayoutTest {
         assertEquals(WidgetCardPadding, WidgetCardPaddingLeading + TextIconEdgeGive)
     }
 
+    /** The inset and the give-back are one condition read twice, so a line of words
+     * measures against [WidgetCardPadding] on every form and either side of the switch. */
+    @Test
+    fun `what the card keeps at its trailing edge, the words are given back`() {
+        (TextForm.entries + null).forEach { form ->
+            listOf(false, true).forEach { showIcon ->
+                assertEquals(
+                    "$form/icon=$showIcon: the words' measure moved",
+                    WidgetCardPadding,
+                    textCardPaddingEnd(form, showIcon) + textEdgeGive(form, showIcon)
+                )
+            }
+        }
+        // ROW is the one form whose glyph never meets the card: it is interior, inside
+        // the name's own column, so that edge is never given away in the first place.
+        assertEquals(WidgetCardPadding, textCardPaddingEnd(TextForm.ROW, true))
+        assertEquals(0.dp, textEdgeGive(TextForm.ROW, true))
+        // A card with no report yet draws no glyph, so it has none to make room for.
+        assertEquals(WidgetCardPadding, textCardPaddingEnd(null, true))
+    }
+
+    /**
+     * The regression that put the pair in one place (21 set 2026): the edge went to the
+     * glyph on the reader's switch alone, while the words paid it back only where a glyph
+     * really came out of [textIconSize] — so on every grant too small for one the card
+     * moved every line 10 dp towards its 24 dp corner and drew nothing there at all.
+     *
+     * Both of these grants ask for the glyph and get none, and both still write at 14.
+     */
+    @Test
+    fun `a card with no room for a glyph keeps the words' own edge`() {
+        val narrow = textStackPlan(
+            twoByTwo, 1f, stale = false, sentence = true, warning = false, range = true
+        )
+        assertEquals(0f, textStackIconSize(twoByTwo, 1f, narrow.heroSp).value, 0.001f)
+        assertEquals(TextIconEdgeGive, textEdgeGive(TextForm.STACK, showIcon = true))
+        // The reference panel at a reader's larger font scale: the same question, and the
+        // band between the eyebrow and the block has gone to the words.
+        val panel = textPanelPlan(
+            fourByTwo, 1.3f, stale = false, sentence = true, warning = true, range = true
+        )
+        assertEquals(0f, textPanelIconSize(fourByTwo, 1.3f, panel).value, 0.001f)
+        assertEquals(TextIconEdgeGive, textEdgeGive(TextForm.PANEL, showIcon = true))
+    }
+
     /** The inverse the whole file rests on: a size asked for a line box, and the line box
      * asked back for the size. */
     @Test

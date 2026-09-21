@@ -214,6 +214,32 @@ class ArcSeriesTest {
         assertNotNull(series(now, moments = close).events.first { it.item.kind == TimelineKind.SUNSET }.verdict)
     }
 
+    /**
+     * «La luna piena al crepuscolo» IS that evening's moonrise — `nextFullMoonAtDusk`
+     * returns the moonrise instant — so the reader who follows it finds their verdict on
+     * the moonrise row, and not a bare row on the one evening it was about (21 set 2026).
+     */
+    @Test
+    fun `the full moon at dusk lends its verdict to the moonrise row`() {
+        val now = at(15)
+        val moonrise = series(now).events.firstOrNull { it.item.kind == TimelineKind.MOONRISE }
+        assertNotNull("the fixture day has no moonrise to hang this on", moonrise)
+        val pass = SkyVerdict(SkyVerdictKind.PASS, cloudPct = 10)
+        val followed = listOf(
+            NextMoment(SkyJobCatalog.MoonFullAtDusk, moonrise!!.at, null, pass, inProgress = false)
+        )
+        assertEquals(
+            pass,
+            series(now, moments = followed)
+                .events.first { it.item.kind == TimelineKind.MOONRISE }.verdict
+        )
+        // And it still says nothing about a row it does not name.
+        assertNull(
+            series(now, moments = followed)
+                .events.first { it.item.kind == TimelineKind.SUNSET }.verdict
+        )
+    }
+
     @Test
     fun `a range lends its verdict by its end too`() {
         val now = at(6)

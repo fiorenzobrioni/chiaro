@@ -37,7 +37,6 @@ import androidx.glance.text.TextStyle
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.WeatherIcons
-import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
@@ -415,36 +414,26 @@ private fun timeFormatter(context: Context): DateTimeFormatter = Formats.timeFor
 private fun evidence(context: Context, verdict: SkyVerdict): String? =
     SkyText.chipEvidence(context.resources, verdict)
 
-/** The moon's day-moment gets its real phase; everything else its family glyph. */
+/**
+ * The moon's day-moment gets its real phase; everything else its family glyph — and the
+ * glyph comes from [ChiaroIcons.skyJobLineRes], **the same table the Sky screen reads**
+ * (21 set 2026, committente, from a home screen). This card kept a copy of that table and
+ * the copy stopped at Fase 19: the planets, the pairs, the eclipses, the quarter moons,
+ * the earthshine, the zodiacal light, the white nights, the Milky Way and the full moon at
+ * dusk all fell through to the meteor shower's drawing, so the card and the screen drew
+ * two different pictures of one subscription. The list the card reads is already the
+ * screen's ([com.callbackdev.chiaro.ui.sky.SkyUpcoming.allAt]); now the drawing is too.
+ *
+ * The phase is the moment's own ([NextMoment.moonPhase]) and no longer a hardcoded full
+ * moon: «La luna oggi» is a different shape every night, and a card that always drew it
+ * round was drawing a moon nobody could see.
+ */
 private fun skyJobIconRes(
     moment: NextMoment,
     style: WeatherIcons,
     darkGround: Boolean
-): Int = when (moment.job.id) {
-    "sun.rise", "twilight.civil.am" ->
-        ChiaroIcons.styledRes(R.drawable.mc3_sunrise, style, darkGround)
-    "sun.set", "twilight.civil.pm" ->
-        ChiaroIcons.styledRes(R.drawable.mc3_sunset, style, darkGround)
-    "solar.noon" ->
-        ChiaroIcons.conditionRes(
-            0, night = false, style = style, darkGround = darkGround
-        )
-    // L'ora d'oro perde la linea dell'orizzonte: vedi ChiaroIcons.goldenHour
-    "golden_hour.am", "golden_hour.pm" ->
-        ChiaroIcons.styledRes(R.drawable.mc3_clear_day, style, darkGround)
-    "blue_hour.am", "blue_hour.pm",
-    "twilight.nautical.am", "twilight.nautical.pm" ->
-        ChiaroIcons.styledRes(R.drawable.mc3_star, style, darkGround)
-    "twilight.astronomical.am", "twilight.astronomical.pm", "darkness.window" ->
-        ChiaroIcons.styledRes(R.drawable.mc3_starry_night, style, darkGround)
-    "moon.rise" -> ChiaroIcons.styledRes(R.drawable.mc3_moonrise, style, darkGround)
-    "moon.set" -> ChiaroIcons.styledRes(R.drawable.mc3_moonset, style, darkGround)
-    "moon.today", "moon.phase" ->
-        ChiaroIcons.moonPhaseRes(MoonPhase.FULL_MOON, style, darkGround)
-    "equinox.spring", "solstice.summer", "equinox.autumn", "solstice.winter" ->
-        ChiaroIcons.styledRes(R.drawable.mc3_horizon, style, darkGround)
-    else -> ChiaroIcons.styledRes(R.drawable.mc3_falling_stars, style, darkGround)
-}
+): Int = moment.moonPhase?.let { ChiaroIcons.moonPhaseRes(it, style, darkGround) }
+    ?: ChiaroIcons.skyJobRes(moment.job.id, style, darkGround)
 
 /** Subscriptions emptied by hand: the widget says why it is quiet, never blanks —
  * centred on the card like every other empty state (committente, 7 set). */
