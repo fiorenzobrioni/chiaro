@@ -206,6 +206,22 @@ is short on purpose — three edits, each with its reason in the file:
   WarningFetchPolicy, WarningDiff}`, `data/warnings/{CapParser, WarningSource,
   DpcBulletinSource, OfficialWarningStore}`, `data/local/WarningRecords`,
   `sync/OfficialWarningsStep`, `notifications/OfficialWarningNotifier`.
+- `WarningRecordDao` grew the global backstop it never had, and the per-place prune grew
+  a companion on the missed-bulletin path (12 set 2026). Chiaro-only because the table
+  is: nothing to carry, but worth the line, because the shape it was missing is the
+  shape it inherited the idea from. `pruneCity` bounds the place it is handed and no
+  other, so every key that stopped being handed to it kept its rows for the life of the
+  install — `weather_history` has had a global `prune` since the seed and this table
+  never did.
+- `WeatherHistoryDao.pruneForeign`, `ReportDiskCache.forgetForeign` and the
+  `StoredDataSweep` that drives them (12 set 2026) were **new here and belonged upstream
+  too**; they were carried the same day (tweather's Fase 30), so the two copies are in
+  step again — with two named exceptions: `StoredDataSweep` has two arms upstream and
+  three here (there is no `warning_records` there), and `WidgetCityStore.remap` carries
+  the sky-line key upstream and not here. The second is not a drift: `remap` is live code
+  upstream (its provider has an `onRestored`) and dead code here, where fixing it for
+  real means deciding for `WidgetLookStore` and `ArcSettingsStore` too. The dated section
+  below has the whole story.
 
 ## The known debt
 
@@ -420,6 +436,70 @@ The prototype also found a gap in **Fase 11's own shipped code**, which is in th
 `OfficialWarningsStep` runs only from `WeatherSyncWorker`, so nothing fetches a bulletin when
 the app is opened or pulled to refresh — the behaviour the phase's plan specified and never
 wired. It is recorded in `PLANNING.md` under Fase 11.
+
+## The rows nobody will read again (12 set 2026)
+
+A review of the whole storage layer, asked for in Chiaro and answered there
+(`PLANNING.md`, same date). Most of what it found is Chiaro's own; one third of it is
+shared, and that third is written here **before** it is carried rather than after,
+because the last two passes each found something this ledger had promised and nobody
+had done.
+
+**The finding, in one line.** Every retention in both apps is a count, not a date, and
+that is the right choice — a phone switched off for a week must not come back to an
+empty history. But a count *per place* never asks whose rows these are, and both apps
+mint places that stop existing: a city removed from the list, and above all the GPS
+pseudo-city, which coins a fresh `cacheKey` for every ~1.1 km cell it has ever adopted.
+Those rows are not old. They are orphaned, and no future read will ever touch them.
+
+**What is Chiaro's alone.** `warning_records` had no global backstop at all and its
+missed-bulletin path wrote without pruning; both are fixed, and both are Chiaro-only
+because the table is (above). `OfficialWarningsStep` likewise.
+
+**What belongs upstream, and was carried on 12 set 2026** (tweather's Fase 30). Three
+things, all additive:
+
+- `StoredDataSweep` (`data/local/`) — a key the app no longer follows, quiet for a week,
+  leaves entirely; all-or-nothing per key, measured from the key's newest row. Upstream
+  it would have two arms rather than three: there is no `warning_records` there.
+- `WeatherHistoryDao.pruneForeign`. Upstream's DAO has only the global `prune` (the
+  per-city split is Chiaro's, Fase 7b), and that backstop evicts by *global age*, so an
+  abandoned cell's rows are dropped at the same rate as a followed city's — the wrong
+  question, asked identically in both.
+- `ReportDiskCache.forgetForeign`. This file is byte-identical across the two repos, so
+  the bug is byte-identical too: `MAX_ENTRIES` bounds the directory, but it bounds it by
+  count and prunes only on a write, so responses for places nothing will read again sit
+  there — and `allowBackup` carries them off the device.
+
+Plus one shared-file edit that only makes sense if the three above travel:
+`WeatherRepository`'s post-commit block became a `bestEffort` helper, so the new
+housekeeping hook and the existing commit hook each get their own guarded call. On its
+own that is gratuitous drift in a file whose paragraphs are deliberately worded the same
+in both; with the sweep it is the same refactor in both.
+
+**The two things this pass could NOT check, checked on the tree.** The session that
+wrote the port notes had no tweather checkout and no read access to the repository, so
+both were marked as guesses; both held:
+
+- `WidgetCityStore` upstream carries the same per-widget sky-line key and had the same
+  leak in `forget`, and the one-line fix was the same one-line fix (see below for the
+  one place the two copies of that file now part).
+- Upstream's `CityStore` does expose the live set through the same two reads
+  (`cities`, `locationSettings.gpsCity`), so `liveCityKeys` ported unchanged. The Fase 3b
+  divergence is in the WRITE accessors (`adoptGpsFix` against `updateGpsCity`), which the
+  sweep does not touch.
+
+**What the port found that this pass could not see.** `WidgetCityStore.remap` has the
+same omission `forget` had, and **upstream it is live code**: tweather's widget provider
+has an `onRestored` and calls it, so a restored widget came back without its sky line and
+left the old flag behind. Fixed there, in the same shape as `forget`. Here `remap` is
+unreachable (no `onRestored`, and the product decision it waits on is recorded in
+`PLANNING.md`), so this file now differs between the two apps at that method — a
+divergence from a real difference between the apps, not a drift.
+
+**This entry is now a record, not a debt.** Carrying it was the third time one bug had to
+be fixed in both apps: the extraction trigger below fired on the position path on 5 set
+and is still waiting on a decision, not on another occurrence.
 
 ## When to extract
 

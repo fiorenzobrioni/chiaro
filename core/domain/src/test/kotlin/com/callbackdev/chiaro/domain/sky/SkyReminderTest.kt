@@ -5,6 +5,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -25,6 +26,49 @@ class SkyReminderTest {
         now: String,
         vararg jobs: Pair<SkyJob, SkyLead>
     ) = SkyReminderPlanner.next(jobs.toList(), at(now), rome, milan)
+
+    /**
+     * Fase 27. The dark window is the night minus the moon now, so it is `∅` for every
+     * night the moon is up from dusk to dawn — and those come in runs: measured over
+     * 2026, nine consecutive nights at Milan, eleven at Edinburgh. The planner has to
+     * walk out of one, or a subscribed reminder goes quiet for a week and a half.
+     *
+     * 26 June 2026 sits inside Milan's longest run of the year (it ends on 4 July), so
+     * the answer here is a night on the far side of it.
+     */
+    @Test
+    fun `a reminder walks out of a run of nights the moon owns`() {
+        val start = at("2026-06-26T12:00")
+        // The fixture has to be a run, or the test proves nothing.
+        repeat(5) { day ->
+            val date = java.time.LocalDate.of(2026, 6, 26).plusDays(day.toLong())
+            assertTrue(
+                "26 June + $day must be a moonlit night for this test to mean anything",
+                SkyScheduler.resolve(SkyJobCatalog.DarknessWindow, date, rome, milan)
+                    is SkyOccurrence.None
+            )
+        }
+        val reminder = SkyReminderPlanner.next(
+            listOf(SkyJobCatalog.DarknessWindow to SkyLead.THIRTY), start, rome, milan
+        )
+        assertNotNull("the run must not silence the reminder", reminder)
+        assertTrue(reminder!!.fireAt.isAfter(start))
+        // And it announces a night that really has a window.
+        assertTrue(
+            SkyScheduler.resolve(
+                SkyJobCatalog.DarknessWindow,
+                reminder.occurrenceAt.atZone(rome).toLocalDate(),
+                rome,
+                milan
+            ) is SkyOccurrence.At ||
+                SkyScheduler.resolve(
+                    SkyJobCatalog.DarknessWindow,
+                    reminder.occurrenceAt.atZone(rome).toLocalDate().minusDays(1),
+                    rome,
+                    milan
+                ) is SkyOccurrence.At
+        )
+    }
 
     // ------------------------------------------------------------- the leads
 

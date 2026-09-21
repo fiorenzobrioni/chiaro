@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The day's high, as a mark (committente, 19 set 2026: «le frecce su e giù ad indicare
+     massima e minima»). A drawing and not the character U+2191, for the reason the verdict
+     marks are drawings: an arrow the system font does not have is drawn by a fallback font,
+     in that font's hand, at that font's weight — measured on this device on 9 set, when a
+     ✗ came out calligraphic.
+
+     Same construction as `ic_verdict_pass`: one stroked path at 2.4 of 24, round caps and
+     joins, which is ~1.6 dp at the 16 dp the widgets show it at — the weight of the 16 sp
+     Medium figure it stands beside. The colour here is irrelevant: the caller tints it to
+     its own ink, always. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M12,19.5 L12,5.5 M5.5,12 L12,5.5 L18.5,12"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.4" />
+</vector>

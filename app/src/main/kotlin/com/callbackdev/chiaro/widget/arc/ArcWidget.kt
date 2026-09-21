@@ -50,6 +50,7 @@ import com.callbackdev.chiaro.widget.PlaceLine
 import com.callbackdev.chiaro.widget.StaleSp
 import com.callbackdev.chiaro.widget.WarningChipGap
 import com.callbackdev.chiaro.widget.WarningChipRow
+import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.widget.WidgetCard
 import com.callbackdev.chiaro.widget.WidgetCardPadding
 import com.callbackdev.chiaro.widget.WidgetData
@@ -135,7 +136,12 @@ class ArcWidget : GlanceAppWidget() {
                 contentPaddingStart = plan?.paddingHorizontal ?: WidgetCardPadding,
                 contentPaddingEnd = plan?.paddingHorizontal ?: WidgetCardPadding,
                 contentPaddingTop = plan?.paddingVertical ?: WidgetCardPadding,
-                contentPaddingBottom = plan?.paddingVertical ?: WidgetCardPadding
+                contentPaddingBottom = plan?.paddingVertical ?: WidgetCardPadding,
+                // The sun's path, the next light moment, the agenda and its verdicts:
+                // all of it is the Sky screen's material, so that is where a tap goes
+                // (21 set 2026). The week at the bottom of the tallest card is Today's,
+                // and it is the minority of one form, not what this card is about.
+                destination = ShellTab.SKY
             ) { palette ->
                 when {
                     content == null && city == null -> NoPlaceContent(palette)
@@ -344,9 +350,7 @@ private fun StackedStripContent(
                     Image(
                         provider = ImageProvider(
                             ArcText.rowIconRes(
-                                next.item.kind, next.at, model.iconStyle, palette.darkGround,
-                                model.settings.palette
-                            )
+                                next.item.kind, next.at, model.iconStyle, palette.darkGround)
                         ),
                         contentDescription = ArcText.heroLabel(context, next.item),
                         modifier = GlanceModifier.size(StripGlyph)
@@ -571,9 +575,7 @@ private fun Agenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, palette
                 Image(
                     provider = ImageProvider(
                         ArcText.rowIconRes(
-                            event.item.kind, event.at, model.iconStyle, palette.darkGround,
-                            model.settings.palette
-                        )
+                            event.item.kind, event.at, model.iconStyle, palette.darkGround)
                     ),
                     contentDescription = null, // the words beside it say it
                     modifier = GlanceModifier.size(AgendaGlyph)
@@ -663,7 +665,7 @@ private fun WeekStrip(
                     provider = ImageProvider(
                         ChiaroIcons.conditionRes(
                             day.forecast.condition.wmoCode, false,
-                            model.iconStyle, palette.darkGround, model.settings.palette
+                            model.iconStyle, palette.darkGround
                         )
                     ),
                     contentDescription = null,

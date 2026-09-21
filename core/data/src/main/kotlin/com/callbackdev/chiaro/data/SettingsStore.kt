@@ -37,6 +37,35 @@ enum class WeatherIcons { FILL, LINE }
 enum class AppPalette { PAPER, VIVID }
 
 /**
+ * Which typeface the app sets itself in (DESIGN §5), **GOOGLE_SANS by default**.
+ *
+ * Two of the three answers are **bundled**, so they are the same drawing on every phone:
+ * [INTER], which the type scale is measured against, and [GOOGLE_SANS], added 20 set
+ * 2026 (committente: «invece di avere un font di sistema che cambia di marca in marca
+ * forse meglio provare un font fisso oltre Inter»). Both ship as variable fonts inside
+ * the APK, so every weight is drawn rather than synthesised and a device with no font
+ * provider renders them too. [SYSTEM] is the other bargain: whatever sans the phone is
+ * wearing — Roboto on one, the OEM's own on another, and on the phones with a font
+ * picker the one the reader chose there.
+ *
+ * The question was opened by the widgets, which have no such choice (committente, same
+ * week: «mi piace il font usato dal widget… vorrei che anche l'app utilizzi questo
+ * font»). A home-screen card is drawn by `RemoteViews`, which has no font-family API for
+ * Glance to expose, so the five cards are always in the system's type — see
+ * `TextWidgetLayout`, which measures its temperature against Roboto Bold, and
+ * `ArcPainter`, which paints with `Typeface.DEFAULT`. The app and the cards can
+ * therefore only speak in one voice by moving the app, never by moving the cards.
+ * [SYSTEM] stays on offer as the closest that gets — closest, and not the same: a card's
+ * views are inflated by the LAUNCHER, in its process and under its theme, while this
+ * setting picks the default typeface inside the app's own. On a ROM where the two are
+ * different files, the card and the app read differently even with this switched on
+ * (device pass, 20 set 2026, where they visibly did).
+ *
+ * UI-only, like [ThemeMode] and [AppPalette]: no engine reads it.
+ */
+enum class AppFont { INTER, GOOGLE_SANS, SYSTEM }
+
+/**
  * Everything the Settings screen edits. The engine inputs ([units], [notifications],
  * the sky keys) are typed in `:core:domain`; the rest is presentation and stays here.
  */
@@ -75,6 +104,26 @@ data class AppSettings(
      * were chosen together and neither says much without the other.
      */
     val palette: AppPalette = AppPalette.VIVID,
+    /**
+     * The typeface (20 set 2026). **GOOGLE_SANS by default since the device pass of the
+     * same day** (committente, on the screenshots: «fai Google Sans il predefinito, va
+     * benissimo»), from [AppFont.INTER].
+     *
+     * The argument Inter had was that a default should be the face the layout was
+     * measured against — the dp columns of `TextScale.kt` are its widths. It loses to
+     * the one that decided every other default in this app: what the product looks like
+     * when somebody opens it. Google Sans is bundled too, so it is the same drawing on
+     * every phone, it carries `tnum` (checked on the file, `FontAssetTest`), and its
+     * rounder figures are what the reader saw and kept. Inter stays one tap away and
+     * stays the fallback the scale was built on, so the measurement is not lost, only
+     * demoted; what to watch is in DESIGN §5.
+     *
+     * [AppFont.SYSTEM] is the loose one: a different font per phone, missing weights
+     * synthesised, tabular figures that may silently not exist — and not even a
+     * guaranteed match with the home-screen cards, which are drawn by the launcher and
+     * not by this app.
+     */
+    val font: AppFont = AppFont.GOOGLE_SANS,
     /** LINE by default (decision, 6 set 2026 — the default moves, the choice stays).
      * The outlined drawings keep one weight of ink on a screen whose hero is already a
      * painted sky, and at the sizes Today now uses (§13.1's ladder, 30-38dp) they read
@@ -134,7 +183,8 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 ),
                 notifications = NotificationSettings(
                     severeWeatherAlerts = prefs[SevereAlerts] ?: true,
-                    dailySummary = prefs[DailySummary] ?: false,
+                    dailySummary = prefs[DailySummary] ?: true,
+                    eveningSummary = prefs[EveningSummary] ?: true,
                     precipitationWarning = prefs[PrecipWarning] ?: true,
                     userRules = prefs[UserRules] ?: true,
                     officialWarnings = prefs[OfficialWarnings] ?: true,
@@ -143,6 +193,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 themeMode = enumOrDefault(prefs[Theme], ThemeMode.SYSTEM),
                 dynamicColor = prefs[DynamicColor] ?: false,
                 palette = enumOrDefault(prefs[Palette], AppPalette.VIVID),
+                font = enumOrDefault(prefs[FontChoice], AppFont.GOOGLE_SANS),
                 weatherIcons = enumOrDefault(prefs[IconStyle], WeatherIcons.LINE),
                 animatedIcons = prefs[AnimatedIcons] ?: true,
                 skyEnabled = prefs[SkyEnabled] ?: true,
@@ -162,6 +213,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setWindSpeedUnit(unit: WindSpeedUnit) = set(WindSpeed, unit.name)
     suspend fun setSevereWeatherAlerts(enabled: Boolean) = set(SevereAlerts, enabled)
     suspend fun setDailySummary(enabled: Boolean) = set(DailySummary, enabled)
+    suspend fun setEveningSummary(enabled: Boolean) = set(EveningSummary, enabled)
     suspend fun setPrecipitationWarning(enabled: Boolean) = set(PrecipWarning, enabled)
     suspend fun setUserRules(enabled: Boolean) = set(UserRules, enabled)
     suspend fun setOfficialWarnings(enabled: Boolean) = set(OfficialWarnings, enabled)
@@ -169,6 +221,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setThemeMode(mode: ThemeMode) = set(Theme, mode.name)
     suspend fun setDynamicColor(enabled: Boolean) = set(DynamicColor, enabled)
     suspend fun setPalette(palette: AppPalette) = set(Palette, palette.name)
+    suspend fun setFont(font: AppFont) = set(FontChoice, font.name)
     suspend fun setWeatherIcons(style: WeatherIcons) = set(IconStyle, style.name)
     suspend fun setAnimatedIcons(enabled: Boolean) = set(AnimatedIcons, enabled)
     suspend fun setSkyEnabled(enabled: Boolean) = set(SkyEnabled, enabled)
@@ -201,6 +254,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
         private val WindSpeed = stringPreferencesKey("units_wind_speed")
         private val SevereAlerts = booleanPreferencesKey("notif_severe_alerts")
         private val DailySummary = booleanPreferencesKey("notif_daily_summary")
+        private val EveningSummary = booleanPreferencesKey("notif_evening_summary")
         private val PrecipWarning = booleanPreferencesKey("notif_precip_warning")
         private val UserRules = booleanPreferencesKey("notif_user_rules")
         private val OfficialWarnings = booleanPreferencesKey("notif_official_warnings")
@@ -208,6 +262,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
         private val Theme = stringPreferencesKey("appearance_theme_mode")
         private val DynamicColor = booleanPreferencesKey("appearance_dynamic_color")
         private val Palette = stringPreferencesKey("appearance_palette")
+        private val FontChoice = stringPreferencesKey("appearance_font")
         private val IconStyle = stringPreferencesKey("appearance_weather_icons")
         private val AnimatedIcons = booleanPreferencesKey("appearance_animated_icons")
         private val SkyEnabled = booleanPreferencesKey("sky_enabled")

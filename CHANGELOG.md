@@ -11,10 +11,119 @@ as the body of the GitHub Release, so a version's entry is written **before** it
 
 Nothing released yet. The engines are in and verified, the design system is code, and
 the everyday surface — Today, places, first run, settings, the guide, the Sky screen
-with its reminders, the alerts, the Journal, the home widgets — is built. See `PLANNING.md` for where the work actually is.
+with its reminders, the alerts, the Journal, the five home widgets — is built. See `PLANNING.md` for where the work actually is.
 
 ### Added
 
+- **The evening summary** (Alerts → Ready-made, off by default), the twin of the morning one.
+  Once a day between 18:00 and 23:00, and its subject is **tomorrow**: by eight in the evening
+  today is no longer a decision, and the alarm, the coat by the door and the umbrella are.
+  Collapsed it is the same sentence its morning twin says, under a title that reads «Domani»
+  instead of «Oggi» — the day is stated once, where it belongs. Opened, it carries what the
+  collapsed line has no room for and what nothing else in the app tells you at that hour: how
+  cold the night gets and when, with what that asks of you (ice on the glass, a coat, a window
+  that can stay open); whether water falls on it; tomorrow's rain as a window with its peak, on
+  the same 70% bar the rain warning fires at; tomorrow's sunrise and sunset **with the change in
+  daylight against today**, which is the line this app exists to print; and tomorrow's peak UV
+  once it asks for anything. Every one of those lines is drawn only when it has its data, and it
+  does not fire at all when the report has no tomorrow left in it. It is deliberately one alert
+  and not two: the night and tomorrow are one decision taken at one moment, and two notifications
+  in the same hour is the noise every other rule in this app is written to avoid.
+- **The typeface is a choice now** (Settings → Appearance → Typeface), with three answers.
+  **Google Sans is the new default**: the open-licensed upstream font, bundled like Inter and
+  so the same drawing on every phone, cut down to the letters this app prints, which is 307KB
+  in the app against 5MB at the source. **Inter** is one tap away and stays the face the type
+  scale was measured against. The third answer is the phone's own font, which is the closest
+  the app gets to the home-screen widgets — closest, not identical: a widget is drawn by the
+  launcher rather than by the app, so on a phone whose system interface runs a different face
+  from the one apps get, the two still differ. The choice swaps the family under all seventeen
+  type roles and moves nothing else, not one size, weight or line height, and the credits name
+  both bundled fonts, always, then say which one is on the screen. Worth knowing before
+  picking the phone's font: a weight the device does not carry is synthesised rather than
+  drawn, and a font with no tabular figures quietly ignores the request for them, so columns
+  of numbers can stop lining up. Both bundled fonts were checked for tabular figures on the
+  files themselves.
+- **The weather icon on the text widget, as a switch on the card** (off by default). It is
+  not a section the card makes room for: all four of that widget's layout plans are computed
+  without it, and the glyph is then drawn only into space they already leave empty — so
+  turning it on costs no line of sentence, no warning's word, no high-and-low and no dp of
+  number, and where there is no such space there is no drawing. Two slots, one per kind of
+  air: beside the number, in the rest of its own line (which is air because a temperature is
+  at most 2.1 ems wide, measured against «−12°» and never against the number being printed),
+  and on the two-row four-cell panel over the words, in the band that form keeps empty by
+  pinning its eyebrow to the top and its block to the bottom. That works out to 52 dp on the
+  reference four-cell row, 58 on the taller row one launcher grants, 71 on the panel and 104
+  on a three-row card; three cells on one row and two cells on two stay words, which is the
+  width those forms already spend on the sentence. The glyph meets the card at a glyph's
+  4 dp edge rather than the words' 14, and each text that reached that edge pays the 10 dp
+  back, so every line still wraps against exactly the width it wrapped against before.
+  Turning it on also brings back the icon-family choice for that card, and the drawing takes
+  the condition's own word for a screen reader when the sentence is off and nothing else
+  names the sky.
+- **A card colour for every widget.** Beside the computed sky, light, dark and follow-the-
+  system, a widget's card can now be one of six colours: blue, light blue, green, sea
+  green, violet, terracotta. It is the one place in this product where colour is offered as
+  colour rather than as meaning, and it ships with no new inks — each colour is picked dark
+  enough to carry the white pair the sky card already writes with, measured at no worse
+  than 7.9:1 for the ink, 5.2:1 for the quiet one and 6.2:1 for the freshness one, so even
+  the 11 sp lines clear what small text needs. No two of the six are closer than 13 ΔE, so
+  picking one over another is picking a colour and not a word. The two configuration
+  screens now print the same background section from one place rather than from two copies
+  of the same list, and the colour rows carry a swatch behind their name.
+- **A fifth home widget, «In parole» / "In words"**: the Now widget's facts with nothing
+  drawn on the card. No weather glyph, no position pin, no warning chip, no verdict mark —
+  words and figures, and the whole hierarchy built out of type. It is not the Now widget
+  with the icon deleted: a card that loses its drawing loses the thing that made it
+  readable across a room, so the temperature becomes the drawing — Bold where the
+  household writes Medium, and grown into the grant the way the other four grow their
+  glyph, from 30 sp on a squeezed row to 56 on a tall card — with the place two ranks under
+  it as the card's eyebrow, the day's sentence at its shoulder, and the official warning
+  and the day's high and low as facts under that. Four ranks that differ by size AND weight
+  AND ink, never by one of the three on its own.
+
+  Four cells by one is the default placement and it resizes both ways from there. Three
+  cells already carry the sentence, one cell better than the Now card manages, for an
+  arithmetic reason: the 66 dp of glyph and its gap that card spends before its first
+  letter, this one does not have. Two cells fall back to the number and its place. Two rows
+  and up become one centred column with the next hours printed as figures where the height
+  holds them, and the order the budget spends in is the hierarchy written down: the number
+  is reserved first, the footnotes are bought last, and a section that does not fit is not
+  drawn. The two things a drawing used to say now say themselves in words: the phone's own
+  position, which was the pin, and the warning's level, which was a chip. The chip is the
+  device that carries its own measured ground — a bare coloured word on a scrimmed sky or
+  somebody's wallpaper was measured unreadable on the Sky card back on 4 set — and a card
+  with nothing drawn on it cannot bring one, so it gives up the colour rather than the
+  legibility and prints the level as a word in the card's own ink. DESIGN §2.3 makes the
+  word the carrier anyway.
+
+  Everything else is the household's: the same `WidgetData` model, the same brief sentence
+  Today and Now print, the same `warningSlot` table, the same per-widget place, background,
+  opacity and content switches (minus the icon family, which would change nothing here).
+  Its budget is pure arithmetic on dp and sp with a table pinning it, like the other four.
+
+  Redrawn twice the same day on a device. The second pass took the hourly temperatures off
+  the tall card for good — they read as a second widget stapled under the first, and the
+  card that exists for the hours is the Today widget — and gave the height back to the
+  composition: the place is pinned to the top of the card as its eyebrow and everything else
+  to the bottom, with the air between them. From four cells up a two-row card becomes a
+  panel: the number on the leading side at 64 sp, which it can afford because it stands
+  BESIDE the words rather than under them, and the sentence and the day's high and low
+  right-aligned against the far edge, bottom-aligned with it. The one-row card's leading
+  column stopped being a share of the row and became what the place name actually needs
+  (168 dp against the sentence's 104 minimum), so «Cavenago di Brianza» is printed whole
+  where it used to be «Cavenago di Bri…» beside a column with 174 dp of white space in it.
+  Its picker description stopped promising the hourly temperatures, which went in the same
+  pass.
+
+  The first pass: the place and the facts moved up to the household's
+  16 sp and the sentence to 18, so the ranks still sort by size as well as by weight and
+  ink; the position pin came back in front of a place the phone is standing in, where the
+  first pass spelled it out in words and the words ate the place name («Ornago · la mia
+  posizi…»); and the day's high and low each got a mark drawn at the verdict marks' weight
+  rather than sharing a slash. A mark at the size of its own line, in that line's ink, is
+  punctuation, and the card still carries no picture. The hero's floor dropped from 30 sp
+  to 26 to pay for the bigger place line, which is what keeps a stale one-row card from
+  clipping instead of shrinking.
 - **Official warnings from the Protezione Civile** (Fase 11), for places in Italy. The
   Dipartimento's criticality bulletin is discovered from its own files, read from its CAP,
   and matched to a place by geometry: the 187 warning zones ship inside the app as
@@ -291,6 +400,143 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
 
 ### Changed
 
+- **Four defaults moved, on a fresh install from the device.** The **morning summary** and the
+  **evening summary** now ship **on**: they used to start silent on the argument that a digest
+  nobody asked for is the one notification a weather app gets uninstalled over, which is the
+  right argument about a digest and the wrong one about these two — a sentence before any
+  number, said at the hour the day is still a decision, is what this app is for, and an install
+  that never opened Alerts was getting the warnings and none of the reading. One notification
+  each, at fixed hours, off in two taps. Every widget is now **a blue card** where it was the
+  computed sky: the sky is still the app's own hero and one row away, but it is a photograph of
+  the weather behind a card of facts, and on a busy wallpaper the two grounds argue — which is
+  what the scrim and the opacity slider exist to manage, and a default should not need managing.
+  And **"In parole" starts with the day's high and low**, alone among the five: it is the card
+  with no drawing to protect, its hierarchy is built out of type in ranks of facts, and that
+  rank is already designed.
+
+- **A tapped notification opens the screen it is about**, by the same rule the widgets follow.
+  A sky reminder lands on **Cielo**, where the moment's row, its bell and the verdict with the
+  number that decided it are. A fired rule and an official warning land on **Avvisi**: the rule
+  card with the hour it last fired, and the warning card that opens the sheet with the grid of
+  hazards by day, what the level means and the attribution — Oggi carries a banner too, but only
+  from yellow up and only while the bulletin is live, and says nothing at all about a zone that
+  is green. The four built-in alerts — severe weather, rain in the next hours and both summaries
+  — land on **Oggi**, because they are the weather itself: its hours, its rain, its sentence.
+  Avvisi is where the switch that sent them lives, which is not what the reader who tapped
+  "Pioggia alle 17" came for.
+
+- **"Momenti del cielo" and "L'arco del giorno" open the Sky screen** (asked for from the
+  device). Everything those two cards draw is the Sky screen's own material — the moments,
+  their verdicts, the next light moment, the agenda that follows — and landing on Today
+  asked the reader to go and find again what they had just read on the home screen. The
+  other three cards open the app as they always did, wherever it was left. A tap on a
+  running app moves the tab rather than restarting the app, and takes any open Settings or
+  guide page down with it: landing on Sky underneath one would be answering the tap and
+  hiding the answer.
+
+- **The place name on the wide "Colpo d'occhio" card takes the room the sentence is not
+  using.** The row split its slack in half between the number-and-place column and the
+  sentence, because Glance cannot measure text — so a four-cell card printed «Cavenago di
+  Bri…» in 118dp next to a column holding «Sereno», which is 47dp of ink in 118dp of room.
+  Both blocks are measured now, with a `Paint` in the app's process at the size, weight and
+  face the launcher will draw them in, and the boundary falls where they ask for it: the
+  sentence keeps its measured width capped at the even share, so a long sentence is never
+  squeezed and the card falls back to exactly the layout it has today; the words then take
+  what the name needs, never past what the sentence kept and never below what the temperature
+  needs. Nothing ever comes out narrower than before, so no card loses room it has — the only
+  space that moves is space one column was holding empty. A warning chip turns the measuring
+  off and restores the even share: a chip cannot wrap or ellipsise. The mirrored arrangement
+  (glyph on the trailing side) is untouched, since there the words already have the whole row.
+  **"Le prossime ore" shares the rule**, on the one arithmetic both cards now call: what its
+  trailing column asks to keep is the widest of what it carries, because one of that column's
+  tenants — the day's high and low — cannot wrap, and a range given less than it measures is a
+  range with a digit cut off its end.
+
+- **The hero temperature is Bold on every card whose hero it is.** The Now and Today widgets
+  printed theirs at 34sp Medium, which is the weight everything else on those cards is set in —
+  the sentence, the place, the day's high and low — so beside the text widget's Bold hero the
+  number read as one more fact rather than as the thing the card exists for. It is a household
+  rule now and it names the hero, not the quantity: the arc card keeps its Medium, because
+  there the hero is the drawing and the number is one line of the strip beside it, and the
+  Today strip's own hours stay Regular because seven bold figures under a bold hero is two
+  heroes. The picker previews carry the same weight, since a preview that advertises a
+  different one is advertising a product that does not exist. Re-measured where it mattered:
+  Bold costs +2.3% of Medium's advance in Google Sans and +2.0% in Inter over «−12°», about
+  1.5dp at 34sp, which the Now card's 66dp number column absorbs with 3dp to spare.
+
+- **The day's low is the same size as the day's high, and now it is also drawn that way.**
+  Two things were wrong and only one of them was visible as a decision. The low figure was
+  set in Regular on the quiet ink while the high was Medium on the strong one, which on a
+  home screen does not read as "this one is secondary" but as a smaller number; where the
+  marks are drawn (the text widget, which has the column for them) both halves are now set
+  alike, because ↑ and ↓ already say which is which and the dimming was saying it a second
+  time. Where the slash is drawn instead (the Today widget, whose column will not take the
+  marks) nothing changes: with no mark to carry the distinction, the ink stays the thing
+  that sorts the pair.
+
+  The other thing was **the mark itself, and it was a bug**: Glance's `padding` is
+  `setViewPadding` on the same view the size lands on, and an `Image` scales its drawing to
+  fit what the padding leaves. The mark asked for a 16dp box with 8dp of leading air and
+  2 of trailing and got a **6dp arrow**, next to a high mark that had only the 2 to pay and
+  drew at 14 — 43% of the ink at the same nominal size. The air is on a wrapper now, which
+  is what `PlaceLine`'s pin and the warning chip's own gap already did, and what
+  `WidgetGlyphBoxTest` holds for every drawing in the widgets from here on.
+
+- **The severe and rain warnings are whole sentences again.** The storm alert was built as a
+  stem plus an optional «, pioggia al 90%» fragment, which cost it the full stop every other
+  built-in alert ends with and fixed the clause order in English for every language that
+  translates it. Both are now one complete sentence per shape, and an alert with no hour or no
+  forecast chance picks a sentence that needs neither: the old code printed «Temporale verso
+  le» and «pioggia al 0%», a broken sentence and an invented zero, in the one place the reader
+  cannot check either. Unreachable today, because the engine anchors both alerts on an hour it
+  has actually read, and now unreachable in the text too.
+
+- **Italian no longer puts an article where a number may force it to elide.** «al 70%» is
+  right and «al 80%» is not, because eighty is *ottanta*: inside 0 to 100 the vowel-initial
+  numbers are 1, 8, 11 and 80 to 89, so eighteen sentences across the notifications, the Sky
+  screen and the Journal were right nine times out of ten and quietly wrong the tenth. They
+  are now written so no article touches the value: «pioggia 80%», the form this app's own
+  morning summary has used since the day it shipped; «fino a 80%» and «coperto per 80%», with
+  the bare prepositions that never elide; and «bollettino del giorno 8 set 2026» for the dates,
+  where the article was given a word to agree with instead of a number. No helper and no
+  locale-specific branch: a rule about Italian belongs in the Italian file, and what remains of
+  it lives in a test that fails the build if an article comes back.
+
+- **The current temperature is bold**, and tracked in with it. At 64sp a hairline figure laid
+  over a painted sky reads as ornament rather than as the reading the whole screen is for,
+  and the home-screen card has printed the same number bold since the day it shipped. The
+  tighter letter spacing is half of the change: at that size the default spacing is drawn for
+  a paragraph, and without it bold reads as shouting. The smaller readings in the metric
+  tiles are untouched — at their size the old argument still holds.
+
+- **Today's place row no longer scrolls away.** The city these numbers belong to used to be
+  the first thing to leave the screen: the row sat inside the sky canvas, which is the first
+  item of the scroll. It is pinned now, the way Sky, Alerts and the Journal already kept
+  their own header, and it is the one bar in the app with two grounds — white over the
+  canvas' scrim while the page is at rest, the page's own surface and theme ink from the
+  first scrolled pixel, with the status-bar icons following the same flip because that bar is
+  what is behind them. The canvas keeps the row's seat with a spacer as tall as the bar
+  really is, so the hero lands exactly where it did before and the skeleton still matches.
+
+- **«Quasi sereno» has a drawing of its own, and the app composes it.** WMO code 1 is a
+  quarter-covered sky — a median 25% of cloud against code 2's 64%, measured on 1 680
+  hours — and it had been drawn twice wrong: first as «poco nuvoloso», then, since the
+  drawing Meteocons offers for it carries 72% of that cloud, as the plain sun. The plain
+  sun is honest where there are words and mute where there are none, and the hour strip
+  and the week row have none: one hour in six showed a clear sky over a quarter-covered
+  one. It now takes a drawing this repo composes from two the family already has —
+  `clear-day` untouched, same size and same place, plus `cloudy`'s silhouette shrunk into
+  the bottom-right corner and cut out of the sun by the mask «poco nuvoloso» already
+  carries. Between «sereno» and «quasi sereno» exactly one thing changes now, and it is
+  the thing that changes in the sky. Measured: the cloud is 43.1 units of the 128-unit box
+  against «poco nuvoloso»'s 99.2, the air between cloud and rays is 1.80 to 2.45 against
+  Meteocons' own 2.48, and the cloud is re-stroked at the family's 4 units rather than
+  shrunk to a 2.0 wisp beside a 3.7 sun. The night keeps the same cloud in the same place,
+  with `clear-night`'s moon in front of it. Nothing is hand-drawn: `tools/compose_sun_cloud.py`
+  writes all sixteen files (four faces, day and night, and their animated twins, where the
+  rays turn and the cloud bobs), and a test compares the result with its sources path by
+  path so a later re-import cannot leave it behind.
+
 - **The Vivid sky is now vivid at night too.** The vivid band table takes its chroma to
   ×1.8 of the paper one, which is the right rule for a token and the wrong one for a
   sky: paper draws the night with the least chroma of any band, so a multiplier handed
@@ -479,6 +725,45 @@ with its reminders, the alerts, the Journal, the home widgets — is built. See 
   the language it was written in.
 
 ### Fixed
+
+- **Two copies of the app, and a settings screen that came back from under it.** Android
+  identifies a task by the intent that created it, and this app was entered through three
+  hand-rolled intents — the widgets', the notifications', and the launcher's. So opening it
+  from a widget and then from the home-screen icon built a *second* task: two home screens,
+  one behind the other, and back came out onto the first. Every door in is now one intent and
+  it is the launcher's own, with the destination riding as an extra where it changes nothing
+  about which task this is; the activity is `singleTask`, which is what the app already was —
+  one screen, with Settings and the guide as state inside it. The widget settings screens had
+  the same illness from the other side: with the app's own task affinity they sat *in* the
+  app's task, so closing one with a swipe to home left it there and the next launch put the
+  home screen on top of it. They now have no affinity at all and do not outlive being swiped
+  away — nothing is lost, because every choice there is written the moment it is tapped. The
+  same fix is expected to settle the closing animation drawing opaque rounded corners after a
+  back gesture, which happened only when the app had been opened from a widget: that is the
+  generic task-close animation, which the system plays for a task the launcher does not
+  recognise as one of its icons.
+
+- **The alerts that could never ring.** Four ready-made alerts ship switched on — severe
+  weather, rain in the next hours, official warnings and your own rules — and Android's
+  notification permission was only ever asked by the act of switching one on, which a
+  fresh install never does. So the switches said yes, the phone said nothing, and the
+  only road to the permission dialog was to turn an alert off and on again. Two repairs,
+  and it takes both. **First run asks, once**, on a step of its own after the place has
+  been answered: a notification is a promise about a place, and there is no place on the
+  screen before it. It is a screen of words with an explicit "Allow" and a "Not now" that
+  costs nothing, never the system dialog on arrival — Android shows that dialog at most
+  twice per install and then does nothing at all, so it is spent on a tap that asked for
+  it. Skipping the place skips this with it, and an upgrade is never stopped by it.
+  **And Alerts says so in place**, in a card above the list, for as long as something is
+  switched on that the phone will not deliver — with the one button that fixes it, which
+  names the door it opens: the permission dialog where the system will still show one,
+  this app's page in the system notification settings where it will not (the other dead
+  end: permission held, notifications switched off in Settings, where asking again
+  returns "granted" and draws nothing). Unlike the dialog the card can be offered again
+  every time, and it goes away by itself the moment the permission arrives. The Sky
+  screen carries the same card once a reminder is really armed. With every switch off
+  neither screen draws anything: there is no promise to break, and a card that scolds you
+  about a permission you need for nothing is inventing a problem.
 
 - **The palette note promised icons it does not always change.** "Vivid is cool white and
   azure, with brighter weather icons" was shown to every reader, but the dress only

@@ -91,6 +91,21 @@ class WidgetCityStoreTest {
     }
 
     @Test
+    fun `forget takes the sky line with the widget`() = runBlocking {
+        // The sky flag arrived after `forget` was written (Fase 16e) and was not added
+        // to it, so every removed widget left one behind — and a new widget handed that
+        // id inherited a line nobody asked for.
+        val store = store()
+        store.pin(1, turinId)
+        store.setSkyLine(1, enabled = true)
+        store.setSkyLine(2, enabled = true)
+
+        store.forget(intArrayOf(1))
+
+        assertEquals(setOf(2), store.currentSkyLine())
+    }
+
+    @Test
     fun `the pinned flow reports the map after a pin`() = runBlocking {
         // The updater observes `pinned` rather than polling, so the edit must reach the flow
         val store = store()

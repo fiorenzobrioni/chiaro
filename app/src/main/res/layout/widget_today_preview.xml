@@ -4,8 +4,9 @@
      dress baked in, nothing here reads a forecast — and the same insets the widget
      writes: 4dp before the glyph, 6 above it, 14 at the words' edge and under the strip.
      The hero row is the wide one-row form: glyph at ~76dp (what a two-row grant leaves
-     once the strip is paid), the temperature over the place, and the day's sentence
-     against the far edge. -->
+     once the strip is paid), the temperature over the place — bold since 20 set 2026,
+     like the Now card's and the text card's — and the day's sentence against the far
+     edge. The strip's own figures stay regular, as they do on the card. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -28,7 +29,7 @@
             android:layout_width="76dp"
             android:layout_height="76dp"
             android:importantForAccessibility="no"
-            android:src="@drawable/mcn_partly_cloudy_day" />
+            android:src="@drawable/mc3n_partly_cloudy_day" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -41,11 +42,11 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
                 android:includeFontPadding="false"
                 android:text="25°"
                 android:textColor="@color/widget_preview_ink"
-                android:textSize="34sp" />
+                android:textSize="34sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -106,7 +107,7 @@
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mcn_partly_cloudy_day" />
+                android:src="@drawable/mc3n_partly_cloudy_day" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"
@@ -133,7 +134,7 @@
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mcn_partly_cloudy_day" />
+                android:src="@drawable/mc3n_partly_cloudy_day" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"
@@ -160,7 +161,7 @@
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mcn_cloudy" />
+                android:src="@drawable/mc3n_cloudy" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"
@@ -187,7 +188,7 @@
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mcn_partly_cloudy_day_rain" />
+                android:src="@drawable/mc3n_partly_cloudy_day_rain" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"
@@ -214,7 +215,7 @@
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mcn_rain" />
+                android:src="@drawable/mc3n_overcast_rain" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"

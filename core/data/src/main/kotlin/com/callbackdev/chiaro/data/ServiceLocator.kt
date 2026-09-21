@@ -6,8 +6,10 @@ import androidx.room.Room
 import com.callbackdev.chiaro.core.data.BuildConfig
 import com.callbackdev.chiaro.data.local.ReportDiskCache
 import com.callbackdev.chiaro.data.local.ChiaroDatabase
+import com.callbackdev.chiaro.data.local.StoredDataSweep
 import com.callbackdev.chiaro.data.local.WarningRecordDao
 import java.io.File
+import java.time.Duration
 import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoGeocodingApi
@@ -17,6 +19,7 @@ import com.callbackdev.chiaro.data.warnings.OfficialWarningStore
 import com.callbackdev.chiaro.data.warnings.WarningSource
 import com.callbackdev.chiaro.data.warnings.WarningZoneAssets
 import com.callbackdev.chiaro.domain.warnings.WarningZoneIndex
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -291,6 +294,16 @@ object ServiceLocator {
     private fun okHttp(): OkHttpClient =
         okHttp ?: synchronized(this) {
             okHttp ?: OkHttpClient.Builder()
+                // OkHttp's defaults bound each PHASE — 10s to connect, 10s between
+                // bytes — and nothing bounds the call. A connection that dribbles a
+                // byte before every read timeout never trips one, which on a screen
+                // the reader just opened is a refresh that never resolves and in
+                // `WeatherSyncWorker` is a worker held open on somebody's battery.
+                // Thirty seconds is past the worst honest case (connect plus a slow
+                // read of a 10 KB response) and well inside what the app can absorb:
+                // every caller already falls back to the cached report, and a pull to
+                // refresh is one gesture away.
+                .callTimeout(Duration.ofSeconds(30))
                 .addInterceptor { chain ->
                     chain.proceed(
                         chain.request().newBuilder()
@@ -331,6 +344,13 @@ object ServiceLocator {
             .build()
 
         val database = database(appContext)
+        // Survives process death so cold starts inside the TTL cost zero GETs
+        val diskCache = ReportDiskCache(File(appContext.filesDir, "report_cache"), json)
+        val sweep = StoredDataSweep(
+            historyDao = database.weatherHistoryDao(),
+            warningRecordDao = warningRecordDao(appContext),
+            diskCache = diskCache
+        )
 
         return WeatherRepository(
             forecastApi = retrofit(OpenMeteoForecastApi.BASE_URL)
@@ -340,12 +360,30 @@ object ServiceLocator {
             geocodingApi = retrofit(OpenMeteoGeocodingApi.BASE_URL)
                 .create(OpenMeteoGeocodingApi::class.java),
             historyDao = database.weatherHistoryDao(),
-            // Survives process death so cold starts inside the TTL cost zero GETs
-            diskCache = ReportDiskCache(File(appContext.filesDir, "report_cache"), json),
+            diskCache = diskCache,
             json = json,
             // Every fetch that commits new data notifies whoever installed us — the
             // widget repaint, in the app. The data layer does not know that.
-            onHistoryCommitted = { historyListener() }
+            onHistoryCommitted = { historyListener() },
+            // ...and the same commit is where the storage tidies up after itself. The
+            // live set is read here and not inside the sweep because the sweep is in
+            // `local/` and has no business knowing about the saved-places store.
+            onHousekeeping = { sweep.run(liveCityKeys(appContext)) }
         )
+    }
+
+    /**
+     * Every `City.cacheKey` the app still has a use for: the saved places and, when
+     * there is one, the current GPS fix. Widget pins resolve city ids against that
+     * same saved list (or the GPS sentinel), so they add nothing here — and the GPS
+     * cells the reader drove through yesterday are deliberately NOT in it, which is
+     * the whole point of [StoredDataSweep].
+     */
+    private suspend fun liveCityKeys(appContext: Context): Set<String> {
+        val store = cityStore(appContext)
+        return buildSet {
+            store.cities.first().forEach { add(it.cacheKey) }
+            store.locationSettings.first().gpsCity?.let { add(it.cacheKey) }
+        }
     }
 }

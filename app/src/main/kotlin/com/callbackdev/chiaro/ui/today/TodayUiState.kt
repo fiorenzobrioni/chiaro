@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.ui.today
 
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.WeatherRecency
+import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.HourlyForecast
@@ -147,8 +148,7 @@ object TodayStateBuilder {
         error: TodayError?,
         warnings: PlaceWarnings? = null
     ): TodayUiState {
-        val zone = runCatching { ZoneId.of(report.location.timezone) }
-            .getOrDefault(ZoneId.systemDefault())
+        val zone = placeZone(report, city)
         if (!WeatherRecency.coversNow(report, now)) {
             return TodayUiState.Empty(city, userRefreshing, error)
         }
@@ -249,7 +249,7 @@ object TodayStateBuilder {
         // (rain likely, sky not shut) at the same time. A possibility, printed with the
         // number it rests on — never a promise (RainbowWindow's own rule).
         com.callbackdev.chiaro.domain.sky.RainbowWindow
-            .windows(report.hourly, zone, coords)
+            .windows(report.hourly, coords)
             .forEach { rainbow ->
                 items += TimelineItem(
                     at = LocalDateTime.ofInstant(rainbow.start, zone),
@@ -288,7 +288,10 @@ object TodayStateBuilder {
         coords: com.callbackdev.chiaro.domain.model.Coordinates
     ): StripHour = StripHour(
         hour = hour,
-        night = AstronomyEngine.sunAltitude(hour.time.atZone(zone).toInstant(), coords) < 0.0
+        // The hour's own instant, not its label put back through the zone: on the day
+        // a zone falls back the label is ambiguous and `atZone` has to pick one of the
+        // two offsets, which is a guess the mapper already answered exactly.
+        night = AstronomyEngine.sunAltitude(hour.at, coords) < 0.0
     )
 
     /** The week's rows, each with its light and its hours for the tap-to-expand. */

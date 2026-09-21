@@ -113,8 +113,11 @@ object HeadlineEngine {
     private val FOG_CODES = setOf(45, 48)
 
     /** Under half, the sky has stopped promising rain: the "clear after that" bar, and
-     * — read the other way — the floor of "rain possible". */
-    private const val CLEAR_BELOW_PCT = 50
+     * — read the other way — the floor of "rain possible". Internal since the evening
+     * summary reads it too (21 set 2026): the app holds two bars for rain, the umbrella
+     * one and this one, and a notification inventing a third would be a third opinion
+     * on the same sky. */
+    internal const val CLEAR_BELOW_PCT = 50
 
     /** How far past its trigger a sentence keeps looking for the turn it promises. */
     private const val TURN_LOOKAHEAD_HOURS = 12L

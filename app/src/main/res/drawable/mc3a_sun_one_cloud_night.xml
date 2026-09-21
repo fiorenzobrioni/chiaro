@@ -1,0 +1,103 @@
+<!-- Composto da tools/compose_sun_cloud.py dai disegni gia' importati di
+     Meteocons v3 (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Il sole e' clear-night alla sua scala, la nuvola
+     e' cloudy al 48.88% ri-tracciata. Non modificare a mano: ri-eseguire lo
+     strumento E' la composizione. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <group android:name="g1maskmove">
+                <clip-path android:pathData="M128,0 L0,0 L0,128 L128,128 Z M78.7683,111.17 C74.3085,111.171,67.9695,105.4536,67.5472,100.9835 C67.1806,97.1059,69.9402,91.8226,73.4204,90.3929 C73.5412,87.8233,75.5052,84.7624,77.6696,83.2916 C79.8237,81.8277,83.2897,81.1454,85.7142,81.948 C88.9085,78.2204,95.9366,76.9684,100.5528,78.8991 C105.0126,80.7649,108.826,86.1121,108.6124,90.829 C112.2198,91.7084,115.501,96.466,115.501,100.3793 C115.501,104.9373,109.2078,111.17,104.6854,111.17 L78.7677,111.17"/>
+                <group android:name="g2maskhold">
+                    <group android:name="g3sun" android:scaleX="1.38" android:scaleY="1.38" android:pivotX="64" android:pivotY="64">
+                        <group android:name="g4moon" android:pivotX="63.6" android:pivotY="64.2">
+                            <path android:pathData="M58.4,34.416 C54.92,55.226,72.526,74.453,93.223,74.12 C88.98,85.698,77.763,94,64.536,94 C47.646,94,34,80.497,34,63.898 C34,49.368,44.46,37.218,58.4,34.416"
+                          android:strokeColor="#327b95"
+                          android:strokeWidth="4"
+                          android:strokeLineCap="round"
+                          android:strokeLineJoin="round"/>
+                        </group>
+                    </group>
+                </group>
+            </group>
+            <group android:name="g5cloud">
+                <group android:name="g6cloudplace" android:scaleX="0.4888" android:scaleY="0.4888" android:translateX="27.5" android:translateY="30.5" android:pivotX="64" android:pivotY="64">
+                    <path android:pathData="M90.389,63.086 C92.684,53.882,87.741,44.136,79.009,40.482 C70.265,36.824,59.828,40.138,54.837,48.212 C50.537,45.625,44.975,45.778,40.824,48.599 C36.684,51.413,34.5,56.514,35.35,61.454 C28.393,62.769,23.393,69.339,24.061,76.408 C24.729,83.477,30.871,89.002,37.953,89 L90.977,89 C98.045,89,104,83.119,104,76.028 C104,68.701,97.677,62.768,90.389,63.086"
+                  android:strokeColor="#88909c"
+                  android:strokeWidth="8.1833"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"/>
+                </group>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="g4moon">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="rotation">
+                <propertyValuesHolder android:propertyName="rotation">
+                    <keyframe android:fraction="0" android:value="-6"/>
+                    <keyframe android:fraction="0.5" android:value="6"/>
+                    <keyframe android:fraction="1" android:value="-6"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g1maskmove">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateY">
+                <propertyValuesHolder android:propertyName="translateY">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="-3"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g2maskhold">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateY">
+                <propertyValuesHolder android:propertyName="translateY">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="3"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g5cloud">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateY">
+                <propertyValuesHolder android:propertyName="translateY">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="-3"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

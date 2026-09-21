@@ -95,7 +95,7 @@ object RuleVariables {
         today("today.precip_pct", RuleVariableKind.NUMBER) { it.precipPct?.toDouble() }
         // The day's peak, not `current.uv_index`'s instant reading: a "put sunscreen
         // on" rule wants to fire in the morning, when the current index is still low.
-        today("today.uv_max", RuleVariableKind.NUMBER) { it.uvIndexMax.toDouble() }
+        today("today.uv_max", RuleVariableKind.NUMBER) { it.uvIndexMax?.toDouble() }
     }
 
     private val index = all.associateBy { it.id }

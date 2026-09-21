@@ -13,21 +13,24 @@ import org.junit.Test
 /**
  * The icon strokes are the only carrier of "what kind of weather" in the hour strip, so
  * they are non-text marks under DESIGN.md §10 and owe 3:1 — against the ground their
- * set is picked for (§13.1): the line set serves both themes and owes both surfaces;
- * the fill set ships twice, mcf_* for light grounds and mcfn_* for dark ones, and each
- * owes only the surface `ChiaroIcons` will ever put it on. Meteocons' own palette does
- * not clear the light surface (its cloud gray is 1.18:1 there), which is why mcf_* is
- * re-anchored and mcfn_* is the original palette on the backdrop it was drawn for.
- * mcn_* joined them with the vivid palette (§2.5): the line set with its light-ground
- * ceiling removed, so it owes the dark surfaces only. Each of the four has an animated
- * twin (§7.1) painted from the same table, and they are swept here too — `AnimatedIconTest`
- * proves twin and original are the same colors, but what ships is the file, and a hand
- * edit to a drawable is exactly what neither of those two guards would catch alone.
+ * set is picked for (§13.1).
  *
- * "The surface" is now four surfaces, because there are two dresses: a set owes every
- * light surface, or every dark one, or both. A set measured against one dress's paper
- * and shipped over the other's is exactly the kind of thing that passes review and
- * fails on a device.
+ * **Since Fase 13 no set owes both surfaces.** Until then the line set served every
+ * ground, which pinned its colors into Y ∈ [0.120, 0.283] and is why its sun was a
+ * bronze; a second line set existed only so the vivid dress could escape that ceiling on
+ * dark grounds. v3 ships four sets picked by style and ground — `mc3_`/`mc3n_` for line,
+ * `mc3f_`/`mc3fn_` for flat — so each one only ever meets the surface `tools/reanchor.py`
+ * measured it against, and the dress no longer chooses an icon at all.
+ *
+ * Each of the four has an animated twin (§7.1) painted from the same table, and they are
+ * swept here too — `AnimatedIconTest` proves twin and original are the same colors, but
+ * what ships is the file, and a hand edit to a drawable is exactly what neither of those
+ * two guards would catch alone.
+ *
+ * A light ground is still two surfaces, because there are two dresses (§2.5), and the
+ * binding one is whichever is darker: a set measured against one dress's paper and
+ * shipped over the other's is exactly the kind of thing that passes review and fails on
+ * a device.
  *
  * This sweeps the emitted XML rather than the tool's table, for the same reason
  * `PaletteContrastTest` asserts the outcome instead of trusting the method: what ships
@@ -66,24 +69,23 @@ class IconContrastTest {
         // Every set the app ships, and the grounds `ChiaroIcons` can put it on. Longest
         // prefix first, because "mcafn_" is also a "mca…" and only one of them is right.
         val sets = listOf(
-            "mcafn_" to darkGrounds,
-            "mcaf_" to lightGrounds,
-            "mcan_" to darkGrounds,
-            "mca_" to lightGrounds + darkGrounds,
-            "mcfn_" to darkGrounds,
-            "mcf_" to lightGrounds,
-            "mcn_" to darkGrounds,
-            "mc_" to lightGrounds + darkGrounds
+            "mc3fan_" to darkGrounds,
+            "mc3fa_" to lightGrounds,
+            "mc3an_" to darkGrounds,
+            "mc3a_" to lightGrounds,
+            "mc3fn_" to darkGrounds,
+            "mc3f_" to lightGrounds,
+            "mc3n_" to darkGrounds,
+            "mc3_" to lightGrounds
         )
 
         val drawables = File("src/main/res/drawable")
             .listFiles { f -> f.extension == "xml" && sets.any { (p, _) -> f.name.startsWith(p) } }
             .orEmpty()
-        assertTrue("no mc_*.xml drawables found — did the import move?", drawables.isNotEmpty())
+        assertTrue("no mc3_*.xml drawables found — did the import move?", drawables.isNotEmpty())
         sets.forEach { (prefix, _) ->
             assertTrue(
-                "the $prefix* set is missing — run tools/import_meteocons.py, then " +
-                    "tools/gen_vivid_icons.py",
+                "the $prefix* set is missing — run tools/import_meteocons_v3.py",
                 drawables.any { it.name.startsWith(prefix) }
             )
         }

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.callbackdev.chiaro.data.AppFont
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.data.ServiceLocator
@@ -42,6 +43,8 @@ class SettingsViewModel(private val store: SettingsStore) : ViewModel() {
         viewModelScope.launch { store.setDynamicColor(enabled) }
 
     fun setPalette(palette: AppPalette) = viewModelScope.launch { store.setPalette(palette) }
+
+    fun setFont(font: AppFont) = viewModelScope.launch { store.setFont(font) }
 
     fun setAnimatedIcons(enabled: Boolean) =
         viewModelScope.launch { store.setAnimatedIcons(enabled) }

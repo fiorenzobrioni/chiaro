@@ -35,7 +35,25 @@ data class UnitSettings(
  */
 data class NotificationSettings(
     val severeWeatherAlerts: Boolean = true,
-    val dailySummary: Boolean = false,
+    /**
+     * The morning summary: once a day between 06:00 and 12:00, today.
+     *
+     * **On by default since 21 set 2026** (committente), with its evening twin. Both
+     * started silent on the argument that a digest nobody asked for is the one
+     * notification a weather app gets uninstalled over — which is the right argument
+     * about a digest, and the wrong one about these two. They are the app: a sentence
+     * before any number, said at the hour the day is still a decision. An install that
+     * never opens Avvisi was getting the warnings and none of the reading, and the pair
+     * is capped at one notification each, at fixed hours, off in two taps.
+     */
+    val dailySummary: Boolean = true,
+    /**
+     * The evening summary (21 set 2026): once between 18:00 and 23:00, TOMORROW —
+     * the night rides along in the expanded notification. **On by default** with its
+     * morning twin, and for the same reason; by eight in the evening today is no longer
+     * a decision and tomorrow is.
+     */
+    val eveningSummary: Boolean = true,
     val precipitationWarning: Boolean = true,
     val userRules: Boolean = true,
     /**

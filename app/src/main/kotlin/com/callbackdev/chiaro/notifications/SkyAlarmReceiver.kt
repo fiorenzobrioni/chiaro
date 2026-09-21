@@ -5,13 +5,13 @@ import android.content.Context
 import android.content.Intent
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.domain.WeatherFreshness
+import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyReminder
 import com.callbackdev.chiaro.domain.sky.SkyReminderPolicy
 import com.callbackdev.chiaro.domain.sky.SkyVerdictEngine
 import java.time.Duration
 import java.time.Instant
-import java.time.ZoneId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -76,10 +76,8 @@ class SkyAlarmReceiver : BroadcastReceiver() {
         if (state.wasPosted(reminder.fingerprint)) return
 
         val city = SkyAlarmScheduler.activeCity(context) ?: return
-        val zone = city.timezone
-            ?.let { runCatching { ZoneId.of(it) }.getOrNull() }
-            ?: ZoneId.systemDefault()
         val report = ServiceLocator.weatherRepository(context).cachedReport(city)
+        val zone = placeZone(report, city)
         val now = Instant.now()
         val verdict = if (job.observable) {
             SkyVerdictEngine.evaluate(

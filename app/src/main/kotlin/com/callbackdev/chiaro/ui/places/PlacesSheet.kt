@@ -273,7 +273,7 @@ private fun GpsRow(
         ListItem(
             leadingContent = {
                 Icon(
-                    imageVector = ImageVector.vectorResource(R.drawable.mc_compass),
+                    imageVector = ImageVector.vectorResource(R.drawable.mc3_compass),
                     contentDescription = null,
                     tint = androidx.compose.ui.graphics.Color.Unspecified
                 )

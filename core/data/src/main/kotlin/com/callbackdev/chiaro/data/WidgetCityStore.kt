@@ -46,9 +46,21 @@ class WidgetCityStore(private val dataStore: DataStore<Preferences>) {
         dataStore.edit { it.remove(key(appWidgetId)) }
     }
 
-    /** Called from the provider's onDeleted so removed widgets leave nothing behind. */
+    /**
+     * Called from the provider's onDeleted so removed widgets leave nothing behind.
+     *
+     * Both keys, since 12 set 2026: [skyLine] arrived later (Fase 16e) and was never
+     * added here, so every widget removed after it shipped left its `widget_sky_` flag
+     * in the file forever — and a new widget that happened to be handed that id
+     * inherited a sky line nobody asked for.
+     */
     suspend fun forget(appWidgetIds: IntArray) {
-        dataStore.edit { prefs -> appWidgetIds.forEach { prefs.remove(key(it)) } }
+        dataStore.edit { prefs ->
+            appWidgetIds.forEach {
+                prefs.remove(key(it))
+                prefs.remove(skyKey(it))
+            }
+        }
     }
 
     /**

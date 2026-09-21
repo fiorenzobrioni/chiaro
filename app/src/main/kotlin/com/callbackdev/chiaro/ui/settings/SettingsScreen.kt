@@ -45,6 +45,7 @@ import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.BuildConfig
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.data.AppFont
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.data.ThemeMode
@@ -150,6 +151,13 @@ private fun SettingsList(
                 label = stringResource(R.string.settings_palette),
                 value = paletteLabel(settings.palette),
                 onClick = { dialog = SettingsDialog.PALETTE }
+            )
+        }
+        item {
+            ValueRow(
+                label = stringResource(R.string.settings_font),
+                value = fontLabel(settings.font),
+                onClick = { dialog = SettingsDialog.FONT }
             )
         }
         item {
@@ -280,8 +288,8 @@ private fun SettingsList(
         item {
             ValueRow(
                 label = stringResource(R.string.settings_credit_font),
-                value = stringResource(R.string.settings_credit_font_note),
-                onClick = { openUrl(context, "https://rsms.me/inter/") }
+                value = fontCreditNote(settings.font),
+                onClick = { openUrl(context, fontCreditUrl(settings.font)) }
             )
         }
         item {
@@ -352,6 +360,14 @@ private fun SettingsList(
             onSelect = { viewModel.setPalette(it); dialog = null },
             onDismiss = { dialog = null }
         )
+        SettingsDialog.FONT -> RadioDialog(
+            title = stringResource(R.string.settings_font),
+            explanation = stringResource(R.string.settings_font_note),
+            options = AppFont.entries.map { it to fontLabel(it) },
+            selected = settings.font,
+            onSelect = { viewModel.setFont(it); dialog = null },
+            onDismiss = { dialog = null }
+        )
         SettingsDialog.ICONS -> RadioDialog(
             title = stringResource(R.string.settings_weather_icons),
             explanation = stringResource(R.string.settings_weather_icons_note),
@@ -390,7 +406,9 @@ private fun SettingsList(
     }
 }
 
-private enum class SettingsDialog { TEMPERATURE, WIND, THEME, PALETTE, ICONS, FREQUENCY, RESET }
+private enum class SettingsDialog {
+    TEMPERATURE, WIND, THEME, PALETTE, FONT, ICONS, FREQUENCY, RESET
+}
 
 @Composable
 private fun GroupHeader(text: String) {
@@ -478,6 +496,41 @@ private fun temperatureLabel(unit: TemperatureUnit): String = when (unit) {
 private fun windLabel(unit: WindSpeedUnit): String = when (unit) {
     WindSpeedUnit.KMH -> stringResource(R.string.settings_wind_kmh)
     WindSpeedUnit.MPH -> stringResource(R.string.settings_wind_mph)
+}
+
+@Composable
+private fun fontLabel(font: AppFont): String = when (font) {
+    AppFont.INTER -> stringResource(R.string.settings_font_inter)
+    AppFont.GOOGLE_SANS -> stringResource(R.string.settings_font_google_sans)
+    AppFont.SYSTEM -> stringResource(R.string.settings_font_system)
+}
+
+/**
+ * The typefaces credit, and which of them the reader is actually reading.
+ *
+ * Both bundled faces travel in the APK whatever the setting says — one is the default,
+ * the other is one tap away — so the OFL attribution names both, always. What the choice
+ * changes is which one is on the screen, and a credits row that said "Inter" to somebody
+ * reading the app in Google Sans would be the screen telling them something that is not
+ * true (DESIGN §1.1, the same rule the palette note learned).
+ */
+@Composable
+private fun fontCreditNote(font: AppFont): String {
+    val credit = stringResource(R.string.settings_credit_font_note)
+    val inUse = when (font) {
+        AppFont.SYSTEM -> stringResource(R.string.settings_credit_font_inuse_system)
+        else -> stringResource(R.string.settings_credit_font_inuse, fontLabel(font))
+    }
+    return "$credit — $inUse"
+}
+
+/** The tap goes where the credit points: to the face being read, or — when that face is
+ * the phone's and belongs to nobody this app can credit — to the licence the two bundled
+ * ones share. */
+private fun fontCreditUrl(font: AppFont): String = when (font) {
+    AppFont.INTER -> "https://rsms.me/inter/"
+    AppFont.GOOGLE_SANS -> "https://fonts.google.com/specimen/Google+Sans"
+    AppFont.SYSTEM -> "https://openfontlicense.org"
 }
 
 @Composable

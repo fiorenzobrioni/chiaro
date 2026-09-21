@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
- * The three widgets as one household (Fase 8): who is placed, and how to repaint
+ * The widgets as one household (Fase 8): who is placed, and how to repaint
  * everyone. Repaints come from three directions — the repository's commit hook (new
  * data landed), the worker's failure path (the stale marker must appear), and the
  * Application's observer on place/settings changes — and all three arrive here.
@@ -34,9 +34,9 @@ import kotlinx.coroutines.launch
  * live composition without re-running `provideGlance`, so on its own it repaints the
  * OLD model (see [WidgetRefresh] for the whole of it).
  */
-/** The four, as the reconfigure screen needs to tell them apart. ARC has a
+/** The five, as the reconfigure screen needs to tell them apart. ARC has a
  * configuration screen of its own (`widget/arc`) and only passes through here. */
-enum class WidgetKind { NOW, TODAY, SKY, ARC }
+enum class WidgetKind { NOW, TODAY, SKY, ARC, TEXT }
 
 object ChiaroWidgets {
 
@@ -44,7 +44,8 @@ object ChiaroWidgets {
         NowWidgetReceiver::class.java to { NowWidget() },
         TodayWidgetReceiver::class.java to { TodayWidget() },
         SkyWidgetReceiver::class.java to { SkyWidget() },
-        ArcWidgetReceiver::class.java to { ArcWidget() }
+        ArcWidgetReceiver::class.java to { ArcWidget() },
+        TextWidgetReceiver::class.java to { TextWidget() }
     )
 
     fun hasWidgets(context: Context): Boolean {
@@ -55,7 +56,7 @@ object ChiaroWidgets {
     }
 
     /**
-     * Which of the three [appWidgetId] is — the reconfigure screen is one activity for
+     * Which of them [appWidgetId] is — the reconfigure screen is one activity for
      * all of them, and an option only some honour must not be offered to the rest. An
      * unbound id (asked before the host has bound the provider) answers null: better a
      * missing switch for one frame than one that changes nothing.
@@ -69,6 +70,7 @@ object ChiaroWidgets {
             TodayWidgetReceiver::class.java.name -> WidgetKind.TODAY
             SkyWidgetReceiver::class.java.name -> WidgetKind.SKY
             ArcWidgetReceiver::class.java.name -> WidgetKind.ARC
+            TextWidgetReceiver::class.java.name -> WidgetKind.TEXT
             else -> null
         }
 
@@ -164,4 +166,8 @@ class TodayWidgetReceiver : ChiaroWidgetReceiver() {
 
 class SkyWidgetReceiver : ChiaroWidgetReceiver() {
     override val glanceAppWidget = SkyWidget()
+}
+
+class TextWidgetReceiver : ChiaroWidgetReceiver() {
+    override val glanceAppWidget = TextWidget()
 }

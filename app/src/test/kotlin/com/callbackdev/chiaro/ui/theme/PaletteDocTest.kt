@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.ui.theme
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toArgb
 import java.io.File
 import java.util.Locale
@@ -124,6 +125,38 @@ class PaletteDocTest {
                 "the span §${dress.colorSection} prints", span.groupValues[1],
                 printed(contrast(dress.light.surface, dress.dark.surface))
             )
+        }
+    }
+
+    /**
+     * §2.6's table is the widgets' card colours, and the claim it makes is the whole
+     * argument for shipping them without new inks: these six grounds, and these eighteen
+     * ratios against the §3.6 white pair. `PaletteContrastTest` proves the ratios clear
+     * their floors; this proves the document prints the ones the code really has.
+     */
+    @Test
+    fun `the card colour table is the widget palette`() {
+        val text = section("2.6")
+        val row = Regex(
+            """^\| [a-z ]+ \| `(#[0-9A-Fa-f]{6})` \| ([\d.]+):1 \| ([\d.]+):1 \| ([\d.]+):1 \|""",
+            RegexOption.MULTILINE
+        )
+        val rows = row.findAll(text).toList()
+        assertEquals(
+            "§2.6 should print one row per card colour",
+            WidgetCardColor.entries.size, rows.size
+        )
+        WidgetCardColor.entries.zip(rows).forEach { (choice, match) ->
+            val g = match.groupValues
+            val ground = widgetCardContainer(choice)
+            assertEquals("$choice ground", g[1].uppercase(), hex(ground))
+            listOf(1f to g[2], 0.75f to g[3], 0.85f to g[4]).forEach { (alpha, claimed) ->
+                assertEquals(
+                    "$choice ink at ${(alpha * 100).toInt()}%",
+                    claimed,
+                    printed(contrast(Color.White.copy(alpha = alpha).compositeOver(ground), ground))
+                )
+            }
         }
     }
 

@@ -59,6 +59,7 @@ class ArcPainterTest {
             hourly = (0 until 48).map {
                 HourlyForecast(
                     time = fetchedAt.withMinute(0).plusHours(it.toLong()),
+                    at = fetchedAt.withMinute(0).plusHours(it.toLong()).atZone(zone).toInstant(),
                     tempC = 14.0 + 8.0 * kotlin.math.sin((it + 12) / 24.0 * Math.PI),
                     condition = clear,
                     precipChancePct = if (it in 4..7) 20 * (it - 3) else 5,
@@ -66,7 +67,7 @@ class ArcPainterTest {
                 )
             },
             daily = (0 until 7).map {
-                DailyForecast(date.plusDays(it.toLong()), 24.0, 14.0, clear, 10, 5, "Moderate")
+                DailyForecast(date.plusDays(it.toLong()), 24.0, 14.0, clear, 10, 5)
             },
             systemInfo = sampleWeatherReport().systemInfo.copy(
                 lastSync = fetchedAt.atZone(zone).toInstant()

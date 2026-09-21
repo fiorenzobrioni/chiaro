@@ -79,10 +79,13 @@ class JournalViewModel(
             if (city == null) {
                 flowOf(JournalUiState.NoPlace)
             } else {
+                // Read once per place, for its timezone: the position's City has none,
+                // and the day boundaries below are what the whole diary is grouped on.
+                val located = runCatching { repository.cachedReport(city) }.getOrNull()
                 combine(
                     repository.historyFlowFor(city, limit = HISTORY_SCAN),
                     fetchLogStore.failures,
-                    dayBoundaries(JournalStateBuilder.zoneOf(city)),
+                    dayBoundaries(JournalStateBuilder.zoneOf(city, located)),
                     // Its own table and its own flow: a bulletin has to show up in the
                     // diary on days no fetch landed, so it cannot ride on the commits.
                     warningRecords?.observeFor(city.cacheKey, WARNING_SCAN) ?: flowOf(emptyList())
@@ -102,7 +105,8 @@ class JournalViewModel(
                             rows = rows,
                             failures = failures.filter { it.cityKey == city.cacheKey },
                             now = Instant.now(),
-                            warnings = warnings.mapNotNull { it.toRow() }
+                            warnings = warnings.mapNotNull { it.toRow() },
+                            report = located
                         )
                     )
                 }

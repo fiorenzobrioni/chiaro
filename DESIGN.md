@@ -332,6 +332,50 @@ light  #006FAC  #00A6EB  #7BCCFF  #E0D7C3  #FFBB66  #E67E00  #B85100
 dark   #2FBAFF  #0091D5  #0070AB  #4C473A  #985E00  #C87400  #F29300
 ```
 
+### 2.6 The card colours a widget can wear
+
+A home-screen widget's card is furniture on somebody's wallpaper, and since 19 set 2026 the
+reader can choose what colour that piece of furniture is (committente: «possibilità di
+mettere uno sfondo colorato: blu, blu chiaro, verde…»), beside the four choices that were
+already there — the computed sky, light, dark, follow the system. It applies to all five
+widgets, because a colour is a property of the card and not of what is printed on it.
+
+This is the one table in the app that is **colour offered as colour**, and it is deliberate
+rather than a hole in §2.1: the generated scheme answers "what does this role mean", and
+this answers "what colour is this object", which is a different question and the reader's to
+answer. Hence hexes, in `ui/theme/WidgetCardPalette.kt`, and a name in front of every swatch
+on the configuration screen (§10: a fill that carries meaning has a word beside it).
+
+**No new inks ship with them.** Ink and ground are a pair (§2.3), so six colours without
+their inks would be half a decision — and the Sky card measured what the other half costs
+on 4 set, when a bare verdict colour on a card whose ground the app does not control came
+back unreadable from a device. Instead every colour is picked dark enough to carry the pair
+the app already has: **the §3.6 white over the scrimmed sky**, full strength for the ink,
+75% for the quiet one, 85% for the freshness one.
+
+| Card | ground | white ink | quiet 75% | freshness 85% |
+|---|---|---|---|---|
+| blue | `#0F3B6B` | 11.3:1 | 7.1:1 | 8.6:1 |
+| light blue | `#0F5580` | 8.0:1 | 5.2:1 | 6.3:1 |
+| green | `#17572E` | 8.6:1 | 5.6:1 | 6.7:1 |
+| sea green | `#0F5B5B` | 7.9:1 | 5.2:1 | 6.2:1 |
+| violet | `#4A2C63` | 11.5:1 | 7.2:1 | 8.8:1 |
+| terracotta | `#7A3320` | 9.0:1 | 5.8:1 | 7.0:1 |
+
+The quiet ink is the floor that matters: it carries an 11 sp hour label, which needs 4.5:1,
+and the worst of the six gives 5.2. `PaletteContrastTest` asserts all eighteen numbers and
+`PaletteDocTest` asserts that this table is the code's.
+
+Six, and no two closer than **13 ΔE**, so picking one over another is picking a colour and
+not a word — the blue is deeper than its first draft for exactly that reason: next to the
+light blue it measured 9.4, and two names were doing the work a colour should do.
+
+A coloured card thins with the reader's opacity exactly as the sky does, and below
+`InkTrustFloorPct` it hands the ink question to the wallpaper for the same reason the sky
+does: choosing a colour is choosing a **ground**, not naming an ink, and at 20% solidity
+that ground is mostly not there. Light and dark keep deciding at any solidity, because
+those two ARE the reader naming an ink (`widgetInk`).
+
 ### 2.4 Rules for using color
 
 - Roles, never hexes (§2.1). A role means the same thing in both dresses (§2.5); a
@@ -516,13 +560,15 @@ forbids rainbows for data.
 
 ## 5. Typography
 
-**Inter** (variable, OFL), with the platform sans as fallback. Never a monospace: the
-terminal line owns that, and Chiaro must not read as its sibling. The one exception is
-nothing — there is no exception.
+**Google Sans** (variable, OFL) by default, with **Inter** (variable, OFL) the second
+bundled face and the scale's own reference, and the platform sans as the third answer —
+the reader picks (Settings → Appearance → Typeface, 20 set 2026). Never a monospace: the terminal
+line owns that, and Chiaro must not read as its sibling. The one exception is nothing —
+there is no exception.
 
 | Role | Size / line | Weight | Where |
 |---|---|---|---|
-| `heroTemperature` (extended) | 64 / 68 | 300 | the canvas' current temperature |
+| `heroTemperature` (extended) | 64 / 68, −0.02em | 700 | the canvas' current temperature |
 | `displaySmall` | 36 / 44 | 400 | a day's high in the expanded day sheet |
 | `titleLarge` | 22 / 28 | 500 | the headline sentence |
 | `titleMedium` | 16 / 24 | 600 | section titles, metric values |
@@ -536,9 +582,156 @@ nothing — there is no exception.
 strip, the week rows, the journal's deltas. Proportional digits in a column are the
 typographic equivalent of a wobbling table, and this app has a lot of columns.
 
+**The hero is bold, and the bold is tracked in** (20 set 2026, from 300). The old rule
+said a number in a body weight reads as a headline rather than as a reading, and at the
+tile's 24sp it still stands — `readingValue` is untouched. At 64sp it did not: that figure
+is not one reading among several, it is what the screen is for, and a hairline of it laid
+over a painted sky read as ornament. The home-screen card has printed the same number Bold
+since the day it shipped, and the app disagreeing with its own widget about it is what
+opened the question. Bold alone would have been half the change: at display size the
+default letter spacing is drawn for a paragraph, so the figures sit in their own way, and
+−0.02em (−1.28sp at 64) is what turns the weight back into a number. Inter's own tracking
+formula settles at about −0.022em by this size; this stops just short of it because the same
+number must sit in Google Sans too, whose rounder shapes close up sooner.
+
+**The typeface is a setting, and Google Sans is the default** (20 set 2026). The scale above is
+one family deep: the choice swaps the family under all seventeen roles — Material's fifteen
+plus `heroTemperature` and the tile's reading — and moves nothing else, not a size, not a
+weight, not a line height (`TypographyFamilyTest` asks Material what its roles are by
+reflection, so a role nobody copied fails there instead of quietly setting one line of the
+app in a second font). The question was opened by the widgets, which never had a choice:
+`RemoteViews` has no font-family API for Glance to expose, so a home-screen card is always
+drawn in the phone's own sans, and the only way to make the app and the cards read alike is
+to move the app.
+
+Three answers, and the first two are **bundled**, which is the property that matters: the
+same drawing on every phone.
+
+- **Google Sans** (OFL 1.1, `ofl/googlesans`), the default since the device pass of the
+  same day. Imported by `tools/import_google_sans.py` and cut down to what this app
+  prints: the unused axes pinned (`GRAD=0`, and `opsz`, whose whole range here is one
+  point), the glyph set reduced to Latin, Greek, Cyrillic and the punctuation a weather
+  screen can print. That is 5.0MB upstream against 307KB in the APK, a third of Inter's
+  own 880. Its `wght` axis **starts at 400**, so the family declares four faces where
+  Inter declares five and a request for Light lands on Regular rather than on an invented
+  weight; `FontAssetTest` reads both facts off the file, along with the `tnum` that made
+  the face admissible at all.
+- **Inter**, one tap away, and still the face this scale and the dp columns of §10 were
+  measured against. That measurement is the one thing the default gives up, and it is
+  worth naming: Google Sans is a shade wider and rounder, so the fixed columns of the
+  week row and the hour strip meet their reflow a step sooner than their comments say.
+  Nothing clips — there is no `maxLines` in `ui/` — and the numbers to re-measure, when
+  somebody does, are those.
+- **The phone's own sans**, which is a different font per device: missing weights
+  synthesised rather than drawn, tabular figures that may silently not exist, columns
+  measured against a face that is not this one. It stays on offer as the **closest** the
+  app can get to the home-screen cards, and closest is the honest word — a card is
+  inflated by the launcher, in its process and under its theme, so on a ROM whose system
+  UI runs a different face from the one apps get, the card and the app still differ. The
+  app also asks for tabular figures where a card cannot ask for anything, so even one
+  font can draw the two differently (measured on a device, 20 set 2026: they did).
+
+Both bundled faces travel in the APK whatever the setting says, so the credits name both,
+always, and then say which one is on the screen — crediting a font the reader is not
+reading is §1.1's kind of lie.
+
 Rounding is a rule, not a call: temperatures to whole degrees everywhere except the
 current one and the feels-like, which carry one decimal because the source does;
 probabilities to whole percent; wind to whole units; distances to one decimal below 10.
+
+**The widgets' own scale** is not this one and cannot be: a home-screen card is drawn by
+`RemoteViews` at whatever size the launcher granted, so its sizes are arithmetic on the
+grant rather than named roles (`WidgetUi.kt`, and a `*WidgetLayout.kt` per card). Four of
+the five cards get their hierarchy from the weather glyph, which fills the height and is
+the first thing read; the text widget (19 set 2026) has no glyph and builds the same
+hierarchy out of type alone, in **four ranks that differ by size and weight and ink, never
+by one of the three on its own** (`TextWidgetLayout.kt`): the temperature at 26 to 64sp
+Bold in the strong ink, scaled to the grant the way the other cards scale their drawing;
+the day's sentence at 18sp Medium, two points over the household's 16 because there is no
+drawing left to carry the card at arm's length; the place, the day's range and the
+warning's word at 16sp, where ink and weight go on sorting inside the rank; the stale
+marker at 11sp. The order the budget spends in is the hierarchy written down: the number is
+reserved first and the footnotes are bought last, and a section that does not fit is not
+drawn.
+
+**Which ceiling the number gets is a question about what it stands next to** — the rule
+§13.1's glyphs live by (`RowIconMax`: the hero never outgrows the block beside it), read off
+three different blocks. 44sp where it stands under the place with a column of prose beside
+it; 56 on a narrow tall card, where it stands over its own sentence; 64 on the two-row form
+from four cells up, where it stands BESIDE the words and the block beside it is 89.8dp tall.
+
+**The weather glyph is optional here, and it is drawn into air rather than into a slot**
+(20 set 2026). Every other card budgets for its drawing first and arranges the words around
+it; this one computes all four of its plans without the glyph and then asks whether what is
+left over is big enough to hold one (`TextWidgetLayout`'s four slot functions, which answer
+a size or nothing). So turning it on costs no line of sentence, no warning, no range and no
+dp of number, and where there is no air there is no drawing: three cells on one row and two
+cells on two stay words whatever the switch says. Two slots, one per kind of empty space:
+**beside the number**, in the rest of its line, which is air because a temperature is at
+most 2.1 ems wide; and on the panel **over the words**, in the band that form keeps empty by
+pinning its eyebrow to the top and its block to the bottom. 48 to 104 dp, one step under the
+family's hero floor at the bottom end because here the glyph is not the hero, the number is.
+
+**A widget may measure its own text, and where two blocks share a row it must** (20 set
+2026). Glance cannot measure text, which is why the Now card's wide row split its slack in
+half: 118dp to the number and the place, 118 to the sentence. On a four-cell card that
+printed «Cavenago di Brianza» as «Cavenago di Bri…» next to a column holding the word
+«Sereno», 47dp of ink in 118dp of room. The measuring happens where it can — a `Paint` in
+the app's process, at the size and weight the `Text` will get, in `Typeface.DEFAULT`, which
+IS the face a widget is drawn in (a card is inflated by the launcher from `RemoteViews` and
+never sees the app's bundled font: §5's own point about the widgets' scale, read the other
+way). The rule that split then follows, in this order: the sentence keeps its measured
+one-line width, capped at the even share, so a long sentence is never squeezed and the card
+falls back to the layout it already had; the words take what the place line needs, never
+below their own minimum, because the temperature lives in that column too; and the words
+stop at whatever the sentence kept. Nothing ever comes out smaller than the even split, so
+no card loses a dp it has today — the only space that moves is space one column was holding
+and not using. A launcher whose system font differs from the one apps get measures a few
+percent off ours, so every caller carries 4dp of slack and nothing here is a bound: a name
+wider than measured ellipsises exactly as it did before.
+
+**A hero temperature is Bold** (20 set 2026, committente, with the cards side by side on
+the home screen). It was the text widget's own weight for a day, on the argument that a
+card with no drawing needs all three of size, weight and ink at its top rank; beside it the
+Now and Today cards' 34sp Medium read as one more fact rather than as the thing the card is
+for. The rule is the household's now and it names the *hero*, not the quantity: Now, Today
+and the text card set the current temperature Bold, and the arc card does not, because
+there the hero is the drawing and the number is one line of the strip beside it. The Today
+strip's own hours stay Regular for the same reason — seven bold figures under a bold hero
+is two heroes. The re-measure the change owes: Bold costs +2.3% of Medium's advance in
+Google Sans and +2.0% in Inter over «−12°», ~1.5dp at 34sp, which the Now card's 66dp
+number column absorbs (`TemperatureColumnMin`).
+
+**The day's high and low are sorted by their marks where they have them** (20 set 2026).
+`DayRange` has two dresses and they no longer share an emphasis: with ↑ and ↓ in front of
+the figures both halves are set alike — same size, same weight, same ink, marks tinted with
+it — because §2.3's rule holds at this scale too, the mark carries the meaning and the ink
+only seconds it. Dimming the low there was saying it twice and charging the low a figure's
+worth of presence for it: on the device it simply read as the smaller number. With the
+slash (the Today card, whose 113dp column will not take the marks) there is no mark to
+carry it, so there the ink stays the thing that sorts the pair: high first and strong, low
+after it and dimmed, which is the week rows' own emphasis.
+
+**Air around a drawing is a wrapper, never the drawing's own padding.** Glance's `padding`
+is `RemoteViews.setViewPadding` on the same view its size lands on, and an `Image` scales
+its provider to fit what is left, so `padding(start = 8, end = 2).size(16)` is a **6dp**
+drawing rather than a 16dp one with air beside it. That is what made the day's low mark
+read smaller than the high one — it was the half carrying the 8dp that separates the pair,
+and it drew at 43% of its neighbour at the same nominal size, through two device passes
+where the symptom looked like colour. The pin before a place name and the gap over a
+warning chip already used a `Spacer` and a wrapper `Box` and say why in their own words;
+`WidgetGlyphBoxTest` now holds it for every drawing in the widgets. A padded container of
+a fixed WIDTH is a different thing and a correct one — a layout's padding comes out of its
+children, not out of a bitmap.
+
+Two **marks** sit inline with that type and do not break it (19 set 2026): the position pin
+in front of a place the phone is standing in, and `ic_range_high`/`ic_range_low` before the
+day's high and low — drawn rather than the characters ↑ and ↓, at the verdict marks' 2.4-of-24
+weight, for the reason §13.1 gives about ✓ and ✗. A mark at the size of its own line, in
+that line's ink, is punctuation; the card still carries no picture. What the card does not
+carry at all is the next hours as figures: it had them on a tall form for a day, and on a
+device they read as a second widget stapled under the first — the card that exists for the
+hours is the Today widget.
 
 ---
 
@@ -626,13 +819,13 @@ the APK. The canvas needed nothing — it is a `Brush`, it has never animated, a
 
 The weather icons are Meteocons' **animated** drawings since 7 set 2026 (committente),
 and the motion is the illustrator's own: every source SVG in the family carries SMIL, and
-`tools/import_meteocons.py` now carries it across as an `AnimatedVectorDrawable` instead
+`tools/import_meteocons_v3.py` carries it across as an `AnimatedVectorDrawable` instead
 of dropping it. The sun turns once in 45 seconds, the moon rocks, cloud banks drift, drops
 fall in 0.7 seconds and out of step with each other, the bolt flickers. Nothing was
 invented here; a rewrite would have been a second opinion about somebody else's drawing.
 
 **Only the condition family moves.** A metric tile's mark labels a quantity — a barometer
-that spins forever is decoration, and §1.4 is where decoration goes. `mc_not_available`
+that spins forever is decoration, and §1.4 is where decoration goes. `mc3_not_available`
 does not move either, because the family has no animation for "we do not know", which is
 the right amount of motion for it. `ChiaroIcons.movingRes` returns **null** for those
 rather than a still frame dressed as a moving one, and the caller falls back.
@@ -727,16 +920,34 @@ already flattened. Two things SMIL has that AVD does not:
 
 Each entry is the contract; the Compose signatures land in Fase 1.
 
-**8.1 SkyCanvas** — the gradient (§3), the place name, `heroTemperature`, condition,
-feels-like, the daylight ribbon, the headline sentence, the scrim (§3.6). Collapses on
-scroll into the app bar, keeping place and temperature. **At least 280dp plus the status
+**8.1 SkyCanvas** — the gradient (§3), `heroTemperature`, condition, feels-like, the
+daylight ribbon, the headline sentence, the scrim (§3.6). **At least 280dp plus the status
 bar, and taller when its text needs it** (8 set 2026): everything on it is measured in sp
 and the block was measured in dp, so at 100% type a two-line sentence left 2dp before the
-hero climbed into the place row, and at 115% they overlapped by 30dp. The row and the hero
-are the two ends of one column now, `SpaceBetween` on a floor rather than two things
+hero climbed into the place row, and at 115% they overlapped by 30dp. The row's seat and
+the hero are the two ends of one column, `SpaceBetween` on a floor rather than two things
 aligned to opposite edges of a fixed box. The bottom edge is straight (4 set, kept on
 review 8 set): every other surface on the page is inset and rounded, and the one that is
 not is the ground the page opens on, not a card floating over it.
+
+**8.1b The place row** — name, chevron, the place's own day and hour, the pager dots, the
+gear. It is **pinned** (18 set 2026, device request): the city these numbers belong to must
+not scroll away, which is the rule the other three tabs already kept by drawing their
+header above their list. On Today it is an overlay and not a row above the list, because
+the canvas still owns the top edge of the screen (§3.6) and the row still stands on the sky
+when the page is at rest — so it is the one bar in the app with two grounds:
+
+- **at the very top**: no ground of its own, white ink over the canvas' top scrim band,
+  which is exactly where §3.6 measures its 5.27:1;
+- **from the first scrolled pixel**: the page's own `surface` and theme ink, crossing over
+  on §7's effects spring. Nothing in between, because in between is white ink over
+  unscrimmed sky — the state the old flip allowed for the row while it protected the clock.
+
+The status-bar icons follow the same flip, because what is behind the status bar IS this
+bar. The canvas keeps the row's seat empty with a spacer as tall as the bar really is,
+measured and not quoted (the row grows with the type scale, with the dots and with the
+place's hour), so the hero lands where it always did and can never climb under a bar it no
+longer belongs to.
 
 **8.2 FreshnessChip** — appears only when the data is older than the update interval.
 Warning role, the real age ("3 hours ago"), tappable to retry, with a progress state while
@@ -807,12 +1018,24 @@ chip, the Sky widget's round mark and the arc widget's agenda rows.
 
 **8.8 MomentCard** — a sky event: name in plain words ("Golden hour, evening"), time,
 verdict chip, the number behind it, a bell for a reminder. The dotted job id never appears.
-The leading glyph is the weather family in its own colors at the timeline's rung (34dp),
-on the moments, the calendar ahead and the guide's index alike (review, 8 set 2026): it
-was a 26dp silhouette in `onSurfaceVariant`, the last place the family was tinted flat,
-and tinted flat the full moon and the new moon are the same disc. The catalog's check
-marks come from the subscription store, not from the rows on screen, so a subscribed job
-with no row today still shows as subscribed.
+The leading glyph is the weather family in its own colors at the Sky's own rung (51dp
+since 11 set 2026), on the moments, the calendar ahead and the guide's index alike
+(review, 8 set 2026): it was a 26dp silhouette in `onSurfaceVariant`, the last place the
+family was tinted flat, and tinted flat the full moon and the new moon are the same disc.
+The catalog's check marks come from the subscription store, not from the rows on screen,
+so a subscribed job with no row today still shows as subscribed.
+
+**The chip gets a line of its own, under the whole row** (12 set 2026). Inside the list
+item's text column it had `screen − 163` — the row's insets and fixed slots, `16 + 51
+(the glyph) + 16 + 16 + 48 (the bell) + 16` — which is 221dp on a 384dp screen and 197 at
+360. "✗ Niente da fare  nuvole 66%" measures 223, so it missed by **two dp** and what
+wrapped was the number under the word: the one pair §8.7 does not allow to come apart.
+Two dp is not a margin, and the widest pair the app can print ("Niente da fare" with
+"pioggia 100%") wants about 236. Nothing of the bell reaches that line, so the line takes
+the bell's column too: `screen − 99`, which is 285dp at 384 and 261 at 360, clear of 236
+on both. It costs about 6dp of row height and puts 14dp of air over the chip instead of 6,
+and those were the cheapest dp on the row: a 40dp bell would have bought 8 and a tighter
+chip 4, neither of them a margin.
 
 **8.9 RuleSentence** — the alert builder as a sentence of tappable chips: *Notify me when*
 `[rain, next 6 h]` *is* `[above]` `[70%]`. Every chip opens a picker; no free-text field
@@ -858,6 +1081,18 @@ highest level over the days still ahead is at least yellow and the bulletin has 
 expired; green is not announced here at all (§1.1), it is answered in Avvisi where somebody
 came to ask.
 
+**When the bulletin was issued says its day only when that day is not today**
+(`WarningText.issued`, committente 11 set 2026): "bollettino delle 15:07", "bollettino di
+ieri alle 15:07", "bollettino del 10 set 2026 alle 15:07". The hour alone was what every
+surface printed, and it lied by omission on the most ordinary reading there is: the
+Dipartimento publishes in the afternoon for today **and tomorrow**, so a reader who opens
+the app in the morning is looking at yesterday's bulletin — and a banner read at 12:33
+saying "delle 15:07" named an hour that had not happened yet that day. One phrase, four
+surfaces: the banner, Avvisi's quiet card, the notification, the Journal's warning line
+(which compares against its own entry's day, not the reader's). **The sheet is the
+exception and always carries the full date**, because it is the provenance surface and
+the attribution the licence asks for should not depend on when it is read.
+
 `ic_warning` is **a drawing, never the character ⚠**, at the verdict marks' own 2.4 stroke
 in a 24 box, for the reason those exist: the character is not in the app's face and the
 phone draws it from whatever fallback it has. It is the mark of one category everywhere it
@@ -878,7 +1113,7 @@ padding — the `VerdictChip` grammar at the widget's size. Avvisi's card leads 
 the home-screen widgets carry it.
 
 **On a widget** the rule is what the card is ALREADY saying (`warningSlot`, one table for
-all four cards). The day's sentence in its brief register IS the orange and the red
+all five cards). The day's sentence in its brief register IS the orange and the red
 («Allerta arancione · temporali»), so where that sentence is on the card there is no chip;
 where it is not — the reader turned it off, or the arc's hero is showing the next light
 moment instead — the chip takes the sentence's place and the card grows by nothing.
@@ -896,6 +1131,17 @@ home; turn the sentence off and its two lines pay for the chip twice over. The T
 widget's rain row yields first, as it already does to a stale marker. The arc's agenda
 gives up a row before the drawing gives up a pixel.
 
+**The text widget has no chip**, and says the level as a word instead (19 set 2026). The
+chip exists because a widget's ground is a scrimmed sky or somebody's wallpaper and a bare
+coloured word on one of those was measured unreadable (the Sky card's verdicts, 4 set); a
+chip answers that by bringing its own measured ground. A card whose whole premise is that
+nothing is drawn on it cannot bring one, so it gives up the colour rather than the
+legibility and prints «Allerta gialla» in the card's own strong ink at its rank-3 size.
+That is not a downgrade of the rule but the rule's own floor: §2.3 makes the word the
+carrier and the colour the reinforcement, and here there is only the carrier. Everything
+else is unchanged — the same `warningSlot` table decides whether it appears at all, and it
+costs that card a line of `TextFactSp` where the others pay `warningChipHeight`.
+
 Its colours come from the pair the CARD's ground selects (`WidgetPalette.colors`), never
 from the phone's theme: a light card under a dark system theme would otherwise wear a
 dark-mode ink on a light-mode container, and the pair would stop being the measured pair.
@@ -911,6 +1157,46 @@ line, which has nothing left to put after the colon, is simply not drawn: a line
 its data is not drawn anywhere in this app. The noun is inside the string on purpose —
 Italian wants "in Basilicata" and "nelle Marche", and those two Regions are exactly the
 thirteen.
+
+**8.14 NotificationsOffCard** (21 set 2026) — the one card in the kit that is about the app
+rather than about the weather: the screen is promising a notification the phone will not
+deliver, and says so.
+
+It is the standing repair for a hole VISION §5.8 left open. Four ready-made alerts ship
+switched ON, and the permission was asked only by the act of switching one on — which a
+fresh install never does. The switches said yes, the phone said nothing, and the only road
+to the runtime dialog was to turn an alert off and on again. The dialog alone could not be
+the repair either: Android shows it at most twice per install and then `launch()` returns
+refused without drawing anything, and where the permission is held but notifications were
+switched off in Settings it returns granted without drawing anything — a button that does
+nothing, twice over. A card can be offered again every time, and says what is wrong before
+it offers the fix.
+
+A `Card` on `secondaryContainer` at the page's 16dp margin, above everything else on the
+screen: `titleSmall` — "Le notifiche sono spente" — over `bodySmall` naming what is
+promised and why it cannot arrive, then a `TextButton`. **The button says which door it
+opens**: «Consenti le notifiche» where the system will still show its dialog, «Apri le
+impostazioni» where it will not, because a button that promises a dialog and silently hands
+over a settings screen is the same broken promise one layer down. A refusal that comes back
+with no dialog left to show opens the settings screen in that same tap; one refusal is
+taken as a refusal and forces nothing.
+
+It is `secondaryContainer` and not the warning or error roles for the reason §1.1 gives
+Avvisi's quiet card: this is a state of the app, not a state of the world, and the warning
+inks belong to the weather. No icon, like the guide card it is shaped after — the words
+carry it, and §2.3 wants the carrier before the colour.
+
+**It is drawn only while something is really on**, and both halves of that are the rule.
+On Avvisi: any ready-made switch, the official warnings, or an enabled rule of the reader's
+own. On Sky: any subscribed moment or calendar row whose lead is not «mai» — the default
+lead on its own is what a moment *adopts*, not a promise anybody has been made. With
+everything off there is no promise to break and no card, because a screen that scolds a
+reader about a permission it needs for nothing is inventing a problem, which is the same
+fault in the other direction.
+
+It re-reads the system on every `ON_RESUME`, because the repair usually happens **outside**
+the app — in the settings page the card sent them to — and a card still sitting there after
+the permission was granted is the same lie the other way round.
 
 ---
 
@@ -1028,10 +1314,13 @@ ui/theme/
   ChiaroTheme.kt    the entry point
 ```
 
-Three generators sit behind those files and none of their output is hand-edited:
-`tools/gen_scheme.py` (the four schemes), `tools/gen_vivid.py` (the vivid semantic tokens
-under §2.5's ceiling, and the sky bands under that ceiling plus §3.7's floor) and `tools/gen_vivid_icons.py` (the `mcn_*` icon set), all three on the
-shared color arithmetic in `tools/color_math.py`.
+Two generators sit behind those files and neither's output is hand-edited:
+`tools/gen_scheme.py` (the four schemes) and `tools/gen_vivid.py` (the vivid semantic
+tokens under §2.5's ceiling, and the sky bands under that ceiling plus §3.7's floor), both
+on the shared color arithmetic in `tools/color_math.py`. There was a third,
+`gen_vivid_icons.py`, for the `mcn_*` icon set; Fase 13 gave every style a set per ground
+and left it with nothing to generate (§13.1). The icon palette now reads the same
+arithmetic through `tools/reanchor.py`.
 
 Seven tests keep this document from rotting, in the series' habit of turning a design rule
 into something CI can fail:
@@ -1097,115 +1386,372 @@ a valid animator and only a person can say the rain falls downward.
 
 ## 13. Open items
 
-1. ~~The icon family~~ — **shipped in Fase 2: Meteocons v2.0.0**
-   (github.com/basmilius/meteocons), MIT, converted to vector drawables by
-   `tools/import_meteocons.py` (the importer of record — re-running it IS the import)
-   behind `ui/icons/ChiaroIcons`. Two styles of the same drawings since 3 set 2026:
-   **line** (the default since 6 set 2026 — one weight of ink on a screen whose hero is
-   already a painted sky) and **fill**, chosen in Settings → Appearance; the whole family
-   switches together through `LocalWeatherIcons`, and the navigation-bar silhouettes stay
-   outside the choice (they are tinted to one color; the styles would be identical).
-   Fill was the default from 3 set (solid shapes read faster at small sizes for an
-   audience that scans) and the argument held while the sizes were small; the sizes
-   moved, so the default did too.
-   **The sizes are one ladder, `ui/icons/WeatherIconSize`**, and not four numbers spread
-   over four components: hour strip **42dp**, week row **38dp**, timeline row and metric
-   tile **34dp**. Each is 10dp above what it was until 6 set 2026 — 4dp, then 2 more on
-   a second look that day, then 4 more on 8 set — when the drawings asked to be examined
-   rather than recognised on a device; no step changed a padding, an arrangement or a
-   column width, so every section kept the rhythm it was tuned to. What they spend
-   instead are the elastic measures beside the icons, each measured at 360dp: the 56dp
-   hour cell keeps 7dp of air per side and the same 112dp height (the third step took
-   over the icon's 2dp of vertical padding), the week's temperature bar and the
-   timeline's prose give up 10dp apiece (112→102dp, 232→222dp), and the tile's label
-   budget goes 94→84dp against a widest label of 76.7dp. That last margin, 7.3dp, is the
-   ladder's ceiling: a fourth step would put «Qualità aria» on two lines at the reference
-   width. The third step was argued with a measurement first (8 set 2026): the obvious
-   alternative was to let the drawings fill more of their own 64-unit box, and the ink of
-   the 18 condition icons, measured over the whole animation loop, uses it — x 6.0–61.6,
-   y 8.0–60.0, drops falling to y 60 and the drifting overcast reaching x 61.6 — so a
-   uniform crop could take 2.4 units, under 4%, and would move the optical centres. The
-   size moved and the viewport did not. What makes the family read small is the plain
-   cloud: 30 units tall in a 64 box, 20dp of drawing in a 42dp icon. The order of the
-   rungs is the reading order: the strip is scanned sideways and carries the most weight,
-   the week is read down, a line of prose leads with the smallest glyph.
-   Gradients are flattened to their face color (a two-stop ramp is invisible at
-   30–38dp, and was at the 24–32 of the import) and hairline edge strokes are dropped.
-   **The SMIL is no longer dropped** (7 set 2026): each of the four sets has an animated
-   twin — `mca_*`, `mcan_*`, `mcaf_*`, `mcafn_*` — carrying the illustrator's own motion
-   as an `AnimatedVectorDrawable`, for the eighteen drawings of the condition family that
-   have any. The rule for which move and when is §7.1; the colors are the same table, so
-   nothing in this section's arithmetic changes. On color, the departure worth
-   this document's attention: **the palette is re-anchored, not copied — and since
-   the icon pass (3 set 2026) the fill set ships twice, picked by its ground.**
-   Meteocons draws for a dark backdrop: its cloud stroke is `#E5E7EB`, 1.18:1 against
-   this app's light surface, and in the hour strip the icon is the only carrier of
-   "what kind of weather", so the marks owe §10's 3:1 non-text floor. A single asset
-   owing 3:1 on BOTH surfaces of §2.2 is forced into `Y ∈ [0.120, 0.283]` — correct
-   arithmetic, muted result, and the reason the fill set is now two sets. The line
-   set (`mc_*`) serves both themes and keeps that band, its chroma raised ×1.25 at
-   held luminance (the color pass' trick: same measured ratios, fuller color); the
-   fill set for light grounds (`mcf_*`) gets the same treatment. The fill set for
-   dark grounds (`mcfn_*`) is **Meteocons' own fill palette, verbatim**, except the
-   four near-black details lifted to clear 3:1 against the dark surface.
-   `ChiaroIcons` picks by ground — the app by its applied theme, the widgets by
-   their card's own `darkGround` — so each set only ever meets the surface its floor
-   was measured against, and `IconContrastTest` re-measures the emitted XML per set
-   on every build, in the same spirit as `PaletteContrastTest`: assert the outcome,
-   not the method.
+1. ~~The icon family~~ — **shipped in Fase 2, rebuilt on Meteocons v3 in Fase 13**
+   (github.com/basmilius/meteocons, MIT). Fase 2 imported **v2.0.0**, 122 drawings in
+   two styles; v3 is a different family — **519 drawings in four styles**, published as
+   an npm package and a versioned CDN instead of a repository to clone, drawn in a
+   **128-unit box** where v2 used 64, and still carrying the illustrator's own **SMIL**
+   (the Lottie build is the other road and was not taken: it wants a runtime dependency
+   for a 34dp glyph and does not run inside a Glance widget at all).
 
-   **A fourth set arrived with the vivid palette** (7 set 2026): `mcn_*`, the LINE set
-   for dark grounds, generated from `mc_*` by `tools/gen_vivid_icons.py` with §2.5's
-   rule and the both-grounds ceiling taken off. That ceiling — `Y ≤ 0.283` — is the
-   whole reason the app's sun is a bronze, and on a dark ground it does not apply: the
-   sun goes `#C37D00` → **`#FFA500`**, the rain `#0085D0` → `#00A4FF`, the moon and snow
-   `#008AB6` → `#02C3FF`, while the near-neutral cloud strokes stay near-neutral because
-   ×1.8 of a small chroma is a small chroma. Only the vivid palette reads it, and only on
-   a dark ground; paper keeps one line family on both, because a consistent muted set is
-   part of what paper means. On a LIGHT ground the vivid palette gets the same files as
-   paper and that is the gamut talking: at `Y ≤ 0.284` there is no bright yellow to pick,
-   whatever the dress asks for. A reader who wants one there is asking to trade §10's
-   floor, which is a decision and not a color. The icons keep their own colors under every theme (they depict
-   the world, like the canvas — §2.1's other justified exception). Animated
-   variants, if they ever come, come as AVDs and as their own decision.
+   **The tools are five, and each one is a seam.** `tools/import_meteocons_v3.py` is the
+   importer of record — re-running it IS the import; `tools/svg_paths.py` holds the path
+   arithmetic and the mask conversion; `tools/reanchor.py` holds the colour rule;
+   `tools/shipped_icons.py` holds the list; `tools/compose_sun_cloud.py` composes the one
+   drawing the family does not have (below). The Kotlin lookup tables are **generated**
+   into `ui/icons/MeteoconsSets.kt` and `ui/icons/ComposedIcons.kt`; what stays
+   hand-written in `ChiaroIcons` is the policy — which weather code gets which drawing,
+   which metric gets which mark — because that is the part a person argues about.
 
-   **The one ground no icon set clears, declared** (7 set 2026, measured from a device
-   report that the app's sun looks darker than the widget's — which it is, and by
-   design: `mc_`/`mcf_` sit at Y 0.26, `mcfn_` at Y 0.58). The widget's **Cielo** card
-   is the scrimmed sky, and at its brightest that ground is `#5C6E7B`, **Y 0.149** — a
-   mid-tone. An ink clears 3:1 there only at Y ≥ 0.546 or Y ≤ 0.016, with nothing in
-   between, and neither set lives in those bands: **8 of the line set's 8 colors fall
-   short (1.03–1.57:1), and 25 of the fill-night set's 37 (1.09–2.93:1)**. The sun is
-   one of the twelve that pass, which is why the card looks right and is the reason
-   this went unseen. The line sun drops under the floor from −7° of solar altitude
-   upward: every daylight hour.
+   **One drawing is composed here, not imported** (12 set 2026): `sun-one-cloud-day` and
+   `-night`, which WMO code 1 takes. It is `clear-day` untouched — the same paths, the
+   same 0.92 scale, the same place — plus `cloudy`'s silhouette at 48.88% in the
+   bottom-right corner, cut out of the sun by the very mask `partly-cloudy` already
+   carries. Every piece stays its original **to the letter** and only the mask's hole is
+   computed, so `ComposedIconsTest` compares the composed file with its sources path by
+   path: that is what catches a re-import changing the drawings underneath, and it says to
+   re-run the composer rather than leaving it quietly behind. Measured: the cloud is
+   **43.1 units against partly-cloudy's 99.2** (43%; Meteocons' own `mostly-clear`, which
+   this replaces, sits at 72%, which is why it is on the shelf), the air between cloud and
+   rays is **1.80–2.45** against Meteocons' own 2.48, and the line style **re-strokes** the
+   cloud at the family's 4 units (`strokeWidth` = 4 / scale) instead of shrinking a ring to
+   2.0 beside a 3.7 sun. It is also the one drawing that is **not normalised**: no
+   `mc3scale` group, ink at **0.711** of the box against the family's 0.690, because
+   normalising it would shrink the sun and then it would not be `clear-day` any more. The
+   3% is under the family's own 0.88 extent cap. `ComposedIcons.kt` is a separate file from
+   `MeteoconsSets.kt` for the reason that makes the whole thing safe: the importer rewrites
+   that one on every run and never touches this one.
 
-   Three ways out were measured and all three were turned down. Splitting the line set
-   by ground the way the fill set was split does not help: the app's dark surface
-   (Y 0.008) is already served at 5.52:1, so such a set would exist only for the sky
-   and would have to put **every** color above Y 0.546 — a near-white family where a
-   cloud, a raindrop and a sun stop being different things, in ~98 new drawables.
+   **The repo carries the whole family; the APK carries the list.** All 519 drawings are
+   converted into `res/drawable`; only the ones a screen actually names appear in the
+   generated tables, and `shrinkResources` drops the rest. The cost of the ones nobody
+   draws was measured on two release builds: **64 bytes each, all of it in
+   `resources.arsc`** — the drawings themselves are gone, the resource-table entry is not.
+   Growing what ships is one line in `shipped_icons.py`, with no re-import and no network,
+   and that is the whole reason the family lives in the repo.
+
+   **Two styles, `line` and `flat`** (`WeatherIcons.LINE` / `.FILL` — the enum kept its
+   old constant because v3's `flat` IS what this app already shipped as its filled set:
+   the v2 `fill` with every gradient flattened by the importer). `fill` and `monochrome`
+   are converted too and shipped by nothing. Line is the default a fresh install sees
+   (6 set 2026), and v3's line is not v2's: it is not a traced stroke but a filled
+   `evenOdd` ring, which Android draws natively and which needs no stroke conversion at
+   all.
+
+   **The sizes are one ladder, `ui/icons/WeatherIconSize`** — hour strip **42dp**, week
+   row **38dp**, metric tile **38dp** since 11 set 2026, timeline row **34dp**, with the
+   Sky's own **51dp** rung off to the side (§8.8) — and the
+   move to v3 did not touch them: the box went 64 → 128 but that is `viewportWidth`, and a
+   dp is a dp. The measurements behind the ladder are the ones the 8 set 2026 pass made and
+   they stand: the 56dp hour cell keeps 7dp of air per side and the week's temperature bar
+   and the timeline's prose give up 10dp apiece. **The tile rung did move**, once, on 11 set
+   2026: v3's drawings are worth looking at and were asking to be bigger. Its label budget
+   is `118 − icon` on a 360dp screen against a widest label of 76.7dp, so the ceiling is
+   **41.3dp**; 38dp leaves 3.3dp of margin, 40dp leaves 1.3, 42dp wraps. The note that stood
+   here said a fourth step would wrap the label — the arithmetic says one step fits, and the
+   arithmetic is right. What it costs is the ladder's strict order: the tile now equals the
+   week row instead of sitting under it, and a tile label beside a week row is not a
+   comparison a reader ever makes. The order of the rungs is the reading order: the strip is
+   scanned sideways and carries the most weight, the week is read down, a line of prose
+   leads with the smallest glyph.
+
+   **One tile is off the ladder, and it is aimed at a detail rather than at a drawing**:
+   UV, at **55dp** since 12 set 2026. Its glyph carries the index as a badge, and the
+   pollen glyph carries its level the same way — the same 30-unit rounded square in the
+   same 128 box — but the normalisation scales the two drawings differently (the UV sun
+   already reaches the corners and takes 0.92; the pollen sprig is compact and takes
+   1.3382), so at one box size the pollen badge is 1.45× the UV one. On a device the UV
+   number read small next to it. The only lever left at the call site is the box, so the
+   box is what moved: `38 × 1.3382 / 0.92 = 55.3`, which puts the two badges 0.6% apart.
+   What it costs is that the UV glyph is plainly the biggest thing in the details grid and
+   its header row grows 17dp, which its neighbour pays too — a pair of tiles shares one
+   height. What it does not cost is the label budget: `118 − 55` still leaves 63dp at
+   360dp for the two letters "UV". `MeteoconScaleTest` measures the two badges in the
+   shipped drawables rather than trusting the numbers in this paragraph.
+
+   **What the conversion cannot say verbatim, and what is done instead.** Each of these
+   is a departure from «use the original», and each is declared by the importer's own
+   report rather than discovered later:
+
+   - **Masks.** v3 composes its skies with SVG `<mask>`, which VectorDrawable does not
+     have. A mask that says «the whole canvas except this shape» becomes a `<clip-path>`
+     with the inner subpath **reversed**, because Android's clip applies NON-ZERO and has
+     no `fillType`. That the two are the same area is not argued, it is rasterised:
+     `tools/spike_mask_clip.py` compares the even-odd original against the non-zero
+     conversion on a 128×128 grid over every mask of all four styles — **1 345 of 1 345
+     identical, zero pixels apart**. The reversal is done on the path COMMANDS, never on
+     a flattened polyline: a reversed cubic is `P1,C2,C1,P0` and a reversed arc keeps its
+     radii and flips `sweep`. Where the mask itself MOVES — the cloud drifting while the
+     sun beneath it holds still — a group transform would drag the clip and the drawing
+     together, so the clip goes in an outer group that moves and the drawing in an inner
+     one that moves back by the same amount on the same interpolator.
+   - **Dashes, which were two problems.** A still dash (`12 9`, 112 drawings: haze, fog,
+     smoke, all of them straight lines) is **redrawn as real segments**, as v2 did, and
+     here exactly rather than approximately. A dash with its offset animated (`50`, 34
+     drawings: the wind lines) is not a dash at all but a **window running along the
+     stroke**, which Android calls `trimPathStart`/`trimPathEnd` with `trimPathOffset`
+     animated. The two have neither unit nor direction in common — SVG's offset is in
+     drawing units and moves the pattern backwards, `trimPathOffset` is a fraction and
+     moves it forwards — so the run is converted into laps of the path and animated from
+     1 to 0. One declared approximation: `trimPath` has ONE window, so where a stroke is
+     longer than the dash period (100 units; the longest measures 111) the SVG would show
+     two.
+   - **Gradients are flattened to their face colour**, as in v2 and for the same reason.
+     With line and flat this is a corner and not the style: **15 drawings out of 1 038**.
+   - **Filters are dropped** — a drop shadow on `compass*`, and VectorDrawable has none.
+     Neither line nor flat uses one at all.
+   - **A `<clipPath>` shape can carry a transform, and it has to be baked in.**
+     VectorDrawable's `<clip-path>` has no transform of its own, and hanging one on the
+     enclosing group would move the drawing along with the clip. So the matrix is cooked
+     into the coordinates (an arc keeps its radii under a rigid transform and turns its
+     axis; a non-uniform scale is refused rather than drawn wrong). Ignoring it was a
+     real defect, found on a device on 11 set 2026: the barometer's clip is a rectangle
+     rotated 45°, and without the rotation it landed in the top-left corner and **erased
+     the needle**. Twenty drawings, every `barometer*` and `compass*`, two of them
+     shipped — and «the dial has no indicator» is exactly how it was reported.
+   - **A group can be left behind**: `DROP_GROUPS`, and it is about language, never about
+     size. `compass` carries **N E S W drawn as paths**, and in Italian the west is O — the
+     same English-text-inside-an-image the `wind-direction-*` glyphs were turned down for.
+     Its `Letters` group is dropped, which also returns it to the v2 drawing (housing and
+     needle) the places row was tuned with.
+   - **Two drawings do not convert**: `pressure-high-alt` and `pressure-low-alt`, whose
+     mask is a Figma stroke outline applied to a single shape. Neither is shipped.
+
+   **On colour, the departure this document exists to argue: the palette is re-anchored,
+   not copied — and since Fase 13 the rule is a function, not a table.** Meteocons is
+   drawn for a neutral backdrop. On this app's paper its cloud bodies measure
+   **1.02–1.10:1** and are simply invisible; on the dark surface its near-black details
+   are. In the hour strip the icon is the only carrier of «what kind of weather» — the
+   word beside it lives in the accessibility description, not on the screen — so the marks
+   owe §10's 3:1 non-text floor. Hue is kept and **luminance** is moved, because WCAG
+   contrast is a function of luminance alone: it is the only lever that changes the ratio
+   and the one that shows least.
+
+   Two things changed with v3, and the second is a gain:
+
+   - **A family is compressed, not a colour shifted.** A cloud is three greys, and a rule
+     applied to each of them alone can swap them. Colours are grouped by hue (neutrals,
+     under 0.03 of chroma, group together) and the family is compressed whole, holding
+     still **the end that was already fine**: against a ceiling the darkest stays put and
+     the lightest comes down, against a floor the lightest stays and the darkest comes up.
+     Order and Oklab spacing survive. A colour that already cleared and that the
+     compression leaves where it was is emitted **byte-identical**, because changing a hex
+     that did not need changing is noise in a diff somebody has to read.
+   - **Each set owes ONE surface.** v2 asked a single line set to clear both, which pinned
+     every colour into `Y ∈ [0.120, 0.283]` — correct arithmetic, muted result, and the
+     reason that set's sun was a bronze. There are now four sets picked by style and
+     ground — `mc3_`/`mc3n_` for line, `mc3f_`/`mc3fn_` for flat — so each meets only the
+     surface it was measured against, the ceiling is gone on dark, and the sun there is a
+     real gold (`#f8af18` → `#ffc25e`). After the re-anchor, **zero colours fall below
+     3:1 on either surface for either style**. `IconContrastTest` re-measures the emitted
+     XML per set on every build, in the same spirit as `PaletteContrastTest`: assert the
+     outcome, not the method.
+
+   **The dress no longer picks an icon**, and the fourth set that existed only for it is
+   gone along with `tools/gen_vivid_icons.py`. `mcn_*` was the line set with the
+   both-grounds ceiling taken off so the vivid palette could have a brighter sun on dark
+   grounds; with a set per ground that ceiling is not there for anybody, and the vivid
+   reader and the paper reader see the same drawing. The icons keep their own colours
+   under every theme (they depict the world, like the canvas — §2.1's other justified
+   exception).
+
+   **The motion is the illustrator's** (7 set 2026, committente): each of the four sets
+   has an animated twin — `mc3a_`, `mc3an_`, `mc3fa_`, `mc3fan_` — carrying v3's own SMIL
+   as an `AnimatedVectorDrawable`, for the 23 shipped drawings of the condition family
+   that have any. The rule for which move and when is §7.1. Two things v2 did not need:
+   `calcMode="spline"` becomes a generated `<pathInterpolator>` per distinct pair of
+   controls, and a `keyTimes` list under a negative `begin` needs the cycle rotated on
+   uneven points — the raindrops, which fall out of step rather than in a chorus line.
+
+   **The graded marks** (Fase 13). v3 draws several metrics at their own levels, and the
+   rule for using one is the rule a second verdict has to pass (§1.2). It has **two**
+   halves, and the second was learned from a device report on 11 set 2026: a glyph may
+   only say a level the tile already computes and already says in words, **and that a
+   reader can actually see.**
+
+   So the pollen mark names the plant at its level (three levels above nothing, not
+   Meteocons' four), the UV mark is graded per unit because the tile prints the integer,
+   and visibility's two hazy bands share one drawing because a glyph that under-claims is
+   honest where one that over-claims is not.
+
+   The air-quality mark is `smoke` and not `smoke-particles` (11 set 2026,
+   committente): the particles drawn alone fill a third of their box and are the
+   smallest, mutest thing in the grid, while `smoke` is the same particles with the air
+   they hang in. The cost is declared — in visibility's hazy band the tile beside it
+   draws a cloud with lines while this one draws a cloud with dots, and at 34dp those
+   are close — and it is paid below 10km, where the words differ anyway.
+
+   **Two metrics are deliberately not graded**, one by each half of the rule. The wind
+   fails the first: `windMeaning` has five bands, the windsocks are three, and the
+   Beaufort number is said nowhere on screen. The **barometer** fails the second, and it
+   is the one that had to be seen to be believed: Meteocons draws five dials and the app
+   has three bands, so the arithmetic lined up, but what tells them apart is a needle
+   **2 units wide in a 128-unit box**, half a device-independent pixel at the tile's 34dp.
+   Arithmetically right and optically absent, a dial that looks like it should be pointing
+   at something and is not. It ships ungraded, and the band stays where it reads, in
+   «Nella norma».
+
+   **The window is the illustrator's; the size inside it is the app's** (committente,
+   11 set 2026, reversing his own rule of that morning). Meteocons does not draw every
+   icon at the same size inside its 128-unit square, and at a single dp rung that shows:
+   measured over the whole shipping list, the ink spanned from **33%** of the box
+   (`smoke-particles`) to **81%** (`uv-index-11-plus`), a **2.48×** range — 11.2dp of
+   drawing against 27.6dp at the agenda's 34dp.
+
+   That range is the drawing, not the conversion: `tools/icon_ink.py --confronto` measures
+   the ink box on the source SVG and on the generated drawable and finds **519 icons × 2
+   styles, 0 out of tolerance**. It is kept where it is honest and removed where it is not.
+   The window is still never cropped and the `viewBox` still comes over untouched; what the
+   importer adds is one wrapper group, `mc3scale`. **What it equalises is the geometric mean
+   of the two ink sides, taken to 0.69**, under a ceiling that keeps the longer side at or
+   under 0.88 and a second that keeps the ink inside the box.
+
+   **The mean and not the longer side**, and the reason is the half-day the first version
+   lasted (committente, from a device, 11 set 2026). Normalising `max(w, h)` to 0.75 is the
+   textbook rule and it has a defect that only shows on a screen: inside a square box a
+   square drawing reaches the target **in height as well**, a flat one reaches it in width
+   and stays 0.43 tall. So the moons came out big and the clouds, the meteor shower and the
+   rainbow came out low — the same complaint the normalisation was meant to end, moved to a
+   different pair of icons. The geometric mean reads the two sides together: it takes the
+   square drawings down and the flat ones up until they meet. Measured over the shipping
+   list, it lands between **0.49 and 0.69** (1.41×) where the source spanned 2.48×, with the
+   width between 0.37 and 0.88 and the height between 0.27 and 0.88.
+
+   Four things about the rule, each of which was a decision:
+
+   - **One scale per drawing, not per style.** It is measured on the union of `line` and
+     `flat`, because an icon that changed size when the reader changes style in Settings
+     would be the opposite of what the scale is for.
+   - **A ceiling on extent, 0.88.** The mean alone pushes a very flat drawing almost to the
+     edge of its box (`rainbow` measured 0.97 wide). It binds 7 of the 79 shipped icons; the
+     mean decides the other 72.
+   - **The pivot is the centre of the box, not the centre of the ink.** Re-centring would
+     move the compositions that are deliberately off-centre (`sunrise` sits low because the
+     sun comes up off a line) and would shift the optical centring the hour strip was tuned
+     on. The third constraint — nothing leaves the box — is what makes that safe, and with
+     the mean in charge it binds nothing.
+   - **The pen scales with the drawing.** Half of the `line` family draws its outlines as
+     filled `evenOdd` rings rather than strokes, and a ring cannot be thinned back;
+     compensating the strokes and not the rings would make the family uneven in place of the
+     icons. So the whole drawing is zoomed, brush included, and the cost is declared: at the
+     shipping list's largest scale (`smoke-particles`, 2.27×) the line is more than twice
+     `clear-day`'s, which sits at 0.92.
+
+   **What no size rule can fix**, and the measurement that settles it: a rule based on ink
+   *mass* rather than extent was tried first and is unusable, because the eight moon phases
+   are one geometry with eleven times the mass between them (`moon-new` covers 1.71% of its
+   box, `moon-full` 19.70%) — normalising on mass would ship a new moon 3.4× the size of a
+   full one. And extent cannot reach inside a composition: Meteocons shrinks the moon when
+   the drawing holds anything else, in three clean steps — **0.50 of the box alone, 0.34
+   with two or three companions (`falling-stars`, `starry-night`), 0.20 behind a cloud** —
+   so the moon of a meteor shower stays smaller than the moon that is the whole icon. That
+   is a composition choice of the illustrator's, it survives the normalisation, and the only
+   lever on it is which drawing a screen asks for.
+
+   **What the reader actually notices is weight, not extent**, and that is worth recording
+   because it sends any future attempt to the right place. The moon fills 0.47 of its box
+   and the partly-cloudy sky 0.66, yet the moon reads heavier: a solid shape outweighs a
+   hollow one. In v2 a cloud was a declared stroke, **3 units in a 64 box, 4.69%**; in v3's
+   `line` it is a filled `evenOdd` ring **4 units in 128, 3.13%** — a third thinner in
+   proportion, 1.3dp of line at 42dp against 2.0dp before. Next to a sun that is a filled
+   disc with filled rays, that ring weighs less. The `flat` style does not have the problem
+   at all, and it is one tap away in Settings; thickening the rings (a stroke of the fill's
+   own colour on the filled path, mechanical and exact) is the other lever and has not been
+   taken.
+
+   **And the rung did not move for the badges either**, which is worth writing down
+   because it was asked for. `uv-index-*` and `pollen-*-*` carry the value as a badge, and
+   the badge is **30 × 30 units in a 128 box** in both — 8dp at the tile's 34, with a digit
+   inside about 3.2dp. The budget in [WeatherIconSize] allows exactly one more step (38dp
+   leaves 80dp of label against the 76.7dp «Qualità aria» needs, 42dp leaves 76 and
+   wraps), and one step buys the digit **0.4dp**. It is not enough to make a number
+   readable and it spends more than half the margin, so the badge stays what it honestly
+   is at this size — a mark of colour, not a figure. The value is printed under it in
+   32sp, which is where a reader reads it.
+
+   **Code 1 takes the plain sun, and the `mostly-clear` drawing is imported and left on
+   the shelf** (committente, 11 set 2026). The family has it — half the reason the import
+   was redone — and it is deliberately unused, because it draws a sky cloudier than its own
+   name. Measured in the source: its cloud is **56 units of 128 against partly-cloudy's
+   80**, so 70% of the cloud for a sky that carries 39% of the cover (25% median against
+   64%), and the sun's disc shrinks from 36 units to 23 while at a quarter of cover the sun
+   is fully out. Used for code 1 it reproduced the original defect in a milder form —
+   overstating cloud instead of understating sun — and on a strip scanned at a glance it
+   read as the cloudy end of the sky rather than the clear one.
+
+   The cost is real and is written here rather than waved past: the hour strip and the week
+   row carry no words, so **0 and 1 now look the same there**, and that is 17.2% of hours
+   drawn as a clear sky over a quarter-covered one. Today's hero still tells them apart in
+   words. Most apps make the same collapse for a poorer reason, having no such drawing at
+   all — Home Assistant's Open-Meteo integration maps both 0 and 1 to `sunny` — and Open-
+   Meteo's own source puts code 1 at 20–49% of cover. Here it is a choice and not a
+   vocabulary limit, the drawing stays in `res/drawable` and in `PLANNED`, and
+   `ConditionIconsTest` pins both halves: code 1 must equal code 0, and must still differ
+   from code 2, which is the confusion that opened the phase and must never come back.
+
+   **The golden hour lost its horizon line** (11 set 2026, from a screenshot).
+   `sunrise`, `horizon` and `sunset` are one drawing apart from a bump in the middle of
+   the line — **6 units in a 128 box**, 1.6dp at the agenda's 34 — so «Ora d'oro» at
+   19:02 and «Tramonto» at 19:41 were two rows carrying one picture. Meteocons has no
+   golden-hour drawing; the plain sun says the thing that actually separates them, which
+   is that in the golden hour the sun is still **above** the horizon while at sunrise and
+   sunset it is crossing it. Whoever crosses keeps the line. **The blue hour's plain
+   star is left as it is and known to be weak**: it reads as a rating star more than as
+   the first star of the evening, and nothing in v3 is better without taking a drawing
+   another row already owns.
+
+   **The wind direction is words, and the arrow beside them is gone** (11 set 2026). It
+   had been a hand-drawn arrow since 8 set and then, briefly, Meteocons' own needle: the
+   eight `wind-direction-*` glyphs were turned down because eight fixed points would round
+   a bearing this app shows exactly into 45° buckets, because each of them carries **N E S
+   W drawn as paths** and in Italian the west is O, and because Meteocons' needle points
+   where the wind comes FROM, the opposite of the convention the row records. So the
+   importer learned to take half a drawing — keeping the `Pointer` group, dropping
+   `Letters`, cropped to a window centred on the hub — and the needle was turned by the
+   real degrees.
+
+   Then it was looked at in the tile and taken out. Not because it said too little: it
+   said MORE than the sixteen-point label beside it. Because at 16dp it was not good
+   looking, and in a tile where everything else is a line of text it was the one thing
+   that drew the eye for the wrong reason. The direction was already written, so nothing
+   was lost but a drawing. The machinery went with it when the illustrator's box became
+   untouchable: it cropped, and nothing crops any more.
+
+
+   **The one ground no icon set clears, declared** (7 set 2026, from a device report that
+   the app's sun looked darker than the widget's — which it did, and by design;
+   **re-measured on the v3 sets, 11 set 2026**). The widget's **Cielo** card is the
+   scrimmed sky, and at its brightest that ground is `#5C6E7B`, **Y 0.149** — a mid-tone.
+   An ink clears 3:1 there only at Y ≥ 0.546 or Y ≤ 0.016, with nothing in between, and
+   most of a weather family lives between those two.
+
+   The card uses the dark-ground sets, and the numbers moved a long way when the
+   both-surfaces ceiling came off:
+
+   | | short of 3:1 on `#5C6E7B` | the sun |
+   |---|---|---|
+   | v2 line (`mc_*`) | 8 of 8 | 1.57:1 |
+   | v2 line, vivid (`mcn_*`) | 8 of 8 | 2.68:1 |
+   | **v3 line, dark (`mc3n_*`)** | **17 of 34** | **3.31:1** |
+   | **v3 flat, dark (`mc3fn_*`)** | **20 of 38** | **3.33:1** |
+
+   **The icon a reader actually looks at now clears the floor**, which it never did
+   before: half the colours still fall short, so the exception stands and is still an
+   exception, but the headline case is fixed and it was fixed by arithmetic rather than by
+   a concession — a set that owes one surface has room a set that owes two does not.
+
+   Three ways out were measured back in September and all three were turned down, and the
+   reasoning survives v3. Splitting the line set by ground the way the fill set was split
+   is now simply what happens, and it is what produced the table above; it does not close
+   the gap because closing it would mean putting **every** colour above Y 0.546 — a
+   near-white family where a cloud, a raindrop and a sun stop being different things.
    Raising the scrim needs alpha ≈ 0.93 to bring the ground to Y 0.013, which is a black
-   card with the memory of a sky behind it. Tinting the glyph to the card's own ink is
-   the cheap and complete fix — white measures 5.29:1 there, `ColorFilter.tint` is
-   already how the position pin is drawn — and **the committente turned it down on
-   product grounds: the colored icons are much of what makes the widget worth looking
-   at, and a monochrome silhouette buys a ratio at the cost of the thing itself.**
+   card with the memory of a sky behind it. Tinting the glyph to the card's own ink is the
+   cheap and complete fix — white measures 5.29:1 there, `ColorFilter.tint` is already how
+   the position pin is drawn — and **the committente turned it down on product grounds:
+   the coloured icons are much of what makes the widget worth looking at, and a monochrome
+   silhouette buys a ratio at the cost of the thing itself.**
 
-   The vivid palette's `mcn_*` narrows the shortfall without closing it, and the number
-   is worth recording because it was measured on the way past: on that same `#5C6E7B`
-   ground the line sun goes from **1.57:1 to 2.68:1** and the set's range from 1.03–1.57
-   to 1.03–2.68. Still 8 of 8 below the floor, so the exception below stands unchanged
-   for both dresses — but the icon a reader actually looks at on that card is now most of
-   the way there, which is the closest thing to a free improvement this shortfall has had.
-
-   So this is an accepted, bounded exception to §10's 3:1 for non-text marks, and it is
-   bounded: it applies to the **Cielo** background only. The Chiaro, Scuro and Sistema
-   cards are the app's own two surfaces, which `IconContrastTest` measures, and the app
-   itself never puts a weather icon on the canvas. Nothing else on the Cielo card relies
-   on it either — the condition is named in words beside the glyph, so the icon is not
-   the sole carrier there the way it is in the hour strip, which is what §10's floor is
-   protecting. If it is ever reopened, the option that keeps both is a small darkened
    plate under the glyph: contrast without giving up the color.
 2. ~~Dynamic color default~~ — **resolved 7 set 2026, the other way**: dynamic color
    ships **off**, and the generated vivid scheme of §2.5 is what a fresh install wears.

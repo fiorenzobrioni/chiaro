@@ -5,6 +5,12 @@ annotano qui con il motivo** (regola della serie, ereditata da tweather). Il per
 del prodotto sta in `VISION.md`, il sistema di design in `DESIGN.md`, la provenienza
 del core in `UPSTREAM.md`.
 
+Quel che **non** si annota, dal 21 set 2026 su richiesta del committente: le valutazioni
+finite con «non si fa niente». Una strada scartata prima di imboccarla non è una deviazione
+dal piano, è la conversazione che ha portato a non deviare, e resta dove è nata. Un file che
+cresce di chiacchiere smette di essere un piano e diventa un archivio in cui il piano non si
+trova più.
+
 Chiaro è la *daylight edition* di tweather: stesse feature, stessi motori, UI Material 3
 per un pubblico che non apre un terminale. Non è un rewrite e non è un re-skin: è la
 stessa app sotto, con sopra un prodotto diverso.
@@ -1671,7 +1677,6 @@ lì: il caso che conta è che l'invariante «un hit non può essere stale» regg
 **ogni** intervallo selezionabile, e una lista ricopiata a mano sarebbe esattamente la
 cosa che va fuori sincrono.
 
-- [ ] Da verificare su device (committente)
 
 ---
 
@@ -1728,7 +1733,6 @@ prevalente — il posto in cui sei — le due coincidono.
 **Verifiche**: suite verde, lint 0 errori. I test del mapper sono gli stessi di
 tweather, allineati byte per byte.
 
-- [ ] Da verificare su device (committente)
 
 ---
 
@@ -1815,7 +1819,6 @@ Nessun device qui: le taglie sono verificate per aritmetica (i quattro conti sop
 un confronto prima/dopo disegnato con i drawable veri, non su una resa reale. È l'unica
 parte di questa passata che resta da guardare su un telefono.
 
-- [ ] Da verificare su device (committente)
 
 ---
 
@@ -5198,6 +5201,1274 @@ essere riscritte. Le misure sono tutte qui sotto e nello spike.
 
 ---
 
+## Fase 13 — Le icone, da zero: Meteocons v3
+
+Aperta l'11 set 2026 da una segnalazione del committente: dove Open-Meteo e le altre app
+mostrano il sole, Chiaro mostra il sole dietro una nuvola. La verifica ha dato ragione alla
+segnalazione e ha trovato sotto una causa più grande di quel singolo glifo — **il repo è
+fermo a Meteocons v2.0.0, e la famiglia nel frattempo è stata rifatta**. Questa fase non
+ripara una riga: rifà l'importazione.
+
+### Il difetto che l'ha aperta
+
+`ChiaroIcons.conditionLineRes` (riga 373) dà **lo stesso disegno** ai codici WMO 1 e 2:
+
+```kotlin
+1, 2 -> if (night) mc_partly_cloudy_night else mc_partly_cloudy_day
+```
+
+Non sono vicini: sono i due estremi della metà serena del cielo. La soglia di Open-Meteo è
+già scritta in questo repo, in `WeatherReportMapper.skyCode` (riga 369) — 0 sotto il 20% di
+copertura, 1 fra 20 e 49, 2 fra 50 e 79, 3 da 80 in su. Misurato dal vivo l'11 set 2026 su
+10 città × 7 giorni = **1 680 ore** (`weather_code` + `cloud_cover`):
+
+| codice | quota ore | copertura p10 / p50 / p90 |
+|---|---|---|
+| 0 | 28% | 0 / 0 / 10 |
+| 1 | **17,2%** | **10 / 25 / 46** |
+| 2 | 20% | 47 / 64 / 80 |
+| 3 | 31% | 82 / 98 / 100 |
+
+I due secchi non si toccano nemmeno fra il decimo e il novantesimo percentile. **Un'ora su
+sei** viene disegnata al 64% di cielo chiuso quando ne ha il 25%. E la parola accanto dice
+già la cosa giusta (`WeatherText.condition`: 1 → `cond_mostly_clear`, «Quasi sereno»),
+quindi sull'hero il disegno **contraddice una parola visibile**; nella striscia oraria e
+nella riga della settimana la parola non è visibile affatto (sta solo nella
+`contentDescription`: `HourStrip.kt:97`, `TodayScreen.kt:1315`), quindi lì il glifo sbagliato
+è l'unico portatore che il lettore ha.
+
+Due difetti minori nella stessa tabella: il fallback `else -> mc_cloudy` disegna una nuvola
+mentre la parola dice «Condizioni sconosciute» (`mc_not_available` è importato in tutti e
+quattro i set e la mappatura dei codici non lo usa mai); e l'82 (rovesci violenti) va su
+`rain` mentre 80 e 81 vanno su `partly_cloudy_*_rain`. E **la tabella non ha un solo test**:
+`AnimatedIconTest` cammina `movingOf`, `IconContrastTest` misura i colori, `WidgetIconsTest`
+copre la scelta dello stile, nessuno chiede mai che disegno prenda un codice. È per questo
+che 1 e 2 hanno potuto fondersi senza che niente diventasse rosso.
+
+### Perché si riparte da zero e non si tocca la riga
+
+Meteocons v2.0.0 **non ha un disegno per «quasi sereno»**: `production/line/all` sono 122
+icone e nella famiglia del cielo ci sono solo clear, partly-cloudy, overcast (+ day/night) e
+cloudy. Misurato sugli SVG originali, in una scatola di 64: il sole di `clear-day` ha r 10.5
+al centro; quello di `partly-cloudy-day` ha **r 4.5** (−82% di area del disco) sotto una
+nuvola che occupa x 16→53.5, y 23.5→45.5; `overcast-day` è la stessa nuvola con un secondo
+strato sopra, cioè **più** nuvoloso, non meno. Non c'è un gradino intermedio da scegliere.
+
+**In v3 c'è.** La categoria si chiama `Mostly Clear` ed esiste in 18 varianti. Il resto della
+famiglia è cresciuto nello stesso modo: `pollen-grass/tree/weed` nei quattro livelli,
+`uv-index-1…11`, `barometer-low…extreme`, `windsock-calm/weak/moderate`,
+`wind-beaufort-0…12`, `compass-n…nw`, `code-yellow/orange/red` e `weather-alert` — cioè
+esattamente le bande che le schede Dettagli, il tile pollini e le allerte della Fase 11
+calcolano già e disegnano con un glifo generico.
+
+| | v2.0.0 (oggi) | v3 |
+|---|---|---|
+| Icone | 122 (line) | **519**, in 16 categorie |
+| Stili | line, fill | **fill, flat, line, monochrome** |
+| Formati | SVG con SMIL | SVG con SMIL (`@meteocons/svg`), SVG statico (`@meteocons/svg-static`), **Lottie** (`@meteocons/lottie`) |
+| Scatola | 64 × 64 | 128 × 128 |
+| Distribuzione | clone del repo al tag | npm + CDN `cdn.meteocons.com/{versione}/{formato}/{stile}/{icona}.{est}`, con `manifest.json` |
+| Licenza | MIT | MIT |
+| Importate in Chiaro | 49 su 122 | — |
+
+Chiaro ne spedisce oggi 268 file XML, 1,7 MB: 49 icone × 4 set statici (`mc_`, `mcn_`,
+`mcf_`, `mcfn_`) + 18 × 4 set animati (`mca_`, `mcan_`, `mcaf_`, `mcafn_`).
+
+### Lo spike, prima di aprire le caselle
+
+Tre domande, e finché non hanno risposta la fase non parte. La prima è l'unica che può
+fermarla.
+
+- [x] **Le maschere.** v3 usa `<mask>`, che VectorDrawable non ha. Sul sottoinsieme delle 70
+      icone che Chiaro metterebbe a schermo: **line 31, flat 31, monochrome 31, fill 12**. Per
+      `line` sono quasi tutti i cieli composti — `mostly-clear-day/night`,
+      `partly-cloudy-day/night`, `overcast`, `fog-day/night`, gli `overcast-*`, i
+      `partly-cloudy-*-rain/snow`, `extreme-rain`, i `thunderstorms-day/night` — quindi
+      **il convertitore di maschere è obbligatorio**, non una comodità, e lo è qualunque sia
+      il secondo stile.
+      Il fatto che salva: sono **tutte `mask-type:alpha` con riempimenti binari bianco/nero,
+      nessuna maschera in gradiente**, e la stragrande maggioranza usa `evenodd`. Una maschera
+      «tutta la tela meno questa forma» si riscrive come `<clip-path>` se si **inverte il
+      verso** della sottoforma (il parser Android applica NON-ZERO e `<clip-path>` non ha
+      `fillType`). La maschera però **si muove** (porta la sua `animateTransform`: è la nuvola
+      che va su e giù) mentre il sole sotto sta fermo, e in VectorDrawable la trasformazione di
+      un gruppo si applica **sia al clip sia ai figli**. Serve quindi la coppia annidata:
+
+      ```xml
+      <group android:translateY="@anim">        <!-- muove il clip -->
+          <clip-path android:pathData="tela meno nuvola"/>
+          <group android:translateY="@anim-inverso">   <!-- rimette fermo il sole -->
+              … il sole …
+          </group>
+      </group>
+      ```
+
+      **Fatto l'11 set 2026, e la geometria regge: 1 345 maschere su 1 345 identiche.**
+      `tools/spike_mask_clip.py` non guarda un disegno, rasterizza: appiattisce ogni maschera
+      dei quattro stili (bezier, archi e abbreviazioni comprese), calcola con una scanline
+      l'area **evenodd dell'originale** e l'area **nonzero della versione convertita**, e le
+      confronta su una griglia di 128 × 128. **Zero pixel di differenza**, su tutte e 519 le
+      icone × 4 stili: 1 236 maschere a due sottopercorsi (tela + forma, quelle che hanno
+      bisogno dell'inversione) e 109 a uno solo (dove le due regole già coincidono). 12,7
+      secondi in tutto.
+      **Anche la maschera che si muove regge, e si è guardata** (stesso giorno).
+      `tools/spike_v3_convert.py` è il prototipo del convertitore: converte davvero un SVG
+      v3 in `<vector>` + `<animated-vector>`, con l'inversione fatta **sui comandi** e non
+      sulla polilinea (una cubica girata è `P1,C2,C1,P0`; un arco tiene i raggi e
+      **inverte `sweep`**), e ri-rasterizza ogni conversione prima di scriverla. Quattro
+      icone `line` — `clear-day`, `mostly-clear-day`, `partly-cloudy-day`, `overcast` —
+      più `partly-cloudy-day-rain` e `thunderstorms-day`.
+      **`./gradlew :app:assembleDebug` passa**: aapt accetta il viewport 128, il
+      `clip-path`, i gruppi annidati, `fillType="evenOdd"` e i `pathInterpolator` generati
+      dai `keySplines`.
+      E `tools/icon_filmstrip.py` — insegnato a leggere il viewport invece dei 64 fissi —
+      le ha disegnate a nove istanti del ciclo su **entrambe** le superfici: la nuvola
+      va su e giù, **il sole sotto resta fermo**, i raggi sono tagliati dove passa la
+      nuvola. La coppia di gruppi annidati fa quello che doveva fare.
+      Due cose che il filmstrip ha reso visibili e che nessun numero aveva reso ovvie:
+      la scala 0 → 1 → 2 → 3 finalmente **si legge come una scala** (sole pieno, sole con
+      nuvoletta, sole dietro la nuvola, nuvola sola); e i colori originali sulla carta
+      sono **fantasmi**, mentre sul fondo scuro sono nitidi. La misura del 73% / 13%
+      guardata invece che calcolata.
+      Quel che resta al telefono: che hwui renda la coppia annidata come la rende il
+      filmstrip. Il rischio è sceso da «la fase può cadere» a «una verifica di resa».
+- [x] **I colori originali su carta.** La misura sotto. Lo spike produce il filmstrip delle
+      due ipotesi (originali / riancorati) e si decide guardando.
+- [x] **La prerelease.** `@meteocons/svg` su npm ha `latest` = **0.1.0** e `next` =
+      **3.0.0-next.10**: v3 non è ancora stabile. Verificare se esce una `3.0.0` prima di
+      aprire le caselle; se non esce, si appunta la versione esatta come si è appuntato il tag
+      v2.0.0, e `UPSTREAM.md` dice che è una prerelease e perché.
+      **Sciolto l'11 set 2026**: la 3.0.0 non e' uscita, quindi si appunta la
+      prerelease esatta — `@meteocons/svg@3.0.0-next.10` — come si appuntava il tag
+      v2.0.0, e `licenses/Meteocons-MIT.txt` dice da quale pacchetto viene il testo.
+
+### Il commento sui colori originali, con i numeri
+
+«Lasciare i colori originali» semplificherebbe moltissimo: farebbe cadere il motivo per cui
+oggi esistono quattro set statici invece di due. Ma non regge sulla superficie chiara.
+
+Misurato sulle 70 icone che Chiaro metterebbe su uno schermo, contro le due superfici di
+DESIGN §2.2 (carta `#FCF9F3`, scura `#16130E`), soglia 3:1 di §10. **I riempimenti delle
+maschere sono esclusi**: `#fff` e `#000` lì dentro non sono inchiostro, e contarli gonfiava
+il conto nella prima stesura di questa fase. «Inchiostro sotto soglia» pesa ogni colore per
+quante volte è usato, che è la domanda vera:
+
+| | fill | flat | line | monochrome |
+|---|---|---|---|---|
+| colori distinti | 44 | 35 | 31 | **1** |
+| passano 3:1 su **entrambe** | 10 | 10 | 7 | 0 |
+| inchiostro sotto soglia su **carta** | **77%** | **73%** | **73%** | 100% |
+| inchiostro sotto soglia su **scura** | 7% | 5% | **13%** | 0% |
+
+I più usati sono corpi e contorni di nuvola: `#e6effc` (26 usi in line) **1,10:1** su carta,
+`#e2e8f0` (15 usi) **1,17:1**, `#86c3db` (27 usi) **1,84:1**, `#f8af18` — il sole — (33 usi)
+**1,79:1**. Non sono «un po' chiari»: sono invisibili, ed è lo stesso difetto che
+`import_meteocons.py` documenta per v2 (`#E5E7EB`, 1,18:1) — v3 non l'ha risolto perché
+Meteocons è disegnato per un fondo neutro, non per la carta.
+
+Una differenza fra gli stili che conta: **`line` è l'unico che fallisce in modo materiale
+anche sul fondo scuro** (13% dell'inchiostro contro il 5–7% degli altri), per via di
+`#1e293b` (29 usi, **1,27:1** su scuro) con cui disegna i contorni scuri. Quindi line va
+riancorato su **entrambe** le superfici, fill e flat praticamente solo su carta. Che è
+esattamente la forma dei quattro set che ci sono già.
+
+E `monochrome` è la via di fuga che nessuno ha chiesto ma che va scritta: **un solo colore**,
+quindi tingibile con un ruolo e conforme per costruzione. Non si prende, e il motivo è già in
+DESIGN §13.1 — «una tinta piatta trasforma la famiglia in sagome». Resta lì come opzione se
+un giorno servisse un set che non costa nulla in contrasto.
+
+Quindi la risposta alla domanda «i colori originali possono causare problemi»: **sì, su carta
+sempre, e su fondo scuro anche per line**. La proposta, che non blocca il lavoro e non butta
+la regola:
+
+- [x] Il tool importa **con i colori originali** come uscita di riferimento (`--original`), e il
+      rimappaggio è un **passo successivo** sullo stesso albero: si generano entrambi e si sceglie
+      davanti al filmstrip, anziché decidere prima
+- [x] L'architettura «due set scelti dal fondo» (`styledRes(darkGround)`) **resta**: è già
+      scritta, ha superato una revisione di design, e con i numeri qui sopra è esattamente la
+      forma giusta. Ma la regola non è «originali sullo scuro, riancorati sulla carta» per
+      tutti: **flat** può quasi tenere gli originali sullo scuro (5% di inchiostro sotto
+      soglia), **line no** (13%, per i contorni `#1e293b`). Quindi quattro set come oggi, e
+      quanto rimappaggio serva a ciascuno lo dice la misura, non la simmetria
+- [~] **Non presa**, e si scrive perché era la terza strada: dare all'icona un
+      **fondo suo** (una pastiglia tenue sotto il glifo nella striscia e nella settimana): fa
+      passare il 3:1 senza toccare un colore. È una decisione di design, non di conversione —
+      va in DESIGN §13.1, non qui
+
+### I due stili: **flat + line**, e perché non fill
+
+Il committente aveva detto «fill e flat», poi si è corretto in «fill e line», poi ha chiesto
+se non fosse meglio «flat e line». La misura dà ragione alla terza versione, e per un motivo
+più forte del conteggio delle maschere.
+
+**v3 `flat` è quello che Chiaro già spedisce.** L'attuale set `mcf_*` è lo stile fill di v2
+con **ogni gradiente appiattito sul colore di faccia** dal tool (dipartenza n. 4 nell'intestazione
+di `import_meteocons.py`). Lo stile `flat` di v3 è esattamente quel disegno, ma **disegnato
+così a monte** invece che derivato da noi. Scegliere `fill` vorrebbe dire o tenere i gradienti
+— una capacità nuova, un rischio nuovo e un cambio visivo rispetto a oggi — o riappiattirli,
+cioè rifare a valle un lavoro che l'illustratore pubblica già fatto. È il punto 5 della
+richiesta («riusare le originali senza ricrearle») portato al massimo.
+
+Misurato sulle 70 icone del sottoinsieme:
+
+| | fill | flat | line |
+|---|---|---|---|
+| maschere da convertire | 12 | 31 | 31 |
+| filtri da lasciar cadere | 1 (`compass`) | **0** | **0** |
+| gradienti da appiattire o portare | 65 | 3 | **0** |
+| tratteggi da ridisegnare | 2 | 2 | 2 |
+| animazioni | identiche | identiche | identiche |
+
+**La coppia flat + line è quella che chiede al tool il minor numero di riscritture**: zero
+filtri, zero o quasi gradienti, e le maschere che servirebbero comunque perché `line` — lo
+stile predefinito, quello che il lettore vede appena installa — ne ha 31 su 70. Una volta
+costruito il convertitore per line, flat non costa una riga in più. Il conteggio delle
+maschere, che nella prima stesura di questa fase faceva preferire fill, **smette di essere un
+argomento** nel momento in cui line è uno dei due: va costruito comunque.
+
+Va anche detto cos'è il `line` di v3, perché non è il `line` di v2: non è un contorno
+tracciato, è **una forma riempita con `fill-rule="evenodd"`** — una ciambella. Per Android è
+una buona notizia (`android:fillType="evenOdd"` esiste dall'API 24, e non c'è nessun tratto
+da convertire); per il contrasto è la stessa notizia di sempre, perché quella ciambella è
+riempita di `#e6effc`.
+
+E la simmetria con oggi si conserva: **line resta il predefinito, flat è l'alternativa in
+Impostazioni → Aspetto**, esattamente come line/fill adesso. Nessuna stringa da riscrivere,
+nessuna scelta da spiegare di nuovo al lettore.
+
+### Il commento sulla «reimportazione totale»
+
+519 icone × 2 stili × (statica + animata) non stanno nell'app. Misurato sul repo: un
+drawable statico pesa **~1,7×** il suo SVG, un animato **~3,5×**; l'SVG v3 medio è 4,1 KB,
+quindi ~7 KB statico e ~14 KB animato.
+
+Vale anche la regola di DESIGN §7.1, che dimezza il conto: **muove solo la famiglia delle
+condizioni**, perché «il marchio di un tile etichetta una quantità, e un barometro che gira
+per sempre è decorazione». Quindi 24 icone hanno il gemello animato e le altre 119 no.
+
+| scenario | file | XML su disco |
+|---|---|---|
+| oggi (v2, 49 icone, 4 set statici + 4 animati) | 268 | 1,7 MB |
+| **le 143 della lista, line + flat, 2 set per fondo** | **668** | **~5,2 MB** |
+| le 143, line + flat, 1 solo set di colori | 334 | ~2,6 MB |
+| tutte e 519, 2 stili, 1 set | 2 076 | ~21,8 MB |
+| tutte e 519, 2 stili, 2 set per fondo | 4 152 | ~43,6 MB |
+
+Tre volte il peso di oggi per tre volte le icone.
+
+**Ma il peso su disco non è il peso nell'APK, e cambia la conclusione.** Misurato dentro
+`app-debug.apk`: i 736 drawable della famiglia pesano 972 KB non compressi e **371 KB
+compressi**, cioè **516 B l'uno** — l'XML binario più il deflate valgono un fattore 4,6
+contro il testo su disco. Rifatto il conto in quella moneta: la lista da 143 aggiunge
+**~1,2 MB** all'APK di release, il set completo da 519 ne aggiungerebbe **~3,5 MB**.
+
+E c'è la terza strada, che è quella giusta e che il progetto ha già configurata
+(`isShrinkResources = true`, `app/build.gradle.kts:63`):
+
+- [x] **Si converte il set completo (519 × 2 stili), si generano le tabelle Kotlin solo per
+      la lista di spedizione.** Un drawable che nessuna tabella nomina non è referenziato, e
+      `shrinkResources` lo toglie dalla release: **zero byte** di costo per le icone non
+      ancora usate, ~15 MB nel repo, e promuoverne una a «spedita» è **una riga**, senza
+      reimportare niente e senza rete. Il repo diventa il set completo, l'APK resta la lista.
+      **Provato l'11 set 2026 sul set intero, e «zero byte» era sbagliato.** Con tutte le
+      1 974 icone v3 in `res/drawable/` e nessuna riga di Kotlin che le nomini, l'A/B di
+      due build di release dà **6 676 125 B contro 6 548 541 B: +127 583 B**, cioè
+      **65 byte a drawable**. E stanno *tutti* in `resources.arsc` (+127 464 B): i file in
+      `res/` sono **1 565 in entrambe**, identici — AGP butta il disegno e tiene la voce
+      in tabella. Quindi il set completo costa **125 KB, il 2% dell'APK**, non zero.
+      L'argomento regge lo stesso e il ripiego previsto non serve, ma il numero è questo
+      e non quello che avevo scritto
+
+Quindi «totale» va inteso sul **convertitore**, non sull'APK: il tool deve saper convertire
+qualunque delle 519 e dimostrarlo, e la tabella `ICONS` resta la lista di spedizione.
+Crescerla è una riga.
+
+
+### Blocco C — il colore, fatto (11 set 2026)
+
+`tools/reanchor.py`. La regola della v2 era una **tabella a mano** (`REMAP`, `FILL_REMAP`,
+`FILL_NIGHT`): una riga per ogni hex. La v3 ha il doppio dei colori e ne avrà altri,
+quindi qui la regola è scritta come funzione e la tabella è il suo risultato.
+
+Si tiene la tinta e si sposta la **luminanza**, perché il contrasto WCAG dipende solo da
+quella: è l'unica leva che cambia il rapporto, ed è quella che si vede di meno. Due cose
+però cambiano rispetto alla v2, e la seconda è un guadagno:
+
+1. **Non si sposta un colore, si comprime una famiglia.** Una nuvola è tre grigi, e una
+   regola applicata a ciascuno per conto suo può scambiarli. I colori si raggruppano per
+   tinta (i neutri, sotto 0,03 di croma, stanno insieme) e la famiglia si comprime
+   intera, tenendo fermo **l'estremo che già va bene**: contro un tetto resta fermo il più
+   scuro e scende il più chiaro, contro un pavimento resta fermo il più chiaro e sale il
+   più scuro. Ordine e spaziatura in L di Oklab si conservano.
+2. **Ogni set deve una sola superficie.** v2 chiedeva a un set di reggere entrambe, il che
+   lo inchiodava nella banda Y ∈ [0,120, 0,283] — ed è il motivo per cui il suo sole è un
+   bronzo: a quella luminanza in sRGB il giallo non c'è. Qui il vincolo è un tetto
+   (carta) **oppure** un pavimento (scuro), mai tutti e due, e sul fondo scuro il sole
+   resta un oro vero (`#f8af18` → `#ffc25e`).
+
+| | colori | identici all'originale | sotto 3:1 dopo |
+|---|---|---|---|
+| line, carta | 57 | 2 | **0** |
+| line, scuro | 57 | 10 | **0** |
+| flat, carta | 62 | 2 | **0** |
+| flat, scuro | 62 | 12 | **0** |
+
+Un colore che già reggeva e che la compressione lascia dov'era esce **identico**: il giro
+per Oklch e ritorno sposterebbe l'ultima cifra, e cambiare un hex che non ne aveva bisogno
+è rumore in un diff che qualcuno dovrà leggere. E la soglia non si dà per raggiunta: dopo
+aver costruito il colore si **misura** il rapporto e si corregge di un passo alla volta
+finché passa, che è la stessa regola con cui `PaletteContrastTest` asserisce l'esito e non
+la ricetta.
+
+I quattro set escono con lo schema della v2 — `mc3_`/`mc3n_` (line, carta e scuro),
+`mc3f_`/`mc3fn_` (flat) più i loro gemelli animati — e il riancoraggio si applica **una
+volta per stile**, non per icona, perché una famiglia si può spostare solo se la regola
+vede tutti i suoi grigi insieme. Il flag `--original` emette anche i set non riancorati,
+per il confronto al filmstrip; non si spediscono.
+
+**Il costo, misurato:** 4 004 drawable, 39 MB nel repo, e nell'APK di release
+**+257 996 B** (64 byte l'uno, lo stesso numero della misura precedente), cioè il 4%.
+
+- [x] **39 MB nel repo**: **decisi l'11 set 2026 dal committente — non pesano.** La
+      famiglia intera resta in git, e la lista di spedizione resta il filtro verso l'APK.
+      Se un giorno pesassero, la stessa lista può diventare anche lista di *conversione*
+
+
+### Blocco B — la cucitura Kotlin, fatta (11 set 2026)
+
+L'app disegna la v3. `tools/import_meteocons.py` e i 268 drawable della v2 escono di
+scena; il tool v2 resta in `tools/` perché `import_meteocons_v3.py` ne importa
+`loop_keyframes` — la rotazione dei keyframe per una fase negativa, scritta per la v2 e
+valida qui identica.
+
+- [x] **`ChiaroIcons` ora è politica, non tabelle.** Le quattro mappe stanno in
+      `ui/icons/MeteoconsSets.kt`, **generato** dal tool su `tools/shipped_icons.py`: 143
+      icone per quattro set sono 595 righe in cui un refuso non si vede, e il tool sa già
+      quali file ha scritto. Quel che resta in `ChiaroIcons` è la parte su cui si discute:
+      quale codice prende quale disegno, quale metrica quale marchio
+- [x] **Il vestito non sceglie più un'icona.** `styledRes` prendeva `AppPalette` perché il
+      set line della v2 doveva **entrambe** le superfici (banda Y ∈ [0,120, 0,283], da cui
+      il sole bronzo) e serviva un secondo set perché il vestito vivid potesse scappare da
+      quel tetto sui fondi scuri. Con quattro set scelti da stile e fondo il parametro non
+      decideva più niente: è stato tolto da `styledRes`, `conditionRes`, `movingRes`,
+      `moonPhaseRes`, `ArcText.rowIconRes` e `SkyWidget.skyJobIconRes`
+- [x] **`WeatherIcons.FILL` ora è il `flat` di v3, e l'enum tiene il suo nome**: `flat` è
+      quello che l'app già spediva come set pieno (il fill v2 coi gradienti appiattiti dal
+      tool). Rinominare la costante avrebbe migrato una preferenza salvata e riscritto una
+      stringa delle impostazioni per descrivere lo stesso disegno
+- [x] **La mappatura WMO** è quella della tabella sopra, `not-available` compreso
+- [x] **Il test che non c'era**: `ConditionIconsTest`. Ogni codice che il provider può
+      servire → il suo disegno, di giorno e di notte; il fallback; e una riga che dice
+      esplicitamente che 0, 1 e 2 sono tre disegni diversi — il difetto che ha aperto la
+      fase, in un'asserzione
+- [x] **`IconContrastTest` e `AnimatedIconTest`** guardano i set v3. Il primo ha perso la
+      frase «il set line deve entrambe le superfici», che dalla Fase 13 non è più vera; il
+      secondo ha imparato due cose: che un `keySplines` è un `<pathInterpolator>` e non un
+      difetto (pretendeva che ogni animatore fosse lineare, vero solo per la v2), e che
+      un'icona il cui tratteggio è diventato una finestra **non** ha lo stesso `pathData`
+      del suo gemello fermo — eccezione dichiarata, riconosciuta dalla presenza di
+      `trimPath` e da nient'altro, così non può allargarsi in silenzio
+- [x] **`MeteoconsSetsTest`**, la guardia del confine. Aggiungere un `R.drawable.mc3_…` a
+      una schermata senza aggiungerlo alla lista compila benissimo e poi lancia in faccia
+      al lettore, perché `styledRes` usa `getValue`: il test legge i sorgenti e lo impedisce
+
+**E la lista di spedizione si è ristretta, dopo averlo misurato.** Era di 143; le icone
+che una schermata disegna davvero oggi sono **53**. Spedire anche le altre 90 — i pollini
+graduati, l'UV, le bande del barometro, la Beaufort, i momenti del giorno, i tipi di
+allerta — costava **570 KB su 6,8 MB, l'8% dell'APK, per disegni che nessun lettore
+vedeva**. Stanno in `PLANNED` nello stesso file, e ognuna si sposta in `SHIPPED` nella
+stessa modifica che le dà una schermata.
+
+| | APK di release |
+|---|---|
+| prima della fase (v2, 49 icone) | 6 548 541 B |
+| v3 con 53 spedite | **7 141 284 B** (+593 KB) |
+| v3 con 143 spedite | 7 724 737 B (+1,12 MB) |
+
+Il mezzo mega in più compra 24 cieli invece di 18, i disegni di v3 che sono più
+dettagliati, e i quattro set riancorati.
+
+- [x] **Le schede Dettagli**: pollini per pianta e livello, UV per unità (il tile stampa
+      l'intero), le **tre** bande del barometro che `pressureMeaning` dice e non le cinque
+      disegnate, e `mist`/`haze`/`fog` per la visibilità. Il vento **non** è graduato, per la
+      stessa regola: `windMeaning` ha cinque bande, i windsock sono tre e la Beaufort non è
+      detta da nessuna parte a schermo
+- [x] **L'ago del vento**: `wind-direction-n` col solo gruppo `Pointer`, ritagliato su una
+      finestra di 48 unità centrata sul **mozzo** (senza ritaglio è tredici unità
+      d'inchiostro su centoventotto, e a 16 dp una scheggia — guardato, non supposto), ruotato
+      come `WindArrow` ruotava già. Resta a 16 dp, così nessuna misura del tile si muove
+
+
+### Blocco D — i documenti, e un numero che è migliorato (11 set 2026)
+
+`DESIGN.md` §13.1 era la sezione più lunga del documento e citava v2.0.0, i 64 unit, le
+tre dipartenze del tool e il quarto set del vestito vivid: riscritta. Con lei §7.1, la
+nota dei generatori e `README.md` (che non prende trattini lunghi, ed è stato ricontrollato
+riga per riga).
+
+**L'eccezione dichiarata del widget Cielo è stata rimisurata, e si è mossa parecchio.**
+Quel fondo è il cielo scurito, al più chiaro `#5C6E7B`, Y 0,149: un mezzotono, dove un
+inchiostro passa il 3:1 solo sopra Y 0,546 o sotto Y 0,016, e in mezzo non c'è niente.
+
+| | sotto 3:1 su `#5C6E7B` | il sole |
+|---|---|---|
+| v2 line (`mc_*`) | 8 su 8 | 1,57:1 |
+| v2 line vivid (`mcn_*`) | 8 su 8 | 2,68:1 |
+| **v3 line scuro (`mc3n_*`)** | **17 su 34** | **3,31:1** |
+| **v3 flat scuro (`mc3fn_*`)** | **20 su 38** | **3,33:1** |
+
+**L'icona che il lettore guarda davvero adesso passa**, e non era mai successo. Metà dei
+colori resta sotto, quindi l'eccezione resta un'eccezione — ma il caso che conta si è
+chiuso per aritmetica e non per concessione: un set che deve una superficie sola ha spazio
+che un set che ne deve due non ha. È il guadagno della decisione del Blocco C, arrivato
+dove non lo si cercava.
+
+
+### La prova sul dispositivo, e le due cose che ha rovesciato (11 set 2026)
+
+Il committente ha installato l'APK e guardato striscia oraria, fasce dei giorni, Cielo e
+widget: **vanno**. Le schede Dettagli no, e in due punti aveva ragione lui.
+
+**Il vento sembrava rotto perché lo era.** Il marchio usciva come mezza riga e un pezzo di
+ricciolo. La causa è una mia scelta sbagliata del blocco sui tratteggi: avevo deciso che un
+tratteggio fermo si ridisegna a segmenti *sempre*, anche quando il tratteggio è la finestra
+di una spazzolata. Ma i marchi delle schede **non si animano mai** (§7.1), quindi quel che
+il lettore vede per sempre è il primo fotogramma di un'animazione che non parte. L'importatore
+v2 lo aveva già capito e messo per iscritto — «il tratteggio lì esisteva solo per essere
+animato» — e io l'ho scavalcato con una regola generale. Ora il fermo esce **pieno** e solo
+il gemello animato porta la finestra di `trimPath`.
+
+Rimettendolo pieno è venuto fuori un difetto vero che il tratteggio nascondeva:
+`emit_path` chiudeva **ogni** sottopercorso con uno `Z`, e su un tratto aperto quella
+chiusura è una riga che torna indietro. Sui segmenti spezzati era invisibile (ogni tratto
+tornava su se stesso), sul ricciolo intero sarebbe stata una diagonale in mezzo all'icona.
+`parse_segments` adesso si ricorda se un sottopercorso era chiuso.
+
+**La regola sulle icone graduate aveva una metà in meno.** Diceva: un glifo può dire solo
+un livello che il tile già calcola e già dice a parole. Il barometro la passava — Meteocons
+ne disegna cinque, l'app ha tre bande — ma quel che distingue i cinque quadranti è un ago
+**largo 2 unità su 128**, cioè mezzo dp ai 34 del tile. Aritmeticamente giusto e otticamente
+assente: un quadrante che sembra dover indicare qualcosa e non indica niente, ed è esattamente
+come l'ha descritto il committente («non ha indicazione»). La regola ora ha la sua seconda
+metà — **e che un lettore possa vederlo** — e la pressione spedisce il quadrante generico.
+
+**La freccia della direzione del vento è stata tolta** (committente). Non perché dicesse
+troppo poco: diceva *più* dell'etichetta a sedici punte accanto. Perché a 16 dp non era
+bella, e in un tile fatto di righe di testo era l'unica cosa che si notava per il motivo
+sbagliato. La macchina che prende metà disegno (`PARTIALS`) resta, documentata e inutilizzata:
+è un problema che tornerà.
+
+**E una domanda a cui la misura risponde di no.** Il committente ha chiesto se, con la v3, si
+possa togliere la pausa delle animazioni durante lo scroll (§7.1, messa l'8 set perché lo
+scroll era scattoso). Misurati i nodi di percorso delle icone che si animano davvero:
+
+| | icone | nodi, mediana | nodi, totale |
+|---|---|---|---|
+| v2 (`mca_*`) | 18 | 24 | 561 |
+| **v3 (`mc3a_*`, spedite)** | 23 | **71** | **2 079** |
+
+Il costo per fotogramma sul RenderThread è la rasterizzazione di quei percorsi, e la v3 ne
+ha **circa il triplo**. La ragione per cui la pausa esiste non è venuta meno: è cresciuta. Il
+conteggio dei nodi è un indizio e non un tempo di fotogramma, quindi la risposta certa resta
+una prova sul dispositivo — ma la misura punta dalla parte opposta a quella sperata.
+
+- [ ] Se si vuole comunque provare: `LocalMotionPaused` è un punto solo, e un APK con la
+      pausa tolta si costruisce in un minuto. Da fare guardando, non discutendo
+
+
+### Il secondo giro sulle schede (11 set 2026)
+
+Tre domande del committente dopo la prima prova, e tre risposte misurate.
+
+**Qualità aria: `smoke` invece di `smoke-particles`.** D'accordo, e c'è un numero dietro:
+le particelle da sole riempiono **0,33** della loro scatola, il marchio più piccolo della
+griglia; `smoke` è le stesse particelle con l'aria in cui stanno, **0,62**. Il costo si
+dichiara: quando la visibilità scende nella sua banda di foschia il tile accanto disegna
+una nuvola con le righe e questo una nuvola con i puntini, e a 34 dp si somigliano. Succede
+sotto i 10 km, dove le parole comunque differiscono.
+
+**Ora d'oro e Tramonto: erano lo stesso disegno, ed è colpa del set.** `sunrise`,
+`horizon` e `sunset` differiscono per una gobba in mezzo alla linea dell'orizzonte, **6
+unità su 128**, cioè 1,6 dp alla misura della riga. Invisibile. Meteocons v3 non ha un
+disegno per l'ora d'oro — cercati e scartati `sun-hot` (legge «caldo»), `haze-day` (legge
+«foschia»), i `time-*` (portano un intervallo di ore stampato, che contraddirebbe l'ora
+della riga) — ma **il sole pieno dice la cosa giusta**: nell'ora d'oro il sole è ancora
+sopra l'orizzonte, all'alba e al tramonto lo sta attraversando. Chi attraversa tiene la
+linea.
+
+L'ora blu resta la stella vuota e **si dichiara debole**: legge più come un «preferito»
+che come la prima stella della sera, e in v3 non c'è di meglio senza rubare un disegno a
+un'altra riga.
+
+**Le dimensioni: la scala non si è mossa, e il motivo è aritmetico.** Meteocons non disegna
+tutte le icone alla stessa taglia dentro la scatola: misurata la frazione occupata dai
+marchi delle schede, va da **0,33** a **1,00**. Non è una svista, è come sono disegnate, e
+appiattirla vorrebbe dire una goccia grande come un sole.
+
+| | riempimento della scatola |
+|---|---|
+| `uv-index` | 1,00 |
+| `barometer` | 0,80 |
+| `wind` | 0,63 |
+| **`pollen-*`** | **0,53** (era 0,76 con `dust`) |
+| `mist`, `raindrops` | 0,47 |
+| `humidity` | 0,42 |
+| `smoke-particles` | 0,33 |
+
+Un solo caso si corregge, ed è una **regressione misurata**: i pollini riempiono 0,53
+dove `dust` — il ripiego che sostituiscono, il disegno con cui la griglia era stata messa
+a punto — ne riempiva 0,76. Si importano in una finestra di 89 unità invece di 128, **una
+sola per tutte e tredici**, calcolata sull'unione dei loro inchiostri così che piante e
+livelli non ballino fra loro.
+
+**Il badge del numero non si salva ingrandendo.** In `uv-index-*` e `pollen-*-*` il badge è
+**30 × 30 unità su 128** in entrambi: 8 dp ai 34 del tile, con dentro una cifra di circa
+**3,2 dp**. Il budget dell'etichetta concede esattamente un gradino (a 38 dp restano 80 dp
+contro i 76,7 che «Qualità aria» chiede; a 42 ne restano 76 e va a capo), e quel gradino
+comprerebbe alla cifra **0,4 dp**. Non basta a renderla leggibile e spende più di metà del
+margine. Il badge resta quello che a questa misura è onestamente: un segno di colore, non
+una cifra. Il valore è stampato sotto in 32 sp, che è dove si legge.
+
+
+### Il terzo giro: l'ago che non c'era, e un gradino (11 set 2026)
+
+**«All'icona della pressione manca l'indicatore» era un difetto di conversione, non una
+scelta.** Tutti i barometri di Meteocons hanno il loro ago; il `<clipPath>` che li
+accompagna però è un rettangolo con un `transform="rotate(45 …)"`, e il convertitore
+**ignorava quel transform**. Il ritaglio finiva nell'angolo in alto a sinistra e cancellava
+l'ago. `<clip-path>` in VectorDrawable non ha un transform suo, e appoggiarlo al gruppo lo
+applicherebbe anche ai figli — cioè muoverebbe il disegno insieme al ritaglio — quindi la
+matrice si cuoce nelle coordinate (un arco tiene i raggi sotto una trasformazione rigida e
+ruota l'inclinazione; una scala non uniforme viene rifiutata invece che disegnata male).
+
+Venti disegni toccati, tutti `barometer*` e `compass*`, due dei quali si spediscono. E
+qui sta la lezione: **il giro precedente aveva concluso che il barometro «non si può
+graduare perché l'ago è mezzo dp»**. L'ago era invece assente del tutto, e la conclusione
+poggiava su un difetto scambiato per una proprietà del disegno. La decisione di non
+graduarlo resta — quattro quadranti che differiscono per l'angolo di un ago da 1 dp non
+sono quattro cose diverse per un lettore — ma ora è presa sul disegno vero.
+
+**La bussola ha perso le sue lettere.** Riparando il ritaglio sono diventate visibili le
+**N E S W disegnate come path** che la `compass` di v3 porta, e in italiano l'ovest è O:
+è lo stesso testo inglese dentro un'immagine per cui erano state scartate le otto
+`wind-direction-*`. Il tool sa ora lasciare indietro un gruppo (`DROP_GROUPS`), e togliere
+`Letters` riporta la bussola al disegno della v2 — cerchio e ago — con cui la riga dei
+luoghi era stata messa a punto.
+
+**E il gradino c'era davvero.** Il budget dell'etichetta è `118 − icona` su 360 dp contro i
+76,7 dp che «Qualità aria» chiede, quindi il tetto è **41,3 dp**: 38 lascia 3,3 dp di
+margine, 40 ne lascia 1,3, 42 manda a capo. La nota che stava lì diceva che un quarto
+gradino avrebbe mandato a capo l'etichetta; l'aritmetica dice che un gradino ci sta, e
+l'aritmetica ha ragione. Il tile passa a **38 dp**. Costa alla scala il suo ordine stretto
+— il tile adesso pareggia la riga della settimana invece di starle sotto — e un'etichetta
+di scheda accanto a una riga della settimana non è un confronto che un lettore fa mai.
+
+
+### «Il ritaglio può aver rotto altro?» — cercato, e no (11 set 2026)
+
+Domanda del committente dopo il difetto del barometro. La risposta non è un'opinione:
+sono due verifiche, una sulla forma del convertitore e una sul risultato.
+
+**Primo: l'inventario.** Enumerati tutti gli elementi e tutti gli attributi che compaiono
+nelle 519 × 4 sorgenti, e confrontati con quel che l'importatore legge davvero. Cinque
+sospetti, e quattro erano fantasmi:
+
+| sospetto | occorrenze | esito |
+|---|---|---|
+| `filter` come **attributo** di un gruppo (io rifiuto solo l'elemento) | **0** | non esiste |
+| `clip-rule` dentro un `<clipPath>` | **0** | non esiste |
+| forme diverse da `<rect>` dentro un `<clipPath>` | **0** | sono tutti rettangoli |
+| `stop-opacity`, primo stop con offset ≠ 0 | **0** | non esistono |
+| `additive="sum"` su `animateTransform` | 84 | **corretto per costruzione** |
+
+L'ultimo meritava la verifica vera, fatta attraversando l'albero e non con una regex: in
+tutte e 519 non c'è **un solo** elemento con un `transform` statico più un'animazione che
+lo sostituisca, né due animazioni di cui la seconda non additiva. L'annidamento di gruppi
+che l'importatore fa è sempre la composizione giusta.
+
+**Secondo: il risultato, non le intenzioni.** `tools/diff_against_source.py` sovrappone
+ogni icona convertita alla sua sorgente con `mix-blend-mode: difference` in una griglia a
+posizione nota, fa scattare Chrome, decodifica il PNG e conta i pixel accesi cella per
+cella. Due accortezze senza le quali il numero non vuol dire niente: l'antialiasing va
+spento (un pixel a metà trasparenza non dà zero sotto `difference`, e senza
+`crispEdges` brillano tutte e 519 le celle), e la **linea di base** va misurata e
+sottratta confrontando la sorgente con se stessa.
+
+Il primo giro diceva 443 celle diverse su 519. Non erano icone rotte: era il filmstrip.
+**`icon_filmstrip.py` ignorava `fillType="evenOdd"`**, e nella famiglia `line` di v3 un
+contorno *è* un anello disegnato con quella regola — quindi lo strumento riempiva piene
+tutte le nuvole. Difetto suo, corretto, e vale anche per ogni figura che questa fase ha
+mostrato finora.
+
+Corretto quello, le icone con una **forma intera** di differenza (picco ≥ 200, cioè non un
+bordo) sono **35 su 519**, e sono due gruppi soli, entrambi voluti e già scritti:
+
+- i **16 pollini**, che sono ritagliati apposta in una finestra di 89 unità;
+- le **19 del vento**, dove il tratteggio spazzolato esce pieno nel disegno fermo.
+
+Nient'altro. Il `transform` sul `<clipPath>` era l'unica classe di perdita silenziosa, e
+non ne restano.
+
+
+### «Le icone sembrano sproporzionate fra loro» — non e' la taglia, e' il tratto (11 set 2026)
+
+Segnalazione dal dispositivo, su «Il resto della giornata» e «La settimana»: il sole e la
+luna sembrano grandi, le nuvole piccole. Cercata la causa in tre misure, e le prime due
+dicono di no.
+
+**Non e' la dimensione della scatola.** Il lato dell'inchiostro in frazione di scatola
+sulla famiglia dei cieli: v2 andava da 0,32 a 0,70 (escursione **2,17×**), v3 va da 0,47 a
+0,73 (**1,58×**). La v3 è *più* uniforme di quella che spediva prima, e le masse sono quasi
+tutte più grandi. L'unica che si è rimpicciolita è `fog-day` (0,70 → 0,49).
+
+**Non è l'inchiostro totale.** Rasterizzate e contate le coperture: `partly-cloudy-day` ne
+mette a schermo **più** di `clear-day` (8,3% contro 7,7% della cella). Eppure sembra più
+leggera, quindi non è quello che l'occhio pesa.
+
+**È lo spessore del tratto.** In v2 la nuvola era un tratto dichiarato: **3 unità su una
+scatola di 64, il 4,69%**. In v3 la nuvola della famiglia `line` è un **anello riempito
+evenodd**, e l'anello è spesso **4 unità su 128, il 3,13%**. Cioè un terzo più sottile in
+proporzione: a 42 dp sono **1,3 dp di linea contro i 2,0 di prima**. Accanto a un sole che
+è un disco pieno con i raggi pieni, un anello di 1,3 dp pesa meno — ed è esattamente quel
+che si vede.
+
+Va aggiunto che una parte di quello che si nota è il disegno che fa il suo mestiere:
+`mostly-clear` **deve** pesare meno di `clear`, ed è la distinzione per cui questa fase è
+stata aperta.
+
+- [ ] **La decisione è del committente**, perché le tre strade portano a lavori diversi:
+      lasciare così (è il disegno dell'illustratore, e un contorno pesa meno di un pieno);
+      passare allo stile **flat**, dove tutto è pieno e la riga si pareggia — un tocco in
+      Impostazioni, zero codice; oppure **ispessire gli anelli** della famiglia line
+      aggiungendo un tratto dello stesso colore al path riempito, che è meccanico ed esatto
+      (4 → 6 unità riporterebbe il peso relativo a quello della v2) ma è una dipartenza vera
+      dal «si usa l'originale»
+
+
+### La regola sulla scatola: quella dell'illustratore, senza eccezioni (11 set 2026)
+
+Decisione del committente, e sostituisce quella che avevo preso io il giorno prima: **ogni
+icona si importa nella finestra in cui è disegnata a monte, "a dimensione 1"**, senza
+ritagli e senza scale per-icona. Le differenze di taglia che ne risultano sono
+dell'illustratore, e si tengono.
+
+Quindi il ritaglio dei pollini è stato **tolto** — tornano a 0,52 della loro scatola, cioè
+più piccoli di come li avevo messi — e con lui è sparita la macchina che lo permetteva
+(`CROPS`, e `PARTIALS` che era l'unica altra cosa a ritagliare e non aveva più utenti da
+quando la freccia del vento è uscita). Resta `DROP_GROUPS`, che non è una questione di
+taglia ma di lingua: toglie le lettere inglesi dalla bussola.
+
+Il conto di quel che si perde, perché è giusto averlo scritto: i pollini erano il caso in
+cui il ripiego della v2 (`dust`) riempiva 0,76 della scatola e il disegno vero ne riempie
+0,53. Il pareggio che il ritaglio comprava valeva meno di una regola senza eccezioni, e
+un'eccezione è una cosa da ricordare.
+
+**La verifica dice che la fedeltà è ora completa.** Rifatto il confronto con le sorgenti
+dopo la rimozione, le icone con una forma intera di differenza sono **19 su 519**, e sono
+17 del vento (il tratteggio spazzolato reso pieno nel disegno fermo, inevitabile perché
+VectorDrawable non ha `stroke-dasharray`) più `moonrise` e `moonset` a 4 e 5 pixel, che
+guardati al grande sono identici alla sorgente: è rumore di soglia. La famiglia dei pollini
+è sparita dall'elenco, che è esattamente quel che doveva succedere.
+
+
+### Il codice 1 prende il sole pieno (11 set 2026)
+
+Decisione del committente, contro il mio consiglio, e con una ragione che si e' rivelata
+migliore dell'argomento con cui l'avevo difesa io.
+
+Io dicevo: abbiamo il disegno del «quasi sereno», usiamolo. Lui diceva: quel disegno **dà
+l'idea del nuvoloso** anche quando significa il contrario. Misurato nella sorgente, ha
+ragione con un margine netto:
+
+| | nuvola | disco del sole |
+|---|---|---|
+| `clear-day` | — | 36 |
+| **`mostly-clear-day`** | **56** | **23** |
+| `partly-cloudy-day` | 80 | 18 |
+
+La nuvola del «quasi sereno» è il **70%** di quella del «poco nuvoloso**, per un cielo che
+ne ha il 39% della copertura (25% mediana contro 64%). E il sole rimpicciolisce da 36 a 23
+unità, un terzo in meno, mentre a un quarto di cielo coperto il sole è fuori tutto. Il
+disegno è più nuvoloso del suo nome: usato per il codice 1 rifaceva il difetto originale in
+forma mite, sovrastimando la nuvola invece di sottostimare il sole.
+
+**Il costo, scritto e non aggirato:** la striscia oraria e la riga della settimana non hanno
+parole, quindi lì 0 e 1 ora si somigliano, e sono il 17,2% delle ore disegnate come cielo
+terso su un cielo coperto per un quarto. Nella scheda in alto le parole li distinguono
+ancora.
+
+Quasi tutte le app fanno lo stesso collasso, ma per una ragione più povera: non hanno il
+disegno. L'integrazione Open-Meteo di Home Assistant mappa 0 e 1 entrambi su `sunny`, e la
+sorgente di Open-Meteo mette il codice 1 a 20–49% di copertura. Qui è una scelta, non un
+limite di vocabolario: **il disegno resta nel repo e in `PLANNED`**, pronto se un giorno la
+scelta si rivede.
+
+`ConditionIconsTest` fissa tutte e due le metà: il codice 1 **deve** essere uguale allo 0, e
+**deve** restare diverso dal 2 — che è la confusione da cui è nata la fase e che non deve
+poter tornare per distrazione.
+
+### Il quasi sereno diventa un disegno suo (12 set 2026)
+
+Il committente torna sulla decisione del giorno prima, e la riapre dalla parte giusta: il
+sole pieno per il codice 1 è onesto sulla parola e muto sul disegno, «mi spiace però non
+visualizzare questo stato meteo correttamente». La domanda è se si possa **comporre**
+un'icona partendo da quella di `clear` e aggiungendo la nuvola rimpicciolita in basso a
+destra, invece di scegliere fra due disegni che sbagliano in due direzioni opposte.
+
+Si può, e non serve disegnare niente a mano: tutti i pezzi sono già importati.
+`tools/compose_sun_cloud.py` li mette insieme, e la regola che lo rende sicuro è che **i
+percorsi restano identici alla lettera ai loro originali** — il sole è `clear-day` con i
+suoi path e il suo gruppo di scala, la nuvola è la silhouette di `cloudy`. L'unico
+percorso calcolato è il buco della maschera, ed è anche l'unico misurato riga per riga.
+
+**Tre cose sono state decise guardando, e una quarta misurando.**
+
+1. **La taglia della nuvola.** Tre misure renderizzate a 42 dp (la striscia oraria) e
+   confrontate con il poco nuvoloso: 37,3 / 43,1 / 48,8 unità, cioè il 38% / 43% / 49%
+   della sua nuvola. Scelta la mediana. Per riferimento, la nuvola dello scartato
+   `mostly-clear` ne vale il **72%**: è quella la ragione per cui il disegno della
+   libreria non si usa.
+2. **La nuvola è ri-tracciata, non rimpicciolita.** Scalare l'anello di `cloudy` scala
+   anche il suo contorno: a metà taglia sarebbe largo 2,0 contro i 3,7 del sole, e la
+   nuvoletta si legge come uno sbaffo. Il gruppo porta `strokeWidth` = 4 / scala, così il
+   tratto torna esattamente a 4. `ComposedIconsTest` tiene fermo quel prodotto.
+3. **Due composizioni, e ha vinto quella che cambia meno.** A: sole all'85%, spostato in
+   alto a sinistra, inchiostro esattamente sullo 0,690 di famiglia. B: `clear-day`
+   **intatto** — stessa taglia, stesso posto — e la nuvola nell'angolo. Scelta B dal
+   committente: fra sereno e quasi sereno cambia una cosa sola, ed è la cosa che cambia
+   nel cielo. Si paga con un inchiostro a **0,711** invece di 0,690 (il 3% sopra, ben
+   sotto il tetto di 0,88) e con il raggio di sud-est che resta dietro la nuvola.
+4. **La notte porta la stessa nuvola, e non lo faceva da sola.** Segnalata dal
+   committente guardando i provini: nel disegno la nuvola era già nello stesso punto, ma
+   la normalizzazione della taglia la spostava, perché una luna occupa meno di un sole
+   con i raggi (`mc3scale` 1,138 contro 0,980) e la stessa nuvola usciva 50,1 unità
+   invece di 43,1. Nella composizione A la correzione era dare alla coppia una scala sola
+   e alla luna la taglia che porta anche la notte a 0,69 — veniva l'85% di `clear-night`,
+   cioè **la stessa percentuale a cui sta il sole**. In B il problema non si pone: non
+   c'è normalizzazione, la luna è `clear-night` intatta e la nuvola cade sullo stesso
+   pixel in tutte e due.
+
+**L'aria fra la nuvola e i raggi** è l'unica misura che la composizione deve inventare,
+perché la maschera della sorgente è dilatata di 4 e scalata con la nuvola varrebbe 1,96.
+Si riparte da quella e si scosta lungo le normali: misurata dove il sole arriva davvero,
+esce **1,80–2,45** (mediana 2,29), contro i 2,48 che Meteocons lascia nel poco nuvoloso.
+
+**Il difetto trovato dallo strumento, non dall'occhio.** Al primo piazzamento (centro
+della nuvola a 86,7) il buco tagliava il raggio di sud **per il lungo** e lasciava una
+scheggia larga mezzo tratto accanto alla nuvola. `ray_report()` la misura raggio per
+raggio — quanto ne resta e quanto è largo quel che resta — e `slivers()` si rifiuta di
+scrivere i file finché c'è. Spostata la nuvola di 3,2 unità a destra: sette raggi interi,
+il sud-est dietro la nuvola, nessuna scheggia.
+
+**Il difetto che si vedeva solo sul telefono (12 set 2026).** Con le icone animate accese
+la nuvoletta partiva per la tangente; ferma era al suo posto. La causa è una regola di
+`AnimatedVectorDrawable` che non avevo in mente: un `objectAnimator` **sostituisce** la
+proprietà del gruppo, non ci si somma. Il gruppo della nuvola portava
+`translateY="30.5"` (il posto) e un `translateY` animato da 0 a −3 (il dondolio): appena
+l'animazione parte, il 30,5 sparisce e la nuvola sale di trenta unità, mentre il buco
+della maschera resta dov'era. Ora i gruppi sono due — un guscio vuoto che porta solo
+l'animazione, e dentro quello che porta taglia e posto — che è poi la forma che
+l'importatore dà a tutte le sue, e per questo nessuna icona importata aveva mai mostrato
+il problema.
+
+**Perché non l'aveva visto il filmstrip**, che esiste apposta per guardare le animate:
+`tools/icon_filmstrip.py` **sommava** la trasformazione statica e quella animata. Sui file
+dell'importatore le due non convivono mai, quindi la somma dava sempre la risposta giusta
+e il difetto è passato. Corretto lì (sostituisce, non somma) e fissato in
+`AnimatedIconTest`: nessun gruppo anima una proprietà che porta anche scritta, su tutta la
+famiglia. La misura di quanto fosse cieco il controllo: 8 file su 519 × 4 set la
+violavano, ed erano tutti e soli i composti.
+
+**Cosa resta dov'era:** il `mostly-clear` di Meteocons resta nel repo e in `PLANNED`,
+inutilizzato; le parole sullo schermo non cambiano; `MeteoconsSets.kt` non è stato
+toccato, perché il composto vive in `ComposedIcons.kt`, che l'importatore non riscrive.
+`ConditionIconsTest` ora fissa tre distanze invece di due (0 ≠ 1, 1 ≠ 2, 0 ≠ 2) e
+`ComposedIconsTest` confronta il composto con le sue sorgenti percorso per percorso: se
+una ri-importazione cambia i disegni da cui viene, il test dice di ri-eseguire lo
+strumento invece di lasciare il composto indietro in silenzio.
+
+### «È l'importazione che ridimensiona?» — no, ed è misurato sulle 519 (11 set 2026)
+
+Segnalazione dal dispositivo, sul Cielo → **In arrivo**: la luna piena e la luna delle
+stelle cadenti hanno taglie molto diverse, e la domanda è se sia l'importatore a fare un
+resize dell'originale.
+
+**La risposta è no, e non è un'opinione.** `tools/icon_ink.py --confronto` misura il
+riquadro dell'inchiostro sulla sorgente SVG e sul vector drawable generato e mette le due
+misure accanto: **519 icone × 2 stili, 0 fuori tolleranza** (un centesimo di unità su 128,
+che è il rumore dell'appiattimento delle curve). L'importatore copia il `viewBox` e le
+coordinate così come sono — `convert()` scrive `viewportWidth` dal `viewBox` e basta — e
+dal 964e01a non esiste più nemmeno la macchina che poteva ritagliare (`CROPS`, `PARTIALS`).
+
+La coppia segnalata, vista da vicino, è la prova più corta:
+
+| | sorgente Meteocons | drawable spedito |
+|---|---|---|
+| `moon-full` | `<circle cx=64 cy=64 r=30.5>` | `M33.5,64 A30.5,30.5,…` |
+| `falling-stars`, la luna | `M59.997 43.821 c-2.266 14.257…` | `M59.997,43.821 C57.731,58.078,…` |
+
+Stessi numeri. L'unica cosa che cambia è il colore (`#72b9d5` → `#88cfec`), che è il
+riancoraggio al 3:1 del fondo scuro e non tocca la geometria.
+
+**Quel che succede davvero è che l'illustratore rimpicciolisce la luna quando il disegno
+ne contiene anche altro**, e lo fa a scalini netti. Misurato con `--dentro moon`, il lato
+della sola luna in frazione di scatola:
+
+| la luna sta | lato | su 34 dp |
+|---|---|---|
+| da sola (`moon-full`, `clear-night`, `moonrise`, `moonset`) | 0,49–0,51 | ~17,0 dp |
+| con due o tre compagni (`falling-stars`, `starry-night`, `fog-night`) | **0,34** | **11,6 dp** |
+| dietro una nuvola (`partly-cloudy-night`, `thunderstorms-night`) | 0,20 | 6,9 dp |
+
+Quindi la luna piena ha **1,47×** il diametro della luna dei Draconidi, e in copertura
+d'inchiostro il disegno intero ne ha 2,27× (19,7% della scatola contro 8,7%). È
+esattamente quel che l'occhio vede, ed è dell'illustratore.
+
+**Dove si nota, e perché proprio lì.** «In arrivo» è l'unico posto del prodotto dove
+icone di **famiglie diverse** stanno incolonnate una sotto l'altra a 34 dp, quindi il
+lettore le confronta davvero. In quella colonna il lato dell'inchiostro va da 0,75
+(`sunrise`, `horizon` — gli equinozi e i solstizi) a 0,37 (`starry-night`), cioè **da 25,5
+a 12,6 dp, un'escursione di 2,02×**. Sull'intera lista di spedizione va da 0,33
+(`smoke-particles`) a 0,81 (`uv-index-11-plus`): **2,48×**.
+
+Vale la pena scriverlo perché ribalta l'istinto: `falling-stars` **non** è un'icona
+piccola. Il suo riquadro è 0,63 largo, più largo della luna piena; è alto 0,36 perché la
+composizione è una diagonale in una scatola quadrata. È piccola la **luna dentro**, ed è
+alto poco il disegno: due cose diverse, e la prima è quella che si è notata.
+
+- [x] **Deciso lo stesso giorno**: si normalizza, su tutte le icone — sezione qui sotto,
+      dove c'è anche il motivo per cui la strada scelta NON è quella che consigliavo qui.
+      I numeri delle tre strade restano scritti perché sono la ragione della scelta:
+      **lasciare così** — è il disegno dell'illustratore, e la regola senza eccezioni del
+      964e01a vale ancora;
+      **normalizzare sul lato** (la regola da manuale) **peggiora proprio questa coppia**:
+      `falling-stars` è già 0,63 e crescerebbe meno della luna piena a 0,50, portando le
+      due lune da 1,47× a 1,85×;
+      **normalizzare sull'inchiostro** (una scala per icona, `k = √(copertura obiettivo /
+      copertura)`, applicata al disegno dentro una scatola che non si muove, quindi zero
+      effetti sul layout) le pareggia. Alla copertura mediana della lista, 14,8%, e sullo
+      stile flat: la luna piena va da 17,0 a **14,7 dp**, quella dei Draconidi da 11,4 a
+      **14,9 dp**. Costa una tabella generata dall'importatore e un fattore di scala ai
+      quattro punti di disegno; tocca ogni icona dell'app (`smoke-particles` × 2,02,
+      `clear-day` × 1,05), e tre icone arriverebbero al bordo della scatola
+
+**Un difetto trovato costruendo la misura**, che vale oltre lo strumento:
+`spike_mask_clip.flatten` **scarta i sottopercorsi di due punti**, ed è giusto là dove
+nasce (deve provare delle maschere, che sono forme chiuse) ma qui faceva sparire la scia
+di `falling-stars` — 0,25 di scatola — e rendeva `mist` «senza inchiostro». `icon_ink.py`
+ha quindi il suo `flatten`, che tiene i segmenti e passa gli archi per la
+parametrizzazione centrale del modulo delle maschere. Chi riusa quella funzione altrove
+lo tenga presente.
+
+### La taglia si pareggia: ogni disegno a una misura comune (11 set 2026)
+
+> La prima versione di questa regola normalizzava il **lato più lungo** a 0,75 ed è
+> durata mezza giornata: la sezione che segue la racconta com'è stata presa, e quella
+> dopo dice perché il lato non bastava e cosa la sostituisce.
+
+Decisione del committente, e **rovescia quella sua del mattino** («la scatola è quella
+dell'illustratore, senza eccezioni»): le differenze di taglia fra i disegni di Meteocons,
+misurate poche ore prima, si leggono come un difetto dell'app e vanno tolte, su tutte le
+icone.
+
+**La regola che avevo proposto io non regge, e l'ho scoperta provandola.** Avevo suggerito
+di normalizzare sull'**inchiostro** (`k = √(copertura obiettivo / copertura)`) perché
+pareggiava la coppia segnalata a 0,2 dp. Applicata a tutte le famiglie si rompe subito: le
+otto fasi lunari sono **una sola geometria** — tutte 0,50 di scatola — con undici volte la
+massa fra gli estremi, `moon-new` al **1,71%** della scatola e `moon-full` al **19,70%**.
+Normalizzare sulla massa spedirebbe una luna nuova **3,4×** la luna piena. Qualunque
+formula che contenga un termine di massa muore sullo stesso scoglio, quindi la massa non
+entra.
+
+**Quel che si spedisce è la normalizzazione sul lato**, l'unica che sta in piedi su tutte
+le famiglie (le fasi lunari restano insieme a 1,50; la scala UV resta insieme a 1,00):
+
+| | prima | dopo |
+|---|---|---|
+| lato dell'inchiostro, lista di spedizione | 0,33 – 0,81 (**2,48×**) | 0,727 – 0,750 (**1,03×**) |
+| `moon-full` a 34 dp | 17,0 dp | 25,5 dp |
+| `falling-stars` | 21,3 dp | 25,5 dp |
+| `starry-night` | 12,6 dp | 25,5 dp |
+| `clear-day`, `sunrise` | 25,5 dp | 25,5 dp (fermi: sono il riferimento) |
+
+`tools/import_meteocons_v3.py` avvolge ogni drawable in un gruppo `mc3scale`, su misure di
+`tools/icon_ink.py`. **502 delle 517** ne hanno preso uno; le altre erano già a misura. La
+finestra non si tocca ancora: il `viewBox` è quello dell'illustratore e non c'è nessun
+ritaglio. `--confronto` continua a provarlo, ora al netto della scala dichiarata: **519
+icone × 2 stili, 0 fuori tolleranza**.
+
+Tre cose sono decisioni, non dettagli:
+
+- **Una scala per disegno, non per stile**, misurata sull'unione di `line` e `flat`: un'icona
+  che cambia taglia quando il lettore cambia stile in Impostazioni sarebbe l'opposto di quel
+  che la scala serve a fare.
+- **Il perno è il centro della scatola, non quello dell'inchiostro.** Ricentrare sposterebbe
+  le composizioni volutamente fuori centro (il sole di `sunrise` sta basso perché sorge da
+  una linea) e cambierebbe il centraggio ottico su cui la striscia oraria è stata messa a
+  punto. Il prezzo: un disegno fuori centro tocca il bordo prima di arrivare a 0,75 e lì si
+  ferma — `sunrise`, `sunset`, `horizon` e `humidity` si fermano a **0,727**.
+- **Il pennello si scala col disegno.** Metà della famiglia `line` disegna i contorni come
+  anelli riempiti `evenOdd` e non come tratti, e un anello non si può riassottigliare;
+  compensare gli uni e non gli altri renderebbe disuniforme la famiglia invece delle icone.
+  Il costo, scritto: alla scala massima della lista (`smoke-particles`, **2,29×**) la linea è
+  più del doppio di quella di `clear-day`, che resta a 1,00.
+
+**Quel che la normalizzazione NON risolve**, ed è la metà della segnalazione che va detta
+chiara: Meteocons rimpicciolisce la luna quando il disegno contiene anche altro — 0,50 da
+sola, **0,34** con due o tre compagni, **0,20** dietro una nuvola — e quella è una scelta di
+composizione, non di taglia. Dopo la scala la luna piena porta 25,5 dp e la luna dei
+Draconidi 14,0 dp: il rapporto passa da 1,47× a 1,82×, perché `falling-stars` era già più
+larga della luna piena e quindi cresce meno. Le due **icone** ora pareggiano; le due lune no,
+e nessuna regola di taglia può farlo senza rompere le fasi lunari. L'unica leva che resta è
+quale disegno una schermata chiede.
+
+`MeteoconScaleTest` tiene le tre cose che si rompono per distrazione: le quattro facce di un
+disegno portano la stessa scala, il gemello animato porta quella del fermo (altrimenti
+l'icona salta di taglia quando parte l'animazione) e il perno è il centro della scatola.
+
+### Il Cielo prende un suo gradino: 51 dp (11 set 2026)
+
+Richiesta del committente subito dopo, «anche 1,5× se c'è spazio»: le icone del Cielo
+crescono da `WeatherIconSize.Timeline` (34 dp) a un gradino nuovo, `Sky` = **51 dp**, nelle
+righe dei momenti, in quelle di «In arrivo» e nell'indice della guida.
+
+Lo spazio c'è, misurato a 360 dp prima di prenderlo. Il budget di testo di una riga è
+`360 − 16 − icona − 16 − 48 (la campanella) − 16`, quindi passa da **230 a 213 dp**; una riga
+di «In arrivo» senza campanella passa da 278 a 261. L'altezza non si muove: le righe sono già
+a tre righe di testo (nome, ora, pastiglia), e 51 dp stanno dentro gli 88 dp di una riga
+Material a tre righe con 18 dp d'aria per lato, dentro i 72 dp di una a due righe con 10,5.
+
+**Il mio parere, scritto perché è stato chiesto e perché il numero non lo dice da solo.** Le
+due modifiche si moltiplicano, e la seconda è stata chiesta guardando l'app *prima* della
+prima: la normalizzazione da sola porta già la luna del Cielo da 17,0 a 25,5 dp e i
+Draconidi da 12,6 a 25,5, cioè l'ingrandimento di 1,5× che la richiesta chiedeva, per le
+icone che sembravano piccole. Sommandoci il gradino, a 51 dp l'inchiostro diventa **35,2 dp**
+su un disegno quadrato (i numeri sono aggiornati alla media geometrica della sezione
+seguente; con la regola sul lato erano 38,3), contro i **29** della striscia oraria: il Cielo
+resta la superficie con i disegni più grandi dell'app, e rovescia l'ordine di lettura per cui
+i gradini di `WeatherIconSize` sono ordinati — la striscia porta il peso maggiore e dovrebbe
+restare davanti.
+
+- [ ] **Da guardare sul dispositivo e decidere.** Spedito a 51 dp come chiesto, e la prova
+      del committente non l'ha contestato. Se un giorno risulta troppo, **44 dp** (30 dp
+      d'inchiostro) rimette la striscia davanti tenendo il Cielo sopra il resto della
+      giornata, ed è una riga in `WeatherIconSize.Sky`. L'altra cosa da guardare nello stesso giro sono le righe con la
+      frase lunga («8 Ottobre · La previsione non arriva ancora così lontano»): a 213 dp una
+      come quella può passare da due righe a tre
+
+### La media geometrica, e perché il lato più lungo non bastava (11 set 2026)
+
+Prova sul dispositivo, subito dopo la normalizzazione. Due segnalazioni, e sono la stessa:
+**le lune senza nuvole sembrano grandi** e **le stelle cadenti un po' piccole**.
+
+Hanno ragione, ed è un difetto della regola, non delle icone. Normalizzare `max(w, h)` a
+0,75 è la regola da manuale e ha un vizio che si vede solo su uno schermo: **in una scatola
+quadrata un disegno quadrato arriva alla misura anche in altezza, uno piatto no**. Misurato
+sulle icone della striscia:
+
+| | dopo la regola sul lato | dopo la media geometrica |
+|---|---|---|
+| `clear-night`, `moon-full` | 0,75 × **0,75** | 0,69 × **0,69** |
+| `overcast` | 0,75 × **0,45** | 0,88 × **0,52** |
+| `cloudy` | 0,75 × 0,47 | 0,87 × 0,55 |
+| `falling-stars` | 0,75 × **0,43** | 0,88 × **0,50** |
+| `rainbow` | 0,75 × 0,38 | 0,88 × 0,44 |
+| `clear-day`, `sunrise` | 0,75 × 0,75 | 0,69 × 0,69 |
+
+La luna riempiva la scatola in tutte e due le direzioni e la nuvola in una sola: da lì
+«grande» e «piccola», che erano la stessa cosa vista da due parti. La media geometrica
+legge i due lati insieme, tira giù i quadrati e su i piatti, e li fa incontrare.
+
+**Perché la media e non qualcos'altro**, con i tentativi scartati scritti perché costano
+tempo a rifarli:
+
+- la **massa** (copertura) è morta di nuovo sulle fasi lunari, come la prima volta;
+- la **sagoma** (l'unione dei sottopercorsi riempiti, che avrebbe dovuto salvare la luna
+  nuova rendendola un disco) non la salva: in `flat` Meteocons disegna **solo la parte
+  illuminata**, quindi la sagoma della luna nuova è 1,76% della scatola contro il 19,65%
+  della piena — è coperura sotto un altro nome;
+- **l'altezza da sola** non si può: una nuvola alta quanto la luna sarebbe larga 1,27 volte
+  la scatola, cioè tagliata.
+
+La regola finale è il minore di tre vincoli: **media geometrica a 0,69**, **ingombro
+massimo 0,88** (senza il tetto `rainbow` arrivava a 0,97 di larghezza, a filo di scatola) e
+**il bordo**. Sulla lista di spedizione la media geometrica sta fra **0,49 e 0,69** (1,41×)
+dove la sorgente spaziava di 2,48×; 72 icone su 79 le decide la media, 7 il tetto, il bordo
+nessuna. `--confronto` continua a dire 519 × 2, 0 fuori tolleranza.
+
+Il gradino del Cielo resta a 51 dp: l'inchiostro di un disegno quadrato passa da 38,3 a
+**35,2 dp**, contro i 29 della striscia oraria. La riserva scritta nella sezione precedente
+si attenua ma non sparisce.
+
+
+### L'ora del bollettino senza il suo giorno (committente, 11 set 2026)
+
+Da uno screenshot: alle **12:33** il banner diceva «Protezione Civile, bollettino delle
+15:07» per un bollettino emesso il **pomeriggio prima**. Un'ora che quel giorno non era
+ancora arrivata, quindi l'unica lettura che si poteva escludere era quella vera.
+
+**Non è un caso di bordo, è il caso normale.** Il Dipartimento pubblica nel pomeriggio e il
+bollettino copre *oggi e domani*: chi apre l'app la mattina sta guardando il bollettino di
+ieri, tutte le mattine. L'ora da sola non poteva dirlo.
+
+La regola è quella proposta dal committente: **il giorno si dice solo quando non è oggi.**
+Una data accanto a ogni ora sarebbe rumore sulla superficie che porta l'allerta, e l'ora di
+oggi è già inequivocabile quando il giorno è quello di chi legge.
+
+Una frase sola, `WarningText.issued`, con dentro la sua preposizione — «delle 15:07», «di
+ieri alle 15:07», «del 10 set 2026 alle 15:07» — perché un `%1$s` che a volte è un'ora e a
+volte una data con l'ora rompe la grammatica di chi la ospita.
+
+**Dove c'era il difetto, verificato superficie per superficie** (la seconda metà della
+domanda era proprio «guarda anche in Avvisi»):
+
+| superficie | prima | adesso |
+|---|---|---|
+| banner su Oggi | solo l'ora | la frase |
+| Avvisi, card con allerta (riusa il banner) | solo l'ora | la frase |
+| Avvisi, card «nessuna allerta» | solo l'ora | la frase |
+| notifica, riga compatta e riga della fonte | solo l'ora | la frase |
+| Diario, riga dell'allerta | solo l'ora | la frase, confrontata con **il giorno della voce**, non con quello di chi legge |
+| Avvisi, card «nessun bollettino per oggi» | solo la **data** | invariata: il difetto non ce l'aveva |
+| scheda dell'allerta | data **e** ora, sempre | invariata, ed è voluto |
+
+La scheda resta l'eccezione perché è la superficie della provenienza: l'attribuzione che la
+licenza chiede non deve dipendere da quando la si legge.
+
+**Il giorno di confronto è quello dell'emittente**, `LocalDate.now(zone del luogo)` — lo
+stesso che `WarningText.days` già usa — così un telefono all'estero non trasforma in «di
+ieri» un bollettino italiano di oggi. Un bollettino datato **avanti** (un orologio che non
+torna) prende la data invece di passare per quello di oggi: quattro test in
+`WarningTextTest` fissano i quattro rami.
+
+### La scheda Rugiada: era voluta, e sta scritto (8 set 2026)
+
+Domanda del committente nello stesso giro. Non è un errore: è la review delle card dell'**8
+set 2026**, sezione «Le card, com'erano e come sono» più su in questo file. Umidità e
+Rugiada dicevano la stessa cosa una sotto l'altra («Confortevole» / «Gradevole»), e
+«Rugiada» è la parola meno capita dello schermo. La card Umidità tiene la percentuale e la
+traccia, **prende la frase dal punto di rugiada** — che è il predittore migliore di come si
+sta — e stampa «Rugiada 12°» come nota: il dato non si è perso, il titolo sì. Via
+`metric_dew` e le quattro `humidity_meaning_*`.
+
+### Le caselle
+
+### Blocco A — il convertitore, fatto (11 set 2026)
+
+`tools/import_meteocons_v3.py`, con la geometria dei percorsi estratta in
+`tools/svg_paths.py` perché serve anche alla prova (`spike_mask_clip.py`). Legge il
+tarball di `@meteocons/svg`, non un clone.
+
+| | line | flat |
+|---|---|---|
+| statiche convertite | **517 / 519** | **517 / 519** |
+| animate | 470 | 470 |
+| saltate | 2 | 2 |
+
+Le due che saltano sono `pressure-high-alt` e `pressure-low-alt`: una maschera di contorno
+alla Figma (un `<mask>` applicato a una forma sola, non a un gruppo), e non sono nella
+lista di spedizione. **1 974 file, 20 MB nel repo**, `:app:assembleDebug` verde.
+
+Quel che il rapporto del tool dichiara invece di tacere, ed è debito vero:
+
+- **112 icone con il tratteggio reso solido.** VectorDrawable non ha `stroke-dasharray`.
+  L'importatore v2 li **ridisegnava** come segmenti veri (la sua dipartenza n. 3) e qui
+  quel lavoro non è stato rifatto: per ora la riga tratteggiata esce piena, che è un
+  disegno diverso. Nella lista di spedizione tocca `wind` e `wind-beaufort-*`
+- **42 animazioni del tratteggio perse** (`stroke-dashoffset`, le formiche in marcia). Si
+  perde l'animazione, non l'icona, ed è la conseguenza del punto sopra
+- **15 gradienti appiattiti** sul colore di faccia: è voluto, ed è la dipartenza n. 4 di v2
+  per lo stesso motivo. Con line e flat sono un caso di bordo, non lo stile
+
+Cose che il porting ha richiesto e che v2 non aveva: i rettangoli ad angoli arrotondati
+(149 icone, fra cui tutti i `barometer*`) come quattro archi veri; le trasformazioni
+statiche (`rotate(45 cx cy)` è `rotation` più il pivot, alla lettera) come gruppi
+annidati; i `clip-path` interni, saltando quello grande quanto la tela che Figma mette
+addosso a quasi ogni icona. La fase negativa, i `keyTimes` e i keyframe **non** sono stati
+riscritti: sono le funzioni di `import_meteocons.py`, importate e usate tali e quali.
+
+- [x] **Il tool v2 resta, i suoi drawable no.** `import_meteocons.py` non produce più niente
+      di spedito, ma `import_meteocons_v3.py` ne importa `loop_keyframes`: la rotazione dei
+      keyframe per una fase negativa è scritta lì ed è valida identica sulla v3
+- [x] **Il tratteggio**: ridisegnare i 112 come fece v2, o dichiarare per iscritto quali
+      restano pieni. Non si spedisce `wind` con una riga che il disegnatore aveva tratteggiato
+      senza dirlo
+      **Fatto**, e in due modi diversi perche' erano due problemi: vedi sopra.
+- [x] **Il tool**: `import_meteocons.py` legge da `@meteocons/svg` / `@meteocons/svg-static`
+      (versione appuntata, tarball con checksum, o CDN versionato) invece che da un clone del
+      repo. Oggi il tool accetta `g`, `circle`, `path`, `defs` ed esce su tutto il resto; gli
+      elementi nuovi da gestire, misurati su tutte e 519, sono `<rect>` (598, quasi sempre il
+      rettangolo del `clipPath` di tela), `<mask>`, `<line>` (2) e — solo nello stile fill —
+      `<filter>` + `<fe*>` (17). Va gestito anche `fill-rule="evenodd"`, che in `line` è il
+      modo stesso in cui è disegnato il contorno: `android:fillType="evenOdd"`, dall'API 24
+- [x] **Le maschere**: la conversione dello spike, estesa e verificata icona per icona. È il
+      punto 5 della richiesta: dove *non* si può riusare l'originale, il tool lo dice e il
+      motivo finisce in `UPSTREAM.md`
+- [x] **I filtri**: nel sottoinsieme, con flat + line, sono **zero** — confermato sull'importazione intera, nessuna icona line o flat ne usa. Restano nello stile fill
+      (17 icone su 519: tutte `compass*` e `wind-direction-*`, un'ombra portata fatta di
+      `feFlood` + `feOffset` + `feComposite` + `feBlend`). Se un giorno si importasse fill, si
+      **lasciano cadere**: l'ombra non porta informazione e VectorDrawable non ha filtri
+- [x] **I tratteggi**, chiusi l'11 set 2026 — ed erano **due problemi diversi**, non uno:
+
+      | | quanti | cos'è | come si dice in Android |
+      |---|---|---|---|
+      | `stroke-dasharray="12 9"` | 112 | tratteggio fermo, tutte **rette** (foschia, nebbia, fumo) | si **ridisegna** a segmenti veri |
+      | `stroke-dasharray="50"` + `stroke-dashoffset` animato | 34 | non è un tratteggio: è una **finestra che corre** lungo la riga del vento | `trimPathStart/End` + `trimPathOffset` animato |
+
+      Il primo caso è esatto e non approssimato: una retta di 48 unità spezzata 12 acceso /
+      9 spento dà `M40,95 L52,95 M61,95 L73,95 M82,95 L88,95`, che è quel che l'SVG
+      disegnerebbe. Il secondo lo è quasi: `trimPath` ha **una** finestra, quindi dove il
+      tratto è più lungo del periodo (100 unità; il più lungo misura 111) l'SVG ne
+      mostrerebbe due. Le due grandezze non hanno né unità né verso in comune — l'offset
+      SVG è in unità di disegno e crescendo sposta il motivo **all'indietro**,
+      `trimPathOffset` è una frazione e crescendo lo sposta **in avanti** — quindi la
+      corsa si converte in giri di percorso e si anima da 1 a 0.
+      Le icone che animano salgono da 470 a **484 per stile**: le quattordici del vento
+      avevano solo quella. E `icon_filmstrip.py` ha imparato a ridisegnare `trimPath*`
+      come il tratteggio da cui viene (con `pathLength="1"` le frazioni di Android **sono**
+      le unità del dasharray), quindi la spazzolata si è potuta guardare: scorre
+- [x] **I gradienti**: con flat + line il problema **sparisce** — sulle 519 sono **15 icone**, appiattite sul colore di faccia e dichiarate nel rapporto. Era il
+      motivo della dipartenza n. 4 del tool, che a questo punto si può togliere anziché
+      riscrivere. Resta da decidere solo per le tre di flat: appiattire come oggi, o portarle
+      davvero (VectorDrawable **sa fare i gradienti** con `aapt:attr` su `android:fillColor`);
+      se si portano, va verificato che reggano dentro i widget Glance, che caricano il
+      drawable nel processo del launcher
+- [x] **Le animazioni restano quelle di Meteocons** (punto 6 della richiesta — 470 icone animate per stile):
+      `@meteocons/svg` è ancora **SMIL**, quindi la strada SMIL → `AnimatedVectorDrawable` che
+      il tool percorre già regge. Il Lottie di v3 sarebbe l'altra strada e **non si prende**:
+      vorrebbe `lottie-android` come dipendenza, non gira in un widget Glance, e si porterebbe
+      dietro un runtime per un'icona da 34 dp.
+      **Le animazioni sono identiche nei quattro stili** — stessi tipi, stessi conteggi, stessi
+      tempi; cambia solo che negli stili mascherati la maschera porta il proprio `translate`.
+      Quindi «le line animate vanno bene?» ha la stessa risposta di qualunque altro stile, e la
+      risposta è sì: animano **485 icone su 519**, e **68 su 70** nel sottoinsieme. Tipi da
+      coprire nel sottoinsieme: `translate` 151, `opacity` 106, `rotate` 42, `scale` 4,
+      `stroke-dashoffset` 4. I primi tre il tool li fa già, `scale` è un attributo di
+      `<group>`, gli ultimi quattro sono le due icone del tratteggio
+- [x] **La mappatura WMO**, finalmente 1:1 con quello che il provider dice (punto 4):
+
+| WMO | parola già a schermo | icona v3 (giorno / notte) |
+|---|---|---|
+| 0 | Sereno | `clear-day` / `clear-night` |
+| 1 | Quasi sereno | `clear-day` / `clear-night` (deciso l'11 set 2026, sotto) |
+| 2 | Poco nuvoloso | `partly-cloudy-day` / `partly-cloudy-night` |
+| 3 | Coperto | `overcast` |
+| 45, 48 | Nebbia | `fog-day` / `fog-night` |
+| 51, 53, 55 | Pioviggine | `overcast-drizzle` |
+| 56, 57 | Pioviggine gelata | `overcast-sleet` |
+| 61, 63, 65 | Pioggia | `overcast-rain` |
+| 66, 67 | Pioggia gelata | `overcast-sleet` |
+| 71, 73, 75, 77 | Neve | `overcast-snow` |
+| 80, 81 | Rovesci | `partly-cloudy-day-rain` / `-night-rain` |
+| 82 | Rovesci violenti | `extreme-rain` |
+| 85, 86 | Rovesci di neve | `partly-cloudy-day-snow` / `-night-snow` |
+| 95 | Temporale | `thunderstorms-day` / `thunderstorms-night` |
+| 96, 99 | Temporale con grandine | `thunderstorms-day-hail` / `-night-hail` |
+| altro | Condizioni sconosciute | **`not-available`**, non una nuvola |
+
+  Le righe `overcast-*` invece delle piatte `drizzle`/`rain`/`snow` hanno una misura dietro,
+  dalle stesse 1 680 ore: quando piove il cielo **è** chiuso (codice 51: copertura minima 88,
+  p50 100; codice 61: minima 87, p50 100; codice 80: minima 71, p50 100). Disegnare la
+  pioggia senza la sua nuvola sarebbe sottrarre un fatto, non semplificare
+- [x] **Un test sulla tabella**, che oggi non c'è: ogni codice WMO che il provider può
+      servire → il suo drawable, per giorno e per notte, e il fallback su `not-available`.
+      È la casella che impedisce alla prossima fusione silenziosa di ripetersi
+- [x] **La lista di spedizione.** Era di 143, verificate una per una presenti in entrambi
+      gli stili; misurando si è divisa in **83 spedite e 61 pronte** (`SHIPPED` e `PLANNED`
+      in `tools/shipped_icons.py`), perché spedire un disegno che nessuna schermata nomina
+      costa e non si vede. Il gruppo qui sotto è la scelta di partenza (punti 2 e 3 della
+      richiesta); la colonna che conta è se una schermata la disegna:
+
+| gruppo | n | note |
+|---|---|---|
+| Cieli, la mappatura WMO | 24 | la tabella sopra, `not-available` compreso |
+| Dettagli, i marchi di oggi | 13 | `wind`, `humidity`, `uv-index`, `thermometer`, `barometer`, `raindrop(s)`, `mist`, `umbrella`, `snowflake`, `dust`, `smoke-particles`, `compass` |
+| **Pollini** | 16 | `pollen`, `pollen-grass/tree/weed` e i loro `-low/-moderate/-high/-very-high` |
+| **UV graduato** | 12 | `uv-index-1…11` e `-11-plus` |
+| **Pressione graduata** | 5 | `barometer-low/moderate/high/very-high/extreme` |
+| **Vento graduato** | 18 | `windsock(-calm/-weak/-moderate)`, `wind-beaufort-0…12`, `umbrella-wind` |
+| **Visibilità e temperatura** | 5 | `haze`, `fog`, `smoke`, `thermometer-warmer/-colder` |
+| **Direzione del vento** | 8 | `wind-direction-n…nw` — vedi la riserva sotto |
+| Cielo e agenda, di oggi | 17 | alba/tramonto, luna e sue fasi, orizzonte, stelle, eclissi |
+| **Arcobaleno e momenti del giorno** | 11 | `rainbow`, `rainbow-clear`, `rainbow-cloud`, `time-morning…late-night` |
+| **Allerte, per tipo di rischio** | 14 | `weather-alert(-day/-night)`, `wind-alert`, `thermometer-alert`, `uv-index-alert`, `water-alert`, `fire-alert`, `avalanche-danger-alert`, `tornado`, `hurricane`, `cyclone`, `waterspout`, `falling-rocks-alert` |
+
+- [x] **Due debiti che questa lista salda**, e sono scritti nel codice, non dedotti:
+      `ChiaroIcons.pollen` oggi disegna `mc_dust` e il suo commento dice «Meteocons v2 non ha
+      un'icona per i pollini (**v3 sì**) … serve finché la famiglia v3 non si stabilizza»;
+      `ChiaroIcons.rainbow` disegna `mc_partly_cloudy_day_rain` e dice «Meteocons v2 non ha un
+      arcobaleno». Sono le due caselle che la Fase 2 ha lasciato aperte e che qui si chiudono
+- [x] **La regola sulle icone graduate**: si spedisce un glifo per banda **solo dove la banda
+      è già calcolata e già detta a parole** (`WeatherText.uvMeaning`, `pressureMeaning`,
+      `windMeaning`, `pollenLevel`). Se il glifo dicesse un livello che la riga accanto non
+      dice, sarebbe un secondo verdetto senza la sua aritmetica (DESIGN §1.2)
+- [x] **La direzione del vento: una sola icona, ruotata** (deciso l'11 set 2026, dopo che il
+      committente aveva chiesto se usare le otto). Non si spediscono le otto, e le ragioni
+      sono tre, tutte lette nel codice e nel disegno, non dedotte:
+      1. **sarebbe un passo indietro, non un'approssimazione.** `ui/components/WindArrow.kt`
+         disegna già la direzione **esatta**, ruotando di `fromDegrees + 180` in continuo:
+         non sedici punti, infiniti. Otto glifi fissi vorrebbero dire secchi da 45°;
+      2. i glifi hanno **le lettere N/E/S/W disegnate come path**. In italiano l'ovest è
+         **O**, non W: è testo inglese dentro un'immagine, non traducibile, contro la regola
+         che in questo prodotto tutto ciò che sta a schermo si localizza;
+      3. l'ago di Meteocons punta da **dove il vento viene**; Chiaro punta **dove l'aria
+         va**, con la sua motivazione scritta (revisione delle schede, 8 set 2026).
+         Importarlo così rovescerebbe in silenzio una decisione presa.
+
+      Quel che si fa invece, e che dà lo stesso guadagno visivo: si importa
+      `wind-direction-n` **tenendo solo il gruppo `Pointer`** — l'ago è un path solo, bbox
+      x 57,5–70,5 e y 40,5–84,0 in una scatola di 128, simmetrico sul centro — si butta il
+      gruppo `Letters`, e lo si ruota come `WindArrow` ruota già. Risultato: l'ago di
+      Meteocons, nella mano della famiglia, esatto al grado, senza lettere inglesi e con la
+      convenzione di Chiaro intatta. Da guardare al filmstrip: l'ago è più dettagliato della
+      freccia disegnata a mano e il tile lo mostra a **16 dp**
+- [ ] **Riserva sulle allerte**: le `Alarms` entrano per il **tipo** di rischio (i quattordici
+      `WarningHazard` della Fase 12), **non per il livello**. Giallo/arancione/rosso restano
+      `ic_warning` tinto: DESIGN §8.13 ha scelto un disegno al peso dei segni di verdetto
+      apposta, e `code-yellow/orange/red` di Meteocons sono icone a colori pieni che in quello
+      slot non ci stanno. Importarle sarebbe disfare una decisione, non aggiungere un'opzione
+- [~] **Le dimensioni non si toccano** (punto 7): la scatola passa da 64 a 128, ma è
+      `viewportWidth`/`viewportHeight` nell'XML e i dp della scala restano quelli
+      (`WeatherIconSize`: striscia 42, settimana 38, riga e tile 34). **Da verificare sul
+      dispositivo**, non solo sulla carta: v3 è un disegno nuovo e potrebbe riempire la sua
+      scatola diversamente, e DESIGN §13.1 dice che è la nuvola semplice a decidere come si
+      legge la famiglia in piccolo. Se il peso ottico cambia, si dichiara e si rimisura la
+      scala — non si cambia un padding
+- [x] **Lo stile**: **line + flat**, per gli argomenti della sezione sopra, con **line
+      predefinito** come oggi. Si costruiscono insieme, perché condividono il convertitore di
+      maschere e non hanno nient'altro da convertire. Se lo spike delle maschere fallisce non
+      cade un secondo stile: **cade la fase**, perché senza maschere il line non ha i cieli
+      composti. È per questo che lo spike sta prima di tutto
+- [x] **La licenza**: `licenses/Meteocons-MIT.txt` porta il testo della v3 (il copyright
+      passa da «2020-2021» a «2020-present») e dice da quale pacchetto viene. `UPSTREAM.md`
+      **non** andava toccato: parla solo di `:core`, e le icone sono `:app`
+- [x] **DESIGN §13.1 riscritta**, e con lei §7.1 (l'importatore ha un nome nuovo), la nota
+      dei generatori (erano tre, `gen_vivid_icons.py` è stato cancellato: un set per fondo gli
+      ha tolto il lavoro) e **l'eccezione dichiarata del widget Cielo, rimisurata** — vedi
+      sotto. `CLAUDE.md` dice che niente sotto `res/drawable/mc3*` e `MeteoconsSets.kt` si
+      modifica a mano, e `README.md` conta 765 test invece di 754
+
+### Quel che non si è potuto misurare
+
+Le maschere non sono state **convertite**, solo lette: che la riscrittura clip-path + verso
+invertito, con la coppia di gruppi annidati che tiene fermo il sole, renda identica
+l'originale **non è dimostrato**, ed è il rischio numero uno della fase — per questo è uno
+spike e non una casella, e per questo ora può far cadere la fase intera invece che un solo
+stile. I gradienti dentro un widget Glance non sono stati provati.
+
+E le 519 non sono state **guardate**: sono state contate, misurate sul colore, sull'elemento
+e sull'animazione, mai messe su uno schermo. Vale in particolare per la scelta line + flat,
+che è argomentata sulle conversioni risparmiate e **non** su come i due disegni stanno
+accanto nella striscia a 42 dp. `tools/icon_filmstrip.py` esiste già ed è quello che chiude
+ognuna di queste caselle.
+
+Una correzione a questa stessa fase, registrata perché è la regola della serie: la prima
+stesura contava `#fff` e `#000` fra i colori del disegno e ne ricavava che fill fosse il più
+sicuro. Erano i riempimenti delle **maschere**, non inchiostro. Rimisurato a maschere escluse,
+sul sottoinsieme giusto, la conclusione si è rovesciata.
+
+---
+
 ## Note trasversali
 
 - **Il fork non si dimentica**: quando un bug del core va corretto due volte, si estrae
@@ -5212,3 +6483,2587 @@ essere riscritte. Le misure sono tutte qui sotto e nello spike.
 - **Le allerte ufficiali si citano, non si traducono** (VISION §8, dal 9 set 2026): livello,
   rischio, giorno e zona localizzano; le parole di un'autorità restano sue, nella sua lingua,
   etichettate come tali. E in Italia fa fede la Protezione Civile, sempre.
+
+### Tre taglie, guardate sul dispositivo (committente, 12 set 2026)
+
+Tre richieste da tre screenshot, e la densità del dispositivo di riferimento rimisurata
+per strada. **È 2,8125 px/dp, non 2,75**: sullo screenshot di Oggi il margine da 16 dp dei
+tile misura 45 px e la gronda da 12 ne misura 34, quindi lo schermo è largo **384 dp** e un
+tile è `(384 − 32 − 12) / 2 = 170` dp, cioè i 478 px misurati. Tutti i numeri sotto sono
+letti a quella scala.
+
+**1. L'icona del widget è «un po' grande».** Vero, ed era il modo in cui la misura era
+scritta: il glifo di una scheda a una riga prendeva tutta l'altezza concessa meno i
+paddings, e basta. Sulla scheda a quattro celle del dispositivo la riga è ~85 dp, quindi il
+glifo usciva a **73 dp** — con accanto un blocco di parole alto 66, cioè la riga della
+temperatura (34 sp × 1,32) più quella del posto (16 × 1,32). Il tetto nuovo,
+`RowIconMax = 66 dp`, è quel blocco: **il glifo non supera le parole che gli stanno
+accanto**. Sulla scheda di riferimento toglie il 10% (50,5 → 45,5 dp d'inchiostro sulla
+media geometrica 0,69 della famiglia) e, come effetto secondario che vale da solo, rende
+uguale il glifo di ogni riga da ~78 dp in su: prima un launcher che concede righe da 101 dp
+lo portava a 89 senza che nulla accanto crescesse. È lo stesso tetto che il widget Cielo si
+era dato l'8 set (`SkyHeroIconMax`, 72 dp contro un orologio da 30 sp), letto sull'ancora di
+questa scheda invece che su quella. Le schede strette non si muovono: a due celle lega la
+larghezza, sotto il tetto. La colonna della frase guadagna i 4 dp che il glifo lascia
+(116 → 118 a quattro celle).
+
+**2. La pastiglia del Cielo va a capo troppo facilmente.** La misura dice perché:
+`supportingContent` è la colonna di testo della riga Material, e una colonna di testo
+finisce dove comincia lo slot in coda. Material spende **163 dp** di una riga con
+campanella in margini e slot fissi: `16 (bordo) + 51 (il glifo) + 16 + 16 + 48 (la
+campanella) + 16`. **Il quarto 16 è vero e mancava ai conti scritti l'11 set**: sullo
+screenshot del dispositivo la pastiglia finisce a 303,6 dp e la scatola da 48 della
+campanella è centrata a 344, quindi fra le due ci sono 16,4 dp. La nota su
+`WeatherIconSize.Sky` è corretta di conseguenza — il budget di una riga con campanella
+passava da 214 a 197 dp, non da 230 a 213; quello di una riga senza («In arrivo» senza
+promemoria) non ha quel gap ed era giusto, 278 → 261.
+
+Restano quindi **221 dp** a 384 e 197 a 360. «✗ Niente da fare  nuvole 66%» ne misura
+**223**: 24 di padding, 14 di segno, due gap da 6, 92,4 di parola e 77 di numero, più 3,8
+di margini laterali letti sulla pastiglia «✓ Bello  nuvole 0%» che le sta sotto e che su
+una riga ci sta, a 154. **Ha sbagliato di due dp**, e quel che è andato a capo è il numero
+sotto la parola: esattamente la coppia che DESIGN §8.7 non lascia separare. Due dp non sono
+un margine, ed è questo che vuol dire «non va a capo facilmente»: la coppia più larga che
+l'app possa stampare, «Niente da fare» con «pioggia 100%», ne vuole ~236.
+
+La pastiglia scende quindi su una riga sua, sotto tutta la riga della lista, e siccome
+della campanella lì non arriva niente **si prende anche la sua colonna**: `schermo − 99`,
+cioè 285 dp a 384 e 261 a 360, sopra i 236 del caso peggiore in tutt'e due. Le alternative
+sono state misurate prima di scartarle, e nessuna compra un margine: una campanella da
+40 dp vale 8 dp (il bersaglio da 48 resta, `IconButton` lo estende oltre i propri limiti),
+una pastiglia più stretta ne vale 4, e i 51 dp del glifo sono una decisione dell'11 set,
+non del gioco. Il prezzo è verticale e va scritto: senza la pastiglia dentro, la riga
+diventa a due righe di testo, quindi Material centra i suoi 44 dp nei 72 di minimo e
+**l'aria sopra la pastiglia passa da 6 a ~14 dp**, con la riga che cresce di ~6. Vale per
+i momenti e per «In arrivo».
+
+**3. Il numero dell'UV deve leggersi come quello dei Pollini.** Le due icone portano lo
+**stesso** distintivo — un quadrato stondato di 30 unità su 128, col valore dentro — e
+escono diverse per via della normalizzazione, non del disegno: il sole dell'UV arriva già
+agli angoli e prende scala **0,92**, la spiga dei pollini è compatta e prende **1,3382**.
+A parità di scatola il distintivo dei pollini è quindi 1,45× quello dell'UV, ed è quel che
+si misura sullo screenshot: 33 px contro 40.
+
+La sola leva rimasta al punto di chiamata è la scatola, e la scatola è quel che si muove:
+`WeatherIconSize.TileUv = 55 dp` (`38 × 1,3382 / 0,92 = 55,3`) mette i due distintivi a
+**11,85 contro 11,92 dp**, lo 0,6% di distanza. I pollini degli alberi sono scalati 1,3109,
+quindi il loro distintivo è 11,68 e l'UV gli sta l'1,5% sopra invece che sotto; il
+confronto chiesto era con l'erba, che è quel che lo screenshot mostrava.
+
+Quel che costa, scritto perché è una deroga vera alla scala di §13.1: **questo gradino sta
+il 45% sopra `Tile`**, quindi il glifo dell'UV è l'oggetto più grande della griglia dei
+dettagli, e la sua riga d'intestazione cresce di 17 dp — che paga anche il tile accanto,
+perché una coppia condivide un'altezza. Quel che **non** costa è il budget dell'etichetta,
+che era la ragione per cui il gradino dei tile si era fermato a 38: `118 − 55` lascia 63 dp
+a 360 dp per le due lettere «UV», la più corta che l'app spedisca.
+
+- [ ] **Da guardare sul dispositivo.** Le tre sono aritmetica, non disegno: il widget a 66
+      dp, l'aria sopra la pastiglia del Cielo, e soprattutto se l'UV a 55 dp accanto a un
+      Vento a 38 si legge come una gerarchia o come un errore. Se è la seconda, la strada
+      che resta non è un numero intermedio (non pareggerebbe niente) ma chiedere
+      all'importatore una scala per famiglia — cioè un'eccezione dichiarata dentro
+      `icon_ink.scale_of`, non al punto di chiamata
+
+`MeteoconScaleTest` tiene il pareggio del punto 3 misurando le due scale **nei drawable
+spediti**, non nei numeri di questa pagina: se l'importatore rigirasse con un `TARGET`
+diverso, o Meteocons ridisegnasse una delle due, il rapporto cambierebbe e il commento no.
+Misura anche il distintivo prima di confrontarlo, perché la premessa «è lo stesso quadrato»
+è la metà che si rompe in silenzio. `NowWidgetLayoutTest` fissa il tetto del punto 1 a tre
+altezze di riga (70, 82, 85, 130 dp) e la densità rimisurata sta nella sua intestazione.
+
+---
+
+## La review della base dati: cosa cresce, cosa non se ne va mai (committente, 12 set 2026)
+
+La domanda era tre domande: c'è una logica che cancella i dati vecchi dopo una certa
+data, il database cresce e basta giorno dopo giorno, e ci sono isole di dati che non
+vengono mai cancellate. Le risposte, nell'ordine: **no e va bene così**, **no**, **sì, ed
+erano quattro**.
+
+### Quel che c'era già, e perché una scadenza a tempo sarebbe stata sbagliata
+
+Nessuna retention dell'app è a tempo, e non è una dimenticanza. `weather_history` tiene
+gli ultimi 100 commit **per luogo** (`pruneCity`) con un tetto globale a 800 righe
+(`prune`), `warning_records` teneva 100 righe per luogo, `ReportDiskCache` tiene 16 file e
+butta quelli oltre l'orizzonte della previsione, e i cinque store di impronte
+(`AlertStateStore`, `RuleStateStore`, `SkyAlertStateStore`, `FetchLogStore`,
+`OfficialWarningStore`) sono anelli limitati a 16-40 voci. Un conteggio, non una data: un
+telefono spento per una settimana deve ritrovare il suo Diario, e «cancella tutto quel che
+ha più di N giorni» glielo svuoterebbe proprio nel caso in cui l'utente ne ha più bisogno.
+Il volume, del resto, non è il problema — 800 commit da ~1,6 KB sono ~1,3 MB, e ci si
+arriva solo con otto luoghi attivi.
+
+Il problema è un altro, e il conteggio per luogo non lo vede: **le righe di un luogo che
+non esiste più**. Non sono vecchie, sono orfane, e nessuna lettura futura le toccherà mai.
+
+### Le quattro isole
+
+1. **`warning_records` non aveva nessun tetto globale.** `pruneCity` limita il luogo che
+   gli viene passato e nessun altro, quindi ogni chiave che smetteva di essergli passata
+   — un luogo tolto dalla lista, e soprattutto ognuna delle celle da ~1,1 km che la
+   pseudo-città GPS conia — si teneva le sue righe per la vita dell'installazione. Era
+   l'unica tabella dell'app senza soffitto.
+2. **Il ramo «bollettino non raggiunto» scriveva senza potare.** `pruneCity` stava solo
+   nel ramo in cui un bollettino si muove davvero, e un emittente irraggiungibile per una
+   stagione è esattamente quando non si muove. Una riga al giorno è lenta, ma lenta e
+   illimitata è comunque illimitata.
+3. **Nessuna delle due tabelle si chiedeva *di chi* fossero le righe.** Il backstop
+   globale della cronologia sfratta per età globale, quindi le righe di una cella
+   abbandonata venivano evicted alla stessa velocità di quelle di una città seguita: la
+   domanda sbagliata. Stessa cosa per i file di `ReportDiskCache`, che è limitato per
+   numero e pota solo in scrittura.
+4. **`WidgetCityStore.forget` dimenticava la chiave `widget_sky_`.** La riga del cielo è
+   arrivata dopo (Fase 16e) e non è mai stata aggiunta a `forget`: ogni widget rimosso
+   lasciava il suo flag nel file per sempre, e un widget nuovo a cui il sistema avesse
+   dato quell'id si ritrovava una riga che nessuno aveva chiesto.
+
+### Quel che si è fatto
+
+`StoredDataSweep` (`:core:data`, `local/`) è la terza retention, e la sola che guarda la
+chiave invece del conteggio: **una chiave che l'app non segue più, ferma da `Grace`, se ne
+va tutta intera**. Le regole, e il perché di ognuna:
+
+- *Non segue più* è la lista dei luoghi salvati più il fix GPS corrente, niente altro. I
+  pin dei widget si risolvono contro quella stessa lista (o contro il sentinella GPS),
+  quindi non hanno voce in capitolo; le celle attraversate ieri **non** ci sono, ed è
+  tutto il punto.
+- *Ferma da `Grace`* si misura dalla riga **più recente** della chiave, e la cancellazione
+  è tutto-o-niente per chiave. Lo swipe di rimozione ha un undo e ri-aggiungere un luogo è
+  un tap: un Diario che tornasse con le pagine di mezzo strappate sarebbe peggio di uno
+  che torna vuoto.
+- `Grace` è **sette giorni**, la stessa settimana che la previsione raggiunge: abbastanza
+  perché un undo, un ripensamento o un telefono in un cassetto non costino il Diario a
+  nessuno, abbastanza poco perché due settimane di pendolarismo non lascino due settimane
+  di celle morte.
+- Un insieme di chiavi vive **vuoto** è uno stato vero (l'ultimo luogo tolto, GPS spento)
+  e vuol dire «qui non è vivo niente», non «stai fermo». Room espande una lista vuota in
+  `NOT IN ()`, che SQLite non parsa, quindi passa un sentinella (`""`) che nessuna
+  `cacheKey` — sempre `<int>:<int>` — può valere.
+
+Gira **dove già girano le altre due**, cioè nel punto unico in cui atterrano dati nuovi
+(`WeatherRepository.recordHistory`), dietro un `onHousekeeping` iniettato da
+`ServiceLocator` come già faceva `onHistoryCommitted`: la spazzata ha bisogno della lista
+dei luoghi salvati, che il repository per scelta non conosce. È `bestEffort` per conto suo
+e non dentro il blocco dell'altro hook, perché una pulizia che fallisce deve comunque
+lasciare al widget il suo repaint.
+
+Accanto, tre riparazioni puntuali: il backstop globale di `warning_records`
+(`RETENTION * PLACES` = 800, gemello di quello della cronologia e generoso per la stessa
+ragione), la potatura anche sul ramo del bollettino mancato, e `widget_sky_` dentro
+`forget`.
+
+### Quel che si è visto e NON si è toccato
+
+- **`WidgetCityStore.remap` è codice morto.** Nessuno lo chiama: il receiver non ha un
+  `onRestored`, e `allowBackup` è `true` senza `dataExtractionRules`. Dopo un ripristino
+  da backup ogni widget prende un id nuovo, quindi i pin restano appesi ai vecchi id (che
+  non se ne vanno mai) e i widget ripristinati perdono la loro città. È un bug vero, ma
+  ripararlo davvero vuol dire decidere anche per `WidgetLookStore` e `ArcSettingsStore`,
+  che un `remap` non ce l'hanno affatto: è una scelta di prodotto, non una pulizia, e sta
+  qui in attesa.
+- **Nessun indice su `city_key`** in nessuna delle due tabelle: ogni `historyFor`,
+  `observeFor` e `pruneCity` è una scansione completa. A 800 righe non si misura, e
+  comprarlo costa una versione di schema: si rivaluta se i tetti crescono.
+- **`ReportDiskCache.prune()` gira solo in scrittura.** La spazzata ora copre il caso che
+  contava (i file orfani); quello che resta — un'app che non fetcha più e tiene i suoi
+  file — è un'app che non sta girando.
+- **I tetti a conteggio restano conteggi.** `HISTORY_CITIES = 8` è generoso apposta, e con
+  le chiavi morte tolte di mezzo la pressione sul backstop globale sparisce quasi del
+  tutto.
+
+Tre test nuovi in `:core:data`: `StoredDataSweepTest` (sei casi, compreso il tutto-o-niente
+per chiave e l'insieme vivo vuoto), `WarningRecordDaoTest` per il backstop che mancava, e
+un caso in più in `WidgetCityStoreTest` per la chiave del cielo. Suite a **793 verdi**.
+
+---
+
+## L'intestazione di Oggi che non scorre via (committente, 18 set 2026)
+
+Due richieste dal dispositivo, una per schermata e una per tutta l'app. La prima:
+«l'intestazione con il nome della città su Oggi deve restare ferma, come nelle altre
+schermate». La seconda: «sulla gesture back voglio la stessa dissolvenza fra le schermate
+che c'è in Saldo» — fatta, guardata sul dispositivo e **ritirata dal committente stesso**
+poche ore dopo, quindi di quel lavoro non resta niente in APK (sotto, cosa era e cos'è
+tornato indietro).
+
+### La riga del luogo, appuntata
+
+Cielo, Allerte e Diario tengono la loro intestazione **fuori** dalla lista, in una `Column`
+sopra di essa, quindi non scorre. Oggi no: la riga del luogo era il primo pezzo del
+`CanvasHeader`, cioè del primo item della `LazyColumn`, e se ne andava in alto con il cielo.
+Il modo più corto di pareggiare le altre tre — una riga sopra la lista, su `surface` — però
+costava il cielo a filo dello schermo: il canvas possiede il bordo superiore da Fase 3
+(DESIGN §3.6) e la fascia di scrim in cima esiste proprio per la riga del luogo e le icone
+di stato.
+
+Si è fatta invece la cosa che DESIGN §8.1 aveva già scritto («collapses on scroll into the
+app bar, keeping place and temperature»): la riga è **appuntata sopra la lista**, dentro il
+`PullToRefreshBox` così che l'indicatore del pull le scenda davanti, e ha **due terreni**.
+
+- In cima alla pagina non ha terreno: bianco sulla fascia di scrim, che è dove §3.6 misura
+  i suoi 5,27:1.
+- Dal **primo pixel** di scroll prende `surface` e l'inchiostro del tema, con la molla
+  `effects` di §7 a fare il passaggio.
+
+Niente di intermedio, e questa è la decisione da ricordare: la soglia misurata che c'era
+prima (`SkyCanvasTopScrimEnd` sull'altezza reale del canvas) teneva il bianco finché la
+fascia stava dietro la **status bar**, e la riga del luogo scende 48dp più in basso della
+status bar — con quella soglia, per qualche decina di dp, il nome della città sarebbe stato
+bianco su cielo non scrimmato. Ora la soglia è una sola, sta in `atTop`, e le icone della
+status bar la seguono perché quel che sta dietro la status bar **è** questa barra.
+
+Il canvas tiene il posto della riga con uno `Spacer` alto quanto la barra **misurata**
+(`onSizeChanged`), non quanto una costante: la riga cresce con la scala del testo, con i
+pallini del pager e con l'ora del luogo, e `PlainHeaderHeight` (48 + 8 + 8) è solo il
+pavimento su cui sta prima del primo layout. Con lo `SpaceBetween` che c'era già, l'eroe
+atterra dove atterrava prima e il bordo inferiore del canvas resta a `status + 280dp`: lo
+scheletro, che quella somma la quotava già (`CanvasBaseHeight - PlainHeaderHeight`), non è
+stato toccato e continua a combaciare.
+
+Gli stati senza report (scheletro, nessun luogo, vuoto) avevano già l'intestazione ferma
+sopra il contenuto e sono rimasti come erano.
+
+### La dissolvenza fra le schermate: fatta, e tolta lo stesso giorno
+
+La seconda richiesta è stata implementata e poi **rimossa su richiesta del committente**,
+che ha preferito lo scambio istantaneo di prima. Sta qui perché il tentativo è un dato,
+non per rimpianto: se la domanda torna, questo è quel che c'era.
+
+Chiaro non ha un nav graph (due enum di stato e un `BackHandler`, scelta di Fase 4), quindi
+la forma di Saldo — fade + slide di un sesto di schermo — era stata ottenuta con un
+`AnimatedContent` su un `SeekableTransitionState` in un solo composable riusabile
+(`ui/shell/ScreenSwap.kt`), con un `PredictiveBackHandler` che faceva `seekTo` a ogni evento
+del gesto: è l'unico modo di far seguire il dito alla transizione invece di farla partire a
+gesto concluso. Tre chiamanti: lo shell (i quattro tab, Impostazioni, la guida), il tab
+Cielo e la guida (tonight/tour ↔ documento degli eventi). Aveva richiesto anche di stringere
+il `BackHandler` di `SkyGuideRoute` al solo livello pagina → indice, perché un handler che
+chiude se stesso consuma il gesto e non anima nulla.
+
+Il ritorno è pulito e verificato come tale: i quattro file toccati (`ChiaroRoot.kt`,
+`SkyScreen.kt`, `SkyGuideScreen.kt`, `GuideScreen.kt`) sono **identici byte per byte** alla
+versione precedente, `ScreenSwap.kt` non esiste, e DESIGN §7 è tornato alle sue quattro
+animazioni. Di questa richiesta resta solo la riga del luogo appuntata, che è l'altra.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 793 test.
+Il resto — che il nome della città non scorra più via e che la barra cambi terreno quando
+deve — è una prova da dispositivo: qui non c'è.
+
+---
+
+## Il widget senza niente di disegnato (committente, 19 set 2026)
+
+«Crea un nuovo widget 4x1 (ridimensionabile) ma con informazioni solo testuali. Niente
+icona meteo o altra grafica. Decidi tu, per ogni tipologia di informazione da visualizzare,
+il modo migliore per: layout, dimensione testo, testo grassetto, ecc. Deve risultare una
+tipografia ordinata e leggibile con info principali in primo piano.»
+
+È il quinto widget della casa e il primo che non disegna niente. Si chiama **«In parole»**
+(`In words` in inglese), `TextWidget` nel codice.
+
+### La cosa da capire prima di scrivere una riga
+
+Il primo istinto è «il widget Ora senza l'icona», e sarebbe sbagliato. Le altre quattro
+schede prendono la gerarchia **dal disegno**: il glifo Meteocons riempie l'altezza che il
+launcher concede ed è la prima cosa che si legge a distanza di braccio — sta scritto in
+VISION §5.9 e la taglia del glifo è aritmetica in tre file di layout. Togli il disegno e la
+scheda resta senza primo piano: un 34 sp e un 16 sp uno sopra l'altro non sono una
+gerarchia, sono due righe.
+
+Quindi la gerarchia si è **ricostruita con il carattere**, e la regola che tiene tutto in
+piedi è una sola: **quattro ranghi che si distinguono per taglia E peso E inchiostro,** mai
+per uno solo dei tre. Un rango che si distinguesse solo per taglia si sfalda quando il
+lettore alza il font di sistema; uno che si distinguesse solo per inchiostro sparisce su una
+carta semitrasparente.
+
+| rango | cosa | taglia | peso | inchiostro |
+|---|---|---|---|---|
+| 1 | la temperatura | 30…56 sp, scalata alla concessione | **Bold** | forte |
+| 2 | la frase del giorno | 17 sp | Medium | forte |
+| 3 | il luogo, massima/minima, la parola dell'allerta, le temperature delle ore | 14 sp | Regular il luogo, Medium le cifre | quieto il luogo, forte le cifre |
+| 4 | il marcatore di vecchiaia, le etichette delle ore | 11 sp | Regular | freschezza il marcatore, quieto le etichette |
+
+**Il numero è il disegno, adesso.** Bold dove tutta la casa scrive Medium — il peso è uno
+dei tre assi, e il rango in cima è l'unico che può permetterseli tutti e tre — e soprattutto
+**scalato alla concessione**, esattamente come le altre quattro scalano il glifo. Una
+taglia fissa può essere giusta su una sola dimensione di cella: `heroIconSize` risolve il
+problema per un disegno, `textSizeForLine` (nuovo in `WidgetUi.kt`, l'inverso di
+`textLineHeight`) lo risolve per una cifra. Sulla riga di riferimento da 85 dp il numero
+esce a **41,3 sp** contro i 34 che il widget Ora stampa accanto al suo glifo; su una scheda
+alta arriva al soffitto di 56.
+
+I 17 sp della frase sono un punto sopra il 16 della casa, e il punto è pagato dall'assenza
+del disegno: su questa scheda la frase **è** la seconda cosa da leggere, non la didascalia
+di un'immagine. Due punti no: a 18 la colonna da 174 dp della scheda a quattro celle smette
+di tenere «Pioggia gelata verso le 15:00» in due righe.
+
+### Le tre forme, e la cella che si guadagna
+
+Stessa grammatica di `NowLayout`, perché le schede stanno sullo stesso schermo:
+
+- **`LINE`** — una riga troppo stretta per due colonne: luogo, numero, vecchiaia. Basta.
+- **`ROW`** — una riga con la seconda colonna, che è la collocazione 4×1 di default: il
+  luogo sopra il numero a sinistra, e al bordo opposto la frase con sotto l'allerta e la
+  massima/minima.
+- **`STACK`** — due righe in su: una colonna sola, centrata sull'altezza che non riempie,
+  con le prossime ore stampate come cifre dove l'altezza le regge.
+
+**A tre celle questa scheda porta già la frase, il widget Ora no** (`NowLayout.NARROW` a
+250 dp). Non è una scelta di gusto, è la stessa aritmetica con un addendo in meno: i 66 dp
+di glifo più gli 8 di distacco che quella scheda spende prima della prima lettera, questa
+non li ha. Il test lo mette una accanto all'altra, perché è la differenza che giustifica
+l'esistenza di due widget.
+
+La colonna di sinistra è una **quota** (42%) e non la metà esatta che usa il widget Ora: le
+due colonne non fanno lo stesso lavoro, una tiene un numero e un nome — entrambi corti — e
+l'altra tiene prosa, che è la cosa che ha bisogno di misura. Sulla scheda di riferimento a
+quattro celle fa 126 dp contro 174; sotto c'è un pavimento di 96 dp, che è quel che serve a
+«−12°» al piano del numero e a un nome di dieci lettere.
+
+### L'ordine in cui si spende, che è la gerarchia scritta
+
+Su scheda alta il budget compra in quest'ordine, e l'ordine **è** l'argomento di layout:
+
+1. il numero, prenotato subito a 40 sp — su una scheda alta è il titolo della pagina, e un
+   titolo che si rimpicciolisce perché ci stia una nota a piè di pagina è la scheda che
+   litiga con sé stessa;
+2. le due righe di frase;
+3. la parola dell'allerta;
+4. massima e minima;
+5. le prossime ore;
+6. quel che avanza torna al numero, fino a 56 sp.
+
+Il luogo e il marcatore di vecchiaia non sono nell'ordine perché non sono mai facoltativi:
+una scheda senza luogo è un numero su nessun posto, e una senza età mente su quanto è
+vecchia (VISION §5.9). Sulla riga da 85 dp il marcatore si paga con il numero, che scende a
+30,3 sp — il pavimento, centrato lì apposta.
+
+**Due righe di frase e mai tre** su scheda alta: è il numero della scheda alta del widget
+Ora (`TallSentenceMaxLines`) e lo stesso argomento — lì la terza riga costava 21 dp al
+glifo, qui costa 13 sp al numero. Sulla 4×2 di riferimento è la differenza fra un 56 sp e un
+43 sp, per una riga che nel registro breve a 340 dp di misura non serve quasi mai. Sulla
+riga singola invece la terza riga resta, perché lì non c'è nessun numero che la paghi: la
+colonna la usa solo se non c'è altro da dire.
+
+### Le due cose che un disegno diceva e ora dicono le parole
+
+- **La posizione del telefono** era il segnaposto (`ic_place_pin`) su tutte le altre schede.
+  Qui è `widget_text_place_gps`, «Milano · la mia posizione»: da dove viene un numero fa
+  parte della sua verità (la regola dell'intestazione di Oggi, §5.1), e una scheda senza
+  glifi deve dirlo invece di marcarlo.
+- **L'allerta ufficiale** era una pastiglia. La pastiglia esiste per una ragione misurata,
+  non decorativa: il terreno di un widget è un cielo con lo scrim o lo sfondo di qualcun
+  altro, e **una parola colorata nuda su uno di quei terreni è risultata illeggibile** (4
+  set, sui verdetti della scheda Cielo — «un verde nudo era difficile da leggere su una
+  scheda scura»). La pastiglia risponde portandosi dietro il proprio terreno misurato.
+  Una scheda il cui presupposto è che non si disegna niente **non può portarselo**, quindi
+  rinuncia al colore e non alla leggibilità: stampa «Allerta gialla» nell'inchiostro forte
+  della scheda, al rango 3. Non è uno sconto sulla regola ma il suo pavimento — DESIGN §2.3
+  fa della parola il vettore e del colore il rinforzo, e qui c'è solo il vettore. Per il
+  resto decide la stessa tabella `warningSlot` delle altre quattro: arancione e rosso stanno
+  già nella frase, il giallo prende una riga sua dove ce n'è una in più.
+
+### Cosa si è deciso di NON mettere
+
+- **La riga della pioggia sotto le ore.** Le ore stampano etichetta e temperatura, non la
+  probabilità. La pioggia, quando conta, è già nella frase del giorno («Pioggia verso le
+  cinque»): una seconda affermazione sulla pioggia in cifre, a un rango più basso, sarebbe
+  la stessa cosa detta due volte — che è l'argomento con cui la tabella dell'allerta tiene
+  la pastiglia fuori dalle schede arancioni.
+- **Il maiuscoletto per il nome del luogo.** Tipograficamente un'etichetta tutta maiuscola
+  sopra un numero grande funziona, ma TalkBack su alcune versioni la compita lettera per
+  lettera, e un nome proprio accentato in maiuscolo è una decisione sulla lingua che questo
+  file non ha titolo di prendere. Il rango basta a farla leggere come etichetta.
+- **Lo sfondo.** Resta quello della casa (il cielo calcolato, di default, più chiaro/scuro/
+  sistema e l'opacità), perché è il vestito della scheda e non il suo contenuto, ed è
+  misurato: lo scrim §3.6 esiste perché l'inchiostro bianco tenga il suo pavimento. Chi
+  vuole la tipografia pura su carta piatta la sceglie dalle impostazioni della scheda, che
+  sono un tocco lungo di distanza.
+- **La famiglia di icone** non viene più offerta nella schermata di configurazione quando la
+  scheda è questa: un interruttore che non cambia niente non si offre (la riga che c'era
+  già per la massima/minima del widget Oggi). Massima/minima invece **viene** offerta anche
+  qui, e per la stessa ragione per cui la offre Oggi: c'è una colonna di fatti in cui
+  metterla, dove sul widget Ora c'era solo il bordo della frase da affollare.
+
+### I contenitori di Glance, contati di nuovo
+
+Glance disegna al massimo dieci figli per contenitore e **scarta il resto senza dire
+niente** (Fase 11, dove aveva già mangiato le ultime due ore della striscia di Oggi). La
+colonna della forma `STACK` ne ha sette al massimo, le due colonne della `ROW` tre ciascuna,
+la riga delle ore sei — e sei è il soffitto di `textHourCells` proprio per quello. Ogni
+distacco è **padding**, mai uno `Spacer`: una riga che costa due figli costa il doppio di
+quel che sembra.
+
+### Quel che è cambiato fuori dal widget
+
+- `WidgetUi.kt`: `textSizeForLine`, l'inverso di `textLineHeight`, e un parametro `size` su
+  `DayRange` (era fissa a 16 sp; qui la coppia sta al rango 3, a 14).
+- `ChiaroWidgets`: `WidgetKind.TEXT`, il ricevitore, la famiglia. `WidgetConfigActivity`:
+  niente icone per questa scheda, sì frase/allerta/massima e minima.
+- `WidgetPreviewTest` conta cinque provider e cinque anteprime invece di quattro. È un
+  conteggio asserito e non derivato apposta: un provider aggiunto senza anteprima deve
+  fallire lì e non sullo schermo di casa di qualcuno.
+
+### Come è stato verificato
+
+`./gradlew :app:compileDebugKotlin`, `test :app:testDebugUnitTest`, `:app:lintDebug` e
+`:app:assembleDebug` verdi, **808 test** (i 793 di prima più i 15 di
+`TextWidgetLayoutTest`), lint senza un rilievo sui file nuovi, e l'APK contiene
+`res/xml/widget_text_info.xml` e `res/layout/widget_text_preview.xml`. Il resto — come legge
+davvero la scheda su uno schermo di casa, a quali taglie il launcher la concede, se 41 sp
+sono i 41 sp giusti — è una prova da dispositivo: qui non c'è.
+
+### Il secondo giro, dal dispositivo (committente, 19 set 2026)
+
+Quattro richieste dopo la prima prova su schermo di casa, con screenshot: la card 4×1 sul
+cielo notturno, «Ornago · la mia posizi…» troncato, «24°», «Quasi sereno», «25° / 16°».
+
+**1. Il segnaposto torna.** «Invece della scritta "la mia posizione" metti il simbolo del
+GPS davanti alla località.» La prima versione l'aveva messa a parole apposta — una scheda
+che non disegna niente dice quel che le altre marcano — e lo screenshot ha mostrato il costo
+esatto di quella coerenza: la riga era **tutta** la nota, e il nome del posto ci finiva
+dentro troncato. Il segno costa 16 dp di inchiostro, dice la stessa cosa e lascia il nome
+intero. È lo stesso `ic_place_pin` della schermata e delle altre quattro schede, quindi le
+cinque non possono litigare su che aspetto ha «la mia posizione».
+
+Da qui una regola che vale anche per il punto 2 e che adesso sta nell'intestazione di
+`TextWidget.kt`: **un segno alla misura della riga cui appartiene, tinto con l'inchiostro di
+quella riga, è punteggiatura, non grafica.** «Niente icona meteo o altra grafica» resta
+intero: sulla scheda non c'è nessun disegno del meteo, nessuna pastiglia, nessuna
+illustrazione.
+
+**2. Le frecce su e giù.** «Temperatura max e min un po' più grandi e con le frecce su e giù
+ad indicare massima e minima.» Sono due `vector` nuovi (`ic_range_high`, `ic_range_low`) e
+non i caratteri ↑ e ↓, per la ragione già misurata il 9 set sui marchi dei verdetti: un
+carattere che il font di sistema non ha lo disegna un font di ripiego, con la sua mano e il
+suo peso, e il committente lesse la ✗ come scrittura a mano. Stessa costruzione dei marchi:
+un tracciato a 2.4 di 24, cuspidi tonde, ≈1.6 dp alla taglia a cui si mostrano.
+
+La coppia resta **un solo composable**, `DayRange`, con un parametro `marks`. Non due
+grammatiche per la stessa cosa: è la stessa frase a due budget. I segni costano ~25 dp, che
+la colonna da 174 dp del widget testuale porta e quella da 113 dp del widget Oggi no — quindi
+Oggi tiene la barra e la scheda che ha lo spazio lo dice per esteso. L'enfasi non cambia in
+nessuno dei due casi: la massima prima e forte, la minima dopo e smorzata, e ogni segno
+prende l'inchiostro della cifra davanti a cui sta.
+
+**3. Il rango 3 sale, e il pavimento dell'eroe scende.** «La località un pochino più
+grande», e le due temperature pure. Il rango 3 va da 14 a **16 sp**, che è il numero con cui
+tutte le altre schede stampano un luogo e una massima/minima: le cinque adesso sono d'accordo
+su quanto è grande un fatto. Ma 17 sopra 16 non è un rango, è un arrotondamento, quindi la
+frase del giorno sale a **18**. Due punti, con Medium contro Regular e forte contro quieto,
+è il salto più piccolo che si ordina ancora a distanza di braccio; a 19 la colonna da 174 dp
+smette di tenere «Pioggia gelata verso le 15:00» in due righe, ed è la misura che ha fermato
+il numero lì.
+
+Il seguito è aritmetico e va detto perché è il genere di cosa che si rompe in silenzio: la
+riga del luogo è cresciuta di 2,6 dp, quindi su una riga da 85 dp con il marcatore di
+vecchiaia il numero resta con 37,4 dp, cioè 28,3 sp — **sotto il vecchio pavimento di 30**.
+Un pavimento che non si può pagare non è un pavimento, è una riga tagliata. È sceso a **26**,
+e così torna a essere quel che deve essere: il punto sotto il quale una scheda strizzata
+smette di rimpicciolire la cifra, non una taglia che una concessione misurata raggiunge. Con
+dati freschi quella stessa riga legge 39,3 sp.
+
+**4. Lo sfondo colorato.** «Possibilità di mettere uno sfondo colorato: blu, blu chiaro,
+verde…» Sei colori — blu, blu chiaro, verde, verde acqua, viola, terracotta — accanto alle
+quattro scelte che c'erano già, e **su tutti e cinque i widget**, non solo su questo: il
+colore è una proprietà della scheda, non di quel che ci sta stampato sopra.
+
+Due decisioni dentro la decisione.
+
+- **Nessun inchiostro nuovo.** Inchiostro e terreno sono una coppia (§2.3), e quanto costa
+  spezzarla è stato misurato il 4 set sui verdetti della scheda Cielo. Quindi invece di sei
+  terne di inchiostri, ogni colore è scelto **abbastanza scuro da portare la coppia che
+  l'app ha già e ha già misurato**: il bianco §3.6 del cielo con lo scrim, pieno per
+  l'inchiostro, 75% per quello quieto, 85% per quello della freschezza. Diciotto misure in
+  DESIGN §2.6, asserite da `PaletteContrastTest` e confrontate con il documento da
+  `PaletteDocTest`. Il pavimento che conta è il quieto, perché porta un'etichetta d'ora da
+  11 sp: il peggiore dei sei dà 5,2:1 contro i 4,5 che servono.
+- **Sei colori devono essere sei colori.** Nessuna coppia sotto **13 ΔE**, altrimenti a
+  scegliere è il nome e non il colore. Il blu del primo tentativo (`#14477A`) stava a 9,4 dal
+  blu chiaro accanto: è sceso a `#0F3B6B`, che è anche il blu che un lettore si aspetta di
+  vedere quando l'altro si chiama «blu chiaro».
+
+`WidgetBackground` prende **un** valore nuovo, `COLOR`, e non sei: quale colore è una seconda
+domanda, e la si fa solo a chi ha scelto COLOR (`WidgetLook.cardColor`), così ogni `when` su
+quell'enum resta di quattro righe. Sotto `InkTrustFloorPct` una scheda colorata passa la
+domanda dell'inchiostro alla carta da parati come fanno il cielo e la scheda di sistema:
+scegliere un colore è scegliere un **terreno**, non nominare un inchiostro, e al 20% di
+solidità quel terreno in gran parte non c'è. Chiaro e scuro continuano a decidere a qualsiasi
+solidità, perché quelli sì sono il lettore che nomina un inchiostro.
+
+Le due schermate di configurazione stampavano già le stesse quattro righe da due copie della
+stessa lista, ed è esattamente il posto in cui un quinto tipo lascia indietro una delle due
+copie: adesso c'è un `BackgroundSection` solo, usato da entrambe, con le righe dei colori
+annidate sotto la scelta «Un colore» e una pastiglia del colore in fondo a ognuna — con il
+nome davanti, perché una pastiglia non è un'etichetta (§10).
+
+### Come è stato verificato (secondo giro)
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **812 test**
+(i 15 del widget più 4 nuovi: le diciotto misure dei colori, la distanza fra i sei, il fatto
+che nessuna scheda solida interroghi la carta da parati, e il confronto fra la tabella di
+§2.6 e il codice). Lint senza rilievi. Come legge la scheda colorata su uno schermo di casa
+resta una prova da dispositivo.
+
+### Il terzo giro: le ore se ne vanno, il pannello, e il nome intero (committente, 19 set 2026)
+
+Screenshot con le due schede affiancate — 4×1 e 4×2, sfondo blu — e tre richieste.
+
+**1. Le temperature orarie via, e sempre.** «Praticamente facciamo sempre senza temperature
+orarie.» Erano l'unica cosa che la scheda alta guadagnava in più, ed è la prima volta che
+una feature di questa serie viene tolta per come **legge** e non per un difetto: sullo
+schermo di casa le sei colonne sotto il blocco di testo si leggevano come un secondo widget
+pinzato sotto il primo. La scheda che esiste per le ore è il widget Oggi, e ce l'ha con i
+glifi. Via `textHourCells`, `textHoursHeight`, `TextHourTempSp`, i quattro numeri della
+cella e il campo `showHours` del piano.
+
+**2. Allineato in basso, e un pannello da quattro colonne in su.** «Allinea in basso testo e
+(se impostata) temperatura minima e massima. Se la dimensione poi è su 2 righe e le colonne
+sono almeno 4 valuta di cambiare il layout con la temperatura allineata in basso con font un
+po' più grande e testo e temperature max e min allineate a destra in basso.»
+
+Le due righe adesso **appuntano il luogo in cima** e tutto il resto **in fondo**, con l'aria
+in mezzo. È quel che l'altezza compra al posto delle ore, ed è la differenza fra una
+composizione e un elenco che è finito: `Spacer` pesato fra l'occhiello e il blocco, un figlio
+solo (Glance ne disegna dieci per contenitore e scarta il resto senza dirlo).
+
+Da quattro celle in su c'è una forma nuova, `TextForm.PANEL`: l'occhiello a tutta larghezza
+in cima, e lungo il fondo il numero a sinistra con la frase e la massima/minima allineate a
+destra, le due colonne **allineate in basso** così che la linea di base del numero e quella
+della coppia cadano insieme — che è tutto il senso di «allineate a destra in basso».
+
+E qui il numero può essere più grande, con una ragione e non a occhio: nelle altre forme sta
+**sotto** le parole, qui sta **accanto**. Vale la regola che il widget Ora scrive per il suo
+glifo (`RowIconMax`: l'eroe non supera mai il blocco che gli sta a fianco), letta su un
+blocco diverso — due righe di frase più la parola dell'allerta più la coppia fanno 89,8 dp, e
+64 sp hanno una scatola di riga di 84,5. Quindi tre soffitti, uno per forma: **44** dove sta
+sotto il luogo con una colonna di prosa a fianco, **56** sulla scheda alta stretta dove sta
+sopra la sua frase, **64** sul pannello.
+
+La soglia «almeno 4 colonne» è 300 dp (`TextPanelMinWidth`), misurata come `TallMinHeight`:
+quattro celle sono ~340 dp sul dispositivo di riferimento e ~320 su una griglia da cinque
+colonne, tre sono ~250. Un widget non sa quante celle ha avuto.
+
+La colonna di sinistra del pannello è **fissa** a 140 dp e non è `textLeadingColumn`: lì
+dentro ci sta una cifra, non un nome — il nome è l'occhiello sopra entrambe le colonne — e
+140 è «−12°» al soffitto (134,4) più un paio di dp, così a decidere la taglia del numero è il
+soffitto e non la larghezza.
+
+**3. Il nome lungo, intero.** «Quando è su una riga vorrei che si riesca a vedere
+completamente una località lunga come "Cavenago di Brianza" lasciando così il layout e le
+dimensioni dei vari testi.»
+
+La colonna di sinistra era il 42% dello slack della riga: 126 dp, contro i 165 che
+«⌖ Cavenago di Brianza» vuole (145 misurati di nome a 16 sp, più la scatola del segnaposto e
+la sua aria). Il risultato era «Cavenago di Bri…» su una riga che aveva 174 dp di bianco
+nell'altra colonna. **Una quota non può risolverlo**, perché le due colonne non vogliono la
+stessa cosa: quella di sinistra vuole esattamente quanto le serve al nome che tiene, quella
+di destra vuole una misura.
+
+Quindi: ogni dp oltre il minimo della frase va al nome finché il nome è soddisfatto.
+
+```
+lead = (slack − 104).coerceAtMost(168).coerceAtLeast(96)
+```
+
+Quattro celle: 168 contro 132 (prima 126 contro 174). Tre celle: 106, e la frase resta
+esattamente sul suo minimo — la forma che questa scheda guadagna a tre celle non viene
+restituita. Due celle: il pavimento, e 23 dp di avanzo, che non è una colonna. Niente
+cambia nelle taglie dei testi né nella disposizione, che era la condizione.
+
+Un controllo che valeva la pena fare: la coppia con le frecce a 16 sp misura ~95 dp con due
+numeri a due cifre e ~113 con due «−12°», quindi ci sta nei 132 della colonna nuova senza
+tagli.
+
+### Come è stato verificato (terzo giro)
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **814 test**,
+di cui 17 sul layout di questa scheda — fra questi uno che, per ogni concessione che è un
+pannello, con e senza marcatore di vecchiaia e a due scale di font, ricalcola le due colonne
+e verifica che la più alta stia dentro la card. Lint senza rilievi. Come legge davvero il
+pannello su uno schermo di casa resta una prova da dispositivo.
+
+## L'icona del meteo sul widget testuale, disegnata nell'aria (committente, 20 set 2026)
+
+«Per ogni layout/dimensione del widget senza cambiare assolutamente niente del testo che c'è
+adesso, dove si potrebbe aggiungere anche l'icona del meteo attuale, attivabile da
+un'impostazione.» E, in coda: se viene bene si potrebbe togliere «A colpo d'occhio».
+
+### La condizione detta bene, perché è tutto il progetto
+
+«Senza cambiare niente del testo» non vuol dire «con le stesse taglie». Vuol dire che
+**nessun budget può cambiare**: se il glifo fosse una sezione per cui la card fa spazio,
+qualcuno pagherebbe — una riga di frase, la parola dell'allerta, la coppia max/min, o dp di
+numero. Quindi l'impianto è rovesciato rispetto alle altre quattro schede.
+
+Le altre quattro **prenotano il disegno per primo** e sistemano le parole intorno. Questa
+calcola tutti e quattro i suoi piani **come se il glifo non esistesse**, e solo dopo chiede
+se quel che avanza basta a tenerne uno. Le quattro funzioni nuove in `TextWidgetLayout`
+(`textIconSize`, `textRowIconSize`, `textStackIconSize`, `textPanelIconSize`) restituiscono
+**una taglia o niente**, e nessuna di loro è input di un piano. Dove non c'è aria non c'è
+disegno: è la regola «una sezione che non ci sta non si disegna», applicata alla cosa che
+questa card era nata per non avere.
+
+### I due posti dove l'aria c'è già
+
+**Accanto al numero** (`LINE`, `ROW`, `STACK`). Una temperatura è larga al massimo
+[TempEmWidth] = 2,1 em — «−12°» — e il resto della sua riga è aria. Misurata contro il
+numero **più largo che l'app possa stampare**, mai contro quello che sta stampando: la
+regola che il widget Cielo scrive per le sue forme, perché una card che cambia forma con la
+previsione non si può mirare.
+
+**Sopra le parole** (`PANEL`). Quella forma appunta l'occhiello in cima e il blocco in fondo,
+quindi la fascia in mezzo è vuota per costruzione: è quel che l'altezza compra da quando le
+ore se ne sono andate. Il glifo ci si appende.
+
+Su una riga il glifo è **sovrapposto** (`Box`) e non affiancato (`Row`): in una `Row` si
+prenderebbe la sua larghezza dalla colonna, e il nome del posto — la riga che questa card ha
+combattuto per stampare intera due giri fa — tornerebbe a troncarsi. Sovrapposto, le parole
+tengono ogni dp e il glifo sta nell'angolo che il numero lascia vuoto.
+
+Sul panel invece il glifo è il **primo figlio della colonna di destra**, non una riga fra lo
+spacer e il blocco. La prima versione l'ho scritta come riga a sé e **era sbagliata**: in una
+`Column` l'altezza si somma, quindi occhiello + glifo + riga bassa sforava di 15,8 dp sulla
+4×2. Dentro la colonna di destra invece la colonna cresce **verso l'alto** dentro la fascia
+che lo spacer teneva, l'allineamento in basso della riga lascia il numero esattamente dov'era
+(verificato: 76,5..161 con e senza glifo, e 62,1..161 con il marcatore di vecchiaia), e
+`textPanelIconSize` è per costruzione l'altezza che quella fascia aveva.
+
+### Quel che ne esce, misurato
+
+| forma | grant | glifo |
+|---|---|---|
+| LINE 1 cella | 110×85 | niente (0 dp d'aria) |
+| LINE 2 celle | 159×85 | **51,9 dp** |
+| ROW 3 celle | 250×85 | niente (23,5 dp) |
+| ROW 3,5 celle | 300×85 | **51,9 dp** |
+| ROW 4 celle | 340×85 | **51,9 dp** |
+| ROW 4 celle, riga alta | 340×101 | **58,1 dp** |
+| STACK 2 celle | 159×189 | niente (27,7 dp) |
+| STACK 2,5 celle | 205×189 | **71,2 dp** |
+| PANEL 4×2 | 340×189 | **71,2 dp** |
+| PANEL 4×2 con allerta | 340×189 | **50,1 dp** |
+| PANEL 4×3 | 340×293 | **104 dp** (soffitto) |
+
+Due cose sono cambiate rispetto alla valutazione che avevo dato in chat, e vanno dette:
+il pavimento unico a 48 dp fa sì che **nella giornata con allerta il panel il glifo lo
+tiene** (50,1 dp) invece di perderlo, e il marcatore di vecchiaia **non costa niente al
+glifo del panel**, perché vive nella colonna di sinistra mentre la fascia si misura su
+quella di destra.
+
+Il pavimento è 48 e non i 52 della famiglia, di un passo: sulle altre quattro schede il glifo
+**è** l'eroe e 52 è dove smette di reggere la card a distanza di braccio; qui l'eroe è il
+numero e il glifo è il suo accompagnatore, alla taglia ottica del numero — 48 dp di scatola
+sono ~33 di inchiostro, che è quel che una cifra da 39 sp mette sulla stessa riga.
+
+### Il bordo, che sono dieci dp e una regola vecchia
+
+Un bordo con un glifo prende 4 dp, uno con parole 14 (`WidgetCardPaddingLeading`, misurato
+sul widget Ora il 7 set: i disegni portano 9–12,5 dp di margine loro). Sulle tre forme in cui
+è il disegno a toccare il bordo della card — tutte tranne `ROW`, dove il glifo è interno alla
+colonna del nome — la card gli dà il bordo del glifo e **il testo restituisce i dieci dp**
+(`TextIconEdgeGive`). Così ogni riga si misura contro esattamente la larghezza di prima: è la
+promessa «non si muove niente» scritta come un numero solo. Senza, il glifo si sarebbe
+fermato ~10 dp più dentro della frase sopra cui sta, che è il difetto che il repo ha già
+registrato una volta.
+
+### L'interruttore
+
+`WidgetLook.showIcon`, **spento di default**, nella schermata della singola card (pressione
+lunga → matita), in cima alla sezione «Contenuto» perché decide che **tipo** di card è e non
+cosa la card dice. Spento di default è il nome della scheda che mantiene la parola: «In
+parole» deve essere vero nel momento in cui la si posa. Per widget e non nelle impostazioni
+dell'app, come tutti gli altri interruttori di contenuto, così lo stesso schermo può portare
+la stessa card due volte, una con il glifo e una senza — che è metà del perché l'opzione vale.
+
+Acceso, riappare anche la scelta della famiglia di icone per questa scheda, nascosta finché
+non disegnava niente. E il glifo prende la parola della condizione per chi legge con TalkBack
+**solo quando la frase è spenta**: con la frase accesa lo direbbe due volte, senza frase
+sarebbe un disegno senza nome.
+
+### «Togliamo A colpo d'occhio?» — no, e non per estetica
+
+Il fattore che decide non è il design: togliere `NowWidgetReceiver` dal manifest
+**orfanizza ogni widget già posato**, perché Android non ha migrazione fra provider. Oltre a
+quello si perderebbero la disposizione speculare, il glifo a 2 e 3 celle su una riga, e i
+66 dp contro 52 sulla riga a quattro celle. Decisione del committente: si tiene.
+
+### Una stringa che mentiva
+
+`widget_text_desc` prometteva ancora «e, su una card più alta, le prossime ore», tolte il
+19 set. Corretta nello stesso giro, in entrambe le lingue.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **821 test**
+(sette nuovi). Due di quei sette non controllano dove va il glifo ma **quanto costa**: per
+ogni forma, a tre scale di font e con e senza marcatore di vecchiaia, rifanno l'aritmetica
+della card e verificano che il glifo stia sotto la riga del luogo, non copra il numero al suo
+più largo, lasci sei em al marcatore, e che il panel non cresca per farlo entrare. È il
+genere di rottura che nessuno segnala come bug: una riga di frase tagliata il giorno in cui
+si accende un interruttore.
+
+---
+
+## Il carattere dell'app, che ora si sceglie (committente, 20 set 2026)
+
+«L'app usa il font Inter mentre il widget penso usi il font di sistema: è corretto? Mi piace
+il font usato dal widget "In parole" e anche il bold usato per la temperatura. Vorrei che
+anche l'app utilizzi questo font… magari si potrebbe mettere nelle opzioni un parametro per
+impostare quale font utilizzare.»
+
+### La diagnosi era giusta, e una metà non è il font
+
+L'app è in Inter, incluso nell'APK come font variabile (`Type.kt`, `res/font/inter_variable.ttf`,
+880 KB, OFL). Le card sono nel carattere di sistema **e non per scelta**: Glance disegna
+attraverso `RemoteViews`, che non ha un'API di famiglia, quindi `androidx.glance.text.TextStyle`
+ha colore, dimensione e peso e basta. Il codice lo dava già per scontato in due punti —
+`TextWidgetLayout` misura «−12°» su Roboto Bold (`TempEmWidth`), `ArcPainter` dipinge con
+`Typeface.DEFAULT`.
+
+La parte che va detta perché non si perda: **fra la temperatura del widget e quella dell'app
+la differenza più grande non è la famiglia, è il peso.** La card la stampa in Bold, la
+schermata in Light 300 a 64 sp, e il Light è una decisione scritta (§5: «un numero in un peso
+da testo si legge come un titolo, non come una lettura»). Questo giro non la tocca: l'opzione
+sposta la famiglia e **nient'altro** (`TypographyFamilyTest` verifica che dimensioni, pesi e
+interlinee siano identici nelle due risposte), così se dopo il peso dell'eroe va cambiato lo
+si cambia da solo, sapendo che cosa si sta cambiando. Resta aperto.
+
+### La coerenza si può ottenere solo spostando l'app
+
+Non esiste il verso opposto. Portare Inter dentro i quattro widget Glance si potrebbe solo con
+`AndroidRemoteViews` e una `SpannableString` con `TypefaceSpan`, cioè rifacendo a mano ogni
+forma di ogni card e rinunciando a quel che Glance dà: fragile, e per di più andrebbe contro
+le larghezze in em già misurate. Il quinto, l'arco, dipinge su Canvas e tecnicamente potrebbe
+(`Typeface` da `ResourcesCompat.getFont`), ma sarebbe l'unica card diversa dalle altre quattro,
+che è peggio dell'incoerenza che risolve. Quindi: la si ottiene muovendo l'app, o non la si
+ottiene.
+
+### Quel che costa il carattere di sistema, tutto in silenzio
+
+Tre cose, ed è per queste che il predefinito resta Inter e non diventa «di sistema»:
+
+1. **I pesi sono quelli che il dispositivo ha.** Dove manca, Android lo sintetizza spalmando
+   gli outline — esattamente il difetto che il commento in `Type.kt` dice di aver evitato
+   includendo il variabile. Il candidato è proprio il 300 dell'eroe.
+2. **`tnum` può non fare niente.** Una famiglia senza cifre tabulari ignora la feature senza
+   errore: nessun crash, solo colonne di numeri che smettono di essere colonne. Inter ce l'ha;
+   di un font OEM non si sa, e **non è verificabile da qui**: va guardato sul dispositivo.
+3. **Le colonne in dp erano misurate su Inter** (`TextScale.kt`: i 44/36/34/34 della riga
+   della settimana, la cella dell'ora, l'orologio della timeline). Una faccia più larga le fa
+   riflettere un passo prima. Non taglia niente — in `ui/` non c'è un solo `maxLines`, ed è
+   deliberato — ma un valore può andare a capo prima di quanto dica la misura.
+
+E una quarta che non è un costo ma una conseguenza: l'app smette di avere un aspetto suo. È lo
+stesso scambio del colore dinamico, fatto sul carattere invece che sul colore, e si risolve
+allo stesso modo: la cosa dell'app di default, la cosa del telefono a richiesta.
+
+### Come è fatto
+
+`AppFont { INTER, SYSTEM }` accanto a `ThemeMode` e `AppPalette` in `:core:data` — solo UI,
+nessun motore la legge — con la chiave `appearance_font` e il solito ritorno al default per un
+valore che questa versione non conosce. `ChiaroTheme` prende un parametro `font` e da lì
+scendono entrambe le metà della scala: i quindici ruoli Material (`chiaroTypography`) e i due
+che Material non ha (`LocalChiaroType`, come `LocalChiaroColors`). Quei due erano `val` di
+primo livello che nominavano `InterFamily`: costruiti all'init della classe, avrebbero
+continuato a stampare Inter sotto un lettore che aveva chiesto il sistema — è la rottura che il
+test copre per seconda. Le tre activity che montano il tema (`MainActivity` e le due di
+configurazione dei widget, che sono schermate dell'app) passano la scelta.
+
+La riga sta in Aspetto, subito dopo Palette, perché è la stessa domanda dell'abito. Il foglio
+di scelta porta la spiegazione: che Inter viene con l'app ed è uguale su ogni telefono, che «di
+sistema» è il carattere del telefono ed è anche quello con cui sono scritte le card.
+
+Un dettaglio che non è cosmetico: **la riga dei crediti non può dire Inter a chi non lo sta
+leggendo.** Inter resta incluso comunque (è il predefinito ed è il fallback), quindi
+l'attribuzione resta; a chi ha scelto il sistema la riga aggiunge «incluso, ma non in uso». È
+§1.1 applicata ai crediti, la stessa lezione della nota della palette.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **826 test**
+(cinque nuovi) e lint a zero errori. I cinque sono `TypographyFamilyTest`; `SettingsStoreTest`
+guadagna tre verifiche dentro i test che già aveva (il default, il giro completo, il valore
+sconosciuto). Il test dei ruoli li chiede a Material per
+riflessione invece di elencarli: un ruolo aggiunto da una versione futura di Material 3 e non
+copiato fallisce lì, invece di stampare una riga dell'app in un secondo carattere senza che
+nessuno se ne accorga.
+
+**Quel che resta da guardare sul dispositivo**, perché una JVM non lo può dire: se il carattere
+di sistema del telefono porta le cifre tabulari (le colonne del Diario e della settimana sono
+il posto dove si vede), e se il 300 dell'eroe è disegnato o sintetizzato.
+
+---
+
+## Il secondo carattere: Google Sans, e la temperatura in grassetto (committente, 20 set 2026)
+
+«Invece di avere un font di sistema che cambia di marca in marca forse meglio provare un
+font fisso oltre Inter. Cosa ne dici di provare Google Sans? Dovrebbe essere free e con
+licenza valida per utilizzo, controlla. […] Possiamo anche provare a mettere in un bel bold
+la temperatura attuale dandogli un bel look.»
+
+### La licenza, controllata alla fonte e non sulla scheda
+
+Google Sans sta in `google/fonts` nella cartella **`ofl/googlesans`**: `license: "OFL"`,
+`OFL.txt` con «Copyright 2025 The Google Sans Project Authors», e **nessun Reserved Font
+Name dichiarato** nella riga di copyright. Quindi si puo' impacchettare, ridurre e
+ridistribuire dentro un'app GPL tenendo la licenza accanto — che e' quel che il repo fa
+gia' per Inter. Il testo e' in `licenses/GoogleSans-OFL.txt` e la riga in
+`licenses/README.md`.
+
+Va detto anche quel che la licenza **non** dice: Google Sans e' il carattere con cui sono
+scritti Android e le app di Google, e un'app di terzi che lo indossa si fa somigliare a
+loro. E' legittimo e non e' un problema legale; e' una scelta di prodotto, ed e' del
+committente.
+
+### Cinque mega non entrano in un APK
+
+Il file a monte pesa **4 974 940 byte** — 8 311 glifi e una ventina di scritture che questa
+app non stampa. `tools/import_google_sans.py` lo riduce a **306 664 byte**, cioe' **un terzo
+di Inter** (880 KB, che e' il file come lo pubblica il suo autore). Come per i disegni del
+meteo, il file sotto `res/font/` non si modifica a mano: rifare girare lo strumento E'
+l'importazione, e `--controlla` rifa' la riduzione e confronta i byte (per questo lo
+strumento scrive `recalcTimestamp=False`: senza, due esecuzioni identiche darebbero due file
+diversi per via dell'ora dentro `head`).
+
+Cosa viene fissato e perche' sta nell'intestazione dello strumento. Le tre cose da ricordare
+qui:
+
+- **`GRAD` a 0 e `opsz` a 18.** Il primo e' un asse di compensazione ottica che l'app non ha
+  un posto dove decidere; il secondo, in questo file, va da 17 a 18: un punto.
+- **`wght` resta variabile, ma parte da 400.** In Google Sans **il 300 non esiste**. Inter
+  arriva a 100, questo no, quindi la famiglia dichiara quattro pesi invece di cinque e chi
+  chiede Light prende il 400. Non si dichiara un peso che il file non sa disegnare: sarebbe
+  la sbavatura per cui Inter era stato impacchettato variabile.
+- **`tnum` c'e'**, verificato sul file e non sulla scheda del sito. Era la condizione: DESIGN
+  §5 dice che ogni cifra in colonna e' tabulare, e una famiglia senza cifre tabulari fa
+  ballare il Diario e la settimana **senza dare un errore**. Se non l'avesse avuto, Google
+  Sans non sarebbe entrato.
+
+Le scritture tenute sono quelle che Inter porta gia' (latino esteso, greco, cirillico): i
+nomi dei luoghi arrivano dal geocoder e non sono tutti italiani. Quel che resta fuori cade
+sul carattere di sistema glifo per glifo, che e' come Android gestisce da sempre un buco.
+
+### Il grassetto, che e' il ribaltamento di una regola scritta
+
+`heroTemperature` passa da **300 a 700**, e la regola vecchia va riscritta invece che
+aggirata. Diceva: «un numero in un peso da testo si legge come un titolo, non come una
+lettura». A 24 sp regge ancora, e infatti `readingValue` **non si tocca**. A 64 sp no: quel
+numero non e' una lettura fra le altre, e' la cosa per cui la schermata esiste, e un filo
+d'inchiostro steso sopra un cielo dipinto si legge come ornamento. La card sulla schermata
+principale lo stampa in Bold dal giorno in cui e' nata: l'app che dava un peso diverso allo
+stesso numero era l'osservazione da cui e' partito tutto.
+
+Grassetto e basta sarebbe stato meta' del lavoro. A quella misura la spaziatura predefinita
+e' disegnata per un paragrafo, e le cifre si mettono in mezzo fra loro: **−0,02 em** (−1,28
+sp a 64) e' quel che rimette il peso dentro un numero. La formula di Inter si assesta
+intorno a −0,022 a questa taglia; ci si ferma appena prima perche' lo stesso numero deve
+stare anche in Google Sans, che e' piu' tondo e si chiude prima. **Da guardare sul
+dispositivo**: se a 64 sp il numero sembra ancora largo, il passo successivo e' −0,022, non
+un'altra taglia.
+
+### Le tre risposte, e perche' «di sistema» resta
+
+Inter (predefinito), Google Sans, di sistema. La terza si poteva togliere — il committente
+l'aveva messa in discussione — e si tiene per una ragione sola: **e' l'unica che fa leggere
+l'app esattamente come le card**, che e' la domanda da cui e' nata la settimana. Le altre due
+sono lo stesso disegno su ogni telefono, che e' la ragione per cui una delle due e' il
+default e la terza non lo sara' mai.
+
+La riga dei crediti adesso nomina **tutti e due** i font inclusi, sempre, perche' tutti e due
+viaggiano nell'APK qualunque cosa dica l'impostazione, e poi dice quale dei due e' sullo
+schermo. Il tocco porta alla pagina del font in uso, o — quando il carattere e' quello del
+telefono e non c'e' nessuno da accreditare — alla licenza che i due inclusi condividono.
+
+### Come e' stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **832 test**
+(undici fra i due file di tipografia, sei nuovi in questo giro) e lint a zero errori.
+
+`FontAssetTest` e' il test che conta, e legge i **file**, non il codice: si apre il `.ttf`,
+si cammina la tabella delle tabelle e si chiede all'asse `wght` se copre davvero ogni peso
+che la famiglia dichiara, alla `GSUB` se `tnum` c'e', e al file quanto pesa. Niente nella
+catena di build lo controlla: chiedere un peso fuori dall'asse non e' un errore, e' un
+rendering diverso, ed e' il modo in cui un difetto di tipografia arriva a chi legge senza
+che nessuno se ne accorga.
+
+### Il predefinito passa a Google Sans, e una promessa da correggere (committente, dal dispositivo)
+
+«Fai Google Sans il predefinito. Va benissimo, vedi screenshot.»
+
+Fatto, e il costo va scritto perche' e' reale: **l'argomento che Inter aveva era la misura.**
+Le colonne fisse di `TextScale.kt` — i 44/36/34/34 della riga della settimana, la cella
+dell'ora, l'orologio della timeline — sono larghezze di Inter. Google Sans e' un filo piu'
+largo e piu' tondo, quindi quelle colonne incontrano il loro punto di riflusso un passo prima
+di quanto dica il commento accanto. Non taglia niente (in `ui/` non c'e' un `maxLines`), ma i
+numeri da rimisurare, quando qualcuno lo fara', sono quelli. L'argomento che ha vinto e'
+quello che ha deciso ogni altro default di questa app: che cosa si vede quando la si apre.
+
+Un'installazione che non ha mai aperto l'impostazione cambia carattere all'aggiornamento. E'
+quel che e' un default, ed e' esattamente la stessa riga scritta il 6 set per le icone a
+tratto: spostarlo per quei lettori e' il punto del cambio.
+
+### «Se seleziono il font di sistema i numeri non sembrano uguali a quelli del widget»
+
+Domanda giusta, e la risposta e' **no, non e' garantito che coincidano** — la promessa era
+mia e la stringa la faceva a schermo, quindi la stringa e' stata corretta (§1.1: lo schermo
+non mente, e questa era una frase che prometteva una cosa che il dispositivo ha smentito).
+
+Tre meccanismi, indipendenti, e bastano il primo o il secondo da soli:
+
+1. **La card non la disegna l'app.** Le `RemoteViews` di un widget vengono gonfiate dal
+   **launcher**, nel suo processo e sotto il suo tema; `FontFamily.Default` invece risolve il
+   typeface predefinito **dentro il processo dell'app**. Su molte ROM il carattere
+   dell'interfaccia di sistema e quello che ricevono le app non sono lo stesso file, e in quel
+   caso nessuna impostazione dell'app puo' farli coincidere.
+2. **L'app chiede le cifre tabulari, la card non puo' chiedere niente.** `tnum` seleziona una
+   serie di cifre diversa da quella predefinita, e in molte famiglie la cifra che cambia di
+   piu' e' proprio l'1. Stesso font, due disegni della stessa cifra: e' il meccanismo che
+   spiega perche' a non somigliarsi siano **i numeri** e non le lettere.
+3. **Il peso e la spaziatura.** L'eroe dell'app e' Bold con −0,02 em; la card e' Bold senza
+   spaziatura, ed e' un altro corpo. Non cambia il disegno del glifo, cambia come si legge.
+
+**Come distinguere 1 da 2 in dieci secondi, sul telefono**: con «di sistema» attivo, confronta
+le **lettere** invece delle cifre — il nome del luogo nell'intestazione dell'app e quello
+sulla card. Se le lettere coincidono e solo le cifre no, e' `tnum` (caso 2) e si risolve
+togliendo le tabulari all'eroe, che e' un numero solo e non una colonna. Se non coincidono
+nemmeno le lettere, sono due font diversi (caso 1) e non c'e' niente da togliere: e' il
+sistema operativo.
+
+Non e' stato toccato niente su questo se non la stringa: quale dei due casi sia, lo dice il
+dispositivo, e il rimedio del caso 2 (l'eroe senza `tnum`) ha un costo suo — l'eroe e' il
+numero che si aggiorna sul posto, e senza cifre tabulari oscilla quando 19,4 diventa 19,5.
+
+### Come e' stato verificato (secondo giro)
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, 832 test,
+lint a zero errori. Il giro di `SettingsStoreTest` e' stato cambiato apposta: con Google Sans
+come default, un test che salvava Google Sans e lo rileggeva non provava piu' niente, quindi
+ora salva Inter.
+
+## Il riepilogo della sera, e una revisione di tutti i messaggi (committente, 21 set 2026)
+
+«Vorrei aggiungere un nuovo avviso dal nome simile a "Il riepilogo della sera", gemello di
+"Il riepilogo del mattino". Cosa ne pensi onestamente? Deve dare info sulla serata/notte e
+una panoramica su domani. Meglio spezzarlo in due avvisi? È un'aggiunta che serve davvero?»
+
+### La risposta onesta, prima del codice
+
+**Serve, ma non per la ragione della domanda.** Le due metà dell'idea non valgono uguale.
+
+La panoramica su domani è **l'avviso con l'argomento più forte di tutta la sezione Pronti**,
+più forte del riepilogo del mattino che già c'è. Alle otto del mattino «oggi massima 18°»
+arriva mentre la giornata è già cominciata: le decisioni che quel numero governa (come
+vestirsi, se portare l'ombrello, a che ora suona la sveglia) sono già state prese. Alle otto
+di sera le stesse decisioni sono **ancora tutte da prendere**, ed è l'unico momento della
+giornata in cui un'app meteo può cambiarne una senza che il lettore la apra.
+
+La serata e la notte, da sole, sono l'esatto contrario: **non valgono un avviso.** Alle 21 la
+serata è fuori dalla finestra, e la notte è un dato con un solo consumatore vero — quanto
+scende, perché decide il ghiaccio sul parabrezza, le piante sul balcone e la finestra aperta.
+Un avviso solo per quello sarebbe una notifica al giorno per dire una cosa sola, e il gelo ha
+già la sua strada in questa app: «Ghiaccio domattina» è uno dei cinque modelli di regola.
+
+Quindi: **un avviso solo, non due**, e le ragioni sono scritte perché sono la decisione.
+
+1. Due notifiche nella stessa ora sono esattamente il rumore contro cui è scritta ogni altra
+   regola di questa sezione («al massimo uno per perturbazione», «al massimo due volte al
+   giorno»). Spezzare in due significherebbe che chi li accende entrambi ne riceve due a
+   venti minuti di distanza, sullo stesso luogo, con metà del contenuto in comune.
+2. **La notte e domani sono una decisione sola presa in un momento solo.** Non si decide la
+   notte e poi separatamente domani: si guarda fuori una volta e si decide la sera.
+3. La sezione Pronti passerebbe da quattro interruttori a cinque, due dei quali quasi
+   identici a leggersi. Una lista di interruttori smette di essere scorribile molto prima di
+   quanto si creda.
+4. Le due metà hanno **pesi diversi**, e un avviso solo lo può dire: domani sta nella riga
+   chiusa, la notte sta sotto, dove va a finire quel che non decide da solo se aprire la
+   notifica. Due avvisi pari le dichiarerebbero equivalenti, che non sono.
+
+### Il nome
+
+Resta **«Il riepilogo della sera»**, gemello di «Il riepilogo del mattino», anche se il suo
+argomento è domani e non la sera. L'alternativa onesta era «Come sarà domani», più informativa
+e più precisa — ed è stata scartata: nella lista i due interruttori si leggono uno sotto
+l'altro, e la coppia *è* l'informazione. Chi ha appena letto «tra le 6 e le 12» capisce al
+volo cosa sia «tra le 18 e le 23»; «Come sarà domani» sarebbe una terza cosa da imparare, e
+nasconderebbe la notte che l'avviso porta davvero. La descrizione dice la verità intera:
+«Una volta al giorno, tra le 18 e le 23: il cielo di domani, minima, massima e pioggia.
+Aprendolo, anche la notte che c'è in mezzo.»
+
+### Cosa mostra, e da dove viene
+
+La riga chiusa è **la frase del gemello, identica**: `Coperto. Minima −1°, massima 9°,
+pioggia 80%.` A separarli c'è il titolo, «Domani · Milano» contro «Oggi · Milano», ed è
+l'unica cosa che deve separarli. Il giorno si dice una volta, dove va detto.
+
+Aperta, cinque righe possibili, per valore decrescente, ognuna disegnata solo se ha il suo
+dato (§1.1 — mai un trattino al posto di un valore, mai uno zero inventato):
+
+| riga | quando compare | perché è lì |
+| --- | --- | --- |
+| `Stanotte fino a −1° verso le 03:00 · Gelo: ghiaccio sui vetri al mattino` | sempre, se il report ha ore dentro la notte | è l'unica temperatura di cui l'app parla prima che qualcuno ci stia dentro, e la fascia è la decisione, non il termometro |
+| `Pioggia stanotte fino al 60%, il peggio verso le 03:00` | picco ≥ 50% | sotto metà la riga direbbe «probabilmente no», che non è una notizia |
+| `Domani pioggia dalle 14:00 alle 16:00, fino al 80%` | domani tocca la soglia ombrello (70%) | è la decisione dell'ombrello, cioè il motivo per cui si legge un riepilogo la sera |
+| `Domani alba 07:58, tramonto 17:07 · 1 minuto di luce in più di oggi` | alba e tramonto esistono entrambi | è l'edizione della luce del giorno: nessun'altra app stampa quel delta |
+| `Domani UV massimo 5 · Scotta in circa 45 minuti` | UV ≥ 3 | alle 21 un «nessuna protezione necessaria» non risponde a nessuna domanda |
+
+Tre cose vanno messe a verbale perché sono deviazioni consapevoli.
+
+**Nessuna soglia nuova per la pioggia.** L'app ne ha due — 70% (l'ombrello, `AlertEngine`) e
+50% (il «possibile», `HeadlineEngine.CLEAR_BELOW_PCT`) — e questo avviso usa quelle. La
+seconda è diventata `internal` apposta: una terza soglia sarebbe una terza opinione della
+stessa app sullo stesso cielo.
+
+**La finestra della pioggia di domani è calcolata sulle sole ore di domani.** Una pioggia che
+comincia alle 23 di stasera è la pioggia di stasera, e la riga che la stampa dice «domani».
+Una che scavalca la mezzanotte successiva torna quindi aperta («dalle 21:00 in poi»), che è
+quel che dicono i dati quando l'unità è il giorno.
+
+**L'UV è condizionale qui e incondizionato nel gemello del mattino.** È una divergenza fra i
+due, voluta: `WeatherText`'s KDoc dice che «non c'è niente da fare» è anch'essa una risposta,
+ed è vera alle 8, quando il lettore ha in mano la domanda. Alle 21 nessuno la sta facendo.
+
+**La finestra 18–23** ha un vincolo duro dentro: il tetto delle 23 è quel che tiene onesta la
+parola «domani». Passata la mezzanotte «domani» è il giorno dopo quello per cui i numeri sono
+stati letti, e un riepilogo che arriva alle 00:10 sbaglia di un giorno. Cinque ore di
+larghezza perché il job periodico ci cade dentro anche all'intervallo più lento consentito
+dalle impostazioni (120 minuti).
+
+**Non parte se il report non ha domani.** Non è una guardia difensiva: una cache può
+sopravvivere alla propria settimana, e un riepilogo la cui frase chiusa sarebbe fatta tutta
+di trattini è lo schermo che mente nell'unico posto in cui il lettore non può verificarlo.
+
+### Quel che è costato altrove
+
+- `AlertState` ha una **casella di dedup separata** per i due riepiloghi. Condividerla
+  avrebbe significato un riepilogo al giorno, il primo che arriva: alle 20 quello del mattino
+  ha già scritto la data di oggi.
+- `Alert.forDate` è nuovo: il notificatore deve sapere di che giorno parla e **non** può
+  ricavarlo dall'orologio del dispositivo, che può essere un giorno più in là del calendario
+  della città.
+- `EveningDetails` è puro come `AlertDetails`, e prende `from` come parametro invece di
+  leggere `hours.first().time`: **il report del worker non è tagliato da `WeatherRecency`**
+  (il taglio vive nel livello UI, in `TodayUiState`), quindi senza quel parametro la «notte»
+  sarebbe partita dall'ora più fredda di stamattina. È il tipo di errore che sarebbe passato
+  in produzione dicendo un numero plausibile e sbagliato.
+- L'alba e il tramonto di domani li calcola `AstronomyEngine`, non il provider: il blocco
+  `astronomical` del report è del giorno del report, e alle 20 l'alba di oggi è l'unico dato
+  che non serve a nessuno. Due `sunCrossing` una volta al giorno, e funziona offline.
+
+### La revisione di tutti i messaggi, chiesta insieme
+
+Letti tutti e sei i notificatori, chiuso e aperto. Due difetti veri, entrambi corretti.
+
+**1. L'avviso di maltempo era l'unico senza il punto finale**, e per un motivo strutturale:
+era un tronco (`%1$s verso le %2$s`) più un frammento opzionale (`, pioggia al 90%`). Un
+frammento incollato in inglese non è un frammento che ogni lingua mette lì, ed è anche quel
+che gli toglieva la punteggiatura. Ora è **una frase intera per forma**.
+
+**2. Lo stesso pezzo di codice stampava `time ?: ""` e `precipPct ?: 0`.** Con l'ora assente
+usciva «Temporale verso le» — una frase rotta — e con la probabilità assente «pioggia al 0%»,
+che è uno zero inventato, cioè esattamente ciò contro cui è scritto §1.1. Irraggiungibile
+oggi, perché il motore àncora entrambi gli avvisi su un'ora che ha letto davvero; ora
+irraggiungibile anche nel testo, che sceglie una frase che di quel dato non ha bisogno.
+
+Il resto della revisione, per completezza, non ha prodotto cambi:
+
+- **Chiuso ≠ aperto** vale per tutti e sei. Maltempo e pioggia aggiungono la finestra vera,
+  l'ora peggiore e l'escursione; il riepilogo del mattino aggiunge i fatti del giorno; le
+  regole aggiungono l'aritmetica che le ha fatte scattare; il cielo aggiunge la frase del
+  catalogo su cosa sia quel momento; le allerte ufficiali aggiungono i livelli per giorno, la
+  zona, il significato e la fonte. `AlertNotifierTest` ora lo **impone** per ogni tipo
+  incorporato, così un quinto non può uscire come titolo senza niente sotto.
+- Il riepilogo del mattino apre con «Adesso», mentre maltempo e pioggia mettono «Adesso»
+  penultimo. È una differenza d'ordine e non un difetto: alle 8 «adesso» è la cosa più
+  azionabile che ci sia; sotto una finestra di temporale sarebbe la riga sbagliata in cima.
+- Il promemoria del cielo aggiunge **una** riga sola quando lo si apre. È poco, ma è la riga
+  giusta: chi si è iscritto all'«ora blu» una volta e non ricorda cosa sia, lì lo ritrova.
+- L'avviso pioggia e il riepilogo della sera possono coincidere: alle 20 la finestra a sei ore
+  del primo arriva alle 2 di notte, che è la notte di cui parla il secondo. Non si sopprimono
+  a vicenda, di proposito — uno è un allarme, l'altro è un riassunto, stanno su due canali e
+  due id diversi, e chi vuole solo uno dei due lo spegne.
+
+**Una cosa segnalata e rimandata al committente**: in italiano «fino al 80%» andrebbe elisa
+in «fino all'80%». È diventata il lavoro del giorno dopo, qui sotto.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, lint a zero errori. Tre file di
+test nuovi o cresciuti:
+
+- `AlertEngineTest` — la finestra 18–23 ai bordi, il dedup separato dai due riepiloghi, il
+  fatto che il mattino non cada mai nella finestra della sera e viceversa, e che senza domani
+  nel report non parta niente.
+- `EveningDetailsTest` — la notte è l'ora più fredda fra adesso e l'alba (con la prova che
+  l'ora più fredda di *stamattina*, che nel report del worker c'è ancora, non viene contata),
+  la finestra di pioggia di domani è di domani sola, l'alba di domani nella zona della città,
+  il ripiego alle 6 dentro la notte polare, e il delta di luce che coincide con la sottrazione
+  delle due durate.
+- `AlertNotifierTest` — **nuovo**, e la parte di questo lavoro che resterà utile più a lungo:
+  rende la regola «aperto dice più di chiuso» una cosa che la build controlla, per ogni tipo,
+  invece di una cosa scritta in un KDoc.
+
+
+## L'elisione, e perché non è un helper (committente, 22 set 2026)
+
+«Sistema anche le stringhe che necessitano l'elisione. Applica la soluzione migliore dal punto
+di vista del codice. Dove dici che "marcisce" non mi sembra la soluzione migliore, giusto?»
+
+Giusto. E il dubbio era ben riposto: la strada dell'helper è quella sbagliata, ma non per la
+ragione che avevo scritto ieri.
+
+### Quanto è grande davvero
+
+Prima di decidere, contate. Non erano tre stringhe né cinque: sono **diciotto**, e stanno in
+tre posti diversi dell'app.
+
+- **Dodici con `%d`**, cioè un numero che mette l'app: otto nelle notifiche e **quattro nella
+  schermata Cielo**, che ieri non avevo nemmeno guardato («illuminata al 80%», «il 80% della
+  Luna nell'ombra»).
+- **Due con `%s` che portano una percentuale già formattata**: gli esiti del Diario, «Pioggia
+  data al 80%».
+- **Quattro con `%s` che portano una data**: «bollettino del 8 set 2026», che vuole «dell'8».
+  Questa classe non l'avevo vista affatto, ed è quella che rende il problema una regola e non
+  una svista: non riguarda le percentuali, riguarda **qualunque valore che comincia per cifra**.
+
+Dentro 0–100 i numeri che cominciano per vocale sono esattamente 1, 8, 11 e 80–89. Cioè:
+«pioggia al %d%%» era giusta nove volte su dieci e sbagliata la decima, in silenzio, in una
+notifica che nessuno può correggere. È il difetto peggiore da avere, perché non si manifesta
+mai quando lo cerchi.
+
+### Le tre strade, e perché la terza
+
+**1. Una funzione in `Formats` che sa quali numeri elidono.** È quella che ieri ho chiamato
+«marcisce», e il committente aveva ragione a non fidarsi della motivazione: «marcisce» non è
+un argomento, è un'etichetta. L'argomento vero è che sarebbe **un fatto sulla lingua italiana
+scritto in Kotlin**, applicato a — o saltato per — ogni altra lingua in cui l'app finirà. Chi
+traduce apre `values-xx/strings.xml`, non `Formats.kt`: la regola sarebbe in un posto in cui
+nessuno di quelli che ne hanno bisogno la troverà.
+
+**2. Due varianti per frase, scelte da una lista di numeri elidenti tenuta nelle risorse.**
+Sembra la versione buona della 1 — la grammatica torna dentro il file della lingua, e un
+traduttore catalano ci mette la sua lista. È stata scartata per una ragione più netta:
+comporre una frase da un frammento («al 70%») più il resto **è esattamente la forma da cui
+l'avviso di maltempo è stato riscritto via un commit fa**, perché una subordinata incollata in
+inglese non è una subordinata che ogni lingua mette lì. Comprare l'elisione con quella forma
+sarebbe disfare la decisione di ieri il giorno dopo averla presa. Il costo secondario, 18 × 2
+stringhe italiane più altrettante inglesi identiche a coppie per via di `StringsParityTest`,
+da solo non avrebbe deciso niente; questo sì.
+
+**3. Scrivere la frase in modo che nessun articolo tocchi il numero.** Scelta. Non ha codice,
+**non può essere sbagliata in nessuna lingua**, presente o futura, e non è nemmeno una nuova
+idea in questa app: `notif_summary_body` dice «pioggia 80%» dal giorno in cui è stata scritta.
+Erano le altre a essere l'eccezione, non questa.
+
+Le uscite usate, tutte e tre invariabili:
+
+- **Via l'articolo** dove la frase regge senza: «pioggia 80%», «Parziale: 80% della Luna».
+- **Preposizione scempia**, che non elide mai: «fino a 80%», «coperto per 80%». Questo è il
+  punto che rende la soluzione una regola e non un trucco: `a`, `di`, `da`, `in`, `su` non
+  chiedono apostrofo davanti a nessun numero, e nemmeno i plurali (`alle 8`, `delle 8`, `dei`).
+  Solo il singolare `il/lo/la` e le sue contrazioni elidono.
+- **L'articolo agganciato a una parola**, per le date: «bollettino **del giorno** 8 set 2026».
+  «del» ora concorda con *giorno*, che non cambia mai. Una sola frase è stata girata invece
+  che allungata, perché ci guadagnava: «L'ultimo è del 8 set» è diventata «L'ultimo **risale a**
+  8 set».
+
+Il Cielo ha preso la forma che l'inglese aveva già: «%d%% illuminata» contro «%d%% lit»,
+invece di «illuminata al %d%%». Due lingue che dicono la stessa cosa nello stesso ordine sono
+anche due stringhe che non divergono alla prossima modifica.
+
+### La regola è un test, non una convenzione
+
+`ItalianArticleTest` fallisce la build se una stringa italiana rimette un articolo elidibile
+subito prima di un `%d`, negli `<string>` e dentro gli `<item>` dei plurali. **Il test è stato
+verificato rompendo la regola apposta** e guardandolo fallire: un test di questo tipo che non
+sia stato visto fallire non sorveglia niente.
+
+Ed è il posto giusto per l'unico pezzo di grammatica italiana che resta nel repository: un
+test non entra in nessun APK, non raggiunge nessun'altra lingua, e sta dove chi aggiunge una
+stringa lo incontra. È la differenza fra sapere l'italiano in produzione — la strada 1 — e
+saperlo nella build.
+
+Quel che il test **non** può controllare è scritto nel suo KDoc: un argomento `%s` porta una
+stringa che ha formattato qualcun altro, e se cominci per cifra lo decide il chiamante, non la
+risorsa. Le sei di quella classe sono corrette a mano e nominate lì, così chi ne aggiunge una
+settima legge perché esistono.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, 1509 test,
+lint a zero errori. Nessun file Kotlin di produzione toccato: la correzione è diciotto stringhe
+e un test, che è esattamente la dimensione che questo problema doveva avere.
+
+---
+
+## Le tre note dallo schermo di casa: il peso del numero (committente, 20 set 2026)
+
+Uno screenshot con due card una sopra l'altra — «In parole» su fondo blu e «Colpo d'occhio»
+sul cielo — e tre righe:
+
+> «widget "In parole": la temperatura minima e la relativa freccia sono più piccole della
+> temperatura massima. È una cosa voluta? […] widget "Colpo d'occhio" e "Le prossime ore":
+> la temperatura sarebbe bello se visualizzata in bold come nel widget "In parole". […] in
+> tutti i widget vorrei nelle impostazioni la voce "Un colore".»
+
+### La minima non era più piccola: era più debole, ed è lo stesso difetto
+
+Misurata, la coppia era già alla stessa taglia: stesso `size` per i due numeri, e i due
+vettori `ic_range_high`/`ic_range_low` sono la stessa geometria specchiata, 14 unità di
+asta su 24 tutt'e due. Quel che cambiava erano **peso e inchiostro**: massima in Medium
+sull'inchiostro forte, minima in Regular su quello quieto, e la freccia tinta come il numero
+che accompagna. Sul dispositivo quella differenza non si legge come «questa è la secondaria»:
+si legge come **un numero più piccolo**, che è precisamente la segnalazione.
+
+Da qui la decisione, che non è «togliere la gerarchia» ma **chiedersi chi la porta**.
+`DayRange` ha due abiti e adesso non condividono più un'enfasi:
+
+- **Con le frecce** (il widget testuale, che ha i 174 dp di colonna per portarle) le due metà
+  sono vestite uguali: stessa taglia, stesso peso, stesso inchiostro, frecce tinte con lui.
+  ↑ e ↓ dicono già quale è quale, quindi l'attenuazione lo diceva una seconda volta e la
+  faceva pagare alla minima in presenza. È §2.3 letta a questa scala: **il segno porta il
+  significato, il colore al massimo lo asseconda.**
+- **Con la barra** (il widget Oggi, la cui colonna da 113 dp le frecce non le prende) non c'è
+  nessun segno a portarlo, e lì l'inchiostro resta la cosa che ordina la coppia: massima
+  prima e forte, minima dopo e attenuata — l'enfasi delle righe della settimana.
+
+Una sola `DayRange` con un parametro, come prima: è sempre una frase a due budget, e adesso
+anche a due grammatiche.
+
+### Il grassetto sale da una card a una regola
+
+`heroTemperature` sull'app era passata in Bold il 20 set; il widget testuale ci stava dal
+giorno in cui è nato. Le card «Colpo d'occhio» e «Le prossime ore» stampavano ancora 34 sp
+Medium, che è **il peso con cui su quelle card è scritto ogni fatto** — la frase, il luogo,
+massima e minima. Accanto al Bold del widget testuale il numero non leggeva come l'eroe della
+card: leggeva come un fatto un po' più grande degli altri.
+
+La regola scritta in DESIGN §5 nomina l'**eroe**, non la grandezza: le tre card in cui la
+temperatura *è* l'eroe la stampano in Bold, la card dell'arco no, perché lì l'eroe è il
+disegno e il numero è una riga della striscia accanto. E le ore in fondo al widget Oggi
+restano Regular per la stessa ragione: sette cifre in grassetto sotto un eroe in grassetto
+sono due eroi.
+
+**Rimisurato, perché il Bold è più largo del Medium e un budget ci stava appoggiato.**
+`TemperatureColumnMin` (66 dp) riserva la colonna del numero quando accanto c'è una frase, sui
+~62 dp di «−12°» a 34 sp col carattere di sistema. Sui due file inclusi il Bold costa **+2,3%**
+(Google Sans) e **+2,0%** (Inter) sull'avanzamento del Medium per quella stringa: ~1,5 dp, cioè
+~63 dp, e la colonna resta con 3 dp di margine. Il numero non si tocca; il commento accanto sì,
+perché diceva «Medium».
+
+Le due anteprime del selettore (`widget_now_preview.xml`, `widget_today_preview.xml`) passano
+in `textStyle="bold"`: un'anteprima che mostra un peso diverso da quello della card sta
+pubblicizzando un prodotto che non esiste.
+
+### «Un colore»: c'era già, e adesso è un test
+
+La terza riga chiedeva una cosa **già vera dal 19 set**: `BackgroundSection` è un composable
+solo, `WidgetConfigActivity` (che configura Colpo d'occhio, Le prossime ore, Momenti del cielo
+e In parole) e `ArcConfigActivity` lo chiamano tutt'e due senza nessuna condizione sul tipo di
+card, e la riga «Un colore» con i suoi sei colori sta lì dentro. Si raggiunge tenendo premuta
+la card sulla schermata di casa e toccando l'ingranaggio, poi **Sfondo → Un colore**.
+
+Quel che mancava non era la voce: era qualcosa che tenesse la promessa. Le due liste diventano
+dati (`WidgetBackgroundChoices`, `WidgetCardColorChoices`) e `WidgetConfigChoicesTest` controlla
+tre cose: che ogni valore di `WidgetBackground` abbia la sua riga e nell'ordine giusto, che ogni
+`WidgetCardColor` ce l'abbia, e che le due schermate passino davvero dalla sezione condivisa
+invece di stamparsi ciascuna la propria lista — che è esattamente il modo in cui «Un colore»
+finirebbe su quattro widget su cinque senza che nessuno se ne accorga.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **1515 test**
+(tre nuovi), lint a zero errori. Le larghezze del Bold contro il Medium sono misurate sui due
+`.ttf` inclusi con `fontTools`, non stimate.
+
+*(Il messaggio di commit dice 1512: la variante `release` non aveva ancora rigirato i tre test
+nuovi quando è stato contato. Il numero giusto è 1515.)*
+
+---
+
+## Il nome del luogo, e la colonna che se lo prendeva a metà (committente, 20 set 2026)
+
+> «Nello screenshot "Colpo d'occhio" vedi che il nome della località è troncato? Sì che questo
+> esempio è lungo, ma si riuscirebbe a visualizzarlo per completo senza penalizzare il testo a
+> destra nel caso la frase da visualizzare sia lunga? Modifica solo se non rovina il layout.»
+
+La condizione è la parte interessante, ed è quella che ha deciso la forma della soluzione.
+
+### Che cosa faceva davvero la riga larga
+
+Le due colonne di testo di una card a una riga si dividevano **la metà esatta** della luce che
+resta dopo il glifo (`nowSentenceColumnWidth`). Sulla card di riferimento da quattro celle sono
+236 dp, cioè 118 per una. «Cavenago di Brianza» col segnaposto è ~167 dp: troncato. E accanto,
+nei suoi 118 dp, c'era **«Sereno»**, che ne occupa 47.
+
+Metà era la prima risposta giusta e la ragione regge ancora: è quel che fa il widget di
+riferimento, il suo blocco di descrizione è largo quanto il suo blocco del numero, e lo spazio
+vuoto cade in mezzo dove l'occhio se lo aspetta. Quel che metà non sa fare è **accorgersi che
+una delle due colonne non è piena**.
+
+### Perché non è una quota fissa più grande
+
+La soluzione ovvia — dare alle parole 140 dp invece di 118 — è quella che il committente ha
+escluso nella stessa frase: quei 22 dp li pagherebbe **ogni** frase lunga, anche sulle card
+dove il nome del luogo è «Rho». E non basterebbe comunque: 140 − 20 di segnaposto = 120 dp di
+nome, e «Cavenago di Brianza» ne vuole 147.
+
+Quindi la domanda va girata: non «quanto do alle parole», ma **quanto chiedono i due blocchi**.
+
+### Misurare, non stimare
+
+Glance non sa misurare il testo, ed è la ragione per cui questa riga si divideva a metà. Ma il
+testo si può misurare **dove si può**: `measureWidgetText` apre un `Paint` in questo processo,
+alla taglia e al peso che il `Text` avrà, e chiede la larghezza. La faccia è
+`Typeface.DEFAULT` — **il carattere di sistema, che è esattamente quello con cui una card viene
+disegnata**: un widget lo gonfia il launcher da `RemoteViews` e non vede mai il font incluso
+nell'APK, che è tutto il motivo per cui in Impostazioni «il carattere del telefono» è la scelta
+che avvicina di più l'app alle sue card. Non è una stima della larghezza: è la larghezza, nello
+stesso font e alla stessa taglia.
+
+Quel che non può promettere sta nel suo KDoc: su un telefono la cui interfaccia di sistema gira
+una faccia diversa da quella che ricevono le app, il launcher misura qualche punto percentuale
+diverso da noi. Per questo ogni chiamante tiene `RowFitSlack` (4 dp) e **niente qui è un
+vincolo**: un nome che viene fuori più largo di quel che abbiamo misurato va in ellissi
+esattamente come faceva prima, che è lo stato da cui siamo partiti.
+
+Una trappola trovata dai test e vale la pena scriverla: il `Typeface` era un `val` di primo
+livello, e i test puri del layout leggono altre proprietà di primo livello dello stesso file —
+l'inizializzatore della classe partiva sotto JUnit e `Typeface.create` sull'`android.jar`
+stubbato esplode. È `by lazy`: niente si costruisce finché qualcosa non misura davvero.
+
+### Le tre regole, e l'ordine è la promessa
+
+`nowWordsColumnWidth` è aritmetica pura (quindi `NowWidgetLayoutTest` la fissa a tavolino):
+
+1. **La frase tiene quel che chiede, e mai meno di quel che le dava la metà.** Quel che chiede è
+   la sua larghezza misurata su **una riga**, tagliata alla metà: così una frase lunga non può
+   essere stretta, viene tagliata prima di poterlo essere, e la card ricade esattamente sul
+   layout che ha oggi. È la condizione del committente, scritta come un `coerceAtMost`.
+2. **Le parole prendono quel che serve alla riga del luogo**, mai meno di `WordsColumnMin`,
+   perché in quella colonna ci vive anche la temperatura e troncare un numero è un guasto
+   peggiore che troncare un nome.
+3. **Le parole non portano mai la frase sotto il suo pavimento**: quel che resta dopo la 1.
+
+Il risultato non è mai più piccolo della metà, quindi **nessuna card perde un dp di quelli che
+ha oggi**; l'unica cosa che si muove è lo spazio che la frase teneva senza usarlo.
+
+Simulato sulle facce incluse (che sono più larghe del Roboto con cui il launcher disegna
+davvero, quindi è il caso peggiore), card da quattro celle:
+
+| luogo | frase | parole | frase | esito |
+|---|---|---:|---:|---|
+| Cavenago di Brianza | Sereno | 171 | 65 | nome **intero**, frase su una riga |
+| Cavenago di Brianza | Poco nuvoloso | 123 | 113 | nome quasi intero, frase su una riga |
+| Cavenago di Brianza | Pioggia gelata verso le 15:00 | 118 | 118 | **identico a oggi** |
+| Milano | Pioggia in arrivo verso le cinque. | 118 | 118 | **identico a oggi** |
+
+Con la pastiglia dell'allerta nella colonna di destra non si misura niente e si torna alla
+metà: una pastiglia è un blocco di inchiostro fisso che non sa andare a capo né in ellissi, e
+il giorno di un'allerta non è il giorno per cercare il bordo di un'aritmetica.
+
+### La regressione che ① si portava dietro, trovata rileggendo il proprio diff
+
+Da quando la finestra di buio è la notte meno la luna, è `∅` ogni notte in cui la luna è su dal
+crepuscolo all'alba — e quelle notti vengono **in fila**. `SkyReminderPlanner` chiedeva
+`next(limit = 3)` e filtrava gli `At`: tre `∅` di fila e il promemoria del buio spariva senza dire
+niente. Misurato sul 2026, corsa più lunga di notti piene: **Milano 9, Palermo 6, Copenaghen 10,
+Edimburgo 11**. Un promemoria muto per una settimana e mezza sarebbe stato un guasto peggiore di
+quello che questa fase ripara.
+
+La correzione non alza e basta la costante: cerca **prima a tre e poi a sedici**, così la camminata
+profonda si paga solo quando quella corta non ha trovato niente — che è il caso della finestra di
+buio e di nient'altro. Alzarla per tutti avrebbe voluto dire sedici giorni di almanacco per ogni
+sottoscrizione a ogni re-arm, per un caso su cinquantuno.
+
+Sedici copre la corsa peggiore misurata più un preavviso da un giorno, con un margine che non è
+una coincidenza da rimisurare ogni anno.
+
+### Quel che NON è stato toccato
+
+- **La disposizione a glifo destro** (`MirroredRowContent`), che il committente dice già legge
+  il nome per intero: lì la colonna delle parole è tutta la riga meno il glifo, e non c'è
+  niente da dividere.
+- **Il widget «Le prossime ore»**, che ha la stessa divisione a metà nella sua riga dell'eroe.
+  Non era nella richiesta e la sua colonna di destra porta anche massima/minima, quindi «quel
+  che la frase chiede» lì è una domanda con due risposte. Si estende quando lo si chiede.
+- **Le anteprime del selettore**, che restano corrette: il loro luogo di esempio è «Milano» e la
+  loro frase è lunga, cioè esattamente il caso in cui la nuova regola ricade sulla metà.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **1523 test**
+(quattro nuovi in questo giro, sette in tutto sul ramo), lint a zero errori. Le larghezze della
+tabella qui sopra sono calcolate dai due `.ttf` inclusi con `fontTools`, non stimate a occhio.
+
+---
+
+## La freccia era davvero più piccola, e non era l'inchiostro (committente, 20 set 2026)
+
+> «Sul widget "In parole" la freccia temperatura minima è ancora piccola e anche il testo mi
+> sembra più piccolo: mi sono perso qualcosa?»
+
+No: si era perso qualcosa chi ha guardato. Il giro precedente aveva trovato una differenza
+vera — massima in Medium sull'inchiostro forte, minima in Regular su quello quieto — l'ha
+corretta, e si è fermato lì perché la geometria *sul file* era identica: `ic_range_high` e
+`ic_range_low` sono la stessa asta da 14 unità su 24, specchiata. Misurare il disegno e non
+quel che arriva sullo schermo è esattamente l'errore che quella segnalazione ha scoperto.
+
+### Che cosa succedeva davvero
+
+`padding` di Glance è `RemoteViews.setViewPadding` **sulla stessa view** su cui atterra la
+misura (verificato nel bytecode di `ApplyModifiersKt`), e un `Image` scala il disegno per
+entrare in quel che il padding lascia (`ContentScale.Fit`, il default — verificato in
+`ImageKt`). Quindi:
+
+```kotlin
+GlanceModifier.padding(start = 8.dp, end = 2.dp).size(16.dp)
+```
+
+non è un segno da 16 dp con dell'aria intorno: è **un segno da 6 dp**. `RangeMark` chiedeva
+proprio quello, e l'aria fra le due metà della coppia — gli 8 dp di `RangeMarkGap` — la
+pagava il segno della minima, di tasca sua. Risultato: freccia in giù disegnata a 6 dp,
+freccia in su (che paga solo i 2 dp di coda) a 14. **Il 43% dell'inchiostro, alla stessa
+misura nominale.** Il committente lo ha visto due volte e aveva ragione due volte.
+
+Il codice attorno lo sapeva già e lo dice a parole sue in due punti: il segnaposto di
+`PlaceLine` si distanzia con uno `Spacer`, e `WarningChipRow` ha il commento «il padding sta
+sulla scatola e non sulla pastiglia, perché il padding di una pastiglia sta DENTRO il suo
+sfondo, e un'aria colorata non è un'aria». `RangeMark` era l'unico posto che non lo seguiva,
+e il commento accanto spiegava perché: evitare uno `Spacer` per tenere la riga a quattro
+figli. Adesso l'aria sta su un `Box` che avvolge il segno — quattro figli lo stesso, e il
+disegno alla misura che chiede.
+
+La coppia con le frecce cresce di 12 dp (da ~75 a ~87 a 16 sp, ~100 sulla coppia più larga
+della scala): la colonna del widget testuale che la porta ne ha 132, quindi restano 30 dp di
+margine anche nel caso peggiore.
+
+**`WidgetGlyphBoxTest`** legge i sorgenti e fallisce se una catena di `GlanceModifier` mette
+insieme `.size(` e `.padding(`. `width` e `height` non ci sono apposta: un contenitore a
+larghezza fissa con del padding è un'altra cosa ed è giusta — il padding di un layout lo
+pagano i suoi figli, non una bitmap. **Verificato rompendolo**: rimettendo il padding
+sull'`Image` di `RangeMark` il test fallisce e nomina il file e la riga.
+
+### E «anche il testo mi sembra più piccolo»
+
+Quello era il giro precedente e ora è a posto: con le frecce le due metà sono vestite uguali,
+stessa taglia, stesso peso, stesso inchiostro. Se lo screenshot è di una build anteriore a
+`4dd8221` la differenza c'è ancora; se è posteriore, resta solo la freccia, che è questo giro.
+
+## Le due colonne dell'eroe, anche su «Le prossime ore»
+
+> «Sì, fallo anche su "Le prossime ore".»
+
+La grammatica era scritta due volte — `todayIsWide` si ricalcolava in casa la stessa divisione
+a metà di `nowSentenceColumnWidth` — e una grammatica scritta due volte è una grammatica che
+diverge. Adesso c'è una sola aritmetica, `heroRowWordsWidth` / `heroRowEvenColumn` /
+`heroWordsColumnWidth`, e le due card la chiamano.
+
+Le tre regole e il loro ordine sono quelle del giro precedente. Quel che cambia è **che cosa
+deve coprire «quel che la colonna di destra chiede»**: sulla card «Colpo d'occhio» quella
+colonna tiene della prosa, che va a capo; qui può tenere anche massima e minima del giorno,
+che **non** vanno a capo — una coppia più stretta di quel che misura è una coppia con una
+cifra tagliata via. Quindi si misura il più largo dei due inquilini invece di riservare per
+entrambi, e con la pastiglia dell'allerta non si misura niente e resta la metà.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **1529 test**
+(sei nuovi in questo giro, tredici sul ramo), lint a zero errori.
+
+## La review delle chiamate a Open-Meteo: l'offset fisso, e tre bugie minori (committente, 20 set 2026)
+
+> «Review accurata delle chiamate alle API di OpenMeteo e all'interpretazione/visualizzazione
+> dei dati. Dati chiamata, UTC località passata, interpretazione dati (weathercode, ecc.),
+> logica di visualizzazione.»
+
+La review è stata fatta **contro l'API vera**, non solo leggendo il codice: gli stessi
+identici parametri che manda l'app, su 15 località (Tokyo, Svalbard, McMurdo, medio Pacifico,
+Everest, Reykjavík, Nuuk, Ushuaia, Malé, Lhasa, Jakutsk, Sydney, Lagos, Quito, Milano). Le 13
+che hanno risposto danno tutte 168 ore, 7 giorni, **tutti i campi presenti**, e unità conformi
+a quel che i DTO assumono (`°C`, `km/h`, `hPa`, `mm`, `m` per la visibilità, `%`,
+`grains/m³`, `µg/m³` — la conversione CO in mg/m³ è giusta, verificata su `current_units`).
+La forma della richiesta è sana. Quel che non lo era è l'assunzione sotto i timestamp.
+
+### 1. `utc_offset_seconds`: Open-Meteo non manda l'ora di parete
+
+`ForecastResponseDto` leggeva `timezone` e ignorava `utc_offset_seconds`; il mapper faceva
+`LocalDateTime.parse` e tutti i lettori interpretavano quei valori come ora locale nelle
+regole di `ZoneId.of(timezone)`. **È falso.** Con `timezone=auto` il provider prende l'offset
+in vigore al momento della richiesta e ci costruisce sopra tutta la settimana: la serie è
+`UTC + quell'offset`, costante.
+
+Misurato il 20 set 2026 su una previsione a 16 giorni di Sydney, che attraversa il passaggio
+all'ora legale del 4 ottobre:
+
+- la risposta porta `utc_offset_seconds: 36000` e `timezone_abbreviation: "GMT+10"` per
+  **tutti** i giorni, anche quelli in AEDT;
+- ogni giorno di calendario ha esattamente 24 valori, `2026-10-04T02:00` compreso — un'ora
+  che in `Australia/Sydney` non esiste;
+- confronto ora per ora con la stessa richiesta su `timezone=UTC`: **0 discrepanze su 384**
+  con offset fisso `+10`, **53 su 69** leggendo le etichette come ora di parete vera;
+- il `daily.sunrise` del 4 ottobre dichiara `05:28`, mentre l'orologio a Sydney dice `06:28`.
+
+Conseguenza per Chiaro: nei ~7 giorni in cui l'orizzonte di un fetch scavalca un cambio d'ora
+(in Europa dal 18 al 25 ottobre, e a marzo) **ogni riga successiva alla transizione stava
+un'ora indietro**. La temperatura sotto «08:00» era quella delle 07:00; `stripHour` decideva
+giorno/notte dall'etichetta invece che dal dato; `SkyVerdictEngine.window()` agganciava un
+picco di meteore delle 02:00 alle nuvole delle 03:00 — proprio i verdetti a 3-7 giorni della
+Fase 16a; `WeatherRecency.trim` teneva un'ora già passata. L'alba dell'app era giusta in tutto
+questo, perché `AstronomyEngine` le ore del provider non le ha mai viste: è quello che rendeva
+il disaccordo **visibile sullo schermo** invece che soltanto sbagliato sotto.
+
+Nessuna traccia di `utc_offset_seconds` o dell'ora legale in `PLANNING.md` o `UPSTREAM.md`
+prima d'ora, e nessun test del mapper lo copriva: era un punto cieco, non una deviazione
+registrata.
+
+**La correzione.** Il campo entra nel DTO nullable e con default — `ReportDiskCache` serializza
+il DTO grezzo, quindi una voce scritta prima deve continuare a decodificare, e un null si
+risponde col comportamento vecchio e non con una stima. Nel mapper c'è `ProviderClock`, che
+tiene le due cornici separate e dice a parole quale vale dove:
+
+- **dentro** `map()` i confronti fra valori della risposta restano nel frame del provider,
+  dove condividono un offset solo e l'aritmetica è esatta (`currentHourIndex` e il
+  raggruppamento di `mapDaily`);
+- **in uscita** ogni valore è ri-espresso sull'orologio della città.
+
+`mapDaily` raggruppa apposta sulle etichette del provider e non sull'ora di parete: una riga
+di `daily` è l'aggregato del provider sul **suo** giorno, e `dailyCode` ri-deriva l'etichetta
+dalle ore che quell'aggregato ha visto. Raggruppare sull'orologio della città regalerebbe al
+giorno una venticinquesima ora che il suo massimo e il suo minimo non hanno mai visto. Quel
+che resta dell'offset fisso è quindi **un'ora a ciascun capo dei due giorni l'anno** in cui
+una zona cambia: la finestra del provider, che è quel che `daily.weather_code` avrebbe detto
+comunque, e due ordini di grandezza meno dell'errore che sostituisce.
+
+### `HourlyForecast.at`, e l'insidia che ha aperto
+
+Ri-esprimere le ore ha una conseguenza che va detta prima di leggerla in un crash report: **il
+giorno in cui una zona torna all'ora solare, le 02:00 ci sono davvero due volte**. Fino a ieri
+non succedeva, ed è l'offset fisso che lo impediva. `HourStrip` chiavava le celle con
+`hour.time.toString()`, e una `LazyRow` con due chiavi uguali non disegna una riga doppia:
+**lancia**. La striscia e la riga espansa della settimana sarebbero andate in crash il 25
+ottobre.
+
+Quindi `HourlyForecast` guadagna `at: Instant` — l'identità, dove `time` è soltanto
+l'etichetta — e la chiave della striscia è quella. Il campo si ripaga subito: quattro lettori
+ri-derivavano l'istante a mano con `time.atZone(zone).toInstant()`, che su un'ora ambigua deve
+*scegliere* uno dei due offset. Adesso lo leggono: il flag giorno/notte della striscia, la
+serie del widget arco, e i due capi di `RainbowWindow`. Quest'ultima perde il parametro `zone`,
+che non le serve più — ed è la versione onesta comunque: la geometria del sole è un fatto su un
+momento e un luogo, mai su quale calendario il momento è scritto.
+
+Quattro test nuovi sul mapper, e **verificati rompendo il codice**: con `localOf` rimessa a
+identità, `hours after a spring forward land on the city's clock` e `the day a zone falls back
+holds one label twice and two moments` falliscono entrambi.
+
+### 2. Il tile UV diceva il picco del giorno con la frase del momento
+
+`Details` stampava `uv_index_max` — il **massimo** della giornata — sotto l'etichetta secca
+«UV» e sotto una riga di significato scritta per il presente. Alle 23:00 di un giorno di luglio
+si leggeva «UV 8 — Scotta in circa 25 minuti, copriti»: un consiglio su un sole tramontato da
+quattro ore, in una griglia dove tutto il resto (vento, umidità, pressione, visibilità, aria) è
+un'osservazione di adesso. Il KDoc di `DailyForecast.uvIndexMax` difende il picco «sotto
+un'intestazione Oggi», e fa bene; questa griglia non è quell'intestazione.
+
+Il valore è adesso `current.uvIndex` — preso dall'API dal primo commit e **renderizzato da
+nessuna parte** fino a oggi — e il picco resta come `note`, come il tile del vento porta le sue
+raffiche, solo finché è ancora notizia (`peak > now`: un picco uguale alla lettura è il tile che
+scrive due volte lo stesso numero). Nuova stringa `uv_peak_today`.
+
+Il primo tentativo nascondeva il tile a sole sotto l'orizzonte. È stato scartato rileggendo
+DESIGN §1.2: *«una metrica il cui valore non ha conseguenze oggi riceve lo stesso la riga della
+sua banda — "non c'è niente da fare" è anch'essa una risposta»*. «UV 0, nessuna protezione
+necessaria» a mezzanotte **è** quella risposta; la vecchia riga era una risposta diversa, su
+un'ora diversa. Il tile resta sempre.
+
+### 3. La cella oraria annunciava «pioggia 0%» dove non stampa niente
+
+In `toCell` il commento diceva la cosa giusta — *«letto come 0 solo quando la previsione dice
+0»* — e il codice faceva l'opposto: `hour.precipChancePct ?: 0` dentro `hour_cell_desc`, che
+non ha una seconda forma. Chi usa TalkBack sentiva «pioggia 0%» su un'ora per cui il provider
+non ha previsto niente: lo zero inventato che tutta la Fase 26 ha estirpato, sopravvissuto
+nell'unico posto che non si legge con gli occhi. La riga della settimana lo risolveva già nel
+modo giusto due schermate sotto (`week_day_desc` / `week_day_desc_no_rain`); ora la cella ha la
+stessa coppia, con `hour_cell_desc_no_rain`.
+
+### 4. Il fuso veniva dalla città dove poteva venire dal report
+
+`City.timezone` è `null` per il luogo GPS, e apposta: `timezone=auto` lo risolve dalle
+coordinate (`toGpsCity`). Solo che **sei superfici** risolvevano il fuso dalla città e non dal
+report, quindi per la posizione cadevano tutte su `ZoneId.systemDefault()`. In `WidgetData` si
+vedeva nel modello stesso: `zone` era calcolato **prima** di caricare il report, mentre il
+`content` costruito subito dopo — da `TodayStateBuilder`, che il report lo legge — usava quello
+del luogo. Una card, due orologi, che è esattamente la cosa che il commento lì accanto dice di
+esistere per impedire.
+
+Adesso c'è una risoluzione sola, `placeZone(report, city)` in `:core:domain`, con l'ordine
+scritto come ordine di quanto ciascuna fonte sa: il fuso del report (la risposta del provider
+sul punto per cui la previsione è stata chiesta, mai assente in una risposta che ha fatto
+parse) → quello della città (il geocoder; assente per la posizione) → quello del device, che è
+una stima. Un id che `ZoneId` non sa leggere cade alla fonte dopo invece di lanciare, che è il
+`runCatching` che ogni chiamante si scriveva a mano.
+
+Adottata da `SkyUiState`, `AlertsViewModel` (sia la preview che il flusso di contenuto, che
+legge il report in cache — un hit in memoria nel caso ordinario, e quel blocco va già alla
+tabella della cronologia una riga sopra), `WidgetData` (con il calcolo spostato **dopo** il
+report), `JournalStateBuilder` e il suo ViewModel, `SkyAlarmScheduler`, `SkyAlarmReceiver` e
+`TodayStateBuilder`. E dalle quattro che erano già giuste ma tenevano la loro copia del
+`runCatching` — `WeatherRecency`, `WeatherSyncWorker` (due), `AlertNotifier` — via
+`WeatherReport.zone()`.
+
+La fixture di `SkyStateBuilderTest` ha pagato il cambio, e aveva ragione lei a rompersi: dava a
+una città di Milano il `sampleWeatherReport()`, che è di New York, e lasciava stare
+l'incoerenza perché il builder il fuso lo prendeva dalla città. È un accoppiamento che il
+repository non può produrre — `map()` scrive la `Location` dalla città stessa che le è stata
+chiesta — quindi la fixture adesso allinea la `location` al luogo, e il test
+(`every time on the screen is the city's, not the phone's`) continua ad avere i denti: il fuso
+del device in CI non è né Roma né New York.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1537 test** (quattro nuovi sul
+mapper, tutti e quattro verificati rompendo il codice), lint a zero errori.
+
+### Quel che è stato guardato e lasciato stare
+
+- **Il weather_code, la nebbia e il codice del giorno**: niente da correggere. La riparazione
+  della nebbia contro la visibilità, la regola di persistenza a una sola direzione, il cancello
+  di materialità e la clausola `HazardCodes` che viene prima sono misurati, documentati e
+  coperti da 38 test. Verificato che `skyCode()` riproduce i bucket di Open-Meteo
+  (`<20/50/80`) e che la soglia nebbia a 1000 m è la loro.
+- **`is_day` contro `AstronomyEngine`**: sembravano due definizioni di giorno/notte in
+  disaccordo, e non lo sono. Su Milano `is_day` gira alle 08:00 (alba 07:07) e alle 20:00
+  (tramonto 19:24), cioè «sole sopra l'orizzonte all'inizio dell'ora» — identico a quel che
+  calcola l'engine. Ridondanza, non difetto.
+- **`sunrise`/`sunset`/`daylight_duration`**: chiesti, deserializzati, scritti nella cache e
+  letti da nessuno in produzione dalla Fase 16e. Toglierli ridurrebbe la risposta e tre
+  superfici di parse-failure a valore zero, ma è un giro suo.
+- **Liste DTO a elementi non-nullable per campi model-dependent** (`uvIndexMax` e compagnia):
+  fragilità reale — un null lì non degrada un tile, fa fallire l'intero report — ma **non un
+  bug vivo. Verificato**: `uv_index_max` torna `[null, null, null]` con
+  `models=icon_seamless` e `jma_seamless`, e per date passate anche con `best_match` (Milano
+  1-3 luglio), ma l'app non passa né `models=` né `past_days`, e su `best_match` a 7 giorni
+  non si è mai visto. Collegato: il `?: 0` alla riga di `uvMax` è lo stesso pattern che due
+  righe sotto il file rifiuta per `precipPct`.
+- **`?: 0` su cieli sconosciuti**: `ArcPainter` dipinge cielo sereno per un'ora fuori
+  dall'orizzonte del report (`hourCovering` torna null), e `SkySnapshot.precipPct` fa lo stesso
+  per una probabilità assente. Si vede solo con un telefono offline da giorni, ed è su una
+  tela e non su un numero.
+- **`mapNotNull` morto in `SkyVerdictEngine`**: `window.mapNotNull { it.cloudCoverPct }` su un
+  `Int` non-nullable non filtra niente, e il ramo `NO_COVERAGE` che segue è irraggiungibile
+  perché `window()` torna già null se la lista è vuota.
+- **Soglia neve**: `WET_DAY_MM = 1.0` è equivalente in acqua, e i codici neve 71/73/77/85 non
+  sono in `HazardCodes`. Due ore di neve moderata con 0,9 mm w.e. — circa un centimetro a
+  terra — perdono l'etichetta. La valvola delle 3 ore copre il caso lungo, non questo: da
+  misurare a parte, con lo stesso metodo delle 161 giornate-città della Fase 26.
+- **Nessun `callTimeout` su OkHttp**: restano i 10s di default per connect/read/write, e due
+  GET in `coroutineScope` possono sommarsi oltre quel che uno schermo appena aperto sostiene.
+
+## Secondo giro sulla review: i punti 5-9, e uno che era sbagliato io (20 set 2026)
+
+> «I punti dal 5 al 9 pensi sia il caso di farli ora? Se sì parti. Decidi per ogni punto cosa
+> è meglio fare (o non fare).»
+
+Quattro fatti, uno no. Quello che non è stato fatto è quello la cui premessa, letta bene, era
+sbagliata.
+
+### 5. `uv_index_max` nullable fino in fondo — **fatto**
+
+La fragilità era vera e vale la pena dirla per esteso, perché il modo in cui fallisce non è
+quello che sembra: `DailyDto.uvIndexMax` era `List<Double>`, e un `null` lì dentro non
+degrada un tile, **fa lanciare il deserializzatore e si porta via l'intero report** — la
+settimana di previsione, il blocco corrente, le ore. Verificato sull'endpoint vero:
+`uv_index_max` torna `[null, null, null]` con `models=icon_seamless` e `models=jma_seamless`,
+e per date passate anche con `best_match` (Milano, 1-3 luglio). Chiaro non passa né `models=`
+né `past_days`, quindi non l'ha mai incontrato; ma `best_match` sceglie il modello per regione
+e Open-Meteo cambia quelle scelte, e il prezzo di sbagliarsi è l'app che non mostra niente.
+
+Il campo prende elementi nullable, come `precipitation_probability_max` che gli sta accanto e
+`visibility` nel blocco orario: è il terzo campo model-dependent scoperto, e il primo scoperto
+**prima** che rompesse qualcosa. Il `?: 0` nel mapper se ne va per la stessa frase che il file
+scrive due righe sotto a proposito della probabilità: uno zero UV non è un'assenza, è la
+previsione di un sole che non scotta, stampata sotto «Nessuna protezione necessaria».
+`DailyForecast.uvIndexMax` diventa `Int?`, e i quattro lettori lo gestiscono nel modo ovvio —
+le due righe UV delle notifiche semplicemente non si dicono, e `today.uv_max` non si risolve,
+che è quel che una regola fa col silenzio.
+
+**`DailyForecast.uvDescription` è stato tolto.** Era vocabolario JSON di tweather — inglese,
+mai localizzato, letto da niente in quest'app tranne il test che verificava che il mapper lo
+avesse scritto, esattamente come `WeatherCondition.description` (lo dice già il KDoc di
+`WeatherText`). Un indice nullable ha costretto la domanda «e la sua etichetta cosa dice
+quando l'indice non c'è», e la risposta onesta era che non la stava chiedendo nessuno.
+`CurrentConditions.uvDescription` resta, morto allo stesso modo: lì non c'è niente che
+costringa, e toglierlo sarebbe scope creep. Resta scritto qui.
+
+Due test nuovi, e il primo dice a parole la modalità di fallimento che sostituisce: il report
+mappa tutti e sette i giorni, il giorno dice di non sapere, e corrente e ore sono intatte.
+
+### 6. `sunrise`, `sunset`, `daylight_duration` fuori dalla richiesta — **fatto**
+
+Chiesti al provider, deserializzati, scritti in ogni voce di `ReportDiskCache` e letti da
+nessuno in produzione da quando la Fase 16e ha dato l'astronomia ad `AstronomyEngine`. Erano
+rimasti perché «non costano niente», che è vero dei byte e falso di tutto il resto: sono tre
+campi non-nullable in più che una risposta deve soddisfare perché l'intero report faccia
+parse, e — questa è la ragione che ha deciso — **sono una trappola da ieri**. Il provider li
+scrive sull'offset fisso che `utc_offset_seconds` nomina, quindi dopo un cambio d'ora
+derivano di un'ora dall'orologio: chi trovasse `daily.sunrise` lì nel DTO e lo usasse
+reintrodurrebbe esattamente l'ora che il giro precedente ha tolto. La risposta per Sydney del
+4 ottobre dichiara un'alba alle 05:28 dove l'orologio lì dice 06:28.
+
+Nessuna migrazione: `ignoreUnknownKeys` fa decodificare le voci di cache già scritte, che
+quelle chiavi ce l'hanno ancora. Verificata la richiesta ridotta contro l'API vera — 168 ore,
+7 giorni, le cinque variabili giornaliere che servono e nient'altro.
+
+### 7. L'arco che dipinge sereno dove non sa — **non fatto, e la segnalazione era sbagliata**
+
+`ArcPainter` passa `cloudPct = hour?.hour?.cloudCoverPct ?: 0` per un campione che il report
+non copre, e sembrava «sereno disegnato dove non si sa». Leggendo `SkyPalette.gradient`: il
+mix nuvole è `lerp(stop, grigio, CloudDesaturation * cloudPct/100)` più un `dim` che vale
+`1 - CloudDarkening * cloudPct/100`. **A zero il lerp non fa niente e il dim vale 1**: zero non
+è «sereno», è *nessuna modulazione* — la banda di altitudine esattamente come il sole l'ha
+disegnata.
+
+Che è la risposta onesta, non una svista: per un'ora oltre l'orizzonte della previsione l'arco
+conosce la luce e non dice niente del tempo. Qualunque altro valore sarebbe un cielo che non
+gli è stato detto (50 % non è «non so», è «mezzo nuvoloso»). Resta un commento al call site,
+perché il prossimo lettore inciampi meno di quanto ci sia inciampato io.
+
+### 8. Il `mapNotNull` morto in `SkyVerdictEngine` — **fatto**
+
+`window.mapNotNull { it.cloudCoverPct }` su un `Int` non-nullable non filtrava niente, e il
+ramo `NO_COVERAGE` sotto era irraggiungibile perché `window()` rifiuta già la lista vuota. Era
+una nullabilità che il tipo non ha, scritta dentro codice che suggerisce di averla — e il KDoc
+di `HourlyForecast.cloudCoverPct` spiega per intero perché quella nullabilità è stata tolta
+apposta. Il valore d'enum resta: `horizonNote` è dove la domanda trova davvero risposta.
+
+### 9. `callTimeout` su OkHttp — **fatto, 30 secondi**
+
+I default di OkHttp limitano ogni **fase** — 10s per connettere, 10s fra un byte e l'altro — e
+niente limita la chiamata. Una connessione che sgocciola un byte prima di ogni read timeout non
+ne fa scattare mai uno: su uno schermo appena aperto è un refresh che non si risolve, e dentro
+`WeatherSyncWorker` è un worker tenuto aperto sulla batteria di qualcuno. Trenta secondi stanno
+oltre il caso peggiore onesto (connessione più lettura lenta di 10 KB) e dentro quel che l'app
+assorbe: ogni chiamante ha già il report in cache come ripiego, e il pull to refresh è un
+gesto.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verdi, **1541 test**
+(quattro nuovi nel giro precedente, due in questo), lint a zero errori. La richiesta ridotta
+ricontrollata contro l'endpoint vero, e il caso «modello senza UV» ricontrollato con
+`models=jma_seamless` perché il test riproduca l'API e non la mia idea dell'API.
+
+### Punto 10, la soglia della neve: cosa sarebbe, e perché non è in questo giro
+
+`WET_DAY_MM = 1.0` è **millimetri di equivalente in acqua**, e `precipitation` di Open-Meteo
+somma pioggia e neve in quell'unità. Un millimetro d'acqua è circa un centimetro di neve
+fresca: la stessa soglia pesa dieci volte di più quando quel che cade resta per terra. E i
+codici neve 71 (debole), 73 (moderata), 77 (granelli) e 85 (rovesci deboli) **non** sono in
+`HazardCodes` — ci sono solo 75 e 86, i «forte». Quindi due ore di neve moderata con 0,9 mm
+w.e. non superano né il millimetro né le tre ore, e la giornata viene etichettata dalla
+nuvolosità: «Coperto» su un giorno con un centimetro a terra.
+
+La valvola delle tre ore copre il caso lungo e non questo, ed è il motivo per cui non è una
+correzione ovvia: la soglia com'è è **misurata** (161 giornate-città, 23 città, Fase 26) e ha
+risolto un difetto vero, quindi cambiarla a intuito vale meno di lasciarla. La domanda giusta
+non è «alzare o abbassare» ma *quante giornate di neve vere l'attuale ne manca*, e si risponde
+con lo stesso metodo: un mese d'inverno su una decina di città nevose (Mosca, Helsinki, Oslo,
+Sapporo, Québec, Innsbruck, Denver, Harbin, Tromsø), `dailyCode` ricalcolato su ogni
+giornata-città, contate quelle in cui i codici neve ci sono ma l'etichetta va al cielo, e
+incrociate con `snowfall` in centimetri — che è il campo che dice se per terra c'era qualcosa.
+Se sono poche, la soglia resta e questa nota è la risposta; se sono molte, la correzione
+candidata è una soglia in acqua più bassa quando i codici della giornata sono di neve, non un
+numero diverso per tutti.
+
+**È una misura che si può fare, ma richiede l'archivio** (`archive-api.open-meteo.com`), perché
+l'endpoint di previsione accetta `start_date` solo per circa tre mesi indietro e a settembre
+non arriva a gennaio. Tentata oggi: `HTTP 429, Daily API request limit exceeded` — la quota
+gratuita dell'IP di questo ambiente era già esaurita dalle quindici località della review. Da
+riprendere con la quota libera; è un giro suo, non una riga di codice.
+
+---
+
+## Gli avvisi che non potevano suonare, e due widget che aprivano la schermata sbagliata (committente, 21 set 2026)
+
+> «Quando si installa l'app alcuni Avvisi sono già attivi ma il permesso per le notifiche non è
+> mai stato chiesto e quindi questi avvisi non scattano mai. [...] Ora l'unico modo per fare il
+> consenso al permesso è disattivare e poi riattivare un avviso.»
+
+La segnalazione è esatta e il difetto è più vecchio della schermata: `NotificationSettings` nasce
+con `severeWeatherAlerts`, `precipitationWarning`, `userRules` e `officialWarnings` a **true**, e
+`POST_NOTIFICATIONS` veniva chiesto solo dentro `somethingTurnedOn()` — cioè dall'**atto** di
+accendere un interruttore. Un'installazione nuova non accende niente: trova tutto già acceso. Quindi
+quattro promesse fatte e nessuna richiesta fatta, e l'unica strada al dialogo di sistema era
+spegnere e riaccendere, che non è una strada che qualcuno trova.
+
+VISION §5.8 diceva «le notifiche sono richieste la prima volta che il lettore accende qualcosa che
+ne ha bisogno, mai all'avvio». Era onesta sul *quando* e sbagliata sul *se*: la regola vale solo se
+i predefiniti sono spenti, e non lo sono. Due modi di chiuderla, e ci vogliono **entrambi**.
+
+### Perché il dialogo di sistema, da solo, non è la riparazione
+
+Android 13 mostra quel dialogo **al massimo due volte per installazione**. Dopo, `launch()` torna
+`false` senza disegnare niente. E c'è un secondo vicolo cieco che si legge uguale da uno schermo e
+si ripara in un posto opposto: permesso **concesso** e notifiche spente dalle impostazioni di
+sistema — lì `launch()` torna `true` immediatamente, sempre senza disegnare niente. In tutti e due
+i casi un pulsante cablato al dialogo è un pulsante morto, che è esattamente lo stato che stiamo
+cercando di finire.
+
+Quindi la domanda giusta non è «ho il permesso» ma `NotificationManagerCompat.areNotificationsEnabled()`:
+*una notifica postata adesso arriverebbe?*. È quella che ogni schermata chiede
+(`NotificationPermission.allowed`). Le due strade morte sono chiuse così:
+
+- permesso già concesso e notifiche spente → si va **dritti** alle impostazioni di sistema, e il
+  pulsante lo dice («Apri le impostazioni»);
+- rifiuto che torna indietro con `shouldShowRequestPermissionRationale` **falso** → il sistema non
+  ha più un dialogo da mostrare, e si consegna la pagina delle impostazioni **nello stesso tap**.
+
+Quel `shouldShowRequestPermissionRationale` non distingue «mai chiesto» da «rifiutato per sempre»:
+è falso per tutti e due. Per questo si legge **dopo** il rifiuto e non prima della richiesta — che
+è anche il motivo per cui non serve persistere nessun flag «gliel'ho già chiesto». Dopo un primo
+rifiuto è vero, quindi un «no» è preso per un no e nessuno viene buttato nelle impostazioni.
+
+### La riparazione che resta: la card (DESIGN §8.14)
+
+Su Avvisi, sopra tutto, e **solo mentre la schermata starebbe mentendo**: qualcosa è acceso e il
+telefono non lo lascia passare. È la metà che conta, perché a differenza del dialogo può essere
+rioffertà ogni volta, dice cosa non va prima di offrire il rimedio, e sparisce da sola quando il
+permesso arriva. Si rilegge a ogni `ON_RESUME`, perché la riparazione avviene **fuori** dall'app e
+una card ancora lì dopo il consenso è la stessa bugia al contrario.
+
+Con tutto spento non è disegnata: non c'è nessuna promessa da rompere, e una card che rimprovera
+per un permesso che non serve a niente sta inventando un problema — lo stesso difetto dall'altra
+parte. `notificationsPromised()` è quella domanda, ed è un test: se i predefiniti si muovono,
+`NotificationsPromisedTest` è dove si vede.
+
+**Anche Cielo**, per la stessa ragione e con la soglia sua: `remindersArmed()`, cioè una campanella
+davvero armata. Lì nessun promemoria nasce acceso, quindi un'installazione nuova non promette niente
+e la card non c'è; ma dal momento che una campanella c'è e il permesso manca, la riga mostra una
+campanella per qualcosa che non può suonare, che è la stessa bugia di Avvisi.
+
+### E il primo avvio: sì, ma dopo il luogo, e a parole
+
+`FirstRun` ha un terzo stato, `Notifications`, fra `Pending` e `Done`. È un passo **suo** e non una
+riga sulla schermata del luogo, perché una notifica è una promessa **su un luogo** e lì il luogo
+non c'è ancora. Ed è una schermata di parole con un «Consenti» esplicito, mai il dialogo di sistema
+all'arrivo: quel dialogo si ha due volte in tutta la vita dell'installazione, quindi si spende su un
+tap che l'ha chiesto. «Non ora» è una risposta vera e non costa niente — non tocca il dialogo, e
+Avvisi tiene la stessa offerta finché è vera.
+
+Tre regole al contorno, tutte e tre nel `CityStore` e tutte e tre con un test:
+
+- **saltare il luogo salta anche questo**, in una sola `edit` (`markFirstRunSkipped`): due edit
+  emetterebbero `Notifications` per un frame lungo la strada, e chi ha appena rifiutato di dare un
+  luogo non ha niente su cui ricevere un avviso. «Salta» non può voler dire «salta uno dei due».
+- **un aggiornamento non viene mai fermato**: `migrateFirstRun` scrive `notify_asked` insieme a
+  `init_done` per le installazioni usate, e — il caso che il `return@edit` in cima si sarebbe perso
+  — lo **riempie** anche per un'installazione già migrata dalla build precedente, che altrimenti
+  avrebbe trovato una schermata intera alla prima apertura. È esattamente quello che quel controllo
+  è stato scritto per evitare.
+- **se le notifiche sono già permesse il passo non si vede**: non c'è niente da chiedere, quindi non
+  si chiede niente.
+
+### I due widget che aprivano la schermata sbagliata
+
+> «Nei widget "Momenti del cielo" e "Arco del giorno" al tap aprire l'app direttamente nella
+> schermata Cielo, che dovrebbe essere più corretto rispetto alle informazioni che i widget
+> visualizzano.»
+
+Giusto, ed è il principio a essere giusto: quei due disegnano materiale della schermata Cielo — i
+momenti, i verdetti, il prossimo momento della luce, l'agenda — e atterrare su Oggi chiedeva al
+lettore di andare a ritrovare quello che aveva appena letto sullo schermo di casa.
+
+`WidgetCard` prende un `destination: ShellTab?` — `null` resta «apri l'app», che atterra dove il
+lettore l'ha lasciata, ed è quello che fanno ancora le altre tre card. La destinazione viaggia
+nell'**azione** dell'intent oltre che in un extra: gli extra non entrano in `Intent.filterEquals`,
+che è la chiave della cache dei `PendingIntent`, e l'azione è quella che resta leggibile in un
+intent a cui gli extra non sono sopravvissuti. (Glance timbra già un `data` unico per widget, quindi
+le due cose sono cintura e bretelle; verificato leggendo il bytecode di `ApplyActionKt`, che usa
+`PendingIntent.getActivity` con il **nostro** intent, azione e flag compresi.)
+
+I flag sono la ricetta di un deep link in un'app a un task solo: `CLEAR_TOP or SINGLE_TOP` consegna
+l'intent all'istanza già viva via `onNewIntent` invece di finirla e ricostruirla. Senza, il **primo**
+tap avrebbe funzionato e tutti quelli dopo no — l'app sarebbe tornata avanti sulla scheda di prima,
+che è il caso che un lettore incontra ogni volta tranne una. Il tab è stato, non una rotta, quindi
+`MainActivity` tiene la richiesta e la passa alla shell, che la consuma e **chiude gli overlay**:
+atterrare su Cielo sotto una pagina Impostazioni aperta sarebbe rispondere al tap e nascondere la
+risposta. Una richiesta arrivata prima che il primo avvio abbia risposto non si perde: resta lì
+finché le schede esistono.
+
+Le altre tre card sono rimaste come stavano. Lo stesso principio le manderebbe su Oggi, ma non è
+stato chiesto e non è un difetto: «apri l'app» è una risposta onesta per una card che mostra il
+tempo di adesso.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1587 test** (18 nuovi nell'app,
+4+2 nel `CityStore`), lint a zero errori. `:app:assembleDebug` e `:app:assembleRelease
+-PsignReleaseWithDebugKey` costruiscono, così l'R8 è passato anche lui. `ShellDestinationTest`
+costruisce davvero il `PendingIntent` sopra l'intent, perché un intent implicito sarebbe rifiutato
+in faccia su questo minSdk.
+
+Quel che **non** è coperto da un test e va guardato su un dispositivo: il dialogo di sistema non
+esiste in Robolectric, quindi il percorso «rifiuta due volte → il tap seguente apre le impostazioni»
+è ragionato sul contratto di `ActivityResultContracts.RequestPermission` e non misurato. Da provare
+su un telefono: installare, arrivare al passo due, dire di no due volte, e controllare che il
+pulsante su Avvisi porti nelle impostazioni di sistema e non da nessuna parte.
+
+---
+
+## Quattro predefiniti, e due task che erano tre (committente, 21 set 2026, dal dispositivo)
+
+Installazione da zero, provata: il permesso notifiche viene chiesto e la card su Avvisi fa il resto.
+Da lì, quattro predefiniti da spostare e due difetti veri trovati usando l'app.
+
+### I predefiniti
+
+**I due riepiloghi, accesi.** `dailySummary` e `eveningSummary` nascevano a `false` su un argomento
+scritto per intero nel KDoc: «un digest che nessuno ha chiesto è l'unica notifica per cui un'app
+meteo viene disinstallata». È l'argomento giusto su *un digest* e quello sbagliato su questi due.
+Sono l'app: una frase prima di qualunque numero, detta all'ora in cui la giornata è ancora una
+decisione. Un'installazione che non apre mai Avvisi prendeva le allerte e niente della lettura. Il
+tetto è una notifica ciascuno, a ore fisse, e si spengono in due tap.
+
+**La card blu al posto del cielo.** Il gradiente resta l'eroe dell'app ed è a una riga di distanza.
+Quel che non è, è la cosa giusta da incontrare su una schermata di casa che non ha mai visto: è una
+fotografia del tempo dietro una card di fatti, e su uno sfondo carico i due terreni litigano — che
+è esattamente quel che lo scrim e il cursore dell'opacità servono a governare, e un predefinito non
+dovrebbe aver bisogno di essere governato. Una card piatta colorata è la grammatica del launcher,
+si legge a distanza di braccio su qualunque wallpaper, e il colore è una riga sotto.
+
+**Massima e minima su «In parole».** Questo è l'unico campo che risponde **diverso per card**, e per
+questo `WidgetLook.defaultsFor(kind)` esiste invece di cinque costanti: un predefinito che varia è
+precisamente quello che finisce scritto due volte — nello store e nella schermata impostazioni — e
+poi divergono. «In parole» non ha un disegno da proteggere: la sua gerarchia è costruita di tipo, in
+ranghi di fatti, e la massima e minima sono un rango già progettato. Lasciarlo vuoto è l'unica card
+che ci perde. Sulle altre vale il KDoc di sempre: il numero nudo è l'eroe.
+
+Due fixture si appoggiavano ai vecchi predefiniti e adesso nominano tutto quel che dichiarano —
+`SyncSchedulerTest.allOff`, `AlertEngineTest.allOn`/`none` e `WeatherSyncWorkerTest.allTogglesOff`,
+che si chiamava «tutti spenti» e ne lasciava uno acceso. Una fixture che dipende da un predefinito
+smette di dire la verità il giorno che il predefinito si muove, in silenzio.
+
+### I due task che erano tre
+
+> «Se apro le proprietà di un widget e poi la chiudo con lo swipe dal basso e poi apro l'app, con
+> la gesture back invece di tornare alla home mi ricompare la schermata proprietà.»
+> «Alcune volte mi trovo ad avere due schermate principali dell'app.»
+
+Stessa famiglia, e la diagnosi è una riga: **Android identifica un task dall'intent che lo ha
+creato**, e questa app entrava da tre porte diverse con tre intent scritti a mano.
+
+`WidgetConfigActivity` e `ArcConfigActivity` avevano l'affinità del pacchetto, quindi stavano nel
+**task dell'app**. Chiuderle con lo swipe le lasciava lì; il lancio successivo dell'app metteva la
+schermata principale sopra, e il back usciva su una schermata che il lettore aveva già congedato.
+Ora hanno `taskAffinity=""` — nessuna affinità, mai quel task — e `noHistory="true"`, così una
+schermata scacciata è finita e non un task che nessuno vede e nessuno può chiudere. Non si perde
+niente: ogni scelta lì è scritta nell'istante in cui è toccata, e «Fatto» chiude solo la porta. Ed è
+sicuro verso l'host perché tutti e cinque i provider dichiarano `configuration_optional`: quella
+schermata non gira mai al momento del piazzamento, quindi nessun widget aspetta il suo risultato.
+C'è un test che tiene ferma quella parola, perché è la premessa del `noHistory`.
+
+Le due schermate principali sono l'altra metà, ed è **colpa del giro precedente**. Avevo messo la
+destinazione nell'**azione** dell'intent, ragionando che gli extra non entrano in `filterEquals` e
+quindi non distinguono due `PendingIntent`. Il ragionamento era giusto e la conclusione rovesciata:
+non entrare in `filterEquals` è **esattamente** il motivo per cui l'extra è l'unico posto dove la
+destinazione può viaggiare senza che il task smetta di somigliare a quello del launcher. Con
+un'azione nostra, il tap sull'icona non riconosceva più il task aperto dal widget e ne apriva un
+secondo — la sovrapposizione nello screenshot.
+
+Quindi: **una porta sola**, e **è l'intent del launcher** — `ACTION_MAIN`, `CATEGORY_LAUNCHER`, il
+nostro componente, più l'extra quando c'è una destinazione. Ci passano tutti e cinque i widget
+(anche i tre che non chiedono una scheda) e tutti e quattro i notificatori, che avevano ciascuno il
+proprio `Intent(context, MainActivity)`. E `MainActivity` è `singleTask`: è quel che l'app **è** —
+una sola activity, con Impostazioni e la guida che sono stato al suo interno — e senza, la
+piattaforma ne faceva un secondo task ogni volta che l'intent non era quello del launcher. I flag
+scritti a mano nel giro precedente (`CLEAR_TOP`, `SINGLE_TOP`) facevano metà di quel lavoro a mano e
+non potevano fare l'altra metà, che è garantire che ci sia **una** istanza a cui consegnare. Resta
+`NEW_TASK`, che la piattaforma pretende da un `PendingIntent`.
+
+### Gli angoli bianchi: la stessa causa, e come verificarlo
+
+> «Quando stacco il dito e l'app fa l'animazione completa di chiusura vedo gli angoli arrotondati
+> bianchi e non più trasparenti. Sembra che lo fa solo quando l'app è stata aperta dal widget.»
+
+«Solo quando è stata aperta dal widget» è la diagnosi dentro la segnalazione, ed è la ragione per
+cui non è un problema di `windowBackground`: quello è lo stesso da qualunque porta si entri. Quel
+che cambia con la porta è **quale animazione di chiusura sceglie il sistema**. Il back predittivo,
+con il dito giù, anima la superficie viva dell'activity e la ritaglia: fuori dal ritaglio non c'è
+niente, quindi trasparente. Al rilascio parte la transizione vera, e su un task che il launcher
+riconosce come una delle sue icone è il launcher a disegnarla — quella che rientra nell'icona. Su un
+task che non riconosce, il sistema usa la chiusura generica, che dipinge il colore di fondo del task
+(preso da `windowBackground`, bianco in chiaro) dietro la superficie che si rimpicciolisce, angoli
+arrotondati compresi.
+
+Con una porta sola che è l'intent del launcher, e `singleTask` sopra, quel task non esiste più. **È
+la correzione che mi aspetto risolva anche questo**, e va detto chiaramente che è l'unico dei
+quattro punti che non ho potuto misurare: l'animazione di chiusura non esiste in Robolectric.
+
+Da provare sul telefono, nell'ordine: (1) riavvio pulito, tap sul widget con app chiusa, back →
+gli angoli devono essere trasparenti come da icona; (2) apri da icona, poi da widget, poi back due
+volte → deve uscire alla home, non su una seconda schermata principale; (3) matita del widget,
+swipe in alto, apri l'app, back → home. Se il punto (1) resta bianco mentre (2) e (3) sono a posto,
+la causa non è il task e la leva successiva è `android:windowBackground`, che oggi è quello di
+`Theme.DeviceDefault.DayNight` — con la nota che renderlo trasparente si paga con qualche frame di
+launcher visibile all'avvio a freddo, che è precisamente il motivo per cui quel tema è lì.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1599 test** (12 nuovi: la porta
+riscritta, i predefiniti delle card, e tre attributi di manifest che nessun test sugli intent può
+vedere), lint a zero errori. `:app:assembleDebug` e `:app:assembleRelease -PsignReleaseWithDebugKey`
+costruiscono.
+
+### Le notifiche atterrano dove devono (committente, stessa giornata)
+
+Chiuso il giro, restava la riga che la porta unica aveva reso gratis: la stessa regola dei widget,
+**la schermata di cui la notifica parla**.
+
+- Il promemoria del cielo → **Cielo**: è la riga di quel momento, la sua campanella, il verdetto con
+  il numero che l'ha deciso e la frase del catalogo su cosa sia quel momento.
+- Una regola che è scattata → **Avvisi**: la card di quella regola è lì, con l'ora dell'ultimo
+  scatto, che questa notifica ha appena cambiato.
+- Un'allerta ufficiale → **Avvisi**, non Oggi. Il banner su Oggi c'è, ma solo da gialla in su e solo
+  finché il bollettino è vivo, e di una zona verde non dice niente (DESIGN §8.13). Avvisi è la
+  schermata dove uno è andato a chiedere, e da lì si apre il foglio con l'aritmetica: la griglia
+  rischio per giorno, cosa vuol dire quel livello, l'attribuzione.
+- I quattro avvisi predefiniti → **Oggi**. Sono il tempo: le ore, la pioggia, la frase. Avvisi è
+  dove sta l'**interruttore** che li ha mandati, che non è quel che cerca chi ha toccato «Pioggia
+  alle 17».
+
+C'è un costo nascosto nell'aver fatto una porta sola, e va scritto perché è invisibile: adesso i
+quattro intent sono `filterEquals`-identici, e `PendingIntent` chiave la cache **su quello**. Gli
+extra non li vede. Quindi il **request code** è l'unica cosa che tiene separate due destinazioni, e
+con `FLAG_UPDATE_CURRENT` due chiamanti che ne condividono uno fanno sì che il secondo riscriva la
+destinazione del primo — sotto una notifica già sulla tendina. I quattro passano il proprio id di
+notifica, e quei quattro intervalli erano già disgiunti e documentati dove sono calcolati
+(1001-1004 gli avvisi predefiniti, 2000-2999 le regole, 3000-3999 le allerte, 7000+ il cielo).
+`SkyNotifier` era l'unico che non lo faceva: passava `0` fisso, che prima non voleva dire niente e
+adesso sarebbe stato il buco.
+
+`NotificationDestinationTest` posta **tutte e quattro sullo stesso manager** e rilegge le
+destinazioni dopo, non una alla volta: una collisione si vede solo quando le quattro coesistono.
+Verificato che il test serva davvero, rompendolo apposta — messo `1002` come request code del cielo,
+il test combinato fallisce con «the sky reminder must be the only one on Cielo, expected 1 but was
+null» (l'avviso pioggia, postato dopo, gli aveva riscritto gli extra), mentre i quattro test singoli
+restavano verdi. È esattamente il motivo per cui il primo test esiste nella forma che ha.
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1609 test**, lint a zero errori.
+
+## Revisione della schermata Cielo: sette difetti, e uno era la promessa della guida (committente, 20 set 2026)
+
+Chiesta una revisione delle feature e degli eventi del cielo: che cosa è sbagliato, come sono
+resi, che cosa manca. Ne sono usciti sette punti, affrontati nell'ordine che il committente ha
+dato — ① ③ ④, poi ② ⑤ ⑥ ⑦ — e il primo non era un difetto di calcolo: era il codice che diceva
+una cosa diversa dalla propria guida.
+
+### ① La finestra di buio non era l'intersezione che la guida descrive
+
+`sky_about_darkness` promette, in tutte e due le lingue, «la notte astronomica — il sole a più di
+18° sotto l'orizzonte — **con in più la luna sotto l'orizzonte**», la chiama «l'unico evento qui
+dentro che sia un'intersezione invece di un attraversamento», e chiude con la frase che ha deciso
+la correzione: «certe notti la finestra è tutta la notte, certe notti è novanta minuti, e certe
+notti non c'è affatto». L'aiuto della card Stanotte dice la stessa cosa: «le ore in cui il cielo è
+davvero scuro **e la luna è fuori dai piedi**».
+
+`SkyScheduler.darkness()` restituiva crepuscolo astronomico → alba astronomica, e basta. La luna
+non entrava nella finestra: rientrava all'altro capo come declassamento del verdetto. Quindi la
+finestra non era **mai** di novanta minuti e non mancava **mai** per la luna, e la card stampava
+«Buio dalle 21:47 alle 05:12» anche con la luna piena alta per sei di quelle ore. Non è una
+sfumatura: è la riga che la guida indica come la ragione per cui questa parte dell'app esiste.
+
+La correzione è un'intersezione, non un motore. `AstronomyEngine` guadagna `moonDownRuns`, che è il
+complemento di `aboveAltitude` già in casa — una **lista** di tratti e non il primo, perché una
+notte può averne due (luna che sorge alle dieci e tramonta alle tre lascia la scheggia prima e le
+ore dopo, e dare la scheggia perché viene prima sarebbe la risposta sbagliata una volta su due).
+La soglia è quella di sorgere della luna, parallasse compresa, la stessa che attraversano
+`moon.rise` e `moon.set`: una finestra che dicesse la luna giù a un'ora che la riga sopra chiama
+moonrise sarebbe lo schermo che litiga con se stesso.
+
+`SkyScheduler.darkNight(date)` torna **due** risposte — la notte e la finestra — perché lo schermo
+ha bisogno di tutte e due: la card stampa la finestra, e la riga sotto può dire *perché* è corta
+solo se sa ancora quanto era lunga la notte. `darkness()` è la seconda; `milkyWayCore` passa da lì,
+quindi il nucleo galattico eredita il filtro lunare, che è come doveva essere (una luna gibbosa
+cancella il centro della Via Lattea esattamente come il crepuscolo).
+
+**Nessun pavimento sulla durata.** Una finestra di dodici minuti è una cosa strana da sentirsi dire
+ed è vera; inventare una soglia sotto la quale l'app la chiama `∅` sarebbe barattare un fatto per
+uno schermo più ordinato, cioè il baratto che questo modulo esiste per rifiutare.
+
+Misurato a Milano, agosto 2026, ed è la frase della guida diventata tabella:
+
+| notte | illuminata | finestra |
+|---|---|---|
+| 12 ago | 0% | 22:33 → 04:23, tutta la notte |
+| 23 ago | 82% | 01:11 → 04:42, 152 minuti |
+| 24 ago | 89% | 03:17 → 04:45, **88 minuti** |
+| 26-30 ago | 98% | `∅` — la luna è su dal crepuscolo all'alba |
+
+Il terzo stato di card vuoto è nuovo (`MOON_ALL_NIGHT`) e ha la sua frase, che dice anche la notte
+che la luna **non** ha cancellato: il cielo è comunque scuro dalle 22:01 alle 04:49, e una card che
+dicesse solo «niente finestra di buio» farebbe credere che a sbagliare sia il sole.
+
+Effetto collaterale, e riparazione di un secondo rilievo della revisione: la card mostrava **un
+numero solo** (`moonLine ?: evidence ?: reason`), quindi quando decideva la luna la percentuale di
+nuvole spariva. Adesso la luna è un fatto sui bordi della finestra e non un declassamento, e sta
+su una riga sua; l'aritmetica del verdetto sta sotto, sempre.
+
+### ③ e ④ «In arrivo» buttava via i `∅`, e non garantiva una riga a chi si era iscritto
+
+Sono due facce della stessa lista, quindi una correzione sola.
+
+`events()` faceva `filterIsInstance<SkyOccurrence.At>()`: un `∅` spariva. Ma `SkyScheduler` ha una
+dottrina scritta e opposta («un giorno il cui risultato è `∅` è **riportato**, non saltato») e la
+lista `moments` accanto la rispetta. Misurato: le **Perseidi a Stoccolma** danno `NO_DARKNESS` nel
+2026 e nel 2027, e `next(limit = 1)` restituisce quel `∅`, quindi non si guardava nemmeno l'anno
+dopo. Lo sciame più famoso dell'anno semplicemente non esisteva, senza una parola.
+
+E le sei righe erano scelte **per data su tutto il catalogo**. Misurato a Milano il 20 settembre
+2026: equinozio, luna piena, Draconidi, Tauridi australi, Orionidi, Tauridi boreali. Sette
+settimane, tre sciami minori su sei righe, e fuori le Geminidi (14 dicembre), il solstizio, il
+tramonto più presto, la luna piena più vicina dell'anno e tutte e due le eclissi — la solare da
+Milano è il **2 agosto 2027**, diciottesima per data. Chi si iscriveva a «Eclissi di Sole» aveva
+la spunta nel catalogo, **un promemoria che funzionava davvero** (`SkyAlarmScheduler` pesca tutte
+le sottoscrizioni) e nessuna riga da nessuna parte. La campanella e lo schermo non erano d'accordo
+su che cosa il lettore stesse seguendo, che è esattamente il difetto per cui `SkyUpcoming` era
+stato scritto.
+
+Adesso la lista ha **due strati**. Il primo sono le righe del lettore: ogni sottoscrizione non
+giornaliera, sempre, `∅` compresi con la loro ragione. Il secondo è il calendario di tutti, i
+prossimi eventi annuali che non sono già nel primo, a riempire fino a sei — con un pavimento di
+tre, perché uno schermo che cancellasse il prossimo sciame per far posto a sette iscrizioni
+avrebbe scambiato un buco con un altro. Nel secondo strato i `∅` non entrano: un `∅` che nessuno
+ha chiesto è un fatto di qualcun altro, e stamparne tredici a una latitudine da notti bianche
+seppellirebbe la lista che deve riempire.
+
+La metà **aperiodica** resta legata alle sottoscrizioni come sempre: una ricerca di eclissi cammina
+anni di lune nuove, e farne due per chi non ha chiesto niente sarebbe batteria spesa per niente.
+
+### ⑤ La riga non diceva né l'anno né l'ora
+
+`d MMMM`, su una lista che arriva anni avanti: `EclipseEngine` cerca sei anni una solare, e
+«2 agosto» era una data che il lettore non poteva collocare. L'anno lo decide il builder e non la
+riga (`UpcomingEvent.showYear`), perché l'orologio sta lì: il builder è puro e prende `now`, un
+composable dovrebbe farselo passare.
+
+L'ora la stampano **le sole eclissi**, e la regola è scritta dov'è: la riga di uno sciame è una
+notte larga nove ore e un solstizio è una data, un'eclissi è novanta minuti per cui uno esce di
+casa o li perde.
+
+### ⑥ Due righe per un evento solo
+
+Tre collisioni, una regola. Le **Delta Aquaridi e le Alfa Capricornidi** hanno tutte e due
+longitudine solare 127.0° — la lista IMO le mette davvero lì — quindi stesso istante, stessa
+notte, stessa icona: misurato, `2027-07-29 23:05` per entrambe. Quelle si **fondono** e tengono
+tutti e due i nomi. Le altre due sono lo stesso evento chiesto due volte (`moon.phase` che risolve
+su una luna piena che il lettore segue anche per nome; la luna piena più vicina dell'anno che
+cade sulla riga della luna piena semplice): lì vince la riga più specifica, e una riga con la
+campanella batte una senza — togliere di mezzo quella a cui il lettore si è iscritto gli
+porterebbe via la campanella dallo schermo.
+
+### ② `withMoon` non faceva quel che diceva la sua KDoc
+
+«Sampled across the window, not at its start: a moon che tramonta un'ora dopo lascia usabile gran
+parte della notte». Il codice prendeva cinque campioni, filtrava quelli con la luna su e poi
+leggeva solo la loro **illuminazione massima**: quanti campioni fossero su veniva buttato. Una luna
+su per un campione su cinque declassava quanto una su per cinque su cinque.
+
+L'illuminazione è la variabile sbagliata da misurare lungo una finestra, perché in una notte non si
+muove; la **quota di finestra** con la luna sopra l'orizzonte è quella che si muove, ed è quella che
+decide adesso. Soglia alla metà — una notte la cui metà più buia è senza luna è una notte in cui si
+esce — e campioni da cinque a nove, perché cinque quantizzavano la quota a un quinto.
+
+Nota d'ordine: dopo ① la finestra di buio e il nucleo galattico sono senza luna per costruzione,
+quindi `withMoon` non scatta più per loro. Resta dov'era sempre servito: sciami e luce zodiacale.
+
+### ⑦ VISION §5.3 era ferma a Fase 5
+
+Diceva «the 32-job catalog» e cinque gruppi: sono 51 in sei (mancava Eclissi), e §6 dice 51 da
+sempre. Era il conto giusto alla Fase 5, e la Fase 19 ha aggiunto la coppia di cielo buio, i
+quarti per nome, le due eclissi, i fatti annuali e tre sciami senza che questa riga seguisse. La
+riga di Fase 5 qui sotto resta com'è: è un log, e alla Fase 5 trentadue era vero.
+
+### Quel che NON è stato toccato
+
+Dalla stessa revisione erano uscite tre proposte che non sono difetti e non entrano in questo giro:
+la media delle nuvole su otto-dieci ore come riassunto della notte (buttare via il tratto buono che
+l'app ha, ora per ora), il catalogo da 51 voci senza ricerca, e quattro eventi nuovi (finestra
+senza luna — che ① adesso rende possibile —, luna piena che sorge al crepuscolo, luce cinerea,
+azimut del tramonto). Restano da decidere.
+
+### Come è stato verificato
+
+Le misure di questa voce non sono ragionate: `:core:domain` compilato e interrogato con test
+usa-e-getta, poi rimossi, che stampano la lista «In arrivo» come la costruisce lo schermo, la
+tabella delle finestre di agosto e l'altezza della luna ora per ora sulla notte usata dalle
+fixture.
+
+Test nuovi, tutti su fatti misurati e non su numeri scelti: la notte astronomica resta dusk →
+dawn di domani (`darkNight().night`), la finestra è la notte meno la luna e si apre al **moonset
+al minuto** della riga che la stampa, la luna piena può prendersela tutta, a luna nuova è la notte
+intera; una sottoscrizione lontana ha comunque la sua riga con l'anno, una che il cielo salta tiene
+riga e ragione e sta in fondo, due sciami di una notte stanno su una riga; e la luna che occupa
+parte della finestra non la rovina tutta.
+
+Un'asserzione è stata **riscritta dopo averla vista fallire per il motivo giusto**: dentro la
+finestra la luna si misura contro l'altezza del bordo della finestra, non contro zero, perché la
+luna tramonta col centro un filo **sopra** l'orizzonte geometrico (la parallasse batte rifrazione e
+semidiametro messi insieme, Meeus 15.1) e lo zero non è la linea su cui quella finestra è tagliata.
+
+Dalla rilettura avversariale del proprio diff sono usciti altri due punti, piccoli e veri: la riga
+fusa dei due sciami teneva la **prima** del gruppo e non quella con la campanella (con un solo
+sciame dei due sottoscritto si sarebbe portata via il promemoria del lettore dallo schermo), e la
+lista degli `∅` sommava una sorgente che per costruzione non può averne.
+
+`ItalianArticleTest` ha bocciato la prima stesura delle stringhe nuove («illuminata al %d%%»):
+riscritte nella forma che l'app già usa, «%d%% illuminata». È la regola del 22 settembre che fa il
+suo lavoro su chi non la conosceva.
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1620 test**, lint a zero errori.
+
+## Fase 28 — Nove eventi nuovi, due pianeti, e un marchio che non è un'opinione (committente, 20 set 2026)
+
+Chiesto di implementare le tre proposte rimaste della revisione, i quattro eventi nuovi, e —
+riaprendo esplicitamente una decisione a verbale — Venere e Giove. In più, la domanda diretta:
+segnalare che un evento si presta alla fotografia è utile o è rumore?
+
+### La risposta sul marchio fotografico, prima del codice
+
+**Sì, ma a due condizioni**, e senza di quelle sarebbe esattamente il rumore che il committente
+temeva.
+
+Le ragioni per cui non lo è: il catalogo ha già proprietà leggibili dalla macchina
+(`observable`, `visibilityDependent`, `needsDarkness`) che generano da sole le righe «quando
+capita» nella guida, e un flag viaggia sullo stesso binario senza poter divergere dalla prosa;
+l'ora d'oro e l'ora blu **sono già nel catalogo solo per la fotografia**, quindi l'app ha già
+quel lettore e semplicemente non lo nomina; e non aggiunge righe, quindi per chi non fotografa
+costa zero.
+
+Le due condizioni:
+
+1. **Scarso.** Su venti eventi su sessanta non direbbe niente. Sono **nove**: le quattro ore del
+   fotografo, la luna piena al crepuscolo, le due finestre di luce cinerea, il nucleo della Via
+   Lattea e l'eclissi **lunare**. Il conto è un test (`SkyJobCatalogTest`), non una buona
+   intenzione di chi aggiunge il prossimo job, e i casi che non devono mai prenderlo sono
+   nominati: mezzogiorno solare, equinozio, perielio, fase lunare.
+2. **Deve portare un'informazione, non un'etichetta.** «Bello da fotografare» è un'opinione e
+   quest'app non ne stampa. Quel che serve è **dove puntare**, e quindi il flag e l'azimut sono
+   una cosa sola: il marchio dice *porta la macchina*, la riga accanto dice *verso ovest-nordovest*.
+   `SkySights.bearing` risponde `null` sulla maggior parte delle righe apposta — un equinozio non
+   capita in una direzione, e «il sole sorge verso est» non insegna niente a nessuno — ed è un
+   test che ogni evento fotografico ne abbia invece una.
+
+**L'eclissi solare è l'unica esclusione decisa sulla sicurezza e non sulla vista.** La riga che
+l'app già stampa su di essa è un avvertimento — non guardare mai il sole senza un filtro adatto —
+e «porta la macchina fotografica» accanto a un avvertimento si legge come un permesso. Non lo è:
+un obiettivo puntato al sole senza filtro solare distrugge il sensore dietro, e attraverso un
+mirino ottico distrugge l'occhio dietro quello. Il marchio serve a mandare qualcuno fuori con una
+macchina, quindi l'unico evento in cui questo richiede attrezzatura che l'app non può verificare
+non lo prende.
+
+Il disegno è nostro (`ic_photographic.xml`), nella stessa mano di `ic_verdict_*` e `ic_range_*`:
+tratti da 2.4 su 24, capi tondi, ~1.8 dp ai 18 a cui la riga lo mostra. Non un'icona Material,
+per due motivi che valgono entrambi: il progetto non porta `material-icons-extended` e non
+aggiunge un megabyte di glifi per un marchio, e ogni pezzo di grafica di servizio che quest'app
+disegna da sé vive già in quella cartella in una mano sola.
+
+### I due pianeti, e la decisione riaperta
+
+`PLANNING.md` aveva messo a verbale alla Fase 19: «pianeti e congiunzioni = un progetto a sé (una
+VSOP87 troncata e i suoi test)». Vero della **categoria**, falso di questi due, ed è l'argomento
+con cui il committente l'ha riaperta: Venere e Giove sono gli unici punti di luce che un passante
+distingue senza che glielo spieghi nessuno, sono la risposta a «cos'è quella stella luminosa», e
+per arrivarci a qualche primo d'arco servono elementi orbitali, non una serie per pianeta. Gli
+altri sei restano fuori per il motivo che non è cambiato: Marte chiede del suo colore, Mercurio
+non è mai cielo scuro, e Saturno, Urano e Nettuno sono roba da telescopio, che §3.2 mette fuori.
+
+Il modello sono **elementi kepleriani con derive secolari** — la tabella JPL/Caltech degli
+elementi approssimati dei pianeti maggiori, valida 1800-2050 — risolti attraverso l'equazione di
+Keplero, riferiti all'eclittica media J2000, precessati all'eclittica della data, corretti per il
+tempo-luce una volta e poi passati alle stesse primitive di obliquità, altezza e azimut che usa
+ogni altro corpo del modulo.
+
+**Buono a qualche primo d'arco**, che è la taglia giusta per le due domande che l'app fa: se un
+pianeta è su e abbastanza alto da essere la cosa che qualcuno sta indicando, e quanto dista dalla
+luna quando si incrociano — una separazione che questa app stampa in gradi interi e mai in primi.
+Non è un'effemeride: niente occultazioni, niente transiti, e niente qui va reso al secondo.
+
+### Misurato, non affermato — e la catena conta
+
+Una tabella di coefficienti che nessuno ha verificato è una diceria (la regola a cui è stato
+tenuto `EclipseEngine`). Ma anche una riga di effemeride **ricordata** è una diceria, quindi la
+verifica è una catena di invarianti e non un elenco di date:
+
+1. Gli elementi della **Terra** rispondono alla longitudine solare di questo stesso modulo, che è
+   a sua volta misurata contro l'alba di Open-Meteo a trenta secondi. Il Sole visto da qui **è**
+   la longitudine eliocentrica della Terra girata di mezzo giro, quindi quell'unica asserzione
+   copre elementi, Keplero, la precessione e il cambio di sistema in un colpo solo. Misurato:
+   **meno di tre primi** su sette date fra il 2000 e il 2030.
+2. I pianeti rispondono agli invarianti che una tabella sbagliata non può soddisfare: la massima
+   elongazione di Venere (che non lascia mai il crepuscolo, ed è il motivo per cui è solo stella
+   della sera o del mattino) fra 44° e 48°; Giove che arriva davvero all'opposizione; i due
+   periodi **sinodici** entro tre giorni dai pubblicati; i due periodi siderali; e l'intervallo di
+   distanza dal Sole che ciascuna orbita consente.
+
+Due asserzioni sono state **riscritte dopo averle viste fallire per il motivo giusto**, ed è il
+tipo di cosa che vale più del test:
+
+- Il periodo sinodico di Venere è uscito **292,28 giorni**. Non è un difetto del modello: è
+  583,92 ÷ 2, perché Venere passa davanti al Sole **due volte** per ciclo — congiunzione inferiore
+  e superiore — e contare ogni minimo di elongazione misura mezzo periodo con grande sicurezza.
+  Le due metà si distinguono da quanto è lontana.
+- Quello di Giove è uscito **381,6** contro 398,88. Anche qui il rilevatore: la separazione è un
+  angolo di cerchio massimo, quindi il vagare in latitudine eclittica ci mette dentro minimi
+  locali. Passato alla definizione vera — l'attraversamento dello zero della differenza segnata in
+  ascensione retta, con i tripli passaggi della retrogradazione deduplicati a cento giorni.
+
+Una conferma indipendente arrivata gratis dalle misure: le finestre di Venere fanno passare il
+pianeta da stella della sera a stella del mattino fra fine ottobre e novembre 2026, che è
+esattamente attorno alla congiunzione inferiore del 26 ottobre 2026 (la precedente più 583,92
+giorni). Nessun test la chiede; è il modello che si comporta come il sistema solare.
+
+### I nove eventi
+
+- **Luna piena al crepuscolo** (`moon.full_at_dusk`). L'intersezione: disco già abbastanza tondo
+  E sorgere dentro il crepuscolo. Misurato a Milano dal 20 settembre 2026: **25 settembre, 18:35**,
+  cioè la sera **prima** della luna piena (26 settembre 18:49) — che è spesso la migliore, ed è il
+  motivo per cui la ricerca è una finestra e non l'istante della geometria.
+- **Luce cinerea**, sera e mattina (`earthshine.pm/am`). Falce fra l'1% e il 18%: sotto è ancora
+  dentro il bagliore del Sole, sopra il bordo illuminato annega la luce di cenere, che è tutta la
+  vista. Misurato: **12, 13 e 14 ottobre 2026** a Milano, con la finestra che cresce da 22 a 64
+  minuti mentre la luna tramonta più tardi.
+- **Venere sera / Venere mattina / Giove stanotte**. Soglie di altezza (5° per Venere, 10° per
+  Giove) perché un pianeta a tre gradi è dietro le case, e dire «c'è Venere» a qualcuno in una via
+  sarebbe inventare una vista. Deliberatamente **non** `needsDarkness`: Giove a magnitudine −2 è
+  ovvio in un cielo di periferia e Venere è ovvio di giorno, quindi una luna piena non li rovina —
+  e dire che lo facesse sarebbe prendere in prestito una regola delle cose deboli per le due più
+  luminose.
+- **Tre congiunzioni**. La seconda metà della definizione non è un vezzo: la luna passa accanto a
+  Venere ogni mese e **circa la metà** di quelle volte capita con tutti e due dietro il Sole, dove
+  l'evento è reale, calcolabile e invisibile — e una riga che lo annunciasse manderebbe qualcuno
+  fuori a guardare la luce del giorno. Quindi un candidato torna solo quando esiste un tratto di
+  notte o crepuscolo con tutti e due davvero su. Misurato da Milano: luna-Giove a **0,2°** il 6
+  ottobre 2026, luna-Venere a 1,0° il 7 novembre, e Venere-Giove a **0,6° il 10 novembre 2028** —
+  che è la distanza fra «ogni mese» e «vale la pena segnarsela».
+
+Nessuna icona nuova da importare, e non è una scorciatoia: **un pianeta a occhio nudo è un punto
+luminoso**, quindi `star` — già spedita — è il disegno onesto. Meteocons non ha pianeti e
+inventarne uno sarebbe un dischetto che nessuno vede.
+
+### Le due proposte rimaste
+
+- **Il tratto più sereno** (`SkyVerdictEngine.clearStretch`). Il verdetto è una media su otto-dieci
+  ore, che è il numero giusto per una parola sola e un pessimo riassunto di una notte: un cielo
+  sereno fino all'una e chiuso dopo esce «così così», e la metà buona — che l'app ha, ora per ora,
+  e ha già scaricato — veniva buttata. Adesso la card la nomina. Derivato e non inventato: una
+  corsa di ore consecutive che passerebbero ognuna da sola. `null` quasi sempre, apposta — quando
+  nessuna ora passa, quando la corsa è tutta la finestra (il verdetto l'ha già detto), e quando sta
+  sotto l'ora, perché «sereno dalle 02:10 alle 02:40» è una promessa che questa previsione non può
+  mantenere.
+- **La ricerca nel catalogo**. Sessanta voci in sei gruppi erano uno scroll per chi cercava
+  «Perseidi» per nome. Filtra sulle due stringhe che la riga **già stampa** — nome e riga di
+  spiegazione — senza accenti e senza maiuscole, e mai sull'id puntato, che su questo schermo non
+  compare e non comparirà (VISION §5.3). Non un `SearchBar`: dentro un bottom sheet che già tiene
+  una lista sarebbe una seconda superficie che scorre sopra la prima.
+
+### Come è stato verificato
+
+Ogni numero di questa voce è uscito da un test usa-e-getta poi rimosso, non da una stima: la
+tabella delle finestre di luce cinerea, le congiunzioni con la loro separazione e la loro finestra
+di visibilità, le finestre di Venere e Giove nell'arco di duecento giorni.
+
+I test nuovi verificano **quel che il codice dichiara**, non il suo output: la luna piena al
+crepuscolo è davvero quasi piena e sorge davvero dentro il crepuscolo, al minuto del sorgere che
+la riga accanto stampa; la luce cinerea capita solo su una falce sottile e la finestra sta dentro
+il crepuscolo; Venere non è mai stella della sera e del mattino lo stesso giorno, e in 400 giorni è
+entrambe; una congiunzione è chiusa (un giorno prima e uno dopo sono più larghi) e tutti e due i
+corpi sono davvero su, col Sole giù, dentro la sua finestra.
+
+I test della guida non hanno avuto bisogno di modifiche e sono passati al primo colpo sulle nove
+pagine nuove, il che è il loro scopo: iterano il catalogo, quindi «ogni evento ha una pagina»,
+«ogni pagina è due paragrafi veri», «ogni pagina è davvero tradotta» e «nessuna pagina dice un id
+a voce alta» valgono anche per quel che non esisteva quando sono stati scritti.
+
+Dalla rilettura avversariale del proprio diff sono usciti due punti, e nessuno dei due sarebbe
+stato trovato da un test:
+
+- La riga di una congiunzione prendeva la separazione da una **seconda ricerca** («la prossima
+  congiunzione da oggi») mentre la sua data veniva da `SkyUpcoming`, che scavalca un evento
+  finito. Due domande, due risposte, una riga sola: è lo stesso difetto per cui `SkyUpcoming`
+  esiste, alla terza occorrenza. Adesso la separazione si misura **sull'istante della riga**, dove
+  di risposte ce n'è una.
+- La camminata aperiodica chiamava la ricerca diretta invece dell'almanacco: tre anni a passi di
+  sei ore con una posizione della Luna a ogni passo, a ogni ricostruzione della schermata, nel
+  giorno dopo una congiunzione. Passa dal memo, chiesta per giorno locale — che è esatto, perché
+  due congiunzioni della stessa coppia non cadono mai lo stesso giorno.
+
+Una sbadataggine da registrare perché costa tempo a chiunque la rifaccia: le trentasei stringhe
+nuove sono state generate con un `unicode_escape` di Python, che si è mangiato i `\'` degli
+apostrofi italiani e ha trasformato i `\n\n` dei capoversi in a capo veri. AAPT lo segnala come
+«Invalid unicode escape sequence», che non è la causa. Riparate e ricontrollate contando apostrofi
+nudi e capoversi.
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1639 test**, lint a zero errori.
+
+## L'aiuto in-app, riletto contro quel che l'app fa davvero (committente, 20 set 2026)
+
+Chiesto di verificare che la guida fosse aggiornata. Sette punti, e **due non venivano dalle Fasi
+27 e 28**: erano già lì.
+
+### Quel che era rimasto indietro sul Cielo
+
+- **«Stanotte»** diceva «le ore in cui il cielo è davvero scuro e la luna è fuori dai piedi», che
+  fino alla Fase 27 era una bugia e adesso è vero. Ma la card nel frattempo ha imparato altre tre
+  cose che la guida non nominava: quel che la luna si è presa, lo stato in cui non c'è finestra
+  affatto, e il tratto più sereno della Fase 28.
+- **«In arrivo»** descriveva la lista a uno strato. Ne ha due dalla Fase 27, tiene i `∅` con la
+  loro ragione, stampa anno e ore sulle righe lontane e fonde due sciami di una notte: la parte
+  più cambiata della schermata, e la guida non ne diceva niente.
+- **«Aggiungi un momento»** aveva il conto e i gruppi già corretti (aggiornati nella Fase 28
+  stessa) e non nominava **il campo di ricerca**, che è nuovo.
+- **Il marchio della macchina fotografica non era spiegato da nessuna parte.** È il difetto più
+  serio dei quattro, perché l'ora dorata della sera è una delle quattro sottoscrizioni
+  predefinite: un lettore lo incontra **su un'installazione appena fatta**, e un marchio che
+  nessuno ha spiegato è un marchio di cui nessuno si fida. Ha un blocco suo, subito dopo l'esempio
+  di riga, e dice anche perché l'eclissi di Sole non ce l'ha.
+
+### I due che erano già lì, e non li aveva messi la Fase 28
+
+- **Il widget «In parole» non esisteva nella guida.** VISION §5.9 dice «cinque card», il manifest
+  lo chiama in un commento «the fifth, and the one with nothing drawn on it», la schermata delle
+  impostazioni lo offre — e il capitolo dei widget ne descriveva quattro. Il widget del 19
+  settembre non è mai entrato nell'aiuto. Adesso c'è, con la frase che lo distingue davvero (il
+  disegno è la temperatura, e il nome del luogo è stampato per intero).
+- **La riga dell'arcobaleno su Oggi non era nominata.** `TimelineKind.RAINBOW` è nella linea del
+  tempo con il suo azimut, ed è una delle righe più caratteristiche dell'app — l'unica di quella
+  schermata che arriva con una direzione. La guida elencava alba, ore dorate, buio, luna e pioggia,
+  e si fermava lì.
+- E **due impostazioni non erano elencate**: il carattere e l'animazione delle icone, mentre nella
+  stessa frase erano nominate la palette e i due disegni delle icone.
+
+### Una chiave che mentiva da due giri
+
+`guide_widgets_three_title` conteneva già «Sono quattro»: il testo era stato aggiornato quando il
+quarto widget è arrivato, la chiave no. Con il quinto sarebbe mentita una terza volta, quindi è
+diventata `guide_widgets_all_title` (e `_body`). Non è un dettaglio di stile: una chiave che dice
+un numero è una chiave che invecchia, e chi la rilegge fra sei mesi crede al nome.
+
+### Come è stato verificato
+
+Non rileggendo la guida e annuendo, ma confrontando ogni affermazione verificabile con la sua
+sorgente: i widget contro i `receiver` del manifest e le etichette in `strings.xml`, le voci delle
+impostazioni contro le `settings_*` che la schermata risolve davvero, la linea del tempo contro
+`TimelineKind`, il conto del catalogo contro `SkyJobCatalog.all`. È così che sono saltati fuori
+l'arcobaleno e «In parole», che nessuna rilettura del solo testo avrebbe trovato.
+
+`MomentSample` non è stato toccato e non ne aveva bisogno: costruisce a mano una riga di `sun.rise`,
+che non è fotografica e non ha una direzione da stampare, quindi l'esempio resta vero.
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, 1639 test, lint a zero errori.
+
+## Fase 28b — «Foto» non trovava niente, e il marchio non c'era dove si sceglie (committente, 20 set 2026)
+
+Chiesto se «luna piena al crepuscolo» non dovesse dire nella descrizione breve che è un evento
+fotografabile, così che un fotografo amatoriale lo trovi senza aprire la pagina, e così che una
+ricerca per «foto» lo peschi. Chiesto esplicitamente di rispondere solo se d'accordo.
+
+**L'obiettivo era giusto e ha scoperto due buchi della Fase 28, ma il meccanismo proposto no.**
+
+### I due buchi
+
+- **Il marchio non era sulla riga del catalogo.** `SkyHeadline` era finito su `MomentRow` e su
+  `EventRow` e non sulla riga della tendina «Aggiungi un momento» — cioè sull'unica schermata dove
+  uno **sfoglia per scegliere**. Un marchio che compare solo dopo che la riga è già sottoscritta
+  arriva dopo la decisione che doveva aiutare. Adesso c'è.
+- **La ricerca non sapeva niente del flag.** `matchesQuery` confrontava nome e spiegazione, quindi
+  cercare «foto» non restituiva niente mentre nove righe portavano la macchina fotografica. Una
+  ricerca e un flag costruiti nella stessa fase e mai presentati.
+
+### Perché non la parola nella descrizione
+
+La riga breve del catalogo esiste per dire **che cos'è** una cosa. «La sera in cui la luna piena
+sorge mentre il cielo è ancora colorato» è una definizione; «, da fotografare» attaccato in fondo è
+prosa peggiore che ripete il glifo seduto sulla stessa riga.
+
+E soprattutto: la parola diventerebbe una **seconda verità** per qualcosa che `SkyJob.photographic`
+già sa, libera di divergerne la prima volta che qualcuno tocca una delle nove stringhe. È
+esattamente la ragione per cui le righe «quando capita» della guida si leggono dal job invece di
+essere scritte due volte.
+
+Quindi la ricerca interroga il flag. `sky_catalog_search_photo_terms` è una lista di parole per
+lingua («foto fotografia fotografare macchina obiettivo scatto…»), e un termine risponde **per
+prefisso da tre lettere in su**: «fot» li trova, «fo» no. La soglia guarda i TERMINI e non il
+testo — «m» continua a pescare la riga perché sta dentro «mentre», che è la regola della
+sottostringa che fa il suo lavoro.
+
+### Come è stato verificato
+
+`matchesSearch` è stata tirata fuori dal composable come funzione pura apposta per poterla provare:
+`SkySearchTest` fissa che «foto» arriva solo a una riga marcata, che la prosa non porta la parola,
+che un prefisso di due lettere non tira dentro tutto, e che accenti e maiuscole non contano.
+
+Due test sono falliti al primo giro e solo **uno** era un difetto: una query di soli spazi non
+veniva ripulita, e la funzione la trattava come una sottostringa da cercare (in pratica non ci
+arrivava mai, perché il chiamante filtra già su `isBlank`, ma il contratto è il contratto).
+L'altro era il test a sbagliare: asseriva che «m» non trovasse una riga marcata, mentre «m» sta
+dentro «mentre» e trovarla è il comportamento giusto. Corretto il test, non il codice.
+
+### Nota sulla sezione «In arrivo», chiesta nella stessa occasione
+
+Il criterio del secondo strato, messo a verbale perché non era scritto da nessuna parte in
+italiano: sono **solo i job ANNUALI del catalogo** (le quattro stagioni, perielio e afelio,
+tramonto più presto e alba più tardi, le due notti bianche, la luna piena più vicina, i tredici
+sciami: ventiquattro in tutto), non sottoscritti, risolti alla prossima occorrenza, **i più vicini
+per data**, a riempire fino a sei righe con un pavimento di tre. Più la prossima luna piena, che
+c'è per tutti.
+
+La conseguenza da sapere: **eclissi, congiunzioni, luce cinerea, Venere e Giove non compaiono mai
+se non li segui.** Per gli aperiodici è voluto e costoso da cambiare (una ricerca di congiunzioni
+cammina tre anni: farla per chi non ha chiesto niente sarebbe batteria spesa per nessuno); per i
+giornalieri è giusto, perché il loro posto è «I prossimi momenti» e non il calendario. Resta che
+una Venere-Giove a 0,6° è invisibile a chi non sapeva di doverla cercare, ed è un candidato onesto
+per un giro futuro.
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1649 test**, lint a zero errori.
+
+## I testi: la promessa, il README, e il marchio della fotocamera (committente, 21 set 2026)
+
+**La tagline.** «Il meteo che ti dice cosa farne» era §1.2 detta in sei parole: giusta, e
+al posto sbagliato. Sulla prima schermata il lettore non ha ancora visto niente, e una frase
+che descrive il *modo* gli chiede di fidarsi di una compressione che si scioglie solo dopo
+l'uso. Scelta fra quattro, la versione concreta che tiene la cadenza di quella vecchia:
+**«Il meteo che ti dice se conviene uscire, e quando.»** («Weather that tells you whether it
+is worth going out, and when.») Nei due `strings.xml`, in VISION §2.3 e nel sottotitolo del
+README. La regola §1.2 resta dov'è sempre stata, nella griglia dei dettagli e nella guida:
+è una regola di prodotto, non uno slogan.
+
+**Il README non nomina più nessuno, nemmeno in astratto.** Tolti i paragoni generici
+(«Most weather apps answer "how many degrees"», «three things it does that a weather app
+normally does not», «the widget nobody else ships»), la sezione «Where it comes from» e ogni
+menzione del repo a monte, che restava anche nella tabella dei documenti. Una pagina che si
+definisce per differenza chiede al lettore di conoscere il termine di paragone; adesso apre
+su quel che l'app risponde e mette in fila quel che c'è oltre le previsioni.
+
+**E il marchio della macchina fotografica ci entra.** Il README non ne diceva niente, né dei
+nove momenti che lo portano né della finestra dell'arcobaleno, e la riga del catalogo era
+ferma a «32 moments» contro i sessanta in sette gruppi che l'app dichiara. Aggiunto dentro i
+punti che c'erano già, non come voce nuova: una coda alla frase del catalogo nel punto Cielo
+(i nove, la direzione in cui guardare, e l'eclissi di Sole che di proposito non lo porta
+perché va guardata col filtro) e una parentesi nella frase della timeline nel punto Oggi.
+
+Due cose che **non** si fanno, ed è la ragione per cui le frasi stanno dove stanno:
+
+- **Niente voce a sé per la fotografia.** Un punto elenco tutto suo trasformerebbe il marchio
+  nella promessa di un pianificatore fotografico, che quest'app non è: niente bussola, niente
+  realtà aumentata, niente tempi di posa. È la misura che VISION §3.2 tiene sull'astronomia.
+- **Mai «ti dice quando ci sarà un arcobaleno».** `RainbowWindow` calcola la finestra in cui
+  il cielo è disposto per farne uno, e il suo commento dice «never a promise that there will
+  be a rainbow». Il README dice «the windows where the geometry and the forecast line up for
+  a rainbow»: la pagina che elenca la regola dell'onestà non è il posto dove romperla.
+
+Corrette nella stessa passata due cose diventate false: il paragrafo della roadmap dava la
+Fase 11 come futura mentre l'elenco delle funzioni la descrive al presente, e i numeri dei
+test erano fermi a 775 su quattro moduli (oggi 946, contati per modulo e non per compito:
+`:app`, `:core:data` e `:core:sync` girano la stessa suite in debug e in release, che è il
+motivo per cui la riga finale di Gradle ne annuncia 1649).

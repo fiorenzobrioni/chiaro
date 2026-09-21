@@ -2,11 +2,12 @@ package com.callbackdev.chiaro.notifications
 
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.callbackdev.chiaro.MainActivity
+import com.callbackdev.chiaro.ui.shell.ShellDestination
+import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.rules.RuleMessages
@@ -131,8 +132,13 @@ object RuleNotifier {
         PendingIntent.getActivity(
             context,
             requestCode,
-            Intent(context, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            // Avvisi (21 set 2026): the rule that just fired is a card on that
+            // screen, with the reader's own conditions on it and the hour it last
+            // fired — which this notification has just changed.
+            //
+            // The request code is load-bearing now that the destination rides in the
+            // extras: see [ShellDestination]. These are the rule ids, 2000-2999.
+            ShellDestination.intent(context, MainActivity::class.java, ShellTab.ALERTS),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 }

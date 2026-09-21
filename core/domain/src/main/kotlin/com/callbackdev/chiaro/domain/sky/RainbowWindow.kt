@@ -4,7 +4,6 @@ import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import java.time.Duration
 import java.time.Instant
-import java.time.ZoneId
 
 /**
  * One stretch of the day when the sky is arranged for a rainbow: the sun low enough
@@ -64,10 +63,15 @@ object RainbowWindow {
      * Works hour by hour because the forecast does: each hour is tested at its own
      * midpoint, which is where its numbers are truest, and neighbouring hours that
      * both qualify become one window rather than two rows saying the same thing.
+     *
+     * It took a `zone` until 20 set 2026, to put each hour's label back through the
+     * city's rules and get an instant. The hour carries its own instant now
+     * ([HourlyForecast.at]) and this needs no zone at all — which is the honest
+     * version anyway: the sun's geometry is a fact about a moment and a place, and
+     * never about which calendar the moment is written on.
      */
     fun windows(
         hours: List<HourlyForecast>,
-        zone: ZoneId,
         coords: Coordinates
     ): List<Rainbow> {
         val open = mutableListOf<Rainbow>()
@@ -76,10 +80,10 @@ object RainbowWindow {
         fun close() {
             val run = current ?: return
             current = null
-            val start = run.first().time.atZone(zone).toInstant()
-            val end = run.last().time.atZone(zone).toInstant().plus(Duration.ofHours(1))
+            val start = run.first().at
+            val end = run.last().at.plus(Duration.ofHours(1))
             val best = run.maxBy { it.precipChancePct ?: 0 }
-            val middle = best.time.atZone(zone).toInstant().plus(Duration.ofMinutes(30))
+            val middle = best.at.plus(Duration.ofMinutes(30))
             open += Rainbow(
                 start = start,
                 end = end,
@@ -91,7 +95,7 @@ object RainbowWindow {
         }
 
         hours.forEach { hour ->
-            val middle = hour.time.atZone(zone).toInstant().plus(Duration.ofMinutes(30))
+            val middle = hour.at.plus(Duration.ofMinutes(30))
             val altitude = AstronomyEngine.sunAltitude(middle, coords)
             val qualifies = altitude > 0 && altitude < MAX_SUN_ALTITUDE &&
                 (hour.precipChancePct ?: 0) >= MIN_PRECIP_PCT &&

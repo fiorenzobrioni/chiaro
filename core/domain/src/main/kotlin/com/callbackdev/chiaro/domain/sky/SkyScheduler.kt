@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.domain.sky
 
 import com.callbackdev.chiaro.domain.model.Coordinates
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -42,7 +43,35 @@ enum class SkyNotScheduled {
     CORE_TOO_LOW,
 
     /** No eclipse of this kind is visible from here inside the search horizon. */
-    NO_ECLIPSE_AHEAD
+    NO_ECLIPSE_AHEAD,
+
+    /**
+     * The sky gets astronomically dark tonight and the moon is up for every minute of
+     * it, so there is no genuinely dark window (Fase 27). A fact about where the moon
+     * is in its cycle, and the one the guide page has always described: "some nights
+     * the window is the whole night, some nights it is ninety minutes, and some
+     * nights there is none at all."
+     */
+    MOON_ALL_NIGHT,
+
+    /**
+     * The moon is not the thin crescent earthshine needs (Fase 28): either it is out
+     * of the sky's glare and too fat for the ashen light to show, or it is so new that
+     * it is still inside the sun's.
+     */
+    MOON_NOT_CRESCENT,
+
+    /**
+     * The planet is in the sky but not high enough to be a sight — usually because it
+     * is on its way behind the sun. A fact about where it is this month.
+     */
+    PLANET_TOO_LOW,
+
+    /** No close approach of this pair is visible from here inside the search horizon. */
+    NO_CONJUNCTION_AHEAD,
+
+    /** No full moon rises inside the twilight here inside the search window. */
+    NO_MOONRISE_AT_DUSK
 }
 
 /**
@@ -135,6 +164,32 @@ object SkyScheduler {
             )
             SkyJobCatalog.MoonClosestFull.id -> yearly(job, date, zone, coords) {
                 YearEvents.closestFullMoon(date.year)
+            }
+            SkyJobCatalog.MoonFullAtDusk.id ->
+                SkyAlmanac.fullMoonAtDusk(date, zone, coords)
+                    ?.let { SkyOccurrence.At(job, it) }
+                    ?: SkyOccurrence.None(job, SkyNotScheduled.NO_MOONRISE_AT_DUSK)
+            SkyJobCatalog.EarthshinePm.id ->
+                sight(job, SkySights.earthshine(date, zone, coords, evening = true))
+            SkyJobCatalog.EarthshineAm.id ->
+                sight(job, SkySights.earthshine(date, zone, coords, evening = false))
+            SkyJobCatalog.VenusEvening.id -> sight(
+                job, SkySights.planetWindow(Planet.VENUS, date, zone, coords, evening = true)
+            )
+            SkyJobCatalog.VenusMorning.id -> sight(
+                job, SkySights.planetWindow(Planet.VENUS, date, zone, coords, evening = false)
+            )
+            SkyJobCatalog.JupiterNight.id -> sight(
+                job,
+                SkySights.planetWindow(
+                    Planet.JUPITER, date, zone, coords, evening = true, wholeNight = true
+                )
+            )
+            in ConjunctionJobs.keys -> {
+                val (a, b) = ConjunctionJobs.getValue(job.id)
+                SkyAlmanac.conjunction(a, b, date, zone, coords)
+                    ?.let { SkyOccurrence.At(job, it.at) }
+                    ?: SkyOccurrence.None(job, SkyNotScheduled.NO_CONJUNCTION_AHEAD)
             }
             SkyJobCatalog.LunarEclipse.id -> lunarEclipse(job, date, zone, coords)
             SkyJobCatalog.SolarEclipse.id -> solarEclipse(job, date, zone, coords)
@@ -252,12 +307,69 @@ object SkyScheduler {
     }
 
     /**
+     * The astronomical night of [date] and the genuinely dark window inside it
+     * (Fase 27).
+     *
+     * Two answers because the screen needs both and they are not the same fact: the
+     * hero prints the dark window, and the line under it can only say WHY the window
+     * is short — or missing — if it still knows how long the night was.
+     */
+    data class DarkNight(
+        /** Astronomical dusk to tomorrow's dawn, or the reason there is none. */
+        val night: SkyOccurrence,
+        /** The longest moonless stretch of it: the job's own answer. */
+        val moonless: SkyOccurrence
+    )
+
+    /**
+     * The dark window of [date]: astronomical night **minus the hours the moon is up**.
+     *
+     * The intersection is the whole point of the line, and until Fase 27 it was only
+     * ever in the prose: the guide page promised "the sun far enough down AND the moon
+     * not up", the card printed dusk-to-dawn whatever the moon was doing, and the moon
+     * came back at the far end as a verdict the window itself contradicted. A gibbous
+     * moon washes out a faint galaxy as thoroughly as twilight does, so an hour with
+     * one in the sky is not part of a dark window and never was.
+     *
+     * The **longest** moonless run, not the first: a moon that rises at ten and sets at
+     * three leaves a sliver before it and the hours after it, and handing over the
+     * sliver because it happens first would be the answer nobody wants about half the
+     * time.
+     *
+     * No floor on the length. A twelve-minute window is a strange thing to be told and
+     * it is true, and inventing a threshold under which the app calls it `∅` would
+     * trade a fact for a tidier screen — the trade this module exists to refuse.
+     */
+    fun darkNight(date: LocalDate, zone: ZoneId, coords: Coordinates): DarkNight {
+        val night = astronomicalNight(SkyJobCatalog.DarknessWindow, date, zone, coords)
+        if (night !is SkyOccurrence.At) return DarkNight(night, night)
+        val end = night.end ?: night.start
+        val moonless = AstronomyEngine.moonDownRuns(night.start, end, coords)
+            .maxByOrNull { Duration.between(it.start, it.endInclusive) }
+            ?: return DarkNight(
+                night,
+                SkyOccurrence.None(SkyJobCatalog.DarknessWindow, SkyNotScheduled.MOON_ALL_NIGHT)
+            )
+        return DarkNight(
+            night,
+            SkyOccurrence.At(SkyJobCatalog.DarknessWindow, moonless.start, moonless.endInclusive)
+        )
+    }
+
+    private fun darkness(
+        job: SkyJob,
+        date: LocalDate,
+        zone: ZoneId,
+        coords: Coordinates
+    ): SkyOccurrence = darkNight(date, zone, coords).moonless.retarget(job)
+
+    /**
      * Astronomical dusk tonight to astronomical dawn tomorrow. Deliberately NOT the
      * dusk-to-dawn pair inside one calendar day: those are the two ends of two
      * different nights, and a window that ran from tonight's dusk back to this
      * morning's dawn would be a negative-length night rendered as a fact.
      */
-    private fun darkness(
+    private fun astronomicalNight(
         job: SkyJob,
         date: LocalDate,
         zone: ZoneId,
@@ -302,7 +414,9 @@ object SkyScheduler {
         coords: Coordinates
     ): SkyOccurrence {
         // No dark window, no core: the window's own reason travels with the answer,
-        // so a polar night is not renamed a white night on the way through.
+        // so a polar night is not renamed a white night on the way through — and
+        // since Fase 27 a moonlit night reaches here as `MOON_ALL_NIGHT` rather than
+        // as a core window nobody could have seen through the moonlight.
         val dark = when (val tonight = darkness(job, date, zone, coords)) {
             is SkyOccurrence.At -> tonight
             is SkyOccurrence.None -> return tonight
@@ -458,6 +572,28 @@ object SkyScheduler {
                         SkyOccurrence.At(job, eclipse.contacts.start, eclipse.contacts.endInclusive)
                     } ?: SkyOccurrence.None(job, SkyNotScheduled.NO_ECLIPSE_AHEAD)
 
+                job.id == SkyJobCatalog.MoonFullAtDusk.id ->
+                    SkySights.nextFullMoonAtDusk(at.atZone(zone).toLocalDate(), zone, coords)
+                        ?.let { moonrise ->
+                            // The next one is a month away; step past this evening so the
+                            // walk does not find the same moonrise again.
+                            at = moonrise.plus(Duration.ofDays(1))
+                            SkyOccurrence.At(job, moonrise)
+                        } ?: SkyOccurrence.None(job, SkyNotScheduled.NO_MOONRISE_AT_DUSK)
+
+                job.id in ConjunctionJobs -> {
+                    val (a, b) = ConjunctionJobs.getValue(job.id)
+                    // Through the almanac, not straight at the search: a conjunction
+                    // walk is three years at six-hour steps with a moon position in
+                    // each, and this runs on every rebuild of the screen. Asked by the
+                    // local DAY, which is the memo's key and is exact here — two
+                    // conjunctions of one pair are never the same day.
+                    conjunctionFrom(a, b, at, zone, coords)?.let { close ->
+                        at = close.at.plus(Duration.ofDays(1))
+                        SkyOccurrence.At(job, close.at)
+                    } ?: SkyOccurrence.None(job, SkyNotScheduled.NO_CONJUNCTION_AHEAD)
+                }
+
                 // `nextMoonQuarter` is strictly-after, so feeding it its own answer
                 // walks the series. That guard lives in the engine rather than here,
                 // where the second caller to need it would have had to remember it.
@@ -478,6 +614,39 @@ object SkyScheduler {
         return results
     }
 
+    /**
+     * The next conjunction of the pair strictly after [at], through [SkyAlmanac].
+     *
+     * The memo is keyed on a local date, and the date of [at] can hold a conjunction
+     * that is already behind it — which is exactly the case the walk hits, since it
+     * steps forward from the one it just returned. One more day, at most once.
+     */
+    private fun conjunctionFrom(
+        a: SkyBody,
+        b: SkyBody,
+        at: Instant,
+        zone: ZoneId,
+        coords: Coordinates
+    ): Conjunction? {
+        val date = at.atZone(zone).toLocalDate()
+        val first = SkyAlmanac.conjunction(a, b, date, zone, coords)
+        if (first != null && first.at.isAfter(at)) return first
+        return SkyAlmanac.conjunction(a, b, date.plusDays(1), zone, coords)
+    }
+
+    /** One of [SkySights]' answers, attributed to the job that asked for it. */
+    private fun sight(job: SkyJob, result: SkySights.SightResult): SkyOccurrence = when (result) {
+        is SkySights.SightResult.At -> SkyOccurrence.At(job, result.start, result.end)
+        is SkySights.SightResult.None -> SkyOccurrence.None(job, result.reason)
+    }
+
+    /** The three pairs a conjunction line can be about, and which bodies each one means. */
+    val ConjunctionJobs: Map<String, Pair<SkyBody, SkyBody>> = mapOf(
+        SkyJobCatalog.MoonVenus.id to (SkyBody.MOON to SkyBody.VENUS),
+        SkyJobCatalog.MoonJupiter.id to (SkyBody.MOON to SkyBody.JUPITER),
+        SkyJobCatalog.VenusJupiter.id to (SkyBody.VENUS to SkyBody.JUPITER)
+    )
+
     /** The four named quarters and the elongation each one is. */
     private val QuarterJobs: Map<String, MoonQuarterKind> = mapOf(
         SkyJobCatalog.MoonNew.id to MoonQuarterKind.NEW_MOON,
@@ -485,6 +654,17 @@ object SkyScheduler {
         SkyJobCatalog.MoonFull.id to MoonQuarterKind.FULL_MOON,
         SkyJobCatalog.MoonLastQuarter.id to MoonQuarterKind.LAST_QUARTER
     )
+
+    /**
+     * The same occurrence, attributed to [job]. [darkNight] answers about the dark
+     * window itself, and `milky_way.core` asks it the same question for its own line:
+     * without this the core's `∅` would arrive carrying the dark window's name.
+     */
+    private fun SkyOccurrence.retarget(job: SkyJob): SkyOccurrence = when {
+        this.job.id == job.id -> this
+        this is SkyOccurrence.At -> SkyOccurrence.At(job, start, end)
+        else -> SkyOccurrence.None(job, (this as SkyOccurrence.None).reason)
+    }
 
     private fun polarReason(day: SolarDay): SkyNotScheduled = when {
         day.sunUpAllDay -> SkyNotScheduled.POLAR_DAY
@@ -504,7 +684,7 @@ object SkyScheduler {
     private const val ECLIPTIC_MIN_STAND = 50.0
 
     /** How long the zodiacal light is worth looking for after (or before) the dark. */
-    private val ZODIACAL_WINDOW: java.time.Duration = java.time.Duration.ofMinutes(90)
+    private val ZODIACAL_WINDOW: Duration = Duration.ofMinutes(90)
 
     /**
      * Ceiling on the day-by-day walk. A daily job answers every day, `∅` included, so

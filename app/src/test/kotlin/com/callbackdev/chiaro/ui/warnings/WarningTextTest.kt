@@ -64,6 +64,45 @@ class WarningTextTest {
         note = null
     )
 
+    /**
+     * Il difetto dell'11 set 2026, da uno screenshot del committente: alle 12:33 il
+     * banner diceva «bollettino delle 15:07» per un bollettino del pomeriggio prima.
+     * L'ora da sola non basta perché il Dipartimento pubblica nel pomeriggio e copre
+     * anche il giorno dopo: incontrare il bollettino di ieri è il caso NORMALE di ogni
+     * mattina, non quello di bordo.
+     */
+    @Test
+    fun `today's bulletin says the hour and nothing else`() {
+        assertEquals(
+            "delle 15:07",
+            WarningText.issued(context, today.atTime(15, 7), today, timeFmt)
+        )
+    }
+
+    @Test
+    fun `yesterday's bulletin says so`() {
+        assertEquals(
+            "di ieri alle 15:07",
+            WarningText.issued(context, today.minusDays(1).atTime(15, 7), today, timeFmt)
+        )
+    }
+
+    @Test
+    fun `an older bulletin carries its date`() {
+        val phrase = WarningText.issued(context, today.minusDays(4).atTime(15, 7), today, timeFmt)
+        assertTrue(phrase, phrase.startsWith("del "))
+        assertTrue(phrase, phrase.endsWith(" alle 15:07"))
+        assertTrue(phrase, "set" in phrase)
+    }
+
+    /** Un bollettino datato avanti e' un orologio che non torna, e si mostra invece di
+     * farlo passare per quello di oggi. */
+    @Test
+    fun `a bulletin dated ahead is dated, not passed off as today's`() {
+        val phrase = WarningText.issued(context, today.plusDays(1).atTime(15, 7), today, timeFmt)
+        assertTrue(phrase, phrase.startsWith("del "))
+    }
+
     @Test
     fun `the sentence groups by level, worst first, in the issuer's order`() {
         assertEquals(

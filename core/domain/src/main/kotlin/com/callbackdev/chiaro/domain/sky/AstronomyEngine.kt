@@ -282,6 +282,10 @@ object AstronomyEngine {
     fun galacticCoreAltitude(at: Instant, coords: Coordinates): Double =
         AstronomyMath.altitude(GALACTIC_CORE, AstronomyMath.julianDay(at), coords.lat, coords.lon)
 
+    /** And which way it stands: the bearing a Milky Way row tells you to face. */
+    fun galacticCoreAzimuth(at: Instant, coords: Coordinates): Double =
+        AstronomyMath.azimuth(GALACTIC_CORE, AstronomyMath.julianDay(at), coords.lat, coords.lon)
+
     /**
      * The stretch of `[from, to]` during which the sun is above the horizon: what
      * clips a solar eclipse to the part of it that happens in this place's daylight.
@@ -298,6 +302,24 @@ object AstronomyEngine {
         aboveAltitude(from, to, coords, 0.0, Body.MOON)
 
     /**
+     * Every stretch of `[from, to]` during which the moon is **below the horizon** —
+     * the other half of the dark window, and the one `darkness.window` is an
+     * intersection with (Fase 27).
+     *
+     * A list rather than one range, because a night really can hold two of them: a
+     * moon that rises at ten and sets at three leaves the sliver before it and the
+     * hours after it, and returning only the first would hand a reader the shorter
+     * one about half the time.
+     *
+     * The threshold is the moon's own rise threshold, parallax and all — the same one
+     * [lunarDay] crosses for `moon.rise` and `moon.set`. It has to be: a window that
+     * said the moon was down at an hour the row above it calls moonrise would be the
+     * screen arguing with itself.
+     */
+    fun moonDownRuns(from: Instant, to: Instant, coords: Coordinates): List<ClosedRange<Instant>> =
+        belowThresholdRuns(from, to, coords, Body.MOON)
+
+    /**
      * The stretch of `[from, to]` during which the galactic core stands at least
      * [minAltitudeDeg] above the horizon, or null when it never does — which is a
      * fact about the latitude at high northern ones, where the core barely clears
@@ -309,6 +331,83 @@ object AstronomyEngine {
         coords: Coordinates,
         minAltitudeDeg: Double
     ): ClosedRange<Instant>? = aboveAltitude(from, to, coords, minAltitudeDeg, Body.GALACTIC_CORE)
+
+    // --------------------------------------------------------------- planets
+
+    /** Altitude of [planet] above the horizon at [at], degrees (Fase 28). */
+    fun planetAltitude(planet: Planet, at: Instant, coords: Coordinates): Double =
+        AstronomyMath.altitude(
+            PlanetMath.equatorial(planet, AstronomyMath.centuriesTT(at)).equatorial,
+            AstronomyMath.julianDay(at),
+            coords.lat,
+            coords.lon
+        )
+
+    /** Compass bearing of [planet] at [at], degrees clockwise from north. */
+    fun planetAzimuth(planet: Planet, at: Instant, coords: Coordinates): Double =
+        AstronomyMath.azimuth(
+            PlanetMath.equatorial(planet, AstronomyMath.centuriesTT(at)).equatorial,
+            AstronomyMath.julianDay(at),
+            coords.lat,
+            coords.lon
+        )
+
+    /**
+     * The stretch of `[from, to]` during which [planet] stands at least
+     * [minAltitudeDeg] above the horizon, or null when it never does.
+     *
+     * The floor is not decoration: a planet at two degrees is behind the houses, and
+     * an app that says "Venus is out" about a light nobody can see from a street would
+     * be inventing a sight.
+     */
+    fun planetAbove(
+        from: Instant,
+        to: Instant,
+        coords: Coordinates,
+        planet: Planet,
+        minAltitudeDeg: Double
+    ): ClosedRange<Instant>? = aboveAltitude(
+        from, to, coords, minAltitudeDeg,
+        if (planet == Planet.VENUS) Body.VENUS else Body.JUPITER
+    )
+
+    /**
+     * How far apart two of the naked-eye bodies are at [at], degrees — the number a
+     * conjunction IS (Fase 28).
+     *
+     * Geocentric, and deliberately so for the moon: a topocentric separation is a few
+     * tenths of a degree different because the moon is near enough for parallax to
+     * matter, and a row that says "the moon passes two degrees from Jupiter" is not a
+     * claim anybody checks with a protractor. What it must not do is disagree with
+     * itself between two places, and geocentric is the answer that does not.
+     */
+    fun separation(a: SkyBody, b: SkyBody, at: Instant): Double {
+        val t = AstronomyMath.centuriesTT(at)
+        return AstronomyMath.separation(equatorialOf(a, t), equatorialOf(b, t))
+    }
+
+    /** Altitude of one of the naked-eye bodies, for the code that takes them as a pair. */
+    fun bodyAltitude(body: SkyBody, at: Instant, coords: Coordinates): Double = when (body) {
+        SkyBody.MOON -> moonAltitude(at, coords)
+        SkyBody.VENUS -> planetAltitude(Planet.VENUS, at, coords)
+        SkyBody.JUPITER -> planetAltitude(Planet.JUPITER, at, coords)
+    }
+
+    /** Bearing of one of the naked-eye bodies: which way a reader turns to look. */
+    fun bodyAzimuth(body: SkyBody, at: Instant, coords: Coordinates): Double = when (body) {
+        SkyBody.MOON -> AstronomyMath.azimuth(
+            AstronomyMath.moonEquatorial(AstronomyMath.centuriesTT(at)),
+            AstronomyMath.julianDay(at), coords.lat, coords.lon
+        )
+        SkyBody.VENUS -> planetAzimuth(Planet.VENUS, at, coords)
+        SkyBody.JUPITER -> planetAzimuth(Planet.JUPITER, at, coords)
+    }
+
+    private fun equatorialOf(body: SkyBody, t: Double): AstronomyMath.Equatorial = when (body) {
+        SkyBody.MOON -> AstronomyMath.moonEquatorial(t)
+        SkyBody.VENUS -> PlanetMath.equatorial(Planet.VENUS, t).equatorial
+        SkyBody.JUPITER -> PlanetMath.equatorial(Planet.JUPITER, t).equatorial
+    }
 
     /**
      * How steeply the ecliptic stands out of the horizon, as the altitude of the
@@ -332,7 +431,7 @@ object AstronomyEngine {
     /** Sagittarius A*, J2000: the direction of the galactic centre. */
     private val GALACTIC_CORE = AstronomyMath.Equatorial(266.41683, -29.00781)
 
-    private enum class Body { SUN, MOON, GALACTIC_CORE }
+    private enum class Body { SUN, MOON, GALACTIC_CORE, VENUS, JUPITER }
 
     /** The half-open instant range of one local calendar day. */
     private class DayWindow(date: LocalDate, zone: ZoneId) {
@@ -351,6 +450,8 @@ object AstronomyEngine {
             Body.SUN -> sunAltitude(at, coords)
             Body.MOON -> moonAltitude(at, coords)
             Body.GALACTIC_CORE -> galacticCoreAltitude(at, coords)
+            Body.VENUS -> planetAltitude(Planet.VENUS, at, coords)
+            Body.JUPITER -> planetAltitude(Planet.JUPITER, at, coords)
         }
 
     /**
@@ -361,8 +462,9 @@ object AstronomyEngine {
     private fun riseThreshold(body: Body, fixed: Double?, at: Instant): Double =
         fixed ?: when (body) {
             Body.SUN -> SUNRISE_ALTITUDE
-            // A star has no disk to speak of and no parallax worth the name.
-            Body.GALACTIC_CORE -> 0.0
+            // A star has no disk to speak of and no parallax worth the name, and a
+            // planet is a point of light at this distance: the same goes for both.
+            Body.GALACTIC_CORE, Body.VENUS, Body.JUPITER -> 0.0
             Body.MOON -> {
                 val parallax = AstronomyMath
                     .moonEcliptic(AstronomyMath.centuries(AstronomyMath.julianDay(at))).parallax
@@ -535,6 +637,49 @@ object AstronomyEngine {
         return start?.let { it..to }
     }
 
+    /**
+     * Every sub-interval of `[from, to]` where [body] is under its own rise threshold,
+     * in order, each end clipped to the interval when the body is already there.
+     *
+     * The complement of [aboveAltitude], and a list rather than its first answer: the
+     * caller that needs this ([moonDownRuns]) needs the longest run, not the earliest.
+     * Same grid-then-bisect pattern, and the threshold is re-read at every sample
+     * because the moon's moves with its parallax.
+     */
+    private fun belowThresholdRuns(
+        from: Instant,
+        to: Instant,
+        coords: Coordinates,
+        body: Body
+    ): List<ClosedRange<Instant>> {
+        if (!from.isBefore(to)) return emptyList()
+        // Negative while the body is DOWN, so the edges read the same way round as
+        // every other hunt in this file: a sign change from negative is a rise.
+        fun offset(at: Instant) = altitudeOf(body, at, coords) - riseThreshold(body, null, at)
+        val runs = mutableListOf<ClosedRange<Instant>>()
+        var start: Instant? = if (offset(from) < 0) from else null
+        var previousAt = from
+        var previous = offset(previousAt)
+        var at = from.plus(GRID)
+        while (true) {
+            val bounded = if (at.isAfter(to)) to else at
+            val current = offset(bounded)
+            if (start != null && previous < 0 && current >= 0) {
+                // Rising edge: the run ends where the body crosses back up.
+                runs += start!!..bisect(previousAt, bounded) { offset(it) }
+                start = null
+            } else if (start == null && previous >= 0 && current < 0) {
+                start = bisect(previousAt, bounded) { -offset(it) }
+            }
+            if (bounded == to) break
+            previousAt = bounded
+            previous = current
+            at = at.plus(GRID)
+        }
+        start?.let { runs += it..to }
+        return runs
+    }
+
     private val GRID: Duration = Duration.ofMinutes(10)
 
     /** How far past a quarter [nextMoonQuarter] jumps before looking for the next. */
@@ -554,6 +699,17 @@ data class MoonLight(
     /** Moon longitude − sun longitude, `[0, 360)`: 0 new, 90 first quarter, 180 full. */
     val elongation: Double
 )
+
+/**
+ * The naked-eye bodies this app will name in a pair (Fase 28): the moon, and the two
+ * planets anybody picks out of a sky without being taught which they are.
+ *
+ * Deliberately not "every body the engine can place". The sun is not here because a
+ * conjunction with the sun is the one nobody may look at, and Mars, Mercury and the
+ * outer planets are not here because [PlanetMath] does not know them and the reason
+ * it does not is written there.
+ */
+enum class SkyBody { MOON, VENUS, JUPITER }
 
 /** Which quarter boundary the moon is heading for. */
 enum class MoonQuarterKind(val elongationDeg: Double) {

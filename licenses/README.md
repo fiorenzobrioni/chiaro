@@ -6,6 +6,7 @@ not ours:
 | What | License | Where |
 |---|---|---|
 | [Inter](https://github.com/rsms/inter) (the app's typeface, bundled as `res/font/inter_variable.ttf`) | SIL Open Font License 1.1 | `Inter-OFL.txt` |
+| [Google Sans](https://fonts.google.com/specimen/Google+Sans) (the app's second typeface, one Settings tap away, bundled as `res/font/google_sans_variable.ttf`: the upstream `ofl/googlesans` variable font with its unused axes pinned and its glyph set cut to what this app prints, by `tools/import_google_sans.py`) | SIL Open Font License 1.1 | `GoogleSans-OFL.txt` |
 | [Meteocons](https://github.com/basmilius/meteocons) v2.0.0 (the weather icon family, converted to the `res/drawable/mc_*.xml` vectors by `tools/import_meteocons.py`, recolored for contrast) | MIT | `Meteocons-MIT.txt` |
 | [Material Icons](https://github.com/google/material-design-icons) — one glyph, `place` in the outlined theme, copied into `res/drawable/ic_place_pin.xml` because a widget cannot draw the Compose `ImageVector` the app screens use | Apache 2.0 | `MaterialIcons-Apache-2.0.txt` |
 

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The text widget (committente, 19 set 2026): the Now widget's facts with nothing drawn
+     on the card — no weather glyph, no position pin, no chip — and the hierarchy rebuilt
+     out of type alone (`TextWidgetLayout.kt`).
+
+     Four cells by one as the default placement, as the Now and Sky cards: that is the form
+     the card is designed around, the one that carries the number, the place and the day's
+     sentence side by side. It resizes both ways from there — three cells still carry the
+     sentence (one cell better than the Now card manages, because there is no 66 dp of
+     glyph to pay for first), two cells fall back to the number and its place, and two rows
+     and up become a centred column with the next hours as figures under it.
+
+     minWidth 110dp is two cells and minHeight 40dp one row, the platform's own formula
+     (70 × n − 30). updatePeriodMillis is 0 on purpose, like the other four: the shared
+     periodic job drives every repaint, at the reader's own update frequency, rather than a
+     second clock the battery pays for.
+
+     previewLayout is what the picker shows: Glance has no preview of its own, so without
+     it the host advertises the generic loading card. See `layout/widget_text_preview.xml`,
+     and `widget_now_info.xml` for the whole of that reasoning. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_text_desc"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:previewLayout="@layout/widget_text_preview"
+    android:minWidth="110dp"
+    android:minHeight="40dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="40dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="1"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0"
+    android:configure="com.callbackdev.chiaro.widget.WidgetConfigActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional"
+    android:widgetCategory="home_screen" />

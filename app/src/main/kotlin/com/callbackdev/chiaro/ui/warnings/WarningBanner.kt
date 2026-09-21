@@ -64,7 +64,7 @@ fun WarningBanner(
             .replaceFirstChar { it.titlecase(java.util.Locale.getDefault()) },
         stringResource(
             R.string.warning_banner_source,
-            warnings.issuedAt.toLocalTime().format(timeFmt)
+            WarningText.issued(context, warnings.issuedAt, today, timeFmt)
         )
     )
     Surface(

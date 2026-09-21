@@ -9,13 +9,19 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.callbackdev.chiaro.data.WeatherIcons
+import com.callbackdev.chiaro.ui.theme.WidgetCardColor
 import kotlinx.coroutines.flow.first
 
 private val Context.widgetLookDataStore by preferencesDataStore(name = "widget_look")
 
-/** What a widget wears: the sky gradient (the app's own hero, the default), or a
- * plain card in light, dark, or whatever the phone says. */
-enum class WidgetBackground { SKY, LIGHT, DARK, SYSTEM }
+/** What a widget wears: the sky gradient (the app's own hero, the default), a plain card
+ * in light, dark, or whatever the phone says — or, since 19 set 2026, one of the card
+ * colours of [com.callbackdev.chiaro.ui.theme.WidgetCardColor] (committente: «possibilità
+ * di mettere uno sfondo colorato: blu, blu chiaro, verde…»). [COLOR] is one value and not
+ * six, because which colour is a second question and only the reader who picked COLOR is
+ * ever asked it: every `when` over this enum stays four lines long, and `WidgetLook` keeps
+ * the answer in [WidgetLook.cardColor]. */
+enum class WidgetBackground { SKY, LIGHT, DARK, SYSTEM, COLOR }
 
 /**
  * Which weather drawings a widget uses (committente, 8 set): the app's own choice, or
@@ -60,7 +66,17 @@ enum class WidgetArrangement { ICON_START, ICON_END }
 /** One widget's look: its background, how solid the card is (0 = see-through), and
  * what it puts on the card. */
 data class WidgetLook(
-    val background: WidgetBackground = WidgetBackground.SKY,
+    /**
+     * **A blue card since 21 set 2026** (committente), where it was the sky gradient.
+     * The sky is still the app's own hero and still one tap away; what it is not is
+     * the right thing to meet on a home screen it has never seen. It is a photograph
+     * of the weather behind a card of facts, and on a busy wallpaper the two grounds
+     * argue — which is exactly what the scrim and the opacity slider exist to manage,
+     * and a default should not need managing. A flat coloured card is the launcher's
+     * own grammar, reads at arm's length on any wallpaper, and the colour is a row
+     * away for anyone who wants another.
+     */
+    val background: WidgetBackground = WidgetBackground.COLOR,
     val opacityPct: Int = DEFAULT_OPACITY,
     /**
      * The day's high and low on the Today widget, anchored to the trailing edge
@@ -74,6 +90,12 @@ data class WidgetLook(
      * Now widget is a glance at what the sky is doing now, and on it the pair competed
      * with the sentence for the same edge; the reader who wants the day's range on the
      * home screen has the widget that carries the day.
+     *
+     * **Except on «In parole», where it is on by default since 21 set 2026**
+     * (committente, and see [defaultsFor]): that card has no drawing to protect. Its
+     * hierarchy is built out of type, in ranks of facts, and the day's high and low are
+     * a rank that is already designed — leaving it empty is the one card that loses
+     * something by staying bare.
      */
     val showDayRange: Boolean = false,
     /**
@@ -105,13 +127,48 @@ data class WidgetLook(
      * Settings choice — which is the default, and what every widget placed before this
      * option existed keeps doing.
      */
-    val icons: WidgetIcons = WidgetIcons.APP
+    val icons: WidgetIcons = WidgetIcons.APP,
+    /**
+     * The weather glyph on the text widget (committente, 20 set 2026). **Off by default**,
+     * and that is the card's name keeping its word: «In parole» has to be true the moment it
+     * is placed, and a reader who wants the drawing turns it on. It is per widget rather
+     * than an app setting for the reason every other content switch here is — so one home
+     * screen can carry the same card twice, once with the glyph and once without, which is
+     * half of why the option is worth having.
+     *
+     * It changes nothing on the other four cards, which have always drawn their glyph, and
+     * it is only offered on the one it means something to (`WidgetConfigActivity`).
+     */
+    val showIcon: Boolean = false,
+    /**
+     * Which colour a [WidgetBackground.COLOR] card is painted (19 set 2026). It is kept
+     * even while the background is something else, so a reader who tries the sky and comes
+     * back finds the colour they picked rather than the default: a stored choice that
+     * forgets itself on the way past is a choice the reader has to make twice.
+     */
+    val cardColor: WidgetCardColor = WidgetCardColor.BLUE
 ) {
     companion object {
         /** 100 since 7 set 2026 (committente): a solid card. The reader can thin it
          * per widget, and below [InkTrustFloorPct] the ink starts asking the wallpaper
          * what color it should be, which is a different conversation. */
         const val DEFAULT_OPACITY = 100
+
+        /**
+         * What a freshly placed widget of [kind] wears before anybody configures it.
+         *
+         * One field answers differently per card and it is [showDayRange], on «In
+         * parole» alone: that card's whole premise is facts in words, and the day's
+         * range is a rank its layout already draws. Everywhere else the field's own
+         * KDoc holds — the bare number is the hero. A null [kind] is an id the host has
+         * not bound yet, and takes the household's answer rather than guessing.
+         *
+         * It is a function and not five constants so that the choice has one home: a
+         * default that differs per card is exactly the kind that otherwise ends up
+         * written twice, in the store and in the settings screen, and drifts.
+         */
+        fun defaultsFor(kind: WidgetKind?): WidgetLook =
+            WidgetLook(showDayRange = kind == WidgetKind.TEXT)
     }
 }
 
@@ -124,25 +181,35 @@ data class WidgetLook(
  */
 class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
 
-    suspend fun lookFor(appWidgetId: Int): WidgetLook {
+    /**
+     * What this widget wears. [kind] decides only the defaults — the stored answers win
+     * whatever it says — and it is passed in rather than looked up here because both
+     * callers already know it and this class has no `Context` to ask with.
+     */
+    suspend fun lookFor(appWidgetId: Int, kind: WidgetKind?): WidgetLook {
         val prefs = dataStore.data.first()
+        val default = WidgetLook.defaultsFor(kind)
         val background = prefs[backgroundKey(appWidgetId)]
             ?.let { name -> WidgetBackground.entries.firstOrNull { it.name == name } }
-            ?: WidgetBackground.SKY
-        val opacity = (prefs[opacityKey(appWidgetId)] ?: WidgetLook.DEFAULT_OPACITY)
+            ?: default.background
+        val opacity = (prefs[opacityKey(appWidgetId)] ?: default.opacityPct)
             .coerceIn(0, 100)
         return WidgetLook(
             background = background,
             opacityPct = opacity,
-            showDayRange = prefs[rangeKey(appWidgetId)] ?: false,
-            showSentence = prefs[sentenceKey(appWidgetId)] ?: true,
-            showWarning = prefs[warningKey(appWidgetId)] ?: true,
+            showDayRange = prefs[rangeKey(appWidgetId)] ?: default.showDayRange,
+            showSentence = prefs[sentenceKey(appWidgetId)] ?: default.showSentence,
+            showWarning = prefs[warningKey(appWidgetId)] ?: default.showWarning,
             arrangement = prefs[arrangementKey(appWidgetId)]
                 ?.let { name -> WidgetArrangement.entries.firstOrNull { it.name == name } }
-                ?: WidgetArrangement.ICON_START,
+                ?: default.arrangement,
             icons = prefs[iconsKey(appWidgetId)]
                 ?.let { name -> WidgetIcons.entries.firstOrNull { it.name == name } }
-                ?: WidgetIcons.APP
+                ?: default.icons,
+            showIcon = prefs[iconShownKey(appWidgetId)] ?: default.showIcon,
+            cardColor = prefs[cardColorKey(appWidgetId)]
+                ?.let { name -> WidgetCardColor.entries.firstOrNull { it.name == name } }
+                ?: default.cardColor
         )
     }
 
@@ -155,6 +222,8 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             prefs[warningKey(appWidgetId)] = look.showWarning
             prefs[arrangementKey(appWidgetId)] = look.arrangement.name
             prefs[iconsKey(appWidgetId)] = look.icons.name
+            prefs[iconShownKey(appWidgetId)] = look.showIcon
+            prefs[cardColorKey(appWidgetId)] = look.cardColor.name
         }
     }
 
@@ -169,6 +238,8 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 prefs.remove(warningKey(it))
                 prefs.remove(arrangementKey(it))
                 prefs.remove(iconsKey(it))
+                prefs.remove(iconShownKey(it))
+                prefs.remove(cardColorKey(it))
                 // The switch this key belonged to is gone (8 set 2026); a widget placed
                 // while it existed still carries the key, and leaves with it.
                 prefs.remove(legacyConditionKey(it))
@@ -183,6 +254,8 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
     private fun warningKey(id: Int) = booleanPreferencesKey("warning_$id")
     private fun arrangementKey(id: Int) = stringPreferencesKey("arrangement_$id")
     private fun iconsKey(id: Int) = stringPreferencesKey("icons_$id")
+    private fun iconShownKey(id: Int) = booleanPreferencesKey("icon_shown_$id")
+    private fun cardColorKey(id: Int) = stringPreferencesKey("card_color_$id")
     private fun legacyConditionKey(id: Int) = booleanPreferencesKey("condition_$id")
 
     companion object {

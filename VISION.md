@@ -103,8 +103,9 @@ page: **the sky canvas is computed** (§4.2), and **the app opens already answer
 
 ### 2.3 The promise
 
-> **Il meteo che ti dice cosa farne.**
-> Weather that tells you what to do about it, and never invents anything to say it.
+> **Il meteo che ti dice se conviene uscire, e quando.**
+> Weather that tells you whether it is worth going out, and when, and never invents anything
+> to say it.
 
 ---
 
@@ -320,8 +321,13 @@ day.
 The differentiator with the most engineering already behind it.
 
 - **Tonight**: a hero verdict — *Great* / *So-so* / *No chance* / *Not sure yet* — for the dark
-  window, with the numbers that decided it and the reason when it was not the clouds ("the moon is
-  up, 94% lit").
+  window, with the numbers that decided it, and since Fase 28 the answer to *yes, but when*: the
+  clearest run of hours inside the window, when that is not the whole of it. A verdict is one
+  word over eight hours and the app has those hours. The dark window is the astronomical night **minus the
+  hours the moon is up** (Fase 27): the intersection the guide page always described, so the card
+  says "dark from 01:11 to 04:42" on a night the moon owns the first half, names what took the rest
+  ("the moon is up until 01:11, 75% lit"), and states the sky it cannot offer at all when the moon
+  is up from dusk to dawn.
 - **The moments ahead**: a list of the reader's subscribed events (sunrise, golden hour, sunset,
   dark window, moon by default — four to five, never the full catalog), each a card with time,
   verdict chip, evidence, and a bell for a reminder. The list is an agenda, not a log: a moment
@@ -329,12 +335,36 @@ The differentiator with the most engineering already behind it.
   in progress says "Now", and the moon's day-moment stays today's because it is a statement about
   today rather than an appointment. The Sky widget resolves its moment by the same rule, so the
   home screen and the app can never print two different sunrises.
-- **Next events**: the calendar ahead — meteor peaks with their dates, full moon, solstice,
-  equinox — with the verdict where the forecast reaches that far and an honest "too far out to
-  say" where it does not.
-- **Add a moment**: the 32-job catalog, grouped (Sun · Moon · Night · Seasons · Meteor showers),
-  each with a one-line explanation of what it is. This is where a person learns what a blue hour is,
-  by adding one.
+- **Next events**: the calendar ahead, in two tiers (Fase 27). **Every subscribed line is there**,
+  however far out — an eclipse years away is a row with its year and its contact times, and a line
+  the sky skips keeps its row and says why. Under them, the nearest annual events for everybody:
+  meteor peaks with their dates, full moon, solstice, equinox. The verdict travels with each where
+  the forecast reaches that far, and an honest "too far out to say" where it does not. One instant
+  is one row: two showers that peak on the same night share it and both are named.
+- **Add a moment**: the 60-job catalog, grouped (Sun · Night · Moon · Planets · Eclipses ·
+  Seasons · Meteor showers), searchable by the words the rows print, each with a one-line
+  explanation of what it is. This is where a person learns what a blue hour is, by adding one.
+  (It read "32-job" and five groups until Fase 27: that was the count at Fase 5, and Fase 19
+  added the dark-sky pair, the named quarters, the two eclipses, the annual facts and three
+  showers without this line following. Fase 28 added the nine below and the search field.)
+- **The nine sights of Fase 28**, which are what the section was always for — an event somebody
+  can be sent outside to look at, in a sentence with a direction in it:
+  - **The full moon at dusk**, the evening it comes up inside the twilight as a huge orange disc.
+    An almanac answers the full moon with "03:14"; this is the evening.
+  - **Earthshine**, evening and morning: the thin crescent with the rest of the disc lit by the
+    earth. Most people have never been told it is a thing they can see.
+  - **Venus and Jupiter** — morning star, evening star, and Jupiter's night — which are the two
+    points of light a passer-by picks out without being taught, and the answer to "what is that
+    bright star". They reopen a Fase 19 decision that planets were a project of their own; that
+    is true of the category and not of these two (§7, `PlanetMath`).
+  - **Three conjunctions**: the moon beside each planet, and the two planets beside each other —
+    listed only when the pair can actually be seen from here, because about half of them happen
+    behind the sun.
+- **The camera mark**: nine of the sixty carry it, and it is deliberately scarce — on a third of
+  the catalog it would say nothing. It is also never an opinion: the rows that carry it print
+  **which way to turn** ("towards west-north-west"), because a flag saying an event is worth
+  photographing with no direction to point in is a taste, and this app does not render those.
+  The solar eclipse is the one exclusion decided on safety rather than on the sight.
 - **The guide to the events**: a page for every entry in that catalog — what it is, when it happens,
   what the clouds have to do with it, and what to read next. It has two doors, and neither is
   redundant: the info button beside a catalog entry, which opens the page *inside* the sheet so the
@@ -362,8 +392,19 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
   15:00 and 17:00; never more than one per bulletin" — and the level it starts from (yellow or
   orange). The switch lives here and not in Settings for the reason Fase 6 gave: next to what it
   governs.
-- **Ready-made**: severe weather, rain in the next hours, morning summary — switches with a plain
-  description of what each will actually send and when.
+- **Ready-made**: severe weather, rain in the next hours, the morning summary and the evening one
+  — switches with a plain description of what each will actually send and when. The two summaries
+  are twins and say so: same sentence, different day. The morning's subject is today, between 6
+  and 12; the evening's is **tomorrow**, between 18 and 23, because by 20:00 today is no longer a
+  decision and tomorrow is. The night in between is not a fifth switch: it rides in the evening
+  one's expanded notification, where the low, its hour and what it asks of the reader sit above
+  tomorrow's umbrella window and tomorrow's sunrise. **Both are on by default** (21 set 2026,
+  committente), where they shipped silent. The old argument — a digest nobody asked for is the one
+  notification a weather app gets uninstalled over — is the right argument about a digest and the
+  wrong one about these two: a sentence before any number, said at the hour the day is still a
+  decision, is what this app is for, and an install that never opened Avvisi was getting the
+  warnings and none of the reading. The pair is capped at one notification each, at fixed hours,
+  and off in two taps.
 - **Yours**: the rules engine, approached from the answer rather than the syntax.
   - **Templates first**: "Tell me when I can ride", "Ice tomorrow morning", "A window to run",
     "High UV", "A clear night". Picking one creates a real rule with sensible thresholds, already on.
@@ -427,12 +468,31 @@ where the answer to "is it about to rain?" actually lives, belongs in the tour o
 
 One screen, two answers: use my location, or search for a place. Skipping is allowed and lands on a
 real "no place yet" state, exactly as tweather's `ActiveSource.None`. No carousel, no account, no
-permission asked before the sentence explaining why it is asked. Notifications are requested the
-first time the reader turns on something that needs them, never at startup.
+permission asked before the sentence explaining why it is asked.
+
+**And then one more screen, for notifications** (21 set 2026). The rule this section used to state —
+"requested the first time the reader turns on something that needs them, never at startup" — was
+honest about the *when* and wrong about the *whether*, because four ready-made alerts ship switched
+ON (§5.4). A fresh install therefore never turns anything on, so the permission was never asked, and
+the switches promised four notifications that could not arrive. The only road to the dialog was to
+turn an alert off and on again, which is not a road anybody finds.
+
+So the question is put, once, on a step of its own after the place has been answered — a notification
+is a promise about a place, and on the screen before it there is no place yet. It is a screen of
+words with an explicit «Consenti», never the system dialog on arrival: Android shows that dialog at
+most twice per install and after that it does nothing at all, so it is spent on a tap that asked for
+it. «Non ora» is a real answer and costs nothing. Skipping the place skips this too, and an upgrade
+is never stopped by it.
+
+The standing repair is on the screen that makes the promise: Avvisi (and Sky, for its reminders)
+draws a card for as long as something is switched on that the phone will not deliver, with the one
+button that fixes it — the runtime dialog where the system will still show one, the app's own page in
+the system settings where it will not (DESIGN §8.14). Unlike the dialog it can be offered again every
+time, and it disappears by itself the moment the permission is granted.
 
 ### 5.9 Widgets
 
-Glance, three sizes, matching the app's dynamic color:
+Glance, five cards, matching the app's dynamic color:
 
 - **Now**: icon, temperature, place — and, where the card has room, the day's sentence: the same
   headline Today opens with, in a shorter register, or the sky's present state when there is
@@ -448,8 +508,37 @@ Glance, three sizes, matching the app's dynamic color:
   widget's wide row — glyph, temperature over place, the day's sentence against the far edge and
   the day's high and low under it when asked for — and the strip hangs under it; the line the
   sentence used to take goes to the glyph.
-- Both Now and Today let the reader turn the sentence off per widget, and Now can lay its one-row
-  card the other way round — glyph in the trailing corner, the sentence at the number's shoulder,
+- **In words** (19 set 2026, committente: «un widget 4x1, ridimensionabile, con informazioni solo
+  testuali»): the Now widget's facts with nothing drawn on the card — no weather glyph, no position
+  pin, no chip, no mark. It is not the Now widget with the icon deleted: a card that loses its
+  drawing loses the thing that made it readable across a room, so the hierarchy is rebuilt out of
+  type, in four ranks that differ by size and weight and ink at once. The temperature is the
+  drawing now — Bold, and sized to the grant the way the other cards size their glyph — with the
+  place set two ranks under it as the card's eyebrow, the day's sentence at its shoulder, and the
+  official warning and the day's high and low as facts under that. Three cells already carry the
+  sentence here, one better than the Now card manages, because there is no glyph to pay for first;
+  and the leading column is sized to the NAME rather than to a share of the row, so a place as long
+  as «Cavenago di Brianza» is printed whole. Two rows pin the place to the top of the card and
+  everything else to the bottom, with the air between them — one column under four cells, and from
+  four up a panel: the number on the leading side at a size the one-row card cannot afford (it
+  stands beside the words there rather than under them), the sentence and the day's range
+  right-aligned against the far edge. There are no hourly temperatures on any form: they were
+  there for a day, and on a device they read as a second widget stapled under the first — the card
+  that exists for the hours is the Today widget. The warning's chip
+  becomes the level's word alone, because a chip is the device that carries its own measured ground
+  and this card has no ground to draw. The weather glyph is an option the reader turns on per
+  widget (20 set 2026), and it is drawn into air rather than into a slot: all four plans are
+  computed without it, so it costs no line of anything, and where the card leaves no room it
+  simply is not drawn — beside the number where its line has room to spare, over the words
+  in the panel's own empty band, and nowhere at three cells on one row or two cells on two.
+  Two marks stay, both asked for from the device on 19 set
+  2026: the position pin in front of a place the phone is standing in — the first pass spelled it
+  out in words and the words ate the place name — and the up and down marks before the day's high
+  and low. A mark at the size of its own line, in that line's ink, is punctuation; the card still
+  carries no picture. Everything else is the household's: the same model, the same sentence, the
+  same warning table, the same refusal to invent.
+- Now, Today and In words let the reader turn the sentence off per widget, and Now can lay its
+  one-row card the other way round — glyph in the trailing corner, the sentence at the number's shoulder,
   the tall card's composition pressed into one row — so a home screen can carry the two looks.
 - **Sky**: the moments in front of the reader and their verdicts, with the day named when it is not
   today — the widget nobody else ships. Laid out on the Now widget's grammar (8 set 2026): the
@@ -464,15 +553,48 @@ Glance, three sizes, matching the app's dynamic color:
 A widget never invents: with stale data it says how old it is, with no place configured it says so
 and opens the app, and no layout ever pads itself out to fill the space it was given.
 
+**A tap opens the screen the card was showing** (21 set 2026, committente): **Sky** and **the day's
+arc** are the Sky screen's own material — its moments, its verdicts, its next light moment, its
+agenda — so they land on Sky rather than on Today, which was asking the reader to go and find again
+what they had just read on the home screen. The other three cards open the app as they always did,
+wherever the reader left it.
+
+All five open it through **one intent, and it is the launcher's own** (`ShellDestination`, the same
+day, from the device) — and so does every notification, which lands on the screen it is about by the
+same rule: a sky reminder on Sky, a fired rule and an official warning on Alerts, where their cards
+and the warning's arithmetic are, and the four built-in alerts on Today, because storms, rain and
+both summaries ARE the weather and Alerts is only where the switch that sent them lives. Android identifies a task by the intent that made it, so a card that opened
+the app its own way opened a second copy of the app — which the reader saw, as two home screens one
+behind the other, and as a closing animation the launcher did not own. The destination rides as an
+extra, where it changes nothing about which task this is, and the activity is `singleTask` so there
+is one instance to route to.
+
+**The card each one wears** is the reader's, per widget: a blue card (the default since 21 set 2026,
+committente), the computed sky, a light card, a dark one, one that follows the phone — and, since
+19 set 2026, one of six colours
+(committente: «possibilità di mettere uno sfondo colorato: blu, blu chiaro, verde…»). The colours
+are the one place in this product where colour is offered as colour rather than as meaning, and
+they ship with no new inks: each one is picked dark enough to carry the white pair the sky card
+already uses, and DESIGN §2.6 prints the eighteen measurements that say so.
+
+The sky was the default until 21 set 2026 and is still the app's own hero, one row away. What it is
+not is the right thing to meet on a home screen it has never seen: it is a photograph of the
+weather behind a card of facts, and on a busy wallpaper the two grounds argue — which is what the
+scrim and the opacity slider exist to manage, and a default should not need managing. A flat
+coloured card is the launcher's own grammar and reads at arm's length on any wallpaper.
+
 **The official warning on a widget** (§12.8, 9 set 2026) follows the launcher's own habit — the
 system weather widgets this app lives beside show a warning line when the national service issues
 one — and follows the app's sentence rule. On an orange or red day the sentence already *is* the
 warning, so the widget adds a chip only where the sentence is off, in the sentence's slot. A yellow
 warning, which the sentence never carries, gets a chip of its own — the drawn mark and the level as
 a word on the level's container color — where the form has room for one more line (the wide and
-tall Now, Today's hero row, the arc's panel) and nowhere on the one-row cards. Now, Today and the
-arc offer the chip and have it on by default: it draws nothing on a day without a warning, and on a
-day with one it is the line a reader would least want a widget to leave out. Sky does not offer it —
+tall Now, Today's hero row, the arc's panel) and nowhere on the one-row cards. On the text widget
+the same table decides and the level is the word by itself in the card's own ink: a chip is the
+device that brings its own measured ground, and that card cannot bring one without drawing it.
+Now, Today, In words and the arc offer the warning and have it on by default: it draws nothing on a
+day without a warning, and on a day with one it is the line a reader would least want a widget to
+leave out. Sky does not offer it —
 that card is about the sky's moments, and a chip about the ground would be a second subject.
 
 ---
@@ -492,7 +614,7 @@ Nothing in tweather is dropped. Everything moves to the surface that fits a Mate
 | built-in alert toggles | **Alerts → Ready-made** |
 | `history.diff` + `forecast.diff` + `sky_runs.log` + fired-rule check lines | **Journal** (one entry per fetch) + the forecast-drift chart |
 | `HELP.md` + `$ tweather init` | **Guide** + first run |
-| widget (`tweather --now`, terminal tiers) | **Widgets** (Now / Today / Sky) |
+| widget (`tweather --now`, terminal tiers) | **Widgets** (Now / Today / In words / Sky / the day's arc) |
 | theme profiles Obsidian/Dracula/Monokai | dynamic color + curated palette, light and dark |
 | — (nothing: tweather reads no official feed) | **Official warnings** — Protezione Civile in Italy (Fase 11), MeteoAlarm elsewhere (Fase 12); the one feature that is Chiaro's before it is the series' (§12.8) |
 

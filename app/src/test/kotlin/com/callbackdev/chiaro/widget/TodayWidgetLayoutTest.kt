@@ -31,6 +31,47 @@ class TodayWidgetLayoutTest {
         assertEquals(7, todayStripCells(600.dp))
     }
 
+    /**
+     * The hero row's two columns, the Now card's rule on this card's glyph (20 set 2026).
+     * On the reference four-by-two the glyph is 76 dp, which leaves
+     * 340 − 4 − 76 − 8 − 14 = 238 of words and 226 of slack once the gap is paid: 113 each
+     * under the even split, which is the figure `todayIsWide` has always compared.
+     */
+    private val heroIcon = 76.dp
+
+    @Test
+    fun `the hero row shares its slack the way the Now card does`() {
+        assertEquals(113f, heroRowEvenColumn(fourByTwo.width, heroIcon).value, 0.01f)
+        // A long name beside a short sentence takes the room the sentence is not using.
+        assertEquals(
+            167f,
+            todayWordsColumnWidth(fourByTwo, heroIcon, placeLine = 167.dp, trailingKeep = 47.dp).value,
+            0.01f
+        )
+        // A trailing column that wants its half keeps its half, whatever the name wants:
+        // on this card that tenant may be the day's high and low, which cannot wrap.
+        assertEquals(
+            113f,
+            todayWordsColumnWidth(fourByTwo, heroIcon, placeLine = 167.dp, trailingKeep = 200.dp).value,
+            0.01f
+        )
+        // And a short name changes nothing at all.
+        assertEquals(
+            113f,
+            todayWordsColumnWidth(fourByTwo, heroIcon, placeLine = 68.dp, trailingKeep = 47.dp).value,
+            0.01f
+        )
+    }
+
+    @Test
+    fun `a card too narrow for a sentence column is still the number and the place`() {
+        // Three cells: 250 − 4 − 76 − 8 − 14 = 148, 68 each — under the 96 a sentence needs,
+        // so the row carries no trailing column and nothing here is asked to divide it.
+        assertEquals(68f, heroRowEvenColumn(threeByTwo.width, heroIcon).value, 0.01f)
+        assertFalse(todayIsWide(threeByTwo, heroIcon))
+        assertTrue(todayIsWide(fourByTwo, heroIcon))
+    }
+
     @Test
     fun `the strip's height is its four lines, the rain line when drawn`() {
         assertEquals(70.32f, todayStripHeight(fontScale = 1f, rain = false).value, 0.05f)

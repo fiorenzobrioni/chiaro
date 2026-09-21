@@ -29,9 +29,18 @@
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
         android:theme="@style/Theme.Chiaro">
+        <!-- singleTask (21 set 2026, from the device): one instance, always the root of
+             one task, whoever opens it. The app IS one activity — Settings and the guide
+             are state inside it, not screens of their own — and without this the
+             platform was making a second task of it, because it identifies a task by
+             the intent that created it and a widget's intent is not the launcher's.
+             The reader saw two copies of the home screen, one behind the other, and a
+             closing animation the launcher did not own. `ShellDestination` is the other
+             half of the fix: every door in now asks with the launcher's own intent. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.Chiaro">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -41,19 +50,33 @@
 
         <!-- The per-widget settings, opened by the launcher's reconfigure flow
              (long-press → the pencil). Exported because the HOST starts it; it acts
-             only on the appWidgetId it is handed and reads nothing sensitive. -->
+             only on the appWidgetId it is handed and reads nothing sensitive.
+
+             taskAffinity="" and noHistory since 21 set 2026 (from the device). With the
+             app's own affinity this screen joined the app's TASK: closing it with a
+             swipe to home left it sitting there, and the next launch of the app put the
+             home screen on top of it, so back came out on a settings screen the reader
+             had dismissed. No affinity means it can never share that task; noHistory
+             means a screen swiped away is gone rather than a task nobody can see and
+             nobody can close. Nothing is lost by either: every choice here is written
+             the moment it is tapped, and "Done" only closes the door. Safe for the host
+             too, because all five providers declare configuration_optional — this
+             screen never runs at placement time, so no widget waits on its result. -->
         <activity
             android:name=".widget.WidgetConfigActivity"
             android:exported="true"
             android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
             android:theme="@style/Theme.Chiaro">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
 
-        <!-- The home widgets (Fase 8): Now, Today, Sky. exported=false — the system
-             delivers APPWIDGET_* regardless, and nothing else needs in. -->
+        <!-- The home widgets (Fase 8): Now, Today, Sky, and since 19 set 2026 the text
+             card. exported=false — the system delivers APPWIDGET_* regardless, and
+             nothing else needs in. -->
         <receiver
             android:name=".widget.NowWidgetReceiver"
             android:exported="false"
@@ -88,6 +111,20 @@
                 android:resource="@xml/widget_sky_info" />
         </receiver>
 
+        <!-- The text widget (19 set 2026): the fifth, and the one with nothing drawn on
+             it. Same shared configuration screen as the three above. -->
+        <receiver
+            android:name=".widget.TextWidgetReceiver"
+            android:exported="false"
+            android:label="@string/widget_text_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_text_info" />
+        </receiver>
+
         <!-- The day's arc (9 set 2026): the fourth widget, one cell to sixteen, with a
              configuration screen of its own: it has far more to configure than the
              other three, and its screen previews the card as the choices change. -->
@@ -102,10 +139,13 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_arc_info" />
         </receiver>
+        <!-- Same isolation as the shared settings screen above, for the same reason. -->
         <activity
             android:name=".widget.arc.ArcConfigActivity"
             android:exported="true"
             android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
             android:theme="@style/Theme.Chiaro">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />

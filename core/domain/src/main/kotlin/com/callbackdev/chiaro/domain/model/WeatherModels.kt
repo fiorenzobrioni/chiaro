@@ -152,7 +152,31 @@ data class Astronomical(
 fun Duration.hhMm(): String = "${toHours()}h ${toMinutesPart()}m"
 
 data class HourlyForecast(
+    /**
+     * The hour on the city's own clock, which is what every surface prints and what
+     * the engines compare against a local `now`.
+     *
+     * It is **not** the string the provider sent (20 set 2026). Open-Meteo builds its
+     * series as `UTC + utc_offset_seconds` with ONE offset for the whole response, so
+     * after a DST change its labels drift an hour from the real wall clock; the mapper
+     * re-expresses them through [at]. See `ForecastResponseDto.utcOffsetSeconds`.
+     *
+     * Consequence worth knowing before writing anything that indexes on this: on the
+     * day a zone falls back, **two consecutive hours carry the same value** (02:00
+     * twice), and on the day it springs forward one is missing. It is a label, not an
+     * identity — [at] is the identity.
+     */
     val time: LocalDateTime,
+    /**
+     * The same hour as the moment it actually is (20 set 2026).
+     *
+     * Unique across the list where [time] is not, so it is what a `LazyRow` key and
+     * any other identity must be built from; exact where `time.atZone(zone)` only
+     * guesses, since that call has to pick one of the two offsets an ambiguous local
+     * hour can wear. Four readers were re-deriving it and now read it: the strip's
+     * day/night flag, the arc widget's series, and `RainbowWindow`'s two ends.
+     */
+    val at: Instant,
     val tempC: Double,
     val condition: WeatherCondition,
     /**
@@ -205,13 +229,27 @@ data class DailyForecast(
      */
     val precipPct: Int?,
     /**
-     * The day's PEAK UV (Open-Meteo `uv_index_max`), with [uvDescription] its label
-     * — never the instant reading [CurrentConditions.uvIndex]: under a "Today"
-     * heading only the maximum says anything, since at 23:52 the current index is 0
-     * whatever the day was (which is exactly what the README used to print).
+     * The day's PEAK UV (Open-Meteo `uv_index_max`) — never the instant reading
+     * [CurrentConditions.uvIndex]: under a "Today" heading only the maximum says
+     * anything, since at 23:52 the current index is 0 whatever the day was (which is
+     * exactly what the README used to print). On Today's own details grid the current
+     * reading is the value and this rides as a note, which is a different question and
+     * `TodayScreen.Details` answers it there.
+     *
+     * **Null when the model behind this response does not carry one** (20 set 2026).
+     * It was coerced to `0` — and a zero UV is not an absence, it is a forecast of a
+     * sun that cannot burn, printed under "Nessuna protezione necessaria". The same
+     * sentence [precipPct] carries, for the same reason, about the field beside it in
+     * the same block.
+     *
+     * It used to travel with a `uvDescription` label. That was tweather's JSON
+     * vocabulary — English, never localized, and read by nothing in this app but the
+     * test that asserted the mapper had written it, the way `WeatherCondition.description`
+     * is (see `WeatherText`'s own note). A nullable index forced the question of what
+     * its label should say when there is no index, and the honest answer was that
+     * nobody was asking.
      */
-    val uvIndexMax: Int,
-    val uvDescription: String
+    val uvIndexMax: Int?
 )
 
 enum class CacheStatus { HIT, MISS }

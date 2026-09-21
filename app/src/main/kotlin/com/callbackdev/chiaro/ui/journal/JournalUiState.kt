@@ -7,6 +7,8 @@ import com.callbackdev.chiaro.data.local.ForecastOutcome
 import com.callbackdev.chiaro.data.local.SnapshotDiff
 import com.callbackdev.chiaro.data.local.WarningRecordKind
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.WeatherReport
+import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.sky.SkyRun
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.domain.warnings.WarningHazard
@@ -201,18 +203,24 @@ object JournalStateBuilder {
 
     /** The place's own zone, falling back to the device's: the Journal groups, labels
      * and judges days in it, and the ViewModel wakes on its midnight. One resolution,
-     * so those four can never disagree. */
-    fun zoneOf(city: City): ZoneId =
-        city.timezone?.let { runCatching { ZoneId.of(it) }.getOrNull() } ?: ZoneId.systemDefault()
+     * so those four can never disagree.
+     *
+     * [report] since 20 set 2026, for the same reason every other surface gained it:
+     * the position's `City` carries no timezone, so without it a diary of a place the
+     * phone is not in was grouped by the phone's own midnight. Defaulted because a
+     * caller with no report — a test, a place never fetched — still gets the old
+     * answer rather than none. */
+    fun zoneOf(city: City, report: WeatherReport? = null): ZoneId = placeZone(report, city)
 
     fun build(
         city: City,
         rows: List<JournalRow>,
         failures: List<FetchFailure>,
         now: Instant,
-        warnings: List<WarningRecordRow> = emptyList()
+        warnings: List<WarningRecordRow> = emptyList(),
+        report: WeatherReport? = null
     ): JournalContent {
-        val zone = zoneOf(city)
+        val zone = zoneOf(city, report)
         val entries = buildList {
             addAll(forecastShifts(rows, zone))
             addAll(outcomes(rows, zone, now))

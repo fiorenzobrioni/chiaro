@@ -21,10 +21,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
-import com.callbackdev.chiaro.ui.theme.ReadingValue
+import com.callbackdev.chiaro.ui.theme.LocalChiaroType
 
 /**
  * DESIGN.md §8.6 and §1.2: a number plus what to do about it.
@@ -35,7 +36,7 @@ import com.callbackdev.chiaro.ui.theme.ReadingValue
  * about 25 minutes" is.
  *
  * The tile's lines, top to bottom, since the card review of 8 set 2026: the icon and
- * the label; the value as a **reading** (`ReadingValue`, 24sp light tabular — the hero's
+ * the label; the value as a **reading** (`ChiaroType.readingValue`, 24sp light tabular — the hero's
  * voice at a tile's scale, because at 16sp the value barely outranked its own label); an
  * optional [scale], a 4dp track on a scale anchored to the world (UV 0–11, humidity
  * 0–100, air 0–300) so the eye gets "how much" before the number is read — one hue,
@@ -57,6 +58,12 @@ fun MetricTile(
     detail: (@Composable () -> Unit)? = null,
     /** A printed fact about the value: the gusts, the dew point, which pollen. */
     note: String? = null,
+    /**
+     * The glyph's box. [WeatherIconSize.Tile] for every tile but UV, which draws its own
+     * value inside the drawing and needs [WeatherIconSize.TileUv] for that value to read
+     * at the size the pollen tile's does — the arithmetic is there, not here.
+     */
+    iconSize: Dp = WeatherIconSize.Tile,
     onClick: (() -> Unit)? = null
 ) {
     Surface(
@@ -69,12 +76,14 @@ fun MetricTile(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             // The header holds one line by construction, never by truncation: on a
-            // 360dp screen the two columns leave the label 84dp beside the 34dp icon
+            // 360dp screen the two columns leave the label 80dp beside the 38dp icon
             // (94 before the ladder's first step on 6 set, 88 before its third on 8
             // set), so the eight labels are written to fit that budget rather than
             // trimmed with an ellipsis — the widest of them, «Qualità aria», measures
             // 76.7dp. A label that outgrows the budget (a huge font scale) wraps and
-            // keeps its words, which is the honest way to fail.
+            // keeps its words, which is the honest way to fail. UV spends 17dp more of
+            // that budget than the rest ([WeatherIconSize.TileUv], 12 set 2026) and can
+            // afford to: its label is the two letters «UV».
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -91,7 +100,7 @@ fun MetricTile(
                     // air-quality mark merge into one blob. Reported from a device
                     // (4 set 2026): «due sembrano uguali».
                     tint = Color.Unspecified,
-                    modifier = Modifier.size(WeatherIconSize.Tile)
+                    modifier = Modifier.size(iconSize)
                 )
                 Text(
                     text = label,
@@ -99,7 +108,7 @@ fun MetricTile(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Text(text = value, style = ReadingValue)
+            Text(text = value, style = LocalChiaroType.current.readingValue)
             scale?.let { QuantityTrack(fraction = it, modifier = Modifier.padding(vertical = 2.dp)) }
             detail?.invoke()
             note?.let { Text(text = it, style = MaterialTheme.typography.bodyMedium) }
@@ -151,13 +160,7 @@ private fun MetricTilePreview() {
                 icon = ChiaroIcons.wind,
                 label = "Vento", value = "12 km/h", meaning = "Tieni il cappello",
                 detail = {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        WindArrow(fromDegrees = 45)
-                        Text(text = "da nord-est", style = MaterialTheme.typography.bodyMedium)
-                    }
+                    Text(text = "da nord-est", style = MaterialTheme.typography.bodyMedium)
                 },
                 note = "Raffiche fino a 45 km/h"
             )

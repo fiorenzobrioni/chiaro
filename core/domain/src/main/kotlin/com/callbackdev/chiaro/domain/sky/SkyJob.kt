@@ -64,7 +64,24 @@ data class SkyJob(
      */
     val visibilityDependent: Boolean = false,
     /** True when the darkness of the sky, not just its clearness, is the point. */
-    val needsDarkness: Boolean = false
+    val needsDarkness: Boolean = false,
+    /**
+     * True when this is an event somebody would bring a camera to (Fase 28).
+     *
+     * Deliberately **scarce**, and that is the whole of whether it is a feature or
+     * noise: on a third of the catalog it says nothing, so it is on nine of sixty —
+     * the four photographer's hours, the full moon at dusk, the two earthshine windows,
+     * the Milky Way's core and the LUNAR eclipse. Not on solar noon, not on an equinox,
+     * not on perihelion, however much those matter otherwise; and not on the solar
+     * eclipse, for a reason that is about safety rather than about the sight and is
+     * written where that job is declared.
+     *
+     * It is also not an opinion. This app does not print "pretty"; what the flag buys
+     * is a **bearing** — the row that carries it says which way to turn, because that
+     * is the part a person cannot work out from a time. Golden hour without "the sun
+     * sets west-north-west" is an almanac line; with it, it is a window to stand at.
+     */
+    val photographic: Boolean = false
 ) {
     val expression: String get() = kind.expression
 }

@@ -150,9 +150,13 @@ class WeatherSyncWorkerTest {
         TestListenableWorkerBuilder<WeatherSyncWorker>(context).build().doWork()
     }
 
+    /** Every one of them by name, which is what the helper claims to be: the two
+     * summaries went ON by default on 21 set 2026 and the evening one, left out here,
+     * quietly kept the job alive. */
     private fun allTogglesOff() = runBlocking {
         settingsStore.setSevereWeatherAlerts(false)
         settingsStore.setDailySummary(false)
+        settingsStore.setEveningSummary(false)
         settingsStore.setPrecipitationWarning(false)
         settingsStore.setOfficialWarnings(false)
     }

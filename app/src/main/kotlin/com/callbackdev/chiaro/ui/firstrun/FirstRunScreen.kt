@@ -19,32 +19,38 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.notifications.NotificationPermission
+import com.callbackdev.chiaro.ui.components.rememberNotificationRequest
 import com.callbackdev.chiaro.ui.places.GpsError
 import com.callbackdev.chiaro.ui.places.GpsState
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
 
 /**
- * First run (VISION §5.8): one screen, two answers — use my location, or search for
- * a place — and skipping is allowed, landing on the real "no place yet" state. The
- * location permission is asked only AFTER the sentence on this screen has explained
- * why; notifications are not mentioned at all, because nothing here needs them.
+ * First run, step one (VISION §5.8): one screen, two answers — use my location, or
+ * search for a place — and skipping is allowed, landing on the real "no place yet"
+ * state. The location permission is asked only AFTER the sentence on this screen has
+ * explained why; notifications are not mentioned here at all, because a notification
+ * is a promise about a place and there is no place yet. They are step two
+ * ([FirstRunNotificationsRoute]), which skipping skips along with this one.
  *
  * Answering happens in the stores, not here: choosing a city or acquiring a fix marks
- * first-run done, and the shell switches to Today on the same flow every other screen
- * reads. This screen never navigates; it just stops being the answer.
+ * the place question answered, and the shell moves on over the same flow every other
+ * screen reads. This screen never navigates; it just stops being the answer.
  */
 @Composable
 fun FirstRunRoute(
@@ -131,6 +137,75 @@ fun FirstRunRoute(
 
     if (searchOpen) {
         PlacesSheet(viewModel = placesViewModel, onDismiss = { searchOpen = false })
+    }
+}
+
+/**
+ * First run, step two (21 set 2026): the notification question, put in words before
+ * the system puts it in a dialog.
+ *
+ * It is a step of its own and not a line on the screen before it, because until there
+ * is a place there is nothing for an alert to be about. And it exists at all because
+ * the screen before it left a promise nobody could keep: four ready-made alerts ship
+ * switched **on**, and the permission was only ever asked by the act of switching one
+ * on — which a fresh install never does. The switches said yes, the phone said
+ * nothing, and the only road to the dialog was to turn an alert off and on again.
+ *
+ * The system dialog is shown at most twice per install, so it is spent on purpose and
+ * never on arrival: this screen explains first and asks only when the reader taps
+ * «Consenti». «Non ora» is a real answer and costs nothing — it does not touch the
+ * dialog, and Avvisi carries the same offer for as long as it is true (DESIGN §8.14).
+ */
+@Composable
+fun FirstRunNotificationsRoute(onDone: () -> Unit) {
+    val context = LocalContext.current
+    val request = rememberNotificationRequest { onDone() }
+
+    // Already allowed — a reinstall on a device that kept the grant, or a launcher
+    // that asked for us. There is nothing to ask, so nothing is asked.
+    LaunchedEffect(Unit) {
+        if (NotificationPermission.allowed(context)) onDone()
+    }
+
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 32.dp, vertical = 48.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = stringResource(R.string.first_run_notify_title),
+                style = MaterialTheme.typography.headlineSmall,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.first_run_notify_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            Button(
+                onClick = request.ask,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.notifications_off_allow))
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.first_run_notify_where),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            TextButton(onClick = onDone) {
+                Text(stringResource(R.string.first_run_notify_later))
+            }
+        }
     }
 }
 

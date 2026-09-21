@@ -85,14 +85,33 @@ object SkyReminderPlanner {
         coordinates: com.callbackdev.chiaro.domain.model.Coordinates
     ): SkyReminder? {
         val minutes = lead.minutes ?: return null
-        return SkyScheduler
-            .next(job, now, zone, coordinates, limit = LOOKAHEAD)
+        fun search(limit: Int): SkyReminder? = SkyScheduler
+            .next(job, now, zone, coordinates, limit = limit)
             .filterIsInstance<SkyOccurrence.At>()
             .asSequence()
             .map { SkyReminder(job.id, it.start.minus(Duration.ofMinutes(minutes.toLong())), it.start) }
             .firstOrNull { it.fireAt.isAfter(now) }
+        // Shallow first, deep only if the shallow walk found nothing: the deep one
+        // exists for one case and paying for it on every job would be a walk of the
+        // almanac per subscription, every re-arm.
+        return search(LOOKAHEAD) ?: search(DEEP_LOOKAHEAD)
     }
 
     /** Enough occurrences that even a one-day lead finds one still in the future. */
     private const val LOOKAHEAD = 3
+
+    /**
+     * And enough to walk out of a run of nights the sky simply does not have (Fase 27).
+     *
+     * Since the dark window became the astronomical night minus the moon, it is `∅`
+     * for every night the moon is up from dusk to dawn — and those come in runs.
+     * Measured over 2026: **9 consecutive nights at Milan, 10 at Copenhagen, 11 at
+     * Edinburgh**, 6 as far south as Palermo. At `LOOKAHEAD` a subscribed dark-window
+     * reminder would have gone quiet for a week and a half at a time and come back
+     * with no explanation, which is a worse failure than the one this phase fixed.
+     *
+     * Sixteen covers the worst measured run with a one-day lead on top and a margin
+     * that is not a coincidence to re-measure every year.
+     */
+    private const val DEEP_LOOKAHEAD = 16
 }

@@ -55,11 +55,12 @@ class OfficialWarningNotifierTest {
     private fun warnings(
         todayLevels: Map<WarningHazard, WarningLevel> = levels(thunderstorm = ORANGE, hydrogeological = YELLOW),
         tomorrowLevels: Map<WarningHazard, WarningLevel> = levels(thunderstorm = YELLOW),
-        note: String? = null
+        note: String? = null,
+        issuedAt: java.time.LocalDateTime = today.atTime(15, 46)
     ) = PlaceWarnings(
         zone = zone,
         bulletinId = "DPC_BULLETIN_2026_09_09_6506",
-        issuedAt = today.atTime(15, 46),
+        issuedAt = issuedAt,
         days = listOf(
             PlaceWarnings.DayWarnings(today, todayLevels),
             PlaceWarnings.DayWarnings(today.plusDays(1), tomorrowLevels)
@@ -85,6 +86,21 @@ class OfficialWarningNotifierTest {
         val text = collapsed()
         assertTrue(text, text.startsWith("Thunderstorms, today until midnight · bulletin of "))
         assertEquals(OfficialWarningNotifier.CHANNEL_HIGH, posted().channelId)
+    }
+
+    /**
+     * Il caso normale di ogni mattina: il Dipartimento pubblica nel pomeriggio per oggi
+     * E domani, quindi una notifica riletta il giorno dopo parla di un bollettino di
+     * ieri. Fino all'11 set 2026 diceva solo l'ora, e l'ora da sola si legge come di
+     * oggi (segnalazione del committente, da uno screenshot delle 12:33).
+     */
+    @Test
+    fun `a bulletin from another day says which day, not just the hour`() {
+        assertTrue(post(warnings(issuedAt = today.minusDays(1).atTime(15, 7))))
+        val text = collapsed()
+        // L'ora la formatta l'orologio del telefono (qui 12 ore), quindi si fissa
+        // quel che questa modifica decide: che il GIORNO ci sia.
+        assertTrue(text, text.contains("· bulletin of yesterday at "))
     }
 
     @Test

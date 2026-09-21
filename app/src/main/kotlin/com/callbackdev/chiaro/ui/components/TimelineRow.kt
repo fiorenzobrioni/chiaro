@@ -78,22 +78,22 @@ private fun TimelineRowPreview() {
         ) {
             TimelineRow(
                 time = "17:04",
-                icon = ImageVector.vectorResource(R.drawable.mc_rain),
+                icon = ImageVector.vectorResource(R.drawable.mc3_overcast_rain),
                 text = "Pioggia probabile (72%)"
             )
             TimelineRow(
                 time = "19:12",
-                icon = ImageVector.vectorResource(R.drawable.mc_sunset),
+                icon = ImageVector.vectorResource(R.drawable.mc3_sunset),
                 text = "Ora d'oro"
             )
             TimelineRow(
                 time = "20:06",
-                icon = ImageVector.vectorResource(R.drawable.mc_horizon),
+                icon = ImageVector.vectorResource(R.drawable.mc3_horizon),
                 text = "Tramonto"
             )
             TimelineRow(
                 time = "22:41",
-                icon = ImageVector.vectorResource(R.drawable.mc_moonrise),
+                icon = ImageVector.vectorResource(R.drawable.mc3_moonrise),
                 text = "Sorge la luna"
             )
         }

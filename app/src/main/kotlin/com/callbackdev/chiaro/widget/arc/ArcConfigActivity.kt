@@ -37,10 +37,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.data.AppFont
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.ThemeMode
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
+import com.callbackdev.chiaro.widget.BackgroundSection
 import com.callbackdev.chiaro.widget.ChiaroWidgets
 import com.callbackdev.chiaro.widget.ChoiceRow
 import com.callbackdev.chiaro.widget.SectionLabel
@@ -48,6 +50,7 @@ import com.callbackdev.chiaro.widget.SwitchRow
 import com.callbackdev.chiaro.widget.WidgetBackground
 import com.callbackdev.chiaro.widget.WidgetData
 import com.callbackdev.chiaro.widget.WidgetIcons
+import com.callbackdev.chiaro.widget.WidgetKind
 import com.callbackdev.chiaro.widget.WidgetLook
 import com.callbackdev.chiaro.widget.WidgetLookStore
 import com.callbackdev.chiaro.widget.WidgetModel
@@ -93,7 +96,8 @@ class ArcConfigActivity : ComponentActivity() {
                     ThemeMode.SYSTEM, null -> isSystemInDarkTheme()
                 },
                 dynamicColor = settings?.dynamicColor ?: false,
-                palette = settings?.palette ?: AppPalette.VIVID
+                palette = settings?.palette ?: AppPalette.VIVID,
+                font = settings?.font ?: AppFont.GOOGLE_SANS
             ) {
                 Scaffold(
                     topBar = {
@@ -128,7 +132,7 @@ private fun ArcConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () ->
     var look by remember { mutableStateOf<WidgetLook?>(null) }
     var arc by remember { mutableStateOf<ArcSettings?>(null) }
     LaunchedEffect(appWidgetId) {
-        look = lookStore.lookFor(appWidgetId)
+        look = lookStore.lookFor(appWidgetId, WidgetKind.ARC)
         arc = arcStore.settingsFor(appWidgetId)
     }
     // The preview's model: the widget's own loader, re-run when the place changes. The
@@ -218,19 +222,7 @@ private fun ArcConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () ->
 
         // ---- The card: the look every widget shares. ----
         look?.let { current ->
-            SectionLabel(stringResource(R.string.widget_config_background))
-            listOf(
-                WidgetBackground.SKY to stringResource(R.string.widget_bg_sky),
-                WidgetBackground.LIGHT to stringResource(R.string.settings_theme_light),
-                WidgetBackground.DARK to stringResource(R.string.settings_theme_dark),
-                WidgetBackground.SYSTEM to stringResource(R.string.settings_theme_system)
-            ).forEach { (background, label) ->
-                ChoiceRow(
-                    label = label,
-                    selected = current.background == background,
-                    onPick = { saveLook(current.copy(background = background)) }
-                )
-            }
+            BackgroundSection(current) { next -> saveLook(next) }
 
             SectionLabel(stringResource(R.string.widget_config_opacity))
             Text(

@@ -2,11 +2,12 @@ package com.callbackdev.chiaro.notifications
 
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.callbackdev.chiaro.MainActivity
+import com.callbackdev.chiaro.ui.shell.ShellDestination
+import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.GpsCityId
@@ -104,7 +105,7 @@ object OfficialWarningNotifier {
             R.string.notif_warning_collapsed,
             hazardWords,
             dayPhrase,
-            context.getString(R.string.notif_warning_bulletin_at, issuedTime(context, warnings))
+            context.getString(R.string.notif_warning_bulletin_at, issued(context, warnings, today))
         )
     }
 
@@ -137,11 +138,15 @@ object OfficialWarningNotifier {
             }
             add(context.getString(R.string.notif_warning_meaning, context.getString(WarningText.meaningRes(warnings.maxLevel))))
             warnings.note?.let { add(context.getString(R.string.notif_warning_note, it)) }
-            add(context.getString(R.string.notif_warning_source, issuedTime(context, warnings)))
+            add(context.getString(R.string.notif_warning_source, issued(context, warnings, today)))
         }
 
-    private fun issuedTime(context: Context, warnings: PlaceWarnings): String =
-        warnings.issuedAt.toLocalTime().format(clockFormat(context))
+    /** «delle 15:07», «di ieri alle 15:07» — the same phrase every surface says it with
+     * (`WarningText.issued`). A notification usually carries the bulletin that has just
+     * arrived, so it is normally today's; it is the same helper because a notification
+     * read the morning after is the case the hour alone got wrong. */
+    private fun issued(context: Context, warnings: PlaceWarnings, today: LocalDate): String =
+        WarningText.issued(context, warnings.issuedAt, today, clockFormat(context))
 
     private fun channelFor(level: WarningLevel): String =
         if (level >= WarningLevel.ORANGE) CHANNEL_HIGH else CHANNEL_YELLOW
@@ -171,13 +176,20 @@ object OfficialWarningNotifier {
             if (android.text.format.DateFormat.is24HourFormat(context)) "HH:mm" else "h:mm a"
         )
 
-    /** Oggi shows the banner first under the canvas: no deep link needed (PLANNING, Fase 11). */
     private fun openApp(context: Context, requestCode: Int): PendingIntent =
         PendingIntent.getActivity(
             context,
             requestCode,
-            Intent(context, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            // Avvisi (21 set 2026), which is the screen this is about: it leads with
+            // the place's warning card and opens the sheet with the arithmetic — the
+            // grid of hazards by day, what the level means, the attribution. Oggi
+            // carries the banner too, but only from yellow up and only while the
+            // bulletin is live, and it says nothing at all about a zone that is green
+            // (DESIGN §8.13): Avvisi is where somebody came to ask.
+            //
+            // The request code is load-bearing now that the destination rides in the
+            // extras: see [ShellDestination]. These are the warning ids, 3000-3999.
+            ShellDestination.intent(context, MainActivity::class.java, ShellTab.ALERTS),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 }

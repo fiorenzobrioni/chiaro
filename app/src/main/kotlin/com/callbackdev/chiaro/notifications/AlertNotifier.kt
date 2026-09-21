@@ -2,21 +2,25 @@ package com.callbackdev.chiaro.notifications
 
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.callbackdev.chiaro.MainActivity
+import com.callbackdev.chiaro.ui.shell.ShellDestination
+import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.AlertKind
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.zone
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.today.HeadlineEngine
 import com.callbackdev.chiaro.ui.today.WeatherText
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.absoluteValue
 
 /**
  * Renders a built-in [Alert] as a system notification, in Chiaro's idiom: a short
@@ -33,9 +37,10 @@ import java.util.Locale
  * it — the details grid's own rule (DESIGN §1.2). tweather folds and unfolds a JSON
  * node in the same place; this is the same idea in this product's register.
  *
- * Nothing in the expanded body is invented: the window comes from [AlertDetails]
- * reading the very hours the engine judged, and a line whose data is missing is not
- * drawn at all (§1.1 — never a dash where a value should be).
+ * Nothing in the expanded body is invented: the window comes from [AlertDetails] and
+ * the night from [EveningDetails], both reading the very hours the engine judged, and a
+ * line whose data is missing is not drawn at all (§1.1 — never a dash where a value
+ * should be).
  *
  * One channel per kind — the reader can silence the morning summary and keep the
  * storm warnings — and one fixed notification id per kind, so a same-kind alert
@@ -91,26 +96,40 @@ object AlertNotifier {
         val condition = alert.condition
             ?.let { context.getString(WeatherText.condition(it.wmoCode)) }
         return when (alert.kind) {
-            AlertKind.SEVERE -> buildString {
-                append(
-                    context.getString(
-                        R.string.notif_severe_body,
-                        condition ?: context.getString(R.string.cond_unknown),
-                        time ?: ""
-                    ).trimEnd()
-                )
-                alert.precipPct?.takeIf { it > 0 }?.let {
-                    append(context.getString(R.string.notif_rain_fragment, it))
+            // Whole sentences, one per shape, since the review of 21 set 2026. They
+            // used to be a stem plus an optional ", rain at 90%" fragment, which cost
+            // the sentence its full stop (the only built-in alert without one) and
+            // fixed the clause order in English for every language. An absent hour or
+            // an absent chance now picks a sentence that does not need it: the old
+            // `?: ""` and `?: 0` printed "Thunderstorm around" and "rain at 0%",
+            // which is the screen breaking and the screen lying (§1.1) — unreachable
+            // today, because the engine anchors both alerts on an hour it has read.
+            AlertKind.SEVERE -> {
+                val sky = condition ?: context.getString(R.string.cond_unknown)
+                val pct = alert.precipPct?.takeIf { it > 0 }
+                when {
+                    time == null -> context.getString(R.string.notif_severe_body_soon, sky)
+                    pct == null -> context.getString(R.string.notif_severe_body, sky, time)
+                    else -> context.getString(R.string.notif_severe_body_rain, sky, time, pct)
                 }
             }
-            AlertKind.PRECIPITATION -> context.getString(
-                R.string.notif_precip_body, time ?: "", alert.precipPct ?: 0
-            )
+            AlertKind.PRECIPITATION -> {
+                val pct = alert.precipPct
+                if (time == null || pct == null) {
+                    context.getString(R.string.notif_precip_body_plain)
+                } else {
+                    context.getString(R.string.notif_precip_body, time, pct)
+                }
+            }
+            // The two summaries share one sentence and differ in their TITLE ("Oggi"
+            // against "Domani"): they are twins on purpose, and a reader who has both
+            // on should be able to read either without learning a second shape.
+            //
             // Two forms: the day may carry no probability at all (§1.1), and the
             // summary then drops the clause rather than announcing a 0% nobody
             // forecast. The temperatures keep their dash — an absent reading in a
             // list of readings is a dash; an absent clause is no clause.
-            AlertKind.DAILY_SUMMARY -> {
+            AlertKind.DAILY_SUMMARY, AlertKind.EVENING_SUMMARY -> {
                 val low = alert.lowC?.let { Formats.temperature(it, unit, locale) } ?: "–"
                 val high = alert.highC?.let { Formats.temperature(it, unit, locale) } ?: "–"
                 val sky = condition ?: context.getString(R.string.cond_unknown)
@@ -123,8 +142,9 @@ object AlertNotifier {
 
     /**
      * The headline, then the rest of the story: the window the weather really covers,
-     * its worst hour, what the thermometer does meanwhile, and — for the morning
-     * summary — the day's own facts, each with its consequence.
+     * its worst hour, what the thermometer does meanwhile; for the morning summary the
+     * day's own facts; for the evening one the night ahead and what tomorrow asks
+     * tonight. Each with its consequence.
      *
      * Order is worth-first, because the system cuts a long body at the bottom.
      */
@@ -145,9 +165,13 @@ object AlertNotifier {
                 alert.at?.let { AlertDetails.rainWindow(report.hourly, it) }
             )
             AlertKind.DAILY_SUMMARY -> dayDetails(context, units, report)
+            AlertKind.EVENING_SUMMARY -> eveningDetails(context, units, report, alert)
         }
-        // Never empty: the window can be missing (a cached report whose hours have
-        // elapsed) but "right now" always has a reading behind it.
+        // The morning kinds are never empty ("right now" always has a reading behind
+        // it); the evening one can be, on a cached report whose hours have all
+        // elapsed and a place with no sunrise. Then the expanded body IS the headline
+        // — which is honest, and still better than a blank line under it.
+        if (details.isEmpty()) return headline
         return headline + "\n\n" + details.joinToString("\n")
     }
 
@@ -219,12 +243,14 @@ object AlertNotifier {
                 )
             )
         }
-        report.daily.firstOrNull()?.let { today ->
+        // No index, no line: a model that does not carry UV gets silence rather than
+        // a "nessuna protezione necessaria" nobody forecast (§1.1).
+        report.daily.firstOrNull()?.uvIndexMax?.let { uv ->
             add(
                 context.getString(
                     R.string.notif_detail_uv,
-                    today.uvIndexMax,
-                    context.getString(WeatherText.uvMeaning(today.uvIndexMax))
+                    uv,
+                    context.getString(WeatherText.uvMeaning(uv))
                 )
             )
         }
@@ -239,6 +265,145 @@ object AlertNotifier {
             )
         }
     }
+
+    /**
+     * The evening summary's own block: the night between here and tomorrow, then the
+     * parts of tomorrow that ask something TONIGHT — an umbrella by the door, an alarm
+     * set to the light. Nothing about today: by 20:00 today is not a decision.
+     *
+     * Worth-first, and every line conditional on having its data. The rain lines use
+     * the app's two existing bars and no third one: the umbrella threshold the rain
+     * warning fires at, and the "possible" floor the Today headline uses.
+     */
+    private fun eveningDetails(
+        context: Context,
+        units: UnitSettings,
+        report: WeatherReport,
+        alert: Alert
+    ): List<String> = buildList {
+        val locale = Locale.getDefault()
+        val clock = clockFormat(context)
+        val zone = report.zone()
+        val now = report.location.localTime
+        val tomorrow = alert.forDate ?: now.toLocalDate().plusDays(1)
+        val coords = report.location.coordinates
+
+        // The night: how cold, when, and what that asks of the reader.
+        val nightEnd = EveningDetails.nightEnd(tomorrow, zone, coords)
+        EveningDetails.night(report.hourly, from = now, until = nightEnd)?.let { night ->
+            add(
+                context.getString(
+                    R.string.notif_detail_night,
+                    Formats.temperature(night.lowC, units.temperature, locale),
+                    night.lowAt.format(clock),
+                    context.getString(WeatherText.nightMeaning(night.lowC))
+                )
+            )
+            // Only once the night has stopped promising a dry one: under half, the
+            // number would be a line that says "probably not", which is not news.
+            val pct = night.peakPrecipPct
+            if (pct != null && pct >= HeadlineEngine.CLEAR_BELOW_PCT && night.peakPrecipAt != null) {
+                add(
+                    context.getString(
+                        R.string.notif_detail_night_rain,
+                        pct,
+                        night.peakPrecipAt.format(clock)
+                    )
+                )
+            }
+        }
+
+        // Tomorrow's rain: the window when it clears the umbrella bar, the peak when
+        // it only gets as far as "possible", nothing at all when it is a dry day.
+        val window = EveningDetails.tomorrowRain(report.hourly, tomorrow)
+        if (window != null) {
+            add(
+                when {
+                    window.openEnded -> context.getString(
+                        R.string.notif_detail_tomorrow_rain_from,
+                        window.start.format(clock),
+                        window.peakPrecipPct
+                    )
+                    window.singleHour -> context.getString(
+                        R.string.notif_detail_tomorrow_rain_hour,
+                        window.start.format(clock),
+                        window.peakPrecipPct
+                    )
+                    else -> context.getString(
+                        R.string.notif_detail_tomorrow_rain,
+                        window.start.format(clock),
+                        window.end.format(clock),
+                        window.peakPrecipPct
+                    )
+                }
+            )
+        } else {
+            EveningDetails.tomorrowRainPeak(report.hourly, tomorrow)
+                ?.takeIf { it.pct >= HeadlineEngine.CLEAR_BELOW_PCT }
+                ?.let {
+                    add(
+                        context.getString(
+                            R.string.notif_detail_tomorrow_rain_maybe,
+                            it.pct,
+                            it.at.format(clock)
+                        )
+                    )
+                }
+        }
+
+        // The daylight edition's own line: the two ends of tomorrow, and how much
+        // light that is against today. The delta is dropped inside a minute of it —
+        // around a solstice the sun stands still, and "0 minutes less" is noise.
+        EveningDetails.sun(tomorrow, zone, coords, report.astronomical.daylightDuration)
+            ?.let { sun ->
+                val minutes = sun.daylightDelta?.toMinutes() ?: 0L
+                val delta = if (minutes == 0L) {
+                    null
+                } else {
+                    context.resources.getQuantityString(
+                        if (minutes > 0) R.plurals.notif_detail_daylight_more
+                        else R.plurals.notif_detail_daylight_less,
+                        minutes.absoluteValue.toInt(),
+                        minutes.absoluteValue.toInt()
+                    )
+                }
+                add(
+                    if (delta == null) {
+                        context.getString(
+                            R.string.notif_detail_sun_tomorrow,
+                            sun.sunrise.format(clock),
+                            sun.sunset.format(clock)
+                        )
+                    } else {
+                        context.getString(
+                            R.string.notif_detail_sun_tomorrow_delta,
+                            sun.sunrise.format(clock),
+                            sun.sunset.format(clock),
+                            delta
+                        )
+                    }
+                )
+            }
+
+        // Tomorrow's UV, only once there is something to do about it. The morning
+        // summary prints every band because at 8:00 "no protection needed" settles
+        // the question the reader opened the app with; at 21:00 nobody is asking.
+        report.daily.firstOrNull { it.date == tomorrow }
+            ?.uvIndexMax
+            ?.takeIf { it >= UV_WORTH_SAYING }
+            ?.let { uv ->
+                add(
+                    context.getString(
+                        R.string.notif_detail_uv_tomorrow,
+                        uv,
+                        context.getString(WeatherText.uvMeaning(uv))
+                    )
+                )
+            }
+    }
+
+    /** The first UV band that asks for anything ([WeatherText.uvMeaning]'s "moderate"). */
+    private const val UV_WORTH_SAYING = 3
 
     /** Where the reader is standing when the notification arrives. */
     private fun nowLine(context: Context, units: UnitSettings, report: WeatherReport): String =
@@ -270,6 +435,7 @@ object AlertNotifier {
             AlertKind.SEVERE -> "alert_severe"
             AlertKind.PRECIPITATION -> "alert_precip"
             AlertKind.DAILY_SUMMARY -> "alert_summary"
+            AlertKind.EVENING_SUMMARY -> "alert_evening"
         }
 
     /** Fixed ids: a fresher same-kind alert replaces the old one, never stacks. */
@@ -278,6 +444,7 @@ object AlertNotifier {
             AlertKind.SEVERE -> 1001
             AlertKind.PRECIPITATION -> 1002
             AlertKind.DAILY_SUMMARY -> 1003
+            AlertKind.EVENING_SUMMARY -> 1004
         }
 
     private val AlertKind.titleRes: Int
@@ -285,6 +452,7 @@ object AlertNotifier {
             AlertKind.SEVERE -> R.string.notif_severe_title
             AlertKind.PRECIPITATION -> R.string.notif_precip_title
             AlertKind.DAILY_SUMMARY -> R.string.notif_summary_title
+            AlertKind.EVENING_SUMMARY -> R.string.notif_evening_title
         }
 
     private val AlertKind.channelNameRes: Int
@@ -292,6 +460,7 @@ object AlertNotifier {
             AlertKind.SEVERE -> R.string.notif_channel_severe
             AlertKind.PRECIPITATION -> R.string.notif_channel_precip
             AlertKind.DAILY_SUMMARY -> R.string.notif_channel_summary
+            AlertKind.EVENING_SUMMARY -> R.string.notif_channel_evening
         }
 
     private fun ensureChannel(
@@ -323,8 +492,15 @@ object AlertNotifier {
         PendingIntent.getActivity(
             context,
             requestCode,
-            Intent(context, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            // The same door the widgets use, and the screen these four are about
+            // (21 set 2026): storms, the rain in the next hours and both summaries are
+            // the weather, and the weather is Oggi — its hours, its rain, its sentence.
+            // Avvisi is where the SWITCH that sent this lives, which is not what the
+            // reader who tapped «Pioggia alle 17» came for.
+            //
+            // The request code is load-bearing now that the destination rides in the
+            // extras: see [ShellDestination]. These are the alert ids, 1001-1004.
+            ShellDestination.intent(context, MainActivity::class.java, ShellTab.TODAY),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 }

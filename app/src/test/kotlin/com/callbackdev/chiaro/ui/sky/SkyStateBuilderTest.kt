@@ -45,9 +45,24 @@ class SkyStateBuilderTest {
         precipPct: Int = 5,
         syncedAt: LocalDateTime = fetched
     ) = sampleWeatherReport().copy(
+        // The sample is a New York report, and until 20 set 2026 this fixture handed it
+        // to a Milan city and left the mismatch standing: the builder resolved its zone
+        // from the CITY, so nothing noticed. It resolves it from the report now — the
+        // better source, and the only one the position has — and a report whose location
+        // is not its city's is a pairing the repository cannot produce, since `map()`
+        // writes the location from the very city it was asked about.
+        location = sampleWeatherReport().location.copy(
+            city = milan.name,
+            region = milan.region,
+            country = milan.country,
+            coordinates = milan.coordinates,
+            timezone = zone.id,
+            localTime = fetched
+        ),
         hourly = (0 until 48).map {
             HourlyForecast(
                 time = fetched.plusHours(it.toLong()),
+                at = fetched.plusHours(it.toLong()).atZone(zone).toInstant(),
                 tempC = 20.0,
                 condition = clear,
                 precipChancePct = precipPct,
@@ -201,11 +216,92 @@ class SkyStateBuilderTest {
 
         assertTrue(content.events.isNotEmpty())
         assertTrue(content.events.size <= 6)
-        val starts = content.events.map { it.occurrence.start }
+        val starts = content.events.map { it.at!!.start }
         assertEquals(starts.sorted(), starts)
         assertTrue(content.events.any { it.quarter == MoonQuarterKind.FULL_MOON })
         // Everything ahead is genuinely ahead.
         assertTrue(starts.all { it.isAfter(noon) })
+    }
+
+    /**
+     * Fase 27, tier one. The six rows used to be the six nearest events in the
+     * catalog, so a subscribed line appeared only if it happened to win a race it
+     * never knew it was in: measured at Milan on 20 set 2026 the six covered seven
+     * weeks, and the next solar eclipse visible from there (2 ago 2027) could not
+     * reach the screen in a year of trying — while its reminder fired all the same.
+     */
+    @Test
+    fun `a subscribed event always has a row, however far out it is`() {
+        val content = SkyStateBuilder.build(
+            milan,
+            report(),
+            defaults() + SkySubscription(SkyJobCatalog.SolarEclipse.id),
+            AppSettings(),
+            noon
+        )
+        val eclipse = content.events.firstOrNull { it.job.id == SkyJobCatalog.SolarEclipse.id }
+        assertNotNull("the subscribed eclipse must have a row", eclipse)
+        assertNotNull("and a date on it", eclipse!!.at)
+        // Years out, so the row has to say which year (the list printed `d MMMM`).
+        assertTrue("an eclipse this far out must print its year", eclipse.showYear)
+        // And the calendar everyone gets is still there under it.
+        assertTrue(content.events.size > 1)
+    }
+
+    /**
+     * Fase 27, and the other half of tier one: a `∅` on a subscribed line is the
+     * answer, not a row to drop. The Perseids peak over Stockholm on a night that
+     * never gets astronomically dark, and the list used to delete the most famous
+     * shower of the year rather than say so — while the moments list beside it
+     * printed exactly this kind of fact with its reason.
+     */
+    @Test
+    fun `a subscribed event the sky skips keeps its row and its reason`() {
+        val stockholm = City(
+            id = 2L, name = "Stoccolma", region = "Stockholms lan", country = "Svezia",
+            coordinates = Coordinates(59.3293, 18.0686), timezone = "Europe/Stockholm"
+        )
+        val perseids = SkyJobCatalog.meteorShowers.first { it.id.contains("perseids") }
+        val content = SkyStateBuilder.build(
+            stockholm, null, listOf(SkySubscription(perseids.id)), AppSettings(), noon
+        )
+        val row = content.events.firstOrNull { it.job.id == perseids.id }
+        assertNotNull("the subscribed shower must keep its row", row)
+        assertEquals(
+            com.callbackdev.chiaro.domain.sky.SkyNotScheduled.NO_DARKNESS,
+            (row!!.occurrence as SkyOccurrence.None).reason
+        )
+        // The undated rows sort after the dated ones, as they do in the moments list.
+        assertEquals(content.events.last().job.id, perseids.id)
+    }
+
+    /**
+     * Fase 27. The delta Aquariids and the alpha Capricornids are both pinned to solar
+     * longitude 127.0° — the IMO working list really does put them there — so they
+     * resolve to the same instant, the same night and the same icon. Two rows a reader
+     * could only read as a bug; one row, both names.
+     */
+    @Test
+    fun `two showers that peak on one night share one row`() {
+        val delta = SkyJobCatalog.meteorShowers.first { it.id.contains("delta_aquariids") }
+        val capricornids =
+            SkyJobCatalog.meteorShowers.first { it.id.contains("alpha_capricornids") }
+        val content = SkyStateBuilder.build(
+            milan,
+            report(),
+            listOf(SkySubscription(delta.id), SkySubscription(capricornids.id)),
+            AppSettings(),
+            noon
+        )
+        val rows = content.events.filter {
+            it.job.id == delta.id || it.job.id == capricornids.id
+        }
+        assertEquals("one night, one row", 1, rows.size)
+        assertEquals(1, rows.single().sharesNightWith.size)
+        assertTrue(
+            "and the row names the other shower too",
+            rows.single().sharesNightWith.single().id in setOf(delta.id, capricornids.id)
+        )
     }
 
     @Test

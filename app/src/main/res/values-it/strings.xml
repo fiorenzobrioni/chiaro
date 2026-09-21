@@ -79,6 +79,7 @@
 
     <!-- La strip oraria -->
     <string name="hour_cell_desc">Alle %1$s, %2$s, %3$s, pioggia %4$d%%</string>
+    <string name="hour_cell_desc_no_rain">Alle %1$s, %2$s, %3$s</string>
     <string name="rain_chart_caption">Probabilità di pioggia</string>
     <string name="rain_chart_desc">Probabilità di pioggia dalle %1$s alle %2$s su una scala da 0 a 100%%, con picco %3$d%% verso le %4$s</string>
 
@@ -101,6 +102,7 @@
     <string name="wind_from">da %1$s</string>
     <string name="wind_gusts">Raffiche a %1$s</string>
     <string name="humidity_dew_note">Rugiada %1$s</string>
+    <string name="uv_peak_today">Massimo oggi %1$d</string>
     <string name="pollen_family_grass">graminacee</string>
     <string name="pollen_family_tree">alberi</string>
     <string name="pollen_family_weed">erbe</string>
@@ -118,6 +120,13 @@
     <string name="wind_meaning_moderate">Si sente, non dà fastidio</string>
     <string name="wind_meaning_strong">Tieni il cappello</string>
     <string name="wind_meaning_gale">Difficile camminarci contro</string>
+    <!-- Le fasce della notte (21 set 2026): l\'unica temperatura di cui l\'app parla
+         prima che qualcuno ci stia dentro, quindi ogni fascia è una decisione di stasera. -->
+    <string name="night_meaning_freezing">Gelo: ghiaccio sui vetri al mattino</string>
+    <string name="night_meaning_cold">Notte fredda, cappotto se esci</string>
+    <string name="night_meaning_cool">Notte fresca, basta una felpa</string>
+    <string name="night_meaning_mild">Notte mite, si può lasciare la finestra aperta</string>
+    <string name="night_meaning_warm">Notte calda: non rinfresca</string>
     <string name="dew_meaning_dry">Aria asciutta e frizzante</string>
     <string name="dew_meaning_pleasant">Gradevole</string>
     <string name="dew_meaning_sticky">Leggermente appiccicosa</string>
@@ -204,11 +213,26 @@
     <string name="header_gps_desc">La mia posizione: %1$s</string>
 
     <!-- Primo avvio: una schermata, due risposte, saltare è concesso -->
-    <string name="first_run_tagline">Il meteo che ti dice cosa farne.</string>
+    <string name="first_run_tagline">Il meteo che ti dice se conviene uscire, e quando.</string>
     <string name="first_run_use_location">Usa la mia posizione</string>
     <string name="first_run_location_why">Usata solo per avere le previsioni di dove sei, arrotondata a circa un chilometro.</string>
     <string name="first_run_search">Cerca una città</string>
     <string name="first_run_skip">Non ora</string>
+
+    <!-- Primo avvio, passo due: la domanda sulle notifiche, in parole prima che la
+         chieda il sistema. Vedi FirstRunNotificationsRoute. -->
+    <string name="first_run_notify_title">Fai passare gli avvisi</string>
+    <string name="first_run_notify_body">Maltempo in arrivo, pioggia nelle prossime ore, allerte ufficiali e i tuoi avvisi sono già attivi. Android chiede il tuo permesso prima che un\'app possa mostrare una notifica: senza, restano in silenzio.</string>
+    <string name="first_run_notify_where">Puoi cambiare idea quando vuoi, dalla schermata Avvisi.</string>
+    <string name="first_run_notify_later">Non ora</string>
+
+    <!-- La riparazione che resta (DESIGN 8.14): disegnata su Avvisi e su Cielo ogni
+         volta che c\'è qualcosa di attivo che il telefono non lascia arrivare. -->
+    <string name="notifications_off_title">Le notifiche sono spente</string>
+    <string name="notifications_off_alerts">Gli avvisi qui sotto sono attivi, ma questo telefono non permette a Chiaro di mostrare una notifica: nessuno di loro può arrivare.</string>
+    <string name="notifications_off_sky">I tuoi promemoria sono impostati, ma questo telefono non permette a Chiaro di mostrare una notifica: nessuno di loro può arrivare.</string>
+    <string name="notifications_off_allow">Consenti le notifiche</string>
+    <string name="notifications_off_open_settings">Apri le impostazioni</string>
 
     <!-- Impostazioni (Fase 4). I gruppi compaiono CON la funzione che governano:
          le notifiche arrivano in Fase 6, i widget in Fase 8 — un interruttore che
@@ -234,6 +258,11 @@
     <string name="settings_palette_note">Carta è bianco caldo e ambra. Brillante è bianco freddo e azzurro.</string>
     <string name="settings_palette_note_icons_line">Con le icone a tratto, Brillante le schiarisce anche sul tema scuro.</string>
     <string name="settings_palette_note_icons_fill">Le icone piene tengono i colori loro, quindi la palette non le tocca.</string>
+    <string name="settings_font">Carattere</string>
+    <string name="settings_font_inter">Inter</string>
+    <string name="settings_font_google_sans">Google Sans</string>
+    <string name="settings_font_system">Di sistema</string>
+    <string name="settings_font_note">Google Sans e Inter vengono con l\'app, quindi si vedono uguali su ogni telefono. Di sistema prende il carattere impostato sul telefono: è quello che più si avvicina ai widget, ma non sempre coincide, perché i widget li disegna la schermata principale e non l\'app.</string>
     <string name="settings_weather_icons">Icone del meteo</string>
     <string name="settings_icons_fill">Piene</string>
     <string name="settings_icons_line">A tratto</string>
@@ -262,8 +291,10 @@
     <string name="settings_data_source_note">Previsioni, qualità dell\'aria e ricerca dei luoghi di Open-Meteo, CC BY 4.0</string>
     <string name="settings_credit_icons">Set di icone del meteo</string>
     <string name="settings_credit_icons_note">Meteocons di Bas Milius, MIT</string>
-    <string name="settings_credit_font">Carattere</string>
-    <string name="settings_credit_font_note">Inter di Rasmus Andersson, SIL Open Font License 1.1</string>
+    <string name="settings_credit_font">Caratteri</string>
+    <string name="settings_credit_font_note">Inter di Rasmus Andersson e Google Sans di Google, entrambi SIL Open Font License 1.1</string>
+    <string name="settings_credit_font_inuse">in uso: %1$s</string>
+    <string name="settings_credit_font_inuse_system">in uso: il carattere impostato sul telefono</string>
     <string name="settings_credit_ui_icons">Icone dell\'interfaccia</string>
     <string name="settings_credit_ui_icons_note">Material Icons di Google, Apache 2.0</string>
     <string name="settings_source_code">Codice sorgente</string>
@@ -310,7 +341,7 @@
     <string name="guide_today_hours_title">Le prossime ore</string>
     <string name="guide_today_hours_body">Ventiquattro ore di temperatura, cielo e probabilità di pioggia, a partire dall\'ora dopo questa: l\'ora in cui sei è il numero grande in cima.</string>
     <string name="guide_today_rest_title">Il resto della giornata</string>
-    <string name="guide_today_rest_body">Una sola linea del tempo per tutto quello che manca: alba o tramonto, l\'ora dorata e l\'ora blu, il momento in cui il cielo diventa del tutto buio, il sorgere e il calare della luna, e le ore in cui la pioggia dovrebbe iniziare e smettere.</string>
+    <string name="guide_today_rest_body">Una sola linea del tempo per tutto quello che manca: alba o tramonto, l\'ora dorata e l\'ora blu, il momento in cui il cielo diventa del tutto buio, il sorgere e il calare della luna, le ore in cui la pioggia dovrebbe iniziare e smettere e — quando il sole è basso e davanti a lui la pioggia è probabile — la finestra in cui potrebbe starci un arcobaleno, con la direzione in cui girarsi a guardare.</string>
     <string name="guide_today_week_title">La settimana</string>
     <string name="guide_today_week_body">Sette giorni su un\'unica scala di temperatura, così la stessa lunghezza di barra significa la stessa cosa su ogni riga. La striscia sotto ogni giorno è la sua luce, dall\'alba al tramonto. Tocca un giorno per aprirne le ore.</string>
     <string name="guide_today_details_title">I dettagli</string>
@@ -322,9 +353,9 @@
     <string name="guide_today_places_body">Scorri di lato per passare da un luogo all\'altro; i puntini sotto il cielo dicono dove sei. Per un luogo che non è quello in cui ti trovi, l\'intestazione dice che giorno e che ora sono lì.</string>
 
     <string name="guide_sky_title">Cielo</string>
-    <string name="guide_sky_p1">È la schermata che nessun\'altra app meteo porta. Prende i momenti che vale la pena aspettare — un\'alba, un\'ora dorata, una notte di stelle, il picco di uno sciame meteorico — e dice se stanotte è una di quelle buone. Tutto quello che c\'è sopra è calcolato sul telefono, quindi funziona anche senza connessione.</string>
+    <string name="guide_sky_p1">È la schermata che nessun\'altra app meteo porta. Prende i momenti che vale la pena aspettare — un\'alba, un\'ora dorata, una notte di stelle, il picco di uno sciame meteorico, il pianeta luminoso che sta a ovest dopo il tramonto — e dice se stanotte è una di quelle buone. Tutto quello che c\'è sopra è calcolato sul telefono, quindi funziona anche senza connessione.</string>
     <string name="guide_sky_tonight_title">Stanotte</string>
-    <string name="guide_sky_tonight_body">La card in cima è la finestra di buio: le ore in cui il cielo è davvero scuro e la luna è fuori dai piedi. Porta il verdetto, le due ore tra cui corre e il numero che l\'ha deciso.</string>
+    <string name="guide_sky_tonight_body">La card in cima è la finestra di buio: le ore in cui il cielo è davvero scuro E la luna è fuori dai piedi. È un\'intersezione, non un orario, quindi certe notti è tutta la notte, certe notti è novanta minuti, e certe notti non c\'è affatto — quando la luna resta su dal crepuscolo all\'alba la card lo dice, e dice anche fra che ore il cielo è comunque scuro. Porta il verdetto, il numero che l\'ha deciso, quel che la luna si è presa se si è presa qualcosa, e, quando la notte non è tutta uguale, il tratto in cui è più sereno.</string>
     <string name="guide_verdicts_p1">Un verdetto è una parola, un piccolo segno e il numero che c\'è dietro — mai un colore da solo:</string>
     <string name="guide_verdicts_caption">Un esempio: una notte di stelle, giudicata dalle sue nuvole.</string>
     <string name="guide_verdicts_p2">Il numero accanto alla parola è la prova che l\'ha decisa, così la risposta puoi pesarla anche tu. Quando la previsione non arriva così lontano, o l\'ultima arrivata è troppo vecchia per fidarsi, la risposta è quella onesta: un grigio «presto per dirlo», mai un\'ipotesi vestita da verdetto.</string>
@@ -334,12 +365,14 @@
     <string name="guide_sky_moments_title">I prossimi momenti</string>
     <string name="guide_sky_moments_body">I momenti che segui, nell\'ordine in cui capitano. Quello che è passato lascia il posto alla sua prossima volta e la riga dice di che giorno si tratta; quello che sta capitando adesso lo dice. È lo stesso momento che il widget Cielo mostra sulla home, risolto allo stesso modo.</string>
     <string name="guide_sky_moment_caption">Un esempio: l\'alba di domani, giudicata dalle sue nuvole.</string>
+    <string name="guide_sky_camera_title">Il marchio della macchina fotografica</string>
+    <string name="guide_sky_camera_body">Qualche evento porta una piccola macchina fotografica accanto al nome: sono i nove per cui vale davvero la pena portarsela — le ore dorate e le ore blu, la luna piena al crepuscolo, la luce cinerea di sera e di mattina, il cuore della Via Lattea e l\'eclissi di Luna. Non è una questione di gusti, ed è per questo che quelle righe dicono anche da che parte guardare: un orario senza una direzione è mezza risposta. L\'eclissi di Sole di proposito non ce l\'ha — quella si guarda solo con un filtro adatto, e un obiettivo ne ha bisogno esattamente quanto un occhio.</string>
     <string name="guide_sky_bell_title">La campanella</string>
     <string name="guide_sky_bell_body">Ogni momento può ricordarsi di te, con il suo anticipo o con quello abituale. I promemoria sono volutamente larghi — possono arrivare qualche minuto prima o dopo — ed è proprio quella larghezza a tenerli fuori dalla batteria. Il promemoria di qualcosa che le nuvole nasconderanno resta zitto, a meno che tu non lo voglia lo stesso.</string>
     <string name="guide_sky_events_title">In arrivo</string>
-    <string name="guide_sky_events_body">Il calendario davanti: i picchi degli sciami meteorici con la loro data, la prossima luna piena, solstizi ed equinozi — col verdetto dove la previsione arriva e un onesto «troppo lontano per dirlo» dove non arriva.</string>
+    <string name="guide_sky_events_body">Il calendario davanti, in due strati. Sopra, tutto quello che segui: anche un\'eclissi fra due anni ha la sua riga, con l\'anno e le ore, e una riga che il cielo salta — uno sciame che culmina in una notte che qui non diventa mai buia — resta lì e dice perché. Sotto, i prossimi eventi per tutti: picchi degli sciami, la prossima luna piena, solstizi ed equinozi. Il verdetto dove la previsione arriva, e un onesto «troppo lontano per dirlo» dove non arriva. Un istante, una riga: due sciami che culminano la stessa notte ne condividono una, e tutti e due sono nominati.</string>
     <string name="guide_sky_catalog_title">Aggiungi un momento</string>
-    <string name="guide_sky_catalog_body">Una cinquantina di momenti, raggruppati in sole, notte, luna, eclissi, stagioni e sciami meteorici, ognuno con la riga che dice cos\'è e una pagina che lo spiega per bene. È il posto dove si scopre cos\'è davvero un\'ora blu, o la luce zodiacale: aggiungendola, o leggendone prima.</string>
+    <string name="guide_sky_catalog_body">Sessanta momenti, raggruppati in sole, notte, luna, pianeti, eclissi, stagioni e sciami meteorici, ognuno con la riga che dice cos\'è e una pagina che lo spiega per bene. Il campo in cima cerca fra i nomi e quelle righe, che è la strada corta per arrivare alle Perseidi — e «foto» tira fuori i nove che portano la macchina fotografica. È il posto dove si scopre cos\'è davvero un\'ora blu, o la luce cinerea: aggiungendola, o leggendone prima.</string>
 
     <string name="guide_alerts_title">Avvisi</string>
     <string name="guide_alerts_p1">Qui vivono due specie: quelli già scritti e quelli che scrivi tu. Non arriva niente che non abbia acceso tu.</string>
@@ -352,7 +385,7 @@
     <string name="guide_alerts_message_title">Il messaggio è tuo</string>
     <string name="guide_alerts_message_body">Chiaro non lo riscrive e non lo traduce mai. Le parole tra graffe diventano numeri quando scatta: {trigger.value} è ciò che l\'ha fatto scattare, {trigger.time} è quando. Ogni valore che un avviso può guardare si può stampare allo stesso modo, e la lista sotto il messaggio lo scrive al posto tuo.</string>
     <string name="guide_alerts_battery_title">Quanto costa</string>
-    <string name="guide_alerts_battery_body">Niente in più: i controlli viaggiano sull\'aggiornamento del meteo che hai già chiesto, al ritmo scelto nelle impostazioni. Android chiede il permesso per le notifiche la prima volta che accendi un avviso.</string>
+    <string name="guide_alerts_battery_body">Niente in più: i controlli viaggiano sull\'aggiornamento del meteo che hai già chiesto, al ritmo scelto nelle impostazioni. Android chiede il permesso per le notifiche una volta al primo avvio, e di nuovo la prima volta che accendi un avviso. La schermata Avvisi lo dice a chiare lettere ogni volta che c\'è qualcosa di attivo che il telefono non lascia passare.</string>
     <string name="guide_alerts_official_title">Le allerte ufficiali</string>
     <string name="guide_alerts_official_body">In Italia fa fede il Dipartimento della Protezione Civile. Ogni pomeriggio, di solito entro le 16, valuta ciascuna zona di allerta per oggi e per domani: rischio idraulico, rischio idrogeologico e temporali, su quattro livelli — nessuno, giallo, arancione, rosso. Chiaro trova la zona in cui cade il tuo luogo, legge il bollettino e lo mostra: il riquadro in Oggi quando c\'è qualcosa da dire, la griglia e le parole del Dipartimento nel foglio dietro, e una riga nel Diario ogni volta che un livello si muove. Le parole dell\'autorità sono citate, mai tradotte. Per i luoghi fuori dall\'Italia non compare nulla, perché nessuno li ha valutati.</string>
     <string name="guide_alerts_official_credit">Fonte: Dipartimento della Protezione Civile, CC BY 4.0.</string>
@@ -377,15 +410,15 @@
     <string name="guide_places_order_body">Sposta un luogo su o giù e lo scorrimento di Oggi segue quell\'ordine. Scorri via un luogo per toglierlo, con un attimo per annullare se era un errore.</string>
 
     <string name="guide_widgets_title">I widget sulla home</string>
-    <string name="guide_widgets_three_title">Sono quattro</string>
-    <string name="guide_widgets_three_body">Colpo d\'occhio: icona, temperatura, luogo — e su una card larga o alta la frase della giornata, o lo stato del cielo quando non c\'è niente da segnalare; ridimensionala e mostra quello che ci sta, e dalle sue impostazioni si può girare al contrario. Le prossime ore: quello, più le ore che vengono. Momenti del cielo: il momento che hai davanti, quando, e il suo verdetto — lo stesso che mostra la schermata Cielo — e quelli dopo su una card più alta. L\'arco del giorno: il percorso del sole sopra il tuo luogo con il cielo di ogni ora sotto, la luna e la pioggia, il prossimo momento della luce e l\'agenda che segue — da una cella a sedici, e si ridisegna a ogni misura, con una schermata di impostazioni tutta sua.</string>
+    <string name="guide_widgets_all_title">Sono cinque</string>
+    <string name="guide_widgets_all_body">Colpo d\'occhio: icona, temperatura, luogo — e su una card larga o alta la frase della giornata, o lo stato del cielo quando non c\'è niente da segnalare; ridimensionala e mostra quello che ci sta, e dalle sue impostazioni si può girare al contrario. Le prossime ore: quello, più le ore che vengono. Momenti del cielo: il momento che hai davanti, quando, e il suo verdetto — lo stesso che mostra la schermata Cielo — e quelli dopo su una card più alta. In parole: gli stessi fatti senza niente di disegnato sulla card — nessuna icona, nessun segnaposto, nessun marchio — dove il disegno è la temperatura e il nome del luogo è stampato per intero per quanto sia lungo. L\'arco del giorno: il percorso del sole sopra il tuo luogo con il cielo di ogni ora sotto, la luna e la pioggia, il prossimo momento della luce e l\'agenda che segue — da una cella a sedici, e si ridisegna a ogni misura, con una schermata di impostazioni tutta sua.</string>
     <string name="guide_widgets_config_title">Come si imposta</string>
     <string name="guide_widgets_config_body">Tieni premuto un widget per aprire le sue impostazioni: quale luogo guarda (quello attivo, o un luogo fisso suo), lo sfondo — compreso lo stesso cielo calcolato che disegna l\'app — quanto quello sfondo è coprente, e con quali icone del meteo disegna.</string>
     <string name="guide_widgets_honest_title">Non inventano</string>
     <string name="guide_widgets_honest_body">Un dato vecchio dice quanto è vecchio, un widget senza luogo lo dice, e nessuno mostra un numero che non ha. Si ridisegnano quando arriva un aggiornamento, quindi non costano batteria per conto loro.</string>
 
     <string name="guide_settings_title">Impostazioni</string>
-    <string name="guide_settings_body">Le unità di temperatura e vento. L\'aspetto, dove vivono il tema, la palette, i due disegni delle icone del meteo e i colori presi dallo sfondo. Ogni quanto cercare una previsione nuova. La lingua dell\'app, sul selettore di Android. Ripristinare le impostazioni predefinite rimette unità, aspetto e frequenza come erano all\'inizio e lascia i tuoi luoghi e il tuo storico esattamente dove sono.</string>
+    <string name="guide_settings_body">Le unità di temperatura e vento. L\'aspetto, dove vivono il tema, la palette, il carattere, i due disegni delle icone del meteo, se si muovono, e i colori presi dallo sfondo. Ogni quanto cercare una previsione nuova. La lingua dell\'app, sul selettore di Android. Ripristinare le impostazioni predefinite rimette unità, aspetto e frequenza come erano all\'inizio e lascia i tuoi luoghi e il tuo storico esattamente dove sono.</string>
 
     <string name="guide_data_title">Da dove arrivano i numeri</string>
     <string name="guide_data_p1">Previsioni, qualità dell\'aria e ricerca dei luoghi arrivano da Open-Meteo, un servizio meteo aperto: gratuito, senza account e senza chiave API. La richiesta del meteo è l\'unica cosa che esce dal telefono.</string>
@@ -406,8 +439,18 @@
     <string name="sky_no_place_body">Aggiungi un luogo per vedere cosa ha in programma il suo cielo.</string>
     <string name="sky_section_moments">I prossimi momenti</string>
     <string name="sky_section_events">In arrivo</string>
+    <!-- Fase 27: due sciami che culminano la stessa notte stanno su una riga sola. -->
+    <string name="sky_event_and">%1$s e %2$s</string>
     <string name="sky_section_reminders">Promemoria</string>
     <string name="sky_add_moment">Aggiungi un momento</string>
+    <!-- Fase 28: sessanta voci in un foglio erano uno scroll. -->
+    <string name="sky_catalog_search">Cerca tra gli eventi</string>
+    <string name="sky_catalog_search_clear">Cancella la ricerca</string>
+    <string name="sky_catalog_no_match">Qui non c\'è niente che corrisponda a «%1$s».</string>
+    <!-- Fase 28b: le parole che tirano fuori i nove eventi col marchio della
+         macchina fotografica. Una lista per lingua, e il marchio resta l'unica
+         verita': la parola non entra nelle descrizioni, dove potrebbe divergere. -->
+    <string name="sky_catalog_search_photo_terms" translatable="true">foto fotografia fotografie fotografare fotografico fotografica macchina obiettivo scatto scattare</string>
     <string name="sky_moment_now">Adesso</string>
     <string name="sky_day_today">Oggi</string>
     <string name="sky_day_tomorrow">Domani</string>
@@ -418,8 +461,13 @@
          è buio a mezzogiorno (sopra gli 84,6° al solstizio). La card e la riga lo dicono. -->
     <string name="sky_tonight_dark_all_day">Qui, a questa latitudine, in questa stagione, è buio tutto il giorno: non c\'è una notte da aspettare, c\'è già.</string>
     <string name="sky_none_dark_all_day">È buio tutto il giorno: il sole non risale fino al crepuscolo</string>
-    <string name="sky_tonight_moon">C\'è la luna, illuminata al %1$d%%</string>
-    <string name="sky_moon_line">%1$s · illuminata al %2$d%%</string>
+    <!-- Fase 27: la finestra di buio e' la notte astronomica MENO le ore in cui la luna
+         e' su, cosi' la card puo' dire che cosa l'ha accorciata - o presa tutta. -->
+    <string name="sky_tonight_moon_sets">La luna resta su fino alle %1$s, %2$d%% illuminata</string>
+    <string name="sky_tonight_moon_rises">La luna torna su alle %1$s, %2$d%% illuminata</string>
+    <string name="sky_tonight_moon_all_night">La luna è su dal crepuscolo all\'alba, %1$d%% illuminata: stanotte non c\'è una finestra davvero buia. Il cielo è comunque scuro dalle %2$s alle %3$s.</string>
+    <string name="sky_tonight_clear_between">Più sereno tra le %1$s e le %2$s</string>
+    <string name="sky_moon_line">%1$s · %2$d%% illuminata</string>
     <string name="sky_too_far">Troppo lontano per dirlo</string>
 
     <!-- L\'evidenza dei verdetti: il numero che ha deciso la parola accanto -->
@@ -438,6 +486,48 @@
     <string name="sky_none_polar_night">Il sole non sorge</string>
     <string name="sky_none_moon">La luna lo salta, come capita circa una volta al mese</string>
     <string name="sky_none_no_darkness">Il cielo non diventa mai del tutto buio</string>
+    <string name="sky_none_moon_all_night">La luna è su tutta la notte</string>
+
+    <!-- Fase 28: i nuovi eventi (luna piena al crepuscolo, luce cinerea, Venere,
+         Giove, le tre congiunzioni), le loro ragioni di assenza, il marchio
+         fotografico e la direzione in cui guardare. -->
+    <string name="sky_group_planets">Pianeti</string>
+    <string name="sky_name_moon_full_at_dusk">Luna piena al crepuscolo</string>
+    <string name="sky_expl_moon_full_at_dusk">La sera in cui la luna piena sorge mentre il cielo è ancora colorato.</string>
+    <string name="sky_about_moon_full_at_dusk">Una volta al mese la luna sorge a pochi minuti dal tramonto, e per mezz\'ora è un disco arancione enorme contro un cielo che non è ancora diventato scuro. È la stessa luna che a mezzanotte sarà piccola, bianca e alta: la dimensione è un\'illusione che l\'occhio fa vicino all\'orizzonte, il colore invece è vero e nasce come nasce un tramonto rosso.\n\nUn almanacco risponde «luna piena, 03:14», che è l\'istante della geometria e non una sera in cui qualcuno uscirebbe di casa. Questa è la sera. L\'app cerca un sorgere della luna che cada dentro il crepuscolo con il disco già abbastanza tondo: a volte è la notte della luna piena, spesso è quella prima.</string>
+    <string name="sky_name_earthshine_pm">Luce cinerea, sera</string>
+    <string name="sky_expl_earthshine_pm">La falce sottile con il resto del disco appena illuminato, bassa a ovest.</string>
+    <string name="sky_about_earthshine_pm">Per qualche sera dopo la luna nuova c\'è una falce sottile bassa a ovest, e se il cielo è pulito si vede tutto il disco: la parte scura brilla di un grigio debolissimo. Quel chiarore è luce del sole che ha colpito la Terra, è rimbalzata ed è finita sulla luna. Si chiama luce cinerea, ed è l\'unica cosa in questo elenco in cui quello che stai guardando è la luce del tuo pianeta che torna indietro.\n\nServe una falce sottile e nient\'altro. Oltre circa un quinto del disco il bordo illuminato è troppo forte e la luce di cenere ci annega dentro: per questo la finestra dura poche sere al mese e per questo questa voce sparisce nel mezzo. Guarda quando il cielo ha ancora del blu: quando è buio davvero, la luna di solito è già tramontata.</string>
+    <string name="sky_name_earthshine_am">Luce cinerea, mattina</string>
+    <string name="sky_expl_earthshine_am">La stessa luce di cenere prima dell\'alba, bassa a est.</string>
+    <string name="sky_about_earthshine_am">La stessa cosa dall\'altra parte del mese: qualche mattina prima della luna nuova una falce calante sorge a est davanti al sole, con il resto del disco appena illuminato dalla luce della Terra.\n\nChiede le stesse cose della versione serale — una falce sottile e un orizzonte pulito — e costa una sveglia presto invece di una serata, che è il motivo per cui quasi tutti hanno visto solo l\'altra metà. La parte scura del disco è un po\' più chiara in primavera che in autunno, perché la parte di Terra che fa da specchio ha più nuvole e più oceano sotto il sole.</string>
+    <string name="sky_name_venus_evening">Venere, stella della sera</string>
+    <string name="sky_expl_venus_evening">La cosa più luminosa a ovest dopo il tramonto, e non è una stella.</string>
+    <string name="sky_about_venus_evening">Quel punto luminoso e fermo basso a ovest dopo il tramonto è un pianeta. È più brillante di qualunque cosa nel cielo a parte il sole e la luna, non tremola come fanno le stelle, ed è in assoluto la cosa che la gente fotografa e poi chiede che cos\'era.\n\nVenere sta più vicino al sole di noi, quindi non se ne allontana mai molto: si vede solo per qualche ora dopo il tramonto o per qualcuna prima dell\'alba, mai a mezzanotte. Ecco perché questa voce va e viene — per mesi Venere è la stella della sera, poi passa tra noi e il sole e per il periodo dopo diventa quella del mattino.</string>
+    <string name="sky_name_venus_morning">Venere, stella del mattino</string>
+    <string name="sky_expl_venus_morning">Lo stesso pianeta dall\'altra parte dell\'anno, prima dell\'alba a est.</string>
+    <string name="sky_about_venus_morning">Lo stesso pianeta, l\'altra metà del suo giro: per mesi Venere sorge prima del sole ed è la cosa più luminosa del cielo a est prima dell\'alba.\n\nGli antichi li presero per due oggetti diversi e diedero loro due nomi, che è un errore ragionevole — niente, in una stella della sera, dice che è la stessa luce vista all\'alba otto mesi prima. È lo stesso pianeta, che gira più in fretta di noi su una pista più stretta, e quel che cambia è da che parte del sole si trova.</string>
+    <string name="sky_name_jupiter_night">Giove stanotte</string>
+    <string name="sky_expl_jupiter_night">Fermo, bianco-giallo, più luminoso di ogni stella: quando è su, e dove.</string>
+    <string name="sky_about_jupiter_night">Dopo Venere e la luna, Giove è la cosa più luminosa di un cielo notturno, e a differenza di Venere può stare su a mezzanotte — è più lontano dal sole di noi, quindi non è legato al crepuscolo. Un punto fermo, bianco-giallo, che non tremola: è lui.\n\nÈ anche la cosa più facile del cielo da trasformare in qualcosa di più di un punto. Un binocolo qualsiasi tenuto fermo mostra fino a quattro delle sue lune come una fila di puntini di fianco, e tra una notte e l\'altra si spostano abbastanza da farti vedere che stanno girando. È l\'osservazione che è costata la libertà a Galileo, e non costa niente.</string>
+    <string name="sky_name_conjunction_moon_venus">La luna accanto a Venere</string>
+    <string name="sky_expl_conjunction_moon_venus">Le sere in cui la falce e il pianeta luminoso stanno uno di fianco all\'altro.</string>
+    <string name="sky_about_conjunction_moon_venus">Circa una volta al mese la luna, girando intorno a noi, passa dal punto in cui si trova Venere, e per una sera i due punti più luminosi del crepuscolo stanno a un paio di gradi di distanza. Tieni un dito a braccio teso: è largo circa un grado. Un passaggio ravvicinato ci sta dietro.\n\nNon sono vicini in nessun senso reale — la luna è a un secondo luce, Venere a qualche minuto — ed è tutto il bello della cosa: due oggetti a distanze completamente diverse, allineati da dove ti trovi tu. L\'app elenca solo i passaggi che da qui si possono davvero vedere, perché circa la metà capita con tutti e due dietro il sole.</string>
+    <string name="sky_name_conjunction_moon_jupiter">La luna accanto a Giove</string>
+    <string name="sky_expl_conjunction_moon_jupiter">Le notti in cui la luna passa accanto al pianeta più luminoso della notte.</string>
+    <string name="sky_about_conjunction_moon_jupiter">Lo stesso passaggio mensile, con l\'altro pianeta che quest\'app conosce per nome. Siccome Giove può essere su a qualsiasi ora, questo non è legato al crepuscolo come quello di Venere: può capitare alto e tardi, il che lo rende il migliore dei due da fotografare.\n\nSe la luna è una falce, è la notte giusta per guardare Giove col binocolo — è facile da trovare perché la luna te lo sta indicando, e nello stesso campo visivo di solito ci stanno anche le sue lune.</string>
+    <string name="sky_name_conjunction_venus_jupiter">Venere accanto a Giove</string>
+    <string name="sky_expl_conjunction_venus_jupiter">I due pianeti più luminosi nello stesso pezzo di cielo: raro, e inconfondibile.</string>
+    <string name="sky_about_conjunction_venus_jupiter">I due pianeti più luminosi, abbastanza vicini da coprirli con un pollice. Capita circa ogni tredici mesi, e solo alcune volte è visibile da un posto preciso, quindi tra una buona e l\'altra passano anni e non mesi.\n\nQuando arriva vale la pena segnarsela. Due punti di quella luminosità, così vicini, sono una cosa che la gente nota senza che nessuno gliel\'abbia detto — è in assoluto la «strana luce nel cielo» più segnalata che ci sia.</string>
+    <string name="sky_none_moon_not_crescent">La luna adesso non è una falce sottile</string>
+    <string name="sky_none_planet_too_low">Troppo basso per vederlo, così vicino al sole</string>
+    <string name="sky_none_no_conjunction">Nessun passaggio ravvicinato visibile da qui per anni</string>
+    <string name="sky_none_no_moonrise_at_dusk">Qui nessuna luna piena sorge dentro il crepuscolo</string>
+    <string name="sky_guide_when_photographic">Vale la pena portare la macchina fotografica.</string>
+    <string name="sky_photographic_desc">Vale la pena fotografarlo</string>
+    <string name="sky_bearing_towards">verso %1$s</string>
+    <string name="sky_conjunction_apart">%1$d° di distanza</string>
+    <string name="sky_conjunction_very_close">meno di un grado di distanza</string>
 
     <!-- Promemoria: inesatti di proposito, e lo schermo lo dice -->
     <string name="sky_default_lead">Promemoria abituale</string>
@@ -666,11 +756,11 @@
     <string name="sky_none_core_too_low">Stanotte il centro della Via Lattea resta troppo basso</string>
     <string name="sky_none_no_eclipse">Nessuna eclissi visibile da qui per anni</string>
     <string name="sky_eclipse_lunar_total">Totale: la Luna entra tutta nell\'ombra</string>
-    <string name="sky_eclipse_lunar_partial">Parziale: il %1$d%% della Luna nell\'ombra</string>
+    <string name="sky_eclipse_lunar_partial">Parziale: %1$d%% della Luna nell\'ombra</string>
     <string name="sky_eclipse_lunar_penumbral">Debole: la Luna sfiora appena l\'ombra</string>
     <string name="sky_eclipse_solar_total">Totale da qui</string>
     <string name="sky_eclipse_solar_annular">Da qui resta un anello di Sole</string>
-    <string name="sky_eclipse_solar_partial">Da qui il Sole è coperto al %1$d%%</string>
+    <string name="sky_eclipse_solar_partial">Da qui il Sole è coperto per %1$d%%</string>
     <string name="sky_eclipse_solar_warning">Mai guardare il Sole senza un filtro adatto</string>
 
     <!-- Fase 19: da che parte guardare, per la riga dell\'arcobaleno -->
@@ -696,6 +786,8 @@
     <string name="alert_precip_desc" formatted="false">Un avviso quando la pioggia supera il 70% di probabilità entro 6 ore. Al massimo due volte al giorno.</string>
     <string name="alert_summary_title">Il riepilogo del mattino</string>
     <string name="alert_summary_desc">Una volta al giorno, tra le 6 e le 12: il cielo di oggi, minima, massima e pioggia.</string>
+    <string name="alert_evening_title">Il riepilogo della sera</string>
+    <string name="alert_evening_desc">Una volta al giorno, tra le 18 e le 23: il cielo di domani, minima, massima e pioggia. Aprendolo, anche la notte che c\'è in mezzo.</string>
     <string name="alerts_templates_title">Parti da un\'idea</string>
     <string name="alerts_max_reached">Hai già il massimo di avvisi che l\'app tiene, %1$d: togline uno per aggiungerne un altro.</string>
     <string name="tpl_already_added">Già aggiunto</string>
@@ -791,6 +883,7 @@
     <string name="notif_channel_severe">Maltempo</string>
     <string name="notif_channel_precip">Pioggia in arrivo</string>
     <string name="notif_channel_summary">Riepilogo del mattino</string>
+    <string name="notif_channel_evening">Riepilogo della sera</string>
     <string name="notif_channel_rules">I tuoi avvisi</string>
 
     <!-- Allerte ufficiali (Fase 11): il bollettino della Protezione Civile come notifica. -->
@@ -801,14 +894,14 @@
     <string name="notif_warning_today">oggi fino a mezzanotte</string>
     <string name="notif_warning_tomorrow">domani</string>
     <string name="notif_warning_today_and_tomorrow">oggi e domani</string>
-    <string name="notif_warning_bulletin_at">bollettino delle %1$s</string>
+    <string name="notif_warning_bulletin_at">bollettino %1$s</string>
     <string name="notif_warning_day_today">Oggi: %1$s</string>
     <string name="notif_warning_day_tomorrow">Domani: %1$s</string>
     <string name="notif_warning_day_other">%1$s: %2$s</string>
     <string name="notif_warning_zone">Zona di allerta: %1$s</string>
     <string name="notif_warning_meaning">Cosa vuol dire: %1$s</string>
     <string name="notif_warning_note">Nota del bollettino: %1$s</string>
-    <string name="notif_warning_source">Dipartimento della Protezione Civile · bollettino delle %1$s</string>
+    <string name="notif_warning_source">Dipartimento della Protezione Civile · bollettino %1$s</string>
     <string name="warning_phrase_yellow">Allerta gialla</string>
     <string name="warning_phrase_orange">Allerta arancione</string>
     <string name="warning_phrase_red">Allerta rossa</string>
@@ -842,19 +935,26 @@
     <string name="warning_day_tomorrow_short">domani</string>
     <string name="warning_zone_unnamed">una zona della regione %1$s</string>
     <string name="warning_banner_detail">%1$s · %2$s</string>
-    <string name="warning_banner_source">Protezione Civile, bollettino delle %1$s</string>
+    <string name="warning_banner_source">Protezione Civile, bollettino %1$s</string>
+    <!-- Quando il bollettino è stato emesso, con la sua preposizione dentro: il giorno
+         si dice solo se non è oggi (committente, 11 set 2026). La sola ora, che era
+         quel che stampavamo, faceva leggere «delle 15:07» a mezzogiorno per un
+         bollettino del pomeriggio prima. -->
+    <string name="warning_issued_time">delle %1$s</string>
+    <string name="warning_issued_yesterday">di ieri alle %1$s</string>
+    <string name="warning_issued_dated">del giorno %1$s alle %2$s</string>
     <string name="warning_sheet_title">Allerta per %1$s</string>
     <string name="warning_sheet_tomorrow">Domani</string>
     <string name="warning_sheet_meaning_title">Cosa vuol dire</string>
     <string name="warning_sheet_note_title">Nota del bollettino</string>
-    <string name="warning_sheet_source">Dipartimento della Protezione Civile · bollettino del %1$s, %2$s · CC BY 4.0</string>
+    <string name="warning_sheet_source">Dipartimento della Protezione Civile · bollettino del giorno %1$s, %2$s · CC BY 4.0</string>
     <string name="warning_sheet_open">Apri il bollettino</string>
 
     <string name="alerts_group_warnings">Allerte ufficiali</string>
     <string name="warning_card_none">Nessuna allerta per %1$s</string>
-    <string name="warning_card_none_detail">Bollettino delle %1$s</string>
+    <string name="warning_card_none_detail">Bollettino %1$s</string>
     <string name="warning_card_stale">Nessun bollettino per oggi</string>
-    <string name="warning_card_stale_detail">L\'ultimo è del %1$s · il prossimo esce di solito entro le 16</string>
+    <string name="warning_card_stale_detail">L\'ultimo risale a %1$s · il prossimo esce di solito entro le 16</string>
     <string name="warning_card_waiting">Ancora nessun bollettino</string>
     <string name="warning_card_waiting_detail">Il primo arriva con il prossimo aggiornamento.</string>
     <string name="warning_card_unavailable">Le allerte ufficiali sono disponibili per i luoghi in Italia</string>
@@ -867,18 +967,26 @@
 
     <string name="journal_warning_raised">%1$s per %2$s, %3$s</string>
     <string name="journal_warning_cleared">Allerta rientrata: nessuna criticità per %1$s</string>
-    <string name="journal_warning_source">Protezione Civile, bollettino delle %1$s</string>
+    <string name="journal_warning_source">Protezione Civile, bollettino %1$s</string>
     <string name="journal_warning_missed">Bollettino non raggiunto</string>
-    <string name="journal_warning_missed_held">Resta valido quello del %1$s</string>
+    <string name="journal_warning_missed_held">Resta valido quello del giorno %1$s</string>
     <string name="journal_warning_missed_empty">Nessun bollettino in memoria</string>
     <string name="notif_severe_title">Maltempo in arrivo · %1$s</string>
-    <string name="notif_severe_body">%1$s verso le %2$s</string>
-    <string name="notif_rain_fragment">, pioggia al %1$d%%</string>
+    <!-- Una frase intera per forma invece di un tronco più un frammento (21 set 2026):
+         una subordinata incollata in inglese non è una subordinata che ogni lingua mette
+         lì, ed è il frammento ad aver lasciato questo avviso senza il punto finale. -->
+    <string name="notif_severe_body">%1$s verso le %2$s.</string>
+    <string name="notif_severe_body_rain">%1$s verso le %2$s, pioggia %3$d%%.</string>
+    <string name="notif_severe_body_soon">%1$s in arrivo.</string>
     <string name="notif_precip_title">Pioggia in arrivo · %1$s</string>
-    <string name="notif_precip_body">Ombrello verso le %1$s: pioggia al %2$d%%.</string>
+    <string name="notif_precip_body">Ombrello verso le %1$s: pioggia %2$d%%.</string>
+    <string name="notif_precip_body_plain">Pioggia probabile nelle prossime ore.</string>
     <string name="notif_summary_title">Oggi · %1$s</string>
     <string name="notif_summary_body">%1$s. Minima %2$s, massima %3$s, pioggia %4$d%%.</string>
     <string name="notif_summary_body_no_rain">%1$s. Minima %2$s, massima %3$s.</string>
+    <!-- Il gemello della sera dice la stessa frase sotto un giorno diverso: li separa
+         il titolo, ed è l\'unica cosa che deve separarli. -->
+    <string name="notif_evening_title">Domani · %1$s</string>
     <string name="notif_rule_title">«%1$s» · %2$s</string>
 
     <!-- La notifica espansa (Fase 6b): la riga chiusa è la frase, sotto un fatto per
@@ -887,13 +995,32 @@
     <string name="notif_detail_window">Dalle %1$s alle %2$s</string>
     <string name="notif_detail_from">Dalle %1$s in poi</string>
     <string name="notif_detail_hour">Verso le %1$s</string>
-    <string name="notif_detail_rain_peak">Pioggia fino al %1$d%%, il peggio verso le %2$s</string>
+    <string name="notif_detail_rain_peak">Pioggia fino a %1$d%%, il peggio verso le %2$s</string>
     <string name="notif_detail_temp_range">Temperatura da %1$s a %2$s</string>
     <string name="notif_detail_now">Adesso %1$s · %2$s</string>
     <string name="notif_detail_sun">Alba %1$s, tramonto %2$s</string>
     <string name="notif_detail_uv">UV massimo %1$d · %2$s</string>
     <string name="notif_detail_wind">Vento adesso %1$s · %2$s</string>
     <string name="notif_detail_air">Qualità dell\'aria %1$d · %2$s</string>
+    <!-- Le righe del riepilogo della sera: la notte che separa da domani, e le parti di
+         domani su cui si può già fare qualcosa stasera. -->
+    <string name="notif_detail_night">Stanotte fino a %1$s verso le %2$s · %3$s</string>
+    <string name="notif_detail_night_rain">Pioggia stanotte fino a %1$d%%, il peggio verso le %2$s</string>
+    <string name="notif_detail_tomorrow_rain">Domani pioggia dalle %1$s alle %2$s, fino a %3$d%%</string>
+    <string name="notif_detail_tomorrow_rain_from">Domani pioggia dalle %1$s in poi, fino a %2$d%%</string>
+    <string name="notif_detail_tomorrow_rain_hour">Domani pioggia verso le %1$s, fino a %2$d%%</string>
+    <string name="notif_detail_tomorrow_rain_maybe">Domani pioggia possibile, fino a %1$d%% verso le %2$s</string>
+    <string name="notif_detail_sun_tomorrow">Domani alba %1$s, tramonto %2$s</string>
+    <string name="notif_detail_sun_tomorrow_delta">Domani alba %1$s, tramonto %2$s · %3$s</string>
+    <plurals name="notif_detail_daylight_more">
+        <item quantity="one">%d minuto di luce in più di oggi</item>
+        <item quantity="other">%d minuti di luce in più di oggi</item>
+    </plurals>
+    <plurals name="notif_detail_daylight_less">
+        <item quantity="one">%d minuto di luce in meno di oggi</item>
+        <item quantity="other">%d minuti di luce in meno di oggi</item>
+    </plurals>
+    <string name="notif_detail_uv_tomorrow">Domani UV massimo %1$d · %2$s</string>
     <string name="notif_rule_why">Perché è scattata</string>
     <string name="notif_rule_condition">%1$s — valore %2$s</string>
 
@@ -930,8 +1057,8 @@
     <string name="journal_drift_desc">tocca per i numeri</string>
     <string name="journal_drift_a11y">Come si sta muovendo la settimana, %1$s. %2$s</string>
     <string name="journal_outcome_high">massima prevista %1$s, vista %2$s</string>
-    <string name="journal_outcome_dry">Pioggia data al %1$s: non ha piovuto</string>
-    <string name="journal_outcome_rained">Pioggia data al %1$s: ha piovuto</string>
+    <string name="journal_outcome_dry">Pioggia data %1$s: non ha piovuto</string>
+    <string name="journal_outcome_rained">Pioggia data %1$s: ha piovuto</string>
     <string name="journal_drift_high_swing">%1$s: la massima è andata su e giù, fra %2$s e %3$s.</string>
     <string name="journal_drift_rain_swing">%1$s è andato su e giù: pioggia fra %2$s e %3$s.</string>
     <string name="journal_drift_table_title">I numeri dietro i colori</string>
@@ -955,6 +1082,22 @@
     <string name="widget_today_desc">L\'adesso, la frase del giorno e le prossime ore</string>
     <string name="widget_sky_label">Momenti del cielo</string>
     <string name="widget_sky_desc">Il prossimo momento del cielo, quando, e il suo verdetto — e quelli dopo su una card più alta</string>
+    <!-- Il widget testuale (19 set 2026): l'unica scheda senza niente di disegnato. -->
+    <string name="widget_text_label">In parole</string>
+    <string name="widget_text_desc">Parole e numeri: la temperatura grande, il luogo sopra, la frase del giorno accanto, e l\'icona del meteo solo se la chiedi</string>
+    <string name="widget_config_show_icon">L\'icona del meteo</string>
+    <string name="widget_config_show_icon_note">Un disegno del cielo di adesso, nello spazio che la card lascia già vuoto: accanto al numero su una riga, sopra le parole su due. Non toglie mai una riga a nient\'altro, quindi dove non c\'è spazio semplicemente non compare. Spenta, la card resta parole e numeri.</string>
+    <!-- I due segni della massima e della minima dicono cosa sono, per chi legge con
+         TalkBack: un numero senza soggetto non è una previsione. -->
+    <string name="widget_range_high">La massima di oggi</string>
+    <string name="widget_range_low">La minima di oggi</string>
+    <string name="widget_bg_color">Un colore</string>
+    <string name="widget_color_blue">Blu</string>
+    <string name="widget_color_azure">Blu chiaro</string>
+    <string name="widget_color_green">Verde</string>
+    <string name="widget_color_teal">Verde acqua</string>
+    <string name="widget_color_plum">Viola</string>
+    <string name="widget_color_clay">Terracotta</string>
     <string name="widget_no_place_hint">Tocca per aprire Chiaro e aggiungerne uno</string>
     <string name="widget_no_data">Sto prendendo la prima previsione…</string>
     <string name="widget_sky_empty">Nessun momento del cielo in arrivo. Tocca per sceglierne.</string>
