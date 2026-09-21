@@ -2,9 +2,9 @@
 
 # 🌤️ Chiaro
 
-**Weather that tells you what to do about it, and never invents anything to say it.**
+**Weather that tells you whether it is worth going out, and when.**
 
-An Android weather app for everybody, with a planner for the sky attached.
+An Android weather app with a planner for the sky attached.
 Free, no account, no ads, no tracking, no API key.
 
 ![Platform](https://img.shields.io/badge/platform-Android-2E6B3E?labelColor=FCFAF6)
@@ -19,19 +19,21 @@ Free, no account, no ads, no tracking, no API key.
 
 ## What Chiaro is
 
-Most weather apps answer "how many degrees". Chiaro answers the question people actually
-have: is it worth going outside, and when. It opens on a computed sky and one sentence
-("Umbrella around 17:00, clearing after 19:00"), and the numbers are there underneath for
-whoever wants them.
+Chiaro answers the question people actually have: is it worth going outside, and when. It
+opens on a computed sky and one sentence ("Umbrella around 17:00, clearing after 19:00"),
+with the numbers underneath for whoever wants them, and every number carries the line that
+says what to do with it. UV 8 is "burns in about 15 minutes, cover up", not an 8.
 
-Three things it does that a weather app normally does not. **The sky has an agenda**:
-sunrise, the golden hour, the blue hour, the genuinely dark window, the moon, the meteor
-peaks, each with the time it happens and whether the sky will let you see it, computed
-from the same cloud forecast the app already downloaded. **It remembers the forecast**:
-Saturday used to be 70% rain and is now 30%, and the movement is often more useful than
-either number on its own. **You write the alerts**: start from an idea ("tell me when I
-can ride") or build one out of real variables, and get told the thing you actually care
-about.
+Around the forecast sits the rest of the app, which is where most of the work went.
+**The sky has an agenda**: sunrise, the golden hour, the blue hour, the genuinely dark
+window, the moon, the meteor peaks, each with the time it happens and whether the sky will
+let you see it, computed from the same cloud forecast the app already downloaded. **It
+remembers the forecast**: Saturday used to be 70% rain and is now 30%, and the movement is
+often more useful than either number on its own. **You write the alerts**: start from an
+idea ("tell me when I can ride") or build one out of real variables, and get told the
+thing you actually care about. **The official bulletin is read here too**: in Italy the
+Protezione Civile's criticality levels, located by where a place is rather than by how its
+name is spelled, and shown next to the forecast they concern.
 
 It works offline with the last data it managed to fetch, and it says how old that data is
 instead of pretending. Nothing on the screen is there because a layout needed filling.
@@ -142,7 +144,7 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   front of you and their verdicts: the moment's time as the big number, its name under it,
   the verdict as a word with the number that decided it or, on a narrower card, as the
   series' own mark, and on a taller card as many further moments as honestly fit and never
-  more than you subscribed to), which is the widget nobody else ships, and **The day's arc**
+  more than you subscribed to), and **The day's arc**
   (the sun's real path over your place, drawn from the same astronomy the app computes its
   sky with, over the sky of every hour as bands, with the moon in its real phase, the rain
   rising from the ground, the next light moment with its countdown, the agenda after it and,
@@ -164,7 +166,7 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
   rather than photographed, that a reminder is loose on purpose, that a failed update is a
   line in the Journal), closing on where the numbers come from. It teaches with the app's
   own components shown as examples, each captioned as one, and it never teaches a control:
-  a control that needs explaining is a bug in this edition. Reachable from Settings
+  a control that needs explaining is a bug in this app. Reachable from Settings
   forever, pointed at once by a dismissable card on Today
 - 🎨 **Appearance**: two palettes, **Paper** (the warm identity) and **Vivid** (the same
   app at the brightest colors a screen holds, the default), each choosing the Material
@@ -210,10 +212,10 @@ cards, taught the headline to look ahead, tuned the second palette and added the
 widget, each round recorded with its measurements. **Fase 10** is the store: final icon,
 screenshots, listing, and v1.0.0.
 
-**Fase 11**, after v1.0.0, is the official warnings: the Protezione Civile's criticality
-bulletin, read from its own files, located by geometry and shown on Today, in Alerts and in
-the Journal. Fase 12 adds MeteoAlarm behind the same model for the rest of Europe, and in
-Italy the Protezione Civile keeps precedence.
+**Fase 11** is in and on device: the official warnings, the Protezione Civile's
+criticality bulletin read from its own files, located by geometry and shown on Today, in
+Alerts, in the Journal and on the home widgets. **Fase 12** adds MeteoAlarm behind the same
+model for the rest of Europe, and in Italy the Protezione Civile keeps precedence.
 
 Deliberately out of scope for v1: radar and satellite imagery (the provider has none, and
 that is a stated position rather than a gap to hide), tides, aurora, air-quality
@@ -256,22 +258,6 @@ body.
 
 One fetch per active place per interval, behind a 15 minute cache and constrained to a
 live connection. Nothing polls, and no request carries anything about you.
-
-## Where it comes from
-
-Chiaro is the daylight edition of
-[tweather](https://github.com/fiorenzobrioni/tweather), a weather app whose entire
-interface is a code editor: the forecast as syntax-highlighted JSON, the settings as a
-config file you edit by tapping values, the update history as a git diff. tweather is
-furniture for developers and was built that way on purpose.
-
-Underneath that interface sits a layer with no opinion about looking like an editor: the
-Open-Meteo client and mapper, a full solar and lunar ephemeris, the alert engine, the
-rules engine, the Room history. Chiaro takes that layer as it stands, with its tests, and
-puts a Material 3 product on top of it. The two apps ship side by side and neither
-replaces the other. [UPSTREAM.md](./UPSTREAM.md) records the exact commit the core came
-from, how to reproduce the copy with `tools/seed_core.py`, and the debt the seed
-deliberately left behind.
 
 ## Design
 
@@ -317,7 +303,7 @@ it, is in [DESIGN.md](./DESIGN.md).
   `tools/import_meteocons_v3.py`. The whole family of 519 drawings lives in the repo and
   only what a screen names reaches the APK, which is what `shrinkResources` is for.
   **Inter** as a bundled variable font
-- 775 unit tests on the JVM across four modules (330 in `:app`, 213 in `:core:domain`, 208
+- 946 unit tests on the JVM across four modules (450 in `:app`, 243 in `:core:domain`, 229
   in `:core:data`, 24 in `:core:sync`), Robolectric where Android is unavoidable, including
   painting the arc widget's bitmap for real and reading its pixels back
 
@@ -402,10 +388,10 @@ in the wrong module.
 
 | File | Contents |
 |---|---|
-| [VISION.md](./VISION.md) | the product: positioning, identity, design language, every screen, the parity map with tweather, the roadmap, the open decisions |
+| [VISION.md](./VISION.md) | the product: positioning, identity, design language, every screen, the roadmap, the open decisions |
 | [DESIGN.md](./DESIGN.md) | the design system: color, the sky canvas, the daylight ribbon, type, shape, motion, the component kit, the chart rules, accessibility, each value with its measured number |
 | [PLANNING.md](./PLANNING.md) | the phased plan with checkable steps, and the honest account of where the work actually is |
-| [UPSTREAM.md](./UPSTREAM.md) | where `:core` came from, how to reproduce the seed, and the debt it left behind |
+| [UPSTREAM.md](./UPSTREAM.md) | how the engines in `:core` were seeded, how to reproduce the seed, and the debt it left behind |
 | [CHANGELOG.md](./CHANGELOG.md) | what shipped, per version; a section is written before its tag |
 | [CLAUDE.md](./CLAUDE.md) | the operating rules for AI-assisted development in this repo |
 

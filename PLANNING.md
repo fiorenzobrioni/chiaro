@@ -9023,3 +9023,156 @@ una Venere-Giove a 0,6° è invisibile a chi non sapeva di doverla cercare, ed �
 per un giro futuro.
 
 `./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1649 test**, lint a zero errori.
+
+## La riga che si tagliava: misurata, capita, e lasciata dov'è (committente, 21 set 2026)
+
+Uno screenshot dello schermo di casa, la card «In parole» a quattro celle per una riga, e una
+riga sola:
+
+> «la scritta "Aggiornato 9 ore fa" è leggermente troncata in basso»
+
+Verbale completo, perché la conclusione è **non toccare niente** e una conclusione del genere
+senza le misure accanto, fra sei mesi, è solo un difetto che nessuno ha guardato.
+
+### Cosa succede davvero
+
+Lo scatto è a risoluzione piena (1080 × 2340), quindi il difetto si misura. Il taglio cade
+**esattamente sulla linea di base** del marcatore: mancano le pance delle due «g», sette pixel,
+che a quella densità sono ~2,5 dp. Ricostruito il resto dalle distanze fra le linee di base
+(53 px fra frase e forchetta a destra, 113 px fra luogo e numero a sinistra): la card aveva
+ricevuto ~88 dp, il numero era stampato a ~40 sp, e la colonna chiedeva ~79 dp di un riquadro
+che ne teneva 76,4.
+
+La causa non è la composizione, è la **prenotazione**. `textLineHeight` moltiplica per **1,32**,
+che è la scatola di Roboto (2146 + 555 unità su 2048) e di nessun altro. Un widget però non lo
+disegna l'app: è `RemoteViews` gonfiato dal launcher, cioè l'unico posto in tutta Chiaro dove il
+testo lo misura una `TextView` con `includeFontPadding` e col **carattere di sistema del
+telefono**, che su quel telefono non è Roboto e ha una scatola vicina a **1,36**. Tre righe
+prenotate al 3% in meno, più un budget che assegna al numero ogni dp che avanza: la colonna
+esce di ~2,5 dp dal riquadro e lo scarto lo paga sempre l'ultima riga, che è l'unica con
+qualcosa sotto la linea di base.
+
+Quindi: **il difetto è reale, è solo delle card con dati vecchi, ed è al massimo la pancia di
+una «g».** Con dati freschi l'ultima riga è il numero, che sotto la linea di base non ha
+inchiostro: lo scarto c'è lo stesso e non si vede.
+
+### Le due correzioni possibili, e cosa costano
+
+Provate tutt'e due, con i numeri, prima di decidere.
+
+1. **Misurare l'interlinea** (`fontMetrics.bottom − fontMetrics.top` da una `Paint`, come
+   `measureWidgetText` fa già per la larghezza) e basta. Le prenotazioni diventano esatte e il
+   taglio sparisce. Costo: sul dispositivo ogni card prenota ~3% in più per riga, quindi il
+   numero della card vecchia scende (~40 → ~38 sp su quella del committente), il glifo della
+   card alta di «Colpo d'occhio» perde ~3,4 dp, e nei casi al limite una riga di frase o un
+   momento in meno ci stanno. Nei test, dove `Paint` è uno stub, non cambierebbe nulla: il
+   dispositivo e la tabella direbbero due cose diverse.
+2. **Misurare più una banda di 3 dp** che il budget dell'eroe non spende (la risposta in
+   altezza a `RowFitSlack`), più un pavimento che cede quando l'altezza non lo paga. Costo, sul
+   riferimento: numero 39,3 → 37,0 sp da freschi e 28,3 → 26,0 da vecchi, glifo facoltativo
+   51,9 → 48,9 dp e nessun glifo su una riga fra 82 e 84 dp, card alta stretta 54,0 → 51,7.
+
+### La decisione: nessuna delle due
+
+> «Sarei allora per tornare indietro e non modificare niente. Abbiamo lavorato molto per i
+> layout sui widget e non vorrei toccarli.»
+
+Ed è una posizione difendibile, per una ragione che le misure stesse dicono: **quei numeri sono
+stati accordati sul dispositivo, uno screenshot alla volta**, e il difetto che pagano vale la
+pancia di una lettera su una card che sta già dichiarando di essere vecchia. Un difetto
+visibile e circoscritto è preferibile a una taratura rifatta su cinque card per aritmetica.
+Il codice è tornato esattamente com'era; resta questa pagina.
+
+**Se un giorno torna** (un lancio con una faccia ancora più alta, o una riga più corta di 82 dp,
+dove il pavimento del numero non è pagabile e il taglio arriverebbe alle maiuscole): la
+correzione minima è la prima delle due, e sta in una costante sola, `LineBoxEm` in
+`WidgetUi.kt`, da sostituire con la misura.
+
+### Il maiuscolo, valutato e scartato
+
+> «si potrebbe fare che il messaggio venga scritto tutto in maiuscolo: così non dovrebbe avere
+> elementi che vengono troncati. Dimmi onestamente se è una cosa che risolve.»
+
+Nasconde, non risolve, e non è nemmeno una stringa sola. Misurato sul carattere che l'app
+impacchetta:
+
+- **Regge per un dp.** Lo scarto è ~2,2 dp × scala e le pance scendono di ~4 dp × scala: oggi
+  le maiuscole si salverebbero, con un dp e mezzo di margine. Su una riga sotto gli 82 dp, dove
+  il numero si ferma al suo pavimento, lo scarto arriva a ~6 dp e **il taglio prende le
+  maiuscole**: una «O» tagliata si legge come un guasto, una pancia mancante come un bordo.
+- **Costa +26,5% di larghezza** («AGGIORNATO 9 ORE FA» è 11,07 em contro 8,75). A tre celle la
+  colonna del nome è 106 dp: la riga minuscola sta in 96 dp, quella maiuscola ne chiede 122 e
+  la riga è `maxLines = 1`. Si baratta una pancia tagliata con **«AGGIORNATO 9 ORE…»**, che è
+  peggio e su più card.
+- **Non è una stringa.** `staleText` la stampano tutt'e cinque le card, e le stesse
+  `freshness_*_ago` le usa anche la riga di freschezza dell'app e la guida: per toccare solo il
+  widget servirebbe un `uppercase(locale)` nel codice del widget, cioè una modifica ai widget,
+  che è quel che questa decisione voleva evitare.
+- **E dice un'altra cosa.** Il rango 4 di questa card è una nota a piè di pagina in prosa; il
+  maiuscolo è un'etichetta, alza la voce di una riga che deve essere quieta, rallenta la
+  lettura e ha il suo vizio noto con le sintesi vocali. Material ha tolto il maiuscolo dai
+  pulsanti per lo stesso motivo.
+
+Quindi no: la riga resta com'è.
+
+## La promessa, e un README che parla solo di sé (committente, 21 set 2026)
+
+Due richieste di testo nella stessa occasione:
+
+> «Nella schermata di onboarding la descrizione dell'app "Il meteo che ti dice cosa farne" la
+> ritieni valida o pensandoci bene penso sarebbe da cambiare? […] togliere riferimento anche
+> generico ad altre app meteo […] Vorrei che il README si concentri solo sull'app e quello che
+> fa senza paragoni o altro. […] rimuovere anche il paragrafo "Where it comes from" e qualsiasi
+> riferimento a tweather.»
+
+### La tagline: era la regola, adesso è la promessa
+
+«Il meteo che ti dice cosa farne» non era sbagliata: è §1.2 detta in sei parole, ed è
+esattamente quel che l'app fa. Il difetto è **dove** stava. Sulla prima schermata il lettore
+non ha ancora visto niente, e una frase che descrive il *modo* chiede di fidarsi di una
+compressione («cosa farne» di che cosa?) che si scioglie solo dopo aver usato l'app.
+
+Scelta dal committente fra quattro, la versione concreta che tiene la cadenza di quella
+vecchia: **«Il meteo che ti dice se conviene uscire, e quando.»** In inglese «Weather that
+tells you whether it is worth going out, and when.» Cambiata nei due `strings.xml`, in
+VISION §2.3 (dove la seconda riga tiene ancora la metà onestà, «and never invents anything to
+say it») e nel sottotitolo del README. La regola §1.2 resta dov'è sempre stata, nella griglia
+dei dettagli e nella guida: è una regola di prodotto, non uno slogan.
+
+### Il README non nomina più nessuno, nemmeno in astratto
+
+Tolti i paragoni, anche quelli generici: «Most weather apps answer "how many degrees"» apriva
+la sezione, «three things it does that a weather app normally does not» la reggeva, e il
+widget Cielo si presentava come «the widget nobody else ships». Una pagina che si definisce per
+differenza chiede al lettore di conoscere il termine di paragone; la nuova apre su quel che
+l'app risponde e poi mette in fila **quel che c'è oltre le previsioni**, che è la richiesta
+esplicita: l'agenda del cielo, la memoria delle previsioni, gli avvisi che scrivi tu e il
+bollettino ufficiale.
+
+Via la sezione «Where it comes from» e ogni menzione di tweather (restava anche nella tabella
+dei documenti, alla riga di VISION). `UPSTREAM.md` resta elencato perché è un file del repo e
+la tabella elenca i file del repo, con la riga riscritta in modo neutro.
+
+Corretta nella stessa passata una cosa che era diventata falsa: il paragrafo della roadmap
+diceva «Fase 11, after v1.0.0, is the official warnings» mentre l'elenco delle funzioni, dieci
+righe sopra, le descrive al presente perché ci sono. Adesso la Fase 11 è dichiarata fatta e la
+12 (MeteoAlarm) è quella che resta. Stessa passata per i numeri dei test, fermi a 775 su
+quattro moduli e oggi 946: una pagina che conta se stessa sbagliando non la legge nessuno due
+volte. (Contati per modulo e non per compito: `:app`, `:core:data` e `:core:sync` girano la
+stessa suite in debug e in release, che è il motivo per cui la riga finale di Gradle ne annuncia
+1649.)
+
+### L'altra domanda della stessa occasione
+
+> «nel momento che è uscito quel messaggio avevo riacceso il telefono ed ero offline. Se ero
+> online avrebbe fatto un refresh delle condizioni meteo anche senza aprire l'app?»
+
+Sì, e non serve aprire niente: il lavoro periodico unico è vivo per il solo fatto che sullo
+schermo di casa c'è un widget (`SyncScheduler.shouldRun`, `hasWidgets`), gira ogni
+`update_frequency_min` (60 di default), e quando atterra scrive il report, ripassa allerte e
+regole e ridipinge le card. Il vincolo è `NetworkType.CONNECTED`: **offline non parte affatto**,
+e non è un errore silenzioso, è la condizione che non si avvera. Le nove ore dello screenshot
+sono telefono spento più risveglio senza rete: WorkManager ripropone il periodico dopo il
+riavvio e lo fa partire appena la rete torna, senza che nessuno apra l'app. Se invece la
+chiamata parte e fallisce, il fallimento è una riga nel Diario, le card vengono ridipinte
+perché il marcatore possa comparire, e si riprova con backoff. Niente da cambiare.
