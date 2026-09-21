@@ -859,43 +859,14 @@ private fun eventIcon(event: UpcomingEvent) = when (event.quarter) {
     else -> jobIcon(event.job)
 }
 
+/**
+ * The drawing for a moment, by the job that names it. **The table is
+ * [ChiaroIcons.skyJobLineRes] and it is shared with the Sky widget** (21 set 2026): this
+ * screen and that card each carried one, the catalog grew twice, and only this one was
+ * kept up — see there for the twenty-five jobs the card was drawing as meteor showers.
+ */
 @Composable
-internal fun jobIcon(job: SkyJob) = when (job.id) {
-    "sun.rise", "twilight.civil.am", "sun.latest_rise" -> ChiaroIcons.sunrise
-    "sun.set", "twilight.civil.pm", "sun.earliest_set" -> ChiaroIcons.sunset
-    "solar.noon", "earth.perihelion", "earth.aphelion" -> ChiaroIcons.condition(0, night = false)
-    "golden_hour.am", "golden_hour.pm" -> ChiaroIcons.goldenHour
-    "blue_hour.am", "blue_hour.pm",
-    "twilight.nautical.am", "twilight.nautical.pm" -> ChiaroIcons.star
-    "twilight.astronomical.am", "twilight.astronomical.pm",
-    "darkness.window", "milky_way.core",
-    "night.white.start", "night.white.end" -> ChiaroIcons.starryNight
-    // The zodiacal light is a glow standing out of the horizon, which is the one
-    // drawing in the family that says exactly that.
-    "zodiacal.am", "zodiacal.pm" -> ChiaroIcons.horizon
-    "moon.rise" -> ChiaroIcons.moonrise
-    "moon.set" -> ChiaroIcons.moonset
-    "moon.new" -> ChiaroIcons.moonPhase(MoonPhase.NEW_MOON)
-    "moon.first_quarter" -> ChiaroIcons.moonPhase(MoonPhase.FIRST_QUARTER)
-    "moon.last_quarter" -> ChiaroIcons.moonPhase(MoonPhase.LAST_QUARTER)
-    // A lunar eclipse happens at a full moon, so the full moon IS its picture.
-    "moon.today", "moon.phase", "moon.full",
-    "moon.closest_full", "eclipse.lunar" -> ChiaroIcons.moonPhase(MoonPhase.FULL_MOON)
-    "eclipse.solar" -> ChiaroIcons.solarEclipse
-    // A moonrise is what the full moon at dusk IS, so it borrows the drawing.
-    "moon.full_at_dusk" -> ChiaroIcons.moonrise
-    "earthshine.pm" -> ChiaroIcons.moonPhase(MoonPhase.WAXING_CRESCENT)
-    "earthshine.am" -> ChiaroIcons.moonPhase(MoonPhase.WANING_CRESCENT)
-    // A planet to the naked eye IS a bright point of light, so the family's own star
-    // is the honest drawing for it — Meteocons has no planets and inventing one would
-    // be a disk nobody sees. The pairs take it too: two points, one of them this.
-    "venus.evening", "venus.morning", "jupiter.night",
-    "conjunction.moon_venus", "conjunction.moon_jupiter",
-    "conjunction.venus_jupiter" -> ChiaroIcons.star
-    "equinox.spring", "solstice.summer",
-    "equinox.autumn", "solstice.winter" -> ChiaroIcons.horizon
-    else -> ChiaroIcons.fallingStars // the meteor showers
-}
+internal fun jobIcon(job: SkyJob) = ChiaroIcons.skyJob(job.id)
 
 // ---------------------------------------------------------------------------------
 // The catalog

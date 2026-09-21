@@ -9119,3 +9119,57 @@ nome tagliato a 4 dp dall'angolo, 10 più in là della frase sotto di lui.
 
 `./gradlew test :app:testDebugUnitTest` e `:app:lintDebug` verdi, **1653 test**, lint a zero
 errori.
+
+## Il cielo sul widget: una tabella sola per le icone (committente, 21 set 2026)
+
+Segnalato da una schermata home: «l'icona dell'evento "Luna piena al crepuscolo" non sembra
+corretta ed è diversa da quella che compare nell'app». Vero, e il modo in cui è successo conta
+più del singolo disegno.
+
+La schermata Cielo (`SkyScreen.jobIcon`) e il widget «Momenti del cielo»
+(`SkyWidget.skyJobIconRes`) avevano ciascuno il proprio `when` sugli id dei job. Il catalogo è
+cresciuto due volte — Fase 19 (le eclissi, i quattro quarti di luna, tramonto più presto e alba
+più tardi, perielio e afelio) e Fase 28 (Venere, Giove, le tre congiunzioni, la luce cinerea, la
+luna piena al crepuscolo, la Via Lattea, le notti bianche, la luce zodiacale) — e solo la tabella
+della schermata è stata tenuta al passo. **Venticinque id su quarantasette** cadevano nell'`else`
+del widget, che è il disegno dello sciame meteorico: la stessa sottoscrizione mostrava due
+immagini diverse sulla home e dentro l'app.
+
+Ed è passato per una ragione precisa, che vale la pena mettere a verbale: **un id non elencato è
+un `when` perfettamente legale.** Non c'è niente che diventi rosso, il compilatore è contento, e
+la sola prova possibile era guardare la card.
+
+**La correzione è strutturale, non una riga.** La politica — quale disegno tocca a quale momento
+— sta adesso in `ChiaroIcons.skyJobLineRes`, cioè nell'unico oggetto che in questo repo decide
+che disegno prende una cosa, e la schermata e il widget la leggono entrambi: `skyJob` per un
+`ImageVector`, `skyJobRes` per il res id che serve a Glance. `SkyMomentIconTest` cammina
+`SkyJobCatalog.all` e fallisce se un job ci finisce senza icona: l'unico arm che può prendere il
+`falling-stars` sono i tredici sciami, che è il disegno di cui portano il nome. Un momento nuovo
+va adesso aggiunto in due posti, e il secondo è il test.
+
+**Nella stessa passata, la luna di oggi.** Il widget disegnava una luna piena su «La luna oggi»
+qualunque fosse la fase, mentre la schermata ha sempre disegnato quella vera (`Moment.moonPhase`).
+`NextMoment` porta adesso la fase, dallo stesso classificatore e con la stessa regola (solo il
+job del giorno, null su tutti gli altri), e il commento del widget — «The moon's day-moment gets
+its real phase» — smette di essere falso.
+
+### La seconda domanda: «L'arco del giorno» e gli eventi seguiti
+
+«Nel widget "L'arco del giorno" non compare l'evento personalizzato "Luna piena al crepuscolo": è
+corretto così?» **Sì, ed è di proposito.** L'agenda dell'arco è la giornata di luce del posto —
+`TodayStateBuilder.agenda` sulle prossime 24 ore (`AgendaReach`), filtrata dai tre interruttori
+del lettore — non l'elenco dei momenti seguiti. La card che porta le sottoscrizioni è «Momenti
+del cielo», ed è la ragione per cui quella esiste. Quell'evento poi cadeva il 25 settembre,
+quattro giorni oltre la portata dell'agenda: nessun layout lo avrebbe mostrato.
+
+Quello che invece non andava, ed è stato corretto, è **il verdetto**. `jobIdsFor` dice quali job
+del Cielo «nominano lo stesso momento» di una riga dell'agenda, e per il sorgere della luna
+elencava solo `moon.rise`. Ma `SkySights.nextFullMoonAtDusk` **restituisce un sorgere di luna** —
+quello della sera in cui la luna piena viene su dentro il crepuscolo — quindi i due sono lo
+stesso istante, calcolato dallo stesso motore. Il lettore che seguiva proprio quel momento
+trovava la riga nuda nella sola sera di cui parlava. Adesso il verdetto ci arriva; chi segue
+entrambi i momenti vede quello che la lista incontra per primo, e sono due risposte oneste alla
+stessa domanda.
+
+`./gradlew test :app:testDebugUnitTest` e `:app:lintDebug` verdi, **1661 test**, lint a zero
+errori.
