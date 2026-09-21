@@ -300,7 +300,7 @@
     <string name="settings_source_code">Codice sorgente</string>
     <string name="settings_source_code_note">Software libero, GPL-3.0, su GitHub</string>
     <string name="settings_privacy">Privacy</string>
-    <string name="settings_privacy_note">Nessun account, nessuna pubblicità, nessun tracciamento.</string>
+    <string name="settings_privacy_note">Nessun account, nessuna pubblicità, nessun tracciamento. Una previsione deve pur essere di un posto, quindi il posto va a Open-Meteo: la tua posizione arrotondata a circa un chilometro, senza nessun account e nessun identificativo del dispositivo attaccato. Non esce altro dal telefono, e un backup porta i tuoi luoghi e le impostazioni ma mai il diario di quel che hai guardato.</string>
     <string name="settings_reset">Ripristina le impostazioni predefinite</string>
     <string name="settings_reset_dialog_title">Ripristinare le impostazioni predefinite?</string>
     <string name="settings_reset_dialog_body">Unità, aspetto e frequenza di aggiornamento tornano ai valori predefiniti. I tuoi luoghi e il tuo storico non vengono toccati.</string>
@@ -421,7 +421,7 @@
     <string name="guide_settings_body">Le unità di temperatura e vento. L\'aspetto, dove vivono il tema, la palette, il carattere, i due disegni delle icone del meteo, se si muovono, e i colori presi dallo sfondo. Ogni quanto cercare una previsione nuova. La lingua dell\'app, sul selettore di Android. Ripristinare le impostazioni predefinite rimette unità, aspetto e frequenza come erano all\'inizio e lascia i tuoi luoghi e il tuo storico esattamente dove sono.</string>
 
     <string name="guide_data_title">Da dove arrivano i numeri</string>
-    <string name="guide_data_p1">Previsioni, qualità dell\'aria e ricerca dei luoghi arrivano da Open-Meteo, un servizio meteo aperto: gratuito, senza account e senza chiave API. La richiesta del meteo è l\'unica cosa che esce dal telefono.</string>
+    <string name="guide_data_p1">Previsioni, qualità dell\'aria e ricerca dei luoghi arrivano da Open-Meteo, un servizio meteo aperto: gratuito, senza account e senza chiave API. La richiesta del meteo è l\'unica cosa che Chiaro manda da qualche parte.</string>
     <string name="guide_data_p2">Alba, tramonto, la luna e tutto il modulo del cielo si calcolano direttamente sul telefono. Per questo sono giusti anche senza nessuna connessione.</string>
     <string name="guide_data_p3">Quando un aggiornamento non passa, non sparisce niente: Chiaro conserva l\'ultima previsione arrivata, ti dice quanto è vecchia e mette da parte, in silenzio, le ore già passate. Quello che vedi è sempre qualcosa che i dati hanno detto davvero.</string>
 

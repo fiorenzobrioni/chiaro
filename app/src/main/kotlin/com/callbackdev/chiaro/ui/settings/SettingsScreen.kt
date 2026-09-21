@@ -282,7 +282,7 @@ private fun SettingsList(
             ValueRow(
                 label = stringResource(R.string.settings_credit_icons),
                 value = stringResource(R.string.settings_credit_icons_note),
-                onClick = { openUrl(context, "https://github.com/basmilius/weather-icons") }
+                onClick = { openUrl(context, "https://github.com/basmilius/meteocons") }
             )
         }
         item {

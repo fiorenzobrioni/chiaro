@@ -9287,3 +9287,90 @@ leggono.
 
 `./gradlew test :app:testDebugUnitTest` e `:app:lintDebug` verdi, **1661 test**, lint a zero
 errori; `:app:assembleRelease` minificato verde, quindi R8 regge il bump.
+
+## Il backup diventa una decisione, e la riga della privacy dice quel che succede (committente, 21 set 2026)
+
+Dal lint della vigilia: `DataExtractionRules`, un avviso solo, che chiedeva perché
+`allowBackup="true"` stesse lì senza regole accanto. La risposta era «perché è il
+default», che in questo repo non è una risposta.
+
+### Perché non `allowBackup="false"`
+
+Sembrava l'opzione pulita e non lo è. La documentazione Android dice che per le app che
+targettano API 31 e oltre — noi siamo a 36 — quel valore «su dispositivi di alcuni
+produttori disabilita il backup cloud **ma non disabilita i trasferimenti
+dispositivo-a-dispositivo**». Un'istruzione il cui effetto dipende da chi ha fatto il
+telefono non è una decisione: sarebbe stata l'unica riga non deterministica del progetto.
+
+L'altra cosa che cambia il quadro, e che va detta perché ridimensiona il problema: il
+backup cloud è **cifrato end-to-end col PIN del dispositivo da Android 9**. Google tiene
+un blob che non può leggere. Con minSdk 33 vale sempre.
+
+### La regola, e il motivo che non è la privacy
+
+`res/xml/data_extraction_rules.xml`, una allowlist di una riga per ciascuno dei due
+flussi: solo `files/datastore`, che è dove scrivono tutti i `preferencesDataStore` di
+`:core:data` — `cities` (i luoghi salvati), `settings`, `rules`, `sky`, `sky_alerts`, i
+quattro store dei widget e il resto. Quel che non è nominato resta fuori, e quel che
+resta fuori è il database Room.
+
+Il Room esce **prima di tutto per correttezza**. Dentro ci sono le previsioni in cache e
+il Diario: roba con un timestamp sopra. Ripristinarlo su un telefono configurato una
+settimana dopo consegna all'app ore già passate, che `WeatherRecency` butta e
+`WeatherFreshness` marca stale a vista: peso trasportato per scartarlo al primo avvio.
+Poi, sì, c'è anche l'altra faccia: `weather_history` è una riga per fetch per luogo, con
+la data, e letta di fila è il registro di quali posti il lettore ha guardato e quando. È
+la cosa che un backup ha meno motivo di copiare, e non vale niente dall'altra parte.
+
+Due flussi identici di proposito: `<cloud-backup>` e `<device-transfer>` si configurano
+indipendentemente, e non c'è ragione di concedere a uno quel che si nega all'altro. Chi
+cambia telefono si ritrova luoghi, avvisi e impostazioni; nessuno si ritrova la cache.
+
+### La riga della privacy diceva cinque parole
+
+«Nessun account, nessuna pubblicità, nessun tracciamento.» Vero, e muto sulla sola
+domanda che uno va a cercare in quella riga: un'app che chiede la posizione, la posizione
+dove la manda? La guida lo diceva già, e bene (`guide_places_gps_body`,
+`guide_data_p1`): era Impostazioni a essere l'unico posto dove non si diceva. Adesso la
+riga porta i tre fatti — una previsione deve pur essere di un posto, quindi il posto va a
+Open-Meteo arrotondato al chilometro e senza account né identificativo del dispositivo
+attaccato; non esce altro; e il backup porta luoghi e impostazioni ma mai il diario.
+
+Nella stessa passata una precisazione in `guide_data_p1`, che diceva «la richiesta del
+meteo è l'unica cosa che esce dal telefono». Con la regola di backup appena scritta non è
+più esatto alla lettera: un backup di sistema esce dal telefono, solo che a mandarlo è
+Android e non Chiaro. Adesso dice «l'unica cosa che **Chiaro** manda da qualche parte»,
+che è la stessa promessa detta con precisione.
+
+**Il posizionamento privacy-first resta**, ed è la risposta alla domanda del committente.
+Non vuol dire «niente esce dal dispositivo»: vuol dire che dove una scelta c'era è stata
+presa dal lato privato, e le scelte c'erano sette volte (account, analytics, advertising
+id, crash reporting, posizione in background, fine invece di coarse, obbligatoria invece
+di opzionale). Sulla coordinata verso Open-Meteo una scelta non c'era: una previsione per
+«qui» richiede di dire dov'è «qui». Quel che si poteva fare era minimizzarla, ed è fatto.
+
+### La revisione di «Informazioni»
+
+Il blocco è completo e non mancava niente: versione (da `BuildConfig`, quindi 1.0.0 senza
+altro da toccare), sviluppatore, copyright, licenza, Open-Meteo, Protezione Civile,
+Meteocons, i caratteri con «in uso: X», le icone di interfaccia, il codice sorgente, la
+privacy. Undici righe, ognuna col suo link. Due cose però non tornavano:
+
+- **Il link di Meteocons puntava a `basmilius/weather-icons`**, mentre il README, i tre
+  tool e il file di licenza usano tutti `basmilius/meteocons`. Funziona, ma solo per il
+  redirect che GitHub tiene sui repo rinominati: un giorno che qualcuno registra quel
+  nome, l'attribuzione di una licenza punta altrove. Portato allo slug canonico.
+- **`licenses/README.md` era fermo a due giri fa.** Dava Meteocons **v2.0.0** convertito
+  in `res/drawable/mc_*.xml` da `tools/import_meteocons.py`: di `mc_*` nel repo ce ne sono
+  **zero**, di `mc3_*` **519**, e il file di licenza accanto dichiara già
+  `@meteocons/svg 3.0.0-next.10`. La tabella contraddiceva il file che le sta a fianco.
+  Corretta, e aggiunta la riga che mancava del tutto: la **geometria delle 187 zone di
+  allerta** (`warning_zones_it.json`, 284 KB, CC BY 4.0), che è dato di terzi che viaggia
+  dentro l'APK, cioè esattamente quel che quella tabella dichiara di elencare. Corretta
+  anche la chiusa, che diceva che l'attribuzione «appartiene alla guida»: sta in
+  Impostazioni → Informazioni, una riga per ciascuna, con il link.
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleRelease` verdi,
+**1661 test**, lint a zero errori e l'avviso `DataExtractionRules` sparito. Verificato
+sull'APK vero: `versionName="1.0.0"`, `dataExtractionRules` presente, e l'XML delle regole
+dentro il pacchetto con le due allowlist come scritte.

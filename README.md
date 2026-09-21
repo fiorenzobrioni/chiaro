@@ -319,7 +319,7 @@ the three commands below.
 | 💬 **One sentence before any number** | the top of Today is a computed line. Numbers follow, for the people who want them |
 | 🔢 **Every number says what to do with it** | a metric is a value plus its consequence. A number with no honest second line lives one tap deeper, not on the home screen |
 | 📴 **Offline-first** | the cached report renders before the network is asked; no core answer needs a connection, and the astronomy needs one at no point at all |
-| 🔒 **Privacy-first** | no account, no analytics, no advertising id, no crash reporting that leaves the device. Coarse location only, optional, and never in the background |
+| 🔒 **Privacy-first** | no account, no analytics, no advertising id, no crash reporting that leaves the device. Coarse location only, optional, and never in the background. A forecast has to be of somewhere, so the place does go to Open-Meteo, with no account and no device identifier attached to it; nothing else leaves the phone, and a backup is an allowlist that carries your places and settings and never the journal of what you looked at |
 | 🔋 **Battery is a feature** | one shared periodic job, inexact alarms, no foreground service and no push service. It is a constraint from the first commit, not an optimization phase |
 
 ## The data
