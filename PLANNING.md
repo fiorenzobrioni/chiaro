@@ -5,6 +5,12 @@ annotano qui con il motivo** (regola della serie, ereditata da tweather). Il per
 del prodotto sta in `VISION.md`, il sistema di design in `DESIGN.md`, la provenienza
 del core in `UPSTREAM.md`.
 
+Quel che **non** si annota, dal 21 set 2026 su richiesta del committente: le valutazioni
+finite con «non si fa niente». Una strada scartata prima di imboccarla non è una deviazione
+dal piano, è la conversazione che ha portato a non deviare, e resta dove è nata. Un file che
+cresce di chiacchiere smette di essere un piano e diventa un archivio in cui il piano non si
+trova più.
+
 Chiaro è la *daylight edition* di tweather: stesse feature, stessi motori, UI Material 3
 per un pubblico che non apre un terminale. Non è un rewrite e non è un re-skin: è la
 stessa app sotto, con sopra un prodotto diverso.
@@ -1671,7 +1677,6 @@ lì: il caso che conta è che l'invariante «un hit non può essere stale» regg
 **ogni** intervallo selezionabile, e una lista ricopiata a mano sarebbe esattamente la
 cosa che va fuori sincrono.
 
-- [ ] Da verificare su device (committente)
 
 ---
 
@@ -1728,7 +1733,6 @@ prevalente — il posto in cui sei — le due coincidono.
 **Verifiche**: suite verde, lint 0 errori. I test del mapper sono gli stessi di
 tweather, allineati byte per byte.
 
-- [ ] Da verificare su device (committente)
 
 ---
 
@@ -1815,7 +1819,6 @@ Nessun device qui: le taglie sono verificate per aritmetica (i quattro conti sop
 un confronto prima/dopo disegnato con i drawable veri, non su una resa reale. È l'unica
 parte di questa passata che resta da guardare su un telefono.
 
-- [ ] Da verificare su device (committente)
 
 ---
 
@@ -9023,3 +9026,44 @@ una Venere-Giove a 0,6° è invisibile a chi non sapeva di doverla cercare, ed �
 per un giro futuro.
 
 `./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1649 test**, lint a zero errori.
+
+## I testi: la promessa, il README, e il marchio della fotocamera (committente, 21 set 2026)
+
+**La tagline.** «Il meteo che ti dice cosa farne» era §1.2 detta in sei parole: giusta, e
+al posto sbagliato. Sulla prima schermata il lettore non ha ancora visto niente, e una frase
+che descrive il *modo* gli chiede di fidarsi di una compressione che si scioglie solo dopo
+l'uso. Scelta fra quattro, la versione concreta che tiene la cadenza di quella vecchia:
+**«Il meteo che ti dice se conviene uscire, e quando.»** («Weather that tells you whether it
+is worth going out, and when.») Nei due `strings.xml`, in VISION §2.3 e nel sottotitolo del
+README. La regola §1.2 resta dov'è sempre stata, nella griglia dei dettagli e nella guida:
+è una regola di prodotto, non uno slogan.
+
+**Il README non nomina più nessuno, nemmeno in astratto.** Tolti i paragoni generici
+(«Most weather apps answer "how many degrees"», «three things it does that a weather app
+normally does not», «the widget nobody else ships»), la sezione «Where it comes from» e ogni
+menzione del repo a monte, che restava anche nella tabella dei documenti. Una pagina che si
+definisce per differenza chiede al lettore di conoscere il termine di paragone; adesso apre
+su quel che l'app risponde e mette in fila quel che c'è oltre le previsioni.
+
+**E il marchio della macchina fotografica ci entra.** Il README non ne diceva niente, né dei
+nove momenti che lo portano né della finestra dell'arcobaleno, e la riga del catalogo era
+ferma a «32 moments» contro i sessanta in sette gruppi che l'app dichiara. Aggiunto dentro i
+punti che c'erano già, non come voce nuova: una coda alla frase del catalogo nel punto Cielo
+(i nove, la direzione in cui guardare, e l'eclissi di Sole che di proposito non lo porta
+perché va guardata col filtro) e una parentesi nella frase della timeline nel punto Oggi.
+
+Due cose che **non** si fanno, ed è la ragione per cui le frasi stanno dove stanno:
+
+- **Niente voce a sé per la fotografia.** Un punto elenco tutto suo trasformerebbe il marchio
+  nella promessa di un pianificatore fotografico, che quest'app non è: niente bussola, niente
+  realtà aumentata, niente tempi di posa. È la misura che VISION §3.2 tiene sull'astronomia.
+- **Mai «ti dice quando ci sarà un arcobaleno».** `RainbowWindow` calcola la finestra in cui
+  il cielo è disposto per farne uno, e il suo commento dice «never a promise that there will
+  be a rainbow». Il README dice «the windows where the geometry and the forecast line up for
+  a rainbow»: la pagina che elenca la regola dell'onestà non è il posto dove romperla.
+
+Corrette nella stessa passata due cose diventate false: il paragrafo della roadmap dava la
+Fase 11 come futura mentre l'elenco delle funzioni la descrive al presente, e i numeri dei
+test erano fermi a 775 su quattro moduli (oggi 946, contati per modulo e non per compito:
+`:app`, `:core:data` e `:core:sync` girano la stessa suite in debug e in release, che è il
+motivo per cui la riga finale di Gradle ne annuncia 1649).

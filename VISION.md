@@ -103,8 +103,9 @@ page: **the sky canvas is computed** (§4.2), and **the app opens already answer
 
 ### 2.3 The promise
 
-> **Il meteo che ti dice cosa farne.**
-> Weather that tells you what to do about it, and never invents anything to say it.
+> **Il meteo che ti dice se conviene uscire, e quando.**
+> Weather that tells you whether it is worth going out, and when, and never invents anything
+> to say it.
 
 ---
 

@@ -213,7 +213,7 @@
     <string name="header_gps_desc">La mia posizione: %1$s</string>
 
     <!-- Primo avvio: una schermata, due risposte, saltare è concesso -->
-    <string name="first_run_tagline">Il meteo che ti dice cosa farne.</string>
+    <string name="first_run_tagline">Il meteo che ti dice se conviene uscire, e quando.</string>
     <string name="first_run_use_location">Usa la mia posizione</string>
     <string name="first_run_location_why">Usata solo per avere le previsioni di dove sei, arrotondata a circa un chilometro.</string>
     <string name="first_run_search">Cerca una città</string>
