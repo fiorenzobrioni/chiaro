@@ -9434,3 +9434,64 @@ di contorno), che il margine restituito porti una scatola di carattere del 4% pi
 stima, che solo le due forme a una riga lo restituiscano, e il limite qui sopra.
 
 `./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1669 test**, lint a zero errori.
+
+## `SkyAlarmSchedulerTest`: il test che correva contro l'avvio dell'app (22 set 2026)
+
+Emerso lavorando sul widget, e per questo vale la pena scriverlo: durante le prove della
+correzione precedente la suite e' fallita **una volta** su `the alarm is inexact and wakes the
+device`, con `Required value was null` — cioe' nessuna sveglia armata — e alla riesecuzione era
+verde. Un messaggio che non dice niente, su un test che non c'entrava con quel che stavo
+toccando: il candidato perfetto per essere archiviato come «flaky» e lasciato li'. La regola di
+casa dice il contrario, e aveva ragione.
+
+**La riproduzione prima della diagnosi.** In isolamento, 8 esecuzioni su 8 verdi; la suite
+`:app` intera, 5 su 5 verdi. Poi ho strumentato le asserzioni perche' stampassero *perche'* non
+c'era una sveglia (luogo attivo, iscrizioni, impostazioni, piano, identita' dei negozi) e ho
+stressato la classe: **2 fallimenti su 30**, poi un terzo su 20. Circa il 6%, cioe' abbastanza
+raro da passare inosservato in CI per settimane e abbastanza frequente da far perdere un
+pomeriggio a qualcuno.
+
+**Quel che la strumentazione ha detto**, e che nessuna rilettura del codice avrebbe provato:
+
+```
+city=Success(null)  ownCities=[Milan]  ownActive=Saved(Milan)
+sameStore=false     locatorCities=[]   settings=skyEnabled=true default=30
+```
+
+Il negozio del test aveva Milano; quello che lo `ServiceLocator` restituiva era **un altro
+oggetto**, reale e vuoto. E nella stessa chiamata a `overrideForTests` il negozio delle
+impostazioni era rimasto quello del test: un solo blocco di assegnazioni, due esiti diversi.
+Questo esclude la scrittura persa e indica una corsa su un singleton.
+
+**La causa e' `ChiaroApplication.onCreate`.** Robolectric costruisce l'applicazione dichiarata
+nel manifest **una volta per test**, e quel metodo lancia due coroutine su uno scope
+`Dispatchers.Default` di cui il test non ha alcun appiglio. Tutt'e due toccano esattamente cio'
+che questa classe misura:
+
+- la prima chiama `SkyAlarmScheduler.reschedule`, la rete di sicurezza a ogni avvio di processo.
+  Legge quel che il locator contiene in quell'istante — di norma i negozi veri e vuoti, perche'
+  sta correndo contro la preparazione del test — non trova niente da armare e chiama
+  `AlarmManager.cancel` sull'unico request code fisso: **la sveglia sparisce da sotto
+  l'asserzione**;
+- la seconda risolve `ServiceLocator.cityStore(app)` per il collettore dei widget. Quel getter e'
+  un singleton pigro, quindi cadere **in mezzo** alle assegnazioni di `overrideForTests` costruisce
+  il negozio vero e lo memorizza **sopra** il finto. E' esattamente la firma misurata.
+
+**Nessuna delle due e' un difetto dell'app**: riarmare all'avvio del processo e seguire il luogo
+attivo sono decisioni prese e documentate. Semplicemente non sono l'oggetto di questo test, e un
+test unitario che installa i propri finti dentro un singleton di processo non puo' allo stesso
+tempo correre contro il processo che quel singleton lo legge.
+
+**La correzione e' una riga, e sta solo nel test**: `@Config(application = Application::class)`.
+Senza `ChiaroApplication` non c'e' nessuna coroutine di avvio, quindi niente corsa e niente
+sveglia cancellata da sotto. Lo scheduler qui viene pilotato direttamente, quindi
+un'`Application` nuda e' tutta l'impalcatura che gli serve.
+
+Insieme, due asserzioni di precondizione in `setUpStores`: il luogo viene riletto **attraverso il
+locator**, com'e' letto dallo scheduler. Se un giorno la preparazione non dovesse attecchire, il
+test fallira' dicendo che non c'e' il luogo, invece di fallire tre righe dopo su una sveglia
+mancante — che e' il modo in cui questa classe falliva, senza dire niente.
+
+**La prova**: 60 esecuzioni consecutive dopo la correzione, zero fallimenti, contro i 3 su 50 di
+prima (a quel tasso, 60 esecuzioni pulite per caso sarebbero circa il 2%).
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1669 test**, lint a zero errori.

@@ -1,10 +1,12 @@
 package com.callbackdev.chiaro.notifications
 
 import android.app.AlarmManager
+import android.app.Application
 import android.content.Context
 import android.content.Intent
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.test.core.app.ApplicationProvider
+import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.SettingsStore
@@ -15,6 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.After
@@ -28,6 +31,7 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
+import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowAlarmManager
 
 /**
@@ -36,8 +40,33 @@ import org.robolectric.shadows.ShadowAlarmManager
  * [com.callbackdev.chiaro.domain.sky.SkyReminderPlanner] and are tested there; this
  * is the plumbing. Ported from tweather's `SkyAlarmSchedulerTest` on 9 set 2026
  * (`UPSTREAM.md`): the scheduler is a near-verbatim copy, so its guard is too.
+ *
+ * **On a bare [Application], and that is the whole isolation of this class**
+ * (22 set 2026, after it failed ~2 times in 30 runs with «nothing was armed»).
+ * Robolectric builds the application named in the manifest once per test, so without
+ * this line every test here ran against [com.callbackdev.chiaro.ChiaroApplication],
+ * whose `onCreate` launches two coroutines on a `Dispatchers.Default` scope the test
+ * has no handle on — and both of them touch exactly what this class is measuring:
+ *
+ * - one calls [SkyAlarmScheduler.reschedule] itself, the process-start safety net. It
+ *   reads whatever the locator holds at that instant — usually the real, empty stores,
+ *   because it is racing the `@Before` half of the test — finds nothing to arm and
+ *   calls `AlarmManager.cancel`, on the same one fixed request code the test just
+ *   armed. The alarm disappears from under the assertion.
+ * - the other resolves `ServiceLocator.cityStore(app)` for the widget collector. That
+ *   getter is a lazy singleton, so landing between two of `overrideForTests`'s
+ *   assignments builds the REAL store and caches it over the fake — measured: the
+ *   place store came back empty while the settings store, set in the same call, still
+ *   held the test's own value.
+ *
+ * Neither is a bug in the app: re-arming on process start and following the active
+ * place are both deliberate (see that class). They are simply not this test's
+ * subject, and a unit test that installs fakes into a process-wide singleton cannot
+ * also be racing the process that reads it. The scheduler is driven here directly, so
+ * a plain [Application] is all the plumbing it needs.
  */
 @RunWith(RobolectricTestRunner::class)
+@Config(application = Application::class)
 class SkyAlarmSchedulerTest {
 
     @get:Rule
@@ -66,7 +95,15 @@ class SkyAlarmSchedulerTest {
             settingsStore = settingsStore,
             skySubscriptionStore = skyStore
         )
-        if (withCity) runBlocking { cityStore.add(milan) }
+        if (withCity) runBlocking {
+            cityStore.add(milan)
+            // Read back through the locator, which is the way the scheduler reads it:
+            // the fakes live in a process-wide singleton, and a setup that did not
+            // take surfaces three lines later as an alarm that was never armed — which
+            // is precisely how this class used to fail, saying nothing about why.
+            assertEquals(ActiveSource.Saved(milan), cityStore.activeSource.first())
+            assertEquals(milan, SkyAlarmScheduler.activeCity(context))
+        }
     }
 
     @After
