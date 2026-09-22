@@ -364,6 +364,108 @@ class TextWidgetLayoutTest {
         assertEquals(0f, textPanelIconSize(squeezed, 1f, tight).value, 0.001f)
     }
 
+    /** Everything a one-row card stacks in its leading column, on a stale card: the place's
+     * line, the number the budget sized, and the marker that is never dropped. */
+    private fun oneRowColumn(size: DpSize, scale: Float): Dp =
+        textLineHeight(TextFactSp, scale) +
+            textLineHeight(textRowHeroSp(size, scale, stale = true), scale) +
+            textLineHeight(TextStaleSp, scale)
+
+    /**
+     * **The one-row budget spends the card's whole height, so the estimate's error has
+     * nowhere to go.** [textRowHeroSp] hands the number everything the place's line and the
+     * marker's leave, which means the leading column measures EXACTLY the card's own budget
+     * at every grant that can pay the hero's floor — zero slack, by construction, while the
+     * file that defines [textLineHeight] says the budgets resting on it are supposed to keep
+     * a band.
+     *
+     * Pinned because it is the mechanism behind the bug, not an incidental number: a device
+     * whose system font boxes taller than the estimated 1.32 em overruns, and the vertical
+     * LinearLayout the column compiles to cuts its LAST child — the stale marker, drawn and
+     * then sliced at the baseline (committente, 22 set 2026, «Aggiornato 2 ore fa» tagliato
+     * in basso su una card 4×1).
+     */
+    @Test
+    fun `a one-row card spends every dp of its own budget`() {
+        listOf(twoByOne, threeByOne, fourByOne).forEach { size ->
+            listOf(0.85f, 1f).forEach { scale ->
+                assertEquals(
+                    "$size/$scale: the column is the budget, to the dp",
+                    (size.height - WidgetCardPaddingSnug * 2).value,
+                    oneRowColumn(size, scale).value,
+                    0.01f
+                )
+            }
+        }
+    }
+
+    /**
+     * The answer to it: the budget still spends the snug inset — every size and every
+     * position on the card is the one it was — and the CARD lends it back, so the column
+     * may overrun into its own air instead of cutting the marker.
+     *
+     * [TallerBox] is the shape of the error, not a device's exact number: a system font
+     * whose top-to-bottom box is 4% past the estimate. On the reference grants that is
+     * ~3 dp, which is what the marker was losing.
+     */
+    @Test
+    fun `the lent-back inset carries a font box taller than the estimate`() {
+        listOf(twoByOne, threeByOne, fourByOne).forEach { size ->
+            listOf(0.85f, 1f, 1.15f).forEach { scale ->
+                val real = Dp(oneRowColumn(size, scale).value * TallerBox)
+                assertTrue(
+                    "$size/$scale: the old inset had already clipped ${real.value} dp",
+                    real > size.height - WidgetCardPaddingSnug * 2
+                )
+                assertFits(
+                    "$size/$scale: the card carries it",
+                    real, size.height - textCardPaddingVertical(textForm(size)) * 2
+                )
+            }
+        }
+    }
+
+    /** A font box 4% taller than [textLineHeight]'s estimate: the shape of the error the
+     * headroom absorbs, sized so it is a few dp on a one-row card rather than a claim about
+     * one launcher's font. */
+    private val TallerBox = 1.04f
+
+    @Test
+    fun `only the one-row forms lend their vertical inset back`() {
+        // The two forms that centre what they hold, so a symmetric inset is free to go.
+        assertEquals(0f, textCardPaddingVertical(TextForm.ROW).value, 0.001f)
+        assertEquals(0f, textCardPaddingVertical(TextForm.LINE).value, 0.001f)
+        // The stack and the panel pin an eyebrow to the top and a block to the bottom, so
+        // there the inset is a position; a card with no report yet has no form at all.
+        assertEquals(WidgetCardPadding, textCardPaddingVertical(TextForm.STACK))
+        assertEquals(WidgetCardPadding, textCardPaddingVertical(TextForm.PANEL))
+        assertEquals(WidgetCardPadding, textCardPaddingVertical(null))
+        // And what the budget spends is what the card lends back, in one place.
+        assertEquals(WidgetCardPaddingSnug * 2, TextRowHeadroom)
+        assertTrue(textOneRow(TextForm.ROW) && textOneRow(TextForm.LINE))
+        assertFalse(textOneRow(TextForm.STACK) || textOneRow(TextForm.PANEL) || textOneRow(null))
+    }
+
+    /**
+     * **Where the headroom stops, on the record.** Past font scale 1.15 the column overruns
+     * for a second reason: the number is already on [TextHeroFloor] and has nothing left to
+     * pay the marker with, so at 1.3 an 85 dp row wants ~91 dp before the card's air is even
+     * counted. Twelve dp of headroom does not reach it, and the only dp left to take are the
+     * number's own — which is a different decision from this one (it would change the size of
+     * the temperature on every card that falls to the floor), so it is written down rather
+     * than quietly made here.
+     */
+    @Test
+    fun `the largest font on the shortest row is past what any inset can carry`() {
+        assertEquals(TextHeroFloor, textRowHeroSp(fourByOne, 1.3f, stale = true), 0.01f)
+        assertTrue(
+            "the 1.3 column is ${oneRowColumn(fourByOne, 1.3f).value} dp of an 85 dp card",
+            oneRowColumn(fourByOne, 1.3f) > fourByOne.height
+        )
+        // One step down it is inside the card, which is where the headroom earns its keep.
+        assertFits("scale 1.15", oneRowColumn(fourByOne, 1.15f), fourByOne.height)
+    }
+
     /**
      * The promise the whole feature rests on, asserted rather than reviewed: **the glyph
      * fits in space the card was already leaving empty.** The failure mode is not an ugly

@@ -14,7 +14,15 @@ sections are a normal size and live here alone.
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- **Widget «In parole», one-row card: the "updated N hours ago" line is no longer cut off.**
+  The form's budget spends the card's whole height — the number takes everything the place's
+  line and the stale marker leave — so on a phone whose system font boxes taller than the
+  layout's estimate the last line was measured short and sliced at its baseline. The budget is
+  unchanged, so every size and position on the card is the one it was; the card now lends its
+  6 dp top and bottom inset back as headroom, which a one-row card can do for free because it
+  centres what it holds.
 
 ## [1.0.0] - 2026-09-21
 

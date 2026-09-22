@@ -108,15 +108,20 @@ class TextWidget : GlanceAppWidget() {
             // Every edge of this card carries words, so every edge takes the words' inset
             // ([WidgetCardPaddingLeading] exists for a glyph's own margin, and there is no
             // glyph here). The exception is the top and bottom of a one-row card, where
-            // the household's snug 6 is what makes the hero worth calling one: at 14 the
-            // reference 85 dp row would print a 27 sp number, under this card's own floor.
-            // Geometry checked against the 24 dp corner: the first cap of a 14 sp line at
-            // (14, 6) sits 20.6 dp from the corner's centre, inside the radius.
-            val vertical = if (form == TextForm.ROW || form == TextForm.LINE) {
-                WidgetCardPaddingSnug
-            } else {
-                WidgetCardPadding
-            }
+            // the budget spends the household's snug 6 — that is what makes the hero worth
+            // calling one: at 14 the reference 85 dp row would print a 27 sp number, under
+            // this card's own floor — and the CARD lends it straight back as headroom, so a
+            // column that measures a few dp taller than the estimate grows into its own air
+            // instead of cutting its last line. Nothing moves either way: a one-row card
+            // centres its columns, and a centred block ignores a symmetric inset. See
+            // [textCardPaddingVertical] for the line that was being cut and the arithmetic.
+            // Geometry checked against the 24 dp corner: at the budgeted height the block
+            // is still centred where it was, so the first cap of the place's line sits at
+            // (14, ~8), 17 dp from the corner's centre and well inside the radius. Only a
+            // column really overrunning its budget comes nearer, and at the full 12 dp of
+            // headroom the cap lands at (14, ~2) — a fraction of a dp outside the curve,
+            // against a line that was being cut in half before.
+            val vertical = textCardPaddingVertical(form)
             // A glyph edge takes 4 dp and a words edge 14 ([TextIconEdgeGive]). On every
             // form but ROW — where the glyph is interior, inside the name's column — the
             // drawing is what meets the trailing edge, so the card gives it the glyph's
@@ -182,7 +187,16 @@ private fun LineContent(
             )
             StaleLineText(content, palette)
         }
-        ConditionGlyph(content, model, palette, icon)
+        // The glyph is the one thing on this form anchored to the CARD rather than to the
+        // block of words, so it is also the one thing the lent-back inset would have moved
+        // ([textCardPaddingVertical]): it keeps the snug 6 dp of its own, outside the size
+        // modifier, because padding inside one would be drawn out of the glyph instead of
+        // under it.
+        if (icon > 0.dp) {
+            Box(modifier = GlanceModifier.padding(bottom = WidgetCardPaddingSnug)) {
+                ConditionGlyph(content, model, palette, icon)
+            }
+        }
     }
 }
 
