@@ -32,10 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -50,14 +46,13 @@ import com.callbackdev.chiaro.ui.components.MetricTile
 import com.callbackdev.chiaro.ui.components.VerdictChip
 import com.callbackdev.chiaro.ui.components.VerdictKind
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
-import com.callbackdev.chiaro.ui.sky.SkyGuideRoute
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.forText
 import java.time.LocalDate
 import java.time.LocalTime
-import java.util.Locale
 
 /**
  * The guide (VISION §5.7): illustrated, and re-openable forever from Settings — a
@@ -80,15 +75,14 @@ import java.util.Locale
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GuideRoute(onBack: () -> Unit) {
-    // The events guide is the one chapter that is a document of its own: fifty-one
-    // pages do not belong inside a tour, and a reader who opens it here has to be able
-    // to come back to the paragraph they left.
-    var eventsOpen by rememberSaveable { mutableStateOf(false) }
-    if (eventsOpen) {
-        SkyGuideRoute(onClose = { eventsOpen = false })
-        return
-    }
+fun GuideRoute(
+    onBack: () -> Unit,
+    /** The events guide, the one chapter that is a document of its own: fifty-one pages
+     * do not belong inside a tour, and a reader who opens it here has to be able to come
+     * back to the paragraph they left — the shell opens it over this page, which keeps
+     * its place under it. */
+    onOpenSkyGuide: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -105,7 +99,7 @@ fun GuideRoute(onBack: () -> Unit) {
         }
     ) { padding ->
         GuideContent(
-            onOpenSkyGuide = { eventsOpen = true },
+            onOpenSkyGuide = onOpenSkyGuide,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -429,7 +423,7 @@ private fun VerdictSampler() {
  * the hour, and the verdict with its number underneath. */
 @Composable
 private fun MomentSample() {
-    val locale = Locale.getDefault()
+    val locale = currentLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val time = LocalTime.of(6, 47).format(Formats.timeFormatter(is24h, locale))
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -500,7 +494,7 @@ private fun MetricSample() {
  */
 @Composable
 private fun DriftSample() {
-    val locale = Locale.getDefault()
+    val locale = currentLocale()
     val today = LocalDate.now()
     val rows = listOf(
         listOf(70, 60, null, 40, 30, 20), // a day that kept improving, across a gap
@@ -547,6 +541,6 @@ private fun DriftSample() {
 @Composable
 private fun GuidePreview() {
     ChiaroTheme(dynamicColor = false) {
-        GuideRoute(onBack = {})
+        GuideRoute(onBack = {}, onOpenSkyGuide = {})
     }
 }

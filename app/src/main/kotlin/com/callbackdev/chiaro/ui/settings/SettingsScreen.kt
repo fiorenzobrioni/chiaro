@@ -41,6 +41,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.BuildConfig
@@ -53,7 +54,6 @@ import com.callbackdev.chiaro.data.UpdateFrequencies
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
-import java.util.Locale
 
 /**
  * Settings (VISION §5.7): standard M3 preferences, grouped, and the guide's front
@@ -586,7 +586,7 @@ private fun currentLanguageLabel(): String {
     if (appLocales.isEmpty) return stringResource(R.string.settings_language_system)
     val locale = appLocales[0]
     return locale.getDisplayLanguage(locale)
-        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(currentLocale()) else it.toString() }
 }
 
 private fun openUrl(context: android.content.Context, url: String) {

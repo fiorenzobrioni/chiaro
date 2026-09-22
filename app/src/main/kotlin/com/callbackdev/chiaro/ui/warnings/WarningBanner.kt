@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
+import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.warnings.WarningText.colors
 import java.time.LocalDate
@@ -61,7 +62,7 @@ fun WarningBanner(
     val detail = stringResource(
         R.string.warning_banner_detail,
         WarningText.days(context, warnings.peakDays.map { it.date }, today)
-            .replaceFirstChar { it.titlecase(java.util.Locale.getDefault()) },
+            .replaceFirstChar { it.titlecase(currentLocale()) },
         stringResource(
             R.string.warning_banner_source,
             WarningText.issued(context, warnings.issuedAt, today, timeFmt)

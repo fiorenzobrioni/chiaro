@@ -484,7 +484,7 @@ fun DayRange(
     size: TextUnit = DayRangeSp,
     marks: Boolean = false
 ) {
-    val locale = Locale.getDefault()
+    val locale = glanceLocale()
     val context = LocalContext.current
     // One dress for both figures in the marks form, and it is the high's: see the header
     // for why the low stops being dimmed the moment a ↓ stands in front of it.
@@ -958,3 +958,13 @@ private fun verdictColors(kind: SkyVerdictKind, night: Boolean, dress: ChiaroPal
             SkyVerdictKind.UNKNOWN -> it.unknown
         }
     }
+
+/**
+ * The locale a card formats in, read from the context Glance composes with rather than
+ * from `Locale.getDefault()`: the same answer, but Compose 1.10's lint refuses the default
+ * inside any composable (`NonObservableLocale`, 22 set 2026), and Glance has no
+ * `LocalConfiguration` to take it from. A card is recomposed on every update, and a change
+ * of language restarts the process, so there is nothing to observe beyond this read.
+ */
+@Composable
+fun glanceLocale(): Locale = LocalContext.current.resources.configuration.locales[0]

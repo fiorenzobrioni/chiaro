@@ -1,6 +1,5 @@
 package com.callbackdev.chiaro.ui.sky
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,10 +27,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -61,40 +57,66 @@ import com.callbackdev.chiaro.ui.theme.SectionBottom
  * than a paragraph: there is room here to explain, and an app that answers "what is
  * a blue hour" in a caption is answering a different question.
  */
+@Composable
+fun SkyGuideIndexRoute(
+    onBack: () -> Unit,
+    onOpen: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    SkyGuideScaffold(
+        title = stringResource(R.string.sky_guide_title),
+        onBack = onBack,
+        modifier = modifier
+    ) { content ->
+        SkyGuideIndex(onOpen = onOpen, modifier = content)
+    }
+}
+
+/**
+ * One event's page, opened from the index. A page and the index are two entries of the
+ * shell's back stack (22 set 2026), so back from a page is a predictive pop onto the
+ * index it came from; a related event opened here takes this page's place rather than
+ * piling on top of it, which keeps that promise however far the reader wanders.
+ */
+@Composable
+fun SkyEventRoute(
+    jobId: String,
+    onBack: () -> Unit,
+    onOpenRelated: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val job = SkyJobCatalog.byId(jobId)
+    if (job == null) {
+        // A page restored for an id the catalog no longer carries (an update between a
+        // process death and its return): there is nothing true to draw, so the page
+        // closes itself rather than showing an empty one.
+        LaunchedEffect(jobId) { onBack() }
+        return
+    }
+    SkyGuideScaffold(
+        title = stringResource(SkyText.nameRes(job.id)),
+        onBack = onBack,
+        modifier = modifier
+    ) { content ->
+        SkyEventPage(job = job, onOpenRelated = onOpenRelated, modifier = content)
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SkyGuideRoute(
-    onClose: () -> Unit,
+private fun SkyGuideScaffold(
+    title: String,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    initialJobId: String? = null
+    content: @Composable (Modifier) -> Unit
 ) {
-    // Which page is open, or the index. Saved across a rotation like any other screen
-    // the reader is in the middle of.
-    var openId by rememberSaveable { mutableStateOf(initialJobId) }
-    val job = openId?.let { SkyJobCatalog.byId(it) }
-    // Back peels one layer: a page returns to the index it came from, the index closes.
-    BackHandler {
-        if (job != null && initialJobId == null) openId = null else onClose()
-    }
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = if (job == null) {
-                            stringResource(R.string.sky_guide_title)
-                        } else {
-                            stringResource(SkyText.nameRes(job.id))
-                        }
-                    )
-                },
+                title = { Text(text = title) },
                 navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            if (job != null && initialJobId == null) openId = null else onClose()
-                        }
-                    ) {
+                    IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                             contentDescription = stringResource(R.string.action_back)
@@ -104,18 +126,11 @@ fun SkyGuideRoute(
             )
         }
     ) { padding ->
-        val content = Modifier
-            .fillMaxSize()
-            .padding(padding)
-        if (job == null) {
-            SkyGuideIndex(onOpen = { openId = it }, modifier = content)
-        } else {
-            SkyEventPage(
-                job = job,
-                onOpenRelated = { openId = it },
-                modifier = content
-            )
-        }
+        content(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+        )
     }
 }
 
@@ -301,7 +316,7 @@ private fun RelatedEvents(ids: List<String>, onOpen: (String) -> Unit) {
 @Composable
 private fun SkyGuideIndexPreview() {
     ChiaroTheme(dynamicColor = false) {
-        SkyGuideRoute(onClose = {})
+        SkyGuideIndexRoute(onBack = {}, onOpen = {})
     }
 }
 
@@ -309,6 +324,10 @@ private fun SkyGuideIndexPreview() {
 @Composable
 private fun SkyEventPagePreview() {
     ChiaroTheme(dynamicColor = false) {
-        SkyGuideRoute(onClose = {}, initialJobId = SkyJobCatalog.DarknessWindow.id)
+        SkyEventRoute(
+            jobId = SkyJobCatalog.DarknessWindow.id,
+            onBack = {},
+            onOpenRelated = {}
+        )
     }
 }

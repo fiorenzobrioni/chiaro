@@ -815,6 +815,21 @@ shape a design rule takes when it is only written down: true in this file, absen
 the APK. The canvas needed nothing — it is a `Brush`, it has never animated, and §3.5's
 "becomes a static gradient" is a promise it keeps by construction.
 
+**Between pages** (22 set 2026, Navigation 3). The shell's pages move with Saldo's
+transition, value for value, because the committente asked for exactly that one: 300 ms
+with `FastOutSlowInEasing`, the incoming page sliding a sixth of the width and fading in
+while the outgoing one slides a sixth the other way and fades out. A push is the forward
+direction; a pop, and a predictive back, is its reverse. A tab switch animates too, the
+way `NavDisplay` reads it: away from Today it is a push, back to Today a pop, and between
+two other tabs a push. The bottom bar slides down under a page that covers it (Settings,
+the guide) and back up after, in the same 300 ms.
+
+It is a tween, the one place the app does not use a spring, and on purpose: a predictive
+back *seeks* the pop with the finger, and a seek needs a curve of known length to lay the
+gesture's progress on. Reduced motion collapses it, and the bar's slide, to the 100 ms
+fade like everything else. At Today's root back belongs to the system
+(`enableOnBackInvokedCallback`), whose own gesture shows the home screen behind the app.
+
 ### 7.1 The weather moves
 
 The weather icons are Meteocons' **animated** drawings since 7 set 2026 (committente),
@@ -1063,7 +1078,11 @@ failed, in plain language, and a retry), stale (§8.2), loading (a shimmer that 
 mistaken for a value, §1.1).
 
 **8.12 Navigation** — a Material 3 `NavigationBar` with four destinations, a place switcher
-in the app bar with a dots indicator, and a horizontal pager between saved places.
+in the app bar with a dots indicator, and a horizontal pager between saved places. Since
+22 set 2026 the shell is Navigation 3 (`ui/shell/ChiaroNavigation.kt`): one back stack per
+tab, Today's stack always under the selected one so back from a tab's root lands on Today,
+and the bar drawn over the pages rather than beside them, so it can slide away under
+Settings and the guide without re-laying out the page under it. The motion is §7.
 
 **8.13 WarningBanner**, **WarningSheet** and the level chip (Fase 11) — an official warning
 as it reaches a screen.

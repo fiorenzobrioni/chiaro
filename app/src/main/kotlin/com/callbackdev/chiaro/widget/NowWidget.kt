@@ -437,7 +437,7 @@ private fun Temperature(
 ) {
     Text(
         text = Formats.temperature(
-            content.report.current.tempC, model.settings.units.temperature, Locale.getDefault()
+            content.report.current.tempC, model.settings.units.temperature, glanceLocale()
         ),
         style = TextStyle(
             color = palette.primary,

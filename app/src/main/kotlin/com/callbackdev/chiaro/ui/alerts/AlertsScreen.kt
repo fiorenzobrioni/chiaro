@@ -57,6 +57,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.theme.GroupTop
 import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
@@ -85,7 +86,6 @@ import com.callbackdev.chiaro.ui.format.Formats
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 import kotlinx.coroutines.launch
 
 /**
@@ -198,7 +198,7 @@ private fun AlertsContent(
         if (!notificationsAllowed) request.ask()
     }
 
-    val locale = Locale.getDefault()
+    val locale = currentLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val firedFmt = remember(locale, is24h) {
         DateTimeFormatter.ofPattern(if (is24h) "d MMM, HH:mm" else "d MMM, h:mm a", locale)
@@ -403,7 +403,7 @@ private fun OfficialWarningCard(
     onOpenSheet: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val locale = Locale.getDefault()
+    val locale = currentLocale()
     val dateFmt = remember(locale) {
         DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.LONG).withLocale(locale)
     }
