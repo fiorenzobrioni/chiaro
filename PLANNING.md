@@ -9374,3 +9374,63 @@ privacy. Undici righe, ognuna col suo link. Due cose però non tornavano:
 **1661 test**, lint a zero errori e l'avviso `DataExtractionRules` sparito. Verificato
 sull'APK vero: `versionName="1.0.0"`, `dataExtractionRules` presente, e l'XML delle regole
 dentro il pacchetto con le due allowlist come scritte.
+
+## «In parole» su una riga: la riga dell'aggiornamento tagliata in basso (committente, 22 set 2026)
+
+Segnalato con una schermata home: sulla card 4×1 con la frase, la riga «Aggiornato 2 ore fa»
+è disegnata e poi **tagliata sotto la linea di base** — le pance delle due «g» non ci sono, e
+sotto il taglio restano ancora quattro o cinque dp di card azzurra. La richiesta era esplicita:
+sistemarla **senza toccare nient'altro**, né posizione né dimensione del testo e dell'eventuale
+glifo.
+
+**La causa è che il budget di questa forma spende tutta la card.** `textRowHeroSp` dà al numero
+**tutto quello che resta** dopo la riga del luogo e quella del marcatore, quindi la colonna di
+sinistra misura *esattamente* `altezza − 6 × 2` a ogni misura e a ogni scala del carattere: zero
+gioco, per costruzione. E `textLineHeight` è una stima — 1,32 em è la scatola di Roboto — che il
+file che la definisce dichiara tale, aggiungendo che i budget che ci si appoggiano «tengono una
+banda di gioco (`textInkBalance`) che assorbe un carattere la cui scatola è di qualche centesimo
+più alta». Questo non ne teneva nessuna. Su un telefono il cui carattere di sistema sta
+sui ~1,37 em la colonna vuole ~3 dp più di quanti la card ne conceda, il `LinearLayout` verticale
+in cui si compila misura l'ultimo figlio con quel che avanza, e un `TextView` misurato sotto la
+propria altezza di riga disegna la riga e la taglia. **L'ultimo figlio è il marcatore**, che è
+anche l'unica riga che un budget non ha mai il diritto di lasciar cadere (VISION §5.9): ecco
+perché l'errore si vedeva solo lì.
+
+Misurato sulla schermata: card 940 × 235 px su un 1080 × 2340, cioè la card di riferimento di
+340 × 85 dp; la base della riga cade a ~381 px e il taglio a 383, cioè esattamente sulla linea di
+base. Sopra scala 1,15 la stessa colonna sfora per una seconda ragione — il numero è già sul
+proprio pavimento (`TextHeroFloor`) e non ha più niente con cui pagare il marcatore — e finisce
+sulla stessa vittima.
+
+**La correzione è che i due numeri non sono lo stesso numero.** Il budget continua a *spendere*
+i 6 dp snelli su ciascun bordo, quindi ogni dimensione e ogni posizione della card restano quelle
+di prima; la card smette di *riservarli* (`textCardPaddingVertical`), così il blocco può crescere
+dentro la propria aria invece di tagliare l'ultima riga. E non si muove niente quando non serve,
+perché una card a una riga **centra** quel che tiene — la `Row` di `TextForm.ROW` e la `Column` di
+`TextForm.LINE` lo fanno entrambe — e un blocco centrato alto *h* sta a `(altezza − h) / 2`
+qualunque sia il margine simmetrico intorno: su ogni misura in cui la stima regge la card disegna
+al dp quello che disegnava prima, e dove non regge ha 12 dp (`TextRowHeadroom`, il ~16% del budget
+della riga di riferimento) da sforare prima che qualcosa venga tagliato.
+
+Una sola eccezione, ed è l'unica cosa in questa forma ancorata alla **card** invece che al blocco
+di parole: il glifo del meteo della forma stretta, che sta in fondo a destra del riquadro. Tiene
+adesso 6 dp suoi, scritti fuori dal modificatore di dimensione perché in Glance il padding di una
+`Image` dimensionata si mangia il disegno invece di stargli sotto. Così resta al dp dov'era.
+
+Le altre due forme non si toccano: stack e pannello appendono l'occhiello in alto e il blocco in
+basso, quindi lì il margine è una posizione e non solo aria, e una card senza ancora un bollettino
+non ha nemmeno una forma.
+
+**Quel che la correzione non copre, a verbale.** A scala 1,3 la colonna di una riga vuole ~91 dp
+su una card da 85: dodici dp di sforo non ci arrivano, e gli unici dp rimasti da prendere sono
+quelli del numero, che è già sul pavimento dei 26 sp. Abbassare il pavimento cambierebbe la
+dimensione della temperatura su ogni card che ci cade sopra — una decisione diversa da questa, e
+non quella che era stata chiesta — quindi è scritta qui e pinnata da un test
+(`the largest font on the shortest row is past what any inset can carry`) invece di essere presa
+di nascosto.
+
+Quattro test nuovi: che il budget di una riga spenda la card intera (il meccanismo, non un numero
+di contorno), che il margine restituito porti una scatola di carattere del 4% più alta della
+stima, che solo le due forme a una riga lo restituiscano, e il limite qui sopra.
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1669 test**, lint a zero errori.

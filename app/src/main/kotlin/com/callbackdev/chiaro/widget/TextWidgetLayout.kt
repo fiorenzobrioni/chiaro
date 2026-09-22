@@ -578,6 +578,57 @@ private fun textGlyphMeetsEdge(form: TextForm?, showIcon: Boolean): Boolean =
     showIcon && form != null && form != TextForm.ROW
 
 /**
+ * **The air a one-row card reserves at its top and bottom edges, and why the card itself
+ * no longer enforces it** (committente, 22 set 2026, on the device: la riga
+ * «Aggiornato 2 ore fa» tagliata a metà in basso su una card 4×1).
+ *
+ * Every budget on a one-row card is paid out of `height − [WidgetCardPaddingSnug] × 2`,
+ * and [textRowHeroSp] hands the number **everything that is left** once the place's line
+ * and the stale marker's are taken off. That is what makes the hero worth calling one —
+ * and it also means the leading column measures EXACTLY the height the card gives it, at
+ * every grant and every font scale. Zero slack, by construction.
+ *
+ * [textLineHeight] is an estimate: 1.32 em is Roboto's own top-to-bottom box, and the
+ * file that defines it says in as many words that the budgets resting on it «keep a band
+ * of slack ([textInkBalance]) that absorbs a font whose box is a few hundredths taller».
+ * This one keeps none — so on a device whose system font boxes at ~1.37 em the column
+ * wants ~3 dp more than the card allows, the vertical LinearLayout the row compiles to
+ * measures its last child with what is left, and a `TextView` measured under its own line
+ * height draws the line and cuts it. The last child is the stale marker, which is why the
+ * only thing that ever showed the error was the one line that can never be dropped
+ * (VISION §5.9). Past font scale 1.15 the same column overruns for a second reason — the
+ * number is already on its floor ([TextHeroFloor]) and cannot pay for the marker any
+ * more — and lands on the same casualty.
+ *
+ * **The fix is that the two numbers are not the same number.** The budget still SPENDS
+ * the snug 6 dp at each edge, so every size and every position on this card is the one it
+ * was; the card stops RESERVING it, so the block may grow into it when the real font is
+ * taller than the estimate. Nothing moves when it does not need to: a one-row card
+ * centres its columns vertically ([TextForm.ROW]'s row and [TextForm.LINE]'s column both
+ * do), and a centred block of height *h* sits at `(height − h) / 2` whatever the
+ * symmetric inset around it is. So on every grant where the estimate holds the card draws
+ * to the dp what it drew before, and on the ones where it does not the column has
+ * [TextRowHeadroom] to overrun into before anything is clipped — 12 dp, which is ~16% of
+ * the reference 85 dp row's own budget.
+ *
+ * Only the one-row forms. The stack and the panel pin their eyebrow to the top and their
+ * block to the bottom, so their inset is a position and not just air, and there the words
+ * keep the card's own [WidgetCardPadding] exactly as before — as does a card with no
+ * report yet, whose form is null.
+ */
+internal fun textCardPaddingVertical(form: TextForm?): Dp =
+    if (textOneRow(form)) 0.dp else WidgetCardPadding
+
+/** What a one-row card may overrun its own budget by before a line is clipped: the air
+ * the budget spends at both edges, lent back by [textCardPaddingVertical]. */
+internal val TextRowHeadroom = WidgetCardPaddingSnug * 2
+
+/** The two forms that are one row of words: both centre what they hold, which is what
+ * makes the headroom free of charge. */
+internal fun textOneRow(form: TextForm?): Boolean =
+    form == TextForm.ROW || form == TextForm.LINE
+
+/**
  * The number's size, given the height it may occupy and the column it must not overflow.
  * [textSizeForLine] inverts the line box; the width guard is the other half of
  * [nowRowIconSize]'s `minOf(byHeight, byWidth)`, at this card's units — the widest
