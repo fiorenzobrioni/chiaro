@@ -68,8 +68,8 @@ import com.callbackdev.chiaro.data.LocationSettings
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.theme.tabular
-import java.util.Locale
 import kotlinx.coroutines.launch
 
 /**
@@ -485,7 +485,7 @@ private fun SavedRow(
                         text = Formats.temperature(
                             it,
                             com.callbackdev.chiaro.domain.settings.TemperatureUnit.CELSIUS,
-                            Locale.getDefault()
+                            currentLocale()
                         ),
                         style = MaterialTheme.typography.titleMedium.tabular()
                     )

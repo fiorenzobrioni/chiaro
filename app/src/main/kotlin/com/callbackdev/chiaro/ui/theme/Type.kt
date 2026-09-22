@@ -156,9 +156,14 @@ private val ReadingWeight = FontWeight.Light
  * The scale of DESIGN §5, in a family. Every role is named: a role left out would take
  * Material's own default family, which is the platform sans, and the app would be set in
  * two typefaces without anybody deciding that (`TypographyFamilyTest` counts them).
+ *
+ * Built with the constructor and not `Typography().copy(...)` since Material 3 1.4 (22 set
+ * 2026, with Navigation 3): 1.4 added fifteen "emphasized" roles, internal in the stable
+ * API, and `copy` keeps Material's own for them (platform sans) where the constructor
+ * derives each from the role it is given. The test caught it, which is what it is for.
  */
 internal fun typographyFor(family: FontFamily): Typography = Typography().run {
-    copy(
+    Typography(
         displayLarge = displayLarge.copy(fontFamily = family),
         displayMedium = displayMedium.copy(fontFamily = family),
         displaySmall = displaySmall.copy(fontFamily = family, fontSize = 36.sp, lineHeight = 44.sp),
@@ -191,7 +196,7 @@ private val GoogleSansTypography: Typography = typographyFor(GoogleSansFamily)
 private val SystemTypography: Typography = typographyFor(SystemFamily)
 
 /** The three scales are built once and picked, never rebuilt per composition: a
- * `Typography` is fifteen `TextStyle`s and the reader changes this setting about once. */
+ * `Typography` is thirty `TextStyle`s and the reader changes this setting about once. */
 fun chiaroTypography(font: AppFont): Typography = when (font) {
     AppFont.INTER -> ChiaroTypography
     AppFont.GOOGLE_SANS -> GoogleSansTypography

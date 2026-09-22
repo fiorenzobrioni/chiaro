@@ -29,11 +29,11 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningHazard
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
+import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.warnings.WarningText.colors
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.Locale
 
 /**
  * DESIGN.md §8.13. The arithmetic behind the banner: the zone, a grid of every hazard
@@ -54,7 +54,7 @@ fun WarningSheet(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val locale = Locale.getDefault()
+    val locale = currentLocale()
     val dateFmt = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -130,7 +130,7 @@ private const val BulletinUrl =
  */
 @Composable
 private fun LevelGrid(warnings: PlaceWarnings, today: LocalDate) {
-    val locale = Locale.getDefault()
+    val locale = currentLocale()
     val dayFmt = DateTimeFormatter.ofPattern("EEE d", locale)
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

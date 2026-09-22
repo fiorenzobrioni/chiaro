@@ -20,10 +20,16 @@
          minutes. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!-- enableOnBackInvokedCallback (22 set 2026): predictive back. Inside the app the
+         shell's NavDisplay already follows the finger; this is what lets the system do
+         the same at Today's root, where back leaves the app and the gesture shows the
+         home screen behind it. Android 16 turns it on for targetSdk 36 by itself, but
+         minSdk is 33 and 14-15 wait for the app to ask. -->
     <application
         android:name=".ChiaroApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:label="@string/app_name"

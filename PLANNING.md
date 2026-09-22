@@ -9495,3 +9495,118 @@ mancante — che e' il modo in cui questa classe falliva, senza dire niente.
 **La prova**: 60 esecuzioni consecutive dopo la correzione, zero fallimenti, contro i 3 su 50 di
 prima (a quel tasso, 60 esecuzioni pulite per caso sarebbero circa il 2%).
 `./gradlew test :app:testDebugUnitTest :app:lintDebug` verdi, **1669 test**, lint a zero errori.
+
+---
+
+## Navigation 3 e il back di Saldo (committente, 22 set 2026)
+
+«Implementa Navigation 3 in Chiaro e fai le stesse animazioni che ci sono in Saldo (il back,
+e mi sembra che in Saldo sia animato anche il cambio fra tab, verifica).»
+
+È la seconda volta che la domanda arriva: il 18 set la dissolvenza di Saldo era stata rifatta
+a mano (`ScreenSwap.kt`, un `AnimatedContent` su un `SeekableTransitionState`) e ritirata lo
+stesso giorno (sezione «L'intestazione di Oggi che non scorre via»). Questa volta non si imita
+Saldo: si adotta **lo stesso meccanismo**, Navigation 3, con le stesse transizioni.
+
+### La verifica: in Saldo il cambio tab è animato, sì
+
+Letto nel sorgente di `navigation3-ui` 1.1.4 (la versione di Saldo), non a memoria.
+`NavDisplay` riceve la lista `[pila della Dashboard] + [pila del tab scelto]` e decide la
+direzione con `isPop(vecchia, nuova)`: è un pop solo se la nuova lista è un prefisso stretto
+della vecchia. Quindi:
+
+- Dashboard → un altro tab: `[D]` → `[D, S]`, **push** (la pagina entra da destra);
+- un tab → Dashboard: `[D, S]` → `[D]`, **pop** (la Dashboard rientra da sinistra);
+- fra due tab che non sono la Dashboard: `[D, S]` → `[D, M]`, stessa lunghezza ma divergente,
+  **push**.
+
+Il cambio tab usa quindi la stessa transizione di ogni altra pagina, e in Chiaro lo fa allo
+stesso modo, con Oggi al posto della Dashboard.
+
+### Cosa è cambiato
+
+- **`ui/shell/ChiaroNavigation.kt`** (nuovo): le chiavi `NavKey` serializzabili (i quattro tab,
+  `SettingsKey`, `GuideKey`, `SkyGuideKey`, `SkyEventKey`) e `ChiaroNavigationState`, la ricetta
+  «multiple back stacks» con la forma di `SaldoNavigationState`: una pila per tab, sullo schermo
+  `[pila di Oggi] + [pila del tab scelto]`, back dalla radice di un tab porta a Oggi, back dalla
+  radice di Oggi è del sistema. Lo stato salvabile di ogni pila vive in un decoratore suo, quindi
+  un tab ritrova scroll e pagina aperta quando ci si torna (prima lo scroll di Oggi si perdeva a
+  ogni cambio tab: il ramo del `when` usciva dalla composizione e il suo `rememberSaveable` con
+  lui).
+- **`ChiaroRoot.kt`**: `MainScreens` diventa un `NavDisplay`. Via i due enum di stato
+  (`ShellOverlay`, `guideFromSettings`) e il `BackHandler`: la guida torna dalla porta da cui è
+  entrata perché la porta è la pagina sotto di lei nella pila. La barra in basso è disegnata
+  **sopra** il display, come in Saldo, e scivola via sotto Impostazioni e la guida; le pagine
+  dei tab lasciano libera in basso l'altezza della barra (80 dp + l'inset di sistema), cioè
+  esattamente l'area che il vecchio `Column` dava loro, con un `padding` semplice e non un
+  modificatore di inset, così nessuna pagina vede cambiare l'inset che leggeva.
+- **La guida degli eventi del cielo** (`SkyGuideScreen.kt`) diventa due route, `SkyGuideIndexRoute`
+  e `SkyEventRoute`: prima era un `openId` dentro un composable con un suo `BackHandler`, e il
+  back da una pagina all'indice era un cambio secco. Ora è un pop predittivo come gli altri. Un
+  evento correlato aperto da una pagina **prende il posto** di quella pagina (`replaceTop`), che
+  è la promessa di prima: back riporta all'indice da cui si era partiti. `SkyRoute` e
+  `GuideRoute` perdono il loro stato «guida aperta» e ricevono una callback.
+- **Le transizioni** sono quelle di Saldo, valore per valore: 300 ms, `FastOutSlowInEasing`,
+  scorrimento di un sesto della larghezza più dissolvenza, in un senso per il push e nell'altro
+  per il pop e per il back predittivo; la barra entra ed esce in verticale negli stessi 300 ms.
+- **Manifest**: `enableOnBackInvokedCallback="true"`, per il gesto di sistema alla radice di Oggi
+  su Android 14 e 15 (su 16 con targetSdk 36 è già acceso).
+- **Un widget o una notifica** (`openFromOutside`) riporta ogni pila alla radice e seleziona il
+  tab: è la regola di prima («il tocco da fuori chiude gli overlay»), estesa alla pila di Oggi
+  che ora sta sotto ogni altro tab, altrimenti un back dal Cielo aperto da un widget avrebbe
+  mostrato una pagina di Impostazioni lasciata aperta ore prima.
+
+### Decisioni e deviazioni
+
+- **Una tween e non una molla**, contro DESIGN §7 che vuole molle ovunque: il back predittivo
+  *cerca* la transizione col dito (`seekTo`), e per mettere il progresso del gesto su una curva
+  la curva deve avere una durata. È anche la richiesta letterale (le animazioni di Saldo). Il
+  movimento ridotto la collassa ai 100 ms di dissolvenza come tutto il resto. Scritto in
+  DESIGN §7.
+- **Nessun decoratore dei ViewModel**, a differenza di Saldo: i ViewModel restano legati
+  all'activity com'erano. I quattro tab condividono un solo `PlacesViewModel`, e un
+  `ViewModelStore` per voce lo avrebbe diviso in quattro. Nessun cambiamento di comportamento
+  per i dati.
+- **Il `BackHandler` del catalogo nel Cielo resta**: vive dentro un `ModalBottomSheet`, che ha la
+  sua finestra e il suo back; non è navigazione dello shell.
+- **Dipendenze**: `navigation3-runtime`/`-ui` 1.1.4 chiedono activity 1.12, lifecycle 2.10 e
+  Compose 1.10, quindi il catalogo le dichiara a quel che si risolve (BOM Compose `2026.02.01`,
+  activity `1.12.4`, lifecycle `2.10.0`: lo stesso insieme di Saldo) invece di lasciarle salire
+  in silenzio sotto un numero vecchio. Material 3 1.4, che arriva con il BOM, non porta più le
+  icone Material con sé: `material-icons-core` è ora dichiarato, alla 1.7.8 che si risolveva già.
+  Tolto `navigation-compose`, che era nel catalogo e nel build ma non era usato da nessun file.
+  Plugin `kotlin.serialization` su `:app` per le chiavi. Un warning nuovo di Material 1.4
+  (`confirmValueChange` deprecato in `PlacesSheet`) resta un warning: non cambia niente oggi.
+
+### Quel che il salto di versione ha rotto, e trovato prima del dispositivo
+
+- **Una famiglia tipografica sfuggita.** Material 3 1.4 aggiunge quindici ruoli «emphasized»
+  (interni nell'API stabile) e `Typography().copy(...)`, che era il modo in cui `typographyFor`
+  costruiva la scala, li lasciava con la famiglia di Material, cioè il sans di piattaforma.
+  `TypographyFamilyTest` esiste esattamente per questo («un ruolo aggiunto da una release
+  futura di Material fallisce qui invece di andare in APK») e lo ha preso. La scala ora si
+  costruisce col costruttore pubblico, che deriva ogni ruolo enfatizzato da quello che riceve.
+- **Due regole di lint nuove di Compose 1.10**, 26 errori su codice che non era cambiato:
+  `NonObservableLocale` (24, `Locale.getDefault()` letto dentro un composable) e
+  `LocalContextGetResourceValueCall` (2, `context.getString` in `ArcPreview`). Corrette nel
+  codice come in Saldo, non soppresse: `currentLocale()` (`ui/format/CurrentLocale.kt`) legge
+  `LocalConfiguration`, `glanceLocale()` (`widget/WidgetUi.kt`) la configurazione del contesto
+  di Glance, che non ha `LocalConfiguration`; le due stringhe passano per `stringResource`.
+  Stessa risposta di prima (con le lingue per app un cambio di lingua riavvia comunque
+  l'activity), letta nel modo che Compose può osservare.
+
+### Come è stato verificato
+
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, **1689 test**
+  (i 1669 di prima più i 10 nuovi, in debug e release), lint a zero errori;
+  `:app:assembleRelease -PsignReleaseWithDebugKey` verde, quindi R8 passa con le chiavi
+  serializzabili.
+- `ChiaroNavigationStateTest` (nuovo, 10 test): la pagina su cui atterra ogni back, il tab in cui
+  lascia, la guida che torna dalla sua porta, la barra coperta da Impostazioni e non dalla guida
+  del cielo nel tab, l'evento correlato che rimpiazza la pagina, il tab che conserva la pagina
+  aperta, il tocco da fuori che ripulisce le pile, e ogni chiave che fa andata e ritorno
+  attraverso kotlinx.serialization (una chiave senza serializzatore cadrebbe alla prima
+  rotazione, non in compilazione).
+- **Da fare sul dispositivo**, perché qui non c'è: il gesto che segue il dito (fra pagine, fra
+  un tab e Oggi, alla radice di Oggi verso la home), la barra che scivola, e un giro sulle
+  schermate per il passaggio a Material 3 1.4 / Compose 1.10.

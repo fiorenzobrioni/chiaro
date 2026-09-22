@@ -373,9 +373,10 @@ it, is in [DESIGN.md](./DESIGN.md).
   history), **DataStore** (settings, places, rules, subscriptions and engine state),
   **WorkManager** (the one periodic job), **Glance** (the widgets)
 - **Coroutines** and **Flow** throughout, a hand-rolled `ServiceLocator` instead of a DI
-  framework (the app is small enough that Hilt would cost more than it saves), the four
-  destinations as a saveable enum in the shell rather than a nav graph, and the charts
-  drawn on a Compose canvas rather than by a charting library
+  framework (the app is small enough that Hilt would cost more than it saves),
+  **Navigation 3** for the shell (one back stack per tab, and a predictive back that
+  follows the finger), and the charts drawn on a Compose canvas rather than by a charting
+  library
 - **Meteocons** v3 as vector drawables, imported and re-anchored by
   `tools/import_meteocons_v3.py`. The whole family of 519 drawings lives in the repo and
   only what a screen names reaches the APK, which is what `shrinkResources` is for.

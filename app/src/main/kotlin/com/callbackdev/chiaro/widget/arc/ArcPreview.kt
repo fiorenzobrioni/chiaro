@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.theme.paletteFor
 import com.callbackdev.chiaro.ui.today.TodayUiState
@@ -67,7 +68,6 @@ import com.callbackdev.chiaro.widget.verdictInk
 import com.callbackdev.chiaro.widget.widgetCardFill
 import com.callbackdev.chiaro.widget.widgetSchemes
 import java.time.Instant
-import java.util.Locale
 
 /**
  * The grants the preview can show, at the reference device's measured sizes (a cell is
@@ -231,7 +231,7 @@ private fun PreviewBody(
     val scale = plan.textScale
     val next = series.nextLight
     val temperature = Formats.temperature(
-        content.report.current.tempC, model.settings.units.temperature, Locale.getDefault()
+        content.report.current.tempC, model.settings.units.temperature, currentLocale()
     )
     val graphic: @Composable () -> Unit = {
         Image(
@@ -355,9 +355,9 @@ private fun PreviewBody(
                     Spacer(modifier = Modifier.width(HeroGap))
                     val units = model.settings.units.temperature
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        PText(Formats.temperature(series.highC, units, Locale.getDefault()), inks.primary, 16f, medium = true)
+                        PText(Formats.temperature(series.highC, units, currentLocale()), inks.primary, 16f, medium = true)
                         PText(" / ", inks.secondary, 16f)
-                        PText(Formats.temperature(series.lowC, units, Locale.getDefault()), inks.secondary, 16f)
+                        PText(Formats.temperature(series.lowC, units, currentLocale()), inks.secondary, 16f)
                     }
                 }
             }
@@ -398,7 +398,7 @@ private fun PreviewAgenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, 
                 )
                 val name = ArcText.rowLabel(context, event.item)
                 Text(
-                    text = if (event.tomorrow) context.getString(R.string.arc_tomorrow_name, name) else name,
+                    text = if (event.tomorrow) stringResource(R.string.arc_tomorrow_name, name) else name,
                     color = inks.primary,
                     fontSize = (AgendaSp * plan.textScale).sp,
                     maxLines = 1,
@@ -425,7 +425,7 @@ private fun PreviewWeek(
     inks: PreviewInks
 ) {
     val context = LocalContext.current
-    val locale = Locale.getDefault()
+    val locale = currentLocale()
     val today = content.now.toLocalDate()
     Row(modifier = Modifier.fillMaxWidth()) {
         content.week.take(7).forEach { day ->
@@ -461,7 +461,6 @@ private fun PreviewWeek(
  */
 @Composable
 private fun PreviewWarningChip(level: WarningLevel, inks: PreviewInks, topGap: Dp) {
-    val context = LocalContext.current
     val colors = inks.palette.colors
     val pair = when (level) {
         WarningLevel.RED -> colors.warningRed
@@ -482,7 +481,7 @@ private fun PreviewWarningChip(level: WarningLevel, inks: PreviewInks, topGap: D
             modifier = Modifier.size(WarningChipGlyph)
         )
         Spacer(modifier = Modifier.width(4.dp))
-        PText(context.getString(WarningText.phraseRes(level)), pair.ink, WarningChipSp, medium = true)
+        PText(stringResource(WarningText.phraseRes(level)), pair.ink, WarningChipSp, medium = true)
     }
 }
 

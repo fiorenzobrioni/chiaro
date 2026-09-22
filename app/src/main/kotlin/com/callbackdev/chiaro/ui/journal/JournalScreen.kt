@@ -60,6 +60,7 @@ import com.callbackdev.chiaro.data.FetchFailureReason
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.warnings.WarningText
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.places.PlacesSheet
@@ -180,7 +181,7 @@ private enum class DriftMetric { RAIN, HIGH }
 
 @Composable
 private fun JournalBody(content: JournalContent, units: UnitSettings) {
-    val locale = Locale.getDefault()
+    val locale = currentLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val timeFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
     val dayFmt = remember(locale) { DateTimeFormatter.ofPattern("EEEE d MMMM", locale) }
@@ -293,7 +294,7 @@ private fun dayTitle(date: LocalDate, zone: ZoneId, dayFmt: DateTimeFormatter): 
         today -> stringResource(R.string.week_today)
         today.minusDays(1) -> stringResource(R.string.journal_yesterday)
         else -> date.format(dayFmt)
-            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(currentLocale()) else it.toString() }
     }
 }
 
@@ -459,7 +460,7 @@ private fun warningDay(day: LocalDate, zone: ZoneId): String {
         today -> stringResource(R.string.warning_day_today_short)
         today.plusDays(1) -> stringResource(R.string.warning_day_tomorrow_short)
         else -> day.format(
-            DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.getDefault())
+            DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(currentLocale())
         )
     }
 }

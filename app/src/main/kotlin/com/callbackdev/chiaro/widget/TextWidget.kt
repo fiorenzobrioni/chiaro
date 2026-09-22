@@ -37,7 +37,6 @@ import com.callbackdev.chiaro.ui.today.TodayUiState
 import com.callbackdev.chiaro.ui.today.WeatherText
 import com.callbackdev.chiaro.ui.warnings.WarningText
 import java.time.Instant
-import java.util.Locale
 
 /**
  * The text widget (committente, 19 set 2026): the same facts the Now widget carries, with
@@ -552,7 +551,7 @@ private fun HeroTemperature(
 ) {
     Text(
         text = Formats.temperature(
-            content.report.current.tempC, model.settings.units.temperature, Locale.getDefault()
+            content.report.current.tempC, model.settings.units.temperature, glanceLocale()
         ),
         style = TextStyle(
             color = palette.primary,

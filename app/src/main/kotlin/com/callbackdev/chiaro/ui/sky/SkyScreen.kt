@@ -72,6 +72,7 @@ import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.components.VerdictChip
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.places.PlacesSheet
@@ -93,19 +94,15 @@ import kotlin.math.roundToInt
 @Composable
 fun SkyRoute(
     onOpenSettings: () -> Unit,
+    /** The events guide. It takes the tab rather than opening beside it: it is a
+     * document, and a reader who is in it is reading, not watching tonight's verdict.
+     * The shell keeps the bottom bar under it, because they never left the Sky tab. */
+    onOpenGuide: () -> Unit,
     skyViewModel: SkyViewModel = viewModel(factory = SkyViewModel.Factory),
     placesViewModel: PlacesViewModel = viewModel(factory = PlacesViewModel.Factory)
 ) {
     val state by skyViewModel.state.collectAsStateWithLifecycle()
     var placesOpen by remember { mutableStateOf(false) }
-    // The guide takes the tab rather than opening beside it: it is a document, and a
-    // reader who is in it is reading, not watching tonight's verdict. The bottom bar
-    // stays, because they never left the Sky tab.
-    var guideOpen by rememberSaveable { mutableStateOf(false) }
-    if (guideOpen) {
-        SkyGuideRoute(onClose = { guideOpen = false })
-        return
-    }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -120,7 +117,7 @@ fun SkyRoute(
                 is SkyUiState.Content -> SkyContent(
                     content = s,
                     viewModel = skyViewModel,
-                    onOpenGuide = { guideOpen = true }
+                    onOpenGuide = onOpenGuide
                 )
             }
         }
@@ -203,7 +200,7 @@ private fun SkyContent(
     viewModel: SkyViewModel,
     onOpenGuide: () -> Unit
 ) {
-    val locale = Locale.getDefault()
+    val locale = currentLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val timeFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
     val dateFmt = remember(locale) { DateTimeFormatter.ofPattern("d MMMM", locale) }

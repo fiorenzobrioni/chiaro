@@ -33,7 +33,6 @@ import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import java.time.Instant
-import java.util.Locale
 
 /**
  * The Today widget (VISION §5.9): now plus the next hours — the Now widget's one-row
@@ -94,7 +93,7 @@ private fun TodayContent(
     size: DpSize
 ) {
     val context = LocalContext.current
-    val locale = Locale.getDefault()
+    val locale = glanceLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(context)
     val fontScale = fontScale(context)
     val cells = todayStripCells(size.width)

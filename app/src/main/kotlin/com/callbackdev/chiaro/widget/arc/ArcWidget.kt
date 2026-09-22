@@ -58,6 +58,7 @@ import com.callbackdev.chiaro.widget.WidgetModel
 import com.callbackdev.chiaro.widget.WidgetPalette
 import com.callbackdev.chiaro.widget.WidgetRefresh
 import com.callbackdev.chiaro.widget.fontScale
+import com.callbackdev.chiaro.widget.glanceLocale
 import com.callbackdev.chiaro.widget.rememberSkyBitmap
 import com.callbackdev.chiaro.widget.rememberWidgetModel
 import com.callbackdev.chiaro.widget.rememberWidgetSchemes
@@ -185,7 +186,7 @@ private fun rememberArcBitmap(
     val density = density(context)
     val fontScale = fontScale(context)
     val is24h = DateFormat.is24HourFormat(context)
-    val locale = Locale.getDefault()
+    val locale = glanceLocale()
     return remember(series, arc, plan, palette, density, fontScale, is24h, locale, model.settings.units) {
         paintArc(context, model, arc, series, plan, palette)
     }
@@ -647,7 +648,7 @@ private fun WeekStrip(
     palette: WidgetPalette
 ) {
     val context = LocalContext.current
-    val locale = Locale.getDefault()
+    val locale = glanceLocale()
     val today = content.now.toLocalDate()
     Row(modifier = GlanceModifier.fillMaxWidth()) {
         content.week.take(7).forEach { day ->
