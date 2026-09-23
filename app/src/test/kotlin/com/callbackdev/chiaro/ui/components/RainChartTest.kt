@@ -74,4 +74,47 @@ class RainChartTest {
             axisTicks(count = 0, every = 6, stepPx = 13f, labelWidthPx = { 16f }, gapPx = 6f)
         )
     }
+
+    // The chart as the strip's map (23 set 2026): which hours are in view, and which hour
+    // a finger lands on. Pixel values as a 360dp phone at 2.75x lays the strip out:
+    // 60dp cells (56 + the 4dp gap is outside the item) are 154px, the 16dp margin 44px.
+
+    @Test
+    fun `a strip at rest shows its first cells whole and the next one cut`() {
+        val w = hourWindow(
+            cells = (0..6).map { VisibleCell(it, it * 165, 154) },
+            viewportStart = -44,
+            viewportEnd = 946
+        )!!
+        assertEquals(0f, w.start, 1e-4f)
+        // The seventh cell starts at 990, past the viewport's end: in view up to the sixth.
+        assertEquals(6f, w.end, 1e-4f)
+    }
+
+    @Test
+    fun `a scrolled strip counts the cut cells by the part of them in view`() {
+        val w = hourWindow(
+            cells = listOf(VisibleCell(3, -77, 154), VisibleCell(4, 88, 154), VisibleCell(9, 900, 154)),
+            viewportStart = -44,
+            viewportEnd = 946
+        )!!
+        // Cell 3 is shown from its 33rd pixel on: 3 + 33/154.
+        assertEquals(3f + 33f / 154f, w.start, 1e-4f)
+        assertEquals(9f + 46f / 154f, w.end, 1e-4f)
+    }
+
+    @Test
+    fun `an empty row has no window`() {
+        assertEquals(null, hourWindow(emptyList(), 0, 100))
+    }
+
+    @Test
+    fun `a finger on the plot lands on the hour under it, and never off the ends`() {
+        // 24 hours over 230px: an hour every 10px.
+        assertEquals(0f, hourAtX(0f, 24, 230f), 1e-4f)
+        assertEquals(11.5f, hourAtX(115f, 24, 230f), 1e-4f)
+        assertEquals(23f, hourAtX(400f, 24, 230f), 1e-4f)
+        assertEquals(0f, hourAtX(-20f, 24, 230f), 1e-4f)
+        assertEquals(0f, hourAtX(50f, 1, 230f), 1e-4f)
+    }
 }

@@ -14,6 +14,18 @@ sections are a normal size and live here alone.
 
 ## [Unreleased]
 
+### Changed
+
+- **Today: the daylight ribbon is drawn as light.** One continuous gradient with rounded ends
+  instead of hard-edged blocks, "now" as a disc, and the part of the day already spent drawn
+  quieter; in the week's rows the night recedes, so each day shows its band of light.
+- **Today: the page lies on the sky.** The content starts as a rounded sheet over the bottom
+  of the sky instead of a hard cut, and its top catches the sky's own color: warm at sunset,
+  blue at noon.
+- **Today: the rain chart follows the hour strip.** It marks the hours the strip has in view,
+  and a tap or a drag on it scrolls the strip to that hour. The first time it appears the line
+  draws itself in from left to right.
+
 ### Fixed
 
 - **Widget «In parole», one-row card: the "updated N hours ago" line is no longer cut off.**

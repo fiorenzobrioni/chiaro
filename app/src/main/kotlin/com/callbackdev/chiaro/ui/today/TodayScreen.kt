@@ -56,6 +56,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -97,7 +98,10 @@ import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.components.RainChart
 import com.callbackdev.chiaro.ui.components.RainHour
+import com.callbackdev.chiaro.ui.components.VisibleCell
+import com.callbackdev.chiaro.ui.components.hourWindow
 import com.callbackdev.chiaro.ui.components.SkyCanvas
+import com.callbackdev.chiaro.ui.components.SkySheet
 import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.warnings.WarningBanner
@@ -117,7 +121,9 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 /**
  * Today (VISION §5.2): the canvas, the sentence, the hours, the day, the week, the
@@ -980,6 +986,10 @@ private fun CanvasHeader(
     // so the sky sits behind the clock, over the top scrim that keeps both legible.
     val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val floor = CanvasBaseHeight + statusTop
+    // The page laid over the sky's last few dp (DESIGN §8.1, 23 set 2026). Its lip is
+    // inside the floor, not added to it: the skeleton quotes the floor, and the block
+    // must still end where the skeleton's does.
+    val sheet = SkySheet(surface = MaterialTheme.colorScheme.surface)
     SkyCanvas(
         gradient = ChiaroTheme.sky.gradient(
             sunAltitudeDeg = sky.sunAltitudeDeg,
@@ -988,7 +998,8 @@ private fun CanvasHeader(
             moonIllumination = sky.moonIllumination,
             moonAltitudeDeg = sky.moonAltitudeDeg
         ),
-        minHeight = floor
+        minHeight = floor,
+        sheet = sheet
     ) {
         // One column with the place row's seat at the top and the hero at the bottom,
         // rather than two children aligned to opposite edges of a fixed box:
@@ -1000,7 +1011,7 @@ private fun CanvasHeader(
         // geometry the row used to make for itself — the hero lands where it always did,
         // and it cannot climb under a bar it no longer belongs to.
         Column(
-            modifier = Modifier.fillMaxWidth().heightIn(min = floor),
+            modifier = Modifier.fillMaxWidth().heightIn(min = floor - sheet.lip),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Spacer(modifier = Modifier.height(placeRowHeight))
@@ -1177,10 +1188,41 @@ private fun NextHours(
 ) {
     // The page margin travels differently for the two children: the strip takes it as
     // `contentPadding` so it scrolls edge to edge (DESIGN §8.3), the chart wears it.
+    // The strip's scroll is hoisted so the chart can follow it: the chart marks the
+    // hours in view and scrolls the strip to the hour it is tapped on (DESIGN §8.3b).
+    val rowState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    val window = {
+        val info = rowState.layoutInfo
+        hourWindow(
+            info.visibleItemsInfo.map { VisibleCell(it.index, it.offset, it.size) },
+            info.viewportStartOffset,
+            info.viewportEndOffset
+        )
+    }
+    val cellGap = with(LocalDensity.current) { StripCellGap.roundToPx() }
+    val seek: (Float, Boolean) -> Unit = { hour, animate ->
+        val info = rowState.layoutInfo
+        val cell = info.visibleItemsInfo.firstOrNull()
+        val inView = window()
+        if (cell != null && inView != null) {
+            // Center the hour under the finger, as far as the strip's ends allow.
+            val span = inView.end - inView.start
+            val first = (hour + 0.5f - span / 2f)
+                .coerceIn(0f, (info.totalItemsCount - span).coerceAtLeast(0f))
+            val index = first.toInt()
+            val offset = ((first - index) * (cell.size + cellGap)).roundToInt()
+            scope.launch {
+                if (animate) rowState.animateScrollToItem(index, offset)
+                else rowState.scrollToItem(index, offset)
+            }
+        }
+    }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         HourStrip(
             hours = content.strip.map { it.toCell(units, is24h, locale) },
-            contentPadding = PagePadding
+            contentPadding = PagePadding,
+            rowState = rowState
         )
         // A dry run draws NO chart (device review, 4 set). Every value at zero put
         // a flat line along the bottom of a 28dp box, which read on the screen as a
@@ -1205,6 +1247,8 @@ private fun NextHours(
                     peakPct,
                     peak.hour.time.format(timeFmt)
                 ),
+                window = window,
+                onSeek = seek,
                 modifier = Modifier.padding(PagePadding)
             )
         }
@@ -1213,6 +1257,9 @@ private fun NextHours(
 
 /** The page's side margin, as the strip's `contentPadding` and the chart's padding. */
 private val PagePadding = PaddingValues(horizontal = 16.dp)
+
+/** `HourStrip`'s gap between cells, which the seek needs to turn hours into pixels. */
+private val StripCellGap = 4.dp
 
 @Composable
 private fun StripHour.toCell(units: UnitSettings, is24h: Boolean, locale: Locale): HourCell {

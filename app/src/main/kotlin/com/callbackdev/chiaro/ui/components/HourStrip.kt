@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -73,11 +74,13 @@ data class HourCell(
 fun HourStrip(
     hours: List<HourCell>,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp)
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+    /** Hoisted by a caller that follows the strip's scroll: the rain chart under it
+     * draws the hours in view and scrolls the strip from a tap (§8.3b). */
+    rowState: LazyListState = rememberLazyListState()
 ) {
     // The strip's own scroll holds the weather still while it runs (DESIGN §7.1, 9 set
     // 2026), on top of whatever the page around it is already saying.
-    val rowState = rememberLazyListState()
     val paused = LocalMotionPaused.current || rowState.isScrollInProgress
     CompositionLocalProvider(LocalMotionPaused provides paused) {
         LazyRow(

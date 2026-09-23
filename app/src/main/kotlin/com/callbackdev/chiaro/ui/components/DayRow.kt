@@ -109,6 +109,9 @@ fun DayRow(
             nowFraction = null,
             description = "", // idem: one announcement per row
             height = 4.dp,
+            // The range bar's own track: the night leans toward it, so the row shows
+            // its pill of light rather than a navy bar (DESIGN §4, 23 set 2026).
+            nightFade = MaterialTheme.colorScheme.surfaceContainerHighest,
             modifier = Modifier.padding(start = if (reflow) 0.dp else 52.dp)
         )
     }

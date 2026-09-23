@@ -9672,3 +9672,78 @@ Chiesto insieme: togliere un momento dalla stessa pagina.
   (i 1689 di prima più i 3 nuovi), lint a zero.
 - **Da fare sul dispositivo**: il tocco sulle righe (anche sulla linea del chip), la campanella
   che resta un bersaglio a sé, TalkBack che annuncia l'azione.
+
+## La schermata Oggi, review grafica: nastro, foglio sul cielo, grafico pioggia (committente, 23 set 2026)
+
+Richiesta: una review completa della schermata principale, con cinque osservazioni del
+committente (la linea della pioggia non sincronizzata con «Prossime ore», la stessa linea
+animata all'apertura, lo stacco secco fra l'area della temperatura e il resto, le barre
+colorate nei dettagli, le linee del giorno più sfumate) più le proposte della review. Scelto il
+blocco 1–3 della proposta, con un mandato esplicito: **dove una scelta migliora la grafica e
+viola DESIGN.md, si cambia DESIGN.md e vince l'estetica**.
+
+### Cosa è cambiato
+
+- **Il nastro della luce è luce, non una tabella** (`DaylightRibbon`, DESIGN §4). Un solo
+  gradiente con estremi arrotondati al posto dei rettangoli a spigolo vivo, che sul dispositivo
+  leggevano come un codice a barre. Ogni fase tiene il suo colore al centro e sfuma nella vicina
+  sul bordo che condividono (il 30% della sua larghezza per lato, al massimo l'1,5% del giorno:
+  `ribbonStops`). Sul canvas passa da 6 a 8 dp; l'«adesso» è un **disco bianco di 14 dp** con un
+  anello dell'inchiostro dello scrim, e la parte di giornata già passata è al 60%.
+- **Nelle righe della settimana la notte si ritira** verso la traccia della barra min/max
+  (`nightFade`): niente dal crepuscolo civile in su, il 75% dalla notte astronomica in giù.
+  Sette barre blu notte erano l'inchiostro più pesante della sezione, e dicevano la cosa che
+  cambia meno; ora ogni riga mostra la sua pillola di luce.
+- **La pagina è un foglio appoggiato sul cielo** (`SkySheet`, DESIGN §8.1). I primi 24 dp della
+  pagina coprono il fondo del canvas con angoli di 28 dp: il cielo si vede attorno agli angoli e
+  la fascia più scura dello scrim finisce sotto la carta. Il foglio **prende la luce** del cielo:
+  i suoi primi 120 dp portano il colore del fondo del canvas al 16%, con una sfumatura a curva
+  fino alla superficie — caldo al tramonto, azzurro a mezzogiorno, quasi niente di notte.
+- **Il grafico pioggia è la mappa della fascia oraria** (DESIGN §8.3b). Tiene la vista delle
+  24 ore e ci segna le ore che la fascia sopra ha in vista (una finestra `surfaceContainerHigh`
+  che segue lo scroll); un tocco o un trascinamento sul grafico porta la fascia su quell'ora.
+  `HourStrip` accetta il suo `LazyListState` da fuori per questo.
+- **Il grafico si disegna** la prima volta che compare: linea e area rivelate da sinistra a
+  destra in 900 ms, una volta per pagina, mai con il movimento ridotto.
+
+### Decisioni e deviazioni
+
+- **Mappa e non grafico «spalmato» sulle 24 celle.** Allungarlo sotto la fascia avrebbe dato
+  l'allineamento ora per ora, e tolto l'unica cosa per cui il grafico c'è: la giornata intera in
+  un colpo d'occhio (VISION §5.2.3). La finestra dà la sincronia senza perdere la panoramica, e
+  il tocco la rende una scorciatoia invece che una decorazione.
+- **La rivelazione va lungo il tempo, mai dal basso.** Una linea che cresce dallo zero mostra
+  per mezzo secondo una giornata asciutta che nessuno ha previsto: §1.1 non ha eccezioni per le
+  animazioni. Il flag è `rememberSaveable`, così scorrere via il grafico e tornarci non la
+  ripete.
+- **Il bordo dritto del canvas resta dritto.** Gli angoli tolti il 4 set facevano del cielo una
+  card; qui il cielo resta il fondo e la card è la pagina. La linguetta è dentro il pavimento dei
+  280 dp, così lo scheletro finisce ancora dove finisce il canvas.
+- **Lo scrim del fondo arriva pieno dove comincia il foglio**, non sul bordo del canvas: il testo
+  ha lo stesso scrim di prima, e §3.6 vale com'era.
+- **Il bagliore è disegnato dall'item del canvas oltre i suoi bordi**, sotto gli item trasparenti
+  che lo seguono. Si esaurisce entro l'altezza della riga del luogo fissata in alto, così quando
+  l'item del canvas esce dalla lista la parte che se ne va con lui è già sotto la superficie di
+  quella riga.
+- **DESIGN §4 prometteva un pallino dal primo giorno**; il codice disegnava una riga di 2 dp. Il
+  documento ora dice il disco che c'è.
+- **Il gesto sul grafico non passa al pager fra i luoghi**: un trascinamento orizzontale sul
+  grafico scorre la fascia, come già faceva il trascinamento sulla fascia stessa.
+
+### Come è stato verificato
+
+- `DaylightRibbonTest` (nuovo): stop monotoni anche con fasi sovrapposte, il nucleo pieno delle
+  fasi lunghe, la dissolvenza della notte che lascia stare il giorno. `RainChartTest`: la
+  finestra delle ore in vista (a riposo e a metà scroll, celle tagliate comprese) e l'ora sotto
+  il dito, mai fuori dai due capi.
+- Resa verificata con uno screenshot Robolectric temporaneo (grafica nativa, `View.draw` su una
+  bitmap: `captureToImage` va in timeout sotto Robolectric) al tramonto chiaro, all'ora d'oro,
+  a notte in tema scuro e a metà rivelazione; il test non è nel repo. Due ritocchi dopo averle
+  guardate: la finestra da `surfaceContainerHighest` a `surfaceContainerHigh` (troppo pesante),
+  il passato del nastro dal 50 al 60% (spento).
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 8 test nuovi
+  (481 in `:app` debug), lint a zero errori e nessun avviso sui file toccati. Maven Central ha
+  risposto 429 a più riprese in questa sessione: i giri rossi erano download (compreso il jar di
+  Robolectric per `:core:data`), rifatti finché verdi.
+- **Da fare sul dispositivo**: il bagliore quando il canvas esce dalla lista (non deve vedersi il
+  taglio), il trascinamento sul grafico dentro il pager, l'animazione alla prima apertura.

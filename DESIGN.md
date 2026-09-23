@@ -545,9 +545,25 @@ one §3.2 already used for the golden hour — another anchor, not a duller tabl
 
 ## 4. The daylight ribbon
 
-A 6dp band (4dp in compact rows) showing one day of light: night, astronomical, nautical
-and civil twilight, the golden hours, daylight — drawn with the §3.2 stops at fixed
-saturation, with the current moment marked by a 2dp `onSurface` line and a 4dp dot.
+An 8dp band (4dp in compact rows) showing one day of light: night, astronomical, nautical
+and civil twilight, the golden hours, daylight — drawn with the §3.2 middle stops, as **one
+continuous gradient with rounded ends** (design review, 23 set 2026). It was a row of
+hard-edged rectangles until then, and on the device it read as a barcode: the sky does not
+change color on a line. Each phase keeps a solid core and blends into its neighbour across
+the edge they share — 30% of the phase's width on each side, capped at 1.5% of the day — so
+a long night stays night and a six-minute twilight is mostly transition, which is what a
+twilight is (`ribbonStops`, tested).
+
+On the canvas the current moment is a **14dp white disc** ringed in the scrim's ink at 35%,
+standing out of the band on both sides, and the part of the day already spent is drawn at
+**60% alpha**: the ribbon reads as "the day so far, and what is left of it" before any word
+does. (This section had promised a dot since the first draft; the code drew a 2dp line.)
+
+In the week's compact rows the night **leans toward the range bar's track**
+(`surfaceContainerHighest`): nothing from the civil twilight up, 37.5% at −12°, 75% from
+astronomical night down. Seven navy bars were the heaviest ink in the section while saying
+the least, the night being the part of the day that is the same every day; faded, each row
+shows its pill of light.
 
 It is the app's signature element and the one component that makes a week of rows read as
 a season rather than seven identical stripes. It is also, deliberately, **a depiction and
@@ -807,9 +823,10 @@ the platform's own animators read, so this is the API and not a way around a mis
 at start-up would be wrong for exactly the reader it is for) and publishes
 `LocalReducedMotion`.
 
-The app moves in four places and all four ask (the fourth is §7.1's icons): the week row's hour strip opens with
-`ChiaroMotion.enter/exit`, the pager `scrollToPage`s instead of animating, and the rule
-editor's dry-run answer jumps into view instead of scrolling to it. Until that pass
+The app moves in five places and all five ask (the fourth is §7.1's icons): the week row's hour strip opens with
+`ChiaroMotion.enter/exit`, the pager `scrollToPage`s instead of animating, the rule
+editor's dry-run answer jumps into view instead of scrolling to it, and the rain chart
+(§8.3b, 23 set 2026) is drawn whole instead of drawing itself in. Until that pass
 `ChiaroMotion.reducedMotionFadeMillis` was a constant nothing consulted, which is the
 shape a design rule takes when it is only written down: true in this file, absent from
 the APK. The canvas needed nothing — it is a `Brush`, it has never animated, and §3.5's
@@ -941,9 +958,21 @@ bar, and taller when its text needs it** (8 set 2026): everything on it is measu
 and the block was measured in dp, so at 100% type a two-line sentence left 2dp before the
 hero climbed into the place row, and at 115% they overlapped by 30dp. The row's seat and
 the hero are the two ends of one column, `SpaceBetween` on a floor rather than two things
-aligned to opposite edges of a fixed box. The bottom edge is straight (4 set, kept on
-review 8 set): every other surface on the page is inset and rounded, and the one that is
-not is the ground the page opens on, not a card floating over it.
+aligned to opposite edges of a fixed box. The canvas' own bottom edge is straight (4 set,
+kept on review 8 set): it is the ground the page opens on, not a card floating over it.
+
+**The page is a sheet laid on the sky** (design review, 23 set 2026). The canvas used to
+end on a ruler line from its darkest band — the bottom scrim at full strength — into the
+near-white page, the two most distant colors on the screen touching edge to edge. Now the
+page's first **24dp overlap the canvas** with **28dp top corners**, so the sky shows round
+them and the darkest strip is under the paper; the lip is inside the 280dp floor, so the
+skeleton's block still ends where the canvas does. The bottom scrim reaches its full 0.55
+where the lip begins rather than at the canvas' edge, so §3.6 holds for the text exactly
+as before. And the sheet **catches the light**: its first 120dp carry the canvas' bottom
+stop at 16%, eased into `surface` — warm at sunset, blue at noon, barely there at night.
+The glow is drawn by the canvas item past its own bounds, under the transparent items that
+follow, and it is spent inside the height of the pinned place row, so when the canvas item
+leaves the list the part that leaves with it is already hidden under that row's surface.
 
 **8.1b The place row** — name, chevron, the place's own day and hour, the pager dots, the
 gear. It is **pinned** (18 set 2026, device request): the city these numbers belong to must
@@ -985,6 +1014,23 @@ dot on every hour. No legend: one series, named by its own caption. It replaced 
 sparkline on the second device review (6 set 2026) — over a day pinned at 100% a line
 with no scale under it is a shape with nowhere to stand, and the flatter the day the
 less it said. A dry run still draws nothing at all (§1.1).
+
+**The chart is the strip's map** (design review, 23 set 2026). The strip shows about six
+hours and scrolls, the chart shows all 24 and does not, so the two never lined up hour over
+hour — and stretching the chart across the strip's 24 cells would have bought alignment
+with the overview, which is the one thing the chart is for. So the overview stays and the
+**hours in view in the strip are marked on it**: a `surfaceContainerHigh` window with
+6dp corners behind the gridlines, spanning the plot and its ticks, following the strip's
+scroll at draw time (a scroll redraws the chart, it never recomposes it). A **tap or a
+horizontal drag** on the chart centres the strip on the hour under the finger — animated
+for a tap, tracking for a drag — so a wet stretch seen on the map is one touch from its
+numbers.
+
+It **draws itself in** the first time it is shown: the line and its area are revealed left
+to right in 900 ms (`FastOutSlowInEasing`), along time, the way the day will go. Never
+grown up from the floor: for half a second that would draw a dry day nobody forecast, and
+§1.1 has no exception for animations. Once per page (the flag survives the chart being
+scrolled away), and not at all under reduced motion.
 
 **8.4 TimelineRow** — the merged day (VISION §5.2.4): time, icon or event glyph, one line
 of prose, optional verdict chip. Sun events, weather turns and the reader's own alerts use
