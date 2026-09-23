@@ -10174,3 +10174,30 @@ Adesso, Le prossime ore, Momenti del cielo e Arco a 13 concessioni, da 1×1 a 4�
 - **Da fare sul dispositivo**: le anteprime nelle due schermate, Adesso e Le prossime ore a 3×3 e
   4×3 sulla Home.
 
+## L'icona dell'app, ridisegnata (committente, 23 set 2026)
+
+Richiesta: «prova a ridisegnare da zero l'icona dell'app. Prima di renderla definitiva fammi un
+preview che la valuto»; scelta: «Vai con la D che è anche la tua consigliata».
+
+### Il percorso
+
+- **Diagnosi**: l'icona era una falce stellata sopra due onde, cioè la notte, per un'app che si
+  chiama Chiaro ed è l'edizione diurna; a 36px le stelle erano puntini.
+- **Candidati disegnati come veri vector drawable** (sfondo, primo piano, monocromo) e resi da
+  Robolectric, poi mascherati (cerchio, squircle, quadrato arrotondato), a tema chiaro e scuro, a
+  64/48/36px su sfondo chiaro e scuro. Sei tentativi, due scartati da me prima dell'anteprima:
+  il tramonto sul mare (generico) e il nastro a pillola (in monocromo un interruttore); la prima
+  curva del sole era una cupola, la seconda una «A».
+- **Scelta: D, «il giorno in un anello»** (DESIGN §3.8).
+
+### Cosa è cambiato
+
+- `ic_launcher_foreground.xml` ridisegnato; nuovo `ic_launcher_monochrome.xml` per le icone a
+  tema (prima il monocromo riusava il primo piano); fondo `#F7F4EE`.
+- Il rendering finale coincide pixel per pixel con l'anteprima approvata.
+
+### Da fare sul dispositivo
+
+- L'icona sulla Home con due o tre launcher (maschere diverse) e a tema; la schermata di avvio di
+  Android 12+, che usa l'icona sul fondo della finestra.
+

@@ -570,6 +570,27 @@ one §3.2 already used for the golden hour — another anchor, not a duller tabl
 
 ---
 
+### 3.8 The app icon
+
+**The day in a ring** (23 set 2026, chosen by the committente from three drawn candidates).
+One day of twenty-four hours as a ring painted like the canvas: a sweep gradient from the
+dusk's amber at three o'clock, clockwise through the night's indigo to midnight at the bottom,
+the dawn's amber at nine and the noon azure at the top — the vivid sky table's anchors (§3.7).
+The sun sits on the ring at mid-afternoon and a clip opens the ring around it, which does
+two things: the disc reads as a sun on its path rather than a bead, and the open ring is a
+**C**. It is the daylight ribbon (§4) bent into a dial and the arc widget's sun on its path.
+
+- **Ground**: `#F7F4EE`, a warm daylight white between the paper surface and its first
+  container: paper on any wallpaper, and still apart from the ring's two palest stops.
+- **Geometry** (108-unit adaptive canvas): ring radius 21, stroke 10; sun radius 8.2 at −40°;
+  gap radius 11.2. Everything stays inside the 33-unit safe circle, so circle, squircle and
+  rounded-square masks crop air, never the mark.
+- **Themed icon**: a drawable of its own (`ic_launcher_monochrome`), the same mark as shapes —
+  annulus, gap, disc — because the system reads only alpha and a gradient's alpha is not a shape.
+- **Why not the others**: a crescent C of light on blue was the strongest at 24px, but read as a
+  moon — the night again, which is what the old badge (a starry crescent over two waves) drew;
+  the sun's curve over a horizon read as a letter A below 48px.
+
 ## 4. The daylight ribbon
 
 An 8dp band (4dp in compact rows) showing one day of light: night, astronomical, nautical

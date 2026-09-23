@@ -68,6 +68,9 @@ sections are a normal size and live here alone.
   three rows up; «Le prossime ore» keeps its sentence whole and adds the next days under the hours.
 - **Every widget's settings show the widget.** All five open on the real card at its size, with
   chips for the other sizes and a line saying what each one carries, on the same grouped layout.
+- **A new app icon: the day in a ring.** A day of 24 hours coloured like the app's sky, with the
+  sun on it at mid-afternoon; the ring opens around the sun into a C. Themed icons get a drawing
+  of their own.
 
 ### Fixed
 

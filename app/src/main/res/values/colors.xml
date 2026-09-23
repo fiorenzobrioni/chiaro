@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The badge's ground: the vivid palette's neutral at tone 95, the cool daylight
-         white of DESIGN.md §2.5 (committente, 7 set — the mark used to wear the paper
-         dress). The foreground drawable carries the arithmetic for all four inks. -->
-    <color name="ic_launcher_background">#E9F2FC</color>
+    <!-- The badge's ground (23 set 2026, with the ring): a warm daylight white between the
+         paper dress's surface (#FCF9F3) and its first container, so the badge reads as paper
+         on any wallpaper and the ring's two palest stops — the dawn amber and the noon
+         azure's light end — still separate from it. The foreground carries the rest. -->
+    <color name="ic_launcher_background">#F7F4EE</color>
 
     <!-- The widget-picker previews (Fase 8c), and the one place their hexes live.
          "Roles, never hexes" is a rule about composables; a static preview layout has
