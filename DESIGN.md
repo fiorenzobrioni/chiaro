@@ -1224,6 +1224,35 @@ verdict is missing (no data, old data) are about their row and stay on it.
 for a value with a range, which is how tweather's "a syntax error is not writable" property
 survives into a UI with no syntax.
 
+**8.9b The Alerts screen** (design review, 23 set 2026) — until then four loose switch rows of
+three and four lines each, a row with a switch for the warnings under a group title of the same
+words, and five more rows of templates: the densest block of text in the app, with nothing on it
+that said which row was which before it was read. Now:
+
+- **When they arrive**, first and only while a timed alert is on: twenty-four hours as a 10dp
+  track with the windows the timed alerts come in — the morning summary 6–12 and the evening one
+  18–23 painted with the sky of their hour (§3.2 middle stops, a depiction as the ribbon is), the
+  bulletin 15–17 in the yellow level's container (its ink on a dark ground, where the container
+  is an olive the track swallows) — each with its drawing over it, "now" as the ribbon's disc, the
+  hours 0 · 6 · 12 · 18 · 24 under it, and on a line of words the alerts that come whenever the
+  weather does. It answers what a list of switches cannot: when will this phone make a sound.
+  One content description reads the windows.
+- **Groups on one rounded ground** (`surfaceContainerLow`, 24dp corners): the warnings' switch
+  with the level it starts from, and the four ready-made alerts, hairlines between rows starting
+  where the text starts. Every row carries **its drawing** from the weather family (36dp; faded to
+  40% while its switch is off, so a group says which rows are on before a switch is read), its
+  title, **what it sends** in one sentence, and **when and how often** on a line of its own in the
+  accent — the tail the four-line sentences used to end on.
+- **The all-clear is an answer**: a check in `primary`, «Nessuna allerta» at `titleMedium`, the
+  zone on its own line and the bulletin's hour under it, a chevron because it opens the bulletin.
+  The three waiting states wear the same card with an info mark. Still the neutral ground, never a
+  warning colour for the absence of a warning.
+- **The rule cards** take the same 24dp shape and a drawing of what the first condition watches
+  (frost for a temperature that must fall to zero), faded while the rule is off.
+- **The ideas are cards in a sideways row** (176 × 204dp): drawing, promise, what it checks, and
+  «Aggiungi» — or «Già aggiunta», inert — in the accent. An idea is picked up, not configured, and
+  five more rows at the foot read as five more settings.
+
 **8.10 JournalEntry** and **DriftStrip** — an entry is a line of prose with its numbers.
 The drift strip is one row per target day — today included while it runs (8 set 2026) —
 and one column per six-hour slot, colored on **the metric's own ramp** (rain on the rain

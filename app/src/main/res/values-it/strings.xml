@@ -379,9 +379,9 @@
     <string name="guide_sky_catalog_body">Sessanta momenti, raggruppati in sole, notte, luna, pianeti, eclissi, stagioni e sciami meteorici, ognuno con la riga che dice cos\'è e una pagina che lo spiega per bene. Il campo in cima cerca fra i nomi e quelle righe, che è la strada corta per arrivare alle Perseidi — e «foto» tira fuori i nove che portano la macchina fotografica. È il posto dove si scopre cos\'è davvero un\'ora blu, o la luce cinerea: aggiungendola, o leggendone prima.</string>
 
     <string name="guide_alerts_title">Avvisi</string>
-    <string name="guide_alerts_p1">Qui vivono due specie: quelli già scritti e quelli che scrivi tu. Non arriva niente che non abbia acceso tu.</string>
+    <string name="guide_alerts_p1">Qui vivono tre gruppi: le allerte ufficiali, gli avvisi già scritti e quelli che scrivi tu. Non arriva niente che non abbia acceso tu.</string>
     <string name="guide_alerts_ready_title">Pronti all\'uso</string>
-    <string name="guide_alerts_ready_body" formatted="false">Tre interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo nelle prossime 12 ore (al massimo uno per temporale), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno) e il riepilogo del mattino, una volta tra le 6 e le 12.</string>
+    <string name="guide_alerts_ready_body" formatted="false">Quattro interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo nelle prossime 12 ore (al massimo uno per perturbazione), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno), il riepilogo del mattino, una volta tra le 6 e le 12, e quello della sera, una volta tra le 18 e le 23, che parla di domani.</string>
     <string name="guide_alerts_yours_title">I tuoi</string>
     <string name="guide_alerts_yours_body">Parti da un\'idea — una finestra per correre, ghiaccio domattina, una notte serena — oppure costruisci la frase da te: cosa guardare, come confrontarlo, la soglia, e una seconda condizione se serve. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile.</string>
     <string name="guide_alerts_preview_title">Provalo adesso</string>
@@ -789,19 +789,28 @@
     <!-- Avvisi (Fase 6). Due gruppi, una schermata: interruttori che dicono
          esattamente cosa mandano, e le regole del lettore come frase a chip. -->
     <string name="tab_alerts">Avvisi</string>
-    <string name="alerts_group_ready">Pronti</string>
+    <string name="alerts_group_ready">Pronti all\'uso</string>
     <string name="alerts_group_yours">I tuoi</string>
+    <string name="alerts_day_title">Quando arrivano</string>
+    <string name="alerts_day_anytime">In qualunque ora, se serve: %1$s</string>
+    <string name="alerts_day_window_desc">%1$s tra le %2$d e le %3$d</string>
+    <string name="alerts_day_yours">i tuoi avvisi</string>
     <string name="alert_severe_title">Maltempo in arrivo</string>
-    <string name="alert_severe_desc">Un avviso quando nelle prossime 12 ore compare un temporale, pioggia gelata, pioggia o neve forte. Al massimo uno per perturbazione.</string>
+    <string name="alert_severe_desc">Temporale, pioggia gelata, pioggia o neve forte nelle prossime 12 ore.</string>
+    <string name="alert_severe_when">Al massimo uno per perturbazione</string>
     <string name="alert_precip_title">Pioggia nelle prossime ore</string>
-    <string name="alert_precip_desc" formatted="false">Un avviso quando la pioggia supera il 70% di probabilità entro 6 ore. Al massimo due volte al giorno.</string>
+    <string name="alert_precip_desc" formatted="false">Pioggia oltre il 70% di probabilità entro 6 ore.</string>
+    <string name="alert_precip_when">Al massimo due volte al giorno</string>
     <string name="alert_summary_title">Il riepilogo del mattino</string>
-    <string name="alert_summary_desc">Una volta al giorno, tra le 6 e le 12: il cielo di oggi, minima, massima e pioggia.</string>
+    <string name="alert_summary_desc">Il cielo di oggi, minima, massima e pioggia.</string>
+    <string name="alert_summary_when">Ogni giorno, tra le 6 e le 12</string>
     <string name="alert_evening_title">Il riepilogo della sera</string>
-    <string name="alert_evening_desc">Una volta al giorno, tra le 18 e le 23: il cielo di domani, minima, massima e pioggia. Aprendolo, anche la notte che c\'è in mezzo.</string>
+    <string name="alert_evening_desc">Il cielo di domani, minima, massima e pioggia. Aprendolo, anche la notte che c\'è in mezzo.</string>
+    <string name="alert_evening_when">Ogni giorno, tra le 18 e le 23</string>
     <string name="alerts_templates_title">Parti da un\'idea</string>
     <string name="alerts_max_reached">Hai già il massimo di avvisi che l\'app tiene, %1$d: togline uno per aggiungerne un altro.</string>
     <string name="tpl_already_added">Già aggiunto</string>
+    <string name="tpl_add">Aggiungi</string>
     <string name="rule_sentence_prefix">Quando</string>
     <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
     <string name="rule_and">e</string>
@@ -962,16 +971,17 @@
     <string name="warning_sheet_open">Apri il bollettino</string>
 
     <string name="alerts_group_warnings">Allerte ufficiali</string>
-    <string name="warning_card_none">Nessuna allerta per %1$s</string>
     <string name="warning_card_none_detail">Bollettino %1$s</string>
+    <string name="warning_card_all_clear">Nessuna allerta</string>
     <string name="warning_card_stale">Nessun bollettino per oggi</string>
     <string name="warning_card_stale_detail">L\'ultimo risale a %1$s · il prossimo esce di solito entro le 16</string>
     <string name="warning_card_waiting">Ancora nessun bollettino</string>
     <string name="warning_card_waiting_detail">Il primo arriva con il prossimo aggiornamento.</string>
     <string name="warning_card_unavailable">Le allerte ufficiali sono disponibili per i luoghi in Italia</string>
     <string name="warning_card_unavailable_detail">Le emette il Dipartimento della Protezione Civile, che valuta il solo territorio italiano.</string>
-    <string name="warning_switch_title">Allerte ufficiali</string>
-    <string name="warning_switch_desc">Quando la Protezione Civile emette un\'allerta per questa zona, appena esce il bollettino, di solito tra le 15 e le 17. Mai più di una per bollettino.</string>
+    <string name="warning_switch_title">Avvisami delle allerte</string>
+    <string name="warning_switch_desc">Quando la Protezione Civile emette un\'allerta per questa zona, appena esce il bollettino.</string>
+    <string name="warning_switch_when">Di solito tra le 15 e le 17 · mai più di una per bollettino</string>
     <string name="warning_from_title">Avvisami da</string>
     <string name="warning_from_yellow">Gialla</string>
     <string name="warning_from_orange">Arancione</string>

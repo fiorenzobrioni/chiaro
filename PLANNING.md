@@ -9887,3 +9887,62 @@ luna nuova in tema scuro) prima di toccare niente. Tre cose:
   `:app` debug, lint a zero errori.
 - **Da fare sul dispositivo**: la card in una notte di luna che sorge a metà (cornice e argento
   affiancati), il «tra N» sul prossimo momento, il conteggio dei giorni a cavallo di mezzanotte.
+
+## La schermata Avvisi, review grafica (committente, 23 set 2026)
+
+Richiesta: «Ora fai una review con gli stessi obiettivi anche per la schermata Avvisi». Stesso
+mandato: dove l'estetica e DESIGN.md litigano, si cambia DESIGN.md.
+
+### La review
+
+Resa della schermata vera prima di toccarla (Robolectric: nessuna allerta con due regole, allerta
+arancione senza regole, allerta gialla in tema scuro). Quel che mostrava:
+
+1. **Un muro di testo.** Quattro interruttori «pronti» con descrizioni di tre e quattro righe, in
+   cui il «quando» e il «quanto spesso» erano la coda della frase; nessun segno per distinguerli
+   prima di leggerli.
+2. **«Allerte ufficiali» due volte**: titolo del gruppo e titolo dell'interruttore, con la soglia
+   «Avvisami da» come terza riga sciolta.
+3. **L'assenza detta come una nota**: «Nessuna allerta per Nodo Idraulico di Milano» in
+   `titleSmall` su un riquadro piccolo, in una schermata dove quella è la risposta che si cercava.
+4. **Le idee come altre cinque righe** in fondo, indistinguibili da impostazioni.
+5. **La guida era rimasta indietro**: «Qui vivono due specie» e «Tre interruttori», quando i gruppi
+   sono tre e gli interruttori quattro (il riepilogo della sera, 21 set, non era mai entrato).
+
+### Cosa è cambiato
+
+- **«Quando arrivano»** (DESIGN §8.9b): le 24 ore con le finestre degli avvisi a orario, nel
+  colore del cielo della loro ora, i loro disegni sopra, l'«adesso» e le ore sotto; e in parole
+  quelli che arrivano a qualunque ora.
+- **Gruppi arrotondati** per l'interruttore delle allerte (con la sua soglia dentro) e per i
+  quattro pronti; ogni riga con il suo disegno (sbiadito quando è spenta), una frase su cosa manda
+  e, a parte, nell'accento, quando e quanto spesso. Testi riscritti: `alert_*_desc` accorciati,
+  `alert_*_when` e `warning_switch_when` nuovi, l'interruttore si chiama «Avvisami delle allerte».
+- **Il «tutto tranquillo»** è una card con segno, «Nessuna allerta», la zona e l'ora del bollettino.
+- **Le regole** hanno il disegno di quel che guardano; **le idee** sono card in una riga orizzontale.
+- **La guida** dice tre gruppi e quattro interruttori; «Pronti» diventa «Pronti all'uso», come nella
+  guida.
+- `AlertsContent` prende funzioni (`AlertsActions`), non il view model, come Cielo.
+
+### Decisioni e deviazioni
+
+- **Le finestre sono disegnate, non gli avvisi «a qualunque ora»**: maltempo, pioggia e regole non
+  hanno una finestra, e disegnarli su tutta la striscia sarebbe una barra piena che non dice niente.
+  Sono nominati in una riga sotto.
+- **Il giallo del bollettino è l'inchiostro in tema scuro**: il contenitore giallo scuro spariva sulla
+  traccia. È la stessa coppia di §2.3, solo scelta per il fondo.
+- **Nessun colore per l'assenza**: il segno del «tutto tranquillo» è in `primary`, non nel verde di un
+  verdetto; il fondo resta neutro (§8.13).
+- **Il chip «Arancione» andava a capo** dentro sé stesso al rientro del testo delle righe: la soglia è
+  un `FlowRow` dal margine del gruppo.
+- **`warning_card_none` tolta**: la frase con la zona dentro è diventata titolo e riga separati.
+
+### Come è stato verificato
+
+- Resa Robolectric prima e dopo, tre scenari, chiaro e scuro; dopo averla guardata: soglia in flow,
+  disegno della sera distinto da quello del mattino (erano due orizzonti quasi uguali), descrizioni
+  delle idee su quattro righe, giallo del bollettino in tema scuro.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 503 test in
+  `:app` debug (nessuno nuovo: il giro cambia disegno e testi, non logica), lint a zero errori.
+- **Da fare sul dispositivo**: la striscia «Quando arrivano» con l'ora vera, il tocco sulle card
+  delle idee e sul «tutto tranquillo», TalkBack sulla striscia.

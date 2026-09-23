@@ -398,9 +398,9 @@
     <string name="guide_sky_catalog_body">Sixty moments, grouped by sun, night, moon, planets, eclipses, seasons and meteor showers, each with the one line that says what it is and a page that explains it properly. The field at the top searches the names and those lines, which is the short way to the Perseids — and “photo” brings up the nine that carry the camera. This is the place to find out what a blue hour actually is, or earthshine: by adding one, or by reading about it first.</string>
 
     <string name="guide_alerts_title">Alerts</string>
-    <string name="guide_alerts_p1">Two kinds live here: the ones already written, and the ones you write. Nothing arrives that you did not switch on.</string>
+    <string name="guide_alerts_p1">Three groups live here: the official warnings, the alerts already written, and the ones you write. Nothing arrives that you did not switch on.</string>
     <string name="guide_alerts_ready_title">Ready-made</string>
-    <string name="guide_alerts_ready_body" formatted="false">Three switches, each saying exactly what it sends and when: severe weather in the next 12 hours (at most one per storm), rain past 70% likely within 6 hours (at most twice a day), and the morning summary, once between 6 and 12.</string>
+    <string name="guide_alerts_ready_body" formatted="false">Four switches, each saying exactly what it sends and when: severe weather in the next 12 hours (at most one per storm), rain past 70% likely within 6 hours (at most twice a day), the morning summary, once between 6 and 12, and the evening one, once between 18 and 23, which is about tomorrow.</string>
     <string name="guide_alerts_yours_title">Yours</string>
     <string name="guide_alerts_yours_body">Start from an idea — a window to run, ice tomorrow morning, a clear night — or build the sentence yourself: what to watch, how to compare it, the threshold, and a second condition if you want one. Values are picked, never typed, so an alert cannot be written wrong.</string>
     <string name="guide_alerts_preview_title">Try it now</string>
@@ -810,17 +810,26 @@
     <string name="tab_alerts">Alerts</string>
     <string name="alerts_group_ready">Ready-made</string>
     <string name="alerts_group_yours">Yours</string>
+    <string name="alerts_day_title">When they arrive</string>
+    <string name="alerts_day_anytime">At any hour, when needed: %1$s</string>
+    <string name="alerts_day_window_desc">%1$s between %2$d and %3$d</string>
+    <string name="alerts_day_yours">your own alerts</string>
     <string name="alert_severe_title">Severe weather ahead</string>
-    <string name="alert_severe_desc">A heads-up when a thunderstorm, freezing rain, heavy rain or heavy snow shows up in the next 12 hours. At most one per storm.</string>
+    <string name="alert_severe_desc">A thunderstorm, freezing rain, heavy rain or heavy snow in the next 12 hours.</string>
+    <string name="alert_severe_when">At most one per storm</string>
     <string name="alert_precip_title">Rain in the next hours</string>
-    <string name="alert_precip_desc" formatted="false">A heads-up when rain gets past 70% likely within 6 hours. At most twice a day.</string>
+    <string name="alert_precip_desc" formatted="false">Rain past 70% likely within 6 hours.</string>
+    <string name="alert_precip_when">At most twice a day</string>
     <string name="alert_summary_title">The morning summary</string>
-    <string name="alert_summary_desc">Once a day, between 6 and 12: today\'s sky, low, high and rain.</string>
+    <string name="alert_summary_desc">Today\'s sky, low, high and rain.</string>
+    <string name="alert_summary_when">Every day, between 6 and 12</string>
     <string name="alert_evening_title">The evening summary</string>
-    <string name="alert_evening_desc">Once a day, between 18 and 23: tomorrow\'s sky, low, high and rain. Open it for the night in between.</string>
+    <string name="alert_evening_desc">Tomorrow\'s sky, low, high and rain. Open it for the night in between.</string>
+    <string name="alert_evening_when">Every day, between 18 and 23</string>
     <string name="alerts_templates_title">Start from an idea</string>
     <string name="alerts_max_reached">You already have the most alerts the app keeps, %1$d: remove one to add another.</string>
     <string name="tpl_already_added">Already added</string>
+    <string name="tpl_add">Add</string>
     <string name="rule_sentence_prefix">When</string>
     <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
     <string name="rule_and">and</string>
@@ -992,16 +1001,17 @@
          absence IS the answer somebody came for, so all three quiet states are drawn —
          which is exactly what Today must never do (DESIGN §1.1). -->
     <string name="alerts_group_warnings">Official warnings</string>
-    <string name="warning_card_none">No warning for %1$s</string>
     <string name="warning_card_none_detail">Bulletin %1$s</string>
+    <string name="warning_card_all_clear">No warnings</string>
     <string name="warning_card_stale">No bulletin for today</string>
     <string name="warning_card_stale_detail">The last one is from %1$s · the next usually comes out by 16:00</string>
     <string name="warning_card_waiting">No bulletin yet</string>
     <string name="warning_card_waiting_detail">The first one arrives with the next update.</string>
     <string name="warning_card_unavailable">Official warnings are available for places in Italy</string>
     <string name="warning_card_unavailable_detail">They are issued by the Dipartimento della Protezione Civile, which grades Italian territory only.</string>
-    <string name="warning_switch_title">Official warnings</string>
-    <string name="warning_switch_desc">When the Protezione Civile issues a warning for this zone, as soon as the bulletin is out, usually between 15:00 and 17:00. Never more than one per bulletin.</string>
+    <string name="warning_switch_title">Notify me of warnings</string>
+    <string name="warning_switch_desc">When the Protezione Civile issues a warning for this zone, as soon as the bulletin is out.</string>
+    <string name="warning_switch_when">Usually between 15:00 and 17:00 · never more than one per bulletin</string>
     <string name="warning_from_title">Notify me from</string>
     <string name="warning_from_yellow">Yellow</string>
     <string name="warning_from_orange">Orange</string>

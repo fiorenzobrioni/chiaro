@@ -42,6 +42,11 @@ sections are a normal size and live here alone.
 - **Sky: the moments are grouped under Today and Tomorrow**, and the next one says how soon.
 - **Sky: the calendar ahead counts the days**, and "too far out to say" is said once instead of
   on every row.
+- **Alerts: a day of alerts at a glance.** A strip of the 24 hours shows when the timed alerts
+  can arrive, painted with the sky of their hour.
+- **Alerts: lighter to read.** Every alert has its drawing, one sentence on what it sends and a
+  separate line on when and how often; the switches sit in rounded groups; "no warning" reads as
+  an answer; ideas to start from are cards you browse sideways.
 
 ### Fixed
 
