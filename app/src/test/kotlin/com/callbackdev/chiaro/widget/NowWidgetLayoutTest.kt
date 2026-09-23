@@ -273,4 +273,28 @@ class NowWidgetLayoutTest {
         val with = nowTallIconRoom(DpSize(159.dp, 290.dp), 1f, false, withSentence = true, withWarning = true)
         assertEquals(chipBlock.value, (without - with).value, 0.01f)
     }
+
+    /** The tall card's number (23 set 2026): 34 sp until the glyph reaches its ceiling —
+     * so the reference two-by-two does not move — then whatever the glyph cannot use, up
+     * to the text card's 56, and never wider than the words' column holds. */
+    @Test
+    fun `the tall number grows only with the glyph's surplus`() {
+        assertEquals(TemperatureSp, nowTallTemperatureSp(twoByTwo, 1f, false, true, false), 0.001f)
+        assertEquals(TemperatureSp, nowTallTemperatureSp(DpSize(340.dp, 189.dp), 1f, true, true, true), 0.001f)
+        val threeRows = listOf(DpSize(159.dp, 293.dp), DpSize(250.dp, 293.dp), DpSize(340.dp, 293.dp))
+        threeRows.forEach { size ->
+            val sp = nowTallTemperatureSp(size, 1f, false, true, false)
+            assertTrue("$size: $sp", sp > TemperatureSp && sp <= TallTemperatureMax)
+            // The glyph keeps its ceiling with the bigger number in the budget.
+            assertEquals(
+                HeroIconMax.value,
+                heroIconSize(nowTallIconRoom(size, 1f, false, true, false, sp)).value,
+                0.01f
+            )
+        }
+        // The width guard: a narrow tall card never gets a number wider than its column.
+        val narrow = DpSize(110.dp, 400.dp)
+        val sp = nowTallTemperatureSp(narrow, 1f, false, true, false)
+        assertTrue(sp * TempEmWidth <= (narrow.width - WidgetCardPadding * 2).value + 0.01f)
+    }
 }

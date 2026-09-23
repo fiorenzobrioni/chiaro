@@ -57,6 +57,7 @@ import com.callbackdev.chiaro.widget.WidgetData
 import com.callbackdev.chiaro.widget.WidgetModel
 import com.callbackdev.chiaro.widget.WidgetPalette
 import com.callbackdev.chiaro.widget.WidgetRefresh
+import com.callbackdev.chiaro.widget.WidgetSchemes
 import com.callbackdev.chiaro.widget.fontScale
 import com.callbackdev.chiaro.widget.glanceLocale
 import com.callbackdev.chiaro.widget.rememberSkyBitmap
@@ -109,47 +110,7 @@ class ArcWidget : GlanceAppWidget() {
             val schemes = rememberWidgetSchemes(
                 context, model.settings.dynamicColor, model.settings.palette
             )
-            val skyBitmap = rememberSkyBitmap(model)
-            val size = LocalSize.current
-            val content = model.content
-            val city = model.city
-            val series = if (content != null && city != null) {
-                remember(content, arc, model.moments) {
-                    ArcSeries.build(content, model.moments, city.coordinates, Instant.now(), arc)
-                }
-            } else {
-                null
-            }
-            val plan = if (content != null && series != null) {
-                arcPlan(
-                    size, fontScale(context), arc,
-                    stale = content.isStale,
-                    agendaAvailable = series.events.size,
-                    weekAvailable = content.week.isNotEmpty(),
-                    heroIsHeadline = heroIsHeadline(arc, series),
-                    warningLevel = model.warning?.maxLevel
-                )
-            } else {
-                null
-            }
-            WidgetCard(
-                model, schemes, skyBitmap,
-                contentPaddingStart = plan?.paddingHorizontal ?: WidgetCardPadding,
-                contentPaddingEnd = plan?.paddingHorizontal ?: WidgetCardPadding,
-                contentPaddingTop = plan?.paddingVertical ?: WidgetCardPadding,
-                contentPaddingBottom = plan?.paddingVertical ?: WidgetCardPadding,
-                // The sun's path, the next light moment, the agenda and its verdicts:
-                // all of it is the Sky screen's material, so that is where a tap goes
-                // (21 set 2026). The week at the bottom of the tallest card is Today's,
-                // and it is the minority of one form, not what this card is about.
-                destination = ShellTab.SKY
-            ) { palette ->
-                when {
-                    content == null && city == null -> NoPlaceContent(palette)
-                    content == null || series == null || plan == null -> NoDataContent(palette)
-                    else -> ArcContent(model, content, arc, series, plan, palette)
-                }
-            }
+            ArcWidgetContent(model, schemes, rememberSkyBitmap(model), arc)
         }
     }
 }
@@ -751,3 +712,53 @@ private val StripGlyph = 16.dp
 
 /** The air before a row's verdict mark: the Sky widget's own. */
 private val MarkGap = 6.dp
+
+/**
+ * The whole card for [model] at the launcher's [LocalSize], split off the receiver's
+ * `provideGlance` (23 set 2026) so the configuration screen's preview and the render tests
+ * draw the SAME composition the launcher does rather than a lookalike.
+ */
+@Composable
+internal fun ArcWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBitmap: Bitmap?, arc: ArcSettings) {
+    val context = LocalContext.current
+    val size = LocalSize.current
+    val content = model.content
+    val city = model.city
+    val series = if (content != null && city != null) {
+        remember(content, arc, model.moments) {
+            ArcSeries.build(content, model.moments, city.coordinates, Instant.now(), arc)
+        }
+    } else {
+        null
+    }
+    val plan = if (content != null && series != null) {
+        arcPlan(
+            size, fontScale(context), arc,
+            stale = content.isStale,
+            agendaAvailable = series.events.size,
+            weekAvailable = content.week.isNotEmpty(),
+            heroIsHeadline = heroIsHeadline(arc, series),
+            warningLevel = model.warning?.maxLevel
+        )
+    } else {
+        null
+    }
+    WidgetCard(
+        model, schemes, skyBitmap,
+        contentPaddingStart = plan?.paddingHorizontal ?: WidgetCardPadding,
+        contentPaddingEnd = plan?.paddingHorizontal ?: WidgetCardPadding,
+        contentPaddingTop = plan?.paddingVertical ?: WidgetCardPadding,
+        contentPaddingBottom = plan?.paddingVertical ?: WidgetCardPadding,
+        // The sun's path, the next light moment, the agenda and its verdicts:
+        // all of it is the Sky screen's material, so that is where a tap goes
+        // (21 set 2026). The week at the bottom of the tallest card is Today's,
+        // and it is the minority of one form, not what this card is about.
+        destination = ShellTab.SKY
+    ) { palette ->
+        when {
+            content == null && city == null -> NoPlaceContent(palette)
+            content == null || series == null || plan == null -> NoDataContent(palette)
+            else -> ArcContent(model, content, arc, series, plan, palette)
+        }
+    }
+}

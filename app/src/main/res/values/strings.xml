@@ -1151,7 +1151,7 @@
     <string name="widget_now_label">At a glance</string>
     <string name="widget_now_desc">The sky right now: icon, temperature, place — and the day\'s sentence where there is room</string>
     <string name="widget_today_label">The hours ahead</string>
-    <string name="widget_today_desc">Now, the day\'s sentence, and the next hours</string>
+    <string name="widget_today_desc">Now, the day\'s sentence, the next hours and, on a tall card, the next days</string>
     <string name="widget_sky_label">Sky moments</string>
     <string name="widget_sky_desc">The next sky moment, when, and its verdict — and the ones after it on a taller card</string>
     <!-- The text widget (19 set 2026): the one card with nothing drawn on it. -->
@@ -1187,7 +1187,7 @@
     <string name="widget_config_show_sentence">The day\'s sentence</string>
     <string name="widget_config_show_sentence_note">An umbrella around five, a thunderstorm at three — or, when there is nothing to warn about, what the sky is doing now. Shown where the card has room for it.</string>
     <string name="widget_config_show_warning">Official warnings</string>
-    <string name="widget_config_show_warning_note">The Protezione Civile\'s level for this place, as a chip. Orange and red are already in the day\'s sentence, so the chip appears where that sentence is not; yellow, which the sentence never carries, takes a line of its own where the card has one to spare.</string>
+    <string name="widget_config_show_warning_note">The Protezione Civile\'s level for this place, as a chip. Orange and red are already in the day\'s sentence; yellow takes a line of its own where there is room.</string>
     <string name="widget_config_preview_desc">Widget preview</string>
     <string name="widget_config_size_placed">As placed</string>
     <string name="widget_config_resize_hint">On the home screen, long-press the widget and drag its edges: it lays itself out again.</string>
@@ -1199,6 +1199,17 @@
     <string name="widget_config_show_later_note">The next hours in words, three hours apart: the time, the temperature, the sky, and the rain when it is likely. Only where the card is tall enough.</string>
     <string name="widget_config_show_range_note_text">With its two arrows, under the day\'s sentence.</string>
     <string name="widget_config_show_warning_note_text">The Protezione Civile\'s level for this place, written as words. Orange and red are already in the day\'s sentence.</string>
+    <string name="now_form_narrow">A narrow row: the icon, the temperature and the place.</string>
+    <string name="now_form_wide">A wide row: the day\'s sentence too, at the far edge.</string>
+    <string name="now_form_tall">Two rows and up: the icon at the top, then the temperature, the sentence and the place. From three rows the temperature grows with the card.</string>
+    <string name="today_form_two">Two rows: now at the top, the next hours with their rain under it.</string>
+    <string name="today_form_tall">From three rows: now, the next hours and, under them, the next days.</string>
+    <string name="sky_form_narrow">A narrow row: the next moment, when, and its verdict as a mark.</string>
+    <string name="sky_form_wide">A wide row: the verdict in words, with the number that decided it.</string>
+    <string name="sky_form_tall">Two rows and up: the moments after it underneath, as many as fit.</string>
+    <string name="widget_config_show_days">The next days</string>
+    <string name="widget_config_show_days_note">Under the hours: the day, the sky, the high and the low. Only where the card is at least three rows tall.</string>
+    <string name="arc_config_more">Also on the card</string>
     <string name="widget_config_arrangement">Arrangement</string>
     <string name="widget_arrangement_icon_start">Icon on the left, sentence at the far edge</string>
     <string name="widget_arrangement_icon_end">Icon on the right, sentence beside the temperature</string>
@@ -1228,7 +1239,6 @@
     <string name="arc_in_hours">in %1$d h</string>
     <string name="arc_desc_next">%1$s, %2$s</string>
     <string name="arc_desc_no_moment">No light moment in the next twenty-four hours</string>
-    <string name="arc_config_preview">Preview</string>
     <string name="arc_form_dial">One cell: the arc, and one figure under it.</string>
     <string name="arc_form_strip">One row: the number and the next moment beside the arc — over it on two cells.</string>
     <string name="arc_form_card">Two cells wide: number, place, the next moment, the arc, and the agenda where the height allows.</string>
@@ -1273,16 +1283,14 @@
     <string name="arc_agenda_rain_note">When rain gets likely or should ease off, and a rainbow\'s window.</string>
     <string name="arc_agenda_verdicts">Verdicts</string>
     <string name="arc_agenda_verdicts_note">Beside a row you also follow on the Sky screen, the mark the Sky widget would print.</string>
-    <string name="arc_config_warning">Official warnings</string>
-    <string name="arc_config_warning_note">The Protezione Civile\'s level, as a chip on the card and the panel. The dial and the strip have one line each, and a chip on either would be the whole card.</string>
+    <string name="arc_config_warning_note">The Protezione Civile\'s level, as a chip, on cards 2×2 and up: on a single row or cell it would be the whole card.</string>
     <string name="arc_warning_switch">Show the level</string>
-    <string name="arc_config_week">The week</string>
     <string name="arc_week_switch">The seven days</string>
     <string name="arc_week_note">At the foot of a card four rows tall.</string>
     <string name="arc_config_density">Text size</string>
     <string name="arc_density_comfortable">Comfortable</string>
     <string name="arc_density_compact">Compact: one more row where it fits</string>
-    <string name="arc_config_reset">Restore this widget\'s defaults</string>
+    <string name="arc_config_reset">Reset this widget</string>
     <string name="widget_preview_arc_hero">Sunset at 19:42</string>
     <string name="widget_preview_arc_sub">Milan · in 8 h</string>
 </resources>

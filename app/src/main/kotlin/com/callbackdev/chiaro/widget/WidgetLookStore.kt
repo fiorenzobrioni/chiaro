@@ -141,12 +141,11 @@ data class WidgetLook(
      */
     val showIcon: Boolean = false,
     /**
-     * «Più tardi» on the text widget (23 set 2026): the next hours as lines of type — the
-     * time, the temperature, the sky in a word — on a card tall enough to have air left
-     * once every other rank is paid ([textLaterRows]). **On by default**, because it only
-     * ever takes space the card was leaving empty: on a one-row card, and on a two-row
-     * card at the launcher's reference height, it changes nothing at all. Offered only on
-     * «In parole»; the Today card has its own drawn strip.
+     * The extra rank of forecast a TALL card carries (23 set 2026): «Più tardi» on the text
+     * widget — the next hours as lines of type ([textLaterRows]) — and the next days under
+     * the hours on the Today widget ([todayShowDays]). **On by default**, because on both it
+     * only ever takes space the card was leaving empty: on a one-row card, and on the
+     * reference two-row cards, it changes nothing at all.
      */
     val showLater: Boolean = true,
     /**

@@ -734,9 +734,28 @@ only where it keeps 84dp, so a two-cell card prints the time and the figures rat
 «Poc…». Hours are stepped on the instant, not on the label, so the night the clocks change
 still shows rows three real hours apart.
 
-**A widget's settings show the widget** (23 set 2026). The text card's configuration screen
-opens on the card itself — not a Compose lookalike like the arc card's, but the Glance
-composition the launcher runs (`TextWidgetContent`), composed to `RemoteViews` with
+**The other cards use height too** (23 set 2026, the widget review that followed). Rendered
+at every grant from 1×1 to 4×4, the Now and Today cards had the text card's old problem:
+from three rows up they stopped spending. Each now does with height what it can honestly do:
+
+- **Now**: the tall form's glyph stops at the family's 104dp, and what it cannot use now goes
+  to the number — from 34sp up to the text card's 56, never wider than the words' column holds.
+  The reference two-by-two is unchanged (its glyph is 69dp, under the ceiling), and the glyph
+  never shrinks for the number: it takes only the surplus.
+- **Today**: the hero glyph has a ceiling of its own, **80dp**, because it stands in a row beside
+  the words and every dp it grew came out of the sentence — on a three-row card the 104dp glyph
+  squeezed «Ombrello verso le 20:00» to «Ombrello / verso le 20:…» with a hundred dp of air under
+  it. 80 is the Now card's rule read off this row: the drawing never outgrows the block beside
+  it (74dp of number, place and leading). And from three rows the card carries **the days** under
+  the hours — name, drawing, high, low — in the same grid as the hours, today first, paid last
+  and only whole (the same switch as the text card's «Più tardi»).
+- **Sky** and **Arc** already spent their height on more moments, more agenda and the week, and
+  keep their layouts.
+
+**A widget's settings show the widget** (23 set 2026). Every card's configuration screen
+opens on the card itself — not a Compose lookalike, which is what the arc card's screen had
+until the same day, but the Glance composition the launcher runs (each receiver's
+`*WidgetContent`), composed to `RemoteViews` with
 `GlanceRemoteViews` and inflated with `RemoteViews.apply`, which is what a launcher does with
 them. It sits on a wallpaper made of the reader's own containers, so a see-through card shows
 it is see-through; it starts at the size the card really has on the home screen when the
@@ -1497,11 +1516,13 @@ headers, with the privacy note as a paragraph among eleven credits. Now:
 - **Reset is an outlined button in the error colour** at the foot, not one more row: it is the one
   thing on the screen that undoes the others.
 
-**8.16 A widget's own settings** (design review of «In parole», 23 set 2026) — the screen the
-launcher opens on long-press was one flat list: place, five backgrounds, six colours, a
-slider, four switches, all radio rows under blue labels. Now:
+**8.16 A widget's own settings** (design review of «In parole», then of the other four cards,
+23 set 2026) — the screen the launcher opens on long-press was one flat list: place, five
+backgrounds, six colours, a slider, four switches, all radio rows under blue labels; the arc
+card's own screen was the same list, twice as long, under a Compose copy of the card. Both
+screens are now built from one kit (`WidgetConfigKit.kt`), so the five read as one:
 
-- **The card comes first** on the text widget: the real composition (§5, «A widget's settings
+- **The card comes first** on every widget: the real composition (§5, «A widget's settings
   show the widget») on a wallpaper of `primaryContainer`→`tertiaryContainer`, the sizes as
   chips under it («Com'è ora» first when the launcher has said the size), the form's one line in
   `bodyMedium` and the resize hint under it in `bodySmall`.
@@ -1512,8 +1533,14 @@ slider, four switches, all radio rows under blue labels. Now:
   paints — the real sky of this moment when there is a report, the light and dark cards, the
   phone's two answers on a diagonal, the chosen colour. «Un colore» opens the six colours as a
   strip of 36dp swatches, the chosen one ringed and ticked in white (every card colour is a dark
-  ground under white ink, §2.6), with its name under the strip. Shared with the arc widget's
-  screen (`BackgroundSection`), which keeps its flat layout.
+  ground under white ink, §2.6), with its name under the strip. One `BackgroundSection` for both
+  screens (`WidgetConfigChoicesTest`).
+- **The chips are the grants the launcher can give**: each card's list is checked against its
+  provider's own minimum (`WidgetPreviewSizesTest`), and the line under them is read off the
+  same form functions the card lays itself out with.
+- **The arc screen's twelve questions are twelve groups**; the warning and the week, each a
+  heading over one switch, became one group, «Altro sulla card»; reset is the outlined button in
+  the error colour, as in Settings.
 - **Opacity is a row** with its value in the primary ink at the end, the slider under it.
 - **The icon family follows the switch that brings it** on the text card: it is offered only once
   the glyph is on, so it sits under the content, not above it.

@@ -113,12 +113,41 @@ class TodayWidgetLayoutTest {
 
     @Test
     fun `the hero glyph is what the strip leaves`() {
-        // 189 − 6 − 14 − 84.84 − 8 = 76.16 with the rain row; 90.68 without.
+        // 189 − 6 − 14 − 84.84 − 8 = 76.16 with the rain row; 90.68 without, which the
+        // card's own ceiling takes down to 80 (23 set 2026: the glyph sits beside the words
+        // and every dp it grows is a dp the sentence loses).
         assertEquals(76.16f, todayHeroIconSize(fourByTwo, fontScale = 1f, rain = true).value, 0.05f)
-        assertEquals(90.68f, todayHeroIconSize(fourByTwo, fontScale = 1f, rain = false).value, 0.05f)
+        assertEquals(80f, todayHeroIconSize(fourByTwo, fontScale = 1f, rain = false).value, 0.05f)
         // Floor and ceiling: a squeezed grant and a three-row card.
         assertEquals(52f, todayHeroIconSize(DpSize(340.dp, 150.dp), fontScale = 1f, rain = true).value, 0.01f)
-        assertEquals(104f, todayHeroIconSize(DpSize(340.dp, 290.dp), fontScale = 1f, rain = true).value, 0.01f)
+        assertEquals(80f, todayHeroIconSize(DpSize(340.dp, 290.dp), fontScale = 1f, rain = true).value, 0.01f)
+    }
+
+    /** The days' row (23 set 2026): absent on the reference two-row cards whatever they
+     * carry, present on every three-row card from the provider's three-cell minimum up,
+     * and never at the cost of the rain line or the hero — it is paid last. */
+    @Test
+    fun `the days come with the third row and never before`() {
+        val flags = listOf(false, true)
+        flags.forEach { stale -> flags.forEach { range -> flags.forEach { rain ->
+            assertFalse(
+                "4x2 stale=$stale range=$range rain=$rain",
+                todayShowDays(fourByTwo, 1f, stale, sentence = true, range = range, warning = false, rain = rain)
+            )
+            assertFalse(todayShowDays(threeByTwo, 1f, stale, true, range, false, rain))
+            listOf(DpSize(250.dp, 293.dp), DpSize(340.dp, 293.dp)).forEach { size ->
+                assertTrue(
+                    "$size stale=$stale range=$range rain=$rain",
+                    todayShowDays(size, 1f, stale, sentence = true, range = range, warning = true, rain = rain)
+                )
+            }
+        } } }
+        // And what it draws fits: hero, gap, strip with its rain line, gap, days.
+        val size = DpSize(340.dp, 293.dp)
+        val used = WidgetCardPaddingSnug + WidgetCardPadding +
+            maxOf(todayHeroIconSize(size, 1f, true), todayHeroTextHeight(1f, true, true, true, true)) +
+            StripGap + todayStripHeight(1f, true) + DaysGap + todayDaysHeight(1f)
+        assertTrue("${used.value}", used.value <= size.height.value)
     }
 
     @Test

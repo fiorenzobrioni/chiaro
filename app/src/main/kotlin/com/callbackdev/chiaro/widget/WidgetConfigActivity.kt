@@ -158,14 +158,12 @@ internal fun ConfigContent(
     val pinnedId by pinnedFlow.collectAsStateWithLifecycle(initialValue = null)
     var look by remember { mutableStateOf<WidgetLook?>(null) }
     LaunchedEffect(appWidgetId) { look = lookStore.lookFor(appWidgetId, kind) }
-    // The preview's model (the text card, 23 set 2026): the widget's own loader, re-run
-    // when the place changes, with this screen's look laid over it so a tap shows before
-    // the store has finished writing it — the arc screen's arrangement.
+    // The preview's model (23 set 2026): the widget's own loader, re-run when the place
+    // changes, with this screen's look laid over it so a tap shows before the store has
+    // finished writing it.
     var base by remember { mutableStateOf<WidgetModel?>(null) }
-    if (kind == WidgetKind.TEXT) {
-        LaunchedEffect(appWidgetId, pinnedId) {
-            base = runCatching { WidgetData.load(context, appWidgetId) }.getOrNull()
-        }
+    LaunchedEffect(appWidgetId, pinnedId) {
+        base = runCatching { WidgetData.load(context, appWidgetId) }.getOrNull()
     }
 
     fun repaint() = scope.launch { runCatching { ChiaroWidgets.updateOne(context, appWidgetId) } }
@@ -182,12 +180,11 @@ internal fun ConfigContent(
             .verticalScroll(rememberScrollState())
             .padding(bottom = 16.dp)
     ) {
-        if (kind == WidgetKind.TEXT) {
-            TextPreviewSection(
-                appWidgetId = appWidgetId,
-                model = base?.let { model -> look?.let { model.copy(look = it) } ?: model }
-            )
-        }
+        WidgetPreviewSection(
+            appWidgetId = appWidgetId,
+            kind = kind,
+            model = base?.let { model -> look?.let { model.copy(look = it) } ?: model }
+        )
 
         ConfigHeader(stringResource(R.string.widget_config_place))
         ConfigGroup {
@@ -218,7 +215,7 @@ internal fun ConfigContent(
         look?.let { current ->
             ConfigHeader(stringResource(R.string.widget_config_background))
             ConfigGroup {
-                BackgroundSection(current, base?.content?.sky, appSettings, grouped = true, onPick = ::save)
+                BackgroundSection(current, base?.content?.sky, appSettings, onPick = ::save)
                 ConfigDivider()
                 OpacityRow(
                     pct = current.opacityPct,
@@ -274,6 +271,17 @@ internal fun ConfigContent(
                         checked = current.showWarning,
                         onToggle = { save(current.copy(showWarning = it)) }
                     )
+                    // The Today card's extra rank on a tall card (23 set 2026): the same
+                    // switch as the text card's «Più tardi», saying what it is on this card.
+                    if (kind == WidgetKind.TODAY) {
+                        ConfigDivider()
+                        ConfigSwitchRow(
+                            label = stringResource(R.string.widget_config_show_days),
+                            note = stringResource(R.string.widget_config_show_days_note),
+                            checked = current.showLater,
+                            onToggle = { save(current.copy(showLater = it)) }
+                        )
+                    }
                     if (text) {
                         // «Più tardi» and the glyph close the list: both only ever take
                         // space the card leaves empty, so they are the two switches whose
@@ -296,9 +304,9 @@ internal fun ConfigContent(
                 }
             }
             // Offered on every card that draws weather glyphs, after the content so that
-            // on the text card it lands right under the switch that brings it — the
-            // reason to pick a family here is the card's own — its size, its ground, the wallpaper behind
-            // it (see [WidgetIcons]). On the text widget it appears only once the glyph
+            // on the text card it lands right under the switch that brings it. The
+            // reason to pick a family here is the card's own — its size, its ground, the
+            // wallpaper behind it (see [WidgetIcons]). On the text widget it appears only once the glyph
             // has been turned on below: a switch that changes nothing must not be offered,
             // and until then that card draws none.
             if (kind != WidgetKind.TEXT || current.showIcon) {
@@ -337,173 +345,35 @@ internal fun ConfigContent(
             }
         }
 
-        Button(
-            onClick = onDone,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 24.dp)
-        ) {
-            Text(stringResource(R.string.action_done))
-        }
+        ConfigDoneButton(onDone)
     }
 }
 
 /**
- * The text card as it will look, on a ground that stands in for a wallpaper, with the sizes
- * it can be seen at underneath and one line saying what that size carries (23 set 2026).
- * It opens on the size the card really has on the home screen when the launcher has said
- * it, so the first thing the reader sees is THEIR card; the other chips are the forms it
- * turns into when resized, which is the one thing a settings screen can teach that the
- * home screen cannot — it only ever shows one size at a time.
+ * What the background question offers, in the order it asks it: the sky, light, dark, the
+ * system, and a colour. Data rather than a list built inside the composable, so that
+ * `WidgetConfigChoicesTest` can hold the one promise this section makes — **every kind of
+ * card, on every widget** — without a screenshot. A [WidgetBackground] added without a row
+ * here now fails the build rather than going missing from five settings screens at once.
  */
-@Composable
-internal fun TextPreviewSection(appWidgetId: Int, model: WidgetModel?) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val placed = remember(appWidgetId) { placedTextSize(context, appWidgetId) }
-    var size by remember { mutableStateOf(placed ?: TextPreviewSize.FOUR_BY_ONE.size) }
-    val colors = MaterialTheme.colorScheme
-    // A wallpaper out of the reader's own scheme: two containers on a diagonal, so a
-    // see-through card shows it is see-through and a solid one shows its edge.
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(28.dp))
-            .background(
-                Brush.linearGradient(
-                    listOf(colors.primaryContainer, colors.tertiaryContainer)
-                )
-            )
-            .padding(horizontal = 16.dp, vertical = 24.dp)
-    ) {
-        TextWidgetPreview(model = model, size = size)
-    }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        placed?.let { here ->
-            FilterChip(
-                selected = size == here,
-                onClick = { size = here },
-                label = { Text(stringResource(R.string.widget_config_size_placed)) }
-            )
-        }
-        TextPreviewSize.entries.forEach { option ->
-            FilterChip(
-                selected = size == option.size && size != placed,
-                onClick = { size = option.size },
-                label = { Text(option.label) }
-            )
-        }
-    }
-    Text(
-        text = stringResource(textFormNote(textForm(size))),
-        style = MaterialTheme.typography.bodyMedium,
-        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp)
-    )
-    Text(
-        text = stringResource(R.string.widget_config_resize_hint),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 4.dp)
-    )
-}
+internal val WidgetBackgroundChoices: List<Pair<WidgetBackground, Int>> = listOf(
+    WidgetBackground.SKY to R.string.widget_bg_sky,
+    WidgetBackground.LIGHT to R.string.settings_theme_light,
+    WidgetBackground.DARK to R.string.settings_theme_dark,
+    WidgetBackground.SYSTEM to R.string.settings_theme_system,
+    WidgetBackground.COLOR to R.string.widget_bg_color
+)
 
-/** A group's title, the Settings screen's: the section's name above its card. */
-@Composable
-private fun ConfigHeader(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 20.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
-    )
-}
-
-/** Rows that belong together, on one rounded ground — the Settings and Alerts screens'
- * grouping, so the widget's own settings read as part of the same app. */
-@Composable
-private fun ConfigGroup(content: @Composable () -> Unit) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = ConfigGroupShape,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(ConfigGroupShape)
-    ) {
-        Column { content() }
-    }
-}
-
-@Composable
-private fun ConfigDivider() {
-    HorizontalDivider(
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
-        modifier = Modifier.padding(horizontal = 16.dp)
-    )
-}
-
-private val ConfigGroupShape = RoundedCornerShape(24.dp)
-
-@Composable
-private fun ConfigChoiceRow(
-    label: String,
-    selected: Boolean,
-    onPick: () -> Unit,
-    inset: androidx.compose.ui.unit.Dp = 16.dp,
-    trailing: (@Composable () -> Unit)? = null
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .selectable(selected = selected, onClick = onPick, role = Role.RadioButton)
-            .padding(horizontal = inset, vertical = 10.dp)
-    ) {
-        RadioButton(selected = selected, onClick = null)
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 12.dp, end = 12.dp)
-        )
-        trailing?.invoke()
-    }
-}
-
-@Composable
-private fun ConfigSwitchRow(
-    label: String,
-    note: String,
-    checked: Boolean,
-    onToggle: (Boolean) -> Unit
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .toggleable(value = checked, onValueChange = onToggle, role = Role.Switch)
-            .padding(horizontal = 16.dp, vertical = 14.dp)
-    ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(text = label, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = note,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Switch(checked = checked, onCheckedChange = null)
-    }
-}
+/** The six colours a [WidgetBackground.COLOR] card can wear, in the order they are asked,
+ * and pinned the same way: a [WidgetCardColor] with no row is a colour no reader can pick. */
+internal val WidgetCardColorChoices: List<Pair<WidgetCardColor, Int>> = listOf(
+    WidgetCardColor.BLUE to R.string.widget_color_blue,
+    WidgetCardColor.AZURE to R.string.widget_color_azure,
+    WidgetCardColor.GREEN to R.string.widget_color_green,
+    WidgetCardColor.TEAL to R.string.widget_color_teal,
+    WidgetCardColor.PLUM to R.string.widget_color_plum,
+    WidgetCardColor.CLAY to R.string.widget_color_clay
+)
 
 /**
  * The background question, shared by this screen and the arc widget's own (19 set 2026):
@@ -523,16 +393,14 @@ private fun ConfigSwitchRow(
  * the ground it paints — the sky as it is right now when there is a report to draw it from,
  * the two fixed cards, the phone's half-and-half, the colour picked — and the six colours
  * are a strip of swatches rather than six more rows, with the chosen one's name printed
- * under the strip (a swatch is never the only label, DESIGN §10). [grouped] is this
- * screen's rounded card, which brings its own heading and inset; the arc screen still
- * lays its sections flat and gets the label and the flush edge it had.
+ * under the strip (a swatch is never the only label, DESIGN §10). The rows only: the
+ * caller puts them on a [ConfigGroup] under its own heading, with the opacity after them.
  */
 @Composable
 internal fun BackgroundSection(
     look: WidgetLook,
     sky: SkySnapshot? = null,
     app: AppSettings? = null,
-    grouped: Boolean = false,
     onPick: (WidgetLook) -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -545,8 +413,7 @@ internal fun BackgroundSection(
     val colors = MaterialTheme.colorScheme
     val fallback = Brush.linearGradient(listOf(colors.primaryContainer, colors.tertiaryContainer))
     val night = isNight(context)
-    val inset = if (grouped) 16.dp else 0.dp
-    if (!grouped) SectionLabel(stringResource(R.string.widget_config_background))
+    val inset = 16.dp
     WidgetBackgroundChoices.forEach { (background, labelRes) ->
         ConfigChoiceRow(
             label = stringResource(labelRes),
@@ -659,118 +526,6 @@ private fun ColorSwatches(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 6.dp)
-        )
-    }
-}
-
-/** How solid the card is: the name and the value on one line, the slider under them. */
-@Composable
-private fun OpacityRow(pct: Int, onChange: (Int) -> Unit, onDone: () -> Unit) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = stringResource(R.string.widget_config_opacity),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                text = when (pct) {
-                    100 -> stringResource(R.string.settings_opacity_full)
-                    0 -> stringResource(R.string.widget_opacity_transparent)
-                    else -> "$pct%"
-                },
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-        Slider(
-            value = pct.toFloat(),
-            onValueChange = { raw -> onChange((raw / 5f).roundToInt() * 5) },
-            onValueChangeFinished = onDone,
-            valueRange = 0f..100f,
-            steps = 19
-        )
-    }
-}
-
-/**
- * What the background question offers, in the order it asks it: the sky, light, dark, the
- * system, and a colour. Data rather than a list built inside the composable, so that
- * `WidgetConfigChoicesTest` can hold the one promise this section makes — **every kind of
- * card, on every widget** — without a screenshot. A [WidgetBackground] added without a row
- * here now fails the build rather than going missing from five settings screens at once.
- */
-internal val WidgetBackgroundChoices: List<Pair<WidgetBackground, Int>> = listOf(
-    WidgetBackground.SKY to R.string.widget_bg_sky,
-    WidgetBackground.LIGHT to R.string.settings_theme_light,
-    WidgetBackground.DARK to R.string.settings_theme_dark,
-    WidgetBackground.SYSTEM to R.string.settings_theme_system,
-    WidgetBackground.COLOR to R.string.widget_bg_color
-)
-
-/** The six colours a [WidgetBackground.COLOR] card can wear, in the order they are asked,
- * and pinned the same way: a [WidgetCardColor] with no row is a colour no reader can pick. */
-internal val WidgetCardColorChoices: List<Pair<WidgetCardColor, Int>> = listOf(
-    WidgetCardColor.BLUE to R.string.widget_color_blue,
-    WidgetCardColor.AZURE to R.string.widget_color_azure,
-    WidgetCardColor.GREEN to R.string.widget_color_green,
-    WidgetCardColor.TEAL to R.string.widget_color_teal,
-    WidgetCardColor.PLUM to R.string.widget_color_plum,
-    WidgetCardColor.CLAY to R.string.widget_color_clay
-)
-
-@Composable
-internal fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
-    )
-}
-
-/** A toggle with the sentence that says what it costs — the same shape the Settings
- * screen gives every switch, so a reader meets one control, not two. */
-@Composable
-internal fun SwitchRow(
-    label: String,
-    note: String,
-    checked: Boolean,
-    onToggle: (Boolean) -> Unit
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .toggleable(value = checked, onValueChange = onToggle, role = Role.Switch)
-            .padding(vertical = 10.dp)
-    ) {
-        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-            Text(text = label, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = note,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Switch(checked = checked, onCheckedChange = null)
-    }
-}
-
-@Composable
-internal fun ChoiceRow(label: String, selected: Boolean, onPick: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .selectable(selected = selected, onClick = onPick, role = Role.RadioButton)
-            .padding(vertical = 10.dp)
-    ) {
-        RadioButton(selected = selected, onClick = null)
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = 12.dp)
         )
     }
 }

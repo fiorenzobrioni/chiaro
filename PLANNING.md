@@ -10116,3 +10116,61 @@ massima e minima «al bordo opposto»).
 - **Da fare sul dispositivo**: l'anteprima nella schermata del launcher (tocco inghiottito,
   angoli), la card a 3×3 e 4×3 sulla schermata Home.
 
+## Gli altri widget e le loro impostazioni, review grafica (committente, 23 set 2026)
+
+Richiesta: «Fai una review anche degli altri widget e uniforma le relative schermate di
+impostazione come questa appena fatta».
+
+### La review
+
+Ogni ricevitore ha ora la sua `*WidgetContent` (come «In parole»), e con quella la resa vera di
+Adesso, Le prossime ore, Momenti del cielo e Arco a 13 concessioni, da 1×1 a 4×4. Cosa è emerso:
+
+- **Adesso**, forma alta: da tre righe l'icona si ferma a 104dp e il numero resta a 34sp; un 4×3
+  era un campo blu con un'icona in un angolo e tre righe in fondo.
+- **Le prossime ore**: da tre righe l'icona cresceva fino a 104dp nella riga accanto alle parole e
+  la frase, stretta a 99dp, diventava «Ombrello / verso le 20:…» con cento dp vuoti sotto. Anche
+  a 4×2 senza pioggia l'icona era 91dp.
+- **Momenti del cielo** e **Arco** usano già l'altezza (più momenti, più agenda, la settimana):
+  invariati. Il blocco del Cielo centrato nelle card alte è una scelta del committente (4 set).
+- Le forme sotto i minimi dei provider (Adesso 1×1, Le prossime ore a una riga, Cielo 2×1) sono
+  irraggiungibili e non sono state toccate.
+
+### Cosa è cambiato
+
+- **Adesso**: `nowTallTemperatureSp` — il numero prende quello che l'icona non può usare, da 34
+  a 56sp, con il limite di larghezza. Il 2×2 di riferimento non cambia.
+- **Le prossime ore**: tetto dell'icona a 80dp (`TodayHeroIconMax`); **i prossimi giorni** sotto
+  le ore da tre righe (`todayShowDays`), stessa griglia delle ore, oggi per primo; interruttore
+  «I prossimi giorni» (lo stesso campo `showLater` di «Più tardi»).
+- **Impostazioni**: `WidgetConfigKit.kt` con anteprima vera per tutti i tipi, chip per tipo
+  (`previewSizes`, legati ai minimi dei provider), riga per forma (`formNote`), gruppi, righe,
+  opacità, «Fatto». La schermata dell'Arco rifatta con gli stessi gruppi e l'anteprima vera;
+  `ArcPreview.kt` (536 righe di copia in Compose) eliminato, come `TextWidgetPreview.kt`,
+  assorbito nel kit.
+- Testi: note dell'allerta accorciate (Adesso/Le prossime ore, Arco), «Ripristina questo widget»,
+  una riga per forma per ogni widget.
+
+### Decisioni e deviazioni
+
+- **80dp e non 76** per l'icona di Le prossime ore: 76 è il 4×2 con la pioggia e non si muove;
+  80 è il blocco di parole accanto (74dp) più il margine proprio del disegno. Il test che fissava
+  90,68 e 104 ora fissa 80, con la ragione.
+- **I giorni partono da oggi**, contro la prima idea (da domani, perché la massima e minima di oggi
+  sono dell'eroe): con sei giorni sotto sette ore le due righe non erano più una griglia.
+- **Un interruttore per due cose diverse** (`showLater`): è «il rango in più di una card alta» su
+  entrambe le card, e ogni schermata lo nomina per quello che fa lì.
+- **Nessun cambio a Cielo e Arco**, oltre alla schermata: la resa non ha trovato difetti che
+  non fossero scelte già registrate.
+
+### Come è stato verificato
+
+- Resa Robolectric dei quattro widget (13 dimensioni ciascuno) prima e dopo, e delle due schermate
+  (chiara e scura) con l'anteprima di ogni tipo.
+- `NowWidgetLayoutTest` (il numero cresce solo col surplus, l'icona resta al tetto, limite di
+  larghezza), `TodayWidgetLayoutTest` (tetto 80, giorni assenti a due righe e presenti a tre, tutto
+  dentro la card), `WidgetPreviewSizesTest` (ogni chip rispetta i minimi del provider).
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+- **Da fare sul dispositivo**: le anteprime nelle due schermate, Adesso e Le prossime ore a 3×3 e
+  4×3 sulla Home.
+

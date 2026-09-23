@@ -64,6 +64,10 @@ sections are a normal size and live here alone.
 - **Widget settings show the widget.** «In parole» opens its settings on the card itself, at the
   size it has on the home screen, with chips to see how it lays itself out at other sizes. The
   settings are grouped like the app's own, and the backgrounds show their colour.
+- **Widgets: tall cards use their height.** On «Adesso» the temperature grows with the card from
+  three rows up; «Le prossime ore» keeps its sentence whole and adds the next days under the hours.
+- **Every widget's settings show the widget.** All five open on the real card at its size, with
+  chips for the other sizes and a line saying what each one carries, on the same grouped layout.
 
 ### Fixed
 

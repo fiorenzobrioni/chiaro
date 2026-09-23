@@ -289,16 +289,52 @@ internal fun nowTallIconRoom(
     fontScale: Float,
     stale: Boolean,
     withSentence: Boolean,
-    withWarning: Boolean
+    withWarning: Boolean,
+    temperatureSp: Float = TemperatureSp
 ): Dp {
-    val text = textLineHeight(TemperatureSp, fontScale) +
+    val text = textLineHeight(temperatureSp, fontScale) +
         (if (withSentence) textLineHeight(SentenceSp, fontScale) * TallSentenceMaxLines else 0.dp) +
         textLineHeight(PlaceSp, fontScale) +
         (if (stale) textLineHeight(StaleSp, fontScale) else 0.dp) +
         warningBlock(fontScale, withWarning)
     return size.height - WidgetCardPaddingSnug - WidgetCardPadding - text +
-        textInkBalance(TemperatureSp, fontScale)
+        textInkBalance(temperatureSp, fontScale)
 }
+
+/**
+ * **The number on a tall card grows with the card** (23 set 2026, widget review). Up to
+ * two rows the tall form spends its height on the glyph, and the glyph stops at the
+ * family's ceiling ([HeroIconMax], 104 dp) — which is where a three-row card used to stop
+ * spending: a 34 sp number and a 104 dp drawing in a card with a hundred dp of nothing
+ * between them. What the glyph cannot use now goes to the number, up to [TallTemperatureMax],
+ * and never past what the words' column can hold at the widest temperature this app prints.
+ *
+ * Nothing changes where the glyph has not reached its ceiling: the reference two-by-two
+ * (~69 dp of glyph) prints the same 34 sp it always did. The glyph never shrinks for it
+ * either — the number takes only the surplus, and a larger number also lends the glyph a
+ * larger band of leading ([textInkBalance]), so the recomputed room only grows.
+ */
+internal fun nowTallTemperatureSp(
+    size: DpSize,
+    fontScale: Float,
+    stale: Boolean,
+    withSentence: Boolean,
+    withWarning: Boolean
+): Float {
+    val surplus = nowTallIconRoom(size, fontScale, stale, withSentence, withWarning) - HeroIconMax
+    if (surplus <= 0.dp) return TemperatureSp
+    val byHeight = textSizeForLine(textLineHeight(TemperatureSp, fontScale) + surplus, fontScale)
+    val byWidth = (size.width - WidgetCardPadding * 2).value /
+        (TempEmWidth * fontScale.coerceAtLeast(0.1f))
+    return minOf(byHeight, byWidth, TallTemperatureMax).coerceAtLeast(TemperatureSp)
+}
+
+/**
+ * The tall card's ceiling: the text widget's own for a number that stands over its
+ * sentence ([TextHeroMax]) — past it a temperature stops being read as a number and starts
+ * being read as an ornament, and two cards on one home screen should agree about where.
+ */
+internal const val TallTemperatureMax = TextHeroMax
 
 /**
  * Whether a tall card can give the chip a line of its own: what the budget leaves once
