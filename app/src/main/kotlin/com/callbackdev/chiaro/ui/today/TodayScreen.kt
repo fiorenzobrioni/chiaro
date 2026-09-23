@@ -3,6 +3,10 @@ package com.callbackdev.chiaro.ui.today
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -67,6 +71,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.core.view.WindowCompat
@@ -78,7 +83,13 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -94,12 +105,20 @@ import com.callbackdev.chiaro.ui.components.FreshnessChip
 import com.callbackdev.chiaro.ui.components.HourCell
 import com.callbackdev.chiaro.ui.components.HourStrip
 import com.callbackdev.chiaro.ui.components.MetricTile
+import com.callbackdev.chiaro.ui.components.TrackScale
+import com.callbackdev.chiaro.ui.components.airTrack
+import com.callbackdev.chiaro.ui.components.humidityTrack
+import com.callbackdev.chiaro.ui.components.pollenTrack
+import com.callbackdev.chiaro.ui.components.pressureTrack
+import com.callbackdev.chiaro.ui.components.uvTrack
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.components.RainChart
 import com.callbackdev.chiaro.ui.components.RainHour
 import com.callbackdev.chiaro.ui.components.VisibleCell
 import com.callbackdev.chiaro.ui.components.hourWindow
+import com.callbackdev.chiaro.ui.components.SkyBodies
+import com.callbackdev.chiaro.ui.components.SkyBodiesLayer
 import com.callbackdev.chiaro.ui.components.SkyCanvas
 import com.callbackdev.chiaro.ui.components.SkySheet
 import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
@@ -114,6 +133,9 @@ import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.theme.ChiaroMotion
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
+import com.callbackdev.chiaro.ui.theme.SkyGradient
+import com.callbackdev.chiaro.ui.theme.SkyPalette
+import com.callbackdev.chiaro.ui.theme.tabular
 import com.callbackdev.chiaro.ui.theme.reducedMotion
 import com.callbackdev.chiaro.ui.theme.reflowForText
 import java.time.Duration
@@ -257,10 +279,9 @@ private fun PagedToday(
     }
 
     // The status bar icons follow what is under them, which since 18 set 2026 is the
-    // pinned place row: white while that row is still transparent over the canvas' top
-    // scrim, theme ink over the plain states AND from the first scrolled pixel, where
-    // the row takes the page's own surface — white icons over scrolled-up light content
-    // were unreadable (device report, 3 set).
+    // pinned place row: white over a page with a report — the row stands on the canvas'
+    // top scrim at rest, and since 23 set 2026 it keeps that same scrimmed sky as its
+    // ground once the page scrolls (DESIGN §8.1b) — and theme ink over the plain states.
     val currentPage = pages.getOrNull(pagerState.currentPage.coerceIn(0, pages.lastIndex))
     val currentState = currentPage?.let { stateFor(it).collectAsStateWithLifecycle().value }
     var canvasBehindBar by remember { mutableStateOf(true) }
@@ -446,7 +467,9 @@ private fun PlaceHeader(
     onOpenSettings: () -> Unit,
     contentColor: Color,
     dotInactive: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    compactVisible: Boolean = false,
+    compact: (@Composable () -> Unit)? = null
 ) {
     val spoken = if (isGps) stringResource(R.string.header_gps_desc, title) else title
     Row(
@@ -469,7 +492,16 @@ private fun PlaceHeader(
                         modifier = Modifier.size(20.dp)
                     )
                 }
-                Text(title, style = MaterialTheme.typography.titleLarge, color = contentColor)
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = contentColor,
+                    // One line when the bar also carries the temperature: a name that
+                    // wrapped under it would push the bar taller at every scroll.
+                    maxLines = if (compact != null) 1 else Int.MAX_VALUE,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
                 Icon(
                     imageVector = Icons.Outlined.KeyboardArrowDown,
                     contentDescription = stringResource(R.string.place_switcher_action),
@@ -496,6 +528,15 @@ private fun PlaceHeader(
                 )
             }
         }
+        compact?.let { now ->
+            AnimatedVisibility(
+                visible = compactVisible,
+                enter = fadeIn(ChiaroMotion.effects(reducedMotion())) +
+                    slideInVertically(ChiaroMotion.spatial(reducedMotion())) { it / 2 },
+                exit = fadeOut(ChiaroMotion.effects(reducedMotion())) +
+                    slideOutVertically(ChiaroMotion.spatial(reducedMotion())) { it / 2 }
+            ) { now() }
+        }
         // The gear of VISION §5.1: settings are visited once a month, so they get an
         // icon by the place row, not a tab. Same two grounds as the row itself.
         IconButton(onClick = onOpenSettings) {
@@ -507,6 +548,34 @@ private fun PlaceHeader(
         }
     }
 }
+
+/**
+ * The hero in the bar (DESIGN §8.1b, 23 set 2026): the sky's icon and the temperature,
+ * shown once the canvas has scrolled away. One announcement, the same number the hero
+ * says; the icon is the still drawing, because the bar is where the eye rests while the
+ * page moves under it.
+ */
+@Composable
+private fun CompactNow(temperature: String, glyph: ConditionGlyph, color: Color) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.padding(start = 8.dp)
+    ) {
+        CompositionLocalProvider(LocalMotionPaused provides true) {
+            com.callbackdev.chiaro.ui.icons.ConditionIcon(glyph = glyph, modifier = Modifier.size(32.dp))
+        }
+        Text(
+            text = temperature,
+            style = MaterialTheme.typography.titleLarge.tabular(),
+            color = color
+        )
+    }
+}
+
+/** How far above the bar's bottom edge the canvas' bottom may climb before the hero
+ * counts as gone: the lip, the padding and the ribbon, up to the temperature's baseline. */
+private val HeroReach = 120.dp
 
 /** The place dots of VISION §5.1: position among the pages, at a glance. */
 @Composable
@@ -581,8 +650,8 @@ private fun EmptyState(state: TodayUiState.Empty, onRefresh: () -> Unit) {
 private val PlainHeaderHeight = 48.dp + HeaderVerticalPadding * 2
 
 /** One hour cell at 100% type, quoted from `HourStrip`: 16 (hour) + 6 + 42 (icon) + 6 +
- * 20 (temperature) + 6 + 16 (rain). */
-private val SkeletonHourCellHeight = 112.dp
+ * 52 (the temperature curve's band, since 23 set 2026) + 6 + 16 (rain). */
+private val SkeletonHourCellHeight = 144.dp
 
 /**
  * Blocks of `surfaceContainerHigh` in the shape of the real layout: unmistakably not
@@ -697,12 +766,17 @@ private fun ContentState(
     // edge of the screen (§3.6) and the row still stands on the sky when the page
     // is at rest.
     //
-    // So this is the one bar in the app with two grounds, and the flip between them is
-    // the flip the status-bar icons used to measure for themselves: at the very top the
-    // bar is transparent over the canvas' top scrim band, which is exactly where §3.6
-    // measures its white; from the FIRST scrolled pixel it carries the page's own
-    // surface and theme ink. Nothing in between, because in between is white ink over
-    // unscrimmed sky.
+    // At the very top the bar is transparent over the canvas' top scrim band, which is
+    // exactly where §3.6 measures its white. From the FIRST scrolled pixel it carries a
+    // ground of its own — and since the design review of 23 set 2026 that ground is the
+    // sky, not the page: the canvas' own top stop under the scrim, which is the color the
+    // canvas has at its very top edge, so the bar reads as the sky staying at the top of
+    // the screen while the page slides under it. The ink stays white throughout (the
+    // scrimmed top stop is darker than anything §3.6 measures white against), so there
+    // is no flip at all, where the old surface ground turned the whole bar and the status
+    // bar from white on sky to black on paper in one frame. When the hero has scrolled
+    // away the bar also carries the temperature and the sky's icon: the reader who is
+    // down in the details still has the one number the page is about.
     val listState = rememberLazyListState()
     val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val density = LocalDensity.current
@@ -711,8 +785,9 @@ private fun ContentState(
             listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
         }
     }
-    // The status bar shows what is behind it, and what is behind it is this bar.
-    LaunchedEffect(isCurrent, atTop) { if (isCurrent) onCanvasBehindBar(atTop) }
+    // The status bar shows what is behind it, and what is behind it is this bar: the sky
+    // at rest, the scrimmed sky once scrolled. White either way.
+    LaunchedEffect(isCurrent) { if (isCurrent) onCanvasBehindBar(true) }
 
     // The canvas keeps the row's seat empty: a spacer as tall as the bar really is,
     // measured rather than quoted because the row grows with the type scale, with the
@@ -720,29 +795,33 @@ private fun ContentState(
     // stands on before the first layout.
     val reduced = reducedMotion()
     var headerHeight by remember(statusTop) { mutableStateOf(statusTop + PlainHeaderHeight) }
-    val headerInk by animateColorAsState(
-        targetValue = if (atTop) Color.White else MaterialTheme.colorScheme.onSurface,
-        animationSpec = ChiaroMotion.effects(reduced),
-        label = "place row ink"
+    val skyGradient = ChiaroTheme.sky.gradient(
+        sunAltitudeDeg = content.sky.sunAltitudeDeg,
+        cloudPct = content.sky.cloudPct,
+        precipPct = content.sky.precipPct,
+        moonIllumination = content.sky.moonIllumination,
+        moonAltitudeDeg = content.sky.moonAltitudeDeg
     )
-    val headerDotInk by animateColorAsState(
-        targetValue = if (atTop) {
-            Color.White.copy(alpha = 0.4f)
-        } else {
-            MaterialTheme.colorScheme.outlineVariant
-        },
-        animationSpec = ChiaroMotion.effects(reduced),
-        label = "place row dots"
-    )
-    // The transparent end is the surface at zero alpha, not `Color.Transparent`: colors
-    // interpolate perceptually here, so fading in from a transparent BLACK would draw a
-    // dark veil across a light page on the way.
-    val surface = MaterialTheme.colorScheme.surface
+    // The transparent end is the same color at zero alpha, not `Color.Transparent`:
+    // colors interpolate perceptually here, and fading in from a transparent BLACK would
+    // draw a veil of the wrong hue on the way.
+    val skyTop = SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha).compositeOver(skyGradient.top)
     val headerGround by animateColorAsState(
-        targetValue = if (atTop) surface.copy(alpha = 0f) else surface,
+        targetValue = if (atTop) skyTop.copy(alpha = 0f) else skyTop,
         animationSpec = ChiaroMotion.effects(reduced),
         label = "place row ground"
     )
+    val headerInk = Color.White
+    val headerDotInk = Color.White.copy(alpha = 0.4f)
+    // The hero is gone once the canvas' bottom has climbed to within [HeroReach] of the
+    // bar: past that line the temperature is under the bar or above the screen.
+    val heroGone by remember {
+        derivedStateOf {
+            val first = listState.layoutInfo.visibleItemsInfo.firstOrNull() ?: return@derivedStateOf false
+            first.index > 0 ||
+                first.offset + first.size < with(density) { (headerHeight + HeroReach).roundToPx() }
+        }
+    }
 
     // Which day of the week is open, hoisted out of the week because the week is no
     // longer one composable: each row is its own lazy item (8 set 2026), so the seven
@@ -802,7 +881,7 @@ private fun ContentState(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = WindowInsets.navigationBars.asPaddingValues()
         ) {
-            item { CanvasHeader(content, units, timeFmt, locale, headerHeight) }
+            item { CanvasHeader(content, skyGradient, units, timeFmt, locale, headerHeight) }
 
             if (content.error != null) {
                 item { ErrorBanner(content.error, onRefresh) }
@@ -882,10 +961,15 @@ private fun ContentState(
         PlaceHeader(
             title = title,
             isGps = isGps,
-            localNow = if (isGps) {
-                null
-            } else {
-                "${Formats.dayLong(content.now.toLocalDate(), locale)} · " +
+            localNow = when {
+                isGps -> null
+                // With the temperature beside it the long date no longer fits on one
+                // line, and a line that wrapped would make the bar taller mid-scroll —
+                // moving the canvas under the reader's finger. The short day keeps the
+                // bar's height and the hour, which is the part that differs by place.
+                heroGone -> "${Formats.dayLabel(content.now.toLocalDate(), locale)} · " +
+                    content.now.format(timeFmt)
+                else -> "${Formats.dayLong(content.now.toLocalDate(), locale)} · " +
                     content.now.format(timeFmt)
             },
             dots = dots,
@@ -893,6 +977,19 @@ private fun ContentState(
             onOpenSettings = onOpenSettings,
             contentColor = headerInk,
             dotInactive = headerDotInk,
+            compactVisible = heroGone,
+            compact = {
+                CompactNow(
+                    // Whole degrees, like every other temperature below the hero: the bar
+                    // is a reminder of the number, and the tenths would cost the place's
+                    // name its room.
+                    temperature = Formats.temperature(
+                        content.report.current.tempC, units.temperature, locale
+                    ),
+                    glyph = ConditionGlyph(content.report.current.condition.wmoCode, content.night),
+                    color = headerInk
+                )
+            },
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 // First in the chain: what the canvas must leave empty is the whole bar,
@@ -975,6 +1072,7 @@ private val CanvasBaseHeight = 280.dp
 @Composable
 private fun CanvasHeader(
     content: TodayUiState.Content,
+    gradient: SkyGradient,
     units: UnitSettings,
     timeFmt: DateTimeFormatter,
     locale: Locale,
@@ -991,13 +1089,7 @@ private fun CanvasHeader(
     // must still end where the skeleton's does.
     val sheet = SkySheet(surface = MaterialTheme.colorScheme.surface)
     SkyCanvas(
-        gradient = ChiaroTheme.sky.gradient(
-            sunAltitudeDeg = sky.sunAltitudeDeg,
-            cloudPct = sky.cloudPct,
-            precipPct = sky.precipPct,
-            moonIllumination = sky.moonIllumination,
-            moonAltitudeDeg = sky.moonAltitudeDeg
-        ),
+        gradient = gradient,
         minHeight = floor,
         sheet = sheet
     ) {
@@ -1010,11 +1102,25 @@ private fun CanvasHeader(
         // still the thing it stands on. A spacer as tall as the real bar keeps the
         // geometry the row used to make for itself — the hero lands where it always did,
         // and it cannot climb under a bar it no longer belongs to.
-        Column(
-            modifier = Modifier.fillMaxWidth().heightIn(min = floor - sheet.lip),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Spacer(modifier = Modifier.height(placeRowHeight))
+        //
+        // Between the two, since 23 set 2026, the sun and the moon, in a band of sky the
+        // layout keeps for them ([SkyColumn]): the discs can never stand behind the place
+        // row or the hero, and the band is never so thin that there is no room for one.
+        SkyColumn(seat = placeRowHeight, floor = floor - sheet.lip) {
+            Box(modifier = Modifier.fillMaxSize().padding(top = 4.dp)) {
+                SkyBodiesLayer(
+                    SkyBodies(
+                        sunAltitudeDeg = sky.sunAltitudeDeg,
+                        sunAzimuthDeg = sky.sunAzimuthDeg,
+                        moonAltitudeDeg = sky.moonAltitudeDeg,
+                        moonAzimuthDeg = sky.moonAzimuthDeg,
+                        moonIllumination = sky.moonIllumination,
+                        moonElongationDeg = sky.moonElongationDeg,
+                        cloudPct = sky.cloudPct,
+                        southern = sky.southern
+                    )
+                )
+            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1022,30 +1128,41 @@ private fun CanvasHeader(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    text = Formats.temperature(current.tempC, units.temperature, locale, decimals = 1),
+                    text = heroTemperatureText(
+                        Formats.temperature(current.tempC, units.temperature, locale, decimals = 1)
+                    ),
                     style = com.callbackdev.chiaro.ui.theme.LocalChiaroType.current.heroTemperature,
                     color = Color.White
                 )
                 // Two type sizes on one line align by BASELINE, not by top: top-aligned
                 // they read as a mistake the moment the sizes differ (device check, 2 set).
+                //
+                // The condition is `titleLarge` since the review of 23 set 2026: from the
+                // 64sp hero straight down to 16sp was a cliff, and the word that says what
+                // the sky is doing is the second thing a reader wants.
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         text = stringResource(WeatherText.condition(current.condition.wmoCode)),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleLarge,
                         color = Color.White,
                         modifier = Modifier.alignByBaseline()
                     )
-                    Text(
-                        text = stringResource(
-                            R.string.feels_like,
-                            Formats.temperature(
-                                current.feelsLikeC, units.temperature, locale, decimals = 1
-                            )
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.7f),
-                        modifier = Modifier.alignByBaseline()
-                    )
+                    // Only when it says something (§1.2): "20,8° / feels like 20,6°" is a
+                    // number with nothing to do about it. A degree apart is where a body
+                    // starts to notice.
+                    if (kotlin.math.abs(current.feelsLikeC - current.tempC) >= FeelsLikeMinDeltaC) {
+                        Text(
+                            text = stringResource(
+                                R.string.feels_like,
+                                Formats.temperature(
+                                    current.feelsLikeC, units.temperature, locale, decimals = 1
+                                )
+                            ),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.alignByBaseline()
+                        )
+                    }
                 }
                 DaylightRibbon(
                     phases = sky.phases,
@@ -1063,6 +1180,66 @@ private fun CanvasHeader(
         }
     }
 }
+
+/**
+ * The canvas' column (23 set 2026): the place row's seat, the band of sky the sun and the
+ * moon are drawn in, and the hero, top to bottom. It was a `Column` with `SpaceBetween`,
+ * which left the sky whatever the floor had over — 14dp on a page with the place's own
+ * hour, which is no room for a sun. Now the band is **at least [BodiesBand]**, more when
+ * the floor leaves more, and the canvas grows by what that costs: the sky is the hero of
+ * this screen, and a hero with no sky in it is a temperature on a gradient.
+ *
+ * Children: the band's content, then the hero.
+ */
+@Composable
+private fun SkyColumn(seat: Dp, floor: Dp, content: @Composable () -> Unit) {
+    androidx.compose.ui.layout.Layout(content = content) { measurables, constraints ->
+        val width = constraints.maxWidth
+        val hero = measurables[1].measure(
+            androidx.compose.ui.unit.Constraints(minWidth = width, maxWidth = width)
+        )
+        val seatPx = seat.roundToPx()
+        val band = maxOf(BodiesBand.roundToPx(), floor.roundToPx() - seatPx - hero.height)
+        val bodies = measurables[0].measure(androidx.compose.ui.unit.Constraints.fixed(width, band))
+        layout(width, seatPx + band + hero.height) {
+            bodies.place(0, seatPx)
+            hero.place(0, seatPx + band)
+        }
+    }
+}
+
+/** The least sky the canvas keeps between the place row and the hero: a 22dp disc and
+ * room for it to climb. */
+private val BodiesBand = 56.dp
+
+/** Below this the feels-like line is not drawn: the air feels like what it is. */
+private const val FeelsLikeMinDeltaC = 1.0
+
+/**
+ * The hero with its tenths set small (design review, 23 set 2026): «20» and «°» at full
+ * size, «,8» at [HeroFractionScale] on the same baseline. The tenths are kept — they are
+ * what the canvas measures — but at 64sp they carried as much weight as the degrees, and
+ * the reader wants the degrees first. On the baseline, not lifted: raised, the decimal
+ * comma read as an apostrophe (rendered and looked at). The string is the formatter's,
+ * untouched, so the locale still owns the separator and a screen reader still reads one
+ * number.
+ */
+internal fun heroTemperatureText(formatted: String): AnnotatedString {
+    val whole = HeroWhole.find(formatted) ?: return AnnotatedString(formatted)
+    val split = whole.range.last + 1
+    val unit = formatted.lastIndexOf('°').takeIf { it >= split } ?: formatted.length
+    if (unit <= split) return AnnotatedString(formatted)
+    return buildAnnotatedString {
+        append(formatted.substring(0, split))
+        withStyle(SpanStyle(fontSize = HeroFractionScale.em)) {
+            append(formatted.substring(split, unit))
+        }
+        append(formatted.substring(unit))
+    }
+}
+
+private val HeroWhole = Regex("""^[-−]?\p{Nd}+""")
+private const val HeroFractionScale = 0.55f
 
 /**
  * The one-time card that points at the guide (VISION 5.7): a card in the scroll, not
@@ -1262,8 +1439,19 @@ private val PagePadding = PaddingValues(horizontal = 16.dp)
 private val StripCellGap = 4.dp
 
 @Composable
-private fun StripHour.toCell(units: UnitSettings, is24h: Boolean, locale: Locale): HourCell {
+private fun StripHour.toCell(
+    units: UnitSettings,
+    is24h: Boolean,
+    locale: Locale,
+    markDayStart: Boolean = true
+): HourCell {
     val hourLabel = Formats.hourLabel(hour.time, is24h, locale)
+    // The strip crosses midnight and never said so (design review, 23 set 2026): «22 23 00
+    // 01» reads as one evening. The first hour of a new day is labelled with the day's
+    // name, in the accent; the hour itself is the one hour a reader can infer, and the
+    // cell still says it aloud. Not in a week row's own strip, which is one day already.
+    val dayStart = markDayStart && hour.time.hour == 0
+    val shownLabel = if (dayStart) Formats.dayLabel(hour.time.toLocalDate(), locale) else hourLabel
     val temp = Formats.temperature(hour.tempC, units.temperature, locale)
     val word = stringResource(WeatherText.condition(hour.condition.wmoCode))
     return HourCell(
@@ -1273,7 +1461,9 @@ private fun StripHour.toCell(units: UnitSettings, is24h: Boolean, locale: Locale
         // the day a zone falls back really does hold 02:00 twice — and a `LazyRow` with
         // two equal keys does not draw a duplicate row, it throws.
         key = hour.at.toString(),
-        hourLabel = hourLabel,
+        hourLabel = shownLabel,
+        tempC = hour.tempC,
+        dayStart = dayStart,
         condition = ConditionGlyph(hour.condition.wmoCode, night),
         temperature = temp,
         rainPct = hour.precipChancePct,
@@ -1291,17 +1481,34 @@ private fun StripHour.toCell(units: UnitSettings, is24h: Boolean, locale: Locale
 
 @Composable
 private fun RestOfDay(content: TodayUiState.Content, timeFmt: DateTimeFormatter) {
+    val gap = 12.dp
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(gap)
     ) {
-        content.timeline.forEach { item ->
+        content.timeline.forEachIndexed { index, item ->
             com.callbackdev.chiaro.ui.components.TimelineRow(
                 time = item.at.format(timeFmt),
                 icon = timelineIcon(item.kind),
-                text = timelineText(item)
+                text = timelineText(item),
+                soon = if (index == 0) soonText(content.now, item.at) else null,
+                connectAbove = index > 0,
+                connectBelow = index < content.timeline.lastIndex,
+                reach = gap / 2
             )
         }
+    }
+}
+
+/** «tra 18 min», «tra 2 h», «tra 1 h 20 min» — or nothing for a moment already here. */
+@Composable
+private fun soonText(now: LocalDateTime, at: LocalDateTime): String? {
+    val minutes = Duration.between(now, at).toMinutes()
+    return when {
+        minutes < 1 -> null
+        minutes < 60 -> stringResource(R.string.tl_in_minutes, minutes.toInt())
+        minutes % 60 == 0L -> stringResource(R.string.tl_in_hours, (minutes / 60).toInt())
+        else -> stringResource(R.string.tl_in_hours_minutes, (minutes / 60).toInt(), (minutes % 60).toInt())
     }
 }
 
@@ -1370,7 +1577,8 @@ private fun LazyListScope.weekRows(
             is24h = is24h,
             locale = locale,
             expanded = expandedDay == day.forecast.date,
-            onToggle = { onToggle(day.forecast.date) }
+            onToggle = { onToggle(day.forecast.date) },
+            nowC = content.report.current.tempC
         )
     }
 }
@@ -1388,7 +1596,8 @@ private fun WeekRow(
     is24h: Boolean,
     locale: Locale,
     expanded: Boolean,
-    onToggle: () -> Unit
+    onToggle: () -> Unit,
+    nowC: Double? = null
 ) {
     val f = day.forecast
     val label = if (isToday) stringResource(R.string.week_today) else Formats.dayLabel(f.date, locale)
@@ -1424,6 +1633,7 @@ private fun WeekRow(
                 low, high
             ),
             onClick = if (day.hours.isNotEmpty()) onToggle else null,
+            nowC = if (isToday) nowC else null,
             modifier = Modifier.padding(PagePadding)
         )
         AnimatedVisibility(
@@ -1432,7 +1642,7 @@ private fun WeekRow(
             exit = ChiaroMotion.exit(reduced)
         ) {
             HourStrip(
-                hours = day.hours.map { it.toCell(units, is24h, locale) },
+                hours = day.hours.map { it.toCell(units, is24h, locale, markDayStart = false) },
                 modifier = Modifier.padding(top = 4.dp),
                 contentPadding = PagePadding
             )
@@ -1444,9 +1654,11 @@ private fun WeekRow(
  * The details grid (DESIGN §8.6), reviewed card by card on 8 set 2026. What each tile
  * carries beyond its value and its meaning, and why:
  *
- * - **UV, humidity, air**: a track on the scale the world uses (0–11, 0–100, 0–300), so
- *   "how much" arrives before the number is read. Pressure and visibility have no such
- *   scale — one is a narrow band around 1013, the other is logarithmic — and get none.
+ * - **UV, humidity, air, pressure, pollen**: a track on the scale the world uses (0–11,
+ *   0–100, 0–300, 980–1046 around 1013, four levels), each in its own hue with a disc on
+ *   the value (design review, 23 set 2026), so "where on the scale" arrives before the
+ *   number is read. Visibility is logarithmic and the wind's meaning is the gust, and
+ *   neither gets one.
  * - **Wind**: an arrow for where the air goes and the words for where it comes from,
  *   and the gusts on the days they matter, when the wind a body feels is the gust.
  * - **Humidity**: one tile where there were two. The dew point tile said "pleasant"
@@ -1490,7 +1702,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
                 label = R.string.metric_uv,
                 value = uvNow.toString(),
                 meaning = WeatherText.uvMeaning(uvNow),
-                scale = uvNow / UvScaleTop,
+                track = uvTrack(uvNow),
                 // Only while it is news: a peak that equals the reading is the tile
                 // printing its own number twice.
                 note = today?.uvIndexMax?.takeIf { it > uvNow }
@@ -1528,7 +1740,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
                 label = R.string.metric_humidity,
                 value = Formats.percent(current.humidityPct, locale),
                 meaning = WeatherText.dewPointMeaning(current.dewPointC),
-                scale = current.humidityPct / 100f,
+                track = humidityTrack(current.humidityPct),
                 note = stringResource(
                     R.string.humidity_dew_note,
                     Formats.temperature(current.dewPointC, units.temperature, locale)
@@ -1540,7 +1752,8 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
                 icon = { ChiaroIcons.pressure },
                 label = R.string.metric_pressure,
                 value = Formats.pressure(current.pressureMb, locale),
-                meaning = WeatherText.pressureMeaning(current.pressureMb)
+                meaning = WeatherText.pressureMeaning(current.pressureMb),
+                track = pressureTrack(current.pressureMb)
             )
         )
         // §1.1 again (Fase 26): `visibility` is a model-dependent field, and a model
@@ -1563,7 +1776,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
                     label = R.string.metric_air,
                     value = air.aqiIndex.toString(),
                     meaning = WeatherText.aqiMeaning(air.aqiIndex),
-                    scale = air.aqiIndex / AqiScaleTop
+                    track = airTrack(air.aqiIndex)
                 )
             )
         }
@@ -1576,6 +1789,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
                     label = R.string.metric_pollen,
                     value = stringResource(WeatherText.pollenLevel(worst)),
                     meaning = WeatherText.pollenMeaning(worst),
+                    track = pollenTrack(worst.ordinal, PollenLevel.entries.size),
                     // The families are stored lowercase so they can be listed; the
                     // line then starts like a sentence.
                     note = when (families.size) {
@@ -1612,7 +1826,7 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
                         label = stringResource(tile.label),
                         value = tile.value,
                         meaning = stringResource(tile.meaning),
-                        scale = tile.scale,
+                        track = tile.track,
                         detail = tile.detail,
                         note = tile.note,
                         iconSize = tile.iconSize,
@@ -1626,14 +1840,6 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
         }
     }
 }
-
-/** The UV index's practical top: 11 is "extreme" and the WHO's scale is open-ended
- * above it, so a rarer 12 or 13 fills the track and the meaning line does the talking. */
-private const val UvScaleTop = 11f
-
-/** The US AQI's "hazardous" threshold: above 300 the track is full and the meaning line
- * says to stay indoors, which is all a reader needs from a number past that. */
-private const val AqiScaleTop = 300f
 
 /** Where the wind comes from, in words, and where it goes, as an arrow (DESIGN §8.6). The
  * eighth of the compass is `SkyText`'s vocabulary — the same "north-east" the Sky screen
@@ -1665,8 +1871,8 @@ private data class Tile(
     val label: Int,
     val value: String,
     val meaning: Int,
-    /** 0..1 on a world-anchored scale, when the metric has one. */
-    val scale: Float? = null,
+    /** The metric's world scale, when it has one (DESIGN §8.6). */
+    val track: TrackScale? = null,
     /** A composed fact about the value (the wind's arrow and source). */
     val detail: (@Composable () -> Unit)? = null,
     /** A printed fact about the value (gusts, dew point, which pollen). */

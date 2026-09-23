@@ -14,11 +14,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -38,9 +44,10 @@ import com.callbackdev.chiaro.ui.theme.LocalChiaroType
  * The tile's lines, top to bottom, since the card review of 8 set 2026: the icon and
  * the label; the value as a **reading** (`ChiaroType.readingValue`, 24sp light tabular — the hero's
  * voice at a tile's scale, because at 16sp the value barely outranked its own label); an
- * optional [scale], a 4dp track on a scale anchored to the world (UV 0–11, humidity
- * 0–100, air 0–300) so the eye gets "how much" before the number is read — one hue,
- * printed value beside it, §9; an optional [detail] and [note], the facts behind the
+ * optional [track], the quantity's own scale anchored to the world (UV 0–11, humidity
+ * 0–100, air 0–300, pressure around 1013, pollen's four levels), in its own hue with a
+ * disc on the value since 23 set 2026 ([QuantityTrack]), so the eye gets "where on the
+ * scale" before the number is read; an optional [detail] and [note], the facts behind the
  * value (where the wind comes from, its gusts, which pollen, the dew point) in the ink
  * of a fact; and the [meaning], the consequence, quiet and last.
  */
@@ -51,9 +58,9 @@ fun MetricTile(
     value: String,
     meaning: String,
     modifier: Modifier = Modifier,
-    /** 0..1 on a world-anchored scale, or null for a metric that has no such scale
-     * (pressure, visibility) — a track under those would be a shape with nothing to say. */
-    scale: Float? = null,
+    /** The metric's world scale, or null for one that has none (visibility, a logarithmic
+     * quantity, and the wind) — a track under those would be a shape with nothing to say. */
+    track: TrackScale? = null,
     /** A composed fact about the value: the wind's arrow and its source. */
     detail: (@Composable () -> Unit)? = null,
     /** A printed fact about the value: the gusts, the dew point, which pollen. */
@@ -109,7 +116,7 @@ fun MetricTile(
                 )
             }
             Text(text = value, style = LocalChiaroType.current.readingValue)
-            scale?.let { QuantityTrack(fraction = it, modifier = Modifier.padding(vertical = 2.dp)) }
+            track?.let { QuantityTrack(scale = it, modifier = Modifier.padding(vertical = 2.dp)) }
             detail?.invoke()
             note?.let { Text(text = it, style = MaterialTheme.typography.bodyMedium) }
             Text(
@@ -122,29 +129,185 @@ fun MetricTile(
 }
 
 /**
- * A quantity on a scale anchored to the world (DESIGN §9.1): a 4dp track in
- * `outlineVariant`, the part up to the value in `primary`. One hue, because it depicts
- * one quantity; no marker, because "how much of the scale" is the question, not "where";
- * no semantics, because the number it depicts is printed right above it (§9.3).
+ * A world scale for [QuantityTrack]: where the value sits on it, the ramp that paints
+ * it, and where its bands change.
+ *
+ * [fraction] is 0..1 on the scale the world uses (UV 0–11, humidity 0–100, air 0–300,
+ * pressure 980–1046 hPa). [ticks] are the thresholds the meaning line switches at, as
+ * fractions, drawn as gaps in the track. [diverging] fills from the middle out, for a
+ * quantity whose middle means something (pressure around 1013). [segments], when set,
+ * draws the scale as that many discrete steps (pollen's four levels) instead of a line.
+ */
+@Immutable
+data class TrackScale(
+    val fraction: Float,
+    val ramp: List<Color>,
+    val ticks: List<Float> = emptyList(),
+    val diverging: Boolean = false,
+    val segments: Int? = null
+)
+
+/**
+ * A quantity on a scale anchored to the world (DESIGN §8.6, §9.1), drawn since the design
+ * review of 23 set 2026 as the quantity's OWN scale rather than a progress bar: the whole
+ * ramp is the track, recessive, so the reader sees what the scale runs from and to; the
+ * part up to the value is the ramp at full strength; the bands the meaning line switches
+ * at are gaps in it; and a disc marks the value, in the ramp's color at that point, so
+ * "where on the scale" arrives before the number is read.
+ *
+ * Until then it was one hue for every metric — `primary` over `outlineVariant`, the same
+ * bar under UV, humidity and air — and said "how much" without saying "of what". Each
+ * quantity now has its own hue ([ChiaroColors.uvRamp] and siblings), still one hue per
+ * quantity (§9.1): never the green-to-violet UV chart, which is a rainbow, and whose bands
+ * collapse under deuteranopia — the word under the number carries the band.
+ *
+ * No semantics: the number it depicts is printed right above it (§9.3).
  */
 @Composable
-fun QuantityTrack(fraction: Float, modifier: Modifier = Modifier) {
-    val track = MaterialTheme.colorScheme.outlineVariant
-    val fill = MaterialTheme.colorScheme.primary
-    Canvas(modifier = modifier.fillMaxWidth().height(4.dp)) {
-        val radius = CornerRadius(size.height / 2)
-        drawRoundRect(color = track, cornerRadius = radius)
-        val filled = size.width * fraction.coerceIn(0f, 1f)
-        if (filled > 0f) {
-            // Never thinner than it is tall: a 1% fill is still a dot, not a smear.
-            drawRoundRect(
-                color = fill,
-                size = Size(maxOf(filled, size.height), size.height),
-                cornerRadius = radius
+fun QuantityTrack(scale: TrackScale, modifier: Modifier = Modifier) {
+    val gap = MaterialTheme.colorScheme.surfaceContainer
+    val ring = MaterialTheme.colorScheme.outline
+    val colors = com.callbackdev.chiaro.ui.theme.ChiaroTheme.colors
+    val at = colors.rampAt(scale.ramp, scale.fraction)
+    Canvas(modifier = modifier.fillMaxWidth().height(MarkerSize)) {
+        val trackHeight = TrackHeight.toPx()
+        val top = (size.height - trackHeight) / 2f
+        val radius = CornerRadius(trackHeight / 2f)
+        val brush = Brush.horizontalGradient(scale.ramp, startX = 0f, endX = size.width)
+        val markerRadius = MarkerSize.toPx() / 2f
+        val x = (size.width * scale.fraction.coerceIn(0f, 1f))
+        val segments = scale.segments
+        if (segments != null && segments > 0) {
+            // Discrete steps: the steps up to the value lit, the rest the scale's own
+            // color at rest. The gap is §9.2's surface gap between adjacent fills.
+            val gapPx = TickGap.toPx()
+            val step = (size.width - gapPx * (segments - 1)) / segments
+            val lit = (scale.fraction * segments).toInt().coerceIn(0, segments - 1)
+            repeat(segments) { i ->
+                val left = i * (step + gapPx)
+                drawRoundRect(
+                    color = colors.rampAt(scale.ramp, (i + 0.5f) / segments),
+                    topLeft = Offset(left, top),
+                    size = Size(step, trackHeight),
+                    cornerRadius = radius,
+                    alpha = if (i <= lit) 1f else RestAlpha
+                )
+            }
+            val center = Offset(lit * (step + gapPx) + step / 2f, size.height / 2f)
+            marker(center, markerRadius, at, gap, ring)
+            return@Canvas
+        }
+        drawRoundRect(
+            brush = brush,
+            topLeft = Offset(0f, top),
+            size = Size(size.width, trackHeight),
+            cornerRadius = radius,
+            alpha = RestAlpha
+        )
+        val from = if (scale.diverging) size.width / 2f else 0f
+        val left = minOf(from, x)
+        val right = maxOf(from, x)
+        if (right - left > 0.5f) {
+            clipRect(left = left, right = right) {
+                drawRoundRect(
+                    brush = brush,
+                    topLeft = Offset(0f, top),
+                    size = Size(size.width, trackHeight),
+                    cornerRadius = radius
+                )
+            }
+        }
+        (scale.ticks + if (scale.diverging) listOf(0.5f) else emptyList()).forEach { t ->
+            val tx = size.width * t.coerceIn(0f, 1f)
+            drawRect(
+                color = gap,
+                topLeft = Offset(tx - TickGap.toPx() / 2f, top),
+                size = Size(TickGap.toPx(), trackHeight)
             )
         }
+        marker(
+            Offset(x.coerceIn(markerRadius, size.width - markerRadius), size.height / 2f),
+            markerRadius, at, gap, ring
+        )
     }
 }
+
+/** The value: a disc in the ramp's color there, a ring of the tile's own ground that
+ * cuts it out of the track, and a hairline of `outline` so the pale end of a ramp
+ * still has an edge on a pale tile (§9.2's markers are ≥ 8dp; this one is 12). */
+private fun DrawScope.marker(center: Offset, radius: Float, fill: Color, ground: Color, ring: Color) {
+    drawCircle(ring.copy(alpha = 0.55f), radius = radius, center = center)
+    drawCircle(ground, radius = radius - 1.dp.toPx(), center = center)
+    drawCircle(fill, radius = radius - 3.dp.toPx(), center = center)
+}
+
+private val TrackHeight = 6.dp
+private val MarkerSize = 14.dp
+private val TickGap = 2.dp
+private const val RestAlpha = 0.4f
+
+// The five scales of the details grid (DESIGN §8.6), each anchored to the world and
+// written once, so the grid and the guide's sample cannot draw two different UV tracks.
+
+/** UV on 0–11, the WHO's bands (moderate from 3, high from 6, very high from 8,
+ * extreme from 11) as gaps half an index before each. */
+@Composable
+@ReadOnlyComposable
+fun uvTrack(index: Int): TrackScale = TrackScale(
+    fraction = index / UvTop,
+    ramp = com.callbackdev.chiaro.ui.theme.ChiaroTheme.colors.uvRamp,
+    ticks = listOf(2.5f, 5.5f, 7.5f, 10.5f).map { it / UvTop }
+)
+
+/** Relative humidity on 0–100, in water's own ramp. No bands: how the air feels is the
+ * dew point's to say, and it says it in the meaning line. */
+@Composable
+@ReadOnlyComposable
+fun humidityTrack(pct: Int): TrackScale = TrackScale(
+    fraction = pct / 100f,
+    ramp = com.callbackdev.chiaro.ui.theme.ChiaroTheme.colors.rainRamp
+)
+
+/** The US AQI on 0–300 ("hazardous" beyond), with its bands at 50, 100, 150 and 200. */
+@Composable
+@ReadOnlyComposable
+fun airTrack(aqi: Int): TrackScale = TrackScale(
+    fraction = aqi / AqiTop,
+    ramp = com.callbackdev.chiaro.ui.theme.ChiaroTheme.colors.airRamp,
+    ticks = listOf(50f, 100f, 150f, 200f).map { it / AqiTop }
+)
+
+/** Pollen's four levels as four steps, the level and those under it lit. */
+@Composable
+@ReadOnlyComposable
+fun pollenTrack(level: Int, levels: Int): TrackScale = TrackScale(
+    fraction = (level + 0.5f) / levels,
+    ramp = com.callbackdev.chiaro.ui.theme.ChiaroTheme.colors.pollenRamp,
+    segments = levels
+)
+
+/** Sea-level pressure on 980–1046 hPa, diverging from 1013 — the standard atmosphere,
+ * which is the middle a barometer's dial is printed around. */
+@Composable
+@ReadOnlyComposable
+fun pressureTrack(mb: Double): TrackScale = TrackScale(
+    fraction = ((mb - PressureLow) / (PressureHigh - PressureLow)).toFloat(),
+    ramp = com.callbackdev.chiaro.ui.theme.ChiaroTheme.colors.pressureRamp,
+    diverging = true
+)
+
+/** The UV index's practical top: 11 is "extreme" and the WHO's scale is open-ended
+ * above it, so a rarer 12 or 13 fills the track and the meaning line does the talking. */
+private const val UvTop = 11f
+
+/** The US AQI's "hazardous" threshold: above 300 the track is full and the meaning line
+ * says to stay indoors, which is all a reader needs from a number past that. */
+private const val AqiTop = 300f
+
+/** 1013 ± 33 hPa: a deep low and a strong high sit at the two ends, and the everyday
+ * swing of a few hPa moves the disc visibly. */
+private const val PressureLow = 980.0
+private const val PressureHigh = 1046.0
 
 @Preview(showBackground = true)
 @Composable
@@ -154,7 +317,7 @@ private fun MetricTilePreview() {
             MetricTile(
                 icon = ChiaroIcons.uv,
                 label = "UV", value = "7", meaning = "Scotta in circa 25 minuti",
-                scale = 7f / 11f
+                track = uvTrack(7)
             )
             MetricTile(
                 icon = ChiaroIcons.wind,
@@ -167,7 +330,7 @@ private fun MetricTilePreview() {
             MetricTile(
                 icon = ChiaroIcons.humidity,
                 label = "Umidità", value = "44%", meaning = "Gradevole",
-                scale = 0.44f,
+                track = humidityTrack(44),
                 note = "Punto di rugiada 12°"
             )
             MetricTile(

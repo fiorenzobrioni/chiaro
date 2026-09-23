@@ -232,6 +232,23 @@ dark   #63B8EA  #1791D2  #0070AB  #4A4740  #985E00  #C87400  #F29300
 Luminance peaks at the midpoint in light and troughs at it in dark, so in both schemes the
 middle recedes and the extremes come forward.
 
+**The details grid's tracks** (design review, 23 set 2026, §8.6) — four quantities that
+until then shared one `primary` bar, each now in a hue of its own. The three sequential
+ones are **one hue, light to dark, monotonic in luminance**, and marks only: like the rain
+fill ramp they never carry a figure. UV is warm — deliberately **not** the WHO's
+green-yellow-orange-red-violet chart, which is a rainbow (§9.1) and whose bands collapse
+under deuteranopia exactly as the verdicts' do; the band is the word under the number. The
+air index is violet, pollen the green of what makes it. Pressure is **diverging** around
+1013 hPa, shaped like the temperature ramp: the neutral middle is the lightest step in
+light and the darkest in dark. Humidity is water and draws on the rain fill ramp above.
+
+| Ramp | light | dark |
+|---|---|---|
+| `uvRamp` (UV index) | `#FDE8B0 #FAC66A #F29A2E #D9661A #A8400F` | `#4A2A08 #7A4210 #B8621A #E8872A #FFB55C` |
+| `airRamp` (air index) | `#ECE4F5 #CFB9E8 #A98AD3 #7E5AB5 #55338C` | `#2A1B40 #432B66 #654292 #8E68C0 #BC9BEA` |
+| `pollenRamp` (pollen) | `#EEF3C8 #D2E08A #A9C24A #7C9A22 #556F12` | `#26300A #3E4E12 #607A1E #8BAA36 #B8D65E` |
+| `pressureRamp` (pressure) | `#5B7FA8 #A6BBD3 #DCD7CC #E6C78A #C99A3A` | `#7FA6D6 #4D6F96 #4A4740 #8C6A2E #D6A24A` |
+
 **Freshness**: the `unstable` pair above, reused deliberately — "this data is old" and
 "the sky is iffy" are the same class of statement and should not learn two colors. English
 overloads the word, so: an official *warning* is an authority grading a day and wears the
@@ -331,6 +348,16 @@ Temperature, diverging, the midpoint still a neutral and still anchored at 15 °
 light  #006FAC  #00A6EB  #7BCCFF  #E0D7C3  #FFBB66  #E67E00  #B85100
 dark   #2FBAFF  #0091D5  #0070AB  #4C473A  #985E00  #C87400  #F29300
 ```
+
+The details grid's tracks, through the same rule (`tools/gen_vivid.py` carries them since 23
+set 2026):
+
+| Ramp | light | dark |
+|---|---|---|
+| `uvRamp` (UV index) | `#FFE8AA #FFC559 #F89700 #DE6300 #AC3D00` | `#4D2900 #7E4000 #BD5F00 #EF8300 #FFB55C` |
+| `airRamp` (air index) | `#F0E2FF #D7B3FF #B87AFF #9138EF #6300BA` | `#320D58 #4F0E8C #771CC4 #A14CF7 #C394FF` |
+| `pollenRamp` (pollen) | `#EEF5A6 #CFE408 #A6C400 #7A9B00 #546F00` | `#253100 #3D4F00 #5E7B00 #88AB00 #B3D900` |
+| `pressureRamp` (pressure) | `#387FCA #96BCE7 #E0D7C3 #FBC23E #D09800` | `#5CA6FE #2A6FB6 #4C473A #946800 #E29E00` |
 
 ### 2.6 The card colours a widget can wear
 
@@ -974,6 +1001,29 @@ The glow is drawn by the canvas item past its own bounds, under the transparent 
 follow, and it is spent inside the height of the pinned place row, so when the canvas item
 leaves the list the part that leaves with it is already hidden under that row's surface.
 
+**8.1c The sun and the moon** (design review, 23 set 2026) — drawn on the canvas where they
+stand, in a band of sky the canvas' column keeps for them between the place row and the hero
+(at least 56dp, more when the floor leaves more; the canvas grows by what that costs, because
+a hero with no sky in it is a temperature on a gradient). **Across** by compass bearing as
+seen facing the equator — in the north east is left and west right, the scale running from
+30° to 330° so a midsummer sunrise in the north-east still lands on screen; in the south the
+reader faces north and the sides swap — and **up** by altitude, the top of the band at 60°.
+A winter sun stays near the middle and a summer one rises and sets near the edges, which is
+true. Below the horizon a body is not drawn. The sun is a 22dp disc with a soft halo, white-gold
+above the golden hour and reddening below it, veiled (not hidden) by cloud. The moon wears its
+phase — lit limb toward the evening sun, the terminator an ellipse, the dark part at 14% as
+earthshine — and is pale by day. Both are drawn inside their band, the halo spilling at most
+14dp past it, so neither can stand behind text and cost it contrast; the colors are
+`SkyPalette.SunHigh`, `SunLow` and `MoonFace`, shared by both palettes like `Moonlight`.
+Static: they move with the page's minute tick and cost one draw (§3.5 still holds — no
+particles, no parallax).
+
+The **hero** itself was re-set the same day: the whole degrees and the degree sign at the
+64sp hero size, **the tenths at 55%** on the same baseline (raised, the decimal comma read as
+an apostrophe — rendered and looked at); the condition at `titleLarge` (from 64sp to 16sp was
+a cliff); and the feels-like line **only when it differs by a degree or more** — "20.8°, feels
+like 20.6°" is a number with nothing to do about it (§1.2).
+
 **8.1b The place row** — name, chevron, the place's own day and hour, the pager dots, the
 gear. It is **pinned** (18 set 2026, device request): the city these numbers belong to must
 not scroll away, which is the rule the other three tabs already kept by drawing their
@@ -983,9 +1033,20 @@ when the page is at rest — so it is the one bar in the app with two grounds:
 
 - **at the very top**: no ground of its own, white ink over the canvas' top scrim band,
   which is exactly where §3.6 measures its 5.27:1;
-- **from the first scrolled pixel**: the page's own `surface` and theme ink, crossing over
-  on §7's effects spring. Nothing in between, because in between is white ink over
-  unscrimmed sky — the state the old flip allowed for the row while it protected the clock.
+- **from the first scrolled pixel**: a ground of its own, crossing over on §7's effects
+  spring. Since the design review of 23 set 2026 that ground is **the sky, not the page**:
+  the canvas' top stop under the §3.6 scrim, which is exactly the color the canvas has at its
+  top edge, so the bar reads as the sky staying at the top of the screen while the page
+  slides under it. The ink stays white (the scrimmed top stop is darker than anything §3.6
+  measures white against), so nothing flips. Until then the bar took `surface` and theme
+  ink, which turned the bar and the status bar from white-on-sky to black-on-paper in one
+  frame. Nothing in between, because in between is white ink over unscrimmed sky.
+
+**Compact** (23 set 2026): once the canvas has climbed to within 120dp of the bar, the hero
+is under it or gone, and the bar carries it — the sky's still icon and the temperature in
+whole degrees, beside the name (which then keeps to one line), fading and sliding in on the
+effects and spatial springs. The place's date shortens to its short weekday at the same
+moment, so the bar never grows a line mid-scroll and moves the canvas under the finger.
 
 The status-bar icons follow the same flip, because what is behind the status bar IS this
 bar. The canvas keeps the row's seat empty with a spacer as tall as the bar really is,
@@ -1004,6 +1065,22 @@ hour the provider gave no probability for prints nothing at all. **Edge to edge*
 line and the rest slide under the screen's edge — cut on a line 16dp inside it, as they
 were, the strip read as a box. A cell is 112dp tall at 100% type (16 + 6 + 42 + 6 + 20 + 6
 + 16), and the skeleton quotes that.
+
+**The temperature is a curve** (design review, 23 set 2026): each figure rides a dot on a
+line drawn through the whole strip, so the evening's drop is a shape before it is six
+numbers. Every cell draws its own piece — a quadratic from the midpoint with the cell before,
+through its own point, to the midpoint with the cell after — and consecutive pieces share
+their midpoints and tangents there, so the strip reads as one smooth line and stays a lazy
+row. The scale is **2dp a degree, fixed**, around the strip's own middle (§9.1: a 10° drop is
+the same slope on any day); only a range that will not fit 24dp at that rate is compressed
+to fit, and the printed figures still say the truth. The line is `outlineVariant`, the dot
+the temperature ramp's color ringed in `outline`. The cell is **144dp** tall now (the 20dp
+figure became a 52dp band: figure, 2 of gap, 24 of travel, the 8dp dot), and the skeleton
+quotes that.
+
+**Midnight has a name**: the first hour of a new day prints the day's short name in
+`primary` in place of «00», so «22 23 Gio 01» no longer reads as one evening. The cell still
+speaks the hour. Not in a week row's own strip, which is one day already.
 
 **8.3b RainChart** — under the strip, the same 24 hours as one series: 2px line on the
 **ink** ramp (a mark has its own 3:1 floor, and the fill ramp's light end clears neither
@@ -1033,22 +1110,35 @@ grown up from the floor: for half a second that would draw a dry day nobody fore
 scrolled away), and not at all under reduced motion.
 
 **8.4 TimelineRow** — the merged day (VISION §5.2.4): time, icon or event glyph, one line
-of prose, optional verdict chip. Sun events, weather turns and the reader's own alerts use
+of prose, optional verdict chip. On Today (design review, 23 set 2026) the glyphs are
+**threaded**: a 2dp `outlineVariant` line from each glyph to the next, stopping 3dp short of
+each, so the rows read as one day in order; and the **first** row says how soon under its
+prose — «tra 18 min», «tra 1 h 20 min» — in `primary`, because the clock time is what you
+check against a watch and the countdown is what you plan with. Sun events, weather turns and the reader's own alerts use
 the same row; only the leading glyph differs.
 
 **8.5 DayRow** — weekday, icon, rain probability on the ink ramp (§2.3, zero included),
 the **temperature range bar** and the ribbon. The bar is one horizontal track per day, all seven **sharing one scale across the
 week** so the week has a shape, filled with the diverging temperature ramp (§2.3) and
 anchored at 15 °C; the low and high are printed at its ends in tabular figures, because a
-colored bar is not a number.
+colored bar is not a number. **Today's** bar carries a 12dp disc at the temperature right now
+(23 set 2026), in the ramp's color with an `onSurface` ring, on the week's shared scale — where
+in its day the day is.
 
 **8.6 MetricTile** — icon and label; the value as a **reading** (`ReadingValue`: Inter
 Light 24sp on a 32sp line, tabular — the hero's voice at a tile's scale, since the card
 review of 8 set 2026; at `titleMedium` the value barely outranked its own 14sp label and
-the eye went to the icon); where the metric has a scale the world uses, a **4dp track**
-in `outlineVariant` filled in `primary` up to the value (UV on 0–11, humidity on 0–100,
-air on 0–300 — one hue, anchored to the world, the number printed above it, §9; pressure
-and visibility get none, one being a narrow band around 1013 and the other logarithmic);
+the eye went to the icon); where the metric has a scale the world uses, **its own scale as
+a track** (design review, 23 set 2026): 6dp tall, the quantity's ramp (§2.3, the details
+grid's tracks) drawn full width at 40% as the scale at rest, the part up to the value at
+full strength, the thresholds the meaning line switches at cut into it as 2dp gaps (§9.2's
+surface gap), and a **12dp disc on the value** — the ramp's color there, a ring of the
+tile's ground, a hairline of `outline` so the pale end of a ramp still has an edge. UV on
+0–11 with the WHO's bands, humidity on 0–100 in water's ramp, air on 0–300 with the US
+bands, **pressure** on 980–1046 hPa diverging from 1013 (filled from the middle out), and
+**pollen** as four steps with the level and those under it lit. It replaced one `primary`
+bar under every metric, which said "how much" without saying "of what". Visibility (a
+logarithmic quantity) and the wind (whose meaning is the gust) get none;
 then the **facts behind the value** in `bodyMedium` — where the wind comes from in words
 with an arrow for where it goes, the gusts on the days they matter, the dew point under
 the humidity, which pollen — and last the meaning line (`bodySmall`, `onSurfaceVariant`).

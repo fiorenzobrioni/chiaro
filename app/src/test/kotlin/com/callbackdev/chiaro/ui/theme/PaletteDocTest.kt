@@ -309,6 +309,26 @@ class PaletteDocTest {
         }
     }
 
+    /** The details grid's four track ramps (23 set 2026), printed as one table per dress. */
+    @Test
+    fun `the track ramps each dress prints are that dress's track ramps`() {
+        documented.forEach { dress ->
+            val text = semanticSection(dress)
+            listOf<Pair<String, (ChiaroColors) -> List<Color>>>(
+                "uvRamp" to { it.uvRamp },
+                "airRamp" to { it.airRamp },
+                "pollenRamp" to { it.pollenRamp },
+                "pressureRamp" to { it.pressureRamp }
+            ).forEach { (name, ramp) ->
+                val row = Regex("""^\| `$name` \([^)]*\) \| `([^`]*)` \| `([^`]*)` \|$""", RegexOption.MULTILINE)
+                    .find(text)
+                requireNotNull(row) { "${dress.name} no longer prints $name" }
+                assertEquals("${dress.name} $name, light", row.groupValues[1].hexes(), ramp(dress.lightColors).map(::hex))
+                assertEquals("${dress.name} $name, dark", row.groupValues[2].hexes(), ramp(dress.darkColors).map(::hex))
+            }
+        }
+    }
+
     /** Each dress says the fill ramp cannot carry text, and prints the two ratios that
      * say so — measured against ITS surface, which is the point of printing them twice. */
     @Test

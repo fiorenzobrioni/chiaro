@@ -396,19 +396,31 @@ fun TemperatureRangeBar(
     scaleHighC: Double,
     description: String,
     modifier: Modifier = Modifier,
-    height: Dp = 8.dp
+    height: Dp = 8.dp,
+    /**
+     * Today's row only: the temperature right now, as a disc on the bar (design review,
+     * 23 set 2026) — where in its day the day is. On the week's shared scale like the
+     * bar itself, so a morning below the forecast low sits honestly left of the fill.
+     */
+    nowC: Double? = null
 ) {
     val colors: ChiaroColors = ChiaroTheme.colors
     val track = androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerHighest
+    val ground = androidx.compose.material3.MaterialTheme.colorScheme.surface
+    val ring = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
     Canvas(
-        modifier = modifier.fillMaxWidth().height(height)
+        modifier = modifier.fillMaxWidth().height(if (nowC != null) NowDisc else height)
             .semantics { contentDescription = description }
     ) {
         val span = (scaleHighC - scaleLowC).takeIf { it > 0.0 } ?: 1.0
         fun fraction(value: Double) = ((value - scaleLowC) / span).coerceIn(0.0, 1.0).toFloat()
-        val radius = size.height / 2f
+        val barHeight = height.toPx()
+        val top = (size.height - barHeight) / 2f
+        val radius = barHeight / 2f
         drawRoundRect(
             color = track,
+            topLeft = Offset(0f, top),
+            size = Size(size.width, barHeight),
             cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius)
         )
         val left = size.width * fraction(lowC)
@@ -419,12 +431,23 @@ fun TemperatureRangeBar(
                 startX = left,
                 endX = right.coerceAtLeast(left + 1f)
             ),
-            topLeft = Offset(left, 0f),
-            size = Size((right - left).coerceAtLeast(size.height), size.height),
+            topLeft = Offset(left, top),
+            size = Size((right - left).coerceAtLeast(barHeight), barHeight),
             cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius)
         )
+        nowC?.let { now ->
+            val r = size.height / 2f
+            val center = Offset((size.width * fraction(now)).coerceIn(r, size.width - r), size.height / 2f)
+            drawCircle(ring, radius = r, center = center)
+            drawCircle(ground, radius = r - 1.5.dp.toPx(), center = center)
+            drawCircle(colors.temperatureAt(now), radius = r - 3.dp.toPx(), center = center)
+        }
     }
 }
+
+/** Today's disc on the range bar: past §9.2's 8dp marker floor, and taller than the bar
+ * so it reads as a mark on it rather than a bead in it. */
+private val NowDisc = 12.dp
 
 @Preview(showBackground = true, widthDp = 320)
 @Composable

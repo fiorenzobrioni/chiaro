@@ -9747,3 +9747,82 @@ viola DESIGN.md, si cambia DESIGN.md e vince l'estetica**.
   Robolectric per `:core:data`), rifatti finché verdi.
 - **Da fare sul dispositivo**: il bagliore quando il canvas esce dalla lista (non deve vedersi il
   taglio), il trascinamento sul grafico dentro il pager, l'animazione alla prima apertura.
+
+## La schermata Oggi, review grafica, blocchi 4–7 e il resto (committente, 23 set 2026)
+
+Richiesta: «Fai il blocco 4-7. Così è tutto completato? Anche gli effetti sono suggeriti da
+te?». Risposta data prima di cominciare: il 4–7 della tabella copriva tre dei quattro effetti
+proposti (sole e luna, barra compatta, curva della temperatura) e lasciava fuori il pallino
+«adesso» sulla barra di Oggi, il giorno a mezzanotte nella fascia e il filo con «tra N min»
+nell'agenda. Fatti anche quelli, così tutta la review è implementata. Mandato invariato:
+dove l'estetica e DESIGN.md litigano, si cambia DESIGN.md.
+
+### Cosa è cambiato
+
+- **La temperatura principale** (DESIGN §8.1c): gradi interi e «°» a 64sp, i decimi al 55%
+  sulla stessa linea di base (`heroTemperatureText`); la condizione a `titleLarge`; «Percepiti»
+  solo quando differisce di almeno 1°.
+- **Le barre dei Dettagli** (§8.6, §2.3): ogni grandezza ha la sua scala e la sua tinta — UV
+  caldo, umidità nell'acqua della pioggia, aria viola, pollini verdi, pressione divergente
+  attorno a 1013 — disegnata intera al 40%, piena fino al valore, con le soglie come tagli e un
+  disco sul valore. Nuove anche le barre di **pressione** e **pollini** (quattro gradini).
+  Quattro rampe nuove in `ChiaroColors`, carta e vivid; le vivid generate da
+  `tools/gen_vivid.py`, che ora le conosce.
+- **Il sole e la luna nel cielo** (§8.1c, `SkyBodiesLayer`): nella loro posizione vera, di
+  traverso per azimut visto guardando l'equatore e in su per altezza; la luna con la sua fase.
+  Il canvas tiene per loro una fascia di almeno 56 dp fra la riga del luogo e la temperatura
+  (`SkyColumn`).
+- **La barra fissata in alto resta cielo** (§8.1b): scorrendo prende il colore del bordo alto
+  del canvas sotto lo scrim invece della superficie, inchiostro bianco sempre; quando la
+  temperatura è sparita porta icona e gradi, e la data si accorcia al giorno breve.
+- **La curva della temperatura nella fascia oraria** (§8.3, `StripCurve`): ogni cella disegna
+  il suo tratto di una curva continua, 2 dp per grado; la cella passa da 112 a 144 dp.
+- **Mezzanotte ha un nome** nella fascia (il giorno breve in `primary` al posto di «00»).
+- **Il pallino «adesso» sulla barra di Oggi** nella settimana (§8.5).
+- **Il resto della giornata** ha un filo fra le icone e «tra N min» sotto la prima riga (§8.4).
+
+### Decisioni e deviazioni
+
+- **I decimi sulla linea di base, non in alto.** La prima resa li alzava all'altezza delle
+  maiuscole: la virgola diventava un apostrofo («20’8»). Visto sullo screenshot e cambiato.
+- **La fascia del cielo ha un minimo, e il canvas cresce per pagarlo.** Con la data del luogo
+  e la condizione più grande restavano 14 dp fra la riga e l'eroe: nessuno spazio per un sole.
+  `SkyColumn` misura l'eroe e garantisce 56 dp; il canvas si allunga di circa 25 dp sul
+  telefono, di più quando c'è la frase. Il sole è l'effetto, e un effetto che non ha posto non
+  c'è; lo scheletro resta sul pavimento dei 280 dp e quindi può essere più corto del canvas
+  vero di quella fascia.
+- **L'alone del sole può uscire di 14 dp dalla sua fascia**, non di più: a quella distanza è
+  pochi punti percentuali di bianco sotto lo scrim, e non tocca il contrasto del testo.
+- **UV caldo, non la scala OMS.** Verde-giallo-arancio-rosso-viola è un arcobaleno (§9.1) e le
+  sue fasce si confondono sotto deuteranopia come quelle dei verdetti; la parola sotto il numero
+  porta la fascia.
+- **La barra non passa più alla superficie.** La decisione del 18 set (superficie e inchiostro
+  del tema) era una risposta alle icone bianche sul contenuto chiaro; un fondo di cielo
+  scrimmato risolve lo stesso problema senza il salto da bianco su cielo a nero su carta.
+- **Nella barra compatta i gradi interi**, come ogni temperatura sotto l'eroe: con i decimi il
+  nome del luogo perdeva metà del suo spazio.
+- **La curva a scala fissa**, non adattata a minimo e massimo delle 24 ore (§9.1): comprime solo
+  una giornata che non ci sta.
+- **Il pallino di Oggi sulla scala della settimana**, anche fuori dal tratto min–max del giorno:
+  una mattina più fredda della minima prevista sta onestamente a sinistra.
+
+### Come è stato verificato
+
+- Test nuovi: `SkyBodiesTest` (lati per emisfero, altezza, lato illuminato della luna, forma della
+  falce; Robolectric per il `Path`), `StripCurveTest` (scala fissa, compressione, punto sulla
+  curva), `HeroTemperatureTextTest` (solo i decimi sono piccoli, anche col segno meno), e in
+  `PaletteContrastTest` / `PaletteDocTest` le quattro rampe nuove: monotone quelle sequenziali,
+  col centro più chiaro in chiaro e più scuro in scuro quella della pressione, stampate in
+  DESIGN §2.3 e §2.5 byte per byte.
+- `tools/gen_vivid.py` rigenerato: i valori vivid già esistenti escono identici, le quattro rampe
+  nuove sono quelle stampate.
+- Resa della schermata **vera** (`ContentState` con uno stato costruito da `TodayStateBuilder`)
+  con Robolectric: mattina, tramonto, notte in tema scuro, pagina scorsa con la barra compatta. Il
+  test temporaneo non è nel repo. Tre ritocchi dopo averle guardate: i decimi (sopra), la fascia
+  minima del cielo (sopra), la barra compatta che mandava a capo la data (ora giorno breve e gradi
+  interi); in più le tracce a riposo dal 30 al 40% e il filo dell'agenda meno spezzato.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 497 test in
+  `:app` debug (16 nuovi), lint a zero errori e nessun avviso sui file toccati.
+- **Da fare sul dispositivo**: la barra compatta durante uno scroll veloce, il sole all'alba e al
+  tramonto (azimut agli estremi), la luna di giorno, la curva nella fascia aperta di un giorno
+  della settimana.

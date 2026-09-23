@@ -68,6 +68,10 @@
 
     <!-- The merged timeline -->
     <string name="tl_sunrise">Sunrise</string>
+    <!-- How soon the next moment of the day is, under it (design review, 23 set 2026). -->
+    <string name="tl_in_minutes">in %d min</string>
+    <string name="tl_in_hours">in %d h</string>
+    <string name="tl_in_hours_minutes">in %1$d h %2$d min</string>
     <string name="tl_golden_morning_end">Golden hour ends</string>
     <string name="tl_golden_evening">Golden hour</string>
     <string name="tl_sunset">Sunset</string>

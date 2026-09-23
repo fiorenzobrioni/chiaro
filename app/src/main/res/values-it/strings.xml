@@ -62,6 +62,10 @@
 
     <!-- La timeline unificata -->
     <string name="tl_sunrise">Alba</string>
+    <!-- How soon the next moment of the day is, under it (design review, 23 set 2026). -->
+    <string name="tl_in_minutes">tra %d min</string>
+    <string name="tl_in_hours">tra %d h</string>
+    <string name="tl_in_hours_minutes">tra %1$d h %2$d min</string>
     <string name="tl_golden_morning_end">Finisce l\'ora d\'oro</string>
     <string name="tl_golden_evening">Ora d\'oro</string>
     <string name="tl_sunset">Tramonto</string>

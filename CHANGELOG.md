@@ -25,6 +25,17 @@ sections are a normal size and live here alone.
 - **Today: the rain chart follows the hour strip.** It marks the hours the strip has in view,
   and a tap or a drag on it scrolls the strip to that hour. The first time it appears the line
   draws itself in from left to right.
+- **Today: the sun and the moon are in the sky**, where they really are, the moon in its real
+  phase. The sky keeps a band of its own for them above the temperature.
+- **Today: the temperature reads first.** Whole degrees large, tenths small; the sky's word is
+  bigger; "feels like" appears only when it differs by a degree or more.
+- **Today: the bar at the top stays sky** as the page scrolls, and carries the temperature once
+  the big one has scrolled away.
+- **Today: the next hours draw the temperature as a curve**, and midnight shows the new day's
+  name. Today's row in the week marks the temperature right now on its bar.
+- **Today: the rest of the day is one thread**, and its next moment says how soon.
+- **Today: every detail with a scale shows it in its own color**, with a disc on the value and
+  the bands marked; pressure and pollen get one too.
 
 ### Fixed
 

@@ -280,6 +280,38 @@ class PaletteContrastTest {
         }
     }
 
+    /** The details grid's tracks (23 set 2026): three sequential quantities, one hue
+     * each, light to dark on paper and dark to light on a dark ground, like the rain. */
+    @Test
+    fun `the sequential track ramps are monotonic, light to dark on paper`() {
+        dresses.forEach { (dress, palette) ->
+            listOf(
+                "uv" to { c: ChiaroColors -> c.uvRamp },
+                "air" to { c: ChiaroColors -> c.airRamp },
+                "pollen" to { c: ChiaroColors -> c.pollenRamp }
+            ).forEach { (name, ramp) ->
+                val light = ramp(palette.lightColors).map(::luminance)
+                assertTrue("the $dress light $name ramp must darken: $light",
+                    light.zipWithNext().all { (a, b) -> a > b })
+                val dark = ramp(palette.darkColors).map(::luminance)
+                assertTrue("the $dress dark $name ramp must brighten: $dark",
+                    dark.zipWithNext().all { (a, b) -> a < b })
+            }
+        }
+    }
+
+    @Test
+    fun `the pressure ramp is diverging, its neutral middle lightest in light and darkest in dark`() {
+        dresses.forEach { (dress, palette) ->
+            val light = palette.lightColors.pressureRamp.map(::luminance)
+            assertTrue("the $dress light pressure ramp should peak in the middle: $light",
+                light.indexOf(light.max()) == 2)
+            val dark = palette.darkColors.pressureRamp.map(::luminance)
+            assertTrue("the $dress dark pressure ramp should trough in the middle: $dark",
+                dark.indexOf(dark.min()) == 2)
+        }
+    }
+
     @Test
     fun `the temperature ramp peaks at its neutral middle, and troughs at it in dark`() {
         dresses.forEach { (dress, palette) ->

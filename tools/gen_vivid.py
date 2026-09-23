@@ -84,8 +84,14 @@ SKY_FLOOR = 0.65
 PAIRS = ("pass", "unstable", "fail", "unknown",
          "warningYellow", "warningOrange", "warningRed")
 
+#: Every ramp `ChiaroColors` holds, in declaration order, with how many colors the
+#: Kotlin prints per line. The details grid's four (23 set 2026) follow the rain and
+#: temperature ramps under the same one rule.
+RAMPS = (("rainRamp", 3), ("rainInkRamp", 3), ("temperatureRamp", 4),
+         ("uvRamp", 3), ("airRamp", 3), ("pollenRamp", 3), ("pressureRamp", 3))
+
 VERDICT = re.compile(r"(\w+) = VerdictColors\(Color\(0xFF([0-9A-Fa-f]{6})\), Color\(0xFF([0-9A-Fa-f]{6})\)\)")
-RAMP = re.compile(r"(rainRamp|rainInkRamp|temperatureRamp) = listOf\((.*?)\)\s*\n", re.S)
+RAMP = re.compile(r"(rainRamp|rainInkRamp|temperatureRamp|uvRamp|airRamp|pollenRamp|pressureRamp) = listOf\((.*?)\)\s*\n", re.S)
 HEX = re.compile(r"0xFF([0-9A-Fa-f]{6})")
 SKY = re.compile(
     r"(-?[\d.]+) to SkyGradient\(Color\(0xFF([0-9A-Fa-f]{6})\), "
@@ -139,9 +145,9 @@ def paper_semantics() -> dict:
         chunk = block(text, name)
         verdicts = {n: (f"#{i.upper()}", f"#{c.upper()}") for n, i, c in VERDICT.findall(chunk)}
         ramps = {n: [f"#{h.upper()}" for h in HEX.findall(body)] for n, body in RAMP.findall(chunk)}
-        if len(verdicts) != len(PAIRS) or len(ramps) != 3:
+        if len(verdicts) != len(PAIRS) or len(ramps) != len(RAMPS):
             sys.exit(f"{label}: parsed {len(verdicts)} pairs and {len(ramps)} ramps, "
-                     f"expected {len(PAIRS)} and 3")
+                     f"expected {len(PAIRS)} and {len(RAMPS)}")
         out[label] = {"verdicts": verdicts, **ramps}
     return out
 
@@ -188,9 +194,9 @@ def main() -> None:
                 f"container {p_container}->{container} "
                 f"on-container {contrast(hex_to_rgb(ink), hex_to_rgb(container)):5.2f}:1"
             )
-        for i, (ramp, per_line) in enumerate((("rainRamp", 3), ("rainInkRamp", 3), ("temperatureRamp", 4))):
+        for i, (ramp, per_line) in enumerate(RAMPS):
             values = [vivid(v) for v in paper[label][ramp]]
-            print(ramp_block(ramp, values, per_line, last=(i == 2)))
+            print(ramp_block(ramp, values, per_line, last=(i == len(RAMPS) - 1)))
             for before, after in zip(paper[label][ramp], values):
                 report.append(
                     f"{label:5s} {ramp:15s} {before}->{after}  "
