@@ -72,6 +72,28 @@ object RuleText {
         return number + unitSuffix(condition.variable, kind, units)
     }
 
+    /**
+     * A value that was READ, for the notification's «why it fired» (23 set 2026): the
+     * threshold's own formatting and unit, with the reader's decimal mark — a reading is
+     * the one number here that is not a whole step of a picker, so it is the one that
+     * shows the mark at all.
+     */
+    fun reading(
+        res: Resources,
+        variableId: String,
+        value: Double,
+        units: UnitSettings,
+        locale: java.util.Locale
+    ): String {
+        val kind = RuleVariables.byId(variableId)?.kind ?: RuleVariableKind.NUMBER
+        if (kind == RuleVariableKind.BOOLEAN) {
+            return res.getString(if (value != 0.0) R.string.value_yes else R.string.value_no)
+        }
+        val separator = java.text.DecimalFormatSymbols.getInstance(locale).decimalSeparator
+        val number = RuleVariables.formatValue(kind, value, units).replace('.', separator)
+        return number + unitSuffix(variableId, kind, units)
+    }
+
     private fun unitSuffix(variableId: String, kind: RuleVariableKind, units: UnitSettings): String =
         when {
             kind == RuleVariableKind.TEMPERATURE -> "°"

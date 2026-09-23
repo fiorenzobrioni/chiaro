@@ -1059,7 +1059,7 @@
     <string name="notif_detail_air">Air quality %1$d · %2$s</string>
     <!-- The evening summary\'s own lines: the night between here and tomorrow, then the
          parts of tomorrow worth acting on tonight. -->
-    <string name="notif_detail_night">Overnight down to %1$s around %2$s · %3$s</string>
+    <string name="notif_detail_night">Tonight a low of %1$s around %2$s · %3$s</string>
     <string name="notif_detail_night_rain">Rain overnight up to %1$d%%, worst around %2$s</string>
     <string name="notif_detail_tomorrow_rain">Tomorrow rain from %1$s to %2$s, up to %3$d%%</string>
     <string name="notif_detail_tomorrow_rain_from">Tomorrow rain from %1$s on, up to %2$d%%</string>
@@ -1076,8 +1076,18 @@
         <item quantity="other">%d minutes less light than today</item>
     </plurals>
     <string name="notif_detail_uv_tomorrow">Tomorrow\'s peak UV %1$d · %2$s</string>
+    <string name="notif_detail_today_rain">Rain from %1$s to %2$s, up to %3$d%%</string>
+    <string name="notif_detail_today_rain_from">Rain from %1$s on, up to %2$d%%</string>
+    <string name="notif_detail_today_rain_hour">Rain around %1$s, up to %2$d%%</string>
+    <string name="notif_detail_today_rain_maybe">Rain possible, up to %1$d%% around %2$s</string>
+    <string name="notif_chart_rain_desc">Chart of the rain over the next %1$d hours: at most %2$d%% around %3$s.</string>
+    <string name="notif_chart_rain_desc_plain">Chart of the rain over the next %1$d hours.</string>
+    <string name="notif_chart_day_desc">Chart of the day: temperature from %1$s to %2$s, rain up to %3$d%%.</string>
+    <string name="notif_chart_day_desc_dry">Chart of the day: temperature from %1$s to %2$s, no rain.</string>
+    <string name="notif_chart_levels_desc">Table of the warning levels, by hazard and by day.</string>
+    <string name="notif_chart_tomorrow">Tomorrow</string>
     <string name="notif_rule_why">Why it fired</string>
-    <string name="notif_rule_condition">%1$s — value %2$s</string>
+    <string name="notif_rule_condition">%1$s · now %2$s</string>
 
 
     <!-- The Journal (Fase 7): the history read as prose, and the drift of the week -->

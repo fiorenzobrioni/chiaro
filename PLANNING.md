@@ -10201,3 +10201,56 @@ preview che la valuto»; scelta: «Vai con la D che è anche la tua consigliata�
 - L'icona sulla Home con due o tre launcher (maschere diverse) e a tema; la schermata di avvio di
   Android 12+, che usa l'icona sul fondo della finestra.
 
+## Le notifiche, review dei messaggi e grafica nelle espanse (committente, 23 set 2026)
+
+Richiesta: «Fai una review finale anche dei messaggi delle notifiche (nelle due varianti chiuse
+ed espanse). … se pensi sia un'aggiunta che dà valore all'app e se è possibile, verifica se
+aggiungere anche della grafica nei messaggi delle notifiche estese (solo dove veramente aggiunge
+valore)».
+
+### La review
+
+Resa delle sette notifiche con i template del sistema (Robolectric: `recoverBuilder` →
+`createContentView`/`createBigContentView` → `apply`), chiare e scure. I testi reggono; tre
+difetti veri:
+
+- il **riepilogo del mattino** diceva quanto è probabile la pioggia e mai quando;
+- la **notte** del riepilogo serale era «Stanotte fino a 9°», che si legge male;
+- l'**avviso personale** stampava «— valore 21.4»: numero nudo, punto decimale del codice, e la
+  condizione in minuscolo come riga a sé.
+
+### Cosa è cambiato (DESIGN §8.17)
+
+- **Grafica** nelle espanse di: pioggia e maltempo (le prossime 12 ore di pioggia, la finestra
+  dell'avviso illuminata), riepiloghi (la giornata: temperatura come curva sulla scala del mondo,
+  pioggia sotto, notte in tinta), allerta (la griglia dei livelli). Niente grafica per il cielo
+  e per gli avvisi personali: non aggiungerebbe niente.
+- Riga «Pioggia dalle … alle …, fino a …%» nel riepilogo del mattino, subito dopo «Adesso».
+- «Stanotte minima …», lettura degli avvisi personali con unità e virgola, frase maiuscola.
+- Colore d'accento del marchio e icona di stato ridisegnata come l'anello dell'icona.
+
+### Decisioni e deviazioni
+
+- **Vista espansa personalizzata + BigTextStyle insieme**: la vista personalizzata mostra il
+  grafico e cinque righe; il testo lungo resta negli extra per orologio, auto, schermata di
+  blocco e test. Su Android 12+ il sistema la decora comunque (intestazione, icona, ora).
+- **Il grafico è dipinto per il tema del sistema al momento dell'invio**: se il lettore cambia
+  tema dopo, l'immagine resta quella; il testo intorno segue il tema. Un compromesso accettato:
+  una notifica vive ore, non giorni, e i colori scelti reggono su entrambi i fondi.
+- **Il messaggio dell'avviso personale non è toccato**: è testo del lettore, e i segnaposto sono
+  interpolati in `:core:domain`, puro Kotlin senza locale (debito ereditato da tweather,
+  UPSTREAM.md). Corretta solo la riga «Perché è scattata», che è nostra.
+
+### Come è stato verificato
+
+- Resa prima e dopo, chiara e scura; dopo averla guardata: la curva non si vedeva (colore base
+  trasparente sotto lo shader), il riempimento era slavato (ora sfuma verso il basso), la notte
+  grigia sembrava «dati mancanti» (ora tinta del primario), altezze ridotte per il tetto di 256dp.
+- `NotificationChartsTest` (quando si disegna e quando no, ore passate escluse, riga della
+  pioggia solo se piove, tetto dei 256dp), `AlertNotifierTest` (immagine su tutti i tipi con
+  testo completo, pioggia di oggi dopo «Adesso», accento), `OfficialWarningNotifierTest`
+  (griglia), `RuleNotifierTest` (unità e virgola).
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+- **Da fare sul dispositivo**: le espanse su due o tre launcher/ROM, chiare e scure; l'icona di
+  stato nella barra.
+

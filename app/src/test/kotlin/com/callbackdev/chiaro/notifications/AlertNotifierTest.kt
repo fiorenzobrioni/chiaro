@@ -203,7 +203,7 @@ class AlertNotifierTest {
         post(evening())
         val lines = expanded().lines()
         // The night, read off tonight's hours and not this morning's
-        assertTrue(expanded(), lines.any { it.startsWith("Overnight down to -1°") })
+        assertTrue(expanded(), lines.any { it.startsWith("Tonight a low of -1°") })
         assertTrue(expanded(), lines.any { it.endsWith("Freezing: ice on the glass by morning") })
         // Tomorrow's umbrella window, with its peak
         assertTrue(expanded(), lines.any { it.startsWith("Tomorrow rain from ") && it.endsWith("up to 80%") })
@@ -251,7 +251,7 @@ class AlertNotifierTest {
         // day still carried one.
         assertFalse(text, text.substringAfter("\n\n").contains("%"))
         // What is left still says more than the collapsed line
-        assertTrue(text, text.contains("Overnight down to"))
+        assertTrue(text, text.contains("Tonight a low of"))
         assertTrue(text, text.contains("Tomorrow sunrise"))
     }
 
@@ -281,4 +281,56 @@ class AlertNotifierTest {
         assertFalse(expanded(), expanded().contains("☁️"))
         assertFalse(title(), title().contains("☁️"))
     }
+
+    // --- the picture (23 set 2026) ---
+
+    private fun posted() = shadowOf(manager).allNotifications.last()
+
+    @Test
+    fun `every built-in kind carries its picture and keeps its whole text`() {
+        val hour = tomorrow.atTime(14, 0)
+        val kinds = listOf(
+            Alert(AlertKind.SEVERE, "f", "Milano", cloudy, at = hour, precipPct = 90),
+            Alert(AlertKind.PRECIPITATION, "f", "Milano", cloudy, at = hour, precipPct = 80),
+            evening()
+        )
+        for (alert in kinds) {
+            post(alert)
+            assertTrue("${alert.kind} has no picture", posted().bigContentView != null)
+            // The big text stays, for the surfaces that never inflate a custom view.
+            assertTrue(alert.kind.name, expanded().startsWith(collapsed()))
+            assertEquals(
+                alert.kind.name,
+                com.callbackdev.chiaro.R.layout.notification_expanded,
+                posted().bigContentView.layoutId
+            )
+        }
+    }
+
+    @Test
+    fun `the morning summary says when it rains, not only how likely`() {
+        val morning = report().let { base ->
+            base.copy(location = base.location.copy(localTime = tomorrow.atTime(7, 0)))
+        }
+        post(
+            Alert(
+                AlertKind.DAILY_SUMMARY, "f", "Milano", cloudy,
+                precipPct = 80, highC = 9.0, lowC = -1.0, forDate = tomorrow
+            ),
+            morning
+        )
+        val lines = expanded().lines()
+        assertTrue(expanded(), lines.any { it.startsWith("Rain from ") && it.endsWith("up to 80%") })
+        // Worth-first: the rain comes straight after «right now».
+        val now = lines.indexOfFirst { it.startsWith("Right now ") }
+        assertEquals(expanded(), now + 1, lines.indexOfFirst { it.startsWith("Rain from ") })
+        assertTrue(posted().bigContentView != null)
+    }
+
+    @Test
+    fun `every notification wears the brand's accent`() {
+        post(evening())
+        assertEquals(context.getColor(com.callbackdev.chiaro.R.color.notification_accent), posted().color)
+    }
 }
+

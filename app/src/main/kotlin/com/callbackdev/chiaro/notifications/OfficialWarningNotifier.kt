@@ -63,24 +63,38 @@ object OfficialWarningNotifier {
         }
 
         val headline = collapsed(context, warnings, today)
-        val built = NotificationCompat.Builder(context, channel)
+        val title = context.getString(
+            R.string.notif_warning_title,
+            context.getString(WarningText.phraseRes(level)),
+            city.name
+        )
+        val details = expanded(context, warnings, today)
+        val builder = NotificationCompat.Builder(context, channel)
             .setSmallIcon(R.drawable.ic_stat_chiaro)
-            .setContentTitle(
-                context.getString(
-                    R.string.notif_warning_title,
-                    context.getString(WarningText.phraseRes(level)),
-                    city.name
-                )
-            )
+            .setColor(NotificationViews.accent(context))
+            .setContentTitle(title)
             .setContentText(headline)
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                    .bigText(headline + "\n\n" + expanded(context, warnings, today).joinToString("\n"))
+                    .bigText(headline + "\n\n" + details.joinToString("\n"))
             )
             .setContentIntent(openApp(context, notificationId(city)))
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
-            .build()
+        // The Dipartimento's own grid (23 set 2026): hazards by day, each cell its level's
+        // word on its level's colour. The lines of levels per day are what it replaces in
+        // the pictured body, which keeps the rest — zone, meaning, note, source.
+        runCatching {
+            NotificationCharts.levels(context, warnings, today, NotificationCharts.inks(context))
+        }.getOrNull()?.let { grid ->
+            NotificationViews.expandWithChart(
+                context, builder, title, headline,
+                details.drop(warnings.days.count { it.ranked.isNotEmpty() }),
+                grid,
+                context.getString(R.string.notif_chart_levels_desc)
+            )
+        }
+        val built = builder.build()
         return try {
             manager.notify(notificationId(city), built)
             true

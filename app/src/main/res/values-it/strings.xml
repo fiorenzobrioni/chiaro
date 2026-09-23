@@ -1027,7 +1027,7 @@
     <string name="notif_detail_air">Qualità dell\'aria %1$d · %2$s</string>
     <!-- Le righe del riepilogo della sera: la notte che separa da domani, e le parti di
          domani su cui si può già fare qualcosa stasera. -->
-    <string name="notif_detail_night">Stanotte fino a %1$s verso le %2$s · %3$s</string>
+    <string name="notif_detail_night">Stanotte minima %1$s verso le %2$s · %3$s</string>
     <string name="notif_detail_night_rain">Pioggia stanotte fino a %1$d%%, il peggio verso le %2$s</string>
     <string name="notif_detail_tomorrow_rain">Domani pioggia dalle %1$s alle %2$s, fino a %3$d%%</string>
     <string name="notif_detail_tomorrow_rain_from">Domani pioggia dalle %1$s in poi, fino a %2$d%%</string>
@@ -1044,8 +1044,18 @@
         <item quantity="other">%d minuti di luce in meno di oggi</item>
     </plurals>
     <string name="notif_detail_uv_tomorrow">Domani UV massimo %1$d · %2$s</string>
+    <string name="notif_detail_today_rain">Pioggia dalle %1$s alle %2$s, fino a %3$d%%</string>
+    <string name="notif_detail_today_rain_from">Pioggia dalle %1$s in poi, fino a %2$d%%</string>
+    <string name="notif_detail_today_rain_hour">Pioggia verso le %1$s, fino a %2$d%%</string>
+    <string name="notif_detail_today_rain_maybe">Pioggia possibile, fino a %1$d%% verso le %2$s</string>
+    <string name="notif_chart_rain_desc">Grafico della pioggia nelle prossime %1$d ore: il massimo è %2$d%% verso le %3$s.</string>
+    <string name="notif_chart_rain_desc_plain">Grafico della pioggia nelle prossime %1$d ore.</string>
+    <string name="notif_chart_day_desc">Grafico della giornata: temperatura da %1$s a %2$s, pioggia fino a %3$d%%.</string>
+    <string name="notif_chart_day_desc_dry">Grafico della giornata: temperatura da %1$s a %2$s, niente pioggia.</string>
+    <string name="notif_chart_levels_desc">Tabella dei livelli di allerta, per rischio e per giorno.</string>
+    <string name="notif_chart_tomorrow">Domani</string>
     <string name="notif_rule_why">Perché è scattata</string>
-    <string name="notif_rule_condition">%1$s — valore %2$s</string>
+    <string name="notif_rule_condition">%1$s · ora %2$s</string>
 
 
     <!-- Il Diario (Fase 7): la storia letta come prosa, e la deriva della settimana -->

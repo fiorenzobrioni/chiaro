@@ -71,6 +71,11 @@ sections are a normal size and live here alone.
 - **A new app icon: the day in a ring.** A day of 24 hours coloured like the app's sky, with the
   sun on it at mid-afternoon; the ring opens around the sun into a C. Themed icons get a drawing
   of their own.
+- **Notifications with pictures, where they help.** Opened, a rain or storm alert shows the
+  next twelve hours of rain with the alert's window marked; the morning and evening summaries
+  show the day's temperature and rain; an official warning shows the levels by hazard and day.
+- **Notifications: clearer words.** The morning summary says when it will rain; a fired alert
+  of yours shows the value it read with its unit. The status bar icon is the new ring.
 
 ### Fixed
 

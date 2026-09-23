@@ -1568,6 +1568,35 @@ screens are now built from one kit (`WidgetConfigKit.kt`), so the five read as o
 - **Notes say what the card does, not what another card does**: the text card prints the warning
   as a word, so its note no longer promises a chip; the range note names its two arrows.
 
+**8.17 Notifications** (review of the messages, 23 set 2026) — collapsed is the sentence,
+expanded is that sentence plus the story, one fact per line with its consequence (Fase 6b).
+What the review changed:
+
+- **A picture where it says something faster than the lines**, in a custom expanded body
+  (`notification_expanded.xml`, decorated by the system) with the big text kept on the
+  notification for every surface that does not inflate custom views:
+  - under a **rain or storm alert**, the next twelve hours of rain chance as bars on the
+    world's 0–100%, a dashed 50% guide, the alert's window lit behind its bars (the storm's
+    in the unstable container, the rain's in the primary), the worst hour labelled;
+  - under the **two summaries**, the day as the Today strip draws it: the temperature as a
+    curve coloured on the world scale with a soft area fading to its foot, high and low
+    marked, the rain as its own row of bars under it (never a second axis, §9.1), the night
+    as a cool tint of the primary — what is left of today in the morning, all of tomorrow
+    in the evening;
+  - under an **official warning**, the Dipartimento's grid: hazards by day, each cell its
+    level's word on its level's container, «nessuno» as a hairline pill in the quiet ink.
+  Nothing else gets one: a sky verdict is a word and a number, a fired rule is the
+  reader's own message. Each picture has a content description with its text equivalent.
+- **Heights under the ceiling**: the platform clips an expanded custom view at 256dp, so the
+  pictures are 75–90dp at a notification's width and the details stop at five lines
+  (`NotificationChartsTest` does the arithmetic at the narrowest width).
+- **The brand's accent** (`notification_accent`, the vivid primary) on the small icon's disc,
+  and the small icon itself is the launcher icon's ring (§3.8) at 24dp.
+- **Words**: the morning summary says when it rains today, not only how likely; the night is
+  «Stanotte minima 9°», not «fino a 9°»; a fired rule's reading carries its unit and the
+  reader's decimal mark («· ora 21,4°», where it printed «— valore 21.4»), and each
+  condition starts as a sentence.
+
 ## 9. Charts and quantities
 
 ### 9.1 The three rules
