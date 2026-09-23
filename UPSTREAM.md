@@ -1,5 +1,10 @@
 # UPSTREAM.md — where `:core` came from
 
+> **Frozen on 23 set 2026.** Chiaro and tweather are separate products from that date: the
+> committente ended the pairing, tweather follows its own road, and Chiaro's `:core` is its
+> own. Nothing below is kept up to date and nothing is carried back; the file stays as the
+> history of how the core was seeded and how it drifted until the split.
+
 `:core:domain` and `:core:data` are a **copy** of tweather's domain and data layers,
 not a link to them (VISION.md §7.3). This file is the ledger that decision depends on:
 without it, the first time the same bug has to be fixed in both apps, telling what
@@ -225,8 +230,8 @@ is short on purpose — three edits, each with its reason in the file:
 
 ## The notification review (23 set 2026)
 
-Three inherited engines changed, all for defects that would be defects upstream too — so
-each is a candidate to carry back to tweather, and each has its tests beside it:
+Three inherited engines changed, for defects that would be defects in tweather too (they
+were not carried back: the split came the same day), each with its tests beside it:
 
 - **`AlertEngine`**: the hour-anchored alerts fire on the hour a run of weather STARTS
   (`firstArrival`, one quiet hour tolerated inside a run), never on an hour of weather already
@@ -238,9 +243,9 @@ each is a candidate to carry back to tweather, and each has its tests beside it:
 - **`RuleEngine`**: rules whose forecast conditions are all `today.*` fingerprint once per
   day, from 06:00 (`dayShaped`), where upstream's half-day bucket posted the same day's fact
   at 00:05 and again at noon.
-- **`RuleMessages.interpolate`**: an optional `format` parameter, defaulting to upstream's
-  `RuleVariables.formatValue`. Additive; the app passes one that writes the reader's decimal
-  mark. `:core:domain` stays locale-free.
+- **`RuleMessages.interpolate`**: takes a `Writer` (default `Canonical`, upstream's own
+  writing); the app's writes the value with its unit, the reader's decimal mark and the
+  phone's clock. `:core:domain` stays locale-free.
 
 Chiaro-only, because tweather has no official warnings: `OfficialWarningEngine` keeps what
 each notification TOLD (`toldTokens`), so the next afternoon's bulletin repeating it is not a

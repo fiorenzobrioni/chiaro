@@ -4,6 +4,7 @@ import android.content.res.Resources
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.rules.RuleCondition
 import com.callbackdev.chiaro.domain.rules.RuleOp
+import com.callbackdev.chiaro.domain.rules.RuleMessages
 import com.callbackdev.chiaro.domain.rules.RuleVariableKind
 import com.callbackdev.chiaro.domain.rules.RuleVariables
 import com.callbackdev.chiaro.domain.settings.UnitSettings
@@ -95,13 +96,35 @@ object RuleText {
     }
 
     /**
-     * A value interpolated into a message, in the reader's decimal mark and WITHOUT a
-     * unit — the message's author writes the unit after the placeholder («{current.temp_c}°»),
-     * so adding one here would print it twice.
+     * How a rule's message writes its placeholders for the reader (23 set 2026): the value
+     * with its unit and the reader's decimal mark — «21,4°», «20%», «35 km/h» — and the
+     * hour on the phone's own clock. Until then `{current.temp_c}` printed «21.4»: a bare
+     * number, in the code's decimal point, with the unit left to whoever wrote the message.
+     *
+     * A unit the author already wrote right after the placeholder is not printed twice:
+     * every message written before this change, the seeds included, says
+     * «{current.temp_c}°», and it keeps reading «21,4°». A yes/no value is the word.
      */
-    fun messageValue(kind: RuleVariableKind, value: Double, units: UnitSettings, locale: java.util.Locale): String {
-        val separator = java.text.DecimalFormatSymbols.getInstance(locale).decimalSeparator
-        return RuleVariables.formatValue(kind, value, units).replace('.', separator)
+    class MessageWriter(
+        private val res: Resources,
+        private val units: UnitSettings,
+        private val locale: java.util.Locale,
+        is24h: Boolean
+    ) : RuleMessages.Writer {
+        private val clock = com.callbackdev.chiaro.ui.format.Formats.timeFormatter(is24h, locale)
+
+        override fun value(variableId: String?, kind: RuleVariableKind, value: Double, following: String): String {
+            if (kind == RuleVariableKind.BOOLEAN) {
+                return res.getString(if (value != 0.0) R.string.value_yes else R.string.value_no)
+            }
+            val separator = java.text.DecimalFormatSymbols.getInstance(locale).decimalSeparator
+            val number = RuleVariables.formatValue(kind, value, units).replace('.', separator)
+            val suffix = unitSuffix(variableId.orEmpty(), kind, units)
+            val written = suffix.isNotEmpty() && following.trimStart().startsWith(suffix.trim())
+            return if (written) number else number + suffix
+        }
+
+        override fun time(at: java.time.LocalDateTime): String = at.format(clock)
     }
 
     private fun unitSuffix(variableId: String, kind: RuleVariableKind, units: UnitSettings): String =

@@ -10,24 +10,24 @@ a general audience: a computed sky as the hero, one sentence before any number, 
 of the day's sun and sky with a verdict, a journal of how the forecast changed, and alerts
 the reader writes themselves. Free, no account, no ads, no API key.
 
-It is the **daylight edition of [tweather](https://github.com/fiorenzobrioni/tweather)**:
-the same data layer, alert engine, rules engine and astronomy engine, with the code-editor
-UI replaced. tweather is furniture for developers and was built that way on purpose;
-Chiaro is the same product for everybody else. The two ship side by side and neither
-replaces the other.
+It was born as the **daylight edition of [tweather](https://github.com/fiorenzobrioni/tweather)**:
+its data layer, alert engine, rules engine and astronomy engine, with the code-editor UI
+replaced. **Since 23 set 2026 it is an independent product**: Chiaro no longer tracks
+tweather, which follows its own road. The core is Chiaro's own — a fix is made here, for
+this app, and is not carried back or kept in step.
 
 Source of truth:
 
 - `VISION.md` — the product: positioning against the store field (§2), identity (§3),
-  design language (§4), every screen (§5), the parity map with tweather (§6), the module
-  split and what is reused (§7), the roadmap (§10), the decisions still open (§12).
+  design language (§4), every screen (§5), the parity map with tweather it started from
+  (§6), the module split (§7), the roadmap (§10), the decisions still open (§12).
 - `DESIGN.md` — the design system: color (generated, plus the semantic tokens Material
   has no slot for), the sky canvas, the daylight ribbon, type, shape, motion, the
   component kit, the chart rules, accessibility. Every value carries its measured number.
 - `PLANNING.md` — the phased plan with checkable steps. **Keep it updated as work
   progresses**, recording every decision and deviation with its reason (the series' rule).
-- `UPSTREAM.md` — where `:core` came from, how to reproduce the seed, and the debt the
-  seed deliberately left behind.
+- `UPSTREAM.md` — **history, frozen on 23 set 2026**: where `:core` came from and how it
+  drifted until the split. Read it for context; do not keep it up to date.
 
 ## Build and commands
 
@@ -142,6 +142,6 @@ punctuation.
 - **Offline**: the last successful report per place is kept with no TTL and carries a week
   of forecast, so the app is never blank. `WeatherRecency` drops the hours that have
   already happened; `WeatherFreshness` decides whether to trust what is left.
-- **The engines are inherited and tested.** Before changing anything in `:core`, read
-  `UPSTREAM.md`: the copy is deliberate, the ledger is what makes a later shared-core
-  extraction cheap, and a fix that belongs upstream should probably be made upstream too.
+- **The engines are tested, and they are Chiaro's.** They came from tweather and have been
+  this app's own since 23 set 2026: change them here, with their tests, for what Chiaro
+  needs. There is no upstream to keep in step with and no shared core to extract.

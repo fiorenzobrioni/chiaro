@@ -177,10 +177,14 @@ class AlertsViewModel(
         return when (val check = RuleEngine.check(rule, report, now)) {
             is RuleCheck.Fires -> RulePreview.WouldFire(
                 settingsStore.settings.first().units.let { units ->
-                    val locale = appContext.resources.configuration.locales[0]
                     RuleMessages.interpolate(
-                        rule.message, rule, check.value, check.at, report, now, units
-                    ) { kind, value -> RuleText.messageValue(kind, value, units, locale) }
+                        rule.message, rule, check.value, check.at, report, now, units,
+                        RuleText.MessageWriter(
+                            appContext.resources, units,
+                            appContext.resources.configuration.locales[0],
+                            android.text.format.DateFormat.is24HourFormat(appContext)
+                        )
+                    )
                 }
             )
             RuleCheck.Passes -> RulePreview.WouldPass

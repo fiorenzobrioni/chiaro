@@ -10316,3 +10316,30 @@ rumore).
 - Resa di Avvisi con il tratteggio delle ore di quiete.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
 
+## I segnaposto con la loro unità, e la separazione da tweather (committente, 23 set 2026)
+
+Richiesta: sistemare i segnaposto dei messaggi degli avvisi personali («`{current.temp_c}` esce
+ancora come 21.4, senza unità e con il punto»); e: «Intendo poi scollegarmi a questo punto da
+tweather che seguirà la sua strada ma per ora è ferma».
+
+### Cosa è cambiato
+
+- `RuleMessages.interpolate` prende un `Writer` (valore, variabile, testo che segue; orario).
+  `Canonical` è la scrittura di prima; `RuleText.MessageWriter` è quella dell'app: il valore con
+  la sua unità e la virgola del lettore («21,4°», «20%», «35 km/h»), sì/no in parole, l'ora
+  nel formato 12/24 del telefono. Usato dalla notifica e dall'anteprima di Avvisi.
+- **Nessun doppione di unità**: se chi scrive ha già messo l'unità subito dopo il segnaposto
+  («{current.temp_c}°», com'erano tutti i messaggi e le idee finora), non viene aggiunta. I
+  messaggi già salvati si leggono uguali.
+- Le idee non scrivono più le unità a mano; la guida del selettore dice che il valore arriva
+  con la sua unità.
+- **Separazione da tweather**: CLAUDE.md, VISION §7.3 e UPSTREAM.md dicono che dal 23 set 2026
+  Chiaro è un prodotto indipendente; UPSTREAM.md è storia congelata, le correzioni al core non
+  si riportano indietro, niente estrazione di un core condiviso.
+
+### Come è stato verificato
+
+- `RuleNotifierTest` (unità una volta sola, virgola), `RuleMessagesTest` (il `Writer` riceve
+  variabile, valore e testo che segue).
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+

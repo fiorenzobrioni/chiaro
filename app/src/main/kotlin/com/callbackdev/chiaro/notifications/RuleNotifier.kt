@@ -71,10 +71,13 @@ object RuleNotifier {
             return false
         }
 
-        val locale = context.resources.configuration.locales[0]
-        val message = RuleMessages.interpolate(trigger.rule.message, trigger, report, now, units) { kind, value ->
-            RuleText.messageValue(kind, value, units, locale)
-        }
+        val message = RuleMessages.interpolate(
+            trigger.rule.message, trigger, report, now, units,
+            RuleText.MessageWriter(
+                context.resources, units, context.resources.configuration.locales[0],
+                android.text.format.DateFormat.is24HourFormat(context)
+            )
+        )
         val id = notificationId(trigger.rule.id)
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_chiaro)

@@ -82,6 +82,9 @@ sections are a normal size and live here alone.
   notifications arrive without a sound, except red warnings and sky reminders.
 - **Alerts: a «Serious heat» idea**, and «Twelve dry hours» in place of «A night without rain»,
   which could fire in the morning.
+- **Your alerts' messages write values properly.** A value in braces, like `{current.temp_c}`,
+  now arrives with its unit and your decimal mark («21,4°»), and a time follows your phone's
+  clock. A unit you already wrote after it is not repeated.
 
 ### Fixed
 

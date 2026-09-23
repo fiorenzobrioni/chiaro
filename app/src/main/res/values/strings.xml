@@ -856,7 +856,7 @@
     <string name="rule_pick_operator">How to compare</string>
     <string name="rule_pick_value">The threshold</string>
     <string name="rule_pick_placeholder">A value in the message</string>
-    <string name="rule_placeholder_intro">Tap one: it lands where the cursor is, and becomes the number when the alert fires.</string>
+    <string name="rule_placeholder_intro">Tap one: it lands at the cursor, and when the alert fires it becomes the value with its unit.</string>
     <string name="action_done">Done</string>
 
     <!-- The operators, as the sentence needs them -->
@@ -903,15 +903,15 @@
     <string name="tpl_bike_title">Tell me when I can ride</string>
     <string name="tpl_bike_desc" formatted="false">At least 12° out and rain under 20% for the next 6 hours.</string>
     <string name="tpl_bike_name">Bike</string>
-    <string name="tpl_bike_message" formatted="false">Good to ride: {current.temp_c}° out, {next_6h.precip_chance_max}% rain ahead.</string>
+    <string name="tpl_bike_message" formatted="false">Good to ride: {current.temp_c} out, {next_6h.precip_chance_max} rain ahead.</string>
     <string name="tpl_ice_title">Ice tomorrow morning</string>
     <string name="tpl_ice_desc">When the next 12 hours dip below zero.</string>
     <string name="tpl_ice_name">Ice</string>
-    <string name="tpl_ice_message" formatted="false">Possible ice: down to {trigger.value}° around {trigger.time}.</string>
+    <string name="tpl_ice_message" formatted="false">Possible ice: down to {trigger.value} around {trigger.time}.</string>
     <string name="tpl_run_title">A window to run</string>
     <string name="tpl_run_desc" formatted="false">Rain under 20% for the next 6 hours and no more than 26°.</string>
     <string name="tpl_run_name">Run</string>
-    <string name="tpl_run_message" formatted="false">Good window for a run: rain at {trigger.value}%.</string>
+    <string name="tpl_run_message" formatted="false">Good window for a run: rain at {trigger.value}.</string>
     <string name="tpl_uv_title">High UV</string>
     <string name="tpl_uv_desc">When today\'s UV index reaches at least 7.</string>
     <string name="tpl_uv_name">Sun</string>
@@ -919,11 +919,11 @@
     <string name="tpl_heat_title">Serious heat</string>
     <string name="tpl_heat_desc">When today\'s high reaches at least 33°.</string>
     <string name="tpl_heat_name">Heat</string>
-    <string name="tpl_heat_message" formatted="false">Up to {trigger.value}° today: water, shade, and nothing strenuous in the hot hours.</string>
+    <string name="tpl_heat_message" formatted="false">Up to {trigger.value} today: water, shade, and nothing strenuous in the hot hours.</string>
     <string name="tpl_night_title">Twelve dry hours</string>
     <string name="tpl_night_desc" formatted="false">Rain under 10% for the next 12 hours.</string>
     <string name="tpl_night_name">Dry</string>
-    <string name="tpl_night_message" formatted="false">No rain in sight for the next 12 hours ({trigger.value}%).</string>
+    <string name="tpl_night_message" formatted="false">No rain in sight for the next 12 hours ({trigger.value}).</string>
 
     <!-- The built-in alerts as notifications: a sentence, never a data dump -->
     <string name="notif_channel_severe">Severe weather</string>

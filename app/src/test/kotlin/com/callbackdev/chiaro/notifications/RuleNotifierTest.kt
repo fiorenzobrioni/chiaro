@@ -30,7 +30,7 @@ class RuleNotifierTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val manager = context.getSystemService(NotificationManager::class.java)
 
-    private fun post(): String {
+    private fun post(message: String = "Fuori {current.temp_c}°"): String {
         manager.cancelAll()
         val report = sampleWeatherReport().let { it.copy(current = it.current.copy(tempC = 21.4)) }
         RuleNotifier.notify(
@@ -39,7 +39,7 @@ class RuleNotifierTest {
                 rule = NotificationRule(
                     id = 7, name = "Bici",
                     conditions = listOf(RuleCondition("current.temp_c", RuleOp.GT, 15.0)),
-                    message = "Fuori {current.temp_c}°"
+                    message = message
                 ),
                 fingerprint = null, latchKey = null, value = 21.4, at = null
             ),
@@ -77,4 +77,18 @@ class RuleNotifierTest {
         assertTrue(why, why.endsWith(" · ora 21,4°"))
         assertEquals(why.first().uppercaseChar(), why.first())
     }
+
+    /** The value carries its unit; a unit the author already wrote is not printed twice —
+     * every message saved before the change says «{current.temp_c}°». */
+    @Config(qualifiers = "it")
+    @Test
+    fun `a placeholder brings its unit, once`() {
+        post("Fuori {current.temp_c}")
+        assertEquals("Fuori 21,4°", collapsed())
+        post("Fuori {current.temp_c}°")
+        assertEquals("Fuori 21,4°", collapsed())
+        post("Fuori {current.temp_c} °")
+        assertEquals("Fuori 21,4 °", collapsed())
+    }
 }
+
