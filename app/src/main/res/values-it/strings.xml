@@ -363,7 +363,7 @@
     <string name="guide_verdict_evidence_unstable" formatted="false">nuvole 45%</string>
     <string name="guide_verdict_evidence_fail" formatted="false">nuvole 90%</string>
     <string name="guide_sky_moments_title">I prossimi momenti</string>
-    <string name="guide_sky_moments_body">I momenti che segui, nell\'ordine in cui capitano. Quello che è passato lascia il posto alla sua prossima volta e la riga dice di che giorno si tratta; quello che sta capitando adesso lo dice. È lo stesso momento che il widget Cielo mostra sulla home, risolto allo stesso modo.</string>
+    <string name="guide_sky_moments_body">I momenti che segui, nell\'ordine in cui capitano. Quello che è passato lascia il posto alla sua prossima volta e la riga dice di che giorno si tratta; quello che sta capitando adesso lo dice. È lo stesso momento che il widget Cielo mostra sulla home, risolto allo stesso modo. Ogni riga porta alla pagina del suo evento, che dice che cos\'è ed è anche il posto da cui toglierlo.</string>
     <string name="guide_sky_moment_caption">Un esempio: l\'alba di domani, giudicata dalle sue nuvole.</string>
     <string name="guide_sky_camera_title">Il marchio della macchina fotografica</string>
     <string name="guide_sky_camera_body">Qualche evento porta una piccola macchina fotografica accanto al nome: sono i nove per cui vale davvero la pena portarsela — le ore dorate e le ore blu, la luna piena al crepuscolo, la luce cinerea di sera e di mattina, il cuore della Via Lattea e l\'eclissi di Luna. Non è una questione di gusti, ed è per questo che quelle righe dicono anche da che parte guardare: un orario senza una direzione è mezza risposta. L\'eclissi di Sole di proposito non ce l\'ha — quella si guarda solo con un filtro adatto, e un obiettivo ne ha bisogno esattamente quanto un occhio.</string>
@@ -591,6 +591,7 @@
     <string name="sky_guide_when_visibility">Sono le nuvole a decidere se merita la tua attenzione, quindi porta un verdetto letto dalle previsioni.</string>
     <string name="sky_guide_when_darkness">Serve anche un cielo davvero buio, quindi la luna e il crepuscolo fanno parte della risposta.</string>
     <string name="sky_guide_open_desc">Che cos\'è: %1$s</string>
+    <string name="sky_row_open_label">leggere che cos\'è</string>
     <string name="sky_guide_add_action">Aggiungi ai miei momenti</string>
     <string name="sky_guide_remove_action">Togli dai miei momenti</string>
     <string name="guide_sky_events_action">Apri la guida agli eventi</string>

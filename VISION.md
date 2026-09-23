@@ -366,11 +366,14 @@ The differentiator with the most engineering already behind it.
   photographing with no direction to point in is a taste, and this app does not render those.
   The solar eclipse is the one exclusion decided on safety rather than on the sight.
 - **The guide to the events**: a page for every entry in that catalog — what it is, when it happens,
-  what the clouds have to do with it, and what to read next. It has two doors, and neither is
+  what the clouds have to do with it, and what to read next. It has three doors, and none is
   redundant: the info button beside a catalog entry, which opens the page *inside* the sheet so the
-  list survives and the button that adds it travels with the answer; and the index, from the Sky
-  screen and from the guide in Settings, for a reader who came to understand rather than to
-  subscribe. The prose is ported from tweather's manual pages; the dotted names it was written
+  list survives and the button that adds it travels with the answer; **a tap on any row of the
+  agenda** (23 set 2026), which opens the same page in a sheet over the list, carrying «remove
+  from my moments» — or «add» on a row of the calendar for everybody — because most of what the
+  agenda shows the reader never picked, and "what is that" arrives on the row; and the index,
+  from the Sky screen and from the guide in Settings, for a reader who came to understand rather
+  than to subscribe. The prose is ported from tweather's manual pages; the dotted names it was written
   around are not.
 - **Reminders**: 15/30/60 minutes before, per moment, plus a default; inexact alarms, exactly as in
   tweather. A reminder for an event the sky will ruin is off by default.
