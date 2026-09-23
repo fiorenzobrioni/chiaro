@@ -42,6 +42,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -211,6 +212,8 @@ private fun SkyContent(
 
     var catalogOpen by remember { mutableStateOf(false) }
     var leadDialog by remember { mutableStateOf<LeadDialog?>(null) }
+    // The page a row of the agenda opened, if any ([AgendaPageSheet]).
+    var pageId by rememberSaveable { mutableStateOf<String?>(null) }
 
     // POST_NOTIFICATIONS is asked the first time a reminder is switched on (VISION
     // §5.8), never at startup: the tap that needs it is the sentence that explains it.
@@ -248,6 +251,7 @@ private fun SkyContent(
                 moment = moment,
                 zone = content.zone,
                 timeFmt = timeFmt,
+                onOpen = { pageId = moment.job.id },
                 onBell = {
                     leadDialog = LeadDialog.ForMoment(
                         moment.job.id, moment.lead, moment.followsDefault
@@ -296,6 +300,9 @@ private fun SkyContent(
                 dateFmt = dateFmt,
                 yearFmt = yearFmt,
                 timeFmt = timeFmt,
+                // A row that names two showers opens the first: it is the row's own job,
+                // and the page's «see also» is one tap from the rest.
+                onOpen = { pageId = event.job.id },
                 onBell = event.lead?.let { lead ->
                     { leadDialog = LeadDialog.ForMoment(event.job.id, lead, event.followsDefault) }
                 }
@@ -342,6 +349,17 @@ private fun SkyContent(
             onAdd = viewModel::addMoment,
             onRemove = viewModel::removeMoment,
             onDismiss = { catalogOpen = false }
+        )
+    }
+
+    pageId?.let { id ->
+        AgendaPageSheet(
+            jobId = id,
+            subscribed = id in content.subscribedIds,
+            onOpenRelated = { pageId = it },
+            onAdd = viewModel::addMoment,
+            onRemove = viewModel::removeMoment,
+            onDismiss = { pageId = null }
         )
     }
 
@@ -527,6 +545,7 @@ private fun MomentRow(
     moment: Moment,
     zone: ZoneId,
     timeFmt: DateTimeFormatter,
+    onOpen: () -> Unit,
     onBell: () -> Unit
 ) {
     val res = LocalContext.current.resources
@@ -559,7 +578,7 @@ private fun MomentRow(
     // verdict ("Niente da fare · nuvole 100%") squeezed the name to one letter per
     // line (device finding, 3 set). Only the fixed-width bell trails. Since 12 set it
     // lives under the whole list item too — see [SkyVerdictLine].
-    Column {
+    Column(Modifier.agendaRowOpens(onOpen)) {
         ListItem(
             leadingContent = {
                 // Its own colors and the Sky's own rung (review, 8 set 2026): these were
@@ -649,6 +668,22 @@ private val SkyRowInset = 16.dp
 private val SkyChipIndent = SkyRowInset + WeatherIconSize.Sky + SkyRowInset
 private val SkyChipBottom = 8.dp
 
+/**
+ * A row of the agenda opens its event's page ([AgendaPageSheet]).
+ *
+ * The whole row, verdict line included, and not an info button beside the bell: the
+ * row has no 48 dp to spare — [SkyVerdictLine] is the arithmetic of what that column
+ * costs — and a row is where a finger already goes to ask "what is this". The bell
+ * stays its own [IconButton] and takes its own taps, the same two-targets rule as the
+ * catalog's rows. No chevron either, for the same 24 dp; TalkBack is told what the tap
+ * does, because a ripple says it only to the eye.
+ */
+@Composable
+private fun Modifier.agendaRowOpens(onOpen: () -> Unit): Modifier = clickable(
+    onClickLabel = stringResource(R.string.sky_row_open_label),
+    onClick = onOpen
+)
+
 @Composable
 private fun EventRow(
     event: UpcomingEvent,
@@ -656,6 +691,7 @@ private fun EventRow(
     dateFmt: DateTimeFormatter,
     yearFmt: DateTimeFormatter,
     timeFmt: DateTimeFormatter,
+    onOpen: () -> Unit,
     onBell: (() -> Unit)?
 ) {
     val res = LocalContext.current.resources
@@ -681,7 +717,7 @@ private fun EventRow(
     val verdictLine = event.verdict?.let { verdict -> SkyText.unknownReason(res, verdict) }
     // Same rule as MomentRow: the chip goes under the text on a line of its own
     // ([SkyVerdictLine]), only the bell trails.
-    Column {
+    Column(Modifier.agendaRowOpens(onOpen)) {
         ListItem(
             leadingContent = {
                 Icon(
@@ -1094,6 +1130,58 @@ private fun CatalogAction(subscribed: Boolean, onClick: () -> Unit) {
         Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.sky_guide_add_action))
         }
+    }
+}
+
+/**
+ * An event's page opened from a row of the agenda: the third door to the guide, and
+ * the one where the question most often arrives — «Ora blu · 19:42», and what is that.
+ * Most of what the agenda shows was never picked from the catalog (the default
+ * moments, the calendar for everybody), so for those rows it was the only door that
+ * did not mean knowing the name and going to look it up.
+ *
+ * A sheet over the agenda, like the catalog's page and for the same reasons: the list
+ * under it stays where it was, and the page carries the one button that acts on what
+ * you have just read. Here that is mostly «Togli dai miei momenti» — reading about a
+ * moment you did not know you had, and deciding you do not want it, is the same
+ * gesture, where before removal meant opening the catalog and finding the row again.
+ * A row of the calendar for everybody (or a page reached through «see also») is not
+ * subscribed, and the same button adds it.
+ *
+ * A related event takes this page's place instead of piling on top of it — the rule
+ * the full-screen guide follows — so back always closes the sheet onto the agenda.
+ * Acting closes it too: the agenda itself is the receipt, a row gone or a row added.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun AgendaPageSheet(
+    jobId: String,
+    subscribed: Boolean,
+    onOpenRelated: (String) -> Unit,
+    onAdd: (String) -> Unit,
+    onRemove: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    // An id the catalog no longer carries (restored across an update) has no true
+    // page to draw: close rather than open an empty sheet.
+    val job = SkyJobCatalog.byId(jobId) ?: run {
+        LaunchedEffect(jobId) { onDismiss() }
+        return
+    }
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        SkyEventPage(
+            job = job,
+            onOpenRelated = onOpenRelated,
+            action = {
+                CatalogAction(
+                    subscribed = subscribed,
+                    onClick = {
+                        if (subscribed) onRemove(job.id) else onAdd(job.id)
+                        onDismiss()
+                    }
+                )
+            }
+        )
     }
 }
 

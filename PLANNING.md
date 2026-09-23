@@ -9610,3 +9610,65 @@ stesso modo, con Oggi al posto della Dashboard.
 - **Da fare sul dispositivo**, perché qui non c'è: il gesto che segue il dito (fra pagine, fra
   un tab e Oggi, alla radice di Oggi verso la home), la barra che scivola, e un giro sulle
   schermate per il passaggio a Material 3 1.4 / Compose 1.10.
+
+## La pagina dell'evento dalla riga dell'agenda (committente, 23 set 2026)
+
+Richiesta: «per vedere le info degli eventi visualizzati bisogna andare in "Che cosa sono
+questi eventi" o nella schermata per aggiungerli/rimuoverli e cercare l'evento. Sarebbe più
+comodo avere accesso alle info direttamente dalla riga». Valutato prima di farlo, e condiviso:
+la domanda «che cos'è» arriva sulla riga, e la maggior parte di quel che l'agenda mostra il
+lettore non l'ha mai scelto dal catalogo — i momenti di default e soprattutto il calendario
+«per tutti» (picchi degli sciami, perielio, equinozi) — quindi per quelle righe non c'era una
+porta che non passasse dal sapere già il nome. E un tocco sulla riga, finora, non faceva niente.
+Chiesto insieme: togliere un momento dalla stessa pagina.
+
+### Cosa è cambiato
+
+- **Ogni riga di «I prossimi momenti» e di «In arrivo» apre la pagina del suo evento**
+  (`Modifier.agendaRowOpens`), l'intera riga compresa la linea del verdetto. La campanella
+  resta un `IconButton` a sé e prende i suoi tocchi.
+- **La pagina si apre in un foglio sopra l'agenda** (`AgendaPageSheet`), la stessa
+  `SkyEventPage` del catalogo con lo stesso bottone (`CatalogAction`): «Togli dai miei
+  momenti» se l'evento è seguito, «Aggiungi ai miei momenti» se no (una riga del calendario
+  per tutti, o una pagina raggiunta da «Vedi anche»). Agire chiude il foglio: la ricevuta è
+  l'agenda sotto, una riga sparita o una riga arrivata.
+- **La guida di Impostazioni** (capitolo Cielo, «I prossimi momenti») dice che ogni riga porta
+  alla pagina del suo evento e che è anche il posto da cui toglierlo. VISION §5.3: le porte
+  della guida agli eventi diventano tre.
+
+### Decisioni e deviazioni
+
+- **Un foglio e non la pagina a tutto schermo della guida** (in discussione era stata proposta
+  `SkyEventKey`, che esiste già). Il bottone che toglie ha bisogno di sapere se l'evento è
+  seguito e di passare per `SkyViewModel`, che rimette la sveglia dopo ogni modifica: dentro
+  la schermata ci sono entrambi, nella rotta della guida nessuno dei due, e un secondo
+  view model solo per un bottone sarebbe una seconda copia della verità. Il foglio è anche la
+  forma che la pagina ha già dal catalogo, per le stesse ragioni (la lista sotto resta dov'era).
+- **Nessuna icona info, nessuna freccia.** La riga non ha 48 dp da dare: `SkyVerdictLine` è il
+  conto di quanto costa quella colonna, e una seconda icona accanto alla campanella avrebbe
+  rimesso a capo il verdetto a 360 dp. Il tocco sull'intera riga è il gesto che una lista
+  suggerisce già; a TalkBack lo dice `onClickLabel` («leggere che cos'è»), perché l'increspatura
+  lo dice solo all'occhio.
+- **Il bottone si chiama come nel catalogo** («Togli dai miei momenti», non «Rimuovi
+  dall'agenda» come l'aveva chiamato la discussione): un'azione, un nome, da qualunque porta.
+- **Una riga con due sciami apre il primo**, che è il job della riga; l'altro è a un tocco nel
+  «Vedi anche» (i due sciami che condividono il corpo progenitore si puntano già a vicenda).
+- **«Vedi anche» rimpiazza la pagina** invece di impilarla, come nella guida a tutto schermo:
+  indietro chiude sempre il foglio sull'agenda.
+- **La card «Stanotte» non apre niente**: è un verdetto sulla notte, non un evento, e la
+  finestra di buio ha già la sua riga fra i momenti.
+
+### Come è stato verificato
+
+- `AgendaPageSheetTest` (nuovo, Robolectric + Compose, primo test Compose dell'app) vive in
+  `src/testDebug`: l'activity che la regola Compose lancia la dichiara `ui-test-manifest`, che è
+  `debugImplementation` per non finire in un APK di release, e in `src/test` falliva nella
+  variante release («Unable to resolve activity»). Controllato che morda: scambiando aggiungi e
+  togli nel foglio, due test su tre diventano rossi.
+  Cosa verifica: una pagina seguita toglie l'evento e
+  chiude, una non seguita lo aggiunge e chiude, un id che il catalogo non ha più chiude invece
+  di disegnare una pagina vuota.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, **1692 test**
+  (i 1689 di prima più i 3 nuovi), lint a zero.
+- **Da fare sul dispositivo**: il tocco sulle righe (anche sulla linea del chip), la campanella
+  che resta un bersaglio a sé, TalkBack che annuncia l'azione.

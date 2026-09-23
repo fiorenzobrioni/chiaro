@@ -382,7 +382,7 @@
     <string name="guide_verdict_evidence_unstable" formatted="false">45% cloud</string>
     <string name="guide_verdict_evidence_fail" formatted="false">90% cloud</string>
     <string name="guide_sky_moments_title">The moments ahead</string>
-    <string name="guide_sky_moments_body">The moments you follow, in the order they happen. One that is over is replaced by its next occurrence and the row says which day it is; one that is happening right now says so. It is the same moment the Sky widget shows on your home screen, resolved the same way.</string>
+    <string name="guide_sky_moments_body">The moments you follow, in the order they happen. One that is over is replaced by its next occurrence and the row says which day it is; one that is happening right now says so. It is the same moment the Sky widget shows on your home screen, resolved the same way. Every row leads to its event\'s page, which says what it is and is also where you take it off the list.</string>
     <string name="guide_sky_moment_caption">An example: tomorrow\'s sunrise, judged by its clouds.</string>
     <string name="guide_sky_camera_title">The camera mark</string>
     <string name="guide_sky_camera_body">A few events carry a small camera beside their name: the nine genuinely worth carrying one for — the golden and blue hours, the full moon at dusk, earthshine morning and evening, the heart of the Milky Way, and the eclipse of the moon. It is not a matter of taste, and that is why those rows also say which way to look: a time of day is half an answer without a direction. The eclipse of the sun deliberately does not carry it — that one is only ever watched through a proper filter, and a lens needs one just as much as an eye does.</string>
@@ -610,6 +610,7 @@
     <string name="sky_guide_when_visibility">Clouds decide whether it is worth your attention, so it carries a verdict read off the forecast.</string>
     <string name="sky_guide_when_darkness">It also needs a properly dark sky, so the moon and the twilight are part of the answer.</string>
     <string name="sky_guide_open_desc">What %1$s is</string>
+    <string name="sky_row_open_label">read what this is</string>
     <string name="sky_guide_add_action">Add to my moments</string>
     <string name="sky_guide_remove_action">Remove from my moments</string>
     <string name="guide_sky_events_action">Open the events guide</string>

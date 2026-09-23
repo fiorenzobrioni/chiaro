@@ -46,12 +46,14 @@ import com.callbackdev.chiaro.ui.theme.SectionBottom
 /**
  * The guide to the sky events: the index of all fifty-one, and a page for each.
  *
- * It has two doors, and neither is redundant. The **catalog sheet** carries it per
+ * It has three doors, and none is redundant. The **catalog sheet** carries it per
  * event, where the question actually arrives — you are about to add something called
  * a zodiacal light and you would like to know what that is — and the sheet keeps its
  * page inside itself, so reading about an event does not throw away the list you were
- * halfway down. The **index** is the door for a reader who came to learn rather than
- * to add, and it is reachable from the Sky screen and from the guide in Settings.
+ * halfway down. **A row of the agenda** opens the same page in a sheet of its own
+ * (`AgendaPageSheet`), because most of what the agenda shows was never picked from the
+ * catalog. The **index** is the door for a reader who came to learn rather than to
+ * add, and it is reachable from the Sky screen and from the guide in Settings.
  *
  * A screen and not a tooltip, for the same reason `HELP.md` became a guide rather
  * than a paragraph: there is room here to explain, and an app that answers "what is
