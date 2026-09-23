@@ -3,6 +3,9 @@ package com.callbackdev.chiaro.widget
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import com.callbackdev.chiaro.ui.today.StripHour
+import java.time.Duration
+import java.time.LocalDateTime
 
 /**
  * The text widget's forms and its type scale (committente, 19 set 2026: «un widget 4x1,
@@ -229,7 +232,9 @@ internal data class TextPanelPlan(
     val heroSp: Float,
     val sentenceLines: Int,
     val showWarning: Boolean,
-    val showRange: Boolean
+    val showRange: Boolean,
+    /** «Più tardi»'s rows under the block, 0 when it is not drawn ([textLaterRows]). */
+    val laterRows: Int = 0
 )
 
 internal fun textPanelPlan(
@@ -238,7 +243,8 @@ internal fun textPanelPlan(
     stale: Boolean,
     sentence: Boolean,
     warning: Boolean,
-    range: Boolean
+    range: Boolean,
+    later: Boolean = false
 ): TextPanelPlan {
     val top = size.height - WidgetCardPadding * 2 - textLineHeight(TextFactSp, fontScale)
     val column = fillColumn(
@@ -249,12 +255,20 @@ internal fun textPanelPlan(
         range = range,
         maxLines = TextPanelSentenceMaxLines
     )
-    val heroRoom = top - (if (stale) textLineHeight(TextStaleSp, fontScale) else 0.dp)
+    val stalePart = if (stale) textLineHeight(TextStaleSp, fontScale) else 0.dp
+    val hero = heroSp(top - stalePart, TextPanelLeading, fontScale, TextHeroPanelMax)
+    // «Più tardi» is paid out of the band the two columns leave between them and the
+    // eyebrow — the air that makes this form a composition — and only past the air the
+    // form keeps for itself ([TextLaterPanelAir]): a panel that spent its whole band on
+    // a table would be a list again. The glyph, when it is on, takes what is left after
+    // the table ([textPanelIconSize]); it is still never an input here.
+    val block = maxOf(textLineHeight(hero, fontScale) + stalePart, top - column.left)
     return TextPanelPlan(
-        heroSp = heroSp(heroRoom, TextPanelLeading, fontScale, TextHeroPanelMax),
+        heroSp = hero,
         sentenceLines = column.sentenceLines,
         showWarning = column.showWarning,
-        showRange = column.showRange
+        showRange = column.showRange,
+        laterRows = if (later) textLaterRows(top - block - TextLaterPanelAir, fontScale) else 0
     )
 }
 
@@ -325,7 +339,9 @@ internal data class TextStackPlan(
     val heroSp: Float,
     val sentenceLines: Int,
     val showWarning: Boolean,
-    val showRange: Boolean
+    val showRange: Boolean,
+    /** «Più tardi»'s rows at the foot of the block, 0 when it is not drawn. */
+    val laterRows: Int = 0
 )
 
 internal fun textStackPlan(
@@ -334,7 +350,8 @@ internal fun textStackPlan(
     stale: Boolean,
     sentence: Boolean,
     warning: Boolean,
-    range: Boolean
+    range: Boolean,
+    later: Boolean = false
 ): TextStackPlan {
     val floor = textLineHeight(TextHeroStackFloor, fontScale)
     val room = size.height - WidgetCardPadding * 2 -
@@ -350,20 +367,70 @@ internal fun textStackPlan(
         maxLines = TextStackSentenceMaxLines,
         growSentenceLast = false
     )
+    val heroRoom = floor + column.left.coerceAtLeast(0.dp)
+    val hero = heroSp(heroRoom, size.width - WidgetCardPadding * 2, fontScale, TextHeroMax)
+    // «Più tardi» comes LAST in the order, after the number has reached its ceiling: on a
+    // tall narrow card the number is the page's title and a table is a footnote, so the
+    // table is only ever paid out of what the title could not use.
     return TextStackPlan(
-        heroSp = heroSp(
-            floor + column.left.coerceAtLeast(0.dp),
-            size.width - WidgetCardPadding * 2,
-            fontScale,
-            TextHeroMax
-        ),
+        heroSp = hero,
         sentenceLines = column.sentenceLines,
         showWarning = column.showWarning,
-        showRange = column.showRange
+        showRange = column.showRange,
+        laterRows = if (later) {
+            textLaterRows(heroRoom - textLineHeight(hero, fontScale), fontScale)
+        } else {
+            0
+        }
     )
 }
 
 internal const val TextStackSentenceMaxLines = 2
+
+/**
+ * **«Più tardi»** (23 set 2026): on a card tall enough to have air left over once every
+ * other rank is paid, the next hours as lines of type — the time, the temperature, the sky
+ * in a word, and the chance of rain when it is worth reading. It is the one thing this card
+ * does with height that it could not do with width, and it is what the provider's own
+ * description promised for two rows and up before the stack and the panel took their
+ * current shape.
+ *
+ * Budgeted last, always: the number reaches its ceiling first, then the table takes what
+ * is left, in whole rows. [TextLaterMinRows] because one hour is not «later», it is a
+ * second current condition; [TextLaterMaxRows] because four rows three hours apart already
+ * reach the night, and a fifth would be tomorrow's business. On every card one row high,
+ * and on the reference two-row cards, it is not drawn at all — those were measured to
+ * have no air to give (see `TextWidgetLayoutTest`), so the switch changes nothing there.
+ */
+internal fun textLaterRows(room: Dp, fontScale: Float): Int {
+    val rows = ((room - TextLaterGap) / textLaterRowHeight(fontScale)).toInt()
+    return if (rows >= TextLaterMinRows) minOf(rows, TextLaterMaxRows) else 0
+}
+
+/** What [rows] of «Più tardi» cost, gap included; nothing for none. */
+internal fun textLaterHeight(rows: Int, fontScale: Float): Dp =
+    if (rows <= 0) 0.dp else TextLaterGap + textLaterRowHeight(fontScale) * rows
+
+/** A row is one fact line: the temperature sets it, at rank 3 ([TextFactSp]). */
+internal fun textLaterRowHeight(fontScale: Float): Dp = textLineHeight(TextFactSp, fontScale)
+
+internal const val TextLaterMinRows = 2
+internal const val TextLaterMaxRows = 4
+
+/** Three hours between rows: the stride at which four rows reach from the afternoon into
+ * the night, which is the question a glance at «later» is asking. */
+internal const val TextLaterStrideHours = 3L
+
+/** The air between the block and the table: enough to read as a new paragraph. */
+internal val TextLaterGap = 10.dp
+
+/** The air a panel keeps between its eyebrow and its block even with a table in it — the
+ * composition the form exists for (see [TextForm.PANEL]). */
+internal val TextLaterPanelAir = 16.dp
+
+/** A rain chance under this is not printed in the table: the word already names the sky,
+ * and «10%» beside «Sereno» says nothing a reader can act on. */
+internal const val TextLaterRainFloorPct = 30
 
 /** [textRowHasFactLine]'s answer for a narrow tall card, asked the same way and for the
  * same reason: the plan without the warning says whether there is a line for one. */
@@ -518,7 +585,7 @@ internal fun textPanelIconSize(size: DpSize, fontScale: Float, plan: TextPanelPl
     val trailing = textLineHeight(TextSentenceSp, fontScale) * plan.sentenceLines +
         (if (plan.showWarning) fact else 0.dp) +
         (if (plan.showRange) fact else 0.dp)
-    val band = size.height - WidgetCardPadding * 2 - fact - trailing
+    val band = size.height - WidgetCardPadding * 2 - fact - trailing - textLaterHeight(plan.laterRows, fontScale)
     return textIconSize(minOf(band, textPanelSentenceColumn(size) + TextIconEdgeGive))
 }
 
@@ -698,3 +765,73 @@ internal const val TextFactSp = 16f
 /** Rank 4, the footnote: the stale marker, at the household's own stale size and in the
  * freshness ink it wears on every other card. */
 internal const val TextStaleSp = 11f
+
+/**
+ * The hours «Più tardi» prints: from the first one at least [TextLaterLeadMinutes] ahead
+ * that falls on the stride's own clock (18:00, 21:00, 00:00 — times a reader can say out
+ * loud, not 16:00 and 19:00 because it happened to be ten past three), then every
+ * [TextLaterStrideHours] after it, as many as the strip holds.
+ *
+ * The lead is there because the hour already under way is the big number's, and the next
+ * one is so close to it that a row for it would repeat the hero rather than add to it.
+ * Matched on time rather than on list positions, so a gap in the strip can never shift a
+ * row onto the wrong hour — a missing hour is a missing row.
+ */
+internal fun laterHours(strip: List<StripHour>, now: LocalDateTime): List<StripHour> {
+    val from = now.plusMinutes(TextLaterLeadMinutes)
+    val first = strip.firstOrNull {
+        !it.hour.time.isBefore(from) && it.hour.time.hour % TextLaterStrideHours.toInt() == 0
+    } ?: return emptyList()
+    // Stepped on the instant, which is an hour's identity, and not on its label: on the
+    // night the clocks change the label repeats or skips (`HourlyForecast.time`), and a
+    // row three hours on should be three real hours on, printed with the time it will be.
+    return (0 until TextLaterMaxRows).mapNotNull { step ->
+        val at = first.hour.at.plus(Duration.ofHours(step * TextLaterStrideHours))
+        strip.firstOrNull { it.hour.at == at }
+    }
+}
+
+internal const val TextLaterLeadMinutes = 90L
+
+/** The table's quiet columns, the time and the word: a step under the temperature beside
+ * them, so the figure is what the eye lands on in every row. */
+internal const val TextLaterSp = 14f
+
+/** «00:00» at [TextLaterSp] with a gap after it, and «12:00 AM» for a 12-hour clock. */
+internal val TextLaterTimeColumn24 = 44.dp
+internal val TextLaterTimeColumn12 = 70.dp
+
+/** «−12°» at [TextFactSp] Medium with a gap after it. */
+internal val TextLaterTempColumn = 42.dp
+
+/** «100%» at [TextLaterSp] Medium with a gap after it. */
+internal val TextLaterRainColumn = 42.dp
+
+/**
+ * The narrowest the sky's word may be given: «Poco nuvoloso» at [TextLaterSp] is ~88 dp,
+ * and the table's words are short enough that this is most of them. Under it the column is
+ * not drawn — the card keeps the time and the figures, which is what a two-cell card has
+ * room to say.
+ */
+internal val TextLaterWordMin = 84.dp
+
+internal data class LaterColumns(
+    val time: Dp,
+    val temperature: Dp,
+    /** 0 when no row has a chance worth printing: no empty column is kept for nothing. */
+    val rain: Dp,
+    val word: Boolean
+)
+
+/** «Più tardi»'s columns for a table [width] wide, at the reader's [fontScale]. */
+internal fun laterColumns(width: Dp, fontScale: Float, is24h: Boolean, rain: Boolean): LaterColumns {
+    val time = (if (is24h) TextLaterTimeColumn24 else TextLaterTimeColumn12) * fontScale
+    val temperature = TextLaterTempColumn * fontScale
+    val rainColumn = if (rain) TextLaterRainColumn * fontScale else 0.dp
+    return LaterColumns(
+        time = time,
+        temperature = temperature,
+        rain = rainColumn,
+        word = width - time - temperature - rainColumn >= TextLaterWordMin * fontScale
+    )
+}

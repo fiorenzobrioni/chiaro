@@ -634,3 +634,166 @@ class TextWidgetLayoutTest {
         assertTrue(TextHeroMax < TextHeroPanelMax)
     }
 }
+
+/**
+ * «Più tardi» (23 set 2026): the next hours as lines of type on a tall card. What is pinned
+ * is the promise the switch makes — it only ever takes air the card was leaving empty — and
+ * the two things that make a table a table: whole rows, and hours three apart on the clock.
+ */
+class TextLaterTest {
+
+    private val twoByTwo = DpSize(159.dp, 189.dp)
+    private val threeByTwo = DpSize(250.dp, 189.dp)
+    private val fourByTwo = DpSize(340.dp, 189.dp)
+    private val twoByThree = DpSize(159.dp, 293.dp)
+    private val threeByThree = DpSize(250.dp, 293.dp)
+    private val fourByThree = DpSize(340.dp, 293.dp)
+
+    private val combos = listOf(false, true).flatMap { stale ->
+        listOf(false, true).flatMap { warning ->
+            listOf(false, true).map { range -> Triple(stale, warning, range) }
+        }
+    }
+
+    @Test
+    fun `the reference two-row cards have no air for a table`() {
+        listOf(twoByTwo, threeByTwo).forEach { size ->
+            combos.forEach { (stale, warning, range) ->
+                val plan = textStackPlan(size, 1f, stale, true, warning, range, later = true)
+                assertEquals("$size stale=$stale", 0, plan.laterRows)
+            }
+        }
+        combos.forEach { (stale, warning, range) ->
+            val plan = textPanelPlan(fourByTwo, 1f, stale, true, warning, range, later = true)
+            assertEquals("4x2 stale=$stale", 0, plan.laterRows)
+        }
+    }
+
+    @Test
+    fun `three rows high, every form carries at least two hours`() {
+        listOf(twoByThree, threeByThree).forEach { size ->
+            combos.forEach { (stale, warning, range) ->
+                val plan = textStackPlan(size, 1f, stale, true, warning, range, later = true)
+                assertTrue("$size stale=$stale warning=$warning", plan.laterRows >= TextLaterMinRows)
+            }
+        }
+        combos.forEach { (stale, warning, range) ->
+            val plan = textPanelPlan(fourByThree, 1f, stale, true, warning, range, later = true)
+            assertTrue("4x3 stale=$stale warning=$warning", plan.laterRows >= TextLaterMinRows)
+        }
+    }
+
+    /** The switch's whole promise: turning it on changes no other line on the card. */
+    @Test
+    fun `the table never changes the rest of the plan`() {
+        val sizes = listOf(twoByTwo, threeByTwo, twoByThree, threeByThree, DpSize(159.dp, 397.dp))
+        sizes.forEach { size ->
+            listOf(1f, 1.3f).forEach { scale ->
+                combos.forEach { (stale, warning, range) ->
+                    val off = textStackPlan(size, scale, stale, true, warning, range)
+                    val on = textStackPlan(size, scale, stale, true, warning, range, later = true)
+                    assertEquals("$size@$scale", off, on.copy(laterRows = 0))
+                }
+            }
+        }
+        listOf(fourByTwo, fourByThree, DpSize(340.dp, 397.dp), DpSize(300.dp, 150.dp)).forEach { size ->
+            listOf(1f, 1.3f).forEach { scale ->
+                combos.forEach { (stale, warning, range) ->
+                    val off = textPanelPlan(size, scale, stale, true, warning, range)
+                    val on = textPanelPlan(size, scale, stale, true, warning, range, later = true)
+                    assertEquals("$size@$scale", off, on.copy(laterRows = 0))
+                }
+            }
+        }
+    }
+
+    /** And it fits: the stack's column and the panel's block, eyebrow and air included. */
+    @Test
+    fun `the table fits inside the card`() {
+        val fact = textLineHeight(TextFactSp, 1f)
+        listOf(twoByThree, threeByThree, DpSize(159.dp, 397.dp), DpSize(250.dp, 500.dp)).forEach { size ->
+            combos.forEach { (stale, warning, range) ->
+                val plan = textStackPlan(size, 1f, stale, true, warning, range, later = true)
+                val used = WidgetCardPadding * 2 + fact +
+                    (if (stale) textLineHeight(TextStaleSp, 1f) else 0.dp) +
+                    textLineHeight(plan.heroSp, 1f) +
+                    textLineHeight(TextSentenceSp, 1f) * plan.sentenceLines +
+                    (if (plan.showWarning) fact else 0.dp) +
+                    (if (plan.showRange) fact else 0.dp) +
+                    textLaterHeight(plan.laterRows, 1f)
+                assertTrue("$size: ${used.value} into ${size.height.value}", used.value <= size.height.value + 0.01f)
+            }
+        }
+        listOf(fourByThree, DpSize(340.dp, 397.dp)).forEach { size ->
+            combos.forEach { (stale, warning, range) ->
+                val plan = textPanelPlan(size, 1f, stale, true, warning, range, later = true)
+                val trailing = textLineHeight(TextSentenceSp, 1f) * plan.sentenceLines +
+                    (if (plan.showWarning) fact else 0.dp) + (if (plan.showRange) fact else 0.dp)
+                val leading = textLineHeight(plan.heroSp, 1f) +
+                    (if (stale) textLineHeight(TextStaleSp, 1f) else 0.dp)
+                val used = WidgetCardPadding * 2 + fact + maxOf(leading, trailing) +
+                    textLaterHeight(plan.laterRows, 1f) + TextLaterPanelAir
+                assertTrue("$size: ${used.value} into ${size.height.value}", used.value <= size.height.value + 0.01f)
+            }
+        }
+    }
+
+    @Test
+    fun `rows are whole, at least two, at most four`() {
+        val row = textLaterRowHeight(1f)
+        assertEquals(0, textLaterRows(TextLaterGap + row * 1.9f, 1f))
+        assertEquals(2, textLaterRows(TextLaterGap + row * 2, 1f))
+        assertEquals(3, textLaterRows(TextLaterGap + row * 3.5f, 1f))
+        assertEquals(TextLaterMaxRows, textLaterRows(1000.dp, 1f))
+        assertEquals(0.dp, textLaterHeight(0, 1f))
+    }
+
+    /** Two cells print the time and the figures; three cells, even with the rain column and
+     * the glyph's 10 dp given back, keep the word. */
+    @Test
+    fun `the word is dropped only where it would be clipped`() {
+        val two = laterColumns(159.dp - WidgetCardPadding * 2, 1f, is24h = true, rain = false)
+        assertFalse(two.word)
+        val three = laterColumns(
+            250.dp - WidgetCardPadding * 2 - TextIconEdgeGive, 1f, is24h = true, rain = true
+        )
+        assertTrue(three.word)
+        assertEquals(0.dp, laterColumns(300.dp, 1f, true, rain = false).rain)
+    }
+}
+
+/** Which hours «Più tardi» reads: on the stride's clock, far enough ahead, on the instant. */
+class LaterHoursTest {
+    private val zone = java.time.ZoneId.of("Europe/Rome")
+
+    private fun strip(from: java.time.LocalDateTime, hours: Int, skip: Set<Int> = emptySet()) =
+        (1..hours).filterNot { it in skip }.map { i ->
+            val t = from.withMinute(0).plusHours(i.toLong())
+            com.callbackdev.chiaro.ui.today.StripHour(
+                com.callbackdev.chiaro.domain.model.HourlyForecast(
+                    time = t, at = t.atZone(zone).toInstant(), tempC = 10.0 + i,
+                    condition = com.callbackdev.chiaro.domain.model.WeatherCondition(0, "", ""),
+                    precipChancePct = 0, cloudCoverPct = 0
+                ),
+                night = false
+            )
+        }
+
+    @Test
+    fun `hours land on the three-hour clock after the lead`() {
+        val now = java.time.LocalDateTime.of(2026, 9, 23, 15, 10)
+        val hours = laterHours(strip(now, 24), now).map { it.hour.time.hour }
+        assertEquals(listOf(18, 21, 0, 3), hours)
+        // Ten to five: 18:00 is an hour and ten away, under the lead, so the table opens at 21.
+        val later = java.time.LocalDateTime.of(2026, 9, 23, 16, 50)
+        assertEquals(21, laterHours(strip(later, 24), later).first().hour.time.hour)
+    }
+
+    @Test
+    fun `a missing hour is a missing row, never a shifted one`() {
+        val now = java.time.LocalDateTime.of(2026, 9, 23, 15, 10)
+        val hours = laterHours(strip(now, 24, skip = setOf(6)), now).map { it.hour.time.hour }
+        assertEquals(listOf(18, 0, 3), hours)
+        assertTrue(laterHours(emptyList(), now).isEmpty())
+    }
+}

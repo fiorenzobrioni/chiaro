@@ -8,7 +8,9 @@
      sentence side by side. It resizes both ways from there — three cells still carry the
      sentence (one cell better than the Now card manages, because there is no 66 dp of
      glyph to pay for first), two cells fall back to the number and its place, and two rows
-     and up become a centred column with the next hours as figures under it.
+     and up pin the place to the top and the number and its words to the bottom — beside
+     them from four cells, under them below that. From three rows the air that leaves buys
+     «Più tardi», the next hours as lines of type (23 set 2026).
 
      minWidth 110dp is two cells and minHeight 40dp one row, the platform's own formula
      (70 × n − 30). updatePeriodMillis is 0 on purpose, like the other four: the shared

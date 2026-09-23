@@ -1156,9 +1156,9 @@
     <string name="widget_sky_desc">The next sky moment, when, and its verdict — and the ones after it on a taller card</string>
     <!-- The text widget (19 set 2026): the one card with nothing drawn on it. -->
     <string name="widget_text_label">In words</string>
-    <string name="widget_text_desc">Words and figures: the temperature big, the place above it, the day\'s sentence beside them, and the weather icon only if you ask for it</string>
+    <string name="widget_text_desc">Words and figures: the temperature large, the place, the day\'s sentence and, on a tall card, the next hours</string>
     <string name="widget_config_show_icon">The weather icon</string>
-    <string name="widget_config_show_icon_note">A drawing of the sky right now, in the space the card already leaves empty: beside the number on a one-row card, over the words on a two-row one. It never takes a line away from anything else, so where there is no room it simply is not drawn. Off, the card is words and figures alone.</string>
+    <string name="widget_config_show_icon_note">A drawing of the sky right now, only in space the card already leaves empty: it never takes a line from the words, and where there is no room it is not drawn.</string>
     <!-- The two range marks say what they are, for a screen reader: a number with no
          subject is not a forecast. -->
     <string name="widget_range_high">Today\'s high</string>
@@ -1188,6 +1188,17 @@
     <string name="widget_config_show_sentence_note">An umbrella around five, a thunderstorm at three — or, when there is nothing to warn about, what the sky is doing now. Shown where the card has room for it.</string>
     <string name="widget_config_show_warning">Official warnings</string>
     <string name="widget_config_show_warning_note">The Protezione Civile\'s level for this place, as a chip. Orange and red are already in the day\'s sentence, so the chip appears where that sentence is not; yellow, which the sentence never carries, takes a line of its own where the card has one to spare.</string>
+    <string name="widget_config_preview_desc">Widget preview</string>
+    <string name="widget_config_size_placed">As placed</string>
+    <string name="widget_config_resize_hint">On the home screen, long-press the widget and drag its edges: it lays itself out again.</string>
+    <string name="text_form_line">Two cells: the place and the temperature. From three cells the day\'s sentence joins them.</string>
+    <string name="text_form_row">One row: place and temperature on the left, the day\'s sentence and range at the far edge.</string>
+    <string name="text_form_stack">Narrow and tall: the place on top, the temperature large and the sentence under it. From three rows the next hours join in.</string>
+    <string name="text_form_panel">Wide and tall: the temperature large beside the day\'s sentence. From three rows the next hours join in.</string>
+    <string name="widget_config_show_later">Later</string>
+    <string name="widget_config_show_later_note">The next hours in words, three hours apart: the time, the temperature, the sky, and the rain when it is likely. Only where the card is tall enough.</string>
+    <string name="widget_config_show_range_note_text">With its two arrows, under the day\'s sentence.</string>
+    <string name="widget_config_show_warning_note_text">The Protezione Civile\'s level for this place, written as words. Orange and red are already in the day\'s sentence.</string>
     <string name="widget_config_arrangement">Arrangement</string>
     <string name="widget_arrangement_icon_start">Icon on the left, sentence at the far edge</string>
     <string name="widget_arrangement_icon_end">Icon on the right, sentence beside the temperature</string>

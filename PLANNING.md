@@ -10051,3 +10051,68 @@ c'è account, SDK di analytics né identificativo pubblicitario.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 506 test in `:app`
   debug, lint a zero errori (l'unico avviso sul file, `UseKtx` su `Uri.parse`, c'era già).
 - **Da fare sul dispositivo**: l'anteprima mentre si cambiano palette, carattere e icone.
+
+## Il widget «In parole» e le sue impostazioni, review grafica (committente, 23 set 2026)
+
+Richiesta: «Ora fai una review con gli stessi obiettivi per il widget "In parole" e le relative
+impostazioni. Tieni in considerazione il ridimensionamento e il re-layout».
+
+### La review
+
+Resa del widget con la composizione Glance vera (`GlanceRemoteViews.compose` → `RemoteViews.apply`
+in Robolectric) su una matrice di concessioni del launcher: 2×1, 3×1, 4×1, 4×1 alta, 5×1, 2×2, 3×2,
+4×2, 5×2, 2×3, 3×3, 4×3, fresca, vecchia, con allerta e con l'icona. Le quattro forme reggono e le
+misure dei due passaggi sul dispositivo tengono; il difetto è in altezza: **da tre righe in su la
+card non aveva niente da fare con lo spazio**. Il numero è al suo tetto (56 e 64sp, per ragioni già
+scritte) e l'aria fra luogo e blocco cresceva e basta: un 3×3 era metà vuoto. La descrizione del
+provider prometteva ancora «the next hours as figures under it», mai fatte.
+
+La schermata delle impostazioni: una lista piatta di radio sotto etichette blu, senza vedere la
+card, con due note sbagliate per questa card (l'allerta «come pastiglia», che qui è una parola; la
+massima e minima «al bordo opposto»).
+
+### Cosa è cambiato
+
+- **«Più tardi»** (DESIGN §5): da tre righe, le prossime ore in righe di testo — ora, temperatura,
+  pioggia se ≥ 30%, il cielo in una parola — ogni tre ore sull'orologio, dalla prima almeno 90
+  minuti avanti. Pagata per ultima, a righe intere, da 2 a 4; il pannello tiene 16dp d'aria; la
+  parola cade dove resterebbe sotto 84dp (2 celle). Interruttore per widget (`showLater`, acceso):
+  cambia qualcosa solo dove c'era aria vuota.
+- **`TextWidgetContent`** estratta da `provideGlance`: la stessa funzione disegna la card del
+  launcher e l'anteprima.
+- **Impostazioni** (DESIGN §8.16): anteprima vera con le dimensioni in chip e una riga per forma
+  più il suggerimento di ridimensionare; gruppi arrotondati come in Impostazioni; sfondi con il
+  loro campione, colori in una striscia di campioni; opacità in una riga; «Più tardi» e l'icona in
+  fondo ai contenuti, la famiglia di icone subito dopo.
+- Testi: nota dell'icona accorciata; note dedicate per allerta e massima/minima sulla card
+  testuale; descrizione del selettore che dice le prossime ore; commento del provider corretto.
+
+### Decisioni e deviazioni
+
+- **Parole e numeri, non glifi, nella tabella.** Il widget «Le prossime ore» ha già la striscia
+  disegnata; qui la stessa informazione è detta: è la premessa della card.
+- **Ore sul passo dell'orologio (18, 21, 00), non «fra 3, 6, 9 ore»**: si leggono ad alta voce. Il
+  passo è sull'istante, non sull'etichetta, così la notte del cambio d'ora non sposta una riga.
+- **Descrizione del cielo per ora, non per fascia («Stasera»)**: una fascia vuole un'aggregazione
+  dei codici che il mapper fa solo per il giorno, con regole misurate (Fase 13b/26); rifarla qui
+  in piccolo sarebbe stato un modo nuovo di sbagliare il cielo. L'ora ha il suo codice già
+  riparato.
+- **L'anteprima è la composizione vera, non un rifacimento in Compose** come quella dell'Arco:
+  `GlanceRemoteViews` (API sperimentale di Glance 1.1) compone per qualsiasi dimensione. Se
+  un giorno smettesse di funzionare, l'anteprima semplicemente non si disegna (`runCatching`).
+- **`BackgroundSection` resta una sola** per i due schermi (`WidgetConfigChoicesTest`): la nuova
+  versione con i campioni serve anche l'Arco, che mantiene il suo impianto piatto.
+
+### Come è stato verificato
+
+- Resa Robolectric del widget (matrice sopra) e della schermata impostazioni, chiara e scura, prima
+  e dopo; dopo averla guardata: la parola della tabella tolta sotto 84dp (stampava «Poc…») e le
+  colonne ristrette di pochi dp perché a 3 celle, con pioggia e icona, la parola resti.
+- `TextLaterTest`, `LaterHoursTest`: nessuna tabella sulle card di riferimento a una e due righe,
+  almeno due righe su tutte quelle a tre, il resto del piano identico con l'interruttore acceso o
+  spento, la tabella dentro la card, righe intere, ore sull'orologio, un'ora mancante è una riga
+  mancante.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+- **Da fare sul dispositivo**: l'anteprima nella schermata del launcher (tocco inghiottito,
+  angoli), la card a 3×3 e 4×3 sulla schermata Home.
+

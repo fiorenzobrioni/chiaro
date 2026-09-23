@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.widget
 
 import android.content.Context
+import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.sp
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
+import com.callbackdev.chiaro.ui.today.StripHour
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import com.callbackdev.chiaro.ui.today.WeatherText
 import com.callbackdev.chiaro.ui.warnings.WarningText
@@ -100,52 +102,61 @@ class TextWidget : GlanceAppWidget() {
             val schemes = rememberWidgetSchemes(
                 context, model.settings.dynamicColor, model.settings.palette
             )
-            val skyBitmap = rememberSkyBitmap(model)
-            val content = model.content
-            val size = LocalSize.current
-            val form = if (content == null) null else textForm(size)
-            // Every edge of this card carries words, so every edge takes the words' inset
-            // ([WidgetCardPaddingLeading] exists for a glyph's own margin, and there is no
-            // glyph here). The exception is the top and bottom of a one-row card, where
-            // the budget spends the household's snug 6 — that is what makes the hero worth
-            // calling one: at 14 the reference 85 dp row would print a 27 sp number, under
-            // this card's own floor — and the CARD lends it straight back as headroom, so a
-            // column that measures a few dp taller than the estimate grows into its own air
-            // instead of cutting its last line. Nothing moves either way: a one-row card
-            // centres its columns, and a centred block ignores a symmetric inset. See
-            // [textCardPaddingVertical] for the line that was being cut and the arithmetic.
-            // Geometry checked against the 24 dp corner: at the budgeted height the block
-            // is still centred where it was, so the first cap of the place's line sits at
-            // (14, ~8), 17 dp from the corner's centre and well inside the radius. Only a
-            // column really overrunning its budget comes nearer, and at the full 12 dp of
-            // headroom the cap lands at (14, ~2) — a fraction of a dp outside the curve,
-            // against a line that was being cut in half before.
-            val vertical = textCardPaddingVertical(form)
-            // A glyph edge takes 4 dp and a words edge 14 ([TextIconEdgeGive]). On every
-            // form but ROW — where the glyph is interior, inside the name's column — the
-            // drawing is what meets the trailing edge, so the card gives it the glyph's
-            // inset and each text that reached that edge pays the 10 dp back. Nothing the
-            // reader can read moves by a dp either way, which is why the inset and the
-            // give-back are two readings of ONE condition ([textCardPaddingEnd]) rather
-            // than two conditions free to disagree — see there for the day they did.
-            val give = textEdgeGive(form, model.look.showIcon)
-            WidgetCard(
-                model, schemes, skyBitmap,
-                contentPaddingEnd = textCardPaddingEnd(form, model.look.showIcon),
-                contentPaddingTop = vertical,
-                contentPaddingBottom = vertical
-            ) { palette ->
-                when {
-                    content == null && model.city == null -> NoPlaceContent(palette)
-                    content == null -> NoDataContent(palette)
-                    form == TextForm.PANEL ->
-                        PanelContent(content, model, palette, size, give)
-                    form == TextForm.STACK ->
-                        StackContent(content, model, palette, size, give)
-                    form == TextForm.ROW -> RowContent(content, model, palette, size)
-                    else -> LineContent(content, model, palette, size, give)
-                }
-            }
+            TextWidgetContent(model, schemes, rememberSkyBitmap(model))
+        }
+    }
+}
+
+/**
+ * The whole card for [model] at the launcher's [LocalSize], split off [TextWidget] so the
+ * configuration screen's preview and the render tests draw the SAME composition the
+ * launcher does rather than a lookalike.
+ */
+@Composable
+internal fun TextWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBitmap: Bitmap?) {
+    val content = model.content
+    val size = LocalSize.current
+    val form = if (content == null) null else textForm(size)
+    // Every edge of this card carries words, so every edge takes the words' inset
+    // ([WidgetCardPaddingLeading] exists for a glyph's own margin, and there is no
+    // glyph here). The exception is the top and bottom of a one-row card, where
+    // the budget spends the household's snug 6 — that is what makes the hero worth
+    // calling one: at 14 the reference 85 dp row would print a 27 sp number, under
+    // this card's own floor — and the CARD lends it straight back as headroom, so a
+    // column that measures a few dp taller than the estimate grows into its own air
+    // instead of cutting its last line. Nothing moves either way: a one-row card
+    // centres its columns, and a centred block ignores a symmetric inset. See
+    // [textCardPaddingVertical] for the line that was being cut and the arithmetic.
+    // Geometry checked against the 24 dp corner: at the budgeted height the block
+    // is still centred where it was, so the first cap of the place's line sits at
+    // (14, ~8), 17 dp from the corner's centre and well inside the radius. Only a
+    // column really overrunning its budget comes nearer, and at the full 12 dp of
+    // headroom the cap lands at (14, ~2) — a fraction of a dp outside the curve,
+    // against a line that was being cut in half before.
+    val vertical = textCardPaddingVertical(form)
+    // A glyph edge takes 4 dp and a words edge 14 ([TextIconEdgeGive]). On every
+    // form but ROW — where the glyph is interior, inside the name's column — the
+    // drawing is what meets the trailing edge, so the card gives it the glyph's
+    // inset and each text that reached that edge pays the 10 dp back. Nothing the
+    // reader can read moves by a dp either way, which is why the inset and the
+    // give-back are two readings of ONE condition ([textCardPaddingEnd]) rather
+    // than two conditions free to disagree — see there for the day they did.
+    val give = textEdgeGive(form, model.look.showIcon)
+    WidgetCard(
+        model, schemes, skyBitmap,
+        contentPaddingEnd = textCardPaddingEnd(form, model.look.showIcon),
+        contentPaddingTop = vertical,
+        contentPaddingBottom = vertical
+    ) { palette ->
+        when {
+            content == null && model.city == null -> NoPlaceContent(palette)
+            content == null -> NoDataContent(palette)
+            form == TextForm.PANEL ->
+                PanelContent(content, model, palette, size, give)
+            form == TextForm.STACK ->
+                StackContent(content, model, palette, size, give)
+            form == TextForm.ROW -> RowContent(content, model, palette, size)
+            else -> LineContent(content, model, palette, size, give)
         }
     }
 }
@@ -339,12 +350,14 @@ private fun StackContent(
         sentenceSlot = true,
         ownRow = textStackHasFactLine(size, scale, content.isStale, sentenceOn)
     )
+    val later = laterHours(content.strip, content.now)
     val plan = textStackPlan(
         size, scale,
         stale = content.isStale,
         sentence = sentenceOn,
         warning = warning.drawn,
-        range = model.look.showDayRange && today != null
+        range = model.look.showDayRange && today != null,
+        later = model.look.showLater && later.size >= TextLaterMinRows
     )
     val icon = if (model.look.showIcon) {
         textStackIconSize(size, scale, plan.heroSp)
@@ -396,6 +409,10 @@ private fun StackContent(
                 size = TextFactSp.sp, marks = true
             )
         }
+        LaterTable(
+            later.take(plan.laterRows), model, palette, scale,
+            width = size.width - WidgetCardPadding * 2, edgeGive = edgeGive
+        )
         StaleLineText(content, palette)
     }
 }
@@ -433,12 +450,14 @@ private fun PanelContent(
         sentenceSlot = true,
         ownRow = textPanelHasFactLine(size, scale, sentenceOn)
     )
+    val later = laterHours(content.strip, content.now)
     val plan = textPanelPlan(
         size, scale,
         stale = content.isStale,
         sentence = sentenceOn,
         warning = warning.drawn,
-        range = model.look.showDayRange && today != null
+        range = model.look.showDayRange && today != null,
+        later = model.look.showLater && later.size >= TextLaterMinRows
     )
     val icon = if (model.look.showIcon) textPanelIconSize(size, scale, plan) else 0.dp
     Column(modifier = GlanceModifier.fillMaxSize()) {
@@ -491,6 +510,99 @@ private fun PanelContent(
                             size = TextFactSp.sp, marks = true
                         )
                     }
+                }
+            }
+        }
+        // Under the whole block and across the full width: the table is the card's
+        // last paragraph, not a third column, and at the width of the card its words
+        // («Pioggia leggera», «Poco nuvoloso») print whole.
+        LaterTable(
+            later.take(plan.laterRows), model, palette, scale,
+            width = size.width - WidgetCardPadding * 2, edgeGive = edgeGive
+        )
+    }
+}
+
+/**
+ * «Più tardi»: the next hours as lines of type, three hours apart ([laterHours]) — the time
+ * in the quiet ink, the temperature at rank 3 in the strong one, the chance of rain in the
+ * rain ramp's own ink when it is [TextLaterRainFloorPct] or more, and the sky in a word.
+ *
+ * It is the Today card's strip said in words, which is the whole of this card's premise:
+ * the same hours, the same numbers, and a word where that card draws a glyph. Columns are
+ * fixed widths so the figures line up down the table the way a timetable's do; the rain
+ * column exists only when some row has a figure for it, and the word only where the card
+ * leaves it [TextLaterWordMin] — a two-cell card prints «Poc…» otherwise, and a clipped
+ * word is worse than a table of figures. Every row is one Glance `Row` of at most four
+ * children, inside a column of at most four rows.
+ */
+@Composable
+private fun LaterTable(
+    rows: List<StripHour>,
+    model: WidgetModel,
+    palette: WidgetPalette,
+    scale: Float,
+    width: Dp,
+    edgeGive: Dp
+) {
+    if (rows.size < TextLaterMinRows) return
+    val context = LocalContext.current
+    val locale = glanceLocale()
+    val is24h = android.text.format.DateFormat.is24HourFormat(context)
+    val clock = Formats.timeFormatter(is24h, locale)
+    val columns = laterColumns(
+        width - edgeGive, scale, is24h,
+        rain = rows.any { (it.hour.precipChancePct ?: 0) >= TextLaterRainFloorPct }
+    )
+    Column(
+        modifier = GlanceModifier.fillMaxWidth().padding(top = TextLaterGap, end = edgeGive)
+    ) {
+        rows.forEach { row ->
+            val hour = row.hour
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = GlanceModifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = hour.time.format(clock),
+                    style = secondaryStyle(palette, TextLaterSp.sp),
+                    maxLines = 1,
+                    modifier = GlanceModifier.width(columns.time)
+                )
+                Text(
+                    text = Formats.temperature(
+                        hour.tempC, model.settings.units.temperature, locale
+                    ),
+                    style = TextStyle(
+                        color = palette.primary,
+                        fontSize = TextFactSp.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    maxLines = 1,
+                    modifier = GlanceModifier.width(columns.temperature)
+                )
+                if (columns.rain > 0.dp) {
+                    // An empty cell, not a «0%», where this hour's chance is under the
+                    // floor or was never forecast (§1.1): the column stays one column.
+                    val pct = hour.precipChancePct?.takeIf { it >= TextLaterRainFloorPct }
+                    Text(
+                        text = pct?.let { Formats.percent(it, locale) } ?: "",
+                        style = TextStyle(
+                            color = rainInk(pct ?: 0, palette),
+                            fontSize = TextLaterSp.sp,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        maxLines = 1,
+                        modifier = GlanceModifier.width(columns.rain)
+                    )
+                }
+                if (columns.word) {
+                    Text(
+                        text = context.getString(WeatherText.condition(hour.condition.wmoCode)),
+                        style = secondaryStyle(palette, TextLaterSp.sp),
+                        maxLines = 1,
+                        modifier = GlanceModifier.defaultWeight()
+                    )
                 }
             }
         }

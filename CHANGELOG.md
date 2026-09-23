@@ -58,6 +58,12 @@ sections are a normal size and live here alone.
 - **Settings: a short, true privacy note.** No account, no ads, no tracking; Chiaro has no server of
   its own, and Open-Meteo only gets the place you ask about, rounded to about a kilometre when it is
   your position.
+- **«In parole»: the next hours on a tall card.** From three rows up the widget adds «Più tardi»:
+  every three hours, the time, the temperature, the rain when it is likely and the sky in a word.
+  It only uses space the card was leaving empty, and can be turned off.
+- **Widget settings show the widget.** «In parole» opens its settings on the card itself, at the
+  size it has on the home screen, with chips to see how it lays itself out at other sizes. The
+  settings are grouped like the app's own, and the backgrounds show their colour.
 
 ### Fixed
 
