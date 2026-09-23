@@ -443,6 +443,11 @@
     <string name="sky_no_place_body">Aggiungi un luogo per vedere cosa ha in programma il suo cielo.</string>
     <string name="sky_section_moments">I prossimi momenti</string>
     <string name="sky_section_events">In arrivo</string>
+    <string name="sky_events_beyond_note">Il verdetto sulle nuvole arriva quando la previsione copre quella notte, pochi giorni prima.</string>
+    <plurals name="sky_event_in_days">
+        <item quantity="one">tra %d giorno</item>
+        <item quantity="other">tra %d giorni</item>
+    </plurals>
     <!-- Fase 27: due sciami che culminano la stessa notte stanno su una riga sola. -->
     <string name="sky_event_and">%1$s e %2$s</string>
     <string name="sky_section_reminders">Promemoria</string>
@@ -459,6 +464,7 @@
     <string name="sky_day_today">Oggi</string>
     <string name="sky_day_tomorrow">Domani</string>
     <string name="sky_tonight_label">Stanotte</string>
+    <string name="sky_tonight_moon_pct">luna %d%%</string>
     <string name="sky_tonight_window">Buio dalle %1$s alle %2$s</string>
     <string name="sky_tonight_no_darkness">Stanotte il cielo non diventa mai del tutto buio: a questa latitudine, in questa stagione, capita.</string>
     <!-- Il cielo opposto con la stessa finestra vuota: la notte polare profonda, dove

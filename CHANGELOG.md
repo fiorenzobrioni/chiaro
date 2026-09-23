@@ -36,6 +36,12 @@ sections are a normal size and live here alone.
 - **Today: the rest of the day is one thread**, and its next moment says how soon.
 - **Today: every detail with a scale shows it in its own color**, with a disc on the value and
   the bands marked; pressure and pollen get one too.
+- **Sky: tonight is drawn as the night.** The card is the night sky with tonight's moon in its
+  phase, and a strip from dusk to dawn shows the moon's hours, the clouds hour by hour, the
+  stars where it is clear and the dark window framed.
+- **Sky: the moments are grouped under Today and Tomorrow**, and the next one says how soon.
+- **Sky: the calendar ahead counts the days**, and "too far out to say" is said once instead of
+  on every row.
 
 ### Fixed
 

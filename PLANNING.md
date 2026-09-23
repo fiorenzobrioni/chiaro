@@ -9826,3 +9826,64 @@ dove l'estetica e DESIGN.md litigano, si cambia DESIGN.md.
 - **Da fare sul dispositivo**: la barra compatta durante uno scroll veloce, il sole all'alba e al
   tramonto (azimut agli estremi), la luna di giorno, la curva nella fascia aperta di un giorno
   della settimana.
+
+## La schermata Cielo, review grafica (committente, 23 set 2026)
+
+Richiesta: «fai un review anche della schermata Cielo sempre con lo stesso obiettivo di
+migliorare e rendere anche wow in qualche aspetto la schermata. Ottimizza e migliora layout e
+testi dove necessario». Stesso mandato della schermata Oggi: dove l'estetica e DESIGN.md
+litigano, si cambia DESIGN.md.
+
+### La review
+
+Resa della schermata vera (Robolectric, pomeriggio sereno, sera mista con luna al 92%, notte di
+luna nuova in tema scuro) prima di toccare niente. Tre cose:
+
+1. **L'eroe non era notturno.** «Stanotte» era una card nel colore del verdetto con cinque righe
+   di testo: corretta, e la cosa meno notturna di una schermata sulla notte. Il dato per
+   disegnarla c'era tutto (la notte, la finestra, la luna, le nuvole ora per ora).
+2. **«Domani ·» su ogni riga.** La sera tutte le righe dei momenti cominciavano con la stessa
+   parola, e l'ora — quello che si cerca — finiva a metà riga.
+3. **«In arrivo» ripeteva la stessa frase.** Cinque righe di sciami, ognuna chiusa da «La
+   previsione non arriva ancora così lontano», ognuna andata a capo.
+
+### Cosa è cambiato
+
+- **`TonightCard` è la notte** (DESIGN §8.8b, `TonightSky.kt`): fondo della banda notturna del
+  canvas sollevata dalla luna, verdetto con segno e parola nella coppia scura, la luna nella sua
+  fase nell'angolo, e la **striscia della notte** — ore di luna argentate, nuvole ora per ora
+  appese dall'alto, stelle dove è sereno, finestra incorniciata nell'inchiostro del verdetto con
+  i suoi orari, tratto più sereno sottolineato.
+- **`Tonight` porta le ore della notte** (`NightHour`, dalla previsione) e l'elongazione della
+  luna; `SkyStateBuilder.nightHours` le ritaglia.
+- **I momenti sotto «Oggi» e «Domani»**, senza la parola ripetuta sulle righe; il prossimo dice
+  fra quanto.
+- **Gli eventi contano i giorni** («tra 15 giorni»), e «troppo lontano» è una nota sola sotto la
+  sezione.
+- **`SkyContent` prende funzioni, non il view model** (`SkyActions`): la schermata si può
+  disegnare in un test o in un'anteprima.
+- `ChiaroTheme.nightColors`: la palette semantica scura nel vestito del lettore, per la card.
+
+### Decisioni e deviazioni
+
+- **Il verdetto nella coppia scura anche in tema chiaro.** La card è sempre notte, come il canvas
+  (§3.2): i colori seguono il fondo, non il tema. È la stessa eccezione che il cielo ha sempre avuto.
+- **La striscia non dice niente di nuovo**, di proposito: ogni segno è una frase della card, e le
+  frasi restano. Per questo è muta per TalkBack.
+- **Stelle fisse, non animate**: nessuna particella (§3.5); la loro luminosità segue le nuvole
+  dell'ora e la luna, quindi anche le stelle sono il dato.
+- **La luna nel badge non ha un'ombra disegnata a mano**: è lo stesso `moonLitPath` del canvas di
+  Oggi, così le due lune non possono disegnare fasi diverse.
+- **«Troppo lontano» resta detto**, una volta: le righe senza verdetto non portano un chip, e la
+  nota sotto la sezione dice perché.
+
+### Come è stato verificato
+
+- `TonightNightTest` (nuovo): ore di luna lette dalla finestra contro la notte, frazione sulla
+  striscia, nuvola dell'istante, ore della notte che includono quella a cavallo del crepuscolo.
+- Resa Robolectric prima e dopo, sui tre scenari; dopo averla guardata: nuvole sfumate sotto (erano
+  blocchi), striscia ritagliata sugli angoli arrotondati.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 503 test in
+  `:app` debug, lint a zero errori.
+- **Da fare sul dispositivo**: la card in una notte di luna che sorge a metà (cornice e argento
+  affiancati), il «tra N» sul prossimo momento, il conteggio dei giorni a cavallo di mezzanotte.

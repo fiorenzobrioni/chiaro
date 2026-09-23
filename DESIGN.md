@@ -1188,6 +1188,37 @@ on both. It costs about 6dp of row height and puts 14dp of air over the chip ins
 and those were the cheapest dp on the row: a 40dp bell would have bought 8 and a tighter
 chip 4, neither of them a margin.
 
+**8.8b TonightCard** (design review, 23 set 2026) — the Sky screen's hero, drawn as **the
+night it is about**. The ground is the canvas' own night band (§3.2 at −24°), lifted by the
+moon (§3.4) when the moon is up tonight, with 28dp corners: dark for the reason the sky is dark
+at 23:00, whatever the phone's theme, so its type is white (secondary at 72%) and its verdict
+wears the **dark** verdict pair in the reader's dress (`ChiaroTheme.nightColors`) — still the
+mark and the word first (§8.7), at `headlineMedium`, with the number that decided it right
+under. Tonight's moon sits in the corner drawn in its phase (lit limb toward the evening sun,
+mirrored in the south) with its percentage. Then the window at `titleMedium`, what the moon
+took, the clearest stretch — the sentences, unchanged, which are the card's text equivalent —
+and under them the **night strip**: dusk to dawn as a 34dp band; the moon's hours silvered;
+each forecast hour's cloud hanging from the top as deep as the sky is covered, fading at its
+underside so neighbouring hours read as one bank; a fixed scatter of stars showing through
+where the hour is clear, dimmer where the moon is up; the dark window framed in the verdict's
+ink with its two times under its edges (one centred label when the window is too short for
+two); the clearest stretch underlined in the pass ink. Silent to a screen reader: nothing on
+it is not already a sentence above it. Until then the hero was a card in the verdict's
+container color holding five lines of text: correct, and the least nocturnal thing on a screen
+about the night.
+
+**The moments are grouped by day** (same review): «Oggi» and «Domani» are `labelLarge`
+headings in `primary` inside the section, and the rows lose the «Domani ·» each of them
+carried — four rows saying the same word pushed the time, which is what a reader scans for,
+to the middle of the line. A row keeps «Adesso», which no heading can say, and the **next**
+timed moment says how soon («tra 1 h 20 min», the words Today's agenda uses) within half a day.
+
+**The calendar ahead counts down** — «8 ottobre · tra 15 giorni», «oggi», «domani», up to two
+months out — and «too far out to say» is said **once**, as a footnote under the section,
+instead of once a row: five consecutive rows ending «La previsione non arriva ancora così
+lontano» were one sentence five times, each wrapped onto a second line. The other reasons a
+verdict is missing (no data, old data) are about their row and stay on it.
+
 **8.9 RuleSentence** — the alert builder as a sentence of tappable chips: *Notify me when*
 `[rain, next 6 h]` *is* `[above]` `[70%]`. Every chip opens a picker; no free-text field
 for a value with a range, which is how tweather's "a syntax error is not writable" property

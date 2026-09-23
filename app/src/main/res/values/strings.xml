@@ -462,6 +462,11 @@
     <string name="sky_no_place_body">Add a place to see what its sky has planned.</string>
     <string name="sky_section_moments">The moments ahead</string>
     <string name="sky_section_events">Coming up</string>
+    <string name="sky_events_beyond_note">The verdict on the clouds arrives once the forecast reaches that night, a few days before.</string>
+    <plurals name="sky_event_in_days">
+        <item quantity="one">in %d day</item>
+        <item quantity="other">in %d days</item>
+    </plurals>
     <!-- Fase 27: two showers that peak on the same night share one row. -->
     <string name="sky_event_and">%1$s and %2$s</string>
     <string name="sky_section_reminders">Reminders</string>
@@ -478,6 +483,7 @@
     <string name="sky_day_today">Today</string>
     <string name="sky_day_tomorrow">Tomorrow</string>
     <string name="sky_tonight_label">Tonight</string>
+    <string name="sky_tonight_moon_pct">moon %d%%</string>
     <string name="sky_tonight_window">Dark from %1$s to %2$s</string>
     <string name="sky_tonight_no_darkness">The sky never gets fully dark tonight: at this latitude, in this season, it happens.</string>
     <!-- The opposite sky with the same empty window: the deep polar night, where it is

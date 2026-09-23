@@ -284,6 +284,15 @@ object ChiaroTheme {
     val colors: ChiaroColors
         @Composable @ReadOnlyComposable get() = LocalChiaroColors.current
 
+    /**
+     * The semantic palette selected for a DARK ground whatever the reader's theme is, in
+     * the reader's dress: for the one surface outside the canvas that is always night,
+     * the Sky's tonight card (23 set 2026). Its verdict pairs are the dark ones because
+     * the ground under them is dark, the same argument §3 makes for the sky itself.
+     */
+    val nightColors: ChiaroColors
+        @Composable @ReadOnlyComposable get() = paletteFor(LocalAppPalette.current).colors(dark = true)
+
     /** The band table the reader's palette paints the canvas with (§3.7). Same reason
      * it lives here and not in `colorScheme`: Material has no slot for a sky. */
     val sky: SkyPalette
