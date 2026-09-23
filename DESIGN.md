@@ -1444,6 +1444,29 @@ the permission was granted is the same lie the other way round.
 
 ---
 
+**8.15 Settings** (design review, 23 set 2026) — the list was Material's plain rows under blue
+headers, with the privacy note as a paragraph among eleven credits. Now:
+
+- **The guide is a card** in `primaryContainer` at the top, with its mark and a chevron: it is
+  the one thing on the screen that is not a setting.
+- **Every group sits on one rounded ground** (`surfaceContainerLow`, 24dp corners, hairlines
+  between rows), the Alerts screen's grouping, so the two screens of switches and values look
+  like one app. A credit whose tap leaves the app carries a chevron; a fact with nothing to
+  change (version, developer, copyright) carries none.
+- **The appearance previews itself**: above the appearance group, a slice of the canvas in the
+  reader's palette at the golden hour (3°, where the two palettes differ most) with a
+  temperature in their typeface and a condition in their icon set, and under it a verdict chip,
+  a rain figure and a temperature bar in their semantic colours. Every choice below changes
+  something in it the moment it is made. Silent to a screen reader: the rows say every choice.
+- **Privacy is its own group and a statement**: a card in `secondaryContainer` with a lock, one
+  line in `titleSmall` («Niente account, niente pubblicità, niente tracciamento.») and three
+  facts, each checked against the code — no server of Chiaro's own, so places, alerts and journal
+  stay on the phone; Open-Meteo gets only the place asked about or searched for, a position
+  rounded to ~1 km (`LocationProvider`, two decimals); no identifier.
+- **The credits are a group of their own** («Dati e riconoscimenti»), apart from who made the app.
+- **Reset is an outlined button in the error colour** at the foot, not one more row: it is the one
+  thing on the screen that undoes the others.
+
 ## 9. Charts and quantities
 
 ### 9.1 The three rules

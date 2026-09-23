@@ -10003,3 +10003,51 @@ con un gelo). Anonima davvero, e per ragioni precise:
   debug, lint a zero errori e nessun avviso sui file toccati.
 - **Da fare sul dispositivo**: le intestazioni fisse durante lo scroll, il tocco sulla deriva che apre
   la tabella, la card della previsione con dati veri di più giorni.
+
+## Le Impostazioni, review grafica e la nota privacy (committente, 23 set 2026)
+
+Richiesta: «Fai review anche della schermata Settings. Oltre ai soliti obiettivi volevo anche
+cambiare la sezione privacy: mi sembra eccessivamente verbosa, vorrei una nota semplice e veritiera
+della filosofia di privacy dell'app».
+
+### La review
+
+Resa della schermata (Robolectric, paper chiaro e vivid scuro). Corretta e piatta: righe Material
+sotto intestazioni blu, la guida come prima riga fra le altre, undici righe di «Informazioni» di cui
+la privacy era una, con un paragrafo di cinque righe.
+
+### Cosa è cambiato (DESIGN §8.15)
+
+- La guida è una card in testa; ogni gruppo sta su un fondo arrotondato come in Avvisi.
+- **L'anteprima dell'aspetto**: una fetta di cielo nella palette scelta, all'ora d'oro, con temperatura
+  nel carattere scelto, condizione nel set di icone scelto, e sotto un verdetto, una pioggia e una barra
+  di temperatura nei colori della palette. Cambia a ogni scelta.
+- **Privacy**: gruppo a sé, card con lucchetto, una riga («Niente account, niente pubblicità, niente
+  tracciamento.») e tre fatti in due frasi.
+- I riconoscimenti in un gruppo loro, «Dati e riconoscimenti»; il ripristino un bottone in fondo.
+- `SettingsList` prende funzioni (`SettingsActions`) invece del view model.
+
+### La nota privacy: cosa dice e perché
+
+Verificato sul codice prima di scriverla: le uniche chiamate di rete sono Open-Meteo (meteo, aria,
+ricerca dei luoghi) e il download del bollettino della Protezione Civile dal mirror su GitHub, che non
+manda niente dell'utente; la posizione esce da `LocationProvider` già arrotondata a due decimali; non
+c'è account, SDK di analytics né identificativo pubblicitario.
+
+- **«Chiaro non ha un server suo»** è la frase che regge le altre: tutto quel che l'app tiene è sul
+  telefono per costruzione, non per promessa.
+- **Il backup è fuori dalla nota**, di proposito: lo fa Android se il lettore l'ha acceso, cifrato col
+  suo PIN, e copre luoghi e impostazioni ma non il diario (21 set). Metterlo in una nota di due frasi la
+  rendeva una nota sul backup; resta spiegato nella guida.
+- **«Nessun identificativo», non «anonimo»**: ogni richiesta di rete porta un indirizzo IP, e una nota
+  veritiera non promette più di quel che l'app controlla.
+- **Il geocoder di Android** (che trova il nome del posto della posizione) resta nella guida, dove è già
+  detto: è il sistema, non Chiaro, a decidere dove chiedere.
+
+### Come è stato verificato
+
+- Resa Robolectric prima e dopo; dopo averla guardata, l'anteprima spostata a 3° (a 5° il cielo era un
+  marroncino) e la nota accorciata di una riga.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 506 test in `:app`
+  debug, lint a zero errori (l'unico avviso sul file, `UseKtx` su `Uri.parse`, c'era già).
+- **Da fare sul dispositivo**: l'anteprima mentre si cambiano palette, carattere e icone.

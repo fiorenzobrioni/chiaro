@@ -52,6 +52,12 @@ sections are a normal size and live here alone.
   week's drift card leads with its sentence and points at the day it names.
 - **Journal: how the forecast did.** From the days already closed: how far the highs were from
   the real ones on average, and the rain the forecast gave on the days it rained against the rest.
+- **Settings: the appearance previews itself.** A slice of sky, a temperature, an icon and a verdict
+  drawn with the palette, typeface and icons you pick, above the choices that change them. Groups sit
+  on rounded cards, and the guide is a card of its own.
+- **Settings: a short, true privacy note.** No account, no ads, no tracking; Chiaro has no server of
+  its own, and Open-Meteo only gets the place you ask about, rounded to about a kilometre when it is
+  your position.
 
 ### Fixed
 

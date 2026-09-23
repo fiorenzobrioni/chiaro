@@ -303,6 +303,7 @@
     <string name="settings_language">App language</string>
     <string name="settings_language_system">Same as the phone</string>
     <string name="settings_group_about">About</string>
+    <string name="settings_group_credits">Data and credits</string>
     <string name="settings_version">Version</string>
     <string name="settings_developer">Developer</string>
     <string name="settings_developer_note" translatable="false">Callback Dev</string>
@@ -323,7 +324,8 @@
     <string name="settings_source_code">Source code</string>
     <string name="settings_source_code_note">Free software, GPL-3.0, on GitHub</string>
     <string name="settings_privacy">Privacy</string>
-    <string name="settings_privacy_note">No account, no ads, no tracking. A forecast has to be of somewhere, so the place goes to Open-Meteo: your position rounded to about a kilometre, with no account and no device identifier attached to it. Nothing else leaves the phone, and a backup carries your places and settings but never the journal of what you looked at.</string>
+    <string name="settings_privacy_headline">No account, no ads, no tracking.</string>
+    <string name="settings_privacy_body">Chiaro has no server of its own: your places, alerts and journal stay on your phone. Open-Meteo only gets the place you ask the weather for, or search for, rounded to about a kilometre when it is your position. No identifier.</string>
     <string name="settings_reset">Restore default settings</string>
     <string name="settings_reset_dialog_title">Restore default settings?</string>
     <string name="settings_reset_dialog_body">Units, appearance and update frequency go back to their defaults. Your places and your history are not affected.</string>

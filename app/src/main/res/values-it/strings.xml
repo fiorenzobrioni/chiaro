@@ -286,6 +286,7 @@
     <string name="settings_language">Lingua dell\'app</string>
     <string name="settings_language_system">Come il telefono</string>
     <string name="settings_group_about">Informazioni</string>
+    <string name="settings_group_credits">Dati e riconoscimenti</string>
     <string name="settings_version">Versione</string>
     <string name="settings_developer">Sviluppo</string>
     <string name="settings_copyright">Copyright</string>
@@ -304,7 +305,8 @@
     <string name="settings_source_code">Codice sorgente</string>
     <string name="settings_source_code_note">Software libero, GPL-3.0, su GitHub</string>
     <string name="settings_privacy">Privacy</string>
-    <string name="settings_privacy_note">Nessun account, nessuna pubblicità, nessun tracciamento. Una previsione deve pur essere di un posto, quindi il posto va a Open-Meteo: la tua posizione arrotondata a circa un chilometro, senza nessun account e nessun identificativo del dispositivo attaccato. Non esce altro dal telefono, e un backup porta i tuoi luoghi e le impostazioni ma mai il diario di quel che hai guardato.</string>
+    <string name="settings_privacy_headline">Niente account, niente pubblicità, niente tracciamento.</string>
+    <string name="settings_privacy_body">Chiaro non ha un server suo: luoghi, avvisi e diario restano sul telefono. A Open-Meteo va solo il luogo di cui chiedi il meteo, o che cerchi, arrotondato a circa un chilometro se è la tua posizione. Nessun identificativo.</string>
     <string name="settings_reset">Ripristina le impostazioni predefinite</string>
     <string name="settings_reset_dialog_title">Ripristinare le impostazioni predefinite?</string>
     <string name="settings_reset_dialog_body">Unità, aspetto e frequenza di aggiornamento tornano ai valori predefiniti. I tuoi luoghi e il tuo storico non vengono toccati.</string>
