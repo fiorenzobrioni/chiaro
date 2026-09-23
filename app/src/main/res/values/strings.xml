@@ -1083,6 +1083,23 @@
     <string name="journal_no_place_body">Add a place and the journal starts writing itself: every update leaves a line.</string>
     <string name="journal_empty">Nothing written yet. The journal fills up as the updates come in.</string>
     <string name="journal_yesterday">Yesterday</string>
+    <plurals name="journal_day_count">
+        <item quantity="one">%d entry</item>
+        <item quantity="other">%d entries</item>
+    </plurals>
+    <plurals name="journal_drift_every">
+        <item quantity="one">One column an hour</item>
+        <item quantity="other">One column every %d hours</item>
+    </plurals>
+    <string name="journal_drift_axis_latest">latest update</string>
+    <string name="journal_skill_title">How the forecast did</string>
+    <string name="journal_skill_high">Highs: on average %1$s from the real one, over %2$d days.</string>
+    <string name="journal_skill_rain">On the days it rained, rain was given %1$s on average; on the others, %2$s.</string>
+    <string name="journal_skill_rain_dry">It rained on none of these days: rain was given %1$s on average.</string>
+    <string name="journal_skill_rain_wet">It rained on every one of these days: rain was given %1$s on average.</string>
+    <string name="journal_fail_offline">The phone was offline</string>
+    <string name="journal_fail_service">The weather service did not answer</string>
+    <string name="journal_fail_unknown">The reason is unclear</string>
     <!-- A journal day's revisions of one target day fold into one line; this says
          how many the line stands for (only shown past one). -->
     <plurals name="journal_shift_revisions">

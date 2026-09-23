@@ -47,6 +47,11 @@ sections are a normal size and live here alone.
 - **Alerts: lighter to read.** Every alert has its drawing, one sentence on what it sends and a
   separate line on when and how often; the switches sit in rounded groups; "no warning" reads as
   an answer; ideas to start from are cards you browse sideways.
+- **Journal: a diary with a face.** Entries sit on a thread with a coloured badge per kind (or the
+  sky's own drawing), the new value of each change stands out, day headings stay pinned, and the
+  week's drift card leads with its sentence and points at the day it names.
+- **Journal: how the forecast did.** From the days already closed: how far the highs were from
+  the real ones on average, and the rain the forecast gave on the days it rained against the rest.
 
 ### Fixed
 

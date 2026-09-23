@@ -1051,6 +1051,23 @@
     <string name="journal_no_place_body">Aggiungi un luogo e il diario comincia a scriversi da solo: ogni aggiornamento lascia una riga.</string>
     <string name="journal_empty">Ancora niente da raccontare. Il diario si riempie man mano che arrivano gli aggiornamenti.</string>
     <string name="journal_yesterday">Ieri</string>
+    <plurals name="journal_day_count">
+        <item quantity="one">%d voce</item>
+        <item quantity="other">%d voci</item>
+    </plurals>
+    <plurals name="journal_drift_every">
+        <item quantity="one">Una colonna per ora</item>
+        <item quantity="other">Una colonna ogni %d ore</item>
+    </plurals>
+    <string name="journal_drift_axis_latest">ultimo aggiornamento</string>
+    <string name="journal_skill_title">Com\'è andata la previsione</string>
+    <string name="journal_skill_high">Massime: in media a %1$s dal vero, su %2$d giorni.</string>
+    <string name="journal_skill_rain">Nei giorni in cui è piovuto la pioggia era data in media al %1$s, negli altri al %2$s.</string>
+    <string name="journal_skill_rain_dry">Non è piovuto in nessuno di questi giorni: la pioggia era data in media al %1$s.</string>
+    <string name="journal_skill_rain_wet">È piovuto in tutti questi giorni: la pioggia era data in media al %1$s.</string>
+    <string name="journal_fail_offline">Il telefono era offline</string>
+    <string name="journal_fail_service">Il servizio meteo non ha risposto</string>
+    <string name="journal_fail_unknown">Il motivo non è chiaro</string>
     <!-- Le revisioni di un giorno bersaglio dentro un giorno del diario diventano una
          riga; questo dice quante ne raccoglie (mostrato solo oltre una). -->
     <plurals name="journal_shift_revisions">

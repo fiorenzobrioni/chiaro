@@ -9946,3 +9946,60 @@ arancione senza regole, allerta gialla in tema scuro). Quel che mostrava:
   `:app` debug (nessuno nuovo: il giro cambia disegno e testi, non logica), lint a zero errori.
 - **Da fare sul dispositivo**: la striscia «Quando arrivano» con l'ora vera, il tocco sulle card
   delle idee e sul «tutto tranquillo», TalkBack sulla striscia.
+
+## Il Diario, review grafica (committente, 23 set 2026)
+
+Richiesta: «Passa a Diario. Questa è molto anonima come schermata, fai un bel review come hai fatto
+per le altre». Stesso mandato: dove l'estetica e DESIGN.md litigano, si cambia DESIGN.md.
+
+### La review
+
+Resa della schermata vera (Robolectric, due giorni di voci di ogni categoria, deriva di sette giorni
+con un gelo). Anonima davvero, e per ragioni precise:
+
+1. **Tutte le voci uguali**: silhouette grigie da 24dp, testo grigio, nessuna gerarchia fra un'allerta
+   arancione e un aggiornamento mancato.
+2. **I numeri non dicevano dove sta la previsione adesso**: «pioggia 70% → 30%» tutto nello stesso
+   inchiostro.
+3. **La card della deriva teneva la risposta in fondo**: la frase che dice se la settimana migliora
+   era l'ultima riga, sotto un grafico che non diceva da che parte si legge il tempo.
+4. **Il cielo osservato era una frase** («Bello, nuvole 8%») dove il Cielo usa un chip.
+5. **Il motivo di un aggiornamento fallito ripeteva il titolo**: «Un aggiornamento non è arrivato» /
+   «Aggiornamento non riuscito: sei offline».
+
+### Cosa è cambiato
+
+- **Voci su un filo** (DESIGN §8.10): badge da 40dp nel tono della categoria o con il disegno meteo
+  per il cielo e la giornata chiusa, filo fra i badge dello stesso giorno, testo a `bodyLarge`.
+- **I numeri**: il valore di prima quieto, quello di adesso in grassetto (la pioggia sulla sua rampa
+  d'inchiostro); stesse stringhe del «cosa è cambiato» di Oggi, con segnaposto.
+- **Il verdetto del cielo osservato è il `VerdictChip`**.
+- **Intestazioni dei giorni fisse** con la data intera accanto a «Oggi»/«Ieri» e il numero di voci.
+- **Deriva**: frase in testa, chip con il disegno della grandezza, asse del tempo ai due capi, celle
+  arrotondate, la riga di cui parla la frase evidenziata.
+- **«Com'è andata la previsione»** (nuova): scarto medio delle massime, pioggia data nei giorni di
+  pioggia contro gli altri, e una colonna per giorno con la pioggia data e il disegno di com'è andata.
+- **Testi**: «Il telefono era offline» / «Il servizio meteo non ha risposto» / «Il motivo non è
+  chiaro» per i fallimenti; il bollettino rimasto valido senza l'anno quando è di quest'anno.
+
+### Decisioni e deviazioni
+
+- **Colore per categoria, non per giudizio.** §8.10 voleva le silhouette tutte in `onSurfaceVariant`;
+  il colore ora distingue la categoria (il glifo resta), e una revisione è dello stesso colore che sia
+  migliorata o peggiorata: il giudizio sta nella frase, come la deriva ha sempre voluto.
+- **Medie, non un punteggio.** Una probabilità non è giusta o sbagliata in un giorno solo; separare la
+  pioggia data nei giorni bagnati da quella nei giorni asciutti è la misura onesta che due settimane di
+  dati possono dare. Da tre giornate chiuse in su, le ultime dieci.
+- **Scarto delle massime in °F convertito come differenza** (× 9/5, senza il +32).
+
+### Come è stato verificato
+
+- `OutcomeStatsTest` (nuovo): scarto medio in valore assoluto, medie separate per giorni di pioggia e
+  asciutti, nessuna media «bagnata» in una settimana senza pioggia.
+- Resa Robolectric prima e dopo, chiaro e scuro.
+- Il test ha preso un dettaglio: `kotlin.math.round` arrotonda la metà al pari (70,5 → 70), mentre
+  ogni percentuale dell'app arrotonda la metà in su; ora `roundToInt`.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 506 test in `:app`
+  debug, lint a zero errori e nessun avviso sui file toccati.
+- **Da fare sul dispositivo**: le intestazioni fisse durante lo scroll, il tocco sulla deriva che apre
+  la tabella, la card della previsione con dati veri di più giorni.

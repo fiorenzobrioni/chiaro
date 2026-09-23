@@ -1269,6 +1269,35 @@ hour trails the row as a label. A journal day's revisions of one target day fold
 line, first value to last, saying how many updates it took; a value that came back where
 it started is not a change.
 
+**Redrawn on the design review of 23 set 2026**, because the screen was the most anonymous
+in the app — a column of identical grey silhouettes beside grey text:
+
+- **The entries are a thread.** Each line's category sits in a **40dp badge** in the
+  category's own tone — a revision in `primaryContainer`, an alert of yours in
+  `secondaryContainer`, an official warning in its level's pair, a missed update in the quiet
+  `surfaceContainerHighest` — and the lines that are about the sky carry the weather family's
+  own drawing instead (the sky moment's, and for a closed day the rain or the sun it actually
+  had). A 2dp `outlineVariant` hairline joins the badges of one day. This overrides the
+  monochrome rule above: a category is still named by its glyph, and the tone is its second
+  carrier, never a judgement (a revision is the same colour whether it got better or worse —
+  the sentence says which).
+- **The numbers say where the forecast is now**: in a revision, the value it came from in the
+  quiet ink and the value it is now in full weight, the rain one on the rain's ink ramp.
+- **A sky moment's verdict is the chip** the Sky screen prints, not a phrase.
+- **Day headings stick** while their entries scroll, with the full date beside «Oggi» or
+  «Ieri» and the day's count of entries.
+- **The drift card leads with its sentence** at `titleMedium`, the metric chips carry the
+  quantity's drawing, the strip names its time axis at the two ends (the oldest column's day,
+  «ultimo aggiornamento»), its cells are 3dp-rounded and 20dp tall, and **the row the sentence
+  names is picked out** on a `surfaceContainerHighest` band with its label in bold.
+- **How the forecast did** (new, from three closed days on): the high's average distance from
+  what was seen, and the rain it was given on the days it rained against the days it did not —
+  averages, never a right/wrong tally, because a 40% chance that stayed dry was not wrong —
+  over one column per day: the rain it was given as a bar on the rain ramp, what the day did as
+  its drawing.
+- The diary's own words for a failed update («Il telefono era offline»), where it used to repeat
+  the app's error line under a headline that had just said the same.
+
 **8.11 States** — empty ("no place yet", with the one action that fixes it), error (what
 failed, in plain language, and a retry), stale (§8.2), loading (a shimmer that cannot be
 mistaken for a value, §1.1).
