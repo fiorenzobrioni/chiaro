@@ -65,7 +65,47 @@ object OfficialWarningEngine {
                     ?.let { it >= level } == true
         }
         if (burntAtOrAbove) return null
-        return WarningNotification(fingerprint = prefix + level.name, warnings = warnings)
+        // A new bulletin that says nothing new (23 set 2026). The Dipartimento issues one
+        // every afternoon with a new id, so a two-day orange used to be announced twice:
+        // yesterday's bulletin for «domani arancione», today's for «oggi arancione» — the
+        // same warning, a second heads-up. What the reader has been TOLD is kept as one
+        // token per day and hazard ([toldTokens]); a bulletin whose every graded cell is
+        // already covered at the same level or higher is the Journal's, not a
+        // notification. A day the reader has not heard about, or a level that went up, is
+        // news, and it goes out.
+        val told = toldTokens(cityKey, warnings, minLevel)
+        if (told.isNotEmpty() && told.all { token -> covered(token, notified) }) return null
+        return WarningNotification(
+            fingerprint = prefix + level.name,
+            warnings = warnings,
+            told = told
+        )
+    }
+
+    /**
+     * `"$cityKey:told:$day:$HAZARD:$LEVEL"` for every day and hazard of [warnings] graded at
+     * [minLevel] or above: what a notification of it tells the reader, one cell at a time.
+     * The store burns them with the fingerprint, and [notificationFor] reads them back.
+     */
+    fun toldTokens(cityKey: String, warnings: PlaceWarnings, minLevel: WarningLevel): List<String> =
+        warnings.days.flatMap { day ->
+            WarningHazard.entries.mapNotNull { hazard ->
+                val level = day.levels.getValue(hazard)
+                if (level == WarningLevel.NONE || level < minLevel) null
+                else "$cityKey:told:${day.date}:${hazard.name}:${level.name}"
+            }
+        }
+
+    /** Whether a told [token] is covered by one already burnt for the same place, day and
+     * hazard at the same level or higher. */
+    private fun covered(token: String, notified: Set<String>): Boolean {
+        val stem = token.substringBeforeLast(':')
+        val level = WarningLevel.valueOf(token.substringAfterLast(':'))
+        return notified.any { burnt ->
+            burnt.substringBeforeLast(':') == stem &&
+                WarningLevel.entries.firstOrNull { it.name == burnt.substringAfterLast(':') }
+                    ?.let { it >= level } == true
+        }
     }
 
     /** `"$cityKey:warn:$bulletinId:"` — the level goes after it. */

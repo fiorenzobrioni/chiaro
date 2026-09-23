@@ -76,9 +76,16 @@ sections are a normal size and live here alone.
   show the day's temperature and rain; an official warning shows the levels by hazard and day.
 - **Notifications: clearer words.** The morning summary says when it will rain; a fired alert
   of yours shows the value it read with its unit. The status bar icon is the new ring.
+- **Notifications arrive once, and quietly at night.** Rain or a storm is announced when it
+  starts, never again for the same spell and never while it is already falling; an official
+  warning is not repeated when the next bulletin says the same thing; from 22:00 to 7:00
+  notifications arrive without a sound, except red warnings and sky reminders.
+- **Alerts: a «Serious heat» idea**, and «Twelve dry hours» in place of «A night without rain»,
+  which could fire in the morning.
 
 ### Fixed
 
+- **A rule about today no longer fires twice a day**, once of them just after midnight.
 - **Widget «In parole», one-row card: the "updated N hours ago" line is no longer cut off.**
   The form's budget spends the card's whole height — the number takes everything the place's
   line and the stale marker leave — so on a phone whose system font boxes taller than the

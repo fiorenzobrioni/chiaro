@@ -10254,3 +10254,65 @@ difetti veri:
 - **Da fare sul dispositivo**: le espanse su due o tre launcher/ROM, chiare e scure; l'icona di
   stato nella barra.
 
+## Le notifiche: quali, e quando (committente, 23 set 2026)
+
+Richiesta: «fai una review anche su queste e verifica che quelle che ci sono sono corrette e se
+ne andrebbero aggiunte o tolte altre».
+
+### La review (motori, worker, promemoria, allerte, regole, idee)
+
+Difetti trovati, tutti riprodotti in un test prima della correzione:
+
+1. **Pioggia doppia dopo il temporale**: il temporale zittiva la pioggia solo nel giro in cui
+   veniva notificato; un'ora dopo, con l'impronta bruciata, il suo 90% mandava «Ombrello verso
+   le 16» sullo stesso evento.
+2. **Una pioggia a cavallo di mezzogiorno erano due avvisi** (impronta per mezza giornata
+   dell'ora trovata, non dell'inizio della pioggia), e la pioggia già in corso veniva annunciata
+   «in arrivo».
+3. **Un temporale a cavallo di mezzanotte veniva riannunciato alle 00:30** (l'ora dopo
+   mezzanotte ha la data di domani), con importanza alta: sveglia.
+4. **Allerta ufficiale ripetuta ogni pomeriggio**: ogni bollettino ha un id nuovo, quindi
+   un'arancione di due giorni arrivava due volte senza nulla di nuovo.
+5. **Regole sui fatti del giorno due volte al giorno, la prima a mezzanotte** («Oggi UV fino a
+   8» alle 00:05 e alle 12).
+6. **Nessun rispetto della notte**: un avviso di pioggia alle 03:00 per le 07:00 suonava.
+7. **Idea «Una notte senza pioggia»** scattava anche alle 9 del mattino dicendo «Stanotte…».
+8. **Numeri nei messaggi delle regole col punto decimale** anche in italiano («21.4°»).
+9. Riepilogo del mattino: la riga «oggi» presa come prima del report e non per data (difensivo).
+
+Aggiunte e rimozioni: **nessuna notifica da togliere** — ognuna risponde a una domanda che le
+altre non fanno. **Un'idea in più**, «Caldo forte», il gemello estivo di «Ghiaccio domattina».
+Valutate e scartate: vento forte (l'orario del fornitore non ha vento, solo il valore di
+adesso), «smette di piovere» (lo coprono le idee «Bici» e «Corsa», che cercano finestre
+asciutte), avvisi sul cambio di previsione (il Diario li registra; come notifica sarebbero
+rumore).
+
+### Cosa è cambiato (DESIGN §8.17b, UPSTREAM.md)
+
+- `AlertEngine.firstArrival` e `nearSevere`; riepilogo del mattino per data.
+- `OfficialWarningEngine.toldTokens`: le celle dette bruciate con l'impronta; anello a 120.
+- `RuleEngine.dayShaped`: una volta al giorno dalle 6 per le regole su `today.*`.
+- Ore di quiete 22–7 (`NotificationViews.quietAtNight`), tranne allerte rosse e promemoria del
+  cielo; tratteggio nella striscia «Quando arrivano» e una frase che lo dice.
+- `RuleMessages.interpolate(format = …)` additivo; il notificatore e l'anteprima di Avvisi
+  scrivono la virgola del lettore.
+- Idee: «Caldo forte» nuova, «Dodici ore asciutte» al posto di «Una notte senza pioggia» (le
+  regole già create tengono nome e messaggio: sono testo del lettore).
+
+### Decisioni e deviazioni
+
+- **Nessuna soglia cambiata**: la review voleva misurare quanto spesso i codici di maltempo
+  arrivano con probabilità bassa, ma Open-Meteo oggi ha rifiutato le richieste da questa rete
+  (limite giornaliero). Resta da misurare, come le fasi 13b/26: se i temporali al 10–20%
+  risultano frequenti, il maltempo dovrebbe chiedere anche una probabilità minima.
+- **Un'ora di pausa non spezza una pioggia**: «70, 65, 80» è un solo episodio.
+- **Le ore di quiete sono dell'orologio del telefono**, non del luogo: dorme il lettore.
+
+### Come è stato verificato
+
+- Test nuovi in `AlertEngineTest` (7), `OfficialWarningEngineTest` (3), `RuleEngineTest` (2),
+  `RuleNotifierTest`, `QuietHoursTest`; aggiornati `OfficialWarningStoreTest` (anello) e
+  `OfficialWarningsStepTest` (celle dette).
+- Resa di Avvisi con il tratteggio delle ore di quiete.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+

@@ -120,7 +120,9 @@ class OfficialWarningStore(
 
         /** Fingerprints carry the bulletin id and the level; a bulletin a day, a few
          * places, a few levels: forty covers weeks. */
-        private const val MAX_FINGERPRINTS = 40
+        // 120 since 23 set 2026: a notification now burns its told cells with it (up to
+        // nine: three hazards on three days), and forty would forget a week of them.
+        private const val MAX_FINGERPRINTS = 120
 
         /** Never appears in a fingerprint (city keys, bulletin ids, level names). */
         private const val SEPARATOR = "|"

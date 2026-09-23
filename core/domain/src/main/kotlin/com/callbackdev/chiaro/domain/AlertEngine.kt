@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.domain
 
 import com.callbackdev.chiaro.domain.settings.NotificationSettings
+import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import java.time.LocalDate
@@ -108,9 +109,16 @@ object AlertEngine {
             null
         }
         severe?.let(::add)
-        // A severe alert already covers its own rain — don't notify twice
+        // A severe alert already covers its own rain — don't notify twice. Not only on
+        // the run that posts it (the rule until 23 set 2026): an hour later the storm's
+        // fingerprint is burnt, `severe` is null, and the storm's own 90% was posting a
+        // second notification, «Ombrello verso le 16», about the storm announced at 13.
+        // So the rain is silenced whenever it IS the storm's rain — its first hour inside
+        // a severe run, or an hour either side of one — told or not.
         if (settings.precipitationWarning && severe == null) {
-            findPrecipitation(report, state, now, cityKey)?.let(::add)
+            findPrecipitation(report, state, now, cityKey)
+                ?.takeUnless { settings.severeWeatherAlerts && nearSevere(report, it.at) }
+                ?.let(::add)
         }
         if (settings.dailySummary) {
             findDailySummary(report, state, now)?.let(::add)
@@ -120,16 +128,61 @@ object AlertEngine {
         }
     }
 
+    /**
+     * The first hour in `[now, now + lookahead]` that STARTS a run of [holds] — the
+     * hour the weather arrives, not an hour of weather already under way (23 set 2026).
+     *
+     * Both hour-anchored alerts say «in arrivo», and until this rule they fired on the
+     * first matching hour from now, whatever came before it. Three things followed from
+     * that, all measured on the fixtures: rain already falling at 10 got «Ombrello verso
+     * le 12» at noon, because noon opened a new half-day fingerprint; a storm running
+     * past midnight was announced again at 00:30, because the hour after midnight has
+     * tomorrow's date; and the first poll into a storm announced it as arriving. A run's
+     * start is stable across polls, so both fingerprints now hang off an hour that does
+     * not move as the clock does.
+     *
+     * A run survives one quiet hour ([RunGapHours]): «70, 65, 80» is one spell of rain
+     * with a dip in it, and a forecast that flickers across the threshold for an hour
+     * must not read as rain stopping and starting again.
+     */
+    private fun firstArrival(
+        report: WeatherReport,
+        now: LocalDateTime,
+        lookaheadHours: Long,
+        holds: (HourlyForecast) -> Boolean
+    ): HourlyForecast? {
+        val end = now.plusHours(lookaheadHours)
+        val hours = report.hourly
+        hours.forEachIndexed { index, hour ->
+            if (hour.time.isBefore(now) || hour.time.isAfter(end) || !holds(hour)) return@forEachIndexed
+            val continues = (1..RunGapHours + 1).any { back ->
+                hours.getOrNull(index - back)?.let(holds) == true
+            }
+            if (!continues) return hour
+        }
+        return null
+    }
+
+    /** One quiet hour inside a run does not end it; two do. */
+    private const val RunGapHours = 1
+
+    /** Whether [at] falls inside a run of severe hours, or an hour either side of one. */
+    private fun nearSevere(report: WeatherReport, at: LocalDateTime?): Boolean {
+        at ?: return false
+        return report.hourly.any { hour ->
+            hour.condition.wmoCode in SevereCodes &&
+                !hour.time.isBefore(at.minusHours(1)) && !hour.time.isAfter(at.plusHours(1))
+        }
+    }
+
     private fun findSevere(
         report: WeatherReport,
         state: AlertState,
         now: LocalDateTime,
         cityKey: String
     ): Alert? {
-        val end = now.plusHours(SEVERE_LOOKAHEAD_HOURS)
-        val hit = report.hourly.firstOrNull { hour ->
-            !hour.time.isBefore(now) && !hour.time.isAfter(end) &&
-                hour.condition.wmoCode in SevereCodes
+        val hit = firstArrival(report, now, SEVERE_LOOKAHEAD_HOURS) {
+            it.condition.wmoCode in SevereCodes
         } ?: return null
         val bucket = SevereCodes.getValue(hit.condition.wmoCode)
         val fingerprint = "$cityKey:sev:${bucket.name}:${hit.time.toLocalDate()}"
@@ -150,14 +203,13 @@ object AlertEngine {
         now: LocalDateTime,
         cityKey: String
     ): Alert? {
-        val end = now.plusHours(PRECIP_LOOKAHEAD_HOURS)
-        val hit = report.hourly.firstOrNull { hour ->
-            !hour.time.isBefore(now) && !hour.time.isAfter(end) &&
-                // A chance the provider did not forecast does not meet a threshold:
-                // "we were not told" has never been a reason to warn (Fase 26).
-                (hour.precipChancePct ?: 0) >= PRECIP_THRESHOLD_PCT
+        // A chance the provider did not forecast does not meet a threshold: "we were
+        // not told" has never been a reason to warn (Fase 26).
+        val hit = firstArrival(report, now, PRECIP_LOOKAHEAD_HOURS) {
+            (it.precipChancePct ?: 0) >= PRECIP_THRESHOLD_PCT
         } ?: return null
-        // Half-day bucket: at most two rain warnings per day per city
+        // Half-day bucket of the spell's START: at most two rain warnings per day per
+        // city, and never two for one spell.
         val halfDay = if (hit.time.hour < 12) "AM" else "PM"
         val fingerprint = "$cityKey:pre:${hit.time.toLocalDate()}:$halfDay"
         if (fingerprint in state.precipFingerprints) return null
@@ -179,7 +231,10 @@ object AlertEngine {
         val time = now.toLocalTime()
         if (time < SummaryWindowStart || time > SummaryWindowEnd) return null
         if (state.summaryDate == now.toLocalDate()) return null
-        val today = report.daily.firstOrNull() ?: return null
+        // By date, like the evening's twin (23 set 2026): the first row of a report is
+        // today only while the report is today's, and the numbers must be the day's
+        // the summary names.
+        val today = report.daily.firstOrNull { it.date == now.toLocalDate() } ?: return null
         return Alert(
             kind = AlertKind.DAILY_SUMMARY,
             // ISO date: AlertStateStore stores it straight into summaryDate

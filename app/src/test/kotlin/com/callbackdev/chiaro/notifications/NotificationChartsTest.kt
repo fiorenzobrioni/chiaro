@@ -81,3 +81,17 @@ class NotificationChartsTest {
         assertTrue("${pictureDp + bodyDp} dp", pictureDp + bodyDp <= 256f)
     }
 }
+
+/** The quiet hours (23 set 2026): 22:00 up to, not including, 07:00, on the phone's clock. */
+class QuietHoursTest {
+    @Test
+    fun `the night is quiet, the day is not`() {
+        fun quiet(h: Int, m: Int = 0) = NotificationViews.isQuiet(java.time.LocalTime.of(h, m))
+        assertTrue(quiet(22))
+        assertTrue(quiet(3))
+        assertTrue(quiet(6, 59))
+        assertTrue(!quiet(7))
+        assertTrue(!quiet(21, 59))
+        assertTrue(!quiet(12))
+    }
+}

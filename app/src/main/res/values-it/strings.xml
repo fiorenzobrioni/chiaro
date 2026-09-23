@@ -797,6 +797,7 @@
     <string name="alerts_day_anytime">In qualunque ora, se serve: %1$s</string>
     <string name="alerts_day_window_desc">%1$s tra le %2$d e le %3$d</string>
     <string name="alerts_day_yours">i tuoi avvisi</string>
+    <string name="alerts_day_quiet">Dalle 22 alle 7 (tratteggio) arrivano senza suono, tranne le allerte rosse e i promemoria del cielo.</string>
     <string name="alert_severe_title">Maltempo in arrivo</string>
     <string name="alert_severe_desc">Temporale, pioggia gelata, pioggia o neve forte nelle prossime 12 ore.</string>
     <string name="alert_severe_when">Al massimo uno per perturbazione</string>
@@ -896,10 +897,14 @@
     <string name="tpl_uv_desc">Quando l\'indice UV di oggi arriva almeno a 7.</string>
     <string name="tpl_uv_name">Sole</string>
     <string name="tpl_uv_message" formatted="false">Oggi UV fino a {trigger.value}: crema e cappello.</string>
-    <string name="tpl_night_title">Una notte senza pioggia</string>
+    <string name="tpl_heat_title">Caldo forte</string>
+    <string name="tpl_heat_desc">Quando la massima di oggi arriva almeno a 33°.</string>
+    <string name="tpl_heat_name">Caldo</string>
+    <string name="tpl_heat_message" formatted="false">Oggi fino a {trigger.value}°: acqua, ombra e niente fatiche nelle ore calde.</string>
+    <string name="tpl_night_title">Dodici ore asciutte</string>
     <string name="tpl_night_desc" formatted="false">Pioggia sotto il 10% nelle prossime 12 ore.</string>
-    <string name="tpl_night_name">Notte</string>
-    <string name="tpl_night_message" formatted="false">Stanotte niente pioggia in vista ({trigger.value}%).</string>
+    <string name="tpl_night_name">Asciutto</string>
+    <string name="tpl_night_message" formatted="false">Niente pioggia in vista nelle prossime 12 ore ({trigger.value}%).</string>
 
     <!-- Gli avvisi integrati come notifiche: una frase, mai un elenco di dati -->
     <string name="notif_channel_severe">Maltempo</string>

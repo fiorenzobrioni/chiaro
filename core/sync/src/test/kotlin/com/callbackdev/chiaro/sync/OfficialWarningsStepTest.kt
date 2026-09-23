@@ -154,7 +154,12 @@ class OfficialWarningsStepTest {
         assertEquals("\"tag\"", state.feedTag)
         assertEquals(1, notifiers.warnings.size)
         assertEquals("3173435:warn:B1:ORANGE", notifiers.warnings.single().fingerprint)
-        assertEquals(setOf("3173435:warn:B1:ORANGE"), runBlocking { store.notified.first() })
+        // The fingerprint, and the cell it told (23 set 2026): the next bulletin repeating
+        // orange on the 9th will not be announced again.
+        assertEquals(
+            setOf("3173435:warn:B1:ORANGE", "3173435:told:2026-09-09:THUNDERSTORM:ORANGE"),
+            runBlocking { store.notified.first() }
+        )
         // The first bulletin a place sees is its state, not news for the Journal.
         assertEquals(0, records().size)
         assertEquals(WarningFetchState(stamp = null, feedTag = null), source.calls.single())
@@ -302,7 +307,12 @@ class OfficialWarningsStepTest {
         source.next = WarningFetchResult.Unchanged("\"tag\"")
         run(at = sept9.atTime(16, 10))
         assertEquals(2, notifiers.warnings.size)
-        assertEquals(setOf("3173435:warn:B1:ORANGE"), runBlocking { store.notified.first() })
+        // The fingerprint, and the cell it told (23 set 2026): the next bulletin repeating
+        // orange on the 9th will not be announced again.
+        assertEquals(
+            setOf("3173435:warn:B1:ORANGE", "3173435:told:2026-09-09:THUNDERSTORM:ORANGE"),
+            runBlocking { store.notified.first() }
+        )
     }
 
     private class ScriptedSource : WarningSource {

@@ -71,9 +71,12 @@ object RuleNotifier {
             return false
         }
 
-        val message = RuleMessages.interpolate(trigger.rule.message, trigger, report, now, units)
+        val locale = context.resources.configuration.locales[0]
+        val message = RuleMessages.interpolate(trigger.rule.message, trigger, report, now, units) { kind, value ->
+            RuleText.messageValue(kind, value, units, locale)
+        }
         val id = notificationId(trigger.rule.id)
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_chiaro)
             .setColor(NotificationViews.accent(context))
             .setContentTitle(
@@ -86,7 +89,8 @@ object RuleNotifier {
             )
             .setContentIntent(openApp(context, id))
             .setAutoCancel(true)
-            .build()
+        NotificationViews.quietAtNight(builder)
+        val notification = builder.build()
         return try {
             manager.notify(id, notification)
             true

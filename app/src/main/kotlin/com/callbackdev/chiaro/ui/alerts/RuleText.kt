@@ -94,6 +94,16 @@ object RuleText {
         return number + unitSuffix(variableId, kind, units)
     }
 
+    /**
+     * A value interpolated into a message, in the reader's decimal mark and WITHOUT a
+     * unit — the message's author writes the unit after the placeholder («{current.temp_c}°»),
+     * so adding one here would print it twice.
+     */
+    fun messageValue(kind: RuleVariableKind, value: Double, units: UnitSettings, locale: java.util.Locale): String {
+        val separator = java.text.DecimalFormatSymbols.getInstance(locale).decimalSeparator
+        return RuleVariables.formatValue(kind, value, units).replace('.', separator)
+    }
+
     private fun unitSuffix(variableId: String, kind: RuleVariableKind, units: UnitSettings): String =
         when {
             kind == RuleVariableKind.TEMPERATURE -> "°"
@@ -142,7 +152,7 @@ object RuleText {
     // ------------------------------------------------------------- templates
 
     /**
-     * The five starting points (VISION §5.4): picking one creates a REAL rule with
+     * The six starting points (VISION §5.4): picking one creates a REAL rule with
      * sensible thresholds, already on — the builder is for adjusting it, not for
      * building from nothing. Name and message become user content at creation, in
      * the reader's language, and are never translated again.
@@ -190,9 +200,23 @@ object RuleText {
             R.string.tpl_uv_name, R.string.tpl_uv_message,
             listOf(RuleCondition("today.uv_max", RuleOp.GTE, 7.0))
         ),
+        // The heat's twin of the frost above (23 set 2026, notification review): a
+        // summer in the Po valley reaches 33° for weeks, and it is the one day-shaped
+        // risk the ideas did not cover. On today's high, so it speaks once a day, in
+        // the morning, when the day can still be planned around it.
+        Template(
+            R.string.tpl_heat_title, R.string.tpl_heat_desc,
+            R.string.tpl_heat_name, R.string.tpl_heat_message,
+            listOf(RuleCondition("today.high_c", RuleOp.GTE, 33.0))
+        ),
         // VISION sketched "a clear night"; the registry has no cloud variable, so
         // this template speaks of rain — the only clearness it can actually verify.
         // Promising "clear" on a rain-only check would be the notification lying.
+        //
+        // **And not «night» either, since 23 set 2026**: the registry has no hour
+        // variable, so the rule fires whenever the next twelve hours turn dry — at nine
+        // in the morning too, where «Stanotte niente pioggia» was wrong about the one
+        // word it was built on. It says what it checks: twelve dry hours.
         Template(
             R.string.tpl_night_title, R.string.tpl_night_desc,
             R.string.tpl_night_name, R.string.tpl_night_message,

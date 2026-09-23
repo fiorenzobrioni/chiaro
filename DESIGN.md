@@ -1597,6 +1597,25 @@ What the review changed:
   reader's decimal mark («· ora 21,4°», where it printed «— valore 21.4»), and each
   condition starts as a sentence.
 
+**8.17b Which notifications, and when** (review of the catalogue, 23 set 2026). The set stays
+the same — storm, rain, the two summaries, official warnings, sky reminders, the reader's
+rules — because each answers a question the others do not, and the review found no
+notification to remove. What changed is **when** they speak:
+
+- **An arrival is announced once, at its start.** «In arrivo» fires on the hour a run of
+  weather begins, never on weather already falling; one spell across noon or a storm across
+  midnight is one notification; the storm's rain never adds a second one.
+- **A bulletin that repeats itself is quiet.** What a warning notification told is kept cell
+  by cell (day, hazard, level); the next afternoon's bulletin saying the same is the
+  Journal's. A new day or a higher level is news.
+- **A fact about today speaks once, from 06:00** (rules on `today.*`).
+- **Quiet hours, 22–7 on the phone's clock**: everything arrives, nothing rings — except a red
+  official warning and the sky reminders, which the reader set for the night. The Alerts
+  screen's day strip draws them as a dashed line under the track, with one sentence saying so.
+- **The ideas**: «Caldo forte» (today's high ≥ 33°) joins as the heat's twin of «Ghiaccio
+  domattina»; «Una notte senza pioggia» is «Dodici ore asciutte», because the rule has no
+  hour and fired at nine in the morning with «Stanotte…».
+
 ## 9. Charts and quantities
 
 ### 9.1 The three rules

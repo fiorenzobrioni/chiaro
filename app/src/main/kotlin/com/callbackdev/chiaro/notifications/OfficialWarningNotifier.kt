@@ -81,6 +81,7 @@ object OfficialWarningNotifier {
             .setContentIntent(openApp(context, notificationId(city)))
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
+        NotificationViews.quietAtNight(builder, urgent = level == WarningLevel.RED)
         // The Dipartimento's own grid (23 set 2026): hazards by day, each cell its level's
         // word on its level's colour. The lines of levels per day are what it replaces in
         // the pictured body, which keeps the rest — zone, meaning, note, source.

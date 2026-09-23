@@ -39,7 +39,7 @@ class RuleNotifierTest {
                 rule = NotificationRule(
                     id = 7, name = "Bici",
                     conditions = listOf(RuleCondition("current.temp_c", RuleOp.GT, 15.0)),
-                    message = "Si va"
+                    message = "Fuori {current.temp_c}°"
                 ),
                 fingerprint = null, latchKey = null, value = 21.4, at = null
             ),
@@ -50,6 +50,17 @@ class RuleNotifierTest {
         )
         return shadowOf(manager).allNotifications.single()
             .extras.getCharSequence(Notification.EXTRA_BIG_TEXT).toString()
+    }
+
+    private fun collapsed(): String =
+        shadowOf(manager).allNotifications.single().extras.getString(Notification.EXTRA_TEXT).orEmpty()
+
+    /** The reader's message keeps its words; only the number takes the reader's mark. */
+    @Config(qualifiers = "it")
+    @Test
+    fun `a placeholder writes the reader's decimal mark`() {
+        post()
+        assertEquals("Fuori 21,4°", collapsed())
     }
 
     @Test

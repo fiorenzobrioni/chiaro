@@ -83,6 +83,7 @@ object AlertNotifier {
             .setContentIntent(openApp(context, alert.kind.notificationId))
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
+        NotificationViews.quietAtNight(builder)
         // The picture (23 set 2026): the rain's hours under a rain or storm alert, the
         // day under a summary — see [NotificationCharts] for why these and no others.
         // Painted only when there is something to paint; the big text above stays

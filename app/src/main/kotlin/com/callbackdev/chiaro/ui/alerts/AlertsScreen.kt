@@ -818,7 +818,7 @@ private fun AlertDayStrip(
             androidx.compose.foundation.Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(DayIcon + 6.dp + DayTrack + 4.dp + 14.dp)
+                    .height(DayIcon + 6.dp + DayTrack + 8.dp + 14.dp)
                     .semantics { contentDescription = spoken }
             ) {
                 val w = size.width
@@ -849,7 +849,23 @@ private fun AlertDayStrip(
                 val r = trackH * 0.9f
                 drawCircle(ink, radius = r, center = Offset(nowX, top + trackH / 2f))
                 drawCircle(track, radius = r - 2.dp.toPx(), center = Offset(nowX, top + trackH / 2f))
-                val labelTop = top + trackH + 4.dp.toPx()
+                // The quiet hours (23 set 2026): a hairline under the track from 22 to 7,
+                // where everything above still arrives, only without a sound.
+                val quietY = top + trackH + 3.dp.toPx()
+                val quietStroke = 2.dp.toPx()
+                listOf(0f to 7f, 22f to 24f).forEach { (from, to) ->
+                    drawLine(
+                        labelColor.copy(alpha = 0.6f),
+                        start = Offset(x(from) + quietStroke, quietY),
+                        end = Offset(x(to) - quietStroke, quietY),
+                        strokeWidth = quietStroke,
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                        pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                            floatArrayOf(4.dp.toPx(), 4.dp.toPx())
+                        )
+                    )
+                }
+                val labelTop = top + trackH + 8.dp.toPx()
                 hourLabels.forEach { (h, text) ->
                     val lx = (x(h.toFloat()) - text.size.width / 2f).coerceIn(0f, w - text.size.width)
                     drawText(text, topLeft = Offset(lx, labelTop))
@@ -862,6 +878,11 @@ private fun AlertDayStrip(
                     color = labelColor
                 )
             }
+            Text(
+                text = stringResource(R.string.alerts_day_quiet),
+                style = MaterialTheme.typography.bodySmall,
+                color = labelColor
+            )
         }
     }
 }
@@ -885,7 +906,8 @@ private fun templateIcon(template: RuleText.Template): ImageVector = when (templ
     R.string.tpl_ice_title -> ChiaroIcons.frost
     R.string.tpl_run_title -> ChiaroIcons.condition(PartlyCloudyCode)
     R.string.tpl_uv_title -> ChiaroIcons.uv
-    R.string.tpl_night_title -> ChiaroIcons.starryNight
+    R.string.tpl_heat_title -> ChiaroIcons.dewPoint
+    R.string.tpl_night_title -> ChiaroIcons.goldenHour
     else -> ChiaroIcons.cloud
 }
 

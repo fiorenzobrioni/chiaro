@@ -135,6 +135,8 @@ class OfficialWarningsStep(private val context: Context) {
         // Burns only on a successful post: a muted channel keeps its chance.
         if (notifiers.notifyOfficialWarning(notification, active, today)) {
             store.recordNotified(notification.fingerprint)
+            // What it told, cell by cell: the next bulletin repeating it stays quiet.
+            notification.told.forEach { store.recordNotified(it) }
         }
     }
 

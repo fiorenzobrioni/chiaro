@@ -37,8 +37,9 @@ object RuleMessages {
         trigger: RuleTrigger,
         report: WeatherReport,
         now: LocalDateTime,
-        units: UnitSettings
-    ): String = interpolate(message, trigger.rule, trigger.value, trigger.at, report, now, units)
+        units: UnitSettings,
+        format: (RuleVariableKind, Double) -> String = { kind, value -> RuleVariables.formatValue(kind, value, units) }
+    ): String = interpolate(message, trigger.rule, trigger.value, trigger.at, report, now, units, format)
 
     /** Same substitution for the dry run, which has a [RuleCheck.Fires] instead. */
     fun interpolate(
@@ -48,7 +49,15 @@ object RuleMessages {
         triggerAt: LocalDateTime?,
         report: WeatherReport,
         now: LocalDateTime,
-        units: UnitSettings
+        units: UnitSettings,
+        /**
+         * How a value is written (23 set 2026): the canonical [RuleVariables.formatValue]
+         * by default, which is the JVM's decimal point; the app passes one that writes the
+         * reader's own decimal mark, so «21,4°» reads as Italian in an Italian sentence.
+         * This module has no locale, and should not grow one to answer a question the
+         * app can.
+         */
+        format: (RuleVariableKind, Double) -> String = { kind, value -> RuleVariables.formatValue(kind, value, units) }
     ): String = Placeholder.replace(message) { match ->
         val name = match.groupValues[1]
         when (name) {
@@ -56,14 +65,14 @@ object RuleMessages {
                 val kind = rule.conditions.firstOrNull()
                     ?.let { RuleVariables.byId(it.variable)?.kind }
                     ?: RuleVariableKind.NUMBER
-                RuleVariables.formatValue(kind, triggerValue, units)
+                format(kind, triggerValue)
             }
             TriggerTime -> (triggerAt ?: now).format(ClockTime)
             else -> {
                 val variable = RuleVariables.canonicalId(name)?.let { RuleVariables.byId(it) }
                 val resolved = variable?.resolve?.invoke(report, now)
                 if (variable != null && resolved != null) {
-                    RuleVariables.formatValue(variable.kind, resolved.value, units)
+                    format(variable.kind, resolved.value)
                 } else {
                     match.value // unknown or unavailable: leave the text untouched
                 }

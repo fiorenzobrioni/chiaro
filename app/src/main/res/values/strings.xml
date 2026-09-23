@@ -816,6 +816,7 @@
     <string name="alerts_day_anytime">At any hour, when needed: %1$s</string>
     <string name="alerts_day_window_desc">%1$s between %2$d and %3$d</string>
     <string name="alerts_day_yours">your own alerts</string>
+    <string name="alerts_day_quiet">From 22 to 7 (dashed) they arrive without a sound, except red warnings and sky reminders.</string>
     <string name="alert_severe_title">Severe weather ahead</string>
     <string name="alert_severe_desc">A thunderstorm, freezing rain, heavy rain or heavy snow in the next 12 hours.</string>
     <string name="alert_severe_when">At most one per storm</string>
@@ -915,10 +916,14 @@
     <string name="tpl_uv_desc">When today\'s UV index reaches at least 7.</string>
     <string name="tpl_uv_name">Sun</string>
     <string name="tpl_uv_message" formatted="false">UV up to {trigger.value} today: sunscreen and a hat.</string>
-    <string name="tpl_night_title">A night without rain</string>
+    <string name="tpl_heat_title">Serious heat</string>
+    <string name="tpl_heat_desc">When today\'s high reaches at least 33°.</string>
+    <string name="tpl_heat_name">Heat</string>
+    <string name="tpl_heat_message" formatted="false">Up to {trigger.value}° today: water, shade, and nothing strenuous in the hot hours.</string>
+    <string name="tpl_night_title">Twelve dry hours</string>
     <string name="tpl_night_desc" formatted="false">Rain under 10% for the next 12 hours.</string>
-    <string name="tpl_night_name">Night</string>
-    <string name="tpl_night_message" formatted="false">No rain in sight tonight ({trigger.value}%).</string>
+    <string name="tpl_night_name">Dry</string>
+    <string name="tpl_night_message" formatted="false">No rain in sight for the next 12 hours ({trigger.value}%).</string>
 
     <!-- The built-in alerts as notifications: a sentence, never a data dump -->
     <string name="notif_channel_severe">Severe weather</string>

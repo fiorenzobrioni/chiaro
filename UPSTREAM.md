@@ -223,6 +223,29 @@ is short on purpose — three edits, each with its reason in the file:
   real means deciding for `WidgetLookStore` and `ArcSettingsStore` too. The dated section
   below has the whole story.
 
+## The notification review (23 set 2026)
+
+Three inherited engines changed, all for defects that would be defects upstream too — so
+each is a candidate to carry back to tweather, and each has its tests beside it:
+
+- **`AlertEngine`**: the hour-anchored alerts fire on the hour a run of weather STARTS
+  (`firstArrival`, one quiet hour tolerated inside a run), never on an hour of weather already
+  under way. Upstream fires on the first matching hour from now, which re-announced a storm
+  after midnight (the next hour has tomorrow's date), a rain spell at noon (the PM half-day
+  bucket) and weather already falling on the first poll into it. The storm's own rain is
+  silenced whether or not the storm was announced on this run (`nearSevere`). The morning
+  summary reads today's row by date, like the evening one.
+- **`RuleEngine`**: rules whose forecast conditions are all `today.*` fingerprint once per
+  day, from 06:00 (`dayShaped`), where upstream's half-day bucket posted the same day's fact
+  at 00:05 and again at noon.
+- **`RuleMessages.interpolate`**: an optional `format` parameter, defaulting to upstream's
+  `RuleVariables.formatValue`. Additive; the app passes one that writes the reader's decimal
+  mark. `:core:domain` stays locale-free.
+
+Chiaro-only, because tweather has no official warnings: `OfficialWarningEngine` keeps what
+each notification TOLD (`toldTokens`), so the next afternoon's bulletin repeating it is not a
+second heads-up; `OfficialWarningStore` keeps 120 burnt entries instead of 40 to hold them.
+
 ## The known debt
 
 **The inherited comments spoke tweather's vocabulary, and each phase rewrote the

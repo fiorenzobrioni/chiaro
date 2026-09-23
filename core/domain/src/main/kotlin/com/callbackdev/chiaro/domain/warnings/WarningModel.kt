@@ -196,5 +196,11 @@ data class PlaceWarnings(
  */
 data class WarningNotification(
     val fingerprint: String,
-    val warnings: PlaceWarnings
+    val warnings: PlaceWarnings,
+    /**
+     * What this notification tells the reader, one token per graded day and hazard
+     * ([OfficialWarningEngine.toldTokens]): burnt with [fingerprint], so the next
+     * afternoon's bulletin repeating the same cells is not announced again.
+     */
+    val told: List<String> = emptyList()
 )
