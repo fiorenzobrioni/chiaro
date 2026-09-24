@@ -10652,3 +10652,14 @@ decimale è delle app che leggono il termometro di una stazione. Decisione del c
 - **La percepita resta legata a un grado di differenza**: con i gradi interi due valori a un
   grado di distanza si stampano sempre diversi, quindi non compare mai «21°, percepita 21°».
 - **Verificato**: `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## La guida allineata al motore (committente, 24 set 2026)
+
+Review della guida dopo le tre passate: non diceva niente di quello che era arrivato. Aggiornati,
+in italiano e in inglese, i paragrafi della frase (il vento forte in arrivo), della pioggia (i
+millimetri e le ore), dei dati vecchi (la stima dalla previsione), delle prossime ore (ogni
+colonna è l'ora che comincia: «15 · 60%» è la pioggia fra le 15 e le 16), della settimana (i
+fatti del giorno aperto), dei dettagli (pioggia, neve, nuvole per strato, aria sull'indice
+europeo, pollini per specie), dei verdetti (lo strato nelle prove) e degli avvisi personali (le
+grandezze nuove). Gli esempi disegnati (UV e umidità, i verdetti, l'età del dato) erano già
+giusti. `guide_today_hours_body` porta `formatted="false"`: il «60%» nel testo non è un formato.
