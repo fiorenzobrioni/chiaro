@@ -10663,3 +10663,19 @@ fatti del giorno aperto), dei dettagli (pioggia, neve, nuvole per strato, aria s
 europeo, pollini per specie), dei verdetti (lo strato nelle prove) e degli avvisi personali (le
 grandezze nuove). Gli esempi disegnati (UV e umidità, i verdetti, l'età del dato) erano già
 giusti. `guide_today_hours_body` porta `formatted="false"`: il «60%» nel testo non è un formato.
+
+## Il sole coperto sembrava la luna (committente, 24 set 2026)
+
+Da uno screenshot delle 15:50 a Cavenago, cielo «Coperto»: nel cielo di Oggi un disco grigio
+chiaro dai bordi netti, «dal colore sembra più la luna». Era il sole (alto 35°; la luna sorgeva
+alle 18:16 e sotto l'orizzonte non si disegna). La nuvola sbiadiva disco e alone dello stesso
+70%: a copertura piena restava un disco crema al 30% con l'alone quasi spento, cioè un cerchio
+grigio col bordo, esattamente come si disegna una luna.
+
+- **Cosa è cambiato** (`SkyBodies.sunVeil`): il disco svanisce con la nuvola fino a zero,
+  l'alone tiene gran parte della sua forza e si allarga di un terzo. Coperto: una zona di cielo
+  più luminosa e morbida, senza bordo; 80%: un disco tenue in un alone largo; metà: il disco
+  con il suo alone; sereno: invariato. La luna resta un disco netto con la sua fase.
+- **Come è stato verificato**: simulato prima di scriverlo, sul colore di cielo dello
+  screenshot, prima/dopo a 100, 80, 50 e 0% accanto alla luna di giorno (lo «prima» riproduce
+  lo screenshot); `SkyBodiesTest` fissa i parametri e i loro estremi. DESIGN §8.1c aggiornato.

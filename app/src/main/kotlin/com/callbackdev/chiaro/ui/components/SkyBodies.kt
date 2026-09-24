@@ -46,7 +46,8 @@ data class SkyBodies(
  * by compass bearing (east on the left in the north, on the right in the south — a winter
  * sun stays near the middle, a summer one rises and sets near the edges, which is true),
  * **up** by altitude. Below the horizon a body is not drawn. Clouds veil the sun rather than
- * hide it: at full cover it is a pale patch, which is what an overcast sun looks like.
+ * hide it, and under a full cover it loses its **edge**, not only its strength — see
+ * [sunVeil]: an overcast sun is a brighter part of the sky, never a disc.
  *
  * The moon wears its phase — the lit limb on the sun's side, the terminator an ellipse —
  * and the rest of its disc is barely there, as earthshine.
@@ -87,12 +88,12 @@ private fun DrawScope.sun(center: Offset, radius: Float, altitudeDeg: Double, cl
     // Warm near the horizon, white-gold above the golden hour.
     val warmth = (1.0 - (altitudeDeg / 12.0)).coerceIn(0.0, 1.0).toFloat()
     val core = lerp(SkyPalette.SunHigh, SkyPalette.SunLow, warmth)
-    val veil = 1f - 0.7f * cloud
-    val glow = glowRadius(center, radius * 4f)
+    val veil = sunVeil(cloud)
+    val glow = glowRadius(center, radius * 4f * veil.spread)
     drawCircle(
         brush = Brush.radialGradient(
-            0f to core.copy(alpha = 0.55f * veil),
-            0.35f to core.copy(alpha = 0.18f * veil),
+            0f to core.copy(alpha = veil.glowCore),
+            0.35f to core.copy(alpha = veil.glowMid),
             1f to Color.Transparent,
             center = center,
             radius = glow
@@ -100,7 +101,33 @@ private fun DrawScope.sun(center: Offset, radius: Float, altitudeDeg: Double, cl
         radius = glow,
         center = center
     )
-    drawCircle(core.copy(alpha = veil), radius = radius, center = center)
+    if (veil.disc > 0f) drawCircle(core.copy(alpha = veil.disc), radius = radius, center = center)
+}
+
+/** How the cloud draws the sun: the disc's opacity, the glow's at its core and at a third
+ * of its reach, and how far the glow spreads (× the clear-sky reach). */
+internal data class SunVeil(val disc: Float, val glowCore: Float, val glowMid: Float, val spread: Float)
+
+/**
+ * The sun under [cloud] (0 clear, 1 full cover). Until 24 set 2026 the cloud only faded
+ * everything — disc and glow by the same 70% — so an overcast sun at noon was a crisp
+ * grey-white disc at 30% with almost no glow: on a device, over a grey sky, **it read as
+ * the moon** (committente, from a screenshot at 15:50 with the moon three hours from
+ * rising). A sun behind a full cover has no edge; the cloud spreads its light. So the
+ * disc now fades with the cloud to nothing, and the glow **keeps** most of its strength
+ * and spreads a third wider: at full cover the sun is a bright, soft patch of sky, at
+ * 80% a faint disc in a wide glow, at half a disc with its halo, in a clear sky the same
+ * sun as before. The moon, always a crisp disc with its phase, can no longer be taken
+ * for it. Simulated on the screenshot's own sky before it was written.
+ */
+internal fun sunVeil(cloud: Float): SunVeil {
+    val c = cloud.coerceIn(0f, 1f)
+    return SunVeil(
+        disc = 1f - c,
+        glowCore = 0.55f - 0.15f * c,
+        glowMid = 0.18f + 0.10f * c,
+        spread = 1f + 0.3f * c
+    )
 }
 
 private fun DrawScope.moon(center: Offset, radius: Float, bodies: SkyBodies, alpha: Float) {

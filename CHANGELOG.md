@@ -115,6 +115,8 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **An overcast sun no longer looks like the moon.** Under a covered sky the sun on Today is a
+  bright, soft patch without an edge, as it looks behind clouds, instead of a pale grey disc.
 - **The day's word in the week follows the day, not the highest code.** A snowy day with one
   shower reads as snow, heavy rain is no longer outranked by a light shower, and a storm the
   forecast barely believes (under 20%) no longer names the whole day, as it already no longer

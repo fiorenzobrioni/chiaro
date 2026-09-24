@@ -1086,7 +1086,9 @@ seen facing the equator — in the north east is left and west right, the scale 
 reader faces north and the sides swap — and **up** by altitude, the top of the band at 60°.
 A winter sun stays near the middle and a summer one rises and sets near the edges, which is
 true. Below the horizon a body is not drawn. The sun is a 22dp disc with a soft halo, white-gold
-above the golden hour and reddening below it, veiled (not hidden) by cloud. The moon wears its
+above the golden hour and reddening below it, veiled (not hidden) by cloud — and under a full
+cover without its edge (24 set 2026: the disc fades out with the cloud while the glow keeps
+its strength and spreads, because a crisp pale disc on a grey sky was read as the moon). The moon wears its
 phase — lit limb toward the evening sun, the terminator an ellipse, the dark part at 14% as
 earthshine — and is pale by day. Both are drawn inside their band, the halo spilling at most
 14dp past it, so neither can stand behind text and cost it contrast; the colors are
