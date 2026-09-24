@@ -503,15 +503,6 @@ class WeatherReportMapperTest {
     }
 
     @Test
-    fun `hours at 0 percent do not make a day of snow`() {
-        // Six hours of trace snow, all at 0%: the rows draw them as sky, and so must the day.
-        val codes = List(24) { if (it in 1..6) 71 else 3 }
-        assertEquals(3, dayCode(codes, mm = { if (codes[it] == 71) 0.1 else 0.0 }, chance = { 0 }))
-        // At 5% they are believed, and six hours of them are the day's.
-        assertEquals(71, dayCode(codes, mm = { if (codes[it] == 71) 0.1 else 0.0 }, chance = { 5 }))
-    }
-
-    @Test
     fun `precipitation that did not earn the day does not win its sky either`() {
         // Daylight 06-19, two hours apiece of every sky and two of drizzle: the old
         // tie-break handed the day to 51. Its hours now vote with their cloud (100% → 3).
@@ -599,36 +590,6 @@ class WeatherReportMapperTest {
         // Row 15:00 is dry, and starts with the overcast sky the rain left.
         assertEquals(3, hours[1].condition.wmoCode)
         assertEquals(10, hours[1].precipChancePct)
-    }
-
-    @Test
-    fun `a snowflake over 0 percent is the sky its hour starts with`() {
-        // Longyearbyen, 24 set 2026: the deterministic model's trace of snow against an
-        // ensemble in which no member reaches 0.1 mm drew a snowflake over «0%» in one cell.
-        val n = forecast().hourly.time.size
-        val hours = rows { h ->
-            h.copy(
-                weatherCode = List(n) { if (it in 15..17) 71 else 3 },
-                precipitationProbabilityPct = List(n) { if (it == 15) 0 else if (it == 16) 1 else null },
-                cloudCoverPct = List(n) { 100 }
-            )
-        }
-        // Row 14 is slot 15 (0%): its sky. Row 15 is slot 16 (1%): the chance says it can.
-        // Row 16 is slot 17, no chance at all: no evidence against the code.
-        assertEquals(listOf(3, 71, 71), hours.take(3).map { it.condition.wmoCode })
-        assertEquals(0, hours.first().precipChancePct)
-    }
-
-    @Test
-    fun `a hazard code keeps its hour at 0 percent too`() {
-        val n = forecast().hourly.time.size
-        val hours = rows { h ->
-            h.copy(
-                weatherCode = List(n) { if (it == 15) 56 else 0 },
-                precipitationProbabilityPct = List(n) { 0 }
-            )
-        }
-        assertEquals(56, hours.first().condition.wmoCode)
     }
 
     @Test

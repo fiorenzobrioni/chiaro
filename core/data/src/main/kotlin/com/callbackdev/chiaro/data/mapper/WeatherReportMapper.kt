@@ -269,8 +269,6 @@ object WeatherReportMapper {
         return (fromIndex until (fromIndex + HOURLY_WINDOW).coerceAtMost(times.size - 1))
             .map { i ->
                 val next = i + 1
-                val chance = hourly.precipitationProbabilityPct.getOrNull(next)
-                val falls = WmoCode.isPrecipitation(codes[next]) && !contradicted(codes[next], chance)
                 HourlyForecast(
                     // [times] holds the provider's labels; the row carries the city's
                     // clock and the moment itself. They differ only across a DST
@@ -278,8 +276,10 @@ object WeatherReportMapper {
                     time = clock.localOf(times[i]),
                     at = clock.instantOf(times[i]),
                     tempC = hourly.temperatureC[i],
-                    condition = WeatherCondition(if (falls) codes[next] else hourly.skyAt(i, codes)),
-                    precipChancePct = chance,
+                    condition = WeatherCondition(
+                        if (WmoCode.isPrecipitation(codes[next])) codes[next] else hourly.skyAt(i, codes)
+                    ),
+                    precipChancePct = hourly.precipitationProbabilityPct.getOrNull(next),
                     // Read like its siblings: the parallel arrays are the same length
                     // in any response that deserialized, and `repairedCodes()` has
                     // already indexed this very column over all of them.
@@ -432,12 +432,7 @@ object WeatherReportMapper {
 
         // Hazard codes that failed the chance test are not wet hours of a lesser kind:
         // they are hours the app has decided not to believe.
-        // So are the hours at 0% (see [contradicted]): the row draws them as sky, and the
-        // day they belong to must not print as snow on the strength of them.
-        val wet = hours.filter {
-            WmoCode.of(codes[it])?.let { w -> w.isPrecipitation && w.hazard == null } == true &&
-                !contradicted(codes[it], chance.getOrNull(it))
-        }
+        val wet = hours.filter { WmoCode.of(codes[it])?.let { w -> w.isPrecipitation && w.hazard == null } == true }
         // An empty `precipitationMm` is a cache entry written before the field was
         // requested: the amount clause simply cannot speak, and the hour count answers alone.
         val amounts = hourly.precipitationMm
@@ -457,23 +452,6 @@ object WeatherReportMapper {
         return daylight.map { skyOf(codes[it], hourly.cloudCoverPct[it]) }
             .groupingBy { it }.eachCount()
             .maxWithOrNull(compareBy({ it.value }, { it.key }))?.key ?: fallback
-    }
-
-    /**
-     * A precipitation code its own hour's chance says will not happen: 0% (24 set 2026,
-     * device review, Longyearbyen). `weather_code` and the amounts come from the
-     * deterministic model, `precipitation_probability` from the ensemble — the share of
-     * its members that see at least 0.1 mm — and the two disagree at the margin: a trace
-     * of snow in the one, not a member of the other above the threshold. The row drew a
-     * snowflake over «0%», the screen contradicting itself inside one cell. At 0% the
-     * hour shows its sky; from 1% up the code stands, since the chance then says it can.
-     * A null chance is no evidence either way, and hazard codes are exempt, as from the
-     * day's materiality rule: [AlertEngine.severeBucket] already judges those on the
-     * same chance, and this may remove a distortion, never a warning.
-     */
-    private fun contradicted(code: Int, chancePct: Int?): Boolean {
-        val wmo = WmoCode.of(code) ?: return false
-        return wmo.isPrecipitation && wmo.hazard == null && chancePct == 0
     }
 
     /** The heaviest of [codes] by [WmoCode.severity]; among equally heavy codes, the one

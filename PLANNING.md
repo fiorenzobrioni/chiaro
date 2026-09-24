@@ -10722,16 +10722,13 @@ due punti (la striscia delle ore e le ore del venerdì aperto) è normale? Il ve
 dice «0,6 mm di pioggia in 6 ore» e «0,4 cm di neve»: sono davvero due cose? «Probabilità di
 pioggia» comprende la neve?
 
-- **Il fiocco su 0%**: sì, per Open-Meteo è normale, e no, lo schermo non deve dirlo.
-  `weather_code` e le quantità vengono dal modello deterministico; `precipitation_probability`
-  dall'ensemble, ed è la quota dei suoi membri che vede almeno 0,1 mm nell'ora. Al margine i
-  due non concordano: una traccia di neve nell'uno, nessun membro sopra la soglia nell'altro.
-  **Cosa è cambiato** (`WeatherReportMapper.contradicted`): un codice di precipitazione a 0%
-  nella sua stessa ora disegna il cielo (`skyAt`), e non conta come ora bagnata per l'etichetta
-  del giorno, così riga e giorno non si smentiscono. Da 1% il codice resta (la probabilità dice
-  che può), una probabilità assente non è una prova, e i codici di pericolo sono esenti come
-  dalla regola della materialità: li giudica già `AlertEngine.severeBucket` sulla stessa
-  probabilità, e la riparazione può togliere una distorsione, mai un avviso.
+- **Il fiocco su 0%**: per Open-Meteo è normale. `weather_code` e le quantità vengono dal
+  modello deterministico; `precipitation_probability` dall'ensemble, ed è la quota dei suoi
+  membri che vede almeno 0,1 mm nell'ora. Al margine i due non concordano: una traccia di
+  neve nell'uno, nessun membro sopra la soglia nell'altro. **Decisione del committente:
+  l'icona resta quella che arriva**, `weather_code` non si modifica per questo. Una prima
+  versione (stesso giorno) disegnava il cielo in un'ora a 0% e non la contava per
+  l'etichetta del giorno; è stata tolta prima del merge: si mostra il dato del provider.
 - **La «pioggia» che era neve**: `precipitation_sum` è pioggia, rovesci **e l'acqua della
   neve** insieme (i 19,81 cm dell'Everest nella fixture del 24 set arrivano come 28,4 mm). Gli
   0,6 mm del venerdì erano quasi tutti gli 0,4 cm di neve. **Cosa è cambiato**: si chiedono
@@ -10752,9 +10749,7 @@ pioggia» comprende la neve?
   ora disegna un codice (la parola di prima).
 - **Rimandato**: le descrizioni a voce della cella oraria e della riga del giorno dicono ancora
   «pioggia N%»; cambiarle vuol dire dare a ogni cella la sua parola, e va fatto con quelle.
-- **Come è stato verificato**: `WeatherReportMapperTest` (il fiocco a 0% diventa cielo, a 1% e
-  senza probabilità resta; il gelicidio a 0% resta; sei ore di traccia a 0% non fanno un giorno
-  di neve, a 5% sì; la pioggia sola da `rain_sum` + `showers_sum`, il ripiego senza neve, lo
+- **Come è stato verificato**: `WeatherReportMapperTest` (la pioggia sola da `rain_sum` + `showers_sum`, il ripiego senza neve, lo
   sconosciuto con neve), `OpenMeteoResponseTest` (Everest: 28,4 mm di totale, pioggia
   sconosciuta), `RuleVariablesTest` (la regola legge la pioggia, non il totale; il campione
   `sampleWeatherReport` porta ora `rainMm`, senza neve uguale al totale). Suite completa e
