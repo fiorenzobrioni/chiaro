@@ -10679,3 +10679,38 @@ grigio col bordo, esattamente come si disegna una luna.
 - **Come è stato verificato**: simulato prima di scriverlo, sul colore di cielo dello
   screenshot, prima/dopo a 100, 80, 50 e 0% accanto alla luna di giorno (lo «prima» riproduce
   lo screenshot); `SkyBodiesTest` fissa i parametri e i loro estremi. DESIGN §8.1c aggiornato.
+
+## «In parole»: il numero calava nei giorni d'allerta, e la linea di base (committente, 24 set 2026)
+
+Due screenshot del pannello 4×2 alla stessa ora: Cavenago («Coperto», tre ore di «Più tardi»)
+composto bene; Catania («Nuvoloso», «Allerta gialla») con il numero una riga più in basso e
+un'ora in meno sotto. Più la proposta: numero e massima/minima allineati in basso.
+
+- **La causa**: il piano riservava sempre **due** righe di frase (Glance non misura il
+  testo), e con l'allerta la colonna di destra valeva 2 × 23,76 + 2 × 21,12 = 89,8 dp contro
+  gli 84,5 del numero. Il blocco risultava 5 dp più alto di come si disegna, «Più tardi»
+  perdeva una riga per quei 5 dp, e il numero, inchiodato al fondo, scendeva di una riga
+  intera. Solo nei giorni con un'allerta e una frase corta, cioè proprio quelli visti.
+- **La correzione**: la frase si misura (`measureWidgetText`, la stessa misura che le schede
+  Ora e Oggi usano da 20 set per le loro righe, con `RowFitSlack`) contro la sua colonna;
+  se sta su una riga ne riserva una (`textPanelPlan(sentenceFitsOneLine)`). Una frase che ne
+  vuole due le ha ancora, e lì il blocco cresce davvero: è onesto.
+- **La linea di base**: il terzo giro (19 set) voleva «la linea di base del numero e quella
+  della coppia cadano insieme», ma le colonne erano allineate per le **scatole** di riga, e
+  la scatola tiene sotto le cifre una discesa proporzionale alla taglia: ~17 dp a 64 sp, ~4 a
+  16. Il numero stava 13 dp sopra la coppia. Ora la colonna di destra si alza della
+  differenza (`textPanelBaselineLift`, 13,0 dp sul pannello di riferimento; misurato sullo
+  screenshot: ~13,6), e le cifre dei due stanno su una riga. La discesa è quella del font
+  del telefono (`widgetTextDescentEm`, dal suo `fontMetrics.bottom`), Roboto (0,271 em) come
+  riserva e nei test.
+- **Decisioni**: l'allineamento è aria e si paga solo con quello che la colonna lascia: non
+  toglie mai una riga di parole (test su tutte le combinazioni, anche a 300×150 e scala 1,3).
+  Con i dati vecchi l'ultima riga a sinistra è la marca «aggiornato…», più piccola della
+  coppia: niente sollevamento, le colonne condividono la sua linea di base come prima. Solo il
+  pannello: la riga 4×1 centra le colonne in verticale e non ha un fondo comune da allineare.
+  Il glifo, quando è acceso, perde i 13 dp dell'allineamento (58,2 invece di 71,2 sul 4×2 con
+  due righe riservate) e riprende la riga che la frase corta non usa (82,0).
+- **Come è stato verificato**: `TextLaterTest` riproduce Catania (376×225: 2 righe con la
+  riserva, 3 misurando, uguali a Cavenago), fissa la linea di base comune per numero/coppia e
+  numero/frase, lo zero da vecchio, e che il sollevamento non costi mai una riga; aggiornati i
+  valori del glifo. Suite completa, lint e build.

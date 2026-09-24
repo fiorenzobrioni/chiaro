@@ -738,6 +738,21 @@ fun placeLineWidth(context: Context, name: String, fromGps: Boolean, sizeSp: Flo
     return if (fromGps) text + placePinSize(context, sizeSp) + PlacePinGap else text
 }
 
+/**
+ * The system font's line box under the baseline, in ems, **measured** for the reason
+ * [measureWidgetText] gives: the card is drawn in the phone's face, not the app's. A
+ * `TextView` with its font padding on (a widget's always is) ends its last line at the
+ * face's `bottom`, so that is the number. A face that answers something implausible gets
+ * Roboto's own ([TextDescentEm]).
+ */
+fun widgetTextDescentEm(): Float {
+    val paint = Paint().apply {
+        typeface = Typeface.DEFAULT
+        textSize = 100f
+    }
+    return (paint.fontMetrics.bottom / 100f).takeIf { it in 0.15f..0.45f } ?: TextDescentEm
+}
+
 /** The air a measured width is given before it is used as a width: the launcher's font
  * is not this process's font, and a block that asks for exactly what it measured wraps
  * or ellipsises on the first phone that rounds the other way. */

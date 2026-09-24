@@ -115,6 +115,10 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **The «In words» widget no longer drops its temperature on days with a warning.** On a wide
+  two-row card a short sentence was budgeted as two lines, so a warning cost an hour of
+  «Later» and pushed the number a row down. The number and the day's high and low now also
+  stand on one baseline.
 - **An overcast sun no longer looks like the moon.** Under a covered sky the sun on Today is a
   bright, soft patch without an edge, as it looks behind clouds, instead of a pale grey disc.
 - **The day's word in the week follows the day, not the highest code.** A snowy day with one

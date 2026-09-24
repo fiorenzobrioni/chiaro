@@ -393,7 +393,7 @@ it, is in [DESIGN.md](./DESIGN.md).
   only what a screen names reaches the APK, which is what `shrinkResources` is for.
   **Google Sans** and **Inter** as bundled variable fonts, the first cut down by
   `tools/import_google_sans.py` from 5MB at the source to 307KB in the app
-- 1125 unit tests on the JVM across four modules (546 in `:app`, 282 in `:core:domain`, 273
+- 1128 unit tests on the JVM across four modules (549 in `:app`, 282 in `:core:domain`, 273
   in `:core:data`, 24 in `:core:sync`), Robolectric where Android is unavoidable, including
   painting the arc widget's bitmap for real and reading its pixels back
 
