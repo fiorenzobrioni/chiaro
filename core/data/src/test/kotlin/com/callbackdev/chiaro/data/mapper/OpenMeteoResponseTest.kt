@@ -154,6 +154,9 @@ class OpenMeteoResponseTest {
         assertEquals(75, today.condition.wmoCode)
         assertEquals(19.81, today.snowCm!!, 0.0)
         assertEquals(28.4, today.precipMm!!, 0.0)
+        // 28.4 mm that are the snow's water: saved before the split was asked for, this
+        // response cannot say how much of it was rain, so the rain is unknown, not 28.4.
+        assertNull(today.rainMm)
     }
 
     /** Suggestion 3 on a real response: two hours offline, the hero is 12:45 + 2 h. */

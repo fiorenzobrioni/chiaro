@@ -657,6 +657,7 @@ class WeatherReportMapperTest {
         assertNull(row.cloudLayers)
         val day = map().daily.first()
         assertNull(day.precipMm)
+        assertNull(day.rainMm)
         assertNull(day.snowCm)
         assertNull(day.gustMaxKph)
     }
@@ -679,6 +680,33 @@ class WeatherReportMapperTest {
         assertEquals(0.0, day[0].snowCm!!, 0.0)
         assertEquals(61.2, day[0].gustMaxKph!!, 0.0)
         assertNull(day[1].precipMm)
+        // No split asked for and no snow: the total is all rain.
+        assertEquals(12.4, day[0].rainMm!!, 0.0)
+    }
+
+    @Test
+    fun `the day's rain is the rain alone, not the snow's water`() {
+        // Friday at Longyearbyen: 0.6 mm in all, which was 0.4 cm of snow.
+        val base = forecast()
+        fun day(rain: Double?, showers: Double?, snow: Double?) = map(
+            forecast = base.copy(
+                daily = base.daily.copy(
+                    precipitationSumMm = List(8) { 0.6 },
+                    snowfallSumCm = List(8) { snow },
+                    rainSumMm = if (rain == null) emptyList() else List(8) { rain },
+                    showersSumMm = if (showers == null) emptyList() else List(8) { showers }
+                )
+            )
+        ).daily.first()
+        assertEquals(0.0, day(rain = 0.0, showers = 0.0, snow = 0.4).rainMm!!, 0.0)
+        assertEquals(0.5, day(rain = 0.2, showers = 0.3, snow = 0.0).rainMm!!, 1e-9)
+        // A model that does not split showers still has its rain.
+        assertEquals(0.2, day(rain = 0.2, showers = null, snow = 0.4).rainMm!!, 0.0)
+        // No split, and snow in the total: which part is rain cannot be told.
+        assertNull(day(rain = null, showers = null, snow = 0.4).rainMm)
+        // …unless the snow is a trace no screen names: its water is under what prints.
+        assertEquals(0.6, day(rain = null, showers = null, snow = 0.07).rainMm!!, 0.0)
+        assertNull(day(rain = null, showers = null, snow = null).rainMm)
     }
 
     /**

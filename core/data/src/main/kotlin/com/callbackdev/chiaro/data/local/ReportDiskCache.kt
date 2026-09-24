@@ -29,8 +29,17 @@ class ReportDiskCache(private val dir: File, private val json: Json) {
         val fetchedAtEpochMs: Long,
         val responseTimeMs: Long,
         val forecast: ForecastResponseDto,
-        val airQuality: AirQualityCurrentDto?
-    )
+        val airQuality: AirQualityCurrentDto?,
+        /**
+         * [OpenMeteoForecastApi.REQUEST] at the time of the fetch; empty for an entry
+         * written before it was recorded. A different one is never a fresh hit — the
+         * app now asks for more than the entry has — but it is still the forecast an
+         * offline phone falls back on.
+         */
+        val request: String = ""
+    ) {
+        val isCurrentRequest: Boolean get() = request == OpenMeteoForecastApi.REQUEST
+    }
 
     suspend fun read(cacheKey: String): Entry? = withContext(Dispatchers.IO) {
         runCatching {

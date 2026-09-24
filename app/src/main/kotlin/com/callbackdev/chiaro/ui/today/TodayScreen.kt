@@ -91,6 +91,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.AqiScale
 import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.DailyForecast
@@ -1394,6 +1395,7 @@ private fun NextHours(
         val peak = content.strip.maxByOrNull { it.hour.precipChancePct ?: -1 }
         val peakPct = peak?.hour?.precipChancePct
         if (peakPct != null && peakPct > 0) {
+            val caption = stringResource(chanceCaption(content.strip.map { it.hour.condition.wmoCode }))
             RainChart(
                 hours = content.strip.map {
                     RainHour(
@@ -1401,9 +1403,10 @@ private fun NextHours(
                         pct = it.hour.precipChancePct
                     )
                 },
-                caption = stringResource(R.string.rain_chart_caption),
+                caption = caption,
                 description = stringResource(
                     R.string.rain_chart_desc,
+                    caption,
                     content.strip.first().hour.time.format(timeFmt),
                     content.strip.last().hour.time.format(timeFmt),
                     peakPct,
@@ -1414,6 +1417,24 @@ private fun NextHours(
                 modifier = Modifier.padding(PagePadding)
             )
         }
+    }
+}
+
+/**
+ * What the chance is a chance OF (24 set 2026). `precipitation_probability` is any
+ * precipitation, snow included, and the chart said «pioggia» over a night of snow at
+ * Longyearbyen. The strip's own codes name it, the way the headline names rain or snow
+ * from its hour's code: snow when every hour that falls is snow, «rain or snow» when
+ * both fall, rain otherwise — and rain too when no hour draws a code, the chart's word
+ * before this.
+ */
+private fun chanceCaption(codes: List<Int>): Int {
+    val falling = codes.mapNotNull { WmoCode.of(it)?.takeIf { w -> w.isPrecipitation } }
+    val snow = falling.count { it.isSnow }
+    return when {
+        snow == 0 -> R.string.rain_chart_caption
+        snow == falling.size -> R.string.rain_chart_caption_snow
+        else -> R.string.rain_chart_caption_mixed
     }
 }
 
@@ -1654,19 +1675,26 @@ private fun WeekRow(
  */
 @Composable
 private fun DayFacts(forecast: DailyForecast, units: UnitSettings, locale: Locale) {
+    // The rain is the rain alone (24 set 2026): the total also carries the snow's water,
+    // and printed «0,6 mm di pioggia in 6 ore» over a day whose 0.6 mm were 0.4 cm of snow.
+    // `precipitation_hours` counts every kind of hour, so it rides on whichever line is
+    // the day's only one, and on neither when rain and snow share the day.
+    val rainMm = forecast.rainMm?.takeIf { it >= 0.2 }
+    val snowCm = forecast.snowCm?.takeIf { it >= 0.1 }
+    val hours = forecast.precipHours?.takeIf { it >= 1.0 && (rainMm == null || snowCm == null) }?.let {
+        pluralStringResource(R.plurals.rain_hours_note, it.roundToInt(), Formats.hours(it, locale))
+    }
     val facts = buildList {
-        forecast.precipMm?.takeIf { it >= 0.2 }?.let { mm ->
+        rainMm?.let { mm ->
             val amount = stringResource(R.string.day_fact_rain, Formats.millimetres(mm, locale))
-            val hours = forecast.precipHours?.takeIf { it >= 1.0 }?.let {
-                pluralStringResource(R.plurals.rain_hours_note, it.roundToInt(), Formats.hours(it, locale))
-            }
             add(DayFact({ ChiaroIcons.precipitation }, listOfNotNull(amount, hours).joinToString(" "), WeatherText.rainMeaning(mm)))
         }
-        forecast.snowCm?.takeIf { it >= 0.1 }?.let { cm ->
+        snowCm?.let { cm ->
+            val amount = stringResource(R.string.day_fact_snow, Formats.centimetres(cm, locale))
             add(
                 DayFact(
                     { ChiaroIcons.snow },
-                    stringResource(R.string.day_fact_snow, Formats.centimetres(cm, locale)),
+                    listOfNotNull(amount, hours).joinToString(" "),
                     WeatherText.snowMeaning(cm)
                 )
             )
@@ -1755,10 +1783,15 @@ private fun Details(content: TodayUiState.Content, units: UnitSettings, locale: 
         // The day's rain first (24 set 2026): how much, over how long, and — while the
         // report is fresh — what fell in the hour just closed. The one number on this grid
         // that answers "do I need the umbrella" rather than "what is it like".
-        today?.precipMm?.let { mm ->
+        //
+        // The rain ALONE (24 set 2026), like the week's open day: the total carries the
+        // snow's water too. On a day with snow in it the hours and the hour just closed
+        // stay off this tile, because both count the snow as well and it has its own.
+        val snowy = (today?.snowCm ?: 0.0) >= 0.1
+        today?.rainMm?.let { mm ->
             val lastHour = current.precipitation.pastHours.firstOrNull()
-                ?.takeIf { !current.estimated && it.precipMm > 0.0 }
-            val hours = today.precipHours?.takeIf { mm >= 0.2 && it >= 1.0 }
+                ?.takeIf { !current.estimated && !snowy && it.precipMm > 0.0 }
+            val hours = today.precipHours?.takeIf { !snowy && mm >= 0.2 && it >= 1.0 }
             add(
                 Tile(
                     icon = { ChiaroIcons.precipitation },

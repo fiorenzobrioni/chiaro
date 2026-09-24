@@ -139,5 +139,9 @@ data class DailyDto(
     @SerialName("precipitation_sum") val precipitationSumMm: List<Double?> = emptyList(),
     @SerialName("precipitation_hours") val precipitationHours: List<Double?> = emptyList(),
     @SerialName("snowfall_sum") val snowfallSumCm: List<Double?> = emptyList(),
-    @SerialName("wind_gusts_10m_max") val windGustsMaxKph: List<Double?> = emptyList()
+    @SerialName("wind_gusts_10m_max") val windGustsMaxKph: List<Double?> = emptyList(),
+    // The liquid part of `precipitation_sum`, which also carries the snow's water: see
+    // OpenMeteoForecastApi.DAILY_VARIABLES. Defaulted and nullable like the fields above.
+    @SerialName("rain_sum") val rainSumMm: List<Double?> = emptyList(),
+    @SerialName("showers_sum") val showersSumMm: List<Double?> = emptyList()
 )

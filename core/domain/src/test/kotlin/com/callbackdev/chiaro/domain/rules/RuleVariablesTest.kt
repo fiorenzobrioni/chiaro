@@ -112,13 +112,14 @@ class RuleVariablesTest {
     /** 24 set 2026: how much, the strongest gust, the European air. Absent reads null. */
     @Test
     fun `the new quantities resolve, and skip when the data does not carry them`() {
-        val today = report.daily.first().copy(precipMm = 12.4, snowCm = 3.0, gustMaxKph = 61.0)
+        val today = report.daily.first().copy(precipMm = 16.7, rainMm = 12.4, snowCm = 3.0, gustMaxKph = 61.0)
         val rich = report.copy(
             daily = listOf(today) + report.daily.drop(1),
             hourly = report.hourly.mapIndexed { i, h -> h.copy(gustKph = 20.0 + i * 10) },
             airQuality = report.airQuality!!.copy(europeanAqi = 33)
         )
         fun of(id: String) = RuleVariables.byId(id)!!.resolve(rich, now)
+        // The rain alone: the 16.7 mm total carries the 3 cm of snow's water too.
         assertEquals(12.4, of("today.precip_mm")!!.value, 0.0)
         assertEquals(3.0, of("today.snow_cm")!!.value, 0.0)
         assertEquals(61.0, of("today.gust_max_kph")!!.value, 0.0)
@@ -128,7 +129,7 @@ class RuleVariablesTest {
         assertEquals(rich.hourly.last().time, gust.at)
         // A report that carries none of them: every one skips rather than reading zero.
         val bare = report.copy(
-            daily = report.daily.map { it.copy(precipMm = null, snowCm = null, gustMaxKph = null) },
+            daily = report.daily.map { it.copy(precipMm = null, rainMm = null, snowCm = null, gustMaxKph = null) },
             hourly = report.hourly.map { it.copy(gustKph = null) },
             airQuality = report.airQuality!!.copy(europeanAqi = null)
         )

@@ -115,7 +115,10 @@ object RuleVariables {
         // How much, not only how likely (24 set 2026): the day's rain in mm, its snow in
         // cm, its strongest gust. Nullable like the rest of the day: a model that does not
         // carry them makes the rule skip.
-        today("today.precip_mm", RuleVariableKind.NUMBER) { it.precipMm }
+        // The id keeps its name for the rules already saved; the value is the rain alone
+        // (24 set 2026), what the phrase «la pioggia di oggi» promises — the total also
+        // carries the snow's water, and fired an umbrella rule on a day of snow.
+        today("today.precip_mm", RuleVariableKind.NUMBER) { it.rainMm }
         today("today.snow_cm", RuleVariableKind.NUMBER) { it.snowCm }
         today("today.gust_max_kph", RuleVariableKind.SPEED) { it.gustMaxKph }
     }

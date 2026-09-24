@@ -87,7 +87,9 @@
     <string name="hour_cell_desc">Alle %1$s, %2$s, %3$s, pioggia %4$d%%</string>
     <string name="hour_cell_desc_no_rain">Alle %1$s, %2$s, %3$s</string>
     <string name="rain_chart_caption">Probabilità di pioggia</string>
-    <string name="rain_chart_desc">Probabilità di pioggia dalle %1$s alle %2$s su una scala da 0 a 100%%, con picco %3$d%% verso le %4$s</string>
+    <string name="rain_chart_caption_snow">Probabilità di neve</string>
+    <string name="rain_chart_caption_mixed">Probabilità di pioggia o neve</string>
+    <string name="rain_chart_desc">%1$s dalle %2$s alle %3$s su una scala da 0 a 100%%, con picco %4$d%% verso le %5$s</string>
 
     <!-- Griglia dettagli: etichette. Una riga sola accanto all'icona da 34dp:
          su uno schermo da 360dp sono 84dp (erano 94 con l'icona da 24 il 6 set e
@@ -386,7 +388,7 @@
     <string name="guide_today_fresh_body">Quando quello che stai leggendo non è più fresco, Chiaro ne dice l\'età vera invece di nasconderla, e un aggiornamento fallito dice perché. Se i dati hanno più di un\'ora, in cima non trovi quelli di allora ma la previsione per quest\'ora, e sotto la temperatura c\'è scritto «Stima dalla previsione». Tira giù la schermata per chiederne uno nuovo, o tocca l\'età stessa per riprovare.</string>
     <string name="guide_today_fresh_caption">Un esempio: l\'età di quello che stai leggendo — si tocca per riprovare.</string>
     <string name="guide_today_hours_title">Le prossime ore</string>
-    <string name="guide_today_hours_body" formatted="false">Ventiquattro ore di temperatura, cielo e probabilità di pioggia, a partire dall\'ora dopo questa: l\'ora in cui sei è il numero grande in cima. Ogni colonna è l\'ora che comincia lì: «15 · 60%» vuol dire 60% di pioggia fra le 15 e le 16, e la temperatura è quella delle 15.</string>
+    <string name="guide_today_hours_body" formatted="false">Ventiquattro ore di temperatura, cielo e probabilità di pioggia, a partire dall\'ora dopo questa: l\'ora in cui sei è il numero grande in cima. Ogni colonna è l\'ora che comincia lì: «15 · 60%» vuol dire 60% di pioggia fra le 15 e le 16, e la temperatura è quella delle 15. Icona e percentuale vengono da due calcoli diversi: l\'icona mostra l\'ora nella previsione più probabile, la percentuale dice in quante previsioni alternative cade qualcosa, pioggia o neve. Per questo a volte non coincidono, un fiocco su 0% o una nuvola su 70%, e sono vere tutte e due.</string>
     <string name="guide_today_rest_title">Il resto della giornata</string>
     <string name="guide_today_rest_body">Una sola linea del tempo per tutto quello che manca: alba o tramonto, l\'ora dorata e l\'ora blu, il momento in cui il cielo diventa del tutto buio, il sorgere e il calare della luna, le ore in cui la pioggia dovrebbe iniziare e smettere e — quando il sole è basso e davanti a lui la pioggia è probabile — la finestra in cui potrebbe starci un arcobaleno, con la direzione in cui girarsi a guardare.</string>
     <string name="guide_today_week_title">La settimana</string>

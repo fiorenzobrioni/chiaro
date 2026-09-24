@@ -95,7 +95,9 @@
          nothing there, so the announcement says nothing either. -->
     <string name="hour_cell_desc_no_rain">At %1$s, %2$s, %3$s</string>
     <string name="rain_chart_caption">Chance of rain</string>
-    <string name="rain_chart_desc">Chance of rain from %1$s to %2$s on a scale of 0 to 100%%, peaking at %3$d%% around %4$s</string>
+    <string name="rain_chart_caption_snow">Chance of snow</string>
+    <string name="rain_chart_caption_mixed">Chance of rain or snow</string>
+    <string name="rain_chart_desc">%1$s from %2$s to %3$s on a scale of 0 to 100%%, peaking at %4$d%% around %5$s</string>
 
     <!-- Details grid: labels. One line beside the tile's 34dp icon, which on a
          360dp screen is a budget of 84dp (94 until the icons grew on 6 set, 88 until
@@ -405,7 +407,7 @@
     <string name="guide_today_fresh_body">When what you are reading is no longer fresh, Chiaro says its real age instead of hiding it, and an update that failed says why. If the data is over an hour old, the top of the screen shows the forecast for this hour instead of the old reading, and says «Estimated from the forecast» under the temperature. Pull the screen down to ask for a new one, or tap the age itself to try again.</string>
     <string name="guide_today_fresh_caption">An example: the age of what you are reading — tap it to try again.</string>
     <string name="guide_today_hours_title">The next hours</string>
-    <string name="guide_today_hours_body" formatted="false">Twenty-four hours of temperature, sky and rain chance, starting from the hour after this one: the hour you are in is the big number at the top. Each column is the hour that starts there: «3 PM · 60%» means a 60% chance of rain between 3 and 4, and the temperature is the one at 3.</string>
+    <string name="guide_today_hours_body" formatted="false">Twenty-four hours of temperature, sky and rain chance, starting from the hour after this one: the hour you are in is the big number at the top. Each column is the hour that starts there: «3 PM · 60%» means a 60% chance of rain between 3 and 4, and the temperature is the one at 3. The icon and the percentage come from two different calculations: the icon shows the hour in the most likely forecast, the percentage how many alternative forecasts see something fall, rain or snow. That is why they sometimes disagree, a snowflake over 0% or a cloud over 70%, and both are true.</string>
     <string name="guide_today_rest_title">The rest of the day</string>
     <string name="guide_today_rest_body">One timeline for everything still ahead: sunrise or sunset, the golden and blue hours, the moment the sky goes fully dark, moonrise and moonset, the hours rain is expected to start and ease off, and — when the sun is low and rain is likely in front of it — the window a rainbow could stand in, with the direction to turn and look.</string>
     <string name="guide_today_week_title">The week</string>

@@ -42,6 +42,12 @@ full java.time), compile/targetSdk 36.
 - Lint: `./gradlew :app:lintDebug`
 - Installable minified build: `./gradlew :app:assembleRelease -PsignReleaseWithDebugKey`
 - On a machine with no system JDK, prepend `JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"`.
+- If Maven Central answers `429 Too Many Requests` (common on shared cloud runners and
+  sandboxed containers; retrying does not help), route it through Google's mirror with the
+  opt-in init script: `./gradlew --init-script tools/maven-mirror.init.gradle.kts
+  --no-configuration-cache <tasks>`. It also points Robolectric's runtime download of
+  `android-all` at the mirror, which a 429 otherwise fails as `LocationProviderTest` and
+  friends. The build files are not changed: CI and local machines keep using Maven Central.
 
 **Modules**: `:core:domain` is **pure Kotlin/JVM** and must stay that way. If a class in
 it needs a `Context` or a `Resources`, it is in the wrong module. `:core:data` is the

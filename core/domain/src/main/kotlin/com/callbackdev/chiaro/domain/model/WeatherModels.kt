@@ -405,7 +405,15 @@ data class DailyForecast(
     val precipMm: Double? = null,
     val precipHours: Double? = null,
     val snowCm: Double? = null,
-    val gustMaxKph: Double? = null
+    val gustMaxKph: Double? = null,
+    /**
+     * The rain alone, in mm: rain and showers, without the snow's water that [precipMm]
+     * also carries. What every line that says «di pioggia» prints — 0.4 cm of snow is
+     * 0.6 mm of [precipMm], and «0,6 mm di pioggia» over a day of snow was a rain nobody
+     * forecast. Null when the response does not split it and the day has snow in it: the
+     * total can then not be told apart, and a guess is not a forecast.
+     */
+    val rainMm: Double? = null
 )
 
 enum class CacheStatus { HIT, MISS }

@@ -110,9 +110,10 @@ class WeatherRepository(
                 }
             // Process death wipes the map above: an unexpired disk entry (last fetch
             // by any process — app or worker) re-maps as a HIT instead of re-spending
-            // two GETs. No history commit: its fetch already committed one.
+            // two GETs. No history commit: its fetch already committed one. An entry an
+            // older app fetched with a shorter request is not one: it lacks the new fields.
             diskCache?.read(city.cacheKey)
-                ?.takeIf { Duration.between(Instant.ofEpochMilli(it.fetchedAtEpochMs), now) < ttl }
+                ?.takeIf { it.isCurrentRequest && Duration.between(Instant.ofEpochMilli(it.fetchedAtEpochMs), now) < ttl }
                 ?.let { entry ->
                     val fetchedAt = Instant.ofEpochMilli(entry.fetchedAtEpochMs)
                     runCatching {
@@ -235,7 +236,8 @@ class WeatherRepository(
                 fetchedAtEpochMs = now.toEpochMilli(),
                 responseTimeMs = responseTimeMs,
                 forecast = forecast,
-                airQuality = air?.current
+                airQuality = air?.current,
+                request = OpenMeteoForecastApi.REQUEST
             )
         )
         recordHistory(city, report)

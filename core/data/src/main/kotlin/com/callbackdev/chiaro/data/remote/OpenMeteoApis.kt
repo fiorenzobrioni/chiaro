@@ -74,12 +74,24 @@ interface OpenMeteoForecastApi {
          * response's own sunrise for Sydney on 4 Oct 2026 says 05:28 where the clock
          * there says 06:28.
          */
+        /**
+         * What a response was asked for, written beside it in `ReportDiskCache` (25 set
+         * 2026). An entry fetched by an older app with a shorter list re-mapped as a
+         * fresh HIT for up to 15 minutes after an update: Longyearbyen showed no rain on
+         * a day of 3.8 mm because the response on disk did not have `rain_sum` yet.
+         */
+        val REQUEST: String get() = "$CURRENT_VARIABLES|$HOURLY_VARIABLES|$DAILY_VARIABLES"
+
         const val DAILY_VARIABLES =
             "weather_code,temperature_2m_max,temperature_2m_min," +
                 "precipitation_probability_max,uv_index_max," +
                 // 24 set 2026: how much, not only how likely — the day's rain and snow,
                 // the hours it lasts, and the strongest gust.
-                "precipitation_sum,precipitation_hours,snowfall_sum,wind_gusts_10m_max"
+                "precipitation_sum,precipitation_hours,snowfall_sum,wind_gusts_10m_max," +
+                // Same day, later: `precipitation_sum` is rain, showers AND the snow's
+                // water together (Everest's 19.81 cm of snow arrive as 28.4 mm of it), so
+                // it cannot be printed as «di pioggia». The liquid part is asked for by name.
+                "rain_sum,showers_sum"
     }
 }
 
