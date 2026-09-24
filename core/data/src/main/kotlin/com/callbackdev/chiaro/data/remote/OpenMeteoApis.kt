@@ -35,7 +35,8 @@ interface OpenMeteoForecastApi {
         const val CURRENT_VARIABLES =
             "temperature_2m,relative_humidity_2m,apparent_temperature,dew_point_2m," +
                 "is_day,precipitation,weather_code,pressure_msl,wind_speed_10m," +
-                "wind_direction_10m,wind_gusts_10m,visibility,cloud_cover,uv_index"
+                "wind_direction_10m,wind_gusts_10m,visibility,cloud_cover,uv_index," +
+                "cloud_cover_low,cloud_cover_mid,cloud_cover_high"
         // visibility + cloud_cover are never displayed: they repair `weather_code`,
         // whose fog is unreliable in both directions (Fase 13c) — see
         // WeatherReportMapper. Hourly cloud_cover has a second reader since Fase 16a:
@@ -47,9 +48,19 @@ interface OpenMeteoForecastApi {
         // that. Measured at **+72 bytes gzipped** on a 7-day response — 168 mostly-zero
         // values compress to almost nothing, which is why the amount was worth asking
         // for rather than inferring from the probability the app already had.
+        //
+        // 24 set 2026, the second pass of the engine review: the rest of what a "now" is
+        // made of (apparent temperature, humidity, dew point, pressure, wind, gusts, UV),
+        // so that a `current` block gone stale can be replaced by the forecast for this
+        // hour instead of shown hours late, and the headline can see a gale coming; and
+        // the cloud by layer, which the details and the sky's verdicts now say. Every
+        // one of them has a reader — see `PLANNING.md`, «I dati nuovi a schermo».
         const val HOURLY_VARIABLES =
             "temperature_2m,weather_code,precipitation,precipitation_probability," +
-                "is_day,visibility,cloud_cover"
+                "is_day,visibility,cloud_cover," +
+                "apparent_temperature,relative_humidity_2m,dew_point_2m,pressure_msl," +
+                "wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index," +
+                "cloud_cover_low,cloud_cover_mid,cloud_cover_high"
         /**
          * `sunrise`, `sunset` and `daylight_duration` left this list on 20 set 2026,
          * having been asked for and dropped on the floor since Fase 16e handed the
@@ -65,7 +76,10 @@ interface OpenMeteoForecastApi {
          */
         const val DAILY_VARIABLES =
             "weather_code,temperature_2m_max,temperature_2m_min," +
-                "precipitation_probability_max,uv_index_max"
+                "precipitation_probability_max,uv_index_max," +
+                // 24 set 2026: how much, not only how likely — the day's rain and snow,
+                // the hours it lasts, and the strongest gust.
+                "precipitation_sum,precipitation_hours,snowfall_sum,wind_gusts_10m_max"
     }
 }
 
@@ -81,7 +95,7 @@ interface OpenMeteoAirQualityApi {
     companion object {
         const val BASE_URL = "https://air-quality-api.open-meteo.com/"
         const val CURRENT_VARIABLES =
-            "us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide," +
+            "us_aqi,european_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide," +
                 "grass_pollen,birch_pollen,alder_pollen,olive_pollen,ragweed_pollen," +
                 "mugwort_pollen"
     }

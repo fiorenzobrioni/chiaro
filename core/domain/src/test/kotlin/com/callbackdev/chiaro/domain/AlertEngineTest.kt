@@ -42,7 +42,7 @@ class AlertEngineTest {
         time = now.plusHours(plusHours),
         at = now.plusHours(plusHours).atZone(rome).toInstant(),
         tempC = 18.0,
-        condition = WeatherCondition(wmoCode, "desc-$wmoCode", "⛅"),
+        condition = WeatherCondition(wmoCode),
         precipChancePct = precipPct,
         cloudCoverPct = 50
     )
@@ -53,7 +53,7 @@ class AlertEngineTest {
         date = date,
         highC = 18.0,
         lowC = 7.0,
-        condition = WeatherCondition(2, "Partly Cloudy", "⛅"),
+        condition = WeatherCondition(2),
         precipPct = 20,
         uvIndexMax = 4
     )

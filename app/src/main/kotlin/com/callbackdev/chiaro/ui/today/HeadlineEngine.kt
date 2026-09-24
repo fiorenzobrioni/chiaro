@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.today
 
 import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
@@ -64,9 +65,10 @@ sealed interface Headline {
     /** Fog on the way inside twelve hours, while it is not foggy now. */
     data class Fog(val at: LocalDateTime) : Headline
 
-    /** The wind right now is strong enough to be the day's fact: the hero has no wind
-     * on it, so this is the one "now" the sentence carries. */
-    data class Wind(val speedKph: Double, val gustKph: Double) : Headline
+    /** The wind is strong enough to be the day's fact: the hero has no wind on it.
+     * [at] null is now; otherwise the first hour of today (or of the next six) that
+     * reaches it, which the rows can say since they carry the wind (24 set 2026). */
+    data class Wind(val speedKph: Double, val gustKph: Double, val at: LocalDateTime? = null) : Headline
 
     /** Rain possible today: the chance is at least half but under the umbrella bar. */
     data class WetMaybe(val at: LocalDateTime, val pct: Int, val snow: Boolean) : Headline
@@ -92,7 +94,7 @@ sealed interface Headline {
  * 3. rain likely later **today** (or inside six hours, past midnight) — the umbrella;
  * 4. frost by tomorrow mid-morning;
  * 5. fog inside twelve hours;
- * 6. a strong wind now;
+ * 6. a strong wind now, or later today (24 set 2026, when the rows gained the wind);
  * 7. rain **possible** today — at least half, under the umbrella bar;
  * 8. rain likely **tomorrow**.
  *
@@ -103,14 +105,6 @@ sealed interface Headline {
  * the answer for a day whose news is eight hours away.
  */
 object HeadlineEngine {
-
-    /** Codes where water is falling right now — drizzle through thunderstorm. */
-    private val WET_CODES = setOf(
-        51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77,
-        80, 81, 82, 85, 86, 95, 96, 99
-    )
-    private val SNOW_CODES = setOf(71, 73, 75, 77, 85, 86)
-    private val FOG_CODES = setOf(45, 48)
 
     /** Under half, the sky has stopped promising rain: the "clear after that" bar, and
      * — read the other way — the floor of "rain possible". Internal since the evening
@@ -161,19 +155,19 @@ object HeadlineEngine {
             ?.let { (hour, bucket) -> return Headline.Severe(bucket = bucket, at = hour.time) }
 
         val current = hours.first()
-        if (current.condition.wmoCode in WET_CODES) {
+        if (WmoCode.isPrecipitation(current.condition.wmoCode)) {
             val stopsAt = hours.asSequence()
                 .drop(1)
                 .takeWhile { it.time.isBefore(now.plusHours(TURN_LOOKAHEAD_HOURS)) }
                 .firstOrNull {
                     // An hour with no forecast chance is not evidence that it clears:
                     // the sentence waits for an hour that actually says so (Fase 26).
-                    it.condition.wmoCode !in WET_CODES &&
+                    !WmoCode.isPrecipitation(it.condition.wmoCode) &&
                         (it.precipChancePct ?: return@firstOrNull false) < CLEAR_BELOW_PCT
                 }
             return Headline.WetNow(
                 stopsAt = stopsAt?.time,
-                snow = current.condition.wmoCode in SNOW_CODES
+                snow = WmoCode.isSnow(current.condition.wmoCode)
             )
         }
 
@@ -190,7 +184,7 @@ object HeadlineEngine {
             return Headline.WetSoon(
                 at = wetHour.time,
                 pct = wetHour.chance,
-                snow = wetHour.condition.wmoCode in SNOW_CODES,
+                snow = WmoCode.isSnow(wetHour.condition.wmoCode),
                 clearsAt = clearsAt?.time
             )
         }
@@ -208,25 +202,36 @@ object HeadlineEngine {
 
         // Fog on the way, only while it is not foggy now: "Fog" is the hero's own word
         // for the present, and the sentence is for what comes next.
-        if (current.condition.wmoCode !in FOG_CODES) {
+        if (!WmoCode.isFog(current.condition.wmoCode)) {
             val fogEnd = now.plusHours(FOG_LOOKAHEAD_HOURS)
-            ahead.firstOrNull { !it.time.isAfter(fogEnd) && it.condition.wmoCode in FOG_CODES }
+            ahead.firstOrNull { !it.time.isAfter(fogEnd) && WmoCode.isFog(it.condition.wmoCode) }
                 ?.let { return Headline.Fog(at = it.time) }
         }
 
-        // The one "now" the sentence carries: the hero has no wind on it, and a gale is
-        // the day's fact whatever the sky is doing. The model carries no hourly wind, so
-        // this cannot look ahead the way the others do.
+        // The hero has no wind on it, and a gale is the day's fact whatever the sky is
+        // doing. Now first; then, since the rows carry the wind (24 set 2026), the first
+        // hour of the umbrella's horizon that reaches the same bar — until then this was
+        // the one step of the ladder that could not look ahead, and a gale at four was
+        // news only at four. A row with no wind at all is not a calm one: it is skipped.
         val wind = report.current.wind
         if (wind.speedKph >= WIND_STRONG_KPH || wind.gustKph >= GUST_STRONG_KPH) {
             return Headline.Wind(speedKph = wind.speedKph, gustKph = wind.gustKph)
+        }
+        todays.firstOrNull {
+            (it.windKph ?: 0.0) >= WIND_STRONG_KPH || (it.gustKph ?: 0.0) >= GUST_STRONG_KPH
+        }?.let { windy ->
+            return Headline.Wind(
+                speedKph = windy.windKph ?: 0.0,
+                gustKph = windy.gustKph ?: 0.0,
+                at = windy.time
+            )
         }
 
         todays.firstOrNull { it.chance >= CLEAR_BELOW_PCT }?.let { maybe ->
             return Headline.WetMaybe(
                 at = maybe.time,
                 pct = maybe.chance,
-                snow = maybe.condition.wmoCode in SNOW_CODES
+                snow = WmoCode.isSnow(maybe.condition.wmoCode)
             )
         }
 
@@ -236,7 +241,7 @@ object HeadlineEngine {
                 return Headline.WetTomorrow(
                     at = wet.time,
                     pct = wet.chance,
-                    snow = wet.condition.wmoCode in SNOW_CODES
+                    snow = WmoCode.isSnow(wet.condition.wmoCode)
                 )
             }
 

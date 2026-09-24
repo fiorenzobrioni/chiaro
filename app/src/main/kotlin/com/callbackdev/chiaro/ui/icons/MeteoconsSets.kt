@@ -39,8 +39,6 @@ internal object MeteoconsSets {
         R.drawable.mc3_extreme_rain to R.drawable.mc3n_extreme_rain,
         R.drawable.mc3_thunderstorms_day to R.drawable.mc3n_thunderstorms_day,
         R.drawable.mc3_thunderstorms_night to R.drawable.mc3n_thunderstorms_night,
-        R.drawable.mc3_thunderstorms_day_hail to R.drawable.mc3n_thunderstorms_day_hail,
-        R.drawable.mc3_thunderstorms_night_hail to R.drawable.mc3n_thunderstorms_night_hail,
         R.drawable.mc3_not_available to R.drawable.mc3n_not_available,
         R.drawable.mc3_wind to R.drawable.mc3n_wind,
         R.drawable.mc3_humidity to R.drawable.mc3n_humidity,
@@ -98,6 +96,9 @@ internal object MeteoconsSets {
         R.drawable.mc3_pollen_weed_high to R.drawable.mc3n_pollen_weed_high,
         R.drawable.mc3_haze to R.drawable.mc3n_haze,
         R.drawable.mc3_fog to R.drawable.mc3n_fog,
+        R.drawable.mc3_pollen_grass_very_high to R.drawable.mc3n_pollen_grass_very_high,
+        R.drawable.mc3_pollen_tree_very_high to R.drawable.mc3n_pollen_tree_very_high,
+        R.drawable.mc3_pollen_weed_very_high to R.drawable.mc3n_pollen_weed_very_high,
     )
 
     /** flat, fondo chiaro. */
@@ -122,8 +123,6 @@ internal object MeteoconsSets {
         R.drawable.mc3_extreme_rain to R.drawable.mc3f_extreme_rain,
         R.drawable.mc3_thunderstorms_day to R.drawable.mc3f_thunderstorms_day,
         R.drawable.mc3_thunderstorms_night to R.drawable.mc3f_thunderstorms_night,
-        R.drawable.mc3_thunderstorms_day_hail to R.drawable.mc3f_thunderstorms_day_hail,
-        R.drawable.mc3_thunderstorms_night_hail to R.drawable.mc3f_thunderstorms_night_hail,
         R.drawable.mc3_not_available to R.drawable.mc3f_not_available,
         R.drawable.mc3_wind to R.drawable.mc3f_wind,
         R.drawable.mc3_humidity to R.drawable.mc3f_humidity,
@@ -181,6 +180,9 @@ internal object MeteoconsSets {
         R.drawable.mc3_pollen_weed_high to R.drawable.mc3f_pollen_weed_high,
         R.drawable.mc3_haze to R.drawable.mc3f_haze,
         R.drawable.mc3_fog to R.drawable.mc3f_fog,
+        R.drawable.mc3_pollen_grass_very_high to R.drawable.mc3f_pollen_grass_very_high,
+        R.drawable.mc3_pollen_tree_very_high to R.drawable.mc3f_pollen_tree_very_high,
+        R.drawable.mc3_pollen_weed_very_high to R.drawable.mc3f_pollen_weed_very_high,
     )
 
     /** flat, fondo scuro. */
@@ -205,8 +207,6 @@ internal object MeteoconsSets {
         R.drawable.mc3_extreme_rain to R.drawable.mc3fn_extreme_rain,
         R.drawable.mc3_thunderstorms_day to R.drawable.mc3fn_thunderstorms_day,
         R.drawable.mc3_thunderstorms_night to R.drawable.mc3fn_thunderstorms_night,
-        R.drawable.mc3_thunderstorms_day_hail to R.drawable.mc3fn_thunderstorms_day_hail,
-        R.drawable.mc3_thunderstorms_night_hail to R.drawable.mc3fn_thunderstorms_night_hail,
         R.drawable.mc3_not_available to R.drawable.mc3fn_not_available,
         R.drawable.mc3_wind to R.drawable.mc3fn_wind,
         R.drawable.mc3_humidity to R.drawable.mc3fn_humidity,
@@ -264,6 +264,9 @@ internal object MeteoconsSets {
         R.drawable.mc3_pollen_weed_high to R.drawable.mc3fn_pollen_weed_high,
         R.drawable.mc3_haze to R.drawable.mc3fn_haze,
         R.drawable.mc3_fog to R.drawable.mc3fn_fog,
+        R.drawable.mc3_pollen_grass_very_high to R.drawable.mc3fn_pollen_grass_very_high,
+        R.drawable.mc3_pollen_tree_very_high to R.drawable.mc3fn_pollen_tree_very_high,
+        R.drawable.mc3_pollen_weed_very_high to R.drawable.mc3fn_pollen_weed_very_high,
     )
 
     /**
@@ -360,14 +363,6 @@ internal object MeteoconsSets {
             R.drawable.mc3a_thunderstorms_night, R.drawable.mc3an_thunderstorms_night,
             R.drawable.mc3fa_thunderstorms_night, R.drawable.mc3fan_thunderstorms_night
         ),
-        R.drawable.mc3_thunderstorms_day_hail to Moving(
-            R.drawable.mc3a_thunderstorms_day_hail, R.drawable.mc3an_thunderstorms_day_hail,
-            R.drawable.mc3fa_thunderstorms_day_hail, R.drawable.mc3fan_thunderstorms_day_hail
-        ),
-        R.drawable.mc3_thunderstorms_night_hail to Moving(
-            R.drawable.mc3a_thunderstorms_night_hail, R.drawable.mc3an_thunderstorms_night_hail,
-            R.drawable.mc3fa_thunderstorms_night_hail, R.drawable.mc3fan_thunderstorms_night_hail
-        ),
     )
 
     /**
@@ -396,8 +391,6 @@ internal object MeteoconsSets {
         "extreme-rain" to R.drawable.mc3_extreme_rain,
         "thunderstorms-day" to R.drawable.mc3_thunderstorms_day,
         "thunderstorms-night" to R.drawable.mc3_thunderstorms_night,
-        "thunderstorms-day-hail" to R.drawable.mc3_thunderstorms_day_hail,
-        "thunderstorms-night-hail" to R.drawable.mc3_thunderstorms_night_hail,
         "not-available" to R.drawable.mc3_not_available,
         "wind" to R.drawable.mc3_wind,
         "humidity" to R.drawable.mc3_humidity,
@@ -455,5 +448,8 @@ internal object MeteoconsSets {
         "pollen-weed-high" to R.drawable.mc3_pollen_weed_high,
         "haze" to R.drawable.mc3_haze,
         "fog" to R.drawable.mc3_fog,
+        "pollen-grass-very-high" to R.drawable.mc3_pollen_grass_very_high,
+        "pollen-tree-very-high" to R.drawable.mc3_pollen_tree_very_high,
+        "pollen-weed-very-high" to R.drawable.mc3_pollen_weed_very_high,
     )
 }

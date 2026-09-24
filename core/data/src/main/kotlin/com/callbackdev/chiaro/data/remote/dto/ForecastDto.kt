@@ -64,7 +64,20 @@ data class CurrentDto(
      */
     @SerialName("visibility") val visibilityM: Double? = null,
     @SerialName("cloud_cover") val cloudCoverPct: Int,
-    @SerialName("uv_index") val uvIndex: Double
+    /**
+     * Nullable since 24 set 2026, the last model-dependent field of this block to be
+     * found out: `models=icon_seamless` serves `current.uv_index: null` on the live
+     * endpoint (Milan, measured that morning), exactly as it serves `uv_index_max`
+     * below. Chiaro passes no `models=`, but `best_match` picks per region and the cost
+     * of meeting that null non-nullable is the whole report, not one tile.
+     */
+    @SerialName("uv_index") val uvIndex: Double? = null,
+    // The cloud by layer (24 set 2026). Defaulted and nullable like every field added
+    // after the first release: a cached response from before must still decode, and a
+    // model that does not split its cloud costs the layer, not the report.
+    @SerialName("cloud_cover_low") val cloudCoverLowPct: Int? = null,
+    @SerialName("cloud_cover_mid") val cloudCoverMidPct: Int? = null,
+    @SerialName("cloud_cover_high") val cloudCoverHighPct: Int? = null
 )
 
 @Serializable
@@ -82,7 +95,21 @@ data class HourlyDto(
     @SerialName("precipitation_probability") val precipitationProbabilityPct: List<Int?>,
     @SerialName("is_day") val isDay: List<Int>,
     @SerialName("visibility") val visibilityM: List<Double?>,
-    @SerialName("cloud_cover") val cloudCoverPct: List<Int>
+    @SerialName("cloud_cover") val cloudCoverPct: List<Int>,
+    // 24 set 2026, see OpenMeteoForecastApi.HOURLY_VARIABLES. All defaulted to empty (a
+    // cache entry from before) and all element-nullable (a model that lacks one):
+    // readers go through `getOrNull`, and an absent value is an absent value.
+    @SerialName("apparent_temperature") val apparentTemperatureC: List<Double?> = emptyList(),
+    @SerialName("relative_humidity_2m") val humidityPct: List<Int?> = emptyList(),
+    @SerialName("dew_point_2m") val dewPointC: List<Double?> = emptyList(),
+    @SerialName("pressure_msl") val pressureMslHpa: List<Double?> = emptyList(),
+    @SerialName("wind_speed_10m") val windSpeedKph: List<Double?> = emptyList(),
+    @SerialName("wind_direction_10m") val windDirectionDeg: List<Int?> = emptyList(),
+    @SerialName("wind_gusts_10m") val windGustsKph: List<Double?> = emptyList(),
+    @SerialName("uv_index") val uvIndex: List<Double?> = emptyList(),
+    @SerialName("cloud_cover_low") val cloudCoverLowPct: List<Int?> = emptyList(),
+    @SerialName("cloud_cover_mid") val cloudCoverMidPct: List<Int?> = emptyList(),
+    @SerialName("cloud_cover_high") val cloudCoverHighPct: List<Int?> = emptyList()
 )
 
 @Serializable
@@ -106,5 +133,11 @@ data class DailyDto(
      * hours. `best_match` picks its model per region and Open-Meteo changes those
      * picks; the cost of being wrong is the app showing nothing.
      */
-    @SerialName("uv_index_max") val uvIndexMax: List<Double?>
+    @SerialName("uv_index_max") val uvIndexMax: List<Double?>,
+    // 24 set 2026: how much falls, for how long, and the strongest gust. Defaulted for
+    // the cache, element-nullable for the model, like `uv_index_max` above.
+    @SerialName("precipitation_sum") val precipitationSumMm: List<Double?> = emptyList(),
+    @SerialName("precipitation_hours") val precipitationHours: List<Double?> = emptyList(),
+    @SerialName("snowfall_sum") val snowfallSumCm: List<Double?> = emptyList(),
+    @SerialName("wind_gusts_10m_max") val windGustsMaxKph: List<Double?> = emptyList()
 )

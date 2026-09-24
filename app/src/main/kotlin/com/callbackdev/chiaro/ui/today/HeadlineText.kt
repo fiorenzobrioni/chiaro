@@ -105,9 +105,17 @@ object HeadlineText {
                 // The bigger of the two is the number that matters; a gust under the
                 // steady wind is not a gust worth naming.
                 val top = Formats.wind(maxOf(headline.speedKph, headline.gustKph), units.windSpeed, locale)
-                context.getString(
-                    if (brief) R.string.headline_wind_brief else R.string.headline_wind, top
-                )
+                val at = headline.at
+                if (at == null) {
+                    context.getString(
+                        if (brief) R.string.headline_wind_brief else R.string.headline_wind, top
+                    )
+                } else {
+                    context.getString(
+                        if (brief) R.string.headline_wind_later_brief else R.string.headline_wind_later,
+                        top, t(at)
+                    )
+                }
             }
             is Headline.WetMaybe -> context.getString(
                 if (headline.snow) R.string.headline_snow_maybe else R.string.headline_wet_maybe,

@@ -428,8 +428,9 @@ private fun StackContent(
  * becoming an ornament. The eyebrow moving to the full width is the other half of the
  * trade — «Cavenago di Brianza» has nothing to compete with up there.
  *
- * The two columns are bottom-aligned, not centred: the number's baseline and the range's
- * end up on one line, which is the whole point of «allineate a destra in basso».
+ * The two columns are bottom-aligned, not centred, and then lifted onto one baseline
+ * ([textPanelBaselineLift]): the digits of the number and of the range stand on one line,
+ * which is the whole point of «allineate a destra in basso».
  */
 @Composable
 private fun PanelContent(
@@ -451,13 +452,17 @@ private fun PanelContent(
         ownRow = textPanelHasFactLine(size, scale, sentenceOn)
     )
     val later = laterHours(content.strip, content.now)
+    val sentenceText = sentence(context, content, model.settings.units)
     val plan = textPanelPlan(
         size, scale,
         stale = content.isStale,
         sentence = sentenceOn,
         warning = warning.drawn,
         range = model.look.showDayRange && today != null,
-        later = model.look.showLater && later.size >= TextLaterMinRows
+        later = model.look.showLater && later.size >= TextLaterMinRows,
+        sentenceFitsOneLine = measureWidgetText(context, sentenceText, TextSentenceSp, medium = true) +
+            RowFitSlack <= textPanelSentenceColumn(size),
+        descentEm = widgetTextDescentEm()
     )
     val icon = if (model.look.showIcon) textPanelIconSize(size, scale, plan) else 0.dp
     Column(modifier = GlanceModifier.fillMaxSize()) {
@@ -491,11 +496,13 @@ private fun PanelContent(
                     // the column they wrap against is the column it always was. Off
                     // [edgeGive] for the reason the stack gives — the reference panel at
                     // a 1.3 font scale asks for a glyph and has no band to draw one in.
-                    modifier = GlanceModifier.padding(end = edgeGive)
+                    // [TextPanelPlan.baselineLift] under the words puts their last line on
+                    // the number's baseline, not on the bottom of its line box.
+                    modifier = GlanceModifier.padding(end = edgeGive, bottom = plan.baselineLift)
                 ) {
                     if (plan.sentenceLines > 0) {
                         Text(
-                            text = sentence(context, content, model.settings.units),
+                            text = sentenceText,
                             style = textSentenceStyle(palette, TextAlign.End),
                             maxLines = plan.sentenceLines,
                             modifier = GlanceModifier.fillMaxWidth()

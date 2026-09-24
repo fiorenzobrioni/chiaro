@@ -164,7 +164,7 @@ class SkyNewJobsTest {
             time = LocalDateTime.of(day, java.time.LocalTime.of(at, 0)),
             at = LocalDateTime.of(day, java.time.LocalTime.of(at, 0)).atZone(rome).toInstant(),
             tempC = 22.0,
-            condition = WeatherCondition(80, "Rovesci", "\uD83C\uDF26\uFE0F"),
+            condition = WeatherCondition(80),
             precipChancePct = precip,
             cloudCoverPct = cloud
         )

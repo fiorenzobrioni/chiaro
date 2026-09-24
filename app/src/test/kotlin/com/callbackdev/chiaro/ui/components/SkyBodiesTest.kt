@@ -71,4 +71,23 @@ class SkyBodiesTest {
         val left = moonLitPath(center, 10f, 0.2f, litRight = false).getBounds()
         assertTrue("a left-lit crescent ends left of the middle", left.right <= 100f + 0.5f)
     }
+
+    /** 24 set 2026: an overcast sun is a soft patch of light, not a pale disc (it read as the moon). */
+    @Test
+    fun `under a full cover the sun loses its edge, not its light`() {
+        val clear = sunVeil(0f)
+        assertEquals(SunVeil(disc = 1f, glowCore = 0.55f, glowMid = 0.18f, spread = 1f), clear)
+        val overcast = sunVeil(1f)
+        assertEquals(0f, overcast.disc, 1e-6f)
+        // The glow stays the brightest thing there is, and spreads.
+        assertTrue(overcast.glowCore >= 0.35f)
+        assertTrue(overcast.spread > 1.2f)
+        // In between the disc fades steadily and never jumps.
+        val half = sunVeil(0.5f)
+        assertTrue(half.disc in 0.4f..0.6f)
+        assertTrue(sunVeil(0.8f).disc < half.disc)
+        // Out of range clamps.
+        assertEquals(overcast, sunVeil(1.7f))
+        assertEquals(clear, sunVeil(-0.2f))
+    }
 }

@@ -32,8 +32,8 @@ SHIPPED = [
     "fog-night", "overcast-drizzle", "overcast-rain", "overcast-sleet",
     "overcast-snow", "partly-cloudy-day-rain", "partly-cloudy-night-rain",
     "partly-cloudy-day-snow", "partly-cloudy-night-snow", "extreme-rain",
-    "thunderstorms-day", "thunderstorms-night", "thunderstorms-day-hail",
-    "thunderstorms-night-hail", "not-available", "wind", "humidity", "uv-index",
+    "thunderstorms-day", "thunderstorms-night",
+    "not-available", "wind", "humidity", "uv-index",
     "thermometer", "barometer", "raindrops", "mist", "snowflake", "smoke-particles",
     "compass", "pollen", "sunrise", "sunset", "moonrise", "moonset", "horizon",
     "star", "starry-night", "falling-stars", "solar-eclipse", "moon-new",
@@ -46,6 +46,9 @@ SHIPPED = [
     "pollen-grass-low", "pollen-grass-moderate", "pollen-grass-high",
     "pollen-tree-low", "pollen-tree-moderate", "pollen-tree-high", "pollen-weed-low",
     "pollen-weed-moderate", "pollen-weed-high", "haze", "fog",
+    # il quinto livello dei pollini (24 set 2026): le soglie per specie di MeteoSwiss hanno
+    # «molto alto», e il tile ora lo dice in parole, quindi il disegno puo' dirlo
+    "pollen-grass-very-high", "pollen-tree-very-high", "pollen-weed-very-high",
 ]
 
 #: Scelte, verificate presenti a monte, e **non spedite**: nessuna schermata le disegna
@@ -53,14 +56,19 @@ SHIPPED = [
 #: barometro, la scala Beaufort, i momenti del giorno, i tipi di allerta della Fase 12.
 #: Spostarne una in SHIPPED e' la meta' del lavoro che serve a usarla.
 PLANNED = [
+    # la grandine: disegnata per 96/99 fino al 24 set 2026, quando la revisione del
+    # motore ha letto che fuori dalla famiglia ICON Open-Meteo scrive 96 per «temporale
+    # forte» e non produce mai 99 — nessuno prevede grandine, e il disegno la
+    # prometteva. 96/99 prendono il temporale semplice; queste restano sullo scaffale
+    # per il giorno in cui la risposta dira' quale modello ha scritto il codice
+    "thunderstorms-day-hail", "thunderstorms-night-hail",
     # il disegno del «quasi sereno» di Meteocons: esiste, e resta sullo scaffale. Dal
     # 12 set 2026 il codice 1 prende `sun-one-cloud-*`, che `tools/compose_sun_cloud.py`
     # compone dal sereno piu' una nuvoletta, perche' questo disegno porta il 72% della
     # nuvola del «poco nuvoloso» per un cielo che ne ha il 39% di copertura — vedi
     # ChiaroIcons.conditionLineRes
     "mostly-clear-day", "mostly-clear-night",
-    "raindrop", "umbrella", "dust", "pollen-grass-very-high",
-    "pollen-tree-very-high", "pollen-weed-very-high", "barometer-very-high",
+    "raindrop", "umbrella", "dust", "barometer-very-high",
     "barometer-extreme", "windsock", "windsock-calm", "windsock-weak",
     "windsock-moderate", "wind-beaufort-0", "wind-beaufort-1", "wind-beaufort-2",
     "wind-beaufort-3", "wind-beaufort-4", "wind-beaufort-5", "wind-beaufort-6",

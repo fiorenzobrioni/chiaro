@@ -234,9 +234,25 @@ internal data class TextPanelPlan(
     val showWarning: Boolean,
     val showRange: Boolean,
     /** «Più tardi»'s rows under the block, 0 when it is not drawn ([textLaterRows]). */
-    val laterRows: Int = 0
+    val laterRows: Int = 0,
+    /** The air under the trailing column that puts its last line on the number's
+     * baseline ([textPanelBaselineLift]). */
+    val baselineLift: Dp = 0.dp
 )
 
+/**
+ * [sentenceFitsOneLine] is the sentence MEASURED against its column (24 set 2026, on the
+ * device): false, the default, reserves the two lines a sentence may take, which is what
+ * every plan did before. The reservation was the bug. «Nuvoloso» under an «Allerta gialla»
+ * was budgeted as two lines of sentence plus the two facts, 89.8 dp against the number's
+ * 84.5, so the block counted 5 dp taller than the card would ever draw it, «Più tardi» lost
+ * a row to it, and the number, pinned to the bottom, dropped a whole row away from its
+ * eyebrow on exactly the days with a warning. A sentence that fits one line now reserves
+ * one, and the block is the height the card really draws.
+ *
+ * [descentEm] is the system font's line box under the baseline, in ems: measured on the
+ * device by the caller ([widgetTextDescentEm]), a constant in the tests.
+ */
 internal fun textPanelPlan(
     size: DpSize,
     fontScale: Float,
@@ -244,7 +260,9 @@ internal fun textPanelPlan(
     sentence: Boolean,
     warning: Boolean,
     range: Boolean,
-    later: Boolean = false
+    later: Boolean = false,
+    sentenceFitsOneLine: Boolean = false,
+    descentEm: Float = TextDescentEm
 ): TextPanelPlan {
     val top = size.height - WidgetCardPadding * 2 - textLineHeight(TextFactSp, fontScale)
     val column = fillColumn(
@@ -253,24 +271,62 @@ internal fun textPanelPlan(
         sentence = sentence,
         warning = warning,
         range = range,
-        maxLines = TextPanelSentenceMaxLines
+        maxLines = if (sentenceFitsOneLine) 1 else TextPanelSentenceMaxLines
     )
     val stalePart = if (stale) textLineHeight(TextStaleSp, fontScale) else 0.dp
     val hero = heroSp(top - stalePart, TextPanelLeading, fontScale, TextHeroPanelMax)
+    val trailingLast = when {
+        column.showRange || column.showWarning -> TextFactSp
+        column.sentenceLines > 0 -> TextSentenceSp
+        else -> null
+    }
+    // The alignment is paid only out of what the column left: it is air, and air never
+    // costs a line of words.
+    val lift = trailingLast?.let {
+        textPanelBaselineLift(if (stale) TextStaleSp else hero, it, fontScale, descentEm)
+            .coerceAtMost(column.left.coerceAtLeast(0.dp))
+    } ?: 0.dp
     // «Più tardi» is paid out of the band the two columns leave between them and the
     // eyebrow — the air that makes this form a composition — and only past the air the
     // form keeps for itself ([TextLaterPanelAir]): a panel that spent its whole band on
     // a table would be a list again. The glyph, when it is on, takes what is left after
     // the table ([textPanelIconSize]); it is still never an input here.
-    val block = maxOf(textLineHeight(hero, fontScale) + stalePart, top - column.left)
+    val block = maxOf(textLineHeight(hero, fontScale) + stalePart, top - column.left + lift)
     return TextPanelPlan(
         heroSp = hero,
         sentenceLines = column.sentenceLines,
         showWarning = column.showWarning,
         showRange = column.showRange,
-        laterRows = if (later) textLaterRows(top - block - TextLaterPanelAir, fontScale) else 0
+        laterRows = if (later) textLaterRows(top - block - TextLaterPanelAir, fontScale) else 0,
+        baselineLift = lift
     )
 }
+
+/**
+ * **The number and the day's range on one baseline** (committente, 24 set 2026: «mettere
+ * allineati in basso temperatura corrente e temperature min e max»).
+ *
+ * The two columns were bottom-aligned by their line BOXES, and a line box carries the
+ * font's descent under its baseline in proportion to its size: 64 sp keeps ~17 dp under
+ * the digits, 16 sp ~4. So the big number stood 13 dp above the «↑ 24° ↓ 12°» it was meant
+ * to sit level with, which read as an accident rather than as a choice. The difference
+ * between the two descents, put under the trailing column, lands its last line on the
+ * number's baseline, and the digits of both stand on one line.
+ *
+ * [leadingLastSp] is the size of the leading column's last line: the number, or the stale
+ * marker when the data is old. That line is smaller than the range, so on a stale card the
+ * lift is nothing and the two columns share the marker's baseline as they always did.
+ */
+internal fun textPanelBaselineLift(
+    leadingLastSp: Float,
+    trailingLastSp: Float,
+    fontScale: Float,
+    descentEm: Float = TextDescentEm
+): Dp = ((leadingLastSp - trailingLastSp) * descentEm * fontScale).coerceAtLeast(0f).dp
+
+/** The system font's line box under the baseline: Roboto's `bottom` (555 of 2048 units),
+ * which the device measures for its own face ([widgetTextDescentEm]). */
+internal const val TextDescentEm = 0.271f
 
 /** [textRowHasFactLine] for the panel: the same question, asked of the same card without
  * the warning on it. */
@@ -584,7 +640,7 @@ internal fun textPanelIconSize(size: DpSize, fontScale: Float, plan: TextPanelPl
     val fact = textLineHeight(TextFactSp, fontScale)
     val trailing = textLineHeight(TextSentenceSp, fontScale) * plan.sentenceLines +
         (if (plan.showWarning) fact else 0.dp) +
-        (if (plan.showRange) fact else 0.dp)
+        (if (plan.showRange) fact else 0.dp) + plan.baselineLift
     val band = size.height - WidgetCardPadding * 2 - fact - trailing - textLaterHeight(plan.laterRows, fontScale)
     return textIconSize(minOf(band, textPanelSentenceColumn(size) + TextIconEdgeGive))
 }

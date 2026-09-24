@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.WeatherIcons
+import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.model.PollenLevel
 import com.callbackdev.chiaro.domain.model.PollenReport
@@ -157,36 +158,42 @@ object ChiaroIcons {
      * An unrecognised code draws **`not-available`**, not a cloud. The word beside it
      * already says "unknown conditions", and a cloud there would be the screen
      * inventing weather nobody forecast.
+     *
+     * **96 and 99 draw the plain thunderstorm** since 24 set 2026, like their word
+     * («Temporale forte»): outside the ICON family Open-Meteo writes 96 for a strong
+     * thunderstorm and never writes 99, so the hail these drew was hail nobody
+     * forecast. The branches are the [WmoCode] entries, so a code the table gains
+     * cannot fall through to a drawing by accident.
      */
     @DrawableRes
-    fun conditionLineRes(wmoCode: Int, night: Boolean = false): Int = when (wmoCode) {
-        0 -> if (night) R.drawable.mc3_clear_night else R.drawable.mc3_clear_day
-        1 -> if (night) ComposedIcons.mostlyClearNight else ComposedIcons.mostlyClearDay
-        2 -> if (night) R.drawable.mc3_partly_cloudy_night else R.drawable.mc3_partly_cloudy_day
-        3 -> R.drawable.mc3_overcast
-        45, 48 -> if (night) R.drawable.mc3_fog_night else R.drawable.mc3_fog_day
-        51, 53, 55 -> R.drawable.mc3_overcast_drizzle
-        56, 57, 66, 67 -> R.drawable.mc3_overcast_sleet
-        61, 63, 65 -> R.drawable.mc3_overcast_rain
-        71, 73, 75, 77 -> R.drawable.mc3_overcast_snow
-        80, 81 -> if (night) {
+    fun conditionLineRes(wmoCode: Int, night: Boolean = false): Int = when (WmoCode.of(wmoCode)) {
+        WmoCode.CLEAR -> if (night) R.drawable.mc3_clear_night else R.drawable.mc3_clear_day
+        WmoCode.MAINLY_CLEAR -> if (night) ComposedIcons.mostlyClearNight else ComposedIcons.mostlyClearDay
+        WmoCode.PARTLY_CLOUDY ->
+            if (night) R.drawable.mc3_partly_cloudy_night else R.drawable.mc3_partly_cloudy_day
+        WmoCode.OVERCAST -> R.drawable.mc3_overcast
+        WmoCode.FOG, WmoCode.RIME_FOG -> if (night) R.drawable.mc3_fog_night else R.drawable.mc3_fog_day
+        WmoCode.DRIZZLE_LIGHT, WmoCode.DRIZZLE_MODERATE, WmoCode.DRIZZLE_DENSE ->
+            R.drawable.mc3_overcast_drizzle
+        WmoCode.FREEZING_DRIZZLE_LIGHT, WmoCode.FREEZING_DRIZZLE_DENSE,
+        WmoCode.FREEZING_RAIN_LIGHT, WmoCode.FREEZING_RAIN_HEAVY -> R.drawable.mc3_overcast_sleet
+        WmoCode.RAIN_SLIGHT, WmoCode.RAIN_MODERATE, WmoCode.RAIN_HEAVY -> R.drawable.mc3_overcast_rain
+        WmoCode.SNOW_SLIGHT, WmoCode.SNOW_MODERATE, WmoCode.SNOW_HEAVY, WmoCode.SNOW_GRAINS ->
+            R.drawable.mc3_overcast_snow
+        WmoCode.SHOWERS_SLIGHT, WmoCode.SHOWERS_MODERATE -> if (night) {
             R.drawable.mc3_partly_cloudy_night_rain
         } else {
             R.drawable.mc3_partly_cloudy_day_rain
         }
-        82 -> R.drawable.mc3_extreme_rain
-        85, 86 -> if (night) {
+        WmoCode.SHOWERS_HEAVY -> R.drawable.mc3_extreme_rain
+        WmoCode.SNOW_SHOWERS_SLIGHT, WmoCode.SNOW_SHOWERS_HEAVY -> if (night) {
             R.drawable.mc3_partly_cloudy_night_snow
         } else {
             R.drawable.mc3_partly_cloudy_day_snow
         }
-        95 -> if (night) R.drawable.mc3_thunderstorms_night else R.drawable.mc3_thunderstorms_day
-        96, 99 -> if (night) {
-            R.drawable.mc3_thunderstorms_night_hail
-        } else {
-            R.drawable.mc3_thunderstorms_day_hail
-        }
-        else -> R.drawable.mc3_not_available
+        WmoCode.THUNDERSTORM, WmoCode.THUNDERSTORM_STRONG, WmoCode.THUNDERSTORM_SEVERE ->
+            if (night) R.drawable.mc3_thunderstorms_night else R.drawable.mc3_thunderstorms_day
+        null -> R.drawable.mc3_not_available
     }
 
     /**
@@ -395,9 +402,10 @@ object ChiaroIcons {
      * and the rule for using one is the same rule a second verdict has to pass
      * (DESIGN §1.2): **a glyph may only say a level the tile already computes and says in
      * words.** Where the family's grades and the app's bands do not line up, the generic
-     * mark stays — that is why the wind tile below is not graded, and why `very-high`
-     * and `extreme` are imported but not shipped: `pressureMeaning` has three bands and
-     * `pollenLevel` has three levels above nothing, not five and four.
+     * mark stays — that is why the wind tile below is not graded, and why the barometer's
+     * `very-high` and `extreme` are imported but not shipped: `pressureMeaning` has three
+     * bands, not five. The pollen's `very-high` ships since 24 set 2026, when the levels
+     * became MeteoSwiss' per-species classes and gained the fourth above nothing.
      */
     @Composable
     fun uv(index: Int): ImageVector = styled(
@@ -461,6 +469,13 @@ object ChiaroIcons {
 
     val precipitation: ImageVector @Composable get() = styled(R.drawable.mc3_raindrops)
 
+    /** The day's snow (24 set 2026). The same drawing as [frost], named for the other
+     * question: how much falls, not whether it freezes (§13.1). */
+    val snow: ImageVector @Composable get() = styled(R.drawable.mc3_snowflake)
+
+    /** The cloud cover tile (24 set 2026): a plain cloud, the sky's quantity. */
+    val cloudCover: ImageVector @Composable get() = styled(R.drawable.mc3_cloudy)
+
     /** Freezing, not snow: the Journal's drift strip marks the days whose forecast
      * minimum is at or below zero, and the question there is ice, not precipitation.
      * The accessor names the metric (§13.1), which is why it is not called
@@ -511,7 +526,8 @@ object ChiaroIcons {
                 family == null -> R.drawable.mc3_pollen
                 worst == PollenLevel.LOW -> family.low
                 worst == PollenLevel.MODERATE -> family.moderate
-                else -> family.high
+                worst == PollenLevel.HIGH -> family.high
+                else -> family.veryHigh
             }
         )
     }
@@ -519,19 +535,20 @@ object ChiaroIcons {
     private enum class Plant(
         @DrawableRes val low: Int,
         @DrawableRes val moderate: Int,
-        @DrawableRes val high: Int
+        @DrawableRes val high: Int,
+        @DrawableRes val veryHigh: Int
     ) {
         GRASS(
             R.drawable.mc3_pollen_grass_low, R.drawable.mc3_pollen_grass_moderate,
-            R.drawable.mc3_pollen_grass_high
+            R.drawable.mc3_pollen_grass_high, R.drawable.mc3_pollen_grass_very_high
         ),
         TREE(
             R.drawable.mc3_pollen_tree_low, R.drawable.mc3_pollen_tree_moderate,
-            R.drawable.mc3_pollen_tree_high
+            R.drawable.mc3_pollen_tree_high, R.drawable.mc3_pollen_tree_very_high
         ),
         WEED(
             R.drawable.mc3_pollen_weed_low, R.drawable.mc3_pollen_weed_moderate,
-            R.drawable.mc3_pollen_weed_high
+            R.drawable.mc3_pollen_weed_high, R.drawable.mc3_pollen_weed_very_high
         )
     }
 

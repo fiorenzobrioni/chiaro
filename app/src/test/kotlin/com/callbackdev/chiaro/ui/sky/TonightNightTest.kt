@@ -67,7 +67,7 @@ class TonightNightTest {
             val t = dusk.plusSeconds(h * 3600 - 1800)
             HourlyForecast(
                 time = t.atZone(zone).toLocalDateTime(), at = t, tempC = 10.0,
-                condition = WeatherCondition(0, "", ""), precipChancePct = 0, cloudCoverPct = h.toInt()
+                condition = WeatherCondition(0), precipChancePct = 0, cloudCoverPct = h.toInt()
             )
         }
         val hours = SkyStateBuilder.nightHours(night, hourly)

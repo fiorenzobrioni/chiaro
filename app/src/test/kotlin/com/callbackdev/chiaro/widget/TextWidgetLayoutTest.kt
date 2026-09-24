@@ -338,10 +338,18 @@ class TextWidgetLayoutTest {
         val plan = textPanelPlan(
             fourByTwo, 1f, stale = false, sentence = true, warning = false, range = true
         )
-        assertEquals(71.24f, textPanelIconSize(fourByTwo, 1f, plan).value, 0.01f)
+        // 71.24 of band, less the 13.01 that lifts the range onto the number's baseline.
+        assertEquals(58.23f, textPanelIconSize(fourByTwo, 1f, plan).value, 0.01f)
+        // A sentence measured to fit one line gives its reserved second line back.
+        val short = textPanelPlan(
+            fourByTwo, 1f, stale = false, sentence = true, warning = false, range = true,
+            sentenceFitsOneLine = true
+        )
+        assertEquals(81.99f, textPanelIconSize(fourByTwo, 1f, short).value, 0.01f)
         // The stale marker lives in the LEADING column, under the number, so it never
         // costs the glyph a dp — which is the reason the band is measured against the
-        // trailing column and not against the taller of the two.
+        // trailing column and not against the taller of the two. On a stale card the
+        // columns share the marker's baseline, so there is no lift to pay either.
         val stale = textPanelPlan(
             fourByTwo, 1f, stale = true, sentence = true, warning = false, range = true
         )
@@ -760,6 +768,94 @@ class TextLaterTest {
         assertTrue(three.word)
         assertEquals(0.dp, laterColumns(300.dp, 1f, true, rain = false).rain)
     }
+
+    /**
+     * The number and the day's range on one baseline (committente, 24 set 2026): the
+     * trailing column is lifted by the difference between the two line boxes' descents,
+     * so what is under the number's digits equals what is under the range's.
+     */
+    @Test
+    fun `the panel puts the range on the number's baseline`() {
+        val plan = textPanelPlan(
+            fourByTwo, 1f, stale = false, sentence = true, warning = false, range = true
+        )
+        assertEquals(TextHeroPanelMax, plan.heroSp, 0.01f)
+        val underNumber = TextHeroPanelMax * TextDescentEm
+        val underRange = plan.baselineLift.value + TextFactSp * TextDescentEm
+        assertEquals(underNumber, underRange, 0.01f)
+        assertEquals(13.01f, plan.baselineLift.value, 0.01f)
+        // Only the sentence under the number: its own, larger descent is the reference.
+        val sentenceOnly = textPanelPlan(
+            fourByTwo, 1f, stale = false, sentence = true, warning = false, range = false
+        )
+        assertEquals((TextHeroPanelMax - TextSentenceSp) * TextDescentEm, sentenceOnly.baselineLift.value, 0.01f)
+        // A stale card ends its leading column on the marker, which is smaller than the
+        // range: the columns share the marker's baseline and nothing is lifted.
+        val stale = textPanelPlan(
+            fourByTwo, 1f, stale = true, sentence = true, warning = false, range = true
+        )
+        assertEquals(0f, stale.baselineLift.value, 0.001f)
+        // The device's own face decides the size of the lift, not the constant.
+        val taller = textPanelPlan(
+            fourByTwo, 1f, stale = false, sentence = true, warning = false, range = true,
+            descentEm = 0.3f
+        )
+        assertEquals((TextHeroPanelMax - TextFactSp) * 0.3f, taller.baselineLift.value, 0.01f)
+    }
+
+    /** The alignment is air: on the tightest panels it gives way, and no line of words is
+     * ever dropped to pay for it. */
+    @Test
+    fun `the baseline lift never costs a line`() {
+        listOf(DpSize(300.dp, 150.dp), DpSize(320.dp, 160.dp), fourByTwo, fourByThree).forEach { size ->
+            listOf(1f, 1.15f, 1.3f).forEach { scale ->
+                combos.forEach { (stale, warning, range) ->
+                    val flat = textPanelPlan(size, scale, stale, true, warning, range, descentEm = 0f)
+                    val lifted = textPanelPlan(size, scale, stale, true, warning, range)
+                    assertEquals("$size@$scale", flat.sentenceLines, lifted.sentenceLines)
+                    assertEquals("$size@$scale", flat.showWarning, lifted.showWarning)
+                    assertEquals("$size@$scale", flat.showRange, lifted.showRange)
+                    assertEquals("$size@$scale", flat.heroSp, lifted.heroSp, 0.001f)
+                    // And the lifted column still fits under the eyebrow.
+                    val trailing = textLineHeight(TextSentenceSp, scale) * lifted.sentenceLines +
+                        (if (lifted.showWarning) textLineHeight(TextFactSp, scale) else 0.dp) +
+                        (if (lifted.showRange) textLineHeight(TextFactSp, scale) else 0.dp) +
+                        lifted.baselineLift
+                    val room = size.height - WidgetCardPadding * 2 - textLineHeight(TextFactSp, scale)
+                    assertTrue("$size@$scale", trailing.value <= room.value + 0.01f)
+                }
+            }
+        }
+    }
+
+    /**
+     * The device pass of 24 set 2026: Catania, «Nuvoloso» and «Allerta gialla», printed one
+     * hour of «Più tardi» fewer than Cavenago beside it, and its number sat a whole row
+     * lower, because the plan reserved a second line for a one-word sentence. Measured,
+     * the sentence reserves what it takes, and a warning that fits beside the number moves
+     * nothing.
+     */
+    @Test
+    fun `a warning that fits beside the number does not move it`() {
+        val size = DpSize(376.dp, 225.dp)
+        val quiet = textPanelPlan(
+            size, 1f, stale = false, sentence = true, warning = false, range = true,
+            later = true, sentenceFitsOneLine = true
+        )
+        val warned = textPanelPlan(
+            size, 1f, stale = false, sentence = true, warning = true, range = true,
+            later = true, sentenceFitsOneLine = true
+        )
+        assertTrue(warned.showWarning && warned.showRange)
+        assertEquals(3, quiet.laterRows)
+        assertEquals(quiet.laterRows, warned.laterRows)
+        // The reservation that was the bug: two lines budgeted for «Nuvoloso».
+        val reserved = textPanelPlan(
+            size, 1f, stale = false, sentence = true, warning = true, range = true, later = true
+        )
+        assertEquals(2, reserved.laterRows)
+    }
+
 }
 
 /** Which hours «Più tardi» reads: on the stride's clock, far enough ahead, on the instant. */
@@ -772,7 +868,7 @@ class LaterHoursTest {
             com.callbackdev.chiaro.ui.today.StripHour(
                 com.callbackdev.chiaro.domain.model.HourlyForecast(
                     time = t, at = t.atZone(zone).toInstant(), tempC = 10.0 + i,
-                    condition = com.callbackdev.chiaro.domain.model.WeatherCondition(0, "", ""),
+                    condition = com.callbackdev.chiaro.domain.model.WeatherCondition(0),
                     precipChancePct = 0, cloudCoverPct = 0
                 ),
                 night = false

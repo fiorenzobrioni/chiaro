@@ -4,21 +4,29 @@ import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
 import com.callbackdev.chiaro.data.remote.dto.AirQualityCurrentDto
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.HourlyDto
+import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.PlaceRegion
 import com.callbackdev.chiaro.domain.WeatherCodes
+import com.callbackdev.chiaro.domain.WeatherCodes.PollenSpecies
+import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.AirQuality
+import com.callbackdev.chiaro.domain.model.AqiScale
 import com.callbackdev.chiaro.domain.model.Astronomical
 import com.callbackdev.chiaro.domain.model.CacheStatus
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.CurrentConditions
 import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.Location
 import com.callbackdev.chiaro.domain.model.MoonPhase
+import com.callbackdev.chiaro.domain.model.PastHour
 import com.callbackdev.chiaro.domain.model.PollenReport
 import com.callbackdev.chiaro.domain.model.Pollutants
 import com.callbackdev.chiaro.domain.model.Precipitation
 import com.callbackdev.chiaro.domain.model.SystemInfo
+import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.model.Wind
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
@@ -46,8 +54,9 @@ import kotlin.math.roundToInt
  * is bounded here rather than left as "whatever arrived".
  *
  * The realized count is never the full 168: the window opens at the current hour, so
- * it runs from ~168 at midnight down to ~145 at 23:00, and [mapHourly] clips it to
- * what the response actually holds.
+ * it runs from 167 at midnight down to ~145 at 23:00 — one less than the slots since
+ * 24 set 2026, because a row needs the slot after it (see [WeatherReportMapper.mapHourly]) —
+ * and it is clipped to what the response actually holds.
  *
  * **The views do not follow this window.** `weather_data.json` caps its table at 24
  * rows and the README at 14; AlertEngine and RuleVariables bound themselves by time
@@ -59,25 +68,11 @@ private const val HOURLY_WINDOW = OpenMeteoForecastApi.FORECAST_DAYS * 24
 /** Days of daily forecast carried — the whole response, like [HOURLY_WINDOW]. */
 private const val DAILY_WINDOW = OpenMeteoForecastApi.FORECAST_DAYS
 
-/** The WMO precipitation floor, kept in the domain beside the code table so that every
- * reader of the boundary — the day's label here, a past hour's judgement elsewhere —
- * reads one number. */
-private const val FIRST_PRECIP_CODE = WeatherCodes.FIRST_PRECIP_CODE
-
-/** WMO 45; Open-Meteo derives 48 in its enum but never emits it. */
-private const val WMO_FOG = 45
-private val FogCodes = setOf(45, 48)
+/** WMO 45, what a fog the visibility proves is written as; 48 is only ever relayed. */
+private val WMO_FOG = WmoCode.FOG.code
 
 /** Open-Meteo's own fog threshold, `WeatherCode.swift:99`: `visibility <= 1000 → fog`. */
 private const val FOG_VISIBILITY_M = 1000.0
-
-/**
- * WMO codes that declare an intensity or a hazard of their own: freezing anything,
- * the heavy grades, violent showers, every thunderstorm. These claim the day
- * unconditionally in [WeatherReportMapper.dailyCode] — the materiality gate below is
- * allowed to drop a label, never a warning.
- */
-private val HazardCodes = setOf(56, 57, 65, 66, 67, 75, 82, 86, 95, 96, 99)
 
 /**
  * How much has to fall before precipitation may label the whole day (Fase 26), and
@@ -163,7 +158,6 @@ object WeatherReportMapper {
     ): WeatherReport {
         val current = forecast.current
         val clock = ProviderClock(forecast.timezone, forecast.utcOffsetSeconds)
-        val isDay = current.isDay == 1
 
         // The provider's own labels, kept in the provider's own frame. Every
         // comparison BETWEEN response values happens here, where they all share one
@@ -187,15 +181,14 @@ object WeatherReportMapper {
                 localTime = localTime
             ),
             current = CurrentConditions(
-                condition = WeatherCodes.condition(
+                condition = WeatherCondition(
                     repairFog(
                         code = current.weatherCode,
                         visibilityM = current.visibilityM,
                         cloudCoverPct = current.cloudCoverPct,
                         // An observation has no run to belong to — see repairFog.
                         fogPersists = true
-                    ),
-                    isDay
+                    )
                 ),
                 tempC = current.temperatureC,
                 feelsLikeC = current.apparentTemperatureC,
@@ -203,8 +196,7 @@ object WeatherReportMapper {
                 dewPointC = current.dewPointC,
                 visibilityKm = current.visibilityM?.div(1000.0),
                 pressureMb = current.pressureMslHpa,
-                uvIndex = current.uvIndex.roundToInt(),
-                uvDescription = WeatherCodes.uvDescription(current.uvIndex.roundToInt()),
+                uvIndex = current.uvIndex?.roundToInt(),
                 wind = Wind(
                     speedKph = current.windSpeedKph,
                     directionCompass = WeatherCodes.windCompass(current.windDirectionDeg),
@@ -212,12 +204,21 @@ object WeatherReportMapper {
                     gustKph = current.windGustsKph
                 ),
                 precipitation = Precipitation(
-                    lastHourMm = current.precipitationMm,
-                    chancePct = forecast.hourly.precipitationProbabilityPct
-                        .getOrNull(currentHourIndex)
+                    lastQuarterHourMm = current.precipitationMm,
+                    pastHours = pastHours(forecast.hourly, providerTimes, clock, providerNow),
+                    // The slot that ENDS after now is the one describing the hour under
+                    // way; `currentHourIndex`'s slot is the hour already gone.
+                    chancePct = providerTimes.indexOfFirst { it.isAfter(providerNow) }
+                        .takeIf { it >= 0 }
+                        ?.let { forecast.hourly.precipitationProbabilityPct.getOrNull(it) },
+                    quarterEndedAt = clock.instantOf(providerNow)
+                ),
+                cloudCoverPct = current.cloudCoverPct,
+                cloudLayers = layersOf(
+                    current.cloudCoverLowPct, current.cloudCoverMidPct, current.cloudCoverHighPct
                 )
             ),
-            airQuality = airQuality?.toAirQuality(),
+            airQuality = airQuality?.toAirQuality(PlaceRegion.inEurope(city.countryCode)),
             pollen = airQuality?.toPollenReport(),
             astronomical = mapAstronomical(city, clock, localTime, fetchedAt),
             hourly = mapHourly(forecast, providerTimes, clock, hourlyCodes, currentHourIndex),
@@ -231,6 +232,31 @@ object WeatherReportMapper {
         )
     }
 
+    /**
+     * One row per hour, **for the hour that starts at it** (24 set 2026, P7b of the review).
+     *
+     * Open-Meteo's instant variables (temperature, cloud, visibility, humidity, pressure,
+     * wind, UV) are the value AT the label; its precipitation, probability and gusts are
+     * «of the preceding hour», and its `weather_code` is derived from that preceding
+     * precipitation. So the provider's 15:00 slot says what fell from 14 to 15 — and a row
+     * that printed «15 · 60%» from it told the reader about an hour already over by the
+     * time it began, an hour late for every «pioggia verso le 15». A row now takes its
+     * instants from its own slot and its interval values — [HourlyForecast.precipChancePct],
+     * [HourlyForecast.gustKph] — from the NEXT one, which is the hour 15-16: what the reader
+     * understands the row to mean.
+     *
+     * The code is both, because Open-Meteo's is: a precipitation code describes the hour
+     * before its slot, a sky or fog code the instant of it. So the row shows the rain that
+     * falls **during** its hour (the next slot's code, when that is precipitation) and
+     * otherwise the sky it **starts** with ([skyAt]). Shifting the whole code instead was
+     * the first draft, and on the Sydney response of that morning it drew the 06:00 row —
+     * 320 m of visibility, fog by any reading — as clear, because the fog had lifted by 07.
+     *
+     * The fog repair and the day's code still read the provider's slots as they are
+     * (`codes` is indexed by slot); only the rows are re-expressed. The last hour of the
+     * response has no slot after it and is not a row: the week loses its final hour,
+     * which is past every horizon the screens draw.
+     */
     private fun mapHourly(
         forecast: ForecastResponseDto,
         times: List<LocalDateTime>,
@@ -239,8 +265,9 @@ object WeatherReportMapper {
         fromIndex: Int
     ): List<HourlyForecast> {
         val hourly = forecast.hourly
-        return (fromIndex until (fromIndex + HOURLY_WINDOW).coerceAtMost(times.size))
+        return (fromIndex until (fromIndex + HOURLY_WINDOW).coerceAtMost(times.size - 1))
             .map { i ->
+                val next = i + 1
                 HourlyForecast(
                     // [times] holds the provider's labels; the row carries the city's
                     // clock and the moment itself. They differ only across a DST
@@ -248,18 +275,35 @@ object WeatherReportMapper {
                     time = clock.localOf(times[i]),
                     at = clock.instantOf(times[i]),
                     tempC = hourly.temperatureC[i],
-                    condition = WeatherCodes.condition(
-                        codes[i],
-                        isDay = hourly.isDay[i] == 1
+                    condition = WeatherCondition(
+                        if (WmoCode.isPrecipitation(codes[next])) codes[next] else hourly.skyAt(i, codes)
                     ),
-                    precipChancePct = hourly.precipitationProbabilityPct.getOrNull(i),
+                    precipChancePct = hourly.precipitationProbabilityPct.getOrNull(next),
                     // Read like its siblings: the parallel arrays are the same length
                     // in any response that deserialized, and `repairedCodes()` has
                     // already indexed this very column over all of them.
-                    cloudCoverPct = hourly.cloudCoverPct[i]
+                    cloudCoverPct = hourly.cloudCoverPct[i],
+                    feelsLikeC = hourly.apparentTemperatureC.getOrNull(i),
+                    humidityPct = hourly.humidityPct.getOrNull(i),
+                    dewPointC = hourly.dewPointC.getOrNull(i),
+                    pressureMb = hourly.pressureMslHpa.getOrNull(i),
+                    windKph = hourly.windSpeedKph.getOrNull(i),
+                    windDirectionDeg = hourly.windDirectionDeg.getOrNull(i),
+                    gustKph = hourly.windGustsKph.getOrNull(next),
+                    uvIndex = hourly.uvIndex.getOrNull(i),
+                    visibilityKm = hourly.visibilityM.getOrNull(i)?.div(1000.0),
+                    cloudLayers = layersOf(
+                        hourly.cloudCoverLowPct.getOrNull(i),
+                        hourly.cloudCoverMidPct.getOrNull(i),
+                        hourly.cloudCoverHighPct.getOrNull(i)
+                    )
                 )
             }
     }
+
+    /** Null when the model split none of the three: an unsplit sky has no layers to name. */
+    private fun layersOf(low: Int?, mid: Int?, high: Int?): CloudLayers? =
+        if (low == null && mid == null && high == null) null else CloudLayers(low, mid, high)
 
     /**
      * [providerTimes] and not the re-expressed ones on purpose: a row of `daily` is the
@@ -291,22 +335,24 @@ object WeatherReportMapper {
                 date = day,
                 highC = daily.temperatureMaxC[i],
                 lowC = daily.temperatureMinC[i],
-                condition = WeatherCodes.condition(
+                condition = WeatherCondition(
                     dailyCode(
+                        forecast.hourly,
                         hourlyCodes,
-                        forecast.hourly.isDay,
-                        forecast.hourly.precipitationMm,
                         hoursByDate[day].orEmpty(),
                         daily.weatherCode[i]
-                    ),
-                    isDay = true
+                    )
                 ),
                 // NOT `?: 0`: `precipitation_probability_max` is model-dependent, and
                 // the old zero was a forecast of no rain put in the mouth of a model
                 // that never spoke. Null travels to the surfaces, like the hourly
                 // probability beside it.
                 precipPct = daily.precipitationProbabilityMaxPct.getOrNull(i),
-                uvIndexMax = uvMax
+                uvIndexMax = uvMax,
+                precipMm = daily.precipitationSumMm.getOrNull(i),
+                precipHours = daily.precipitationHours.getOrNull(i),
+                snowCm = daily.snowfallSumCm.getOrNull(i),
+                gustMaxKph = daily.windGustsMaxKph.getOrNull(i)
             )
         }
     }
@@ -321,48 +367,121 @@ object WeatherReportMapper {
      * CAPE spike. Measured 22 Aug 2026 on 8 Po Valley cities — see Fase 13b in PLANNING.md
      * for the numbers behind every choice below.
      *
-     * Rain first, over the WHOLE day — but only rain that is REALLY there (Fase 26).
-     * Any precipitation code used to outrank every sky code, which handed the day to a
-     * single hour of 0.1 mm at 1% probability; now the light codes have to clear
-     * [WET_DAY_MM] over the day or run for [WET_DAY_HOURS] of it, and [HazardCodes]
-     * clear nothing because a warning is never dropped. Scoping the rain half to the
-     * daylight too was the first cut, back in 13b, and it dropped the precipitation
-     * from 17 days out of 56, 8 of them turning a night thunderstorm into `Overcast`:
-     * this rule may remove a distortion, never a warning, and that is exactly why the
-     * hazard clause comes first.
-     * `max()` within the precipitation family keeps Open-Meteo's own ordering, where 80
-     * (slight showers) outranks 65 (heavy rain): imprecise about intensity, never wrong
-     * about whether it rains. Measured 6 Sep 2026 over 3 024 hours, the codes that make
-     * that inversion possible (82, 66, 67, 99) were not emitted once, so it stays.
+     * Three steps, in this order, over the WHOLE day for the first two:
      *
-     * The sky, with no rain to report, is the daylight's: the row answers "how will the day
-     * look", so a single closed hour at 4am neither darkens nor fogs a sunny day. Apple
-     * (`daytimeForecast`/`overnightForecast`) and Google (`daytimeForecast` 07-19) split the
-     * day for the same reason. Most frequent daylight code wins, ties to the heavier one —
-     * which needs no case for fog: on a really foggy day fog is the most frequent code.
+     * 1. **A hazard the ensemble backs claims the day.** Freezing anything, the heavy
+     *    grades, every thunderstorm — [WmoCode.hazard] — whatever else falls, because
+     *    this rule may remove a distortion, never a warning (scoping it to daylight, back
+     *    in 13b, turned 8 night thunderstorms out of 56 days into `Overcast`). "Backs" is
+     *    [AlertEngine.severeBucket]'s own test since 24 set 2026: a storm or downpour code
+     *    under a 20% chance is not «Maltempo» for the banner, the headline or the rules,
+     *    and the week's row used to be the one surface still printing it. Such an hour is
+     *    dropped here entirely, millimetres included — the ensemble says it will not
+     *    happen, and that is the judgement the rest of the app already made.
+     * 2. **Rain that is REALLY there labels the day** (Fase 26): the non-hazard codes
+     *    have to clear [WET_DAY_MM] over the day or run for [WET_DAY_HOURS] of it — one
+     *    hour of 0.1 mm at 1% probability used to print «Drizzle» over a whole day.
+     *    The label is then chosen by [WmoCode.severity] within the day's dominant
+     *    [WmoCode.Phase], never by the WMO number (24 set 2026): the number is not an
+     *    order of severity, and `max()` over it printed «Rovesci» (80) over a day of
+     *    snow (71-75) for one shower, and let slight showers outrank heavy rain. The
+     *    phase that brought more water — hours, when the amounts are not there — names
+     *    the day; the heaviest intensity inside it picks the word; among codes of the
+     *    same intensity (rain and a shower of the same millimetres) the one more hours
+     *    carry wins.
+     * 3. **Otherwise the sky, and the daylight's.** The row answers "how will the day
+     *    look", so a single closed hour at 4am neither darkens nor fogs a sunny day.
+     *    Apple (`daytimeForecast`/`overnightForecast`) and Google (`daytimeForecast`
+     *    07-19) split the day for the same reason. Most frequent daylight sky wins, ties
+     *    to the heavier one — which needs no case for fog: on a really foggy day fog is
+     *    the most frequent code. An hour whose code is precipitation that did not earn
+     *    the day votes with the sky its own cloud cover makes ([skyCode], the provider's
+     *    buckets): a light shower that does not label the day must not label its sky
+     *    either, and until 24 set 2026 two drizzle hours could win a tie against it.
      *
      * Dates the hourly run does not reach keep the provider's code: it ends with
      * `forecast_days` and the daily one can outrun it. Aggregate better, never blank a row.
      */
     private fun dailyCode(
+        hourly: HourlyDto,
         codes: List<Int>,
-        isDay: List<Int>,
-        precipMm: List<Double>,
         hours: List<Int>,
         fallback: Int
     ): Int {
         if (hours.isEmpty()) return fallback
-        val wet = hours.filter { codes[it] >= FIRST_PRECIP_CODE }
-        // An empty `precipMm` is a cache entry written before the field was requested:
-        // the amount clause simply cannot speak, and the hour count answers alone.
-        val claimsTheDay = wet.any { codes[it] in HazardCodes } ||
-            wet.size >= WET_DAY_HOURS ||
-            wet.sumOf { precipMm.getOrElse(it) { 0.0 } } >= WET_DAY_MM
-        if (claimsTheDay) wet.map { codes[it] }.maxOrNull()?.let { return it }
-        val daylight = hours.filter { isDay[it] == 1 }.ifEmpty { hours }
-        return daylight.map { codes[it] }
+        val chance = hourly.precipitationProbabilityPct
+
+        val hazards = hours.filter { AlertEngine.severeBucket(codes[it], chance.getOrNull(it)) != null }
+        if (hazards.isNotEmpty()) return heaviest(hazards.map { codes[it] })
+
+        // Hazard codes that failed the chance test are not wet hours of a lesser kind:
+        // they are hours the app has decided not to believe.
+        val wet = hours.filter { WmoCode.of(codes[it])?.let { w -> w.isPrecipitation && w.hazard == null } == true }
+        // An empty `precipitationMm` is a cache entry written before the field was
+        // requested: the amount clause simply cannot speak, and the hour count answers alone.
+        val amounts = hourly.precipitationMm
+        fun mm(of: List<Int>) = of.sumOf { amounts.getOrElse(it) { 0.0 } }
+        val wetMm = mm(wet)
+        if (wet.size >= WET_DAY_HOURS || wetMm >= WET_DAY_MM) {
+            val weight: (List<Int>) -> Double =
+                if (wetMm > 0.0) ::mm else { phaseHours -> phaseHours.size.toDouble() }
+            val dominant = wet.groupBy { WmoCode.of(codes[it])!!.phase }.values
+                .maxWithOrNull(
+                    compareBy(weight).thenBy { phaseHours -> phaseHours.maxOf { severity(codes[it]) } }
+                )!!
+            return heaviest(dominant.map { codes[it] })
+        }
+
+        val daylight = hours.filter { hourly.isDay[it] == 1 }.ifEmpty { hours }
+        return daylight.map { skyOf(codes[it], hourly.cloudCoverPct[it]) }
             .groupingBy { it }.eachCount()
             .maxWithOrNull(compareBy({ it.value }, { it.key }))?.key ?: fallback
+    }
+
+    /** The heaviest of [codes] by [WmoCode.severity]; among equally heavy codes, the one
+     * more hours carry, then the higher number so the answer never depends on order. */
+    private fun heaviest(codes: List<Int>): Int {
+        val top = codes.maxOf(::severity)
+        return codes.filter { severity(it) == top }
+            .groupingBy { it }.eachCount()
+            .maxWithOrNull(compareBy({ it.value }, { it.key }))!!.key
+    }
+
+    /** Only ever called on codes the table knows: hazards and wet hours are filtered through it. */
+    private fun severity(code: Int): Int = WmoCode.of(code)!!.severity
+
+    /** The sky an hour shows: its own code when that is a sky or a fog, else the one its
+     * cloud cover makes. An unknown number is not a sky either. */
+    private fun skyOf(code: Int, cloudCoverPct: Int): Int =
+        if (WmoCode.of(code)?.phase == WmoCode.Phase.NONE) code else skyCode(cloudCoverPct)
+
+    /**
+     * The hours that have closed by [providerNow], newest first, up to
+     * [Precipitation.PAST_HOURS]: each hourly value of `precipitation` is Open-Meteo's
+     * «sum of the preceding hour», so the slot labelled 10:00 is the rain of 09:00-10:00
+     * and closes at 10:00. The label is compared in the provider's frame and the end
+     * leaves as the instant it names, like every other row of this mapper.
+     *
+     * Empty when the amounts are not in the response — a cache entry from before Fase 26
+     * — rather than a list of zeros: no amount is not a dry hour.
+     */
+    private fun pastHours(
+        hourly: HourlyDto,
+        providerTimes: List<LocalDateTime>,
+        clock: ProviderClock,
+        providerNow: LocalDateTime
+    ): List<PastHour> {
+        if (hourly.precipitationMm.isEmpty()) return emptyList()
+        val newest = providerTimes.indexOfLast { !it.isAfter(providerNow) }
+        if (newest < 0) return emptyList()
+        return (newest downTo maxOf(0, newest - Precipitation.PAST_HOURS + 1)).mapNotNull { i ->
+            val mm = hourly.precipitationMm.getOrNull(i) ?: return@mapNotNull null
+            PastHour(
+                endedAt = clock.instantOf(providerTimes[i]),
+                precipMm = mm,
+                tempC = hourly.temperatureC[i]
+            )
+        }
     }
 
     /**
@@ -382,19 +501,34 @@ object WeatherReportMapper {
      * codes served are contradicted (median 4 km, worst 16.3 km). It is only the
      * INVENTING direction that has to be patient.
      */
-    private fun HourlyDto.repairedCodes(): List<Int> {
-        val lowVisibility = weatherCode.indices.map {
-            visibilityM.getOrNull(it)?.let { v -> v <= FOG_VISIBILITY_M } == true
-        }
-        return weatherCode.indices.map { i ->
+    private fun HourlyDto.repairedCodes(): List<Int> =
+        weatherCode.indices.map { i ->
             repairFog(
                 code = weatherCode[i],
                 visibilityM = visibilityM.getOrNull(i),
                 cloudCoverPct = cloudCoverPct[i],
-                fogPersists = lowVisibility[i] &&
-                    (lowVisibility.getOrNull(i - 1) == true || lowVisibility.getOrNull(i + 1) == true)
+                fogPersists = fogPersists(i)
             )
         }
+
+    /** Below the fog threshold at [i] and at a neighbour: the series' test for inventing fog. */
+    private fun HourlyDto.fogPersists(i: Int): Boolean {
+        fun low(at: Int) = visibilityM.getOrNull(at)?.let { v -> v <= FOG_VISIBILITY_M } == true
+        return low(i) && (low(i - 1) || low(i + 1))
+    }
+
+    /**
+     * The sky AT slot [i], as an instant (24 set 2026, for [mapHourly]'s rows): the slot's
+     * own code when that is a sky or a fog — those Open-Meteo derives from the instant's
+     * cloud and visibility — and when it is precipitation, which describes the hour BEFORE
+     * the slot, the sky that instant's cloud cover makes, fog included by the same rule
+     * [repairFog] applies. An unknown number is left as it came.
+     */
+    private fun HourlyDto.skyAt(i: Int, codes: List<Int>): Int {
+        val code = codes[i]
+        val wmo = WmoCode.of(code) ?: return code
+        if (!wmo.isPrecipitation) return code
+        return if (fogPersists(i)) WMO_FOG else skyCode(cloudCoverPct[i])
     }
 
     /**
@@ -416,14 +550,16 @@ object WeatherReportMapper {
      * visibility, and thunderstorms need CAPE fields the app does not fetch.
      *
      * A null visibility (never seen in 20 cities across 5 continents, but the field is
-     * model-dependent) leaves the code exactly as the provider sent it.
+     * model-dependent) leaves the code exactly as the provider sent it, and so does a
+     * number outside [WmoCode]'s table: the repair corrects a verdict it can read, and it
+     * cannot read that one.
      *
-     * [fogPersists] is the series' veto on inventing fog, and it is false for the
-     * `current` block on purpose: that block is an observation of NOW, and if the
-     * visibility is 300 metres right now then it is foggy right now — there is no run
-     * to require, because there is no series. Persistence is a property of a forecast,
-     * not of a measurement. Callers with a series pass [HourlyDto.repairedCodes]'
-     * answer; the one caller without one passes `true` and gets the old rule.
+     * [fogPersists] is the series' permission to invent fog, and the `current` block
+     * always has it: that block is an observation of NOW, and if the visibility is 300
+     * metres right now then it is foggy right now — there is no run to require, because
+     * there is no series. Persistence is a property of a forecast, not of a measurement.
+     * Callers with a series pass [HourlyDto.repairedCodes]' answer; the one caller
+     * without one passes `true` and gets the plain rule.
      */
     private fun repairFog(
         code: Int,
@@ -431,11 +567,12 @@ object WeatherReportMapper {
         cloudCoverPct: Int,
         fogPersists: Boolean
     ): Int {
-        if (code >= FIRST_PRECIP_CODE || visibilityM == null) return code
+        val wmo = WmoCode.of(code)
+        if (wmo == null || wmo.isPrecipitation || visibilityM == null) return code
         val foggy = visibilityM <= FOG_VISIBILITY_M
         return when {
-            code in FogCodes && !foggy -> skyCode(cloudCoverPct)
-            code !in FogCodes && foggy && fogPersists -> WMO_FOG
+            wmo.isFog && !foggy -> skyCode(cloudCoverPct)
+            !wmo.isFog && foggy && fogPersists -> WMO_FOG
             else -> code
         }
     }
@@ -494,29 +631,42 @@ object WeatherReportMapper {
         )
     }
 
-    private fun AirQualityCurrentDto.toAirQuality(): AirQuality? {
+    /**
+     * [inEurope] picks the scale the place reads (24 set 2026): the EEA's where the place is
+     * European and the index was served, the US one otherwise — never a European label on
+     * a missing European number.
+     */
+    private fun AirQualityCurrentDto.toAirQuality(inEurope: Boolean): AirQuality? {
         val aqi = usAqi ?: return null
         return AirQuality(
             aqiIndex = aqi,
-            status = WeatherCodes.usAqiStatus(aqi),
+            europeanAqi = europeanAqi,
+            scale = if (inEurope && europeanAqi != null) AqiScale.EUROPEAN else AqiScale.US,
+            // Null for what the service did not measure — never a 0.0 of clean air.
             pollutants = Pollutants(
-                pm25 = pm25 ?: 0.0,
-                pm10 = pm10 ?: 0.0,
-                o3 = ozone ?: 0.0,
-                no2 = no2 ?: 0.0,
-                so2 = so2 ?: 0.0,
-                coMg = (co ?: 0.0) / 1000.0 // API returns µg/m³, sample shows mg/m³
+                pm25 = pm25,
+                pm10 = pm10,
+                o3 = ozone,
+                no2 = no2,
+                so2 = so2,
+                coMg = co?.div(1000.0) // the API serves µg/m³
             )
         )
     }
 
+    /** Each species on its own MeteoSwiss scale, then the worst per family (24 set 2026). */
     private fun AirQualityCurrentDto.toPollenReport(): PollenReport? {
-        val tree = listOfNotNull(birchPollen, alderPollen, olivePollen).maxOrNull()
-        val weed = listOfNotNull(ragweedPollen, mugwortPollen).maxOrNull()
         return PollenReport(
-            grass = WeatherCodes.pollenLevel(grassPollen) ?: return null,
-            tree = WeatherCodes.pollenLevel(tree) ?: return null,
-            weed = WeatherCodes.pollenLevel(weed) ?: return null
+            grass = WeatherCodes.pollenFamilyLevel(PollenSpecies.GRASS to grassPollen) ?: return null,
+            tree = WeatherCodes.pollenFamilyLevel(
+                PollenSpecies.BIRCH to birchPollen,
+                PollenSpecies.ALDER to alderPollen,
+                PollenSpecies.OLIVE to olivePollen
+            ) ?: return null,
+            weed = WeatherCodes.pollenFamilyLevel(
+                PollenSpecies.RAGWEED to ragweedPollen,
+                PollenSpecies.MUGWORT to mugwortPollen
+            ) ?: return null
         )
     }
 }

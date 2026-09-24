@@ -33,7 +33,7 @@ class NotificationChartsTest {
         val t = start.plusHours(i.toLong())
         HourlyForecast(
             time = t, at = t.atZone(zone).toInstant(), tempC = 15.0 + i % 6,
-            condition = WeatherCondition(2, "", ""), precipChancePct = pct(i), cloudCoverPct = 50
+            condition = WeatherCondition(2), precipChancePct = pct(i), cloudCoverPct = 50
         )
     }
 

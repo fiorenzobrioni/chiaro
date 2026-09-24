@@ -109,20 +109,28 @@ puts on the launcher:
   computed from the real position of the sun, the cloud cover and the moon) carries the
   place, the temperature, the condition and the **headline sentence**, which looks ahead
   (an umbrella around 17:00, rain possible this afternoon, tomorrow's rain from 09:00,
-  frost by morning, fog on its way, a strong wind right now) and is absent when there is
-  nothing worth saying because quiet is an answer too. Under it: the next 24
-  hours with a rain sparkline (not drawn on a dry day, because a chart of zeroes says
-  nothing), the **rest of the day** as one merged timeline of sun, moon and weather turns
+  frost by morning, fog on its way, a strong wind now or later today) and is absent when
+  there is nothing worth saying because quiet is an answer too. The temperature is in whole
+  degrees, because a forecast is not precise to a tenth. When the data is over an hour old
+  the top of the screen shows the forecast for this hour instead of a stale reading, and
+  says so. Under it: the next 24 hours, each column being the hour that starts there
+  ("15 · 60%" is the chance of rain from 15 to 16), with a rain sparkline (not drawn on a
+  dry day, because a chart of zeroes says nothing), the **rest of the day** as one merged timeline of sun, moon and weather turns
   (the windows where the geometry and the forecast line up for a rainbow among them, the
   one row on the page that comes with a direction to look in), **what changed** when the
   last update moved the week, the seven days on one shared
-  temperature scale with each day's ribbon of light, and a details grid where every number
-  carries its meaning: UV 8 is "burns in about 15 minutes, cover up", not an 8. The page
+  temperature scale with each day's ribbon of light (open a day for its hours and its
+  facts: how much rain and for how long, the snow, the strongest gusts, the highest UV),
+  and a details grid where every number carries its meaning: UV 8 is "burns in about 15
+  minutes, cover up", not an 8. The grid has today's rain in millimetres, the snow when
+  there is some, the clouds with the layer that makes them (high and thin is a veiled sun,
+  low is a grey day), the air on the European index for places in Europe, and pollen on
+  each species' own thresholds (MeteoSwiss), five levels from none to very high. The page
   ends with the line that says when its numbers arrived and where from ("Updated at
   18:45, Open-Meteo data")
 - 🌅 **Sky**: tonight's verdict on the dark window (**Great**, **So-so**, **No chance**,
-  **Not sure yet**) with the numbers that decided it, and the moon named when the moon was
-  the reason. The **moments ahead** are an agenda rather than a log: resolved in the
+  **Not sure yet**) with the numbers that decided it, the cloud's layer named when one
+  layer makes the sky, and the moon named when the moon was the reason. The **moments ahead** are an agenda rather than a log: resolved in the
   place's own timezone, a moment that is over is replaced by its next occurrence and says
   "Tomorrow", a window in progress says "Now". Then the calendar ahead (meteor peaks, the
   next full moon, solstices and equinoxes) with an honest "too far out to say" past the
@@ -165,9 +173,11 @@ puts on the launcher:
   within 6 hours, at most twice a day; the morning summary, once between 6 and 12; the
   evening summary, once between 18 and 23, whose subject is tomorrow, with the night in
   between, tomorrow's umbrella and tomorrow's sunrise under it when you open it). Then
-  your own: five templates that create a real rule already switched on, and a builder that
+  your own: six templates that create a real rule already switched on, and a builder that
   is a sentence of tappable chips (*when* **rain in the next 6 hours** *is* **above**
-  **70%**), with an optional second condition and your own message. Values are picked and
+  **70%**), with an optional second condition and your own message. It can watch the
+  rain in millimetres and the snow of the day, the gusts ahead and the European air index
+  as well as the temperatures and chances. Values are picked and
   never typed, so an alert cannot be written wrong, and a comparison is only offered where
   it means something ("equals" on a yes or no, never on a temperature). Your rules are
   cards that say their sentence, their state and when they last fired, in the place's own
@@ -258,8 +268,9 @@ puts on the launcher:
 - 📴 **Offline, honestly**: the last successful report per place is kept with no TTL and
   carries a week of forecast, so the app is never blank and yesterday's fetch still holds
   today. The hours that have already happened are dropped first, stale data states its
-  real age, and a report past its horizon becomes an empty state instead of an old screen
-  posing as current. There is no full-screen spinner in this product: cached content
+  real age, past an hour the current conditions are the forecast for now and are labelled
+  as an estimate, and a report past its horizon becomes an empty state instead of an old
+  screen posing as current. There is no full-screen spinner in this product: cached content
   first, freshness stated, refresh silent
 - 🔋 **One job for everything**: a single periodic WorkManager task carries the fetch, the
   built-in alerts, your rules and the sky observation, and cancels itself when there is
@@ -329,7 +340,7 @@ the three commands below.
 | What | Source |
 |---|---|
 | Current conditions, hourly, daily | Forecast API |
-| Air quality, pollutants, pollen *(Europe only)* | Air Quality API |
+| Air quality (US and European indexes), pollutants, pollen *(Europe only)* | Air Quality API |
 | Place search | Geocoding API |
 | Sun, moon, twilight, meteor peaks, the verdicts | computed on the device by `:core:domain`, offline |
 
@@ -382,7 +393,7 @@ it, is in [DESIGN.md](./DESIGN.md).
   only what a screen names reaches the APK, which is what `shrinkResources` is for.
   **Google Sans** and **Inter** as bundled variable fonts, the first cut down by
   `tools/import_google_sans.py` from 5MB at the source to 307KB in the app
-- 952 unit tests on the JVM across four modules (456 in `:app`, 243 in `:core:domain`, 229
+- 1128 unit tests on the JVM across four modules (549 in `:app`, 282 in `:core:domain`, 273
   in `:core:data`, 24 in `:core:sync`), Robolectric where Android is unavoidable, including
   painting the arc widget's bitmap for real and reading its pixels back
 
@@ -444,7 +455,9 @@ chiaro/
 │           └── format/               # units, times and numbers as the reader sees them
 ├── core/
 │   ├── domain/                       # pure Kotlin/JVM, no Android at all
-│   │   ├── AlertEngine.kt            # the three built-in alerts
+│   │   ├── AlertEngine.kt            # the built-in alerts
+│   │   ├── WmoCode.kt                # the one table of weather codes: word, phase, severity
+│   │   ├── CurrentEstimate.kt        # the forecast for now, when the fetched now is old
 │   │   ├── rules/                    # the rules engine: variables, evaluation, messages
 │   │   ├── sky/                      # astronomy: Meeus series, catalog, verdicts, reminders
 │   │   ├── model/                    # the weather report as the app reads it

@@ -45,7 +45,7 @@ class AlertNotifierTest {
 
     private val today = LocalDate.of(2026, 1, 15)
     private val tomorrow = today.plusDays(1)
-    private val cloudy = WeatherCondition(3, "Overcast", "☁️")
+    private val cloudy = WeatherCondition(3)
     private val zone: ZoneId = ZoneId.of("Europe/Rome")
     private val milan = Coordinates(45.4642, 9.1900)
 

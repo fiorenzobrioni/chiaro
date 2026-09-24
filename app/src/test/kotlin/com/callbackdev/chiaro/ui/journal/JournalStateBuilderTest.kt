@@ -2,9 +2,10 @@ package com.callbackdev.chiaro.ui.journal
 
 import com.callbackdev.chiaro.data.FetchFailure
 import com.callbackdev.chiaro.data.FetchFailureReason
+import com.callbackdev.chiaro.data.local.WarningRecordKind
+import com.callbackdev.chiaro.data.local.WeatherSnapshots
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
-import com.callbackdev.chiaro.data.local.WarningRecordKind
 import com.callbackdev.chiaro.domain.sky.SkyRun
 import com.callbackdev.chiaro.domain.warnings.WarningHazard
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
@@ -12,8 +13,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -33,8 +34,8 @@ class JournalStateBuilderTest {
      * that have not happened yet. */
     private val now = at(3, 12)
 
-    private fun forecast(precip: Int, high: Double, low: Double = 14.0) = mapOf(
-        "$saturday.status" to "Rain",
+    private fun forecast(precip: Int, high: Double, low: Double = 14.0, status: String = "rain") = mapOf(
+        "$saturday.status" to status,
         "$saturday.high_c" to high.toString(),
         "$saturday.low_c" to low.toString(),
         "$saturday.precip_pct" to precip.toString()
@@ -140,6 +141,55 @@ class JournalStateBuilderTest {
         val rain = shift.shifts.first { it.field == "precip_pct" }
         assertEquals("70", rain.old)
         assertEquals("30", rain.new)
+    }
+
+    /**
+     * P8 of the engine review (24 set 2026): a day that turned from clear to storm
+     * with the same chance of rain was an entry with no verdict and no detail — the
+     * status was an English label the screen could not print and the verdict read rain
+     * alone. The sky now decides when rain does not.
+     */
+    @Test
+    fun `a sky that turned stormy at the same rain reads as worse`() {
+        val rows = listOf(
+            row(at(3, 7), forecast(precip = 40, high = 24.0, status = "thunderstorm")),
+            row(at(2, 7), forecast(precip = 40, high = 24.0, status = "clear"))
+        )
+        val shift = build(rows).days.flatMap { it.entries }
+            .filterIsInstance<JournalEntry.ForecastShift>()
+            .single()
+        assertEquals(false, shift.better)
+        val sky = shift.shifts.single()
+        assertEquals("status", sky.field)
+        assertEquals("clear", sky.old)
+        assertEquals("thunderstorm", sky.new)
+    }
+
+    @Test
+    fun `rain still decides over the sky when both moved`() {
+        val rows = listOf(
+            row(at(3, 7), forecast(precip = 20, high = 24.0, status = "overcast")),
+            row(at(2, 7), forecast(precip = 60, high = 24.0, status = "clear"))
+        )
+        val shift = build(rows).days.flatMap { it.entries }
+            .filterIsInstance<JournalEntry.ForecastShift>()
+            .single()
+        assertEquals(true, shift.better)
+    }
+
+    /** The first fetch after the update rewrites every status id; the forecast did not
+     * change, and the Journal must not say it did. */
+    @Test
+    fun `an old English label and its new id are the same forecast`() {
+        val rows = listOf(
+            row(at(3, 7), forecast(precip = 40, high = 24.0, status = "partly_cloudy")),
+            row(at(2, 7), forecast(precip = 40, high = 24.0, status = "Partly Cloudy ⛅"))
+        )
+        assertTrue(
+            build(rows).days.flatMap { it.entries }
+                .filterIsInstance<JournalEntry.ForecastShift>()
+                .isEmpty()
+        )
     }
 
     /**
@@ -354,17 +404,22 @@ class JournalStateBuilderTest {
     // The loop closed: what the app said, against what it then saw.
     // -----------------------------------------------------------------------------
 
-    private fun observed(mm: Double) = mapOf(
+    /** A commit written on the hour at [at], in the shape since 24 set 2026: the code,
+     * the quarter, and the hour that closed at [at] with [mm] in it. */
+    private fun observed(at: Instant, mm: Double) = mapOf(
         "current.wmo_code" to (if (mm > 0) "63" else "3"),
-        "current.precip_last_hour_mm" to mm.toString(),
-        "current.temp_c" to "21.0"
+        "current.precip_quarter_mm" to mm.toString(),
+        "current.temp_c" to "21.0",
+        WeatherSnapshots.PAST_HOURS_END to at.toString(),
+        WeatherSnapshots.PAST_HOURS_MM to mm.toString(),
+        WeatherSnapshots.PAST_HOURS_TEMP_C to "21.0"
     )
 
     @Test
     fun `a finished day is judged, and its verdict opens the day it closes`() {
         val target = LocalDate.of(2026, 9, 3)
         val rows = listOf(row(at(2, 22), mapOf("$target.precip_pct" to "70", "$target.high_c" to "24.0"))) +
-            (0..23).map { row(at(3, it), snapshot = observed(mm = 0.0)) }
+            (0..23).map { row(at(3, it), snapshot = observed(at(3, it), mm = 0.0)) }
         val content = build(rows, now = at(4, 12))
 
         val day = content.days.single { it.date == target }
@@ -380,7 +435,7 @@ class JournalStateBuilderTest {
     fun `a day the app could not watch enough gets no line at all`() {
         val target = LocalDate.of(2026, 9, 3)
         val rows = listOf(row(at(2, 22), mapOf("$target.precip_pct" to "70"))) +
-            (8..12).map { row(at(3, it), snapshot = observed(mm = 0.0)) }
+            (8..12).map { row(at(3, it), snapshot = observed(at(3, it), mm = 0.0)) }
 
         assertTrue(
             build(rows, now = at(4, 12)).days

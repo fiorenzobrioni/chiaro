@@ -66,13 +66,9 @@ object AlertEngine {
      */
     enum class SevereBucket { THUNDER, ICE, RAIN, SNOW }
 
-    val SevereCodes: Map<Int, SevereBucket> = mapOf(
-        95 to SevereBucket.THUNDER, 96 to SevereBucket.THUNDER, 99 to SevereBucket.THUNDER,
-        56 to SevereBucket.ICE, 57 to SevereBucket.ICE,
-        66 to SevereBucket.ICE, 67 to SevereBucket.ICE,
-        65 to SevereBucket.RAIN, 82 to SevereBucket.RAIN,
-        75 to SevereBucket.SNOW, 86 to SevereBucket.SNOW
-    )
+    /** The hazard codes and their classes — read off [WmoCode], which owns the table. */
+    val SevereCodes: Map<Int, SevereBucket> =
+        WmoCode.entries.mapNotNull { code -> code.hazard?.let { code.code to it } }.toMap()
 
     /** Long enough to warn before an evening storm seen at a morning poll. */
     const val SEVERE_LOOKAHEAD_HOURS = 12L
@@ -102,10 +98,19 @@ object AlertEngine {
      * window and the rules' `wmo_severe` all read, so none of them can call a storm
      * the others dropped.
      */
-    fun severeBucket(hour: HourlyForecast): SevereBucket? {
-        val bucket = SevereCodes[hour.condition.wmoCode] ?: return null
-        val chance = hour.precipChancePct
-        val probable = chance == null || chance >= SEVERE_MIN_CHANCE_PCT ||
+    fun severeBucket(hour: HourlyForecast): SevereBucket? =
+        severeBucket(hour.condition.wmoCode, hour.precipChancePct)
+
+    /**
+     * The same judgement on a bare code and chance, for the one reader that has no
+     * [HourlyForecast] yet: the mapper, deciding whether a hazard hour may label its
+     * day (24 set 2026). Until then the day's row claimed «Temporale» for every storm
+     * code this function had already dropped as improbable, so the week said storm
+     * where the banner, the headline and the rules all said nothing.
+     */
+    fun severeBucket(wmoCode: Int, precipChancePct: Int?): SevereBucket? {
+        val bucket = SevereCodes[wmoCode] ?: return null
+        val probable = precipChancePct == null || precipChancePct >= SEVERE_MIN_CHANCE_PCT ||
             bucket == SevereBucket.ICE || bucket == SevereBucket.SNOW
         return bucket.takeIf { probable }
     }

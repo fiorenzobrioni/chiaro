@@ -73,7 +73,7 @@ class RuleVariablesTest {
                 at = LocalDateTime.of(2023, 10, 27, 20, 0)
                     .atZone(ZoneId.of("America/New_York")).toInstant(),
                 tempC = 13.0,
-                condition = WeatherCondition(95, "Thunderstorm", "⛈️"),
+                condition = WeatherCondition(95),
                 precipChancePct = 90,
                 cloudCoverPct = 100
             )
@@ -91,7 +91,7 @@ class RuleVariablesTest {
                 at = LocalDateTime.of(2023, 10, 27, 20, 0)
                     .atZone(ZoneId.of("America/New_York")).toInstant(),
                 tempC = 13.0,
-                condition = WeatherCondition(95, "Thunderstorm", "⛈️"),
+                condition = WeatherCondition(95),
                 precipChancePct = 10,
                 cloudCoverPct = 100
             )
@@ -107,6 +107,35 @@ class RuleVariablesTest {
         assertEquals(0.0, resolve("today.precip_pct")!!.value, 0.0)
         assertEquals(5.0, resolve("today.uv_max")!!.value, 0.0)  // peak, not current.uv_index (4)
         assertNull(RuleVariables.byId("today.high_c")!!.resolve(report.copy(daily = emptyList()), now))
+    }
+
+    /** 24 set 2026: how much, the strongest gust, the European air. Absent reads null. */
+    @Test
+    fun `the new quantities resolve, and skip when the data does not carry them`() {
+        val today = report.daily.first().copy(precipMm = 12.4, snowCm = 3.0, gustMaxKph = 61.0)
+        val rich = report.copy(
+            daily = listOf(today) + report.daily.drop(1),
+            hourly = report.hourly.mapIndexed { i, h -> h.copy(gustKph = 20.0 + i * 10) },
+            airQuality = report.airQuality!!.copy(europeanAqi = 33)
+        )
+        fun of(id: String) = RuleVariables.byId(id)!!.resolve(rich, now)
+        assertEquals(12.4, of("today.precip_mm")!!.value, 0.0)
+        assertEquals(3.0, of("today.snow_cm")!!.value, 0.0)
+        assertEquals(61.0, of("today.gust_max_kph")!!.value, 0.0)
+        assertEquals(33.0, of("current.aqi_eu_index")!!.value, 0.0)
+        val gust = of("next_6h.gust_max_kph")!!
+        assertEquals(rich.hourly.last().gustKph!!, gust.value, 0.0)
+        assertEquals(rich.hourly.last().time, gust.at)
+        // A report that carries none of them: every one skips rather than reading zero.
+        val bare = report.copy(
+            daily = report.daily.map { it.copy(precipMm = null, snowCm = null, gustMaxKph = null) },
+            hourly = report.hourly.map { it.copy(gustKph = null) },
+            airQuality = report.airQuality!!.copy(europeanAqi = null)
+        )
+        listOf("today.precip_mm", "today.snow_cm", "today.gust_max_kph", "current.aqi_eu_index", "next_6h.gust_max_kph")
+            .forEach { assertNull(it, RuleVariables.byId(it)!!.resolve(bare, now)) }
+        // Gusts are speeds: they follow the reader's unit, name and value.
+        assertEquals(RuleVariableKind.SPEED, RuleVariables.byId("today.gust_max_kph")!!.kind)
     }
 
     @Test

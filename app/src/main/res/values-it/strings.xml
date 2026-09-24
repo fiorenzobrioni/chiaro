@@ -35,6 +35,8 @@
     <string name="headline_fog">Nebbia verso le %1$s</string>
     <string name="headline_wind">Vento forte, fino a %1$s</string>
     <string name="headline_wind_brief">Vento fino a %1$s</string>
+    <string name="headline_wind_later">Vento forte verso le %2$s, fino a %1$s</string>
+    <string name="headline_wind_later_brief">Vento verso le %2$s, fino a %1$s</string>
 
     <!-- Freschezza ed errori: l\'età vera, il motivo vero -->
     <plurals name="freshness_minutes_ago">
@@ -153,15 +155,54 @@
     <string name="pollen_level_low">Bassi</string>
     <string name="pollen_level_moderate">Moderati</string>
     <string name="pollen_level_high">Alti</string>
+    <string name="pollen_level_very_high">Molto alti</string>
     <string name="pollen_meaning_none">Respirano tutti</string>
     <string name="pollen_meaning_low">Si notano appena</string>
     <string name="pollen_meaning_moderate">Chi è allergico se ne accorge</string>
     <string name="pollen_meaning_high">Giornata dura per chi è allergico</string>
+    <string name="pollen_meaning_very_high">Giornata molto dura per chi è allergico: meglio stare al chiuso</string>
+    <!-- 24 set 2026: the new quantities of the engine review's second pass -->
+    <string name="metric_rain">Pioggia oggi</string>
+    <string name="metric_snow">Neve oggi</string>
+    <string name="metric_cloud">Nuvole</string>
+    <string name="rain_meaning_none">Niente ombrello oggi</string>
+    <string name="rain_meaning_drops">Qualche goccia, niente di serio</string>
+    <string name="rain_meaning_umbrella">Serve l\'ombrello</string>
+    <string name="rain_meaning_wet">Giornata bagnata: vestiti di conseguenza</string>
+    <string name="rain_meaning_heavy">Pioggia abbondante: occhio a sottopassi e torrenti</string>
+    <string name="rain_last_hour">Nell\'ultima ora %1$s</string>
+    <string name="snow_meaning_dusting">Una spolverata</string>
+    <string name="snow_meaning_slippery">Strade scivolose: prudenza</string>
+    <string name="snow_meaning_shovel">Neve da spalare: servono le gomme invernali</string>
+    <string name="snow_meaning_heavy">Nevicata forte: meglio non viaggiare</string>
+    <string name="cloud_meaning_open">Cielo aperto, sole pieno</string>
+    <string name="cloud_meaning_veiled">Sole velato, ma c\'è</string>
+    <string name="cloud_meaning_closed">Cielo chiuso, luce grigia</string>
+    <string name="cloud_meaning_broken">Sole a tratti</string>
+    <string name="cloud_meaning_open_night">Cielo sereno, stelle visibili</string>
+    <string name="cloud_meaning_veiled_night">Stelle dietro un velo</string>
+    <string name="cloud_meaning_closed_night">Cielo chiuso, niente stelle</string>
+    <string name="cloud_meaning_broken_night">Stelle fra le nuvole</string>
+    <string name="cloud_note_low">Soprattutto basse</string>
+    <string name="cloud_note_mid">Soprattutto a media quota</string>
+    <string name="cloud_note_high">Soprattutto alte e sottili</string>
+    <string name="wind_gust_max_today">Fino a %1$s oggi</string>
+    <string name="wind_gusts_and_max">Raffiche a %1$s, fino a %2$s oggi</string>
+    <string name="estimate_hero">Stima dalla previsione</string>
+    <string name="estimate_details">Valori stimati dalla previsione per quest\'ora: gli ultimi dati sono di %1$s.</string>
+    <string name="day_fact_rain">%1$s di pioggia</string>
+    <string name="day_fact_snow">%1$s di neve</string>
+    <string name="day_fact_gust">Raffiche fino a %1$s</string>
+    <string name="day_fact_uv">UV fino a %1$d</string>
+    <plurals name="rain_hours_note">
+        <item quantity="one">in %1$s ora</item>
+        <item quantity="other">in %1$s ore</item>
+    </plurals>
 
     <!-- Condizioni: il vocabolario WMO, una parola ciascuna -->
     <string name="cond_clear">Sereno</string>
     <string name="cond_mostly_clear">Quasi sereno</string>
-    <string name="cond_partly_cloudy">Poco nuvoloso</string>
+    <string name="cond_partly_cloudy">Nuvoloso</string>
     <string name="cond_overcast">Coperto</string>
     <string name="cond_fog">Nebbia</string>
     <string name="cond_drizzle">Pioviggine</string>
@@ -175,10 +216,10 @@
     <string name="cond_snow_heavy">Neve fitta</string>
     <string name="cond_snow_grains">Nevischio</string>
     <string name="cond_showers">Rovesci</string>
-    <string name="cond_showers_violent">Rovesci violenti</string>
+    <string name="cond_showers_heavy">Rovesci forti</string>
     <string name="cond_snow_showers">Rovesci di neve</string>
     <string name="cond_thunderstorm">Temporale</string>
-    <string name="cond_thunderstorm_hail">Temporale con grandine</string>
+    <string name="cond_thunderstorm_strong">Temporale forte</string>
     <string name="cond_unknown">Condizioni sconosciute</string>
 
     <!-- Stati vuoti e di errore -->
@@ -338,20 +379,20 @@
     <string name="guide_today_title">Oggi</string>
     <string name="guide_today_p1">Il cielo disegnato in cima non è una fotografia: è calcolato per questo minuto dall\'altezza del sole, dalle nuvole, dalla pioggia e dalla luna, così alle tre di notte con il sereno è lo stesso blu profondo che vedresti fuori. La striscia sottile sotto è la giornata, dalla prima luce all\'ultima, con l\'ora in cui sei segnata sopra.</string>
     <string name="guide_today_headline_title">La frase</string>
-    <string name="guide_today_headline_body">Quando c\'è qualcosa che vale la pena dire — ombrello verso le cinque, temporale alle tre, gelo entro domattina, nebbia in arrivo, o l\'ombrello di domani — è scritto sopra ogni numero. La frase anticipa: quello che succede adesso lo dice già il numero grande. Quando non c\'è niente da dire, la frase non compare: anche il silenzio è una risposta.</string>
+    <string name="guide_today_headline_body">Quando c\'è qualcosa che vale la pena dire — ombrello verso le cinque, temporale alle tre, gelo entro domattina, nebbia in arrivo, vento forte nel pomeriggio, o l\'ombrello di domani — è scritto sopra ogni numero. La frase anticipa: quello che succede adesso lo dice già il numero grande. Quando non c\'è niente da dire, la frase non compare: anche il silenzio è una risposta.</string>
     <string name="guide_today_rain_title">Sta per piovere?</string>
-    <string name="guide_today_rain_body">La risposta è in due punti: la frase in cima e, subito sotto, le probabilità ora per ora, con il picco delle prossime ore segnato sulla piccola curva della pioggia. Chiaro descrive la pioggia nella lingua in cui arrivano i dati: quanto è probabile, quanta, da che ora a che ora.</string>
+    <string name="guide_today_rain_body">La risposta è in tre punti: la frase in cima, subito sotto le probabilità ora per ora, con il picco delle prossime ore segnato sulla piccola curva della pioggia, e nei dettagli quanti millimetri sono previsti oggi e per quante ore. Chiaro descrive la pioggia nella lingua in cui arrivano i dati: quanto è probabile, quanta, da che ora a che ora.</string>
     <string name="guide_today_fresh_title">Quanto sono freschi i numeri</string>
-    <string name="guide_today_fresh_body">Quando quello che stai leggendo non è più fresco, Chiaro ne dice l\'età vera invece di nasconderla, e un aggiornamento fallito dice perché. Tira giù la schermata per chiederne uno nuovo, o tocca l\'età stessa per riprovare.</string>
+    <string name="guide_today_fresh_body">Quando quello che stai leggendo non è più fresco, Chiaro ne dice l\'età vera invece di nasconderla, e un aggiornamento fallito dice perché. Se i dati hanno più di un\'ora, in cima non trovi quelli di allora ma la previsione per quest\'ora, e sotto la temperatura c\'è scritto «Stima dalla previsione». Tira giù la schermata per chiederne uno nuovo, o tocca l\'età stessa per riprovare.</string>
     <string name="guide_today_fresh_caption">Un esempio: l\'età di quello che stai leggendo — si tocca per riprovare.</string>
     <string name="guide_today_hours_title">Le prossime ore</string>
-    <string name="guide_today_hours_body">Ventiquattro ore di temperatura, cielo e probabilità di pioggia, a partire dall\'ora dopo questa: l\'ora in cui sei è il numero grande in cima.</string>
+    <string name="guide_today_hours_body" formatted="false">Ventiquattro ore di temperatura, cielo e probabilità di pioggia, a partire dall\'ora dopo questa: l\'ora in cui sei è il numero grande in cima. Ogni colonna è l\'ora che comincia lì: «15 · 60%» vuol dire 60% di pioggia fra le 15 e le 16, e la temperatura è quella delle 15.</string>
     <string name="guide_today_rest_title">Il resto della giornata</string>
     <string name="guide_today_rest_body">Una sola linea del tempo per tutto quello che manca: alba o tramonto, l\'ora dorata e l\'ora blu, il momento in cui il cielo diventa del tutto buio, il sorgere e il calare della luna, le ore in cui la pioggia dovrebbe iniziare e smettere e — quando il sole è basso e davanti a lui la pioggia è probabile — la finestra in cui potrebbe starci un arcobaleno, con la direzione in cui girarsi a guardare.</string>
     <string name="guide_today_week_title">La settimana</string>
-    <string name="guide_today_week_body">Sette giorni su un\'unica scala di temperatura, così la stessa lunghezza di barra significa la stessa cosa su ogni riga. La striscia sotto ogni giorno è la sua luce, dall\'alba al tramonto. Tocca un giorno per aprirne le ore.</string>
+    <string name="guide_today_week_body">Sette giorni su un\'unica scala di temperatura, così la stessa lunghezza di barra significa la stessa cosa su ogni riga. La striscia sotto ogni giorno è la sua luce, dall\'alba al tramonto. Tocca un giorno per aprirlo: sopra le sue ore trovi quanta pioggia e per quante ore, la neve, le raffiche più forti e l\'UV massimo, ciascuno con cosa vuol dire, e solo quelli che quel giorno dicono qualcosa.</string>
     <string name="guide_today_details_title">I dettagli</string>
-    <string name="guide_today_details_body">UV, vento, umidità, punto di rugiada, pressione, visibilità, qualità dell\'aria e pollini. Ogni numero porta con sé la riga che dice cosa farne, che è l\'unico motivo per cui sta sullo schermo.</string>
+    <string name="guide_today_details_body">La pioggia di oggi in millimetri, la neve quando c\'è, UV, vento con le raffiche, le nuvole con il tipo che le fa (alte e sottili, un sole velato; basse, una giornata grigia), umidità e punto di rugiada, pressione, visibilità, qualità dell\'aria — sull\'indice europeo per i luoghi in Europa — e pollini, sulle soglie di ciascuna specie. Ogni numero porta con sé la riga che dice cosa farne, che è l\'unico motivo per cui sta sullo schermo.</string>
     <string name="guide_today_details_caption">Un esempio: due dettagli, ognuno con la riga che dice cosa farne.</string>
     <string name="guide_today_changed_title">Cosa è cambiato</string>
     <string name="guide_today_changed_body">Quando l\'ultimo aggiornamento sposta i giorni che vengono, fino a tre frasi dicono come. Toccale e la storia completa si apre nel Diario.</string>
@@ -364,7 +405,7 @@
     <string name="guide_sky_tonight_body">La card in cima è la finestra di buio: le ore in cui il cielo è davvero scuro E la luna è fuori dai piedi. È un\'intersezione, non un orario, quindi certe notti è tutta la notte, certe notti è novanta minuti, e certe notti non c\'è affatto — quando la luna resta su dal crepuscolo all\'alba la card lo dice, e dice anche fra che ore il cielo è comunque scuro. Porta il verdetto, il numero che l\'ha deciso, quel che la luna si è presa se si è presa qualcosa, e, quando la notte non è tutta uguale, il tratto in cui è più sereno.</string>
     <string name="guide_verdicts_p1">Un verdetto è una parola, un piccolo segno e il numero che c\'è dietro — mai un colore da solo:</string>
     <string name="guide_verdicts_caption">Un esempio: una notte di stelle, giudicata dalle sue nuvole.</string>
-    <string name="guide_verdicts_p2">Il numero accanto alla parola è la prova che l\'ha decisa, così la risposta puoi pesarla anche tu. Quando la previsione non arriva così lontano, o l\'ultima arrivata è troppo vecchia per fidarsi, la risposta è quella onesta: un grigio «presto per dirlo», mai un\'ipotesi vestita da verdetto.</string>
+    <string name="guide_verdicts_p2">Il numero accanto alla parola è la prova che l\'ha decisa, così la risposta puoi pesarla anche tu; quando le nuvole sono quasi tutte di un tipo, la prova dice anche quale: alte, medie o basse. Quando la previsione non arriva così lontano, o l\'ultima arrivata è troppo vecchia per fidarsi, la risposta è quella onesta: un grigio «presto per dirlo», mai un\'ipotesi vestita da verdetto.</string>
     <string name="guide_verdict_evidence_pass" formatted="false">nuvole 10%</string>
     <string name="guide_verdict_evidence_unstable" formatted="false">nuvole 45%</string>
     <string name="guide_verdict_evidence_fail" formatted="false">nuvole 90%</string>
@@ -385,7 +426,7 @@
     <string name="guide_alerts_ready_title">Pronti all\'uso</string>
     <string name="guide_alerts_ready_body" formatted="false">Quattro interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo nelle prossime 12 ore (al massimo uno per perturbazione), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno), il riepilogo del mattino, una volta tra le 6 e le 12, e quello della sera, una volta tra le 18 e le 23, che parla di domani.</string>
     <string name="guide_alerts_yours_title">I tuoi</string>
-    <string name="guide_alerts_yours_body">Parti da un\'idea — una finestra per correre, ghiaccio domattina, una notte serena — oppure costruisci la frase da te: cosa guardare, come confrontarlo, la soglia, e una seconda condizione se serve. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile.</string>
+    <string name="guide_alerts_yours_body">Parti da un\'idea — una finestra per correre, ghiaccio domattina, una notte serena — oppure costruisci la frase da te: cosa guardare, come confrontarlo, la soglia, e una seconda condizione se serve. Si possono guardare anche i millimetri di pioggia e la neve di oggi, le raffiche e l\'indice europeo dell\'aria. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile.</string>
     <string name="guide_alerts_preview_title">Provalo adesso</string>
     <string name="guide_alerts_preview_body">Fa girare il tuo avviso sulla previsione che è già sul telefono e ti dice cosa avrebbe fatto. Non manda niente e non lascia traccia.</string>
     <string name="guide_alerts_message_title">Il messaggio è tuo</string>
@@ -484,6 +525,10 @@
 
     <!-- L\'evidenza dei verdetti: il numero che ha deciso la parola accanto -->
     <string name="sky_evidence_cloud" formatted="false">nuvole %1$d%%</string>
+    <string name="sky_evidence_cloud_layer" formatted="false">nuvole %1$d%%, %2$s</string>
+    <string name="cloud_layer_low">basse</string>
+    <string name="cloud_layer_mid">medie</string>
+    <string name="cloud_layer_high">alte</string>
     <string name="sky_evidence_rain" formatted="false">pioggia %1$d%%</string>
     <string name="sky_evidence_moon" formatted="false">luna %1$d%%</string>
 
@@ -865,7 +910,7 @@
     <string name="var_current_precip">la probabilità di pioggia adesso</string>
     <string name="var_current_pressure">la pressione adesso</string>
     <string name="var_current_visibility">la visibilità adesso</string>
-    <string name="var_current_aqi">l\'indice dell\'aria adesso</string>
+    <string name="var_current_aqi">l\'indice statunitense dell\'aria adesso</string>
     <string name="var_next6_precip">la pioggia nelle prossime 6 ore</string>
     <string name="var_next6_temp_min">la minima delle prossime 6 ore</string>
     <string name="var_next6_temp_max">la massima delle prossime 6 ore</string>
@@ -878,6 +923,12 @@
     <string name="var_today_low">la minima di oggi</string>
     <string name="var_today_precip">la pioggia di oggi</string>
     <string name="var_today_uv">l\'UV massimo di oggi</string>
+    <string name="var_current_aqi_eu">l\'indice europeo dell\'aria adesso</string>
+    <string name="var_next6_gust">le raffiche nelle prossime 6 ore</string>
+    <string name="var_next12_gust">le raffiche nelle prossime 12 ore</string>
+    <string name="var_today_precip_mm">i millimetri di pioggia di oggi</string>
+    <string name="var_today_snow">la neve di oggi</string>
+    <string name="var_today_gust">le raffiche più forti di oggi</string>
 
     <!-- I cinque punti di partenza. Nome e messaggio diventano contenuto del lettore
          alla creazione, nella sua lingua, e da lì in poi non si traducono più. -->
@@ -1120,6 +1171,7 @@
     <string name="journal_shift_better">%1$s è migliorato</string>
     <string name="journal_shift_worse">%1$s è peggiorato</string>
     <string name="journal_shift_neutral">La previsione di %1$s è cambiata</string>
+    <string name="journal_field_sky">%1$s → %2$s</string>
     <string name="journal_field_rain">pioggia %1$s → %2$s</string>
     <string name="journal_field_high">massima %1$s → %2$s</string>
     <string name="journal_field_low">minima %1$s → %2$s</string>

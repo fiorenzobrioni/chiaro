@@ -1,71 +1,17 @@
 package com.callbackdev.chiaro.domain
 
 import com.callbackdev.chiaro.domain.model.PollenLevel
-import com.callbackdev.chiaro.domain.model.WeatherCondition
 
 /**
- * Single source of truth for turning raw Open-Meteo values into the labeled,
- * emoji-decorated strings the editor UI renders (icons are Unicode emoji, per the
- * design system — no image assets).
+ * The small conversions of raw Open-Meteo values that are not weather codes: the wind's
+ * compass point and the pollen's coarse level. The codes themselves live in [WmoCode]
+ * since 24 set 2026, together with everything decided from them.
+ *
+ * This object used to be tweather's label table — English descriptions with an emoji,
+ * `"Moderate ☀️"` for a UV index, `"Good ⚪"` for an air quality — none of which ever
+ * reached a screen of this app: every surface localizes through `WeatherText`.
  */
 object WeatherCodes {
-
-    /** WMO weather interpretation code (Open-Meteo `weather_code`) → condition. */
-    fun condition(wmoCode: Int, isDay: Boolean): WeatherCondition {
-        val (description, emoji) = when (wmoCode) {
-            0 -> if (isDay) "Clear" to "☀️" else "Clear" to "🌙"
-            1 -> if (isDay) "Mainly Clear" to "🌤️" else "Mainly Clear" to "🌙"
-            2 -> "Partly Cloudy" to "⛅"
-            3 -> "Overcast" to "☁️"
-            45, 48 -> "Foggy" to "🌫️"
-            51, 53, 55 -> "Drizzle" to "🌦️"
-            56, 57 -> "Freezing Drizzle" to "🌧️"
-            61 -> "Light Rain" to "🌧️"
-            63 -> "Rainy" to "🌧️"
-            65 -> "Heavy Rain" to "🌧️"
-            66, 67 -> "Freezing Rain" to "🌧️"
-            71 -> "Light Snow" to "🌨️"
-            73 -> "Snowy" to "🌨️"
-            75 -> "Heavy Snow" to "❄️"
-            77 -> "Snow Grains" to "❄️"
-            80, 81 -> "Rain Showers" to "🌦️"
-            82 -> "Violent Showers" to "🌧️"
-            85, 86 -> "Snow Showers" to "🌨️"
-            95 -> "Thunderstorm" to "⛈️"
-            96, 99 -> "Thunderstorm w/ Hail" to "⛈️"
-            else -> "Unknown" to "❓"
-        }
-        return WeatherCondition(wmoCode, description, emoji)
-    }
-
-    /**
-     * Below [FIRST_PRECIP_CODE] the WMO scale carries only sky states and fog; from it
-     * up every code is a precipitation of some kind (drizzle, rain, snow, showers,
-     * thunderstorm). The mapper reads it to decide the day's label, and whoever has to
-     * say whether a past hour was wet reads the same boundary. One number, one home.
-     */
-    const val FIRST_PRECIP_CODE = 51
-
-    fun isPrecipitation(wmoCode: Int): Boolean = wmoCode >= FIRST_PRECIP_CODE
-
-    /** UV index → descriptive label, e.g. `"Moderate ☀️"` like the sample. */
-    fun uvDescription(uvIndex: Int): String = when {
-        uvIndex <= 2 -> "Low"
-        uvIndex <= 5 -> "Moderate ☀️"
-        uvIndex <= 7 -> "High ☀️"
-        uvIndex <= 10 -> "Very High ☀️"
-        else -> "Extreme ☀️"
-    }
-
-    /** US AQI → status label (sample: 42 → `"Good ⚪"`). */
-    fun usAqiStatus(aqi: Int): String = when {
-        aqi <= 50 -> "Good ⚪"
-        aqi <= 100 -> "Moderate 🟡"
-        aqi <= 150 -> "Unhealthy for Sensitive Groups 🟠"
-        aqi <= 200 -> "Unhealthy 🔴"
-        aqi <= 300 -> "Very Unhealthy 🟣"
-        else -> "Hazardous 🟤"
-    }
 
     private val COMPASS_POINTS = listOf(
         "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
@@ -80,14 +26,42 @@ object WeatherCodes {
     }
 
     /**
-     * Pollen concentration (grains/m³) → coarse level; null in, null out (Open-Meteo
-     * pollen is Europe-only).
+     * The pollen species Open-Meteo serves (CAMS, Europe only), each with the lower
+     * bounds of MeteoSwiss' moderate, high and very-high classes in grains/m³ («Threshold
+     * values for pollen load classes of allergenic pollen types»; low starts at 1 for all).
+     *
+     * Per species since 24 set 2026. The old single scale (1/30/100) called 30 grains of
+     * ragweed «low» where MeteoSwiss says «high» from 11, and 100 of grass «high» where
+     * the scale has a class above it from 150. The olive is not in the Swiss table — it
+     * does not grow there — and takes the ash's thresholds: same family, Oleaceae, and
+     * cross-reactive allergens. The table is for mean DAILY concentrations and the value
+     * here is the current hour's: the same approximation the old scale made, now on the
+     * right numbers.
      */
-    fun pollenLevel(grainsPerM3: Double?): PollenLevel? = when {
+    enum class PollenSpecies(val moderate: Double, val high: Double, val veryHigh: Double) {
+        GRASS(20.0, 50.0, 150.0),
+        BIRCH(11.0, 70.0, 300.0),
+        ALDER(11.0, 70.0, 250.0),
+        OLIVE(11.0, 100.0, 350.0),
+        RAGWEED(6.0, 11.0, 40.0),
+        MUGWORT(6.0, 15.0, 50.0)
+    }
+
+    /** The class [grainsPerM3] of [species] falls in; null in, null out. */
+    fun pollenLevel(species: PollenSpecies, grainsPerM3: Double?): PollenLevel? = when {
         grainsPerM3 == null -> null
         grainsPerM3 < 1.0 -> PollenLevel.NONE
-        grainsPerM3 < 30.0 -> PollenLevel.LOW
-        grainsPerM3 < 100.0 -> PollenLevel.MODERATE
-        else -> PollenLevel.HIGH
+        grainsPerM3 < species.moderate -> PollenLevel.LOW
+        grainsPerM3 < species.high -> PollenLevel.MODERATE
+        grainsPerM3 < species.veryHigh -> PollenLevel.HIGH
+        else -> PollenLevel.VERY_HIGH
     }
+
+    /**
+     * A family's level: the worst of its species, each on its own scale — comparing grains
+     * across species was the old scale's mistake. Null when no species of the family was
+     * served (outside Europe), so the report says nothing rather than «none».
+     */
+    fun pollenFamilyLevel(vararg readings: Pair<PollenSpecies, Double?>): PollenLevel? =
+        readings.mapNotNull { (species, grains) -> pollenLevel(species, grains) }.maxByOrNull { it.ordinal }
 }

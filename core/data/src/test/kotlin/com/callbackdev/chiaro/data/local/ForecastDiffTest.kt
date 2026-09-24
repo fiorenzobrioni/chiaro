@@ -164,4 +164,33 @@ class ForecastDiffTest {
         )
         assertEquals("2026-08-18", revisions.single().hunks.single().date)
     }
+
+    /**
+     * 24 set 2026: the status is stored as a word id, and every commit before carries
+     * tweather's English label. The first fetch after the update must not report the
+     * whole week as changed — the same forecast in two spellings is not a revision.
+     */
+    @Test
+    fun `an old label and the new id for the same word are not a change`() {
+        val revisions = ForecastDiff.compute(
+            listOf(
+                fetch(1000, day("2026-08-18", status = "Partly Cloudy ⛅")),
+                fetch(2000, day("2026-08-18", status = "partly_cloudy"))
+            )
+        )
+        assertEquals(1, revisions.size) // the first appearance only
+    }
+
+    @Test
+    fun `an old label and a different new word are, and read as ids`() {
+        val revisions = ForecastDiff.compute(
+            listOf(
+                fetch(1000, day("2026-08-18", status = "Clear ☀️")),
+                fetch(2000, day("2026-08-18", status = "thunderstorm"))
+            )
+        )
+        val changed = revisions.last().hunks.single().lines
+            .filter { it.type != SnapshotDiff.Type.CONTEXT }
+        assertEquals(listOf("clear", "thunderstorm"), changed.map { it.value })
+    }
 }

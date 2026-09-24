@@ -382,7 +382,9 @@ private fun timeFormatter(context: Context): DateTimeFormatter = Formats.timeFor
  * not; the word «Presto per dirlo» is the honest whole of what the card can say.
  */
 private fun evidence(context: Context, verdict: SkyVerdict): String? =
-    SkyText.chipEvidence(context.resources, verdict)
+    // The short form (24 set 2026): the card's evidence line is budgeted for «nuvole 10%»,
+    // and the layer the app's screens add would be what the budget cuts.
+    SkyText.chipEvidence(context.resources, verdict, withLayer = false)
 
 /**
  * The moon's day-moment gets its real phase; everything else its family glyph — and the

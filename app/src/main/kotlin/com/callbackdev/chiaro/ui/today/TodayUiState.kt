@@ -1,12 +1,13 @@
 package com.callbackdev.chiaro.ui.today
 
+import com.callbackdev.chiaro.domain.CurrentEstimate
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.WeatherRecency
-import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
+import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
@@ -158,7 +159,10 @@ object TodayStateBuilder {
         if (!WeatherRecency.coversNow(report, now)) {
             return TodayUiState.Empty(city, userRefreshing, error)
         }
-        val trimmed = WeatherRecency.trim(report, now)
+        // The forecast for now stands in for a `current` block over an hour old (24 set
+        // 2026, `CurrentEstimate`), before the trim so the rows around now are still there
+        // to interpolate. The widgets build through here too, and inherit it.
+        val trimmed = WeatherRecency.trim(CurrentEstimate.apply(report, now), now)
         val local = LocalDateTime.ofInstant(now, zone)
         val coords = report.location.coordinates
         val sunAltitude = AstronomyEngine.sunAltitude(now, coords)
@@ -176,6 +180,8 @@ object TodayStateBuilder {
             sky = SkySnapshot(
                 sunAltitudeDeg = sunAltitude,
                 cloudPct = currentHour.cloudCoverPct,
+                // A tint, never a printed number: an hour with no chance draws the
+                // sky undimmed, the same "not told is not wet" the verdicts apply.
                 precipPct = currentHour.precipChancePct ?: 0,
                 moonIllumination = moon.illuminatedFraction,
                 moonAltitudeDeg = AstronomyEngine.moonAltitude(now, coords),

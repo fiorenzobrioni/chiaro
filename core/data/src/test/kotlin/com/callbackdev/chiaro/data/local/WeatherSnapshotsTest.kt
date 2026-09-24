@@ -1,8 +1,12 @@
 package com.callbackdev.chiaro.data.local
 
+import com.callbackdev.chiaro.domain.ConditionWord
 import com.callbackdev.chiaro.domain.model.DailyForecast
+import com.callbackdev.chiaro.domain.model.PastHour
+import com.callbackdev.chiaro.domain.model.Precipitation
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
+import java.time.Instant
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -12,8 +16,8 @@ import org.junit.Test
 
 class WeatherSnapshotsTest {
 
-    private val sunny = WeatherCondition(0, "Sunny", "☀️")
-    private val rainy = WeatherCondition(63, "Rainy", "🌧️")
+    private val sunny = WeatherCondition(0)
+    private val rainy = WeatherCondition(63)
 
     // sampleWeatherReport's local time is 2023-10-27 14:30
     private val today: LocalDate = LocalDate.of(2023, 10, 27)
@@ -31,15 +35,15 @@ class WeatherSnapshotsTest {
         )
         assertEquals(
             mapOf(
-                "2023-10-27.status" to "Sunny ☀️",
+                "2023-10-27.status" to "clear",
                 "2023-10-27.high_c" to "21.0",
                 "2023-10-27.low_c" to "14.0",
                 "2023-10-27.precip_pct" to "0",
-                "2023-10-28.status" to "Rainy 🌧️",
+                "2023-10-28.status" to "rain",
                 "2023-10-28.high_c" to "20.0",
                 "2023-10-28.low_c" to "12.0",
                 "2023-10-28.precip_pct" to "85",
-                "2023-10-29.status" to "Sunny ☀️",
+                "2023-10-29.status" to "clear",
                 "2023-10-29.high_c" to "16.0",
                 "2023-10-29.low_c" to "10.0",
                 "2023-10-29.precip_pct" to "20"
@@ -125,11 +129,50 @@ class WeatherSnapshotsTest {
     }
 
     @Test
-    fun `the current snapshot carries the code and the hour behind it`() {
-        val flat = WeatherSnapshots.flatten(sampleWeatherReport())
-        // ForecastOutcome reads these two and nothing else to judge a past hour.
+    fun `the current snapshot carries the code, the quarter and the closed hours`() {
+        val hours = listOf(
+            PastHour(Instant.parse("2023-10-27T14:00:00Z"), 0.4, 18.5),
+            PastHour(Instant.parse("2023-10-27T13:00:00Z"), 0.0, 18.0)
+        )
+        val base = sampleWeatherReport()
+        val report = base.copy(
+            current = base.current.copy(
+                precipitation = Precipitation(0.1, hours, 30, Instant.parse("2023-10-27T14:15:00Z"))
+            )
+        )
+        val flat = WeatherSnapshots.flatten(report)
+        // ForecastOutcome reads these and nothing else to judge a past day.
         assertNotNull(flat["current.wmo_code"]?.toIntOrNull())
-        assertNotNull(flat["current.precip_last_hour_mm"]?.toDoubleOrNull())
+        assertEquals("0.1", flat["current.precip_quarter_mm"])
+        assertEquals("2023-10-27T14:15:00Z", flat[WeatherSnapshots.QUARTER_END])
+        assertEquals("2023-10-27T14:00:00Z,2023-10-27T13:00:00Z", flat[WeatherSnapshots.PAST_HOURS_END])
+        assertEquals("0.4,0.0", flat[WeatherSnapshots.PAST_HOURS_MM])
+        assertEquals("18.5,18.0", flat[WeatherSnapshots.PAST_HOURS_TEMP_C])
+        // The old name held the quarter under the hour's name; nothing writes it now.
+        assertNull(flat["current.precip_last_hour_mm"])
+    }
+
+    @Test
+    fun `no closed hours, no keys — and no uv, no uv key`() {
+        val base = sampleWeatherReport()
+        val flat = WeatherSnapshots.flatten(
+            base.copy(current = base.current.copy(uvIndex = null))
+        )
+        assertNull(flat[WeatherSnapshots.PAST_HOURS_END])
+        assertNull(flat["current.uv_index"])
+        assertTrue(flat.values.none { it == "null" })
+    }
+
+    /** The status is a word id now; the English labels on disk still read as words. */
+    @Test
+    fun `a stored status reads as its word in either shape`() {
+        assertEquals(ConditionWord.PARTLY_CLOUDY, WeatherSnapshots.conditionWord("partly_cloudy"))
+        assertEquals(ConditionWord.PARTLY_CLOUDY, WeatherSnapshots.conditionWord("Partly Cloudy ⛅"))
+        assertEquals(ConditionWord.CLEAR, WeatherSnapshots.conditionWord("Clear 🌙"))
+        assertEquals(ConditionWord.THUNDERSTORM_STRONG, WeatherSnapshots.conditionWord("Thunderstorm w/ Hail ⛈️"))
+        assertEquals(ConditionWord.SHOWERS_HEAVY, WeatherSnapshots.conditionWord("Violent Showers 🌧️"))
+        assertNull(WeatherSnapshots.conditionWord("Sunny ☀️")) // the sample's word, never stored
+        assertEquals("partly_cloudy", WeatherSnapshots.flatten(sampleWeatherReport())["current.status"])
     }
 
     @Test

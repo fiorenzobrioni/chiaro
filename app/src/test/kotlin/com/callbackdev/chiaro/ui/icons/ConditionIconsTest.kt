@@ -47,8 +47,11 @@ class ConditionIconsTest {
         85 to R.drawable.mc3_partly_cloudy_day_snow,
         86 to R.drawable.mc3_partly_cloudy_day_snow,
         95 to R.drawable.mc3_thunderstorms_day,
-        96 to R.drawable.mc3_thunderstorms_day_hail,
-        99 to R.drawable.mc3_thunderstorms_day_hail
+        // Il temporale semplice anche per 96/99 dal 24 set 2026: fuori dalla famiglia
+        // ICON Open-Meteo scrive 96 per «temporale forte» e 99 mai; la grandine
+        // disegnata era grandine che nessuno aveva previsto.
+        96 to R.drawable.mc3_thunderstorms_day,
+        99 to R.drawable.mc3_thunderstorms_day
     )
 
     /** I codici che di notte cambiano disegno, e in cosa. */
@@ -63,8 +66,8 @@ class ConditionIconsTest {
         85 to R.drawable.mc3_partly_cloudy_night_snow,
         86 to R.drawable.mc3_partly_cloudy_night_snow,
         95 to R.drawable.mc3_thunderstorms_night,
-        96 to R.drawable.mc3_thunderstorms_night_hail,
-        99 to R.drawable.mc3_thunderstorms_night_hail
+        96 to R.drawable.mc3_thunderstorms_night,
+        99 to R.drawable.mc3_thunderstorms_night
     )
 
     @Test

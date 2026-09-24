@@ -14,6 +14,8 @@ data class AirQualityResponseDto(
 data class AirQualityCurrentDto(
     val time: String,
     @SerialName("us_aqi") val usAqi: Int? = null,
+    /** The EEA's index (bands revised 2024), served for every place since 24 set 2026. */
+    @SerialName("european_aqi") val europeanAqi: Int? = null,
     @SerialName("pm2_5") val pm25: Double? = null,
     @SerialName("pm10") val pm10: Double? = null,
     @SerialName("ozone") val ozone: Double? = null,

@@ -37,14 +37,14 @@ class WeatherRecencyTest {
     private val fetchedAt: Instant = fetchLocal.atZone(rome).toInstant()
 
     private fun report(hours: Int = 48, days: Int = 7): WeatherReport {
-        val clear = WeatherCondition(0, "Clear", "☀️")
+        val clear = WeatherCondition(0)
         return WeatherReport(
             location = Location(
                 "Milan", "Lombardy", "Italy", Coordinates(45.46, 9.19), rome.id, fetchLocal
             ),
             current = CurrentConditions(
-                clear, 20.0, 20.0, 50, 10.0, 10.0, 1013.0, 3, "Moderate",
-                Wind(5.0, "N", 0, 8.0), Precipitation(0.0, 0)
+                clear, 20.0, 20.0, 50, 10.0, 10.0, 1013.0, 3,
+                Wind(5.0, "N", 0, 8.0), Precipitation(0.0, emptyList(), 0)
             ),
             airQuality = null,
             pollen = null,

@@ -32,6 +32,12 @@ object RuleText {
         "current.pressure_mb" -> R.string.var_current_pressure
         "current.visibility_km" -> R.string.var_current_visibility
         "current.aqi_index" -> R.string.var_current_aqi
+        "current.aqi_eu_index" -> R.string.var_current_aqi_eu
+        "next_6h.gust_max_kph" -> R.string.var_next6_gust
+        "next_12h.gust_max_kph" -> R.string.var_next12_gust
+        "today.precip_mm" -> R.string.var_today_precip_mm
+        "today.snow_cm" -> R.string.var_today_snow
+        "today.gust_max_kph" -> R.string.var_today_gust
         "next_6h.precip_chance_max" -> R.string.var_next6_precip
         "next_6h.temp_c_min" -> R.string.var_next6_temp_min
         "next_6h.temp_c_max" -> R.string.var_next6_temp_max
@@ -135,6 +141,8 @@ object RuleText {
             variableId.contains("pct") || variableId.contains("chance") -> "%"
             variableId.contains("pressure") -> " hPa"
             variableId.contains("visibility") -> " km"
+            variableId.endsWith("_mm") -> " mm"
+            variableId.endsWith("_cm") -> " cm"
             else -> "" // UV and AQI are bare indexes
         }
 
@@ -166,8 +174,11 @@ object RuleText {
             variableId.contains("humidity") -> ValueSpec(0.0, 100.0, 5.0)
         variableId.contains("uv") -> ValueSpec(0.0, 12.0, 1.0)
         variableId.contains("wind") -> ValueSpec(0.0, 120.0, 5.0)
+        variableId.contains("gust") -> ValueSpec(0.0, 150.0, 5.0)
+        variableId.endsWith("_mm") || variableId.endsWith("_cm") -> ValueSpec(0.0, 100.0, 1.0)
         variableId.contains("pressure") -> ValueSpec(950.0, 1050.0, 5.0)
         variableId.contains("visibility") -> ValueSpec(0.0, 50.0, 1.0)
+        variableId.contains("aqi_eu") -> ValueSpec(0.0, 150.0, 5.0)
         variableId.contains("aqi") -> ValueSpec(0.0, 300.0, 10.0)
         else -> ValueSpec(0.0, 100.0, 1.0)
     }

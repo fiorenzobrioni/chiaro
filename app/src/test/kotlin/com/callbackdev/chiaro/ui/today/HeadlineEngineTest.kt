@@ -27,11 +27,11 @@ class HeadlineEngineTest {
 
     private val now: LocalDateTime = LocalDateTime.of(2026, 9, 2, 14, 0)
 
-    private val clear = WeatherCondition(0, "Clear", "☀️")
-    private val fog = WeatherCondition(45, "Fog", "🌫️")
-    private val rain = WeatherCondition(63, "Rainy", "🌧️")
-    private val snow = WeatherCondition(73, "Snowy", "🌨️")
-    private val storm = WeatherCondition(95, "Thunderstorm", "⛈️")
+    private val clear = WeatherCondition(0)
+    private val fog = WeatherCondition(45)
+    private val rain = WeatherCondition(63)
+    private val snow = WeatherCondition(73)
+    private val storm = WeatherCondition(95)
 
     /** One forecast hour: what the sky does, the chance of rain, the temperature. */
     private data class Hour(val condition: WeatherCondition, val pct: Int, val tempC: Double = 20.0)
@@ -269,6 +269,30 @@ class HeadlineEngineTest {
 
         val breeze = report(quiet(), windKph = 30.0, gustKph = 50.0)
         assertNull(HeadlineEngine.headline(breeze, now))
+    }
+
+    /** 24 set 2026: the rows carry the wind, so a gale this afternoon is news this morning. */
+    @Test
+    fun `a strong wind later today is announced with its hour`() {
+        val calmNow = report(quiet())
+        val later = calmNow.copy(
+            hourly = calmNow.hourly.mapIndexed { i, h ->
+                h.copy(windKph = 15.0, gustKph = if (i == 4) 70.0 else 25.0)
+            }
+        )
+        val headline = HeadlineEngine.headline(later, now) as Headline.Wind
+        assertEquals(now.plusHours(4), headline.at)
+        assertEquals(70.0, headline.gustKph, 0.001)
+        // Now wins over later, and still says no hour.
+        val gustyNow = report(quiet(), windKph = 25.0, gustKph = 65.0)
+        assertNull((HeadlineEngine.headline(gustyNow, now) as Headline.Wind).at)
+        // Rows without wind (a cache from before) are not calm rows: nothing is said.
+        assertNull(HeadlineEngine.headline(calmNow, now))
+        // Tomorrow's gale is not today's sentence.
+        val tomorrow = calmNow.copy(
+            hourly = calmNow.hourly.mapIndexed { i, h -> h.copy(gustKph = if (i == 20) 90.0 else 20.0) }
+        )
+        assertNull(HeadlineEngine.headline(tomorrow, now))
     }
 
     @Test

@@ -34,7 +34,7 @@ class EveningDetailsTest {
             time = start.plusHours(i.toLong()),
             at = start.plusHours(i.toLong()).atZone(zone).toInstant(),
             tempC = temp[i],
-            condition = WeatherCondition(2, "x", "x"),
+            condition = WeatherCondition(2),
             precipChancePct = rain[i],
             cloudCoverPct = 40
         )

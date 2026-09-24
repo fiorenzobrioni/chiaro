@@ -4,8 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.domain.ConditionWord
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.today.WeatherText
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -33,9 +35,15 @@ object JournalText {
     }
 
     /**
-     * "pioggia 70% → 30% · massima 24° → 27°" — the numbers behind the word.
-     * The stored status field stays out: its value is the engine's English label,
-     * and an English word must never reach this screen (VISION §8).
+     * "sereno → temporale · pioggia 70% → 30% · massima 24° → 27°" — the words and
+     * numbers behind the verdict.
+     *
+     * The sky joined on 24 set 2026. It had been left out because the stored value was
+     * the engine's English label, and an English word must never reach this screen
+     * (VISION §8) — which left a day that went from clear to thunderstorm, rain chance
+     * unchanged, as an entry with nothing in it. The value is a [ConditionWord] id now
+     * (the old labels are read into one by `ForecastDiff`), printed in the reader's
+     * words; one this build does not know is left out rather than guessed.
      */
     @Composable
     fun shiftDetails(
@@ -45,8 +53,14 @@ object JournalText {
     ): String {
         fun temp(raw: String?): String? =
             raw?.toDoubleOrNull()?.let { Formats.temperature(it, units.temperature, locale) }
+        @Composable
+        fun sky(raw: String?): String? = raw?.let(ConditionWord::fromId)
+            ?.let { stringResource(WeatherText.condition(it)).lowercase(locale) }
         return shifts.mapNotNull { shift ->
             when (shift.field) {
+                "status" -> sky(shift.new)?.let { new ->
+                    stringResource(R.string.journal_field_sky, sky(shift.old) ?: MISSING, new)
+                }
                 // The dash, never a "0%": the old value is absent when the previous
                 // fetch carried no probability for that day, and a probability is the
                 // one number that must not be invented as zero (§1.1). The
