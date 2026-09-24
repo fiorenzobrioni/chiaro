@@ -701,7 +701,8 @@ reading is §1.1's kind of lie.
 
 Rounding is a rule, not a call: temperatures to whole degrees everywhere except the
 current one and the feels-like, which carry one decimal because the source does;
-probabilities to whole percent; wind to whole units; distances to one decimal below 10.
+probabilities to whole percent; wind to whole units; distances, rain (mm) and snow (cm) to
+one decimal below 10, whole above.
 
 **The widgets' own scale** is not this one and cannot be: a home-screen card is drawn by
 `RemoteViews` at whatever size the launcher granted, so its sizes are arithmetic on the
@@ -1094,6 +1095,13 @@ an apostrophe — rendered and looked at); the condition at `titleLarge` (from 6
 a cliff); and the feels-like line **only when it differs by a degree or more** — "20.8°, feels
 like 20.6°" is a number with nothing to do about it (§1.2).
 
+**8.1d The estimated now** (24 set 2026, the engine review's second pass) — when the
+provider's `current` block is over an hour old, the hero, the details and the widgets show
+the forecast for this hour (`CurrentEstimate`) and the hero says **«Stima dalla
+previsione»** under the condition, `bodyMedium` in white at 70%, the feels-like's own voice.
+The details grid opens with one `bodySmall` line saying the same and how old the data is.
+§1.1's third row, a computed value labelled as one; the freshness chip still states the age.
+
 **8.1b The place row** — name, chevron, the place's own day and hour, the pager dots, the
 gear. It is **pinned** (18 set 2026, device request): the city these numbers belong to must
 not scroll away, which is the rule the other three tabs already kept by drawing their
@@ -1195,6 +1203,13 @@ colored bar is not a number. **Today's** bar carries a 12dp disc at the temperat
 (23 set 2026), in the ramp's color with an `onSurface` ring, on the week's shared scale — where
 in its day the day is.
 
+**8.5b The open day** (24 set 2026) — an open week row shows, above its hours, the day's
+**facts**: rain (mm, and over how many hours), snow (cm), the strongest gust from 39 km/h,
+the highest UV from 3. One row per fact — the `Timeline` rung's glyph, the value in
+`bodyMedium`, its consequence under it in `bodySmall` / `onSurfaceVariant` — and only the
+facts that say something that day; a day with none draws no block. The closed row does not
+change: §1.3 puts the numbers one level down.
+
 **8.6 MetricTile** — icon and label; the value as a **reading** (`ReadingValue`: Inter
 Light 24sp on a 32sp line, tabular — the hero's voice at a tile's scale, since the card
 review of 8 set 2026; at `titleMedium` the value barely outranked its own 14sp label and
@@ -1229,7 +1244,25 @@ the icon took cost nothing and left 7.3dp of margin, which is where the ladder s
 this rung. The contract is a 360dp contract: narrower than that the labels wrap and keep
 their words, as they already did at 320dp beside the 24dp icon.)
 
-**8.7 VerdictChip** — glyph + word + evidence, in that order: `✓ Great · 12% cloud`. The
+**The tiles of 24 set 2026.** **Pioggia oggi**: the day's millimetres, a note with the hours
+it lasts and — while the report is fresh — what fell in the hour just closed; its track is
+**five steps** in water's ramp (0,2 / 2 / 10 / 30 mm), steps because millimetres are not
+linear to a reader. **Neve oggi**, only on a day with snow, four steps (1 / 5 / 20 cm) on the
+same ramp. Both decide their band on the number **as printed** (19,81 cm prints «20 cm» and
+is read as 20). **Nuvole**: the total cover, a note naming the layer that makes it when one
+does («soprattutto alte e sottili»), a meaning for the sun by day and the stars by night; no
+track, because a veiled sun and a grey day are the same place on a 0–100 line. **Vento**
+adds the day's strongest gust to its note when it is strong (≥ 39 km/h) and above what the
+tile already shows. **Qualità aria** reads the **European index** (EEA, 2024 bands 20/40/
+60/80, track 0–100) for places in Europe by country code, the US one elsewhere, with the
+same six meaning lines matched on the EEA's advice. **Pollini** has **five** levels, MeteoSwiss'
+per-species classes, the fifth «molto alti» with Meteocons' `very-high` drawings.
+
+**8.7 VerdictChip** — glyph + word + evidence, in that order: `✓ Great · 12% cloud`. Since
+24 set 2026 the evidence names the cloud's layer when one makes the window's sky
+(«nuvole 60%, alte»), on the Sky screen and in its notification; the Sky widget keeps the
+short form its line is budgeted for. The layer is evidence only — it does not move the
+verdict, whose thresholds were set on the total cover. The
 container is the verdict container color, the text is the ink color. **Never the color
 alone** (§2.3), never a bare dot, never a number without the word. The glyph is a drawing
 (`ic_verdict_pass/unstable/fail/unknown`, one line weight, tinted with the ink), not the

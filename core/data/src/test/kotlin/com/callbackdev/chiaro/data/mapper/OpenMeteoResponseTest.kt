@@ -110,4 +110,70 @@ class OpenMeteoResponseTest {
             }
         }
     }
+
+    // ---------------- 24 set 2026: the full request of the second pass, same morning
+
+    private fun loadFull(name: String): ForecastResponseDto {
+        val text = javaClass.getResource("/openmeteo/$name-full-2026-09-24.json")!!.readText()
+        return json.decodeFromString(ForecastResponseDto.serializer(), text)
+    }
+
+    @Test
+    fun `reykjavik full - the day's rain, its hours and a 112 km per hour gust`() {
+        val report = map(loadFull("reykjavik"), 64.1466, -21.9426)
+        val today = report.daily.first()
+        assertEquals(10.5, today.precipMm!!, 0.0)
+        assertEquals(16.0, today.precipHours!!, 0.0)
+        assertEquals(0.0, today.snowCm!!, 0.0)
+        assertEquals(112.3, today.gustMaxKph!!, 0.0)
+        // current.time 10:45: the first row is 10:00, the hour 10-11, whose gust and code
+        // the provider writes in its 11:00 slot.
+        val row = report.hourly.first()
+        assertEquals(LocalDateTime.parse("2026-09-24T10:00"), row.time)
+        assertEquals(112.3, row.gustKph!!, 0.0)
+        assertEquals(61, row.condition.wmoCode)
+        assertEquals(-3.0, row.feelsLikeC!!, 0.0)
+        assertEquals(58.0, row.windKph!!, 0.0)
+        assertEquals(91, row.windDirectionDeg)
+        // 19% low, 58% mid, 100% high: no one layer makes this sky.
+        assertNull(report.current.cloudLayers!!.dominant())
+    }
+
+    @Test
+    fun `milan full - a sky all high cloud is a veil`() {
+        val report = map(loadFull("milan"), 45.4642, 9.19)
+        assertEquals(100, report.current.cloudCoverPct)
+        assertEquals(com.callbackdev.chiaro.domain.model.CloudLayers.Layer.HIGH, report.current.cloudLayers!!.dominant())
+        assertEquals(0.0, report.daily.first().precipMm!!, 0.0)
+    }
+
+    @Test
+    fun `everest full - a day of heavy snow is heavy snow, with its centimetres`() {
+        val report = map(loadFull("everest"), 27.99, 86.93)
+        val today = report.daily.first()
+        assertEquals(75, today.condition.wmoCode)
+        assertEquals(19.81, today.snowCm!!, 0.0)
+        assertEquals(28.4, today.precipMm!!, 0.0)
+    }
+
+    /** Suggestion 3 on a real response: two hours offline, the hero is 12:45 + 2 h. */
+    @Test
+    fun `milan full - offline for two hours, now is the forecast for now`() {
+        val forecast = loadFull("milan")
+        val fetched = Instant.parse("2026-09-24T10:45:00Z") // 12:45 in Milan
+        val report = WeatherReportMapper.map(
+            city = City(1, "Milano", "Lombardia", "Italia", Coordinates(45.4642, 9.19), "Europe/Rome", countryCode = "IT"),
+            forecast = forecast, airQuality = null, fetchedAt = fetched,
+            responseTimeMs = 1, cacheStatus = CacheStatus.MISS
+        )
+        val now = Instant.parse("2026-09-24T12:45:00Z") // 14:45 in Milan
+        val estimated = com.callbackdev.chiaro.domain.CurrentEstimate.apply(report, now).current
+        assertTrue(estimated.estimated)
+        val h = forecast.hourly
+        val at14 = h.time.indexOf("2026-09-24T14:00")
+        val expected = h.temperatureC[at14] + (h.temperatureC[at14 + 1] - h.temperatureC[at14]) * 0.75
+        assertEquals(expected, estimated.tempC, 1e-9)
+        // Nothing changes on a fresh report.
+        assertEquals(false, com.callbackdev.chiaro.domain.CurrentEstimate.apply(report, fetched).current.estimated)
+    }
 }

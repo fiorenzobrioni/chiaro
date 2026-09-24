@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.ui.sky
 
 import android.content.res.Resources
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.sky.LunarEclipse
 import com.callbackdev.chiaro.domain.sky.LunarEclipseKind
@@ -256,14 +257,25 @@ object SkyText {
      * UNKNOWN — not knowing has no arithmetic to show; its reason is a sentence
      * ([unknownReason]), not an evidence figure.
      */
-    fun chipEvidence(res: Resources, verdict: SkyVerdict): String? = when {
+    fun chipEvidence(res: Resources, verdict: SkyVerdict, withLayer: Boolean = true): String? = when {
         verdict.kind == SkyVerdictKind.UNKNOWN -> null
         verdict.note == SkyVerdictNote.MOONLIGHT && verdict.moonPct != null ->
             res.getString(R.string.sky_evidence_moon, verdict.moonPct)
         verdict.note == SkyVerdictNote.PRECIPITATION && verdict.precipPct != null ->
             res.getString(R.string.sky_evidence_rain, verdict.precipPct)
+        withLayer && verdict.cloudPct != null && verdict.cloudLayer != null -> res.getString(
+            R.string.sky_evidence_cloud_layer, verdict.cloudPct, res.getString(layerRes(verdict.cloudLayer!!))
+        )
         verdict.cloudPct != null -> res.getString(R.string.sky_evidence_cloud, verdict.cloudPct)
         else -> null
+    }
+
+    /** Which cloud it is, in a word (24 set 2026): the verdict's evidence names the layer
+     * when one makes the sky, since 60% of high veil and 60% of low cloud are two skies. */
+    fun layerRes(layer: CloudLayers.Layer): Int = when (layer) {
+        CloudLayers.Layer.LOW -> R.string.cloud_layer_low
+        CloudLayers.Layer.MID -> R.string.cloud_layer_mid
+        CloudLayers.Layer.HIGH -> R.string.cloud_layer_high
     }
 
     /** Why the app does not know — always stated, never a bare question mark. */

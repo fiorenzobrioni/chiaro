@@ -402,9 +402,10 @@ object ChiaroIcons {
      * and the rule for using one is the same rule a second verdict has to pass
      * (DESIGN §1.2): **a glyph may only say a level the tile already computes and says in
      * words.** Where the family's grades and the app's bands do not line up, the generic
-     * mark stays — that is why the wind tile below is not graded, and why `very-high`
-     * and `extreme` are imported but not shipped: `pressureMeaning` has three bands and
-     * `pollenLevel` has three levels above nothing, not five and four.
+     * mark stays — that is why the wind tile below is not graded, and why the barometer's
+     * `very-high` and `extreme` are imported but not shipped: `pressureMeaning` has three
+     * bands, not five. The pollen's `very-high` ships since 24 set 2026, when the levels
+     * became MeteoSwiss' per-species classes and gained the fourth above nothing.
      */
     @Composable
     fun uv(index: Int): ImageVector = styled(
@@ -468,6 +469,13 @@ object ChiaroIcons {
 
     val precipitation: ImageVector @Composable get() = styled(R.drawable.mc3_raindrops)
 
+    /** The day's snow (24 set 2026). The same drawing as [frost], named for the other
+     * question: how much falls, not whether it freezes (§13.1). */
+    val snow: ImageVector @Composable get() = styled(R.drawable.mc3_snowflake)
+
+    /** The cloud cover tile (24 set 2026): a plain cloud, the sky's quantity. */
+    val cloudCover: ImageVector @Composable get() = styled(R.drawable.mc3_cloudy)
+
     /** Freezing, not snow: the Journal's drift strip marks the days whose forecast
      * minimum is at or below zero, and the question there is ice, not precipitation.
      * The accessor names the metric (§13.1), which is why it is not called
@@ -518,7 +526,8 @@ object ChiaroIcons {
                 family == null -> R.drawable.mc3_pollen
                 worst == PollenLevel.LOW -> family.low
                 worst == PollenLevel.MODERATE -> family.moderate
-                else -> family.high
+                worst == PollenLevel.HIGH -> family.high
+                else -> family.veryHigh
             }
         )
     }
@@ -526,19 +535,20 @@ object ChiaroIcons {
     private enum class Plant(
         @DrawableRes val low: Int,
         @DrawableRes val moderate: Int,
-        @DrawableRes val high: Int
+        @DrawableRes val high: Int,
+        @DrawableRes val veryHigh: Int
     ) {
         GRASS(
             R.drawable.mc3_pollen_grass_low, R.drawable.mc3_pollen_grass_moderate,
-            R.drawable.mc3_pollen_grass_high
+            R.drawable.mc3_pollen_grass_high, R.drawable.mc3_pollen_grass_very_high
         ),
         TREE(
             R.drawable.mc3_pollen_tree_low, R.drawable.mc3_pollen_tree_moderate,
-            R.drawable.mc3_pollen_tree_high
+            R.drawable.mc3_pollen_tree_high, R.drawable.mc3_pollen_tree_very_high
         ),
         WEED(
             R.drawable.mc3_pollen_weed_low, R.drawable.mc3_pollen_weed_moderate,
-            R.drawable.mc3_pollen_weed_high
+            R.drawable.mc3_pollen_weed_high, R.drawable.mc3_pollen_weed_very_high
         )
     }
 

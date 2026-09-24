@@ -271,6 +271,30 @@ class HeadlineEngineTest {
         assertNull(HeadlineEngine.headline(breeze, now))
     }
 
+    /** 24 set 2026: the rows carry the wind, so a gale this afternoon is news this morning. */
+    @Test
+    fun `a strong wind later today is announced with its hour`() {
+        val calmNow = report(quiet())
+        val later = calmNow.copy(
+            hourly = calmNow.hourly.mapIndexed { i, h ->
+                h.copy(windKph = 15.0, gustKph = if (i == 4) 70.0 else 25.0)
+            }
+        )
+        val headline = HeadlineEngine.headline(later, now) as Headline.Wind
+        assertEquals(now.plusHours(4), headline.at)
+        assertEquals(70.0, headline.gustKph, 0.001)
+        // Now wins over later, and still says no hour.
+        val gustyNow = report(quiet(), windKph = 25.0, gustKph = 65.0)
+        assertNull((HeadlineEngine.headline(gustyNow, now) as Headline.Wind).at)
+        // Rows without wind (a cache from before) are not calm rows: nothing is said.
+        assertNull(HeadlineEngine.headline(calmNow, now))
+        // Tomorrow's gale is not today's sentence.
+        val tomorrow = calmNow.copy(
+            hourly = calmNow.hourly.mapIndexed { i, h -> h.copy(gustKph = if (i == 20) 90.0 else 20.0) }
+        )
+        assertNull(HeadlineEngine.headline(tomorrow, now))
+    }
+
     @Test
     fun `the ladder - today's umbrella over frost, frost over maybe, maybe over tomorrow`() {
         val frostyMaybe = List(30) { i ->

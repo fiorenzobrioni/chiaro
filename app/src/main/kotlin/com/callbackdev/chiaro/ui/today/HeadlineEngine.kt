@@ -65,9 +65,10 @@ sealed interface Headline {
     /** Fog on the way inside twelve hours, while it is not foggy now. */
     data class Fog(val at: LocalDateTime) : Headline
 
-    /** The wind right now is strong enough to be the day's fact: the hero has no wind
-     * on it, so this is the one "now" the sentence carries. */
-    data class Wind(val speedKph: Double, val gustKph: Double) : Headline
+    /** The wind is strong enough to be the day's fact: the hero has no wind on it.
+     * [at] null is now; otherwise the first hour of today (or of the next six) that
+     * reaches it, which the rows can say since they carry the wind (24 set 2026). */
+    data class Wind(val speedKph: Double, val gustKph: Double, val at: LocalDateTime? = null) : Headline
 
     /** Rain possible today: the chance is at least half but under the umbrella bar. */
     data class WetMaybe(val at: LocalDateTime, val pct: Int, val snow: Boolean) : Headline
@@ -93,7 +94,7 @@ sealed interface Headline {
  * 3. rain likely later **today** (or inside six hours, past midnight) — the umbrella;
  * 4. frost by tomorrow mid-morning;
  * 5. fog inside twelve hours;
- * 6. a strong wind now;
+ * 6. a strong wind now, or later today (24 set 2026, when the rows gained the wind);
  * 7. rain **possible** today — at least half, under the umbrella bar;
  * 8. rain likely **tomorrow**.
  *
@@ -207,12 +208,23 @@ object HeadlineEngine {
                 ?.let { return Headline.Fog(at = it.time) }
         }
 
-        // The one "now" the sentence carries: the hero has no wind on it, and a gale is
-        // the day's fact whatever the sky is doing. The model carries no hourly wind, so
-        // this cannot look ahead the way the others do.
+        // The hero has no wind on it, and a gale is the day's fact whatever the sky is
+        // doing. Now first; then, since the rows carry the wind (24 set 2026), the first
+        // hour of the umbrella's horizon that reaches the same bar — until then this was
+        // the one step of the ladder that could not look ahead, and a gale at four was
+        // news only at four. A row with no wind at all is not a calm one: it is skipped.
         val wind = report.current.wind
         if (wind.speedKph >= WIND_STRONG_KPH || wind.gustKph >= GUST_STRONG_KPH) {
             return Headline.Wind(speedKph = wind.speedKph, gustKph = wind.gustKph)
+        }
+        todays.firstOrNull {
+            (it.windKph ?: 0.0) >= WIND_STRONG_KPH || (it.gustKph ?: 0.0) >= GUST_STRONG_KPH
+        }?.let { windy ->
+            return Headline.Wind(
+                speedKph = windy.windKph ?: 0.0,
+                gustKph = windy.gustKph ?: 0.0,
+                at = windy.time
+            )
         }
 
         todays.firstOrNull { it.chance >= CLEAR_BELOW_PCT }?.let { maybe ->

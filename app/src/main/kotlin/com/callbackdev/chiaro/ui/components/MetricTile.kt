@@ -277,7 +277,31 @@ fun airTrack(aqi: Int): TrackScale = TrackScale(
     ticks = listOf(50f, 100f, 150f, 200f).map { it / AqiTop }
 )
 
-/** Pollen's four levels as four steps, the level and those under it lit. */
+/** The European index on 0–100 ("extremely poor" beyond), bands at 20, 40, 60 and 80
+ * (EEA, revised 2024) — the same air ramp as the US scale, since it is the same quantity. */
+@Composable
+@ReadOnlyComposable
+fun euAirTrack(aqi: Int): TrackScale = TrackScale(
+    fraction = aqi / EuAqiTop,
+    ramp = com.callbackdev.chiaro.ui.theme.ChiaroTheme.colors.airRamp,
+    ticks = listOf(20f, 40f, 60f, 80f).map { it / EuAqiTop }
+)
+
+/**
+ * The day's rain (24 set 2026) as its five bands, in water's ramp: steps and not a line,
+ * because millimetres are not linear to a reader — 2 and 10 are further apart in what
+ * they ask of a day than 30 and 50 — and a linear track would put nine days out of ten
+ * in its first twentieth. The bands are `WeatherText.rainBand`'s.
+ */
+@Composable
+@ReadOnlyComposable
+fun rainTrack(band: Int, bands: Int): TrackScale = TrackScale(
+    fraction = (band + 0.5f) / bands,
+    ramp = com.callbackdev.chiaro.ui.theme.ChiaroTheme.colors.rainRamp,
+    segments = bands
+)
+
+/** Pollen's levels as steps, the level and those under it lit. */
 @Composable
 @ReadOnlyComposable
 fun pollenTrack(level: Int, levels: Int): TrackScale = TrackScale(
@@ -303,6 +327,9 @@ private const val UvTop = 11f
 /** The US AQI's "hazardous" threshold: above 300 the track is full and the meaning line
  * says to stay indoors, which is all a reader needs from a number past that. */
 private const val AqiTop = 300f
+
+/** The European index's «extremely poor» threshold: past 100 the track is full. */
+private const val EuAqiTop = 100f
 
 /** 1013 ± 33 hPa: a deep low and a strong high sit at the two ends, and the everyday
  * swing of a few hPa moves the disc visibly. */

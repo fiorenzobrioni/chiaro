@@ -3,6 +3,9 @@ package com.callbackdev.chiaro.ui.today
 import androidx.annotation.StringRes
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.ConditionWord
+import com.callbackdev.chiaro.domain.model.AirQuality
+import com.callbackdev.chiaro.domain.model.AqiScale
+import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.PollenLevel
 import com.callbackdev.chiaro.domain.model.PollenReport
 
@@ -157,12 +160,111 @@ object WeatherText {
         else -> R.string.aqi_meaning_hazardous
     }
 
+    /**
+     * The European index (EEA, bands revised 2024: 0-20 good, 20-40 fair, 40-60 moderate,
+     * 60-80 poor, 80-100 very poor, above extremely poor), said with the same six lines
+     * the US scale uses, matched on the EEA's own advice for the general population:
+     * nothing to change through «moderate», cut the intense effort when «poor», less time
+     * outside when «very poor», indoors past 100 (24 set 2026).
+     */
+    @StringRes
+    fun euAqiMeaning(aqi: Int): Int = when {
+        aqi <= 20 -> R.string.aqi_meaning_good
+        aqi <= 60 -> R.string.aqi_meaning_moderate
+        aqi <= 80 -> R.string.aqi_meaning_sensitive
+        aqi <= 100 -> R.string.aqi_meaning_very_unhealthy
+        else -> R.string.aqi_meaning_hazardous
+    }
+
+    /** The air's line on the scale the place reads. */
+    @StringRes
+    fun airMeaning(air: AirQuality): Int =
+        if (air.scale == AqiScale.EUROPEAN) euAqiMeaning(air.shownIndex) else aqiMeaning(air.shownIndex)
+
+    /**
+     * A day's rain in bands (24 set 2026): under 0.2 mm nothing falls that anyone notices,
+     * under 2 a few drops, under 10 an umbrella, under 30 a wet day, above that abundant —
+     * one millimetre is the Met Office's «wet day», ten the WMO's «heavy precipitation
+     * day», thirty where Italian civil protection bulletins start talking about ground
+     * effects. The index is the band, for the track's steps.
+     */
+    fun rainBand(mm: Double): Int = rainBandOf(asPrinted(mm))
+
+    private fun rainBandOf(mm: Double): Int = when {
+        mm < 0.2 -> 0
+        mm < 2.0 -> 1
+        mm < 10.0 -> 2
+        mm < 30.0 -> 3
+        else -> 4
+    }
+
+    const val RAIN_BANDS = 5
+
+    /**
+     * The amount as `Formats.millimetres`/`centimetres` print it — a decimal below ten,
+     * whole above — so the band is decided on the number the reader sees: 19.81 cm prints
+     * «20 cm», and a line for «under 20» beside it would be the tile arguing with itself.
+     */
+    private fun asPrinted(amount: Double): Double =
+        if (amount < 10) Math.round(amount * 10) / 10.0 else Math.round(amount).toDouble()
+
+    @StringRes
+    fun rainMeaning(mm: Double): Int = when (rainBand(mm)) {
+        0 -> R.string.rain_meaning_none
+        1 -> R.string.rain_meaning_drops
+        2 -> R.string.rain_meaning_umbrella
+        3 -> R.string.rain_meaning_wet
+        else -> R.string.rain_meaning_heavy
+    }
+
+    /** Snow on the ground by the day's end, in bands of what it does to a journey. */
+    fun snowBand(cm: Double): Int = snowBandOf(asPrinted(cm))
+
+    private fun snowBandOf(cm: Double): Int = when {
+        cm < 1.0 -> 0
+        cm < 5.0 -> 1
+        cm < 20.0 -> 2
+        else -> 3
+    }
+
+    const val SNOW_BANDS = 4
+
+    @StringRes
+    fun snowMeaning(cm: Double): Int = when (snowBand(cm)) {
+        0 -> R.string.snow_meaning_dusting
+        1 -> R.string.snow_meaning_slippery
+        2 -> R.string.snow_meaning_shovel
+        else -> R.string.snow_meaning_heavy
+    }
+
+    /**
+     * What the cloud does to the sky, by day to the sun and by night to the stars
+     * (24 set 2026). The layer is what the total cannot say: 90% of high veil still lets
+     * the sun through, 90% of low cloud is a grey day.
+     */
+    @StringRes
+    fun cloudMeaning(totalPct: Int, layer: CloudLayers.Layer?, night: Boolean): Int = when {
+        totalPct < CloudLayers.MIN_PCT -> if (night) R.string.cloud_meaning_open_night else R.string.cloud_meaning_open
+        layer == CloudLayers.Layer.HIGH -> if (night) R.string.cloud_meaning_veiled_night else R.string.cloud_meaning_veiled
+        totalPct >= 80 -> if (night) R.string.cloud_meaning_closed_night else R.string.cloud_meaning_closed
+        else -> if (night) R.string.cloud_meaning_broken_night else R.string.cloud_meaning_broken
+    }
+
+    /** The note under the cloud's value: which layer makes it, when one does. */
+    @StringRes
+    fun cloudLayerNote(layer: CloudLayers.Layer): Int = when (layer) {
+        CloudLayers.Layer.LOW -> R.string.cloud_note_low
+        CloudLayers.Layer.MID -> R.string.cloud_note_mid
+        CloudLayers.Layer.HIGH -> R.string.cloud_note_high
+    }
+
     @StringRes
     fun pollenLevel(level: PollenLevel): Int = when (level) {
         PollenLevel.NONE -> R.string.pollen_level_none
         PollenLevel.LOW -> R.string.pollen_level_low
         PollenLevel.MODERATE -> R.string.pollen_level_moderate
         PollenLevel.HIGH -> R.string.pollen_level_high
+        PollenLevel.VERY_HIGH -> R.string.pollen_level_very_high
     }
 
     @StringRes
@@ -171,6 +273,7 @@ object WeatherText {
         PollenLevel.LOW -> R.string.pollen_meaning_low
         PollenLevel.MODERATE -> R.string.pollen_meaning_moderate
         PollenLevel.HIGH -> R.string.pollen_meaning_high
+        PollenLevel.VERY_HIGH -> R.string.pollen_meaning_very_high
     }
 
     /** The level the pollen tile prints: the worst of the three families. */

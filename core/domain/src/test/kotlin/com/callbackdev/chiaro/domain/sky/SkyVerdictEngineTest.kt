@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.domain.sky
 
+import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
@@ -56,6 +57,32 @@ class SkyVerdictEngineTest {
         dataAge = dataAge,
         staleAfter = staleAfter
     )
+
+    // ------------------------------------------ 24 set 2026: which cloud it is
+
+    @Test
+    fun `the evidence names the layer that makes the cloud, and the verdict does not move`() {
+        fun layered(layers: CloudLayers) = hours(cloud = { 60 }).map { it.copy(cloudLayers = layers) }
+        val high = evaluate(hours = layered(CloudLayers(5, 5, 60)))
+        assertEquals(CloudLayers.Layer.HIGH, high.cloudLayer)
+        assertEquals(SkyVerdictKind.UNSTABLE, high.kind) // same as without layers
+        assertEquals(SkyVerdictKind.UNSTABLE, evaluate(hours = hours(cloud = { 60 })).kind)
+        assertEquals(CloudLayers.Layer.LOW, evaluate(hours = layered(CloudLayers(60, 10, 0))).cloudLayer)
+        // A mixed sky names nothing; so does a sky with too little cloud to name.
+        assertNull(evaluate(hours = layered(CloudLayers(40, 0, 40))).cloudLayer)
+        val clear = hours(cloud = { 10 }).map { it.copy(cloudLayers = CloudLayers(0, 0, 10)) }
+        assertNull(evaluate(hours = clear).cloudLayer)
+        // Rows without layers (a response from before) name nothing either.
+        assertNull(evaluate(hours = hours(cloud = { 60 })).cloudLayer)
+    }
+
+    @Test
+    fun `a window where no hour had a chance of rain carries none, not a zero`() {
+        val noChance = hours(cloud = { 0 }).map { it.copy(precipChancePct = null) }
+        val verdict = evaluate(hours = noChance)
+        assertEquals(SkyVerdictKind.PASS, verdict.kind)
+        assertNull(verdict.precipPct)
+    }
 
     // ------------------------------------------------------------ the cloud table
 

@@ -26,14 +26,42 @@ object WeatherCodes {
     }
 
     /**
-     * Pollen concentration (grains/m³) → coarse level; null in, null out (Open-Meteo
-     * pollen is Europe-only).
+     * The pollen species Open-Meteo serves (CAMS, Europe only), each with the lower
+     * bounds of MeteoSwiss' moderate, high and very-high classes in grains/m³ («Threshold
+     * values for pollen load classes of allergenic pollen types»; low starts at 1 for all).
+     *
+     * Per species since 24 set 2026. The old single scale (1/30/100) called 30 grains of
+     * ragweed «low» where MeteoSwiss says «high» from 11, and 100 of grass «high» where
+     * the scale has a class above it from 150. The olive is not in the Swiss table — it
+     * does not grow there — and takes the ash's thresholds: same family, Oleaceae, and
+     * cross-reactive allergens. The table is for mean DAILY concentrations and the value
+     * here is the current hour's: the same approximation the old scale made, now on the
+     * right numbers.
      */
-    fun pollenLevel(grainsPerM3: Double?): PollenLevel? = when {
+    enum class PollenSpecies(val moderate: Double, val high: Double, val veryHigh: Double) {
+        GRASS(20.0, 50.0, 150.0),
+        BIRCH(11.0, 70.0, 300.0),
+        ALDER(11.0, 70.0, 250.0),
+        OLIVE(11.0, 100.0, 350.0),
+        RAGWEED(6.0, 11.0, 40.0),
+        MUGWORT(6.0, 15.0, 50.0)
+    }
+
+    /** The class [grainsPerM3] of [species] falls in; null in, null out. */
+    fun pollenLevel(species: PollenSpecies, grainsPerM3: Double?): PollenLevel? = when {
         grainsPerM3 == null -> null
         grainsPerM3 < 1.0 -> PollenLevel.NONE
-        grainsPerM3 < 30.0 -> PollenLevel.LOW
-        grainsPerM3 < 100.0 -> PollenLevel.MODERATE
-        else -> PollenLevel.HIGH
+        grainsPerM3 < species.moderate -> PollenLevel.LOW
+        grainsPerM3 < species.high -> PollenLevel.MODERATE
+        grainsPerM3 < species.veryHigh -> PollenLevel.HIGH
+        else -> PollenLevel.VERY_HIGH
     }
+
+    /**
+     * A family's level: the worst of its species, each on its own scale — comparing grains
+     * across species was the old scale's mistake. Null when no species of the family was
+     * served (outside Europe), so the report says nothing rather than «none».
+     */
+    fun pollenFamilyLevel(vararg readings: Pair<PollenSpecies, Double?>): PollenLevel? =
+        readings.mapNotNull { (species, grains) -> pollenLevel(species, grains) }.maxByOrNull { it.ordinal }
 }

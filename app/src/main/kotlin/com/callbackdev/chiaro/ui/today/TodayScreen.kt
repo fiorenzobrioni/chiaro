@@ -3,10 +3,10 @@ package com.callbackdev.chiaro.ui.today
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -56,16 +56,16 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,9 +74,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.core.view.WindowCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
@@ -89,13 +86,19 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import androidx.core.view.WindowCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.model.AqiScale
+import com.callbackdev.chiaro.domain.model.CloudLayers
+import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.PollenLevel
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.settings.UnitSettings
@@ -105,39 +108,41 @@ import com.callbackdev.chiaro.ui.components.FreshnessChip
 import com.callbackdev.chiaro.ui.components.HourCell
 import com.callbackdev.chiaro.ui.components.HourStrip
 import com.callbackdev.chiaro.ui.components.MetricTile
-import com.callbackdev.chiaro.ui.components.TrackScale
-import com.callbackdev.chiaro.ui.components.airTrack
-import com.callbackdev.chiaro.ui.components.humidityTrack
-import com.callbackdev.chiaro.ui.components.pollenTrack
-import com.callbackdev.chiaro.ui.components.pressureTrack
-import com.callbackdev.chiaro.ui.components.uvTrack
-import com.callbackdev.chiaro.ui.format.currentLocale
-import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.components.RainChart
 import com.callbackdev.chiaro.ui.components.RainHour
-import com.callbackdev.chiaro.ui.components.VisibleCell
-import com.callbackdev.chiaro.ui.components.hourWindow
 import com.callbackdev.chiaro.ui.components.SkyBodies
 import com.callbackdev.chiaro.ui.components.SkyBodiesLayer
 import com.callbackdev.chiaro.ui.components.SkyCanvas
 import com.callbackdev.chiaro.ui.components.SkySheet
+import com.callbackdev.chiaro.ui.components.TrackScale
+import com.callbackdev.chiaro.ui.components.VisibleCell
+import com.callbackdev.chiaro.ui.components.airTrack
+import com.callbackdev.chiaro.ui.components.euAirTrack
+import com.callbackdev.chiaro.ui.components.hourWindow
+import com.callbackdev.chiaro.ui.components.humidityTrack
+import com.callbackdev.chiaro.ui.components.pollenTrack
+import com.callbackdev.chiaro.ui.components.pressureTrack
+import com.callbackdev.chiaro.ui.components.rainTrack
+import com.callbackdev.chiaro.ui.components.uvTrack
 import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
 import com.callbackdev.chiaro.ui.format.Formats
-import com.callbackdev.chiaro.ui.warnings.WarningBanner
-import com.callbackdev.chiaro.ui.warnings.WarningSheet
+import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
 import com.callbackdev.chiaro.ui.icons.LocalMotionPaused
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
+import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.theme.ChiaroMotion
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.SkyGradient
 import com.callbackdev.chiaro.ui.theme.SkyPalette
-import com.callbackdev.chiaro.ui.theme.tabular
 import com.callbackdev.chiaro.ui.theme.reducedMotion
 import com.callbackdev.chiaro.ui.theme.reflowForText
+import com.callbackdev.chiaro.ui.theme.tabular
+import com.callbackdev.chiaro.ui.warnings.WarningBanner
+import com.callbackdev.chiaro.ui.warnings.WarningSheet
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
@@ -952,7 +957,7 @@ private fun ContentState(
             }
 
             item { SectionTitle(stringResource(R.string.section_details)) }
-            item { Details(content.report, units, locale) }
+            item { Details(content, units, locale) }
             item { DataFooter(content, timeFmt) }
         }
 
@@ -1163,6 +1168,16 @@ private fun CanvasHeader(
                             modifier = Modifier.alignByBaseline()
                         )
                     }
+                }
+                // A now rebuilt from the forecast says so under its own numbers
+                // (DESIGN §1.1, 24 set 2026): the chip above says how old the data is,
+                // this says what the hero did about it.
+                if (current.estimated) {
+                    Text(
+                        text = stringResource(R.string.estimate_hero),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
                 }
                 DaylightRibbon(
                     phases = sky.phases,
@@ -1435,6 +1450,12 @@ private fun NextHours(
 /** The page's side margin, as the strip's `contentPadding` and the chart's padding. */
 private val PagePadding = PaddingValues(horizontal = 16.dp)
 
+/** The day's strongest gust is news from here: «strong» on the wind tile's own ladder. */
+private const val DayGustNewsKph = 39.0
+
+/** …and when it is clearly above what the tile already prints. */
+private const val DayGustMarginKph = 5.0
+
 /** `HourStrip`'s gap between cells, which the seek needs to turn hours into pixels. */
 private val StripCellGap = 4.dp
 
@@ -1641,14 +1662,98 @@ private fun WeekRow(
             enter = ChiaroMotion.enter(reduced),
             exit = ChiaroMotion.exit(reduced)
         ) {
-            HourStrip(
-                hours = day.hours.map { it.toCell(units, is24h, locale, markDayStart = false) },
-                modifier = Modifier.padding(top = 4.dp),
-                contentPadding = PagePadding
-            )
+            Column {
+                DayFacts(forecast = f, units = units, locale = locale)
+                HourStrip(
+                    hours = day.hours.map { it.toCell(units, is24h, locale, markDayStart = false) },
+                    modifier = Modifier.padding(top = 4.dp),
+                    contentPadding = PagePadding
+                )
+            }
         }
     }
 }
+
+/**
+ * The open day's facts (24 set 2026): how much rain and over how many hours, the snow,
+ * the strongest gust, the highest UV — one line each with its consequence (§1.2), and
+ * only the lines that say something that day. The closed row stays what it was, weekday,
+ * sky, chance and range: §1.3 puts the numbers one level down, and a row that grew four
+ * figures would stop being a week you read at a glance. A day with nothing to say draws
+ * nothing, not an empty block (§1.1).
+ */
+@Composable
+private fun DayFacts(forecast: DailyForecast, units: UnitSettings, locale: Locale) {
+    val facts = buildList {
+        forecast.precipMm?.takeIf { it >= 0.2 }?.let { mm ->
+            val amount = stringResource(R.string.day_fact_rain, Formats.millimetres(mm, locale))
+            val hours = forecast.precipHours?.takeIf { it >= 1.0 }?.let {
+                pluralStringResource(R.plurals.rain_hours_note, it.roundToInt(), Formats.hours(it, locale))
+            }
+            add(DayFact({ ChiaroIcons.precipitation }, listOfNotNull(amount, hours).joinToString(" "), WeatherText.rainMeaning(mm)))
+        }
+        forecast.snowCm?.takeIf { it >= 0.1 }?.let { cm ->
+            add(
+                DayFact(
+                    { ChiaroIcons.snow },
+                    stringResource(R.string.day_fact_snow, Formats.centimetres(cm, locale)),
+                    WeatherText.snowMeaning(cm)
+                )
+            )
+        }
+        forecast.gustMaxKph?.takeIf { it >= DayGustNewsKph }?.let { gust ->
+            add(
+                DayFact(
+                    { ChiaroIcons.wind },
+                    stringResource(R.string.day_fact_gust, Formats.wind(gust, units.windSpeed, locale)),
+                    WeatherText.windMeaning(gust)
+                )
+            )
+        }
+        // From «moderate» up (3): a low UV asks nothing of the day, and a line saying so
+        // on every winter day would be the block talking to fill itself.
+        forecast.uvIndexMax?.takeIf { it >= 3 }?.let { uv ->
+            add(DayFact({ ChiaroIcons.uv(uv) }, stringResource(R.string.day_fact_uv, uv), WeatherText.uvMeaning(uv)))
+        }
+    }
+    if (facts.isEmpty()) return
+    Column(
+        modifier = Modifier.padding(PagePadding).padding(top = 4.dp, bottom = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        facts.forEach { fact ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = fact.icon(),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(DayFactIconSize)
+                )
+                Column {
+                    Text(text = fact.value, style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = stringResource(fact.meaning),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+private class DayFact(
+    val icon: @Composable () -> androidx.compose.ui.graphics.vector.ImageVector,
+    val value: String,
+    @androidx.annotation.StringRes val meaning: Int
+)
+
+/** The open day's glyphs: the timeline's rung, a leading glyph for a line or two of
+ * prose — which is what each fact is. */
+private val DayFactIconSize = WeatherIconSize.Timeline
 
 /**
  * The details grid (DESIGN §8.6), reviewed card by card on 8 set 2026. What each tile
@@ -1672,10 +1777,52 @@ private fun WeekRow(
  *   "grass" does.
  */
 @Composable
-private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) {
+private fun Details(content: TodayUiState.Content, units: UnitSettings, locale: Locale) {
+    val report = content.report
     val current = report.current
     val today = report.daily.firstOrNull()
     val tiles = buildList {
+        // The day's rain first (24 set 2026): how much, over how long, and — while the
+        // report is fresh — what fell in the hour just closed. The one number on this grid
+        // that answers "do I need the umbrella" rather than "what is it like".
+        today?.precipMm?.let { mm ->
+            val lastHour = current.precipitation.pastHours.firstOrNull()
+                ?.takeIf { !current.estimated && it.precipMm > 0.0 }
+            val hours = today.precipHours?.takeIf { mm >= 0.2 && it >= 1.0 }
+            add(
+                Tile(
+                    icon = { ChiaroIcons.precipitation },
+                    label = R.string.metric_rain,
+                    value = Formats.millimetres(mm, locale),
+                    meaning = WeatherText.rainMeaning(mm),
+                    track = rainTrack(WeatherText.rainBand(mm), WeatherText.RAIN_BANDS),
+                    note = listOfNotNull(
+                        hours?.let {
+                            pluralStringResource(
+                                R.plurals.rain_hours_note, it.roundToInt(), Formats.hours(it, locale)
+                            )
+                        },
+                        lastHour?.let {
+                            stringResource(R.string.rain_last_hour, Formats.millimetres(it.precipMm, locale))
+                        }
+                    ).joinToString(" · ").ifEmpty { null }
+                        ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+                )
+            )
+        }
+        // Snow only on a day that has some: a «0 cm» every day of the year would be the
+        // tile saying nothing about nothing.
+        today?.snowCm?.takeIf { it >= 0.1 }?.let { cm ->
+            add(
+                Tile(
+                    icon = { ChiaroIcons.snow },
+                    label = R.string.metric_snow,
+                    value = Formats.centimetres(cm, locale),
+                    meaning = WeatherText.snowMeaning(cm),
+                    track = rainTrack(WeatherText.snowBand(cm), WeatherText.SNOW_BANDS)
+                )
+            )
+        }
         // The UV tile says NOW, like every other tile in this grid (20 set 2026).
         //
         // It printed `uv_index_max` — the day's PEAK — under the bare label "UV" and
@@ -1728,15 +1875,42 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
                 // talking, and it is right.
                 meaning = WeatherText.windMeaning(if (gusty) wind.gustKph else wind.speedKph),
                 detail = { WindDirection(fromDegrees = wind.degree) },
-                note = if (gusty) {
-                    stringResource(
-                        R.string.wind_gusts, Formats.wind(wind.gustKph, units.windSpeed, locale)
-                    )
-                } else {
-                    null
+                // The day's strongest gust joins the note (24 set 2026) when it is news:
+                // strong on the tile's own ladder (39 km/h, «tieni il cappello») and
+                // clearly above what the tile already shows. A calm morning before a
+                // windy afternoon said nothing about the afternoon until then.
+                note = run {
+                    val shownNow = if (gusty) wind.gustKph else wind.speedKph
+                    val dayMax = today?.gustMaxKph
+                        ?.takeIf { it >= DayGustNewsKph && it >= shownNow + DayGustMarginKph }
+                    val max = dayMax?.let { Formats.wind(it, units.windSpeed, locale) }
+                    val now = Formats.wind(wind.gustKph, units.windSpeed, locale)
+                    when {
+                        gusty && max != null -> stringResource(R.string.wind_gusts_and_max, now, max)
+                        gusty -> stringResource(R.string.wind_gusts, now)
+                        max != null -> stringResource(R.string.wind_gust_max_today, max)
+                        else -> null
+                    }
                 }
             )
         )
+        // The sky by layer (24 set 2026): the total says how much is covered, the layer
+        // says what that looks like — 90% of high veil still lets the sun through. No
+        // track: the meaning turns on the layer as much as on the percentage, and a
+        // 0–100 line would draw a veiled sun and a grey day as the same place.
+        current.cloudCoverPct?.let { total ->
+            val layer = current.cloudLayers?.dominant()
+            add(
+                Tile(
+                    icon = { ChiaroIcons.cloudCover },
+                    label = R.string.metric_cloud,
+                    value = Formats.percent(total, locale),
+                    meaning = WeatherText.cloudMeaning(total, layer, content.night),
+                    note = layer?.takeIf { total >= CloudLayers.MIN_PCT }
+                        ?.let { stringResource(WeatherText.cloudLayerNote(it)) }
+                )
+            )
+        }
         add(
             Tile(
                 icon = { ChiaroIcons.humidity },
@@ -1772,14 +1946,16 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
             )
         }
         // §1.1: data the provider does not have for here is not drawn — no dashes.
+        // On the scale the place reads (24 set 2026): the EEA's in Europe, the US one
+        // elsewhere — each with its own bands and track.
         report.airQuality?.let { air ->
             add(
                 Tile(
                     icon = { ChiaroIcons.airQuality },
                     label = R.string.metric_air,
-                    value = air.aqiIndex.toString(),
-                    meaning = WeatherText.aqiMeaning(air.aqiIndex),
-                    track = airTrack(air.aqiIndex)
+                    value = air.shownIndex.toString(),
+                    meaning = WeatherText.airMeaning(air),
+                    track = if (air.scale == AqiScale.EUROPEAN) euAirTrack(air.shownIndex) else airTrack(air.shownIndex)
                 )
             )
         }
@@ -1811,6 +1987,16 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // An estimated now says so where its numbers are (DESIGN §1.1, 24 set 2026): the
+        // tiles below are the forecast for this hour, and the air and pollen still what
+        // was measured when the data arrived.
+        if (current.estimated) {
+            Text(
+                text = stringResource(R.string.estimate_details, freshnessAge(content.lastSync)),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
         // §10: two columns is a budget, not a layout. At 150% the label beside the
         // 34dp icon has 84dp for a word that wants 115, and the tile becomes three
         // wrapped lines of two words. One column keeps the pair rule (a row of one is

@@ -35,6 +35,8 @@
     <string name="headline_fog">Nebbia verso le %1$s</string>
     <string name="headline_wind">Vento forte, fino a %1$s</string>
     <string name="headline_wind_brief">Vento fino a %1$s</string>
+    <string name="headline_wind_later">Vento forte verso le %2$s, fino a %1$s</string>
+    <string name="headline_wind_later_brief">Vento verso le %2$s, fino a %1$s</string>
 
     <!-- Freschezza ed errori: l\'età vera, il motivo vero -->
     <plurals name="freshness_minutes_ago">
@@ -153,10 +155,49 @@
     <string name="pollen_level_low">Bassi</string>
     <string name="pollen_level_moderate">Moderati</string>
     <string name="pollen_level_high">Alti</string>
+    <string name="pollen_level_very_high">Molto alti</string>
     <string name="pollen_meaning_none">Respirano tutti</string>
     <string name="pollen_meaning_low">Si notano appena</string>
     <string name="pollen_meaning_moderate">Chi è allergico se ne accorge</string>
     <string name="pollen_meaning_high">Giornata dura per chi è allergico</string>
+    <string name="pollen_meaning_very_high">Giornata molto dura per chi è allergico: meglio stare al chiuso</string>
+    <!-- 24 set 2026: the new quantities of the engine review's second pass -->
+    <string name="metric_rain">Pioggia oggi</string>
+    <string name="metric_snow">Neve oggi</string>
+    <string name="metric_cloud">Nuvole</string>
+    <string name="rain_meaning_none">Niente ombrello oggi</string>
+    <string name="rain_meaning_drops">Qualche goccia, niente di serio</string>
+    <string name="rain_meaning_umbrella">Serve l\'ombrello</string>
+    <string name="rain_meaning_wet">Giornata bagnata: vestiti di conseguenza</string>
+    <string name="rain_meaning_heavy">Pioggia abbondante: occhio a sottopassi e torrenti</string>
+    <string name="rain_last_hour">Nell\'ultima ora %1$s</string>
+    <string name="snow_meaning_dusting">Una spolverata</string>
+    <string name="snow_meaning_slippery">Strade scivolose: prudenza</string>
+    <string name="snow_meaning_shovel">Neve da spalare: servono le gomme invernali</string>
+    <string name="snow_meaning_heavy">Nevicata forte: meglio non viaggiare</string>
+    <string name="cloud_meaning_open">Cielo aperto, sole pieno</string>
+    <string name="cloud_meaning_veiled">Sole velato, ma c\'è</string>
+    <string name="cloud_meaning_closed">Cielo chiuso, luce grigia</string>
+    <string name="cloud_meaning_broken">Sole a tratti</string>
+    <string name="cloud_meaning_open_night">Cielo sereno, stelle visibili</string>
+    <string name="cloud_meaning_veiled_night">Stelle dietro un velo</string>
+    <string name="cloud_meaning_closed_night">Cielo chiuso, niente stelle</string>
+    <string name="cloud_meaning_broken_night">Stelle fra le nuvole</string>
+    <string name="cloud_note_low">Soprattutto basse</string>
+    <string name="cloud_note_mid">Soprattutto a media quota</string>
+    <string name="cloud_note_high">Soprattutto alte e sottili</string>
+    <string name="wind_gust_max_today">Fino a %1$s oggi</string>
+    <string name="wind_gusts_and_max">Raffiche a %1$s, fino a %2$s oggi</string>
+    <string name="estimate_hero">Stima dalla previsione</string>
+    <string name="estimate_details">Valori stimati dalla previsione per quest\'ora: gli ultimi dati sono di %1$s.</string>
+    <string name="day_fact_rain">%1$s di pioggia</string>
+    <string name="day_fact_snow">%1$s di neve</string>
+    <string name="day_fact_gust">Raffiche fino a %1$s</string>
+    <string name="day_fact_uv">UV fino a %1$d</string>
+    <plurals name="rain_hours_note">
+        <item quantity="one">in %1$s ora</item>
+        <item quantity="other">in %1$s ore</item>
+    </plurals>
 
     <!-- Condizioni: il vocabolario WMO, una parola ciascuna -->
     <string name="cond_clear">Sereno</string>
@@ -484,6 +525,10 @@
 
     <!-- L\'evidenza dei verdetti: il numero che ha deciso la parola accanto -->
     <string name="sky_evidence_cloud" formatted="false">nuvole %1$d%%</string>
+    <string name="sky_evidence_cloud_layer" formatted="false">nuvole %1$d%%, %2$s</string>
+    <string name="cloud_layer_low">basse</string>
+    <string name="cloud_layer_mid">medie</string>
+    <string name="cloud_layer_high">alte</string>
     <string name="sky_evidence_rain" formatted="false">pioggia %1$d%%</string>
     <string name="sky_evidence_moon" formatted="false">luna %1$d%%</string>
 
@@ -865,7 +910,7 @@
     <string name="var_current_precip">la probabilità di pioggia adesso</string>
     <string name="var_current_pressure">la pressione adesso</string>
     <string name="var_current_visibility">la visibilità adesso</string>
-    <string name="var_current_aqi">l\'indice dell\'aria adesso</string>
+    <string name="var_current_aqi">l\'indice statunitense dell\'aria adesso</string>
     <string name="var_next6_precip">la pioggia nelle prossime 6 ore</string>
     <string name="var_next6_temp_min">la minima delle prossime 6 ore</string>
     <string name="var_next6_temp_max">la massima delle prossime 6 ore</string>
@@ -878,6 +923,12 @@
     <string name="var_today_low">la minima di oggi</string>
     <string name="var_today_precip">la pioggia di oggi</string>
     <string name="var_today_uv">l\'UV massimo di oggi</string>
+    <string name="var_current_aqi_eu">l\'indice europeo dell\'aria adesso</string>
+    <string name="var_next6_gust">le raffiche nelle prossime 6 ore</string>
+    <string name="var_next12_gust">le raffiche nelle prossime 12 ore</string>
+    <string name="var_today_precip_mm">i millimetri di pioggia di oggi</string>
+    <string name="var_today_snow">la neve di oggi</string>
+    <string name="var_today_gust">le raffiche più forti di oggi</string>
 
     <!-- I cinque punti di partenza. Nome e messaggio diventano contenuto del lettore
          alla creazione, nella sua lingua, e da lì in poi non si traducono più. -->

@@ -96,6 +96,9 @@ internal object MeteoconsSets {
         R.drawable.mc3_pollen_weed_high to R.drawable.mc3n_pollen_weed_high,
         R.drawable.mc3_haze to R.drawable.mc3n_haze,
         R.drawable.mc3_fog to R.drawable.mc3n_fog,
+        R.drawable.mc3_pollen_grass_very_high to R.drawable.mc3n_pollen_grass_very_high,
+        R.drawable.mc3_pollen_tree_very_high to R.drawable.mc3n_pollen_tree_very_high,
+        R.drawable.mc3_pollen_weed_very_high to R.drawable.mc3n_pollen_weed_very_high,
     )
 
     /** flat, fondo chiaro. */
@@ -177,6 +180,9 @@ internal object MeteoconsSets {
         R.drawable.mc3_pollen_weed_high to R.drawable.mc3f_pollen_weed_high,
         R.drawable.mc3_haze to R.drawable.mc3f_haze,
         R.drawable.mc3_fog to R.drawable.mc3f_fog,
+        R.drawable.mc3_pollen_grass_very_high to R.drawable.mc3f_pollen_grass_very_high,
+        R.drawable.mc3_pollen_tree_very_high to R.drawable.mc3f_pollen_tree_very_high,
+        R.drawable.mc3_pollen_weed_very_high to R.drawable.mc3f_pollen_weed_very_high,
     )
 
     /** flat, fondo scuro. */
@@ -258,6 +264,9 @@ internal object MeteoconsSets {
         R.drawable.mc3_pollen_weed_high to R.drawable.mc3fn_pollen_weed_high,
         R.drawable.mc3_haze to R.drawable.mc3fn_haze,
         R.drawable.mc3_fog to R.drawable.mc3fn_fog,
+        R.drawable.mc3_pollen_grass_very_high to R.drawable.mc3fn_pollen_grass_very_high,
+        R.drawable.mc3_pollen_tree_very_high to R.drawable.mc3fn_pollen_tree_very_high,
+        R.drawable.mc3_pollen_weed_very_high to R.drawable.mc3fn_pollen_weed_very_high,
     )
 
     /**
@@ -439,5 +448,8 @@ internal object MeteoconsSets {
         "pollen-weed-high" to R.drawable.mc3_pollen_weed_high,
         "haze" to R.drawable.mc3_haze,
         "fog" to R.drawable.mc3_fog,
+        "pollen-grass-very-high" to R.drawable.mc3_pollen_grass_very_high,
+        "pollen-tree-very-high" to R.drawable.mc3_pollen_tree_very_high,
+        "pollen-weed-very-high" to R.drawable.mc3_pollen_weed_very_high,
     )
 }

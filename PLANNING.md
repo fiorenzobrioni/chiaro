@@ -10515,3 +10515,123 @@ unico) nel momento in cui conviene, riverificando tutto: «è il cuore dell'app�
   del giorno falliscono e tutti i precedenti passano: la correzione è reale e non cambia i casi
   che erano già giusti.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## I dati nuovi a schermo, e la chiusura della review (committente, 24 set 2026)
+
+Richiesta: «prepara la proposta, io vorrei visualizzare tutti i dati, o almeno quelli che tu mi
+proponi, quindi decidi come è meglio visualizzarli e dove. E poi procedi.» Chiude i punti rimasti
+della review del motore: suggerimenti 2, 3 e 6, P7b.
+
+### La proposta (decisa, con le sue ragioni)
+
+**Cosa si chiede in più a Open-Meteo** (verificato il 24 set su 12 luoghi dall'Artide
+all'Everest con `best_match`: nessun valore nullo; tutti i campi restano nullabili lo stesso):
+
+- orari: `apparent_temperature`, `relative_humidity_2m`, `dew_point_2m`, `pressure_msl`,
+  `wind_speed_10m`, `wind_direction_10m`, `wind_gusts_10m`, `uv_index`,
+  `cloud_cover_low`/`_mid`/`_high`;
+- attuali: `cloud_cover_low`/`_mid`/`_high`;
+- giornalieri: `precipitation_sum`, `precipitation_hours`, `snowfall_sum`, `wind_gusts_10m_max`;
+- qualità dell'aria: `european_aqi`.
+- **Non** `rain`/`showers`/`snowfall` orari, proposti nella review: la fase del giorno la decide
+  già il codice pesato coi millimetri (P2), e nessuna superficie li userebbe. Un dato che non
+  ha un lettore è quello che questo repo ha già tolto due volte.
+
+**Dove va ogni dato** (DESIGN §1.3: frase, riquadro, scheda; §1.2: ogni numero con la sua
+conseguenza; §1.1: senza dato non si disegna):
+
+| Dato | Dove | Come |
+|---|---|---|
+| pioggia del giorno (mm, ore) | **Oggi → Dettagli**, riquadro nuovo «Pioggia»; **Settimana → giorno aperto** | valore «12 mm», nota «in 5 ore» e, oggi, «nell'ultima ora 1,1 mm» (le ore chiuse di P1); conseguenza a fasce: <0,2 niente, <2 «qualche goccia», <10 «serve l'ombrello», <30 «giornata bagnata», ≥30 «pioggia abbondante» |
+| neve del giorno (cm) | Dettagli (solo se oggi nevica); giorno aperto | «8 cm», fasce: <1 spolverata, <5 strade scivolose, <20 neve da spalare, ≥20 nevicata forte |
+| raffica massima del giorno | nota del riquadro Vento; giorno aperto quando conta | «fino a 60 km/h oggi», con la stessa soglia di `gustsMaterial` |
+| UV massimo dei giorni | giorno aperto (oggi c'è già come nota) | «UV fino a 7», con la fascia di `uvMeaning` |
+| nuvole per strato | **Dettagli**, riquadro nuovo «Nuvole»; **Cielo**, evidenza del verdetto | valore = copertura totale; nota = lo strato che domina («alte e sottili», «basse»); conseguenza per il sole: aperto / velato / a tratti / chiuso |
+| vento, umidità, percepita, pressione, UV orari | la **stima delle condizioni attuali** (sugg. 3) e la **frase del giorno** (raffiche in arrivo) | nessun numero nuovo a schermo: rendono veri quelli che ci sono |
+| indice europeo dell'aria | riquadro Aria, **per i luoghi in Europa** | fasce EEA 2024 (0-20 buona … >100 pessima), con la sua traccia; fuori Europa resta l'indice USA |
+| pollini per specie | riquadro Pollini | soglie **MeteoSwiss** per specie (erba 20/50/150, betulla 11/70/300, ontano 11/70/250, ambrosia 6/11/40, artemisia 6/15/50; olivo come il frassino, stessa famiglia: 11/100/350) e il **quinto livello** «molto alto», che la scala ufficiale ha e l'app comprimeva in «alto» |
+
+**Il giorno aperto nella settimana**: sopra le sue ore, un blocco «fatti del giorno» — una riga
+per fatto (icona, valore, conseguenza), solo i fatti che dicono qualcosa quel giorno. La riga
+chiusa resta com'è: è già piena, e il principio §1.3 vuole i numeri al secondo livello.
+
+**La stima delle condizioni attuali (sugg. 3)**: quando il blocco `current` ha più di **60
+minuti** (è un'istantanea di un quarto d'ora; dopo un'ora la previsione per adesso è più vicina
+al vero), Oggi e i widget mostrano i valori **dell'ora corrente** della previsione — temperatura,
+percepita, umidità e punto di rugiada, pressione e UV interpolati fra le due ore che la
+contengono; direzione del vento dell'ora più vicina; raffica, codice e probabilità dell'ora in
+corso — e l'eroe dice **«Stima dalla previsione»** (§1.1: un valore calcolato lo dichiara).
+L'aria e i pollini non si stimano: restano quelli misurati, e la loro età la dice già il chip.
+
+**P7b, le righe orarie per l'ora che comincia**: la riga delle 15 porta temperatura, nuvole e
+visibilità **alle 15** e pioggia, probabilità, codice e raffica **dalle 15 alle 16** (in
+Open-Meteo sono «dell'ora precedente», quindi dello slot delle 16). È ciò che un lettore capisce
+da «15 · 60%», e toglie un'ora di ritardo a ogni «pioggia verso le 15». Si fa in un punto solo,
+il mapper; l'ultima ora della settimana, che non ha la successiva, si perde.
+
+**Non si fa, con la ragione**: la previsione a 15 minuti («smette tra 20 minuti»). Misurato il
+24 set: a Milano, Bari, Palermo e perfino Monaco circa l'80% dei valori a 15 minuti coincide con
+l'interpolazione lineare dei valori orari (New York, modello nativo: 36%), e la risposta non dice
+quando il dato è vero. In Italia sarebbe precisione finta.
+
+**Le regole degli avvisi personali** ricevono le stesse quantità: `today.precip_mm`,
+`today.snow_cm`, `today.gust_max_kph`, `next_6h.gust_max_kph` / `next_12h.gust_max_kph`,
+`current.aqi_eu_index`.
+
+### Cosa è cambiato
+
+- **Richiesta e modello**: le variabili della proposta, tutte nullabili e con default (la cache
+  scritta prima si legge ancora). `HourlyForecast` porta il resto dell'ora e le nuvole per
+  strato; `DailyForecast` pioggia, ore, neve e raffica massima; `CurrentConditions` nuvole,
+  strati ed `estimated`; `AirQuality` l'indice europeo e la scala del luogo (`PlaceRegion`,
+  per codice di paese); `PollenLevel.VERY_HIGH`; `CloudLayers.dominant()`.
+- **P7b** nel mapper: le righe per l'ora che comincia; la pioggia che cade **durante** l'ora
+  (codice, probabilità, raffica dallo slot dopo) e il cielo con cui l'ora **comincia** (codice
+  di cielo o nebbia dello slot stesso, o quello che la sua nuvolosità fa quando lo slot è
+  pioggia dell'ora prima). L'ultima ora della risposta non è più una riga.
+- **Stima di adesso** (`CurrentEstimate`, sugg. 3): oltre 60 minuti, in `TodayStateBuilder`,
+  quindi anche nei widget; «Stima dalla previsione» sotto l'eroe e una riga sopra i Dettagli.
+- **Frase del giorno**: il vento forte più tardi oggi, con la sua ora.
+- **Cielo**: lo strato che fa le nuvole nell'evidenza del verdetto (non nel widget).
+- **Oggi → Dettagli**: «Pioggia oggi», «Neve oggi» (solo se nevica), «Nuvole», la raffica
+  massima nella nota del Vento, l'aria sulla scala europea in Europa, i pollini a cinque livelli.
+- **Settimana**: i fatti del giorno aperto (DESIGN §8.5b).
+- **Regole**: `today.precip_mm`, `today.snow_cm`, `today.gust_max_kph`,
+  `next_6h/12h.gust_max_kph`, `current.aqi_eu_index`; `current.aqi_index` si chiama ora
+  «l'indice statunitense dell'aria» perché accanto ce n'è un altro.
+- **Pollini**: soglie MeteoSwiss per specie in `WeatherCodes`; i disegni `very-high` spediti
+  (`shipped_icons.py`, `MeteoconsSets.kt` rigenerato da `write_kotlin`).
+
+### Decisioni e deviazioni
+
+- **Il codice di un'ora è metà intervallo e metà istante.** La prima stesura di P7b spostava
+  tutto il codice di uno slot: sulla risposta reale di Sydney la riga delle 06:00, con 320 m di
+  visibilità, diventava sereno perché alle 07 la nebbia era andata. Precipitazione dall'ora
+  che comincia, cielo dall'istante con cui comincia.
+- **Le fasce si decidono sul numero stampato**: 19,81 cm si legge «20 cm» ed è «nevicata forte»,
+  non la fascia sotto; trovato dal test sulla risposta dell'Everest.
+- **Lo strato non cambia i verdetti del cielo**: le soglie sono tarate sul totale e l'app non ha
+  un riscontro (un tramonto «bello») su cui ritararle; dirlo come evidenza è gratuito e onesto.
+- **Nessuna traccia per le nuvole**: la conseguenza dipende dallo strato quanto dalla
+  percentuale. Per pioggia e neve **gradini**, non una linea: i millimetri non sono lineari per
+  chi legge.
+- **L'olivo con le soglie del frassino** (stessa famiglia, allergeni crociati): la tabella
+  svizzera non lo ha. **Le soglie sono per medie giornaliere** e il valore è quello dell'ora,
+  la stessa approssimazione della scala di prima, sui numeri giusti.
+- **Indice europeo solo per codice di paese**, mai per riquadro geografico (Tunisi); un luogo
+  senza codice tiene la scala di sempre. Le regole su `current.aqi_index` non cambiano significato.
+- **La stima non tocca aria e pollini** e non si fa se le righe non portano il resto dell'ora
+  (una cache vecchia): un «adesso» fatto di due ore diverse sarebbe peggio di uno vecchio.
+- **Niente previsione a 15 minuti** (misura sopra) e niente `rain`/`showers`/`snowfall` orari.
+
+### Come è stato verificato
+
+- Risposte reali della stessa mattina con tutte le variabili (Reykjavík: 10,5 mm in 16 ore e
+  raffiche a 112 km/h; Milano: cielo 100% di nubi alte; Everest: 19,81 cm di neve), più le tre
+  di prima per la compatibilità della cache. `CurrentEstimateTest`, `CloudAndRegionTest`,
+  `WeatherCodesTest` (pollini), `SkyVerdictEngineTest` (strato), `RuleVariablesTest` (nuove
+  variabili), `WeatherReportMapperTest` (P7b, campi, aria, pollini), `HeadlineEngineTest`
+  (vento più tardi), `NewQuantitiesTextTest` (fasce e parole).
+- **Controprova P7b**: con le righe rimesse sullo slot proprio falliscono i quattro test che
+  parlano dell'ora in cui cade la pioggia, e passano quelli sul cielo, come deve essere.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.

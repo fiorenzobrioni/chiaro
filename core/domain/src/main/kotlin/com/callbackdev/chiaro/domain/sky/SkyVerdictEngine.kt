@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.domain.sky
 
 import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import java.time.Duration
@@ -56,7 +57,15 @@ data class SkyVerdict(
     val precipPct: Int? = null,
     val note: SkyVerdictNote? = null,
     /** Illumination of the moon at the event, 0..100, when [note] is MOONLIGHT. */
-    val moonPct: Int? = null
+    val moonPct: Int? = null,
+    /**
+     * The layer that makes the window's cloud, when one does (24 set 2026) — printed
+     * beside [cloudPct] as evidence ("nuvole 60%, alte"). It does **not** move the verdict:
+     * the thresholds were set on the total cover, and a high veil may colour a sunset or
+     * dim the stars — which of the two, and by how much, is a measurement this app has
+     * no ground truth for. Saying which cloud it is costs nothing and hides nothing.
+     */
+    val cloudLayer: CloudLayers.Layer? = null
 ) {
     val isKnown: Boolean get() = kind != SkyVerdictKind.UNKNOWN
 }
@@ -149,6 +158,7 @@ object SkyVerdictEngine {
         val precipPct = window.mapNotNull { it.precipChancePct }.maxOrNull()
         val rainPct = precipPct ?: 0
 
+        val layer = windowLayer(window, cloudPct)
         val fromWeather = when {
             rainPct >= PRECIP_FAIL_PCT ->
                 SkyVerdict(SkyVerdictKind.FAIL, cloudPct, precipPct, SkyVerdictNote.PRECIPITATION)
@@ -158,7 +168,21 @@ object SkyVerdictEngine {
             cloudPct > CLOUD_PASS_PCT -> SkyVerdict(SkyVerdictKind.UNSTABLE, cloudPct, precipPct)
             else -> SkyVerdict(SkyVerdictKind.PASS, cloudPct, precipPct)
         }
-        return if (job.needsDarkness) withMoon(fromWeather, start, end, coordinates) else fromWeather
+        val judged = fromWeather.copy(cloudLayer = layer)
+        return if (job.needsDarkness) withMoon(judged, start, end, coordinates) else judged
+    }
+
+    /**
+     * The window's dominant layer by the mean of each layer over its hours, named only
+     * when the window has cloud worth naming ([CloudLayers.MIN_PCT]) and its hours carry
+     * layers at all.
+     */
+    private fun windowLayer(window: List<HourlyForecast>, cloudPct: Int): CloudLayers.Layer? {
+        if (cloudPct < CloudLayers.MIN_PCT) return null
+        val layers = window.mapNotNull { it.cloudLayers }.takeIf { it.isNotEmpty() } ?: return null
+        fun mean(pick: (CloudLayers) -> Int?) =
+            layers.mapNotNull(pick).takeIf { it.isNotEmpty() }?.average()?.roundToInt()
+        return CloudLayers(mean { it.lowPct }, mean { it.midPct }, mean { it.highPct }).dominant()
     }
 
     /**

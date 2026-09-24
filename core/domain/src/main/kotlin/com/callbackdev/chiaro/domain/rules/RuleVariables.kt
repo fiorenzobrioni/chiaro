@@ -62,6 +62,12 @@ object RuleVariables {
                 report.airQuality?.let { ResolvedValue(it.aqiIndex.toDouble()) }
             }
         )
+        // The European index beside the US one (24 set 2026), not in its place: a rule
+        // written as «aqi > 100» means the US scale, and changing what the id reads would
+        // change what a saved rule means without its author knowing.
+        optional("current.aqi_eu_index", RuleVariableKind.NUMBER) {
+            it.airQuality?.europeanAqi?.toDouble()
+        }
 
         for (hours in listOf(6L, 12L)) {
             window("next_${hours}h.precip_chance_max", RuleVariableKind.NUMBER, hours) { w ->
@@ -74,6 +80,13 @@ object RuleVariables {
             }
             window("next_${hours}h.temp_c_max", RuleVariableKind.TEMPERATURE, hours) { w ->
                 w.maxByOrNull { it.tempC }?.let { ResolvedValue(it.tempC, it.time) }
+            }
+            // The strongest gust ahead (24 set 2026, when the rows gained the wind); an
+            // hour with no gust is left out, never read as calm.
+            window("next_${hours}h.gust_max_kph", RuleVariableKind.SPEED, hours) { w ->
+                w.mapNotNull { h -> h.gustKph?.let { h to it } }
+                    .maxByOrNull { (_, gust) -> gust }
+                    ?.let { (hour, gust) -> ResolvedValue(gust, hour.time) }
             }
             // The builtin severe alert's own definition (AlertEngine.isSevere), chance
             // floor included: a rule must not call «Maltempo» a storm the app dropped.
@@ -99,6 +112,12 @@ object RuleVariables {
         // The day's peak, not `current.uv_index`'s instant reading: a "put sunscreen
         // on" rule wants to fire in the morning, when the current index is still low.
         today("today.uv_max", RuleVariableKind.NUMBER) { it.uvIndexMax?.toDouble() }
+        // How much, not only how likely (24 set 2026): the day's rain in mm, its snow in
+        // cm, its strongest gust. Nullable like the rest of the day: a model that does not
+        // carry them makes the rule skip.
+        today("today.precip_mm", RuleVariableKind.NUMBER) { it.precipMm }
+        today("today.snow_cm", RuleVariableKind.NUMBER) { it.snowCm }
+        today("today.gust_max_kph", RuleVariableKind.SPEED) { it.gustMaxKph }
     }
 
     private val index = all.associateBy { it.id }

@@ -92,6 +92,20 @@ sections are a normal size and live here alone.
   for a sky 50 to 80% covered, where «Poco nuvoloso» said less than it was.
 - **The Journal says when the sky changed.** A day that went from clear to stormy shows the two
   words, and is judged worse even when the chance of rain did not move.
+- **How much, not only how likely.** Today's details show the day's rain in millimetres and
+  over how many hours, the snow when there is some, and the clouds with the layer that makes
+  them («mostly high and thin»: a veiled sun, not a grey day). Opening a day in the week
+  shows its rain, snow, strongest gust and highest UV.
+- **The hours mean the hour that starts.** «15 · 60%» is now the chance from 15 to 16; it was
+  the hour that had just ended, an hour late for every «rain around 3».
+- **When the data is old, the top of Today shows the forecast for now**, and says so
+  («Estimated from the forecast»), instead of a reading hours out of date. The widgets too.
+- **Strong wind later today is in the day's sentence**, with its hour.
+- **Air quality on the European scale in Europe**, and **pollen on each species' own scale**
+  with a fifth level, «very high» (MeteoSwiss thresholds).
+- **The Sky's verdicts say which cloud it is** («cloud 60%, high»).
+- **New things your alerts can watch**: today's rain in mm, today's snow, today's strongest
+  gust, the gusts in the next 6 or 12 hours, the European air index.
 - **One more try when the forecast service stumbles.** A server error is retried once, two
   seconds later, before the app says the service is unavailable.
 - **Your alerts' messages write values properly.** A value in braces, like `{current.temp_c}`,

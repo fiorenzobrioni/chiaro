@@ -46,6 +46,17 @@ object Formats {
 
     fun pressure(mb: Double, locale: Locale): String = String.format(locale, "%.0f hPa", mb)
 
+    /** Rain, one decimal below ten millimetres and whole above, like distances (§5). */
+    fun millimetres(mm: Double, locale: Locale): String =
+        if (mm < 10) String.format(locale, "%.1f mm", mm) else String.format(locale, "%.0f mm", mm)
+
+    /** Snow depth, by the same rule. */
+    fun centimetres(cm: Double, locale: Locale): String =
+        if (cm < 10) String.format(locale, "%.1f cm", cm) else String.format(locale, "%.0f cm", cm)
+
+    /** A span of hours, whole: the provider counts them to the hour. */
+    fun hours(hours: Double, locale: Locale): String = String.format(locale, "%.0f", hours)
+
     /**
      * A probability or a proportion. It went through here on the Fase 9 IT/EN pass,
      * having been `"$pct%"` in five places until then.

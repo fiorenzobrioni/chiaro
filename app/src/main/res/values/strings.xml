@@ -41,6 +41,8 @@
     <string name="headline_fog">Fog around %1$s</string>
     <string name="headline_wind">Strong wind, up to %1$s</string>
     <string name="headline_wind_brief">Wind up to %1$s</string>
+    <string name="headline_wind_later">Strong wind around %2$s, up to %1$s</string>
+    <string name="headline_wind_later_brief">Wind around %2$s, up to %1$s</string>
 
     <!-- Freshness and errors: the real age, the real reason -->
     <plurals name="freshness_minutes_ago">
@@ -163,10 +165,49 @@
     <string name="pollen_level_low">Low</string>
     <string name="pollen_level_moderate">Moderate</string>
     <string name="pollen_level_high">High</string>
+    <string name="pollen_level_very_high">Very high</string>
     <string name="pollen_meaning_none">Everyone breathes easy</string>
     <string name="pollen_meaning_low">Barely noticeable</string>
     <string name="pollen_meaning_moderate">Allergies will notice</string>
     <string name="pollen_meaning_high">A hard day for allergies</string>
+    <string name="pollen_meaning_very_high">A very hard day for allergies: stay indoors if you can</string>
+    <!-- 24 set 2026: the new quantities of the engine review's second pass -->
+    <string name="metric_rain">Rain today</string>
+    <string name="metric_snow">Snow today</string>
+    <string name="metric_cloud">Clouds</string>
+    <string name="rain_meaning_none">No umbrella today</string>
+    <string name="rain_meaning_drops">A few drops, nothing serious</string>
+    <string name="rain_meaning_umbrella">Take an umbrella</string>
+    <string name="rain_meaning_wet">A wet day: dress for it</string>
+    <string name="rain_meaning_heavy">Heavy rain: mind underpasses and streams</string>
+    <string name="rain_last_hour">In the last hour %1$s</string>
+    <string name="snow_meaning_dusting">A dusting</string>
+    <string name="snow_meaning_slippery">Slippery roads: take care</string>
+    <string name="snow_meaning_shovel">Snow to shovel: winter tyres needed</string>
+    <string name="snow_meaning_heavy">Heavy snow: better not to travel</string>
+    <string name="cloud_meaning_open">Open sky, full sun</string>
+    <string name="cloud_meaning_veiled">A veiled sun, but it\'s there</string>
+    <string name="cloud_meaning_closed">Closed sky, grey light</string>
+    <string name="cloud_meaning_broken">Sun at times</string>
+    <string name="cloud_meaning_open_night">Clear sky, stars out</string>
+    <string name="cloud_meaning_veiled_night">Stars behind a veil</string>
+    <string name="cloud_meaning_closed_night">Closed sky, no stars</string>
+    <string name="cloud_meaning_broken_night">Stars between clouds</string>
+    <string name="cloud_note_low">Mostly low</string>
+    <string name="cloud_note_mid">Mostly mid-level</string>
+    <string name="cloud_note_high">Mostly high and thin</string>
+    <string name="wind_gust_max_today">Up to %1$s today</string>
+    <string name="wind_gusts_and_max">Gusts %1$s, up to %2$s today</string>
+    <string name="estimate_hero">Estimated from the forecast</string>
+    <string name="estimate_details">Values estimated from the forecast for this hour: the latest data is from %1$s.</string>
+    <string name="day_fact_rain">%1$s of rain</string>
+    <string name="day_fact_snow">%1$s of snow</string>
+    <string name="day_fact_gust">Gusts up to %1$s</string>
+    <string name="day_fact_uv">UV up to %1$d</string>
+    <plurals name="rain_hours_note">
+        <item quantity="one">over %1$s hour</item>
+        <item quantity="other">over %1$s hours</item>
+    </plurals>
 
     <!-- Conditions: the WMO vocabulary, one word each -->
     <string name="cond_clear">Clear</string>
@@ -503,6 +544,10 @@
 
     <!-- Verdict evidence: the number that decided the word next to it -->
     <string name="sky_evidence_cloud" formatted="false">cloud %1$d%%</string>
+    <string name="sky_evidence_cloud_layer" formatted="false">cloud %1$d%%, %2$s</string>
+    <string name="cloud_layer_low">low</string>
+    <string name="cloud_layer_mid">mid-level</string>
+    <string name="cloud_layer_high">high</string>
     <string name="sky_evidence_rain" formatted="false">rain %1$d%%</string>
     <string name="sky_evidence_moon" formatted="false">moon %1$d%%</string>
 
@@ -884,7 +929,7 @@
     <string name="var_current_precip">the rain chance now</string>
     <string name="var_current_pressure">the pressure now</string>
     <string name="var_current_visibility">the visibility now</string>
-    <string name="var_current_aqi">the air quality index now</string>
+    <string name="var_current_aqi">the US air index now</string>
     <string name="var_next6_precip">rain in the next 6 hours</string>
     <string name="var_next6_temp_min">the low of the next 6 hours</string>
     <string name="var_next6_temp_max">the high of the next 6 hours</string>
@@ -897,6 +942,12 @@
     <string name="var_today_low">today\'s low</string>
     <string name="var_today_precip">today\'s rain chance</string>
     <string name="var_today_uv">today\'s peak UV</string>
+    <string name="var_current_aqi_eu">the European air index now</string>
+    <string name="var_next6_gust">the gusts in the next 6 hours</string>
+    <string name="var_next12_gust">the gusts in the next 12 hours</string>
+    <string name="var_today_precip_mm">today\'s rain in millimetres</string>
+    <string name="var_today_snow">today\'s snow</string>
+    <string name="var_today_gust">today\'s strongest gusts</string>
 
     <!-- The five starting points. Name and message become the reader's content at
          creation, in their language, and are never translated again. -->

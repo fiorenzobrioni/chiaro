@@ -46,6 +46,9 @@ SHIPPED = [
     "pollen-grass-low", "pollen-grass-moderate", "pollen-grass-high",
     "pollen-tree-low", "pollen-tree-moderate", "pollen-tree-high", "pollen-weed-low",
     "pollen-weed-moderate", "pollen-weed-high", "haze", "fog",
+    # il quinto livello dei pollini (24 set 2026): le soglie per specie di MeteoSwiss hanno
+    # «molto alto», e il tile ora lo dice in parole, quindi il disegno puo' dirlo
+    "pollen-grass-very-high", "pollen-tree-very-high", "pollen-weed-very-high",
 ]
 
 #: Scelte, verificate presenti a monte, e **non spedite**: nessuna schermata le disegna
@@ -65,8 +68,7 @@ PLANNED = [
     # nuvola del «poco nuvoloso» per un cielo che ne ha il 39% di copertura — vedi
     # ChiaroIcons.conditionLineRes
     "mostly-clear-day", "mostly-clear-night",
-    "raindrop", "umbrella", "dust", "pollen-grass-very-high",
-    "pollen-tree-very-high", "pollen-weed-very-high", "barometer-very-high",
+    "raindrop", "umbrella", "dust", "barometer-very-high",
     "barometer-extreme", "windsock", "windsock-calm", "windsock-weak",
     "windsock-moderate", "wind-beaufort-0", "wind-beaufort-1", "wind-beaufort-2",
     "wind-beaufort-3", "wind-beaufort-4", "wind-beaufort-5", "wind-beaufort-6",
