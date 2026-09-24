@@ -10714,3 +10714,47 @@ un'ora in meno sotto. Più la proposta: numero e massima/minima allineati in bas
   riserva, 3 misurando, uguali a Cavenago), fissa la linea di base comune per numero/coppia e
   numero/frase, lo zero da vecchio, e che il sollevamento non costi mai una riga; aggiornati i
   valori del glifo. Suite completa, lint e build.
+
+## Neve a 0%, «pioggia» che era neve (committente, 24 set 2026)
+
+Due screenshot di Longyearbyen alle 22:37, con tre domande: un fiocco di neve sopra «0%» in
+due punti (la striscia delle ore e le ore del venerdì aperto) è normale? Il venerdì aperto
+dice «0,6 mm di pioggia in 6 ore» e «0,4 cm di neve»: sono davvero due cose? «Probabilità di
+pioggia» comprende la neve?
+
+- **Il fiocco su 0%**: sì, per Open-Meteo è normale, e no, lo schermo non deve dirlo.
+  `weather_code` e le quantità vengono dal modello deterministico; `precipitation_probability`
+  dall'ensemble, ed è la quota dei suoi membri che vede almeno 0,1 mm nell'ora. Al margine i
+  due non concordano: una traccia di neve nell'uno, nessun membro sopra la soglia nell'altro.
+  **Cosa è cambiato** (`WeatherReportMapper.contradicted`): un codice di precipitazione a 0%
+  nella sua stessa ora disegna il cielo (`skyAt`), e non conta come ora bagnata per l'etichetta
+  del giorno, così riga e giorno non si smentiscono. Da 1% il codice resta (la probabilità dice
+  che può), una probabilità assente non è una prova, e i codici di pericolo sono esenti come
+  dalla regola della materialità: li giudica già `AlertEngine.severeBucket` sulla stessa
+  probabilità, e la riparazione può togliere una distorsione, mai un avviso.
+- **La «pioggia» che era neve**: `precipitation_sum` è pioggia, rovesci **e l'acqua della
+  neve** insieme (i 19,81 cm dell'Everest nella fixture del 24 set arrivano come 28,4 mm). Gli
+  0,6 mm del venerdì erano quasi tutti gli 0,4 cm di neve. **Cosa è cambiato**: si chiedono
+  anche `rain_sum` e `showers_sum`; `DailyForecast.rainMm` è la loro somma, e la stampano la
+  riga «di pioggia» del giorno aperto, la tile «Pioggia oggi» e la variabile delle regole
+  `today.precip_mm` (l'id resta per le regole salvate; «la pioggia di oggi» ora è la pioggia).
+  `precipMm` resta il totale, per chi un giorno dovesse volere proprio quello.
+- **Decisioni**: una risposta senza la divisione (cache di prima, modello che non la fa) usa il
+  totale solo in un giorno senza neve; con neve dentro la pioggia è sconosciuta, non il totale.
+  `precipitation_hours` conta ogni tipo d'ora: sta sulla riga che è l'unica del giorno (anche
+  quella della neve, ora: «0,4 cm di neve in 6 ore»), su nessuna quando pioggia e neve si
+  dividono il giorno. Per la stessa ragione, in un giorno con neve la tile della pioggia non
+  porta le ore né «Nell'ultima ora», che contano anche la neve.
+- **«Probabilità di pioggia»**: la probabilità è di qualunque precipitazione. La didascalia del
+  grafico (e la sua descrizione a voce) ora la nomina dai codici della striscia, come la frase
+  in cima nomina pioggia o neve dal codice della sua ora: «di neve» quando ogni ora che cade è
+  neve, «di pioggia o neve» quando cadono entrambe, «di pioggia» altrimenti e quando nessuna
+  ora disegna un codice (la parola di prima).
+- **Rimandato**: le descrizioni a voce della cella oraria e della riga del giorno dicono ancora
+  «pioggia N%»; cambiarle vuol dire dare a ogni cella la sua parola, e va fatto con quelle.
+- **Come è stato verificato**: `WeatherReportMapperTest` (il fiocco a 0% diventa cielo, a 1% e
+  senza probabilità resta; il gelicidio a 0% resta; sei ore di traccia a 0% non fanno un giorno
+  di neve, a 5% sì; la pioggia sola da `rain_sum` + `showers_sum`, il ripiego senza neve, lo
+  sconosciuto con neve), `OpenMeteoResponseTest` (Everest: 28,4 mm di totale, pioggia
+  sconosciuta), `RuleVariablesTest` (la regola legge la pioggia, non il totale). La risposta
+  live di Longyearbyen non è stata riletta: dal container Open-Meteo non era raggiungibile.

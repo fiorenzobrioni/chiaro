@@ -503,6 +503,15 @@ class WeatherReportMapperTest {
     }
 
     @Test
+    fun `hours at 0 percent do not make a day of snow`() {
+        // Six hours of trace snow, all at 0%: the rows draw them as sky, and so must the day.
+        val codes = List(24) { if (it in 1..6) 71 else 3 }
+        assertEquals(3, dayCode(codes, mm = { if (codes[it] == 71) 0.1 else 0.0 }, chance = { 0 }))
+        // At 5% they are believed, and six hours of them are the day's.
+        assertEquals(71, dayCode(codes, mm = { if (codes[it] == 71) 0.1 else 0.0 }, chance = { 5 }))
+    }
+
+    @Test
     fun `precipitation that did not earn the day does not win its sky either`() {
         // Daylight 06-19, two hours apiece of every sky and two of drizzle: the old
         // tie-break handed the day to 51. Its hours now vote with their cloud (100% → 3).
@@ -593,6 +602,36 @@ class WeatherReportMapperTest {
     }
 
     @Test
+    fun `a snowflake over 0 percent is the sky its hour starts with`() {
+        // Longyearbyen, 24 set 2026: the deterministic model's trace of snow against an
+        // ensemble in which no member reaches 0.1 mm drew a snowflake over «0%» in one cell.
+        val n = forecast().hourly.time.size
+        val hours = rows { h ->
+            h.copy(
+                weatherCode = List(n) { if (it in 15..17) 71 else 3 },
+                precipitationProbabilityPct = List(n) { if (it == 15) 0 else if (it == 16) 1 else null },
+                cloudCoverPct = List(n) { 100 }
+            )
+        }
+        // Row 14 is slot 15 (0%): its sky. Row 15 is slot 16 (1%): the chance says it can.
+        // Row 16 is slot 17, no chance at all: no evidence against the code.
+        assertEquals(listOf(3, 71, 71), hours.take(3).map { it.condition.wmoCode })
+        assertEquals(0, hours.first().precipChancePct)
+    }
+
+    @Test
+    fun `a hazard code keeps its hour at 0 percent too`() {
+        val n = forecast().hourly.time.size
+        val hours = rows { h ->
+            h.copy(
+                weatherCode = List(n) { if (it == 15) 56 else 0 },
+                precipitationProbabilityPct = List(n) { 0 }
+            )
+        }
+        assertEquals(56, hours.first().condition.wmoCode)
+    }
+
+    @Test
     fun `a row starts with its own sky, not the one the hour ends with`() {
         val n = forecast().hourly.time.size
         // Fog at 14 and 15, gone by 16: rows 14 and 15 start in it, row 16 does not.
@@ -657,6 +696,7 @@ class WeatherReportMapperTest {
         assertNull(row.cloudLayers)
         val day = map().daily.first()
         assertNull(day.precipMm)
+        assertNull(day.rainMm)
         assertNull(day.snowCm)
         assertNull(day.gustMaxKph)
     }
@@ -679,6 +719,31 @@ class WeatherReportMapperTest {
         assertEquals(0.0, day[0].snowCm!!, 0.0)
         assertEquals(61.2, day[0].gustMaxKph!!, 0.0)
         assertNull(day[1].precipMm)
+        // No split asked for and no snow: the total is all rain.
+        assertEquals(12.4, day[0].rainMm!!, 0.0)
+    }
+
+    @Test
+    fun `the day's rain is the rain alone, not the snow's water`() {
+        // Friday at Longyearbyen: 0.6 mm in all, which was 0.4 cm of snow.
+        val base = forecast()
+        fun day(rain: Double?, showers: Double?, snow: Double?) = map(
+            forecast = base.copy(
+                daily = base.daily.copy(
+                    precipitationSumMm = List(8) { 0.6 },
+                    snowfallSumCm = List(8) { snow },
+                    rainSumMm = if (rain == null) emptyList() else List(8) { rain },
+                    showersSumMm = if (showers == null) emptyList() else List(8) { showers }
+                )
+            )
+        ).daily.first()
+        assertEquals(0.0, day(rain = 0.0, showers = 0.0, snow = 0.4).rainMm!!, 0.0)
+        assertEquals(0.5, day(rain = 0.2, showers = 0.3, snow = 0.0).rainMm!!, 1e-9)
+        // A model that does not split showers still has its rain.
+        assertEquals(0.2, day(rain = 0.2, showers = null, snow = 0.4).rainMm!!, 0.0)
+        // No split, and snow in the total: which part is rain cannot be told.
+        assertNull(day(rain = null, showers = null, snow = 0.4).rainMm)
+        assertNull(day(rain = null, showers = null, snow = null).rainMm)
     }
 
     /**

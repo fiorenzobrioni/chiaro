@@ -79,7 +79,11 @@ interface OpenMeteoForecastApi {
                 "precipitation_probability_max,uv_index_max," +
                 // 24 set 2026: how much, not only how likely — the day's rain and snow,
                 // the hours it lasts, and the strongest gust.
-                "precipitation_sum,precipitation_hours,snowfall_sum,wind_gusts_10m_max"
+                "precipitation_sum,precipitation_hours,snowfall_sum,wind_gusts_10m_max," +
+                // Same day, later: `precipitation_sum` is rain, showers AND the snow's
+                // water together (Everest's 19.81 cm of snow arrive as 28.4 mm of it), so
+                // it cannot be printed as «di pioggia». The liquid part is asked for by name.
+                "rain_sum,showers_sum"
     }
 }
 

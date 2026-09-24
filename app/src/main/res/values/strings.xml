@@ -95,7 +95,9 @@
          nothing there, so the announcement says nothing either. -->
     <string name="hour_cell_desc_no_rain">At %1$s, %2$s, %3$s</string>
     <string name="rain_chart_caption">Chance of rain</string>
-    <string name="rain_chart_desc">Chance of rain from %1$s to %2$s on a scale of 0 to 100%%, peaking at %3$d%% around %4$s</string>
+    <string name="rain_chart_caption_snow">Chance of snow</string>
+    <string name="rain_chart_caption_mixed">Chance of rain or snow</string>
+    <string name="rain_chart_desc">%1$s from %2$s to %3$s on a scale of 0 to 100%%, peaking at %4$d%% around %5$s</string>
 
     <!-- Details grid: labels. One line beside the tile's 34dp icon, which on a
          360dp screen is a budget of 84dp (94 until the icons grew on 6 set, 88 until
