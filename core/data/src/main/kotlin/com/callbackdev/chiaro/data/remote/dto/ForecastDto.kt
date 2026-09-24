@@ -64,7 +64,14 @@ data class CurrentDto(
      */
     @SerialName("visibility") val visibilityM: Double? = null,
     @SerialName("cloud_cover") val cloudCoverPct: Int,
-    @SerialName("uv_index") val uvIndex: Double
+    /**
+     * Nullable since 24 set 2026, the last model-dependent field of this block to be
+     * found out: `models=icon_seamless` serves `current.uv_index: null` on the live
+     * endpoint (Milan, measured that morning), exactly as it serves `uv_index_max`
+     * below. Chiaro passes no `models=`, but `best_match` picks per region and the cost
+     * of meeting that null non-nullable is the whole report, not one tile.
+     */
+    @SerialName("uv_index") val uvIndex: Double? = null
 )
 
 @Serializable

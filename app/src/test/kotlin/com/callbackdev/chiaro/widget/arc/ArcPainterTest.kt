@@ -46,7 +46,7 @@ class ArcPainterTest {
         coordinates = Coordinates(45.4643, 9.1895), timezone = "Europe/Rome"
     )
     private val date: LocalDate = LocalDate.of(2026, 9, 2)
-    private val clear = WeatherCondition(0, "Clear", "☀️")
+    private val clear = WeatherCondition(0)
 
     private fun report(fetchedAt: LocalDateTime) =
         sampleWeatherReport().copy(

@@ -30,7 +30,7 @@ class SkyRunRecorderTest {
             LocalDateTime.parse(from).plusHours(i.toLong()).let { t ->
                 HourlyForecast(
                     t, t.atZone(rome).toInstant(), 20.0,
-                    WeatherCondition(0, "Clear", "☀️"), 0, cloud
+                    WeatherCondition(0), 0, cloud
                 )
             }
         }

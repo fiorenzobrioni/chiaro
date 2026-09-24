@@ -772,7 +772,7 @@ class LaterHoursTest {
             com.callbackdev.chiaro.ui.today.StripHour(
                 com.callbackdev.chiaro.domain.model.HourlyForecast(
                     time = t, at = t.atZone(zone).toInstant(), tempC = 10.0 + i,
-                    condition = com.callbackdev.chiaro.domain.model.WeatherCondition(0, "", ""),
+                    condition = com.callbackdev.chiaro.domain.model.WeatherCondition(0),
                     precipChancePct = 0, cloudCoverPct = 0
                 ),
                 night = false

@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.data.local
 
-import com.callbackdev.chiaro.domain.WeatherCodes
+import com.callbackdev.chiaro.domain.WmoCode
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -11,24 +12,32 @@ import java.time.ZoneId
  *
  * Everything it needs is already on disk. What was forecast for a past day D is the
  * last commit written BEFORE D began that still carried D in its horizon — literally
- * "what the app told you the evening before". What actually happened is the commits
- * written DURING D, each carrying the sky it found (`current.wmo_code`) and the rain
- * of the hour behind it (`current.precip_last_hour_mm`, Open-Meteo's own definition:
- * the sum over the preceding hour).
+ * "what the app told you the evening before". What actually happened is what the
+ * commits found: the sky at the moment of each (`current.wmo_code`), and the rain over
+ * spans of time that each commit states for itself — the hours that had closed when it
+ * was written, and the quarter of an hour behind it. "Found" is the model's own account
+ * of the recent past, not a rain gauge: it is the best the app has without a station,
+ * and the sentence on screen says "seen", not "measured".
  *
  * Two rules keep it from lying, and they are not symmetric on purpose:
  *
- * - **"It rained" needs one wet observation.** A positive is proof: the app saw rain,
- *   and no amount of missing hours can un-see it.
- * - **"It did not rain" needs [MIN_COVERAGE_HOURS] of the day actually covered.** Each
- *   observation covers the hour before it, the covered intervals are merged, and below
- *   the floor the day gets no verdict at all rather than a "stayed dry" resting on a
- *   phone that was switched off. The covered hours are carried out with the verdict so
- *   the sentence can state them, the way a sky run states its `obsMinutes`.
+ * - **"It rained" needs one wet piece of evidence.** A positive is proof: the app saw
+ *   rain, and no amount of missing hours can un-see it.
+ * - **"It did not rain" needs [MIN_COVERAGE_HOURS] of the day actually covered**, and
+ *   covered means exactly the spans some commit carried an amount for — merged, never
+ *   stretched. Below the floor the day gets no verdict at all rather than a "stayed dry"
+ *   resting on a phone that was switched off. The covered hours are carried out with
+ *   the verdict so the sentence can state them, the way a sky run states its `obsMinutes`.
  *
- * A commit written before those two keys existed carries no observation and therefore
- * contributes nothing — not a dry hour, not a wet one. The screen fills in from the
- * update forward instead of judging days it has no evidence about.
+ * **24 set 2026.** Until then a commit carried one amount, `current.precip_last_hour_mm`,
+ * read as the hour behind it and in fact Open-Meteo's `current` quarter of an hour
+ * (`"interval": 900`). The hourly cadence therefore covered a day with 15 minutes of
+ * evidence per hour and called the rest dry, and the two-hour cadence had been given a
+ * rule that let each reading vouch for up to two hours behind it to reach the floor at
+ * all. Both went: each commit now carries the last [com.callbackdev.chiaro.domain.model.Precipitation.PAST_HOURS]
+ * closed hours from the hourly series, so a phone that fetched every one or two hours
+ * covers the day with real amounts, and one that slept six hours leaves them uncovered.
+ * Commits from before keep what they really were: a quarter of an hour of evidence.
  */
 object ForecastOutcome {
 
@@ -37,23 +46,10 @@ object ForecastOutcome {
 
     private const val DAY_HOURS = 24
 
-    /** The hour a reading's millimetres describe: Open-Meteo's own definition. */
-    private val OBSERVATION_WINDOW = java.time.Duration.ofHours(1)
+    private val HOUR: Duration = Duration.ofHours(1)
 
-    /**
-     * The most one reading may vouch for, backwards, when the previous reading is
-     * further away than an hour (8 set 2026): the app's own longest cadence. Until then
-     * every reading covered exactly the hour behind it, which made "covered" mean "how
-     * many times the app fetched" rather than "how long it was watching": at the two-hour
-     * cadence a day watched end to end covered twelve hours and never reached the floor,
-     * so a dry day at that setting was never called dry, and at the hourly cadence one
-     * night in Doze — where the periodic job runs at the system's convenience — dropped
-     * a fully watched day under sixteen. A reading now covers the time since the one
-     * before it, capped here, so a phone that watched all day at its own cadence covers
-     * the day, and a phone that slept six hours still leaves four of them uncovered.
-     * The rain itself stays on the hour the millimetres describe.
-     */
-    private val MAX_OBSERVATION_WINDOW = java.time.Duration.ofHours(2)
+    /** What `current.precipitation` sums over: Open-Meteo's 15-minutely block. */
+    private val QUARTER: Duration = Duration.ofMinutes(15)
 
     /** One commit, as the Journal already decodes it. */
     data class Fetch(
@@ -66,10 +62,11 @@ object ForecastOutcome {
 
     /**
      * One finished day, judged. [forecastPrecipPct] is the probability the app was
-     * carrying when the day began; [observedHighC] is the warmest reading it actually
-     * took, which is a maximum over samples and is named "seen" on screen for that
-     * reason. Both temperatures are null when the day was not covered enough to make a
-     * maximum mean anything.
+     * carrying when the day began; [observedHighC] is the warmest temperature among the
+     * instants the commits recorded — each closed hour's end and each reading's own —
+     * which is a maximum over samples and is named "seen" on screen for that reason.
+     * Both temperatures are null when the day was not covered enough to make a maximum
+     * mean anything.
      */
     data class Outcome(
         val date: LocalDate,
@@ -91,10 +88,16 @@ object ForecastOutcome {
             .map { Instant.ofEpochSecond(it.timestampEpochSeconds).atZone(zone).toLocalDate() }
             .distinct()
             .filter { it.isBefore(today) }
-        return days.mapNotNull { date -> outcomeFor(date, sorted, zone) }
+        val observations = sorted.mapNotNull { it.observation() }
+        return days.mapNotNull { date -> outcomeFor(date, sorted, observations, zone) }
     }
 
-    private fun outcomeFor(date: LocalDate, sorted: List<Fetch>, zone: ZoneId): Outcome? {
+    private fun outcomeFor(
+        date: LocalDate,
+        sorted: List<Fetch>,
+        observations: List<Observation>,
+        zone: ZoneId
+    ): Outcome? {
         val start = date.atStartOfDay(zone).toInstant()
         val end = date.plusDays(1).atStartOfDay(zone).toInstant()
 
@@ -109,32 +112,30 @@ object ForecastOutcome {
             ?: return null
         val forecastHigh = baseline.forecast["$date.high_c"]?.toDoubleOrNull()
 
-        val observations = sorted.mapNotNull { it.observation() }
         var rained = false
-        var high: Double? = null
         val covered = mutableListOf<Pair<Instant, Instant>>()
-        var previous: Instant? = null
         observations.forEach { obs ->
-            // Coverage reaches back to the previous reading, up to the cap; the very
-            // first reading has nothing before it and vouches for its own hour.
-            val window = previous
-                ?.let { minOf(java.time.Duration.between(it, obs.at), MAX_OBSERVATION_WINDOW) }
-                ?: OBSERVATION_WINDOW
-            previous = obs.at
-            val from = maxOf(obs.at.minus(window), start)
-            val until = minOf(obs.at, end)
-            if (from < until) covered += Pair(from, until)
-            // The millimetres belong to the HOUR behind the reading — not to the
-            // coverage window — so they count for the day that hour overlaps.
-            val rainFrom = maxOf(obs.at.minus(OBSERVATION_WINDOW), start)
-            if (rainFrom < until && obs.lastHourMm != null && obs.lastHourMm > 0.0) rained = true
+            // A span of rain counts for the day it overlaps — a closed hour never
+            // straddles midnight, the quarter behind a reading at 00:05 barely does.
+            obs.spans.forEach { span ->
+                val from = maxOf(span.from, start)
+                val until = minOf(span.until, end)
+                if (from < until) {
+                    covered += Pair(from, until)
+                    if (span.wet) rained = true
+                }
+            }
             // The code is what the sky was doing AT the reading, so it counts only
             // for the day the reading itself falls in.
-            if (obs.at >= start && obs.at < end) {
-                if (obs.wmoCode != null && WeatherCodes.isPrecipitation(obs.wmoCode)) rained = true
-                obs.tempC?.let { t -> high = high?.let { maxOf(it, t) } ?: t }
+            if (obs.at >= start && obs.at < end && obs.wmoCode != null &&
+                WmoCode.isPrecipitation(obs.wmoCode)
+            ) {
+                rained = true
             }
         }
+        val high = observations.flatMap { it.temps }
+            .filter { (at, _) -> at >= start && at < end }
+            .maxOfOrNull { (_, tempC) -> tempC }
         val coveredHours = (mergedSeconds(covered) / 3600).toInt().coerceAtMost(DAY_HOURS)
         val judged = coveredHours >= MIN_COVERAGE_HOURS
         if (!rained && !judged) return null
@@ -168,24 +169,55 @@ object ForecastOutcome {
         return total + (to.epochSecond - from.epochSecond)
     }
 
+    /** A stretch of time some commit carried an amount of rain for. */
+    private data class Span(val from: Instant, val until: Instant, val wet: Boolean)
+
     private data class Observation(
         val at: Instant,
         val wmoCode: Int?,
-        val lastHourMm: Double?,
-        val tempC: Double?
+        val spans: List<Span>,
+        /** Instants with the temperature the commit recorded for them. */
+        val temps: List<Pair<Instant, Double>>
     )
 
-    /** A commit is an observation only if it carries one of the two rain readings —
-     * a row written before they existed is silence, not a dry hour. */
+    /**
+     * A commit is an observation only if it carries some rain reading — a row written
+     * before they existed is silence, not a dry hour.
+     *
+     * The quarter is read under both its names: `current.precip_quarter_mm` since 24 set
+     * 2026, and `current.precip_last_hour_mm` before, which held the same 15-minute value
+     * under the wrong name. The closed hours are three aligned lists; lists that do not
+     * line up are dropped whole rather than paired by guess.
+     */
     private fun Fetch.observation(): Observation? {
+        val at = Instant.ofEpochSecond(timestampEpochSeconds)
         val code = snapshot["current.wmo_code"]?.toIntOrNull()
-        val mm = snapshot["current.precip_last_hour_mm"]?.toDoubleOrNull()
-        if (code == null && mm == null) return null
-        return Observation(
-            at = Instant.ofEpochSecond(timestampEpochSeconds),
-            wmoCode = code,
-            lastHourMm = mm,
-            tempC = snapshot["current.temp_c"]?.toDoubleOrNull()
-        )
+        val quarter = (snapshot["current.precip_quarter_mm"] ?: snapshot["current.precip_last_hour_mm"])
+            ?.toDoubleOrNull()
+        val ends = snapshot[WeatherSnapshots.PAST_HOURS_END]?.split(',')
+            ?.map { runCatching { Instant.parse(it) }.getOrNull() }
+        val amounts = snapshot[WeatherSnapshots.PAST_HOURS_MM]?.split(',')?.map { it.toDoubleOrNull() }
+        val hourTemps = snapshot[WeatherSnapshots.PAST_HOURS_TEMP_C]?.split(',')?.map { it.toDoubleOrNull() }
+
+        // The quarter ends at the provider's `current.time`, up to fifteen minutes before
+        // the commit; a commit that did not record it (all before 24 set 2026) ends at its own.
+        val quarterEnd = snapshot[WeatherSnapshots.QUARTER_END]
+            ?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: at
+        val spans = buildList {
+            quarter?.let { add(Span(quarterEnd.minus(QUARTER), quarterEnd, wet = it > 0.0)) }
+            if (ends != null && amounts != null && ends.size == amounts.size) {
+                ends.zip(amounts).forEach { (end, mm) ->
+                    if (end != null && mm != null) add(Span(end.minus(HOUR), end, wet = mm > 0.0))
+                }
+            }
+        }
+        if (code == null && spans.isEmpty()) return null
+        val temps = buildList {
+            snapshot["current.temp_c"]?.toDoubleOrNull()?.let { add(at to it) }
+            if (ends != null && hourTemps != null && ends.size == hourTemps.size) {
+                ends.zip(hourTemps).forEach { (end, t) -> if (end != null && t != null) add(end to t) }
+            }
+        }
+        return Observation(at = at, wmoCode = code, spans = spans, temps = temps)
     }
 }

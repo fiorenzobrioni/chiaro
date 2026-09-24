@@ -44,7 +44,9 @@ object RuleVariables {
         current("current.feels_like_c", RuleVariableKind.TEMPERATURE) { it.current.feelsLikeC }
         current("current.humidity_pct", RuleVariableKind.NUMBER) { it.current.humidityPct.toDouble() }
         current("current.dew_point_c", RuleVariableKind.TEMPERATURE) { it.current.dewPointC }
-        current("current.uv_index", RuleVariableKind.NUMBER) { it.current.uvIndex.toDouble() }
+        // Optional since 24 set 2026: a model may carry no UV at all, and a rule on it
+        // then skips rather than firing `< 3` on an index nobody measured.
+        optional("current.uv_index", RuleVariableKind.NUMBER) { it.current.uvIndex?.toDouble() }
         current("current.wind.speed_kph", RuleVariableKind.SPEED) { it.current.wind.speedKph }
         current("current.wind.gust_kph", RuleVariableKind.SPEED) { it.current.wind.gustKph }
         // Fase 26: both of these can be absent, and a variable that does not resolve

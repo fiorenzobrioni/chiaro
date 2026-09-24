@@ -73,7 +73,7 @@ class RuleVariablesTest {
                 at = LocalDateTime.of(2023, 10, 27, 20, 0)
                     .atZone(ZoneId.of("America/New_York")).toInstant(),
                 tempC = 13.0,
-                condition = WeatherCondition(95, "Thunderstorm", "⛈️"),
+                condition = WeatherCondition(95),
                 precipChancePct = 90,
                 cloudCoverPct = 100
             )
@@ -91,7 +91,7 @@ class RuleVariablesTest {
                 at = LocalDateTime.of(2023, 10, 27, 20, 0)
                     .atZone(ZoneId.of("America/New_York")).toInstant(),
                 tempC = 13.0,
-                condition = WeatherCondition(95, "Thunderstorm", "⛈️"),
+                condition = WeatherCondition(95),
                 precipChancePct = 10,
                 cloudCoverPct = 100
             )

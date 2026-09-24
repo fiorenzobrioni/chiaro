@@ -33,7 +33,7 @@ class AlertDetailsTest {
             time = day.withHour(12).plusHours(i.toLong()),
             at = day.withHour(12).plusHours(i.toLong()).atZone(rome).toInstant(),
             tempC = temp[i],
-            condition = WeatherCondition(codes[i], "x", "x"),
+            condition = WeatherCondition(codes[i]),
             precipChancePct = rain[i],
             cloudCoverPct = 0
         )

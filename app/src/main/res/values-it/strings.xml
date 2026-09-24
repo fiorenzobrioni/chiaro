@@ -161,7 +161,7 @@
     <!-- Condizioni: il vocabolario WMO, una parola ciascuna -->
     <string name="cond_clear">Sereno</string>
     <string name="cond_mostly_clear">Quasi sereno</string>
-    <string name="cond_partly_cloudy">Poco nuvoloso</string>
+    <string name="cond_partly_cloudy">Nuvoloso</string>
     <string name="cond_overcast">Coperto</string>
     <string name="cond_fog">Nebbia</string>
     <string name="cond_drizzle">Pioviggine</string>
@@ -175,10 +175,10 @@
     <string name="cond_snow_heavy">Neve fitta</string>
     <string name="cond_snow_grains">Nevischio</string>
     <string name="cond_showers">Rovesci</string>
-    <string name="cond_showers_violent">Rovesci violenti</string>
+    <string name="cond_showers_heavy">Rovesci forti</string>
     <string name="cond_snow_showers">Rovesci di neve</string>
     <string name="cond_thunderstorm">Temporale</string>
-    <string name="cond_thunderstorm_hail">Temporale con grandine</string>
+    <string name="cond_thunderstorm_strong">Temporale forte</string>
     <string name="cond_unknown">Condizioni sconosciute</string>
 
     <!-- Stati vuoti e di errore -->
@@ -1120,6 +1120,7 @@
     <string name="journal_shift_better">%1$s è migliorato</string>
     <string name="journal_shift_worse">%1$s è peggiorato</string>
     <string name="journal_shift_neutral">La previsione di %1$s è cambiata</string>
+    <string name="journal_field_sky">%1$s → %2$s</string>
     <string name="journal_field_rain">pioggia %1$s → %2$s</string>
     <string name="journal_field_high">massima %1$s → %2$s</string>
     <string name="journal_field_low">minima %1$s → %2$s</string>

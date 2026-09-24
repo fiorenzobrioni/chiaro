@@ -1695,24 +1695,27 @@ private fun Details(report: WeatherReport, units: UnitSettings, locale: Locale) 
         // "nothing to do about it" is also an answer — and «UV 0, nessuna protezione
         // necessaria» at midnight is exactly that answer, where the old line was a
         // different one about a different hour.
-        val uvNow = current.uvIndex
-        add(
-            Tile(
-                icon = { ChiaroIcons.uv(uvNow) },
-                label = R.string.metric_uv,
-                value = uvNow.toString(),
-                meaning = WeatherText.uvMeaning(uvNow),
-                track = uvTrack(uvNow),
-                // Only while it is news: a peak that equals the reading is the tile
-                // printing its own number twice.
-                note = today?.uvIndexMax?.takeIf { it > uvNow }
-                    ?.let { stringResource(R.string.uv_peak_today, it) },
-                // The one tile whose glyph is not on the ladder's tile rung: the
-                // drawing carries the index as a badge, and at 38dp that badge read
-                // smaller than the pollen tile's. See [WeatherIconSize.TileUv].
-                iconSize = WeatherIconSize.TileUv
+        // No tile when the model carries no index (24 set 2026): the screen draws no
+        // section it has no data for, and a «UV 0» would be a sun that cannot burn.
+        current.uvIndex?.let { uvNow ->
+            add(
+                Tile(
+                    icon = { ChiaroIcons.uv(uvNow) },
+                    label = R.string.metric_uv,
+                    value = uvNow.toString(),
+                    meaning = WeatherText.uvMeaning(uvNow),
+                    track = uvTrack(uvNow),
+                    // Only while it is news: a peak that equals the reading is the tile
+                    // printing its own number twice.
+                    note = today?.uvIndexMax?.takeIf { it > uvNow }
+                        ?.let { stringResource(R.string.uv_peak_today, it) },
+                    // The one tile whose glyph is not on the ladder's tile rung: the
+                    // drawing carries the index as a badge, and at 38dp that badge read
+                    // smaller than the pollen tile's. See [WeatherIconSize.TileUv].
+                    iconSize = WeatherIconSize.TileUv
+                )
             )
-        )
+        }
         val wind = current.wind
         val gusty = WeatherText.gustsMaterial(wind.speedKph, wind.gustKph)
         add(

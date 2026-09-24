@@ -84,7 +84,7 @@ class NotificationDestinationTest {
             kind = AlertKind.PRECIPITATION,
             fingerprint = today.toString(),
             cityLabel = "Milano",
-            condition = WeatherCondition(61, "Rain", "🌧"),
+            condition = WeatherCondition(61),
             at = today.atTime(17, 0),
             precipPct = 80
         ),

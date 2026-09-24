@@ -27,11 +27,11 @@ class HeadlineEngineTest {
 
     private val now: LocalDateTime = LocalDateTime.of(2026, 9, 2, 14, 0)
 
-    private val clear = WeatherCondition(0, "Clear", "☀️")
-    private val fog = WeatherCondition(45, "Fog", "🌫️")
-    private val rain = WeatherCondition(63, "Rainy", "🌧️")
-    private val snow = WeatherCondition(73, "Snowy", "🌨️")
-    private val storm = WeatherCondition(95, "Thunderstorm", "⛈️")
+    private val clear = WeatherCondition(0)
+    private val fog = WeatherCondition(45)
+    private val rain = WeatherCondition(63)
+    private val snow = WeatherCondition(73)
+    private val storm = WeatherCondition(95)
 
     /** One forecast hour: what the sky does, the chance of rain, the temperature. */
     private data class Hour(val condition: WeatherCondition, val pct: Int, val tempC: Double = 20.0)

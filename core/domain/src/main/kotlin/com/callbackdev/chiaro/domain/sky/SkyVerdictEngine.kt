@@ -142,14 +142,18 @@ object SkyVerdictEngine {
         // The note itself stays — `horizonNote` below is where it is really answered.
         val cloudPct = window.map { it.cloudCoverPct }.average().roundToInt()
         // An hour with no forecast chance contributes nothing to the worst case:
-        // a verdict is never made worse by what the app was not told (Fase 26).
-        val precipPct = window.maxOf { it.precipChancePct ?: 0 }
+        // a verdict is never made worse by what the app was not told (Fase 26). And a
+        // window where NO hour carried one has no chance at all — null, not the 0 it
+        // was until 24 set 2026, which the verdict then carried as the number it had
+        // been "built from".
+        val precipPct = window.mapNotNull { it.precipChancePct }.maxOrNull()
+        val rainPct = precipPct ?: 0
 
         val fromWeather = when {
-            precipPct >= PRECIP_FAIL_PCT ->
+            rainPct >= PRECIP_FAIL_PCT ->
                 SkyVerdict(SkyVerdictKind.FAIL, cloudPct, precipPct, SkyVerdictNote.PRECIPITATION)
             cloudPct > CLOUD_FAIL_PCT -> SkyVerdict(SkyVerdictKind.FAIL, cloudPct, precipPct)
-            precipPct >= PRECIP_UNSTABLE_PCT ->
+            rainPct >= PRECIP_UNSTABLE_PCT ->
                 SkyVerdict(SkyVerdictKind.UNSTABLE, cloudPct, precipPct, SkyVerdictNote.PRECIPITATION)
             cloudPct > CLOUD_PASS_PCT -> SkyVerdict(SkyVerdictKind.UNSTABLE, cloudPct, precipPct)
             else -> SkyVerdict(SkyVerdictKind.PASS, cloudPct, precipPct)

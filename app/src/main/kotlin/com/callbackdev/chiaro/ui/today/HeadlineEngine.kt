@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.today
 
 import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
@@ -104,14 +105,6 @@ sealed interface Headline {
  */
 object HeadlineEngine {
 
-    /** Codes where water is falling right now — drizzle through thunderstorm. */
-    private val WET_CODES = setOf(
-        51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77,
-        80, 81, 82, 85, 86, 95, 96, 99
-    )
-    private val SNOW_CODES = setOf(71, 73, 75, 77, 85, 86)
-    private val FOG_CODES = setOf(45, 48)
-
     /** Under half, the sky has stopped promising rain: the "clear after that" bar, and
      * — read the other way — the floor of "rain possible". Internal since the evening
      * summary reads it too (21 set 2026): the app holds two bars for rain, the umbrella
@@ -161,19 +154,19 @@ object HeadlineEngine {
             ?.let { (hour, bucket) -> return Headline.Severe(bucket = bucket, at = hour.time) }
 
         val current = hours.first()
-        if (current.condition.wmoCode in WET_CODES) {
+        if (WmoCode.isPrecipitation(current.condition.wmoCode)) {
             val stopsAt = hours.asSequence()
                 .drop(1)
                 .takeWhile { it.time.isBefore(now.plusHours(TURN_LOOKAHEAD_HOURS)) }
                 .firstOrNull {
                     // An hour with no forecast chance is not evidence that it clears:
                     // the sentence waits for an hour that actually says so (Fase 26).
-                    it.condition.wmoCode !in WET_CODES &&
+                    !WmoCode.isPrecipitation(it.condition.wmoCode) &&
                         (it.precipChancePct ?: return@firstOrNull false) < CLEAR_BELOW_PCT
                 }
             return Headline.WetNow(
                 stopsAt = stopsAt?.time,
-                snow = current.condition.wmoCode in SNOW_CODES
+                snow = WmoCode.isSnow(current.condition.wmoCode)
             )
         }
 
@@ -190,7 +183,7 @@ object HeadlineEngine {
             return Headline.WetSoon(
                 at = wetHour.time,
                 pct = wetHour.chance,
-                snow = wetHour.condition.wmoCode in SNOW_CODES,
+                snow = WmoCode.isSnow(wetHour.condition.wmoCode),
                 clearsAt = clearsAt?.time
             )
         }
@@ -208,9 +201,9 @@ object HeadlineEngine {
 
         // Fog on the way, only while it is not foggy now: "Fog" is the hero's own word
         // for the present, and the sentence is for what comes next.
-        if (current.condition.wmoCode !in FOG_CODES) {
+        if (!WmoCode.isFog(current.condition.wmoCode)) {
             val fogEnd = now.plusHours(FOG_LOOKAHEAD_HOURS)
-            ahead.firstOrNull { !it.time.isAfter(fogEnd) && it.condition.wmoCode in FOG_CODES }
+            ahead.firstOrNull { !it.time.isAfter(fogEnd) && WmoCode.isFog(it.condition.wmoCode) }
                 ?.let { return Headline.Fog(at = it.time) }
         }
 
@@ -226,7 +219,7 @@ object HeadlineEngine {
             return Headline.WetMaybe(
                 at = maybe.time,
                 pct = maybe.chance,
-                snow = maybe.condition.wmoCode in SNOW_CODES
+                snow = WmoCode.isSnow(maybe.condition.wmoCode)
             )
         }
 
@@ -236,7 +229,7 @@ object HeadlineEngine {
                 return Headline.WetTomorrow(
                     at = wet.time,
                     pct = wet.chance,
-                    snow = wet.condition.wmoCode in SNOW_CODES
+                    snow = WmoCode.isSnow(wet.condition.wmoCode)
                 )
             }
 

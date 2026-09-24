@@ -10402,3 +10402,116 @@ completo», sull'ipotesi lasciata aperta il 23 set: un temporale con probabilit�
   i fixture di prova danno ai codici severi una probabilità credibile (40%), come fa il fornitore.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
 
+
+## Il motore dei dati: review di Open-Meteo e dei codici WMO (committente, 24 set 2026)
+
+Richiesta: una review del motore che interroga Open-Meteo e interpreta i dati, con attenzione al
+`weather_code`; poi «inizia con P1-P6 e tutti i suggerimenti», il suggerimento 1 (un modello WMO
+unico) nel momento in cui conviene, riverificando tutto: «è il cuore dell'app».
+
+### La review (le verifiche fatte quel giorno)
+
+- **API live** su 13 luoghi e **sorgente di Open-Meteo** (`WeatherCode.swift`, `calculate`):
+  - `current` è il blocco **a 15 minuti** (`"interval": 900`; la tabella 15-minutely della
+    documentazione dice «Preceding 15 minutes sum»). Reykjavík: `current.precipitation` 0,4 mm =
+    il quarto delle 08:45, contro 2,7 mm dell'ora; Singapore 0,0 dopo un'ora da 0,3 mm. L'app lo
+    chiamava `lastHourMm` e `ForecastOutcome` ci basava un'ora di «asciutto».
+  - I valori orari di pioggia e probabilità sono «of the preceding hour»: lo slot etichettato
+    con l'ora corrente descrive l'ora già passata.
+  - Fuori dalla famiglia ICON Open-Meteo **deriva** il codice: pioviggine = sotto 1,3 mm/h,
+    82 = ≥ 7,6 mm/h (la soglia di 65), 96 = temporale con punteggio > 85, **99 e la grandine
+    mai**. «Hail is only available in Central Europe».
+  - `models=icon_seamless` serve `current.uv_index: null`: il DTO non nullable avrebbe fatto
+    fallire l'intero report (lo stesso rischio chiuso il 20 set per `uv_index_max`).
+- **Il codice**: il giorno prendeva il `max()` del numero WMO fra le ore bagnate, e il numero non
+  è un ordine di gravità (80 > 75, 85 > 82, 71 > 65); la riga della settimana diceva «Temporale»
+  per i temporali che `AlertEngine` scartava sotto il 20%; il Journal non poteva stampare un
+  cambio di cielo (etichetta inglese) e non lo giudicava; cinque tabelle dei codici tenute
+  d'accordo a mano.
+
+### Cosa è cambiato
+
+- **`WmoCode` (domain)**: la tabella unica dei 28 codici, con parola (`ConditionWord`, id stabili
+  scritti nello storico), fase (NONE/LIQUID/FREEZING/FROZEN), **gravità** esplicita e classe di
+  maltempo. La leggono il mapper, `AlertEngine.SevereCodes` (ora derivata), `HeadlineEngine`,
+  `WeatherText` (per parola) e `ChiaroIcons` (per voce della tabella). `WeatherCondition` è il
+  solo codice: descrizione inglese ed emoji di tweather tolte, con `uvDescription` e
+  `AirQuality.status` che nessuno leggeva.
+- **Il codice del giorno (P2, P5)**: 1) un pericolo che l'ensemble sostiene
+  (`AlertEngine.severeBucket(code, chance)`, la stessa soglia del 20% del banner) prende il
+  giorno; un'ora di temporale o nubifragio improbabile è ignorata, millimetri compresi;
+  2) la pioggia materiale (1 mm o 3 ore, invariato) sceglie per **gravità dentro la fase
+  dominante** (più acqua; ore se mancano i millimetri), a parità di gravità la forma con più
+  ore; 3) altrimenti il cielo della luce, dove un'ora di pioggia che non ha guadagnato il giorno
+  vota col cielo della sua nuvolosità.
+- **La pioggia intorno ad adesso (P1)**: `Precipitation` porta il quarto d'ora con la sua fine
+  (`current.time`), le **tre ore chiuse** dalla serie oraria (fine, mm, temperatura) e la
+  probabilità dell'**ora in corso** (P7a: lo slot che finisce dopo adesso). Istantanea:
+  `current.precip_quarter_mm`/`_end`, `current.past_hours_end`/`_mm`/`_temp_c`.
+  `ForecastOutcome`: copertura = esattamente gli intervalli per cui un commit porta una
+  quantità, unione, mai allungata; la massima «vista» conta anche le ore chiuse.
+- **UV attuale nullabile (P6)**: DTO, dominio, tile di Oggi (non disegnato senza dato), variabile
+  delle regole (`optional`), istantanea (chiave assente).
+- **Parole e icone (P3, P4)**: 96/99 «Temporale forte» / «Strong thunderstorm» col temporale
+  semplice; 82 «Rovesci forti» / «Heavy showers» (disegno invariato); codice 2 «Nuvoloso» in
+  italiano. `tools/shipped_icons.py`: la grandine passa in PLANNED; `MeteoconsSets.kt`
+  rigenerato con `write_kotlin` dell'importatore (verificato prima che, a lista invariata,
+  riproducesse il file identico).
+- **Journal (P8)**: lo stato è l'id della parola, e `WeatherSnapshots.conditionWord` legge anche le
+  etichette inglesi già su disco, così il primo aggiornamento non segna la settimana come
+  cambiata. Il dettaglio stampa «sereno → temporale»; se la pioggia non decide, decide la gravità.
+- **Minori**: inquinanti mancanti null e non 0; il verdetto del cielo porta `precipPct` null
+  quando nessuna ora ha una probabilità; commento contraddittorio di `repairFog` corretto; un
+  codice fuori tabella non viene mai «riparato».
+- **Rete (suggerimento 4)**: `WeatherRepository` riprova **una** volta, dopo 2 s, un 500/502/503/504
+  del forecast.
+
+### Decisioni e deviazioni
+
+- **La gravità, non il numero, e la fase prima della gravità**: una giornata di neve con un
+  rovescio è neve; il pericolo resta davanti a tutto, perché la regola può togliere una
+  distorsione, mai un avviso (13b).
+- **Un pericolo improbabile non bagna il giorno**: è la decisione che il resto dell'app aveva già
+  preso il 24 set; tenere i suoi millimetri avrebbe rimesso dalla finestra la pioggia che il
+  banner aveva tolto dalla porta.
+- **«Temporale forte», non «con grandine»**: vera con entrambe le letture del codice. La grandine
+  tornerà quando la risposta dirà quale modello ha scritto il codice.
+- **«Pioviggine» resta** per 51-55: per il lettore è la pioggia fine e leggera, che è ciò che il
+  codice promette in entrambe le letture.
+- **82 tiene `extreme-rain`**: ≥ 7,6 mm/h è davvero un acquazzone; esagerava la parola, non il
+  disegno.
+- **I commit vecchi restano ciò che erano**: la loro unica quantità era un quarto d'ora, e come tale
+  è letta. I giorni già chiusi con soli commit vecchi perdono l'«è rimasto asciutto» che non
+  potevano sostenere; la pioggia vista resta prova.
+- **Nessun retry su 429** (i limiti sono per IP e per minuto, «riprova tra un minuto»: su un NAT
+  dell'operatore riprovare consuma il limite di altri) **né su errore di rete** (offline è il caso
+  comune, e il report in cache è già a schermo).
+- **Il `?: 0` della tinta del cielo di Oggi resta**: è un colore, non un numero stampato.
+
+### Rimandato, con la ragione
+
+- **Suggerimento 2 (nuove variabili: `rain`/`showers`/`snowfall`, totali giornalieri, raffiche
+  massime, nuvole basse/medie/alte)** e **suggerimento 3 (le condizioni «attuali» ricavate
+  dall'ora quando sono vecchie)**: il 3 ha bisogno delle variabili orarie del 2 (percepita,
+  umidità, vento), altrimenti l'eroe mescolerebbe ore diverse; entrambi portano numeri nuovi su
+  superfici nuove, cioè design (§1.2) e misure proprie. Passata dedicata.
+- **P7b (le righe orarie etichettate con l'inizio dell'intervallo)**: sposta di un'ora pioggia,
+  probabilità e codice di ogni riga per ogni motore (avvisi, frase, cielo, regole): va misurata a
+  parte, con i suoi test di confine.
+- **Suggerimento 6 (AQI europeo, soglie dei pollini per specie, nowcast a 15 minuti)**:
+  funzioni nuove, non correzioni.
+
+### Come è stato verificato
+
+- Base prima di toccare il codice: 767 test del core e 520 dell'app, verdi.
+- `WmoCodeTest` (la tabella contro i codici documentati e contro ogni insieme tenuto a mano
+  prima), `OpenMeteoResponseTest` (tre **risposte reali** di quella mattina, stesse variabili
+  dell'app, deserializzate con lo stesso `Json`), `WeatherReportMapperTest` (fase, gravità,
+  soglia, voto del cielo, ore chiuse, ora in corso, UV assente), `ForecastOutcomeTest`
+  (riscritto sulla nuova semantica, con i commit vecchi), `ForecastDiffTest`,
+  `WeatherSnapshotsTest`, `TransientRetryTest`, `JournalStateBuilderTest`, `ConditionWordsTest`,
+  `ConditionIconsTest`.
+- **Controprova**: con il vecchio `dailyCode` rimesso al suo posto, gli 8 test nuovi sul codice
+  del giorno falliscono e tutti i precedenti passano: la correzione è reale e non cambia i casi
+  che erano già giusti.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.

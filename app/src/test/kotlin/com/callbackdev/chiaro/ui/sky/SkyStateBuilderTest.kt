@@ -29,7 +29,7 @@ class SkyStateBuilderTest {
         id = 1L, name = "Milano", region = "Lombardia", country = "Italia",
         coordinates = Coordinates(45.4643, 9.1895), timezone = "Europe/Rome"
     )
-    private val clear = WeatherCondition(0, "Clear", "☀️")
+    private val clear = WeatherCondition(0)
 
     /** Noon of a NEW-MOON day (2026-09-11), so the dark window cannot be washed by
      * moonlight and a clear forecast really is a PASS; every daily moment of the day

@@ -112,18 +112,19 @@ class WeatherReportMapperTest {
     @Test
     fun `current conditions convert units and derive labels`() {
         val current = map().current
-        assertEquals("Partly Cloudy ⛅", current.condition.label)
+        assertEquals(2, current.condition.wmoCode)
         assertEquals(22.4, current.tempC, 0.0)
         assertEquals(24.1, current.feelsLikeC, 0.0)
         assertEquals(65, current.humidityPct)
         assertEquals(16.09, current.visibilityKm!!, 1e-9)      // meters → km
         assertEquals(5, current.uvIndex)                     // 5.4 rounds down
-        assertEquals("Moderate ☀️", current.uvDescription)
         assertEquals("NW", current.wind.directionCompass)    // 310°
         assertEquals(310, current.wind.degree)
-        // Precip chance read from the hourly slot matching the current hour (14:00 → index 14).
-        assertEquals(40, current.precipitation.chancePct)
-        assertEquals(0.5, current.precipitation.lastHourMm, 0.0)
+        // The chance of the hour under way is the slot that ends after 14:23 — 15:00,
+        // which the fixture leaves without one — not 14:00's 40%, which is 13-14's.
+        assertNull(current.precipitation.chancePct)
+        // `current.precipitation` is the provider's quarter of an hour, named as such.
+        assertEquals(0.5, current.precipitation.lastQuarterHourMm, 0.0)
     }
 
     @Test
@@ -137,14 +138,15 @@ class WeatherReportMapperTest {
         assertEquals(LocalDateTime.parse("2026-08-13T14:00"), hourly.first().time)
         assertEquals(LocalDateTime.parse("2026-08-14T23:00"), hourly.last().time)
         assertEquals(24.0, hourly.first().tempC, 0.0)        // 10.0 + index 14
-        assertEquals("Light Rain 🌧️", hourly.first().condition.label)
+        assertEquals(61, hourly.first().condition.wmoCode)
         assertEquals(40, hourly.first().precipChancePct)
         // Fase 26: a chance the provider did not forecast stays null. It used to be
         // mapped to 0, which is a forecast of its own and was never made.
         assertNull(hourly[1].precipChancePct)
-        // Night slot (2026-08-14T03:00, index 27) uses the night emoji for clear sky.
+        // Night is not the condition's business any more: the slot carries its code
+        // and the icon picks the nocturnal drawing from the hour.
         val night = hourly.first { it.time == LocalDateTime.parse("2026-08-14T03:00") }
-        assertEquals("🌙", night.condition.emoji)
+        assertEquals(0, night.condition.wmoCode)
     }
 
     @Test
@@ -186,7 +188,7 @@ class WeatherReportMapperTest {
         assertEquals(18.0, daily.first().lowC, 0.0)
         // Derived from the day's hours, not from daily.weather_code (3): it rains at hour
         // 14, and rain outranks any sky code.
-        assertEquals("Light Rain 🌧️", daily.first().condition.label)
+        assertEquals(61, daily.first().condition.wmoCode)
         assertEquals(55, daily.first().precipPct)
         // The model carried no probability, so neither does the day.
         assertNull(daily[1].precipPct)
@@ -222,7 +224,7 @@ class WeatherReportMapperTest {
     }
 
     private fun statusOfFirstDay(codes: List<Int>, providerCode: Int) =
-        map(forecast = dayOf(codes, providerCode)).daily.first().condition.label
+        map(forecast = dayOf(codes, providerCode)).daily.first().condition.wmoCode
 
     /**
      * The default fixture with [span] hours from the CURRENT one (index 14,
@@ -249,34 +251,34 @@ class WeatherReportMapperTest {
     }
 
     private fun statusOfCurrentHour(code: Int, visibilityM: Double?, cloudPct: Int, span: Int = 2) =
-        map(forecast = hourAt(code, visibilityM, cloudPct, span)).hourly.first().condition.label
+        map(forecast = hourAt(code, visibilityM, cloudPct, span)).hourly.first().condition.wmoCode
 
     @Test
     fun `fog reported with kilometres of visibility falls back on the cloud cover`() {
         // Cavenago, 22 Aug 2026, 01:00: weather_code 45 with 9.76 km of visibility.
-        assertEquals("Partly Cloudy ⛅", statusOfCurrentHour(45, 9760.0, 59))
+        assertEquals(2, statusOfCurrentHour(45, 9760.0, 59))
     }
 
     @Test
     fun `dense fog the provider called overcast reads as fog`() {
         // Same city, 07:00: 160 m of visibility served as code 3. The dangerous direction.
-        assertEquals("Foggy 🌫️", statusOfCurrentHour(3, 160.0, 100))
+        assertEquals(45, statusOfCurrentHour(3, 160.0, 100))
     }
 
     @Test
     fun `fog that really is fog is left alone`() {
-        assertEquals("Foggy 🌫️", statusOfCurrentHour(45, 40.0, 100))
+        assertEquals(45, statusOfCurrentHour(45, 40.0, 100))
     }
 
     @Test
     fun `precipitation is never rewritten by the fog repair`() {
         // Rain is not derived from visibility, and it can rain in fog.
-        assertEquals("Light Rain 🌧️", statusOfCurrentHour(61, 40.0, 100))
+        assertEquals(61, statusOfCurrentHour(61, 40.0, 100))
     }
 
     @Test
     fun `a missing visibility leaves the provider code untouched`() {
-        assertEquals("Foggy 🌫️", statusOfCurrentHour(45, null, 10))
+        assertEquals(45, statusOfCurrentHour(45, null, 10))
     }
 
     @Test
@@ -288,7 +290,7 @@ class WeatherReportMapperTest {
             )
         )
         // The JSON printed "Foggy" right above a 9.76 km visibility of its own.
-        assertEquals("Partly Cloudy ⛅", report.current.condition.label)
+        assertEquals(2, report.current.condition.wmoCode)
         assertEquals(9.76, report.current.visibilityKm!!, 1e-9)
     }
 
@@ -297,13 +299,13 @@ class WeatherReportMapperTest {
         // The reported case: Open-Meteo's daily code is max() over 24 hours, so the fog
         // hours of a Po Valley night outrank 14 hours of sun. Only the daylight votes.
         val codes = List(24) { if (it in 6..19) 0 else 45 }
-        assertEquals("Clear ☀️", statusOfFirstDay(codes, providerCode = 45))
+        assertEquals(0, statusOfFirstDay(codes, providerCode = 45))
     }
 
     @Test
     fun `rain in daylight outranks the sky`() {
         val codes = List(24) { if (it == 15) 61 else 0 }
-        assertEquals("Light Rain 🌧️", statusOfFirstDay(codes, providerCode = 61))
+        assertEquals(61, statusOfFirstDay(codes, providerCode = 61))
     }
 
     // ---------------------------------------- Fase 26: fog needs a run to be invented
@@ -312,12 +314,12 @@ class WeatherReportMapperTest {
     fun `a single hour below the threshold is not invented into fog`() {
         // Measured 6 Sep 2026 on 23 cities: rewriting isolated hours took the week's
         // fog transitions from 10 to 18. Fog is not one hour long at this resolution.
-        assertEquals("Clear ☀️", statusOfCurrentHour(0, 160.0, 100, span = 1))
+        assertEquals(0, statusOfCurrentHour(0, 160.0, 100, span = 1))
     }
 
     @Test
     fun `two hours below the threshold still are`() {
-        assertEquals("Foggy 🌫️", statusOfCurrentHour(0, 160.0, 100, span = 2))
+        assertEquals(45, statusOfCurrentHour(0, 160.0, 100, span = 2))
     }
 
     @Test
@@ -325,13 +327,13 @@ class WeatherReportMapperTest {
         // The rule is one-sided on purpose: there is no run argument for KEEPING a
         // value the provider's own visibility disagrees with, and 68% of the fog codes
         // served are contradicted.
-        assertEquals("Partly Cloudy ⛅", statusOfCurrentHour(45, 9760.0, 59, span = 1))
+        assertEquals(2, statusOfCurrentHour(45, 9760.0, 59, span = 1))
     }
 
     // ------------------------------- Fase 26: the day is claimed by material rain only
 
     /** [mm] per precipitation hour; the codes place them. */
-    private fun dayOfWith(codes: List<Int>, mm: Double, providerCode: Int): String {
+    private fun dayOfWith(codes: List<Int>, mm: Double, providerCode: Int): Int {
         val base = dayOf(codes, providerCode)
         return map(
             forecast = base.copy(
@@ -339,7 +341,7 @@ class WeatherReportMapperTest {
                     precipitationMm = codes.map { if (it >= 51) mm else 0.0 }
                 )
             )
-        ).daily.first().condition.label
+        ).daily.first().condition.wmoCode
     }
 
     @Test
@@ -347,7 +349,7 @@ class WeatherReportMapperTest {
         // Singapore, 6 Sep 2026: one hour, 0.1 mm, 1% probability, and the week table
         // said Drizzle. Milan the same day said Rain Showers for 0.0 mm.
         val codes = List(24) { if (it == 9) 51 else 0 }
-        assertEquals("Clear ☀️", dayOfWith(codes, mm = 0.1, providerCode = 51))
+        assertEquals(0, dayOfWith(codes, mm = 0.1, providerCode = 51))
     }
 
     @Test
@@ -355,13 +357,13 @@ class WeatherReportMapperTest {
         // 0.4 mm in total, under the millimetre — but four hours of it, which is what
         // a drizzly day looks like. The hour count is the escape hatch.
         val codes = List(24) { if (it in 13..16) 51 else 0 }
-        assertEquals("Drizzle 🌦️", dayOfWith(codes, mm = 0.1, providerCode = 51))
+        assertEquals(51, dayOfWith(codes, mm = 0.1, providerCode = 51))
     }
 
     @Test
     fun `a single hour that really rains does`() {
         val codes = List(24) { if (it == 9) 61 else 0 }
-        assertEquals("Light Rain 🌧️", dayOfWith(codes, mm = 1.2, providerCode = 61))
+        assertEquals(61, dayOfWith(codes, mm = 1.2, providerCode = 61))
     }
 
     @Test
@@ -369,7 +371,7 @@ class WeatherReportMapperTest {
         // The gate may remove a distortion, never a warning: a dry thunderstorm is
         // still a thunderstorm, and it does not have to clear a millimetre to say so.
         val codes = List(24) { if (it == 9) 95 else 0 }
-        assertEquals("Thunderstorm ⛈️", dayOfWith(codes, mm = 0.0, providerCode = 95))
+        assertEquals(95, dayOfWith(codes, mm = 0.0, providerCode = 95))
     }
 
     @Test
@@ -378,7 +380,7 @@ class WeatherReportMapperTest {
         // cannot speak, and the day is judged on how long the rain runs.
         val base = dayOf(List(24) { if (it in 13..16) 51 else 0 }, providerCode = 51)
         val noAmounts = base.copy(hourly = base.hourly.copy(precipitationMm = emptyList()))
-        assertEquals("Drizzle 🌦️", map(forecast = noAmounts).daily.first().condition.label)
+        assertEquals(51, map(forecast = noAmounts).daily.first().condition.wmoCode)
     }
 
     @Test
@@ -387,28 +389,166 @@ class WeatherReportMapperTest {
         // nocturnal thunderstorms into "Overcast" across the 8 cities measured — the rule
         // may remove a distortion, never a warning.
         val codes = List(24) { if (it in 6..19) 3 else 95 }
-        assertEquals("Thunderstorm ⛈️", statusOfFirstDay(codes, providerCode = 95))
+        assertEquals(95, statusOfFirstDay(codes, providerCode = 95))
     }
 
     @Test
     fun `a day that really is foggy still reads foggy`() {
         // No special case for 45: it wins on its own when it is the day's usual sky.
         val codes = List(24) { if (it in 6..15) 45 else 3 }
-        assertEquals("Foggy 🌫️", statusOfFirstDay(codes, providerCode = 45))
+        assertEquals(45, statusOfFirstDay(codes, providerCode = 45))
     }
 
     @Test
     fun `a tie between two skies goes to the heavier one`() {
         val codes = List(24) { if (it in 6..12) 1 else 3 }
-        assertEquals("Overcast ☁️", statusOfFirstDay(codes, providerCode = 3))
+        assertEquals(3, statusOfFirstDay(codes, providerCode = 3))
     }
 
     @Test
     fun `days the hourly run does not reach keep the provider code`() {
         // 48 hourly slots cover two days; the rest of the week falls back on daily.
         val daily = map().daily
-        assertEquals("Clear ☀️", daily[1].condition.label)     // derived: clear all day
-        assertEquals("Overcast ☁️", daily[2].condition.label)  // provider's code 3
+        assertEquals(0, daily[1].condition.wmoCode)     // derived: clear all day
+        assertEquals(3, daily[2].condition.wmoCode)  // provider's code 3
+    }
+
+    // ------------------------ 24 set 2026: severity and phase, not the WMO number (P2)
+
+    /** The first day's code for [codes], with [mm] and [chance] per hour of the day. */
+    private fun dayCode(
+        codes: List<Int>,
+        mm: (Int) -> Double = { if (codes[it] >= 51) 1.5 else 0.0 },
+        chance: (Int) -> Int? = { null }
+    ): Int {
+        val base = dayOf(codes, providerCode = 3)
+        return map(
+            forecast = base.copy(
+                hourly = base.hourly.copy(
+                    precipitationMm = List(24, mm),
+                    precipitationProbabilityPct = List(24, chance)
+                )
+            )
+        ).daily.first().condition.wmoCode
+    }
+
+    @Test
+    fun `a snowy day with one shower is snow, not showers`() {
+        // The number put 80 above 73: max() printed «Rovesci» over a day of snow.
+        val codes = List(24) { if (it in 8..15) 73 else if (it == 17) 80 else 3 }
+        assertEquals(73, dayCode(codes))
+    }
+
+    @Test
+    fun `heavy snow is not outranked by a slight shower`() {
+        val codes = List(24) { if (it in 8..10) 75 else if (it == 17) 80 else 3 }
+        assertEquals(75, dayCode(codes))
+    }
+
+    @Test
+    fun `heavy rain is not outranked by slight showers`() {
+        val codes = List(24) { if (it in 8..10) 65 else if (it in 14..15) 80 else 3 }
+        assertEquals(65, dayCode(codes))
+    }
+
+    @Test
+    fun `rain and showers of the same grade go to the one more hours carry`() {
+        assertEquals(80, dayCode(List(24) { if (it in 8..9) 61 else if (it in 12..15) 80 else 3 }))
+        assertEquals(61, dayCode(List(24) { if (it in 8..11) 61 else if (it in 14..15) 80 else 3 }))
+    }
+
+    @Test
+    fun `the phase that brought more water names the day`() {
+        // Four hours of light snow, 0.2 mm each, against two of moderate rain at 3 mm:
+        // it was a day of rain with some snow in it, not the other way round.
+        val codes = List(24) { if (it in 6..9) 71 else if (it in 14..15) 63 else 3 }
+        assertEquals(63, dayCode(codes, mm = { if (it in 6..9) 0.2 else if (it in 14..15) 3.0 else 0.0 }))
+        // Without amounts the hours decide: four of snow beat two of rain.
+        val base = dayOf(codes, providerCode = 3)
+        val noAmounts = base.copy(hourly = base.hourly.copy(precipitationMm = emptyList()))
+        assertEquals(71, map(forecast = noAmounts).daily.first().condition.wmoCode)
+    }
+
+    // ------------------------------ 24 set 2026: the banner's chance floor (P5)
+
+    @Test
+    fun `an improbable storm does not label the day`() {
+        // AlertEngine drops a storm under 20%; the week's row printed it anyway.
+        val codes = List(24) { if (it == 15) 95 else 0 }
+        assertEquals(0, dayCode(codes, chance = { if (it == 15) 10 else 0 }))
+        assertEquals(95, dayCode(codes, chance = { if (it == 15) 25 else 0 }))
+        // No chance at all is not evidence against it (§1.1): the storm stands.
+        assertEquals(95, dayCode(codes, chance = { null }))
+    }
+
+    @Test
+    fun `an improbable downpour's millimetres do not make the day wet`() {
+        val codes = List(24) { if (it == 15) 65 else 0 }
+        assertEquals(0, dayCode(codes, mm = { if (it == 15) 9.0 else 0.0 }, chance = { 5 }))
+    }
+
+    @Test
+    fun `ice needs no chance at all`() {
+        val codes = List(24) { if (it == 7) 56 else 0 }
+        assertEquals(56, dayCode(codes, mm = { 0.0 }, chance = { 2 }))
+    }
+
+    @Test
+    fun `precipitation that did not earn the day does not win its sky either`() {
+        // Daylight 06-19, two hours apiece of every sky and two of drizzle: the old
+        // tie-break handed the day to 51. Its hours now vote with their cloud (100% → 3).
+        val daylight = listOf(0, 0, 1, 1, 2, 2, 3, 3, 51, 51, 45, 45, 48, 48)
+        val codes = List(24) { if (it in 6..19) daylight[it - 6] else 0 }
+        assertEquals(3, dayCode(codes, mm = { if (codes[it] == 51) 0.1 else 0.0 }))
+    }
+
+    // ------------------------------------------- 24 set 2026: the rain around now (P1, P7)
+
+    @Test
+    fun `the closed hours come from the hourly series, each with its end`() {
+        // Fixture: current 14:23 New York (EDT, UTC-4); slot 14 holds 2 mm, the rest 0.
+        val rain = map().current.precipitation
+        assertEquals(
+            listOf("2026-08-13T18:00:00Z", "2026-08-13T17:00:00Z", "2026-08-13T16:00:00Z"),
+            rain.pastHours.map { it.endedAt.toString() }
+        )
+        assertEquals(listOf(2.0, 0.0, 0.0), rain.pastHours.map { it.precipMm })
+        assertEquals(listOf(24.0, 23.0, 22.0), rain.pastHours.map { it.tempC })
+    }
+
+    @Test
+    fun `no amounts in the response, no closed hours - not three dry ones`() {
+        val base = forecast()
+        val report = map(forecast = base.copy(hourly = base.hourly.copy(precipitationMm = emptyList())))
+        assertEquals(emptyList<Any>(), report.current.precipitation.pastHours)
+    }
+
+    @Test
+    fun `just after midnight only the hours the response holds are closed`() {
+        val rain = map(forecast = forecast(currentTime = "2026-08-13T00:20")).current.precipitation
+        assertEquals(1, rain.pastHours.size) // 23:00-00:00, labelled 00:00
+    }
+
+    @Test
+    fun `the chance now is the hour under way, not the one gone`() {
+        val base = forecast()
+        val n = base.hourly.time.size
+        val chances = base.copy(hourly = base.hourly.copy(precipitationProbabilityPct = List(n) { it * 2 }))
+        // 14:23 → the slot labelled 15:00 (14-15), index 15.
+        assertEquals(30, map(forecast = chances).current.precipitation.chancePct)
+        // On the hour the one ahead too: at 14:00 the hour 13-14 is over.
+        assertEquals(30, map(forecast = chances.copy(current = chances.current.copy(time = "2026-08-13T14:00")))
+            .current.precipitation.chancePct)
+    }
+
+    // ---------------------------------------------------------- 24 set 2026: P6
+
+    @Test
+    fun `a model with no current uv costs the index, not the report`() {
+        val base = forecast()
+        val report = map(forecast = base.copy(current = base.current.copy(uvIndex = null)))
+        assertNull(report.current.uvIndex)
+        assertEquals(34, report.hourly.size)
     }
 
     /**
@@ -505,20 +645,20 @@ class WeatherReportMapperTest {
         )
         val aq = report.airQuality!!
         assertEquals(42, aq.aqiIndex)
-        assertEquals("Good ⚪", aq.status)
-        assertEquals(12.5, aq.pollutants.pm25, 0.0)
-        assertEquals(0.3, aq.pollutants.coMg, 1e-9)          // µg → mg
-        assertEquals(0.0, aq.pollutants.no2 - 15.3, 1e-9)
+        assertEquals(12.5, aq.pollutants.pm25!!, 0.0)
+        assertEquals(0.3, aq.pollutants.coMg!!, 1e-9)          // µg → mg
+        assertEquals(15.3, aq.pollutants.no2!!, 1e-9)
     }
 
     @Test
-    fun `missing pollutants default to zero`() {
+    fun `missing pollutants stay missing rather than clean`() {
+        // They defaulted to 0.0 until 24 set 2026: clean air nobody had measured.
         val report = map(
             airQuality = AirQualityCurrentDto(time = "2026-08-13T14:00", usAqi = 66)
         )
         val pollutants = report.airQuality!!.pollutants
-        assertEquals(0.0, pollutants.pm25, 0.0)
-        assertEquals(0.0, pollutants.coMg, 0.0)
+        assertNull(pollutants.pm25)
+        assertNull(pollutants.coMg)
     }
 
     @Test

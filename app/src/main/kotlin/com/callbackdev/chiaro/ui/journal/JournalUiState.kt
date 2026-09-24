@@ -6,6 +6,7 @@ import com.callbackdev.chiaro.data.local.ForecastDiff
 import com.callbackdev.chiaro.data.local.ForecastOutcome
 import com.callbackdev.chiaro.data.local.SnapshotDiff
 import com.callbackdev.chiaro.data.local.WarningRecordKind
+import com.callbackdev.chiaro.domain.ConditionWord
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.placeZone
@@ -411,12 +412,31 @@ object JournalStateBuilder {
             .map { FieldShift(it.key, removed[it.key], it.value) }
     }
 
-    /** Rain decides the word: it is the number people plan around (VISION §5.5's own
-     * example). Temperature alone stays neutral — warmer is not universally better. */
+    /**
+     * Rain decides the word: it is the number people plan around (VISION §5.5's own
+     * example). Temperature alone stays neutral — warmer is not universally better.
+     *
+     * When rain does not decide, the sky does (24 set 2026): a day that went from
+     * «Sereno» to «Temporale» with the same chance of rain got worse, and until then it
+     * was an entry with no verdict and, the sky being unprintable, no detail either.
+     * Ranked by [ConditionWord.severity] — the same ladder that picks the day's word —
+     * so fog is worse than overcast and snow worse than the rain of the same grade.
+     */
     private fun judgement(shifts: List<FieldShift>): Boolean? {
-        val rain = shifts.firstOrNull { it.field == "precip_pct" } ?: return null
-        val old = rain.old?.toDoubleOrNull() ?: return null
-        val new = rain.new.toDoubleOrNull() ?: return null
+        compare(shifts, "precip_pct") { it.toDoubleOrNull() }?.let { return it }
+        return compare(shifts, "status") { raw -> ConditionWord.fromId(raw)?.severity?.toDouble() }
+    }
+
+    /** true when [field] went down, false when it went up, null when it did not move or
+     * either end cannot be read. */
+    private fun compare(
+        shifts: List<FieldShift>,
+        field: String,
+        measure: (String) -> Double?
+    ): Boolean? {
+        val shift = shifts.firstOrNull { it.field == field } ?: return null
+        val old = shift.old?.let(measure) ?: return null
+        val new = measure(shift.new) ?: return null
         return when {
             new < old -> true
             new > old -> false

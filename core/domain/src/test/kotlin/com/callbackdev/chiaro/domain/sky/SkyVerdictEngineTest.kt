@@ -31,7 +31,7 @@ class SkyVerdictEngineTest {
                 time = midnight.plusHours(i.toLong()),
                 at = midnight.plusHours(i.toLong()).atZone(rome).toInstant(),
                 tempC = 20.0,
-                condition = WeatherCondition(0, "Clear", "☀️"),
+                condition = WeatherCondition(0),
                 precipChancePct = rain(i),
                 cloudCoverPct = cloud(i)
             )
@@ -243,7 +243,7 @@ class SkyVerdictEngineTest {
                 LocalDateTime.parse("2026-08-12T00:00").plusHours(it.toLong()).let { t ->
                     HourlyForecast(
                         t, t.atZone(rome).toInstant(),
-                        20.0, WeatherCondition(0, "Clear", "☀️"), 0, 0
+                        20.0, WeatherCondition(0), 0, 0
                     )
                 }
             },

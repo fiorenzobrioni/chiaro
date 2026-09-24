@@ -29,9 +29,9 @@ import java.time.ZoneId
  * that must match the mockups without touching the network.
  */
 fun sampleWeatherReport(): WeatherReport {
-    val partlyCloudy = WeatherCondition(2, "Partly Cloudy", "⛅")
-    val sunny = WeatherCondition(0, "Sunny", "☀️")
-    val clearNight = WeatherCondition(0, "Clear", "🌙")
+    val partlyCloudy = WeatherCondition(2)
+    val sunny = WeatherCondition(0)
+    val clearNight = WeatherCondition(0)
     val baseDate = LocalDate.of(2023, 10, 27)
     return WeatherReport(
         location = Location(
@@ -51,13 +51,11 @@ fun sampleWeatherReport(): WeatherReport {
             visibilityKm = 16.1,
             pressureMb = 1015.2,
             uvIndex = 4,
-            uvDescription = "Moderate ☀️",
             wind = Wind(12.5, "NW", 310, 18.0),
-            precipitation = Precipitation(0.0, 10)
+            precipitation = Precipitation(0.0, emptyList(), 10)
         ),
         airQuality = AirQuality(
             aqiIndex = 42,
-            status = "Good ⚪",
             pollutants = Pollutants(8.2, 15.5, 35.1, 12.4, 2.1, 0.4)
         ),
         pollen = PollenReport(
@@ -83,8 +81,8 @@ fun sampleWeatherReport(): WeatherReport {
         ),
         daily = listOf(
             DailyForecast(baseDate.plusDays(3), 20.0, 12.0, sunny, 0, 5),
-            DailyForecast(baseDate.plusDays(4), 18.0, 11.0, WeatherCondition(63, "Rainy", "🌧️"), 85, 2),
-            DailyForecast(baseDate.plusDays(5), 16.0, 10.0, WeatherCondition(3, "Cloudy", "☁️"), 20, 3),
+            DailyForecast(baseDate.plusDays(4), 18.0, 11.0, WeatherCondition(63), 85, 2),
+            DailyForecast(baseDate.plusDays(5), 16.0, 10.0, WeatherCondition(3), 20, 3),
             DailyForecast(baseDate.plusDays(6), 19.0, 13.0, partlyCloudy, 10, 6)
         ),
         systemInfo = SystemInfo(

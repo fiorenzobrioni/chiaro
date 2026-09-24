@@ -185,10 +185,10 @@
     <string name="cond_snow_heavy">Heavy snow</string>
     <string name="cond_snow_grains">Snow grains</string>
     <string name="cond_showers">Showers</string>
-    <string name="cond_showers_violent">Violent showers</string>
+    <string name="cond_showers_heavy">Heavy showers</string>
     <string name="cond_snow_showers">Snow showers</string>
     <string name="cond_thunderstorm">Thunderstorm</string>
-    <string name="cond_thunderstorm_hail">Thunderstorm with hail</string>
+    <string name="cond_thunderstorm_strong">Strong thunderstorm</string>
     <string name="cond_unknown">Unknown conditions</string>
 
     <!-- Empty and error states -->
@@ -1152,6 +1152,7 @@
     <string name="journal_shift_better">%1$s improved</string>
     <string name="journal_shift_worse">%1$s got worse</string>
     <string name="journal_shift_neutral">%1$s\'s forecast changed</string>
+    <string name="journal_field_sky">%1$s → %2$s</string>
     <string name="journal_field_rain">rain %1$s → %2$s</string>
     <string name="journal_field_high">high %1$s → %2$s</string>
     <string name="journal_field_low">low %1$s → %2$s</string>

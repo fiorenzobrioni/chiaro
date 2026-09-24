@@ -2,15 +2,16 @@ package com.callbackdev.chiaro.ui.today
 
 import androidx.annotation.StringRes
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.domain.ConditionWord
 import com.callbackdev.chiaro.domain.model.PollenLevel
 import com.callbackdev.chiaro.domain.model.PollenReport
 
 /**
  * The WMO vocabulary and the meaning lines, as string resources — which is the whole
  * localization architecture of this app: everything on screen is prose or data, so
- * everything on screen is a resource (VISION §8). The domain's own English
- * `WeatherCondition.description` never reaches a screen; it is tweather's JSON
- * vocabulary, not Chiaro's.
+ * everything on screen is a resource (VISION §8). The domain carries no words of its
+ * own for a condition since 24 set 2026 — tweather's English descriptions went — only
+ * the code and the [ConditionWord] group it belongs to.
  *
  * The meaning bands are the product's editorial voice (DESIGN §1.2): every band is an
  * honest consequence, and a metric whose value has no consequence today still gets its
@@ -20,28 +21,44 @@ object WeatherText {
 
     /** One word (or two) per WMO bucket. Day/night does not change the word. */
     @StringRes
-    fun condition(wmoCode: Int): Int = when (wmoCode) {
-        0 -> R.string.cond_clear
-        1 -> R.string.cond_mostly_clear
-        2 -> R.string.cond_partly_cloudy
-        3 -> R.string.cond_overcast
-        45, 48 -> R.string.cond_fog
-        51, 53, 55 -> R.string.cond_drizzle
-        56, 57 -> R.string.cond_freezing_drizzle
-        61 -> R.string.cond_rain_light
-        63 -> R.string.cond_rain
-        65 -> R.string.cond_rain_heavy
-        66, 67 -> R.string.cond_freezing_rain
-        71 -> R.string.cond_snow_light
-        73 -> R.string.cond_snow
-        75 -> R.string.cond_snow_heavy
-        77 -> R.string.cond_snow_grains
-        80, 81 -> R.string.cond_showers
-        82 -> R.string.cond_showers_violent
-        85, 86 -> R.string.cond_snow_showers
-        95 -> R.string.cond_thunderstorm
-        96, 99 -> R.string.cond_thunderstorm_hail
-        else -> R.string.cond_unknown
+    fun condition(wmoCode: Int): Int = condition(ConditionWord.of(wmoCode))
+
+    /**
+     * The word for a [ConditionWord], which is where the grouping of codes lives
+     * (24 set 2026): this table only spells each group, so it can no longer disagree
+     * with the engines about which codes belong together.
+     *
+     * Three words changed that day, each to what the code can promise under both of
+     * the ways Open-Meteo writes it (see `WmoCode`): 96/99 are «Temporale forte», not
+     * «con grandine» — outside the ICON family the code means a strong thunderstorm
+     * and nobody forecast hail; 82 is «Rovesci forti», not «violenti» — it starts at
+     * 7.6 mm/h, the same floor as «Pioggia forte»; and code 2 is «Nuvoloso», not «Poco
+     * nuvoloso» — it is 50 to 80% of the sky, where the Italian bulletins' «poco
+     * nuvoloso» is the few clouds of code 1.
+     */
+    @StringRes
+    fun condition(word: ConditionWord): Int = when (word) {
+        ConditionWord.CLEAR -> R.string.cond_clear
+        ConditionWord.MOSTLY_CLEAR -> R.string.cond_mostly_clear
+        ConditionWord.PARTLY_CLOUDY -> R.string.cond_partly_cloudy
+        ConditionWord.OVERCAST -> R.string.cond_overcast
+        ConditionWord.FOG -> R.string.cond_fog
+        ConditionWord.DRIZZLE -> R.string.cond_drizzle
+        ConditionWord.FREEZING_DRIZZLE -> R.string.cond_freezing_drizzle
+        ConditionWord.RAIN_LIGHT -> R.string.cond_rain_light
+        ConditionWord.RAIN -> R.string.cond_rain
+        ConditionWord.RAIN_HEAVY -> R.string.cond_rain_heavy
+        ConditionWord.FREEZING_RAIN -> R.string.cond_freezing_rain
+        ConditionWord.SNOW_LIGHT -> R.string.cond_snow_light
+        ConditionWord.SNOW -> R.string.cond_snow
+        ConditionWord.SNOW_HEAVY -> R.string.cond_snow_heavy
+        ConditionWord.SNOW_GRAINS -> R.string.cond_snow_grains
+        ConditionWord.SHOWERS -> R.string.cond_showers
+        ConditionWord.SHOWERS_HEAVY -> R.string.cond_showers_heavy
+        ConditionWord.SNOW_SHOWERS -> R.string.cond_snow_showers
+        ConditionWord.THUNDERSTORM -> R.string.cond_thunderstorm
+        ConditionWord.THUNDERSTORM_STRONG -> R.string.cond_thunderstorm_strong
+        ConditionWord.UNKNOWN -> R.string.cond_unknown
     }
 
     /** Burn-time bands for unprotected fair skin — estimates, and worded as such. */

@@ -1,5 +1,7 @@
 package com.callbackdev.chiaro.domain.model
 
+import com.callbackdev.chiaro.domain.ConditionWord
+import com.callbackdev.chiaro.domain.WmoCode
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -57,13 +59,21 @@ data class Location(
     val localTime: LocalDateTime
 )
 
-data class WeatherCondition(
-    val wmoCode: Int,
-    val description: String,
-    val emoji: String
-) {
-    /** Rendered form used in the JSON UI, e.g. `"Partly Cloudy ⛅"`. */
-    val label: String get() = "$description $emoji"
+/**
+ * A condition is its WMO code and nothing else (24 set 2026).
+ *
+ * It used to carry tweather's English description and an emoji beside the code —
+ * `"Partly Cloudy ⛅"` — which no screen of this app ever showed (`WeatherText` picks
+ * the word, `ChiaroIcons` the drawing) but which the history snapshots stored and the
+ * Journal compared. Everything a reader or an engine needs is read off the code through
+ * [WmoCode], the one table.
+ */
+data class WeatherCondition(val wmoCode: Int) {
+    /** The table's entry, or null for a number Open-Meteo does not serve. */
+    val wmo: WmoCode? get() = WmoCode.of(wmoCode)
+
+    /** The word a screen prints for this condition. */
+    val word: ConditionWord get() = ConditionWord.of(wmoCode)
 }
 
 data class Wind(
@@ -73,10 +83,54 @@ data class Wind(
     val gustKph: Double
 )
 
+/**
+ * The rain around now: what fell in the provider's current quarter of an hour, what fell
+ * in the hours that have just closed, and the chance for the hour under way.
+ *
+ * Reshaped 24 set 2026. It carried one `lastHourMm`, read off `current.precipitation`
+ * and documented as "the sum of the preceding hour" — but `current` is Open-Meteo's
+ * 15-minutely block (`"interval": 900`, and the docs' 15-minutely table says «Preceding
+ * 15 minutes sum»). Measured that morning: Reykjavík `current` 0.4 mm, equal to the
+ * 08:45 quarter, where the hour behind it held 2.7 mm; Singapore `current` 0.0 mm after
+ * an hour of 0.3 mm. `ForecastOutcome` had been vouching for whole hours of dry weather
+ * on a quarter of an hour of evidence. The hours now come from the hourly series, whose
+ * values ARE sums of the preceding hour, each with the moment it ended.
+ */
 data class Precipitation(
-    val lastHourMm: Double,
-    /** Null when the provider did not forecast one for this hour — never a silent 0. */
-    val chancePct: Int?
+    /** Millimetres in the 15 minutes ending at the provider's `current.time`. */
+    val lastQuarterHourMm: Double,
+    /**
+     * The hours that have already closed, newest first, as the hourly series has them
+     * (up to [PAST_HOURS]). Empty for a report built from a cache entry written before
+     * the hourly amounts were fetched.
+     */
+    val pastHours: List<PastHour>,
+    /**
+     * The chance for the hour now under way, or null when the provider did not
+     * forecast one — never a silent 0. Read off the slot that ENDS after now: an
+     * hourly probability is Open-Meteo's «of the preceding hour», and the slot
+     * labelled with the current hour describes the one already gone (24 set 2026).
+     */
+    val chancePct: Int?,
+    /**
+     * When [lastQuarterHourMm]'s quarter ended: the provider's `current.time`, which is
+     * aligned to the quarter and can sit up to fifteen minutes before the fetch. Null
+     * only where a report is built by hand.
+     */
+    val quarterEndedAt: Instant? = null
+) {
+    companion object {
+        /** Three: enough that a reading every two hours, give or take the job's flex,
+         * still leaves no hour between two readings unaccounted for. */
+        const val PAST_HOURS = 3
+    }
+}
+
+/** One closed hour: what fell in it and the temperature at its end. */
+data class PastHour(
+    val endedAt: Instant,
+    val precipMm: Double,
+    val tempC: Double
 )
 
 data class CurrentConditions(
@@ -88,25 +142,37 @@ data class CurrentConditions(
     /** Null when the model behind this response does not carry visibility. */
     val visibilityKm: Double?,
     val pressureMb: Double,
-    val uvIndex: Int,
-    val uvDescription: String,
+    /**
+     * The UV index right now, **null when the model behind this response does not
+     * carry one** (24 set 2026) — the same sentence [DailyForecast.uvIndexMax] has
+     * carried since 20 set, found out one block later. Measured on the live endpoint:
+     * `models=icon_seamless` serves `current.uv_index: null`, and the non-nullable
+     * field would have failed the whole report to parse rather than cost one tile.
+     * The English `uvDescription` beside it went with it: nothing read it.
+     */
+    val uvIndex: Int?,
     val wind: Wind,
     val precipitation: Precipitation
 )
 
-/** Concentrations in µg/m³ except [coMg] (mg/m³, as in the sample). */
+/**
+ * Concentrations in µg/m³ except [coMg] (mg/m³). Each one **null when the service did
+ * not measure it** (24 set 2026): the mapper used to write `0.0` in its place, a clean
+ * air nobody had observed. No screen reads these yet; the first one that does must not
+ * inherit a zero.
+ */
 data class Pollutants(
-    val pm25: Double,
-    val pm10: Double,
-    val o3: Double,
-    val no2: Double,
-    val so2: Double,
-    val coMg: Double
+    val pm25: Double?,
+    val pm10: Double?,
+    val o3: Double?,
+    val no2: Double?,
+    val so2: Double?,
+    val coMg: Double?
 )
 
+/** The US AQI and its pollutants. The English `status` label it carried went unread. */
 data class AirQuality(
     val aqiIndex: Int,
-    val status: String,
     val pollutants: Pollutants
 )
 

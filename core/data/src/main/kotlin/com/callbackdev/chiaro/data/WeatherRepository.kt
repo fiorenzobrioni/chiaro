@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
@@ -59,7 +60,9 @@ class WeatherRepository(
      * [ServiceLocator] wires it. A default of nothing means a test that does not care
      * about retention gets none.
      */
-    private val onHousekeeping: suspend () -> Unit = {}
+    private val onHousekeeping: suspend () -> Unit = {},
+    /** How long [fetch] waits before its one retry of a transient failure. */
+    private val transientRetryDelay: Duration = TRANSIENT_RETRY_DELAY
 ) {
 
     private data class CacheEntry(val report: WeatherReport, val fetchedAt: Instant)
@@ -207,7 +210,7 @@ class WeatherRepository(
         val startNanos = System.nanoTime()
         val (forecast, air) = coroutineScope {
             val forecastDeferred = async {
-                forecastApi.forecast(city.coordinates.lat, city.coordinates.lon)
+                retryingTransient { forecastApi.forecast(city.coordinates.lat, city.coordinates.lon) }
             }
             // Air quality is best-effort: its failure must not sink the whole report
             val airDeferred = async {
@@ -289,6 +292,27 @@ class WeatherRepository(
         }
     }
 
+    /**
+     * [block] once more, after [transientRetryDelay], when Open-Meteo answers with one of
+     * [TRANSIENT_HTTP_CODES] (24 set 2026): a 5xx is the service's own passing state — a
+     * deploy, a node restarting — and not a verdict on the request, so the reader who
+     * pulled to refresh should not be told the service is down because of one of them.
+     *
+     * **Once**, and only for those. A 4xx is the request's fault and will fail the same
+     * way. A 429 is left alone on purpose: Open-Meteo's limits are per minute, hour and
+     * day per IP, and its own answer is «try again in one minute» — a retry two seconds
+     * later can only fail again and count against the same limit, which on a carrier's
+     * shared address is not ours alone. And no retry on an [IOException]: offline is the
+     * common case, and the cached report is already on screen.
+     */
+    private suspend fun <T> retryingTransient(block: suspend () -> T): T = try {
+        block()
+    } catch (e: HttpException) {
+        if (e.code() !in TRANSIENT_HTTP_CODES) throw e
+        delay(transientRetryDelay.toMillis())
+        block()
+    }
+
     private inline fun <T> wrapErrors(block: () -> T): T = try {
         block()
     } catch (e: CancellationException) {
@@ -312,6 +336,12 @@ class WeatherRepository(
 
     companion object {
         const val HISTORY_AUTHOR = "sys@chiaro.app"
+
+        /** The server-side failures worth one more try; see [retryingTransient]. */
+        val TRANSIENT_HTTP_CODES = setOf(500, 502, 503, 504)
+
+        /** Long enough for a restarting node, short enough for a pull to refresh. */
+        val TRANSIENT_RETRY_DELAY: Duration = Duration.ofSeconds(2)
 
         /** Commits kept **per city** — the depth of one place's Journal. */
         const val HISTORY_RETENTION = 100

@@ -86,12 +86,30 @@ sections are a normal size and live here alone.
   real rain one time in three and heavy rain almost never. Ice and snow are not affected.
 - **Alerts: a «Serious heat» idea**, and «Twelve dry hours» in place of «A night without rain»,
   which could fire in the morning.
+- **Condition words that promise only what the forecast says.** «Temporale forte» (strong
+  thunderstorm) instead of «con grandine», with the plain thunderstorm drawing: outside Central
+  Europe the forecast never predicts hail. «Rovesci forti» instead of «violenti», and «Nuvoloso»
+  for a sky 50 to 80% covered, where «Poco nuvoloso» said less than it was.
+- **The Journal says when the sky changed.** A day that went from clear to stormy shows the two
+  words, and is judged worse even when the chance of rain did not move.
+- **One more try when the forecast service stumbles.** A server error is retried once, two
+  seconds later, before the app says the service is unavailable.
 - **Your alerts' messages write values properly.** A value in braces, like `{current.temp_c}`,
   now arrives with its unit and your decimal mark («21,4°»), and a time follows your phone's
   clock. A unit you already wrote after it is not repeated.
 
 ### Fixed
 
+- **The day's word in the week follows the day, not the highest code.** A snowy day with one
+  shower reads as snow, heavy rain is no longer outranked by a light shower, and a storm the
+  forecast barely believes (under 20%) no longer names the whole day, as it already no longer
+  raised the alert.
+- **«How the forecast did» no longer calls a day dry on too little evidence.** The rain it read
+  covered a quarter of an hour, not the hour behind each update; it now reads the closed hours
+  themselves. Days judged before this update may lose a «stayed dry» they could not support.
+- **A forecast model without a UV index no longer empties the app.** The UV tile is simply not
+  drawn.
+- **A rule on the current chance of rain reads the hour under way**, not the one just gone.
 - **A rule about today no longer fires twice a day**, once of them just after midnight.
 - **Widget «In parole», one-row card: the "updated N hours ago" line is no longer cut off.**
   The form's budget spends the card's whole height — the number takes everything the place's

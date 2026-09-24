@@ -176,6 +176,8 @@ object TodayStateBuilder {
             sky = SkySnapshot(
                 sunAltitudeDeg = sunAltitude,
                 cloudPct = currentHour.cloudCoverPct,
+                // A tint, never a printed number: an hour with no chance draws the
+                // sky undimmed, the same "not told is not wet" the verdicts apply.
                 precipPct = currentHour.precipChancePct ?: 0,
                 moonIllumination = moon.illuminatedFraction,
                 moonAltitudeDeg = AstronomyEngine.moonAltitude(now, coords),

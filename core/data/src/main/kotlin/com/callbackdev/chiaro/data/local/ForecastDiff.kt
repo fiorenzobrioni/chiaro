@@ -100,10 +100,20 @@ object ForecastDiff {
         )
     }
 
-    /** Known fields in importance order, then any future extras in map order. */
+    /**
+     * Known fields in importance order, then any future extras in map order.
+     *
+     * `status` is read through [WeatherSnapshots.conditionWord], so every value that
+     * leaves here is a word id whatever shape the commit stored it in (24 set 2026):
+     * commits from before carry `"Partly Cloudy ⛅"`, commits since `partly_cloudy`, and
+     * comparing the two raw would have called every day of the week changed once.
+     */
     private fun fieldsOf(forecast: Map<String, String>, date: String): Map<String, String> {
         val bare = forecast.filterKeys { it.startsWith("$date.") }
             .mapKeys { (key, _) -> key.substringAfter('.') }
+            .mapValues { (key, value) ->
+                if (key == "status") WeatherSnapshots.conditionWord(value)?.id ?: value else value
+            }
         return buildMap {
             FIELDS.forEach { field -> bare[field]?.let { put(field, it) } }
             bare.forEach { (key, value) -> putIfAbsent(key, value) }
