@@ -155,15 +155,10 @@ object HeadlineEngine {
         val ahead = hours.filter { !it.time.isBefore(now) }
 
         val severeEnd = now.plusHours(AlertEngine.SEVERE_LOOKAHEAD_HOURS)
-        val severe = ahead.firstOrNull {
-            !it.time.isAfter(severeEnd) && it.condition.wmoCode in AlertEngine.SevereCodes
-        }
-        if (severe != null) {
-            return Headline.Severe(
-                bucket = AlertEngine.SevereCodes.getValue(severe.condition.wmoCode),
-                at = severe.time
-            )
-        }
+        ahead.asSequence()
+            .takeWhile { !it.time.isAfter(severeEnd) }
+            .firstNotNullOfOrNull { hour -> AlertEngine.severeBucket(hour)?.let { hour to it } }
+            ?.let { (hour, bucket) -> return Headline.Severe(bucket = bucket, at = hour.time) }
 
         val current = hours.first()
         if (current.condition.wmoCode in WET_CODES) {

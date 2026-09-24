@@ -1612,6 +1612,15 @@ notification to remove. What changed is **when** they speak:
 - **Quiet hours, 22–7 on the phone's clock**: everything arrives, nothing rings — except a red
   official warning and the sky reminders, which the reader set for the night. The Alerts
   screen's day strip draws them as a dashed line under the track, with one sentence saying so.
+- **«Maltempo» needs the ensemble's agreement** (24 set 2026). A storm or downpour code
+  (THUNDER, RAIN) under a 20% chance of rain is not severe, for the alert, the Today headline,
+  the widgets and the rules' `wmo_severe` alike (`AlertEngine.isSevere`, one definition).
+  Measured on 148 runs over 31 places and 60 days against ERA5 rain: under 20% the run saw
+  1 mm 33% of the time and 5 mm 6% (any five hours: 12% and 3%); at 20–29% 75%, at 30% and
+  over 96%. The floor drops a quarter of the banners and 2 of the 68 heavy-rain runs. Ice and
+  snow keep their code alone (not measurable in a summer window, dangerous in small amounts),
+  and so does an hour whose chance the model does not serve. The hour strip still draws the
+  storm icon: the icon is the model's sky, the banner is the verdict.
 - **The ideas**: «Caldo forte» (today's high ≥ 33°) joins as the heat's twin of «Ghiaccio
   domattina»; «Una notte senza pioggia» is «Dodici ore asciutte», because the rule has no
   hour and fired at nine in the morning with «Stanotte…».

@@ -80,6 +80,10 @@ sections are a normal size and live here alone.
   starts, never again for the same spell and never while it is already falling; an official
   warning is not repeated when the next bulletin says the same thing; from 22:00 to 7:00
   notifications arrive without a sound, except red warnings and sky reminders.
+- **A storm the forecast barely believes is no longer «Bad weather».** A thunderstorm or
+  downpour code with less than a 20% chance of rain no longer raises the alert, the banner on
+  Today or the widgets' sentence: measured over 31 places and two months, those storms brought
+  real rain one time in three and heavy rain almost never. Ice and snow are not affected.
 - **Alerts: a «Serious heat» idea**, and «Twelve dry hours» in place of «A night without rain»,
   which could fire in the morning.
 - **Your alerts' messages write values properly.** A value in braces, like `{current.temp_c}`,

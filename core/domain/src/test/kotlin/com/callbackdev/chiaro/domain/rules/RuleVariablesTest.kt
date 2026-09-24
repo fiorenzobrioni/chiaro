@@ -84,6 +84,23 @@ class RuleVariablesTest {
     }
 
     @Test
+    fun `wmo_severe keeps the alert's chance floor`() {
+        val unlikely = report.copy(
+            hourly = report.hourly + HourlyForecast(
+                time = LocalDateTime.of(2023, 10, 27, 20, 0),
+                at = LocalDateTime.of(2023, 10, 27, 20, 0)
+                    .atZone(ZoneId.of("America/New_York")).toInstant(),
+                tempC = 13.0,
+                condition = WeatherCondition(95, "Thunderstorm", "⛈️"),
+                precipChancePct = 10,
+                cloudCoverPct = 100
+            )
+        )
+        val severe = RuleVariables.byId("next_12h.wmo_severe")!!.resolve(unlikely, now)!!
+        assertEquals(0.0, severe.value, 0.0)
+    }
+
+    @Test
     fun `today variables read the first daily entry`() {
         assertEquals(20.0, resolve("today.high_c")!!.value, 0.0)
         assertEquals(12.0, resolve("today.low_c")!!.value, 0.0)

@@ -10343,3 +10343,62 @@ tweather che seguirà la sua strada ma per ora è ferma».
   variabile, valore e testo che segue).
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
 
+## La soglia del maltempo (committente, 24 set 2026)
+
+Richiesta: «prova a controllare le soglie cosi questo round di implementazione è veramente
+completo», sull'ipotesi lasciata aperta il 23 set: un temporale con probabilità di pioggia bassa
+(10–20%) fa scattare un «Maltempo» a banner.
+
+### La misura
+
+- **Fonte**: Open-Meteo, 31 luoghi (15 italiani, 16 nel mondo in climi diversi), 21 lug –
+  18 set 2026. Previsione: l'API forecast con `past_days` (codice e probabilità per ora, come
+  li riceve l'app; è la previsione a breve scadenza, quindi più brava di una a 12 ore, e la
+  misura è prudente). Verifica: pioggia ERA5 (archive API) nella finestra della serie ±2 ore.
+  L'archivio delle corse precedenti (`previous-runs`) non serve la probabilità
+  (`precipitation_probability_previous_day1` è tutta null), per questo non è stato usato.
+- **Eventi**: 148 serie di ore severe (una serie = un avviso, stessa regola di `firstArrival`,
+  un'ora di pausa tollerata): 131 THUNDER, 17 RAIN; nessun ghiaccio né neve d'estate.
+- **Risultato** (probabilità massima della serie → serie con ≥ 1 mm osservato, con ≥ 5 mm):
+
+  | probabilità | serie | ≥ 1 mm | ≥ 5 mm | pioggia mediana |
+  |---|---|---|---|---|
+  | 0–9% | 21 | 24% | 5% | 0,2 mm |
+  | 10–19% | 15 | 47% | 7% | 0,7 mm |
+  | 20–29% | 8 | 75% | 12% | 2,2 mm |
+  | 30–49% | 16 | 100% | 38% | 3,6 mm |
+  | 50–69% | 23 | 87% | 48% | 3,8 mm |
+  | 70–100% | 65 | 98% | 74% | 6,9 mm |
+
+  Base: cinque ore qualsiasi vedono 1 mm il 12% delle volte, 5 mm il 3%.
+- **Soglie provate**: 10% → toglie 21 avvisi (24% verificati), ne perde 5 veri; **20% → toglie
+  36 avvisi su 148 (un quarto), di cui un terzo verificati e quasi sempre con pioggia leggera;
+  delle 68 serie con 5 mm ne perde 2**; 30% → toglie 44 e perde 18 verificati, 3 con 5 mm.
+
+### Cosa è cambiato
+
+- `AlertEngine.SEVERE_MIN_CHANCE_PCT = 20`, `severeBucket(hour)` / `isSevere(hour)`: **una sola
+  definizione** di «maltempo», letta dall'avviso, dal suo «arriva», dal silenzio dell'ombrello
+  vicino a un temporale (`nearSevere`), dalla frase di Oggi e dei widget
+  (`HeadlineEngine`), dalla finestra della notifica (`AlertDetails`) e da `next_Nh.wmo_severe`
+  degli avvisi personali. Nessuna può chiamare temporale ciò che le altre hanno scartato.
+
+### Decisioni e deviazioni
+
+- **Solo THUNDER e RAIN.** Ghiaccio e neve non erano misurabili (estate) e la pioviggine che
+  gela è pericolosa in quantità che l'ensemble può contare appena: tengono il codice da solo.
+- **Probabilità assente = il codice vale.** È un dato che dipende dal modello (§1.1): un numero
+  mancante non è prova che il temporale non verrà.
+- **L'icona resta.** L'ora dice ancora temporale (è il cielo del modello, con accanto il suo
+  10%); è il verdetto, il banner, che non lo dice più.
+- **Un temporale improbabile non zittisce più l'ombrello**: la pioggia all'80% un'ora dopo un
+  95 al 10% è la notizia, e nessun altro l'avrebbe detta.
+
+### Come è stato verificato
+
+- `AlertEngineTest` (sotto la soglia nessun avviso, alla soglia sì; ghiaccio, neve e
+  probabilità assente invariati; l'arrivo è la prima ora probabile; l'ombrello non più
+  zittito), `HeadlineEngineTest`, `RuleVariablesTest` (`wmo_severe` con la stessa soglia);
+  i fixture di prova danno ai codici severi una probabilità credibile (40%), come fa il fornitore.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+

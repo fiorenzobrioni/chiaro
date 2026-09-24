@@ -77,6 +77,41 @@ object AlertEngine {
     /** Long enough to warn before an evening storm seen at a morning poll. */
     const val SEVERE_LOOKAHEAD_HOURS = 12L
 
+    /**
+     * The chance of rain under which a storm or downpour code is not «Maltempo»
+     * (24 set 2026). The code comes from one model run; the chance from the ensemble,
+     * and when they disagree the ensemble is the one that verifies. Measured over 31
+     * places and 60 days (21 Jul - 18 Sep 2026, 148 severe runs checked against ERA5
+     * rain within two hours of the run): runs whose highest chance was under 10% saw
+     * 1 mm of rain 24% of the time, 10-19% saw it 47%, 20-29% saw it 75%, 30% and over
+     * 96%. Heavy rain (5 mm) followed 6% of the runs under 20%, against 3% for any five
+     * hours at all. The floor drops 36 of 148 banners (24%) and misses 2 of the 68
+     * runs that brought 5 mm.
+     *
+     * Only for [SevereBucket.THUNDER] and [SevereBucket.RAIN], the two buckets the
+     * measure saw (131 and 17 runs); a summer window has no ice or snow to measure,
+     * and freezing drizzle is dangerous in amounts an ensemble may barely count. An
+     * hour with no chance at all (model-dependent, §1.1) keeps its code: a missing
+     * number is not evidence that the storm will not come.
+     */
+    const val SEVERE_MIN_CHANCE_PCT = 20
+
+    /**
+     * The bucket of a severe hour, or null when the hour is not one: the single
+     * definition of «Maltempo» that the alert, the Today headline, the notification's
+     * window and the rules' `wmo_severe` all read, so none of them can call a storm
+     * the others dropped.
+     */
+    fun severeBucket(hour: HourlyForecast): SevereBucket? {
+        val bucket = SevereCodes[hour.condition.wmoCode] ?: return null
+        val chance = hour.precipChancePct
+        val probable = chance == null || chance >= SEVERE_MIN_CHANCE_PCT ||
+            bucket == SevereBucket.ICE || bucket == SevereBucket.SNOW
+        return bucket.takeIf { probable }
+    }
+
+    fun isSevere(hour: HourlyForecast): Boolean = severeBucket(hour) != null
+
     /** "Take the umbrella" horizon — actionable, not noise. */
     const val PRECIP_LOOKAHEAD_HOURS = 6L
     const val PRECIP_THRESHOLD_PCT = 70
@@ -170,7 +205,7 @@ object AlertEngine {
     private fun nearSevere(report: WeatherReport, at: LocalDateTime?): Boolean {
         at ?: return false
         return report.hourly.any { hour ->
-            hour.condition.wmoCode in SevereCodes &&
+            isSevere(hour) &&
                 !hour.time.isBefore(at.minusHours(1)) && !hour.time.isAfter(at.plusHours(1))
         }
     }
@@ -181,10 +216,8 @@ object AlertEngine {
         now: LocalDateTime,
         cityKey: String
     ): Alert? {
-        val hit = firstArrival(report, now, SEVERE_LOOKAHEAD_HOURS) {
-            it.condition.wmoCode in SevereCodes
-        } ?: return null
-        val bucket = SevereCodes.getValue(hit.condition.wmoCode)
+        val hit = firstArrival(report, now, SEVERE_LOOKAHEAD_HOURS, ::isSevere) ?: return null
+        val bucket = severeBucket(hit) ?: return null
         val fingerprint = "$cityKey:sev:${bucket.name}:${hit.time.toLocalDate()}"
         if (fingerprint in state.severeFingerprints) return null
         return Alert(

@@ -29,7 +29,16 @@ class AlertEngineTest {
         eveningSummary = false
     )
 
-    private fun hour(plusHours: Long, wmoCode: Int = 2, precipPct: Int = 0) = HourlyForecast(
+    /**
+     * A severe code gets a chance above [AlertEngine.SEVERE_MIN_CHANCE_PCT] and below
+     * the umbrella's 70% unless the test names one: a storm the ensemble believes, and
+     * no umbrella of its own to muddle what the test is about.
+     */
+    private fun hour(
+        plusHours: Long,
+        wmoCode: Int = 2,
+        precipPct: Int? = if (wmoCode in AlertEngine.SevereCodes) 40 else 0
+    ) = HourlyForecast(
         time = now.plusHours(plusHours),
         at = now.plusHours(plusHours).atZone(rome).toInstant(),
         tempC = 18.0,
@@ -80,6 +89,41 @@ class AlertEngineTest {
         // rain showers 80, moderate rain 63, light snow showers 85: not severe
         val alerts = evaluate(listOf(hour(1, 80), hour(2, 63), hour(3, 85)))
         assertNull(alerts.find { it.kind == AlertKind.SEVERE })
+    }
+
+    @Test
+    fun `a storm the ensemble barely believes is not severe`() {
+        // 24 set 2026: a 95 at 19% saw 1 mm of rain less than half the time, 5 mm 6%
+        val floor = AlertEngine.SEVERE_MIN_CHANCE_PCT
+        assertNull(evaluate(listOf(hour(2, 95, floor - 1))).find { it.kind == AlertKind.SEVERE })
+        assertNull(evaluate(listOf(hour(2, 82, 5))).find { it.kind == AlertKind.SEVERE })
+        assertTrue(evaluate(listOf(hour(2, 95, floor))).any { it.kind == AlertKind.SEVERE })
+    }
+
+    @Test
+    fun `ice, snow and a missing chance keep their code`() {
+        // 67 freezing rain, 75 heavy snow: not measured, and dangerous in small amounts
+        for (code in listOf(67, 75)) {
+            assertTrue(evaluate(listOf(hour(2, code, 5))).any { it.kind == AlertKind.SEVERE })
+        }
+        // no chance served (model-dependent): absence is not evidence
+        assertTrue(evaluate(listOf(hour(2, 95, null))).any { it.kind == AlertKind.SEVERE })
+    }
+
+    @Test
+    fun `a storm arrives at its first probable hour`() {
+        val storm = listOf(hour(2, 95, 10), hour(3, 95, 60), hour(4, 95, 70))
+        val severe = evaluate(storm).single { it.kind == AlertKind.SEVERE }
+        assertEquals(now.plusHours(3), severe.at)
+    }
+
+    @Test
+    fun `an improbable storm does not silence the umbrella`() {
+        // The 80% rain an hour after a 95 at 10% is the news; nobody else told it
+        val day = listOf(hour(2, 95, 10), hour(3, precipPct = 80))
+        val alerts = evaluate(day)
+        assertNull(alerts.find { it.kind == AlertKind.SEVERE })
+        assertTrue(alerts.any { it.kind == AlertKind.PRECIPITATION })
     }
 
     @Test

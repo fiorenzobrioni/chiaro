@@ -329,6 +329,14 @@ class HeadlineEngineTest {
     }
 
     @Test
+    fun `a storm at 10 percent is not the headline`() {
+        // The alert's own floor (AlertEngine.SEVERE_MIN_CHANCE_PCT): the banner must not
+        // announce a storm the notifications dropped. The rain after it still speaks.
+        val report = report(clear at 5, storm at 10, rain at 80, clear at 10)
+        assertTrue(HeadlineEngine.headline(report, now) is Headline.WetSoon)
+    }
+
+    @Test
     fun `an empty report says nothing rather than inventing`() {
         assertNull(HeadlineEngine.headline(sampleWeatherReport().copy(hourly = emptyList()), now))
     }

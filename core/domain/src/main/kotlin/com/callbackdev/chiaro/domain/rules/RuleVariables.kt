@@ -73,12 +73,13 @@ object RuleVariables {
             window("next_${hours}h.temp_c_max", RuleVariableKind.TEMPERATURE, hours) { w ->
                 w.maxByOrNull { it.tempC }?.let { ResolvedValue(it.tempC, it.time) }
             }
-            // Same hazard classes as the builtin severe alert (AlertEngine.SevereCodes)
+            // The builtin severe alert's own definition (AlertEngine.isSevere), chance
+            // floor included: a rule must not call «Maltempo» a storm the app dropped.
             window("next_${hours}h.wmo_severe", RuleVariableKind.BOOLEAN, hours) { w ->
                 if (w.isEmpty()) {
                     null
                 } else {
-                    val hit = w.firstOrNull { it.condition.wmoCode in AlertEngine.SevereCodes }
+                    val hit = w.firstOrNull(AlertEngine::isSevere)
                     if (hit != null) ResolvedValue(1.0, hit.time) else ResolvedValue(0.0)
                 }
             }
