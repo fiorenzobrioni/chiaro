@@ -10756,5 +10756,7 @@ pioggia» comprende la neve?
   senza probabilità resta; il gelicidio a 0% resta; sei ore di traccia a 0% non fanno un giorno
   di neve, a 5% sì; la pioggia sola da `rain_sum` + `showers_sum`, il ripiego senza neve, lo
   sconosciuto con neve), `OpenMeteoResponseTest` (Everest: 28,4 mm di totale, pioggia
-  sconosciuta), `RuleVariablesTest` (la regola legge la pioggia, non il totale). La risposta
-  live di Longyearbyen non è stata riletta: dal container Open-Meteo non era raggiungibile.
+  sconosciuta), `RuleVariablesTest` (la regola legge la pioggia, non il totale; il campione
+  `sampleWeatherReport` porta ora `rainMm`, senza neve uguale al totale). Suite completa e
+  lint. La risposta live di Longyearbyen non è stata riletta: dal container Open-Meteo non
+  era raggiungibile.

@@ -83,10 +83,11 @@ fun sampleWeatherReport(): WeatherReport {
         daily = listOf(
             // How much and the strongest gust since 24 set 2026, coherent with each row:
             // a dry day carries 0 mm (the model's zero, not an absence), the wet one 14.
-            DailyForecast(baseDate.plusDays(3), 20.0, 12.0, sunny, 0, 5, 0.0, 0.0, 0.0, 24.0),
-            DailyForecast(baseDate.plusDays(4), 18.0, 11.0, WeatherCondition(63), 85, 2, 14.2, 9.0, 0.0, 48.0),
-            DailyForecast(baseDate.plusDays(5), 16.0, 10.0, WeatherCondition(3), 20, 3, 0.4, 1.0, 0.0, 30.0),
-            DailyForecast(baseDate.plusDays(6), 19.0, 13.0, partlyCloudy, 10, 6, 0.0, 0.0, 0.0, 22.0)
+            // No snow anywhere, so the rain alone is the whole of it.
+            DailyForecast(baseDate.plusDays(3), 20.0, 12.0, sunny, 0, 5, 0.0, 0.0, 0.0, 24.0, rainMm = 0.0),
+            DailyForecast(baseDate.plusDays(4), 18.0, 11.0, WeatherCondition(63), 85, 2, 14.2, 9.0, 0.0, 48.0, rainMm = 14.2),
+            DailyForecast(baseDate.plusDays(5), 16.0, 10.0, WeatherCondition(3), 20, 3, 0.4, 1.0, 0.0, 30.0, rainMm = 0.4),
+            DailyForecast(baseDate.plusDays(6), 19.0, 13.0, partlyCloudy, 10, 6, 0.0, 0.0, 0.0, 22.0, rainMm = 0.0)
         ),
         systemInfo = SystemInfo(
             source = "Open-Meteo API",
