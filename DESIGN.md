@@ -699,8 +699,13 @@ Both bundled faces travel in the APK whatever the setting says, so the credits n
 always, and then say which one is on the screen — crediting a font the reader is not
 reading is §1.1's kind of lie.
 
-Rounding is a rule, not a call: temperatures to whole degrees everywhere except the
-current one and the feels-like, which carry one decimal because the source does;
+Rounding is a rule, not a call: temperatures to whole degrees **everywhere**, the current one
+and the feels-like included since 24 set 2026 (committente). They carried one decimal
+"because the source does", which confused the source's resolution with its accuracy: a
+model's 2 m temperature is good to a degree or two, the hero may be an estimate between two
+hours, and the general-purpose apps all print whole degrees — tenths belong to a station's
+thermometer, which this app does not read. A rule's reading keeps its decimal
+(«ora 21,4°»): there the tenth is why a threshold of 21 fired;
 probabilities to whole percent; wind to whole units; distances, rain (mm) and snow (cm) to
 one decimal below 10, whole above.
 
@@ -1090,10 +1095,10 @@ Static: they move with the page's minute tick and cost one draw (§3.5 still hol
 particles, no parallax).
 
 The **hero** itself was re-set the same day: the whole degrees and the degree sign at the
-64sp hero size, **the tenths at 55%** on the same baseline (raised, the decimal comma read as
-an apostrophe — rendered and looked at); the condition at `titleLarge` (from 64sp to 16sp was
-a cliff); and the feels-like line **only when it differs by a degree or more** — "20.8°, feels
-like 20.6°" is a number with nothing to do about it (§1.2).
+64sp hero size (the tenths, first set at 55% on the same baseline, went on 24 set 2026 with
+the rounding rule of §5); the condition at `titleLarge` (from 64sp to 16sp was a cliff); and
+the feels-like line **only when it differs by a degree or more** — "21°, feels like 21°" is a
+number with nothing to do about it (§1.2).
 
 **8.1d The estimated now** (24 set 2026, the engine review's second pass) — when the
 provider's `current` block is over an hour old, the hero, the details and the widgets show

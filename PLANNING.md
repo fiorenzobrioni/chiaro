@@ -10635,3 +10635,20 @@ quando il dato è vero. In Italia sarebbe precisione finta.
 - **Controprova P7b**: con le righe rimesse sullo slot proprio falliscono i quattro test che
   parlano dell'ora in cui cade la pioggia, e passano quelli sul cielo, come deve essere.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## La temperatura in gradi interi (committente, 24 set 2026)
+
+Domanda: «la temperatura attuale è visualizzata con un decimale: va bene così o meglio
+arrotondare?». Risposta data: arrotondare. Il decimale era la risoluzione del modello, non la
+sua precisione (una temperatura a 2 m prevista vale uno o due gradi), da oggi l'eroe può essere
+una stima interpolata fra due ore, e le app per il grande pubblico stampano gradi interi: il
+decimale è delle app che leggono il termometro di una stazione. Decisione del committente: sì.
+
+- **Cosa è cambiato**: la temperatura principale e la percepita in gradi interi (`TodayScreen`);
+  tolti `heroTemperatureText` e il suo test (i decimi piccoli del 23 set non hanno più niente da
+  rimpicciolire); DESIGN §5 (regola dell'arrotondamento) e §8.1 aggiornati.
+- **Resta col decimale** la lettura di un avviso personale («ora 21,4°»): lì il decimo è il
+  motivo per cui una soglia di 21 è scattata, ed è un valore letto, non una previsione mostrata.
+- **La percepita resta legata a un grado di differenza**: con i gradi interi due valori a un
+  grado di distanza si stampano sempre diversi, quindi non compare mai «21°, percepita 21°».
+- **Verificato**: `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.

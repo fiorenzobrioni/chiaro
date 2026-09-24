@@ -27,7 +27,8 @@ sections are a normal size and live here alone.
   draws itself in from left to right.
 - **Today: the sun and the moon are in the sky**, where they really are, the moon in its real
   phase. The sky keeps a band of its own for them above the temperature.
-- **Today: the temperature reads first.** Whole degrees large, tenths small; the sky's word is
+- **Today: the temperature reads first.** In whole degrees, like the feels-like: a forecast is
+  not precise to a tenth, and the tenth made it look as if it were. The sky's word is
   bigger; "feels like" appears only when it differs by a degree or more.
 - **Today: the bar at the top stays sky** as the page scrolls, and carries the temperature once
   the big one has scrolled away.

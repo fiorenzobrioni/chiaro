@@ -80,15 +80,10 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -1132,10 +1127,13 @@ private fun CanvasHeader(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
+                // Whole degrees (committente, 24 set 2026), like every other temperature
+                // in the app. The tenths were the model's resolution, not its accuracy: a
+                // 2 m temperature from a forecast model is good to a degree or two, and
+                // since the same day the hero may be an estimate interpolated between two
+                // hours — «20,8°» claimed a precision nobody had.
                 Text(
-                    text = heroTemperatureText(
-                        Formats.temperature(current.tempC, units.temperature, locale, decimals = 1)
-                    ),
+                    text = Formats.temperature(current.tempC, units.temperature, locale),
                     style = com.callbackdev.chiaro.ui.theme.LocalChiaroType.current.heroTemperature,
                     color = Color.White
                 )
@@ -1152,16 +1150,14 @@ private fun CanvasHeader(
                         color = Color.White,
                         modifier = Modifier.alignByBaseline()
                     )
-                    // Only when it says something (§1.2): "20,8° / feels like 20,6°" is a
-                    // number with nothing to do about it. A degree apart is where a body
-                    // starts to notice.
+                    // Only when it says something (§1.2): "21° / feels like 21°" is a number
+                    // with nothing to do about it. A degree apart is where a body starts to
+                    // notice, and a degree apart the two whole numbers always differ.
                     if (kotlin.math.abs(current.feelsLikeC - current.tempC) >= FeelsLikeMinDeltaC) {
                         Text(
                             text = stringResource(
                                 R.string.feels_like,
-                                Formats.temperature(
-                                    current.feelsLikeC, units.temperature, locale, decimals = 1
-                                )
+                                Formats.temperature(current.feelsLikeC, units.temperature, locale)
                             ),
                             style = MaterialTheme.typography.bodyLarge,
                             color = Color.White.copy(alpha = 0.7f),
@@ -1229,32 +1225,6 @@ private val BodiesBand = 56.dp
 
 /** Below this the feels-like line is not drawn: the air feels like what it is. */
 private const val FeelsLikeMinDeltaC = 1.0
-
-/**
- * The hero with its tenths set small (design review, 23 set 2026): «20» and «°» at full
- * size, «,8» at [HeroFractionScale] on the same baseline. The tenths are kept — they are
- * what the canvas measures — but at 64sp they carried as much weight as the degrees, and
- * the reader wants the degrees first. On the baseline, not lifted: raised, the decimal
- * comma read as an apostrophe (rendered and looked at). The string is the formatter's,
- * untouched, so the locale still owns the separator and a screen reader still reads one
- * number.
- */
-internal fun heroTemperatureText(formatted: String): AnnotatedString {
-    val whole = HeroWhole.find(formatted) ?: return AnnotatedString(formatted)
-    val split = whole.range.last + 1
-    val unit = formatted.lastIndexOf('°').takeIf { it >= split } ?: formatted.length
-    if (unit <= split) return AnnotatedString(formatted)
-    return buildAnnotatedString {
-        append(formatted.substring(0, split))
-        withStyle(SpanStyle(fontSize = HeroFractionScale.em)) {
-            append(formatted.substring(split, unit))
-        }
-        append(formatted.substring(unit))
-    }
-}
-
-private val HeroWhole = Regex("""^[-−]?\p{Nd}+""")
-private const val HeroFractionScale = 0.55f
 
 /**
  * The one-time card that points at the guide (VISION 5.7): a card in the scroll, not
