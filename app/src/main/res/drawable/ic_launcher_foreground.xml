@@ -1,60 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The mark (decision, 3 set): the starry-night crescent from the app's own icon
-     family, fill style, sitting low in the badge over two calm waves. Geometry is
-     mcf_starry_night's, mapped into the 108-box (scale 0.87, glyph center at 54,46;
-     nudged down and the waves up on device review, 3 set — the first cut hugged both
-     edges and left a gulf between moon and sea)
-     so everything clears the 33-unit safe circle of every launcher mask. The
-     <monochrome> layer reuses this drawable: the system reads its alpha.
+<!-- The mark, redrawn (committente, 23 set 2026): THE DAY IN A RING.
 
-     Repainted in the VIVID dress (committente, 7 set), which is the one a fresh
-     install wears since the palette default moved. Same method as tools/gen_scheme.py
-     and for the same reason — one algorithm, two dresses: each ink keeps the CIELAB
-     lightness it was drawn at and takes its hue and chroma from the vivid source of
-     DESIGN §2.5, so the badge's measured contrasts against its own ground survive the
-     change (2.99 → 3.00 stars, 3.50 → 3.45 moon, 2.97 → 2.99 far wave).
+     The ring is one day of twenty-four hours, painted the way the app paints the sky: a
+     sweep gradient that starts at three o'clock (18:00, the dusk's amber) and runs
+     clockwise through the night's indigo to midnight at the bottom, the dawn's amber at
+     nine o'clock, and the noon blue at the top. The stops are the vivid sky table's
+     (SkyPalette, DESIGN §3.7) read at its anchors — horizon amber, civil-twilight violet,
+     night navy, midday azure — so the badge and the canvas are one sky.
 
-       moon, near wave  #3589AC → #317DF5   vivid primary #2C7BF2 at L* 54
-       stars            #C27D08 → #BB8000   vivid secondary #FFB000 at L* 58
-       far wave         #6493A5 → #6288E8   the same blue at L* 58, chroma at 0.8 of
-                                            the gamut edge so the two waves stay two
-       ground           #F4F1EA → #E9F2FC   vivid neutral at tone 95 (colors.xml)
+     The sun sits ON the ring at the hour a reader most often meets the app, mid
+     afternoon, and a clip cuts the ring 3 dp wider than the disc around it: the gap is
+     what turns the ring into a C, the name's initial, and what keeps the disc a sun on
+     a path rather than a bead on a bracelet. It is the Today screen's daylight ribbon
+     bent into a dial, and the arc widget's sun on its path.
 
-     The stars barely move, and that is the palette being honest rather than the edit
-     being incomplete: at L* 58 both ambers are already on the sRGB gamut edge, so
-     there is no brighter amber to take. -->
+     Geometry, all inside the 33-unit safe circle of every launcher mask: ring radius 21
+     with a 10 stroke (outer edge 26), sun radius 8.2 centred 21 out at −40° (its far
+     edge at 29.2), the gap radius 11.2 (32.2). The <monochrome> layer is its own drawable,
+     ic_launcher_monochrome, because a sweep gradient's alpha is not a shape.
+
+     It replaces the starry-night crescent over two waves (3 set), which drew the one hour
+     this app is least about. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <group
-        android:scaleX="0.87"
-        android:scaleY="0.87"
-        android:translateX="26.2"
-        android:translateY="17.6">
-        <path
-            android:fillColor="#BB8000"
-            android:pathData="M 35.44 16.87 l 1.3 2.13 a 0.55 0.55 0 0 1 0.06 0.5 l -0.8 2.36 a 0.59 0.59 0 0 0 0.87 0.7 l 2.13 -1.3 a 0.55 0.55 0 0 1 0.5 -0.06 l 2.36 0.8 a 0.59 0.59 0 0 0 0.7 -0.87 L 41.26 19 a 0.55 0.55 0 0 1 -0.06 -0.5 l 0.8 -2.36 a 0.59 0.59 0 0 0 -0.87 -0.7 L 39 16.74 a 0.55 0.55 0 0 1 -0.5 0.06 l -2.36 -0.8 a 0.59 0.59 0 0 0 -0.7 0.87 z" />
-        <path
-            android:fillColor="#BB8000"
-            android:pathData="M 42.27 30.82 l 2.49 0.07 a 0.62 0.62 0 0 1 0.46 0.22 l 1.53 2 a 0.6 0.6 0 0 0 1.07 -0.35 l 0.07 -2.49 a 0.62 0.62 0 0 1 0.22 -0.46 l 2 -1.53 a 0.6 0.6 0 0 0 -0.35 -1.07 l -2.49 -0.07 a 0.62 0.62 0 0 1 -0.46 -0.22 l -1.53 -2 a 0.6 0.6 0 0 0 -1.07 0.35 l -0.07 2.49 a 0.62 0.62 0 0 1 -0.22 0.46 l -2 1.53 a 0.6 0.6 0 0 0 0.35 1.07 z" />
-        <path
-            android:fillColor="#BB8000"
-            android:pathData="M 35.31 26.35 l 1.25 1.1 a 0.4 0.4 0 0 1 0.14 0.31 v 1.66 a 0.39 0.39 0 0 0 0.69 0.27 l 1.1 -1.25 a 0.4 0.4 0 0 1 0.31 -0.14 h 1.66 a 0.39 0.39 0 0 0 0.27 -0.69 l -1.25 -1.1 a 0.4 0.4 0 0 1 -0.14 -0.31 v -1.66 a 0.39 0.39 0 0 0 -0.69 -0.27 l -1.1 1.25 a 0.4 0.4 0 0 1 -0.31 0.14 h -1.66 a 0.39 0.39 0 0 0 -0.27 0.69 z" />
-        <path
-            android:fillColor="#317DF5"
-            android:pathData="M 46.66 36.2 a 16.66 16.66 0 0 1 -16.78 -16.55 16.29 16.29 0 0 1 0.55 -4.15 A 16.56 16.56 0 1 0 48.5 36.1 c -0.61 0.06 -1.22 0.1 -1.84 0.1 z" />
+    <group>
+    <clip-path android:pathData="M 0,0 H 108 V 108 H 0 Z M 58.89,40.50 a 11.20,11.20 0 1,0 22.40,0 a 11.20,11.20 0 1,0 -22.40,0 z"/>
+    <path android:pathData="M 33.00,54.00 a 21.00,21.00 0 1,0 42.00,0 a 21.00,21.00 0 1,0 -42.00,0 z" android:strokeWidth="10" android:fillColor="#00000000">
+        <aapt:attr name="android:strokeColor">
+            <gradient android:type="sweep" android:centerX="54" android:centerY="54">
+                <item android:offset="0" android:color="#FFF08A1A"/>
+                <item android:offset="0.07" android:color="#FF6B4FC8"/>
+                <item android:offset="0.16" android:color="#FF1B2A78"/>
+                <item android:offset="0.25" android:color="#FF0D1646"/>
+                <item android:offset="0.34" android:color="#FF1B2A78"/>
+                <item android:offset="0.43" android:color="#FF6B4FC8"/>
+                <item android:offset="0.5" android:color="#FFF7A21B"/>
+                <item android:offset="0.57" android:color="#FF7CC6FF"/>
+                <item android:offset="0.66" android:color="#FF2BA8FF"/>
+                <item android:offset="0.75" android:color="#FF168FF0"/>
+                <item android:offset="0.84" android:color="#FF2BA8FF"/>
+                <item android:offset="0.93" android:color="#FF7CC6FF"/>
+                <item android:offset="1" android:color="#FFF08A1A"/>
+            </gradient>
+        </aapt:attr>
+    </path>
     </group>
-    <!-- Two calm waves under the night: the sea the sky is worth going out for. -->
-    <path
-        android:strokeColor="#6288E8"
-        android:strokeWidth="4.5"
-        android:strokeLineCap="round"
-        android:pathData="M 36 70 c 6 -5 12 5 18 0 c 6 -5 12 5 18 0" />
-    <path
-        android:strokeColor="#317DF5"
-        android:strokeWidth="4.5"
-        android:strokeLineCap="round"
-        android:pathData="M 41 78 c 5 -4.2 10 4.2 15 0 c 5 -4.2 10 4.2 15 0" />
+    <path android:pathData="M 61.89,40.50 a 8.20,8.20 0 1,0 16.40,0 a 8.20,8.20 0 1,0 -16.40,0 z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="67.89" android:centerY="38.30" android:gradientRadius="10">
+                <item android:offset="0" android:color="#FFFFFCF2"/>
+                <item android:offset="0.55" android:color="#FFFFDB8E"/>
+                <item android:offset="1" android:color="#FFFFAA40"/>
+            </gradient>
+        </aapt:attr>
+    </path>
 </vector>

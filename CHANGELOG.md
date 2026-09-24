@@ -14,8 +14,85 @@ sections are a normal size and live here alone.
 
 ## [Unreleased]
 
+### Changed
+
+- **Today: the daylight ribbon is drawn as light.** One continuous gradient with rounded ends
+  instead of hard-edged blocks, "now" as a disc, and the part of the day already spent drawn
+  quieter; in the week's rows the night recedes, so each day shows its band of light.
+- **Today: the page lies on the sky.** The content starts as a rounded sheet over the bottom
+  of the sky instead of a hard cut, and its top catches the sky's own color: warm at sunset,
+  blue at noon.
+- **Today: the rain chart follows the hour strip.** It marks the hours the strip has in view,
+  and a tap or a drag on it scrolls the strip to that hour. The first time it appears the line
+  draws itself in from left to right.
+- **Today: the sun and the moon are in the sky**, where they really are, the moon in its real
+  phase. The sky keeps a band of its own for them above the temperature.
+- **Today: the temperature reads first.** Whole degrees large, tenths small; the sky's word is
+  bigger; "feels like" appears only when it differs by a degree or more.
+- **Today: the bar at the top stays sky** as the page scrolls, and carries the temperature once
+  the big one has scrolled away.
+- **Today: the next hours draw the temperature as a curve**, and midnight shows the new day's
+  name. Today's row in the week marks the temperature right now on its bar.
+- **Today: the rest of the day is one thread**, and its next moment says how soon.
+- **Today: every detail with a scale shows it in its own color**, with a disc on the value and
+  the bands marked; pressure and pollen get one too.
+- **Sky: tonight is drawn as the night.** The card is the night sky with tonight's moon in its
+  phase, and a strip from dusk to dawn shows the moon's hours, the clouds hour by hour, the
+  stars where it is clear and the dark window framed.
+- **Sky: the moments are grouped under Today and Tomorrow**, and the next one says how soon.
+- **Sky: the calendar ahead counts the days**, and "too far out to say" is said once instead of
+  on every row.
+- **Alerts: a day of alerts at a glance.** A strip of the 24 hours shows when the timed alerts
+  can arrive, painted with the sky of their hour.
+- **Alerts: lighter to read.** Every alert has its drawing, one sentence on what it sends and a
+  separate line on when and how often; the switches sit in rounded groups; "no warning" reads as
+  an answer; ideas to start from are cards you browse sideways.
+- **Journal: a diary with a face.** Entries sit on a thread with a coloured badge per kind (or the
+  sky's own drawing), the new value of each change stands out, day headings stay pinned, and the
+  week's drift card leads with its sentence and points at the day it names.
+- **Journal: how the forecast did.** From the days already closed: how far the highs were from
+  the real ones on average, and the rain the forecast gave on the days it rained against the rest.
+- **Settings: the appearance previews itself.** A slice of sky, a temperature, an icon and a verdict
+  drawn with the palette, typeface and icons you pick, above the choices that change them. Groups sit
+  on rounded cards, and the guide is a card of its own.
+- **Settings: a short, true privacy note.** No account, no ads, no tracking; Chiaro has no server of
+  its own, and Open-Meteo only gets the place you ask about, rounded to about a kilometre when it is
+  your position.
+- **«In parole»: the next hours on a tall card.** From three rows up the widget adds «Più tardi»:
+  every three hours, the time, the temperature, the rain when it is likely and the sky in a word.
+  It only uses space the card was leaving empty, and can be turned off.
+- **Widget settings show the widget.** «In parole» opens its settings on the card itself, at the
+  size it has on the home screen, with chips to see how it lays itself out at other sizes. The
+  settings are grouped like the app's own, and the backgrounds show their colour.
+- **Widgets: tall cards use their height.** On «Adesso» the temperature grows with the card from
+  three rows up; «Le prossime ore» keeps its sentence whole and adds the next days under the hours.
+- **Every widget's settings show the widget.** All five open on the real card at its size, with
+  chips for the other sizes and a line saying what each one carries, on the same grouped layout.
+- **A new app icon: the day in a ring.** A day of 24 hours coloured like the app's sky, with the
+  sun on it at mid-afternoon; the ring opens around the sun into a C. Themed icons get a drawing
+  of their own.
+- **Notifications with pictures, where they help.** Opened, a rain or storm alert shows the
+  next twelve hours of rain with the alert's window marked; the morning and evening summaries
+  show the day's temperature and rain; an official warning shows the levels by hazard and day.
+- **Notifications: clearer words.** The morning summary says when it will rain; a fired alert
+  of yours shows the value it read with its unit. The status bar icon is the new ring.
+- **Notifications arrive once, and quietly at night.** Rain or a storm is announced when it
+  starts, never again for the same spell and never while it is already falling; an official
+  warning is not repeated when the next bulletin says the same thing; from 22:00 to 7:00
+  notifications arrive without a sound, except red warnings and sky reminders.
+- **A storm the forecast barely believes is no longer «Bad weather».** A thunderstorm or
+  downpour code with less than a 20% chance of rain no longer raises the alert, the banner on
+  Today or the widgets' sentence: measured over 31 places and two months, those storms brought
+  real rain one time in three and heavy rain almost never. Ice and snow are not affected.
+- **Alerts: a «Serious heat» idea**, and «Twelve dry hours» in place of «A night without rain»,
+  which could fire in the morning.
+- **Your alerts' messages write values properly.** A value in braces, like `{current.temp_c}`,
+  now arrives with its unit and your decimal mark («21,4°»), and a time follows your phone's
+  clock. A unit you already wrote after it is not repeated.
+
 ### Fixed
 
+- **A rule about today no longer fires twice a day**, once of them just after midnight.
 - **Widget «In parole», one-row card: the "updated N hours ago" line is no longer cut off.**
   The form's budget spends the card's whole height — the number takes everything the place's
   line and the stale marker leave — so on a phone whose system font boxes taller than the

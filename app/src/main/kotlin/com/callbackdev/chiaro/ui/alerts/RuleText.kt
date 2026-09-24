@@ -4,6 +4,7 @@ import android.content.res.Resources
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.rules.RuleCondition
 import com.callbackdev.chiaro.domain.rules.RuleOp
+import com.callbackdev.chiaro.domain.rules.RuleMessages
 import com.callbackdev.chiaro.domain.rules.RuleVariableKind
 import com.callbackdev.chiaro.domain.rules.RuleVariables
 import com.callbackdev.chiaro.domain.settings.UnitSettings
@@ -72,6 +73,60 @@ object RuleText {
         return number + unitSuffix(condition.variable, kind, units)
     }
 
+    /**
+     * A value that was READ, for the notification's «why it fired» (23 set 2026): the
+     * threshold's own formatting and unit, with the reader's decimal mark — a reading is
+     * the one number here that is not a whole step of a picker, so it is the one that
+     * shows the mark at all.
+     */
+    fun reading(
+        res: Resources,
+        variableId: String,
+        value: Double,
+        units: UnitSettings,
+        locale: java.util.Locale
+    ): String {
+        val kind = RuleVariables.byId(variableId)?.kind ?: RuleVariableKind.NUMBER
+        if (kind == RuleVariableKind.BOOLEAN) {
+            return res.getString(if (value != 0.0) R.string.value_yes else R.string.value_no)
+        }
+        val separator = java.text.DecimalFormatSymbols.getInstance(locale).decimalSeparator
+        val number = RuleVariables.formatValue(kind, value, units).replace('.', separator)
+        return number + unitSuffix(variableId, kind, units)
+    }
+
+    /**
+     * How a rule's message writes its placeholders for the reader (23 set 2026): the value
+     * with its unit and the reader's decimal mark — «21,4°», «20%», «35 km/h» — and the
+     * hour on the phone's own clock. Until then `{current.temp_c}` printed «21.4»: a bare
+     * number, in the code's decimal point, with the unit left to whoever wrote the message.
+     *
+     * A unit the author already wrote right after the placeholder is not printed twice:
+     * every message written before this change, the seeds included, says
+     * «{current.temp_c}°», and it keeps reading «21,4°». A yes/no value is the word.
+     */
+    class MessageWriter(
+        private val res: Resources,
+        private val units: UnitSettings,
+        private val locale: java.util.Locale,
+        is24h: Boolean
+    ) : RuleMessages.Writer {
+        private val clock = com.callbackdev.chiaro.ui.format.Formats.timeFormatter(is24h, locale)
+
+        override fun value(variableId: String?, kind: RuleVariableKind, value: Double, following: String): String {
+            if (kind == RuleVariableKind.BOOLEAN) {
+                return res.getString(if (value != 0.0) R.string.value_yes else R.string.value_no)
+            }
+            val separator = java.text.DecimalFormatSymbols.getInstance(locale).decimalSeparator
+            val number = RuleVariables.formatValue(kind, value, units).replace('.', separator)
+            val suffix = unitSuffix(variableId.orEmpty(), kind, units)
+            val written = suffix.isNotEmpty() && following.trimStart().startsWith(suffix.trim())
+            return if (written) number else number + suffix
+        }
+
+        override fun time(at: java.time.LocalDateTime): String = at.format(clock)
+    }
+
     private fun unitSuffix(variableId: String, kind: RuleVariableKind, units: UnitSettings): String =
         when {
             kind == RuleVariableKind.TEMPERATURE -> "°"
@@ -120,7 +175,7 @@ object RuleText {
     // ------------------------------------------------------------- templates
 
     /**
-     * The five starting points (VISION §5.4): picking one creates a REAL rule with
+     * The six starting points (VISION §5.4): picking one creates a REAL rule with
      * sensible thresholds, already on — the builder is for adjusting it, not for
      * building from nothing. Name and message become user content at creation, in
      * the reader's language, and are never translated again.
@@ -168,9 +223,23 @@ object RuleText {
             R.string.tpl_uv_name, R.string.tpl_uv_message,
             listOf(RuleCondition("today.uv_max", RuleOp.GTE, 7.0))
         ),
+        // The heat's twin of the frost above (23 set 2026, notification review): a
+        // summer in the Po valley reaches 33° for weeks, and it is the one day-shaped
+        // risk the ideas did not cover. On today's high, so it speaks once a day, in
+        // the morning, when the day can still be planned around it.
+        Template(
+            R.string.tpl_heat_title, R.string.tpl_heat_desc,
+            R.string.tpl_heat_name, R.string.tpl_heat_message,
+            listOf(RuleCondition("today.high_c", RuleOp.GTE, 33.0))
+        ),
         // VISION sketched "a clear night"; the registry has no cloud variable, so
         // this template speaks of rain — the only clearness it can actually verify.
         // Promising "clear" on a rain-only check would be the notification lying.
+        //
+        // **And not «night» either, since 23 set 2026**: the registry has no hour
+        // variable, so the rule fires whenever the next twelve hours turn dry — at nine
+        // in the morning too, where «Stanotte niente pioggia» was wrong about the one
+        // word it was built on. It says what it checks: twelve dry hours.
         Template(
             R.string.tpl_night_title, R.string.tpl_night_desc,
             R.string.tpl_night_name, R.string.tpl_night_message,

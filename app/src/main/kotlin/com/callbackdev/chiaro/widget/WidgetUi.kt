@@ -857,7 +857,7 @@ fun heroIconSize(
 ): Dp = available.coerceIn(min, max)
 
 private val HeroIconMin = 52.dp
-private val HeroIconMax = 104.dp
+internal val HeroIconMax = 104.dp
 
 /** The rain figure's ink: the §2.3 INK ramp — the one selected for figures rather
  * than for marks — resolved on the ground the card really has, zero included. The

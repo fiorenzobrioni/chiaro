@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.widget
 
 import android.content.Context
+import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
@@ -83,38 +84,7 @@ class SkyWidget : GlanceAppWidget() {
             val schemes = rememberWidgetSchemes(
                 context, model.settings.dynamicColor, model.settings.palette
             )
-            val skyBitmap = rememberSkyBitmap(model)
-            val size = LocalSize.current
-            val hasContent = model.city != null && model.moments.isNotEmpty()
-            val tall = hasContent && skyIsTall(size)
-            // The same edge rule as the Now widget: a glyph edge takes the glyph's inset,
-            // a words edge the words'. The glyph leads every form and owns the top; the
-            // far edge always carries words or a chip; the bottom is the glyph's on one
-            // row and the last row's words on a tall card. Empty states are words only.
-            WidgetCard(
-                model, schemes, skyBitmap,
-                contentPaddingStart =
-                    if (hasContent) WidgetCardPaddingLeading else WidgetCardPadding,
-                contentPaddingEnd = WidgetCardPaddingTrailing,
-                contentPaddingTop = if (hasContent) WidgetCardPaddingSnug else WidgetCardPadding,
-                contentPaddingBottom =
-                    if (hasContent && !tall) WidgetCardPaddingSnug else WidgetCardPadding,
-                // Every moment and every verdict on this card is the Sky screen's own
-                // (21 set 2026): a tap lands where the rest of the answer is.
-                destination = ShellTab.SKY
-            ) { palette ->
-                when {
-                    model.city == null -> NoPlaceContent(palette)
-                    model.moments.isEmpty() -> NoMomentContent(palette)
-                    tall -> TallContent(model, palette, size)
-                    else -> HeroRow(
-                        model, model.moments.first(), palette,
-                        glyph = skyHeroIconSize(size),
-                        wide = skyIsWide(size),
-                        modifier = GlanceModifier.fillMaxSize()
-                    )
-                }
-            }
+            SkyWidgetContent(model, schemes, rememberSkyBitmap(model))
         }
     }
 }
@@ -448,5 +418,45 @@ private fun NoMomentContent(palette: WidgetPalette) {
             text = context.getString(R.string.widget_sky_empty),
             style = secondaryStyle(palette, 12.sp)
         )
+    }
+}
+
+/**
+ * The whole card for [model] at the launcher's [LocalSize], split off the receiver's
+ * `provideGlance` (23 set 2026) so the configuration screen's preview and the render tests
+ * draw the SAME composition the launcher does rather than a lookalike.
+ */
+@Composable
+internal fun SkyWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBitmap: Bitmap?) {
+    val size = LocalSize.current
+    val hasContent = model.city != null && model.moments.isNotEmpty()
+    val tall = hasContent && skyIsTall(size)
+    // The same edge rule as the Now widget: a glyph edge takes the glyph's inset,
+    // a words edge the words'. The glyph leads every form and owns the top; the
+    // far edge always carries words or a chip; the bottom is the glyph's on one
+    // row and the last row's words on a tall card. Empty states are words only.
+    WidgetCard(
+        model, schemes, skyBitmap,
+        contentPaddingStart =
+            if (hasContent) WidgetCardPaddingLeading else WidgetCardPadding,
+        contentPaddingEnd = WidgetCardPaddingTrailing,
+        contentPaddingTop = if (hasContent) WidgetCardPaddingSnug else WidgetCardPadding,
+        contentPaddingBottom =
+            if (hasContent && !tall) WidgetCardPaddingSnug else WidgetCardPadding,
+        // Every moment and every verdict on this card is the Sky screen's own
+        // (21 set 2026): a tap lands where the rest of the answer is.
+        destination = ShellTab.SKY
+    ) { palette ->
+        when {
+            model.city == null -> NoPlaceContent(palette)
+            model.moments.isEmpty() -> NoMomentContent(palette)
+            tall -> TallContent(model, palette, size)
+            else -> HeroRow(
+                model, model.moments.first(), palette,
+                glyph = skyHeroIconSize(size),
+                wide = skyIsWide(size),
+                modifier = GlanceModifier.fillMaxSize()
+            )
+        }
     }
 }

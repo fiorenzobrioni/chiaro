@@ -176,6 +176,16 @@ class SkyPalette internal constructor(
         private const val CloudDesaturation = 0.7f
         private const val CloudDarkening = 0.15f
 
+        /**
+         * The discs drawn on the canvas (design review, 23 set 2026): the sun high, the
+         * sun low (it reddens as it nears the horizon, which is the same air that makes
+         * the golden hour), and the moon's lit face. Shared by both palettes, like
+         * [Moonlight]: the reader picks a sky, not a sun.
+         */
+        val SunHigh = Color(0xFFFFF6DC)
+        val SunLow = Color(0xFFFFB35C)
+        val MoonFace = Color(0xFFF1F3F8)
+
         /** What moonlight lifts a night sky toward. Shared: the moon is not part of the
          * palette the reader picked, it is the same moon. */
         internal val Moonlight = Color(0xFF273458)

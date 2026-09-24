@@ -105,10 +105,10 @@ class OfficialWarningStoreTest {
         store.recordNotified("a:warn:B1:YELLOW")
         assertEquals(setOf("a:warn:B1:YELLOW", "a:warn:B1:ORANGE"), store.notified.first())
 
-        repeat(45) { store.recordNotified("a:warn:B${it + 2}:YELLOW") }
+        repeat(125) { store.recordNotified("a:warn:B${it + 2}:YELLOW") }
         val ring = store.notified.first()
-        assertEquals(40, ring.size)
-        assertTrue("the newest survives", "a:warn:B46:YELLOW" in ring)
+        assertEquals(120, ring.size)
+        assertTrue("the newest survives", "a:warn:B126:YELLOW" in ring)
         assertTrue("the oldest fell off", "a:warn:B1:ORANGE" !in ring)
     }
 }

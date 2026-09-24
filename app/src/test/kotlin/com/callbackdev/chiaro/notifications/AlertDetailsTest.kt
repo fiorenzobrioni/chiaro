@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.notifications
 
+import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import java.time.LocalDateTime
@@ -24,7 +25,8 @@ class AlertDetailsTest {
     /** [codes] is one WMO code per hour from 12:00, [rain] its chance, [temp] its degrees. */
     private fun hours(
         codes: List<Int>,
-        rain: List<Int> = codes.map { 0 },
+        // A severe code carries a chance the engine believes, as the provider's do
+        rain: List<Int> = codes.map { if (it in AlertEngine.SevereCodes) 40 else 0 },
         temp: List<Double> = codes.map { 20.0 }
     ): List<HourlyForecast> = codes.indices.map { i ->
         HourlyForecast(

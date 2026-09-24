@@ -225,4 +225,39 @@ class OfficialWarningEngineTest {
     fun `a bulletin covering no day is refused`() {
         bulletin(days = emptyList())
     }
+
+    // --- the next afternoon's bulletin (23 set 2026) ---
+
+    @Test
+    fun `tomorrow's bulletin repeating what was told stays quiet`() {
+        // Yesterday's bulletin: orange on the 9th. The reader was told.
+        val first = notify(place(row(milano, sept9, THUNDERSTORM, ORANGE)))!!
+        val burnt = setOf(first.fingerprint) + first.told
+        // The 9th's own bulletin, new id, same orange on the 9th and nothing on the 10th.
+        val repeat = place(row(milano, sept9, THUNDERSTORM, ORANGE), id = "DPC_BULLETIN_2026_09_09_6472")
+        assertNull(notify(repeat, notified = burnt))
+    }
+
+    @Test
+    fun `a new day or a higher level in the next bulletin is news`() {
+        val first = notify(place(row(milano, sept9, THUNDERSTORM, YELLOW)))!!
+        val burnt = setOf(first.fingerprint) + first.told
+        val higher = place(row(milano, sept9, THUNDERSTORM, ORANGE), id = "DPC_BULLETIN_2026_09_09_6472")
+        assertNotNull(notify(higher, notified = burnt))
+        // A cell the first bulletin did not grade: the other day, another hazard.
+        val newDay = place(
+            row(milano, sept9, THUNDERSTORM, YELLOW), row(milano, sept8, HYDRAULIC, YELLOW),
+            id = "DPC_BULLETIN_2026_09_09_6472"
+        )
+        assertNotNull(notify(newDay, notified = burnt))
+    }
+
+    @Test
+    fun `told cells belong to their place`() {
+        val first = notify(place(row(milano, sept9, THUNDERSTORM, ORANGE)))!!
+        val burnt = setOf(first.fingerprint) + first.told
+        val repeat = place(row(milano, sept9, THUNDERSTORM, ORANGE), id = "DPC_BULLETIN_2026_09_09_6472")
+        assertNotNull(notify(repeat, notified = burnt, cityKey = "gps"))
+    }
 }
+

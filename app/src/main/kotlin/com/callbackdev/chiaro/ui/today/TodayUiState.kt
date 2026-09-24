@@ -88,7 +88,13 @@ data class SkySnapshot(
     val moonIllumination: Double,
     val moonAltitudeDeg: Double,
     val phases: List<LightPhase>,
-    val nowFraction: Float
+    val nowFraction: Float,
+    /** Where the sun and the moon stand, for the discs on the canvas (23 set 2026):
+     * compass bearings, clockwise from north, and the moon's elongation for its phase. */
+    val sunAzimuthDeg: Double = 180.0,
+    val moonAzimuthDeg: Double = 180.0,
+    val moonElongationDeg: Double = 0.0,
+    val southern: Boolean = false
 )
 
 enum class TimelineKind {
@@ -174,7 +180,13 @@ object TodayStateBuilder {
                 moonIllumination = moon.illuminatedFraction,
                 moonAltitudeDeg = AstronomyEngine.moonAltitude(now, coords),
                 phases = DaylightPhases.phases(today, zone),
-                nowFraction = DaylightPhases.fraction(local)
+                nowFraction = DaylightPhases.fraction(local),
+                sunAzimuthDeg = AstronomyEngine.sunAzimuth(now, coords),
+                moonAzimuthDeg = AstronomyEngine.bodyAzimuth(
+                    com.callbackdev.chiaro.domain.sky.SkyBody.MOON, now, coords
+                ),
+                moonElongationDeg = moon.elongation,
+                southern = coords.lat < 0.0
             ),
             headline = HeadlineEngine.headline(trimmed, local, graded),
             strip = trimmed.hourly.drop(1).take(STRIP_HOURS).map { stripHour(it, zone, coords) },

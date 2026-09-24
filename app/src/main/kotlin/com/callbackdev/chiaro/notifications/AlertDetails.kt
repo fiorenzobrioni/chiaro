@@ -39,7 +39,7 @@ object AlertDetails {
 
     /** The run of severe hours containing [at], by the engine's own bucket table. */
     fun severeWindow(hours: List<HourlyForecast>, at: LocalDateTime): AlertWindow? =
-        window(hours, at) { it.condition.wmoCode in AlertEngine.SevereCodes }
+        window(hours, at, AlertEngine::isSevere)
 
     /** The run of hours at or above the warning threshold containing [at]. */
     fun rainWindow(

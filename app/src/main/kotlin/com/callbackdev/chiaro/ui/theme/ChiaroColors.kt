@@ -43,7 +43,21 @@ data class ChiaroColors(
      * one of them at or above 4.5:1 on the surface (§2.3, §10). */
     val rainInkRamp: List<Color>,
     /** Seven steps, diverging, the middle one neutral. [temperatureAt] anchors it. */
-    val temperatureRamp: List<Color>
+    val temperatureRamp: List<Color>,
+    /**
+     * The details grid's tracks (design review, 23 set 2026): one hue per quantity, light
+     * to dark, monotonic in luminance — MARKS, like [rainRamp], never ink. The UV index
+     * is warm (the WHO's green-to-violet scale is a rainbow, §9.1, and its bands collapse
+     * under deuteranopia; the word under the number carries the band), the air index is
+     * violet, pollen is the green of what makes it. Humidity is water and draws on
+     * [rainRamp].
+     */
+    val uvRamp: List<Color>,
+    val airRamp: List<Color>,
+    val pollenRamp: List<Color>,
+    /** Five steps, diverging around 1013 hPa, the middle one neutral: low pressure a
+     * slate blue, high a sand amber — the same light-peaked shape as [temperatureRamp]. */
+    val pressureRamp: List<Color>
 ) {
     /**
      * "This data is old" and "the sky is iffy" are the same class of statement, so they
@@ -71,6 +85,9 @@ data class ChiaroColors(
      */
     fun temperatureAt(celsius: Double): Color =
         sample(temperatureRamp, (((celsius - ANCHOR_LOW) / (ANCHOR_HIGH - ANCHOR_LOW)).toFloat()).coerceIn(0f, 1f))
+
+    /** A step of any of the tracks' ramps, for a position 0..1 on its world scale. */
+    fun rampAt(ramp: List<Color>, fraction: Float): Color = sample(ramp, fraction.coerceIn(0f, 1f))
 
     private fun sample(ramp: List<Color>, t: Float): Color {
         val pos = t * (ramp.size - 1)
@@ -108,6 +125,22 @@ internal val ChiaroLightColors = ChiaroColors(
     temperatureRamp = listOf(
         Color(0xFF006FAC), Color(0xFF4CA5D8), Color(0xFF9CC9E7), Color(0xFFDCD7CC),
         Color(0xFFFABD72), Color(0xFFE67E00), Color(0xFFB85100)
+    ),
+    uvRamp = listOf(
+        Color(0xFFFDE8B0), Color(0xFFFAC66A), Color(0xFFF29A2E),
+        Color(0xFFD9661A), Color(0xFFA8400F)
+    ),
+    airRamp = listOf(
+        Color(0xFFECE4F5), Color(0xFFCFB9E8), Color(0xFFA98AD3),
+        Color(0xFF7E5AB5), Color(0xFF55338C)
+    ),
+    pollenRamp = listOf(
+        Color(0xFFEEF3C8), Color(0xFFD2E08A), Color(0xFFA9C24A),
+        Color(0xFF7C9A22), Color(0xFF556F12)
+    ),
+    pressureRamp = listOf(
+        Color(0xFF5B7FA8), Color(0xFFA6BBD3), Color(0xFFDCD7CC),
+        Color(0xFFE6C78A), Color(0xFFC99A3A)
     )
 )
 
@@ -130,6 +163,22 @@ internal val ChiaroDarkColors = ChiaroColors(
     temperatureRamp = listOf(
         Color(0xFF63B8EA), Color(0xFF1791D2), Color(0xFF0070AB), Color(0xFF4A4740),
         Color(0xFF985E00), Color(0xFFC87400), Color(0xFFF29300)
+    ),
+    uvRamp = listOf(
+        Color(0xFF4A2A08), Color(0xFF7A4210), Color(0xFFB8621A),
+        Color(0xFFE8872A), Color(0xFFFFB55C)
+    ),
+    airRamp = listOf(
+        Color(0xFF2A1B40), Color(0xFF432B66), Color(0xFF654292),
+        Color(0xFF8E68C0), Color(0xFFBC9BEA)
+    ),
+    pollenRamp = listOf(
+        Color(0xFF26300A), Color(0xFF3E4E12), Color(0xFF607A1E),
+        Color(0xFF8BAA36), Color(0xFFB8D65E)
+    ),
+    pressureRamp = listOf(
+        Color(0xFF7FA6D6), Color(0xFF4D6F96), Color(0xFF4A4740),
+        Color(0xFF8C6A2E), Color(0xFFD6A24A)
     )
 )
 
@@ -170,6 +219,22 @@ internal val VividLightColors = ChiaroColors(
     temperatureRamp = listOf(
         Color(0xFF006FAC), Color(0xFF00A6EB), Color(0xFF7BCCFF), Color(0xFFE0D7C3),
         Color(0xFFFFBB66), Color(0xFFE67E00), Color(0xFFB85100)
+    ),
+    uvRamp = listOf(
+        Color(0xFFFFE8AA), Color(0xFFFFC559), Color(0xFFF89700),
+        Color(0xFFDE6300), Color(0xFFAC3D00)
+    ),
+    airRamp = listOf(
+        Color(0xFFF0E2FF), Color(0xFFD7B3FF), Color(0xFFB87AFF),
+        Color(0xFF9138EF), Color(0xFF6300BA)
+    ),
+    pollenRamp = listOf(
+        Color(0xFFEEF5A6), Color(0xFFCFE408), Color(0xFFA6C400),
+        Color(0xFF7A9B00), Color(0xFF546F00)
+    ),
+    pressureRamp = listOf(
+        Color(0xFF387FCA), Color(0xFF96BCE7), Color(0xFFE0D7C3),
+        Color(0xFFFBC23E), Color(0xFFD09800)
     )
 )
 
@@ -192,6 +257,22 @@ internal val VividDarkColors = ChiaroColors(
     temperatureRamp = listOf(
         Color(0xFF2FBAFF), Color(0xFF0091D5), Color(0xFF0070AB), Color(0xFF4C473A),
         Color(0xFF985E00), Color(0xFFC87400), Color(0xFFF29300)
+    ),
+    uvRamp = listOf(
+        Color(0xFF4D2900), Color(0xFF7E4000), Color(0xFFBD5F00),
+        Color(0xFFEF8300), Color(0xFFFFB55C)
+    ),
+    airRamp = listOf(
+        Color(0xFF320D58), Color(0xFF4F0E8C), Color(0xFF771CC4),
+        Color(0xFFA14CF7), Color(0xFFC394FF)
+    ),
+    pollenRamp = listOf(
+        Color(0xFF253100), Color(0xFF3D4F00), Color(0xFF5E7B00),
+        Color(0xFF88AB00), Color(0xFFB3D900)
+    ),
+    pressureRamp = listOf(
+        Color(0xFF5CA6FE), Color(0xFF2A6FB6), Color(0xFF4C473A),
+        Color(0xFF946800), Color(0xFFE29E00)
     )
 )
 
@@ -202,6 +283,15 @@ val LocalChiaroColors = staticCompositionLocalOf { ChiaroLightColors }
 object ChiaroTheme {
     val colors: ChiaroColors
         @Composable @ReadOnlyComposable get() = LocalChiaroColors.current
+
+    /**
+     * The semantic palette selected for a DARK ground whatever the reader's theme is, in
+     * the reader's dress: for the one surface outside the canvas that is always night,
+     * the Sky's tonight card (23 set 2026). Its verdict pairs are the dark ones because
+     * the ground under them is dark, the same argument §3 makes for the sky itself.
+     */
+    val nightColors: ChiaroColors
+        @Composable @ReadOnlyComposable get() = paletteFor(LocalAppPalette.current).colors(dark = true)
 
     /** The band table the reader's palette paints the canvas with (§3.7). Same reason
      * it lives here and not in `colorScheme`: Material has no slot for a sky. */

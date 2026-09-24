@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Status-bar icon: the system renders only the alpha channel, so this is a plain
-     white sun — Chiaro's subject, legible at 24dp, no detail to lose. -->
+<!-- Status-bar icon: the system renders only the alpha channel. Since 23 set 2026 it is the
+     launcher icon's own mark, restated for 24 dp — the day's ring, the gap the sun opens in
+     it, and the sun — so the notification a reader sees first and the icon they tap to open
+     the app are one drawing. The proportions are the monochrome layer's, scaled (ring radius
+     7.6 with a 3.6 stroke, the sun 3.1 at −40°, the gap 4.3), and nudged only where 24 dp asks:
+     a stroke under 3.5 dp breaks up at the status bar's size. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+    <group>
+        <clip-path android:pathData="M 0,0 H 24 V 24 H 0 Z M 13.52,7.11 a 4.30,4.30 0 1,0 8.60,0 a 4.30,4.30 0 1,0 -8.60,0 z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:fillType="evenOdd"
+            android:pathData="M 2.60,12.00 a 9.40,9.40 0 1,0 18.80,0 a 9.40,9.40 0 1,0 -18.80,0 z M 6.20,12.00 a 5.80,5.80 0 1,0 11.60,0 a 5.80,5.80 0 1,0 -11.60,0 z" />
+    </group>
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M12,7.5 A4.5,4.5 0 1 0 12,16.5 A4.5,4.5 0 1 0 12,7.5 Z" />
-    <path
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="2"
-        android:strokeLineCap="round"
-        android:pathData="M12,1.6 L12,4.4 M12,19.6 L12,22.4 M1.6,12 L4.4,12 M19.6,12 L22.4,12 M4.65,4.65 L6.63,6.63 M17.37,17.37 L19.35,19.35 M17.37,6.63 L19.35,4.65 M4.65,19.35 L6.63,17.37" />
+        android:pathData="M 14.72,7.11 a 3.10,3.10 0 1,0 6.20,0 a 3.10,3.10 0 1,0 -6.20,0 z" />
 </vector>

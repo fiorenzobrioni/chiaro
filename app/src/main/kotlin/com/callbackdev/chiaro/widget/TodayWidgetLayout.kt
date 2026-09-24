@@ -107,8 +107,64 @@ internal fun todayShowRain(
 internal fun todayHeroIconSize(size: DpSize, fontScale: Float, rain: Boolean): Dp =
     heroIconSize(
         size.height - WidgetCardPaddingSnug - WidgetCardPadding -
-            todayStripHeight(fontScale, rain) - StripGap
+            todayStripHeight(fontScale, rain) - StripGap,
+        max = TodayHeroIconMax
     )
+
+/**
+ * **The hero glyph's ceiling on this card: 80 dp** (23 set 2026, widget review), where it
+ * was the family's 104. The glyph sits in a ROW beside the words, and every dp it grows is
+ * a dp the two text columns lose: on a three-row card it reached 104 and the day's sentence,
+ * squeezed to 99 dp, came out «Ombrello / verso le 20:…» on a card with a hundred dp of air
+ * under it. 80 is the Now card's rule read off this row — the drawing never outgrows the
+ * block beside it, and the temperature over the place over its leading band is 74 dp,
+ * which an 80 dp box (~70 of ink) matches. The reference four-by-two with rain is 76 and
+ * does not move; without rain it drew a 91 dp glyph and now draws 80, and the 11 dp go to
+ * the words.
+ */
+internal val TodayHeroIconMax = 80.dp
+
+/**
+ * **The next days on a tall card** (23 set 2026, widget review). From about three rows the
+ * card had a band of nothing between its hero and its hours; it now carries the days —
+ * the day's name, its drawing, its high and its low — under the hours, so the card reads
+ * top to bottom as now, the next hours, the next days. It starts with today, in as many
+ * cells as the hours have, so the two rows are one grid.
+ *
+ * Budgeted last: the hero row and the strip with its rain line are paid first, and the row
+ * is drawn only when all of it fits, never squeezed. On the reference four-by-two it does
+ * not (the card is unchanged), on every three-row card from three cells up it does.
+ */
+internal fun todayShowDays(
+    size: DpSize,
+    fontScale: Float,
+    stale: Boolean,
+    sentence: Boolean,
+    range: Boolean,
+    warning: Boolean,
+    rain: Boolean
+): Boolean {
+    val hero = maxOf(
+        todayHeroIconSize(size, fontScale, rain),
+        todayHeroTextHeight(fontScale, stale, sentence, range, warning)
+    )
+    val room = size.height - WidgetCardPaddingSnug - WidgetCardPadding - hero - StripGap -
+        todayStripHeight(fontScale, rain) - DaysGap
+    return room >= todayDaysHeight(fontScale)
+}
+
+/** The days' row: the day's name, the glyph, the high and the low, stacked like an hour. */
+internal fun todayDaysHeight(fontScale: Float): Dp =
+    textLineHeight(StripHourSp, fontScale) + StripInnerGap + DaysIconSize + StripInnerGap +
+        textLineHeight(StripTempSp, fontScale) + textLineHeight(StripRainSp, fontScale)
+
+/** A day's drawing: a step under the hour's, because a day is a summary and the hours
+ * above it are the card's subject. */
+internal val DaysIconSize = 28.dp
+
+/** The air between the hours and the days: a little more than between the hero and the
+ * hours, so the two rows read as two things. */
+internal val DaysGap = 10.dp
 
 /**
  * Whether the hero row has room for the sentence column against its far edge: the same

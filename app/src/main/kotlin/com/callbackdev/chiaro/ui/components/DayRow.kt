@@ -67,7 +67,9 @@ fun DayRow(
     phases: List<LightPhase>,
     description: String,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    /** Today's row: the temperature now, drawn on the range bar. */
+    nowC: Double? = null
 ) {
     val reflow = reflowForText()
     Column(
@@ -94,14 +96,14 @@ fun DayRow(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
-            ) { Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC) }
+            ) { Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC, nowC) }
         } else {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 DayAndSky(dayLabel, condition, rainPct, rainLabel)
-                Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC)
+                Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC, nowC)
             }
         }
         DaylightRibbon(
@@ -109,6 +111,9 @@ fun DayRow(
             nowFraction = null,
             description = "", // idem: one announcement per row
             height = 4.dp,
+            // The range bar's own track: the night leans toward it, so the row shows
+            // its pill of light rather than a navy bar (DESIGN §4, 23 set 2026).
+            nightFade = MaterialTheme.colorScheme.surfaceContainerHighest,
             modifier = Modifier.padding(start = if (reflow) 0.dp else 52.dp)
         )
     }
@@ -159,7 +164,8 @@ private fun RowScope.Range(
     lowC: Double,
     highC: Double,
     scaleLowC: Double,
-    scaleHighC: Double
+    scaleHighC: Double,
+    nowC: Double?
 ) {
     Text(
         text = lowLabel,
@@ -174,7 +180,8 @@ private fun RowScope.Range(
         scaleLowC = scaleLowC,
         scaleHighC = scaleHighC,
         description = "", // the row's own description covers it
-        modifier = Modifier.weight(1f)
+        modifier = Modifier.weight(1f),
+        nowC = nowC
     )
     Text(
         text = highLabel,

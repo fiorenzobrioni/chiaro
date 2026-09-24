@@ -29,7 +29,16 @@ class AlertEngineTest {
         eveningSummary = false
     )
 
-    private fun hour(plusHours: Long, wmoCode: Int = 2, precipPct: Int = 0) = HourlyForecast(
+    /**
+     * A severe code gets a chance above [AlertEngine.SEVERE_MIN_CHANCE_PCT] and below
+     * the umbrella's 70% unless the test names one: a storm the ensemble believes, and
+     * no umbrella of its own to muddle what the test is about.
+     */
+    private fun hour(
+        plusHours: Long,
+        wmoCode: Int = 2,
+        precipPct: Int? = if (wmoCode in AlertEngine.SevereCodes) 40 else 0
+    ) = HourlyForecast(
         time = now.plusHours(plusHours),
         at = now.plusHours(plusHours).atZone(rome).toInstant(),
         tempC = 18.0,
@@ -80,6 +89,41 @@ class AlertEngineTest {
         // rain showers 80, moderate rain 63, light snow showers 85: not severe
         val alerts = evaluate(listOf(hour(1, 80), hour(2, 63), hour(3, 85)))
         assertNull(alerts.find { it.kind == AlertKind.SEVERE })
+    }
+
+    @Test
+    fun `a storm the ensemble barely believes is not severe`() {
+        // 24 set 2026: a 95 at 19% saw 1 mm of rain less than half the time, 5 mm 6%
+        val floor = AlertEngine.SEVERE_MIN_CHANCE_PCT
+        assertNull(evaluate(listOf(hour(2, 95, floor - 1))).find { it.kind == AlertKind.SEVERE })
+        assertNull(evaluate(listOf(hour(2, 82, 5))).find { it.kind == AlertKind.SEVERE })
+        assertTrue(evaluate(listOf(hour(2, 95, floor))).any { it.kind == AlertKind.SEVERE })
+    }
+
+    @Test
+    fun `ice, snow and a missing chance keep their code`() {
+        // 67 freezing rain, 75 heavy snow: not measured, and dangerous in small amounts
+        for (code in listOf(67, 75)) {
+            assertTrue(evaluate(listOf(hour(2, code, 5))).any { it.kind == AlertKind.SEVERE })
+        }
+        // no chance served (model-dependent): absence is not evidence
+        assertTrue(evaluate(listOf(hour(2, 95, null))).any { it.kind == AlertKind.SEVERE })
+    }
+
+    @Test
+    fun `a storm arrives at its first probable hour`() {
+        val storm = listOf(hour(2, 95, 10), hour(3, 95, 60), hour(4, 95, 70))
+        val severe = evaluate(storm).single { it.kind == AlertKind.SEVERE }
+        assertEquals(now.plusHours(3), severe.at)
+    }
+
+    @Test
+    fun `an improbable storm does not silence the umbrella`() {
+        // The 80% rain an hour after a 95 at 10% is the news; nobody else told it
+        val day = listOf(hour(2, 95, 10), hour(3, precipPct = 80))
+        val alerts = evaluate(day)
+        assertNull(alerts.find { it.kind == AlertKind.SEVERE })
+        assertTrue(alerts.any { it.kind == AlertKind.PRECIPITATION })
     }
 
     @Test
@@ -175,16 +219,17 @@ class AlertEngineTest {
 
     @Test
     fun `summary fires once inside the morning window`() {
-        val summary = evaluate(emptyList()).single { it.kind == AlertKind.DAILY_SUMMARY }
+        val today = listOf(day(now.toLocalDate()))
+        val summary = evaluate(emptyList(), daily = today).single { it.kind == AlertKind.DAILY_SUMMARY }
         assertEquals(now.toLocalDate().toString(), summary.fingerprint)
         // already sent today → silent
         assertNull(
-            evaluate(emptyList(), state = AlertState(summaryDate = now.toLocalDate()))
+            evaluate(emptyList(), state = AlertState(summaryDate = now.toLocalDate()), daily = today)
                 .find { it.kind == AlertKind.DAILY_SUMMARY }
         )
         // sent yesterday → fires again
         assertTrue(
-            evaluate(emptyList(), state = AlertState(summaryDate = now.toLocalDate().minusDays(1)))
+            evaluate(emptyList(), state = AlertState(summaryDate = now.toLocalDate().minusDays(1)), daily = today)
                 .any { it.kind == AlertKind.DAILY_SUMMARY }
         )
     }
@@ -192,7 +237,8 @@ class AlertEngineTest {
     @Test
     fun `summary respects the 06-12 window edges`() {
         fun at(hour: Int, minute: Int) = evaluate(
-            emptyList(), at = now.withHour(hour).withMinute(minute)
+            emptyList(), at = now.withHour(hour).withMinute(minute),
+            daily = listOf(day(now.toLocalDate()))
         ).find { it.kind == AlertKind.DAILY_SUMMARY }
         assertNull(at(5, 59))
         assertTrue(at(6, 0) != null)
@@ -315,4 +361,86 @@ class AlertEngineTest {
         val alerts = evaluate(emptyList(), settings = allOn.copy(dailySummary = false))
         assertTrue(alerts.isEmpty())
     }
+
+    // --- arrivals, not weather already under way (23 set 2026) ---
+
+    @Test
+    fun `the morning summary needs a row for today, not just a first row`() {
+        // A report whose first day is not today describes some other day: its numbers
+        // under «Oggi» would be the notification lying.
+        assertNull(
+            evaluate(emptyList(), daily = listOf(day(now.toLocalDate().plusDays(1))))
+                .find { it.kind == AlertKind.DAILY_SUMMARY }
+        )
+    }
+
+    @Test
+    fun `rain already falling is not announced as arriving`() {
+        // 08:00 → 11:00 at 80%, polled at 09:00: it is raining, «Ombrello verso le 09»
+        // is not news.
+        val raining = (-1L..2L).map { hour(it, precipPct = 80) }
+        assertNull(evaluate(raining).find { it.kind == AlertKind.PRECIPITATION })
+    }
+
+    @Test
+    fun `one spell of rain across noon is one warning`() {
+        // 10:00 → 13:00: announced at 09:00 as the AM spell…
+        val spell = (1L..4L).map { hour(it, precipPct = 80) }
+        val first = evaluate(spell).single { it.kind == AlertKind.PRECIPITATION }
+        assertTrue(first.fingerprint.endsWith(":AM"))
+        // …and at 11:30 the PM half of the SAME spell must not open a second one.
+        assertNull(
+            evaluate(spell, state = AlertState(precipFingerprints = setOf(first.fingerprint)), at = now.plusHours(2).plusMinutes(30))
+                .find { it.kind == AlertKind.PRECIPITATION }
+        )
+    }
+
+    @Test
+    fun `a one-hour dip does not split a spell in two`() {
+        val spell = listOf(hour(1, precipPct = 80), hour(2, precipPct = 60), hour(3, precipPct = 80))
+        val first = evaluate(spell).single { it.kind == AlertKind.PRECIPITATION }
+        assertNull(
+            evaluate(spell, state = AlertState(precipFingerprints = setOf(first.fingerprint)), at = now.plusHours(1).plusMinutes(30))
+                .find { it.kind == AlertKind.PRECIPITATION }
+        )
+    }
+
+    @Test
+    fun `a storm across midnight is announced once`() {
+        // 22:00 → 01:00: announced at 21:00; at 00:30 the hour after midnight carries
+        // tomorrow's date, which used to open a fresh fingerprint and a 00:30 heads-up.
+        val storm = (13L..16L).map { hour(it, wmoCode = 95, precipPct = 80) }
+        val first = evaluate(storm, at = now.plusHours(12)).single { it.kind == AlertKind.SEVERE }
+        assertNull(
+            evaluate(storm, state = AlertState(severeFingerprints = setOf(first.fingerprint)), at = now.plusHours(15).plusMinutes(30))
+                .find { it.kind == AlertKind.SEVERE }
+        )
+    }
+
+    @Test
+    fun `the storm's rain stays silent after the storm has been told`() {
+        val storm = listOf(hour(2, wmoCode = 95, precipPct = 90))
+        val told = evaluate(storm).single { it.kind == AlertKind.SEVERE }.fingerprint
+        // An hour later the storm is burnt, and its own 90% used to post «Ombrello».
+        assertNull(
+            evaluate(storm, state = AlertState(severeFingerprints = setOf(told)))
+                .find { it.kind == AlertKind.PRECIPITATION }
+        )
+    }
+
+    @Test
+    fun `rain that is not the storm's still warns`() {
+        // Rain at 11:00, a storm at 17:00: two different things, both worth saying.
+        val day = listOf(hour(2, precipPct = 90), hour(8, wmoCode = 95, precipPct = 60))
+        val alerts = evaluate(day)
+        assertTrue(alerts.any { it.kind == AlertKind.SEVERE })
+        // The storm fires first this run and silences precipitation for THIS run only…
+        val told = alerts.single { it.kind == AlertKind.SEVERE }.fingerprint
+        // …the next run, storm told, the morning rain is its own warning.
+        assertTrue(
+            evaluate(day, state = AlertState(severeFingerprints = setOf(told)))
+                .any { it.kind == AlertKind.PRECIPITATION }
+        )
+    }
 }
+

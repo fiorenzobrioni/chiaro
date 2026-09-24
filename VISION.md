@@ -693,6 +693,12 @@ bug has to be fixed in both repos, the ledger is what makes the extraction a mec
 rather than an archaeology project. The `:core:*` modules exist from day one for exactly that reason:
 the extraction must never require moving code between packages.
 
+**Superseded on 23 set 2026 (committente): the pairing is over.** tweather follows its own road
+(and is paused); Chiaro's `:core` is its own. Fixes are made here and are not carried back, the
+ledger in `UPSTREAM.md` is frozen as history, and option 2 is off the table: there is no second
+consumer to share a core with. Where this document compares Chiaro with tweather (§1, §6), it is
+describing where Chiaro came from, not a sibling it has to stay in step with.
+
 ### 7.4 Engineering rules kept
 
 Same stack as the series (Kotlin 2.2, Compose M3, Gradle 9.1/AGP 8.13, version catalog, minSdk 33,

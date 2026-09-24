@@ -81,7 +81,18 @@ data class Tonight(
      * number for one word and a poor answer to "yes, but when" — and the app has the
      * hours. Null on most nights: see [SkyVerdictEngine.clearStretch].
      */
-    val clearStretch: ClosedRange<Instant>? = null
+    val clearStretch: ClosedRange<Instant>? = null,
+    /**
+     * The forecast's cloud cover for each hour of [night] (design review, 23 set 2026):
+     * what the card's night strip draws hanging over the dark, so "so-so" is a picture of
+     * which hours before it is a word. Empty when there is no report or no night.
+     */
+    val hours: List<NightHour> = emptyList(),
+    /** The moon's elongation at the middle of the night, `[0, 360)`: under 180 it is
+     * waxing. For the phase the card draws; null with [moonIlluminationPct]. */
+    val moonElongationDeg: Double? = null,
+    /** South of the equator the moon's lit limb is mirrored. */
+    val southern: Boolean = false
 ) {
     /** True when the moon is what opens the window late: the night started earlier. */
     val moonHeldTheStart: Boolean
@@ -91,6 +102,9 @@ data class Tonight(
     val moonTookTheEnd: Boolean
         get() = window?.end != null && night?.end != null && window.end!!.isBefore(night.end!!)
 }
+
+/** One hour of the night strip: when it starts, and how much of the sky is cloud. */
+data class NightHour(val at: Instant, val cloudPct: Int)
 
 /** When a moment's occurrence lands — the word the row prints before the time. */
 enum class MomentTiming { NOW, TODAY, TOMORROW }
@@ -239,7 +253,7 @@ object SkyStateBuilder {
         return SkyUiState.Content(
             placeName = city.name,
             zone = zone,
-            tonight = tonight(city, zone, now, ::judge) { at ->
+            tonight = tonight(city, zone, now, report?.hourly.orEmpty(), ::judge) { at ->
                 SkyVerdictEngine.clearStretch(at.start, at.end, report?.hourly.orEmpty(), zone)
             },
             moments = moments(subscriptions, settings, city, zone, now, ::judge),
@@ -261,6 +275,7 @@ object SkyStateBuilder {
         city: City,
         zone: ZoneId,
         now: Instant,
+        hourly: List<com.callbackdev.chiaro.domain.model.HourlyForecast>,
         judge: (SkyJob, SkyOccurrence.At) -> SkyVerdict?,
         clearStretch: (SkyOccurrence.At) -> ClosedRange<Instant>?
     ): Tonight {
@@ -271,26 +286,47 @@ object SkyStateBuilder {
         // cannot explain a short window without the night it was cut out of.
         val night = SkyScheduler.darkNight(upcoming.date, zone, city.coordinates).night
             as? SkyOccurrence.At
-        val moonPct = night?.let {
+        val moonLight = night?.let {
             val middle = it.start.plus(
                 Duration.between(it.start, it.end ?: it.start).dividedBy(2)
             )
-            (AstronomyEngine.moonIllumination(middle).illuminatedFraction * 100).roundToInt()
+            AstronomyEngine.moonIllumination(middle)
         }
+        val moonPct = moonLight?.let { (it.illuminatedFraction * 100).roundToInt() }
+        val hours = nightHours(night, hourly)
         val at = upcoming.at ?: return Tonight(
             window = null,
             verdict = null,
             reason = (upcoming.occurrence as? SkyOccurrence.None)?.reason,
             night = night,
-            moonIlluminationPct = moonPct
+            moonIlluminationPct = moonPct,
+            hours = hours,
+            moonElongationDeg = moonLight?.elongation,
+            southern = city.coordinates.lat < 0.0
         )
         return Tonight(
             window = at,
             verdict = judge(job, at),
             night = night,
             moonIlluminationPct = moonPct,
-            clearStretch = clearStretch(at)
+            clearStretch = clearStretch(at),
+            hours = hours,
+            moonElongationDeg = moonLight?.elongation,
+            southern = city.coordinates.lat < 0.0
         )
+    }
+
+    /** The forecast hours that overlap [night], each with its cloud cover: an hour that
+     * starts before dusk still counts for the part of it that is night. */
+    internal fun nightHours(
+        night: SkyOccurrence.At?,
+        hourly: List<com.callbackdev.chiaro.domain.model.HourlyForecast>
+    ): List<NightHour> {
+        val start = night?.start ?: return emptyList()
+        val end = night.end ?: return emptyList()
+        return hourly
+            .filter { it.at.plus(Duration.ofHours(1)).isAfter(start) && it.at.isBefore(end) }
+            .map { NightHour(it.at, it.cloudCoverPct) }
     }
 
     /**

@@ -71,10 +71,17 @@ object RuleNotifier {
             return false
         }
 
-        val message = RuleMessages.interpolate(trigger.rule.message, trigger, report, now, units)
+        val message = RuleMessages.interpolate(
+            trigger.rule.message, trigger, report, now, units,
+            RuleText.MessageWriter(
+                context.resources, units, context.resources.configuration.locales[0],
+                android.text.format.DateFormat.is24HourFormat(context)
+            )
+        )
         val id = notificationId(trigger.rule.id)
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_chiaro)
+            .setColor(NotificationViews.accent(context))
             .setContentTitle(
                 context.getString(R.string.notif_rule_title, trigger.rule.name, cityLabel)
             )
@@ -85,7 +92,8 @@ object RuleNotifier {
             )
             .setContentIntent(openApp(context, id))
             .setAutoCancel(true)
-            .build()
+        NotificationViews.quietAtNight(builder)
+        val notification = builder.build()
         return try {
             manager.notify(id, notification)
             true
@@ -112,11 +120,17 @@ object RuleNotifier {
         message: String
     ): String {
         val res = context.resources
+        val locale = res.configuration.locales[0]
         val lines = trigger.rule.conditions.map { condition ->
+            // A line of its own reads as a sentence, so it starts like one (23 set 2026:
+            // the Alerts screen's fragment is lower-case because it follows «Quando»).
             val sentence = RuleText.sentence(res, condition, units)
+                .replaceFirstChar { it.titlecase(locale) }
             val variable = RuleVariables.byId(condition.variable)
+            // The reading with its unit and the reader's decimal mark: «21,4°», where it
+            // printed «valore 21.4» — a number with no unit, in the code's decimal point.
             val reading = variable?.resolve?.invoke(report, now)
-                ?.let { RuleVariables.formatValue(variable.kind, it.value, units) }
+                ?.let { RuleText.reading(res, condition.variable, it.value, units, locale) }
             if (reading == null) {
                 sentence
             } else {

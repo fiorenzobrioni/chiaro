@@ -62,6 +62,7 @@ object SkyNotifier {
         val lines = lines(context, occurrenceAt, zone, verdict, now)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_chiaro)
+            .setColor(NotificationViews.accent(context))
             .setContentTitle(context.getString(SkyText.nameRes(jobId)))
             // Collapsed: one line, so the pieces share it. BigTextStyle is also what
             // stops the system from eliding the verdict on a narrow screen.

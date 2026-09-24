@@ -158,6 +158,30 @@ class RuleEngineTest {
         assertTrue(trigger.fingerprint!!.contains(":rule:${mixed.id}:"))
     }
 
+    // --- facts about the day (23 set 2026) ---
+
+    @Test
+    fun `a rule on today's facts speaks once a day, and not before six`() {
+        val uv = rule(RuleCondition("today.uv_max", RuleOp.GTE, 1.0))
+        val trigger = evaluate(uv).triggers.single()
+        assertEquals("$cityKey:rule:${uv.id}:2023-10-27:DAY", trigger.fingerprint)
+        val fired = RuleEngineState(firedFingerprints = setOf(trigger.fingerprint!!))
+        // The morning half used to be a second bucket: «Oggi UV fino a 5» twice a day.
+        assertTrue(evaluate(uv, state = fired, at = now.withHour(9)).triggers.isEmpty())
+        // At 00:05 the day has not begun for anyone reading it.
+        assertTrue(evaluate(uv, at = now.withHour(0).withMinute(5)).triggers.isEmpty())
+        assertEquals(1, evaluate(uv, at = now.withHour(6)).triggers.size)
+    }
+
+    @Test
+    fun `today's facts beside a window keep the half-day bucket`() {
+        val mixed = rule(
+            RuleCondition("today.uv_max", RuleOp.GTE, 1.0),
+            RuleCondition("next_6h.precip_chance_max", RuleOp.GTE, 0.0)
+        )
+        assertTrue(evaluate(mixed).triggers.single().fingerprint!!.endsWith(":PM"))
+    }
+
     // --- gating ---
 
     @Test

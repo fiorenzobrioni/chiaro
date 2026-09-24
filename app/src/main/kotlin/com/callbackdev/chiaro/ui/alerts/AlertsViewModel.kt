@@ -176,10 +176,16 @@ class AlertsViewModel(
         val now = ZonedDateTime.now(zone).toLocalDateTime()
         return when (val check = RuleEngine.check(rule, report, now)) {
             is RuleCheck.Fires -> RulePreview.WouldFire(
-                RuleMessages.interpolate(
-                    rule.message, rule, check.value, check.at, report, now,
-                    settingsStore.settings.first().units
-                )
+                settingsStore.settings.first().units.let { units ->
+                    RuleMessages.interpolate(
+                        rule.message, rule, check.value, check.at, report, now, units,
+                        RuleText.MessageWriter(
+                            appContext.resources, units,
+                            appContext.resources.configuration.locales[0],
+                            android.text.format.DateFormat.is24HourFormat(appContext)
+                        )
+                    )
+                }
             )
             RuleCheck.Passes -> RulePreview.WouldPass
             is RuleCheck.Unavailable -> RulePreview.Unavailable(check.variable)

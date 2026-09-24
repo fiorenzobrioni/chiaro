@@ -6,6 +6,23 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import com.callbackdev.chiaro.data.AppSettings
+import com.callbackdev.chiaro.ui.theme.paletteFor
+import com.callbackdev.chiaro.ui.today.SkySnapshot
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -82,6 +99,7 @@ class WidgetConfigActivity : ComponentActivity() {
         )
 
         val settingsStore = ServiceLocator.settingsStore(applicationContext)
+        val kind = ChiaroWidgets.kindOf(applicationContext, appWidgetId)
         setContent {
             // This screen is part of the app, so it wears what the app wears: the
             // reader's theme, their answer on wallpaper colors, and their dress (§2.5).
@@ -108,7 +126,8 @@ class WidgetConfigActivity : ComponentActivity() {
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(padding),
-                        onDone = { finish() }
+                        onDone = { finish() },
+                        kind = kind
                     )
                 }
             }
@@ -117,16 +136,21 @@ class WidgetConfigActivity : ComponentActivity() {
 }
 
 @Composable
-private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Unit) {
+internal fun ConfigContent(
+    appWidgetId: Int,
+    modifier: Modifier,
+    onDone: () -> Unit,
+    // Content options are not the same for all of them: the Sky card has none, the text
+    // card draws no icons, and a switch that changes nothing must not be offered.
+    kind: WidgetKind?
+) {
     val context = androidx.compose.ui.platform.LocalContext.current.applicationContext
     val scope = rememberCoroutineScope()
     val cityStore = remember { ServiceLocator.cityStore(context) }
     val widgetCityStore = remember { ServiceLocator.widgetCityStore(context) }
     val lookStore = remember { WidgetLookStore.get(context) }
-    // Content options are not the same for all of them: the Sky card has none, the text
-    // card draws no icons, and a switch that changes nothing must not be offered.
-    val kind = remember(appWidgetId) { ChiaroWidgets.kindOf(context, appWidgetId) }
-
+    val appSettings by remember { ServiceLocator.settingsStore(context).settings }
+        .collectAsStateWithLifecycle(initialValue = null)
     val cities by cityStore.cities.collectAsStateWithLifecycle(initialValue = emptyList())
     val pinnedFlow = remember(appWidgetId) {
         widgetCityStore.pinned.map { it[appWidgetId] }
@@ -134,101 +158,70 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
     val pinnedId by pinnedFlow.collectAsStateWithLifecycle(initialValue = null)
     var look by remember { mutableStateOf<WidgetLook?>(null) }
     LaunchedEffect(appWidgetId) { look = lookStore.lookFor(appWidgetId, kind) }
+    // The preview's model (23 set 2026): the widget's own loader, re-run when the place
+    // changes, with this screen's look laid over it so a tap shows before the store has
+    // finished writing it.
+    var base by remember { mutableStateOf<WidgetModel?>(null) }
+    LaunchedEffect(appWidgetId, pinnedId) {
+        base = runCatching { WidgetData.load(context, appWidgetId) }.getOrNull()
+    }
 
     fun repaint() = scope.launch { runCatching { ChiaroWidgets.updateOne(context, appWidgetId) } }
+    fun save(next: WidgetLook) {
+        look = next
+        scope.launch {
+            lookStore.set(appWidgetId, next)
+            repaint()
+        }
+    }
 
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp),
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)
+            .padding(bottom = 16.dp)
     ) {
-        SectionLabel(stringResource(R.string.widget_config_place))
-        ChoiceRow(
-            label = stringResource(R.string.widget_config_active_place),
-            selected = pinnedId == null,
-            onPick = {
-                scope.launch {
-                    widgetCityStore.unpin(appWidgetId)
-                    repaint()
-                }
-            }
+        WidgetPreviewSection(
+            appWidgetId = appWidgetId,
+            kind = kind,
+            model = base?.let { model -> look?.let { model.copy(look = it) } ?: model }
         )
-        cities.forEach { city ->
-            ChoiceRow(
-                label = city.name,
-                selected = pinnedId == city.id,
+
+        ConfigHeader(stringResource(R.string.widget_config_place))
+        ConfigGroup {
+            ConfigChoiceRow(
+                label = stringResource(R.string.widget_config_active_place),
+                selected = pinnedId == null,
                 onPick = {
                     scope.launch {
-                        widgetCityStore.pin(appWidgetId, city.id)
+                        widgetCityStore.unpin(appWidgetId)
                         repaint()
                     }
                 }
             )
-        }
-
-        look?.let { current ->
-            BackgroundSection(current) { next ->
-                look = next
-                scope.launch {
-                    lookStore.set(appWidgetId, next)
-                    repaint()
-                }
-            }
-
-            SectionLabel(stringResource(R.string.widget_config_opacity))
-            Text(
-                text = when (current.opacityPct) {
-                    100 -> stringResource(R.string.settings_opacity_full)
-                    0 -> stringResource(R.string.widget_opacity_transparent)
-                    else -> "${current.opacityPct}%"
-                },
-                style = MaterialTheme.typography.titleMedium
-            )
-            Slider(
-                value = current.opacityPct.toFloat(),
-                onValueChange = { raw ->
-                    look = current.copy(opacityPct = ((raw / 5f).roundToInt() * 5))
-                },
-                onValueChangeFinished = {
-                    look?.let { final ->
+            cities.forEach { city ->
+                ConfigChoiceRow(
+                    label = city.name,
+                    selected = pinnedId == city.id,
+                    onPick = {
                         scope.launch {
-                            lookStore.set(appWidgetId, final)
+                            widgetCityStore.pin(appWidgetId, city.id)
                             repaint()
                         }
                     }
-                },
-                valueRange = 0f..100f,
-                steps = 19
-            )
-
-            fun save(next: WidgetLook) {
-                look = next
-                scope.launch {
-                    lookStore.set(appWidgetId, next)
-                    repaint()
-                }
-            }
-
-            // Offered on every card that draws weather glyphs, and the reason to pick a
-            // family here is the card's own — its size, its ground, the wallpaper behind
-            // it (see [WidgetIcons]). On the text widget it appears only once the glyph
-            // has been turned on below: a switch that changes nothing must not be offered,
-            // and until then that card draws none.
-            if (kind != WidgetKind.TEXT || current.showIcon) {
-                SectionLabel(stringResource(R.string.widget_config_icons))
-                val iconOptions = listOf(
-                    WidgetIcons.APP to stringResource(R.string.widget_icons_app),
-                    WidgetIcons.FILL to stringResource(R.string.settings_icons_fill),
-                    WidgetIcons.LINE to stringResource(R.string.settings_icons_line)
                 )
-                iconOptions.forEach { (icons, label) ->
-                    ChoiceRow(
-                        label = label,
-                        selected = current.icons == icons,
-                        onPick = { save(current.copy(icons = icons)) }
-                    )
-                }
+            }
+        }
+
+        look?.let { current ->
+            ConfigHeader(stringResource(R.string.widget_config_background))
+            ConfigGroup {
+                BackgroundSection(current, base?.content?.sky, appSettings, onPick = ::save)
+                ConfigDivider()
+                OpacityRow(
+                    pct = current.opacityPct,
+                    onChange = { look = current.copy(opacityPct = it) },
+                    onDone = { look?.let(::save) }
+                )
             }
 
             // Now, Today and the text card carry the day's sentence and may hide it;
@@ -238,67 +231,121 @@ private fun ConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Un
             // that can be laid two ways. The Sky widget's content is its subscriptions,
             // chosen on the Sky screen, so it has no content switch to offer here.
             if (kind == WidgetKind.NOW || kind == WidgetKind.TODAY || kind == WidgetKind.TEXT) {
-                SectionLabel(stringResource(R.string.widget_config_content))
-                // The text card's one picture, and the first thing to decide about it —
-                // above the sentence, because it is the switch that changes what KIND of
-                // card this is rather than what the card says (committente, 20 set 2026).
-                if (kind == WidgetKind.TEXT) {
-                    SwitchRow(
-                        label = stringResource(R.string.widget_config_show_icon),
-                        note = stringResource(R.string.widget_config_show_icon_note),
-                        checked = current.showIcon,
-                        onToggle = { save(current.copy(showIcon = it)) }
+                val text = kind == WidgetKind.TEXT
+                ConfigHeader(stringResource(R.string.widget_config_content))
+                ConfigGroup {
+                    ConfigSwitchRow(
+                        label = stringResource(R.string.widget_config_show_sentence),
+                        note = stringResource(R.string.widget_config_show_sentence_note),
+                        checked = current.showSentence,
+                        onToggle = { save(current.copy(showSentence = it)) }
                     )
-                }
-                SwitchRow(
-                    label = stringResource(R.string.widget_config_show_sentence),
-                    note = stringResource(R.string.widget_config_show_sentence_note),
-                    checked = current.showSentence,
-                    onToggle = { save(current.copy(showSentence = it)) }
-                )
-                if (kind == WidgetKind.TODAY || kind == WidgetKind.TEXT) {
-                    SwitchRow(
-                        label = stringResource(R.string.widget_config_show_range),
-                        note = stringResource(R.string.widget_config_show_range_note),
-                        checked = current.showDayRange,
-                        onToggle = { save(current.copy(showDayRange = it)) }
+                    if (kind == WidgetKind.TODAY || text) {
+                        ConfigDivider()
+                        ConfigSwitchRow(
+                            label = stringResource(R.string.widget_config_show_range),
+                            note = stringResource(
+                                if (text) {
+                                    R.string.widget_config_show_range_note_text
+                                } else {
+                                    R.string.widget_config_show_range_note
+                                }
+                            ),
+                            checked = current.showDayRange,
+                            onToggle = { save(current.copy(showDayRange = it)) }
+                        )
+                    }
+                    // Fase 11: on by default, and on a day with no warning it changes
+                    // nothing at all — which is the whole argument for leaving it on. The
+                    // text card prints the level as a word rather than a chip, so it says so.
+                    ConfigDivider()
+                    ConfigSwitchRow(
+                        label = stringResource(R.string.widget_config_show_warning),
+                        note = stringResource(
+                            if (text) {
+                                R.string.widget_config_show_warning_note_text
+                            } else {
+                                R.string.widget_config_show_warning_note
+                            }
+                        ),
+                        checked = current.showWarning,
+                        onToggle = { save(current.copy(showWarning = it)) }
                     )
+                    // The Today card's extra rank on a tall card (23 set 2026): the same
+                    // switch as the text card's «Più tardi», saying what it is on this card.
+                    if (kind == WidgetKind.TODAY) {
+                        ConfigDivider()
+                        ConfigSwitchRow(
+                            label = stringResource(R.string.widget_config_show_days),
+                            note = stringResource(R.string.widget_config_show_days_note),
+                            checked = current.showLater,
+                            onToggle = { save(current.copy(showLater = it)) }
+                        )
+                    }
+                    if (text) {
+                        // «Più tardi» and the glyph close the list: both only ever take
+                        // space the card leaves empty, so they are the two switches whose
+                        // effect depends on the size — which the preview above shows.
+                        ConfigDivider()
+                        ConfigSwitchRow(
+                            label = stringResource(R.string.widget_config_show_later),
+                            note = stringResource(R.string.widget_config_show_later_note),
+                            checked = current.showLater,
+                            onToggle = { save(current.copy(showLater = it)) }
+                        )
+                        ConfigDivider()
+                        ConfigSwitchRow(
+                            label = stringResource(R.string.widget_config_show_icon),
+                            note = stringResource(R.string.widget_config_show_icon_note),
+                            checked = current.showIcon,
+                            onToggle = { save(current.copy(showIcon = it)) }
+                        )
+                    }
                 }
-                // Fase 11: on by default, and on a day with no warning it changes
-                // nothing at all — which is the whole argument for leaving it on.
-                SwitchRow(
-                    label = stringResource(R.string.widget_config_show_warning),
-                    note = stringResource(R.string.widget_config_show_warning_note),
-                    checked = current.showWarning,
-                    onToggle = { save(current.copy(showWarning = it)) }
-                )
             }
+            // Offered on every card that draws weather glyphs, after the content so that
+            // on the text card it lands right under the switch that brings it. The
+            // reason to pick a family here is the card's own — its size, its ground, the
+            // wallpaper behind it (see [WidgetIcons]). On the text widget it appears only once the glyph
+            // has been turned on below: a switch that changes nothing must not be offered,
+            // and until then that card draws none.
+            if (kind != WidgetKind.TEXT || current.showIcon) {
+                ConfigHeader(stringResource(R.string.widget_config_icons))
+                ConfigGroup {
+                    listOf(
+                        WidgetIcons.APP to stringResource(R.string.widget_icons_app),
+                        WidgetIcons.FILL to stringResource(R.string.settings_icons_fill),
+                        WidgetIcons.LINE to stringResource(R.string.settings_icons_line)
+                    ).forEach { (icons, label) ->
+                        ConfigChoiceRow(
+                            label = label,
+                            selected = current.icons == icons,
+                            onPick = { save(current.copy(icons = icons)) }
+                        )
+                    }
+                }
+            }
+
             if (kind == WidgetKind.NOW) {
-                SectionLabel(stringResource(R.string.widget_config_arrangement))
-                val arrangements = listOf(
-                    WidgetArrangement.ICON_START to
-                        stringResource(R.string.widget_arrangement_icon_start),
-                    WidgetArrangement.ICON_END to
-                        stringResource(R.string.widget_arrangement_icon_end)
-                )
-                arrangements.forEach { (arrangement, label) ->
-                    ChoiceRow(
-                        label = label,
-                        selected = current.arrangement == arrangement,
-                        onPick = { save(current.copy(arrangement = arrangement)) }
-                    )
+                ConfigHeader(stringResource(R.string.widget_config_arrangement))
+                ConfigGroup {
+                    listOf(
+                        WidgetArrangement.ICON_START to
+                            stringResource(R.string.widget_arrangement_icon_start),
+                        WidgetArrangement.ICON_END to
+                            stringResource(R.string.widget_arrangement_icon_end)
+                    ).forEach { (arrangement, label) ->
+                        ConfigChoiceRow(
+                            label = label,
+                            selected = current.arrangement == arrangement,
+                            onPick = { save(current.copy(arrangement = arrangement)) }
+                        )
+                    }
                 }
             }
         }
 
-        Button(
-            onClick = onDone,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp)
-        ) {
-            Text(stringResource(R.string.action_done))
-        }
+        ConfigDoneButton(onDone)
     }
 }
 
@@ -329,7 +376,7 @@ internal val WidgetCardColorChoices: List<Pair<WidgetCardColor, Int>> = listOf(
 )
 
 /**
- * The background choices, shared by this screen and the arc widget's own (19 set 2026):
+ * The background question, shared by this screen and the arc widget's own (19 set 2026):
  * the sky, light, dark, the system — and a colour, whose six options only appear once the
  * reader has picked it. Nested rather than six more rows in the same list, because the
  * question is really two: what KIND of card, and then which colour, and a flat list of ten
@@ -341,114 +388,144 @@ internal val WidgetCardColorChoices: List<Pair<WidgetCardColor, Int>> = listOf(
  * furniture on somebody's wallpaper whatever is printed on it, so the question is the same
  * question on every one of them, and «Un colore» has been on all five since the day it
  * landed (committente, 20 set 2026, asking for exactly that — it was already true).
+ *
+ * **Rows that show their answer since 23 set 2026**: each kind of card carries a swatch of
+ * the ground it paints — the sky as it is right now when there is a report to draw it from,
+ * the two fixed cards, the phone's half-and-half, the colour picked — and the six colours
+ * are a strip of swatches rather than six more rows, with the chosen one's name printed
+ * under the strip (a swatch is never the only label, DESIGN §10). The rows only: the
+ * caller puts them on a [ConfigGroup] under its own heading, with the opacity after them.
  */
 @Composable
-internal fun BackgroundSection(look: WidgetLook, onPick: (WidgetLook) -> Unit) {
-    SectionLabel(stringResource(R.string.widget_config_background))
+internal fun BackgroundSection(
+    look: WidgetLook,
+    sky: SkySnapshot? = null,
+    app: AppSettings? = null,
+    onPick: (WidgetLook) -> Unit
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val dynamic = app?.dynamicColor ?: false
+    val dress = app?.palette ?: AppPalette.VIVID
+    val schemes = remember(dynamic, dress) { widgetSchemes(context, dynamic, dress) }
+    val skyImage = remember(sky, dress) {
+        sky?.let { skyGradientBitmap(it, 100, paletteFor(dress).sky).asImageBitmap() }
+    }
+    val colors = MaterialTheme.colorScheme
+    val fallback = Brush.linearGradient(listOf(colors.primaryContainer, colors.tertiaryContainer))
+    val night = isNight(context)
+    val inset = 16.dp
     WidgetBackgroundChoices.forEach { (background, labelRes) ->
-        ChoiceRow(
+        ConfigChoiceRow(
             label = stringResource(labelRes),
             selected = look.background == background,
-            onPick = { onPick(look.copy(background = background)) }
+            onPick = { onPick(look.copy(background = background)) },
+            inset = inset,
+            trailing = {
+                GroundSwatch(background, look, schemes, skyImage, night, fallback)
+            }
         )
     }
     if (look.background == WidgetBackground.COLOR) {
-        WidgetCardColorChoices.forEach { (color, labelRes) ->
-            ColorRow(
-                label = stringResource(labelRes),
-                color = widgetCardContainer(color),
-                selected = look.cardColor == color,
-                onPick = { onPick(look.copy(cardColor = color)) }
-            )
+        ColorSwatches(look.cardColor, start = inset + 40.dp, end = inset) {
+            onPick(look.copy(cardColor = it))
         }
+    }
+}
+
+/** One ground, the size of a card corner: a rounded rectangle, not a dot, because what is
+ * being chosen is the card's whole face. */
+@Composable
+private fun GroundSwatch(
+    background: WidgetBackground,
+    look: WidgetLook,
+    schemes: WidgetSchemes,
+    skyImage: androidx.compose.ui.graphics.ImageBitmap?,
+    night: Boolean,
+    fallback: Brush
+) {
+    val app = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(10.dp)
+    val modifier = Modifier
+        .size(width = 44.dp, height = 30.dp)
+        .clip(shape)
+        .border(1.dp, app.outlineVariant, shape)
+    when (background) {
+        WidgetBackground.SKY -> if (skyImage != null) {
+            androidx.compose.foundation.Image(
+                bitmap = skyImage,
+                contentDescription = null,
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                modifier = modifier
+            )
+        } else {
+            Box(modifier.background(fallback))
+        }
+        // The phone's choice, drawn as both of its answers on a diagonal.
+        WidgetBackground.SYSTEM -> androidx.compose.foundation.Canvas(modifier) {
+            drawRect(schemes.light.surface)
+            val path = androidx.compose.ui.graphics.Path().apply {
+                moveTo(size.width, 0f)
+                lineTo(size.width, size.height)
+                lineTo(0f, size.height)
+                close()
+            }
+            drawPath(path, schemes.dark.surface)
+        }
+        else -> Box(
+            modifier.background(widgetCardFill(background, schemes, night, 1f, look.cardColor))
+        )
     }
 }
 
 /**
- * A colour's row: the radio, the name, and a swatch of the colour itself at the end. The
- * swatch is the one place in this app where a colour is offered as a colour, so it is also
- * the one place the name alone would not be enough — and the name is still there, in front
- * of it, because a swatch is not a label (DESIGN §10: a fill that carries meaning has a
- * word beside it).
+ * The six colours as swatches across the group, the chosen one ringed and ticked, and its
+ * name under the strip — the swatch shows the colour, the word says which one it is.
  */
 @Composable
-private fun ColorRow(label: String, color: Color, selected: Boolean, onPick: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .selectable(selected = selected, onClick = onPick, role = Role.RadioButton)
-            .padding(vertical = 10.dp)
-    ) {
-        RadioButton(selected = selected, onClick = null)
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 12.dp, end = 12.dp)
-        )
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-    }
-}
-
-@Composable
-internal fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
-    )
-}
-
-/** A toggle with the sentence that says what it costs — the same shape the Settings
- * screen gives every switch, so a reader meets one control, not two. */
-@Composable
-internal fun SwitchRow(
-    label: String,
-    note: String,
-    checked: Boolean,
-    onToggle: (Boolean) -> Unit
+private fun ColorSwatches(
+    selected: WidgetCardColor,
+    start: androidx.compose.ui.unit.Dp,
+    end: androidx.compose.ui.unit.Dp,
+    onPick: (WidgetCardColor) -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .toggleable(value = checked, onValueChange = onToggle, role = Role.Switch)
-            .padding(vertical = 10.dp)
-    ) {
-        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-            Text(text = label, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = note,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+    Column(modifier = Modifier.padding(start = start, end = end, bottom = 12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            WidgetCardColorChoices.forEach { (color, labelRes) ->
+                val chosen = color == selected
+                val name = stringResource(labelRes)
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .border(
+                            width = if (chosen) 2.dp else 0.dp,
+                            color = if (chosen) MaterialTheme.colorScheme.primary else Color.Transparent,
+                            shape = CircleShape
+                        )
+                        .padding(if (chosen) 4.dp else 0.dp)
+                        .clip(CircleShape)
+                        .background(widgetCardContainer(color))
+                        .selectable(selected = chosen, onClick = { onPick(color) }, role = Role.RadioButton)
+                        .semantics { contentDescription = name }
+                ) {
+                    if (chosen) {
+                        Icon(
+                            imageVector = Icons.Rounded.Check,
+                            contentDescription = null,
+                            // Every card colour is a dark ground under white ink (§2.6).
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
         }
-        Switch(checked = checked, onCheckedChange = null)
-    }
-}
-
-@Composable
-internal fun ChoiceRow(label: String, selected: Boolean, onPick: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .selectable(selected = selected, onClick = onPick, role = Role.RadioButton)
-            .padding(vertical = 10.dp)
-    ) {
-        RadioButton(selected = selected, onClick = null)
         Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = 12.dp)
+            text = stringResource(WidgetCardColorChoices.first { it.first == selected }.second),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 6.dp)
         )
     }
 }

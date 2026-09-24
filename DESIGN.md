@@ -232,6 +232,23 @@ dark   #63B8EA  #1791D2  #0070AB  #4A4740  #985E00  #C87400  #F29300
 Luminance peaks at the midpoint in light and troughs at it in dark, so in both schemes the
 middle recedes and the extremes come forward.
 
+**The details grid's tracks** (design review, 23 set 2026, §8.6) — four quantities that
+until then shared one `primary` bar, each now in a hue of its own. The three sequential
+ones are **one hue, light to dark, monotonic in luminance**, and marks only: like the rain
+fill ramp they never carry a figure. UV is warm — deliberately **not** the WHO's
+green-yellow-orange-red-violet chart, which is a rainbow (§9.1) and whose bands collapse
+under deuteranopia exactly as the verdicts' do; the band is the word under the number. The
+air index is violet, pollen the green of what makes it. Pressure is **diverging** around
+1013 hPa, shaped like the temperature ramp: the neutral middle is the lightest step in
+light and the darkest in dark. Humidity is water and draws on the rain fill ramp above.
+
+| Ramp | light | dark |
+|---|---|---|
+| `uvRamp` (UV index) | `#FDE8B0 #FAC66A #F29A2E #D9661A #A8400F` | `#4A2A08 #7A4210 #B8621A #E8872A #FFB55C` |
+| `airRamp` (air index) | `#ECE4F5 #CFB9E8 #A98AD3 #7E5AB5 #55338C` | `#2A1B40 #432B66 #654292 #8E68C0 #BC9BEA` |
+| `pollenRamp` (pollen) | `#EEF3C8 #D2E08A #A9C24A #7C9A22 #556F12` | `#26300A #3E4E12 #607A1E #8BAA36 #B8D65E` |
+| `pressureRamp` (pressure) | `#5B7FA8 #A6BBD3 #DCD7CC #E6C78A #C99A3A` | `#7FA6D6 #4D6F96 #4A4740 #8C6A2E #D6A24A` |
+
 **Freshness**: the `unstable` pair above, reused deliberately — "this data is old" and
 "the sky is iffy" are the same class of statement and should not learn two colors. English
 overloads the word, so: an official *warning* is an authority grading a day and wears the
@@ -331,6 +348,16 @@ Temperature, diverging, the midpoint still a neutral and still anchored at 15 °
 light  #006FAC  #00A6EB  #7BCCFF  #E0D7C3  #FFBB66  #E67E00  #B85100
 dark   #2FBAFF  #0091D5  #0070AB  #4C473A  #985E00  #C87400  #F29300
 ```
+
+The details grid's tracks, through the same rule (`tools/gen_vivid.py` carries them since 23
+set 2026):
+
+| Ramp | light | dark |
+|---|---|---|
+| `uvRamp` (UV index) | `#FFE8AA #FFC559 #F89700 #DE6300 #AC3D00` | `#4D2900 #7E4000 #BD5F00 #EF8300 #FFB55C` |
+| `airRamp` (air index) | `#F0E2FF #D7B3FF #B87AFF #9138EF #6300BA` | `#320D58 #4F0E8C #771CC4 #A14CF7 #C394FF` |
+| `pollenRamp` (pollen) | `#EEF5A6 #CFE408 #A6C400 #7A9B00 #546F00` | `#253100 #3D4F00 #5E7B00 #88AB00 #B3D900` |
+| `pressureRamp` (pressure) | `#387FCA #96BCE7 #E0D7C3 #FBC23E #D09800` | `#5CA6FE #2A6FB6 #4C473A #946800 #E29E00` |
 
 ### 2.6 The card colours a widget can wear
 
@@ -543,11 +570,48 @@ one §3.2 already used for the golden hour — another anchor, not a duller tabl
 
 ---
 
+### 3.8 The app icon
+
+**The day in a ring** (23 set 2026, chosen by the committente from three drawn candidates).
+One day of twenty-four hours as a ring painted like the canvas: a sweep gradient from the
+dusk's amber at three o'clock, clockwise through the night's indigo to midnight at the bottom,
+the dawn's amber at nine and the noon azure at the top — the vivid sky table's anchors (§3.7).
+The sun sits on the ring at mid-afternoon and a clip opens the ring around it, which does
+two things: the disc reads as a sun on its path rather than a bead, and the open ring is a
+**C**. It is the daylight ribbon (§4) bent into a dial and the arc widget's sun on its path.
+
+- **Ground**: `#F7F4EE`, a warm daylight white between the paper surface and its first
+  container: paper on any wallpaper, and still apart from the ring's two palest stops.
+- **Geometry** (108-unit adaptive canvas): ring radius 21, stroke 10; sun radius 8.2 at −40°;
+  gap radius 11.2. Everything stays inside the 33-unit safe circle, so circle, squircle and
+  rounded-square masks crop air, never the mark.
+- **Themed icon**: a drawable of its own (`ic_launcher_monochrome`), the same mark as shapes —
+  annulus, gap, disc — because the system reads only alpha and a gradient's alpha is not a shape.
+- **Why not the others**: a crescent C of light on blue was the strongest at 24px, but read as a
+  moon — the night again, which is what the old badge (a starry crescent over two waves) drew;
+  the sun's curve over a horizon read as a letter A below 48px.
+
 ## 4. The daylight ribbon
 
-A 6dp band (4dp in compact rows) showing one day of light: night, astronomical, nautical
-and civil twilight, the golden hours, daylight — drawn with the §3.2 stops at fixed
-saturation, with the current moment marked by a 2dp `onSurface` line and a 4dp dot.
+An 8dp band (4dp in compact rows) showing one day of light: night, astronomical, nautical
+and civil twilight, the golden hours, daylight — drawn with the §3.2 middle stops, as **one
+continuous gradient with rounded ends** (design review, 23 set 2026). It was a row of
+hard-edged rectangles until then, and on the device it read as a barcode: the sky does not
+change color on a line. Each phase keeps a solid core and blends into its neighbour across
+the edge they share — 30% of the phase's width on each side, capped at 1.5% of the day — so
+a long night stays night and a six-minute twilight is mostly transition, which is what a
+twilight is (`ribbonStops`, tested).
+
+On the canvas the current moment is a **14dp white disc** ringed in the scrim's ink at 35%,
+standing out of the band on both sides, and the part of the day already spent is drawn at
+**60% alpha**: the ribbon reads as "the day so far, and what is left of it" before any word
+does. (This section had promised a dot since the first draft; the code drew a 2dp line.)
+
+In the week's compact rows the night **leans toward the range bar's track**
+(`surfaceContainerHighest`): nothing from the civil twilight up, 37.5% at −12°, 75% from
+astronomical night down. Seven navy bars were the heaviest ink in the section while saying
+the least, the night being the part of the day that is the same every day; faded, each row
+shows its pill of light.
 
 It is the app's signature element and the one component that makes a week of rows read as
 a season rather than seven identical stripes. It is also, deliberately, **a depiction and
@@ -671,6 +735,55 @@ cells on two stay words whatever the switch says. Two slots, one per kind of emp
 most 2.1 ems wide; and on the panel **over the words**, in the band that form keeps empty by
 pinning its eyebrow to the top and its block to the bottom. 48 to 104 dp, one step under the
 family's hero floor at the bottom end because here the glyph is not the hero, the number is.
+
+**Height buys the text card a table, never a bigger ornament** (23 set 2026). From three
+rows up the stack and the panel had air they could only spend on emptiness — the number is
+capped at 56 and 64sp for the reasons above, and the air between the eyebrow and the block
+simply grew. That air now buys **«Più tardi»**: the next hours as lines of type, three hours
+apart on the clock (18:00, 21:00, 00:00 — times a reader says out loud, from the first one
+at least 90 minutes ahead), each the time in the quiet ink, the temperature at rank 3 in the
+strong one, the chance of rain in the rain ramp's ink when it is 30% or more, and the sky in
+a word. It is the Today card's strip said in words, which is this card's premise. The rules
+are the glyph's rules: budgeted LAST, after the number has reached its ceiling, in whole
+rows, two at least (one hour is a second "now", not "later") and four at most (they already
+reach the night); the panel keeps 16dp of its air even with a table in it, and the glyph
+takes what the table leaves. So on every one-row card and on the reference two-row cards it
+is not drawn at all, and turning it on changes no other line of any plan — both pinned by
+`TextLaterTest`. The columns are fixed widths so the figures line up down the table the way a
+timetable's do; the rain column exists only when some row has a figure for it, and the word
+only where it keeps 84dp, so a two-cell card prints the time and the figures rather than
+«Poc…». Hours are stepped on the instant, not on the label, so the night the clocks change
+still shows rows three real hours apart.
+
+**The other cards use height too** (23 set 2026, the widget review that followed). Rendered
+at every grant from 1×1 to 4×4, the Now and Today cards had the text card's old problem:
+from three rows up they stopped spending. Each now does with height what it can honestly do:
+
+- **Now**: the tall form's glyph stops at the family's 104dp, and what it cannot use now goes
+  to the number — from 34sp up to the text card's 56, never wider than the words' column holds.
+  The reference two-by-two is unchanged (its glyph is 69dp, under the ceiling), and the glyph
+  never shrinks for the number: it takes only the surplus.
+- **Today**: the hero glyph has a ceiling of its own, **80dp**, because it stands in a row beside
+  the words and every dp it grew came out of the sentence — on a three-row card the 104dp glyph
+  squeezed «Ombrello verso le 20:00» to «Ombrello / verso le 20:…» with a hundred dp of air under
+  it. 80 is the Now card's rule read off this row: the drawing never outgrows the block beside
+  it (74dp of number, place and leading). And from three rows the card carries **the days** under
+  the hours — name, drawing, high, low — in the same grid as the hours, today first, paid last
+  and only whole (the same switch as the text card's «Più tardi»).
+- **Sky** and **Arc** already spent their height on more moments, more agenda and the week, and
+  keep their layouts.
+
+**A widget's settings show the widget** (23 set 2026). Every card's configuration screen
+opens on the card itself — not a Compose lookalike, which is what the arc card's screen had
+until the same day, but the Glance composition the launcher runs (each receiver's
+`*WidgetContent`), composed to `RemoteViews` with
+`GlanceRemoteViews` and inflated with `RemoteViews.apply`, which is what a launcher does with
+them. It sits on a wallpaper made of the reader's own containers, so a see-through card shows
+it is see-through; it starts at the size the card really has on the home screen when the
+launcher has said it, and chips below it show the other grants, each with one line saying
+what that form carries. That is where a reader learns the card re-lays itself out as it is
+resized — the home screen only ever shows one size. The preview swallows touches (the card's
+own tap opens the app) and is one picture to a screen reader.
 
 **A widget may measure its own text, and where two blocks share a row it must** (20 set
 2026). Glance cannot measure text, which is why the Now card's wide row split its slack in
@@ -807,9 +920,10 @@ the platform's own animators read, so this is the API and not a way around a mis
 at start-up would be wrong for exactly the reader it is for) and publishes
 `LocalReducedMotion`.
 
-The app moves in four places and all four ask (the fourth is §7.1's icons): the week row's hour strip opens with
-`ChiaroMotion.enter/exit`, the pager `scrollToPage`s instead of animating, and the rule
-editor's dry-run answer jumps into view instead of scrolling to it. Until that pass
+The app moves in five places and all five ask (the fourth is §7.1's icons): the week row's hour strip opens with
+`ChiaroMotion.enter/exit`, the pager `scrollToPage`s instead of animating, the rule
+editor's dry-run answer jumps into view instead of scrolling to it, and the rain chart
+(§8.3b, 23 set 2026) is drawn whole instead of drawing itself in. Until that pass
 `ChiaroMotion.reducedMotionFadeMillis` was a constant nothing consulted, which is the
 shape a design rule takes when it is only written down: true in this file, absent from
 the APK. The canvas needed nothing — it is a `Brush`, it has never animated, and §3.5's
@@ -941,9 +1055,44 @@ bar, and taller when its text needs it** (8 set 2026): everything on it is measu
 and the block was measured in dp, so at 100% type a two-line sentence left 2dp before the
 hero climbed into the place row, and at 115% they overlapped by 30dp. The row's seat and
 the hero are the two ends of one column, `SpaceBetween` on a floor rather than two things
-aligned to opposite edges of a fixed box. The bottom edge is straight (4 set, kept on
-review 8 set): every other surface on the page is inset and rounded, and the one that is
-not is the ground the page opens on, not a card floating over it.
+aligned to opposite edges of a fixed box. The canvas' own bottom edge is straight (4 set,
+kept on review 8 set): it is the ground the page opens on, not a card floating over it.
+
+**The page is a sheet laid on the sky** (design review, 23 set 2026). The canvas used to
+end on a ruler line from its darkest band — the bottom scrim at full strength — into the
+near-white page, the two most distant colors on the screen touching edge to edge. Now the
+page's first **24dp overlap the canvas** with **28dp top corners**, so the sky shows round
+them and the darkest strip is under the paper; the lip is inside the 280dp floor, so the
+skeleton's block still ends where the canvas does. The bottom scrim reaches its full 0.55
+where the lip begins rather than at the canvas' edge, so §3.6 holds for the text exactly
+as before. And the sheet **catches the light**: its first 120dp carry the canvas' bottom
+stop at 16%, eased into `surface` — warm at sunset, blue at noon, barely there at night.
+The glow is drawn by the canvas item past its own bounds, under the transparent items that
+follow, and it is spent inside the height of the pinned place row, so when the canvas item
+leaves the list the part that leaves with it is already hidden under that row's surface.
+
+**8.1c The sun and the moon** (design review, 23 set 2026) — drawn on the canvas where they
+stand, in a band of sky the canvas' column keeps for them between the place row and the hero
+(at least 56dp, more when the floor leaves more; the canvas grows by what that costs, because
+a hero with no sky in it is a temperature on a gradient). **Across** by compass bearing as
+seen facing the equator — in the north east is left and west right, the scale running from
+30° to 330° so a midsummer sunrise in the north-east still lands on screen; in the south the
+reader faces north and the sides swap — and **up** by altitude, the top of the band at 60°.
+A winter sun stays near the middle and a summer one rises and sets near the edges, which is
+true. Below the horizon a body is not drawn. The sun is a 22dp disc with a soft halo, white-gold
+above the golden hour and reddening below it, veiled (not hidden) by cloud. The moon wears its
+phase — lit limb toward the evening sun, the terminator an ellipse, the dark part at 14% as
+earthshine — and is pale by day. Both are drawn inside their band, the halo spilling at most
+14dp past it, so neither can stand behind text and cost it contrast; the colors are
+`SkyPalette.SunHigh`, `SunLow` and `MoonFace`, shared by both palettes like `Moonlight`.
+Static: they move with the page's minute tick and cost one draw (§3.5 still holds — no
+particles, no parallax).
+
+The **hero** itself was re-set the same day: the whole degrees and the degree sign at the
+64sp hero size, **the tenths at 55%** on the same baseline (raised, the decimal comma read as
+an apostrophe — rendered and looked at); the condition at `titleLarge` (from 64sp to 16sp was
+a cliff); and the feels-like line **only when it differs by a degree or more** — "20.8°, feels
+like 20.6°" is a number with nothing to do about it (§1.2).
 
 **8.1b The place row** — name, chevron, the place's own day and hour, the pager dots, the
 gear. It is **pinned** (18 set 2026, device request): the city these numbers belong to must
@@ -954,9 +1103,20 @@ when the page is at rest — so it is the one bar in the app with two grounds:
 
 - **at the very top**: no ground of its own, white ink over the canvas' top scrim band,
   which is exactly where §3.6 measures its 5.27:1;
-- **from the first scrolled pixel**: the page's own `surface` and theme ink, crossing over
-  on §7's effects spring. Nothing in between, because in between is white ink over
-  unscrimmed sky — the state the old flip allowed for the row while it protected the clock.
+- **from the first scrolled pixel**: a ground of its own, crossing over on §7's effects
+  spring. Since the design review of 23 set 2026 that ground is **the sky, not the page**:
+  the canvas' top stop under the §3.6 scrim, which is exactly the color the canvas has at its
+  top edge, so the bar reads as the sky staying at the top of the screen while the page
+  slides under it. The ink stays white (the scrimmed top stop is darker than anything §3.6
+  measures white against), so nothing flips. Until then the bar took `surface` and theme
+  ink, which turned the bar and the status bar from white-on-sky to black-on-paper in one
+  frame. Nothing in between, because in between is white ink over unscrimmed sky.
+
+**Compact** (23 set 2026): once the canvas has climbed to within 120dp of the bar, the hero
+is under it or gone, and the bar carries it — the sky's still icon and the temperature in
+whole degrees, beside the name (which then keeps to one line), fading and sliding in on the
+effects and spatial springs. The place's date shortens to its short weekday at the same
+moment, so the bar never grows a line mid-scroll and moves the canvas under the finger.
 
 The status-bar icons follow the same flip, because what is behind the status bar IS this
 bar. The canvas keeps the row's seat empty with a spacer as tall as the bar really is,
@@ -976,6 +1136,22 @@ line and the rest slide under the screen's edge — cut on a line 16dp inside it
 were, the strip read as a box. A cell is 112dp tall at 100% type (16 + 6 + 42 + 6 + 20 + 6
 + 16), and the skeleton quotes that.
 
+**The temperature is a curve** (design review, 23 set 2026): each figure rides a dot on a
+line drawn through the whole strip, so the evening's drop is a shape before it is six
+numbers. Every cell draws its own piece — a quadratic from the midpoint with the cell before,
+through its own point, to the midpoint with the cell after — and consecutive pieces share
+their midpoints and tangents there, so the strip reads as one smooth line and stays a lazy
+row. The scale is **2dp a degree, fixed**, around the strip's own middle (§9.1: a 10° drop is
+the same slope on any day); only a range that will not fit 24dp at that rate is compressed
+to fit, and the printed figures still say the truth. The line is `outlineVariant`, the dot
+the temperature ramp's color ringed in `outline`. The cell is **144dp** tall now (the 20dp
+figure became a 52dp band: figure, 2 of gap, 24 of travel, the 8dp dot), and the skeleton
+quotes that.
+
+**Midnight has a name**: the first hour of a new day prints the day's short name in
+`primary` in place of «00», so «22 23 Gio 01» no longer reads as one evening. The cell still
+speaks the hour. Not in a week row's own strip, which is one day already.
+
 **8.3b RainChart** — under the strip, the same 24 hours as one series: 2px line on the
 **ink** ramp (a mark has its own 3:1 floor, and the fill ramp's light end clears neither
 floor), the area under it tinted with the fill ramp at 0.30 → 0.06, three recessive
@@ -986,23 +1162,53 @@ sparkline on the second device review (6 set 2026) — over a day pinned at 100%
 with no scale under it is a shape with nowhere to stand, and the flatter the day the
 less it said. A dry run still draws nothing at all (§1.1).
 
+**The chart is the strip's map** (design review, 23 set 2026). The strip shows about six
+hours and scrolls, the chart shows all 24 and does not, so the two never lined up hour over
+hour — and stretching the chart across the strip's 24 cells would have bought alignment
+with the overview, which is the one thing the chart is for. So the overview stays and the
+**hours in view in the strip are marked on it**: a `surfaceContainerHigh` window with
+6dp corners behind the gridlines, spanning the plot and its ticks, following the strip's
+scroll at draw time (a scroll redraws the chart, it never recomposes it). A **tap or a
+horizontal drag** on the chart centres the strip on the hour under the finger — animated
+for a tap, tracking for a drag — so a wet stretch seen on the map is one touch from its
+numbers.
+
+It **draws itself in** the first time it is shown: the line and its area are revealed left
+to right in 900 ms (`FastOutSlowInEasing`), along time, the way the day will go. Never
+grown up from the floor: for half a second that would draw a dry day nobody forecast, and
+§1.1 has no exception for animations. Once per page (the flag survives the chart being
+scrolled away), and not at all under reduced motion.
+
 **8.4 TimelineRow** — the merged day (VISION §5.2.4): time, icon or event glyph, one line
-of prose, optional verdict chip. Sun events, weather turns and the reader's own alerts use
+of prose, optional verdict chip. On Today (design review, 23 set 2026) the glyphs are
+**threaded**: a 2dp `outlineVariant` line from each glyph to the next, stopping 3dp short of
+each, so the rows read as one day in order; and the **first** row says how soon under its
+prose — «tra 18 min», «tra 1 h 20 min» — in `primary`, because the clock time is what you
+check against a watch and the countdown is what you plan with. Sun events, weather turns and the reader's own alerts use
 the same row; only the leading glyph differs.
 
 **8.5 DayRow** — weekday, icon, rain probability on the ink ramp (§2.3, zero included),
 the **temperature range bar** and the ribbon. The bar is one horizontal track per day, all seven **sharing one scale across the
 week** so the week has a shape, filled with the diverging temperature ramp (§2.3) and
 anchored at 15 °C; the low and high are printed at its ends in tabular figures, because a
-colored bar is not a number.
+colored bar is not a number. **Today's** bar carries a 12dp disc at the temperature right now
+(23 set 2026), in the ramp's color with an `onSurface` ring, on the week's shared scale — where
+in its day the day is.
 
 **8.6 MetricTile** — icon and label; the value as a **reading** (`ReadingValue`: Inter
 Light 24sp on a 32sp line, tabular — the hero's voice at a tile's scale, since the card
 review of 8 set 2026; at `titleMedium` the value barely outranked its own 14sp label and
-the eye went to the icon); where the metric has a scale the world uses, a **4dp track**
-in `outlineVariant` filled in `primary` up to the value (UV on 0–11, humidity on 0–100,
-air on 0–300 — one hue, anchored to the world, the number printed above it, §9; pressure
-and visibility get none, one being a narrow band around 1013 and the other logarithmic);
+the eye went to the icon); where the metric has a scale the world uses, **its own scale as
+a track** (design review, 23 set 2026): 6dp tall, the quantity's ramp (§2.3, the details
+grid's tracks) drawn full width at 40% as the scale at rest, the part up to the value at
+full strength, the thresholds the meaning line switches at cut into it as 2dp gaps (§9.2's
+surface gap), and a **12dp disc on the value** — the ramp's color there, a ring of the
+tile's ground, a hairline of `outline` so the pale end of a ramp still has an edge. UV on
+0–11 with the WHO's bands, humidity on 0–100 in water's ramp, air on 0–300 with the US
+bands, **pressure** on 980–1046 hPa diverging from 1013 (filled from the middle out), and
+**pollen** as four steps with the level and those under it lit. It replaced one `primary`
+bar under every metric, which said "how much" without saying "of what". Visibility (a
+logarithmic quantity) and the wind (whose meaning is the gust) get none;
 then the **facts behind the value** in `bodyMedium` — where the wind comes from in words
 with an arrow for where it goes, the gusts on the days they matter, the dew point under
 the humidity, which pollen — and last the meaning line (`bodySmall`, `onSurfaceVariant`).
@@ -1052,10 +1258,70 @@ on both. It costs about 6dp of row height and puts 14dp of air over the chip ins
 and those were the cheapest dp on the row: a 40dp bell would have bought 8 and a tighter
 chip 4, neither of them a margin.
 
+**8.8b TonightCard** (design review, 23 set 2026) — the Sky screen's hero, drawn as **the
+night it is about**. The ground is the canvas' own night band (§3.2 at −24°), lifted by the
+moon (§3.4) when the moon is up tonight, with 28dp corners: dark for the reason the sky is dark
+at 23:00, whatever the phone's theme, so its type is white (secondary at 72%) and its verdict
+wears the **dark** verdict pair in the reader's dress (`ChiaroTheme.nightColors`) — still the
+mark and the word first (§8.7), at `headlineMedium`, with the number that decided it right
+under. Tonight's moon sits in the corner drawn in its phase (lit limb toward the evening sun,
+mirrored in the south) with its percentage. Then the window at `titleMedium`, what the moon
+took, the clearest stretch — the sentences, unchanged, which are the card's text equivalent —
+and under them the **night strip**: dusk to dawn as a 34dp band; the moon's hours silvered;
+each forecast hour's cloud hanging from the top as deep as the sky is covered, fading at its
+underside so neighbouring hours read as one bank; a fixed scatter of stars showing through
+where the hour is clear, dimmer where the moon is up; the dark window framed in the verdict's
+ink with its two times under its edges (one centred label when the window is too short for
+two); the clearest stretch underlined in the pass ink. Silent to a screen reader: nothing on
+it is not already a sentence above it. Until then the hero was a card in the verdict's
+container color holding five lines of text: correct, and the least nocturnal thing on a screen
+about the night.
+
+**The moments are grouped by day** (same review): «Oggi» and «Domani» are `labelLarge`
+headings in `primary` inside the section, and the rows lose the «Domani ·» each of them
+carried — four rows saying the same word pushed the time, which is what a reader scans for,
+to the middle of the line. A row keeps «Adesso», which no heading can say, and the **next**
+timed moment says how soon («tra 1 h 20 min», the words Today's agenda uses) within half a day.
+
+**The calendar ahead counts down** — «8 ottobre · tra 15 giorni», «oggi», «domani», up to two
+months out — and «too far out to say» is said **once**, as a footnote under the section,
+instead of once a row: five consecutive rows ending «La previsione non arriva ancora così
+lontano» were one sentence five times, each wrapped onto a second line. The other reasons a
+verdict is missing (no data, old data) are about their row and stay on it.
+
 **8.9 RuleSentence** — the alert builder as a sentence of tappable chips: *Notify me when*
 `[rain, next 6 h]` *is* `[above]` `[70%]`. Every chip opens a picker; no free-text field
 for a value with a range, which is how tweather's "a syntax error is not writable" property
 survives into a UI with no syntax.
+
+**8.9b The Alerts screen** (design review, 23 set 2026) — until then four loose switch rows of
+three and four lines each, a row with a switch for the warnings under a group title of the same
+words, and five more rows of templates: the densest block of text in the app, with nothing on it
+that said which row was which before it was read. Now:
+
+- **When they arrive**, first and only while a timed alert is on: twenty-four hours as a 10dp
+  track with the windows the timed alerts come in — the morning summary 6–12 and the evening one
+  18–23 painted with the sky of their hour (§3.2 middle stops, a depiction as the ribbon is), the
+  bulletin 15–17 in the yellow level's container (its ink on a dark ground, where the container
+  is an olive the track swallows) — each with its drawing over it, "now" as the ribbon's disc, the
+  hours 0 · 6 · 12 · 18 · 24 under it, and on a line of words the alerts that come whenever the
+  weather does. It answers what a list of switches cannot: when will this phone make a sound.
+  One content description reads the windows.
+- **Groups on one rounded ground** (`surfaceContainerLow`, 24dp corners): the warnings' switch
+  with the level it starts from, and the four ready-made alerts, hairlines between rows starting
+  where the text starts. Every row carries **its drawing** from the weather family (36dp; faded to
+  40% while its switch is off, so a group says which rows are on before a switch is read), its
+  title, **what it sends** in one sentence, and **when and how often** on a line of its own in the
+  accent — the tail the four-line sentences used to end on.
+- **The all-clear is an answer**: a check in `primary`, «Nessuna allerta» at `titleMedium`, the
+  zone on its own line and the bulletin's hour under it, a chevron because it opens the bulletin.
+  The three waiting states wear the same card with an info mark. Still the neutral ground, never a
+  warning colour for the absence of a warning.
+- **The rule cards** take the same 24dp shape and a drawing of what the first condition watches
+  (frost for a temperature that must fall to zero), faded while the rule is off.
+- **The ideas are cards in a sideways row** (176 × 204dp): drawing, promise, what it checks, and
+  «Aggiungi» — or «Già aggiunta», inert — in the accent. An idea is picked up, not configured, and
+  five more rows at the foot read as five more settings.
 
 **8.10 JournalEntry** and **DriftStrip** — an entry is a line of prose with its numbers.
 The drift strip is one row per target day — today included while it runs (8 set 2026) —
@@ -1072,6 +1338,35 @@ silhouette in `onSurfaceVariant` for all five: these are not weather icons, so �
 hour trails the row as a label. A journal day's revisions of one target day fold into one
 line, first value to last, saying how many updates it took; a value that came back where
 it started is not a change.
+
+**Redrawn on the design review of 23 set 2026**, because the screen was the most anonymous
+in the app — a column of identical grey silhouettes beside grey text:
+
+- **The entries are a thread.** Each line's category sits in a **40dp badge** in the
+  category's own tone — a revision in `primaryContainer`, an alert of yours in
+  `secondaryContainer`, an official warning in its level's pair, a missed update in the quiet
+  `surfaceContainerHighest` — and the lines that are about the sky carry the weather family's
+  own drawing instead (the sky moment's, and for a closed day the rain or the sun it actually
+  had). A 2dp `outlineVariant` hairline joins the badges of one day. This overrides the
+  monochrome rule above: a category is still named by its glyph, and the tone is its second
+  carrier, never a judgement (a revision is the same colour whether it got better or worse —
+  the sentence says which).
+- **The numbers say where the forecast is now**: in a revision, the value it came from in the
+  quiet ink and the value it is now in full weight, the rain one on the rain's ink ramp.
+- **A sky moment's verdict is the chip** the Sky screen prints, not a phrase.
+- **Day headings stick** while their entries scroll, with the full date beside «Oggi» or
+  «Ieri» and the day's count of entries.
+- **The drift card leads with its sentence** at `titleMedium`, the metric chips carry the
+  quantity's drawing, the strip names its time axis at the two ends (the oldest column's day,
+  «ultimo aggiornamento»), its cells are 3dp-rounded and 20dp tall, and **the row the sentence
+  names is picked out** on a `surfaceContainerHighest` band with its label in bold.
+- **How the forecast did** (new, from three closed days on): the high's average distance from
+  what was seen, and the rain it was given on the days it rained against the days it did not —
+  averages, never a right/wrong tally, because a 40% chance that stayed dry was not wrong —
+  over one column per day: the rain it was given as a bar on the rain ramp, what the day did as
+  its drawing.
+- The diary's own words for a failed update («Il telefono era offline»), where it used to repeat
+  the app's error line under a headline that had just said the same.
 
 **8.11 States** — empty ("no place yet", with the one action that fixes it), error (what
 failed, in plain language, and a retry), stale (§8.2), loading (a shimmer that cannot be
@@ -1218,6 +1513,117 @@ the app — in the settings page the card sent them to — and a card still sitt
 the permission was granted is the same lie the other way round.
 
 ---
+
+**8.15 Settings** (design review, 23 set 2026) — the list was Material's plain rows under blue
+headers, with the privacy note as a paragraph among eleven credits. Now:
+
+- **The guide is a card** in `primaryContainer` at the top, with its mark and a chevron: it is
+  the one thing on the screen that is not a setting.
+- **Every group sits on one rounded ground** (`surfaceContainerLow`, 24dp corners, hairlines
+  between rows), the Alerts screen's grouping, so the two screens of switches and values look
+  like one app. A credit whose tap leaves the app carries a chevron; a fact with nothing to
+  change (version, developer, copyright) carries none.
+- **The appearance previews itself**: above the appearance group, a slice of the canvas in the
+  reader's palette at the golden hour (3°, where the two palettes differ most) with a
+  temperature in their typeface and a condition in their icon set, and under it a verdict chip,
+  a rain figure and a temperature bar in their semantic colours. Every choice below changes
+  something in it the moment it is made. Silent to a screen reader: the rows say every choice.
+- **Privacy is its own group and a statement**: a card in `secondaryContainer` with a lock, one
+  line in `titleSmall` («Niente account, niente pubblicità, niente tracciamento.») and three
+  facts, each checked against the code — no server of Chiaro's own, so places, alerts and journal
+  stay on the phone; Open-Meteo gets only the place asked about or searched for, a position
+  rounded to ~1 km (`LocationProvider`, two decimals); no identifier.
+- **The credits are a group of their own** («Dati e riconoscimenti»), apart from who made the app.
+- **Reset is an outlined button in the error colour** at the foot, not one more row: it is the one
+  thing on the screen that undoes the others.
+
+**8.16 A widget's own settings** (design review of «In parole», then of the other four cards,
+23 set 2026) — the screen the launcher opens on long-press was one flat list: place, five
+backgrounds, six colours, a slider, four switches, all radio rows under blue labels; the arc
+card's own screen was the same list, twice as long, under a Compose copy of the card. Both
+screens are now built from one kit (`WidgetConfigKit.kt`), so the five read as one:
+
+- **The card comes first** on every widget: the real composition (§5, «A widget's settings
+  show the widget») on a wallpaper of `primaryContainer`→`tertiaryContainer`, the sizes as
+  chips under it («Com'è ora» first when the launcher has said the size), the form's one line in
+  `bodyMedium` and the resize hint under it in `bodySmall`.
+- **The Settings screen's groups**: `surfaceContainerLow`, 24dp corners, hairlines between
+  switches, the heading in `titleSmall` primary above each card — so the widget's settings read
+  as part of the same app rather than as a system dialog.
+- **The background rows show their answer**: each carries a 44×30dp swatch of the ground it
+  paints — the real sky of this moment when there is a report, the light and dark cards, the
+  phone's two answers on a diagonal, the chosen colour. «Un colore» opens the six colours as a
+  strip of 36dp swatches, the chosen one ringed and ticked in white (every card colour is a dark
+  ground under white ink, §2.6), with its name under the strip. One `BackgroundSection` for both
+  screens (`WidgetConfigChoicesTest`).
+- **The chips are the grants the launcher can give**: each card's list is checked against its
+  provider's own minimum (`WidgetPreviewSizesTest`), and the line under them is read off the
+  same form functions the card lays itself out with.
+- **The arc screen's twelve questions are twelve groups**; the warning and the week, each a
+  heading over one switch, became one group, «Altro sulla card»; reset is the outlined button in
+  the error colour, as in Settings.
+- **Opacity is a row** with its value in the primary ink at the end, the slider under it.
+- **The icon family follows the switch that brings it** on the text card: it is offered only once
+  the glyph is on, so it sits under the content, not above it.
+- **Notes say what the card does, not what another card does**: the text card prints the warning
+  as a word, so its note no longer promises a chip; the range note names its two arrows.
+
+**8.17 Notifications** (review of the messages, 23 set 2026) — collapsed is the sentence,
+expanded is that sentence plus the story, one fact per line with its consequence (Fase 6b).
+What the review changed:
+
+- **A picture where it says something faster than the lines**, in a custom expanded body
+  (`notification_expanded.xml`, decorated by the system) with the big text kept on the
+  notification for every surface that does not inflate custom views:
+  - under a **rain or storm alert**, the next twelve hours of rain chance as bars on the
+    world's 0–100%, a dashed 50% guide, the alert's window lit behind its bars (the storm's
+    in the unstable container, the rain's in the primary), the worst hour labelled;
+  - under the **two summaries**, the day as the Today strip draws it: the temperature as a
+    curve coloured on the world scale with a soft area fading to its foot, high and low
+    marked, the rain as its own row of bars under it (never a second axis, §9.1), the night
+    as a cool tint of the primary — what is left of today in the morning, all of tomorrow
+    in the evening;
+  - under an **official warning**, the Dipartimento's grid: hazards by day, each cell its
+    level's word on its level's container, «nessuno» as a hairline pill in the quiet ink.
+  Nothing else gets one: a sky verdict is a word and a number, a fired rule is the
+  reader's own message. Each picture has a content description with its text equivalent.
+- **Heights under the ceiling**: the platform clips an expanded custom view at 256dp, so the
+  pictures are 75–90dp at a notification's width and the details stop at five lines
+  (`NotificationChartsTest` does the arithmetic at the narrowest width).
+- **The brand's accent** (`notification_accent`, the vivid primary) on the small icon's disc,
+  and the small icon itself is the launcher icon's ring (§3.8) at 24dp.
+- **Words**: the morning summary says when it rains today, not only how likely; the night is
+  «Stanotte minima 9°», not «fino a 9°»; a fired rule's reading carries its unit and the
+  reader's decimal mark («· ora 21,4°», where it printed «— valore 21.4»), and each
+  condition starts as a sentence.
+
+**8.17b Which notifications, and when** (review of the catalogue, 23 set 2026). The set stays
+the same — storm, rain, the two summaries, official warnings, sky reminders, the reader's
+rules — because each answers a question the others do not, and the review found no
+notification to remove. What changed is **when** they speak:
+
+- **An arrival is announced once, at its start.** «In arrivo» fires on the hour a run of
+  weather begins, never on weather already falling; one spell across noon or a storm across
+  midnight is one notification; the storm's rain never adds a second one.
+- **A bulletin that repeats itself is quiet.** What a warning notification told is kept cell
+  by cell (day, hazard, level); the next afternoon's bulletin saying the same is the
+  Journal's. A new day or a higher level is news.
+- **A fact about today speaks once, from 06:00** (rules on `today.*`).
+- **Quiet hours, 22–7 on the phone's clock**: everything arrives, nothing rings — except a red
+  official warning and the sky reminders, which the reader set for the night. The Alerts
+  screen's day strip draws them as a dashed line under the track, with one sentence saying so.
+- **«Maltempo» needs the ensemble's agreement** (24 set 2026). A storm or downpour code
+  (THUNDER, RAIN) under a 20% chance of rain is not severe, for the alert, the Today headline,
+  the widgets and the rules' `wmo_severe` alike (`AlertEngine.isSevere`, one definition).
+  Measured on 148 runs over 31 places and 60 days against ERA5 rain: under 20% the run saw
+  1 mm 33% of the time and 5 mm 6% (any five hours: 12% and 3%); at 20–29% 75%, at 30% and
+  over 96%. The floor drops a quarter of the banners and 2 of the 68 heavy-rain runs. Ice and
+  snow keep their code alone (not measurable in a summer window, dangerous in small amounts),
+  and so does an hour whose chance the model does not serve. The hour strip still draws the
+  storm icon: the icon is the model's sky, the banner is the verdict.
+- **The ideas**: «Caldo forte» (today's high ≥ 33°) joins as the heat's twin of «Ghiaccio
+  domattina»; «Una notte senza pioggia» is «Dodici ore asciutte», because the rule has no
+  hour and fired at nine in the morning with «Stanotte…».
 
 ## 9. Charts and quantities
 

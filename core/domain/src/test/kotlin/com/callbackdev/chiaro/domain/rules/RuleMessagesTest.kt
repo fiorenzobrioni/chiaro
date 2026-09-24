@@ -81,4 +81,22 @@ class RuleMessagesTest {
     fun `plain text passes through untouched`() {
         assertEquals("Porta l'ombrello ☔", interpolate("Porta l'ombrello ☔"))
     }
+
+    /** The writer sees what it writes and what follows it (23 set 2026): the app's writer
+     * adds the unit and must know when the author already wrote one. */
+    @Test
+    fun `a writer gets the variable, the value and the text after the placeholder`() {
+        val seen = mutableListOf<String>()
+        val writer = object : RuleMessages.Writer {
+            override fun value(variableId: String?, kind: RuleVariableKind, value: Double, following: String): String {
+                seen += "$variableId|$following"
+                return "V"
+            }
+            override fun time(at: LocalDateTime): String = "T"
+        }
+        val out = RuleMessages.interpolate("a {current.temp_c}° b {trigger.time}", rule(), 1.0, null, report, now, metric, writer)
+        assertEquals("a V° b T", out)
+        assertEquals(listOf("current.temp_c|° b {trigger.time}"), seen)
+    }
 }
+

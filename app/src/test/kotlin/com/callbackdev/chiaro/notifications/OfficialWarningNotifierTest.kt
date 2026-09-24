@@ -197,4 +197,15 @@ class OfficialWarningNotifierTest {
         assertFalse(everything, everything.contains("Warning zone:"))
         assertTrue(everything, everything.contains("What it means:"))
     }
+
+    /** The Dipartimento's grid (23 set 2026): drawn on every warning, and the big text
+     * keeps the per-day lines the picture replaces in the pictured body. */
+    @Test
+    fun `a warning carries its level grid and keeps its day lines in the text`() {
+        post()
+        assertTrue(posted().bigContentView != null)
+        assertEquals(com.callbackdev.chiaro.R.layout.notification_expanded, posted().bigContentView.layoutId)
+        assertTrue(expanded(), expanded().lines().any { it.startsWith("Today: ") })
+    }
 }
+

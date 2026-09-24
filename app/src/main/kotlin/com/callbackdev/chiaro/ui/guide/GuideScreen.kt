@@ -43,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.components.FreshnessChip
 import com.callbackdev.chiaro.ui.components.MetricTile
+import com.callbackdev.chiaro.ui.components.humidityTrack
+import com.callbackdev.chiaro.ui.components.uvTrack
 import com.callbackdev.chiaro.ui.components.VerdictChip
 import com.callbackdev.chiaro.ui.components.VerdictKind
 import com.callbackdev.chiaro.ui.format.Formats
@@ -470,7 +472,7 @@ private fun MetricSample() {
             label = stringResource(R.string.metric_uv),
             value = "7",
             meaning = stringResource(R.string.uv_meaning_high),
-            scale = 7f / 11f,
+            track = uvTrack(7),
             modifier = Modifier.weight(1f)
         )
         MetricTile(
@@ -478,7 +480,7 @@ private fun MetricSample() {
             label = stringResource(R.string.metric_humidity),
             value = "62%",
             meaning = stringResource(R.string.dew_meaning_pleasant),
-            scale = 0.62f,
+            track = humidityTrack(62),
             modifier = Modifier.weight(1f)
         )
     }

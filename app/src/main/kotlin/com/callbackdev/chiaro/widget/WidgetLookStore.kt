@@ -141,6 +141,14 @@ data class WidgetLook(
      */
     val showIcon: Boolean = false,
     /**
+     * The extra rank of forecast a TALL card carries (23 set 2026): «Più tardi» on the text
+     * widget — the next hours as lines of type ([textLaterRows]) — and the next days under
+     * the hours on the Today widget ([todayShowDays]). **On by default**, because on both it
+     * only ever takes space the card was leaving empty: on a one-row card, and on the
+     * reference two-row cards, it changes nothing at all.
+     */
+    val showLater: Boolean = true,
+    /**
      * Which colour a [WidgetBackground.COLOR] card is painted (19 set 2026). It is kept
      * even while the background is something else, so a reader who tries the sky and comes
      * back finds the colour they picked rather than the default: a stored choice that
@@ -207,6 +215,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 ?.let { name -> WidgetIcons.entries.firstOrNull { it.name == name } }
                 ?: default.icons,
             showIcon = prefs[iconShownKey(appWidgetId)] ?: default.showIcon,
+            showLater = prefs[laterKey(appWidgetId)] ?: default.showLater,
             cardColor = prefs[cardColorKey(appWidgetId)]
                 ?.let { name -> WidgetCardColor.entries.firstOrNull { it.name == name } }
                 ?: default.cardColor
@@ -223,6 +232,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             prefs[arrangementKey(appWidgetId)] = look.arrangement.name
             prefs[iconsKey(appWidgetId)] = look.icons.name
             prefs[iconShownKey(appWidgetId)] = look.showIcon
+            prefs[laterKey(appWidgetId)] = look.showLater
             prefs[cardColorKey(appWidgetId)] = look.cardColor.name
         }
     }
@@ -239,6 +249,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 prefs.remove(arrangementKey(it))
                 prefs.remove(iconsKey(it))
                 prefs.remove(iconShownKey(it))
+                prefs.remove(laterKey(it))
                 prefs.remove(cardColorKey(it))
                 // The switch this key belonged to is gone (8 set 2026); a widget placed
                 // while it existed still carries the key, and leaves with it.
@@ -255,6 +266,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
     private fun arrangementKey(id: Int) = stringPreferencesKey("arrangement_$id")
     private fun iconsKey(id: Int) = stringPreferencesKey("icons_$id")
     private fun iconShownKey(id: Int) = booleanPreferencesKey("icon_shown_$id")
+    private fun laterKey(id: Int) = booleanPreferencesKey("later_$id")
     private fun cardColorKey(id: Int) = stringPreferencesKey("card_color_$id")
     private fun legacyConditionKey(id: Int) = booleanPreferencesKey("condition_$id")
 

@@ -5,24 +5,19 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,11 +38,18 @@ import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.ThemeMode
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.widget.BackgroundSection
+import com.callbackdev.chiaro.widget.ConfigChoiceRow
+import com.callbackdev.chiaro.widget.ConfigChoices
+import com.callbackdev.chiaro.widget.ConfigDivider
+import com.callbackdev.chiaro.widget.ConfigDoneButton
+import com.callbackdev.chiaro.widget.ConfigGroup
+import com.callbackdev.chiaro.widget.ConfigHeader
+import com.callbackdev.chiaro.widget.ConfigSwitch
+import com.callbackdev.chiaro.widget.ConfigSwitchRow
+import com.callbackdev.chiaro.widget.ConfigSwitches
+import com.callbackdev.chiaro.widget.OpacityRow
+import com.callbackdev.chiaro.widget.WidgetPreviewSection
 import com.callbackdev.chiaro.widget.ChiaroWidgets
-import com.callbackdev.chiaro.widget.ChoiceRow
-import com.callbackdev.chiaro.widget.SectionLabel
-import com.callbackdev.chiaro.widget.SwitchRow
-import com.callbackdev.chiaro.widget.WidgetBackground
 import com.callbackdev.chiaro.widget.WidgetData
 import com.callbackdev.chiaro.widget.WidgetIcons
 import com.callbackdev.chiaro.widget.WidgetKind
@@ -56,7 +58,6 @@ import com.callbackdev.chiaro.widget.WidgetLookStore
 import com.callbackdev.chiaro.widget.WidgetModel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 /**
  * The arc widget's own settings screen, from the launcher's reconfigure flow. It has
@@ -118,7 +119,7 @@ class ArcConfigActivity : ComponentActivity() {
 }
 
 @Composable
-private fun ArcConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Unit) {
+internal fun ArcConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -> Unit) {
     val context = LocalContext.current.applicationContext
     val scope = rememberCoroutineScope()
     val cityStore = remember { ServiceLocator.cityStore(context) }
@@ -142,8 +143,6 @@ private fun ArcConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () ->
     LaunchedEffect(appWidgetId, pinnedId) {
         base = runCatching { WidgetData.load(context, appWidgetId) }.getOrNull()
     }
-    var previewSize by remember { mutableStateOf(ArcPreviewSize.FOUR_BY_TWO) }
-
     fun repaint() = scope.launch { runCatching { ChiaroWidgets.updateOne(context, appWidgetId) } }
     fun saveLook(next: WidgetLook) {
         look = next
@@ -160,291 +159,246 @@ private fun ArcConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () ->
         }
     }
 
+    val appSettings by remember { ServiceLocator.settingsStore(context).settings }
+        .collectAsStateWithLifecycle(initialValue = null)
+
+    // The shared screen's grammar (23 set 2026): the card first, then every question on a
+    // rounded group under its own heading. The arc has more questions than the other four
+    // cards put together, so the groups are what keep a long page scannable.
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+            .padding(bottom = 16.dp)
     ) {
-        // ---- The preview, and the sizes it can be seen at. ----
-        SectionLabel(stringResource(R.string.arc_config_preview))
-        ArcPreview(
+        WidgetPreviewSection(
+            appWidgetId = appWidgetId,
+            kind = WidgetKind.ARC,
             model = base?.let { model -> look?.let { model.copy(look = it) } ?: model },
-            arc = arc,
-            size = previewSize.size,
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            ArcPreviewSize.entries.forEach { option ->
-                FilterChip(
-                    selected = previewSize == option,
-                    onClick = { previewSize = option },
-                    label = { Text(option.label) }
-                )
-            }
-        }
-        Text(
-            text = stringResource(formNote(arcForm(previewSize.size))),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp)
+            arc = arc
         )
 
-        // ---- The place. ----
-        SectionLabel(stringResource(R.string.widget_config_place))
-        ChoiceRow(
-            label = stringResource(R.string.widget_config_active_place),
-            selected = pinnedId == null,
-            onPick = {
-                scope.launch {
-                    widgetCityStore.unpin(appWidgetId)
-                    repaint()
-                }
-            }
-        )
-        cities.forEach { city ->
-            ChoiceRow(
-                label = city.name,
-                selected = pinnedId == city.id,
+        ConfigHeader(stringResource(R.string.widget_config_place))
+        ConfigGroup {
+            ConfigChoiceRow(
+                label = stringResource(R.string.widget_config_active_place),
+                selected = pinnedId == null,
                 onPick = {
                     scope.launch {
-                        widgetCityStore.pin(appWidgetId, city.id)
+                        widgetCityStore.unpin(appWidgetId)
                         repaint()
                     }
                 }
             )
+            cities.forEach { city ->
+                ConfigChoiceRow(
+                    label = city.name,
+                    selected = pinnedId == city.id,
+                    onPick = {
+                        scope.launch {
+                            widgetCityStore.pin(appWidgetId, city.id)
+                            repaint()
+                        }
+                    }
+                )
+            }
         }
 
         // ---- The card: the look every widget shares. ----
         look?.let { current ->
-            BackgroundSection(current) { next -> saveLook(next) }
-
-            SectionLabel(stringResource(R.string.widget_config_opacity))
-            Text(
-                text = when (current.opacityPct) {
-                    100 -> stringResource(R.string.settings_opacity_full)
-                    0 -> stringResource(R.string.widget_opacity_transparent)
-                    else -> "${current.opacityPct}%"
-                },
-                style = MaterialTheme.typography.titleMedium
-            )
-            Slider(
-                value = current.opacityPct.toFloat(),
-                onValueChange = { raw -> look = current.copy(opacityPct = (raw / 5f).roundToInt() * 5) },
-                onValueChangeFinished = { look?.let { saveLook(it) } },
-                valueRange = 0f..100f,
-                steps = 19
-            )
-
-            SectionLabel(stringResource(R.string.widget_config_icons))
-            listOf(
-                WidgetIcons.APP to stringResource(R.string.widget_icons_app),
-                WidgetIcons.FILL to stringResource(R.string.settings_icons_fill),
-                WidgetIcons.LINE to stringResource(R.string.settings_icons_line)
-            ).forEach { (icons, label) ->
-                ChoiceRow(
-                    label = label,
-                    selected = current.icons == icons,
-                    onPick = { saveLook(current.copy(icons = icons)) }
+            ConfigHeader(stringResource(R.string.widget_config_background))
+            ConfigGroup {
+                BackgroundSection(current, base?.content?.sky, appSettings) { next -> saveLook(next) }
+                ConfigDivider()
+                OpacityRow(
+                    pct = current.opacityPct,
+                    onChange = { look = current.copy(opacityPct = it) },
+                    onDone = { look?.let { saveLook(it) } }
                 )
             }
+
+            ConfigHeader(stringResource(R.string.widget_config_icons))
+            ConfigChoices(
+                listOf(
+                    WidgetIcons.APP to stringResource(R.string.widget_icons_app),
+                    WidgetIcons.FILL to stringResource(R.string.settings_icons_fill),
+                    WidgetIcons.LINE to stringResource(R.string.settings_icons_line)
+                ),
+                selected = current.icons,
+                onPick = { saveLook(current.copy(icons = it)) }
+            )
         }
 
         // ---- The arc itself. ----
         arc?.let { current ->
-            SectionLabel(stringResource(R.string.arc_config_span))
-            ChoiceRow(
-                label = stringResource(R.string.arc_span_today),
-                selected = current.span == ArcSpan.TODAY,
-                onPick = { saveArc(current.copy(span = ArcSpan.TODAY)) }
-            )
-            ChoiceRow(
-                label = stringResource(R.string.arc_span_ahead),
-                selected = current.span == ArcSpan.AHEAD,
-                onPick = { saveArc(current.copy(span = ArcSpan.AHEAD)) }
+            ConfigHeader(stringResource(R.string.arc_config_span))
+            ConfigChoices(
+                listOf(
+                    ArcSpan.TODAY to stringResource(R.string.arc_span_today),
+                    ArcSpan.AHEAD to stringResource(R.string.arc_span_ahead)
+                ),
+                selected = current.span,
+                onPick = { saveArc(current.copy(span = it)) }
             )
 
-            SectionLabel(stringResource(R.string.arc_config_ground))
-            listOf(
-                ArcGround.BANDS to stringResource(R.string.arc_ground_bands),
-                ArcGround.RIBBON to stringResource(R.string.arc_ground_ribbon),
-                ArcGround.NONE to stringResource(R.string.arc_ground_none)
-            ).forEach { (ground, label) ->
-                ChoiceRow(
-                    label = label,
-                    selected = current.ground == ground,
-                    onPick = { saveArc(current.copy(ground = ground)) }
+            ConfigHeader(stringResource(R.string.arc_config_ground))
+            ConfigChoices(
+                listOf(
+                    ArcGround.BANDS to stringResource(R.string.arc_ground_bands),
+                    ArcGround.RIBBON to stringResource(R.string.arc_ground_ribbon),
+                    ArcGround.NONE to stringResource(R.string.arc_ground_none)
+                ),
+                selected = current.ground,
+                onPick = { saveArc(current.copy(ground = it)) }
+            )
+
+            ConfigHeader(stringResource(R.string.arc_config_layers))
+            ConfigSwitches(
+                listOf(
+                    ConfigSwitch(
+                        stringResource(R.string.arc_layer_sun),
+                        stringResource(R.string.arc_layer_sun_note),
+                        current.sunPath
+                    ) { saveArc(current.copy(sunPath = it)) },
+                    ConfigSwitch(
+                        stringResource(R.string.arc_layer_moon),
+                        stringResource(R.string.arc_layer_moon_note),
+                        current.moon
+                    ) { saveArc(current.copy(moon = it)) },
+                    ConfigSwitch(
+                        stringResource(R.string.arc_layer_rain),
+                        stringResource(R.string.arc_layer_rain_note),
+                        current.rain
+                    ) { saveArc(current.copy(rain = it)) },
+                    ConfigSwitch(
+                        stringResource(R.string.arc_layer_now),
+                        stringResource(R.string.arc_layer_now_note),
+                        current.nowMarker
+                    ) { saveArc(current.copy(nowMarker = it)) },
+                    ConfigSwitch(
+                        stringResource(R.string.arc_layer_fade),
+                        stringResource(R.string.arc_layer_fade_note),
+                        current.fadePast
+                    ) { saveArc(current.copy(fadePast = it)) },
+                    ConfigSwitch(
+                        stringResource(R.string.arc_layer_hours),
+                        stringResource(R.string.arc_layer_hours_note),
+                        current.hourLabels
+                    ) { saveArc(current.copy(hourLabels = it)) },
+                    ConfigSwitch(
+                        stringResource(R.string.arc_layer_temperatures),
+                        stringResource(R.string.arc_layer_temperatures_note),
+                        current.temperatures
+                    ) { saveArc(current.copy(temperatures = it)) }
                 )
+            )
+
+            // ---- The words: which sentence heads the card, and the day's range. ----
+            ConfigHeader(stringResource(R.string.arc_config_words))
+            ConfigGroup {
+                listOf(
+                    ArcHero.NEXT_MOMENT to stringResource(R.string.arc_hero_next),
+                    ArcHero.HEADLINE to stringResource(R.string.arc_hero_headline),
+                    ArcHero.NONE to stringResource(R.string.arc_hero_none)
+                ).forEach { (hero, label) ->
+                    ConfigChoiceRow(
+                        label = label,
+                        selected = current.hero == hero,
+                        onPick = { saveArc(current.copy(hero = hero)) }
+                    )
+                }
+                look?.let { currentLook ->
+                    ConfigDivider()
+                    ConfigSwitchRow(
+                        label = stringResource(R.string.widget_config_show_range),
+                        note = stringResource(R.string.arc_range_note),
+                        checked = currentLook.showDayRange,
+                        onToggle = { saveLook(currentLook.copy(showDayRange = it)) }
+                    )
+                }
             }
 
-            SectionLabel(stringResource(R.string.arc_config_layers))
-            SwitchRow(
-                label = stringResource(R.string.arc_layer_sun),
-                note = stringResource(R.string.arc_layer_sun_note),
-                checked = current.sunPath,
-                onToggle = { saveArc(current.copy(sunPath = it)) }
-            )
-            SwitchRow(
-                label = stringResource(R.string.arc_layer_moon),
-                note = stringResource(R.string.arc_layer_moon_note),
-                checked = current.moon,
-                onToggle = { saveArc(current.copy(moon = it)) }
-            )
-            SwitchRow(
-                label = stringResource(R.string.arc_layer_rain),
-                note = stringResource(R.string.arc_layer_rain_note),
-                checked = current.rain,
-                onToggle = { saveArc(current.copy(rain = it)) }
-            )
-            SwitchRow(
-                label = stringResource(R.string.arc_layer_now),
-                note = stringResource(R.string.arc_layer_now_note),
-                checked = current.nowMarker,
-                onToggle = { saveArc(current.copy(nowMarker = it)) }
-            )
-            SwitchRow(
-                label = stringResource(R.string.arc_layer_fade),
-                note = stringResource(R.string.arc_layer_fade_note),
-                checked = current.fadePast,
-                onToggle = { saveArc(current.copy(fadePast = it)) }
-            )
-            SwitchRow(
-                label = stringResource(R.string.arc_layer_hours),
-                note = stringResource(R.string.arc_layer_hours_note),
-                checked = current.hourLabels,
-                onToggle = { saveArc(current.copy(hourLabels = it)) }
-            )
-            SwitchRow(
-                label = stringResource(R.string.arc_layer_temperatures),
-                note = stringResource(R.string.arc_layer_temperatures_note),
-                checked = current.temperatures,
-                onToggle = { saveArc(current.copy(temperatures = it)) }
+            ConfigHeader(stringResource(R.string.arc_config_dial))
+            ConfigChoices(
+                listOf(
+                    ArcDialFigure.TEMPERATURE to stringResource(R.string.arc_dial_temperature),
+                    ArcDialFigure.NEXT_TIME to stringResource(R.string.arc_dial_next_time)
+                ),
+                selected = current.dialFigure,
+                onPick = { saveArc(current.copy(dialFigure = it)) }
             )
 
-            // ---- The words. ----
-            SectionLabel(stringResource(R.string.arc_config_words))
-            listOf(
-                ArcHero.NEXT_MOMENT to stringResource(R.string.arc_hero_next),
-                ArcHero.HEADLINE to stringResource(R.string.arc_hero_headline),
-                ArcHero.NONE to stringResource(R.string.arc_hero_none)
-            ).forEach { (hero, label) ->
-                ChoiceRow(
-                    label = label,
-                    selected = current.hero == hero,
-                    onPick = { saveArc(current.copy(hero = hero)) }
+            ConfigHeader(stringResource(R.string.arc_config_agenda))
+            ConfigSwitches(
+                listOf(
+                    ConfigSwitch(
+                        stringResource(R.string.arc_agenda_sun),
+                        stringResource(R.string.arc_agenda_sun_note),
+                        current.agendaSun
+                    ) { saveArc(current.copy(agendaSun = it)) },
+                    ConfigSwitch(
+                        stringResource(R.string.arc_agenda_moon),
+                        stringResource(R.string.arc_agenda_moon_note),
+                        current.agendaMoon
+                    ) { saveArc(current.copy(agendaMoon = it)) },
+                    ConfigSwitch(
+                        stringResource(R.string.arc_agenda_rain),
+                        stringResource(R.string.arc_agenda_rain_note),
+                        current.agendaRain
+                    ) { saveArc(current.copy(agendaRain = it)) },
+                    ConfigSwitch(
+                        stringResource(R.string.arc_agenda_verdicts),
+                        stringResource(R.string.arc_agenda_verdicts_note),
+                        current.agendaVerdicts
+                    ) { saveArc(current.copy(agendaVerdicts = it)) }
                 )
-            }
-            look?.let { currentLook ->
-                SwitchRow(
-                    label = stringResource(R.string.widget_config_show_range),
-                    note = stringResource(R.string.arc_range_note),
-                    checked = currentLook.showDayRange,
-                    onToggle = { saveLook(currentLook.copy(showDayRange = it)) }
+            )
+
+            // The official warning (Fase 11) and the week each had a heading of their own
+            // over a single switch; on groups they are one group of two, «Altro sulla card».
+            ConfigHeader(stringResource(R.string.arc_config_more))
+            ConfigSwitches(
+                listOf(
+                    ConfigSwitch(
+                        stringResource(R.string.arc_warning_switch),
+                        stringResource(R.string.arc_config_warning_note),
+                        current.warning
+                    ) { saveArc(current.copy(warning = it)) },
+                    ConfigSwitch(
+                        stringResource(R.string.arc_week_switch),
+                        stringResource(R.string.arc_week_note),
+                        current.week
+                    ) { saveArc(current.copy(week = it)) }
                 )
-            }
-
-            SectionLabel(stringResource(R.string.arc_config_dial))
-            ChoiceRow(
-                label = stringResource(R.string.arc_dial_temperature),
-                selected = current.dialFigure == ArcDialFigure.TEMPERATURE,
-                onPick = { saveArc(current.copy(dialFigure = ArcDialFigure.TEMPERATURE)) }
-            )
-            ChoiceRow(
-                label = stringResource(R.string.arc_dial_next_time),
-                selected = current.dialFigure == ArcDialFigure.NEXT_TIME,
-                onPick = { saveArc(current.copy(dialFigure = ArcDialFigure.NEXT_TIME)) }
             )
 
-            // ---- The agenda. ----
-            SectionLabel(stringResource(R.string.arc_config_agenda))
-            SwitchRow(
-                label = stringResource(R.string.arc_agenda_sun),
-                note = stringResource(R.string.arc_agenda_sun_note),
-                checked = current.agendaSun,
-                onToggle = { saveArc(current.copy(agendaSun = it)) }
-            )
-            SwitchRow(
-                label = stringResource(R.string.arc_agenda_moon),
-                note = stringResource(R.string.arc_agenda_moon_note),
-                checked = current.agendaMoon,
-                onToggle = { saveArc(current.copy(agendaMoon = it)) }
-            )
-            SwitchRow(
-                label = stringResource(R.string.arc_agenda_rain),
-                note = stringResource(R.string.arc_agenda_rain_note),
-                checked = current.agendaRain,
-                onToggle = { saveArc(current.copy(agendaRain = it)) }
-            )
-            SwitchRow(
-                label = stringResource(R.string.arc_agenda_verdicts),
-                note = stringResource(R.string.arc_agenda_verdicts_note),
-                checked = current.agendaVerdicts,
-                onToggle = { saveArc(current.copy(agendaVerdicts = it)) }
+            ConfigHeader(stringResource(R.string.arc_config_density))
+            ConfigChoices(
+                listOf(
+                    ArcDensity.COMFORTABLE to stringResource(R.string.arc_density_comfortable),
+                    ArcDensity.COMPACT to stringResource(R.string.arc_density_compact)
+                ),
+                selected = current.density,
+                onPick = { saveArc(current.copy(density = it)) }
             )
 
-            // ---- The official warning (Fase 11). ----
-            SectionLabel(stringResource(R.string.arc_config_warning))
-            SwitchRow(
-                label = stringResource(R.string.arc_warning_switch),
-                note = stringResource(R.string.arc_config_warning_note),
-                checked = current.warning,
-                onToggle = { saveArc(current.copy(warning = it)) }
-            )
-
-            // ---- The week. ----
-            SectionLabel(stringResource(R.string.arc_config_week))
-            SwitchRow(
-                label = stringResource(R.string.arc_week_switch),
-                note = stringResource(R.string.arc_week_note),
-                checked = current.week,
-                onToggle = { saveArc(current.copy(week = it)) }
-            )
-
-            // ---- The density. ----
-            SectionLabel(stringResource(R.string.arc_config_density))
-            ChoiceRow(
-                label = stringResource(R.string.arc_density_comfortable),
-                selected = current.density == ArcDensity.COMFORTABLE,
-                onPick = { saveArc(current.copy(density = ArcDensity.COMFORTABLE)) }
-            )
-            ChoiceRow(
-                label = stringResource(R.string.arc_density_compact),
-                selected = current.density == ArcDensity.COMPACT,
-                onPick = { saveArc(current.copy(density = ArcDensity.COMPACT)) }
-            )
-
-            TextButton(
+            // The one control that undoes the others: outlined, in the error colour, at
+            // the foot — the Settings screen's reset.
+            OutlinedButton(
                 onClick = {
                     saveArc(ArcSettings())
-                    saveLook(WidgetLook())
+                    saveLook(WidgetLook.defaultsFor(WidgetKind.ARC))
                 },
-                modifier = Modifier.padding(top = 8.dp)
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 24.dp)
             ) {
                 Text(stringResource(R.string.arc_config_reset))
             }
         }
 
-        Button(
-            onClick = onDone,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp)
-        ) {
-            Text(stringResource(R.string.action_done))
-        }
+        ConfigDoneButton(onDone)
     }
-}
-
-/** One sentence under the preview saying what the chosen size shows. */
-private fun formNote(form: ArcForm): Int = when (form) {
-    ArcForm.DIAL -> R.string.arc_form_dial
-    ArcForm.STRIP -> R.string.arc_form_strip
-    ArcForm.CARD -> R.string.arc_form_card
-    ArcForm.PANEL -> R.string.arc_form_panel
-    ArcForm.BOARD -> R.string.arc_form_board
 }

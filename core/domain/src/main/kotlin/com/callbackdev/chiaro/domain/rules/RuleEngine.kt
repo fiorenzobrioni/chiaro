@@ -49,9 +49,11 @@ sealed interface RuleCheck {
  * - all conditions on `current.*` → **edge-triggered**: fire on the false→true
  *   transition, re-arm when it reads false again (else `temp < 5` fires every
  *   poll all January);
- * - any forecast/daily condition → **fingerprint per half-day** (`AM`/`PM`), the
+ * - any forecast condition → **fingerprint per half-day** (`AM`/`PM`), the
  *   same bucket the builtin precipitation warning uses — an aggregate over a
- *   sliding window never cleanly reads "false again".
+ *   sliding window never cleanly reads "false again";
+ * - conditions on `today.*` alone → **fingerprint per day**, from 06:00 (23 set 2026):
+ *   a fact about the day is one answer per date.
  */
 object RuleEngine {
 
@@ -77,6 +79,16 @@ object RuleEngine {
                     if (latchKey !in state.latched) {
                         triggers += RuleTrigger(rule, null, latchKey, result.value, result.at)
                     }
+                } else if (dayShaped(rule)) {
+                    // A fact about the day (23 set 2026): once a day, and not before the
+                    // day has begun — the half-day bucket was posting «Oggi UV fino a 8»
+                    // at 00:05 and again at noon, the same sentence about the same day.
+                    if (now.toLocalTime() >= DayRulesFrom) {
+                        val fingerprint = "$cityKey:rule:${rule.id}:${now.toLocalDate()}:DAY"
+                        if (fingerprint !in state.firedFingerprints) {
+                            triggers += RuleTrigger(rule, fingerprint, null, result.value, result.at)
+                        }
+                    }
                 } else {
                     val half = if (now.hour < 12) "AM" else "PM"
                     val fingerprint = "$cityKey:rule:${rule.id}:${now.toLocalDate()}:$half"
@@ -88,6 +100,21 @@ object RuleEngine {
         }
         return RuleEvaluation(triggers, unlatch)
     }
+
+    /**
+     * A rule whose forecast conditions are all about TODAY as a whole (`today.*`, with any
+     * `current.*` beside them): its answer is one per date, so it speaks once a date. A
+     * rule reading a sliding window (`next_Nh.*`) keeps the half-day bucket, because the
+     * window it reads really is a different stretch of hours at nine and at three.
+     */
+    private fun dayShaped(rule: NotificationRule): Boolean =
+        rule.conditions.any { it.variable.startsWith(TodayPrefix) } &&
+            rule.conditions.all { it.variable.startsWith(TodayPrefix) || RuleVariables.isInstant(it.variable) }
+
+    private const val TodayPrefix = "today."
+
+    /** When a day-shaped rule may first speak: the morning summary's own opening hour. */
+    private val DayRulesFrom: java.time.LocalTime = java.time.LocalTime.of(6, 0)
 
     /**
      * Stateless check of one rule — the engine behind the Alerts screen's

@@ -62,6 +62,10 @@
 
     <!-- La timeline unificata -->
     <string name="tl_sunrise">Alba</string>
+    <!-- How soon the next moment of the day is, under it (design review, 23 set 2026). -->
+    <string name="tl_in_minutes">tra %d min</string>
+    <string name="tl_in_hours">tra %d h</string>
+    <string name="tl_in_hours_minutes">tra %1$d h %2$d min</string>
     <string name="tl_golden_morning_end">Finisce l\'ora d\'oro</string>
     <string name="tl_golden_evening">Ora d\'oro</string>
     <string name="tl_sunset">Tramonto</string>
@@ -282,6 +286,7 @@
     <string name="settings_language">Lingua dell\'app</string>
     <string name="settings_language_system">Come il telefono</string>
     <string name="settings_group_about">Informazioni</string>
+    <string name="settings_group_credits">Dati e riconoscimenti</string>
     <string name="settings_version">Versione</string>
     <string name="settings_developer">Sviluppo</string>
     <string name="settings_copyright">Copyright</string>
@@ -300,7 +305,8 @@
     <string name="settings_source_code">Codice sorgente</string>
     <string name="settings_source_code_note">Software libero, GPL-3.0, su GitHub</string>
     <string name="settings_privacy">Privacy</string>
-    <string name="settings_privacy_note">Nessun account, nessuna pubblicità, nessun tracciamento. Una previsione deve pur essere di un posto, quindi il posto va a Open-Meteo: la tua posizione arrotondata a circa un chilometro, senza nessun account e nessun identificativo del dispositivo attaccato. Non esce altro dal telefono, e un backup porta i tuoi luoghi e le impostazioni ma mai il diario di quel che hai guardato.</string>
+    <string name="settings_privacy_headline">Niente account, niente pubblicità, niente tracciamento.</string>
+    <string name="settings_privacy_body">Chiaro non ha un server suo: luoghi, avvisi e diario restano sul telefono. A Open-Meteo va solo il luogo di cui chiedi il meteo, o che cerchi, arrotondato a circa un chilometro se è la tua posizione. Nessun identificativo.</string>
     <string name="settings_reset">Ripristina le impostazioni predefinite</string>
     <string name="settings_reset_dialog_title">Ripristinare le impostazioni predefinite?</string>
     <string name="settings_reset_dialog_body">Unità, aspetto e frequenza di aggiornamento tornano ai valori predefiniti. I tuoi luoghi e il tuo storico non vengono toccati.</string>
@@ -375,9 +381,9 @@
     <string name="guide_sky_catalog_body">Sessanta momenti, raggruppati in sole, notte, luna, pianeti, eclissi, stagioni e sciami meteorici, ognuno con la riga che dice cos\'è e una pagina che lo spiega per bene. Il campo in cima cerca fra i nomi e quelle righe, che è la strada corta per arrivare alle Perseidi — e «foto» tira fuori i nove che portano la macchina fotografica. È il posto dove si scopre cos\'è davvero un\'ora blu, o la luce cinerea: aggiungendola, o leggendone prima.</string>
 
     <string name="guide_alerts_title">Avvisi</string>
-    <string name="guide_alerts_p1">Qui vivono due specie: quelli già scritti e quelli che scrivi tu. Non arriva niente che non abbia acceso tu.</string>
+    <string name="guide_alerts_p1">Qui vivono tre gruppi: le allerte ufficiali, gli avvisi già scritti e quelli che scrivi tu. Non arriva niente che non abbia acceso tu.</string>
     <string name="guide_alerts_ready_title">Pronti all\'uso</string>
-    <string name="guide_alerts_ready_body" formatted="false">Tre interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo nelle prossime 12 ore (al massimo uno per temporale), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno) e il riepilogo del mattino, una volta tra le 6 e le 12.</string>
+    <string name="guide_alerts_ready_body" formatted="false">Quattro interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo nelle prossime 12 ore (al massimo uno per perturbazione), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno), il riepilogo del mattino, una volta tra le 6 e le 12, e quello della sera, una volta tra le 18 e le 23, che parla di domani.</string>
     <string name="guide_alerts_yours_title">I tuoi</string>
     <string name="guide_alerts_yours_body">Parti da un\'idea — una finestra per correre, ghiaccio domattina, una notte serena — oppure costruisci la frase da te: cosa guardare, come confrontarlo, la soglia, e una seconda condizione se serve. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile.</string>
     <string name="guide_alerts_preview_title">Provalo adesso</string>
@@ -439,6 +445,11 @@
     <string name="sky_no_place_body">Aggiungi un luogo per vedere cosa ha in programma il suo cielo.</string>
     <string name="sky_section_moments">I prossimi momenti</string>
     <string name="sky_section_events">In arrivo</string>
+    <string name="sky_events_beyond_note">Il verdetto sulle nuvole arriva quando la previsione copre quella notte, pochi giorni prima.</string>
+    <plurals name="sky_event_in_days">
+        <item quantity="one">tra %d giorno</item>
+        <item quantity="other">tra %d giorni</item>
+    </plurals>
     <!-- Fase 27: due sciami che culminano la stessa notte stanno su una riga sola. -->
     <string name="sky_event_and">%1$s e %2$s</string>
     <string name="sky_section_reminders">Promemoria</string>
@@ -455,6 +466,7 @@
     <string name="sky_day_today">Oggi</string>
     <string name="sky_day_tomorrow">Domani</string>
     <string name="sky_tonight_label">Stanotte</string>
+    <string name="sky_tonight_moon_pct">luna %d%%</string>
     <string name="sky_tonight_window">Buio dalle %1$s alle %2$s</string>
     <string name="sky_tonight_no_darkness">Stanotte il cielo non diventa mai del tutto buio: a questa latitudine, in questa stagione, capita.</string>
     <!-- Il cielo opposto con la stessa finestra vuota: la notte polare profonda, dove
@@ -779,19 +791,29 @@
     <!-- Avvisi (Fase 6). Due gruppi, una schermata: interruttori che dicono
          esattamente cosa mandano, e le regole del lettore come frase a chip. -->
     <string name="tab_alerts">Avvisi</string>
-    <string name="alerts_group_ready">Pronti</string>
+    <string name="alerts_group_ready">Pronti all\'uso</string>
     <string name="alerts_group_yours">I tuoi</string>
+    <string name="alerts_day_title">Quando arrivano</string>
+    <string name="alerts_day_anytime">In qualunque ora, se serve: %1$s</string>
+    <string name="alerts_day_window_desc">%1$s tra le %2$d e le %3$d</string>
+    <string name="alerts_day_yours">i tuoi avvisi</string>
+    <string name="alerts_day_quiet">Dalle 22 alle 7 (tratteggio) arrivano senza suono, tranne le allerte rosse e i promemoria del cielo.</string>
     <string name="alert_severe_title">Maltempo in arrivo</string>
-    <string name="alert_severe_desc">Un avviso quando nelle prossime 12 ore compare un temporale, pioggia gelata, pioggia o neve forte. Al massimo uno per perturbazione.</string>
+    <string name="alert_severe_desc">Temporale, pioggia gelata, pioggia o neve forte nelle prossime 12 ore.</string>
+    <string name="alert_severe_when">Al massimo uno per perturbazione</string>
     <string name="alert_precip_title">Pioggia nelle prossime ore</string>
-    <string name="alert_precip_desc" formatted="false">Un avviso quando la pioggia supera il 70% di probabilità entro 6 ore. Al massimo due volte al giorno.</string>
+    <string name="alert_precip_desc" formatted="false">Pioggia oltre il 70% di probabilità entro 6 ore.</string>
+    <string name="alert_precip_when">Al massimo due volte al giorno</string>
     <string name="alert_summary_title">Il riepilogo del mattino</string>
-    <string name="alert_summary_desc">Una volta al giorno, tra le 6 e le 12: il cielo di oggi, minima, massima e pioggia.</string>
+    <string name="alert_summary_desc">Il cielo di oggi, minima, massima e pioggia.</string>
+    <string name="alert_summary_when">Ogni giorno, tra le 6 e le 12</string>
     <string name="alert_evening_title">Il riepilogo della sera</string>
-    <string name="alert_evening_desc">Una volta al giorno, tra le 18 e le 23: il cielo di domani, minima, massima e pioggia. Aprendolo, anche la notte che c\'è in mezzo.</string>
+    <string name="alert_evening_desc">Il cielo di domani, minima, massima e pioggia. Aprendolo, anche la notte che c\'è in mezzo.</string>
+    <string name="alert_evening_when">Ogni giorno, tra le 18 e le 23</string>
     <string name="alerts_templates_title">Parti da un\'idea</string>
     <string name="alerts_max_reached">Hai già il massimo di avvisi che l\'app tiene, %1$d: togline uno per aggiungerne un altro.</string>
     <string name="tpl_already_added">Già aggiunto</string>
+    <string name="tpl_add">Aggiungi</string>
     <string name="rule_sentence_prefix">Quando</string>
     <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
     <string name="rule_and">e</string>
@@ -815,7 +837,7 @@
     <string name="rule_pick_operator">Come confrontarlo</string>
     <string name="rule_pick_value">La soglia</string>
     <string name="rule_pick_placeholder">Un valore nel messaggio</string>
-    <string name="rule_placeholder_intro">Toccane uno: finisce dove sei col cursore e diventa il numero quando l\'avviso scatta.</string>
+    <string name="rule_placeholder_intro">Toccane uno: finisce dove sei col cursore e, quando l\'avviso scatta, diventa il valore con la sua unità.</string>
     <string name="action_done">Fatto</string>
 
     <!-- Gli operatori, come li vuole la frase -->
@@ -862,23 +884,27 @@
     <string name="tpl_bike_title">Dimmi quando posso pedalare</string>
     <string name="tpl_bike_desc" formatted="false">Almeno 12° e pioggia sotto il 20% nelle prossime 6 ore.</string>
     <string name="tpl_bike_name">Bici</string>
-    <string name="tpl_bike_message" formatted="false">Si pedala: {current.temp_c}° e pioggia al {next_6h.precip_chance_max}%.</string>
+    <string name="tpl_bike_message" formatted="false">Si pedala: {current.temp_c} e pioggia al {next_6h.precip_chance_max}.</string>
     <string name="tpl_ice_title">Ghiaccio domattina</string>
     <string name="tpl_ice_desc">Quando nelle prossime 12 ore si scende sotto zero.</string>
     <string name="tpl_ice_name">Ghiaccio</string>
-    <string name="tpl_ice_message" formatted="false">Possibile ghiaccio: si scende a {trigger.value}° verso le {trigger.time}.</string>
+    <string name="tpl_ice_message" formatted="false">Possibile ghiaccio: si scende a {trigger.value} verso le {trigger.time}.</string>
     <string name="tpl_run_title">Una finestra per correre</string>
     <string name="tpl_run_desc" formatted="false">Pioggia sotto il 20% nelle prossime 6 ore e non più di 26°.</string>
     <string name="tpl_run_name">Corsa</string>
-    <string name="tpl_run_message" formatted="false">Buona finestra per correre: pioggia al {trigger.value}%.</string>
+    <string name="tpl_run_message" formatted="false">Buona finestra per correre: pioggia al {trigger.value}.</string>
     <string name="tpl_uv_title">UV alto</string>
     <string name="tpl_uv_desc">Quando l\'indice UV di oggi arriva almeno a 7.</string>
     <string name="tpl_uv_name">Sole</string>
     <string name="tpl_uv_message" formatted="false">Oggi UV fino a {trigger.value}: crema e cappello.</string>
-    <string name="tpl_night_title">Una notte senza pioggia</string>
+    <string name="tpl_heat_title">Caldo forte</string>
+    <string name="tpl_heat_desc">Quando la massima di oggi arriva almeno a 33°.</string>
+    <string name="tpl_heat_name">Caldo</string>
+    <string name="tpl_heat_message" formatted="false">Oggi fino a {trigger.value}: acqua, ombra e niente fatiche nelle ore calde.</string>
+    <string name="tpl_night_title">Dodici ore asciutte</string>
     <string name="tpl_night_desc" formatted="false">Pioggia sotto il 10% nelle prossime 12 ore.</string>
-    <string name="tpl_night_name">Notte</string>
-    <string name="tpl_night_message" formatted="false">Stanotte niente pioggia in vista ({trigger.value}%).</string>
+    <string name="tpl_night_name">Asciutto</string>
+    <string name="tpl_night_message" formatted="false">Niente pioggia in vista nelle prossime 12 ore ({trigger.value}).</string>
 
     <!-- Gli avvisi integrati come notifiche: una frase, mai un elenco di dati -->
     <string name="notif_channel_severe">Maltempo</string>
@@ -952,16 +978,17 @@
     <string name="warning_sheet_open">Apri il bollettino</string>
 
     <string name="alerts_group_warnings">Allerte ufficiali</string>
-    <string name="warning_card_none">Nessuna allerta per %1$s</string>
     <string name="warning_card_none_detail">Bollettino %1$s</string>
+    <string name="warning_card_all_clear">Nessuna allerta</string>
     <string name="warning_card_stale">Nessun bollettino per oggi</string>
     <string name="warning_card_stale_detail">L\'ultimo risale a %1$s · il prossimo esce di solito entro le 16</string>
     <string name="warning_card_waiting">Ancora nessun bollettino</string>
     <string name="warning_card_waiting_detail">Il primo arriva con il prossimo aggiornamento.</string>
     <string name="warning_card_unavailable">Le allerte ufficiali sono disponibili per i luoghi in Italia</string>
     <string name="warning_card_unavailable_detail">Le emette il Dipartimento della Protezione Civile, che valuta il solo territorio italiano.</string>
-    <string name="warning_switch_title">Allerte ufficiali</string>
-    <string name="warning_switch_desc">Quando la Protezione Civile emette un\'allerta per questa zona, appena esce il bollettino, di solito tra le 15 e le 17. Mai più di una per bollettino.</string>
+    <string name="warning_switch_title">Avvisami delle allerte</string>
+    <string name="warning_switch_desc">Quando la Protezione Civile emette un\'allerta per questa zona, appena esce il bollettino.</string>
+    <string name="warning_switch_when">Di solito tra le 15 e le 17 · mai più di una per bollettino</string>
     <string name="warning_from_title">Avvisami da</string>
     <string name="warning_from_yellow">Gialla</string>
     <string name="warning_from_orange">Arancione</string>
@@ -1005,7 +1032,7 @@
     <string name="notif_detail_air">Qualità dell\'aria %1$d · %2$s</string>
     <!-- Le righe del riepilogo della sera: la notte che separa da domani, e le parti di
          domani su cui si può già fare qualcosa stasera. -->
-    <string name="notif_detail_night">Stanotte fino a %1$s verso le %2$s · %3$s</string>
+    <string name="notif_detail_night">Stanotte minima %1$s verso le %2$s · %3$s</string>
     <string name="notif_detail_night_rain">Pioggia stanotte fino a %1$d%%, il peggio verso le %2$s</string>
     <string name="notif_detail_tomorrow_rain">Domani pioggia dalle %1$s alle %2$s, fino a %3$d%%</string>
     <string name="notif_detail_tomorrow_rain_from">Domani pioggia dalle %1$s in poi, fino a %2$d%%</string>
@@ -1022,8 +1049,18 @@
         <item quantity="other">%d minuti di luce in meno di oggi</item>
     </plurals>
     <string name="notif_detail_uv_tomorrow">Domani UV massimo %1$d · %2$s</string>
+    <string name="notif_detail_today_rain">Pioggia dalle %1$s alle %2$s, fino a %3$d%%</string>
+    <string name="notif_detail_today_rain_from">Pioggia dalle %1$s in poi, fino a %2$d%%</string>
+    <string name="notif_detail_today_rain_hour">Pioggia verso le %1$s, fino a %2$d%%</string>
+    <string name="notif_detail_today_rain_maybe">Pioggia possibile, fino a %1$d%% verso le %2$s</string>
+    <string name="notif_chart_rain_desc">Grafico della pioggia nelle prossime %1$d ore: il massimo è %2$d%% verso le %3$s.</string>
+    <string name="notif_chart_rain_desc_plain">Grafico della pioggia nelle prossime %1$d ore.</string>
+    <string name="notif_chart_day_desc">Grafico della giornata: temperatura da %1$s a %2$s, pioggia fino a %3$d%%.</string>
+    <string name="notif_chart_day_desc_dry">Grafico della giornata: temperatura da %1$s a %2$s, niente pioggia.</string>
+    <string name="notif_chart_levels_desc">Tabella dei livelli di allerta, per rischio e per giorno.</string>
+    <string name="notif_chart_tomorrow">Domani</string>
     <string name="notif_rule_why">Perché è scattata</string>
-    <string name="notif_rule_condition">%1$s — valore %2$s</string>
+    <string name="notif_rule_condition">%1$s · ora %2$s</string>
 
 
     <!-- Il Diario (Fase 7): la storia letta come prosa, e la deriva della settimana -->
@@ -1031,6 +1068,23 @@
     <string name="journal_no_place_body">Aggiungi un luogo e il diario comincia a scriversi da solo: ogni aggiornamento lascia una riga.</string>
     <string name="journal_empty">Ancora niente da raccontare. Il diario si riempie man mano che arrivano gli aggiornamenti.</string>
     <string name="journal_yesterday">Ieri</string>
+    <plurals name="journal_day_count">
+        <item quantity="one">%d voce</item>
+        <item quantity="other">%d voci</item>
+    </plurals>
+    <plurals name="journal_drift_every">
+        <item quantity="one">Una colonna per ora</item>
+        <item quantity="other">Una colonna ogni %d ore</item>
+    </plurals>
+    <string name="journal_drift_axis_latest">ultimo aggiornamento</string>
+    <string name="journal_skill_title">Com\'è andata la previsione</string>
+    <string name="journal_skill_high">Massime: in media a %1$s dal vero, su %2$d giorni.</string>
+    <string name="journal_skill_rain">Nei giorni in cui è piovuto la pioggia era data in media al %1$s, negli altri al %2$s.</string>
+    <string name="journal_skill_rain_dry">Non è piovuto in nessuno di questi giorni: la pioggia era data in media al %1$s.</string>
+    <string name="journal_skill_rain_wet">È piovuto in tutti questi giorni: la pioggia era data in media al %1$s.</string>
+    <string name="journal_fail_offline">Il telefono era offline</string>
+    <string name="journal_fail_service">Il servizio meteo non ha risposto</string>
+    <string name="journal_fail_unknown">Il motivo non è chiaro</string>
     <!-- Le revisioni di un giorno bersaglio dentro un giorno del diario diventano una
          riga; questo dice quante ne raccoglie (mostrato solo oltre una). -->
     <plurals name="journal_shift_revisions">
@@ -1080,14 +1134,14 @@
     <string name="widget_now_label">Colpo d\'occhio</string>
     <string name="widget_now_desc">Il cielo in questo momento: icona, temperatura, luogo — e la frase del giorno dove c\'è spazio</string>
     <string name="widget_today_label">Le prossime ore</string>
-    <string name="widget_today_desc">L\'adesso, la frase del giorno e le prossime ore</string>
+    <string name="widget_today_desc">L\'adesso, la frase del giorno, le prossime ore e, su una card alta, i prossimi giorni</string>
     <string name="widget_sky_label">Momenti del cielo</string>
     <string name="widget_sky_desc">Il prossimo momento del cielo, quando, e il suo verdetto — e quelli dopo su una card più alta</string>
     <!-- Il widget testuale (19 set 2026): l'unica scheda senza niente di disegnato. -->
     <string name="widget_text_label">In parole</string>
-    <string name="widget_text_desc">Parole e numeri: la temperatura grande, il luogo sopra, la frase del giorno accanto, e l\'icona del meteo solo se la chiedi</string>
+    <string name="widget_text_desc">Parole e numeri: la temperatura grande, il luogo, la frase del giorno e, su una card alta, le prossime ore</string>
     <string name="widget_config_show_icon">L\'icona del meteo</string>
-    <string name="widget_config_show_icon_note">Un disegno del cielo di adesso, nello spazio che la card lascia già vuoto: accanto al numero su una riga, sopra le parole su due. Non toglie mai una riga a nient\'altro, quindi dove non c\'è spazio semplicemente non compare. Spenta, la card resta parole e numeri.</string>
+    <string name="widget_config_show_icon_note">Il disegno del cielo di adesso, solo nello spazio che la card lascia già vuoto: non toglie mai una riga alle parole, e dove non c\'è spazio non compare.</string>
     <!-- I due segni della massima e della minima dicono cosa sono, per chi legge con
          TalkBack: un numero senza soggetto non è una previsione. -->
     <string name="widget_range_high">La massima di oggi</string>
@@ -1116,7 +1170,29 @@
     <string name="widget_config_show_sentence">La frase del giorno</string>
     <string name="widget_config_show_sentence_note">Ombrello verso le cinque, temporale alle tre — o, quando non c\'è niente da segnalare, cosa fa il cielo adesso. Compare dove la card ha spazio.</string>
     <string name="widget_config_show_warning">Le allerte ufficiali</string>
-    <string name="widget_config_show_warning_note">Il livello della Protezione Civile per questo luogo, come pastiglia. Arancione e rosso stanno già nella frase del giorno, quindi la pastiglia compare dove quella frase non c\'è; il giallo, che la frase non porta mai, prende una riga sua dove la card ne ha una in più.</string>
+    <string name="widget_config_show_warning_note">Il livello della Protezione Civile per questo luogo, come pastiglia. Arancione e rosso li dice già la frase del giorno; il giallo prende una riga sua dove c\'è spazio.</string>
+    <string name="widget_config_preview_desc">Anteprima del widget</string>
+    <string name="widget_config_size_placed">Com\'è ora</string>
+    <string name="widget_config_resize_hint">Sulla schermata Home tieni premuto il widget e trascinane i bordi: si ridispone da solo.</string>
+    <string name="text_form_line">Due celle: il luogo e la temperatura. Da tre celle arriva anche la frase del giorno.</string>
+    <string name="text_form_row">Una riga: luogo e temperatura a sinistra, la frase del giorno e la giornata al bordo opposto.</string>
+    <string name="text_form_stack">Stretto e alto: il luogo in cima, la temperatura grande e sotto la frase. Da tre righe arrivano anche le prossime ore.</string>
+    <string name="text_form_panel">Largo e alto: la temperatura grande accanto alla frase del giorno. Da tre righe arrivano anche le prossime ore.</string>
+    <string name="widget_config_show_later">Più tardi</string>
+    <string name="widget_config_show_later_note">Le prossime ore in parole, ogni tre ore: l\'ora, la temperatura, il cielo e la pioggia quando è probabile. Solo dove la card è alta abbastanza.</string>
+    <string name="widget_config_show_range_note_text">Con le due frecce, sotto la frase del giorno.</string>
+    <string name="widget_config_show_warning_note_text">Il livello della Protezione Civile per questo luogo, scritto in parole. Arancione e rosso li dice già la frase del giorno.</string>
+    <string name="now_form_narrow">Una riga stretta: l\'icona, la temperatura e il luogo.</string>
+    <string name="now_form_wide">Una riga larga: anche la frase del giorno, al bordo opposto.</string>
+    <string name="now_form_tall">Due righe e più: l\'icona in alto, sotto la temperatura, la frase e il luogo. Da tre righe la temperatura cresce con la card.</string>
+    <string name="today_form_two">Due righe: l\'adesso in alto, sotto le prossime ore con la pioggia.</string>
+    <string name="today_form_tall">Da tre righe: l\'adesso, le prossime ore e, sotto, i prossimi giorni.</string>
+    <string name="sky_form_narrow">Una riga stretta: il prossimo momento, quando, e il verdetto come segno.</string>
+    <string name="sky_form_wide">Una riga larga: il verdetto in parole, con il numero che l\'ha deciso.</string>
+    <string name="sky_form_tall">Due righe e più: sotto, i momenti che seguono, quanti ne stanno.</string>
+    <string name="widget_config_show_days">I prossimi giorni</string>
+    <string name="widget_config_show_days_note">Sotto le ore, il giorno, il cielo, la massima e la minima. Solo dove la card è alta almeno tre righe.</string>
+    <string name="arc_config_more">Altro sulla card</string>
     <string name="widget_config_arrangement">Disposizione</string>
     <string name="widget_arrangement_icon_start">Icona a sinistra, frase al bordo opposto</string>
     <string name="widget_arrangement_icon_end">Icona a destra, frase accanto alla temperatura</string>
@@ -1146,7 +1222,6 @@
     <string name="arc_in_hours">tra %1$d h</string>
     <string name="arc_desc_next">%1$s, %2$s</string>
     <string name="arc_desc_no_moment">Nessun momento della luce nelle prossime ventiquattro ore</string>
-    <string name="arc_config_preview">Anteprima</string>
     <string name="arc_form_dial">Una cella: l\'arco, e un numero sotto.</string>
     <string name="arc_form_strip">Una riga: il numero e il prossimo momento accanto all\'arco — sopra, su due celle.</string>
     <string name="arc_form_card">Due celle di larghezza: numero, luogo, il prossimo momento, l\'arco, e l\'agenda dove l\'altezza lo permette.</string>
@@ -1191,16 +1266,14 @@
     <string name="arc_agenda_rain_note">Quando la pioggia diventa probabile o dovrebbe smettere, e la finestra di un arcobaleno.</string>
     <string name="arc_agenda_verdicts">Verdetti</string>
     <string name="arc_agenda_verdicts_note">Accanto a una riga che segui anche nella schermata Cielo, il segno che stamperebbe il widget Cielo.</string>
-    <string name="arc_config_warning">Le allerte ufficiali</string>
-    <string name="arc_config_warning_note">Il livello della Protezione Civile, come pastiglia sulla card e sul pannello. Il quadrante e le strisce hanno una riga sola, e una pastiglia lì sarebbe tutta la card.</string>
+    <string name="arc_config_warning_note">Il livello della Protezione Civile, come pastiglia, sulle card da 2×2 in su: su una riga o una cella sola sarebbe tutta la card.</string>
     <string name="arc_warning_switch">Mostra il livello</string>
-    <string name="arc_config_week">La settimana</string>
     <string name="arc_week_switch">I sette giorni</string>
     <string name="arc_week_note">In fondo a una card alta quattro righe.</string>
     <string name="arc_config_density">Dimensione del testo</string>
     <string name="arc_density_comfortable">Comoda</string>
     <string name="arc_density_compact">Compatta: una riga in più dove ci sta</string>
-    <string name="arc_config_reset">Ripristina le impostazioni predefinite di questo widget</string>
+    <string name="arc_config_reset">Ripristina questo widget</string>
     <string name="widget_preview_arc_hero">Tramonto alle 19:42</string>
     <string name="widget_preview_arc_sub">Milano · tra 8 h</string>
 </resources>

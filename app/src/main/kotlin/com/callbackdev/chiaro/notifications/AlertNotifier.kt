@@ -69,18 +69,31 @@ object AlertNotifier {
         }
 
         val headline = body(context, alert, units.temperature)
-        val notification = NotificationCompat.Builder(context, alert.kind.channelId)
+        val title = context.getString(alert.kind.titleRes, alert.cityLabel)
+        val details = details(context, alert, report, units)
+        val builder = NotificationCompat.Builder(context, alert.kind.channelId)
             .setSmallIcon(R.drawable.ic_stat_chiaro)
-            .setContentTitle(context.getString(alert.kind.titleRes, alert.cityLabel))
+            .setColor(NotificationViews.accent(context))
+            .setContentTitle(title)
             .setContentText(headline)
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                    .bigText(expanded(context, alert, report, units, headline))
+                    .bigText(expanded(headline, details))
             )
             .setContentIntent(openApp(context, alert.kind.notificationId))
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
-            .build()
+        NotificationViews.quietAtNight(builder)
+        // The picture (23 set 2026): the rain's hours under a rain or storm alert, the
+        // day under a summary — see [NotificationCharts] for why these and no others.
+        // Painted only when there is something to paint; the big text above stays
+        // either way, for every surface that does not inflate a custom view.
+        runCatching { chart(context, alert, report, units) }.getOrNull()?.let { (bitmap, description) ->
+            NotificationViews.expandWithChart(
+                context, builder, title, headline, details, bitmap, description
+            )
+        }
+        val notification = builder.build()
         return try {
             manager.notify(alert.kind.notificationId, notification)
             true
@@ -141,38 +154,113 @@ object AlertNotifier {
     }
 
     /**
-     * The headline, then the rest of the story: the window the weather really covers,
+     * The rest of the story under the headline: the window the weather really covers,
      * its worst hour, what the thermometer does meanwhile; for the morning summary the
      * day's own facts; for the evening one the night ahead and what tomorrow asks
      * tonight. Each with its consequence.
      *
-     * Order is worth-first, because the system cuts a long body at the bottom.
+     * Order is worth-first, because the system cuts a long body at the bottom — and the
+     * pictured body keeps the first five lines only.
      */
-    private fun expanded(
+    private fun details(
         context: Context,
         alert: Alert,
         report: WeatherReport,
-        units: UnitSettings,
-        headline: String
-    ): String {
-        val details = when (alert.kind) {
-            AlertKind.SEVERE -> forecastDetails(
-                context, units, report,
-                alert.at?.let { AlertDetails.severeWindow(report.hourly, it) }
-            )
-            AlertKind.PRECIPITATION -> forecastDetails(
-                context, units, report,
-                alert.at?.let { AlertDetails.rainWindow(report.hourly, it) }
-            )
-            AlertKind.DAILY_SUMMARY -> dayDetails(context, units, report)
-            AlertKind.EVENING_SUMMARY -> eveningDetails(context, units, report, alert)
+        units: UnitSettings
+    ): List<String> = when (alert.kind) {
+        AlertKind.SEVERE -> forecastDetails(
+            context, units, report,
+            alert.at?.let { AlertDetails.severeWindow(report.hourly, it) }
+        )
+        AlertKind.PRECIPITATION -> forecastDetails(
+            context, units, report,
+            alert.at?.let { AlertDetails.rainWindow(report.hourly, it) }
+        )
+        AlertKind.DAILY_SUMMARY -> dayDetails(context, units, report)
+        AlertKind.EVENING_SUMMARY -> eveningDetails(context, units, report, alert)
+    }
+
+    /**
+     * The headline and its details as one text, for the big-text body. The morning kinds
+     * are never empty ("right now" always has a reading behind it); the evening one can
+     * be, on a cached report whose hours have all elapsed and a place with no sunrise.
+     * Then the expanded body IS the headline — which is honest, and still better than a
+     * blank line under it.
+     */
+    private fun expanded(headline: String, details: List<String>): String =
+        if (details.isEmpty()) headline else headline + "\n\n" + details.joinToString("\n")
+
+    /**
+     * The picture for [alert] and its text equivalent, or null when there is nothing to
+     * draw. Storms and rain get the next twelve hours of rain with the alert's window lit;
+     * the summaries get their day — what is left of today in the morning, the whole of
+     * tomorrow in the evening — with its temperature, its rain and its night.
+     */
+    private fun chart(
+        context: Context,
+        alert: Alert,
+        report: WeatherReport,
+        units: UnitSettings
+    ): Pair<android.graphics.Bitmap, String>? {
+        val inks = NotificationCharts.inks(context)
+        val locale = Locale.getDefault()
+        val is24h = android.text.format.DateFormat.is24HourFormat(context)
+        val now = report.location.localTime
+        return when (alert.kind) {
+            AlertKind.SEVERE, AlertKind.PRECIPITATION -> {
+                val severe = alert.kind == AlertKind.SEVERE
+                val window = alert.at?.let {
+                    if (severe) AlertDetails.severeWindow(report.hourly, it)
+                    else AlertDetails.rainWindow(report.hourly, it)
+                }
+                val bitmap = NotificationCharts.rainHours(
+                    report.hourly, now, window, severe, inks, is24h, locale
+                ) ?: return null
+                val shown = report.hourly.filter { !it.time.isBefore(now.withMinute(0)) }
+                    .take(NotificationCharts.RainHours)
+                val peak = shown.filter { it.precipChancePct != null }.maxByOrNull { it.precipChancePct!! }
+                val description = if (peak == null) {
+                    context.getString(R.string.notif_chart_rain_desc_plain, shown.size)
+                } else {
+                    context.getString(
+                        R.string.notif_chart_rain_desc, shown.size,
+                        peak.precipChancePct!!, peak.time.format(clockFormat(context))
+                    )
+                }
+                bitmap to description
+            }
+            AlertKind.DAILY_SUMMARY, AlertKind.EVENING_SUMMARY -> {
+                val date = if (alert.kind == AlertKind.DAILY_SUMMARY) {
+                    now.toLocalDate()
+                } else {
+                    alert.forDate ?: now.toLocalDate().plusDays(1)
+                }
+                val hours = report.hourly.filter {
+                    it.time.toLocalDate() == date && !it.time.isBefore(now.withMinute(0))
+                }
+                val (sunrise, sunset) = if (alert.kind == AlertKind.DAILY_SUMMARY) {
+                    report.astronomical.sunrise?.let(date::atTime) to
+                        report.astronomical.sunset?.let(date::atTime)
+                } else {
+                    EveningDetails.sun(
+                        date, report.zone(), report.location.coordinates,
+                        report.astronomical.daylightDuration
+                    ).let { it?.sunrise?.let(date::atTime) to it?.sunset?.let(date::atTime) }
+                }
+                val bitmap = NotificationCharts.day(
+                    hours, sunrise, sunset, units.temperature, inks, is24h, locale
+                ) ?: return null
+                val low = Formats.temperature(hours.minOf { it.tempC }, units.temperature, locale)
+                val high = Formats.temperature(hours.maxOf { it.tempC }, units.temperature, locale)
+                val rain = hours.mapNotNull { it.precipChancePct }.maxOrNull()?.takeIf { it > 0 }
+                val description = if (rain == null) {
+                    context.getString(R.string.notif_chart_day_desc_dry, low, high)
+                } else {
+                    context.getString(R.string.notif_chart_day_desc, low, high, rain)
+                }
+                bitmap to description
+            }
         }
-        // The morning kinds are never empty ("right now" always has a reading behind
-        // it); the evening one can be, on a cached report whose hours have all
-        // elapsed and a place with no sunrise. Then the expanded body IS the headline
-        // — which is honest, and still better than a blank line under it.
-        if (details.isEmpty()) return headline
-        return headline + "\n\n" + details.joinToString("\n")
     }
 
     /** What an hour-anchored alert (storm, rain) can say beyond its first hour. */
@@ -230,18 +318,41 @@ object AlertNotifier {
     ): List<String> = buildList {
         val clock = clockFormat(context)
         add(nowLine(context, units, report))
-        val sunrise = report.astronomical.sunrise
-        val sunset = report.astronomical.sunset
-        // Both or neither: above the Arctic circle in June there is no sunrise to
-        // have, and half a pair says less than nothing.
-        if (sunrise != null && sunset != null) {
+        // When it rains today (23 set 2026, notification review): the summary said how
+        // likely and never WHEN, which is the half of the question a reader acts on. The
+        // evening summary's own rule, read over what is left of today: the window where
+        // it clears the umbrella bar, the peak where it only gets to «possible».
+        val now = report.location.localTime
+        val today = now.toLocalDate()
+        val ahead = report.hourly.filter { !it.time.isBefore(now.withMinute(0)) }
+        val window = EveningDetails.tomorrowRain(ahead, today)
+        if (window != null) {
             add(
-                context.getString(
-                    R.string.notif_detail_sun,
-                    sunrise.format(clock),
-                    sunset.format(clock)
-                )
+                when {
+                    window.openEnded -> context.getString(
+                        R.string.notif_detail_today_rain_from,
+                        window.start.format(clock), window.peakPrecipPct
+                    )
+                    window.singleHour -> context.getString(
+                        R.string.notif_detail_today_rain_hour,
+                        window.start.format(clock), window.peakPrecipPct
+                    )
+                    else -> context.getString(
+                        R.string.notif_detail_today_rain,
+                        window.start.format(clock), window.end.format(clock), window.peakPrecipPct
+                    )
+                }
             )
+        } else {
+            EveningDetails.tomorrowRainPeak(ahead, today)
+                ?.takeIf { it.pct >= HeadlineEngine.CLEAR_BELOW_PCT }
+                ?.let {
+                    add(
+                        context.getString(
+                            R.string.notif_detail_today_rain_maybe, it.pct, it.at.format(clock)
+                        )
+                    )
+                }
         }
         // No index, no line: a model that does not carry UV gets silence rather than
         // a "nessuna protezione necessaria" nobody forecast (§1.1).
@@ -255,6 +366,20 @@ object AlertNotifier {
             )
         }
         add(windLine(context, units, report))
+        val sunrise = report.astronomical.sunrise
+        val sunset = report.astronomical.sunset
+        // Both or neither: above the Arctic circle in June there is no sunrise to
+        // have, and half a pair says less than nothing. After the wind since 23 set
+        // 2026: the picture draws the night, so this line is the fifth thing to read.
+        if (sunrise != null && sunset != null) {
+            add(
+                context.getString(
+                    R.string.notif_detail_sun,
+                    sunrise.format(clock),
+                    sunset.format(clock)
+                )
+            )
+        }
         report.airQuality?.let { air ->
             add(
                 context.getString(

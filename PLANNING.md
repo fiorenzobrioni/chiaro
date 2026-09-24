@@ -9672,3 +9672,733 @@ Chiesto insieme: togliere un momento dalla stessa pagina.
   (i 1689 di prima più i 3 nuovi), lint a zero.
 - **Da fare sul dispositivo**: il tocco sulle righe (anche sulla linea del chip), la campanella
   che resta un bersaglio a sé, TalkBack che annuncia l'azione.
+
+## La schermata Oggi, review grafica: nastro, foglio sul cielo, grafico pioggia (committente, 23 set 2026)
+
+Richiesta: una review completa della schermata principale, con cinque osservazioni del
+committente (la linea della pioggia non sincronizzata con «Prossime ore», la stessa linea
+animata all'apertura, lo stacco secco fra l'area della temperatura e il resto, le barre
+colorate nei dettagli, le linee del giorno più sfumate) più le proposte della review. Scelto il
+blocco 1–3 della proposta, con un mandato esplicito: **dove una scelta migliora la grafica e
+viola DESIGN.md, si cambia DESIGN.md e vince l'estetica**.
+
+### Cosa è cambiato
+
+- **Il nastro della luce è luce, non una tabella** (`DaylightRibbon`, DESIGN §4). Un solo
+  gradiente con estremi arrotondati al posto dei rettangoli a spigolo vivo, che sul dispositivo
+  leggevano come un codice a barre. Ogni fase tiene il suo colore al centro e sfuma nella vicina
+  sul bordo che condividono (il 30% della sua larghezza per lato, al massimo l'1,5% del giorno:
+  `ribbonStops`). Sul canvas passa da 6 a 8 dp; l'«adesso» è un **disco bianco di 14 dp** con un
+  anello dell'inchiostro dello scrim, e la parte di giornata già passata è al 60%.
+- **Nelle righe della settimana la notte si ritira** verso la traccia della barra min/max
+  (`nightFade`): niente dal crepuscolo civile in su, il 75% dalla notte astronomica in giù.
+  Sette barre blu notte erano l'inchiostro più pesante della sezione, e dicevano la cosa che
+  cambia meno; ora ogni riga mostra la sua pillola di luce.
+- **La pagina è un foglio appoggiato sul cielo** (`SkySheet`, DESIGN §8.1). I primi 24 dp della
+  pagina coprono il fondo del canvas con angoli di 28 dp: il cielo si vede attorno agli angoli e
+  la fascia più scura dello scrim finisce sotto la carta. Il foglio **prende la luce** del cielo:
+  i suoi primi 120 dp portano il colore del fondo del canvas al 16%, con una sfumatura a curva
+  fino alla superficie — caldo al tramonto, azzurro a mezzogiorno, quasi niente di notte.
+- **Il grafico pioggia è la mappa della fascia oraria** (DESIGN §8.3b). Tiene la vista delle
+  24 ore e ci segna le ore che la fascia sopra ha in vista (una finestra `surfaceContainerHigh`
+  che segue lo scroll); un tocco o un trascinamento sul grafico porta la fascia su quell'ora.
+  `HourStrip` accetta il suo `LazyListState` da fuori per questo.
+- **Il grafico si disegna** la prima volta che compare: linea e area rivelate da sinistra a
+  destra in 900 ms, una volta per pagina, mai con il movimento ridotto.
+
+### Decisioni e deviazioni
+
+- **Mappa e non grafico «spalmato» sulle 24 celle.** Allungarlo sotto la fascia avrebbe dato
+  l'allineamento ora per ora, e tolto l'unica cosa per cui il grafico c'è: la giornata intera in
+  un colpo d'occhio (VISION §5.2.3). La finestra dà la sincronia senza perdere la panoramica, e
+  il tocco la rende una scorciatoia invece che una decorazione.
+- **La rivelazione va lungo il tempo, mai dal basso.** Una linea che cresce dallo zero mostra
+  per mezzo secondo una giornata asciutta che nessuno ha previsto: §1.1 non ha eccezioni per le
+  animazioni. Il flag è `rememberSaveable`, così scorrere via il grafico e tornarci non la
+  ripete.
+- **Il bordo dritto del canvas resta dritto.** Gli angoli tolti il 4 set facevano del cielo una
+  card; qui il cielo resta il fondo e la card è la pagina. La linguetta è dentro il pavimento dei
+  280 dp, così lo scheletro finisce ancora dove finisce il canvas.
+- **Lo scrim del fondo arriva pieno dove comincia il foglio**, non sul bordo del canvas: il testo
+  ha lo stesso scrim di prima, e §3.6 vale com'era.
+- **Il bagliore è disegnato dall'item del canvas oltre i suoi bordi**, sotto gli item trasparenti
+  che lo seguono. Si esaurisce entro l'altezza della riga del luogo fissata in alto, così quando
+  l'item del canvas esce dalla lista la parte che se ne va con lui è già sotto la superficie di
+  quella riga.
+- **DESIGN §4 prometteva un pallino dal primo giorno**; il codice disegnava una riga di 2 dp. Il
+  documento ora dice il disco che c'è.
+- **Il gesto sul grafico non passa al pager fra i luoghi**: un trascinamento orizzontale sul
+  grafico scorre la fascia, come già faceva il trascinamento sulla fascia stessa.
+
+### Come è stato verificato
+
+- `DaylightRibbonTest` (nuovo): stop monotoni anche con fasi sovrapposte, il nucleo pieno delle
+  fasi lunghe, la dissolvenza della notte che lascia stare il giorno. `RainChartTest`: la
+  finestra delle ore in vista (a riposo e a metà scroll, celle tagliate comprese) e l'ora sotto
+  il dito, mai fuori dai due capi.
+- Resa verificata con uno screenshot Robolectric temporaneo (grafica nativa, `View.draw` su una
+  bitmap: `captureToImage` va in timeout sotto Robolectric) al tramonto chiaro, all'ora d'oro,
+  a notte in tema scuro e a metà rivelazione; il test non è nel repo. Due ritocchi dopo averle
+  guardate: la finestra da `surfaceContainerHighest` a `surfaceContainerHigh` (troppo pesante),
+  il passato del nastro dal 50 al 60% (spento).
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 8 test nuovi
+  (481 in `:app` debug), lint a zero errori e nessun avviso sui file toccati. Maven Central ha
+  risposto 429 a più riprese in questa sessione: i giri rossi erano download (compreso il jar di
+  Robolectric per `:core:data`), rifatti finché verdi.
+- **Da fare sul dispositivo**: il bagliore quando il canvas esce dalla lista (non deve vedersi il
+  taglio), il trascinamento sul grafico dentro il pager, l'animazione alla prima apertura.
+
+## La schermata Oggi, review grafica, blocchi 4–7 e il resto (committente, 23 set 2026)
+
+Richiesta: «Fai il blocco 4-7. Così è tutto completato? Anche gli effetti sono suggeriti da
+te?». Risposta data prima di cominciare: il 4–7 della tabella copriva tre dei quattro effetti
+proposti (sole e luna, barra compatta, curva della temperatura) e lasciava fuori il pallino
+«adesso» sulla barra di Oggi, il giorno a mezzanotte nella fascia e il filo con «tra N min»
+nell'agenda. Fatti anche quelli, così tutta la review è implementata. Mandato invariato:
+dove l'estetica e DESIGN.md litigano, si cambia DESIGN.md.
+
+### Cosa è cambiato
+
+- **La temperatura principale** (DESIGN §8.1c): gradi interi e «°» a 64sp, i decimi al 55%
+  sulla stessa linea di base (`heroTemperatureText`); la condizione a `titleLarge`; «Percepiti»
+  solo quando differisce di almeno 1°.
+- **Le barre dei Dettagli** (§8.6, §2.3): ogni grandezza ha la sua scala e la sua tinta — UV
+  caldo, umidità nell'acqua della pioggia, aria viola, pollini verdi, pressione divergente
+  attorno a 1013 — disegnata intera al 40%, piena fino al valore, con le soglie come tagli e un
+  disco sul valore. Nuove anche le barre di **pressione** e **pollini** (quattro gradini).
+  Quattro rampe nuove in `ChiaroColors`, carta e vivid; le vivid generate da
+  `tools/gen_vivid.py`, che ora le conosce.
+- **Il sole e la luna nel cielo** (§8.1c, `SkyBodiesLayer`): nella loro posizione vera, di
+  traverso per azimut visto guardando l'equatore e in su per altezza; la luna con la sua fase.
+  Il canvas tiene per loro una fascia di almeno 56 dp fra la riga del luogo e la temperatura
+  (`SkyColumn`).
+- **La barra fissata in alto resta cielo** (§8.1b): scorrendo prende il colore del bordo alto
+  del canvas sotto lo scrim invece della superficie, inchiostro bianco sempre; quando la
+  temperatura è sparita porta icona e gradi, e la data si accorcia al giorno breve.
+- **La curva della temperatura nella fascia oraria** (§8.3, `StripCurve`): ogni cella disegna
+  il suo tratto di una curva continua, 2 dp per grado; la cella passa da 112 a 144 dp.
+- **Mezzanotte ha un nome** nella fascia (il giorno breve in `primary` al posto di «00»).
+- **Il pallino «adesso» sulla barra di Oggi** nella settimana (§8.5).
+- **Il resto della giornata** ha un filo fra le icone e «tra N min» sotto la prima riga (§8.4).
+
+### Decisioni e deviazioni
+
+- **I decimi sulla linea di base, non in alto.** La prima resa li alzava all'altezza delle
+  maiuscole: la virgola diventava un apostrofo («20’8»). Visto sullo screenshot e cambiato.
+- **La fascia del cielo ha un minimo, e il canvas cresce per pagarlo.** Con la data del luogo
+  e la condizione più grande restavano 14 dp fra la riga e l'eroe: nessuno spazio per un sole.
+  `SkyColumn` misura l'eroe e garantisce 56 dp; il canvas si allunga di circa 25 dp sul
+  telefono, di più quando c'è la frase. Il sole è l'effetto, e un effetto che non ha posto non
+  c'è; lo scheletro resta sul pavimento dei 280 dp e quindi può essere più corto del canvas
+  vero di quella fascia.
+- **L'alone del sole può uscire di 14 dp dalla sua fascia**, non di più: a quella distanza è
+  pochi punti percentuali di bianco sotto lo scrim, e non tocca il contrasto del testo.
+- **UV caldo, non la scala OMS.** Verde-giallo-arancio-rosso-viola è un arcobaleno (§9.1) e le
+  sue fasce si confondono sotto deuteranopia come quelle dei verdetti; la parola sotto il numero
+  porta la fascia.
+- **La barra non passa più alla superficie.** La decisione del 18 set (superficie e inchiostro
+  del tema) era una risposta alle icone bianche sul contenuto chiaro; un fondo di cielo
+  scrimmato risolve lo stesso problema senza il salto da bianco su cielo a nero su carta.
+- **Nella barra compatta i gradi interi**, come ogni temperatura sotto l'eroe: con i decimi il
+  nome del luogo perdeva metà del suo spazio.
+- **La curva a scala fissa**, non adattata a minimo e massimo delle 24 ore (§9.1): comprime solo
+  una giornata che non ci sta.
+- **Il pallino di Oggi sulla scala della settimana**, anche fuori dal tratto min–max del giorno:
+  una mattina più fredda della minima prevista sta onestamente a sinistra.
+
+### Come è stato verificato
+
+- Test nuovi: `SkyBodiesTest` (lati per emisfero, altezza, lato illuminato della luna, forma della
+  falce; Robolectric per il `Path`), `StripCurveTest` (scala fissa, compressione, punto sulla
+  curva), `HeroTemperatureTextTest` (solo i decimi sono piccoli, anche col segno meno), e in
+  `PaletteContrastTest` / `PaletteDocTest` le quattro rampe nuove: monotone quelle sequenziali,
+  col centro più chiaro in chiaro e più scuro in scuro quella della pressione, stampate in
+  DESIGN §2.3 e §2.5 byte per byte.
+- `tools/gen_vivid.py` rigenerato: i valori vivid già esistenti escono identici, le quattro rampe
+  nuove sono quelle stampate.
+- Resa della schermata **vera** (`ContentState` con uno stato costruito da `TodayStateBuilder`)
+  con Robolectric: mattina, tramonto, notte in tema scuro, pagina scorsa con la barra compatta. Il
+  test temporaneo non è nel repo. Tre ritocchi dopo averle guardate: i decimi (sopra), la fascia
+  minima del cielo (sopra), la barra compatta che mandava a capo la data (ora giorno breve e gradi
+  interi); in più le tracce a riposo dal 30 al 40% e il filo dell'agenda meno spezzato.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 497 test in
+  `:app` debug (16 nuovi), lint a zero errori e nessun avviso sui file toccati.
+- **Da fare sul dispositivo**: la barra compatta durante uno scroll veloce, il sole all'alba e al
+  tramonto (azimut agli estremi), la luna di giorno, la curva nella fascia aperta di un giorno
+  della settimana.
+
+## La schermata Cielo, review grafica (committente, 23 set 2026)
+
+Richiesta: «fai un review anche della schermata Cielo sempre con lo stesso obiettivo di
+migliorare e rendere anche wow in qualche aspetto la schermata. Ottimizza e migliora layout e
+testi dove necessario». Stesso mandato della schermata Oggi: dove l'estetica e DESIGN.md
+litigano, si cambia DESIGN.md.
+
+### La review
+
+Resa della schermata vera (Robolectric, pomeriggio sereno, sera mista con luna al 92%, notte di
+luna nuova in tema scuro) prima di toccare niente. Tre cose:
+
+1. **L'eroe non era notturno.** «Stanotte» era una card nel colore del verdetto con cinque righe
+   di testo: corretta, e la cosa meno notturna di una schermata sulla notte. Il dato per
+   disegnarla c'era tutto (la notte, la finestra, la luna, le nuvole ora per ora).
+2. **«Domani ·» su ogni riga.** La sera tutte le righe dei momenti cominciavano con la stessa
+   parola, e l'ora — quello che si cerca — finiva a metà riga.
+3. **«In arrivo» ripeteva la stessa frase.** Cinque righe di sciami, ognuna chiusa da «La
+   previsione non arriva ancora così lontano», ognuna andata a capo.
+
+### Cosa è cambiato
+
+- **`TonightCard` è la notte** (DESIGN §8.8b, `TonightSky.kt`): fondo della banda notturna del
+  canvas sollevata dalla luna, verdetto con segno e parola nella coppia scura, la luna nella sua
+  fase nell'angolo, e la **striscia della notte** — ore di luna argentate, nuvole ora per ora
+  appese dall'alto, stelle dove è sereno, finestra incorniciata nell'inchiostro del verdetto con
+  i suoi orari, tratto più sereno sottolineato.
+- **`Tonight` porta le ore della notte** (`NightHour`, dalla previsione) e l'elongazione della
+  luna; `SkyStateBuilder.nightHours` le ritaglia.
+- **I momenti sotto «Oggi» e «Domani»**, senza la parola ripetuta sulle righe; il prossimo dice
+  fra quanto.
+- **Gli eventi contano i giorni** («tra 15 giorni»), e «troppo lontano» è una nota sola sotto la
+  sezione.
+- **`SkyContent` prende funzioni, non il view model** (`SkyActions`): la schermata si può
+  disegnare in un test o in un'anteprima.
+- `ChiaroTheme.nightColors`: la palette semantica scura nel vestito del lettore, per la card.
+
+### Decisioni e deviazioni
+
+- **Il verdetto nella coppia scura anche in tema chiaro.** La card è sempre notte, come il canvas
+  (§3.2): i colori seguono il fondo, non il tema. È la stessa eccezione che il cielo ha sempre avuto.
+- **La striscia non dice niente di nuovo**, di proposito: ogni segno è una frase della card, e le
+  frasi restano. Per questo è muta per TalkBack.
+- **Stelle fisse, non animate**: nessuna particella (§3.5); la loro luminosità segue le nuvole
+  dell'ora e la luna, quindi anche le stelle sono il dato.
+- **La luna nel badge non ha un'ombra disegnata a mano**: è lo stesso `moonLitPath` del canvas di
+  Oggi, così le due lune non possono disegnare fasi diverse.
+- **«Troppo lontano» resta detto**, una volta: le righe senza verdetto non portano un chip, e la
+  nota sotto la sezione dice perché.
+
+### Come è stato verificato
+
+- `TonightNightTest` (nuovo): ore di luna lette dalla finestra contro la notte, frazione sulla
+  striscia, nuvola dell'istante, ore della notte che includono quella a cavallo del crepuscolo.
+- Resa Robolectric prima e dopo, sui tre scenari; dopo averla guardata: nuvole sfumate sotto (erano
+  blocchi), striscia ritagliata sugli angoli arrotondati.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 503 test in
+  `:app` debug, lint a zero errori.
+- **Da fare sul dispositivo**: la card in una notte di luna che sorge a metà (cornice e argento
+  affiancati), il «tra N» sul prossimo momento, il conteggio dei giorni a cavallo di mezzanotte.
+
+## La schermata Avvisi, review grafica (committente, 23 set 2026)
+
+Richiesta: «Ora fai una review con gli stessi obiettivi anche per la schermata Avvisi». Stesso
+mandato: dove l'estetica e DESIGN.md litigano, si cambia DESIGN.md.
+
+### La review
+
+Resa della schermata vera prima di toccarla (Robolectric: nessuna allerta con due regole, allerta
+arancione senza regole, allerta gialla in tema scuro). Quel che mostrava:
+
+1. **Un muro di testo.** Quattro interruttori «pronti» con descrizioni di tre e quattro righe, in
+   cui il «quando» e il «quanto spesso» erano la coda della frase; nessun segno per distinguerli
+   prima di leggerli.
+2. **«Allerte ufficiali» due volte**: titolo del gruppo e titolo dell'interruttore, con la soglia
+   «Avvisami da» come terza riga sciolta.
+3. **L'assenza detta come una nota**: «Nessuna allerta per Nodo Idraulico di Milano» in
+   `titleSmall` su un riquadro piccolo, in una schermata dove quella è la risposta che si cercava.
+4. **Le idee come altre cinque righe** in fondo, indistinguibili da impostazioni.
+5. **La guida era rimasta indietro**: «Qui vivono due specie» e «Tre interruttori», quando i gruppi
+   sono tre e gli interruttori quattro (il riepilogo della sera, 21 set, non era mai entrato).
+
+### Cosa è cambiato
+
+- **«Quando arrivano»** (DESIGN §8.9b): le 24 ore con le finestre degli avvisi a orario, nel
+  colore del cielo della loro ora, i loro disegni sopra, l'«adesso» e le ore sotto; e in parole
+  quelli che arrivano a qualunque ora.
+- **Gruppi arrotondati** per l'interruttore delle allerte (con la sua soglia dentro) e per i
+  quattro pronti; ogni riga con il suo disegno (sbiadito quando è spenta), una frase su cosa manda
+  e, a parte, nell'accento, quando e quanto spesso. Testi riscritti: `alert_*_desc` accorciati,
+  `alert_*_when` e `warning_switch_when` nuovi, l'interruttore si chiama «Avvisami delle allerte».
+- **Il «tutto tranquillo»** è una card con segno, «Nessuna allerta», la zona e l'ora del bollettino.
+- **Le regole** hanno il disegno di quel che guardano; **le idee** sono card in una riga orizzontale.
+- **La guida** dice tre gruppi e quattro interruttori; «Pronti» diventa «Pronti all'uso», come nella
+  guida.
+- `AlertsContent` prende funzioni (`AlertsActions`), non il view model, come Cielo.
+
+### Decisioni e deviazioni
+
+- **Le finestre sono disegnate, non gli avvisi «a qualunque ora»**: maltempo, pioggia e regole non
+  hanno una finestra, e disegnarli su tutta la striscia sarebbe una barra piena che non dice niente.
+  Sono nominati in una riga sotto.
+- **Il giallo del bollettino è l'inchiostro in tema scuro**: il contenitore giallo scuro spariva sulla
+  traccia. È la stessa coppia di §2.3, solo scelta per il fondo.
+- **Nessun colore per l'assenza**: il segno del «tutto tranquillo» è in `primary`, non nel verde di un
+  verdetto; il fondo resta neutro (§8.13).
+- **Il chip «Arancione» andava a capo** dentro sé stesso al rientro del testo delle righe: la soglia è
+  un `FlowRow` dal margine del gruppo.
+- **`warning_card_none` tolta**: la frase con la zona dentro è diventata titolo e riga separati.
+
+### Come è stato verificato
+
+- Resa Robolectric prima e dopo, tre scenari, chiaro e scuro; dopo averla guardata: soglia in flow,
+  disegno della sera distinto da quello del mattino (erano due orizzonti quasi uguali), descrizioni
+  delle idee su quattro righe, giallo del bollettino in tema scuro.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 503 test in
+  `:app` debug (nessuno nuovo: il giro cambia disegno e testi, non logica), lint a zero errori.
+- **Da fare sul dispositivo**: la striscia «Quando arrivano» con l'ora vera, il tocco sulle card
+  delle idee e sul «tutto tranquillo», TalkBack sulla striscia.
+
+## Il Diario, review grafica (committente, 23 set 2026)
+
+Richiesta: «Passa a Diario. Questa è molto anonima come schermata, fai un bel review come hai fatto
+per le altre». Stesso mandato: dove l'estetica e DESIGN.md litigano, si cambia DESIGN.md.
+
+### La review
+
+Resa della schermata vera (Robolectric, due giorni di voci di ogni categoria, deriva di sette giorni
+con un gelo). Anonima davvero, e per ragioni precise:
+
+1. **Tutte le voci uguali**: silhouette grigie da 24dp, testo grigio, nessuna gerarchia fra un'allerta
+   arancione e un aggiornamento mancato.
+2. **I numeri non dicevano dove sta la previsione adesso**: «pioggia 70% → 30%» tutto nello stesso
+   inchiostro.
+3. **La card della deriva teneva la risposta in fondo**: la frase che dice se la settimana migliora
+   era l'ultima riga, sotto un grafico che non diceva da che parte si legge il tempo.
+4. **Il cielo osservato era una frase** («Bello, nuvole 8%») dove il Cielo usa un chip.
+5. **Il motivo di un aggiornamento fallito ripeteva il titolo**: «Un aggiornamento non è arrivato» /
+   «Aggiornamento non riuscito: sei offline».
+
+### Cosa è cambiato
+
+- **Voci su un filo** (DESIGN §8.10): badge da 40dp nel tono della categoria o con il disegno meteo
+  per il cielo e la giornata chiusa, filo fra i badge dello stesso giorno, testo a `bodyLarge`.
+- **I numeri**: il valore di prima quieto, quello di adesso in grassetto (la pioggia sulla sua rampa
+  d'inchiostro); stesse stringhe del «cosa è cambiato» di Oggi, con segnaposto.
+- **Il verdetto del cielo osservato è il `VerdictChip`**.
+- **Intestazioni dei giorni fisse** con la data intera accanto a «Oggi»/«Ieri» e il numero di voci.
+- **Deriva**: frase in testa, chip con il disegno della grandezza, asse del tempo ai due capi, celle
+  arrotondate, la riga di cui parla la frase evidenziata.
+- **«Com'è andata la previsione»** (nuova): scarto medio delle massime, pioggia data nei giorni di
+  pioggia contro gli altri, e una colonna per giorno con la pioggia data e il disegno di com'è andata.
+- **Testi**: «Il telefono era offline» / «Il servizio meteo non ha risposto» / «Il motivo non è
+  chiaro» per i fallimenti; il bollettino rimasto valido senza l'anno quando è di quest'anno.
+
+### Decisioni e deviazioni
+
+- **Colore per categoria, non per giudizio.** §8.10 voleva le silhouette tutte in `onSurfaceVariant`;
+  il colore ora distingue la categoria (il glifo resta), e una revisione è dello stesso colore che sia
+  migliorata o peggiorata: il giudizio sta nella frase, come la deriva ha sempre voluto.
+- **Medie, non un punteggio.** Una probabilità non è giusta o sbagliata in un giorno solo; separare la
+  pioggia data nei giorni bagnati da quella nei giorni asciutti è la misura onesta che due settimane di
+  dati possono dare. Da tre giornate chiuse in su, le ultime dieci.
+- **Scarto delle massime in °F convertito come differenza** (× 9/5, senza il +32).
+
+### Come è stato verificato
+
+- `OutcomeStatsTest` (nuovo): scarto medio in valore assoluto, medie separate per giorni di pioggia e
+  asciutti, nessuna media «bagnata» in una settimana senza pioggia.
+- Resa Robolectric prima e dopo, chiaro e scuro.
+- Il test ha preso un dettaglio: `kotlin.math.round` arrotonda la metà al pari (70,5 → 70), mentre
+  ogni percentuale dell'app arrotonda la metà in su; ora `roundToInt`.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 506 test in `:app`
+  debug, lint a zero errori e nessun avviso sui file toccati.
+- **Da fare sul dispositivo**: le intestazioni fisse durante lo scroll, il tocco sulla deriva che apre
+  la tabella, la card della previsione con dati veri di più giorni.
+
+## Le Impostazioni, review grafica e la nota privacy (committente, 23 set 2026)
+
+Richiesta: «Fai review anche della schermata Settings. Oltre ai soliti obiettivi volevo anche
+cambiare la sezione privacy: mi sembra eccessivamente verbosa, vorrei una nota semplice e veritiera
+della filosofia di privacy dell'app».
+
+### La review
+
+Resa della schermata (Robolectric, paper chiaro e vivid scuro). Corretta e piatta: righe Material
+sotto intestazioni blu, la guida come prima riga fra le altre, undici righe di «Informazioni» di cui
+la privacy era una, con un paragrafo di cinque righe.
+
+### Cosa è cambiato (DESIGN §8.15)
+
+- La guida è una card in testa; ogni gruppo sta su un fondo arrotondato come in Avvisi.
+- **L'anteprima dell'aspetto**: una fetta di cielo nella palette scelta, all'ora d'oro, con temperatura
+  nel carattere scelto, condizione nel set di icone scelto, e sotto un verdetto, una pioggia e una barra
+  di temperatura nei colori della palette. Cambia a ogni scelta.
+- **Privacy**: gruppo a sé, card con lucchetto, una riga («Niente account, niente pubblicità, niente
+  tracciamento.») e tre fatti in due frasi.
+- I riconoscimenti in un gruppo loro, «Dati e riconoscimenti»; il ripristino un bottone in fondo.
+- `SettingsList` prende funzioni (`SettingsActions`) invece del view model.
+
+### La nota privacy: cosa dice e perché
+
+Verificato sul codice prima di scriverla: le uniche chiamate di rete sono Open-Meteo (meteo, aria,
+ricerca dei luoghi) e il download del bollettino della Protezione Civile dal mirror su GitHub, che non
+manda niente dell'utente; la posizione esce da `LocationProvider` già arrotondata a due decimali; non
+c'è account, SDK di analytics né identificativo pubblicitario.
+
+- **«Chiaro non ha un server suo»** è la frase che regge le altre: tutto quel che l'app tiene è sul
+  telefono per costruzione, non per promessa.
+- **Il backup è fuori dalla nota**, di proposito: lo fa Android se il lettore l'ha acceso, cifrato col
+  suo PIN, e copre luoghi e impostazioni ma non il diario (21 set). Metterlo in una nota di due frasi la
+  rendeva una nota sul backup; resta spiegato nella guida.
+- **«Nessun identificativo», non «anonimo»**: ogni richiesta di rete porta un indirizzo IP, e una nota
+  veritiera non promette più di quel che l'app controlla.
+- **Il geocoder di Android** (che trova il nome del posto della posizione) resta nella guida, dove è già
+  detto: è il sistema, non Chiaro, a decidere dove chiedere.
+
+### Come è stato verificato
+
+- Resa Robolectric prima e dopo; dopo averla guardata, l'anteprima spostata a 3° (a 5° il cielo era un
+  marroncino) e la nota accorciata di una riga.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` verde, 506 test in `:app`
+  debug, lint a zero errori (l'unico avviso sul file, `UseKtx` su `Uri.parse`, c'era già).
+- **Da fare sul dispositivo**: l'anteprima mentre si cambiano palette, carattere e icone.
+
+## Il widget «In parole» e le sue impostazioni, review grafica (committente, 23 set 2026)
+
+Richiesta: «Ora fai una review con gli stessi obiettivi per il widget "In parole" e le relative
+impostazioni. Tieni in considerazione il ridimensionamento e il re-layout».
+
+### La review
+
+Resa del widget con la composizione Glance vera (`GlanceRemoteViews.compose` → `RemoteViews.apply`
+in Robolectric) su una matrice di concessioni del launcher: 2×1, 3×1, 4×1, 4×1 alta, 5×1, 2×2, 3×2,
+4×2, 5×2, 2×3, 3×3, 4×3, fresca, vecchia, con allerta e con l'icona. Le quattro forme reggono e le
+misure dei due passaggi sul dispositivo tengono; il difetto è in altezza: **da tre righe in su la
+card non aveva niente da fare con lo spazio**. Il numero è al suo tetto (56 e 64sp, per ragioni già
+scritte) e l'aria fra luogo e blocco cresceva e basta: un 3×3 era metà vuoto. La descrizione del
+provider prometteva ancora «the next hours as figures under it», mai fatte.
+
+La schermata delle impostazioni: una lista piatta di radio sotto etichette blu, senza vedere la
+card, con due note sbagliate per questa card (l'allerta «come pastiglia», che qui è una parola; la
+massima e minima «al bordo opposto»).
+
+### Cosa è cambiato
+
+- **«Più tardi»** (DESIGN §5): da tre righe, le prossime ore in righe di testo — ora, temperatura,
+  pioggia se ≥ 30%, il cielo in una parola — ogni tre ore sull'orologio, dalla prima almeno 90
+  minuti avanti. Pagata per ultima, a righe intere, da 2 a 4; il pannello tiene 16dp d'aria; la
+  parola cade dove resterebbe sotto 84dp (2 celle). Interruttore per widget (`showLater`, acceso):
+  cambia qualcosa solo dove c'era aria vuota.
+- **`TextWidgetContent`** estratta da `provideGlance`: la stessa funzione disegna la card del
+  launcher e l'anteprima.
+- **Impostazioni** (DESIGN §8.16): anteprima vera con le dimensioni in chip e una riga per forma
+  più il suggerimento di ridimensionare; gruppi arrotondati come in Impostazioni; sfondi con il
+  loro campione, colori in una striscia di campioni; opacità in una riga; «Più tardi» e l'icona in
+  fondo ai contenuti, la famiglia di icone subito dopo.
+- Testi: nota dell'icona accorciata; note dedicate per allerta e massima/minima sulla card
+  testuale; descrizione del selettore che dice le prossime ore; commento del provider corretto.
+
+### Decisioni e deviazioni
+
+- **Parole e numeri, non glifi, nella tabella.** Il widget «Le prossime ore» ha già la striscia
+  disegnata; qui la stessa informazione è detta: è la premessa della card.
+- **Ore sul passo dell'orologio (18, 21, 00), non «fra 3, 6, 9 ore»**: si leggono ad alta voce. Il
+  passo è sull'istante, non sull'etichetta, così la notte del cambio d'ora non sposta una riga.
+- **Descrizione del cielo per ora, non per fascia («Stasera»)**: una fascia vuole un'aggregazione
+  dei codici che il mapper fa solo per il giorno, con regole misurate (Fase 13b/26); rifarla qui
+  in piccolo sarebbe stato un modo nuovo di sbagliare il cielo. L'ora ha il suo codice già
+  riparato.
+- **L'anteprima è la composizione vera, non un rifacimento in Compose** come quella dell'Arco:
+  `GlanceRemoteViews` (API sperimentale di Glance 1.1) compone per qualsiasi dimensione. Se
+  un giorno smettesse di funzionare, l'anteprima semplicemente non si disegna (`runCatching`).
+- **`BackgroundSection` resta una sola** per i due schermi (`WidgetConfigChoicesTest`): la nuova
+  versione con i campioni serve anche l'Arco, che mantiene il suo impianto piatto.
+
+### Come è stato verificato
+
+- Resa Robolectric del widget (matrice sopra) e della schermata impostazioni, chiara e scura, prima
+  e dopo; dopo averla guardata: la parola della tabella tolta sotto 84dp (stampava «Poc…») e le
+  colonne ristrette di pochi dp perché a 3 celle, con pioggia e icona, la parola resti.
+- `TextLaterTest`, `LaterHoursTest`: nessuna tabella sulle card di riferimento a una e due righe,
+  almeno due righe su tutte quelle a tre, il resto del piano identico con l'interruttore acceso o
+  spento, la tabella dentro la card, righe intere, ore sull'orologio, un'ora mancante è una riga
+  mancante.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+- **Da fare sul dispositivo**: l'anteprima nella schermata del launcher (tocco inghiottito,
+  angoli), la card a 3×3 e 4×3 sulla schermata Home.
+
+## Gli altri widget e le loro impostazioni, review grafica (committente, 23 set 2026)
+
+Richiesta: «Fai una review anche degli altri widget e uniforma le relative schermate di
+impostazione come questa appena fatta».
+
+### La review
+
+Ogni ricevitore ha ora la sua `*WidgetContent` (come «In parole»), e con quella la resa vera di
+Adesso, Le prossime ore, Momenti del cielo e Arco a 13 concessioni, da 1×1 a 4×4. Cosa è emerso:
+
+- **Adesso**, forma alta: da tre righe l'icona si ferma a 104dp e il numero resta a 34sp; un 4×3
+  era un campo blu con un'icona in un angolo e tre righe in fondo.
+- **Le prossime ore**: da tre righe l'icona cresceva fino a 104dp nella riga accanto alle parole e
+  la frase, stretta a 99dp, diventava «Ombrello / verso le 20:…» con cento dp vuoti sotto. Anche
+  a 4×2 senza pioggia l'icona era 91dp.
+- **Momenti del cielo** e **Arco** usano già l'altezza (più momenti, più agenda, la settimana):
+  invariati. Il blocco del Cielo centrato nelle card alte è una scelta del committente (4 set).
+- Le forme sotto i minimi dei provider (Adesso 1×1, Le prossime ore a una riga, Cielo 2×1) sono
+  irraggiungibili e non sono state toccate.
+
+### Cosa è cambiato
+
+- **Adesso**: `nowTallTemperatureSp` — il numero prende quello che l'icona non può usare, da 34
+  a 56sp, con il limite di larghezza. Il 2×2 di riferimento non cambia.
+- **Le prossime ore**: tetto dell'icona a 80dp (`TodayHeroIconMax`); **i prossimi giorni** sotto
+  le ore da tre righe (`todayShowDays`), stessa griglia delle ore, oggi per primo; interruttore
+  «I prossimi giorni» (lo stesso campo `showLater` di «Più tardi»).
+- **Impostazioni**: `WidgetConfigKit.kt` con anteprima vera per tutti i tipi, chip per tipo
+  (`previewSizes`, legati ai minimi dei provider), riga per forma (`formNote`), gruppi, righe,
+  opacità, «Fatto». La schermata dell'Arco rifatta con gli stessi gruppi e l'anteprima vera;
+  `ArcPreview.kt` (536 righe di copia in Compose) eliminato, come `TextWidgetPreview.kt`,
+  assorbito nel kit.
+- Testi: note dell'allerta accorciate (Adesso/Le prossime ore, Arco), «Ripristina questo widget»,
+  una riga per forma per ogni widget.
+
+### Decisioni e deviazioni
+
+- **80dp e non 76** per l'icona di Le prossime ore: 76 è il 4×2 con la pioggia e non si muove;
+  80 è il blocco di parole accanto (74dp) più il margine proprio del disegno. Il test che fissava
+  90,68 e 104 ora fissa 80, con la ragione.
+- **I giorni partono da oggi**, contro la prima idea (da domani, perché la massima e minima di oggi
+  sono dell'eroe): con sei giorni sotto sette ore le due righe non erano più una griglia.
+- **Un interruttore per due cose diverse** (`showLater`): è «il rango in più di una card alta» su
+  entrambe le card, e ogni schermata lo nomina per quello che fa lì.
+- **Nessun cambio a Cielo e Arco**, oltre alla schermata: la resa non ha trovato difetti che
+  non fossero scelte già registrate.
+
+### Come è stato verificato
+
+- Resa Robolectric dei quattro widget (13 dimensioni ciascuno) prima e dopo, e delle due schermate
+  (chiara e scura) con l'anteprima di ogni tipo.
+- `NowWidgetLayoutTest` (il numero cresce solo col surplus, l'icona resta al tetto, limite di
+  larghezza), `TodayWidgetLayoutTest` (tetto 80, giorni assenti a due righe e presenti a tre, tutto
+  dentro la card), `WidgetPreviewSizesTest` (ogni chip rispetta i minimi del provider).
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+- **Da fare sul dispositivo**: le anteprime nelle due schermate, Adesso e Le prossime ore a 3×3 e
+  4×3 sulla Home.
+
+## L'icona dell'app, ridisegnata (committente, 23 set 2026)
+
+Richiesta: «prova a ridisegnare da zero l'icona dell'app. Prima di renderla definitiva fammi un
+preview che la valuto»; scelta: «Vai con la D che è anche la tua consigliata».
+
+### Il percorso
+
+- **Diagnosi**: l'icona era una falce stellata sopra due onde, cioè la notte, per un'app che si
+  chiama Chiaro ed è l'edizione diurna; a 36px le stelle erano puntini.
+- **Candidati disegnati come veri vector drawable** (sfondo, primo piano, monocromo) e resi da
+  Robolectric, poi mascherati (cerchio, squircle, quadrato arrotondato), a tema chiaro e scuro, a
+  64/48/36px su sfondo chiaro e scuro. Sei tentativi, due scartati da me prima dell'anteprima:
+  il tramonto sul mare (generico) e il nastro a pillola (in monocromo un interruttore); la prima
+  curva del sole era una cupola, la seconda una «A».
+- **Scelta: D, «il giorno in un anello»** (DESIGN §3.8).
+
+### Cosa è cambiato
+
+- `ic_launcher_foreground.xml` ridisegnato; nuovo `ic_launcher_monochrome.xml` per le icone a
+  tema (prima il monocromo riusava il primo piano); fondo `#F7F4EE`.
+- Il rendering finale coincide pixel per pixel con l'anteprima approvata.
+
+### Da fare sul dispositivo
+
+- L'icona sulla Home con due o tre launcher (maschere diverse) e a tema; la schermata di avvio di
+  Android 12+, che usa l'icona sul fondo della finestra.
+
+## Le notifiche, review dei messaggi e grafica nelle espanse (committente, 23 set 2026)
+
+Richiesta: «Fai una review finale anche dei messaggi delle notifiche (nelle due varianti chiuse
+ed espanse). … se pensi sia un'aggiunta che dà valore all'app e se è possibile, verifica se
+aggiungere anche della grafica nei messaggi delle notifiche estese (solo dove veramente aggiunge
+valore)».
+
+### La review
+
+Resa delle sette notifiche con i template del sistema (Robolectric: `recoverBuilder` →
+`createContentView`/`createBigContentView` → `apply`), chiare e scure. I testi reggono; tre
+difetti veri:
+
+- il **riepilogo del mattino** diceva quanto è probabile la pioggia e mai quando;
+- la **notte** del riepilogo serale era «Stanotte fino a 9°», che si legge male;
+- l'**avviso personale** stampava «— valore 21.4»: numero nudo, punto decimale del codice, e la
+  condizione in minuscolo come riga a sé.
+
+### Cosa è cambiato (DESIGN §8.17)
+
+- **Grafica** nelle espanse di: pioggia e maltempo (le prossime 12 ore di pioggia, la finestra
+  dell'avviso illuminata), riepiloghi (la giornata: temperatura come curva sulla scala del mondo,
+  pioggia sotto, notte in tinta), allerta (la griglia dei livelli). Niente grafica per il cielo
+  e per gli avvisi personali: non aggiungerebbe niente.
+- Riga «Pioggia dalle … alle …, fino a …%» nel riepilogo del mattino, subito dopo «Adesso».
+- «Stanotte minima …», lettura degli avvisi personali con unità e virgola, frase maiuscola.
+- Colore d'accento del marchio e icona di stato ridisegnata come l'anello dell'icona.
+
+### Decisioni e deviazioni
+
+- **Vista espansa personalizzata + BigTextStyle insieme**: la vista personalizzata mostra il
+  grafico e cinque righe; il testo lungo resta negli extra per orologio, auto, schermata di
+  blocco e test. Su Android 12+ il sistema la decora comunque (intestazione, icona, ora).
+- **Il grafico è dipinto per il tema del sistema al momento dell'invio**: se il lettore cambia
+  tema dopo, l'immagine resta quella; il testo intorno segue il tema. Un compromesso accettato:
+  una notifica vive ore, non giorni, e i colori scelti reggono su entrambi i fondi.
+- **Il messaggio dell'avviso personale non è toccato**: è testo del lettore, e i segnaposto sono
+  interpolati in `:core:domain`, puro Kotlin senza locale (debito ereditato da tweather,
+  UPSTREAM.md). Corretta solo la riga «Perché è scattata», che è nostra.
+
+### Come è stato verificato
+
+- Resa prima e dopo, chiara e scura; dopo averla guardata: la curva non si vedeva (colore base
+  trasparente sotto lo shader), il riempimento era slavato (ora sfuma verso il basso), la notte
+  grigia sembrava «dati mancanti» (ora tinta del primario), altezze ridotte per il tetto di 256dp.
+- `NotificationChartsTest` (quando si disegna e quando no, ore passate escluse, riga della
+  pioggia solo se piove, tetto dei 256dp), `AlertNotifierTest` (immagine su tutti i tipi con
+  testo completo, pioggia di oggi dopo «Adesso», accento), `OfficialWarningNotifierTest`
+  (griglia), `RuleNotifierTest` (unità e virgola).
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+- **Da fare sul dispositivo**: le espanse su due o tre launcher/ROM, chiare e scure; l'icona di
+  stato nella barra.
+
+## Le notifiche: quali, e quando (committente, 23 set 2026)
+
+Richiesta: «fai una review anche su queste e verifica che quelle che ci sono sono corrette e se
+ne andrebbero aggiunte o tolte altre».
+
+### La review (motori, worker, promemoria, allerte, regole, idee)
+
+Difetti trovati, tutti riprodotti in un test prima della correzione:
+
+1. **Pioggia doppia dopo il temporale**: il temporale zittiva la pioggia solo nel giro in cui
+   veniva notificato; un'ora dopo, con l'impronta bruciata, il suo 90% mandava «Ombrello verso
+   le 16» sullo stesso evento.
+2. **Una pioggia a cavallo di mezzogiorno erano due avvisi** (impronta per mezza giornata
+   dell'ora trovata, non dell'inizio della pioggia), e la pioggia già in corso veniva annunciata
+   «in arrivo».
+3. **Un temporale a cavallo di mezzanotte veniva riannunciato alle 00:30** (l'ora dopo
+   mezzanotte ha la data di domani), con importanza alta: sveglia.
+4. **Allerta ufficiale ripetuta ogni pomeriggio**: ogni bollettino ha un id nuovo, quindi
+   un'arancione di due giorni arrivava due volte senza nulla di nuovo.
+5. **Regole sui fatti del giorno due volte al giorno, la prima a mezzanotte** («Oggi UV fino a
+   8» alle 00:05 e alle 12).
+6. **Nessun rispetto della notte**: un avviso di pioggia alle 03:00 per le 07:00 suonava.
+7. **Idea «Una notte senza pioggia»** scattava anche alle 9 del mattino dicendo «Stanotte…».
+8. **Numeri nei messaggi delle regole col punto decimale** anche in italiano («21.4°»).
+9. Riepilogo del mattino: la riga «oggi» presa come prima del report e non per data (difensivo).
+
+Aggiunte e rimozioni: **nessuna notifica da togliere** — ognuna risponde a una domanda che le
+altre non fanno. **Un'idea in più**, «Caldo forte», il gemello estivo di «Ghiaccio domattina».
+Valutate e scartate: vento forte (l'orario del fornitore non ha vento, solo il valore di
+adesso), «smette di piovere» (lo coprono le idee «Bici» e «Corsa», che cercano finestre
+asciutte), avvisi sul cambio di previsione (il Diario li registra; come notifica sarebbero
+rumore).
+
+### Cosa è cambiato (DESIGN §8.17b, UPSTREAM.md)
+
+- `AlertEngine.firstArrival` e `nearSevere`; riepilogo del mattino per data.
+- `OfficialWarningEngine.toldTokens`: le celle dette bruciate con l'impronta; anello a 120.
+- `RuleEngine.dayShaped`: una volta al giorno dalle 6 per le regole su `today.*`.
+- Ore di quiete 22–7 (`NotificationViews.quietAtNight`), tranne allerte rosse e promemoria del
+  cielo; tratteggio nella striscia «Quando arrivano» e una frase che lo dice.
+- `RuleMessages.interpolate(format = …)` additivo; il notificatore e l'anteprima di Avvisi
+  scrivono la virgola del lettore.
+- Idee: «Caldo forte» nuova, «Dodici ore asciutte» al posto di «Una notte senza pioggia» (le
+  regole già create tengono nome e messaggio: sono testo del lettore).
+
+### Decisioni e deviazioni
+
+- **Nessuna soglia cambiata**: la review voleva misurare quanto spesso i codici di maltempo
+  arrivano con probabilità bassa, ma Open-Meteo oggi ha rifiutato le richieste da questa rete
+  (limite giornaliero). Resta da misurare, come le fasi 13b/26: se i temporali al 10–20%
+  risultano frequenti, il maltempo dovrebbe chiedere anche una probabilità minima.
+- **Un'ora di pausa non spezza una pioggia**: «70, 65, 80» è un solo episodio.
+- **Le ore di quiete sono dell'orologio del telefono**, non del luogo: dorme il lettore.
+
+### Come è stato verificato
+
+- Test nuovi in `AlertEngineTest` (7), `OfficialWarningEngineTest` (3), `RuleEngineTest` (2),
+  `RuleNotifierTest`, `QuietHoursTest`; aggiornati `OfficialWarningStoreTest` (anello) e
+  `OfficialWarningsStepTest` (celle dette).
+- Resa di Avvisi con il tratteggio delle ore di quiete.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## I segnaposto con la loro unità, e la separazione da tweather (committente, 23 set 2026)
+
+Richiesta: sistemare i segnaposto dei messaggi degli avvisi personali («`{current.temp_c}` esce
+ancora come 21.4, senza unità e con il punto»); e: «Intendo poi scollegarmi a questo punto da
+tweather che seguirà la sua strada ma per ora è ferma».
+
+### Cosa è cambiato
+
+- `RuleMessages.interpolate` prende un `Writer` (valore, variabile, testo che segue; orario).
+  `Canonical` è la scrittura di prima; `RuleText.MessageWriter` è quella dell'app: il valore con
+  la sua unità e la virgola del lettore («21,4°», «20%», «35 km/h»), sì/no in parole, l'ora
+  nel formato 12/24 del telefono. Usato dalla notifica e dall'anteprima di Avvisi.
+- **Nessun doppione di unità**: se chi scrive ha già messo l'unità subito dopo il segnaposto
+  («{current.temp_c}°», com'erano tutti i messaggi e le idee finora), non viene aggiunta. I
+  messaggi già salvati si leggono uguali.
+- Le idee non scrivono più le unità a mano; la guida del selettore dice che il valore arriva
+  con la sua unità.
+- **Separazione da tweather**: CLAUDE.md, VISION §7.3 e UPSTREAM.md dicono che dal 23 set 2026
+  Chiaro è un prodotto indipendente; UPSTREAM.md è storia congelata, le correzioni al core non
+  si riportano indietro, niente estrazione di un core condiviso.
+
+### Come è stato verificato
+
+- `RuleNotifierTest` (unità una volta sola, virgola), `RuleMessagesTest` (il `Writer` riceve
+  variabile, valore e testo che segue).
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## La soglia del maltempo (committente, 24 set 2026)
+
+Richiesta: «prova a controllare le soglie cosi questo round di implementazione è veramente
+completo», sull'ipotesi lasciata aperta il 23 set: un temporale con probabilità di pioggia bassa
+(10–20%) fa scattare un «Maltempo» a banner.
+
+### La misura
+
+- **Fonte**: Open-Meteo, 31 luoghi (15 italiani, 16 nel mondo in climi diversi), 21 lug –
+  18 set 2026. Previsione: l'API forecast con `past_days` (codice e probabilità per ora, come
+  li riceve l'app; è la previsione a breve scadenza, quindi più brava di una a 12 ore, e la
+  misura è prudente). Verifica: pioggia ERA5 (archive API) nella finestra della serie ±2 ore.
+  L'archivio delle corse precedenti (`previous-runs`) non serve la probabilità
+  (`precipitation_probability_previous_day1` è tutta null), per questo non è stato usato.
+- **Eventi**: 148 serie di ore severe (una serie = un avviso, stessa regola di `firstArrival`,
+  un'ora di pausa tollerata): 131 THUNDER, 17 RAIN; nessun ghiaccio né neve d'estate.
+- **Risultato** (probabilità massima della serie → serie con ≥ 1 mm osservato, con ≥ 5 mm):
+
+  | probabilità | serie | ≥ 1 mm | ≥ 5 mm | pioggia mediana |
+  |---|---|---|---|---|
+  | 0–9% | 21 | 24% | 5% | 0,2 mm |
+  | 10–19% | 15 | 47% | 7% | 0,7 mm |
+  | 20–29% | 8 | 75% | 12% | 2,2 mm |
+  | 30–49% | 16 | 100% | 38% | 3,6 mm |
+  | 50–69% | 23 | 87% | 48% | 3,8 mm |
+  | 70–100% | 65 | 98% | 74% | 6,9 mm |
+
+  Base: cinque ore qualsiasi vedono 1 mm il 12% delle volte, 5 mm il 3%.
+- **Soglie provate**: 10% → toglie 21 avvisi (24% verificati), ne perde 5 veri; **20% → toglie
+  36 avvisi su 148 (un quarto), di cui un terzo verificati e quasi sempre con pioggia leggera;
+  delle 68 serie con 5 mm ne perde 2**; 30% → toglie 44 e perde 18 verificati, 3 con 5 mm.
+
+### Cosa è cambiato
+
+- `AlertEngine.SEVERE_MIN_CHANCE_PCT = 20`, `severeBucket(hour)` / `isSevere(hour)`: **una sola
+  definizione** di «maltempo», letta dall'avviso, dal suo «arriva», dal silenzio dell'ombrello
+  vicino a un temporale (`nearSevere`), dalla frase di Oggi e dei widget
+  (`HeadlineEngine`), dalla finestra della notifica (`AlertDetails`) e da `next_Nh.wmo_severe`
+  degli avvisi personali. Nessuna può chiamare temporale ciò che le altre hanno scartato.
+
+### Decisioni e deviazioni
+
+- **Solo THUNDER e RAIN.** Ghiaccio e neve non erano misurabili (estate) e la pioviggine che
+  gela è pericolosa in quantità che l'ensemble può contare appena: tengono il codice da solo.
+- **Probabilità assente = il codice vale.** È un dato che dipende dal modello (§1.1): un numero
+  mancante non è prova che il temporale non verrà.
+- **L'icona resta.** L'ora dice ancora temporale (è il cielo del modello, con accanto il suo
+  10%); è il verdetto, il banner, che non lo dice più.
+- **Un temporale improbabile non zittisce più l'ombrello**: la pioggia all'80% un'ora dopo un
+  95 al 10% è la notizia, e nessun altro l'avrebbe detta.
+
+### Come è stato verificato
+
+- `AlertEngineTest` (sotto la soglia nessun avviso, alla soglia sì; ghiaccio, neve e
+  probabilità assente invariati; l'arrivo è la prima ora probabile; l'ombrello non più
+  zittito), `HeadlineEngineTest`, `RuleVariablesTest` (`wmo_severe` con la stessa soglia);
+  i fixture di prova danno ai codici severi una probabilità credibile (40%), come fa il fornitore.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+

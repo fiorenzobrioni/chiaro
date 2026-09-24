@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.widget
 
 import android.content.Context
+import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -62,25 +63,7 @@ class TodayWidget : GlanceAppWidget() {
             val schemes = rememberWidgetSchemes(
                 context, model.settings.dynamicColor, model.settings.palette
             )
-            val skyBitmap = rememberSkyBitmap(model)
-            val content = model.content
-            // The Now widget's edge rule: the glyph leads the hero row and owns the top,
-            // so those two edges take the glyph's insets; the far edge carries words and
-            // the bottom the strip's, so those take the words'. Empty states: words only.
-            WidgetCard(
-                model, schemes, skyBitmap,
-                contentPaddingStart =
-                    if (content != null) WidgetCardPaddingLeading else WidgetCardPadding,
-                contentPaddingEnd = WidgetCardPaddingTrailing,
-                contentPaddingTop = if (content != null) WidgetCardPaddingSnug else WidgetCardPadding,
-                contentPaddingBottom = WidgetCardPadding
-            ) { palette ->
-                when {
-                    content == null && model.city == null -> NoPlaceContent(palette)
-                    content == null -> NoDataContent(palette)
-                    else -> TodayContent(content, model, palette, LocalSize.current)
-                }
-            }
+            TodayWidgetContent(model, schemes, rememberSkyBitmap(model))
         }
     }
 }
@@ -127,6 +110,14 @@ private fun TodayContent(
             sentence = sentenceOn, range = range != null, warning = warning.drawn
         )
     val icon = todayHeroIconSize(size, fontScale, showRain)
+    // The same count as the hours, so the two rows are one grid.
+    val days = content.week.take(cells)
+    val showDays = model.look.showLater && days.size >= StripCellsFloor &&
+        todayShowDays(
+            size, fontScale, content.isStale,
+            sentence = sentenceOn, range = range != null, warning = warning.drawn,
+            rain = showRain
+        )
     val withSentence = sentenceOn && todayIsWide(size, icon)
     // The range wants the far edge too (committente, 4 set: «at the far edge, level with
     // the temperature»); with the sentence there it sits under it, and without a sentence
@@ -310,6 +301,95 @@ private fun TodayContent(
                         )
                     }
                 }
+            }
+        }
+        if (showDays) {
+            Spacer(modifier = GlanceModifier.height(DaysGap))
+            DaysRow(days, content.now.toLocalDate(), model, palette)
+        }
+    }
+}
+
+/**
+ * The whole card for [model] at the launcher's [LocalSize], split off the receiver's
+ * `provideGlance` (23 set 2026) so the configuration screen's preview and the render tests
+ * draw the SAME composition the launcher does rather than a lookalike.
+ */
+@Composable
+internal fun TodayWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBitmap: Bitmap?) {
+    val content = model.content
+    // The Now widget's edge rule: the glyph leads the hero row and owns the top,
+    // so those two edges take the glyph's insets; the far edge carries words and
+    // the bottom the strip's, so those take the words'. Empty states: words only.
+    WidgetCard(
+        model, schemes, skyBitmap,
+        contentPaddingStart =
+            if (content != null) WidgetCardPaddingLeading else WidgetCardPadding,
+        contentPaddingEnd = WidgetCardPaddingTrailing,
+        contentPaddingTop = if (content != null) WidgetCardPaddingSnug else WidgetCardPadding,
+        contentPaddingBottom = WidgetCardPadding
+    ) { palette ->
+        when {
+            content == null && model.city == null -> NoPlaceContent(palette)
+            content == null -> NoDataContent(palette)
+            else -> TodayContent(content, model, palette, LocalSize.current)
+        }
+    }
+}
+
+/**
+ * The days on a tall card ([todayShowDays]), today first: the hours' own grid and type, one
+ * cell per day and as many as the hours above have, so the two rows are one grid — the day's name in the quiet ink, its drawing, the high in the strong ink
+ * and the low in the quiet one under it, which is the week rows' emphasis in the app.
+ */
+@Composable
+private fun DaysRow(
+    days: List<com.callbackdev.chiaro.ui.today.WeekDay>,
+    today: java.time.LocalDate,
+    model: WidgetModel,
+    palette: WidgetPalette
+) {
+    val context = LocalContext.current
+    val locale = glanceLocale()
+    Row(modifier = GlanceModifier.fillMaxWidth().padding(start = StripStartInset)) {
+        days.forEach { day ->
+            val forecast = day.forecast
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = GlanceModifier
+                    .padding(horizontal = StripCellSpacing / 2)
+                    .defaultWeight()
+            ) {
+                Text(
+                    text = if (forecast.date == today) {
+                        context.getString(com.callbackdev.chiaro.R.string.week_today)
+                    } else {
+                        Formats.dayLabel(forecast.date, locale)
+                    },
+                    style = secondaryStyle(palette, StripHourSp.sp),
+                    maxLines = 1
+                )
+                Spacer(modifier = GlanceModifier.height(StripInnerGap))
+                Image(
+                    provider = ImageProvider(
+                        ChiaroIcons.conditionRes(
+                            forecast.condition.wmoCode, false, model.iconStyle, palette.darkGround
+                        )
+                    ),
+                    contentDescription = null,
+                    modifier = GlanceModifier.size(DaysIconSize)
+                )
+                Spacer(modifier = GlanceModifier.height(StripInnerGap))
+                Text(
+                    text = Formats.temperature(forecast.highC, model.settings.units.temperature, locale),
+                    style = TextStyle(color = palette.primary, fontSize = StripTempSp.sp),
+                    maxLines = 1
+                )
+                Text(
+                    text = Formats.temperature(forecast.lowC, model.settings.units.temperature, locale),
+                    style = secondaryStyle(palette, StripRainSp.sp),
+                    maxLines = 1
+                )
             }
         }
     }

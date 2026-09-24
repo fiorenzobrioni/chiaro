@@ -71,6 +71,7 @@ import com.callbackdev.chiaro.domain.sky.SkyLead
 import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
+import com.callbackdev.chiaro.domain.sky.SkyVerdictNote
 import com.callbackdev.chiaro.ui.components.VerdictChip
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.format.currentLocale
@@ -117,7 +118,13 @@ fun SkyRoute(
                 SkyUiState.NoPlace -> NoPlaceForSky(onOpenPlaces = { placesOpen = true })
                 is SkyUiState.Content -> SkyContent(
                     content = s,
-                    viewModel = skyViewModel,
+                    actions = SkyActions(
+                        addMoment = skyViewModel::addMoment,
+                        removeMoment = skyViewModel::removeMoment,
+                        setLead = skyViewModel::setLead,
+                        setDefaultLead = skyViewModel::setDefaultLead,
+                        setNotifyOnFail = skyViewModel::setNotifyOnFail
+                    ),
                     onOpenGuide = onOpenGuide
                 )
             }
@@ -195,10 +202,20 @@ private sealed interface LeadDialog {
     data object ForDefault : LeadDialog
 }
 
+/** What the screen can ask of its store, as functions rather than the view model: the
+ * content is then a plain composable a preview or a test can draw. */
+internal class SkyActions(
+    val addMoment: (String) -> Unit,
+    val removeMoment: (String) -> Unit,
+    val setLead: (String, Int?) -> Unit,
+    val setDefaultLead: (Int?) -> Unit,
+    val setNotifyOnFail: (Boolean) -> Unit
+)
+
 @Composable
 private fun SkyContent(
     content: SkyUiState.Content,
-    viewModel: SkyViewModel,
+    actions: SkyActions,
     onOpenGuide: () -> Unit
 ) {
     val locale = currentLocale()
@@ -245,20 +262,33 @@ private fun SkyContent(
         }
 
         item { SkySectionTitle(stringResource(R.string.sky_section_moments)) }
-        items(content.moments.size) { index ->
-            val moment = content.moments[index]
-            MomentRow(
-                moment = moment,
-                zone = content.zone,
-                timeFmt = timeFmt,
-                onOpen = { pageId = moment.job.id },
-                onBell = {
-                    leadDialog = LeadDialog.ForMoment(
-                        moment.job.id, moment.lead, moment.followsDefault
+        // Grouped by day under a heading of their own (design review, 23 set 2026): four
+        // rows that each began «Domani ·» said the same word four times and pushed the
+        // time — the thing a reader scans for — to the middle of the line.
+        val (todays, tomorrows) = content.moments.partition { it.timing != MomentTiming.TOMORROW }
+        val next = content.moments.firstOrNull {
+            it.timing != MomentTiming.NOW && it.occurrence is SkyOccurrence.At && it.moonPhase == null
+        }
+        listOf(R.string.sky_day_today to todays, R.string.sky_day_tomorrow to tomorrows)
+            .filter { it.second.isNotEmpty() }
+            .forEach { (dayRes, dayMoments) ->
+                item { SkyDayHeading(stringResource(dayRes)) }
+                items(dayMoments.size) { index ->
+                    val moment = dayMoments[index]
+                    MomentRow(
+                        moment = moment,
+                        zone = content.zone,
+                        timeFmt = timeFmt,
+                        isNext = moment === next,
+                        onOpen = { pageId = moment.job.id },
+                        onBell = {
+                            leadDialog = LeadDialog.ForMoment(
+                                moment.job.id, moment.lead, moment.followsDefault
+                            )
+                        }
                     )
                 }
-            )
-        }
+            }
         item {
             TextButton(
                 onClick = { catalogOpen = true },
@@ -292,6 +322,7 @@ private fun SkyContent(
         }
 
         item { SkySectionTitle(stringResource(R.string.sky_section_events)) }
+        val today = java.time.LocalDate.now(content.zone)
         items(content.events.size) { index ->
             val event = content.events[index]
             EventRow(
@@ -300,6 +331,7 @@ private fun SkyContent(
                 dateFmt = dateFmt,
                 yearFmt = yearFmt,
                 timeFmt = timeFmt,
+                today = today,
                 // A row that names two showers opens the first: it is the row's own job,
                 // and the page's «see also» is one tap from the rest.
                 onOpen = { pageId = event.job.id },
@@ -307,6 +339,21 @@ private fun SkyContent(
                     { leadDialog = LeadDialog.ForMoment(event.job.id, lead, event.followsDefault) }
                 }
             )
+        }
+
+        // «Too far out to say» once for the section, not once a row (23 set 2026): five
+        // rows in a row each ending «La previsione non arriva ancora così lontano» was the
+        // same sentence five times, wrapped onto a second line each time. It is still said
+        // — the rows simply carry no chip until the forecast reaches them.
+        if (content.events.any { it.verdict?.note == SkyVerdictNote.BEYOND_HORIZON }) {
+            item {
+                Text(
+                    text = stringResource(R.string.sky_events_beyond_note),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
         }
 
         item { SkySectionTitle(stringResource(R.string.sky_section_reminders)) }
@@ -325,7 +372,7 @@ private fun SkyContent(
                     Switch(checked = content.notifyOnFail, onCheckedChange = null)
                 },
                 modifier = Modifier.clickable(
-                    onClick = { viewModel.setNotifyOnFail(!content.notifyOnFail) },
+                    onClick = { actions.setNotifyOnFail(!content.notifyOnFail) },
                     role = Role.Switch
                 )
             )
@@ -346,8 +393,8 @@ private fun SkyContent(
             // job with no row (an eclipse search that finds nothing ahead) used to show
             // as unsubscribed here and offer to be added twice (review, 8 set 2026).
             subscribedIds = content.subscribedIds,
-            onAdd = viewModel::addMoment,
-            onRemove = viewModel::removeMoment,
+            onAdd = actions.addMoment,
+            onRemove = actions.removeMoment,
             onDismiss = { catalogOpen = false }
         )
     }
@@ -357,8 +404,8 @@ private fun SkyContent(
             jobId = id,
             subscribed = id in content.subscribedIds,
             onOpenRelated = { pageId = it },
-            onAdd = viewModel::addMoment,
-            onRemove = viewModel::removeMoment,
+            onAdd = actions.addMoment,
+            onRemove = actions.removeMoment,
             onDismiss = { pageId = null }
         )
     }
@@ -370,7 +417,7 @@ private fun SkyContent(
             current = if (dialog.followsDefault) null else (dialog.lead.minutes ?: 0),
             perMoment = true,
             onPick = { minutes ->
-                viewModel.setLead(dialog.jobId, minutes)
+                actions.setLead(dialog.jobId, minutes)
                 leadChosen(minutes ?: content.defaultLead.minutes)
                 leadDialog = null
             },
@@ -382,7 +429,7 @@ private fun SkyContent(
             current = content.defaultLead.minutes ?: 0,
             perMoment = false,
             onPick = { minutes ->
-                viewModel.setDefaultLead(minutes?.takeIf { it > 0 })
+                actions.setDefaultLead(minutes?.takeIf { it > 0 })
                 leadChosen(minutes)
                 leadDialog = null
             },
@@ -402,6 +449,17 @@ internal fun remindersArmed(content: SkyUiState.Content): Boolean =
     content.moments.any { it.lead != SkyLead.OFF } ||
         content.events.any { it.lead != null && it.lead != SkyLead.OFF }
 
+/** A day inside «I prossimi momenti»: the word the rows used to carry each, said once. */
+@Composable
+private fun SkyDayHeading(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 16.dp, top = 8.dp)
+    )
+}
+
 @Composable
 private fun SkySectionTitle(text: String) {
     Text(
@@ -415,126 +473,6 @@ private fun SkySectionTitle(text: String) {
 // Tonight
 // ---------------------------------------------------------------------------------
 
-/**
- * The hero (VISION §5.3): the verdict word first, the numbers that decided it, and
- * the reason when it was not the clouds. The card wears the verdict's own container
- * color — the same pair every chip uses, so the vocabulary has one look.
- */
-@Composable
-private fun TonightCard(tonight: Tonight, zone: ZoneId, timeFmt: DateTimeFormatter) {
-    val res = LocalContext.current.resources
-    val window = tonight.window
-    val verdict = tonight.verdict
-    val colors = when (verdict?.kind) {
-        SkyVerdictKind.PASS -> ChiaroTheme.colors.pass
-        SkyVerdictKind.UNSTABLE -> ChiaroTheme.colors.unstable
-        SkyVerdictKind.FAIL -> ChiaroTheme.colors.fail
-        else -> ChiaroTheme.colors.unknown
-    }
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = colors.container,
-            contentColor = colors.ink
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.sky_tonight_label),
-                style = MaterialTheme.typography.titleSmall
-            )
-            if (window == null) {
-                // A fact about the latitude and the season, stated as such — and the
-                // RIGHT fact: an empty window is also the deep polar night, where it is
-                // dark at noon and "never gets fully dark" would be the reverse of the
-                // truth (8 set 2026). The engine tells the two apart; the card repeats it.
-                //
-                // Since Fase 27 there is a third empty sky and it is the common one: a
-                // moon up from dusk to dawn. It gets its own sentence, with the night it
-                // did NOT cancel stated after it — the sky is still dark, it is just not
-                // dark enough to plan a faint thing around, and a card that said only
-                // "no dark window" would have the reader believe the sun is misbehaving.
-                val night = tonight.night
-                val moonPct = tonight.moonIlluminationPct
-                val text = when {
-                    tonight.reason == SkyNotScheduled.MOON_ALL_NIGHT &&
-                        night?.end != null && moonPct != null -> stringResource(
-                        R.string.sky_tonight_moon_all_night,
-                        moonPct,
-                        night.start.atZone(zone).format(timeFmt),
-                        night.end!!.atZone(zone).format(timeFmt)
-                    )
-                    tonight.reason == SkyNotScheduled.DARK_ALL_DAY ->
-                        stringResource(R.string.sky_tonight_dark_all_day)
-                    else -> stringResource(R.string.sky_tonight_no_darkness)
-                }
-                Text(text = text, style = MaterialTheme.typography.titleMedium)
-                return@Card
-            }
-            Text(
-                text = stringResource(SkyText.verdictWordRes(verdict?.kind ?: SkyVerdictKind.UNKNOWN)),
-                style = MaterialTheme.typography.headlineMedium
-            )
-            Text(
-                text = stringResource(
-                    R.string.sky_tonight_window,
-                    window.start.atZone(zone).format(timeFmt),
-                    (window.end ?: window.start).atZone(zone).format(timeFmt)
-                ),
-                style = MaterialTheme.typography.bodyMedium
-            )
-            // What the moon took out of the night, when it took something (Fase 27).
-            // It is read off the window's edges against the night's, not off the
-            // verdict: the window IS the moonless part now, so the moon is a fact
-            // about where it opens rather than a downgrade applied afterwards.
-            val moonPct = tonight.moonIlluminationPct
-            val moonLine = when {
-                moonPct == null -> null
-                tonight.moonHeldTheStart -> stringResource(
-                    R.string.sky_tonight_moon_sets,
-                    window.start.atZone(zone).format(timeFmt),
-                    moonPct
-                )
-                tonight.moonTookTheEnd -> stringResource(
-                    R.string.sky_tonight_moon_rises,
-                    (window.end ?: window.start).atZone(zone).format(timeFmt),
-                    moonPct
-                )
-                else -> null
-            }
-            moonLine?.let { Text(text = it, style = MaterialTheme.typography.bodyMedium) }
-            // And WHEN, on a night the verdict had to average (Fase 28): the clearest
-            // run of hours inside the window, which is the half of "so-so" a reader can
-            // actually act on. Absent on most nights, by design.
-            tonight.clearStretch?.let { stretch ->
-                Text(
-                    text = stringResource(
-                        R.string.sky_tonight_clear_between,
-                        stretch.start.atZone(zone).format(timeFmt),
-                        stretch.endInclusive.atZone(zone).format(timeFmt)
-                    ),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-            // The arithmetic, always (DESIGN §8.7): the number that decided it, or
-            // the reason there is no number yet — and on its own line, beside the
-            // moon rather than instead of it. The two used to share one slot with the
-            // moon winning, so a card that blamed the moon printed no cloud figure at
-            // all, which is half an answer to the one question this card exists for.
-            val evidence = verdict?.let { SkyText.chipEvidence(res, it) }
-            val reason = verdict?.let { SkyText.unknownReason(res, it) }
-            (evidence ?: reason)?.let {
-                Text(text = it, style = MaterialTheme.typography.bodyMedium)
-            }
-        }
-    }
-}
-
 // ---------------------------------------------------------------------------------
 // Moments and events
 // ---------------------------------------------------------------------------------
@@ -545,6 +483,7 @@ private fun MomentRow(
     moment: Moment,
     zone: ZoneId,
     timeFmt: DateTimeFormatter,
+    isNext: Boolean,
     onOpen: () -> Unit,
     onBell: () -> Unit
 ) {
@@ -560,19 +499,12 @@ private fun MomentRow(
         }
         is SkyOccurrence.None -> stringResource(SkyText.notScheduledRes(occ.reason))
     }
-    // Which day the time belongs to, in a word. Today's scheduled moments carry no
-    // marker — a time with nothing in front of it means today, and saying it on
-    // every row would be four "Today"s nobody reads; a `∅` says its day, because
-    // "the moon skips it" without one is a sentence missing its subject.
-    val dayMark = when (moment.timing) {
-        MomentTiming.NOW -> stringResource(R.string.sky_moment_now)
-        MomentTiming.TOMORROW -> stringResource(R.string.sky_day_tomorrow)
-        MomentTiming.TODAY ->
-            if (moment.occurrence is SkyOccurrence.None) {
-                stringResource(R.string.sky_day_today)
-            } else {
-                null
-            }
+    // Which day the time belongs to is the heading's to say since 23 set 2026; the row
+    // keeps only «Adesso», which no heading can, and the next moment says how soon.
+    val dayMark = when {
+        moment.timing == MomentTiming.NOW -> stringResource(R.string.sky_moment_now)
+        isNext -> (moment.occurrence as? SkyOccurrence.At)?.let { soonLine(it.start) }
+        else -> null
     }
     // The chip lives UNDER the name, never beside it: in a trailing slot a wide
     // verdict ("Niente da fare · nuvole 100%") squeezed the name to one letter per
@@ -596,7 +528,7 @@ private fun MomentRow(
             headlineContent = { SkyHeadline(name, moment.job.photographic) },
             supportingContent = {
                 Text(
-                    text = listOfNotNull(dayMark, timeLine, bearingLine(moment.bearingDeg))
+                    text = listOfNotNull(timeLine, dayMark, bearingLine(moment.bearingDeg))
                         .joinToString(" · "),
                     color = quiet
                 )
@@ -691,6 +623,7 @@ private fun EventRow(
     dateFmt: DateTimeFormatter,
     yearFmt: DateTimeFormatter,
     timeFmt: DateTimeFormatter,
+    today: java.time.LocalDate,
     onOpen: () -> Unit,
     onBell: (() -> Unit)?
 ) {
@@ -710,11 +643,16 @@ private fun EventRow(
             // shower's row is a night nine hours wide and a solstice is a date; an
             // eclipse is ninety minutes you either step outside for or miss.
             val window = eclipseWindow(event, zone, timeFmt)
-            listOfNotNull(date, window).joinToString(" · ")
+            val countdown = daysAway(today, occurrence.start.atZone(zone).toLocalDate())
+            listOfNotNull(date, window, countdown).joinToString(" · ")
         }
         is SkyOccurrence.None -> stringResource(SkyText.notScheduledRes(occurrence.reason))
     }
-    val verdictLine = event.verdict?.let { verdict -> SkyText.unknownReason(res, verdict) }
+    // «Too far out» is the section's footnote now; the other reasons (no data, old
+    // data) are about this row and stay on it.
+    val verdictLine = event.verdict
+        ?.takeIf { it.note != SkyVerdictNote.BEYOND_HORIZON }
+        ?.let { verdict -> SkyText.unknownReason(res, verdict) }
     // Same rule as MomentRow: the chip goes under the text on a line of its own
     // ([SkyVerdictLine]), only the bell trails.
     Column(Modifier.agendaRowOpens(onOpen)) {
@@ -780,6 +718,35 @@ private fun eventName(event: UpcomingEvent): String {
     val others = event.sharesNightWith.map { stringResource(SkyText.nameRes(it.id)) }
     val head = (listOf(own) + others.dropLast(1)).joinToString(", ")
     return stringResource(R.string.sky_event_and, head, others.last())
+}
+
+/** «oggi», «domani», «tra 15 giorni» — up to two months out, where a count of days is
+ * still a way of planning; past that the date alone says it. */
+@Composable
+private fun daysAway(today: java.time.LocalDate, date: java.time.LocalDate): String? {
+    val days = java.time.temporal.ChronoUnit.DAYS.between(today, date)
+    return when {
+        days < 0 -> null
+        days == 0L -> stringResource(R.string.sky_day_today).lowercase(currentLocale())
+        days == 1L -> stringResource(R.string.sky_day_tomorrow).lowercase(currentLocale())
+        days <= CountdownDays -> pluralStringResource(R.plurals.sky_event_in_days, days.toInt(), days.toInt())
+        else -> null
+    }
+}
+
+private const val CountdownDays = 60
+
+/** «tra 20 min», «tra 2 h», «tra 1 h 20 min» — the same words Today's agenda uses — for
+ * the next moment of the list, and only within half a day. */
+@Composable
+private fun soonLine(at: java.time.Instant): String? {
+    val minutes = java.time.Duration.between(java.time.Instant.now(), at).toMinutes()
+    return when {
+        minutes < 1 || minutes > 12 * 60 -> null
+        minutes < 60 -> stringResource(R.string.tl_in_minutes, minutes.toInt())
+        minutes % 60 == 0L -> stringResource(R.string.tl_in_hours, (minutes / 60).toInt())
+        else -> stringResource(R.string.tl_in_hours_minutes, (minutes / 60).toInt(), (minutes % 60).toInt())
+    }
 }
 
 /** The contact window of an eclipse row, or null for every other kind of event. */

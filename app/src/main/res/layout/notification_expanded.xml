@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The expanded body of a notification that carries a picture (23 set 2026): the title,
+     the collapsed sentence as its headline, the picture, and the lines of the story under
+     it. The system decorates it (header, icon, time) on every version this app runs on;
+     the text takes the notification's own appearances, so it follows the system's day
+     and night like any standard notification. Kept under the platform's 256 dp ceiling
+     for an expanded custom view: two lines of title and headline, a picture of 60 to 90
+     dp at a notification's width, and at most five lines of details. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/notif_title"
+        style="@style/TextAppearance.Compat.Notification.Title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1" />
+
+    <TextView
+        android:id="@+id/notif_headline"
+        style="@style/TextAppearance.Compat.Notification.Line2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="2" />
+
+    <ImageView
+        android:id="@+id/notif_chart"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter" />
+
+    <TextView
+        android:id="@+id/notif_details"
+        style="@style/TextAppearance.Compat.Notification"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:lineSpacingMultiplier="1.1"
+        android:maxLines="5" />
+</LinearLayout>

@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.widget
 
 import android.content.Context
+import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -67,95 +68,7 @@ class NowWidget : GlanceAppWidget() {
             val schemes = rememberWidgetSchemes(
                 context, model.settings.dynamicColor, model.settings.palette
             )
-            val skyBitmap = rememberSkyBitmap(model)
-            val content = model.content
-            val size = LocalSize.current
-            val layout = if (content == null) null else nowLayout(size)
-            val mirrored = layout != NowLayout.TALL &&
-                model.look.arrangement == WidgetArrangement.ICON_END
-            // Each edge is inset for what sits against it — a glyph brings a margin of
-            // its own, words bring none (the numbers are in [WidgetCardPaddingLeading]).
-            // One-row forms: the glyph owns the height, so 6 above and below; it leads
-            // the row in the standard arrangement and closes it in the mirrored one, and
-            // the glyph's 4 and the words' 14 follow it to whichever edge it is on. The
-            // tall form: the glyph sits in the top trailing corner, so those two edges
-            // take the glyph's numbers and the other two the words'. An empty state has
-            // no glyph, only words, and words get the words' inset on every side.
-            val glyphLeads = layout == NowLayout.NARROW || layout == NowLayout.WIDE
-            val paddingStart = when {
-                glyphLeads && !mirrored -> WidgetCardPaddingLeading
-                else -> WidgetCardPadding
-            }
-            val paddingEnd = when {
-                layout == NowLayout.TALL || (glyphLeads && mirrored) -> WidgetCardPaddingLeading
-                else -> WidgetCardPaddingTrailing
-            }
-            val paddingTop = if (layout != null) WidgetCardPaddingSnug else WidgetCardPadding
-            val paddingBottom = if (glyphLeads) WidgetCardPaddingSnug else WidgetCardPadding
-            WidgetCard(
-                model, schemes, skyBitmap,
-                contentPaddingStart = paddingStart,
-                contentPaddingEnd = paddingEnd,
-                contentPaddingTop = paddingTop,
-                contentPaddingBottom = paddingBottom
-            ) { palette ->
-                val sentenceOn = model.look.showSentence
-                val level = model.warning?.maxLevel
-                val stale = content?.isStale == true
-                val scale = fontScale(context)
-                when {
-                    content == null && model.city == null -> NoPlaceContent(palette)
-                    content == null -> NoDataContent(palette)
-                    layout == NowLayout.TALL -> TallContent(
-                        content, model, palette, size,
-                        withSentence = sentenceOn,
-                        // A tall card always HAS a sentence slot, so orange and red take
-                        // it whenever the reader turned the sentence off; a line of its
-                        // own is the budget's answer, not the form's.
-                        warning = warningSlot(
-                            level = level,
-                            enabled = model.look.showWarning,
-                            headlineShown = sentenceOn,
-                            sentenceSlot = true,
-                            ownRow = nowTallHasWarningRow(size, scale, stale, sentenceOn)
-                        )
-                    )
-                    mirrored -> {
-                        val fits = nowMirroredSentenceWidth(size) >= SentenceColumnMin
-                        MirroredRowContent(
-                            content, model, palette, size,
-                            withSentence = sentenceOn && fits,
-                            // The mirrored row has no line to spare: the leading column
-                            // is already the number, the place and the stale marker in
-                            // ~82 dp. The chip only ever stands where the sentence would.
-                            warning = warningSlot(
-                                level = level,
-                                enabled = model.look.showWarning,
-                                headlineShown = sentenceOn && fits,
-                                sentenceSlot = fits,
-                                ownRow = false
-                            )
-                        )
-                    }
-                    else -> {
-                        val wide = layout == NowLayout.WIDE
-                        RowContent(
-                            content, model, palette, size,
-                            withSentence = sentenceOn && wide,
-                            // The narrow form has no sentence column at all, so it has
-                            // nowhere to put a warning either: two or three cells are the
-                            // glyph, the number and the place, and that is the whole card.
-                            warning = warningSlot(
-                                level = level,
-                                enabled = model.look.showWarning,
-                                headlineShown = sentenceOn && wide,
-                                sentenceSlot = wide,
-                                ownRow = wide && nowRowHasWarningRow(size, scale, sentenceOn)
-                            )
-                        )
-                    }
-                }
-            }
+            NowWidgetContent(model, schemes, rememberSkyBitmap(model))
         }
     }
 }
@@ -356,14 +269,20 @@ private fun TallContent(
     warning: WarningSlot = WarningSlot.NONE
 ) {
     val context = LocalContext.current
+    val scale = fontScale(context)
+    val temperatureSp = nowTallTemperatureSp(
+        size, scale, content.isStale, withSentence, warning.drawn
+    )
     Box(
         contentAlignment = Alignment.TopEnd,
         modifier = GlanceModifier.fillMaxSize()
     ) {
         HeroIcon(
             content, model, palette,
-            nowTallIconSize(
-                size, fontScale(context), content.isStale, withSentence, warning.drawn
+            heroIconSize(
+                nowTallIconRoom(
+                    size, scale, content.isStale, withSentence, warning.drawn, temperatureSp
+                )
             )
         )
         // The words stop at the words' inset on the trailing side too: the card's
@@ -375,7 +294,7 @@ private fun TallContent(
                 .fillMaxSize()
                 .padding(end = WidgetCardPadding - WidgetCardPaddingLeading)
         ) {
-            Temperature(content, model, palette)
+            Temperature(content, model, palette, temperatureSp)
             if (withSentence) {
                 Text(
                     text = sentence(context, content, model.settings.units),
@@ -433,7 +352,8 @@ private fun HeroIcon(
 private fun Temperature(
     content: TodayUiState.Content,
     model: WidgetModel,
-    palette: WidgetPalette
+    palette: WidgetPalette,
+    sizeSp: Float = TemperatureSp
 ) {
     Text(
         text = Formats.temperature(
@@ -441,7 +361,7 @@ private fun Temperature(
         ),
         style = TextStyle(
             color = palette.primary,
-            fontSize = TemperatureSp.sp,
+            fontSize = sizeSp.sp,
             fontWeight = FontWeight.Bold
         ),
         maxLines = 1
@@ -492,3 +412,101 @@ internal fun sentenceStyle(palette: WidgetPalette, align: TextAlign): TextStyle 
 /** Read off a Context rather than a composition local for the reason [isNight] is:
  * there is no `LocalConfiguration` on the launcher's side of the fence. */
 internal fun fontScale(context: Context): Float = context.resources.configuration.fontScale
+
+/**
+ * The whole card for [model] at the launcher's [LocalSize], split off the receiver's
+ * `provideGlance` (23 set 2026) so the configuration screen's preview and the render tests
+ * draw the SAME composition the launcher does rather than a lookalike.
+ */
+@Composable
+internal fun NowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBitmap: Bitmap?) {
+    val context = LocalContext.current
+    val content = model.content
+    val size = LocalSize.current
+    val layout = if (content == null) null else nowLayout(size)
+    val mirrored = layout != NowLayout.TALL &&
+        model.look.arrangement == WidgetArrangement.ICON_END
+    // Each edge is inset for what sits against it — a glyph brings a margin of
+    // its own, words bring none (the numbers are in [WidgetCardPaddingLeading]).
+    // One-row forms: the glyph owns the height, so 6 above and below; it leads
+    // the row in the standard arrangement and closes it in the mirrored one, and
+    // the glyph's 4 and the words' 14 follow it to whichever edge it is on. The
+    // tall form: the glyph sits in the top trailing corner, so those two edges
+    // take the glyph's numbers and the other two the words'. An empty state has
+    // no glyph, only words, and words get the words' inset on every side.
+    val glyphLeads = layout == NowLayout.NARROW || layout == NowLayout.WIDE
+    val paddingStart = when {
+        glyphLeads && !mirrored -> WidgetCardPaddingLeading
+        else -> WidgetCardPadding
+    }
+    val paddingEnd = when {
+        layout == NowLayout.TALL || (glyphLeads && mirrored) -> WidgetCardPaddingLeading
+        else -> WidgetCardPaddingTrailing
+    }
+    val paddingTop = if (layout != null) WidgetCardPaddingSnug else WidgetCardPadding
+    val paddingBottom = if (glyphLeads) WidgetCardPaddingSnug else WidgetCardPadding
+    WidgetCard(
+        model, schemes, skyBitmap,
+        contentPaddingStart = paddingStart,
+        contentPaddingEnd = paddingEnd,
+        contentPaddingTop = paddingTop,
+        contentPaddingBottom = paddingBottom
+    ) { palette ->
+        val sentenceOn = model.look.showSentence
+        val level = model.warning?.maxLevel
+        val stale = content?.isStale == true
+        val scale = fontScale(context)
+        when {
+            content == null && model.city == null -> NoPlaceContent(palette)
+            content == null -> NoDataContent(palette)
+            layout == NowLayout.TALL -> TallContent(
+                content, model, palette, size,
+                withSentence = sentenceOn,
+                // A tall card always HAS a sentence slot, so orange and red take
+                // it whenever the reader turned the sentence off; a line of its
+                // own is the budget's answer, not the form's.
+                warning = warningSlot(
+                    level = level,
+                    enabled = model.look.showWarning,
+                    headlineShown = sentenceOn,
+                    sentenceSlot = true,
+                    ownRow = nowTallHasWarningRow(size, scale, stale, sentenceOn)
+                )
+            )
+            mirrored -> {
+                val fits = nowMirroredSentenceWidth(size) >= SentenceColumnMin
+                MirroredRowContent(
+                    content, model, palette, size,
+                    withSentence = sentenceOn && fits,
+                    // The mirrored row has no line to spare: the leading column
+                    // is already the number, the place and the stale marker in
+                    // ~82 dp. The chip only ever stands where the sentence would.
+                    warning = warningSlot(
+                        level = level,
+                        enabled = model.look.showWarning,
+                        headlineShown = sentenceOn && fits,
+                        sentenceSlot = fits,
+                        ownRow = false
+                    )
+                )
+            }
+            else -> {
+                val wide = layout == NowLayout.WIDE
+                RowContent(
+                    content, model, palette, size,
+                    withSentence = sentenceOn && wide,
+                    // The narrow form has no sentence column at all, so it has
+                    // nowhere to put a warning either: two or three cells are the
+                    // glyph, the number and the place, and that is the whole card.
+                    warning = warningSlot(
+                        level = level,
+                        enabled = model.look.showWarning,
+                        headlineShown = sentenceOn && wide,
+                        sentenceSlot = wide,
+                        ownRow = wide && nowRowHasWarningRow(size, scale, sentenceOn)
+                    )
+                )
+            }
+        }
+    }
+}

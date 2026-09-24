@@ -1,5 +1,10 @@
 # UPSTREAM.md — where `:core` came from
 
+> **Frozen on 23 set 2026.** Chiaro and tweather are separate products from that date: the
+> committente ended the pairing, tweather follows its own road, and Chiaro's `:core` is its
+> own. Nothing below is kept up to date and nothing is carried back; the file stays as the
+> history of how the core was seeded and how it drifted until the split.
+
 `:core:domain` and `:core:data` are a **copy** of tweather's domain and data layers,
 not a link to them (VISION.md §7.3). This file is the ledger that decision depends on:
 without it, the first time the same bug has to be fixed in both apps, telling what
@@ -222,6 +227,29 @@ is short on purpose — three edits, each with its reason in the file:
   upstream (its provider has an `onRestored`) and dead code here, where fixing it for
   real means deciding for `WidgetLookStore` and `ArcSettingsStore` too. The dated section
   below has the whole story.
+
+## The notification review (23 set 2026)
+
+Three inherited engines changed, for defects that would be defects in tweather too (they
+were not carried back: the split came the same day), each with its tests beside it:
+
+- **`AlertEngine`**: the hour-anchored alerts fire on the hour a run of weather STARTS
+  (`firstArrival`, one quiet hour tolerated inside a run), never on an hour of weather already
+  under way. Upstream fires on the first matching hour from now, which re-announced a storm
+  after midnight (the next hour has tomorrow's date), a rain spell at noon (the PM half-day
+  bucket) and weather already falling on the first poll into it. The storm's own rain is
+  silenced whether or not the storm was announced on this run (`nearSevere`). The morning
+  summary reads today's row by date, like the evening one.
+- **`RuleEngine`**: rules whose forecast conditions are all `today.*` fingerprint once per
+  day, from 06:00 (`dayShaped`), where upstream's half-day bucket posted the same day's fact
+  at 00:05 and again at noon.
+- **`RuleMessages.interpolate`**: takes a `Writer` (default `Canonical`, upstream's own
+  writing); the app's writes the value with its unit, the reader's decimal mark and the
+  phone's clock. `:core:domain` stays locale-free.
+
+Chiaro-only, because tweather has no official warnings: `OfficialWarningEngine` keeps what
+each notification TOLD (`toldTokens`), so the next afternoon's bulletin repeating it is not a
+second heads-up; `OfficialWarningStore` keeps 120 burnt entries instead of 40 to hold them.
 
 ## The known debt
 

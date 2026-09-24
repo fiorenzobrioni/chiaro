@@ -32,13 +32,42 @@ object RuleMessages {
     /** A name as it is written inside a message: the one place that knows the braces. */
     fun placeholder(name: String): String = "{$name}"
 
+    /**
+     * How a message's placeholders are written out (23 set 2026). The domain knows what a
+     * value IS — its variable, its kind, the number — and not how the reader writes it:
+     * the decimal mark, the unit, the clock are the app's, which has a locale and the
+     * reader's settings. [Canonical] is the locale-free answer, for tests and anything
+     * without a screen.
+     */
+    interface Writer {
+        /**
+         * [variableId] is the canonical variable the value belongs to, or null when the
+         * rule has no condition to name one; [following] is the message text right after
+         * the placeholder, so a writer that adds a unit can see the author already wrote
+         * one («{current.temp_c}°») and not print it twice.
+         */
+        fun value(variableId: String?, kind: RuleVariableKind, value: Double, following: String): String
+
+        fun time(at: LocalDateTime): String
+    }
+
+    /** The canonical writing: [RuleVariables.formatValue], a bare number with a decimal
+     * point, and a 24-hour clock. */
+    class Canonical(private val units: UnitSettings) : Writer {
+        override fun value(variableId: String?, kind: RuleVariableKind, value: Double, following: String): String =
+            RuleVariables.formatValue(kind, value, units)
+
+        override fun time(at: LocalDateTime): String = at.format(ClockTime)
+    }
+
     fun interpolate(
         message: String,
         trigger: RuleTrigger,
         report: WeatherReport,
         now: LocalDateTime,
-        units: UnitSettings
-    ): String = interpolate(message, trigger.rule, trigger.value, trigger.at, report, now, units)
+        units: UnitSettings,
+        writer: Writer = Canonical(units)
+    ): String = interpolate(message, trigger.rule, trigger.value, trigger.at, report, now, units, writer)
 
     /** Same substitution for the dry run, which has a [RuleCheck.Fires] instead. */
     fun interpolate(
@@ -48,22 +77,24 @@ object RuleMessages {
         triggerAt: LocalDateTime?,
         report: WeatherReport,
         now: LocalDateTime,
-        units: UnitSettings
+        units: UnitSettings,
+        writer: Writer = Canonical(units)
     ): String = Placeholder.replace(message) { match ->
         val name = match.groupValues[1]
+        val following = message.substring(match.range.last + 1)
         when (name) {
             TriggerValue -> {
-                val kind = rule.conditions.firstOrNull()
-                    ?.let { RuleVariables.byId(it.variable)?.kind }
-                    ?: RuleVariableKind.NUMBER
-                RuleVariables.formatValue(kind, triggerValue, units)
+                val variable = rule.conditions.firstOrNull()?.variable
+                val kind = variable?.let { RuleVariables.byId(it)?.kind } ?: RuleVariableKind.NUMBER
+                writer.value(variable, kind, triggerValue, following)
             }
-            TriggerTime -> (triggerAt ?: now).format(ClockTime)
+            TriggerTime -> writer.time(triggerAt ?: now)
             else -> {
-                val variable = RuleVariables.canonicalId(name)?.let { RuleVariables.byId(it) }
+                val id = RuleVariables.canonicalId(name)
+                val variable = id?.let { RuleVariables.byId(it) }
                 val resolved = variable?.resolve?.invoke(report, now)
                 if (variable != null && resolved != null) {
-                    RuleVariables.formatValue(variable.kind, resolved.value, units)
+                    writer.value(id, variable.kind, resolved.value, following)
                 } else {
                     match.value // unknown or unavailable: leave the text untouched
                 }
