@@ -97,6 +97,9 @@ private const val FOG_VISIBILITY_M = 1000.0
 private const val WET_DAY_MM = 1.0
 private const val WET_DAY_HOURS = 3
 
+/** Snow under this is not snow on any screen: the day's facts and the tile start at it. */
+private const val TRACE_SNOW_CM = 0.1
+
 /**
  * The frame Open-Meteo's timestamps are written in, and the city's real clock beside it.
  *
@@ -363,14 +366,17 @@ object WeatherReportMapper {
      * The day's rain without its snow: `rain_sum` plus `showers_sum`, the liquid part of
      * `precipitation_sum`. A response without them — a cache entry from before they were
      * asked for, a model that does not split — falls back on the total only when the day
-     * has no snow to be counted in it; otherwise the answer is null, not the total.
+     * has no snow the screen would name ([TRACE_SNOW_CM]); otherwise the answer is null,
+     * not the total. Under that floor the snow's water is under 0.15 mm (Open-Meteo's own
+     * 7 cm to 10 mm), below what the rain line prints, and an exact zero instead hid the
+     * 3.9 mm of a Longyearbyen Monday behind 0.07 cm of snow (25 set 2026).
      */
     private fun rainOf(daily: DailyDto, i: Int): Double? {
         val rain = daily.rainSumMm.getOrNull(i)
         val showers = daily.showersSumMm.getOrNull(i)
         if (rain != null || showers != null) return (rain ?: 0.0) + (showers ?: 0.0)
         val snow = daily.snowfallSumCm.getOrNull(i) ?: return null
-        return if (snow == 0.0) daily.precipitationSumMm.getOrNull(i) else null
+        return if (snow < TRACE_SNOW_CM) daily.precipitationSumMm.getOrNull(i) else null
     }
 
     /**

@@ -10755,3 +10755,27 @@ pioggia» comprende la neve?
   `sampleWeatherReport` porta ora `rainMm`, senza neve uguale al totale). Suite completa e
   lint. La risposta live di Longyearbyen non è stata riletta: dal container Open-Meteo non
   era raggiungibile.
+
+### Il seguito (committente, 25 set 2026)
+
+- **Icona e percentuale, la regola**: dopo il fiocco su 0% il committente ha visto il caso
+  speculare, una nuvola su 70%. Correggere l'uno vorrebbe dire correggere anche l'altro, e lì
+  un codice andrebbe inventato (quale pioggia? o neve?). Decisione: **un codice si corregge
+  solo quando lo smentisce un altro dato dello stesso modello** (la nebbia con la
+  visibilità); tra modelli diversi l'app non fa da arbitro. L'eccezione che resta, un
+  pericolo sotto il 20% che non fa l'avviso né l'etichetta del giorno, riguarda gli avvisi,
+  non le icone delle ore. La guida delle prossime ore ora lo dice in una frase.
+- **La pioggia che non compariva**: a Longyearbyen, subito dopo l'aggiornamento, il lunedì
+  (3,7 mm di `rain_sum` + 0,1 di `showers_sum`, 0,07 cm di neve) non diceva niente, e la
+  domenica mostrava solo la neve con le ore. Era la risposta scritta su disco dalla
+  versione di prima, riletta come fresca per i suoi 15 minuti: `ReportDiskCache` la
+  riconosceva solo dalle coordinate. **Cosa è cambiato**: l'entry registra la richiesta
+  che l'ha prodotta (`OpenMeteoForecastApi.REQUEST`), e una richiesta diversa non è mai un
+  HIT; resta però il ripiego di un telefono offline. E il ripiego per le risposte senza
+  divisione usa il totale anche quando la neve è sotto la soglia che lo schermo chiama neve
+  (`TRACE_SNOW_CM`, 0,1 cm): l'acqua di quella neve è sotto 0,15 mm, meno di quanto la riga
+  stampa, e lo zero esatto nascondeva 3,9 mm dietro 0,07 cm.
+- **Come è stato verificato**: la risposta live di Longyearbyen del 25 set (via WebFetch)
+  per i numeri; `ReportDiskCacheTest` (la richiesta scritta e riletta, un'entry senza
+  campo non è la richiesta corrente); `WeatherReportMapperTest` (la neve in traccia non
+  blocca il ripiego). Suite completa e lint.

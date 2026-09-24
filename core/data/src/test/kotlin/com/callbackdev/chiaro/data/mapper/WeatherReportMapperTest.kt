@@ -704,6 +704,8 @@ class WeatherReportMapperTest {
         assertEquals(0.2, day(rain = 0.2, showers = null, snow = 0.4).rainMm!!, 0.0)
         // No split, and snow in the total: which part is rain cannot be told.
         assertNull(day(rain = null, showers = null, snow = 0.4).rainMm)
+        // …unless the snow is a trace no screen names: its water is under what prints.
+        assertEquals(0.6, day(rain = null, showers = null, snow = 0.07).rainMm!!, 0.0)
         assertNull(day(rain = null, showers = null, snow = null).rainMm)
     }
 
