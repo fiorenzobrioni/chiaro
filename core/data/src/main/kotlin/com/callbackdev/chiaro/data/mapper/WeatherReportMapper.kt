@@ -101,6 +101,13 @@ private const val WET_DAY_HOURS = 3
 private const val TRACE_SNOW_CM = 0.1
 
 /**
+ * Open-Meteo's snowfall per millimetre of water: «7 cm snow = 10 mm precipitation water
+ * equivalent» (its documentation), and its responses keep to it — 9.66 cm against 13.8 mm
+ * on Longyearbyen's 2 Oct of the 25 Sep run, 19.81 cm against 28.4 mm on Everest.
+ */
+private const val SNOW_CM_PER_MM = 0.7
+
+/**
  * The frame Open-Meteo's timestamps are written in, and the city's real clock beside it.
  *
  * With `timezone=auto` the provider does NOT apply [zone]'s rules hour by hour: it takes
@@ -363,20 +370,36 @@ object WeatherReportMapper {
     }
 
     /**
-     * The day's rain without its snow: `rain_sum` plus `showers_sum`, the liquid part of
-     * `precipitation_sum`. A response without them — a cache entry from before they were
-     * asked for, a model that does not split — falls back on the total only when the day
-     * has no snow the screen would name ([TRACE_SNOW_CM]); otherwise the answer is null,
-     * not the total. Under that floor the snow's water is under 0.15 mm (Open-Meteo's own
-     * 7 cm to 10 mm), below what the rain line prints, and an exact zero instead hid the
-     * 3.9 mm of a Longyearbyen Monday behind 0.07 cm of snow (25 set 2026).
+     * The day's rain without its snow: `rain_sum` plus `showers_sum`, **capped by what the
+     * total leaves once the snow's water is taken out** (25 set 2026).
+     *
+     * The cap is there because `showers` is the model's convective precipitation of ANY
+     * phase: measured on Longyearbyen's response of 25 Sep, the hours coded 85 (snow
+     * showers) carry the same water in `showers` and in `snowfall`, and the day added up to
+     * 0.8 mm against a `precipitation_sum` of 0.6. On every other day of that response the
+     * identity held exactly — total = rain + showers + snowfall / 0.7 (Open-Meteo's own
+     * 7 cm to 10 mm) — so the total minus the snow's water is the liquid whenever the split
+     * double counts, and the split is the liquid whenever it does not. The smaller of the
+     * two is right in both cases; on a day of snow alone the split is 0 and no rounding
+     * residue of the subtraction ever reaches the screen.
+     *
+     * A response without the split — a cache entry from before it was asked for, a model
+     * that does not provide it — falls back on the total only when the day has no snow the
+     * screen would name ([TRACE_SNOW_CM]); otherwise the answer is null, not the total.
+     * Under that floor the snow's water is under 0.15 mm, below what the rain line prints.
      */
     private fun rainOf(daily: DailyDto, i: Int): Double? {
         val rain = daily.rainSumMm.getOrNull(i)
         val showers = daily.showersSumMm.getOrNull(i)
-        if (rain != null || showers != null) return (rain ?: 0.0) + (showers ?: 0.0)
-        val snow = daily.snowfallSumCm.getOrNull(i) ?: return null
-        return if (snow < TRACE_SNOW_CM) daily.precipitationSumMm.getOrNull(i) else null
+        val total = daily.precipitationSumMm.getOrNull(i)
+        val snow = daily.snowfallSumCm.getOrNull(i)
+        if (rain != null || showers != null) {
+            val split = (rain ?: 0.0) + (showers ?: 0.0)
+            if (total == null || snow == null) return split
+            return minOf(split, maxOf(0.0, total - snow / SNOW_CM_PER_MM))
+        }
+        if (snow == null) return null
+        return if (snow < TRACE_SNOW_CM) total else null
     }
 
     /**

@@ -685,6 +685,45 @@ class WeatherReportMapperTest {
     }
 
     @Test
+    fun `showers that are snow showers are not rain`() {
+        // Longyearbyen, 25 Sep 2026 run, two days of the same response. The 25th: the
+        // hours coded 85 carry their water in `showers` AND in `snowfall`, so the split
+        // says 0.3 mm where the total leaves 0.6 - 0.35 / 0.7 = 0.1. The 28th: the showers
+        // were rain, the identity holds, and the two answers are the same 3.4.
+        val base = forecast()
+        val days = map(
+            forecast = base.copy(
+                daily = base.daily.copy(
+                    precipitationSumMm = List(8) { if (it == 0) 0.6 else 4.1 },
+                    rainSumMm = List(8) { if (it == 0) 0.1 else 2.8 },
+                    showersSumMm = List(8) { if (it == 0) 0.2 else 0.6 },
+                    snowfallSumCm = List(8) { if (it == 0) 0.35 else 0.49 }
+                )
+            )
+        ).daily
+        assertEquals(0.1, days[0].rainMm!!, 1e-9)
+        assertEquals(3.4, days[1].rainMm!!, 1e-9)
+    }
+
+    @Test
+    fun `a day of snow alone has no rain, whatever the subtraction leaves`() {
+        // Everest's 19.81 cm against 28.4 mm: the total minus the snow's water is 0.1, a
+        // rounding residue. The split says 0, and the smaller answer wins.
+        val base = forecast()
+        val day = map(
+            forecast = base.copy(
+                daily = base.daily.copy(
+                    precipitationSumMm = List(8) { 28.4 },
+                    rainSumMm = List(8) { 0.0 },
+                    showersSumMm = List(8) { 0.0 },
+                    snowfallSumCm = List(8) { 19.81 }
+                )
+            )
+        ).daily.first()
+        assertEquals(0.0, day.rainMm!!, 0.0)
+    }
+
+    @Test
     fun `the day's rain is the rain alone, not the snow's water`() {
         // Friday at Longyearbyen: 0.6 mm in all, which was 0.4 cm of snow.
         val base = forecast()
@@ -701,7 +740,7 @@ class WeatherReportMapperTest {
         assertEquals(0.0, day(rain = 0.0, showers = 0.0, snow = 0.4).rainMm!!, 0.0)
         assertEquals(0.5, day(rain = 0.2, showers = 0.3, snow = 0.0).rainMm!!, 1e-9)
         // A model that does not split showers still has its rain.
-        assertEquals(0.2, day(rain = 0.2, showers = null, snow = 0.4).rainMm!!, 0.0)
+        assertEquals(0.2, day(rain = 0.2, showers = null, snow = 0.2).rainMm!!, 0.0)
         // No split, and snow in the total: which part is rain cannot be told.
         assertNull(day(rain = null, showers = null, snow = 0.4).rainMm)
         // …unless the snow is a trace no screen names: its water is under what prints.
