@@ -1,0 +1,765 @@
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+  <identifier>DPC_BULLETIN_2026_09_24_7024</identifier>
+  <sender>2.49.0.0.380.1</sender>
+  <sent>2026-09-24T14:34:00+02:00</sent>
+  <status>Actual</status>
+  <msgType>Alert</msgType>
+  <scope>Public</scope>
+  <note>Per la giornata di oggi: Regione Campania: per la validità temporale delle criticità si rimanda al bollettino regionale.
+Per la giornata di domani: nessuna</note>
+  <info>
+    <category>Met</category>
+    <event>ORDINARIA CRITICITA' PER RISCHIO TEMPORALI / ALLERTA GIALLA:</event>
+    <responseType>Prepare</responseType>
+    <urgency>Expected</urgency>
+    <severity>Moderate</severity>
+    <certainty>Likely</certainty>
+    <onset>2026-09-24T12:00:00+02:00</onset>
+    <expires>2026-09-24T23:59:59+02:00</expires>
+    <senderName>DIPARTIMENTO DI PROTEZIONE CIVILE</senderName>
+    <description>all_GIALLA PER OGGI SU:</description>
+    <area>
+      <areaDesc>Piana Sele e Alto Cilento</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-6</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basso Cilento</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-8</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alta Irpinia e Sannio</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-4</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Piana campana, Napoli, Isole e Area vesuviana</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alto Volturno e Matese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Penisola sorrentino-amalfitana, Monti di Sarno e Monti Picentini</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Tusciano e Alto Sele</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-5</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Tanagro</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-7</value>
+      </geocode>
+    </area>
+  </info>
+  <info>
+    <category>Met</category>
+    <event>ORDINARIA CRITICITA' PER RISCHIO IDRAULICO / ALLERTA GIALLA:</event>
+    <responseType>Prepare</responseType>
+    <urgency>Expected</urgency>
+    <severity>Moderate</severity>
+    <certainty>Likely</certainty>
+    <onset>2026-09-25T00:00:00+02:00</onset>
+    <expires>2026-09-25T23:59:59+02:00</expires>
+    <senderName>DIPARTIMENTO DI PROTEZIONE CIVILE</senderName>
+    <description>all_GIALLA PER DOMANI SU:</description>
+    <area>
+      <areaDesc>Versante Tirrenico Centro-settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jionico Centro-meridionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-7</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Tirrenico Centro-meridionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Centro-settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-6</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Tirrenico Meridionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-4</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Meridionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-8</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Tirrenico Settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-5</value>
+      </geocode>
+    </area>
+  </info>
+  <info>
+    <category>Met</category>
+    <event>ORDINARIA CRITICITA' PER RISCHIO TEMPORALI / ALLERTA GIALLA:</event>
+    <responseType>Prepare</responseType>
+    <urgency>Expected</urgency>
+    <severity>Moderate</severity>
+    <certainty>Likely</certainty>
+    <onset>2026-09-25T00:00:00+02:00</onset>
+    <expires>2026-09-25T23:59:59+02:00</expires>
+    <senderName>DIPARTIMENTO DI PROTEZIONE CIVILE</senderName>
+    <description>all_GIALLA PER DOMANI SU:</description>
+    <area>
+      <areaDesc>Bacino dell'Aterno</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino del Pescara</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino Alto del Sangro</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-D1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacini Tordino Vomano</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Marsica</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-E</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino Basso del Sangro</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-D2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basi-A2</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Basi-A2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basi-C</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Basi-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basi-D</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Basi-D</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basi-A1</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Basi-A1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basi-B</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Basi-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basi-E2</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Basi-E2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basi-E1</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Basi-E1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Tirrenico Centro-settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jionico Centro-meridionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-7</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Tirrenico Centro-meridionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Centro-settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-6</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Tirrenico Meridionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-4</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Meridionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-8</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Tirrenico Settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-5</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Piana campana, Napoli, Isole e Area vesuviana</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alto Volturno e Matese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Tusciano e Alto Sele</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-5</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Piana Sele e Alto Cilento</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-6</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Tanagro</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-7</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alta Irpinia e Sannio</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-4</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Penisola sorrentino-amalfitana, Monti di Sarno e Monti Picentini</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basso Cilento</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Camp-8</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Frentani - Sannio - Matese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Moli-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Litoranea</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Moli-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alto Volturno - Medio Sangro</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Moli-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Salento</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-D</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Gargano e Tremiti</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basso Ofanto</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-G</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basso Fortore</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-I</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Puglia Centrale Bradanica</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-F</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Tavoliere - bassi bacini del Candelaro, Cervaro e Carapelle</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Sub-Appennino Dauno</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-H</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Puglia Centrale Adriatica</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacini del Lato e del Lenne</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-E</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Sud-Occidentale e isola di Pantelleria</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-D</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Nord-Occidentale e isole Egadi e Ustica</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Centro-Settentrionale, versante tirrenico</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino del Fiume Simeto</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-H</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Centro-Meridionale e isole Pelagie</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-E</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Nord-Orientale, versante tirrenico e isole Eolie</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Nord-Orientale, versante ionico</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-I</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Sud-Orientale, versante ionico</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-G</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Sud-Orientale, versante Stretto di Sicilia</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-F</value>
+      </geocode>
+    </area>
+  </info>
+  <info>
+    <category>Met</category>
+    <event>ORDINARIA CRITICITA' PER RISCHIO IDROGEOLOGICO / ALLERTA GIALLA:</event>
+    <responseType>Prepare</responseType>
+    <urgency>Expected</urgency>
+    <severity>Moderate</severity>
+    <certainty>Likely</certainty>
+    <onset>2026-09-25T00:00:00+02:00</onset>
+    <expires>2026-09-25T23:59:59+02:00</expires>
+    <senderName>DIPARTIMENTO DI PROTEZIONE CIVILE</senderName>
+    <description>all_GIALLA PER DOMANI SU:</description>
+    <area>
+      <areaDesc>Bacino dell'Aterno</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino del Pescara</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino Alto del Sangro</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-D1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacini Tordino Vomano</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Marsica</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-E</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino Basso del Sangro</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Abru-D2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Tirrenico Centro-settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-2</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jionico Centro-meridionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-7</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Tirrenico Centro-meridionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-3</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Centro-settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-6</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Tirrenico Meridionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-4</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Meridionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-8</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Tirrenico Settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-1</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Versante Jonico Settentrionale</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Cala-5</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Frentani - Sannio - Matese</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Moli-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Litoranea</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Moli-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Alto Volturno - Medio Sangro</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Moli-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Salento</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-D</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Gargano e Tremiti</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basso Ofanto</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-G</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Basso Fortore</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-I</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Puglia Centrale Bradanica</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-F</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Tavoliere - bassi bacini del Candelaro, Cervaro e Carapelle</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Sub-Appennino Dauno</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-H</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Puglia Centrale Adriatica</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacini del Lato e del Lenne</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Pugl-E</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Sud-Occidentale e isola di Pantelleria</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-D</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Nord-Occidentale e isole Egadi e Ustica</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-C</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Centro-Settentrionale, versante tirrenico</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-B</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Bacino del Fiume Simeto</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-H</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Centro-Meridionale e isole Pelagie</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-E</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Nord-Orientale, versante tirrenico e isole Eolie</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-A</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Nord-Orientale, versante ionico</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-I</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Sud-Orientale, versante ionico</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-G</value>
+      </geocode>
+    </area>
+    <area>
+      <areaDesc>Sud-Orientale, versante Stretto di Sicilia</areaDesc>
+      <geocode>
+        <valueName>Zona di Allerta</valueName>
+        <value>Sici-F</value>
+      </geocode>
+    </area>
+  </info>
+</alert>

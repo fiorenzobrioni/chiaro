@@ -11099,3 +11099,77 @@ Due fatti sui dati, che correggono l'analisi del 25 mattina:
   limite: il `ww` del DWD pesa meno le nubi alte e sottili, la nuvolosità totale no; l'app
   ha già le nubi per strato, e un «velato» per il cielo di sole nubi alte è un seguito
   possibile, non una premessa.
+
+## Le schermate del README disegnate dai test (committente, 25 set 2026)
+
+Richiesta: «Fatico a tenere aggiornati gli screenshot […] quelli attuali sono fermi alla
+release». Le otto immagini delle schermate erano foto del telefono del 21 set (v1.0.0, in
+italiano, su Cortina d'Ampezzo) e da allora l'app era cambiata sotto di loro (il motore
+degli stati, le icone, la griglia dei dettagli, Avvisi). Il modello è quello di Passo: le
+schermate le disegnano dei test, a richiesta, e una regola del repo dice quando.
+
+### Cosa è cambiato
+
+- **`ReadmeScreenshots`** (`app/src/testDebug/.../readme/`): otto test Robolectric con la
+  grafica nativa che disegnano Oggi (in cima, la settimana, i dettagli), Cielo (stanotte, il
+  calendario), Avvisi, Impostazioni e la guida in `docs/screenshots/*.png`. Partono solo
+  con `-PupdateScreenshots` (`app/build.gradle.kts` passa la cartella come proprietà di
+  sistema); senza, `assumeTrue` li salta, quindi la CI e un `test` qualsiasi non riscrivono
+  mai un'immagine.
+- **Dati veri, non inventati**: `tools/record_readme_data.py` registra Milano in
+  `app/src/test/resources/readme/` (il geocoder in inglese, la previsione e la qualità
+  dell'aria con **le stesse variabili dell'app**, lette da `OpenMeteoApis.kt` e non
+  copiate, l'ultimo bollettino della Protezione Civile e il momento della registrazione).
+  `MilanRecording` le passa per la pipeline dell'app: i DTO, `WeatherReportMapper`,
+  `TodayStateBuilder`, `SkyStateBuilder`, l'indice delle zone d'allerta e
+  `OfficialWarningEngine`. Le schermate sono disegnate cinque minuti dopo la
+  registrazione, con le impostazioni di un'installazione nuova (`AppSettings()`).
+- **Le schermate prendono lo stato, non il view model**: `SkyScreen`, `AlertsScreen` e
+  `SettingsScreen` (internal) sono estratte dalle rispettive `*Route`, che ora le chiamano
+  e basta; `TodayPage`, `ChiaroBottomBar` e `BottomBarHeight` passano da private a internal.
+  Nessun cambiamento di comportamento.
+- **`LocalClock`** (`ui/format/LocalClock.kt`): i punti in cui un composable leggeva l'ora
+  da solo al momento di disegnare la leggono da qui: l'età nel chip di freschezza, il «tra
+  20 min» e il «tra 13 giorni» del Cielo, il disco di «adesso» nella striscia di Avvisi e il
+  giorno del suo bollettino, «oggi» e «ieri» del Diario, i giorni d'esempio della guida. Sul
+  telefono è l'orologio di sistema, come prima; nei test è fermo al momento della
+  registrazione. I view model restano sul loro `Clock`: non disegnano.
+- README: le otto immagini sono `.png` generate; il testo dice da dove vengono e come si
+  rigenerano. `widget-day-arc.jpg` e `widgets-home.jpg` restano foto della v1.0.0 e il
+  README lo dice. Tolta la frase «the screenshots above are the shipping build», che non
+  sarà più vera né falsa per costruzione: le immagini seguono il codice.
+- CLAUDE.md: la regola (sotto).
+
+### Decisioni e deviazioni
+
+- **Milano, in inglese** (committente). Inglese britannico (`en-rGB`), non americano: il
+  README è in inglese ma la città è italiana, e l'orologio a 24 ore e «Friday 25 September»
+  sono quello che vede un lettore europeo. Telefono 384 × 832 dp (il device di riferimento
+  delle misure dei widget) a xhdpi.
+- **Icone ferme** (committente: «puoi fare gli screenshot con le icone non animate»):
+  `LocalAnimatedIcons` a false, e comunque il test di Compose non fa girare le animazioni
+  infinite.
+- **Cielo in tema scuro**, le altre in chiaro: il README deve mostrare il secondo vestito da
+  qualche parte, e il Cielo è la scheda che si apre di sera. Stessa scelta di Passo.
+- **Non `captureToImage`**: con questo Compose (BOM 2026.02.01) e Robolectric 4.16 aspetta
+  un ridisegno sul thread che sta bloccando e va in timeout dopo 2 s (anche con
+  `robolectric.pixelCopyRenderMode=hardware`). `View.draw` della finestra sotto la grafica
+  nativa disegna gli stessi pixel senza aggiornare nessuna dipendenza (Passo, su Robolectric
+  4.17 e BOM 2026.09, usa `captureToImage`).
+- **Niente Diario, niente widget**: il Diario ha bisogno di giorni di storia registrata, e
+  una storia inventata sarebbe l'unica immagine finta del README; i widget sono Glance e un
+  test non disegna un launcher. Restano fuori finché una registrazione onesta non li rende
+  possibili (per il Diario: l'API «previous runs» di Open-Meteo è la strada da misurare).
+- **Nessun controllo in CI sulle immagini**: il rendering di Robolectric cambia di un pixel
+  fra versioni e font, e un test che fallisce per quello verrebbe ignorato. La garanzia è
+  la regola in CLAUDE.md, come in Passo.
+
+### Come è stato verificato
+
+- `./gradlew :app:testDebugUnitTest --tests "*ReadmeScreenshots" -PupdateScreenshots`
+  (con lo script del mirror): otto immagini, guardate una per una; e senza la proprietà gli
+  otto test risultano saltati. **Due esecuzioni di fila danno gli stessi byte** per tutte e
+  otto: la prima prova l'aveva mancata per Avvisi, il cui disco di «adesso» leggeva ancora
+  l'orologio vero (`LocalTime.now(zone)`, sfuggito alla prima ricerca perché aveva un
+  argomento), ed è così che sono stati trovati anche Cielo e Diario.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
