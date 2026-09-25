@@ -20,7 +20,7 @@ Free, no account, no ads, no tracking, no API key.
 <tr>
 <td width="33%"><img src="docs/screenshots/today-now.png" alt="Today: the computed sky, the next hours and the rest of the day"></td>
 <td width="33%"><img src="docs/screenshots/sky-tonight.png" alt="Sky in the dark theme: tonight's verdict and the moments ahead"></td>
-<td width="33%"><img src="docs/screenshots/widget-day-arc.jpg" alt="The day's arc widget on the home screen"></td>
+<td width="33%"><img src="docs/screenshots/widget-day-arc.png" alt="The day's arc widget: the sun's path over Milan, the moments ahead and the week"></td>
 </tr>
 <tr>
 <td align="center"><sub><b>Today</b>: the sky, then the numbers</sub></td>
@@ -61,10 +61,10 @@ so every picture shows the current build. They are regenerated with
 English here; the app ships in Italian and English through the system per-app language
 picker. The phone's status bar is not in the pictures.
 
-Two things are not drawn by a test. The home screen, because a test cannot draw a
-launcher: those two pictures are photographs from a phone at v1.0.0. And the Journal, which
-is the history of how the forecast changed over several days: its picture waits for days of
-real updates rather than showing invented ones.
+The widgets are drawn the way a launcher draws them, from the same data, on a plain dark
+ground: the launcher and its wallpaper are not in the picture. The Journal is the one screen
+not shown: it is the history of how the forecast changed over several days, and its picture
+waits for days of real updates rather than showing invented ones.
 
 **Today**, one vertical scroll that starts with the sky:
 
@@ -112,16 +112,16 @@ it looks:
 </tr>
 </table>
 
-**The home screen**, photographed on a phone:
+**Widgets**, as a reader first places them:
 
 <table>
 <tr>
-<td width="33%"><img src="docs/screenshots/widgets-home.jpg" alt="Four widgets on the home screen: Now, Today, Sky and the next hours"></td>
-<td width="33%"><img src="docs/screenshots/widget-day-arc.jpg" alt="The day's arc widget on the home screen"></td>
+<td width="33%"><img src="docs/screenshots/widgets.png" alt="Four widgets: Now, In words, Sky with the golden hour and its verdict, and Today with the next hours"></td>
+<td width="33%"><img src="docs/screenshots/widget-day-arc.png" alt="The day's arc widget: the sun's path over Milan, the moments ahead and the week"></td>
 <td width="33%"></td>
 </tr>
 <tr>
-<td align="center"><sub>Widgets in Glance, each configured on its own</sub></td>
+<td align="center"><sub>Now, In words, Sky and Today, each configured on its own</sub></td>
 <td align="center"><sub>The day's arc: the sun's real path over your place</sub></td>
 <td></td>
 </tr>

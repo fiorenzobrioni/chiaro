@@ -119,7 +119,7 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
 ## README screenshots
 
 The pictures of the app's screens in the root `README.md` (`docs/screenshots/*.png`) are
-drawn by `ReadmeScreenshots` (`app/src/testDebug/.../readme/`) from a recorded Milan
+drawn by `ReadmeScreenshots` (`app/src/testDebug/.../readme/`), widgets included, from a recorded Milan
 (`app/src/test/resources/readme/`, written by `tools/record_readme_data.py`), in English,
 and only on request:
 `./gradlew :app:testDebugUnitTest --tests "*ReadmeScreenshots" -PupdateScreenshots` (plus
@@ -134,9 +134,10 @@ ordinary run rewrites an image. Standing rules (committente, 25 set 2026):
 - **Re-record the data** (`python3 tools/record_readme_data.py`) only when the recording no
   longer holds what a screen needs (a new field the old response does not have); a
   re-recording changes every picture, so it is a change of its own.
-- The two home-screen pictures (`widget-day-arc.jpg`, `widgets-home.jpg`) are photographs
-  from a phone at v1.0.0: a test cannot draw a launcher. Replace them by hand when the
-  widgets change visibly.
+- The widgets are drawn too (`widgets.png`, `widget-day-arc.png`): Glance composes each
+  one into the `RemoteViews` a launcher receives, applied to a real view and drawn through
+  the GPU pipeline so the outline-rounded corners come out round. A widget change
+  regenerates them like a screen change does.
 - **No invented data.** Every picture comes from the recording or from what a reader makes
   with the app's own words (the alerts are created from its ideas). The Journal has no
   picture until real history can be recorded (PLANNING.md, «Le schermate del README»).

@@ -188,6 +188,21 @@ object WidgetData {
         val jobs = ServiceLocator.skySubscriptionStore(context).subscriptions.first()
             .filter { it.enabled }
             .mapNotNull { SkyJobCatalog.byId(it.jobId) }
+        return momentsFor(jobs, city, zone, now, report, settings)
+    }
+
+    /**
+     * [moments] once the subscriptions are read: pure, so the README's pictures of the
+     * Sky widget are the moments this function judges and not a copy of it.
+     */
+    internal fun momentsFor(
+        jobs: List<SkyJob>,
+        city: City,
+        zone: ZoneId,
+        now: Instant,
+        report: WeatherReport?,
+        settings: AppSettings
+    ): List<NextMoment> {
         if (jobs.isEmpty()) return emptyList()
         val hours = report?.hourly.orEmpty()
         val dataAge = report?.let { Duration.between(it.systemInfo.lastSync, now) }

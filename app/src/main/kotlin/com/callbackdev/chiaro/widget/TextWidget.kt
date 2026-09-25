@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.today.StripHour
 import com.callbackdev.chiaro.ui.today.TodayUiState
@@ -753,7 +754,7 @@ private fun StaleLineText(content: TodayUiState.Content, palette: WidgetPalette)
     if (!content.isStale) return
     val context = LocalContext.current
     Text(
-        text = staleText(context, content.lastSync, Instant.now()),
+        text = staleText(context, content.lastSync, Instant.now(LocalClock.current)),
         style = TextStyle(color = palette.stale, fontSize = TextStaleSp.sp),
         maxLines = 1
     )

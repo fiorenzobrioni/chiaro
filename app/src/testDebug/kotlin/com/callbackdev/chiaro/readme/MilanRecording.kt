@@ -29,6 +29,10 @@ import com.callbackdev.chiaro.ui.sky.SkyStateBuilder
 import com.callbackdev.chiaro.ui.sky.SkyUiState
 import com.callbackdev.chiaro.ui.today.TodayStateBuilder
 import com.callbackdev.chiaro.ui.today.TodayUiState
+import com.callbackdev.chiaro.widget.WidgetData
+import com.callbackdev.chiaro.widget.WidgetKind
+import com.callbackdev.chiaro.widget.WidgetLook
+import com.callbackdev.chiaro.widget.WidgetModel
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -118,13 +122,42 @@ internal object MilanRecording {
     }
 
     /** A fresh install's subscriptions: the catalog's defaults, as the store seeds them. */
+    private val subscriptions = SkyJobCatalog.defaults.map { SkySubscription(it.id) }
+
     fun sky(): SkyUiState.Content = SkyStateBuilder.build(
         city = city,
         report = report,
-        subscriptions = SkyJobCatalog.defaults.map { SkySubscription(it.id) },
+        subscriptions = subscriptions,
         settings = settings,
         now = now
     )
+
+    /**
+     * What a widget of [kind] knows, as `WidgetData.load` builds it: Today's own state
+     * over the report, the moments judged by `WidgetData.momentsFor`, and the look a
+     * newly placed widget of that kind wears.
+     */
+    fun widget(context: Context, kind: WidgetKind): WidgetModel {
+        val zone = placeZone(report, city)
+        return WidgetModel(
+            settings = settings,
+            look = WidgetLook.defaultsFor(kind),
+            city = city,
+            fromGps = false,
+            content = today(context),
+            moments = WidgetData.momentsFor(
+                jobs = subscriptions.mapNotNull { SkyJobCatalog.byId(it.jobId) },
+                city = city,
+                zone = zone,
+                now = now,
+                report = report,
+                settings = settings
+            ),
+            zone = zone,
+            warning = (warnings(context) as? PlaceWarningState.Current)?.warnings
+                ?.takeIf { it.maxLevel != WarningLevel.NONE }
+        )
+    }
 
     /**
      * Two rules a reader makes with two taps: the Bike and the Run ideas, created exactly

@@ -4,6 +4,26 @@ import android.Manifest
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.HardwareRenderer
+import android.graphics.PixelFormat
+import android.graphics.RenderNode
+import android.media.ImageReader
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import androidx.compose.ui.unit.DpSize
+import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
+import androidx.glance.appwidget.GlanceRemoteViews
+import com.callbackdev.chiaro.widget.NowWidgetContent
+import com.callbackdev.chiaro.widget.SkyWidgetContent
+import com.callbackdev.chiaro.widget.TextWidgetContent
+import com.callbackdev.chiaro.widget.TodayWidgetContent
+import com.callbackdev.chiaro.widget.WidgetKind
+import com.callbackdev.chiaro.widget.arc.ArcSettings
+import com.callbackdev.chiaro.widget.arc.ArcWidgetContent
+import com.callbackdev.chiaro.widget.rememberSkyBitmap
+import com.callbackdev.chiaro.widget.widgetSchemes
+import kotlinx.coroutines.runBlocking
 import androidx.activity.ComponentActivity
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
@@ -74,6 +94,20 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = "en-rGB-w384dp-h832dp-xhdpi")
 class ReadmeScreenshots {
+
+    private companion object {
+        /** The widget tests' reference cells: four by one, by two, by four (dp). */
+        val OneRow = DpSize(340.dp, 82.dp)
+        val TwoRows = DpSize(340.dp, 189.dp)
+        val FourRows = DpSize(340.dp, 397.dp)
+
+        /** The board the widgets are laid on: the phone's width, and a dark plain ground
+         * standing in for a wallpaper nobody chose. */
+        const val BoardWidth = 384f
+        const val BoardMargin = 22f
+        const val BoardGap = 16f
+        const val BoardGround = 0xFF14171C.toInt()
+    }
 
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
@@ -218,6 +252,125 @@ class ReadmeScreenshots {
         save("guide")
     }
 
+    // ---------------------------------------------------------------------- widgets
+
+    /**
+     * Four widgets as a reader first places them, one under the other: Now and «In
+     * words» at four cells by one, Sky and Today at four by two. The launcher is not in
+     * the picture: the cards are drawn on a plain dark ground instead of a wallpaper.
+     */
+    @Test
+    fun widgets() {
+        val now = widget(WidgetKind.NOW)
+        val words = widget(WidgetKind.TEXT)
+        val sky = widget(WidgetKind.SKY)
+        val today = widget(WidgetKind.TODAY)
+        val schemes = schemes()
+        val board = listOf(
+            WidgetOne(OneRow) { NowWidgetContent(now, schemes, rememberSkyBitmap(now)) },
+            WidgetOne(OneRow) { TextWidgetContent(words, schemes, rememberSkyBitmap(words)) },
+            WidgetOne(TwoRows) { SkyWidgetContent(sky, schemes, rememberSkyBitmap(sky)) },
+            WidgetOne(TwoRows) { TodayWidgetContent(today, schemes, rememberSkyBitmap(today)) }
+        )
+        saveBitmap("widgets", drawBoard(board))
+    }
+
+    /** The day's arc at four cells by four, the size it shows the week at. */
+    @Test
+    fun widgetDayArc() {
+        val model = widget(WidgetKind.ARC)
+        val schemes = schemes()
+        val arc = WidgetOne(FourRows) {
+            ArcWidgetContent(model, schemes, rememberSkyBitmap(model), ArcSettings())
+        }
+        saveBitmap("widget-day-arc", drawBoard(listOf(arc)))
+    }
+
+    private class WidgetOne(val size: DpSize, val content: @Composable () -> Unit)
+
+    private fun widget(kind: WidgetKind) = MilanRecording.widget(app, kind)
+
+    private fun schemes() = widgetSchemes(app, settings.dynamicColor, settings.palette)
+
+    /**
+     * Each widget composed by Glance into the `RemoteViews` a launcher would receive,
+     * applied to a real view as the launcher applies it, and drawn ([hardwareDraw]); then
+     * the cards laid one under the other on the ground. The text is the system's face,
+     * as on a phone: a widget is drawn in the launcher's process, not the app's.
+     */
+    @OptIn(ExperimentalGlanceRemoteViewsApi::class)
+    private fun drawBoard(widgets: List<WidgetOne>): Bitmap {
+        val density = app.resources.displayMetrics.density
+        fun px(dp: Float) = (dp * density).toInt()
+        val drawn = widgets.map { one ->
+            val composed = runBlocking {
+                GlanceRemoteViews().compose(app, one.size) {
+                    CompositionLocalProvider(LocalClock provides clock()) { one.content() }
+                }
+            }
+            val view = composed.remoteViews.apply(app, FrameLayout(app))
+            val width = px(one.size.width.value)
+            val height = px(one.size.height.value)
+            view.measure(
+                View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+            )
+            view.layout(0, 0, width, height)
+            hardwareDraw(view, width, height)
+        }
+        val margin = px(BoardMargin)
+        val gap = px(BoardGap)
+        val board = Bitmap.createBitmap(
+            px(BoardWidth),
+            margin * 2 + drawn.sumOf { it.height } + gap * (drawn.size - 1),
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(board)
+        canvas.drawColor(BoardGround)
+        var top = margin.toFloat()
+        drawn.forEach { card ->
+            canvas.drawBitmap(card, ((board.width - card.width) / 2).toFloat(), top, null)
+            top += card.height + gap
+        }
+        return board
+    }
+
+    /**
+     * [view] drawn through the GPU pipeline rather than onto a software canvas. Glance
+     * rounds its cards and chips with the view's outline (`clipToOutline`, API 31+),
+     * and only a render node honours an outline: drawn in software every corner came
+     * out square. The view is attached to the test's activity first, because a child
+     * is recorded as its own render node only inside a hardware-accelerated window.
+     */
+    private fun hardwareDraw(view: View, width: Int, height: Int): Bitmap {
+        compose.runOnUiThread {
+            val host = FrameLayout(compose.activity)
+            compose.activity.setContentView(host, ViewGroup.LayoutParams(width, height))
+            host.addView(view, FrameLayout.LayoutParams(width, height))
+        }
+        compose.waitForIdle()
+        val node = RenderNode("readme").apply { setPosition(0, 0, width, height) }
+        view.draw(node.beginRecording())
+        node.endRecording()
+        val reader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1)
+        val renderer = HardwareRenderer()
+        try {
+            renderer.setSurface(reader.surface)
+            renderer.setContentRoot(node)
+            renderer.createRenderRequest().setWaitForPresent(true).syncAndDraw()
+            reader.acquireNextImage().use { image ->
+                val plane = image.planes[0]
+                // A row may be padded past the width: copy the padded rows, then crop.
+                val padded = Bitmap.createBitmap(plane.rowStride / plane.pixelStride, height, Bitmap.Config.ARGB_8888)
+                padded.copyPixelsFromBuffer(plane.buffer)
+                return Bitmap.createBitmap(padded, 0, 0, width, height)
+            }
+        } finally {
+            renderer.destroy()
+            reader.close()
+        }
+    }
+
     // ---------------------------------------------------------------------- drawing
 
     /** The app's frame as `MainActivity` sets it up, with the fresh install's settings
@@ -233,7 +386,7 @@ class ReadmeScreenshots {
                 CompositionLocalProvider(
                     LocalWeatherIcons provides settings.weatherIcons,
                     LocalAnimatedIcons provides false,
-                    LocalClock provides Clock.fixed(MilanRecording.now, placeZone(MilanRecording.report, MilanRecording.city))
+                    LocalClock provides clock()
                 ) {
                     Surface(modifier = Modifier.fillMaxSize()) { content() }
                 }
@@ -289,11 +442,17 @@ class ReadmeScreenshots {
      * Robolectric it waits for a redraw on the very thread it is blocking and times out
      * (25 set 2026), where a plain `View.draw` under native graphics draws the same pixels.
      */
+    private fun clock(): Clock = Clock.fixed(MilanRecording.now, placeZone(MilanRecording.report, MilanRecording.city))
+
     private fun save(name: String) {
         compose.waitForIdle()
         val view = compose.activity.window.decorView
         val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
         view.draw(Canvas(bitmap))
+        saveBitmap(name, bitmap)
+    }
+
+    private fun saveBitmap(name: String, bitmap: Bitmap) {
         val dir = File(checkNotNull(output)).apply { mkdirs() }
         File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }

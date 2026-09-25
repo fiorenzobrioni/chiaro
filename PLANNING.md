@@ -11208,3 +11208,41 @@ rain in the next 6 hours *is* above 70%»). In italiano «la temperatura adesso 
 regge come stile telegrafico. Non toccato in questa modifica, che riguarda le immagini:
 è una decisione di testo del committente (aggiungere «is» agli operatori numerici inglesi,
 o un frammento con il verbo, tenendo «is»/«is not» dei sì/no).
+
+### Il seguito: «is» negli operatori e i widget disegnati (committente, 25 set 2026)
+
+Richieste: aggiungere «is» agli operatori inglesi e rigenerare l'immagine; e «non hai
+rigenerato gli screenshot dei widget e vedo ancora i miei».
+
+- **Gli operatori inglesi portano il verbo**: «is above», «is at least», «is below», «is at
+  most», «is exactly», «is anything but» (`values/strings.xml`); «is» e «is not» dei sì/no
+  restano come sono, l'italiano non cambia. La frase della card e i chip dell'editor ora
+  leggono «When the temperature now is at least 12°», come il README la promette. Nessun
+  test fissava le parole vecchie. `alerts-yours.png` rigenerata.
+- **I widget sono disegnati, non più fotografati.** La premessa di prima («un test non
+  disegna un launcher») era vera del launcher e non dei widget: `GlanceRemoteViews().compose`
+  (Glance 1.1.1, sperimentale) compone il contenuto di un widget nei `RemoteViews` che un
+  launcher riceve, senza id né launcher, e `RemoteViews.apply` lo applica a una view vera.
+  I contenuti erano già funzioni `internal` di un `WidgetModel` (`NowWidgetContent`,
+  `TextWidgetContent`, `SkyWidgetContent`, `TodayWidgetContent`, `ArcWidgetContent`), e il
+  modello si costruisce come fa `WidgetData.load`: lo stato di Oggi sul report, l'aspetto
+  di un widget appena messo (`WidgetLook.defaultsFor`), i momenti giudicati. Per questi
+  ultimi `WidgetData.moments` è diviso in due: la lettura delle iscrizioni e
+  `momentsFor`, puro e `internal`, che il test chiama invece di copiarlo.
+- **Gli angoli**: disegnati su un canvas software uscivano quadrati, card e chip dei
+  verdetti, perché Glance li arrotonda col contorno della view (`clipToOutline`, API 31+) e
+  solo un render node rispetta un contorno. La view è attaccata alla finestra (accelerata)
+  dell'attività del test e registrata in un `RenderNode`, reso da un `HardwareRenderer` su
+  un `ImageReader`: gli angoli escono come sul telefono.
+- **Il testo è Roboto**, non Google Sans come nell'app: è giusto così, un widget è
+  disegnato nel processo del launcher col carattere di sistema, come nella foto del device.
+- **L'orologio anche nei widget**: `staleText(…, Instant.now())` in cinque punti, il «domani»
+  del widget Cielo (`dayMark`, che ora riceve il giorno invece di leggerlo) e il `now` con cui
+  l'arco costruisce la sua serie leggono `LocalClock`: Glance compone con lo stesso runtime
+  di Compose e i `CompositionLocal` funzionano uguali. Sul telefono resta l'orologio di
+  sistema. Resta `Instant.now()` solo in `WidgetData.load`, che costruisce il modello e che
+  il test non attraversa.
+- `widgets.png` (Now e «In words» a 4×1, Sky e Today a 4×2) e `widget-day-arc.png` (4×4)
+  sostituiscono le due foto della v1.0.0, su un fondo scuro semplice al posto dello sfondo
+  del telefono; le misure delle celle sono quelle dei test dei widget (340 × 82, 340 × 189)
+  e dell'arco nella foto (340 × 397). Undici immagini generate; nessuna foto nel README.
