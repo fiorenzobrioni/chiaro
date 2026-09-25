@@ -81,6 +81,15 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
 - **The screen must not lie.** A section with no data is not drawn, never a card with a
   dash in it. Stale data states its real age. Estimates say so. No placeholder ever
   renders as a value: a skeleton must look like a skeleton, never like a grey zero.
+- **Numbers are the model's; states are the app's.** Chiaro is not a relay of the API.
+  What an hour or a day *is* (its icon and its word: rain, showers, snow, fog, ice, sky)
+  is the app's reading of the forecast, derived from the physical fields (amounts, phase,
+  probability, temperature, visibility, cloud), and it may differ from `weather_code`: the
+  fog repair and the day's code already do this, and the state engine (`PLANNING.md`, «Il
+  motore degli stati») extends it. What the app never does is change a number: a
+  probability, an amount, a temperature on screen is the one the model forecast, or an
+  estimate that says so. Every rule that derives a state is written down with its reason
+  and its measurement, and tested.
 - **Every number says what to do with it.** A metric tile is a value plus its consequence.
   A metric with no honest second line belongs in the details sheet, not on the home screen.
 - **A verdict ships with its arithmetic**, and is a glyph and a word before it is a color:
@@ -119,8 +128,20 @@ punctuation.
 
 - **Provider**: Open-Meteo (forecast, air quality, geocoding), no API key. Astronomy is
   computed locally by `:core:domain` and works offline.
+- **The state of an hour is the app's, not `weather_code`** (25 set 2026,
+  `WeatherStateEngine` in `:core:domain`, measured on 26 cities and 4 342 hours): the icon
+  and the word come from the amounts, the snowfall, the convective part, the probability,
+  the temperature, the visibility and the cloud cover, and the provider's code is read
+  only where those are missing or for what the app cannot see (thunderstorms, freezing
+  rain). Precipitation needs ≥ 0.1 mm (the probability's own floor) and ≥ 20% (the
+  «Maltempo» floor; heavy snow exempt); ≥ 60% with nothing measurable is «probabile», a
+  possibility and never a wet hour; the sky is the cloud cover on the provider's 20/50/80.
+  `rain` and `showers` change meaning with the model (the UK's rain holds its showers,
+  Svalbard's showers hold snow): the liquid is always the total minus `snowfall` / 0.7.
+  Every threshold and its reason is in `PLANNING.md`, «Il motore degli stati».
 - **Reading the provider's `weather_code`** (inherited from tweather's Fase 13b/13c,
-  re-measured 6 Sep 2026 over 23 cities and 3 864 hours): fog is checked against the
+  re-measured 6 Sep 2026 over 23 cities and 3 864 hours; now rules 5 and 1–2 of the
+  engine and the day's label on its states): fog is checked against the
   same hour's visibility — the served code contradicts the served visibility 68% of the
   times it says fog — and is only *invented* when the neighbouring hour is also below
   1 km, because fog is not one hour long; a contradicted fog code is still dropped on

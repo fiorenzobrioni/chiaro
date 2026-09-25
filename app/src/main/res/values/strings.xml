@@ -36,6 +36,16 @@
     <string name="headline_snow_maybe">Snow possible around %1$s</string>
     <string name="headline_wet_tomorrow">Umbrella tomorrow from %1$s</string>
     <string name="headline_snow_tomorrow">Snow tomorrow from %1$s</string>
+    <!-- Rain and snow together (25 set 2026): the state engine writes it, and the
+         sentence said rain alone. -->
+    <string name="headline_mixed_soon">Rain and snow around %1$s</string>
+    <string name="headline_mixed_soon_clearing">Rain and snow around %1$s, clearing after %2$s</string>
+    <string name="headline_mixed_now_stopping">Rain and snow should stop around %1$s</string>
+    <string name="headline_mixed_now">Rain and snow for the rest of the day</string>
+    <string name="headline_mixed_now_stopping_brief">Rain and snow until about %1$s</string>
+    <string name="headline_mixed_now_brief">Rain and snow for the rest of the day</string>
+    <string name="headline_mixed_maybe">Rain and snow possible around %1$s</string>
+    <string name="headline_mixed_tomorrow">Rain and snow tomorrow from %1$s</string>
     <string name="headline_frost">Frost around %1$s, low %2$s</string>
     <string name="headline_frost_brief">Frost around %1$s</string>
     <string name="headline_fog">Fog around %1$s</string>
@@ -233,6 +243,12 @@
     <string name="cond_thunderstorm">Thunderstorm</string>
     <string name="cond_thunderstorm_strong">Strong thunderstorm</string>
     <string name="cond_unknown">Unknown conditions</string>
+    <!-- The state engine's states (25 set 2026, PLANNING «Il motore degli stati»). -->
+    <string name="cond_freezing_fog">Freezing fog</string>
+    <string name="cond_rain_and_snow">Rain and snow</string>
+    <string name="cond_rain_likely">Rain likely</string>
+    <string name="cond_snow_likely">Snow likely</string>
+    <string name="cond_thunderstorm_possible">Thunderstorms possible</string>
 
     <!-- Empty and error states -->
     <string name="empty_no_place_title">No place yet</string>
@@ -407,7 +423,7 @@
     <string name="guide_today_fresh_body">When what you are reading is no longer fresh, Chiaro says its real age instead of hiding it, and an update that failed says why. If the data is over an hour old, the top of the screen shows the forecast for this hour instead of the old reading, and says «Estimated from the forecast» under the temperature. Pull the screen down to ask for a new one, or tap the age itself to try again.</string>
     <string name="guide_today_fresh_caption">An example: the age of what you are reading — tap it to try again.</string>
     <string name="guide_today_hours_title">The next hours</string>
-    <string name="guide_today_hours_body" formatted="false">Twenty-four hours of temperature, sky and rain chance, starting from the hour after this one: the hour you are in is the big number at the top. Each column is the hour that starts there: «3 PM · 60%» means a 60% chance of rain between 3 and 4, and the temperature is the one at 3. The icon and the percentage come from two different calculations: the icon shows the hour in the most likely forecast, the percentage how many alternative forecasts see something fall, rain or snow. That is why they sometimes disagree, a snowflake over 0% or a cloud over 70%, and both are true.</string>
+    <string name="guide_today_hours_body" formatted="false">Twenty-four hours of temperature, sky and rain chance, starting from the hour after this one: the hour you are in is the big number at the top. Each column is the hour that starts there: «3 PM · 60%» means a 60% chance of rain between 3 and 4, and the temperature is the one at 3.</string>
     <string name="guide_today_rest_title">The rest of the day</string>
     <string name="guide_today_rest_body">One timeline for everything still ahead: sunrise or sunset, the golden and blue hours, the moment the sky goes fully dark, moonrise and moonset, the hours rain is expected to start and ease off, and — when the sun is low and rain is likely in front of it — the window a rainbow could stand in, with the direction to turn and look.</string>
     <string name="guide_today_week_title">The week</string>

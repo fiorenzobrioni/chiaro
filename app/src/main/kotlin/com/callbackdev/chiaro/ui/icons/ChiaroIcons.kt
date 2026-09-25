@@ -173,13 +173,22 @@ object ChiaroIcons {
             if (night) R.drawable.mc3_partly_cloudy_night else R.drawable.mc3_partly_cloudy_day
         WmoCode.OVERCAST -> R.drawable.mc3_overcast
         WmoCode.FOG, WmoCode.RIME_FOG -> if (night) R.drawable.mc3_fog_night else R.drawable.mc3_fog_day
-        WmoCode.DRIZZLE_LIGHT, WmoCode.DRIZZLE_MODERATE, WmoCode.DRIZZLE_DENSE ->
-            R.drawable.mc3_overcast_drizzle
-        WmoCode.FREEZING_DRIZZLE_LIGHT, WmoCode.FREEZING_DRIZZLE_DENSE,
-        WmoCode.FREEZING_RAIN_LIGHT, WmoCode.FREEZING_RAIN_HEAVY -> R.drawable.mc3_overcast_sleet
+        // Likely rain takes the lightest rain there is (25 set 2026): a possibility, never
+        // drawn as a downpour.
+        WmoCode.DRIZZLE_LIGHT, WmoCode.DRIZZLE_MODERATE, WmoCode.DRIZZLE_DENSE,
+        WmoCode.RAIN_LIKELY -> R.drawable.mc3_overcast_drizzle
+        // Freezing rain is rain: what falls is liquid, and it freezes on the ground. The
+        // family has no drawing of that, and `overcast-sleet` — drops AND flakes — went to
+        // rain and snow together, which is exactly what it draws (25 set 2026). The danger
+        // is the word's and the «Maltempo» banner's, which fires for ice at any chance.
+        WmoCode.FREEZING_DRIZZLE_LIGHT, WmoCode.FREEZING_DRIZZLE_DENSE -> R.drawable.mc3_overcast_drizzle
+        WmoCode.FREEZING_RAIN_LIGHT, WmoCode.FREEZING_RAIN_HEAVY -> R.drawable.mc3_overcast_rain
+        WmoCode.RAIN_AND_SNOW_LIGHT, WmoCode.RAIN_AND_SNOW -> R.drawable.mc3_overcast_sleet
         WmoCode.RAIN_SLIGHT, WmoCode.RAIN_MODERATE, WmoCode.RAIN_HEAVY -> R.drawable.mc3_overcast_rain
-        WmoCode.SNOW_SLIGHT, WmoCode.SNOW_MODERATE, WmoCode.SNOW_HEAVY, WmoCode.SNOW_GRAINS ->
-            R.drawable.mc3_overcast_snow
+        // The family has one snow under a cloud; likely snow shares it, and its word says
+        // «probabile».
+        WmoCode.SNOW_SLIGHT, WmoCode.SNOW_MODERATE, WmoCode.SNOW_HEAVY, WmoCode.SNOW_GRAINS,
+        WmoCode.SNOW_LIKELY -> R.drawable.mc3_overcast_snow
         WmoCode.SHOWERS_SLIGHT, WmoCode.SHOWERS_MODERATE -> if (night) {
             R.drawable.mc3_partly_cloudy_night_rain
         } else {
@@ -191,7 +200,10 @@ object ChiaroIcons {
         } else {
             R.drawable.mc3_partly_cloudy_day_snow
         }
+        // A storm with its rain, and a storm over a dry hour without (25 set 2026).
         WmoCode.THUNDERSTORM, WmoCode.THUNDERSTORM_STRONG, WmoCode.THUNDERSTORM_SEVERE ->
+            if (night) R.drawable.mc3_thunderstorms_night_rain else R.drawable.mc3_thunderstorms_day_rain
+        WmoCode.THUNDERSTORM_POSSIBLE ->
             if (night) R.drawable.mc3_thunderstorms_night else R.drawable.mc3_thunderstorms_day
         null -> R.drawable.mc3_not_available
     }

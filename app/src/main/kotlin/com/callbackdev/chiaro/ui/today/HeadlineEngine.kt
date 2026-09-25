@@ -46,14 +46,14 @@ sealed interface Headline {
     data class Severe(val bucket: AlertEngine.SevereBucket, val at: LocalDateTime) : Headline
 
     /** Already wet: when it should stop, or the honest "not today". */
-    data class WetNow(val stopsAt: LocalDateTime?, val snow: Boolean) : Headline
+    data class WetNow(val stopsAt: LocalDateTime?, val falling: Falling) : Headline
 
     /** Dry now, likely wet later today: the umbrella sentence. [clearsAt] is the first
      * hour the chance drops back under half, when the forecast shows one. */
     data class WetSoon(
         val at: LocalDateTime,
         val pct: Int,
-        val snow: Boolean,
+        val falling: Falling,
         val clearsAt: LocalDateTime?
     ) : Headline
 
@@ -71,10 +71,27 @@ sealed interface Headline {
     data class Wind(val speedKph: Double, val gustKph: Double, val at: LocalDateTime? = null) : Headline
 
     /** Rain possible today: the chance is at least half but under the umbrella bar. */
-    data class WetMaybe(val at: LocalDateTime, val pct: Int, val snow: Boolean) : Headline
+    data class WetMaybe(val at: LocalDateTime, val pct: Int, val falling: Falling) : Headline
 
     /** Dry today, likely wet tomorrow: the first hour tomorrow over the umbrella bar. */
-    data class WetTomorrow(val at: LocalDateTime, val pct: Int, val snow: Boolean) : Headline
+    data class WetTomorrow(val at: LocalDateTime, val pct: Int, val falling: Falling) : Headline
+
+    /**
+     * What the sentence says is falling (25 set 2026). It was a snow-or-rain Boolean until
+     * the state engine started writing rain and snow together (68/69): the icon, the word
+     * and the chart's caption said both while the sentence said rain.
+     */
+    enum class Falling {
+        RAIN, SNOW, MIXED;
+
+        companion object {
+            fun of(wmoCode: Int): Falling = when {
+                WmoCode.of(wmoCode)?.phase == WmoCode.Phase.MIXED -> MIXED
+                WmoCode.isSnow(wmoCode) -> SNOW
+                else -> RAIN
+            }
+        }
+    }
 }
 
 /**
@@ -167,7 +184,7 @@ object HeadlineEngine {
                 }
             return Headline.WetNow(
                 stopsAt = stopsAt?.time,
-                snow = WmoCode.isSnow(current.condition.wmoCode)
+                falling = Headline.Falling.of(current.condition.wmoCode)
             )
         }
 
@@ -184,7 +201,7 @@ object HeadlineEngine {
             return Headline.WetSoon(
                 at = wetHour.time,
                 pct = wetHour.chance,
-                snow = WmoCode.isSnow(wetHour.condition.wmoCode),
+                falling = Headline.Falling.of(wetHour.condition.wmoCode),
                 clearsAt = clearsAt?.time
             )
         }
@@ -231,7 +248,7 @@ object HeadlineEngine {
             return Headline.WetMaybe(
                 at = maybe.time,
                 pct = maybe.chance,
-                snow = WmoCode.isSnow(maybe.condition.wmoCode)
+                falling = Headline.Falling.of(maybe.condition.wmoCode)
             )
         }
 
@@ -241,7 +258,7 @@ object HeadlineEngine {
                 return Headline.WetTomorrow(
                     at = wet.time,
                     pct = wet.chance,
-                    snow = WmoCode.isSnow(wet.condition.wmoCode)
+                    falling = Headline.Falling.of(wet.condition.wmoCode)
                 )
             }
 

@@ -10779,3 +10779,323 @@ pioggia» comprende la neve?
   per i numeri; `ReportDiskCacheTest` (la richiesta scritta e riletta, un'entry senza
   campo non è la richiesta corrente); `WeatherReportMapperTest` (la neve in traccia non
   blocca il ripiego). Suite completa e lint.
+
+## Il motore degli stati: dal codice del provider allo stato dell'app (committente, 25 set 2026)
+
+Il committente torna sulla decisione del 24 set («l'icona resta quella che arriva») con
+un'analisi propria, «Weather Data Sanitization Pipeline», e una direzione: **filtrare e
+rielaborare i dati dove serve**, come fanno le app che ha studiato, invece di fare da
+passacarte tra l'API e lo schermo. Chiede una revisione precisa, adattata all'app, con il
+parere su se sia la scelta giusta. Qui sotto: i fatti verificati, la valutazione punto per
+punto, il motore rivisto fenomeno per fenomeno, i passi. **Stato: proposta, da approvare
+prima di scrivere codice.** Supera la regola del giorno prima («tra modelli diversi l'app non
+fa da arbitro»), e la frase della guida sulle icone e le percentuali che non coincidono è
+stata tolta: la guida delle prossime ore è tornata al testo di prima.
+
+### I fatti, verificati il 25 set
+
+- **Come Open-Meteo scrive `weather_code`** (`WeatherCode.calculate`, letto nel sorgente):
+  temporale da una probabilità calcolata su CAPE e lifted index (> 60 → 95, > 85 → 96),
+  **prima e indipendentemente dalla precipitazione**; gelicidio solo con
+  `categoricalFreezingRain >= 1`, che solo alcuni modelli forniscono; rovesci solo con
+  precipitazione convettiva > 0 o CAPE ≥ 800, e per la pioggia **solo da 1,3 mm/h** (sotto
+  cade nel ramo della pioviggine); neve **da 0,01 cm/h** (71: 0,01–0,2; 73: 0,2–0,8; 75:
+  ≥ 0,8); pioggia **da 0,01 mm/h** (pioviggine 51/53/55 fino a 1,3 mm/h, poi 61/63/65 a
+  2,5 e 7,6); nebbia se visibilità ≤ 1000 m; cielo sulle soglie 20/50/80 della nuvolosità.
+  Per la famiglia ICON il codice è invece il `ww` del DWD, con la sua logica.
+- **La probabilità** (`precipitation_probability`) è la quota dei membri di un ensemble a
+  0,25° che vede **più di 0,1 mm** nell'ora (documentazione). Il codice parte da 0,01: fra
+  0,01 e 0,1 mm il codice dice «precipita» per definizione di una quantità che la
+  probabilità, per definizione, non conta. Questa è la causa strutturale del fiocco su 0%.
+- **Le quantità orarie** escono arrotondate a 0,1 mm (`snowfall` a 0,01 cm): la più piccola
+  precipitazione che la risposta sa dire è 0,1 mm, la stessa soglia della probabilità.
+- **`freezing_rain` non esiste** come variabile: la richiesta risponde HTTP 400. Il
+  gelicidio si conosce solo dal codice (56/57/66/67) o si deduce da fase e temperatura.
+- **`showers` è la precipitazione convettiva di qualunque fase**, non la pioggia a
+  rovesci: nella risposta di Longyearbyen del 25 set le ore codificate 85 (rovesci di neve)
+  portano la stessa acqua in `showers` e in `snowfall`, e il 25 somma 0,8 mm contro un
+  totale di 0,6. Negli altri sei giorni della stessa risposta vale esattamente
+  **totale = rain + showers + snowfall / 0,7** (7 cm di neve = 10 mm d'acqua, la regola
+  della documentazione). Quindi **liquida = min(rain + showers, totale − snowfall / 0,7)**.
+  → Corretto in questo stesso giro in `WeatherReportMapper.rainOf`: la «pioggia» del giorno
+  aperto del 24 set sommava anche i rovesci di neve.
+- **Un campione** (6 città, 72 ore, 432 ore, `best_match` del 25 set alle 00:40: Milano,
+  Bari, Londra, Reykjavik, Longyearbyen, Tokyo; 70 ore con ≥ 0,1 mm), tre disaccordi:
+  - A. codice di precipitazione con probabilità < 20%: **6 ore** (Longyearbyen, 6–18%);
+  - B. codice di cielo con ≥ 0,1 mm **nella stessa risposta**: **4 ore** (Bari 08–11, fino
+    a 0,5 mm sotto «coperto»): il codice smentisce la quantità dello stesso modello;
+  - C. modello asciutto con probabilità ≥ 50%: **16 ore** (Bari 2, Tokyo 14), 7 delle quali
+    ≥ 70% sotto un'icona di cielo; tutte a ridosso di un periodo piovoso: è la tempistica
+    del singolo modello contro trenta membri.
+  Un campione di un giorno è un'indicazione, non una misura: la misura vera è il passo 1.
+
+### La valutazione dell'analisi
+
+**La direzione è giusta.** Le app citate non mostrano il dato grezzo, ma va detto con
+precisione chi filtra: il grosso del lavoro lo fanno i **fornitori di dati** (The Weather
+Company/IBM, AccuWeather con i suoi meteorologi, il backend di Apple Weather, il National
+Blend of Models del NWS) con **post-elaborazione statistica** (MOS, fusione di modelli,
+calibrazione sulle osservazioni) e con la derivazione del «tempo sensibile» dai campi fisici.
+Carrot Weather è un client che lascia scegliere il fornitore: filtra poco di suo. «Coherence
+engine» e «data sanitization pipeline» non sono termini del settore; quelli in uso sono
+*post-processing*, *MOS*, *model blending*, *consistency checks* (il Graphical Forecast
+Editor del NWS ha strumenti che tengono coerenti probabilità, quantità, tipo di tempo e
+nuvolosità). Open-Meteo invece è vicino all'uscita dei modelli: un'app costruita su di lui
+ha una ragione in più per avere uno strato suo. Detto onestamente: senza osservazioni e
+senza storico l'app non può **calibrare** (migliorare l'accuratezza); può rendere
+**coerente e leggibile** quello che mostra, ed è già molto.
+
+Punto per punto:
+
+1. **Floor e capping della probabilità — respinti.** Portare a 0% un 14% cancella
+   un'informazione vera (quattro membri su trenta vedono precipitazione), e portare a 50%
+   una probabilità sotto il 40% scrive un numero che nessun modello ha prodotto. In più la
+   probabilità alimenta gli avvisi (70% in 6 ore), la frase in cima e le regole del
+   lettore: cambiarla cambia tutti e tre. La condizione sulla neve del floor (> 0,5 cm) è
+   anche ridondante: 0,5 cm sono 0,7 mm d'acqua, già dentro `precipitation > 0,5`. La
+   coerenza si ottiene altrove: **il numero resta quello del modello, è lo stato (icona e
+   parola) che si decide guardando anche la probabilità.**
+2. **Le fasce di intensità — tenute, rifatte.** Avevano buchi (0,4–0,5 mm; sotto 0,1 non
+   definito) e una soglia di temperatura (2 °C) per scegliere fra goccia e fiocco, quando il
+   modello dice già la fase: `snowfall` contro il resto. Le fasce standard per la pioggia
+   (AMS Glossary) sono debole < 2,5 mm/h, moderata 2,5–7,6, forte > 7,6: le stesse soglie
+   alte di Open-Meteo. La differenza vera è in basso, dove Open-Meteo chiama «pioviggine
+   fitta» 1 mm/h (Tokyo, 26 set, al 90%): per un lettore è pioggia debole.
+3. **L'albero — tenuto nella forma, corretto nel contenuto.** Mancavano nebbia (che l'app
+   già ripara), rovesci, pioggia e neve insieme come stato vero, le ore probabili senza
+   quantità (caso C), il gelicidio senza `freezing_rain`; `precipitation > 0` va sostituito
+   da ≥ 0,1 mm; «sleet» è ambiguo (pioggia e neve in UK, granuli di ghiaccio in USA) e va
+   detto «pioggia e neve»; le soglie di cielo 25/70 a tre stati cancellerebbero il «quasi
+   sereno», e l'app usa 20/50/80 come il provider.
+4. **Il ripiego — tenuto, reso per campo e per ora**: non tutto o niente sull'intera
+   risposta, ma per ciascun input mancante il pezzo di albero che lo usa torna al codice.
+5. **Dove vive — non nel ViewModel.** Frase in cima, avvisi, regole, widget, diario e riga
+   del giorno leggono tutti `HourlyForecast.condition`: un filtro nella UI lascerebbe loro
+   il codice grezzo e l'app si contraddirebbe fra schermate. Il motore sta in `:core:domain`
+   (Kotlin puro, testabile a tabella) e lo chiama il mapper, al posto di oggi.
+
+### Il motore rivisto
+
+Un'ora entra con: codice, quantità totale, neve, `showers`, probabilità, temperatura,
+visibilità, nuvolosità (le quantità e la probabilità dello slot successivo, come oggi). Esce
+con uno stato; **nessun numero cambia**. Soglie comuni: **misurabile = ≥ 0,1 mm** (la stessa
+della probabilità e della risoluzione della risposta); **probabile = probabilità ≥ 20% o
+assente** (la soglia del maltempo di `AlertEngine`, e quella sotto cui i bollettini del NWS di
+norma non nominano la precipitazione). Acqua della neve = `snowfall / 0,7`; liquida = totale
+− acqua della neve.
+
+In ordine; la prima regola che risponde decide:
+
+1. **Temporale** — codice 95/96/99 del provider (l'app non ha CAPE: non lo inventa né lo
+   toglie) e probabile. Con ≥ 0,1 mm: temporale con pioggia; senza: il disegno del
+   temporale senza gocce, parola «Temporali possibili» (Open-Meteo lo scrive anche in ore
+   asciutte, perché nasce dal CAPE). 96/99 restano «forte», senza grandine.
+2. **Gelicidio** — codice 56/57/66/67 del provider, **oppure** (da misurare, passo 1)
+   liquida misurabile con temperatura ≤ 0 °C: pioggia che gela al suolo. Pioviggine gelata
+   sotto 1,3 mm/h, pioggia gelata sopra (le soglie del provider). Nessuna soglia di
+   probabilità, come oggi: il ghiaccio è pericoloso in qualunque quantità.
+3. **Precipitazione misurabile e probabile** (≥ 0,1 mm e probabile):
+   - **Pioggia e neve** se liquida e acqua della neve sono **entrambe** ≥ 0,1 mm: WMO 68
+     (debole, < 2,5 mm/h in tutto) o 69 (moderata o forte). Codici WMO validi che Open-Meteo
+     non scrive mai; disegno `overcast-sleet` (oggi usato per il gelicidio: da decidere).
+   - **Neve** se la parte che cade è neve: **rovesci di neve** (85, forti 86 da 0,8 cm/h)
+     quando `showers` ≥ metà dell'acqua dell'ora, altrimenti neve 71/73/75 a 0,2 e 0,8 cm/h
+     (le soglie del provider; 75 e 86 restano «maltempo»).
+   - **Pioggia** altrimenti: **rovesci** (80, 81 da 2,5, 82 da 7,6 mm/h) quando la parte
+     convettiva liquida — `min(showers, liquida)` — è almeno metà, **a qualunque
+     intensità** (Open-Meteo li chiama pioviggine sotto 1,3 mm/h); altrimenti **pioviggine**
+     (51) sotto 0,5 mm/h, **pioggia debole** (61) fino a 2,5, **pioggia** (63) fino a 7,6,
+     **pioggia forte** (65) oltre. Spariscono 53/55: 1 mm/h è pioggia debole, non
+     «pioviggine fitta».
+4. **Precipitazione probabile senza quantità** (caso C: < 0,1 mm, probabilità ≥ 60%, la
+   fascia che i bollettini NWS chiamano «probabile») — **decisione aperta**: mostrare la
+   precipitazione come «probabile» (disegno della debole, parola «Pioggia probabile» /
+   «Neve probabile»), con la fase dell'ora bagnata del modello più vicina entro 3 ore,
+   altrimenti neve a ≤ 1 °C (la soglia media pioggia/neve dell'emisfero nord, Jennings et al.
+   2018). Oppure lasciare il cielo e far parlare la percentuale, come oggi.
+5. **Nebbia** — la riparazione di oggi, dentro il motore: visibilità ≤ 1000 m, inventata
+   solo se persiste in un'ora vicina, tolta quando la visibilità la smentisce. **Nebbia
+   gelata** (48) con temperatura ≤ 0 °C: la nebbia che deposita brina, il caso che conta su
+   strada; oggi 48 non arriva mai perché solo ICON lo scrive. La precipitazione viene prima
+   della nebbia: nella pioggia la visibilità bassa è la pioggia.
+6. **Cielo** — dalla nuvolosità sulle soglie del provider (20/50/80, quattro stati), non dal
+   codice: il cielo disegnato in cima è già calcolato dalla nuvolosità, e l'icona deve dire
+   la stessa cosa. Misurato il 22 ago sul Po: la nuvolosità sposta il 23% delle ore rispetto
+   al codice (per la famiglia ICON, che non la usa per il `ww`).
+
+Le ore di traccia (< 0,1 mm) o improbabili (< 20%) finiscono in 5 o 6: è la correzione del
+fiocco su 0% (caso A), e un codice «coperto» con 0,5 mm diventa pioggia (caso B).
+
+**Il resto dell'app eredita lo stato**: la riga del giorno (le regole della Fase 26 e del 24
+set restano, applicate agli stati), la frase in cima, gli avvisi, le regole, i widget, il
+diario. **Il blocco `current`** passa dallo stesso motore con i suoi campi. **Ripiego**: un
+input mancante (quantità, neve, `showers`, nuvolosità, visibilità, temperatura) spegne solo
+la regola che lo usa, e quell'ora torna al codice del provider per quel pezzo; una cache
+vecchia senza i campi nuovi funziona come oggi.
+
+**Fuori, per ora**: la foschia (visibilità 1–5 km, disegni `mist`/`haze` già spediti, ma non
+è un codice WMO fra quelli che l'app parla: stato nuovo, da proporre a parte); la grandine
+(nessun modello di Open-Meteo la prevede); il ghiaccio al suolo dopo la pioggia (è una frase
+o un avviso, non un'icona).
+
+### Le decisioni aperte, per il committente
+
+1. Caso C (probabile senza quantità): stato «probabile» dal 60%, oppure cielo come oggi.
+2. Gelicidio dedotto (liquida a ≤ 0 °C): sì dopo la misura, o solo dal codice.
+3. «Pioggia e neve» e il gelicidio oggi condividono `overcast-sleet`: separarli (Meteocons ha
+   anche `sleet`) o tenerli insieme e distinguerli con la parola.
+4. «Temporali possibili» per un 95 senza pioggia nell'ora.
+
+### Le decisioni (committente, 25 set 2026, con i vincoli proposti)
+
+1. **Caso C: sì, stato «Pioggia probabile» / «Neve probabile»**, con quattro vincoli: soglia
+   60% da confermare con la misura; disegno della precipitazione debole (`overcast-drizzle`
+   o l'equivalente della neve), mai quello pieno; è uno stato di **possibilità**, quindi non
+   fa dire alla frase in cima «piove adesso», non conta come ora bagnata per l'etichetta
+   del giorno e non porta millimetri; fase dall'ora bagnata del modello più vicina entro 3
+   ore, altrimenti neve a ≤ 1 °C.
+2. **Gelicidio dedotto: dopo la misura**, e in più con la soglia di probabilità (≥ 20%) che
+   il gelicidio scritto dal provider non ha: uno stato dedotto che fa scattare un avviso di
+   maltempo senza probabilità alcuna sarebbe il falso allarme più caro dell'app.
+3. **Separati.** «Pioggia e neve» prende `overcast-sleet`, che disegna proprio gocce e
+   fiocchi. Il gelicidio non ha un disegno onesto in Meteocons (nessuna icona di pioggia che
+   gela): si compone, come il «quasi sereno» con `tools/compose_sun_cloud.py`, oppure si
+   sceglie un disegno esistente; da decidere al passo 2 con una prova a schermo.
+4. **«Temporali possibili» per un 95 senza pioggia nell'ora: sì.** Il limite noto: la
+   probabilità è di precipitazione, non di fulmini (Open-Meteo non ne dà una), quindi il
+   filtro al 20% è il migliore disponibile, non uno esatto.
+
+### I passi
+
+- [x] 1. **Misura** (25 set 2026, 08:42 UTC): 26 città scelte per fenomeno, 7 giorni, 4342
+      ore come le mostra l'app. `tools/measure_states.py` scarica (gira in locale o nel
+      workflow `Measure states`, che committa il file), `tools/analyze_states.py` prototipa
+      il motore e conta; i dati grezzi sono in `tools/measurements/states-2026-09-25.json`.
+      Vedi «La misura» qui sotto.
+- [x] 2. `WmoCode`: 68/69 («Pioggia e neve», fase `MIXED`), gli stati dell'app sopra il
+      1000 (1061 «Pioggia probabile», 1071 «Neve probabile», 1095 «Temporali possibili»,
+      ancora un pericolo), 48 con la sua parola («Nebbia gelata»); `likely` tiene gli stati
+      probabili fuori da `isPrecipitation`. Parole IT/EN, disegni (vedi sotto).
+- [x] 3. `WeatherStateEngine` in `:core:domain`, puro; `WeatherStateEngineTest` regola per
+      regola, con i confini delle soglie, i ripieghi e i casi della misura per nome.
+- [x] 4. Il mapper costruisce le ore delle righe (intervallo dallo slot dopo, istanti dal
+      proprio) e le passa al motore; il giorno lavora sugli stati riportati agli slot; il
+      blocco `current` passa dallo stesso motore. Chiede `snowfall` e `showers` orari e
+      correnti; spariscono `repairedCodes`, `skyAt` e `repairFog`, entrati nel motore.
+- [x] 5. Verifica: le fixture reali passano invariate (Reykjavik, Milano, Everest, Sydney);
+      il motore Kotlin rigirato sulle 4342 ore della misura dà lo stesso stato del
+      prototipo Python in 4339; le 3 differenze sono tutte l'arrotondamento voluto (0,2 mm
+      con 0,07 cm: 0,1 di liquida e 0,1 d'acqua di neve, «pioggia e neve» in Kotlin, dove
+      il prototipo senza tolleranza leggeva 0,0999… di liquida). Suite completa e lint.
+- [ ] 6. Un giro sul telefono nelle città degli screenshot (Longyearbyen, Bari, Tokyo).
+
+### Come è stato scritto (25 set 2026)
+
+- **I disegni.** Il gelicidio prende il disegno di quel che cade — pioviggine per 56/57,
+  pioggia per 66/67 — perché Meteocons non ha un disegno onesto della pioggia che gela, e
+  `overcast-sleet` (gocce e fiocchi, lo si è guardato) è andato a pioggia e neve, che è
+  esattamente quel che disegna. Il pericolo resta della parola e del banner «Maltempo»,
+  che per il ghiaccio scatta a qualunque probabilità. Un disegno composto per il gelicidio
+  (come il «quasi sereno») resta un seguito possibile. Il temporale che piove prende
+  `thunderstorms-*-rain`, importato con `tools/import_meteocons_v3.py` (la ri-esecuzione a
+  lista invariata ha dato zero differenze; con le due voci nuove ha aggiunto solo quelle
+  a `MeteoconsSets.kt`); «Temporali possibili» tiene il fulmine senza gocce. La pioggia
+  probabile prende la pioviggine, la neve probabile l'unica neve sotto una nuvola.
+- **Il blocco `current`** somma 15 minuti (`interval` 900 in tutte le 26 città): le
+  quantità si portano all'ora prima delle soglie. Non dice mai «probabile» — descrive
+  adesso — e può inventare nebbia senza vicini, come prima.
+- **La neve forte** vale come avviso a qualunque probabilità, come in `AlertEngine`:
+  la regola della probabilità non la toglie.
+- **Il gelicidio dedotto** non è scritto: nessuna ora della misura l'avrebbe acceso, e
+  resta per la misura d'inverno (decisione 2).
+- **La frase in cima** diceva «pioggia» per pioggia e neve insieme (`isSnow` è la sola
+  neve), mentre icona, parola e didascalia dicevano entrambe. Chiuso lo stesso giorno su
+  richiesta del committente: `Headline.Falling` (pioggia, neve, entrambe) al posto del
+  booleano, e le otto frasi «pioggia e neve» in IT/EN. La stessa frase la leggono il
+  widget «Ora» e le notifiche, che la ereditano.
+
+### La revisione del codice (25 set 2026, chiesta dal committente)
+
+Una revisione del commit del motore ha trovato nove punti; verificati sul codice uno per uno:
+
+- **Corretti**: (1) pioggia e neve nascondeva l'avviso di una parte forte — ora una neve
+  forte (≥ 0,8 cm/h) o una pioggia forte (≥ 7,6 mm/h) dentro l'ora mista le dà il nome e
+  l'avviso, anche sotto il 20% per la neve; (2) il giorno votava il cielo con gli istanti
+  dello slot prima — ora lo slot k è l'intervallo e l'istante di k, come leggeva
+  `dailyCode` prima del motore; (3) senza `showers` (cache vecchia) i rovesci diventavano
+  pioggia — ora ripiegano sui codici di rovescio del provider; (6) «probabile» ignorava la
+  fase dell'ora stessa — ora viene prima la sua (traccia di neve o codice), poi l'ora
+  vicina, poi la temperatura; (8) la probabilità dell'ora in corso si calcolava due volte —
+  ora una; (9) la persistenza della nebbia viveva nel mapper — ora è del motore, che ha la
+  serie (il blocco `current` la forza con `fogPersists = true`).
+- **Chiarito, non cambiato**: (5) il blocco `current` può dire «Temporali possibili»:
+  `likely = false` spegne la pioggia o neve probabile, non l'avviso di un temporale che il
+  provider vede adesso.
+- **Limiti noti, detti al committente**: (4) la frase in cima per pioggia e neve (chiuso
+  subito dopo, sopra); (7) il gelicidio disegna la pioggia che è, e la pioggia probabile la pioviggine: la
+  differenza è della parola, del banner e della percentuale.
+- Dopo le correzioni il motore Kotlin, rigirato sulle 4342 ore della misura, resta uguale
+  al prototipo in 4339 ore, con le stesse 3 differenze volute.
+
+### La regola «lo schermo non mente»
+
+Il committente vuole toglierla perché bloccherebbe le elaborazioni. Letta per quello che
+dice (DESIGN §1.1: niente sezioni vuote, età vera dei dati vecchi, stime dichiarate, niente
+segnaposto spacciati per valori), non vieta nessuna elaborazione: a bloccare è stata la mia
+lettura del 24 set, che ne ha fatto un «non toccare il codice». Quindi la regola resta per
+quello che dice, e le si affianca il principio che mancava — **i numeri sono del modello,
+gli stati sono dell'app** — in `CLAUDE.md` e in DESIGN §1.1. Rimuoverla del tutto
+toglierebbe anche le sue parti che nessuno vuole perdere (lo scheletro che sembra uno zero,
+l'età dei dati che tace).
+
+### La misura (passo 1, 25 set 2026)
+
+26 città, 7 giorni, 4342 ore; 585 con ≥ 0,1 mm (13,5%). I disaccordi fra i dati grezzi:
+
+| | ore | % |
+|---|---:|---:|
+| A. codice di precipitazione con probabilità < 20% | 88 | 2,0 |
+| B. codice di cielo o nebbia con ≥ 0,1 mm nella stessa risposta | 19 | 0,4 |
+| C. asciutta (< 0,1 mm) con probabilità ≥ 50 / 60 / 70% | 103 / 56 / 20 | 2,4 / 1,3 / 0,5 |
+
+Il motore proposto cambia la parola di **795 ore su 4342 (18,3%)**:
+
+- **Cielo, 472 ore (10,9%)**, ed è un fatto europeo: rispetto alle soglie 20/50/80 sulla
+  nuvolosità dello stesso slot il codice di cielo diverge nel 10–29% delle ore in Italia,
+  Francia e Germania (Cagliari 29%, Trento 27%, Milano 17%) e nello 0–1% altrove (Londra,
+  Oslo, Reykjavik, Longyearbyen, le Americhe, Tokyo, Singapore, Mumbai, Sydney). È il `ww`
+  della famiglia ICON, che Open-Meteo inoltra senza ricalcolarlo; fuori dall'Europa il
+  codice è già la nuvolosità. I passaggi più frequenti: quasi sereno → sereno 161, poco
+  nuvoloso → quasi sereno 104, poco nuvoloso ↔ coperto 64.
+- **Pioggia e rovesci, 244 ore**: pioviggine → rovesci 120 (Reykjavik, 0,4 mm/h
+  convettivi: Open-Meteo chiama pioviggine ogni rovescio sotto 1,3 mm/h), pioviggine →
+  pioggia debole 95 (Londra, 0,9 mm/h: la «pioviggine fitta»), pioviggine → cielo 71 e
+  pioggia debole/rovesci/neve → cielo 13 (probabilità < 20%: Londra 0,3 mm al 16–19%,
+  Montreal 2,2 mm al 17%, Longyearbyen 0,1 mm al 10–18%), cielo → pioggia 9 (il caso B:
+  Napoli 0,2 mm al 98% sotto «coperto»).
+- **Probabile, 56 ore** (caso C dal 60%): Bari 60–85%, Oslo 88%, Tokyo 71–90%, Singapore;
+  due di neve a Longyearbyen, dalla fase dell'ora bagnata vicina.
+- **Nebbia, 23 ore**: 18 diventano nebbia gelata (Longyearbyen, −4 °C), 5 ore di
+  pioviggine al < 20% con visibilità ≤ 1 km diventano nebbia (Singapore).
+- **Temporale (14 ore) e neve (25 ore)**: nessun cambiamento.
+- **Mai viste in questo campione**: gelicidio dedotto (0 ore di pioggia a ≤ 0 °C), pioggia e
+  neve insieme (0), temporale senza pioggia (0). Fine settembre non ha inverno: **queste
+  regole restano da misurare**, rilanciando lo script fra dicembre e febbraio. Fino ad
+  allora il gelicidio dedotto resta spento (decisione 2), le altre due si scrivono con i
+  test ma senza una misura dietro, e lo si dice.
+
+Due fatti sui dati, che correggono l'analisi del 25 mattina:
+
+- **`rain` e `showers` cambiano significato col modello.** A Longyearbyen `showers`
+  contiene la neve convettiva (lo stesso 0,1 mm in `showers` e in `snowfall`, codice 85); a
+  Londra `rain` contiene già i rovesci: il 27 set rain 1,5, showers 0,6, totale 1,5; il 30
+  rain 7,5, showers 0,9, totale 7,5. L'unica liquida affidabile è **totale − neve / 0,7**,
+  che vale in tutte le 585 ore bagnate. `rainOf` (il minimo fra le due) dà la risposta
+  giusta in entrambi i casi: la versione mergiata il 24 avrebbe scritto 2,1 mm per i 1,5 di
+  Londra. Il motore userà solo la differenza.
+- **Il cielo dalla nuvolosità è la scelta con più effetto a schermo**, e riguarda soprattutto
+  il pubblico italiano. La ragione per farlo resta: l'icona dirà la stessa cosa della tile
+  delle nuvole e del cielo disegnato in cima, che sono già calcolati dalla nuvolosità. Il
+  limite: il `ww` del DWD pesa meno le nubi alte e sottili, la nuvolosità totale no; l'app
+  ha già le nubi per strato, e un «velato» per il cielo di sole nubi alte è un seguito
+  possibile, non una premessa.
