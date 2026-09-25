@@ -11173,3 +11173,38 @@ schermate le disegnano dei test, a richiesta, e una regola del repo dice quando.
   l'orologio vero (`LocalTime.now(zone)`, sfuggito alla prima ricerca perché aveva un
   argomento), ed è così che sono stati trovati anche Cielo e Diario.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+### Il seguito: cosa mostrano (committente, 25 set 2026)
+
+Richiesta: rivedere se le schermate coprono tutto quello che c'è da mostrare, e decidere.
+Confrontate con le cinque cose che dicono cos'è l'app (il cielo calcolato, una frase prima dei
+numeri, l'agenda del cielo col verdetto, il diario della previsione, gli avvisi scritti da chi
+legge) e con l'elenco delle funzioni del README:
+
+- **Aggiunta `alerts-yours.png`**: la sezione «Yours» di Avvisi con due regole fatte dalle
+  idee dell'app (Bike e Run, create come le crea `addFromTemplate`: nome, messaggio e
+  condizioni dell'idea, mai scattate) e la fila delle idee, con «Already added» su quella
+  usata. Gli avvisi scritti da chi legge erano l'unico dei cinque tratti senza immagine.
+  Nove immagini generate, non più otto.
+- **`today-week.png` con domani aperto**: la settimana e, sotto la riga di sabato, le sue
+  ore e i suoi fatti (qui l'UV, perché è un giorno asciutto). Prima mostrava solo le righe.
+- **Il Diario resta fuori, misurato**: la Single Runs API di Open-Meteo ridà una corsa
+  passata nella stessa forma della risposta viva, ma rifiuta `daily` se la corsa non parte
+  alla mezzanotte locale («only supported … if 'run' starts at 00:00 in the requested
+  timezone») e le corse delle 22Z non esistono per nessun modello provato (GFS, ICON); la
+  Previous Runs API ha solo ritardi di giorni interi. Un diario ricostruito avrebbe un
+  aggiornamento al giorno con i buchi in mezzo, che dice il falso sul comportamento
+  dell'app. Il README lo dice. La strada onesta è registrare Milano a intervalli per qualche
+  giorno e ricostruire le righe con `WeatherSnapshots.flatten`/`flattenForecast`.
+- **Fuori anche l'editor delle regole**: è un bottom sheet in una finestra sua, che il
+  disegno della finestra dell'attività non contiene, e vuole il view model vero.
+- README: le immagini in quattro gruppi (Oggi; Cielo; Avvisi e Impostazioni; la schermata
+  home, fotografata), il paragrafo iniziale dice cosa non è disegnato da un test e perché.
+
+**Un difetto trovato dall'immagine, non corretto qui**: in inglese la frase della regola è
+«When the temperature now at least 12°», senza verbo (`rule_sentence_fragment` è
+`%1$s %2$s %3$s` e gli operatori sono «at least», «above»…; il README promette «*when*
+rain in the next 6 hours *is* above 70%»). In italiano «la temperatura adesso almeno 12°»
+regge come stile telegrafico. Non toccato in questa modifica, che riguarda le immagini:
+è una decisione di testo del committente (aggiungere «is» agli operatori numerici inglesi,
+o un frammento con il verbo, tenendo «is»/«is not» dei sì/no).

@@ -20,7 +20,11 @@ import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.warnings.DpcBulletinReader
 import com.callbackdev.chiaro.domain.warnings.OfficialWarningEngine
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
+import com.callbackdev.chiaro.domain.rules.MaxRules
+import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.ui.alerts.AlertsUiState
+import com.callbackdev.chiaro.ui.alerts.RuleCardModel
+import com.callbackdev.chiaro.ui.alerts.RuleText
 import com.callbackdev.chiaro.ui.sky.SkyStateBuilder
 import com.callbackdev.chiaro.ui.sky.SkyUiState
 import com.callbackdev.chiaro.ui.today.TodayStateBuilder
@@ -122,11 +126,27 @@ internal object MilanRecording {
         now = now
     )
 
-    fun alerts(context: Context): AlertsUiState.Content = AlertsUiState.Content(
+    /**
+     * Two rules a reader makes with two taps: the Bike and the Run ideas, created exactly
+     * as `AlertsViewModel.addFromTemplate` creates them (the idea's name and message, its
+     * conditions, switched on). The app's own words, so the picture puts no sentence in a
+     * reader's mouth; never fired yet, because nothing has run.
+     */
+    fun yourRules(context: Context): List<NotificationRule> =
+        listOf(RuleText.templates[0], RuleText.templates[2]).mapIndexed { index, template ->
+            NotificationRule(
+                id = index + 1L,
+                name = context.getString(template.nameRes),
+                conditions = template.conditions,
+                message = context.getString(template.messageRes)
+            )
+        }
+
+    fun alerts(context: Context, rules: List<NotificationRule> = emptyList()): AlertsUiState.Content = AlertsUiState.Content(
         placeName = city.name,
         notifications = settings.notifications,
-        rules = emptyList(),
-        canAdd = true,
+        rules = rules.map { RuleCardModel(it, lastFired = null) },
+        canAdd = rules.size < MaxRules,
         units = settings.units,
         zone = placeZone(report, city),
         warnings = warnings(context)

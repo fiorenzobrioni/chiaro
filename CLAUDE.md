@@ -137,6 +137,9 @@ ordinary run rewrites an image. Standing rules (committente, 25 set 2026):
 - The two home-screen pictures (`widget-day-arc.jpg`, `widgets-home.jpg`) are photographs
   from a phone at v1.0.0: a test cannot draw a launcher. Replace them by hand when the
   widgets change visibly.
+- **No invented data.** Every picture comes from the recording or from what a reader makes
+  with the app's own words (the alerts are created from its ideas). The Journal has no
+  picture until real history can be recorded (PLANNING.md, «Le schermate del README»).
 
 ## Writing `README.md` (root file only)
 

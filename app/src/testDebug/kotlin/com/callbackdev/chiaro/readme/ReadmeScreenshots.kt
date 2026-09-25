@@ -20,6 +20,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
@@ -28,6 +29,7 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.ui.alerts.AlertsActions
 import com.callbackdev.chiaro.ui.alerts.AlertsScreen
+import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.guide.GuideRoute
 import com.callbackdev.chiaro.ui.icons.LocalAnimatedIcons
@@ -97,9 +99,15 @@ class ReadmeScreenshots {
         save("today-now")
     }
 
+    /** The week with tomorrow open: its hours and its facts, one tap on its row. */
     @Test
     fun todayWeek() {
         showTab(ShellTab.TODAY) { today() }
+        scrollUnderHeader(R.string.section_week)
+        val tomorrow = MilanRecording.today(app).week[1].forecast.date
+        compose.onNode(hasText(Formats.dayLabel(tomorrow, app.resources.configuration.locales[0])))
+            .performClick()
+        compose.waitForIdle()
         scrollUnderHeader(R.string.section_week)
         save("today-week")
     }
@@ -173,6 +181,22 @@ class ReadmeScreenshots {
             )
         }
         save("alerts")
+    }
+
+    /** Further down: the reader's own alerts, and the ideas they start from. */
+    @Test
+    fun alertsYours() {
+        showTab(ShellTab.ALERTS) {
+            AlertsScreen(
+                state = MilanRecording.alerts(app, MilanRecording.yourRules(app)),
+                actions = AlertsActions({}, {}, {}, {}, {}, {}, {}, { _, _ -> }),
+                onEdit = {},
+                onOpenPlaces = {},
+                onOpenSettings = {}
+            )
+        }
+        scrollUnderHeader(R.string.alerts_group_yours)
+        save("alerts-yours")
     }
 
     @Test

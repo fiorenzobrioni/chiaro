@@ -56,23 +56,27 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
 
 Drawn by the app's own screens from real data for Milan: a forecast from Open-Meteo and a
 bulletin from the Protezione Civile, recorded once and put through the app's own pipeline,
-so every picture shows the current build. In English here; the app ships in Italian and
-English through the system per-app language picker. The phone's status bar is not in the
-pictures, and the two of the home screen are photographs from a phone at v1.0.0, because a
-test cannot draw a launcher. They are regenerated with
-`./gradlew :app:testDebugUnitTest --tests "*ReadmeScreenshots" -PupdateScreenshots`.
+so every picture shows the current build. They are regenerated with
+`./gradlew :app:testDebugUnitTest --tests "*ReadmeScreenshots" -PupdateScreenshots`. In
+English here; the app ships in Italian and English through the system per-app language
+picker. The phone's status bar is not in the pictures.
+
+Two things are not drawn by a test. The home screen, because a test cannot draw a
+launcher: those two pictures are photographs from a phone at v1.0.0. And the Journal, which
+is the history of how the forecast changed over several days: its picture waits for days of
+real updates rather than showing invented ones.
 
 **Today**, one vertical scroll that starts with the sky:
 
 <table>
 <tr>
 <td width="33%"><img src="docs/screenshots/today-now.png" alt="The sky canvas with the temperature, the condition and the daylight ribbon, the next hours, and the rest of the day"></td>
-<td width="33%"><img src="docs/screenshots/today-week.png" alt="The week on one shared temperature scale, each day with its ribbon of light"></td>
+<td width="33%"><img src="docs/screenshots/today-week.png" alt="The week on one shared temperature scale, each day with its ribbon of light, and tomorrow open on its UV and its hours"></td>
 <td width="33%"><img src="docs/screenshots/today-details.png" alt="The details grid: wind, clouds, humidity, pressure, visibility, air quality and pollen, each with the line that says what to do with it"></td>
 </tr>
 <tr>
 <td align="center"><sub>The computed sky, the next hours, the rest of the day</sub></td>
-<td align="center"><sub>The week on one temperature scale, with each day's light</sub></td>
+<td align="center"><sub>The week on one temperature scale, with each day's light. Open a day for its hours and its facts</sub></td>
 <td align="center"><sub>Every number carries its consequence, never a bare value</sub></td>
 </tr>
 </table>
@@ -92,19 +96,34 @@ test cannot draw a launcher. They are regenerated with
 </tr>
 </table>
 
-**Alerts, Settings and the home screen**: what the app sends, how it looks, and what it
-puts on the launcher:
+**Alerts and Settings**: what the app sends and when, the alerts you write yourself, and how
+it looks:
 
 <table>
 <tr>
 <td width="33%"><img src="docs/screenshots/alerts.png" alt="Alerts: when each notification can arrive, then the official Protezione Civile bulletin for the zone and the switch that follows it"></td>
+<td width="33%"><img src="docs/screenshots/alerts-yours.png" alt="Your own alerts: two rules made from the ideas, Bike and Run, each written out as its sentence with its switch, and the row of ideas to start from"></td>
 <td width="33%"><img src="docs/screenshots/settings.png" alt="Settings: the guide, the units, and the appearance with a live preview above the theme, the palette and the typeface"></td>
-<td width="33%"><img src="docs/screenshots/widgets-home.jpg" alt="Four widgets on the home screen: Now, Today, Sky and the next hours"></td>
 </tr>
 <tr>
 <td align="center"><sub>When they arrive, then the official bulletin and what it sends</sub></td>
+<td align="center"><sub>Your own alerts, written as sentences, started from an idea</sub></td>
 <td align="center"><sub>Two palettes, three typefaces, two icon families</sub></td>
+</tr>
+</table>
+
+**The home screen**, photographed on a phone:
+
+<table>
+<tr>
+<td width="33%"><img src="docs/screenshots/widgets-home.jpg" alt="Four widgets on the home screen: Now, Today, Sky and the next hours"></td>
+<td width="33%"><img src="docs/screenshots/widget-day-arc.jpg" alt="The day's arc widget on the home screen"></td>
+<td width="33%"></td>
+</tr>
+<tr>
 <td align="center"><sub>Widgets in Glance, each configured on its own</sub></td>
+<td align="center"><sub>The day's arc: the sun's real path over your place</sub></td>
+<td></td>
 </tr>
 </table>
 
