@@ -11008,9 +11008,11 @@ o un avviso, non un'icona).
   la regola della probabilità non la toglie.
 - **Il gelicidio dedotto** non è scritto: nessuna ora della misura l'avrebbe acceso, e
   resta per la misura d'inverno (decisione 2).
-- **La frase in cima** dice ancora «pioggia» per pioggia e neve insieme (`isSnow` è la
-  sola neve): la didascalia del grafico invece le nomina entrambe. Un seguito: le frasi
-  «pioggia e neve» non esistono ancora, in nessuna delle otto varianti.
+- **La frase in cima** diceva «pioggia» per pioggia e neve insieme (`isSnow` è la sola
+  neve), mentre icona, parola e didascalia dicevano entrambe. Chiuso lo stesso giorno su
+  richiesta del committente: `Headline.Falling` (pioggia, neve, entrambe) al posto del
+  booleano, e le otto frasi «pioggia e neve» in IT/EN. La stessa frase la leggono il
+  widget «Ora» e le notifiche, che la ereditano.
 
 ### La revisione del codice (25 set 2026, chiesta dal committente)
 
@@ -11029,8 +11031,8 @@ Una revisione del commit del motore ha trovato nove punti; verificati sul codice
 - **Chiarito, non cambiato**: (5) il blocco `current` può dire «Temporali possibili»:
   `likely = false` spegne la pioggia o neve probabile, non l'avviso di un temporale che il
   provider vede adesso.
-- **Limiti noti, detti al committente**: (4) la frase in cima per pioggia e neve (sopra);
-  (7) il gelicidio disegna la pioggia che è, e la pioggia probabile la pioviggine: la
+- **Limiti noti, detti al committente**: (4) la frase in cima per pioggia e neve (chiuso
+  subito dopo, sopra); (7) il gelicidio disegna la pioggia che è, e la pioggia probabile la pioviggine: la
   differenza è della parola, del banner e della percentuale.
 - Dopo le correzioni il motore Kotlin, rigirato sulle 4342 ore della misura, resta uguale
   al prototipo in 4339 ore, con le stesse 3 differenze volute.

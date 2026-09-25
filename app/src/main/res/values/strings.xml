@@ -36,6 +36,16 @@
     <string name="headline_snow_maybe">Snow possible around %1$s</string>
     <string name="headline_wet_tomorrow">Umbrella tomorrow from %1$s</string>
     <string name="headline_snow_tomorrow">Snow tomorrow from %1$s</string>
+    <!-- Rain and snow together (25 set 2026): the state engine writes it, and the
+         sentence said rain alone. -->
+    <string name="headline_mixed_soon">Rain and snow around %1$s</string>
+    <string name="headline_mixed_soon_clearing">Rain and snow around %1$s, clearing after %2$s</string>
+    <string name="headline_mixed_now_stopping">Rain and snow should stop around %1$s</string>
+    <string name="headline_mixed_now">Rain and snow for the rest of the day</string>
+    <string name="headline_mixed_now_stopping_brief">Rain and snow until about %1$s</string>
+    <string name="headline_mixed_now_brief">Rain and snow for the rest of the day</string>
+    <string name="headline_mixed_maybe">Rain and snow possible around %1$s</string>
+    <string name="headline_mixed_tomorrow">Rain and snow tomorrow from %1$s</string>
     <string name="headline_frost">Frost around %1$s, low %2$s</string>
     <string name="headline_frost_brief">Frost around %1$s</string>
     <string name="headline_fog">Fog around %1$s</string>

@@ -30,6 +30,16 @@
     <string name="headline_snow_maybe">Possibile neve verso le %1$s</string>
     <string name="headline_wet_tomorrow">Domani ombrello dalle %1$s</string>
     <string name="headline_snow_tomorrow">Domani neve dalle %1$s</string>
+    <!-- Pioggia e neve insieme (25 set 2026): il motore degli stati le scrive, e la frase
+         diceva solo «pioggia». -->
+    <string name="headline_mixed_soon">Pioggia e neve verso le %1$s</string>
+    <string name="headline_mixed_soon_clearing">Pioggia e neve verso le %1$s, schiarisce dopo le %2$s</string>
+    <string name="headline_mixed_now_stopping">Pioggia e neve dovrebbero smettere verso le %1$s</string>
+    <string name="headline_mixed_now">Pioggia e neve per il resto della giornata</string>
+    <string name="headline_mixed_now_stopping_brief">Pioggia e neve fino alle %1$s circa</string>
+    <string name="headline_mixed_now_brief">Pioggia e neve per il resto del giorno</string>
+    <string name="headline_mixed_maybe">Possibile pioggia mista a neve verso le %1$s</string>
+    <string name="headline_mixed_tomorrow">Domani pioggia e neve dalle %1$s</string>
     <string name="headline_frost">Gelo verso le %1$s, minima %2$s</string>
     <string name="headline_frost_brief">Gelo verso le %1$s</string>
     <string name="headline_fog">Nebbia verso le %1$s</string>

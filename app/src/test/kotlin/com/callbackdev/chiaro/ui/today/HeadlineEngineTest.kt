@@ -170,7 +170,7 @@ class HeadlineEngineTest {
         assertEquals(now.plusHours(2), headline.at)
         assertEquals(75, headline.pct)
         assertEquals(now.plusHours(4), headline.clearsAt)
-        assertTrue(!headline.snow)
+        assertEquals(Headline.Falling.RAIN, headline.falling)
     }
 
     @Test
@@ -320,7 +320,7 @@ class HeadlineEngineTest {
         val report = report(rain at 90, rain at 85, rain at 60, clear at 30, clear at 5)
         val headline = HeadlineEngine.headline(report, now) as Headline.WetNow
         assertEquals(now.plusHours(3), headline.stopsAt)
-        assertTrue(!headline.snow)
+        assertEquals(Headline.Falling.RAIN, headline.falling)
     }
 
     @Test
@@ -334,7 +334,24 @@ class HeadlineEngineTest {
     fun `snow speaks as snow`() {
         val report = report(clear at 5, snow at 80, snow at 85, clear at 20)
         val headline = HeadlineEngine.headline(report, now) as Headline.WetSoon
-        assertTrue(headline.snow)
+        assertEquals(Headline.Falling.SNOW, headline.falling)
+    }
+
+    @Test
+    fun `rain and snow together speak as both`() {
+        // 25 set 2026: the state engine writes 68/69, and the sentence said rain alone.
+        val mixed = WeatherCondition(68)
+        val soon = HeadlineEngine.headline(report(clear at 5, mixed at 80, mixed at 85, clear at 20), now)
+        assertEquals(Headline.Falling.MIXED, (soon as Headline.WetSoon).falling)
+        val wetNow = HeadlineEngine.headline(report(List(24) { mixed at 90 }), now)
+        assertEquals(Headline.Falling.MIXED, (wetNow as Headline.WetNow).falling)
+    }
+
+    @Test
+    fun `likely snow speaks as snow, and is never snowing now`() {
+        val likelySnow = WeatherCondition(1071)
+        val headline = HeadlineEngine.headline(report(List(24) { likelySnow at 80 }), now)
+        assertEquals(Headline.Falling.SNOW, (headline as Headline.WetSoon).falling)
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.today
 
 import android.content.Context
+import androidx.annotation.StringRes
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.settings.UnitSettings
@@ -64,35 +65,58 @@ object HeadlineText {
                 },
                 t(headline.at)
             )
-            is Headline.WetNow -> when {
-                headline.snow && headline.stopsAt != null -> context.getString(
-                    if (brief) R.string.headline_snow_now_stopping_brief
-                    else R.string.headline_snow_now_stopping,
-                    t(headline.stopsAt)
-                )
-                headline.snow -> context.getString(
-                    if (brief) R.string.headline_snow_now_brief else R.string.headline_snow_now
-                )
-                headline.stopsAt != null -> context.getString(
-                    if (brief) R.string.headline_wet_now_stopping_brief
-                    else R.string.headline_wet_now_stopping,
-                    t(headline.stopsAt)
-                )
-                else -> context.getString(
-                    if (brief) R.string.headline_wet_now_brief else R.string.headline_wet_now
-                )
+            is Headline.WetNow -> {
+                val falling = headline.falling
+                val stopsAt = headline.stopsAt
+                if (stopsAt != null) {
+                    context.getString(
+                        if (brief) {
+                            falling.pick(
+                                R.string.headline_wet_now_stopping_brief,
+                                R.string.headline_snow_now_stopping_brief,
+                                R.string.headline_mixed_now_stopping_brief
+                            )
+                        } else {
+                            falling.pick(
+                                R.string.headline_wet_now_stopping,
+                                R.string.headline_snow_now_stopping,
+                                R.string.headline_mixed_now_stopping
+                            )
+                        },
+                        t(stopsAt)
+                    )
+                } else {
+                    context.getString(
+                        if (brief) {
+                            falling.pick(
+                                R.string.headline_wet_now_brief,
+                                R.string.headline_snow_now_brief,
+                                R.string.headline_mixed_now_brief
+                            )
+                        } else {
+                            falling.pick(R.string.headline_wet_now, R.string.headline_snow_now, R.string.headline_mixed_now)
+                        }
+                    )
+                }
             }
             is Headline.WetSoon -> {
                 val clearsAt = headline.clearsAt?.takeUnless { brief }
-                when {
-                    headline.snow && clearsAt != null -> context.getString(
-                        R.string.headline_snow_soon_clearing, t(headline.at), t(clearsAt)
+                if (clearsAt != null) {
+                    context.getString(
+                        headline.falling.pick(
+                            R.string.headline_wet_soon_clearing,
+                            R.string.headline_snow_soon_clearing,
+                            R.string.headline_mixed_soon_clearing
+                        ),
+                        t(headline.at), t(clearsAt)
                     )
-                    headline.snow -> context.getString(R.string.headline_snow_soon, t(headline.at))
-                    clearsAt != null -> context.getString(
-                        R.string.headline_wet_soon_clearing, t(headline.at), t(clearsAt)
+                } else {
+                    context.getString(
+                        headline.falling.pick(
+                            R.string.headline_wet_soon, R.string.headline_snow_soon, R.string.headline_mixed_soon
+                        ),
+                        t(headline.at)
                     )
-                    else -> context.getString(R.string.headline_wet_soon, t(headline.at))
                 }
             }
             is Headline.Frost -> {
@@ -118,13 +142,26 @@ object HeadlineText {
                 }
             }
             is Headline.WetMaybe -> context.getString(
-                if (headline.snow) R.string.headline_snow_maybe else R.string.headline_wet_maybe,
+                headline.falling.pick(
+                    R.string.headline_wet_maybe, R.string.headline_snow_maybe, R.string.headline_mixed_maybe
+                ),
                 t(headline.at)
             )
             is Headline.WetTomorrow -> context.getString(
-                if (headline.snow) R.string.headline_snow_tomorrow else R.string.headline_wet_tomorrow,
+                headline.falling.pick(
+                    R.string.headline_wet_tomorrow, R.string.headline_snow_tomorrow, R.string.headline_mixed_tomorrow
+                ),
                 t(headline.at)
             )
         }
     }
+
+    /** The sentence for what falls: rain, snow, or both (25 set 2026). */
+    @StringRes
+    private fun Headline.Falling.pick(@StringRes rain: Int, @StringRes snow: Int, @StringRes mixed: Int): Int =
+        when (this) {
+            Headline.Falling.RAIN -> rain
+            Headline.Falling.SNOW -> snow
+            Headline.Falling.MIXED -> mixed
+        }
 }
