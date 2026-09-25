@@ -10967,9 +10967,11 @@ o un avviso, non un'icona).
 
 ### I passi
 
-- [ ] 1. **Misura** come per la Fase 13b e la 26: ≥ 20 città, 7 giorni, i campi del motore;
-      per ogni regola quante ore sposta e in che direzione, con gli esempi. Le soglie qui
-      sopra si confermano o si correggono sui numeri.
+- [x] 1. **Misura** (25 set 2026, 08:42 UTC): 26 città scelte per fenomeno, 7 giorni, 4342
+      ore come le mostra l'app. `tools/measure_states.py` scarica (gira in locale o nel
+      workflow `Measure states`, che committa il file), `tools/analyze_states.py` prototipa
+      il motore e conta; i dati grezzi sono in `tools/measurements/states-2026-09-25.json`.
+      Vedi «La misura» qui sotto.
 - [ ] 2. `WmoCode`: 68/69 («Pioggia e neve»), parole e disegni per gli stati nuovi decisi.
 - [ ] 3. Il motore in `:core:domain` (`WeatherStateEngine`), puro, test a tabella per ogni
       regola, i ripieghi, i confini delle soglie.
@@ -10991,3 +10993,55 @@ quello che dice, e le si affianca il principio che mancava — **i numeri sono d
 gli stati sono dell'app** — in `CLAUDE.md` e in DESIGN §1.1. Rimuoverla del tutto
 toglierebbe anche le sue parti che nessuno vuole perdere (lo scheletro che sembra uno zero,
 l'età dei dati che tace).
+
+### La misura (passo 1, 25 set 2026)
+
+26 città, 7 giorni, 4342 ore; 585 con ≥ 0,1 mm (13,5%). I disaccordi fra i dati grezzi:
+
+| | ore | % |
+|---|---:|---:|
+| A. codice di precipitazione con probabilità < 20% | 88 | 2,0 |
+| B. codice di cielo o nebbia con ≥ 0,1 mm nella stessa risposta | 19 | 0,4 |
+| C. asciutta (< 0,1 mm) con probabilità ≥ 50 / 60 / 70% | 103 / 56 / 20 | 2,4 / 1,3 / 0,5 |
+
+Il motore proposto cambia la parola di **795 ore su 4342 (18,3%)**:
+
+- **Cielo, 472 ore (10,9%)**, ed è un fatto europeo: rispetto alle soglie 20/50/80 sulla
+  nuvolosità dello stesso slot il codice di cielo diverge nel 10–29% delle ore in Italia,
+  Francia e Germania (Cagliari 29%, Trento 27%, Milano 17%) e nello 0–1% altrove (Londra,
+  Oslo, Reykjavik, Longyearbyen, le Americhe, Tokyo, Singapore, Mumbai, Sydney). È il `ww`
+  della famiglia ICON, che Open-Meteo inoltra senza ricalcolarlo; fuori dall'Europa il
+  codice è già la nuvolosità. I passaggi più frequenti: quasi sereno → sereno 161, poco
+  nuvoloso → quasi sereno 104, poco nuvoloso ↔ coperto 64.
+- **Pioggia e rovesci, 244 ore**: pioviggine → rovesci 120 (Reykjavik, 0,4 mm/h
+  convettivi: Open-Meteo chiama pioviggine ogni rovescio sotto 1,3 mm/h), pioviggine →
+  pioggia debole 95 (Londra, 0,9 mm/h: la «pioviggine fitta»), pioviggine → cielo 71 e
+  pioggia debole/rovesci/neve → cielo 13 (probabilità < 20%: Londra 0,3 mm al 16–19%,
+  Montreal 2,2 mm al 17%, Longyearbyen 0,1 mm al 10–18%), cielo → pioggia 9 (il caso B:
+  Napoli 0,2 mm al 98% sotto «coperto»).
+- **Probabile, 56 ore** (caso C dal 60%): Bari 60–85%, Oslo 88%, Tokyo 71–90%, Singapore;
+  due di neve a Longyearbyen, dalla fase dell'ora bagnata vicina.
+- **Nebbia, 23 ore**: 18 diventano nebbia gelata (Longyearbyen, −4 °C), 5 ore di
+  pioviggine al < 20% con visibilità ≤ 1 km diventano nebbia (Singapore).
+- **Temporale (14 ore) e neve (25 ore)**: nessun cambiamento.
+- **Mai viste in questo campione**: gelicidio dedotto (0 ore di pioggia a ≤ 0 °C), pioggia e
+  neve insieme (0), temporale senza pioggia (0). Fine settembre non ha inverno: **queste
+  regole restano da misurare**, rilanciando lo script fra dicembre e febbraio. Fino ad
+  allora il gelicidio dedotto resta spento (decisione 2), le altre due si scrivono con i
+  test ma senza una misura dietro, e lo si dice.
+
+Due fatti sui dati, che correggono l'analisi del 25 mattina:
+
+- **`rain` e `showers` cambiano significato col modello.** A Longyearbyen `showers`
+  contiene la neve convettiva (lo stesso 0,1 mm in `showers` e in `snowfall`, codice 85); a
+  Londra `rain` contiene già i rovesci: il 27 set rain 1,5, showers 0,6, totale 1,5; il 30
+  rain 7,5, showers 0,9, totale 7,5. L'unica liquida affidabile è **totale − neve / 0,7**,
+  che vale in tutte le 585 ore bagnate. `rainOf` (il minimo fra le due) dà la risposta
+  giusta in entrambi i casi: la versione mergiata il 24 avrebbe scritto 2,1 mm per i 1,5 di
+  Londra. Il motore userà solo la differenza.
+- **Il cielo dalla nuvolosità è la scelta con più effetto a schermo**, e riguarda soprattutto
+  il pubblico italiano. La ragione per farlo resta: l'icona dirà la stessa cosa della tile
+  delle nuvole e del cielo disegnato in cima, che sono già calcolati dalla nuvolosità. Il
+  limite: il `ww` del DWD pesa meno le nubi alte e sottili, la nuvolosità totale no; l'app
+  ha già le nubi per strato, e un «velato» per il cielo di sole nubi alte è un seguito
+  possibile, non una premessa.
