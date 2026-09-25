@@ -10946,6 +10946,25 @@ o un avviso, non un'icona).
    anche `sleet`) o tenerli insieme e distinguerli con la parola.
 4. «Temporali possibili» per un 95 senza pioggia nell'ora.
 
+### Le decisioni (committente, 25 set 2026, con i vincoli proposti)
+
+1. **Caso C: sì, stato «Pioggia probabile» / «Neve probabile»**, con quattro vincoli: soglia
+   60% da confermare con la misura; disegno della precipitazione debole (`overcast-drizzle`
+   o l'equivalente della neve), mai quello pieno; è uno stato di **possibilità**, quindi non
+   fa dire alla frase in cima «piove adesso», non conta come ora bagnata per l'etichetta
+   del giorno e non porta millimetri; fase dall'ora bagnata del modello più vicina entro 3
+   ore, altrimenti neve a ≤ 1 °C.
+2. **Gelicidio dedotto: dopo la misura**, e in più con la soglia di probabilità (≥ 20%) che
+   il gelicidio scritto dal provider non ha: uno stato dedotto che fa scattare un avviso di
+   maltempo senza probabilità alcuna sarebbe il falso allarme più caro dell'app.
+3. **Separati.** «Pioggia e neve» prende `overcast-sleet`, che disegna proprio gocce e
+   fiocchi. Il gelicidio non ha un disegno onesto in Meteocons (nessuna icona di pioggia che
+   gela): si compone, come il «quasi sereno» con `tools/compose_sun_cloud.py`, oppure si
+   sceglie un disegno esistente; da decidere al passo 2 con una prova a schermo.
+4. **«Temporali possibili» per un 95 senza pioggia nell'ora: sì.** Il limite noto: la
+   probabilità è di precipitazione, non di fulmini (Open-Meteo non ne dà una), quindi il
+   filtro al 20% è il migliore disponibile, non uno esatto.
+
 ### I passi
 
 - [ ] 1. **Misura** come per la Fase 13b e la 26: ≥ 20 città, 7 giorni, i campi del motore;
