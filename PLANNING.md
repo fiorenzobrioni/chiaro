@@ -11009,7 +11009,31 @@ o un avviso, non un'icona).
 - **Il gelicidio dedotto** non è scritto: nessuna ora della misura l'avrebbe acceso, e
   resta per la misura d'inverno (decisione 2).
 - **La frase in cima** dice ancora «pioggia» per pioggia e neve insieme (`isSnow` è la
-  sola neve): la didascalia del grafico invece le nomina entrambe.
+  sola neve): la didascalia del grafico invece le nomina entrambe. Un seguito: le frasi
+  «pioggia e neve» non esistono ancora, in nessuna delle otto varianti.
+
+### La revisione del codice (25 set 2026, chiesta dal committente)
+
+Una revisione del commit del motore ha trovato nove punti; verificati sul codice uno per uno:
+
+- **Corretti**: (1) pioggia e neve nascondeva l'avviso di una parte forte — ora una neve
+  forte (≥ 0,8 cm/h) o una pioggia forte (≥ 7,6 mm/h) dentro l'ora mista le dà il nome e
+  l'avviso, anche sotto il 20% per la neve; (2) il giorno votava il cielo con gli istanti
+  dello slot prima — ora lo slot k è l'intervallo e l'istante di k, come leggeva
+  `dailyCode` prima del motore; (3) senza `showers` (cache vecchia) i rovesci diventavano
+  pioggia — ora ripiegano sui codici di rovescio del provider; (6) «probabile» ignorava la
+  fase dell'ora stessa — ora viene prima la sua (traccia di neve o codice), poi l'ora
+  vicina, poi la temperatura; (8) la probabilità dell'ora in corso si calcolava due volte —
+  ora una; (9) la persistenza della nebbia viveva nel mapper — ora è del motore, che ha la
+  serie (il blocco `current` la forza con `fogPersists = true`).
+- **Chiarito, non cambiato**: (5) il blocco `current` può dire «Temporali possibili»:
+  `likely = false` spegne la pioggia o neve probabile, non l'avviso di un temporale che il
+  provider vede adesso.
+- **Limiti noti, detti al committente**: (4) la frase in cima per pioggia e neve (sopra);
+  (7) il gelicidio disegna la pioggia che è, e la pioggia probabile la pioviggine: la
+  differenza è della parola, del banner e della percentuale.
+- Dopo le correzioni il motore Kotlin, rigirato sulle 4342 ore della misura, resta uguale
+  al prototipo in 4339 ore, con le stesse 3 differenze volute.
 
 ### La regola «lo schermo non mente»
 

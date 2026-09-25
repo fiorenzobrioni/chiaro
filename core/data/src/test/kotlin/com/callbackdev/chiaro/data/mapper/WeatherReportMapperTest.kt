@@ -540,7 +540,9 @@ class WeatherReportMapperTest {
     fun `precipitation that did not earn the day does not win its sky either`() {
         // Daylight 06-19, two hours apiece of every sky and two of drizzle: the old
         // tie-break handed the day to 51. Its hours now vote with their cloud (100% → 3).
-        val daylight = listOf(0, 0, 1, 1, 2, 2, 3, 3, 51, 51, 45, 45, 48, 48)
+        // (48 left the list on 25 set 2026: it is the engine's freezing fog now, which
+        // needs ≤ 0 °C, and at this fixture's 20 °C two more hours of it are plain fog.)
+        val daylight = listOf(0, 0, 1, 1, 2, 2, 3, 3, 51, 51, 45, 45, 0, 0)
         val codes = List(24) { if (it in 6..19) daylight[it - 6] else 0 }
         assertEquals(3, dayCode(codes, mm = { if (codes[it] == 51) 0.1 else 0.0 }))
     }

@@ -127,7 +127,8 @@ class WeatherStateEngineTest {
     fun `rain and snow are both there only when both are measurable`() {
         // 0.3 mm of which 0.14 cm snow = 0.2 mm water, 0.1 liquid.
         assertEquals(68, state(code = 71, mm = 0.3, snow = 0.14))
-        assertEquals(69, state(code = 73, mm = 3.0, snow = 1.05))
+        // 3 mm with 0.5 cm (0.71 mm of water, 2.29 liquid): neither part heavy on its own.
+        assertEquals(69, state(code = 73, mm = 3.0, snow = 0.5))
         // 0.07 cm (0.1 mm water) in a 0.1 mm hour: no liquid left, snow.
         assertEquals(71, state(code = 71, mm = 0.1, snow = 0.07))
     }
@@ -137,6 +138,24 @@ class WeatherStateEngineTest {
         assertEquals(75, state(code = 75, mm = 1.4, snow = 0.98, pct = 5))
         // …while an improbable heavy downpour is not, like the banner.
         assertEquals(3, state(code = 65, mm = 9.0, pct = 15))
+    }
+
+    @Test
+    fun `rain and snow together never hide the warning of a heavy part`() {
+        // 12 mm with 1 cm of snow (1.43 mm of water): the snow alone is heavy.
+        assertEquals(75, state(code = 73, mm = 12.0, snow = 1.0))
+        // …and still is at 5%, as heavy snow always is.
+        assertEquals(75, state(code = 73, mm = 12.0, snow = 1.0, pct = 5))
+        // 9 mm with 0.3 cm: the rain alone is heavy (8.6 mm).
+        assertEquals(65, state(code = 63, mm = 9.0, snow = 0.3))
+    }
+
+    @Test
+    fun `without the convective amount the provider's showers still name the hour`() {
+        assertEquals(81, state(code = 81, mm = 3.0, showers = null))
+        assertEquals(80, state(code = 80, mm = 0.4, showers = null))
+        assertEquals(85, state(code = 85, mm = 0.1, snow = 0.07, showers = null))
+        assertEquals(61, state(code = 61, mm = 1.0, showers = null))
     }
 
     // --------------------------------------------------------------------- 4. likely
@@ -175,6 +194,20 @@ class WeatherStateEngineTest {
         assertEquals(WmoCode.RAIN_LIKELY.code, state(code = 3, mm = 0.0, pct = 63, t = 1.1))
     }
 
+    @Test
+    fun `a likely hour's own phase comes first`() {
+        // A trace of snow (0.03 cm) under a snow code at 1.5 °C: the model's own phase.
+        assertEquals(WmoCode.SNOW_LIKELY.code, state(code = 71, mm = 0.05, snow = 0.03, pct = 70, t = 1.5))
+        // A precipitation code with no amount at all.
+        assertEquals(WmoCode.SNOW_LIKELY.code, state(code = 71, mm = 0.0, snow = 0.0, pct = 70, t = 3.0))
+        assertEquals(WmoCode.RAIN_LIKELY.code, state(code = 51, mm = 0.0, snow = 0.0, pct = 70, t = 0.5))
+    }
+
+    @Test
+    fun `a storm over a dry quarter is possible in the present too`() {
+        assertEquals(WmoCode.THUNDERSTORM_POSSIBLE.code, state(code = 95, mm = 0.0, pct = 40, likely = false))
+    }
+
     // ------------------------------------------------------------------------ 5. fog
 
     @Test
@@ -187,6 +220,14 @@ class WeatherStateEngineTest {
     fun `fog is invented only where it persists`() {
         assertEquals(3, state(code = 3, vis = 300.0, persists = false))
         assertEquals(45, state(code = 3, vis = 300.0, persists = true))
+    }
+
+    @Test
+    fun `in a series the engine judges persistence from the neighbours' visibility`() {
+        fun hour(vis: Double) = Hour(3, 3, 0.0, 0.0, 0.0, 10, 8.0, 100, vis)
+        // One low hour alone, then a run of two.
+        val series = listOf(hour(9_000.0), hour(300.0), hour(9_000.0), hour(300.0), hour(250.0))
+        assertEquals(listOf(3, 3, 3, 45, 45), WeatherStateEngine.states(series))
     }
 
     @Test

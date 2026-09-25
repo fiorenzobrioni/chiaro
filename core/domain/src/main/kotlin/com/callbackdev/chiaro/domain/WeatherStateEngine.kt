@@ -88,14 +88,21 @@ object WeatherStateEngine {
         val temperatureC: Double? = null,
         val cloudCoverPct: Int? = null,
         val visibilityM: Double? = null,
-        /** Whether a neighbouring hour is also under [FOG_VISIBILITY_M]: the series'
-         * permission to invent fog. An observation has no series and passes true. */
-        val fogPersists: Boolean = false
+        /**
+         * The permission to invent fog. Null — the default — lets the series decide: a
+         * neighbouring hour must also be under [FOG_VISIBILITY_M] (Fase 26). An
+         * observation has no series and passes true: if the visibility is 300 m right
+         * now, it is foggy right now.
+         */
+        val fogPersists: Boolean? = null
     )
 
     /**
      * The state of every hour of a series, in order. [likely] switches rule 4 off for a
-     * caller that is describing what is happening rather than what may.
+     * caller that is describing what is happening rather than what may: rain or snow the
+     * ensemble expects but nothing measures is not the present. It does not touch rule 1 —
+     * a storm the provider sees over a dry quarter is «Temporali possibili» now too, and
+     * the warning is the present's.
      */
     fun states(hours: List<Hour>, likely: Boolean = true): List<Int> =
         hours.indices.map { i -> stateAt(hours, i, likely) }
@@ -137,7 +144,19 @@ object WeatherStateEngine {
         }
 
         // 5. Fog, then 6. the sky.
-        return fogOrSky(hour)
+        return fogOrSky(hour, hour.fogPersists ?: fogPersists(hours, i))
+    }
+
+    /**
+     * Below the fog threshold here and in a neighbouring hour: the series' test for
+     * INVENTING fog (Fase 26). Writing fog into an hour whose neighbours are both
+     * clear-aired nearly doubled the fog↔non-fog transitions of the week (23 cities, 6 Sep
+     * 2026: 10 in the provider's series, 18 repaired, 14 with this rule). Removing a fog
+     * code the visibility contradicts needs no such patience.
+     */
+    private fun fogPersists(hours: List<Hour>, i: Int): Boolean {
+        fun low(at: Int) = hours.getOrNull(at)?.visibilityM?.let { it <= FOG_VISIBILITY_M } == true
+        return low(i) && (low(i - 1) || low(i + 1))
     }
 
     /** Rule 3 on an hour with a measurable, probable amount; null when the phase cannot be
@@ -147,13 +166,24 @@ object WeatherStateEngine {
             ?: phaseFromProvider(hour, mm)
             ?: return null
         val liquid = (mm - snowWater).coerceAtLeast(0.0)
-        if (measurable(liquid) && measurable(snowWater)) {
-            return if (mm < RAIN_LIGHT_MAX_MM) WmoCode.RAIN_AND_SNOW_LIGHT.code else WmoCode.RAIN_AND_SNOW.code
-        }
         val showers = hour.showersMm
+        // Read only when `showers` is missing: the provider's code then says whether the
+        // hour is convective.
+        val providerConvective = WmoCode.of(hour.providerCode) in PROVIDER_SHOWERS
+        if (measurable(liquid) && measurable(snowWater)) {
+            // Rain and snow together is not a hazard of its own, and must not hide one:
+            // a part that is heavy on its own keeps its warning and names the hour.
+            val cm = snowWater * SNOW_CM_PER_MM
+            return when {
+                cm >= SNOW_HEAVY_CM -> WmoCode.SNOW_HEAVY.code
+                liquid >= RAIN_MODERATE_MAX_MM -> WmoCode.RAIN_HEAVY.code
+                mm < RAIN_LIGHT_MAX_MM -> WmoCode.RAIN_AND_SNOW_LIGHT.code
+                else -> WmoCode.RAIN_AND_SNOW.code
+            }
+        }
         if (snowWater > liquid) {
             val cm = snowWater * SNOW_CM_PER_MM
-            if (showers != null && showers >= snowWater / 2) {
+            if (if (showers != null) showers >= snowWater / 2 else providerConvective) {
                 return if (cm >= SNOW_HEAVY_CM) WmoCode.SNOW_SHOWERS_HEAVY.code else WmoCode.SNOW_SHOWERS_SLIGHT.code
             }
             return when {
@@ -164,7 +194,9 @@ object WeatherStateEngine {
         }
         // `showers` may hold convective snow too: only the part the liquid can account
         // for is a shower of rain.
-        if (showers != null && minOf(showers, liquid) >= liquid / 2) {
+        // Without `showers` (a cache entry from before it was asked for, a model that does
+        // not split) the provider's own shower codes say whether the hour is convective.
+        if (if (showers != null) minOf(showers, liquid) >= liquid / 2 else providerConvective) {
             return when {
                 liquid < RAIN_LIGHT_MAX_MM -> WmoCode.SHOWERS_SLIGHT.code
                 liquid < RAIN_MODERATE_MAX_MM -> WmoCode.SHOWERS_MODERATE.code
@@ -194,9 +226,17 @@ object WeatherStateEngine {
         }
     }
 
-    /** The phase a likely hour takes: the nearest hour within reach that has a
-     * measurable amount of its own, else the temperature. */
+    /**
+     * The phase a likely hour takes: its own, when the model gave it one — a trace of snow
+     * or rain, or a precipitation code, is the model's phase for this very hour —, else
+     * the nearest hour within reach that has a measurable amount, else the temperature.
+     */
     private fun likelySnow(hours: List<Hour>, i: Int): Boolean {
+        val own = hours[i]
+        val ownMm = own.precipitationMm ?: 0.0
+        val ownSnow = own.snowfallCm
+        if (ownMm > 0.0 && ownSnow != null) return ownSnow / SNOW_CM_PER_MM > ownMm / 2
+        WmoCode.of(own.providerCode)?.takeIf { it.isPrecipitation }?.let { return it.isSnow }
         for (distance in 1..LIKELY_PHASE_REACH_HOURS) {
             for (j in intArrayOf(i - distance, i + distance)) {
                 val near = hours.getOrNull(j) ?: continue
@@ -217,13 +257,13 @@ object WeatherStateEngine {
      * A null visibility leaves the provider's own fog verdict standing; a null cloud cover
      * leaves the provider's sky.
      */
-    private fun fogOrSky(hour: Hour): Int {
+    private fun fogOrSky(hour: Hour, persists: Boolean): Int {
         val instant = WmoCode.of(hour.providerSkyCode)
         val visibility = hour.visibilityM
         val fog = if (visibility == null) {
             instant?.isFog == true
         } else {
-            visibility <= FOG_VISIBILITY_M && (instant?.isFog == true || hour.fogPersists)
+            visibility <= FOG_VISIBILITY_M && (instant?.isFog == true || persists)
         }
         if (fog) {
             val t = hour.temperatureC
@@ -259,6 +299,13 @@ object WeatherStateEngine {
      * same upper floors Open-Meteo uses for 61/63/65 and 80/81/82. */
     private const val RAIN_LIGHT_MAX_MM = 2.5
     private const val RAIN_MODERATE_MAX_MM = 7.6
+
+    /** The provider's convective codes, rain and snow: the phase of an hour's showers
+     * when the response does not carry the amount. */
+    private val PROVIDER_SHOWERS = setOf(
+        WmoCode.SHOWERS_SLIGHT, WmoCode.SHOWERS_MODERATE, WmoCode.SHOWERS_HEAVY,
+        WmoCode.SNOW_SHOWERS_SLIGHT, WmoCode.SNOW_SHOWERS_HEAVY
+    )
 
     /** Open-Meteo's own snowfall ladder, cm/h: 71 under 0.2, 73 under 0.8, 75 from 0.8. */
     private const val SNOW_MODERATE_CM = 0.2
