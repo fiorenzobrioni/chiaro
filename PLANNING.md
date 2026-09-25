@@ -11283,7 +11283,32 @@ margini della card vera, valori d'esempio) era già la stessa: Passo l'aveva pre
   cambiato o un colore rimisurato fallisce qui e non nel selettore di qualcuno.
 
 **Rimandato, con la ragione**: le anteprime *generate* (Android 15+, `providePreview` e
-`setWidgetPreviews`), che Passo pubblica una volta per versione. Chiedono Glance 1.2 (qui 1.1.1) e
-un modello d'esempio nel codice di produzione per ciascuna delle cinque card (un report meteo
-completo, non una giornata di passi), che è un lavoro a sé; sui launcher che non le chiedono il
-selettore mostra comunque il `previewLayout`, ed è quello che questa modifica allinea.
+`setWidgetPreviews`), che Passo pubblica una volta per versione. Chiedono Glance 1.2 (allora 1.1.1,
+aggiornato subito dopo: sezione seguente) e un modello d'esempio nel codice di produzione per
+ciascuna delle cinque card (un report meteo completo, non una giornata di passi), che è un lavoro a
+sé; sui launcher che non le chiedono il selettore mostra comunque il `previewLayout`, ed è quello
+che questa modifica allinea.
+
+### Glance 1.2.0, senza anteprime generate (committente, 25 set 2026)
+
+Domanda: aggiornare Glance alla 1.2 è complesso o rischia di rompere qualcosa? Provato in una copia
+di lavoro prima di rispondere, poi deciso: «fai l'aggiornamento di Glance e lasciamo così», senza
+le anteprime generate, così nelle modifiche future non c'è un modello d'esempio da tenere al passo.
+
+- **Una riga**: `glance = "1.2.0"` in `libs.versions.toml` (era 1.1.1), la stessa versione di Passo.
+  Nessun file Kotlin cambia; nessun avviso di deprecazione tocca il codice dei widget.
+- **Le dipendenze risolte non cambiano** fuori da Glance (confronto di `releaseRuntimeClasspath`
+  prima e dopo): Compose resta alla 1.11.2 del BOM, WorkManager alla 2.10.5 che il catalogo già
+  fissa, quella che in Passo aveva tolto le card dallo spinner di caricamento (ADR 0005 di Passo).
+- **I widget disegnati sono identici**: `widgets.png` e `widget-day-arc.png` rigenerati con 1.2
+  (`GlanceRemoteViews`, sempre sperimentale, stesso comportamento) coincidono **pixel per pixel**
+  con quelli fatti con 1.1.1; nessuna immagine del README cambia.
+- **Le anteprime del selettore restano i `previewLayout` statici.** Senza `providePreview` il
+  launcher mostra quelli su ogni versione di Android, com'era. Il costo di manutenzione che
+  resta è quello di sempre: quando una modifica cambia l'aspetto di una card a 4×1 o 4×2 (il
+  fondo predefinito, i ranghi del tipo, i margini), il suo `widget_*_preview.xml` si ridisegna a
+  mano nella stessa modifica. Cambiare dati, testi o logica delle card non lo tocca.
+  `WidgetPreviewTest` ferma in build i due errori silenziosi (anteprima mancante o non
+  inflatabile) e il fondo diverso dalla card predefinita.
+- Da verificare sul telefono, perché nessun test lo raggiunge: aggiornamento periodico, tap e
+  riconfigurazione delle cinque card su One UI.
