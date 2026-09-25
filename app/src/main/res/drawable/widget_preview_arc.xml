@@ -27,8 +27,8 @@
                 <item android:color="@color/widget_preview_arc_night" android:offset="0" />
                 <item android:color="@color/widget_preview_arc_night" android:offset="0.22" />
                 <item android:color="@color/widget_preview_arc_dawn" android:offset="0.29" />
-                <item android:color="@color/widget_preview_sky_mid" android:offset="0.42" />
-                <item android:color="@color/widget_preview_sky_mid" android:offset="0.62" />
+                <item android:color="@color/widget_preview_arc_noon" android:offset="0.42" />
+                <item android:color="@color/widget_preview_arc_noon" android:offset="0.62" />
                 <item android:color="@color/widget_preview_arc_dawn" android:offset="0.78" />
                 <item android:color="@color/widget_preview_arc_night" android:offset="0.86" />
                 <item android:color="@color/widget_preview_arc_night" android:offset="1" />

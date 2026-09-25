@@ -15,19 +15,18 @@
          "Roles, never hexes" is a rule about composables; a static preview layout has
          no composition and no theme to read from — the launcher inflates it in a
          restricted context and never runs a line of our code — so the values are baked,
-         and baked HERE rather than sprayed across three layouts.
+         and baked HERE rather than sprayed across five layouts.
 
-         Every one of them is COMPUTED, not picked: the ground is the vivid sky's
-         midday anchor (SkyPalette.Vivid at +90°) composited under the §3.6 scrim the
-         real card paints — scrim × 0.55 + sky × 0.45, in sRGB values, exactly as
-         `skyGradientBitmap` does it — and the inks are §3.6's white pair over it. The
-         rain figures are VividDarkColors.rainInkRamp sampled at the stops themselves
-         (0/25/50/75%), so no interpolation has to be reproduced by hand, and the
-         verdict pair is VividDarkColors.pass — ink and container together, never one
-         mode's word on the other mode's chip. -->
-    <color name="widget_preview_sky_top">#094B6E</color>
-    <color name="widget_preview_sky_mid">#1C5D7F</color>
-    <color name="widget_preview_sky_bottom">#586F7F</color>
+         The card is the default one (25 set 2026, the picker caught up with the 21 set
+         default): `widgetCardContainer(WidgetCardColor.BLUE)`, flat, the value Passo's
+         previews bake too, so the family's widgets look like one family in the picker.
+         `WidgetPreviewTest` checks it against the Kotlin table. The inks are §3.6's white
+         pair, which a card colour writes with (`WidgetInk.OVER_SKY`). The rain figures
+         are VividDarkColors.rainInkRamp sampled at the stops themselves (0/25/50/75%), so
+         no interpolation has to be reproduced by hand, and the verdict pair is
+         VividDarkColors.pass — ink and container together, never one mode's word on the
+         other mode's chip. -->
+    <color name="widget_preview_card">#FF0F3B6B</color>
     <color name="widget_preview_ink">#FFFFFFFF</color>
     <color name="widget_preview_ink_dim">#BFFFFFFF</color>
     <color name="widget_preview_rain_0">#688BA2</color>
@@ -37,9 +36,13 @@
     <color name="widget_preview_verdict_ink">#00E079</color>
     <color name="widget_preview_verdict_container">#003F23</color>
 
-    <!-- The arc preview (9 set 2026), same arithmetic: the night band's mid stop
-         (#111A2D) and the horizon's (#E58800) under the §3.6 scrim, the veil the painter
+    <!-- The arc preview (9 set 2026): the day's bands are the arc's own sky, not the
+         card's, so they keep the scrim arithmetic — the vivid sky's midday anchor under
+         the §3.6 scrim (scrim × 0.55 + sky × 0.45, in sRGB values, as
+         `skyGradientBitmap` does it), the night band's mid stop (#111A2D) and the
+         horizon's (#E58800) under the same scrim, the veil the painter
          lays over the past (black at 40%), and the sun's two inks from ArcPalette. -->
+    <color name="widget_preview_arc_noon">#1C5D7F</color>
     <color name="widget_preview_arc_night">#101620</color>
     <color name="widget_preview_arc_dawn">#70470C</color>
     <color name="widget_preview_arc_veil">#66000000</color>

@@ -5,8 +5,9 @@
   A Glance widget has no picker preview of its own: without `previewLayout` the host shows
   the generic loading layout, which is why every one of ours names a static one. The picker
   never runs `provideGlance` — there is no place, no report and no composition on that
-  screen — so this is sample values with the DEFAULT dress baked in: the computed sky under
-  its scrim, white ink. It is the same card, one moment of it.
+  screen — so this is sample values with the DEFAULT dress baked in: the blue card
+  (`widget_preview_card`, the one Passo's previews draw too), white ink. It is the same
+  card, one moment of it.
 
   The moment drawn is the wide one-row form, which is the default 4×1 placement: the place
   over the temperature on the leading side, the day's sentence against the far edge. Same
@@ -31,7 +32,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_preview_sky"
+    android:background="@drawable/widget_preview_card"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingStart="14dp"
@@ -68,7 +69,7 @@
     </LinearLayout>
 
     <!-- Rank 2: the same sample sentence the other previews print, in this card's dress —
-         18sp medium, strong ink, right-aligned, two lines. -->
+         18sp medium, strong ink, right-aligned, up to three lines (TextRowSentenceMaxLines). -->
     <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -76,7 +77,7 @@
         android:ellipsize="end"
         android:fontFamily="sans-serif-medium"
         android:gravity="end"
-        android:maxLines="2"
+        android:maxLines="3"
         android:paddingStart="12dp"
         android:paddingEnd="0dp"
         android:text="@string/widget_preview_headline"

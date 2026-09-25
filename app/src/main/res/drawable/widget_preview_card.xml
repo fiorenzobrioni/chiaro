@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The picker previews' card (25 set 2026): the default card, flat, in the blue a fresh
+     widget wears since 21 set (WidgetCardColor.BLUE), with the 24dp corner of the running
+     card. The same drawable, colour and corner as Passo's previews, so the two apps meet
+     the reader in the launcher's picker as one family. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/widget_preview_card" />
+    <corners android:radius="24dp" />
+</shape>

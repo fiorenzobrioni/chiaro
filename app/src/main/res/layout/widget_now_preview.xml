@@ -6,7 +6,8 @@
   shows the generic loading layout, which is why all three of ours advertised the same
   grey card. The picker never runs `provideGlance` — there is no place, no report and no
   composition on that screen — so the preview is a static layout with sample values and
-  the DEFAULT dress baked in: the computed sky under its scrim, white ink, the vivid
+  the DEFAULT dress baked in: the blue card a fresh widget wears since 21 set 2026
+  (`widget_preview_card`, the same card Passo's previews draw), white ink, the vivid
   line icons a fresh install draws with. It is the same card, one moment of it.
 
   The moment drawn is the wide one-row form (the default placement is four cells by one
@@ -24,7 +25,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_preview_sky"
+    android:background="@drawable/widget_preview_card"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingStart="4dp"
@@ -68,7 +69,8 @@
     </LinearLayout>
 
     <!-- The sentence: the Today preview's sample, in the dress the widget gives it —
-         16sp medium, strong ink, right-aligned, two lines. -->
+         16sp medium, strong ink, right-aligned, up to three lines as a one-row card gives it
+         (RowSentenceMaxLines). -->
     <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -76,7 +78,7 @@
         android:ellipsize="end"
         android:fontFamily="sans-serif-medium"
         android:gravity="end"
-        android:maxLines="2"
+        android:maxLines="3"
         android:paddingStart="12dp"
         android:paddingEnd="0dp"
         android:text="@string/widget_preview_headline"
