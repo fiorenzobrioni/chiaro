@@ -102,6 +102,7 @@ import com.callbackdev.chiaro.ui.warnings.WarningText
 import com.callbackdev.chiaro.ui.warnings.WarningSheet
 import com.callbackdev.chiaro.ui.warnings.WarningBanner
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.format.LocalClock
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -122,31 +123,22 @@ fun AlertsRoute(
     var placesOpen by remember { mutableStateOf(false) }
     var editingRuleId by rememberSaveable { mutableStateOf<Long?>(null) }
 
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            AlertsHeader(
-                placeName = (state as? AlertsUiState.Content)?.placeName,
-                onOpenPlaces = { placesOpen = true },
-                onOpenSettings = onOpenSettings
-            )
-            (state as? AlertsUiState.Content)?.let { content ->
-                AlertsContent(
-                    content = content,
-                    actions = AlertsActions(
-                        setOfficialWarnings = alertsViewModel::setOfficialWarnings,
-                        setOfficialWarningsFrom = alertsViewModel::setOfficialWarningsFrom,
-                        setSevereWeather = alertsViewModel::setSevereWeather,
-                        setPrecipitationWarning = alertsViewModel::setPrecipitationWarning,
-                        setDailySummary = alertsViewModel::setDailySummary,
-                        setEveningSummary = alertsViewModel::setEveningSummary,
-                        update = alertsViewModel::update,
-                        addFromTemplate = alertsViewModel::addFromTemplate
-                    ),
-                    onEdit = { editingRuleId = it }
-                )
-            }
-        }
-    }
+    AlertsScreen(
+        state = state,
+        actions = AlertsActions(
+            setOfficialWarnings = alertsViewModel::setOfficialWarnings,
+            setOfficialWarningsFrom = alertsViewModel::setOfficialWarningsFrom,
+            setSevereWeather = alertsViewModel::setSevereWeather,
+            setPrecipitationWarning = alertsViewModel::setPrecipitationWarning,
+            setDailySummary = alertsViewModel::setDailySummary,
+            setEveningSummary = alertsViewModel::setEveningSummary,
+            update = alertsViewModel::update,
+            addFromTemplate = alertsViewModel::addFromTemplate
+        ),
+        onEdit = { editingRuleId = it },
+        onOpenPlaces = { placesOpen = true },
+        onOpenSettings = onOpenSettings
+    )
 
     if (placesOpen) {
         PlacesSheet(viewModel = placesViewModel, onDismiss = { placesOpen = false })
@@ -161,6 +153,33 @@ fun AlertsRoute(
             viewModel = alertsViewModel,
             onDismiss = { editingRuleId = null }
         )
+    }
+}
+
+/**
+ * The page itself, from a state and not from the view model: what [AlertsRoute] draws,
+ * and what the README's screenshots draw (25 set 2026). The editor sheet stays with the
+ * route, because it is the one part of this screen that keeps the view model.
+ */
+@Composable
+internal fun AlertsScreen(
+    state: AlertsUiState,
+    actions: AlertsActions,
+    onEdit: (Long) -> Unit,
+    onOpenPlaces: () -> Unit,
+    onOpenSettings: () -> Unit
+) {
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            AlertsHeader(
+                placeName = (state as? AlertsUiState.Content)?.placeName,
+                onOpenPlaces = onOpenPlaces,
+                onOpenSettings = onOpenSettings
+            )
+            (state as? AlertsUiState.Content)?.let { content ->
+                AlertsContent(content = content, actions = actions, onEdit = onEdit)
+            }
+        }
     }
 }
 
@@ -250,7 +269,9 @@ private fun AlertsContent(
     var warningSheetOpen by rememberSaveable { mutableStateOf(false) }
     val current = content.warnings as? PlaceWarningState.Current
     // The place's own day, like the "last fired" hour above it.
-    val placeToday = LocalDate.now(content.zone)
+    // Read here and not in the list below: a lazy list's builder is not a composable.
+    val clock = LocalClock.current
+    val placeToday = LocalDate.now(clock.withZone(content.zone))
     if (warningSheetOpen && current != null) {
         WarningSheet(
             warnings = current.warnings,
@@ -283,7 +304,7 @@ private fun AlertsContent(
                 AlertDayStrip(
                     notifications = content.notifications,
                     ownRules = content.rules.any { it.rule.enabled },
-                    now = java.time.LocalTime.now(content.zone),
+                    now = java.time.LocalTime.now(clock.withZone(content.zone)),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }

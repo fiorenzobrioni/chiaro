@@ -74,6 +74,7 @@ import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.domain.sky.SkyVerdictNote
 import com.callbackdev.chiaro.ui.components.VerdictChip
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
@@ -106,32 +107,53 @@ fun SkyRoute(
     val state by skyViewModel.state.collectAsStateWithLifecycle()
     var placesOpen by remember { mutableStateOf(false) }
 
+    SkyScreen(
+        state = state,
+        actions = SkyActions(
+            addMoment = skyViewModel::addMoment,
+            removeMoment = skyViewModel::removeMoment,
+            setLead = skyViewModel::setLead,
+            setDefaultLead = skyViewModel::setDefaultLead,
+            setNotifyOnFail = skyViewModel::setNotifyOnFail
+        ),
+        onOpenPlaces = { placesOpen = true },
+        onOpenSettings = onOpenSettings,
+        onOpenGuide = onOpenGuide
+    )
+    if (placesOpen) {
+        PlacesSheet(viewModel = placesViewModel, onDismiss = { placesOpen = false })
+    }
+}
+
+/**
+ * The page itself, from a state and not from the view model: what [SkyRoute] draws, and
+ * what the README's screenshots draw from a recorded forecast (25 set 2026).
+ */
+@Composable
+internal fun SkyScreen(
+    state: SkyUiState,
+    actions: SkyActions,
+    onOpenPlaces: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenGuide: () -> Unit
+) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             SkyHeader(
                 placeName = (state as? SkyUiState.Content)?.placeName,
-                onOpenPlaces = { placesOpen = true },
+                onOpenPlaces = onOpenPlaces,
                 onOpenSettings = onOpenSettings
             )
-            when (val s = state) {
+            when (state) {
                 SkyUiState.Starting -> Unit // the tick answers within a frame; no skeleton flash
-                SkyUiState.NoPlace -> NoPlaceForSky(onOpenPlaces = { placesOpen = true })
+                SkyUiState.NoPlace -> NoPlaceForSky(onOpenPlaces = onOpenPlaces)
                 is SkyUiState.Content -> SkyContent(
-                    content = s,
-                    actions = SkyActions(
-                        addMoment = skyViewModel::addMoment,
-                        removeMoment = skyViewModel::removeMoment,
-                        setLead = skyViewModel::setLead,
-                        setDefaultLead = skyViewModel::setDefaultLead,
-                        setNotifyOnFail = skyViewModel::setNotifyOnFail
-                    ),
+                    content = state,
+                    actions = actions,
                     onOpenGuide = onOpenGuide
                 )
             }
         }
-    }
-    if (placesOpen) {
-        PlacesSheet(viewModel = placesViewModel, onDismiss = { placesOpen = false })
     }
 }
 
@@ -242,6 +264,8 @@ private fun SkyContent(
         if (minutes != null && minutes > 0 && !notificationsAllowed) request.ask()
     }
 
+    // Read here and not in the list below: a lazy list's builder is not a composable.
+    val clock = LocalClock.current
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         if (!notificationsAllowed && remindersArmed(content)) {
             item {
@@ -322,7 +346,7 @@ private fun SkyContent(
         }
 
         item { SkySectionTitle(stringResource(R.string.sky_section_events)) }
-        val today = java.time.LocalDate.now(content.zone)
+        val today = java.time.LocalDate.now(clock.withZone(content.zone))
         items(content.events.size) { index ->
             val event = content.events[index]
             EventRow(
@@ -740,7 +764,7 @@ private const val CountdownDays = 60
  * the next moment of the list, and only within half a day. */
 @Composable
 private fun soonLine(at: java.time.Instant): String? {
-    val minutes = java.time.Duration.between(java.time.Instant.now(), at).toMinutes()
+    val minutes = java.time.Duration.between(java.time.Instant.now(LocalClock.current), at).toMinutes()
     return when {
         minutes < 1 || minutes > 12 * 60 -> null
         minutes < 60 -> stringResource(R.string.tl_in_minutes, minutes.toInt())

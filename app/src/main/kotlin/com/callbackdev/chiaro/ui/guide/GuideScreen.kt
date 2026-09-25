@@ -48,6 +48,7 @@ import com.callbackdev.chiaro.ui.components.uvTrack
 import com.callbackdev.chiaro.ui.components.VerdictChip
 import com.callbackdev.chiaro.ui.components.VerdictKind
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.sky.SkyText
@@ -497,7 +498,7 @@ private fun MetricSample() {
 @Composable
 private fun DriftSample() {
     val locale = currentLocale()
-    val today = LocalDate.now()
+    val today = LocalDate.now(LocalClock.current)
     val rows = listOf(
         listOf(70, 60, null, 40, 30, 20), // a day that kept improving, across a gap
         listOf(20, 25, null, 20, 15, 20), // a day that held

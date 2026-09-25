@@ -116,6 +116,32 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
   protect, which is the one rule of the terminal line that does not survive the reskin.
   The reader's own alert messages are user content and are never translated.
 
+## README screenshots
+
+The pictures of the app's screens in the root `README.md` (`docs/screenshots/*.png`) are
+drawn by `ReadmeScreenshots` (`app/src/testDebug/.../readme/`), widgets included, from a recorded Milan
+(`app/src/test/resources/readme/`, written by `tools/record_readme_data.py`), in English,
+and only on request:
+`./gradlew :app:testDebugUnitTest --tests "*ReadmeScreenshots" -PupdateScreenshots` (plus
+the mirror init script in the sandbox). Without the property the tests are skipped, so no
+ordinary run rewrites an image. Standing rules (committente, 25 set 2026):
+
+- **Regenerate them** in the same change whenever it alters what an existing one shows, and
+  look at every regenerated image before committing.
+- **Add one** when a change brings something worth showing (a new screen, a new section),
+  with its caption and alt text in the README; **drop one** whose screen is gone. Keep the
+  set small: the meaningful views only.
+- **Re-record the data** (`python3 tools/record_readme_data.py`) only when the recording no
+  longer holds what a screen needs (a new field the old response does not have); a
+  re-recording changes every picture, so it is a change of its own.
+- The widgets are drawn too (`widgets.png`, `widget-day-arc.png`): Glance composes each
+  one into the `RemoteViews` a launcher receives, applied to a real view and drawn through
+  the GPU pipeline so the outline-rounded corners come out round. A widget change
+  regenerates them like a screen change does.
+- **No invented data.** Every picture comes from the recording or from what a reader makes
+  with the app's own words (the alerts are created from its ideas). The Journal has no
+  picture until real history can be recorded (PLANNING.md, «Le schermate del README»).
+
 ## Writing `README.md` (root file only)
 
 **No em dashes (`—`) or en dashes (`–`) in the root `README.md`.** Rewrite the sentence

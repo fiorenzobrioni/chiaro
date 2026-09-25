@@ -39,6 +39,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import com.callbackdev.chiaro.widget.ChiaroWidgetReceiver
@@ -304,7 +305,7 @@ private fun StackedStripContent(
             val next = series.nextLight
             when {
                 content.isStale -> Text(
-                    text = staleText(context, content.lastSync, Instant.now()),
+                    text = staleText(context, content.lastSync, Instant.now(LocalClock.current)),
                     style = TextStyle(color = palette.stale, fontSize = StaleSp.sp),
                     maxLines = 1
                 )
@@ -362,7 +363,7 @@ private fun RowStripContent(
             val lineSp = (StripLineSp * plan.textScale).sp
             when {
                 content.isStale -> Text(
-                    text = staleText(context, content.lastSync, Instant.now()),
+                    text = staleText(context, content.lastSync, Instant.now(LocalClock.current)),
                     style = TextStyle(color = palette.stale, fontSize = StaleSp.sp),
                     maxLines = 1
                 )
@@ -482,7 +483,7 @@ private fun PanelContent(
                     }
                     if (content.isStale) {
                         Text(
-                            text = Separator + staleText(context, content.lastSync, Instant.now()),
+                            text = Separator + staleText(context, content.lastSync, Instant.now(LocalClock.current)),
                             style = TextStyle(color = palette.stale, fontSize = subSp),
                             maxLines = 1
                         )
@@ -659,7 +660,7 @@ private fun StaleLine(content: TodayUiState.Content, palette: WidgetPalette) {
     if (!content.isStale) return
     val context = LocalContext.current
     Text(
-        text = staleText(context, content.lastSync, Instant.now()),
+        text = staleText(context, content.lastSync, Instant.now(LocalClock.current)),
         style = TextStyle(color = palette.stale, fontSize = StaleSp.sp),
         maxLines = 1
     )
@@ -724,9 +725,11 @@ internal fun ArcWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
     val size = LocalSize.current
     val content = model.content
     val city = model.city
+    // Read out here: the builder below runs inside `remember`, which is not composable.
+    val clock = LocalClock.current
     val series = if (content != null && city != null) {
         remember(content, arc, model.moments) {
-            ArcSeries.build(content, model.moments, city.coordinates, Instant.now(), arc)
+            ArcSeries.build(content, model.moments, city.coordinates, Instant.now(clock), arc)
         }
     } else {
         null

@@ -30,6 +30,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.ui.today.HeadlineText
@@ -375,7 +376,7 @@ private fun StaleLine(content: TodayUiState.Content, palette: WidgetPalette) {
     if (!content.isStale) return
     val context = LocalContext.current
     Text(
-        text = staleText(context, content.lastSync, Instant.now()),
+        text = staleText(context, content.lastSync, Instant.now(LocalClock.current)),
         style = TextStyle(color = palette.stale, fontSize = StaleSp.sp),
         maxLines = 1
     )

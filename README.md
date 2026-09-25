@@ -18,9 +18,9 @@ Free, no account, no ads, no tracking, no API key.
 
 <table>
 <tr>
-<td width="33%"><img src="docs/screenshots/today-now.jpg" alt="Today: the computed sky, the next hours and the rest of the day"></td>
-<td width="33%"><img src="docs/screenshots/sky-tonight.jpg" alt="Sky: tonight's verdict and the moments ahead"></td>
-<td width="33%"><img src="docs/screenshots/widget-day-arc.jpg" alt="The day's arc widget on the home screen"></td>
+<td width="33%"><img src="docs/screenshots/today-now.png" alt="Today: the computed sky, the next hours and the rest of the day"></td>
+<td width="33%"><img src="docs/screenshots/sky-tonight.png" alt="Sky in the dark theme: tonight's verdict and the moments ahead"></td>
+<td width="33%"><img src="docs/screenshots/widget-day-arc.png" alt="The day's arc widget: the sun's path over Milan, the moments ahead and the week"></td>
 </tr>
 <tr>
 <td align="center"><sub><b>Today</b>: the sky, then the numbers</sub></td>
@@ -54,20 +54,29 @@ instead of pretending. Nothing on the screen is there because a layout needed fi
 
 ## Screenshots
 
-Italian, on a phone, with real data over Cortina d'Ampezzo. The app ships in Italian and
-English through the system per-app language picker.
+Drawn by the app's own screens from real data for Milan: a forecast from Open-Meteo and a
+bulletin from the Protezione Civile, recorded once and put through the app's own pipeline,
+so every picture shows the current build. They are regenerated with
+`./gradlew :app:testDebugUnitTest --tests "*ReadmeScreenshots" -PupdateScreenshots`. In
+English here; the app ships in Italian and English through the system per-app language
+picker. The phone's status bar is not in the pictures.
+
+The widgets are drawn the way a launcher draws them, from the same data, on a plain dark
+ground: the launcher and its wallpaper are not in the picture. The Journal is the one screen
+not shown: it is the history of how the forecast changed over several days, and its picture
+waits for days of real updates rather than showing invented ones.
 
 **Today**, one vertical scroll that starts with the sky:
 
 <table>
 <tr>
-<td width="33%"><img src="docs/screenshots/today-now.jpg" alt="The sky canvas with the temperature, the condition and the daylight ribbon, the next hours, and the rest of the day"></td>
-<td width="33%"><img src="docs/screenshots/today-week.jpg" alt="The week on one shared temperature scale, each day with its ribbon of light"></td>
-<td width="33%"><img src="docs/screenshots/today-details.jpg" alt="The details grid: humidity, pressure, visibility, air quality and pollen, each with the line that says what to do with it"></td>
+<td width="33%"><img src="docs/screenshots/today-now.png" alt="The sky canvas with the temperature, the condition and the daylight ribbon, the next hours, and the rest of the day"></td>
+<td width="33%"><img src="docs/screenshots/today-week.png" alt="The week on one shared temperature scale, each day with its ribbon of light, and tomorrow open on its UV and its hours"></td>
+<td width="33%"><img src="docs/screenshots/today-details.png" alt="The details grid: wind, clouds, humidity, pressure, visibility, air quality and pollen, each with the line that says what to do with it"></td>
 </tr>
 <tr>
 <td align="center"><sub>The computed sky, the next hours, the rest of the day</sub></td>
-<td align="center"><sub>The week on one temperature scale, with each day's light</sub></td>
+<td align="center"><sub>The week on one temperature scale, with each day's light. Open a day for its hours and its facts</sub></td>
 <td align="center"><sub>Every number carries its consequence, never a bare value</sub></td>
 </tr>
 </table>
@@ -76,30 +85,45 @@ English through the system per-app language picker.
 
 <table>
 <tr>
-<td width="33%"><img src="docs/screenshots/sky-tonight.jpg" alt="Tonight's verdict with the numbers that decided it, and the moments ahead each with its own verdict"></td>
-<td width="33%"><img src="docs/screenshots/sky-ahead.jpg" alt="The calendar ahead: the equinox, the full moon at dusk, and the meteor peaks past the forecast horizon"></td>
-<td width="33%"><img src="docs/screenshots/guide.jpg" alt="The guide: a tour of the four screens, what each one answers and what it cannot say out loud"></td>
+<td width="33%"><img src="docs/screenshots/sky-tonight.png" alt="In the dark theme: tonight's verdict with the numbers that decided it, and the moments ahead each with its own verdict"></td>
+<td width="33%"><img src="docs/screenshots/sky-ahead.png" alt="The calendar ahead: the full moon and the meteor peaks past the forecast horizon, then the reminders"></td>
+<td width="33%"><img src="docs/screenshots/guide.png" alt="The guide: a tour of the four screens, what each one answers and what it cannot say out loud"></td>
 </tr>
 <tr>
-<td align="center"><sub>Tonight, and the moments ahead. A camera marks the nine worth photographing</sub></td>
+<td align="center"><sub>Tonight, and the moments ahead, in the dark theme. A camera marks the nine worth photographing</sub></td>
 <td align="center"><sub>The calendar ahead, with an honest "too far out to say"</sub></td>
 <td align="center"><sub>The guide, reachable from Settings forever</sub></td>
 </tr>
 </table>
 
-**Alerts, Settings and the home screen**: what the app sends, how it looks, and what it
-puts on the launcher:
+**Alerts and Settings**: what the app sends and when, the alerts you write yourself, and how
+it looks:
 
 <table>
 <tr>
-<td width="33%"><img src="docs/screenshots/alerts.jpg" alt="Alerts: the official Protezione Civile bulletin for the zone, and the ready-made switches with what each one sends and when"></td>
-<td width="33%"><img src="docs/screenshots/settings.jpg" alt="Settings: units, theme, palette, typeface and the weather icon family"></td>
-<td width="33%"><img src="docs/screenshots/widgets-home.jpg" alt="Four widgets on the home screen: Now, Today, Sky and the next hours"></td>
+<td width="33%"><img src="docs/screenshots/alerts.png" alt="Alerts: when each notification can arrive, then the official Protezione Civile bulletin for the zone and the switch that follows it"></td>
+<td width="33%"><img src="docs/screenshots/alerts-yours.png" alt="Your own alerts: two rules made from the ideas, Bike and Run, each written out as its sentence with its switch, and the row of ideas to start from"></td>
+<td width="33%"><img src="docs/screenshots/settings.png" alt="Settings: the guide, the units, and the appearance with a live preview above the theme, the palette and the typeface"></td>
 </tr>
 <tr>
-<td align="center"><sub>The official bulletin, then switches that say exactly what they send</sub></td>
+<td align="center"><sub>When they arrive, then the official bulletin and what it sends</sub></td>
+<td align="center"><sub>Your own alerts, written as sentences, started from an idea</sub></td>
 <td align="center"><sub>Two palettes, three typefaces, two icon families</sub></td>
-<td align="center"><sub>Widgets in Glance, each configured on its own</sub></td>
+</tr>
+</table>
+
+**Widgets**, as a reader first places them:
+
+<table>
+<tr>
+<td width="33%"><img src="docs/screenshots/widgets.png" alt="Four widgets: Now, In words, Sky with the golden hour and its verdict, and Today with the next hours"></td>
+<td width="33%"><img src="docs/screenshots/widget-day-arc.png" alt="The day's arc widget: the sun's path over Milan, the moments ahead and the week"></td>
+<td width="33%"></td>
+</tr>
+<tr>
+<td align="center"><sub>Now, In words, Sky and Today, each configured on its own</sub></td>
+<td align="center"><sub>The day's arc: the sun's real path over your place</sub></td>
+<td></td>
 </tr>
 </table>
 
@@ -294,10 +318,10 @@ rather than by hand, and an accessibility and performance pass with its numbers 
 Between those rounds sit some fifty device reviews, each recorded with what it measured and
 what it changed.
 
-**v1.0.0 is that work, tagged.** The launcher icon is drawn and measured, the screenshots
-above are the shipping build, and the `## [1.0.0]` section of the changelog is written: the
-release workflow reads it and uses it as the body of the release. The signing key and the
-release pipeline were in place first and were rehearsed end to end on a throwaway tag.
+**v1.0.0 is that work, tagged.** The launcher icon is drawn and measured, and the
+`## [1.0.0]` section of the changelog is written: the release workflow reads it and uses it
+as the body of the release. The signing key and the release pipeline were in place first and
+were rehearsed end to end on a throwaway tag.
 
 **After v1.0.0**: MeteoAlarm behind the same warning model for the rest of Europe, with the
 Protezione Civile keeping precedence in Italy.

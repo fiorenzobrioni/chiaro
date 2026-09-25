@@ -122,6 +122,7 @@ import com.callbackdev.chiaro.ui.components.rainTrack
 import com.callbackdev.chiaro.ui.components.uvTrack
 import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
@@ -355,8 +356,12 @@ private fun StatusBarIcons(overCanvas: Boolean) {
     }
 }
 
+/**
+ * One place's page: what the pager draws for each place, and, being a function of its
+ * state alone, what the README's screenshots draw from a recorded forecast (25 set 2026).
+ */
 @Composable
-private fun TodayPage(
+internal fun TodayPage(
     state: TodayUiState,
     title: String,
     isGps: Boolean,
@@ -1327,7 +1332,7 @@ private fun ribbonDescription(
 /** How old the data really is, in the largest unit that keeps a whole number. */
 @Composable
 private fun freshnessAge(lastSync: Instant): String {
-    val elapsed = Duration.between(lastSync, Instant.now())
+    val elapsed = Duration.between(lastSync, Instant.now(LocalClock.current))
     return when {
         elapsed.toHours() < 1 -> pluralStringResource(
             R.plurals.freshness_minutes_ago, elapsed.toMinutes().toInt(), elapsed.toMinutes().toInt()

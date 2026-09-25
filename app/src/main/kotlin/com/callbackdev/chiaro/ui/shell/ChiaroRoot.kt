@@ -140,7 +140,7 @@ fun ChiaroRoot(
 }
 
 /** Height of the Material 3 navigation bar's content, without the system inset under it. */
-private val BottomBarHeight = 80.dp
+internal val BottomBarHeight = 80.dp
 
 /**
  * The shell (Fase 4, bottom bar since Fase 5, Navigation 3 since 22 set 2026): the four
@@ -303,7 +303,7 @@ private fun backwardTransition(reduced: Boolean): ContentTransform {
  * Journal — every tab arrived with its screen, none ever shipped dead.
  */
 @Composable
-private fun ChiaroBottomBar(selected: ShellTab, onSelect: (ShellTab) -> Unit) {
+internal fun ChiaroBottomBar(selected: ShellTab, onSelect: (ShellTab) -> Unit) {
     NavigationBar {
         TabItem(ShellTab.TODAY, selected, onSelect, ChiaroIcons.tabToday, R.string.tab_today)
         TabItem(ShellTab.SKY, selected, onSelect, ChiaroIcons.tabSky, R.string.tab_sky)

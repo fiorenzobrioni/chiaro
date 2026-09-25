@@ -73,6 +73,7 @@ import com.callbackdev.chiaro.data.FetchFailureReason
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.warnings.WarningText
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
@@ -387,7 +388,7 @@ private fun DayHeading(date: LocalDate, zone: ZoneId, dayFmt: DateTimeFormatter,
  * Italy, "today" is Tokyo's today or the two headings disagree by a day. */
 @Composable
 private fun dayTitle(date: LocalDate, zone: ZoneId, dayFmt: DateTimeFormatter): String {
-    val today = LocalDate.now(zone)
+    val today = LocalDate.now(LocalClock.current.withZone(zone))
     return when (date) {
         today -> stringResource(R.string.week_today)
         today.minusDays(1) -> stringResource(R.string.journal_yesterday)
@@ -548,7 +549,7 @@ private fun EntryRow(
                 // The date without its year when it is this year's: «21 set 2026» under a
                 // heading that is already in September 2026 was the year said twice.
                 val held = it.toLocalDate()
-                val fmt = if (held.year == LocalDate.now(zone).year) {
+                val fmt = if (held.year == LocalDate.now(LocalClock.current.withZone(zone)).year) {
                     DateTimeFormatter.ofPattern("d MMMM", locale)
                 } else {
                     DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
@@ -651,7 +652,7 @@ private sealed interface EntryBadge {
  */
 @Composable
 private fun warningDay(day: LocalDate, zone: ZoneId): String {
-    val today = LocalDate.now(zone)
+    val today = LocalDate.now(LocalClock.current.withZone(zone))
     return when (day) {
         today -> stringResource(R.string.warning_day_today_short)
         today.plusDays(1) -> stringResource(R.string.warning_day_tomorrow_short)

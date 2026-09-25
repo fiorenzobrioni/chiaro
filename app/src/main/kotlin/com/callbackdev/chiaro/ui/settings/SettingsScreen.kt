@@ -89,7 +89,6 @@ import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
  * switch that changes nothing yet would be the screen lying about what the app can
  * do (DESIGN §1.1).
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsRoute(
     onBack: () -> Unit,
@@ -98,6 +97,37 @@ fun SettingsRoute(
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
 
+    SettingsScreen(
+        settings = settings,
+        actions = SettingsActions(
+            setTemperatureUnit = { viewModel.setTemperatureUnit(it) },
+            setWindSpeedUnit = { viewModel.setWindSpeedUnit(it) },
+            setThemeMode = { viewModel.setThemeMode(it) },
+            setDynamicColor = { viewModel.setDynamicColor(it) },
+            setPalette = { viewModel.setPalette(it) },
+            setFont = { viewModel.setFont(it) },
+            setAnimatedIcons = { viewModel.setAnimatedIcons(it) },
+            setWeatherIcons = { viewModel.setWeatherIcons(it) },
+            setUpdateFrequency = { viewModel.setUpdateFrequency(it) },
+            resetToDefaults = { viewModel.resetToDefaults() }
+        ),
+        onBack = onBack,
+        onOpenGuide = onOpenGuide
+    )
+}
+
+/**
+ * The page itself, from the settings and not from the view model: what [SettingsRoute]
+ * draws, and what the README's screenshots draw (25 set 2026).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun SettingsScreen(
+    settings: AppSettings?,
+    actions: SettingsActions,
+    onBack: () -> Unit,
+    onOpenGuide: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -118,18 +148,7 @@ fun SettingsRoute(
         settings?.let { current ->
             SettingsList(
                 settings = current,
-                actions = SettingsActions(
-                    setTemperatureUnit = { viewModel.setTemperatureUnit(it) },
-                    setWindSpeedUnit = { viewModel.setWindSpeedUnit(it) },
-                    setThemeMode = { viewModel.setThemeMode(it) },
-                    setDynamicColor = { viewModel.setDynamicColor(it) },
-                    setPalette = { viewModel.setPalette(it) },
-                    setFont = { viewModel.setFont(it) },
-                    setAnimatedIcons = { viewModel.setAnimatedIcons(it) },
-                    setWeatherIcons = { viewModel.setWeatherIcons(it) },
-                    setUpdateFrequency = { viewModel.setUpdateFrequency(it) },
-                    resetToDefaults = { viewModel.resetToDefaults() }
-                ),
+                actions = actions,
                 onOpenGuide = onOpenGuide,
                 modifier = Modifier
                     .fillMaxSize()

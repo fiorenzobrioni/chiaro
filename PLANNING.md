@@ -11099,3 +11099,150 @@ Due fatti sui dati, che correggono l'analisi del 25 mattina:
   limite: il `ww` del DWD pesa meno le nubi alte e sottili, la nuvolosità totale no; l'app
   ha già le nubi per strato, e un «velato» per il cielo di sole nubi alte è un seguito
   possibile, non una premessa.
+
+## Le schermate del README disegnate dai test (committente, 25 set 2026)
+
+Richiesta: «Fatico a tenere aggiornati gli screenshot […] quelli attuali sono fermi alla
+release». Le otto immagini delle schermate erano foto del telefono del 21 set (v1.0.0, in
+italiano, su Cortina d'Ampezzo) e da allora l'app era cambiata sotto di loro (il motore
+degli stati, le icone, la griglia dei dettagli, Avvisi). Il modello è quello di Passo: le
+schermate le disegnano dei test, a richiesta, e una regola del repo dice quando.
+
+### Cosa è cambiato
+
+- **`ReadmeScreenshots`** (`app/src/testDebug/.../readme/`): otto test Robolectric con la
+  grafica nativa che disegnano Oggi (in cima, la settimana, i dettagli), Cielo (stanotte, il
+  calendario), Avvisi, Impostazioni e la guida in `docs/screenshots/*.png`. Partono solo
+  con `-PupdateScreenshots` (`app/build.gradle.kts` passa la cartella come proprietà di
+  sistema); senza, `assumeTrue` li salta, quindi la CI e un `test` qualsiasi non riscrivono
+  mai un'immagine.
+- **Dati veri, non inventati**: `tools/record_readme_data.py` registra Milano in
+  `app/src/test/resources/readme/` (il geocoder in inglese, la previsione e la qualità
+  dell'aria con **le stesse variabili dell'app**, lette da `OpenMeteoApis.kt` e non
+  copiate, l'ultimo bollettino della Protezione Civile e il momento della registrazione).
+  `MilanRecording` le passa per la pipeline dell'app: i DTO, `WeatherReportMapper`,
+  `TodayStateBuilder`, `SkyStateBuilder`, l'indice delle zone d'allerta e
+  `OfficialWarningEngine`. Le schermate sono disegnate cinque minuti dopo la
+  registrazione, con le impostazioni di un'installazione nuova (`AppSettings()`).
+- **Le schermate prendono lo stato, non il view model**: `SkyScreen`, `AlertsScreen` e
+  `SettingsScreen` (internal) sono estratte dalle rispettive `*Route`, che ora le chiamano
+  e basta; `TodayPage`, `ChiaroBottomBar` e `BottomBarHeight` passano da private a internal.
+  Nessun cambiamento di comportamento.
+- **`LocalClock`** (`ui/format/LocalClock.kt`): i punti in cui un composable leggeva l'ora
+  da solo al momento di disegnare la leggono da qui: l'età nel chip di freschezza, il «tra
+  20 min» e il «tra 13 giorni» del Cielo, il disco di «adesso» nella striscia di Avvisi e il
+  giorno del suo bollettino, «oggi» e «ieri» del Diario, i giorni d'esempio della guida. Sul
+  telefono è l'orologio di sistema, come prima; nei test è fermo al momento della
+  registrazione. I view model restano sul loro `Clock`: non disegnano.
+- README: le otto immagini sono `.png` generate; il testo dice da dove vengono e come si
+  rigenerano. `widget-day-arc.jpg` e `widgets-home.jpg` restano foto della v1.0.0 e il
+  README lo dice. Tolta la frase «the screenshots above are the shipping build», che non
+  sarà più vera né falsa per costruzione: le immagini seguono il codice.
+- CLAUDE.md: la regola (sotto).
+
+### Decisioni e deviazioni
+
+- **Milano, in inglese** (committente). Inglese britannico (`en-rGB`), non americano: il
+  README è in inglese ma la città è italiana, e l'orologio a 24 ore e «Friday 25 September»
+  sono quello che vede un lettore europeo. Telefono 384 × 832 dp (il device di riferimento
+  delle misure dei widget) a xhdpi.
+- **Icone ferme** (committente: «puoi fare gli screenshot con le icone non animate»):
+  `LocalAnimatedIcons` a false, e comunque il test di Compose non fa girare le animazioni
+  infinite.
+- **Cielo in tema scuro**, le altre in chiaro: il README deve mostrare il secondo vestito da
+  qualche parte, e il Cielo è la scheda che si apre di sera. Stessa scelta di Passo.
+- **Non `captureToImage`**: con questo Compose (BOM 2026.02.01) e Robolectric 4.16 aspetta
+  un ridisegno sul thread che sta bloccando e va in timeout dopo 2 s (anche con
+  `robolectric.pixelCopyRenderMode=hardware`). `View.draw` della finestra sotto la grafica
+  nativa disegna gli stessi pixel senza aggiornare nessuna dipendenza (Passo, su Robolectric
+  4.17 e BOM 2026.09, usa `captureToImage`).
+- **Niente Diario, niente widget**: il Diario ha bisogno di giorni di storia registrata, e
+  una storia inventata sarebbe l'unica immagine finta del README; i widget sono Glance e un
+  test non disegna un launcher. Restano fuori finché una registrazione onesta non li rende
+  possibili (per il Diario: l'API «previous runs» di Open-Meteo è la strada da misurare).
+- **Nessun controllo in CI sulle immagini**: il rendering di Robolectric cambia di un pixel
+  fra versioni e font, e un test che fallisce per quello verrebbe ignorato. La garanzia è
+  la regola in CLAUDE.md, come in Passo.
+
+### Come è stato verificato
+
+- `./gradlew :app:testDebugUnitTest --tests "*ReadmeScreenshots" -PupdateScreenshots`
+  (con lo script del mirror): otto immagini, guardate una per una; e senza la proprietà gli
+  otto test risultano saltati. **Due esecuzioni di fila danno gli stessi byte** per tutte e
+  otto: la prima prova l'aveva mancata per Avvisi, il cui disco di «adesso» leggeva ancora
+  l'orologio vero (`LocalTime.now(zone)`, sfuggito alla prima ricerca perché aveva un
+  argomento), ed è così che sono stati trovati anche Cielo e Diario.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+### Il seguito: cosa mostrano (committente, 25 set 2026)
+
+Richiesta: rivedere se le schermate coprono tutto quello che c'è da mostrare, e decidere.
+Confrontate con le cinque cose che dicono cos'è l'app (il cielo calcolato, una frase prima dei
+numeri, l'agenda del cielo col verdetto, il diario della previsione, gli avvisi scritti da chi
+legge) e con l'elenco delle funzioni del README:
+
+- **Aggiunta `alerts-yours.png`**: la sezione «Yours» di Avvisi con due regole fatte dalle
+  idee dell'app (Bike e Run, create come le crea `addFromTemplate`: nome, messaggio e
+  condizioni dell'idea, mai scattate) e la fila delle idee, con «Already added» su quella
+  usata. Gli avvisi scritti da chi legge erano l'unico dei cinque tratti senza immagine.
+  Nove immagini generate, non più otto.
+- **`today-week.png` con domani aperto**: la settimana e, sotto la riga di sabato, le sue
+  ore e i suoi fatti (qui l'UV, perché è un giorno asciutto). Prima mostrava solo le righe.
+- **Il Diario resta fuori, misurato**: la Single Runs API di Open-Meteo ridà una corsa
+  passata nella stessa forma della risposta viva, ma rifiuta `daily` se la corsa non parte
+  alla mezzanotte locale («only supported … if 'run' starts at 00:00 in the requested
+  timezone») e le corse delle 22Z non esistono per nessun modello provato (GFS, ICON); la
+  Previous Runs API ha solo ritardi di giorni interi. Un diario ricostruito avrebbe un
+  aggiornamento al giorno con i buchi in mezzo, che dice il falso sul comportamento
+  dell'app. Il README lo dice. La strada onesta è registrare Milano a intervalli per qualche
+  giorno e ricostruire le righe con `WeatherSnapshots.flatten`/`flattenForecast`.
+- **Fuori anche l'editor delle regole**: è un bottom sheet in una finestra sua, che il
+  disegno della finestra dell'attività non contiene, e vuole il view model vero.
+- README: le immagini in quattro gruppi (Oggi; Cielo; Avvisi e Impostazioni; la schermata
+  home, fotografata), il paragrafo iniziale dice cosa non è disegnato da un test e perché.
+
+**Un difetto trovato dall'immagine, non corretto qui**: in inglese la frase della regola è
+«When the temperature now at least 12°», senza verbo (`rule_sentence_fragment` è
+`%1$s %2$s %3$s` e gli operatori sono «at least», «above»…; il README promette «*when*
+rain in the next 6 hours *is* above 70%»). In italiano «la temperatura adesso almeno 12°»
+regge come stile telegrafico. Non toccato in questa modifica, che riguarda le immagini:
+è una decisione di testo del committente (aggiungere «is» agli operatori numerici inglesi,
+o un frammento con il verbo, tenendo «is»/«is not» dei sì/no).
+
+### Il seguito: «is» negli operatori e i widget disegnati (committente, 25 set 2026)
+
+Richieste: aggiungere «is» agli operatori inglesi e rigenerare l'immagine; e «non hai
+rigenerato gli screenshot dei widget e vedo ancora i miei».
+
+- **Gli operatori inglesi portano il verbo**: «is above», «is at least», «is below», «is at
+  most», «is exactly», «is anything but» (`values/strings.xml`); «is» e «is not» dei sì/no
+  restano come sono, l'italiano non cambia. La frase della card e i chip dell'editor ora
+  leggono «When the temperature now is at least 12°», come il README la promette. Nessun
+  test fissava le parole vecchie. `alerts-yours.png` rigenerata.
+- **I widget sono disegnati, non più fotografati.** La premessa di prima («un test non
+  disegna un launcher») era vera del launcher e non dei widget: `GlanceRemoteViews().compose`
+  (Glance 1.1.1, sperimentale) compone il contenuto di un widget nei `RemoteViews` che un
+  launcher riceve, senza id né launcher, e `RemoteViews.apply` lo applica a una view vera.
+  I contenuti erano già funzioni `internal` di un `WidgetModel` (`NowWidgetContent`,
+  `TextWidgetContent`, `SkyWidgetContent`, `TodayWidgetContent`, `ArcWidgetContent`), e il
+  modello si costruisce come fa `WidgetData.load`: lo stato di Oggi sul report, l'aspetto
+  di un widget appena messo (`WidgetLook.defaultsFor`), i momenti giudicati. Per questi
+  ultimi `WidgetData.moments` è diviso in due: la lettura delle iscrizioni e
+  `momentsFor`, puro e `internal`, che il test chiama invece di copiarlo.
+- **Gli angoli**: disegnati su un canvas software uscivano quadrati, card e chip dei
+  verdetti, perché Glance li arrotonda col contorno della view (`clipToOutline`, API 31+) e
+  solo un render node rispetta un contorno. La view è attaccata alla finestra (accelerata)
+  dell'attività del test e registrata in un `RenderNode`, reso da un `HardwareRenderer` su
+  un `ImageReader`: gli angoli escono come sul telefono.
+- **Il testo è Roboto**, non Google Sans come nell'app: è giusto così, un widget è
+  disegnato nel processo del launcher col carattere di sistema, come nella foto del device.
+- **L'orologio anche nei widget**: `staleText(…, Instant.now())` in cinque punti, il «domani»
+  del widget Cielo (`dayMark`, che ora riceve il giorno invece di leggerlo) e il `now` con cui
+  l'arco costruisce la sua serie leggono `LocalClock`: Glance compone con lo stesso runtime
+  di Compose e i `CompositionLocal` funzionano uguali. Sul telefono resta l'orologio di
+  sistema. Resta `Instant.now()` solo in `WidgetData.load`, che costruisce il modello e che
+  il test non attraversa.
+- `widgets.png` (Now e «In words» a 4×1, Sky e Today a 4×2) e `widget-day-arc.png` (4×4)
+  sostituiscono le due foto della v1.0.0, su un fondo scuro semplice al posto dello sfondo
+  del telefono; le misure delle celle sono quelle dei test dei widget (340 × 82, 340 × 189)
+  e dell'arco nella foto (340 × 397). Undici immagini generate; nessuna foto nel README.

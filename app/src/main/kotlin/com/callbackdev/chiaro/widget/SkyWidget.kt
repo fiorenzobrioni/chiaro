@@ -40,6 +40,7 @@ import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.ui.sky.SkyText
@@ -138,7 +139,7 @@ private fun HeroRow(
                     }
                 }
                 Text(
-                    text = heroLabel(context, model, moment),
+                    text = heroLabel(context, model, moment, placeToday(model)),
                     style = secondaryStyle(palette, SkyNameSp.sp),
                     maxLines = 1
                 )
@@ -240,7 +241,7 @@ private fun CompactRow(
             modifier = GlanceModifier.padding(start = 8.dp).defaultWeight()
         )
         Text(
-            text = rowClock(context, model, moment),
+            text = rowClock(context, model, moment, placeToday(model)),
             style = secondaryStyle(palette, SkyCompactSp.sp),
             maxLines = 1,
             modifier = GlanceModifier.padding(start = MarkGap)
@@ -349,20 +350,24 @@ private fun heroClock(context: Context, model: WidgetModel, moment: NextMoment):
  * screen. Anything past tomorrow carries its date, because a word for it would be a
  * guess at how the reader counts days.
  */
-private fun heroLabel(context: Context, model: WidgetModel, moment: NextMoment): String {
+private fun heroLabel(context: Context, model: WidgetModel, moment: NextMoment, today: LocalDate): String {
     val name = context.getString(SkyText.nameRes(moment.job.id))
-    return listOfNotNull(dayMark(context, model, moment), name).joinToString(" · ")
+    return listOfNotNull(dayMark(context, model, moment, today), name).joinToString(" · ")
 }
 
 /** A row's clock: the day marker and the start, the Sky screen's own phrase. */
-private fun rowClock(context: Context, model: WidgetModel, moment: NextMoment): String {
+private fun rowClock(context: Context, model: WidgetModel, moment: NextMoment, today: LocalDate): String {
     val start = moment.start.atZone(model.zone).format(timeFormatter(context))
-    return listOfNotNull(dayMark(context, model, moment), start).joinToString(" · ")
+    return listOfNotNull(dayMark(context, model, moment, today), start).joinToString(" · ")
 }
 
-private fun dayMark(context: Context, model: WidgetModel, moment: NextMoment): String? {
+/** Today in the place, from [LocalClock]: the day [dayMark] counts from. */
+@Composable
+private fun placeToday(model: WidgetModel): LocalDate =
+    LocalDate.now(LocalClock.current.withZone(model.zone))
+
+private fun dayMark(context: Context, model: WidgetModel, moment: NextMoment, today: LocalDate): String? {
     val date = moment.start.atZone(model.zone).toLocalDate()
-    val today = LocalDate.now(model.zone)
     return when {
         moment.inProgress -> context.getString(R.string.sky_moment_now)
         date == today -> null

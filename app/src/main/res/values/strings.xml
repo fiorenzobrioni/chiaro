@@ -922,13 +922,16 @@
     <string name="rule_placeholder_intro">Tap one: it lands at the cursor, and when the alert fires it becomes the value with its unit.</string>
     <string name="action_done">Done</string>
 
-    <!-- The operators, as the sentence needs them -->
-    <string name="op_above">above</string>
-    <string name="op_at_least">at least</string>
-    <string name="op_below">below</string>
-    <string name="op_at_most">at most</string>
-    <string name="op_equal">exactly</string>
-    <string name="op_not_equal">anything but</string>
+    <!-- The operators, as the sentence needs them. English carries the verb here
+         (25 Sep 2026): "When the temperature now is at least 12°"; without it the
+         sentence read "When the temperature now at least 12°". Italian reads well
+         without one and keeps its own. -->
+    <string name="op_above">is above</string>
+    <string name="op_at_least">is at least</string>
+    <string name="op_below">is below</string>
+    <string name="op_at_most">is at most</string>
+    <string name="op_equal">is exactly</string>
+    <string name="op_not_equal">is anything but</string>
     <string name="op_is">is</string>
     <string name="op_is_not">is not</string>
     <string name="value_yes">yes</string>

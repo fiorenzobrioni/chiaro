@@ -106,6 +106,19 @@ android {
     }
 }
 
+// The README's screenshots (docs/screenshots) are drawn by the `ReadmeScreenshots` tests
+// from a recorded Milan (`tools/record_readme_data.py`), and only on request:
+// `./gradlew :app:testDebugUnitTest --tests "*ReadmeScreenshots" -PupdateScreenshots`.
+// Without the property those tests are skipped, so an ordinary run (CI's included) never
+// rewrites a committed image. The same scheme as Passo's (25 set 2026).
+if (providers.gradleProperty("updateScreenshots").isPresent) {
+    val screenshots = rootProject.layout.projectDirectory.dir("docs/screenshots").asFile.absolutePath
+    tasks.withType<Test>().configureEach {
+        systemProperty("chiaro.readmeScreenshots", screenshots)
+        outputs.upToDateWhen { false }
+    }
+}
+
 dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:sync"))
