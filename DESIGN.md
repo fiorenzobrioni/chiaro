@@ -36,6 +36,13 @@ not drawn** — never a card with an em dash in it. And **no placeholder ever re
 value**: a skeleton must be visibly a skeleton, which in practice means it is a shimmer
 of `surfaceContainerHigh`, never a grey "0°".
 
+**A derived state is not a lie** (25 set 2026). The rule is about values, age and absence,
+not about relaying the provider: the icon and the word of an hour are the app's reading of
+the forecast, derived from the physical fields and allowed to differ from `weather_code`
+(the fog repair, the day's code, the state engine in `PLANNING.md`). What stays forbidden is
+changing a number the model forecast: a probability, an amount or a temperature on screen is
+the model's, or an estimate that says so.
+
 ### 1.2 Every number says what to do with it
 
 The mainstream inversion of the series' evidence rule. UV 7 is a number, "burns in about

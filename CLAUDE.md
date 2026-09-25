@@ -81,6 +81,15 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
 - **The screen must not lie.** A section with no data is not drawn, never a card with a
   dash in it. Stale data states its real age. Estimates say so. No placeholder ever
   renders as a value: a skeleton must look like a skeleton, never like a grey zero.
+- **Numbers are the model's; states are the app's.** Chiaro is not a relay of the API.
+  What an hour or a day *is* (its icon and its word: rain, showers, snow, fog, ice, sky)
+  is the app's reading of the forecast, derived from the physical fields (amounts, phase,
+  probability, temperature, visibility, cloud), and it may differ from `weather_code`: the
+  fog repair and the day's code already do this, and the state engine (`PLANNING.md`, «Il
+  motore degli stati») extends it. What the app never does is change a number: a
+  probability, an amount, a temperature on screen is the one the model forecast, or an
+  estimate that says so. Every rule that derives a state is written down with its reason
+  and its measurement, and tested.
 - **Every number says what to do with it.** A metric tile is a value plus its consequence.
   A metric with no honest second line belongs in the details sheet, not on the home screen.
 - **A verdict ships with its arithmetic**, and is a glyph and a word before it is a color:

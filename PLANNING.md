@@ -10788,7 +10788,9 @@ rielaborare i dati dove serve**, come fanno le app che ha studiato, invece di fa
 passacarte tra l'API e lo schermo. Chiede una revisione precisa, adattata all'app, con il
 parere su se sia la scelta giusta. Qui sotto: i fatti verificati, la valutazione punto per
 punto, il motore rivisto fenomeno per fenomeno, i passi. **Stato: proposta, da approvare
-prima di scrivere codice.**
+prima di scrivere codice.** Supera la regola del giorno prima («tra modelli diversi l'app non
+fa da arbitro»), e la frase della guida sulle icone e le percentuali che non coincidono è
+stata tolta: la guida delle prossime ore è tornata al testo di prima.
 
 ### I fatti, verificati il 25 set
 
