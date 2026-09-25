@@ -1,0 +1,44 @@
+# The state engine's measurement (PLANNING.md, «Il motore degli stati», step 1).
+#
+# Runs tools/measure_states.py on a runner that can reach Open-Meteo and commits the raw
+# responses to the branch that asked for them, under tools/measurements/. Triggered by a
+# push that touches the script or this file, or by hand from the Actions tab. It never
+# builds or ships anything: it only downloads a public forecast.
+name: Measure states
+
+on:
+  push:
+    paths:
+      - tools/measure_states.py
+      - .github/workflows/measure-states.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: measure-states-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download the forecasts
+        run: python3 tools/measure_states.py
+
+      - name: Commit the measurement to this branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/measurements
+          if git diff --cached --quiet; then
+            echo "Nothing new to commit."
+          else
+            git commit -m "Measurement for the state engine, $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
