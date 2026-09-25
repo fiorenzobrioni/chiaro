@@ -36,7 +36,9 @@ interface OpenMeteoForecastApi {
             "temperature_2m,relative_humidity_2m,apparent_temperature,dew_point_2m," +
                 "is_day,precipitation,weather_code,pressure_msl,wind_speed_10m," +
                 "wind_direction_10m,wind_gusts_10m,visibility,cloud_cover,uv_index," +
-                "cloud_cover_low,cloud_cover_mid,cloud_cover_high"
+                "cloud_cover_low,cloud_cover_mid,cloud_cover_high," +
+                // 25 set 2026: the phase and the convective part, for WeatherStateEngine.
+                "snowfall,showers"
         // visibility + cloud_cover are never displayed: they repair `weather_code`,
         // whose fog is unreliable in both directions (Fase 13c) — see
         // WeatherReportMapper. Hourly cloud_cover has a second reader since Fase 16a:
@@ -60,7 +62,12 @@ interface OpenMeteoForecastApi {
                 "is_day,visibility,cloud_cover," +
                 "apparent_temperature,relative_humidity_2m,dew_point_2m,pressure_msl," +
                 "wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index," +
-                "cloud_cover_low,cloud_cover_mid,cloud_cover_high"
+                "cloud_cover_low,cloud_cover_mid,cloud_cover_high," +
+                // 25 set 2026: the snow and the convective part of each hour, which
+                // WeatherStateEngine reads to decide what falls. `rain` is not asked for:
+                // its meaning changes with the model (the UK's includes the showers), and
+                // the liquid is the total minus the snow's water.
+                "snowfall,showers"
         /**
          * `sunrise`, `sunset` and `daylight_duration` left this list on 20 set 2026,
          * having been asked for and dropped on the floor since Fase 16e handed the

@@ -10972,16 +10972,44 @@ o un avviso, non un'icona).
       workflow `Measure states`, che committa il file), `tools/analyze_states.py` prototipa
       il motore e conta; i dati grezzi sono in `tools/measurements/states-2026-09-25.json`.
       Vedi «La misura» qui sotto.
-- [ ] 2. `WmoCode`: 68/69 («Pioggia e neve»), parole e disegni per gli stati nuovi decisi.
-- [ ] 3. Il motore in `:core:domain` (`WeatherStateEngine`), puro, test a tabella per ogni
-      regola, i ripieghi, i confini delle soglie.
-- [ ] 4. Il mapper lo chiama per le ore e per `current`; chiede anche `snowfall` e `showers`
-      orari; la nebbia esce da `WeatherReportMapper` ed entra nel motore; il codice del
-      giorno lavora sugli stati.
-- [ ] 5. Verifica sulle fixture reali (Reykjavik, Milano, Everest, Sydney) e sui casi di
-      questo giro (Longyearbyen A, Bari B, Tokyo C); guida e DESIGN aggiornati su cosa è
-      uno stato.
-- [ ] 6. Suite completa, lint, build, e un giro sul telefono nelle città degli screenshot.
+- [x] 2. `WmoCode`: 68/69 («Pioggia e neve», fase `MIXED`), gli stati dell'app sopra il
+      1000 (1061 «Pioggia probabile», 1071 «Neve probabile», 1095 «Temporali possibili»,
+      ancora un pericolo), 48 con la sua parola («Nebbia gelata»); `likely` tiene gli stati
+      probabili fuori da `isPrecipitation`. Parole IT/EN, disegni (vedi sotto).
+- [x] 3. `WeatherStateEngine` in `:core:domain`, puro; `WeatherStateEngineTest` regola per
+      regola, con i confini delle soglie, i ripieghi e i casi della misura per nome.
+- [x] 4. Il mapper costruisce le ore delle righe (intervallo dallo slot dopo, istanti dal
+      proprio) e le passa al motore; il giorno lavora sugli stati riportati agli slot; il
+      blocco `current` passa dallo stesso motore. Chiede `snowfall` e `showers` orari e
+      correnti; spariscono `repairedCodes`, `skyAt` e `repairFog`, entrati nel motore.
+- [x] 5. Verifica: le fixture reali passano invariate (Reykjavik, Milano, Everest, Sydney);
+      il motore Kotlin rigirato sulle 4342 ore della misura dà lo stesso stato del
+      prototipo Python in 4339; le 3 differenze sono tutte l'arrotondamento voluto (0,2 mm
+      con 0,07 cm: 0,1 di liquida e 0,1 d'acqua di neve, «pioggia e neve» in Kotlin, dove
+      il prototipo senza tolleranza leggeva 0,0999… di liquida). Suite completa e lint.
+- [ ] 6. Un giro sul telefono nelle città degli screenshot (Longyearbyen, Bari, Tokyo).
+
+### Come è stato scritto (25 set 2026)
+
+- **I disegni.** Il gelicidio prende il disegno di quel che cade — pioviggine per 56/57,
+  pioggia per 66/67 — perché Meteocons non ha un disegno onesto della pioggia che gela, e
+  `overcast-sleet` (gocce e fiocchi, lo si è guardato) è andato a pioggia e neve, che è
+  esattamente quel che disegna. Il pericolo resta della parola e del banner «Maltempo»,
+  che per il ghiaccio scatta a qualunque probabilità. Un disegno composto per il gelicidio
+  (come il «quasi sereno») resta un seguito possibile. Il temporale che piove prende
+  `thunderstorms-*-rain`, importato con `tools/import_meteocons_v3.py` (la ri-esecuzione a
+  lista invariata ha dato zero differenze; con le due voci nuove ha aggiunto solo quelle
+  a `MeteoconsSets.kt`); «Temporali possibili» tiene il fulmine senza gocce. La pioggia
+  probabile prende la pioviggine, la neve probabile l'unica neve sotto una nuvola.
+- **Il blocco `current`** somma 15 minuti (`interval` 900 in tutte le 26 città): le
+  quantità si portano all'ora prima delle soglie. Non dice mai «probabile» — descrive
+  adesso — e può inventare nebbia senza vicini, come prima.
+- **La neve forte** vale come avviso a qualunque probabilità, come in `AlertEngine`:
+  la regola della probabilità non la toglie.
+- **Il gelicidio dedotto** non è scritto: nessuna ora della misura l'avrebbe acceso, e
+  resta per la misura d'inverno (decisione 2).
+- **La frase in cima** dice ancora «pioggia» per pioggia e neve insieme (`isSnow` è la
+  sola neve): la didascalia del grafico invece le nomina entrambe.
 
 ### La regola «lo schermo non mente»
 

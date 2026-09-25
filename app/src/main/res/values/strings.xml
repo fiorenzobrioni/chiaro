@@ -233,6 +233,12 @@
     <string name="cond_thunderstorm">Thunderstorm</string>
     <string name="cond_thunderstorm_strong">Strong thunderstorm</string>
     <string name="cond_unknown">Unknown conditions</string>
+    <!-- The state engine's states (25 set 2026, PLANNING «Il motore degli stati»). -->
+    <string name="cond_freezing_fog">Freezing fog</string>
+    <string name="cond_rain_and_snow">Rain and snow</string>
+    <string name="cond_rain_likely">Rain likely</string>
+    <string name="cond_snow_likely">Snow likely</string>
+    <string name="cond_thunderstorm_possible">Thunderstorms possible</string>
 
     <!-- Empty and error states -->
     <string name="empty_no_place_title">No place yet</string>

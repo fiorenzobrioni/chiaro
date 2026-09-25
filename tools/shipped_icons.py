@@ -33,6 +33,10 @@ SHIPPED = [
     "overcast-snow", "partly-cloudy-day-rain", "partly-cloudy-night-rain",
     "partly-cloudy-day-snow", "partly-cloudy-night-snow", "extreme-rain",
     "thunderstorms-day", "thunderstorms-night",
+    # il temporale con la sua pioggia (25 set 2026): il motore degli stati separa il 95
+    # che piove nell'ora da quello su un'ora asciutta («Temporali possibili»), e il
+    # disegno lo dice; il secondo tiene il fulmine senza gocce qui sopra
+    "thunderstorms-day-rain", "thunderstorms-night-rain",
     "not-available", "wind", "humidity", "uv-index",
     "thermometer", "barometer", "raindrops", "mist", "snowflake", "smoke-particles",
     "compass", "pollen", "sunrise", "sunset", "moonrise", "moonset", "horizon",

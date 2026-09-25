@@ -1429,12 +1429,16 @@ private fun NextHours(
  * before this.
  */
 private fun chanceCaption(codes: List<Int>): Int {
-    val falling = codes.mapNotNull { WmoCode.of(it)?.takeIf { w -> w.isPrecipitation } }
-    val snow = falling.count { it.isSnow }
+    // By phase, not by `isPrecipitation` (25 set 2026): an hour of likely snow names the
+    // chance as much as a snowing one, and rain and snow together name both.
+    val phases = codes.mapNotNull { WmoCode.of(it)?.phase }.toSet()
+    val snow = WmoCode.Phase.FROZEN in phases || WmoCode.Phase.MIXED in phases
+    val rain = WmoCode.Phase.LIQUID in phases || WmoCode.Phase.FREEZING in phases ||
+        WmoCode.Phase.MIXED in phases
     return when {
-        snow == 0 -> R.string.rain_chart_caption
-        snow == falling.size -> R.string.rain_chart_caption_snow
-        else -> R.string.rain_chart_caption_mixed
+        snow && rain -> R.string.rain_chart_caption_mixed
+        snow -> R.string.rain_chart_caption_snow
+        else -> R.string.rain_chart_caption
     }
 }
 

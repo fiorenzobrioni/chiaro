@@ -77,7 +77,17 @@ data class CurrentDto(
     // model that does not split its cloud costs the layer, not the report.
     @SerialName("cloud_cover_low") val cloudCoverLowPct: Int? = null,
     @SerialName("cloud_cover_mid") val cloudCoverMidPct: Int? = null,
-    @SerialName("cloud_cover_high") val cloudCoverHighPct: Int? = null
+    @SerialName("cloud_cover_high") val cloudCoverHighPct: Int? = null,
+    /**
+     * The length of the block's own interval, seconds: 900 on every response measured
+     * (26 cities, 25 set 2026), which is what [precipitationMm] and the two below are the
+     * sum of. Null in a cache entry from before it was read; the mapper then assumes 900.
+     */
+    @SerialName("interval") val intervalSeconds: Int? = null,
+    // 25 set 2026, for WeatherStateEngine: the snow and the convective part of the
+    // interval. Nullable and defaulted like every later field.
+    @SerialName("snowfall") val snowfallCm: Double? = null,
+    @SerialName("showers") val showersMm: Double? = null
 )
 
 @Serializable
@@ -109,7 +119,11 @@ data class HourlyDto(
     @SerialName("uv_index") val uvIndex: List<Double?> = emptyList(),
     @SerialName("cloud_cover_low") val cloudCoverLowPct: List<Int?> = emptyList(),
     @SerialName("cloud_cover_mid") val cloudCoverMidPct: List<Int?> = emptyList(),
-    @SerialName("cloud_cover_high") val cloudCoverHighPct: List<Int?> = emptyList()
+    @SerialName("cloud_cover_high") val cloudCoverHighPct: List<Int?> = emptyList(),
+    // 25 set 2026, for WeatherStateEngine: snowfall (cm) and convective precipitation of
+    // ANY phase (mm) in the hour. Defaulted for the cache, element-nullable for the model.
+    @SerialName("snowfall") val snowfallCm: List<Double?> = emptyList(),
+    @SerialName("showers") val showersMm: List<Double?> = emptyList()
 )
 
 @Serializable

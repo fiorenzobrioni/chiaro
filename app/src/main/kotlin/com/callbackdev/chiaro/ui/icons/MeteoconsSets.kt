@@ -39,6 +39,8 @@ internal object MeteoconsSets {
         R.drawable.mc3_extreme_rain to R.drawable.mc3n_extreme_rain,
         R.drawable.mc3_thunderstorms_day to R.drawable.mc3n_thunderstorms_day,
         R.drawable.mc3_thunderstorms_night to R.drawable.mc3n_thunderstorms_night,
+        R.drawable.mc3_thunderstorms_day_rain to R.drawable.mc3n_thunderstorms_day_rain,
+        R.drawable.mc3_thunderstorms_night_rain to R.drawable.mc3n_thunderstorms_night_rain,
         R.drawable.mc3_not_available to R.drawable.mc3n_not_available,
         R.drawable.mc3_wind to R.drawable.mc3n_wind,
         R.drawable.mc3_humidity to R.drawable.mc3n_humidity,
@@ -123,6 +125,8 @@ internal object MeteoconsSets {
         R.drawable.mc3_extreme_rain to R.drawable.mc3f_extreme_rain,
         R.drawable.mc3_thunderstorms_day to R.drawable.mc3f_thunderstorms_day,
         R.drawable.mc3_thunderstorms_night to R.drawable.mc3f_thunderstorms_night,
+        R.drawable.mc3_thunderstorms_day_rain to R.drawable.mc3f_thunderstorms_day_rain,
+        R.drawable.mc3_thunderstorms_night_rain to R.drawable.mc3f_thunderstorms_night_rain,
         R.drawable.mc3_not_available to R.drawable.mc3f_not_available,
         R.drawable.mc3_wind to R.drawable.mc3f_wind,
         R.drawable.mc3_humidity to R.drawable.mc3f_humidity,
@@ -207,6 +211,8 @@ internal object MeteoconsSets {
         R.drawable.mc3_extreme_rain to R.drawable.mc3fn_extreme_rain,
         R.drawable.mc3_thunderstorms_day to R.drawable.mc3fn_thunderstorms_day,
         R.drawable.mc3_thunderstorms_night to R.drawable.mc3fn_thunderstorms_night,
+        R.drawable.mc3_thunderstorms_day_rain to R.drawable.mc3fn_thunderstorms_day_rain,
+        R.drawable.mc3_thunderstorms_night_rain to R.drawable.mc3fn_thunderstorms_night_rain,
         R.drawable.mc3_not_available to R.drawable.mc3fn_not_available,
         R.drawable.mc3_wind to R.drawable.mc3fn_wind,
         R.drawable.mc3_humidity to R.drawable.mc3fn_humidity,
@@ -363,6 +369,14 @@ internal object MeteoconsSets {
             R.drawable.mc3a_thunderstorms_night, R.drawable.mc3an_thunderstorms_night,
             R.drawable.mc3fa_thunderstorms_night, R.drawable.mc3fan_thunderstorms_night
         ),
+        R.drawable.mc3_thunderstorms_day_rain to Moving(
+            R.drawable.mc3a_thunderstorms_day_rain, R.drawable.mc3an_thunderstorms_day_rain,
+            R.drawable.mc3fa_thunderstorms_day_rain, R.drawable.mc3fan_thunderstorms_day_rain
+        ),
+        R.drawable.mc3_thunderstorms_night_rain to Moving(
+            R.drawable.mc3a_thunderstorms_night_rain, R.drawable.mc3an_thunderstorms_night_rain,
+            R.drawable.mc3fa_thunderstorms_night_rain, R.drawable.mc3fan_thunderstorms_night_rain
+        ),
     )
 
     /**
@@ -391,6 +405,8 @@ internal object MeteoconsSets {
         "extreme-rain" to R.drawable.mc3_extreme_rain,
         "thunderstorms-day" to R.drawable.mc3_thunderstorms_day,
         "thunderstorms-night" to R.drawable.mc3_thunderstorms_night,
+        "thunderstorms-day-rain" to R.drawable.mc3_thunderstorms_day_rain,
+        "thunderstorms-night-rain" to R.drawable.mc3_thunderstorms_night_rain,
         "not-available" to R.drawable.mc3_not_available,
         "wind" to R.drawable.mc3_wind,
         "humidity" to R.drawable.mc3_humidity,

@@ -19,10 +19,16 @@ class WmoCodeTest {
         71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99
     )
 
+    /** What the state engine writes that no provider serves (25 set 2026): WMO's own 68
+     * and 69, and the app's states above 1000. */
+    private val engineOnly = listOf(68, 69, 1061, 1071, 1095)
+
     @Test
-    fun `the table is exactly the codes Open-Meteo serves`() {
-        assertEquals(served, WmoCode.entries.map { it.code })
+    fun `the table is the codes Open-Meteo serves, plus the engine's own`() {
+        assertEquals((served + engineOnly).sorted(), WmoCode.entries.map { it.code }.sorted())
         served.forEach { assertEquals(it, WmoCode.of(it)!!.code) }
+        // The app's states can never be mistaken for a WMO number.
+        assertTrue(WmoCode.entries.filter { it.code > 99 }.map { it.code }.all { it > 1000 })
     }
 
     @Test
@@ -54,7 +60,9 @@ class WmoCodeTest {
             56 to AlertEngine.SevereBucket.ICE, 57 to AlertEngine.SevereBucket.ICE,
             66 to AlertEngine.SevereBucket.ICE, 67 to AlertEngine.SevereBucket.ICE,
             65 to AlertEngine.SevereBucket.RAIN, 82 to AlertEngine.SevereBucket.RAIN,
-            75 to AlertEngine.SevereBucket.SNOW, 86 to AlertEngine.SevereBucket.SNOW
+            75 to AlertEngine.SevereBucket.SNOW, 86 to AlertEngine.SevereBucket.SNOW,
+            // The engine's storm over a dry hour: a warning it may not remove (25 set 2026).
+            1095 to AlertEngine.SevereBucket.THUNDER
         )
         assertEquals(expected, AlertEngine.SevereCodes)
     }
@@ -78,7 +86,8 @@ class WmoCodeTest {
     fun `every hazard outweighs every other precipitation, and precipitation every sky`() {
         val hazards = WmoCode.entries.filter { it.hazard != null }
         val plainWet = WmoCode.entries.filter { it.isPrecipitation && it.hazard == null }
-        val skies = WmoCode.entries.filter { !it.isPrecipitation }
+        // A possible storm is a hazard and not precipitation: it belongs with the hazards.
+        val skies = WmoCode.entries.filter { !it.isPrecipitation && it.hazard == null }
         assertTrue(hazards.minOf { it.severity } > plainWet.maxOf { it.severity })
         assertTrue(plainWet.minOf { it.severity } > skies.maxOf { it.severity })
         // Fog outweighs the cloudiest sky, as the day's tie-break always had it.
@@ -96,16 +105,18 @@ class WmoCodeTest {
         assertEquals(WmoCode.Phase.LIQUID, WmoCode.of(51)!!.phase)
         assertEquals(WmoCode.Phase.LIQUID, WmoCode.of(95)!!.phase)
         assertEquals(WmoCode.Phase.NONE, WmoCode.of(45)!!.phase)
+        assertEquals(WmoCode.Phase.MIXED, WmoCode.of(68)!!.phase)
+        assertEquals(WmoCode.Phase.MIXED, WmoCode.of(69)!!.phase)
     }
 
     @Test
     fun `codes share a word exactly where the old tables grouped them`() {
         val groups = WmoCode.entries.groupBy({ it.word }, { it.code }).values.map { it.toSet() }.toSet()
         val expected = setOf(
-            setOf(0), setOf(1), setOf(2), setOf(3), setOf(45, 48), setOf(51, 53, 55),
+            setOf(0), setOf(1), setOf(2), setOf(3), setOf(45), setOf(48), setOf(51, 53, 55),
             setOf(56, 57), setOf(61), setOf(63), setOf(65), setOf(66, 67), setOf(71),
             setOf(73), setOf(75), setOf(77), setOf(80, 81), setOf(82), setOf(85, 86),
-            setOf(95), setOf(96, 99)
+            setOf(95), setOf(96, 99), setOf(68, 69), setOf(1061), setOf(1071), setOf(1095)
         )
         assertEquals(expected, groups)
     }
@@ -118,7 +129,8 @@ class WmoCodeTest {
                 "clear", "mostly_clear", "partly_cloudy", "overcast", "fog", "drizzle",
                 "freezing_drizzle", "rain_light", "rain", "rain_heavy", "freezing_rain",
                 "snow_light", "snow", "snow_heavy", "snow_grains", "showers", "showers_heavy",
-                "snow_showers", "thunderstorm", "thunderstorm_strong", "unknown"
+                "snow_showers", "thunderstorm", "thunderstorm_strong", "unknown",
+                "freezing_fog", "rain_and_snow", "rain_likely", "snow_likely", "thunderstorm_possible"
             ),
             ConditionWord.entries.map { it.id }
         )

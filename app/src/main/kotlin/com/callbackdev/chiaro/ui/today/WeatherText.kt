@@ -62,6 +62,11 @@ object WeatherText {
         ConditionWord.THUNDERSTORM -> R.string.cond_thunderstorm
         ConditionWord.THUNDERSTORM_STRONG -> R.string.cond_thunderstorm_strong
         ConditionWord.UNKNOWN -> R.string.cond_unknown
+        ConditionWord.FREEZING_FOG -> R.string.cond_freezing_fog
+        ConditionWord.RAIN_AND_SNOW -> R.string.cond_rain_and_snow
+        ConditionWord.RAIN_LIKELY -> R.string.cond_rain_likely
+        ConditionWord.SNOW_LIKELY -> R.string.cond_snow_likely
+        ConditionWord.THUNDERSTORM_POSSIBLE -> R.string.cond_thunderstorm_possible
     }
 
     /** Burn-time bands for unprotected fair skin — estimates, and worded as such. */
