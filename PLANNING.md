@@ -11246,3 +11246,44 @@ rigenerato gli screenshot dei widget e vedo ancora i miei».
   sostituiscono le due foto della v1.0.0, su un fondo scuro semplice al posto dello sfondo
   del telefono; le misure delle celle sono quelle dei test dei widget (340 × 82, 340 × 189)
   e dell'arco nella foto (340 × 397). Undici immagini generate; nessuna foto nel README.
+
+## Le anteprime del selettore sulla card blu, come Passo (committente, 25 set 2026)
+
+Richiesta: «Riscrivi le anteprime dei widget di Chiaro nel picker prendendo come esempio lo stile
+di quelle di Passo, così le rendiamo omogenee tra le due app e si vede che sono dello stesso
+ecosistema».
+
+La differenza era una sola, e di sostanza: le anteprime di Passo stanno sulla **card blu piatta**
+(`#0F3B6B`, angolo 24 dp, inchiostri bianchi), che è la card predefinita di Chiaro dal 21 set; le
+cinque di Chiaro stavano ancora sul **gradiente del cielo** di prima del 21 set. Il selettore
+pubblicizzava quindi un vestito che una card appena messa non indossa più, e accanto alle due di
+Passo sembrava un'altra famiglia. La struttura (riga larga del 4×1, pannello del 4×2, ranghi e
+margini della card vera, valori d'esempio) era già la stessa: Passo l'aveva presa da qui.
+
+- **`widget_preview_sky` → `widget_preview_card`**: stesso nome, stessa forma e stesso colore del
+  drawable di Passo, un `solid` di `@color/widget_preview_card` con l'angolo di 24 dp. Le cinque
+  anteprime (Colpo d'occhio, In parole, Momenti del cielo, Le prossime ore, L'arco del giorno) ci
+  stanno sopra; i commenti dicono la card blu al posto del cielo sotto lo scrim.
+- **`colors.xml`**: via le tre fermate del cielo; `widget_preview_card` è
+  `widgetCardContainer(WidgetCardColor.BLUE)`. La fermata di mezzogiorno resta, rinominata
+  `widget_preview_arc_noon`, perché le bande dell'arco sono il cielo dell'arco e non il fondo della
+  card: la dipinge `ArcPainter` su qualunque card. Inchiostri, rampa della pioggia e coppia del
+  verdetto non cambiano: una card colorata scrive con la stessa coppia bianca del cielo
+  (`WidgetInk.OVER_SKY`).
+- **La pastiglia del verdetto** a 10 dp di angolo invece di 12: è quello che `VerdictChip`
+  disegna, e un'anteprima che mostra un'altra forma pubblicizza una card che non esiste.
+- **La frase fino a tre righe** su Colpo d'occhio e In parole, come la card a una riga la concede
+  (`RowSentenceMaxLines`, `TextRowSentenceMaxLines`) e come l'anteprima di Passo: con due,
+  «Pioggia in arrivo verso le cinque.» usciva troncata in un selettore dove la card vera la
+  stampa intera. Le prossime ore resta a due, che è quello che la sua riga eroe concede davvero
+  (`TallSentenceMaxLines`).
+- **Un test** (`WidgetPreviewTest`, «the previews draw the default card»), il gemello di quello di
+  Passo: il predefinito di `WidgetLook` è `COLOR`, l'hex cotto in `colors.xml` è quello della
+  tabella Kotlin del suo colore, e ogni anteprima sta su `widget_preview_card`. Un predefinito
+  cambiato o un colore rimisurato fallisce qui e non nel selettore di qualcuno.
+
+**Rimandato, con la ragione**: le anteprime *generate* (Android 15+, `providePreview` e
+`setWidgetPreviews`), che Passo pubblica una volta per versione. Chiedono Glance 1.2 (qui 1.1.1) e
+un modello d'esempio nel codice di produzione per ciascuna delle cinque card (un report meteo
+completo, non una giornata di passi), che è un lavoro a sé; sui launcher che non le chiedono il
+selettore mostra comunque il `previewLayout`, ed è quello che questa modifica allinea.

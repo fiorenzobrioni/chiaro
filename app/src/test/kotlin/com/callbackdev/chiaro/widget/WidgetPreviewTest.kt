@@ -1,5 +1,7 @@
 package com.callbackdev.chiaro.widget
 
+import androidx.compose.ui.graphics.toArgb
+import com.callbackdev.chiaro.ui.theme.widgetCardContainer
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -62,6 +64,33 @@ class WidgetPreviewTest {
                 .filterNot { it in remoteViewsTags }
                 .toSet()
             assertEquals("${preview.name} uses views RemoteViews cannot inflate", emptySet<String>(), unsupported)
+        }
+    }
+
+    /**
+     * The picker shows the card a fresh widget wears (25 set 2026): the blue card since
+     * 21 set, and the same card Passo's previews draw, so the family reads as one in the
+     * launcher's picker. The hex is baked into `colors.xml` because a static layout cannot
+     * call Kotlin, so this is where the two are kept in step: a default re-picked in
+     * [WidgetLook] or a colour re-measured in `WidgetCardPalette` fails here, not on
+     * somebody's picker. And no preview goes back to a ground of its own.
+     */
+    @Test
+    fun `the previews draw the default card`() {
+        val default = WidgetLook()
+        assertEquals(WidgetBackground.COLOR, default.background)
+        val expected = "#%08X".format(widgetCardContainer(default.cardColor).toArgb())
+        val colors = File("src/main/res/values/colors.xml").readText()
+        assertTrue(
+            "widget_preview_card is not the default card, $expected",
+            colors.contains("<color name=\"widget_preview_card\">$expected</color>")
+        )
+
+        layout.listFiles { file -> file.name.endsWith("_preview.xml") }.orEmpty().forEach { preview ->
+            assertTrue(
+                "${preview.name} does not stand on the default card",
+                preview.readText().contains("""android:background="@drawable/widget_preview_card"""")
+            )
         }
     }
 }
