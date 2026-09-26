@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.domain.rules
 
 import com.callbackdev.chiaro.domain.model.WeatherReport
+import com.callbackdev.chiaro.domain.zone
 import java.time.LocalDateTime
 
 /** One rule whose conditions all hold — ready to notify. Exactly one of
@@ -54,6 +55,10 @@ sealed interface RuleCheck {
  *   sliding window never cleanly reads "false again";
  * - conditions on `today.*` alone → **fingerprint per day**, from 06:00 (23 set 2026):
  *   a fact about the day is one answer per date.
+ *
+ * A rule with hours of its own ([NotificationRule.window], 26 set 2026) is silent outside
+ * them and speaks **once per occurrence** of its window inside them — once per band, once
+ * per day of light — or once per date if it is day-shaped; see [RuleWindows].
  */
 object RuleEngine {
 
@@ -75,26 +80,40 @@ object RuleEngine {
                 RuleCheck.Passes -> if (instant && latchKey in state.latched) {
                     unlatch += latchKey
                 }
-                is RuleCheck.Fires -> if (instant) {
-                    if (latchKey !in state.latched) {
-                        triggers += RuleTrigger(rule, null, latchKey, result.value, result.at)
-                    }
-                } else if (dayShaped(rule)) {
-                    // A fact about the day (23 set 2026): once a day, and not before the
-                    // day has begun — the half-day bucket was posting «Oggi UV fino a 8»
-                    // at 00:05 and again at noon, the same sentence about the same day.
-                    if (now.toLocalTime() >= DayRulesFrom) {
-                        val fingerprint = "$cityKey:rule:${rule.id}:${now.toLocalDate()}:DAY"
-                        if (fingerprint !in state.firedFingerprints) {
-                            triggers += RuleTrigger(rule, fingerprint, null, result.value, result.at)
+                is RuleCheck.Fires -> {
+                    // Outside its hours (26 set 2026): silent, and nothing recorded, so a
+                    // rule still true when its window opens speaks then — «si pedala» at
+                    // 7:00 about a mild night, never at 21:47 about a mild evening.
+                    val occurrence = RuleWindows.occurrence(
+                        rule.window, now, report.zone(), report.location.coordinates
+                    )
+                    fun once(fingerprint: String) =
+                        RuleTrigger(rule, fingerprint, null, result.value, result.at)
+                            .takeIf { fingerprint !in state.firedFingerprints }
+                    val dayFingerprint = "$cityKey:rule:${rule.id}:${now.toLocalDate()}:DAY"
+                    val trigger = when {
+                        occurrence == null -> null
+                        // One voice per occurrence of the window: per band, per day of
+                        // light. The half-day buckets would let a band across noon speak
+                        // twice, and the latch would keep a condition true since yesterday
+                        // silent through today's band. A fact about the day keeps its one
+                        // voice per date, in the first band of the day that opens.
+                        !rule.window.always ->
+                            once(if (dayShaped(rule)) dayFingerprint else "$cityKey:rule:${rule.id}:$occurrence")
+                        instant ->
+                            RuleTrigger(rule, null, latchKey, result.value, result.at)
+                                .takeIf { latchKey !in state.latched }
+                        // A fact about the day (23 set 2026): once a day, and not before the
+                        // day has begun — the half-day bucket was posting «Oggi UV fino a 8»
+                        // at 00:05 and again at noon, the same sentence about the same day.
+                        dayShaped(rule) ->
+                            if (now.toLocalTime() >= DayRulesFrom) once(dayFingerprint) else null
+                        else -> {
+                            val half = if (now.hour < 12) "AM" else "PM"
+                            once("$cityKey:rule:${rule.id}:${now.toLocalDate()}:$half")
                         }
                     }
-                } else {
-                    val half = if (now.hour < 12) "AM" else "PM"
-                    val fingerprint = "$cityKey:rule:${rule.id}:${now.toLocalDate()}:$half"
-                    if (fingerprint !in state.firedFingerprints) {
-                        triggers += RuleTrigger(rule, fingerprint, null, result.value, result.at)
-                    }
+                    trigger?.let { triggers += it }
                 }
             }
         }

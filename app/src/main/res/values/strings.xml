@@ -464,7 +464,7 @@
     <string name="guide_alerts_ready_title">Ready-made</string>
     <string name="guide_alerts_ready_body" formatted="false">Four switches, each saying exactly what it sends and when: severe weather in the next 12 hours (at most one per storm), rain past 70% likely within 6 hours (at most twice a day), the morning summary, once between 6 and 12, and the evening one, once between 18 and 23, which is about tomorrow.</string>
     <string name="guide_alerts_yours_title">Yours</string>
-    <string name="guide_alerts_yours_body">Start from an idea — a window to run, ice tomorrow morning, a clear night — or build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. You can also watch today\'s rain in millimetres and its snow, the gusts and the European air index. Values are picked, never typed, so an alert cannot be written wrong.</string>
+    <string name="guide_alerts_yours_body">Start from an idea — a window to run, ice tomorrow morning, a clear night — or open “New alert” and build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. Then choose when it may ring: at any time, only in daylight, or in one or two bands of hours. You can also watch today\'s rain in millimetres and its snow, the gusts and the European air index. Values are picked, never typed, so an alert cannot be written wrong.</string>
     <string name="guide_alerts_preview_title">Try it now</string>
     <string name="guide_alerts_preview_body">Runs your alert against the forecast already on the phone and tells you what it would have done. Nothing is sent, nothing is recorded.</string>
     <string name="guide_alerts_message_title">The message is yours</string>
@@ -897,6 +897,12 @@
     <string name="alerts_max_reached">You already have the most alerts the app keeps, %1$d: remove one to add another.</string>
     <string name="tpl_already_added">Already added</string>
     <string name="tpl_add">Add</string>
+    <!-- The blank idea (26 set 2026): the first card of the row, a rule built from nothing. -->
+    <string name="tpl_blank_title">New alert</string>
+    <string name="tpl_blank_desc">Start from scratch: you pick what to watch, the threshold, the hours and the message.</string>
+    <string name="tpl_blank_name">My alert</string>
+    <string name="tpl_blank_message" formatted="false">Your alert fired: {trigger.value}.</string>
+    <string name="tpl_create">Create</string>
     <string name="rule_sentence_prefix">When</string>
     <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
     <string name="rule_and">and</string>
@@ -913,6 +919,29 @@
     <string name="rule_preview_passes">It would stay quiet right now.</string>
     <string name="rule_preview_unavailable">Can\'t say: “%1$s” has no value right now.</string>
     <string name="rule_preview_no_data">Can\'t say: no forecast yet for this place.</string>
+    <!-- A rule's own hours (26 set 2026): when it may speak, not whether the weather allows it. -->
+    <string name="rule_window_title">At what hours</string>
+    <string name="rule_window_always">Any time</string>
+    <string name="rule_window_daylight">In daylight</string>
+    <string name="rule_window_hours">Set hours</string>
+    <string name="rule_window_always_help">It can fire at any hour, night included.</string>
+    <string name="rule_window_daylight_help">From sunrise to sunset here, following the season by itself.</string>
+    <string name="rule_window_daylight_today">From sunrise to sunset here: today from %1$s to %2$s.</string>
+    <string name="rule_window_hours_help">Only inside these hours, and at most once per band each day.</string>
+    <string name="rule_band_from">from</string>
+    <string name="rule_band_to">to</string>
+    <string name="rule_band_range">from %1$s to %2$s</string>
+    <string name="rule_band_add">and another band</string>
+    <string name="rule_band_remove">Remove this band</string>
+    <string name="rule_band_pick_from">Start</string>
+    <string name="rule_band_pick_to">End</string>
+    <string name="rule_band_same">Start and end can\'t be the same time.</string>
+    <string name="rule_card_daylight">Only in daylight</string>
+    <string name="rule_card_hours">Only %1$s</string>
+    <string name="rule_preview_closed">It would fire, but not at this hour: it is outside the hours you chose.</string>
+    <string name="rule_preview_closed_today">It would fire, but not at this hour: it can from %1$s.</string>
+    <string name="rule_preview_closed_tomorrow">It would fire, but not at this hour: it can from tomorrow at %1$s.</string>
+    <string name="rule_preview_would_say">It would say: “%1$s”</string>
     <string name="rule_delete">Delete this alert</string>
     <string name="rule_delete_confirm_title">Delete this alert?</string>
     <string name="rule_delete_confirm_body">It goes away for good, message included.</string>
@@ -974,7 +1003,7 @@
     <!-- The five starting points. Name and message become the reader's content at
          creation, in their language, and are never translated again. -->
     <string name="tpl_bike_title">Tell me when I can ride</string>
-    <string name="tpl_bike_desc" formatted="false">At least 12° out and rain under 20% for the next 6 hours.</string>
+    <string name="tpl_bike_desc" formatted="false">In daylight, at least 12° out and rain under 20% for the next 6 hours.</string>
     <string name="tpl_bike_name">Bike</string>
     <string name="tpl_bike_message" formatted="false">Good to ride: {current.temp_c} out, {next_6h.precip_chance_max} rain ahead.</string>
     <string name="tpl_ice_title">Ice tomorrow morning</string>
@@ -982,11 +1011,11 @@
     <string name="tpl_ice_name">Ice</string>
     <string name="tpl_ice_message" formatted="false">Possible ice: down to {trigger.value} around {trigger.time}.</string>
     <string name="tpl_run_title">A window to run</string>
-    <string name="tpl_run_desc" formatted="false">Rain under 20% for the next 6 hours and between 5° and 26°.</string>
+    <string name="tpl_run_desc" formatted="false">In daylight, rain under 20% for the next 6 hours and between 5° and 26°.</string>
     <string name="tpl_run_name">Run</string>
     <string name="tpl_run_message" formatted="false">Good window for a run: {current.temp_c} and rain at {next_6h.precip_chance_max}.</string>
     <string name="tpl_cold_run_title">A run in the cold</string>
-    <string name="tpl_cold_run_desc" formatted="false">Rain under 20% for the next 6 hours and between 0° and 5°: you can run, with the cold\'s precautions.</string>
+    <string name="tpl_cold_run_desc" formatted="false">In daylight, rain under 20% for the next 6 hours and between 0° and 5°: you can run, with the cold\'s precautions.</string>
     <string name="tpl_cold_run_name">Cold run</string>
     <string name="tpl_cold_run_message" formatted="false">You can run, but it is cold: {current.temp_c}. Layers, gloves and a longer warm-up.</string>
     <string name="tpl_uv_title">High UV</string>

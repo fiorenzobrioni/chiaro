@@ -11,6 +11,7 @@ import com.callbackdev.chiaro.domain.rules.MaxRules
 import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.rules.RuleCondition
 import com.callbackdev.chiaro.domain.rules.RuleOp
+import com.callbackdev.chiaro.domain.rules.RuleWindow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -52,7 +53,8 @@ class RuleStore(
     suspend fun add(
         name: String,
         conditions: List<RuleCondition>,
-        message: String
+        message: String,
+        window: RuleWindow = RuleWindow.Always
     ): NotificationRule? {
         var created: NotificationRule? = null
         dataStore.edit { prefs ->
@@ -62,7 +64,7 @@ class RuleStore(
             prefs[NextRuleId] = id + 1
             val rule = NotificationRule(
                 id = id, name = name, enabled = true,
-                conditions = conditions, message = message
+                conditions = conditions, message = message, window = window
             )
             created = rule
             prefs[RulesJson] = json.encodeToString(rules + rule)

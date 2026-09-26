@@ -102,12 +102,12 @@ it looks:
 <table>
 <tr>
 <td width="33%"><img src="docs/screenshots/alerts.png" alt="Alerts: when each notification can arrive, then the official Protezione Civile bulletin for the zone and the switch that follows it"></td>
-<td width="33%"><img src="docs/screenshots/alerts-yours.png" alt="Your own alerts: two rules made from the ideas, Bike and Run, each written out as its sentence with its switch, and the row of ideas to start from"></td>
+<td width="33%"><img src="docs/screenshots/alerts-yours.png" alt="Your own alerts: two rules made from the ideas, Bike and Run, each written out as its sentence and its hours (only in daylight) with its switch, and the row of ideas to start from, led by a New alert card for one built from scratch"></td>
 <td width="33%"><img src="docs/screenshots/settings.png" alt="Settings: the guide, the units, and the appearance with a live preview above the theme, the palette and the typeface"></td>
 </tr>
 <tr>
 <td align="center"><sub>When they arrive, then the official bulletin and what it sends</sub></td>
-<td align="center"><sub>Your own alerts, written as sentences, started from an idea</sub></td>
+<td align="center"><sub>Your own alerts, written as sentences, started from an idea or from scratch</sub></td>
 <td align="center"><sub>Two palettes, three typefaces, two icon families</sub></td>
 </tr>
 </table>
@@ -197,9 +197,13 @@ it looks:
   within 6 hours, at most twice a day; the morning summary, once between 6 and 12; the
   evening summary, once between 18 and 23, whose subject is tomorrow, with the night in
   between, tomorrow's umbrella and tomorrow's sunrise under it when you open it). Then
-  your own: six templates that create a real rule already switched on, and a builder that
+  your own: seven templates that create a real rule already switched on, a "New alert"
+  card to start from scratch, and a builder that
   is a sentence of tappable chips (*when* **rain in the next 6 hours** *is* **above**
-  **70%**), with an optional second condition and your own message. It can watch the
+  **70%**), with up to two more conditions, your own message and the hours it may ring
+  in: at any time, only in daylight (sunrise to sunset where you are, so it follows the
+  season), or in one or two bands of your own. The ride and run ideas start in daylight,
+  so an invitation to go out never arrives after dark. It can watch the
   rain in millimetres and the snow of the day, the gusts ahead and the European air index
   as well as the temperatures and chances. Values are picked and
   never typed, so an alert cannot be written wrong, and a comparison is only offered where
