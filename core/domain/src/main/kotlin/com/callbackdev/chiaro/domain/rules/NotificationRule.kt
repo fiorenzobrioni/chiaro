@@ -54,7 +54,10 @@ data class NotificationRule(
     val conditions: List<RuleCondition>,
     /** User content in the user's language — never localized. `{placeholders}`
      * ([RuleMessages]) interpolate at notify time. */
-    val message: String
+    val message: String,
+    /** When it may speak (26 set 2026). Absent from every rule saved before, which
+     * therefore reads as [RuleWindow.Always]: what those rules always did. */
+    val window: RuleWindow = RuleWindow.Always
 )
 
 /** Low ceiling on purpose: alerts.rules is a config file, not a database. */

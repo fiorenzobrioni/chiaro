@@ -15,17 +15,21 @@ import com.callbackdev.chiaro.data.WeatherRepository
 import com.callbackdev.chiaro.data.warnings.OfficialWarningReader
 import com.callbackdev.chiaro.data.warnings.PlaceWarningState
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.rules.MaxRules
 import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.rules.RuleCheck
 import com.callbackdev.chiaro.domain.rules.RuleEngine
 import com.callbackdev.chiaro.domain.rules.RuleMessages
+import com.callbackdev.chiaro.domain.rules.RuleWindows
 import com.callbackdev.chiaro.domain.settings.NotificationSettings
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.sync.SyncScheduler
 import java.time.Instant
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +55,17 @@ sealed interface RulePreview {
     data class WouldFire(val message: String) : RulePreview
     data object WouldPass : RulePreview
 
+    /**
+     * All conditions hold, but the rule's own hours are closed (26 set 2026): it would not
+     * speak now, and [next] is when it could — null when there is no hour to promise (the
+     * polar night). [today] is the place's date, to say «dalle» or «da domani alle».
+     */
+    data class OutsideHours(
+        val message: String,
+        val next: java.time.LocalDateTime?,
+        val today: java.time.LocalDate
+    ) : RulePreview
+
     /** A variable has no value right now (air quality down, empty window). */
     data class Unavailable(val variableId: String) : RulePreview
     data object NoData : RulePreview
@@ -74,7 +89,13 @@ sealed interface AlertsUiState {
          * reader came for, so all four states are drawn — which is the opposite of what
          * Today does with the same value (DESIGN §1.1).
          */
-        val warnings: PlaceWarningState = PlaceWarningState.Unavailable
+        val warnings: PlaceWarningState = PlaceWarningState.Unavailable,
+        /**
+         * Today's sunrise and sunset at the active place, on its clock (26 set 2026): what
+         * «Con la luce» means today, said beside the choice. Null with no forecast yet or
+         * on a day the sun does not both rise and set — the line then says the rule only.
+         */
+        val daylightToday: Pair<LocalTime, LocalTime>? = null
     ) : AlertsUiState
 }
 
@@ -104,11 +125,13 @@ class AlertsViewModel(
         // none: an in-memory hit in the ordinary case, and this block already goes to
         // the history table one line above.
         val report = city?.let { runCatching { repository.cachedReport(it) }.getOrNull() }
+        val zone = placeZone(report, city)
         AlertsUiState.Content(
             placeName = city?.name,
             notifications = settings.notifications,
             rules = rules.map { RuleCardModel(it, lastFired[it.name]) },
-            zone = placeZone(report, city),
+            zone = zone,
+            daylightToday = report?.let { daylightToday(it.location.coordinates, zone) },
             canAdd = rules.size < MaxRules,
             units = settings.units,
             // The zone lookup decodes a 290 KB asset the first time and runs on
@@ -154,7 +177,8 @@ class AlertsViewModel(
             val created = ruleStore.add(
                 name = res.getString(template.nameRes),
                 conditions = template.conditions,
-                message = res.getString(template.messageRes)
+                message = res.getString(template.messageRes),
+                window = template.window
             )
             SyncScheduler.reconcile(appContext)
             created?.let(onCreated)
@@ -175,21 +199,38 @@ class AlertsViewModel(
         val zone = placeZone(report, city)
         val now = ZonedDateTime.now(zone).toLocalDateTime()
         return when (val check = RuleEngine.check(rule, report, now)) {
-            is RuleCheck.Fires -> RulePreview.WouldFire(
-                settingsStore.settings.first().units.let { units ->
-                    RuleMessages.interpolate(
-                        rule.message, rule, check.value, check.at, report, now, units,
-                        RuleText.MessageWriter(
-                            appContext.resources, units,
-                            appContext.resources.configuration.locales[0],
-                            android.text.format.DateFormat.is24HourFormat(appContext)
-                        )
+            is RuleCheck.Fires -> {
+                val units = settingsStore.settings.first().units
+                val message = RuleMessages.interpolate(
+                    rule.message, rule, check.value, check.at, report, now, units,
+                    RuleText.MessageWriter(
+                        appContext.resources, units,
+                        appContext.resources.configuration.locales[0],
+                        android.text.format.DateFormat.is24HourFormat(appContext)
+                    )
+                )
+                val coords = report.location.coordinates
+                if (RuleWindows.isOpen(rule.window, now, zone, coords)) {
+                    RulePreview.WouldFire(message)
+                } else {
+                    RulePreview.OutsideHours(
+                        message, RuleWindows.nextOpening(rule.window, now, zone, coords), now.toLocalDate()
                     )
                 }
-            )
+            }
             RuleCheck.Passes -> RulePreview.WouldPass
             is RuleCheck.Unavailable -> RulePreview.Unavailable(check.variable)
         }
+    }
+
+    private fun daylightToday(coords: Coordinates, zone: ZoneId): Pair<LocalTime, LocalTime>? {
+        val today = ZonedDateTime.now(zone).toLocalDate()
+        fun crossing(rising: Boolean) = AstronomyEngine.sunCrossing(
+            today, zone, coords, AstronomyEngine.SUNRISE_ALTITUDE, rising
+        )?.atZone(zone)?.toLocalTime()
+        val rise = crossing(rising = true) ?: return null
+        val set = crossing(rising = false) ?: return null
+        return rise to set
     }
 
     // ------------------------------------------------------------- plumbing

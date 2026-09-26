@@ -47,6 +47,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -89,11 +91,14 @@ import com.callbackdev.chiaro.data.warnings.PlaceWarningState
 import com.callbackdev.chiaro.domain.rules.MaxConditions
 import com.callbackdev.chiaro.domain.rules.MaxRules
 import com.callbackdev.chiaro.domain.rules.NotificationRule
+import com.callbackdev.chiaro.domain.rules.RuleBand
 import com.callbackdev.chiaro.domain.rules.RuleCondition
 import com.callbackdev.chiaro.domain.rules.RuleMessages
 import com.callbackdev.chiaro.domain.rules.RuleOp
 import com.callbackdev.chiaro.domain.rules.RuleVariableKind
 import com.callbackdev.chiaro.domain.rules.RuleVariables
+import com.callbackdev.chiaro.domain.rules.RuleWindow
+import com.callbackdev.chiaro.domain.rules.RuleWindowKind
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.places.PlacesSheet
@@ -150,6 +155,7 @@ fun AlertsRoute(
         RuleEditorSheet(
             rule = editing,
             units = content.units,
+            daylightToday = content.daylightToday,
             viewModel = alertsViewModel,
             onDismiss = { editingRuleId = null }
         )
@@ -303,7 +309,9 @@ private fun AlertsContent(
             item {
                 AlertDayStrip(
                     notifications = content.notifications,
-                    ownRules = content.rules.any { it.rule.enabled },
+                    // «At any hour» is only true of the rules with no hours of their own
+                    // (26 set 2026); the others say theirs on their own card.
+                    ownRules = content.rules.any { it.rule.enabled && it.rule.window.always },
                     now = java.time.LocalTime.now(clock.withZone(content.zone)),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
@@ -411,6 +419,7 @@ private fun AlertsContent(
                 units = content.units,
                 zone = content.zone,
                 firedFmt = firedFmt,
+                clock = issuedFmt,
                 onToggle = { enabled ->
                     actions.update(card.rule.copy(enabled = enabled))
                     if (enabled) somethingTurnedOn()
@@ -984,6 +993,7 @@ private fun RuleCard(
     units: UnitSettings,
     zone: ZoneId,
     firedFmt: DateTimeFormatter,
+    clock: DateTimeFormatter,
     onToggle: (Boolean) -> Unit,
     onOpen: () -> Unit,
     modifier: Modifier = Modifier
@@ -995,6 +1005,9 @@ private fun RuleCard(
     val fired = card.lastFired?.let {
         stringResource(R.string.rule_last_fired, it.atZone(zone).format(firedFmt))
     } ?: stringResource(R.string.rule_never_fired)
+    // Its hours, when it has any (26 set 2026): a rule that stays silent at night must say
+    // so where it is listed, or its silence reads as a rule that does not work.
+    val hours = RuleText.window(res, card.rule.window, clock)
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = GroupShape,
@@ -1025,6 +1038,9 @@ private fun RuleCard(
                     text = stringResource(R.string.rule_sentence_prefix) + " " + sentence,
                     style = MaterialTheme.typography.bodyMedium
                 )
+                hours?.let {
+                    Text(text = it, style = MaterialTheme.typography.bodyMedium)
+                }
                 Text(
                     text = fired,
                     style = MaterialTheme.typography.bodySmall,
@@ -1047,6 +1063,9 @@ private sealed interface EditorDialog {
     data class Value(val index: Int) : EditorDialog
     data object Placeholder : EditorDialog
     data object ConfirmDelete : EditorDialog
+
+    /** The start ([end] false) or the end of the hours' band at [index]. */
+    data class BandTime(val index: Int, val end: Boolean) : EditorDialog
 }
 
 /**
@@ -1069,10 +1088,14 @@ private val FlushTextButtonPadding = PaddingValues(horizontal = 0.dp, vertical =
 private fun RuleEditorSheet(
     rule: NotificationRule,
     units: UnitSettings,
+    daylightToday: Pair<java.time.LocalTime, java.time.LocalTime>?,
     viewModel: AlertsViewModel,
     onDismiss: () -> Unit
 ) {
     val res = LocalContext.current.resources
+    val locale = currentLocale()
+    val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
+    val clock = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
     val scope = rememberCoroutineScope()
     var name by rememberSaveable(rule.id) { mutableStateOf(rule.name) }
     // A TextFieldValue rather than a String: a value picked from the list lands where
@@ -1110,7 +1133,9 @@ private fun RuleEditorSheet(
     // takes it away rather than letting it age in place; the message is not in the
     // key, because rewording what a fired alert would say does not change whether it
     // fires — the answer already quotes the wording it was given.
-    LaunchedEffect(rule.conditions) { preview = null }
+    // The hours are in the key for the same reason: «fuori orario» about hours the
+    // reader has just widened would be an answer to the rule they no longer have.
+    LaunchedEffect(rule.conditions, rule.window) { preview = null }
 
     ModalBottomSheet(
         onDismissRequest = ::close,
@@ -1190,6 +1215,14 @@ private fun RuleEditorSheet(
                 }
             }
 
+            RuleHoursEditor(
+                window = rule.window,
+                daylightToday = daylightToday,
+                clock = clock,
+                onChange = { viewModel.update(rule.copy(window = it)) },
+                onPickTime = { index, end -> dialog = EditorDialog.BandTime(index, end) }
+            )
+
             OutlinedTextField(
                 value = message,
                 onValueChange = { message = it },
@@ -1242,6 +1275,20 @@ private fun RuleEditorSheet(
                     text = when (result) {
                         is RulePreview.WouldFire ->
                             stringResource(R.string.rule_preview_fires, result.message)
+                        is RulePreview.OutsideHours -> {
+                            val next = result.next
+                            val closed = when (next?.toLocalDate()) {
+                                null -> stringResource(R.string.rule_preview_closed)
+                                result.today -> stringResource(
+                                    R.string.rule_preview_closed_today, next.format(clock)
+                                )
+                                result.today.plusDays(1) -> stringResource(
+                                    R.string.rule_preview_closed_tomorrow, next.format(clock)
+                                )
+                                else -> stringResource(R.string.rule_preview_closed)
+                            }
+                            closed + "\n" + stringResource(R.string.rule_preview_would_say, result.message)
+                        }
                         RulePreview.WouldPass -> stringResource(R.string.rule_preview_passes)
                         is RulePreview.Unavailable -> stringResource(
                             R.string.rule_preview_unavailable,
@@ -1324,6 +1371,31 @@ private fun RuleEditorSheet(
             },
             onDismiss = { dialog = null }
         )
+        is EditorDialog.BandTime -> {
+            val band = rule.window.bands[d.index]
+            BandTimeDialog(
+                title = stringResource(if (d.end) R.string.rule_band_pick_to else R.string.rule_band_pick_from),
+                initial = if (d.end) band.toTime else band.fromTime,
+                other = if (d.end) band.fromTime else band.toTime,
+                is24h = is24h,
+                onPick = { time ->
+                    val picked = if (d.end) {
+                        RuleBand.of(band.fromTime, time)
+                    } else {
+                        RuleBand.of(time, band.toTime)
+                    }
+                    viewModel.update(
+                        rule.copy(
+                            window = rule.window.copy(
+                                bands = rule.window.bands.mapIndexed { i, b -> if (i == d.index) picked else b }
+                            )
+                        )
+                    )
+                    dialog = null
+                },
+                onDismiss = { dialog = null }
+            )
+        }
         EditorDialog.ConfirmDelete -> AlertDialog(
             onDismissRequest = { dialog = null },
             title = { Text(stringResource(R.string.rule_delete_confirm_title)) },
@@ -1352,6 +1424,180 @@ private fun RuleEditorSheet(
 
 private fun NotificationRule.withCondition(index: Int, condition: RuleCondition): NotificationRule =
     copy(conditions = conditions.mapIndexed { i, c -> if (i == index) condition else c })
+
+/**
+ * «In che orari» (26 set 2026, committente): when the rule may speak. Three chips — any
+ * time, in daylight, set hours — and, for the last, one or two bands of two time chips
+ * each, pickers like every other value here. The line under the chips says what the
+ * choice does; for daylight it says today's sunrise and sunset at the place, because «con
+ * la luce» is a promise about an hour and the reader should see which one.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun RuleHoursEditor(
+    window: RuleWindow,
+    daylightToday: Pair<java.time.LocalTime, java.time.LocalTime>?,
+    clock: DateTimeFormatter,
+    onChange: (RuleWindow) -> Unit,
+    onPickTime: (index: Int, end: Boolean) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = stringResource(R.string.rule_window_title),
+            style = MaterialTheme.typography.titleMedium
+        )
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(
+                RuleWindowKind.ALWAYS to R.string.rule_window_always,
+                RuleWindowKind.DAYLIGHT to R.string.rule_window_daylight,
+                RuleWindowKind.HOURS to R.string.rule_window_hours
+            ).forEach { (kind, labelRes) ->
+                FilterChip(
+                    selected = window.kind == kind,
+                    onClick = {
+                        if (window.kind != kind) {
+                            // The bands survive a trip to another kind; a first visit to
+                            // «Fasce orarie» starts from the waking day, to be narrowed.
+                            val bands = if (kind == RuleWindowKind.HOURS && window.bands.isEmpty()) {
+                                listOf(RuleWindow.FirstBand)
+                            } else {
+                                window.bands
+                            }
+                            onChange(RuleWindow(kind, bands))
+                        }
+                    },
+                    label = { Text(stringResource(labelRes)) }
+                )
+            }
+        }
+        if (window.kind == RuleWindowKind.HOURS) {
+            window.bands.forEachIndexed { index, band ->
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (index > 0) {
+                        Text(
+                            text = stringResource(R.string.rule_and),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(top = 12.dp)
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.rule_band_from),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
+                    AssistChip(
+                        onClick = { onPickTime(index, false) },
+                        label = { Text(band.fromTime.format(clock)) }
+                    )
+                    Text(
+                        text = stringResource(R.string.rule_band_to),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
+                    AssistChip(
+                        onClick = { onPickTime(index, true) },
+                        label = { Text(band.toTime.format(clock)) }
+                    )
+                    if (window.bands.size > 1) {
+                        IconButton(
+                            onClick = {
+                                onChange(window.copy(bands = window.bands.filterIndexed { i, _ -> i != index }))
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Close,
+                                contentDescription = stringResource(R.string.rule_band_remove)
+                            )
+                        }
+                    }
+                }
+            }
+            if (window.bands.size < RuleWindow.MaxBands) {
+                TextButton(
+                    onClick = {
+                        // The second band starts where a commute's evening does.
+                        onChange(window.copy(bands = window.bands + SecondBand))
+                    },
+                    contentPadding = FlushTextButtonPadding
+                ) {
+                    Icon(Icons.Outlined.Add, contentDescription = null)
+                    Text(
+                        text = stringResource(R.string.rule_band_add),
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
+            }
+        }
+        Text(
+            text = when (window.kind) {
+                RuleWindowKind.ALWAYS -> stringResource(R.string.rule_window_always_help)
+                RuleWindowKind.DAYLIGHT -> daylightToday?.let { (rise, set) ->
+                    stringResource(R.string.rule_window_daylight_today, rise.format(clock), set.format(clock))
+                } ?: stringResource(R.string.rule_window_daylight_help)
+                RuleWindowKind.HOURS -> stringResource(R.string.rule_window_hours_help)
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/** What «e un'altra fascia» adds: the evening of a commute, 17:00-19:00. */
+private val SecondBand = RuleBand(17 * 60, 19 * 60)
+
+/**
+ * One end of a band, on Material's clock (26 set 2026). The confirm button refuses the
+ * other end's own time: a band that starts where it ends is no hours at all, and a rule
+ * silenced for ever by a slip of the finger is not writable here (VISION §5.4).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BandTimeDialog(
+    title: String,
+    initial: java.time.LocalTime,
+    other: java.time.LocalTime,
+    is24h: Boolean,
+    onPick: (java.time.LocalTime) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val state = rememberTimePickerState(
+        initialHour = initial.hour,
+        initialMinute = initial.minute,
+        is24Hour = is24h
+    )
+    val picked = java.time.LocalTime.of(state.hour, state.minute)
+    val same = picked == other
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                TimePicker(state = state)
+                if (same) {
+                    Text(
+                        text = stringResource(R.string.rule_band_same),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onPick(picked) }, enabled = !same) {
+                Text(stringResource(android.R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        }
+    )
+}
 
 /** One condition as its three chips, each a door to a picker — never a text field. */
 @OptIn(ExperimentalLayoutApi::class)

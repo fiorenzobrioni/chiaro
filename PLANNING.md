@@ -11378,3 +11378,89 @@ notifica elenca già le condizioni una per riga.
   al massimo 26°»): leggere due condizioni sulla stessa quantità come «tra 5° e 26°» è un
   seguito possibile, non fatto qui.
 - VISION §5.4 e la guida degli avvisi dicono «fino a due condizioni in più».
+
+## Gli orari di un avviso: sempre, con la luce, o una o due fasce (committente, 26 set 2026)
+
+Alle 21:47 di sabato «Bici» ha scritto «Si pedala: 18,8° e pioggia al 0%» a Cavenago di
+Brianza. Il tempo lo permetteva, l'ora no. Il motore aveva fatto il suo: una regola che
+legge le previsioni parla al massimo una volta al mattino e una al pomeriggio, e le due
+condizioni sono diventate vere insieme dopo le 21. Quello che mancava era un modo per
+dirgli *quando* il lettore farebbe davvero la cosa. Proposta discussa e accettata prima di
+scrivere codice: due fasce e «Con la luce».
+
+### Cosa è cambiato
+
+- **`RuleWindow`** (`:core:domain`, `rules/RuleWindow.kt`), un campo nuovo di
+  `NotificationRule` con tre valori: `ALWAYS` (quello che ogni regola ha sempre fatto,
+  e il default), `DAYLIGHT` e `HOURS` con una o due `RuleBand` in minuti dalla mezzanotte
+  sull'orologio del posto (inizio incluso, fine esclusa; una fascia la cui fine viene prima
+  dell'inizio passa la mezzanotte).
+- **«Con la luce» è il sole sopra l'orizzonte adesso**, all'altezza dell'alba degli almanacchi
+  (−0,833°), da `AstronomyEngine.sunAltitude`. Niente alba da cercare: il giorno polare è
+  aperto e la notte polare chiusa senza un caso speciale. Segue la stagione da solo: a Milano
+  chiude alle 16:40 a dicembre e alle 21:15 a giugno, dove un «7-21» fisso manderebbe in bici
+  al buio tutto l'inverno.
+- **Nel motore** (`RuleEngine.evaluate`): fuori dagli orari la regola tace e **non registra
+  niente**, così una regola ancora vera quando la finestra si apre parla allora («si pedala»
+  alle 7:00 dopo una notte mite). Dentro, **una voce per occorrenza della finestra**: una per
+  fascia, una per giorno di luce. L'impronta porta il giorno in cui l'occorrenza è cominciata e
+  la fascia stessa (`…:2026-09-26:H420-540`, `…:LIGHT`). Una regola sui fatti del giorno
+  (`today.*`) tiene la sua voce per data, nella prima fascia che si apre, anche prima delle 6
+  se il lettore ha scelto le 5. Le regole `ALWAYS` non cambiano di un byte.
+- **L'editor** ha la sezione «In che orari»: tre FilterChip (Sempre · Con la luce · Fasce
+  orarie), come la scelta del livello delle allerte. Per le fasce, «dalle [07:00] alle
+  [21:00]», ogni orario un chip che apre il `TimePicker` di Material, «e un'altra fascia»
+  fino a due, la × per toglierne una. Sotto, una riga che dice cosa fa la scelta; per «Con la
+  luce» dice l'alba e il tramonto di oggi al posto attivo.
+- **La scheda** dell'avviso dice i suoi orari sotto la frase («Solo con la luce», «Solo dalle
+  07:00 alle 09:00 e dalle 17:00 alle 19:30»); per «Sempre» nessuna riga, com'era.
+- **«Prova adesso»** fuori orario non dice più «Adesso scatterebbe»: «Scatterebbe, ma non a
+  quest'ora: potrà dalle 07:13» (o «da domani alle»), e sotto il messaggio che manderebbe.
+- **Le idee Bici, Corsa e Corsa al freddo nascono «Con la luce»**, e la loro descrizione lo
+  dice. Ghiaccio, UV, Caldo e Asciutto restano «Sempre»: «Ghiaccio domattina» serve proprio
+  la sera prima.
+- **«Quando arrivano»**: «i tuoi avvisi» compare tra quelli «a qualsiasi ora» solo se almeno
+  uno acceso non ha orari suoi.
+- Guida degli avvisi (IT/EN) e VISION §5.4 dicono gli orari.
+
+### Decisioni e deviazioni
+
+- **Una voce per fascia, non il mezzo giorno.** Con le fasce la chiave del mezzo giorno
+  (`AM`/`PM`) avrebbe fatto parlare due volte una fascia 11-14, e il latch delle regole su
+  `current.*` avrebbe tenuto zitta la fascia di stasera per una condizione vera da stamattina.
+  La promessa scritta sotto le fasce è «al massimo una volta per fascia al giorno», e il
+  motore fa esattamente quella.
+- **Il latch si riarma lo stesso**: una regola su `current.*` con orari che torna falsa libera
+  il suo vecchio latch, così tornare a «Sempre» non la trova bloccata.
+- **Le fasce restano salvate quando si passa a un altro tipo**: chi prova «Con la luce» e
+  torna indietro le ritrova. Una prima visita a «Fasce orarie» parte da 07:00-21:00, la
+  seconda fascia da 17:00-19:00.
+- **Una fascia che comincia dove finisce non è scrivibile**: il pulsante OK del selettore si
+  spegne e lo dice. Un file che ne avesse una (o `HOURS` senza fasce) si legge come «Sempre»,
+  mai come una regola zittita per sempre senza una parola.
+- **I tuoi avvisi già salvati non cambiano**: il campo manca dal JSON e si legge come
+  `ALWAYS`. Il «Bici» del committente resta «Sempre» finché non lo apre e sceglie; un avviso
+  salvato è del lettore.
+- **Il ritardo**: il controllo gira col job periodico, quindi una regola vera all'apertura
+  della fascia può arrivare fino a un intervallo di sincronizzazione dopo. È il ritardo che
+  c'era già; nessun allarme nuovo, per la regola della batteria.
+- **La striscia «Quando arrivano» non disegna le fasce dei tuoi avvisi**: con dieci regole
+  diventerebbe un orario ferroviario. Ogni scheda dice le sue.
+
+### Come è stato verificato
+
+- `RuleWindowTest` (nuovo, 10 casi): fasce e loro bordi, la fascia oltre mezzanotte come una
+  sola occorrenza, la luce a Milano a settembre, dicembre e giugno, giorno e notte polare a
+  Tromsø, la prossima apertura (fascia, alba, notte polare senza alba da promettere), un
+  avviso salvato prima che si legge «Sempre» e il giro completo del JSON.
+- `RuleEngineTest` (+6): fuori orario non scatta e non registra, una voce per fascia anche
+  per le regole su `current.*`, una fascia a cavallo di mezzogiorno parla una volta, «Con la
+  luce» a New York spegne le 21:47, un fatto del giorno nella prima fascia del lettore, il
+  latch che si riarma.
+- `RunTemplatesTest` (+1): Bici, Corsa e Corsa al freddo nascono «Con la luce», le altre
+  idee «Sempre».
+- `alerts-yours.png` rigenerato e guardato: le schede Bike e Run dicono «Only in daylight»,
+  l'idea della bici dice «In daylight, …». Il testo alternativo lo dice. `widgets.png` usciva
+  diverso di 622 pixel di antialiasing, invisibili: rimesso com'era.
+- README: la frase sugli avvisi dice gli orari, e già che c'era «fino a due condizioni in
+  più» (era «una seconda», ferma a prima del 26 set) e sette idee (erano sei).

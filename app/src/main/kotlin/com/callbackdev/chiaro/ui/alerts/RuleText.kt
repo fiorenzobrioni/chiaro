@@ -2,11 +2,14 @@ package com.callbackdev.chiaro.ui.alerts
 
 import android.content.res.Resources
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.domain.rules.RuleBand
 import com.callbackdev.chiaro.domain.rules.RuleCondition
 import com.callbackdev.chiaro.domain.rules.RuleOp
 import com.callbackdev.chiaro.domain.rules.RuleMessages
 import com.callbackdev.chiaro.domain.rules.RuleVariableKind
 import com.callbackdev.chiaro.domain.rules.RuleVariables
+import com.callbackdev.chiaro.domain.rules.RuleWindow
+import com.callbackdev.chiaro.domain.rules.RuleWindowKind
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 
@@ -157,6 +160,27 @@ object RuleText {
         )
     }
 
+    // ------------------------------------------------------------- hours
+
+    /** One band in words: «dalle 07:00 alle 09:00», on the reader's clock. */
+    fun band(res: Resources, band: RuleBand, clock: java.time.format.DateTimeFormatter): String =
+        res.getString(R.string.rule_band_range, band.fromTime.format(clock), band.toTime.format(clock))
+
+    /**
+     * The card's line about the hours (26 set 2026): «Solo con la luce», «Solo dalle 07:00
+     * alle 09:00 e dalle 17:00 alle 19:30». Null for any hour, which is what a rule with no
+     * line has always meant.
+     */
+    fun window(res: Resources, window: RuleWindow, clock: java.time.format.DateTimeFormatter): String? =
+        when (window.kind) {
+            RuleWindowKind.ALWAYS -> null
+            RuleWindowKind.DAYLIGHT -> res.getString(R.string.rule_card_daylight)
+            RuleWindowKind.HOURS -> window.bands.filter { it.from != it.to }
+                .takeIf { it.isNotEmpty() }
+                ?.joinToString(" " + res.getString(R.string.rule_and) + " ") { band(res, it, clock) }
+                ?.let { res.getString(R.string.rule_card_hours, it) }
+        }
+
     // ------------------------------------------------------------- value ranges
 
     /**
@@ -204,7 +228,12 @@ object RuleText {
         val descriptionRes: Int,
         val nameRes: Int,
         val messageRes: Int,
-        val conditions: List<RuleCondition>
+        val conditions: List<RuleCondition>,
+        /** The hours it starts with (26 set 2026): the outdoor ideas are born «Con la
+         * luce», because an invitation to ride or run is about the daylight too — the
+         * Bike idea's rule fired at 21:47. The rest keep any hour: «Ghiaccio domattina»
+         * is useful precisely the evening before. */
+        val window: RuleWindow = RuleWindow.Always
     )
 
     /** Where the plain run ends and the cold one begins: the practical line of an
@@ -218,7 +247,8 @@ object RuleText {
             listOf(
                 RuleCondition("current.temp_c", RuleOp.GTE, 12.0),
                 RuleCondition("next_6h.precip_chance_max", RuleOp.LTE, 20.0)
-            )
+            ),
+            RuleWindow.Daylight
         ),
         Template(
             R.string.tpl_ice_title, R.string.tpl_ice_desc,
@@ -238,7 +268,8 @@ object RuleText {
                 RuleCondition("next_6h.precip_chance_max", RuleOp.LTE, 20.0),
                 RuleCondition("current.temp_c", RuleOp.GTE, RunColdBelowC),
                 RuleCondition("current.temp_c", RuleOp.LTE, 26.0)
-            )
+            ),
+            RuleWindow.Daylight
         ),
         Template(
             R.string.tpl_cold_run_title, R.string.tpl_cold_run_desc,
@@ -247,7 +278,8 @@ object RuleText {
                 RuleCondition("next_6h.precip_chance_max", RuleOp.LTE, 20.0),
                 RuleCondition("current.temp_c", RuleOp.GT, 0.0),
                 RuleCondition("current.temp_c", RuleOp.LT, RunColdBelowC)
-            )
+            ),
+            RuleWindow.Daylight
         ),
         Template(
             R.string.tpl_uv_title, R.string.tpl_uv_desc,

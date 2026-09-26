@@ -17,13 +17,15 @@ class RuleEngineTest {
     private fun rule(
         vararg conditions: RuleCondition,
         id: Long = 1,
-        enabled: Boolean = true
+        enabled: Boolean = true,
+        window: RuleWindow = RuleWindow.Always
     ) = NotificationRule(
         id = id,
         name = "rule_$id",
         enabled = enabled,
         conditions = conditions.toList(),
-        message = "msg"
+        message = "msg",
+        window = window
     )
 
     private fun evaluate(
@@ -200,5 +202,83 @@ class RuleEngineTest {
         val silent = rule(RuleCondition("current.temp_c", RuleOp.LT, 0.0), id = 2)
         val evaluation = evaluate(fires, silent)
         assertEquals(listOf(1L), evaluation.triggers.map { it.rule.id })
+    }
+
+    // --- a rule's own hours (26 set 2026) ---
+
+    private fun band(from: Int, to: Int) =
+        RuleWindow(RuleWindowKind.HOURS, listOf(RuleBand(from * 60, to * 60)))
+
+    @Test
+    fun `outside its hours a true rule is silent and records nothing`() {
+        val mild = rule(RuleCondition("current.temp_c", RuleOp.GT, 15.0), window = band(7, 9))
+        val evaluation = evaluate(mild) // 14:30
+        assertTrue(evaluation.triggers.isEmpty())
+        assertTrue(evaluation.unlatch.isEmpty())
+        // The same truth inside the band speaks.
+        assertEquals(1, evaluate(mild, at = now.withHour(8)).triggers.size)
+    }
+
+    @Test
+    fun `a rule with hours speaks once per band, latch or no latch`() {
+        val mild = rule(
+            RuleCondition("current.temp_c", RuleOp.GT, 15.0),
+            window = RuleWindow(RuleWindowKind.HOURS, listOf(RuleBand(7 * 60, 9 * 60), RuleBand(17 * 60, 19 * 60)))
+        )
+        val morning = evaluate(mild, at = now.withHour(8)).triggers.single()
+        assertNull(morning.latchKey)
+        assertEquals("$cityKey:rule:${mild.id}:2023-10-27:H420-540", morning.fingerprint)
+        val fired = RuleEngineState(firedFingerprints = setOf(morning.fingerprint!!))
+        assertTrue(evaluate(mild, state = fired, at = now.withHour(8).withMinute(45)).triggers.isEmpty())
+        // The evening band is its own occurrence: the same truth speaks again there,
+        // where the latch would have kept a condition true since the morning silent.
+        val evening = evaluate(mild, state = fired, at = now.withHour(18)).triggers.single()
+        assertEquals("$cityKey:rule:${mild.id}:2023-10-27:H1020-1140", evening.fingerprint)
+    }
+
+    @Test
+    fun `a band across noon speaks once, not once per half-day`() {
+        val mild = rule(RuleCondition("next_6h.temp_c_max", RuleOp.GTE, 19.0), window = band(11, 16))
+        val first = evaluate(mild, at = now.withHour(11).withMinute(30)).triggers.single()
+        val fired = RuleEngineState(firedFingerprints = setOf(first.fingerprint!!))
+        assertTrue(evaluate(mild, state = fired).triggers.isEmpty()) // 14:30, PM
+    }
+
+    @Test
+    fun `daylight closes the evening that started it all`() {
+        // New York, 27 Oct 2023: the sun sets just before six.
+        val bike = rule(
+            RuleCondition("current.temp_c", RuleOp.GTE, 12.0),
+            window = RuleWindow.Daylight
+        )
+        assertEquals(
+            "$cityKey:rule:${bike.id}:2023-10-27:LIGHT",
+            evaluate(bike).triggers.single().fingerprint
+        )
+        assertTrue(evaluate(bike, at = now.withHour(21).withMinute(47)).triggers.isEmpty())
+        assertTrue(evaluate(bike, at = now.withHour(6)).triggers.isEmpty())
+    }
+
+    @Test
+    fun `a fact about the day keeps one voice per date, in the reader's first band`() {
+        val uv = rule(
+            RuleCondition("today.uv_max", RuleOp.GTE, 1.0),
+            window = RuleWindow(RuleWindowKind.HOURS, listOf(RuleBand(5 * 60, 6 * 60), RuleBand(17 * 60, 19 * 60)))
+        )
+        // The reader's own five o'clock wins over the six o'clock floor.
+        val early = evaluate(uv, at = now.withHour(5).withMinute(15)).triggers.single()
+        assertEquals("$cityKey:rule:${uv.id}:2023-10-27:DAY", early.fingerprint)
+        val fired = RuleEngineState(firedFingerprints = setOf(early.fingerprint!!))
+        assertTrue(evaluate(uv, state = fired, at = now.withHour(18)).triggers.isEmpty())
+    }
+
+    @Test
+    fun `a false instant rule with hours still re-arms its old latch`() {
+        val cold = rule(RuleCondition("current.temp_c", RuleOp.LT, 5.0), window = band(7, 9))
+        val latchKey = RuleEngine.latchKey(cityKey, cold.id)
+        assertEquals(
+            setOf(latchKey),
+            evaluate(cold, state = RuleEngineState(latched = setOf(latchKey))).unlatch
+        )
     }
 }

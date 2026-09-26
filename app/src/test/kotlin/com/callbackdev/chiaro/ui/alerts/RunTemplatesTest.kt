@@ -5,6 +5,7 @@ import com.callbackdev.chiaro.domain.rules.MaxConditions
 import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.rules.RuleCheck
 import com.callbackdev.chiaro.domain.rules.RuleEngine
+import com.callbackdev.chiaro.domain.rules.RuleWindow
 import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
 import java.time.LocalDateTime
 import org.junit.Assert.assertEquals
@@ -33,6 +34,15 @@ class RunTemplatesTest {
     fun `every idea fits the builder`() {
         RuleText.templates.forEach { template ->
             assertTrue(template.conditions.size in 1..MaxConditions)
+        }
+    }
+
+    @Test
+    fun `the outdoor ideas are born in daylight, the others at any hour`() {
+        val outdoor = setOf(R.string.tpl_bike_title, R.string.tpl_run_title, R.string.tpl_cold_run_title)
+        RuleText.templates.forEach { template ->
+            val expected = if (template.titleRes in outdoor) RuleWindow.Daylight else RuleWindow.Always
+            assertEquals(expected, template.window)
         }
     }
 

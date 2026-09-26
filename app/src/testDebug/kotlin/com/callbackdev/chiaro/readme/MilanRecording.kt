@@ -162,7 +162,7 @@ internal object MilanRecording {
     /**
      * Two rules a reader makes with two taps: the Bike and the Run ideas, created exactly
      * as `AlertsViewModel.addFromTemplate` creates them (the idea's name and message, its
-     * conditions, switched on). The app's own words, so the picture puts no sentence in a
+     * conditions and hours, switched on). The app's own words, so the picture puts no sentence in a
      * reader's mouth; never fired yet, because nothing has run.
      */
     fun yourRules(context: Context): List<NotificationRule> =
@@ -171,7 +171,8 @@ internal object MilanRecording {
                 id = index + 1L,
                 name = context.getString(template.nameRes),
                 conditions = template.conditions,
-                message = context.getString(template.messageRes)
+                message = context.getString(template.messageRes),
+                window = template.window
             )
         }
 
