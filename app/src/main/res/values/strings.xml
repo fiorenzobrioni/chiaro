@@ -464,7 +464,7 @@
     <string name="guide_alerts_ready_title">Ready-made</string>
     <string name="guide_alerts_ready_body" formatted="false">Four switches, each saying exactly what it sends and when: severe weather in the next 12 hours (at most one per storm), rain past 70% likely within 6 hours (at most twice a day), the morning summary, once between 6 and 12, and the evening one, once between 18 and 23, which is about tomorrow.</string>
     <string name="guide_alerts_yours_title">Yours</string>
-    <string name="guide_alerts_yours_body">Start from an idea — a window to run, ice tomorrow morning, a clear night — or build the sentence yourself: what to watch, how to compare it, the threshold, and a second condition if you want one. You can also watch today\'s rain in millimetres and its snow, the gusts and the European air index. Values are picked, never typed, so an alert cannot be written wrong.</string>
+    <string name="guide_alerts_yours_body">Start from an idea — a window to run, ice tomorrow morning, a clear night — or build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. You can also watch today\'s rain in millimetres and its snow, the gusts and the European air index. Values are picked, never typed, so an alert cannot be written wrong.</string>
     <string name="guide_alerts_preview_title">Try it now</string>
     <string name="guide_alerts_preview_body">Runs your alert against the forecast already on the phone and tells you what it would have done. Nothing is sent, nothing is recorded.</string>
     <string name="guide_alerts_message_title">The message is yours</string>
@@ -982,9 +982,13 @@
     <string name="tpl_ice_name">Ice</string>
     <string name="tpl_ice_message" formatted="false">Possible ice: down to {trigger.value} around {trigger.time}.</string>
     <string name="tpl_run_title">A window to run</string>
-    <string name="tpl_run_desc" formatted="false">Rain under 20% for the next 6 hours and no more than 26°.</string>
+    <string name="tpl_run_desc" formatted="false">Rain under 20% for the next 6 hours and between 5° and 26°.</string>
     <string name="tpl_run_name">Run</string>
-    <string name="tpl_run_message" formatted="false">Good window for a run: rain at {trigger.value}.</string>
+    <string name="tpl_run_message" formatted="false">Good window for a run: {current.temp_c} and rain at {next_6h.precip_chance_max}.</string>
+    <string name="tpl_cold_run_title">A run in the cold</string>
+    <string name="tpl_cold_run_desc" formatted="false">Rain under 20% for the next 6 hours and between 0° and 5°: you can run, with the cold\'s precautions.</string>
+    <string name="tpl_cold_run_name">Cold run</string>
+    <string name="tpl_cold_run_message" formatted="false">You can run, but it is cold: {current.temp_c}. Layers, gloves and a longer warm-up.</string>
     <string name="tpl_uv_title">High UV</string>
     <string name="tpl_uv_desc">When today\'s UV index reaches at least 7.</string>
     <string name="tpl_uv_name">Sun</string>

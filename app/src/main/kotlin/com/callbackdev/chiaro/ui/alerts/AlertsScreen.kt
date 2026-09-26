@@ -926,6 +926,7 @@ private fun templateIcon(template: RuleText.Template): ImageVector = when (templ
     R.string.tpl_bike_title -> ChiaroIcons.wind
     R.string.tpl_ice_title -> ChiaroIcons.frost
     R.string.tpl_run_title -> ChiaroIcons.condition(PartlyCloudyCode)
+    R.string.tpl_cold_run_title -> ChiaroIcons.colder
     R.string.tpl_uv_title -> ChiaroIcons.uv
     R.string.tpl_heat_title -> ChiaroIcons.dewPoint
     R.string.tpl_night_title -> ChiaroIcons.goldenHour
@@ -1059,7 +1060,7 @@ private val FlushTextButtonPadding = PaddingValues(horizontal = 0.dp, vertical =
 
 /**
  * The builder (VISION §5.4): a sentence of tappable chips — variable, operator,
- * threshold — an optional second condition, the reader's own message, and a dry run
+ * threshold — up to two more conditions, the reader's own message, and a dry run
  * that says what the rule would do right now without posting anything. Chip edits
  * persist immediately; the two text fields land when the sheet closes.
  */

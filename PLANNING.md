@@ -11335,3 +11335,46 @@ notte su 14-15° si sveglia verso i 16°, che per molti è fredda. Due difetti n
 minima sopra i 20°). La fascia si legge sul valore del modello, non su quello stampato, come le
 altre della notte. `NightMeaningTest` fissa i bordi e il caso di stanotte: le fasce non avevano
 un test.
+
+### La corsa in due fasce, e tre condizioni per avviso (committente, 26 set 2026)
+
+Dalla revisione delle frasi legate alla temperatura nelle notifiche (le altre stampano il
+numero nudo; i modelli degli avvisi hanno soglie fisse, e quella della Corsa non aveva un
+minimo: poteva dire «Buona finestra per correre» a −5°). Proposta del committente: il
+messaggio attuale da 5° in su, uno con le precauzioni fra 0 e 5°, perché è il limite pratico
+di molti corridori amatoriali; sotto zero l'aria gelida dà fastidio ai polmoni e soprattutto
+cresce il rischio di lastre di ghiaccio sull'asfalto.
+
+**D'accordo su 5° e su 0-5°; sotto zero, niente.** Il modello è un invito («vai a
+correre»), e sotto zero sarebbe l'app che invita al rischio che non sa misurare: il ghiaccio
+sull'asfalto è dell'asfalto bagnato (pioggia o neve delle ore prima), non dell'aria. A −2°
+su asciutto si corre bene, a +1° dopo una pioggia no. Il pericolo lo dice già «Ghiaccio
+domattina», alla stessa soglia di 0°.
+
+**Tre condizioni per avviso** (`MaxConditions` da 2 a 3): una regola è condizioni in «e» più
+un messaggio solo, quindi le fasce sono due modelli; e una temperatura fra due valori più la
+pioggia sono tre condizioni. Con due, la regola più naturale che un lettore scrive («tra 5 e
+26° e non piove») non si poteva dire. L'editor offre la terza con lo stesso pulsante; la
+notifica elenca già le condizioni una per riga.
+
+| Modello | Condizioni | Messaggio |
+|---|---|---|
+| Una finestra per correre («Corsa») | pioggia 6 h ≤ 20%, adesso ≥ 5°, adesso ≤ 26° | «Buona finestra per correre: {current.temp_c} e pioggia al {next_6h.precip_chance_max}.» |
+| Corsa al freddo (nuovo) | pioggia 6 h ≤ 20%, adesso > 0°, adesso < 5° | «Si corre, ma fa freddo: {current.temp_c}. Strati, guanti e riscaldamento più lungo.» |
+
+- I bordi si toccano senza buchi né sovrapposizioni: 5,0° è della Corsa, 4,9° di quella al
+  freddo, 0,0° di nessuna delle due (è del Ghiaccio). Il messaggio della Corsa dice ora anche
+  la temperatura, visto che è lei a decidere la fascia.
+- Chi aveva già aggiunto «Corsa» tiene la sua regola, senza minimo: un avviso salvato è testo
+  del lettore. Cambia solo quel che si aggiunge da ora.
+- Il disegno dell'idea nuova è `thermometer-colder`, spostato da PLANNED a SHIPPED in
+  `tools/shipped_icons.py` e importato con `tools/import_meteocons_v3.py` (dal pacchetto
+  `@meteocons/svg@3.0.0-next.10`): nessun drawable cambia, `MeteoconsSets.kt` guadagna le sue
+  quattro righe; `compose_sun_cloud.py` rieseguito, zero differenze.
+- `RunTemplatesTest` passa le fasce dal motore vero (−3, 0, 0,5, 4,9, 5, 18, 26, 26,5°), la
+  finestra bagnata che le spegne entrambe, e che ogni idea stia nel limite dell'editor.
+- `alerts-yours.png` rigenerato: la card «Run» dice ora la sua fascia. Il testo alternativo
+  resta vero. La frase della card ripete «la temperatura adesso» due volte («almeno 5° e …
+  al massimo 26°»): leggere due condizioni sulla stessa quantità come «tra 5° e 26°» è un
+  seguito possibile, non fatto qui.
+- VISION §5.4 e la guida degli avvisi dicono «fino a due condizioni in più».

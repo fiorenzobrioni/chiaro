@@ -445,7 +445,7 @@
     <string name="guide_alerts_ready_title">Pronti all\'uso</string>
     <string name="guide_alerts_ready_body" formatted="false">Quattro interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo nelle prossime 12 ore (al massimo uno per perturbazione), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno), il riepilogo del mattino, una volta tra le 6 e le 12, e quello della sera, una volta tra le 18 e le 23, che parla di domani.</string>
     <string name="guide_alerts_yours_title">I tuoi</string>
-    <string name="guide_alerts_yours_body">Parti da un\'idea — una finestra per correre, ghiaccio domattina, una notte serena — oppure costruisci la frase da te: cosa guardare, come confrontarlo, la soglia, e una seconda condizione se serve. Si possono guardare anche i millimetri di pioggia e la neve di oggi, le raffiche e l\'indice europeo dell\'aria. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile.</string>
+    <string name="guide_alerts_yours_body">Parti da un\'idea — una finestra per correre, ghiaccio domattina, una notte serena — oppure costruisci la frase da te: cosa guardare, come confrontarlo, la soglia, e fino a due condizioni in più se servono. Si possono guardare anche i millimetri di pioggia e la neve di oggi, le raffiche e l\'indice europeo dell\'aria. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile.</string>
     <string name="guide_alerts_preview_title">Provalo adesso</string>
     <string name="guide_alerts_preview_body">Fa girare il tuo avviso sulla previsione che è già sul telefono e ti dice cosa avrebbe fatto. Non manda niente e non lascia traccia.</string>
     <string name="guide_alerts_message_title">Il messaggio è tuo</string>
@@ -960,9 +960,13 @@
     <string name="tpl_ice_name">Ghiaccio</string>
     <string name="tpl_ice_message" formatted="false">Possibile ghiaccio: si scende a {trigger.value} verso le {trigger.time}.</string>
     <string name="tpl_run_title">Una finestra per correre</string>
-    <string name="tpl_run_desc" formatted="false">Pioggia sotto il 20% nelle prossime 6 ore e non più di 26°.</string>
+    <string name="tpl_run_desc" formatted="false">Pioggia sotto il 20% nelle prossime 6 ore e tra 5° e 26°.</string>
     <string name="tpl_run_name">Corsa</string>
-    <string name="tpl_run_message" formatted="false">Buona finestra per correre: pioggia al {trigger.value}.</string>
+    <string name="tpl_run_message" formatted="false">Buona finestra per correre: {current.temp_c} e pioggia al {next_6h.precip_chance_max}.</string>
+    <string name="tpl_cold_run_title">Corsa al freddo</string>
+    <string name="tpl_cold_run_desc" formatted="false">Pioggia sotto il 20% nelle prossime 6 ore e tra 0° e 5°: si corre, con le precauzioni del freddo.</string>
+    <string name="tpl_cold_run_name">Corsa al freddo</string>
+    <string name="tpl_cold_run_message" formatted="false">Si corre, ma fa freddo: {current.temp_c}. Strati, guanti e riscaldamento più lungo.</string>
     <string name="tpl_uv_title">UV alto</string>
     <string name="tpl_uv_desc">Quando l\'indice UV di oggi arriva almeno a 7.</string>
     <string name="tpl_uv_name">Sole</string>

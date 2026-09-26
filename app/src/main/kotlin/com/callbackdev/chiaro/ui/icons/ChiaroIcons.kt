@@ -493,6 +493,10 @@ object ChiaroIcons {
      * The accessor names the metric (§13.1), which is why it is not called
      * `snowflake`. */
     val frost: ImageVector @Composable get() = styled(R.drawable.mc3_snowflake)
+
+    /** Cold that is not yet ice (26 set 2026): the «Corsa al freddo» idea, between 0 and
+     * 5°. The snowflake is [frost]'s, and this band is exactly the one above it. */
+    val colder: ImageVector @Composable get() = styled(R.drawable.mc3_thermometer_colder)
     /**
      * `smoke`, not `smoke-particles` (11 set 2026, committente). Meteocons draws the
      * particles alone as three specks that fill a third of their box — the smallest mark
