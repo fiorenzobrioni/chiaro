@@ -153,6 +153,7 @@
     <string name="night_meaning_freezing">Freezing: ice on the glass by morning</string>
     <string name="night_meaning_cold">A cold night, a coat if you go out</string>
     <string name="night_meaning_cool">A cool night, a sweater is enough</string>
+    <string name="night_meaning_ajar">A cool night: leave the window ajar, a sweater if you go out</string>
     <string name="night_meaning_mild">A mild night, the window can stay open</string>
     <string name="night_meaning_warm">A warm night: it won\'t cool down</string>
     <string name="dew_meaning_dry">Dry, crisp air</string>

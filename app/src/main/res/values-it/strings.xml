@@ -143,6 +143,7 @@
     <string name="night_meaning_freezing">Gelo: ghiaccio sui vetri al mattino</string>
     <string name="night_meaning_cold">Notte fredda, cappotto se esci</string>
     <string name="night_meaning_cool">Notte fresca, basta una felpa</string>
+    <string name="night_meaning_ajar">Notte fresca: finestra socchiusa, felpa se esci</string>
     <string name="night_meaning_mild">Notte mite, si può lasciare la finestra aperta</string>
     <string name="night_meaning_warm">Notte calda: non rinfresca</string>
     <string name="dew_meaning_dry">Aria asciutta e frizzante</string>

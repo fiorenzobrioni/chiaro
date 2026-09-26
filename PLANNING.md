@@ -11312,3 +11312,26 @@ le anteprime generate, così nelle modifiche future non c'è un modello d'esempi
   inflatabile) e il fondo diverso dalla card predefinita.
 - Da verificare sul telefono, perché nessun test lo raggiunge: aggiornamento periodico, tap e
   riconfigurazione delle cinque card su One UI.
+
+### La finestra socchiusa: una fascia in più per la notte (committente, 26 set 2026)
+
+Domanda, con la notifica sotto gli occhi: «Stanotte minima 14° verso le 07:00 · Notte mite, si
+può lasciare la finestra aperta. Concordi, o le temperature sono un po' bassine per tenere la
+finestra aperta?» (Cavenago di Brianza, 16° a mezzanotte, 14° dalle 3 alle 7.)
+
+**Il numero era giusto, la frase no.** A fine settembre in Brianza 14° di minima sono nella
+norma, e «mite» si difende; «si può lasciare la finestra aperta» no: una camera aperta tutta la
+notte su 14-15° si sveglia verso i 16°, che per molti è fredda. Due difetti nelle fasce del
+21 set:
+
+1. **13-21° era una fascia sola**, e una notte a 13,1° e una a 20,9° non chiedono la stessa cosa.
+2. **I 13° erano la soglia della felpa** («sotto i 13 il freddo arriva a un corpo che esce»),
+   riusata per la finestra: a 14° l'app diceva di dormire con la finestra aperta, quando chi
+   esce alla stessa ora la felpa la vuole ancora.
+
+**La decisione**: una fascia nuova, **13-16°**, «Notte fresca: finestra socchiusa, felpa se esci»
+(`night_meaning_ajar`); «finestra aperta» resta alle notti tra 16 e 21°; il resto non cambia
+(≤ 0 gelo, < 5 fredda, < 13 felpa, ≥ 21 calda, vicina alla «notte tropicale» dei climatologi,
+minima sopra i 20°). La fascia si legge sul valore del modello, non su quello stampato, come le
+altre della notte. `NightMeaningTest` fissa i bordi e il caso di stanotte: le fasce non avevano
+un test.
