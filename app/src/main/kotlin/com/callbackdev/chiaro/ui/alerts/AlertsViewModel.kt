@@ -170,12 +170,15 @@ class AlertsViewModel(
 
     // ------------------------------------------------------------- the reader's
 
-    /** Creates the template's real rule, already on, and hands it to [onCreated]. */
+    /** Creates the template's real rule, already on, and hands it to [onCreated]. The name
+     * is the idea's, numbered when a rule already has it (the blank idea, a second «Bici»). */
     fun addFromTemplate(template: RuleText.Template, onCreated: (NotificationRule) -> Unit) {
         val res = appContext.resources
         viewModelScope.launch {
             val created = ruleStore.add(
-                name = res.getString(template.nameRes),
+                name = RuleText.freeName(
+                    res.getString(template.nameRes), ruleStore.rules.first().map { it.name }
+                ),
                 conditions = template.conditions,
                 message = res.getString(template.messageRes),
                 window = template.window

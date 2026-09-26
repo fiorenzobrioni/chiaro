@@ -38,6 +38,26 @@ class RunTemplatesTest {
     }
 
     @Test
+    fun `the blank idea is a working rule at any hour, apart from the ideas`() {
+        val blank = RuleText.blank
+        assertEquals(1, blank.conditions.size)
+        assertEquals(RuleWindow.Always, blank.window)
+        assertTrue(blank !in RuleText.templates)
+        val rule = NotificationRule(id = 1L, name = "", conditions = blank.conditions, message = "")
+        assertTrue(RuleEngine.check(rule, sampleWeatherReport(), now) !is RuleCheck.Unavailable)
+    }
+
+    @Test
+    fun `a second rule with a name already taken is numbered`() {
+        assertEquals("Il mio avviso", RuleText.freeName("Il mio avviso", listOf("Bici")))
+        assertEquals("Il mio avviso 2", RuleText.freeName("Il mio avviso", listOf("Il mio avviso")))
+        assertEquals(
+            "Bici 3",
+            RuleText.freeName("Bici", listOf("Bici", "Bici 2", "Corsa"))
+        )
+    }
+
+    @Test
     fun `the outdoor ideas are born in daylight, the others at any hour`() {
         val outdoor = setOf(R.string.tpl_bike_title, R.string.tpl_run_title, R.string.tpl_cold_run_title)
         RuleText.templates.forEach { template ->

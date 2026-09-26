@@ -411,7 +411,9 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
 - **Yours**: the rules engine, approached from the answer rather than the syntax.
   - **Templates first**: "Tell me when I can ride", "Ice tomorrow morning", "A window to run",
     "A run in the cold", "High UV", "A clear night". Picking one creates a real rule with sensible
-    thresholds, already on.
+    thresholds, already on. **The first card is "New alert"** (26 set 2026): a rule from
+    scratch, for what no idea covers, started from one neutral condition and opened straight in
+    the builder.
   - **The builder** is a sentence with three tappable chips: *Notify me when* **[rain, next 6 h]**
     *is* **[above]** **[70%]**, plus up to two more conditions (three in all since 26 set 2026:
     a range is two) and the message. Pickers, never a text field for a value that has a range:

@@ -236,6 +236,29 @@ object RuleText {
         val window: RuleWindow = RuleWindow.Always
     )
 
+    /**
+     * The blank idea (26 set 2026, committente): the first card of the row, for a rule the
+     * ideas do not cover. Not empty — the builder cannot hold a rule with no condition, and
+     * a working sentence to change beats a skeleton to fill — but neutral: the condition the
+     * «and another condition» button adds, a message that fits whatever the reader makes of
+     * it, any hour. Kept out of [templates]: it is never «already added», and the ideas'
+     * order is what the README's picture and its tests name.
+     */
+    val blank = Template(
+        R.string.tpl_blank_title, R.string.tpl_blank_desc,
+        R.string.tpl_blank_name, R.string.tpl_blank_message,
+        listOf(RuleCondition("current.temp_c", RuleOp.GTE, 20.0))
+    )
+
+    /**
+     * [base], or «[base] 2», «[base] 3»… — the first that no rule in [taken] carries. «Last
+     * fired» is read off the history by name, so two «Il mio avviso» would share one past.
+     */
+    fun freeName(base: String, taken: Collection<String>): String =
+        generateSequence(1) { it + 1 }
+            .map { if (it == 1) base else "$base $it" }
+            .first { it !in taken }
+
     /** Where the plain run ends and the cold one begins: the practical line of an
      * amateur runner, under which gloves, layers and a longer warm-up come out. */
     private const val RunColdBelowC = 5.0

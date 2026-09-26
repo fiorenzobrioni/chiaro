@@ -39,6 +39,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
@@ -454,6 +455,25 @@ private fun AlertsContent(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.padding(bottom = 16.dp)
                 ) {
+                    // The blank idea leads (26 set 2026): building from nothing is the
+                    // other way in, and at the end of a sideways row it would be the card
+                    // nobody scrolls to.
+                    item {
+                        IdeaCard(
+                            icon = Icons.Outlined.Edit,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            title = stringResource(RuleText.blank.titleRes),
+                            description = stringResource(RuleText.blank.descriptionRes),
+                            added = false,
+                            actionLabel = stringResource(R.string.tpl_create),
+                            onAdd = {
+                                actions.addFromTemplate(RuleText.blank) { created ->
+                                    somethingTurnedOn()
+                                    onEdit(created.id)
+                                }
+                            }
+                        )
+                    }
                     items(RuleText.templates.size) { index ->
                         val template = RuleText.templates[index]
                         val added = template.conditions in existing
@@ -736,7 +756,9 @@ private fun IdeaCard(
     title: String,
     description: String,
     added: Boolean,
-    onAdd: () -> Unit
+    onAdd: () -> Unit,
+    iconTint: Color = Color.Unspecified,
+    actionLabel: String = stringResource(R.string.tpl_add)
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -750,7 +772,7 @@ private fun IdeaCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Icon(icon, contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(RowIcon))
+            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(RowIcon))
             Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(
                 text = description,
@@ -768,7 +790,7 @@ private fun IdeaCard(
                     modifier = Modifier.size(18.dp)
                 )
                 Text(
-                    text = stringResource(if (added) R.string.tpl_already_added else R.string.tpl_add),
+                    text = if (added) stringResource(R.string.tpl_already_added) else actionLabel,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
                 )

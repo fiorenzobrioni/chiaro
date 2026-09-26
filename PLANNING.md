@@ -11464,3 +11464,32 @@ scrivere codice: due fasce e «Con la luce».
   diverso di 622 pixel di antialiasing, invisibili: rimesso com'era.
 - README: la frase sugli avvisi dice gli orari, e già che c'era «fino a due condizioni in
   più» (era «una seconda», ferma a prima del 26 set) e sette idee (erano sei).
+
+## «Nuovo avviso»: la carta per partire da zero (committente, 26 set 2026)
+
+La guida lo prometteva già («oppure costruisci la frase da te») ma l'app no: l'unico modo di
+creare un avviso era scegliere un'idea e cambiarle tutto, e un'idea usata restava «Già
+aggiunto», quindi anche due «Bici» con soglie diverse erano un giro non evidente.
+`RuleStore.add()` senza argomenti c'era, ereditata da tweather, ma nessun pulsante la usava
+e scrive nome e messaggio in inglese fisso: non adatta.
+
+- **Una carta «Nuovo avviso» in testa alla fila delle idee** (scelta del committente fra la
+  carta e un pulsante sotto «I tuoi»): disegno a matita in `primary` (il «+» c'è già sulla
+  riga dell'azione), «Da zero: scegli tu cosa guardare, la soglia, gli orari e il messaggio»,
+  azione «Crea». Mai «Già aggiunto». In testa e non in fondo: in una fila da scorrere di lato
+  l'ultima carta è quella che nessuno raggiunge.
+- **Non parte vuota**: l'editor non tiene una regola senza condizioni, e una frase che
+  funziona da cambiare batte uno scheletro da riempire. `RuleText.blank`: «la temperatura
+  adesso almeno 20°» (la stessa condizione che aggiunge «e un'altra condizione»), nome «Il mio
+  avviso», messaggio «Il tuo avviso è scattato: {trigger.value}.», che resta vero qualunque
+  cosa il lettore ne faccia, orari «Sempre». Si apre subito l'editor, come dopo un'idea.
+- **Fuori da `RuleText.templates`**: non è mai «già aggiunta», e l'ordine delle idee è quello
+  che la foto del README e i test nominano.
+- **Il nome è numerato se già preso** (`RuleText.freeName`: «Il mio avviso 2», «Bici 2»),
+  per ogni creazione da idea: «ultima volta» si legge dalla cronologia per nome, e due avvisi
+  con lo stesso nome condividerebbero un passato.
+- Al tetto di dieci sparisce con le idee, sotto la frase che c'è già.
+- Guida IT/EN («oppure apri «Nuovo avviso» e costruisci la frase da te»), VISION §5.4, README
+  (frase, testo alternativo e didascalia) e `alerts-yours.png` rigenerato.
+- `RunTemplatesTest` (+2): l'idea vuota è una regola che il motore valuta, a qualsiasi ora,
+  fuori dalle idee; la numerazione dei nomi.

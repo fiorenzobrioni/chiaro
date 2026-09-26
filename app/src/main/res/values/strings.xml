@@ -464,7 +464,7 @@
     <string name="guide_alerts_ready_title">Ready-made</string>
     <string name="guide_alerts_ready_body" formatted="false">Four switches, each saying exactly what it sends and when: severe weather in the next 12 hours (at most one per storm), rain past 70% likely within 6 hours (at most twice a day), the morning summary, once between 6 and 12, and the evening one, once between 18 and 23, which is about tomorrow.</string>
     <string name="guide_alerts_yours_title">Yours</string>
-    <string name="guide_alerts_yours_body">Start from an idea — a window to run, ice tomorrow morning, a clear night — or build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. Then choose when it may ring: at any time, only in daylight, or in one or two bands of hours. You can also watch today\'s rain in millimetres and its snow, the gusts and the European air index. Values are picked, never typed, so an alert cannot be written wrong.</string>
+    <string name="guide_alerts_yours_body">Start from an idea — a window to run, ice tomorrow morning, a clear night — or open “New alert” and build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. Then choose when it may ring: at any time, only in daylight, or in one or two bands of hours. You can also watch today\'s rain in millimetres and its snow, the gusts and the European air index. Values are picked, never typed, so an alert cannot be written wrong.</string>
     <string name="guide_alerts_preview_title">Try it now</string>
     <string name="guide_alerts_preview_body">Runs your alert against the forecast already on the phone and tells you what it would have done. Nothing is sent, nothing is recorded.</string>
     <string name="guide_alerts_message_title">The message is yours</string>
@@ -897,6 +897,12 @@
     <string name="alerts_max_reached">You already have the most alerts the app keeps, %1$d: remove one to add another.</string>
     <string name="tpl_already_added">Already added</string>
     <string name="tpl_add">Add</string>
+    <!-- The blank idea (26 set 2026): the first card of the row, a rule built from nothing. -->
+    <string name="tpl_blank_title">New alert</string>
+    <string name="tpl_blank_desc">Start from scratch: you pick what to watch, the threshold, the hours and the message.</string>
+    <string name="tpl_blank_name">My alert</string>
+    <string name="tpl_blank_message" formatted="false">Your alert fired: {trigger.value}.</string>
+    <string name="tpl_create">Create</string>
     <string name="rule_sentence_prefix">When</string>
     <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
     <string name="rule_and">and</string>
