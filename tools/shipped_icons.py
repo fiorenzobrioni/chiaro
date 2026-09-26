@@ -53,6 +53,9 @@ SHIPPED = [
     # il quinto livello dei pollini (24 set 2026): le soglie per specie di MeteoSwiss hanno
     # «molto alto», e il tile ora lo dice in parole, quindi il disegno puo' dirlo
     "pollen-grass-very-high", "pollen-tree-very-high", "pollen-weed-very-high",
+    # il freddo che non e' ancora ghiaccio (26 set 2026): l'idea «Corsa al freddo», tra
+    # 0 e 5°, un gradino sopra il fiocco del gelo
+    "thermometer-colder",
 ]
 
 #: Scelte, verificate presenti a monte, e **non spedite**: nessuna schermata le disegna
@@ -78,7 +81,7 @@ PLANNED = [
     "wind-beaufort-3", "wind-beaufort-4", "wind-beaufort-5", "wind-beaufort-6",
     "wind-beaufort-7", "wind-beaufort-8", "wind-beaufort-9", "wind-beaufort-10",
     "wind-beaufort-11", "wind-beaufort-12", "umbrella-wind", "smoke",
-    "thermometer-warmer", "thermometer-colder", "wind-direction-n",
+    "thermometer-warmer", "wind-direction-n",
     "wind-direction-ne", "wind-direction-e", "wind-direction-se", "wind-direction-s",
     "wind-direction-sw", "wind-direction-w", "wind-direction-nw", "rainbow-clear",
     "rainbow-cloud", "time-morning", "time-late-morning", "time-afternoon",

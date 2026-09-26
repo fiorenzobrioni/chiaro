@@ -125,15 +125,19 @@ object WeatherText {
      * The bands are the decisions, not the thermometer: at or under zero there is ice
      * to scrape and plants to cover (the same 0 °C the drift strip and the headline
      * call frost — a third definition of freezing is a third answer); under 5 the cold
-     * reaches what is left outside; under 13 it reaches a body that goes out; under 21
-     * it is the night a window can stay open on; above it, the night that does not
-     * cool down, which is the only reason the number matters at all.
+     * reaches what is left outside; under 13 it reaches a body that goes out; under 16
+     * it reaches the bedroom too, so the window is ajar and not open (26 set 2026: a
+     * 14° low was telling the reader to sleep with it open, and a room aired all night
+     * on 14-15° wakes up near 16); under 21 it is the night a window can stay open on;
+     * above it, the night that does not cool down, which is the only reason the number
+     * matters at all.
      */
     @StringRes
     fun nightMeaning(lowC: Double): Int = when {
         lowC <= 0 -> R.string.night_meaning_freezing
         lowC < 5 -> R.string.night_meaning_cold
         lowC < 13 -> R.string.night_meaning_cool
+        lowC < 16 -> R.string.night_meaning_ajar
         lowC < 21 -> R.string.night_meaning_mild
         else -> R.string.night_meaning_warm
     }

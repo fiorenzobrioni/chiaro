@@ -207,6 +207,10 @@ object RuleText {
         val conditions: List<RuleCondition>
     )
 
+    /** Where the plain run ends and the cold one begins: the practical line of an
+     * amateur runner, under which gloves, layers and a longer warm-up come out. */
+    private const val RunColdBelowC = 5.0
+
     val templates: List<Template> = listOf(
         Template(
             R.string.tpl_bike_title, R.string.tpl_bike_desc,
@@ -221,12 +225,28 @@ object RuleText {
             R.string.tpl_ice_name, R.string.tpl_ice_message,
             listOf(RuleCondition("next_12h.temp_c_min", RuleOp.LTE, 0.0))
         ),
+        // The run in two bands (26 set 2026, committente): from 5° it is the plain
+        // invitation; between 0 and 5 it still runs, with the cold's precautions; at 0 and
+        // under there is no idea at all, because an invitation to run over ice is the one
+        // risk the app cannot see (ice on the asphalt is the wet ground's, not the air's)
+        // and «Ghiaccio domattina» already speaks at that same 0°. The bands meet without
+        // a gap or an overlap: 5° is the plain run's, 0° is neither's.
         Template(
             R.string.tpl_run_title, R.string.tpl_run_desc,
             R.string.tpl_run_name, R.string.tpl_run_message,
             listOf(
                 RuleCondition("next_6h.precip_chance_max", RuleOp.LTE, 20.0),
+                RuleCondition("current.temp_c", RuleOp.GTE, RunColdBelowC),
                 RuleCondition("current.temp_c", RuleOp.LTE, 26.0)
+            )
+        ),
+        Template(
+            R.string.tpl_cold_run_title, R.string.tpl_cold_run_desc,
+            R.string.tpl_cold_run_name, R.string.tpl_cold_run_message,
+            listOf(
+                RuleCondition("next_6h.precip_chance_max", RuleOp.LTE, 20.0),
+                RuleCondition("current.temp_c", RuleOp.GT, 0.0),
+                RuleCondition("current.temp_c", RuleOp.LT, RunColdBelowC)
             )
         ),
         Template(

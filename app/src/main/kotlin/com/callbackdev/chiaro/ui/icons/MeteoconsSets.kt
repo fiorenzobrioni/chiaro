@@ -101,6 +101,7 @@ internal object MeteoconsSets {
         R.drawable.mc3_pollen_grass_very_high to R.drawable.mc3n_pollen_grass_very_high,
         R.drawable.mc3_pollen_tree_very_high to R.drawable.mc3n_pollen_tree_very_high,
         R.drawable.mc3_pollen_weed_very_high to R.drawable.mc3n_pollen_weed_very_high,
+        R.drawable.mc3_thermometer_colder to R.drawable.mc3n_thermometer_colder,
     )
 
     /** flat, fondo chiaro. */
@@ -187,6 +188,7 @@ internal object MeteoconsSets {
         R.drawable.mc3_pollen_grass_very_high to R.drawable.mc3f_pollen_grass_very_high,
         R.drawable.mc3_pollen_tree_very_high to R.drawable.mc3f_pollen_tree_very_high,
         R.drawable.mc3_pollen_weed_very_high to R.drawable.mc3f_pollen_weed_very_high,
+        R.drawable.mc3_thermometer_colder to R.drawable.mc3f_thermometer_colder,
     )
 
     /** flat, fondo scuro. */
@@ -273,6 +275,7 @@ internal object MeteoconsSets {
         R.drawable.mc3_pollen_grass_very_high to R.drawable.mc3fn_pollen_grass_very_high,
         R.drawable.mc3_pollen_tree_very_high to R.drawable.mc3fn_pollen_tree_very_high,
         R.drawable.mc3_pollen_weed_very_high to R.drawable.mc3fn_pollen_weed_very_high,
+        R.drawable.mc3_thermometer_colder to R.drawable.mc3fn_thermometer_colder,
     )
 
     /**
@@ -467,5 +470,6 @@ internal object MeteoconsSets {
         "pollen-grass-very-high" to R.drawable.mc3_pollen_grass_very_high,
         "pollen-tree-very-high" to R.drawable.mc3_pollen_tree_very_high,
         "pollen-weed-very-high" to R.drawable.mc3_pollen_weed_very_high,
+        "thermometer-colder" to R.drawable.mc3_thermometer_colder,
     )
 }

@@ -410,11 +410,13 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
   and off in two taps.
 - **Yours**: the rules engine, approached from the answer rather than the syntax.
   - **Templates first**: "Tell me when I can ride", "Ice tomorrow morning", "A window to run",
-    "High UV", "A clear night". Picking one creates a real rule with sensible thresholds, already on.
+    "A run in the cold", "High UV", "A clear night". Picking one creates a real rule with sensible
+    thresholds, already on.
   - **The builder** is a sentence with three tappable chips: *Notify me when* **[rain, next 6 h]**
-    *is* **[above]** **[70%]**, plus an optional second condition and the message. Pickers, never a
-    text field for a value that has a range: the property tweather bought with token-by-token
-    editing — a syntax error cannot be written — is kept, and it costs nothing in a chip UI.
+    *is* **[above]** **[70%]**, plus up to two more conditions (three in all since 26 set 2026:
+    a range is two) and the message. Pickers, never a text field for a value that has a range:
+    the property tweather bought with token-by-token editing — a syntax error cannot be
+    written — is kept, and it costs nothing in a chip UI.
   - **Preview** runs the rule against the current data and says what it would have done, with no
     notification posted.
   - Each rule card shows its sentence, its state, and when it last fired.

@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * The "Weather CI" mini-language (Fase 11) is deliberately NOT a language: a rule is
- * a structure of 1–2 (variable, operator, threshold) conditions plus a message,
+ * a structure of 1–3 (variable, operator, threshold) conditions plus a message,
  * edited token by token in `alerts.rules`. A syntax error is not writable, so there
  * is no parser and no diagnostics anywhere in this package.
  */
@@ -60,5 +60,10 @@ data class NotificationRule(
 /** Low ceiling on purpose: alerts.rules is a config file, not a database. */
 const val MaxRules = 10
 
-/** One `and`, no `or`, no parentheses — the v1 boundary (PLANNING, Fase 11). */
-const val MaxConditions = 2
+/**
+ * `and` only, no `or`, no parentheses — the v1 boundary (PLANNING, Fase 11). Three since
+ * 26 set 2026: a range on one quantity is two conditions («from 5° to 26°»), and with two
+ * the most natural rule a reader writes — between two temperatures, and dry — could not be
+ * said at all. The run ideas are exactly that rule.
+ */
+const val MaxConditions = 3
