@@ -11465,6 +11465,8 @@ scrivere codice: due fasce e «Con la luce».
   diverso di 622 pixel di antialiasing, invisibili: rimesso com'era.
 - README: la frase sugli avvisi dice gli orari, e già che c'era «fino a due condizioni in
   più» (era «una seconda», ferma a prima del 26 set) e sette idee (erano sei).
+- **Provato sul dispositivo dal committente** (30 set 2026), con «Nuovo avviso» qui sotto,
+  uscito nella stessa PR (#56): tutto a posto.
 
 ## «Nuovo avviso»: la carta per partire da zero (committente, 26 set 2026)
 
@@ -11494,6 +11496,7 @@ e scrive nome e messaggio in inglese fisso: non adatta.
   (frase, testo alternativo e didascalia) e `alerts-yours.png` rigenerato.
 - `RunTemplatesTest` (+2): l'idea vuota è una regola che il motore valuta, a qualsiasi ora,
   fuori dalle idee; la numerazione dei nomi.
+- **Provato sul dispositivo dal committente** (30 set 2026): tutto a posto.
 
 ## Il grafico delle notifiche sul fondo sbagliato (committente, 30 set 2026)
 
@@ -11549,8 +11552,8 @@ sono illeggibili sull'altro.
 - `NotificationChartsTest` (+3): un'immagine per fondo o nessuna; il layout gonfiato con
   `notnight` mostra quella del giorno e nasconde l'altra, con `night` il contrario.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
-- **Da fare sul dispositivo**: il riepilogo del mattino con il telefono in tema chiaro e poi,
-  a notifica aperta, passando al tema scuro: il grafico deve cambiare con il resto.
+- **Provato sul dispositivo dal committente** (30 set 2026): «Ho provato ed è tutto ok». Il
+  riepilogo del mattino in tema chiaro e in tema scuro, il grafico che cambia con il resto.
 
 ## La notifica nel README (committente, 30 set 2026)
 
