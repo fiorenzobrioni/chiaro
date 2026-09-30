@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The night ground's picture: see values/notification.xml. -->
+    <integer name="notif_chart_day_visibility">2</integer>
+    <integer name="notif_chart_night_visibility">0</integer>
+</resources>

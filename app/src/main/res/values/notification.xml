@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Which of the notification's two pictures the shade shows (notification_expanded):
+         the day ground here, the night ground in values-night. The values are the
+         android:visibility attribute's own enum, 0 visible and 2 gone: the attribute is
+         read as an index into the View's flags, so View.GONE's 8 would crash the
+         inflation. -->
+    <integer name="notif_chart_day_visibility">0</integer>
+    <integer name="notif_chart_night_visibility">2</integer>
+</resources>

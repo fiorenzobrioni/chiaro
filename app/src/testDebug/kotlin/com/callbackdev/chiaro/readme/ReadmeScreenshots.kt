@@ -2,12 +2,18 @@ package com.callbackdev.chiaro.readme
 
 import android.Manifest
 import android.app.Application
+import android.app.Notification
+import android.app.NotificationManager
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.HardwareRenderer
+import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.PixelFormat
 import android.graphics.RenderNode
 import android.media.ImageReader
+import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -46,7 +52,11 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.AlertKind
+import com.callbackdev.chiaro.domain.AlertState
 import com.callbackdev.chiaro.domain.placeZone
+import com.callbackdev.chiaro.notifications.AlertNotifier
 import com.callbackdev.chiaro.ui.alerts.AlertsActions
 import com.callbackdev.chiaro.ui.alerts.AlertsScreen
 import com.callbackdev.chiaro.ui.format.Formats
@@ -65,6 +75,7 @@ import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.today.TodayPage
 import java.io.File
 import java.time.Clock
+import java.util.TimeZone
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
@@ -107,6 +118,12 @@ class ReadmeScreenshots {
         const val BoardMargin = 22f
         const val BoardGap = 16f
         const val BoardGround = 0xFF14171C.toInt()
+
+        /** A notification in the shade: its side margin, its padding and its corners
+         * (dp), stock Android's. */
+        const val NotificationMargin = 12f
+        const val NotificationPadding = 4f
+        const val NotificationCorner = 24f
     }
 
     @get:Rule
@@ -284,6 +301,95 @@ class ReadmeScreenshots {
             ArcWidgetContent(model, schemes, rememberSkyBitmap(model), ArcSettings())
         }
         saveBitmap("widget-day-arc", drawBoard(listOf(arc)))
+    }
+
+    /**
+     * The morning summary as the shade shows it, opened, on the day shade and on the
+     * night one: the alert the engine finds in the recording at the report's own moment
+     * (12:00, the last minute of the summary's window), posted by the app's own notifier,
+     * then decorated by the platform's own template, as the system decorates a custom
+     * body. The shade itself is not the app's: the cards stand on stock Android's own
+     * notification ground, not on any maker's.
+     */
+    @Test
+    fun notificationSummary() {
+        val report = MilanRecording.report
+        val zone = placeZone(report, MilanRecording.city)
+        val moment = report.location.localTime
+        val alert = checkNotNull(
+            AlertEngine.evaluate(report, settings.notifications, AlertState(), moment, "readme")
+                .find { it.kind == AlertKind.DAILY_SUMMARY }
+        ) { "the recording's moment is outside the morning summary's window" }
+        val manager = app.getSystemService(NotificationManager::class.java)
+        check(AlertNotifier.notify(app, alert, report, settings.units))
+        val posted = shadowOf(manager).allNotifications.last()
+
+        val density = app.resources.displayMetrics.density
+        fun px(dp: Float) = (dp * density).toInt()
+        val width = px(BoardWidth - NotificationMargin * 2)
+        // The header as a reader sees it: the app's name, not the debug build's, and the
+        // time the summary was posted, «now», not the distance from the test's 1970.
+        val postedAt = moment.atZone(zone).toInstant().toEpochMilli()
+        SystemClock.setCurrentTimeMillis(postedAt)
+        val label = app.applicationInfo.nonLocalizedLabel
+        app.applicationInfo.nonLocalizedLabel = "Chiaro"
+        // The builder is recovered on the context given, not on a fresh one for the app:
+        // that one would carry the phone's configuration, not the night the card is for.
+        posted.extras.remove("android.appInfo")
+        val defaultZone = TimeZone.getDefault()
+        TimeZone.setDefault(TimeZone.getTimeZone(zone))
+        val cards = try {
+            listOf(false, true).map { night ->
+                val context = app.createConfigurationContext(
+                    Configuration(app.resources.configuration).apply {
+                        uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
+                            (if (night) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO)
+                    }
+                )
+                val views = Notification.Builder.recoverBuilder(context, posted)
+                    .setWhen(postedAt)
+                    .setShowWhen(true)
+                    .createBigContentView()
+                val body = views.apply(context, FrameLayout(context))
+                body.measure(
+                    View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                )
+                val height = body.measuredHeight + px(NotificationPadding * 2)
+                body.layout(0, 0, width, body.measuredHeight)
+                val card = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(card)
+                canvas.drawRoundRect(
+                    RectF(0f, 0f, width.toFloat(), height.toFloat()),
+                    px(NotificationCorner).toFloat(), px(NotificationCorner).toFloat(),
+                    Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = context.getColor(
+                            if (night) android.R.color.system_neutral1_800 else android.R.color.system_neutral1_50
+                        )
+                    }
+                )
+                canvas.drawBitmap(
+                    hardwareDraw(body, width, body.measuredHeight), 0f, px(NotificationPadding).toFloat(), null
+                )
+                card
+            }
+        } finally {
+            TimeZone.setDefault(defaultZone)
+            app.applicationInfo.nonLocalizedLabel = label
+        }
+        val margin = px(BoardMargin)
+        val gap = px(BoardGap)
+        val board = Bitmap.createBitmap(
+            px(BoardWidth), margin * 2 + cards.sumOf { it.height } + gap, Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(board)
+        canvas.drawColor(BoardGround)
+        var top = margin.toFloat()
+        cards.forEach { card ->
+            canvas.drawBitmap(card, ((board.width - card.width) / 2).toFloat(), top, null)
+            top += card.height + gap
+        }
+        saveBitmap("notification-summary", board)
     }
 
     private class WidgetOne(val size: DpSize, val content: @Composable () -> Unit)

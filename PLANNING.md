@@ -10237,6 +10237,7 @@ difetti veri:
 - **Il grafico è dipinto per il tema del sistema al momento dell'invio**: se il lettore cambia
   tema dopo, l'immagine resta quella; il testo intorno segue il tema. Un compromesso accettato:
   una notifica vive ore, non giorni, e i colori scelti reggono su entrambi i fondi.
+  **Superato il 30 set 2026** («Il grafico delle notifiche sul fondo sbagliato»): non reggevano.
 - **Il messaggio dell'avviso personale non è toccato**: è testo del lettore, e i segnaposto sono
   interpolati in `:core:domain`, puro Kotlin senza locale (debito ereditato da tweather,
   UPSTREAM.md). Corretta solo la riga «Perché è scattata», che è nostra.
@@ -11464,6 +11465,8 @@ scrivere codice: due fasce e «Con la luce».
   diverso di 622 pixel di antialiasing, invisibili: rimesso com'era.
 - README: la frase sugli avvisi dice gli orari, e già che c'era «fino a due condizioni in
   più» (era «una seconda», ferma a prima del 26 set) e sette idee (erano sei).
+- **Provato sul dispositivo dal committente** (30 set 2026), con «Nuovo avviso» qui sotto,
+  uscito nella stessa PR (#56): tutto a posto.
 
 ## «Nuovo avviso»: la carta per partire da zero (committente, 26 set 2026)
 
@@ -11493,3 +11496,89 @@ e scrive nome e messaggio in inglese fisso: non adatta.
   (frase, testo alternativo e didascalia) e `alerts-yours.png` rigenerato.
 - `RunTemplatesTest` (+2): l'idea vuota è una regola che il motore valuta, a qualsiasi ora,
   fuori dalle idee; la numerazione dei nomi.
+- **Provato sul dispositivo dal committente** (30 set 2026): tutto a posto.
+
+## Il grafico delle notifiche sul fondo sbagliato (committente, 30 set 2026)
+
+Segnalazione dal dispositivo (Samsung, tema chiaro, riepilogo del mattino delle 09:59): «Il
+grafico sulle notifiche dell'app non è visibile in maniera ottimale […] verifica anche in tema
+scuro». Nella foto le ore e le cifre erano quasi bianche sul fondo grigio chiaro, la curva
+marrone, la notte un riquadro lilla: esattamente il grafico dipinto con gli inchiostri della
+**notte**, rifatto nel sandbox pixel per pixel. Il testo intorno, che segue il tema da sé, era
+giusto. In più «17°» stava sopra «09».
+
+La causa è la decisione del 23 set (sopra, «Il grafico è dipinto per il tema del sistema al
+momento dell'invio»): il tema al momento dell'invio non è quello al momento della lettura (una
+programmazione notturna che finisce, un cambio a mano, un processo in background con una
+configurazione vecchia), e una notifica, a differenza di un widget, l'app non la ridipinge mai.
+Il compromesso «i colori reggono su entrambi i fondi» era falso: gli inchiostri di un tema
+sono illeggibili sull'altro.
+
+### Cosa è cambiato
+
+- **Due immagini, sceglie il sistema**: `NotificationCharts.themed` dipinge ogni grafico due
+  volte (schema del giorno e della notte, stessa veste del lettore letta una volta) e
+  `notification_expanded` porta due `ImageView`, con la visibilità presa da
+  `values/notification.xml` e `values-night/notification.xml`. Il sistema rigonfia la vista
+  quando cambia il tema (è il meccanismo delle risorse `-night` dei widget), ed è l'unico
+  momento che sa su che fondo si legge. Vale per tutti e tre i grafici: giornata, ore di
+  pioggia, livelli di allerta.
+- **Il minimo non cade più sull'etichetta dell'ora**: la cifra sta sotto e di lato al punto
+  (a destra, a sinistra vicino al bordo destro), dove la curva non può essere, perché è il
+  minimo; il riepilogo del mattino ha quasi sempre il minimo alla prima ora. Grafico asciutto
+  200 → 212 px e 8 px in più fra curva e ore; con la pioggia 10 px in più fra curva e barre.
+- **Un bordo tenue sotto la curva** nell'inchiostro del fondo (onSurface al 16% di giorno, 24%
+  di notte): l'estremo mite della scala (pesca chiaro di giorno, marrone scuro di notte) si
+  perdeva nel grigio traslucido di Samsung. Il colore della linea resta quello del mondo.
+- **La notte come fascia arrotondata** per ogni tratto di ore notturne, la forma della finestra
+  del grafico della pioggia, invece del rettangolo a spigoli vivi nell'angolo.
+
+### Decisioni e deviazioni
+
+- **Due immagini e non una sola «neutra»**: nessun inchiostro è leggibile sia sul fondo chiaro
+  sia su quello scuro, e colorare solo le etichette con una tinta di sistema lascerebbe curva,
+  barre e bande con i colori di un tema solo. Il costo è la memoria: la giornata con pioggia
+  pesa 2 × 1,06 MB, appena sopra la soglia di *avviso* di Android per le viste remote (2 MB,
+  solo un log), lontana da quella che le toglie (5 MB).
+- **La visibilità è l'indice dell'enum** (`0` visibile, `2` gone), non `View.GONE` (8): il
+  test di inflazione l'ha trovato, 8 mandava in crash la vista.
+
+### Come è stato verificato
+
+- Resa nel sandbox (Robolectric, grafica nativa) prima e dopo, tema chiaro e scuro, su quattro
+  fondi (grigio Samsung chiaro e scuro, Pixel chiaro e scuro): la resa «notte su fondo
+  chiaro» coincide con la foto; dopo, ore e cifre leggibili su tutti e quattro, «17°»
+  staccato da «09», curva distinta anche a 17°.
+- `NotificationChartsTest` (+3): un'immagine per fondo o nessuna; il layout gonfiato con
+  `notnight` mostra quella del giorno e nasconde l'altra, con `night` il contrario.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+- **Provato sul dispositivo dal committente** (30 set 2026): «Ho provato ed è tutto ok». Il
+  riepilogo del mattino in tema chiaro e in tema scuro, il grafico che cambia con il resto.
+
+## La notifica nel README (committente, 30 set 2026)
+
+Richiesta: «si potrebbe mettere almeno uno screenshot delle notifiche nel readme? Solo se da
+valore aggiunto e non solo rumore». Valutazione data prima di farlo: una sola, il riepilogo
+del mattino aperto, perché è la cosa che il README non mostrava e che si usa ogni giorno (la
+giornata in una frase e un grafico senza aprire l'app); pioggia e allerta sarebbero la stessa
+forma con meno da vedere. Il committente ha detto sì.
+
+- **`notification-summary.png`**, terza colonna della tabella dei widget, che diventa
+  «Widgets and notifications» (la colonna era vuota). Didascalia e testo alternativo.
+- **Nessun dato inventato**: l'avviso è quello che `AlertEngine.evaluate` trova nella
+  registrazione di Milano al momento del report stesso (le 12:00 del `current`, l'ultimo
+  minuto della finestra 6-12; le 12:10 dell'orologio della registrazione ne sarebbero
+  fuori), con le impostazioni di una installazione nuova; lo pubblica `AlertNotifier`, lo
+  stesso codice del telefono, e il corpo è la `RemoteViews` che l'app consegna.
+- **La tendina non è dell'app**: la cornice (icona, nome, «now», freccia) è il modello del
+  sistema stesso, `Notification.Builder.recoverBuilder(...).createBigContentView()`, cioè
+  quello con cui Android decora un corpo personalizzato; il fondo è quello di Android
+  stock (`system_neutral1_50` / `system_neutral1_800`), non quello di un produttore. Due
+  card, tendina chiara e scura, ciascuna con il grafico che il sistema sceglie per lei: è
+  la correzione del giorno stesso, e fa vedere che il riepilogo si legge su entrambe.
+- Tre aggiustamenti del solo test, perché l'intestazione dicesse quello che vede un lettore:
+  il nome «Chiaro» e non «Chiaro (dev)» della build di debug; l'orologio del test portato
+  al momento dell'invio (diceva «in 56 y», dal 1970 di Robolectric); tolto dagli extra
+  `android.appInfo`, altrimenti il builder recuperato usa un contesto nuovo con la
+  configurazione del telefono e colora l'intestazione della card scura per il giorno.
+- Le altre undici immagini, rigenerate nello stesso giro, sono uscite identiche byte per byte.

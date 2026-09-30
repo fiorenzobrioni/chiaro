@@ -86,7 +86,9 @@ object OfficialWarningNotifier {
         // word on its level's colour. The lines of levels per day are what it replaces in
         // the pictured body, which keeps the rest — zone, meaning, note, source.
         runCatching {
-            NotificationCharts.levels(context, warnings, today, NotificationCharts.inks(context))
+            NotificationCharts.themed(context) { inks ->
+                NotificationCharts.levels(context, warnings, today, inks)
+            }
         }.getOrNull()?.let { grid ->
             NotificationViews.expandWithChart(
                 context, builder, title, headline,

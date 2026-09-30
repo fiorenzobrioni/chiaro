@@ -201,8 +201,7 @@ object AlertNotifier {
         alert: Alert,
         report: WeatherReport,
         units: UnitSettings
-    ): Pair<android.graphics.Bitmap, String>? {
-        val inks = NotificationCharts.inks(context)
+    ): Pair<NotificationCharts.Themed, String>? {
         val locale = Locale.getDefault()
         val is24h = android.text.format.DateFormat.is24HourFormat(context)
         val now = report.location.localTime
@@ -213,9 +212,9 @@ object AlertNotifier {
                     if (severe) AlertDetails.severeWindow(report.hourly, it)
                     else AlertDetails.rainWindow(report.hourly, it)
                 }
-                val bitmap = NotificationCharts.rainHours(
-                    report.hourly, now, window, severe, inks, is24h, locale
-                ) ?: return null
+                val bitmap = NotificationCharts.themed(context) { inks ->
+                    NotificationCharts.rainHours(report.hourly, now, window, severe, inks, is24h, locale)
+                } ?: return null
                 val shown = report.hourly.filter { !it.time.isBefore(now.withMinute(0)) }
                     .take(NotificationCharts.RainHours)
                 val peak = shown.filter { it.precipChancePct != null }.maxByOrNull { it.precipChancePct!! }
@@ -247,9 +246,9 @@ object AlertNotifier {
                         report.astronomical.daylightDuration
                     ).let { it?.sunrise?.let(date::atTime) to it?.sunset?.let(date::atTime) }
                 }
-                val bitmap = NotificationCharts.day(
-                    hours, sunrise, sunset, units.temperature, inks, is24h, locale
-                ) ?: return null
+                val bitmap = NotificationCharts.themed(context) { inks ->
+                    NotificationCharts.day(hours, sunrise, sunset, units.temperature, inks, is24h, locale)
+                } ?: return null
                 val low = Formats.temperature(hours.minOf { it.tempC }, units.temperature, locale)
                 val high = Formats.temperature(hours.maxOf { it.tempC }, units.temperature, locale)
                 val rain = hours.mapNotNull { it.precipChancePct }.maxOrNull()?.takeIf { it > 0 }
