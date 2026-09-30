@@ -11551,3 +11551,31 @@ sono illeggibili sull'altro.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
 - **Da fare sul dispositivo**: il riepilogo del mattino con il telefono in tema chiaro e poi,
   a notifica aperta, passando al tema scuro: il grafico deve cambiare con il resto.
+
+## La notifica nel README (committente, 30 set 2026)
+
+Richiesta: «si potrebbe mettere almeno uno screenshot delle notifiche nel readme? Solo se da
+valore aggiunto e non solo rumore». Valutazione data prima di farlo: una sola, il riepilogo
+del mattino aperto, perché è la cosa che il README non mostrava e che si usa ogni giorno (la
+giornata in una frase e un grafico senza aprire l'app); pioggia e allerta sarebbero la stessa
+forma con meno da vedere. Il committente ha detto sì.
+
+- **`notification-summary.png`**, terza colonna della tabella dei widget, che diventa
+  «Widgets and notifications» (la colonna era vuota). Didascalia e testo alternativo.
+- **Nessun dato inventato**: l'avviso è quello che `AlertEngine.evaluate` trova nella
+  registrazione di Milano al momento del report stesso (le 12:00 del `current`, l'ultimo
+  minuto della finestra 6-12; le 12:10 dell'orologio della registrazione ne sarebbero
+  fuori), con le impostazioni di una installazione nuova; lo pubblica `AlertNotifier`, lo
+  stesso codice del telefono, e il corpo è la `RemoteViews` che l'app consegna.
+- **La tendina non è dell'app**: la cornice (icona, nome, «now», freccia) è il modello del
+  sistema stesso, `Notification.Builder.recoverBuilder(...).createBigContentView()`, cioè
+  quello con cui Android decora un corpo personalizzato; il fondo è quello di Android
+  stock (`system_neutral1_50` / `system_neutral1_800`), non quello di un produttore. Due
+  card, tendina chiara e scura, ciascuna con il grafico che il sistema sceglie per lei: è
+  la correzione del giorno stesso, e fa vedere che il riepilogo si legge su entrambe.
+- Tre aggiustamenti del solo test, perché l'intestazione dicesse quello che vede un lettore:
+  il nome «Chiaro» e non «Chiaro (dev)» della build di debug; l'orologio del test portato
+  al momento dell'invio (diceva «in 56 y», dal 1970 di Robolectric); tolto dagli extra
+  `android.appInfo`, altrimenti il builder recuperato usa un contesto nuovo con la
+  configurazione del telefono e colora l'intestazione della card scura per il giorno.
+- Le altre undici immagini, rigenerate nello stesso giro, sono uscite identiche byte per byte.

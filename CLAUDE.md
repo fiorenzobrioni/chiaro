@@ -138,6 +138,10 @@ ordinary run rewrites an image. Standing rules (committente, 25 set 2026):
   one into the `RemoteViews` a launcher receives, applied to a real view and drawn through
   the GPU pipeline so the outline-rounded corners come out round. A widget change
   regenerates them like a screen change does.
+- So is the morning summary (`notification-summary.png`): the alert the engine finds in the
+  recording, posted by `AlertNotifier`, decorated by the platform's own template on a day
+  and a night shade of stock Android. A change to the notifications' text or pictures
+  regenerates it.
 - **No invented data.** Every picture comes from the recording or from what a reader makes
   with the app's own words (the alerts are created from its ideas). The Journal has no
   picture until real history can be recorded (PLANNING.md, «Le schermate del README»).

@@ -112,18 +112,18 @@ it looks:
 </tr>
 </table>
 
-**Widgets**, as a reader first places them:
+**Widgets and notifications**, as a reader first places and opens them:
 
 <table>
 <tr>
 <td width="33%"><img src="docs/screenshots/widgets.png" alt="Four widgets: Now, In words, Sky with the golden hour and its verdict, and Today with the next hours"></td>
 <td width="33%"><img src="docs/screenshots/widget-day-arc.png" alt="The day's arc widget: the sun's path over Milan, the moments ahead and the week"></td>
-<td width="33%"></td>
+<td width="33%"><img src="docs/screenshots/notification-summary.png" alt="The morning summary for Milan opened in the notification shade, on a light and on a dark shade: the day in one sentence, the rest of the day's temperature as a curve with its high and low and the evening shaded as night, then the temperature now, the UV, the wind, sunrise and sunset and the air quality, each with what it means"></td>
 </tr>
 <tr>
 <td align="center"><sub>Now, In words, Sky and Today, each configured on its own</sub></td>
 <td align="center"><sub>The day's arc: the sun's real path over your place</sub></td>
-<td></td>
+<td align="center"><sub>The morning summary opened: the day in a sentence and a picture, on either shade</sub></td>
 </tr>
 </table>
 
