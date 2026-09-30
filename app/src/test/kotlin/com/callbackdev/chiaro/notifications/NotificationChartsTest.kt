@@ -1,6 +1,9 @@
 package com.callbackdev.chiaro.notifications
 
 import android.content.Context
+import android.view.LayoutInflater
+import android.view.View
+import com.callbackdev.chiaro.R
 import androidx.test.core.app.ApplicationProvider
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
@@ -16,6 +19,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * The pictures of the expanded notifications (23 set 2026). What can be held without a
@@ -37,7 +41,7 @@ class NotificationChartsTest {
         )
     }
 
-    private val inks get() = NotificationCharts.inks(context)
+    private val inks get() = NotificationCharts.inks(context, dark = false)
 
     @Test
     fun `the rain's hours need hours, and a chance in at least one of them`() {
@@ -67,6 +71,38 @@ class NotificationChartsTest {
         assertEquals(NotificationCharts.DayChartHeight, wet!!.height)
         assertEquals(NotificationCharts.DayChartHeightDry, dry!!.height)
         assertNull(NotificationCharts.day(hours(2) { 0 }, sunrise, sunset, TemperatureUnit.CELSIUS, inks, true, Locale.ITALY))
+    }
+
+    /** Both grounds are painted, or neither: a notification never carries one picture
+     * for a shade it may not be drawn on. */
+    @Test
+    fun `a picture is painted for each ground`() {
+        val sunrise = start.withHour(7).withMinute(11)
+        val sunset = start.withHour(19).withMinute(18)
+        val themed = NotificationCharts.themed(context) { inks ->
+            NotificationCharts.day(hours(11) { 0 }, sunrise, sunset, TemperatureUnit.CELSIUS, inks, true, Locale.ITALY)
+        }
+        assertNotNull(themed)
+        assertTrue(themed!!.light !== themed.dark)
+        assertNull(NotificationCharts.themed(context) { null })
+    }
+
+    /** The shade picks the picture when it inflates the body (30 set 2026): by day the
+     * day's, by night the night's, from the layout's own `-night` resources. */
+    @Test
+    @Config(qualifiers = "notnight")
+    fun `the day shade shows the day picture`() {
+        val body = LayoutInflater.from(context).inflate(R.layout.notification_expanded, null)
+        assertEquals(View.VISIBLE, body.findViewById<View>(R.id.notif_chart_day).visibility)
+        assertEquals(View.GONE, body.findViewById<View>(R.id.notif_chart_night).visibility)
+    }
+
+    @Test
+    @Config(qualifiers = "night")
+    fun `the night shade shows the night picture`() {
+        val body = LayoutInflater.from(context).inflate(R.layout.notification_expanded, null)
+        assertEquals(View.GONE, body.findViewById<View>(R.id.notif_chart_day).visibility)
+        assertEquals(View.VISIBLE, body.findViewById<View>(R.id.notif_chart_night).visibility)
     }
 
     /** The platform clips an expanded custom view at 256 dp. At the narrowest width a

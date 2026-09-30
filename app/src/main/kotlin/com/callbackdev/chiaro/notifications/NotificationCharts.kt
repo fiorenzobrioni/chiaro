@@ -1,7 +1,6 @@
 package com.callbackdev.chiaro.notifications
 
 import android.content.Context
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.LinearGradient
@@ -21,6 +20,7 @@ import com.callbackdev.chiaro.domain.warnings.WarningHazard
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.theme.ChiaroColors
+import com.callbackdev.chiaro.ui.theme.ChiaroPalette
 import com.callbackdev.chiaro.ui.theme.paletteFor
 import com.callbackdev.chiaro.ui.warnings.WarningText
 import java.time.LocalDate
@@ -53,16 +53,25 @@ import kotlinx.coroutines.withTimeoutOrNull
  * temperature scale. And every picture has a text equivalent — the lines under it, and a
  * content description on the image ([NotificationViews]).
  *
- * The bitmaps are painted for the ground the notification will have when it is posted:
- * the system's night mode, read once, and the reader's dress (§2.5). A 1000 px wide image
- * is laid out as ~340 dp at ~3×, so the type sizes below are the dp of a 3× screen.
+ * The bitmaps are painted TWICE, once for each ground the shade can have, and the system
+ * picks between them when it draws the notification (30 set 2026, device report):
+ * [Themed], and the `-night` resources of `notification_expanded`. A picture painted for
+ * the ground the app saw when it posted went on showing that ground whatever the shade
+ * became: a morning summary was read on the pale day shade with the night's inks —
+ * near-white figures and hours nobody could read, the night band a lavender box. The
+ * ground at posting is not the ground at reading (a night schedule ending, a switch by
+ * hand, a background process holding an old configuration), and a notification, unlike a
+ * widget, is never repainted by the app; its layout IS re-inflated by the system on a
+ * change of night mode, and that inflation is the one moment that knows which ground the
+ * reader is looking at. The reader's dress (§2.5) is read once for both. A 1000 px wide image is laid out as ~340 dp at ~3×, so the type
+ * sizes below are the dp of a 3× screen.
  */
 internal object NotificationCharts {
 
     const val WIDTH = 1000
 
-    /** The inks a chart is painted with: the reader's dress, on the ground the system
-     * will give the notification. */
+    /** The inks a chart is painted with: the reader's dress, on one of the two grounds
+     * the system may give the notification. */
     data class Inks(
         val colors: ChiaroColors,
         val ink: Int,
@@ -71,13 +80,25 @@ internal object NotificationCharts {
         val night: Int,
         val band: Int,
         val severeBand: Int,
+        val edge: Int,
         val dark: Boolean
     )
 
-    fun inks(context: Context): Inks {
-        val dark = (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
-            Configuration.UI_MODE_NIGHT_YES
+    /** One picture for each ground: the system shows [light] on a day shade and [dark]
+     * on a night one, whenever it draws the notification. */
+    class Themed(val light: Bitmap, val dark: Bitmap)
+
+    /** Paints [draw] for both grounds; null when there is nothing to draw on either. */
+    fun themed(context: Context, draw: (Inks) -> Bitmap?): Themed? {
         val palette = paletteFor(readerPalette(context))
+        val light = draw(inks(palette, dark = false)) ?: return null
+        val dark = draw(inks(palette, dark = true)) ?: return null
+        return Themed(light, dark)
+    }
+
+    fun inks(context: Context, dark: Boolean): Inks = inks(paletteFor(readerPalette(context)), dark)
+
+    private fun inks(palette: ChiaroPalette, dark: Boolean): Inks {
         val scheme = palette.scheme(dark)
         val colors = palette.colors(dark)
         return Inks(
@@ -90,6 +111,7 @@ internal object NotificationCharts {
             night = scheme.primary.copy(alpha = if (dark) 0.12f else 0.07f).toArgb(),
             band = scheme.primary.copy(alpha = if (dark) 0.16f else 0.10f).toArgb(),
             severeBand = colors.unstable.container.copy(alpha = if (dark) 0.55f else 0.65f).toArgb(),
+            edge = scheme.onSurface.copy(alpha = if (dark) 0.24f else 0.16f).toArgb(),
             dark = dark
         )
     }
@@ -202,16 +224,27 @@ internal object NotificationCharts {
         val rainBottom = labelTop - 6f
         val rainTop = rainBottom - RainRow
         val curveTop = 52f
-        val curveBottom = (if (rain) rainTop - 20f else labelTop - 26f)
+        // Room under the curve for the low's figure, which hangs below its dot: clear of
+        // the rain row, and of the hours' row when there is no rain.
+        val curveBottom = (if (rain) rainTop - 30f else labelTop - 34f)
 
-        // The night, first and faint: the daylight ribbon's own reading of the hours.
+        // The night, first and faint: the daylight ribbon's own reading of the hours. Each
+        // run of night hours is one rounded band, the rain chart's window shape, so it reads
+        // as a stretch of the day and not as a box pasted over the corner.
         if (sunrise != null && sunset != null) {
             val nightPaint = fill(inks.night)
-            hours.forEachIndexed { i, hour ->
+            val night = hours.map { hour ->
                 val mid = hour.time.plusMinutes(30)
-                if (mid.isBefore(sunrise) || !mid.isBefore(sunset)) {
-                    canvas.drawRect(i * cell, 0f, (i + 1) * cell, rainBottom, nightPaint)
-                }
+                mid.isBefore(sunrise) || !mid.isBefore(sunset)
+            }
+            var i = 0
+            while (i < night.size) {
+                if (!night[i]) { i++; continue }
+                val start = i
+                while (i < night.size && night[i]) i++
+                canvas.drawRoundRect(
+                    RectF(start * cell + 2, 0f, i * cell - 2, rainBottom), 18f, 18f, nightPaint
+                )
             }
         }
 
@@ -254,6 +287,11 @@ internal object NotificationCharts {
             }
         )
         canvas.restoreToCount(layer)
+        // A faint edge of the ground's ink under the line: the scale's mild end is a pale
+        // peach by day and a dim brown by night, and on a shade the app does not paint —
+        // grey and see-through on some phones — it thinned into the ground. The edge keeps
+        // the line's shape without touching its colour, which stays the world's.
+        canvas.drawPath(curve, stroke(inks.edge, 12f).apply { strokeCap = Paint.Cap.ROUND })
         // An opaque base colour under the shader: a paint's alpha is its colour's, and a
         // shader on a transparent paint draws nothing at all.
         canvas.drawPath(
@@ -264,7 +302,11 @@ internal object NotificationCharts {
             }
         )
 
-        // The high and the low, each a dot on the curve and its figure beside it.
+        // The high and the low, each a dot on the curve and its figure beside it: the high
+        // above its dot, where the curve cannot be; the low below and to the side of its
+        // dot, where the curve cannot be either. Straight below, the low's figure landed on
+        // the first hour's label whenever the day's low was its first hour — the morning
+        // summary's usual shape (device report, 30 set 2026: «17°» over «09»).
         val hiIndex = temps.indexOf(high)
         val loIndex = temps.indexOf(low)
         listOf(hiIndex to true, loIndex to false).distinctBy { it.first }.forEach { (i, isHigh) ->
@@ -272,9 +314,13 @@ internal object NotificationCharts {
             canvas.drawCircle(x, yy, 9f, fill(inks.colors.temperatureAt(temps[i]).toArgb()))
             canvas.drawCircle(x, yy, 9f, stroke(inks.ink, 2.5f))
             val label = Formats.temperature(temps[i], unit, locale)
-            val paint = text(inks.ink, 34f, bold = true)
-            val tx = x.coerceIn(40f, WIDTH - 40f)
-            canvas.drawText(label, tx, if (isHigh) yy - 20f else (yy + 42f).coerceAtMost(curveBottom + 36f), paint)
+            if (isHigh) {
+                canvas.drawText(label, x.coerceIn(40f, WIDTH - 40f), yy - 20f, text(inks.ink, 34f, bold = true))
+            } else {
+                val right = x < WIDTH - LowLabelSide
+                val paint = text(inks.ink, 34f, bold = true, align = if (right) Paint.Align.LEFT else Paint.Align.RIGHT)
+                canvas.drawText(label, if (right) x + 12f else x - 12f, yy + 30f, paint)
+            }
         }
 
         if (rain) {
@@ -427,8 +473,10 @@ internal object NotificationCharts {
      */
     const val RainChartHeight = 220
     const val DayChartHeight = 264
-    const val DayChartHeightDry = 200
+    const val DayChartHeightDry = 212
     private const val AreaAlpha = 110
+    /** How close to the right edge the low's figure moves to the left of its dot. */
+    private const val LowLabelSide = 110f
     /** The day chart labels its rain only when it is worth a figure: the headline's own
      * «possible» floor. */
     private const val RainLabelFloorPct = 30

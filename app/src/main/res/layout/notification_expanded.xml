@@ -27,13 +27,27 @@
         android:ellipsize="end"
         android:maxLines="2" />
 
+    <!-- The picture twice, one per ground (30 set 2026): the system inflates this layout
+         again when the shade changes between day and night, and the visibilities below
+         come from values / values-night at that moment, so the picture on screen is always
+         the one painted for the ground it is on. -->
     <ImageView
-        android:id="@+id/notif_chart"
+        android:id="@+id/notif_chart_day"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:adjustViewBounds="true"
-        android:scaleType="fitCenter" />
+        android:scaleType="fitCenter"
+        android:visibility="@integer/notif_chart_day_visibility" />
+
+    <ImageView
+        android:id="@+id/notif_chart_night"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:visibility="@integer/notif_chart_night_visibility" />
 
     <TextView
         android:id="@+id/notif_details"

@@ -1634,6 +1634,19 @@ What the review changed:
     level's word on its level's container, «nessuno» as a hairline pill in the quiet ink.
   Nothing else gets one: a sky verdict is a word and a number, a fired rule is the
   reader's own message. Each picture has a content description with its text equivalent.
+- **Painted for both grounds, picked by the shade** (device report, 30 set 2026): every picture
+  is painted twice, with the day scheme and with the night one, and the body carries both;
+  its `values`/`values-night` visibilities show the one for the shade the system is drawing
+  on. The app cannot choose: a notification is never repainted, the shade's night mode at
+  reading is not the one at posting, and a morning summary painted with the night inks put
+  near-white figures and hours on the pale day shade. The system re-inflates the body when
+  the mode changes, which is the one moment that knows the ground.
+- **A shade the app does not paint**: the ground under the picture is the system's — pale on a
+  Pixel, grey and see-through on a Samsung — so the temperature line has a faint edge in the
+  ground's ink (onSurface at 16% by day, 24% by night) under its world-scale colour, whose mild
+  end otherwise thinned into the grey; the night is a rounded band per run of night hours,
+  the rain window's shape, not a box in the corner; the low's figure hangs below and beside
+  its dot, where the curve cannot be, instead of on the first hour's label.
 - **Heights under the ceiling**: the platform clips an expanded custom view at 256dp, so the
   pictures are 75–90dp at a notification's width and the details stop at five lines
   (`NotificationChartsTest` does the arithmetic at the narrowest width).

@@ -1,7 +1,6 @@
 package com.callbackdev.chiaro.notifications
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -57,6 +56,10 @@ internal object NotificationViews {
      * Sets the expanded body on [builder] when there is a [chart]; leaves the standard
      * big-text body alone when there is not. [description] is the picture's text
      * equivalent for a screen reader: what it shows, in one sentence.
+     *
+     * Both pictures go in: the layout shows the day one and hides the night one, and its
+     * `-night` resources the reverse, so the system picks the picture for the shade it is
+     * drawing on at the moment it draws — see [NotificationCharts] for why the app cannot.
      */
     fun expandWithChart(
         context: Context,
@@ -64,15 +67,17 @@ internal object NotificationViews {
         title: String,
         headline: String,
         details: List<String>,
-        chart: Bitmap?,
+        chart: NotificationCharts.Themed?,
         description: String
     ) {
         if (chart == null) return
         val views = RemoteViews(context.packageName, R.layout.notification_expanded).apply {
             setTextViewText(R.id.notif_title, title)
             setTextViewText(R.id.notif_headline, headline)
-            setImageViewBitmap(R.id.notif_chart, chart)
-            setContentDescription(R.id.notif_chart, description)
+            setImageViewBitmap(R.id.notif_chart_day, chart.light)
+            setImageViewBitmap(R.id.notif_chart_night, chart.dark)
+            setContentDescription(R.id.notif_chart_day, description)
+            setContentDescription(R.id.notif_chart_night, description)
             if (details.isEmpty()) {
                 setViewVisibility(R.id.notif_details, View.GONE)
             } else {
