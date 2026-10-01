@@ -57,6 +57,8 @@ jobs:
         run: |
           cp app/build/outputs/apk/release/app-release.apk "chiaro-${GITHUB_REF_NAME}.apk"
           cp app/build/outputs/mapping/release/mapping.txt "mapping-${GITHUB_REF_NAME}.txt"
+          # The checksum lets a reader verify the download (README, "Install").
+          sha256sum "chiaro-${GITHUB_REF_NAME}.apk" > "chiaro-${GITHUB_REF_NAME}.apk.sha256"
 
       # The body of the release is the CHANGELOG section for this tag, so the page
       # says what changed in the reader's terms instead of only listing commits;
@@ -85,6 +87,7 @@ jobs:
           body_path: release-notes.md
           files: |
             chiaro-${{ github.ref_name }}.apk
+            chiaro-${{ github.ref_name }}.apk.sha256
             mapping-${{ github.ref_name }}.txt
           generate_release_notes: true
           # A hyphen in the tag (v1.0.0-rc1) is a prerelease by SemVer definition.

@@ -14,131 +14,52 @@ sections are a normal size and live here alone.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-01
+
+**A clearer page, and an app that reads the forecast itself.** Each hour's icon and word now
+come from Chiaro's own reading of the forecast's numbers, every screen has been redrawn, and
+alerts, widgets and notifications do more with less noise.
+
+Android 13 (API 33) or newer. Installs over 1.0.0 and keeps your places, alerts and settings.
+Check the download with the `.sha256` file beside the APK, and the signing certificate against
+the fingerprint in the
+[README](https://github.com/fiorenzobrioni/chiaro#install).
+
+### New
+
+- **The forecast, read by Chiaro.** An hour's icon and word come from the rain, snow, chance,
+  temperature, visibility and clouds; the numbers on screen stay the model's.
+- **How much, not only how likely.** Today's rain and snow in millimetres, the cloud layer,
+  and each day's rain, gusts and UV when you open it.
+- **Your alerts' hours.** Any time, only in daylight, or one or two bands of your own.
+- **A «New alert» card** to start from scratch, a «Serious heat» idea, and new things to watch
+  (today's rain and snow, gusts, the European air index).
+- **Journal: how the forecast did**, on the days already over.
+- **Notifications with pictures**: the next hours of rain, the day's temperature, the warning
+  levels. Quiet from 22:00 to 7:00, except red warnings and sky reminders.
+- **«In words» shows the next hours** on a tall card, and every widget's settings show the
+  card itself at its real size.
+- **A new app icon**: the day in a ring.
+
 ### Changed
 
-- **Today: the daylight ribbon is drawn as light.** One continuous gradient with rounded ends
-  instead of hard-edged blocks, "now" as a disc, and the part of the day already spent drawn
-  quieter; in the week's rows the night recedes, so each day shows its band of light.
-- **Today: the page lies on the sky.** The content starts as a rounded sheet over the bottom
-  of the sky instead of a hard cut, and its top catches the sky's own color: warm at sunset,
-  blue at noon.
-- **Today: the rain chart follows the hour strip.** It marks the hours the strip has in view,
-  and a tap or a drag on it scrolls the strip to that hour. The first time it appears the line
-  draws itself in from left to right.
-- **Today: the sun and the moon are in the sky**, where they really are, the moon in its real
-  phase. The sky keeps a band of its own for them above the temperature.
-- **Today: the temperature reads first.** In whole degrees, like the feels-like: a forecast is
-  not precise to a tenth, and the tenth made it look as if it were. The sky's word is
-  bigger; "feels like" appears only when it differs by a degree or more.
-- **Today: the bar at the top stays sky** as the page scrolls, and carries the temperature once
-  the big one has scrolled away.
-- **Today: the next hours draw the temperature as a curve**, and midnight shows the new day's
-  name. Today's row in the week marks the temperature right now on its bar.
-- **Today: the rest of the day is one thread**, and its next moment says how soon.
-- **Today: every detail with a scale shows it in its own color**, with a disc on the value and
-  the bands marked; pressure and pollen get one too.
-- **Sky: tonight is drawn as the night.** The card is the night sky with tonight's moon in its
-  phase, and a strip from dusk to dawn shows the moon's hours, the clouds hour by hour, the
-  stars where it is clear and the dark window framed.
-- **Sky: the moments are grouped under Today and Tomorrow**, and the next one says how soon.
-- **Sky: the calendar ahead counts the days**, and "too far out to say" is said once instead of
-  on every row.
-- **Alerts: a day of alerts at a glance.** A strip of the 24 hours shows when the timed alerts
-  can arrive, painted with the sky of their hour.
-- **Alerts: lighter to read.** Every alert has its drawing, one sentence on what it sends and a
-  separate line on when and how often; the switches sit in rounded groups; "no warning" reads as
-  an answer; ideas to start from are cards you browse sideways.
-- **Journal: a diary with a face.** Entries sit on a thread with a coloured badge per kind (or the
-  sky's own drawing), the new value of each change stands out, day headings stay pinned, and the
-  week's drift card leads with its sentence and points at the day it names.
-- **Journal: how the forecast did.** From the days already closed: how far the highs were from
-  the real ones on average, and the rain the forecast gave on the days it rained against the rest.
-- **Settings: the appearance previews itself.** A slice of sky, a temperature, an icon and a verdict
-  drawn with the palette, typeface and icons you pick, above the choices that change them. Groups sit
-  on rounded cards, and the guide is a card of its own.
-- **Settings: a short, true privacy note.** No account, no ads, no tracking; Chiaro has no server of
-  its own, and Open-Meteo only gets the place you ask about, rounded to about a kilometre when it is
-  your position.
-- **«In parole»: the next hours on a tall card.** From three rows up the widget adds «Più tardi»:
-  every three hours, the time, the temperature, the rain when it is likely and the sky in a word.
-  It only uses space the card was leaving empty, and can be turned off.
-- **Widget settings show the widget.** «In parole» opens its settings on the card itself, at the
-  size it has on the home screen, with chips to see how it lays itself out at other sizes. The
-  settings are grouped like the app's own, and the backgrounds show their colour.
-- **Widgets: tall cards use their height.** On «Adesso» the temperature grows with the card from
-  three rows up; «Le prossime ore» keeps its sentence whole and adds the next days under the hours.
-- **Every widget's settings show the widget.** All five open on the real card at its size, with
-  chips for the other sizes and a line saying what each one carries, on the same grouped layout.
-- **A new app icon: the day in a ring.** A day of 24 hours coloured like the app's sky, with the
-  sun on it at mid-afternoon; the ring opens around the sun into a C. Themed icons get a drawing
-  of their own.
-- **Notifications with pictures, where they help.** Opened, a rain or storm alert shows the
-  next twelve hours of rain with the alert's window marked; the morning and evening summaries
-  show the day's temperature and rain; an official warning shows the levels by hazard and day.
-- **Notifications: clearer words.** The morning summary says when it will rain; a fired alert
-  of yours shows the value it read with its unit. The status bar icon is the new ring.
-- **Notifications arrive once, and quietly at night.** Rain or a storm is announced when it
-  starts, never again for the same spell and never while it is already falling; an official
-  warning is not repeated when the next bulletin says the same thing; from 22:00 to 7:00
-  notifications arrive without a sound, except red warnings and sky reminders.
-- **A storm the forecast barely believes is no longer «Bad weather».** A thunderstorm or
-  downpour code with less than a 20% chance of rain no longer raises the alert, the banner on
-  Today or the widgets' sentence: measured over 31 places and two months, those storms brought
-  real rain one time in three and heavy rain almost never. Ice and snow are not affected.
-- **Alerts: a «Serious heat» idea**, and «Twelve dry hours» in place of «A night without rain»,
-  which could fire in the morning.
-- **Condition words that promise only what the forecast says.** «Temporale forte» (strong
-  thunderstorm) instead of «con grandine», with the plain thunderstorm drawing: outside Central
-  Europe the forecast never predicts hail. «Rovesci forti» instead of «violenti», and «Nuvoloso»
-  for a sky 50 to 80% covered, where «Poco nuvoloso» said less than it was.
-- **The Journal says when the sky changed.** A day that went from clear to stormy shows the two
-  words, and is judged worse even when the chance of rain did not move.
-- **How much, not only how likely.** Today's details show the day's rain in millimetres and
-  over how many hours, the snow when there is some, and the clouds with the layer that makes
-  them («mostly high and thin»: a veiled sun, not a grey day). Opening a day in the week
-  shows its rain, snow, strongest gust and highest UV.
-- **The hours mean the hour that starts.** «15 · 60%» is now the chance from 15 to 16; it was
-  the hour that had just ended, an hour late for every «rain around 3».
-- **When the data is old, the top of Today shows the forecast for now**, and says so
-  («Estimated from the forecast»), instead of a reading hours out of date. The widgets too.
-- **Strong wind later today is in the day's sentence**, with its hour.
-- **Air quality on the European scale in Europe**, and **pollen on each species' own scale**
-  with a fifth level, «very high» (MeteoSwiss thresholds).
-- **The Sky's verdicts say which cloud it is** («cloud 60%, high»).
-- **New things your alerts can watch**: today's rain in mm, today's snow, today's strongest
-  gust, the gusts in the next 6 or 12 hours, the European air index.
-- **One more try when the forecast service stumbles.** A server error is retried once, two
-  seconds later, before the app says the service is unavailable.
-- **Your alerts' messages write values properly.** A value in braces, like `{current.temp_c}`,
-  now arrives with its unit and your decimal mark («21,4°»), and a time follows your phone's
-  clock. A unit you already wrote after it is not repeated.
+- **Today, redrawn.** The ribbon as light, the sun and moon in the sky, the next hours as a
+  curve, the temperature in whole degrees, the forecast for now when the data is old.
+- **Sky, redrawn.** Tonight as a night sky, the moments grouped by day with a countdown.
+- **Alerts and Journal, lighter to read**, and Settings with a live preview of the appearance.
+- **The hours mean the hour that starts.** «15 · 60%» is the chance from 15 to 16.
+- **Air quality on the European scale in Europe**, and pollen on each species' own scale.
+- **Fewer false alarms.** A storm with under 20% chance no longer raises «Bad weather»; rain
+  is announced once per spell.
+- **Back follows your finger**, with a preview of the page behind it.
 
 ### Fixed
 
-- **The «In words» widget no longer drops its temperature on days with a warning.** On a wide
-  two-row card a short sentence was budgeted as two lines, so a warning cost an hour of
-  «Later» and pushed the number a row down. The number and the day's high and low now also
-  stand on one baseline.
-- **An overcast sun no longer looks like the moon.** Under a covered sky the sun on Today is a
-  bright, soft patch without an edge, as it looks behind clouds, instead of a pale grey disc.
-- **The day's word in the week follows the day, not the highest code.** A snowy day with one
-  shower reads as snow, heavy rain is no longer outranked by a light shower, and a storm the
-  forecast barely believes (under 20%) no longer names the whole day, as it already no longer
-  raised the alert.
-- **«How the forecast did» no longer calls a day dry on too little evidence.** The rain it read
-  covered a quarter of an hour, not the hour behind each update; it now reads the closed hours
-  themselves. Days judged before this update may lose a «stayed dry» they could not support.
-- **A forecast model without a UV index no longer empties the app.** The UV tile is simply not
-  drawn.
-- **A rule on the current chance of rain reads the hour under way**, not the one just gone.
-- **A rule about today no longer fires twice a day**, once of them just after midnight.
-- **Widget «In parole», one-row card: the "updated N hours ago" line is no longer cut off.**
-  The form's budget spends the card's whole height — the number takes everything the place's
-  line and the stale marker leave — so on a phone whose system font boxes taller than the
-  layout's estimate the last line was measured short and sliced at its baseline. The budget is
-  unchanged, so every size and position on the card is the one it was; the card now lends its
-  6 dp top and bottom inset back as headroom, which a one-row card can do for free because it
-  centres what it holds.
+- «In words» no longer drops its temperature on days with a warning, or cuts its last line.
+- An overcast sun no longer looks like the moon.
+- The week's word follows the day, not its single worst hour.
+- A forecast without UV no longer empties the app.
+- A rule about today no longer fires twice a day.
 
 ## [1.0.0] - 2026-09-21
 

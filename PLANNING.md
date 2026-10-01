@@ -11582,3 +11582,32 @@ forma con meno da vedere. Il committente ha detto sì.
   `android.appInfo`, altrimenti il builder recuperato usa un contesto nuovo con la
   configurazione del telefono e colora l'intestazione della card scura per il giorno.
 - Le altre undici immagini, rigenerate nello stesso giro, sono uscite identiche byte per byte.
+
+## Il README della famiglia (committente, 1 ott 2026)
+
+Prima della 1.1.0 i README di Chiaro, Passo e Saldo sono stati riscritti su una struttura
+comune: intestazione con gli stessi badge e il link al download, cos'è l'app, le schermate in
+una tabella a tre colonne con didascalie di una riga, le funzioni in punti di una riga, i
+principi, l'installazione (checksum, impronta del certificato, aggiornamenti), la roadmap, la
+build, lo stack, la struttura, la documentazione, la famiglia, la licenza. Il committente ha
+chiesto punti brevi: le descrizioni lunghe scoraggiavano la lettura, e il dettaglio vive già in
+`VISION.md`, `DESIGN.md` e nella guida dell'app. Sono usciti il riquadro delle tre schermate
+nell'intestazione, la sezione «Design» (rimanda a `DESIGN.md`) e i conteggi dei test, che
+invecchiavano a ogni commit. La «Roadmap» non racconta più la 1.0.0 come imminente.
+
+`release.yml` pubblica ora anche `chiaro-vX.Y.Z.apk.sha256`, come Passo, e il README stampa
+l'impronta SHA-256 del certificato di firma, letta dall'APK della 1.0.0
+(`apksigner verify --print-certs`).
+
+## La 1.1.0 (committente, 1 ott 2026)
+
+Il numero è **1.1.0**, non la 1.5.0 proposta all'inizio: dalla 1.0.0 ci sono funzioni nuove e
+nessuna rottura di compatibilità, cioè un salto di minor per SemVer, ed è il numero che il
+CHANGELOG annunciava. `versionName` passa a `1.1.0` e `versionCode` a **2**: la 1.0.0 ha
+pubblicato l'1, e un aggiornamento in place deve salire. Il database è alla versione 5 come
+nella 1.0.0 (nessuna migrazione nuova), quindi la 1.1.0 si installa sopra la 1.0.0 senza
+perdere luoghi, avvisi e impostazioni.
+
+La sezione `## [1.1.0]` del CHANGELOG è scritta corta, come il committente ha chiesto per i
+README: le voci lunghe dell'`[Unreleased]` sono riassunte in punti di una riga. Il dettaglio di
+ogni modifica resta in questo documento e nei commit.
