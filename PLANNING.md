@@ -11598,3 +11598,16 @@ invecchiavano a ogni commit. La «Roadmap» non racconta più la 1.0.0 come immi
 `release.yml` pubblica ora anche `chiaro-vX.Y.Z.apk.sha256`, come Passo, e il README stampa
 l'impronta SHA-256 del certificato di firma, letta dall'APK della 1.0.0
 (`apksigner verify --print-certs`).
+
+## La 1.1.0 (committente, 1 ott 2026)
+
+Il numero è **1.1.0**, non la 1.5.0 proposta all'inizio: dalla 1.0.0 ci sono funzioni nuove e
+nessuna rottura di compatibilità, cioè un salto di minor per SemVer, ed è il numero che il
+CHANGELOG annunciava. `versionName` passa a `1.1.0` e `versionCode` a **2**: la 1.0.0 ha
+pubblicato l'1, e un aggiornamento in place deve salire. Il database è alla versione 5 come
+nella 1.0.0 (nessuna migrazione nuova), quindi la 1.1.0 si installa sopra la 1.0.0 senza
+perdere luoghi, avvisi e impostazioni.
+
+La sezione `## [1.1.0]` del CHANGELOG è scritta corta, come il committente ha chiesto per i
+README: le voci lunghe dell'`[Unreleased]` sono riassunte in punti di una riga. Il dettaglio di
+ogni modifica resta in questo documento e nei commit.
