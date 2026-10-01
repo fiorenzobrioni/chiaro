@@ -11582,3 +11582,19 @@ forma con meno da vedere. Il committente ha detto sì.
   `android.appInfo`, altrimenti il builder recuperato usa un contesto nuovo con la
   configurazione del telefono e colora l'intestazione della card scura per il giorno.
 - Le altre undici immagini, rigenerate nello stesso giro, sono uscite identiche byte per byte.
+
+## Il README della famiglia (committente, 1 ott 2026)
+
+Prima della 1.1.0 i README di Chiaro, Passo e Saldo sono stati riscritti su una struttura
+comune: intestazione con gli stessi badge e il link al download, cos'è l'app, le schermate in
+una tabella a tre colonne con didascalie di una riga, le funzioni in punti di una riga, i
+principi, l'installazione (checksum, impronta del certificato, aggiornamenti), la roadmap, la
+build, lo stack, la struttura, la documentazione, la famiglia, la licenza. Il committente ha
+chiesto punti brevi: le descrizioni lunghe scoraggiavano la lettura, e il dettaglio vive già in
+`VISION.md`, `DESIGN.md` e nella guida dell'app. Sono usciti il riquadro delle tre schermate
+nell'intestazione, la sezione «Design» (rimanda a `DESIGN.md`) e i conteggi dei test, che
+invecchiavano a ogni commit. La «Roadmap» non racconta più la 1.0.0 come imminente.
+
+`release.yml` pubblica ora anche `chiaro-vX.Y.Z.apk.sha256`, come Passo, e il README stampa
+l'impronta SHA-256 del certificato di firma, letta dall'APK della 1.0.0
+(`apksigner verify --print-certs`).
