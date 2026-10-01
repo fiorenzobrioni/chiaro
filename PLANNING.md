@@ -11611,3 +11611,15 @@ perdere luoghi, avvisi e impostazioni.
 La sezione `## [1.1.0]` del CHANGELOG è scritta corta, come il committente ha chiesto per i
 README: le voci lunghe dell'`[Unreleased]` sono riassunte in punti di una riga. Il dettaglio di
 ogni modifica resta in questo documento e nei commit.
+
+## Dopo la 1.1.0: la pagina della release e «Measure states» (committente, 1 ott 2026)
+
+- **La pagina della release è solo la sezione del CHANGELOG.** `release.yml` non aggiunge più
+  l'elenco delle pull request generato da GitHub, come già Saldo: le tre app hanno pagine uguali.
+  Un tag senza la sua sezione ora fa fallire la release invece di pubblicare una pagina vuota.
+- **«Measure states» non parte più sui tag.** Su un push di tag GitHub ignora il filtro
+  `paths`, quindi il tag `v1.1.0` ha avviato la misurazione, che ha scaricato i dati e poi non
+  ha potuto spingere il commit sul tag (`! [rejected] HEAD -> v1.1.0 (already exists)`). Il
+  trigger `push` è limitato ai branch, e il passo del commit gira solo su un branch, così anche
+  un avvio a mano su un tag misura senza fallire. Il tag e la release non sono stati toccati.
+

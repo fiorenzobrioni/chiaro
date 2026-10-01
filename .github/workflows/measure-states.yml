@@ -8,6 +8,10 @@ name: Measure states
 
 on:
   push:
+    # Branches only: a tag push ignores the paths filter and would run the measurement on
+    # the tag, whose commit cannot be pushed back (v1.1.0, 1 Oct 2026).
+    branches:
+      - "**"
     paths:
       - tools/measure_states.py
       - .github/workflows/measure-states.yml
@@ -31,7 +35,9 @@ jobs:
       - name: Download the forecasts
         run: python3 tools/measure_states.py
 
+      # A run started by hand on a tag still measures, but has no branch to commit to.
       - name: Commit the measurement to this branch
+        if: github.ref_type == 'branch'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
