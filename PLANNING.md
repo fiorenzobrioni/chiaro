@@ -11623,3 +11623,13 @@ ogni modifica resta in questo documento e nei commit.
   trigger `push` è limitato ai branch, e il passo del commit gira solo su un branch, così anche
   un avvio a mano su un tag misura senza fallire. Il tag e la release non sono stati toccati.
 
+
+## La famiglia fuori dal codice (committente, 10 ott 2026)
+
+Tempo 1.0.0 è uscito, quarta app della famiglia: il README lo nomina in «The family». Le app
+sorelle (Passo, Saldo, Tempo) si nominano **solo lì e nella documentazione di progetto**, mai
+in una stringa dell'app né nel codice: i commenti che dicevano «come Passo», «i valori di
+Saldo» o «perché la famiglia si legga come una» sono riscritti con la loro ragione e basta
+(il workflow di release, il build, la shell, le anteprime del selettore e il loro test, il
+catalogo delle versioni). Le guide nell'app già non le citavano. tweather resta nominato dove
+il codice ne viene: è l'origine del core (`UPSTREAM.md`), non un'app della famiglia.

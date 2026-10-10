@@ -7,7 +7,7 @@
   grey card. The picker never runs `provideGlance` — there is no place, no report and no
   composition on that screen — so the preview is a static layout with sample values and
   the DEFAULT dress baked in: the blue card a fresh widget wears since 21 set 2026
-  (`widget_preview_card`, the same card Passo's previews draw), white ink, the vivid
+  (`widget_preview_card`), white ink, the vivid
   line icons a fresh install draws with. It is the same card, one moment of it.
 
   The moment drawn is the wide one-row form (the default placement is four cells by one

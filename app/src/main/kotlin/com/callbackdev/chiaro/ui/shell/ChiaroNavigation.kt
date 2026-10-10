@@ -65,8 +65,8 @@ val ShellTab.root: NavKey
     }
 
 /**
- * One back stack per tab — Navigation 3's "multiple back stacks" recipe, the same shape
- * as Saldo's `SaldoNavigationState`. A tab keeps its stack, and through the per-stack
+ * One back stack per tab — Navigation 3's "multiple back stacks" recipe. A tab keeps its
+ * stack, and through the per-stack
  * decorator its saved state (the scroll of Today, an open page of the sky guide), while
  * another tab is on screen.
  *

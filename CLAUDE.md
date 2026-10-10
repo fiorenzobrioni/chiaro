@@ -154,6 +154,14 @@ the thoughts are separate, parentheses for an aside. Same house style as tweathe
 and thabit, deliberately scoped to that one file: every other file keeps normal
 punctuation.
 
+## The family
+
+Chiaro belongs to a family of four apps by callbackdev, with Passo, Saldo and Tempo. The
+sister apps are named **only** in the root `README.md` («The family») and in the project's
+documents (VISION, PLANNING, DESIGN): never in a string the app shows, its guide included,
+and never in the code, comments and tests included (committente, 10 ott 2026). A comment
+says why a value is what it is, not which sister has it too.
+
 ## Domain notes
 
 - **Provider**: Open-Meteo (forecast, air quality, geocoding), no API key. Astronomy is

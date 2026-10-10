@@ -62,7 +62,7 @@ jobs:
 
       # The body of the release is the CHANGELOG section for this tag and nothing
       # else, so the page says what changed in the reader's terms (no generated list
-      # of pull requests, as in Passo and Saldo). Matched as a literal prefix, not a
+      # of pull requests). Matched as a literal prefix, not a
       # regex, or the dots in the version would match anything. A missing section
       # fails the release: without generated notes it would publish an empty page.
       - name: Take the release body from CHANGELOG.md

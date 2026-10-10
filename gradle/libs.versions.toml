@@ -12,7 +12,7 @@ lifecycle = "2.10.0"
 # Navigation 3 (22 set 2026): the shell's back stacks, one per tab, and the predictive
 # back that follows the finger. It pins the three lines above it: navigation3-ui 1.1.4
 # asks for activity 1.12, lifecycle 2.10 and Compose 1.10, so they are declared at what
-# resolves instead of being silently upgraded under an older number. Same set as Saldo.
+# resolves instead of being silently upgraded under an older number.
 navigation3 = "1.1.4"
 # material3 1.4 (the BOM above) stopped bringing the icon set in with it. 1.7.8 is what
 # resolved before, and the last release of the set: declared, not upgraded.

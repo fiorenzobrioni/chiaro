@@ -148,7 +148,7 @@ internal val BottomBarHeight = 80.dp
  * from Settings or from the one-time card on Today, the sky events guide from Sky or
  * from the guide — and the bottom bar over all of it.
  *
- * The bar is drawn OVER the display rather than beside it, as in Saldo: a bar in the
+ * The bar is drawn OVER the display rather than beside it: a bar in the
  * layout would reshape the area every page is laid out in each time it came or went, and
  * a page would jump at the end of its own transition. Over it, every page is laid out at
  * its final size from the first frame — the tab pages leave the bar's height free at the
@@ -263,8 +263,7 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
 }
 
 /*
- * The page transitions are Saldo's, value for value (the committente's request, 22 set
- * 2026): 300 ms, the incoming page sliding a sixth of the width and fading in, the
+ * The page transitions (the committente's request, 22 set 2026): 300 ms, the incoming page sliding a sixth of the width and fading in, the
  * outgoing one sliding a sixth the other way and fading out. A tween and not one of
  * DESIGN §7's springs, because a predictive back SEEKS this transition with the finger,
  * and a seek needs a curve with a known length to put the finger's progress on.

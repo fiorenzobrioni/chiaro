@@ -6,7 +6,7 @@
   the generic loading layout, which is why every one of ours names a static one. The picker
   never runs `provideGlance` — there is no place, no report and no composition on that
   screen — so this is sample values with the DEFAULT dress baked in: the blue card
-  (`widget_preview_card`, the one Passo's previews draw too), white ink. It is the same
+  (`widget_preview_card`), white ink. It is the same
   card, one moment of it.
 
   The moment drawn is the wide one-row form, which is the default 4×1 placement: the place

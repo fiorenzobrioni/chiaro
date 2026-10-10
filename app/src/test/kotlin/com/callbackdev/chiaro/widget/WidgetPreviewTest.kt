@@ -69,8 +69,7 @@ class WidgetPreviewTest {
 
     /**
      * The picker shows the card a fresh widget wears (25 set 2026): the blue card since
-     * 21 set, and the same card Passo's previews draw, so the family reads as one in the
-     * launcher's picker. The hex is baked into `colors.xml` because a static layout cannot
+     * 21 set. The hex is baked into `colors.xml` because a static layout cannot
      * call Kotlin, so this is where the two are kept in step: a default re-picked in
      * [WidgetLook] or a colour re-measured in `WidgetCardPalette` fails here, not on
      * somebody's picker. And no preview goes back to a ground of its own.
