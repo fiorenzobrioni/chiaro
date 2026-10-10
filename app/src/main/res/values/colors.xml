@@ -18,8 +18,8 @@
          and baked HERE rather than sprayed across five layouts.
 
          The card is the default one (25 set 2026, the picker caught up with the 21 set
-         default): `widgetCardContainer(WidgetCardColor.BLUE)`, flat, the value Passo's
-         previews bake too, so the family's widgets look like one family in the picker.
+         default): `widgetCardContainer(WidgetCardColor.BLUE)`, flat, so the picker shows the
+         widget as it will be placed.
          `WidgetPreviewTest` checks it against the Kotlin table. The inks are §3.6's white
          pair, which a card colour writes with (`WidgetInk.OVER_SKY`). The rain figures
          are VividDarkColors.rainInkRamp sampled at the stops themselves (0/25/50/75%), so
