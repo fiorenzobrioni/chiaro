@@ -223,7 +223,12 @@ dark   #768996  #759BB3  #71ADD0  #6FBFEB  #76D1FF     5.1 6.3 7.6 9.1 10.9 : 1
 
 Two rules come with it. **Zero is the quiet end of this ramp, not another color**: a
 probability of nothing is still a probability, and the figure with the least to say must
-not be the loudest one in the column. And **the fill ramp never paints a figure** — where
+not be the loudest one in the column. **Since the review of 12 ott 2026 Today prints a chance only from
+20%**, the state engine's own floor for a wet hour (`PROBABLE_PCT`): a strip of six «0%» and a
+week of five was the loudest repetition on the page, and a figure under the floor has nothing
+to plan by. The cell and the row keep their width (empty, never a dash), the ramp still colors
+what is printed, the spoken description still says every figure, zero included, and the rain
+chart is drawn only when the strip reaches the same 20%. And **the fill ramp never paints a figure** — where
 a number is printed it is `rainInkAt`, where a mark is drawn it is `rainAt`.
 
 **Temperature** — a diverging quantity, because it has a meaningful middle. Two hues and a
@@ -1209,7 +1214,9 @@ the same slope on any day); only a range that will not fit 24dp at that rate is 
 to fit, and the printed figures still say the truth. The line is `outlineVariant`, the dot
 the temperature ramp's color ringed in `outline`. The cell is **144dp** tall now (the 20dp
 figure became a 52dp band: figure, 2 of gap, 24 of travel, the 8dp dot), and the skeleton
-quotes that.
+quotes that. A strip where no hour reaches the 20% Today prints a chance from (§2.3, 12 ott
+2026) has **no rain row** and is 122dp: a row kept for figures never there was a hole between
+the strip and the next section.
 
 **Midnight has a name**: the first hour of a new day prints the day's short name in
 `primary` in place of «00», so «22 23 Gio 01» no longer reads as one evening. The cell still
@@ -1250,7 +1257,7 @@ prose — «tra 18 min», «tra 1 h 20 min» — in `primary`, because the clock
 check against a watch and the countdown is what you plan with. Sun events, weather turns and the reader's own alerts use
 the same row; only the leading glyph differs.
 
-**8.5 DayRow** — weekday, icon, rain probability on the ink ramp (§2.3, zero included),
+**8.5 DayRow** — weekday, icon, rain probability on the ink ramp (§2.3; printed from 20%),
 the **temperature range bar** and the ribbon, with the day's forecast sky and, in a week with
 rain, the wet lane under it (§4, 12 ott 2026). The bar is one horizontal track per day, all seven **sharing one scale across the
 week** so the week has a shape, filled with the diverging temperature ramp (§2.3) and
@@ -1949,6 +1956,13 @@ a valid animator and only a person can say the rain falls downward.
    3% is under the family's own 0.88 extent cap. `ComposedIcons.kt` is a separate file from
    `MeteoconsSets.kt` for the reason that makes the whole thing safe: the importer rewrites
    that one on every run and never touches this one.
+
+   **Overcast (WMO 3) draws `cloudy`, one cloud** (review of 12 ott 2026). Meteocons'
+   `overcast` puts a second, darker cloud over the first's shoulder, and at the strip's and
+   the week's sizes that sliver read as a crescent: «partly cloudy at night» at 13:00, beside
+   the real night glyph at 04:00. The rain, drizzle, sleet and snow drawings keep their
+   double cloud, where the drops say what they are. `overcast` stays on the shipped list
+   only because its animated twins are generated with it; nothing names it on a screen.
 
    **The repo carries the whole family; the APK carries the list.** All 519 drawings are
    converted into `res/drawable`; only the ones a screen actually names appear in the

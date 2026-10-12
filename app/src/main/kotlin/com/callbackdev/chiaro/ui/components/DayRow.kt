@@ -57,7 +57,8 @@ fun DayRow(
      * probability** (§1.1) — the column then prints nothing and keeps its width, the
      * way the hour cell already does. A dash would read as a value. */
     rainPct: Int?,
-    /** The same quantity printed, which the locale owns (§11); null with [rainPct]. */
+    /** The same quantity printed, which the locale owns (§11); null with [rainPct], and
+     * null under the floor the caller prints from (20%, 12 ott 2026). */
     rainLabel: String?,
     lowC: Double,
     highC: Double,

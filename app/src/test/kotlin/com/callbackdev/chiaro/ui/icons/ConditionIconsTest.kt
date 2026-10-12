@@ -24,7 +24,8 @@ class ConditionIconsTest {
         0 to R.drawable.mc3_clear_day,
         1 to R.drawable.mc3_sun_one_cloud_day,
         2 to R.drawable.mc3_partly_cloudy_day,
-        3 to R.drawable.mc3_overcast,
+        // Una nuvola sola dal 12 ott 2026: la seconda di `overcast` si leggeva come una luna.
+        3 to R.drawable.mc3_cloudy,
         45 to R.drawable.mc3_fog_day,
         48 to R.drawable.mc3_fog_day,
         51 to R.drawable.mc3_overcast_drizzle,

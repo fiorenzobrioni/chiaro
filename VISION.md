@@ -286,7 +286,7 @@ The spine of the product, one vertical scroll, in this order:
 2. **A freshness chip** when, and only when, it matters: "Updated 3 hours ago" in amber, tappable to
    retry. Pull to refresh; no FAB on this screen, because the app refreshes itself.
 3. **Next hours**: a horizontal strip, 24 hours from the next full hour, each with icon, temperature
-   and rain probability, plus a rain-probability chart underneath — a 0–100% scale, the hours named
+   and rain probability (printed from 20%, since 12 ott 2026), plus a rain-probability chart underneath — a 0–100% scale, the hours named
    under it, a dot per hour — so a wet stretch is a shape rather than twelve numbers, and the shape
    has somewhere to stand.
 4. **The rest of the day**: the merged timeline, and the second differentiator on this screen. Sun

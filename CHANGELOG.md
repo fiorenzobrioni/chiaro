@@ -25,6 +25,9 @@ sections are a normal size and live here alone.
   forecast's own numbers. It sits right under the sky's word, before the ribbon.
 - **Sunrise and sunset on the ribbon**, printed under the points where they fall, and the
   week's ribbons a little thicker so the sky in them reads at a glance.
+- **Less «0%».** The chance of rain is printed from 20%, where the app starts calling an hour
+  wet; under it the column stays empty, and a dry strip of hours has no rain row at all.
+- **Overcast is one cloud.** The two-cloud drawing read as a moon at small sizes.
 
 ## [1.1.0] - 2026-10-01
 

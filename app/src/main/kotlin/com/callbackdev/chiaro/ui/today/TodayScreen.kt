@@ -1454,10 +1454,12 @@ private fun NextHours(
         // a flat line along the bottom of a 28dp box, which read on the screen as a
         // stray divider with a hole above it — and said nothing the row of "0%" right
         // over it had not already said. §1.1: a section with no data is not drawn, and
-        // a chart of nothing but zeros is one.
+        // a chart of nothing but zeros is one. Since 12 ott 2026 "dry" is the strip's own
+        // floor: a run that never reaches [ChanceFloorPct] prints no figure, and a chart
+        // of 8% bumps under a row of empty cells would be a shape with nothing to plan by.
         val peak = content.strip.maxByOrNull { it.hour.precipChancePct ?: -1 }
         val peakPct = peak?.hour?.precipChancePct
-        if (peakPct != null && peakPct > 0) {
+        if (peakPct != null && peakPct >= ChanceFloorPct) {
             val caption = stringResource(chanceCaption(content.strip.map { it.hour.condition.wmoCode }))
             RainChart(
                 hours = content.strip.map {
@@ -1505,6 +1507,22 @@ private fun chanceCaption(codes: List<Int>): Int {
     }
 }
 
+/**
+ * A chance is printed from [ChanceFloorPct] up (review of 12 ott 2026). Under it the
+ * figure has nothing to plan by — a row of six «0%» under the strip and five in the week
+ * was the loudest repetition on the page, saying the one thing every other mark already
+ * said. The floor is the state engine's own for a wet hour: below it the app never calls
+ * an hour wet, so it has no business printing the figure as if it mattered. The cell and
+ * the row keep their width (an empty column, never a dash), and the spoken description
+ * still says the figure, zero included: TalkBack reads one cell at a time and has no
+ * column of repetitions to be spared.
+ */
+private fun chanceLabel(pct: Int?, locale: Locale): String? =
+    pct?.takeIf { it >= ChanceFloorPct }?.let { Formats.percent(it, locale) }
+
+/** The floor of [chanceLabel] and of the rain chart: the state engine's «probable». */
+private const val ChanceFloorPct = com.callbackdev.chiaro.domain.WeatherStateEngine.PROBABLE_PCT
+
 /** The page's side margin, as the strip's `contentPadding` and the chart's padding. */
 private val PagePadding = PaddingValues(horizontal = 16.dp)
 
@@ -1546,7 +1564,7 @@ private fun StripHour.toCell(
         condition = ConditionGlyph(hour.condition.wmoCode, night),
         temperature = temp,
         rainPct = hour.precipChancePct,
-        rainLabel = hour.precipChancePct?.let { Formats.percent(it, locale) },
+        rainLabel = chanceLabel(hour.precipChancePct, locale),
         // Two forms, like the week row below (§1.1). The single form read "rain 0%"
         // through a `?: 0` for an hour the provider forecast no chance for — the cell
         // printed nothing and the announcement invented a forecast, which is the one
@@ -1696,7 +1714,7 @@ private fun WeekRow(
             dayLabel = label,
             condition = ConditionGlyph(f.condition.wmoCode, night = false),
             rainPct = f.precipPct,
-            rainLabel = f.precipPct?.let { Formats.percent(it, locale) },
+            rainLabel = chanceLabel(f.precipPct, locale),
             lowC = f.lowC,
             highC = f.highC,
             lowLabel = low,

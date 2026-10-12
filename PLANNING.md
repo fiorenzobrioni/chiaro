@@ -11754,3 +11754,48 @@ veniva dopo il nastro; il punto 2 era il nastro sul cielo che non si leggeva sen
 - Screenshot `today-now` e `today-week` rigenerati e guardati: «Dry for the next 7 days, high of
   23° around 16:00» sotto «Overcast», 07:13 e 19:15 sotto il nastro, la settimana a 6dp.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## Oggi: meno «0%» e la nuvola che sembrava una luna (committente, 12 ott 2026)
+
+Punti 3 e 4 della revisione di Oggi. Il 3: sei «0%» sotto la striscia e cinque nella settimana
+erano la ripetizione più rumorosa della pagina. Il 4: l'icona di «coperto» (`overcast` di
+Meteocons, una nuvola con una seconda più scura dietro la spalla) alle 13 e alle 14 si leggeva
+come «poco nuvoloso di notte», accanto alla vera icona notturna delle 04.
+
+Prima, la domanda del committente sui widget: frasi tranquille «brevi» solo per loro? Valutata
+e **non fatta** per ora, su parere dato al committente (che resta libero di chiederla): il widget di oggi stampa già ↑ e ↓, quindi
+la metà «caldo» sarebbe un doppione; l'asciutto cambia di rado e diventerebbe tappezzeria; e la
+parola del cielo («Coperto») è l'unico gemello testuale dell'icona, quella che il punto 4 aveva
+trovato ambigua. I widget stampano già il registro breve di tutta la scala (allerte, temporale,
+ombrello, fine della pioggia, gelo, nebbia, vento, pioggia possibile, ombrello di domani).
+
+### Cosa è cambiato
+
+- **La probabilità si stampa dal 20%** (`WeatherStateEngine.PROBABLE_PCT`, la soglia sotto cui
+  l'app non chiama mai bagnata un'ora): nella striscia, nella striscia del giorno aperto e nella
+  settimana. Sotto, la cella resta vuota e larga uguale; la descrizione parlata dice ancora la
+  cifra, zero compreso. Il grafico della pioggia si disegna solo se la striscia arriva al 20%.
+- **Una striscia senza nessuna cifra non ha la riga della pioggia**: la riga vuota era un buco
+  di 22dp fra la striscia e la sezione dopo (visto nello screenshot rigenerato). La cella passa
+  da 144 a 122dp in quel caso; lo scheletro resta sulla misura alta.
+- **WMO 3 disegna `cloudy`**, una nuvola sola. Pioviggine, pioggia, nevischio e neve tengono la
+  loro nuvola doppia, dove le gocce dicono cosa sono. `overcast` resta nella lista spedita perché
+  i suoi gemelli animati sono generati con lei; nessuna schermata la nomina più. Non si è
+  toccato nulla di generato: è la tabella `conditionLineRes`, che è codice dell'app.
+- DESIGN §2.3, §8.3, §8.5, §13; VISION §5.2; CHANGELOG. Rigenerati e guardati `today-now`,
+  `today-week`, `today-details`, `widgets` e `widget-day-arc` (questi tre per la nuvola).
+
+### Decisioni e deviazioni
+
+- **20% e non 10%**: la soglia è già dell'app, non una nuova; 10% sarebbe stata una terza
+  opinione sullo stesso cielo.
+- **«Zero compreso» (DESIGN §2.3, 6 set 2026) è superato solo nella stampa**: la rampa
+  d'inchiostro resta quella, e colora quello che si stampa.
+
+### Come è stato verificato
+
+- `ConditionIconsTest`: il codice 3 prende `mc3_cloudy`; `MeteoconsSetsTest` e
+  `AnimatedIconTest` verdi (le varianti di `cloudy` c'erano già).
+- Screenshot rigenerati: la striscia senza «0%» e senza buco, la settimana con la colonna vuota,
+  la nuvola sola nell'app e nei widget.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
