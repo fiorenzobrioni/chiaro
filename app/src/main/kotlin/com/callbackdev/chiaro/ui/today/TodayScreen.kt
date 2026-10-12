@@ -1579,6 +1579,7 @@ private fun StripHour.toCell(
 @Composable
 private fun RestOfDay(content: TodayUiState.Content, timeFmt: DateTimeFormatter) {
     val gap = 12.dp
+    val counted = countdownIndex(content.timeline)
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(gap)
@@ -1587,8 +1588,8 @@ private fun RestOfDay(content: TodayUiState.Content, timeFmt: DateTimeFormatter)
             com.callbackdev.chiaro.ui.components.TimelineRow(
                 time = item.at.format(timeFmt),
                 icon = timelineIcon(item.kind),
-                text = timelineText(item),
-                soon = if (index == 0) soonText(content.now, item.at) else null,
+                text = timelineText(item, timeFmt),
+                soon = if (index == counted) soonText(content.now, item.at) else null,
                 connectAbove = index > 0,
                 connectBelow = index < content.timeline.lastIndex,
                 reach = gap / 2
@@ -1596,6 +1597,18 @@ private fun RestOfDay(content: TodayUiState.Content, timeFmt: DateTimeFormatter)
         }
     }
 }
+
+/**
+ * Which row says how soon (review of 12 ott 2026): the first one that is not the moon's.
+ * It was always the first row, and on the README's Milan that was a moonrise six hours
+ * out, one minute before the golden hour — the countdown, the one figure on the agenda in
+ * the accent, spent on the event a reader plans least by. The sun's moments, the rain's
+ * turns and the rainbow are what an afternoon is arranged around; a day whose agenda is
+ * only the moon counts down to the moon.
+ */
+internal fun countdownIndex(timeline: List<TimelineItem>): Int =
+    timeline.indexOfFirst { it.kind != TimelineKind.MOONRISE && it.kind != TimelineKind.MOONSET }
+        .takeIf { it >= 0 } ?: 0
 
 /** «tra 18 min», «tra 2 h», «tra 1 h 20 min» — or nothing for a moment already here. */
 @Composable
@@ -1625,12 +1638,17 @@ private fun timelineIcon(kind: TimelineKind) = when (kind) {
 }
 
 @Composable
-private fun timelineText(item: TimelineItem): String = when (item.kind) {
+private fun timelineText(item: TimelineItem, timeFmt: DateTimeFormatter): String = when (item.kind) {
     TimelineKind.SUNRISE -> stringResource(R.string.tl_sunrise)
     TimelineKind.GOLDEN_MORNING_END -> stringResource(R.string.tl_golden_morning_end)
-    TimelineKind.GOLDEN_EVENING -> stringResource(R.string.tl_golden_evening)
+    // A span says where it ends (12 ott 2026); without its end it is the moment it was.
+    TimelineKind.GOLDEN_EVENING -> item.until
+        ?.let { stringResource(R.string.tl_golden_evening_until, it.format(timeFmt)) }
+        ?: stringResource(R.string.tl_golden_evening)
     TimelineKind.SUNSET -> stringResource(R.string.tl_sunset)
-    TimelineKind.BLUE_EVENING -> stringResource(R.string.tl_blue_evening)
+    TimelineKind.BLUE_EVENING -> item.until
+        ?.let { stringResource(R.string.tl_blue_evening_until, it.format(timeFmt)) }
+        ?: stringResource(R.string.tl_blue_evening)
     TimelineKind.DARK -> stringResource(R.string.tl_dark)
     TimelineKind.MOONRISE -> stringResource(R.string.tl_moonrise)
     TimelineKind.MOONSET -> stringResource(R.string.tl_moonset)
@@ -1755,12 +1773,28 @@ private fun WeekRow(
                 HourStrip(
                     hours = day.hours.map { it.toCell(units, is24h, locale, markDayStart = false) },
                     modifier = Modifier.padding(top = 4.dp),
-                    contentPadding = PagePadding
+                    contentPadding = PagePadding,
+                    // Opened on the morning, not on midnight (review of 12 ott 2026): the
+                    // first six cells of a later day were 00–05, all night, and the hours
+                    // a reader opens a day for were off the screen. Remembered inside the
+                    // expansion, so every opening starts there again.
+                    rowState = rememberLazyListState(
+                        initialFirstVisibleItemIndex = openingHour(day.hours)
+                    )
                 )
             }
         }
     }
 }
+
+/**
+ * Where an open day's strip starts: the hour before the first daylight hour, so the
+ * sunrise is the second cell and the dawn before it is in view. Today's row starts at the
+ * hour we are in already (the report holds nothing earlier), and opens there, as does a
+ * day the sun never rises on.
+ */
+internal fun openingHour(hours: List<StripHour>): Int =
+    (hours.indexOfFirst { !it.night } - 1).coerceAtLeast(0)
 
 /**
  * The words for a row's wet marks (12 ott 2026): what falls, named from the hours' own

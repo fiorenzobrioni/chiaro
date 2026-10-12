@@ -115,7 +115,11 @@ data class TimelineItem(
     val at: LocalDateTime,
     val kind: TimelineKind,
     val pct: Int? = null,
-    val bearingDeg: Double? = null
+    val bearingDeg: Double? = null,
+    /** Where a span ends, for the rows that are spans and not moments (12 ott 2026):
+     * the evening's golden hour runs to sunset, its blue hour to the sun at −6°. Null for a
+     * moment, and for a span whose end the day does not have. */
+    val until: LocalDateTime? = null
 )
 
 /** One cell's worth of forecast, with its own day/night already decided — the strip
@@ -246,8 +250,14 @@ object TodayStateBuilder {
     ): List<TimelineItem> {
         val coords = report.location.coordinates
         val items = mutableListOf<TimelineItem>()
-        fun sun(at: Instant?, kind: TimelineKind) {
-            at?.let { items += TimelineItem(LocalDateTime.ofInstant(it, zone), kind) }
+        fun sun(at: Instant?, kind: TimelineKind, until: Instant? = null) {
+            at?.let {
+                items += TimelineItem(
+                    LocalDateTime.ofInstant(it, zone),
+                    kind,
+                    until = until?.let { end -> LocalDateTime.ofInstant(end, zone) }
+                )
+            }
         }
         val firstDate = now.toLocalDate()
         val lastDate = until.toLocalDate()
@@ -260,9 +270,12 @@ object TodayStateBuilder {
             }
             sun(solar.sunrise, TimelineKind.SUNRISE)
             sun(solar.goldenHourMorningEnd, TimelineKind.GOLDEN_MORNING_END)
-            sun(solar.goldenHourEveningStart, TimelineKind.GOLDEN_EVENING)
+            // The two evening hours are spans, and the agenda printed them as moments
+            // (review of 12 ott 2026): «Ora d'oro 18:36» left the reader to find out
+            // that it lasts until sunset.
+            sun(solar.goldenHourEveningStart, TimelineKind.GOLDEN_EVENING, until = solar.sunset)
             sun(solar.sunset, TimelineKind.SUNSET)
-            sun(solar.blueHourEveningStart, TimelineKind.BLUE_EVENING)
+            sun(solar.blueHourEveningStart, TimelineKind.BLUE_EVENING, until = solar.blueHourEveningEnd)
             sun(solar.astronomicalDusk, TimelineKind.DARK)
 
             val lunar = AstronomyEngine.lunarDay(date, zone, coords)

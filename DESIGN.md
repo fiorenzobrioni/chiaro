@@ -1254,7 +1254,13 @@ of prose, optional verdict chip. On Today (design review, 23 set 2026) the glyph
 **threaded**: a 2dp `outlineVariant` line from each glyph to the next, stopping 3dp short of
 each, so the rows read as one day in order; and the **first** row says how soon under its
 prose — «tra 18 min», «tra 1 h 20 min» — in `primary`, because the clock time is what you
-check against a watch and the countdown is what you plan with. Sun events, weather turns and the reader's own alerts use
+check against a watch and the countdown is what you plan with. Since the review of 12 ott
+2026 that is the first row **that is not the moon's** (a moon-only agenda still counts the
+moon): on the README's Milan the countdown went to a moonrise one minute before the golden
+hour. And the evening's **golden and blue hours print as spans** — «Ora d'oro fino alle
+19:15», and the blue hour to the sun at −6° — because they are spans; the blue hour keeps its star,
+the first light of the evening sky, since the family's alternatives are worse (`horizon` is
+`sunset` with a 1.6dp bump, a moon would announce a moon). Sun events, weather turns and the reader's own alerts use
 the same row; only the leading glyph differs.
 
 **8.5 DayRow** — weekday, icon, rain probability on the ink ramp (§2.3; printed from 20%),
@@ -1266,7 +1272,9 @@ colored bar is not a number. **Today's** bar carries a 12dp disc at the temperat
 (23 set 2026), in the ramp's color with an `onSurface` ring, on the week's shared scale — where
 in its day the day is.
 
-**8.5b The open day** (24 set 2026) — an open week row shows, above its hours, the day's
+**8.5b The open day** (24 set 2026) — its hour strip opens **on the hour before the first
+daylight hour** (12 ott 2026; it opened on 00:00, six cells of night), and today's on the
+hour we are in. An open week row shows, above its hours, the day's
 **facts**: rain (mm, and over how many hours), snow (cm), the strongest gust from 39 km/h,
 the highest UV from 3. One row per fact — the `Timeline` rung's glyph, the value in
 `bodyMedium`, its consequence under it in `bodySmall` / `onSurfaceVariant` — and only the

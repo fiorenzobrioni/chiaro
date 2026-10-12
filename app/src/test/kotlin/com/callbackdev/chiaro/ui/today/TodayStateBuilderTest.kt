@@ -192,4 +192,17 @@ class TodayStateBuilderTest {
         assertEquals(0f, tomorrow.first().at, 0f)
         assertEquals(1f, tomorrow.last().at, 0f)
     }
+
+    /** The evening's golden and blue hours are spans (review of 12 ott 2026): the golden
+     * hour ends at the sunset the same agenda lists, the blue hour after it begins. */
+    @Test
+    fun `the evening hours carry where they end`() {
+        val agenda = content(null).timeline
+        val golden = agenda.single { it.kind == TimelineKind.GOLDEN_EVENING }
+        val sunset = agenda.single { it.kind == TimelineKind.SUNSET }
+        val blue = agenda.single { it.kind == TimelineKind.BLUE_EVENING }
+        assertEquals(sunset.at, golden.until)
+        assertTrue(blue.until!!.isAfter(blue.at))
+        assertEquals(null, sunset.until)
+    }
 }

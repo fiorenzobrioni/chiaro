@@ -28,6 +28,9 @@ sections are a normal size and live here alone.
 - **Less «0%».** The chance of rain is printed from 20%, where the app starts calling an hour
   wet; under it the column stays empty, and a dry strip of hours has no rain row at all.
 - **Overcast is one cloud.** The two-cloud drawing read as a moon at small sizes.
+- **An open day starts at dawn**, not at midnight.
+- **The rest of the day**: the golden and blue hours say when they end, and the countdown goes
+  to the first event that is not the moon's.
 
 ## [1.1.0] - 2026-10-01
 

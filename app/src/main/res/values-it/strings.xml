@@ -98,6 +98,8 @@
     <string name="tl_golden_evening">Ora d\'oro</string>
     <string name="tl_sunset">Tramonto</string>
     <string name="tl_blue_evening">Ora blu</string>
+    <string name="tl_golden_evening_until">Ora d\'oro fino alle %1$s</string>
+    <string name="tl_blue_evening_until">Ora blu fino alle %1$s</string>
     <string name="tl_dark">Buio pieno</string>
     <string name="tl_moonrise">Sorge la luna</string>
     <string name="tl_moonset">Tramonta la luna</string>

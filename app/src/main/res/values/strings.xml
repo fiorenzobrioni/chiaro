@@ -104,6 +104,8 @@
     <string name="tl_golden_evening">Golden hour</string>
     <string name="tl_sunset">Sunset</string>
     <string name="tl_blue_evening">Blue hour</string>
+    <string name="tl_golden_evening_until">Golden hour until %1$s</string>
+    <string name="tl_blue_evening_until">Blue hour until %1$s</string>
     <string name="tl_dark">Fully dark sky</string>
     <string name="tl_moonrise">Moonrise</string>
     <string name="tl_moonset">Moonset</string>

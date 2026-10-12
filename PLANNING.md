@@ -11799,3 +11799,43 @@ ombrello, fine della pioggia, gelo, nebbia, vento, pioggia possibile, ombrello d
 - Screenshot rigenerati: la striscia senza «0%» e senza buco, la settimana con la colonna vuota,
   la nuvola sola nell'app e nei widget.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## Oggi: il giorno aperto all'alba, l'agenda che conta il sole (committente, 12 ott 2026)
+
+Punti 5 e 6 della revisione di Oggi, nella numerazione della revisione (nel messaggio prima
+li avevo rinumerati male; il committente ha chiesto «5 e 6» e si è seguita la revisione).
+
+### Cosa è cambiato
+
+- **Il giorno aperto parte dall'ora prima della prima ora di luce** (`openingHour`): sabato del
+  README apriva su 00–05, tutta notte; ora su 07, con l'alba delle 07:14. Lo stato della lista
+  è ricordato dentro l'espansione, quindi ogni apertura riparte da lì. Oggi apre sull'ora in
+  corso, come prima (il report non ha ore precedenti).
+- **Il «tra X» va alla prima riga che non è della luna** (`countdownIndex`): era sempre la
+  prima, e sul Milano del README contava sei ore a un sorgere di luna un minuto prima
+  dell'ora d'oro. Un'agenda di sola luna conta la luna.
+- **Ora d'oro e ora blu della sera sono intervalli**: `TimelineItem.until`, dal tramonto e dal
+  sole a −6° di `SolarDay`; «Ora d'oro fino alle 19:15», e così l'ora blu. Senza la
+  fine (un giorno che non ce l'ha) restano il momento di prima. Stringhe IT/EN.
+- DESIGN §8.4 e §8.5b, CHANGELOG; `today-now` e `today-week` rigenerati e guardati.
+
+### Decisioni e deviazioni
+
+- **La stella dell'ora blu resta.** La revisione la chiamava arbitraria; guardate le
+  alternative della famiglia, sono peggiori: `horizon` è `sunset` con una gobba di 1,6dp (la
+  stessa ragione per cui l'ora d'oro l'ha lasciato l'11 set), una luna annuncerebbe una luna.
+  La stella è la prima luce del cielo della sera, che è l'ora blu.
+- **«Ripete la scheda Cielo nei giorni asciutti» non è stato toccato**: è una scelta di
+  struttura (la VISION §5.2.4 vuole l'agenda unita qui), non un difetto da correggere in due
+  righe. Resta aperta per una decisione del committente.
+- **L'arco del widget non cambia**: stampa gli stessi elementi dell'agenda ma ha la sua riga
+  stretta; i campi nuovi hanno valori predefiniti e non lo toccano.
+
+### Come è stato verificato
+
+- `RestOfDayTest` (3, nuovo): il conto salta la luna; la prima riga conta quando non è della
+  luna, un'agenda di sola luna conta la luna; il giorno aperto parte dall'ora prima della luce,
+  oggi e una notte intera partono dall'inizio.
+- `TodayStateBuilderTest` (+1): l'ora d'oro finisce al tramonto della stessa agenda, l'ora blu
+  finisce dopo l'inizio, il tramonto non ha fine.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
