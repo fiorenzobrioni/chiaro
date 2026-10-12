@@ -35,7 +35,8 @@ import com.callbackdev.chiaro.ui.theme.tabular
 /**
  * DESIGN.md §8.5. One day of the week: weekday, icon, rain probability, the range bar
  * on the scale the caller computed **across the whole week**, the printed low and high
- * (a colored bar is not a number), and the day's ribbon of light underneath.
+ * (a colored bar is not a number), and the day's ribbon underneath — its light and, since
+ * 12 ott 2026, its forecast sky, with the wet hours marked under it.
  *
  * Everything arrives formatted; [scaleLowC]/[scaleHighC] are the week's own extremes,
  * shared by all seven rows so the week has a shape.
@@ -69,7 +70,15 @@ fun DayRow(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     /** Today's row: the temperature now, drawn on the range bar. */
-    nowC: Double? = null
+    nowC: Double? = null,
+    /** The day's forecast sky for its ribbon (DESIGN §4, 12 ott 2026). */
+    sky: List<RibbonHour> = emptyList(),
+    /** Whether the ribbon keeps a lane for the wet hours. The caller decides it for the
+     * whole week, so seven rows stay one height whichever of them has rain in it. */
+    wetLane: Boolean = false,
+    /** Today's row: where now is in the day. What comes before it is spent, and the
+     * ribbon fades it toward the track like the night (DESIGN §4, 12 ott 2026). */
+    skyFrom: Float = 0f
 ) {
     val reflow = reflowForText()
     Column(
@@ -114,6 +123,9 @@ fun DayRow(
             // The range bar's own track: the night leans toward it, so the row shows
             // its pill of light rather than a navy bar (DESIGN §4, 23 set 2026).
             nightFade = MaterialTheme.colorScheme.surfaceContainerHighest,
+            hours = sky,
+            wetLane = wetLane,
+            skyFrom = skyFrom,
             modifier = Modifier.padding(start = if (reflow) 0.dp else 52.dp)
         )
     }

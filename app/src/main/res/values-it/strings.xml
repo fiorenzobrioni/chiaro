@@ -6,6 +6,11 @@
     <string name="ribbon_desc">Alba alle %1$s, tramonto alle %2$s</string>
     <string name="ribbon_desc_all_day">Oggi il sole non tramonta</string>
     <string name="ribbon_desc_all_night">Oggi il sole non sorge</string>
+    <string name="ribbon_wet_rain">Pioggia %1$s</string>
+    <string name="ribbon_wet_snow">Neve %1$s</string>
+    <string name="ribbon_wet_mixed">Pioggia e neve %1$s</string>
+    <string name="ribbon_wet_span">dalle %1$s alle %2$s</string>
+    <string name="ribbon_wet_at">alle %1$s</string>
 
     <!-- La frase in cima. Quando non c\'è niente da dire, nessuna stringa viene usata. -->
     <string name="headline_severe_thunder">Temporale verso le %1$s</string>

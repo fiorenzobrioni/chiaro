@@ -620,6 +620,33 @@ astronomical night down. Seven navy bars were the heaviest ink in the section wh
 the least, the night being the part of the day that is the same every day; faded, each row
 shows its pill of light.
 
+**The forecast sky** (committente, 12 ott 2026). Light alone, the week's ribbons *were*
+seven identical stripes: a week moves sunset by a quarter of an hour, and 4dp does not show
+it. So every stretch of the day the forecast covers is painted with
+`SkyPalette.gradient(phase, cloud, chance).mid`, the very call that paints the canvas, with
+the hour's cloud cover and chance interpolated in a straight line between hours and sampled
+every ten minutes (the phases' own core edges stay among the stops, so a twilight is as
+sharp as before). An overcast afternoon is the overcast canvas' grey-blue, a likely hour is
+darker, a clear day is the light alone. The ribbon is the canvas carried through the day,
+and the two cannot disagree.
+
+- **Nothing is invented.** The report keeps no hour before the one we are in; before it
+  there is no sky. On the canvas the spent part keeps its light at 60% alpha, as before; on
+  **today's row**, which has no dimming, the spent part leans toward the track as far as the
+  night does (0.75), so the row reads as what is left of the day. Drawn as bare light, the
+  README's Milan showed a bright clear morning on a day that had been overcast.
+- **Rain is a mark, not a shade.** Every hour whose state has something falling (the state
+  engine's, so `RAIN_LIKELY` is not one) gets a mark in a lane under the band: 2dp below it,
+  3dp tall, one hour wide centred on the hour's label as the strip's cell is, 0.5dp short at
+  each end so a run of wet hours still counts as hours, in the rain's ink ramp at the hour's
+  chance. The lane is the **week's**: drawn on all seven rows when any day has a wet hour
+  (+5dp a row), on none in a dry week, so the rows stay one height.
+- **Every mark has its word**: the row's description adds «Pioggia dalle 15:00 alle 17:00,
+  alle 20:00» («Neve», «Pioggia e neve» by the hours' phases, as the rain chart's caption).
+- Measured on the README's Milan and on a live week of Glasgow rain (the comparison page,
+  12 ott 2026): overcast and clear separate in luminance at 4dp (vivid day mid `#2BB8FF`,
+  overcast ≈ `#748FA0`), modestly; the wet lane is what makes a wet day legible at a glance.
+
 It is the app's signature element and the one component that makes a week of rows read as
 a season rather than seven identical stripes. It is also, deliberately, **a depiction and
 not an encoding**: nobody has to decode a color into a phase, because every phase it shows
@@ -1210,7 +1237,8 @@ check against a watch and the countdown is what you plan with. Sun events, weath
 the same row; only the leading glyph differs.
 
 **8.5 DayRow** — weekday, icon, rain probability on the ink ramp (§2.3, zero included),
-the **temperature range bar** and the ribbon. The bar is one horizontal track per day, all seven **sharing one scale across the
+the **temperature range bar** and the ribbon, with the day's forecast sky and, in a week with
+rain, the wet lane under it (§4, 12 ott 2026). The bar is one horizontal track per day, all seven **sharing one scale across the
 week** so the week has a shape, filled with the diverging temperature ramp (§2.3) and
 anchored at 15 °C; the low and high are printed at its ends in tabular figures, because a
 colored bar is not a number. **Today's** bar carries a 12dp disc at the temperature right now

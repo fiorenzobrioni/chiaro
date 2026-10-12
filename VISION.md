@@ -203,7 +203,9 @@ A thin horizontal band, used on the canvas and on every day row of the week, sho
 astronomical/nautical/civil twilight, daylight and the golden hours as color segments, with "now"
 marked. It is the one component that says at a glance what a whole day of light looks like, it is
 unique to this app, and it is recognizable in a store screenshot at thumbnail size. It comes free
-from the ephemeris.
+from the ephemeris. Since 12 ott 2026 it also carries the day's forecast sky, painted with the
+canvas' own colors hour by hour, with the wet hours marked under it: each day of the week says
+*when* it is clear, grey or wet (DESIGN §4).
 
 ### 4.4 Type, shape, motion, density
 

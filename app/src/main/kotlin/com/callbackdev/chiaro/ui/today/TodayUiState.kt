@@ -12,6 +12,7 @@ import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.components.LightPhase
+import com.callbackdev.chiaro.ui.components.RibbonHour
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -95,7 +96,9 @@ data class SkySnapshot(
     val sunAzimuthDeg: Double = 180.0,
     val moonAzimuthDeg: Double = 180.0,
     val moonElongationDeg: Double = 0.0,
-    val southern: Boolean = false
+    val southern: Boolean = false,
+    /** The rest of today's forecast sky, for the canvas' ribbon (12 ott 2026). */
+    val hours: List<RibbonHour> = emptyList()
 )
 
 enum class TimelineKind {
@@ -119,12 +122,13 @@ data class TimelineItem(
  * crosses midnight, so "is it night" is per hour, not per screen. */
 data class StripHour(val hour: HourlyForecast, val night: Boolean)
 
-/** One row of the week: the forecast, the day's light, and its hours for the
- * in-place expansion. */
+/** One row of the week: the forecast, the day's light, its hours for the in-place
+ * expansion, and its forecast sky for the ribbon (12 ott 2026). */
 data class WeekDay(
     val forecast: DailyForecast,
     val phases: List<LightPhase>,
-    val hours: List<StripHour>
+    val hours: List<StripHour>,
+    val sky: List<RibbonHour> = emptyList()
 )
 
 /**
@@ -192,7 +196,8 @@ object TodayStateBuilder {
                     com.callbackdev.chiaro.domain.sky.SkyBody.MOON, now, coords
                 ),
                 moonElongationDeg = moon.elongation,
-                southern = coords.lat < 0.0
+                southern = coords.lat < 0.0,
+                hours = DaylightPhases.sky(trimmed.hourly, local.toLocalDate())
             ),
             headline = HeadlineEngine.headline(trimmed, local, graded),
             strip = trimmed.hourly.drop(1).take(STRIP_HOURS).map { stripHour(it, zone, coords) },
@@ -312,7 +317,7 @@ object TodayStateBuilder {
         night = AstronomyEngine.sunAltitude(hour.at, coords) < 0.0
     )
 
-    /** The week's rows, each with its light and its hours for the tap-to-expand. */
+    /** The week's rows, each with its light, its hours for the tap-to-expand and its sky. */
     private fun week(
         report: WeatherReport,
         zone: ZoneId,
@@ -325,7 +330,8 @@ object TodayStateBuilder {
             ),
             hours = report.hourly
                 .filter { it.time.toLocalDate() == day.date }
-                .map { stripHour(it, zone, coords) }
+                .map { stripHour(it, zone, coords) },
+            sky = DaylightPhases.sky(report.hourly, day.date)
         )
     }
 }

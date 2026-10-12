@@ -11633,3 +11633,67 @@ Saldo» o «perché la famiglia si legga come una» sono riscritti con la loro r
 (il workflow di release, il build, la shell, le anteprime del selettore e il loro test, il
 catalogo delle versioni). Le guide nell'app già non le citavano. tweather resta nominato dove
 il codice ne viene: è l'origine del core (`UPSTREAM.md`), non un'app della famiglia.
+
+## Il nastro del cielo (committente, 12 ott 2026)
+
+Dalla revisione della schermata Oggi: i sette nastri della settimana erano sette copie (in una
+settimana di fine settembre il giorno si accorcia di una ventina di minuti, e a 4dp non si
+vede), e quello sul cielo diceva solo la luce. Proposta: colorare il nastro ora per ora con il
+cielo previsto, con la stessa funzione che dipinge il cielo in alto. Il committente ha visto la
+pagina di confronto prima/dopo (Milano del README e una settimana piovosa vera di Glasgow,
+scaricata da Open-Meteo il 12 ott) e ha chiesto di implementarla: «sono ottime modifiche e
+visivamente belle».
+
+### Cosa è cambiato
+
+- **`DaylightRibbon` riceve il cielo** (`RibbonHour`: dove cade l'ora nel giorno, copertura,
+  probabilità, se è bagnata). `ribbonColorStops` campiona il giorno ogni dieci minuti e tinge
+  ogni punto con `SkyPalette.gradient(fase, nuvole, probabilità).mid`; fra due nuclei di fase
+  mescola in sRGB come fa il gradiente della piattaforma; i bordi dei nuclei restano fra le
+  tappe. Senza ore il risultato è identico al nastro di prima (testato).
+- **`DaylightPhases.sky`** costruisce le ore di un giorno dal report, chiuse dalla mezzanotte
+  del giorno dopo a 1 (senza segno: è della riga di domani); **`wetRuns`** raggruppa le ore
+  bagnate per le parole.
+- **Il cielo in alto**: dal momento attuale in poi il cielo previsto; la parte già trascorsa
+  resta luce al 60%, come prima.
+- **La riga di oggi**: la parte trascorsa sfuma verso il fondo della barra quanto la notte
+  (0,75). Prima prova: la riga mostrava la mattina come luce piena, cioè un mattino sereno su
+  una giornata coperta (Milano del README). Primo tentativo di cura, il cielo della giornata
+  intera prima del taglio di `WeatherRecency`: inutile, perché il mapper non tiene nessuna ora
+  precedente a quella corrente. Annullato; la sfumatura dice «già passato» senza inventare.
+- **Le ore bagnate** (stato del motore con qualcosa che cade: `RAIN_LIKELY` no) hanno un segno
+  in una corsia sotto il nastro, nell'inchiostro della pioggia alla probabilità dell'ora. La
+  corsia è della settimana: su tutte e sette le righe se un giorno ha un'ora bagnata (+5dp a
+  riga), su nessuna in una settimana asciutta.
+- **Le parole**: la descrizione della riga aggiunge «Pioggia dalle 15:00 alle 17:00, alle
+  20:00» («Neve», «Pioggia e neve» secondo la fase delle ore). Stringhe IT/EN.
+- DESIGN §4 e §8.5, VISION §4.3, CHANGELOG. Gli screenshot `today-now` e `today-week`
+  rigenerati e guardati; `widgets.png` usciva diverso solo per antialiasing (622 pixel, nessun
+  riquadro di differenza) ed è stato lasciato com'era.
+
+### Decisioni e deviazioni
+
+- **4dp, non 6.** La pagina di confronto suggeriva di provare 6dp: resta 4dp, la misura di §4
+  e della riga a 46dp. Con il cielo l'effetto si vede ma è discreto; è la prima cosa da guardare
+  sul dispositivo.
+- **Bagnata = stato dell'app**, non le due soglie della pagina di confronto (≥ 0,1 mm e ≥ 20%):
+  il motore degli stati le contiene già, con il resto delle sue regole.
+- **Nessun segno sul cielo in alto**: la pioggia di oggi la dicono già la frase, la striscia
+  delle ore e il grafico; il nastro sul cielo resta luce e nuvole.
+- **Nessuna frase sulle nuvole** nella descrizione: è una raffigurazione (§4), e le nuvole ora
+  per ora sono nella striscia aperta; le ore bagnate invece sono segni, e un segno ha la sua
+  parola.
+
+### Come è stato verificato
+
+- `DaylightRibbonTest` (+8): senza ore le tappe sono quelle di prima; con le ore non tornano
+  indietro e tengono i bordi dei nuclei; il pomeriggio coperto è grigio e la mattina serena no;
+  prima della prima ora e di `skyFrom` niente cielo; nella riga il trascorso sfuma, sul cielo
+  no; interpolazione, fine un'ora dopo l'ultima, due ore nello stesso istante; il segno
+  centrato sull'ora e dentro il giorno.
+- `RibbonSkyTest` (5, nuovo): dove cade ogni ora e la mezzanotte che chiude; `RAIN_LIKELY` non
+  bagnata; probabilità assente = nessuna tinta; il giorno tagliato parte dall'ora corrente;
+  i gruppi di ore bagnate.
+- `TodayStateBuilderTest` (+1): il cielo di oggi parte dall'ora corrente, i giorni dopo interi.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` (con lo script del
+  mirror nel sandbox).

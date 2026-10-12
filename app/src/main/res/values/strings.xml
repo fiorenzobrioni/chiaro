@@ -9,6 +9,11 @@
     <string name="ribbon_desc">Sunrise at %1$s, sunset at %2$s</string>
     <string name="ribbon_desc_all_day">The sun never sets today</string>
     <string name="ribbon_desc_all_night">The sun never rises today</string>
+    <string name="ribbon_wet_rain">Rain %1$s</string>
+    <string name="ribbon_wet_snow">Snow %1$s</string>
+    <string name="ribbon_wet_mixed">Rain and snow %1$s</string>
+    <string name="ribbon_wet_span">from %1$s to %2$s</string>
+    <string name="ribbon_wet_at">at %1$s</string>
 
     <!-- The headline sentence. When there is nothing to say, no string is used at all. -->
     <string name="headline_severe_thunder">Thunderstorm around %1$s</string>

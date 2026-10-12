@@ -177,4 +177,19 @@ class TodayStateBuilderTest {
         ) as TodayUiState.Content
         assertEquals(content.timeline, agenda.filter { it.at.toLocalDate() == date })
     }
+
+    // ------------------------------------------- the ribbon's sky (DESIGN §4, 12 ott 2026)
+
+    /** The report keeps no hour before the one we are in, so both of today's ribbons, the
+     * canvas' and the row's, start their sky there, and every later day has its whole day
+     * closed by the next midnight. */
+    @Test
+    fun `today's sky starts at the hour we are in and later days are whole`() {
+        val built = content(null)
+        assertEquals(12 / 24f, built.sky.hours.first().at, 1e-6f)
+        assertEquals(12 / 24f, built.week.first().sky.first().at, 1e-6f)
+        val tomorrow = built.week[1].sky
+        assertEquals(0f, tomorrow.first().at, 0f)
+        assertEquals(1f, tomorrow.last().at, 0f)
+    }
 }

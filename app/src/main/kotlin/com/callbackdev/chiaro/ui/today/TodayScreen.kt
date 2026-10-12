@@ -95,6 +95,7 @@ import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.AqiScale
 import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.DailyForecast
+import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.PollenLevel
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.settings.UnitSettings
@@ -1184,7 +1185,11 @@ private fun CanvasHeader(
                 DaylightRibbon(
                     phases = sky.phases,
                     nowFraction = sky.nowFraction,
-                    description = ribbonDescription(content, timeFmt)
+                    description = ribbonDescription(content, timeFmt),
+                    // What is left of today wears its forecast sky (DESIGN §4, 12 ott
+                    // 2026); what is already spent stays light alone, dimmed as before.
+                    hours = sky.hours,
+                    skyFrom = sky.nowFraction
                 )
                 headlineText(content.headline, timeFmt, units)?.let { sentence ->
                     Text(
@@ -1588,6 +1593,9 @@ private fun LazyListScope.weekRows(
     val scaleLow = content.week.minOf { it.forecast.lowC }
     val scaleHigh = content.week.maxOf { it.forecast.highC }
     val today = content.now.toLocalDate()
+    // One lane for the whole week or none: a row that grew by its wet hours would make the
+    // week uneven, and a dry week pays nothing for a lane it would leave empty.
+    val wetLane = content.week.any { day -> day.sky.any { it.wet && it.at < 1f } }
     items(content.week, key = { "week-${it.forecast.date}" }) { day ->
         WeekRow(
             day = day,
@@ -1599,7 +1607,9 @@ private fun LazyListScope.weekRows(
             locale = locale,
             expanded = expandedDay == day.forecast.date,
             onToggle = { onToggle(day.forecast.date) },
-            nowC = content.report.current.tempC
+            nowC = content.report.current.tempC,
+            wetLane = wetLane,
+            skyFrom = if (day.forecast.date == today) content.sky.nowFraction else 0f
         )
     }
 }
@@ -1618,7 +1628,10 @@ private fun WeekRow(
     locale: Locale,
     expanded: Boolean,
     onToggle: () -> Unit,
-    nowC: Double? = null
+    nowC: Double? = null,
+    wetLane: Boolean = false,
+    /** Today's row: where now is in the day, so what is spent of it reads as spent. */
+    skyFrom: Float = 0f
 ) {
     val f = day.forecast
     val label = if (isToday) stringResource(R.string.week_today) else Formats.dayLabel(f.date, locale)
@@ -1638,9 +1651,13 @@ private fun WeekRow(
             scaleLowC = scaleLowC,
             scaleHighC = scaleHighC,
             phases = day.phases,
+            sky = day.sky,
+            wetLane = wetLane,
+            skyFrom = skyFrom,
             // Two forms, because a day with no probability must not announce one:
-            // the row that prints nothing says nothing (§1.1).
-            description = f.precipPct?.let { pct ->
+            // the row that prints nothing says nothing (§1.1). The ribbon's wet marks
+            // are spoken after them (§4.6: no mark without its word).
+            description = listOfNotNull(f.precipPct?.let { pct ->
                 stringResource(
                     R.string.week_day_desc,
                     label,
@@ -1652,7 +1669,7 @@ private fun WeekRow(
                 label,
                 stringResource(WeatherText.condition(f.condition.wmoCode)),
                 low, high
-            ),
+            ), wetDescription(day.hours.map { it.hour }, is24h, locale)).joinToString(". "),
             onClick = if (day.hours.isNotEmpty()) onToggle else null,
             nowC = if (isToday) nowC else null,
             modifier = Modifier.padding(PagePadding)
@@ -1672,6 +1689,36 @@ private fun WeekRow(
             }
         }
     }
+}
+
+/**
+ * The words for a row's wet marks (12 ott 2026): what falls, named from the hours' own
+ * states the way the rain chart's caption names it, and when — «Pioggia dalle 15:00 alle
+ * 17:00, alle 20:00». Null on a dry day, which says nothing about it.
+ */
+@Composable
+private fun wetDescription(hours: List<HourlyForecast>, is24h: Boolean, locale: Locale): String? {
+    val timeFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
+    val runs = DaylightPhases.wetRuns(hours)
+    if (runs.isEmpty()) return null
+    val phases = hours.filter { WmoCode.isPrecipitation(it.condition.wmoCode) }
+        .mapNotNull { WmoCode.of(it.condition.wmoCode)?.phase }
+        .toSet()
+    val snow = WmoCode.Phase.FROZEN in phases || WmoCode.Phase.MIXED in phases
+    val rain = WmoCode.Phase.LIQUID in phases || WmoCode.Phase.FREEZING in phases ||
+        WmoCode.Phase.MIXED in phases
+    val spans = runs.map { (from, to) ->
+        if (from == to) stringResource(R.string.ribbon_wet_at, from.format(timeFmt))
+        else stringResource(R.string.ribbon_wet_span, from.format(timeFmt), to.format(timeFmt))
+    }.joinToString(", ")
+    return stringResource(
+        when {
+            snow && rain -> R.string.ribbon_wet_mixed
+            snow -> R.string.ribbon_wet_snow
+            else -> R.string.ribbon_wet_rain
+        },
+        spans
+    )
 }
 
 /**
