@@ -78,6 +78,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -1182,6 +1183,16 @@ private fun CanvasHeader(
                         color = Color.White.copy(alpha = 0.7f)
                     )
                 }
+                // The sentence before the ribbon (review of 12 ott 2026): it is the second
+                // thing the hero says, right under the word for the sky, and the ribbon
+                // with its two clock times closes the canvas as its floor line.
+                headlineText(content.headline, timeFmt, units)?.let { sentence ->
+                    Text(
+                        text = sentence,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White
+                    )
+                }
                 DaylightRibbon(
                     phases = sky.phases,
                     nowFraction = sky.nowFraction,
@@ -1191,12 +1202,8 @@ private fun CanvasHeader(
                     hours = sky.hours,
                     skyFrom = sky.nowFraction
                 )
-                headlineText(content.headline, timeFmt, units)?.let { sentence ->
-                    Text(
-                        text = sentence,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = Color.White
-                    )
+                ribbonTimes(content, timeFmt).takeIf { it.isNotEmpty() }?.let { times ->
+                    RibbonTimes(times = times, color = Color.White.copy(alpha = 0.85f))
                 }
             }
         }
@@ -1331,6 +1338,52 @@ private fun ribbonDescription(
         astro.daylightDuration == null && astro.sunrise == null && astro.sunset == null ->
             stringResource(R.string.ribbon_desc_all_night)
         else -> stringResource(R.string.ribbon_desc_all_day)
+    }
+}
+
+/**
+ * The ribbon's two clock times (review of 12 ott 2026): sunrise and sunset, each under the
+ * point of the band where it falls. Until then the band was a strip of colors that could
+ * be read only by somebody who already knew it: the blue in the middle is the day, the
+ * amber flecks are the sun's ends. The same two times the ribbon's description reads, so
+ * TalkBack hears them once, from the ribbon, and the labels are cleared from semantics.
+ * A day with no sunrise or no sunset draws neither: one time on its own is half a span.
+ */
+@Composable
+private fun ribbonTimes(
+    content: TodayUiState.Content,
+    timeFmt: DateTimeFormatter
+): List<Pair<Float, String>> {
+    val astro = content.report.astronomical
+    val rise = astro.sunrise ?: return emptyList()
+    val set = astro.sunset ?: return emptyList()
+    fun at(time: java.time.LocalTime) = time.toSecondOfDay() / 86_400f
+    return listOf(at(rise) to rise.format(timeFmt), at(set) to set.format(timeFmt))
+}
+
+/** Labels placed under the fractions of the width they name, centred there and kept
+ * inside the row. */
+@Composable
+private fun RibbonTimes(times: List<Pair<Float, String>>, color: Color) {
+    androidx.compose.ui.layout.Layout(
+        content = {
+            times.forEach { (_, text) ->
+                Text(text = text, style = MaterialTheme.typography.labelSmall.tabular(), color = color)
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clearAndSetSemantics { }
+    ) { measurables, constraints ->
+        val placeables = measurables.map { it.measure(constraints.copy(minWidth = 0)) }
+        val width = constraints.maxWidth
+        layout(width, placeables.maxOfOrNull { it.height } ?: 0) {
+            placeables.forEachIndexed { i, label ->
+                val x = (times[i].first * width - label.width / 2f).roundToInt()
+                    .coerceIn(0, (width - label.width).coerceAtLeast(0))
+                label.place(x, 0)
+            }
+        }
     }
 }
 

@@ -600,7 +600,7 @@ two things: the disc reads as a sun on its path rather than a bead, and the open
 
 ## 4. The daylight ribbon
 
-An 8dp band (4dp in compact rows) showing one day of light: night, astronomical, nautical
+An 8dp band (6dp in compact rows, 4dp until 12 ott 2026) showing one day of light: night, astronomical, nautical
 and civil twilight, the golden hours, daylight — drawn with the §3.2 middle stops, as **one
 continuous gradient with rounded ends** (design review, 23 set 2026). It was a row of
 hard-edged rectangles until then, and on the device it read as a barcode: the sky does not
@@ -646,6 +646,10 @@ and the two cannot disagree.
 - Measured on the README's Milan and on a live week of Glasgow rain (the comparison page,
   12 ott 2026): overcast and clear separate in luminance at 4dp (vivid day mid `#2BB8FF`,
   overcast ≈ `#748FA0`), modestly; the wet lane is what makes a wet day legible at a glance.
+- **6dp in the rows** (committente, 12 ott 2026, from the week drawn at 4, 6 and 8dp side by
+  side): at 4dp the grey of an overcast afternoon had to be looked for; at 8dp the ribbon is
+  as thick as the 8dp range bar above it, and the row reads as two bars of one weight. At 6dp
+  it reads at a glance and stays second to the range bar. The row is 48dp, up from 46.
 
 It is the app's signature element and the one component that makes a week of rows read as
 a season rather than seven identical stripes. It is also, deliberately, **a depiction and
@@ -1090,7 +1094,17 @@ already flattened. Two things SMIL has that AVD does not:
 Each entry is the contract; the Compose signatures land in Fase 1.
 
 **8.1 SkyCanvas** — the gradient (§3), `heroTemperature`, condition, feels-like, the
-daylight ribbon, the headline sentence, the scrim (§3.6). **At least 280dp plus the status
+headline sentence, the daylight ribbon with its two clock times, the scrim (§3.6). Since the
+review of 12 ott 2026 the sentence stands **before** the ribbon, right under the word for the
+sky, and the ribbon closes the canvas with **sunrise and sunset** printed under the points of
+the band where they fall (`labelSmall`, tabular, white at 85%, cleared from semantics because
+the ribbon's own description reads the same two times; neither on a day missing one of
+them). Until then the band could be read only by somebody who already knew it. On a quiet day
+the sentence is the calm one (`HeadlineEngine.calm`): the next day with something falling, or
+the forecast's dry length from three days, and today's high while it is ahead (the first hour
+that prints it, a degree over now), else tomorrow's range — «Prossima pioggia domenica,
+massima 23° verso le 16:00». Facts the forecast holds, never a filler; the widgets' brief
+register leaves a quiet day to their own fallback, the sky right now. **At least 280dp plus the status
 bar, and taller when its text needs it** (8 set 2026): everything on it is measured in sp
 and the block was measured in dp, so at 100% type a two-line sentence left 2dp before the
 hero climbed into the place row, and at 115% they overlapped by 30dp. The row's seat and
@@ -1772,9 +1786,10 @@ number.
   35 nulls in `ui/`. The ribbon reads its phases with times. Charts announce their extremes
   and their current value. Every row that can be removed can be removed without a gesture
   (`customActions`, Fase 9's predecessor pass).
-- **Reduced motion**: §7. **Touch targets**: ≥ 48dp, always. Two things the app draws are
-  smaller than that — the week row is 46dp (a 38dp icon, 4dp of gap, the 4dp ribbon) and
-  the freshness chip 32dp — and the Fase 9 pass went to fix them and found nothing to fix:
+- **Reduced motion**: §7. **Touch targets**: ≥ 48dp, always. Two things the app drew were
+  smaller than that — the week row at 46dp (a 38dp icon, 4dp of gap, a 4dp ribbon; 48dp since
+  the 6dp ribbon of 12 ott 2026) and the freshness chip at 32dp — and the Fase 9 pass went to
+  fix them and found nothing to fix:
   Compose expands a pointer node's bounds to the platform's minimum touch target, so a
   `clickable` of any size is already 48dp to a finger. Worth writing down because the
   expansion has one hole: it reserves no **space**, so two small targets sitting closer

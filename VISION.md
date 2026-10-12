@@ -132,7 +132,9 @@ accounts and tracking, that works offline with the last data it managed to fetch
    no full-screen spinner in this product, ever: content first, freshness stated, refresh silent.
 2. **One sentence before any number.** The top of the home screen is a computed line — "Umbrella
    around 17:00, clear after that" — built from the alert engine and the next hours. Numbers follow
-   for the people who want them.
+   for the people who want them. On a day with nothing to warn about (since 12 ott 2026) the line says
+   what a quiet day is still planned by: when the next rain is due and when it will be warmest —
+   "Next rain Sunday, high of 23° around 16:00" — never a filler.
 3. **Every number says what to do with it.** UV 7 is not a number, it is "burns in about 25 minutes,
    wear something". AQI 112 is "fine for a walk, not for a run". This is the mainstream inversion of
    the series' evidence rule: tweather ships the arithmetic with the verdict, Chiaro ships the

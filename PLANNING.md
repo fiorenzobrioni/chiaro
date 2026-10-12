@@ -11697,3 +11697,60 @@ visivamente belle».
 - `TodayStateBuilderTest` (+1): il cielo di oggi parte dall'ora corrente, i giorni dopo interi.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` (con lo script del
   mirror nel sandbox).
+
+## Oggi: la frase dei giorni tranquilli, gli orari sul nastro, il nastro a 6dp (committente, 12 ott 2026)
+
+Dalla stessa revisione: «Vai con 6dp. Poi, tornando ai punti deboli della review, inizia a
+implementare le soluzioni dei punti 1 e 2». Il punto 1 era la frase che mancava nei giorni
+tranquilli (cioè quasi sempre: il cielo diceva «20° Coperto» e basta) e che, quando c'era,
+veniva dopo il nastro; il punto 2 era il nastro sul cielo che non si leggeva senza saperlo già.
+
+### Cosa è cambiato
+
+- **Il nastro nelle righe a 6dp.** Il committente ha visto la settimana di Milano disegnata a
+  4, 6 e 8dp affiancate. A 4dp il grigio di un pomeriggio coperto andava cercato; a 8dp il
+  nastro è spesso quanto la barra delle temperature (8dp) e la riga diventa due barre dello
+  stesso peso. La riga passa da 46 a 48dp.
+- **`HeadlineEngine.calm`**, fuori dalla scala: `headline()` risponde ancora «c'è qualcosa da
+  segnalare?», e null resta no. Il builder usa `headline() ?: calm()`. Due fatti:
+  - **l'asciutto**: solo se nessuna ora rimasta oggi ha qualcosa che cade (stato del motore:
+    un'ora «probabile» non conta, una bagnata al 20% sì); poi il primo giorno successivo con
+    un'ora bagnata o con l'etichetta di precipitazione («Prossima pioggia domenica», «domani»,
+    neve e pioggia e neve per fase), oppure, se non ce n'è, la lunghezza della previsione, da
+    tre giorni in su («Asciutto per i prossimi 7 giorni»);
+  - **il caldo**: la prima ora di oggi che stampa la massima, se è ancora avanti e almeno un
+    grado sopra adesso («massima 23° verso le 16:00»); altrimenti la forbice di domani
+    («domani tra 14° e 26°»).
+- **La frase prima del nastro**, subito sotto la parola del cielo; il nastro chiude il cielo
+  con **alba e tramonto** stampati sotto i punti dove cadono, tolti dalla semantica perché la
+  descrizione del nastro legge già gli stessi due orari.
+- La guida: «è scritto sopra ogni numero» non era vero (la frase sta sotto la temperatura) ed
+  è diventato «sotto il numero grande»; «quando non c'è niente da dire la frase non compare»
+  è diventato la frase dei giorni tranquilli. DESIGN §8.1 e §4, VISION §3.3, CHANGELOG.
+
+### Decisioni e deviazioni
+
+- **Niente «3° più caldo di ieri»**, che la revisione proponeva: il mapper non tiene le ore
+  passate e il report non ha ieri; servirebbe `past_days`, un cambio del dato e non della
+  schermata. Rimandato.
+- **I widget non cambiano.** Il registro breve risponde null alla frase tranquilla e i widget
+  tengono il loro ripiego, il cielo di adesso: tre righe di quattordici caratteri sono per il
+  presente, e «Prossima pioggia domenica, massima 23°» non ci sta. `widgets.png` rigenerato
+  usciva diverso solo per antialiasing ed è rimasto com'era.
+- **La frase resta sotto la temperatura**, non sopra: VISION §5.1 la disegna lì, e il numero
+  grande in cima al cielo è la firma della schermata. È salita sopra il nastro.
+- **L'ora del picco è la prima che stampa la massima**: nel Milano del README 22,7° alle 16 e
+  22,9° alle 17 sono entrambi «23°» nella striscia, e la frase diceva «verso le 17:00».
+
+### Come è stato verificato
+
+- `HeadlineEngineTest` (+8): la scala tace ancora nel giorno tranquillo e `calm` risponde; un'ora
+  bagnata in un giorno con etichetta asciutta chiude l'asciutto; sette giorni asciutti, e
+  niente sotto i tre; un'ora bagnata oggi toglie l'asciutto; la neve; la forbice di domani dopo
+  il picco o con un picco non più caldo di adesso; la prima ora che stampa la massima; niente da
+  dire resta niente.
+- `CalmTextTest` (5, nuovo, Robolectric in italiano): le quattro combinazioni e il null del
+  registro breve.
+- Screenshot `today-now` e `today-week` rigenerati e guardati: «Dry for the next 7 days, high of
+  23° around 16:00» sotto «Overcast», 07:13 e 19:15 sotto il nastro, la settimana a 6dp.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.

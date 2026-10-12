@@ -20,6 +20,11 @@ sections are a normal size and live here alone.
   of the day's light now takes the forecast's clouds hour by hour, with the same colors as the
   sky at the top, and marks the hours with rain or snow: each day says *when* it is clear,
   grey or wet. What is already over today is drawn faded.
+- **A sentence on quiet days too.** When there is nothing to warn about, the line under the
+  temperature now says when the next rain is due and when it will be warmest, from the
+  forecast's own numbers. It sits right under the sky's word, before the ribbon.
+- **Sunrise and sunset on the ribbon**, printed under the points where they fall, and the
+  week's ribbons a little thicker so the sky in them reads at a glance.
 
 ## [1.1.0] - 2026-10-01
 

@@ -199,7 +199,10 @@ object TodayStateBuilder {
                 southern = coords.lat < 0.0,
                 hours = DaylightPhases.sky(trimmed.hourly, local.toLocalDate())
             ),
-            headline = HeadlineEngine.headline(trimmed, local, graded),
+            // The ladder first; on a day it has nothing to warn about, the quiet day's own
+            // sentence (12 ott 2026) — still the model's facts, never a filler.
+            headline = HeadlineEngine.headline(trimmed, local, graded)
+                ?: HeadlineEngine.calm(trimmed, local),
             strip = trimmed.hourly.drop(1).take(STRIP_HOURS).map { stripHour(it, zone, coords) },
             timeline = timeline(trimmed, today, zone, local),
             week = week(trimmed, zone, coords),

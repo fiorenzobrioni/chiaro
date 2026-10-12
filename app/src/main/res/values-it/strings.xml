@@ -52,6 +52,17 @@
     <string name="headline_wind_brief">Vento fino a %1$s</string>
     <string name="headline_wind_later">Vento forte verso le %2$s, fino a %1$s</string>
     <string name="headline_wind_later_brief">Vento verso le %2$s, fino a %1$s</string>
+    <string name="headline_next_rain">Prossima pioggia %1$s</string>
+    <string name="headline_next_snow">Prossima neve %1$s</string>
+    <string name="headline_next_mixed">Prossima pioggia e neve %1$s</string>
+    <string name="headline_next_tomorrow">domani</string>
+    <string name="headline_peak">Massima %1$s verso le %2$s</string>
+    <string name="headline_tomorrow_range">Domani tra %1$s e %2$s</string>
+    <string name="headline_calm_pair">%1$s, %2$s</string>
+    <plurals name="headline_dry_days">
+        <item quantity="one">Asciutto per il prossimo giorno</item>
+        <item quantity="other">Asciutto per i prossimi %1$d giorni</item>
+    </plurals>
 
     <!-- Freschezza ed errori: l\'età vera, il motivo vero -->
     <plurals name="freshness_minutes_ago">
@@ -403,7 +414,7 @@
     <string name="guide_today_title">Oggi</string>
     <string name="guide_today_p1">Il cielo disegnato in cima non è una fotografia: è calcolato per questo minuto dall\'altezza del sole, dalle nuvole, dalla pioggia e dalla luna, così alle tre di notte con il sereno è lo stesso blu profondo che vedresti fuori. La striscia sottile sotto è la giornata, dalla prima luce all\'ultima, con l\'ora in cui sei segnata sopra.</string>
     <string name="guide_today_headline_title">La frase</string>
-    <string name="guide_today_headline_body">Quando c\'è qualcosa che vale la pena dire — ombrello verso le cinque, temporale alle tre, gelo entro domattina, nebbia in arrivo, vento forte nel pomeriggio, o l\'ombrello di domani — è scritto sopra ogni numero. La frase anticipa: quello che succede adesso lo dice già il numero grande. Quando non c\'è niente da dire, la frase non compare: anche il silenzio è una risposta.</string>
+    <string name="guide_today_headline_body">Quando c\'è qualcosa che vale la pena dire — ombrello verso le cinque, temporale alle tre, gelo entro domattina, nebbia in arrivo, vento forte nel pomeriggio, o l\'ombrello di domani — è scritto sotto il numero grande. La frase anticipa: quello che succede adesso lo dice già il numero grande. Nei giorni tranquilli dice quando è attesa la prossima pioggia e quando farà più caldo: due fatti della previsione, mai una frase di circostanza.</string>
     <string name="guide_today_rain_title">Sta per piovere?</string>
     <string name="guide_today_rain_body">La risposta è in tre punti: la frase in cima, subito sotto le probabilità ora per ora, con il picco delle prossime ore segnato sulla piccola curva della pioggia, e nei dettagli quanti millimetri sono previsti oggi e per quante ore. Chiaro descrive la pioggia nella lingua in cui arrivano i dati: quanto è probabile, quanta, da che ora a che ora.</string>
     <string name="guide_today_fresh_title">Quanto sono freschi i numeri</string>

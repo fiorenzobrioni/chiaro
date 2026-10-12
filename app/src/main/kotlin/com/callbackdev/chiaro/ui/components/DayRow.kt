@@ -84,8 +84,9 @@ fun DayRow(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            // §10 asks for ≥ 48dp of target and the row draws 46 (a 38dp icon, 4dp of
-            // gap, the 4dp ribbon). It clears the floor anyway and not by luck:
+            // §10 asks for ≥ 48dp of target and the row draws 48 (a 38dp icon, 4dp of
+            // gap, the 6dp ribbon; 46 until the ribbon took the sky, 12 ott 2026). It
+            // would clear the floor anyway and not by luck:
             // Compose expands a pointer node's bounds to the platform's minimum touch
             // target, so `clickable` is already 48. What that expansion does NOT do is
             // reserve space, so it fails when two small targets sit closer than their
@@ -119,7 +120,11 @@ fun DayRow(
             phases = phases,
             nowFraction = null,
             description = "", // idem: one announcement per row
-            height = 4.dp,
+            // 6dp since the ribbon carries the sky (committente, 12 ott 2026): at 4dp an
+            // overcast afternoon had to be looked for; at 8dp the ribbon weighed as much
+            // as the range bar, and the row became two bars of one weight. Six reads at a
+            // glance and stays the second thing in the row.
+            height = 6.dp,
             // The range bar's own track: the night leans toward it, so the row shows
             // its pill of light rather than a navy bar (DESIGN §4, 23 set 2026).
             nightFade = MaterialTheme.colorScheme.surfaceContainerHighest,

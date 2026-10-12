@@ -9,6 +9,7 @@ import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.warnings.WarningText
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Locale
 
 /**
@@ -153,6 +154,49 @@ object HeadlineText {
                 ),
                 t(headline.at)
             )
+            // A quiet day's sentence (12 ott 2026) is the screen's, not the cards': the
+            // brief register keeps its own fallback, the sky right now, which is what a
+            // card with three short lines is for.
+            is Headline.Calm -> if (brief) null else calm(context, headline, ::t, units, locale)
+        }
+    }
+
+    /** «Prossima pioggia domenica, massima 23° verso le 16:00»: the dry spell, then the
+     * warmth, either alone when the other is missing. */
+    private fun calm(
+        context: Context,
+        headline: Headline.Calm,
+        t: (LocalDateTime) -> String,
+        units: UnitSettings,
+        locale: Locale
+    ): String? {
+        val dry = when (val d = headline.dry) {
+            null -> null
+            is Headline.Calm.Dry.Until -> context.getString(
+                d.falling.pick(R.string.headline_next_rain, R.string.headline_next_snow, R.string.headline_next_mixed),
+                if (d.daysAhead == 1) {
+                    context.getString(R.string.headline_next_tomorrow)
+                } else {
+                    d.date.dayOfWeek.getDisplayName(TextStyle.FULL, locale)
+                }
+            )
+            is Headline.Calm.Dry.Days ->
+                context.resources.getQuantityString(R.plurals.headline_dry_days, d.days, d.days)
+        }
+        fun deg(c: Double) = Formats.temperature(c, units.temperature, locale)
+        val warmth = when (val w = headline.warmth) {
+            null -> null
+            is Headline.Calm.Warmth.Peak -> context.getString(R.string.headline_peak, deg(w.tempC), t(w.at))
+            is Headline.Calm.Warmth.Tomorrow ->
+                context.getString(R.string.headline_tomorrow_range, deg(w.lowC), deg(w.highC))
+        }
+        return when {
+            dry != null && warmth != null -> context.getString(
+                R.string.headline_calm_pair,
+                dry,
+                warmth.replaceFirstChar { it.lowercase(locale) }
+            )
+            else -> dry ?: warmth
         }
     }
 
