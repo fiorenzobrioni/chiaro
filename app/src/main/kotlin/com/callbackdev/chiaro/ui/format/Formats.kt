@@ -35,6 +35,16 @@ object Formats {
         return String.format(locale, "%.${decimals}f°", if (roundsToZero) 0.0 else value)
     }
 
+    /** A difference of temperature, whole degrees: a span, so no offset — 3 °C apart is
+     * 5 °F apart, not 37. */
+    fun temperatureDifference(celsius: Double, unit: TemperatureUnit, locale: Locale): String {
+        val value = when (unit) {
+            TemperatureUnit.CELSIUS -> celsius
+            TemperatureUnit.FAHRENHEIT -> celsius * 9.0 / 5.0
+        }
+        return String.format(locale, "%.0f°", value)
+    }
+
     fun wind(kph: Double, unit: WindSpeedUnit, locale: Locale): String = when (unit) {
         WindSpeedUnit.KMH -> String.format(locale, "%.0f km/h", kph)
         WindSpeedUnit.MPH -> String.format(locale, "%.0f mph", kph / 1.609344)

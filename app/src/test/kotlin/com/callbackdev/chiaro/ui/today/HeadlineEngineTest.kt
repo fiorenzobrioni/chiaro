@@ -467,4 +467,23 @@ class HeadlineEngineTest {
         assertNull(HeadlineEngine.calm(calmReport(cooling, clear), now))
         assertNull(HeadlineEngine.calm(sampleWeatherReport().copy(hourly = emptyList()), now))
     }
+
+    // ------------------------------------------- today against yesterday (13 ott 2026)
+
+    @Test
+    fun `three degrees from yesterday's high take the hour's place`() {
+        // calmReport's today is 24.0 high.
+        val warmer = HeadlineEngine.calm(calmReport(warmingDay, clear, clear), now, yesterdayHighC = 20.5)!!
+        assertEquals(3.5, (warmer.warmth as Headline.Calm.Warmth.Peak).vsYesterdayC!!, 1e-9)
+        val cooler = HeadlineEngine.calm(calmReport(warmingDay, clear, clear), now, yesterdayHighC = 28.0)!!
+        assertEquals(-4.0, (cooler.warmth as Headline.Calm.Warmth.Peak).vsYesterdayC!!, 1e-9)
+    }
+
+    @Test
+    fun `under three degrees, or with no yesterday, the hour stays`() {
+        val close = HeadlineEngine.calm(calmReport(warmingDay, clear, clear), now, yesterdayHighC = 22.0)!!
+        assertNull((close.warmth as Headline.Calm.Warmth.Peak).vsYesterdayC)
+        val none = HeadlineEngine.calm(calmReport(warmingDay, clear, clear), now)!!
+        assertNull((none.warmth as Headline.Calm.Warmth.Peak).vsYesterdayC)
+    }
 }

@@ -29,8 +29,10 @@ sections are a normal size and live here alone.
   wet; under it the column stays empty, and a dry strip of hours has no rain row at all.
 - **Overcast is one cloud.** The two-cloud drawing read as a moon at small sizes.
 - **An open day starts at dawn**, not at midnight.
-- **The rest of the day**: the golden and blue hours say when they end, and the countdown goes
-  to the first event that is not the moon's.
+- **The rest of the day**: the golden and blue hours say when they end, and the moon's rising
+  and setting stay on the Sky tab.
+- **Warmer or cooler than yesterday.** On a quiet day the sentence says when today's high is
+  three degrees or more from yesterday's, from what Chiaro already kept: no extra download.
 - **Pressure says which way it is going**: rising, falling or falling fast over the next three
   hours, with the change in hPa; a steady barometer keeps its reading's meaning.
 - **Details**: an odd last tile takes the whole row, and the empty band between the sky and

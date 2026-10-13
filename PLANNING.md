@@ -11880,3 +11880,57 @@ vuota, misurati sullo screenshot del README.
 - Screenshot rigenerati: la tessera dei pollini su tutta la riga, «High: settled weather»,
   «Next hours» più vicino al cielo.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## Ieri, la luna e il barometro: le tre proposte (committente, 13 ott 2026)
+
+Il committente ha chiesto un parere sui due punti rimasti aperti e sulla tendenza barometrica,
+con due vincoli: **niente modifiche al modello dati, niente scaricamento eccessivo dalla rete**.
+Due fatti verificati prima di rispondere: la risposta di Open-Meteo parte da mezzanotte (le ore
+passate di oggi sono già scaricate, il mapper le scarta), e il Journal (`weather_history`)
+scrive a ogni aggiornamento la previsione da oggi a +7 giorni, massime comprese. Proposte
+accettate: «implementa le tue tre proposte».
+
+### Cosa è cambiato
+
+- **«4° più di ieri»** nella frase tranquilla: quando la massima di oggi dista tre gradi o più da
+  quella di ieri, la differenza prende il posto dell'ora («Massima 26°, 4° più di ieri»). La
+  massima di ieri viene dal Journal: il commit più recente scritto nella data di ieri (nel fuso
+  del luogo) e il suo `<ieri>.high_c` (`TodayStateBuilder.yesterdayHigh`, pura; il ViewModel la
+  legge quando i dati si muovono, insieme a «Cosa è cambiato», filtra per data e decodifica un
+  solo commit). Nessun campo nuovo, nessuna richiesta: Today legge già quella tabella.
+- **La luna fuori dall'agenda di Oggi**: sorgere e tramonto restano nella scheda Cielo e
+  nell'arco del widget. Il conto alla rovescia che saltava la luna (`countdownIndex`, 12 ott) era
+  diventato codice morto ed è stato tolto: conta di nuovo la prima riga.
+- `Formats.temperatureDifference`: una differenza di gradi, senza lo scarto dei Fahrenheit.
+- DESIGN §8.1 e §8.4, VISION §3.3 e §5.2, CHANGELOG; `today-now` rigenerato e guardato.
+
+### Decisioni e deviazioni
+
+- **Niente `past_days=1`.** Un 12% in più a ogni aggiornamento per ogni luogo, e i giorni che
+  partirebbero da ieri mentre metà dell'app assume che il primo sia oggi: un cambio di modello
+  vero, con rischi ovunque.
+- **Ieri è una previsione, non una misura**: la massima che il modello dava per ieri al suo
+  ultimo aggiornamento della giornata. È il numero più vicino al vero che l'app abbia, e lo
+  stesso tipo di numero della massima di oggi (entrambe `highC` del giorno). Senza un commit di
+  ieri (installazione nuova, telefono spento) la frase tace e torna all'ora del picco.
+- **La tendenza barometrica resta in avanti** (decisione esplicita, non dimenticanza). Il
+  barometro classico guarda le tre ore passate perché è uno strumento e misura; le ore passate
+  di questa app non sono misure ma l'analisi del modello, quindi «indietro» non è più vero di
+  «avanti», e «avanti» risponde alla domanda del lettore (sta per peggiorare?). Se un giorno si
+  volesse la convenzione classica, la strada è la pressione nelle `PastHour` che il mapper già
+  costruisce dalla risposta scaricata: un campo in più nel modello in memoria, non nel database
+  (la cache su disco tiene la risposta grezza) né nella rete; il limite sono le tre ore dopo
+  mezzanotte, che la risposta non copre.
+- Lo screenshot del README non mostra «più di ieri»: la registrazione non ha un Journal, e una
+  massima di ieri messa a mano sarebbe un dato inventato.
+
+### Come è stato verificato
+
+- `HeadlineEngineTest` (+2): tre gradi da ieri prendono il posto dell'ora, in su e in giù; sotto i
+  tre o senza ieri l'ora resta.
+- `CalmTextTest` (+1): «Massima 23°, 4° più di ieri», e con l'asciutto davanti «…, 3° meno di ieri».
+- `TodayStateBuilderTest` (+3, uno aggiornato): la massima di ieri è il commit più recente di ieri,
+  non uno di oggi; senza commit di ieri o senza la massima, niente; l'agenda di Oggi senza luna, e
+  l'agenda completa che arriva oltre mezzanotte resta quella del widget.
+- `RestOfDayTest`: tolti i due test del conto che saltava la luna, resta quello dell'apertura.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.

@@ -134,7 +134,8 @@ accounts and tracking, that works offline with the last data it managed to fetch
    around 17:00, clear after that" — built from the alert engine and the next hours. Numbers follow
    for the people who want them. On a day with nothing to warn about (since 12 ott 2026) the line says
    what a quiet day is still planned by: when the next rain is due and when it will be warmest —
-   "Next rain Sunday, high of 23° around 16:00" — never a filler.
+   "Next rain Sunday, high of 23° around 16:00", or "4° warmer than yesterday" when the Journal
+   has yesterday — never a filler.
 3. **Every number says what to do with it.** UV 7 is not a number, it is "burns in about 25 minutes,
    wear something". AQI 112 is "fine for a walk, not for a run". This is the mainstream inversion of
    the series' evidence rule: tweather ships the arithmetic with the verdict, Chiaro ships the
@@ -291,7 +292,8 @@ The spine of the product, one vertical scroll, in this order:
    has somewhere to stand.
 4. **The rest of the day**: the merged timeline, and the second differentiator on this screen. Sun
    and sky events, weather turns ("rain starts around 17:00"), and the reader's own alerts, in one
-   chronological list. This is `sky.crontab` plus the hourly forecast plus `alerts.rules`, collapsed
+   chronological list. The moon's rising and setting stay on the Sky tab (13 ott 2026): they are
+   the rows nobody plans an afternoon by. This is `sky.crontab` plus the hourly forecast plus `alerts.rules`, collapsed
    into the artifact a person actually keeps in their head: what is going to happen today, in order.
 5. **The week**: seven rows, each with icon, a min/max bar aligned across the whole week (so the
    week has a *shape*), rain probability, and the daylight ribbon. Tapping a row expands it in

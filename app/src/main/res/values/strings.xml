@@ -63,6 +63,8 @@
     <string name="headline_next_mixed">Next rain and snow %1$s</string>
     <string name="headline_next_tomorrow">tomorrow</string>
     <string name="headline_peak">High of %1$s around %2$s</string>
+    <string name="headline_peak_warmer">High of %1$s, %2$s warmer than yesterday</string>
+    <string name="headline_peak_cooler">High of %1$s, %2$s cooler than yesterday</string>
     <string name="headline_tomorrow_range">Tomorrow %1$s to %2$s</string>
     <string name="headline_calm_pair">%1$s, %2$s</string>
     <plurals name="headline_dry_days">

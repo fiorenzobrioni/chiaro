@@ -57,4 +57,12 @@ class CalmTextTest {
     fun `the widgets' brief register leaves a quiet day to its own fallback`() {
         assertNull(text(Headline.Calm(Headline.Calm.Dry.Days(7), peak), brief = true))
     }
+
+    @Test
+    fun `against yesterday the high drops its hour`() {
+        val warmer = Headline.Calm(null, peak.copy(vsYesterdayC = 3.6))
+        assertEquals("Massima 23°, 4° più di ieri", text(warmer))
+        val cooler = Headline.Calm(Headline.Calm.Dry.Days(7), peak.copy(vsYesterdayC = -3.2))
+        assertEquals("Asciutto per i prossimi 7 giorni, massima 23°, 3° meno di ieri", text(cooler))
+    }
 }

@@ -175,7 +175,15 @@ class TodayStateBuilderTest {
         val content = TodayStateBuilder.build(
             milan, report, nowLocal.atZone(zone).toInstant(), 60, false, null
         ) as TodayUiState.Content
-        assertEquals(content.timeline, agenda.filter { it.at.toLocalDate() == date })
+        // Today's timeline is the agenda's first day without the moon, which stays on the
+        // Sky tab and in the day's arc widget (13 ott 2026).
+        assertEquals(
+            content.timeline,
+            agenda.filter {
+                it.at.toLocalDate() == date &&
+                    it.kind != TimelineKind.MOONRISE && it.kind != TimelineKind.MOONSET
+            }
+        )
     }
 
     // ------------------------------------------- the ribbon's sky (DESIGN §4, 12 ott 2026)
@@ -204,5 +212,41 @@ class TodayStateBuilderTest {
         assertEquals(sunset.at, golden.until)
         assertTrue(blue.until!!.isAfter(blue.at))
         assertEquals(null, sunset.until)
+    }
+
+    // ----------------------------------------------- the Journal's yesterday (13 ott 2026)
+
+    private fun commit(at: LocalDateTime, high: String?) =
+        at.atZone(zone).toInstant() to (high?.let { mapOf("2026-09-01.high_c" to it) } ?: emptyMap())
+
+    private fun yesterdayHigh(vararg commits: Pair<java.time.Instant, Map<String, String>>) =
+        TodayStateBuilder.yesterdayHigh(commits.toList(), { it.first }, { it.second }, date, zone)
+
+    @Test
+    fun `yesterday's high is the newest of yesterday's commits`() {
+        assertEquals(
+            24.5,
+            yesterdayHigh(
+                commit(LocalDateTime.of(2026, 9, 1, 8, 0), "26.0"),
+                commit(LocalDateTime.of(2026, 9, 1, 22, 0), "24.5"),
+                // Today's commits are not yesterday's, whatever they say about it.
+                commit(LocalDateTime.of(2026, 9, 2, 9, 0), "30.0")
+            )!!,
+            0.0
+        )
+    }
+
+    @Test
+    fun `no commit of yesterday's, or none with its high, is no yesterday`() {
+        assertEquals(null, yesterdayHigh(commit(LocalDateTime.of(2026, 9, 2, 9, 0), "30.0")))
+        assertEquals(null, yesterdayHigh(commit(LocalDateTime.of(2026, 9, 1, 22, 0), null)))
+        assertEquals(null, yesterdayHigh())
+    }
+
+    @Test
+    fun `Today's agenda has no moon`() {
+        assertTrue(content(null).timeline.none {
+            it.kind == TimelineKind.MOONRISE || it.kind == TimelineKind.MOONSET
+        })
     }
 }

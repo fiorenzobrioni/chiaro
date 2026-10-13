@@ -8,31 +8,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * The review of 12 ott 2026, points 5 and 6: which agenda row counts down, and where an
- * open day's strip starts.
+ * The review of 12 ott 2026, point 5: where an open day's strip starts. (Point 6's
+ * moon-skipping countdown went with the moon itself, 13 ott 2026: Today's agenda has none.)
  */
 class RestOfDayTest {
-
-    private val at = LocalDateTime.of(2026, 9, 25, 18, 0)
-
-    private fun item(kind: TimelineKind, minutes: Long) = TimelineItem(at.plusMinutes(minutes), kind)
-
-    @Test
-    fun `the countdown skips the moon`() {
-        val agenda = listOf(
-            item(TimelineKind.MOONRISE, 35),
-            item(TimelineKind.GOLDEN_EVENING, 36),
-            item(TimelineKind.SUNSET, 75)
-        )
-        assertEquals(1, countdownIndex(agenda))
-    }
-
-    @Test
-    fun `the first row counts down when it is not the moon's, and a moon-only agenda counts the moon`() {
-        assertEquals(0, countdownIndex(listOf(item(TimelineKind.RAIN_START, 10), item(TimelineKind.MOONRISE, 20))))
-        assertEquals(0, countdownIndex(listOf(item(TimelineKind.MOONSET, 10), item(TimelineKind.MOONRISE, 20))))
-        assertEquals(0, countdownIndex(emptyList()))
-    }
 
     private val zone = ZoneId.of("Europe/Rome")
 

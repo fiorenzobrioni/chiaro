@@ -186,7 +186,14 @@ object HeadlineText {
         fun deg(c: Double) = Formats.temperature(c, units.temperature, locale)
         val warmth = when (val w = headline.warmth) {
             null -> null
-            is Headline.Calm.Warmth.Peak -> context.getString(R.string.headline_peak, deg(w.tempC), t(w.at))
+            is Headline.Calm.Warmth.Peak -> when {
+                w.vsYesterdayC == null -> context.getString(R.string.headline_peak, deg(w.tempC), t(w.at))
+                else -> context.getString(
+                    if (w.vsYesterdayC > 0) R.string.headline_peak_warmer else R.string.headline_peak_cooler,
+                    deg(w.tempC),
+                    Formats.temperatureDifference(kotlin.math.abs(w.vsYesterdayC), units.temperature, locale)
+                )
+            }
             is Headline.Calm.Warmth.Tomorrow ->
                 context.getString(R.string.headline_tomorrow_range, deg(w.lowC), deg(w.highC))
         }

@@ -1592,7 +1592,6 @@ private fun StripHour.toCell(
 @Composable
 private fun RestOfDay(content: TodayUiState.Content, timeFmt: DateTimeFormatter) {
     val gap = 12.dp
-    val counted = countdownIndex(content.timeline)
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(gap)
@@ -1602,7 +1601,7 @@ private fun RestOfDay(content: TodayUiState.Content, timeFmt: DateTimeFormatter)
                 time = item.at.format(timeFmt),
                 icon = timelineIcon(item.kind),
                 text = timelineText(item, timeFmt),
-                soon = if (index == counted) soonText(content.now, item.at) else null,
+                soon = if (index == 0) soonText(content.now, item.at) else null,
                 connectAbove = index > 0,
                 connectBelow = index < content.timeline.lastIndex,
                 reach = gap / 2
@@ -1610,18 +1609,6 @@ private fun RestOfDay(content: TodayUiState.Content, timeFmt: DateTimeFormatter)
         }
     }
 }
-
-/**
- * Which row says how soon (review of 12 ott 2026): the first one that is not the moon's.
- * It was always the first row, and on the README's Milan that was a moonrise six hours
- * out, one minute before the golden hour — the countdown, the one figure on the agenda in
- * the accent, spent on the event a reader plans least by. The sun's moments, the rain's
- * turns and the rainbow are what an afternoon is arranged around; a day whose agenda is
- * only the moon counts down to the moon.
- */
-internal fun countdownIndex(timeline: List<TimelineItem>): Int =
-    timeline.indexOfFirst { it.kind != TimelineKind.MOONRISE && it.kind != TimelineKind.MOONSET }
-        .takeIf { it >= 0 } ?: 0
 
 /** «tra 18 min», «tra 2 h», «tra 1 h 20 min» — or nothing for a moment already here. */
 @Composable

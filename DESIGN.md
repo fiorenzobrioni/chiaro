@@ -1112,7 +1112,10 @@ them). Until then the band could be read only by somebody who already knew it. O
 the sentence is the calm one (`HeadlineEngine.calm`): the next day with something falling, or
 the forecast's dry length from three days, and today's high while it is ahead (the first hour
 that prints it, a degree over now), else tomorrow's range — «Prossima pioggia domenica,
-massima 23° verso le 16:00». Facts the forecast holds, never a filler; the widgets' brief
+massima 23° verso le 16:00». When today's high is three degrees or more from yesterday's, the
+hour gives way to the difference — «massima 26°, 4° più di ieri» (13 ott 2026) — yesterday's
+high read off the Journal, the newest commit of yesterday's date and the `high_c` it wrote for
+it: no fetch, no new field, and silence on a phone that did not fetch yesterday. Facts the forecast holds, never a filler; the widgets' brief
 register leaves a quiet day to their own fallback, the sky right now. **At least 280dp plus the status
 bar, and taller when its text needs it** (8 set 2026): everything on it is measured in sp
 and the block was measured in dp, so at 100% type a two-line sentence left 2dp before the
@@ -1258,10 +1261,11 @@ of prose, optional verdict chip. On Today (design review, 23 set 2026) the glyph
 **threaded**: a 2dp `outlineVariant` line from each glyph to the next, stopping 3dp short of
 each, so the rows read as one day in order; and the **first** row says how soon under its
 prose — «tra 18 min», «tra 1 h 20 min» — in `primary`, because the clock time is what you
-check against a watch and the countdown is what you plan with. Since the review of 12 ott
-2026 that is the first row **that is not the moon's** (a moon-only agenda still counts the
-moon): on the README's Milan the countdown went to a moonrise one minute before the golden
-hour. And the evening's **golden and blue hours print as spans** — «Ora d'oro fino alle
+check against a watch and the countdown is what you plan with. **The moon is not on Today's
+agenda** (committente, 13 ott 2026; for a day, 12 ott, the countdown skipped it instead): on
+the README's Milan a moonrise led the list and took the countdown one minute before the
+golden hour, and on a dry day the agenda was the Sky tab over again. Moonrise and moonset
+stay on the Sky tab and in the day's arc widget. And the evening's **golden and blue hours print as spans** — «Ora d'oro fino alle
 19:15», and the blue hour to the sun at −6° — because they are spans; the blue hour keeps its star,
 the first light of the evening sky, since the family's alternatives are worse (`horizon` is
 `sunset` with a 1.6dp bump, a moon would announce a moon). Sun events, weather turns and the reader's own alerts use

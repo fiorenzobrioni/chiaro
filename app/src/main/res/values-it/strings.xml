@@ -57,6 +57,8 @@
     <string name="headline_next_mixed">Prossima pioggia e neve %1$s</string>
     <string name="headline_next_tomorrow">domani</string>
     <string name="headline_peak">Massima %1$s verso le %2$s</string>
+    <string name="headline_peak_warmer">Massima %1$s, %2$s più di ieri</string>
+    <string name="headline_peak_cooler">Massima %1$s, %2$s meno di ieri</string>
     <string name="headline_tomorrow_range">Domani tra %1$s e %2$s</string>
     <string name="headline_calm_pair">%1$s, %2$s</string>
     <plurals name="headline_dry_days">
