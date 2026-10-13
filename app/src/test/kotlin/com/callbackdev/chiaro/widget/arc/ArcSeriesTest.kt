@@ -140,6 +140,23 @@ class ArcSeriesTest {
         assertNull(s.hourCovering(at(14, 40)))
     }
 
+    /** The band's weather is joined between hour middles (widget review, 13 ott 2026): an
+     * hour's own value at its middle, halfway between two hours halfway between their
+     * values, none in the morning the report no longer has. */
+    @Test
+    fun `the band's weather passes from one hour to the next without steps`() {
+        val now = at(15, 30)
+        // Fetched at 12:00: the 17:00 row and every later one say 70%, the rest 10%.
+        val s = ArcSeries.build(content(now, wetFrom = 5), emptyList(), milan.coordinates, now, ArcSettings())
+        assertNull(s.weatherAt(at(14, 40)))
+        assertEquals(ArcWeather(20, 10), s.weatherAt(at(15, 10)))
+        assertEquals(ArcWeather(20, 10), s.weatherAt(at(16, 30)))
+        assertEquals(ArcWeather(20, 40), s.weatherAt(at(17)))
+        assertEquals(ArcWeather(20, 25), s.weatherAt(at(16, 45)))
+        assertEquals(ArcWeather(20, 70), s.weatherAt(at(17, 30)))
+        assertEquals(ArcWeather(20, 70), s.weatherAt(at(23, 50)))
+    }
+
     @Test
     fun `the present sits where the window puts it`() {
         assertEquals(0.625f, series(at(15)).nowFraction, 0.0001f)

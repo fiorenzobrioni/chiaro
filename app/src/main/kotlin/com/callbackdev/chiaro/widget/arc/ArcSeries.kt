@@ -15,6 +15,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+import kotlin.math.roundToInt
 
 /**
  * The stretch of time the arc spans, and where a moment falls in it. [fraction] is the
@@ -34,6 +35,9 @@ internal data class ArcWindow(val start: Instant, val end: Instant) {
 
 /** One forecast hour inside the window, with its place on the axis. */
 internal data class ArcHour(val hour: HourlyForecast, val at: Instant, val fraction: Float)
+
+/** The sky's cloud and rain chance at one moment, as the band paints them. */
+internal data class ArcWeather(val cloudPct: Int, val precipPct: Int)
 
 /**
  * One row of the agenda: the Today screen's own [TimelineItem], with its instant, whether
@@ -113,6 +117,42 @@ internal data class ArcSeries(
     }
 
     /**
+     * The cloud and the rain chance at [at] for the band, **joined between hours** (widget
+     * review, 13 ott 2026): each hour holds its value at its middle, and between two
+     * middles the band passes from one to the other. Painted hour by hour, the band
+     * changed in a step on every hour where the cover did, and at dawn and dusk those
+     * steps stood beside the light's own colours as stripes that read as dirt, not sky.
+     *
+     * Nothing is invented: the value at an hour's middle is the hour's, and between two
+     * hours the band says neither more nor less than they do. Outside the hours — the
+     * morning the report no longer has, past its horizon — there is no weather, as for
+     * [hourCovering]: null. Before the first hour's middle and after the last one's, the
+     * hour's own value holds; a gap between two hours is not bridged.
+     */
+    fun weatherAt(at: Instant): ArcWeather? {
+        val covering = hourCovering(at) ?: return null
+        val index = hours.indexOf(covering)
+        val middle = covering.at.plus(HalfHour)
+        val (from, to) = if (at.isBefore(middle)) {
+            hours.getOrNull(index - 1) to covering
+        } else {
+            covering to hours.getOrNull(index + 1)
+        }
+        if (from == null || to == null || Duration.between(from.at, to.at) != Duration.ofHours(1)) {
+            return covering.weather()
+        }
+        val t = Duration.between(from.at.plus(HalfHour), at).toMillis() / 3_600_000.0
+        val a = from.weather()
+        val b = to.weather()
+        return ArcWeather(
+            cloudPct = (a.cloudPct + (b.cloudPct - a.cloudPct) * t).roundToInt(),
+            precipPct = (a.precipPct + (b.precipPct - a.precipPct) * t).roundToInt()
+        )
+    }
+
+    private fun ArcHour.weather() = ArcWeather(hour.cloudCoverPct, hour.precipChancePct ?: 0)
+
+    /**
      * The whole local hours inside the window whose hour-of-day is a multiple of
      * [stepHours]: where the plot writes its labels. The end is exclusive, so a
      * midnight-to-midnight window labels 0 and never 24.
@@ -147,6 +187,8 @@ internal data class ArcSeries(
             TimelineKind.SUNRISE, TimelineKind.GOLDEN_MORNING_END, TimelineKind.GOLDEN_EVENING,
             TimelineKind.SUNSET, TimelineKind.BLUE_EVENING, TimelineKind.DARK
         )
+
+        private val HalfHour: Duration = Duration.ofMinutes(30)
 
         /** The agenda looks this far ahead, whatever the plot spans. */
         val AgendaReach: Duration = Duration.ofHours(24)

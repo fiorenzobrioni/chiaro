@@ -3,11 +3,9 @@ package com.callbackdev.chiaro.widget.arc
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.DashPathEffect
-import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
-import android.graphics.Shader
 import android.graphics.Typeface
 import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.createBitmap
@@ -88,6 +86,11 @@ internal object ArcPainter {
 
     /** The ribbon ground's band, centred on the horizon. */
     private const val RibbonDp = 6f
+
+    /** The band's rows: its three stops, mixed in between, before the canvas stretches
+     * them over the plot. Enough that a step between two rows is under one level of
+     * colour at the tallest plot (150 dp). */
+    private const val BandRows = 64
 
     fun paint(series: ArcSeries, settings: ArcSettings, spec: ArcCanvasSpec, inks: ArcInks): Bitmap {
         val w = spec.widthPx.coerceAtLeast(1)
@@ -273,16 +276,28 @@ internal object ArcPainter {
 
         // ---- The hours, and their temperatures, written under the plot. ----
         if (spec.hourLabels) {
-            paintTicks(canvas, series, spec, labelPaint, tempPaint, plotBottom, labelLine, tempLine)
+            paintTicks(
+                canvas, series, spec, labelPaint, tempPaint, plotBottom, labelLine, tempLine,
+                fadePast = settings.fadePast
+            )
         }
         return bitmap
     }
 
     /**
      * Every sample's sky, top to bottom, as the canvas computes it for that moment: the
-     * altitude's band, the forecast hour's cloud and rain where the report has the hour,
+     * altitude's band, the forecast's cloud and rain where the report has the hour,
      * and the §3.6 scrim over all of it — the same one the card wears, so ink stays
      * legible on the brightest noon.
+     *
+     * **Painted column by column, not sample by sample** (widget review, 13 ott 2026). The
+     * band used to be one rectangle per altitude sample, a quarter of an hour wide, with
+     * the cloud of the hour it fell in: every hour where the cover changed was a step,
+     * and the quarter hours of dawn and dusk were stripes of orange and blue a few pixels
+     * wide. Now every pixel column takes the sun and the moon where they are at that
+     * instant (joined between samples) and the weather joined between hours
+     * ([ArcSeries.weatherAt]), and the column's three stops go into a small bitmap that
+     * the canvas stretches with filtering: one continuous sky, the same colours.
      */
     private fun paintBands(
         canvas: Canvas,
@@ -290,39 +305,60 @@ internal object ArcPainter {
         inks: ArcInks,
         plot: RectF
     ) {
-        val n = series.sun.size
-        val paint = Paint()
-        val width = plot.width()
-        for (i in 0 until n - 1) {
-            val x0 = plot.left + width * (i / (n - 1f))
-            val x1 = plot.left + width * ((i + 1) / (n - 1f)) + 1f
-            val hour = series.hourCovering(series.window.at(i / (n - 1f)))
+        val columns = plot.width().roundToInt().coerceAtLeast(2)
+        val pixels = IntArray(columns * BandRows)
+        for (c in 0 until columns) {
+            val fraction = c / (columns - 1f)
+            val weather = series.weatherAt(series.window.at(fraction))
             val gradient = inks.sky.gradient(
-                sunAltitudeDeg = series.sun[i].toDouble(),
+                sunAltitudeDeg = sampled(series.sun, fraction),
                 // Zero is "do not modulate", not "clear": `SkyPalette.gradient` lerps
                 // by `cloudPct / 100`, so 0 leaves the altitude band exactly as the
-                // sun drew it. For a sample the report has no hour for — past the
-                // forecast's horizon on a phone that has been offline for days — that
-                // is the honest answer: the arc knows the light and says nothing about
-                // the weather. Any other value would be a sky it was never told.
-                cloudPct = hour?.hour?.cloudCoverPct ?: 0,
-                precipPct = hour?.hour?.precipChancePct ?: 0,
+                // sun drew it. For a moment the report has no hour for — the morning
+                // already gone, or past the forecast's horizon on a phone that has been
+                // offline for days — that is the honest answer: the arc knows the light
+                // and says nothing about the weather. Any other value would be a sky it
+                // was never told.
+                cloudPct = weather?.cloudPct ?: 0,
+                precipPct = weather?.precipPct ?: 0,
                 moonIllumination = series.moonLight.illuminatedFraction,
-                moonAltitudeDeg = series.moon[(i * (series.moon.size - 1)) / (n - 1)].toDouble()
+                moonAltitudeDeg = sampled(series.moon, fraction)
             )
-            paint.shader = LinearGradient(
-                0f, plot.top, 0f, plot.bottom,
-                intArrayOf(gradient.top.toArgb(), gradient.mid.toArgb(), gradient.bottom.toArgb()),
-                floatArrayOf(0f, 0.5f, 1f),
-                Shader.TileMode.CLAMP
-            )
-            canvas.drawRect(x0, plot.top, x1, plot.bottom, paint)
+            val top = gradient.top.toArgb()
+            val mid = gradient.mid.toArgb()
+            val bottom = gradient.bottom.toArgb()
+            for (r in 0 until BandRows) {
+                val y = r / (BandRows - 1f)
+                pixels[r * columns + c] = if (y < 0.5f) {
+                    blend(top, mid, y * 2f)
+                } else {
+                    blend(mid, bottom, (y - 0.5f) * 2f)
+                }
+            }
         }
+        val sky = Bitmap.createBitmap(pixels, columns, BandRows, Bitmap.Config.ARGB_8888)
+        canvas.drawBitmap(sky, null, plot, Paint(Paint.FILTER_BITMAP_FLAG))
+        sky.recycle()
         val scrim = Paint().apply {
             color = SkyPalette.ScrimColor.toArgb()
             alpha = (SkyPalette.ScrimAlpha * 255).roundToInt()
         }
         canvas.drawRect(plot, scrim)
+    }
+
+    /** [samples] read at [fraction] of the window, joined linearly between two samples. */
+    private fun sampled(samples: FloatArray, fraction: Float): Double {
+        val at = fraction.coerceIn(0f, 1f) * (samples.size - 1)
+        val i = at.toInt().coerceAtMost(samples.size - 2)
+        val t = at - i
+        return (samples[i] + (samples[i + 1] - samples[i]) * t).toDouble()
+    }
+
+    /** Two colours mixed channel by channel, as a linear gradient mixes its stops. */
+    private fun blend(a: Int, b: Int, t: Float): Int {
+        fun mix(shift: Int) = ((a shr shift and 0xFF) + ((b shr shift and 0xFF) - (a shr shift and 0xFF)) * t)
+            .roundToInt() shl shift
+        return mix(24) or mix(16) or mix(8) or mix(0)
     }
 
     /** The app's daylight ribbon (DESIGN §4), laid along the horizon: the mid stop of
@@ -422,9 +458,16 @@ internal object ArcPainter {
         tempPaint: Paint,
         plotBottom: Float,
         labelLine: Float,
-        tempLine: Float
+        tempLine: Float,
+        fadePast: Boolean
     ) {
         val w = spec.widthPx.toFloat()
+        // The hours the report no longer has (widget review, 13 ott 2026): their labels
+        // take the veil the band and the paths take, so the row of temperatures reads as
+        // starting where the forecast does instead of as half a row left empty. The
+        // report keeps the hour we are in, so that is where the veil stops.
+        val forecastFrom = series.hours.firstOrNull()?.at?.takeIf { !it.isAfter(series.now) } ?: series.now
+        val pastLabelPaint = Paint(labelPaint).apply { alpha = (labelPaint.alpha * PastPathAlpha).roundToInt() }
         val pxPerHour = w / (series.window.length.toMinutes() / 60f)
         var step = spec.tickStepHours.coerceAtLeast(1)
         val all = series.ticks(spec.zone, 1)
@@ -453,7 +496,8 @@ internal object ArcPainter {
             val label = Formats.hourLabel(local, spec.is24Hour, spec.locale)
             val half = labelPaint.measureText(label) / 2
             if (x - half < 0f || x + half > w) return@forEach
-            canvas.drawText(label, x, labelBaseline, labelPaint)
+            val past = fadePast && at.isBefore(forecastFrom)
+            canvas.drawText(label, x, labelBaseline, if (past) pastLabelPaint else labelPaint)
             if (tempLine > 0f) {
                 val hour = series.hourAt(at) ?: return@forEach
                 val temp = Formats.temperature(hour.hour.tempC, spec.temperatureUnit, spec.locale)
