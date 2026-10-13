@@ -11934,3 +11934,43 @@ accettate: «implementa le tue tre proposte».
   l'agenda completa che arriva oltre mezzanotte resta quella del widget.
 - `RestOfDayTest`: tolti i due test del conto che saltava la luna, resta quello dell'apertura.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## La guida: le due barre della settimana (committente, 13 ott 2026)
+
+Domanda del committente: le due «etichette» della schermata, la barra delle temperature e il
+nastro del giorno, sono spiegate nella guida? Per un nuovo utente non sono intuitive.
+
+Verificato: in parte, e con **quattro frasi rese false da questa stessa PR** (non aggiornate
+quando si sono cambiate le schermate, ed era da fare insieme): il nastro «dalla prima luce
+all'ultima» e «dall'alba al tramonto» (va da mezzanotte a mezzanotte, e ora porta il cielo, la
+pioggia, il passato attenuato e gli orari), la luna nell'agenda (tolta), la probabilità per
+ogni ora (ora dal 20%). La barra delle temperature era spiegata solo nella scala comune, non in
+cosa va da dove a dove, nei colori e nel pallino di adesso.
+
+### Cosa è cambiato
+
+- Le quattro frasi corrette, IT/EN: `guide_today_p1`, `guide_today_hours_body`,
+  `guide_today_rest_body`, `guide_today_week_body`.
+- **Un esempio disegnato** sotto «La settimana» (`WeekSample`): due righe vere di `DayRow`, oggi
+  sereno con il pallino e la mattina passata sbiadita, domani che si copre dopo pranzo e piove
+  dalle 15 alle 17 con la corsia delle ore bagnate; la didascalia dice cosa guardare in ciascuna
+  barra. I giorni sono quelli veri (come la striscia del Diario nella guida), la luce è una
+  giornata generica di media latitudine, i numeri sono l'esempio.
+- `guide.png` rigenerato (in fondo mostra il nuovo testo sul nastro); l'esempio è stato
+  guardato in uno screenshot temporaneo, poi tolto.
+
+### Decisioni e deviazioni
+
+- **La prima didascalia diceva «scuro di notte»**, giusto per il nastro sul cielo e sbagliato per
+  le righe, dove la notte sbiadisce verso il fondo della barra: visto nello screenshot e corretto
+  in «tenue alle due estremità, che sono la notte».
+- **Le temperature dell'esempio sono in °C** anche per chi usa i Fahrenheit: la guida non riceve
+  le unità del lettore, e la didascalia non cita numeri. Da rivedere se la guida le riceverà.
+- Nessun esempio della striscia sul cielo: il paragrafo d'apertura lo descrive, e il cielo vero
+  è a un tocco dalla guida.
+
+### Come è stato verificato
+
+- Screenshot temporaneo della sezione (inglese, tema chiaro), guardato, poi rimosso insieme al
+  test che lo disegnava.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.

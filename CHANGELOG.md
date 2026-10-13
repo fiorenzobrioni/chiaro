@@ -31,6 +31,8 @@ sections are a normal size and live here alone.
 - **An open day starts at dawn**, not at midnight.
 - **The rest of the day**: the golden and blue hours say when they end, and the moon's rising
   and setting stay on the Sky tab.
+- **The guide explains the week's two bars** with a drawn example, and no longer describes the
+  ribbon as it was before.
 - **Warmer or cooler than yesterday.** On a quiet day the sentence says when today's high is
   three degrees or more from yesterday's, from what Chiaro already kept: no extra download.
 - **Pressure says which way it is going**: rising, falling or falling fast over the next three
