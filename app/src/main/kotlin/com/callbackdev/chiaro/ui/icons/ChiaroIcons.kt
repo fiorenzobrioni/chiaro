@@ -167,7 +167,7 @@ object ChiaroIcons {
      * revisited again. Most apps collapse 0 and 1 for a poorer reason, having no such
      * drawing at all: Home Assistant's Open-Meteo integration maps both to `sunny`.
      *
-     * Rain, drizzle and snow take their cloud with them (`overcast-*`) rather than
+     * Rain, drizzle and snow take their cloud with them (one cloud, the overcast sky's) rather than
      * falling out of nothing: from the same hours, when it rains the sky IS closed —
      * code 51 never below 88% of cover, code 61 never below 87%. Showers keep the
      * partly-cloudy sky, because a shower is the sky that lets the sun back between two
@@ -191,36 +191,43 @@ object ChiaroIcons {
         // `cloudy`, one cloud, since the review of 12 ott 2026: `overcast` draws a second,
         // darker cloud peeking over the first, and at the strip's and the week's sizes
         // that back cloud read as a crescent — «partly cloudy at night» at 13:00, beside
-        // the real night glyph at 04:00. One cloud says overcast and nothing else; the
-        // rain and snow drawings keep their own double cloud, where the drops say which.
+        // the real night glyph at 04:00. One cloud says overcast and nothing else. Since
+        // the icon review of 13 ott 2026 everything that falls from a closed sky falls
+        // from that same one cloud (`drizzle`, `rain`, `sleet`, `snow`, the storms): the
+        // `overcast-*` drawings carried the back cloud too, the same crescent beside the
+        // drops, and a rainy hour after a grey one changed two things where one changed.
         WmoCode.OVERCAST -> R.drawable.mc3_cloudy
         WmoCode.FOG, WmoCode.RIME_FOG -> if (night) R.drawable.mc3_fog_night else R.drawable.mc3_fog_day
         // Likely rain takes the lightest rain there is (25 set 2026): a possibility, never
         // drawn as a downpour.
         WmoCode.DRIZZLE_LIGHT, WmoCode.DRIZZLE_MODERATE, WmoCode.DRIZZLE_DENSE,
-        WmoCode.RAIN_LIKELY -> R.drawable.mc3_overcast_drizzle
+        WmoCode.RAIN_LIKELY -> R.drawable.mc3_drizzle
         // Freezing rain is rain: what falls is liquid, and it freezes on the ground. The
         // family has no drawing of that, and `overcast-sleet` — drops AND flakes — went to
         // rain and snow together, which is exactly what it draws (25 set 2026). The danger
         // is the word's and the «Maltempo» banner's, which fires for ice at any chance.
-        WmoCode.FREEZING_DRIZZLE_LIGHT, WmoCode.FREEZING_DRIZZLE_DENSE -> R.drawable.mc3_overcast_drizzle
-        WmoCode.FREEZING_RAIN_LIGHT, WmoCode.FREEZING_RAIN_HEAVY -> R.drawable.mc3_overcast_rain
-        WmoCode.RAIN_AND_SNOW_LIGHT, WmoCode.RAIN_AND_SNOW -> R.drawable.mc3_overcast_sleet
-        WmoCode.RAIN_SLIGHT, WmoCode.RAIN_MODERATE, WmoCode.RAIN_HEAVY -> R.drawable.mc3_overcast_rain
+        WmoCode.FREEZING_DRIZZLE_LIGHT, WmoCode.FREEZING_DRIZZLE_DENSE -> R.drawable.mc3_drizzle
+        WmoCode.FREEZING_RAIN_LIGHT, WmoCode.FREEZING_RAIN_HEAVY -> R.drawable.mc3_rain
+        WmoCode.RAIN_AND_SNOW_LIGHT, WmoCode.RAIN_AND_SNOW -> R.drawable.mc3_sleet
+        WmoCode.RAIN_SLIGHT, WmoCode.RAIN_MODERATE, WmoCode.RAIN_HEAVY -> R.drawable.mc3_rain
         // The family has one snow under a cloud; likely snow shares it, and its word says
         // «probabile».
         WmoCode.SNOW_SLIGHT, WmoCode.SNOW_MODERATE, WmoCode.SNOW_HEAVY, WmoCode.SNOW_GRAINS,
-        WmoCode.SNOW_LIKELY -> R.drawable.mc3_overcast_snow
+        WmoCode.SNOW_LIKELY -> R.drawable.mc3_snow
         WmoCode.SHOWERS_SLIGHT, WmoCode.SHOWERS_MODERATE ->
             if (night) ComposedIcons.showersNight else ComposedIcons.showersDay
-        WmoCode.SHOWERS_HEAVY -> R.drawable.mc3_extreme_rain
+        // A violent shower closes the sky: the rain's drawing, its one cloud (13 ott 2026;
+        // `extreme-rain` was the darker double cloud, the back one a crescent again). The
+        // word says how hard, as it does for heavy rain.
+        WmoCode.SHOWERS_HEAVY -> R.drawable.mc3_rain
         WmoCode.SNOW_SHOWERS_SLIGHT, WmoCode.SNOW_SHOWERS_HEAVY ->
             if (night) ComposedIcons.snowShowersNight else ComposedIcons.snowShowersDay
-        // A storm with its rain, and a storm over a dry hour without (25 set 2026).
+        // A storm with its rain, and a storm over a dry hour without (25 set 2026). One cloud
+        // and no sun since 13 ott 2026: `thunderstorms-day-*` was the sliver of sun behind a
+        // full cloud that code 2 and the showers left that day, and a storm is a closed sky.
         WmoCode.THUNDERSTORM, WmoCode.THUNDERSTORM_STRONG, WmoCode.THUNDERSTORM_SEVERE ->
-            if (night) R.drawable.mc3_thunderstorms_night_rain else R.drawable.mc3_thunderstorms_day_rain
-        WmoCode.THUNDERSTORM_POSSIBLE ->
-            if (night) R.drawable.mc3_thunderstorms_night else R.drawable.mc3_thunderstorms_day
+            R.drawable.mc3_thunderstorms_rain
+        WmoCode.THUNDERSTORM_POSSIBLE -> R.drawable.mc3_thunderstorms
         null -> R.drawable.mc3_not_available
     }
 

@@ -215,7 +215,7 @@
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mc3n_overcast_rain" />
+                android:src="@drawable/mc3n_rain" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"

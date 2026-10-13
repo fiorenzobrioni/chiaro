@@ -24,23 +24,19 @@ internal object MeteoconsSets {
         R.drawable.mc3_clear_night to R.drawable.mc3n_clear_night,
         R.drawable.mc3_partly_cloudy_day to R.drawable.mc3n_partly_cloudy_day,
         R.drawable.mc3_partly_cloudy_night to R.drawable.mc3n_partly_cloudy_night,
-        R.drawable.mc3_overcast to R.drawable.mc3n_overcast,
         R.drawable.mc3_cloudy to R.drawable.mc3n_cloudy,
         R.drawable.mc3_fog_day to R.drawable.mc3n_fog_day,
         R.drawable.mc3_fog_night to R.drawable.mc3n_fog_night,
-        R.drawable.mc3_overcast_drizzle to R.drawable.mc3n_overcast_drizzle,
-        R.drawable.mc3_overcast_rain to R.drawable.mc3n_overcast_rain,
-        R.drawable.mc3_overcast_sleet to R.drawable.mc3n_overcast_sleet,
-        R.drawable.mc3_overcast_snow to R.drawable.mc3n_overcast_snow,
         R.drawable.mc3_partly_cloudy_day_rain to R.drawable.mc3n_partly_cloudy_day_rain,
         R.drawable.mc3_partly_cloudy_night_rain to R.drawable.mc3n_partly_cloudy_night_rain,
         R.drawable.mc3_partly_cloudy_day_snow to R.drawable.mc3n_partly_cloudy_day_snow,
         R.drawable.mc3_partly_cloudy_night_snow to R.drawable.mc3n_partly_cloudy_night_snow,
-        R.drawable.mc3_extreme_rain to R.drawable.mc3n_extreme_rain,
-        R.drawable.mc3_thunderstorms_day to R.drawable.mc3n_thunderstorms_day,
-        R.drawable.mc3_thunderstorms_night to R.drawable.mc3n_thunderstorms_night,
-        R.drawable.mc3_thunderstorms_day_rain to R.drawable.mc3n_thunderstorms_day_rain,
-        R.drawable.mc3_thunderstorms_night_rain to R.drawable.mc3n_thunderstorms_night_rain,
+        R.drawable.mc3_drizzle to R.drawable.mc3n_drizzle,
+        R.drawable.mc3_rain to R.drawable.mc3n_rain,
+        R.drawable.mc3_sleet to R.drawable.mc3n_sleet,
+        R.drawable.mc3_snow to R.drawable.mc3n_snow,
+        R.drawable.mc3_thunderstorms to R.drawable.mc3n_thunderstorms,
+        R.drawable.mc3_thunderstorms_rain to R.drawable.mc3n_thunderstorms_rain,
         R.drawable.mc3_not_available to R.drawable.mc3n_not_available,
         R.drawable.mc3_wind to R.drawable.mc3n_wind,
         R.drawable.mc3_humidity to R.drawable.mc3n_humidity,
@@ -111,23 +107,19 @@ internal object MeteoconsSets {
         R.drawable.mc3_clear_night to R.drawable.mc3f_clear_night,
         R.drawable.mc3_partly_cloudy_day to R.drawable.mc3f_partly_cloudy_day,
         R.drawable.mc3_partly_cloudy_night to R.drawable.mc3f_partly_cloudy_night,
-        R.drawable.mc3_overcast to R.drawable.mc3f_overcast,
         R.drawable.mc3_cloudy to R.drawable.mc3f_cloudy,
         R.drawable.mc3_fog_day to R.drawable.mc3f_fog_day,
         R.drawable.mc3_fog_night to R.drawable.mc3f_fog_night,
-        R.drawable.mc3_overcast_drizzle to R.drawable.mc3f_overcast_drizzle,
-        R.drawable.mc3_overcast_rain to R.drawable.mc3f_overcast_rain,
-        R.drawable.mc3_overcast_sleet to R.drawable.mc3f_overcast_sleet,
-        R.drawable.mc3_overcast_snow to R.drawable.mc3f_overcast_snow,
         R.drawable.mc3_partly_cloudy_day_rain to R.drawable.mc3f_partly_cloudy_day_rain,
         R.drawable.mc3_partly_cloudy_night_rain to R.drawable.mc3f_partly_cloudy_night_rain,
         R.drawable.mc3_partly_cloudy_day_snow to R.drawable.mc3f_partly_cloudy_day_snow,
         R.drawable.mc3_partly_cloudy_night_snow to R.drawable.mc3f_partly_cloudy_night_snow,
-        R.drawable.mc3_extreme_rain to R.drawable.mc3f_extreme_rain,
-        R.drawable.mc3_thunderstorms_day to R.drawable.mc3f_thunderstorms_day,
-        R.drawable.mc3_thunderstorms_night to R.drawable.mc3f_thunderstorms_night,
-        R.drawable.mc3_thunderstorms_day_rain to R.drawable.mc3f_thunderstorms_day_rain,
-        R.drawable.mc3_thunderstorms_night_rain to R.drawable.mc3f_thunderstorms_night_rain,
+        R.drawable.mc3_drizzle to R.drawable.mc3f_drizzle,
+        R.drawable.mc3_rain to R.drawable.mc3f_rain,
+        R.drawable.mc3_sleet to R.drawable.mc3f_sleet,
+        R.drawable.mc3_snow to R.drawable.mc3f_snow,
+        R.drawable.mc3_thunderstorms to R.drawable.mc3f_thunderstorms,
+        R.drawable.mc3_thunderstorms_rain to R.drawable.mc3f_thunderstorms_rain,
         R.drawable.mc3_not_available to R.drawable.mc3f_not_available,
         R.drawable.mc3_wind to R.drawable.mc3f_wind,
         R.drawable.mc3_humidity to R.drawable.mc3f_humidity,
@@ -198,23 +190,19 @@ internal object MeteoconsSets {
         R.drawable.mc3_clear_night to R.drawable.mc3fn_clear_night,
         R.drawable.mc3_partly_cloudy_day to R.drawable.mc3fn_partly_cloudy_day,
         R.drawable.mc3_partly_cloudy_night to R.drawable.mc3fn_partly_cloudy_night,
-        R.drawable.mc3_overcast to R.drawable.mc3fn_overcast,
         R.drawable.mc3_cloudy to R.drawable.mc3fn_cloudy,
         R.drawable.mc3_fog_day to R.drawable.mc3fn_fog_day,
         R.drawable.mc3_fog_night to R.drawable.mc3fn_fog_night,
-        R.drawable.mc3_overcast_drizzle to R.drawable.mc3fn_overcast_drizzle,
-        R.drawable.mc3_overcast_rain to R.drawable.mc3fn_overcast_rain,
-        R.drawable.mc3_overcast_sleet to R.drawable.mc3fn_overcast_sleet,
-        R.drawable.mc3_overcast_snow to R.drawable.mc3fn_overcast_snow,
         R.drawable.mc3_partly_cloudy_day_rain to R.drawable.mc3fn_partly_cloudy_day_rain,
         R.drawable.mc3_partly_cloudy_night_rain to R.drawable.mc3fn_partly_cloudy_night_rain,
         R.drawable.mc3_partly_cloudy_day_snow to R.drawable.mc3fn_partly_cloudy_day_snow,
         R.drawable.mc3_partly_cloudy_night_snow to R.drawable.mc3fn_partly_cloudy_night_snow,
-        R.drawable.mc3_extreme_rain to R.drawable.mc3fn_extreme_rain,
-        R.drawable.mc3_thunderstorms_day to R.drawable.mc3fn_thunderstorms_day,
-        R.drawable.mc3_thunderstorms_night to R.drawable.mc3fn_thunderstorms_night,
-        R.drawable.mc3_thunderstorms_day_rain to R.drawable.mc3fn_thunderstorms_day_rain,
-        R.drawable.mc3_thunderstorms_night_rain to R.drawable.mc3fn_thunderstorms_night_rain,
+        R.drawable.mc3_drizzle to R.drawable.mc3fn_drizzle,
+        R.drawable.mc3_rain to R.drawable.mc3fn_rain,
+        R.drawable.mc3_sleet to R.drawable.mc3fn_sleet,
+        R.drawable.mc3_snow to R.drawable.mc3fn_snow,
+        R.drawable.mc3_thunderstorms to R.drawable.mc3fn_thunderstorms,
+        R.drawable.mc3_thunderstorms_rain to R.drawable.mc3fn_thunderstorms_rain,
         R.drawable.mc3_not_available to R.drawable.mc3fn_not_available,
         R.drawable.mc3_wind to R.drawable.mc3fn_wind,
         R.drawable.mc3_humidity to R.drawable.mc3fn_humidity,
@@ -312,10 +300,6 @@ internal object MeteoconsSets {
             R.drawable.mc3a_partly_cloudy_night, R.drawable.mc3an_partly_cloudy_night,
             R.drawable.mc3fa_partly_cloudy_night, R.drawable.mc3fan_partly_cloudy_night
         ),
-        R.drawable.mc3_overcast to Moving(
-            R.drawable.mc3a_overcast, R.drawable.mc3an_overcast,
-            R.drawable.mc3fa_overcast, R.drawable.mc3fan_overcast
-        ),
         R.drawable.mc3_cloudy to Moving(
             R.drawable.mc3a_cloudy, R.drawable.mc3an_cloudy,
             R.drawable.mc3fa_cloudy, R.drawable.mc3fan_cloudy
@@ -327,22 +311,6 @@ internal object MeteoconsSets {
         R.drawable.mc3_fog_night to Moving(
             R.drawable.mc3a_fog_night, R.drawable.mc3an_fog_night,
             R.drawable.mc3fa_fog_night, R.drawable.mc3fan_fog_night
-        ),
-        R.drawable.mc3_overcast_drizzle to Moving(
-            R.drawable.mc3a_overcast_drizzle, R.drawable.mc3an_overcast_drizzle,
-            R.drawable.mc3fa_overcast_drizzle, R.drawable.mc3fan_overcast_drizzle
-        ),
-        R.drawable.mc3_overcast_rain to Moving(
-            R.drawable.mc3a_overcast_rain, R.drawable.mc3an_overcast_rain,
-            R.drawable.mc3fa_overcast_rain, R.drawable.mc3fan_overcast_rain
-        ),
-        R.drawable.mc3_overcast_sleet to Moving(
-            R.drawable.mc3a_overcast_sleet, R.drawable.mc3an_overcast_sleet,
-            R.drawable.mc3fa_overcast_sleet, R.drawable.mc3fan_overcast_sleet
-        ),
-        R.drawable.mc3_overcast_snow to Moving(
-            R.drawable.mc3a_overcast_snow, R.drawable.mc3an_overcast_snow,
-            R.drawable.mc3fa_overcast_snow, R.drawable.mc3fan_overcast_snow
         ),
         R.drawable.mc3_partly_cloudy_day_rain to Moving(
             R.drawable.mc3a_partly_cloudy_day_rain, R.drawable.mc3an_partly_cloudy_day_rain,
@@ -360,25 +328,29 @@ internal object MeteoconsSets {
             R.drawable.mc3a_partly_cloudy_night_snow, R.drawable.mc3an_partly_cloudy_night_snow,
             R.drawable.mc3fa_partly_cloudy_night_snow, R.drawable.mc3fan_partly_cloudy_night_snow
         ),
-        R.drawable.mc3_extreme_rain to Moving(
-            R.drawable.mc3a_extreme_rain, R.drawable.mc3an_extreme_rain,
-            R.drawable.mc3fa_extreme_rain, R.drawable.mc3fan_extreme_rain
+        R.drawable.mc3_drizzle to Moving(
+            R.drawable.mc3a_drizzle, R.drawable.mc3an_drizzle,
+            R.drawable.mc3fa_drizzle, R.drawable.mc3fan_drizzle
         ),
-        R.drawable.mc3_thunderstorms_day to Moving(
-            R.drawable.mc3a_thunderstorms_day, R.drawable.mc3an_thunderstorms_day,
-            R.drawable.mc3fa_thunderstorms_day, R.drawable.mc3fan_thunderstorms_day
+        R.drawable.mc3_rain to Moving(
+            R.drawable.mc3a_rain, R.drawable.mc3an_rain,
+            R.drawable.mc3fa_rain, R.drawable.mc3fan_rain
         ),
-        R.drawable.mc3_thunderstorms_night to Moving(
-            R.drawable.mc3a_thunderstorms_night, R.drawable.mc3an_thunderstorms_night,
-            R.drawable.mc3fa_thunderstorms_night, R.drawable.mc3fan_thunderstorms_night
+        R.drawable.mc3_sleet to Moving(
+            R.drawable.mc3a_sleet, R.drawable.mc3an_sleet,
+            R.drawable.mc3fa_sleet, R.drawable.mc3fan_sleet
         ),
-        R.drawable.mc3_thunderstorms_day_rain to Moving(
-            R.drawable.mc3a_thunderstorms_day_rain, R.drawable.mc3an_thunderstorms_day_rain,
-            R.drawable.mc3fa_thunderstorms_day_rain, R.drawable.mc3fan_thunderstorms_day_rain
+        R.drawable.mc3_snow to Moving(
+            R.drawable.mc3a_snow, R.drawable.mc3an_snow,
+            R.drawable.mc3fa_snow, R.drawable.mc3fan_snow
         ),
-        R.drawable.mc3_thunderstorms_night_rain to Moving(
-            R.drawable.mc3a_thunderstorms_night_rain, R.drawable.mc3an_thunderstorms_night_rain,
-            R.drawable.mc3fa_thunderstorms_night_rain, R.drawable.mc3fan_thunderstorms_night_rain
+        R.drawable.mc3_thunderstorms to Moving(
+            R.drawable.mc3a_thunderstorms, R.drawable.mc3an_thunderstorms,
+            R.drawable.mc3fa_thunderstorms, R.drawable.mc3fan_thunderstorms
+        ),
+        R.drawable.mc3_thunderstorms_rain to Moving(
+            R.drawable.mc3a_thunderstorms_rain, R.drawable.mc3an_thunderstorms_rain,
+            R.drawable.mc3fa_thunderstorms_rain, R.drawable.mc3fan_thunderstorms_rain
         ),
     )
 
@@ -393,23 +365,19 @@ internal object MeteoconsSets {
         "clear-night" to R.drawable.mc3_clear_night,
         "partly-cloudy-day" to R.drawable.mc3_partly_cloudy_day,
         "partly-cloudy-night" to R.drawable.mc3_partly_cloudy_night,
-        "overcast" to R.drawable.mc3_overcast,
         "cloudy" to R.drawable.mc3_cloudy,
         "fog-day" to R.drawable.mc3_fog_day,
         "fog-night" to R.drawable.mc3_fog_night,
-        "overcast-drizzle" to R.drawable.mc3_overcast_drizzle,
-        "overcast-rain" to R.drawable.mc3_overcast_rain,
-        "overcast-sleet" to R.drawable.mc3_overcast_sleet,
-        "overcast-snow" to R.drawable.mc3_overcast_snow,
         "partly-cloudy-day-rain" to R.drawable.mc3_partly_cloudy_day_rain,
         "partly-cloudy-night-rain" to R.drawable.mc3_partly_cloudy_night_rain,
         "partly-cloudy-day-snow" to R.drawable.mc3_partly_cloudy_day_snow,
         "partly-cloudy-night-snow" to R.drawable.mc3_partly_cloudy_night_snow,
-        "extreme-rain" to R.drawable.mc3_extreme_rain,
-        "thunderstorms-day" to R.drawable.mc3_thunderstorms_day,
-        "thunderstorms-night" to R.drawable.mc3_thunderstorms_night,
-        "thunderstorms-day-rain" to R.drawable.mc3_thunderstorms_day_rain,
-        "thunderstorms-night-rain" to R.drawable.mc3_thunderstorms_night_rain,
+        "drizzle" to R.drawable.mc3_drizzle,
+        "rain" to R.drawable.mc3_rain,
+        "sleet" to R.drawable.mc3_sleet,
+        "snow" to R.drawable.mc3_snow,
+        "thunderstorms" to R.drawable.mc3_thunderstorms,
+        "thunderstorms-rain" to R.drawable.mc3_thunderstorms_rain,
         "not-available" to R.drawable.mc3_not_available,
         "wind" to R.drawable.mc3_wind,
         "humidity" to R.drawable.mc3_humidity,

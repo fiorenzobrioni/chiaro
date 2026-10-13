@@ -28,41 +28,41 @@ class ConditionIconsTest {
         3 to R.drawable.mc3_cloudy,
         45 to R.drawable.mc3_fog_day,
         48 to R.drawable.mc3_fog_day,
-        51 to R.drawable.mc3_overcast_drizzle,
-        53 to R.drawable.mc3_overcast_drizzle,
-        55 to R.drawable.mc3_overcast_drizzle,
+        51 to R.drawable.mc3_drizzle,
+        53 to R.drawable.mc3_drizzle,
+        55 to R.drawable.mc3_drizzle,
         // Il gelicidio è pioggia che gela a terra: si disegna quel che cade (25 set 2026).
         // `overcast-sleet` — gocce E fiocchi — è andato a pioggia e neve insieme, 68/69.
-        56 to R.drawable.mc3_overcast_drizzle,
-        57 to R.drawable.mc3_overcast_drizzle,
-        61 to R.drawable.mc3_overcast_rain,
-        63 to R.drawable.mc3_overcast_rain,
-        65 to R.drawable.mc3_overcast_rain,
-        66 to R.drawable.mc3_overcast_rain,
-        67 to R.drawable.mc3_overcast_rain,
-        68 to R.drawable.mc3_overcast_sleet,
-        69 to R.drawable.mc3_overcast_sleet,
-        71 to R.drawable.mc3_overcast_snow,
-        73 to R.drawable.mc3_overcast_snow,
-        75 to R.drawable.mc3_overcast_snow,
-        77 to R.drawable.mc3_overcast_snow,
+        56 to R.drawable.mc3_drizzle,
+        57 to R.drawable.mc3_drizzle,
+        61 to R.drawable.mc3_rain,
+        63 to R.drawable.mc3_rain,
+        65 to R.drawable.mc3_rain,
+        66 to R.drawable.mc3_rain,
+        67 to R.drawable.mc3_rain,
+        68 to R.drawable.mc3_sleet,
+        69 to R.drawable.mc3_sleet,
+        71 to R.drawable.mc3_snow,
+        73 to R.drawable.mc3_snow,
+        75 to R.drawable.mc3_snow,
+        77 to R.drawable.mc3_snow,
         80 to R.drawable.mc3_sun_half_cloud_rain_day,
         81 to R.drawable.mc3_sun_half_cloud_rain_day,
-        82 to R.drawable.mc3_extreme_rain,
+        82 to R.drawable.mc3_rain,
         85 to R.drawable.mc3_sun_half_cloud_snow_day,
         86 to R.drawable.mc3_sun_half_cloud_snow_day,
         // Il temporale con la sua pioggia dal 25 set 2026, e anche per 96/99 (dal 24 set:
         // fuori dalla famiglia ICON Open-Meteo scrive 96 per «temporale forte» e 99 mai;
         // la grandine disegnata era grandine che nessuno aveva previsto).
-        95 to R.drawable.mc3_thunderstorms_day_rain,
-        96 to R.drawable.mc3_thunderstorms_day_rain,
-        99 to R.drawable.mc3_thunderstorms_day_rain,
+        95 to R.drawable.mc3_thunderstorms_rain,
+        96 to R.drawable.mc3_thunderstorms_rain,
+        99 to R.drawable.mc3_thunderstorms_rain,
         // Gli stati del motore: la pioggia probabile prende la pioggia più leggera, la
         // neve probabile l'unica neve sotto una nuvola, il temporale su un'ora asciutta il
         // fulmine senza gocce.
-        1061 to R.drawable.mc3_overcast_drizzle,
-        1071 to R.drawable.mc3_overcast_snow,
-        1095 to R.drawable.mc3_thunderstorms_day
+        1061 to R.drawable.mc3_drizzle,
+        1071 to R.drawable.mc3_snow,
+        1095 to R.drawable.mc3_thunderstorms
     )
 
     /** I codici che di notte cambiano disegno, e in cosa. */
@@ -75,11 +75,7 @@ class ConditionIconsTest {
         80 to R.drawable.mc3_sun_half_cloud_rain_night,
         81 to R.drawable.mc3_sun_half_cloud_rain_night,
         85 to R.drawable.mc3_sun_half_cloud_snow_night,
-        86 to R.drawable.mc3_sun_half_cloud_snow_night,
-        95 to R.drawable.mc3_thunderstorms_night_rain,
-        96 to R.drawable.mc3_thunderstorms_night_rain,
-        99 to R.drawable.mc3_thunderstorms_night_rain,
-        1095 to R.drawable.mc3_thunderstorms_night
+        86 to R.drawable.mc3_sun_half_cloud_snow_night
     )
 
     @Test
