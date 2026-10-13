@@ -52,6 +52,10 @@ sections are a normal size and live here alone.
   it two rows tall, and «The day's arc» can show the moments you follow instead of the arc.
   «The hours ahead» and «Sky moments» are no longer offered, but the ones already on your
   home screen keep working.
+- **«Partly cloudy» looks like a step up from «mostly clear»**: the same sun with a bigger
+  cloud, instead of a different drawing; the four skies from clear to overcast now climb in
+  steps, and a stray speck next to the «mostly clear» cloud is gone.
+- **The full moon on the day's arc is a disc**, not an empty ring.
 - **«In words» on the same scale**: its sentence is the size of the facts under it, set apart by
   weight, which gives the temperature a little more room.
 - **Widgets wear your launcher's corner**, and on the day's arc the moon's path is dotted, so

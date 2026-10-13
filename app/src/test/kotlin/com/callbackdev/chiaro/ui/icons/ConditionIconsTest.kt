@@ -23,7 +23,7 @@ class ConditionIconsTest {
     private val byDay = mapOf(
         0 to R.drawable.mc3_clear_day,
         1 to R.drawable.mc3_sun_one_cloud_day,
-        2 to R.drawable.mc3_partly_cloudy_day,
+        2 to R.drawable.mc3_sun_half_cloud_day,
         // Una nuvola sola dal 12 ott 2026: la seconda di `overcast` si leggeva come una luna.
         3 to R.drawable.mc3_cloudy,
         45 to R.drawable.mc3_fog_day,
@@ -69,7 +69,7 @@ class ConditionIconsTest {
     private val byNight = mapOf(
         0 to R.drawable.mc3_clear_night,
         1 to R.drawable.mc3_sun_one_cloud_night,
-        2 to R.drawable.mc3_partly_cloudy_night,
+        2 to R.drawable.mc3_sun_half_cloud_night,
         45 to R.drawable.mc3_fog_night,
         48 to R.drawable.mc3_fog_night,
         80 to R.drawable.mc3_partly_cloudy_night_rain,

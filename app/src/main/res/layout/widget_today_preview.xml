@@ -29,7 +29,7 @@
             android:layout_width="76dp"
             android:layout_height="76dp"
             android:importantForAccessibility="no"
-            android:src="@drawable/mc3n_partly_cloudy_day" />
+            android:src="@drawable/mc3n_sun_half_cloud_day" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -107,7 +107,7 @@
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mc3n_partly_cloudy_day" />
+                android:src="@drawable/mc3n_sun_half_cloud_day" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"
@@ -134,7 +134,7 @@
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mc3n_partly_cloudy_day" />
+                android:src="@drawable/mc3n_sun_half_cloud_day" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"

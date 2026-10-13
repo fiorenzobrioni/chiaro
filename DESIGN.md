@@ -2000,8 +2000,8 @@ a valid animator and only a person can say the rain falls downward.
    **The tools are five, and each one is a seam.** `tools/import_meteocons_v3.py` is the
    importer of record — re-running it IS the import; `tools/svg_paths.py` holds the path
    arithmetic and the mask conversion; `tools/reanchor.py` holds the colour rule;
-   `tools/shipped_icons.py` holds the list; `tools/compose_sun_cloud.py` composes the one
-   drawing the family does not have (below). The Kotlin lookup tables are **generated**
+   `tools/shipped_icons.py` holds the list; `tools/compose_sun_cloud.py` composes the two
+   drawings the family does not have the way this app needs them (below). The Kotlin lookup tables are **generated**
    into `ui/icons/MeteoconsSets.kt` and `ui/icons/ComposedIcons.kt`; what stays
    hand-written in `ChiaroIcons` is the policy — which weather code gets which drawing,
    which metric gets which mark — because that is the part a person argues about.
@@ -2024,6 +2024,23 @@ a valid animator and only a person can say the rain falls downward.
    3% is under the family's own 0.88 extent cap. `ComposedIcons.kt` is a separate file from
    `MeteoconsSets.kt` for the reason that makes the whole thing safe: the importer rewrites
    that one on every run and never touches this one.
+
+   **And a second one, for WMO 2** (13 ott 2026, after the widget review):
+   `sun-half-cloud-day` and `-night`, the same untouched sun with `cloudy` at **78%**, over
+   35% of the disc and the south and south-east rays, the six others whole. It replaced
+   Meteocons' `partly-cloudy` (a full cloud, a sliver of sun in the corner) because the four
+   skies did not climb in steps: from 1 to 2 the sun went from whole to a sliver and moved
+   corner, and at the strip's 32 dp the sliver was a few pixels, so 2 read as 3. Now the
+   cloud grows 0 → 49% → 78% → 100% and the sun goes whole → whole → a third hidden → gone.
+   Each recipe has its own day and night centre (`RECIPES`): at night the cloud sits at
+   (84, 80) instead of (77, 86), where the crescent's lower horn goes under it instead of
+   poking out beside it. The composer now refuses three kinds of splinter: a ray cut
+   lengthwise (since 12 set), a ray tip left in the air between hole and cloud (`tips`, at a
+   tenth of a unit: the «quasi sereno» left one in the flat style, and its cloud moved up
+   half a unit, from y 94.5 to 94, to lose it), and a piece of crescent cut off from the
+   rest (`moon_fragments`). Showers keep Meteocons' `partly-cloudy-*-rain`: their drops are
+   what tell them apart. `partly-cloudy-day/-night` stay shipped and unused on screen,
+   because the composer reads its mask from them.
 
    **Overcast (WMO 3) draws `cloudy`, one cloud** (review of 12 ott 2026). Meteocons'
    `overcast` puts a second, darker cloud over the first's shoulder, and at the strip's and

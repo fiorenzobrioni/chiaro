@@ -12159,3 +12159,53 @@ dopo.
   ragione.
 - Anteprima prima/dopo guardata in italiano e in inglese a ogni misura; `widgets.png`
   rigenerato.
+
+## Le icone del cielo in scala, e la luna piena nell'agenda (committente, 13 ott 2026)
+
+Il committente ha approvato la proposta sul punto «due disegni per stati vicini» e ha chiesto
+di farla con un'anteprima, insieme alla luna piena dell'agenda dell'arco.
+
+### Cosa è cambiato
+
+- **Il codice 2 (poco nuvoloso) è composto** da `tools/compose_sun_cloud.py` come il codice 1:
+  `sun-half-cloud-*`, lo stesso sole di `clear-day` con la nuvola di `cloudy` al 78%. Prima era
+  `partly-cloudy` di Meteocons, nuvola piena con uno spicchio di sole nell'angolo: da 1 a 2 il
+  sole passava da intero a spicchio e cambiava angolo, e a 32 dp lo spicchio spariva, quindi 2
+  si confondeva con 3. Ora la nuvola cresce 0 → 49% → 78% → 100% e il sole intero → intero →
+  coperto per un terzo → assente. `ChiaroIcons.conditionLineRes`, le anteprime del selettore e
+  i test seguono.
+- **Lo strumento compone ricette**, ciascuna con la sua taglia e un centro di giorno e uno di
+  notte (`RECIPES`). Il poco nuvoloso: di giorno (77, 86), di notte (84, 80).
+- **Tre controlli contro le schegge**: il raggio tagliato per il lungo (c'era), la punta di
+  raggio rimasta nell'aria fra buco e nuvola (`tips`, nuovo) e il pezzo di falce staccato
+  (`moon_fragments`, nuovo). Il primo nuovo ha trovato un difetto nel quasi sereno già
+  spedito: nello stile pieno restava un puntino giallo accanto alla nuvoletta. La nuvoletta
+  sale di mezza unità (y 94,5 → 94) e il puntino sparisce.
+- **La luna nelle righe di elenco** (agenda dell'arco, righe del widget Cielo) usa sempre lo
+  stile pieno: nello stile linea la luna piena è un anello, che a 20 dp accanto ai segni del
+  verdetto sembrava un pulsante di selezione vuoto.
+
+### Decisioni e deviazioni
+
+- **Non `moonrise`/`moonset` per la luna dell'agenda**, che era la prima idea: erano già stati
+  scartati il 9 set 2026 (a 20 dp il disco tagliato dall'orizzonte sembra «tagliato in
+  basso»), e la fase reale è una scelta esplicita del committente. Resta la fase reale, nello
+  stile pieno, che è anche come l'arco dipinge il disco della luna.
+- **I parametri sono stati scelti con una ricerca a griglia** sui tre controlli, più la quota
+  di disco coperta (circa metà), poi guardati in grande e alla misura della striscia nei
+  quattro stili. A 32 dp la differenza fra 1 e 2 ora è la taglia della nuvola: più sottile del
+  salto di prima, che era il difetto.
+- **Gli acquazzoni restano su `partly-cloudy-*-rain`** di Meteocons: le gocce li distinguono, e
+  comporre anche quelli è un lavoro a parte.
+- **`partly-cloudy-day/-night` restano in `shipped_icons.py`** anche se nessuna schermata li
+  nomina: il compositore ne legge la maschera.
+
+### Come è stato verificato
+
+- Anteprima prima/dopo della scala completa (sereno → coperto), giorno e notte, linea e pieno,
+  in grande e a 40 px; anteprima prima/dopo delle zone cambiate degli screenshot del README.
+- `compose_sun_cloud.py --controlla` pulito; i due nuovi controlli fatti fallire sui
+  parametri vecchi (punta di raggio a y 94,5; falce in tre pezzi con il centro del giorno).
+- `ComposedIconsTest` e `ConditionIconsTest` estesi al codice 2, `ArcTextTest` alla luna in
+  stile pieno; README rigenerato (`today-now`, `today-week`, `settings`, `widgets`,
+  `widget-day-arc`).

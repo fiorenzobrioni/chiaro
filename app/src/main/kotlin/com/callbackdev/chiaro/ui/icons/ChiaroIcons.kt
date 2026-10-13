@@ -145,6 +145,18 @@ object ChiaroIcons {
      * the south-east one stands behind the cloud. Between 0 and 1 exactly one thing
      * changes, and it is the thing that changes in the sky.
      *
+     * **Code 2 takes `sun-half-cloud`, composed the same way** (committente, 13 ott 2026,
+     * after the widget review): the same untouched sun, in the same place, with
+     * `cloudy`'s silhouette at 78% over a third of its disc and its south and south-east
+     * rays. It replaced Meteocons' `partly-cloudy`, a full cloud with a sliver of sun in
+     * the corner, because the four skies did not climb in steps: from 1 to 2 the sun went
+     * from whole to a sliver and moved corner, the cloud from small to full, and at the
+     * hour strip's 32 dp the sliver was a few pixels, so 2 read as 3. Now the cloud grows
+     * 0 → 49% → 78% → 100% and the sun goes whole → whole → a third hidden → gone. At
+     * night the cloud sits higher and further right (the recipe's own centre), where the
+     * crescent's lower horn goes under it instead of poking out beside it. Showers keep
+     * Meteocons' `partly-cloudy-*-rain`: the drops are what tell them apart.
+     *
      * The imported `mostly-clear` stays in the repo, unused, for the day the choice is
      * revisited again. Most apps collapse 0 and 1 for a poorer reason, having no such
      * drawing at all: Home Assistant's Open-Meteo integration maps both to `sunny`.
@@ -169,8 +181,7 @@ object ChiaroIcons {
     fun conditionLineRes(wmoCode: Int, night: Boolean = false): Int = when (WmoCode.of(wmoCode)) {
         WmoCode.CLEAR -> if (night) R.drawable.mc3_clear_night else R.drawable.mc3_clear_day
         WmoCode.MAINLY_CLEAR -> if (night) ComposedIcons.mostlyClearNight else ComposedIcons.mostlyClearDay
-        WmoCode.PARTLY_CLOUDY ->
-            if (night) R.drawable.mc3_partly_cloudy_night else R.drawable.mc3_partly_cloudy_day
+        WmoCode.PARTLY_CLOUDY -> if (night) ComposedIcons.partlyCloudyNight else ComposedIcons.partlyCloudyDay
         // `cloudy`, one cloud, since the review of 12 ott 2026: `overcast` draws a second,
         // darker cloud peeking over the first, and at the strip's and the week's sizes
         // that back cloud read as a crescent — «partly cloudy at night» at 13:00, beside

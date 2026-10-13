@@ -10,7 +10,8 @@ import org.junit.Test
 /**
  * Il disegno che il repo **compone** invece di importarlo (DESIGN.md §13.1, 12 set 2026).
  *
- * `sun-one-cloud` e' il sereno di Meteocons piu' una nuvoletta nell'angolo, e la ragione
+ * `sun-one-cloud` e' il sereno di Meteocons piu' una nuvoletta nell'angolo, `sun-half-cloud`
+ * (13 ott 2026) lo stesso sereno con la nuvola al 78%, e la ragione
  * per cui puo' esistere senza che nessuno disegni a mano e' che ogni suo pezzo resta il
  * pezzo originale: il sole e' `clear-day` con i suoi percorsi e la sua scala, la nuvola
  * e' la silhouette di `cloudy`. Lo compone `tools/compose_sun_cloud.py`, e il solo
@@ -41,7 +42,8 @@ class ComposedIconsTest {
 
     /** I nomi composti, e il disegno del sereno da cui viene ognuno. */
     private val composed = mapOf(
-        "sun_one_cloud_day" to "clear_day", "sun_one_cloud_night" to "clear_night"
+        "sun_one_cloud_day" to "clear_day", "sun_one_cloud_night" to "clear_night",
+        "sun_half_cloud_day" to "clear_day", "sun_half_cloud_night" to "clear_night"
     )
 
     private val pathData = Regex("""android:pathData="([^"]*)"""")
@@ -185,29 +187,32 @@ class ComposedIconsTest {
     }
 
     /**
-     * **Il codice 1 arriva davvero al disegno composto, per tutte le strade.**
+     * **I codici 1 e 2 arrivano davvero al disegno composto, per tutte le strade.**
      *
      * `conditionLineRes` è solo la prima: `styledRes` deve trovare la faccia per lo stile
      * e il fondo, e `movingRes` il gemello animato. Sono tre tabelle diverse, e una
      * dimenticata qui non rompe la compilazione — lascia un'icona vuota a chi cambia
-     * stile, o una che non si muove a chi accende il movimento.
+     * stile, o una che non si muove a chi accende il movimento. Il codice 2 si è aggiunto
+     * il 13 ott 2026.
      */
     @Test
-    fun `il quasi sereno si trova in tutte e quattro le facce, ferma e animata`() {
-        listOf(false, true).forEach { night ->
-            val line = ChiaroIcons.conditionLineRes(1, night)
-            assertTrue("il codice 1 non prende il disegno composto",
-                line in ComposedIcons.byName.values)
-            listOf(WeatherIcons.LINE, WeatherIcons.FILL).forEach { style ->
-                listOf(false, true).forEach { dark ->
-                    assertTrue(
-                        "nessuna faccia ferma per il quasi sereno ($style, scuro=$dark)",
-                        ChiaroIcons.styledRes(line, style, dark) != 0
-                    )
-                    assertNotNull(
-                        "il quasi sereno non ha il gemello animato ($style, scuro=$dark)",
-                        ChiaroIcons.movingRes(line, style, dark)
-                    )
+    fun `quasi sereno e poco nuvoloso si trovano in tutte e quattro le facce, fermi e animati`() {
+        listOf(1, 2).forEach { code ->
+            listOf(false, true).forEach { night ->
+                val line = ChiaroIcons.conditionLineRes(code, night)
+                assertTrue("il codice $code non prende il disegno composto",
+                    line in ComposedIcons.byName.values)
+                listOf(WeatherIcons.LINE, WeatherIcons.FILL).forEach { style ->
+                    listOf(false, true).forEach { dark ->
+                        assertTrue(
+                            "nessuna faccia ferma per il codice $code ($style, scuro=$dark)",
+                            ChiaroIcons.styledRes(line, style, dark) != 0
+                        )
+                        assertNotNull(
+                            "il codice $code non ha il gemello animato ($style, scuro=$dark)",
+                            ChiaroIcons.movingRes(line, style, dark)
+                        )
+                    }
                 }
             }
         }

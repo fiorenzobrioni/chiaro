@@ -105,8 +105,9 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
   `ui/icons/MeteoconsSets.kt` or `ui/icons/ComposedIcons.kt` is edited by hand** —
   re-running the tool IS the drawing. Two tools write there and they do not overlap: the
   importer owns every name that exists in Meteocons, and `tools/compose_sun_cloud.py` owns
-  `sun-one-cloud-*`, the «quasi sereno» this repo composes from `clear-day` and `cloudy`
-  because the family has no honest drawing for WMO code 1. Run the composer again after
+  `sun-one-cloud-*` and `sun-half-cloud-*`, the «quasi sereno» and the «poco nuvoloso» this
+  repo composes from `clear-day` and `cloudy`, so that WMO codes 0 to 3 climb in steps (the
+  family has no honest drawing for code 1, and its code 2 jumped). Run the composer again after
   any re-import: `ComposedIconsTest` compares the composed drawing with its sources path by
   path and fails when they drift. The repo carries all 519 drawings; only what a screen
   names reaches the APK, so adding one to a screen means adding it to `shipped_icons.py`

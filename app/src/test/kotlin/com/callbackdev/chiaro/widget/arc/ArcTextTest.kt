@@ -73,20 +73,24 @@ class ArcTextTest {
 
     @Test
     fun `the moon's rows draw the real phase, the sun's their own glyphs`() {
-        // 9 Sep 2026, two days before the new moon of the 11th: the new moon's glyph, in
-        // the card's family and for its ground — and the full disc a fortnight later.
+        // 9 Sep 2026, two days before the new moon of the 11th: the new moon's glyph for
+        // the card's ground — and the full disc a fortnight later. Always the filled
+        // family (13 ott 2026): in the line family a full moon is a bare ring, which at a
+        // row's size read as an empty radio button.
         val nearNew = LocalDateTime.of(2026, 9, 9, 19, 0).atZone(zone).toInstant()
         assertEquals(MoonPhase.NEW_MOON, MoonPhase.at(nearNew))
         assertEquals(
-            ChiaroIcons.moonPhaseRes(MoonPhase.NEW_MOON, WeatherIcons.LINE, true),
+            ChiaroIcons.moonPhaseRes(MoonPhase.NEW_MOON, WeatherIcons.FILL, true),
             ArcText.rowIconRes(TimelineKind.MOONSET, nearNew, WeatherIcons.LINE, true)
         )
         val nearFull = LocalDateTime.of(2026, 9, 26, 21, 0).atZone(zone).toInstant()
         assertEquals(MoonPhase.FULL_MOON, MoonPhase.at(nearFull))
-        assertEquals(
-            ChiaroIcons.moonPhaseRes(MoonPhase.FULL_MOON, WeatherIcons.FILL, true),
-            ArcText.rowIconRes(TimelineKind.MOONRISE, nearFull, WeatherIcons.FILL, true)
-        )
+        listOf(WeatherIcons.LINE, WeatherIcons.FILL).forEach { family ->
+            assertEquals(
+                ChiaroIcons.moonPhaseRes(MoonPhase.FULL_MOON, WeatherIcons.FILL, true),
+                ArcText.rowIconRes(TimelineKind.MOONRISE, nearFull, family, true)
+            )
+        }
         assertEquals(
             R.drawable.mc3n_sunset,
             ArcText.rowIconRes(TimelineKind.SUNSET, nearNew, WeatherIcons.LINE, true)

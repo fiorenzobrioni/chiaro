@@ -21,9 +21,10 @@ gira per sempre e' decorazione.
 #: I cieli che `ChiaroIcons.conditionLineRes` puo' restituire, i marchi delle schede, del
 #: Cielo e dell'agenda: tutto quello che oggi arriva su uno schermo.
 #:
-#: **Non tutto quel che arriva a uno schermo e' qui**: `sun-one-cloud-day` e `-night` non
-#: sono disegni di Meteocons ma composizioni di questo repo (`tools/compose_sun_cloud.py`),
-#: e hanno la loro lista li'. Questa resta la lista di **cosa importare**, e un nome che
+#: **Non tutto quel che arriva a uno schermo e' qui**: `sun-one-cloud-*` e (dal 13 ott 2026)
+#: `sun-half-cloud-*` non sono disegni di Meteocons ma composizioni di questo repo
+#: (`tools/compose_sun_cloud.py`), e hanno la loro lista li'. `partly-cloudy-day/-night`
+#: restano qui anche se nessuna schermata li nomina piu': lo strumento ne legge la maschera. Questa resta la lista di **cosa importare**, e un nome che
 #: non esiste a monte la farebbe fallire.
 SHIPPED = [
     "smoke",

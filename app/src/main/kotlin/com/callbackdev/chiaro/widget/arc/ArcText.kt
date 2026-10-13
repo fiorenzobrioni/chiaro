@@ -126,6 +126,13 @@ internal object ArcText {
      * rises or sets. Near the new moon that glyph is Meteocons' dotted circle, a moon you
      * cannot see: honest, and the committente chose it knowingly over a fixed crescent
      * («the explanation is right; leave the real phase»). The arc paints the same phase.
+     *
+     * **In the filled family, whatever the card's** (widget review, 13 ott 2026). In the
+     * line family a full moon is a bare ring, and at a row's 20 dp, beside the agenda's
+     * verdict marks, it read as an empty radio button; the gibbous phases as a ring with a
+     * bite. Filled, the lit part is a shape — the full moon a disc, as the arc paints it —
+     * and the phase stays the real one. The sun's rows keep the card's family: their
+     * drawings are lines that read as lines.
      */
     @DrawableRes
     fun rowIconRes(
@@ -149,7 +156,7 @@ internal object ArcText {
             TimelineKind.BLUE_EVENING -> R.drawable.mc3_star
             TimelineKind.DARK -> R.drawable.mc3_starry_night
             TimelineKind.MOONRISE, TimelineKind.MOONSET ->
-                return ChiaroIcons.moonPhaseRes(MoonPhase.at(at), style, darkGround)
+                return ChiaroIcons.moonPhaseRes(MoonPhase.at(at), WeatherIcons.FILL, darkGround)
             TimelineKind.RAINBOW -> R.drawable.mc3_rainbow
             TimelineKind.RAIN_START -> R.drawable.mc3_raindrops
             TimelineKind.RAIN_STOP -> R.drawable.mc3_cloudy

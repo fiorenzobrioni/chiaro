@@ -270,7 +270,7 @@ private fun MomentGlyph(
 ) {
     Image(
         provider = ImageProvider(
-            skyJobIconRes(moment, model.iconStyle, palette.darkGround)
+            skyJobIconRes(moment, model.iconStyle, palette.darkGround, row = size <= SkyRowGlyph)
         ),
         contentDescription = null, // the name says it in words
         modifier = GlanceModifier.size(size)
@@ -450,8 +450,11 @@ private fun evidence(context: Context, verdict: SkyVerdict): String? =
 private fun skyJobIconRes(
     moment: NextMoment,
     style: WeatherIcons,
-    darkGround: Boolean
-): Int = moment.moonPhase?.let { ChiaroIcons.moonPhaseRes(it, style, darkGround) }
+    darkGround: Boolean,
+    /** A list row's 20 dp glyph: a phase there takes the filled family (13 ott 2026), the
+     * arc agenda's rule, because a line-drawn full moon at that size is a bare ring. */
+    row: Boolean = false
+): Int = moment.moonPhase?.let { ChiaroIcons.moonPhaseRes(it, if (row) WeatherIcons.FILL else style, darkGround) }
     ?: ChiaroIcons.skyJobRes(moment.job.id, style, darkGround)
 
 /** Subscriptions emptied by hand: the widget says why it is quiet, never blanks —
