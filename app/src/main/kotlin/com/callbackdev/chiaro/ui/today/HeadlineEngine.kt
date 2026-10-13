@@ -7,6 +7,7 @@ import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningHazard
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
@@ -75,6 +76,39 @@ sealed interface Headline {
 
     /** Dry today, likely wet tomorrow: the first hour tomorrow over the umbrella bar. */
     data class WetTomorrow(val at: LocalDateTime, val pct: Int, val falling: Falling) : Headline
+
+    /**
+     * A day with nothing to warn about (committente, 12 ott 2026). Until then such a day
+     * had no sentence, and on most days the hero was «20° Coperto» and nothing else: the
+     * number every other app prints, with the one line this screen exists for left empty.
+     * This is not a filler — "Enjoy your day!" is still the exact species of invention the
+     * screen must not commit — but the two facts a quiet day is still worth planning by:
+     * when the dry spell ends ([dry]) and when it will be warmest ([warmth]). Either may be
+     * missing; [HeadlineEngine.calm] answers null when both are.
+     */
+    data class Calm(val dry: Dry?, val warmth: Warmth?) : Headline {
+
+        sealed interface Dry {
+            /** The first later day with something falling, [daysAhead] from today. */
+            data class Until(val date: LocalDate, val daysAhead: Int, val falling: Falling) : Dry
+
+            /** Nothing falls on any of the [days] the forecast covers, today included. */
+            data class Days(val days: Int) : Dry
+        }
+
+        sealed interface Warmth {
+            /**
+             * Today's warmest hour, still ahead and clearly warmer than now. [vsYesterdayC]
+             * is today's high against yesterday's, when the Journal has yesterday and the
+             * two are [HeadlineEngine.CALM_YESTERDAY_MIN_C] or more apart (13 ott 2026):
+             * «4° più di ieri» is what a reader dresses by, and it takes the hour's place.
+             */
+            data class Peak(val at: LocalDateTime, val tempC: Double, val vsYesterdayC: Double? = null) : Warmth
+
+            /** Past today's peak: tomorrow's range is the next thing to dress for. */
+            data class Tomorrow(val lowC: Double, val highC: Double) : Warmth
+        }
+    }
 
     /**
      * What the sentence says is falling (25 set 2026). It was a snow-or-rain Boolean until
@@ -147,6 +181,21 @@ object HeadlineEngine {
      * matters on its own whatever the steady wind is doing. */
     private const val WIND_STRONG_KPH = 39.0
     private const val GUST_STRONG_KPH = 60.0
+
+    /** The calm sentence's dry spell is said from three days of forecast: fewer is the
+     * forecast running out, not a spell. */
+    internal const val CALM_MIN_DRY_DAYS = 3
+
+    /** Today's peak is news from a degree above now: the figures are whole degrees, and
+     * a peak that prints as the hero's own number says nothing. */
+    internal const val CALM_PEAK_MARGIN_C = 1.0
+
+    /** Today against yesterday is news from three degrees: under it a body barely tells
+     * the two days apart, and the sentence would say it most days of the year. */
+    internal const val CALM_YESTERDAY_MIN_C = 3.0
+
+    /** Two hours within half a degree of each other print as one whole number. */
+    private const val PEAK_SAME_PRINT_C = 0.5
 
     /**
      * [warnings] is what the official-warnings step last wrote for this place, or null
@@ -266,6 +315,80 @@ object HeadlineEngine {
     }
 
     /**
+     * The sentence for a day [headline] has nothing to say about (12 ott 2026), or null
+     * when even that has nothing true to offer. Kept apart from the ladder on purpose:
+     * [headline] still answers "is there anything to warn about", and null there still
+     * means no — the widgets' brief register reads it that way and keeps its own fallback.
+     *
+     * - **Dry**: only when no hour left today has something falling (the state engine's
+     *   own call, so a likely hour does not count and a wet one at 20% does). Then the
+     *   first later day with a wet hour, or whose label is precipitation, ends the spell;
+     *   with none, the spell is the forecast's length — said only from
+     *   [CALM_MIN_DRY_DAYS] days, because "dry for the next 2 days" is the week
+     *   running out, not news.
+     * - **Warmth**: today's warmest hour (the first that prints its figure) while it is
+     *   still ahead and at least [CALM_PEAK_MARGIN_C] warmer than the hour we are in (a
+     *   peak equal to the hero is the hero again); past it, tomorrow's range. With
+     *   [yesterdayHighC] — yesterday's high as the Journal last wrote it — the peak says
+     *   how far today is from yesterday instead of its hour, from three degrees.
+     */
+    fun calm(report: WeatherReport, now: LocalDateTime, yesterdayHighC: Double? = null): Headline.Calm? {
+        val hours = report.hourly
+        if (hours.isEmpty()) return null
+        val today = now.toLocalDate()
+        val current = hours.first()
+        val todays = hours.filter { it.time.toLocalDate() == today }
+
+        val dry: Headline.Calm.Dry? = if (todays.any { it.isWet }) {
+            null
+        } else {
+            val wetDay = report.daily
+                .filter { it.date.isAfter(today) }
+                .firstOrNull { day ->
+                    WmoCode.isPrecipitation(day.condition.wmoCode) ||
+                        hours.any { it.time.toLocalDate() == day.date && it.isWet }
+                }
+            val days = report.daily.count { !it.date.isBefore(today) }
+            when {
+                wetDay != null -> Headline.Calm.Dry.Until(
+                    date = wetDay.date,
+                    daysAhead = java.time.temporal.ChronoUnit.DAYS.between(today, wetDay.date).toInt(),
+                    falling = Headline.Falling.of(
+                        hours.firstOrNull { it.time.toLocalDate() == wetDay.date && it.isWet }
+                            ?.condition?.wmoCode ?: wetDay.condition.wmoCode
+                    )
+                )
+                days >= CALM_MIN_DRY_DAYS -> Headline.Calm.Dry.Days(days)
+                else -> null
+            }
+        }
+
+        // The first hour that prints the day's high, not the hundredth of a degree above
+        // it: 22.7° at 16:00 and 22.9° at 17:00 both read «23°» in the strip, and the
+        // sentence must name the hour the reader sees the number at.
+        val peak = todays.maxByOrNull { it.tempC }
+            ?.let { top -> todays.first { it.tempC > top.tempC - PEAK_SAME_PRINT_C } }
+        val warmth: Headline.Calm.Warmth? =
+            if (peak != null && peak.time.isAfter(current.time) && peak.tempC - current.tempC >= CALM_PEAK_MARGIN_C) {
+                // Today's high against yesterday's, both the day's own `highC` — the figure
+                // the Journal wrote down for yesterday — so the two are the same kind of
+                // number. Under the margin it is not news, and the hour stays.
+                val todayHigh = report.daily.firstOrNull { it.date == today }?.highC
+                val vsYesterday = if (todayHigh != null && yesterdayHighC != null) {
+                    (todayHigh - yesterdayHighC).takeIf { kotlin.math.abs(it) >= CALM_YESTERDAY_MIN_C }
+                } else {
+                    null
+                }
+                Headline.Calm.Warmth.Peak(at = peak.time, tempC = peak.tempC, vsYesterdayC = vsYesterday)
+            } else {
+                report.daily.firstOrNull { it.date == today.plusDays(1) }
+                    ?.let { Headline.Calm.Warmth.Tomorrow(lowC = it.lowC, highC = it.highC) }
+            }
+
+        return if (dry == null && warmth == null) null else Headline.Calm(dry, warmth)
+    }
+
+    /**
      * Step zero. Today before tomorrow when both carry the peak — a sentence about now
      * beats a sentence about later — and the hazards are the ones AT the peak on the
      * day named, not every hazard the day carries: "orange for thunderstorms" must not
@@ -282,6 +405,9 @@ object HeadlineEngine {
         if (hazards.isEmpty()) return null
         return Headline.Official(level = level, hazards = hazards, today = day.date == today)
     }
+
+    /** Something falls in this hour, by the app's own state of it (a likely hour does not). */
+    private val HourlyForecast.isWet: Boolean get() = WmoCode.isPrecipitation(condition.wmoCode)
 
     /** A missing chance meets no threshold (§1.1): it is not a zero, it is silence. */
     private val HourlyForecast.chance: Int get() = precipChancePct ?: -1

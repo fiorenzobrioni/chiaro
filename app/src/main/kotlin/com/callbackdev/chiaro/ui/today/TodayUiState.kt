@@ -12,6 +12,7 @@ import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.components.LightPhase
+import com.callbackdev.chiaro.ui.components.RibbonHour
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -95,7 +96,9 @@ data class SkySnapshot(
     val sunAzimuthDeg: Double = 180.0,
     val moonAzimuthDeg: Double = 180.0,
     val moonElongationDeg: Double = 0.0,
-    val southern: Boolean = false
+    val southern: Boolean = false,
+    /** The rest of today's forecast sky, for the canvas' ribbon (12 ott 2026). */
+    val hours: List<RibbonHour> = emptyList()
 )
 
 enum class TimelineKind {
@@ -112,19 +115,24 @@ data class TimelineItem(
     val at: LocalDateTime,
     val kind: TimelineKind,
     val pct: Int? = null,
-    val bearingDeg: Double? = null
+    val bearingDeg: Double? = null,
+    /** Where a span ends, for the rows that are spans and not moments (12 ott 2026):
+     * the evening's golden hour runs to sunset, its blue hour to the sun at −6°. Null for a
+     * moment, and for a span whose end the day does not have. */
+    val until: LocalDateTime? = null
 )
 
 /** One cell's worth of forecast, with its own day/night already decided — the strip
  * crosses midnight, so "is it night" is per hour, not per screen. */
 data class StripHour(val hour: HourlyForecast, val night: Boolean)
 
-/** One row of the week: the forecast, the day's light, and its hours for the
- * in-place expansion. */
+/** One row of the week: the forecast, the day's light, its hours for the in-place
+ * expansion, and its forecast sky for the ribbon (12 ott 2026). */
 data class WeekDay(
     val forecast: DailyForecast,
     val phases: List<LightPhase>,
-    val hours: List<StripHour>
+    val hours: List<StripHour>,
+    val sky: List<RibbonHour> = emptyList()
 )
 
 /**
@@ -153,7 +161,10 @@ object TodayStateBuilder {
         updateFrequencyMin: Int,
         userRefreshing: Boolean,
         error: TodayError?,
-        warnings: PlaceWarnings? = null
+        warnings: PlaceWarnings? = null,
+        /** Yesterday's high as the Journal last wrote it ([yesterdayHigh]), for the
+         * quiet day's sentence; null where the Journal has no yesterday. */
+        yesterdayHighC: Double? = null
     ): TodayUiState {
         val zone = placeZone(report, city)
         if (!WeatherRecency.coversNow(report, now)) {
@@ -192,9 +203,13 @@ object TodayStateBuilder {
                     com.callbackdev.chiaro.domain.sky.SkyBody.MOON, now, coords
                 ),
                 moonElongationDeg = moon.elongation,
-                southern = coords.lat < 0.0
+                southern = coords.lat < 0.0,
+                hours = DaylightPhases.sky(trimmed.hourly, local.toLocalDate())
             ),
-            headline = HeadlineEngine.headline(trimmed, local, graded),
+            // The ladder first; on a day it has nothing to warn about, the quiet day's own
+            // sentence (12 ott 2026) — still the model's facts, never a filler.
+            headline = HeadlineEngine.headline(trimmed, local, graded)
+                ?: HeadlineEngine.calm(trimmed, local, yesterdayHighC),
             strip = trimmed.hourly.drop(1).take(STRIP_HOURS).map { stripHour(it, zone, coords) },
             timeline = timeline(trimmed, today, zone, local),
             week = week(trimmed, zone, coords),
@@ -219,6 +234,10 @@ object TodayStateBuilder {
         now: LocalDateTime
     ): List<TimelineItem> =
         agenda(report, zone, now, until = now.toLocalDate().atTime(java.time.LocalTime.MAX), today = today)
+            // The moon stays on the Sky tab (committente, 13 ott 2026): on a dry day
+            // Today's agenda was the Sky tab again, led by a moonrise nobody plans an
+            // afternoon by. The day's arc widget keeps the whole agenda, moon included.
+            .filterNot { it.kind == TimelineKind.MOONRISE || it.kind == TimelineKind.MOONSET }
 
     /**
      * The merged agenda of everything still ahead between [now] and [until]: the sun's
@@ -238,8 +257,14 @@ object TodayStateBuilder {
     ): List<TimelineItem> {
         val coords = report.location.coordinates
         val items = mutableListOf<TimelineItem>()
-        fun sun(at: Instant?, kind: TimelineKind) {
-            at?.let { items += TimelineItem(LocalDateTime.ofInstant(it, zone), kind) }
+        fun sun(at: Instant?, kind: TimelineKind, until: Instant? = null) {
+            at?.let {
+                items += TimelineItem(
+                    LocalDateTime.ofInstant(it, zone),
+                    kind,
+                    until = until?.let { end -> LocalDateTime.ofInstant(end, zone) }
+                )
+            }
         }
         val firstDate = now.toLocalDate()
         val lastDate = until.toLocalDate()
@@ -252,9 +277,12 @@ object TodayStateBuilder {
             }
             sun(solar.sunrise, TimelineKind.SUNRISE)
             sun(solar.goldenHourMorningEnd, TimelineKind.GOLDEN_MORNING_END)
-            sun(solar.goldenHourEveningStart, TimelineKind.GOLDEN_EVENING)
+            // The two evening hours are spans, and the agenda printed them as moments
+            // (review of 12 ott 2026): «Ora d'oro 18:36» left the reader to find out
+            // that it lasts until sunset.
+            sun(solar.goldenHourEveningStart, TimelineKind.GOLDEN_EVENING, until = solar.sunset)
             sun(solar.sunset, TimelineKind.SUNSET)
-            sun(solar.blueHourEveningStart, TimelineKind.BLUE_EVENING)
+            sun(solar.blueHourEveningStart, TimelineKind.BLUE_EVENING, until = solar.blueHourEveningEnd)
             sun(solar.astronomicalDusk, TimelineKind.DARK)
 
             val lunar = AstronomyEngine.lunarDay(date, zone, coords)
@@ -300,6 +328,33 @@ object TodayStateBuilder {
             .sortedBy { it.at }
     }
 
+    /**
+     * Yesterday's high, read off the Journal (13 ott 2026): the newest commit written on
+     * yesterday's date in the place's zone, and the `<date>.high_c` it flattened for that
+     * date — the forecast for yesterday as it stood at its last fetch, which by then is as
+     * close to the day as the app ever gets. No network and no new field: every fetch has
+     * been writing it since today joined the horizon (8 set 2026). Null when no commit of
+     * yesterday's is there (a new install, a phone that never fetched), or it carries no
+     * high for the date. [commits] are in any order; [forecast] is called once, on the
+     * commit chosen.
+     */
+    fun <T> yesterdayHigh(
+        commits: List<T>,
+        at: (T) -> Instant,
+        forecast: (T) -> Map<String, String>,
+        today: java.time.LocalDate,
+        zone: ZoneId
+    ): Double? {
+        val yesterday = today.minusDays(1)
+        // The date first, the JSON last: one commit is decoded, not the hundred.
+        return commits
+            .filter { at(it).atZone(zone).toLocalDate() == yesterday }
+            .maxByOrNull { at(it) }
+            ?.let(forecast)
+            ?.get("$yesterday.high_c")
+            ?.toDoubleOrNull()
+    }
+
     private fun stripHour(
         hour: HourlyForecast,
         zone: ZoneId,
@@ -312,7 +367,7 @@ object TodayStateBuilder {
         night = AstronomyEngine.sunAltitude(hour.at, coords) < 0.0
     )
 
-    /** The week's rows, each with its light and its hours for the tap-to-expand. */
+    /** The week's rows, each with its light, its hours for the tap-to-expand and its sky. */
     private fun week(
         report: WeatherReport,
         zone: ZoneId,
@@ -325,7 +380,8 @@ object TodayStateBuilder {
             ),
             hours = report.hourly
                 .filter { it.time.toLocalDate() == day.date }
-                .map { stripHour(it, zone, coords) }
+                .map { stripHour(it, zone, coords) },
+            sky = DaylightPhases.sky(report.hourly, day.date)
         )
     }
 }

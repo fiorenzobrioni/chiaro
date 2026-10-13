@@ -381,4 +381,109 @@ class HeadlineEngineTest {
     fun `an empty report says nothing rather than inventing`() {
         assertNull(HeadlineEngine.headline(sampleWeatherReport().copy(hourly = emptyList()), now))
     }
+
+    // ------------------------------------------- the quiet day's sentence (12 ott 2026)
+
+    /** [days] daily rows from today, each a condition; hours from [hours], starting now. */
+    private fun calmReport(hours: List<Hour>, vararg days: WeatherCondition) =
+        report(hours).copy(
+            daily = days.mapIndexed { i, condition ->
+                com.callbackdev.chiaro.domain.model.DailyForecast(
+                    now.toLocalDate().plusDays(i.toLong()), 24.0 + i, 14.0 + i, condition, 10, 5
+                )
+            }
+        )
+
+    /** A warm afternoon: 20° now, peaking at 23° three hours out, then cooling. */
+    private val warmingDay = List(10) { i -> Hour(clear, 10, tempC = if (i == 3) 23.0 else 20.0) }
+
+    @Test
+    fun `the ladder still answers no on a quiet day, and calm answers the quiet day`() {
+        val r = calmReport(warmingDay, clear, clear, clear, rain, clear, clear, clear)
+        assertNull(HeadlineEngine.headline(r, now))
+        val calm = HeadlineEngine.calm(r, now)!!
+        val dry = calm.dry as Headline.Calm.Dry.Until
+        assertEquals(now.toLocalDate().plusDays(3), dry.date)
+        assertEquals(3, dry.daysAhead)
+        assertEquals(Headline.Falling.RAIN, dry.falling)
+        val peak = calm.warmth as Headline.Calm.Warmth.Peak
+        assertEquals(now.plusHours(3), peak.at)
+        assertEquals(23.0, peak.tempC, 0.0)
+    }
+
+    @Test
+    fun `the peak is the first hour that prints the high`() {
+        val hours = List(10) { i -> Hour(clear, 10, tempC = when (i) { 2 -> 22.7; 3 -> 22.9; else -> 20.0 }) }
+        val peak = HeadlineEngine.calm(calmReport(hours, clear, clear), now)!!.warmth as Headline.Calm.Warmth.Peak
+        assertEquals(now.plusHours(2), peak.at)
+        assertEquals(22.7, peak.tempC, 0.0)
+    }
+
+    @Test
+    fun `a wet hour on a later day ends the dry spell even under a dry label`() {
+        // 36 hours from 14:00: tomorrow 20:00 rains, though tomorrow's label says clear.
+        val hours = List(36) { i -> if (i == 30) rain at 30 else clear at 10 }
+        val calm = HeadlineEngine.calm(calmReport(hours, clear, clear, clear, clear), now)!!
+        val dry = calm.dry as Headline.Calm.Dry.Until
+        assertEquals(1, dry.daysAhead)
+    }
+
+    @Test
+    fun `no wet day in sight is the forecast's own length, and only from three days`() {
+        val week = HeadlineEngine.calm(calmReport(warmingDay, clear, clear, clear, clear, clear, clear, clear), now)!!
+        assertEquals(Headline.Calm.Dry.Days(7), week.dry)
+        val short = HeadlineEngine.calm(calmReport(warmingDay, clear, clear), now)!!
+        assertNull(short.dry)
+    }
+
+    @Test
+    fun `a wet hour left today says nothing about a dry spell`() {
+        // 20% and 0.2 mm is a wet hour to the state engine, and under every rung of the ladder.
+        val hours = listOf(clear at 10, rain at 20, clear at 10)
+        val calm = HeadlineEngine.calm(calmReport(hours, clear, clear, clear, clear), now)
+        assertNull(calm?.dry)
+    }
+
+    @Test
+    fun `snow names the next day as snow`() {
+        val calm = HeadlineEngine.calm(calmReport(warmingDay, clear, clear, snow, clear), now)!!
+        assertEquals(Headline.Falling.SNOW, (calm.dry as Headline.Calm.Dry.Until).falling)
+    }
+
+    @Test
+    fun `past the peak, or with a peak no warmer than now, tomorrow's range is the warmth`() {
+        val cooling = List(10) { i -> Hour(clear, 10, tempC = 20.0 - i) }
+        val flat = List(10) { Hour(clear, 10, tempC = 20.0) }
+        listOf(cooling, flat).forEach { hours ->
+            val calm = HeadlineEngine.calm(calmReport(hours, clear, clear), now)!!
+            assertEquals(Headline.Calm.Warmth.Tomorrow(lowC = 15.0, highC = 25.0), calm.warmth)
+        }
+    }
+
+    @Test
+    fun `nothing true to say is still nothing`() {
+        // One day of forecast, past its peak: no spell to name and no tomorrow.
+        val cooling = List(5) { i -> Hour(clear, 10, tempC = 20.0 - i) }
+        assertNull(HeadlineEngine.calm(calmReport(cooling, clear), now))
+        assertNull(HeadlineEngine.calm(sampleWeatherReport().copy(hourly = emptyList()), now))
+    }
+
+    // ------------------------------------------- today against yesterday (13 ott 2026)
+
+    @Test
+    fun `three degrees from yesterday's high take the hour's place`() {
+        // calmReport's today is 24.0 high.
+        val warmer = HeadlineEngine.calm(calmReport(warmingDay, clear, clear), now, yesterdayHighC = 20.5)!!
+        assertEquals(3.5, (warmer.warmth as Headline.Calm.Warmth.Peak).vsYesterdayC!!, 1e-9)
+        val cooler = HeadlineEngine.calm(calmReport(warmingDay, clear, clear), now, yesterdayHighC = 28.0)!!
+        assertEquals(-4.0, (cooler.warmth as Headline.Calm.Warmth.Peak).vsYesterdayC!!, 1e-9)
+    }
+
+    @Test
+    fun `under three degrees, or with no yesterday, the hour stays`() {
+        val close = HeadlineEngine.calm(calmReport(warmingDay, clear, clear), now, yesterdayHighC = 22.0)!!
+        assertNull((close.warmth as Headline.Calm.Warmth.Peak).vsYesterdayC)
+        val none = HeadlineEngine.calm(calmReport(warmingDay, clear, clear), now)!!
+        assertNull((none.warmth as Headline.Calm.Warmth.Peak).vsYesterdayC)
+    }
 }

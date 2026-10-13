@@ -175,6 +175,78 @@ class TodayStateBuilderTest {
         val content = TodayStateBuilder.build(
             milan, report, nowLocal.atZone(zone).toInstant(), 60, false, null
         ) as TodayUiState.Content
-        assertEquals(content.timeline, agenda.filter { it.at.toLocalDate() == date })
+        // Today's timeline is the agenda's first day without the moon, which stays on the
+        // Sky tab and in the day's arc widget (13 ott 2026).
+        assertEquals(
+            content.timeline,
+            agenda.filter {
+                it.at.toLocalDate() == date &&
+                    it.kind != TimelineKind.MOONRISE && it.kind != TimelineKind.MOONSET
+            }
+        )
+    }
+
+    // ------------------------------------------- the ribbon's sky (DESIGN §4, 12 ott 2026)
+
+    /** The report keeps no hour before the one we are in, so both of today's ribbons, the
+     * canvas' and the row's, start their sky there, and every later day has its whole day
+     * closed by the next midnight. */
+    @Test
+    fun `today's sky starts at the hour we are in and later days are whole`() {
+        val built = content(null)
+        assertEquals(12 / 24f, built.sky.hours.first().at, 1e-6f)
+        assertEquals(12 / 24f, built.week.first().sky.first().at, 1e-6f)
+        val tomorrow = built.week[1].sky
+        assertEquals(0f, tomorrow.first().at, 0f)
+        assertEquals(1f, tomorrow.last().at, 0f)
+    }
+
+    /** The evening's golden and blue hours are spans (review of 12 ott 2026): the golden
+     * hour ends at the sunset the same agenda lists, the blue hour after it begins. */
+    @Test
+    fun `the evening hours carry where they end`() {
+        val agenda = content(null).timeline
+        val golden = agenda.single { it.kind == TimelineKind.GOLDEN_EVENING }
+        val sunset = agenda.single { it.kind == TimelineKind.SUNSET }
+        val blue = agenda.single { it.kind == TimelineKind.BLUE_EVENING }
+        assertEquals(sunset.at, golden.until)
+        assertTrue(blue.until!!.isAfter(blue.at))
+        assertEquals(null, sunset.until)
+    }
+
+    // ----------------------------------------------- the Journal's yesterday (13 ott 2026)
+
+    private fun commit(at: LocalDateTime, high: String?) =
+        at.atZone(zone).toInstant() to (high?.let { mapOf("2026-09-01.high_c" to it) } ?: emptyMap())
+
+    private fun yesterdayHigh(vararg commits: Pair<java.time.Instant, Map<String, String>>) =
+        TodayStateBuilder.yesterdayHigh(commits.toList(), { it.first }, { it.second }, date, zone)
+
+    @Test
+    fun `yesterday's high is the newest of yesterday's commits`() {
+        assertEquals(
+            24.5,
+            yesterdayHigh(
+                commit(LocalDateTime.of(2026, 9, 1, 8, 0), "26.0"),
+                commit(LocalDateTime.of(2026, 9, 1, 22, 0), "24.5"),
+                // Today's commits are not yesterday's, whatever they say about it.
+                commit(LocalDateTime.of(2026, 9, 2, 9, 0), "30.0")
+            )!!,
+            0.0
+        )
+    }
+
+    @Test
+    fun `no commit of yesterday's, or none with its high, is no yesterday`() {
+        assertEquals(null, yesterdayHigh(commit(LocalDateTime.of(2026, 9, 2, 9, 0), "30.0")))
+        assertEquals(null, yesterdayHigh(commit(LocalDateTime.of(2026, 9, 1, 22, 0), null)))
+        assertEquals(null, yesterdayHigh())
+    }
+
+    @Test
+    fun `Today's agenda has no moon`() {
+        assertTrue(content(null).timeline.none {
+            it.kind == TimelineKind.MOONRISE || it.kind == TimelineKind.MOONSET
+        })
     }
 }

@@ -171,7 +171,12 @@ object ChiaroIcons {
         WmoCode.MAINLY_CLEAR -> if (night) ComposedIcons.mostlyClearNight else ComposedIcons.mostlyClearDay
         WmoCode.PARTLY_CLOUDY ->
             if (night) R.drawable.mc3_partly_cloudy_night else R.drawable.mc3_partly_cloudy_day
-        WmoCode.OVERCAST -> R.drawable.mc3_overcast
+        // `cloudy`, one cloud, since the review of 12 ott 2026: `overcast` draws a second,
+        // darker cloud peeking over the first, and at the strip's and the week's sizes
+        // that back cloud read as a crescent — «partly cloudy at night» at 13:00, beside
+        // the real night glyph at 04:00. One cloud says overcast and nothing else; the
+        // rain and snow drawings keep their own double cloud, where the drops say which.
+        WmoCode.OVERCAST -> R.drawable.mc3_cloudy
         WmoCode.FOG, WmoCode.RIME_FOG -> if (night) R.drawable.mc3_fog_night else R.drawable.mc3_fog_day
         // Likely rain takes the lightest rain there is (25 set 2026): a possibility, never
         // drawn as a downpour.

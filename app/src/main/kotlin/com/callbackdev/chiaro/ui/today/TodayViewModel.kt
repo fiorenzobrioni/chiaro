@@ -320,6 +320,7 @@ class TodayViewModel(
             var error: TodayError? = null
             var report = repository.cachedReport(city)
             var whatChanged: List<JournalEntry.ForecastShift> = emptyList()
+            var yesterdayHighC: Double? = null
             // The official warning for this place (Fase 11). The zone is looked up once —
             // it decodes a 290 KB asset the first time and cannot change under a place —
             // and only for a place that might be in one: a reader whose places are all
@@ -338,7 +339,8 @@ class TodayViewModel(
                         val built = TodayStateBuilder.build(
                             city, current, clock.instant(), updateFrequencyMin,
                             userRefreshing, error,
-                            (warningState as? PlaceWarningState.Current)?.warnings
+                            (warningState as? PlaceWarningState.Current)?.warnings,
+                            yesterdayHighC
                         )
                         if (built is TodayUiState.Content) {
                             built.copy(whatChanged = whatChanged)
@@ -362,6 +364,20 @@ class TodayViewModel(
                         }
                     )
                 }.getOrDefault(emptyList())
+                // Yesterday's high for the quiet day's sentence (13 ott 2026), off the same
+                // table: the Journal keeps a hundred commits a place, days of them, and
+                // this is one more read of it when the data moves, never a fetch.
+                yesterdayHighC = runCatching {
+                    val current = report ?: return@runCatching null
+                    val zone = com.callbackdev.chiaro.domain.placeZone(current, city)
+                    TodayStateBuilder.yesterdayHigh(
+                        repository.historyFor(city),
+                        at = { java.time.Instant.ofEpochSecond(it.timestampEpochSeconds) },
+                        forecast = { repository.forecast(it) },
+                        today = clock.instant().atZone(zone).toLocalDate(),
+                        zone = zone
+                    )
+                }.getOrNull()
             }
 
             suspend fun fetch(userAsked: Boolean) {

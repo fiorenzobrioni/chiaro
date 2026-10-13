@@ -132,7 +132,10 @@ accounts and tracking, that works offline with the last data it managed to fetch
    no full-screen spinner in this product, ever: content first, freshness stated, refresh silent.
 2. **One sentence before any number.** The top of the home screen is a computed line — "Umbrella
    around 17:00, clear after that" — built from the alert engine and the next hours. Numbers follow
-   for the people who want them.
+   for the people who want them. On a day with nothing to warn about (since 12 ott 2026) the line says
+   what a quiet day is still planned by: when the next rain is due and when it will be warmest —
+   "Next rain Sunday, high of 23° around 16:00", or "4° warmer than yesterday" when the Journal
+   has yesterday — never a filler.
 3. **Every number says what to do with it.** UV 7 is not a number, it is "burns in about 25 minutes,
    wear something". AQI 112 is "fine for a walk, not for a run". This is the mainstream inversion of
    the series' evidence rule: tweather ships the arithmetic with the verdict, Chiaro ships the
@@ -203,7 +206,9 @@ A thin horizontal band, used on the canvas and on every day row of the week, sho
 astronomical/nautical/civil twilight, daylight and the golden hours as color segments, with "now"
 marked. It is the one component that says at a glance what a whole day of light looks like, it is
 unique to this app, and it is recognizable in a store screenshot at thumbnail size. It comes free
-from the ephemeris.
+from the ephemeris. Since 12 ott 2026 it also carries the day's forecast sky, painted with the
+canvas' own colors hour by hour, with the wet hours marked under it: each day of the week says
+*when* it is clear, grey or wet (DESIGN §4).
 
 ### 4.4 Type, shape, motion, density
 
@@ -282,12 +287,13 @@ The spine of the product, one vertical scroll, in this order:
 2. **A freshness chip** when, and only when, it matters: "Updated 3 hours ago" in amber, tappable to
    retry. Pull to refresh; no FAB on this screen, because the app refreshes itself.
 3. **Next hours**: a horizontal strip, 24 hours from the next full hour, each with icon, temperature
-   and rain probability, plus a rain-probability chart underneath — a 0–100% scale, the hours named
+   and rain probability (printed from 20%, since 12 ott 2026), plus a rain-probability chart underneath — a 0–100% scale, the hours named
    under it, a dot per hour — so a wet stretch is a shape rather than twelve numbers, and the shape
    has somewhere to stand.
 4. **The rest of the day**: the merged timeline, and the second differentiator on this screen. Sun
    and sky events, weather turns ("rain starts around 17:00"), and the reader's own alerts, in one
-   chronological list. This is `sky.crontab` plus the hourly forecast plus `alerts.rules`, collapsed
+   chronological list. The moon's rising and setting stay on the Sky tab (13 ott 2026): they are
+   the rows nobody plans an afternoon by. This is `sky.crontab` plus the hourly forecast plus `alerts.rules`, collapsed
    into the artifact a person actually keeps in their head: what is going to happen today, in order.
 5. **The week**: seven rows, each with icon, a min/max bar aligned across the whole week (so the
    week has a *shape*), rain probability, and the daylight ribbon. Tapping a row expands it in

@@ -35,7 +35,8 @@ import com.callbackdev.chiaro.ui.theme.tabular
 /**
  * DESIGN.md §8.5. One day of the week: weekday, icon, rain probability, the range bar
  * on the scale the caller computed **across the whole week**, the printed low and high
- * (a colored bar is not a number), and the day's ribbon of light underneath.
+ * (a colored bar is not a number), and the day's ribbon underneath — its light and, since
+ * 12 ott 2026, its forecast sky, with the wet hours marked under it.
  *
  * Everything arrives formatted; [scaleLowC]/[scaleHighC] are the week's own extremes,
  * shared by all seven rows so the week has a shape.
@@ -56,7 +57,8 @@ fun DayRow(
      * probability** (§1.1) — the column then prints nothing and keeps its width, the
      * way the hour cell already does. A dash would read as a value. */
     rainPct: Int?,
-    /** The same quantity printed, which the locale owns (§11); null with [rainPct]. */
+    /** The same quantity printed, which the locale owns (§11); null with [rainPct], and
+     * null under the floor the caller prints from (20%, 12 ott 2026). */
     rainLabel: String?,
     lowC: Double,
     highC: Double,
@@ -69,14 +71,23 @@ fun DayRow(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     /** Today's row: the temperature now, drawn on the range bar. */
-    nowC: Double? = null
+    nowC: Double? = null,
+    /** The day's forecast sky for its ribbon (DESIGN §4, 12 ott 2026). */
+    sky: List<RibbonHour> = emptyList(),
+    /** Whether the ribbon keeps a lane for the wet hours. The caller decides it for the
+     * whole week, so seven rows stay one height whichever of them has rain in it. */
+    wetLane: Boolean = false,
+    /** Today's row: where now is in the day. What comes before it is spent, and the
+     * ribbon fades it toward the track like the night (DESIGN §4, 12 ott 2026). */
+    skyFrom: Float = 0f
 ) {
     val reflow = reflowForText()
     Column(
         modifier = modifier
             .fillMaxWidth()
-            // §10 asks for ≥ 48dp of target and the row draws 46 (a 38dp icon, 4dp of
-            // gap, the 4dp ribbon). It clears the floor anyway and not by luck:
+            // §10 asks for ≥ 48dp of target and the row draws 48 (a 38dp icon, 4dp of
+            // gap, the 6dp ribbon; 46 until the ribbon took the sky, 12 ott 2026). It
+            // would clear the floor anyway and not by luck:
             // Compose expands a pointer node's bounds to the platform's minimum touch
             // target, so `clickable` is already 48. What that expansion does NOT do is
             // reserve space, so it fails when two small targets sit closer than their
@@ -110,10 +121,17 @@ fun DayRow(
             phases = phases,
             nowFraction = null,
             description = "", // idem: one announcement per row
-            height = 4.dp,
+            // 6dp since the ribbon carries the sky (committente, 12 ott 2026): at 4dp an
+            // overcast afternoon had to be looked for; at 8dp the ribbon weighed as much
+            // as the range bar, and the row became two bars of one weight. Six reads at a
+            // glance and stays the second thing in the row.
+            height = 6.dp,
             // The range bar's own track: the night leans toward it, so the row shows
             // its pill of light rather than a navy bar (DESIGN §4, 23 set 2026).
             nightFade = MaterialTheme.colorScheme.surfaceContainerHighest,
+            hours = sky,
+            wetLane = wetLane,
+            skyFrom = skyFrom,
             modifier = Modifier.padding(start = if (reflow) 0.dp else 52.dp)
         )
     }

@@ -14,6 +14,32 @@ sections are a normal size and live here alone.
 
 ## [Unreleased]
 
+### Changed
+
+- **The ribbon shows the sky.** Under the temperature and on every day of the week, the band
+  of the day's light now takes the forecast's clouds hour by hour, with the same colors as the
+  sky at the top, and marks the hours with rain or snow: each day says *when* it is clear,
+  grey or wet. What is already over today is drawn faded.
+- **A sentence on quiet days too.** When there is nothing to warn about, the line under the
+  temperature now says when the next rain is due and when it will be warmest, from the
+  forecast's own numbers. It sits right under the sky's word, before the ribbon.
+- **Sunrise and sunset on the ribbon**, printed under the points where they fall, and the
+  week's ribbons a little thicker so the sky in them reads at a glance.
+- **Less «0%».** The chance of rain is printed from 20%, where the app starts calling an hour
+  wet; under it the column stays empty, and a dry strip of hours has no rain row at all.
+- **Overcast is one cloud.** The two-cloud drawing read as a moon at small sizes.
+- **An open day starts at dawn**, not at midnight.
+- **The rest of the day**: the golden and blue hours say when they end, and the moon's rising
+  and setting stay on the Sky tab.
+- **The guide explains the week's two bars** with a drawn example, and no longer describes the
+  ribbon as it was before.
+- **Warmer or cooler than yesterday.** On a quiet day the sentence says when today's high is
+  three degrees or more from yesterday's, from what Chiaro already kept: no extra download.
+- **Pressure says which way it is going**: rising, falling or falling fast over the next three
+  hours, with the change in hPa; a steady barometer keeps its reading's meaning.
+- **Details**: an odd last tile takes the whole row, and the empty band between the sky and
+  the next hours is gone.
+
 ## [1.1.0] - 2026-10-01
 
 **A clearer page, and an app that reads the forecast itself.** Each hour's icon and word now

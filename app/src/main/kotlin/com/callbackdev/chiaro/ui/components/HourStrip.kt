@@ -72,8 +72,10 @@ data class HourCell(
 
 /**
  * DESIGN.md §8.3. Horizontal, 24 cells from the next full hour, each 56dp: hour, icon,
- * temperature, rain probability. The rain column prints even a 0 — an absent number
- * under one hour would read as "no data", and it is data.
+ * temperature, rain probability. The caller decides which chances are printed: Today
+ * prints them from 20% (review of 12 ott 2026), and a cell under it is empty. A strip in
+ * which **no** cell prints one has no rain row at all — a row kept for figures that are
+ * never there was a 22dp hole between the strip and the next section.
  *
  * A **null** [HourCell.rainPct] is the other case and it really is "no data" (Fase
  * 26): the provider forecast no chance for that hour. The cell keeps its 56dp so the
@@ -86,8 +88,8 @@ data class HourCell(
  * of being cut on a line 16dp inside it, which made the strip read as a box.
  *
  * One cell is 144dp tall at 100% type: 16 (hour) + 6 + 42 (icon) + 6 + 52 (the curve's
- * band: the 20dp figure, 2 of gap, 24 of travel and the 8dp dot) + 6 + 16 (rain). The
- * skeleton quotes that number. A strip with no temperatures (none, today) keeps the old
+ * band: the 20dp figure, 2 of gap, 24 of travel and the 8dp dot) + 6 + 16 (rain); 122
+ * with no rain row. The skeleton quotes the tall number. A strip with no temperatures (none, today) keeps the old
  * 20dp figure and is 112.
  */
 @Composable
@@ -102,6 +104,7 @@ fun HourStrip(
     // The strip's own scroll holds the weather still while it runs (DESIGN §7.1, 9 set
     // 2026), on top of whatever the page around it is already saying.
     val paused = LocalMotionPaused.current || rowState.isScrollInProgress
+    val rainRow = hours.any { it.rainLabel != null }
     val curve = remember(hours) {
         StripCurve.of(hours.map { it.tempC }, CurveTravel.value, CurveDpPerDegree)
     }
@@ -157,7 +160,7 @@ fun HourStrip(
                         style = MaterialTheme.typography.labelLarge.tabular()
                     )
                 }
-                Text(
+                if (rainRow) Text(
                     text = cell.rainLabel.orEmpty(),
                     style = MaterialTheme.typography.labelSmall.tabular(),
                     // Zero is the ramp's quiet end, not another role (DESIGN.md §2.3);

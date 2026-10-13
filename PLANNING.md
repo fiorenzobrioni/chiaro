@@ -11633,3 +11633,344 @@ Saldo» o «perché la famiglia si legga come una» sono riscritti con la loro r
 (il workflow di release, il build, la shell, le anteprime del selettore e il loro test, il
 catalogo delle versioni). Le guide nell'app già non le citavano. tweather resta nominato dove
 il codice ne viene: è l'origine del core (`UPSTREAM.md`), non un'app della famiglia.
+
+## Il nastro del cielo (committente, 12 ott 2026)
+
+Dalla revisione della schermata Oggi: i sette nastri della settimana erano sette copie (in una
+settimana di fine settembre il giorno si accorcia di una ventina di minuti, e a 4dp non si
+vede), e quello sul cielo diceva solo la luce. Proposta: colorare il nastro ora per ora con il
+cielo previsto, con la stessa funzione che dipinge il cielo in alto. Il committente ha visto la
+pagina di confronto prima/dopo (Milano del README e una settimana piovosa vera di Glasgow,
+scaricata da Open-Meteo il 12 ott) e ha chiesto di implementarla: «sono ottime modifiche e
+visivamente belle».
+
+### Cosa è cambiato
+
+- **`DaylightRibbon` riceve il cielo** (`RibbonHour`: dove cade l'ora nel giorno, copertura,
+  probabilità, se è bagnata). `ribbonColorStops` campiona il giorno ogni dieci minuti e tinge
+  ogni punto con `SkyPalette.gradient(fase, nuvole, probabilità).mid`; fra due nuclei di fase
+  mescola in sRGB come fa il gradiente della piattaforma; i bordi dei nuclei restano fra le
+  tappe. Senza ore il risultato è identico al nastro di prima (testato).
+- **`DaylightPhases.sky`** costruisce le ore di un giorno dal report, chiuse dalla mezzanotte
+  del giorno dopo a 1 (senza segno: è della riga di domani); **`wetRuns`** raggruppa le ore
+  bagnate per le parole.
+- **Il cielo in alto**: dal momento attuale in poi il cielo previsto; la parte già trascorsa
+  resta luce al 60%, come prima.
+- **La riga di oggi**: la parte trascorsa sfuma verso il fondo della barra quanto la notte
+  (0,75). Prima prova: la riga mostrava la mattina come luce piena, cioè un mattino sereno su
+  una giornata coperta (Milano del README). Primo tentativo di cura, il cielo della giornata
+  intera prima del taglio di `WeatherRecency`: inutile, perché il mapper non tiene nessuna ora
+  precedente a quella corrente. Annullato; la sfumatura dice «già passato» senza inventare.
+- **Le ore bagnate** (stato del motore con qualcosa che cade: `RAIN_LIKELY` no) hanno un segno
+  in una corsia sotto il nastro, nell'inchiostro della pioggia alla probabilità dell'ora. La
+  corsia è della settimana: su tutte e sette le righe se un giorno ha un'ora bagnata (+5dp a
+  riga), su nessuna in una settimana asciutta.
+- **Le parole**: la descrizione della riga aggiunge «Pioggia dalle 15:00 alle 17:00, alle
+  20:00» («Neve», «Pioggia e neve» secondo la fase delle ore). Stringhe IT/EN.
+- DESIGN §4 e §8.5, VISION §4.3, CHANGELOG. Gli screenshot `today-now` e `today-week`
+  rigenerati e guardati; `widgets.png` usciva diverso solo per antialiasing (622 pixel, nessun
+  riquadro di differenza) ed è stato lasciato com'era.
+
+### Decisioni e deviazioni
+
+- **4dp, non 6.** La pagina di confronto suggeriva di provare 6dp: resta 4dp, la misura di §4
+  e della riga a 46dp. Con il cielo l'effetto si vede ma è discreto; è la prima cosa da guardare
+  sul dispositivo.
+- **Bagnata = stato dell'app**, non le due soglie della pagina di confronto (≥ 0,1 mm e ≥ 20%):
+  il motore degli stati le contiene già, con il resto delle sue regole.
+- **Nessun segno sul cielo in alto**: la pioggia di oggi la dicono già la frase, la striscia
+  delle ore e il grafico; il nastro sul cielo resta luce e nuvole.
+- **Nessuna frase sulle nuvole** nella descrizione: è una raffigurazione (§4), e le nuvole ora
+  per ora sono nella striscia aperta; le ore bagnate invece sono segni, e un segno ha la sua
+  parola.
+
+### Come è stato verificato
+
+- `DaylightRibbonTest` (+8): senza ore le tappe sono quelle di prima; con le ore non tornano
+  indietro e tengono i bordi dei nuclei; il pomeriggio coperto è grigio e la mattina serena no;
+  prima della prima ora e di `skyFrom` niente cielo; nella riga il trascorso sfuma, sul cielo
+  no; interpolazione, fine un'ora dopo l'ultima, due ore nello stesso istante; il segno
+  centrato sull'ora e dentro il giorno.
+- `RibbonSkyTest` (5, nuovo): dove cade ogni ora e la mezzanotte che chiude; `RAIN_LIKELY` non
+  bagnata; probabilità assente = nessuna tinta; il giorno tagliato parte dall'ora corrente;
+  i gruppi di ore bagnate.
+- `TodayStateBuilderTest` (+1): il cielo di oggi parte dall'ora corrente, i giorni dopo interi.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` (con lo script del
+  mirror nel sandbox).
+
+## Oggi: la frase dei giorni tranquilli, gli orari sul nastro, il nastro a 6dp (committente, 12 ott 2026)
+
+Dalla stessa revisione: «Vai con 6dp. Poi, tornando ai punti deboli della review, inizia a
+implementare le soluzioni dei punti 1 e 2». Il punto 1 era la frase che mancava nei giorni
+tranquilli (cioè quasi sempre: il cielo diceva «20° Coperto» e basta) e che, quando c'era,
+veniva dopo il nastro; il punto 2 era il nastro sul cielo che non si leggeva senza saperlo già.
+
+### Cosa è cambiato
+
+- **Il nastro nelle righe a 6dp.** Il committente ha visto la settimana di Milano disegnata a
+  4, 6 e 8dp affiancate. A 4dp il grigio di un pomeriggio coperto andava cercato; a 8dp il
+  nastro è spesso quanto la barra delle temperature (8dp) e la riga diventa due barre dello
+  stesso peso. La riga passa da 46 a 48dp.
+- **`HeadlineEngine.calm`**, fuori dalla scala: `headline()` risponde ancora «c'è qualcosa da
+  segnalare?», e null resta no. Il builder usa `headline() ?: calm()`. Due fatti:
+  - **l'asciutto**: solo se nessuna ora rimasta oggi ha qualcosa che cade (stato del motore:
+    un'ora «probabile» non conta, una bagnata al 20% sì); poi il primo giorno successivo con
+    un'ora bagnata o con l'etichetta di precipitazione («Prossima pioggia domenica», «domani»,
+    neve e pioggia e neve per fase), oppure, se non ce n'è, la lunghezza della previsione, da
+    tre giorni in su («Asciutto per i prossimi 7 giorni»);
+  - **il caldo**: la prima ora di oggi che stampa la massima, se è ancora avanti e almeno un
+    grado sopra adesso («massima 23° verso le 16:00»); altrimenti la forbice di domani
+    («domani tra 14° e 26°»).
+- **La frase prima del nastro**, subito sotto la parola del cielo; il nastro chiude il cielo
+  con **alba e tramonto** stampati sotto i punti dove cadono, tolti dalla semantica perché la
+  descrizione del nastro legge già gli stessi due orari.
+- La guida: «è scritto sopra ogni numero» non era vero (la frase sta sotto la temperatura) ed
+  è diventato «sotto il numero grande»; «quando non c'è niente da dire la frase non compare»
+  è diventato la frase dei giorni tranquilli. DESIGN §8.1 e §4, VISION §3.3, CHANGELOG.
+
+### Decisioni e deviazioni
+
+- **Niente «3° più caldo di ieri»**, che la revisione proponeva: il mapper non tiene le ore
+  passate e il report non ha ieri; servirebbe `past_days`, un cambio del dato e non della
+  schermata. Rimandato.
+- **I widget non cambiano.** Il registro breve risponde null alla frase tranquilla e i widget
+  tengono il loro ripiego, il cielo di adesso: tre righe di quattordici caratteri sono per il
+  presente, e «Prossima pioggia domenica, massima 23°» non ci sta. `widgets.png` rigenerato
+  usciva diverso solo per antialiasing ed è rimasto com'era.
+- **La frase resta sotto la temperatura**, non sopra: VISION §5.1 la disegna lì, e il numero
+  grande in cima al cielo è la firma della schermata. È salita sopra il nastro.
+- **L'ora del picco è la prima che stampa la massima**: nel Milano del README 22,7° alle 16 e
+  22,9° alle 17 sono entrambi «23°» nella striscia, e la frase diceva «verso le 17:00».
+
+### Come è stato verificato
+
+- `HeadlineEngineTest` (+8): la scala tace ancora nel giorno tranquillo e `calm` risponde; un'ora
+  bagnata in un giorno con etichetta asciutta chiude l'asciutto; sette giorni asciutti, e
+  niente sotto i tre; un'ora bagnata oggi toglie l'asciutto; la neve; la forbice di domani dopo
+  il picco o con un picco non più caldo di adesso; la prima ora che stampa la massima; niente da
+  dire resta niente.
+- `CalmTextTest` (5, nuovo, Robolectric in italiano): le quattro combinazioni e il null del
+  registro breve.
+- Screenshot `today-now` e `today-week` rigenerati e guardati: «Dry for the next 7 days, high of
+  23° around 16:00» sotto «Overcast», 07:13 e 19:15 sotto il nastro, la settimana a 6dp.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## Oggi: meno «0%» e la nuvola che sembrava una luna (committente, 12 ott 2026)
+
+Punti 3 e 4 della revisione di Oggi. Il 3: sei «0%» sotto la striscia e cinque nella settimana
+erano la ripetizione più rumorosa della pagina. Il 4: l'icona di «coperto» (`overcast` di
+Meteocons, una nuvola con una seconda più scura dietro la spalla) alle 13 e alle 14 si leggeva
+come «poco nuvoloso di notte», accanto alla vera icona notturna delle 04.
+
+Prima, la domanda del committente sui widget: frasi tranquille «brevi» solo per loro? Valutata
+e **non fatta** per ora, su parere dato al committente (che resta libero di chiederla): il widget di oggi stampa già ↑ e ↓, quindi
+la metà «caldo» sarebbe un doppione; l'asciutto cambia di rado e diventerebbe tappezzeria; e la
+parola del cielo («Coperto») è l'unico gemello testuale dell'icona, quella che il punto 4 aveva
+trovato ambigua. I widget stampano già il registro breve di tutta la scala (allerte, temporale,
+ombrello, fine della pioggia, gelo, nebbia, vento, pioggia possibile, ombrello di domani).
+
+### Cosa è cambiato
+
+- **La probabilità si stampa dal 20%** (`WeatherStateEngine.PROBABLE_PCT`, la soglia sotto cui
+  l'app non chiama mai bagnata un'ora): nella striscia, nella striscia del giorno aperto e nella
+  settimana. Sotto, la cella resta vuota e larga uguale; la descrizione parlata dice ancora la
+  cifra, zero compreso. Il grafico della pioggia si disegna solo se la striscia arriva al 20%.
+- **Una striscia senza nessuna cifra non ha la riga della pioggia**: la riga vuota era un buco
+  di 22dp fra la striscia e la sezione dopo (visto nello screenshot rigenerato). La cella passa
+  da 144 a 122dp in quel caso; lo scheletro resta sulla misura alta.
+- **WMO 3 disegna `cloudy`**, una nuvola sola. Pioviggine, pioggia, nevischio e neve tengono la
+  loro nuvola doppia, dove le gocce dicono cosa sono. `overcast` resta nella lista spedita perché
+  i suoi gemelli animati sono generati con lei; nessuna schermata la nomina più. Non si è
+  toccato nulla di generato: è la tabella `conditionLineRes`, che è codice dell'app.
+- DESIGN §2.3, §8.3, §8.5, §13; VISION §5.2; CHANGELOG. Rigenerati e guardati `today-now`,
+  `today-week`, `today-details`, `widgets` e `widget-day-arc` (questi tre per la nuvola).
+
+### Decisioni e deviazioni
+
+- **20% e non 10%**: la soglia è già dell'app, non una nuova; 10% sarebbe stata una terza
+  opinione sullo stesso cielo.
+- **«Zero compreso» (DESIGN §2.3, 6 set 2026) è superato solo nella stampa**: la rampa
+  d'inchiostro resta quella, e colora quello che si stampa.
+
+### Come è stato verificato
+
+- `ConditionIconsTest`: il codice 3 prende `mc3_cloudy`; `MeteoconsSetsTest` e
+  `AnimatedIconTest` verdi (le varianti di `cloudy` c'erano già).
+- Screenshot rigenerati: la striscia senza «0%» e senza buco, la settimana con la colonna vuota,
+  la nuvola sola nell'app e nei widget.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## Oggi: il giorno aperto all'alba, l'agenda che conta il sole (committente, 12 ott 2026)
+
+Punti 5 e 6 della revisione di Oggi, nella numerazione della revisione (nel messaggio prima
+li avevo rinumerati male; il committente ha chiesto «5 e 6» e si è seguita la revisione).
+
+### Cosa è cambiato
+
+- **Il giorno aperto parte dall'ora prima della prima ora di luce** (`openingHour`): sabato del
+  README apriva su 00–05, tutta notte; ora su 07, con l'alba delle 07:14. Lo stato della lista
+  è ricordato dentro l'espansione, quindi ogni apertura riparte da lì. Oggi apre sull'ora in
+  corso, come prima (il report non ha ore precedenti).
+- **Il «tra X» va alla prima riga che non è della luna** (`countdownIndex`): era sempre la
+  prima, e sul Milano del README contava sei ore a un sorgere di luna un minuto prima
+  dell'ora d'oro. Un'agenda di sola luna conta la luna.
+- **Ora d'oro e ora blu della sera sono intervalli**: `TimelineItem.until`, dal tramonto e dal
+  sole a −6° di `SolarDay`; «Ora d'oro fino alle 19:15», e così l'ora blu. Senza la
+  fine (un giorno che non ce l'ha) restano il momento di prima. Stringhe IT/EN.
+- DESIGN §8.4 e §8.5b, CHANGELOG; `today-now` e `today-week` rigenerati e guardati.
+
+### Decisioni e deviazioni
+
+- **La stella dell'ora blu resta.** La revisione la chiamava arbitraria; guardate le
+  alternative della famiglia, sono peggiori: `horizon` è `sunset` con una gobba di 1,6dp (la
+  stessa ragione per cui l'ora d'oro l'ha lasciato l'11 set), una luna annuncerebbe una luna.
+  La stella è la prima luce del cielo della sera, che è l'ora blu.
+- **«Ripete la scheda Cielo nei giorni asciutti» non è stato toccato**: è una scelta di
+  struttura (la VISION §5.2.4 vuole l'agenda unita qui), non un difetto da correggere in due
+  righe. Resta aperta per una decisione del committente.
+- **L'arco del widget non cambia**: stampa gli stessi elementi dell'agenda ma ha la sua riga
+  stretta; i campi nuovi hanno valori predefiniti e non lo toccano.
+
+### Come è stato verificato
+
+- `RestOfDayTest` (3, nuovo): il conto salta la luna; la prima riga conta quando non è della
+  luna, un'agenda di sola luna conta la luna; il giorno aperto parte dall'ora prima della luce,
+  oggi e una notte intera partono dall'inizio.
+- `TodayStateBuilderTest` (+1): l'ora d'oro finisce al tramonto della stessa agenda, l'ora blu
+  finisce dopo l'inizio, il tramonto non ha fine.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## Oggi: la pressione che va da qualche parte, la griglia senza buchi, la fascia vuota (committente, 12-13 ott 2026)
+
+Punti 7 e 8 della revisione di Oggi. Il 7: la griglia dei dettagli era disomogenea (i pollini
+da soli su mezza riga, accanto al vuoto) e la pressione stampava «Alta: tende al sereno» sotto
+un cielo coperto all'86%. L'8: fra il bordo del foglio e «Prossime ore» c'erano 53dp di carta
+vuota, misurati sullo screenshot del README.
+
+### Cosa è cambiato
+
+- **La pressione come tendenza** (`WeatherText.pressureTrend`): l'ora in corso contro quella tre
+  ore dopo, sulle bande dei bollettini marini (sotto 1,6 hPa in 3 ore stabile, da 3,6 rapida).
+  In calo, in rapido calo, in aumento: la riga di significato è la tendenza e la nota è il suo
+  conto («−2,4 hPa nelle prossime 3 ore»). Stabile: resta il significato della lettura.
+- **«Alta» dice *stabile*, non *sereno***: l'alta pressione è tempo stabile, e un anticiclone
+  d'autunno è spesso grigio — era la contraddizione con la finestra. EN «settled weather».
+- **La tessera spaiata prende tutta la riga** invece di stare accanto a un riquadro vuoto.
+- **Il primo titolo sul foglio non aggiunge margine**: il bordo del foglio (24dp) e lo spazio
+  della lista (12dp) bastano. Da 53 a circa 42dp fra il bordo e il testo. Con il chip della
+  freschezza, un'allerta o la carta della guida in mezzo, il titolo tiene i suoi 12dp.
+- La guida: «pressione e dove sta andando». DESIGN §8.6 e la spaziatura delle intestazioni,
+  CHANGELOG; `today-now` e `today-details` rigenerati e guardati.
+
+### Decisioni e deviazioni
+
+- **Tendenza in avanti, non all'indietro.** La tendenza barometrica classica guarda le tre ore
+  passate; il report non ne tiene nessuna (il mapper parte dall'ora corrente), quindi si legge
+  dove il barometro *sta andando* secondo il modello. È scritto così anche nel commento.
+- **La tessera delle nuvole resta.** La revisione proponeva di toglierla dove il cielo in alto
+  la dice già; ma la tessera dice anche lo strato (un 90% di velo alto lascia passare il sole,
+  un 90% basso no), che il cielo in alto non dice.
+- Sul Milano del README la pressione cala di 1,3 hPa in 3 ore: per le bande è stabile, e la
+  tessera dice «Alta: tempo stabile». Nessuna tendenza inventata sotto la soglia.
+
+### Come è stato verificato
+
+- `PressureTrendTest` (3, nuovo): le quattro bande e il conto; niente tendenza senza la
+  pressione o senza l'ora tre dopo; la tendenza vince sulla lettura, la stabilità no.
+- Screenshot rigenerati: la tessera dei pollini su tutta la riga, «High: settled weather»,
+  «Next hours» più vicino al cielo.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## Ieri, la luna e il barometro: le tre proposte (committente, 13 ott 2026)
+
+Il committente ha chiesto un parere sui due punti rimasti aperti e sulla tendenza barometrica,
+con due vincoli: **niente modifiche al modello dati, niente scaricamento eccessivo dalla rete**.
+Due fatti verificati prima di rispondere: la risposta di Open-Meteo parte da mezzanotte (le ore
+passate di oggi sono già scaricate, il mapper le scarta), e il Journal (`weather_history`)
+scrive a ogni aggiornamento la previsione da oggi a +7 giorni, massime comprese. Proposte
+accettate: «implementa le tue tre proposte».
+
+### Cosa è cambiato
+
+- **«4° più di ieri»** nella frase tranquilla: quando la massima di oggi dista tre gradi o più da
+  quella di ieri, la differenza prende il posto dell'ora («Massima 26°, 4° più di ieri»). La
+  massima di ieri viene dal Journal: il commit più recente scritto nella data di ieri (nel fuso
+  del luogo) e il suo `<ieri>.high_c` (`TodayStateBuilder.yesterdayHigh`, pura; il ViewModel la
+  legge quando i dati si muovono, insieme a «Cosa è cambiato», filtra per data e decodifica un
+  solo commit). Nessun campo nuovo, nessuna richiesta: Today legge già quella tabella.
+- **La luna fuori dall'agenda di Oggi**: sorgere e tramonto restano nella scheda Cielo e
+  nell'arco del widget. Il conto alla rovescia che saltava la luna (`countdownIndex`, 12 ott) era
+  diventato codice morto ed è stato tolto: conta di nuovo la prima riga.
+- `Formats.temperatureDifference`: una differenza di gradi, senza lo scarto dei Fahrenheit.
+- DESIGN §8.1 e §8.4, VISION §3.3 e §5.2, CHANGELOG; `today-now` rigenerato e guardato.
+
+### Decisioni e deviazioni
+
+- **Niente `past_days=1`.** Un 12% in più a ogni aggiornamento per ogni luogo, e i giorni che
+  partirebbero da ieri mentre metà dell'app assume che il primo sia oggi: un cambio di modello
+  vero, con rischi ovunque.
+- **Ieri è una previsione, non una misura**: la massima che il modello dava per ieri al suo
+  ultimo aggiornamento della giornata. È il numero più vicino al vero che l'app abbia, e lo
+  stesso tipo di numero della massima di oggi (entrambe `highC` del giorno). Senza un commit di
+  ieri (installazione nuova, telefono spento) la frase tace e torna all'ora del picco.
+- **La tendenza barometrica resta in avanti** (decisione esplicita, non dimenticanza). Il
+  barometro classico guarda le tre ore passate perché è uno strumento e misura; le ore passate
+  di questa app non sono misure ma l'analisi del modello, quindi «indietro» non è più vero di
+  «avanti», e «avanti» risponde alla domanda del lettore (sta per peggiorare?). Se un giorno si
+  volesse la convenzione classica, la strada è la pressione nelle `PastHour` che il mapper già
+  costruisce dalla risposta scaricata: un campo in più nel modello in memoria, non nel database
+  (la cache su disco tiene la risposta grezza) né nella rete; il limite sono le tre ore dopo
+  mezzanotte, che la risposta non copre.
+- Lo screenshot del README non mostra «più di ieri»: la registrazione non ha un Journal, e una
+  massima di ieri messa a mano sarebbe un dato inventato.
+
+### Come è stato verificato
+
+- `HeadlineEngineTest` (+2): tre gradi da ieri prendono il posto dell'ora, in su e in giù; sotto i
+  tre o senza ieri l'ora resta.
+- `CalmTextTest` (+1): «Massima 23°, 4° più di ieri», e con l'asciutto davanti «…, 3° meno di ieri».
+- `TodayStateBuilderTest` (+3, uno aggiornato): la massima di ieri è il commit più recente di ieri,
+  non uno di oggi; senza commit di ieri o senza la massima, niente; l'agenda di Oggi senza luna, e
+  l'agenda completa che arriva oltre mezzanotte resta quella del widget.
+- `RestOfDayTest`: tolti i due test del conto che saltava la luna, resta quello dell'apertura.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## La guida: le due barre della settimana (committente, 13 ott 2026)
+
+Domanda del committente: le due «etichette» della schermata, la barra delle temperature e il
+nastro del giorno, sono spiegate nella guida? Per un nuovo utente non sono intuitive.
+
+Verificato: in parte, e con **quattro frasi rese false da questa stessa PR** (non aggiornate
+quando si sono cambiate le schermate, ed era da fare insieme): il nastro «dalla prima luce
+all'ultima» e «dall'alba al tramonto» (va da mezzanotte a mezzanotte, e ora porta il cielo, la
+pioggia, il passato attenuato e gli orari), la luna nell'agenda (tolta), la probabilità per
+ogni ora (ora dal 20%). La barra delle temperature era spiegata solo nella scala comune, non in
+cosa va da dove a dove, nei colori e nel pallino di adesso.
+
+### Cosa è cambiato
+
+- Le quattro frasi corrette, IT/EN: `guide_today_p1`, `guide_today_hours_body`,
+  `guide_today_rest_body`, `guide_today_week_body`.
+- **Un esempio disegnato** sotto «La settimana» (`WeekSample`): due righe vere di `DayRow`, oggi
+  sereno con il pallino e la mattina passata sbiadita, domani che si copre dopo pranzo e piove
+  dalle 15 alle 17 con la corsia delle ore bagnate; la didascalia dice cosa guardare in ciascuna
+  barra. I giorni sono quelli veri (come la striscia del Diario nella guida), la luce è una
+  giornata generica di media latitudine, i numeri sono l'esempio.
+- `guide.png` rigenerato (in fondo mostra il nuovo testo sul nastro); l'esempio è stato
+  guardato in uno screenshot temporaneo, poi tolto.
+
+### Decisioni e deviazioni
+
+- **La prima didascalia diceva «scuro di notte»**, giusto per il nastro sul cielo e sbagliato per
+  le righe, dove la notte sbiadisce verso il fondo della barra: visto nello screenshot e corretto
+  in «tenue alle due estremità, che sono la notte».
+- **Le temperature dell'esempio sono in °C** anche per chi usa i Fahrenheit: la guida non riceve
+  le unità del lettore, e la didascalia non cita numeri. Da rivedere se la guida le riceverà.
+- Nessun esempio della striscia sul cielo: il paragrafo d'apertura lo descrive, e il cielo vero
+  è a un tocco dalla guida.
+
+### Come è stato verificato
+
+- Screenshot temporaneo della sezione (inglese, tema chiaro), guardato, poi rimosso insieme al
+  test che lo disegnava.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.

@@ -6,6 +6,7 @@ import com.callbackdev.chiaro.domain.ConditionWord
 import com.callbackdev.chiaro.domain.model.AirQuality
 import com.callbackdev.chiaro.domain.model.AqiScale
 import com.callbackdev.chiaro.domain.model.CloudLayers
+import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.PollenLevel
 import com.callbackdev.chiaro.domain.model.PollenReport
 
@@ -149,6 +150,54 @@ object WeatherText {
         mb <= 1020 -> R.string.pressure_meaning_normal
         else -> R.string.pressure_meaning_high
     }
+
+    /**
+     * Which way the barometer is going (review of 12 ott 2026). The absolute value printed
+     * «Alta: tende al sereno» under a sky 86% closed: a high pressure is a slow, regional
+     * fact, and the tile was contradicting the window. The tendency is what a barometer is
+     * read for, and it is the consequence the tile owes (§1.2).
+     *
+     * Read on the forecast's own hours — the hour we are in against the one three hours
+     * on, the span the barometric tendency is defined over — because the report keeps no
+     * hour before the present: this is where the barometer is **going**, not where it has
+     * been. The bands are the marine forecasts' (WMO): under 1.6 hPa in three hours is
+     * steady, from 3.6 it is quick. Null where either hour carries no pressure, or the
+     * hour three on is missing.
+     */
+    fun pressureTrend(hours: List<HourlyForecast>): PressureTrend? {
+        val first = hours.firstOrNull() ?: return null
+        val from = first.pressureMb ?: return null
+        val later = hours.firstOrNull { java.time.Duration.between(first.at, it.at).toHours() >= TREND_HOURS }
+            ?.takeIf { java.time.Duration.between(first.at, it.at).toHours() == TREND_HOURS }
+            ?: return null
+        val to = later.pressureMb ?: return null
+        val delta = to - from
+        val direction = when {
+            delta <= -TREND_QUICK_HPA -> PressureTrend.Direction.FALLING_FAST
+            delta <= -TREND_STEADY_HPA -> PressureTrend.Direction.FALLING
+            delta >= TREND_STEADY_HPA -> PressureTrend.Direction.RISING
+            else -> PressureTrend.Direction.STEADY
+        }
+        return PressureTrend(direction, delta)
+    }
+
+    /** The barometer's way, and the change over [TREND_HOURS] that decided it. */
+    data class PressureTrend(val direction: Direction, val deltaHpa: Double) {
+        enum class Direction { FALLING_FAST, FALLING, STEADY, RISING }
+    }
+
+    /** The tile's meaning: the tendency when it moves, the absolute reading when it holds. */
+    @StringRes
+    fun pressureMeaning(mb: Double, trend: PressureTrend?): Int = when (trend?.direction) {
+        PressureTrend.Direction.FALLING_FAST -> R.string.pressure_trend_falling_fast
+        PressureTrend.Direction.FALLING -> R.string.pressure_trend_falling
+        PressureTrend.Direction.RISING -> R.string.pressure_trend_rising
+        PressureTrend.Direction.STEADY, null -> pressureMeaning(mb)
+    }
+
+    private const val TREND_HOURS = 3L
+    private const val TREND_STEADY_HPA = 1.6
+    private const val TREND_QUICK_HPA = 3.6
 
     @StringRes
     fun visibilityMeaning(km: Double): Int = when {

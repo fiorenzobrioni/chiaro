@@ -41,8 +41,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.domain.settings.TemperatureUnit
+import com.callbackdev.chiaro.ui.components.DayRow
 import com.callbackdev.chiaro.ui.components.FreshnessChip
+import com.callbackdev.chiaro.ui.components.LightPhase
 import com.callbackdev.chiaro.ui.components.MetricTile
+import com.callbackdev.chiaro.ui.components.RibbonHour
 import com.callbackdev.chiaro.ui.components.humidityTrack
 import com.callbackdev.chiaro.ui.components.uvTrack
 import com.callbackdev.chiaro.ui.components.VerdictChip
@@ -51,6 +55,7 @@ import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
+import com.callbackdev.chiaro.ui.icons.ConditionGlyph
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.forText
@@ -154,6 +159,8 @@ private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifi
             stringResource(R.string.guide_today_week_title),
             stringResource(R.string.guide_today_week_body)
         )
+        WeekSample()
+        Caption(stringResource(R.string.guide_today_week_caption))
         Feature(
             stringResource(R.string.guide_today_details_title),
             stringResource(R.string.guide_today_details_body)
@@ -462,6 +469,68 @@ private fun FreshnessSample() {
         age = pluralStringResource(R.plurals.freshness_hours_ago, 2, 2),
         onRetry = {}
     )
+}
+
+/**
+ * Two rows of the week, drawn by the week's own [DayRow] (13 ott 2026): the two bars on
+ * the screen that ask to be decoded rather than read, so the guide shows them and its
+ * caption says what to look at. Today is clear, with the dot on the range bar and the
+ * spent morning faded; tomorrow clouds over after lunch and rains from 15 to 17, with
+ * the wet lane under its ribbon. The days are the real ones, as the drift strip's are;
+ * the light is a generic mid-latitude day and the numbers are the example.
+ */
+@Composable
+private fun WeekSample() {
+    val locale = currentLocale()
+    val today = LocalDate.now(LocalClock.current)
+    val phases = listOf(
+        LightPhase(0f, 0.22f, -30.0),
+        LightPhase(0.22f, 0.25f, -15.0),
+        LightPhase(0.25f, 0.27f, -9.0),
+        LightPhase(0.27f, 0.29f, -4.0),
+        LightPhase(0.29f, 0.32f, 2.0),
+        LightPhase(0.32f, 0.76f, 30.0),
+        LightPhase(0.76f, 0.79f, 2.0),
+        LightPhase(0.79f, 0.81f, -4.0),
+        LightPhase(0.81f, 0.83f, -9.0),
+        LightPhase(0.83f, 0.86f, -15.0),
+        LightPhase(0.86f, 1f, -30.0)
+    )
+    fun hours(cloud: (Int) -> Int, chance: (Int) -> Int, wet: (Int) -> Boolean) =
+        (0..24).map { h -> RibbonHour(h / 24f, cloud(h), chance(h), wet(h) && h < 24) }
+    val clear = hours({ 10 }, { 0 }, { false })
+    val turning = hours(
+        cloud = { h -> when { h < 11 -> 15; h < 14 -> 15 + (h - 10) * 25; h < 21 -> 100; else -> 60 } },
+        chance = { h -> if (h in 15..17) 70 else 5 },
+        wet = { h -> h in 15..17 }
+    )
+    val days = listOf(
+        Triple(stringResource(R.string.week_today), Triple(12.0, 21.0, 0), clear),
+        Triple(Formats.dayLabel(today.plusDays(1), locale), Triple(10.0, 16.0, 70), turning)
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        days.forEachIndexed { i, (label, range, sky) ->
+            val (low, high, pct) = range
+            DayRow(
+                dayLabel = label,
+                condition = ConditionGlyph(if (i == 0) 0 else 61),
+                rainPct = pct,
+                rainLabel = pct.takeIf { it >= 20 }?.let { Formats.percent(it, locale) },
+                lowC = low,
+                highC = high,
+                lowLabel = Formats.temperature(low, TemperatureUnit.CELSIUS, locale),
+                highLabel = Formats.temperature(high, TemperatureUnit.CELSIUS, locale),
+                scaleLowC = 10.0,
+                scaleHighC = 21.0,
+                phases = phases,
+                description = stringResource(R.string.guide_today_week_caption),
+                nowC = if (i == 0) 17.0 else null,
+                sky = sky,
+                wetLane = true,
+                skyFrom = if (i == 0) 0.42f else 0f
+            )
+        }
+    }
 }
 
 /** Two tiles of the details grid: the value, and the line that says what to do. */
