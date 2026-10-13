@@ -188,7 +188,7 @@
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mc3n_partly_cloudy_day_rain" />
+                android:src="@drawable/mc3n_sun_half_cloud_rain_day" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"

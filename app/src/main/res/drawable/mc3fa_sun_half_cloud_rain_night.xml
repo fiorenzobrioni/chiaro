@@ -1,0 +1,220 @@
+<!-- Composto da tools/compose_sun_cloud.py dai disegni gia' importati di
+     Meteocons v3 (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Il sole e' clear-night alla sua scala, la nuvola
+     e' cloudy al 78% ri-tracciata. Non modificare a mano: ri-eseguire lo
+     strumento E' la composizione. -->
+<!-- Le gocce sono quelli di partly-cloudy-night-rain, alla misura della nuvola. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <group android:name="g1maskmove">
+                <clip-path android:pathData="M128,0 L0,0 L0,128 L128,128 Z M63.6829,103.95 C56.5661,103.9516,49.0907,97.2297,48.4167,90.0966 C47.8317,83.9089,51.7628,77.2549,57.3164,74.9734 C57.5091,70.873,59.9664,66.654,63.4202,64.307 C66.8577,61.9709,71.609,61.2435,75.4778,62.5242 C80.5751,56.576,90.0567,54.4698,97.423,57.5508 C104.5397,60.528,109.5266,68.2051,109.1857,75.7321 C114.9421,77.1353,119.6484,83.1372,119.6484,89.3818 C119.6484,96.6553,112.2571,103.95,105.0405,103.95 L63.6826,103.95"/>
+                <group android:name="g2maskhold">
+                    <group android:name="g3sun" android:scaleX="1.38" android:scaleY="1.38" android:pivotX="64" android:pivotY="64">
+                        <group android:name="g4moon" android:pivotX="64" android:pivotY="64">
+                            <path android:pathData="M60.962,32 C44.676,33.758,32,47.362,32,63.898 C32,81.627,46.567,96,64.536,96 C79.682,96,92.373,85.775,96,71.95 C74.381,74.266,55.329,53.463,60.962,32"
+                          android:fillColor="#317994"/>
+                        </group>
+                    </group>
+                </group>
+            </group>
+            <group android:name="g5cloud">
+                <group android:name="g6cloudplace" android:scaleX="0.78" android:scaleY="0.78" android:translateX="20" android:translateY="16" android:pivotX="64" android:pivotY="64">
+                    <path android:pathData="M90.389,63.086 C92.684,53.882,87.741,44.136,79.009,40.482 C70.265,36.824,59.828,40.138,54.837,48.212 C50.537,45.625,44.975,45.778,40.824,48.599 C36.684,51.413,34.5,56.514,35.35,61.454 C28.393,62.769,23.393,69.339,24.061,76.408 C24.729,83.477,30.871,89.002,37.953,89 L90.977,89 C98.045,89,104,83.119,104,76.028 C104,68.701,97.677,62.768,90.389,63.086"
+                  android:fillColor="#88909c"/>
+                </group>
+            </group>
+            <group android:name="g7fallplace" android:scaleX="0.95" android:scaleY="0.95" android:translateX="23.121" android:translateY="14.95" android:pivotX="0" android:pivotY="0">
+                <group android:name="fall_g5raindrop1">
+                    <path android:pathData="M52,83 L52,95"
+                  android:name="fall_g6p"
+                  android:strokeColor="#003d9a"
+                  android:strokeWidth="4.2105"
+                  android:strokeLineCap="round"/>
+                </group>
+                <group android:name="fall_g7raindrop2">
+                    <path android:pathData="M64,83 L64,95"
+                  android:name="fall_g8p"
+                  android:strokeColor="#003d9a"
+                  android:strokeWidth="4.2105"
+                  android:strokeLineCap="round"/>
+                </group>
+                <group android:name="fall_g9raindrop3">
+                    <path android:pathData="M76,83 L76,95"
+                  android:name="fall_g10p"
+                  android:strokeColor="#003d9a"
+                  android:strokeWidth="4.2105"
+                  android:strokeLineCap="round"/>
+                </group>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="g4moon">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="rotation">
+                <propertyValuesHolder android:propertyName="rotation">
+                    <keyframe android:fraction="0" android:value="-6"/>
+                    <keyframe android:fraction="0.5" android:value="6"/>
+                    <keyframe android:fraction="1" android:value="-6"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g1maskmove">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateY">
+                <propertyValuesHolder android:propertyName="translateY">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="-3"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g2maskhold">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateY">
+                <propertyValuesHolder android:propertyName="translateY">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="3"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g5cloud">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateY">
+                <propertyValuesHolder android:propertyName="translateY">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="-3"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="fall_g5raindrop1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="1000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_10_10"
+                android:propertyName="translateY"
+                android:valueFrom="0"
+                android:valueTo="20"/>
+        </aapt:attr>
+    </target>
+    <target android:name="fall_g6p">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="1000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="strokeAlpha">
+                <propertyValuesHolder android:propertyName="strokeAlpha">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.15" android:value="1"/>
+                    <keyframe android:fraction="0.85" android:value="1"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="fall_g7raindrop2">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="1000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_10_10"
+                android:propertyName="translateY">
+                <propertyValuesHolder android:propertyName="translateY">
+                    <keyframe android:fraction="0" android:value="12"/>
+                    <keyframe android:fraction="0.4" android:value="20"/>
+                    <keyframe android:fraction="0.401" android:value="0"/>
+                    <keyframe android:fraction="1" android:value="12"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="fall_g8p">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="1000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="strokeAlpha">
+                <propertyValuesHolder android:propertyName="strokeAlpha">
+                    <keyframe android:fraction="0" android:value="1"/>
+                    <keyframe android:fraction="0.25" android:value="1"/>
+                    <keyframe android:fraction="0.4" android:value="0"/>
+                    <keyframe android:fraction="0.55" android:value="1"/>
+                    <keyframe android:fraction="1" android:value="1"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="fall_g9raindrop3">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="1000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_10_10"
+                android:propertyName="translateY">
+                <propertyValuesHolder android:propertyName="translateY">
+                    <keyframe android:fraction="0" android:value="4"/>
+                    <keyframe android:fraction="0.8" android:value="20"/>
+                    <keyframe android:fraction="0.801" android:value="0"/>
+                    <keyframe android:fraction="1" android:value="4"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="fall_g10p">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="1000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/linear_interpolator"
+                android:propertyName="strokeAlpha">
+                <propertyValuesHolder android:propertyName="strokeAlpha">
+                    <keyframe android:fraction="0" android:value="1"/>
+                    <keyframe android:fraction="0.65" android:value="1"/>
+                    <keyframe android:fraction="0.8" android:value="0"/>
+                    <keyframe android:fraction="0.95" android:value="1"/>
+                    <keyframe android:fraction="1" android:value="1"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

@@ -154,8 +154,14 @@ object ChiaroIcons {
      * hour strip's 32 dp the sliver was a few pixels, so 2 read as 3. Now the cloud grows
      * 0 → 49% → 78% → 100% and the sun goes whole → whole → a third hidden → gone. At
      * night the cloud sits higher and further right (the recipe's own centre), where the
-     * crescent's lower horn goes under it instead of poking out beside it. Showers keep
-     * Meteocons' `partly-cloudy-*-rain`: the drops are what tell them apart.
+     * crescent's lower horn goes under it instead of poking out beside it.
+     *
+     * **Showers are code 2 with what falls** (same day): `sun-half-cloud-rain` and
+     * `-snow`, the same sun and cloud with the drops or flakes of Meteocons'
+     * `partly-cloudy-*-rain/-snow` hung from the cloud's floor. They used to take those
+     * drawings whole, which carry the sliver of sun behind a full cloud that code 2 had
+     * just left: beside the new ladder a shower read as another sky, not as the same sky
+     * raining. Now 2 → 80 changes one thing, the drops.
      *
      * The imported `mostly-clear` stays in the repo, unused, for the day the choice is
      * revisited again. Most apps collapse 0 and 1 for a poorer reason, having no such
@@ -205,17 +211,11 @@ object ChiaroIcons {
         // «probabile».
         WmoCode.SNOW_SLIGHT, WmoCode.SNOW_MODERATE, WmoCode.SNOW_HEAVY, WmoCode.SNOW_GRAINS,
         WmoCode.SNOW_LIKELY -> R.drawable.mc3_overcast_snow
-        WmoCode.SHOWERS_SLIGHT, WmoCode.SHOWERS_MODERATE -> if (night) {
-            R.drawable.mc3_partly_cloudy_night_rain
-        } else {
-            R.drawable.mc3_partly_cloudy_day_rain
-        }
+        WmoCode.SHOWERS_SLIGHT, WmoCode.SHOWERS_MODERATE ->
+            if (night) ComposedIcons.showersNight else ComposedIcons.showersDay
         WmoCode.SHOWERS_HEAVY -> R.drawable.mc3_extreme_rain
-        WmoCode.SNOW_SHOWERS_SLIGHT, WmoCode.SNOW_SHOWERS_HEAVY -> if (night) {
-            R.drawable.mc3_partly_cloudy_night_snow
-        } else {
-            R.drawable.mc3_partly_cloudy_day_snow
-        }
+        WmoCode.SNOW_SHOWERS_SLIGHT, WmoCode.SNOW_SHOWERS_HEAVY ->
+            if (night) ComposedIcons.snowShowersNight else ComposedIcons.snowShowersDay
         // A storm with its rain, and a storm over a dry hour without (25 set 2026).
         WmoCode.THUNDERSTORM, WmoCode.THUNDERSTORM_STRONG, WmoCode.THUNDERSTORM_SEVERE ->
             if (night) R.drawable.mc3_thunderstorms_night_rain else R.drawable.mc3_thunderstorms_day_rain

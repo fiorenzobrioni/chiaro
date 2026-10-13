@@ -22,9 +22,11 @@ gira per sempre e' decorazione.
 #: Cielo e dell'agenda: tutto quello che oggi arriva su uno schermo.
 #:
 #: **Non tutto quel che arriva a uno schermo e' qui**: `sun-one-cloud-*` e (dal 13 ott 2026)
-#: `sun-half-cloud-*` non sono disegni di Meteocons ma composizioni di questo repo
-#: (`tools/compose_sun_cloud.py`), e hanno la loro lista li'. `partly-cloudy-day/-night`
-#: restano qui anche se nessuna schermata li nomina piu': lo strumento ne legge la maschera. Questa resta la lista di **cosa importare**, e un nome che
+#: `sun-half-cloud-*` (con gli acquazzoni `sun-half-cloud-rain-*` e `-snow-*`) non sono
+#: disegni di Meteocons ma composizioni di questo repo (`tools/compose_sun_cloud.py`), e
+#: hanno la loro lista li'. `partly-cloudy-day/-night` e `partly-cloudy-*-rain/-snow`
+#: restano qui anche se nessuna schermata li nomina piu': lo strumento ne legge la maschera,
+#: le gocce e i fiocchi. Questa resta la lista di **cosa importare**, e un nome che
 #: non esiste a monte la farebbe fallire.
 SHIPPED = [
     "smoke",
