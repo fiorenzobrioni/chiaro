@@ -355,12 +355,13 @@ object AlertNotifier {
         }
         // No index, no line: a model that does not carry UV gets silence rather than
         // a "nessuna protezione necessaria" nobody forecast (§1.1).
-        report.daily.firstOrNull()?.uvIndexMax?.let { uv ->
+        report.daily.firstOrNull()?.let { day ->
+            val uv = day.uvIndexMax ?: return@let
             add(
                 context.getString(
                     R.string.notif_detail_uv,
                     uv,
-                    context.getString(WeatherText.uvMeaning(uv))
+                    context.getString(WeatherText.uvPeakMeaning(uv, day.condition))
                 )
             )
         }
@@ -513,14 +514,13 @@ object AlertNotifier {
         // summary prints every band because at 8:00 "no protection needed" settles
         // the question the reader opened the app with; at 21:00 nobody is asking.
         report.daily.firstOrNull { it.date == tomorrow }
-            ?.uvIndexMax
-            ?.takeIf { it >= UV_WORTH_SAYING }
-            ?.let { uv ->
+            ?.let { day ->
+                val uv = day.uvIndexMax?.takeIf { it >= UV_WORTH_SAYING } ?: return@let
                 add(
                     context.getString(
                         R.string.notif_detail_uv_tomorrow,
                         uv,
-                        context.getString(WeatherText.uvMeaning(uv))
+                        context.getString(WeatherText.uvPeakMeaning(uv, day.condition))
                     )
                 )
             }

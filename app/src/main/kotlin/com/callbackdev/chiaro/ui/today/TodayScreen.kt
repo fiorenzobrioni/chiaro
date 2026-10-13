@@ -1872,7 +1872,7 @@ private fun DayFacts(forecast: DailyForecast, units: UnitSettings, locale: Local
         // From «moderate» up (3): a low UV asks nothing of the day, and a line saying so
         // on every winter day would be the block talking to fill itself.
         forecast.uvIndexMax?.takeIf { it >= 3 }?.let { uv ->
-            add(DayFact({ ChiaroIcons.uv(uv) }, stringResource(R.string.day_fact_uv, uv), WeatherText.uvMeaning(uv)))
+            add(DayFact({ ChiaroIcons.uv(uv) }, stringResource(R.string.day_fact_uv, uv), WeatherText.uvPeakMeaning(uv, forecast.condition)))
         }
     }
     if (facts.isEmpty()) return
