@@ -1321,7 +1321,10 @@ hour we are in. An open week row shows, above its hours, the day's
 the highest UV from 3. One row per fact — the `Timeline` rung's glyph, the value in
 `bodyMedium`, its consequence under it in `bodySmall` / `onSurfaceVariant` — and only the
 facts that say something that day; a day with none draws no block. The closed row does not
-change: §1.3 puts the numbers one level down.
+change: §1.3 puts the numbers one level down. On a day the row draws wet, the UV's
+consequence is said for its sunny spells («Nelle schiarite scotta in circa 45 minuti», 13 ott
+2026): the peak is the hour the sun comes out, and a bare burn time under a rain icon read
+as a promise for the whole day.
 
 **8.6 MetricTile** — icon and label; the value as a **reading** (`ReadingValue`: Inter
 Light 24sp on a 32sp line, tabular — the hero's voice at a tile's scale, since the card

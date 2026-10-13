@@ -9,6 +9,7 @@ import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.PollenLevel
 import com.callbackdev.chiaro.domain.model.PollenReport
+import com.callbackdev.chiaro.domain.model.WeatherCondition
 
 /**
  * The WMO vocabulary and the meaning lines, as string resources — which is the whole
@@ -79,6 +80,38 @@ object WeatherText {
         uvIndex <= 10 -> R.string.uv_meaning_very_high
         else -> R.string.uv_meaning_extreme
     }
+
+    /**
+     * The meaning line of a day's PEAK UV, said for the day its row draws (13 ott 2026).
+     *
+     * `uv_index_max` is the brightest hour of the day, and the provider's UV dims under
+     * low, thick cloud but hardly under a high veil (the README's Milan: 0.75 under 100%
+     * low cloud at 11:00 on 25 Sep, 4.45 under 92% of high cloud at 13:00 on 29 Sep,
+     * against 4.55 on a clear 28 Sep). On a wet day, then, the peak is the hour the rain
+     * stops and the sun comes out, and «UV fino a 4 · Scotta in circa 45 minuti» under a
+     * rain icon read as a burn promised for the whole wet Sunday (Milan, 18 Oct 2026:
+     * 4.3 mm in 18 hours at 46-52% an hour, the peak still 4, the clear-sky value of
+     * mid-October). The number stays the model's; the line says the time is the sunny
+     * spells'. Only on a wet day: an overcast day can be high cloud, which burns as if
+     * it were not there, and «in the sunny spells» would undersell it.
+     */
+    @StringRes
+    fun uvPeakMeaning(uvIndex: Int, day: WeatherCondition): Int =
+        if (!wetDay(day)) uvMeaning(uvIndex) else when {
+            uvIndex <= 2 -> R.string.uv_meaning_low
+            uvIndex <= 5 -> R.string.uv_meaning_moderate_spells
+            uvIndex <= 7 -> R.string.uv_meaning_high_spells
+            uvIndex <= 10 -> R.string.uv_meaning_very_high_spells
+            else -> R.string.uv_meaning_extreme_spells
+        }
+
+    /**
+     * A day the row draws with something falling, or with a storm: its label is
+     * precipitation, which the mapper gives a day only when it is material, or a hazard
+     * (a storm possible in dry hours is still the day's word).
+     */
+    private fun wetDay(day: WeatherCondition): Boolean =
+        day.wmo?.let { it.isPrecipitation || it.hazard != null } == true
 
     /**
      * Said for the wind a body feels, which on a gusty day is the gust: the tile passes

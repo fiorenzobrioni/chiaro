@@ -12279,3 +12279,50 @@ sono coerenti.
   alla lettera, la nuvola senza pavimento, il tratto delle gocce a 4), `ConditionIconsTest`,
   `ArcSeriesTest` (`weatherAt`), i test di layout dei tre widget (`nowTallHourRows`,
   `todayShowMoreHours`, `skyPlotHeight`).
+
+## L'UV di un giorno di pioggia: «nelle schiarite» (committente, 13 ott 2026)
+
+Il committente ha mandato uno screenshot della settimana di Milano: domenica 18 ottobre,
+icona della pioggia, 55%, «4,3 mm di pioggia in 18 ore», e sotto «UV fino a 4 · Scotta in
+circa 45 minuti». La domanda: può essere? Il numero sì, la frase no.
+
+- **Da dove viene il 4**: è `uv_index_max`, l'ora più forte del giorno. L'UV del fornitore si
+  abbassa sotto le nuvole basse e spesse, quasi per niente sotto un velo alto: nella
+  registrazione di Milano del README 0,75 alle 11 del 25 set con il 100% di nuvole basse, 4,45
+  alle 13 del 29 set con il 92% di nuvole quasi tutte alte, contro 4,55 alle 13 del 28 set
+  sereno. A metà ottobre il sereno di Milano vale circa 3,5-4 (stima dall'altezza del sole):
+  domenica il modello vede un'ora di schiarita o di nuvola sottile, in un giorno di 0,24 mm
+  l'ora al 46-52% l'ora. Le ore di quella domenica non si sono potute guardare: il limite
+  giornaliero dell'API, raggiunto dal container.
+- **Cosa è cambiato**: `WeatherText.uvPeakMeaning(uv, giorno)` dice la conseguenza del massimo
+  UV per il giorno che la riga disegna. In un giorno bagnato (la sua etichetta è
+  precipitazione, che il mapper dà solo a una pioggia materiale, o un pericolo: anche il
+  temporale possibile) le quattro fasce da 3 in su diventano «Nelle schiarite scotta in circa
+  45 / 25 / 15 / 10 minuti…» («In sunny spells, burns in about…»). Il numero resta quello
+  del modello; sotto 3 resta «Nessuna protezione necessaria». Tre lettori: i fatti del giorno
+  aperto, la riga UV del riepilogo del mattino, quella di domani del riepilogo della sera.
+  La tessera UV dei dettagli no: dice l'indice di adesso, che è già quello sotto le nuvole
+  di adesso.
+
+### Decisioni e deviazioni
+
+- **Solo il giorno bagnato, non il coperto**: un coperto può essere un velo di cirri, che
+  lascia passare quasi tutto l'UV (il 29 set sopra), e «nelle schiarite» lo sottovaluterebbe.
+  Nemmeno la nebbia: la mattina nebbiosa di pianura ha il sole a mezzogiorno, e il massimo è
+  quello.
+- **Il possibile non è bagnato**: `RAIN_LIKELY` e `SNOW_LIKELY` non etichettano mai un giorno
+  (il mapper li fa votare con il loro cielo); se succedesse, resterebbero la frase normale.
+- **Alternativa scartata: togliere la riga nei giorni bagnati.** Nasconde un dato vero, e le
+  schiarite di un giorno instabile sono proprio quelle in cui ci si scotta senza pensarci.
+- **Restano le fasce larghe**: «45 minuti» vale da 3 a 5 (circa 55 e 33 minuti agli estremi
+  per una pelle chiara). Non toccate qui: è un'altra domanda.
+- Nessuna immagine del README cambia: la registrazione di Milano non ha giorni bagnati.
+
+### Come è stato verificato
+
+- `UvPeakMeaningTest`: il giorno asciutto (sereno, coperto, nebbia) tiene la frase normale;
+  il giorno bagnato prende le fasce «nelle schiarite» banda per banda; sotto 3 nessuna
+  protezione, bagnato o no; pioggia, rovesci, neve e temporale possibile sono bagnati, la
+  pioggia probabile e un codice sconosciuto no.
+- `AlertNotifierTest`: la riga di domani in un giorno di pioggia è «Tomorrow's peak UV 5 · In
+  sunny spells, burns in about 45 minutes»; i test esistenti (domani coperto, UV 5) invariati.

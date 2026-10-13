@@ -215,6 +215,24 @@ class AlertNotifierTest {
     }
 
     @Test
+    fun `tomorrow's UV on a wet day burns in the sunny spells`() {
+        // The peak of a day of rain is the hour the sun comes out (13 ott 2026): the
+        // number stays the model's, the time is said for that hour.
+        val wet = report().let { base ->
+            base.copy(
+                daily = base.daily.map {
+                    if (it.date == tomorrow) it.copy(condition = WeatherCondition(61)) else it
+                }
+            )
+        }
+        post(evening(), wet)
+        assertTrue(
+            expanded(),
+            expanded().lines().any { it == "Tomorrow's peak UV 5 · In sunny spells, burns in about 45 minutes" }
+        )
+    }
+
+    @Test
     fun `the daylight line turns around with the year`() {
         // Same sun, a longer today: the line has to say "less", and nothing else in
         // it changes. Milan on 16 January gains a minute; a July evening loses four.

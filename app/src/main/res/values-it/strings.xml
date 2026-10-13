@@ -153,6 +153,11 @@
     <string name="uv_meaning_high">Scotta in circa 25 minuti, copriti</string>
     <string name="uv_meaning_very_high">Scotta in circa 15 minuti, copriti</string>
     <string name="uv_meaning_extreme">Scotta in circa 10 minuti, resta all\'ombra</string>
+    <!-- Il massimo UV di un giorno di pioggia: l'ora più forte è quella in cui esce il sole -->
+    <string name="uv_meaning_moderate_spells">Nelle schiarite scotta in circa 45 minuti</string>
+    <string name="uv_meaning_high_spells">Nelle schiarite scotta in circa 25 minuti, copriti</string>
+    <string name="uv_meaning_very_high_spells">Nelle schiarite scotta in circa 15 minuti, copriti</string>
+    <string name="uv_meaning_extreme_spells">Nelle schiarite scotta in circa 10 minuti, resta all\'ombra</string>
     <string name="wind_meaning_calm">Aria ferma, non si sente</string>
     <string name="wind_meaning_light">Una brezza leggera</string>
     <string name="wind_meaning_moderate">Si sente, non dà fastidio</string>

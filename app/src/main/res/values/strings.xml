@@ -163,6 +163,11 @@
     <string name="uv_meaning_high">Burns in about 25 minutes, cover up</string>
     <string name="uv_meaning_very_high">Burns in about 15 minutes, cover up</string>
     <string name="uv_meaning_extreme">Burns in about 10 minutes, stay in shade</string>
+    <!-- The peak UV of a wet day: its brightest hour is the one the sun comes out -->
+    <string name="uv_meaning_moderate_spells">In sunny spells, burns in about 45 minutes</string>
+    <string name="uv_meaning_high_spells">In sunny spells, burns in about 25 minutes, cover up</string>
+    <string name="uv_meaning_very_high_spells">In sunny spells, burns in about 15 minutes, cover up</string>
+    <string name="uv_meaning_extreme_spells">In sunny spells, burns in about 10 minutes, stay in shade</string>
     <string name="wind_meaning_calm">Still air, you won\'t notice it</string>
     <string name="wind_meaning_light">A light breeze</string>
     <string name="wind_meaning_moderate">Noticeable, not a bother</string>
