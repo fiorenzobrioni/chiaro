@@ -127,6 +127,36 @@ internal fun skyRows(size: DpSize, fontScale: Float, available: Int): Int {
  * does (132). Five glyphs at 30 carry about the ink three carry at 34, so the two
  * numbers sit at one optical weight side by side.
  */
+/** The tall card's block: the hero row, and under it [rows] moments with their gaps. */
+internal fun skyTallBlockHeight(fontScale: Float, rows: Int): Dp {
+    val words = textLineHeight(SkyTimeSp, fontScale) +
+        maxOf(textLineHeight(SkyNameSp, fontScale), SkyMarkChip) +
+        textInkBalance(SkyTimeSp, fontScale)
+    val hero = maxOf(SkyTallHeroIcon, words)
+    if (rows <= 0) return hero
+    val row = maxOf(SkyRowHeight, textLineHeight(SkyCompactSp, fontScale))
+    return hero + SkyListGap + row * rows + SkyRowGap * (rows - 1)
+}
+
+/**
+ * **The arc under the moments** (widget review, 13 ott 2026): the height left on a tall
+ * card once the block is paid, or null when it is less than [SkyPlotMin]. The moments card
+ * centred its block in whatever it did not fill, and with the three moments a reader
+ * typically follows a four-by-four was two thirds empty. Where the arc fits, the block
+ * goes to the top and the day's arc takes the rest, all of it: capped at the arc card's own
+ * 150 dp it only moved the air from the bottom to the middle (looked at, 13 ott 2026).
+ */
+internal fun skyPlotHeight(size: DpSize, fontScale: Float, rows: Int): Dp? {
+    val room = size.height - WidgetCardPaddingSnug - WidgetCardPadding -
+        skyTallBlockHeight(fontScale, rows) - SkyPlotGap
+    return room.takeIf { it >= SkyPlotMin }
+}
+
+/** The smallest arc worth drawing under the moments: a plot of about 50 dp with its hours. */
+internal val SkyPlotMin = 72.dp
+internal val SkyPlotGap = 12.dp
+
+
 internal const val SkyTimeSp = WidgetType.Display
 
 /** The name under the clock: the Now widget's place line, one step down because it

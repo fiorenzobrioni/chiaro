@@ -100,4 +100,17 @@ class SkyWidgetLayoutTest {
         // the 24 dp row): 189 − 20 − 86.6 − 10 = 72.4; 78.4 / 30 = 2.6 → 2.
         assertEquals(2, skyRows(fourByTwo, fontScale = 1.3f, available = 5))
     }
+
+    /** The arc under the moments (widget review, 13 ott 2026): the room a tall card leaves
+     * once its block is paid, from 72 dp up; none on two rows. */
+    @Test
+    fun `a tall moments card hangs the arc in the room it leaves`() {
+        assertEquals(null, skyPlotHeight(DpSize(340.dp, 189.dp), 1f, rows = 2))
+        val three = skyPlotHeight(DpSize(250.dp, 293.dp), 1f, rows = 2)
+        assertTrue("three rows hold an arc: $three", three != null && three >= SkyPlotMin)
+        val four = skyPlotHeight(DpSize(340.dp, 397.dp), 1f, rows = 2)!!
+        assertEquals(104.dp, four - three!!)
+        // Six moments on three rows leave no arc worth drawing.
+        assertEquals(null, skyPlotHeight(DpSize(250.dp, 293.dp), 1f, rows = 6))
+    }
 }

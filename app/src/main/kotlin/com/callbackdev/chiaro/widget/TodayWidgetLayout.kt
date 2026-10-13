@@ -153,6 +153,38 @@ internal fun todayShowDays(
     return room >= todayDaysHeight(fontScale)
 }
 
+/**
+ * **A second row of hours on the tallest card** (widget review, 13 ott 2026). At four by
+ * four the card held its hero, one row of hours and the days, and a third of it was air
+ * between the hero and the hours. The air now holds the hours after the first row's, from
+ * the strip the app already carries (the next 24): seven hours become fourteen, the same
+ * grid, and nothing on the card is drawn that the forecast did not say.
+ *
+ * Budgeted after everything else and with its rain line, so it never squeezes what was
+ * there: on the reference four-by-three it does not fit and the card is unchanged.
+ */
+internal fun todayShowMoreHours(
+    size: DpSize,
+    fontScale: Float,
+    stale: Boolean,
+    sentence: Boolean,
+    range: Boolean,
+    warning: Boolean,
+    rain: Boolean
+): Boolean {
+    val hero = maxOf(
+        todayHeroIconSize(size, fontScale, rain),
+        todayHeroTextHeight(fontScale, stale, sentence, range, warning)
+    )
+    val room = size.height - WidgetCardPaddingSnug - WidgetCardPadding - hero - StripGap -
+        todayStripHeight(fontScale, rain) - DaysGap - todayDaysHeight(fontScale) -
+        MoreHoursGap - todayStripHeight(fontScale, rain = true)
+    return room >= 0.dp
+}
+
+/** The air between the two rows of hours: the hours' own gap, because they are one list. */
+internal val MoreHoursGap = 8.dp
+
 /** The days' row: the day's name, the glyph, the high and the low, stacked like an hour. */
 internal fun todayDaysHeight(fontScale: Float): Dp =
     textLineHeight(StripHourSp, fontScale) + StripInnerGap + DaysIconSize + StripInnerGap +

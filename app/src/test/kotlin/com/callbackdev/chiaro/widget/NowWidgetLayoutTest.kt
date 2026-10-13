@@ -308,4 +308,18 @@ class NowWidgetLayoutTest {
         val sp = nowTallTemperatureSp(narrow, 1f, false, true, false)
         assertTrue(sp * TempEmWidth <= (narrow.width - WidgetCardPadding * 2).value + 0.01f)
     }
+
+    /** The narrow tall card lists the next hours under the two-by-two's hero (widget
+     * review, 13 ott 2026): three on the reference two-by-three, six on the two-by-four,
+     * none on the two-by-two itself, and fewer lines as the text grows. */
+    @Test
+    fun `a narrow tall card lists the next hours under its hero`() {
+        assertEquals(0, nowTallHourRows(DpSize(159.dp, 189.dp), 1f, available = 24))
+        assertEquals(3, nowTallHourRows(DpSize(159.dp, 293.dp), 1f, available = 24))
+        assertEquals(6, nowTallHourRows(DpSize(159.dp, 397.dp), 1f, available = 24))
+        assertEquals(2, nowTallHourRows(DpSize(159.dp, 293.dp), 2f, available = 24))
+        // Never more than the strip carries, and one line alone is no list.
+        assertEquals(4, nowTallHourRows(DpSize(159.dp, 397.dp), 1f, available = 4))
+        assertEquals(0, nowTallHourRows(DpSize(159.dp, 397.dp), 1f, available = 1))
+    }
 }

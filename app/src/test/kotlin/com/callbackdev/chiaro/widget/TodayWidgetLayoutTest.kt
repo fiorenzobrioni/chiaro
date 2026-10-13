@@ -206,4 +206,22 @@ class TodayWidgetLayoutTest {
             todayHasWarningRow(DpSize(340.dp, 150.dp), 1f, stale = true, sentence = true, range = true)
         )
     }
+
+    /** The second row of hours (widget review, 13 ott 2026): on the four-by-four, under
+     * everything else and with its rain line; never on the four-by-three. */
+    @Test
+    fun `only the tallest card carries a second row of hours`() {
+        fun more(h: Int) = todayShowMoreHours(
+            DpSize(340.dp, h.dp), 1f, stale = false, sentence = true, range = false,
+            warning = false, rain = true
+        )
+        assertTrue(more(397))
+        assertFalse(more(293))
+        assertFalse(
+            todayShowMoreHours(
+                DpSize(340.dp, 397.dp), 2f, stale = false, sentence = true, range = false,
+                warning = false, rain = true
+            )
+        )
+    }
 }

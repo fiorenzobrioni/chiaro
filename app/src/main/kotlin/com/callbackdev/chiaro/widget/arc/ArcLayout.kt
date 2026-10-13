@@ -309,6 +309,11 @@ internal val ArcPadStripVertical = 9.dp
 
 /** The air between a card's sections, and between two agenda rows. */
 internal val ArcGap = 6.dp
+
+/** The moments card's arc ([MomentsPlot]): its clock step, and the height from which it
+ * also prints the temperatures — a plot of 60 dp over the two text lines. */
+internal const val MomentsPlotTickHours = 3
+internal val MomentsPlotTemperaturesMin = 100.dp
 internal val ArcGapTight = 4.dp
 internal val ArcRowGap = 4.dp
 

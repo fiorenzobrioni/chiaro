@@ -1323,12 +1323,13 @@
     <string name="widget_config_show_warning_note_text">Il livello della Protezione Civile per questo luogo, scritto in parole. Arancione e rosso li dice già la frase del giorno.</string>
     <string name="now_form_narrow">Una riga stretta: l\'icona, la temperatura e il luogo.</string>
     <string name="now_form_wide">Una riga larga: anche la frase del giorno, al bordo opposto.</string>
-    <string name="now_form_tall">Due righe e più: l\'icona in alto, sotto la temperatura, la frase e il luogo. Da tre righe la temperatura cresce con la card.</string>
+    <string name="now_form_tall">Due celle di larghezza, due righe e più: l\'icona in alto, sotto la temperatura, la frase e il luogo. Da tre righe, sotto, le prossime ore, una per riga.</string>
     <string name="today_form_two">Due righe: l\'adesso in alto, sotto le prossime ore con la pioggia.</string>
-    <string name="today_form_tall">Da tre righe: l\'adesso, le prossime ore e, sotto, i prossimi giorni.</string>
+    <string name="today_form_tall">Da tre righe: l\'adesso, le prossime ore e, sotto, i prossimi giorni. A quattro righe, il doppio delle ore.</string>
     <string name="sky_form_narrow">Una riga stretta: il prossimo momento, quando, e il verdetto come segno.</string>
     <string name="sky_form_wide">Una riga larga: il verdetto in parole, con il numero che l\'ha deciso.</string>
     <string name="sky_form_tall">Due righe e più: sotto, i momenti che seguono, quanti ne stanno.</string>
+    <string name="moments_form_tall">Due righe e più: sotto, i momenti che seguono, quanti ne stanno; nello spazio che lasciano, l\'arco del giorno.</string>
     <string name="widget_config_show_days">I prossimi giorni</string>
     <string name="widget_config_show_days_note">Sotto le ore, il giorno, il cielo, la massima e la minima. Solo dove la card è alta almeno tre righe.</string>
     <string name="arc_config_more">Altro sulla card</string>

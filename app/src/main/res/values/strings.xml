@@ -1358,12 +1358,13 @@
     <string name="widget_config_show_warning_note_text">The Protezione Civile\'s level for this place, written as words. Orange and red are already in the day\'s sentence.</string>
     <string name="now_form_narrow">A narrow row: the icon, the temperature and the place.</string>
     <string name="now_form_wide">A wide row: the day\'s sentence too, at the far edge.</string>
-    <string name="now_form_tall">Two rows and up: the icon at the top, then the temperature, the sentence and the place. From three rows the temperature grows with the card.</string>
+    <string name="now_form_tall">Two cells wide, two rows and up: the icon at the top, then the temperature, the sentence and the place. From three rows, the next hours under them, one per line.</string>
     <string name="today_form_two">Two rows: now at the top, the next hours with their rain under it.</string>
-    <string name="today_form_tall">From three rows: now, the next hours and, under them, the next days.</string>
+    <string name="today_form_tall">From three rows: now, the next hours and, under them, the next days. At four rows, twice the hours.</string>
     <string name="sky_form_narrow">A narrow row: the next moment, when, and its verdict as a mark.</string>
     <string name="sky_form_wide">A wide row: the verdict in words, with the number that decided it.</string>
     <string name="sky_form_tall">Two rows and up: the moments after it underneath, as many as fit.</string>
+    <string name="moments_form_tall">Two rows and up: the moments after it underneath, as many as fit; in the room they leave, the day\'s arc.</string>
     <string name="widget_config_show_days">The next days</string>
     <string name="widget_config_show_days_note">Under the hours: the day, the sky, the high and the low. Only where the card is at least three rows tall.</string>
     <string name="arc_config_more">Also on the card</string>

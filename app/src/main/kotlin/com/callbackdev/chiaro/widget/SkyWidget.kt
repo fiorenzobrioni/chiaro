@@ -181,12 +181,18 @@ private fun HeroRow(
  * for six should look composed, not interrupted.
  */
 @Composable
-private fun TallContent(model: WidgetModel, palette: WidgetPalette, size: DpSize) {
+private fun TallContent(
+    model: WidgetModel,
+    palette: WidgetPalette,
+    size: DpSize,
+    plot: (@Composable (WidgetPalette, DpSize) -> Unit)?
+) {
     val context = LocalContext.current
     val wide = skyIsWide(size, context)
     val rows = skyRows(size, fontScale(context), available = model.moments.size - 1)
+    val plotHeight = plot?.let { skyPlotHeight(size, fontScale(context), rows) }
     Column(modifier = GlanceModifier.fillMaxSize()) {
-        Spacer(modifier = GlanceModifier.defaultWeight())
+        if (plotHeight == null) Spacer(modifier = GlanceModifier.defaultWeight())
         HeroRow(
             model, model.moments.first(), palette,
             glyph = SkyTallHeroIcon,
@@ -206,7 +212,24 @@ private fun TallContent(model: WidgetModel, palette: WidgetPalette, size: DpSize
                 CompactRow(model, next, palette, marks, topGap = if (index > 0) SkyRowGap else 0.dp)
             }
         }
-        Spacer(modifier = GlanceModifier.defaultWeight())
+        if (plot != null && plotHeight != null) {
+            // The words' inset on both sides: the plot is not a glyph, it is a box. The
+            // gap is the box's own padding, not a spacer: with six moments over it the
+            // column is at Glance's ten children.
+            Box(
+                modifier = GlanceModifier.padding(
+                    start = WidgetCardPadding - WidgetCardPaddingLeading,
+                    top = SkyPlotGap
+                )
+            ) {
+                plot(
+                    palette,
+                    DpSize(size.width - WidgetCardPadding - WidgetCardPaddingTrailing, plotHeight)
+                )
+            }
+        } else {
+            Spacer(modifier = GlanceModifier.defaultWeight())
+        }
     }
 }
 
@@ -479,7 +502,14 @@ private fun NoMomentContent(palette: WidgetPalette) {
  * draw the SAME composition the launcher does rather than a lookalike.
  */
 @Composable
-internal fun SkyWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBitmap: Bitmap?) {
+internal fun SkyWidgetContent(
+    model: WidgetModel,
+    schemes: WidgetSchemes,
+    skyBitmap: Bitmap?,
+    /** The day's arc for the room a tall card has left under its moments, from the arc
+     * widget that shows them; null on the hidden Sky card, which keeps its form. */
+    plot: (@Composable (WidgetPalette, DpSize) -> Unit)? = null
+) {
     val size = LocalSize.current
     val hasContent = model.city != null && model.moments.isNotEmpty()
     val tall = hasContent && skyIsTall(size)
@@ -502,7 +532,7 @@ internal fun SkyWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
         when {
             model.city == null -> NoPlaceContent(palette)
             model.moments.isEmpty() -> NoMomentContent(palette)
-            tall -> TallContent(model, palette, size)
+            tall -> TallContent(model, palette, size, plot)
             else -> HeroRow(
                 model, model.moments.first(), palette,
                 glyph = skyHeroIconSize(size),

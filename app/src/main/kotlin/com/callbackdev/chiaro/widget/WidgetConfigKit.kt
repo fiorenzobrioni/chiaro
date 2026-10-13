@@ -144,7 +144,8 @@ internal fun placedWidgetSize(context: Context, appWidgetId: Int): DpSize? {
  * describe two different forms.
  */
 internal fun formNote(kind: WidgetKind?, size: DpSize, arc: ArcSettings? = null): Int = when {
-    kind == WidgetKind.ARC && arc != null && showsMoments(arc, size) -> formNote(WidgetKind.SKY, size)
+    kind == WidgetKind.ARC && arc != null && showsMoments(arc, size) ->
+        if (skyIsTall(size)) R.string.moments_form_tall else formNote(WidgetKind.SKY, size)
     else -> formNoteOf(kind, size)
 }
 

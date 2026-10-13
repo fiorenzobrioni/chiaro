@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
@@ -171,19 +172,41 @@ internal fun paintArc(
     series: ArcSeries,
     plan: ArcPlan,
     palette: WidgetPalette
+): Bitmap = paintPlot(
+    context, model, arc, series, palette,
+    box = plan.graphic,
+    textScale = plan.textScale,
+    hourLabels = plan.hourLabels,
+    temperatures = plan.temperatures,
+    tickStepHours = plan.tickStepHours
+)
+
+/** The plot for any [box]: [paintArc]'s body, for the one caller with no [ArcPlan] — the
+ * moments card, which hangs the arc under its list when it has the room. */
+internal fun paintPlot(
+    context: Context,
+    model: WidgetModel,
+    arc: ArcSettings,
+    series: ArcSeries,
+    palette: WidgetPalette,
+    box: DpSize,
+    textScale: Float,
+    hourLabels: Boolean,
+    temperatures: Boolean,
+    tickStepHours: Int
 ): Bitmap {
     val density = density(context)
     return ArcPainter.paint(
         series, arc,
         ArcCanvasSpec(
-            widthPx = (plan.graphic.width.value * density).roundToInt().coerceAtLeast(1),
-            heightPx = (plan.graphic.height.value * density).roundToInt().coerceAtLeast(1),
+            widthPx = (box.width.value * density).roundToInt().coerceAtLeast(1),
+            heightPx = (box.height.value * density).roundToInt().coerceAtLeast(1),
             density = density,
             fontScale = fontScale(context),
-            textScale = plan.textScale,
-            hourLabels = plan.hourLabels,
-            temperatures = plan.temperatures,
-            tickStepHours = plan.tickStepHours,
+            textScale = textScale,
+            hourLabels = hourLabels,
+            temperatures = temperatures,
+            tickStepHours = tickStepHours,
             is24Hour = DateFormat.is24HourFormat(context),
             locale = Locale.getDefault(),
             temperatureUnit = model.settings.units.temperature,
@@ -221,6 +244,37 @@ private fun ArcContent(
         ArcForm.CARD -> CardContent(model, content, arc, series, plan, palette, bitmap)
         ArcForm.PANEL, ArcForm.BOARD -> PanelContent(model, content, arc, series, plan, palette, bitmap)
     }
+}
+
+/** The arc under the moments: the plot with its hours, and their temperatures when the
+ * box is tall enough for both lines under a plot worth the name. */
+@Composable
+private fun MomentsPlot(
+    model: WidgetModel,
+    arc: ArcSettings,
+    series: ArcSeries,
+    palette: WidgetPalette,
+    box: DpSize
+) {
+    val context = LocalContext.current
+    val locale = glanceLocale()
+    val is24h = DateFormat.is24HourFormat(context)
+    val temperatures = arc.temperatures && box.height >= MomentsPlotTemperaturesMin
+    val bitmap = remember(series, arc, palette, box, locale, is24h, model.settings.units) {
+        paintPlot(
+            context, model, arc, series, palette, box,
+            textScale = arc.textScale,
+            hourLabels = true,
+            temperatures = temperatures,
+            tickStepHours = MomentsPlotTickHours
+        )
+    }
+    Image(
+        provider = ImageProvider(bitmap),
+        contentDescription = ArcText.description(context, series, model.zone),
+        contentScale = ContentScale.FillBounds,
+        modifier = GlanceModifier.width(box.width).height(box.height)
+    )
 }
 
 /** The plot, at the box the plan gave it. Its description is the next moment in words:
@@ -740,10 +794,6 @@ internal fun ArcWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
     val size = LocalSize.current
     // The moments the reader follows, as the Sky card drew them (13 ott 2026): from three
     // cells, that card's own floor ([showsMoments]); narrower, the arc.
-    if (showsMoments(arc, size)) {
-        SkyWidgetContent(model, schemes, skyBitmap)
-        return
-    }
     val content = model.content
     val city = model.city
     // Read out here: the builder below runs inside `remember`, which is not composable.
@@ -754,6 +804,16 @@ internal fun ArcWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
         }
     } else {
         null
+    }
+    if (showsMoments(arc, size)) {
+        // On a card taller than the moments need, the day's arc under them (widget
+        // review, 13 ott 2026): the list used to sit in the middle of a card two thirds
+        // empty. The arc is this card's own drawing, the moments' sky in a picture.
+        SkyWidgetContent(
+            model, schemes, skyBitmap,
+            plot = series?.let { s -> { palette, box -> MomentsPlot(model, arc, s, palette, box) } }
+        )
+        return
     }
     val plan = if (content != null && series != null) {
         arcPlan(

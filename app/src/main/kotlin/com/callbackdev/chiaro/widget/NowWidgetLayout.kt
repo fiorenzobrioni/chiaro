@@ -368,6 +368,33 @@ internal fun nowTallHasWarningRow(
  * against it rather than against a number it cannot see. */
 internal val HeroIconFloor = 52.dp
 
+/**
+ * **The next hours on a narrow tall card** (widget review, 13 ott 2026): how many lines of
+ * hours fit under the reference two-by-two's hero ([NowTallHeroCard]), at most eight
+ * (Glance's ten children, less the hero and its gap) and never more than the strip
+ * carries. Zero below two lines: one hour under a hero is a footnote, not a list, and the
+ * card keeps the hero it had. On the reference two-by-three it is three, on the two-by-four
+ * six.
+ */
+internal fun nowTallHourRows(size: DpSize, fontScale: Float, available: Int): Int {
+    val row = maxOf(HourListRowHeight, textLineHeight(StripHourSp, fontScale))
+    val room = size.height - NowTallHeroCard - HourListGap
+    val rows = (room / row).toInt().coerceIn(0, minOf(HourListMax, available))
+    return if (rows < 2) 0 else rows
+}
+
+/** The hero's height when the narrow tall card lists hours under it: the reference
+ * two-by-two's, so the two cards' heroes are the same drawing at the same size. */
+internal val NowTallHeroCard = 189.dp
+
+internal val HourListGap = 8.dp
+internal val HourListRowHeight = 30.dp
+internal val HourListIconSize = 24.dp
+
+/** Wide enough for «-10°», measured at 13 sp Medium with the family's slack. */
+internal val HourListTempWidth = 40.dp
+internal const val HourListMax = 8
+
 /** The hero number's size, named because two budgets are measured off it. */
 internal const val TemperatureSp = WidgetType.Hero
 
