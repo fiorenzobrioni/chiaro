@@ -11974,3 +11974,308 @@ cosa va da dove a dove, nei colori e nel pallino di adesso.
 - Screenshot temporaneo della sezione (inglese, tema chiaro), guardato, poi rimosso insieme al
   test che lo disegnava.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## I widget: la revisione, punti 1 e 2 (committente, 13 ott 2026)
+
+Il committente ha chiesto una revisione dei cinque widget (layout, grafica, tipografia, numero
+dei widget), l'ha accettata in quattro punti e ha chiesto di partire dai primi due: le correzioni
+rapide e la scala tipografica con un solo abito per il verdetto. I punti 3 (il raggio degli
+angoli preso dal sistema, la curva della luna distinguibile) e 4 (da cinque widget a tre) sono
+approvati e vengono dopo. Il raggio riguarda tutta la famiglia, e si fa nelle tre app insieme.
+
+La revisione è stata fatta disegnando ogni widget a ogni dimensione che offre (EN, IT, card
+chiara, card cielo) con la registrazione di Milano del README, e misurando i testi con il font di
+sistema (`measureWidgetText`) prima di decidere ogni misura qui sotto.
+
+### Cosa è cambiato
+
+**Punto 1, le correzioni:**
+- **L'agenda dell'arco a due celle** è su due righe, il nome sopra l'orario e il segno del
+  verdetto dopo l'orario («Domani ·» davanti all'orario, non al nome). Su una riga la colonna di
+  131 dp lasciava al nome 42 dp, e il 2×4 stampava «Moon… / Gold… / Tom…». Ora il nome ha 103 dp,
+  e il più lungo che l'agenda dice nelle due lingue, «Finisce l'ora d'oro», ne misura 99,5. Le
+  righe della pioggia usano il nome breve del titolo. Il 2×3 passa da tre righe a due, il 2×4 ne
+  tiene quattro.
+- **Le ore della striscia di «Le prossime ore» sono orari**: «13:00» e non «13», che sopra la riga
+  dei giorni («Oggi Sab Dom») si leggeva come il 13 del mese (`Formats.hourClockLabel`). Con
+  l'orologio a 12 ore resta «1 PM», che lo dice già. La cella si allarga all'etichetta misurata
+  (`stripCellFor`): a un font grande la striscia mostra un'ora in meno invece di tagliare «13:…».
+  L'app e i tick dell'arco restano «13»: lì l'asse o il cambio di giorno dicono cosa sono.
+- **Un solo nome per l'ora d'oro.** In italiano l'app diceva «Ora dorata» nel Cielo e «Ora d'oro»
+  nell'agenda di Oggi e nell'arco: ora è «ora d'oro» ovunque (nomi del Cielo, guida). E il widget
+  Cielo stampa il **nome breve** (`SkyText.shortNameRes`): «Ora d'oro», non «Ora d'oro, sera»,
+  perché l'orario accanto dice già quale; il «, sera» era quello che l'ellissi mangiava a tre
+  celle. Vale per i sette momenti che hanno un gemello mattina/sera; «Venere, stella della sera»
+  resta intero, perché lì la sera è cosa il momento è.
+- **Il titolo dell'arco** è il prossimo momento con un verdetto, poi il sole, poi la luna
+  (`ArcSeries.nextLight`). Diceva «Sorge la luna alle 18:35» sopra un'ora d'oro di un minuto dopo
+  che il lettore segue e che il Cielo giudica «Bello».
+- **I nomi nel README** sono quelli del selettore dei widget («Colpo d'occhio», «Le prossime
+  ore», «In parole», «Momenti del cielo», «L'arco del giorno» e gli inglesi), che la guida usava
+  già.
+
+**Punto 2, la scala e il verdetto:**
+- **La scala tipografica dei widget** (`WidgetType.kt`, DESIGN §5): sei gradini, ciascuno un
+  ruolo. Caption 11, Label 13, Body 16, Title 22, Display 30, Hero 34 e oltre. Cosa si è mosso:
+  il nome del momento nel Cielo 15 → 16; la pillola del verdetto 11 → 13 e l'evidenza 14 → 13;
+  la striscia di «Le prossime ore» 12/14 → 13/13 (il valore Medium, così etichetta e numero si
+  distinguono per peso e inchiostro); la settimana dell'arco 11/12 → 13/13; la frase dell'arco
+  15 → 16 e la riga sotto 12 → 13; il numero dell'arco a due celle 28 → 30, a una riga impilata
+  20 → 22; le righe dell'arco a una riga 12 → 13; «Più tardi» di «In parole» 14 → 13; la pillola
+  dell'allerta 11 → 13; gli stati vuoti 14/12 → 16/13. `WidgetTypeTest` fallisce su una misura
+  fuori scala.
+- **Il verdetto ha due abiti, per ruolo** (prima tre). Il titolo del Cielo porta la pillola,
+  ora con il segno prima della parola come nella pillola dell'app; stretta, la pillola si riduce
+  al segno nel cerchio. Ogni riga di elenco, nel Cielo come nell'arco, porta il segno nudo
+  dell'arco in uno spazio che ogni riga tiene, così gli orari stanno in colonna (`VerdictNote`).
+- **L'evidenza ha la maiuscola** («Nuvole 19%»): nell'app segue la parola sulla stessa riga, nel
+  widget è una riga a sé.
+
+### Decisioni e deviazioni
+
+- **Sei gradini, non i cinque proposti** (11/13/16/22/34). Il Cielo stampa un orario come numero
+  principale, e «7:55 PM» a 34 sp misura 128 dp, contro i 108–130 che una card a quattro celle
+  lascia alle parole: il 30 che aveva resta, ed è il gradino Display, che serve anche al numero
+  dell'arco accanto alla frase.
+- **Una misura resta fuori scala, di proposito**: la frase di «In parole» a 18 sp. È una
+  decisione del committente sul dispositivo (19 set 2026: «17 su 16 non è un grado»), e la scala
+  non la scavalca senza chiederlo. È scritta in `WidgetType` e nel test.
+- **La colonna del verdetto si misura nella lingua della card** (`skyVerdictColumn`,
+  `skyWordsMin`). Con il segno nella pillola e la parola a 13, una colonna fissa per una lingua è
+  sbagliata per l'altra: «Presto per dirlo» con il segno fa 124 dp, «Not sure yet» 102; «19:55»
+  80, «7:55 PM» 116. Resta geometrica (la parola più larga delle quattro e un orario campione,
+  mai il momento in mostra), così la card non cambia forma con la previsione. Le tabelle dei test
+  usano il riferimento italiano a 24 ore; un 4 celle su una griglia a cinque colonne (320 dp) ora
+  è largo in italiano e stretto in inglese a 12 ore, ed è giusto così.
+- **Il padding verticale della pillola dell'allerta e del verdetto è 2 dp, non 3**: con la parola
+  a 13 la pillola sarebbe cresciuta di 2,64 dp, e una card «Le prossime ore» 3×3 con l'intervallo
+  del giorno e un'allerta perdeva la riga dei giorni. Con 2 dp cresce di 0,64 e la tiene.
+- **La card dell'arco a una riga ha 9 dp sopra e sotto, non 10**: con le righe a 13 sp il nome e
+  l'orario sotto il numero non stavano più su due righe in 82 dp (63,36 contro 62). Il dp che
+  manca viene dal padding.
+- **Il 2×3 dell'arco perde le temperature sotto le ore** (l'arco scende a 74 dp, sotto i 76 che
+  servono): due righe d'agenda leggibili valgono più di una riga di numeri sul disegno.
+- **Il segno del verdetto nelle righe del Cielo** prende l'inchiostro misurato per il fondo della
+  card (`palette.darkGround`), come l'arco; la pillola e il cerchio del titolo restano sulla
+  coppia contenitore/inchiostro, che porta il suo fondo.
+- **La famiglia**: la scala nasce qui, misurata su questi widget, ed è stata portata nella
+  stessa sessione nelle card di Passo e di Tempo (`WidgetType` in ciascuna, con il suo test; la
+  decisione è registrata nei loro PLANNING §15 e ADR dei widget). Saldo si allinea in una
+  sessione sua. Le correzioni del punto 1 e l'abito del verdetto sono solo di Chiaro: le altre
+  app non hanno verdetti né l'arco.
+
+### Come è stato verificato
+
+- Ogni widget disegnato a ogni dimensione offerta, in italiano e in inglese, prima e dopo, con un
+  test temporaneo poi rimosso; guardato ogni foglio.
+- I testi misurati con `measureWidgetText` (font di sistema) per ogni larghezza citata sopra.
+- Test nuovi: `WidgetTypeTest`, il titolo dell'arco in `ArcSeriesTest`, `hourClockLabel` in
+  `FormatsTest`, le celle in `TodayWidgetLayoutTest`, i 320 dp in due lingue in
+  `SkyWidgetLayoutTest`; le tabelle di `ArcLayoutTest`, `TodayWidgetLayoutTest`,
+  `WidgetWarningTest` ricalcolate con le nuove misure, ciascuna con il conto nel commento.
+- `widgets.png` e `widget-day-arc.png` rigenerati e guardati.
+
+## I widget: la revisione, punti 3 e 4 (committente, 13 ott 2026)
+
+Il committente ha chiesto di procedere con i due punti rimasti della revisione: l'angolo delle
+card preso dal sistema con la curva della luna distinguibile (3), e da cinque widget a tre (4).
+
+### Cosa è cambiato
+
+- **L'angolo è quello del launcher** (`system_app_widget_background_radius`), da un 24 dp
+  fisso, nella card (`WidgetCard`) e nell'anteprima del selettore (`widget_preview_card`), e
+  nello stesso giorno in Passo e Tempo. Il riquadro dell'arco prende il raggio interno
+  (`system_app_widget_inner_radius`), e le sue curve sono ritagliate su quell'angolo.
+- **La luna dell'arco è a puntini** tondi nel pallido della luna (`ArcPalette.MoonLit`; nel
+  colore quieto della card dove il riquadro non ha cielo), la corsa del sole sotto l'orizzonte
+  a trattini lunghi e sottili: prima erano due tratteggi quasi uguali nello stesso inchiostro,
+  e dove si incrociano si leggevano come una linea sola.
+- **Tre widget nel selettore**: «Colpo d'occhio», «In parole», «L'arco del giorno».
+  - «Colpo d'occhio» da tre celle per due righe disegna quello che era «Le prossime ore»
+    (`nowShowsHours`): la riga in alto, le ore sotto e da tre righe i giorni. Sotto quella
+    misura è quello che era. Le sue impostazioni hanno ora l'intervallo del giorno e i giorni,
+    ciascuno con la misura a cui compare.
+  - «L'arco del giorno» ha una scelta nuova, «La card mostra»: l'arco con la sua agenda, oppure
+    «I momenti che segui, con i loro verdetti», cioè quello che era «Momenti del cielo»
+    (`ArcDrawing.MOMENTS`, `showsMoments`), da tre celle in su; sotto, l'arco. Con i momenti le
+    impostazioni dell'arco non sono offerte (non cambierebbero niente).
+  - «Le prossime ore» e «Momenti del cielo» hanno `hide_from_picker`: chi li ha già sulla
+    schermata home li tiene, funzionanti e configurabili; nessuno li trova più nel selettore.
+- La guida («Sono tre»), le descrizioni del selettore, il README (la tavola dei widget ora
+  mostra i tre, con «Colpo d'occhio» anche a due righe e l'arco con i momenti) e VISION §5.9.
+
+### Decisioni e deviazioni
+
+- **Il nome resta «L'arco del giorno», non «Cielo»** come nella proposta: è il nome che il
+  committente gli ha dato e quello che la guida e il README usano, e i momenti sono una sua
+  impostazione, detta nella descrizione del selettore.
+- **«Momenti del cielo» non si poteva sciogliere nell'agenda dell'arco**, come la revisione
+  dava per scontato: l'agenda copre le prossime ventiquattro ore del sole, della luna e della
+  pioggia, mentre i momenti seguiti arrivano a eclissi, picchi di stelle cadenti e pianeti a
+  giorni di distanza. Diventa quindi una scelta della card, non una perdita.
+- **I momenti da tre celle**, non da due: provati a due celle, l'orario e il nome uscivano
+  «18:… / Gold…». Era il minimo del widget Cielo, e resta il suo.
+- **I widget ritirati non sono rimossi**: togliere il receiver cancellerebbe le card dalle
+  schermate home di chi le ha. `hide_from_picker` (API 31, sotto il nostro minSdk 33) è il
+  modo previsto dalla piattaforma. `WidgetPreviewTest` fissa quali due sono nascosti.
+- **Su Android 16 standard l'angolo di sistema è 24 dp**, lo stesso di prima, quindi le
+  immagini del README non cambiano per l'angolo: cambia sui launcher che danno un raggio loro.
+  Il raggio interno invece è 16 (prima l'arco usava 8): visto nello screenshot, e da lì il
+  ritaglio delle curve, che agli angoli inferiori uscivano dal riquadro.
+- **Lo spazio vuoto delle card alte resta** (Colpo d'occhio 4×4 tra la riga in alto e le
+  strisce, i momenti a tre e quattro righe): non era nei quattro punti, ed è segnato tra le cose
+  da fare.
+
+### Come è stato verificato
+
+- Le tre card disegnate a tutte le dimensioni, l'arco anche con i momenti, con un test
+  temporaneo poi rimosso; guardato ogni foglio.
+- Test nuovi: le ore di «Colpo d'occhio» in `NowWidgetLayoutTest`, i momenti in
+  `ArcLayoutTest`, la scelta nel giro di codifica di `ArcSettingsTest`, i due nascosti in
+  `WidgetPreviewTest`.
+- `widget-day-arc.png` rigenerato (la luna a puntini, il riquadro con il raggio interno);
+  `widgets.png` disegnato con le tre card, uguale pixel per pixel al precedente (le stesse
+  forme, ora di due card invece che di quattro) e quindi lasciato com'era.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## «In parole»: la frase in scala (committente, 13 ott 2026)
+
+Il committente ha chiesto di portare in scala la frase di «In parole», l'unica misura rimasta
+fuori dopo la revisione (18 sp, decisione sul dispositivo del 19 set), con un'anteprima prima e
+dopo.
+
+- `TextSentenceSp` = `WidgetType.Body`, 16 sp. Frase e fatti (luogo, intervallo, parola
+  dell'allerta) hanno ora la stessa misura e si distinguono per peso e inchiostro, Medium e
+  forte sopra Regular e quieto, come in «Colpo d'occhio» da sempre. Il numero sopra resta
+  diverso su tutti e tre gli assi. `WidgetTypeTest` non ha più eccezioni.
+- Ogni riga di frase restituisce 2,64 dp, che vanno al numero e all'icona: sul 2×2 il numero
+  arriva al suo tetto di 56 sp (era 53,97), sul pannello 4×2 la fascia dell'icona passa da
+  71,24 a 76,52 dp. Le tabelle di `TextWidgetLayoutTest` sono ricalcolate, con il conto nei
+  commenti; «i gradi sono ordinati» ora chiede frase ≥ fatti.
+- Alternativa scartata: tenere la differenza di misura scendendo i fatti a 13. Il committente
+  li aveva portati a 16 sul dispositivo il 19 set («la località un pochino più grande»), e la
+  card avrebbe perso proprio quello.
+- Stessa modifica in Passo, la cui card «In words» aveva la stessa eccezione per la stessa
+  ragione.
+- Anteprima prima/dopo guardata in italiano e in inglese a ogni misura; `widgets.png`
+  rigenerato.
+
+## Le icone del cielo in scala, e la luna piena nell'agenda (committente, 13 ott 2026)
+
+Il committente ha approvato la proposta sul punto «due disegni per stati vicini» e ha chiesto
+di farla con un'anteprima, insieme alla luna piena dell'agenda dell'arco.
+
+### Cosa è cambiato
+
+- **Il codice 2 (poco nuvoloso) è composto** da `tools/compose_sun_cloud.py` come il codice 1:
+  `sun-half-cloud-*`, lo stesso sole di `clear-day` con la nuvola di `cloudy` al 78%. Prima era
+  `partly-cloudy` di Meteocons, nuvola piena con uno spicchio di sole nell'angolo: da 1 a 2 il
+  sole passava da intero a spicchio e cambiava angolo, e a 32 dp lo spicchio spariva, quindi 2
+  si confondeva con 3. Ora la nuvola cresce 0 → 49% → 78% → 100% e il sole intero → intero →
+  coperto per un terzo → assente. `ChiaroIcons.conditionLineRes`, le anteprime del selettore e
+  i test seguono.
+- **Lo strumento compone ricette**, ciascuna con la sua taglia e un centro di giorno e uno di
+  notte (`RECIPES`). Il poco nuvoloso: di giorno (77, 86), di notte (84, 80).
+- **Tre controlli contro le schegge**: il raggio tagliato per il lungo (c'era), la punta di
+  raggio rimasta nell'aria fra buco e nuvola (`tips`, nuovo) e il pezzo di falce staccato
+  (`moon_fragments`, nuovo). Il primo nuovo ha trovato un difetto nel quasi sereno già
+  spedito: nello stile pieno restava un puntino giallo accanto alla nuvoletta. La nuvoletta
+  sale di mezza unità (y 94,5 → 94) e il puntino sparisce.
+- **La luna nelle righe di elenco** (agenda dell'arco, righe del widget Cielo) usa sempre lo
+  stile pieno: nello stile linea la luna piena è un anello, che a 20 dp accanto ai segni del
+  verdetto sembrava un pulsante di selezione vuoto.
+
+### Decisioni e deviazioni
+
+- **Non `moonrise`/`moonset` per la luna dell'agenda**, che era la prima idea: erano già stati
+  scartati il 9 set 2026 (a 20 dp il disco tagliato dall'orizzonte sembra «tagliato in
+  basso»), e la fase reale è una scelta esplicita del committente. Resta la fase reale, nello
+  stile pieno, che è anche come l'arco dipinge il disco della luna.
+- **I parametri sono stati scelti con una ricerca a griglia** sui tre controlli, più la quota
+  di disco coperta (circa metà), poi guardati in grande e alla misura della striscia nei
+  quattro stili. A 32 dp la differenza fra 1 e 2 ora è la taglia della nuvola: più sottile del
+  salto di prima, che era il difetto.
+- **Gli acquazzoni restano su `partly-cloudy-*-rain`** di Meteocons: le gocce li distinguono, e
+  comporre anche quelli è un lavoro a parte.
+- **`partly-cloudy-day/-night` restano in `shipped_icons.py`** anche se nessuna schermata li
+  nomina: il compositore ne legge la maschera.
+
+### Come è stato verificato
+
+- Anteprima prima/dopo della scala completa (sereno → coperto), giorno e notte, linea e pieno,
+  in grande e a 40 px; anteprima prima/dopo delle zone cambiate degli screenshot del README.
+- `compose_sun_cloud.py --controlla` pulito; i due nuovi controlli fatti fallire sui
+  parametri vecchi (punta di raggio a y 94,5; falce in tre pezzi con il centro del giorno).
+- `ComposedIconsTest` e `ConditionIconsTest` estesi al codice 2, `ArcTextTest` alla luna in
+  stile pieno; README rigenerato (`today-now`, `today-week`, `settings`, `widgets`,
+  `widget-day-arc`).
+
+## Gli acquazzoni, il resto della revisione dei widget, le icone riviste tutte (committente, 13 ott 2026)
+
+Il committente ha chiesto di sistemare gli acquazzoni, di chiudere tutti i punti rimasti della
+revisione iniziale dei widget e, dopo gli acquazzoni, di rivedere tutte le icone per vedere se
+sono coerenti.
+
+### Cosa è cambiato
+
+- **Gli acquazzoni sono il poco nuvoloso con quel che cade** (80, 81, 85, 86):
+  `sun-half-cloud-rain-*` e `sun-half-cloud-snow-*`, composti da `compose_sun_cloud.py`. Lo
+  stesso sole e la stessa nuvola del codice 2, con le gocce o i fiocchi di
+  `partly-cloudy-*-rain/-snow` appesi al pavimento della nuvola, copiati alla lettera con le
+  loro animazioni. Nello stile linea la nuvola perde il pavimento, come nei disegni di pioggia
+  di Meteocons, e le gocce ne escono invece di attraversare una riga.
+- **Tutto quel che cade da un cielo chiuso cade da una nuvola sola** (la revisione delle icone):
+  pioggerella, pioggia, neve mista e neve prendono `drizzle`, `rain`, `sleet`, `snow` invece di
+  `overcast-*`, i rovesci forti (82) `rain` invece di `extreme-rain`, il temporale
+  `thunderstorms-rain` e quello possibile `thunderstorms` invece di `thunderstorms-day/night-*`.
+  `overcast-*` portava la seconda nuvola scura che si leggeva come una falce (la ragione per
+  cui il codice 3 l'ha lasciata il 12 ott), il temporale lo spicchio di sole che il codice 2 e
+  gli acquazzoni hanno appena lasciato. Le icone sono ora due cieli e nessun terzo: sole o luna
+  interi con una nuvola che cresce (1, 2, 80, 85), e una nuvola sola con quel che ne cade (3-77,
+  82, 95). I disegni che nessuna schermata nomina più passano da `SHIPPED` a `PLANNED`;
+  l'importatore, rieseguito su `@meteocons/svg` 3.0.0-next.10, ha riscritto solo
+  `MeteoconsSets.kt` (prima, a liste invariate, il repo usciva identico al byte).
+- **La banda del cielo dell'arco è continua**: dipinta colonna per colonna, con sole e luna
+  dove stanno in quell'istante e il tempo raccordato fra le metà delle ore
+  (`ArcSeries.weatherAt`), da una bitmap stirata con il filtro. Prima ogni campione da un quarto
+  d'ora era un rettangolo con la nuvolosità della sua ora: un gradino a ogni ora e strisce di
+  pochi pixel all'alba e al tramonto.
+- **Le ore passate dell'arco prendono il velo del passato**: le etichette 03, 06, 09 sono
+  attenuate come la banda e i percorsi, e la riga delle temperature si legge come una riga che
+  comincia dove comincia la previsione.
+- **Le card alte portano dati, non aria**:
+  - «Colpo d'occhio» stretto da tre righe (2×3, 2×4): l'eroe del 2×2 alla sua altezza e sotto
+    le prossime ore, una per riga (3 e 6); prima l'eroe stirato, metà card vuota.
+  - «Colpo d'occhio» 4×4: una seconda riga di ore (le prossime 14 invece di 7), messa in conto
+    per ultima e con la riga della pioggia; sul 4×3 non ci sta e la card non cambia.
+  - I momenti dell'arco su una card alta: i momenti in alto e l'arco del giorno nello spazio che
+    lasciano, da 72 dp; prima il blocco stava centrato in una card vuota per due terzi. La card
+    Cielo nascosta tiene la sua forma.
+
+### Decisioni e deviazioni
+
+- **Le gocce al 95% della sorgente, non al 78% della nuvola**: rimpicciolite con la nuvola erano
+  lunghe 9 unità e a misura di striscia l'acquazzone non si distingueva dal poco nuvoloso. Al
+  100% la caduta animata finiva a 133,5 su una scatola di 128, oltre i 132,7 della pioggia che
+  la famiglia già disegna; 0,95 è il passo tondo più grande che ci sta, e lo strumento rifiuta
+  una caduta che esca più di quella (`fall_room`).
+- **Il temporale non ha più la notte**: è un cielo chiuso, come la pioggia, che non l'ha mai
+  avuta. L'intensità (pioggia forte, rovesci forti) resta della parola e della quantità.
+- **La mattina dell'arco resta senza tempo e senza temperature**: il mapper parte dall'ora in
+  corso e `WeatherRecency` toglie le ore passate, per scelta. Riempirle vorrebbe dire tenere
+  nel rapporto le ore già passate di oggi (cambio del livello dati e della cache); per ora le
+  etichette passate prendono il velo. Alternativa possibile: la finestra «prossime 24 ore»
+  come default dell'arco.
+- **L'arco sotto i momenti prende tutto lo spazio rimasto**: limitato ai 150 dp dell'arco
+  sulla sua card più alta spostava solo l'aria dal fondo al centro (guardato sul 4×4).
+
+### Come è stato verificato
+
+- Anteprime prima/dopo: gli acquazzoni nei quattro stili, la famiglia delle condizioni intera
+  (15 codici, giorno e notte, quattro stili, in grande e a 32 px), la banda dell'arco, ogni
+  forma dei tre widget a ogni misura del selettore.
+- `compose_sun_cloud.py` pulito con i nuovi controlli (`fall_room`, il pavimento di `cloudy`,
+  la nuvola delle sorgenti uguale alla silhouette); `ComposedIconsTest` esteso (quel che cade
+  alla lettera, la nuvola senza pavimento, il tratto delle gocce a 4), `ConditionIconsTest`,
+  `ArcSeriesTest` (`weatherAt`), i test di layout dei tre widget (`nowTallHourRows`,
+  `todayShowMoreHours`, `skyPlotHeight`).

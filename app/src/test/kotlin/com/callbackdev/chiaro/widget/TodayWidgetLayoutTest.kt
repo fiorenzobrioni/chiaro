@@ -29,6 +29,10 @@ class TodayWidgetLayoutTest {
         // Fewer than four hours is no longer an afternoon; more than seven no longer fits.
         assertEquals(4, todayStripCells(180.dp))
         assertEquals(7, todayStripCells(600.dp))
+        // A label wider than the floor takes a cell from the strip rather than being cut:
+        // «13:00» at 13 sp is 33 dp, and at a large font size the cell it needs grows.
+        assertEquals(7, todayStripCells(340.dp, stripCellFor(33.dp)))
+        assertEquals(6, todayStripCells(340.dp, stripCellFor(43.dp)))
     }
 
     /**
@@ -179,7 +183,7 @@ class TodayWidgetLayoutTest {
     @Test
     fun `with the range too the row grows and the strip still fits`() {
         assertEquals(
-            87.88f,
+            88.52f,
             todayHeroTextHeight(1f, stale = false, sentence = true, range = true, warning = true).value,
             0.01f
         )
@@ -200,6 +204,24 @@ class TodayWidgetLayoutTest {
     fun `a card with no room left carries no chip`() {
         assertFalse(
             todayHasWarningRow(DpSize(340.dp, 150.dp), 1f, stale = true, sentence = true, range = true)
+        )
+    }
+
+    /** The second row of hours (widget review, 13 ott 2026): on the four-by-four, under
+     * everything else and with its rain line; never on the four-by-three. */
+    @Test
+    fun `only the tallest card carries a second row of hours`() {
+        fun more(h: Int) = todayShowMoreHours(
+            DpSize(340.dp, h.dp), 1f, stale = false, sentence = true, range = false,
+            warning = false, rain = true
+        )
+        assertTrue(more(397))
+        assertFalse(more(293))
+        assertFalse(
+            todayShowMoreHours(
+                DpSize(340.dp, 397.dp), 2f, stale = false, sentence = true, range = false,
+                warning = false, rain = true
+            )
         )
     }
 }

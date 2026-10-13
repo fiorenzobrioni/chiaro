@@ -5,6 +5,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.widget.StaleSp
+import com.callbackdev.chiaro.widget.WidgetType
 import com.callbackdev.chiaro.widget.WarningChipGap
 import com.callbackdev.chiaro.widget.WarningSlot
 import com.callbackdev.chiaro.widget.textLineHeight
@@ -21,7 +22,9 @@ import com.callbackdev.chiaro.widget.warningSlot
  * - [STRIP] is one row at two cells or more: the words and the arc side by side — or,
  *   at two cells, the words over the arc, because 47 dp is not a width to draw a day in.
  * - [CARD] is two cells wide and two or more tall: temperature, place, the next moment,
- *   the arc, and under it as many agenda rows as the height honestly holds.
+ *   the arc, and under it as many agenda rows as the height honestly holds — each on two
+ *   lines, the name over its clock, because one line of 131 dp left a name 42 dp and
+ *   printed «Moon… / Gold… / Tom…» (widget review, 13 ott 2026).
  * - [PANEL] is three or four cells wide and two tall: the hero row (the number, the
  *   sentence, the place and the countdown on one line), the arc with its hours, and a
  *   row or two of agenda.
@@ -52,6 +55,13 @@ internal fun arcRows(height: Dp): Int = when {
     height < 340.dp -> 3
     else -> 4
 }
+
+/** Whether the card draws the followed moments instead of the arc: the reader chose them,
+ * and the card is three cells wide or more — the moments' own floor, where the clock and
+ * the moment's name have a column (at two cells they came out «18:… / Gold…»); narrower,
+ * the arc is the honest answer. */
+internal fun showsMoments(settings: ArcSettings, size: DpSize): Boolean =
+    settings.drawing == ArcDrawing.MOMENTS && arcColumns(size.width) >= 3
 
 internal fun arcForm(size: DpSize): ArcForm {
     val columns = arcColumns(size.width)
@@ -145,7 +155,7 @@ internal fun arcPlan(
         }
         ArcForm.STRIP -> {
             val innerW = size.width - ArcPadTight * 2
-            val innerH = size.height - ArcPadTight * 2
+            val innerH = size.height - ArcPadStripVertical * 2
             val stacked = columns == 2
             val graphic = if (stacked) {
                 DpSize(innerW, innerH - line(StripStackedTempSp) - ArcGapTight)
@@ -154,12 +164,12 @@ internal fun arcPlan(
             }
             val labels = settings.hourLabels && graphic.height >= HourLabelsMinHeight
             // Beside the arc the words get the moment's name and, when the height holds a
-            // third line, its clock and countdown under it (62 − 29.04 = 32.96 ≥ 2 × 15.84
+            // third line, its clock and countdown under it (64 − 29.04 = 34.96 ≥ 2 × 17.16
             // at the default font size; at 1.3 it does not, and the two join on one line).
             val wordLines = if (!stacked && innerH - line(StripTempSp) >= line(StripLineSp) * 2) 2 else 1
             ArcPlan(
                 form, columns, rows, stacked,
-                paddingHorizontal = ArcPadTight, paddingVertical = ArcPadTight,
+                paddingHorizontal = ArcPadTight, paddingVertical = ArcPadStripVertical,
                 graphic = graphic,
                 hourLabels = labels,
                 temperatures = labels && settings.temperatures &&
@@ -230,7 +240,7 @@ internal fun arcPlan(
                 ArcForm.PANEL -> GraphicMaxPanel
                 else -> GraphicMaxBoard
             }
-            val rowHeight = arcAgendaRowHeight(fontScale, scale)
+            val rowHeight = arcAgendaRowHeight(fontScale, scale, stacked = form == ArcForm.CARD)
             val cap = if (form == ArcForm.PANEL) PanelAgendaMaxRows else AgendaMaxRows
             val fit = ((room - preferred - ArcGap + ArcRowGap) / (rowHeight + ArcRowGap)).toInt()
             val agendaRows = fit.coerceIn(0, minOf(cap, agendaAvailable.coerceAtLeast(0)))
@@ -273,10 +283,11 @@ internal fun arcTickStep(width: Dp): Int = when {
     else -> 6
 }
 
-/** An agenda row: its 13 sp line and 3 dp of air above and below; the 18 dp glyph
- * fits inside it at every scale the card offers. */
-internal fun arcAgendaRowHeight(fontScale: Float, textScale: Float): Dp =
-    textLineHeight(AgendaSp * textScale, fontScale) + AgendaRowAir * 2
+/** An agenda row: its 13 sp line and 3 dp of air above and below; the 20 dp glyph
+ * fits inside it at every scale the card offers. A [stacked] row — the two-cell card's —
+ * is two lines, the name over its clock. */
+internal fun arcAgendaRowHeight(fontScale: Float, textScale: Float, stacked: Boolean = false): Dp =
+    textLineHeight(AgendaSp * textScale, fontScale) * (if (stacked) 2 else 1) + AgendaRowAir * 2
 
 /** The week's strip: the day's name, the glyph, the high and the low, stacked. */
 internal fun arcWeekHeight(fontScale: Float, textScale: Float): Dp =
@@ -288,8 +299,21 @@ internal fun arcWeekHeight(fontScale: Float, textScale: Float): Dp =
 internal val ArcPad = 14.dp
 internal val ArcPadTight = 10.dp
 
+/**
+ * A one-row card's top and bottom: 9, a dp under the small forms' 10. The words beside
+ * the arc went from 12 to the widget scale's 13 sp (widget review, 13 ott 2026), and the
+ * reference one-row card (82 dp) then held the number and ONE line under it — the dp
+ * given back here is what keeps the moment's name and its clock on two lines.
+ */
+internal val ArcPadStripVertical = 9.dp
+
 /** The air between a card's sections, and between two agenda rows. */
 internal val ArcGap = 6.dp
+
+/** The moments card's arc ([MomentsPlot]): its clock step, and the height from which it
+ * also prints the temperatures — a plot of 60 dp over the two text lines. */
+internal const val MomentsPlotTickHours = 3
+internal val MomentsPlotTemperaturesMin = 100.dp
 internal val ArcGapTight = 4.dp
 internal val ArcRowGap = 4.dp
 
@@ -312,9 +336,9 @@ internal val TemperatureColumn = 68.dp
 internal val HeroGap = 8.dp
 
 /** Below this width the hero sentence gets two lines: «Golden hour ends at 09:15» at
- * 15 sp Medium is ~165 dp, and a column that cannot hold that on one line holds it on
- * two rather than cutting it. */
-internal val HeroOneLineMin = 190.dp
+ * the scale's 16 sp Medium is 188 dp (measured, 13 ott 2026; 176.5 at the 15 sp it had),
+ * and a column that cannot hold that on one line holds it on two rather than cutting it. */
+internal val HeroOneLineMin = 196.dp
 
 /** On a two-cell card the sentence wraps to two lines: at 13 sp its column is 131 dp. */
 internal const val CardHeroMaxLines = 2
@@ -341,27 +365,28 @@ internal val GraphicFloor = 24.dp
 internal const val AgendaMaxRows = 6
 internal const val PanelAgendaMaxRows = 2
 
-// Text sizes. The panel's number is the Sky widget's 30, one step under the Now
-// widget's 34: it shares its row with a sentence. The card's is 28, the strip's 24, the
-// one-cell figure 22 — each the largest that leaves its words their column (measured
-// with the system font, see ArcLayoutTest for the widths).
-internal const val DialFigureSp = 22f
+// Text sizes, every one a step of the widgets' scale (WidgetType, 13 ott 2026). The
+// panel's and the card's number is the Sky widget's Display 30, one step under the Now
+// widget's 34: it shares its row with a sentence (the card's was 28). The strip's and the
+// one-cell figure are Title 22 (the stacked strip's was 20) — each the largest that leaves
+// its words their column (measured with the system font, see ArcLayoutTest for the widths).
+internal const val DialFigureSp = WidgetType.Title
 /** 22 since the device pass of 9 set 2026 (from 24): the number gives its two points to
  * the third line of words, the clock under the moment's name. */
-internal const val StripTempSp = 22f
-internal const val StripStackedTempSp = 20f
-internal const val StripLineSp = 12f
-internal const val CardTempSp = 28f
-internal const val PanelTempSp = 30f
-internal const val PlaceSp = 13f
-internal const val HeroSp = 15f
-internal const val HeroSubSp = 12f
-internal const val CardHeroSp = 13f
-internal const val AgendaSp = 13f
-internal const val TickSp = 11f
-internal const val WeekDaySp = 11f
-internal const val WeekHighSp = 12f
-internal const val WeekLowSp = 11f
+internal const val StripTempSp = WidgetType.Title
+internal const val StripStackedTempSp = WidgetType.Title
+internal const val StripLineSp = WidgetType.Label
+internal const val CardTempSp = WidgetType.Display
+internal const val PanelTempSp = WidgetType.Display
+internal const val PlaceSp = WidgetType.Label
+internal const val HeroSp = WidgetType.Body
+internal const val HeroSubSp = WidgetType.Label
+internal const val CardHeroSp = WidgetType.Label
+internal const val AgendaSp = WidgetType.Label
+internal const val TickSp = WidgetType.Caption
+internal const val WeekDaySp = WidgetType.Label
+internal const val WeekHighSp = WidgetType.Label
+internal const val WeekLowSp = WidgetType.Caption
 
 /**
  * The verdict mark's column at the end of an agenda row: the glyph alone («✓ ~ ✗ ?») in the
@@ -372,9 +397,6 @@ internal const val WeekLowSp = 11f
  */
 internal val AgendaMarkSlot = 14.dp
 
-/** The mark's drawing inside its slot: 12 dp is the x-height of the 13 sp words beside
- * it, so the cross stands in the line like a letter and not like an icon. */
-internal val AgendaMarkGlyph = 12.dp
 internal val AgendaRowAir = 3.dp
 /** The Sky widget's row glyph, so the two cards' lists read as siblings; 20 since the
  * device pass of 9 set 2026 (from 18). */

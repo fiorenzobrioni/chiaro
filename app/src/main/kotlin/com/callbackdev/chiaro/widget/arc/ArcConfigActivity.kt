@@ -228,8 +228,29 @@ internal fun ArcConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -
             )
         }
 
-        // ---- The arc itself. ----
+        // ---- What the card is: the arc, or the followed moments (13 ott 2026). ----
         arc?.let { current ->
+            ConfigHeader(stringResource(R.string.arc_config_drawing))
+            ConfigChoices(
+                listOf(
+                    ArcDrawing.ARC to stringResource(R.string.arc_drawing_arc),
+                    ArcDrawing.MOMENTS to stringResource(R.string.arc_drawing_moments)
+                ),
+                selected = current.drawing,
+                onPick = { saveArc(current.copy(drawing = it)) }
+            )
+            if (current.drawing == ArcDrawing.MOMENTS) {
+                Text(
+                    text = stringResource(R.string.arc_drawing_moments_note),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp)
+                )
+            }
+        }
+
+        // ---- The arc itself: none of it applies to a card of moments, so it is not offered. ----
+        arc?.takeIf { it.drawing == ArcDrawing.ARC }?.let { current ->
             ConfigHeader(stringResource(R.string.arc_config_span))
             ConfigChoices(
                 listOf(
@@ -383,6 +404,23 @@ internal fun ArcConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -
 
             // The one control that undoes the others: outlined, in the error colour, at
             // the foot — the Settings screen's reset.
+            OutlinedButton(
+                onClick = {
+                    saveArc(ArcSettings())
+                    saveLook(WidgetLook.defaultsFor(WidgetKind.ARC))
+                },
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 24.dp)
+            ) {
+                Text(stringResource(R.string.arc_config_reset))
+            }
+        }
+
+        arc?.takeIf { it.drawing == ArcDrawing.MOMENTS }?.let {
             OutlinedButton(
                 onClick = {
                     saveArc(ArcSettings())

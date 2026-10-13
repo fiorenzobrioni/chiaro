@@ -51,7 +51,7 @@
                 android:singleLine="true"
                 android:text="@string/widget_preview_arc_hero"
                 android:textColor="@color/widget_preview_ink"
-                android:textSize="15sp" />
+                android:textSize="16sp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -59,7 +59,7 @@
                 android:singleLine="true"
                 android:text="@string/widget_preview_arc_sub"
                 android:textColor="@color/widget_preview_ink_dim"
-                android:textSize="12sp" />
+                android:textSize="13sp" />
         </LinearLayout>
     </LinearLayout>
 

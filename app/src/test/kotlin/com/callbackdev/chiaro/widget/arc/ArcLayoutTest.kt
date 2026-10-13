@@ -81,9 +81,9 @@ class ArcLayoutTest {
     fun `two cells by one stacks the words over the arc`() {
         val plan = plan(DpSize(159.dp, 82.dp))
         assertTrue(plan.stacked)
-        // 139 wide; 62 − 26.4 (a 20 sp line) − 4 = 31.6 tall: no room for hour labels.
+        // 139 wide; 64 − 29.04 (the scale's 22 sp line) − 4 = 30.96 tall: no room for hour labels.
         assertEquals(139f, plan.graphic.width.value, 0.01f)
-        assertEquals(31.6f, plan.graphic.height.value, 0.05f)
+        assertEquals(30.96f, plan.graphic.height.value, 0.05f)
         assertFalse(plan.hourLabels)
     }
 
@@ -92,11 +92,12 @@ class ArcLayoutTest {
         val three = plan(DpSize(250.dp, 82.dp))
         assertFalse(three.stacked)
         assertEquals(112f, three.graphic.width.value, 0.01f)
-        assertEquals(62f, three.graphic.height.value, 0.01f)
+        // 82 − 2 × 9: a one-row card's top and bottom are 9 dp since 13 ott 2026.
+        assertEquals(64f, three.graphic.height.value, 0.01f)
         assertTrue(three.hourLabels)
         assertFalse(three.temperatures)
         assertEquals(6, three.tickStepHours)
-        // 62 − 29.04 (the 22 sp number) = 32.96 holds two 12 sp lines (31.68): the
+        // 64 − 29.04 (the 22 sp number) = 34.96 holds two 13 sp lines (34.32): the
         // moment's name, and its clock under it.
         assertEquals(2, three.heroLines)
 
@@ -113,19 +114,24 @@ class ArcLayoutTest {
     fun `the two-by-two card is header and arc, the taller card adds agenda`() {
         val small = plan(DpSize(159.dp, 189.dp))
         assertEquals(ArcForm.CARD, small.form)
-        // Header: 36.96 + 17.16 + 2 × 17.16 = 88.44; 161 − 88.44 − 6 = 66.56 for the arc.
+        // Header: 39.6 (the 30 sp number) + 17.16 + 2 × 17.16 = 91.08;
+        // 161 − 91.08 − 6 = 63.92 for the arc.
         assertEquals(2, small.heroLines)
         assertEquals(0, small.agendaRows)
-        assertEquals(66.56f, small.graphic.height.value, 0.05f)
+        assertEquals(63.92f, small.graphic.height.value, 0.05f)
         assertTrue(small.hourLabels)
         assertFalse(small.temperatures)
 
         val tall = plan(DpSize(159.dp, 290.dp))
-        // 262 − 88.44 − 6 = 167.56; (167.56 − 72 − 6 + 4) / 27.16 = 3.4 → 3 rows;
-        // the arc keeps 167.56 − (6 + 69.48 + 8) = 84.08, enough for temperatures.
-        assertEquals(3, tall.agendaRows)
-        assertEquals(84.08f, tall.graphic.height.value, 0.05f)
-        assertTrue(tall.temperatures)
+        // The two-cell card's rows are two lines, the name over its clock (13 ott 2026),
+        // 2 × 17.16 + 6 = 40.32 each: 262 − 91.08 − 6 = 164.92;
+        // (164.92 − 72 − 6 + 4) / 44.32 = 2.05 → 2 rows; the arc keeps
+        // 164.92 − (6 + 80.64 + 4) = 74.28, under the 76 the temperatures need.
+        assertEquals(2, tall.agendaRows)
+        assertEquals(74.28f, tall.graphic.height.value, 0.05f)
+        assertFalse(tall.temperatures)
+        // The reference two-by-four: (369 − 91.08 − 6 − 72 − 6 + 4) / 44.32 = 4.5 → 4 rows.
+        assertEquals(4, plan(DpSize(159.dp, 397.dp)).agendaRows)
     }
 
     @Test
@@ -147,11 +153,11 @@ class ArcLayoutTest {
     @Test
     fun `the three-by-two panel wraps its sentence and keeps one row`() {
         val plan = plan(DpSize(250.dp, 189.dp))
-        // Hero column 222 − 76 = 146 < 190: two lines, header 2 × 19.8 + 15.84 = 55.44.
+        // Hero column 222 − 76 = 146 < 196: two lines, header 2 × 21.12 + 17.16 = 59.4.
         assertEquals(2, plan.heroLines)
-        // 161 − 55.44 − 6 = 99.56; (99.56 − 56 − 6 + 4) / 27.16 = 1.5 → 1 row; arc 70.4.
+        // 161 − 59.4 − 6 = 95.6; (95.6 − 56 − 6 + 4) / 27.16 = 1.4 → 1 row; arc 66.44.
         assertEquals(1, plan.agendaRows)
-        assertEquals(70.4f, plan.graphic.height.value, 0.05f)
+        assertEquals(66.44f, plan.graphic.height.value, 0.05f)
         assertEquals(4, plan.tickStepHours)
     }
 
@@ -167,11 +173,11 @@ class ArcLayoutTest {
         assertFalse(three.week)
 
         val four = plan(DpSize(340.dp, 390.dp))
-        // 362 − 45.6 = 316.4; the week takes 70.88 + 6; (239.52 − 110 − 6 + 4) / 27.16 =
-        // 4.7 → 4 rows; arc = 239.52 − (6 + 92.64 + 12) = 128.88.
+        // 362 − 39.6 − 6 = 316.4; the week takes 74.84 + 6; (235.56 − 110 − 6 + 4) / 27.16 =
+        // 4.5 → 4 rows; arc = 235.56 − (6 + 92.64 + 12) = 124.92.
         assertTrue(four.week)
         assertEquals(4, four.agendaRows)
-        assertEquals(128.88f, four.graphic.height.value, 0.05f)
+        assertEquals(124.92f, four.graphic.height.value, 0.05f)
     }
 
     @Test
@@ -234,10 +240,22 @@ class ArcLayoutTest {
         assertFalse(tempsOff.temperatures)
     }
 
+    /** The followed moments, where the reader chose them, from three cells (13 ott 2026). */
+    @Test
+    fun `the moments replace the arc from three cells, never under`() {
+        val moments = defaults.copy(drawing = ArcDrawing.MOMENTS)
+        assertTrue(showsMoments(moments, DpSize(250.dp, 82.dp)))
+        assertTrue(showsMoments(moments, DpSize(340.dp, 397.dp)))
+        assertFalse(showsMoments(moments, DpSize(159.dp, 189.dp)))
+        assertFalse(showsMoments(moments, DpSize(85.dp, 85.dp)))
+        assertFalse(showsMoments(defaults, DpSize(340.dp, 189.dp)))
+    }
+
     @Test
     fun `the week strip is four lines and a glyph`() {
-        // 14.52 + 22 + 15.84 + 14.52 + 2 × 2 = 70.88.
-        assertEquals(70.88f, arcWeekHeight(1f, 1f).value, 0.01f)
+        // The day and the high at the scale's 13 sp, the low at 11 (13 ott 2026):
+        // 17.16 + 22 + 17.16 + 14.52 + 2 × 2 = 74.84.
+        assertEquals(74.84f, arcWeekHeight(1f, 1f).value, 0.01f)
     }
 
     // ------------------------------------------------- the warning chip (Fase 11)

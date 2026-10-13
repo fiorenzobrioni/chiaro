@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Il disegno del «quasi sereno»: il sereno di Meteocons piu' una nuvoletta.
+"""I disegni del «quasi sereno» e del «poco nuvoloso»: il sereno di Meteocons piu' una nuvola.
 
     python3 tools/compose_sun_cloud.py            # scrive, e stampa le misure
     python3 tools/compose_sun_cloud.py --controlla  # non scrive: verifica e basta
@@ -37,7 +37,30 @@ di `clear-day`. L'inchiostro esce a **0,711**, il 3% sopra la misura di famiglia
 sotto il tetto di 0,88 che `icon_ink.scale_of` impone agli altri. Per la stessa ragione
 il file non porta nessun gruppo `mc3scale`: non c'e' niente da riportare a misura.
 
-**Il nome e' suo** (`sun-one-cloud-day` / `-night`, che in Meteocons non esistono), e i
+**Il «poco nuvoloso» e' la seconda composizione** (13 ott 2026, revisione dei widget). Il
+codice 2 prendeva `partly-cloudy` di Meteocons: una nuvola piena con uno spicchio di sole
+nell'angolo. Accanto al codice 1 la scala non andava a gradini: da 1 a 2 il sole passava da
+intero a spicchio e cambiava angolo, la nuvola da piccola a piena, e 2 e 3 si confondevano
+nella striscia oraria, dove lo spicchio e' di pochi pixel. Ora il codice 2 e' lo stesso sole
+intero, nello stesso posto, con la nuvola al **78%** che ne copre circa un terzo: la scala
+dice nuvola 0 → 49% → 78% → 100%, sole intero → intero → coperto per un terzo → nessuno.
+Ogni composizione ha la sua taglia e i suoi due centri, uno per il giorno e uno per la notte
+([RECIPES]), perche' la falce della luna ha le punte dove il sole non ha niente.
+
+**Nessuna scheggia** (13 ott 2026). Oltre ai raggi tagliati per il lungo ([slivers]) lo
+strumento rifiuta ora una punta di raggio rimasta nell'aria fra il buco e la nuvola ([tips]):
+il «quasi sereno» ne lasciava una nello stile pieno, visibile in grande, e per questo la sua
+nuvoletta e' salita di mezza unita'. E di notte rifiuta un pezzo di falce staccato dal resto
+([moon_fragments]).
+
+**Gli acquazzoni sono la terza composizione** (13 ott 2026): `sun-half-cloud-rain-*` e
+`sun-half-cloud-snow-*`, il «poco nuvoloso» con le gocce o i fiocchi di
+`partly-cloudy-*-rain/-snow` appesi al pavimento della nuvola ([FALLS], [fall_matrix]). Nello
+stile `line` la nuvola perde il pavimento come nei disegni di pioggia di Meteocons ([floorless]),
+e la caduta animata non esce dalla scatola piu' della pioggia che la famiglia gia' disegna
+([fall_room]).
+
+**I nomi sono suoi** (`sun-one-cloud-*`, `sun-half-cloud-*`, che in Meteocons non esistono), e i
 prefissi sono quelli della famiglia, cosi' `ChiaroIcons.styledRes` sceglie stile e fondo
 come per tutti gli altri e i test che camminano i prefissi coprono anche questi. Una
 ri-esecuzione di `import_meteocons_v3.py` non tocca questi file, ma se **cambia** i
@@ -78,21 +101,77 @@ fmt = paths.fmt
 
 # --------------------------------------------------------------------- la ricetta
 
-#: I due nomi composti, e da quale disegno del sereno viene ognuno.
-COMPOSED = {"sun-one-cloud-day": "clear-day", "sun-one-cloud-night": "clear-night"}
+#: Le composizioni. Per ognuna: il nome, il codice WMO che la disegna, quanto della sua
+#: taglia tiene la nuvola di `cloudy`, e dove cade il centro della nuvola di giorno e di
+#: notte. La silhouette di `cloudy` ha il proprio centro esattamente in mezzo alla scatola,
+#: quindi il centro e' anche il `translate` del gruppo, meno 64.
+#:
+#: **«Quasi sereno», 0,4888.** A questa scala la nuvola e' larga 43,1 unita' con il
+#: contorno, il **43%** di quella di `partly-cloudy` (99,2); `mostly-clear`, il disegno
+#: scartato, ne vale il 72%. **Il centro non e' estetico**: piu' a sinistra di 91,5 il buco
+#: taglierebbe il raggio di sud per il lungo (visto a 86,7, misurato da [ray_report]); a
+#: 91,5 prende il raggio di sud-est per intero e non tocca gli altri sette. In Y era 94,5
+#: fino al 13 ott 2026: li' la punta del raggio di sud-est restava nell'aria intorno alla
+#: nuvola nello stile pieno, e 94 la nasconde ([tips]).
+#:
+#: **«Poco nuvoloso», 0,78** (13 ott 2026): la nuvola copre il 35% del disco, nasconde per
+#: intero i raggi di sud e di sud-est e lascia interi gli altri sei, nessuno tagliato a
+#: meta'. Di giorno in (77, 86); di notte in (84, 80), l'unico posto vicino in cui la punta
+#: bassa della falce sparisce sotto la nuvola invece di restarne fuori come una scheggia
+#: ([moon_fragments]). Scelti con una ricerca a griglia sui tre controlli, poi guardati.
+#:
+#: **Gli acquazzoni** (13 ott 2026) sono il «poco nuvoloso» con quel che cade: stessa taglia,
+#: stessi centri, e sotto la nuvola le gocce o i fiocchi di `partly-cloudy-*-rain/-snow` di
+#: Meteocons ([FALLS]). Prima prendevano quei disegni interi, cioe' lo spicchio di sole dietro
+#: la nuvola piena che il codice 2 ha appena lasciato: accanto alla nuova scala l'acquazzone
+#: si leggeva come un cielo diverso, non come lo stesso cielo con la pioggia.
+HALF_CLOUD = {"scale": 0.78, "centre": {"day": (77.0, 86.0), "night": (84.0, 80.0)}}
 
-#: Quanto della sua taglia tiene la nuvola di `cloudy`. Scelta guardando: a questa scala
-#: e' larga 43,1 unita' con il contorno, cioe' il **43%** della nuvola di `partly-cloudy`
-#: (99,2). Quella di `mostly-clear`, che e' il disegno scartato, ne vale il 72%.
-CLOUD_SCALE = 0.4888
+RECIPES = [
+    {"name": "sun-one-cloud", "wmo": 1, "scale": 0.4888,
+     "centre": {"day": (91.5, 94.0), "night": (91.5, 94.0)}},
+    {"name": "sun-half-cloud", "wmo": 2, **HALF_CLOUD},
+    {"name": "sun-half-cloud-rain", "wmo": 80, "fall": "rain", **HALF_CLOUD},
+    {"name": "sun-half-cloud-snow", "wmo": 85, "fall": "snow", **HALF_CLOUD},
+]
 
-#: Dove cade il centro della nuvola. La silhouette di `cloudy` ha il proprio centro
-#: esattamente in mezzo alla scatola, quindi questo e' anche il `translate` del gruppo,
-#: meno 64. **Il valore in X non e' estetico**: piu' a sinistra il buco taglierebbe il
-#: raggio di sud per il lungo e lascerebbe una scheggia di raggio accanto alla nuvola
-#: (visto a 86,7, misurato da [ray_report]). A 91,5 il buco prende il raggio di sud-est
-#: per intero e non tocca gli altri sette.
-CLOUD_CENTRE = (91.5, 94.5)
+#: Da dove vengono le gocce e i fiocchi: i gruppi che in `partly-cloudy-{parte}-{fall}`
+#: seguono la nuvola, copiati con i loro percorsi e le loro animazioni **alla lettera**.
+#: Stanno, in quel disegno, alla misura della sua nuvola, che e' la silhouette di `cloudy`
+#: alle stesse coordinate (verificato da [check_sources]); quindi qui prendono la
+#: trasformazione della nuvola, e cadono dove cadevano rispetto a lei. Le gocce sono un
+#: tratto e vengono ri-tracciate come la nuvola, a [CLOUD_STROKE] a schermo; i fiocchi sono
+#: pieni e si rimpiccioliscono con lei.
+FALLS = {"rain": "partly_cloudy_{part}_rain", "snow": "partly_cloudy_{part}_snow"}
+
+#: La misura delle gocce e dei fiocchi rispetto alla scatola ([fall_matrix]): il 95% di
+#: quella della sorgente prima della sua `mc3scale`, cioe' una goccia lunga 11,4 con il
+#: tratto a 4 come la nuvola. A 1,0 la caduta finiva a 133,5, oltre i 132,8 della pioggia
+#: che la famiglia gia' disegna ([fall_room]); 0,95 e' il passo tondo piu' grande che ci sta.
+FALL_SCALE = 0.95
+
+#: Il pavimento della silhouette di `cloudy`, in coordinate della sorgente: il centro del
+#: tratto dritto in basso, da (37,953, 89) a (90,977, 89). Le gocce ci sono appese.
+FLOOR = ((37.953 + 90.977) / 2, 89.0)
+
+#: La composizione in corso: [use] le imposta, e ogni funzione qui sotto le legge. Sono
+#: globali perche' lo strumento e' nato con una composizione sola, e passarle a mano a
+#: tutte le funzioni di geometria e di misura non le renderebbe piu' chiare.
+CLOUD_SCALE = RECIPES[0]["scale"]
+CLOUD_CENTRE = RECIPES[0]["centre"]["day"]
+FALL = None
+
+
+def use(recipe: dict, night: bool) -> None:
+    """Prepara la geometria per [recipe], di giorno o di notte."""
+    global CLOUD_SCALE, CLOUD_CENTRE, FALL
+    CLOUD_SCALE = recipe["scale"]
+    CLOUD_CENTRE = recipe["centre"]["night" if night else "day"]
+    FALL = recipe.get("fall")
+
+
+def file_stem(recipe: dict, night: bool) -> str:
+    return recipe["name"].replace("-", "_") + ("_night" if night else "_day")
 
 #: Il contorno della nuvola **a schermo**, uguale a quello del sole di `clear-day`
 #: (4 x 0,92 = 3,68): la nuvola e' un filo piu' marcata, com'e' gia' in tutta la famiglia
@@ -132,6 +211,18 @@ HEADER = (
     "     e' cloudy al {pct}% ri-tracciata. Non modificare a mano: ri-eseguire lo" + NL +
     "     strumento E' la composizione. -->"
 )
+FALL_HEADER = (
+    "<!-- {what} sono quelli di partly-cloudy-{part}-{fall}, alla misura della nuvola. -->"
+)
+
+
+def header(night: bool) -> str:
+    part = "night" if night else "day"
+    text = HEADER.format(part=part, pct=fmt(CLOUD_SCALE * 100))
+    if FALL:
+        what = "Le gocce" if FALL == "rain" else "I fiocchi"
+        text += NL + FALL_HEADER.format(what=what, part=part, fall=FALL)
+    return text
 
 
 # ------------------------------------------------------------------ leggere il repo
@@ -180,6 +271,42 @@ def cloud_of(prefix: str):
         scale_group(SILHOUETTE_OF[GROUND_OF[prefix]]).find("group").find("path"))
     colour = attrs(scale_group(f"{prefix}cloudy").find("group").find("path"))["fillColor"]
     return silhouette["pathData"], colour
+
+
+def fall_stem(prefix: str, night: bool) -> str:
+    return prefix + FALLS[FALL].format(part="night" if night else "day")
+
+
+def fall_of(prefix: str, night: bool) -> list[tuple[str, dict]]:
+    """Le gocce o i fiocchi **come stanno nel file**: i gruppi che seguono la nuvola, ognuno
+    con il suo nome e il suo percorso (che porta un nome anche lui, perche' l'animazione ne
+    muove l'alfa)."""
+    g = scale_group(fall_stem(prefix, night))
+    kids = list(g)
+    names = [k.get(A + "name") for k in kids]
+    if "g4clouds" not in names:
+        sys.exit(f"{fall_stem(prefix, night)}: nessun g4clouds — il disegno ha cambiato forma?")
+    out = []
+    for k in kids[names.index("g4clouds") + 1:]:
+        if k.tag != "group" or len(k) != 1 or k[0].tag != "path" or set(attrs(k)) != {"name"}:
+            sys.exit(f"{fall_stem(prefix, night)}: {k.get(A + 'name')} non e' un gruppo con "
+                     f"un percorso solo — il disegno ha cambiato forma?")
+        out.append((k.get(A + "name"), attrs(k[0])))
+    return out
+
+
+def fall_cloud(prefix: str, night: bool) -> str:
+    """La nuvola del disegno da cui vengono le gocce: deve essere la silhouette di `cloudy`
+    alle stesse coordinate, o le gocce non cadrebbero da questa nuvola."""
+    g = scale_group(fall_stem(prefix, night))
+    clouds = [k for k in g if k.get(A + "name") == "g4clouds"][0]
+    return clouds.find("path").get(A + "pathData")
+
+
+def renamed(name: str) -> str:
+    """I nomi dei gruppi che cadono, con un prefisso: i numeri dell'importatore (g5, g6...)
+    sono gli stessi che questo strumento usa per la nuvola."""
+    return "fall_" + name
 
 
 def mask_of_partly_cloudy() -> str:
@@ -316,7 +443,7 @@ def gap_report(prefix="mc3_"):
     return d[0], d[len(d) // 2], d[-1], len(near)
 
 
-def ray_report(prefix="mc3_"):
+def ray_report(prefix="mc3_", step=0.25):
     """Per ogni raggio del sole: quanto ne resta fuori dal buco, e **quanto e' largo**
     quel che resta.
 
@@ -334,7 +461,6 @@ def ray_report(prefix="mc3_"):
         d = paths.emit_path([sub])
         poly = raster.flatten(d)
         x0, y0, x1, y1 = bbox(d)
-        step = 0.25
         inside, kept = 0, []
         y = y0
         while y <= y1:
@@ -374,14 +500,88 @@ def ink_box(prefix="mc3_", night=False):
     b = bbox(transformed(silhouette, cloud_matrix()))
     half = CLOUD_STROKE / 2
     boxes.append((b[0] - half, b[1] - half, b[2] + half, b[3] + half))
+    if FALL:
+        for _, p in fall_of(prefix, night):
+            boxes.append(fall_box(p, fall_matrix(), CLOUD_STROKE))
     return (min(b[0] for b in boxes), min(b[1] for b in boxes),
             max(b[2] for b in boxes), max(b[3] for b in boxes))
+
+
+def fall_matrix():
+    """Dove cadono le gocce: la loro sorgente le appende al pavimento della nuvola, e qui
+    il pavimento e' quello della nuvola composta. Alla misura [FALL_SCALE] della scatola e
+    non a quella della nuvola: rimpicciolite con lei erano lunghe 9 unita' a schermo, e
+    nella striscia oraria l'acquazzone non si distingueva piu' dal «poco nuvoloso»."""
+    (fx, fy) = FLOOR
+    m = cloud_matrix()
+    ax, ay = m[0] * fx + m[4], m[3] * fy + m[5]
+    return (FALL_SCALE, 0.0, 0.0, FALL_SCALE, ax - FALL_SCALE * fx, ay - FALL_SCALE * fy)
+
+
+def fall_box(p: dict, m, stroke: float, drop: float = 0.0):
+    """Il riquadro a schermo di una goccia o di un fiocco nella trasformazione `m`,
+    contorno compreso (`stroke` a schermo), spostato in basso di `drop` unita' della
+    sorgente: quanto l'animazione lo fa cadere."""
+    d = p["pathData"]
+    if "strokeWidth" in p:
+        # una goccia e' un segmento: bbox() non ne vede l'area, quindi si prendono i punti
+        xs = [float(v) for v in d.replace("M", " ").replace("L", " ").replace(",", " ").split()]
+        pts = list(zip(xs[0::2], xs[1::2]))
+        grow = stroke / 2
+    else:
+        pts = [pt for sub in raster.flatten(d) for pt in sub]
+        grow = 0.0
+    pts = [(m[0] * x + m[4], m[3] * (y + drop) + m[5]) for x, y in pts]
+    return (min(x for x, _ in pts) - grow, min(y for _, y in pts) - grow,
+            max(x for x, _ in pts) + grow, max(y for _, y in pts) + grow)
+
+
+#: Quanto cadono le gocce e i fiocchi nelle animazioni di Meteocons, in unita' della
+#: sorgente (il `translateY` piu' lungo dei gruppi che cadono).
+FALL_TRAVEL = 20
+
+
+def family_fall_end() -> float:
+    """Fin dove cadono, a schermo, le gocce dei disegni di pioggia che l'app gia' usa.
+
+    Escono tutte un poco dalla scatola alla fine della caduta, mentre svaniscono: la
+    pioggia di `rain` arriva a 132,7. E' il limite che il composto rispetta, invece di uno
+    piu' stretto che nessun altro disegno della famiglia rispetta."""
+    worst = 0.0
+    for stem in ("mc3_overcast_rain", "mc3_rain", "mc3_partly_cloudy_day_rain",
+                 "mc3_overcast_snow", "mc3_partly_cloudy_day_snow"):
+        g = scale_group(stem)
+        k = float(g.get(A + "scaleX"))
+        m = matrix(k, 0, 0)
+        for el in g:
+            if el.tag == "group" and el.get(A + "name") not in ("g4clouds", "g1maskmove"):
+                for path in el.iter("path"):
+                    if path.get(A + "name"):
+                        p = attrs(path)
+                        b = fall_box(p, m, 4 * k, drop=FALL_TRAVEL)
+                        worst = max(worst, b[3])
+    return worst
+
+
+def fall_room(prefix="mc3_", night=False) -> list[str]:
+    """Alla fine della caduta le gocce non escono dalla scatola piu' di quanto ne escano
+    quelle che la famiglia gia' disegna ([family_fall_end])."""
+    if not FALL:
+        return []
+    out = []
+    limit = family_fall_end() + 0.05
+    for name, p in fall_of(prefix, night):
+        b = fall_box(p, fall_matrix(), CLOUD_STROKE, drop=FALL_TRAVEL)
+        if b[3] > limit:
+            out.append(f"{name} finisce la caduta a {b[3]:.1f}, oltre il {limit:.1f} della "
+                       f"pioggia di Meteocons")
+    return out
 
 
 # --------------------------------------------------------------------- scrivere
 
 def path_xml(p: dict, indent: str) -> str:
-    order = ["pathData", "fillColor", "fillType", "strokeColor", "strokeWidth",
+    order = ["pathData", "name", "fillColor", "fillType", "strokeColor", "strokeWidth",
              "strokeLineCap", "strokeLineJoin"]
     bits = [f'android:{k}="{p[k]}"' for k in order if k in p]
     return indent + "<path " + (NL + indent + "      ").join(bits) + "/>"
@@ -403,8 +603,35 @@ def group_open(name: str, indent: str, scale: float = None, pivot=(64, 64),
     return indent + "<group " + " ".join(bits) + ">"
 
 
+def floor_segment(d: str):
+    """Il tratto dritto in basso della silhouette: (sottopercorso, indice), o None."""
+    for k, (start, segs, _) in enumerate(paths.parse_segments(d)):
+        for i, seg in enumerate(segs):
+            before = start if i == 0 else segs[i - 1][-1]
+            if seg[0] == "L" and abs(before[1] - seg[1][1]) < 1e-6 and before[1] > 85:
+                return k, i
+    return None
+
+
+def floorless(d: str) -> str:
+    """La silhouette **senza pavimento**, come la nuvola dei disegni di pioggia di
+    Meteocons nello stile `line`: il contorno parte dalla fine del tratto in basso, fa il
+    giro e si ferma al suo inizio. Le gocce escono da li' invece di attraversare una riga."""
+    found = floor_segment(d)
+    if found is None:
+        sys.exit("la silhouette di cloudy non ha piu' un pavimento dritto")
+    k, i = found
+    start, segs, _ = paths.parse_segments(d)[k]
+    if segs[-1][-1] != start and segs[-1][-1] != tuple(start):
+        sys.exit("la silhouette di cloudy non torna al punto da cui parte")
+    opened = [segs[i][1], segs[i + 1:] + segs[:i], False]
+    return paths.emit_path([opened])
+
+
 def cloud_element(prefix: str, face: str) -> dict:
     silhouette, colour = cloud_of(prefix)
+    if FALL and face == "line":
+        silhouette = floorless(silhouette)
     if face == "flat":
         return {"pathData": silhouette, "fillColor": colour}
     return {"pathData": silhouette, "strokeColor": colour,
@@ -451,13 +678,26 @@ def drawing(prefix: str, face: str, night: bool) -> list[str]:
         "        </group>",
         "    </group>",
     ]
+    if FALL:
+        # Fuori dal guscio che dondola, come nella sorgente: le gocce non salgono e
+        # scendono con la nuvola, cadono e basta.
+        m = fall_matrix()
+        lines.append(group_open("g7fallplace", " " * 4, scale=FALL_SCALE, pivot=(0, 0),
+                                translate=(m[4], m[5])))
+        for name, p in fall_of(prefix, night):
+            p = dict(p, name=renamed(p["name"]))
+            if "strokeWidth" in p:
+                p["strokeWidth"] = fmt(CLOUD_STROKE / FALL_SCALE)
+            lines.append(group_open(renamed(name), " " * 8, pivot=None))
+            lines.append(path_xml(p, " " * 12))
+            lines.append(" " * 8 + "</group>")
+        lines.append("    </group>")
     return lines
 
 
 def still_xml(prefix: str, face: str, night: bool) -> str:
     body = NL.join(drawing(prefix, face, night))
-    return (HEADER.format(part="night" if night else "day",
-                          pct=fmt(CLOUD_SCALE * 100)) + NL +
+    return (header(night) + NL +
             '<vector xmlns:android="http://schemas.android.com/apk/res/android"' + NL +
             '    android:width="24dp"' + NL +
             '    android:height="24dp"' + NL +
@@ -517,10 +757,34 @@ def sun_target(prefix: str, night: bool) -> list[str]:
     return ["    " + lines[0]] + lines[1:]
 
 
+def fall_targets(prefix: str, night: bool) -> list[str]:
+    """Le animazioni delle gocce o dei fiocchi, ritagliate dal gemello animato della
+    sorgente come [sun_target] fa per il sole, con i nomi di [renamed]."""
+    if not FALL:
+        return []
+    moving = {"mc3_": "mc3a_", "mc3n_": "mc3an_",
+              "mc3f_": "mc3fa_", "mc3fn_": "mc3fan_"}[prefix]
+    source = DRAWABLE / (moving + FALLS[FALL].format(part="night" if night else "day") + ".xml")
+    text = source.read_text(encoding="utf8")
+    out = []
+    for name, p in fall_of(prefix, night):
+        for wanted in (name, p["name"]):
+            head = f'<target android:name="{wanted}">'
+            if text.count(head) != 1:
+                sys.exit(f"{source.name}: non anima {wanted} una volta sola — la pioggia ha "
+                         f"cambiato forma")
+            start = text.index(head)
+            block = text[start:text.index("</target>", start) + len("</target>")]
+            block = block.replace(head, f'<target android:name="{renamed(wanted)}">')
+            lines = block.splitlines()
+            out += ["    " + lines[0]] + lines[1:]
+    return out
+
+
 def animated_xml(prefix: str, face: str, night: bool) -> str:
     body = [" " * 8 + line for line in drawing(prefix, face, night)]
     lines = [
-        HEADER.format(part="night" if night else "day", pct=fmt(CLOUD_SCALE * 100)),
+        header(night),
         '<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"',
         '    xmlns:aapt="http://schemas.android.com/aapt">',
         '    <aapt:attr name="android:drawable">',
@@ -536,6 +800,7 @@ def animated_xml(prefix: str, face: str, night: bool) -> str:
         *bob_target("g1maskmove", +1, "    "),
         *bob_target("g2maskhold", -1, "    "),
         *bob_target("g5cloud", +1, "    "),
+        *fall_targets(prefix, night),
         '</animated-vector>',
     ]
     return NL.join(lines) + NL
@@ -558,10 +823,13 @@ import com.callbackdev.chiaro.R
  * che rende sicura tutta la faccenda: quel file lo riscrive l'importatore a ogni giro,
  * questo no.
  *
- * Oggi ce n'e' uno solo, il «quasi sereno»: il sereno di Meteocons intatto piu' una
- * nuvoletta nell'angolo, perche' il disegno che la libreria chiama `mostly-clear`
- * porta il 72% della nuvola del «poco nuvoloso» per un cielo che ne ha il 39% di
- * copertura. Il perche' per esteso, con le misure, sta in testa allo strumento.
+ * Sono una scala: il «quasi sereno» (il sereno di Meteocons intatto piu' una nuvoletta
+ * nell'angolo, perche' il `mostly-clear` della libreria porta il 72% della nuvola del «poco
+ * nuvoloso» per un cielo che ne ha il 39% di copertura) e dal 13 ott 2026 il «poco
+ * nuvoloso» (lo stesso sole, la nuvola al 78%), che ha preso il posto di `partly-cloudy`
+ * perche' fra i due disegni la scala saltava, e con lui gli acquazzoni: lo stesso cielo
+ * con le gocce o i fiocchi di Meteocons sotto la nuvola. Il perche' per esteso, con le
+ * misure, sta in testa allo strumento.
  */
 internal object ComposedIcons {
 '''
@@ -571,7 +839,7 @@ def kotlin_file() -> str:
     def res(prefix, name):
         return f"R.drawable.{prefix}{name.replace('-', '_')}"
 
-    names = list(COMPOSED)
+    names = [f"{r['name']}-{part}" for r in RECIPES for part in ("day", "night")]
     body = [KOTLIN_HEAD]
     for title, comment, prefix in (
         ("lineDarkOf", "line, fondo scuro.", "mc3n_"),
@@ -600,7 +868,22 @@ def kotlin_file() -> str:
     body.append("    @DrawableRes")
     body.append("    val mostlyClearDay: Int = R.drawable.mc3_sun_one_cloud_day" + NL)
     body.append("    @DrawableRes")
-    body.append("    val mostlyClearNight: Int = R.drawable.mc3_sun_one_cloud_night")
+    body.append("    val mostlyClearNight: Int = R.drawable.mc3_sun_one_cloud_night" + NL)
+    body.append("    /** Il disegno del «poco nuvoloso», di giorno e di notte. */")
+    body.append("    @DrawableRes")
+    body.append("    val partlyCloudyDay: Int = R.drawable.mc3_sun_half_cloud_day" + NL)
+    body.append("    @DrawableRes")
+    body.append("    val partlyCloudyNight: Int = R.drawable.mc3_sun_half_cloud_night" + NL)
+    body.append("    /** Gli acquazzoni di pioggia, di giorno e di notte. */")
+    body.append("    @DrawableRes")
+    body.append("    val showersDay: Int = R.drawable.mc3_sun_half_cloud_rain_day" + NL)
+    body.append("    @DrawableRes")
+    body.append("    val showersNight: Int = R.drawable.mc3_sun_half_cloud_rain_night" + NL)
+    body.append("    /** Gli acquazzoni di neve, di giorno e di notte. */")
+    body.append("    @DrawableRes")
+    body.append("    val snowShowersDay: Int = R.drawable.mc3_sun_half_cloud_snow_day" + NL)
+    body.append("    @DrawableRes")
+    body.append("    val snowShowersNight: Int = R.drawable.mc3_sun_half_cloud_snow_night")
     body.append("}")
     return NL.join(body) + NL
 
@@ -624,34 +907,58 @@ def check_sources():
         for night in (False, True):
             if abs(sun_of(prefix, night)["scale"] - sun_of("mc3_", night)["scale"]) > 1e-6:
                 problems.append(f"{prefix}clear_* porta una scala diversa da mc3_clear_*")
+    # le gocce cadono dalla nuvola di `cloudy`: la nuvola della loro sorgente deve essere
+    # quella, alle stesse coordinate, o qui cadrebbero da un'altra parte
+    global FALL
+    for fall in FALLS:
+        FALL = fall
+        for prefix in ("mc3f_", "mc3fn_"):
+            for night in (False, True):
+                if fall_cloud(prefix, night) != cloud_of(prefix)[0]:
+                    problems.append(f"{fall_stem(prefix, night)}: la nuvola non e' piu' la "
+                                    f"silhouette di cloudy")
+    FALL = None
+    floor = floor_segment(cloud_of("mc3_")[0])
+    if floor is None:
+        problems.append("la silhouette di cloudy non ha piu' un pavimento dritto")
+    else:
+        start, segs, _ = paths.parse_segments(cloud_of("mc3_")[0])[floor[0]]
+        a = start if floor[1] == 0 else segs[floor[1] - 1][-1]
+        b = segs[floor[1]][1]
+        if abs((a[0] + b[0]) / 2 - FLOOR[0]) > 1e-3 or abs(a[1] - FLOOR[1]) > 1e-3:
+            problems.append(f"il pavimento di cloudy e' da {a} a {b}, non intorno a {FLOOR}")
     return problems
 
 
 def report() -> str:
     lines = []
-    gmin, gmed, gmax, points = gap_report()
-    lines.append(f"aria sole-nuvola, dove il sole arriva: {gmin:.2f} / {gmed:.2f} / "
-                 f"{gmax:.2f} (min, mediana, max su {points} punti); "
-                 f"Meteocons ne lascia 2,48 in partly-cloudy")
-    for i, ray in enumerate(ray_report(), start=1):
-        if ray["kept"] > 0.99:
-            state = "intero"
-        elif ray["kept"] < 0.01:
-            state = "dietro la nuvola"
-        else:
-            state = f"tagliato, ne resta il {ray['kept'] * 100:.0f}% largo {ray['width']:.2f}"
-        lines.append(f"raggio {i} ({ray['centre'][0]:.0f},{ray['centre'][1]:.0f}): {state}")
-    for night in (False, True):
-        b = ink_box(night=night)
-        w, h = b[2] - b[0], b[3] - b[1]
-        lines.append(f"inchiostro {'notte ' if night else 'giorno'}: "
-                     f"{w:.1f} x {h:.1f}, media geometrica "
-                     f"{math.sqrt(w * h) / 128:.3f} della scatola (la famiglia sta a 0,690)")
-    silhouette, _ = cloud_of("mc3_")
-    b = bbox(transformed(silhouette, cloud_matrix()))
-    lines.append(f"nuvola: larga {b[2] - b[0] + CLOUD_STROKE:.1f} con il contorno, "
-                 f"il {(b[2] - b[0] + CLOUD_STROKE) / 99.2 * 100:.0f}% di quella del "
-                 f"poco nuvoloso")
+    for recipe in RECIPES:
+        use(recipe, night=False)
+        lines.append(f"== {recipe['name']} (codice {recipe['wmo']})")
+        gmin, gmed, gmax, points = gap_report()
+        lines.append(f"aria sole-nuvola, dove il sole arriva: {gmin:.2f} / {gmed:.2f} / "
+                     f"{gmax:.2f} (min, mediana, max su {points} punti); "
+                     f"Meteocons ne lascia 2,48 in partly-cloudy")
+        for i, ray in enumerate(ray_report(), start=1):
+            if ray["kept"] > 0.99:
+                state = "intero"
+            elif ray["kept"] < 0.01:
+                state = "dietro la nuvola"
+            else:
+                state = f"tagliato, ne resta il {ray['kept'] * 100:.0f}% largo {ray['width']:.2f}"
+            lines.append(f"raggio {i} ({ray['centre'][0]:.0f},{ray['centre'][1]:.0f}): {state}")
+        silhouette, _ = cloud_of("mc3_")
+        b = bbox(transformed(silhouette, cloud_matrix()))
+        lines.append(f"nuvola: larga {b[2] - b[0] + CLOUD_STROKE:.1f} con il contorno, "
+                     f"il {(b[2] - b[0] + CLOUD_STROKE) / 99.2 * 100:.0f}% di quella del "
+                     f"poco nuvoloso di Meteocons")
+        for night in (False, True):
+            use(recipe, night)
+            b = ink_box(night=night)
+            w, h = b[2] - b[0], b[3] - b[1]
+            lines.append(f"inchiostro {'notte ' if night else 'giorno'}: "
+                         f"{w:.1f} x {h:.1f}, media geometrica "
+                         f"{math.sqrt(w * h) / 128:.3f} della scatola (la famiglia sta a 0,690)")
     return NL.join(lines)
 
 
@@ -661,8 +968,78 @@ def slivers() -> list[str]:
     for i, ray in enumerate(ray_report(), start=1):
         if 0.02 < ray["kept"] < 0.99 and ray["width"] < 0.6 * 3.68:
             out.append(f"il raggio {i} resta largo {ray['width']:.2f} invece di 3,68: "
-                       f"il buco lo taglia per il lungo, sposta CLOUD_CENTRE")
+                       f"il buco lo taglia per il lungo, sposta il centro della nuvola")
     return out
+
+
+def tips(prefix="mc3f_") -> list[str]:
+    """Una punta di raggio rimasta nell'aria fra il buco e la nuvola (13 ott 2026).
+
+    [slivers] guarda i raggi a passi di un quarto d'unita', e una punta piu' piccola gli
+    sfugge: il «quasi sereno» ne lasciava una nello stile pieno, un puntino giallo accanto
+    alla nuvoletta che a 160 dp si vedeva. Qui si guarda a un decimo d'unita', e un raggio
+    di cui resta meno del 3% e' una punta, non un raggio: o si vede, o non c'e'.
+    """
+    out = []
+    for i, ray in enumerate(ray_report(prefix, step=0.1), start=1):
+        if 0 < ray["kept"] < 0.03:
+            out.append(f"del raggio {i} resta una punta ({ray['kept'] * 100:.1f}%) nell'aria "
+                       f"intorno alla nuvola: sposta il centro della nuvola")
+    return out
+
+
+def moon_fragments(step=0.5) -> list[str]:
+    """Di notte, i pezzi della falce che restano fuori dalla nuvola: deve essere uno solo.
+
+    Una punta della falce che spunta dall'altra parte della nuvola, staccata dal resto, e'
+    la scheggia della notte (13 ott 2026: la punta bassa, accanto al «poco nuvoloso»). Si
+    guarda il tratto dello stile `line`, il piu' sottile: dove resta intero lui, resta
+    intero anche il disegno pieno.
+    """
+    sun = sun_of("mc3_", night=True)
+    m = matrix(sun["scale"], 0, 0)
+    outline = [p for sub in raster.flatten(transformed(sun["moon"]["pathData"], m)) for p in sub]
+    half = float(sun["moon"].get("strokeWidth", 4)) * sun["scale"] / 2
+    hole = raster.flatten(hole_path())
+    segs = list(zip(outline, outline[1:]))
+
+    def on_stroke(x, y):
+        for (ax, ay), (bx, by) in segs:
+            dx, dy = bx - ax, by - ay
+            t = max(0.0, min(1.0, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy or 1)))
+            if math.hypot(x - ax - t * dx, y - ay - t * dy) <= half:
+                return True
+        return False
+
+    x0, y0, x1, y1 = bbox(transformed(sun["moon"]["pathData"], m))
+    cells = set()
+    i = 0
+    while x0 - half + i * step <= x1 + half:
+        j = 0
+        while y0 - half + j * step <= y1 + half:
+            x, y = x0 - half + i * step, y0 - half + j * step
+            if on_stroke(x, y) and raster.winding(x, y, hole) == 0:
+                cells.add((i, j))
+            j += 1
+        i += 1
+    pieces = 0
+    seen = set()
+    for c in cells:
+        if c in seen:
+            continue
+        pieces += 1
+        stack = [c]
+        seen.add(c)
+        while stack:
+            a, b = stack.pop()
+            for n in ((a + 1, b), (a - 1, b), (a, b + 1), (a, b - 1)):
+                if n in cells and n not in seen:
+                    seen.add(n)
+                    stack.append(n)
+    if pieces > 1:
+        return [f"di notte la falce resta in {pieces} pezzi fuori dalla nuvola: sposta il "
+                f"centro di notte"]
+    return []
 
 
 def main() -> None:
@@ -671,19 +1048,28 @@ def main() -> None:
                     help="verifica e misura senza scrivere niente")
     args = ap.parse_args()
 
-    problems = check_sources() + slivers()
+    problems = check_sources()
+    for recipe in RECIPES:
+        use(recipe, night=False)
+        problems += [f"{recipe['name']}: {p}" for p in slivers() + tips()]
+        problems += [f"{recipe['name']}: {p}" for p in fall_room()]
+        use(recipe, night=True)
+        problems += [f"{recipe['name']}: {p}" for p in moon_fragments() + fall_room(night=True)]
     if problems:
         sys.exit("la composizione non si scrive:" + NL + NL.join(f"  - {p}" for p in problems))
 
     written = []
-    for still, moving, source, face, ground in SETS:
-        for night, name in ((False, "sun_one_cloud_day"), (True, "sun_one_cloud_night")):
-            files = [(f"{still}{name}.xml", still_xml(source, face, night)),
-                     (f"{moving}{name}.xml", animated_xml(source, face, night))]
-            for filename, text in files:
-                if not args.controlla:
-                    (DRAWABLE / filename).write_text(text, encoding="utf8")
-                written.append(filename)
+    for recipe in RECIPES:
+        for still, moving, source, face, ground in SETS:
+            for night in (False, True):
+                use(recipe, night)
+                name = file_stem(recipe, night)
+                files = [(f"{still}{name}.xml", still_xml(source, face, night)),
+                         (f"{moving}{name}.xml", animated_xml(source, face, night))]
+                for filename, text in files:
+                    if not args.controlla:
+                        (DRAWABLE / filename).write_text(text, encoding="utf8")
+                    written.append(filename)
     if not args.controlla:
         KOTLIN.write_text(kotlin_file(), encoding="utf8")
 

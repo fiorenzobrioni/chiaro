@@ -78,7 +78,7 @@ class SkyNotifierTest {
     @Config(qualifiers = "it")
     fun `everything localizes, the verdict word and its evidence included`() {
         post()
-        assertEquals("Ora dorata, sera", title())
+        assertEquals("Ora d'oro, sera", title())
         val text = collapsed()
         assertTrue(text, text.startsWith("Tra 30 minuti, alle "))
         assertTrue(text, text.endsWith(" · Bello, nuvole 8%"))

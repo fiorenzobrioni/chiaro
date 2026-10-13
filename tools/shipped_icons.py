@@ -21,22 +21,26 @@ gira per sempre e' decorazione.
 #: I cieli che `ChiaroIcons.conditionLineRes` puo' restituire, i marchi delle schede, del
 #: Cielo e dell'agenda: tutto quello che oggi arriva su uno schermo.
 #:
-#: **Non tutto quel che arriva a uno schermo e' qui**: `sun-one-cloud-day` e `-night` non
-#: sono disegni di Meteocons ma composizioni di questo repo (`tools/compose_sun_cloud.py`),
-#: e hanno la loro lista li'. Questa resta la lista di **cosa importare**, e un nome che
+#: **Non tutto quel che arriva a uno schermo e' qui**: `sun-one-cloud-*` e (dal 13 ott 2026)
+#: `sun-half-cloud-*` (con gli acquazzoni `sun-half-cloud-rain-*` e `-snow-*`) non sono
+#: disegni di Meteocons ma composizioni di questo repo (`tools/compose_sun_cloud.py`), e
+#: hanno la loro lista li'. `partly-cloudy-day/-night` e `partly-cloudy-*-rain/-snow`
+#: restano qui anche se nessuna schermata li nomina piu': lo strumento ne legge la maschera,
+#: le gocce e i fiocchi. Questa resta la lista di **cosa importare**, e un nome che
 #: non esiste a monte la farebbe fallire.
 SHIPPED = [
     "smoke",
     "clear-day", "clear-night",
-    "partly-cloudy-day", "partly-cloudy-night", "overcast", "cloudy", "fog-day",
-    "fog-night", "overcast-drizzle", "overcast-rain", "overcast-sleet",
-    "overcast-snow", "partly-cloudy-day-rain", "partly-cloudy-night-rain",
-    "partly-cloudy-day-snow", "partly-cloudy-night-snow", "extreme-rain",
-    "thunderstorms-day", "thunderstorms-night",
-    # il temporale con la sua pioggia (25 set 2026): il motore degli stati separa il 95
-    # che piove nell'ora da quello su un'ora asciutta («Temporali possibili»), e il
-    # disegno lo dice; il secondo tiene il fulmine senza gocce qui sopra
-    "thunderstorms-day-rain", "thunderstorms-night-rain",
+    "partly-cloudy-day", "partly-cloudy-night", "cloudy", "fog-day",
+    "fog-night", "partly-cloudy-day-rain", "partly-cloudy-night-rain",
+    "partly-cloudy-day-snow", "partly-cloudy-night-snow",
+    # una nuvola sola sotto quel che cade (revisione delle icone, 13 ott 2026): `overcast-*`
+    # porta la seconda nuvola scura che sporge in alto a destra, la stessa che a misura di
+    # striscia si leggeva come una falce e che il codice 3 ha lasciato il 12 ott. La
+    # pioggia, la pioggerella, la neve e la neve mista prendono il disegno a nuvola sola;
+    # il temporale quello senza lo spicchio di sole dietro una nuvola piena, il disegno che
+    # il codice 2 e gli acquazzoni hanno lasciato lo stesso giorno
+    "drizzle", "rain", "sleet", "snow", "thunderstorms", "thunderstorms-rain",
     "not-available", "wind", "humidity", "uv-index",
     "thermometer", "barometer", "raindrops", "mist", "snowflake", "smoke-particles",
     "compass", "pollen", "sunrise", "sunset", "moonrise", "moonset", "horizon",
@@ -63,6 +67,14 @@ SHIPPED = [
 #: barometro, la scala Beaufort, i momenti del giorno, i tipi di allerta della Fase 12.
 #: Spostarne una in SHIPPED e' la meta' del lavoro che serve a usarla.
 PLANNED = [
+    # le nuvole doppie e il temporale con lo spicchio di sole, spediti fino al 13 ott 2026:
+    # la revisione delle icone ha portato la pioggia, la neve e il temporale sotto la
+    # nuvola sola di `cloudy` (vedi SHIPPED). `overcast` era gia' fermo dal 12 ott. Il
+    # temporale con la sua pioggia e quello su un'ora asciutta («Temporali possibili»,
+    # 25 set 2026) restano due disegni: `thunderstorms-rain` e `thunderstorms`
+    "overcast", "overcast-drizzle", "overcast-rain", "overcast-sleet", "overcast-snow",
+    "extreme-rain", "thunderstorms-day", "thunderstorms-night", "thunderstorms-day-rain",
+    "thunderstorms-night-rain",
     # la grandine: disegnata per 96/99 fino al 24 set 2026, quando la revisione del
     # motore ha letto che fuori dalla famiglia ICON Open-Meteo scrive 96 per «temporale
     # forte» e non produce mai 99 — nessuno prevede grandine, e il disegno la
@@ -96,4 +108,5 @@ PLANNED = [
 #: ed e' la quantita' di movimento giusta per «non lo sappiamo».
 ANIMATED = {n for n in SHIPPED
             if n.startswith(("clear-", "mostly-clear-", "partly-cloudy-", "overcast",
-                             "fog-", "thunderstorms-", "extreme-", "cloudy"))}
+                             "fog-", "thunderstorms", "extreme-", "cloudy"))
+            or n in ("drizzle", "rain", "sleet", "snow")}

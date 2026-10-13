@@ -753,17 +753,51 @@ probabilities to whole percent; wind to whole units; distances, rain (mm) and sn
 one decimal below 10, whole above.
 
 **The widgets' own scale** is not this one and cannot be: a home-screen card is drawn by
-`RemoteViews` at whatever size the launcher granted, so its sizes are arithmetic on the
-grant rather than named roles (`WidgetUi.kt`, and a `*WidgetLayout.kt` per card). Four of
+`RemoteViews` at whatever size the launcher granted, so its layouts are arithmetic on the
+grant (`WidgetUi.kt`, and a `*WidgetLayout.kt` per card). **Its sizes are six steps**
+(`WidgetType.kt`, widget review of 13 ott 2026), each a role, and one role is one size on
+every card:
+
+| Step | sp | Role |
+|---|---|---|
+| Caption | 11 | read last: the stale marker, a plot's hour ticks, a strip's rain, a day's low |
+| Label | 13 | a list's row and a strip's cell: an agenda line, an hour and its figure (the figure Medium), every chip's word, the line under a hero sentence |
+| Body | 16 | the second thing read: the day's sentence, the place, a moment's name, the day's range |
+| Title | 22 | the figure of a card whose hero is the drawing: the arc's one-row and one-cell number |
+| Display | 30 | a hero wider than a temperature: the Sky card's clock, and the arc's number heading a panel or a two-cell card |
+| Hero | 34+ | the current temperature on the weather cards; the tall Now card and the text card grow it with the grant |
+
+**The card's corner is the launcher's** (`system_app_widget_background_radius`, 13 ott 2026,
+from a fixed 24 dp, on the family's three apps at once): 24 dp on stock Android 16, whatever a
+phone's own launcher gives its widgets elsewhere, so the card never wears a corner of its own
+beside them. The arc's plot, a box inside the card, takes the launcher's inner radius
+(`system_app_widget_inner_radius`, 16 dp on stock Android 16, from 8), and its paths are clipped
+to it. Chips stay pills: their corner is half their height by design, not a box's.
+
+**The arc's two night lines are two drawings** (13 ott 2026). The moon's path is round dots in
+the moon's own pale (`ArcPalette.MoonLit`; the card's quiet ink where the plot has no sky), the
+sun's course under the horizon long thin dashes in the quiet ink: in one ink and one rhythm the
+two curves crossing under the horizon read as one line.
+
+Before it each card had grown its own: twelve fixed sizes between 11 and 34, a place at 16
+on one card and 13 on the next, a moment's name at 15 and 13, a strip's hour at 12 over a
+week's day at 11, the verdict — the Sky card's answer — at 11, the smallest type on it.
+`WidgetTypeTest` fails on a widget size that is not a step, with no exception since the text
+card's sentence joined the scale too (18 to 16, committente, 13 ott 2026: see below). Display is the
+step the review did not plan: «7:55 PM» at 34 sp is 128 dp, and a four-cell card's words
+have 108 to 130 of it.
+
+Four of
 the five cards get their hierarchy from the weather glyph, which fills the height and is
 the first thing read; the text widget (19 set 2026) has no glyph and builds the same
-hierarchy out of type alone, in **four ranks that differ by size and weight and ink, never
-by one of the three on its own** (`TextWidgetLayout.kt`): the temperature at 26 to 64sp
-Bold in the strong ink, scaled to the grant the way the other cards scale their drawing;
-the day's sentence at 18sp Medium, two points over the household's 16 because there is no
-drawing left to carry the card at arm's length; the place, the day's range and the
-warning's word at 16sp, where ink and weight go on sorting inside the rank; the stale
-marker at 11sp. The order the budget spends in is the hierarchy written down: the number is
+hierarchy out of type alone, in **four ranks that never differ by one of size, weight and
+ink on its own** (`TextWidgetLayout.kt`): the temperature at 26 to 64sp Bold in the strong
+ink, scaled to the grant the way the other cards scale their drawing; the day's sentence at
+16sp Medium in the strong ink; the place, the day's range and the warning's word at 16sp
+Regular in the quiet one; the stale marker at 11sp. The sentence was 18, two points over
+the facts, until the committente put it on the widget scale (13 ott 2026): since then ranks
+2 and 3 share a size and sort by weight and ink, as the Now card's sentence and place always
+have, and the 2.64 dp a line gives back go to the number and the glyph. The order the budget spends in is the hierarchy written down: the number is
 reserved first and the footnotes are bought last, and a section that does not fit is not
 drawn.
 
@@ -1354,6 +1388,19 @@ alone** (§2.3), never a bare dot, never a number without the word. The glyph is
 hand of its own (calligraphic on One UI, seen 9 set 2026). The same four marks serve the
 chip, the Sky widget's round mark and the arc widget's agenda rows.
 
+**On a widget the verdict has two dresses, by role** (widget review, 13 ott 2026; it had
+three). The **hero** — the moment the Sky card is about — wears this chip: the mark, then
+the word at the widget scale's 13 sp Medium, on the verdict's container, with the number
+under it where the card is wide («Nuvole 19%», capitalized because there it is a line of its
+own); where it is narrow, the chip shrinks to its mark in the round container. Every **row**
+of a list — the Sky card's moments after the first, the arc's agenda — wears the bare mark in
+the verdict's ink for the card's ground, in a slot every row keeps so the clocks stand in a
+column. The Sky card's rows used to wear the word chip on a wide card and the round mark on a
+narrow one; the bare mark is the one the committente chose for a list row (9 set 2026: a pill
+in a list was «a punch in the eye»), so the two cards' lists now say a verdict the same way.
+The wide chip's column is measured in the card's language (`skyVerdictColumn`): «Presto per
+dirlo» with its mark is 124 dp, «Not sure yet» 102.
+
 **8.8 MomentCard** — a sky event: name in plain words ("Golden hour, evening"), time,
 verdict chip, the number behind it, a bell for a reminder. The dotted job id never appears.
 The leading glyph is the weather family in its own colors at the Sky's own rung (51dp
@@ -1539,8 +1586,8 @@ attribution the licence requires — "Dipartimento della Protezione Civile · bo
 dell'8 settembre, 15:19 · CC BY 4.0" — and the link to the bulletin itself.
 
 The **chip** is the same statement where a banner does not fit: `ic_warning` at 12dp in
-the level's ink plus the level's word at 11sp on the level's container, 10dp corner, 7/3
-padding — the `VerdictChip` grammar at the widget's size. Avvisi's card leads with it, and
+the level's ink plus the level's word at 13sp (the widget scale's Label, since 13 ott 2026;
+11 before) on the level's container, 10dp corner, 7/2 padding — the `VerdictChip` grammar at the widget's size. Avvisi's card leads with it, and
 the home-screen widgets carry it.
 
 **On a widget** the rule is what the card is ALREADY saying (`warningSlot`, one table for
@@ -1953,8 +2000,8 @@ a valid animator and only a person can say the rain falls downward.
    **The tools are five, and each one is a seam.** `tools/import_meteocons_v3.py` is the
    importer of record — re-running it IS the import; `tools/svg_paths.py` holds the path
    arithmetic and the mask conversion; `tools/reanchor.py` holds the colour rule;
-   `tools/shipped_icons.py` holds the list; `tools/compose_sun_cloud.py` composes the one
-   drawing the family does not have (below). The Kotlin lookup tables are **generated**
+   `tools/shipped_icons.py` holds the list; `tools/compose_sun_cloud.py` composes the two
+   drawings the family does not have the way this app needs them (below). The Kotlin lookup tables are **generated**
    into `ui/icons/MeteoconsSets.kt` and `ui/icons/ComposedIcons.kt`; what stays
    hand-written in `ChiaroIcons` is the policy — which weather code gets which drawing,
    which metric gets which mark — because that is the part a person argues about.
@@ -1978,12 +2025,53 @@ a valid animator and only a person can say the rain falls downward.
    `MeteoconsSets.kt` for the reason that makes the whole thing safe: the importer rewrites
    that one on every run and never touches this one.
 
+   **And a second one, for WMO 2** (13 ott 2026, after the widget review):
+   `sun-half-cloud-day` and `-night`, the same untouched sun with `cloudy` at **78%**, over
+   35% of the disc and the south and south-east rays, the six others whole. It replaced
+   Meteocons' `partly-cloudy` (a full cloud, a sliver of sun in the corner) because the four
+   skies did not climb in steps: from 1 to 2 the sun went from whole to a sliver and moved
+   corner, and at the strip's 32 dp the sliver was a few pixels, so 2 read as 3. Now the
+   cloud grows 0 → 49% → 78% → 100% and the sun goes whole → whole → a third hidden → gone.
+   Each recipe has its own day and night centre (`RECIPES`): at night the cloud sits at
+   (84, 80) instead of (77, 86), where the crescent's lower horn goes under it instead of
+   poking out beside it. The composer now refuses three kinds of splinter: a ray cut
+   lengthwise (since 12 set), a ray tip left in the air between hole and cloud (`tips`, at a
+   tenth of a unit: the «quasi sereno» left one in the flat style, and its cloud moved up
+   half a unit, from y 94.5 to 94, to lose it), and a piece of crescent cut off from the
+   rest (`moon_fragments`). `partly-cloudy-day/-night` and `partly-cloudy-*-rain/-snow`
+   stay shipped and unused on screen, because the composer reads its mask, its drops and
+   its flakes from them.
+
+   **The showers are WMO 2 with what falls** (same day): `sun-half-cloud-rain-*` (80, 81) and
+   `sun-half-cloud-snow-*` (85, 86) are code 2's sun and cloud with the drops or flakes of
+   Meteocons' `partly-cloudy-*-rain/-snow` hung from the cloud's floor (`FALLS`,
+   `fall_matrix`), copied to the letter with their animations. They used to take those
+   drawings whole, the sliver of sun code 2 had just left, so beside the ladder a shower read
+   as another sky; now 2 → 80 changes one thing, the drops. The fall is at **95%** of the
+   source, a drop 11.4 units long re-stroked at 4 like the cloud: shrunk with the cloud
+   (78%) it was 9 units, and at the strip's size a shower no longer read apart from code 2.
+   In the `line` style the cloud **loses its floor**, as Meteocons' own rain clouds do
+   (`floorless`), so the drops fall out of it instead of crossing a line. The animated fall
+   ends 0.7 units lower than the family's own rain (`rain`, 132.7 of a 128 box) at 100%,
+   which is why the step is 95%: the composer refuses a fall that leaves the box further
+   than the drawings the family already ships (`fall_room`).
+
    **Overcast (WMO 3) draws `cloudy`, one cloud** (review of 12 ott 2026). Meteocons'
    `overcast` puts a second, darker cloud over the first's shoulder, and at the strip's and
    the week's sizes that sliver read as a crescent: «partly cloudy at night» at 13:00, beside
-   the real night glyph at 04:00. The rain, drizzle, sleet and snow drawings keep their
-   double cloud, where the drops say what they are. `overcast` stays on the shipped list
-   only because its animated twins are generated with it; nothing names it on a screen.
+   the real night glyph at 04:00.
+
+   **And so does everything that falls from a closed sky** (icon review, 13 ott 2026, after
+   the showers): drizzle, rain, sleet and snow draw Meteocons' single-cloud `drizzle`,
+   `rain`, `sleet`, `snow`, not `overcast-*`, whose back cloud was the same crescent beside
+   the drops; heavy showers (82) draw `rain` instead of `extreme-rain` (the darker double
+   cloud), and the storms draw `thunderstorms-rain` and `thunderstorms` instead of
+   `thunderstorms-day/night-*`, the sliver of sun behind a full cloud that code 2 and the
+   showers had just left. A storm is a closed sky, so it has no night variant any more,
+   like rain. The family now has two skies and no third: a whole sun or moon with a cloud
+   that grows (1, 2, 80, 85), and one cloud with what falls from it (3 to 77, 82, 95). The
+   intensity is the word's and the amount's, as it already was for heavy rain. The
+   drawings no screen names left `SHIPPED` for `PLANNED`.
 
    **The repo carries the whole family; the APK carries the list.** All 519 drawings are
    converted into `res/drawable`; only the ones a screen actually names appear in the

@@ -123,7 +123,7 @@ private fun TimelineRowPreview() {
         ) {
             TimelineRow(
                 time = "17:04",
-                icon = ImageVector.vectorResource(R.drawable.mc3_overcast_rain),
+                icon = ImageVector.vectorResource(R.drawable.mc3_rain),
                 text = "Pioggia probabile (72%)"
             )
             TimelineRow(

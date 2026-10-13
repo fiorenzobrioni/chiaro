@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.widget
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -80,7 +81,7 @@ private fun TodayContent(
     val locale = glanceLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(context)
     val fontScale = fontScale(context)
-    val cells = todayStripCells(size.width)
+    val cells = todayStripCells(size.width, stripCellFor(widestStripLabel(context, is24h, locale)))
     val shown = content.strip.take(cells)
     val today = content.week.firstOrNull()?.forecast
     val range = today?.takeIf { model.look.showDayRange }
@@ -120,6 +121,17 @@ private fun TodayContent(
             rain = showRain
         )
     val withSentence = sentenceOn && todayIsWide(size, icon)
+    // The hours after the first row's, on a card tall enough for them under the days.
+    val more = if (
+        showDays && todayShowMoreHours(
+            size, fontScale, content.isStale,
+            sentence = sentenceOn, range = range != null, warning = warning.drawn, rain = showRain
+        )
+    ) {
+        content.strip.drop(cells).take(cells).takeIf { it.size == cells }.orEmpty()
+    } else {
+        emptyList()
+    }
     // The range wants the far edge too (committente, 4 set: «at the far edge, level with
     // the temperature»); with the sentence there it sits under it, and without a sentence
     // column to hold it — a card too narrow for one — it stays home rather than crowding
@@ -254,55 +266,10 @@ private fun TodayContent(
         // Half the gap on each side of every cell rather than the whole of it between
         // them, so the cells stay one grid: the strip's ink gives up 3 dp at each end,
         // which is the whole visible difference on a 340 dp card.
-        Row(modifier = GlanceModifier.fillMaxWidth().padding(start = StripStartInset)) {
-            shown.forEach { strip ->
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = GlanceModifier
-                        .padding(horizontal = StripCellSpacing / 2)
-                        .defaultWeight()
-                ) {
-                    Text(
-                        text = Formats.hourLabel(strip.hour.time, is24h, locale),
-                        style = secondaryStyle(palette, StripHourSp.sp),
-                        maxLines = 1
-                    )
-                    Spacer(modifier = GlanceModifier.height(StripInnerGap))
-                    Image(
-                        provider = ImageProvider(
-                            ChiaroIcons.conditionRes(
-                                strip.hour.condition.wmoCode,
-                                strip.night,
-                                model.iconStyle,
-                                palette.darkGround
-                            )
-                        ),
-                        contentDescription = null,
-                        modifier = GlanceModifier.size(StripIconSize)
-                    )
-                    Spacer(modifier = GlanceModifier.height(StripInnerGap))
-                    Text(
-                        text = Formats.temperature(
-                            strip.hour.tempC, model.settings.units.temperature, locale
-                        ),
-                        style = TextStyle(color = palette.primary, fontSize = StripTempSp.sp),
-                        maxLines = 1
-                    )
-                    // An hour with no forecast chance prints nothing under it rather
-                    // than a 0% it was never told (Fase 26).
-                    val pct = strip.hour.precipChancePct
-                    if (showRain && pct != null) {
-                        Text(
-                            text = Formats.percent(pct, locale),
-                            style = TextStyle(
-                                color = rainInk(pct, palette),
-                                fontSize = StripRainSp.sp
-                            ),
-                            maxLines = 1
-                        )
-                    }
-                }
-            }
+        HoursRow(shown, showRain, model, palette, is24h, locale)
+        if (more.isNotEmpty()) {
+            Spacer(modifier = GlanceModifier.height(MoreHoursGap))
+            HoursRow(more, showRain || more.any { (it.hour.precipChancePct ?: 0) > 0 }, model, palette, is24h, locale)
         }
         if (showDays) {
             Spacer(modifier = GlanceModifier.height(DaysGap))
@@ -383,7 +350,7 @@ private fun DaysRow(
                 Spacer(modifier = GlanceModifier.height(StripInnerGap))
                 Text(
                     text = Formats.temperature(forecast.highC, model.settings.units.temperature, locale),
-                    style = TextStyle(color = palette.primary, fontSize = StripTempSp.sp),
+                    style = TextStyle(color = palette.primary, fontSize = StripTempSp.sp, fontWeight = FontWeight.Medium),
                     maxLines = 1
                 )
                 Text(
@@ -395,3 +362,77 @@ private fun DaysRow(
         }
     }
 }
+
+/** One row of hours, the strip's grid: the hour, its drawing, its temperature and, when
+ * [showRain], its chance of rain. */
+@Composable
+private fun HoursRow(
+    shown: List<com.callbackdev.chiaro.ui.today.StripHour>,
+    showRain: Boolean,
+    model: WidgetModel,
+    palette: WidgetPalette,
+    is24h: Boolean,
+    locale: java.util.Locale
+) {
+    Row(modifier = GlanceModifier.fillMaxWidth().padding(start = StripStartInset)) {
+        shown.forEach { strip ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = GlanceModifier
+                    .padding(horizontal = StripCellSpacing / 2)
+                    .defaultWeight()
+            ) {
+                Text(
+                    text = Formats.hourClockLabel(strip.hour.time, is24h, locale),
+                    style = secondaryStyle(palette, StripHourSp.sp),
+                    maxLines = 1
+                )
+                Spacer(modifier = GlanceModifier.height(StripInnerGap))
+                Image(
+                    provider = ImageProvider(
+                        ChiaroIcons.conditionRes(
+                            strip.hour.condition.wmoCode,
+                            strip.night,
+                            model.iconStyle,
+                            palette.darkGround
+                        )
+                    ),
+                    contentDescription = null,
+                    modifier = GlanceModifier.size(StripIconSize)
+                )
+                Spacer(modifier = GlanceModifier.height(StripInnerGap))
+                Text(
+                    text = Formats.temperature(
+                        strip.hour.tempC, model.settings.units.temperature, locale
+                    ),
+                    style = TextStyle(color = palette.primary, fontSize = StripTempSp.sp, fontWeight = FontWeight.Medium),
+                    maxLines = 1
+                )
+                // An hour with no forecast chance prints nothing under it rather
+                // than a 0% it was never told (Fase 26).
+                val pct = strip.hour.precipChancePct
+                if (showRain && pct != null) {
+                    Text(
+                        text = Formats.percent(pct, locale),
+                        style = TextStyle(
+                            color = rainInk(pct, palette),
+                            fontSize = StripRainSp.sp
+                        ),
+                        maxLines = 1
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** The widest label the strip can print in this locale and clock: «22:00» or «12 PM». */
+private fun widestStripLabel(context: Context, is24h: Boolean, locale: java.util.Locale): Dp =
+    listOf(10, 12, 22).maxOf { hour ->
+        measureWidgetText(
+            context,
+            Formats.hourClockLabel(java.time.LocalDateTime.of(2026, 1, 1, hour, 0), is24h, locale),
+            StripHourSp,
+            medium = false
+        )
+    }

@@ -29,7 +29,7 @@
             android:layout_width="76dp"
             android:layout_height="76dp"
             android:importantForAccessibility="no"
-            android:src="@drawable/mc3n_partly_cloudy_day" />
+            android:src="@drawable/mc3n_sun_half_cloud_day" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -103,11 +103,11 @@
 
             <TextView
                 style="@style/WidgetPreviewHour"
-                android:text="14" />
+                android:text="14:00" />
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mc3n_partly_cloudy_day" />
+                android:src="@drawable/mc3n_sun_half_cloud_day" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"
@@ -130,11 +130,11 @@
 
             <TextView
                 style="@style/WidgetPreviewHour"
-                android:text="15" />
+                android:text="15:00" />
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mc3n_partly_cloudy_day" />
+                android:src="@drawable/mc3n_sun_half_cloud_day" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"
@@ -157,7 +157,7 @@
 
             <TextView
                 style="@style/WidgetPreviewHour"
-                android:text="16" />
+                android:text="16:00" />
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
@@ -184,11 +184,11 @@
 
             <TextView
                 style="@style/WidgetPreviewHour"
-                android:text="17" />
+                android:text="17:00" />
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mc3n_partly_cloudy_day_rain" />
+                android:src="@drawable/mc3n_sun_half_cloud_rain_day" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"
@@ -211,11 +211,11 @@
 
             <TextView
                 style="@style/WidgetPreviewHour"
-                android:text="18" />
+                android:text="18:00" />
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
-                android:src="@drawable/mc3n_overcast_rain" />
+                android:src="@drawable/mc3n_rain" />
 
             <TextView
                 style="@style/WidgetPreviewHourTemp"

@@ -234,10 +234,10 @@ class TextWidgetLayoutTest {
             twoByTwo, 1f,
             stale = false, sentence = true, warning = false, range = true
         )
-        // 189 − 28 − 21.12 (place) = 139.88; the number reserves 52.8, two lines of
-        // sentence take 47.52 and the range 21.12, and the 18.44 left over goes back to
-        // the number.
-        assertEquals(53.97f, plan.heroSp, 0.01f)
+        // 189 − 28 − 21.12 (place) = 139.88; the number reserves 52.8, two lines of the
+        // 16 sp sentence take 42.24 and the range 21.12, and what is left goes back to the
+        // number, which reaches its 56 sp ceiling (it was 53.97 under an 18 sp sentence).
+        assertEquals(56f, plan.heroSp, 0.01f)
         assertEquals(2, plan.sentenceLines)
         assertTrue(plan.showRange)
     }
@@ -252,7 +252,7 @@ class TextWidgetLayoutTest {
         assertFalse(plan.showRange)
         // The stale marker and the warning both cost the number, and it stays well over
         // its floor.
-        assertEquals(42.97f, plan.heroSp, 0.01f)
+        assertEquals(46.97f, plan.heroSp, 0.01f)
     }
 
     @Test
@@ -324,7 +324,7 @@ class TextWidgetLayoutTest {
         val plan = textStackPlan(
             threeByTwo, 1f, stale = false, sentence = true, warning = false, range = true
         )
-        assertEquals(71.24f, textStackIconSize(threeByTwo, 1f, plan.heroSp).value, 0.01f)
+        assertEquals(73.92f, textStackIconSize(threeByTwo, 1f, plan.heroSp).value, 0.01f)
         // Two cells: the number takes every leftover dp, so there is no air to take and
         // taking it from the number would be changing the text.
         val narrow = textStackPlan(
@@ -338,14 +338,15 @@ class TextWidgetLayoutTest {
         val plan = textPanelPlan(
             fourByTwo, 1f, stale = false, sentence = true, warning = false, range = true
         )
-        // 71.24 of band, less the 13.01 that lifts the range onto the number's baseline.
-        assertEquals(58.23f, textPanelIconSize(fourByTwo, 1f, plan).value, 0.01f)
+        // 76.52 of band under a 16 sp sentence (71.24 under the 18 it had), less the 13.01
+        // that lifts the range onto the number's baseline.
+        assertEquals(63.51f, textPanelIconSize(fourByTwo, 1f, plan).value, 0.01f)
         // A sentence measured to fit one line gives its reserved second line back.
         val short = textPanelPlan(
             fourByTwo, 1f, stale = false, sentence = true, warning = false, range = true,
             sentenceFitsOneLine = true
         )
-        assertEquals(81.99f, textPanelIconSize(fourByTwo, 1f, short).value, 0.01f)
+        assertEquals(84.63f, textPanelIconSize(fourByTwo, 1f, short).value, 0.01f)
         // The stale marker lives in the LEADING column, under the number, so it never
         // costs the glyph a dp — which is the reason the band is measured against the
         // trailing column and not against the taller of the two. On a stale card the
@@ -353,7 +354,7 @@ class TextWidgetLayoutTest {
         val stale = textPanelPlan(
             fourByTwo, 1f, stale = true, sentence = true, warning = false, range = true
         )
-        assertEquals(71.24f, textPanelIconSize(fourByTwo, 1f, stale).value, 0.01f)
+        assertEquals(76.52f, textPanelIconSize(fourByTwo, 1f, stale).value, 0.01f)
         // A warning's word is a line the card grew for a reason, and the drawing yields.
         val warned = textPanelPlan(
             fourByTwo, 1f, stale = false, sentence = true, warning = true, range = true
@@ -631,12 +632,13 @@ class TextWidgetLayoutTest {
         assertEquals(0f, textSizeForLine((-10).dp, 1f), 0.001f)
     }
 
-    /** The four ranks are separated by size as well as by weight and ink, and in that
-     * order: a rank that only differed by one of the three would not sort. */
+    /** The four ranks are ordered by size, and never by one axis alone: the hero is larger
+     * than everything under it; the sentence and the facts share the scale's 16 sp since
+     * 13 ott 2026 and sort by weight and ink, Medium and strong over Regular and quiet. */
     @Test
     fun `the ranks are ordered`() {
         assertTrue(TextHeroFloor > TextSentenceSp)
-        assertTrue(TextSentenceSp > TextFactSp)
+        assertTrue(TextSentenceSp >= TextFactSp)
         assertTrue(TextFactSp > TextStaleSp)
         assertTrue(TextHeroStackFloor in TextHeroFloor..TextHeroMax)
         assertTrue(TextHeroMax < TextHeroPanelMax)

@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
  * the hero's words when a stale marker takes their third line. Everything here is
  * arithmetic on dp so a table can pin it (`TodayWidgetLayoutTest`).
  */
-internal fun todayStripCells(width: Dp): Int =
-    ((width - WidgetCardPadding * 2 + StripCellSpacing) / (StripCellMin + StripCellSpacing))
+internal fun todayStripCells(width: Dp, cellMin: Dp = StripCellMin): Int =
+    ((width - WidgetCardPadding * 2 + StripCellSpacing) / (maxOf(cellMin, StripCellMin) + StripCellSpacing))
         .toInt()
         .coerceIn(StripCellsFloor, StripCellsCeiling)
 
@@ -153,6 +153,38 @@ internal fun todayShowDays(
     return room >= todayDaysHeight(fontScale)
 }
 
+/**
+ * **A second row of hours on the tallest card** (widget review, 13 ott 2026). At four by
+ * four the card held its hero, one row of hours and the days, and a third of it was air
+ * between the hero and the hours. The air now holds the hours after the first row's, from
+ * the strip the app already carries (the next 24): seven hours become fourteen, the same
+ * grid, and nothing on the card is drawn that the forecast did not say.
+ *
+ * Budgeted after everything else and with its rain line, so it never squeezes what was
+ * there: on the reference four-by-three it does not fit and the card is unchanged.
+ */
+internal fun todayShowMoreHours(
+    size: DpSize,
+    fontScale: Float,
+    stale: Boolean,
+    sentence: Boolean,
+    range: Boolean,
+    warning: Boolean,
+    rain: Boolean
+): Boolean {
+    val hero = maxOf(
+        todayHeroIconSize(size, fontScale, rain),
+        todayHeroTextHeight(fontScale, stale, sentence, range, warning)
+    )
+    val room = size.height - WidgetCardPaddingSnug - WidgetCardPadding - hero - StripGap -
+        todayStripHeight(fontScale, rain) - DaysGap - todayDaysHeight(fontScale) -
+        MoreHoursGap - todayStripHeight(fontScale, rain = true)
+    return room >= 0.dp
+}
+
+/** The air between the two rows of hours: the hours' own gap, because they are one list. */
+internal val MoreHoursGap = 8.dp
+
 /** The days' row: the day's name, the glyph, the high and the low, stacked like an hour. */
 internal fun todayDaysHeight(fontScale: Float): Dp =
     textLineHeight(StripHourSp, fontScale) + StripInnerGap + DaysIconSize + StripInnerGap +
@@ -207,12 +239,21 @@ internal val StripGap = 8.dp
  * afternoon. At the reference four-cell width this lands on seven cells.
  */
 internal val StripCellMin = 38.dp
+
+/**
+ * The cell an hour's label really needs: the widest clock time the strip can print,
+ * measured by the caller at the label's size and the reader's font scale, plus
+ * [RowFitSlack]. «13:00» (widget review, 13 ott 2026: a bare «13» over a row of days read
+ * as a date) is ~33 dp at 13 sp and fits the 38 dp floor at the default font size; at a
+ * larger one the strip shows an hour fewer rather than cutting «13:…».
+ */
+internal fun stripCellFor(labelWidth: Dp): Dp = labelWidth + RowFitSlack
 internal val StripCellSpacing = 6.dp
 internal const val StripCellsFloor = 4
 internal const val StripCellsCeiling = 7
 
 internal val StripIconSize = 32.dp
 internal val StripInnerGap = 2.dp
-internal const val StripHourSp = 12f
-internal const val StripTempSp = 14f
-internal const val StripRainSp = 11f
+internal const val StripHourSp = WidgetType.Label
+internal const val StripTempSp = WidgetType.Label
+internal const val StripRainSp = WidgetType.Caption

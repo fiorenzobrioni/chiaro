@@ -792,8 +792,13 @@ internal const val TextHeroStackFloor = 40f
 internal const val TextHeroMax = 56f
 
 /**
- * Rank 2, the day's sentence: 18 sp Medium in the strong ink, two points above the
- * household's 16. The other cards put the sentence beside a drawing, and the drawing is
+ * Rank 2, the day's sentence: **the scale's [WidgetType.Body], 16 sp, since 13 ott 2026**
+ * (committente, after the widget review: «mettila in scala»), Medium in the strong ink, over
+ * rank 3's 16 sp Regular in the quiet one. Ranks 2 and 3 now share a size and sort by weight
+ * and ink, which is exactly how the Now card has always set its sentence over its place; the
+ * hero above them still differs by all three. What follows is the size's history.
+ *
+ * It was 18 sp, two points above the household's 16. The other cards put the sentence beside a drawing, and the drawing is
  * what carries the card at arm's length; here the sentence IS the second thing to read, so
  * it takes the step the glyph's absence pays for.
  *
@@ -804,7 +809,7 @@ internal const val TextHeroMax = 56f
  * trailing column still holds «Pioggia gelata verso le 15:00» in two lines, which is the
  * measurement that stopped it going to 19.
  */
-internal const val TextSentenceSp = 18f
+internal const val TextSentenceSp = WidgetType.Body
 
 /**
  * Rank 3, the facts: the place, the day's high and low, the warning's word. **16 sp since
@@ -816,11 +821,11 @@ internal const val TextSentenceSp = 18f
  * Inside the rank the other two axes still do the sorting: the place is Regular in the
  * quiet ink, the figures Medium in the strong one, and the range carries its two marks.
  */
-internal const val TextFactSp = 16f
+internal const val TextFactSp = WidgetType.Body
 
 /** Rank 4, the footnote: the stale marker, at the household's own stale size and in the
  * freshness ink it wears on every other card. */
-internal const val TextStaleSp = 11f
+internal const val TextStaleSp = WidgetType.Caption
 
 /**
  * The hours «Più tardi» prints: from the first one at least [TextLaterLeadMinutes] ahead
@@ -851,7 +856,7 @@ internal const val TextLaterLeadMinutes = 90L
 
 /** The table's quiet columns, the time and the word: a step under the temperature beside
  * them, so the figure is what the eye lands on in every row. */
-internal const val TextLaterSp = 14f
+internal const val TextLaterSp = WidgetType.Label
 
 /** «00:00» at [TextLaterSp] with a gap after it, and «12:00 AM» for a 12-hour clock. */
 internal val TextLaterTimeColumn24 = 44.dp

@@ -15,6 +15,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+import kotlin.math.roundToInt
 
 /**
  * The stretch of time the arc spans, and where a moment falls in it. [fraction] is the
@@ -34,6 +35,9 @@ internal data class ArcWindow(val start: Instant, val end: Instant) {
 
 /** One forecast hour inside the window, with its place on the axis. */
 internal data class ArcHour(val hour: HourlyForecast, val at: Instant, val fraction: Float)
+
+/** The sky's cloud and rain chance at one moment, as the band paints them. */
+internal data class ArcWeather(val cloudPct: Int, val precipPct: Int)
 
 /**
  * One row of the agenda: the Today screen's own [TimelineItem], with its instant, whether
@@ -89,9 +93,20 @@ internal data class ArcSeries(
      * weather, not a moment the day turns on: the agenda keeps every kind, the hero takes
      * the first that has a job behind it, and falls back to whatever is ahead when
      * nothing of the light is.
+     *
+     * **A judged moment first, then the sun, then the moon** (widget review, 13 ott 2026).
+     * The card's header read «Moonrise at 18:35» over a golden hour one minute later that
+     * the reader follows and the Sky screen calls great: the header named the moment
+     * nobody asked about and left the verdict a row below. A verdict exists only for a
+     * moment the reader follows, so «the first one with a verdict» is «the next thing
+     * this reader is waiting for»; without one, the sun's moments outrank the moon's,
+     * because the card is the sun's path and the moon is the line drawn under it.
      */
     val nextLight: ArcEvent?
-        get() = events.firstOrNull { jobIdsFor(it.item.kind).isNotEmpty() } ?: events.firstOrNull()
+        get() = events.firstOrNull { it.verdict != null }
+            ?: events.firstOrNull { it.item.kind in SunKinds }
+            ?: events.firstOrNull { jobIdsFor(it.item.kind).isNotEmpty() }
+            ?: events.firstOrNull()
 
     /** The forecast hour starting exactly at [at], if the window has it. */
     fun hourAt(at: Instant): ArcHour? = hours.firstOrNull { it.at == at }
@@ -100,6 +115,42 @@ internal data class ArcSeries(
     fun hourCovering(at: Instant): ArcHour? = hours.lastOrNull { !it.at.isAfter(at) }?.takeIf {
         Duration.between(it.at, at) < Duration.ofHours(1)
     }
+
+    /**
+     * The cloud and the rain chance at [at] for the band, **joined between hours** (widget
+     * review, 13 ott 2026): each hour holds its value at its middle, and between two
+     * middles the band passes from one to the other. Painted hour by hour, the band
+     * changed in a step on every hour where the cover did, and at dawn and dusk those
+     * steps stood beside the light's own colours as stripes that read as dirt, not sky.
+     *
+     * Nothing is invented: the value at an hour's middle is the hour's, and between two
+     * hours the band says neither more nor less than they do. Outside the hours — the
+     * morning the report no longer has, past its horizon — there is no weather, as for
+     * [hourCovering]: null. Before the first hour's middle and after the last one's, the
+     * hour's own value holds; a gap between two hours is not bridged.
+     */
+    fun weatherAt(at: Instant): ArcWeather? {
+        val covering = hourCovering(at) ?: return null
+        val index = hours.indexOf(covering)
+        val middle = covering.at.plus(HalfHour)
+        val (from, to) = if (at.isBefore(middle)) {
+            hours.getOrNull(index - 1) to covering
+        } else {
+            covering to hours.getOrNull(index + 1)
+        }
+        if (from == null || to == null || Duration.between(from.at, to.at) != Duration.ofHours(1)) {
+            return covering.weather()
+        }
+        val t = Duration.between(from.at.plus(HalfHour), at).toMillis() / 3_600_000.0
+        val a = from.weather()
+        val b = to.weather()
+        return ArcWeather(
+            cloudPct = (a.cloudPct + (b.cloudPct - a.cloudPct) * t).roundToInt(),
+            precipPct = (a.precipPct + (b.precipPct - a.precipPct) * t).roundToInt()
+        )
+    }
+
+    private fun ArcHour.weather() = ArcWeather(hour.cloudCoverPct, hour.precipChancePct ?: 0)
 
     /**
      * The whole local hours inside the window whose hour-of-day is a multiple of
@@ -130,6 +181,14 @@ internal data class ArcSeries(
 
         /** The moon moves as slowly across the sky; every half hour is plenty. */
         const val MoonSamples = 49
+
+        /** The sun's own moments, which outrank the moon's in the header. */
+        val SunKinds = setOf(
+            TimelineKind.SUNRISE, TimelineKind.GOLDEN_MORNING_END, TimelineKind.GOLDEN_EVENING,
+            TimelineKind.SUNSET, TimelineKind.BLUE_EVENING, TimelineKind.DARK
+        )
+
+        private val HalfHour: Duration = Duration.ofMinutes(30)
 
         /** The agenda looks this far ahead, whatever the plot spans. */
         val AgendaReach: Duration = Duration.ofHours(24)

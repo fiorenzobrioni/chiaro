@@ -39,6 +39,36 @@ sections are a normal size and live here alone.
   hours, with the change in hPa; a steady barometer keeps its reading's meaning.
 - **Details**: an odd last tile takes the whole row, and the empty band between the sky and
   the next hours is gone.
+- **Widgets, one type scale.** The five home-screen widgets now print in the same six sizes,
+  so a place, a list row or a chip is the same size on every card. The verdict is larger, and
+  the Sky widget's chip carries its mark before the word, as in the app.
+- **The day's arc on a narrow card** prints its agenda on two lines, name over time, instead
+  of cutting the names short; its header names the next moment you follow before a moonrise.
+- **The hours ahead say "13:00"**, not "13", so they no longer read as dates over the row of
+  days.
+- **One name for the golden hour** in Italian («ora d'oro»), and the Sky widget prints the
+  moment's short name: its clock already says morning or evening.
+- **Three widgets instead of five.** «At a glance» shows the next hours and days when you make
+  it two rows tall, and «The day's arc» can show the moments you follow instead of the arc.
+  «The hours ahead» and «Sky moments» are no longer offered, but the ones already on your
+  home screen keep working.
+- **«Partly cloudy» looks like a step up from «mostly clear»**: the same sun with a bigger
+  cloud, instead of a different drawing; the four skies from clear to overcast now climb in
+  steps, and a stray speck next to the «mostly clear» cloud is gone.
+- **The full moon on the day's arc is a disc**, not an empty ring.
+- **«In words» on the same scale**: its sentence is the size of the facts under it, set apart by
+  weight, which gives the temperature a little more room.
+- **Widgets wear your launcher's corner**, and on the day's arc the moon's path is dotted, so
+  it no longer looks like the sun's course under the horizon.
+- **Showers look like the partly cloudy sky with rain**: the same sun and cloud, with drops or
+  flakes under it, instead of a different drawing.
+- **Rain, snow and storms fall from one cloud**, the overcast one: their drawings had a second,
+  darker cloud that read as a moon at small sizes, and the storms a sliver of sun.
+- **The day's arc paints one continuous sky**, without a step at every hour or stripes at dawn
+  and dusk; the hours already gone are faded like the rest of the past.
+- **Tall widgets carry more instead of empty space**: «At a glance» lists the next hours under
+  its temperature when it is narrow and tall, and shows twice the hours at four rows; the
+  moments you follow have the day's arc under them when the card has room.
 
 ## [1.1.0] - 2026-10-01
 

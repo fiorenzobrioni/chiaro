@@ -58,6 +58,7 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.theme.paletteFor
 import com.callbackdev.chiaro.widget.arc.ArcForm
 import com.callbackdev.chiaro.widget.arc.ArcSettings
+import com.callbackdev.chiaro.widget.arc.showsMoments
 import com.callbackdev.chiaro.widget.arc.ArcWidgetContent
 import com.callbackdev.chiaro.widget.arc.arcForm
 import kotlin.math.roundToInt
@@ -142,8 +143,14 @@ internal fun placedWidgetSize(context: Context, appWidgetId: Int): DpSize? {
  * the same functions the card lays itself out with, so the sentence and the card can never
  * describe two different forms.
  */
-internal fun formNote(kind: WidgetKind?, size: DpSize): Int = when (kind) {
-    WidgetKind.NOW -> when (nowLayout(size)) {
+internal fun formNote(kind: WidgetKind?, size: DpSize, arc: ArcSettings? = null): Int = when {
+    kind == WidgetKind.ARC && arc != null && showsMoments(arc, size) ->
+        if (skyIsTall(size)) R.string.moments_form_tall else formNote(WidgetKind.SKY, size)
+    else -> formNoteOf(kind, size)
+}
+
+private fun formNoteOf(kind: WidgetKind?, size: DpSize): Int = when (kind) {
+    WidgetKind.NOW -> if (nowShowsHours(size)) formNoteOf(WidgetKind.TODAY, size) else when (nowLayout(size)) {
         NowLayout.NARROW -> R.string.now_form_narrow
         NowLayout.WIDE -> R.string.now_form_wide
         NowLayout.TALL -> R.string.now_form_tall
@@ -232,7 +239,7 @@ internal fun WidgetPreviewSection(
         }
     }
     Text(
-        text = stringResource(formNote(kind, size)),
+        text = stringResource(formNote(kind, size, arc)),
         style = MaterialTheme.typography.bodyMedium,
         modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp)
     )

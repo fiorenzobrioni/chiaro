@@ -140,6 +140,23 @@ class ArcSeriesTest {
         assertNull(s.hourCovering(at(14, 40)))
     }
 
+    /** The band's weather is joined between hour middles (widget review, 13 ott 2026): an
+     * hour's own value at its middle, halfway between two hours halfway between their
+     * values, none in the morning the report no longer has. */
+    @Test
+    fun `the band's weather passes from one hour to the next without steps`() {
+        val now = at(15, 30)
+        // Fetched at 12:00: the 17:00 row and every later one say 70%, the rest 10%.
+        val s = ArcSeries.build(content(now, wetFrom = 5), emptyList(), milan.coordinates, now, ArcSettings())
+        assertNull(s.weatherAt(at(14, 40)))
+        assertEquals(ArcWeather(20, 10), s.weatherAt(at(15, 10)))
+        assertEquals(ArcWeather(20, 10), s.weatherAt(at(16, 30)))
+        assertEquals(ArcWeather(20, 40), s.weatherAt(at(17)))
+        assertEquals(ArcWeather(20, 25), s.weatherAt(at(16, 45)))
+        assertEquals(ArcWeather(20, 70), s.weatherAt(at(17, 30)))
+        assertEquals(ArcWeather(20, 70), s.weatherAt(at(23, 50)))
+    }
+
     @Test
     fun `the present sits where the window puts it`() {
         assertEquals(0.625f, series(at(15)).nowFraction, 0.0001f)
@@ -181,6 +198,35 @@ class ArcSeriesTest {
             ArcSettings(agendaSun = false, agendaMoon = false)
         )
         assertEquals(rainOnly.next, rainOnly.nextLight)
+    }
+
+    /**
+     * The header names what the reader is waiting for (widget review, 13 ott 2026): a
+     * moment with a verdict first, then the sun, and the moon only when nothing of the sun
+     * is ahead — «Moonrise at 18:35» stood over a golden hour the reader follows.
+     */
+    @Test
+    fun `the hero prefers a judged moment, then the sun, then the moon`() {
+        val now = at(15)
+        val base = series(now)
+        val t = LocalDateTime.of(date, LocalTime.of(18, 35))
+        fun event(kind: TimelineKind, minutes: Long, verdict: SkyVerdict? = null) = ArcEvent(
+            item = com.callbackdev.chiaro.ui.today.TimelineItem(t.plusMinutes(minutes), kind),
+            at = t.plusMinutes(minutes).atZone(zone).toInstant(),
+            tomorrow = false,
+            verdict = verdict
+        )
+        val pass = SkyVerdict(SkyVerdictKind.PASS, cloudPct = 10)
+        val moonrise = event(TimelineKind.MOONRISE, 0)
+        val golden = event(TimelineKind.GOLDEN_EVENING, 1)
+        val sunset = event(TimelineKind.SUNSET, 40, pass)
+        // The judged sunset wins over the moonrise and the golden hour before it.
+        assertEquals(sunset, base.copy(events = listOf(moonrise, golden, sunset)).nextLight)
+        // With nothing judged, the sun outranks the moon that comes a minute earlier.
+        val unjudged = sunset.copy(verdict = null)
+        assertEquals(golden, base.copy(events = listOf(moonrise, golden, unjudged)).nextLight)
+        // And the moon is the header when it is all the light there is.
+        assertEquals(moonrise, base.copy(events = listOf(moonrise)).nextLight)
     }
 
     @Test

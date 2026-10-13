@@ -25,6 +25,25 @@ import kotlin.math.roundToInt
  */
 object SkyText {
 
+    /**
+     * The name a home-screen card prints: [nameRes] without its «, morning» / «, evening»
+     * where the moment has a twin on the other side of the day. The card prints the
+     * moment's clock beside it, which already says which twin it is, and on a three-cell
+     * card the qualifier was what the ellipsis ate («Golden hour, eve…», widget review,
+     * 13 ott 2026). Everything else is its full name: a qualifier that is not a time of
+     * day («Venus, evening star») is part of what the moment is.
+     */
+    fun shortNameRes(jobId: String): Int = when (jobId) {
+        "golden_hour.am", "golden_hour.pm" -> R.string.sky_short_golden
+        "blue_hour.am", "blue_hour.pm" -> R.string.sky_short_blue
+        "twilight.civil.am", "twilight.civil.pm" -> R.string.sky_short_civil
+        "twilight.nautical.am", "twilight.nautical.pm" -> R.string.sky_short_nautical
+        "twilight.astronomical.am", "twilight.astronomical.pm" -> R.string.sky_short_astronomical
+        "earthshine.am", "earthshine.pm" -> R.string.sky_short_earthshine
+        "zodiacal.am", "zodiacal.pm" -> R.string.sky_short_zodiacal
+        else -> nameRes(jobId)
+    }
+
     /** The moment's name. Unknown ids fail loudly in debug — a job the catalog
      * knows must have words before it ships. */
     fun nameRes(jobId: String): Int = when (jobId) {

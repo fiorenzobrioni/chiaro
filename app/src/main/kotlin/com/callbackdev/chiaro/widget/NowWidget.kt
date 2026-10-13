@@ -20,8 +20,10 @@ import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
+import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
+import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.layout.width
@@ -319,6 +321,55 @@ private fun TallContent(
     }
 }
 
+/** One hour of the narrow tall card's list: the hour, its drawing, its temperature. The
+ * strip's three things on a line, in the strip's sizes, the temperature against the words'
+ * edge like the hero's words. */
+@Composable
+private fun HourListRow(
+    strip: com.callbackdev.chiaro.ui.today.StripHour,
+    model: WidgetModel,
+    palette: WidgetPalette
+) {
+    val context = LocalContext.current
+    val locale = glanceLocale()
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .height(HourListRowHeight)
+            .padding(end = WidgetCardPadding - WidgetCardPaddingLeading)
+    ) {
+        Text(
+            text = Formats.hourClockLabel(
+                strip.hour.time, android.text.format.DateFormat.is24HourFormat(context), locale
+            ),
+            style = secondaryStyle(palette, StripHourSp.sp),
+            maxLines = 1,
+            modifier = GlanceModifier.defaultWeight()
+        )
+        Image(
+            provider = ImageProvider(
+                ChiaroIcons.conditionRes(
+                    strip.hour.condition.wmoCode, strip.night, model.iconStyle, palette.darkGround
+                )
+            ),
+            contentDescription = null,
+            modifier = GlanceModifier.size(HourListIconSize)
+        )
+        Text(
+            text = Formats.temperature(strip.hour.tempC, model.settings.units.temperature, locale),
+            style = TextStyle(
+                color = palette.primary,
+                fontSize = StripTempSp.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.End
+            ),
+            maxLines = 1,
+            modifier = GlanceModifier.width(HourListTempWidth)
+        )
+    }
+}
+
 @Composable
 private fun HeroIcon(
     content: TodayUiState.Content,
@@ -424,6 +475,14 @@ internal fun NowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
     val context = LocalContext.current
     val content = model.content
     val size = LocalSize.current
+    // From three cells by two rows the card is the hours' card (13 ott 2026, when «Le
+    // prossime ore» joined this one and left the picker): the same hero row, and under it
+    // the next hours and, taller, the next days. The tall form this card drew there had a
+    // glyph in one corner, three lines in the other and the middle empty.
+    if (nowShowsHours(size)) {
+        TodayWidgetContent(model, schemes, skyBitmap)
+        return
+    }
     val layout = if (content == null) null else nowLayout(size)
     val mirrored = layout != NowLayout.TALL &&
         model.look.arrangement == WidgetArrangement.ICON_END
@@ -460,20 +519,44 @@ internal fun NowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
         when {
             content == null && model.city == null -> NoPlaceContent(palette)
             content == null -> NoDataContent(palette)
-            layout == NowLayout.TALL -> TallContent(
-                content, model, palette, size,
-                withSentence = sentenceOn,
-                // A tall card always HAS a sentence slot, so orange and red take
-                // it whenever the reader turned the sentence off; a line of its
-                // own is the budget's answer, not the form's.
-                warning = warningSlot(
-                    level = level,
-                    enabled = model.look.showWarning,
-                    headlineShown = sentenceOn,
-                    sentenceSlot = true,
-                    ownRow = nowTallHasWarningRow(size, scale, stale, sentenceOn)
-                )
-            )
+            layout == NowLayout.TALL -> {
+                // A narrow card taller than the reference two-by-two (widget review,
+                // 13 ott 2026): the two-by-two's own hero at its own height, and under it
+                // the next hours, one per line. It used to be that hero stretched, a glyph
+                // in one corner and the words in the other with half the card empty.
+                val rows = nowTallHourRows(size, scale, content.strip.size)
+                val hero = if (rows > 0) DpSize(size.width, NowTallHeroCard) else size
+                val heroContent: @Composable () -> Unit = {
+                    TallContent(
+                        content, model, palette, hero,
+                        withSentence = sentenceOn,
+                        // A tall card always HAS a sentence slot, so orange and red take
+                        // it whenever the reader turned the sentence off; a line of its
+                        // own is the budget's answer, not the form's.
+                        warning = warningSlot(
+                            level = level,
+                            enabled = model.look.showWarning,
+                            headlineShown = sentenceOn,
+                            sentenceSlot = true,
+                            ownRow = nowTallHasWarningRow(hero, scale, stale, sentenceOn)
+                        )
+                    )
+                }
+                if (rows == 0) {
+                    heroContent()
+                } else {
+                    // Ten children at most: the hero, the gap and eight hours.
+                    Column(modifier = GlanceModifier.fillMaxSize()) {
+                        Box(
+                            modifier = GlanceModifier
+                                .fillMaxWidth()
+                                .height(NowTallHeroCard - WidgetCardPaddingSnug - WidgetCardPadding)
+                        ) { heroContent() }
+                        Spacer(modifier = GlanceModifier.height(HourListGap))
+                        content.strip.take(rows).forEach { HourListRow(it, model, palette) }
+                    }
+                }
+            }
             mirrored -> {
                 val fits = nowMirroredSentenceWidth(size) >= SentenceColumnMin
                 MirroredRowContent(

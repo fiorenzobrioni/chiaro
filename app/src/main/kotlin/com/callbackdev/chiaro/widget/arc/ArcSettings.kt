@@ -39,6 +39,15 @@ enum class ArcDialFigure { TEMPERATURE, NEXT_TIME }
 enum class ArcDensity { COMFORTABLE, COMPACT }
 
 /**
+ * What the card is (widget review, 13 ott 2026, when «Momenti del cielo» joined this card
+ * and left the picker): [ARC], the day's arc with its agenda, or [MOMENTS], the moments the
+ * reader follows on the Sky screen and their verdicts, as the Sky card drew them — eclipses,
+ * meteor peaks and planets days ahead included, which the arc's agenda of the next
+ * twenty-four hours never carries. One card in the picker, two answers on its settings.
+ */
+enum class ArcDrawing { ARC, MOMENTS }
+
+/**
  * One arc widget's own settings — everything the card carries beyond the look every
  * widget shares (background, opacity, icon family: [com.callbackdev.chiaro.widget.WidgetLook])
  * and the place it watches. Every field has a default a fresh widget draws with, and
@@ -78,7 +87,8 @@ data class ArcSettings(
      * costs nothing, and on the other kind it is the line worth keeping.
      */
     val warning: Boolean = true,
-    val density: ArcDensity = ArcDensity.COMFORTABLE
+    val density: ArcDensity = ArcDensity.COMFORTABLE,
+    val drawing: ArcDrawing = ArcDrawing.ARC
 ) {
     /** The factor every text size on the card is multiplied by. */
     val textScale: Float get() = if (density == ArcDensity.COMPACT) CompactTextScale else 1f
@@ -116,11 +126,12 @@ object ArcSettingsCodec {
     const val WEEK = "week"
     const val WARNING = "warning"
     const val DENSITY = "density"
+    const val DRAWING = "drawing"
 
     val keys: List<String> = listOf(
         SPAN, GROUND, SUN_PATH, MOON, RAIN, HOUR_LABELS, TEMPERATURES, NOW_MARKER, FADE_PAST,
         HERO, DIAL_FIGURE, AGENDA_SUN, AGENDA_MOON, AGENDA_RAIN, AGENDA_VERDICTS, WEEK,
-        WARNING, DENSITY
+        WARNING, DENSITY, DRAWING
     )
 
     fun encode(settings: ArcSettings): Map<String, String> = mapOf(
@@ -141,7 +152,8 @@ object ArcSettingsCodec {
         AGENDA_VERDICTS to settings.agendaVerdicts.toString(),
         WEEK to settings.week.toString(),
         WARNING to settings.warning.toString(),
-        DENSITY to settings.density.name
+        DENSITY to settings.density.name,
+        DRAWING to settings.drawing.name
     )
 
     fun decode(values: Map<String, String>): ArcSettings {
@@ -168,7 +180,8 @@ object ArcSettingsCodec {
             agendaVerdicts = flag(AGENDA_VERDICTS, defaults.agendaVerdicts),
             week = flag(WEEK, defaults.week),
             warning = flag(WARNING, defaults.warning),
-            density = named(DENSITY, defaults.density, ArcDensity.entries)
+            density = named(DENSITY, defaults.density, ArcDensity.entries),
+            drawing = named(DRAWING, defaults.drawing, ArcDrawing.entries)
         )
     }
 }

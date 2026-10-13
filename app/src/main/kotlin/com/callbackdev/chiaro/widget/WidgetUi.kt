@@ -264,7 +264,8 @@ val WidgetCardPaddingSnug = 6.dp
  * is a bigger thing to sit against a corner, and the reference widget insets its own
  * description by ~25 dp on a card with a much larger radius. Fourteen on a 24 dp corner
  * keeps the block clear of the curve, and the two dp came out of a column that no longer
- * has the pair to pay for.
+ * has the pair to pay for. (The corner is the launcher's own since 13 ott 2026: 24 dp on
+ * stock Android 16, the size this was measured on.)
  */
 val WidgetCardPaddingLeading = 4.dp
 val WidgetCardPaddingTrailing = WidgetCardPadding
@@ -316,7 +317,12 @@ fun WidgetCard(
         modifier = GlanceModifier
             .fillMaxSize()
             .appWidgetBackground()
-            .cornerRadius(24.dp)
+            // The launcher's own corner (widget review, 13 ott 2026): it was a fixed 24 dp,
+            // and beside the launcher's other widgets — 24 dp on stock Android 16, other
+            // values where a phone's launcher sets its own — the card could wear a corner of
+            // its own. The platform names the radius the
+            // home screen gives its widgets, and every card of the family now takes it.
+            .cornerRadius(android.R.dimen.system_app_widget_background_radius)
             // One door for all five cards, destination or not (21 set 2026): the intent
             // is what tells the platform which TASK this is, and a card that opened the
             // app with an intent of its own was opening a second one. The Intent
@@ -595,7 +601,7 @@ private val RangeMarkTextGap = 2.dp
 private val RangeMarkGap = 8.dp
 
 /** The pair sits at the place name's size: it is the same order of fact. */
-private val DayRangeSp = 16.sp
+private val DayRangeSp = WidgetType.Body.sp
 
 /**
  * The empty states sit in the MIDDLE of the card, not at the top of it (committente,
@@ -623,13 +629,13 @@ fun NoPlaceContent(palette: WidgetPalette) {
             text = context.getString(R.string.empty_no_place_title),
             style = TextStyle(
                 color = palette.primary,
-                fontSize = 14.sp,
+                fontSize = WidgetType.Body.sp,
                 fontWeight = FontWeight.Medium
             )
         )
         Text(
             text = context.getString(R.string.widget_no_place_hint),
-            style = TextStyle(color = palette.secondary, fontSize = 12.sp)
+            style = TextStyle(color = palette.secondary, fontSize = WidgetType.Label.sp)
         )
     }
 }
@@ -644,7 +650,7 @@ fun NoDataContent(palette: WidgetPalette) {
     ) {
         Text(
             text = context.getString(R.string.widget_no_data),
-            style = TextStyle(color = palette.secondary, fontSize = 12.sp)
+            style = TextStyle(color = palette.secondary, fontSize = WidgetType.Label.sp)
         )
     }
 }
