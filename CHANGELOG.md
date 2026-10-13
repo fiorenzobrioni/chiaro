@@ -60,6 +60,15 @@ sections are a normal size and live here alone.
   weight, which gives the temperature a little more room.
 - **Widgets wear your launcher's corner**, and on the day's arc the moon's path is dotted, so
   it no longer looks like the sun's course under the horizon.
+- **Showers look like the partly cloudy sky with rain**: the same sun and cloud, with drops or
+  flakes under it, instead of a different drawing.
+- **Rain, snow and storms fall from one cloud**, the overcast one: their drawings had a second,
+  darker cloud that read as a moon at small sizes, and the storms a sliver of sun.
+- **The day's arc paints one continuous sky**, without a step at every hour or stripes at dawn
+  and dusk; the hours already gone are faded like the rest of the past.
+- **Tall widgets carry more instead of empty space**: «At a glance» lists the next hours under
+  its temperature when it is narrow and tall, and shows twice the hours at four rows; the
+  moments you follow have the day's arc under them when the card has room.
 
 ## [1.1.0] - 2026-10-01
 

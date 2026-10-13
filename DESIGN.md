@@ -2038,16 +2038,40 @@ a valid animator and only a person can say the rain falls downward.
    lengthwise (since 12 set), a ray tip left in the air between hole and cloud (`tips`, at a
    tenth of a unit: the «quasi sereno» left one in the flat style, and its cloud moved up
    half a unit, from y 94.5 to 94, to lose it), and a piece of crescent cut off from the
-   rest (`moon_fragments`). Showers keep Meteocons' `partly-cloudy-*-rain`: their drops are
-   what tell them apart. `partly-cloudy-day/-night` stay shipped and unused on screen,
-   because the composer reads its mask from them.
+   rest (`moon_fragments`). `partly-cloudy-day/-night` and `partly-cloudy-*-rain/-snow`
+   stay shipped and unused on screen, because the composer reads its mask, its drops and
+   its flakes from them.
+
+   **The showers are WMO 2 with what falls** (same day): `sun-half-cloud-rain-*` (80, 81) and
+   `sun-half-cloud-snow-*` (85, 86) are code 2's sun and cloud with the drops or flakes of
+   Meteocons' `partly-cloudy-*-rain/-snow` hung from the cloud's floor (`FALLS`,
+   `fall_matrix`), copied to the letter with their animations. They used to take those
+   drawings whole, the sliver of sun code 2 had just left, so beside the ladder a shower read
+   as another sky; now 2 → 80 changes one thing, the drops. The fall is at **95%** of the
+   source, a drop 11.4 units long re-stroked at 4 like the cloud: shrunk with the cloud
+   (78%) it was 9 units, and at the strip's size a shower no longer read apart from code 2.
+   In the `line` style the cloud **loses its floor**, as Meteocons' own rain clouds do
+   (`floorless`), so the drops fall out of it instead of crossing a line. The animated fall
+   ends 0.7 units lower than the family's own rain (`rain`, 132.7 of a 128 box) at 100%,
+   which is why the step is 95%: the composer refuses a fall that leaves the box further
+   than the drawings the family already ships (`fall_room`).
 
    **Overcast (WMO 3) draws `cloudy`, one cloud** (review of 12 ott 2026). Meteocons'
    `overcast` puts a second, darker cloud over the first's shoulder, and at the strip's and
    the week's sizes that sliver read as a crescent: «partly cloudy at night» at 13:00, beside
-   the real night glyph at 04:00. The rain, drizzle, sleet and snow drawings keep their
-   double cloud, where the drops say what they are. `overcast` stays on the shipped list
-   only because its animated twins are generated with it; nothing names it on a screen.
+   the real night glyph at 04:00.
+
+   **And so does everything that falls from a closed sky** (icon review, 13 ott 2026, after
+   the showers): drizzle, rain, sleet and snow draw Meteocons' single-cloud `drizzle`,
+   `rain`, `sleet`, `snow`, not `overcast-*`, whose back cloud was the same crescent beside
+   the drops; heavy showers (82) draw `rain` instead of `extreme-rain` (the darker double
+   cloud), and the storms draw `thunderstorms-rain` and `thunderstorms` instead of
+   `thunderstorms-day/night-*`, the sliver of sun behind a full cloud that code 2 and the
+   showers had just left. A storm is a closed sky, so it has no night variant any more,
+   like rain. The family now has two skies and no third: a whole sun or moon with a cloud
+   that grows (1, 2, 80, 85), and one cloud with what falls from it (3 to 77, 82, 95). The
+   intensity is the word's and the amount's, as it already was for heavy rain. The
+   drawings no screen names left `SHIPPED` for `PLANNED`.
 
    **The repo carries the whole family; the APK carries the list.** All 519 drawings are
    converted into `res/drawable`; only the ones a screen actually names appear in the

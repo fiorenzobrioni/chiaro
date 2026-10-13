@@ -536,7 +536,10 @@ dynamic color:
   since 8 set; on a home screen they were one card at two sizes, and the tall form «At a glance»
   drew at three cells by two was a glyph in one corner, three lines in the other and nothing in
   the middle. The hours' switches (the day's range, the next days) are on its settings now,
-  each saying the size it shows at.
+  each saying the size it shows at. **Its tall forms hold data, not air** (same day, the rest
+  of the review): narrow and three rows up it keeps the two-by-two's hero at its own height and
+  lists the next hours under it, one per line; at four by four the hours take two rows, the
+  next fourteen instead of seven, in the third of the card that was air.
 - **Today** (the hours' card, retired from the picker on 13 ott 2026 and drawn by «At a glance»
   from three cells by two): now plus the next hours strip. Since 8 set 2026 the head of the card IS the Now
   widget's wide row — glyph, temperature over place, the day's sentence against the far edge and
@@ -589,7 +592,10 @@ dynamic color:
   with the verdict as the arc's agenda prints it: the bare mark (13 ott 2026, so the two cards'
   lists say a verdict one way). The hero's verdict wears its container: the app's verdict inks
   are measured against the app's own surface, and a card whose ground is a scrimmed sky or a
-  wallpaper has to bring its own; a row's bare mark takes the ink measured for the card's ground.
+  wallpaper has to bring its own; a row's bare mark takes the ink measured for the card's ground. On the
+  day's arc, a card taller than its moments need puts them at the top and the day's arc in the
+  room they leave (13 ott 2026): the block sat centred in a card two thirds empty, and the arc is
+  that card's own drawing.
 
 A widget never invents: with stale data it says how old it is, with no place configured it says so
 and opens the app, and no layout ever pads itself out to fill the space it was given.

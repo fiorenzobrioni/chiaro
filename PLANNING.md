@@ -12209,3 +12209,73 @@ di farla con un'anteprima, insieme alla luna piena dell'agenda dell'arco.
 - `ComposedIconsTest` e `ConditionIconsTest` estesi al codice 2, `ArcTextTest` alla luna in
   stile pieno; README rigenerato (`today-now`, `today-week`, `settings`, `widgets`,
   `widget-day-arc`).
+
+## Gli acquazzoni, il resto della revisione dei widget, le icone riviste tutte (committente, 13 ott 2026)
+
+Il committente ha chiesto di sistemare gli acquazzoni, di chiudere tutti i punti rimasti della
+revisione iniziale dei widget e, dopo gli acquazzoni, di rivedere tutte le icone per vedere se
+sono coerenti.
+
+### Cosa è cambiato
+
+- **Gli acquazzoni sono il poco nuvoloso con quel che cade** (80, 81, 85, 86):
+  `sun-half-cloud-rain-*` e `sun-half-cloud-snow-*`, composti da `compose_sun_cloud.py`. Lo
+  stesso sole e la stessa nuvola del codice 2, con le gocce o i fiocchi di
+  `partly-cloudy-*-rain/-snow` appesi al pavimento della nuvola, copiati alla lettera con le
+  loro animazioni. Nello stile linea la nuvola perde il pavimento, come nei disegni di pioggia
+  di Meteocons, e le gocce ne escono invece di attraversare una riga.
+- **Tutto quel che cade da un cielo chiuso cade da una nuvola sola** (la revisione delle icone):
+  pioggerella, pioggia, neve mista e neve prendono `drizzle`, `rain`, `sleet`, `snow` invece di
+  `overcast-*`, i rovesci forti (82) `rain` invece di `extreme-rain`, il temporale
+  `thunderstorms-rain` e quello possibile `thunderstorms` invece di `thunderstorms-day/night-*`.
+  `overcast-*` portava la seconda nuvola scura che si leggeva come una falce (la ragione per
+  cui il codice 3 l'ha lasciata il 12 ott), il temporale lo spicchio di sole che il codice 2 e
+  gli acquazzoni hanno appena lasciato. Le icone sono ora due cieli e nessun terzo: sole o luna
+  interi con una nuvola che cresce (1, 2, 80, 85), e una nuvola sola con quel che ne cade (3-77,
+  82, 95). I disegni che nessuna schermata nomina più passano da `SHIPPED` a `PLANNED`;
+  l'importatore, rieseguito su `@meteocons/svg` 3.0.0-next.10, ha riscritto solo
+  `MeteoconsSets.kt` (prima, a liste invariate, il repo usciva identico al byte).
+- **La banda del cielo dell'arco è continua**: dipinta colonna per colonna, con sole e luna
+  dove stanno in quell'istante e il tempo raccordato fra le metà delle ore
+  (`ArcSeries.weatherAt`), da una bitmap stirata con il filtro. Prima ogni campione da un quarto
+  d'ora era un rettangolo con la nuvolosità della sua ora: un gradino a ogni ora e strisce di
+  pochi pixel all'alba e al tramonto.
+- **Le ore passate dell'arco prendono il velo del passato**: le etichette 03, 06, 09 sono
+  attenuate come la banda e i percorsi, e la riga delle temperature si legge come una riga che
+  comincia dove comincia la previsione.
+- **Le card alte portano dati, non aria**:
+  - «Colpo d'occhio» stretto da tre righe (2×3, 2×4): l'eroe del 2×2 alla sua altezza e sotto
+    le prossime ore, una per riga (3 e 6); prima l'eroe stirato, metà card vuota.
+  - «Colpo d'occhio» 4×4: una seconda riga di ore (le prossime 14 invece di 7), messa in conto
+    per ultima e con la riga della pioggia; sul 4×3 non ci sta e la card non cambia.
+  - I momenti dell'arco su una card alta: i momenti in alto e l'arco del giorno nello spazio che
+    lasciano, da 72 dp; prima il blocco stava centrato in una card vuota per due terzi. La card
+    Cielo nascosta tiene la sua forma.
+
+### Decisioni e deviazioni
+
+- **Le gocce al 95% della sorgente, non al 78% della nuvola**: rimpicciolite con la nuvola erano
+  lunghe 9 unità e a misura di striscia l'acquazzone non si distingueva dal poco nuvoloso. Al
+  100% la caduta animata finiva a 133,5 su una scatola di 128, oltre i 132,7 della pioggia che
+  la famiglia già disegna; 0,95 è il passo tondo più grande che ci sta, e lo strumento rifiuta
+  una caduta che esca più di quella (`fall_room`).
+- **Il temporale non ha più la notte**: è un cielo chiuso, come la pioggia, che non l'ha mai
+  avuta. L'intensità (pioggia forte, rovesci forti) resta della parola e della quantità.
+- **La mattina dell'arco resta senza tempo e senza temperature**: il mapper parte dall'ora in
+  corso e `WeatherRecency` toglie le ore passate, per scelta. Riempirle vorrebbe dire tenere
+  nel rapporto le ore già passate di oggi (cambio del livello dati e della cache); per ora le
+  etichette passate prendono il velo. Alternativa possibile: la finestra «prossime 24 ore»
+  come default dell'arco.
+- **L'arco sotto i momenti prende tutto lo spazio rimasto**: limitato ai 150 dp dell'arco
+  sulla sua card più alta spostava solo l'aria dal fondo al centro (guardato sul 4×4).
+
+### Come è stato verificato
+
+- Anteprime prima/dopo: gli acquazzoni nei quattro stili, la famiglia delle condizioni intera
+  (15 codici, giorno e notte, quattro stili, in grande e a 32 px), la banda dell'arco, ogni
+  forma dei tre widget a ogni misura del selettore.
+- `compose_sun_cloud.py` pulito con i nuovi controlli (`fall_room`, il pavimento di `cloudy`,
+  la nuvola delle sorgenti uguale alla silhouette); `ComposedIconsTest` esteso (quel che cade
+  alla lettera, la nuvola senza pavimento, il tratto delle gocce a 4), `ConditionIconsTest`,
+  `ArcSeriesTest` (`weatherAt`), i test di layout dei tre widget (`nowTallHourRows`,
+  `todayShowMoreHours`, `skyPlotHeight`).
