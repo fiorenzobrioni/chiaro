@@ -52,6 +52,8 @@ sections are a normal size and live here alone.
   it two rows tall, and «The day's arc» can show the moments you follow instead of the arc.
   «The hours ahead» and «Sky moments» are no longer offered, but the ones already on your
   home screen keep working.
+- **«In words» on the same scale**: its sentence is the size of the facts under it, set apart by
+  weight, which gives the temperature a little more room.
 - **Widgets wear your launcher's corner**, and on the day's arc the moon's path is dotted, so
   it no longer looks like the sun's course under the horizon.
 

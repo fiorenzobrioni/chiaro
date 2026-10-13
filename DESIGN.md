@@ -782,21 +782,22 @@ two curves crossing under the horizon read as one line.
 Before it each card had grown its own: twelve fixed sizes between 11 and 34, a place at 16
 on one card and 13 on the next, a moment's name at 15 and 13, a strip's hour at 12 over a
 week's day at 11, the verdict — the Sky card's answer — at 11, the smallest type on it.
-`WidgetTypeTest` fails on a widget size that is not a step. The one size off the scale is
-on purpose and written down there: the text card's sentence at 18 (below). Display is the
+`WidgetTypeTest` fails on a widget size that is not a step, with no exception since the text
+card's sentence joined the scale too (18 to 16, committente, 13 ott 2026: see below). Display is the
 step the review did not plan: «7:55 PM» at 34 sp is 128 dp, and a four-cell card's words
 have 108 to 130 of it.
 
 Four of
 the five cards get their hierarchy from the weather glyph, which fills the height and is
 the first thing read; the text widget (19 set 2026) has no glyph and builds the same
-hierarchy out of type alone, in **four ranks that differ by size and weight and ink, never
-by one of the three on its own** (`TextWidgetLayout.kt`): the temperature at 26 to 64sp
-Bold in the strong ink, scaled to the grant the way the other cards scale their drawing;
-the day's sentence at 18sp Medium, two points over the household's 16 because there is no
-drawing left to carry the card at arm's length; the place, the day's range and the
-warning's word at 16sp, where ink and weight go on sorting inside the rank; the stale
-marker at 11sp. The order the budget spends in is the hierarchy written down: the number is
+hierarchy out of type alone, in **four ranks that never differ by one of size, weight and
+ink on its own** (`TextWidgetLayout.kt`): the temperature at 26 to 64sp Bold in the strong
+ink, scaled to the grant the way the other cards scale their drawing; the day's sentence at
+16sp Medium in the strong ink; the place, the day's range and the warning's word at 16sp
+Regular in the quiet one; the stale marker at 11sp. The sentence was 18, two points over
+the facts, until the committente put it on the widget scale (13 ott 2026): since then ranks
+2 and 3 share a size and sort by weight and ink, as the Now card's sentence and place always
+have, and the 2.64 dp a line gives back go to the number and the glyph. The order the budget spends in is the hierarchy written down: the number is
 reserved first and the footnotes are bought last, and a section that does not fit is not
 drawn.
 

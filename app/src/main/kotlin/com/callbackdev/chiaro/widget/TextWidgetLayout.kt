@@ -792,8 +792,13 @@ internal const val TextHeroStackFloor = 40f
 internal const val TextHeroMax = 56f
 
 /**
- * Rank 2, the day's sentence: 18 sp Medium in the strong ink, two points above the
- * household's 16. The other cards put the sentence beside a drawing, and the drawing is
+ * Rank 2, the day's sentence: **the scale's [WidgetType.Body], 16 sp, since 13 ott 2026**
+ * (committente, after the widget review: «mettila in scala»), Medium in the strong ink, over
+ * rank 3's 16 sp Regular in the quiet one. Ranks 2 and 3 now share a size and sort by weight
+ * and ink, which is exactly how the Now card has always set its sentence over its place; the
+ * hero above them still differs by all three. What follows is the size's history.
+ *
+ * It was 18 sp, two points above the household's 16. The other cards put the sentence beside a drawing, and the drawing is
  * what carries the card at arm's length; here the sentence IS the second thing to read, so
  * it takes the step the glyph's absence pays for.
  *
@@ -804,7 +809,7 @@ internal const val TextHeroMax = 56f
  * trailing column still holds «Pioggia gelata verso le 15:00» in two lines, which is the
  * measurement that stopped it going to 19.
  */
-internal const val TextSentenceSp = 18f
+internal const val TextSentenceSp = WidgetType.Body
 
 /**
  * Rank 3, the facts: the place, the day's high and low, the warning's word. **16 sp since

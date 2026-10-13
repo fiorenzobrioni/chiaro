@@ -48,11 +48,11 @@ class WidgetTypeTest {
         }
     }
 
-    /** The one size off the scale, and the reason it is written down in [WidgetType]. */
+    /** The text card's sentence was the one exception until 13 ott 2026: no longer. */
     @Test
-    fun `the text card's sentence is the one exception`() {
-        assertFalse(TextSentenceSp in WidgetType.steps)
-        assertEquals(18f, TextSentenceSp)
+    fun `the text card's sentence is on the scale too`() {
+        assertTrue(TextSentenceSp in WidgetType.steps)
+        assertEquals(WidgetType.Body, TextSentenceSp)
     }
 
     @Test

@@ -12137,3 +12137,25 @@ card preso dal sistema con la curva della luna distinguibile (3), e da cinque wi
   `widgets.png` disegnato con le tre card, uguale pixel per pixel al precedente (le stesse
   forme, ora di due card invece che di quattro) e quindi lasciato com'era.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## «In parole»: la frase in scala (committente, 13 ott 2026)
+
+Il committente ha chiesto di portare in scala la frase di «In parole», l'unica misura rimasta
+fuori dopo la revisione (18 sp, decisione sul dispositivo del 19 set), con un'anteprima prima e
+dopo.
+
+- `TextSentenceSp` = `WidgetType.Body`, 16 sp. Frase e fatti (luogo, intervallo, parola
+  dell'allerta) hanno ora la stessa misura e si distinguono per peso e inchiostro, Medium e
+  forte sopra Regular e quieto, come in «Colpo d'occhio» da sempre. Il numero sopra resta
+  diverso su tutti e tre gli assi. `WidgetTypeTest` non ha più eccezioni.
+- Ogni riga di frase restituisce 2,64 dp, che vanno al numero e all'icona: sul 2×2 il numero
+  arriva al suo tetto di 56 sp (era 53,97), sul pannello 4×2 la fascia dell'icona passa da
+  71,24 a 76,52 dp. Le tabelle di `TextWidgetLayoutTest` sono ricalcolate, con il conto nei
+  commenti; «i gradi sono ordinati» ora chiede frase ≥ fatti.
+- Alternativa scartata: tenere la differenza di misura scendendo i fatti a 13. Il committente
+  li aveva portati a 16 sul dispositivo il 19 set («la località un pochino più grande»), e la
+  card avrebbe perso proprio quello.
+- Stessa modifica in Passo, la cui card «In words» aveva la stessa eccezione per la stessa
+  ragione.
+- Anteprima prima/dopo guardata in italiano e in inglese a ogni misura; `widgets.png`
+  rigenerato.

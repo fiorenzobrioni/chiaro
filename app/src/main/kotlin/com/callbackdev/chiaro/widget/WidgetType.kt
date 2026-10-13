@@ -28,9 +28,9 @@ package com.callbackdev.chiaro.widget
  *   to the grant (the tall Now card, the text card) this is where it starts from, and
  *   the grant decides the rest.
  *
- * One size stays off the scale, and on purpose: the text card's sentence at 18 sp
- * ([TextSentenceSp]), the committente's on the device (19 set 2026), because on a card
- * with no drawing the sentence is the second thing read and «17 over 16 is not a rank».
+ * Every fixed size is a step. The text card's sentence was the one exception, at 18 sp, until
+ * the committente put it on the scale too (13 ott 2026): it is Body now, and sorts from the
+ * facts under it by weight and ink, as the Now card's sentence does from its place.
  */
 internal object WidgetType {
     const val Caption = 11f
