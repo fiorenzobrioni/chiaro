@@ -12058,8 +12058,11 @@ sistema (`measureWidgetText`) prima di decidere ogni misura qui sotto.
 - **Il segno del verdetto nelle righe del Cielo** prende l'inchiostro misurato per il fondo della
   card (`palette.darkGround`), come l'arco; la pillola e il cerchio del titolo restano sulla
   coppia contenitore/inchiostro, che porta il suo fondo.
-- **La famiglia**: la scala nasce qui, misurata su questi widget. Passo e Tempo hanno le loro
-  card sulla stessa grammatica; l'allineamento delle loro misure si fa nei loro repository.
+- **La famiglia**: la scala nasce qui, misurata su questi widget, ed è stata portata nella
+  stessa sessione nelle card di Passo e di Tempo (`WidgetType` in ciascuna, con il suo test; la
+  decisione è registrata nei loro PLANNING §15 e ADR dei widget). Saldo si allinea in una
+  sessione sua. Le correzioni del punto 1 e l'abito del verdetto sono solo di Chiaro: le altre
+  app non hanno verdetti né l'arco.
 
 ### Come è stato verificato
 
