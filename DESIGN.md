@@ -929,6 +929,10 @@ and the neighbour is not the same everywhere:
   and 4 + 8 the 12dp below;
 - Today's list spaces its own items by 12dp, so its header asks for 12 rather than 16 and
   arrives at the same 24 / 12;
+- the **first** header on Today's paper, «Prossime ore» right under the sky, asks for 0
+  (review of 12 ott 2026): the sheet's 24dp lip and the list's 12 are already above it, and
+  with its own 12 the sky and the hours stood 53dp of empty paper apart. With the freshness
+  chip, a warning banner or the guide card between them it keeps its 12;
 - next to a Material `ListItem` — the Sky moments, the Alerts switches and rule cards, the
   Settings rows — the gap is Material's, not ours: `ListItem` brings its own padding and a
   minimum height that centres its text, so the air under a header there is at least 12dp
@@ -1291,7 +1295,11 @@ full strength, the thresholds the meaning line switches at cut into it as 2dp ga
 surface gap), and a **12dp disc on the value** — the ramp's color there, a ring of the
 tile's ground, a hairline of `outline` so the pale end of a ramp still has an edge. UV on
 0–11 with the WHO's bands, humidity on 0–100 in water's ramp, air on 0–300 with the US
-bands, **pressure** on 980–1046 hPa diverging from 1013 (filled from the middle out), and
+bands, **pressure** on 980–1046 hPa diverging from 1013 (filled from the middle out; its
+meaning line is the **tendency** since 12 ott 2026 — the hour we are in against three hours
+on, steady under 1.6 hPa, quick from 3.6, the marine forecasts' bands — with the change as
+its note, «−2,4 hPa nelle prossime 3 ore», and the reading's own meaning only while it holds;
+«Alta» now says *settled*, not *clear*, which an overcast anticyclone contradicted), and
 **pollen** as four steps with the level and those under it lit. It replaced one `primary`
 bar under every metric, which said "how much" without saying "of what". Visibility (a
 logarithmic quantity) and the wind (whose meaning is the gust) get none;
@@ -1299,7 +1307,8 @@ then the **facts behind the value** in `bodyMedium` — where the wind comes fro
 with an arrow for where it goes, the gusts on the days they matter, the dew point under
 the humidity, which pollen — and last the meaning line (`bodySmall`, `onSurfaceVariant`).
 Never ships without the meaning line (§1.2). Tapping opens the details sheet at that
-metric. Two tiles became one that day: the dew point said "pleasant" under the
+metric. An odd tile out at the foot of the two columns **takes the whole row** (12 ott 2026), where
+it sat beside half a row of nothing. Two tiles became one that day: the dew point said "pleasant" under the
 humidity's "comfortable", the same fact in two cards, and the dew point is the better
 predictor of how the air feels, so it writes the humidity tile's meaning and stays on it
 as a note. The air index lost its acronym — "AQI" was the one piece of jargon on a

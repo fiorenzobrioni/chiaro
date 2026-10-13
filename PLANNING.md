@@ -11839,3 +11839,44 @@ li avevo rinumerati male; il committente ha chiesto «5 e 6» e si è seguita la
 - `TodayStateBuilderTest` (+1): l'ora d'oro finisce al tramonto della stessa agenda, l'ora blu
   finisce dopo l'inizio, il tramonto non ha fine.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## Oggi: la pressione che va da qualche parte, la griglia senza buchi, la fascia vuota (committente, 12-13 ott 2026)
+
+Punti 7 e 8 della revisione di Oggi. Il 7: la griglia dei dettagli era disomogenea (i pollini
+da soli su mezza riga, accanto al vuoto) e la pressione stampava «Alta: tende al sereno» sotto
+un cielo coperto all'86%. L'8: fra il bordo del foglio e «Prossime ore» c'erano 53dp di carta
+vuota, misurati sullo screenshot del README.
+
+### Cosa è cambiato
+
+- **La pressione come tendenza** (`WeatherText.pressureTrend`): l'ora in corso contro quella tre
+  ore dopo, sulle bande dei bollettini marini (sotto 1,6 hPa in 3 ore stabile, da 3,6 rapida).
+  In calo, in rapido calo, in aumento: la riga di significato è la tendenza e la nota è il suo
+  conto («−2,4 hPa nelle prossime 3 ore»). Stabile: resta il significato della lettura.
+- **«Alta» dice *stabile*, non *sereno***: l'alta pressione è tempo stabile, e un anticiclone
+  d'autunno è spesso grigio — era la contraddizione con la finestra. EN «settled weather».
+- **La tessera spaiata prende tutta la riga** invece di stare accanto a un riquadro vuoto.
+- **Il primo titolo sul foglio non aggiunge margine**: il bordo del foglio (24dp) e lo spazio
+  della lista (12dp) bastano. Da 53 a circa 42dp fra il bordo e il testo. Con il chip della
+  freschezza, un'allerta o la carta della guida in mezzo, il titolo tiene i suoi 12dp.
+- La guida: «pressione e dove sta andando». DESIGN §8.6 e la spaziatura delle intestazioni,
+  CHANGELOG; `today-now` e `today-details` rigenerati e guardati.
+
+### Decisioni e deviazioni
+
+- **Tendenza in avanti, non all'indietro.** La tendenza barometrica classica guarda le tre ore
+  passate; il report non ne tiene nessuna (il mapper parte dall'ora corrente), quindi si legge
+  dove il barometro *sta andando* secondo il modello. È scritto così anche nel commento.
+- **La tessera delle nuvole resta.** La revisione proponeva di toglierla dove il cielo in alto
+  la dice già; ma la tessera dice anche lo strato (un 90% di velo alto lascia passare il sole,
+  un 90% basso no), che il cielo in alto non dice.
+- Sul Milano del README la pressione cala di 1,3 hPa in 3 ore: per le bande è stabile, e la
+  tessera dice «Alta: tempo stabile». Nessuna tendenza inventata sotto la soglia.
+
+### Come è stato verificato
+
+- `PressureTrendTest` (3, nuovo): le quattro bande e il conto; niente tendenza senza la
+  pressione o senza l'ora tre dopo; la tendenza vince sulla lettura, la stabilità no.
+- Screenshot rigenerati: la tessera dei pollini su tutta la riga, «High: settled weather»,
+  «Next hours» più vicino al cielo.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.

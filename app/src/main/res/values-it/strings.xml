@@ -171,7 +171,11 @@
     <string name="dew_meaning_oppressive">Opprimente</string>
     <string name="pressure_meaning_low">Bassa: tempo instabile più probabile</string>
     <string name="pressure_meaning_normal">Nella norma</string>
-    <string name="pressure_meaning_high">Alta: tende al sereno</string>
+    <string name="pressure_meaning_high">Alta: tempo stabile</string>
+    <string name="pressure_trend_falling_fast">In rapido calo: peggioramento probabile</string>
+    <string name="pressure_trend_falling">In calo: il tempo tende a peggiorare</string>
+    <string name="pressure_trend_rising">In aumento: il tempo tende a migliorare</string>
+    <string name="pressure_trend_note">%1$s hPa nelle prossime 3 ore</string>
     <string name="visibility_meaning_clear">Limpido, si vede lontano</string>
     <string name="visibility_meaning_light_haze">Leggera foschia</string>
     <string name="visibility_meaning_haze">Foschia fitta</string>
@@ -429,7 +433,7 @@
     <string name="guide_today_week_title">La settimana</string>
     <string name="guide_today_week_body">Sette giorni su un\'unica scala di temperatura, così la stessa lunghezza di barra significa la stessa cosa su ogni riga. La striscia sotto ogni giorno è la sua luce, dall\'alba al tramonto. Tocca un giorno per aprirlo: sopra le sue ore trovi quanta pioggia e per quante ore, la neve, le raffiche più forti e l\'UV massimo, ciascuno con cosa vuol dire, e solo quelli che quel giorno dicono qualcosa.</string>
     <string name="guide_today_details_title">I dettagli</string>
-    <string name="guide_today_details_body">La pioggia di oggi in millimetri, la neve quando c\'è, UV, vento con le raffiche, le nuvole con il tipo che le fa (alte e sottili, un sole velato; basse, una giornata grigia), umidità e punto di rugiada, pressione, visibilità, qualità dell\'aria — sull\'indice europeo per i luoghi in Europa — e pollini, sulle soglie di ciascuna specie. Ogni numero porta con sé la riga che dice cosa farne, che è l\'unico motivo per cui sta sullo schermo.</string>
+    <string name="guide_today_details_body">La pioggia di oggi in millimetri, la neve quando c\'è, UV, vento con le raffiche, le nuvole con il tipo che le fa (alte e sottili, un sole velato; basse, una giornata grigia), umidità e punto di rugiada, pressione e dove sta andando, visibilità, qualità dell\'aria — sull\'indice europeo per i luoghi in Europa — e pollini, sulle soglie di ciascuna specie. Ogni numero porta con sé la riga che dice cosa farne, che è l\'unico motivo per cui sta sullo schermo.</string>
     <string name="guide_today_details_caption">Un esempio: due dettagli, ognuno con la riga che dice cosa farne.</string>
     <string name="guide_today_changed_title">Cosa è cambiato</string>
     <string name="guide_today_changed_body">Quando l\'ultimo aggiornamento sposta i giorni che vengono, fino a tre frasi dicono come. Toccale e la storia completa si apre nel Diario.</string>

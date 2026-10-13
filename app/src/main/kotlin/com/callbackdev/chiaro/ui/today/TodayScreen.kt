@@ -928,7 +928,20 @@ private fun ContentState(
                 item { GuideCard(onOpen = onOpenGuide, onDismiss = onDismissGuideCard) }
             }
 
-            item { SectionTitle(stringResource(R.string.section_next_hours)) }
+            // The first title on the paper (review of 12 ott 2026): the sheet's own 24dp lip
+            // and the list's 12dp gap are already above it, and its usual 12 more made a
+            // 53dp band of empty paper between the sky and the hours, measured on the
+            // README's Milan — the hours VISION §4.4 wants above the fold, pushed down by
+            // nothing. With a chip, a banner or the guide card in between, it keeps the 12
+            // it needs to stand apart from them.
+            val opensThePaper = content.error == null && !content.isStale &&
+                content.warnings == null && guideCardVisible != true
+            item {
+                SectionTitle(
+                    stringResource(R.string.section_next_hours),
+                    top = if (opensThePaper) 0.dp else 12.dp
+                )
+            }
             item { NextHours(content, units, is24h, timeFmt, locale) }
 
             if (content.timeline.isNotEmpty()) {
@@ -1057,11 +1070,11 @@ private fun DataFooter(content: TodayUiState.Content, timeFmt: DateTimeFormatter
  * to on the screens that have no list spacing.
  */
 @Composable
-private fun SectionTitle(text: String) {
+private fun SectionTitle(text: String, top: Dp = 12.dp) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(start = 16.dp, top = 12.dp)
+        modifier = Modifier.padding(start = 16.dp, top = top)
     )
 }
 
@@ -2088,13 +2101,19 @@ private fun Details(content: TodayUiState.Content, units: UnitSettings, locale: 
                 )
             )
         )
+        // Where the barometer is going, when it is going somewhere (12 ott 2026): the
+        // meaning follows the tendency and the note carries its arithmetic; a steady
+        // barometer keeps the absolute reading's meaning and no note.
+        val trend = WeatherText.pressureTrend(report.hourly)
         add(
             Tile(
                 icon = { ChiaroIcons.pressure },
                 label = R.string.metric_pressure,
                 value = Formats.pressure(current.pressureMb, locale),
-                meaning = WeatherText.pressureMeaning(current.pressureMb),
-                track = pressureTrack(current.pressureMb)
+                meaning = WeatherText.pressureMeaning(current.pressureMb, trend),
+                track = pressureTrack(current.pressureMb),
+                note = trend?.takeIf { it.direction != WeatherText.PressureTrend.Direction.STEADY }
+                    ?.let { stringResource(R.string.pressure_trend_note, String.format(locale, "%+.1f", it.deltaHpa)) }
             )
         )
         // §1.1 again (Fase 26): `visibility` is a model-dependent field, and a model
@@ -2173,6 +2192,9 @@ private fun Details(content: TodayUiState.Content, units: UnitSettings, locale: 
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.height(IntrinsicSize.Max)
             ) {
+                // An odd tile out takes the whole row (review of 12 ott 2026): it used
+                // to sit beside an empty box, half a row of nothing at the foot of the
+                // grid, which read as a tile that had failed to load.
                 rowTiles.forEach { tile ->
                     MetricTile(
                         icon = tile.icon(),
@@ -2185,9 +2207,6 @@ private fun Details(content: TodayUiState.Content, units: UnitSettings, locale: 
                         iconSize = tile.iconSize,
                         modifier = Modifier.weight(1f).fillMaxHeight()
                     )
-                }
-                if (rowTiles.size < perRow) {
-                    Box(modifier = Modifier.weight(1f))
                 }
             }
         }

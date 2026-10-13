@@ -181,7 +181,11 @@
     <string name="dew_meaning_oppressive">Oppressive</string>
     <string name="pressure_meaning_low">Low: unsettled weather is likelier</string>
     <string name="pressure_meaning_normal">In the normal range</string>
-    <string name="pressure_meaning_high">High: leans toward clear skies</string>
+    <string name="pressure_meaning_high">High: settled weather</string>
+    <string name="pressure_trend_falling_fast">Falling fast: worse weather likely</string>
+    <string name="pressure_trend_falling">Falling: the weather tends to worsen</string>
+    <string name="pressure_trend_rising">Rising: the weather tends to improve</string>
+    <string name="pressure_trend_note">%1$s hPa in the next 3 hours</string>
     <string name="visibility_meaning_clear">Clear, you can see far</string>
     <string name="visibility_meaning_light_haze">Slight haze</string>
     <string name="visibility_meaning_haze">Thick haze</string>
@@ -448,7 +452,7 @@
     <string name="guide_today_week_title">The week</string>
     <string name="guide_today_week_body">Seven days on one shared temperature scale, so the same bar length means the same thing on every row. The stripe under each day is its light, from dawn to dusk. Tap a day to open it: above its hours you find how much rain and over how many hours, the snow, the strongest gusts and the highest UV, each with what it means, and only those that say something that day.</string>
     <string name="guide_today_details_title">The details</string>
-    <string name="guide_today_details_body">Today\'s rain in millimetres, the snow when there is some, UV, wind with its gusts, the clouds with the kind that makes them (high and thin, a veiled sun; low, a grey day), humidity and dew point, pressure, visibility, air quality — on the European index for places in Europe — and pollen, on each species\' own thresholds. Each number carries the line that says what to do about it, which is the only reason it is on the screen.</string>
+    <string name="guide_today_details_body">Today\'s rain in millimetres, the snow when there is some, UV, wind with its gusts, the clouds with the kind that makes them (high and thin, a veiled sun; low, a grey day), humidity and dew point, pressure and which way it is heading, visibility, air quality — on the European index for places in Europe — and pollen, on each species\' own thresholds. Each number carries the line that says what to do about it, which is the only reason it is on the screen.</string>
     <string name="guide_today_details_caption">An example: two details, each with the line that says what to do about it.</string>
     <string name="guide_today_changed_title">What changed</string>
     <string name="guide_today_changed_body">When the latest update moves the days ahead, up to three sentences say how. Tap them and the whole story opens in the Journal.</string>
