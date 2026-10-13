@@ -46,7 +46,10 @@ internal data class ArcCanvasSpec(
     val is24Hour: Boolean,
     val locale: Locale,
     val temperatureUnit: TemperatureUnit,
-    val zone: ZoneId
+    val zone: ZoneId,
+    /** The plot's corner: the launcher's inner radius for a widget's contents
+     * (`system_app_widget_inner_radius`), so the drawing's corner follows the card's. */
+    val plotCornerDp: Float = 8f
 )
 
 /**
@@ -103,7 +106,7 @@ internal object ArcPainter {
         val plotBottom = (h - labelLine - tempLine).coerceAtLeast(dp(12f))
         val plot = RectF(0f, plotTop, w.toFloat(), plotBottom)
         val horizonY = plotTop + (plotBottom - plotTop) * HorizonFraction
-        val corner = dp(8f)
+        val corner = dp(spec.plotCornerDp)
         val plotClip = Path().apply { addRoundRect(plot, corner, corner, Path.Direction.CW) }
         val nowX = series.nowFraction * w
         val compact = h < CompactBelowDp * d
@@ -170,15 +173,26 @@ internal object ArcPainter {
             canvas.drawLine(plot.left, horizonY, plot.right, horizonY, line)
         }
 
-        // ---- The moon's path while it is up: dotted, quiet. ----
+        // The two paths stay inside the plot's rounded corners: with the launcher's inner
+        // radius (16 dp on stock Android 16, from a fixed 8) the sun's night dashes ran out
+        // of the box at its lower corners.
+        val pathsLayer = canvas.save()
+        canvas.clipPath(plotClip)
+
+        // ---- The moon's path while it is up: round dots in the moon's own pale. ----
+        // Dots and not dashes, and the moon's colour rather than the card's quiet ink (widget
+        // review, 13 ott 2026): at 1.5 dp with round caps the moon's dashes were 2.75 dp long
+        // beside the sun's 3 dp night dashes, in the same ink, and the two curves crossing
+        // under the horizon read as one line. Zero-length dashes with round caps are dots;
+        // on a card with no sky behind the plot the pale would vanish, so there it is the ink.
         if (settings.moon && !compact) {
             val moonPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = inks.secondary
-                alpha = 180
+                color = if (settings.ground == ArcGround.NONE) inks.secondary else ArcPalette.MoonLit.toArgb()
+                alpha = 220
                 style = Paint.Style.STROKE
-                strokeWidth = dp(1.25f)
+                strokeWidth = dp(2.25f)
                 strokeCap = Paint.Cap.ROUND
-                pathEffect = DashPathEffect(floatArrayOf(dp(1.5f), dp(3.5f)), 0f)
+                pathEffect = DashPathEffect(floatArrayOf(0f, dp(4.5f)), 0f)
             }
             val path = Path()
             var open = false
@@ -213,12 +227,13 @@ internal object ArcPainter {
                 strokeCap = Paint.Cap.ROUND
                 strokeJoin = Paint.Join.ROUND
             }
+            // Long thin dashes, so the sun's night reads as a line and the moon's dots as dots.
             val below = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = inks.secondary
-                alpha = 130
+                alpha = 120
                 style = Paint.Style.STROKE
                 strokeWidth = dp(1f)
-                pathEffect = DashPathEffect(floatArrayOf(dp(3f), dp(3f)), 0f)
+                pathEffect = DashPathEffect(floatArrayOf(dp(5f), dp(3f)), 0f)
             }
             val fade = settings.fadePast && nowX > 0f
             // Above the horizon, then below; each drawn twice when the past is veiled —
@@ -235,6 +250,7 @@ internal object ArcPainter {
             stroke(above, plot.top, horizonY)
             if (!compact) stroke(below, horizonY, plot.bottom)
         }
+        canvas.restoreToCount(pathsLayer)
 
         // ---- The present. ----
         if (settings.nowMarker) {

@@ -67,6 +67,7 @@ import com.callbackdev.chiaro.widget.rememberWidgetSchemes
 import com.callbackdev.chiaro.widget.secondaryStyle
 import com.callbackdev.chiaro.widget.sentence
 import com.callbackdev.chiaro.widget.staleText
+import com.callbackdev.chiaro.widget.SkyWidgetContent
 import com.callbackdev.chiaro.widget.VerdictNote
 import java.time.Instant
 import java.util.Locale
@@ -186,7 +187,8 @@ internal fun paintArc(
             is24Hour = DateFormat.is24HourFormat(context),
             locale = Locale.getDefault(),
             temperatureUnit = model.settings.units.temperature,
-            zone = model.zone
+            zone = model.zone,
+            plotCornerDp = context.resources.getDimension(android.R.dimen.system_app_widget_inner_radius) / density
         ),
         ArcInks(
             primary = palette.primary.getColor(context).toArgb(),
@@ -736,6 +738,12 @@ private val MarkGap = 6.dp
 internal fun ArcWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBitmap: Bitmap?, arc: ArcSettings) {
     val context = LocalContext.current
     val size = LocalSize.current
+    // The moments the reader follows, as the Sky card drew them (13 ott 2026): from three
+    // cells, that card's own floor ([showsMoments]); narrower, the arc.
+    if (showsMoments(arc, size)) {
+        SkyWidgetContent(model, schemes, skyBitmap)
+        return
+    }
     val content = model.content
     val city = model.city
     // Read out here: the builder below runs inside `remember`, which is not composable.

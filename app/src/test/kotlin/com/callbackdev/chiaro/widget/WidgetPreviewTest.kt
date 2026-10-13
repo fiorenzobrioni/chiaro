@@ -52,6 +52,21 @@ class WidgetPreviewTest {
         }
     }
 
+    /**
+     * Three in the picker (13 ott 2026, the widget review): «The hours ahead» joined «At a
+     * glance» and «Sky moments» joined the day's arc. The two retired providers stay
+     * declared, so the cards already on home screens keep working, and are hidden from the
+     * picker; a third hidden one, or one of the three hidden, fails here.
+     */
+    @Test
+    fun `the picker offers three cards and hides the two that joined them`() {
+        val hidden = xml.listFiles { file -> file.name.startsWith("widget_") }.orEmpty()
+            .filter { "hide_from_picker" in it.readText() }
+            .map { it.name }
+            .toSet()
+        assertEquals(setOf("widget_today_info.xml", "widget_sky_info.xml"), hidden)
+    }
+
     @Test
     fun `a preview layout only uses views RemoteViews knows`() {
         val previews = layout.listFiles { file -> file.name.endsWith("_preview.xml") }.orEmpty()

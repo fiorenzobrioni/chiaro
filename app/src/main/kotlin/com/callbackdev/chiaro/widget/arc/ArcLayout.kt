@@ -56,6 +56,13 @@ internal fun arcRows(height: Dp): Int = when {
     else -> 4
 }
 
+/** Whether the card draws the followed moments instead of the arc: the reader chose them,
+ * and the card is three cells wide or more — the moments' own floor, where the clock and
+ * the moment's name have a column (at two cells they came out «18:… / Gold…»); narrower,
+ * the arc is the honest answer. */
+internal fun showsMoments(settings: ArcSettings, size: DpSize): Boolean =
+    settings.drawing == ArcDrawing.MOMENTS && arcColumns(size.width) >= 3
+
 internal fun arcForm(size: DpSize): ArcForm {
     val columns = arcColumns(size.width)
     val rows = arcRows(size.height)

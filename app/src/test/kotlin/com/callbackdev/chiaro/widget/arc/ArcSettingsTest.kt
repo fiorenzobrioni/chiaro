@@ -30,7 +30,8 @@ class ArcSettingsTest {
         agendaVerdicts = false,
         week = false,
         warning = false,
-        density = ArcDensity.COMPACT
+        density = ArcDensity.COMPACT,
+        drawing = ArcDrawing.MOMENTS
     )
 
     @Test
@@ -49,6 +50,9 @@ class ArcSettingsTest {
         assertTrue(defaults.warning)
         assertEquals(ArcDensity.COMFORTABLE, defaults.density)
         assertEquals(1f, defaults.textScale)
+        // The arc, not the followed moments: the card a reader placed as «the day's arc»
+        // before 13 ott 2026 draws what it drew.
+        assertEquals(ArcDrawing.ARC, defaults.drawing)
     }
 
     @Test
@@ -60,7 +64,8 @@ class ArcSettingsTest {
     @Test
     fun `the codec writes exactly the keys it reads`() {
         assertEquals(ArcSettingsCodec.keys.toSet(), ArcSettingsCodec.encode(ArcSettings()).keys)
-        assertEquals(18, ArcSettingsCodec.keys.size)
+        // Nineteen since the card learned to draw the followed moments (13 ott 2026).
+        assertEquals(19, ArcSettingsCodec.keys.size)
     }
 
     @Test

@@ -510,7 +510,16 @@ time, and it disappears by itself the moment the permission is granted.
 
 ### 5.9 Widgets
 
-Glance, five cards, matching the app's dynamic color:
+Glance, **three cards in the picker** since 13 ott 2026 (the widget review): «At a glance», «In
+words» and «The day's arc». There were five, and two of them were another one at another size:
+«The hours ahead» was «At a glance» with the next hours under it, and «Sky moments» was a list
+the arc's own card had the room and the grammar for. Each now lives inside the card it was a
+size or a setting of, as described below; the two retired providers stay declared and hidden
+from the picker (`hide_from_picker`), so a card already on a home screen keeps working and is
+offered to no one new. Every card wears the launcher's own corner
+(`system_app_widget_background_radius`), as the family's other cards do. Matching the app's
+dynamic color:
+
 
 - **Now**: icon, temperature, place — and, where the card has room, the day's sentence: the same
   headline Today opens with, in a shorter register, or the sky's present state when there is
@@ -522,7 +531,14 @@ Glance, five cards, matching the app's dynamic color:
   a setting precisely so a card would not rewrite itself under a reader's fingers, and a season of
   living beside the launcher's own weather widget, which reflows, showed that reflowing is what the
   reader expects a widget to do.)
-- **Today**: now plus the next hours strip. Since 8 set 2026 the head of the card IS the Now
+- **At a glance carries the hours** (13 ott 2026): from three cells by two rows the card is what
+  «The hours ahead» was, and below that size what it always was. The two cards had one hero row
+  since 8 set; on a home screen they were one card at two sizes, and the tall form «At a glance»
+  drew at three cells by two was a glyph in one corner, three lines in the other and nothing in
+  the middle. The hours' switches (the day's range, the next days) are on its settings now,
+  each saying the size it shows at.
+- **Today** (the hours' card, retired from the picker on 13 ott 2026 and drawn by «At a glance»
+  from three cells by two): now plus the next hours strip. Since 8 set 2026 the head of the card IS the Now
   widget's wide row — glyph, temperature over place, the day's sentence against the far edge and
   the day's high and low under it when asked for — and the strip hangs under it; the line the
   sentence used to take goes to the glyph.
@@ -558,8 +574,12 @@ Glance, five cards, matching the app's dynamic color:
 - Now, Today and In words let the reader turn the sentence off per widget, and Now can lay its
   one-row card the other way round — glyph in the trailing corner, the sentence at the number's shoulder,
   the tall card's composition pressed into one row — so a home screen can carry the two looks.
-- **Sky**: the moments in front of the reader and their verdicts, with the day named when it is not
-  today — the widget nobody else ships. Laid out on the Now widget's grammar (8 set 2026): the
+- **Sky** (retired from the picker on 13 ott 2026: the day's arc draws it, from three cells, when
+  its settings say «the moments you follow»; the arc's own agenda covers only the next
+  twenty-four hours of the sun, the moon and the rain, and this list reaches eclipses, meteor
+  peaks and planets days ahead, so it is a choice on that card and not a loss): the moments in
+  front of the reader and their verdicts, with the day named when it is not today — the widget
+  nobody else ships. Laid out on the Now widget's grammar (8 set 2026): the
   moment's time is the hero number, its name under it — the short name, «Golden hour» and not
   «Golden hour, evening», because the clock already says which (13 ott 2026) — the glyph beside
   them; the verdict is the chip, mark and word, over the number that decided it against the far

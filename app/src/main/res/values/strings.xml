@@ -520,8 +520,8 @@
     <string name="guide_places_order_body">Move a place up or down and the swipe on Today follows that order. Swipe a place away to remove it, with a moment to undo if it was a mistake.</string>
 
     <string name="guide_widgets_title">The home widgets</string>
-    <string name="guide_widgets_all_title">Five of them</string>
-    <string name="guide_widgets_all_body">At a glance: icon, temperature, place — and on a wide or a tall card the day\'s sentence, or the sky\'s state when there is nothing to warn about; resize it and it shows what fits, and its settings can lay it the other way round. The hours ahead: that, plus the next hours. Sky moments: the moment in front of you, when, and its verdict — the same one the Sky screen shows — and the ones after it on a taller card. In words: the same facts with nothing drawn on the card at all — no glyph, no pin, no mark — where the temperature is the drawing and the place is printed whole however long its name. The day\'s arc: the sun\'s path over your place with the sky of every hour under it, the moon and the rain, the next light moment and the agenda after it — from one cell to sixteen, reshaping itself at every size, with a settings screen of its own.</string>
+    <string name="guide_widgets_all_title">Three of them</string>
+    <string name="guide_widgets_all_body">At a glance: icon, temperature, place and the day\'s sentence, or the sky\'s state when there is nothing to warn about. Make it taller and wider, from three cells by two, and it adds the next hours, and on three rows the next days; resize it and it shows what fits, and its settings can lay the one-row card the other way round. In words: the same facts with nothing drawn on the card at all (no glyph, no pin, no mark), where the temperature is the drawing and the place is printed whole however long its name. The day\'s arc: the sun\'s path over your place with the sky of every hour under it, the moon and the rain, the next light moment and the agenda after it, from one cell to sixteen, reshaping itself at every size. From its settings it can show the moments you follow on the Sky screen instead, each with its verdict.</string>
     <string name="guide_widgets_config_title">Setting one up</string>
     <string name="guide_widgets_config_body">Press and hold a widget to open its own settings: which place it watches (the active one, or a fixed place of its own), its background — including the same computed sky the app draws — how solid that background is, and which weather icons it draws with.</string>
     <string name="guide_widgets_honest_title">They never invent</string>
@@ -1305,7 +1305,7 @@
 
     <!-- The home widgets (Fase 8) -->
     <string name="widget_now_label">At a glance</string>
-    <string name="widget_now_desc">The sky right now: icon, temperature, place — and the day\'s sentence where there is room</string>
+    <string name="widget_now_desc">The sky right now: icon, temperature, place and the day\'s sentence; taller, the next hours and the next days</string>
     <string name="widget_today_label">The hours ahead</string>
     <string name="widget_today_desc">Now, the day\'s sentence, the next hours and, on a tall card, the next days</string>
     <string name="widget_sky_label">Sky moments</string>
@@ -1340,6 +1340,7 @@
     <string name="widget_config_content">Content</string>
     <string name="widget_config_show_range">Today\'s high and low</string>
     <string name="widget_config_show_range_note">At the far edge, under the day\'s sentence.</string>
+    <string name="widget_config_show_range_note_glance">On a card three cells wide and two rows tall, at the far edge under the day\'s sentence.</string>
     <string name="widget_config_show_sentence">The day\'s sentence</string>
     <string name="widget_config_show_sentence_note">An umbrella around five, a thunderstorm at three — or, when there is nothing to warn about, what the sky is doing now. Shown where the card has room for it.</string>
     <string name="widget_config_show_warning">Official warnings</string>
@@ -1382,7 +1383,7 @@
     <!-- The day's arc widget (9 set 2026): the card, its configuration screen, its
          picker preview. The agenda rows reuse the timeline strings above. -->
     <string name="widget_arc_label">The day\'s arc</string>
-    <string name="widget_arc_desc">The sun\'s path over your place, the sky of every hour, the moon, the rain, and the next light moment with its agenda — from one cell to sixteen</string>
+    <string name="widget_arc_desc">The sun\'s path over your place, the sky of every hour, the moon, the rain and the next light moment with its agenda; or, from its settings, the moments you follow with their verdicts</string>
     <string name="arc_next_at">%1$s at %2$s</string>
     <string name="arc_next_tomorrow_at">%1$s tomorrow at %2$s</string>
     <string name="arc_next_short">%1$s · %2$s</string>
@@ -1400,6 +1401,11 @@
     <string name="arc_form_card">Two cells wide: number, place, the next moment, the arc, and the agenda where the height allows.</string>
     <string name="arc_form_panel">Two rows: the number with the next moment and its countdown, the arc with its hours, and a row or two of agenda.</string>
     <string name="arc_form_board">Three rows and up: a taller arc, more agenda, and on four rows the week.</string>
+    <!-- What the card is (widget review, 13 ott 2026): «Sky moments» joined this card. -->
+    <string name="arc_config_drawing">The card shows</string>
+    <string name="arc_drawing_arc">The day\'s arc and its agenda</string>
+    <string name="arc_drawing_moments">The moments you follow, with their verdicts</string>
+    <string name="arc_drawing_moments_note">The ones you follow on the Sky screen, eclipses and meteor peaks days ahead included. On a card under three cells wide it draws the arc.</string>
     <string name="arc_config_span">What the arc spans</string>
     <string name="arc_span_today">Today, midnight to midnight</string>
     <string name="arc_span_ahead">The next twenty-four hours</string>

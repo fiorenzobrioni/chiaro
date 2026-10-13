@@ -48,6 +48,12 @@ sections are a normal size and live here alone.
   days.
 - **One name for the golden hour** in Italian («ora d'oro»), and the Sky widget prints the
   moment's short name: its clock already says morning or evening.
+- **Three widgets instead of five.** «At a glance» shows the next hours and days when you make
+  it two rows tall, and «The day's arc» can show the moments you follow instead of the arc.
+  «The hours ahead» and «Sky moments» are no longer offered, but the ones already on your
+  home screen keep working.
+- **Widgets wear your launcher's corner**, and on the day's arc the moon's path is dotted, so
+  it no longer looks like the sun's course under the horizon.
 
 ## [1.1.0] - 2026-10-01
 

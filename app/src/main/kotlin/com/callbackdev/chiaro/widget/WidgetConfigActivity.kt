@@ -240,15 +240,19 @@ internal fun ConfigContent(
                         checked = current.showSentence,
                         onToggle = { save(current.copy(showSentence = it)) }
                     )
-                    if (kind == WidgetKind.TODAY || text) {
+                    // «At a glance» carries the hours' card from three cells by two (13 ott
+                    // 2026), so the hours' card's switches are its too, each saying where it
+                    // shows.
+                    val glance = kind == WidgetKind.NOW
+                    if (kind == WidgetKind.TODAY || text || glance) {
                         ConfigDivider()
                         ConfigSwitchRow(
                             label = stringResource(R.string.widget_config_show_range),
                             note = stringResource(
-                                if (text) {
-                                    R.string.widget_config_show_range_note_text
-                                } else {
-                                    R.string.widget_config_show_range_note
+                                when {
+                                    text -> R.string.widget_config_show_range_note_text
+                                    glance -> R.string.widget_config_show_range_note_glance
+                                    else -> R.string.widget_config_show_range_note
                                 }
                             ),
                             checked = current.showDayRange,
@@ -273,7 +277,7 @@ internal fun ConfigContent(
                     )
                     // The Today card's extra rank on a tall card (23 set 2026): the same
                     // switch as the text card's «Più tardi», saying what it is on this card.
-                    if (kind == WidgetKind.TODAY) {
+                    if (kind == WidgetKind.TODAY || glance) {
                         ConfigDivider()
                         ConfigSwitchRow(
                             label = stringResource(R.string.widget_config_show_days),

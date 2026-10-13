@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The Today widget (VISION §5.9): now, the headline sentence, the next hours.
      previewLayout: see `layout/widget_today_preview.xml`, and widget_now_info for why. -->
+<!-- Retired from the picker (13 ott 2026, widget review: five cards became three).
+     hide_from_picker keeps every card already on a home screen working and configurable,
+     and offers it to no one new; removing the receiver instead would delete those cards
+     from the readers' home screens. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_today_desc"
     android:initialLayout="@layout/glance_default_loading_layout"
@@ -12,5 +16,5 @@
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:configure="com.callbackdev.chiaro.widget.WidgetConfigActivity"
-    android:widgetFeatures="reconfigurable|configuration_optional"
+    android:widgetFeatures="reconfigurable|configuration_optional|hide_from_picker"
     android:widgetCategory="home_screen" />

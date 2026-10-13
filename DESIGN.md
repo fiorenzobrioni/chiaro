@@ -767,6 +767,18 @@ every card:
 | Display | 30 | a hero wider than a temperature: the Sky card's clock, and the arc's number heading a panel or a two-cell card |
 | Hero | 34+ | the current temperature on the weather cards; the tall Now card and the text card grow it with the grant |
 
+**The card's corner is the launcher's** (`system_app_widget_background_radius`, 13 ott 2026,
+from a fixed 24 dp, on the family's three apps at once): 24 dp on stock Android 16, whatever a
+phone's own launcher gives its widgets elsewhere, so the card never wears a corner of its own
+beside them. The arc's plot, a box inside the card, takes the launcher's inner radius
+(`system_app_widget_inner_radius`, 16 dp on stock Android 16, from 8), and its paths are clipped
+to it. Chips stay pills: their corner is half their height by design, not a box's.
+
+**The arc's two night lines are two drawings** (13 ott 2026). The moon's path is round dots in
+the moon's own pale (`ArcPalette.MoonLit`; the card's quiet ink where the plot has no sky), the
+sun's course under the horizon long thin dashes in the quiet ink: in one ink and one rhythm the
+two curves crossing under the horizon read as one line.
+
 Before it each card had grown its own: twelve fixed sizes between 11 and 34, a place at 16
 on one card and 13 on the next, a moment's name at 15 and 13, a strip's hour at 12 over a
 week's day at 11, the verdict — the Sky card's answer — at 11, the smallest type on it.

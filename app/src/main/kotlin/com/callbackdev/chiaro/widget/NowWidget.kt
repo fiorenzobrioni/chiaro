@@ -424,6 +424,14 @@ internal fun NowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
     val context = LocalContext.current
     val content = model.content
     val size = LocalSize.current
+    // From three cells by two rows the card is the hours' card (13 ott 2026, when «Le
+    // prossime ore» joined this one and left the picker): the same hero row, and under it
+    // the next hours and, taller, the next days. The tall form this card drew there had a
+    // glyph in one corner, three lines in the other and the middle empty.
+    if (nowShowsHours(size)) {
+        TodayWidgetContent(model, schemes, skyBitmap)
+        return
+    }
     val layout = if (content == null) null else nowLayout(size)
     val mirrored = layout != NowLayout.TALL &&
         model.look.arrangement == WidgetArrangement.ICON_END

@@ -31,6 +31,17 @@ class NowWidgetLayoutTest {
     private val fourByOne = DpSize(340.dp, 82.dp)
     private val twoByTwo = DpSize(159.dp, 189.dp)
 
+    /** From three cells by two rows the card is the hours' card (13 ott 2026). */
+    @Test
+    fun `the hours come with three cells and two rows, never with one of the two`() {
+        assertTrue(nowShowsHours(DpSize(250.dp, 189.dp)))
+        assertTrue(nowShowsHours(DpSize(340.dp, 189.dp)))
+        assertTrue(nowShowsHours(DpSize(340.dp, 397.dp)))
+        assertFalse(nowShowsHours(fourByOne))
+        assertFalse(nowShowsHours(twoByTwo))
+        assertFalse(nowShowsHours(DpSize(159.dp, 397.dp)))
+    }
+
     @Test
     fun `one row at two or three cells is the narrow form`() {
         assertEquals(NowLayout.NARROW, nowLayout(twoByOne))

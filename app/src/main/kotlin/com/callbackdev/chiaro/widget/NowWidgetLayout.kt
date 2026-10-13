@@ -33,6 +33,17 @@ internal fun nowLayout(size: DpSize): NowLayout = when {
 }
 
 /**
+ * Whether the card carries the hours: two rows tall and three cells wide (13 ott 2026, the
+ * widget review). There the two widgets that were «At a glance» and «The hours ahead» are
+ * one: the first's forms below this size, the second's from it. Three cells is ~210 dp on
+ * every grid measured (the arc's own threshold), where the strip still holds four hours.
+ */
+internal fun nowShowsHours(size: DpSize): Boolean =
+    size.height >= TallMinHeight && size.width >= HoursMinWidth
+
+internal val HoursMinWidth = 210.dp
+
+/**
  * Two rows on any launcher grid this has been measured on: one row lands between
  * ~82 and ~101 dp depending on how the host pads its cells, two rows never under 170.
  */

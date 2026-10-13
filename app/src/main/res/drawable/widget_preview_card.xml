@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The picker previews' card (25 set 2026): the default card, flat, in the blue a fresh
-     widget wears since 21 set (WidgetCardColor.BLUE), with the 24dp corner of the running
-     card, so the picker shows the widget as it will be placed. -->
+     widget wears since 21 set (WidgetCardColor.BLUE), with the launcher's own corner, as the
+     running card has since 13 ott 2026, so the picker shows the widget as it will be placed. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <solid android:color="@color/widget_preview_card" />
-    <corners android:radius="24dp" />
+    <corners android:radius="@android:dimen/system_app_widget_background_radius" />
 </shape>

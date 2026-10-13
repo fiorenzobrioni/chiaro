@@ -240,6 +240,17 @@ class ArcLayoutTest {
         assertFalse(tempsOff.temperatures)
     }
 
+    /** The followed moments, where the reader chose them, from three cells (13 ott 2026). */
+    @Test
+    fun `the moments replace the arc from three cells, never under`() {
+        val moments = defaults.copy(drawing = ArcDrawing.MOMENTS)
+        assertTrue(showsMoments(moments, DpSize(250.dp, 82.dp)))
+        assertTrue(showsMoments(moments, DpSize(340.dp, 397.dp)))
+        assertFalse(showsMoments(moments, DpSize(159.dp, 189.dp)))
+        assertFalse(showsMoments(moments, DpSize(85.dp, 85.dp)))
+        assertFalse(showsMoments(defaults, DpSize(340.dp, 189.dp)))
+    }
+
     @Test
     fun `the week strip is four lines and a glyph`() {
         // The day and the high at the scale's 13 sp, the low at 11 (13 ott 2026):

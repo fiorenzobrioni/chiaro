@@ -21,10 +21,9 @@ import androidx.compose.ui.unit.DpSize
 import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
 import androidx.glance.appwidget.GlanceRemoteViews
 import com.callbackdev.chiaro.widget.NowWidgetContent
-import com.callbackdev.chiaro.widget.SkyWidgetContent
 import com.callbackdev.chiaro.widget.TextWidgetContent
-import com.callbackdev.chiaro.widget.TodayWidgetContent
 import com.callbackdev.chiaro.widget.WidgetKind
+import com.callbackdev.chiaro.widget.arc.ArcDrawing
 import com.callbackdev.chiaro.widget.arc.ArcSettings
 import com.callbackdev.chiaro.widget.arc.ArcWidgetContent
 import com.callbackdev.chiaro.widget.rememberSkyBitmap
@@ -272,22 +271,25 @@ class ReadmeScreenshots {
     // ---------------------------------------------------------------------- widgets
 
     /**
-     * Four widgets as a reader first places them, one under the other: Now and «In
-     * words» at four cells by one, Sky and Today at four by two. The launcher is not in
-     * the picture: the cards are drawn on a plain dark ground instead of a wallpaper.
+     * The three widgets as a reader places them, one under the other (13 ott 2026, when
+     * five became three): «At a glance» and «In words» at four cells by one, the day's
+     * arc set to the moments the reader follows at four by two, and «At a glance» again at
+     * four by two, where it carries the next hours. The launcher is not in the picture:
+     * the cards are drawn on a plain dark ground instead of a wallpaper.
      */
     @Test
     fun widgets() {
         val now = widget(WidgetKind.NOW)
         val words = widget(WidgetKind.TEXT)
-        val sky = widget(WidgetKind.SKY)
-        val today = widget(WidgetKind.TODAY)
+        val moments = widget(WidgetKind.ARC)
         val schemes = schemes()
         val board = listOf(
             WidgetOne(OneRow) { NowWidgetContent(now, schemes, rememberSkyBitmap(now)) },
             WidgetOne(OneRow) { TextWidgetContent(words, schemes, rememberSkyBitmap(words)) },
-            WidgetOne(TwoRows) { SkyWidgetContent(sky, schemes, rememberSkyBitmap(sky)) },
-            WidgetOne(TwoRows) { TodayWidgetContent(today, schemes, rememberSkyBitmap(today)) }
+            WidgetOne(TwoRows) {
+                ArcWidgetContent(moments, schemes, rememberSkyBitmap(moments), ArcSettings(drawing = ArcDrawing.MOMENTS))
+            },
+            WidgetOne(TwoRows) { NowWidgetContent(now, schemes, rememberSkyBitmap(now)) }
         )
         saveBitmap("widgets", drawBoard(board))
     }

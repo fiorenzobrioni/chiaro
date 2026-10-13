@@ -12074,3 +12074,66 @@ sistema (`measureWidgetText`) prima di decidere ogni misura qui sotto.
   `SkyWidgetLayoutTest`; le tabelle di `ArcLayoutTest`, `TodayWidgetLayoutTest`,
   `WidgetWarningTest` ricalcolate con le nuove misure, ciascuna con il conto nel commento.
 - `widgets.png` e `widget-day-arc.png` rigenerati e guardati.
+
+## I widget: la revisione, punti 3 e 4 (committente, 13 ott 2026)
+
+Il committente ha chiesto di procedere con i due punti rimasti della revisione: l'angolo delle
+card preso dal sistema con la curva della luna distinguibile (3), e da cinque widget a tre (4).
+
+### Cosa è cambiato
+
+- **L'angolo è quello del launcher** (`system_app_widget_background_radius`), da un 24 dp
+  fisso, nella card (`WidgetCard`) e nell'anteprima del selettore (`widget_preview_card`), e
+  nello stesso giorno in Passo e Tempo. Il riquadro dell'arco prende il raggio interno
+  (`system_app_widget_inner_radius`), e le sue curve sono ritagliate su quell'angolo.
+- **La luna dell'arco è a puntini** tondi nel pallido della luna (`ArcPalette.MoonLit`; nel
+  colore quieto della card dove il riquadro non ha cielo), la corsa del sole sotto l'orizzonte
+  a trattini lunghi e sottili: prima erano due tratteggi quasi uguali nello stesso inchiostro,
+  e dove si incrociano si leggevano come una linea sola.
+- **Tre widget nel selettore**: «Colpo d'occhio», «In parole», «L'arco del giorno».
+  - «Colpo d'occhio» da tre celle per due righe disegna quello che era «Le prossime ore»
+    (`nowShowsHours`): la riga in alto, le ore sotto e da tre righe i giorni. Sotto quella
+    misura è quello che era. Le sue impostazioni hanno ora l'intervallo del giorno e i giorni,
+    ciascuno con la misura a cui compare.
+  - «L'arco del giorno» ha una scelta nuova, «La card mostra»: l'arco con la sua agenda, oppure
+    «I momenti che segui, con i loro verdetti», cioè quello che era «Momenti del cielo»
+    (`ArcDrawing.MOMENTS`, `showsMoments`), da tre celle in su; sotto, l'arco. Con i momenti le
+    impostazioni dell'arco non sono offerte (non cambierebbero niente).
+  - «Le prossime ore» e «Momenti del cielo» hanno `hide_from_picker`: chi li ha già sulla
+    schermata home li tiene, funzionanti e configurabili; nessuno li trova più nel selettore.
+- La guida («Sono tre»), le descrizioni del selettore, il README (la tavola dei widget ora
+  mostra i tre, con «Colpo d'occhio» anche a due righe e l'arco con i momenti) e VISION §5.9.
+
+### Decisioni e deviazioni
+
+- **Il nome resta «L'arco del giorno», non «Cielo»** come nella proposta: è il nome che il
+  committente gli ha dato e quello che la guida e il README usano, e i momenti sono una sua
+  impostazione, detta nella descrizione del selettore.
+- **«Momenti del cielo» non si poteva sciogliere nell'agenda dell'arco**, come la revisione
+  dava per scontato: l'agenda copre le prossime ventiquattro ore del sole, della luna e della
+  pioggia, mentre i momenti seguiti arrivano a eclissi, picchi di stelle cadenti e pianeti a
+  giorni di distanza. Diventa quindi una scelta della card, non una perdita.
+- **I momenti da tre celle**, non da due: provati a due celle, l'orario e il nome uscivano
+  «18:… / Gold…». Era il minimo del widget Cielo, e resta il suo.
+- **I widget ritirati non sono rimossi**: togliere il receiver cancellerebbe le card dalle
+  schermate home di chi le ha. `hide_from_picker` (API 31, sotto il nostro minSdk 33) è il
+  modo previsto dalla piattaforma. `WidgetPreviewTest` fissa quali due sono nascosti.
+- **Su Android 16 standard l'angolo di sistema è 24 dp**, lo stesso di prima, quindi le
+  immagini del README non cambiano per l'angolo: cambia sui launcher che danno un raggio loro.
+  Il raggio interno invece è 16 (prima l'arco usava 8): visto nello screenshot, e da lì il
+  ritaglio delle curve, che agli angoli inferiori uscivano dal riquadro.
+- **Lo spazio vuoto delle card alte resta** (Colpo d'occhio 4×4 tra la riga in alto e le
+  strisce, i momenti a tre e quattro righe): non era nei quattro punti, ed è segnato tra le cose
+  da fare.
+
+### Come è stato verificato
+
+- Le tre card disegnate a tutte le dimensioni, l'arco anche con i momenti, con un test
+  temporaneo poi rimosso; guardato ogni foglio.
+- Test nuovi: le ore di «Colpo d'occhio» in `NowWidgetLayoutTest`, i momenti in
+  `ArcLayoutTest`, la scelta nel giro di codifica di `ArcSettingsTest`, i due nascosti in
+  `WidgetPreviewTest`.
+- `widget-day-arc.png` rigenerato (la luna a puntini, il riquadro con il raggio interno);
+  `widgets.png` disegnato con le tre card, uguale pixel per pixel al precedente (le stesse
+  forme, ora di due card invece che di quattro) e quindi lasciato com'era.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
