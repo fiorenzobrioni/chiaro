@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
  * the hero's words when a stale marker takes their third line. Everything here is
  * arithmetic on dp so a table can pin it (`TodayWidgetLayoutTest`).
  */
-internal fun todayStripCells(width: Dp): Int =
-    ((width - WidgetCardPadding * 2 + StripCellSpacing) / (StripCellMin + StripCellSpacing))
+internal fun todayStripCells(width: Dp, cellMin: Dp = StripCellMin): Int =
+    ((width - WidgetCardPadding * 2 + StripCellSpacing) / (maxOf(cellMin, StripCellMin) + StripCellSpacing))
         .toInt()
         .coerceIn(StripCellsFloor, StripCellsCeiling)
 
@@ -207,12 +207,21 @@ internal val StripGap = 8.dp
  * afternoon. At the reference four-cell width this lands on seven cells.
  */
 internal val StripCellMin = 38.dp
+
+/**
+ * The cell an hour's label really needs: the widest clock time the strip can print,
+ * measured by the caller at the label's size and the reader's font scale, plus
+ * [RowFitSlack]. «13:00» (widget review, 13 ott 2026: a bare «13» over a row of days read
+ * as a date) is ~33 dp at 13 sp and fits the 38 dp floor at the default font size; at a
+ * larger one the strip shows an hour fewer rather than cutting «13:…».
+ */
+internal fun stripCellFor(labelWidth: Dp): Dp = labelWidth + RowFitSlack
 internal val StripCellSpacing = 6.dp
 internal const val StripCellsFloor = 4
 internal const val StripCellsCeiling = 7
 
 internal val StripIconSize = 32.dp
 internal val StripInnerGap = 2.dp
-internal const val StripHourSp = 12f
-internal const val StripTempSp = 14f
-internal const val StripRainSp = 11f
+internal const val StripHourSp = WidgetType.Label
+internal const val StripTempSp = WidgetType.Label
+internal const val StripRainSp = WidgetType.Caption

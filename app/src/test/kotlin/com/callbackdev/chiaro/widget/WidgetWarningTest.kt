@@ -106,11 +106,11 @@ class WidgetWarningTest {
         assertEquals(warningChipHeight(1f) + WarningChipGap, warningBlock(1f, drawn = true))
     }
 
-    /** The chip's box at the default font size: the word's line, which is taller than
-     * the 12 dp mark, plus 3 dp of padding either side. */
+    /** The chip's box at the default font size: the word's 13 sp line, which is taller
+     * than the 12 dp mark, plus 2 dp of padding either side (13 ott 2026, from 11 sp and 3). */
     @Test
     fun `the chip is one measured height every budget subtracts`() {
-        assertEquals(20.52f, warningChipHeight(1f).value, 0.01f)
+        assertEquals(21.16f, warningChipHeight(1f).value, 0.01f)
         // A reader's larger font grows it, and every budget that made room follows.
         assertTrue(warningChipHeight(1.3f) > warningChipHeight(1f))
     }

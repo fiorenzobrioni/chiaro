@@ -11974,3 +11974,100 @@ cosa va da dove a dove, nei colori e nel pallino di adesso.
 - Screenshot temporaneo della sezione (inglese, tema chiaro), guardato, poi rimosso insieme al
   test che lo disegnava.
 - `./gradlew test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+
+## I widget: la revisione, punti 1 e 2 (committente, 13 ott 2026)
+
+Il committente ha chiesto una revisione dei cinque widget (layout, grafica, tipografia, numero
+dei widget), l'ha accettata in quattro punti e ha chiesto di partire dai primi due: le correzioni
+rapide e la scala tipografica con un solo abito per il verdetto. I punti 3 (il raggio degli
+angoli preso dal sistema, la curva della luna distinguibile) e 4 (da cinque widget a tre) sono
+approvati e vengono dopo. Il raggio riguarda tutta la famiglia, e si fa nelle tre app insieme.
+
+La revisione è stata fatta disegnando ogni widget a ogni dimensione che offre (EN, IT, card
+chiara, card cielo) con la registrazione di Milano del README, e misurando i testi con il font di
+sistema (`measureWidgetText`) prima di decidere ogni misura qui sotto.
+
+### Cosa è cambiato
+
+**Punto 1, le correzioni:**
+- **L'agenda dell'arco a due celle** è su due righe, il nome sopra l'orario e il segno del
+  verdetto dopo l'orario («Domani ·» davanti all'orario, non al nome). Su una riga la colonna di
+  131 dp lasciava al nome 42 dp, e il 2×4 stampava «Moon… / Gold… / Tom…». Ora il nome ha 103 dp,
+  e il più lungo che l'agenda dice nelle due lingue, «Finisce l'ora d'oro», ne misura 99,5. Le
+  righe della pioggia usano il nome breve del titolo. Il 2×3 passa da tre righe a due, il 2×4 ne
+  tiene quattro.
+- **Le ore della striscia di «Le prossime ore» sono orari**: «13:00» e non «13», che sopra la riga
+  dei giorni («Oggi Sab Dom») si leggeva come il 13 del mese (`Formats.hourClockLabel`). Con
+  l'orologio a 12 ore resta «1 PM», che lo dice già. La cella si allarga all'etichetta misurata
+  (`stripCellFor`): a un font grande la striscia mostra un'ora in meno invece di tagliare «13:…».
+  L'app e i tick dell'arco restano «13»: lì l'asse o il cambio di giorno dicono cosa sono.
+- **Un solo nome per l'ora d'oro.** In italiano l'app diceva «Ora dorata» nel Cielo e «Ora d'oro»
+  nell'agenda di Oggi e nell'arco: ora è «ora d'oro» ovunque (nomi del Cielo, guida). E il widget
+  Cielo stampa il **nome breve** (`SkyText.shortNameRes`): «Ora d'oro», non «Ora d'oro, sera»,
+  perché l'orario accanto dice già quale; il «, sera» era quello che l'ellissi mangiava a tre
+  celle. Vale per i sette momenti che hanno un gemello mattina/sera; «Venere, stella della sera»
+  resta intero, perché lì la sera è cosa il momento è.
+- **Il titolo dell'arco** è il prossimo momento con un verdetto, poi il sole, poi la luna
+  (`ArcSeries.nextLight`). Diceva «Sorge la luna alle 18:35» sopra un'ora d'oro di un minuto dopo
+  che il lettore segue e che il Cielo giudica «Bello».
+- **I nomi nel README** sono quelli del selettore dei widget («Colpo d'occhio», «Le prossime
+  ore», «In parole», «Momenti del cielo», «L'arco del giorno» e gli inglesi), che la guida usava
+  già.
+
+**Punto 2, la scala e il verdetto:**
+- **La scala tipografica dei widget** (`WidgetType.kt`, DESIGN §5): sei gradini, ciascuno un
+  ruolo. Caption 11, Label 13, Body 16, Title 22, Display 30, Hero 34 e oltre. Cosa si è mosso:
+  il nome del momento nel Cielo 15 → 16; la pillola del verdetto 11 → 13 e l'evidenza 14 → 13;
+  la striscia di «Le prossime ore» 12/14 → 13/13 (il valore Medium, così etichetta e numero si
+  distinguono per peso e inchiostro); la settimana dell'arco 11/12 → 13/13; la frase dell'arco
+  15 → 16 e la riga sotto 12 → 13; il numero dell'arco a due celle 28 → 30, a una riga impilata
+  20 → 22; le righe dell'arco a una riga 12 → 13; «Più tardi» di «In parole» 14 → 13; la pillola
+  dell'allerta 11 → 13; gli stati vuoti 14/12 → 16/13. `WidgetTypeTest` fallisce su una misura
+  fuori scala.
+- **Il verdetto ha due abiti, per ruolo** (prima tre). Il titolo del Cielo porta la pillola,
+  ora con il segno prima della parola come nella pillola dell'app; stretta, la pillola si riduce
+  al segno nel cerchio. Ogni riga di elenco, nel Cielo come nell'arco, porta il segno nudo
+  dell'arco in uno spazio che ogni riga tiene, così gli orari stanno in colonna (`VerdictNote`).
+- **L'evidenza ha la maiuscola** («Nuvole 19%»): nell'app segue la parola sulla stessa riga, nel
+  widget è una riga a sé.
+
+### Decisioni e deviazioni
+
+- **Sei gradini, non i cinque proposti** (11/13/16/22/34). Il Cielo stampa un orario come numero
+  principale, e «7:55 PM» a 34 sp misura 128 dp, contro i 108–130 che una card a quattro celle
+  lascia alle parole: il 30 che aveva resta, ed è il gradino Display, che serve anche al numero
+  dell'arco accanto alla frase.
+- **Una misura resta fuori scala, di proposito**: la frase di «In parole» a 18 sp. È una
+  decisione del committente sul dispositivo (19 set 2026: «17 su 16 non è un grado»), e la scala
+  non la scavalca senza chiederlo. È scritta in `WidgetType` e nel test.
+- **La colonna del verdetto si misura nella lingua della card** (`skyVerdictColumn`,
+  `skyWordsMin`). Con il segno nella pillola e la parola a 13, una colonna fissa per una lingua è
+  sbagliata per l'altra: «Presto per dirlo» con il segno fa 124 dp, «Not sure yet» 102; «19:55»
+  80, «7:55 PM» 116. Resta geometrica (la parola più larga delle quattro e un orario campione,
+  mai il momento in mostra), così la card non cambia forma con la previsione. Le tabelle dei test
+  usano il riferimento italiano a 24 ore; un 4 celle su una griglia a cinque colonne (320 dp) ora
+  è largo in italiano e stretto in inglese a 12 ore, ed è giusto così.
+- **Il padding verticale della pillola dell'allerta e del verdetto è 2 dp, non 3**: con la parola
+  a 13 la pillola sarebbe cresciuta di 2,64 dp, e una card «Le prossime ore» 3×3 con l'intervallo
+  del giorno e un'allerta perdeva la riga dei giorni. Con 2 dp cresce di 0,64 e la tiene.
+- **La card dell'arco a una riga ha 9 dp sopra e sotto, non 10**: con le righe a 13 sp il nome e
+  l'orario sotto il numero non stavano più su due righe in 82 dp (63,36 contro 62). Il dp che
+  manca viene dal padding.
+- **Il 2×3 dell'arco perde le temperature sotto le ore** (l'arco scende a 74 dp, sotto i 76 che
+  servono): due righe d'agenda leggibili valgono più di una riga di numeri sul disegno.
+- **Il segno del verdetto nelle righe del Cielo** prende l'inchiostro misurato per il fondo della
+  card (`palette.darkGround`), come l'arco; la pillola e il cerchio del titolo restano sulla
+  coppia contenitore/inchiostro, che porta il suo fondo.
+- **La famiglia**: la scala nasce qui, misurata su questi widget. Passo e Tempo hanno le loro
+  card sulla stessa grammatica; l'allineamento delle loro misure si fa nei loro repository.
+
+### Come è stato verificato
+
+- Ogni widget disegnato a ogni dimensione offerta, in italiano e in inglese, prima e dopo, con un
+  test temporaneo poi rimosso; guardato ogni foglio.
+- I testi misurati con `measureWidgetText` (font di sistema) per ogni larghezza citata sopra.
+- Test nuovi: `WidgetTypeTest`, il titolo dell'arco in `ArcSeriesTest`, `hourClockLabel` in
+  `FormatsTest`, le celle in `TodayWidgetLayoutTest`, i 320 dp in due lingue in
+  `SkyWidgetLayoutTest`; le tabelle di `ArcLayoutTest`, `TodayWidgetLayoutTest`,
+  `WidgetWarningTest` ricalcolate con le nuove misure, ciascuna con il conto nel commento.
+- `widgets.png` e `widget-day-arc.png` rigenerati e guardati.

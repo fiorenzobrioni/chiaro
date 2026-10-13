@@ -46,13 +46,14 @@ class SkyWidgetLayoutTest {
 
     @Test
     fun `the words' column is the row less glyph, gaps, inset and verdict block`() {
-        // 340 − 4 − 70 − 8 − 12 − 14 − 96 = 136.
-        assertEquals(136f, skyWordsColumnWidth(fourByOne).value, 0.01f)
-        // On a tall card the glyph is 60, so the same width leaves 146.
-        assertEquals(146f, skyWordsColumnWidth(fourByTwo).value, 0.01f)
-        // Three cells leave 46 (250 − 4 − 70 − 8 − 12 − 14 − 96): no room for «7:55 PM»
+        // 340 − 4 − 70 − 8 − 12 − 14 − 124 = 108 (the reference's verdict block: «Presto
+        // per dirlo» with its mark, 13 ott 2026).
+        assertEquals(108f, skyWordsColumnWidth(fourByOne).value, 0.01f)
+        // On a tall card the glyph is 60, so the same width leaves 118.
+        assertEquals(118f, skyWordsColumnWidth(fourByTwo).value, 0.01f)
+        // Three cells leave 18 (250 − 4 − 70 − 8 − 12 − 14 − 124): no room for a clock
         // beside a chip.
-        assertEquals(46f, skyWordsColumnWidth(threeByOne).value, 0.01f)
+        assertEquals(18f, skyWordsColumnWidth(threeByOne).value, 0.01f)
     }
 
     @Test
@@ -60,12 +61,16 @@ class SkyWidgetLayoutTest {
         assertTrue(skyIsWide(fourByOne))
         assertTrue(skyIsWide(fourByTwo))
         // The 72 dp cap is what keeps a four-cell card wide on a 101 dp launcher:
-        // 340 − 4 − 72 − 8 − 12 − 14 − 96 = 134 ≥ 120.
+        // 340 − 4 − 72 − 8 − 12 − 14 − 124 = 106 ≥ 84.
         assertTrue(skyIsWide(DpSize(340.dp, 101.dp)))
         assertFalse(skyIsWide(threeByOne))
         assertFalse(skyIsWide(threeByTwo))
-        // Four cells on a five-column grid (320): 116, under the 120 the clock needs.
-        assertFalse(skyIsWide(DpSize(320.dp, 82.dp)))
+        // Four cells on a five-column grid (320) leave 88: «19:55» (80 with its slack) fits...
+        assertTrue(skyIsWide(DpSize(320.dp, 82.dp)))
+        // ...and a twelve-hour clock does not: English's widest chip, «Not sure yet» with
+        // its mark (102), leaves 110 under the 116 «7:55 PM» needs, so that card is narrow.
+        assertFalse(skyIsWide(DpSize(320.dp, 82.dp), verdictColumn = 102.dp, wordsMin = 116.dp))
+        assertTrue(skyIsWide(fourByOne, verdictColumn = 102.dp, wordsMin = 116.dp))
     }
 
     @Test

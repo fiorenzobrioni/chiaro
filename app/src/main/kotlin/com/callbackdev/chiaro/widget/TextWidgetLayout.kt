@@ -816,11 +816,11 @@ internal const val TextSentenceSp = 18f
  * Inside the rank the other two axes still do the sorting: the place is Regular in the
  * quiet ink, the figures Medium in the strong one, and the range carries its two marks.
  */
-internal const val TextFactSp = 16f
+internal const val TextFactSp = WidgetType.Body
 
 /** Rank 4, the footnote: the stale marker, at the household's own stale size and in the
  * freshness ink it wears on every other card. */
-internal const val TextStaleSp = 11f
+internal const val TextStaleSp = WidgetType.Caption
 
 /**
  * The hours «Più tardi» prints: from the first one at least [TextLaterLeadMinutes] ahead
@@ -851,7 +851,7 @@ internal const val TextLaterLeadMinutes = 90L
 
 /** The table's quiet columns, the time and the word: a step under the temperature beside
  * them, so the figure is what the eye lands on in every row. */
-internal const val TextLaterSp = 14f
+internal const val TextLaterSp = WidgetType.Label
 
 /** «00:00» at [TextLaterSp] with a gap after it, and «12:00 AM» for a 12-hour clock. */
 internal val TextLaterTimeColumn24 = 44.dp

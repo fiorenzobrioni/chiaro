@@ -89,9 +89,20 @@ internal data class ArcSeries(
      * weather, not a moment the day turns on: the agenda keeps every kind, the hero takes
      * the first that has a job behind it, and falls back to whatever is ahead when
      * nothing of the light is.
+     *
+     * **A judged moment first, then the sun, then the moon** (widget review, 13 ott 2026).
+     * The card's header read «Moonrise at 18:35» over a golden hour one minute later that
+     * the reader follows and the Sky screen calls great: the header named the moment
+     * nobody asked about and left the verdict a row below. A verdict exists only for a
+     * moment the reader follows, so «the first one with a verdict» is «the next thing
+     * this reader is waiting for»; without one, the sun's moments outrank the moon's,
+     * because the card is the sun's path and the moon is the line drawn under it.
      */
     val nextLight: ArcEvent?
-        get() = events.firstOrNull { jobIdsFor(it.item.kind).isNotEmpty() } ?: events.firstOrNull()
+        get() = events.firstOrNull { it.verdict != null }
+            ?: events.firstOrNull { it.item.kind in SunKinds }
+            ?: events.firstOrNull { jobIdsFor(it.item.kind).isNotEmpty() }
+            ?: events.firstOrNull()
 
     /** The forecast hour starting exactly at [at], if the window has it. */
     fun hourAt(at: Instant): ArcHour? = hours.firstOrNull { it.at == at }
@@ -130,6 +141,12 @@ internal data class ArcSeries(
 
         /** The moon moves as slowly across the sky; every half hour is plenty. */
         const val MoonSamples = 49
+
+        /** The sun's own moments, which outrank the moon's in the header. */
+        val SunKinds = setOf(
+            TimelineKind.SUNRISE, TimelineKind.GOLDEN_MORNING_END, TimelineKind.GOLDEN_EVENING,
+            TimelineKind.SUNSET, TimelineKind.BLUE_EVENING, TimelineKind.DARK
+        )
 
         /** The agenda looks this far ahead, whatever the plot spans. */
         val AgendaReach: Duration = Duration.ofHours(24)

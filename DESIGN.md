@@ -753,8 +753,29 @@ probabilities to whole percent; wind to whole units; distances, rain (mm) and sn
 one decimal below 10, whole above.
 
 **The widgets' own scale** is not this one and cannot be: a home-screen card is drawn by
-`RemoteViews` at whatever size the launcher granted, so its sizes are arithmetic on the
-grant rather than named roles (`WidgetUi.kt`, and a `*WidgetLayout.kt` per card). Four of
+`RemoteViews` at whatever size the launcher granted, so its layouts are arithmetic on the
+grant (`WidgetUi.kt`, and a `*WidgetLayout.kt` per card). **Its sizes are six steps**
+(`WidgetType.kt`, widget review of 13 ott 2026), each a role, and one role is one size on
+every card:
+
+| Step | sp | Role |
+|---|---|---|
+| Caption | 11 | read last: the stale marker, a plot's hour ticks, a strip's rain, a day's low |
+| Label | 13 | a list's row and a strip's cell: an agenda line, an hour and its figure (the figure Medium), every chip's word, the line under a hero sentence |
+| Body | 16 | the second thing read: the day's sentence, the place, a moment's name, the day's range |
+| Title | 22 | the figure of a card whose hero is the drawing: the arc's one-row and one-cell number |
+| Display | 30 | a hero wider than a temperature: the Sky card's clock, and the arc's number heading a panel or a two-cell card |
+| Hero | 34+ | the current temperature on the weather cards; the tall Now card and the text card grow it with the grant |
+
+Before it each card had grown its own: twelve fixed sizes between 11 and 34, a place at 16
+on one card and 13 on the next, a moment's name at 15 and 13, a strip's hour at 12 over a
+week's day at 11, the verdict — the Sky card's answer — at 11, the smallest type on it.
+`WidgetTypeTest` fails on a widget size that is not a step. The one size off the scale is
+on purpose and written down there: the text card's sentence at 18 (below). Display is the
+step the review did not plan: «7:55 PM» at 34 sp is 128 dp, and a four-cell card's words
+have 108 to 130 of it.
+
+Four of
 the five cards get their hierarchy from the weather glyph, which fills the height and is
 the first thing read; the text widget (19 set 2026) has no glyph and builds the same
 hierarchy out of type alone, in **four ranks that differ by size and weight and ink, never
@@ -1354,6 +1375,19 @@ alone** (§2.3), never a bare dot, never a number without the word. The glyph is
 hand of its own (calligraphic on One UI, seen 9 set 2026). The same four marks serve the
 chip, the Sky widget's round mark and the arc widget's agenda rows.
 
+**On a widget the verdict has two dresses, by role** (widget review, 13 ott 2026; it had
+three). The **hero** — the moment the Sky card is about — wears this chip: the mark, then
+the word at the widget scale's 13 sp Medium, on the verdict's container, with the number
+under it where the card is wide («Nuvole 19%», capitalized because there it is a line of its
+own); where it is narrow, the chip shrinks to its mark in the round container. Every **row**
+of a list — the Sky card's moments after the first, the arc's agenda — wears the bare mark in
+the verdict's ink for the card's ground, in a slot every row keeps so the clocks stand in a
+column. The Sky card's rows used to wear the word chip on a wide card and the round mark on a
+narrow one; the bare mark is the one the committente chose for a list row (9 set 2026: a pill
+in a list was «a punch in the eye»), so the two cards' lists now say a verdict the same way.
+The wide chip's column is measured in the card's language (`skyVerdictColumn`): «Presto per
+dirlo» with its mark is 124 dp, «Not sure yet» 102.
+
 **8.8 MomentCard** — a sky event: name in plain words ("Golden hour, evening"), time,
 verdict chip, the number behind it, a bell for a reminder. The dotted job id never appears.
 The leading glyph is the weather family in its own colors at the Sky's own rung (51dp
@@ -1539,8 +1573,8 @@ attribution the licence requires — "Dipartimento della Protezione Civile · bo
 dell'8 settembre, 15:19 · CC BY 4.0" — and the link to the bulletin itself.
 
 The **chip** is the same statement where a banner does not fit: `ic_warning` at 12dp in
-the level's ink plus the level's word at 11sp on the level's container, 10dp corner, 7/3
-padding — the `VerdictChip` grammar at the widget's size. Avvisi's card leads with it, and
+the level's ink plus the level's word at 13sp (the widget scale's Label, since 13 ott 2026;
+11 before) on the level's container, 10dp corner, 7/2 padding — the `VerdictChip` grammar at the widget's size. Avvisi's card leads with it, and
 the home-screen widgets carry it.
 
 **On a widget** the rule is what the card is ALREADY saying (`warningSlot`, one table for

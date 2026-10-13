@@ -31,6 +31,8 @@ import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.layout.width
+import androidx.glance.semantics.contentDescription
+import androidx.glance.semantics.semantics
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
@@ -151,7 +153,7 @@ private fun HeroRow(
                     horizontalAlignment = Alignment.End,
                     modifier = GlanceModifier
                         .padding(start = SentenceGap)
-                        .width(SkyVerdictColumn)
+                        .width(skyVerdictColumn(context))
                 ) {
                     VerdictChip(verdict, palette)
                     evidence(context, verdict)?.let { number ->
@@ -181,7 +183,7 @@ private fun HeroRow(
 @Composable
 private fun TallContent(model: WidgetModel, palette: WidgetPalette, size: DpSize) {
     val context = LocalContext.current
-    val wide = skyIsWide(size)
+    val wide = skyIsWide(size, context)
     val rows = skyRows(size, fontScale(context), available = model.moments.size - 1)
     Column(modifier = GlanceModifier.fillMaxSize()) {
         Spacer(modifier = GlanceModifier.defaultWeight())
@@ -198,8 +200,10 @@ private fun TallContent(model: WidgetModel, palette: WidgetPalette, size: DpSize
             // and drops the rest without a word. With spacers this column ran to
             // thirteen at the five rows a three-row card can hold — the weight and the
             // last rows were being dropped in silence. Nine now, at the widest.
-            model.moments.drop(1).take(rows).forEachIndexed { index, next ->
-                CompactRow(model, next, palette, wide, topGap = if (index > 0) SkyRowGap else 0.dp)
+            val shown = model.moments.drop(1).take(rows)
+            val marks = shown.any { it.verdict != null }
+            shown.forEachIndexed { index, next ->
+                CompactRow(model, next, palette, marks, topGap = if (index > 0) SkyRowGap else 0.dp)
             }
         }
         Spacer(modifier = GlanceModifier.defaultWeight())
@@ -211,15 +215,17 @@ private fun TallContent(model: WidgetModel, palette: WidgetPalette, size: DpSize
  * share a size so their baselines meet under centre alignment; only the name gives
  * ground on a narrow card, because the clock carries the day marker and a bare «06:47»
  * on a home screen reads as this morning's (committente, 3 set). The verdict is the
- * word chip where the card is wide and the mark where it is not — the same rule as
- * the hero above it, so a card speaks one register top to bottom.
+ * note ([VerdictNote]) on every width, the arc's agenda's own: a row is a list's, and
+ * the two cards' lists now say a verdict the same way.
  */
 @Composable
 private fun CompactRow(
     model: WidgetModel,
     moment: NextMoment,
     palette: WidgetPalette,
-    wide: Boolean,
+    /** Whether any row on the card has a verdict: then every row keeps the note's slot,
+     * so the clocks stand in one column (the arc's agenda found it first). */
+    marks: Boolean,
     /** The air above this row, taken as padding INSIDE a taller box (the arc widget's
      * own cure): the row still occupies its height plus the gap, and the column still
      * has one child per row rather than two. */
@@ -235,7 +241,7 @@ private fun CompactRow(
     ) {
         MomentGlyph(model, moment, palette, SkyRowGlyph)
         Text(
-            text = context.getString(SkyText.nameRes(moment.job.id)),
+            text = context.getString(SkyText.shortNameRes(moment.job.id)),
             style = TextStyle(color = palette.primary, fontSize = SkyCompactSp.sp),
             maxLines = 1,
             modifier = GlanceModifier.padding(start = 8.dp).defaultWeight()
@@ -246,9 +252,11 @@ private fun CompactRow(
             maxLines = 1,
             modifier = GlanceModifier.padding(start = MarkGap)
         )
-        moment.verdict?.let { verdict ->
+        if (marks) {
             Spacer(modifier = GlanceModifier.width(MarkGap))
-            if (wide) VerdictChip(verdict, palette) else VerdictMark(verdict, palette)
+            Box(contentAlignment = Alignment.Center, modifier = GlanceModifier.width(SkyNoteSlot)) {
+                moment.verdict?.let { VerdictNote(it, palette) }
+            }
         }
     }
 }
@@ -281,21 +289,52 @@ private fun MomentGlyph(
 internal fun VerdictChip(verdict: SkyVerdict, palette: WidgetPalette) {
     val context = LocalContext.current
     val night = isNight(context)
+    val ink = verdictInk(verdict.kind, night, palette.dress)
+    val word = context.getString(SkyText.verdictWordRes(verdict.kind))
     Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier
             .background(verdictContainer(verdict.kind, night, palette.dress))
             .cornerRadius(10.dp)
-            .padding(horizontal = 7.dp, vertical = 3.dp)
+            .padding(horizontal = SkyChipPadH, vertical = WarningChipPadV)
+            .semantics { contentDescription = word }
     ) {
+        Image(
+            provider = ImageProvider(ChiaroIcons.verdictMarkRes(verdict.kind)),
+            contentDescription = null, // the chip's own semantics say the word
+            colorFilter = ColorFilter.tint(ink),
+            modifier = GlanceModifier.size(SkyMarkGlyph)
+        )
+        Spacer(modifier = GlanceModifier.width(SkyChipTextGap))
         Text(
-            text = context.getString(SkyText.verdictWordRes(verdict.kind)),
-            style = TextStyle(
-                color = verdictInk(verdict.kind, night, palette.dress),
-                fontSize = SkyChipSp.sp
-            ),
+            text = word,
+            style = TextStyle(color = ink, fontSize = SkyChipSp.sp, fontWeight = FontWeight.Medium),
             maxLines = 1
         )
     }
+}
+
+/**
+ * The verdict as a note beside a row's clock — every list row on every card, the Sky
+ * card's moments after the first and the arc's agenda alike (widget review, 13 ott 2026:
+ * the Sky card's rows wore a word chip where the card was wide and a round mark where it
+ * was narrow, and the arc's the bare mark, three dresses for one answer). The bare mark
+ * won because it is the one the committente chose for a row (9 set 2026: the pill in a
+ * list was «a punch in the eye»): the series' own `✓ ~ ✗ ?`, drawn, at the words'
+ * x-height, in the verdict's ink for the CARD'S ground — the dark set on a dark card
+ * whatever the phone's theme, because a bare glyph in the wrong set is unreadable. The
+ * hero keeps the chip: there the verdict is what the card is for.
+ */
+@Composable
+internal fun VerdictNote(verdict: SkyVerdict, palette: WidgetPalette) {
+    val context = LocalContext.current
+    Image(
+        provider = ImageProvider(ChiaroIcons.verdictMarkRes(verdict.kind)),
+        // The word for it, so the row reads «Golden hour, 19:07, fail».
+        contentDescription = context.getString(SkyText.verdictWordRes(verdict.kind)),
+        colorFilter = ColorFilter.tint(verdictInk(verdict.kind, palette.darkGround, palette.dress)),
+        modifier = GlanceModifier.size(SkyMarkGlyph)
+    )
 }
 
 /**
@@ -351,7 +390,7 @@ private fun heroClock(context: Context, model: WidgetModel, moment: NextMoment):
  * guess at how the reader counts days.
  */
 private fun heroLabel(context: Context, model: WidgetModel, moment: NextMoment, today: LocalDate): String {
-    val name = context.getString(SkyText.nameRes(moment.job.id))
+    val name = context.getString(SkyText.shortNameRes(moment.job.id))
     return listOfNotNull(dayMark(context, model, moment, today), name).joinToString(" · ")
 }
 
@@ -388,8 +427,11 @@ private fun timeFormatter(context: Context): DateTimeFormatter = Formats.timeFor
  */
 private fun evidence(context: Context, verdict: SkyVerdict): String? =
     // The short form (24 set 2026): the card's evidence line is budgeted for «nuvole 10%»,
-    // and the layer the app's screens add would be what the budget cuts.
+    // and the layer the app's screens add would be what the budget cuts. Capitalized here
+    // (widget review, 13 ott 2026): in the app it follows the chip's word on one line, on
+    // the card it is a line of its own, and «nuvole 19%» under «Bello» read as a typo.
     SkyText.chipEvidence(context.resources, verdict, withLayer = false)
+        ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 
 /**
  * The moon's day-moment gets its real phase; everything else its family glyph — and the
@@ -423,7 +465,7 @@ private fun NoMomentContent(palette: WidgetPalette) {
     ) {
         Text(
             text = context.getString(R.string.widget_sky_empty),
-            style = secondaryStyle(palette, 12.sp)
+            style = secondaryStyle(palette, WidgetType.Label.sp)
         )
     }
 }
@@ -461,7 +503,7 @@ internal fun SkyWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
             else -> HeroRow(
                 model, model.moments.first(), palette,
                 glyph = skyHeroIconSize(size),
-                wide = skyIsWide(size),
+                wide = skyIsWide(size, LocalContext.current),
                 modifier = GlanceModifier.fillMaxSize()
             )
         }

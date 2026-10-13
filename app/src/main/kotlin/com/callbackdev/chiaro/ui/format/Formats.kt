@@ -87,6 +87,17 @@ object Formats {
     fun hourLabel(time: LocalDateTime, is24Hour: Boolean, locale: Locale): String =
         time.format(DateTimeFormatter.ofPattern(if (is24Hour) "HH" else "h a", locale))
 
+    /**
+     * An hour said as a clock time: "17:00" or "5 PM". For a row of hours that stands next
+     * to a row of days, where a bare "13 14 15" reads as the 13th, 14th and 15th of the
+     * month (widget review, 13 ott 2026: the home-screen card's hours sat right over
+     * «Today Sat Sun»). A twelve-hour clock already says it with its "PM", so only the
+     * twenty-four-hour label gains its minutes.
+     */
+    fun hourClockLabel(time: LocalDateTime, is24Hour: Boolean, locale: Locale): String =
+        time.truncatedTo(java.time.temporal.ChronoUnit.HOURS)
+            .format(DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h a", locale))
+
     /** A week row's day name: short, capitalized the locale's way. */
     fun dayLabel(date: java.time.LocalDate, locale: Locale): String =
         date.format(DateTimeFormatter.ofPattern("EEE", locale))

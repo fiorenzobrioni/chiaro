@@ -39,6 +39,15 @@ sections are a normal size and live here alone.
   hours, with the change in hPa; a steady barometer keeps its reading's meaning.
 - **Details**: an odd last tile takes the whole row, and the empty band between the sky and
   the next hours is gone.
+- **Widgets, one type scale.** The five home-screen widgets now print in the same six sizes,
+  so a place, a list row or a chip is the same size on every card. The verdict is larger, and
+  the Sky widget's chip carries its mark before the word, as in the app.
+- **The day's arc on a narrow card** prints its agenda on two lines, name over time, instead
+  of cutting the names short; its header names the next moment you follow before a moonrise.
+- **The hours ahead say "13:00"**, not "13", so they no longer read as dates over the row of
+  days.
+- **One name for the golden hour** in Italian («ora d'oro»), and the Sky widget prints the
+  moment's short name: its clock already says morning or evening.
 
 ## [1.1.0] - 2026-10-01
 

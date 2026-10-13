@@ -358,7 +358,7 @@ internal fun nowTallHasWarningRow(
 internal val HeroIconFloor = 52.dp
 
 /** The hero number's size, named because two budgets are measured off it. */
-internal const val TemperatureSp = 34f
+internal const val TemperatureSp = WidgetType.Hero
 
 /**
  * The sentence and the place share one size, 16 sp, and differ by weight and ink: the
@@ -370,9 +370,9 @@ internal const val TemperatureSp = 34f
  * still takes two lines in a four-cell column and «Cavenago di Brianza» (145 dp,
  * measured) still fits the 154 dp a three-cell card leaves the words.
  */
-internal const val SentenceSp = 16f
-internal const val PlaceSp = 16f
-internal const val StaleSp = 11f
+internal const val SentenceSp = WidgetType.Body
+internal const val PlaceSp = WidgetType.Body
+internal const val StaleSp = WidgetType.Caption
 
 /**
  * 8 dp between glyph and words, not 12: the glyph leaves 9 to 12.5 dp of its own box

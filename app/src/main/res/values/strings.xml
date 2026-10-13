@@ -744,6 +744,15 @@
     <string name="sky_name_astronomical_pm">Astronomical twilight, evening</string>
     <string name="sky_expl_astronomical_pm">From here on the sky is properly dark.</string>
     <string name="sky_about_astronomical_pm">The evening half: from 12° to 18° below the horizon. When it ends, the sky is as dark as it is going to get tonight from the sun\'s point of view, and astronomical night begins.\n\nAbove roughly 48.5° of latitude there are weeks in summer when the sun never gets 18° down and this event simply does not happen — the sky never finishes darkening. This guide has a pair of entries for exactly those weeks.</string>
+    <!-- The short names a home-screen card prints (widget review, 13 ott 2026): the
+         card's clock already says morning or evening, and ", evening" was what got cut. -->
+    <string name="sky_short_golden">Golden hour</string>
+    <string name="sky_short_blue">Blue hour</string>
+    <string name="sky_short_civil">Civil twilight</string>
+    <string name="sky_short_nautical">Nautical twilight</string>
+    <string name="sky_short_astronomical">Astronomical twilight</string>
+    <string name="sky_short_earthshine">Earthshine</string>
+    <string name="sky_short_zodiacal">Zodiacal light</string>
     <string name="sky_name_golden_am">Golden hour, morning</string>
     <string name="sky_expl_golden_am">The first stretch after sunrise: warm, low light, the photographer\'s.</string>
     <string name="sky_about_golden_am">The morning twin: the same low-sun light, running from around sunrise until the sun has climbed high enough for the colour to go out of it.\n\nThe light is physically the same as the evening\'s, but the air is usually not: a night of cooling settles dust and often leaves mist in the low ground, so morning golden light tends to be cleaner and cooler, with more haze in the valleys. The practical difference is that you have to be there before it starts, which is why it is one of the moments most worth a reminder.</string>
@@ -1369,7 +1378,7 @@
     <string name="widget_preview_headline">Rain arriving around five.</string>
     <!-- The evidence half of the sample verdict, written the way `sky_evidence_cloud`
          writes a real one — the preview must not print a shape the widget never does. -->
-    <string name="widget_preview_evidence">cloud 10%</string>
+    <string name="widget_preview_evidence">Cloud 10%</string>
     <!-- The day's arc widget (9 set 2026): the card, its configuration screen, its
          picker preview. The agenda rows reuse the timeline strings above. -->
     <string name="widget_arc_label">The day\'s arc</string>

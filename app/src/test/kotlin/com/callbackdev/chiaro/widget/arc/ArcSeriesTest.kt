@@ -183,6 +183,35 @@ class ArcSeriesTest {
         assertEquals(rainOnly.next, rainOnly.nextLight)
     }
 
+    /**
+     * The header names what the reader is waiting for (widget review, 13 ott 2026): a
+     * moment with a verdict first, then the sun, and the moon only when nothing of the sun
+     * is ahead — «Moonrise at 18:35» stood over a golden hour the reader follows.
+     */
+    @Test
+    fun `the hero prefers a judged moment, then the sun, then the moon`() {
+        val now = at(15)
+        val base = series(now)
+        val t = LocalDateTime.of(date, LocalTime.of(18, 35))
+        fun event(kind: TimelineKind, minutes: Long, verdict: SkyVerdict? = null) = ArcEvent(
+            item = com.callbackdev.chiaro.ui.today.TimelineItem(t.plusMinutes(minutes), kind),
+            at = t.plusMinutes(minutes).atZone(zone).toInstant(),
+            tomorrow = false,
+            verdict = verdict
+        )
+        val pass = SkyVerdict(SkyVerdictKind.PASS, cloudPct = 10)
+        val moonrise = event(TimelineKind.MOONRISE, 0)
+        val golden = event(TimelineKind.GOLDEN_EVENING, 1)
+        val sunset = event(TimelineKind.SUNSET, 40, pass)
+        // The judged sunset wins over the moonrise and the golden hour before it.
+        assertEquals(sunset, base.copy(events = listOf(moonrise, golden, sunset)).nextLight)
+        // With nothing judged, the sun outranks the moon that comes a minute earlier.
+        val unjudged = sunset.copy(verdict = null)
+        assertEquals(golden, base.copy(events = listOf(moonrise, golden, unjudged)).nextLight)
+        // And the moon is the header when it is all the light there is.
+        assertEquals(moonrise, base.copy(events = listOf(moonrise)).nextLight)
+    }
+
     @Test
     fun `the agenda's families follow the settings`() {
         val sunOnly = series(at(15), ArcSettings(agendaMoon = false, agendaRain = false))

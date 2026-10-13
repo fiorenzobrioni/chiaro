@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.widget
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -80,7 +81,7 @@ private fun TodayContent(
     val locale = glanceLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(context)
     val fontScale = fontScale(context)
-    val cells = todayStripCells(size.width)
+    val cells = todayStripCells(size.width, stripCellFor(widestStripLabel(context, is24h, locale)))
     val shown = content.strip.take(cells)
     val today = content.week.firstOrNull()?.forecast
     val range = today?.takeIf { model.look.showDayRange }
@@ -263,7 +264,7 @@ private fun TodayContent(
                         .defaultWeight()
                 ) {
                     Text(
-                        text = Formats.hourLabel(strip.hour.time, is24h, locale),
+                        text = Formats.hourClockLabel(strip.hour.time, is24h, locale),
                         style = secondaryStyle(palette, StripHourSp.sp),
                         maxLines = 1
                     )
@@ -285,7 +286,7 @@ private fun TodayContent(
                         text = Formats.temperature(
                             strip.hour.tempC, model.settings.units.temperature, locale
                         ),
-                        style = TextStyle(color = palette.primary, fontSize = StripTempSp.sp),
+                        style = TextStyle(color = palette.primary, fontSize = StripTempSp.sp, fontWeight = FontWeight.Medium),
                         maxLines = 1
                     )
                     // An hour with no forecast chance prints nothing under it rather
@@ -383,7 +384,7 @@ private fun DaysRow(
                 Spacer(modifier = GlanceModifier.height(StripInnerGap))
                 Text(
                     text = Formats.temperature(forecast.highC, model.settings.units.temperature, locale),
-                    style = TextStyle(color = palette.primary, fontSize = StripTempSp.sp),
+                    style = TextStyle(color = palette.primary, fontSize = StripTempSp.sp, fontWeight = FontWeight.Medium),
                     maxLines = 1
                 )
                 Text(
@@ -395,3 +396,14 @@ private fun DaysRow(
         }
     }
 }
+
+/** The widest label the strip can print in this locale and clock: «22:00» or «12 PM». */
+private fun widestStripLabel(context: Context, is24h: Boolean, locale: java.util.Locale): Dp =
+    listOf(10, 12, 22).maxOf { hour ->
+        measureWidgetText(
+            context,
+            Formats.hourClockLabel(java.time.LocalDateTime.of(2026, 1, 1, hour, 0), is24h, locale),
+            StripHourSp,
+            medium = false
+        )
+    }

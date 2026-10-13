@@ -51,7 +51,7 @@ fetched, and says how old that data is.
     <td align="center"><img src="docs/screenshots/settings.png" width="250" alt="Settings: the guide, the units, and the appearance with a live preview above the theme, the palette and the typeface"><br><sub><b>Appearance</b>, with a live preview</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/widgets.png" width="250" alt="Four widgets: Now, In words, Sky with the golden hour and its verdict, and Today with the next hours"><br><sub><b>Widgets</b>: Now, In words, Sky, Today</sub></td>
+    <td align="center"><img src="docs/screenshots/widgets.png" width="250" alt="Four widgets: At a glance, In words, Sky moments with the golden hour and its verdict, and The hours ahead"><br><sub><b>Widgets</b>: At a glance, In words, Sky moments, The hours ahead</sub></td>
     <td align="center"><img src="docs/screenshots/widget-day-arc.png" width="250" alt="The day's arc widget: the sun's path over Milan, the moments ahead and the week"><br><sub><b>The day's arc</b>: the sun's real path</sub></td>
     <td align="center"><img src="docs/screenshots/notification-summary.png" width="250" alt="The morning summary for Milan opened in the notification shade, on a light and on a dark shade: the day in one sentence, the rest of the day's temperature as a curve with its high and low and the evening shaded as night, then the temperature now, the UV, the wind, sunrise and sunset and the air quality, each with what it means"><br><sub><b>The morning summary</b>, opened</sub></td>
   </tr>
@@ -74,7 +74,7 @@ of real forecast history. The command that redraws them is in [Build](#build).
 - ⚠️ **Alerts**: four ready-made switches, plus your own rules written as sentences, with the hours they may ring in.
 - 📓 **Journal**: how the forecast changed, and how well it did on the days already over.
 - 📍 **Places**: saved places side by side, search as you type, optional coarse location.
-- 🏠 **Five widgets**: Now, Today, In words, Sky and the day's arc, each configured on its own.
+- 🏠 **Five widgets**: At a glance, The hours ahead, In words, Sky moments and The day's arc, each configured on its own.
 - 📖 **The guide**: what each screen answers, and what a screen cannot say out loud.
 - 🎨 **Appearance**: two palettes, three typefaces, two icon families, light or dark.
 - 📴 **Offline, honestly**: the last report is always there, with its real age.
@@ -186,7 +186,7 @@ chiaro/
 ├── app/                    # everything visible
 │   └── src/main/kotlin/com/callbackdev/chiaro/
 │       ├── notifications/  # alert, rule and sky notifiers; the reminder alarms
-│       ├── widget/         # Glance: Now, Today, In words, Sky, the day's arc
+│       ├── widget/         # Glance: the five home-screen widgets
 │       └── ui/             # theme, components, shell and one package per screen
 ├── core/
 │   ├── domain/             # pure Kotlin: states, alerts, rules, astronomy, the weather model

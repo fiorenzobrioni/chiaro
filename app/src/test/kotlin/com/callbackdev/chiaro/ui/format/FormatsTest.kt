@@ -95,6 +95,9 @@ class FormatsTest {
         assertEquals("17:05", afternoon.format(Formats.timeFormatter(is24Hour = true, en)))
         assertEquals("17", Formats.hourLabel(afternoon, is24Hour = true, en))
         assertEquals("5 PM", Formats.hourLabel(afternoon, is24Hour = false, en).uppercase(en))
+        // Beside a row of days an hour says it is one: "17:00", never a bare "17".
+        assertEquals("17:00", Formats.hourClockLabel(afternoon, is24Hour = true, en))
+        assertEquals("5 PM", Formats.hourClockLabel(afternoon, is24Hour = false, en).uppercase(en))
     }
 
     @Test

@@ -103,7 +103,7 @@
 
             <TextView
                 style="@style/WidgetPreviewHour"
-                android:text="14" />
+                android:text="14:00" />
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
@@ -130,7 +130,7 @@
 
             <TextView
                 style="@style/WidgetPreviewHour"
-                android:text="15" />
+                android:text="15:00" />
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
@@ -157,7 +157,7 @@
 
             <TextView
                 style="@style/WidgetPreviewHour"
-                android:text="16" />
+                android:text="16:00" />
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
@@ -184,7 +184,7 @@
 
             <TextView
                 style="@style/WidgetPreviewHour"
-                android:text="17" />
+                android:text="17:00" />
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"
@@ -211,7 +211,7 @@
 
             <TextView
                 style="@style/WidgetPreviewHour"
-                android:text="18" />
+                android:text="18:00" />
 
             <ImageView
                 style="@style/WidgetPreviewHourIcon"

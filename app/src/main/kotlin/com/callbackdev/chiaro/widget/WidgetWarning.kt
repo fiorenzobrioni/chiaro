@@ -75,15 +75,21 @@ fun warningSlot(
 fun warningChipHeight(fontScale: Float): Dp =
     maxOf(WarningChipGlyph, textLineHeight(WarningChipSp, fontScale)) + WarningChipPadV * 2
 
-/** `ic_warning` at the size the Sky card's mark is drawn beside 11 sp words. */
+/** `ic_warning` at the size the Sky card's mark is drawn in its chip. */
 val WarningChipGlyph = 12.dp
 
-/** The word beside it, and the corner and padding of the Sky widget's own chip
- * (DESIGN §8.13: the `VerdictChip` grammar at the size a card can afford). */
-const val WarningChipSp = 11f
+/**
+ * The word beside it, and the corner and padding of the Sky widget's own chip (DESIGN
+ * §8.13: the `VerdictChip` grammar at the size a card can afford). The word is the widget
+ * scale's [WidgetType.Label] (widget review, 13 ott 2026, from 11: every chip on every card
+ * is one size now, and the warning is no footnote); the padding above and below went from
+ * 3 to 2 dp in the same change, so the chip costs every budget 0.64 dp more rather than
+ * 2.64 — a three-by-three Today card with the range on still carries its days.
+ */
+internal const val WarningChipSp = WidgetType.Label
 val WarningChipCorner = 10.dp
 val WarningChipPadH = 7.dp
-val WarningChipPadV = 3.dp
+val WarningChipPadV = 2.dp
 
 /** The air between the chip and whatever it sits under. */
 val WarningChipGap = 4.dp

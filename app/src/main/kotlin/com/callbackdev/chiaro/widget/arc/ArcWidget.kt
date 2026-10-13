@@ -67,7 +67,7 @@ import com.callbackdev.chiaro.widget.rememberWidgetSchemes
 import com.callbackdev.chiaro.widget.secondaryStyle
 import com.callbackdev.chiaro.widget.sentence
 import com.callbackdev.chiaro.widget.staleText
-import com.callbackdev.chiaro.widget.verdictInk
+import com.callbackdev.chiaro.widget.VerdictNote
 import java.time.Instant
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -513,11 +513,12 @@ private fun PanelContent(
 private fun Agenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, palette: WidgetPalette) {
     if (plan.agendaRows <= 0) return
     val context = LocalContext.current
-    val rowHeight = arcAgendaRowHeight(fontScale(context), plan.textScale)
+    val stacked = plan.form == ArcForm.CARD
+    val rowHeight = arcAgendaRowHeight(fontScale(context), plan.textScale, stacked)
     val rows = series.events.take(plan.agendaRows)
     // A slot for the mark on every row as soon as one row has a verdict, so the clocks
     // stand in a column (device report, 9 set 2026: «19:07» sat left of the «19:00»
-    // above it, pushed by its own mark). The mark itself is quiet — see [AgendaMark].
+    // above it, pushed by its own mark). The mark itself is quiet — see [VerdictNote].
     val marks = rows.any { it.verdict != null }
     // ONE child of the card's column whatever the row count, and the gaps between rows
     // as padding rather than spacers: Glance draws at most ten children per container
@@ -543,16 +544,21 @@ private fun Agenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, palette
                     contentDescription = null, // the words beside it say it
                     modifier = GlanceModifier.size(AgendaGlyph)
                 )
+                val sp = (AgendaSp * plan.textScale).sp
+                if (stacked) {
+                    StackedAgendaWords(context, event, model, palette, sp)
+                    return@Row
+                }
                 val name = ArcText.rowLabel(context, event.item)
                 Text(
                     text = if (event.tomorrow) context.getString(R.string.arc_tomorrow_name, name) else name,
-                    style = TextStyle(color = palette.primary, fontSize = (AgendaSp * plan.textScale).sp),
+                    style = TextStyle(color = palette.primary, fontSize = sp),
                     maxLines = 1,
                     modifier = GlanceModifier.padding(start = 8.dp).defaultWeight()
                 )
                 Text(
                     text = ArcText.clock(context, event.at, model.zone),
-                    style = secondaryStyle(palette, (AgendaSp * plan.textScale).sp),
+                    style = secondaryStyle(palette, sp),
                     maxLines = 1,
                     modifier = GlanceModifier.padding(start = 8.dp)
                 )
@@ -562,7 +568,7 @@ private fun Agenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, palette
                         contentAlignment = Alignment.Center,
                         modifier = GlanceModifier.width(AgendaMarkSlot)
                     ) {
-                        event.verdict?.let { AgendaMark(it, palette) }
+                        event.verdict?.let { VerdictNote(it, palette) }
                     }
                 }
             }
@@ -571,34 +577,41 @@ private fun Agenda(model: WidgetModel, series: ArcSeries, plan: ArcPlan, palette
 }
 
 /**
- * The verdict beside an agenda row: the series' own mark — `✓ ~ ✗ ?`, a shape before it is
- * a color (DESIGN §2.3) — drawn ([ArcText.markRes]) in the verdict's ink, at the words'
- * x-height, and nothing else. The Sky widget's filled pill was here first and came back
- * from the device as «a punch in the eye» (committente, 9 set 2026): on that card the
- * verdict is the hero, on this one it is a note beside a time, and a note is set like the
- * words around it. The character came next and came back as «handwriting»: it was a
- * fallback font's, not Roboto's, hence the drawings ([ChiaroIcons.verdictMarkRes]), which
- * the Sky widget and the app's chip now share.
- *
- * The ink is picked for the CARD'S ground, not the phone's theme: the pill's pale container
- * on a dark card was the light theme's pair, chosen by `isNight`, on a card that is dark
- * whatever the phone is doing (the sky under its scrim, or a dark card). The dark set's
- * inks are the ones measured against a dark surface, so the mark is readable where it
- * sits — and a bare glyph in the wrong set was exactly what made the Sky widget grow its
- * container in the first place (4 set).
+ * A two-cell card's agenda row, past its glyph: the name on a line of its own, and under it
+ * the clock — with «Tomorrow ·» before it rather than before the name, where it would take
+ * half the line — and the verdict's mark after the clock. On one line the clock and the
+ * mark left the name 42 dp, and the reference two-by-four printed «Moon… / Gold… / Tom…»
+ * (widget review, 13 ott 2026); stacked, the name has the column's whole 103 dp, which
+ * holds the longest the agenda says in either language («Finisce l'ora d'oro», 99.5 dp at
+ * 13 sp). The rain's rows take the hero's short name: their sentence is a panel's length.
  */
 @Composable
-private fun AgendaMark(verdict: SkyVerdict, palette: WidgetPalette) {
-    val context = LocalContext.current
-    Image(
-        provider = ImageProvider(ChiaroIcons.verdictMarkRes(verdict.kind)),
-        // The word for it, so the row reads «Golden hour, 19:07, fail».
-        contentDescription = context.getString(
-            com.callbackdev.chiaro.ui.sky.SkyText.verdictWordRes(verdict.kind)
-        ),
-        colorFilter = ColorFilter.tint(verdictInk(verdict.kind, palette.darkGround, palette.dress)),
-        modifier = GlanceModifier.size(AgendaMarkGlyph)
-    )
+private fun androidx.glance.layout.RowScope.StackedAgendaWords(
+    context: android.content.Context,
+    event: ArcEvent,
+    model: WidgetModel,
+    palette: WidgetPalette,
+    sp: androidx.compose.ui.unit.TextUnit
+) {
+    val clock = ArcText.clock(context, event.at, model.zone)
+    Column(modifier = GlanceModifier.padding(start = 8.dp).defaultWeight()) {
+        Text(
+            text = ArcText.heroLabel(context, event.item),
+            style = TextStyle(color = palette.primary, fontSize = sp),
+            maxLines = 1
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = if (event.tomorrow) context.getString(R.string.arc_tomorrow_name, clock) else clock,
+                style = secondaryStyle(palette, sp),
+                maxLines = 1
+            )
+            event.verdict?.let { verdict ->
+                Spacer(modifier = GlanceModifier.width(MarkGap))
+                VerdictNote(verdict, palette)
+            }
+        }
+    }
 }
 
 /** The week at the foot of a four-row card: seven columns of day, glyph, high, low. */

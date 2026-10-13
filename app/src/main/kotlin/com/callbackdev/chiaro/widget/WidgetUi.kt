@@ -595,7 +595,7 @@ private val RangeMarkTextGap = 2.dp
 private val RangeMarkGap = 8.dp
 
 /** The pair sits at the place name's size: it is the same order of fact. */
-private val DayRangeSp = 16.sp
+private val DayRangeSp = WidgetType.Body.sp
 
 /**
  * The empty states sit in the MIDDLE of the card, not at the top of it (committente,
@@ -623,13 +623,13 @@ fun NoPlaceContent(palette: WidgetPalette) {
             text = context.getString(R.string.empty_no_place_title),
             style = TextStyle(
                 color = palette.primary,
-                fontSize = 14.sp,
+                fontSize = WidgetType.Body.sp,
                 fontWeight = FontWeight.Medium
             )
         )
         Text(
             text = context.getString(R.string.widget_no_place_hint),
-            style = TextStyle(color = palette.secondary, fontSize = 12.sp)
+            style = TextStyle(color = palette.secondary, fontSize = WidgetType.Label.sp)
         )
     }
 }
@@ -644,7 +644,7 @@ fun NoDataContent(palette: WidgetPalette) {
     ) {
         Text(
             text = context.getString(R.string.widget_no_data),
-            style = TextStyle(color = palette.secondary, fontSize = 12.sp)
+            style = TextStyle(color = palette.secondary, fontSize = WidgetType.Label.sp)
         )
     }
 }

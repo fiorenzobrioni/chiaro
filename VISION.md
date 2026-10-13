@@ -560,13 +560,16 @@ Glance, five cards, matching the app's dynamic color:
   the tall card's composition pressed into one row — so a home screen can carry the two looks.
 - **Sky**: the moments in front of the reader and their verdicts, with the day named when it is not
   today — the widget nobody else ships. Laid out on the Now widget's grammar (8 set 2026): the
-  moment's time is the hero number, its name under it, the glyph beside them; the verdict is the
-  word chip over the number that decided it against the far edge where the card is wide, and the
-  series' own mark (`✓ ~ ✗ ?`) before the name where it is not. A taller grant adds compact rows
-  off the same ordered list the Sky screen reads, as many as honestly fit and never more than the
-  reader subscribed to. Every verdict on a widget wears its container: the app's verdict inks are
-  measured against the app's own surface, and a card whose ground is a scrimmed sky or a wallpaper
-  has to bring its own.
+  moment's time is the hero number, its name under it — the short name, «Golden hour» and not
+  «Golden hour, evening», because the clock already says which (13 ott 2026) — the glyph beside
+  them; the verdict is the chip, mark and word, over the number that decided it against the far
+  edge where the card is wide, and the series' own mark (`✓ ~ ✗ ?`) in its round container
+  before the name where it is not. A taller grant adds compact rows off the same ordered list the
+  Sky screen reads, as many as honestly fit and never more than the reader subscribed to, each
+  with the verdict as the arc's agenda prints it: the bare mark (13 ott 2026, so the two cards'
+  lists say a verdict one way). The hero's verdict wears its container: the app's verdict inks
+  are measured against the app's own surface, and a card whose ground is a scrimmed sky or a
+  wallpaper has to bring its own; a row's bare mark takes the ink measured for the card's ground.
 
 A widget never invents: with stale data it says how old it is, with no place configured it says so
 and opens the app, and no layout ever pads itself out to fill the space it was given.
