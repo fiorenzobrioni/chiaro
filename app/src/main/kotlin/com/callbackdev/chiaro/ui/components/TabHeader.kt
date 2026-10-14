@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
 
 /**
- * The header of the Sky, Alerts and Journal tabs: the tab's name, the place under it, and
+ * The header of the Sky and Alerts tabs: the tab's name, the place under it, and
  * Settings (review of the Sky screen, point 10, 14 ott 2026).
  *
  * The three screens carried a copy each, and each copy made only the place's line

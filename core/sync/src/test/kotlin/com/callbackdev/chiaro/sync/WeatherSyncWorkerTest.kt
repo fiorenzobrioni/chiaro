@@ -11,8 +11,6 @@ import androidx.work.testing.TestListenableWorkerBuilder
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.callbackdev.chiaro.data.AlertStateStore
 import com.callbackdev.chiaro.data.CityStore
-import com.callbackdev.chiaro.data.FetchFailureReason
-import com.callbackdev.chiaro.data.FetchLogStore
 import com.callbackdev.chiaro.data.RuleStateStore
 import com.callbackdev.chiaro.data.RuleStore
 import com.callbackdev.chiaro.data.ServiceLocator
@@ -32,7 +30,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -54,8 +51,8 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
  * nothing to sync for, what keeps it alive, and what a failed fetch leaves behind.
  * Ported from tweather's `WeatherSyncWorkerTest` on 9 set 2026 (`UPSTREAM.md`); the
  * widget and the notifiers arrive through [SyncDependencies] here, so they are fakes
- * rather than a placed widget, and the last two tests are this app's own — the
- * Journal's failure log and the widget repaint that lets the stale marker appear.
+ * rather than a placed widget, and the last test is this app's own — the widget repaint
+ * that lets the stale marker appear.
  */
 @RunWith(RobolectricTestRunner::class)
 class WeatherSyncWorkerTest {
@@ -67,7 +64,6 @@ class WeatherSyncWorkerTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private lateinit var settingsStore: SettingsStore
     private lateinit var ruleStore: RuleStore
-    private lateinit var fetchLog: FetchLogStore
     private lateinit var database: ChiaroDatabase
     private val notifiers = FakeNotifiers()
     private val widgets = FakeWidgets()
@@ -121,7 +117,6 @@ class WeatherSyncWorkerTest {
         runBlocking { cityStore.add(CityStore.DefaultCity) }
         settingsStore = store("settings") { SettingsStore(it) }
         ruleStore = store("rules") { RuleStore(it, json) }
-        fetchLog = store("fetch-log") { FetchLogStore(it, json) }
         ServiceLocator.overrideForTests(
             repository = WeatherRepository(
                 forecastApi = retrofit.create(OpenMeteoForecastApi::class.java),
@@ -134,8 +129,7 @@ class WeatherSyncWorkerTest {
             settingsStore = settingsStore,
             alertStateStore = store("alerts") { AlertStateStore(it) },
             ruleStore = ruleStore,
-            ruleStateStore = store("rule-state") { RuleStateStore(it) },
-            fetchLogStore = fetchLog
+            ruleStateStore = store("rule-state") { RuleStateStore(it) }
         )
     }
 
@@ -206,17 +200,6 @@ class WeatherSyncWorkerTest {
     fun `network failure - worker asks for a retry`() {
         // defaults: severe+precip on, notifications enabled (the fake says so)
         assertEquals(ListenableWorker.Result.retry(), runWorker())
-    }
-
-    /** The Journal is where offline honesty lives (Fase 7): a fetch that could not
-     * land is an entry, never a silent gap. */
-    @Test
-    fun `a failed fetch is written to the failure log with its reason`() = runBlocking {
-        runWorker()
-        val failures = fetchLog.failures.first()
-        assertEquals(1, failures.size)
-        assertEquals(CityStore.DefaultCity.cacheKey, failures.single().cityKey)
-        assertEquals(FetchFailureReason.OFFLINE, failures.single().reason)
     }
 
     /** A successful fetch repaints through the repository's commit hook; a FAILED one

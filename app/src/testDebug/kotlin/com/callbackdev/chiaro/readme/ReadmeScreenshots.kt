@@ -184,7 +184,6 @@ class ReadmeScreenshots {
             onOpenPlaces = {},
             onOpenSettings = {},
             onOpenGuide = {},
-            onOpenJournal = {},
             onDismissGuideCard = {},
             isCurrent = true,
             onCanvasBehindBar = {}

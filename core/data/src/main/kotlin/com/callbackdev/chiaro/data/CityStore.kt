@@ -309,7 +309,7 @@ class CityStore(
      * The adoption rule is here rather than in a caller because every road to a fix
      * has to obey it (Fase 3b). Under [FixAdoptionMeters] the reader has not changed
      * town: the coordinates — and with them the cacheKey, the page, the disk cache
-     * and the Journal's history — stay exactly where they were, and only what reverse
+     * and the place's history — stay exactly where they were, and only what reverse
      * geocoding learned about the NAME is taken. Past it the fix is a new place and
      * replaces the old one wholesale. Read and write happen inside one edit, so two
      * fixes landing together cannot both measure themselves against the same

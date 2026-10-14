@@ -394,7 +394,7 @@ object ChiaroIcons {
     /**
      * The official warning's mark (Fase 11, DESIGN §8.13): one drawing, at the verdict
      * marks' weight, for every surface that carries a level — the banner, the sheet, the
-     * card in Avvisi, the Journal's line and the widgets' chip. It is tinted with the
+     * card in Avvisi and the widgets' chip. It is tinted with the
      * level's ink and never recoloured, and it is a drawing for the reason the verdict
      * marks are: ⚠ is not in the app's face.
      *
@@ -518,10 +518,9 @@ object ChiaroIcons {
     /** The cloud cover tile (24 set 2026): a plain cloud, the sky's quantity. */
     val cloudCover: ImageVector @Composable get() = styled(R.drawable.mc3_cloudy)
 
-    /** Freezing, not snow: the Journal's drift strip marks the days whose forecast
-     * minimum is at or below zero, and the question there is ice, not precipitation.
-     * The accessor names the metric (§13.1), which is why it is not called
-     * `snowflake`. */
+    /** Freezing, not snow: the ice alerts ask whether the minimum reaches zero, and the
+     * question there is ice, not precipitation. The accessor names the metric (§13.1),
+     * which is why it is not called `snowflake`. */
     val frost: ImageVector @Composable get() = styled(R.drawable.mc3_snowflake)
 
     /** Cold that is not yet ice (26 set 2026): the «Corsa al freddo» idea, between 0 and
@@ -601,11 +600,6 @@ object ChiaroIcons {
     // The day's timeline and the Sky screen.
     /** The rain-over glyph: a cloud with nothing falling out of it. */
     val cloud: ImageVector @Composable get() = styled(R.drawable.mc3_cloudy)
-    /** Something the app went to fetch and did not get (an update, a bulletin): a cloud
-     * crossed out, a silhouette tinted at use. Not the family's «not available», which is
-     * the letters N/A. */
-    val notReached: ImageVector
-        @Composable get() = ImageVector.vectorResource(R.drawable.ic_not_reached)
     val sunrise: ImageVector @Composable get() = styled(R.drawable.mc3_sunrise)
     val sunset: ImageVector @Composable get() = styled(R.drawable.mc3_sunset)
     val moonrise: ImageVector @Composable get() = styled(R.drawable.mc3_moonrise)

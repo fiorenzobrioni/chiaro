@@ -28,8 +28,8 @@ the numbers underneath, and every number says what to do with it: UV 8 is "burns
 minutes, cover up", not an 8.
 
 Around the forecast: an agenda of the sky (golden hour, dark window, moon, meteor peaks) with
-a verdict on each moment, a journal of how the forecast changed, alerts you write yourself,
-and in Italy the official Protezione Civile bulletin. It works offline with the last data it
+a verdict on each moment, what changed in the forecast since the last look, alerts you write
+yourself, and in Italy the official Protezione Civile bulletin. It works offline with the last data it
 fetched, and says how old that data is.
 
 ## Screenshots
@@ -43,7 +43,7 @@ fetched, and says how old that data is.
   <tr>
     <td align="center"><img src="docs/screenshots/sky-tonight.png" width="250" alt="In the dark theme: tonight's card, which answers in a word with the night's numbers and its hours large over a strip a finger can explore, and the next moment in a card of its own"><br><sub><b>Sky</b>: tonight, and the moments ahead</sub></td>
     <td align="center"><img src="docs/screenshots/sky-ahead.png" width="250" alt="The calendar ahead: the full moon and the meteor peaks past the forecast horizon, then the reminders"><br><sub><b>The calendar ahead</b>, honestly dated</sub></td>
-    <td align="center"><img src="docs/screenshots/guide.png" width="250" alt="The guide: a tour of the four screens, what each one answers and what it cannot say out loud"><br><sub><b>The guide</b>, in the app</sub></td>
+    <td align="center"><img src="docs/screenshots/guide.png" width="250" alt="The guide: a tour of the three screens, what each one answers and what it cannot say out loud"><br><sub><b>The guide</b>, in the app</sub></td>
   </tr>
   <tr>
     <td align="center"><img src="docs/screenshots/alerts.png" width="250" alt="Alerts: one card at the top with the answer of the official Protezione Civile bulletin for the zone, the window the phone may ring in next and the day of alerts drawn under it, then the switch that follows the bulletin, and the New alert button"><br><sub><b>Alerts</b> and the official bulletin</sub></td>
@@ -59,8 +59,7 @@ fetched, and says how old that data is.
 
 Drawn by the app's own screens from real data for Milan (a recorded Open-Meteo forecast and
 Protezione Civile bulletin), in English (the app also speaks Italian). The phone's status bar
-and the launcher are not in the pictures. The Journal is not shown: its picture waits for days
-of real forecast history. The command that redraws them is in [Build](#build).
+and the launcher are not in the pictures. The command that redraws them is in [Build](#build).
 
 ## Features
 
@@ -72,7 +71,7 @@ of real forecast history. The command that redraws them is in [Build](#build).
 - 🔔 **Sky reminders**: a bell on any moment, quiet when clouds will hide it.
 - 🇮🇹 **Official warnings**: the Protezione Civile bulletin, located by where a place is, offline too.
 - ⚠️ **Alerts**: four ready-made switches, plus your own rules written as sentences, with the hours they may ring in and whether each one is true right now.
-- 📓 **Journal**: which day of the week is moving and which way, the story of each change, and how well the forecast did on the days already over.
+- 🔁 **What changed**: when the latest update moves the days ahead, up to three sentences say how ("Saturday improved: rain 70% → 30%").
 - 📍 **Places**: saved places side by side, search as you type, optional coarse location.
 - 🏠 **Three widgets**: At a glance (the next hours and days as it grows), In words, and The day's arc (or the moments you follow), each configured on its own.
 - 📖 **The guide**: what each screen answers, and what a screen cannot say out loud.

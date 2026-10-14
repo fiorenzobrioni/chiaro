@@ -15,7 +15,6 @@ import com.callbackdev.chiaro.domain.model.CacheStatus
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.WeatherReport
-import com.callbackdev.chiaro.domain.sky.SkyRun
 import java.io.IOException
 import java.time.Clock
 import java.time.Duration
@@ -26,15 +25,15 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
 
 /**
  * Single entry point of the data layer. In-memory cache of the last report per city
  * (TTL-based HIT/MISS, surfaced in `system_info`) backed by [ReportDiskCache] so a
- * process death doesn't cost a re-fetch inside the TTL, history persisted to Room
- * as "commits" for the Logs screen, errors normalized to [WeatherException].
+ * process death doesn't cost a re-fetch inside the TTL, a short history of the
+ * forecasts in Room (what Today's "what changed" and Alerts' «last fired» read), errors
+ * normalized to [WeatherException].
  */
 class WeatherRepository(
     private val forecastApi: OpenMeteoForecastApi,
@@ -53,14 +52,16 @@ class WeatherRepository(
      */
     private val onHistoryCommitted: suspend () -> Unit = {},
     /**
-     * The other thing that happens at that choke point: the sweep that drops what
-     * belongs to places the app no longer follows ([ReportDiskCache] and both Room
-     * tables, via `StoredDataSweep`). Injected rather than built here because it
-     * needs the saved-places list, which this class deliberately does not know —
-     * [ServiceLocator] wires it. A default of nothing means a test that does not care
-     * about retention gets none.
+     * The places the app still follows (`City.cacheKey` of the saved list and the GPS
+     * fix), read at the commit, which is where the storage tidies up after itself:
+     * [onHousekeeping] gets them (the `StoredDataSweep` of the disk entries and the
+     * history, the rules' latches) and the in-memory cache forgets everything else.
+     * Injected because the saved-places list is not this class's to know —
+     * [ServiceLocator] wires it. Null means a test that does not care about retention
+     * gets none.
      */
-    private val onHousekeeping: suspend () -> Unit = {},
+    private val liveKeys: (suspend () -> Set<String>)? = null,
+    private val onHousekeeping: suspend (liveKeys: Set<String>) -> Unit = {},
     /** How long [fetch] waits before its one retry of a transient failure. */
     private val transientRetryDelay: Duration = TRANSIENT_RETRY_DELAY
 ) {
@@ -163,49 +164,37 @@ class WeatherRepository(
         }.getOrNull()?.also { cache[city.cacheKey] = CacheEntry(it, fetchedAt) }
     }
 
-    fun observeHistory(limit: Int = HISTORY_RETENTION) = historyDao.observeLatest(limit)
-
     /**
      * Fase 11: marks the user rules that fired on [city]'s newest commit — the data
      * the worker just evaluated (that commit even on a cache HIT: a hit means the
-     * latest commit is still the current data). Rendered as check lines in the Logs.
+     * latest commit is still the current data). Alerts reads «last fired» off these.
+     *
+     * Merged with what the commit already lists, never written over it (14 ott 2026):
+     * a commit can now stand for several fetches ([recordHistory]), and a rule that
+     * fired on the first of them must not vanish because another fired on the second.
      */
     suspend fun recordFiredRules(city: City, ruleNames: List<String>) {
         if (ruleNames.isEmpty()) return
-        historyDao.setFiredRulesOnLatest(city.cacheKey, json.encodeToString(ruleNames))
+        val latest = historyDao.latestFor(city.cacheKey) ?: return
+        val merged = (firedRules(latest) + ruleNames).distinct()
+        historyDao.setFiredRules(latest.id, json.encodeToString(merged))
     }
 
-    suspend fun historyFor(city: City, limit: Int = HISTORY_RETENTION) =
+    /** [city]'s commits, newest first; the default reaches the whole retention. */
+    suspend fun historyFor(city: City, limit: Int = HISTORY_MAX_ROWS_PER_PLACE) =
         historyDao.historyFor(city.cacheKey, limit)
-
-    /** One city's commits as a Flow (Fase 7b): the Journal follows the table instead
-     * of polling it on a minute tick. */
-    fun historyFlowFor(city: City, limit: Int = HISTORY_RETENTION) =
-        historyDao.observeFor(city.cacheKey, limit)
 
     /** The rule names a commit recorded, decoded where they were encoded (Fase 6):
      * the Alerts screen reads "last fired" off these without owning the JSON. */
-    fun firedRules(entry: com.callbackdev.chiaro.data.local.WeatherHistoryEntry): List<String> =
+    fun firedRules(entry: WeatherHistoryEntry): List<String> =
         entry.firedRulesJson
             ?.let { runCatching { json.decodeFromString<List<String>>(it) }.getOrNull() }
             ?: emptyList()
 
-    /** A commit's flattened snapshot, decoded for the Journal (Fase 7). */
-    fun snapshot(entry: com.callbackdev.chiaro.data.local.WeatherHistoryEntry): Map<String, String> =
-        runCatching { json.decodeFromString<Map<String, String>>(entry.snapshotJson) }
+    /** A commit's flattened week of forecast (`<date>.<field>` keys). */
+    fun forecast(entry: WeatherHistoryEntry): Map<String, String> =
+        runCatching { json.decodeFromString<Map<String, String>>(entry.forecastJson) }
             .getOrDefault(emptyMap())
-
-    /** A commit's flattened week of forecast (`<date>.<field>` keys), for the drift. */
-    fun forecast(entry: com.callbackdev.chiaro.data.local.WeatherHistoryEntry): Map<String, String> =
-        entry.forecastJson
-            ?.let { runCatching { json.decodeFromString<Map<String, String>>(it) }.getOrNull() }
-            ?: emptyMap()
-
-    /** The sky runs a commit observed, decoded where they were encoded. */
-    fun skyRuns(entry: com.callbackdev.chiaro.data.local.WeatherHistoryEntry): List<SkyRun> =
-        entry.skyRunsJson
-            ?.let { runCatching { json.decodeFromString<List<SkyRun>>(it) }.getOrNull() }
-            ?: emptyList()
 
     private suspend fun fetch(city: City, now: Instant): WeatherReport = wrapErrors {
         val startNanos = System.nanoTime()
@@ -245,38 +234,57 @@ class WeatherRepository(
     }
 
     /**
-     * Fase 16e: attaches the sky jobs this fetch observed as run to [city]'s newest
-     * commit — the same after-the-fact UPDATE [recordFiredRules] uses, for the same
-     * reason. A run belongs to the fetch that noticed it.
+     * One commit per fetch, with two rules on top (14 ott 2026).
+     *
+     * **A fetch inside the previous commit's window replaces it** ([COMMIT_WINDOW], the
+     * provider's own resolution): Open-Meteo moves its numbers every fifteen minutes at
+     * most, so a second commit inside them is the same forecast written twice. It used
+     * to be written twice, and it cost twice. Every pull to refresh stood a row beside
+     * the last one, which made the depth of the history a function of how often the
+     * reader pulled, and it emptied "what changed": the newest commit, identical to the
+     * one a minute older, had no revision of its own, so the section vanished on the
+     * pull. Replaced in place, the newest commit still compares against the forecast
+     * before it. The rules it already lists stay listed.
+     *
+     * **Retention is by time** ([HISTORY_RETENTION]), never fewer than
+     * [HISTORY_MIN_ROWS] a place, under a global ceiling that is only a backstop.
      */
-    suspend fun recordSkyRuns(city: City, runs: List<SkyRun>) {
-        if (runs.isEmpty()) return
-        historyDao.setSkyRunsOnLatest(city.cacheKey, json.encodeToString(runs))
-    }
-
     private suspend fun recordHistory(city: City, report: WeatherReport) {
-        val snapshot = json.encodeToString(WeatherSnapshots.flatten(report))
+        val forecast = json.encodeToString(WeatherSnapshots.flattenForecast(report))
         val timestamp = report.systemInfo.lastSync.epochSecond
-        historyDao.insert(
-            WeatherHistoryEntry(
-                cityKey = city.cacheKey,
-                cityLabel = city.label,
-                hash = WeatherSnapshots.commitHash(city.cacheKey, timestamp.toString(), snapshot),
-                author = HISTORY_AUTHOR,
-                timestampEpochSeconds = timestamp,
-                snapshotJson = snapshot,
-                forecastJson = json.encodeToString(WeatherSnapshots.flattenForecast(report))
+        val latest = historyDao.latestFor(city.cacheKey)
+        if (latest != null && timestamp - latest.timestampEpochSeconds in 0 until COMMIT_WINDOW.seconds) {
+            historyDao.update(latest.copy(timestampEpochSeconds = timestamp, forecastJson = forecast))
+        } else {
+            historyDao.insert(
+                WeatherHistoryEntry(
+                    cityKey = city.cacheKey,
+                    timestampEpochSeconds = timestamp,
+                    forecastJson = forecast
+                )
             )
+        }
+        historyDao.pruneCity(
+            city.cacheKey,
+            cutoffEpochSeconds = timestamp - HISTORY_RETENTION.seconds,
+            keepAtLeast = HISTORY_MIN_ROWS
         )
-        historyDao.pruneCity(city.cacheKey, HISTORY_RETENTION)
-        historyDao.prune(HISTORY_RETENTION * HISTORY_CITIES)
-        // Neither of the two above asks whose rows these are, so a third one does.
+        historyDao.prune(HISTORY_MAX_ROWS)
         // Its own best-effort call, not folded into the block below: housekeeping that
         // fails must still leave the widget its repaint.
-        bestEffort { onHousekeeping() }
+        bestEffort { housekeeping() }
         // A failing observer must never sink a successful fetch: the report is already
         // cached and committed, and at worst the widget misses a repaint.
         bestEffort { onHistoryCommitted() }
+    }
+
+    /** What belongs to places the app no longer follows leaves, on disk and in memory. */
+    private suspend fun housekeeping() {
+        val live = liveKeys?.invoke() ?: return
+        // The in-memory map had no bound but the process's life: every GPS cell a
+        // long-lived process drove through kept a week of forecast in RAM.
+        cache.keys.retainAll(live)
+        onHousekeeping(live)
     }
 
     /**
@@ -334,24 +342,40 @@ class WeatherRepository(
      * been used, whatever the user did or did not configure — which is exactly what
      * [CityStore.migrateFirstRun] needs to tell an upgrade from a fresh install.
      */
-    suspend fun hasAnyHistory(): Boolean = historyDao.observeLatest(limit = 1).first().isNotEmpty()
+    suspend fun hasAnyHistory(): Boolean = historyDao.any()
 
     companion object {
-        const val HISTORY_AUTHOR = "sys@chiaro.app"
-
         /** The server-side failures worth one more try; see [retryingTransient]. */
         val TRANSIENT_HTTP_CODES = setOf(500, 502, 503, 504)
 
         /** Long enough for a restarting node, short enough for a pull to refresh. */
         val TRANSIENT_RETRY_DELAY: Duration = Duration.ofSeconds(2)
 
-        /** Commits kept **per city** — the depth of one place's Journal. */
-        const val HISTORY_RETENTION = 100
+        /**
+         * How far back a place's history reaches. Three days: the deepest reader is
+         * yesterday's high, which in the place's own zone can lie up to 48 hours back,
+         * and the third day is the margin a phone that slept through a morning needs.
+         */
+        val HISTORY_RETENTION: Duration = Duration.ofDays(3)
 
-        /** How many places the table is sized for before its global backstop bites.
-         * Generous on purpose: it exists to bound rows left behind by places that
-         * were removed, never to shorten a place somebody still follows. */
-        private const val HISTORY_CITIES = 8
+        /** The commits a place keeps past [HISTORY_RETENTION]: one to compare against,
+         * one to be compared, for a phone that comes back after a week off. */
+        const val HISTORY_MIN_ROWS = 2
+
+        /** Two fetches closer than this are one commit: the provider's own resolution. */
+        val COMMIT_WINDOW: Duration = WeatherFreshness.ProviderResolution
+
+        /** The most commits [HISTORY_RETENTION] can hold for one place: one per window. */
+        val HISTORY_MAX_ROWS_PER_PLACE: Int =
+            (HISTORY_RETENTION.seconds / COMMIT_WINDOW.seconds).toInt()
+
+        /**
+         * The global backstop: eight places at their ceiling. Each commit is a week of
+         * daily forecast, about a kilobyte, so the table cannot pass a couple of
+         * megabytes, and the ceiling is far above what any place reaches at the hourly
+         * cadence (some seventy rows), so it never truncates a place still followed.
+         */
+        private val HISTORY_MAX_ROWS: Int = HISTORY_MAX_ROWS_PER_PLACE * 8
     }
 }
 

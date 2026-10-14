@@ -190,7 +190,7 @@ data class PlaceWarnings(
  * A warning worth a notification, with the fingerprint the store burns once it has
  * been shown: `"$cityKey:warn:$bulletinId:$maxLevel"`. Same bulletin and a higher
  * level is an "Aggiornamento" and a new fingerprint; a level that came down is not
- * news for a notification (the Journal writes it), which is why
+ * news for a notification (the card and the banner show it), which is why
  * [OfficialWarningEngine.notificationFor] reads the burnt prefixes, not just the
  * exact key.
  */

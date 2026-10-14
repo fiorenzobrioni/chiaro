@@ -64,11 +64,10 @@ sealed interface TodayUiState {
         val isStale: Boolean,
         val userRefreshing: Boolean,
         val error: TodayError?,
-        /** VISION §5.2.5: the latest forecast revisions, at most three lines,
-         * tapping opens the Journal. Filled by the ViewModel, not the builder —
-         * it comes from the history, which the builder deliberately never reads. */
-        val whatChanged: List<com.callbackdev.chiaro.ui.journal.JournalEntry.ForecastShift> =
-            emptyList(),
+        /** VISION §5.2.6: the latest forecast revisions, at most three lines.
+         * Filled by the ViewModel, not the builder — it comes from the history,
+         * which the builder deliberately never reads. */
+        val whatChanged: List<ForecastShift> = emptyList(),
         /**
          * The official warning for this place (Fase 11), or null where there is none to
          * draw — abroad, no bulletin, or a bulletin whose days are over. Green is null
@@ -162,8 +161,8 @@ object TodayStateBuilder {
         userRefreshing: Boolean,
         error: TodayError?,
         warnings: PlaceWarnings? = null,
-        /** Yesterday's high as the Journal last wrote it ([yesterdayHigh]), for the
-         * quiet day's sentence; null where the Journal has no yesterday. */
+        /** Yesterday's high as the history last wrote it ([yesterdayHigh]), for the
+         * quiet day's sentence; null where the history has no yesterday. */
         yesterdayHighC: Double? = null
     ): TodayUiState {
         val zone = placeZone(report, city)
@@ -329,7 +328,7 @@ object TodayStateBuilder {
     }
 
     /**
-     * Yesterday's high, read off the Journal (13 ott 2026): the newest commit written on
+     * Yesterday's high, read off the history (13 ott 2026): the newest commit written on
      * yesterday's date in the place's zone, and the `<date>.high_c` it flattened for that
      * date — the forecast for yesterday as it stood at its last fetch, which by then is as
      * close to the day as the app ever gets. No network and no new field: every fetch has

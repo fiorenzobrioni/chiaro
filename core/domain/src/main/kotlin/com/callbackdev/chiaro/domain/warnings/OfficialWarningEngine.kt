@@ -44,7 +44,7 @@ object OfficialWarningEngine {
      * in Avvisi), or a fingerprint already burnt for this bulletin at this level OR
      * HIGHER. The last clause is what keeps a level that came down from
      * re-notifying: the "Aggiornamento" that raises a bulletin from yellow to orange
-     * is news, the correction that lowers it back is the Journal's.
+     * is news, the correction that lowers it back is the card's and the banner's.
      *
      * [notified] is the ring of burnt fingerprints the store keeps; [cityKey] is the
      * job's key for the place (`"gps"` for the position, the id otherwise), so two
@@ -70,8 +70,8 @@ object OfficialWarningEngine {
         // yesterday's bulletin for «domani arancione», today's for «oggi arancione» — the
         // same warning, a second heads-up. What the reader has been TOLD is kept as one
         // token per day and hazard ([toldTokens]); a bulletin whose every graded cell is
-        // already covered at the same level or higher is the Journal's, not a
-        // notification. A day the reader has not heard about, or a level that went up, is
+        // already covered at the same level or higher is the card's to show, not a
+        // notification's. A day the reader has not heard about, or a level that went up, is
         // news, and it goes out.
         val told = toldTokens(cityKey, warnings, minLevel)
         if (told.isNotEmpty() && told.all { token -> covered(token, notified) }) return null

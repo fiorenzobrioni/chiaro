@@ -22,8 +22,8 @@ import org.robolectric.RobolectricTestRunner
 
 /**
  * The sweep of 12 set 2026: the only retention in the app that asks WHOSE rows these
- * are. Everything here is about the line between "old" (which is fine, and which the
- * count-based prunes deliberately tolerate) and "orphaned" (which is not).
+ * are. Everything here is about the line between "old" (which the per-place prune
+ * handles) and "orphaned" (which only this can see).
  */
 @RunWith(RobolectricTestRunner::class)
 class StoredDataSweepTest {
@@ -62,7 +62,6 @@ class StoredDataSweepTest {
 
     private fun sweep(diskCache: ReportDiskCache? = null) = StoredDataSweep(
         historyDao = database.weatherHistoryDao(),
-        warningRecordDao = database.warningRecordDao(),
         diskCache = diskCache,
         clock = clock
     )
@@ -71,21 +70,8 @@ class StoredDataSweepTest {
         database.weatherHistoryDao().insert(
             WeatherHistoryEntry(
                 cityKey = cityKey,
-                cityLabel = cityKey,
-                hash = "abcdef0",
-                author = "sys@chiaro.app",
                 timestampEpochSeconds = at.epochSecond,
-                snapshotJson = "{}"
-            )
-        )
-    }
-
-    private fun warning(cityKey: String, at: Instant) = runBlocking {
-        database.warningRecordDao().insert(
-            WarningRecordEntity(
-                cityKey = cityKey,
-                recordedEpochSeconds = at.epochSecond,
-                kind = WarningRecordKind.BULLETIN_MISSED.name
+                forecastJson = "{}"
             )
         )
     }
@@ -93,12 +79,6 @@ class StoredDataSweepTest {
     private fun historyKeys(): List<String> = runBlocking {
         listOf(milan, turin, cell).flatMap { key ->
             database.weatherHistoryDao().historyFor(key, 100).map { it.cityKey }
-        }
-    }
-
-    private fun warningKeys(): List<String> = runBlocking {
-        listOf(milan, turin, cell).flatMap { key ->
-            database.warningRecordDao().recordsFor(key, 100).map { it.cityKey }
         }
     }
 
@@ -116,20 +96,18 @@ class StoredDataSweepTest {
     fun `a place no longer followed leaves once it has been quiet for the grace`() = runBlocking {
         commit(milan, recent)
         commit(cell, ancient)
-        warning(cell, ancient)
 
         sweep().run(liveKeys = setOf(milan))
 
         assertEquals(listOf(milan), historyKeys())
-        assertTrue(warningKeys().isEmpty())
     }
 
     @Test
-    fun `a place removed a moment ago keeps everything, so an undo still has a Journal`() =
+    fun `a place removed a moment ago keeps everything, so an undo still has its history`() =
         runBlocking {
             commit(turin, ancient)
             // The newest row is what the grace is measured from: a place followed until
-            // yesterday is inside it even when most of its diary is a month old.
+            // yesterday is inside it even when most of its history is a month old.
             commit(turin, recent)
 
             sweep().run(liveKeys = setOf(milan))
@@ -138,15 +116,14 @@ class StoredDataSweepTest {
         }
 
     @Test
-    fun `it is all or nothing per place, never the old half of one diary`() = runBlocking {
+    fun `it is all or nothing per place, never the old half of one history`() = runBlocking {
         commit(cell, ancient)
         commit(cell, recent)
 
         sweep().run(liveKeys = setOf(milan))
 
         // `cell` is foreign and half of it is past the cutoff, but its newest row is not:
-        // the whole key stays. A Journal with its middle pages torn out is the one thing
-        // this must never produce.
+        // the whole key stays.
         assertEquals(listOf(cell, cell), historyKeys())
     }
 
@@ -156,12 +133,10 @@ class StoredDataSweepTest {
             // The reader removed their last place and left GPS off: Room would choke on
             // `NOT IN ()`, so the sentinel has to carry this case.
             commit(milan, ancient)
-            warning(milan, ancient)
 
             sweep().run(liveKeys = emptySet())
 
             assertTrue(historyKeys().isEmpty())
-            assertTrue(warningKeys().isEmpty())
         }
 
     @Test
@@ -179,5 +154,33 @@ class StoredDataSweepTest {
         assertTrue(live.exists())
         assertTrue(fresh.exists())
         assertTrue(!orphan.exists())
+    }
+
+    /**
+     * The count cap moved here from the write (14 ott 2026): on the write it could not
+     * tell a followed place from a GPS cell, so a reader with more than sixteen places
+     * lost the offline forecast of the oldest of them. Here it caps the foreign files
+     * only, newest kept, and a followed place is never counted.
+     */
+    @Test
+    fun `the count cap takes foreign responses only, newest kept`() = runBlocking {
+        val liveFiles = (0 until 20).map { i ->
+            File(cacheDir, "1_$i.json").apply {
+                writeText("{}")
+                setLastModified(ancient.toEpochMilli())
+            }
+        }
+        val foreign = (0 until ReportDiskCache.MAX_FOREIGN + 3).map { i ->
+            File(cacheDir, "2_$i.json").apply {
+                writeText("{}")
+                setLastModified(recent.minusSeconds(i * 60L).toEpochMilli())
+            }
+        }
+
+        sweep(ReportDiskCache(cacheDir, Json)).run(liveKeys = (0 until 20).map { "1:$it" }.toSet())
+
+        assertTrue(liveFiles.all { it.exists() })
+        assertEquals(ReportDiskCache.MAX_FOREIGN, foreign.count { it.exists() })
+        assertTrue("the newest foreign stay", foreign.take(ReportDiskCache.MAX_FOREIGN).all { it.exists() })
     }
 }

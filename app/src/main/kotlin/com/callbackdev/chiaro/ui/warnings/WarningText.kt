@@ -20,7 +20,7 @@ import java.util.Locale
 /**
  * One vocabulary for the official warnings, shared by every surface that says one: the
  * notification (Fase 11's second step), the banner and the sheet on Today, the card in
- * Avvisi, the Journal's lines and the widgets' chip.
+ * Avvisi and the widgets' chip.
  *
  * It lives here and not in any of them for the reason [com.callbackdev.chiaro.ui.today.HeadlineText]
  * lives outside the two screens that print it: two copies of "Allerta arancione per

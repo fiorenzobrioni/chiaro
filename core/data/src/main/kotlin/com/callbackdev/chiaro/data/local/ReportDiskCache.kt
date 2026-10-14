@@ -18,7 +18,7 @@ import kotlinx.serialization.json.Json
  * rebuild a [com.callbackdev.chiaro.domain.model.WeatherReport]. Best-effort by
  * design — any I/O or parse failure just falls through to the network.
  *
- * Since Fase 17 it is also **what the editor falls back to when a fetch fails**, and
+ * Since Fase 17 it is also **what the app falls back to when a fetch fails**, and
  * that changed what "dead weight" means here: an entry past the TTL is no longer
  * useless, it is the only forecast an offline phone has. See [prune].
  */
@@ -59,46 +59,49 @@ class ReportDiskCache(private val dir: File, private val json: Json) {
     }
 
     /**
-     * Two cutoffs since Fase 17, and the age one moved a long way out.
+     * The age cutoff, on every write.
      *
      * It used to be four hours — "twice the largest TTL, so it can never be read back
-     * as a hit". True while a hit was the only thing an entry could ever be; now an
-     * entry is also the document the editor shows when it cannot refresh, and the
+     * as a hit". True while a hit was the only thing an entry could ever be; since Fase
+     * 17 an entry is also the document the app shows when it cannot refresh, and the
      * response holds a **week** of forecast, so it stays useful for as long as that
      * forecast still reaches the present ([com.callbackdev.chiaro.domain.WeatherRecency]
-     * decides that, from the data rather than from a constant). Pruning at four hours
-     * would have quietly capped the offline fallback at four hours.
+     * decides that, from the data rather than from a constant). Past the horizon it says
+     * nothing about any hour still to come, and goes.
      *
-     * The count cutoff is what the age one used to do: the GPS pseudo-city mints a
-     * cacheKey per ~1.1 km cell, so a week of commuting would otherwise leave a file
-     * behind for every place the user has been. Newest kept, oldest deleted.
+     * There was a count cutoff here too, sixteen files, newest kept. Here it could not
+     * tell a followed place from a GPS cell driven through yesterday, so a reader with
+     * more than sixteen places lost the offline forecast of the least recently fetched
+     * of them. The count moved to [forgetForeign], which knows which is which
+     * (14 ott 2026).
      */
     private fun prune() {
         val cutoff = System.currentTimeMillis() - MAX_AGE_MS
-        val files = dir.listFiles()?.sortedByDescending { it.lastModified() } ?: return
-        files.forEachIndexed { index, file ->
-            if (index >= MAX_ENTRIES || file.lastModified() < cutoff) file.delete()
+        dir.listFiles()?.forEach { file ->
+            if (file.lastModified() < cutoff) file.delete()
         }
     }
 
     /**
-     * Files belonging to places the app no longer follows, once they are past
-     * [cutoffEpochMs] — the disk-cache half of `StoredDataSweep`.
+     * Files belonging to places the app no longer follows — the disk-cache half of
+     * `StoredDataSweep`. Two rules, and neither ever touches a followed place:
      *
-     * [prune] already bounds this directory, but it bounds it by count and it runs
-     * only on a write: a reader who removed a place, or who has driven through a
-     * dozen GPS cells, keeps up to [MAX_ENTRIES] responses on disk for places nothing
-     * will ever read again — and `allowBackup` carries them off the device. The age
-     * test is the same one [prune] applies, so an entry the offline fallback could
-     * still use is never the one taken away.
+     * - past [cutoffEpochMs], a foreign file goes (the same age test [prune] applies,
+     *   so an entry the offline fallback could still use is never the one taken away);
+     * - inside it, at most [MAX_FOREIGN] foreign files stay, the newest: the GPS
+     *   pseudo-city mints a cacheKey per ~1.1 km cell, and a week of commuting would
+     *   otherwise leave a response behind for every place the reader has been.
      */
     suspend fun forgetForeign(liveKeys: Set<String>, cutoffEpochMs: Long) {
         withContext(Dispatchers.IO) {
             runCatching {
                 val live = liveKeys.map(::fileName).toSet()
-                dir.listFiles()?.forEach { file ->
-                    if (file.name !in live && file.lastModified() < cutoffEpochMs) file.delete()
-                }
+                dir.listFiles()
+                    ?.filter { it.name !in live }
+                    ?.sortedByDescending { it.lastModified() }
+                    ?.forEachIndexed { index, file ->
+                        if (index >= MAX_FOREIGN || file.lastModified() < cutoffEpochMs) file.delete()
+                    }
             }
         }
     }
@@ -114,11 +117,10 @@ class ReportDiskCache(private val dir: File, private val json: Json) {
         private const val MAX_AGE_MS = OpenMeteoForecastApi.FORECAST_DAYS * 24 * 60 * 60 * 1000L
 
         /**
-         * Roughly a saved-city list plus a handful of GPS cells. An evicted entry
-         * costs one fetch when there is a network and the offline fallback for that
-         * one city when there is not — which is why the cap is on the count and not
-         * on the age the fallback needs.
+         * Foreign responses kept: a handful of GPS cells, enough for a place passed
+         * through this morning to come back without a fetch. An evicted one costs a
+         * fetch when there is a network, and nothing a reader follows.
          */
-        private const val MAX_ENTRIES = 16
+        const val MAX_FOREIGN = 8
     }
 }

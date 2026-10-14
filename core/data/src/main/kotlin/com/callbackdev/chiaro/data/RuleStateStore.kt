@@ -55,10 +55,10 @@ class RuleStateStore(private val dataStore: DataStore<Preferences>) {
     }
 
     /**
-     * Editing a rule's conditions makes its state stale (a still-latched rule with
-     * a new threshold would stay silent); the UI clears it on every condition edit
-     * and on removal. Latch keys are `cityKey:ruleId`, fingerprints embed
-     * `:rule:<id>:`.
+     * Editing a rule's conditions or its window makes its state stale (a still-latched
+     * rule with a new threshold would stay silent); Alerts clears it on every such edit.
+     * A deletion is left to [retain], because «Annulla» brings the rule back as it was.
+     * Latch keys are `cityKey:ruleId`, fingerprints embed `:rule:<id>:`.
      */
     suspend fun clearRule(ruleId: Long) {
         dataStore.edit { prefs ->
@@ -68,6 +68,27 @@ class RuleStateStore(private val dataStore: DataStore<Preferences>) {
             prefs[Fingerprints] = prefs[Fingerprints].toEntries()
                 .filterNot { it.contains(":rule:$ruleId:") }
                 .joinToString(SEPARATOR)
+        }
+    }
+
+    /**
+     * Keeps only the latches of a place the app still follows AND a rule that still
+     * exists (14 ott 2026). A latch is `<place>:<rule id>` and is cleared only when its
+     * rule, evaluated for its place, reads false again — so the latch of a removed place
+     * or of a rule deleted before [clearRule] was wired is never evaluated and never
+     * cleared. Fingerprints need no such care: they are a bounded ring.
+     *
+     * @param liveCities the places' notification keys (`"gps"` or the id)
+     */
+    suspend fun retain(liveCities: Set<String>, liveRules: Set<Long>) {
+        dataStore.edit { prefs ->
+            val latched = prefs[Latched].toEntries()
+            val kept = latched.filter { key ->
+                val place = key.substringBeforeLast(':')
+                val rule = key.substringAfterLast(':').toLongOrNull()
+                place in liveCities && rule in liveRules
+            }
+            if (kept.size != latched.size) prefs[Latched] = kept.joinToString(SEPARATOR)
         }
     }
 

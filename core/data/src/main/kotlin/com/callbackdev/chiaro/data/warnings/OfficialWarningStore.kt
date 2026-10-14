@@ -36,9 +36,7 @@ data class WarningSourceState(
     /** The discovery feed's ETag as last seen, for a free re-check. */
     val feedTag: String?,
     /** When the network was last asked, success or failure. */
-    val lastAttempt: Instant?,
-    /** The last day a «bollettino non raggiunto» row was written: one a day at most. */
-    val failureLoggedOn: LocalDate?
+    val lastAttempt: Instant?
 )
 
 /**
@@ -59,10 +57,7 @@ class OfficialWarningStore(
             WarningSourceState(
                 current = prefs[bulletinKey(sourceId)]?.let { decode(it) },
                 feedTag = prefs[feedTagKey(sourceId)],
-                lastAttempt = prefs[lastAttemptKey(sourceId)]?.let(Instant::ofEpochMilli),
-                failureLoggedOn = prefs[failureLoggedKey(sourceId)]?.let {
-                    runCatching { LocalDate.parse(it) }.getOrNull()
-                }
+                lastAttempt = prefs[lastAttemptKey(sourceId)]?.let(Instant::ofEpochMilli)
             )
         }
         .distinctUntilChanged()
@@ -88,11 +83,12 @@ class OfficialWarningStore(
     }
 
     suspend fun markAttempt(sourceId: String, at: Instant) {
-        dataStore.edit { it[lastAttemptKey(sourceId)] = at.toEpochMilli() }
-    }
-
-    suspend fun markFailureLogged(sourceId: String, day: LocalDate) {
-        dataStore.edit { it[failureLoggedKey(sourceId)] = day.toString() }
+        dataStore.edit { prefs ->
+            prefs[lastAttemptKey(sourceId)] = at.toEpochMilli()
+            // The day the Journal last wrote «bulletin not reached» (until 14 ott 2026):
+            // the Journal is gone, and so is the key, on the first look after the update.
+            prefs.remove(failureLoggedKey(sourceId))
+        }
     }
 
     /** Called only after a successful post — an unposted warning can still fire. */
@@ -115,6 +111,7 @@ class OfficialWarningStore(
         private fun bulletinKey(sourceId: String) = stringPreferencesKey("bulletin_$sourceId")
         private fun feedTagKey(sourceId: String) = stringPreferencesKey("feed_tag_$sourceId")
         private fun lastAttemptKey(sourceId: String) = longPreferencesKey("last_attempt_$sourceId")
+        /** Written by builds before 14 ott 2026 and only ever removed now. */
         private fun failureLoggedKey(sourceId: String) = stringPreferencesKey("failure_logged_$sourceId")
         private val Notified = stringPreferencesKey("notified_fingerprints")
 

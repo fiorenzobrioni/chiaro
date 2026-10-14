@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
+import com.callbackdev.chiaro.data.RuleStateStore
 import com.callbackdev.chiaro.data.RuleStore
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.SettingsStore
@@ -120,6 +121,7 @@ class AlertsViewModel(
     private val appContext: Context,
     private val settingsStore: SettingsStore,
     private val ruleStore: RuleStore,
+    private val ruleStateStore: RuleStateStore,
     private val cityStore: CityStore,
     private val repository: WeatherRepository,
     private val warningReader: OfficialWarningReader?
@@ -218,7 +220,25 @@ class AlertsViewModel(
         }
     }
 
-    fun update(rule: NotificationRule) = mutate { ruleStore.update(rule) }
+    /**
+     * Saves [rule], and re-arms it when what it asks changed (14 ott 2026). A latched
+     * rule given a new threshold stayed latched under the old one, silent until the
+     * old condition happened to read false; a rule that had spoken today under its
+     * old window kept today's fingerprint and could not speak under the new one.
+     * `RuleStateStore.clearRule` was written for exactly this and never called. A
+     * rename or a switch flipped leaves the state alone: nothing it reads moved.
+     *
+     * A deletion does not clear here, because «Annulla» brings the rule back as it
+     * was; the latches of a rule that stays deleted leave at the next sync, with
+     * those of removed places (`RuleStateStore.retain`).
+     */
+    fun update(rule: NotificationRule) = mutate {
+        val before = ruleStore.rules.first().firstOrNull { it.id == rule.id }
+        ruleStore.update(rule)
+        if (before != null && (before.conditions != rule.conditions || before.window != rule.window)) {
+            ruleStateStore.clearRule(rule.id)
+        }
+    }
 
     fun remove(id: Long) = mutate { ruleStore.remove(id) }
 
@@ -270,7 +290,7 @@ class AlertsViewModel(
      * honest reading of what the data can say.
      */
     private suspend fun lastFiredByName(city: City): Map<String, Instant> {
-        val rows = runCatching { repository.historyFor(city, limit = HISTORY_SCAN) }
+        val rows = runCatching { repository.historyFor(city) }
             .getOrDefault(emptyList())
         val result = mutableMapOf<String, Instant>()
         rows.forEach { row ->
@@ -289,8 +309,6 @@ class AlertsViewModel(
     }
 
     companion object {
-        private const val HISTORY_SCAN = 50
-
         val Factory = viewModelFactory {
             initializer {
                 val app = checkNotNull(this[APPLICATION_KEY])
@@ -298,6 +316,7 @@ class AlertsViewModel(
                     appContext = app.applicationContext,
                     settingsStore = ServiceLocator.settingsStore(app),
                     ruleStore = ServiceLocator.ruleStore(app),
+                    ruleStateStore = ServiceLocator.ruleStateStore(app),
                     cityStore = ServiceLocator.cityStore(app),
                     repository = ServiceLocator.weatherRepository(app),
                     warningReader = ServiceLocator.warningReader(app)

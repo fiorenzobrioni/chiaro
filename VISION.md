@@ -92,8 +92,9 @@ them, and that the enthusiast apps will not do, because their audience is not th
    printed beside the answer. The engine exists and is tested; this is presentation work.
 2. **Memory of the forecast.** tweather already stores every fetch as a snapshot and diffs the next
    days against the previous fetch. Nobody in the mainstream tells a user that Saturday's forecast
-   *changed*: rain 70% → 30% is more actionable than either number alone, and it is the single most
-   share-worthy screen in the product.
+   *changed*: rain 70% → 30% is more actionable than either number alone. Since 14 ott 2026 this is
+   a section of Today, "What changed" (§5.2.6), and no longer a screen of its own: the Journal that
+   read the whole history back was removed (§5.5).
 3. **Alerts the user writes.** Not five fixed switches — an alert built from real variables
    ("rain in the next 6 hours above 70%", "tomorrow morning below 0°"), with templates for people
    who do not want to build anything, and a preview that runs the rule against today's data.
@@ -134,7 +135,7 @@ accounts and tracking, that works offline with the last data it managed to fetch
    around 17:00, clear after that" — built from the alert engine and the next hours. Numbers follow
    for the people who want them. On a day with nothing to warn about (since 12 ott 2026) the line says
    what a quiet day is still planned by: when the next rain is due and when it will be warmest —
-   "Next rain Sunday, high of 23° around 16:00", or "4° warmer than yesterday" when the Journal
+   "Next rain Sunday, high of 23° around 16:00", or "4° warmer than yesterday" when the history
    has yesterday — never a filler.
 3. **Every number says what to do with it.** UV 7 is not a number, it is "burns in about 25 minutes,
    wear something". AQI 112 is "fine for a walk, not for a run". This is the mainstream inversion of
@@ -256,8 +257,8 @@ Non-negotiable, and one of the reasons this edition exists.
 
 ### 5.1 Navigation model
 
-Four bottom destinations, a place switcher in the app bar, and a horizontal pager between saved
-places. That is the fastest arrangement for this content and it is the one the audience already
+Three bottom destinations (four until 14 ott 2026, when the Journal left, §5.5), a place switcher
+in the app bar, and a horizontal pager between saved places. That is the fastest arrangement for this content and it is the one the audience already
 knows from every other weather app.
 
 ```
@@ -271,7 +272,7 @@ knows from every other weather app.
 │  └────────────────────────────────┘  │
 │  ...                                 │
 │                                      │
-│   Today    Sky    Alerts    Journal  │   bottom navigation
+│      Today      Sky      Alerts      │   bottom navigation
 └──────────────────────────────────────┘
 ```
 
@@ -299,10 +300,10 @@ The spine of the product, one vertical scroll, in this order:
    week has a *shape*), rain probability, and the daylight ribbon. Tapping a row expands it in
    place with a shared-element transition into that day's hours.
 6. **What changed** (when something did): "Saturday improved: rain 70% → 30%". Two or three lines,
-   tapping opens the Journal. **After** the week, and not before it (moved 6 set 2026): every one
-   of these sentences names a day further out, so ahead of the week it was naming days the reader
-   had not been shown yet — and it cut between the two sections about today and the one about the
-   days ahead. A revision this screen has no words for is not a line at all.
+   and nothing behind them since the Journal left (14 ott 2026). **After** the week, and not before
+   it (moved 6 set 2026): every one of these sentences names a day further out, so ahead of the week
+   it was naming days the reader had not been shown yet — and it cut between the two sections about
+   today and the one about the days ahead. A revision this screen has no words for is not a line at all.
 7. **Details**: air quality, pollen, UV, wind, humidity, pressure, visibility, dew point — as a grid
    of small cards, each with its number and its one-line meaning (§3.3). Cards for data the region
    does not have are not drawn (pollen outside Europe simply is not there).
@@ -442,26 +443,19 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
   - **Deleting** a rule asks nothing: the sheet closes with "Undo", which puts it back as it was
     (14 ott 2026, as the Sky undoes a moment).
 
-### 5.5 Journal
+### 5.5 Journal (removed 14 ott 2026)
 
-One Room row per fetch already carries the snapshot, the forecast for the coming days, the rules
-that fired and the sky jobs observed. The Journal is that table read as prose, newest first, grouped
-by day:
+The Journal read the history table back as prose: a line per forecast revision, alert fired, sky
+moment observed and failed update, a heat strip of how the week's forecast had drifted, and a check of
+how the forecast did on the days already over. It was removed on the committente's call, with every
+table and column only it read (`PLANNING.md`, «Via il Diario»).
 
-- "Saturday's forecast improved: rain 70% → 30%, high 24° → 27°"
-- "Your alert *bike* fired at 07:12"
-- "Sunrise, seen: clear sky, 8% cloud"
-- "Orange warning for thunderstorms tomorrow — Protezione Civile, 15:19" (and, the day it lifts,
-  "Warning lifted: no criticality tomorrow"): a level that appears, rises or falls between two
-  bulletins is a change in what the reader was told, which is exactly what this screen keeps
-
-And one chart the rest of the store does not have: **forecast drift** — how the next seven days'
-forecast changed over the last several days, as a compact heat strip (one row per target day, one
-column per fetch, color = the metric). It answers "has this been getting better or worse", which is
-the question anybody planning a weekend actually asks. It is built from data already on disk.
-
-The Journal is also where offline honesty lives: a failed fetch is an entry, with the reason in
-plain language.
+The honest reason: it was the tweather `git log` read as prose, an answer to a question the general
+audience of this product does not ask — a weather app is opened for what is coming, for seconds — and
+its one piece that does answer one, "Saturday improved: rain 70% → 30%", already lived on Today
+(§5.2.6), where it stays. The forecast check was the weakest of it: three days of evidence at most,
+and the model's own analysis standing in for a measurement. Offline honesty, which it also carried,
+lives in the freshness chip and in the cards' stated ages.
 
 ### 5.6 Places
 
@@ -477,11 +471,11 @@ icons, dynamic color, canvas motion), update
 frequency, notifications, widgets, language, about. Reset is a destructive-styled item with a
 confirmation dialog rather than a two-tap `$` command.
 
-`HELP.md` becomes **the guide**: a tour of the four screens — what each one answers, what it can do,
+`HELP.md` becomes **the guide**: a tour of the three screens — what each one answers, what it can do,
 and the things a screen cannot say out loud (that the sky is computed rather than photographed, that
-a reminder is loose on purpose, that a failed update is a line in the Journal) — closing on where the
-numbers come from. It teaches by showing the app's OWN components as examples, each captioned as one:
-the verdict chips, a details tile, the freshness chip, a miniature of the drift strip. Reachable from
+a reminder is loose on purpose) — closing on where the numbers come from. It teaches by showing the
+app's OWN components as examples, each captioned as one: the verdict chips, a details tile, the
+freshness chip, two rows of the week. Reachable from
 settings and from a one-time card on the home screen.
 
 Two rules hold it in shape. It **never teaches a control**, because a control that needs explaining is
@@ -667,7 +661,7 @@ Nothing in tweather is dropped. Everything moves to the surface that fits a Mate
 | `settings.config` | **Settings** |
 | `alerts.rules` (user rules, dry run, master switch) | **Alerts → Yours**: templates + chip builder + preview |
 | built-in alert toggles | **Alerts → Ready-made** |
-| `history.diff` + `forecast.diff` + `sky_runs.log` + fired-rule check lines | **Journal** (one entry per fetch) + the forecast-drift chart |
+| `history.diff` + `forecast.diff` + `sky_runs.log` + fired-rule check lines | **Journal** until 14 ott 2026; now only Today's "What changed" and Alerts' «last fired» |
 | `HELP.md` + `$ tweather init` | **Guide** + first run |
 | widget (`tweather --now`, terminal tiers) | **Widgets** (Now / Today / In words / Sky / the day's arc) |
 | theme profiles Obsidian/Dracula/Monokai | dynamic color + curated palette, light and dark |
@@ -792,11 +786,15 @@ civil-protection instruction is a sentence nobody signed.
   Astronomy is computed locally and works offline.
 - **Network**: one fetch per active place per interval (15/30/60/120 min, default 60), a 15-minute
   in-memory/disk TTL in front of it, CONNECTED-constrained. Nothing polls.
-- **Battery**: one periodic WorkManager job for everything (sync, alerts, rules, sky observation),
+- **Battery**: one periodic WorkManager job for everything (sync, alerts, rules, sky reminders),
   inexact alarms for reminders, no foreground service, no background location, no FCM.
 - **Offline**: the last successful report per place is kept with no TTL and carries a week of
   forecast, so the app is never blank; recency drops the hours that have already happened, and the
   freshness chip says how old the answer is.
+- **Storage** (14 ott 2026): bounded by time and by owner. The history keeps three days of forecasts
+  a place (never fewer than two commits, one commit per fifteen minutes at most); the response cache
+  keeps a followed place up to the forecast horizon and at most eight places no longer followed; a
+  place the app stops following leaves the disk entirely after a week. Nothing else is written.
 - **Official warnings** (§12.8): Open-Meteo has none, so they come from the issuers themselves, free
   and without a key. In Italy the Dipartimento della Protezione Civile's daily bulletins (criticality
   by 16:00, vigilance by 15:00; CC BY 4.0, attributed on the sheet and in the guide), a few
@@ -822,7 +820,7 @@ ribbon spec, the icon decision. Compose theme and the component kit.
 **Fase 4** — Settings and the guide.
 **Fase 5** — Sky: tonight, moments, catalog, reminders.
 **Fase 6** — Alerts: ready-made, templates, chip builder, preview.
-**Fase 7** — Journal: entries, forecast-drift chart.
+**Fase 7** — Journal: entries, forecast-drift chart (removed 14 ott 2026, §5.5).
 **Fase 8** — Widgets (Now, Today, Sky).
 **Fase 9** — Accessibility and performance pass with numbers (§3.3.6), IT/EN sweep.
 **Fase 10** — Store assets, screenshots, listing, v1.0.0 release.

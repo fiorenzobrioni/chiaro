@@ -7,7 +7,6 @@ import com.callbackdev.chiaro.core.data.BuildConfig
 import com.callbackdev.chiaro.data.local.ReportDiskCache
 import com.callbackdev.chiaro.data.local.ChiaroDatabase
 import com.callbackdev.chiaro.data.local.StoredDataSweep
-import com.callbackdev.chiaro.data.local.WarningRecordDao
 import java.io.File
 import java.time.Duration
 import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
@@ -18,6 +17,8 @@ import com.callbackdev.chiaro.data.warnings.OfficialWarningReader
 import com.callbackdev.chiaro.data.warnings.OfficialWarningStore
 import com.callbackdev.chiaro.data.warnings.WarningSource
 import com.callbackdev.chiaro.data.warnings.WarningZoneAssets
+import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.notificationKey
 import com.callbackdev.chiaro.domain.warnings.WarningZoneIndex
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
@@ -73,9 +74,6 @@ object ServiceLocator {
     private var skyAlertStateStore: SkyAlertStateStore? = null
 
     @Volatile
-    private var fetchLogStore: FetchLogStore? = null
-
-    @Volatile
     private var warningStore: OfficialWarningStore? = null
 
     @Volatile
@@ -83,9 +81,6 @@ object ServiceLocator {
 
     @Volatile
     private var warningSource: WarningSource? = null
-
-    @Volatile
-    private var warningRecordDao: WarningRecordDao? = null
 
     @Volatile
     private var warningReader: OfficialWarningReader? = null
@@ -128,12 +123,6 @@ object ServiceLocator {
                 store = warningStore(context),
                 index = { warningZoneIndex(context) }
             ).also { warningReader = it }
-        }
-
-    fun warningRecordDao(context: Context): WarningRecordDao =
-        warningRecordDao ?: synchronized(this) {
-            warningRecordDao ?: database(context.applicationContext).warningRecordDao()
-                .also { warningRecordDao = it }
         }
 
     fun weatherRepository(context: Context): WeatherRepository =
@@ -207,12 +196,6 @@ object ServiceLocator {
                 .also { skyAlertStateStore = it }
         }
 
-    fun fetchLogStore(context: Context): FetchLogStore =
-        fetchLogStore ?: synchronized(this) {
-            fetchLogStore ?: FetchLogStore.create(context.applicationContext, json)
-                .also { fetchLogStore = it }
-        }
-
     fun ruleStateStore(context: Context): RuleStateStore =
         ruleStateStore ?: synchronized(this) {
             ruleStateStore ?: RuleStateStore.create(context.applicationContext)
@@ -235,11 +218,9 @@ object ServiceLocator {
         ruleStateStore: RuleStateStore? = null,
         skySubscriptionStore: SkySubscriptionStore? = null,
         skyAlertStateStore: SkyAlertStateStore? = null,
-        fetchLogStore: FetchLogStore? = null,
         warningStore: OfficialWarningStore? = null,
         warningZoneIndex: WarningZoneIndex? = null,
-        warningSource: WarningSource? = null,
-        warningRecordDao: WarningRecordDao? = null
+        warningSource: WarningSource? = null
     ) {
         this.repository = repository
         this.cityStore = cityStore
@@ -250,12 +231,10 @@ object ServiceLocator {
         this.ruleStateStore = ruleStateStore
         this.skySubscriptionStore = skySubscriptionStore
         this.skyAlertStateStore = skyAlertStateStore
-        this.fetchLogStore = fetchLogStore
         this.warningStore = warningStore
         this.warningReader = null
         this.warningZoneIndex = warningZoneIndex
         this.warningSource = warningSource
-        this.warningRecordDao = warningRecordDao
     }
 
     /**
@@ -346,11 +325,8 @@ object ServiceLocator {
         val database = database(appContext)
         // Survives process death so cold starts inside the TTL cost zero GETs
         val diskCache = ReportDiskCache(File(appContext.filesDir, "report_cache"), json)
-        val sweep = StoredDataSweep(
-            historyDao = database.weatherHistoryDao(),
-            warningRecordDao = warningRecordDao(appContext),
-            diskCache = diskCache
-        )
+        forgetRetiredFiles(appContext)
+        val sweep = StoredDataSweep(historyDao = database.weatherHistoryDao(), diskCache = diskCache)
 
         return WeatherRepository(
             forecastApi = retrofit(OpenMeteoForecastApi.BASE_URL)
@@ -368,8 +344,27 @@ object ServiceLocator {
             // ...and the same commit is where the storage tidies up after itself. The
             // live set is read here and not inside the sweep because the sweep is in
             // `local/` and has no business knowing about the saved-places store.
-            onHousekeeping = { sweep.run(liveCityKeys(appContext)) }
+            liveKeys = { liveCityKeys(appContext) },
+            onHousekeeping = { live ->
+                sweep.run(live)
+                // The rules' latches are filed by place and by rule: a place removed or
+                // a rule deleted leaves latches nothing would ever re-arm.
+                ruleStateStore(appContext).retain(
+                    liveCities = liveNotificationKeys(appContext),
+                    liveRules = ruleStore(appContext).rules.first().map { it.id }.toSet()
+                )
+            }
         )
+    }
+
+    /**
+     * Files only the Journal wrote, left behind by builds before 14 ott 2026: the log of
+     * failed updates. Deleting a file that is not there is free, so this runs once per
+     * process with no flag to remember it by. (The Journal's table goes in the Room
+     * migration to v6.)
+     */
+    private fun forgetRetiredFiles(appContext: Context) {
+        runCatching { File(appContext.filesDir, "datastore/fetch_log.preferences_pb").delete() }
     }
 
     /**
@@ -379,11 +374,15 @@ object ServiceLocator {
      * cells the reader drove through yesterday are deliberately NOT in it, which is
      * the whole point of [StoredDataSweep].
      */
-    private suspend fun liveCityKeys(appContext: Context): Set<String> {
+    private suspend fun liveCityKeys(appContext: Context): Set<String> =
+        livePlaces(appContext).map { it.cacheKey }.toSet()
+
+    /** The same places, by the key the notification engines file them under. */
+    private suspend fun liveNotificationKeys(appContext: Context): Set<String> =
+        livePlaces(appContext).map { it.notificationKey }.toSet()
+
+    private suspend fun livePlaces(appContext: Context): List<City> {
         val store = cityStore(appContext)
-        return buildSet {
-            store.cities.first().forEach { add(it.cacheKey) }
-            store.locationSettings.first().gpsCity?.let { add(it.cacheKey) }
-        }
+        return store.cities.first() + listOfNotNull(store.locationSettings.first().gpsCity)
     }
 }

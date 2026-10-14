@@ -2,11 +2,8 @@ package com.callbackdev.chiaro.sync
 
 import android.content.Context
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.callbackdev.chiaro.data.ServiceLocator
-import com.callbackdev.chiaro.data.local.ChiaroDatabase
-import com.callbackdev.chiaro.data.local.WarningRecordKind
 import com.callbackdev.chiaro.data.warnings.OfficialWarningStore
 import com.callbackdev.chiaro.data.warnings.WarningFetchFailure
 import com.callbackdev.chiaro.data.warnings.WarningFetchResult
@@ -38,8 +35,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -49,7 +44,7 @@ import org.robolectric.RobolectricTestRunner
 
 /**
  * The warnings leg of the job with a scripted source and a recording notifier: when
- * it asks the network, what it keeps, what it writes in the Journal, when it speaks.
+ * it asks the network, what it keeps, when it speaks.
  * The zone index is the real asset, read off the data module's tree.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -61,7 +56,6 @@ class OfficialWarningsStepTest {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val rome: ZoneId = ZoneId.of("Europe/Rome")
-    private lateinit var database: ChiaroDatabase
     private lateinit var store: OfficialWarningStore
     private val source = ScriptedSource()
     private val notifiers = RecordingNotifiers()
@@ -79,8 +73,6 @@ class OfficialWarningsStepTest {
 
     @Before
     fun setUp() {
-        database = Room.inMemoryDatabaseBuilder(context, ChiaroDatabase::class.java)
-            .allowMainThreadQueries().build()
         store = OfficialWarningStore(
             PreferenceDataStoreFactory.create(scope = scope) {
                 tmp.newFile("warnings-${System.nanoTime()}.preferences_pb")
@@ -91,15 +83,13 @@ class OfficialWarningsStepTest {
         ServiceLocator.overrideForTests(
             warningStore = store,
             warningZoneIndex = index,
-            warningSource = source,
-            warningRecordDao = database.warningRecordDao()
+            warningSource = source
         )
     }
 
     @After
     fun tearDown() {
         ServiceLocator.overrideForTests()
-        database.close()
         scope.cancel()
     }
 
@@ -132,8 +122,6 @@ class OfficialWarningsStepTest {
         )
     }
 
-    private fun records() = runBlocking { database.warningRecordDao().recordsFor(milano.cacheKey, 20) }
-
     @Test
     fun `a place outside every zone never touches the network`() {
         source.next = fresh(bulletin(sept9.atTime(15, 46), "B1", row(sept9, WarningHazard.THUNDERSTORM, WarningLevel.ORANGE)))
@@ -160,8 +148,6 @@ class OfficialWarningsStepTest {
             setOf("3173435:warn:B1:ORANGE", "3173435:told:2026-09-09:THUNDERSTORM:ORANGE"),
             runBlocking { store.notified.first() }
         )
-        // The first bulletin a place sees is its state, not news for the Journal.
-        assertEquals(0, records().size)
         assertEquals(WarningFetchState(stamp = null, feedTag = null), source.calls.single())
     }
 
@@ -180,7 +166,7 @@ class OfficialWarningsStepTest {
     }
 
     @Test
-    fun `an update that raises the level is announced again and written in the Journal`() {
+    fun `an update that raises the level is announced again`() {
         source.next = fresh(bulletin(sept9.atTime(15, 46), "B1", row(sept9, WarningHazard.THUNDERSTORM, WarningLevel.ORANGE)))
         run(at = sept9.atTime(16, 0))
 
@@ -195,29 +181,6 @@ class OfficialWarningsStepTest {
         run(at = sept9.atTime(17, 40))
 
         assertEquals(listOf("3173435:warn:B1:ORANGE", "3173435:warn:B1:RED"), notifiers.warnings.map { it.fingerprint })
-        val change = records().single()
-        assertEquals(WarningRecordKind.LEVEL_CHANGE.name, change.kind)
-        assertEquals("HYDROGEOLOGICAL", change.hazard)
-        assertEquals("NONE", change.fromLevel)
-        assertEquals("RED", change.toLevel)
-        assertEquals("2026-09-09", change.day)
-        assertEquals("Nodo Idraulico di Milano", change.zoneName)
-    }
-
-    @Test
-    fun `a failure after the hour writes one missed row a day, before the hour none`() {
-        source.next = WarningFetchResult.Failed(WarningFetchFailure.OFFLINE)
-        run(at = sept9.atTime(16, 0))
-        run(at = sept9.atTime(16, 30))
-        val missed = records()
-        assertEquals(1, missed.size)
-        assertEquals(WarningRecordKind.BULLETIN_MISSED.name, missed.single().kind)
-        assertNull(missed.single().bulletinId)
-
-        run(at = sept9.plusDays(1).atTime(10, 0))
-        assertEquals(1, records().size)
-        run(at = sept9.plusDays(1).atTime(16, 0))
-        assertEquals(2, records().size)
     }
 
     @Test
@@ -228,7 +191,6 @@ class OfficialWarningsStepTest {
         source.next = WarningFetchResult.Failed(WarningFetchFailure.SERVICE)
         run(at = sept9.atTime(16, 0))
         assertEquals("20260908_1519", runBlocking { store.state("dpc").first() }.current?.stamp)
-        assertEquals(1, records().count { it.kind == WarningRecordKind.BULLETIN_MISSED.name })
     }
 
     // --- the screen's own run (11 set 2026): fetches, never speaks -------------------
@@ -255,23 +217,6 @@ class OfficialWarningsStepTest {
         source.next = WarningFetchResult.Unchanged("\"tag\"")
         run(at = sept9.atTime(17, 5))
         assertEquals(1, notifiers.warnings.size)
-    }
-
-    @Test
-    fun `a silent run still writes the Journal, because a level moved either way`() {
-        source.next = fresh(bulletin(sept9.atTime(15, 46), "B1", row(sept9, WarningHazard.THUNDERSTORM, WarningLevel.YELLOW)))
-        run(at = sept9.atTime(16, 0), silent = true)
-        val first = records().size
-
-        source.next = fresh(
-            bulletin(sept9.atTime(17, 0), "B2", row(sept9, WarningHazard.THUNDERSTORM, WarningLevel.ORANGE)),
-            stamp = "20260909_1700"
-        )
-        run(at = sept9.atTime(17, 30), force = true, silent = true)
-        assertTrue(
-            "the diary is content, not speech",
-            records().count { it.kind == WarningRecordKind.LEVEL_CHANGE.name } > first
-        )
     }
 
     @Test

@@ -99,7 +99,7 @@ sealed interface Headline {
         sealed interface Warmth {
             /**
              * Today's warmest hour, still ahead and clearly warmer than now. [vsYesterdayC]
-             * is today's high against yesterday's, when the Journal has yesterday and the
+             * is today's high against yesterday's, when the history has yesterday and the
              * two are [HeadlineEngine.CALM_YESTERDAY_MIN_C] or more apart (13 ott 2026):
              * «4° più di ieri» is what a reader dresses by, and it takes the hour's place.
              */
@@ -329,7 +329,7 @@ object HeadlineEngine {
      * - **Warmth**: today's warmest hour (the first that prints its figure) while it is
      *   still ahead and at least [CALM_PEAK_MARGIN_C] warmer than the hour we are in (a
      *   peak equal to the hero is the hero again); past it, tomorrow's range. With
-     *   [yesterdayHighC] — yesterday's high as the Journal last wrote it — the peak says
+     *   [yesterdayHighC] — yesterday's high as the history last wrote it — the peak says
      *   how far today is from yesterday instead of its hour, from three degrees.
      */
     fun calm(report: WeatherReport, now: LocalDateTime, yesterdayHighC: Double? = null): Headline.Calm? {
@@ -371,7 +371,7 @@ object HeadlineEngine {
         val warmth: Headline.Calm.Warmth? =
             if (peak != null && peak.time.isAfter(current.time) && peak.tempC - current.tempC >= CALM_PEAK_MARGIN_C) {
                 // Today's high against yesterday's, both the day's own `highC` — the figure
-                // the Journal wrote down for yesterday — so the two are the same kind of
+                // the history wrote down for yesterday — so the two are the same kind of
                 // number. Under the margin it is not news, and the hour stays.
                 val todayHigh = report.daily.firstOrNull { it.date == today }?.highC
                 val vsYesterday = if (todayHigh != null && yesterdayHighC != null) {

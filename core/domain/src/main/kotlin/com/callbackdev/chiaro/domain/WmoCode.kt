@@ -144,11 +144,11 @@ enum class WmoCode(
 
 /**
  * The words the reader sees for a condition, one per string resource: several codes
- * share a word (51/53/55 are all «Pioviggine»), and the Journal compares days by word
- * because a change the reader cannot see is not a change worth a line.
+ * share a word (51/53/55 are all «Pioviggine»), and "what changed" compares days by
+ * word because a change the reader cannot see is not a change worth a line.
  *
  * [id] is written into history snapshots and must never change once shipped; it is the
- * key the Journal and the widgets read back. [UNKNOWN] is what a number outside the table
+ * key the history and the widgets read back. [UNKNOWN] is what a number outside the table
  * maps to, never a guess at the nearest code.
  */
 enum class ConditionWord(val id: String) {
@@ -182,7 +182,7 @@ enum class ConditionWord(val id: String) {
     SNOW_LIKELY("snow_likely"),
     THUNDERSTORM_POSSIBLE("thunderstorm_possible");
 
-    /** The heaviest code that prints this word; what the Journal ranks two days by. */
+    /** The heaviest code that prints this word; what "what changed" ranks two days by. */
     val severity: Int get() = WmoCode.entries.filter { it.word == this }.maxOfOrNull { it.severity } ?: -1
 
     companion object {
