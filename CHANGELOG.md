@@ -29,6 +29,29 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **The Journal answers first.** The week's card is now the head of the Journal, shaped like
+  the Sky's tonight card: the answer in large type, such as «Saturday 17 is improving», with
+  its numbers on a line of their own («rain 70% → 30%»), then the strip. Before the first
+  trend can be drawn it says «Too early to say» and when the trend will arrive. «How the
+  forecast did» takes the same rounded shape.
+- **A Journal easier to scan.** The hours of the log stand in a column in full ink, as on the
+  Sky screen; the days read «Today», «Yesterday» under a «What happened» title, without the
+  count of entries. Each line's badge now draws what it is about: the rain or the thermometer
+  for a revision, your alert's own drawing for an alert that fired, a crossed-out cloud for an
+  update that did not arrive. Under «How the forecast did» each day is named by weekday and
+  date, where a lone «T» could be Tuesday or Thursday.
+- **Journal lines open what they talk about.** Tap a sky moment to read its page, a warning
+  to see the bulletin, an alert that fired to open it in Alerts, and a forecast change to see
+  the story of that day: each update that moved its rain or its high, the latest on top. With
+  TalkBack each line is read as one, hour included.
+- **Explore the week with a finger.** In the Journal, drag along the week's strip (or hold
+  it) and the square under your finger lights up with its row and column, while the line
+  above reads it: which day, from which update, with its rain and its high. Lift the finger
+  and the strip goes back to how it was. With TalkBack each day can be adjusted update by
+  update.
+- **Rain or highs, one tap.** The Journal's choice between the two is now a single
+  two-part button, and a «How to read the journal» row under the week opens the guide's
+  chapter about it.
 - **Undo on the Sky screen.** Adding or removing a moment from its page now shows a message
   with «Undo», and undoing a removal brings the moment back with its own reminder.
 - **An easier place switcher.** On Sky, Alerts and Journal the whole title is now the button

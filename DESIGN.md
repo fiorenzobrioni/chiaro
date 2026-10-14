@@ -1654,6 +1654,92 @@ in the app — a column of identical grey silhouettes beside grey text:
 - The diary's own words for a failed update («Il telefono era offline»), where it used to repeat
   the app's error line under a headline that had just said the same.
 
+**The week's hero** (review of the Journal, points A.1 and A.2, 14 ott 2026), in the Sky's
+shape. The drift card is the head of the page: `shapes.extraLarge` (28 dp) on
+`surfaceContainerHigh`, 20 dp of padding, 8 dp from the header like the tonight card. Inside, a
+label («La settimana», `labelLarge`, `onSurfaceVariant`), **the answer as a word** at
+`headlineMedium` («Sabato 17 migliora», «… peggiora», «… si scalda», «… si rinfresca», «… va su e
+giù», «Settimana ferma»), its **arithmetic on a line of its own** at `bodyLarge` tabular, the
+value it came from in the quiet ink and the value it is now in full weight (the rain one on the
+rain's ink ramp, as in the entries), then the chips, the strip and the frost line. The section
+title over the card is gone: the label is its job. The one-line sentence it replaces wrapped
+inside its own number at 384 dp («pioggia 52% →» over «5%.»), which is the pair §8.7 does not let
+come apart. Before there are two columns to compare, the hero still answers: «Ancora presto»,
+with the sentence that says when the trend arrives (no more «deriva»: jargon). The ground is
+neutral on purpose: the strip under the word is on the rain and temperature ramps, which must
+read as themselves, so the weight is the type's and the shape's. The row the word names is now
+picked out on `surfaceContainerLowest`: `surfaceContainerHighest`, one step from the new ground,
+all but vanished in the light dress. **How the forecast did** takes the same 28 dp and 20 dp of
+padding, on `surfaceContainer`, one step quieter than the hero, as the Sky's moments sit under
+its night; it was 16 dp under a hero of 12, two radii one above the other.
+
+**The log in the Sky's dress** (review of the Journal, points A.3, A.4, A.5 and A.9, 14 ott
+2026):
+
+- **The hour is a column**: `titleMedium` tabular in full ink on the headline's line, as the
+  Sky's rows print their times. In `labelMedium` grey it was the faintest thing on the row of a
+  log that is scanned by the hour.
+- **The Sky's hierarchy**: a section title («Cosa è successo») over the log, the days in
+  `labelLarge` in `primary` with the full date beside them in the quiet ink, still sticky. The
+  count of entries («5 voci») is gone: a number with nothing to do with it.
+- **Badges are drawings, not commands.** A revision carries the drawing of the quantity that
+  moved (the drops for the rain, the thermometer for the high or the low, rain first when both),
+  as the metric chips draw them; never the day's weather, which the entry does not carry and a
+  probability alone must not invent. An alert that fired carries its card's drawing from Alerts
+  (`ruleIcon`, by name), and keeps the bell when that alert is gone. A missed update or bulletin
+  carries a cloud crossed out (`ic_not_reached`, in `ic_warning`'s hand): the pencil read as
+  «edit» and the circular arrow as «try again», buttons that were not there, and Meteocons'
+  «not available» is the letters N/A.
+- **How the forecast did** names its columns by weekday and day number on two lines («mar» over
+  «13»): the weekday's initial alone said «M» for Tuesday and Wednesday. The weekday shrinks
+  rather than clips at ten columns on 360 dp (`TextAutoSize`, down to 8 sp), and the columns are
+  4 dp apart.
+
+**A line opens its page** (review of the Journal, points A.6 and A.11, 14 ott 2026), as a row
+of the Sky opens its moment: the whole line is the target, with no chevron (the same 24 dp
+reason as the Sky's rows) and an `onClickLabel` that tells TalkBack what the tap does.
+
+- An **observed sky moment** opens its page, the one the agenda and the catalog open, without
+  the agenda's add-or-remove button: the diary records, the agenda is kept on its tab.
+- A **warning** opens the bulletin's sheet (§8.13), only while the bulletin in hand still
+  covers the line's day: the app keeps no other, and a line about a day gone by would open
+  another bulletin's grades.
+- An **alert that fired** opens its editor on Alerts, at that tab's root; one deleted or
+  renamed since stays still.
+- A **revision** opens **the story of its day**: the strip's row read down, one line for each
+  column that moved the rain or the high, newest on top, the number that moved in full ink
+  and semibold and the one that held in the quiet ink, the rain on its own ramp. A slot no
+  fetch landed in is not a step. A day the strip no longer holds has no story and its line
+  stays still. (The first form of the review's C.2; its two step charts come later.)
+- A **missed update** and a **closed day** open nothing: the line is their whole story.
+
+Every line is **one node** for TalkBack: a line that opens is one by being clickable, the
+others merge their descendants. The sentence, the facts and the hour used to be three stops,
+the hour last and on its own.
+
+**The strip under a finger** (review of the Journal, point C.1, 14 ott 2026), the Sky night
+strip's gesture on a grid. A horizontal drag starts at once; holding still needs the long
+press, so a vertical scroll that begins on the strip never flashes a reading. The square
+under the finger is ringed in `onSurface` (2 dp), its row and its column stay lit and every
+other square steps back to 30%, and its day's name turns bold. The line over the strip,
+`labelLarge` tabular and two lines tall so a wrap never moves the grid under the finger,
+reads it: «Sabato 17, previsione di martedì alle 15:07: pioggia 45% · massima 22°», the
+metric on screen first; a slot no update landed in says «nessun aggiornamento verso…», an
+update that did not reach the day «non ancora nella previsione di…». With no finger down it
+is the hint, «Trascina sulla striscia per leggere ogni casella», above the strip as on the
+Sky (the review's A.8). Each square crossed is a light tick, the long press a firm one.
+Lifting the finger brings the hint back; a tap still opens the table, and the long press no
+longer does. For TalkBack each day is an adjustable control over the updates, one step per
+column, its state that square's reading (the newest until moved); the line itself is silent.
+
+**Rain or highs is a segmented button** (review of the Journal, A.7, 14 ott 2026): one
+choice of two, so Material's component for an exclusive choice, as wide as the strip, where
+two filter chips said «filters you can turn on together». Each segment keeps its quantity's
+drawing in place of the check mark. **A door to the guide** (A.10): under the hero, «Come si
+legge il diario», the Sky's «Che cosa sono questi eventi» row in shape, opens the guide's
+Journal chapter in a sheet over the page it explains (`JournalChapter`, the one composable
+the guide itself draws, so the two cannot drift).
+
 **8.11 States** — empty ("no place yet", with the one action that fixes it), error (what
 failed, in plain language, and a retry), stale (§8.2), loading (a shimmer that cannot be
 mistaken for a value, §1.1).

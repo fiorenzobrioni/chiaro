@@ -492,9 +492,9 @@
     <string name="guide_journal_title">Diario</string>
     <string name="guide_journal_p1">Ogni aggiornamento lascia una riga. Il Diario è quel registro letto come prosa, dal più recente, raggruppato per giorno.</string>
     <string name="guide_journal_entries_title">Cosa c\'è scritto</string>
-    <string name="guide_journal_entries_body">Come si è mossa la previsione per i giorni che vengono, quali dei tuoi avvisi sono scattati e quando, quali momenti del cielo sono stati osservati davvero e con che verdetto — e gli aggiornamenti che non sono passati, col loro motivo. Un aggiornamento fallito è una riga, non un silenzio. E quando una giornata è finita, una riga in più la chiude: a quanto era data la pioggia, e se ha piovuto.</string>
+    <string name="guide_journal_entries_body">Come si è mossa la previsione per i giorni che vengono, quali dei tuoi avvisi sono scattati e quando, quali momenti del cielo sono stati osservati davvero e con che verdetto — e gli aggiornamenti che non sono passati, col loro motivo. Un aggiornamento fallito è una riga, non un silenzio. E quando una giornata è finita, una riga in più la chiude: a quanto era data la pioggia, e se ha piovuto. Una riga che ha una pagina dietro si tocca: un momento del cielo apre la sua pagina, un\'allerta il bollettino, un tuo avviso la sua scheda in Avvisi, e una previsione cambiata la storia di quel giorno, aggiornamento per aggiornamento.</string>
     <string name="guide_journal_drift_title">Come si muove la settimana</string>
-    <string name="guide_journal_drift_body">Una riga per oggi e per ogni giorno davanti, una colonna ogni sei ore, il colore sulla scala della grandezza: la pioggia, oppure le massime. Una casella dove non è arrivato nessun aggiornamento resta vuota, così una notte a telefono spento si vede per il buco che è stato. Un giorno la cui minima prevista è a zero o sotto porta un segno accanto al nome, e sotto la striscia quei giorni sono elencati: il gelo è una soglia, non una deriva, quindi prende un segno e una frase invece di una scala tutta sua. Risponde alla domanda che si fa davvero chi organizza un fine settimana: sta migliorando o peggiorando? Toccala per vedere i numeri dietro ai colori.</string>
+    <string name="guide_journal_drift_body">Una riga per oggi e per ogni giorno davanti, una colonna ogni sei ore, il colore sulla scala della grandezza: la pioggia, oppure le massime. Una casella dove non è arrivato nessun aggiornamento resta vuota, così una notte a telefono spento si vede per il buco che è stato. Un giorno la cui minima prevista è a zero o sotto porta un segno accanto al nome, e sotto la striscia quei giorni sono elencati: il gelo è una soglia, non una deriva, quindi prende un segno e una frase invece di una scala tutta sua. In cima alla pagina la risposta in poche parole, con i suoi numeri sotto: il giorno che si è mosso di più, e nella striscia la sua riga è evidenziata. Risponde alla domanda che si fa davvero chi organizza un fine settimana: sta migliorando o peggiorando? Trascina il dito sulla striscia, o tienilo fermo, per leggere una casella: il giorno, l\'aggiornamento, la pioggia e la massima. Toccala per vedere tutti i numeri dietro ai colori.</string>
     <string name="guide_journal_drift_caption">Un esempio: tre giorni, sei fasce, sulla scala della pioggia.</string>
 
     <string name="guide_places_title">I tuoi luoghi</string>
@@ -1255,15 +1255,29 @@
     <string name="journal_no_place_body">Aggiungi un luogo e il diario comincia a scriversi da solo: ogni aggiornamento lascia una riga.</string>
     <string name="journal_empty">Ancora niente da raccontare. Il diario si riempie man mano che arrivano gli aggiornamenti.</string>
     <string name="journal_yesterday">Ieri</string>
-    <plurals name="journal_day_count">
-        <item quantity="one">%d voce</item>
-        <item quantity="other">%d voci</item>
+    <string name="journal_log_title">Cosa è successo</string>
+    <!-- What a line of the log opens (review of the Journal, A.6): TalkBack says "double-tap to …". -->
+    <string name="journal_open_alert">aprire l\'avviso</string>
+    <string name="journal_open_bulletin">leggere il bollettino</string>
+    <string name="journal_open_story">vedere la storia del giorno</string>
+    <string name="journal_story_title">La storia di %1$s</string>
+    <plurals name="journal_story_note">
+        <item quantity="one">Una riga per ogni volta che la previsione di questo giorno è cambiata, la più recente in alto. Letta ogni ora, da %2$s alle %3$s.</item>
+        <item quantity="other">Una riga per ogni volta che la previsione di questo giorno è cambiata, la più recente in alto. Letta ogni %1$d ore, da %2$s alle %3$s.</item>
     </plurals>
     <plurals name="journal_drift_every">
         <item quantity="one">Una colonna per ora</item>
         <item quantity="other">Una colonna ogni %d ore</item>
     </plurals>
     <string name="journal_drift_axis_latest">ultimo aggiornamento</string>
+    <!-- The strip read with a finger (review of the Journal, C.1): the line over it, and each day's control. -->
+    <string name="journal_scrub_hint">Trascina sulla striscia per leggere ogni casella</string>
+    <string name="journal_scrub_line">%1$s, %2$s</string>
+    <string name="journal_scrub_reading">previsione di %1$s alle %2$s: %3$s</string>
+    <string name="journal_scrub_empty">nessun aggiornamento verso %1$s alle %2$s</string>
+    <string name="journal_scrub_uncovered">non ancora nella previsione di %1$s alle %2$s</string>
+    <string name="journal_scrub_rain">pioggia %1$s</string>
+    <string name="journal_scrub_high">massima %1$s</string>
     <string name="journal_skill_title">Com\'è andata la previsione</string>
     <string name="journal_skill_high">Massime: in media a %1$s dal vero, su %2$d giorni.</string>
     <string name="journal_skill_rain">Nei giorni in cui è piovuto la pioggia era data in media al %1$s, negli altri al %2$s.</string>
@@ -1278,16 +1292,23 @@
         <item quantity="one">in un aggiornamento</item>
         <item quantity="other">in %d aggiornamenti</item>
     </plurals>
-    <string name="journal_drift_title">Come si sta muovendo la settimana</string>
     <string name="journal_metric_rain">Pioggia</string>
     <string name="journal_metric_high">Massime</string>
-    <string name="journal_drift_waiting">La deriva compare dopo qualche altro aggiornamento: una colonna sola non è una tendenza.</string>
-    <string name="journal_drift_quiet">Finora la settimana è rimasta com\'era.</string>
+    <string name="journal_drift_waiting">La tendenza della settimana arriva dopo qualche altro aggiornamento: una colonna sola non è una tendenza.</string>
+    <string name="journal_drift_label">La settimana</string>
+    <string name="journal_guide_entry_title">Come si legge il diario</string>
+    <string name="journal_guide_entry_subtitle">Cosa c\'è scritto, e come si muove la settimana</string>
+    <string name="journal_drift_word_better">%1$s migliora</string>
+    <string name="journal_drift_word_worse">%1$s peggiora</string>
+    <string name="journal_drift_word_warmer">%1$s si scalda</string>
+    <string name="journal_drift_word_cooler">%1$s si rinfresca</string>
+    <string name="journal_drift_word_swing">%1$s va su e giù</string>
+    <string name="journal_drift_word_quiet">Settimana ferma</string>
+    <string name="journal_drift_word_waiting">Ancora presto</string>
+    <string name="journal_drift_rain_between">pioggia fra %1$s e %2$s</string>
+    <string name="journal_drift_high_between">massima fra %1$s e %2$s</string>
     <string name="journal_drift_frost">Gelo previsto: %1$s</string>
     <string name="journal_drift_frost_day">%1$s (%2$s)</string>
-    <string name="journal_drift_rain_better">%1$s è migliorato: pioggia %2$s → %3$s.</string>
-    <string name="journal_drift_rain_worse">%1$s è peggiorato: pioggia %2$s → %3$s.</string>
-    <string name="journal_drift_high_moved">La massima di %1$s è passata da %2$s a %3$s.</string>
     <plurals name="journal_drift_columns">
         <item quantity="one">Una colonna per ora, da %2$s a %3$s</item>
         <item quantity="other">Una colonna ogni %1$d ore, da %2$s a %3$s</item>
@@ -1301,8 +1322,6 @@
     <string name="journal_outcome_high">massima prevista %1$s, vista %2$s</string>
     <string name="journal_outcome_dry">Pioggia data %1$s: non ha piovuto</string>
     <string name="journal_outcome_rained">Pioggia data %1$s: ha piovuto</string>
-    <string name="journal_drift_high_swing">%1$s: la massima è andata su e giù, fra %2$s e %3$s.</string>
-    <string name="journal_drift_rain_swing">%1$s è andato su e giù: pioggia fra %2$s e %3$s.</string>
     <string name="journal_drift_table_title">I numeri dietro i colori</string>
     <string name="journal_shift_better">%1$s è migliorato</string>
     <string name="journal_shift_worse">%1$s è peggiorato</string>

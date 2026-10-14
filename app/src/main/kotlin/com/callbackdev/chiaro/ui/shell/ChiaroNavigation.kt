@@ -122,6 +122,17 @@ class ChiaroNavigationState(
     }
 
     /**
+     * [tab] at its own root, from another tab: a line of the Journal opening one of the
+     * reader's alerts lands on Alerts itself, not under a Settings page left open there.
+     * The other stacks keep what they had, and back returns to Today as from any tab.
+     */
+    fun openTabRoot(tab: ShellTab) {
+        val stack = backStacks.getValue(tab)
+        while (stack.size > 1) stack.removeAt(stack.lastIndex)
+        selected = tab
+    }
+
+    /**
      * A tab asked for from outside the app — a widget or a notification. The answer is
      * that tab's own screen, so every stack goes back to its root: landing on Sky under an
      * open Settings page (or on Sky over one left open under Today, one back away) would be

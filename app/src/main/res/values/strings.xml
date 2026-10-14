@@ -511,9 +511,9 @@
     <string name="guide_journal_title">Journal</string>
     <string name="guide_journal_p1">Every update leaves a line. The Journal is that record read as prose, newest first, grouped by day.</string>
     <string name="guide_journal_entries_title">What is written there</string>
-    <string name="guide_journal_entries_body">How the forecast moved for the days ahead, which of your alerts fired and when, which sky moments were actually observed and with what verdict — and the updates that did not make it, with the reason. A failed update is an entry, not a silence. When a day is over, one more line closes it: what the rain was given at, and whether it rained.</string>
+    <string name="guide_journal_entries_body">How the forecast moved for the days ahead, which of your alerts fired and when, which sky moments were actually observed and with what verdict — and the updates that did not make it, with the reason. A failed update is an entry, not a silence. When a day is over, one more line closes it: what the rain was given at, and whether it rained. A line with a page behind it can be tapped: a sky moment opens its page, a warning the bulletin, one of your alerts its card in Alerts, and a changed forecast the story of that day, update by update.</string>
     <string name="guide_journal_drift_title">How the week has been moving</string>
-    <string name="guide_journal_drift_body">One row for today and each day ahead, one column per six hours, the colour on the metric\'s own scale: rain, or the highs. A slot no update landed in stays empty, so a night with the phone off looks like the gap it was. A day whose forecast minimum is at or below zero carries a mark beside its name, with those days named underneath: freezing is a threshold, not a drift, so it gets a mark and a sentence rather than a scale of its own. It answers the question anyone planning a weekend actually asks — is this getting better or worse? Tap it to see the numbers behind the colours.</string>
+    <string name="guide_journal_drift_body">One row for today and each day ahead, one column per six hours, the colour on the metric\'s own scale: rain, or the highs. A slot no update landed in stays empty, so a night with the phone off looks like the gap it was. A day whose forecast minimum is at or below zero carries a mark beside its name, with those days named underneath: freezing is a threshold, not a drift, so it gets a mark and a sentence rather than a scale of its own. At the top of the page the answer in a few words, with its numbers under it: the day that moved most, its row picked out in the strip. It answers the question anyone planning a weekend actually asks — is this getting better or worse? Drag a finger along the strip, or hold it still, to read one square: the day, the update, the rain and the high. Tap it to see all the numbers behind the colours.</string>
     <string name="guide_journal_drift_caption">An example: three days, six slots, on the rain scale.</string>
 
     <string name="guide_places_title">Your places</string>
@@ -1290,15 +1290,29 @@
     <string name="journal_no_place_body">Add a place and the journal starts writing itself: every update leaves a line.</string>
     <string name="journal_empty">Nothing written yet. The journal fills up as the updates come in.</string>
     <string name="journal_yesterday">Yesterday</string>
-    <plurals name="journal_day_count">
-        <item quantity="one">%d entry</item>
-        <item quantity="other">%d entries</item>
+    <string name="journal_log_title">What happened</string>
+    <!-- What a line of the log opens (review of the Journal, A.6): TalkBack says "double-tap to …". -->
+    <string name="journal_open_alert">open the alert</string>
+    <string name="journal_open_bulletin">read the bulletin</string>
+    <string name="journal_open_story">see the day\'s story</string>
+    <string name="journal_story_title">The story of %1$s</string>
+    <plurals name="journal_story_note">
+        <item quantity="one">One line for each time this day\'s forecast changed, the latest on top. Read every hour, since %2$s at %3$s.</item>
+        <item quantity="other">One line for each time this day\'s forecast changed, the latest on top. Read every %1$d hours, since %2$s at %3$s.</item>
     </plurals>
     <plurals name="journal_drift_every">
         <item quantity="one">One column an hour</item>
         <item quantity="other">One column every %d hours</item>
     </plurals>
     <string name="journal_drift_axis_latest">latest update</string>
+    <!-- The strip read with a finger (review of the Journal, C.1): the line over it, and each day's control. -->
+    <string name="journal_scrub_hint">Drag along the strip to read each square</string>
+    <string name="journal_scrub_line">%1$s, %2$s</string>
+    <string name="journal_scrub_reading">forecast from %1$s at %2$s: %3$s</string>
+    <string name="journal_scrub_empty">no update around %1$s at %2$s</string>
+    <string name="journal_scrub_uncovered">not yet in the forecast from %1$s at %2$s</string>
+    <string name="journal_scrub_rain">rain %1$s</string>
+    <string name="journal_scrub_high">high %1$s</string>
     <string name="journal_skill_title">How the forecast did</string>
     <string name="journal_skill_high">Highs: on average %1$s from the real one, over %2$d days.</string>
     <string name="journal_skill_rain">On the days it rained, rain was given %1$s on average; on the others, %2$s.</string>
@@ -1313,16 +1327,23 @@
         <item quantity="one">in one update</item>
         <item quantity="other">across %d updates</item>
     </plurals>
-    <string name="journal_drift_title">How the week has been moving</string>
     <string name="journal_metric_rain">Rain</string>
     <string name="journal_metric_high">Highs</string>
-    <string name="journal_drift_waiting">The drift appears after a few more updates: one column is not a trend.</string>
-    <string name="journal_drift_quiet">The week has held steady so far.</string>
+    <string name="journal_drift_waiting">The week\'s trend arrives after a few more updates: one column is not a trend.</string>
+    <string name="journal_drift_label">The week</string>
+    <string name="journal_guide_entry_title">How to read the journal</string>
+    <string name="journal_guide_entry_subtitle">What is written there, and how the week has been moving</string>
+    <string name="journal_drift_word_better">%1$s is improving</string>
+    <string name="journal_drift_word_worse">%1$s is getting worse</string>
+    <string name="journal_drift_word_warmer">%1$s is warming up</string>
+    <string name="journal_drift_word_cooler">%1$s is cooling down</string>
+    <string name="journal_drift_word_swing">%1$s keeps changing</string>
+    <string name="journal_drift_word_quiet">A steady week</string>
+    <string name="journal_drift_word_waiting">Too early to say</string>
+    <string name="journal_drift_rain_between">rain between %1$s and %2$s</string>
+    <string name="journal_drift_high_between">high between %1$s and %2$s</string>
     <string name="journal_drift_frost">Frost forecast: %1$s</string>
     <string name="journal_drift_frost_day">%1$s (%2$s)</string>
-    <string name="journal_drift_rain_better">%1$s improved: rain %2$s → %3$s.</string>
-    <string name="journal_drift_rain_worse">%1$s got worse: rain %2$s → %3$s.</string>
-    <string name="journal_drift_high_moved">%1$s\'s high moved from %2$s to %3$s.</string>
     <plurals name="journal_drift_columns">
         <item quantity="one">One column per hour, %2$s to %3$s</item>
         <item quantity="other">One column per %1$d hours, %2$s to %3$s</item>
@@ -1336,8 +1357,6 @@
     <string name="journal_outcome_high">high forecast %1$s, seen %2$s</string>
     <string name="journal_outcome_dry">Rain was given at %1$s: it stayed dry</string>
     <string name="journal_outcome_rained">Rain was given at %1$s: it rained</string>
-    <string name="journal_drift_high_swing">%1$s: the high went up and down, between %2$s and %3$s.</string>
-    <string name="journal_drift_rain_swing">%1$s went up and down: rain between %2$s and %3$s.</string>
     <string name="journal_drift_table_title">The numbers behind the colors</string>
     <string name="journal_shift_better">%1$s improved</string>
     <string name="journal_shift_worse">%1$s got worse</string>

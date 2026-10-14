@@ -12678,3 +12678,240 @@ e un avviso riacceso restava senza il lavoro che lo controlla fino al riavvio de
 stesso valeva per il cambio di frequenza, che ora si applica subito. (La chiave dell'opacità
 dei widget nello stesso negozio non è letta da nessuna schermata: le card hanno ognuna il
 proprio aspetto, e la frase non la nomina.)
+
+## Diario: l'hero della settimana e le forme del Cielo (committente, 14 ott 2026)
+
+Il committente ha chiesto una revisione del Diario (grafica e UI/UX) per renderlo coerente con il
+Cielo appena rivisto, e poi di attuarne il primo passo: i punti A.1 (un hero che risponde) e A.2
+(le forme). Gli altri punti della revisione (gli orari in colonna, i titoli dei giorni, le icone
+delle voci, le voci che aprono la loro pagina, la striscia col dito, la memoria dei giorni chiusi)
+aspettano la sua parola.
+
+### Cosa è cambiato
+
+- **A.1, l'hero.** La card della settimana è la testa della pagina, nella forma della card di
+  stanotte: angoli 28 dp, `surfaceContainerHigh`, 20 dp di respiro. Dentro: l'etichetta «La
+  settimana», **la risposta come parola** in `headlineMedium` («Sabato 17 migliora», «peggiora»,
+  «si scalda», «si rinfresca», «va su e giù», «Settimana ferma»), **i suoi numeri su una riga
+  loro**, tabellari, il valore di prima in inchiostro tenue e quello di adesso pieno, poi i chip,
+  la striscia e il gelo. Il titolo di sezione sopra la card non c'è più: lo fa l'etichetta.
+- **L'hero risponde anche nelle prime ore**: «Ancora presto», e sotto quando arriva la tendenza.
+  Era una riga grigia in `bodySmall` che diceva «deriva», una parola di gergo.
+- **A.2, le forme.** «Com'è andata la previsione» prende gli angoli da 28 dp e i 20 dp dell'hero,
+  su `surfaceContainer`. Erano 12 dp per la settimana e 16 per la previsione, uno sotto l'altro.
+- La riga del giorno che la parola nomina è evidenziata su `surfaceContainerLowest`.
+- `driftStory`, la metà pura della frase: quale giorno, quale cambiamento, con quali due numeri.
+  Le parole restano della schermata.
+- La guida («Come si muove la settimana») dice la risposta in cima alla pagina, IT/EN.
+
+### Decisioni e deviazioni
+
+- **La parola al presente, «Sabato 17 migliora»**, e non «è migliorato»: è quello che il lettore
+  vuole sapere del suo sabato, e il passato era della frase lunga che spiegava. I numeri sotto
+  dicono da dove a dove.
+- **Le massime si dicono «si scalda» e «si rinfresca», non meglio o peggio**: più caldo non è un
+  giudizio (DESIGN §8.10). Una massima che va su e giù dice «va su e giù» come la pioggia.
+- **Una settimana ferma non ha numeri sotto**: non c'è un giorno da nominare, e una cifra messa
+  lì per riempire sarebbe la riga che la schermata rifiuta.
+- **Il fondo neutro, non colorato**: la striscia sotto la parola è sulle scale della pioggia e
+  della temperatura, che devono leggersi per quello che sono. Il peso viene dal tipo e dalla
+  forma. La previsione resta un gradino sotto (`surfaceContainer`), perché due card dello
+  stesso tono non sono una gerarchia.
+- **La banda del giorno nominato passa a `surfaceContainerLowest`**: la `Highest` di prima, a un
+  gradino dal nuovo fondo, nel vestito chiaro quasi spariva.
+- **Nessun file di tema toccato**: le forme sono `shapes.extraLarge` e i ruoli che esistono già.
+  Nello stesso momento il thread di Avvisi lavora su segmenti e scala dei tipi.
+
+### Come è stato verificato
+
+- `DriftStoryTest`: meno pioggia è il giorno migliore e vince lo spostamento più grande; più
+  pioggia è il peggiore; un giorno che va e torna è un'oscillazione con i suoi due estremi; sotto
+  la soglia del motore la settimana è ferma e non nomina un giorno; la massima è più calda o più
+  fresca; una riga con una sola previsione non ha niente da confrontare.
+- `JournalHeroTest` (Robolectric, 360 dp): l'etichetta e la parola ci sono, e i numeri sono un
+  testo loro su **una riga sola**; nelle prime ore l'hero dice «Ancora presto»; una settimana
+  ferma lo dice.
+- La pagina disegnata con Robolectric in chiaro (IT, 384 dp) e in scuro (EN, 360 dp), nella
+  settimana che si muove, in quella ferma e nelle prime ore, guardata immagine per immagine. Il
+  README non ha un'immagine del Diario (CLAUDE.md, «Le schermate del README»), quindi nessuna da
+  rigenerare.
+
+## Diario: orari, giorni, icone, iniziali (committente, 14 ott 2026)
+
+Il secondo passo della revisione del Diario: i punti A.3, A.4, A.5 e A.9, sulla stessa PR
+dell'hero.
+
+### Cosa è cambiato
+
+- **A.3, gli orari in colonna**: l'ora di ogni voce in `titleMedium` tabellare, inchiostro
+  pieno, sulla riga del titolo, come gli orari del Cielo. Era un'etichetta grigia piccola.
+- **A.4, i giorni**: un titolo di sezione «Cosa è successo» sopra il registro, e i giorni nello
+  stile dei giorni del Cielo (`labelLarge` in `primary`, la data intera accanto in inchiostro
+  tenue), sempre fissi in alto mentre si scorre. Il conteggio «5 voci» non c'è più (e con lui il
+  plurale `journal_day_count`).
+- **A.5, le icone**: una revisione porta il disegno della grandezza che si è mossa (le gocce o
+  il termometro, sul suo `primaryContainer`); un avviso scattato il disegno della sua card in
+  Avvisi (`ruleIcon`, ora `internal`, cercato per nome: `JournalViewModel.rules`), con la
+  campanella per un avviso che non c'è più; un aggiornamento o un bollettino mancato una nuvola
+  barrata (`ic_not_reached`).
+- **A.9, le iniziali**: sotto le barre di «Com'è andata la previsione» il giorno della settimana
+  e il numero, su due righe.
+
+### Decisioni e deviazioni
+
+- **La grandezza e non il tempo del giorno, sulla revisione.** La revisione proponeva «il
+  disegno del tempo del giorno di cui parla»; la voce però porta solo i numeri che si sono
+  mossi, non lo stato del giorno, e dedurre pioggia o sole da una probabilità sarebbe la
+  schermata che inventa quello che decide il motore degli stati. Il disegno della grandezza è
+  quello dei chip della settimana, ed è vero per ogni voce.
+- **La nuvola barrata disegnata qui, non `not-available` di Meteocons**: provato, quel disegno
+  sono le lettere «N/A», una sigla inglese in un'app che non ha gergo. Un vettore di due tratti
+  nella mano di `ic_warning`, colorato come le altre sagome tenui.
+- **L'avviso per nome**: la storia registra il nome, ed è lo stesso legame che Avvisi usa per
+  «scattato l'ultima volta». Un avviso rinominato o cancellato perde il disegno e torna alla
+  campanella, che resta vera.
+- **`ruleIcon` da `private` a `internal`**, una riga in `AlertsScreen.kt`, invece di copiarla:
+  una sola funzione decide il disegno di un avviso. Il thread di Avvisi lavora sullo stesso file
+  in questi giorni; la modifica è quella sola riga.
+- **Giorno e numero su due righe, non «dom 11» su una**: a dieci colonne su 360 dp una colonna
+  ha circa 25 dp, e «dom 11» ne vuole più di 30. Il giorno si rimpicciolisce (fino a 8 sp)
+  invece di essere tagliato: provato, «Mon» e «Wed» venivano tagliati a «Mo» e «We» prima.
+  Lo spazio fra le colonne passa da 6 a 4 dp.
+
+### Come è stato verificato
+
+- La pagina disegnata con Robolectric in chiaro (IT, 384 dp, tre giorni chiusi) e in scuro (EN,
+  360 dp, dieci giorni chiusi), con ogni tipo di voce, un avviso che esiste e uno cancellato,
+  guardata immagine per immagine.
+- Suite completa e lint.
+
+## Diario: le voci che aprono la loro pagina, TalkBack (14 ott 2026)
+
+Punto 3 dell'ordine della review del Diario (`/mnt/project-files/review-diario/review-diario.md`):
+A.6 e A.11, richiesti dal committente.
+
+- [x] **A.6, le voci che aprono**: tutta la riga è il bersaglio, senza chevron, con
+  `onClickLabel` come le righe del Cielo (`EntryOpens` in `JournalScreen.kt`).
+  - un momento del cielo osservato apre la sua pagina (`SkyEventPage` in un foglio, i
+    momenti collegati si aprono al suo posto);
+  - un'allerta apre il foglio del bollettino (`WarningSheet`), se il bollettino in mano copre
+    ancora il giorno della voce (`JournalViewModel.warnings`);
+  - un avviso scattato apre il suo editor in Avvisi: `AlertsRoute(openRuleId)`, portato dalla
+    shell (`ChiaroRoot`) con `openTabRoot(ShellTab.ALERTS)`;
+  - una revisione apre «La storia di sabato 17» (`DayStorySheet`, `dayStory()`).
+  - Aggiornamenti mancati, bollettini mancati e giorni chiusi restano fermi.
+- [x] **A.11, TalkBack**: ogni voce è un nodo solo. Quelle che aprono lo sono perché cliccabili,
+  le altre con `semantics(mergeDescendants = true)`; l'ora è letta con la frase.
+
+### Decisioni e deviazioni
+
+- **La storia del giorno in forma minima, non C.2 intero.** C.2 (due grafici a gradini) è nel
+  punto 6 dell'ordine; una revisione però doveva aprire qualcosa ora. La forma minima è la riga
+  della striscia letta in verticale: una riga per ogni colonna che ha mosso pioggia o massima,
+  la più recente in alto, il numero mosso in inchiostro pieno. Gli stessi dati che la striscia
+  ha già in memoria, niente di nuovo da salvare. Una colonna vuota non è un passo (una notte a
+  telefono spento non è una previsione rimasta ferma), e la nota in fondo dice ogni quante ore
+  è letta e da quando. I grafici di C.2 la sostituiranno o la affiancheranno.
+- **Solo i giorni che la striscia tiene**: la striscia copre i giorni ancora davanti, su tre
+  giorni e mezzo. Una revisione di un giorno già passato resta ferma: la sua storia non c'è più,
+  e aprire un foglio vuoto sarebbe la schermata che promette qualcosa che non ha.
+- **Il bollettino solo se copre ancora il giorno.** L'app tiene un bollettino solo, quello in
+  mano: aprirlo da una voce di tre giorni fa mostrerebbe i gradi di un altro bollettino sotto la
+  frase di quello vecchio. Se lo copre, il foglio dice da sé l'ora del suo bollettino.
+- **La pagina del momento senza «Aggiungi/Togli».** È la pagina che apre il Cielo, senza il
+  pulsante dell'agenda: il diario registra quello che è successo, l'agenda si tiene nel Cielo, e
+  togliere un momento dal diario sarebbe un effetto lontano dalla pagina che lo mostra.
+- **L'avviso in Avvisi, non un editor nel Diario.** «Apre quell'avviso in Avvisi», come diceva
+  la review: l'editor vive con il view model di Avvisi, e copiarlo nel Diario vorrebbe dire due
+  editor. La richiesta passa per la shell e Avvisi si apre alla sua radice (non sotto una
+  pagina delle Impostazioni lasciata aperta lì); indietro chiude l'editor, poi torna a Oggi come
+  da ogni scheda.
+- **File condivisi toccati** (il thread di Avvisi lavora in parallelo): `AlertsScreen.kt` (due
+  parametri e un `LaunchedEffect` in `AlertsRoute`), `ChiaroRoot.kt`, `ChiaroNavigation.kt`
+  (`openTabRoot`). Nessun file del tema.
+
+### Come è stato verificato
+
+- `JournalOpensTest` (Robolectric): ogni tipo di voce apre quello che deve, con la sua etichetta
+  per TalkBack; un avviso cancellato e un aggiornamento mancato non prendono il tocco; una voce
+  ferma è un nodo solo con l'ora dentro. `DayStoryTest`: i passi, le colonne vuote, un giorno
+  che la striscia non tiene.
+- La storia del giorno e le righe disegnate con Robolectric (IT chiaro, EN scuro, 360 dp),
+  guardate immagine per immagine.
+- Suite completa e lint.
+
+## Diario: la striscia della settimana col dito (14 ott 2026)
+
+Punto 4 dell'ordine della review del Diario: C.1, richiesto dal committente. Porta con sé
+A.8 (il suggerimento del gesto sopra la striscia).
+
+- [x] Un dito sulla striscia sceglie una casella: trascinamento orizzontale subito, pressione
+  lunga da fermo (`detectHorizontalDragGestures`, `detectDragGesturesAfterLongPress`, come
+  `NightStrip` del Cielo). `driftCellAt()` trova la casella: le righe si dividono l'altezza, le
+  colonne quello che lasciano i nomi dei giorni; oltre un bordo resta la casella del bordo.
+- [x] La casella ha un anello, la sua riga e la sua colonna restano accese e il resto scende
+  al 30%; il nome del giorno in grassetto. Un tocco leggero a ogni casella attraversata.
+- [x] La riga sopra la striscia legge la casella (`driftReading()`): giorno, aggiornamento,
+  pioggia e massima (la grandezza sullo schermo per prima); una fascia vuota e un
+  aggiornamento che non arrivava a quel giorno lo dicono. Senza dito è il suggerimento.
+- [x] TalkBack: ogni giorno è un controllo regolabile sugli aggiornamenti, lo stato è la
+  lettura della casella (la più recente finché non lo si muove).
+
+### Decisioni e deviazioni
+
+- **La pressione lunga non apre più la tabella**: è il gesto che tiene una casella, come nel
+  Cielo. Il tocco la apre ancora («la tabella resta per chi la vuole tutta»).
+- **La riga sopra, la frase dell'hero ferma.** La review diceva «alzato il dito torna la frase
+  della settimana»: la frase dell'hero non cambia mentre si esplora, cambia solo la riga sopra
+  la striscia, che torna al suggerimento. Una parola grande che salta a ogni casella sarebbe
+  rumore, e la riga è dove si guarda mentre il dito è sulla striscia.
+- **Entrambi i numeri nella lettura**, non solo quello della grandezza scelta: costa mezza
+  riga e risponde a «e la massima?» senza cambiare chip. La grandezza sullo schermo viene prima.
+- **Due righe riservate** alla lettura: in italiano a 360 dp va a capo, e una riga che cresce
+  sposterebbe la striscia sotto il dito.
+- **Un controllo per giorno per TalkBack**, non uno per tutta la griglia: una griglia è due
+  dimensioni, un controllo regolabile una sola; il giorno è la domanda («quando è cambiato
+  sabato?») e gli aggiornamenti sono i passi.
+- **A.8 fatto qui**: il suggerimento del gesto sta sopra la striscia; sotto resta «Una colonna
+  ogni 6 ore · tocca per i numeri».
+
+### Come è stato verificato
+
+- `DriftScrubTest`: la casella sotto il dito, i bordi, la lettura di una casella, di una fascia
+  vuota e di un aggiornamento che non arrivava al giorno. `JournalStripTest`: lo stato di ogni
+  giorno per TalkBack e il suo spostamento casella per casella.
+- La striscia disegnata a riposo, con una casella tenuta e con una fascia vuota, in chiaro (IT,
+  384 dp) e in scuro (EN, 360 dp), guardata immagine per immagine.
+- Suite completa e lint.
+
+## Diario: il selettore segmentato, la porta della guida, e cosa non si fa (14 ott 2026)
+
+Punto 6 dell'ordine della review del Diario, nella parte che il committente ha scelto.
+
+- [x] **A.7**: Pioggia/Massime è un pulsante segmentato (`SingleChoiceSegmentedButtonRow`,
+  `MetricChoice`), largo quanto la striscia, con il disegno della grandezza al posto della
+  spunta. Erano due `FilterChip`, che in Material sono filtri attivabili insieme.
+- [x] **A.8**: fatto con C.1 (il suggerimento del gesto sopra la striscia).
+- [x] **A.10**: «Come si legge il diario» sotto l'hero, nella forma della riga «Che cosa sono
+  questi eventi» del Cielo, apre in un foglio il capitolo del Diario della guida.
+
+### Decisioni e deviazioni
+
+- **Il capitolo in un foglio, non la guida intera.** La guida è una pagina sola che scorre: aprirla
+  dal Diario voleva dire scorrere Oggi, Cielo e Avvisi per arrivare al capitolo, oppure dare alla
+  sua chiave di navigazione un capitolo d'arrivo (un cambio in `ChiaroNavigation` e nei suoi test,
+  in un file che il thread di Avvisi tocca). Il capitolo è estratto in `JournalChapter()`, disegnato
+  dalla guida e dal foglio: un solo testo, due porte.
+- **Non si fanno, per scelta del committente (14 ott 2026):**
+  - **B** (una tabella dei giorni chiusi tenuta 90 giorni) e **C.3** (il mese della previsione):
+    «Com'è andata la previsione» resta sui giorni che la storia tiene (circa quattro alla
+    cadenza oraria). Statistiche in più che rischiano di non essere guardate.
+  - **C.2** (la storia di un giorno con due grafici a gradini): la domanda «sabato si sta
+    stabilizzando?» ha già la sua risposta nella forma minima che apre una revisione (A.6).
+  Non riproporli senza una richiesta.
+
+### Come è stato verificato
+
+- `JournalChoiceTest`: le due grandezze sono una scelta sola; la riga apre il capitolo.
+- La pagina disegnata (IT chiaro, EN scuro) con il foglio della guida aperto, guardata.
+- Suite completa e lint.

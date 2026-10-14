@@ -120,12 +120,22 @@ import kotlinx.coroutines.launch
 @Composable
 fun AlertsRoute(
     onOpenSettings: () -> Unit,
+    /** An alert another screen asked to open (the Journal's line of one that fired), or
+     * null; its editor opens once, and [onOpenRuleHandled] clears the request. */
+    openRuleId: Long? = null,
+    onOpenRuleHandled: () -> Unit = {},
     alertsViewModel: AlertsViewModel = viewModel(factory = AlertsViewModel.Factory),
     placesViewModel: PlacesViewModel = viewModel(factory = PlacesViewModel.Factory)
 ) {
     val state by alertsViewModel.state.collectAsStateWithLifecycle()
     var placesOpen by remember { mutableStateOf(false) }
     var editingRuleId by rememberSaveable { mutableStateOf<Long?>(null) }
+    LaunchedEffect(openRuleId) {
+        if (openRuleId != null) {
+            editingRuleId = openRuleId
+            onOpenRuleHandled()
+        }
+    }
 
     AlertsScreen(
         state = state,
@@ -926,7 +936,7 @@ private fun templateIcon(template: RuleText.Template): ImageVector = when (templ
  * temperature that has to fall to zero, the thermometer for any other.
  */
 @Composable
-private fun ruleIcon(rule: NotificationRule): ImageVector {
+internal fun ruleIcon(rule: NotificationRule): ImageVector {
     val first = rule.conditions.firstOrNull() ?: return ChiaroIcons.cloud
     val id = first.variable
     return when {
