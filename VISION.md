@@ -435,8 +435,10 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     light). The ride and run ideas are born *in daylight*: the Bike rule fired at 21:47, true
     about the weather and useless about the hour.
   - **Preview** runs the rule against the current data and says what it would have done, with no
-    notification posted.
-  - Each rule card shows its sentence, its state, and when it last fired.
+    notification posted. Since the Alerts review (14 ott 2026) it is not a button: it stands at
+    the head of the builder and changes with every chip.
+  - Each rule card shows its sentence, its state, whether it holds **right now** (and if not,
+    which condition misses and by how much), and when it last fired.
   - **Deleting** a rule asks nothing: the sheet closes with "Undo", which puts it back as it was
     (14 ott 2026, as the Sky undoes a moment).
 

@@ -496,8 +496,8 @@
     <string name="guide_alerts_ready_body" formatted="false">Four switches, each saying exactly what it sends and when: severe weather in the next 12 hours (at most one per storm), rain past 70% likely within 6 hours (at most twice a day), the morning summary, once between 6 and 12, and the evening one, once between 18 and 23, which is about tomorrow.</string>
     <string name="guide_alerts_yours_title">Yours</string>
     <string name="guide_alerts_yours_body">“New alert” opens the ideas — a window to run, ice tomorrow morning, a clear night — and “From scratch”, to build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. Then choose when it may ring: at any time, only in daylight, or in one or two bands of hours. You can also watch today\'s rain in millimetres and its snow, the gusts and the European air index. Values are picked, never typed, so an alert cannot be written wrong. Deleting one closes the sheet with “Undo” at the foot of the screen, which puts it back as it was.</string>
-    <string name="guide_alerts_preview_title">Try it now</string>
-    <string name="guide_alerts_preview_body">Runs your alert against the forecast already on the phone and tells you what it would have done. Nothing is sent, nothing is recorded.</string>
+    <string name="guide_alerts_preview_title">Is it true now?</string>
+    <string name="guide_alerts_preview_body">Every alert says on its card whether it is true right now, and if not, which condition does not hold and by how much. In the editor the answer stands at the top and changes with every choice, with the message that would arrive. It sends nothing and leaves no trace.</string>
     <string name="guide_alerts_message_title">The message is yours</string>
     <string name="guide_alerts_message_body">Chiaro never rewrites it and never translates it. Words in braces become numbers when it fires: {trigger.value} is what set it off, {trigger.time} is when. Anything an alert can watch can be printed the same way, and the list under the message writes it for you.</string>
     <string name="guide_alerts_battery_title">What it costs</string>
@@ -1009,10 +1009,6 @@
     <string name="rule_message_add_value">Add a value</string>
     <string name="rule_add_condition">and another condition</string>
     <string name="rule_remove_condition">Remove this condition</string>
-    <string name="rule_preview_action">Try it now</string>
-    <string name="rule_preview_fires">It would fire right now: “%1$s”</string>
-    <string name="rule_preview_passes">It would stay quiet right now.</string>
-    <string name="rule_preview_unavailable">Can\'t say: “%1$s” has no value right now.</string>
     <string name="rule_preview_no_data">Can\'t say: no forecast yet for this place.</string>
     <!-- A rule's own hours (26 set 2026): when it may speak, not whether the weather allows it. -->
     <string name="rule_window_title">At what hours</string>
@@ -1033,9 +1029,22 @@
     <string name="rule_band_same">Start and end can\'t be the same time.</string>
     <string name="rule_card_daylight">Only in daylight</string>
     <string name="rule_card_hours">Only %1$s</string>
-    <string name="rule_preview_closed">It would fire, but not at this hour: it is outside the hours you chose.</string>
-    <string name="rule_preview_closed_today">It would fire, but not at this hour: it can from %1$s.</string>
-    <string name="rule_preview_closed_tomorrow">It would fire, but not at this hour: it can from tomorrow at %1$s.</string>
+    <string name="rule_now_yes">True right now</string>
+    <string name="rule_now_no">Not right now</string>
+    <string name="rule_now_unknown">Can\'t tell right now</string>
+    <string name="rule_now_closed_today">%1$s, but outside its hours until %2$s</string>
+    <string name="rule_now_closed_tomorrow">%1$s, but outside its hours until %2$s tomorrow</string>
+    <string name="rule_now_closed">%1$s, but outside its hours</string>
+    <string name="rule_now_failed">%1$s · %2$s is %3$s, it needs %4$s</string>
+    <string name="rule_now_failed_short">%1$s · it is %2$s, it needs %3$s</string>
+    <string name="rule_need_above">above %1$s</string>
+    <string name="rule_need_at_least">at least %1$s</string>
+    <string name="rule_need_below">below %1$s</string>
+    <string name="rule_need_at_most">at most %1$s</string>
+    <string name="rule_need_equal">exactly %1$s</string>
+    <string name="rule_need_not_equal">anything but %1$s</string>
+    <string name="rule_now_failed_flag">%1$s · %2$s: %3$s</string>
+    <string name="rule_now_missing">%1$s · %2$s has no value</string>
     <string name="rule_preview_would_say">It would say: “%1$s”</string>
     <string name="rule_delete">Delete this alert</string>
     <string name="rule_pick_variable">What to watch</string>

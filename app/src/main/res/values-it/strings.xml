@@ -477,8 +477,8 @@
     <string name="guide_alerts_ready_body" formatted="false">Quattro interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo nelle prossime 12 ore (al massimo uno per perturbazione), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno), il riepilogo del mattino, una volta tra le 6 e le 12, e quello della sera, una volta tra le 18 e le 23, che parla di domani.</string>
     <string name="guide_alerts_yours_title">I tuoi</string>
     <string name="guide_alerts_yours_body">«Nuovo avviso» apre le idee — una finestra per correre, ghiaccio domattina, una notte serena — e «Da zero», per costruire la frase da te: cosa guardare, come confrontarlo, la soglia, e fino a due condizioni in più se servono. Poi scegli quando può suonare: sempre, solo con la luce o in una o due fasce orarie. Si possono guardare anche i millimetri di pioggia e la neve di oggi, le raffiche e l\'indice europeo dell\'aria. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile. Se ne elimini uno, il foglio si chiude con «Annulla» in fondo allo schermo, che lo rimette com\'era.</string>
-    <string name="guide_alerts_preview_title">Provalo adesso</string>
-    <string name="guide_alerts_preview_body">Fa girare il tuo avviso sulla previsione che è già sul telefono e ti dice cosa avrebbe fatto. Non manda niente e non lascia traccia.</string>
+    <string name="guide_alerts_preview_title">È vero adesso?</string>
+    <string name="guide_alerts_preview_body">Ogni avviso dice sulla sua card se è vero adesso e, se no, quale condizione non tiene e di quanto. Nell\'editor la risposta sta in cima e cambia a ogni scelta, con il messaggio che arriverebbe. Non manda niente e non lascia traccia.</string>
     <string name="guide_alerts_message_title">Il messaggio è tuo</string>
     <string name="guide_alerts_message_body">Chiaro non lo riscrive e non lo traduce mai. Le parole tra graffe diventano numeri quando scatta: {trigger.value} è ciò che l\'ha fatto scattare, {trigger.time} è quando. Ogni valore che un avviso può guardare si può stampare allo stesso modo, e la lista sotto il messaggio lo scrive al posto tuo.</string>
     <string name="guide_alerts_battery_title">Quanto costa</string>
@@ -990,10 +990,6 @@
     <string name="rule_message_add_value">Aggiungi un valore</string>
     <string name="rule_add_condition">e un\'altra condizione</string>
     <string name="rule_remove_condition">Togli questa condizione</string>
-    <string name="rule_preview_action">Prova adesso</string>
-    <string name="rule_preview_fires">Adesso scatterebbe: «%1$s»</string>
-    <string name="rule_preview_passes">Adesso resterebbe zitto.</string>
-    <string name="rule_preview_unavailable">Non posso dirlo: «%1$s» al momento non ha un valore.</string>
     <string name="rule_preview_no_data">Non posso dirlo: nessuna previsione ancora per questo luogo.</string>
     <!-- Gli orari di un avviso (26 set 2026): quando può parlare, non se il tempo lo permette. -->
     <string name="rule_window_title">In che orari</string>
@@ -1014,9 +1010,22 @@
     <string name="rule_band_same">Inizio e fine non possono coincidere.</string>
     <string name="rule_card_daylight">Solo con la luce</string>
     <string name="rule_card_hours">Solo %1$s</string>
-    <string name="rule_preview_closed">Scatterebbe, ma non a quest\'ora: è fuori dagli orari che hai scelto.</string>
-    <string name="rule_preview_closed_today">Scatterebbe, ma non a quest\'ora: potrà dalle %1$s.</string>
-    <string name="rule_preview_closed_tomorrow">Scatterebbe, ma non a quest\'ora: potrà da domani alle %1$s.</string>
+    <string name="rule_now_yes">Adesso sì</string>
+    <string name="rule_now_no">Adesso no</string>
+    <string name="rule_now_unknown">Adesso non si può dire</string>
+    <string name="rule_now_closed_today">%1$s, ma fuori orario fino alle %2$s</string>
+    <string name="rule_now_closed_tomorrow">%1$s, ma fuori orario fino a domani alle %2$s</string>
+    <string name="rule_now_closed">%1$s, ma fuori dai suoi orari</string>
+    <string name="rule_now_failed">%1$s · %2$s è %3$s, serve %4$s</string>
+    <string name="rule_now_failed_short">%1$s · è %2$s, serve %3$s</string>
+    <string name="rule_need_above">sopra %1$s</string>
+    <string name="rule_need_at_least">almeno %1$s</string>
+    <string name="rule_need_below">sotto %1$s</string>
+    <string name="rule_need_at_most">al massimo %1$s</string>
+    <string name="rule_need_equal">esattamente %1$s</string>
+    <string name="rule_need_not_equal">diverso da %1$s</string>
+    <string name="rule_now_failed_flag">%1$s · %2$s: %3$s</string>
+    <string name="rule_now_missing">%1$s · %2$s non ha un valore</string>
     <string name="rule_preview_would_say">Direbbe: «%1$s»</string>
     <string name="rule_delete">Elimina questo avviso</string>
     <string name="rule_pick_variable">Cosa guardare</string>

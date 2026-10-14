@@ -1678,6 +1678,22 @@ of a confirmation.
   latches are its own again and its «last fired», kept by name, comes back with it. The screen is
   a `Scaffold` for this, so the FAB rises over the snackbar.
 
+**Is it true now** (committente, 14 ott 2026, the Alerts review, points 11 and 12):
+
+- **On every rule's card** (point 11), under its sentence and its hours: the dry run as a line,
+  a mark and a word first (§8.7). A full dot in `onSurface` when the rule holds, a ring in
+  `onSurfaceVariant` when it does not or cannot be said, and no colour at all: «true» is not
+  «good» here, and the verdict pairs would say something this line does not. «**Adesso sì**»;
+  «**Adesso sì**, ma fuori orario fino alle 20:00»; «**Adesso no** · è 19,7°, serve sotto 5°»
+  (the quantity named only when the rule watches more than one); «**Adesso non si può dire** ·
+  … non ha un valore». The number is the one the model forecast, beside the threshold it missed.
+  No forecast for the place, no line. Read again every minute the page is watched.
+- **At the head of the editor** (point 12): the same line on a `surfaceContainerHigh` segment
+  above the name, with «Direbbe: «…»» under it when it would speak, recomputed at every chip, at
+  the hours and at the message (after 300 ms without a keystroke). «Prova adesso» is gone, and so
+  is the scroll that carried its answer into view: the answer is read before anything is changed,
+  as the Sky's is.
+
 **8.10 JournalEntry** and **DriftStrip** — an entry is a line of prose with its numbers.
 The drift strip is one row per target day — today included while it runs (8 set 2026) —
 and one column per six-hour slot, colored on **the metric's own ramp** (rain on the rain

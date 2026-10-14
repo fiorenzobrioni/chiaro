@@ -41,6 +41,10 @@ sections are a normal size and live here alone.
   opens the ideas, with «From scratch» first; the row of ideas stays on the page only until you
   have an alert of your own. Deleting an alert no longer asks first: it shows «Undo», which brings
   it back exactly as it was.
+- **Every alert says whether it is true now.** Each of your alerts shows a line such as «Not
+  right now · it is 19.7°, it needs below 5°» or «True right now, but outside its hours until
+  20:00». In the editor the same answer stands at the top and changes with every choice, with the
+  message that would arrive: there is no «Try it now» button to press any more.
 - **Undo on the Sky screen.** Adding or removing a moment from its page now shows a message
   with «Undo», and undoing a removal brings the moment back with its own reminder.
 - **An easier place switcher.** On Sky, Alerts and Journal the whole title is now the button

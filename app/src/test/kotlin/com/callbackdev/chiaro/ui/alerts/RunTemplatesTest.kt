@@ -93,7 +93,10 @@ class RunTemplatesTest {
         )
         listOf(run, coldRun).forEach { template ->
             val rule = NotificationRule(id = 1L, name = "", conditions = template.conditions, message = "")
-            assertEquals(RuleCheck.Passes, RuleEngine.check(rule, wet, now))
+            val passes = RuleEngine.check(rule, wet, now) as RuleCheck.Passes
+            // Silenced by the rain, and the card can say so with the rain's own number.
+            assertEquals(template.conditions.first { it.variable.contains("precip") }, passes.failed)
+            assertEquals(60.0, passes.value!!, 0.0)
         }
     }
 }

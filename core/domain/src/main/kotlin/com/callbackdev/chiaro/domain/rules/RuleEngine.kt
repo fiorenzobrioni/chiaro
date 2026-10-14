@@ -36,7 +36,14 @@ data class RuleEvaluation(
 /** A single stateless rule check — what the dry run shows, one line per rule. */
 sealed interface RuleCheck {
     data class Fires(val value: Double, val at: LocalDateTime?) : RuleCheck
-    data object Passes : RuleCheck
+
+    /**
+     * Not all of it holds. [failed] is the first condition that does not, and [value] what
+     * it read (the Alerts review, point 11, 14 ott 2026): «Adesso no · la pioggia è 35%, serve
+     * al massimo 20%» needs both, and a bare «no» left the reader to guess which threshold to
+     * move. Both null only for a rule with no conditions.
+     */
+    data class Passes(val failed: RuleCondition? = null, val value: Double? = null) : RuleCheck
 
     /** The variable can't be resolved right now (AQ down, empty window). */
     data class Unavailable(val variable: String) : RuleCheck
@@ -77,7 +84,7 @@ object RuleEngine {
             when (val result = check(rule, report, now)) {
                 // Missing data is not "false": keep the latch, the data may return
                 is RuleCheck.Unavailable -> Unit
-                RuleCheck.Passes -> if (instant && latchKey in state.latched) {
+                is RuleCheck.Passes -> if (instant && latchKey in state.latched) {
                     unlatch += latchKey
                 }
                 is RuleCheck.Fires -> {
@@ -148,11 +155,11 @@ object RuleEngine {
                 ?: return RuleCheck.Unavailable(condition.variable)
             if (first == null) first = resolved
             if (!condition.op.compare(resolved.value, condition.threshold)) {
-                return RuleCheck.Passes
+                return RuleCheck.Passes(condition, resolved.value)
             }
         }
         // The first condition is the rule's subject: its value/hour become trigger.*
-        return first?.let { RuleCheck.Fires(it.value, it.at) } ?: RuleCheck.Passes
+        return first?.let { RuleCheck.Fires(it.value, it.at) } ?: RuleCheck.Passes()
     }
 
     fun latchKey(cityKey: String, ruleId: Long): String = "$cityKey:$ruleId"

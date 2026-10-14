@@ -9,6 +9,9 @@ import com.callbackdev.chiaro.ui.warnings.WarningText.colors
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
@@ -94,7 +97,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -109,7 +111,6 @@ import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.theme.GroupTop
 import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
-import com.callbackdev.chiaro.ui.theme.reducedMotion
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.components.NotificationsOffCard
 import com.callbackdev.chiaro.ui.components.rememberNotificationRequest
@@ -1346,6 +1347,13 @@ private fun RuleCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            // Whether it holds now, with the number that decides (the Alerts review, point
+            // 11, 14 ott 2026): until then the card said only «Non è ancora mai scattato», and
+            // whether a rule was true meant opening it and pressing «Prova adesso».
+            card.now?.let { preview ->
+                ruleNow(res, preview, units, clock, currentLocale(), watchesSeveral(card.rule))
+                    ?.let { RuleNowLine(it) }
+            }
             Text(
                 text = fired,
                 style = MaterialTheme.typography.bodyMedium,
@@ -1355,6 +1363,165 @@ private fun RuleCard(
         Switch(checked = card.rule.enabled, onCheckedChange = onToggle)
     }
 }
+
+/** A rule's state now, as a line: whether it holds ([holds], null when it cannot be said),
+ * the [word] that says it first, and the whole [text], which begins with that word. */
+internal class RuleNow(val holds: Boolean?, val word: String, val text: String)
+
+/**
+ * The dry run as words (the Alerts review, points 11 and 12, 14 ott 2026): «Adesso sì»,
+ * «Adesso sì, ma fuori orario fino alle 7:12», «Adesso no · la pioggia nelle prossime 6 ore è
+ * 35%, serve al massimo 20%», or why it cannot be said. The number that decides is the one the
+ * model forecast, in the reader's units, beside the threshold it missed: a «no» without them
+ * left the reader to guess which threshold to move. Null with no forecast at all, where the
+ * card says nothing (the editor says why, [EditorAnswer]).
+ */
+internal fun ruleNow(
+    res: android.content.res.Resources,
+    preview: RulePreview,
+    units: UnitSettings,
+    clock: DateTimeFormatter,
+    locale: java.util.Locale,
+    /** Whether to name the quantity: only when the rule watches more than one, because on
+     * «la temperatura adesso sotto 5°» the line «è 19,7°, serve sotto 5°» needs no subject. */
+    named: Boolean = true
+): RuleNow? = when (preview) {
+    is RulePreview.WouldFire -> res.getString(R.string.rule_now_yes).let { RuleNow(true, it, it) }
+    is RulePreview.OutsideHours -> {
+        val word = res.getString(R.string.rule_now_yes)
+        val next = preview.next
+        val text = when (next?.toLocalDate()) {
+            preview.today -> res.getString(R.string.rule_now_closed_today, word, next.format(clock))
+            preview.today.plusDays(1) -> res.getString(R.string.rule_now_closed_tomorrow, word, next.format(clock))
+            else -> res.getString(R.string.rule_now_closed, word)
+        }
+        RuleNow(true, word, text)
+    }
+    is RulePreview.WouldPass -> {
+        val word = res.getString(R.string.rule_now_no)
+        val failed = preview.failed
+        val value = preview.value
+        val text = if (failed == null || value == null) {
+            word
+        } else {
+            val name = res.getString(RuleText.nameRes(failed.variable))
+            val reading = RuleText.reading(res, failed.variable, value, units, locale)
+            if (RuleVariables.byId(failed.variable)?.kind == RuleVariableKind.BOOLEAN) {
+                res.getString(R.string.rule_now_failed_flag, word, name, reading)
+            } else {
+                val need = res.getString(needRes(failed.op), RuleText.value(res, failed, units))
+                if (named) {
+                    res.getString(R.string.rule_now_failed, word, name, reading, need)
+                } else {
+                    res.getString(R.string.rule_now_failed_short, word, reading, need)
+                }
+            }
+        }
+        RuleNow(false, word, text)
+    }
+    is RulePreview.Unavailable -> {
+        val word = res.getString(R.string.rule_now_unknown)
+        RuleNow(null, word, res.getString(R.string.rule_now_missing, word, res.getString(RuleText.nameRes(preview.variableId))))
+    }
+    RulePreview.NoData -> null
+}
+
+/** What a threshold asks, as the words after «serve»: the pickers' «is at least» carries a
+ * verb English cannot put after «it needs». */
+private fun needRes(op: RuleOp): Int = when (op) {
+    RuleOp.GT -> R.string.rule_need_above
+    RuleOp.GTE -> R.string.rule_need_at_least
+    RuleOp.LT -> R.string.rule_need_below
+    RuleOp.LTE -> R.string.rule_need_at_most
+    RuleOp.EQ -> R.string.rule_need_equal
+    RuleOp.NEQ -> R.string.rule_need_not_equal
+}
+
+/** Whether a rule watches more than one quantity, so its «no» must say which one. */
+internal fun watchesSeveral(rule: NotificationRule): Boolean =
+    rule.conditions.map { it.variable }.distinct().size > 1
+
+/**
+ * A mark and a word before anything else (DESIGN §8.7): a full dot when the rule holds, a
+ * ring when it does not or cannot be said, and the word in full ink. No green and no red:
+ * «true» is not «good» here, and the Sky's verdict colours mean something this line does not.
+ */
+@Composable
+private fun RuleNowLine(now: RuleNow, modifier: Modifier = Modifier) {
+    val ink = MaterialTheme.colorScheme.onSurface
+    val quiet = MaterialTheme.colorScheme.onSurfaceVariant
+    Row(verticalAlignment = Alignment.Top, modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .padding(top = 6.dp)
+                .size(NowDot)
+                .then(
+                    if (now.holds == true) {
+                        Modifier.background(ink, CircleShape)
+                    } else {
+                        Modifier.border(1.5.dp, quiet, CircleShape)
+                    }
+                )
+        )
+        Text(
+            text = buildAnnotatedString {
+                withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = ink)) { append(now.word) }
+                append(now.text.removePrefix(now.word))
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = quiet,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+    }
+}
+
+/**
+ * The editor's answer, at the head of the sheet (the Alerts review, point 12): the card's line,
+ * and under it the message as it would arrive, when it would. With no forecast for the place
+ * it says so, because here somebody is asking.
+ */
+@Composable
+private fun EditorAnswer(preview: RulePreview, named: Boolean, units: UnitSettings, clock: DateTimeFormatter) {
+    val res = LocalContext.current.resources
+    val locale = currentLocale()
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(segmentShape(0, 1))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        val now = ruleNow(res, preview, units, clock, locale, named)
+        if (now == null) {
+            Text(
+                text = stringResource(R.string.rule_preview_no_data),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            return@Column
+        }
+        RuleNowLine(now)
+        val message = when (preview) {
+            is RulePreview.WouldFire -> preview.message
+            is RulePreview.OutsideHours -> preview.message
+            else -> null
+        }
+        message?.let {
+            Text(
+                text = stringResource(R.string.rule_preview_would_say, it),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(start = NowDot + 8.dp)
+            )
+        }
+    }
+}
+
+private val NowDot = 8.dp
+
+/** How long the answer waits for the next keystroke before it reads the rule again. */
+private const val PreviewSettle = 300L
 
 // ---------------------------------------------------------------------------------
 // The editor
@@ -1402,7 +1569,6 @@ private fun RuleEditorSheet(
     val locale = currentLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val clock = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
-    val scope = rememberCoroutineScope()
     var name by rememberSaveable(rule.id) { mutableStateOf(rule.name) }
     // A TextFieldValue rather than a String: a value picked from the list lands where
     // the cursor is, and a cursor is something only the field itself knows about. It
@@ -1414,7 +1580,6 @@ private fun RuleEditorSheet(
     var dialog by remember { mutableStateOf<EditorDialog?>(null) }
     var preview by remember { mutableStateOf<RulePreview?>(null) }
     val scroll = rememberScrollState()
-    val reduced = reducedMotion()
 
     fun close() {
         val trimmedName = name.trim().ifEmpty { rule.name }
@@ -1434,14 +1599,16 @@ private fun RuleEditorSheet(
         )
     }
 
-    // An answer about conditions that have since changed would be an answer to a
-    // question nobody asked (DESIGN §1.1: the screen must not lie). Editing a chip
-    // takes it away rather than letting it age in place; the message is not in the
-    // key, because rewording what a fired alert would say does not change whether it
-    // fires — the answer already quotes the wording it was given.
-    // The hours are in the key for the same reason: «fuori orario» about hours the
-    // reader has just widened would be an answer to the rule they no longer have.
-    LaunchedEffect(rule.conditions, rule.window) { preview = null }
+    // The answer answers the rule on screen, every time it changes (the Alerts review, point
+    // 12, 14 ott 2026): a chip, the hours, the message. It used to wait for «Prova adesso» at
+    // the foot of the sheet and vanish at the next chip, so trying a threshold meant pressing
+    // again and scrolling down to read it. The message changes what it would say, never
+    // whether it fires; it is in the key so the quoted message is the one being typed, after a
+    // breath so a word being typed is not a reading a letter.
+    LaunchedEffect(rule.conditions, rule.window, message.text) {
+        if (preview != null) kotlinx.coroutines.delay(PreviewSettle)
+        preview = viewModel.preview(rule.copy(message = message.text))
+    }
 
     ModalBottomSheet(
         onDismissRequest = ::close,
@@ -1458,6 +1625,9 @@ private fun RuleEditorSheet(
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // The answer before the controls, as the Sky's answer comes before anything to
+            // change (point 12): what the rule would do now, and what it would say.
+            preview?.let { EditorAnswer(it, watchesSeveral(rule), units, clock) }
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -1550,67 +1720,6 @@ private fun RuleEditorSheet(
                 Text(
                     text = stringResource(R.string.rule_message_add_value),
                     modifier = Modifier.padding(start = 4.dp)
-                )
-            }
-
-            // The dry run (VISION §5.4): what it would have done, nothing posted.
-            TextButton(
-                onClick = {
-                    scope.launch {
-                        preview = viewModel.preview(rule.copy(message = message.text))
-                        // The answer prints under the button, which on a short screen
-                        // is under the fold: whoever just asked the question should not
-                        // have to drag the sheet to read it. Two frames, because the
-                        // line is composed on the first and measured on the second, and
-                        // the scroll range only knows about it once it is measured.
-                        withFrameNanos { }
-                        withFrameNanos { }
-                        // §7: with motion off the answer still has to come into view —
-                        // the scroll is what carries the information here, the travel is
-                        // only how it gets there.
-                        if (reduced) scroll.scrollTo(scroll.maxValue)
-                        else scroll.animateScrollTo(scroll.maxValue)
-                    }
-                },
-                contentPadding = FlushTextButtonPadding
-            ) {
-                Text(stringResource(R.string.rule_preview_action))
-            }
-            preview?.let { result ->
-                Text(
-                    text = when (result) {
-                        is RulePreview.WouldFire ->
-                            stringResource(R.string.rule_preview_fires, result.message)
-                        is RulePreview.OutsideHours -> {
-                            val next = result.next
-                            val closed = when (next?.toLocalDate()) {
-                                null -> stringResource(R.string.rule_preview_closed)
-                                result.today -> stringResource(
-                                    R.string.rule_preview_closed_today, next.format(clock)
-                                )
-                                result.today.plusDays(1) -> stringResource(
-                                    R.string.rule_preview_closed_tomorrow, next.format(clock)
-                                )
-                                else -> stringResource(R.string.rule_preview_closed)
-                            }
-                            closed + "\n" + stringResource(R.string.rule_preview_would_say, result.message)
-                        }
-                        RulePreview.WouldPass -> stringResource(R.string.rule_preview_passes)
-                        is RulePreview.Unavailable -> stringResource(
-                            R.string.rule_preview_unavailable,
-                            stringResource(RuleText.nameRes(result.variableId))
-                        )
-                        RulePreview.NoData -> stringResource(R.string.rule_preview_no_data)
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    // "It would fire, and here is what it would say" is the answer the
-                    // reader pressed the button for, in full ink; the three quiet
-                    // answers stay quiet (review, 8 set 2026).
-                    color = if (result is RulePreview.WouldFire) {
-                        MaterialTheme.colorScheme.onSurface
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
                 )
             }
 

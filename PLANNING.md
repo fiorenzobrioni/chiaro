@@ -12695,8 +12695,8 @@ coerente con il Cielo appena rivisto, e ne ha fatto attuare i punti da 1 a 6. La
 - [ ] 8. La striscia del giorno con le tacche delle ore e le ore dei tuoi avvisi.
 - [x] 9. «Nuovo avviso» come FAB, le idee in un foglio; la fila resta solo con «I tuoi» vuoto.
 - [x] 10. «Annulla» al posto della conferma per eliminare.
-- [ ] 11. Lo stato di ogni regola adesso, con il suo numero.
-- [ ] 12. La prova dell'editor che si aggiorna a ogni chip.
+- [x] 11. Lo stato di ogni regola adesso, con il suo numero.
+- [x] 12. La prova dell'editor che si aggiorna a ogni chip.
 - [ ] 13. «Quando scatterebbe»: la regola provata sulla settimana di previsione.
 
 ### Cosa è cambiato
@@ -12814,4 +12814,56 @@ Chiesti dopo i primi sei, nella stessa PR.
   un'allerta arancione e «I tuoi» vuoto, in attesa del bollettino alle 22, il foglio delle idee,
   la snackbar con il FAB sollevato. Guardate immagine per immagine; le immagini del README
   rigenerate e guardate.
+- Suite completa e lint.
+
+### Punti 11 e 12 (committente, 14 ott 2026)
+
+Chiesti dopo il 7, il 9 e il 10, nella stessa PR.
+
+**Cosa è cambiato**
+
+- **Il motore dice perché no.** `RuleCheck.Passes` da `data object` a `data class Passes(failed,
+  value)`: la prima condizione che non tiene e ciò che ha letto. `evaluate` non cambia (il ramo è
+  `is RuleCheck.Passes`); `RulePreview.WouldPass` porta gli stessi due campi.
+- **Punto 11.** Ogni card di regola ha una riga di stato sotto la frase e gli orari: «Adesso sì»,
+  «Adesso sì, ma fuori orario fino alle 20:00» (o «fino a domani alle 7:12»), «Adesso no · è 19,7°,
+  serve sotto 5°», «Adesso non si può dire · l'indice europeo dell'aria adesso non ha un valore».
+  Un punto pieno quando la regola tiene, un anello quando no o non si sa, la parola in `SemiBold`
+  `onSurface`, il resto in `onSurfaceVariant`. Senza previsione per il luogo la riga non c'è.
+  `AlertsViewModel` legge ogni regola contro il report in cache (`ruleReading`, la stessa funzione
+  della prova) e di nuovo ogni minuto mentre la pagina è guardata.
+- **Punto 12.** Il pulsante «Prova adesso» e lo scorrimento fino alla risposta non ci sono più: la
+  risposta sta in testa al foglio, sopra il nome (`EditorAnswer`, la riga della card e sotto
+  «Direbbe: «…»»), e si ricalcola a ogni chip, agli orari e al messaggio, quest'ultimo dopo 300 ms
+  senza battute. Le stringhe `rule_preview_action`, `_fires`, `_passes`, `_unavailable` e
+  `_closed*` sono tolte; la guida («È vero adesso?») dice la riga sulla card e la risposta viva.
+
+**Decisioni e deviazioni**
+
+- **Segno e parola, niente colore**, come chiedeva la revisione: «vera» non vuol dire «bella», e i
+  colori dei verdetti del Cielo qui direbbero una cosa che la riga non dice.
+- **La grandezza si nomina solo se la regola ne guarda più d'una**: su «la temperatura adesso
+  sotto 5°» la riga «è 19,7°, serve sotto 5°» non ha bisogno del soggetto, che era la terza
+  ripetizione di «adesso» sulla card.
+- **«serve al massimo 20%» da stringhe proprie** (`rule_need_*`) e non dalle parole dei selettori:
+  in inglese il selettore dice «is at most», e «it needs is at most 20%» non è una frase (visto
+  nella prova in inglese).
+- **Il messaggio nella chiave della risposta**, ma dopo una pausa: non cambia se la regola scatta,
+  cambia ciò che la risposta cita, e la risposta deve citare quello che si sta scrivendo.
+- **Ogni minuto, solo la lettura**: le regole, le impostazioni e la storia si rileggono quando
+  cambiano, come prima; il minuto rifà soltanto l'aritmetica sul report già in memoria, perché
+  `next_6h` scorre con l'orologio e una fascia si apre e si chiude. Niente gira a pagina chiusa.
+- **Una regola spenta mostra lo stesso il suo stato**: dice se le condizioni tengono, che è ciò che
+  serve per tararla prima di riaccenderla.
+
+**Come è stato verificato**
+
+- `RuleEngineTest`: la condizione riportata è quella che non tiene, la prima quando non ne tiene
+  nessuna. `RunTemplatesTest`: la corsa sotto la pioggia è zitta per la pioggia, con il 60% letto.
+  `RuleNowTest` (Robolectric, italiano): le quattro forme della riga, la virgola dei decimali, la
+  forma senza soggetto, `watchesSeveral`.
+- Avvisi disegnata a 360 dp in italiano in chiaro e in inglese in scuro con cinque regole (vera,
+  vera fuori orario, falsa su una grandezza, falsa sulla qualità dell'aria, le due delle idee); le
+  quattro risposte dell'editor disegnate a parte. Guardate immagine per immagine; l'immagine del
+  README dei tuoi avvisi rigenerata e guardata.
 - Suite completa e lint.

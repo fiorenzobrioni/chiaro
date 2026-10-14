@@ -25,6 +25,7 @@ import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.ui.alerts.AlertsUiState
 import com.callbackdev.chiaro.ui.alerts.RuleCardModel
 import com.callbackdev.chiaro.ui.alerts.RuleText
+import com.callbackdev.chiaro.ui.alerts.ruleReading
 import com.callbackdev.chiaro.ui.sky.SkyStateBuilder
 import com.callbackdev.chiaro.ui.sky.SkyUiState
 import com.callbackdev.chiaro.ui.today.TodayStateBuilder
@@ -179,7 +180,14 @@ internal object MilanRecording {
     fun alerts(context: Context, rules: List<NotificationRule> = emptyList()): AlertsUiState.Content = AlertsUiState.Content(
         placeName = city.name,
         notifications = settings.notifications,
-        rules = rules.map { RuleCardModel(it, lastFired = null) },
+        // Each rule read against the recording at its own moment, as the screen reads it.
+        rules = rules.map { rule ->
+            val zone = placeZone(report, city)
+            RuleCardModel(
+                rule, lastFired = null,
+                now = ruleReading(rule, report, zone, now.atZone(zone).toLocalDateTime(), settings.units, context)
+            )
+        },
         canAdd = rules.size < MaxRules,
         units = settings.units,
         zone = placeZone(report, city),
