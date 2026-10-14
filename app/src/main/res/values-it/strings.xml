@@ -462,7 +462,7 @@
     <string name="guide_sky_moments_body">I momenti che segui, nell\'ordine in cui capitano. Quello che è passato lascia il posto alla sua prossima volta e la riga dice di che giorno si tratta; quello che sta capitando adesso lo dice. È lo stesso momento che il widget Cielo mostra sulla home, risolto allo stesso modo. Ogni riga porta alla pagina del suo evento, che dice che cos\'è ed è anche il posto da cui toglierlo.</string>
     <string name="guide_sky_moment_caption">Un esempio: l\'alba di domani, giudicata dalle sue nuvole.</string>
     <string name="guide_sky_camera_title">Il marchio della macchina fotografica</string>
-    <string name="guide_sky_camera_body">Qualche evento porta una piccola macchina fotografica accanto al nome: sono i nove per cui vale davvero la pena portarsela — le ore d\'oro e le ore blu, la luna piena al crepuscolo, la luce cinerea di sera e di mattina, il cuore della Via Lattea e l\'eclissi di Luna. Non è una questione di gusti, ed è per questo che quelle righe dicono anche da che parte guardare: un orario senza una direzione è mezza risposta. L\'eclissi di Sole di proposito non ce l\'ha — quella si guarda solo con un filtro adatto, e un obiettivo ne ha bisogno esattamente quanto un occhio.</string>
+    <string name="guide_sky_camera_body">Qualche evento porta una piccola macchina fotografica accanto al nome: sono i nove per cui vale davvero la pena portarsela — le ore d\'oro e le ore blu, la luna piena al crepuscolo, la luce cinerea di sera e di mattina, il cuore della Via Lattea e l\'eclissi di Luna. Non è una questione di gusti, ed è per questo che quelle righe dicono anche da che parte guardare: un orario senza una direzione è mezza risposta. L\'eclissi di Sole di proposito non ce l\'ha — quella si guarda solo con un filtro adatto, e un obiettivo ne ha bisogno esattamente quanto un occhio. Ogni riga che dice da che parte guardare, queste e i pianeti, apre una pagina con «Dove guardare»: «Apri la bussola» ti fa girare dalla parte giusta, e ti dice quando la bussola del telefono va calibrata e con quale gesto.</string>
     <string name="guide_sky_bell_title">La campanella</string>
     <string name="guide_sky_bell_body">Ogni momento può ricordarsi di te, con il suo anticipo o con quello abituale. I promemoria sono volutamente larghi — possono arrivare qualche minuto prima o dopo — ed è proprio quella larghezza a tenerli fuori dalla batteria. Il promemoria di qualcosa che le nuvole nasconderanno resta zitto, a meno che tu non lo voglia lo stesso.</string>
     <string name="guide_sky_events_title">In arrivo</string>
@@ -575,6 +575,27 @@
     <string name="sky_scrub_moon_up">luna su</string>
     <string name="sky_scrub_moon_down">senza luna</string>
     <string name="sky_scrub_strip_desc">La notte, ora per ora</string>
+    <!-- Dove guardare (14 ott 2026): la bussola dietro la direzione di una riga. Mai i
+         gradi: la riga dice «verso ovest», il quadrante è il disegno del numero. -->
+    <string name="sky_look_title">Dove guardare</string>
+    <string name="sky_look_towards">Verso %1$s</string>
+    <string name="sky_look_open">Apri la bussola</string>
+    <string name="compass_letter_n">N</string>
+    <string name="compass_letter_e">E</string>
+    <string name="compass_letter_s">S</string>
+    <string name="compass_letter_w">O</string>
+    <string name="compass_waiting">Cerco il nord…</string>
+    <string name="compass_ahead">Ci sei: è davanti a te</string>
+    <string name="compass_turn_left">Gira a sinistra</string>
+    <string name="compass_turn_right">Gira a destra</string>
+    <string name="compass_behind">È alle tue spalle: voltati</string>
+    <string name="compass_hold">Tieni il telefono davanti a te, in piano, oppure dritto come per una foto.</string>
+    <string name="compass_calibrate_title">La bussola va calibrata</string>
+    <string name="compass_calibrate_body">Muovi il telefono nell\'aria disegnando un 8, girando anche il polso, per due o tre volte. Quando la bussola è pronta, questo riquadro sparisce.</string>
+    <string name="compass_calibrate_help">La direzione ti sembra sbagliata?</string>
+    <string name="compass_calibrate_help_body">Non tutti i telefoni avvisano quando la bussola è starata. Disegna un 8 nell\'aria con il telefono, girando anche il polso, per due o tre volte, lontano da oggetti di metallo.</string>
+    <string name="compass_disturbed">Qualcosa qui vicino disturba la bussola: un oggetto di metallo, un magnete, una cover con la calamita. Spostati di qualche passo; calibrarla non basta.</string>
+    <string name="compass_unsupported">Questo telefono non ha una bussola: guarda verso %1$s.</string>
     <string name="sky_moon_line">%1$s · %2$d%% illuminata</string>
     <string name="sky_too_far">Troppo lontano per dirlo</string>
 

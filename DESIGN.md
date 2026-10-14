@@ -1469,6 +1469,44 @@ phase, low in the stretch, so the moon is a mark as well as a hue; a 5 dp tick s
 band's floor at every whole hour; and «now», when the night is under way, is a thin white
 line through the band with a dot under it.
 
+**8.8c Where to look** (committente, 14 ott 2026). A row with a bearing (the photographer's
+hours, the moon at dusk and its earthshine, the Milky Way, Venus, Jupiter and the pairs:
+`SkySights.bearing` decides, and most rows have none) opens its page with «Dove guardare»:
+a `surfaceContainerHigh` card, the compass mark (`ic_compass`, the chrome hand), «Verso
+ovest», and a tonal «Apri la bussola». The compass takes the sheet's place, opened all the
+way; back returns to the page.
+
+- **The dial** turns with the phone, so its north is the world's: ticks every 15°, longer at
+  the eighths and the cardinals, the four letters localized (N E S O / N E S W) with north
+  in `primary`. The event's own drawing sits in the centre; a `primary` line runs from it to
+  a disc on the rim where the event will be; a fixed pointer over the top of the ring is
+  the phone. Before the first reading only the ring and the pointer are drawn: letters
+  before the sensor has spoken would be a north the app does not know.
+- **One line says what to do**, `headlineSmall`: «Gira a destra», «Gira a sinistra», «È alle
+  tue spalle: voltati», «Ci sei: è davanti a te» in `primary` with a `Confirm` haptic.
+  «Ahead» is within 12° and takes 18 to leave, so a hand's tremor does not flick the word.
+  It is a polite live region: TalkBack hears the word when it changes, not the needle.
+- **Where the phone points**: flat, the top edge of the screen (by the display's
+  rotation); held up as for a photo, the back of the phone, the camera's line of sight.
+  Read as a device vector carried into the world by the rotation matrix, not through
+  Euler angles, which are singular exactly where a camera is held; the switch between the
+  two has a gap (|up| 0.4 / 0.6) so the boundary does not flicker. **True north**:
+  `GeomagneticField`'s declination for the place, because the sky's bearings are true and
+  a magnetometer's are not.
+- **Calibration, honestly.** When the magnetometer reports itself unreliable or low, a
+  `secondaryContainer` card shows the figure of eight drawn with a small phone travelling
+  it and tilting (the wrist turn), still under reduced motion, and the words for the
+  gesture; it goes away when the sensor recovers. Phones report that flag unevenly and some
+  never report it, so the same gesture is one tap away under the dial («La direzione ti
+  sembra sbagliata?»). A field outside 20–70 µT for a second and a half (the earth's is
+  25–65) is not a calibration problem: a `tertiaryContainer` card says something nearby is
+  pulling the needle and to move. While either card shows, the dial is drawn at 45%: the
+  needle keeps moving, it stops claiming a confidence it does not have.
+- **Battery**: the sensors are registered on resume and released on pause, only while the
+  compass is on screen; never in the background. A phone with no magnetometer says so, and
+  the direction in words.
+- **No degrees**, here as on the rows: the dial is the picture of the number.
+
 **The moments are grouped by day** (same review): «Oggi» and «Domani» are `labelLarge`
 headings in `primary` inside the section, and the rows lose the «Domani ·» each of them
 carried — four rows saying the same word pushed the time, which is what a reader scans for,

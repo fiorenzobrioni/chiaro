@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The compass mark of «Dove guardare» (14 ott 2026): the door from an agenda row's
+     page to the compass. Drawn here in the hand of the other chrome marks (ic_photographic,
+     ic_verdict_*) rather than borrowed: the project does not carry
+     `material-icons-extended`. Stroked at 2.4 of 24 with round caps and joins; a ring and a
+     needle, the needle's north half filled so the mark has a direction. The colour is
+     irrelevant: the page tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M12,12 m-9,0 a9,9 0 1 0 18,0 a9,9 0 1 0 -18,0"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.4" />
+    <path
+        android:pathData="M12,6.6 L14.3,12 L9.7,12 Z"
+        android:fillColor="#FFFFFFFF"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineJoin="round"
+        android:strokeWidth="1.4" />
+    <path
+        android:pathData="M9.7,12 L12,17.4 L14.3,12"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="1.4" />
+</vector>

@@ -68,7 +68,7 @@ of real forecast history. The command that redraws them is in [Build](#build).
 - 🕐 **The next hours**: temperature as a curve, chance of rain, and the rest of the day as one timeline.
 - 📅 **The week**: seven days on one temperature scale, each with its ribbon of light. Open a day for its hours.
 - 🔢 **Details**: UV, wind, clouds, air quality, pollen, each with the line that says what to do with it.
-- 🌅 **Sky**: tonight's verdict and a night to explore hour by hour with a finger, the moments ahead and a catalog of 60, all computed on the phone.
+- 🌅 **Sky**: tonight's verdict and a night to explore hour by hour with a finger, the moments ahead with a compass for where to look, and a catalog of 60, all computed on the phone.
 - 🔔 **Sky reminders**: a bell on any moment, quiet when clouds will hide it.
 - 🇮🇹 **Official warnings**: the Protezione Civile bulletin, located by where a place is, offline too.
 - ⚠️ **Alerts**: four ready-made switches, plus your own rules written as sentences, with the hours they may ring in.

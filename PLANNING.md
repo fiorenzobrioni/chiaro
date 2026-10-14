@@ -12335,8 +12335,9 @@ Material 3 Expressive) e ha deciso di attuarla tutta. Il piano, nell'ordine in c
 - [x] **La striscia della notte si esplora col dito** (il «tocco wow» della revisione).
 - [x] **I segni della striscia** (punto 8): la luna distinta dalle nuvole, le tacche delle
   ore, «adesso».
-- [ ] «Se non stanotte, quando?»: la prossima notte buona nei giorni coperti dalla previsione.
-- [ ] La bussola «dove guardare» per le righe che hanno una direzione.
+- [-] ~~«Se non stanotte, quando?»~~: **scartata** dal committente (14 ott 2026): oltre due
+  o tre giorni la previsione delle nuvole è troppo poco precisa per indicare una notte.
+- [x] La bussola «dove guardare» per le righe che hanno una direzione.
 - [ ] 1. Un hero che risponde sempre (anche la notte in cui la luna c'è tutta la notte).
 - [ ] 2. Il prossimo momento in evidenza; gli altri in una lista a gruppi.
 - [ ] 3. Gli orari in colonna.
@@ -12401,3 +12402,68 @@ Material 3 Expressive) e ha deciso di attuarla tutta. Il piano, nell'ordine in c
 - La card disegnata con Robolectric a metà gesto (ora con la luna, ora buia, notte di luna
   piena, «adesso» nella notte), guardata immagine per immagine; le immagini del README
   rigenerate e guardate.
+
+## Cielo: la bussola «Dove guardare» (committente, 14 ott 2026)
+
+Il secondo punto della revisione del Cielo. Le righe che dicono da che parte guardare
+(«verso ovest») ora portano a una bussola che fa girare il lettore dalla parte giusta. Il
+committente ha chiesto anche l'avviso di calibrazione con il gesto da fare, e lo proverà sul
+suo telefono: in un container non c'è un sensore, quindi qui è verificata la matematica e il
+disegno, non l'ago vero.
+
+### Cosa è cambiato
+
+- **La pagina di una riga con una direzione** (quella che si apre toccandola) comincia con
+  «Dove guardare · Verso ovest» e il pulsante «Apri la bussola». La bussola prende il posto
+  della pagina nel foglio, aperto del tutto; indietro torna alla pagina. Le righe senza
+  direzione (quasi tutte, per scelta: `SkySights.bearing`) non hanno il riquadro.
+- **La bussola**: il quadrante gira con il telefono, il segno dell'evento sul bordo dove
+  accadrà, un indice fisso in alto che è il telefono, e una riga sola: «Gira a destra», «Gira
+  a sinistra», «È alle tue spalle: voltati», «Ci sei: è davanti a te» (con una vibrazione di
+  conferma). Funziona con il telefono in piano (punta il bordo alto dello schermo) e dritto
+  come per una foto (punta la fotocamera).
+- **La calibrazione**: quando il magnetometro si dichiara inaffidabile o poco preciso, un
+  riquadro mostra l'8 disegnato con un telefonino che lo percorre girando il polso, e le
+  parole del gesto; sparisce quando il sensore torna a posto. Lo stesso gesto è sempre a un
+  tocco, «La direzione ti sembra sbagliata?», perché non tutti i telefoni lo segnalano.
+- **Il disturbo**: un campo fuori da 20–70 µT per un secondo e mezzo (quello terrestre sta
+  fra 25 e 65) è un oggetto di metallo o un magnete vicino, non una calibrazione: il riquadro
+  lo dice e dice di spostarsi.
+- `SkyUiState.Content.coordinates`, per la declinazione magnetica del luogo.
+- La guida («Il marchio della macchina fotografica») dice la bussola, IT/EN.
+
+### Decisioni e deviazioni
+
+- **Dietro un tocco, non accesa sulla pagina**: la pagina si legge, e un sensore acceso mentre
+  qualcuno legge della luce cinerea è batteria spesa per niente. I sensori si registrano alla
+  ripresa e si rilasciano alla pausa, solo con la bussola a schermo.
+- **Il nord vero**: le direzioni del cielo sono vere, quelle del magnetometro no (in Italia 2–5
+  gradi, altrove decine): la bussola aggiunge la declinazione di `GeomagneticField` per il
+  luogo. È il luogo della pagina, non la posizione del telefono: l'app non chiede la
+  posizione, e alla scala di una regione la differenza non si vede.
+- **Il vettore e non gli angoli di Eulero**: `getOrientation` è singolare proprio quando il
+  telefono è tenuto dritto, e l'ago impazziva lì. La direzione è un vettore del telefono
+  portato nel mondo dalla matrice di rotazione; il passaggio fra in piano e dritto ha un
+  margine (0,4 / 0,6) perché al confine la direzione non salti.
+- **«Ci sei» entro 12°, si esce a 18**: una mano a braccio teso copre una ventina di gradi, e
+  una parola che lampeggia fra «ci sei» e «gira a destra» sembra una bussola rotta.
+- **Il quadrante attenuato (45%) quando la bussola dubita**: l'ago continua a muoversi, perché
+  il gesto si fa meglio guardandolo assestarsi, ma non finge una sicurezza che non ha.
+- **Il limite onesto dell'avviso**: l'accuratezza che Android riporta dipende dal produttore;
+  alcuni telefoni non dicono mai «bassa». Per questo l'aiuto a richiesta, e il disturbo
+  misurato sull'intensità del campo, che non dipende da quel segnale.
+- **Mai i gradi**, come sulle righe: il quadrante è il disegno del numero.
+- **Nessuna immagine nuova nel README**: è una vista dentro un foglio, e l'insieme resta
+  piccolo.
+
+### Come è stato verificato
+
+- `CompassMathTest`: il telefono in piano punta il bordo alto dello schermo, e la rotazione
+  dello schermo sposta quel bordo; dritto punta la fotocamera, comunque sia girato lo schermo;
+  la postura cambia con il margine; la svolta è la via corta, destra positiva; «ci sei» è più
+  facile da tenere che da prendere, e oltre 150° è «alle spalle»; solo un campo che la Terra
+  non può fare è un disturbo; inaffidabile e bassa chiedono il gesto, media e alta no; la
+  media attraverso il nord resta a nord.
+- La bussola disegnata con Robolectric e sensori simulati (girarsi, ci sei, da calibrare,
+  disturbata, senza bussola) e la pagina con «Dove guardare», guardate immagine per immagine.
+- Da provare sul telefono del committente: l'ago vero, il gesto, il telefono dritto.

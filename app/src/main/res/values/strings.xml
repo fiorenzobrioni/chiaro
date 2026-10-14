@@ -481,7 +481,7 @@
     <string name="guide_sky_moments_body">The moments you follow, in the order they happen. One that is over is replaced by its next occurrence and the row says which day it is; one that is happening right now says so. It is the same moment the Sky widget shows on your home screen, resolved the same way. Every row leads to its event\'s page, which says what it is and is also where you take it off the list.</string>
     <string name="guide_sky_moment_caption">An example: tomorrow\'s sunrise, judged by its clouds.</string>
     <string name="guide_sky_camera_title">The camera mark</string>
-    <string name="guide_sky_camera_body">A few events carry a small camera beside their name: the nine genuinely worth carrying one for — the golden and blue hours, the full moon at dusk, earthshine morning and evening, the heart of the Milky Way, and the eclipse of the moon. It is not a matter of taste, and that is why those rows also say which way to look: a time of day is half an answer without a direction. The eclipse of the sun deliberately does not carry it — that one is only ever watched through a proper filter, and a lens needs one just as much as an eye does.</string>
+    <string name="guide_sky_camera_body">A few events carry a small camera beside their name: the nine genuinely worth carrying one for — the golden and blue hours, the full moon at dusk, earthshine morning and evening, the heart of the Milky Way, and the eclipse of the moon. It is not a matter of taste, and that is why those rows also say which way to look: a time of day is half an answer without a direction. The eclipse of the sun deliberately does not carry it — that one is only ever watched through a proper filter, and a lens needs one just as much as an eye does. Every row that says which way to look, these and the planets, opens a page with “Where to look”: “Open the compass” turns you the right way, and tells you when the phone\'s compass needs calibrating and with which gesture.</string>
     <string name="guide_sky_bell_title">The bell</string>
     <string name="guide_sky_bell_body">Each moment can remind you, with its own lead time or the usual one. Reminders are deliberately loose — they can arrive a few minutes early or late — and that looseness is exactly what keeps them off your battery. A reminder for something the clouds are going to hide stays quiet, unless you ask for it anyway.</string>
     <string name="guide_sky_events_title">Coming up</string>
@@ -594,6 +594,27 @@
     <string name="sky_scrub_moon_up">moon up</string>
     <string name="sky_scrub_moon_down">no moon</string>
     <string name="sky_scrub_strip_desc">The night, hour by hour</string>
+    <!-- Where to look (14 Oct 2026): the compass behind a row's direction. Never degrees:
+         the row says "towards west", the dial is the picture of the number. -->
+    <string name="sky_look_title">Where to look</string>
+    <string name="sky_look_towards">Towards %1$s</string>
+    <string name="sky_look_open">Open the compass</string>
+    <string name="compass_letter_n">N</string>
+    <string name="compass_letter_e">E</string>
+    <string name="compass_letter_s">S</string>
+    <string name="compass_letter_w">W</string>
+    <string name="compass_waiting">Finding north…</string>
+    <string name="compass_ahead">There: straight ahead</string>
+    <string name="compass_turn_left">Turn left</string>
+    <string name="compass_turn_right">Turn right</string>
+    <string name="compass_behind">It is behind you: turn round</string>
+    <string name="compass_hold">Hold the phone in front of you, flat, or upright as for a photo.</string>
+    <string name="compass_calibrate_title">The compass needs calibrating</string>
+    <string name="compass_calibrate_body">Move the phone through the air in a figure of eight, turning your wrist as you go, two or three times. This box goes away when the compass is ready.</string>
+    <string name="compass_calibrate_help">Does the direction look wrong?</string>
+    <string name="compass_calibrate_help_body">Not every phone says when its compass is off. Draw a figure of eight in the air with the phone, turning your wrist as you go, two or three times, away from metal objects.</string>
+    <string name="compass_disturbed">Something nearby is pulling the compass: a metal object, a magnet, a case with a magnetic clasp. Move a few steps away; calibrating will not fix this one.</string>
+    <string name="compass_unsupported">This phone has no compass: look towards %1$s.</string>
     <string name="sky_moon_line">%1$s · %2$d%% lit</string>
     <string name="sky_too_far">Too far out to say</string>
 

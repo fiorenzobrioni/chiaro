@@ -53,7 +53,10 @@ sealed interface SkyUiState {
          * subscribed job with no row (an eclipse search that finds nothing ahead) then
          * showed as unsubscribed and offered to be added again (review, 8 set 2026).
          */
-        val subscribedIds: Set<String> = emptySet()
+        val subscribedIds: Set<String> = emptySet(),
+        /** The place's own coordinates, for the compass: where magnetic north is from
+         * true north there (14 ott 2026). */
+        val coordinates: Coordinates? = null
     ) : SkyUiState
 }
 
@@ -277,7 +280,8 @@ object SkyStateBuilder {
             events = events(subscriptions, settings, city, zone, now, ::judge),
             defaultLead = SkyLead.ofMinutes(settings.skyNotifyDefaultMin),
             notifyOnFail = settings.skyNotifyOnFail,
-            subscribedIds = subscriptions.filter { it.enabled }.map { it.jobId }.toSet()
+            subscribedIds = subscriptions.filter { it.enabled }.map { it.jobId }.toSet(),
+            coordinates = city.coordinates
         )
     }
 

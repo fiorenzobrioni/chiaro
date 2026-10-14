@@ -28,6 +28,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -63,6 +65,7 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.components.NotificationsOffCard
 import com.callbackdev.chiaro.ui.components.rememberNotificationRequest
 import com.callbackdev.chiaro.ui.components.rememberNotificationsAllowed
+import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.sky.MoonQuarterKind
 import com.callbackdev.chiaro.domain.sky.SkyJob
@@ -79,6 +82,7 @@ import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.places.PlacesSheet
+import com.callbackdev.chiaro.ui.sky.compass.CompassView
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.theme.GroupTop
 import com.callbackdev.chiaro.ui.theme.SectionBottom
@@ -253,6 +257,10 @@ private fun SkyContent(
     var leadDialog by remember { mutableStateOf<LeadDialog?>(null) }
     // The page a row of the agenda opened, if any ([AgendaPageSheet]).
     var pageId by rememberSaveable { mutableStateOf<String?>(null) }
+    // And where that row says to look, with its time line, for the page's compass
+    // (14 ott 2026): a direction belongs to an occurrence, not to the job the page is for.
+    var pageBearing by rememberSaveable { mutableStateOf<Double?>(null) }
+    var pageWhen by rememberSaveable { mutableStateOf("") }
 
     // POST_NOTIFICATIONS is asked the first time a reminder is switched on (VISION
     // §5.8), never at startup: the tap that needs it is the sentence that explains it.
@@ -304,7 +312,11 @@ private fun SkyContent(
                         zone = content.zone,
                         timeFmt = timeFmt,
                         isNext = moment === next,
-                        onOpen = { pageId = moment.job.id },
+                        onOpen = { line ->
+                            pageId = moment.job.id
+                            pageBearing = moment.bearingDeg
+                            pageWhen = line
+                        },
                         onBell = {
                             leadDialog = LeadDialog.ForMoment(
                                 moment.job.id, moment.lead, moment.followsDefault
@@ -358,7 +370,11 @@ private fun SkyContent(
                 today = today,
                 // A row that names two showers opens the first: it is the row's own job,
                 // and the page's «see also» is one tap from the rest.
-                onOpen = { pageId = event.job.id },
+                onOpen = { line ->
+                    pageId = event.job.id
+                    pageBearing = event.bearingDeg
+                    pageWhen = line
+                },
                 onBell = event.lead?.let { lead ->
                     { leadDialog = LeadDialog.ForMoment(event.job.id, lead, event.followsDefault) }
                 }
@@ -427,10 +443,15 @@ private fun SkyContent(
         AgendaPageSheet(
             jobId = id,
             subscribed = id in content.subscribedIds,
-            onOpenRelated = { pageId = it },
+            onOpenRelated = {
+                pageId = it
+                pageBearing = null
+            },
             onAdd = actions.addMoment,
             onRemove = actions.removeMoment,
-            onDismiss = { pageId = null }
+            onDismiss = { pageId = null },
+            look = pageBearing?.let { LookTarget(it, pageWhen) },
+            coordinates = content.coordinates
         )
     }
 
@@ -508,7 +529,8 @@ private fun MomentRow(
     zone: ZoneId,
     timeFmt: DateTimeFormatter,
     isNext: Boolean,
-    onOpen: () -> Unit,
+    /** Opens the row's page, handed the row's own time line for its compass. */
+    onOpen: (String) -> Unit,
     onBell: () -> Unit
 ) {
     val res = LocalContext.current.resources
@@ -534,7 +556,7 @@ private fun MomentRow(
     // verdict ("Niente da fare · nuvole 100%") squeezed the name to one letter per
     // line (device finding, 3 set). Only the fixed-width bell trails. Since 12 set it
     // lives under the whole list item too — see [SkyVerdictLine].
-    Column(Modifier.agendaRowOpens(onOpen)) {
+    Column(Modifier.agendaRowOpens { onOpen(timeLine) }) {
         ListItem(
             leadingContent = {
                 // Its own colors and the Sky's own rung (review, 8 set 2026): these were
@@ -648,7 +670,7 @@ private fun EventRow(
     yearFmt: DateTimeFormatter,
     timeFmt: DateTimeFormatter,
     today: java.time.LocalDate,
-    onOpen: () -> Unit,
+    onOpen: (String) -> Unit,
     onBell: (() -> Unit)?
 ) {
     val res = LocalContext.current.resources
@@ -679,7 +701,7 @@ private fun EventRow(
         ?.let { verdict -> SkyText.unknownReason(res, verdict) }
     // Same rule as MomentRow: the chip goes under the text on a line of its own
     // ([SkyVerdictLine]), only the bell trails.
-    Column(Modifier.agendaRowOpens(onOpen)) {
+    Column(Modifier.agendaRowOpens { onOpen(whenLine) }) {
         ListItem(
             leadingContent = {
                 Icon(
@@ -1143,6 +1165,10 @@ private fun CatalogAction(subscribed: Boolean, onClick: () -> Unit) {
  * the full-screen guide follows — so back always closes the sheet onto the agenda.
  * Acting closes it too: the agenda itself is the receipt, a row gone or a row added.
  */
+/** Where a row of the agenda says to look: its bearing, and its time line for the
+ * compass's header. */
+internal data class LookTarget(val bearingDeg: Double, val whenLine: String)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AgendaPageSheet(
@@ -1151,7 +1177,14 @@ internal fun AgendaPageSheet(
     onOpenRelated: (String) -> Unit,
     onAdd: (String) -> Unit,
     onRemove: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    /**
+     * The row's direction, when it has one (14 ott 2026): the page then opens with
+     * «Dove guardare», whose button turns the sheet into the compass. A row with no
+     * bearing — most of them, by design ([SkySights.bearing]) — has no compass to offer.
+     */
+    look: LookTarget? = null,
+    coordinates: Coordinates? = null
 ) {
     // An id the catalog no longer carries (restored across an update) has no true
     // page to draw: close rather than open an empty sheet.
@@ -1159,10 +1192,30 @@ internal fun AgendaPageSheet(
         LaunchedEffect(jobId) { onDismiss() }
         return
     }
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    val sheetState = rememberModalBottomSheetState()
+    var compassOpen by rememberSaveable(jobId) { mutableStateOf(false) }
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        val direction = look?.let { stringResource(SkyText.bearingRes(it.bearingDeg)) }
+        if (compassOpen && look != null && direction != null) {
+            // Back returns to the page, as the catalog's page returns to its list; the
+            // sheet opens all the way, because a dial in half a sheet is half a dial.
+            BackHandler { compassOpen = false }
+            LaunchedEffect(Unit) { sheetState.expand() }
+            CompassView(
+                name = stringResource(SkyText.nameRes(job.id)),
+                whenLine = look.whenLine,
+                direction = direction,
+                bearingDeg = look.bearingDeg,
+                icon = jobIcon(job),
+                coordinates = coordinates,
+                onBack = { compassOpen = false }
+            )
+            return@ModalBottomSheet
+        }
         SkyEventPage(
             job = job,
             onOpenRelated = onOpenRelated,
+            header = direction?.let { { LookBlock(direction = it, onOpen = { compassOpen = true }) } },
             action = {
                 CatalogAction(
                     subscribed = subscribed,
@@ -1173,6 +1226,44 @@ internal fun AgendaPageSheet(
                 )
             }
         )
+    }
+}
+
+/**
+ * «Dove guardare» at the top of a row's page: the direction the row prints in its
+ * supporting line, said once more where there is room for the button that turns it into
+ * a needle. The compass is behind a tap rather than running on the page because the page
+ * is mostly read, and a sensor listening while somebody reads about earthshine is a
+ * battery spent on nothing.
+ */
+@Composable
+private fun LookBlock(direction: String, onOpen: () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = MaterialTheme.shapes.large,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_compass),
+                    contentDescription = null, // the title beside it says it
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Column {
+                    Text(stringResource(R.string.sky_look_title), style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        text = stringResource(R.string.sky_look_towards, direction),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            FilledTonalButton(onClick = onOpen, modifier = Modifier.align(Alignment.End)) {
+                Text(stringResource(R.string.sky_look_open))
+            }
+        }
     }
 }
 

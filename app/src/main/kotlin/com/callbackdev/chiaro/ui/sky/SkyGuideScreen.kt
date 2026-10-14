@@ -203,6 +203,8 @@ internal fun SkyEventPage(
     onOpenRelated: (String) -> Unit,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
+    /** What goes right under the name, before the prose: the agenda's «where to look». */
+    header: @Composable (() -> Unit)? = null,
     action: @Composable (() -> Unit)? = null
 ) {
     val resources = LocalContext.current.resources
@@ -244,6 +246,8 @@ internal fun SkyEventPage(
                 )
             }
         }
+
+        header?.invoke()
 
         // Prose is bodyLarge (DESIGN §5): 16/24, made to be read rather than scanned,
         // which is the same size the guide in Settings sets its paragraphs in.

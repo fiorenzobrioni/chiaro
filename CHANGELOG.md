@@ -21,6 +21,11 @@ sections are a normal size and live here alone.
   is likely and whether the moon is up. Lift the finger and the whole night comes back. The
   strip now also marks every hour and the present moment, and draws the moon's hours in their
   own color with the moon in them.
+- **A compass for where to look.** A sky row that says which way to look (golden and blue
+  hours, the moon at dusk, the Milky Way, Venus, Jupiter) now opens with «Where to look» and a
+  compass that turns you the right way. It tells you when the phone's compass needs
+  calibrating, shows the figure-of-eight gesture that fixes it, and warns when something
+  metallic nearby is pulling the needle. The sensors run only while the compass is open.
 
 ### Changed
 
