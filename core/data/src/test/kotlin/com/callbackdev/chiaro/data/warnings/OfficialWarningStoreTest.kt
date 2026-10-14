@@ -61,7 +61,6 @@ class OfficialWarningStoreTest {
         assertNull(state.current)
         assertNull(state.feedTag)
         assertNull(state.lastAttempt)
-        assertNull(state.failureLoggedOn)
         assertEquals(emptySet<String>(), store().notified.first())
     }
 
@@ -87,14 +86,11 @@ class OfficialWarningStoreTest {
     }
 
     @Test
-    fun `attempts and the one failure row a day are dated`() = runBlocking {
+    fun `attempts are dated`() = runBlocking {
         val store = store()
         val at = Instant.parse("2026-09-08T14:00:00Z")
         store.markAttempt("dpc", at)
-        store.markFailureLogged("dpc", sept8)
-        val state = store.state("dpc").first()
-        assertEquals(at, state.lastAttempt)
-        assertEquals(sept8, state.failureLoggedOn)
+        assertEquals(at, store.state("dpc").first().lastAttempt)
     }
 
     @Test

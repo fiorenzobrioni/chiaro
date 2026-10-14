@@ -396,7 +396,7 @@
     <string name="settings_source_code_note">Software libero, GPL-3.0, su GitHub</string>
     <string name="settings_privacy">Privacy</string>
     <string name="settings_privacy_headline">Niente account, niente pubblicità, niente tracciamento.</string>
-    <string name="settings_privacy_body">Chiaro non ha un server suo: luoghi, avvisi e diario restano sul telefono. A Open-Meteo va solo il luogo di cui chiedi il meteo, o che cerchi, arrotondato a circa un chilometro se è la tua posizione. Nessun identificativo.</string>
+    <string name="settings_privacy_body">Chiaro non ha un server suo: luoghi, avvisi e impostazioni restano sul telefono. A Open-Meteo va solo il luogo di cui chiedi il meteo, o che cerchi, arrotondato a circa un chilometro se è la tua posizione. Nessun identificativo.</string>
     <string name="settings_reset">Ripristina le impostazioni predefinite</string>
     <string name="settings_reset_dialog_title">Ripristinare le impostazioni predefinite?</string>
     <string name="settings_reset_dialog_body">Tutto torna come al primo avvio: unità, aspetto, frequenza di aggiornamento, promemoria del cielo e gli interruttori degli avvisi, comprese le allerte ufficiali. Gli avvisi che avevi spento si riaccendono. I tuoi luoghi, gli avvisi che hai scritto e il tuo storico non vengono toccati.</string>
@@ -410,19 +410,18 @@
     <string name="verdict_unknown">Presto per dirlo</string>
 
     <!-- La guida (VISION §5.7): prosa, quindi tutto si traduce. Dalla quarta passata
-         su device è un giro delle quattro schermate - a cosa risponde ciascuna e le
+         su device è un giro delle tre schermate - a cosa risponde ciascuna e le
          poche cose che una schermata non può dire da sola - e non più un capitolo che
          giustifica una mappa radar che nessuno ha chiesto. -->
     <string name="guide_entry_title">Come leggere Chiaro</string>
-    <string name="guide_entry_subtitle">Le quattro schermate, cosa dicono i verdetti, da dove arrivano i numeri</string>
+    <string name="guide_entry_subtitle">Le tre schermate, cosa dicono i verdetti, da dove arrivano i numeri</string>
     <string name="guide_title">La guida</string>
-    <string name="guide_intro">Chiaro racconta il cielo sopra i tuoi luoghi e cosa farne: prima una frase, poi i numeri che l\'hanno decisa. Questa guida attraversa le quattro schermate, dice a cosa risponde ciascuna e segnala le cose che vale la pena sapere e che una schermata non può dire da sola.</string>
+    <string name="guide_intro">Chiaro racconta il cielo sopra i tuoi luoghi e cosa farne: prima una frase, poi i numeri che l\'hanno decisa. Questa guida attraversa le tre schermate, dice a cosa risponde ciascuna e segnala le cose che vale la pena sapere e che una schermata non può dire da sola.</string>
 
-    <string name="guide_map_title">Le quattro schermate</string>
+    <string name="guide_map_title">Le tre schermate</string>
     <string name="guide_map_today">Il cielo adesso e come andrà la giornata.</string>
     <string name="guide_map_sky">I momenti del cielo, e se stanotte ne vale la pena.</string>
     <string name="guide_map_alerts">Cosa deve avvisarti, e quando.</string>
-    <string name="guide_map_journal">Come è cambiata la previsione.</string>
     <string name="guide_map_note">I tuoi luoghi sono a un tocco, dietro al nome in cima alla schermata; le impostazioni dietro all\'ingranaggio accanto.</string>
 
     <string name="guide_today_title">Oggi</string>
@@ -445,7 +444,7 @@
     <string name="guide_today_details_body">La pioggia di oggi in millimetri, la neve quando c\'è, UV, vento con le raffiche, le nuvole con il tipo che le fa (alte e sottili, un sole velato; basse, una giornata grigia), umidità e punto di rugiada, pressione e dove sta andando, visibilità, qualità dell\'aria — sull\'indice europeo per i luoghi in Europa — e pollini, sulle soglie di ciascuna specie. Ogni numero porta con sé la riga che dice cosa farne, che è l\'unico motivo per cui sta sullo schermo.</string>
     <string name="guide_today_details_caption">Un esempio: due dettagli, ognuno con la riga che dice cosa farne.</string>
     <string name="guide_today_changed_title">Cosa è cambiato</string>
-    <string name="guide_today_changed_body">Quando l\'ultimo aggiornamento sposta i giorni che vengono, fino a tre frasi dicono come. Toccale e la storia completa si apre nel Diario.</string>
+    <string name="guide_today_changed_body">Quando l\'ultimo aggiornamento sposta i giorni che vengono, fino a tre frasi dicono come.</string>
     <string name="guide_today_places_title">Più di un luogo</string>
     <string name="guide_today_places_body">Scorri di lato per passare da un luogo all\'altro; i puntini sotto il cielo dicono dove sei. Per un luogo che non è quello in cui ti trovi, l\'intestazione dice che giorno e che ora sono lì.</string>
 
@@ -484,20 +483,11 @@
     <string name="guide_alerts_battery_title">Quanto costa</string>
     <string name="guide_alerts_battery_body">Niente in più: i controlli viaggiano sull\'aggiornamento del meteo che hai già chiesto, al ritmo scelto nelle impostazioni. Android chiede il permesso per le notifiche una volta al primo avvio, e di nuovo la prima volta che accendi un avviso. La schermata Avvisi lo dice a chiare lettere ogni volta che c\'è qualcosa di attivo che il telefono non lascia passare.</string>
     <string name="guide_alerts_official_title">Le allerte ufficiali</string>
-    <string name="guide_alerts_official_body">In Italia fa fede il Dipartimento della Protezione Civile. Ogni pomeriggio, di solito entro le 16, valuta ciascuna zona di allerta per oggi e per domani: rischio idraulico, rischio idrogeologico e temporali, su quattro livelli — nessuno, giallo, arancione, rosso. Chiaro trova la zona in cui cade il tuo luogo, legge il bollettino e lo mostra: il riquadro in Oggi quando c\'è qualcosa da dire, la card in cima ad Avvisi, nel colore del livello quando un\'allerta è in vigore e con «Nessuna allerta» quando non c\'è, la griglia e le parole del Dipartimento nel foglio dietro, e una riga nel Diario ogni volta che un livello si muove. L\'interruttore sotto la card, «Avvisami delle allerte», ti avvisa quando il bollettino dà alla tua zona il livello che hai scelto o uno più alto, giallo o arancione, mai più di una volta per bollettino. Le parole dell\'autorità sono citate, mai tradotte. Per i luoghi fuori dall\'Italia non compare nulla, perché nessuno li ha valutati.</string>
+    <string name="guide_alerts_official_body">In Italia fa fede il Dipartimento della Protezione Civile. Ogni pomeriggio, di solito entro le 16, valuta ciascuna zona di allerta per oggi e per domani: rischio idraulico, rischio idrogeologico e temporali, su quattro livelli — nessuno, giallo, arancione, rosso. Chiaro trova la zona in cui cade il tuo luogo, legge il bollettino e lo mostra: il riquadro in Oggi quando c\'è qualcosa da dire, la card in cima ad Avvisi, nel colore del livello quando un\'allerta è in vigore e con «Nessuna allerta» quando non c\'è, e la griglia e le parole del Dipartimento nel foglio dietro. L\'interruttore sotto la card, «Avvisami delle allerte», ti avvisa quando il bollettino dà alla tua zona il livello che hai scelto o uno più alto, giallo o arancione, mai più di una volta per bollettino. Le parole dell\'autorità sono citate, mai tradotte. Per i luoghi fuori dall\'Italia non compare nulla, perché nessuno li ha valutati.</string>
     <string name="guide_alerts_official_credit">Fonte: Dipartimento della Protezione Civile, CC BY 4.0.</string>
     <string name="settings_credit_warnings">Allerte ufficiali</string>
     <string name="settings_credit_warnings_note">Dipartimento della Protezione Civile, CC BY 4.0</string>
 
-    <string name="guide_journal_title">Diario</string>
-    <string name="guide_journal_p1">Ogni aggiornamento lascia una riga, e il Diario le rilegge. In cima la settimana: quale giorno si muove, e in che verso. Sotto, com\'è andata la previsione nei giorni già finiti, e poi cosa è successo, dal più recente, raggruppato per giorno.</string>
-    <string name="guide_journal_entries_title">Cosa c\'è scritto</string>
-    <string name="guide_journal_entries_body">Come si è mossa la previsione per i giorni che vengono, quali dei tuoi avvisi sono scattati e quando, quali momenti del cielo sono stati osservati davvero e con che verdetto — e gli aggiornamenti che non sono passati, col loro motivo. Un aggiornamento fallito è una riga, non un silenzio. E quando una giornata è finita, una riga in più la chiude: a quanto era data la pioggia, e se ha piovuto. Una riga che ha una pagina dietro si tocca: un momento del cielo apre la sua pagina, un\'allerta il bollettino, un tuo avviso il suo editor in Avvisi, e una previsione cambiata la storia di quel giorno, aggiornamento per aggiornamento.</string>
-    <string name="guide_journal_drift_title">Come si muove la settimana</string>
-    <string name="guide_journal_drift_body">In cima alla pagina la risposta in poche parole, con i suoi numeri sotto: il giorno che si è mosso di più, e nella striscia la sua riga è evidenziata. Risponde alla domanda che si fa davvero chi organizza un fine settimana: sta migliorando o peggiorando? Nelle prime ore, prima che ci sia una tendenza, dice che è ancora presto. La striscia ha una riga per oggi e per ogni giorno davanti, una colonna ogni sei ore, il colore sulla scala della grandezza: la pioggia, oppure le massime. Una casella dove non è arrivato nessun aggiornamento resta vuota, così una notte a telefono spento si vede per il buco che è stato. Un giorno la cui minima prevista è a zero o sotto porta un segno accanto al nome, e sotto la striscia quei giorni sono elencati: il gelo è una soglia, non una deriva, quindi prende un segno e una frase invece di una scala tutta sua. Trascina il dito sulla striscia, o tienilo fermo, per leggere una casella: il giorno, l\'aggiornamento, la pioggia e la massima. Toccala per vedere tutti i numeri dietro ai colori.</string>
-    <string name="guide_journal_drift_caption">Un esempio: tre giorni, sei fasce, sulla scala della pioggia.</string>
-    <string name="guide_journal_skill_title">Com\'è andata la previsione</string>
-    <string name="guide_journal_skill_body" formatted="false">Quando tre giorni sono finiti, una card mette quello che era previsto accanto a quello che è successo: di quanto le massime si sono scostate in media da quelle vere, e a quanto era data la pioggia nei giorni in cui ha piovuto e in quelli rimasti asciutti. Non è mai un voto: un 40% rimasto asciutto non era sbagliato. Sotto le parole, una colonna per giorno: la pioggia che era data, e cosa ha fatto il giorno.</string>
 
     <string name="guide_places_title">I tuoi luoghi</string>
     <string name="guide_places_p1">Il nome del luogo in cima a ogni schermata apre l\'elenco dei luoghi, ed è lì che si gestiscono tutti.</string>
@@ -969,16 +959,16 @@
     <string name="alerts_next_today">Il prossimo, oggi</string>
     <string name="alerts_next_tomorrow">Il prossimo, domani</string>
     <string name="alerts_window_bulletin">Il bollettino</string>
+    <!-- «I tuoi» senza avvisi (14 ott 2026): a cosa serve la sezione, e l'unico ingresso. -->
+    <string name="alerts_yours_empty">Gli avvisi che scrivi tu, per quello che fai: «Nuovo avviso» parte da un\'idea o da zero.</string>
     <string name="alerts_templates_title">Parti da un\'idea</string>
     <string name="alerts_max_reached">Hai già il massimo di avvisi che l\'app tiene, %1$d: togline uno per aggiungerne un altro.</string>
     <string name="tpl_already_added">Già aggiunto</string>
-    <string name="tpl_add">Aggiungi</string>
-    <!-- L'idea vuota (26 set 2026): la prima carta della fila, un avviso costruito da zero. -->
+    <!-- L'idea vuota (26 set 2026): la prima riga del foglio delle idee, un avviso costruito da zero. -->
     <string name="tpl_blank_title">Da zero</string>
     <string name="tpl_blank_desc">Scegli tu cosa guardare, la soglia, gli orari e il messaggio.</string>
     <string name="tpl_blank_name">Il mio avviso</string>
     <string name="tpl_blank_message" formatted="false">Il tuo avviso è scattato: {trigger.value}.</string>
-    <string name="tpl_create">Crea</string>
     <string name="rule_sentence_prefix">Quando</string>
     <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
     <!-- Two bounds on one quantity, said once: «la temperatura adesso fra 5° e 26°». -->
@@ -1200,12 +1190,6 @@
     <string name="warning_from_yellow">Gialla</string>
     <string name="warning_from_orange">Arancione</string>
 
-    <string name="journal_warning_raised">%1$s per %2$s, %3$s</string>
-    <string name="journal_warning_cleared">Allerta rientrata: nessuna criticità per %1$s</string>
-    <string name="journal_warning_source">Protezione Civile, bollettino %1$s</string>
-    <string name="journal_warning_missed">Bollettino non raggiunto</string>
-    <string name="journal_warning_missed_held">Resta valido quello del giorno %1$s</string>
-    <string name="journal_warning_missed_empty">Nessun bollettino in memoria</string>
     <string name="notif_severe_title">Maltempo in arrivo · %1$s</string>
     <!-- Una frase intera per forma invece di un tronco più un frammento (21 set 2026):
          una subordinata incollata in inglese non è una subordinata che ogni lingua mette
@@ -1270,92 +1254,16 @@
     <string name="notif_rule_condition">%1$s · ora %2$s</string>
 
 
-    <!-- Il Diario (Fase 7): la storia letta come prosa, e la deriva della settimana -->
-    <string name="tab_journal">Diario</string>
-    <string name="journal_no_place_body">Aggiungi un luogo e il diario comincia a scriversi da solo: ogni aggiornamento lascia una riga.</string>
-    <string name="journal_empty">Ancora niente da raccontare. Il diario si riempie man mano che arrivano gli aggiornamenti.</string>
-    <string name="journal_yesterday">Ieri</string>
-    <string name="journal_log_title">Cosa è successo</string>
-    <!-- What a line of the log opens (review of the Journal, A.6): TalkBack says "double-tap to …". -->
-    <string name="journal_open_alert">aprire l\'avviso</string>
-    <string name="journal_open_bulletin">leggere il bollettino</string>
-    <string name="journal_open_story">vedere la storia del giorno</string>
-    <string name="journal_story_title">La storia di %1$s</string>
-    <plurals name="journal_story_note">
-        <item quantity="one">Una riga per ogni volta che la previsione di questo giorno è cambiata, la più recente in alto. Letta ogni ora, da %2$s alle %3$s.</item>
-        <item quantity="other">Una riga per ogni volta che la previsione di questo giorno è cambiata, la più recente in alto. Letta ogni %1$d ore, da %2$s alle %3$s.</item>
-    </plurals>
-    <plurals name="journal_drift_every">
-        <item quantity="one">Una colonna per ora</item>
-        <item quantity="other">Una colonna ogni %d ore</item>
-    </plurals>
-    <string name="journal_drift_axis_latest">ultimo aggiornamento</string>
-    <!-- The strip read with a finger (review of the Journal, C.1): the line over it, and each day's control. -->
-    <string name="journal_scrub_hint">Trascina sulla striscia per leggere ogni casella</string>
-    <string name="journal_scrub_line">%1$s, %2$s</string>
-    <string name="journal_scrub_reading">previsione di %1$s alle %2$s: %3$s</string>
-    <string name="journal_scrub_empty">nessun aggiornamento verso %1$s alle %2$s</string>
-    <string name="journal_scrub_uncovered">non ancora nella previsione di %1$s alle %2$s</string>
-    <string name="journal_scrub_rain">pioggia %1$s</string>
-    <string name="journal_scrub_high">massima %1$s</string>
-    <string name="journal_skill_title">Com\'è andata la previsione</string>
-    <string name="journal_skill_high">Massime: in media a %1$s dal vero, su %2$d giorni.</string>
-    <string name="journal_skill_rain">Nei giorni in cui è piovuto la pioggia era data in media al %1$s, negli altri al %2$s.</string>
-    <string name="journal_skill_rain_dry">Non è piovuto in nessuno di questi giorni: la pioggia era data in media al %1$s.</string>
-    <string name="journal_skill_rain_wet">È piovuto in tutti questi giorni: la pioggia era data in media al %1$s.</string>
-    <string name="journal_fail_offline">Il telefono era offline</string>
-    <string name="journal_fail_service">Il servizio meteo non ha risposto</string>
-    <string name="journal_fail_unknown">Il motivo non è chiaro</string>
-    <!-- Le revisioni di un giorno bersaglio dentro un giorno del diario diventano una
-         riga; questo dice quante ne raccoglie (mostrato solo oltre una). -->
-    <plurals name="journal_shift_revisions">
-        <item quantity="one">in un aggiornamento</item>
-        <item quantity="other">in %d aggiornamenti</item>
-    </plurals>
-    <string name="journal_metric_rain">Pioggia</string>
-    <string name="journal_metric_high">Massime</string>
-    <string name="journal_drift_waiting">La tendenza della settimana arriva dopo qualche altro aggiornamento: una colonna sola non è una tendenza.</string>
-    <string name="journal_drift_label">La settimana</string>
-    <string name="journal_guide_entry_title">Come si legge il diario</string>
-    <string name="journal_guide_entry_subtitle">La settimana, com\'è andata la previsione e cosa c\'è scritto</string>
-    <string name="journal_drift_word_better">%1$s migliora</string>
-    <string name="journal_drift_word_worse">%1$s peggiora</string>
-    <string name="journal_drift_word_warmer">%1$s si scalda</string>
-    <string name="journal_drift_word_cooler">%1$s si rinfresca</string>
-    <string name="journal_drift_word_swing">%1$s va su e giù</string>
-    <string name="journal_drift_word_quiet">Settimana ferma</string>
-    <string name="journal_drift_word_waiting">Ancora presto</string>
-    <string name="journal_drift_rain_between">pioggia fra %1$s e %2$s</string>
-    <string name="journal_drift_high_between">massima fra %1$s e %2$s</string>
-    <string name="journal_drift_frost">Gelo previsto: %1$s</string>
-    <string name="journal_drift_frost_day">%1$s (%2$s)</string>
-    <plurals name="journal_drift_columns">
-        <item quantity="one">Una colonna per ora, da %2$s a %3$s</item>
-        <item quantity="other">Una colonna ogni %1$d ore, da %2$s a %3$s</item>
-    </plurals>
-    <plurals name="journal_outcome_coverage">
-        <item quantity="one">%1$d ora della giornata osservata</item>
-        <item quantity="other">%1$d ore della giornata osservate</item>
-    </plurals>
-    <string name="journal_drift_desc">tocca per i numeri</string>
-    <string name="journal_drift_a11y">Come si sta muovendo la settimana, %1$s. %2$s</string>
-    <string name="journal_outcome_high">massima prevista %1$s, vista %2$s</string>
-    <string name="journal_outcome_dry">Pioggia data %1$s: non ha piovuto</string>
-    <string name="journal_outcome_rained">Pioggia data %1$s: ha piovuto</string>
-    <string name="journal_drift_table_title">I numeri dietro i colori</string>
-    <string name="journal_shift_better">%1$s è migliorato</string>
-    <string name="journal_shift_worse">%1$s è peggiorato</string>
-    <string name="journal_shift_neutral">La previsione di %1$s è cambiata</string>
-    <string name="journal_field_sky">%1$s → %2$s</string>
-    <string name="journal_field_rain">pioggia %1$s → %2$s</string>
-    <string name="journal_field_high">massima %1$s → %2$s</string>
-    <string name="journal_field_low">minima %1$s → %2$s</string>
-    <string name="journal_rule_fired">Il tuo avviso «%1$s» è scattato</string>
-    <string name="journal_sky_skipped">Nessun aggiornamento abbastanza vicino per giudicare</string>
-    <string name="journal_fetch_failed">Un aggiornamento non è arrivato</string>
+    <!-- Today's «what changed»: one forecast revision as one sentence -->
+    <string name="changed_shift_better">%1$s è migliorato</string>
+    <string name="changed_shift_worse">%1$s è peggiorato</string>
+    <string name="changed_shift_neutral">La previsione di %1$s è cambiata</string>
+    <string name="changed_field_sky">%1$s → %2$s</string>
+    <string name="changed_field_rain">pioggia %1$s → %2$s</string>
+    <string name="changed_field_high">massima %1$s → %2$s</string>
+    <string name="changed_field_low">minima %1$s → %2$s</string>
     <string name="today_updated_footer">Aggiornato alle %1$s · dati Open-Meteo</string>
     <string name="today_changed_title">Cos\'è cambiato</string>
-    <string name="today_changed_open">La storia intera è nel Diario</string>
 
     <!-- I widget della home (Fase 8) -->
     <string name="widget_now_label">Colpo d\'occhio</string>

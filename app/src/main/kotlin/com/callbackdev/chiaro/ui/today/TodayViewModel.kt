@@ -8,8 +8,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.callbackdev.chiaro.sync.WarningRefresh
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
-import com.callbackdev.chiaro.data.FetchFailureReason
-import com.callbackdev.chiaro.data.FetchLogStore
 import com.callbackdev.chiaro.data.LocationProvider
 import com.callbackdev.chiaro.data.PowerSaveState
 import com.callbackdev.chiaro.data.ServiceLocator
@@ -23,9 +21,6 @@ import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.warnings.WarningZone
-import com.callbackdev.chiaro.ui.journal.JournalEntry
-import com.callbackdev.chiaro.ui.journal.JournalRow
-import com.callbackdev.chiaro.ui.journal.JournalStateBuilder
 import com.callbackdev.chiaro.ui.places.GpsError
 import com.callbackdev.chiaro.ui.places.asGpsError
 import java.time.Clock
@@ -87,7 +82,6 @@ class TodayViewModel(
     private val cityStore: CityStore,
     private val settingsStore: SettingsStore,
     private val workspaceStore: WorkspaceStore,
-    private val fetchLogStore: FetchLogStore,
     private val locationProvider: LocationProvider,
     private val warnings: OfficialWarningReader? = null,
     /**
@@ -319,7 +313,7 @@ class TodayViewModel(
             var userRefreshing = false
             var error: TodayError? = null
             var report = repository.cachedReport(city)
-            var whatChanged: List<JournalEntry.ForecastShift> = emptyList()
+            var whatChanged: List<ForecastShift> = emptyList()
             var yesterdayHighC: Double? = null
             // The official warning for this place (Fase 11). The zone is looked up once —
             // it decodes a 290 KB asset the first time and cannot change under a place —
@@ -353,20 +347,18 @@ class TodayViewModel(
             // write. Recomputed when the data moves, never on the minute tick.
             suspend fun refreshChanged() {
                 whatChanged = runCatching {
-                    JournalStateBuilder.latestShifts(
+                    WhatChangedBuilder.latestShifts(
                         repository.historyFor(city, limit = 12).map { entry ->
-                            JournalRow(
+                            ForecastCommit(
                                 at = java.time.Instant.ofEpochSecond(entry.timestampEpochSeconds),
-                                forecast = repository.forecast(entry),
-                                firedRules = emptyList(),
-                                skyRuns = emptyList()
+                                forecast = repository.forecast(entry)
                             )
                         }
                     )
                 }.getOrDefault(emptyList())
                 // Yesterday's high for the quiet day's sentence (13 ott 2026), off the same
-                // table: the Journal keeps a hundred commits a place, days of them, and
-                // this is one more read of it when the data moves, never a fetch.
+                // table: the history keeps three days of commits a place, and this is one
+                // more read of it when the data moves, never a fetch.
                 yesterdayHighC = runCatching {
                     val current = report ?: return@runCatching null
                     val zone = com.callbackdev.chiaro.domain.placeZone(current, city)
@@ -409,18 +401,6 @@ class TodayViewModel(
                         is WeatherException.NoNetwork -> TodayError.OFFLINE
                         is WeatherException.ApiError -> TodayError.SERVICE
                         else -> TodayError.UNKNOWN
-                    }
-                    // The Journal is where offline honesty lives (Fase 7): the
-                    // failure becomes an entry, not a silent gap between commits.
-                    runCatching {
-                        fetchLogStore.record(
-                            city.cacheKey, clock.instant().epochSecond,
-                            when (error) {
-                                TodayError.OFFLINE -> FetchFailureReason.OFFLINE
-                                TodayError.SERVICE -> FetchFailureReason.SERVICE
-                                else -> FetchFailureReason.UNKNOWN
-                            }
-                        )
                     }
                 } finally {
                     inFlight = false
@@ -528,7 +508,6 @@ class TodayViewModel(
                     cityStore = ServiceLocator.cityStore(app),
                     settingsStore = ServiceLocator.settingsStore(app),
                     workspaceStore = ServiceLocator.workspaceStore(app),
-                    fetchLogStore = ServiceLocator.fetchLogStore(app),
                     locationProvider = ServiceLocator.locationProvider(app),
                     warnings = ServiceLocator.warningReader(app),
                     fetchWarnings = { force -> WarningRefresh.run(app, force) },

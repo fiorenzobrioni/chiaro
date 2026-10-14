@@ -3,7 +3,7 @@ package com.callbackdev.chiaro.sync
 import android.content.Context
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.ServiceLocator
-import com.callbackdev.chiaro.domain.model.GpsCityId
+import com.callbackdev.chiaro.domain.model.notificationKey
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.flow.first
 
@@ -68,7 +68,7 @@ object WarningRefresh {
             }
             // Stable identity, not cacheKey — the same rule the worker follows, so the two
             // paths cannot burn different fingerprints for one place.
-            val cityKey = if (city.id == GpsCityId) "gps" else city.id.toString()
+            val cityKey = city.notificationKey
             OfficialWarningsStep(context).run(
                 active = city,
                 cityKey = cityKey,

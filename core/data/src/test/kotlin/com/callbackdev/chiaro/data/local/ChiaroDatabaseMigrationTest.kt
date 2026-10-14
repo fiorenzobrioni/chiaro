@@ -7,16 +7,18 @@ import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Migration 1→2 must carry the committente's real history across the update: a
- * database is hand-built with the exact v1 schema (this test pins it — if it
- * drifts from what Room generated, opening fails validation), then opened with
- * Room v2 + the migration.
+ * Each migration must carry the reader's history across the update: a database is
+ * hand-built with an old schema exactly as Room generated it (the test pins it — if it
+ * drifts, opening fails Room's validation), then opened with today's Room and the
+ * migrations, all of them in a row.
  */
 @RunWith(RobolectricTestRunner::class)
 class ChiaroDatabaseMigrationTest {
@@ -31,157 +33,101 @@ class ChiaroDatabaseMigrationTest {
         context.deleteDatabase(dbName)
     }
 
-    @Test
-    fun `v1 rows survive the migration with a null forecast`() {
-        val file = context.getDatabasePath(dbName).also { it.parentFile?.mkdirs() }
-        SQLiteDatabase.openOrCreateDatabase(file, null).use { v1 ->
-            v1.execSQL(
-                "CREATE TABLE IF NOT EXISTS `weather_history` (" +
-                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-                    "`city_key` TEXT NOT NULL, `city_label` TEXT NOT NULL, " +
-                    "`hash` TEXT NOT NULL, `author` TEXT NOT NULL, " +
-                    "`timestamp_epoch_s` INTEGER NOT NULL, `snapshot_json` TEXT NOT NULL)"
-            )
-            v1.execSQL(
-                "INSERT INTO weather_history " +
-                    "(city_key, city_label, hash, author, timestamp_epoch_s, snapshot_json) " +
-                    "VALUES ('milan', 'Milan, Lombardy', 'a1b2c3d', 'sys@chiaro.app', " +
-                    "1755000000, '{\"current.temp_c\":\"31.0\"}')"
-            )
-            v1.version = 1
-        }
-
-        val db = Room.databaseBuilder(context, ChiaroDatabase::class.java, dbName)
+    private fun open(): ChiaroDatabase =
+        Room.databaseBuilder(context, ChiaroDatabase::class.java, dbName)
             .addMigrations(*ChiaroDatabase.MIGRATIONS)
             .build()
             .also { database = it }
 
-        val migrated = runBlocking { db.weatherHistoryDao().historyFor("milan", 10) }
-        val old = migrated.single()
-        assertEquals("a1b2c3d", old.hash)
-        assertEquals("{\"current.temp_c\":\"31.0\"}", old.snapshotJson)
-        assertNull(old.forecastJson)
-        assertNull("a v1 row has no sky runs either", old.skyRunsJson)
-
-        // And the new column round-trips on fresh inserts
-        runBlocking {
-            db.weatherHistoryDao().insert(
-                WeatherHistoryEntry(
-                    cityKey = "milan",
-                    cityLabel = "Milan, Lombardy",
-                    hash = "9f8e7d6",
-                    author = "sys@chiaro.app",
-                    timestampEpochSeconds = 1755003600,
-                    snapshotJson = "{}",
-                    forecastJson = "{\"2026-08-18.high_c\":\"27.0\"}"
-                )
-            )
+    private fun build(version: Int, vararg sql: String) {
+        val file = context.getDatabasePath(dbName).also { it.parentFile?.mkdirs() }
+        SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
+            sql.forEach(db::execSQL)
+            db.version = version
         }
-        val newest = runBlocking { db.weatherHistoryDao().historyFor("milan", 10) }.first()
-        assertEquals("{\"2026-08-18.high_c\":\"27.0\"}", newest.forecastJson)
     }
 
+    /** The exact v5 schema: v1 + forecast_json + fired_rules + sky_runs, and Fase 11's table. */
+    private val v5 = arrayOf(
+        "CREATE TABLE IF NOT EXISTS `weather_history` (" +
+            "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+            "`city_key` TEXT NOT NULL, `city_label` TEXT NOT NULL, " +
+            "`hash` TEXT NOT NULL, `author` TEXT NOT NULL, " +
+            "`timestamp_epoch_s` INTEGER NOT NULL, `snapshot_json` TEXT NOT NULL, " +
+            "`forecast_json` TEXT, `fired_rules` TEXT, `sky_runs` TEXT)",
+        "CREATE TABLE IF NOT EXISTS `warning_records` (" +
+            "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+            "`city_key` TEXT NOT NULL, `recorded_epoch_s` INTEGER NOT NULL, " +
+            "`kind` TEXT NOT NULL, `bulletin_id` TEXT, `issued_at` TEXT, " +
+            "`zone_name` TEXT, `day` TEXT, `hazard` TEXT, " +
+            "`from_level` TEXT, `to_level` TEXT)"
+    )
+
+    /**
+     * v5 → v6 (14 ott 2026): the Journal left, and what only it read leaves with it. The
+     * forecasts and the fired rules stay, row by row and id by id; a row with no forecast
+     * carries nothing anyone reads and is not copied; `warning_records` is gone.
+     */
     @Test
-    fun `v2 rows survive the migration with null fired rules`() {
-        val file = context.getDatabasePath(dbName).also { it.parentFile?.mkdirs() }
-        SQLiteDatabase.openOrCreateDatabase(file, null).use { v2 ->
-            // The exact v2 schema (v1 + Fase 9h's forecast_json), pinned like above
-            v2.execSQL(
-                "CREATE TABLE IF NOT EXISTS `weather_history` (" +
-                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-                    "`city_key` TEXT NOT NULL, `city_label` TEXT NOT NULL, " +
-                    "`hash` TEXT NOT NULL, `author` TEXT NOT NULL, " +
-                    "`timestamp_epoch_s` INTEGER NOT NULL, `snapshot_json` TEXT NOT NULL, " +
-                    "`forecast_json` TEXT)"
-            )
-            v2.execSQL(
-                "INSERT INTO weather_history " +
-                    "(city_key, city_label, hash, author, timestamp_epoch_s, snapshot_json) " +
-                    "VALUES ('milan', 'Milan, Lombardy', 'a1b2c3d', 'sys@chiaro.app', " +
-                    "1755000000, '{}')"
-            )
-            v2.version = 2
-        }
+    fun `v5 keeps its forecasts and fired rules and drops what only the Journal read`() {
+        build(
+            5, *v5,
+            "INSERT INTO weather_history (id, city_key, city_label, hash, author, " +
+                "timestamp_epoch_s, snapshot_json, forecast_json, fired_rules, sky_runs) VALUES " +
+                "(7, '4546:919', 'Milano, Lombardia', 'a1b2c3d', 'sys@chiaro.app', 1755000000, " +
+                "'{\"current.temp_c\":\"31.0\"}', '{\"2026-08-18.high_c\":\"27.0\"}', " +
+                "'[\"umbrella\"]', '[]')",
+            "INSERT INTO weather_history (id, city_key, city_label, hash, author, " +
+                "timestamp_epoch_s, snapshot_json) VALUES " +
+                "(3, '4546:919', 'Milano, Lombardia', '0f0f0f0', 'sys@chiaro.app', 1754990000, '{}')",
+            "INSERT INTO warning_records (city_key, recorded_epoch_s, kind) " +
+                "VALUES ('4546:919', 1755000000, 'BULLETIN_MISSED')"
+        )
 
-        val db = Room.databaseBuilder(context, ChiaroDatabase::class.java, dbName)
-            .addMigrations(*ChiaroDatabase.MIGRATIONS)
-            .build()
-            .also { database = it }
+        val db = open()
+        val rows = runBlocking { db.weatherHistoryDao().historyFor("4546:919", 10) }
+        val kept = rows.single()
+        assertEquals(7L, kept.id)
+        assertEquals(1755000000L, kept.timestampEpochSeconds)
+        assertEquals("{\"2026-08-18.high_c\":\"27.0\"}", kept.forecastJson)
+        assertEquals("[\"umbrella\"]", kept.firedRulesJson)
 
-        val migrated = runBlocking { db.weatherHistoryDao().historyFor("milan", 10) }.single()
-        assertNull(migrated.firedRulesJson)
-
-        // And the fired-rules UPDATE lands on the city's NEWEST commit only
-        runBlocking {
-            db.weatherHistoryDao().insert(
-                WeatherHistoryEntry(
-                    cityKey = "milan",
-                    cityLabel = "Milan, Lombardy",
-                    hash = "9f8e7d6",
-                    author = "sys@chiaro.app",
-                    timestampEpochSeconds = 1755003600,
-                    snapshotJson = "{}"
-                )
-            )
-            db.weatherHistoryDao().setFiredRulesOnLatest("milan", "[\"umbrella\"]")
-        }
-        val entries = runBlocking { db.weatherHistoryDao().historyFor("milan", 10) }
-        assertEquals("[\"umbrella\"]", entries.first().firedRulesJson)
-        assertNull(entries.last().firedRulesJson)
+        db.openHelper.readableDatabase.query(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'warning_records'"
+        ).use { assertFalse("the Journal's table is gone", it.moveToFirst()) }
+        db.openHelper.readableDatabase.query(
+            "SELECT name FROM sqlite_master WHERE type = 'index' " +
+                "AND name = 'index_weather_history_city_key_timestamp_epoch_s'"
+        ).use { assertTrue("the table has its index", it.moveToFirst()) }
     }
 
-    /** v4 → v5 (Fase 11) adds a table and touches nothing else: the history rows are
-     * exactly where they were, and the new table takes and gives back a row. */
+    /** The oldest schema still opens through the whole chain, and the table works. */
     @Test
-    fun `v4 rows survive the migration and the warning records table is born beside them`() {
-        val file = context.getDatabasePath(dbName).also { it.parentFile?.mkdirs() }
-        SQLiteDatabase.openOrCreateDatabase(file, null).use { v4 ->
-            // The exact v4 schema: v1 + forecast_json + fired_rules + sky_runs.
-            v4.execSQL(
-                "CREATE TABLE IF NOT EXISTS `weather_history` (" +
-                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-                    "`city_key` TEXT NOT NULL, `city_label` TEXT NOT NULL, " +
-                    "`hash` TEXT NOT NULL, `author` TEXT NOT NULL, " +
-                    "`timestamp_epoch_s` INTEGER NOT NULL, `snapshot_json` TEXT NOT NULL, " +
-                    "`forecast_json` TEXT, `fired_rules` TEXT, `sky_runs` TEXT)"
-            )
-            v4.execSQL(
-                "INSERT INTO weather_history " +
-                    "(city_key, city_label, hash, author, timestamp_epoch_s, snapshot_json, sky_runs) " +
-                    "VALUES ('milan', 'Milan, Lombardy', 'a1b2c3d', 'sys@chiaro.app', " +
-                    "1755000000, '{}', '[]')"
-            )
-            v4.version = 4
-        }
+    fun `a v1 database walks every migration and takes new commits`() {
+        build(
+            1,
+            "CREATE TABLE IF NOT EXISTS `weather_history` (" +
+                "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`city_key` TEXT NOT NULL, `city_label` TEXT NOT NULL, " +
+                "`hash` TEXT NOT NULL, `author` TEXT NOT NULL, " +
+                "`timestamp_epoch_s` INTEGER NOT NULL, `snapshot_json` TEXT NOT NULL)",
+            "INSERT INTO weather_history " +
+                "(city_key, city_label, hash, author, timestamp_epoch_s, snapshot_json) " +
+                "VALUES ('milan', 'Milan, Lombardy', 'a1b2c3d', 'sys@chiaro.app', " +
+                "1755000000, '{\"current.temp_c\":\"31.0\"}')"
+        )
 
-        val db = Room.databaseBuilder(context, ChiaroDatabase::class.java, dbName)
-            .addMigrations(*ChiaroDatabase.MIGRATIONS)
-            .build()
-            .also { database = it }
-
-        val old = runBlocking { db.weatherHistoryDao().historyFor("milan", 10) }.single()
-        assertEquals("a1b2c3d", old.hash)
-        assertEquals("[]", old.skyRunsJson)
+        val db = open()
+        val dao = db.weatherHistoryDao()
+        // A v1 row had no forecast: nothing a reader of v6 can use.
+        assertEquals(emptyList<WeatherHistoryEntry>(), runBlocking { dao.historyFor("milan", 10) })
 
         runBlocking {
-            db.warningRecordDao().insert(
-                WarningRecordEntity(
-                    cityKey = "milan",
-                    recordedEpochSeconds = 1_757_430_000,
-                    kind = WarningRecordKind.LEVEL_CHANGE.name,
-                    bulletinId = "DPC_BULLETIN_2026_09_09_6506",
-                    issuedAt = "2026-09-09T15:46",
-                    zoneName = "Nodo Idraulico di Milano",
-                    day = "2026-09-09",
-                    hazard = "THUNDERSTORM",
-                    fromLevel = "NONE",
-                    toLevel = "ORANGE"
-                )
-            )
+            dao.insert(WeatherHistoryEntry(cityKey = "milan", timestampEpochSeconds = 1755003600, forecastJson = "{}"))
         }
-        val record = runBlocking { db.warningRecordDao().recordsFor("milan", 10) }.single()
-        assertEquals("ORANGE", record.toLevel)
-        assertEquals("Nodo Idraulico di Milano", record.zoneName)
-        assertEquals(emptyList<WarningRecordEntity>(), runBlocking { db.warningRecordDao().recordsFor("rome", 10) })
+        val newest = runBlocking { dao.latestFor("milan") }!!
+        assertEquals(1755003600L, newest.timestampEpochSeconds)
+        assertNull(newest.firedRulesJson)
+        assertTrue(runBlocking { dao.any() })
     }
 }

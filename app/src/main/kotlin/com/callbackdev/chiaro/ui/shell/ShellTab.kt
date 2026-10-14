@@ -3,8 +3,8 @@ package com.callbackdev.chiaro.ui.shell
 import android.content.Context
 import android.content.Intent
 
-/** The four destinations of the bottom bar (VISION §5.1). */
-enum class ShellTab { TODAY, SKY, ALERTS, JOURNAL }
+/** The three destinations of the bottom bar (VISION §5.1). */
+enum class ShellTab { TODAY, SKY, ALERTS }
 
 /**
  * **The one door into the app from outside it** — every widget and every notification —

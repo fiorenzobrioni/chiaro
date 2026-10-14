@@ -38,43 +38,18 @@ sections are a normal size and live here alone.
 - **Alerts opens with an answer.** One card at the top says whether there is a warning for your
   place, which window your phone may ring in next («Next, today: the evening summary, 18–23»)
   and draws the day of alerts under it, with the Sky's hour ticks and its line for now. «New alert» is now a button that floats over the page and
-  opens the ideas, with «From scratch» first; the row of ideas stays on the page only until you
-  have an alert of your own. Deleting an alert no longer asks first: it shows «Undo», which brings
+  opens the ideas, with «From scratch» first. It is the only way to add one: with no alert of
+  your own yet, «Yours» says in one line what it is for. Deleting an alert no longer asks first: it shows «Undo», which brings
   it back exactly as it was.
 - **Every alert says whether it is true now.** Each of your alerts shows a line such as «Not
   right now · it is 19.7°, it needs below 5°» or «True right now, but outside its hours until
   20:00». In the editor the same answer stands at the top and changes with every choice, with the
   message that would arrive: there is no «Try it now» button to press any more.
-- **The Journal answers first.** The week's card is now the head of the Journal, shaped like
-  the Sky's tonight card: the answer in large type, such as «Saturday 17 is improving», with
-  its numbers on a line of their own («rain 70% → 30%»), then the strip. Before the first
-  trend can be drawn it says «Too early to say» and when the trend will arrive. «How the
-  forecast did» takes the same rounded shape.
-- **A Journal easier to scan.** The hours of the log stand in a column in full ink, as on the
-  Sky screen; the days read «Today», «Yesterday» under a «What happened» title, without the
-  count of entries. Each line's badge now draws what it is about: the rain or the thermometer
-  for a revision, your alert's own drawing for an alert that fired, a crossed-out cloud for an
-  update that did not arrive. Under «How the forecast did» each day is named by weekday and
-  date, where a lone «T» could be Tuesday or Thursday.
-- **Journal lines open what they talk about.** Tap a sky moment to read its page, a warning
-  to see the bulletin, an alert that fired to open it in Alerts, and a forecast change to see
-  the story of that day: each update that moved its rain or its high, the latest on top. With
-  TalkBack each line is read as one, hour included.
-- **Explore the week with a finger.** In the Journal, drag along the week's strip (or hold
-  it) and the square under your finger lights up with its row and column, while the line
-  above reads it: which day, from which update, with its rain and its high. Lift the finger
-  and the strip goes back to how it was. With TalkBack each day can be adjusted update by
-  update.
-- **Rain or highs, one tap.** The Journal's choice between the two is now a single
-  two-part button, and a «How to read the journal» row under the week opens the guide's
-  chapter about it.
 - **The guide follows the new pages.** Its Alerts chapter starts from the card at the top,
-  says what the line «True right now» tells you and what the warnings switch sends; its
-  Journal chapter walks the page in its own order, from the week to «How the forecast did»,
-  which it now explains, to what happened.
+  and says what the line «True right now» tells you and what the warnings switch sends.
 - **Undo on the Sky screen.** Adding or removing a moment from its page now shows a message
   with «Undo», and undoing a removal brings the moment back with its own reminder.
-- **An easier place switcher.** On Sky, Alerts and Journal the whole title is now the button
+- **An easier place switcher.** On Sky and Alerts the whole title is now the button
   that changes place, not just the small line under it.
 - **Adding a moment is one button.** «Add a moment» is now a floating button at the bottom
   of the Sky screen. The usual reminder and «Even under a covered sky» moved to Settings,
@@ -144,6 +119,28 @@ sections are a normal size and live here alone.
 - **Tall widgets carry more instead of empty space**: «At a glance» lists the next hours under
   its temperature when it is narrow and tall, and shows twice the hours at four rows; the
   moments you follow have the day's arc under them when the card has room.
+
+### Removed
+
+- **The Journal.** The fourth tab is gone, with everything only it kept: the log of each
+  update, the week's trend strip, «How the forecast did» and the history of warnings and sky
+  moments. Its one sentence everybody used stays where it always was, on Today: «What changed»
+  still says when the latest update moves a day ahead («Saturday improved: rain 70% → 30%»).
+  The app keeps less on the phone as a result: three days of forecasts a place instead of a
+  hundred updates.
+
+### Fixed
+
+- **An alert you edit starts over.** Changing an alert's thresholds or hours now re-arms it,
+  so it can speak under its new conditions the same day; until now an alert that had already
+  fired kept quiet until its old condition happened to turn false.
+- **«What changed» no longer vanishes on a pull to refresh.** A refresh within a quarter of an
+  hour of the last update updates it instead of writing a copy, so the section keeps comparing
+  against the forecast before.
+- **No more leftovers on the phone.** The memory of alerts that fired for a place you removed,
+  or for an alert you deleted, is cleaned up at the next update; the offline copy of a place
+  you follow is never thrown away to make room, whatever the number of places; and the copies
+  kept for places you passed through are capped.
 
 ## [1.1.0] - 2026-10-01
 

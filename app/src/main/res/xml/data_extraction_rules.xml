@@ -5,14 +5,15 @@
   Without this file the platform backs up everything the app owns, which is the
   default and not a choice. Two reasons it had to become one.
 
-  The first is correctness. The Room database is the cached reports and the
-  Journal: forecasts with a timestamp on them. Restoring those onto a phone set
+  The first is correctness. The Room database is a short history of forecasts, and
+  the report cache beside it the last responses: forecasts with a timestamp on them. Restoring those onto a phone set
   up a week later hands the app hours that have already happened, which
   `WeatherRecency` drops and `WeatherFreshness` marks stale on sight — weight
   carried across a device transfer to be discarded at the first launch.
 
   The second is that `weather_history` is one row per fetch per place, dated:
-  read end to end it is a record of which places the reader watched and when.
+  read end to end it is a record of which places the reader watched and when
+  (three days of it since 14 ott 2026, but a record all the same).
   It is the one thing this app holds that a backup has no business copying, and
   it is worth nothing on the other side.
 

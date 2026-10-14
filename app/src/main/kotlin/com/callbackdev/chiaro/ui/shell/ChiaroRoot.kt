@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -31,9 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -59,7 +55,6 @@ import com.callbackdev.chiaro.ui.firstrun.FirstRunNotificationsRoute
 import com.callbackdev.chiaro.ui.firstrun.FirstRunRoute
 import com.callbackdev.chiaro.ui.guide.GuideRoute
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
-import com.callbackdev.chiaro.ui.journal.JournalRoute
 import com.callbackdev.chiaro.ui.settings.SettingsRoute
 import com.callbackdev.chiaro.ui.sky.SkyEventRoute
 import com.callbackdev.chiaro.ui.sky.SkyGuideIndexRoute
@@ -146,7 +141,7 @@ fun ChiaroRoot(
 internal val BottomBarHeight = 80.dp
 
 /**
- * The shell (Fase 4, bottom bar since Fase 5, Navigation 3 since 22 set 2026): the four
+ * The shell (Fase 4, bottom bar since Fase 5, Navigation 3 since 22 set 2026): the three
  * tabs of VISION §5.1, the pages opened over them — Settings from the gear, the guide
  * from Settings or from the one-time card on Today, the sky events guide from Sky or
  * from the guide — and the bottom bar over all of it.
@@ -180,17 +175,12 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
         .fillMaxSize()
         .padding(bottom = barHeight)
 
-    // An alert the Journal asked to open on its tab, held here because the request crosses
-    // from one tab's page to another's and must survive the switch between them.
-    var alertToOpen by rememberSaveable { mutableStateOf<Long?>(null) }
-
     val provider = entryProvider<NavKey> {
         entry<TodayKey> {
             Box(tabPage) {
                 TodayRoute(
                     onOpenSettings = { nav.navigate(SettingsKey) },
-                    onOpenGuide = { nav.navigate(GuideKey) },
-                    onOpenJournal = { nav.switchTab(ShellTab.JOURNAL) }
+                    onOpenGuide = { nav.navigate(GuideKey) }
                 )
             }
         }
@@ -204,22 +194,7 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
         }
         entry<AlertsKey> {
             Box(tabPage) {
-                AlertsRoute(
-                    onOpenSettings = { nav.navigate(SettingsKey) },
-                    openRuleId = alertToOpen,
-                    onOpenRuleHandled = { alertToOpen = null }
-                )
-            }
-        }
-        entry<JournalKey> {
-            Box(tabPage) {
-                JournalRoute(
-                    onOpenSettings = { nav.navigate(SettingsKey) },
-                    onOpenAlert = { id ->
-                        alertToOpen = id
-                        nav.openTabRoot(ShellTab.ALERTS)
-                    }
-                )
+                AlertsRoute(onOpenSettings = { nav.navigate(SettingsKey) })
             }
         }
         entry<SettingsKey> {
@@ -319,8 +294,8 @@ private fun backwardTransition(reduced: Boolean): ContentTransform {
 }
 
 /**
- * The bottom bar of VISION §5.1, complete since Fase 7: Today, Sky, Alerts and the
- * Journal — every tab arrived with its screen, none ever shipped dead.
+ * The bottom bar of VISION §5.1: Today, Sky and Alerts. Three since 14 ott 2026, when the
+ * Journal left the app; every tab arrived with its screen, none ever shipped dead.
  */
 @Composable
 internal fun ChiaroBottomBar(selected: ShellTab, onSelect: (ShellTab) -> Unit) {
@@ -328,7 +303,6 @@ internal fun ChiaroBottomBar(selected: ShellTab, onSelect: (ShellTab) -> Unit) {
         TabItem(ShellTab.TODAY, selected, onSelect, ChiaroIcons.tabToday, R.string.tab_today)
         TabItem(ShellTab.SKY, selected, onSelect, ChiaroIcons.tabSky, R.string.tab_sky)
         TabItem(ShellTab.ALERTS, selected, onSelect, Icons.Outlined.Notifications, R.string.tab_alerts)
-        TabItem(ShellTab.JOURNAL, selected, onSelect, Icons.Outlined.DateRange, R.string.tab_journal)
     }
 }
 

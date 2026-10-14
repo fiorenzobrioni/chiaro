@@ -64,8 +64,8 @@ data class Location(
  *
  * It used to carry tweather's English description and an emoji beside the code —
  * `"Partly Cloudy ⛅"` — which no screen of this app ever showed (`WeatherText` picks
- * the word, `ChiaroIcons` the drawing) but which the history snapshots stored and the
- * Journal compared. Everything a reader or an engine needs is read off the code through
+ * the word, `ChiaroIcons` the drawing) but which the history snapshots stored and
+ * compared. Everything a reader or an engine needs is read off the code through
  * [WmoCode], the one table.
  */
 data class WeatherCondition(val wmoCode: Int) {
@@ -92,8 +92,8 @@ data class Wind(
  * 15-minutely block (`"interval": 900`, and the docs' 15-minutely table says «Preceding
  * 15 minutes sum»). Measured that morning: Reykjavík `current` 0.4 mm, equal to the
  * 08:45 quarter, where the hour behind it held 2.7 mm; Singapore `current` 0.0 mm after
- * an hour of 0.3 mm. `ForecastOutcome` had been vouching for whole hours of dry weather
- * on a quarter of an hour of evidence. The hours now come from the hourly series, whose
+ * an hour of 0.3 mm. The forecast check of the Journal (gone since 14 ott 2026) had been
+ * vouching for whole hours of dry weather on a quarter of an hour of evidence. The hours now come from the hourly series, whose
  * values ARE sums of the preceding hour, each with the moment it ended.
  */
 data class Precipitation(

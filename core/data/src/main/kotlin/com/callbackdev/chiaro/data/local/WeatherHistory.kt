@@ -4,38 +4,37 @@ import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
+import androidx.room.Update
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import kotlinx.coroutines.flow.Flow
 
 /**
- * One weather fetch persisted as a git-style "commit" for the Logs screen
- * (`history.diff`): short hash, fixed author, timestamp and a flattened
- * key→value snapshot (JSON) that Fase 8 diffs against the previous entry.
- * [forecastJson] (Fase 9h) is the same-shaped flatten of the daily forecast for
- * the next two target dates, diffed per-date in `forecast.diff`; null on
- * rows written before the column existed. [firedRulesJson] (Fase 11) is the JSON
- * array of user-rule names that fired on this data — the commit's check lines;
- * null when nothing fired (the overwhelmingly common case). [skyRunsJson] (Fase 16e)
- * is the same idea for the sky module: the jobs whose instant this fetch was the
- * first to observe as past, with the verdict the data carried at that moment.
+ * One weather fetch, kept for what the app reads back off it: the week it forecast
+ * ([forecastJson], the [WeatherSnapshots.flattenForecast] map as JSON) and the reader's
+ * rules that fired on its data ([firedRulesJson], a JSON array of names, null when none
+ * did — the overwhelmingly common case).
+ *
+ * Three readers, all small (14 ott 2026, when the Journal that read the rest left the
+ * app): Today's "what changed" diffs the newest forecasts, Today's quiet sentence takes
+ * yesterday's high, and Alerts says when each rule last fired. The current-conditions
+ * snapshot, the sky runs, the git-style hash and author and the place's label were the
+ * Journal's alone and went with it ([ChiaroDatabase.MIGRATION_5_6]).
  */
-@Entity(tableName = "weather_history")
+@Entity(
+    tableName = "weather_history",
+    indices = [Index(value = ["city_key", "timestamp_epoch_s"])]
+)
 data class WeatherHistoryEntry(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     @ColumnInfo(name = "city_key") val cityKey: String,
-    @ColumnInfo(name = "city_label") val cityLabel: String,
-    val hash: String,
-    val author: String,
     @ColumnInfo(name = "timestamp_epoch_s") val timestampEpochSeconds: Long,
-    @ColumnInfo(name = "snapshot_json") val snapshotJson: String,
-    @ColumnInfo(name = "forecast_json") val forecastJson: String? = null,
-    @ColumnInfo(name = "fired_rules") val firedRulesJson: String? = null,
-    @ColumnInfo(name = "sky_runs") val skyRunsJson: String? = null
+    @ColumnInfo(name = "forecast_json") val forecastJson: String,
+    @ColumnInfo(name = "fired_rules") val firedRulesJson: String? = null
 )
 
 @Dao
@@ -44,44 +43,49 @@ interface WeatherHistoryDao {
     @Insert
     suspend fun insert(entry: WeatherHistoryEntry): Long
 
+    /** Rewrites a commit in place: the fetch that lands inside the previous one's
+     * window replaces it rather than standing beside it (see `WeatherRepository`). */
+    @Update
+    suspend fun update(entry: WeatherHistoryEntry)
+
     @Query(
         "SELECT * FROM weather_history WHERE city_key = :cityKey " +
             "ORDER BY timestamp_epoch_s DESC LIMIT :limit"
     )
     suspend fun historyFor(cityKey: String, limit: Int): List<WeatherHistoryEntry>
 
-    @Query("SELECT * FROM weather_history ORDER BY timestamp_epoch_s DESC LIMIT :limit")
-    fun observeLatest(limit: Int): Flow<List<WeatherHistoryEntry>>
-
-    /**
-     * [historyFor] as a Flow: the Journal follows one city's commits instead of
-     * re-reading the table on a timer. Room re-emits on write and only on write, so
-     * a screen that is open sees a fetch land and an idle screen costs nothing.
-     */
     @Query(
         "SELECT * FROM weather_history WHERE city_key = :cityKey " +
-            "ORDER BY timestamp_epoch_s DESC LIMIT :limit"
+            "ORDER BY timestamp_epoch_s DESC LIMIT 1"
     )
-    fun observeFor(cityKey: String, limit: Int): Flow<List<WeatherHistoryEntry>>
+    suspend fun latestFor(cityKey: String): WeatherHistoryEntry?
+
+    /** Has this install ever written a commit, for any place. */
+    @Query("SELECT EXISTS(SELECT 1 FROM weather_history)")
+    suspend fun any(): Boolean
 
     /**
-     * The retention that matters: **per city**. The global [prune] below had been the
-     * only one, so four saved places shared one hundred rows and each city's Journal
-     * got twenty-five — a diary whose depth depended on how many other places you
-     * follow, and a drift strip eating half of it.
+     * The retention that matters: **per place, by time**. A place keeps the commits of
+     * the last [cutoffEpochSeconds]-worth of days, and never fewer than its newest
+     * [keepAtLeast], so a phone left in a drawer comes back with a baseline to compare
+     * the first new forecast against.
+     *
+     * By time and not by count since 14 ott 2026. The count it replaced (a hundred
+     * commits) made the depth depend on how often the app fetched: four days at the
+     * hourly cadence, a day for somebody who keeps the app open, less for somebody who
+     * pulls to refresh. The readers ask about days (yesterday's high), not about rows.
      */
     @Query(
-        "DELETE FROM weather_history WHERE city_key = :cityKey AND id NOT IN " +
+        "DELETE FROM weather_history WHERE city_key = :cityKey " +
+            "AND timestamp_epoch_s < :cutoffEpochSeconds AND id NOT IN " +
             "(SELECT id FROM weather_history WHERE city_key = :cityKey " +
-            "ORDER BY timestamp_epoch_s DESC LIMIT :keep)"
+            "ORDER BY timestamp_epoch_s DESC LIMIT :keepAtLeast)"
     )
-    suspend fun pruneCity(cityKey: String, keep: Int)
+    suspend fun pruneCity(cityKey: String, cutoffEpochSeconds: Long, keepAtLeast: Int)
 
     /**
-     * The backstop, now only a backstop: it bounds the table when places come and go
-     * (removing a place does not delete its commits) and evicts the globally oldest
-     * rows, which for an abandoned place is exactly the right ones. Sized so it can
-     * never be what truncates an active city's history.
+     * The backstop, and only a backstop: it evicts the globally oldest rows past a
+     * ceiling sized so it can never be what truncates a place somebody still follows.
      */
     @Query(
         "DELETE FROM weather_history WHERE id NOT IN " +
@@ -90,22 +94,11 @@ interface WeatherHistoryDao {
     suspend fun prune(keep: Int)
 
     /**
-     * The third retention, and the only one that asks *whose* rows these are: every
-     * commit of a place the app no longer follows, once that place has been gone long
-     * enough to be gone for real.
-     *
-     * The two prunes above bound the table; neither empties it. A removed place and,
-     * far more often, every ~1.1 km cell the GPS pseudo-city has ever minted keep a
-     * hundred commits each until the global backstop happens to reach them — and it
-     * reaches them by global age, so an abandoned cell's rows are evicted at the same
-     * rate as a followed city's. That is the wrong question: those rows are not old,
-     * they are ORPHANED, and no future fetch will ever read them again.
-     *
-     * All or nothing per key, never row by row: a key is dropped only when its NEWEST
-     * row predates [cutoffEpochSeconds], so a place removed by a swipe keeps its whole
-     * Journal for as long as the undo — and the re-add — can still want it. Half a
-     * Journal is a diary with pages torn out, which is the one thing this table must
-     * not be.
+     * Every commit of a place the app no longer follows, once that place has been gone
+     * long enough to be gone for real ([StoredDataSweep]). All or nothing per key: a key
+     * is dropped only when its NEWEST row predates [cutoffEpochSeconds], so a place
+     * removed by a swipe keeps its history for as long as the undo, and the re-add, can
+     * still want it.
      */
     @Query(
         "DELETE FROM weather_history WHERE city_key NOT IN (:liveKeys) AND city_key IN " +
@@ -114,46 +107,23 @@ interface WeatherHistoryDao {
     )
     suspend fun pruneForeign(liveKeys: List<String>, cutoffEpochSeconds: Long)
 
-    /**
-     * Attaches fired user rules to the city's newest commit (Fase 11). An UPDATE
-     * after the fact, not an insert-time field: the worker evaluates rules after
-     * the fetch has committed — and on a cache HIT the data the rules ran on IS
-     * that latest commit.
-     */
-    @Query(
-        "UPDATE weather_history SET fired_rules = :firedRulesJson WHERE id = " +
-            "(SELECT id FROM weather_history WHERE city_key = :cityKey " +
-            "ORDER BY timestamp_epoch_s DESC LIMIT 1)"
-    )
-    suspend fun setFiredRulesOnLatest(cityKey: String, firedRulesJson: String)
-
-    /**
-     * Attaches the sky jobs this fetch observed as run (Fase 16e), by the same
-     * after-the-fact UPDATE `fired_rules` uses and for the same reason: the worker
-     * evaluates once the fetch has already committed, and on a cache HIT the data
-     * the jobs were judged against IS that latest commit.
-     */
-    @Query(
-        "UPDATE weather_history SET sky_runs = :skyRunsJson WHERE id = " +
-            "(SELECT id FROM weather_history WHERE city_key = :cityKey " +
-            "ORDER BY timestamp_epoch_s DESC LIMIT 1)"
-    )
-    suspend fun setSkyRunsOnLatest(cityKey: String, skyRunsJson: String)
+    /** The rules that fired on commit [id]'s data, as the repository merged them. */
+    @Query("UPDATE weather_history SET fired_rules = :firedRulesJson WHERE id = :id")
+    suspend fun setFiredRules(id: Long, firedRulesJson: String)
 }
 
 @Database(
-    entities = [WeatherHistoryEntry::class, WarningRecordEntity::class],
-    version = 5,
+    entities = [WeatherHistoryEntry::class],
+    version = 6,
     exportSchema = false
 )
 abstract class ChiaroDatabase : RoomDatabase() {
     abstract fun weatherHistoryDao(): WeatherHistoryDao
-    abstract fun warningRecordDao(): WarningRecordDao
 
     companion object {
         /** Every migration, in order: the one list the builder and the tests share. */
         val MIGRATIONS: Array<Migration>
-            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
 
         /** v2 (Fase 9h): forecast snapshot alongside the current-conditions one. */
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -169,28 +139,14 @@ abstract class ChiaroDatabase : RoomDatabase() {
             }
         }
 
-        /**
-         * v4 (Fase 16e): the sky jobs this fetch observed as run.
-         *
-         * One nullable column rather than the table, DAO, recorder and second
-         * pruning policy `VISION_SKY.md` first drafted — see §8.1. A sky run is not
-         * an independent event, it is something a FETCH noticed, and attaching it to
-         * the commit that noticed says so structurally: `obs`, the distance between
-         * the event and its observation, stops being a number the recorder computes
-         * and becomes one the schema implies.
-         */
+        /** v4 (Fase 16e): the sky jobs a fetch observed as run, for the Journal. */
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE weather_history ADD COLUMN sky_runs TEXT")
             }
         }
 
-        /**
-         * v5 (Fase 11, 9 set 2026): the official warnings' Journal rows. Additive — a
-         * new table, `weather_history` untouched — for the reason [WarningRecordEntity]
-         * gives: a bulletin is a document with a validity window, not something a fetch
-         * observed, and its rows must exist on days no fetch succeeded.
-         */
+        /** v5 (Fase 11, 9 set 2026): the official warnings' Journal rows. */
         val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL(
@@ -201,6 +157,42 @@ abstract class ChiaroDatabase : RoomDatabase() {
                         "`zone_name` TEXT, `day` TEXT, `hazard` TEXT, " +
                         "`from_level` TEXT, `to_level` TEXT)"
                 )
+            }
+        }
+
+        /**
+         * v6 (14 ott 2026): the Journal left the app, and what only it read leaves the
+         * database. `warning_records` is dropped whole; `weather_history` keeps the
+         * forecast and the fired rules and loses the snapshot, the sky runs, the hash,
+         * the author and the label. A row with no forecast (written before v2) carries
+         * nothing any reader wants and is not copied.
+         *
+         * A rebuild, not `ALTER TABLE … DROP COLUMN`: SQLite has that only from 3.35,
+         * and minSdk 33 ships 3.32. It also gives the table the index its every query
+         * has always wanted, `(city_key, timestamp_epoch_s)`, named the way Room names it
+         * so the schema check after the migration finds exactly what the entity declares.
+         */
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE `weather_history_new` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`city_key` TEXT NOT NULL, `timestamp_epoch_s` INTEGER NOT NULL, " +
+                        "`forecast_json` TEXT NOT NULL, `fired_rules` TEXT)"
+                )
+                db.execSQL(
+                    "INSERT INTO `weather_history_new` " +
+                        "(`id`, `city_key`, `timestamp_epoch_s`, `forecast_json`, `fired_rules`) " +
+                        "SELECT `id`, `city_key`, `timestamp_epoch_s`, `forecast_json`, `fired_rules` " +
+                        "FROM `weather_history` WHERE `forecast_json` IS NOT NULL"
+                )
+                db.execSQL("DROP TABLE `weather_history`")
+                db.execSQL("ALTER TABLE `weather_history_new` RENAME TO `weather_history`")
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_weather_history_city_key_timestamp_epoch_s` " +
+                        "ON `weather_history` (`city_key`, `timestamp_epoch_s`)"
+                )
+                db.execSQL("DROP TABLE IF EXISTS `warning_records`")
             }
         }
     }

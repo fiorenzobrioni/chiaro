@@ -2,16 +2,11 @@ package com.callbackdev.chiaro.data.local
 
 import com.callbackdev.chiaro.domain.ConditionWord
 import com.callbackdev.chiaro.domain.model.DailyForecast
-import com.callbackdev.chiaro.domain.model.PastHour
-import com.callbackdev.chiaro.domain.model.Precipitation
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
-import java.time.Instant
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WeatherSnapshotsTest {
@@ -77,92 +72,6 @@ class WeatherSnapshotsTest {
         assertNull(flat["2023-10-28.precip_pct"])
     }
 
-    /**
-     * The 6 set 2026 review made the chance nullable, and `.toString()` on the null
-     * had been writing the literal word "null" into every commit — a value no reader
-     * of the snapshot can turn back into a number.
-     */
-    @Test
-    fun `the current snapshot leaves the chance out when the model carries none`() {
-        val report = sampleWeatherReport()
-        assertEquals(
-            report.current.precipitation.chancePct.toString(),
-            WeatherSnapshots.flatten(report)["current.precip_chance_pct"]
-        )
-        val without = report.copy(
-            current = report.current.copy(
-                precipitation = report.current.precipitation.copy(chancePct = null)
-            )
-        )
-        assertNull(WeatherSnapshots.flatten(without)["current.precip_chance_pct"])
-    }
-
-    @Test
-    fun `location falls back to the country, like the entry above it`() {
-        val report = sampleWeatherReport()
-        val withRegion = report.copy(location = report.location.copy(region = "NY"))
-        val withoutRegion = report.copy(
-            location = report.location.copy(
-                city = "Singapore", region = null, country = "Singapore"
-            )
-        )
-
-        assertEquals("New York, NY", WeatherSnapshots.flatten(withRegion)["location"])
-        assertEquals("Singapore, Singapore", WeatherSnapshots.flatten(withoutRegion)["location"])
-    }
-
-    /** The sky block whole, daylight included; and a polar day leaves its keys out
-     * rather than writing the word "null" for a sunrise that did not happen. */
-    @Test
-    fun `the sky block carries the daylight span and leaves an absent sunrise out`() {
-        val full = sampleWeatherReport()
-        assertEquals("10h 52m", WeatherSnapshots.flatten(full)["astronomical.daylight_duration"])
-
-        val polar = full.copy(
-            astronomical = full.astronomical.copy(sunrise = null, sunset = null, daylightDuration = null)
-        )
-        val flat = WeatherSnapshots.flatten(polar)
-        assertNull(flat["astronomical.sunrise"])
-        assertNull(flat["astronomical.sunset"])
-        assertNull(flat["astronomical.daylight_duration"])
-        assertTrue(flat.values.none { it == "null" })
-    }
-
-    @Test
-    fun `the current snapshot carries the code, the quarter and the closed hours`() {
-        val hours = listOf(
-            PastHour(Instant.parse("2023-10-27T14:00:00Z"), 0.4, 18.5),
-            PastHour(Instant.parse("2023-10-27T13:00:00Z"), 0.0, 18.0)
-        )
-        val base = sampleWeatherReport()
-        val report = base.copy(
-            current = base.current.copy(
-                precipitation = Precipitation(0.1, hours, 30, Instant.parse("2023-10-27T14:15:00Z"))
-            )
-        )
-        val flat = WeatherSnapshots.flatten(report)
-        // ForecastOutcome reads these and nothing else to judge a past day.
-        assertNotNull(flat["current.wmo_code"]?.toIntOrNull())
-        assertEquals("0.1", flat["current.precip_quarter_mm"])
-        assertEquals("2023-10-27T14:15:00Z", flat[WeatherSnapshots.QUARTER_END])
-        assertEquals("2023-10-27T14:00:00Z,2023-10-27T13:00:00Z", flat[WeatherSnapshots.PAST_HOURS_END])
-        assertEquals("0.4,0.0", flat[WeatherSnapshots.PAST_HOURS_MM])
-        assertEquals("18.5,18.0", flat[WeatherSnapshots.PAST_HOURS_TEMP_C])
-        // The old name held the quarter under the hour's name; nothing writes it now.
-        assertNull(flat["current.precip_last_hour_mm"])
-    }
-
-    @Test
-    fun `no closed hours, no keys — and no uv, no uv key`() {
-        val base = sampleWeatherReport()
-        val flat = WeatherSnapshots.flatten(
-            base.copy(current = base.current.copy(uvIndex = null))
-        )
-        assertNull(flat[WeatherSnapshots.PAST_HOURS_END])
-        assertNull(flat["current.uv_index"])
-        assertTrue(flat.values.none { it == "null" })
-    }
-
     /** The status is a word id now; the English labels on disk still read as words. */
     @Test
     fun `a stored status reads as its word in either shape`() {
@@ -172,7 +81,6 @@ class WeatherSnapshotsTest {
         assertEquals(ConditionWord.THUNDERSTORM_STRONG, WeatherSnapshots.conditionWord("Thunderstorm w/ Hail ⛈️"))
         assertEquals(ConditionWord.SHOWERS_HEAVY, WeatherSnapshots.conditionWord("Violent Showers 🌧️"))
         assertNull(WeatherSnapshots.conditionWord("Sunny ☀️")) // the sample's word, never stored
-        assertEquals("partly_cloudy", WeatherSnapshots.flatten(sampleWeatherReport())["current.status"])
     }
 
     @Test

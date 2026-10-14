@@ -4,27 +4,19 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.callbackdev.chiaro.data.ActiveSource
-import com.callbackdev.chiaro.data.FetchFailureReason
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.WeatherException
-import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.zone
-import com.callbackdev.chiaro.domain.model.City
-import com.callbackdev.chiaro.domain.model.GpsCityId
-import com.callbackdev.chiaro.domain.model.WeatherReport
+import com.callbackdev.chiaro.domain.model.notificationKey
 import com.callbackdev.chiaro.domain.rules.RuleEngine
-import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
-import com.callbackdev.chiaro.domain.sky.SkyRunRecorder
-import java.time.Duration
-import java.time.Instant
 import java.time.ZonedDateTime
 import kotlinx.coroutines.flow.first
 
 /**
  * The single periodic background job (Fase 6, see [SyncScheduler]): fetch weather
- * for the active place, evaluate the built-in alerts and the reader's rules, record
- * what the sky did, re-arm the reminder alarm. Named "sync", not "alerts" — the
+ * for the active place, evaluate the built-in alerts and the reader's rules, re-arm
+ * the sky reminders. Named "sync", not "alerts" — the
  * fetch is the reusable part, and the widgets of Fase 8 will re-render off the same
  * run. Battery: one fetch (two HTTP GETs — forecast + air quality) per period, and a
  * cache HIT is free when the reader just used the app.
@@ -65,31 +57,20 @@ class WeatherSyncWorker(
             // No `ttl` of its own since 6 set 2026: the repository's
             // WeatherFreshness.ProviderResolution applies here too. Handing it
             // `update_frequency_min` meant a foreground fetch from ninety minutes ago
-            // could still satisfy this run — and this run evaluates the alerts and
-            // writes the journal entry.
+            // could still satisfy this run — and this run evaluates the alerts.
             ServiceLocator.weatherRepository(context).getWeather(city, forceRefresh = false)
         } catch (e: WeatherException.NoNetwork) {
-            // The Journal is where offline honesty lives (Fase 7): a fetch that
-            // could not land is an entry, not a silent gap. And this is exactly when
-            // a widget must stop presenting old numbers as current (Fase 8): repaint
-            // so its stale marker can appear.
-            recordFailure(context, city, FetchFailureReason.OFFLINE)
+            // Exactly when a widget must stop presenting old numbers as current (Fase
+            // 8): repaint so its stale marker can appear.
             widgets?.repaintAll()
             return Result.retry() // captive portal/DNS flap; CONNECTED already gated
         } catch (e: WeatherException) {
-            recordFailure(
-                context, city,
-                if (e is WeatherException.ApiError) FetchFailureReason.SERVICE
-                else FetchFailureReason.UNKNOWN
-            )
             widgets?.repaintAll()
             return Result.success() // next period is at most one interval away
         }
 
-        // Stable identity, not cacheKey: the GPS pseudo-city's cacheKey moves with
-        // the fix (~1.1 km grid) and would re-notify the same storm at every commute
-        // leg; ids never move.
-        val cityKey = if (city.id == GpsCityId) "gps" else city.id.toString()
+        // Stable identity, not cacheKey: see [notificationKey].
+        val cityKey = city.notificationKey
 
         // The official warnings (Fase 11): one step per device, after the fetch and
         // BEFORE the alerts gate — the bulletin is content for Oggi and the widgets,
@@ -150,7 +131,7 @@ class WeatherSyncWorker(
                     fired += trigger.rule.name
                 }
             }
-            // The Journal's food (Fase 7): this fetch's commit lists what fired.
+            // This fetch's commit lists what fired: Alerts reads «last fired» off it.
             if (fired.isNotEmpty()) {
                 ServiceLocator.weatherRepository(context).recordFiredRules(city, fired)
             }
@@ -171,63 +152,11 @@ class WeatherSyncWorker(
                 }
             }
 
-        // The sky (Fase 5–7). Deliberately OUTSIDE the alerts gate in spirit —
-        // recording is not notifying — but this worker only runs when alerts are
-        // wanted until Fase 8 gives it a second customer.
-        if (settings.skyEnabled) {
-            recordSkyRuns(context, city, report, settings.updateFrequencyMin)
-            // The receiver arms the next reminder when one fires; this is the safety
-            // net — an alarm lost to a force-stop comes back at the next fetch.
-            notifiers.rearmSkyReminders()
-        }
+        // The receiver arms the next sky reminder when one fires; this is the safety
+        // net — an alarm lost to a force-stop comes back at the next fetch.
+        if (settings.skyEnabled) notifiers.rearmSkyReminders()
 
         return Result.success()
     }
 
-    private suspend fun recordFailure(
-        context: Context,
-        city: City,
-        reason: FetchFailureReason
-    ) {
-        runCatching {
-            ServiceLocator.fetchLogStore(context)
-                .record(city.cacheKey, Instant.now().epochSecond, reason)
-        }
-    }
-
-    /**
-     * Which sky moments ran since this city's previous commit, attached to the one
-     * this fetch just wrote.
-     *
-     * The previous commit IS the "since": it is precisely the last moment the app
-     * looked at this city, so the window between them is everything that happened
-     * while it was not looking. On the very first commit there is no previous one
-     * and nothing to have missed, so nothing is recorded — an install does not
-     * acquire a history of sunsets it was not installed for.
-     */
-    private suspend fun recordSkyRuns(
-        context: Context,
-        city: City,
-        report: WeatherReport,
-        updateFrequencyMin: Int
-    ) {
-        val subscriptions = ServiceLocator.skySubscriptionStore(context).subscriptions.first()
-        val jobs = subscriptions.filter { it.enabled }.mapNotNull { SkyJobCatalog.byId(it.jobId) }
-        if (jobs.isEmpty()) return
-        val repository = ServiceLocator.weatherRepository(context)
-        val history = repository.historyFor(city, limit = 2)
-        val previous = history.getOrNull(1) ?: return
-        val zone = report.zone()
-        val runs = SkyRunRecorder.runsSince(
-            since = Instant.ofEpochSecond(previous.timestampEpochSeconds),
-            now = report.systemInfo.lastSync,
-            jobs = jobs,
-            zone = zone,
-            coordinates = city.coordinates,
-            hours = report.hourly,
-            dataAge = Duration.ZERO,
-            staleAfter = WeatherFreshness.staleAfter(updateFrequencyMin)
-        )
-        repository.recordSkyRuns(city, runs)
-    }
 }

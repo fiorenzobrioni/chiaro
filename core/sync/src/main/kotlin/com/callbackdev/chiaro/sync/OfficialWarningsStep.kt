@@ -3,16 +3,12 @@ package com.callbackdev.chiaro.sync
 import android.content.Context
 import android.net.ConnectivityManager
 import com.callbackdev.chiaro.data.ServiceLocator
-import com.callbackdev.chiaro.data.local.WarningRecordEntity
-import com.callbackdev.chiaro.data.local.WarningRecordKind
 import com.callbackdev.chiaro.data.warnings.StoredBulletin
 import com.callbackdev.chiaro.data.warnings.WarningFetchResult
 import com.callbackdev.chiaro.data.warnings.WarningFetchState
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.settings.NotificationSettings
 import com.callbackdev.chiaro.domain.warnings.OfficialWarningEngine
-import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
-import com.callbackdev.chiaro.domain.warnings.WarningDiff
 import com.callbackdev.chiaro.domain.warnings.WarningFetchPolicy
 import java.time.Instant
 import java.time.LocalDate
@@ -21,16 +17,15 @@ import kotlinx.coroutines.flow.first
 
 /**
  * The official warnings' leg of the periodic job (Fase 11): fetch the issuer's
- * bulletin when the cadence says so, write the Journal's rows for the active place,
- * and hand the notifier what is worth saying. One step per device, not per place — a
- * bulletin covers everyone — and **inert** when no saved place is in a zone the issuer
- * grades, so a reader abroad never spends a byte on it.
+ * bulletin when the cadence says so and hand the notifier what is worth saying. One
+ * step per device, not per place — a bulletin covers everyone — and **inert** when no
+ * saved place is in a zone the issuer grades, so a reader abroad never spends a byte
+ * on it.
  *
  * Everything that decides is pure and lives in the domain ([WarningFetchPolicy],
- * [OfficialWarningEngine], [WarningDiff]); this class only threads the clock, the
- * store, the network and the DAO through them. It never throws to the worker:
- * a failure keeps the previous bulletin and, at most once a day, says so in the
- * Journal — never on Oggi.
+ * [OfficialWarningEngine]); this class only threads the clock, the store and the
+ * network through them. It never throws to the worker: a failure keeps the previous
+ * bulletin, whose age the banner and the card state.
  */
 class OfficialWarningsStep(private val context: Context) {
 
@@ -67,10 +62,6 @@ class OfficialWarningsStep(private val context: Context) {
         val today: LocalDate = localNow.toLocalDate()
         val lastAttempt = state.lastAttempt?.atZone(source.zone)?.toLocalDateTime()
 
-        // What the place looked like under the bulletin in hand, before anything moves.
-        val before: PlaceWarnings? = state.current?.let {
-            OfficialWarningEngine.forPlace(it.bulletin, activeZone, today)
-        }
         var held: StoredBulletin? = state.current
 
         if (force || WarningFetchPolicy.shouldFetch(localNow, held?.bulletin, lastAttempt)) {
@@ -88,46 +79,16 @@ class OfficialWarningsStep(private val context: Context) {
                     SyncDependencies.widgets?.repaintAll()
                 }
                 is WarningFetchResult.Unchanged -> store.setFeedTag(source.id, result.feedTag)
-                is WarningFetchResult.Failed -> {
-                    val todaysMissing = held == null || held.bulletin.issuedAt.toLocalDate() < today
-                    val dueByNow = localNow.toLocalTime() >= WarningFetchPolicy.PublicationStart
-                    if (todaysMissing && dueByNow && state.failureLoggedOn != today) {
-                        recordMissed(active, now, held)
-                        store.markFailureLogged(source.id, today)
-                    }
-                }
+                // Nothing to record: the bulletin in hand stays, with its own date.
+                is WarningFetchResult.Failed -> Unit
             }
         }
 
         val bulletin = held?.bulletin ?: return
-        val after = OfficialWarningEngine.forPlace(bulletin, activeZone, today) ?: return
-
-        // The Journal: what moved between two consecutive bulletins, for this place.
-        if (held != state.current) {
-            val dao = ServiceLocator.warningRecordDao(context)
-            WarningDiff.between(before, after).forEach { change ->
-                dao.insert(
-                    WarningRecordEntity(
-                        cityKey = active.cacheKey,
-                        recordedEpochSeconds = now.epochSecond,
-                        kind = WarningRecordKind.LEVEL_CHANGE.name,
-                        bulletinId = after.bulletinId,
-                        issuedAt = after.issuedAt.toString(),
-                        zoneName = after.zone.name,
-                        day = change.day.toString(),
-                        hazard = change.hazard.name,
-                        fromLevel = change.from.name,
-                        toLevel = change.to.name
-                    )
-                )
-            }
-            dao.pruneCity(active.cacheKey, RETENTION)
-            dao.prune(RETENTION * PLACES)
-        }
-
         if (notifiers == null || !settings.officialWarnings) return
+        val warnings = OfficialWarningEngine.forPlace(bulletin, activeZone, today) ?: return
         val notification = OfficialWarningEngine.notificationFor(
-            warnings = after,
+            warnings = warnings,
             minLevel = settings.officialWarningsFrom,
             notified = store.notified.first(),
             cityKey = cityKey
@@ -140,37 +101,7 @@ class OfficialWarningsStep(private val context: Context) {
         }
     }
 
-    private suspend fun recordMissed(active: City, now: Instant, held: StoredBulletin?) {
-        val dao = ServiceLocator.warningRecordDao(context)
-        dao.insert(
-            WarningRecordEntity(
-                cityKey = active.cacheKey,
-                recordedEpochSeconds = now.epochSecond,
-                kind = WarningRecordKind.BULLETIN_MISSED.name,
-                bulletinId = held?.bulletin?.id,
-                issuedAt = held?.bulletin?.issuedAt?.toString()
-            )
-        )
-        // This path writes and, until 12 set 2026, pruned nothing: the retention above
-        // runs only when a bulletin actually MOVES, and an issuer that cannot be
-        // reached for a season is exactly when it never does. A row a day is slow, but
-        // slow and unbounded is still unbounded.
-        dao.pruneCity(active.cacheKey, RETENTION)
-        dao.prune(RETENTION * PLACES)
-    }
-
     /** The 4.7 MB fallback archive is for Wi-Fi; a metered network gets the small files only. */
     private fun isMetered(): Boolean =
         context.getSystemService(ConnectivityManager::class.java)?.isActiveNetworkMetered ?: true
-
-    companion object {
-        /** Rows kept per place — the depth of one place's warning diary, like the history's. */
-        const val RETENTION = 100
-
-        /** How many places the table is sized for before its global backstop bites —
-         * `WeatherRepository.HISTORY_CITIES`'s twin, and generous for its reason: the
-         * backstop exists to bound rows left behind by places that are gone, never to
-         * shorten a place somebody still follows. */
-        private const val PLACES = 8
-    }
 }

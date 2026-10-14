@@ -15,11 +15,21 @@ import kotlin.math.sqrt
 const val GpsCityId = -1L
 
 /**
+ * The key the notification engines file a place under: `"gps"` for the position, the
+ * id otherwise. Stable identity, not [City.cacheKey]: the position's cacheKey moves with
+ * the fix (~1.1 km grid) and would re-notify the same storm at every commute leg, and
+ * ids never move. One definition, so the job, the screen's warning refresh and the
+ * housekeeping that drops a removed place's rule latches can never file one place twice.
+ */
+val City.notificationKey: String
+    get() = if (id == GpsCityId) "gps" else id.toString()
+
+/**
  * How far a new fix has to be from the stored one before it counts as a new PLACE
  * (Fase 3b). [City.cacheKey] moves on a ~1.1 km grid, which is finer than any
  * forecast model resolves and far finer than "the reader has changed town": adopting
  * every cell crossing rebuilt the page from a skeleton, spent two GETs and started
- * the Journal's history over, several times on a walk across a city. Below this
+ * the place's history over, several times on a walk across a city. Below this
  * distance the fix still updates the place's NAME — reverse geocoding gets better
  * answers as the phone settles — but not its coordinates.
  */

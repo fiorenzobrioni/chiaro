@@ -36,12 +36,10 @@ import org.junit.Test
  * adding a string will meet it.
  *
  * **What this test cannot check**: a `%s` argument, whose value is a string the app
- * formatted — a date, a city, a condition. Six of those carried a digit-leading value
- * and were fixed by hand in the same pass: `journal_outcome_dry` and
- * `journal_outcome_rained` (a percentage), and `warning_issued_dated`,
- * `warning_sheet_source`, `warning_card_stale_detail` and `journal_warning_missed_held`
- * (a date — «del 8 set» wanted «dell'8 set», so the article was given the word *giorno*
- * to agree with instead, which never changes). Whether a `%s` leads with a digit is a
+ * formatted — a date, a city, a condition. Those that carried a digit-leading value
+ * were fixed by hand in the same pass: `warning_issued_dated`, `warning_sheet_source`
+ * and `warning_card_stale_detail` (a date — «del 8 set» wanted «dell'8 set», so the
+ * article was given the word *giorno* to agree with instead, which never changes). Whether a `%s` leads with a digit is a
  * property of the call site, so it stays a reading and not an assertion.
  */
 class ItalianArticleTest {

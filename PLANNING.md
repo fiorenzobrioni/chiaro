@@ -13155,3 +13155,127 @@ controllo, riga per riga contro le schermate, ha trovato quello che restava indi
   risposta della settimana. Le didascalie e le immagini erano già giuste (#66 le aveva
   rigenerate); l'immagine della guida mostra l'inizio, che non cambia, quindi nessuna da
   rigenerare.
+
+## Via il Diario, e la gestione dei dati (committente, 14 ott 2026)
+
+Il committente ha chiesto una revisione della gestione dei dati (cosa si salva, per quanto, se le
+tabelle si puliscono) e un parere sincero sul Diario. Il parere: come scheda non si guadagnava il
+posto. Era il `git log` di tweather letto come prosa, una risposta a una domanda che il pubblico di
+questa app non fa; la sua statistica («Com'è andata la previsione») poteva contare al massimo tre
+giorni con la retention di allora e misurava il modello contro la sua stessa analisi; le altre voci
+ripetevano cose già dette altrove (la notifica, l'età dei dati). L'unico pezzo che risponde a una
+domanda vera, «Sabato è migliorato: pioggia 70% → 30%», viveva già in Oggi. Decisione del
+committente: **togliere il Diario del tutto, con le sue implicazioni nel data layer, e correggere
+tutti i problemi trovati nella revisione, anche i minori**.
+
+### Cosa è cambiato
+
+- [x] **Il Diario esce**: la scheda (tre destinazioni: Oggi, Cielo, Avvisi), `ui/journal/` con i
+  suoi test, il capitolo della guida e la sua riga nella mappa delle schede, la miniatura della
+  striscia, 73 stringhe per lingua, l'icona `ic_not_reached`, la porta da Avvisi
+  (`openRuleId`, `openTabRoot`).
+- [x] **«Cosa è cambiato» resta in Oggi**, e diventa di Oggi: `ui/today/WhatChanged.kt`
+  (`WhatChangedBuilder.latestShifts`, `WhatChangedText`), stesse regole e stesse parole, stringhe
+  rinominate `changed_*`. Le frasi non si toccano più: dietro non c'è niente da aprire.
+- [x] **Il data layer perde quello che leggeva solo il Diario**: la tabella `warning_records`, le
+  colonne `snapshot_json`, `sky_runs`, `hash`, `author`, `city_label` di `weather_history`,
+  `FetchLogStore` (e il suo file, cancellato all'avvio), `ForecastOutcome`, `SkyRunRecorder`,
+  `WarningDiff`, la riga «bollettino non raggiunto» e la sua chiave in `OfficialWarningStore`,
+  lo snapshot delle condizioni attuali (`WeatherSnapshots.flatten`). Room passa a v6
+  (`MIGRATION_5_6`): ricostruzione della tabella con `forecast_json` e `fired_rules`, l'indice
+  `(city_key, timestamp_epoch_s)`, `DROP TABLE warning_records`.
+- [x] **Retention per tempo, non per numero**: tre giorni per luogo (`HISTORY_RETENTION`), mai
+  meno di due righe (`HISTORY_MIN_ROWS`), un tetto globale di 8 × 288 righe come sola rete di
+  sicurezza. Il cento per luogo di prima faceva dipendere la profondità da quanto spesso l'app
+  scaricava.
+- [x] **Un commit per finestra di 15 minuti** (`COMMIT_WINDOW`, la risoluzione del provider): un
+  aggiornamento dentro la finestra riscrive l'ultimo commit invece di affiancarlo. Prima ogni
+  pull-to-refresh scriveva una copia identica, e la copia, senza revisioni proprie, faceva
+  sparire «Cosa è cambiato» proprio al pull.
+- [x] **Le regole scattate si sommano** (`recordFiredRules` legge e unisce): con il commit che
+  può valere due aggiornamenti, sovrascrivere avrebbe perso la prima.
+- [x] **`RuleStateStore.clearRule` finalmente chiamato**: Avvisi lo chiama quando cambiano le
+  condizioni o le ore di una regola. Era scritto, testato, documentato come chiamato dalla UI, e
+  nessuno lo chiamava: una regola già scattata con una soglia nuova restava zitta.
+- [x] **I latch orfani se ne vanno** (`RuleStateStore.retain`, a ogni commit): quelli di un luogo
+  rimosso o di una regola cancellata non venivano mai valutati, quindi mai tolti. La chiave del
+  luogo per le notifiche è ora una sola definizione (`City.notificationKey`), usata dal job, dal
+  refresh dei bollettini e dalla pulizia.
+- [x] **La cache su disco non butta più un luogo seguito**: il tetto di 16 file era applicato
+  alla scrittura, che non sa distinguere un luogo seguito da una cella GPS, e con più di 16 luoghi
+  toglieva la previsione offline di qualcuno. Ora alla scrittura c'è solo l'età (l'orizzonte), e il
+  tetto (8) vale solo per i file dei luoghi non più seguiti, in `forgetForeign`.
+- [x] **La cache in memoria tiene solo i luoghi seguiti** (`cache.keys.retainAll` a ogni commit):
+  prima cresceva con ogni cella GPS per tutta la vita del processo.
+- [x] Commenti allineati: quello di `ReportDiskCache` sul backup (non più vero dal 21 set), e
+  ogni riga di codice che nominava il Diario come lettore di qualcosa.
+- [x] VISION (§2.2, §5.1, §5.2, §5.5, §5.7, §6, §9), DESIGN (§8.10, §8.12, tipi, accessibilità),
+  README, CLAUDE.md (la regola dello storage), CHANGELOG (Removed, Fixed).
+
+### Decisioni e deviazioni
+
+- **Tre giorni.** Il lettore più profondo è la massima di ieri, che nel fuso del luogo può stare
+  fino a 48 ore indietro; il terzo giorno è il margine per un telefono che ha dormito una mattina.
+  «Ultima volta» in Avvisi legge ora tutta la retention (prima 50 righe, circa due giorni).
+- **Due righe minime**: un telefono rimasto spento una settimana torna con una previsione con cui
+  confrontare la prima nuova.
+- **La migrazione ricostruisce la tabella** invece di `DROP COLUMN`: SQLite lo ha dalla 3.35 e
+  minSdk 33 porta la 3.32. Le righe senza previsione (scritte prima della v2) non vengono copiate:
+  nessun lettore le userebbe. Il file non si restringe senza un `VACUUM`, che non può girare dentro
+  la transazione della migrazione: le pagine liberate vengono riusate, il file non cresce più.
+- **La cancellazione di una regola non pulisce subito**: «Annulla» la riporta com'era. I latch di
+  una regola che resta cancellata vanno via al commit successivo, con quelli dei luoghi rimossi.
+- **Nessun «Cosa è cambiato» cliccabile**: la riga «La storia intera è nel Diario» non ha più una
+  pagina dietro, e una frase che si tocca senza effetto sarebbe un controllo finto.
+- **La cronologia delle allerte rientrate non si sposta altrove**: il banner e la card dicono lo
+  stato del bollettino in mano, con la sua data; la storia dei cambi era una cosa del Diario.
+
+### Come è stato verificato
+
+- `HistoryRetentionTest` (nuovo, Robolectric con Room in memoria): tre pull in nove minuti sono
+  un commit solo, con l'ora dell'ultimo, e il quarto dopo 25 minuti ne apre un secondo; le regole
+  scattate su due aggiornamenti dello stesso commit restano entrambe; un luogo tiene tre giorni;
+  un telefono tornato dopo una settimana tiene il nuovo commit e il più recente dei vecchi; la
+  cache in memoria dimentica un luogo non seguito al commit successivo e ne rifà il fetch.
+- `ChiaroDatabaseMigrationTest` riscritto: una v5 vera (con `warning_records` e le colonne del
+  Diario) passa a v6 tenendo id, previsione e regole, perde la riga senza previsione e la tabella,
+  e trova l'indice; una v1 attraversa tutta la catena e accetta commit nuovi.
+- `RuleStateStoreTest` (+1): `retain` tiene i latch dei luoghi e delle regole vive, `gps`
+  compreso, e lascia stare le impronte.
+- `StoredDataSweepTest` (+1): con venti luoghi seguiti nessuno perde la sua risposta, e dei file
+  stranieri ne restano otto, i più recenti.
+- `WhatChangedBuilderTest` (nuovo, al posto dei casi di «Cosa è cambiato» che stavano nel test del
+  Diario): pioggia che scende è migliorato, cielo che peggiora a pioggia ferma è peggiorato, la
+  pioggia decide sul cielo, una massima da sola resta neutra, le etichette inglesi su disco sono la
+  stessa previsione, parla solo l'ultimo aggiornamento, al massimo tre righe con la pioggia più
+  mossa in testa.
+- `OfficialWarningsStepTest` e `WeatherSyncWorkerTest` senza i casi del Diario; gli altri invariati.
+- `./gradlew test :app:testDebugUnitTest :app:lintDebug`: 1842 test, 0 falliti (i 12 saltati sono
+  le schermate del README senza `-PupdateScreenshots`), lint pulito.
+- Schermate del README rigenerate e guardate una per una: la barra ha tre schede (Oggi, Cielo,
+  Avvisi), la guida e Impostazioni dicono «tre schermate». Widget e notifica non cambiano.
+
+## Avvisi: «Nuovo avviso» è l'unico ingresso (committente, 14 ott 2026)
+
+Provando l'app il committente ha visto due ingressi alla stessa cosa: con «I tuoi» vuoto la fila
+delle idee sulla pagina e il FAB «Nuovo avviso», che apre le stesse idee in un foglio; al primo
+avviso creato la fila spariva e restava il FAB. Era voluto (punto 9 della revisione di Avvisi: la
+fila come stato vuoto della sezione), ma letto sul telefono era un salto della pagina che
+sembrava un errore. Decisione: **solo il FAB, con una riga di stato vuoto**.
+
+- [x] La fila delle idee esce dalla pagina (`IdeaCard`, le sue misure, `tpl_add`, `tpl_create`).
+  Le idee vivono solo nel foglio del FAB, con «Da zero» in testa, come già con un avviso.
+- [x] «I tuoi» vuoto è una riga, `alerts_yours_empty` (IT/EN): «Gli avvisi che scrivi tu, per
+  quello che fai: «Nuovo avviso» parte da un'idea o da zero.» Il titolo della sezione non sta
+  sopra il nulla (DESIGN §1.1), che era la ragione della fila, e al primo avviso cambia una riga,
+  non un blocco di card.
+- [x] VISION §5.4, DESIGN (Avvisi), CHANGELOG. La guida diceva già che le idee si aprono da
+  «Nuovo avviso»: nessuna parola da cambiare.
+
+Scartato: tenere le card e nascondere il FAB finché la sezione è vuota. Il pulsante sarebbe
+comparso dal nulla dopo il primo avviso: lo stesso salto, al contrario.
+
+Verificato con `AlertsYoursEmptyTest` (nuovo, Robolectric): con «I tuoi» vuoto la pagina ha la
+riga e nessuna idea, e «Nuovo avviso» apre il foglio con «Da zero» e «Parti da un'idea». Suite
+completa e lint verdi. Le schermate del README rigenerate non cambiano: nessuna mostra «I tuoi»
+vuoto.

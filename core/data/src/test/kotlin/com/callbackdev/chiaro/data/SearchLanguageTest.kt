@@ -8,8 +8,6 @@ import com.callbackdev.chiaro.data.remote.OpenMeteoGeocodingApi
 import com.callbackdev.chiaro.data.remote.dto.GeoResultDto
 import com.callbackdev.chiaro.data.remote.dto.GeocodingResponseDto
 import java.util.Locale
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -59,15 +57,14 @@ class SearchLanguageTest {
     /** searchCities never reaches the history; the fetch paths have their own tests. */
     private object UnusedHistoryDao : WeatherHistoryDao {
         override suspend fun insert(entry: WeatherHistoryEntry): Long = 0
+        override suspend fun update(entry: WeatherHistoryEntry) = Unit
         override suspend fun historyFor(cityKey: String, limit: Int) = emptyList<WeatherHistoryEntry>()
-        override fun observeLatest(limit: Int): Flow<List<WeatherHistoryEntry>> = emptyFlow()
-        override fun observeFor(cityKey: String, limit: Int): Flow<List<WeatherHistoryEntry>> =
-            emptyFlow()
-        override suspend fun pruneCity(cityKey: String, keep: Int) = Unit
+        override suspend fun latestFor(cityKey: String): WeatherHistoryEntry? = null
+        override suspend fun any(): Boolean = false
+        override suspend fun pruneCity(cityKey: String, cutoffEpochSeconds: Long, keepAtLeast: Int) = Unit
         override suspend fun prune(keep: Int) = Unit
         override suspend fun pruneForeign(liveKeys: List<String>, cutoffEpochSeconds: Long) = Unit
-        override suspend fun setFiredRulesOnLatest(cityKey: String, firedRulesJson: String) = Unit
-        override suspend fun setSkyRunsOnLatest(cityKey: String, skyRunsJson: String) = Unit
+        override suspend fun setFiredRules(id: Long, firedRulesJson: String) = Unit
     }
 
     private val defaultLocale: Locale = Locale.getDefault()

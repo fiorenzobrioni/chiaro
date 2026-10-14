@@ -37,7 +37,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.drawText
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.CheckCircle
@@ -58,7 +57,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.style.TextOverflow
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -148,10 +146,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun AlertsRoute(
     onOpenSettings: () -> Unit,
-    /** An alert another screen asked to open (the Journal's line of one that fired), or
-     * null; its editor opens once, and [onOpenRuleHandled] clears the request. */
-    openRuleId: Long? = null,
-    onOpenRuleHandled: () -> Unit = {},
     alertsViewModel: AlertsViewModel = viewModel(factory = AlertsViewModel.Factory),
     placesViewModel: PlacesViewModel = viewModel(factory = PlacesViewModel.Factory)
 ) {
@@ -161,12 +155,6 @@ fun AlertsRoute(
     val snackbars = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val res = LocalContext.current.resources
-    LaunchedEffect(openRuleId) {
-        if (openRuleId != null) {
-            editingRuleId = openRuleId
-            onOpenRuleHandled()
-        }
-    }
 
     AlertsScreen(
         state = state,
@@ -512,55 +500,20 @@ private fun AlertsContent(
             )
         }
 
-        // The ideas stay on the page only while «I tuoi» is empty (the Alerts review, point
-        // 9): there they are the section's empty state, where without them its title would
-        // stand over nothing (DESIGN §1.1). Once the reader has an alert of their own, the
-        // ideas are the FAB's sheet, and the page is the alerts.
+        // «I tuoi» empty: one line, not a row of ideas (committente, 14 ott 2026). The ideas
+        // had stayed on the page while the section was empty, as its empty state, and the
+        // page changed shape at the first alert: the row vanished and the FAB was left as
+        // the one way in, which it had been all along beside the row. Now the FAB is the
+        // only way in from the start, and the section says what it is for instead of
+        // standing as a title over nothing (DESIGN §1.1).
         if (content.canAdd && content.rules.isEmpty()) {
             item {
-                // A heading inside «I tuoi», in the Sky's own grammar for one («Oggi»,
-                // «Domani»): `labelLarge` in the accent (the Alerts review, point 4).
                 Text(
-                    text = stringResource(R.string.alerts_templates_title),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 16.dp, bottom = SectionBottom)
+                    text = stringResource(R.string.alerts_yours_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
-            }
-            // A row of cards to browse sideways since the design review of 23 set 2026:
-            // five more list rows at the foot of the page read as five more settings,
-            // and an idea is something you pick up, not something you configure.
-            item {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(bottom = 16.dp)
-                ) {
-                    // The blank idea leads (26 set 2026): building from nothing is the
-                    // other way in, and at the end of a sideways row it would be the card
-                    // nobody scrolls to.
-                    item {
-                        IdeaCard(
-                            icon = Icons.Outlined.Edit,
-                            iconTint = MaterialTheme.colorScheme.primary,
-                            title = stringResource(RuleText.blank.titleRes),
-                            description = stringResource(RuleText.blank.descriptionRes),
-                            added = false,
-                            actionLabel = stringResource(R.string.tpl_create),
-                            onAdd = { add(RuleText.blank) }
-                        )
-                    }
-                    items(RuleText.templates.size) { index ->
-                        val template = RuleText.templates[index]
-                        IdeaCard(
-                            icon = templateIcon(template),
-                            title = stringResource(template.titleRes),
-                            description = stringResource(template.descriptionRes),
-                            added = template.conditions in existing,
-                            onAdd = { add(template) }
-                        )
-                    }
-                }
             }
         } else if (!content.canAdd) {
             // The templates used to vanish without a word at the cap (review, 8 set), and
@@ -1014,60 +967,6 @@ private fun AlertRow(
 }
 
 /**
- * One idea to start from, as a card in a sideways row (design review, 23 set 2026): its
- * drawing, its promise and what it checks, and the one action. A card already turned into
- * a rule says so in the accent and does nothing, as the row it replaced did.
- */
-@Composable
-private fun IdeaCard(
-    icon: ImageVector,
-    title: String,
-    description: String,
-    added: Boolean,
-    onAdd: () -> Unit,
-    iconTint: Color = Color.Unspecified,
-    actionLabel: String = stringResource(R.string.tpl_add)
-) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = segmentShape(0, 1),
-        modifier = Modifier
-            .width(IdeaWidth)
-            .height(IdeaHeight)
-            .then(if (added) Modifier else Modifier.clickable(onClick = onAdd))
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(RowIcon))
-            Text(title, style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 4,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Icon(
-                    imageVector = if (added) Icons.Outlined.Check else Icons.Outlined.Add,
-                    contentDescription = null, // the label beside it says it
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp)
-                )
-                Text(
-                    text = if (added) stringResource(R.string.tpl_already_added) else actionLabel,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-    }
-}
-
-/**
  * The windows the timed alerts arrive in, for the ones switched on: the morning summary
  * 6–12, the bulletin 15–17, the evening one 18–23, each with the sky of its hour (§3.2, the
  * ribbon's own rule: a depiction, the words are under it) and its drawing.
@@ -1288,8 +1187,6 @@ private const val PartlyCloudyCode = 2
 private val RowIcon = 36.dp
 private val RowGap = 14.dp
 private const val OffAlpha = 0.4f
-private val IdeaWidth = 176.dp
-private val IdeaHeight = 204.dp
 
 /**
  * A rule's card (VISION §5.4): its name, its sentence in words, when it last fired, and

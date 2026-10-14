@@ -160,7 +160,6 @@ import kotlinx.coroutines.launch
 fun TodayRoute(
     onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
-    onOpenJournal: () -> Unit,
     todayViewModel: TodayViewModel = viewModel(factory = TodayViewModel.Factory),
     placesViewModel: PlacesViewModel = viewModel(factory = PlacesViewModel.Factory)
 ) {
@@ -204,7 +203,6 @@ fun TodayRoute(
                 onOpenPlaces = { placesOpen = true },
                 onOpenSettings = onOpenSettings,
                 onOpenGuide = openGuideFromCard,
-                onOpenJournal = onOpenJournal,
                 onDismissGuideCard = todayViewModel::dismissGuideCard
             )
         }
@@ -239,7 +237,6 @@ private fun PagedToday(
     onOpenPlaces: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
-    onOpenJournal: () -> Unit,
     onDismissGuideCard: () -> Unit
 ) {
     val pages by rememberUpdatedState(model.pages)
@@ -318,7 +315,6 @@ private fun PagedToday(
                     onOpenPlaces = onOpenPlaces,
                     onOpenSettings = onOpenSettings,
                     onOpenGuide = onOpenGuide,
-                    onOpenJournal = onOpenJournal,
                     onDismissGuideCard = onDismissGuideCard,
                     isCurrent = index == pagerState.currentPage,
                     onCanvasBehindBar = { canvasBehindBar = it }
@@ -375,7 +371,6 @@ internal fun TodayPage(
     onOpenPlaces: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
-    onOpenJournal: () -> Unit,
     onDismissGuideCard: () -> Unit,
     isCurrent: Boolean,
     onCanvasBehindBar: (Boolean) -> Unit
@@ -384,7 +379,7 @@ internal fun TodayPage(
         is TodayUiState.Content ->
             ContentState(
                 state, title, isGps, dots, units, locating, guideCardVisible,
-                onRefresh, onOpenPlaces, onOpenSettings, onOpenGuide, onOpenJournal,
+                onRefresh, onOpenPlaces, onOpenSettings, onOpenGuide,
                 onDismissGuideCard, isCurrent, onCanvasBehindBar
             )
         else -> Column(modifier = Modifier.fillMaxSize()) {
@@ -758,7 +753,6 @@ private fun ContentState(
     onOpenPlaces: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
-    onOpenJournal: () -> Unit,
     onDismissGuideCard: () -> Unit,
     isCurrent: Boolean,
     onCanvasBehindBar: (Boolean) -> Unit
@@ -862,11 +856,11 @@ private fun ContentState(
     // which is §1.1's dash in a card by another route — and it spent one of the three
     // lines the section is allowed.
     val changed = content.whatChanged.mapNotNull { shift ->
-        val details = com.callbackdev.chiaro.ui.journal.JournalText.shiftDetails(
+        val details = WhatChangedText.shiftDetails(
             shift.shifts, units, locale
         )
         if (details.isBlank()) null
-        else com.callbackdev.chiaro.ui.journal.JournalText.shiftHeadline(shift, locale) +
+        else WhatChangedText.shiftHeadline(shift, locale) +
             ": " + details
     }
 
@@ -961,15 +955,15 @@ private fun ContentState(
                 )
             }
 
-            // VISION §5.2.5 — when something did change: two or three sentences,
-            // tapping opens the Journal where the whole story lives. AFTER the week
+            // VISION §5.2.6 — when something did change: two or three sentences.
+            // AFTER the week
             // (asked on device, 6 set, and it is the right order): every one of these
             // sentences is about a day further out — "Wednesday's forecast changed" —
             // so it used to name days the reader had not been shown yet, and it split
             // the two sections about today from the one about the days ahead.
             if (changed.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.today_changed_title)) }
-                item { WhatChanged(lines = changed, onOpenJournal = onOpenJournal) }
+                item { WhatChanged(lines = changed) }
             }
 
             item { SectionTitle(stringResource(R.string.section_details)) }
@@ -1304,29 +1298,19 @@ private fun GuideCard(onOpen: () -> Unit, onDismiss: () -> Unit) {
     }
 }
 
-/** VISION §5.2.5: each revision as one sentence, the same words the Journal uses
- * ([JournalText]), the whole block one door to it. The sentences arrive built (see
- * the list above): a revision with no printable numbers never becomes a line. */
+/** VISION §5.2.6: each revision as one sentence. The sentences arrive built (see the
+ * list above): a revision with no printable numbers never becomes a line. */
 @Composable
-private fun WhatChanged(
-    lines: List<String>,
-    onOpenJournal: () -> Unit
-) {
+private fun WhatChanged(lines: List<String>) {
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onOpenJournal)
             .padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
         lines.forEach { line ->
             Text(text = line, style = MaterialTheme.typography.bodyMedium)
         }
-        Text(
-            text = stringResource(R.string.today_changed_open),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.primary
-        )
     }
 }
 

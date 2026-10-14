@@ -22,7 +22,7 @@ import kotlinx.serialization.Serializable
  * [Serializable] so the stacks survive a rotation and process death, as the enum did.
  */
 
-/** The four tab roots, one per [ShellTab]. */
+/** The three tab roots, one per [ShellTab]. */
 @Serializable
 data object TodayKey : NavKey
 
@@ -31,9 +31,6 @@ data object SkyKey : NavKey
 
 @Serializable
 data object AlertsKey : NavKey
-
-@Serializable
-data object JournalKey : NavKey
 
 /** Settings, from the gear every tab carries. It covers the bottom bar. */
 @Serializable
@@ -61,7 +58,6 @@ val ShellTab.root: NavKey
         ShellTab.TODAY -> TodayKey
         ShellTab.SKY -> SkyKey
         ShellTab.ALERTS -> AlertsKey
-        ShellTab.JOURNAL -> JournalKey
     }
 
 /**
@@ -122,17 +118,6 @@ class ChiaroNavigationState(
     }
 
     /**
-     * [tab] at its own root, from another tab: a line of the Journal opening one of the
-     * reader's alerts lands on Alerts itself, not under a Settings page left open there.
-     * The other stacks keep what they had, and back returns to Today as from any tab.
-     */
-    fun openTabRoot(tab: ShellTab) {
-        val stack = backStacks.getValue(tab)
-        while (stack.size > 1) stack.removeAt(stack.lastIndex)
-        selected = tab
-    }
-
-    /**
      * A tab asked for from outside the app — a widget or a notification. The answer is
      * that tab's own screen, so every stack goes back to its root: landing on Sky under an
      * open Settings page (or on Sky over one left open under Today, one back away) would be
@@ -181,7 +166,7 @@ fun rememberChiaroNavigationState(): ChiaroNavigationState {
  * there when the reader comes back.
  *
  * No ViewModel decorator, deliberately: the ViewModels stay scoped to the activity, as
- * they were before the stacks. The four tabs share one `PlacesViewModel`, and the active
+ * they were before the stacks. The three tabs share one `PlacesViewModel`, and the active
  * place and the subscriptions are meant to survive a tab switch in the ViewModels
  * themselves; a store per entry would have split them.
  */

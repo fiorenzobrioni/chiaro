@@ -7,8 +7,8 @@ this repository.
 
 **Chiaro** is an Android weather app (Kotlin 2.2 / Jetpack Compose Material 3) built for
 a general audience: a computed sky as the hero, one sentence before any number, an agenda
-of the day's sun and sky with a verdict, a journal of how the forecast changed, and alerts
-the reader writes themselves. Free, no account, no ads, no API key.
+of the day's sun and sky with a verdict, what changed in the forecast since the last look,
+and alerts the reader writes themselves. Free, no account, no ads, no API key.
 
 It was born as the **daylight edition of [tweather](https://github.com/fiorenzobrioni/tweather)**:
 its data layer, alert engine, rules engine and astronomy engine, with the code-editor UI
@@ -149,8 +149,7 @@ ordinary run rewrites an image. Standing rules (committente, 25 set 2026):
   and a night shade of stock Android. A change to the notifications' text or pictures
   regenerates it.
 - **No invented data.** Every picture comes from the recording or from what a reader makes
-  with the app's own words (the alerts are created from its ideas). The Journal has no
-  picture until real history can be recorded (PLANNING.md, «Le schermate del README»).
+  with the app's own words (the alerts are created from its ideas).
 
 ## Writing `README.md` (root file only)
 
@@ -213,6 +212,15 @@ says why a value is what it is, not which sister has it too.
 - **Offline**: the last successful report per place is kept with no TTL and carries a week
   of forecast, so the app is never blank. `WeatherRecency` drops the hours that have
   already happened; `WeatherFreshness` decides whether to trust what is left.
+- **Storage is bounded by time and by owner** (14 ott 2026, when the Journal left with
+  every table and column only it read). `weather_history` is a forecast and the rules
+  that fired on it, one commit per 15-minute window (a fetch inside it rewrites the last
+  commit), three days a place and never fewer than two rows; it feeds Today's "What
+  changed", yesterday's high and Alerts' «last fired», nothing else. `report_cache`
+  keeps a followed place up to the forecast horizon and at most 8 places no longer
+  followed; `StoredDataSweep` empties a place no longer followed after a week, and the
+  rules' latches of a removed place or a deleted rule go at the next commit. A new thing
+  written to disk comes with its bound, or it is a leak.
 - **The engines are tested, and they are Chiaro's.** They came from tweather and have been
   this app's own since 23 set 2026: change them here, with their tests, for what Chiaro
   needs. There is no upstream to keep in step with and no shared core to extract.

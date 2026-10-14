@@ -214,7 +214,7 @@ class TodayStateBuilderTest {
         assertEquals(null, sunset.until)
     }
 
-    // ----------------------------------------------- the Journal's yesterday (13 ott 2026)
+    // ----------------------------------------------- yesterday off the history (13 ott 2026)
 
     private fun commit(at: LocalDateTime, high: String?) =
         at.atZone(zone).toInstant() to (high?.let { mapOf("2026-09-01.high_c" to it) } ?: emptyMap())

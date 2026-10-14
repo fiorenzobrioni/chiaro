@@ -80,6 +80,25 @@ class RuleStateStoreTest {
         assertEquals(setOf("milan:rule:12:2026-08-17:AM"), state.firedFingerprints)
     }
 
+    /** A latch is cleared only by its rule reading false for its place: a removed place
+     * or a deleted rule would keep one for ever, so the sync's housekeeping retains. */
+    @Test
+    fun `retain keeps the latches of live places and live rules only`() = runBlocking {
+        val store = store()
+        store.record(latchTrigger(1, "3173435:1"))  // live place, live rule
+        store.record(latchTrigger(1, "gps:1"))      // the position, live rule
+        store.record(latchTrigger(1, "3165524:1"))  // a place removed
+        store.record(latchTrigger(7, "3173435:7"))  // a rule deleted
+        store.record(fingerprintTrigger(7, "3173435:rule:7:2026-10-14:DAY"))
+
+        store.retain(liveCities = setOf("3173435", "gps"), liveRules = setOf(1L))
+
+        val state = store.state.first()
+        assertEquals(setOf("3173435:1", "gps:1"), state.latched)
+        // The fingerprints are a bounded ring and are left to age out.
+        assertEquals(setOf("3173435:rule:7:2026-10-14:DAY"), state.firedFingerprints)
+    }
+
     @Test
     fun `fingerprints are bounded, oldest fall off`() = runBlocking {
         val store = store()

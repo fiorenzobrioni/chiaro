@@ -1,24 +1,18 @@
 package com.callbackdev.chiaro.ui.guide
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Notifications
@@ -60,7 +54,6 @@ import com.callbackdev.chiaro.ui.sky.SkyRow
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.components.segmentShape
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
-import com.callbackdev.chiaro.ui.theme.forText
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -70,9 +63,9 @@ import java.time.LocalTime
  * screen shown once cannot be consulted the day the question actually arrives.
  *
  * Rewritten in the 4th device pass, on the committente's call, into a **tour of the
- * four screens**: what each one answers, what it can do, and the handful of things a
- * screen cannot say out loud (that the sky is computed rather than photographed, that
- * a reminder is loose on purpose, that a failed update is a line in the Journal). The
+ * screens** (three since the Journal left, 14 ott 2026): what each one answers, what it
+ * can do, and the handful of things a screen cannot say out loud (that the sky is
+ * computed rather than photographed, that a reminder is loose on purpose). The
  * old chapter explaining why there is no radar map is gone: a guide is where a
  * product says what it does, not where it defends what it is not, and the useful half
  * of that chapter — where the answer to "is it about to rain?" actually lives —
@@ -80,7 +73,7 @@ import java.time.LocalTime
  *
  * The rule that stays is the one that made it good: it never teaches a control. It
  * teaches what a screen is FOR, and it teaches by showing the real components —
- * [VerdictChip], [MetricTile], [FreshnessChip], the drift strip — each with a caption
+ * [VerdictChip], [MetricTile], [FreshnessChip], the week's rows — each with a caption
  * saying it is an example, never a number posing as this reader's own.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -127,7 +120,7 @@ private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifi
     ) {
         Paragraph(stringResource(R.string.guide_intro))
 
-        // The map first: four glyphs a reader can recognize at the bottom of the app,
+        // The map first: three glyphs a reader can recognize at the bottom of the app,
         // so every chapter below is already placed before it starts.
         Chapter(icon = null, text = stringResource(R.string.guide_map_title))
         TabMap()
@@ -248,9 +241,6 @@ private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifi
         )
         Caption(stringResource(R.string.guide_alerts_official_credit))
 
-        Chapter(Icons.Outlined.DateRange, stringResource(R.string.guide_journal_title))
-        JournalChapter()
-
         Chapter(Icons.Outlined.LocationOn, stringResource(R.string.guide_places_title))
         Paragraph(stringResource(R.string.guide_places_p1))
         Feature(
@@ -313,31 +303,6 @@ private fun Chapter(icon: ImageVector?, text: String) {
     }
 }
 
-/**
- * The Journal's chapter, under its title: here, and in the sheet the Journal opens from
- * «Come si legge il diario» (review of the Journal, A.10), so the two can never say
- * different things. In a [Column] that spaces its children, as both callers' are.
- */
-@Composable
-internal fun JournalChapter() {
-    Paragraph(stringResource(R.string.guide_journal_p1))
-    // In the page's own order: the week's answer, how the forecast did, then the log.
-    Feature(
-        stringResource(R.string.guide_journal_drift_title),
-        stringResource(R.string.guide_journal_drift_body)
-    )
-    DriftSample()
-    Caption(stringResource(R.string.guide_journal_drift_caption))
-    Feature(
-        stringResource(R.string.guide_journal_skill_title),
-        stringResource(R.string.guide_journal_skill_body)
-    )
-    Feature(
-        stringResource(R.string.guide_journal_entries_title),
-        stringResource(R.string.guide_journal_entries_body)
-    )
-}
-
 /** Guide prose is bodyLarge (DESIGN §5): 16/24, made to be read, not scanned. */
 @Composable
 private fun Paragraph(text: String) {
@@ -375,14 +340,13 @@ private fun Caption(text: String) {
 // The samples: the app's own components, shown as themselves
 // ---------------------------------------------------------------------------------
 
-/** The bottom bar, spelled out: the same four glyphs, in the same order. */
+/** The bottom bar, spelled out: the same three glyphs, in the same order. */
 @Composable
 private fun TabMap() {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         TabRow(ChiaroIcons.tabToday, R.string.tab_today, R.string.guide_map_today)
         TabRow(ChiaroIcons.tabSky, R.string.tab_sky, R.string.guide_map_sky)
         TabRow(Icons.Outlined.Notifications, R.string.tab_alerts, R.string.guide_map_alerts)
-        TabRow(Icons.Outlined.DateRange, R.string.tab_journal, R.string.guide_map_journal)
     }
 }
 
@@ -489,8 +453,8 @@ private fun FreshnessSample() {
  * the screen that ask to be decoded rather than read, so the guide shows them and its
  * caption says what to look at. Today is clear, with the dot on the range bar and the
  * spent morning faded; tomorrow clouds over after lunch and rains from 15 to 17, with
- * the wet lane under its ribbon. The days are the real ones, as the drift strip's are;
- * the light is a generic mid-latitude day and the numbers are the example.
+ * the wet lane under its ribbon. The days are the real ones; the light is a generic
+ * mid-latitude day and the numbers are the example.
  */
 @Composable
 private fun WeekSample() {
@@ -566,59 +530,6 @@ private fun MetricSample() {
             track = humidityTrack(62),
             modifier = Modifier.weight(1f)
         )
-    }
-}
-
-/**
- * The drift strip in miniature, drawn the way the Journal draws it: a row per day
- * ahead, a column per six-hour slot, the rain ramp for color, and an empty slot drawn
- * as absence — the guide has to teach the gap too, or the first night with the phone
- * off looks like a bug. The days are the real next three — a strip labelled with
- * invented weekdays would be the guide teaching a calendar nobody has — and only the
- * percentages are the example.
- */
-@Composable
-private fun DriftSample() {
-    val locale = currentLocale()
-    val today = LocalDate.now(LocalClock.current)
-    val rows = listOf(
-        listOf(70, 60, null, 40, 30, 20), // a day that kept improving, across a gap
-        listOf(20, 25, null, 20, 15, 20), // a day that held
-        listOf(10, 20, null, 50, 60, 70)  // a day that turned
-    )
-    Column(
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        rows.forEachIndexed { index, percentages ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = Formats.dayLabel(today.plusDays(index + 1L), locale),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    // §10, and the same column as the Journal's own strip.
-                modifier = Modifier.width(52.dp.forText())
-                )
-                percentages.forEach { percent ->
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(16.dp)
-                            .padding(1.dp)
-                            .let { base ->
-                                if (percent != null) {
-                                    base.background(ChiaroTheme.colors.rainAt(percent))
-                                } else {
-                                    base.border(
-                                        width = 0.5.dp,
-                                        color = MaterialTheme.colorScheme.outlineVariant
-                                    )
-                                }
-                            }
-                    )
-                }
-            }
-        }
     }
 }
 

@@ -115,8 +115,8 @@ class ChiaroNavigationStateTest {
         val nav = state()
         nav.switchTab(ShellTab.SKY)
         nav.navigate(SkyGuideKey(inTab = true))
-        nav.switchTab(ShellTab.JOURNAL)
-        assertEquals(listOf(TodayKey, JournalKey), nav.onScreen())
+        nav.switchTab(ShellTab.ALERTS)
+        assertEquals(listOf(TodayKey, AlertsKey), nav.onScreen())
 
         nav.switchTab(ShellTab.SKY)
         assertEquals(SkyGuideKey(inTab = true), nav.currentKey)
@@ -143,7 +143,7 @@ class ChiaroNavigationStateTest {
         // rememberNavBackStack saves the stacks through kotlinx.serialization: a key
         // without its serializer would crash on the first rotation, not at compile time.
         val keys: List<NavKey> = listOf(
-            TodayKey, SkyKey, AlertsKey, JournalKey, SettingsKey, GuideKey,
+            TodayKey, SkyKey, AlertsKey, SettingsKey, GuideKey,
             SkyGuideKey(inTab = true), SkyEventKey("golden_hour.pm", inTab = false)
         )
         keys.forEach { key ->

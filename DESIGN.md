@@ -209,7 +209,7 @@ light  #DFEFFC  #AFD9F6  #76BCEC  #2E97DE  #006FAC     Y .84 .65 .46 .28 .14
 dark   #0E2E44  #004B6F  #006C98  #0092C8  #55BCEC     Y .02 .06 .13 .25 .44
 ```
 
-That is the ramp of the **marks** — the sparkline, the drift cell, the swatch — and it
+That is the ramp of the **marks** — the sparkline, the swatch — and it
 cannot carry text: on paper its light end is 1.12:1 and its middle 1.96:1. So a printed
 probability has a **second ramp of the same quantity, selected as ink** (6 set 2026, after
 a device report: the week's 0% was the heaviest figure in a column of pale blues, because
@@ -679,14 +679,14 @@ there is no exception.
 | `displaySmall` | 36 / 44 | 400 | a day's high in the expanded day sheet |
 | `titleLarge` | 22 / 28 | 500 | the headline sentence |
 | `titleMedium` | 16 / 24 | 600 | section titles, metric values |
-| `bodyLarge` | 16 / 24 | 400 | prose in the guide and the journal |
+| `bodyLarge` | 16 / 24 | 400 | prose in the guide |
 | `bodyMedium` | 14 / 20 | 400 | card body |
 | `bodySmall` | 12 / 16 | 400 | the meaning line under a number, timestamps |
 | `labelLarge` | 14 / 20 | 500 | buttons, chips, the hour strip's temperature |
 | `labelSmall` | 11 / 16 | 500 | axis labels, ribbon legends |
 
 **Every figure that sits in a column is tabular** (`FontFeatureSetting("tnum")`): the hour
-strip, the week rows, the journal's deltas. Proportional digits in a column are the
+strip, the week rows, the rows of the sky's moments. Proportional digits in a column are the
 typographic equivalent of a wobbling table, and this app has a lot of columns.
 
 **The hero is bold, and the bold is tracked in** (20 set 2026, from 300). The old rule
@@ -1148,7 +1148,7 @@ the forecast's dry length from three days, and today's high while it is ahead (t
 that prints it, a degree over now), else tomorrow's range — «Prossima pioggia domenica,
 massima 23° verso le 16:00». When today's high is three degrees or more from yesterday's, the
 hour gives way to the difference — «massima 26°, 4° più di ieri» (13 ott 2026) — yesterday's
-high read off the Journal, the newest commit of yesterday's date and the `high_c` it wrote for
+high read off the history, the newest commit of yesterday's date and the `high_c` it wrote for
 it: no fetch, no new field, and silence on a phone that did not fetch yesterday. Facts the forecast holds, never a filler; the widgets' brief
 register leaves a quiet day to their own fallback, the sky right now. **At least 280dp plus the status
 bar, and taller when its text needs it** (8 set 2026): everything on it is measured in sp
@@ -1605,9 +1605,8 @@ that said which row was which before it was read. Now:
   warning colour for the absence of a warning.
 - **The rule cards** take the same 24dp shape and a drawing of what the first condition watches
   (frost for a temperature that must fall to zero), faded while the rule is off.
-- **The ideas are cards in a sideways row** (176 × 204dp): drawing, promise, what it checks, and
-  «Aggiungi» — or «Già aggiunta», inert — in the accent. An idea is picked up, not configured, and
-  five more rows at the foot read as five more settings.
+- **The ideas live in the FAB's sheet** (14 ott 2026). They were cards in a sideways row
+  (176 × 204dp) at the foot of the page until then, and later only while «I tuoi» was empty.
 
 **In the Sky's shape** (committente, 14 ott 2026, the Alerts review, points 1 to 6). The design
 review of 23 set gave the screen its groups; the Sky's review of 14 ott gave the app a second
@@ -1675,8 +1674,11 @@ of a confirmation.
   which is now the FAB's word), then «Parti da un'idea» and the ideas as rows, the drawing in
   front and `+` or `✓` after; a row already added is inert and says «Già aggiunto» to TalkBack.
   The rows sit on the sheet's ground (`ListItem`'s default `surface` striped it, rendered). The
-  sideways row of idea cards stays on the page only while «I tuoi» is empty: it is that section's
-  empty state, where its title would otherwise stand over nothing (§1.1).
+  FAB is the only way in: an empty «I tuoi» is one line at `bodyMedium` in `onSurfaceVariant`,
+  «Gli avvisi che scrivi tu, per quello che fai: «Nuovo avviso» parte da un'idea o da zero.», so
+  the title does not stand over nothing (§1.1). Until 14 ott 2026 the sideways row of idea cards
+  was that empty state, and the page changed shape at the first alert (the committente saw it
+  on device: two ways in to the same sheet, then one).
 - **«Annulla», not «Eliminare questo avviso?»** (point 10). Deleting closes the editor and shows
   «"Bici" eliminato · Annulla», `Long`; undo puts the rule back as the sheet showed it (its unsaved
   name and message included), in its place and with its own id (`RuleStore.restore`), so its
@@ -1699,151 +1701,26 @@ of a confirmation.
   is the scroll that carried its answer into view: the answer is read before anything is changed,
   as the Sky's is.
 
-**8.10 JournalEntry** and **DriftStrip** — an entry is a line of prose with its numbers.
-The drift strip is one row per target day — today included while it runs (8 set 2026) —
-and one column per six-hour slot, colored on **the metric's own ramp** (rain on the rain
-ramp, temperature on the diverging one) rather than on a good/bad scale: whether Saturday
-got "better" is a judgement, and the judgement belongs in the sentence beside the strip,
-not in the color. Legend always present, cells ≥ 8dp, and a table view behind a tap or a
-long press for anyone who cannot read the colors at all — a grid with the slot's hour over
-each column, not a line of arrows. The strip, its chips, the frost line and the sentence
-sit in one `surfaceContainer` card. An entry's glyph names its **category** (a revision, a
-sky moment observed, an alert fired, a day checked, an update missed) and is a Material
-silhouette in `onSurfaceVariant` for all five: these are not weather icons, so §13.1's
-"keep their colors" does not reach them, and a monochrome set is the consistent one. The
-hour trails the row as a label. A journal day's revisions of one target day fold into one
-line, first value to last, saying how many updates it took; a value that came back where
-it started is not a change.
-
-**Redrawn on the design review of 23 set 2026**, because the screen was the most anonymous
-in the app — a column of identical grey silhouettes beside grey text:
-
-- **The entries are a thread.** Each line's category sits in a **40dp badge** in the
-  category's own tone — a revision in `primaryContainer`, an alert of yours in
-  `secondaryContainer`, an official warning in its level's pair, a missed update in the quiet
-  `surfaceContainerHighest` — and the lines that are about the sky carry the weather family's
-  own drawing instead (the sky moment's, and for a closed day the rain or the sun it actually
-  had). A 2dp `outlineVariant` hairline joins the badges of one day. This overrides the
-  monochrome rule above: a category is still named by its glyph, and the tone is its second
-  carrier, never a judgement (a revision is the same colour whether it got better or worse —
-  the sentence says which).
-- **The numbers say where the forecast is now**: in a revision, the value it came from in the
-  quiet ink and the value it is now in full weight, the rain one on the rain's ink ramp.
-- **A sky moment's verdict is the chip** the Sky screen prints, not a phrase.
-- **Day headings stick** while their entries scroll, with the full date beside «Oggi» or
-  «Ieri» and the day's count of entries.
-- **The drift card leads with its sentence** at `titleMedium`, the metric chips carry the
-  quantity's drawing, the strip names its time axis at the two ends (the oldest column's day,
-  «ultimo aggiornamento»), its cells are 3dp-rounded and 20dp tall, and **the row the sentence
-  names is picked out** on a `surfaceContainerHighest` band with its label in bold.
-- **How the forecast did** (new, from three closed days on): the high's average distance from
-  what was seen, and the rain it was given on the days it rained against the days it did not —
-  averages, never a right/wrong tally, because a 40% chance that stayed dry was not wrong —
-  over one column per day: the rain it was given as a bar on the rain ramp, what the day did as
-  its drawing.
-- The diary's own words for a failed update («Il telefono era offline»), where it used to repeat
-  the app's error line under a headline that had just said the same.
-
-**The week's hero** (review of the Journal, points A.1 and A.2, 14 ott 2026), in the Sky's
-shape. The drift card is the head of the page: `shapes.extraLarge` (28 dp) on
-`surfaceContainerHigh`, 20 dp of padding, 8 dp from the header like the tonight card. Inside, a
-label («La settimana», `labelLarge`, `onSurfaceVariant`), **the answer as a word** at
-`headlineMedium` («Sabato 17 migliora», «… peggiora», «… si scalda», «… si rinfresca», «… va su e
-giù», «Settimana ferma»), its **arithmetic on a line of its own** at `bodyLarge` tabular, the
-value it came from in the quiet ink and the value it is now in full weight (the rain one on the
-rain's ink ramp, as in the entries), then the chips, the strip and the frost line. The section
-title over the card is gone: the label is its job. The one-line sentence it replaces wrapped
-inside its own number at 384 dp («pioggia 52% →» over «5%.»), which is the pair §8.7 does not let
-come apart. Before there are two columns to compare, the hero still answers: «Ancora presto»,
-with the sentence that says when the trend arrives (no more «deriva»: jargon). The ground is
-neutral on purpose: the strip under the word is on the rain and temperature ramps, which must
-read as themselves, so the weight is the type's and the shape's. The row the word names is now
-picked out on `surfaceContainerLowest`: `surfaceContainerHighest`, one step from the new ground,
-all but vanished in the light dress. **How the forecast did** takes the same 28 dp and 20 dp of
-padding, on `surfaceContainer`, one step quieter than the hero, as the Sky's moments sit under
-its night; it was 16 dp under a hero of 12, two radii one above the other.
-
-**The log in the Sky's dress** (review of the Journal, points A.3, A.4, A.5 and A.9, 14 ott
-2026):
-
-- **The hour is a column**: `titleMedium` tabular in full ink on the headline's line, as the
-  Sky's rows print their times. In `labelMedium` grey it was the faintest thing on the row of a
-  log that is scanned by the hour.
-- **The Sky's hierarchy**: a section title («Cosa è successo») over the log, the days in
-  `labelLarge` in `primary` with the full date beside them in the quiet ink, still sticky. The
-  count of entries («5 voci») is gone: a number with nothing to do with it.
-- **Badges are drawings, not commands.** A revision carries the drawing of the quantity that
-  moved (the drops for the rain, the thermometer for the high or the low, rain first when both),
-  as the metric chips draw them; never the day's weather, which the entry does not carry and a
-  probability alone must not invent. An alert that fired carries its card's drawing from Alerts
-  (`ruleIcon`, by name), and keeps the bell when that alert is gone. A missed update or bulletin
-  carries a cloud crossed out (`ic_not_reached`, in `ic_warning`'s hand): the pencil read as
-  «edit» and the circular arrow as «try again», buttons that were not there, and Meteocons'
-  «not available» is the letters N/A.
-- **How the forecast did** names its columns by weekday and day number on two lines («mar» over
-  «13»): the weekday's initial alone said «M» for Tuesday and Wednesday. The weekday shrinks
-  rather than clips at ten columns on 360 dp (`TextAutoSize`, down to 8 sp), and the columns are
-  4 dp apart.
-
-**A line opens its page** (review of the Journal, points A.6 and A.11, 14 ott 2026), as a row
-of the Sky opens its moment: the whole line is the target, with no chevron (the same 24 dp
-reason as the Sky's rows) and an `onClickLabel` that tells TalkBack what the tap does.
-
-- An **observed sky moment** opens its page, the one the agenda and the catalog open, without
-  the agenda's add-or-remove button: the diary records, the agenda is kept on its tab.
-- A **warning** opens the bulletin's sheet (§8.13), only while the bulletin in hand still
-  covers the line's day: the app keeps no other, and a line about a day gone by would open
-  another bulletin's grades.
-- An **alert that fired** opens its editor on Alerts, at that tab's root; one deleted or
-  renamed since stays still.
-- A **revision** opens **the story of its day**: the strip's row read down, one line for each
-  column that moved the rain or the high, newest on top, the number that moved in full ink
-  and semibold and the one that held in the quiet ink, the rain on its own ramp. A slot no
-  fetch landed in is not a step. A day the strip no longer holds has no story and its line
-  stays still. (The first form of the review's C.2; its two step charts come later.)
-- A **missed update** and a **closed day** open nothing: the line is their whole story.
-
-Every line is **one node** for TalkBack: a line that opens is one by being clickable, the
-others merge their descendants. The sentence, the facts and the hour used to be three stops,
-the hour last and on its own.
-
-**The strip under a finger** (review of the Journal, point C.1, 14 ott 2026), the Sky night
-strip's gesture on a grid. A horizontal drag starts at once; holding still needs the long
-press, so a vertical scroll that begins on the strip never flashes a reading. The square
-under the finger is ringed in `onSurface` (2 dp), its row and its column stay lit and every
-other square steps back to 30%, and its day's name turns bold. The line over the strip,
-`labelLarge` tabular and two lines tall so a wrap never moves the grid under the finger,
-reads it: «Sabato 17, previsione di martedì alle 15:07: pioggia 45% · massima 22°», the
-metric on screen first; a slot no update landed in says «nessun aggiornamento verso…», an
-update that did not reach the day «non ancora nella previsione di…». With no finger down it
-is the hint, «Trascina sulla striscia per leggere ogni casella», above the strip as on the
-Sky (the review's A.8). Each square crossed is a light tick, the long press a firm one.
-Lifting the finger brings the hint back; a tap still opens the table, and the long press no
-longer does. For TalkBack each day is an adjustable control over the updates, one step per
-column, its state that square's reading (the newest until moved); the line itself is silent.
-
-**Rain or highs is a segmented button** (review of the Journal, A.7, 14 ott 2026): one
-choice of two, so Material's component for an exclusive choice, as wide as the strip, where
-two filter chips said «filters you can turn on together». Each segment keeps its quantity's
-drawing in place of the check mark. **A door to the guide** (A.10): under the hero, «Come si
-legge il diario», the Sky's «Che cosa sono questi eventi» row in shape, opens the guide's
-Journal chapter in a sheet over the page it explains (`JournalChapter`, the one composable
-the guide itself draws, so the two cannot drift).
+**8.10 JournalEntry** and **DriftStrip** — removed with the Journal (14 ott 2026, VISION
+§5.5). What survives of them is Today's "What changed" (§8.1): the same sentence, «Sabato 5 è
+migliorato: pioggia 70% → 30%», at `bodyMedium`, no tap target behind it, the judgement in the
+words and never in a color.
 
 **8.11 States** — empty ("no place yet", with the one action that fixes it), error (what
 failed, in plain language, and a retry), stale (§8.2), loading (a shimmer that cannot be
 mistaken for a value, §1.1).
 
-**8.12 Navigation** — a Material 3 `NavigationBar` with four destinations, a place switcher
-in the app bar with a dots indicator, and a horizontal pager between saved places. Since
+**8.12 Navigation** — a Material 3 `NavigationBar` with three destinations (four until the
+Journal left, 14 ott 2026), a place switcher in the app bar with a dots indicator, and a
+horizontal pager between saved places. Since
 22 set 2026 the shell is Navigation 3 (`ui/shell/ChiaroNavigation.kt`): one back stack per
 tab, Today's stack always under the selected one so back from a tab's root lands on Today,
 and the bar drawn over the pages rather than beside them, so it can slide away under
 Settings and the guide without re-laying out the page under it. The motion is §7.
 
-**8.12b TabHeader** (14 ott 2026, review of the Sky screen, point 10) — the header of Sky,
-Alerts and Journal: the tab's name at `titleLarge`, the place under it at `titleSmall` with a
-chevron, Settings at the end. One composable (`ui/components/TabHeader.kt`) where there were
+**8.12b TabHeader** (14 ott 2026, review of the Sky screen, point 10) — the header of Sky
+and Alerts (and of the Journal, until it left the same day): the tab's name at
+`titleLarge`, the place under it at `titleSmall` with a chevron, Settings at the end. One composable (`ui/components/TabHeader.kt`) where there were
 three copies, each of which made only the place's line clickable: a target about 20 dp tall,
 under §6's 48. The target is now the name and the place together, 28 + 20 = 48 dp, at least
 48 wide, clipped to a 12 dp shape and inset 8 dp so its ripple has room while the text stays
@@ -1872,16 +1749,15 @@ ieri alle 15:07", "bollettino del 10 set 2026 alle 15:07". The hour alone was wh
 surface printed, and it lied by omission on the most ordinary reading there is: the
 Dipartimento publishes in the afternoon for today **and tomorrow**, so a reader who opens
 the app in the morning is looking at yesterday's bulletin — and a banner read at 12:33
-saying "delle 15:07" named an hour that had not happened yet that day. One phrase, four
-surfaces: the banner, Avvisi's quiet card, the notification, the Journal's warning line
-(which compares against its own entry's day, not the reader's). **The sheet is the
+saying "delle 15:07" named an hour that had not happened yet that day. One phrase, three
+surfaces: the banner, Avvisi's quiet card, the notification. **The sheet is the
 exception and always carries the full date**, because it is the provenance surface and
 the attribution the licence asks for should not depend on when it is read.
 
 `ic_warning` is **a drawing, never the character ⚠**, at the verdict marks' own 2.4 stroke
 in a 24 box, for the reason those exist: the character is not in the app's face and the
 phone draws it from whatever fallback it has. It is the mark of one category everywhere it
-appears — banner, sheet, journal line, widget chip — and it is tinted, never recoloured.
+appears — banner, sheet, card, widget chip — and it is tinted, never recoloured.
 
 The **sheet** (`ModalBottomSheet`) is the arithmetic behind the banner. Title "Allerta per
 *Nodo Idraulico di Milano*" with the region under it; then a grid, one row per hazard and
@@ -2004,7 +1880,7 @@ headers, with the privacy note as a paragraph among eleven credits. Now:
   something in it the moment it is made. Silent to a screen reader: the rows say every choice.
 - **Privacy is its own group and a statement**: a card in `secondaryContainer` with a lock, one
   line in `titleSmall` («Niente account, niente pubblicità, niente tracciamento.») and three
-  facts, each checked against the code — no server of Chiaro's own, so places, alerts and journal
+  facts, each checked against the code — no server of Chiaro's own, so places, alerts and settings
   stay on the phone; Open-Meteo gets only the place asked about or searched for, a position
   rounded to ~1 km (`LocationProvider`, two decimals); no identifier.
 - **The credits are a group of their own** («Dati e riconoscimenti»), apart from who made the app.
@@ -2094,7 +1970,7 @@ notification to remove. What changed is **when** they speak:
   midnight is one notification; the storm's rain never adds a second one.
 - **A bulletin that repeats itself is quiet.** What a warning notification told is kept cell
   by cell (day, hazard, level); the next afternoon's bulletin saying the same is the
-  Journal's. A new day or a higher level is news.
+  card's to show. A new day or a higher level is news.
 - **A fact about today speaks once, from 06:00** (rules on `today.*`).
 - **Quiet hours, 22–7 on the phone's clock**: everything arrives, nothing rings — except a red
   official warning and the sky reminders, which the reader set for the night. The Alerts
@@ -2138,8 +2014,7 @@ Direct labels on the extremes only — never a number on every point.
 ### 9.3 Every chart has a text equivalent
 
 The rain chart prints the ends of its scale and the hours under it, and the strip above it
-prints every one of its values; the range bar's ends are printed, the drift strip has a
-table view. This is both the accessibility floor and §1.2: a picture of a number is not a
+prints every one of its values; the range bar's ends are printed. This is both the accessibility floor and §1.2: a picture of a number is not a
 number.
 
 ---
@@ -2150,14 +2025,13 @@ number.
   in §12. Non-text marks ≥ 3:1, with one declared exception measured and argued in §13.1
   (the weather icon on the widget's Cielo card, where the ground is a mid-tone sky). A quantity that is both drawn and printed therefore owns
   two ramps, and the fill one never paints a figure (§2.3). The canvas is covered by the scrim contract (§3.6).
-- **Never color alone**: verdicts carry a glyph and a word; the drift strip has a table;
-  chart series are direct-labeled.
+- **Never color alone**: verdicts carry a glyph and a word; chart series are direct-labeled.
 - **Type scale to 200%**: layouts wrap and reflow, they do not clip or ellipsize a value.
   The week rows and the metric grid are the two places this is tested, and both have a
   `fontScale = 2f` preview beside their normal one so the check is a thing you look at.
   Clipping was never the risk — there is not one `maxLines` in `ui/` — but **a column
   measured in dp holding text measured in sp comes apart on its own**: at 200% the week
-  row's four columns, the hour cell, the timeline's clock and the drift strip's date all
+  row's four columns, the hour cell, the timeline's clock and the Journal's strip date all
   held text twice their width, and nothing was cut off because it wrapped mid-value into
   a line the row had no height for. Two rules, in `ui/theme/TextScale.kt`: a column that
   holds text is **measured in text** (`Dp.forText()`, capped at 2.0 where the system's own
