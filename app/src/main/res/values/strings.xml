@@ -978,16 +978,16 @@
     <string name="alerts_next_today">Next, today</string>
     <string name="alerts_next_tomorrow">Next, tomorrow</string>
     <string name="alerts_window_bulletin">The bulletin</string>
+    <!-- «Yours» with no alert yet (14 ott 2026): what the section is for, and the one way in. -->
+    <string name="alerts_yours_empty">The alerts you write, for what you do: “New alert” starts from an idea or from scratch.</string>
     <string name="alerts_templates_title">Start from an idea</string>
     <string name="alerts_max_reached">You already have the most alerts the app keeps, %1$d: remove one to add another.</string>
     <string name="tpl_already_added">Already added</string>
-    <string name="tpl_add">Add</string>
-    <!-- The blank idea (26 set 2026): the first card of the row, a rule built from nothing. -->
+    <!-- The blank idea (26 set 2026): the first row of the ideas sheet, a rule built from nothing. -->
     <string name="tpl_blank_title">From scratch</string>
     <string name="tpl_blank_desc">You pick what to watch, the threshold, the hours and the message.</string>
     <string name="tpl_blank_name">My alert</string>
     <string name="tpl_blank_message" formatted="false">Your alert fired: {trigger.value}.</string>
-    <string name="tpl_create">Create</string>
     <string name="rule_sentence_prefix">When</string>
     <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
     <!-- Two bounds on one quantity, said once: «la temperatura adesso fra 5° e 26°». -->

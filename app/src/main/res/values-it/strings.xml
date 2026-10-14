@@ -959,16 +959,16 @@
     <string name="alerts_next_today">Il prossimo, oggi</string>
     <string name="alerts_next_tomorrow">Il prossimo, domani</string>
     <string name="alerts_window_bulletin">Il bollettino</string>
+    <!-- «I tuoi» senza avvisi (14 ott 2026): a cosa serve la sezione, e l'unico ingresso. -->
+    <string name="alerts_yours_empty">Gli avvisi che scrivi tu, per quello che fai: «Nuovo avviso» parte da un\'idea o da zero.</string>
     <string name="alerts_templates_title">Parti da un\'idea</string>
     <string name="alerts_max_reached">Hai già il massimo di avvisi che l\'app tiene, %1$d: togline uno per aggiungerne un altro.</string>
     <string name="tpl_already_added">Già aggiunto</string>
-    <string name="tpl_add">Aggiungi</string>
-    <!-- L'idea vuota (26 set 2026): la prima carta della fila, un avviso costruito da zero. -->
+    <!-- L'idea vuota (26 set 2026): la prima riga del foglio delle idee, un avviso costruito da zero. -->
     <string name="tpl_blank_title">Da zero</string>
     <string name="tpl_blank_desc">Scegli tu cosa guardare, la soglia, gli orari e il messaggio.</string>
     <string name="tpl_blank_name">Il mio avviso</string>
     <string name="tpl_blank_message" formatted="false">Il tuo avviso è scattato: {trigger.value}.</string>
-    <string name="tpl_create">Crea</string>
     <string name="rule_sentence_prefix">Quando</string>
     <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
     <!-- Two bounds on one quantity, said once: «la temperatura adesso fra 5° e 26°». -->

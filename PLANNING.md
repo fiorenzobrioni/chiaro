@@ -13254,3 +13254,28 @@ tutti i problemi trovati nella revisione, anche i minori**.
   le schermate del README senza `-PupdateScreenshots`), lint pulito.
 - Schermate del README rigenerate e guardate una per una: la barra ha tre schede (Oggi, Cielo,
   Avvisi), la guida e Impostazioni dicono «tre schermate». Widget e notifica non cambiano.
+
+## Avvisi: «Nuovo avviso» è l'unico ingresso (committente, 14 ott 2026)
+
+Provando l'app il committente ha visto due ingressi alla stessa cosa: con «I tuoi» vuoto la fila
+delle idee sulla pagina e il FAB «Nuovo avviso», che apre le stesse idee in un foglio; al primo
+avviso creato la fila spariva e restava il FAB. Era voluto (punto 9 della revisione di Avvisi: la
+fila come stato vuoto della sezione), ma letto sul telefono era un salto della pagina che
+sembrava un errore. Decisione: **solo il FAB, con una riga di stato vuoto**.
+
+- [x] La fila delle idee esce dalla pagina (`IdeaCard`, le sue misure, `tpl_add`, `tpl_create`).
+  Le idee vivono solo nel foglio del FAB, con «Da zero» in testa, come già con un avviso.
+- [x] «I tuoi» vuoto è una riga, `alerts_yours_empty` (IT/EN): «Gli avvisi che scrivi tu, per
+  quello che fai: «Nuovo avviso» parte da un'idea o da zero.» Il titolo della sezione non sta
+  sopra il nulla (DESIGN §1.1), che era la ragione della fila, e al primo avviso cambia una riga,
+  non un blocco di card.
+- [x] VISION §5.4, DESIGN (Avvisi), CHANGELOG. La guida diceva già che le idee si aprono da
+  «Nuovo avviso»: nessuna parola da cambiare.
+
+Scartato: tenere le card e nascondere il FAB finché la sezione è vuota. Il pulsante sarebbe
+comparso dal nulla dopo il primo avviso: lo stesso salto, al contrario.
+
+Verificato con `AlertsYoursEmptyTest` (nuovo, Robolectric): con «I tuoi» vuoto la pagina ha la
+riga e nessuna idea, e «Nuovo avviso» apre il foglio con «Da zero» e «Parti da un'idea». Suite
+completa e lint verdi. Le schermate del README rigenerate non cambiano: nessuna mostra «I tuoi»
+vuoto.

@@ -1605,9 +1605,8 @@ that said which row was which before it was read. Now:
   warning colour for the absence of a warning.
 - **The rule cards** take the same 24dp shape and a drawing of what the first condition watches
   (frost for a temperature that must fall to zero), faded while the rule is off.
-- **The ideas are cards in a sideways row** (176 × 204dp): drawing, promise, what it checks, and
-  «Aggiungi» — or «Già aggiunta», inert — in the accent. An idea is picked up, not configured, and
-  five more rows at the foot read as five more settings.
+- **The ideas live in the FAB's sheet** (14 ott 2026). They were cards in a sideways row
+  (176 × 204dp) at the foot of the page until then, and later only while «I tuoi» was empty.
 
 **In the Sky's shape** (committente, 14 ott 2026, the Alerts review, points 1 to 6). The design
 review of 23 set gave the screen its groups; the Sky's review of 14 ott gave the app a second
@@ -1675,8 +1674,11 @@ of a confirmation.
   which is now the FAB's word), then «Parti da un'idea» and the ideas as rows, the drawing in
   front and `+` or `✓` after; a row already added is inert and says «Già aggiunto» to TalkBack.
   The rows sit on the sheet's ground (`ListItem`'s default `surface` striped it, rendered). The
-  sideways row of idea cards stays on the page only while «I tuoi» is empty: it is that section's
-  empty state, where its title would otherwise stand over nothing (§1.1).
+  FAB is the only way in: an empty «I tuoi» is one line at `bodyMedium` in `onSurfaceVariant`,
+  «Gli avvisi che scrivi tu, per quello che fai: «Nuovo avviso» parte da un'idea o da zero.», so
+  the title does not stand over nothing (§1.1). Until 14 ott 2026 the sideways row of idea cards
+  was that empty state, and the page changed shape at the first alert (the committente saw it
+  on device: two ways in to the same sheet, then one).
 - **«Annulla», not «Eliminare questo avviso?»** (point 10). Deleting closes the editor and shows
   «"Bici" eliminato · Annulla», `Long`; undo puts the rule back as the sheet showed it (its unsaved
   name and message included), in its place and with its own id (`RuleStore.restore`), so its

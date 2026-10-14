@@ -38,8 +38,8 @@ sections are a normal size and live here alone.
 - **Alerts opens with an answer.** One card at the top says whether there is a warning for your
   place, which window your phone may ring in next («Next, today: the evening summary, 18–23»)
   and draws the day of alerts under it, with the Sky's hour ticks and its line for now. «New alert» is now a button that floats over the page and
-  opens the ideas, with «From scratch» first; the row of ideas stays on the page only until you
-  have an alert of your own. Deleting an alert no longer asks first: it shows «Undo», which brings
+  opens the ideas, with «From scratch» first. It is the only way to add one: with no alert of
+  your own yet, «Yours» says in one line what it is for. Deleting an alert no longer asks first: it shows «Undo», which brings
   it back exactly as it was.
 - **Every alert says whether it is true now.** Each of your alerts shows a line such as «Not
   right now · it is 19.7°, it needs below 5°» or «True right now, but outside its hours until
