@@ -57,7 +57,10 @@ sealed interface SkyUiState {
         val subscribedIds: Set<String> = emptySet(),
         /** The place's own coordinates, for the compass: where magnetic north is from
          * true north there (14 ott 2026). */
-        val coordinates: Coordinates? = null
+        val coordinates: Coordinates? = null,
+        /** The enabled lines as the store keeps them, leads included: what «Annulla»
+         * puts back after a removal (review point 9, 14 ott 2026). */
+        val subscriptions: List<SkySubscription> = emptyList()
     ) : SkyUiState
 }
 
@@ -285,7 +288,8 @@ object SkyStateBuilder {
             defaultLead = SkyLead.ofMinutes(settings.skyNotifyDefaultMin),
             notifyOnFail = settings.skyNotifyOnFail,
             subscribedIds = subscriptions.filter { it.enabled }.map { it.jobId }.toSet(),
-            coordinates = city.coordinates
+            coordinates = city.coordinates,
+            subscriptions = subscriptions.filter { it.enabled }
         )
     }
 

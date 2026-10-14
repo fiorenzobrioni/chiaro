@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.callbackdev.chiaro.data.SkySubscription
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
 import com.callbackdev.chiaro.data.ServiceLocator
@@ -72,6 +73,9 @@ class SkyViewModel(
     fun addMoment(jobId: String) = mutate { subscriptionStore.add(jobId) }
 
     fun removeMoment(jobId: String) = mutate { subscriptionStore.remove(jobId) }
+
+    /** «Annulla» after a removal: the line back as it was, its own lead included. */
+    fun restoreMoment(line: SkySubscription) = mutate { subscriptionStore.restore(line) }
 
     /**
      * This moment's own lead: null follows the default, zero is an explicit "never"

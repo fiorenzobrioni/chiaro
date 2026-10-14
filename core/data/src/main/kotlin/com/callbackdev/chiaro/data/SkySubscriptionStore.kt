@@ -70,6 +70,19 @@ class SkySubscriptionStore(
         edit { current -> current.filterNot { it.jobId == jobId } }
     }
 
+    /**
+     * Puts back a line exactly as it was — its lead included — after [remove] (the Sky
+     * screen's «Annulla», 14 ott 2026). [add] would bring the job back with its lead
+     * forgotten, which is an undo that undoes half. A no-op when the job is already a
+     * line, and for a job the catalog no longer knows.
+     */
+    suspend fun restore(line: SkySubscription) {
+        if (SkyJobCatalog.byId(line.jobId) == null) return
+        edit { current ->
+            if (current.any { it.jobId == line.jobId }) current else current + line
+        }
+    }
+
     /** Comments the line out, or back in — the leading `#` of a real crontab. */
     suspend fun setEnabled(jobId: String, enabled: Boolean) {
         edit { current ->

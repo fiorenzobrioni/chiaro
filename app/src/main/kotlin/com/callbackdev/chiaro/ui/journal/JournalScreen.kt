@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.ui.journal
 
+import com.callbackdev.chiaro.ui.components.TabHeader
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,7 +29,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.horizontalScroll
@@ -37,9 +37,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material.icons.outlined.Refresh
@@ -110,7 +108,8 @@ fun JournalRoute(
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            JournalHeader(
+            TabHeader(
+                title = stringResource(R.string.tab_journal),
                 placeName = (state as? JournalUiState.Ready)?.content?.placeName,
                 onOpenPlaces = { placesOpen = true },
                 onOpenSettings = onOpenSettings
@@ -127,48 +126,6 @@ fun JournalRoute(
     }
 }
 
-@Composable
-private fun JournalHeader(
-    placeName: String?,
-    onOpenPlaces: () -> Unit,
-    onOpenSettings: () -> Unit
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.tab_journal), style = MaterialTheme.typography.titleLarge)
-            if (placeName != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable(onClick = onOpenPlaces)
-                ) {
-                    Text(
-                        text = placeName,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Icon(
-                        imageVector = Icons.Outlined.KeyboardArrowDown,
-                        contentDescription = stringResource(R.string.place_switcher_action),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-        }
-        IconButton(onClick = onOpenSettings) {
-            Icon(
-                imageVector = Icons.Outlined.Settings,
-                contentDescription = stringResource(R.string.settings_title)
-            )
-        }
-    }
-}
 
 @Composable
 private fun NoPlaceForJournal(onOpenPlaces: () -> Unit) {

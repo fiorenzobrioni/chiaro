@@ -1553,6 +1553,15 @@ reminders can be a few minutes early or late) moved: the two preferences to Sett
 «Promemoria del cielo», and the note into the lead picker, where the reader is choosing a
 time; a moment's own picker adds that the usual reminder is changed in Settings.
 
+**«Annulla»** (same day, point 9). An add or a removal made from an event's page closes the
+sheet, and the row that appeared or vanished may be off screen: a snackbar says it («“Ora
+d'oro, sera” tolto dai tuoi momenti») with «Annulla», `Long` because it carries an action
+somebody may need time to reach. Undoing a removal puts the line back **as it was**, its own
+lead included (`SkySubscriptionStore.restore`; `add` would forget it); undoing an add removes
+it. The screen is a `Scaffold` for this, so the FAB rises over the snackbar. The catalog's
+rows need no snackbar (their mark turns in place, and a modal sheet would cover one): a line
+removed there and tapped again within the same sheet comes back with its lead too.
+
 **One moon** (same day, point 6). The card, «today's moon» and the widget read the moon at
 one instant, the middle of the date's astronomical night (`MoonOfTheNight`; the local
 midnight after it where there is none): the screen used to print 99% on the card and 98% on
@@ -1655,6 +1664,15 @@ in the app bar with a dots indicator, and a horizontal pager between saved place
 tab, Today's stack always under the selected one so back from a tab's root lands on Today,
 and the bar drawn over the pages rather than beside them, so it can slide away under
 Settings and the guide without re-laying out the page under it. The motion is §7.
+
+**8.12b TabHeader** (14 ott 2026, review of the Sky screen, point 10) — the header of Sky,
+Alerts and Journal: the tab's name at `titleLarge`, the place under it at `titleSmall` with a
+chevron, Settings at the end. One composable (`ui/components/TabHeader.kt`) where there were
+three copies, each of which made only the place's line clickable: a target about 20 dp tall,
+under §6's 48. The target is now the name and the place together, 28 + 20 = 48 dp, at least
+48 wide, clipped to a 12 dp shape and inset 8 dp so its ripple has room while the text stays
+on the 16 dp margin. It is one button to TalkBack («Cielo, Milano», action «Cambia luogo»).
+Today keeps its own header, over the sky.
 
 **8.13 WarningBanner**, **WarningSheet** and the level chip (Fase 11) — an official warning
 as it reaches a screen.

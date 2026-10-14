@@ -12347,8 +12347,8 @@ Material 3 Expressive) e ha deciso di attuarla tutta. Il piano, nell'ordine in c
 - [x] 5. «Aggiungi momento» come FAB esteso; i promemoria fuori dalla pagina.
 - [x] 6. Una sola luna: la stessa percentuale e la stessa fase ovunque nella pagina.
 - [x] 7. Le icone ripetute (gli sciami, la stella per cinque cose diverse).
-- [ ] 9. «Annulla» dopo un'aggiunta o una rimozione.
-- [ ] 10. Il bersaglio del selettore del luogo a 48 dp (la top app bar flessibile aspetta
+- [x] 9. «Annulla» dopo un'aggiunta o una rimozione.
+- [x] 10. Il bersaglio del selettore del luogo a 48 dp (la top app bar flessibile aspetta
   `material3` 1.5 stabile: la 1.4.0 del BOM non ha `MaterialShapes`, `ButtonGroup`,
   `FloatingToolbar` né le top app bar flessibili; ha `MotionScheme` e `ShortNavigationBar`).
 
@@ -12602,3 +12602,44 @@ I punti 5, 6 e 7 della revisione del Cielo.
   della famiglia. `SkyMomentIconTest` e `MeteoconsSetsTest` aggiornati.
 - La pagina del Cielo, le Impostazioni e i segni in tutte le facce disegnati con Robolectric e
   guardati; le immagini del README rigenerate e guardate.
+
+## Cielo: «Annulla» e il selettore del luogo (committente, 14 ott 2026)
+
+I punti 9 e 10, gli ultimi della revisione del Cielo. Restano aperti solo il punto 4,
+rimandato al passaggio Material 3 Expressive di famiglia, e «Se non stanotte, quando?»,
+scartato.
+
+### Cosa è cambiato
+
+- **Punto 9.** Aggiungere o togliere un momento dalla sua pagina chiude il foglio e mostra una
+  snackbar con «Annulla». Annullare una rimozione rimette la riga **com'era**, con il suo
+  anticipo: `SkySubscriptionStore.restore`, perché `add` lo dimentica; annullare un'aggiunta
+  la toglie. La schermata è uno `Scaffold`, che alza il FAB sopra la snackbar. Nel catalogo
+  niente snackbar (il segno della riga cambia sul posto, e il foglio modale la coprirebbe), ma
+  una riga tolta e ritoccata nello stesso foglio torna con il suo anticipo.
+  `SkyUiState.Content.subscriptions` porta le righe come il negozio le tiene.
+- **Punto 10.** `ui/components/TabHeader.kt` sostituisce le tre copie dell'intestazione di
+  Cielo, Avvisi e Diario. Il bersaglio è il nome della scheda e il luogo insieme, 48 dp di
+  altezza e almeno 48 di larghezza, un pulsante solo per TalkBack. Il testo non si sposta:
+  i dati del README non cambiano.
+
+### Decisioni e deviazioni
+
+- **Tutte e tre le schermate, non solo il Cielo**: il difetto era lo stesso in tre copie, e
+  correggerne una avrebbe lasciato le altre due a 20 dp. Un componente solo perché la
+  prossima correzione arrivi a tutte.
+- **Il bersaglio è il blocco intero e non una riga alta 48**: una riga del luogo alta 48
+  avrebbe allungato l'intestazione di 28 dp; il nome più il luogo fanno già 48, ed è lì che
+  un dito cerca «questo luogo».
+- **La snackbar solo per le azioni che chiudono un foglio**: dove il segno cambia sotto il
+  dito, la ricevuta c'è già e lo stesso tocco è l'annullamento.
+- **`Long`**: la snackbar porta un'azione, e con TalkBack raggiungerla richiede tempo.
+
+### Come è stato verificato
+
+- `SkySubscriptionStoreTest`: ripristinare rimette la riga com'era, anticipo compreso, e una
+  volta sola.
+- `SkyUndoTest`: dalla pagina di «Tramonto» con un anticipo di 30 minuti, togli → la snackbar
+  → «Annulla» → la riga torna con i suoi 30 minuti; il selettore del luogo è un bersaglio di
+  almeno 48 × 48 dp, e senza un luogo il titolo non è un pulsante.
+- Suite completa e lint; le immagini del README rigenerate: nessuna cambia.

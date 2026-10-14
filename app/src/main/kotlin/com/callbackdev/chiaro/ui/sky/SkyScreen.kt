@@ -1,6 +1,17 @@
 package com.callbackdev.chiaro.ui.sky
 
+import com.callbackdev.chiaro.ui.components.TabHeader
 import androidx.activity.compose.BackHandler
+import com.callbackdev.chiaro.data.SkySubscription
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,7 +33,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -32,7 +42,6 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
@@ -128,7 +137,8 @@ fun SkyRoute(
         actions = SkyActions(
             addMoment = skyViewModel::addMoment,
             removeMoment = skyViewModel::removeMoment,
-            setLead = skyViewModel::setLead
+            setLead = skyViewModel::setLead,
+            restoreMoment = skyViewModel::restoreMoment
         ),
         onOpenPlaces = { placesOpen = true },
         onOpenSettings = onOpenSettings,
@@ -153,7 +163,8 @@ internal fun SkyScreen(
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            SkyHeader(
+            TabHeader(
+                title = stringResource(R.string.tab_sky),
                 placeName = (state as? SkyUiState.Content)?.placeName,
                 onOpenPlaces = onOpenPlaces,
                 onOpenSettings = onOpenSettings
@@ -171,44 +182,6 @@ internal fun SkyScreen(
     }
 }
 
-@Composable
-private fun SkyHeader(placeName: String?, onOpenPlaces: () -> Unit, onOpenSettings: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.tab_sky), style = MaterialTheme.typography.titleLarge)
-            if (placeName != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable(onClick = onOpenPlaces)
-                ) {
-                    Text(
-                        text = placeName,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Icon(
-                        imageVector = Icons.Outlined.KeyboardArrowDown,
-                        contentDescription = stringResource(R.string.place_switcher_action),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-        }
-        IconButton(onClick = onOpenSettings) {
-            Icon(
-                imageVector = Icons.Outlined.Settings,
-                contentDescription = stringResource(R.string.settings_title)
-            )
-        }
-    }
-}
 
 @Composable
 private fun NoPlaceForSky(onOpenPlaces: () -> Unit) {
@@ -243,7 +216,9 @@ private sealed interface LeadDialog {
 internal class SkyActions(
     val addMoment: (String) -> Unit,
     val removeMoment: (String) -> Unit,
-    val setLead: (String, Int?) -> Unit
+    val setLead: (String, Int?) -> Unit,
+    /** Puts a removed line back as it was, lead included (review point 9). */
+    val restoreMoment: (SkySubscription) -> Unit = { addMoment(it.jobId) }
 )
 
 @Composable
@@ -283,13 +258,63 @@ private fun SkyContent(
     // Read here and not in the list below: a lazy list's builder is not a composable.
     val clock = LocalClock.current
     val listState = rememberLazyListState()
+    val snackbars = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val res = LocalContext.current.resources
+    val undoLabel = stringResource(R.string.action_undo)
+
+    /**
+     * «Annulla» (review point 9, 14 ott 2026) after an add or a removal made from an
+     * event's page: the sheet closes on the act, and the row that appeared or vanished
+     * may well be off screen, so the snackbar is the receipt and the way back. A removal
+     * is undone by putting the line back as it was, its own lead included ([restore]); an
+     * add by removing it. Long, because it carries an action somebody may need a moment
+     * to reach (and TalkBack users more than a moment).
+     */
+    fun announce(jobId: String, added: Boolean) {
+        val name = res.getString(SkyText.nameRes(jobId))
+        val line = content.subscriptions.firstOrNull { it.jobId == jobId }
+        scope.launch {
+            snackbars.currentSnackbarData?.dismiss()
+            val result = snackbars.showSnackbar(
+                message = res.getString(
+                    if (added) R.string.sky_moment_added else R.string.sky_moment_removed, name
+                ),
+                actionLabel = undoLabel,
+                duration = SnackbarDuration.Long
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                if (added) actions.removeMoment(jobId)
+                else actions.restoreMoment(line ?: SkySubscription(jobId))
+            }
+        }
+    }
     // Extended while the top of the page is in view, the icon alone once the reader has
     // scrolled into the list: the label is read once, and after that it covers rows.
     val fabExpanded by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
-    Box(modifier = Modifier.fillMaxSize()) {
+    // A Scaffold for the two things that float over the list: the FAB, and the snackbar
+    // that offers «Annulla» (review point 9), which the Scaffold lifts the FAB over.
+    Scaffold(
+        containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        snackbarHost = { SnackbarHost(snackbars) },
+        floatingActionButton = {
+            // «Aggiungi un momento» (review point 5, 14 ott 2026): the screen's one
+            // action, as Material puts a screen's one action, instead of a text button
+            // lost between the moments and the guide's row.
+            ExtendedFloatingActionButton(
+                text = { Text(stringResource(R.string.sky_add_moment)) },
+                icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
+                expanded = fabExpanded,
+                onClick = { catalogOpen = true }
+            )
+        }
+    ) { inner ->
     LazyColumn(
         state = listState,
-        modifier = Modifier.fillMaxSize(),
+        // Zero today (no bars, no insets: the header and the bottom bar are the shell's),
+        // and right the day the Scaffold is given one.
+        modifier = Modifier.fillMaxSize().padding(inner),
         // Room for the FAB under the last row, so nothing ends up beneath it.
         contentPadding = PaddingValues(bottom = FabClearance)
     ) {
@@ -419,18 +444,6 @@ private fun SkyContent(
         }
 
     }
-    // «Aggiungi un momento» (review point 5, 14 ott 2026): the screen's one action, as
-    // Material puts a screen's one action, instead of a text button lost between the
-    // moments and the guide's row.
-    ExtendedFloatingActionButton(
-        text = { Text(stringResource(R.string.sky_add_moment)) },
-        icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
-        expanded = fabExpanded,
-        onClick = { catalogOpen = true },
-        modifier = Modifier
-            .align(Alignment.BottomEnd)
-            .padding(16.dp)
-    )
     }
 
     if (catalogOpen) {
@@ -439,8 +452,10 @@ private fun SkyContent(
             // job with no row (an eclipse search that finds nothing ahead) used to show
             // as unsubscribed here and offer to be added twice (review, 8 set 2026).
             subscribedIds = content.subscribedIds,
+            subscriptions = content.subscriptions,
             onAdd = actions.addMoment,
             onRemove = actions.removeMoment,
+            onRestore = actions.restoreMoment,
             onDismiss = { catalogOpen = false }
         )
     }
@@ -453,8 +468,14 @@ private fun SkyContent(
                 pageId = it
                 pageBearing = null
             },
-            onAdd = actions.addMoment,
-            onRemove = actions.removeMoment,
+            onAdd = {
+                actions.addMoment(it)
+                announce(it, added = true)
+            },
+            onRemove = {
+                actions.removeMoment(it)
+                announce(it, added = false)
+            },
             onDismiss = { pageId = null },
             look = pageBearing?.let { LookTarget(it, pageWhen) },
             coordinates = content.coordinates
@@ -1127,11 +1148,26 @@ internal fun jobIcon(job: SkyJob) = ChiaroIcons.skyJob(job.id)
 @Composable
 private fun CatalogSheet(
     subscribedIds: Set<String>,
+    subscriptions: List<SkySubscription>,
     onAdd: (String) -> Unit,
     onRemove: (String) -> Unit,
+    onRestore: (SkySubscription) -> Unit,
     onDismiss: () -> Unit
 ) {
     var openId by rememberSaveable { mutableStateOf<String?>(null) }
+    // The catalog's undo is the same tap (review point 9, 14 ott 2026): the row's mark
+    // turns in place, so it needs no snackbar — which a modal sheet would cover anyway.
+    // What the tap could not do was bring back a line's own lead; the lines removed in
+    // this sheet are kept here, and tapping one again restores it as it was.
+    val removedHere = remember { mutableStateMapOf<String, SkySubscription>() }
+    fun toggle(jobId: String) {
+        if (jobId in subscribedIds) {
+            subscriptions.firstOrNull { it.jobId == jobId }?.let { removedHere[jobId] = it }
+            onRemove(jobId)
+        } else {
+            removedHere.remove(jobId)?.let(onRestore) ?: onAdd(jobId)
+        }
+    }
     var query by rememberSaveable { mutableStateOf("") }
     ModalBottomSheet(onDismissRequest = onDismiss) {
         val open = openId?.let { SkyJobCatalog.byId(it) }
@@ -1149,7 +1185,7 @@ private fun CatalogSheet(
                     CatalogAction(
                         subscribed = subscribed,
                         onClick = {
-                            if (subscribed) onRemove(open.id) else onAdd(open.id)
+                            toggle(open.id)
                             openId = null
                         }
                     )
@@ -1224,7 +1260,7 @@ private fun CatalogSheet(
                             }
                         },
                         modifier = Modifier.clickable {
-                            if (subscribed) onRemove(job.id) else onAdd(job.id)
+                            toggle(job.id)
                         }
                     )
                 }

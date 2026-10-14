@@ -29,6 +29,10 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Undo on the Sky screen.** Adding or removing a moment from its page now shows a message
+  with «Undo», and undoing a removal brings the moment back with its own reminder.
+- **An easier place switcher.** On Sky, Alerts and Journal the whole title is now the button
+  that changes place, not just the small line under it.
 - **Adding a moment is one button.** «Add a moment» is now a floating button at the bottom
   of the Sky screen. The usual reminder and «Even under a covered sky» moved to Settings,
   under «Sky reminders».

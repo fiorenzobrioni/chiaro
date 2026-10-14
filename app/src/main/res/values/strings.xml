@@ -563,6 +563,9 @@
     <!-- Fase 27: two showers that peak on the same night share one row. -->
     <string name="sky_event_and">%1$s and %2$s</string>
     <string name="sky_add_moment">Add a moment</string>
+    <!-- "Undo" after an add or a removal made from an event's page (14 Oct 2026). -->
+    <string name="sky_moment_added">“%1$s” added to your moments</string>
+    <string name="sky_moment_removed">“%1$s” removed from your moments</string>
     <!-- Fase 28: sessanta voci in un foglio erano uno scroll. -->
     <string name="sky_catalog_search">Search the events</string>
     <string name="sky_catalog_search_clear">Clear the search</string>

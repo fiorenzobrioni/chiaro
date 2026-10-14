@@ -214,7 +214,7 @@ class ReadmeScreenshots {
     @Composable
     private fun sky() = SkyScreen(
         state = MilanRecording.sky(),
-        actions = SkyActions({}, {}, { _, _ -> }),
+        actions = SkyActions({}, {}, { _, _ -> }, {}),
         onOpenPlaces = {},
         onOpenSettings = {},
         onOpenGuide = {}
