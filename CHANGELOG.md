@@ -37,7 +37,7 @@ sections are a normal size and live here alone.
   temperature now is between 5° and 26°», with the thresholds in bold.
 - **Alerts opens with an answer.** One card at the top says whether there is a warning for your
   place, which window your phone may ring in next («Next, today: the evening summary, 18–23»)
-  and draws the day of alerts under it. «New alert» is now a button that floats over the page and
+  and draws the day of alerts under it, with the Sky's hour ticks and its line for now. «New alert» is now a button that floats over the page and
   opens the ideas, with «From scratch» first; the row of ideas stays on the page only until you
   have an alert of your own. Deleting an alert no longer asks first: it shows «Undo», which brings
   it back exactly as it was.

@@ -1664,6 +1664,11 @@ of a confirmation.
   alert: the screen cannot know whether today's summary has already come, so it names the hours
   it may, never a promise (`nextWindow`). The bulletin's window is named «Il bollettino»: the
   switch's «Avvisami delle allerte» is a command, not the name of something that comes.
+- **The day strip wears the night strip's marks** (point 8): a 5dp tick at every whole hour from
+  1 to 23 on the track's floor, `onSurface` at 30%, and "now" as a 1.5dp line through the track
+  with a 2.5dp dot under it, in place of the daylight ribbon's disc. Nothing else of point 8: a
+  lane with the reader's own rules' hours would repeat their cards, and say when a rule may speak
+  rather than when it will.
 - **«Nuovo avviso» is the FAB** (point 9): extended at the top of the page, the icon alone once
   the list scrolls, gone at the ceiling (the sentence at the foot of «I tuoi» says why). It opens
   a sheet in the catalog's grammar: «Da zero» first (the blank idea, renamed from «Nuovo avviso»,

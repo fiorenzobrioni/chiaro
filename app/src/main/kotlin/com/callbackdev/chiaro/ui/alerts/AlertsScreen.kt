@@ -1095,7 +1095,7 @@ private fun alertWindows(
 
 /**
  * The reader's day of alerts (design review, 23 set 2026): twenty-four hours as a track, the
- * [windows] painted on it and marked with their drawings, and "now" as a disc. The alerts
+ * [windows] painted on it and marked with their drawings, and "now" as the Sky's line and dot. The alerts
  * that arrive whenever the weather does are named on a line under it rather than drawn,
  * because they have no window to draw. It answers the question a switch list cannot: when
  * will this phone make a sound.
@@ -1157,11 +1157,26 @@ private fun AlertDayStrip(
                     }
                 }
             }
-            // Now, as the disc the daylight ribbon uses.
+            // A tick at every whole hour, standing on the track's floor, and "now" as a thin
+            // line through the track with a dot under it: the marks of the night strip on the
+            // Sky (the Alerts review, point 8, 14 ott 2026), so the two strips read alike.
+            val tick = DayTick.toPx()
+            for (h in 1 until 24) {
+                drawLine(
+                    color = ink.copy(alpha = 0.3f),
+                    start = Offset(x(h.toFloat()), top + trackH - tick),
+                    end = Offset(x(h.toFloat()), top + trackH),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
             val nowX = x(now.hour + now.minute / 60f)
-            val r = trackH * 0.9f
-            drawCircle(ink, radius = r, center = Offset(nowX, top + trackH / 2f))
-            drawCircle(track, radius = r - 2.dp.toPx(), center = Offset(nowX, top + trackH / 2f))
+            drawLine(
+                color = ink.copy(alpha = 0.85f),
+                start = Offset(nowX, top),
+                end = Offset(nowX, top + trackH),
+                strokeWidth = 1.5.dp.toPx()
+            )
+            drawCircle(ink, radius = 2.5.dp.toPx(), center = Offset(nowX, top + trackH + 3.dp.toPx()))
             // The quiet hours (23 set 2026): a hairline under the track from 22 to 7,
             // where everything above still arrives, only without a sound.
             val quietY = top + trackH + 3.dp.toPx()
@@ -1210,6 +1225,7 @@ private class AlertWindow(
 
 private val DayIcon = 26.dp
 private val DayTrack = 10.dp
+private val DayTick = 5.dp
 private val FabClearance = 88.dp
 
 /** A template's drawing: what it is about, from the weather family. */

@@ -12692,12 +12692,14 @@ coerente con il Cielo appena rivisto, e ne ha fatto attuare i punti da 1 a 6. La
 - [x] 5. La regola nata da un'idea porta il disegno dell'idea.
 - [x] 6. La frase della regola: gli intervalli, le soglie in grassetto.
 - [x] 7. Un hero che risponde sempre (lo stato delle allerte, il prossimo avviso, la striscia).
-- [ ] 8. La striscia del giorno con le tacche delle ore e le ore dei tuoi avvisi.
+- [x] 8. La striscia del giorno con le tacche delle ore e «adesso» del Cielo (senza la corsia delle
+  ore dei tuoi avvisi: vedi «Punto 8»).
 - [x] 9. «Nuovo avviso» come FAB, le idee in un foglio; la fila resta solo con «I tuoi» vuoto.
 - [x] 10. «Annulla» al posto della conferma per eliminare.
 - [x] 11. Lo stato di ogni regola adesso, con il suo numero.
 - [x] 12. La prova dell'editor che si aggiorna a ogni chip.
-- [ ] 13. «Quando scatterebbe»: la regola provata sulla settimana di previsione.
+- [ ] 13. «Quando scatterebbe»: la regola provata sulla settimana di previsione. **Non si fa**
+  (committente, 14 ott 2026): vedi «Punto 8».
 
 ### Cosa è cambiato
 
@@ -12794,7 +12796,7 @@ Chiesti dopo i primi sei, nella stessa PR.
 - **Il prossimo è una fascia, non un avviso.** I riepiloghi arrivano una volta dentro la loro
   fascia e la pagina non sa se quello di oggi è già arrivato: dice le ore in cui il telefono può
   suonare, che sa, e non promette che suonerà. Le regole del lettore con orari propri non entrano
-  nella riga: le loro ore sono sulla loro card (il punto 8 le porta nella striscia).
+  nella riga: le loro ore sono sulla loro card (e il punto 8 non le porta nella striscia).
 - **«Il bollettino»** come nome della fascia delle 15–17 nella riga e nella descrizione della
   striscia: «Avvisami delle allerte», il titolo dell'interruttore, è un comando e non il nome di
   qualcosa che arriva, e «Il bollettino delle allerte» andava a capo a 360 dp.
@@ -12867,3 +12869,25 @@ Chiesti dopo il 7, il 9 e il 10, nella stessa PR.
   quattro risposte dell'editor disegnate a parte. Guardate immagine per immagine; l'immagine del
   README dei tuoi avvisi rigenerata e guardata.
 - Suite completa e lint.
+
+### Punto 8 (committente, 14 ott 2026)
+
+Della proposta resta solo la parte di forma: la striscia del giorno ha le tacche delle ore intere e
+«adesso» come la striscia della notte del Cielo, una linea sottile attraverso il binario con un
+punto sotto (prima era il disco del nastro della luce). Le due strisce si leggono allo stesso modo.
+
+- **Senza la seconda corsia con le ore dei tuoi avvisi.** Dopo i punti 7 e 11 ogni card dice le sue
+  ore e se è fuori orario adesso: la corsia avrebbe ripetuto la stessa cosa più vaga, un avviso
+  «con la luce» accende quasi tutto il giorno, e quelle ore dicono quando un avviso può parlare,
+  non quando parlerà. Servirebbe solo a chi ha molti avvisi su orari diversi.
+- **Senza il punto 13.** Prevedere «probabilmente domani verso le 8» è una promessa su una
+  previsione che cambia, con un controllo che gira a intervalli e variabili (l'aria) senza un
+  valore ora per ora; la riga del punto 11 risponde già a «perché non mi arriva».
+- **Le tacche dalle 1 alle 23**, a 5 dp sul fondo del binario, `onSurface` al 30%, sopra le fasce:
+  le ore 0 e 24 sono gli estremi del binario. Il punto di «adesso» sta all'altezza del tratteggio
+  delle ore silenziose e si distingue da esso per forma (un disco pieno contro trattini di 2 dp).
+
+**Come è stato verificato**
+
+- Avvisi disegnata a 360 dp in chiaro e in scuro, di giorno e nelle ore silenziose; l'immagine del
+  README degli avvisi rigenerata e guardata. Suite completa e lint.
