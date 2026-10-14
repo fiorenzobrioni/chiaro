@@ -1255,10 +1255,7 @@
     <string name="journal_no_place_body">Aggiungi un luogo e il diario comincia a scriversi da solo: ogni aggiornamento lascia una riga.</string>
     <string name="journal_empty">Ancora niente da raccontare. Il diario si riempie man mano che arrivano gli aggiornamenti.</string>
     <string name="journal_yesterday">Ieri</string>
-    <plurals name="journal_day_count">
-        <item quantity="one">%d voce</item>
-        <item quantity="other">%d voci</item>
-    </plurals>
+    <string name="journal_log_title">Cosa è successo</string>
     <plurals name="journal_drift_every">
         <item quantity="one">Una colonna per ora</item>
         <item quantity="other">Una colonna ogni %d ore</item>

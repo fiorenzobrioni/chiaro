@@ -2,6 +2,9 @@ package com.callbackdev.chiaro.ui.journal
 
 import com.callbackdev.chiaro.ui.components.TabHeader
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,11 +39,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Warning
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -74,6 +75,8 @@ import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.warnings.WarningText
+import com.callbackdev.chiaro.ui.alerts.ruleIcon
+import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
@@ -104,6 +107,7 @@ fun JournalRoute(
 ) {
     val state by journalViewModel.state.collectAsStateWithLifecycle()
     val units by journalViewModel.units.collectAsStateWithLifecycle()
+    val rules by journalViewModel.rules.collectAsStateWithLifecycle()
     var placesOpen by remember { mutableStateOf(false) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
@@ -117,7 +121,7 @@ fun JournalRoute(
             when (val s = state) {
                 JournalUiState.Starting -> Unit
                 JournalUiState.NoPlace -> NoPlaceForJournal(onOpenPlaces = { placesOpen = true })
-                is JournalUiState.Ready -> JournalBody(s.content, units)
+                is JournalUiState.Ready -> JournalBody(s.content, units, rules)
             }
         }
     }
@@ -153,7 +157,11 @@ internal enum class DriftMetric { RAIN, HIGH }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun JournalBody(content: JournalContent, units: UnitSettings) {
+internal fun JournalBody(
+    content: JournalContent,
+    units: UnitSettings,
+    rules: Map<String, NotificationRule> = emptyMap()
+) {
     val locale = currentLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val timeFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
@@ -261,12 +269,18 @@ internal fun JournalBody(content: JournalContent, units: UnitSettings) {
             }
         }
 
+        // The Sky's hierarchy (review of the Journal, A.4, 14 ott 2026): a section title,
+        // then the days in the accent, then the rows. The days used to sit at the section
+        // titles' own size, level with «Com'è andata la previsione» above them.
+        if (content.days.isNotEmpty()) {
+            item { JournalSectionTitle(stringResource(R.string.journal_log_title)) }
+        }
         // Each day's heading stays at the top while its entries scroll under it (design
         // review, 23 set 2026): a log read backwards through several days lost which day
         // it was in as soon as the heading scrolled away.
         content.days.forEach { day ->
             stickyHeader(key = "day-${day.date}") {
-                DayHeading(day.date, content.zone, dayFmt, day.entries.size)
+                DayHeading(day.date, content.zone, dayFmt)
             }
             items(day.entries.size) { index ->
                 EntryRow(
@@ -275,6 +289,7 @@ internal fun JournalBody(content: JournalContent, units: UnitSettings) {
                     timeFmt = timeFmt,
                     units = units,
                     locale = locale,
+                    rules = rules,
                     threadAbove = index > 0,
                     threadBelow = index < day.entries.lastIndex
                 )
@@ -306,9 +321,14 @@ private fun JournalSectionTitle(text: String) {
 
 /** A day of the log, pinned while its entries pass under it: «Oggi» or «Ieri» with the
  * full date beside it in the quiet ink (the relative word alone left the reader counting
- * back), or the full date alone further back. */
+ * back), or the full date alone further back.
+ *
+ * In the Sky's day headings' dress since the Journal's review (A.4, 14 ott 2026):
+ * `labelLarge` in the accent, under the section's own title. The count of entries that
+ * stood at the end («5 voci») is gone: a number with nothing to do with it, and five
+ * lines are counted at a glance. */
 @Composable
-private fun DayHeading(date: LocalDate, zone: ZoneId, dayFmt: DateTimeFormatter, count: Int) {
+private fun DayHeading(date: LocalDate, zone: ZoneId, dayFmt: DateTimeFormatter) {
     val title = dayTitle(date, zone, dayFmt)
     val full = date.format(dayFmt)
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(currentLocale()) else it.toString() }
@@ -316,24 +336,20 @@ private fun DayHeading(date: LocalDate, zone: ZoneId, dayFmt: DateTimeFormatter,
         Row(
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = SectionTop, bottom = SectionBottom)
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp)
         ) {
-            Text(text = title, style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
             if (title != full) {
                 Text(
                     text = full,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 2.dp)
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = pluralStringResource(R.plurals.journal_day_count, count, count),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 2.dp)
-            )
         }
     }
 }
@@ -362,6 +378,7 @@ private fun EntryRow(
     timeFmt: DateTimeFormatter,
     units: UnitSettings,
     locale: Locale,
+    rules: Map<String, NotificationRule>,
     threadAbove: Boolean,
     threadBelow: Boolean
 ) {
@@ -372,7 +389,10 @@ private fun EntryRow(
     val time = entry.at.atZone(zone).format(timeFmt)
     val context = LocalContext.current
     val scheme = MaterialTheme.colorScheme
-    val quiet = EntryBadge.Silhouette(Icons.Outlined.Refresh, scheme.surfaceContainerHighest, scheme.onSurfaceVariant)
+    // Something the app went to fetch and did not get: a cloud crossed out (review of the
+    // Journal, A.5). The circular arrow it replaces read as «try again», a button that was
+    // not there.
+    val quiet = EntryBadge.Silhouette(ChiaroIcons.notReached, scheme.surfaceContainerHighest, scheme.onSurfaceVariant)
     @Composable
     fun item(badge: EntryBadge, headline: String, supporting: (@Composable () -> Unit)?, time: String?) =
         EntryItem(badge, headline, supporting, time, threadAbove, threadBelow)
@@ -388,7 +408,10 @@ private fun EntryRow(
                 null
             }
             item(
-                badge = EntryBadge.Silhouette(Icons.Outlined.Edit, scheme.primaryContainer, scheme.onPrimaryContainer),
+                // The drawing of the quantity that moved, on the revision's own tone (review
+                // of the Journal, A.5): the pencil read as «edit», an action on a line that
+                // has none. Rain first when both moved: it is the one the headline judges.
+                badge = EntryBadge.Drawing(shiftIcon(entry.shifts), scheme.primaryContainer),
                 headline = JournalText.shiftHeadline(entry, locale),
                 // A revision this screen has no words for keeps its row — the Journal
                 // is the log, and "something moved at 21:54" is still the truth.
@@ -405,8 +428,12 @@ private fun EntryRow(
                 time = time
             )
         }
+        // The alert's own drawing, the one its card has in Alerts (review of the Journal,
+        // A.5): every alert used to be the same bell. A line whose alert has since been
+        // deleted or renamed keeps the bell, which is still true.
         is JournalEntry.RuleFired -> item(
-            badge = EntryBadge.Silhouette(Icons.Outlined.Notifications, scheme.secondaryContainer, scheme.onSecondaryContainer),
+            badge = rules[entry.name]?.let { EntryBadge.Drawing(ruleIcon(it), scheme.secondaryContainer) }
+                ?: EntryBadge.Silhouette(Icons.Outlined.Notifications, scheme.secondaryContainer, scheme.onSecondaryContainer),
             headline = stringResource(R.string.journal_rule_fired, entry.name),
             supporting = null,
             time = time
@@ -616,6 +643,17 @@ private sealed interface EntryBadge {
 }
 
 /**
+ * A revision's drawing: the quantity it is about, as the metric chips draw it — the drops
+ * for the rain, the thermometer for the high and the low. Not the day's weather: the entry
+ * does not carry the day's state, and drawing one from a probability alone would be the
+ * screen inventing what the state engine decides.
+ */
+@Composable
+private fun shiftIcon(shifts: List<FieldShift>): ImageVector =
+    if (shifts.isEmpty() || shifts.any { it.field == "precip_pct" }) ChiaroIcons.precipitation
+    else ChiaroIcons.dewPoint
+
+/**
  * The day a level concerns, in the words the rest of the diary uses. [zone] is the
  * PLACE's, like every other date on this screen.
  */
@@ -691,12 +729,14 @@ private fun EntryItem(
             Text(headline, style = MaterialTheme.typography.bodyLarge)
             supporting?.invoke()
         }
+        // The hour in the Sky's column (review of the Journal, A.3, 14 ott 2026):
+        // `titleMedium`, tabular, full ink, on the headline's line. A log is scanned by the
+        // hour, and in a small grey label it was the faintest thing on the row.
         time?.let {
             Text(
                 text = it,
-                style = MaterialTheme.typography.labelMedium.tabular(),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp)
+                style = MaterialTheme.typography.titleMedium.tabular(),
+                modifier = Modifier.padding(top = 2.dp)
             )
         }
     }
@@ -1135,7 +1175,10 @@ private fun OutcomeCard(
     modifier: Modifier = Modifier
 ) {
     val stats = outcomeStats(outcomes)
-    val narrow = remember(locale) { DateTimeFormatter.ofPattern("EEEEE", locale) }
+    // The weekday and the day's number, on two lines (review of the Journal, A.9): the
+    // weekday's initial alone said «M» for both Tuesday and Wednesday in Italian. Two short
+    // lines and not «dom 11» on one, which at ten columns would wrap.
+    val weekday = remember(locale) { DateTimeFormatter.ofPattern("EEE", locale) }
     val lines = buildList {
         stats.highErrorC?.let { error ->
             val shown = if (units.temperature == com.callbackdev.chiaro.domain.settings.TemperatureUnit.FAHRENHEIT) {
@@ -1169,7 +1212,7 @@ private fun OutcomeCard(
             lines.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
             // The picture of the same numbers; the sentences above are its text (§9.3).
             Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.Bottom,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1206,11 +1249,27 @@ private fun OutcomeCard(
                             tint = Color.Unspecified,
                             modifier = Modifier.size(22.dp)
                         )
-                        Text(
-                            text = day.date.format(narrow).uppercase(locale),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            // Shrinks rather than clips or wraps: at ten columns on a
+                            // 360 dp phone a column is ~25 dp, and «Wed» wants about that.
+                            BasicText(
+                                text = day.date.format(weekday).trimEnd('.'),
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    letterSpacing = 0.sp
+                                ),
+                                maxLines = 1,
+                                autoSize = TextAutoSize.StepBased(
+                                    minFontSize = 8.sp,
+                                    maxFontSize = MaterialTheme.typography.labelSmall.fontSize
+                                )
+                            )
+                            Text(
+                                text = day.date.dayOfMonth.toString(),
+                                style = MaterialTheme.typography.labelSmall.tabular(),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }

@@ -926,7 +926,7 @@ private fun templateIcon(template: RuleText.Template): ImageVector = when (templ
  * temperature that has to fall to zero, the thermometer for any other.
  */
 @Composable
-private fun ruleIcon(rule: NotificationRule): ImageVector {
+internal fun ruleIcon(rule: NotificationRule): ImageVector {
     val first = rule.conditions.firstOrNull() ?: return ChiaroIcons.cloud
     val id = first.variable
     return when {

@@ -12735,3 +12735,52 @@ aspettano la sua parola.
   settimana che si muove, in quella ferma e nelle prime ore, guardata immagine per immagine. Il
   README non ha un'immagine del Diario (CLAUDE.md, «Le schermate del README»), quindi nessuna da
   rigenerare.
+
+## Diario: orari, giorni, icone, iniziali (committente, 14 ott 2026)
+
+Il secondo passo della revisione del Diario: i punti A.3, A.4, A.5 e A.9, sulla stessa PR
+dell'hero.
+
+### Cosa è cambiato
+
+- **A.3, gli orari in colonna**: l'ora di ogni voce in `titleMedium` tabellare, inchiostro
+  pieno, sulla riga del titolo, come gli orari del Cielo. Era un'etichetta grigia piccola.
+- **A.4, i giorni**: un titolo di sezione «Cosa è successo» sopra il registro, e i giorni nello
+  stile dei giorni del Cielo (`labelLarge` in `primary`, la data intera accanto in inchiostro
+  tenue), sempre fissi in alto mentre si scorre. Il conteggio «5 voci» non c'è più (e con lui il
+  plurale `journal_day_count`).
+- **A.5, le icone**: una revisione porta il disegno della grandezza che si è mossa (le gocce o
+  il termometro, sul suo `primaryContainer`); un avviso scattato il disegno della sua card in
+  Avvisi (`ruleIcon`, ora `internal`, cercato per nome: `JournalViewModel.rules`), con la
+  campanella per un avviso che non c'è più; un aggiornamento o un bollettino mancato una nuvola
+  barrata (`ic_not_reached`).
+- **A.9, le iniziali**: sotto le barre di «Com'è andata la previsione» il giorno della settimana
+  e il numero, su due righe.
+
+### Decisioni e deviazioni
+
+- **La grandezza e non il tempo del giorno, sulla revisione.** La revisione proponeva «il
+  disegno del tempo del giorno di cui parla»; la voce però porta solo i numeri che si sono
+  mossi, non lo stato del giorno, e dedurre pioggia o sole da una probabilità sarebbe la
+  schermata che inventa quello che decide il motore degli stati. Il disegno della grandezza è
+  quello dei chip della settimana, ed è vero per ogni voce.
+- **La nuvola barrata disegnata qui, non `not-available` di Meteocons**: provato, quel disegno
+  sono le lettere «N/A», una sigla inglese in un'app che non ha gergo. Un vettore di due tratti
+  nella mano di `ic_warning`, colorato come le altre sagome tenui.
+- **L'avviso per nome**: la storia registra il nome, ed è lo stesso legame che Avvisi usa per
+  «scattato l'ultima volta». Un avviso rinominato o cancellato perde il disegno e torna alla
+  campanella, che resta vera.
+- **`ruleIcon` da `private` a `internal`**, una riga in `AlertsScreen.kt`, invece di copiarla:
+  una sola funzione decide il disegno di un avviso. Il thread di Avvisi lavora sullo stesso file
+  in questi giorni; la modifica è quella sola riga.
+- **Giorno e numero su due righe, non «dom 11» su una**: a dieci colonne su 360 dp una colonna
+  ha circa 25 dp, e «dom 11» ne vuole più di 30. Il giorno si rimpicciolisce (fino a 8 sp)
+  invece di essere tagliato: provato, «Mon» e «Wed» venivano tagliati a «Mo» e «We» prima.
+  Lo spazio fra le colonne passa da 6 a 4 dp.
+
+### Come è stato verificato
+
+- La pagina disegnata con Robolectric in chiaro (IT, 384 dp, tre giorni chiusi) e in scuro (EN,
+  360 dp, dieci giorni chiusi), con ogni tipo di voce, un avviso che esiste e uno cancellato,
+  guardata immagine per immagine.
+- Suite completa e lint.

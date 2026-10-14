@@ -34,6 +34,12 @@ sections are a normal size and live here alone.
   its numbers on a line of their own («rain 70% → 30%»), then the strip. Before the first
   trend can be drawn it says «Too early to say» and when the trend will arrive. «How the
   forecast did» takes the same rounded shape.
+- **A Journal easier to scan.** The hours of the log stand in a column in full ink, as on the
+  Sky screen; the days read «Today», «Yesterday» under a «What happened» title, without the
+  count of entries. Each line's badge now draws what it is about: the rain or the thermometer
+  for a revision, your alert's own drawing for an alert that fired, a crossed-out cloud for an
+  update that did not arrive. Under «How the forecast did» each day is named by weekday and
+  date, where a lone «T» could be Tuesday or Thursday.
 - **Undo on the Sky screen.** Adding or removing a moment from its page now shows a message
   with «Undo», and undoing a removal brings the moment back with its own reminder.
 - **An easier place switcher.** On Sky, Alerts and Journal the whole title is now the button

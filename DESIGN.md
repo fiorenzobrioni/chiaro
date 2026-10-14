@@ -1673,6 +1673,28 @@ all but vanished in the light dress. **How the forecast did** takes the same 28 
 padding, on `surfaceContainer`, one step quieter than the hero, as the Sky's moments sit under
 its night; it was 16 dp under a hero of 12, two radii one above the other.
 
+**The log in the Sky's dress** (review of the Journal, points A.3, A.4, A.5 and A.9, 14 ott
+2026):
+
+- **The hour is a column**: `titleMedium` tabular in full ink on the headline's line, as the
+  Sky's rows print their times. In `labelMedium` grey it was the faintest thing on the row of a
+  log that is scanned by the hour.
+- **The Sky's hierarchy**: a section title («Cosa è successo») over the log, the days in
+  `labelLarge` in `primary` with the full date beside them in the quiet ink, still sticky. The
+  count of entries («5 voci») is gone: a number with nothing to do with it.
+- **Badges are drawings, not commands.** A revision carries the drawing of the quantity that
+  moved (the drops for the rain, the thermometer for the high or the low, rain first when both),
+  as the metric chips draw them; never the day's weather, which the entry does not carry and a
+  probability alone must not invent. An alert that fired carries its card's drawing from Alerts
+  (`ruleIcon`, by name), and keeps the bell when that alert is gone. A missed update or bulletin
+  carries a cloud crossed out (`ic_not_reached`, in `ic_warning`'s hand): the pencil read as
+  «edit» and the circular arrow as «try again», buttons that were not there, and Meteocons'
+  «not available» is the letters N/A.
+- **How the forecast did** names its columns by weekday and day number on two lines («mar» over
+  «13»): the weekday's initial alone said «M» for Tuesday and Wednesday. The weekday shrinks
+  rather than clips at ten columns on 360 dp (`TextAutoSize`, down to 8 sp), and the columns are
+  4 dp apart.
+
 **8.11 States** — empty ("no place yet", with the one action that fixes it), error (what
 failed, in plain language, and a retry), stale (§8.2), loading (a shimmer that cannot be
 mistaken for a value, §1.1).

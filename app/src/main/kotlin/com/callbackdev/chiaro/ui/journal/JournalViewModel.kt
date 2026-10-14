@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
 import com.callbackdev.chiaro.data.FetchLogStore
+import com.callbackdev.chiaro.data.RuleStore
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.SettingsStore
 import com.callbackdev.chiaro.data.WeatherRepository
@@ -15,6 +16,7 @@ import com.callbackdev.chiaro.data.local.WarningRecordDao
 import com.callbackdev.chiaro.data.local.WarningRecordEntity
 import com.callbackdev.chiaro.data.local.WarningRecordKind
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.warnings.WarningHazard
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
@@ -64,13 +66,25 @@ class JournalViewModel(
     private val cityStore: CityStore,
     private val fetchLogStore: FetchLogStore,
     private val warningRecords: WarningRecordDao?,
-    settingsStore: SettingsStore
+    settingsStore: SettingsStore,
+    ruleStore: RuleStore? = null
 ) : ViewModel() {
 
     val units: StateFlow<UnitSettings> = settingsStore.settings
         .map { it.units }
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UnitSettings())
+
+    /**
+     * The reader's alerts by name, for the drawing of the one a line says fired: the same
+     * drawing its card has in Alerts (review of the Journal, A.5). By name because the
+     * history records the name; an alert since deleted or renamed has none, and its line
+     * keeps the bell.
+     */
+    val rules: StateFlow<Map<String, NotificationRule>> = (ruleStore?.rules ?: flowOf(emptyList()))
+        .map { list -> list.associateBy { it.name } }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     val state: StateFlow<JournalUiState> = cityStore.activeSource
         .map { it.cityOrNull() }
@@ -177,7 +191,8 @@ class JournalViewModel(
                     cityStore = ServiceLocator.cityStore(app),
                     fetchLogStore = ServiceLocator.fetchLogStore(app),
                     warningRecords = ServiceLocator.warningRecordDao(app),
-                    settingsStore = ServiceLocator.settingsStore(app)
+                    settingsStore = ServiceLocator.settingsStore(app),
+                    ruleStore = ServiceLocator.ruleStore(app)
                 )
             }
         }
