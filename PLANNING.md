@@ -12664,7 +12664,17 @@ prossimo) reggono; erano rimaste indietro quattro cose.
   26 dp in grigio, giorno e ora nella riga). Ora lo disegna `SkyRow` stessa, resa `internal` con
   `onOpen` facoltativo e il margine come parametro: l'esempio è la riga, non una sua imitazione.
 
-**Lasciato com'è, e segnalato al committente**: `resetToDefaults` svuota anche gli
-interruttori degli avvisi pronti all'uso (`notif_*`), l'allerta ufficiale e l'opacità dei
-widget, che la frase sul ripristino non nomina. Se debba farlo, o se la frase debba dirlo, è
-una decisione sua.
+**Il ripristino e gli avvisi** (decisione del committente, 14 ott 2026): `resetToDefaults`
+svuota tutto il negozio, quindi anche gli interruttori degli avvisi pronti all'uso
+(`notif_*`) e delle allerte ufficiali. **Resta così, e la frase lo dice.** È la direzione
+sicura: gli avvisi valgono tutti «acceso» per difetto, quindi un ripristino può solo
+riaccendere un avviso spento, mai zittirne uno. La finestra di conferma e la guida dicono
+ora «tutto torna come al primo avvio… gli avvisi che avevi spento si riaccendono», e non
+«si azzerano», che in italiano si legge come «si spengono».
+
+Perché la frase sia vera subito, `SettingsViewModel` ora ripianifica il lavoro periodico
+(`SyncScheduler.reconcile`) dopo il ripristino: prima lo faceva solo all'avvio del processo,
+e un avviso riacceso restava senza il lavoro che lo controlla fino al riavvio dell'app. Lo
+stesso valeva per il cambio di frequenza, che ora si applica subito. (La chiave dell'opacità
+dei widget nello stesso negozio non è letta da nessuna schermata: le card hanno ognuna il
+proprio aspetto, e la frase non la nomina.)

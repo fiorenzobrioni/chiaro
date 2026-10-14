@@ -399,7 +399,7 @@
     <string name="settings_privacy_body">Chiaro non ha un server suo: luoghi, avvisi e diario restano sul telefono. A Open-Meteo va solo il luogo di cui chiedi il meteo, o che cerchi, arrotondato a circa un chilometro se è la tua posizione. Nessun identificativo.</string>
     <string name="settings_reset">Ripristina le impostazioni predefinite</string>
     <string name="settings_reset_dialog_title">Ripristinare le impostazioni predefinite?</string>
-    <string name="settings_reset_dialog_body">Unità, aspetto, frequenza di aggiornamento e promemoria del cielo tornano ai valori predefiniti. I tuoi luoghi e il tuo storico non vengono toccati.</string>
+    <string name="settings_reset_dialog_body">Tutto torna come al primo avvio: unità, aspetto, frequenza di aggiornamento, promemoria del cielo e gli interruttori degli avvisi, comprese le allerte ufficiali. Gli avvisi che avevi spento si riaccendono. I tuoi luoghi, gli avvisi che hai scritto e il tuo storico non vengono toccati.</string>
     <string name="settings_reset_confirm">Ripristina</string>
 
     <!-- Le quattro parole dei verdetti (VISION §5.3). Definite con la guida che le
@@ -515,7 +515,7 @@
     <string name="guide_widgets_honest_body">Un dato vecchio dice quanto è vecchio, un widget senza luogo lo dice, e nessuno mostra un numero che non ha. Si ridisegnano quando arriva un aggiornamento, quindi non costano batteria per conto loro.</string>
 
     <string name="guide_settings_title">Impostazioni</string>
-    <string name="guide_settings_body">Le unità di temperatura e vento. L\'aspetto, dove vivono il tema, la palette, il carattere, i due disegni delle icone del meteo, se si muovono, e i colori presi dallo sfondo. Ogni quanto cercare una previsione nuova. I promemoria del cielo: con quanto anticipo suonano quando un momento non ne ha uno suo, e se suonano anche quando le nuvole nasconderanno quello che annunciano. La lingua dell\'app, sul selettore di Android. Ripristinare le impostazioni predefinite rimette unità, aspetto, frequenza e promemoria del cielo come erano all\'inizio e lascia i tuoi luoghi e il tuo storico esattamente dove sono.</string>
+    <string name="guide_settings_body">Le unità di temperatura e vento. L\'aspetto, dove vivono il tema, la palette, il carattere, i due disegni delle icone del meteo, se si muovono, e i colori presi dallo sfondo. Ogni quanto cercare una previsione nuova. I promemoria del cielo: con quanto anticipo suonano quando un momento non ne ha uno suo, e se suonano anche quando le nuvole nasconderanno quello che annunciano. La lingua dell\'app, sul selettore di Android. Ripristinare le impostazioni predefinite rimette tutto come al primo avvio, compresi gli interruttori degli avvisi: quelli che avevi spento si riaccendono. I tuoi luoghi, gli avvisi che hai scritto e il tuo storico restano esattamente dove sono.</string>
 
     <string name="guide_data_title">Da dove arrivano i numeri</string>
     <string name="guide_data_p1">Previsioni, qualità dell\'aria e ricerca dei luoghi arrivano da Open-Meteo, un servizio meteo aperto: gratuito, senza account e senza chiave API. La richiesta del meteo è l\'unica cosa che Chiaro manda da qualche parte.</string>

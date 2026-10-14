@@ -418,7 +418,7 @@
     <string name="settings_privacy_body">Chiaro has no server of its own: your places, alerts and journal stay on your phone. Open-Meteo only gets the place you ask the weather for, or search for, rounded to about a kilometre when it is your position. No identifier.</string>
     <string name="settings_reset">Restore default settings</string>
     <string name="settings_reset_dialog_title">Restore default settings?</string>
-    <string name="settings_reset_dialog_body">Units, appearance, update frequency and sky reminders go back to their defaults. Your places and your history are not affected.</string>
+    <string name="settings_reset_dialog_body">Everything goes back to how it was at first launch: units, appearance, update frequency, sky reminders and the alerts\' switches, official warnings included. Alerts you had turned off come back on. Your places, the alerts you wrote and your history are not affected.</string>
     <string name="settings_reset_confirm">Restore</string>
 
     <!-- The four verdict words (VISION §5.3). Defined with the guide that teaches
@@ -534,7 +534,7 @@
     <string name="guide_widgets_honest_body">Old data says how old it is, a widget with no place says so, and none of them shows a number it does not have. They repaint when an update lands, so they cost no battery of their own.</string>
 
     <string name="guide_settings_title">Settings</string>
-    <string name="guide_settings_body">Units for temperature and wind. Appearance, where the theme, the palette, the typeface, the two drawings of the weather icons, whether they move, and the wallpaper colors live. How often to look for a new forecast. Sky reminders: how early they ring when a moment has no lead of its own, and whether they ring even when the clouds will hide what they announce. The app language, on Android\'s own picker. Restoring the defaults puts units, appearance, frequency and sky reminders back as they started and leaves your places and your history exactly where they are.</string>
+    <string name="guide_settings_body">Units for temperature and wind. Appearance, where the theme, the palette, the typeface, the two drawings of the weather icons, whether they move, and the wallpaper colors live. How often to look for a new forecast. Sky reminders: how early they ring when a moment has no lead of its own, and whether they ring even when the clouds will hide what they announce. The app language, on Android\'s own picker. Restoring the defaults puts everything back as at first launch, the alerts\' switches included: those you had turned off come back on. Your places, the alerts you wrote and your history stay exactly where they are.</string>
 
     <string name="guide_data_title">Where the numbers come from</string>
     <string name="guide_data_p1">Forecasts, air quality and place search come from Open-Meteo, an open weather service: free, no account, no API key. The weather request is the only thing Chiaro sends anywhere.</string>
