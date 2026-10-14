@@ -12344,9 +12344,9 @@ Material 3 Expressive) e ha deciso di attuarla tutta. Il piano, nell'ordine in c
 - [-] 4. Il movimento: chiavi nelle liste, `animateItem`, `MotionScheme.expressive()`.
   **Rimandato** (committente, 14 ott 2026): vedi «Material 3 Expressive, un passaggio a
   parte» sotto.
-- [ ] 5. «Aggiungi momento» come FAB esteso; i promemoria fuori dalla pagina.
-- [ ] 6. Una sola luna: la stessa percentuale e la stessa fase ovunque nella pagina.
-- [ ] 7. Le icone ripetute (gli sciami, la stella per cinque cose diverse).
+- [x] 5. «Aggiungi momento» come FAB esteso; i promemoria fuori dalla pagina.
+- [x] 6. Una sola luna: la stessa percentuale e la stessa fase ovunque nella pagina.
+- [x] 7. Le icone ripetute (gli sciami, la stella per cinque cose diverse).
 - [ ] 9. «Annulla» dopo un'aggiunta o una rimozione.
 - [ ] 10. Il bersaglio del selettore del luogo a 48 dp (la top app bar flessibile aspetta
   `material3` 1.5 stabile: la 1.4.0 del BOM non ha `MaterialShapes`, `ButtonGroup`,
@@ -12540,3 +12540,65 @@ Quando si farà, il punto di partenza misurato il 14 ott 2026:
   salta invece di muoversi: è la prima cosa da sistemare, ed è indipendente dallo schema.
 - Da guardare nello stesso passaggio: la top app bar flessibile con il luogo come
   sottotitolo (punto 10 della revisione del Cielo), le forme espressive dove dicono qualcosa.
+
+## Cielo: il pulsante, una luna sola, i segni del cielo (committente, 14 ott 2026)
+
+I punti 5, 6 e 7 della revisione del Cielo.
+
+### Cosa è cambiato
+
+- **Punto 5.** «Aggiungi un momento» è un FAB esteso in basso a destra, che resta solo icona
+  quando si scorre nella lista; la lista lascia 88 dp sotto l'ultima riga. La sezione
+  «Promemoria» in fondo alla pagina non c'è più: «Promemoria abituale» e «Anche a cielo
+  coperto» stanno in Impostazioni, gruppo «Promemoria del cielo» (`SettingsViewModel`
+  ripianifica gli allarmi come faceva il Cielo, anche dopo il ripristino); la nota «possono
+  arrivare qualche minuto prima o dopo» sta nella finestra dell'anticipo, e quella di un
+  momento dice dove si cambia l'abituale. `SkyActions` perde i due setter.
+- **Punto 6.** `MoonOfTheNight` in `:core:domain`: la luna di una data si legge a metà della
+  sua notte astronomica (a mezzanotte dove non c'è), per la card, per «La luna di oggi» e
+  per il widget. Una fase che nomina un quarto porta il suo giorno e la sua ora: «Luna piena
+  domani alle 18:49 · 99% illuminata». L'occorrenza di «La luna di oggi» resta a
+  mezzogiorno: è l'ora del suo promemoria, e quella non cambia.
+- **Punto 7.** `tools/compose_sky_marks.py` compone tre segni dai disegni di Meteocons e
+  scrive `ui/icons/SkyMarks.kt`: la meteora per gli sciami, la luna con la stella per le
+  congiunzioni della luna, le due stelle per Venere e Giove. CLAUDE.md, DESIGN §13 e
+  `shipped_icons.py` lo dicono.
+- La guida (momenti, campanella, catalogo) dice la card del prossimo, dove si sceglie il
+  promemoria abituale e da dove si aggiunge un momento.
+
+### Decisioni e deviazioni
+
+- **I promemoria in Impostazioni e non nella finestra della campanella**: una preferenza che
+  vale per tutti i momenti non è contenuto della pagina di stanotte, e la finestra di un
+  momento sceglie per quel momento. La finestra però lo dice, perché chi cercava la riga in
+  fondo alla pagina sappia dove è andata.
+- **Il FAB primario di Material, non un colore nostro**: è il componente, con il suo
+  contenitore; il FAB esteso in cima alla pagina copre il bordo di una riga, che è il
+  comportamento di un FAB, e si ritira appena si scorre.
+- **La luna a metà della notte, non a mezzogiorno**: è la luna che si guarda, e quella che la
+  card ha sempre usato; spostare la card a mezzogiorno avrebbe messo la riga d'accordo con
+  un istante in cui la luna di solito non si vede. Il widget segue, perché la home e l'app
+  non stampino due fasi.
+- **Il quarto con giorno e ora solo per le quattro fasi che lo nominano**: «gibbosa
+  crescente» è un tratto del ciclo, non un istante, e non ha niente da precisare.
+- **Tre segni e non di più.** Venere e Giove restano la stella (è il loro nome a occhio
+  nudo); le ore blu e i crepuscoli nautici anche (lo stesso cielo delle prime stelle, e
+  Meteocons non disegna il sole appena sotto l'orizzonte). Gli sciami restano uno per riga
+  con lo stesso disegno: sono la stessa cosa in date diverse, e raggrupparli in una riga
+  sola avrebbe nascosto le date e le pagine.
+- **Le immagini del README**: «sky-ahead» ora parte dalla riga della guida, perché senza la
+  sezione dei promemoria la lista finisce prima e lo scorrimento si fermava con quella riga
+  tagliata sotto l'intestazione.
+
+### Come è stato verificato
+
+- `MoonOfTheNightTest`: la luna di una data si legge a metà della sua notte, a mezzanotte
+  dove la notte non c'è; una fase principale porta il suo quarto, entro due giorni, ed è lo
+  stesso istante del calendario; le fasi intermedie non ne hanno.
+- `SkyStateBuilderTest`: la card e «La luna di oggi» stampano la stessa percentuale, e il
+  quarto della luna piena del 25 set 2026 cade il 26.
+- `SkyMarksTest`: le quattro facce di ogni segno, nelle tabelle, senza gemelli animati; i pezzi
+  uguali alle sorgenti alla lettera, percorsi e colori; la meteora senza la luna; i contorni
+  della famiglia. `SkyMomentIconTest` e `MeteoconsSetsTest` aggiornati.
+- La pagina del Cielo, le Impostazioni e i segni in tutte le facce disegnati con Robolectric e
+  guardati; le immagini del README rigenerate e guardate.

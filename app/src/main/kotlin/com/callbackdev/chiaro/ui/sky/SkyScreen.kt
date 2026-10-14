@@ -1,6 +1,10 @@
 package com.callbackdev.chiaro.ui.sky
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.rememberLazyListState
 import com.callbackdev.chiaro.ui.theme.tabular
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Shape
@@ -124,9 +128,7 @@ fun SkyRoute(
         actions = SkyActions(
             addMoment = skyViewModel::addMoment,
             removeMoment = skyViewModel::removeMoment,
-            setLead = skyViewModel::setLead,
-            setDefaultLead = skyViewModel::setDefaultLead,
-            setNotifyOnFail = skyViewModel::setNotifyOnFail
+            setLead = skyViewModel::setLead
         ),
         onOpenPlaces = { placesOpen = true },
         onOpenSettings = onOpenSettings,
@@ -230,10 +232,10 @@ private fun NoPlaceForSky(onOpenPlaces: () -> Unit) {
 // Content
 // ---------------------------------------------------------------------------------
 
-/** Which lead picker is open: one moment's, or the default's. */
+/** The lead picker that is open: one moment's. The default's lives in Settings since
+ * 14 ott 2026 (review point 5). */
 private sealed interface LeadDialog {
     data class ForMoment(val jobId: String, val lead: SkyLead, val followsDefault: Boolean) : LeadDialog
-    data object ForDefault : LeadDialog
 }
 
 /** What the screen can ask of its store, as functions rather than the view model: the
@@ -241,9 +243,7 @@ private sealed interface LeadDialog {
 internal class SkyActions(
     val addMoment: (String) -> Unit,
     val removeMoment: (String) -> Unit,
-    val setLead: (String, Int?) -> Unit,
-    val setDefaultLead: (Int?) -> Unit,
-    val setNotifyOnFail: (Boolean) -> Unit
+    val setLead: (String, Int?) -> Unit
 )
 
 @Composable
@@ -282,7 +282,17 @@ private fun SkyContent(
 
     // Read here and not in the list below: a lazy list's builder is not a composable.
     val clock = LocalClock.current
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    val listState = rememberLazyListState()
+    // Extended while the top of the page is in view, the icon alone once the reader has
+    // scrolled into the list: the label is read once, and after that it covers rows.
+    val fabExpanded by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
+    Box(modifier = Modifier.fillMaxSize()) {
+    LazyColumn(
+        state = listState,
+        modifier = Modifier.fillMaxSize(),
+        // Room for the FAB under the last row, so nothing ends up beneath it.
+        contentPadding = PaddingValues(bottom = FabClearance)
+    ) {
         if (!notificationsAllowed && remindersArmed(content)) {
             item {
                 NotificationsOffCard(
@@ -349,21 +359,8 @@ private fun SkyContent(
                     )
                 }
             }
-        item {
-            TextButton(
-                onClick = { catalogOpen = true },
-                modifier = Modifier.padding(horizontal = 8.dp)
-            ) {
-                Icon(Icons.Outlined.Add, contentDescription = null)
-                Text(
-                    text = stringResource(R.string.sky_add_moment),
-                    modifier = Modifier.padding(start = 4.dp)
-                )
-            }
-        }
-        // A row and not a second button beside "Add a moment": the two labels are a
-        // line and a half on a 360dp screen in Italian, and this one is the door for a
-        // reader who came to understand rather than to subscribe.
+        // The door for a reader who came to understand rather than to subscribe; adding
+        // is the FAB's since 14 ott 2026.
         item {
             ListItem(
                 leadingContent = {
@@ -421,35 +418,19 @@ private fun SkyContent(
             }
         }
 
-        item { SkySectionTitle(stringResource(R.string.sky_section_reminders)) }
-        item {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.sky_default_lead)) },
-                supportingContent = { Text(leadLabel(content.defaultLead)) },
-                modifier = Modifier.clickable { leadDialog = LeadDialog.ForDefault }
-            )
-        }
-        item {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.sky_notify_on_fail)) },
-                supportingContent = { Text(stringResource(R.string.sky_notify_on_fail_note)) },
-                trailingContent = {
-                    Switch(checked = content.notifyOnFail, onCheckedChange = null)
-                },
-                modifier = Modifier.clickable(
-                    onClick = { actions.setNotifyOnFail(!content.notifyOnFail) },
-                    role = Role.Switch
-                )
-            )
-        }
-        item {
-            Text(
-                text = stringResource(R.string.sky_reminders_note),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-        }
+    }
+    // «Aggiungi un momento» (review point 5, 14 ott 2026): the screen's one action, as
+    // Material puts a screen's one action, instead of a text button lost between the
+    // moments and the guide's row.
+    ExtendedFloatingActionButton(
+        text = { Text(stringResource(R.string.sky_add_moment)) },
+        icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
+        expanded = fabExpanded,
+        onClick = { catalogOpen = true },
+        modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .padding(16.dp)
+    )
     }
 
     if (catalogOpen) {
@@ -489,18 +470,6 @@ private fun SkyContent(
             onPick = { minutes ->
                 actions.setLead(dialog.jobId, minutes)
                 leadChosen(minutes ?: content.defaultLead.minutes)
-                leadDialog = null
-            },
-            onDismiss = { leadDialog = null }
-        )
-        LeadDialog.ForDefault -> LeadPickerDialog(
-            title = stringResource(R.string.sky_default_lead),
-            defaultLead = content.defaultLead,
-            current = content.defaultLead.minutes ?: 0,
-            perMoment = false,
-            onPick = { minutes ->
-                actions.setDefaultLead(minutes?.takeIf { it > 0 })
-                leadChosen(minutes)
                 leadDialog = null
             },
             onDismiss = { leadDialog = null }
@@ -568,7 +537,7 @@ private fun MomentRow(
     val start = timed?.start?.atZone(zone)?.format(timeFmt)
     val until = timed?.end?.let { stringResource(R.string.sky_until, it.atZone(zone).format(timeFmt)) }
     val detail = when {
-        moment.moonPhase != null -> moonLine(moment.moonPhase, moment.moonIlluminationPct)
+        moment.moonPhase != null -> moonLine(moment, zone, timeFmt)
         occ is SkyOccurrence.None -> stringResource(SkyText.notScheduledRes(occ.reason))
         else -> null
     }
@@ -603,7 +572,7 @@ private fun MomentRow(
 private fun timeLine(moment: Moment, zone: ZoneId, timeFmt: DateTimeFormatter): String =
     when (val occ = moment.occurrence) {
         is SkyOccurrence.At -> when {
-            moment.moonPhase != null -> moonLine(moment.moonPhase, moment.moonIlluminationPct)
+            moment.moonPhase != null -> moonLine(moment, zone, timeFmt)
             occ.end != null ->
                 "${occ.start.atZone(zone).format(timeFmt)} – ${occ.end!!.atZone(zone).format(timeFmt)}"
             else -> occ.start.atZone(zone).format(timeFmt)
@@ -797,6 +766,8 @@ private fun segmentShape(index: Int, count: Int): Shape {
     return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
 }
 
+/** An extended FAB is 56 dp tall with 16 dp under it; 16 more so the last row clears it. */
+private val FabClearance = 88.dp
 private val GroupOuter = 20.dp
 private val GroupInner = 4.dp
 private val NextCardCorner = 28.dp
@@ -1081,12 +1052,35 @@ private fun BellButton(lead: SkyLead, name: String, onClick: () -> Unit) {
     }
 }
 
+/**
+ * «Luna piena domani alle 18:49 · 99% illuminata» (review point 6, 14 ott 2026): the
+ * phase, with the day and hour of its quarter when it is one of the four — a phase name
+ * covers almost two days either side of its instant, and «Luna piena» on the evening
+ * before the calendar's full moon read as the app disagreeing with itself — and the
+ * percentage of the screen's one moon ([com.callbackdev.chiaro.domain.sky.MoonOfTheNight]).
+ */
 @Composable
-private fun moonLine(phase: MoonPhase, illuminationPct: Int?): String {
+private fun moonLine(moment: Moment, zone: ZoneId, timeFmt: DateTimeFormatter): String {
+    val phase = moment.moonPhase ?: return ""
     val name = stringResource(SkyText.phaseRes(phase))
-    return if (illuminationPct != null) {
-        stringResource(R.string.sky_moon_line, name, illuminationPct)
+    val quarter = moment.moonQuarterAt
+    val day = (moment.occurrence as? SkyOccurrence.At)?.start?.atZone(zone)?.toLocalDate()
+    val named = if (quarter != null && day != null) {
+        val local = quarter.atZone(zone)
+        val locale = currentLocale()
+        val whenDay = when (java.time.temporal.ChronoUnit.DAYS.between(day, local.toLocalDate())) {
+            0L -> stringResource(R.string.sky_day_today).lowercase(locale)
+            1L -> stringResource(R.string.sky_day_tomorrow).lowercase(locale)
+            -1L -> stringResource(R.string.sky_day_yesterday).lowercase(locale)
+            else -> stringResource(
+                R.string.sky_moon_on_date,
+                local.format(DateTimeFormatter.ofPattern("d MMMM", locale))
+            )
+        }
+        stringResource(R.string.sky_moon_quarter_when, name, whenDay, local.format(timeFmt))
     } else name
+    val pct = moment.moonIlluminationPct
+    return if (pct != null) stringResource(R.string.sky_moon_line, named, pct) else named
 }
 
 @Composable
@@ -1473,7 +1467,7 @@ private fun LookBlock(direction: String, onOpen: () -> Unit) {
  * free-text field — the same discipline every value with a range gets in this app.
  */
 @Composable
-private fun LeadPickerDialog(
+internal fun LeadPickerDialog(
     title: String,
     defaultLead: SkyLead,
     /** null = follows the default; 0 = explicitly off; else minutes. */
@@ -1516,6 +1510,18 @@ private fun LeadPickerDialog(
                         )
                     }
                 }
+                // What used to be the footnote of the page's «Promemoria» section, said
+                // where the reader is choosing a time (review point 5, 14 ott 2026); and,
+                // on a moment's bell, where the default it can follow is kept now.
+                Text(
+                    text = listOfNotNull(
+                        stringResource(R.string.sky_reminders_note),
+                        if (perMoment) stringResource(R.string.sky_lead_default_where) else null
+                    ).joinToString(" "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 12.dp)
+                )
             }
         },
         confirmButton = {
@@ -1526,7 +1532,7 @@ private fun LeadPickerDialog(
 
 /** "30 minuti prima", "1 ora prima", or the plain off. */
 @Composable
-private fun leadLabel(lead: SkyLead): String = when (lead) {
+internal fun leadLabel(lead: SkyLead): String = when (lead) {
     SkyLead.OFF -> stringResource(R.string.sky_lead_off)
     SkyLead.FIFTEEN -> pluralStringResource(R.plurals.sky_lead_minutes, 15, 15)
     SkyLead.THIRTY -> pluralStringResource(R.plurals.sky_lead_minutes, 30, 30)

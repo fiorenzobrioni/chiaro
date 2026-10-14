@@ -1543,6 +1543,23 @@ the name it had 241 dp at 360, and «✗ Niente da fare  nuvole 86%, basse» (th
 glyph's edge it has 304 at 360 and 328 at 384. §8.8's 236 dp was measured before the layer
 existed; the old row was already 1 dp from wrapping.
 
+**One action, and no settings, on the page** (committente, 14 ott 2026, review point 5).
+«Aggiungi un momento» is an `ExtendedFloatingActionButton` at the bottom end (elevation 3,
+the one shadow §6 allows): extended while the top of the page is in view, its icon alone
+once the reader has scrolled into the list, so the label is read once and then stops
+covering rows. The list keeps 88 dp under its last row for it. The «Promemoria» section that
+closed the page (the usual reminder, «even under a covered sky», and the note that
+reminders can be a few minutes early or late) moved: the two preferences to Settings, group
+«Promemoria del cielo», and the note into the lead picker, where the reader is choosing a
+time; a moment's own picker adds that the usual reminder is changed in Settings.
+
+**One moon** (same day, point 6). The card, «today's moon» and the widget read the moon at
+one instant, the middle of the date's astronomical night (`MoonOfTheNight`; the local
+midnight after it where there is none): the screen used to print 99% on the card and 98% on
+the row, measured at noon. And a phase that names a quarter carries its quarter's day and
+hour, «Luna piena domani alle 18:49 · 99% illuminata»: «Luna piena» alone, the evening before
+the calendar's full moon, was the name of a two-day range read as the name of an instant.
+
 **The calendar ahead counts down** — «8 ottobre · tra 15 giorni», «oggi», «domani», up to two
 months out — and «too far out to say» is said **once**, as a footnote under the section,
 instead of once a row: five consecutive rows ending «La previsione non arriva ancora così
@@ -2093,14 +2110,31 @@ a valid animator and only a person can say the rain falls downward.
    (the Lottie build is the other road and was not taken: it wants a runtime dependency
    for a 34dp glyph and does not run inside a Glance widget at all).
 
-   **The tools are five, and each one is a seam.** `tools/import_meteocons_v3.py` is the
+   **The tools are six, and each one is a seam.** `tools/import_meteocons_v3.py` is the
    importer of record — re-running it IS the import; `tools/svg_paths.py` holds the path
    arithmetic and the mask conversion; `tools/reanchor.py` holds the colour rule;
    `tools/shipped_icons.py` holds the list; `tools/compose_sun_cloud.py` composes the two
-   drawings the family does not have the way this app needs them (below). The Kotlin lookup tables are **generated**
-   into `ui/icons/MeteoconsSets.kt` and `ui/icons/ComposedIcons.kt`; what stays
+   drawings the family does not have the way this app needs them (below);
+   `tools/compose_sky_marks.py` composes the sky catalog's marks it does not have at all
+   (14 ott 2026, below). The Kotlin lookup tables are **generated**
+   into `ui/icons/MeteoconsSets.kt`, `ui/icons/ComposedIcons.kt` and `ui/icons/SkyMarks.kt`;
+   what stays
    hand-written in `ChiaroIcons` is the policy — which weather code gets which drawing,
    which metric gets which mark — because that is the part a person argues about.
+
+   **Three sky marks are composed too** (14 ott 2026, review of the Sky screen, point 7),
+   still faces only, because nothing in the sky catalog moves. **`meteor`** is
+   `falling-stars` without the moon it draws them across: in a list of five showers that
+   moon read as a moon crossed out, «no moon», the opposite of the row; the stars and the
+   streak are kept to the letter, at 110% and re-centred. **`moon-star`** (the crescent of
+   `clear-night` at 80% with a star of `star` at 42%) and **`two-stars`** (the star at 62%
+   and 40%) are the conjunctions, the only rows of the catalog that are two things in one
+   place; the star alone had been saying five things. Venus and Jupiter keep the star (the
+   evening star is their name to the eye), and so do the blue hours and the nautical
+   twilights, the same sky of the first stars, which Meteocons has no other drawing for.
+   Pieces are copied path for path and colour for colour from each face; only
+   `strokeWidth` is divided by the piece's scale, so a smaller star keeps the family's line
+   (`SkyMarksTest`).
 
    **One drawing is composed here, not imported** (12 set 2026): `sun-one-cloud-day` and
    `-night`, which WMO code 1 takes. It is `clear-day` untouched — the same paths, the

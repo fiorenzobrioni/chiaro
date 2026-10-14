@@ -11,6 +11,7 @@ import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.LunarEclipse
 import com.callbackdev.chiaro.domain.sky.MeteorShowerTable
+import com.callbackdev.chiaro.domain.sky.MoonOfTheNight
 import com.callbackdev.chiaro.domain.sky.MoonQuarterKind
 import com.callbackdev.chiaro.domain.sky.SkyAlmanac
 import com.callbackdev.chiaro.domain.sky.SolarEclipse
@@ -150,6 +151,9 @@ data class Moment(
     /** For the moon's day-moment: the phase is the value, not a verdict. */
     val moonPhase: MoonPhase? = null,
     val moonIlluminationPct: Int? = null,
+    /** The exact instant of the quarter [moonPhase] is named after, when it is one of the
+     * four: the row prints its day and hour beside the name (review point 6). */
+    val moonQuarterAt: Instant? = null,
     /**
      * Which way to turn, degrees from north, on the rows where that is the half a
      * reader cannot work out from a time (Fase 28). Null on most of them, deliberately
@@ -307,11 +311,10 @@ object SkyStateBuilder {
         // cannot explain a short window without the night it was cut out of.
         val night = SkyScheduler.darkNight(upcoming.date, zone, city.coordinates).night
             as? SkyOccurrence.At
+        // The one moon of the screen ([MoonOfTheNight]): «today's moon» reads the same
+        // instant, so the card and the row cannot print two percentages for one evening.
         val moonLight = night?.let {
-            val middle = it.start.plus(
-                Duration.between(it.start, it.end ?: it.start).dividedBy(2)
-            )
-            AstronomyEngine.moonIllumination(middle)
+            AstronomyEngine.moonIllumination(MoonOfTheNight.instant(upcoming.date, zone, city.coordinates))
         }
         val moonPct = moonLight?.let { (it.illuminatedFraction * 100).roundToInt() }
         val hours = nightHours(night, hourly)
@@ -392,6 +395,12 @@ object SkyStateBuilder {
                 val upcoming = SkyUpcoming.of(job, now, zone, city.coordinates)
                 val at = upcoming.at
                 val isMoonDay = job.id == SkyJobCatalog.MoonToday.id
+                // Read at the night's middle, not at the occurrence's noon (which stays
+                // the reminder's time): [MoonOfTheNight].
+                val moonAt = if (isMoonDay && at != null) {
+                    MoonOfTheNight.instant(upcoming.date, zone, city.coordinates)
+                } else null
+                val phase = moonAt?.let { MoonPhase.at(it) }
                 Moment(
                     job = job,
                     occurrence = upcoming.occurrence,
@@ -403,10 +412,12 @@ object SkyStateBuilder {
                         upcoming.date == today -> MomentTiming.TODAY
                         else -> MomentTiming.TOMORROW
                     },
-                    moonPhase = if (isMoonDay && at != null) MoonPhase.at(at.start) else null,
-                    moonIlluminationPct = if (isMoonDay && at != null) {
-                        (AstronomyEngine.moonIllumination(at.start).illuminatedFraction * 100)
-                            .roundToInt()
+                    moonPhase = phase,
+                    moonIlluminationPct = moonAt?.let {
+                        (AstronomyEngine.moonIllumination(it).illuminatedFraction * 100).roundToInt()
+                    },
+                    moonQuarterAt = if (phase != null && moonAt != null) {
+                        MoonOfTheNight.quarterOf(phase, moonAt)?.at
                     } else null,
                     // Measured at the middle of a window rather than at its start: the
                     // sun moves 15° an hour, so a golden hour's bearing taken at its

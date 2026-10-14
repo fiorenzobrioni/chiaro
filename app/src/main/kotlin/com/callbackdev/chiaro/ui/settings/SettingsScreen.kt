@@ -1,5 +1,10 @@
 package com.callbackdev.chiaro.ui.settings
 
+import com.callbackdev.chiaro.ui.components.rememberNotificationsAllowed
+import com.callbackdev.chiaro.ui.components.rememberNotificationRequest
+import com.callbackdev.chiaro.ui.sky.leadLabel
+import com.callbackdev.chiaro.ui.sky.LeadPickerDialog
+import com.callbackdev.chiaro.domain.sky.SkyLead
 import android.app.LocaleManager
 import android.content.Intent
 import android.net.Uri
@@ -109,6 +114,8 @@ fun SettingsRoute(
             setAnimatedIcons = { viewModel.setAnimatedIcons(it) },
             setWeatherIcons = { viewModel.setWeatherIcons(it) },
             setUpdateFrequency = { viewModel.setUpdateFrequency(it) },
+            setSkyDefaultLead = { viewModel.setSkyDefaultLead(it) },
+            setSkyNotifyOnFail = { viewModel.setSkyNotifyOnFail(it) },
             resetToDefaults = { viewModel.resetToDefaults() }
         ),
         onBack = onBack,
@@ -170,6 +177,8 @@ internal class SettingsActions(
     val setAnimatedIcons: (Boolean) -> Unit,
     val setWeatherIcons: (WeatherIcons) -> Unit,
     val setUpdateFrequency: (Int) -> Unit,
+    val setSkyDefaultLead: (Int?) -> Unit,
+    val setSkyNotifyOnFail: (Boolean) -> Unit,
     val resetToDefaults: () -> Unit
 )
 
@@ -189,6 +198,8 @@ private fun SettingsList(
 ) {
     val context = LocalContext.current
     var dialog by remember { mutableStateOf<SettingsDialog?>(null) }
+    val notificationsAllowed by rememberNotificationsAllowed()
+    val notificationRequest = rememberNotificationRequest()
 
     LazyColumn(modifier = modifier, contentPadding = PaddingValues(bottom = 24.dp)) {
         // The guide first: the row a new reader is here for — now a card, because it is
@@ -266,6 +277,28 @@ private fun SettingsList(
                     label = stringResource(R.string.settings_update_frequency),
                     value = frequencyLabel(settings.updateFrequencyMin),
                     onClick = { dialog = SettingsDialog.FREQUENCY }
+                )
+            }
+        }
+
+        // The Sky's two reminder preferences, moved here from the bottom of the Sky screen
+        // (review point 5, 14 ott 2026): a page about tonight is not where a default is
+        // kept. A moment's own bell still opens on its screen, and its picker says this
+        // is where the usual one lives.
+        item { GroupHeader(stringResource(R.string.settings_group_sky_reminders)) }
+        item {
+            SettingsGroup {
+                ValueRow(
+                    label = stringResource(R.string.sky_default_lead),
+                    value = leadLabel(SkyLead.ofMinutes(settings.skyNotifyDefaultMin)),
+                    onClick = { dialog = SettingsDialog.SKY_LEAD }
+                )
+                GroupDivider()
+                SwitchRow(
+                    label = stringResource(R.string.sky_notify_on_fail),
+                    note = stringResource(R.string.sky_notify_on_fail_note),
+                    checked = settings.skyNotifyOnFail,
+                    onChange = actions.setSkyNotifyOnFail
                 )
             }
         }
@@ -444,6 +477,20 @@ private fun SettingsList(
             onSelect = { actions.setUpdateFrequency(it); dialog = null },
             onDismiss = { dialog = null }
         )
+        SettingsDialog.SKY_LEAD -> LeadPickerDialog(
+            title = stringResource(R.string.sky_default_lead),
+            defaultLead = SkyLead.ofMinutes(settings.skyNotifyDefaultMin),
+            current = settings.skyNotifyDefaultMin ?: 0,
+            perMoment = false,
+            onPick = { minutes ->
+                val lead = minutes?.takeIf { it > 0 }
+                actions.setSkyDefaultLead(lead)
+                // POST_NOTIFICATIONS is asked by the tap that needs it (VISION §5.8).
+                if (lead != null && !notificationsAllowed) notificationRequest.ask()
+                dialog = null
+            },
+            onDismiss = { dialog = null }
+        )
         SettingsDialog.RESET -> AlertDialog(
             onDismissRequest = { dialog = null },
             title = { Text(stringResource(R.string.settings_reset_dialog_title)) },
@@ -614,7 +661,7 @@ private fun PrivacyCard() {
 }
 
 private enum class SettingsDialog {
-    TEMPERATURE, WIND, THEME, PALETTE, FONT, ICONS, FREQUENCY, RESET
+    TEMPERATURE, WIND, THEME, PALETTE, FONT, ICONS, FREQUENCY, SKY_LEAD, RESET
 }
 
 @Composable

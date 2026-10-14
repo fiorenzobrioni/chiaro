@@ -382,6 +382,7 @@
     <string name="settings_dynamic_color">Wallpaper colors</string>
     <string name="settings_dynamic_color_note">The colors come from your wallpaper instead of the palette above.</string>
     <string name="settings_group_updates">Updates</string>
+    <string name="settings_group_sky_reminders">Sky reminders</string>
     <string name="settings_update_frequency">Update frequency</string>
     <string name="settings_update_frequency_note">How long a forecast stays current before Chiaro asks for a new one.</string>
     <string name="settings_freq_15">Every 15 minutes</string>
@@ -478,16 +479,16 @@
     <string name="guide_verdict_evidence_unstable" formatted="false">45% cloud</string>
     <string name="guide_verdict_evidence_fail" formatted="false">90% cloud</string>
     <string name="guide_sky_moments_title">The moments ahead</string>
-    <string name="guide_sky_moments_body">The moments you follow, in the order they happen. One that is over is replaced by its next occurrence and the row says which day it is; one that is happening right now says so. It is the same moment the Sky widget shows on your home screen, resolved the same way. Every row leads to its event\'s page, which says what it is and is also where you take it off the list.</string>
+    <string name="guide_sky_moments_body">The moments you follow, in the order they happen. One that is over is replaced by its next occurrence and the row says which day it is; one that is happening right now says so. It is the same moment the Sky widget shows on your home screen, resolved the same way. Every row leads to its event\'s page, which says what it is and is also where you take it off the list. The next of your moments sits at the top, in a card of its own, with its time large and how soon it comes.</string>
     <string name="guide_sky_moment_caption">An example: tomorrow\'s sunrise, judged by its clouds.</string>
     <string name="guide_sky_camera_title">The camera mark</string>
     <string name="guide_sky_camera_body">A few events carry a small camera beside their name: the nine genuinely worth carrying one for — the golden and blue hours, the full moon at dusk, earthshine morning and evening, the heart of the Milky Way, and the eclipse of the moon. It is not a matter of taste, and that is why those rows also say which way to look: a time of day is half an answer without a direction. The eclipse of the sun deliberately does not carry it — that one is only ever watched through a proper filter, and a lens needs one just as much as an eye does. Every row that says which way to look, these and the planets, opens a page with “Where to look”: “Open the compass” turns you the right way, and tells you when the phone\'s compass needs calibrating and with which gesture.</string>
     <string name="guide_sky_bell_title">The bell</string>
-    <string name="guide_sky_bell_body">Each moment can remind you, with its own lead time or the usual one. Reminders are deliberately loose — they can arrive a few minutes early or late — and that looseness is exactly what keeps them off your battery. A reminder for something the clouds are going to hide stays quiet, unless you ask for it anyway.</string>
+    <string name="guide_sky_bell_body">Each moment can remind you, with its own lead time or the usual one. Reminders are deliberately loose — they can arrive a few minutes early or late — and that looseness is exactly what keeps them off your battery. A reminder for something the clouds are going to hide stays quiet, unless you ask for it anyway. The usual one, and whether to ring under a covered sky too, is chosen in Settings, under “Sky reminders”.</string>
     <string name="guide_sky_events_title">Coming up</string>
     <string name="guide_sky_events_body">The calendar ahead, in two tiers. On top, everything you follow: an eclipse two years out still has its row, with its year and its hours, and a line the sky skips — a shower peaking on a night that never gets dark here — keeps its row and says why. Under it, the nearest events for everybody: meteor peaks, the next full moon, solstices and equinoxes. A verdict where the forecast reaches that far, an honest “too far out to say” where it does not. One instant, one row: two showers that peak on the same night share one, and both are named.</string>
     <string name="guide_sky_catalog_title">Add a moment</string>
-    <string name="guide_sky_catalog_body">Sixty moments, grouped by sun, night, moon, planets, eclipses, seasons and meteor showers, each with the one line that says what it is and a page that explains it properly. The field at the top searches the names and those lines, which is the short way to the Perseids — and “photo” brings up the nine that carry the camera. This is the place to find out what a blue hour actually is, or earthshine: by adding one, or by reading about it first.</string>
+    <string name="guide_sky_catalog_body">Sixty moments, grouped by sun, night, moon, planets, eclipses, seasons and meteor showers, each with the one line that says what it is and a page that explains it properly. The field at the top searches the names and those lines, which is the short way to the Perseids — and “photo” brings up the nine that carry the camera. This is the place to find out what a blue hour actually is, or earthshine: by adding one, or by reading about it first. It opens from the “Add a moment” button at the bottom right.</string>
 
     <string name="guide_alerts_title">Alerts</string>
     <string name="guide_alerts_p1">Three groups live here: the official warnings, the alerts already written, and the ones you write. Nothing arrives that you did not switch on.</string>
@@ -561,7 +562,6 @@
     </plurals>
     <!-- Fase 27: two showers that peak on the same night share one row. -->
     <string name="sky_event_and">%1$s and %2$s</string>
-    <string name="sky_section_reminders">Reminders</string>
     <string name="sky_add_moment">Add a moment</string>
     <!-- Fase 28: sessanta voci in un foglio erano uno scroll. -->
     <string name="sky_catalog_search">Search the events</string>
@@ -576,6 +576,10 @@
     <string name="sky_next_label">Next, %1$s</string>
     <string name="sky_day_today">Today</string>
     <string name="sky_day_tomorrow">Tomorrow</string>
+    <string name="sky_day_yesterday">Yesterday</string>
+    <!-- "Full moon tomorrow at 18:49": the phase with the day and hour of its quarter (14 Oct 2026). -->
+    <string name="sky_moon_quarter_when">%1$s %2$s at %3$s</string>
+    <string name="sky_moon_on_date">on %1$s</string>
     <string name="sky_tonight_label">Tonight</string>
     <string name="sky_tonight_moon_pct">moon %d%%</string>
     <string name="sky_tonight_window">Dark from %1$s to %2$s</string>
@@ -708,6 +712,7 @@
     <string name="sky_notify_on_fail">Even under a covered sky</string>
     <string name="sky_notify_on_fail_note">Send the reminder even when the verdict says the sky will hide it.</string>
     <string name="sky_reminders_note">Reminders can arrive a few minutes early or late.</string>
+    <string name="sky_lead_default_where">The usual reminder is changed in Settings.</string>
     <string name="sky_bell_on_desc">Reminder for %1$s: on, tap to change</string>
     <string name="sky_bell_off_desc">Reminder for %1$s: off, tap to set one</string>
 

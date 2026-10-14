@@ -29,6 +29,14 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Adding a moment is one button.** «Add a moment» is now a floating button at the bottom
+  of the Sky screen. The usual reminder and «Even under a covered sky» moved to Settings,
+  under «Sky reminders».
+- **One moon on the Sky screen.** The tonight card, today's moon and the widget now read the
+  moon at the same moment of the night, so they print the same percentage, and a phase like
+  the full moon says its day and hour: «Full moon tomorrow at 18:49».
+- **Clearer sky icons.** Meteor showers have their own drawing, a shooting star, instead of a
+  moon with a streak across it; the conjunctions show the moon beside a star, or two stars.
 - **Tonight always answers.** On a night with no dark window (a moon up from dusk to dawn,
   a summer night that never gets dark, a polar night) the Sky card now opens with a word, such
   as «A moonlit night», and the night's cloud, instead of a paragraph. The hours of the night

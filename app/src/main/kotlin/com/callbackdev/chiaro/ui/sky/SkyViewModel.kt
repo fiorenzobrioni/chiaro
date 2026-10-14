@@ -81,9 +81,8 @@ class SkyViewModel(
     fun setLead(jobId: String, minutes: Int?) =
         mutate { subscriptionStore.setNotifyLead(jobId, minutes) }
 
-    fun setDefaultLead(minutes: Int?) = mutate { settingsStore.setSkyNotifyDefault(minutes) }
-
-    fun setNotifyOnFail(enabled: Boolean) = mutate { settingsStore.setSkyNotifyOnFail(enabled) }
+    // The usual reminder and «even under a covered sky» are Settings' since 14 ott 2026
+    // (review point 5): see SettingsViewModel.
 
     private fun mutate(edit: suspend () -> Unit) {
         viewModelScope.launch {

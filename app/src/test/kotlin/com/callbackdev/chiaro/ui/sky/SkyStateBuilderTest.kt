@@ -338,4 +338,18 @@ class SkyStateBuilderTest {
         val content = SkyStateBuilder.build(milan, report(), defaults(), AppSettings(), noon)
         assertEquals(zone, content.zone)
     }
+
+    @Test
+    fun `the card and today's moon print one moon`() {
+        // 25 set 2026, the evening before the full moon: the card and the row used to say
+        // 99% and 98%, and the row called it full a day early (review point 6).
+        val eve = LocalDateTime.of(2026, 9, 25, 12, 0).atZone(zone).toInstant()
+        val content = SkyStateBuilder.build(milan, null, defaults(), AppSettings(), eve)
+        val moon = content.moments.single { it.job.id == SkyJobCatalog.MoonToday.id }
+        assertEquals(content.tonight.moonIlluminationPct, moon.moonIlluminationPct)
+        // And a principal phase carries the instant of its quarter: the calendar's.
+        val quarter = moon.moonQuarterAt
+        assertNotNull(quarter)
+        assertEquals(LocalDate.of(2026, 9, 26), quarter!!.atZone(zone).toLocalDate())
+    }
 }
