@@ -149,11 +149,11 @@ private fun NoPlaceForJournal(onOpenPlaces: () -> Unit) {
 // Body
 // ---------------------------------------------------------------------------------
 
-private enum class DriftMetric { RAIN, HIGH }
+internal enum class DriftMetric { RAIN, HIGH }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun JournalBody(content: JournalContent, units: UnitSettings) {
+internal fun JournalBody(content: JournalContent, units: UnitSettings) {
     val locale = currentLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val timeFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
@@ -163,75 +163,72 @@ private fun JournalBody(content: JournalContent, units: UnitSettings) {
 
     LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
         if (content.drift != null) {
-            item { JournalSectionTitle(stringResource(R.string.journal_drift_title)) }
-            // One card for the whole drift (review, 8 set 2026): the chips, the strip,
-            // the frost line and the sentence were five things stacked on the page and
-            // read as five; on the same `surfaceContainer` as the details tiles they
-            // read as one object with one job.
+            // The hero (review of the Journal, A.1, 14 ott 2026): the page answers before it
+            // explains, as the Sky's tonight card does. A label, the answer as a word at
+            // `headlineMedium`, its arithmetic on a line of its own, then the strip that
+            // shows the row the word names. The section title it replaces was the label's
+            // job, and the one-line sentence it replaces wrapped inside its own number
+            // («pioggia 52% →» over «5%.») at 384 dp.
             item {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceContainer,
-                    shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
+                val story = driftHeadline(content.drift, metric, units, locale)
+                WeekHero(
+                    word = story.word,
+                    evidence = story.evidence
                 ) {
-                    // The sentence FIRST since the design review of 23 set 2026: it is the
-                    // answer the card exists for ("is the weekend getting better?"), and at
-                    // the foot of the card it read as a caption to a chart nobody had yet
-                    // learned to read. The strip under it then shows the row it names.
-                    val headline = driftHeadline(content.drift, metric, units, locale)
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(top = 8.dp)
                     ) {
-                        Text(text = headline.text, style = MaterialTheme.typography.titleMedium)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(
-                                selected = metric == DriftMetric.RAIN,
-                                onClick = { metric = DriftMetric.RAIN },
-                                label = { Text(stringResource(R.string.journal_metric_rain)) },
-                                leadingIcon = {
-                                    Icon(
-                                        ChiaroIcons.precipitation, contentDescription = null,
-                                        tint = Color.Unspecified, modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            )
-                            FilterChip(
-                                selected = metric == DriftMetric.HIGH,
-                                onClick = { metric = DriftMetric.HIGH },
-                                label = { Text(stringResource(R.string.journal_metric_high)) },
-                                leadingIcon = {
-                                    Icon(
-                                        ChiaroIcons.dewPoint, contentDescription = null,
-                                        tint = Color.Unspecified, modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            )
-                        }
-                        DriftStrip(
-                            drift = content.drift,
-                            metric = metric,
-                            zone = content.zone,
-                            units = units,
-                            locale = locale,
-                            timeFmt = timeFmt,
-                            highlight = headline.date,
-                            onOpenTable = { tableOpen = true }
+                        FilterChip(
+                            selected = metric == DriftMetric.RAIN,
+                            onClick = { metric = DriftMetric.RAIN },
+                            label = { Text(stringResource(R.string.journal_metric_rain)) },
+                            leadingIcon = {
+                                Icon(
+                                    ChiaroIcons.precipitation, contentDescription = null,
+                                    tint = Color.Unspecified, modifier = Modifier.size(18.dp)
+                                )
+                            }
                         )
-                        FrostLine(content.drift, units, locale)
+                        FilterChip(
+                            selected = metric == DriftMetric.HIGH,
+                            onClick = { metric = DriftMetric.HIGH },
+                            label = { Text(stringResource(R.string.journal_metric_high)) },
+                            leadingIcon = {
+                                Icon(
+                                    ChiaroIcons.dewPoint, contentDescription = null,
+                                    tint = Color.Unspecified, modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        )
                     }
+                    DriftStrip(
+                        drift = content.drift,
+                        metric = metric,
+                        zone = content.zone,
+                        units = units,
+                        locale = locale,
+                        timeFmt = timeFmt,
+                        highlight = story.date,
+                        onOpenTable = { tableOpen = true }
+                    )
+                    FrostLine(content.drift, units, locale)
                 }
             }
         } else if (content.days.isNotEmpty()) {
+            // The hero answers on the first hours too, as the Sky's does on a night with no
+            // window: «too early to say» is an answer, and a grey caption was not one.
             item {
-                Text(
-                    text = stringResource(R.string.journal_drift_waiting),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
+                WeekHero(
+                    word = stringResource(R.string.journal_drift_word_waiting),
+                    evidence = null
+                ) {
+                    Text(
+                        text = stringResource(R.string.journal_drift_waiting),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
@@ -576,21 +573,36 @@ private fun styledShift(shifts: List<FieldShift>, units: UnitSettings, locale: L
     return buildAnnotatedString {
         parts.forEachIndexed { i, (template, old, new) ->
             if (i > 0) withStyle(SpanStyle(color = quiet)) { append(" · ") }
-            val oldAt = template.indexOf(OldMark)
-            val newAt = template.indexOf(NewMark)
-            if (oldAt < 0 || newAt < 0 || newAt < oldAt) {
-                append(template.replace(OldMark, old).replace(NewMark, new.first))
-                return@forEachIndexed
-            }
-            withStyle(SpanStyle(color = quiet)) {
-                append(template.substring(0, oldAt))
-                append(old)
-                append(template.substring(oldAt + OldMark.length, newAt))
-            }
-            withStyle(SpanStyle(color = new.second, fontWeight = FontWeight.SemiBold)) { append(new.first) }
-            withStyle(SpanStyle(color = quiet)) { append(template.substring(newAt + NewMark.length)) }
+            appendChange(template, old, new.first, new.second, quiet)
         }
     }
+}
+
+/**
+ * One «old → new» from a format string carrying [OldMark] and [NewMark]: everything in
+ * the [quiet] ink but the new value, in [strong] and semibold. Shared by the entries and
+ * the week's hero, so a change reads the same wherever it is printed.
+ */
+private fun AnnotatedString.Builder.appendChange(
+    template: String,
+    old: String,
+    new: String,
+    strong: Color,
+    quiet: Color
+) {
+    val oldAt = template.indexOf(OldMark)
+    val newAt = template.indexOf(NewMark)
+    if (oldAt < 0 || newAt < 0 || newAt < oldAt) {
+        append(template.replace(OldMark, old).replace(NewMark, new))
+        return
+    }
+    withStyle(SpanStyle(color = quiet)) {
+        append(template.substring(0, oldAt))
+        append(old)
+        append(template.substring(oldAt + OldMark.length, newAt))
+    }
+    withStyle(SpanStyle(color = strong, fontWeight = FontWeight.SemiBold)) { append(new) }
+    withStyle(SpanStyle(color = quiet)) { append(template.substring(newAt + NewMark.length)) }
 }
 
 private const val OldMark = "\u0001"
@@ -770,11 +782,13 @@ private fun DriftStrip(
             val named = date == highlight
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                // The day the sentence above names, picked out on its own row.
+                // The day the hero's word names, picked out on its own row. On the lowest
+                // container since the hero moved to `surfaceContainerHigh` (14 ott 2026):
+                // the highest, one step from that ground, all but vanished in the light dress.
                 modifier = if (named) {
                     Modifier
                         .clip(RoundedCornerShape(6.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
                 } else {
                     Modifier
                 }
@@ -938,7 +952,9 @@ private fun FrostLine(drift: DriftModel, units: UnitSettings, locale: Locale) {
 }
 
 /**
- * The judgement in words, beside the strip — never in its colors (DESIGN §8.10).
+ * The judgement in words, above the strip — never in its colors (DESIGN §8.10): since the
+ * Journal's review (14 ott 2026) a word for the hero and its arithmetic on a line of its
+ * own, where it was one sentence that wrapped inside its own number.
  *
  * Three states, not two. "Quiet" used to cover both the week that did not move and the
  * week that moved and came back, so the strip could print "the week held steady" over a
@@ -958,54 +974,145 @@ private fun driftHeadline(
      * lowercase on its own, so the format alone is not enough. */
     fun day(date: LocalDate): String = date.format(dayFmt)
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+    fun value(v: Double): String = when (metric) {
+        DriftMetric.RAIN -> Formats.percent(v.roundToInt(), locale)
+        DriftMetric.HIGH -> Formats.temperature(v, units.temperature, locale)
+    }
 
-    return when (metric) {
-        DriftMetric.RAIN -> {
-            val moves = drift.dates.indices.mapNotNull { row -> move(drift.dates[row], drift.rain[row]) }
-            val net = moves.filter { kotlin.math.abs(it.last - it.first) >= RAIN_MOVE_PCT }
-                .maxByOrNull { kotlin.math.abs(it.last - it.first) }
-            val swing = moves.filter { it.high - it.low >= RAIN_MOVE_PCT }
-                .maxByOrNull { it.high - it.low }
-            when {
-                net != null && net.last < net.first -> DriftHeadline(stringResource(
-                    R.string.journal_drift_rain_better, day(net.date),
-                    Formats.percent(net.first, locale), Formats.percent(net.last, locale)
-                ), net.date)
-                net != null -> DriftHeadline(stringResource(
-                    R.string.journal_drift_rain_worse, day(net.date),
-                    Formats.percent(net.first, locale), Formats.percent(net.last, locale)
-                ), net.date)
-                swing != null -> DriftHeadline(stringResource(
-                    R.string.journal_drift_rain_swing, day(swing.date),
-                    Formats.percent(swing.low, locale), Formats.percent(swing.high, locale)
-                ), swing.date)
-                else -> DriftHeadline(stringResource(R.string.journal_drift_quiet), null)
+    val story = driftStory(drift, metric)
+    val date = story.date ?: return DriftHeadline(stringResource(R.string.journal_drift_word_quiet), null, null)
+    val word = stringResource(
+        when (story.kind) {
+            DriftStory.Kind.BETTER -> R.string.journal_drift_word_better
+            DriftStory.Kind.WORSE -> R.string.journal_drift_word_worse
+            DriftStory.Kind.WARMER -> R.string.journal_drift_word_warmer
+            DriftStory.Kind.COOLER -> R.string.journal_drift_word_cooler
+            DriftStory.Kind.SWING, DriftStory.Kind.QUIET -> R.string.journal_drift_word_swing
+        },
+        day(date)
+    )
+    val quiet = MaterialTheme.colorScheme.onSurfaceVariant
+    // The new value in the ink the entries give it: the rain on its own ramp, a
+    // temperature in full ink. A swing has no "new" value, so both ends stay quiet.
+    val strong = when (metric) {
+        DriftMetric.RAIN -> ChiaroTheme.colors.rainInkAt(story.to.roundToInt())
+        DriftMetric.HIGH -> MaterialTheme.colorScheme.onSurface
+    }
+    val evidence = if (story.kind == DriftStory.Kind.SWING) {
+        AnnotatedString(
+            stringResource(
+                when (metric) {
+                    DriftMetric.RAIN -> R.string.journal_drift_rain_between
+                    DriftMetric.HIGH -> R.string.journal_drift_high_between
+                },
+                value(story.from), value(story.to)
+            )
+        )
+    } else {
+        val template = stringResource(
+            when (metric) {
+                DriftMetric.RAIN -> R.string.journal_field_rain
+                DriftMetric.HIGH -> R.string.journal_field_high
+            },
+            OldMark, NewMark
+        )
+        buildAnnotatedString { appendChange(template, value(story.from), value(story.to), strong, quiet) }
+    }
+    return DriftHeadline(word, evidence, date)
+}
+
+/** The hero's word, its arithmetic, and the day it is about — which the strip then
+ * points at. [evidence] and [date] are null for a week that held. */
+private data class DriftHeadline(val word: String, val evidence: AnnotatedString?, val date: LocalDate?)
+
+/**
+ * What the week did on one metric, before any word is chosen: the pure half of
+ * [driftHeadline], for the test.
+ *
+ * The day that moved most from its first prediction to its latest, if any moved by the
+ * diff engine's own threshold; otherwise the day that wandered most and came back; and
+ * otherwise a week that held. For a move [from] and [to] are the first and the latest
+ * prediction, for a swing the lowest and the highest.
+ */
+internal data class DriftStory(val kind: Kind, val date: LocalDate?, val from: Double, val to: Double) {
+    enum class Kind { BETTER, WORSE, WARMER, COOLER, SWING, QUIET }
+}
+
+internal fun driftStory(drift: DriftModel, metric: DriftMetric): DriftStory {
+    val threshold = when (metric) {
+        DriftMetric.RAIN -> RAIN_MOVE_PCT.toDouble()
+        DriftMetric.HIGH -> HIGH_MOVE_C
+    }
+    val rows = when (metric) {
+        DriftMetric.RAIN -> drift.rain.map { row -> row.map { it?.toDouble() } }
+        DriftMetric.HIGH -> drift.highC
+    }
+    val moves = drift.dates.indices.mapNotNull { row -> move(drift.dates[row], rows[row]) }
+    val net = moves.filter { kotlin.math.abs(it.last - it.first) >= threshold }
+        .maxByOrNull { kotlin.math.abs(it.last - it.first) }
+    val swing = moves.filter { it.high - it.low >= threshold }
+        .maxByOrNull { it.high - it.low }
+    return when {
+        net != null -> {
+            val down = net.last < net.first
+            val kind = when (metric) {
+                // Less rain is the better day; the high is said as warmer or cooler, which
+                // is a fact, not a judgement (DESIGN §8.10).
+                DriftMetric.RAIN -> if (down) DriftStory.Kind.BETTER else DriftStory.Kind.WORSE
+                DriftMetric.HIGH -> if (down) DriftStory.Kind.COOLER else DriftStory.Kind.WARMER
             }
+            DriftStory(kind, net.date, net.first, net.last)
         }
-        DriftMetric.HIGH -> {
-            fun temp(value: Double) = Formats.temperature(value, units.temperature, locale)
-            val moves = drift.dates.indices.mapNotNull { row -> move(drift.dates[row], drift.highC[row]) }
-            val net = moves.filter { kotlin.math.abs(it.last - it.first) >= HIGH_MOVE_C }
-                .maxByOrNull { kotlin.math.abs(it.last - it.first) }
-            val swing = moves.filter { it.high - it.low >= HIGH_MOVE_C }
-                .maxByOrNull { it.high - it.low }
-            when {
-                net != null -> DriftHeadline(stringResource(
-                    R.string.journal_drift_high_moved,
-                    net.date.format(dayFmt), temp(net.first), temp(net.last)
-                ), net.date)
-                swing != null -> DriftHeadline(stringResource(
-                    R.string.journal_drift_high_swing,
-                    day(swing.date), temp(swing.low), temp(swing.high)
-                ), swing.date)
-                else -> DriftHeadline(stringResource(R.string.journal_drift_quiet), null)
-            }
-        }
+        swing != null -> DriftStory(DriftStory.Kind.SWING, swing.date, swing.low, swing.high)
+        else -> DriftStory(DriftStory.Kind.QUIET, null, 0.0, 0.0)
     }
 }
 
-/** The card's sentence, and the day it is about — which the strip then points at. */
-private data class DriftHeadline(val text: String, val date: LocalDate?)
+/**
+ * The head of the page (review of the Journal, A.1, 14 ott 2026), in the Sky's hero's
+ * shape: 28 dp corners, a label, the answer as a word at `headlineMedium`, its arithmetic
+ * on a line of its own in tabular figures, then [content] — the strip, or the sentence
+ * that says it is too early for one.
+ *
+ * On `surfaceContainerHigh` and not a coloured ground: the strip under the word is on the
+ * rain and temperature ramps, and those have to read as themselves. The weight is the
+ * type's and the shape's, which is what makes it the loud thing on a page of prose.
+ */
+@Composable
+private fun WeekHero(
+    word: String,
+    evidence: AnnotatedString?,
+    content: @Composable () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(MaterialTheme.shapes.extraLarge)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = stringResource(R.string.journal_drift_label),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(text = word, style = MaterialTheme.typography.headlineMedium)
+            // The arithmetic under the word it decided, and never broken across a line:
+            // it is short, and its own line is what keeps «52% →» from leaving «5%» behind.
+            evidence?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyLarge.tabular(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        content()
+    }
+}
 
 /**
  * How the forecast did (design review, 23 set 2026), from the log's own day-outcome lines:
@@ -1050,12 +1157,15 @@ private fun OutcomeCard(
         }
     }
     val colors = ChiaroTheme.colors
+    // The hero's 28 dp corners and its 20 dp of air (review of the Journal, A.2, 14 ott
+    // 2026): it was 16 dp under a hero of 12, two radii one above the other. The ground
+    // stays one step quieter than the hero's, as the Sky's moments sit under its night.
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.extraLarge,
         modifier = modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             lines.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
             // The picture of the same numbers; the sentences above are its text (§9.3).
             Row(

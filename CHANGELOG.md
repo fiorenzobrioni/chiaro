@@ -29,6 +29,11 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **The Journal answers first.** The week's card is now the head of the Journal, shaped like
+  the Sky's tonight card: the answer in large type, such as «Saturday 17 is improving», with
+  its numbers on a line of their own («rain 70% → 30%»), then the strip. Before the first
+  trend can be drawn it says «Too early to say» and when the trend will arrive. «How the
+  forecast did» takes the same rounded shape.
 - **Undo on the Sky screen.** Adding or removing a moment from its page now shows a message
   with «Undo», and undoing a removal brings the moment back with its own reminder.
 - **An easier place switcher.** On Sky, Alerts and Journal the whole title is now the button

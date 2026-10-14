@@ -12678,3 +12678,60 @@ e un avviso riacceso restava senza il lavoro che lo controlla fino al riavvio de
 stesso valeva per il cambio di frequenza, che ora si applica subito. (La chiave dell'opacità
 dei widget nello stesso negozio non è letta da nessuna schermata: le card hanno ognuna il
 proprio aspetto, e la frase non la nomina.)
+
+## Diario: l'hero della settimana e le forme del Cielo (committente, 14 ott 2026)
+
+Il committente ha chiesto una revisione del Diario (grafica e UI/UX) per renderlo coerente con il
+Cielo appena rivisto, e poi di attuarne il primo passo: i punti A.1 (un hero che risponde) e A.2
+(le forme). Gli altri punti della revisione (gli orari in colonna, i titoli dei giorni, le icone
+delle voci, le voci che aprono la loro pagina, la striscia col dito, la memoria dei giorni chiusi)
+aspettano la sua parola.
+
+### Cosa è cambiato
+
+- **A.1, l'hero.** La card della settimana è la testa della pagina, nella forma della card di
+  stanotte: angoli 28 dp, `surfaceContainerHigh`, 20 dp di respiro. Dentro: l'etichetta «La
+  settimana», **la risposta come parola** in `headlineMedium` («Sabato 17 migliora», «peggiora»,
+  «si scalda», «si rinfresca», «va su e giù», «Settimana ferma»), **i suoi numeri su una riga
+  loro**, tabellari, il valore di prima in inchiostro tenue e quello di adesso pieno, poi i chip,
+  la striscia e il gelo. Il titolo di sezione sopra la card non c'è più: lo fa l'etichetta.
+- **L'hero risponde anche nelle prime ore**: «Ancora presto», e sotto quando arriva la tendenza.
+  Era una riga grigia in `bodySmall` che diceva «deriva», una parola di gergo.
+- **A.2, le forme.** «Com'è andata la previsione» prende gli angoli da 28 dp e i 20 dp dell'hero,
+  su `surfaceContainer`. Erano 12 dp per la settimana e 16 per la previsione, uno sotto l'altro.
+- La riga del giorno che la parola nomina è evidenziata su `surfaceContainerLowest`.
+- `driftStory`, la metà pura della frase: quale giorno, quale cambiamento, con quali due numeri.
+  Le parole restano della schermata.
+- La guida («Come si muove la settimana») dice la risposta in cima alla pagina, IT/EN.
+
+### Decisioni e deviazioni
+
+- **La parola al presente, «Sabato 17 migliora»**, e non «è migliorato»: è quello che il lettore
+  vuole sapere del suo sabato, e il passato era della frase lunga che spiegava. I numeri sotto
+  dicono da dove a dove.
+- **Le massime si dicono «si scalda» e «si rinfresca», non meglio o peggio**: più caldo non è un
+  giudizio (DESIGN §8.10). Una massima che va su e giù dice «va su e giù» come la pioggia.
+- **Una settimana ferma non ha numeri sotto**: non c'è un giorno da nominare, e una cifra messa
+  lì per riempire sarebbe la riga che la schermata rifiuta.
+- **Il fondo neutro, non colorato**: la striscia sotto la parola è sulle scale della pioggia e
+  della temperatura, che devono leggersi per quello che sono. Il peso viene dal tipo e dalla
+  forma. La previsione resta un gradino sotto (`surfaceContainer`), perché due card dello
+  stesso tono non sono una gerarchia.
+- **La banda del giorno nominato passa a `surfaceContainerLowest`**: la `Highest` di prima, a un
+  gradino dal nuovo fondo, nel vestito chiaro quasi spariva.
+- **Nessun file di tema toccato**: le forme sono `shapes.extraLarge` e i ruoli che esistono già.
+  Nello stesso momento il thread di Avvisi lavora su segmenti e scala dei tipi.
+
+### Come è stato verificato
+
+- `DriftStoryTest`: meno pioggia è il giorno migliore e vince lo spostamento più grande; più
+  pioggia è il peggiore; un giorno che va e torna è un'oscillazione con i suoi due estremi; sotto
+  la soglia del motore la settimana è ferma e non nomina un giorno; la massima è più calda o più
+  fresca; una riga con una sola previsione non ha niente da confrontare.
+- `JournalHeroTest` (Robolectric, 360 dp): l'etichetta e la parola ci sono, e i numeri sono un
+  testo loro su **una riga sola**; nelle prime ore l'hero dice «Ancora presto»; una settimana
+  ferma lo dice.
+- La pagina disegnata con Robolectric in chiaro (IT, 384 dp) e in scuro (EN, 360 dp), nella
+  settimana che si muove, in quella ferma e nelle prime ore, guardata immagine per immagine. Il
+  README non ha un'immagine del Diario (CLAUDE.md, «Le schermate del README»), quindi nessuna da
+  rigenerare.

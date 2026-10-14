@@ -1654,6 +1654,25 @@ in the app — a column of identical grey silhouettes beside grey text:
 - The diary's own words for a failed update («Il telefono era offline»), where it used to repeat
   the app's error line under a headline that had just said the same.
 
+**The week's hero** (review of the Journal, points A.1 and A.2, 14 ott 2026), in the Sky's
+shape. The drift card is the head of the page: `shapes.extraLarge` (28 dp) on
+`surfaceContainerHigh`, 20 dp of padding, 8 dp from the header like the tonight card. Inside, a
+label («La settimana», `labelLarge`, `onSurfaceVariant`), **the answer as a word** at
+`headlineMedium` («Sabato 17 migliora», «… peggiora», «… si scalda», «… si rinfresca», «… va su e
+giù», «Settimana ferma»), its **arithmetic on a line of its own** at `bodyLarge` tabular, the
+value it came from in the quiet ink and the value it is now in full weight (the rain one on the
+rain's ink ramp, as in the entries), then the chips, the strip and the frost line. The section
+title over the card is gone: the label is its job. The one-line sentence it replaces wrapped
+inside its own number at 384 dp («pioggia 52% →» over «5%.»), which is the pair §8.7 does not let
+come apart. Before there are two columns to compare, the hero still answers: «Ancora presto»,
+with the sentence that says when the trend arrives (no more «deriva»: jargon). The ground is
+neutral on purpose: the strip under the word is on the rain and temperature ramps, which must
+read as themselves, so the weight is the type's and the shape's. The row the word names is now
+picked out on `surfaceContainerLowest`: `surfaceContainerHighest`, one step from the new ground,
+all but vanished in the light dress. **How the forecast did** takes the same 28 dp and 20 dp of
+padding, on `surfaceContainer`, one step quieter than the hero, as the Sky's moments sit under
+its night; it was 16 dp under a hero of 12, two radii one above the other.
+
 **8.11 States** — empty ("no place yet", with the one action that fixes it), error (what
 failed, in plain language, and a retry), stale (§8.2), loading (a shimmer that cannot be
 mistaken for a value, §1.1).
