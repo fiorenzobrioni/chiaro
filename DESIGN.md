@@ -1609,6 +1609,43 @@ that said which row was which before it was read. Now:
   «Aggiungi» — or «Già aggiunta», inert — in the accent. An idea is picked up, not configured, and
   five more rows at the foot read as five more settings.
 
+**In the Sky's shape** (committente, 14 ott 2026, the Alerts review, points 1 to 6). The design
+review of 23 set gave the screen its groups; the Sky's review of 14 ott gave the app a second
+way of grouping, and Alerts now follows it:
+
+- **Segments, not one ground** (point 1). The warnings' switch and its level, the four
+  ready-made alerts and the reader's own rules are `SegmentedGroup`s
+  (`ui/components/SegmentedGroup.kt`, where the Sky's `segmentShape` now lives too): one
+  `surfaceContainer` segment a row, 2 dp apart, 20 dp outside and 4 inside, and no hairlines.
+  A rule is a segment of «I tuoi», no longer a loose 24 dp card. Settings moves with it
+  (§8.15). A card that stands alone (the day strip, the bulletin's answer, the ideas) takes the
+  Sky's card corner, 28 dp, and the ideas the segments' ground.
+- **A warning in force leads** (point 2). Avvisi drew Today's banner, 12 dp and `titleSmall`:
+  smaller than the all-clear card that takes its place on a quiet day. It is now a 28 dp card on
+  the level's container, in the level's ink: the mark and the zone at `labelLarge` with a
+  chevron, the hazards at `headlineSmall`, the days at `titleMedium`, who said so at
+  `bodyMedium`, one sentence to TalkBack. The all-clear and the three waiting states are the
+  same 28 dp card on `surfaceContainerHigh`, the Sky's next moment's ground. Today keeps its
+  banner.
+- **The hours in a column** (point 3). A ready-made alert with a window says it over its switch,
+  `titleMedium` tabular, end-aligned: «15–17», «6–12», «18–23», so the group's hours read down
+  its end edge as a day's times do on the Sky. Beside the title they did not fit: the text column
+  is 180 dp at 360, and «Il riepilogo del mattino» broke in two. The two alerts that come at any
+  hour have none. How often closes the description, in its ink («… pioggia. Una volta al
+  giorno.»), where it was an accent line that broke over two and three lines.
+- **One type scale, the Sky row's** (point 4): a row's name at `bodyLarge`, every line under it
+  at `bodyMedium` in `onSurfaceVariant`, a card's label at `labelLarge` in `primary` («Quando
+  arrivano»), and «Parti da un'idea» as a heading inside «I tuoi» in the grammar of «Oggi» and
+  «Domani». An idea's title is `bodyLarge` too.
+- **A rule wears its idea's drawing** (point 5): a rule whose conditions are still an idea's
+  takes that idea's drawing, by the same match that marks the idea «Già aggiunto». «Bici» was
+  under a thermometer and «Corsa» under raindrops; the first condition decides only for the rest.
+- **The sentence scans** (point 6): two conditions on one quantity are one phrase,
+  «la temperatura adesso fra 5° e 26°» for the inclusive pair and «sopra 0° e sotto 5°» for the
+  strict one, with the quantity said once; the thresholds are set in `SemiBold` and `onSurface`
+  over the quiet sentence (`RuleText.sentenceParts`). The words change, the rule does not, and
+  the notification's own lines (one a condition, each with its reading) are untouched.
+
 **8.10 JournalEntry** and **DriftStrip** — an entry is a line of prose with its numbers.
 The drift strip is one row per target day — today included while it runs (8 set 2026) —
 and one column per six-hour slot, colored on **the metric's own ramp** (rain on the rain
@@ -1814,9 +1851,12 @@ headers, with the privacy note as a paragraph among eleven credits. Now:
 
 - **The guide is a card** in `primaryContainer` at the top, with its mark and a chevron: it is
   the one thing on the screen that is not a setting.
-- **Every group sits on one rounded ground** (`surfaceContainerLow`, 24dp corners, hairlines
-  between rows), the Alerts screen's grouping, so the two screens of switches and values look
-  like one app. A credit whose tap leaves the app carries a chevron; a fact with nothing to
+- **Every group is a column of segments** (`SegmentedGroup`, since the Alerts review of 14 ott
+  2026: one `surfaceContainer` segment a row, 2 dp apart, 20 dp outside and 4 inside), the
+  grouping of the Sky and of Alerts, so the screens of switches and values look like one app.
+  Until then each group sat on one `surfaceContainerLow` ground with hairlines, the Alerts
+  screen's grouping of 23 set. The guide card, the appearance preview and the privacy card stand
+  alone, at the Sky's card corner, 28 dp. A credit whose tap leaves the app carries a chevron; a fact with nothing to
   change (version, developer, copyright) carries none.
 - **The appearance previews itself**: above the appearance group, a slice of the canvas in the
   reader's palette at the golden hour (3°, where the two palettes differ most) with a

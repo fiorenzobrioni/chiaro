@@ -503,7 +503,7 @@
     <string name="guide_alerts_battery_title">What it costs</string>
     <string name="guide_alerts_battery_body">Nothing extra: the checks ride the weather update you already asked for, at the rhythm you chose in the settings. Android asks for notification permission once, on the first run, and again the first time you turn an alert on. Alerts says so in plain words whenever something is switched on that the phone is not letting through.</string>
     <string name="guide_alerts_official_title">Official warnings</string>
-    <string name="guide_alerts_official_body">In Italy the authority is the Dipartimento della Protezione Civile. Every afternoon, usually by 16:00, it grades each of its warning zones for the day and the next: hydraulic risk, hydrogeological risk and thunderstorms, on four levels — none, yellow, orange, red. Chiaro finds the zone your place falls in, reads the bulletin and shows it: the banner on Today when there is something to say, the grid and the Dipartimento\'s own words in the sheet behind it, and a line in the Journal each time a level moves. The words of the authority are quoted, never translated. Nothing is shown for places outside Italy, because nobody has graded them.</string>
+    <string name="guide_alerts_official_body">In Italy the authority is the Dipartimento della Protezione Civile. Every afternoon, usually by 16:00, it grades each of its warning zones for the day and the next: hydraulic risk, hydrogeological risk and thunderstorms, on four levels — none, yellow, orange, red. Chiaro finds the zone your place falls in, reads the bulletin and shows it: the banner on Today when there is something to say, the card at the top of Alerts, in the level\'s color while a warning is in force and saying “No warnings” when there is none, the grid and the Dipartimento\'s own words in the sheet behind it, and a line in the Journal each time a level moves. The words of the authority are quoted, never translated. Nothing is shown for places outside Italy, because nobody has graded them.</string>
     <string name="guide_alerts_official_credit">Source: Dipartimento della Protezione Civile, CC BY 4.0.</string>
     <string name="settings_credit_warnings">Official warnings</string>
     <string name="settings_credit_warnings_note">Dipartimento della Protezione Civile, CC BY 4.0</string>
@@ -965,6 +965,10 @@
     <string name="alerts_day_window_desc">%1$s between %2$d and %3$d</string>
     <string name="alerts_day_yours">your own alerts</string>
     <string name="alerts_day_quiet">From 22 to 7 (dashed) they arrive without a sound, except red warnings and sky reminders.</string>
+    <!-- The hours of a ready-made alert, at the end of its title: the Sky's column of times. -->
+    <string name="alerts_hours_range">%1$d–%2$d</string>
+    <!-- What an alert sends, then how often (two sentences of the strings above). -->
+    <string name="alerts_row_supporting">%1$s %2$s.</string>
     <string name="alert_severe_title">Severe weather ahead</string>
     <string name="alert_severe_desc">A thunderstorm, freezing rain, heavy rain or heavy snow in the next 12 hours.</string>
     <string name="alert_severe_when">At most one per storm</string>
@@ -973,10 +977,10 @@
     <string name="alert_precip_when">At most twice a day</string>
     <string name="alert_summary_title">The morning summary</string>
     <string name="alert_summary_desc">Today\'s sky, low, high and rain.</string>
-    <string name="alert_summary_when">Every day, between 6 and 12</string>
+    <string name="alert_summary_when">Once a day</string>
     <string name="alert_evening_title">The evening summary</string>
     <string name="alert_evening_desc">Tomorrow\'s sky, low, high and rain. Open it for the night in between.</string>
-    <string name="alert_evening_when">Every day, between 18 and 23</string>
+    <string name="alert_evening_when">Once a day</string>
     <string name="alerts_templates_title">Start from an idea</string>
     <string name="alerts_max_reached">You already have the most alerts the app keeps, %1$d: remove one to add another.</string>
     <string name="tpl_already_added">Already added</string>
@@ -989,6 +993,8 @@
     <string name="tpl_create">Create</string>
     <string name="rule_sentence_prefix">When</string>
     <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
+    <!-- Two bounds on one quantity, said once: «la temperatura adesso fra 5° e 26°». -->
+    <string name="rule_sentence_range">%1$s is between %2$s and %3$s</string>
     <string name="rule_and">and</string>
     <string name="rule_last_fired">Last fired %1$s</string>
     <string name="rule_never_fired">Never fired so far</string>
@@ -1208,7 +1214,7 @@
     <string name="warning_card_unavailable_detail">They are issued by the Dipartimento della Protezione Civile, which grades Italian territory only.</string>
     <string name="warning_switch_title">Notify me of warnings</string>
     <string name="warning_switch_desc">When the Protezione Civile issues a warning for this zone, as soon as the bulletin is out.</string>
-    <string name="warning_switch_when">Usually between 15:00 and 17:00 · never more than one per bulletin</string>
+    <string name="warning_switch_when">Usually in that window, never more than one per bulletin</string>
     <string name="warning_from_title">Notify me from</string>
     <string name="warning_from_yellow">Yellow</string>
     <string name="warning_from_orange">Orange</string>

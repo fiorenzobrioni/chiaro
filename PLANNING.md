@@ -12678,3 +12678,81 @@ e un avviso riacceso restava senza il lavoro che lo controlla fino al riavvio de
 stesso valeva per il cambio di frequenza, che ora si applica subito. (La chiave dell'opacità
 dei widget nello stesso negozio non è letta da nessuna schermata: le card hanno ognuna il
 proprio aspetto, e la frase non la nomina.)
+
+## Avvisi: la revisione della schermata, punti 1–6 (committente, 14 ott 2026)
+
+Il committente ha chiesto una revisione della schermata Avvisi, grafica e UI/UX, per renderla
+coerente con il Cielo appena rivisto, e ne ha fatto attuare i punti da 1 a 6. La revisione intera
+è in `/mnt/project-files/review-avvisi/review-avvisi.md` del progetto; i punti:
+
+- [x] 1. Un solo modo di raggruppare: i segmenti del Cielo, anche in Impostazioni.
+- [x] 2. L'allerta in vigore come la card forte della pagina.
+- [x] 3. Gli orari in colonna.
+- [x] 4. Una scala tipografica sola, quella del Cielo.
+- [x] 5. La regola nata da un'idea porta il disegno dell'idea.
+- [x] 6. La frase della regola: gli intervalli, le soglie in grassetto.
+- [ ] 7. Un hero che risponde sempre (lo stato delle allerte, il prossimo avviso, la striscia).
+- [ ] 8. La striscia del giorno con le tacche delle ore e le ore dei tuoi avvisi.
+- [ ] 9. «Nuovo avviso» come FAB, le idee in un foglio; la fila resta solo con «I tuoi» vuoto.
+- [ ] 10. «Annulla» al posto della conferma per eliminare.
+- [ ] 11. Lo stato di ogni regola adesso, con il suo numero.
+- [ ] 12. La prova dell'editor che si aggiorna a ogni chip.
+- [ ] 13. «Quando scatterebbe»: la regola provata sulla settimana di previsione.
+
+### Cosa è cambiato
+
+- **Punto 1.** `ui/components/SegmentedGroup.kt`: `SegmentedGroup` (una lista di righe, un
+  segmento `surfaceContainer` ciascuna, 2 dp fra l'una e l'altra) e `segmentShape`, che era del
+  Cielo e ora è di tutti (il Cielo e la guida lo importano da lì). In Avvisi l'interruttore delle
+  allerte con la sua soglia, i quattro pronti all'uso e le regole sono gruppi di segmenti, senza
+  filetti; le regole erano card sciolte da 24 dp. Impostazioni passa ai segmenti nello stesso
+  cambio: copiava il gruppo di Avvisi perché le due schermate sembrassero una app sola. Le card
+  che stanno da sole (la striscia del giorno, la risposta del bollettino, la guida, l'anteprima
+  dell'aspetto, la privacy) prendono l'angolo delle card del Cielo, 28 dp.
+- **Punto 2.** Con un'allerta in vigore, Avvisi disegna `ActiveWarningCard` e non più il banner
+  di Oggi: card da 28 dp nel contenitore del livello, la zona in alto con il segno, i pericoli
+  in `headlineSmall`, i giorni, chi l'ha detto; apre lo stesso foglio. «Nessuna allerta» e i tre
+  stati d'attesa sono la stessa card da 28 dp su `surfaceContainerHigh`.
+- **Punto 3.** La fascia dei tre avvisi a orario («15–17», «6–12», «18–23») sta sopra
+  l'interruttore, `titleMedium` tabellare; la frequenza chiude la descrizione. Le stringhe
+  `alert_summary_when`, `alert_evening_when` e `warning_switch_when` perdono le ore, che dicono
+  la colonna.
+- **Punto 4.** Nome della riga in `bodyLarge`, righe sotto in `bodyMedium` `onSurfaceVariant`,
+  etichetta di card in `labelLarge` `primary`, «Parti da un'idea» come i titoli dei giorni del
+  Cielo.
+- **Punto 5.** `ruleIcon` cerca prima l'idea con le stesse condizioni, lo stesso confronto che
+  scrive «Già aggiunto».
+- **Punto 6.** `RuleText.sentenceParts`: due condizioni sulla stessa grandezza sono una frase,
+  «fra 5° e 26°» per almeno/al massimo, «sopra 0° e sotto 5°» per le due strette; le soglie sono
+  pezzi a parte, che la card scrive in `SemiBold` e `onSurface`. La guida dice la card in cima ad
+  Avvisi.
+
+### Decisioni e deviazioni
+
+- **Le ore sopra l'interruttore, non accanto al titolo** come nella revisione: la colonna del
+  testo di una riga di Avvisi è di 180 dp a 360 (la riga ha il disegno da 36 e l'interruttore da
+  52), e nella prova «Il riepilogo del mattino» con «6–12» accanto andava a capo. Sopra
+  l'interruttore le ore stanno comunque in colonna, sul bordo della riga.
+- **«6–12» e non «06:00–12:00»**: sono le ore della striscia del giorno subito sopra (0, 6, 12, 18,
+  24), e un orario intero per capo non ci sta nella colonna dell'interruttore. Le fasce sono
+  finestre, non minuti: il riepilogo arriva quando gira l'aggiornamento dentro la fascia.
+- **«Fra» solo per almeno e al massimo**: sono i due limiti che la parola dice esattamente.
+  Due limiti stretti tengono le loro parole («sopra 0° e sotto 5°»), con la grandezza detta una
+  volta; due limiti che non lasciano niente in mezzo non si chiamano intervallo. Cambiano solo
+  le parole: la regola salvata è la stessa, e le righe della notifica (una per condizione, con la
+  sua lettura) non cambiano.
+- **Impostazioni nello stesso cambio**: con un gruppo diverso da Avvisi e dal Cielo l'app
+  avrebbe avuto due modi di raggruppare le righe, che è il difetto del punto 1.
+- **L'anteprima dell'aspetto resta una card a sé** sopra il gruppo dell'aspetto, non il suo primo
+  segmento: è un disegno, non una scelta.
+
+### Come è stato verificato
+
+- `RuleSentenceTest` (Robolectric, italiano): la corsa dice «la temperatura adesso fra 5° e 26°»
+  con le tre soglie come pezzi a parte; la corsa al freddo «sopra 0° e sotto 5°»; due limiti che
+  non lasciano niente in mezzo non diventano «fra»; una regola con una condizione per grandezza
+  si legge come prima.
+- Avvisi disegnata con Robolectric a 360 dp in italiano, in chiaro e in scuro, con due regole,
+  al primo avvio e con un'allerta arancione e gialla in vigore; Impostazioni in chiaro. Guardate
+  immagine per immagine; le immagini del README rigenerate e guardate.
+- Suite completa e lint.

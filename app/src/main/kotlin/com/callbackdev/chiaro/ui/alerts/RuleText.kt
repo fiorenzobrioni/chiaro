@@ -160,6 +160,89 @@ object RuleText {
         )
     }
 
+    /** A piece of a rule's sentence on its card: a threshold ([value]) or the words around it. */
+    data class Part(val text: String, val value: Boolean)
+
+    /**
+     * A rule's conditions as the card's one sentence, in pieces so the card can set the
+     * thresholds in full weight (the Alerts review, point 6, 14 ott 2026).
+     *
+     * Two conditions on the same quantity are one phrase, because a reader says it that way:
+     * «at least 5°» and «at most 26°» are «between 5° and 26°», and «above 0°» and «below 5°»
+     * keep their words but say the quantity once. The «A window to run» idea read «the
+     * temperature now is at least 5° and the temperature now is at most 26°», six lines on a
+     * 360 dp screen. Only the words change: «between» is said only for the two inclusive
+     * bounds, the pair the words mean exactly, and the rule is the same rule.
+     */
+    fun sentenceParts(res: Resources, conditions: List<RuleCondition>, units: UnitSettings): List<Part> {
+        val and = " " + res.getString(R.string.rule_and) + " "
+        val used = BooleanArray(conditions.size)
+        val phrases = mutableListOf<List<Part>>()
+        conditions.forEachIndexed { i, condition ->
+            if (used[i]) return@forEachIndexed
+            used[i] = true
+            val twin = (i + 1 until conditions.size)
+                .firstOrNull { !used[it] && conditions[it].variable == condition.variable }
+            if (twin == null) {
+                phrases += fragmentParts(res, condition, units)
+                return@forEachIndexed
+            }
+            used[twin] = true
+            val other = conditions[twin]
+            val pair = listOf(condition, other)
+            val lower = pair.firstOrNull { it.op == RuleOp.GTE }
+            val upper = pair.firstOrNull { it.op == RuleOp.LTE }
+            phrases += if (lower != null && upper != null && lower.threshold <= upper.threshold) {
+                withValues(
+                    res.getString(R.string.rule_sentence_range, res.getString(nameRes(condition.variable)), marker(0), marker(1)),
+                    listOf(value(res, lower, units), value(res, upper, units))
+                )
+            } else {
+                val boolean = RuleVariables.byId(other.variable)?.kind == RuleVariableKind.BOOLEAN
+                fragmentParts(res, condition, units) +
+                    Part(and + res.getString(opRes(other.op, boolean)) + " ", value = false) +
+                    Part(value(res, other, units), value = true)
+            }
+        }
+        return phrases.flatMapIndexed { index, phrase ->
+            if (index == 0) phrase else listOf(Part(and, value = false)) + phrase
+        }
+    }
+
+    private fun fragmentParts(res: Resources, condition: RuleCondition, units: UnitSettings): List<Part> {
+        val boolean = RuleVariables.byId(condition.variable)?.kind == RuleVariableKind.BOOLEAN
+        return withValues(
+            res.getString(
+                R.string.rule_sentence_fragment,
+                res.getString(nameRes(condition.variable)),
+                res.getString(opRes(condition.op, boolean)),
+                marker(0)
+            ),
+            listOf(value(res, condition, units))
+        )
+    }
+
+    /** [text] cut at its markers, each replaced by its value: whatever order a translation
+     * puts them in, the earliest marker is the next cut. */
+    private fun withValues(text: String, values: List<String>): List<Part> {
+        val parts = mutableListOf<Part>()
+        var rest = text
+        val left = values.indices.toMutableSet()
+        while (left.isNotEmpty()) {
+            val next = left.mapNotNull { k -> rest.indexOf(marker(k)).takeIf { it >= 0 }?.let { k to it } }
+                .minByOrNull { it.second } ?: break
+            val (k, at) = next
+            if (at > 0) parts += Part(rest.substring(0, at), value = false)
+            parts += Part(values[k], value = true)
+            rest = rest.substring(at + marker(k).length)
+            left -= k
+        }
+        if (rest.isNotEmpty()) parts += Part(rest, value = false)
+        return parts
+    }
+
+    private fun marker(k: Int) = "\u0000$k\u0000"
+
     // ------------------------------------------------------------- hours
 
     /** One band in words: «dalle 07:00 alle 09:00», on the reader's clock. */

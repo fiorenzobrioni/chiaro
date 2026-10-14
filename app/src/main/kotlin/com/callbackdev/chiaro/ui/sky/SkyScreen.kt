@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.sky
 
 import com.callbackdev.chiaro.ui.components.TabHeader
+import com.callbackdev.chiaro.ui.components.segmentShape
 import androidx.activity.compose.BackHandler
 import com.callbackdev.chiaro.data.SkySubscription
 import kotlinx.coroutines.launch
@@ -784,17 +785,8 @@ internal fun SkyRow(
     }
 }
 
-/** The segment of a group at [index] of [count]: round outside, tight inside. */
-internal fun segmentShape(index: Int, count: Int): Shape {
-    val top = if (index == 0) GroupOuter else GroupInner
-    val bottom = if (index == count - 1) GroupOuter else GroupInner
-    return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
-}
-
 /** An extended FAB is 56 dp tall with 16 dp under it; 16 more so the last row clears it. */
 private val FabClearance = 88.dp
-private val GroupOuter = 20.dp
-private val GroupInner = 4.dp
 private val NextCardCorner = 28.dp
 private val RowStart = 12.dp
 private val RowGap = 12.dp

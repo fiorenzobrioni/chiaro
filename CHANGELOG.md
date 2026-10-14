@@ -29,6 +29,12 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Alerts in the Sky's shape.** The alerts are grouped rows like the Sky's moments, and so are
+  the rows of Settings. A warning in force is now the big card at the top of the official
+  warnings, in the warning's own color, instead of a small banner. The hours of the morning and
+  evening summaries and of the bulletin stand over their switches, in a column. A rule made from
+  an idea keeps that idea's drawing, and its sentence is shorter and easier to scan: «the
+  temperature now is between 5° and 26°», with the thresholds in bold.
 - **Undo on the Sky screen.** Adding or removing a moment from its page now shows a message
   with «Undo», and undoing a removal brings the moment back with its own reminder.
 - **An easier place switcher.** On Sky, Alerts and Journal the whole title is now the button

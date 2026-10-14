@@ -58,7 +58,7 @@ import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
 import com.callbackdev.chiaro.ui.sky.SkyRow
 import com.callbackdev.chiaro.ui.sky.SkyText
-import com.callbackdev.chiaro.ui.sky.segmentShape
+import com.callbackdev.chiaro.ui.components.segmentShape
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.forText
 import java.time.LocalDate

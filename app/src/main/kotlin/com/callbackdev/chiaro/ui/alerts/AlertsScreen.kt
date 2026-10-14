@@ -1,6 +1,23 @@
 package com.callbackdev.chiaro.ui.alerts
 
 import com.callbackdev.chiaro.ui.components.TabHeader
+import com.callbackdev.chiaro.ui.components.SegmentGap
+import com.callbackdev.chiaro.ui.components.SegmentedGroup
+import com.callbackdev.chiaro.ui.components.segmentShape
+import com.callbackdev.chiaro.ui.theme.tabular
+import com.callbackdev.chiaro.ui.warnings.WarningText.colors
+import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -104,7 +121,6 @@ import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.warnings.WarningText
 import com.callbackdev.chiaro.ui.warnings.WarningSheet
-import com.callbackdev.chiaro.ui.warnings.WarningBanner
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.format.LocalClock
 import java.time.LocalDate
@@ -297,72 +313,92 @@ private fun AlertsContent(
         // 2026): the level is a property of the switch, and as two loose rows under a
         // row they read as three settings.
         item {
-            SwitchGroup(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                AlertRow(
-                    icon = ChiaroIcons.warning,
-                    iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    title = stringResource(R.string.warning_switch_title),
-                    description = stringResource(R.string.warning_switch_desc),
-                    cadence = stringResource(R.string.warning_switch_when),
-                    checked = content.notifications.officialWarnings,
-                    onChange = { actions.setOfficialWarnings(it); if (it) somethingTurnedOn() }
-                )
-                // The other honest road to the same choice: the two channels let the
-                // system silence the yellow, this lets the app never send it (§8.13).
-                if (content.notifications.officialWarnings) {
-                    WarningFromRow(
-                        from = content.notifications.officialWarningsFrom,
-                        onChange = actions.setOfficialWarningsFrom
-                    )
-                }
-            }
+            SegmentedGroup(
+                segments = buildList<@Composable () -> Unit> {
+                    add {
+                        AlertRow(
+                            icon = ChiaroIcons.warning,
+                            iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            title = stringResource(R.string.warning_switch_title),
+                            hours = stringResource(R.string.alerts_hours_range, 15, 17),
+                            description = stringResource(R.string.warning_switch_desc),
+                            cadence = stringResource(R.string.warning_switch_when),
+                            checked = content.notifications.officialWarnings,
+                            onChange = { actions.setOfficialWarnings(it); if (it) somethingTurnedOn() }
+                        )
+                    }
+                    // The other honest road to the same choice: the two channels let the
+                    // system silence the yellow, this lets the app never send it (§8.13).
+                    if (content.notifications.officialWarnings) {
+                        add {
+                            WarningFromRow(
+                                from = content.notifications.officialWarningsFrom,
+                                onChange = actions.setOfficialWarningsFrom
+                            )
+                        }
+                    }
+                },
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
         }
 
         item { GroupTitle(stringResource(R.string.alerts_group_ready)) }
         // One group, four rows with their own drawing (design review, 23 set 2026): four
         // loose list items of three or four lines each were the densest block of text in
         // the app, and nothing on them said which was which before it was read.
+        // Four segments (the Alerts review, point 1, 14 ott 2026): the grouped list the Sky
+        // draws its moments with, where these rows sat on one ground with hairlines.
         item {
-            SwitchGroup(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
-                AlertRow(
-                    icon = ChiaroIcons.condition(ThunderstormCode),
-                    title = stringResource(R.string.alert_severe_title),
-                    description = stringResource(R.string.alert_severe_desc),
-                    cadence = stringResource(R.string.alert_severe_when),
-                    checked = content.notifications.severeWeatherAlerts,
-                    onChange = { actions.setSevereWeather(it); if (it) somethingTurnedOn() }
-                )
-                GroupDivider()
-                AlertRow(
-                    icon = ChiaroIcons.precipitation,
-                    title = stringResource(R.string.alert_precip_title),
-                    description = stringResource(R.string.alert_precip_desc),
-                    cadence = stringResource(R.string.alert_precip_when),
-                    checked = content.notifications.precipitationWarning,
-                    onChange = { actions.setPrecipitationWarning(it); if (it) somethingTurnedOn() }
-                )
-                GroupDivider()
-                AlertRow(
-                    icon = ChiaroIcons.sunrise,
-                    title = stringResource(R.string.alert_summary_title),
-                    description = stringResource(R.string.alert_summary_desc),
-                    cadence = stringResource(R.string.alert_summary_when),
-                    checked = content.notifications.dailySummary,
-                    onChange = { actions.setDailySummary(it); if (it) somethingTurnedOn() }
-                )
-                GroupDivider()
-                // Immediately under its twin, and never anywhere else: the pair is the
-                // point, and a reader who has just read "tra le 6 e le 12" is exactly the
-                // reader who wants to know there is an evening one.
-                AlertRow(
-                    icon = ChiaroIcons.starryNight,
-                    title = stringResource(R.string.alert_evening_title),
-                    description = stringResource(R.string.alert_evening_desc),
-                    cadence = stringResource(R.string.alert_evening_when),
-                    checked = content.notifications.eveningSummary,
-                    onChange = { actions.setEveningSummary(it); if (it) somethingTurnedOn() }
-                )
-            }
+            SegmentedGroup(
+                segments = listOf(
+                    {
+                        AlertRow(
+                            icon = ChiaroIcons.condition(ThunderstormCode),
+                            title = stringResource(R.string.alert_severe_title),
+                            description = stringResource(R.string.alert_severe_desc),
+                            cadence = stringResource(R.string.alert_severe_when),
+                            checked = content.notifications.severeWeatherAlerts,
+                            onChange = { actions.setSevereWeather(it); if (it) somethingTurnedOn() }
+                        )
+                    },
+                    {
+                        AlertRow(
+                            icon = ChiaroIcons.precipitation,
+                            title = stringResource(R.string.alert_precip_title),
+                            description = stringResource(R.string.alert_precip_desc),
+                            cadence = stringResource(R.string.alert_precip_when),
+                            checked = content.notifications.precipitationWarning,
+                            onChange = { actions.setPrecipitationWarning(it); if (it) somethingTurnedOn() }
+                        )
+                    },
+                    {
+                        AlertRow(
+                            icon = ChiaroIcons.sunrise,
+                            title = stringResource(R.string.alert_summary_title),
+                            hours = stringResource(R.string.alerts_hours_range, 6, 12),
+                            description = stringResource(R.string.alert_summary_desc),
+                            cadence = stringResource(R.string.alert_summary_when),
+                            checked = content.notifications.dailySummary,
+                            onChange = { actions.setDailySummary(it); if (it) somethingTurnedOn() }
+                        )
+                    },
+                    // Immediately under its twin, and never anywhere else: the pair is the
+                    // point, and a reader who has just read the morning's hours is exactly
+                    // the reader who wants to know there is an evening one.
+                    {
+                        AlertRow(
+                            icon = ChiaroIcons.starryNight,
+                            title = stringResource(R.string.alert_evening_title),
+                            hours = stringResource(R.string.alerts_hours_range, 18, 23),
+                            description = stringResource(R.string.alert_evening_desc),
+                            cadence = stringResource(R.string.alert_evening_when),
+                            checked = content.notifications.eveningSummary,
+                            onChange = { actions.setEveningSummary(it); if (it) somethingTurnedOn() }
+                        )
+                    }
+                ),
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
         }
 
         item { GroupTitle(stringResource(R.string.alerts_group_yours)) }
@@ -374,6 +410,7 @@ private fun AlertsContent(
             val card = content.rules[index]
             RuleCard(
                 card = card,
+                shape = segmentShape(index, content.rules.size),
                 units = content.units,
                 zone = content.zone,
                 firedFmt = firedFmt,
@@ -383,15 +420,17 @@ private fun AlertsContent(
                     if (enabled) somethingTurnedOn()
                 },
                 onOpen = { onEdit(card.rule.id) },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = SegmentGap / 2)
             )
         }
 
         if (content.canAdd) {
             item {
+                // A heading inside «I tuoi», in the Sky's own grammar for one («Oggi»,
+                // «Domani»): `labelLarge` in the accent (the Alerts review, point 4).
                 Text(
                     text = stringResource(R.string.alerts_templates_title),
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(
                         start = 16.dp, top = GroupTop, bottom = SectionBottom
@@ -490,7 +529,7 @@ private fun OfficialWarningCard(
         is PlaceWarningState.Current -> {
             val warnings = state.warnings
             if (warnings.maxLevel != WarningLevel.NONE) {
-                WarningBanner(
+                ActiveWarningCard(
                     warnings = warnings,
                     today = today,
                     timeFmt = timeFmt,
@@ -543,10 +582,78 @@ private fun OfficialWarningCard(
     }
 }
 
+/**
+ * A warning in force, as the card that leads the page (the Alerts review, point 2, 14 ott
+ * 2026). Today's banner is a reminder over a page about the weather, and it is drawn small
+ * on purpose; here it is the answer the page exists for, and drawn as the banner it was
+ * smaller than the all-clear card that stands in its place on a quiet day. Now it wears the
+ * level's own pair on the 28 dp card the Sky leads with («Stanotte»): the zone over it, the
+ * hazards at `headlineSmall`, then the days and who said so. It opens the same sheet, and is
+ * one sentence to TalkBack, as the banner is.
+ */
+@Composable
+private fun ActiveWarningCard(
+    warnings: PlaceWarnings,
+    today: LocalDate,
+    timeFmt: DateTimeFormatter,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val palette = warnings.maxLevel.colors
+    val zone = WarningText.zoneLabel(context, warnings.zone)
+    val headline = WarningText.sentence(context, warnings)
+    val days = WarningText.days(context, warnings.peakDays.map { it.date }, today)
+        .replaceFirstChar { it.titlecase(currentLocale()) }
+    val source = stringResource(
+        R.string.warning_banner_source,
+        WarningText.issued(context, warnings.issuedAt, today, timeFmt)
+    )
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.extraLarge)
+            .background(palette.container)
+            .clickable(onClick = onOpen)
+            .clearAndSetSemantics { contentDescription = "$headline. $zone. $days · $source" }
+            .padding(start = 20.dp, top = 16.dp, end = 12.dp, bottom = 20.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painter = painterResource(ChiaroIcons.warningMarkRes()),
+                contentDescription = null, // the card's own semantics say it
+                tint = palette.ink,
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = zone,
+                style = MaterialTheme.typography.labelLarge,
+                color = palette.ink,
+                modifier = Modifier.weight(1f).padding(start = 10.dp)
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                contentDescription = null,
+                tint = palette.ink
+            )
+        }
+        Text(
+            text = headline,
+            style = MaterialTheme.typography.headlineSmall,
+            color = palette.ink,
+            modifier = Modifier.padding(top = 4.dp, end = 8.dp)
+        )
+        Text(text = days, style = MaterialTheme.typography.titleMedium, color = palette.ink)
+        Text(text = source, style = MaterialTheme.typography.bodyMedium, color = palette.ink)
+    }
+}
+
 /** The states the banner must never draw: a fact and its reason, on the neutral ground the
  * details tiles use — not a warning colour for the absence of a warning. A mark in front,
  * in `primary` for the all-clear and in quiet ink for the three that are waiting on
- * something; a chevron when the card opens the bulletin. */
+ * something; a chevron when the card opens the bulletin. A card on its own, so the Sky's
+ * card shape (28 dp on `surfaceContainerHigh`, its next moment's) and not a group's. */
 @Composable
 private fun StatusCard(
     icon: ImageVector,
@@ -557,8 +664,8 @@ private fun StatusCard(
     iconTint: Color = MaterialTheme.colorScheme.onSurfaceVariant
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = GroupShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = MaterialTheme.shapes.extraLarge,
         modifier = modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
@@ -591,8 +698,8 @@ private fun StatusCard(
 }
 
 /** «Avvisami da: gialla / arancione» — two chips, because it is two values and a
- * dialog for two values is a screen nobody needs. Inside the switch's group, indented
- * to the row's text, so it reads as the switch's own setting. */
+ * dialog for two values is a screen nobody needs. The segment under the switch's, in its
+ * group, so it reads as the switch's own setting. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun WarningFromRow(from: WarningLevel, onChange: (WarningLevel) -> Unit) {
@@ -601,7 +708,7 @@ private fun WarningFromRow(from: WarningLevel, onChange: (WarningLevel) -> Unit)
     FlowRow(
         verticalArrangement = Arrangement.Center,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(
             text = stringResource(R.string.warning_from_title),
@@ -631,32 +738,16 @@ private fun GroupTitle(text: String) {
     )
 }
 
-/** Rows that belong together, on one rounded ground (design review, 23 set 2026). */
-@Composable
-private fun SwitchGroup(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = GroupShape,
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Column { content() }
-    }
-}
-
-/** The hairline between two rows of a group, starting where their text starts. */
-@Composable
-private fun GroupDivider() {
-    HorizontalDivider(
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
-        modifier = Modifier.padding(start = RowTextIndent, end = 16.dp)
-    )
-}
-
 /**
- * A ready-made alert (design review, 23 set 2026): its drawing, what it sends, and —
- * on a line of its own, in the accent — when and how often, which used to be the tail of
- * a four-line sentence. The drawing fades while the switch is off, so the group says
- * which of its rows are on before any switch is read.
+ * A ready-made alert (design review, 23 set 2026): its drawing, what it sends, and how often.
+ * The drawing fades while the switch is off, so the group says which of its rows are on
+ * before any switch is read.
+ *
+ * [hours] stand over the switch, `titleMedium` tabular (the Alerts review, point 3, 14 ott
+ * 2026): the Sky's column of times, at the row's end edge. They were the head of an accent
+ * line under the description, which in Italian broke over two and three lines, and they are
+ * what a reader scans this group for. The alerts that come at any hour have none to show. How
+ * often closes the description, in its ink: it qualifies the sentence, it is not a heading.
  */
 @Composable
 private fun AlertRow(
@@ -666,6 +757,7 @@ private fun AlertRow(
     cadence: String,
     checked: Boolean,
     onChange: (Boolean) -> Unit,
+    hours: String? = null,
     iconTint: Color = Color.Unspecified
 ) {
     Row(
@@ -685,20 +777,22 @@ private fun AlertRow(
                 .alpha(if (checked) 1f else OffAlpha)
         )
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(title, style = MaterialTheme.typography.titleSmall)
+            Text(title, style = MaterialTheme.typography.bodyLarge)
             Text(
-                text = description,
+                text = stringResource(R.string.alerts_row_supporting, description, cadence),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Text(
-                text = cadence,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 2.dp)
-            )
         }
-        Switch(checked = checked, onCheckedChange = null)
+        // Over the switch and not beside the title: the text column is 180 dp at 360, and
+        // «Il riepilogo del mattino» with «6–12» beside it broke in two (rendered). Over the
+        // switch the hours of the group stand in one column at its end edge.
+        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            hours?.let {
+                Text(text = it, style = MaterialTheme.typography.titleMedium.tabular())
+            }
+            Switch(checked = checked, onCheckedChange = null)
+        }
     }
 }
 
@@ -718,8 +812,8 @@ private fun IdeaCard(
     actionLabel: String = stringResource(R.string.tpl_add)
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = GroupShape,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = segmentShape(0, 1),
         modifier = Modifier
             .width(IdeaWidth)
             .height(IdeaHeight)
@@ -730,7 +824,7 @@ private fun IdeaCard(
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(RowIcon))
-            Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(title, style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
@@ -813,16 +907,18 @@ private fun AlertDayStrip(
     val iconPainters = windows.map { androidx.compose.ui.graphics.vector.rememberVectorPainter(it.icon) }
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = GroupShape,
+        shape = MaterialTheme.shapes.extraLarge,
         modifier = modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            // A card's label, as the Sky labels its cards («Stanotte», «Il prossimo, oggi»).
             Text(
                 text = stringResource(R.string.alerts_day_title),
-                style = MaterialTheme.typography.titleSmall
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
             )
             androidx.compose.foundation.Canvas(
                 modifier = Modifier
@@ -922,11 +1018,17 @@ private fun templateIcon(template: RuleText.Template): ImageVector = when (templ
 }
 
 /**
- * A rule's drawing, from the quantity its first condition watches — frost for a
- * temperature that has to fall to zero, the thermometer for any other.
+ * A rule's drawing. A rule that still checks what one of the ideas checks wears that idea's
+ * drawing (the Alerts review, point 5, 14 ott 2026): «Bici», made from the idea with the
+ * wind, was listed under a thermometer, and «Corsa», made from the sun among the clouds,
+ * under raindrops, because the drawing came from the first condition alone. The match is
+ * the one that marks an idea «già aggiunto», so the two can never disagree. Any other rule
+ * takes the quantity its first condition watches — frost for a temperature that has to
+ * fall to zero, the thermometer for any other.
  */
 @Composable
 private fun ruleIcon(rule: NotificationRule): ImageVector {
+    RuleText.templates.firstOrNull { it.conditions == rule.conditions }?.let { return templateIcon(it) }
     val first = rule.conditions.firstOrNull() ?: return ChiaroIcons.cloud
     val id = first.variable
     return when {
@@ -949,26 +1051,28 @@ private fun ruleIcon(rule: NotificationRule): ImageVector {
 private const val ThunderstormCode = 95
 private const val PartlyCloudyCode = 2
 
-private val GroupShape = RoundedCornerShape(24.dp)
 private val RowIcon = 36.dp
 private val RowGap = 14.dp
-/** Where a group row's text starts: its inset, the drawing and the gap after it. */
-private val RowTextIndent = 16.dp + RowIcon + RowGap
 private const val OffAlpha = 0.4f
 private val IdeaWidth = 176.dp
 private val IdeaHeight = 204.dp
 
 /**
  * A rule's card (VISION §5.4): its name, its sentence in words, when it last fired, and
- * its switch. A `Surface` on `surfaceContainer` like the details tiles, since the review
- * of 8 set 2026 — as a list row it was the ready-made switches' twin, and a row with a
- * switch does not say "I open". The whole card opens the editor; the switch is its own
- * target, as before. [zone] is the place's: "last fired" is a time on this place's
- * clock, like every other hour in the app.
+ * its switch. The whole segment opens the editor; the switch is its own target. [zone] is
+ * the place's: "last fired" is a time on this place's clock, like every other hour in the
+ * app.
+ *
+ * A segment of the «I tuoi» group since the Alerts review (point 1, 14 ott 2026), where it
+ * was a loose 24 dp card: the rows of one group look like one group, as the Sky's moments
+ * do. Its type is the Sky row's (point 4): the name at `bodyLarge`, every line under it in
+ * the quiet ink at `bodyMedium`, with the thresholds in full weight (point 6), so that the
+ * sentence can be read down its numbers the way a day of moments is read down its times.
  */
 @Composable
 private fun RuleCard(
     card: RuleCardModel,
+    shape: Shape,
     units: UnitSettings,
     zone: ZoneId,
     firedFmt: DateTimeFormatter,
@@ -978,56 +1082,70 @@ private fun RuleCard(
     modifier: Modifier = Modifier
 ) {
     val res = LocalContext.current.resources
-    val sentence = card.rule.conditions.joinToString(
-        separator = " " + stringResource(R.string.rule_and) + " "
-    ) { RuleText.sentence(res, it, units) }
+    val ink = MaterialTheme.colorScheme.onSurface
+    val sentence = remember(card.rule.conditions, units, res) {
+        val parts = listOf(RuleText.Part(res.getString(R.string.rule_sentence_prefix) + " ", value = false)) +
+            RuleText.sentenceParts(res, card.rule.conditions, units)
+        buildAnnotatedString {
+            parts.forEach { part ->
+                if (part.value) {
+                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = ink)) { append(part.text) }
+                } else {
+                    append(part.text)
+                }
+            }
+        }
+    }
     val fired = card.lastFired?.let {
         stringResource(R.string.rule_last_fired, it.atZone(zone).format(firedFmt))
     } ?: stringResource(R.string.rule_never_fired)
     // Its hours, when it has any (26 set 2026): a rule that stays silent at night must say
     // so where it is listed, or its silence reads as a rule that does not work.
     val hours = RuleText.window(res, card.rule.window, clock)
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = GroupShape,
-        modifier = modifier.fillMaxWidth().clickable(onClick = onOpen)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(RowGap),
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .clickable(onClick = onOpen)
+            .padding(start = 16.dp, top = 14.dp, end = 12.dp, bottom = 14.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(RowGap),
-            modifier = Modifier.padding(start = 16.dp, top = 14.dp, end = 12.dp, bottom = 14.dp)
+        // The drawing of what it watches, faded while it is off — as the ready-made
+        // rows above do (design review, 23 set 2026).
+        Icon(
+            imageVector = ruleIcon(card.rule),
+            contentDescription = null, // the name beside it says what the rule is
+            tint = Color.Unspecified,
+            modifier = Modifier
+                .size(RowIcon)
+                .alpha(if (card.rule.enabled) 1f else OffAlpha)
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            // The drawing of what it watches, faded while it is off — as the ready-made
-            // rows above do (design review, 23 set 2026).
-            Icon(
-                imageVector = ruleIcon(card.rule),
-                contentDescription = null, // the name beside it says what the rule is
-                tint = Color.Unspecified,
-                modifier = Modifier
-                    .size(RowIcon)
-                    .alpha(if (card.rule.enabled) 1f else OffAlpha)
+            Text(text = card.rule.name, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = sentence,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(text = card.rule.name, style = MaterialTheme.typography.titleMedium)
-                // The sentence: «Quando» in the ink of a label, the conditions in full.
+            hours?.let {
                 Text(
-                    text = stringResource(R.string.rule_sentence_prefix) + " " + sentence,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                hours?.let {
-                    Text(text = it, style = MaterialTheme.typography.bodyMedium)
-                }
-                Text(
-                    text = fired,
-                    style = MaterialTheme.typography.bodySmall,
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Switch(checked = card.rule.enabled, onCheckedChange = onToggle)
+            Text(
+                text = fired,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
+        Switch(checked = card.rule.enabled, onCheckedChange = onToggle)
     }
 }
 
