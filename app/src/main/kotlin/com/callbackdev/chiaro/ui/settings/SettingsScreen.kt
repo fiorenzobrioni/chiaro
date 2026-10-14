@@ -50,7 +50,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -78,6 +77,7 @@ import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.BuildConfig
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.ui.components.SegmentedGroup
 import com.callbackdev.chiaro.data.AppFont
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.AppSettings
@@ -208,19 +208,22 @@ private fun SettingsList(
 
         item { GroupHeader(stringResource(R.string.settings_group_units)) }
         item {
-            SettingsGroup {
-                ValueRow(
-                    label = stringResource(R.string.settings_temperature),
-                    value = temperatureLabel(settings.units.temperature),
-                    onClick = { dialog = SettingsDialog.TEMPERATURE }
-                )
-                GroupDivider()
-                ValueRow(
-                    label = stringResource(R.string.settings_wind),
-                    value = windLabel(settings.units.windSpeed),
-                    onClick = { dialog = SettingsDialog.WIND }
-                )
-            }
+            SettingsGroup(
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_temperature),
+                        value = temperatureLabel(settings.units.temperature),
+                        onClick = { dialog = SettingsDialog.TEMPERATURE }
+                    )
+                },
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_wind),
+                        value = windLabel(settings.units.windSpeed),
+                        onClick = { dialog = SettingsDialog.WIND }
+                    )
+                }
+            )
         }
 
         item { GroupHeader(stringResource(R.string.settings_group_appearance)) }
@@ -229,56 +232,65 @@ private fun SettingsList(
         // A palette called «Carta» or «Brillante» is a word until it is seen.
         item { AppearancePreview(settings) }
         item {
-            SettingsGroup {
-                ValueRow(
-                    label = stringResource(R.string.settings_theme),
-                    value = themeLabel(settings.themeMode),
-                    onClick = { dialog = SettingsDialog.THEME }
-                )
-                GroupDivider()
-                ValueRow(
-                    label = stringResource(R.string.settings_palette),
-                    value = paletteLabel(settings.palette),
-                    onClick = { dialog = SettingsDialog.PALETTE }
-                )
-                GroupDivider()
-                ValueRow(
-                    label = stringResource(R.string.settings_font),
-                    value = fontLabel(settings.font),
-                    onClick = { dialog = SettingsDialog.FONT }
-                )
-                GroupDivider()
-                ValueRow(
-                    label = stringResource(R.string.settings_weather_icons),
-                    value = iconStyleLabel(settings.weatherIcons),
-                    onClick = { dialog = SettingsDialog.ICONS }
-                )
-                GroupDivider()
-                SwitchRow(
-                    label = stringResource(R.string.settings_animated_icons),
-                    note = stringResource(R.string.settings_animated_icons_note),
-                    checked = settings.animatedIcons,
-                    onChange = actions.setAnimatedIcons
-                )
-                GroupDivider()
-                SwitchRow(
-                    label = stringResource(R.string.settings_dynamic_color),
-                    note = stringResource(R.string.settings_dynamic_color_note),
-                    checked = settings.dynamicColor,
-                    onChange = actions.setDynamicColor
-                )
-            }
+            SettingsGroup(
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_theme),
+                        value = themeLabel(settings.themeMode),
+                        onClick = { dialog = SettingsDialog.THEME }
+                    )
+                },
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_palette),
+                        value = paletteLabel(settings.palette),
+                        onClick = { dialog = SettingsDialog.PALETTE }
+                    )
+                },
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_font),
+                        value = fontLabel(settings.font),
+                        onClick = { dialog = SettingsDialog.FONT }
+                    )
+                },
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_weather_icons),
+                        value = iconStyleLabel(settings.weatherIcons),
+                        onClick = { dialog = SettingsDialog.ICONS }
+                    )
+                },
+                {
+                    SwitchRow(
+                        label = stringResource(R.string.settings_animated_icons),
+                        note = stringResource(R.string.settings_animated_icons_note),
+                        checked = settings.animatedIcons,
+                        onChange = actions.setAnimatedIcons
+                    )
+                },
+                {
+                    SwitchRow(
+                        label = stringResource(R.string.settings_dynamic_color),
+                        note = stringResource(R.string.settings_dynamic_color_note),
+                        checked = settings.dynamicColor,
+                        onChange = actions.setDynamicColor
+                    )
+                }
+            )
         }
 
         item { GroupHeader(stringResource(R.string.settings_group_updates)) }
         item {
-            SettingsGroup {
-                ValueRow(
-                    label = stringResource(R.string.settings_update_frequency),
-                    value = frequencyLabel(settings.updateFrequencyMin),
-                    onClick = { dialog = SettingsDialog.FREQUENCY }
-                )
-            }
+            SettingsGroup(
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_update_frequency),
+                        value = frequencyLabel(settings.updateFrequencyMin),
+                        onClick = { dialog = SettingsDialog.FREQUENCY }
+                    )
+                }
+            )
         }
 
         // The Sky's two reminder preferences, moved here from the bottom of the Sky screen
@@ -287,40 +299,45 @@ private fun SettingsList(
         // is where the usual one lives.
         item { GroupHeader(stringResource(R.string.settings_group_sky_reminders)) }
         item {
-            SettingsGroup {
-                ValueRow(
-                    label = stringResource(R.string.sky_default_lead),
-                    value = leadLabel(SkyLead.ofMinutes(settings.skyNotifyDefaultMin)),
-                    onClick = { dialog = SettingsDialog.SKY_LEAD }
-                )
-                GroupDivider()
-                SwitchRow(
-                    label = stringResource(R.string.sky_notify_on_fail),
-                    note = stringResource(R.string.sky_notify_on_fail_note),
-                    checked = settings.skyNotifyOnFail,
-                    onChange = actions.setSkyNotifyOnFail
-                )
-            }
+            SettingsGroup(
+                {
+                    ValueRow(
+                        label = stringResource(R.string.sky_default_lead),
+                        value = leadLabel(SkyLead.ofMinutes(settings.skyNotifyDefaultMin)),
+                        onClick = { dialog = SettingsDialog.SKY_LEAD }
+                    )
+                },
+                {
+                    SwitchRow(
+                        label = stringResource(R.string.sky_notify_on_fail),
+                        note = stringResource(R.string.sky_notify_on_fail_note),
+                        checked = settings.skyNotifyOnFail,
+                        onChange = actions.setSkyNotifyOnFail
+                    )
+                }
+            )
         }
 
         item { GroupHeader(stringResource(R.string.settings_group_language)) }
         item {
-            SettingsGroup {
-                ValueRow(
-                    label = stringResource(R.string.settings_language),
-                    value = currentLanguageLabel(),
-                    onClick = {
-                        // The system per-app picker (minSdk 33): one place to change it,
-                        // the same place every app has.
-                        context.startActivity(
-                            Intent(
-                                Settings.ACTION_APP_LOCALE_SETTINGS,
-                                Uri.fromParts("package", context.packageName, null)
+            SettingsGroup(
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_language),
+                        value = currentLanguageLabel(),
+                        onClick = {
+                            // The system per-app picker (minSdk 33): one place to change it,
+                            // the same place every app has.
+                            context.startActivity(
+                                Intent(
+                                    Settings.ACTION_APP_LOCALE_SETTINGS,
+                                    Uri.fromParts("package", context.packageName, null)
+                                )
                             )
-                        )
-                    }
-                )
-            }
+                        }
+                    )
+                }
+            )
         }
 
         // The privacy note, before the credits and on its own (committente, 23 set 2026:
@@ -336,74 +353,86 @@ private fun SettingsList(
         // provider and stops there is only two thirds honest.
         item { GroupHeader(stringResource(R.string.settings_group_about)) }
         item {
-            SettingsGroup {
-                InfoRow(stringResource(R.string.settings_version), BuildConfig.VERSION_NAME)
-                GroupDivider()
-                InfoRow(stringResource(R.string.settings_developer), stringResource(R.string.settings_developer_note))
-                GroupDivider()
-                InfoRow(stringResource(R.string.settings_copyright), stringResource(R.string.settings_copyright_note))
-                GroupDivider()
-                ValueRow(
-                    label = stringResource(R.string.settings_license),
-                    value = stringResource(R.string.settings_license_note),
-                    onClick = { openUrl(context, "https://www.gnu.org/licenses/gpl-3.0.html") },
-                    external = true
-                )
-                GroupDivider()
-                ValueRow(
-                    label = stringResource(R.string.settings_source_code),
-                    value = stringResource(R.string.settings_source_code_note),
-                    onClick = { openUrl(context, "https://github.com/fiorenzobrioni/chiaro") },
-                    external = true
-                )
-            }
+            SettingsGroup(
+                {
+                    InfoRow(stringResource(R.string.settings_version), BuildConfig.VERSION_NAME)
+                },
+                {
+                    InfoRow(stringResource(R.string.settings_developer), stringResource(R.string.settings_developer_note))
+                },
+                {
+                    InfoRow(stringResource(R.string.settings_copyright), stringResource(R.string.settings_copyright_note))
+                },
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_license),
+                        value = stringResource(R.string.settings_license_note),
+                        onClick = { openUrl(context, "https://www.gnu.org/licenses/gpl-3.0.html") },
+                        external = true
+                    )
+                },
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_source_code),
+                        value = stringResource(R.string.settings_source_code_note),
+                        onClick = { openUrl(context, "https://github.com/fiorenzobrioni/chiaro") },
+                        external = true
+                    )
+                }
+            )
         }
 
         item { GroupHeader(stringResource(R.string.settings_group_credits)) }
         item {
-            SettingsGroup {
-                ValueRow(
-                    label = stringResource(R.string.settings_data_source),
-                    value = stringResource(R.string.settings_data_source_note),
-                    onClick = { openUrl(context, "https://open-meteo.com") },
-                    external = true
-                )
-                GroupDivider()
-                // The official warnings' attribution (Fase 11): CC BY 4.0 asks for it, and
-                // the sheet that shows a warning carries the same line where it is met.
-                ValueRow(
-                    label = stringResource(R.string.settings_credit_warnings),
-                    value = stringResource(R.string.settings_credit_warnings_note),
-                    onClick = {
-                        openUrl(
-                            context,
-                            "https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita/"
-                        )
-                    },
-                    external = true
-                )
-                GroupDivider()
-                ValueRow(
-                    label = stringResource(R.string.settings_credit_icons),
-                    value = stringResource(R.string.settings_credit_icons_note),
-                    onClick = { openUrl(context, "https://github.com/basmilius/meteocons") },
-                    external = true
-                )
-                GroupDivider()
-                ValueRow(
-                    label = stringResource(R.string.settings_credit_font),
-                    value = fontCreditNote(settings.font),
-                    onClick = { openUrl(context, fontCreditUrl(settings.font)) },
-                    external = true
-                )
-                GroupDivider()
-                ValueRow(
-                    label = stringResource(R.string.settings_credit_ui_icons),
-                    value = stringResource(R.string.settings_credit_ui_icons_note),
-                    onClick = { openUrl(context, "https://github.com/google/material-design-icons") },
-                    external = true
-                )
-            }
+            SettingsGroup(
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_data_source),
+                        value = stringResource(R.string.settings_data_source_note),
+                        onClick = { openUrl(context, "https://open-meteo.com") },
+                        external = true
+                    )
+                },
+                {
+                    // The official warnings' attribution (Fase 11): CC BY 4.0 asks for it, and
+                    // the sheet that shows a warning carries the same line where it is met.
+                    ValueRow(
+                        label = stringResource(R.string.settings_credit_warnings),
+                        value = stringResource(R.string.settings_credit_warnings_note),
+                        onClick = {
+                            openUrl(
+                                context,
+                                "https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita/"
+                            )
+                        },
+                        external = true
+                    )
+                },
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_credit_icons),
+                        value = stringResource(R.string.settings_credit_icons_note),
+                        onClick = { openUrl(context, "https://github.com/basmilius/meteocons") },
+                        external = true
+                    )
+                },
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_credit_font),
+                        value = fontCreditNote(settings.font),
+                        onClick = { openUrl(context, fontCreditUrl(settings.font)) },
+                        external = true
+                    )
+                },
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_credit_ui_icons),
+                        value = stringResource(R.string.settings_credit_ui_icons_note),
+                        onClick = { openUrl(context, "https://github.com/google/material-design-icons") },
+                        external = true
+                    )
+                }
+            )
         }
 
         item {
@@ -519,11 +548,11 @@ private fun GuideCard(onOpenGuide: () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        shape = GroupShape,
+        shape = CardShape,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(GroupShape)
+            .clip(CardShape)
             .clickable(onClick = onOpenGuide)
     ) {
         Row(
@@ -555,7 +584,7 @@ private fun AppearancePreview(settings: AppSettings) {
     val sky = ChiaroTheme.sky.gradient(sunAltitudeDeg = PreviewAltitude, cloudPct = 20)
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = GroupShape,
+        shape = CardShape,
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
@@ -642,7 +671,7 @@ private fun PrivacyCard() {
     Surface(
         color = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        shape = GroupShape,
+        shape = CardShape,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
@@ -676,27 +705,16 @@ private fun GroupHeader(text: String) {
     )
 }
 
-/** Rows that belong together, on one rounded ground (the Alerts screen's, 23 set 2026). */
+/**
+ * Rows that belong together, one segment each: the grouped list of the Sky and of the
+ * Alerts screen (the Alerts review, point 1, 14 ott 2026). Until then the rows sat on one
+ * `surfaceContainerLow` ground with hairlines between them, the Alerts screen's grouping
+ * of 23 set 2026, so the two screens of switches and values look like one app; they move
+ * together, and with the Sky.
+ */
 @Composable
-private fun SettingsGroup(content: @Composable () -> Unit) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = GroupShape,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(GroupShape)
-    ) {
-        Column { content() }
-    }
-}
-
-@Composable
-private fun GroupDivider() {
-    HorizontalDivider(
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
-        modifier = Modifier.padding(horizontal = 16.dp)
-    )
+private fun SettingsGroup(vararg rows: @Composable () -> Unit) {
+    SegmentedGroup(segments = rows.toList())
 }
 
 /** A preference row: what it is, what it currently says, tap to change — or, with
@@ -758,7 +776,9 @@ private fun SwitchRow(label: String, note: String, checked: Boolean, onChange: (
     }
 }
 
-private val GroupShape = RoundedCornerShape(24.dp)
+/** A card on its own (the guide, the preview, privacy): the Sky's card corner, 28 dp, since the
+ * groups became segments (the Alerts review, point 1, 14 ott 2026). */
+private val CardShape = RoundedCornerShape(28.dp)
 private val PreviewSky = 132.dp
 /** The golden hour: where the two palettes' skies differ most. */
 private const val PreviewAltitude = 3.0

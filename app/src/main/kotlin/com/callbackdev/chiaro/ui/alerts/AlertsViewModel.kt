@@ -46,14 +46,26 @@ import kotlinx.coroutines.launch
 data class RuleCardModel(
     val rule: NotificationRule,
     /** When it last fired for the active place, from the history — null = not yet. */
-    val lastFired: Instant?
+    val lastFired: Instant?,
+    /**
+     * Whether it holds right now, with the number that decides (the Alerts review, point 11,
+     * 14 ott 2026): the editor's dry run, on the card. Null with no forecast for the place,
+     * where the card says nothing rather than a guess.
+     */
+    val now: RulePreview? = null
 )
 
 /** What "try it now" answered (VISION §5.4: no notification is ever posted). */
 sealed interface RulePreview {
     /** All conditions hold: the message as it would arrive. */
     data class WouldFire(val message: String) : RulePreview
-    data object WouldPass : RulePreview
+
+    /** Not all of it holds: [failed] is the first condition that does not, [value] what it
+     * read ([RuleCheck.Passes]). */
+    data class WouldPass(
+        val failed: com.callbackdev.chiaro.domain.rules.RuleCondition? = null,
+        val value: Double? = null
+    ) : RulePreview
 
     /**
      * All conditions hold, but the rule's own hours are closed (26 set 2026): it would not
@@ -113,7 +125,8 @@ class AlertsViewModel(
     private val warningReader: OfficialWarningReader?
 ) : ViewModel() {
 
-    val state: StateFlow<AlertsUiState> = combine(
+    /** The page's own state, and the report its rules are read against. */
+    private val page = combine(
         settingsStore.settings,
         ruleStore.rules,
         cityStore.activeSource,
@@ -126,7 +139,7 @@ class AlertsViewModel(
         // the history table one line above.
         val report = city?.let { runCatching { repository.cachedReport(it) }.getOrNull() }
         val zone = placeZone(report, city)
-        AlertsUiState.Content(
+        report to AlertsUiState.Content(
             placeName = city?.name,
             notifications = settings.notifications,
             rules = rules.map { RuleCardModel(it, lastFired[it.name]) },
@@ -142,6 +155,23 @@ class AlertsViewModel(
                     reader.state(reader.zoneOf(city!!), bulletin, reader.today())
                 }.getOrDefault(PlaceWarningState.Unavailable)
             } ?: PlaceWarningState.Unavailable
+        )
+    }
+
+    /**
+     * Each rule read against the forecast the phone already has, again every minute the page
+     * is watched (the Alerts review, point 11): `next_6h` slides with the clock and a band of
+     * hours opens and closes, so an answer read once would go stale on screen. Only the
+     * reading repeats, which is arithmetic on a cached report; the stores and the history are
+     * read when they change, as before. Nothing runs once the page is gone (`WhileSubscribed`).
+     */
+    val state: StateFlow<AlertsUiState> = combine(page, minuteTicks()) { (report, content), _ ->
+        if (report == null) return@combine content
+        val now = ZonedDateTime.now(content.zone).toLocalDateTime()
+        content.copy(
+            rules = content.rules.map { card ->
+                card.copy(now = ruleReading(card.rule, report, content.zone, now, content.units, appContext))
+            }
         )
     }
         .flowOn(Dispatchers.Default)
@@ -192,6 +222,9 @@ class AlertsViewModel(
 
     fun remove(id: Long) = mutate { ruleStore.remove(id) }
 
+    /** The «Annulla» of a deletion: [rule] back at [index], as it was ([RuleStore.restore]). */
+    fun restore(rule: NotificationRule, index: Int) = mutate { ruleStore.restore(rule, index) }
+
     /**
      * "Try it now": the stateless check against the data the app already has, in the
      * city's own clock — what the rule WOULD do, with nothing posted (VISION §5.4).
@@ -201,28 +234,13 @@ class AlertsViewModel(
         val report = repository.cachedReport(city) ?: return RulePreview.NoData
         val zone = placeZone(report, city)
         val now = ZonedDateTime.now(zone).toLocalDateTime()
-        return when (val check = RuleEngine.check(rule, report, now)) {
-            is RuleCheck.Fires -> {
-                val units = settingsStore.settings.first().units
-                val message = RuleMessages.interpolate(
-                    rule.message, rule, check.value, check.at, report, now, units,
-                    RuleText.MessageWriter(
-                        appContext.resources, units,
-                        appContext.resources.configuration.locales[0],
-                        android.text.format.DateFormat.is24HourFormat(appContext)
-                    )
-                )
-                val coords = report.location.coordinates
-                if (RuleWindows.isOpen(rule.window, now, zone, coords)) {
-                    RulePreview.WouldFire(message)
-                } else {
-                    RulePreview.OutsideHours(
-                        message, RuleWindows.nextOpening(rule.window, now, zone, coords), now.toLocalDate()
-                    )
-                }
-            }
-            RuleCheck.Passes -> RulePreview.WouldPass
-            is RuleCheck.Unavailable -> RulePreview.Unavailable(check.variable)
+        return ruleReading(rule, report, zone, now, settingsStore.settings.first().units, appContext)
+    }
+
+    private fun minuteTicks() = kotlinx.coroutines.flow.flow {
+        while (true) {
+            emit(Unit)
+            kotlinx.coroutines.delay(60_000)
         }
     }
 
@@ -288,3 +306,39 @@ class AlertsViewModel(
         }
     }
 }
+
+/**
+ * What [rule] would do at [now], with nothing posted: the dry run, for the editor and for each
+ * card (the Alerts review, points 11 and 12). Its message is written as it would arrive, in the
+ * reader's units and on the phone's clock ([RuleText.MessageWriter]).
+ */
+internal fun ruleReading(
+    rule: NotificationRule,
+    report: com.callbackdev.chiaro.domain.model.WeatherReport,
+    zone: ZoneId,
+    now: java.time.LocalDateTime,
+    units: UnitSettings,
+    context: Context
+): RulePreview =
+    when (val check = RuleEngine.check(rule, report, now)) {
+        is RuleCheck.Fires -> {
+            val message = RuleMessages.interpolate(
+                rule.message, rule, check.value, check.at, report, now, units,
+                RuleText.MessageWriter(
+                    context.resources, units,
+                    context.resources.configuration.locales[0],
+                    android.text.format.DateFormat.is24HourFormat(context)
+                )
+            )
+            val coords = report.location.coordinates
+            if (RuleWindows.isOpen(rule.window, now, zone, coords)) {
+                RulePreview.WouldFire(message)
+            } else {
+                RulePreview.OutsideHours(
+                    message, RuleWindows.nextOpening(rule.window, now, zone, coords), now.toLocalDate()
+                )
+            }
+        }
+        is RuleCheck.Passes -> RulePreview.WouldPass(check.failed, check.value)
+        is RuleCheck.Unavailable -> RulePreview.Unavailable(check.variable)
+    }

@@ -29,6 +29,22 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Alerts in the Sky's shape.** The alerts are grouped rows like the Sky's moments, and so are
+  the rows of Settings. A warning in force is now the big card at the top of the official
+  warnings, in the warning's own color, instead of a small banner. The hours of the morning and
+  evening summaries and of the bulletin stand over their switches, in a column. A rule made from
+  an idea keeps that idea's drawing, and its sentence is shorter and easier to scan: «the
+  temperature now is between 5° and 26°», with the thresholds in bold.
+- **Alerts opens with an answer.** One card at the top says whether there is a warning for your
+  place, which window your phone may ring in next («Next, today: the evening summary, 18–23»)
+  and draws the day of alerts under it, with the Sky's hour ticks and its line for now. «New alert» is now a button that floats over the page and
+  opens the ideas, with «From scratch» first; the row of ideas stays on the page only until you
+  have an alert of your own. Deleting an alert no longer asks first: it shows «Undo», which brings
+  it back exactly as it was.
+- **Every alert says whether it is true now.** Each of your alerts shows a line such as «Not
+  right now · it is 19.7°, it needs below 5°» or «True right now, but outside its hours until
+  20:00». In the editor the same answer stands at the top and changes with every choice, with the
+  message that would arrive: there is no «Try it now» button to press any more.
 - **The Journal answers first.** The week's card is now the head of the Journal, shaped like
   the Sky's tonight card: the answer in large type, such as «Saturday 17 is improving», with
   its numbers on a line of their own («rain 70% → 30%»), then the strip. Before the first

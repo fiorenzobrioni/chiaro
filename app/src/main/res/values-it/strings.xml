@@ -476,15 +476,15 @@
     <string name="guide_alerts_ready_title">Pronti all\'uso</string>
     <string name="guide_alerts_ready_body" formatted="false">Quattro interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo nelle prossime 12 ore (al massimo uno per perturbazione), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno), il riepilogo del mattino, una volta tra le 6 e le 12, e quello della sera, una volta tra le 18 e le 23, che parla di domani.</string>
     <string name="guide_alerts_yours_title">I tuoi</string>
-    <string name="guide_alerts_yours_body">Parti da un\'idea — una finestra per correre, ghiaccio domattina, una notte serena — oppure apri «Nuovo avviso» e costruisci la frase da te: cosa guardare, come confrontarlo, la soglia, e fino a due condizioni in più se servono. Poi scegli quando può suonare: sempre, solo con la luce o in una o due fasce orarie. Si possono guardare anche i millimetri di pioggia e la neve di oggi, le raffiche e l\'indice europeo dell\'aria. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile.</string>
-    <string name="guide_alerts_preview_title">Provalo adesso</string>
-    <string name="guide_alerts_preview_body">Fa girare il tuo avviso sulla previsione che è già sul telefono e ti dice cosa avrebbe fatto. Non manda niente e non lascia traccia.</string>
+    <string name="guide_alerts_yours_body">«Nuovo avviso» apre le idee — una finestra per correre, ghiaccio domattina, una notte serena — e «Da zero», per costruire la frase da te: cosa guardare, come confrontarlo, la soglia, e fino a due condizioni in più se servono. Poi scegli quando può suonare: sempre, solo con la luce o in una o due fasce orarie. Si possono guardare anche i millimetri di pioggia e la neve di oggi, le raffiche e l\'indice europeo dell\'aria. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile. Se ne elimini uno, il foglio si chiude con «Annulla» in fondo allo schermo, che lo rimette com\'era.</string>
+    <string name="guide_alerts_preview_title">È vero adesso?</string>
+    <string name="guide_alerts_preview_body">Ogni avviso dice sulla sua card se è vero adesso e, se no, quale condizione non tiene e di quanto. Nell\'editor la risposta sta in cima e cambia a ogni scelta, con il messaggio che arriverebbe. Non manda niente e non lascia traccia.</string>
     <string name="guide_alerts_message_title">Il messaggio è tuo</string>
     <string name="guide_alerts_message_body">Chiaro non lo riscrive e non lo traduce mai. Le parole tra graffe diventano numeri quando scatta: {trigger.value} è ciò che l\'ha fatto scattare, {trigger.time} è quando. Ogni valore che un avviso può guardare si può stampare allo stesso modo, e la lista sotto il messaggio lo scrive al posto tuo.</string>
     <string name="guide_alerts_battery_title">Quanto costa</string>
     <string name="guide_alerts_battery_body">Niente in più: i controlli viaggiano sull\'aggiornamento del meteo che hai già chiesto, al ritmo scelto nelle impostazioni. Android chiede il permesso per le notifiche una volta al primo avvio, e di nuovo la prima volta che accendi un avviso. La schermata Avvisi lo dice a chiare lettere ogni volta che c\'è qualcosa di attivo che il telefono non lascia passare.</string>
     <string name="guide_alerts_official_title">Le allerte ufficiali</string>
-    <string name="guide_alerts_official_body">In Italia fa fede il Dipartimento della Protezione Civile. Ogni pomeriggio, di solito entro le 16, valuta ciascuna zona di allerta per oggi e per domani: rischio idraulico, rischio idrogeologico e temporali, su quattro livelli — nessuno, giallo, arancione, rosso. Chiaro trova la zona in cui cade il tuo luogo, legge il bollettino e lo mostra: il riquadro in Oggi quando c\'è qualcosa da dire, la griglia e le parole del Dipartimento nel foglio dietro, e una riga nel Diario ogni volta che un livello si muove. Le parole dell\'autorità sono citate, mai tradotte. Per i luoghi fuori dall\'Italia non compare nulla, perché nessuno li ha valutati.</string>
+    <string name="guide_alerts_official_body">In Italia fa fede il Dipartimento della Protezione Civile. Ogni pomeriggio, di solito entro le 16, valuta ciascuna zona di allerta per oggi e per domani: rischio idraulico, rischio idrogeologico e temporali, su quattro livelli — nessuno, giallo, arancione, rosso. Chiaro trova la zona in cui cade il tuo luogo, legge il bollettino e lo mostra: il riquadro in Oggi quando c\'è qualcosa da dire, la card in cima ad Avvisi, nel colore del livello quando un\'allerta è in vigore e con «Nessuna allerta» quando non c\'è, la griglia e le parole del Dipartimento nel foglio dietro, e una riga nel Diario ogni volta che un livello si muove. Le parole dell\'autorità sono citate, mai tradotte. Per i luoghi fuori dall\'Italia non compare nulla, perché nessuno li ha valutati.</string>
     <string name="guide_alerts_official_credit">Fonte: Dipartimento della Protezione Civile, CC BY 4.0.</string>
     <string name="settings_credit_warnings">Allerte ufficiali</string>
     <string name="settings_credit_warnings_note">Dipartimento della Protezione Civile, CC BY 4.0</string>
@@ -941,11 +941,14 @@
     <string name="tab_alerts">Avvisi</string>
     <string name="alerts_group_ready">Pronti all\'uso</string>
     <string name="alerts_group_yours">I tuoi</string>
-    <string name="alerts_day_title">Quando arrivano</string>
     <string name="alerts_day_anytime">In qualunque ora, se serve: %1$s</string>
     <string name="alerts_day_window_desc">%1$s tra le %2$d e le %3$d</string>
     <string name="alerts_day_yours">i tuoi avvisi</string>
     <string name="alerts_day_quiet">Dalle 22 alle 7 (tratteggio) arrivano senza suono, tranne le allerte rosse e i promemoria del cielo.</string>
+    <!-- The hours of a ready-made alert, at the end of its title: the Sky's column of times. -->
+    <string name="alerts_hours_range">%1$d–%2$d</string>
+    <!-- What an alert sends, then how often (two sentences of the strings above). -->
+    <string name="alerts_row_supporting">%1$s %2$s.</string>
     <string name="alert_severe_title">Maltempo in arrivo</string>
     <string name="alert_severe_desc">Temporale, pioggia gelata, pioggia o neve forte nelle prossime 12 ore.</string>
     <string name="alert_severe_when">Al massimo uno per perturbazione</string>
@@ -954,22 +957,30 @@
     <string name="alert_precip_when">Al massimo due volte al giorno</string>
     <string name="alert_summary_title">Il riepilogo del mattino</string>
     <string name="alert_summary_desc">Il cielo di oggi, minima, massima e pioggia.</string>
-    <string name="alert_summary_when">Ogni giorno, tra le 6 e le 12</string>
+    <string name="alert_summary_when">Una volta al giorno</string>
     <string name="alert_evening_title">Il riepilogo della sera</string>
     <string name="alert_evening_desc">Il cielo di domani, minima, massima e pioggia. Aprendolo, anche la notte che c\'è in mezzo.</string>
-    <string name="alert_evening_when">Ogni giorno, tra le 18 e le 23</string>
+    <string name="alert_evening_when">Una volta al giorno</string>
+    <string name="alerts_new_rule">Nuovo avviso</string>
+    <string name="alerts_rule_deleted">«%1$s» eliminato</string>
+    <string name="alerts_next_now">Adesso</string>
+    <string name="alerts_next_today">Il prossimo, oggi</string>
+    <string name="alerts_next_tomorrow">Il prossimo, domani</string>
+    <string name="alerts_window_bulletin">Il bollettino</string>
     <string name="alerts_templates_title">Parti da un\'idea</string>
     <string name="alerts_max_reached">Hai già il massimo di avvisi che l\'app tiene, %1$d: togline uno per aggiungerne un altro.</string>
     <string name="tpl_already_added">Già aggiunto</string>
     <string name="tpl_add">Aggiungi</string>
     <!-- L'idea vuota (26 set 2026): la prima carta della fila, un avviso costruito da zero. -->
-    <string name="tpl_blank_title">Nuovo avviso</string>
-    <string name="tpl_blank_desc">Da zero: scegli tu cosa guardare, la soglia, gli orari e il messaggio.</string>
+    <string name="tpl_blank_title">Da zero</string>
+    <string name="tpl_blank_desc">Scegli tu cosa guardare, la soglia, gli orari e il messaggio.</string>
     <string name="tpl_blank_name">Il mio avviso</string>
     <string name="tpl_blank_message" formatted="false">Il tuo avviso è scattato: {trigger.value}.</string>
     <string name="tpl_create">Crea</string>
     <string name="rule_sentence_prefix">Quando</string>
     <string name="rule_sentence_fragment">%1$s %2$s %3$s</string>
+    <!-- Two bounds on one quantity, said once: «la temperatura adesso fra 5° e 26°». -->
+    <string name="rule_sentence_range">%1$s fra %2$s e %3$s</string>
     <string name="rule_and">e</string>
     <string name="rule_last_fired">Scattato l\'ultima volta %1$s</string>
     <string name="rule_never_fired">Non è ancora mai scattato</string>
@@ -979,10 +990,6 @@
     <string name="rule_message_add_value">Aggiungi un valore</string>
     <string name="rule_add_condition">e un\'altra condizione</string>
     <string name="rule_remove_condition">Togli questa condizione</string>
-    <string name="rule_preview_action">Prova adesso</string>
-    <string name="rule_preview_fires">Adesso scatterebbe: «%1$s»</string>
-    <string name="rule_preview_passes">Adesso resterebbe zitto.</string>
-    <string name="rule_preview_unavailable">Non posso dirlo: «%1$s» al momento non ha un valore.</string>
     <string name="rule_preview_no_data">Non posso dirlo: nessuna previsione ancora per questo luogo.</string>
     <!-- Gli orari di un avviso (26 set 2026): quando può parlare, non se il tempo lo permette. -->
     <string name="rule_window_title">In che orari</string>
@@ -1003,13 +1010,24 @@
     <string name="rule_band_same">Inizio e fine non possono coincidere.</string>
     <string name="rule_card_daylight">Solo con la luce</string>
     <string name="rule_card_hours">Solo %1$s</string>
-    <string name="rule_preview_closed">Scatterebbe, ma non a quest\'ora: è fuori dagli orari che hai scelto.</string>
-    <string name="rule_preview_closed_today">Scatterebbe, ma non a quest\'ora: potrà dalle %1$s.</string>
-    <string name="rule_preview_closed_tomorrow">Scatterebbe, ma non a quest\'ora: potrà da domani alle %1$s.</string>
+    <string name="rule_now_yes">Adesso sì</string>
+    <string name="rule_now_no">Adesso no</string>
+    <string name="rule_now_unknown">Adesso non si può dire</string>
+    <string name="rule_now_closed_today">%1$s, ma fuori orario fino alle %2$s</string>
+    <string name="rule_now_closed_tomorrow">%1$s, ma fuori orario fino a domani alle %2$s</string>
+    <string name="rule_now_closed">%1$s, ma fuori dai suoi orari</string>
+    <string name="rule_now_failed">%1$s · %2$s è %3$s, serve %4$s</string>
+    <string name="rule_now_failed_short">%1$s · è %2$s, serve %3$s</string>
+    <string name="rule_need_above">sopra %1$s</string>
+    <string name="rule_need_at_least">almeno %1$s</string>
+    <string name="rule_need_below">sotto %1$s</string>
+    <string name="rule_need_at_most">al massimo %1$s</string>
+    <string name="rule_need_equal">esattamente %1$s</string>
+    <string name="rule_need_not_equal">diverso da %1$s</string>
+    <string name="rule_now_failed_flag">%1$s · %2$s: %3$s</string>
+    <string name="rule_now_missing">%1$s · %2$s non ha un valore</string>
     <string name="rule_preview_would_say">Direbbe: «%1$s»</string>
     <string name="rule_delete">Elimina questo avviso</string>
-    <string name="rule_delete_confirm_title">Eliminare questo avviso?</string>
-    <string name="rule_delete_confirm_body">Sparisce per sempre, messaggio compreso.</string>
     <string name="rule_pick_variable">Cosa guardare</string>
     <string name="rule_pick_operator">Come confrontarlo</string>
     <string name="rule_pick_value">La soglia</string>
@@ -1175,7 +1193,7 @@
     <string name="warning_card_unavailable_detail">Le emette il Dipartimento della Protezione Civile, che valuta il solo territorio italiano.</string>
     <string name="warning_switch_title">Avvisami delle allerte</string>
     <string name="warning_switch_desc">Quando la Protezione Civile emette un\'allerta per questa zona, appena esce il bollettino.</string>
-    <string name="warning_switch_when">Di solito tra le 15 e le 17 · mai più di una per bollettino</string>
+    <string name="warning_switch_when">Di solito in quella fascia, mai più di una per bollettino</string>
     <string name="warning_from_title">Avvisami da</string>
     <string name="warning_from_yellow">Gialla</string>
     <string name="warning_from_orange">Arancione</string>

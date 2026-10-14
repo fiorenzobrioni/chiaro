@@ -63,7 +63,20 @@ class RuleEngineTest {
             RuleCondition("current.temp_c", RuleOp.GT, 10.0),
             RuleCondition("current.uv_index", RuleOp.GTE, 7.0)
         )
-        assertEquals(RuleCheck.Passes, RuleEngine.check(secondFails, report, now))
+        val passes = RuleEngine.check(secondFails, report, now) as RuleCheck.Passes
+        // The condition that does not hold, and what it read (the Alerts review, point 11).
+        assertEquals(secondFails.conditions[1], passes.failed)
+        assertTrue(passes.value != null && passes.value!! < 7.0)
+    }
+
+    @Test
+    fun `the first condition that fails is the one reported`() {
+        val bothFail = rule(
+            RuleCondition("current.temp_c", RuleOp.LT, -40.0),
+            RuleCondition("current.uv_index", RuleOp.GTE, 99.0)
+        )
+        val passes = RuleEngine.check(bothFail, report, now) as RuleCheck.Passes
+        assertEquals(bothFail.conditions[0], passes.failed)
     }
 
     @Test

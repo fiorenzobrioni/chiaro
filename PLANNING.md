@@ -12679,6 +12679,219 @@ stesso valeva per il cambio di frequenza, che ora si applica subito. (La chiave 
 dei widget nello stesso negozio non è letta da nessuna schermata: le card hanno ognuna il
 proprio aspetto, e la frase non la nomina.)
 
+## Avvisi: la revisione della schermata, punti 1–6 (committente, 14 ott 2026)
+
+Il committente ha chiesto una revisione della schermata Avvisi, grafica e UI/UX, per renderla
+coerente con il Cielo appena rivisto, e ne ha fatto attuare i punti da 1 a 6. La revisione intera
+è in `/mnt/project-files/review-avvisi/review-avvisi.md` del progetto; i punti:
+
+- [x] 1. Un solo modo di raggruppare: i segmenti del Cielo, anche in Impostazioni.
+- [x] 2. L'allerta in vigore come la card forte della pagina.
+- [x] 3. Gli orari in colonna.
+- [x] 4. Una scala tipografica sola, quella del Cielo.
+- [x] 5. La regola nata da un'idea porta il disegno dell'idea.
+- [x] 6. La frase della regola: gli intervalli, le soglie in grassetto.
+- [x] 7. Un hero che risponde sempre (lo stato delle allerte, il prossimo avviso, la striscia).
+- [x] 8. La striscia del giorno con le tacche delle ore e «adesso» del Cielo (senza la corsia delle
+  ore dei tuoi avvisi: vedi «Punto 8»).
+- [x] 9. «Nuovo avviso» come FAB, le idee in un foglio; la fila resta solo con «I tuoi» vuoto.
+- [x] 10. «Annulla» al posto della conferma per eliminare.
+- [x] 11. Lo stato di ogni regola adesso, con il suo numero.
+- [x] 12. La prova dell'editor che si aggiorna a ogni chip.
+- [ ] 13. «Quando scatterebbe»: la regola provata sulla settimana di previsione. **Non si fa**
+  (committente, 14 ott 2026): vedi «Punto 8».
+
+### Cosa è cambiato
+
+- **Punto 1.** `ui/components/SegmentedGroup.kt`: `SegmentedGroup` (una lista di righe, un
+  segmento `surfaceContainer` ciascuna, 2 dp fra l'una e l'altra) e `segmentShape`, che era del
+  Cielo e ora è di tutti (il Cielo e la guida lo importano da lì). In Avvisi l'interruttore delle
+  allerte con la sua soglia, i quattro pronti all'uso e le regole sono gruppi di segmenti, senza
+  filetti; le regole erano card sciolte da 24 dp. Impostazioni passa ai segmenti nello stesso
+  cambio: copiava il gruppo di Avvisi perché le due schermate sembrassero una app sola. Le card
+  che stanno da sole (la striscia del giorno, la risposta del bollettino, la guida, l'anteprima
+  dell'aspetto, la privacy) prendono l'angolo delle card del Cielo, 28 dp.
+- **Punto 2.** Con un'allerta in vigore, Avvisi disegna `ActiveWarningCard` e non più il banner
+  di Oggi: card da 28 dp nel contenitore del livello, la zona in alto con il segno, i pericoli
+  in `headlineSmall`, i giorni, chi l'ha detto; apre lo stesso foglio. «Nessuna allerta» e i tre
+  stati d'attesa sono la stessa card da 28 dp su `surfaceContainerHigh`.
+- **Punto 3.** La fascia dei tre avvisi a orario («15–17», «6–12», «18–23») sta sopra
+  l'interruttore, `titleMedium` tabellare; la frequenza chiude la descrizione. Le stringhe
+  `alert_summary_when`, `alert_evening_when` e `warning_switch_when` perdono le ore, che dicono
+  la colonna.
+- **Punto 4.** Nome della riga in `bodyLarge`, righe sotto in `bodyMedium` `onSurfaceVariant`,
+  etichetta di card in `labelLarge` `primary`, «Parti da un'idea» come i titoli dei giorni del
+  Cielo.
+- **Punto 5.** `ruleIcon` cerca prima l'idea con le stesse condizioni, lo stesso confronto che
+  scrive «Già aggiunto».
+- **Punto 6.** `RuleText.sentenceParts`: due condizioni sulla stessa grandezza sono una frase,
+  «fra 5° e 26°» per almeno/al massimo, «sopra 0° e sotto 5°» per le due strette; le soglie sono
+  pezzi a parte, che la card scrive in `SemiBold` e `onSurface`. La guida dice la card in cima ad
+  Avvisi.
+
+### Decisioni e deviazioni
+
+- **Le ore sopra l'interruttore, non accanto al titolo** come nella revisione: la colonna del
+  testo di una riga di Avvisi è di 180 dp a 360 (la riga ha il disegno da 36 e l'interruttore da
+  52), e nella prova «Il riepilogo del mattino» con «6–12» accanto andava a capo. Sopra
+  l'interruttore le ore stanno comunque in colonna, sul bordo della riga.
+- **«6–12» e non «06:00–12:00»**: sono le ore della striscia del giorno subito sopra (0, 6, 12, 18,
+  24), e un orario intero per capo non ci sta nella colonna dell'interruttore. Le fasce sono
+  finestre, non minuti: il riepilogo arriva quando gira l'aggiornamento dentro la fascia.
+- **«Fra» solo per almeno e al massimo**: sono i due limiti che la parola dice esattamente.
+  Due limiti stretti tengono le loro parole («sopra 0° e sotto 5°»), con la grandezza detta una
+  volta; due limiti che non lasciano niente in mezzo non si chiamano intervallo. Cambiano solo
+  le parole: la regola salvata è la stessa, e le righe della notifica (una per condizione, con la
+  sua lettura) non cambiano.
+- **Impostazioni nello stesso cambio**: con un gruppo diverso da Avvisi e dal Cielo l'app
+  avrebbe avuto due modi di raggruppare le righe, che è il difetto del punto 1.
+- **L'anteprima dell'aspetto resta una card a sé** sopra il gruppo dell'aspetto, non il suo primo
+  segmento: è un disegno, non una scelta.
+
+### Come è stato verificato
+
+- `RuleSentenceTest` (Robolectric, italiano): la corsa dice «la temperatura adesso fra 5° e 26°»
+  con le tre soglie come pezzi a parte; la corsa al freddo «sopra 0° e sotto 5°»; due limiti che
+  non lasciano niente in mezzo non diventano «fra»; una regola con una condizione per grandezza
+  si legge come prima.
+- Avvisi disegnata con Robolectric a 360 dp in italiano, in chiaro e in scuro, con due regole,
+  al primo avvio e con un'allerta arancione e gialla in vigore; Impostazioni in chiaro. Guardate
+  immagine per immagine; le immagini del README rigenerate e guardate.
+- Suite completa e lint.
+
+### Punti 7, 9 e 10 (committente, 14 ott 2026)
+
+Chiesti dopo i primi sei, nella stessa PR.
+
+**Cosa è cambiato**
+
+- **Punto 7.** `AlertsHero`: una card da 28 dp su `surfaceContainerHigh` in testa alla pagina, dove
+  c'erano «Quando arrivano» e, sotto il titolo «Allerte ufficiali», la card dello stato. In alto la
+  risposta delle allerte (`WarningAnswer`, uno scheletro per ogni stato: segno e zona, la
+  risposta, ciò che la regge); con un'allerta in vigore quel blocco prende il contenitore del
+  livello per tutta la larghezza della card. Sotto, solo con un avviso a orario acceso, la fascia
+  in cui il telefono può suonare per prima (`NextWindowRow`, sul modello della card del prossimo
+  momento) e la striscia del giorno, che perde la sua card e il suo titolo (`alerts_day_title`
+  tolta). `nextWindow` in `NextWindow.kt` sceglie la fascia: quella aperta adesso, altrimenti la
+  prossima di oggi, altrimenti la prima di domani.
+- **Punto 9.** `ExtendedFloatingActionButton` «Nuovo avviso» in uno `Scaffold`, esteso in cima e
+  ridotto all'icona quando si scorre, assente al massimo delle regole. Apre `IdeasSheet`: «Da zero»
+  in testa, poi «Parti da un'idea» e le idee come righe del catalogo del Cielo. La fila delle idee
+  sulla pagina resta solo con «I tuoi» vuoto. L'idea vuota si chiama «Da zero» («From scratch»),
+  perché «Nuovo avviso» è la parola del FAB.
+- **Punto 10.** Niente più finestra di conferma (`rule_delete_confirm_*` tolte): «Elimina questo
+  avviso» chiude il foglio e mostra ««Bici» eliminato · Annulla», `Long`. `RuleStore.restore`
+  rimette la regola com'era e dov'era, con il suo id; `AlertsViewModel.restore` la chiama.
+- Guida: «I tuoi» dice che «Nuovo avviso» apre le idee e «Da zero», e che l'eliminazione si
+  annulla. VISION §5.4 allineata.
+
+**Decisioni e deviazioni**
+
+- **La regola torna con il suo id**, non con uno nuovo. Gli id non si riciclano perché una regola
+  nuova non erediti lo stato di una tolta; qui è la stessa regola che torna, e con il suo id
+  ritrova i suoi latch e le impronte di ciò che ha già mandato oggi, quindi non scatta una seconda
+  volta. Torna nella sua posizione, e non torna se nel frattempo la lista è piena.
+- **Torna com'era nel foglio**, nome e messaggio non ancora salvati compresi: è quello che il
+  lettore aveva davanti quando ha premuto «Elimina».
+- **Il prossimo è una fascia, non un avviso.** I riepiloghi arrivano una volta dentro la loro
+  fascia e la pagina non sa se quello di oggi è già arrivato: dice le ore in cui il telefono può
+  suonare, che sa, e non promette che suonerà. Le regole del lettore con orari propri non entrano
+  nella riga: le loro ore sono sulla loro card (e il punto 8 non le porta nella striscia).
+- **«Il bollettino»** come nome della fascia delle 15–17 nella riga e nella descrizione della
+  striscia: «Avvisami delle allerte», il titolo dell'interruttore, è un comando e non il nome di
+  qualcosa che arriva, e «Il bollettino delle allerte» andava a capo a 360 dp.
+- **La fila delle idee resta come stato vuoto**, come dice la revisione: senza, «I tuoi» vuoto
+  sarebbe un titolo sopra il nulla; con una regola, le idee sono nel foglio del FAB.
+- **Gli stati d'attesa sotto «Allerte ufficiali»**: senza una zona da nominare l'etichetta del
+  blocco dice di cosa si sta parlando, e la risposta resta in `titleMedium`, perché «Ancora nessun
+  bollettino» non è una risposta da leggere da lontano.
+
+**Come è stato verificato**
+
+- `NextWindowTest`: prima dell'alba la fascia del mattino oggi, dentro una fascia quella aperta
+  fino al suo ultimo minuto, dopo l'ultima la prima di domani, fasce spente assenti, niente
+  acceso niente detto. `RuleStoreTest`: `restore` rimette la regola al suo posto con il suo id, e
+  il prossimo id resta nuovo; non la raddoppia e non passa il massimo.
+- Avvisi disegnata con Robolectric a 360 dp in italiano: in chiaro con due regole, in scuro con
+  un'allerta arancione e «I tuoi» vuoto, in attesa del bollettino alle 22, il foglio delle idee,
+  la snackbar con il FAB sollevato. Guardate immagine per immagine; le immagini del README
+  rigenerate e guardate.
+- Suite completa e lint.
+
+### Punti 11 e 12 (committente, 14 ott 2026)
+
+Chiesti dopo il 7, il 9 e il 10, nella stessa PR.
+
+**Cosa è cambiato**
+
+- **Il motore dice perché no.** `RuleCheck.Passes` da `data object` a `data class Passes(failed,
+  value)`: la prima condizione che non tiene e ciò che ha letto. `evaluate` non cambia (il ramo è
+  `is RuleCheck.Passes`); `RulePreview.WouldPass` porta gli stessi due campi.
+- **Punto 11.** Ogni card di regola ha una riga di stato sotto la frase e gli orari: «Adesso sì»,
+  «Adesso sì, ma fuori orario fino alle 20:00» (o «fino a domani alle 7:12»), «Adesso no · è 19,7°,
+  serve sotto 5°», «Adesso non si può dire · l'indice europeo dell'aria adesso non ha un valore».
+  Un punto pieno quando la regola tiene, un anello quando no o non si sa, la parola in `SemiBold`
+  `onSurface`, il resto in `onSurfaceVariant`. Senza previsione per il luogo la riga non c'è.
+  `AlertsViewModel` legge ogni regola contro il report in cache (`ruleReading`, la stessa funzione
+  della prova) e di nuovo ogni minuto mentre la pagina è guardata.
+- **Punto 12.** Il pulsante «Prova adesso» e lo scorrimento fino alla risposta non ci sono più: la
+  risposta sta in testa al foglio, sopra il nome (`EditorAnswer`, la riga della card e sotto
+  «Direbbe: «…»»), e si ricalcola a ogni chip, agli orari e al messaggio, quest'ultimo dopo 300 ms
+  senza battute. Le stringhe `rule_preview_action`, `_fires`, `_passes`, `_unavailable` e
+  `_closed*` sono tolte; la guida («È vero adesso?») dice la riga sulla card e la risposta viva.
+
+**Decisioni e deviazioni**
+
+- **Segno e parola, niente colore**, come chiedeva la revisione: «vera» non vuol dire «bella», e i
+  colori dei verdetti del Cielo qui direbbero una cosa che la riga non dice.
+- **La grandezza si nomina solo se la regola ne guarda più d'una**: su «la temperatura adesso
+  sotto 5°» la riga «è 19,7°, serve sotto 5°» non ha bisogno del soggetto, che era la terza
+  ripetizione di «adesso» sulla card.
+- **«serve al massimo 20%» da stringhe proprie** (`rule_need_*`) e non dalle parole dei selettori:
+  in inglese il selettore dice «is at most», e «it needs is at most 20%» non è una frase (visto
+  nella prova in inglese).
+- **Il messaggio nella chiave della risposta**, ma dopo una pausa: non cambia se la regola scatta,
+  cambia ciò che la risposta cita, e la risposta deve citare quello che si sta scrivendo.
+- **Ogni minuto, solo la lettura**: le regole, le impostazioni e la storia si rileggono quando
+  cambiano, come prima; il minuto rifà soltanto l'aritmetica sul report già in memoria, perché
+  `next_6h` scorre con l'orologio e una fascia si apre e si chiude. Niente gira a pagina chiusa.
+- **Una regola spenta mostra lo stesso il suo stato**: dice se le condizioni tengono, che è ciò che
+  serve per tararla prima di riaccenderla.
+
+**Come è stato verificato**
+
+- `RuleEngineTest`: la condizione riportata è quella che non tiene, la prima quando non ne tiene
+  nessuna. `RunTemplatesTest`: la corsa sotto la pioggia è zitta per la pioggia, con il 60% letto.
+  `RuleNowTest` (Robolectric, italiano): le quattro forme della riga, la virgola dei decimali, la
+  forma senza soggetto, `watchesSeveral`.
+- Avvisi disegnata a 360 dp in italiano in chiaro e in inglese in scuro con cinque regole (vera,
+  vera fuori orario, falsa su una grandezza, falsa sulla qualità dell'aria, le due delle idee); le
+  quattro risposte dell'editor disegnate a parte. Guardate immagine per immagine; l'immagine del
+  README dei tuoi avvisi rigenerata e guardata.
+- Suite completa e lint.
+
+### Punto 8 (committente, 14 ott 2026)
+
+Della proposta resta solo la parte di forma: la striscia del giorno ha le tacche delle ore intere e
+«adesso» come la striscia della notte del Cielo, una linea sottile attraverso il binario con un
+punto sotto (prima era il disco del nastro della luce). Le due strisce si leggono allo stesso modo.
+
+- **Senza la seconda corsia con le ore dei tuoi avvisi.** Dopo i punti 7 e 11 ogni card dice le sue
+  ore e se è fuori orario adesso: la corsia avrebbe ripetuto la stessa cosa più vaga, un avviso
+  «con la luce» accende quasi tutto il giorno, e quelle ore dicono quando un avviso può parlare,
+  non quando parlerà. Servirebbe solo a chi ha molti avvisi su orari diversi.
+- **Senza il punto 13.** Prevedere «probabilmente domani verso le 8» è una promessa su una
+  previsione che cambia, con un controllo che gira a intervalli e variabili (l'aria) senza un
+  valore ora per ora; la riga del punto 11 risponde già a «perché non mi arriva».
+- **Le tacche dalle 1 alle 23**, a 5 dp sul fondo del binario, `onSurface` al 30%, sopra le fasce:
+  le ore 0 e 24 sono gli estremi del binario. Il punto di «adesso» sta all'altezza del tratteggio
+  delle ore silenziose e si distingue da esso per forma (un disco pieno contro trattini di 2 dp).
+
+**Come è stato verificato**
+
+- Avvisi disegnata a 360 dp in chiaro e in scuro, di giorno e nelle ore silenziose; l'immagine del
+  README degli avvisi rigenerata e guardata. Suite completa e lint.
+
 ## Diario: l'hero della settimana e le forme del Cielo (committente, 14 ott 2026)
 
 Il committente ha chiesto una revisione del Diario (grafica e UI/UX) per renderlo coerente con il

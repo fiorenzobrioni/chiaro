@@ -85,6 +85,23 @@ class RuleStore(
         }
     }
 
+    /**
+     * Puts back a rule [remove] took away, as it was and where it was ([index], clamped):
+     * the «Annulla» of a deletion (the Alerts review, point 10, 14 ott 2026). The rule keeps
+     * its own id. That is not a recycled id, because nothing else ever had it: it is the same
+     * rule coming back, so its latch and the alerts it already sent today are its own again
+     * and it does not fire a second time. A no-op when the id is already there or the list is
+     * at [MaxRules] (a rule added while the snackbar was up).
+     */
+    suspend fun restore(rule: NotificationRule, index: Int) {
+        dataStore.edit { prefs ->
+            val rules = decode(prefs)
+            if (rules.size >= MaxRules || rules.any { it.id == rule.id }) return@edit
+            val at = index.coerceIn(0, rules.size)
+            prefs[RulesJson] = json.encodeToString(rules.take(at) + rule + rules.drop(at))
+        }
+    }
+
     private fun decode(prefs: Preferences): List<NotificationRule> =
         prefs[RulesJson]
             ?.let { runCatching { json.decodeFromString<List<NotificationRule>>(it) }.getOrNull() }
