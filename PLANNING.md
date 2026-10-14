@@ -13128,3 +13128,30 @@ Punto 6 dell'ordine della review del Diario, nella parte che il committente ha s
 - `JournalChoiceTest`: le due grandezze sono una scelta sola; la riga apre il capitolo.
 - La pagina disegnata (IT chiaro, EN scuro) con il foglio della guida aperto, guardata.
 - Suite completa e lint.
+
+## La guida e il README dopo le revisioni di Avvisi e Diario (committente, 14 ott 2026)
+
+Il committente ha chiesto di verificare la guida nell'app e il `README.md` dopo le due revisioni
+(PR #65, Diario, e #66, Avvisi). Le due PR avevano già aggiornato i paragrafi che toccavano; il
+controllo, riga per riga contro le schermate, ha trovato quello che restava indietro.
+
+- [x] **Avvisi, l'apertura del capitolo** diceva «tre gruppi»: ora la pagina apre con una card che
+  risponde (le allerte, la fascia in cui il telefono può suonare per prima, la striscia del
+  giorno), poi i gruppi e il pulsante «Nuovo avviso». Il paragrafo lo dice in quell'ordine.
+- [x] **«È vero adesso?»** diceva «di quanto» una condizione non tiene: la riga sulla card dice il
+  valore letto e quello che serve, e anche «fuori orario fino alle…», che la guida non nominava.
+- [x] **Le allerte ufficiali**: l'interruttore «Avvisami delle allerte» con la sua soglia (giallo o
+  arancione, una notifica per bollettino) non era nella guida, ed è ora nello stesso gruppo della
+  card.
+- [x] **Diario, l'apertura del capitolo** diceva che il Diario è «il registro letto come prosa»:
+  dopo la revisione il registro è la terza parte della pagina. Il paragrafo dice le tre parti, e i
+  tre paragrafi seguono l'ordine della pagina (`JournalChapter`): la settimana, com'è andata la
+  previsione, cosa c'è scritto. «Come si muove la settimana» parte dalla risposta in cima e dice
+  «Ancora presto».
+- [x] **«Com'è andata la previsione»** non aveva un paragrafo (c'è dal 23 set): ora ce l'ha, con
+  la ragione per cui non è un voto. La riga «Come si legge il diario» ne dice le tre parti.
+- [x] Una riga di un avviso scattato apre il suo **editor** in Avvisi, non la sua card.
+- [x] `README.md`: le righe delle funzioni di Avvisi e Diario dicono lo stato di ogni avviso e la
+  risposta della settimana. Le didascalie e le immagini erano già giuste (#66 le aveva
+  rigenerate); l'immagine della guida mostra l'inizio, che non cambia, quindi nessuna da
+  rigenerare.

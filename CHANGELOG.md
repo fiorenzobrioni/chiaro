@@ -68,6 +68,10 @@ sections are a normal size and live here alone.
 - **Rain or highs, one tap.** The Journal's choice between the two is now a single
   two-part button, and a «How to read the journal» row under the week opens the guide's
   chapter about it.
+- **The guide follows the new pages.** Its Alerts chapter starts from the card at the top,
+  says what the line «True right now» tells you and what the warnings switch sends; its
+  Journal chapter walks the page in its own order, from the week to «How the forecast did»,
+  which it now explains, to what happened.
 - **Undo on the Sky screen.** Adding or removing a moment from its page now shows a message
   with «Undo», and undoing a removal brings the moment back with its own reminder.
 - **An easier place switcher.** On Sky, Alerts and Journal the whole title is now the button
