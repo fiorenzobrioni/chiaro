@@ -2,13 +2,25 @@ package com.callbackdev.chiaro.ui.journal
 
 import com.callbackdev.chiaro.ui.components.TabHeader
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.CircleShape
@@ -1053,9 +1065,20 @@ private fun DayStorySheet(
  * OWN ramp — whether Saturday got "better" is a judgement, and the judgement lives in
  * the sentence underneath, never in the color. A slot no fetch landed in, and a cell
  * whose fetch did not cover that day, are both drawn as absence (hairline outline),
- * never as a zero. A tap, or a long press, opens the numbers.
+ * never as a zero. A tap opens the numbers.
+ *
+ * Since the Journal's review (C.1, 14 ott 2026) the grid is also explored with a finger,
+ * the gesture the Sky's night strip has: a horizontal drag starts at once (the page
+ * scrolls vertically, so the two never compete), holding still needs the long press. The
+ * square under the finger is ringed, its row and column stay lit while the rest dims,
+ * and the line over the strip reads it: which day, from which update, with both numbers.
+ * Lifting the finger brings the hint back. Every square crossed is a light tick. It
+ * answers «when did Saturday change?», which the colors showed and nothing said.
+ *
+ * To a screen reader each day is an adjustable control over the updates, whose state is
+ * that square's reading (the newest until moved): the strip is no longer a picture
+ * described in one sentence.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun DriftStrip(
     drift: DriftModel,
@@ -1085,21 +1108,61 @@ private fun DriftStrip(
     // One announcement for the whole strip: the cells carry no text, so without this
     // TalkBack would read seven dates and nothing about what is drawn beside them.
     val stripDescription = stringResource(R.string.journal_drift_a11y, metricName, window)
+    val scheme = MaterialTheme.colorScheme
+    var scrub by remember(drift) { mutableStateOf<DriftCell?>(null) }
+    val haptics = LocalHapticFeedback.current
+    val latestScrub by rememberUpdatedState(scrub)
+    fun scrubTo(cell: DriftCell?) {
+        val previous = latestScrub
+        if (cell != null && previous != null && cell != previous) {
+            haptics.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+        }
+        scrub = cell
+    }
+    val lastCol = drift.columns.lastIndex
+    // The words for every day's reading, at the square each day stands on: the one under
+    // the finger for its day, the newest for the others. A day's control states it.
+    val readings = drift.dates.indices.map { row ->
+        val col = scrub?.takeIf { it.row == row }?.col ?: lastCol
+        driftReadingText(driftReading(drift, DriftCell(row, col)), metric, zone, locale, timeFmt, units)
+    }
+    val dayNameFmt = remember(locale) { DateTimeFormatter.ofPattern("EEEE d", locale) }
     Column(
         verticalArrangement = Arrangement.spacedBy(2.dp),
         modifier = Modifier
             .fillMaxWidth()
-            // Both gestures open the table. An empty onClick left a ripple that did
-            // nothing and, worse, gave TalkBack a "double tap to activate" for an
-            // action that was not there. The margins are the card's now.
-            .combinedClickable(onClick = onOpenTable, onLongClick = onOpenTable)
+            // The tap opens the table. The long press used to open it too; it is the
+            // gesture that holds a square now, as on the Sky's night strip.
+            .clickable(onClick = onOpenTable)
             .semantics(mergeDescendants = true) { contentDescription = stripDescription }
     ) {
+        // The line over the strip (review of the Journal, A.8 with C.1): what to do with it
+        // while nobody touches it, the square under the finger while somebody does. Two
+        // lines kept, so a reading that wraps does not move the strip under the finger.
+        // Silent to a screen reader: each day's control carries the same words.
+        val reading = scrub?.let { cell ->
+            stringResource(
+                R.string.journal_scrub_line,
+                drift.dates[cell.row].format(dayNameFmt).capitalized(locale),
+                readings[cell.row]
+            )
+        }
+        Text(
+            text = reading ?: stringResource(R.string.journal_scrub_hint),
+            style = MaterialTheme.typography.labelLarge.tabular(),
+            color = if (reading != null) scheme.onSurface else scheme.onSurfaceVariant,
+            minLines = 2,
+            maxLines = 2,
+            modifier = Modifier
+                .padding(bottom = 4.dp)
+                .clearAndSetSemantics { }
+        )
         // The mark's slot is added to every row or to none, so the cells stay in one
         // grid; a week with nothing freezing in it draws exactly the strip it drew
         // before this existed.
         val marked = drift.frostC.any { it != null }
         val labelWidth = (if (marked) 68.dp else 52.dp).forText()
+        val labelWidthPx = with(LocalDensity.current) { labelWidth.toPx() }
         // The time axis, said at its two ends (design review, 23 set 2026): «oldest ← →
         // newest» was a sentence under the legend, and a grid read before its axis is a
         // grid read backwards.
@@ -1108,82 +1171,142 @@ private fun DriftStrip(
             Text(
                 text = drift.oldest.atZone(zone).format(dayFmt),
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = scheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f)
             )
             Text(
                 text = stringResource(R.string.journal_drift_axis_latest),
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = scheme.onSurfaceVariant
             )
         }
-        drift.dates.forEachIndexed { row, date ->
-            val named = date == highlight
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                // The day the hero's word names, picked out on its own row. On the lowest
-                // container since the hero moved to `surfaceContainerHigh` (14 ott 2026):
-                // the highest, one step from that ground, all but vanished in the light dress.
-                modifier = if (named) {
-                    Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                } else {
-                    Modifier
-                }
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    // §10: «Sab 13» in the reader's type, not in 52 fixed dp.
-                    modifier = Modifier.width(labelWidth)
-                ) {
-                    Text(
-                        text = date.format(dayFmt),
-                        style = if (named) {
-                            MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                        } else {
-                            MaterialTheme.typography.labelSmall
-                        },
-                        color = if (named) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 4.dp)
+        val rows = drift.dates.size
+        val cols = drift.columns.size
+        Column(
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier
+                .pointerInput(drift) {
+                    fun at(p: Offset) = driftCellAt(p.x, p.y, size.width.toFloat(), size.height.toFloat(), labelWidthPx, rows, cols)
+                    detectHorizontalDragGestures(
+                        onDragStart = { scrubTo(at(it)) },
+                        onDragEnd = { scrubTo(null) },
+                        onDragCancel = { scrubTo(null) },
+                        onHorizontalDrag = { change, _ ->
+                            change.consume()
+                            scrubTo(at(change.position))
+                        }
                     )
-                    if (drift.frostC[row] != null) {
-                        Icon(
-                            imageVector = ChiaroIcons.frost,
-                            // The strip speaks once, and the clause under it names
-                            // these days in words: a glyph is never the only carrier.
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(12.dp)
+                }
+                .pointerInput(drift) {
+                    fun at(p: Offset) = driftCellAt(p.x, p.y, size.width.toFloat(), size.height.toFloat(), labelWidthPx, rows, cols)
+                    detectDragGesturesAfterLongPress(
+                        onDragStart = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            scrubTo(at(it))
+                        },
+                        onDragEnd = { scrubTo(null) },
+                        onDragCancel = { scrubTo(null) },
+                        onDrag = { change, _ ->
+                            change.consume()
+                            scrubTo(at(change.position))
+                        }
+                    )
+                }
+        ) {
+            drift.dates.forEachIndexed { row, date ->
+                val named = date == highlight
+                val held = scrub?.row == row
+                val current = scrub?.takeIf { it.row == row }?.col ?: lastCol
+                val dayName = date.format(dayNameFmt).capitalized(locale)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    // The day the hero's word names, picked out on its own row. On the lowest
+                    // container since the hero moved to `surfaceContainerHigh` (14 ott 2026):
+                    // the highest, one step from that ground, all but vanished in the light dress.
+                    modifier = (
+                        if (named) {
+                            Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(scheme.surfaceContainerLowest)
+                        } else {
+                            Modifier
+                        }
+                        )
+                        // A day is a control over the updates, one step per column.
+                        .semantics(mergeDescendants = true) {
+                            contentDescription = dayName
+                            stateDescription = readings[row]
+                            progressBarRangeInfo = ProgressBarRangeInfo(
+                                current = current.toFloat(),
+                                range = 0f..lastCol.toFloat(),
+                                steps = (cols - 2).coerceAtLeast(0)
+                            )
+                            setProgress { target ->
+                                scrub = DriftCell(row, target.roundToInt().coerceIn(0, lastCol))
+                                true
+                            }
+                        }
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        // §10: «Sab 13» in the reader's type, not in 52 fixed dp.
+                        modifier = Modifier.width(labelWidth)
+                    ) {
+                        Text(
+                            text = date.format(dayFmt),
+                            style = if (named || held) {
+                                MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                            } else {
+                                MaterialTheme.typography.labelSmall
+                            },
+                            color = if (named || held) scheme.onSurface else scheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                        if (drift.frostC[row] != null) {
+                            Icon(
+                                imageVector = ChiaroIcons.frost,
+                                // The strip speaks once, and the clause under it names
+                                // these days in words: a glyph is never the only carrier.
+                                contentDescription = null,
+                                tint = scheme.onSurfaceVariant,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
+                    }
+                    drift.columns.indices.forEach { col ->
+                        val color = when (metric) {
+                            DriftMetric.RAIN -> drift.rain[row][col]
+                                ?.let { ChiaroTheme.colors.rainAt(it) }
+                            DriftMetric.HIGH -> drift.highC[row][col]
+                                ?.let { ChiaroTheme.colors.temperatureAt(it) }
+                        }
+                        val picked = scrub == DriftCell(row, col)
+                        // The square's row and column stay lit, the rest steps back.
+                        val lit = scrub.let { it == null || it.row == row || it.col == col }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(20.dp)
+                                .padding(1.5.dp)
+                                .alpha(if (lit) 1f else DimmedCell)
+                                .clip(CellShape)
+                                .let { base ->
+                                    if (color != null) {
+                                        base.background(color)
+                                    } else {
+                                        base.border(
+                                            width = 0.5.dp,
+                                            color = scheme.outlineVariant,
+                                            shape = CellShape
+                                        )
+                                    }
+                                }
+                                .then(
+                                    if (picked) Modifier.border(2.dp, scheme.onSurface, CellShape) else Modifier
+                                )
                         )
                     }
-                }
-                drift.columns.indices.forEach { col ->
-                    val color = when (metric) {
-                        DriftMetric.RAIN -> drift.rain[row][col]
-                            ?.let { ChiaroTheme.colors.rainAt(it) }
-                        DriftMetric.HIGH -> drift.highC[row][col]
-                            ?.let { ChiaroTheme.colors.temperatureAt(it) }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(20.dp)
-                            .padding(1.5.dp)
-                            .clip(CellShape)
-                            .let { base ->
-                                if (color != null) {
-                                    base.background(color)
-                                } else {
-                                    base.border(
-                                        width = 0.5.dp,
-                                        color = MaterialTheme.colorScheme.outlineVariant,
-                                        shape = CellShape
-                                    )
-                                }
-                            }
-                    )
                 }
             }
         }
@@ -1193,10 +1316,88 @@ private fun DriftStrip(
                 R.plurals.journal_drift_every, drift.columnHours.toInt(), drift.columnHours.toInt()
             ) + " · " + tableHint,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = scheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp)
         )
     }
+}
+
+/** How far a square outside the held one's row and column steps back. */
+private const val DimmedCell = 0.3f
+
+private fun String.capitalized(locale: Locale): String =
+    replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+
+/** One square of the strip: a target day's row, an update's column. */
+internal data class DriftCell(val row: Int, val col: Int)
+
+/**
+ * The square under a finger at ([x], [y]) on a grid [width] by [height] whose first
+ * [labelWidth] are the days' names: rows share the height, columns share what the names
+ * leave. Clamped, so a finger past an edge holds the edge's square rather than nothing.
+ */
+internal fun driftCellAt(
+    x: Float,
+    y: Float,
+    width: Float,
+    height: Float,
+    labelWidth: Float,
+    rows: Int,
+    cols: Int
+): DriftCell {
+    val cellsWidth = (width - labelWidth).coerceAtLeast(1f)
+    val col = (((x - labelWidth) / cellsWidth) * cols).toInt().coerceIn(0, cols - 1)
+    val row = ((y / height.coerceAtLeast(1f)) * rows).toInt().coerceIn(0, rows - 1)
+    return DriftCell(row, col)
+}
+
+/**
+ * What a square says: its day, the update's moment — the fetch's own, or for a slot no
+ * fetch landed in, where that slot falls ([fetched] false) — and both numbers as that
+ * update forecast them, each null where it did not cover the day.
+ */
+internal data class DriftReading(
+    val date: LocalDate,
+    val at: Instant,
+    val fetched: Boolean,
+    val rainPct: Int?,
+    val highC: Double?
+)
+
+internal fun driftReading(drift: DriftModel, cell: DriftCell): DriftReading {
+    val fetchedAt = drift.columns[cell.col]
+    return DriftReading(
+        date = drift.dates[cell.row],
+        at = fetchedAt
+            ?: drift.newest.minusSeconds((drift.columns.lastIndex - cell.col) * drift.columnHours * 3600),
+        fetched = fetchedAt != null,
+        rainPct = drift.rain[cell.row][cell.col],
+        highC = drift.highC[cell.row][cell.col]
+    )
+}
+
+/** «previsione di martedì alle 15:07: pioggia 45% · massima 22°», the metric on screen
+ * first. A slot with no update and an update that did not reach the day say so. */
+@Composable
+private fun driftReadingText(
+    reading: DriftReading,
+    metric: DriftMetric,
+    zone: ZoneId,
+    locale: Locale,
+    timeFmt: DateTimeFormatter,
+    units: UnitSettings
+): String {
+    val local = reading.at.atZone(zone)
+    val day = local.format(DateTimeFormatter.ofPattern("EEEE", locale))
+    val time = local.format(timeFmt)
+    if (!reading.fetched) return stringResource(R.string.journal_scrub_empty, day, time)
+    val rain = reading.rainPct?.let { stringResource(R.string.journal_scrub_rain, Formats.percent(it, locale)) }
+    val high = reading.highC?.let {
+        stringResource(R.string.journal_scrub_high, Formats.temperature(it, units.temperature, locale))
+    }
+    val values = (if (metric == DriftMetric.RAIN) listOf(rain, high) else listOf(high, rain)).filterNotNull()
+    if (values.isEmpty()) return stringResource(R.string.journal_scrub_uncovered, day, time)
+    return stringResource(R.string.journal_scrub_reading, day, time, values.joinToString(" · "))
 }
 
 private val CellShape = RoundedCornerShape(3.dp)

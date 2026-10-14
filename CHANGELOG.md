@@ -44,6 +44,11 @@ sections are a normal size and live here alone.
   to see the bulletin, an alert that fired to open it in Alerts, and a forecast change to see
   the story of that day: each update that moved its rain or its high, the latest on top. With
   TalkBack each line is read as one, hour included.
+- **Explore the week with a finger.** In the Journal, drag along the week's strip (or hold
+  it) and the square under your finger lights up with its row and column, while the line
+  above reads it: which day, from which update, with its rain and its high. Lift the finger
+  and the strip goes back to how it was. With TalkBack each day can be adjusted update by
+  update.
 - **Undo on the Sky screen.** Adding or removing a moment from its page now shows a message
   with «Undo», and undoing a removal brings the moment back with its own reminder.
 - **An easier place switcher.** On Sky, Alerts and Journal the whole title is now the button

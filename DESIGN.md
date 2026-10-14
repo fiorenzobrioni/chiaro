@@ -1717,6 +1717,21 @@ Every line is **one node** for TalkBack: a line that opens is one by being click
 others merge their descendants. The sentence, the facts and the hour used to be three stops,
 the hour last and on its own.
 
+**The strip under a finger** (review of the Journal, point C.1, 14 ott 2026), the Sky night
+strip's gesture on a grid. A horizontal drag starts at once; holding still needs the long
+press, so a vertical scroll that begins on the strip never flashes a reading. The square
+under the finger is ringed in `onSurface` (2 dp), its row and its column stay lit and every
+other square steps back to 30%, and its day's name turns bold. The line over the strip,
+`labelLarge` tabular and two lines tall so a wrap never moves the grid under the finger,
+reads it: «Sabato 17, previsione di martedì alle 15:07: pioggia 45% · massima 22°», the
+metric on screen first; a slot no update landed in says «nessun aggiornamento verso…», an
+update that did not reach the day «non ancora nella previsione di…». With no finger down it
+is the hint, «Trascina sulla striscia per leggere ogni casella», above the strip as on the
+Sky (the review's A.8). Each square crossed is a light tick, the long press a firm one.
+Lifting the finger brings the hint back; a tap still opens the table, and the long press no
+longer does. For TalkBack each day is an adjustable control over the updates, one step per
+column, its state that square's reading (the newest until moved); the line itself is silent.
+
 **8.11 States** — empty ("no place yet", with the one action that fixes it), error (what
 failed, in plain language, and a retry), stale (§8.2), loading (a shimmer that cannot be
 mistaken for a value, §1.1).

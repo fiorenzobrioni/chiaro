@@ -12839,3 +12839,47 @@ A.6 e A.11, richiesti dal committente.
 - La storia del giorno e le righe disegnate con Robolectric (IT chiaro, EN scuro, 360 dp),
   guardate immagine per immagine.
 - Suite completa e lint.
+
+## Diario: la striscia della settimana col dito (14 ott 2026)
+
+Punto 4 dell'ordine della review del Diario: C.1, richiesto dal committente. Porta con sé
+A.8 (il suggerimento del gesto sopra la striscia).
+
+- [x] Un dito sulla striscia sceglie una casella: trascinamento orizzontale subito, pressione
+  lunga da fermo (`detectHorizontalDragGestures`, `detectDragGesturesAfterLongPress`, come
+  `NightStrip` del Cielo). `driftCellAt()` trova la casella: le righe si dividono l'altezza, le
+  colonne quello che lasciano i nomi dei giorni; oltre un bordo resta la casella del bordo.
+- [x] La casella ha un anello, la sua riga e la sua colonna restano accese e il resto scende
+  al 30%; il nome del giorno in grassetto. Un tocco leggero a ogni casella attraversata.
+- [x] La riga sopra la striscia legge la casella (`driftReading()`): giorno, aggiornamento,
+  pioggia e massima (la grandezza sullo schermo per prima); una fascia vuota e un
+  aggiornamento che non arrivava a quel giorno lo dicono. Senza dito è il suggerimento.
+- [x] TalkBack: ogni giorno è un controllo regolabile sugli aggiornamenti, lo stato è la
+  lettura della casella (la più recente finché non lo si muove).
+
+### Decisioni e deviazioni
+
+- **La pressione lunga non apre più la tabella**: è il gesto che tiene una casella, come nel
+  Cielo. Il tocco la apre ancora («la tabella resta per chi la vuole tutta»).
+- **La riga sopra, la frase dell'hero ferma.** La review diceva «alzato il dito torna la frase
+  della settimana»: la frase dell'hero non cambia mentre si esplora, cambia solo la riga sopra
+  la striscia, che torna al suggerimento. Una parola grande che salta a ogni casella sarebbe
+  rumore, e la riga è dove si guarda mentre il dito è sulla striscia.
+- **Entrambi i numeri nella lettura**, non solo quello della grandezza scelta: costa mezza
+  riga e risponde a «e la massima?» senza cambiare chip. La grandezza sullo schermo viene prima.
+- **Due righe riservate** alla lettura: in italiano a 360 dp va a capo, e una riga che cresce
+  sposterebbe la striscia sotto il dito.
+- **Un controllo per giorno per TalkBack**, non uno per tutta la griglia: una griglia è due
+  dimensioni, un controllo regolabile una sola; il giorno è la domanda («quando è cambiato
+  sabato?») e gli aggiornamenti sono i passi.
+- **A.8 fatto qui**: il suggerimento del gesto sta sopra la striscia; sotto resta «Una colonna
+  ogni 6 ore · tocca per i numeri».
+
+### Come è stato verificato
+
+- `DriftScrubTest`: la casella sotto il dito, i bordi, la lettura di una casella, di una fascia
+  vuota e di un aggiornamento che non arrivava al giorno. `JournalStripTest`: lo stato di ogni
+  giorno per TalkBack e il suo spostamento casella per casella.
+- La striscia disegnata a riposo, con una casella tenuta e con una fascia vuota, in chiaro (IT,
+  384 dp) e in scuro (EN, 360 dp), guardata immagine per immagine.
+- Suite completa e lint.

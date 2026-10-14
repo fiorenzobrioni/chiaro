@@ -513,7 +513,7 @@
     <string name="guide_journal_entries_title">What is written there</string>
     <string name="guide_journal_entries_body">How the forecast moved for the days ahead, which of your alerts fired and when, which sky moments were actually observed and with what verdict — and the updates that did not make it, with the reason. A failed update is an entry, not a silence. When a day is over, one more line closes it: what the rain was given at, and whether it rained. A line with a page behind it can be tapped: a sky moment opens its page, a warning the bulletin, one of your alerts its card in Alerts, and a changed forecast the story of that day, update by update.</string>
     <string name="guide_journal_drift_title">How the week has been moving</string>
-    <string name="guide_journal_drift_body">One row for today and each day ahead, one column per six hours, the colour on the metric\'s own scale: rain, or the highs. A slot no update landed in stays empty, so a night with the phone off looks like the gap it was. A day whose forecast minimum is at or below zero carries a mark beside its name, with those days named underneath: freezing is a threshold, not a drift, so it gets a mark and a sentence rather than a scale of its own. At the top of the page the answer in a few words, with its numbers under it: the day that moved most, its row picked out in the strip. It answers the question anyone planning a weekend actually asks — is this getting better or worse? Tap it to see the numbers behind the colours.</string>
+    <string name="guide_journal_drift_body">One row for today and each day ahead, one column per six hours, the colour on the metric\'s own scale: rain, or the highs. A slot no update landed in stays empty, so a night with the phone off looks like the gap it was. A day whose forecast minimum is at or below zero carries a mark beside its name, with those days named underneath: freezing is a threshold, not a drift, so it gets a mark and a sentence rather than a scale of its own. At the top of the page the answer in a few words, with its numbers under it: the day that moved most, its row picked out in the strip. It answers the question anyone planning a weekend actually asks — is this getting better or worse? Drag a finger along the strip, or hold it still, to read one square: the day, the update, the rain and the high. Tap it to see all the numbers behind the colours.</string>
     <string name="guide_journal_drift_caption">An example: three days, six slots, on the rain scale.</string>
 
     <string name="guide_places_title">Your places</string>
@@ -1305,6 +1305,14 @@
         <item quantity="other">One column every %d hours</item>
     </plurals>
     <string name="journal_drift_axis_latest">latest update</string>
+    <!-- The strip read with a finger (review of the Journal, C.1): the line over it, and each day's control. -->
+    <string name="journal_scrub_hint">Drag along the strip to read each square</string>
+    <string name="journal_scrub_line">%1$s, %2$s</string>
+    <string name="journal_scrub_reading">forecast from %1$s at %2$s: %3$s</string>
+    <string name="journal_scrub_empty">no update around %1$s at %2$s</string>
+    <string name="journal_scrub_uncovered">not yet in the forecast from %1$s at %2$s</string>
+    <string name="journal_scrub_rain">rain %1$s</string>
+    <string name="journal_scrub_high">high %1$s</string>
     <string name="journal_skill_title">How the forecast did</string>
     <string name="journal_skill_high">Highs: on average %1$s from the real one, over %2$d days.</string>
     <string name="journal_skill_rain">On the days it rained, rain was given %1$s on average; on the others, %2$s.</string>
