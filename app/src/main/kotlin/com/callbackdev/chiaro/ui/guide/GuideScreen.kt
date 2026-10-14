@@ -249,17 +249,7 @@ private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifi
         Caption(stringResource(R.string.guide_alerts_official_credit))
 
         Chapter(Icons.Outlined.DateRange, stringResource(R.string.guide_journal_title))
-        Paragraph(stringResource(R.string.guide_journal_p1))
-        Feature(
-            stringResource(R.string.guide_journal_entries_title),
-            stringResource(R.string.guide_journal_entries_body)
-        )
-        Feature(
-            stringResource(R.string.guide_journal_drift_title),
-            stringResource(R.string.guide_journal_drift_body)
-        )
-        DriftSample()
-        Caption(stringResource(R.string.guide_journal_drift_caption))
+        JournalChapter()
 
         Chapter(Icons.Outlined.LocationOn, stringResource(R.string.guide_places_title))
         Paragraph(stringResource(R.string.guide_places_p1))
@@ -321,6 +311,26 @@ private fun Chapter(icon: ImageVector?, text: String) {
         }
         Text(text, style = MaterialTheme.typography.titleLarge)
     }
+}
+
+/**
+ * The Journal's chapter, under its title: here, and in the sheet the Journal opens from
+ * «Come si legge il diario» (review of the Journal, A.10), so the two can never say
+ * different things. In a [Column] that spaces its children, as both callers' are.
+ */
+@Composable
+internal fun JournalChapter() {
+    Paragraph(stringResource(R.string.guide_journal_p1))
+    Feature(
+        stringResource(R.string.guide_journal_entries_title),
+        stringResource(R.string.guide_journal_entries_body)
+    )
+    Feature(
+        stringResource(R.string.guide_journal_drift_title),
+        stringResource(R.string.guide_journal_drift_body)
+    )
+    DriftSample()
+    Caption(stringResource(R.string.guide_journal_drift_caption))
 }
 
 /** Guide prose is bodyLarge (DESIGN §5): 16/24, made to be read, not scanned. */

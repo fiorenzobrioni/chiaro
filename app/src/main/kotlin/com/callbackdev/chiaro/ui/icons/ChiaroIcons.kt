@@ -601,6 +601,11 @@ object ChiaroIcons {
     // The day's timeline and the Sky screen.
     /** The rain-over glyph: a cloud with nothing falling out of it. */
     val cloud: ImageVector @Composable get() = styled(R.drawable.mc3_cloudy)
+    /** Something the app went to fetch and did not get (an update, a bulletin): a cloud
+     * crossed out, a silhouette tinted at use. Not the family's «not available», which is
+     * the letters N/A. */
+    val notReached: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_not_reached)
     val sunrise: ImageVector @Composable get() = styled(R.drawable.mc3_sunrise)
     val sunset: ImageVector @Composable get() = styled(R.drawable.mc3_sunset)
     val moonrise: ImageVector @Composable get() = styled(R.drawable.mc3_moonrise)
