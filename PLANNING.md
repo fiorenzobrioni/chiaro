@@ -12643,3 +12643,28 @@ scartato.
   → «Annulla» → la riga torna con i suoi 30 minuti; il selettore del luogo è un bersaglio di
   almeno 48 × 48 dp, e senza un luogo il titolo non è un pulsante.
 - Suite completa e lint; le immagini del README rigenerate: nessuna cambia.
+
+## La guida dopo la revisione del Cielo (committente, 14 ott 2026)
+
+Riletta per intero contro le cinque passate della revisione. Le parti già aggiornate lungo la
+strada (la striscia da esplorare, «Dove guardare», la campanella, il catalogo, la card del
+prossimo) reggono; erano rimaste indietro quattro cose.
+
+- **«Stanotte»**: la notte senza finestra ha una parola al posto del verdetto, gli orari sono in
+  grande, e la striscia ha le sue tacche, la luna color paglia e «adesso». La guida lo dice.
+- **«I prossimi momenti»**: i giorni come titoli e l'orario a destra, «La luna di oggi» che è la
+  luna di stanotte con il giorno e l'ora del suo quarto, e «Annulla» che rimette un momento
+  tolto per sbaglio con il suo promemoria.
+- **«I tuoi luoghi»**: diceva che il nome in cima a Oggi e a Cielo apre i luoghi; lo apre il
+  nome in cima a ogni schermata, ed è così anche per Avvisi e Diario.
+- **«Impostazioni»**: mancava il gruppo «Promemoria del cielo». La frase sul ripristino, nella
+  guida e nella finestra di conferma, dice ora che tornano ai valori iniziali anche i promemoria
+  del cielo, perché è vero: `SettingsStore.resetToDefaults` svuota tutto il negozio.
+- **L'esempio della riga di un momento** era una copia della riga di inizio settembre (icona di
+  26 dp in grigio, giorno e ora nella riga). Ora lo disegna `SkyRow` stessa, resa `internal` con
+  `onOpen` facoltativo e il margine come parametro: l'esempio è la riga, non una sua imitazione.
+
+**Lasciato com'è, e segnalato al committente**: `resetToDefaults` svuota anche gli
+interruttori degli avvisi pronti all'uso (`notif_*`), l'allerta ufficiale e l'opacità dei
+widget, che la frase sul ripristino non nomina. Se debba farlo, o se la frase debba dirlo, è
+una decisione sua.

@@ -79,6 +79,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -706,25 +707,28 @@ private fun NextMomentCard(
  * times of a group read down as a column.
  */
 @Composable
-private fun SkyRow(
+internal fun SkyRow(
     icon: ImageVector,
     name: String,
     photographic: Boolean,
     time: String?,
     supporting: String,
     shape: Shape,
-    onOpen: () -> Unit,
+    /** Null for a row that opens nothing: the guide's example draws this very row. */
+    onOpen: (() -> Unit)?,
     bell: (@Composable () -> Unit)?,
     verdict: (@Composable () -> Unit)?,
-    extra: String? = null
+    extra: String? = null,
+    /** The page's margin; the guide, which has its own, passes zero. */
+    inset: Dp = 16.dp
 ) {
     Column(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 1.dp)
+            .padding(horizontal = inset, vertical = 1.dp)
             .fillMaxWidth()
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .agendaRowOpens(onOpen)
+            .then(if (onOpen != null) Modifier.agendaRowOpens(onOpen) else Modifier)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -781,7 +785,7 @@ private fun SkyRow(
 }
 
 /** The segment of a group at [index] of [count]: round outside, tight inside. */
-private fun segmentShape(index: Int, count: Int): Shape {
+internal fun segmentShape(index: Int, count: Int): Shape {
     val top = if (index == 0) GroupOuter else GroupInner
     val bottom = if (index == count - 1) GroupOuter else GroupInner
     return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)

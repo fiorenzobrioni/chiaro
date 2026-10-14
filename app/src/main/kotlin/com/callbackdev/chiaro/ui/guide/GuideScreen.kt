@@ -56,7 +56,9 @@ import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
+import com.callbackdev.chiaro.ui.sky.SkyRow
 import com.callbackdev.chiaro.ui.sky.SkyText
+import com.callbackdev.chiaro.ui.sky.segmentShape
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.forText
 import java.time.LocalDate
@@ -429,37 +431,33 @@ private fun VerdictSampler() {
     }
 }
 
-/** A Sky row, built exactly as the Sky screen builds one: name, the day in a word,
- * the hour, and the verdict with its number underneath. */
+/** A Sky row, drawn by the Sky screen's own [SkyRow] (14 ott 2026): until then this was a
+ * copy, and the copy had stayed on the row of early September (a small grey glyph, the
+ * day and the hour in the line) while the screen moved on. The day is the list's heading
+ * there, so the caption says it here. */
 @Composable
 private fun MomentSample() {
     val locale = currentLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val time = LocalTime.of(6, 47).format(Formats.timeFormatter(is24h, locale))
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Icon(
-            imageVector = ChiaroIcons.sunrise,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(26.dp)
-        )
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(
-                text = stringResource(SkyText.nameRes("sun.rise")),
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Text(
-                text = stringResource(R.string.sky_day_tomorrow) + " · " + time,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+    SkyRow(
+        icon = ChiaroIcons.skyJob("sun.rise"),
+        name = stringResource(SkyText.nameRes("sun.rise")),
+        photographic = false,
+        time = time,
+        supporting = "",
+        shape = segmentShape(0, 1),
+        onOpen = null,
+        bell = null,
+        verdict = {
             VerdictChip(
                 kind = VerdictKind.PASS,
                 label = stringResource(R.string.verdict_pass),
                 evidence = stringResource(R.string.guide_verdict_evidence_pass)
             )
-        }
-    }
+        },
+        inset = 0.dp
+    )
 }
 
 /** The age chip of Today, tappable there, inert here. */
