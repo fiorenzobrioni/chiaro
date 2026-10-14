@@ -14,6 +14,14 @@ sections are a normal size and live here alone.
 
 ## [Unreleased]
 
+### Added
+
+- **Explore tonight hour by hour.** On the Sky screen, drag a finger along the night strip, or
+  hold it, and the card paints the sky of that moment, with the hour's cloud, the rain when it
+  is likely and whether the moon is up. Lift the finger and the whole night comes back. The
+  strip now also marks every hour and the present moment, and draws the moon's hours in their
+  own color with the moon in them.
+
 ### Changed
 
 - **The ribbon shows the sky.** Under the temperature and on every day of the week, the band

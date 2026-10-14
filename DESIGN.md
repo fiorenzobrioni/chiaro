@@ -1440,9 +1440,34 @@ underside so neighbouring hours read as one bank; a fixed scatter of stars showi
 where the hour is clear, dimmer where the moon is up; the dark window framed in the verdict's
 ink with its two times under its edges (one centred label when the window is too short for
 two); the clearest stretch underlined in the pass ink. Silent to a screen reader: nothing on
-it is not already a sentence above it. Until then the hero was a card in the verdict's
+it is not already a sentence above it (until 14 ott 2026, when it learned to answer a finger:
+below). Until then the hero was a card in the verdict's
 container color holding five lines of text: correct, and the least nocturnal thing on a screen
 about the night.
+
+**The strip answers a finger** (committente, 14 ott 2026). A horizontal drag along it, or a
+long press on it, asks for one instant of the night: a white cursor with a knob stands on
+the band, the line over the strip («Trascina per vedere ogni ora» while nobody touches it,
+in white at 60%) becomes that instant's reading in `labelLarge` tabular («02:05 · nuvole
+5% · senza luna»: the hour's cloud, its rain from the 20% the app prints a probability at,
+the moon), and the card's own ground repaints with the gradient of that instant (the sun
+and the moon where `AstronomyEngine` puts them then, sampled every 10 minutes by the state
+builder, and that hour's cloud and rain) through `ChiaroMotion.effects`. The moon badge drops
+to 35% while the instant has the moon below the horizon. Lifting the finger gives the whole
+night back. The time settles on the clock's five minutes (dusk and dawn reachable at the two
+ends): the forecast under it is hourly, and «02:07» would be a precision it does not have.
+Every whole hour crossed is a `SegmentFrequentTick`, the window's edges a `SegmentTick`. The
+moon in the reading is the strip's own account (the window is the moonless part of the
+night), so the line can never call set a moon the band washes. To a screen reader the strip
+is no longer silent: it is an adjustable control in whole hours whose state is the reading,
+because the hour-by-hour cloud is information no sentence above it carries.
+
+**The strip's marks** (same day, review point 8): the moon's hours are washed in
+`SkyPalette.MoonWash`, a pale straw, instead of the white the cloud hangs in (a moonlit
+clear hour and a cloudy moonless one were one grey), and carry the moon's disc in tonight's
+phase, low in the stretch, so the moon is a mark as well as a hue; a 5 dp tick stands on the
+band's floor at every whole hour; and «now», when the night is under way, is a thin white
+line through the band with a dot under it.
 
 **The moments are grouped by day** (same review): «Oggi» and «Domani» are `labelLarge`
 headings in `primary` inside the section, and the rows lose the «Domani ·» each of them

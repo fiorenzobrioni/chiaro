@@ -12326,3 +12326,78 @@ circa 45 minuti». La domanda: può essere? Il numero sì, la frase no.
   pioggia probabile e un codice sconosciuto no.
 - `AlertNotifierTest`: la riga di domani in un giorno di pioggia è «Tomorrow's peak UV 5 · In
   sunny spells, burns in about 45 minutes»; i test esistenti (domani coperto, UV 5) invariati.
+
+## Cielo: la revisione della schermata, e la notte che si esplora col dito (committente, 14 ott 2026)
+
+Il committente ha chiesto una revisione della schermata Cielo (grafica, UI/UX, aderenza a
+Material 3 Expressive) e ha deciso di attuarla tutta. Il piano, nell'ordine in cui la si fa:
+
+- [x] **La striscia della notte si esplora col dito** (il «tocco wow» della revisione).
+- [x] **I segni della striscia** (punto 8): la luna distinta dalle nuvole, le tacche delle
+  ore, «adesso».
+- [ ] «Se non stanotte, quando?»: la prossima notte buona nei giorni coperti dalla previsione.
+- [ ] La bussola «dove guardare» per le righe che hanno una direzione.
+- [ ] 1. Un hero che risponde sempre (anche la notte in cui la luna c'è tutta la notte).
+- [ ] 2. Il prossimo momento in evidenza; gli altri in una lista a gruppi.
+- [ ] 3. Gli orari in colonna.
+- [ ] 4. Il movimento: chiavi nelle liste, `animateItem`, `MotionScheme.expressive()`.
+- [ ] 5. «Aggiungi momento» come FAB esteso; i promemoria fuori dalla pagina.
+- [ ] 6. Una sola luna: la stessa percentuale e la stessa fase ovunque nella pagina.
+- [ ] 7. Le icone ripetute (gli sciami, la stella per cinque cose diverse).
+- [ ] 9. «Annulla» dopo un'aggiunta o una rimozione.
+- [ ] 10. Il bersaglio del selettore del luogo a 48 dp (la top app bar flessibile aspetta
+  `material3` 1.5 stabile: la 1.4.0 del BOM non ha `MaterialShapes`, `ButtonGroup`,
+  `FloatingToolbar` né le top app bar flessibili; ha `MotionScheme` e `ShortNavigationBar`).
+
+### Cosa è cambiato
+
+- **Un dito sulla striscia chiede un istante della notte.** Un trascinamento orizzontale
+  parte subito (la pagina scorre in verticale, i due gesti non si contendono il dito);
+  tenere fermo il dito chiede la pressione lunga, così uno scorrimento verticale che comincia
+  sulla striscia non fa lampeggiare una lettura. Sotto il dito: un cursore bianco con il suo
+  pomello; sopra la striscia, la riga che finché nessuno tocca dice «Trascina per vedere ogni
+  ora» diventa la lettura di quell'istante, «02:05 · nuvole 5% · senza luna», con la pioggia
+  dal 20% in su; e il fondo della card si ridipinge con il cielo di quell'istante: il sole e
+  la luna dove stanno allora, le nuvole e la pioggia di quell'ora. La luna nell'angolo si
+  attenua al 35% quando l'istante la ha sotto l'orizzonte. Alzato il dito, torna la notte
+  intera.
+- **I dati**: `NightHour` porta anche la probabilità di precipitazione dell'ora (nullable,
+  come ovunque); `Tonight.samples` sono il sole e la luna ogni 10 minuti dal crepuscolo
+  all'alba, calcolati da `SkyStateBuilder` con `AstronomyEngine`.
+- **I segni**: le ore della luna in `SkyPalette.MoonWash` (paglierino) e non più nel bianco
+  delle nuvole, con il disco della luna nella sua fase dentro il tratto; una tacca a ogni ora
+  intera; «adesso», quando la notte è in corso.
+- **Accessibilità**: la striscia non è più muta. Per TalkBack è un controllo regolabile a ore
+  intere, il cui stato è la lettura: le nuvole ora per ora sono un'informazione che nessuna
+  frase sopra di lei porta.
+- La guida del Cielo («Stanotte») dice il gesto, IT/EN.
+
+### Decisioni e deviazioni
+
+- **Il dito che si alza riporta la notte intera**, come i grafici a scorrimento di sistema:
+  la card parla della notte, e una lettura rimasta appesa dopo il gesto la farebbe parlare di
+  un'ora senza che nessuno lo stia chiedendo. TalkBack è l'eccezione, perché lì non c'è un
+  dito da tenere giù: la lettura scelta resta finché la si cambia.
+- **Il tempo si posa sui cinque minuti dell'orologio**: la previsione sotto è oraria, e
+  «02:07» sarebbe una precisione che non ha. Il crepuscolo e l'alba, che hanno minuti
+  dispari, si raggiungono ai due capi (entro mezzo passo da un capo, il capo).
+- **La luna della lettura è quella della striscia**, non l'altezza calcolata: la finestra è
+  la parte della notte senza luna, e la riga non può dire «luna su» sopra un tratto che la
+  banda disegna buio. L'altezza calcolata serve solo a quanto la luna schiarisce il cielo, ed
+  è tenuta sopra o sotto l'orizzonte secondo quel racconto.
+- **Un suggerimento fisso sopra la striscia** costa una riga alla card. Senza, il gesto non
+  si scopre: niente nella striscia dice che risponde al dito.
+- **La paglia e non l'oro**: l'oro si sarebbe confuso con la cornice ambra del «così così»;
+  la paglia è un riempimento tenue, la cornice una linea piena.
+
+### Come è stato verificato
+
+- `TonightNightTest`: la lettura prende nuvole e pioggia dell'ora che contiene l'istante; un'ora
+  che la previsione non copre si legge senza nuvole, non con uno zero; la luna della lettura
+  è quella della striscia, e il bordo della finestra è buio; un punto della striscia si posa
+  sui cinque minuti e non esce mai dalla notte; le tacche sono le ore intere strettamente
+  dentro la notte; il cielo tra due campioni si legge tra i due; la notte è campionata dal
+  crepuscolo all'alba, alba compresa.
+- La card disegnata con Robolectric a metà gesto (ora con la luna, ora buia, notte di luna
+  piena, «adesso» nella notte), guardata immagine per immagine; le immagini del README
+  rigenerate e guardate.

@@ -5,6 +5,7 @@ import com.callbackdev.chiaro.data.SkySubscription
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
@@ -92,7 +93,14 @@ data class Tonight(
      * waxing. For the phase the card draws; null with [moonIlluminationPct]. */
     val moonElongationDeg: Double? = null,
     /** South of the equator the moon's lit limb is mirrored. */
-    val southern: Boolean = false
+    val southern: Boolean = false,
+    /**
+     * Where the sun and the moon stand over the night, every [NightSampleStep] (14 ott
+     * 2026): what the card paints when a finger asks for one moment of the night rather
+     * than the whole of it, so the sky it shows at 02:00 is the one computed for 02:00.
+     * Empty when there is no night.
+     */
+    val samples: List<NightSample> = emptyList()
 ) {
     /** True when the moon is what opens the window late: the night started earlier. */
     val moonHeldTheStart: Boolean
@@ -103,8 +111,17 @@ data class Tonight(
         get() = window?.end != null && night?.end != null && window.end!!.isBefore(night.end!!)
 }
 
-/** One hour of the night strip: when it starts, and how much of the sky is cloud. */
-data class NightHour(val at: Instant, val cloudPct: Int)
+/** One hour of the night strip: when it starts, how much of the sky is cloud, and the
+ * chance of precipitation where the model gives one (it is nullable all the way to the
+ * screen, CLAUDE.md). */
+data class NightHour(val at: Instant, val cloudPct: Int, val precipPct: Int? = null)
+
+/** The sun's and the moon's altitude at one instant of the night, in degrees. */
+data class NightSample(val at: Instant, val sunAltitudeDeg: Double, val moonAltitudeDeg: Double)
+
+/** Ten minutes: a sky that changes slower than that cannot be told apart by eye, and a
+ * fourteen-hour polar night is still under a hundred samples. */
+val NightSampleStep: Duration = Duration.ofMinutes(10)
 
 /** When a moment's occurrence lands — the word the row prints before the time. */
 enum class MomentTiming { NOW, TODAY, TOMORROW }
@@ -294,6 +311,7 @@ object SkyStateBuilder {
         }
         val moonPct = moonLight?.let { (it.illuminatedFraction * 100).roundToInt() }
         val hours = nightHours(night, hourly)
+        val samples = nightSamples(night, city.coordinates)
         val at = upcoming.at ?: return Tonight(
             window = null,
             verdict = null,
@@ -302,7 +320,8 @@ object SkyStateBuilder {
             moonIlluminationPct = moonPct,
             hours = hours,
             moonElongationDeg = moonLight?.elongation,
-            southern = city.coordinates.lat < 0.0
+            southern = city.coordinates.lat < 0.0,
+            samples = samples
         )
         return Tonight(
             window = at,
@@ -312,8 +331,21 @@ object SkyStateBuilder {
             clearStretch = clearStretch(at),
             hours = hours,
             moonElongationDeg = moonLight?.elongation,
-            southern = city.coordinates.lat < 0.0
+            southern = city.coordinates.lat < 0.0,
+            samples = samples
         )
+    }
+
+    /** The sun and the moon over [night], every [NightSampleStep] and at dawn itself. */
+    internal fun nightSamples(night: SkyOccurrence.At?, coordinates: Coordinates): List<NightSample> {
+        val start = night?.start ?: return emptyList()
+        val end = night.end ?: return emptyList()
+        val instants = generateSequence(start) { it.plus(NightSampleStep) }
+            .takeWhile { it.isBefore(end) }
+            .plus(end)
+        return instants.map {
+            NightSample(it, AstronomyEngine.sunAltitude(it, coordinates), AstronomyEngine.moonAltitude(it, coordinates))
+        }.toList()
     }
 
     /** The forecast hours that overlap [night], each with its cloud cover: an hour that
@@ -326,7 +358,7 @@ object SkyStateBuilder {
         val end = night.end ?: return emptyList()
         return hourly
             .filter { it.at.plus(Duration.ofHours(1)).isAfter(start) && it.at.isBefore(end) }
-            .map { NightHour(it.at, it.cloudCoverPct) }
+            .map { NightHour(it.at, it.cloudCoverPct, it.precipChancePct) }
     }
 
     /**
