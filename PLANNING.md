@@ -12691,10 +12691,10 @@ coerente con il Cielo appena rivisto, e ne ha fatto attuare i punti da 1 a 6. La
 - [x] 4. Una scala tipografica sola, quella del Cielo.
 - [x] 5. La regola nata da un'idea porta il disegno dell'idea.
 - [x] 6. La frase della regola: gli intervalli, le soglie in grassetto.
-- [ ] 7. Un hero che risponde sempre (lo stato delle allerte, il prossimo avviso, la striscia).
+- [x] 7. Un hero che risponde sempre (lo stato delle allerte, il prossimo avviso, la striscia).
 - [ ] 8. La striscia del giorno con le tacche delle ore e le ore dei tuoi avvisi.
-- [ ] 9. «Nuovo avviso» come FAB, le idee in un foglio; la fila resta solo con «I tuoi» vuoto.
-- [ ] 10. «Annulla» al posto della conferma per eliminare.
+- [x] 9. «Nuovo avviso» come FAB, le idee in un foglio; la fila resta solo con «I tuoi» vuoto.
+- [x] 10. «Annulla» al posto della conferma per eliminare.
 - [ ] 11. Lo stato di ogni regola adesso, con il suo numero.
 - [ ] 12. La prova dell'editor che si aggiorna a ogni chip.
 - [ ] 13. «Quando scatterebbe»: la regola provata sulla settimana di previsione.
@@ -12755,4 +12755,63 @@ coerente con il Cielo appena rivisto, e ne ha fatto attuare i punti da 1 a 6. La
 - Avvisi disegnata con Robolectric a 360 dp in italiano, in chiaro e in scuro, con due regole,
   al primo avvio e con un'allerta arancione e gialla in vigore; Impostazioni in chiaro. Guardate
   immagine per immagine; le immagini del README rigenerate e guardate.
+- Suite completa e lint.
+
+### Punti 7, 9 e 10 (committente, 14 ott 2026)
+
+Chiesti dopo i primi sei, nella stessa PR.
+
+**Cosa è cambiato**
+
+- **Punto 7.** `AlertsHero`: una card da 28 dp su `surfaceContainerHigh` in testa alla pagina, dove
+  c'erano «Quando arrivano» e, sotto il titolo «Allerte ufficiali», la card dello stato. In alto la
+  risposta delle allerte (`WarningAnswer`, uno scheletro per ogni stato: segno e zona, la
+  risposta, ciò che la regge); con un'allerta in vigore quel blocco prende il contenitore del
+  livello per tutta la larghezza della card. Sotto, solo con un avviso a orario acceso, la fascia
+  in cui il telefono può suonare per prima (`NextWindowRow`, sul modello della card del prossimo
+  momento) e la striscia del giorno, che perde la sua card e il suo titolo (`alerts_day_title`
+  tolta). `nextWindow` in `NextWindow.kt` sceglie la fascia: quella aperta adesso, altrimenti la
+  prossima di oggi, altrimenti la prima di domani.
+- **Punto 9.** `ExtendedFloatingActionButton` «Nuovo avviso» in uno `Scaffold`, esteso in cima e
+  ridotto all'icona quando si scorre, assente al massimo delle regole. Apre `IdeasSheet`: «Da zero»
+  in testa, poi «Parti da un'idea» e le idee come righe del catalogo del Cielo. La fila delle idee
+  sulla pagina resta solo con «I tuoi» vuoto. L'idea vuota si chiama «Da zero» («From scratch»),
+  perché «Nuovo avviso» è la parola del FAB.
+- **Punto 10.** Niente più finestra di conferma (`rule_delete_confirm_*` tolte): «Elimina questo
+  avviso» chiude il foglio e mostra ««Bici» eliminato · Annulla», `Long`. `RuleStore.restore`
+  rimette la regola com'era e dov'era, con il suo id; `AlertsViewModel.restore` la chiama.
+- Guida: «I tuoi» dice che «Nuovo avviso» apre le idee e «Da zero», e che l'eliminazione si
+  annulla. VISION §5.4 allineata.
+
+**Decisioni e deviazioni**
+
+- **La regola torna con il suo id**, non con uno nuovo. Gli id non si riciclano perché una regola
+  nuova non erediti lo stato di una tolta; qui è la stessa regola che torna, e con il suo id
+  ritrova i suoi latch e le impronte di ciò che ha già mandato oggi, quindi non scatta una seconda
+  volta. Torna nella sua posizione, e non torna se nel frattempo la lista è piena.
+- **Torna com'era nel foglio**, nome e messaggio non ancora salvati compresi: è quello che il
+  lettore aveva davanti quando ha premuto «Elimina».
+- **Il prossimo è una fascia, non un avviso.** I riepiloghi arrivano una volta dentro la loro
+  fascia e la pagina non sa se quello di oggi è già arrivato: dice le ore in cui il telefono può
+  suonare, che sa, e non promette che suonerà. Le regole del lettore con orari propri non entrano
+  nella riga: le loro ore sono sulla loro card (il punto 8 le porta nella striscia).
+- **«Il bollettino»** come nome della fascia delle 15–17 nella riga e nella descrizione della
+  striscia: «Avvisami delle allerte», il titolo dell'interruttore, è un comando e non il nome di
+  qualcosa che arriva, e «Il bollettino delle allerte» andava a capo a 360 dp.
+- **La fila delle idee resta come stato vuoto**, come dice la revisione: senza, «I tuoi» vuoto
+  sarebbe un titolo sopra il nulla; con una regola, le idee sono nel foglio del FAB.
+- **Gli stati d'attesa sotto «Allerte ufficiali»**: senza una zona da nominare l'etichetta del
+  blocco dice di cosa si sta parlando, e la risposta resta in `titleMedium`, perché «Ancora nessun
+  bollettino» non è una risposta da leggere da lontano.
+
+**Come è stato verificato**
+
+- `NextWindowTest`: prima dell'alba la fascia del mattino oggi, dentro una fascia quella aperta
+  fino al suo ultimo minuto, dopo l'ultima la prima di domani, fasce spente assenti, niente
+  acceso niente detto. `RuleStoreTest`: `restore` rimette la regola al suo posto con il suo id, e
+  il prossimo id resta nuovo; non la raddoppia e non passa il massimo.
+- Avvisi disegnata con Robolectric a 360 dp in italiano: in chiaro con due regole, in scuro con
+  un'allerta arancione e «I tuoi» vuoto, in attesa del bollettino alle 22, il foglio delle idee,
+  la snackbar con il FAB sollevato. Guardate immagine per immagine; le immagini del README
+  rigenerate e guardate.
 - Suite completa e lint.

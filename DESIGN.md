@@ -1646,6 +1646,38 @@ way of grouping, and Alerts now follows it:
   over the quiet sentence (`RuleText.sentenceParts`). The words change, the rule does not, and
   the notification's own lines (one a condition, each with its reading) are untouched.
 
+**The Sky's structure** (committente, 14 ott 2026, the Alerts review, points 7, 9 and 10). The
+page now behaves as the Sky does: an answer at the head, one action as a FAB, «Annulla» in place
+of a confirmation.
+
+- **A hero that always answers** (point 7). One 28 dp card on `surfaceContainerHigh` leads the
+  page, where «Quando arrivano» (a diagram to decipher) stood over a separate status card. On top,
+  the warnings' answer, one skeleton for every state: a mark and the zone at `labelLarge` (with
+  the chevron when it opens the bulletin), the answer, then what backs it. A warning in force
+  paints that block across the card's width in the level's container and ink (point 2's card,
+  now the head of this one); «Nessuna allerta» is `headlineSmall` on the card's ground; the three
+  states that wait on something say their reason at `titleMedium` under «Allerte ufficiali». Under
+  the answer, only while a timed alert is on: **the window the phone may ring in next**, in the
+  shape of the Sky's next moment (its drawing, «Il prossimo, oggi», «Adesso» or «Il prossimo,
+  domani» in the accent over its name at `bodyLarge`, the hours at `titleMedium` tabular at the
+  end), and the day strip under it, no longer a card of its own nor labelled. A window and not an
+  alert: the screen cannot know whether today's summary has already come, so it names the hours
+  it may, never a promise (`nextWindow`). The bulletin's window is named «Il bollettino»: the
+  switch's «Avvisami delle allerte» is a command, not the name of something that comes.
+- **«Nuovo avviso» is the FAB** (point 9): extended at the top of the page, the icon alone once
+  the list scrolls, gone at the ceiling (the sentence at the foot of «I tuoi» says why). It opens
+  a sheet in the catalog's grammar: «Da zero» first (the blank idea, renamed from «Nuovo avviso»,
+  which is now the FAB's word), then «Parti da un'idea» and the ideas as rows, the drawing in
+  front and `+` or `✓` after; a row already added is inert and says «Già aggiunto» to TalkBack.
+  The rows sit on the sheet's ground (`ListItem`'s default `surface` striped it, rendered). The
+  sideways row of idea cards stays on the page only while «I tuoi» is empty: it is that section's
+  empty state, where its title would otherwise stand over nothing (§1.1).
+- **«Annulla», not «Eliminare questo avviso?»** (point 10). Deleting closes the editor and shows
+  «"Bici" eliminato · Annulla», `Long`; undo puts the rule back as the sheet showed it (its unsaved
+  name and message included), in its place and with its own id (`RuleStore.restore`), so its
+  latches are its own again and its «last fired», kept by name, comes back with it. The screen is
+  a `Scaffold` for this, so the FAB rises over the snackbar.
+
 **8.10 JournalEntry** and **DriftStrip** — an entry is a line of prose with its numbers.
 The drift strip is one row per target day — today included while it runs (8 set 2026) —
 and one column per six-hour slot, colored on **the metric's own ramp** (rain on the rain

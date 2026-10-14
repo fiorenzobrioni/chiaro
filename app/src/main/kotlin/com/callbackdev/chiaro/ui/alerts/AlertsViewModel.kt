@@ -192,6 +192,9 @@ class AlertsViewModel(
 
     fun remove(id: Long) = mutate { ruleStore.remove(id) }
 
+    /** The «Annulla» of a deletion: [rule] back at [index], as it was ([RuleStore.restore]). */
+    fun restore(rule: NotificationRule, index: Int) = mutate { ruleStore.restore(rule, index) }
+
     /**
      * "Try it now": the stateless check against the data the app already has, in the
      * city's own clock — what the rule WOULD do, with nothing posted (VISION §5.4).

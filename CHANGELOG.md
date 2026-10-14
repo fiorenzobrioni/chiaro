@@ -35,6 +35,12 @@ sections are a normal size and live here alone.
   evening summaries and of the bulletin stand over their switches, in a column. A rule made from
   an idea keeps that idea's drawing, and its sentence is shorter and easier to scan: «the
   temperature now is between 5° and 26°», with the thresholds in bold.
+- **Alerts opens with an answer.** One card at the top says whether there is a warning for your
+  place, which window your phone may ring in next («Next, today: the evening summary, 18–23»)
+  and draws the day of alerts under it. «New alert» is now a button that floats over the page and
+  opens the ideas, with «From scratch» first; the row of ideas stays on the page only until you
+  have an alert of your own. Deleting an alert no longer asks first: it shows «Undo», which brings
+  it back exactly as it was.
 - **Undo on the Sky screen.** Adding or removing a moment from its page now shows a message
   with «Undo», and undoing a removal brings the moment back with its own reminder.
 - **An easier place switcher.** On Sky, Alerts and Journal the whole title is now the button

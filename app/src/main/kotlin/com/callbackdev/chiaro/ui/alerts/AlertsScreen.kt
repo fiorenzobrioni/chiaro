@@ -39,7 +39,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
@@ -142,6 +153,9 @@ fun AlertsRoute(
     val state by alertsViewModel.state.collectAsStateWithLifecycle()
     var placesOpen by remember { mutableStateOf(false) }
     var editingRuleId by rememberSaveable { mutableStateOf<Long?>(null) }
+    val snackbars = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val res = LocalContext.current.resources
 
     AlertsScreen(
         state = state,
@@ -157,7 +171,8 @@ fun AlertsRoute(
         ),
         onEdit = { editingRuleId = it },
         onOpenPlaces = { placesOpen = true },
-        onOpenSettings = onOpenSettings
+        onOpenSettings = onOpenSettings,
+        snackbars = snackbars
     )
 
     if (placesOpen) {
@@ -172,7 +187,28 @@ fun AlertsRoute(
             units = content.units,
             daylightToday = content.daylightToday,
             viewModel = alertsViewModel,
-            onDismiss = { editingRuleId = null }
+            onDismiss = { editingRuleId = null },
+            onDelete = { deleted ->
+                // «Annulla» in place of «Eliminare questo avviso?» (the Alerts review, point
+                // 10, 14 ott 2026), as the Sky undoes a moment taken away: the sheet closes on
+                // the act and the snackbar is the receipt and the way back. It puts the rule
+                // back as it was, in its place, with its own id, so its «last fired» returns
+                // with it. Long, for an action somebody may need a moment to reach.
+                val index = content.rules.indexOfFirst { it.rule.id == deleted.id }
+                alertsViewModel.remove(deleted.id)
+                editingRuleId = null
+                scope.launch {
+                    snackbars.currentSnackbarData?.dismiss()
+                    val result = snackbars.showSnackbar(
+                        message = res.getString(R.string.alerts_rule_deleted, deleted.name),
+                        actionLabel = res.getString(R.string.action_undo),
+                        duration = SnackbarDuration.Long
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        alertsViewModel.restore(deleted, index)
+                    }
+                }
+            }
         )
     }
 }
@@ -188,7 +224,8 @@ internal fun AlertsScreen(
     actions: AlertsActions,
     onEdit: (Long) -> Unit,
     onOpenPlaces: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    snackbars: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -199,7 +236,7 @@ internal fun AlertsScreen(
                 onOpenSettings = onOpenSettings
             )
             (state as? AlertsUiState.Content)?.let { content ->
-                AlertsContent(content = content, actions = actions, onEdit = onEdit)
+                AlertsContent(content = content, actions = actions, onEdit = onEdit, snackbars = snackbars)
             }
         }
     }
@@ -227,7 +264,8 @@ internal class AlertsActions(
 private fun AlertsContent(
     content: AlertsUiState.Content,
     actions: AlertsActions,
-    onEdit: (Long) -> Unit
+    onEdit: (Long) -> Unit,
+    snackbars: SnackbarHostState
 ) {
     // Asked the first time something that needs it is switched on (VISION §5.8) — and
     // stated in a card above the list for as long as it is missing, because on this
@@ -247,11 +285,13 @@ private fun AlertsContent(
     // The active place's own hour, like every other hour in the app.
     val issuedFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
     var warningSheetOpen by rememberSaveable { mutableStateOf(false) }
+    var ideasOpen by rememberSaveable { mutableStateOf(false) }
     val current = content.warnings as? PlaceWarningState.Current
     // The place's own day, like the "last fired" hour above it.
     // Read here and not in the list below: a lazy list's builder is not a composable.
     val clock = LocalClock.current
     val placeToday = LocalDate.now(clock.withZone(content.zone))
+    val placeNow = java.time.LocalTime.now(clock.withZone(content.zone))
     if (warningSheetOpen && current != null) {
         WarningSheet(
             warnings = current.warnings,
@@ -260,8 +300,59 @@ private fun AlertsContent(
             onDismiss = { warningSheetOpen = false }
         )
     }
+    fun add(template: RuleText.Template) {
+        actions.addFromTemplate(template) { created ->
+            somethingTurnedOn()
+            onEdit(created.id)
+        }
+    }
+    // A template whose rule already exists — same conditions, whatever the reader renamed
+    // it — is marked as added rather than offered again: tapping it a second time made two
+    // identical "Bike" rules (review, 8 set 2026).
+    val existing = content.rules.map { it.rule.conditions }.toSet()
+    if (ideasOpen) {
+        IdeasSheet(
+            existing = existing,
+            onPick = { template ->
+                ideasOpen = false
+                add(template)
+            },
+            onDismiss = { ideasOpen = false }
+        )
+    }
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    val listState = rememberLazyListState()
+    // Extended while the top of the page is in view, the icon alone once the reader has
+    // scrolled into the list, as the Sky's: the label is read once, then it covers rows.
+    val fabExpanded by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
+    // A Scaffold for the two things that float over the list (the Alerts review, points 9
+    // and 10, 14 ott 2026): the FAB, and the snackbar that offers «Annulla», which the
+    // Scaffold lifts the FAB over.
+    Scaffold(
+        containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        snackbarHost = { SnackbarHost(snackbars) },
+        floatingActionButton = {
+            // «Nuovo avviso» (point 9): the screen's one action, where Material puts a
+            // screen's one action, instead of a row of ideas at the foot of a page five
+            // screens long. At the ceiling there is nothing to add, and the sentence at the
+            // foot of «I tuoi» says why.
+            if (content.canAdd) {
+                ExtendedFloatingActionButton(
+                    text = { Text(stringResource(R.string.alerts_new_rule)) },
+                    icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
+                    expanded = fabExpanded,
+                    onClick = { ideasOpen = true }
+                )
+            }
+        }
+    ) { inner ->
+    LazyColumn(
+        state = listState,
+        modifier = Modifier.fillMaxSize().padding(inner),
+        // Room for the FAB under the last row, so nothing ends up beneath it.
+        contentPadding = PaddingValues(bottom = FabClearance)
+    ) {
         // Above everything, and only while the screen would otherwise be lying: the
         // switches below say an alert will arrive, and with notifications off none of
         // them can. With nothing switched on there is no promise to break and no card.
@@ -275,35 +366,21 @@ private fun AlertsContent(
                 )
             }
         }
-        // When the phone may ring (design review, 23 set 2026): the alerts that come in a
-        // window of the day, drawn on the day. Only while at least one of them is on.
-        if (content.notifications.dailySummary || content.notifications.eveningSummary ||
-            content.notifications.officialWarnings
-        ) {
-            item {
-                AlertDayStrip(
-                    notifications = content.notifications,
-                    // «At any hour» is only true of the rules with no hours of their own
-                    // (26 set 2026); the others say theirs on their own card.
-                    ownRules = content.rules.any { it.rule.enabled && it.rule.window.always },
-                    now = java.time.LocalTime.now(clock.withZone(content.zone)),
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-        }
         // VISION §5.4 and Fase 11: the authority's warnings lead, because they are the
         // only ones on this screen nobody chose — and because the reader who opens
-        // Avvisi in an autumn afternoon is usually here to check exactly this.
-        item { GroupTitle(stringResource(R.string.alerts_group_warnings)) }
+        // Avvisi in an autumn afternoon is usually here to check exactly this. Since the
+        // Alerts review (point 7, 14 ott 2026) they lead as the answer of one card, which
+        // goes on to say when the phone may ring next and draws the day under it.
         item {
-            OfficialWarningCard(
-                state = content.warnings,
+            AlertsHero(
+                content = content,
                 today = placeToday,
+                now = placeNow,
                 timeFmt = issuedFmt,
-                onOpenSheet = { warningSheetOpen = true },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                onOpenSheet = { warningSheetOpen = true }
             )
         }
+        item { GroupTitle(stringResource(R.string.alerts_group_warnings)) }
         // The switch is a setting, not a property of the place on screen: it stays put
         // when the active place is abroad, because hiding a setting behind today's
         // choice of city is how a setting becomes unfindable. The card above is what
@@ -338,7 +415,7 @@ private fun AlertsContent(
                         }
                     }
                 },
-                modifier = Modifier.padding(vertical = 8.dp)
+                modifier = Modifier.padding(vertical = 4.dp)
             )
         }
 
@@ -424,7 +501,11 @@ private fun AlertsContent(
             )
         }
 
-        if (content.canAdd) {
+        // The ideas stay on the page only while «I tuoi» is empty (the Alerts review, point
+        // 9): there they are the section's empty state, where without them its title would
+        // stand over nothing (DESIGN §1.1). Once the reader has an alert of their own, the
+        // ideas are the FAB's sheet, and the page is the alerts.
+        if (content.canAdd && content.rules.isEmpty()) {
             item {
                 // A heading inside «I tuoi», in the Sky's own grammar for one («Oggi»,
                 // «Domani»): `labelLarge` in the accent (the Alerts review, point 4).
@@ -432,19 +513,12 @@ private fun AlertsContent(
                     text = stringResource(R.string.alerts_templates_title),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(
-                        start = 16.dp, top = GroupTop, bottom = SectionBottom
-                    )
+                    modifier = Modifier.padding(start = 16.dp, bottom = SectionBottom)
                 )
             }
-            // A template whose rule already exists — same conditions, whatever the
-            // reader renamed it — is marked as added rather than offered again: tapping
-            // it a second time made two identical "Bike" rules (review, 8 set 2026).
-            //
             // A row of cards to browse sideways since the design review of 23 set 2026:
             // five more list rows at the foot of the page read as five more settings,
             // and an idea is something you pick up, not something you configure.
-            val existing = content.rules.map { it.rule.conditions }.toSet()
             item {
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp),
@@ -462,34 +536,24 @@ private fun AlertsContent(
                             description = stringResource(RuleText.blank.descriptionRes),
                             added = false,
                             actionLabel = stringResource(R.string.tpl_create),
-                            onAdd = {
-                                actions.addFromTemplate(RuleText.blank) { created ->
-                                    somethingTurnedOn()
-                                    onEdit(created.id)
-                                }
-                            }
+                            onAdd = { add(RuleText.blank) }
                         )
                     }
                     items(RuleText.templates.size) { index ->
                         val template = RuleText.templates[index]
-                        val added = template.conditions in existing
                         IdeaCard(
                             icon = templateIcon(template),
                             title = stringResource(template.titleRes),
                             description = stringResource(template.descriptionRes),
-                            added = added,
-                            onAdd = {
-                                actions.addFromTemplate(template) { created ->
-                                    somethingTurnedOn()
-                                    onEdit(created.id)
-                                }
-                            }
+                            added = template.conditions in existing,
+                            onAdd = { add(template) }
                         )
                     }
                 }
             }
-        } else {
-            // The templates used to vanish without a word at the cap (review, 8 set).
+        } else if (!content.canAdd) {
+            // The templates used to vanish without a word at the cap (review, 8 set), and
+            // the FAB goes with them now: this sentence is what says why.
             item {
                 Text(
                     text = stringResource(R.string.alerts_max_reached, MaxRules),
@@ -500,200 +564,342 @@ private fun AlertsContent(
             }
         }
     }
+    }
 }
 
 /**
- * The official warnings for the active place: the banner when there is one, and
- * otherwise the honest state (DESIGN §8.13). This is the screen where an absence is a
- * value — "nessuna allerta per Milano, bollettino delle 15:19" is the answer somebody
- * came for — which is exactly why Today draws nothing at all in the same case (§1.1).
+ * «Nuovo avviso» (the Alerts review, point 9, 14 ott 2026): the FAB's sheet, as the Sky's
+ * opens its catalog. «Da zero» first, because building from nothing is the other way in;
+ * then the ideas, each with its drawing, its promise and what it checks. An idea already
+ * turned into a rule says so and does nothing, as its card on the page does. A pick closes
+ * the sheet and opens the new rule's editor, where the rest of the choosing happens.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun IdeasSheet(
+    existing: Set<List<RuleCondition>>,
+    onPick: (RuleText.Template) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val addedState = stringResource(R.string.tpl_already_added)
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
+            item {
+                IdeaRow(
+                    icon = Icons.Outlined.Edit,
+                    iconTint = MaterialTheme.colorScheme.primary,
+                    title = stringResource(RuleText.blank.titleRes),
+                    description = stringResource(RuleText.blank.descriptionRes),
+                    added = false,
+                    addedState = addedState,
+                    onPick = { onPick(RuleText.blank) }
+                )
+            }
+            item {
+                Text(
+                    text = stringResource(R.string.alerts_templates_title),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 16.dp, top = GroupTop, bottom = SectionBottom)
+                )
+            }
+            items(RuleText.templates.size) { index ->
+                val template = RuleText.templates[index]
+                IdeaRow(
+                    icon = templateIcon(template),
+                    title = stringResource(template.titleRes),
+                    description = stringResource(template.descriptionRes),
+                    added = template.conditions in existing,
+                    addedState = addedState,
+                    onPick = { onPick(template) }
+                )
+            }
+        }
+    }
+}
+
+/** One idea in the sheet: the catalog's row, its drawing in front and the mark after. */
+@Composable
+private fun IdeaRow(
+    icon: ImageVector,
+    title: String,
+    description: String,
+    added: Boolean,
+    addedState: String,
+    onPick: () -> Unit,
+    iconTint: Color = Color.Unspecified
+) {
+    ListItem(
+        leadingContent = {
+            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(RowIcon))
+        },
+        headlineContent = { Text(title) },
+        supportingContent = { Text(description) },
+        trailingContent = {
+            Icon(
+                imageVector = if (added) Icons.Outlined.Check else Icons.Outlined.Add,
+                contentDescription = null, // the row says it, below
+                tint = if (added) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        // On the sheet's own ground: the item's default container is `surface`, which on
+        // the sheet's lighter one striped the list row by row (rendered).
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        modifier = if (added) {
+            Modifier.semantics { stateDescription = addedState }
+        } else {
+            Modifier.clickable(onClick = onPick)
+        }
+    )
+}
+
+/**
+ * The head of Alerts (the Alerts review, point 7, 14 ott 2026): one card that always
+ * answers. On top, the official warnings' answer: the warning in force in its level's
+ * colour (point 2), or «Nessuna allerta» with the zone and the bulletin, or the reason there
+ * is none to give. Under it, on the card's own ground, the window the phone may ring in
+ * next, as the Sky names its next moment, and the day of windows drawn under that.
  *
- * Since the design review of 23 set 2026 the absence is said like an answer: a mark, the
- * two words at `titleMedium`, the zone on its own line and the bulletin's hour under it,
- * where it used to be one `titleSmall` sentence with the zone's long name folded into it.
+ * Until then the page opened with «Quando arrivano», a diagram to decipher, and the answer
+ * somebody came for stood under it in a card of its own: two things where VISION §5.4 asks
+ * for one, the warnings first. The lower half is drawn only while a timed alert is on; the
+ * answer always is.
  */
 @Composable
-private fun OfficialWarningCard(
+private fun AlertsHero(
+    content: AlertsUiState.Content,
+    today: LocalDate,
+    now: java.time.LocalTime,
+    timeFmt: DateTimeFormatter,
+    onOpenSheet: () -> Unit
+) {
+    val windows = alertWindows(content.notifications)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(MaterialTheme.shapes.extraLarge)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+    ) {
+        WarningAnswer(
+            state = content.warnings,
+            today = today,
+            timeFmt = timeFmt,
+            onOpenSheet = onOpenSheet
+        )
+        if (windows.isNotEmpty()) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(start = 20.dp, top = 4.dp, end = 20.dp, bottom = 20.dp)
+            ) {
+                nextWindow(windows.map { it.from to it.to }, now)?.let { next ->
+                    NextWindowRow(windows[next.index], next.whenever)
+                }
+                AlertDayStrip(
+                    windows = windows,
+                    notifications = content.notifications,
+                    // «At any hour» is only true of the rules with no hours of their own
+                    // (26 set 2026); the others say theirs on their own card.
+                    ownRules = content.rules.any { it.rule.enabled && it.rule.window.always },
+                    now = now
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The official warnings for the active place, as the hero's answer: the warning in force
+ * when there is one, and otherwise the honest state (DESIGN §8.13). This is the screen where
+ * an absence is a value — "nessuna allerta per Milano, bollettino delle 15:19" is the answer
+ * somebody came for — which is exactly why Today draws nothing at all in the same case (§1.1).
+ *
+ * One skeleton for every state: a mark and a label on a line, the answer under them, then
+ * what backs it. The answer is `headlineSmall` when it is one (a warning, or none), and
+ * `titleMedium` when it is only the reason there is no answer yet: «Ancora nessun
+ * bollettino» is not something to read from across the room.
+ */
+@Composable
+private fun WarningAnswer(
     state: PlaceWarningState,
     today: LocalDate,
     timeFmt: DateTimeFormatter,
-    onOpenSheet: () -> Unit,
-    modifier: Modifier = Modifier
+    onOpenSheet: () -> Unit
 ) {
     val locale = currentLocale()
     val dateFmt = remember(locale) {
         DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.LONG).withLocale(locale)
     }
     val context = LocalContext.current
+    val quiet = MaterialTheme.colorScheme.onSurfaceVariant
     when (state) {
         is PlaceWarningState.Current -> {
             val warnings = state.warnings
+            val issued = WarningText.issued(context, warnings.issuedAt, today, timeFmt)
+            val zone = WarningText.zoneLabel(context, warnings.zone)
             if (warnings.maxLevel != WarningLevel.NONE) {
-                ActiveWarningCard(
-                    warnings = warnings,
-                    today = today,
-                    timeFmt = timeFmt,
-                    onOpen = onOpenSheet,
-                    modifier = modifier
+                val palette = warnings.maxLevel.colors
+                val days = WarningText.days(context, warnings.peakDays.map { it.date }, today)
+                    .replaceFirstChar { it.titlecase(locale) }
+                AnswerBlock(
+                    mark = { Icon(painterResource(ChiaroIcons.warningMarkRes()), null, tint = palette.ink, modifier = Modifier.size(24.dp)) },
+                    label = zone,
+                    answer = WarningText.sentence(context, warnings),
+                    lines = listOf(
+                        AnswerLine(days, MaterialTheme.typography.titleMedium),
+                        AnswerLine(stringResource(R.string.warning_banner_source, issued), MaterialTheme.typography.bodyMedium)
+                    ),
+                    ink = palette.ink,
+                    labelInk = palette.ink,
+                    ground = palette.container,
+                    onClick = onOpenSheet
                 )
             } else {
-                StatusCard(
-                    icon = Icons.Outlined.CheckCircle,
-                    iconTint = MaterialTheme.colorScheme.primary,
-                    title = stringResource(R.string.warning_card_all_clear),
+                AnswerBlock(
+                    mark = { Icon(Icons.Outlined.CheckCircle, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp)) },
+                    label = zone,
+                    answer = stringResource(R.string.warning_card_all_clear),
                     lines = listOf(
-                        WarningText.zoneLabel(context, warnings.zone),
-                        stringResource(
-                            R.string.warning_card_none_detail,
-                            WarningText.issued(context, warnings.issuedAt, today, timeFmt)
-                        )
+                        AnswerLine(stringResource(R.string.warning_card_none_detail, issued), MaterialTheme.typography.bodyMedium)
                     ),
-                    onClick = onOpenSheet,
-                    modifier = modifier
+                    ink = MaterialTheme.colorScheme.onSurface,
+                    labelInk = quiet,
+                    onClick = onOpenSheet
                 )
             }
         }
-        is PlaceWarningState.Stale -> StatusCard(
-            icon = Icons.Outlined.Info,
+        is PlaceWarningState.Stale -> QuietAnswer(
             title = stringResource(R.string.warning_card_stale),
-            lines = listOf(
-                stringResource(
-                    R.string.warning_card_stale_detail,
-                    state.issuedAt.toLocalDate().format(dateFmt)
-                )
-            ),
-            onClick = null,
-            modifier = modifier
+            detail = stringResource(
+                R.string.warning_card_stale_detail,
+                state.issuedAt.toLocalDate().format(dateFmt)
+            )
         )
-        is PlaceWarningState.Waiting -> StatusCard(
-            icon = Icons.Outlined.Info,
+        is PlaceWarningState.Waiting -> QuietAnswer(
             title = stringResource(R.string.warning_card_waiting),
-            lines = listOf(stringResource(R.string.warning_card_waiting_detail)),
-            onClick = null,
-            modifier = modifier
+            detail = stringResource(R.string.warning_card_waiting_detail)
         )
-        PlaceWarningState.Unavailable -> StatusCard(
-            icon = Icons.Outlined.Info,
+        PlaceWarningState.Unavailable -> QuietAnswer(
             title = stringResource(R.string.warning_card_unavailable),
-            lines = listOf(stringResource(R.string.warning_card_unavailable_detail)),
-            onClick = null,
-            modifier = modifier
+            detail = stringResource(R.string.warning_card_unavailable_detail)
         )
+    }
+}
+
+private class AnswerLine(val text: String, val style: androidx.compose.ui.text.TextStyle)
+
+/** The three states that are waiting on something, or have no zone: a fact and its
+ * reason in the quiet ink, under the label of what is missing. Not a warning colour for the
+ * absence of a warning, and no chevron: there is no bulletin behind it to open. */
+@Composable
+private fun QuietAnswer(title: String, detail: String) {
+    AnswerBlock(
+        mark = {
+            Icon(Icons.Outlined.Info, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
+        },
+        label = stringResource(R.string.alerts_group_warnings),
+        answer = title,
+        answerStyle = MaterialTheme.typography.titleMedium,
+        lines = listOf(AnswerLine(detail, MaterialTheme.typography.bodyMedium)),
+        ink = MaterialTheme.colorScheme.onSurface,
+        labelInk = MaterialTheme.colorScheme.onSurfaceVariant,
+        onClick = null
+    )
+}
+
+/**
+ * The answer's block. On a warning in force it wears the level's own pair across the card's
+ * full width (point 2), so the card leads in the colour of its news and keeps its ground
+ * under it for the hours; otherwise it sits on the card's ground. One sentence to TalkBack,
+ * as Today's banner is, and the whole block opens the bulletin when there is one.
+ */
+@Composable
+private fun AnswerBlock(
+    mark: @Composable () -> Unit,
+    label: String,
+    answer: String,
+    lines: List<AnswerLine>,
+    ink: Color,
+    labelInk: Color,
+    onClick: (() -> Unit)?,
+    ground: Color = Color.Transparent,
+    answerStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.headlineSmall
+) {
+    val spoken = (listOf(answer, label) + lines.map { it.text }).joinToString(". ")
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(ground)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .clearAndSetSemantics { contentDescription = spoken }
+            .padding(start = 20.dp, top = 16.dp, end = 12.dp, bottom = if (ground == Color.Transparent) 12.dp else 20.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            mark()
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                color = labelInk,
+                modifier = Modifier.weight(1f).padding(start = 10.dp)
+            )
+            if (onClick != null) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                    contentDescription = null, // the block is the target; the sheet says the rest
+                    tint = labelInk
+                )
+            }
+        }
+        Text(
+            text = answer,
+            style = answerStyle,
+            color = ink,
+            modifier = Modifier.padding(top = 4.dp, end = 8.dp)
+        )
+        lines.forEach { line ->
+            Text(
+                text = line.text,
+                style = line.style,
+                color = if (ground == Color.Transparent) MaterialTheme.colorScheme.onSurfaceVariant else ink,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        }
     }
 }
 
 /**
- * A warning in force, as the card that leads the page (the Alerts review, point 2, 14 ott
- * 2026). Today's banner is a reminder over a page about the weather, and it is drawn small
- * on purpose; here it is the answer the page exists for, and drawn as the banner it was
- * smaller than the all-clear card that stands in its place on a quiet day. Now it wears the
- * level's own pair on the 28 dp card the Sky leads with («Stanotte»): the zone over it, the
- * hazards at `headlineSmall`, then the days and who said so. It opens the same sheet, and is
- * one sentence to TalkBack, as the banner is.
+ * The window the phone may ring in next, in the shape of the Sky's next moment: its drawing,
+ * «Il prossimo, oggi» (or «Adesso», or «domani») in the accent over its name, and its hours in
+ * the column the rows of «Pronti all'uso» put theirs in.
  */
 @Composable
-private fun ActiveWarningCard(
-    warnings: PlaceWarnings,
-    today: LocalDate,
-    timeFmt: DateTimeFormatter,
-    onOpen: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
-    val palette = warnings.maxLevel.colors
-    val zone = WarningText.zoneLabel(context, warnings.zone)
-    val headline = WarningText.sentence(context, warnings)
-    val days = WarningText.days(context, warnings.peakDays.map { it.date }, today)
-        .replaceFirstChar { it.titlecase(currentLocale()) }
-    val source = stringResource(
-        R.string.warning_banner_source,
-        WarningText.issued(context, warnings.issuedAt, today, timeFmt)
-    )
-    Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.extraLarge)
-            .background(palette.container)
-            .clickable(onClick = onOpen)
-            .clearAndSetSemantics { contentDescription = "$headline. $zone. $days · $source" }
-            .padding(start = 20.dp, top = 16.dp, end = 12.dp, bottom = 20.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                painter = painterResource(ChiaroIcons.warningMarkRes()),
-                contentDescription = null, // the card's own semantics say it
-                tint = palette.ink,
-                modifier = Modifier.size(24.dp)
-            )
+private fun NextWindowRow(window: AlertWindow, whenever: NextWhen) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(RowGap)) {
+        Icon(
+            imageVector = window.icon,
+            contentDescription = null, // the name beside it says it
+            tint = window.tint,
+            modifier = Modifier.size(RowIcon)
+        )
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = zone,
+                text = stringResource(
+                    when (whenever) {
+                        NextWhen.NOW -> R.string.alerts_next_now
+                        NextWhen.TODAY -> R.string.alerts_next_today
+                        NextWhen.TOMORROW -> R.string.alerts_next_tomorrow
+                    }
+                ),
                 style = MaterialTheme.typography.labelLarge,
-                color = palette.ink,
-                modifier = Modifier.weight(1f).padding(start = 10.dp)
+                color = MaterialTheme.colorScheme.primary
             )
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                contentDescription = null,
-                tint = palette.ink
-            )
+            Text(text = window.name, style = MaterialTheme.typography.bodyLarge)
         }
         Text(
-            text = headline,
-            style = MaterialTheme.typography.headlineSmall,
-            color = palette.ink,
-            modifier = Modifier.padding(top = 4.dp, end = 8.dp)
+            text = stringResource(R.string.alerts_hours_range, window.from, window.to),
+            style = MaterialTheme.typography.titleMedium.tabular()
         )
-        Text(text = days, style = MaterialTheme.typography.titleMedium, color = palette.ink)
-        Text(text = source, style = MaterialTheme.typography.bodyMedium, color = palette.ink)
-    }
-}
-
-/** The states the banner must never draw: a fact and its reason, on the neutral ground the
- * details tiles use — not a warning colour for the absence of a warning. A mark in front,
- * in `primary` for the all-clear and in quiet ink for the three that are waiting on
- * something; a chevron when the card opens the bulletin. A card on its own, so the Sky's
- * card shape (28 dp on `surfaceContainerHigh`, its next moment's) and not a group's. */
-@Composable
-private fun StatusCard(
-    icon: ImageVector,
-    title: String,
-    lines: List<String>,
-    onClick: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-    iconTint: Color = MaterialTheme.colorScheme.onSurfaceVariant
-) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = MaterialTheme.shapes.extraLarge,
-        modifier = modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
-        ) {
-            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(28.dp))
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
-                lines.forEachIndexed { i, line ->
-                    Text(
-                        text = line,
-                        style = if (i == 0) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            if (onClick != null) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                    contentDescription = null, // the card is the target; the sheet says the rest
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
     }
 }
 
@@ -851,47 +1057,62 @@ private fun IdeaCard(
 }
 
 /**
- * The reader's day of alerts (design review, 23 set 2026): twenty-four hours as a track,
- * and on it the windows the timed alerts arrive in — the morning summary 6–12, the
- * bulletin 15–17, the evening one 18–23 — each painted with the sky of its hour (§3.2,
- * the ribbon's own rule: a depiction, the words are under it) and marked with its drawing,
- * and "now" as a disc. The alerts that arrive whenever the weather does are named on a
- * line under it rather than drawn, because they have no window to draw.
- *
- * It answers the question a switch list cannot: when will this phone make a sound.
+ * The windows the timed alerts arrive in, for the ones switched on: the morning summary
+ * 6–12, the bulletin 15–17, the evening one 18–23, each with the sky of its hour (§3.2, the
+ * ribbon's own rule: a depiction, the words are under it) and its drawing.
  */
 @Composable
-private fun AlertDayStrip(
-    notifications: com.callbackdev.chiaro.domain.settings.NotificationSettings,
-    ownRules: Boolean,
-    now: java.time.LocalTime,
-    modifier: Modifier = Modifier
-) {
+private fun alertWindows(
+    notifications: com.callbackdev.chiaro.domain.settings.NotificationSettings
+): List<AlertWindow> {
     val sky = com.callbackdev.chiaro.ui.theme.ChiaroTheme.sky
-    val track = MaterialTheme.colorScheme.surfaceContainerHighest
-    val ink = MaterialTheme.colorScheme.onSurface
-    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val windows = buildList {
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val yellow = com.callbackdev.chiaro.ui.theme.ChiaroTheme.colors.warningYellow
+    val quietTint = MaterialTheme.colorScheme.onSurfaceVariant
+    val morning = stringResource(R.string.alert_summary_title)
+    val bulletin = stringResource(R.string.alerts_window_bulletin)
+    val evening = stringResource(R.string.alert_evening_title)
+    return buildList {
         if (notifications.dailySummary) {
-            add(AlertWindow(6, 12, sky.gradient(35.0).mid, ChiaroIcons.sunrise, stringResource(R.string.alert_summary_title)))
+            add(AlertWindow(6, 12, sky.gradient(35.0).mid, ChiaroIcons.sunrise, morning))
         }
         if (notifications.officialWarnings) {
+            // The yellow level's container on paper, its ink on a dark ground, where the
+            // container is an olive the track swallows (rendered).
             add(
                 AlertWindow(
-                    // The yellow level's container on paper, its ink on a dark ground,
-                    // where the container is an olive the track swallows (rendered).
-                    15, 17, com.callbackdev.chiaro.ui.theme.ChiaroTheme.colors.warningYellow.let {
-                        if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) it.ink else it.container
-                    },
-                    ChiaroIcons.warning, stringResource(R.string.warning_switch_title),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    15, 17, if (dark) yellow.ink else yellow.container,
+                    ChiaroIcons.warning, bulletin, tint = quietTint
                 )
             )
         }
         if (notifications.eveningSummary) {
-            add(AlertWindow(18, 23, sky.gradient(-8.0).mid, ChiaroIcons.starryNight, stringResource(R.string.alert_evening_title)))
+            add(AlertWindow(18, 23, sky.gradient(-8.0).mid, ChiaroIcons.starryNight, evening))
         }
     }
+}
+
+/**
+ * The reader's day of alerts (design review, 23 set 2026): twenty-four hours as a track, the
+ * [windows] painted on it and marked with their drawings, and "now" as a disc. The alerts
+ * that arrive whenever the weather does are named on a line under it rather than drawn,
+ * because they have no window to draw. It answers the question a switch list cannot: when
+ * will this phone make a sound.
+ *
+ * The lower half of the hero since the Alerts review (point 7, 14 ott 2026), under the next
+ * window it pictures: its own card and its label «Quando arrivano» went, because the row
+ * above it already says what the drawing is for.
+ */
+@Composable
+private fun AlertDayStrip(
+    windows: List<AlertWindow>,
+    notifications: com.callbackdev.chiaro.domain.settings.NotificationSettings,
+    ownRules: Boolean,
+    now: java.time.LocalTime
+) {
+    val track = MaterialTheme.colorScheme.surfaceContainerHighest
+    val ink = MaterialTheme.colorScheme.onSurface
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val anytime = listOfNotNull(
         stringResource(R.string.alert_severe_title).takeIf { notifications.severeWeatherAlerts },
         stringResource(R.string.alert_precip_title).takeIf { notifications.precipitationWarning },
@@ -905,90 +1126,75 @@ private fun AlertDayStrip(
         listOf(0, 6, 12, 18, 24).map { it to measurer.measure(androidx.compose.ui.text.AnnotatedString("$it"), hourStyle) }
     }
     val iconPainters = windows.map { androidx.compose.ui.graphics.vector.rememberVectorPainter(it.icon) }
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = MaterialTheme.shapes.extraLarge,
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        androidx.compose.foundation.Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(DayIcon + 6.dp + DayTrack + 8.dp + 14.dp)
+                .semantics { contentDescription = spoken }
         ) {
-            // A card's label, as the Sky labels its cards («Stanotte», «Il prossimo, oggi»).
-            Text(
-                text = stringResource(R.string.alerts_day_title),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-            androidx.compose.foundation.Canvas(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(DayIcon + 6.dp + DayTrack + 8.dp + 14.dp)
-                    .semantics { contentDescription = spoken }
-            ) {
-                val w = size.width
-                val iconPx = DayIcon.toPx()
-                val top = iconPx + 6.dp.toPx()
-                val trackH = DayTrack.toPx()
-                fun x(hour: Float) = w * hour / 24f
-                val corner = androidx.compose.ui.geometry.CornerRadius(trackH / 2f)
-                drawRoundRect(track, topLeft = Offset(0f, top), size = Size(w, trackH), cornerRadius = corner)
-                windows.forEachIndexed { i, win ->
-                    val x0 = x(win.from.toFloat())
-                    val x1 = x(win.to.toFloat())
-                    drawRoundRect(win.color, topLeft = Offset(x0, top), size = Size(x1 - x0, trackH), cornerRadius = corner)
-                    val cx = (x0 + x1) / 2f
-                    translate(left = cx - iconPx / 2f, top = 0f) {
-                        with(iconPainters[i]) {
-                            draw(
-                                Size(iconPx, iconPx),
-                                colorFilter = if (win.tint != Color.Unspecified) {
-                                    androidx.compose.ui.graphics.ColorFilter.tint(win.tint)
-                                } else null
-                            )
-                        }
+            val w = size.width
+            val iconPx = DayIcon.toPx()
+            val top = iconPx + 6.dp.toPx()
+            val trackH = DayTrack.toPx()
+            fun x(hour: Float) = w * hour / 24f
+            val corner = androidx.compose.ui.geometry.CornerRadius(trackH / 2f)
+            drawRoundRect(track, topLeft = Offset(0f, top), size = Size(w, trackH), cornerRadius = corner)
+            windows.forEachIndexed { i, win ->
+                val x0 = x(win.from.toFloat())
+                val x1 = x(win.to.toFloat())
+                drawRoundRect(win.color, topLeft = Offset(x0, top), size = Size(x1 - x0, trackH), cornerRadius = corner)
+                val cx = (x0 + x1) / 2f
+                translate(left = cx - iconPx / 2f, top = 0f) {
+                    with(iconPainters[i]) {
+                        draw(
+                            Size(iconPx, iconPx),
+                            colorFilter = if (win.tint != Color.Unspecified) {
+                                androidx.compose.ui.graphics.ColorFilter.tint(win.tint)
+                            } else null
+                        )
                     }
                 }
-                // Now, as the disc the daylight ribbon uses.
-                val nowX = x(now.hour + now.minute / 60f)
-                val r = trackH * 0.9f
-                drawCircle(ink, radius = r, center = Offset(nowX, top + trackH / 2f))
-                drawCircle(track, radius = r - 2.dp.toPx(), center = Offset(nowX, top + trackH / 2f))
-                // The quiet hours (23 set 2026): a hairline under the track from 22 to 7,
-                // where everything above still arrives, only without a sound.
-                val quietY = top + trackH + 3.dp.toPx()
-                val quietStroke = 2.dp.toPx()
-                listOf(0f to 7f, 22f to 24f).forEach { (from, to) ->
-                    drawLine(
-                        labelColor.copy(alpha = 0.6f),
-                        start = Offset(x(from) + quietStroke, quietY),
-                        end = Offset(x(to) - quietStroke, quietY),
-                        strokeWidth = quietStroke,
-                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                        pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
-                            floatArrayOf(4.dp.toPx(), 4.dp.toPx())
-                        )
-                    )
-                }
-                val labelTop = top + trackH + 8.dp.toPx()
-                hourLabels.forEach { (h, text) ->
-                    val lx = (x(h.toFloat()) - text.size.width / 2f).coerceIn(0f, w - text.size.width)
-                    drawText(text, topLeft = Offset(lx, labelTop))
-                }
             }
-            if (anytime.isNotEmpty()) {
-                Text(
-                    text = stringResource(R.string.alerts_day_anytime, anytime.joinToString(" · ")),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = labelColor
+            // Now, as the disc the daylight ribbon uses.
+            val nowX = x(now.hour + now.minute / 60f)
+            val r = trackH * 0.9f
+            drawCircle(ink, radius = r, center = Offset(nowX, top + trackH / 2f))
+            drawCircle(track, radius = r - 2.dp.toPx(), center = Offset(nowX, top + trackH / 2f))
+            // The quiet hours (23 set 2026): a hairline under the track from 22 to 7,
+            // where everything above still arrives, only without a sound.
+            val quietY = top + trackH + 3.dp.toPx()
+            val quietStroke = 2.dp.toPx()
+            listOf(0f to 7f, 22f to 24f).forEach { (from, to) ->
+                drawLine(
+                    labelColor.copy(alpha = 0.6f),
+                    start = Offset(x(from) + quietStroke, quietY),
+                    end = Offset(x(to) - quietStroke, quietY),
+                    strokeWidth = quietStroke,
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                        floatArrayOf(4.dp.toPx(), 4.dp.toPx())
+                    )
                 )
             }
+            val labelTop = top + trackH + 8.dp.toPx()
+            hourLabels.forEach { (h, text) ->
+                val lx = (x(h.toFloat()) - text.size.width / 2f).coerceIn(0f, w - text.size.width)
+                drawText(text, topLeft = Offset(lx, labelTop))
+            }
+        }
+        if (anytime.isNotEmpty()) {
             Text(
-                text = stringResource(R.string.alerts_day_quiet),
+                text = stringResource(R.string.alerts_day_anytime, anytime.joinToString(" · ")),
                 style = MaterialTheme.typography.bodySmall,
                 color = labelColor
             )
         }
+        Text(
+            text = stringResource(R.string.alerts_day_quiet),
+            style = MaterialTheme.typography.bodySmall,
+            color = labelColor
+        )
     }
 }
 
@@ -1003,6 +1209,7 @@ private class AlertWindow(
 
 private val DayIcon = 26.dp
 private val DayTrack = 10.dp
+private val FabClearance = 88.dp
 
 /** A template's drawing: what it is about, from the weather family. */
 @Composable
@@ -1159,7 +1366,6 @@ private sealed interface EditorDialog {
     data class Operator(val index: Int) : EditorDialog
     data class Value(val index: Int) : EditorDialog
     data object Placeholder : EditorDialog
-    data object ConfirmDelete : EditorDialog
 
     /** The start ([end] false) or the end of the hours' band at [index]. */
     data class BandTime(val index: Int, val end: Boolean) : EditorDialog
@@ -1187,7 +1393,10 @@ private fun RuleEditorSheet(
     units: UnitSettings,
     daylightToday: Pair<java.time.LocalTime, java.time.LocalTime>?,
     viewModel: AlertsViewModel,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    /** Deletes [NotificationRule] — the rule as the sheet shows it, its unsaved name and
+     * message included, so that «Annulla» brings back what the reader was looking at. */
+    onDelete: (NotificationRule) -> Unit
 ) {
     val res = LocalContext.current.resources
     val locale = currentLocale()
@@ -1406,7 +1615,11 @@ private fun RuleEditorSheet(
             }
 
             TextButton(
-                onClick = { dialog = EditorDialog.ConfirmDelete },
+                // No «Eliminare questo avviso?» since the Alerts review (point 10, 14 ott
+                // 2026): the snackbar's «Annulla» puts it back, as the Sky's does a moment.
+                onClick = {
+                    onDelete(rule.copy(name = name.trim().ifEmpty { rule.name }, message = message.text))
+                },
                 contentPadding = FlushTextButtonPadding
             ) {
                 Text(
@@ -1493,28 +1706,6 @@ private fun RuleEditorSheet(
                 onDismiss = { dialog = null }
             )
         }
-        EditorDialog.ConfirmDelete -> AlertDialog(
-            onDismissRequest = { dialog = null },
-            title = { Text(stringResource(R.string.rule_delete_confirm_title)) },
-            text = { Text(stringResource(R.string.rule_delete_confirm_body)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    dialog = null
-                    viewModel.remove(rule.id)
-                    onDismiss()
-                }) {
-                    Text(
-                        text = stringResource(R.string.rule_delete),
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { dialog = null }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            }
-        )
         null -> Unit
     }
 }

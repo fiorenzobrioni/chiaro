@@ -392,7 +392,9 @@ notation never appears.
 Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen opened with two).
 
 - **Official** (first, because it is the one nobody wrote): the warning in force for the place's
-  zone, as the same banner Today shows, opening the same sheet — and the three states the banner
+  zone, opening the same sheet as Today's banner — and, since the Alerts review of 14 ott 2026,
+  as the answer of the card that heads the page, in the level's colour, with the window the phone
+  may ring in next and the day of windows under it — and the three states the banner
   never has to draw, because here the absence *is* the answer: "No warning for *Nodo idraulico di
   Milano* · bulletin of 15:19", "Yesterday's bulletin; the next one usually lands by 16:00", and
   "Official warnings are available for places in Italy" until MeteoAlarm lands (Fase 12). With it,
@@ -419,7 +421,9 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     "A run in the cold", "High UV", "A clear night". Picking one creates a real rule with sensible
     thresholds, already on. **The first card is "New alert"** (26 set 2026): a rule from
     scratch, for what no idea covers, started from one neutral condition and opened straight in
-    the builder.
+    the builder. Since the Alerts review (14 ott 2026) **"New alert" is the screen's one action**,
+    a FAB that opens the ideas in a sheet with **"From scratch"** at its head; the row of ideas
+    stays on the page only while "Yours" is empty, as its empty state.
   - **The builder** is a sentence with three tappable chips: *Notify me when* **[rain, next 6 h]**
     *is* **[above]** **[70%]**, plus up to two more conditions (three in all since 26 set 2026:
     a range is two) and the message. Pickers, never a text field for a value that has a range:
@@ -433,6 +437,8 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
   - **Preview** runs the rule against the current data and says what it would have done, with no
     notification posted.
   - Each rule card shows its sentence, its state, and when it last fired.
+  - **Deleting** a rule asks nothing: the sheet closes with "Undo", which puts it back as it was
+    (14 ott 2026, as the Sky undoes a moment).
 
 ### 5.5 Journal
 

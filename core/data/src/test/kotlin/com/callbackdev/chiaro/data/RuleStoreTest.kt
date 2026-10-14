@@ -102,6 +102,36 @@ class RuleStoreTest {
         assertTrue(!rules[1].enabled)
     }
 
+    /** «Annulla» after a deletion (the Alerts review, point 10): the rule comes back as it
+     * was, in its place and with its own id, and the next new rule still gets a fresh one. */
+    @Test
+    fun `restore puts a removed rule back where it was, with its id`() = runBlocking {
+        val store = store()
+        repeat(3) { store.add() }
+        val middle = store.rules.first()[1].copy(name = "bici", enabled = false)
+        store.update(middle)
+        store.remove(middle.id)
+        store.restore(middle, index = 1)
+        assertEquals(listOf(1L, 2L, 3L), store.rules.first().map { it.id })
+        assertEquals(middle, store.rules.first()[1])
+        store.add()
+        assertEquals(4L, store.rules.first().last().id)
+    }
+
+    @Test
+    fun `restore never doubles a rule nor passes the ceiling`() = runBlocking {
+        val store = store()
+        store.add()
+        val rule = store.rules.first().single()
+        store.restore(rule, index = 0)
+        assertEquals(1, store.rules.first().size)
+        store.remove(rule.id)
+        repeat(MaxRules) { store.add() }
+        store.restore(rule, index = 0)
+        assertEquals(MaxRules, store.rules.first().size)
+        assertTrue(store.rules.first().none { it.id == rule.id })
+    }
+
     @Test
     fun `add is a no-op at the ceiling`() = runBlocking {
         val store = store()
