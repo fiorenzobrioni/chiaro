@@ -12784,3 +12784,58 @@ dell'hero.
   360 dp, dieci giorni chiusi), con ogni tipo di voce, un avviso che esiste e uno cancellato,
   guardata immagine per immagine.
 - Suite completa e lint.
+
+## Diario: le voci che aprono la loro pagina, TalkBack (14 ott 2026)
+
+Punto 3 dell'ordine della review del Diario (`/mnt/project-files/review-diario/review-diario.md`):
+A.6 e A.11, richiesti dal committente.
+
+- [x] **A.6, le voci che aprono**: tutta la riga è il bersaglio, senza chevron, con
+  `onClickLabel` come le righe del Cielo (`EntryOpens` in `JournalScreen.kt`).
+  - un momento del cielo osservato apre la sua pagina (`SkyEventPage` in un foglio, i
+    momenti collegati si aprono al suo posto);
+  - un'allerta apre il foglio del bollettino (`WarningSheet`), se il bollettino in mano copre
+    ancora il giorno della voce (`JournalViewModel.warnings`);
+  - un avviso scattato apre il suo editor in Avvisi: `AlertsRoute(openRuleId)`, portato dalla
+    shell (`ChiaroRoot`) con `openTabRoot(ShellTab.ALERTS)`;
+  - una revisione apre «La storia di sabato 17» (`DayStorySheet`, `dayStory()`).
+  - Aggiornamenti mancati, bollettini mancati e giorni chiusi restano fermi.
+- [x] **A.11, TalkBack**: ogni voce è un nodo solo. Quelle che aprono lo sono perché cliccabili,
+  le altre con `semantics(mergeDescendants = true)`; l'ora è letta con la frase.
+
+### Decisioni e deviazioni
+
+- **La storia del giorno in forma minima, non C.2 intero.** C.2 (due grafici a gradini) è nel
+  punto 6 dell'ordine; una revisione però doveva aprire qualcosa ora. La forma minima è la riga
+  della striscia letta in verticale: una riga per ogni colonna che ha mosso pioggia o massima,
+  la più recente in alto, il numero mosso in inchiostro pieno. Gli stessi dati che la striscia
+  ha già in memoria, niente di nuovo da salvare. Una colonna vuota non è un passo (una notte a
+  telefono spento non è una previsione rimasta ferma), e la nota in fondo dice ogni quante ore
+  è letta e da quando. I grafici di C.2 la sostituiranno o la affiancheranno.
+- **Solo i giorni che la striscia tiene**: la striscia copre i giorni ancora davanti, su tre
+  giorni e mezzo. Una revisione di un giorno già passato resta ferma: la sua storia non c'è più,
+  e aprire un foglio vuoto sarebbe la schermata che promette qualcosa che non ha.
+- **Il bollettino solo se copre ancora il giorno.** L'app tiene un bollettino solo, quello in
+  mano: aprirlo da una voce di tre giorni fa mostrerebbe i gradi di un altro bollettino sotto la
+  frase di quello vecchio. Se lo copre, il foglio dice da sé l'ora del suo bollettino.
+- **La pagina del momento senza «Aggiungi/Togli».** È la pagina che apre il Cielo, senza il
+  pulsante dell'agenda: il diario registra quello che è successo, l'agenda si tiene nel Cielo, e
+  togliere un momento dal diario sarebbe un effetto lontano dalla pagina che lo mostra.
+- **L'avviso in Avvisi, non un editor nel Diario.** «Apre quell'avviso in Avvisi», come diceva
+  la review: l'editor vive con il view model di Avvisi, e copiarlo nel Diario vorrebbe dire due
+  editor. La richiesta passa per la shell e Avvisi si apre alla sua radice (non sotto una
+  pagina delle Impostazioni lasciata aperta lì); indietro chiude l'editor, poi torna a Oggi come
+  da ogni scheda.
+- **File condivisi toccati** (il thread di Avvisi lavora in parallelo): `AlertsScreen.kt` (due
+  parametri e un `LaunchedEffect` in `AlertsRoute`), `ChiaroRoot.kt`, `ChiaroNavigation.kt`
+  (`openTabRoot`). Nessun file del tema.
+
+### Come è stato verificato
+
+- `JournalOpensTest` (Robolectric): ogni tipo di voce apre quello che deve, con la sua etichetta
+  per TalkBack; un avviso cancellato e un aggiornamento mancato non prendono il tocco; una voce
+  ferma è un nodo solo con l'ora dentro. `DayStoryTest`: i passi, le colonne vuote, un giorno
+  che la striscia non tiene.
+- La storia del giorno e le righe disegnate con Robolectric (IT chiaro, EN scuro, 360 dp),
+  guardate immagine per immagine.
+- Suite completa e lint.

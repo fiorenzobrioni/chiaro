@@ -120,12 +120,22 @@ import kotlinx.coroutines.launch
 @Composable
 fun AlertsRoute(
     onOpenSettings: () -> Unit,
+    /** An alert another screen asked to open (the Journal's line of one that fired), or
+     * null; its editor opens once, and [onOpenRuleHandled] clears the request. */
+    openRuleId: Long? = null,
+    onOpenRuleHandled: () -> Unit = {},
     alertsViewModel: AlertsViewModel = viewModel(factory = AlertsViewModel.Factory),
     placesViewModel: PlacesViewModel = viewModel(factory = PlacesViewModel.Factory)
 ) {
     val state by alertsViewModel.state.collectAsStateWithLifecycle()
     var placesOpen by remember { mutableStateOf(false) }
     var editingRuleId by rememberSaveable { mutableStateOf<Long?>(null) }
+    LaunchedEffect(openRuleId) {
+        if (openRuleId != null) {
+            editingRuleId = openRuleId
+            onOpenRuleHandled()
+        }
+    }
 
     AlertsScreen(
         state = state,

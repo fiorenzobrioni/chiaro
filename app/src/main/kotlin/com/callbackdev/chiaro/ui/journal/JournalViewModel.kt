@@ -15,9 +15,12 @@ import com.callbackdev.chiaro.data.WeatherRepository
 import com.callbackdev.chiaro.data.local.WarningRecordDao
 import com.callbackdev.chiaro.data.local.WarningRecordEntity
 import com.callbackdev.chiaro.data.local.WarningRecordKind
+import com.callbackdev.chiaro.data.warnings.OfficialWarningReader
+import com.callbackdev.chiaro.data.warnings.PlaceWarningState
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningHazard
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import java.time.Duration
@@ -29,6 +32,7 @@ import java.time.ZonedDateTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -67,7 +71,8 @@ class JournalViewModel(
     private val fetchLogStore: FetchLogStore,
     private val warningRecords: WarningRecordDao?,
     settingsStore: SettingsStore,
-    ruleStore: RuleStore? = null
+    ruleStore: RuleStore? = null,
+    warningReader: OfficialWarningReader? = null
 ) : ViewModel() {
 
     val units: StateFlow<UnitSettings> = settingsStore.settings
@@ -85,6 +90,29 @@ class JournalViewModel(
         .map { list -> list.associateBy { it.name } }
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    /**
+     * The bulletin that still covers today for the active place, or null: what a warning's
+     * line opens (review of the Journal, A.6), the same sheet Alerts and Today open. Only a
+     * current one: the app keeps no old bulletin, so a line about a day it no longer
+     * covers opens nothing rather than another bulletin's grades.
+     */
+    val warnings: StateFlow<PlaceWarnings?> = if (warningReader == null) {
+        MutableStateFlow(null)
+    } else {
+        combine(
+            cityStore.activeSource.map { it.cityOrNull() }.distinctUntilChanged(),
+            warningReader.bulletin
+        ) { city, bulletin ->
+            city?.let {
+                runCatching {
+                    warningReader.state(warningReader.zoneOf(it), bulletin, warningReader.today())
+                }.getOrNull() as? PlaceWarningState.Current
+            }?.warnings
+        }
+            .flowOn(Dispatchers.Default)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+    }
 
     val state: StateFlow<JournalUiState> = cityStore.activeSource
         .map { it.cityOrNull() }
@@ -192,7 +220,8 @@ class JournalViewModel(
                     fetchLogStore = ServiceLocator.fetchLogStore(app),
                     warningRecords = ServiceLocator.warningRecordDao(app),
                     settingsStore = ServiceLocator.settingsStore(app),
-                    ruleStore = ServiceLocator.ruleStore(app)
+                    ruleStore = ServiceLocator.ruleStore(app),
+                    warningReader = ServiceLocator.warningReader(app)
                 )
             }
         }

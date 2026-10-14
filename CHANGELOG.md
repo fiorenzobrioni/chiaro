@@ -40,6 +40,10 @@ sections are a normal size and live here alone.
   for a revision, your alert's own drawing for an alert that fired, a crossed-out cloud for an
   update that did not arrive. Under «How the forecast did» each day is named by weekday and
   date, where a lone «T» could be Tuesday or Thursday.
+- **Journal lines open what they talk about.** Tap a sky moment to read its page, a warning
+  to see the bulletin, an alert that fired to open it in Alerts, and a forecast change to see
+  the story of that day: each update that moved its rain or its high, the latest on top. With
+  TalkBack each line is read as one, hour included.
 - **Undo on the Sky screen.** Adding or removing a moment from its page now shows a message
   with «Undo», and undoing a removal brings the moment back with its own reminder.
 - **An easier place switcher.** On Sky, Alerts and Journal the whole title is now the button

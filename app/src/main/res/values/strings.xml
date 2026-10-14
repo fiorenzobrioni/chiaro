@@ -511,7 +511,7 @@
     <string name="guide_journal_title">Journal</string>
     <string name="guide_journal_p1">Every update leaves a line. The Journal is that record read as prose, newest first, grouped by day.</string>
     <string name="guide_journal_entries_title">What is written there</string>
-    <string name="guide_journal_entries_body">How the forecast moved for the days ahead, which of your alerts fired and when, which sky moments were actually observed and with what verdict — and the updates that did not make it, with the reason. A failed update is an entry, not a silence. When a day is over, one more line closes it: what the rain was given at, and whether it rained.</string>
+    <string name="guide_journal_entries_body">How the forecast moved for the days ahead, which of your alerts fired and when, which sky moments were actually observed and with what verdict — and the updates that did not make it, with the reason. A failed update is an entry, not a silence. When a day is over, one more line closes it: what the rain was given at, and whether it rained. A line with a page behind it can be tapped: a sky moment opens its page, a warning the bulletin, one of your alerts its card in Alerts, and a changed forecast the story of that day, update by update.</string>
     <string name="guide_journal_drift_title">How the week has been moving</string>
     <string name="guide_journal_drift_body">One row for today and each day ahead, one column per six hours, the colour on the metric\'s own scale: rain, or the highs. A slot no update landed in stays empty, so a night with the phone off looks like the gap it was. A day whose forecast minimum is at or below zero carries a mark beside its name, with those days named underneath: freezing is a threshold, not a drift, so it gets a mark and a sentence rather than a scale of its own. At the top of the page the answer in a few words, with its numbers under it: the day that moved most, its row picked out in the strip. It answers the question anyone planning a weekend actually asks — is this getting better or worse? Tap it to see the numbers behind the colours.</string>
     <string name="guide_journal_drift_caption">An example: three days, six slots, on the rain scale.</string>
@@ -1291,6 +1291,15 @@
     <string name="journal_empty">Nothing written yet. The journal fills up as the updates come in.</string>
     <string name="journal_yesterday">Yesterday</string>
     <string name="journal_log_title">What happened</string>
+    <!-- What a line of the log opens (review of the Journal, A.6): TalkBack says "double-tap to …". -->
+    <string name="journal_open_alert">open the alert</string>
+    <string name="journal_open_bulletin">read the bulletin</string>
+    <string name="journal_open_story">see the day\'s story</string>
+    <string name="journal_story_title">The story of %1$s</string>
+    <plurals name="journal_story_note">
+        <item quantity="one">One line for each time this day\'s forecast changed, the latest on top. Read every hour, since %2$s at %3$s.</item>
+        <item quantity="other">One line for each time this day\'s forecast changed, the latest on top. Read every %1$d hours, since %2$s at %3$s.</item>
+    </plurals>
     <plurals name="journal_drift_every">
         <item quantity="one">One column an hour</item>
         <item quantity="other">One column every %d hours</item>

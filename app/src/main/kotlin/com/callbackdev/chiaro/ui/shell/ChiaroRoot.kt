@@ -31,6 +31,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -177,6 +180,10 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
         .fillMaxSize()
         .padding(bottom = barHeight)
 
+    // An alert the Journal asked to open on its tab, held here because the request crosses
+    // from one tab's page to another's and must survive the switch between them.
+    var alertToOpen by rememberSaveable { mutableStateOf<Long?>(null) }
+
     val provider = entryProvider<NavKey> {
         entry<TodayKey> {
             Box(tabPage) {
@@ -196,10 +203,24 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
             }
         }
         entry<AlertsKey> {
-            Box(tabPage) { AlertsRoute(onOpenSettings = { nav.navigate(SettingsKey) }) }
+            Box(tabPage) {
+                AlertsRoute(
+                    onOpenSettings = { nav.navigate(SettingsKey) },
+                    openRuleId = alertToOpen,
+                    onOpenRuleHandled = { alertToOpen = null }
+                )
+            }
         }
         entry<JournalKey> {
-            Box(tabPage) { JournalRoute(onOpenSettings = { nav.navigate(SettingsKey) }) }
+            Box(tabPage) {
+                JournalRoute(
+                    onOpenSettings = { nav.navigate(SettingsKey) },
+                    onOpenAlert = { id ->
+                        alertToOpen = id
+                        nav.openTabRoot(ShellTab.ALERTS)
+                    }
+                )
+            }
         }
         entry<SettingsKey> {
             SettingsRoute(

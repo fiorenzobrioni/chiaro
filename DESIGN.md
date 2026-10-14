@@ -1695,6 +1695,28 @@ its night; it was 16 dp under a hero of 12, two radii one above the other.
   rather than clips at ten columns on 360 dp (`TextAutoSize`, down to 8 sp), and the columns are
   4 dp apart.
 
+**A line opens its page** (review of the Journal, points A.6 and A.11, 14 ott 2026), as a row
+of the Sky opens its moment: the whole line is the target, with no chevron (the same 24 dp
+reason as the Sky's rows) and an `onClickLabel` that tells TalkBack what the tap does.
+
+- An **observed sky moment** opens its page, the one the agenda and the catalog open, without
+  the agenda's add-or-remove button: the diary records, the agenda is kept on its tab.
+- A **warning** opens the bulletin's sheet (§8.13), only while the bulletin in hand still
+  covers the line's day: the app keeps no other, and a line about a day gone by would open
+  another bulletin's grades.
+- An **alert that fired** opens its editor on Alerts, at that tab's root; one deleted or
+  renamed since stays still.
+- A **revision** opens **the story of its day**: the strip's row read down, one line for each
+  column that moved the rain or the high, newest on top, the number that moved in full ink
+  and semibold and the one that held in the quiet ink, the rain on its own ramp. A slot no
+  fetch landed in is not a step. A day the strip no longer holds has no story and its line
+  stays still. (The first form of the review's C.2; its two step charts come later.)
+- A **missed update** and a **closed day** open nothing: the line is their whole story.
+
+Every line is **one node** for TalkBack: a line that opens is one by being clickable, the
+others merge their descendants. The sentence, the facts and the hour used to be three stops,
+the hour last and on its own.
+
 **8.11 States** — empty ("no place yet", with the one action that fixes it), error (what
 failed, in plain language, and a retry), stale (§8.2), loading (a shimmer that cannot be
 mistaken for a value, §1.1).
