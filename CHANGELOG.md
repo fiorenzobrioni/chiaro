@@ -29,6 +29,13 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Tonight always answers.** On a night with no dark window (a moon up from dusk to dawn,
+  a summer night that never gets dark, a polar night) the Sky card now opens with a word, such
+  as «A moonlit night», and the night's cloud, instead of a paragraph. The hours of the night
+  are printed large.
+- **The next moment stands out.** At the top of the moments, the next one is a card of its
+  own with its time large, how soon, which way to look and its verdict. The others sit in
+  grouped rows, with their times in a column on the right.
 - **The ribbon shows the sky.** Under the temperature and on every day of the week, the band
   of the day's light now takes the forecast's clouds hour by hour, with the same colors as the
   sky at the top, and marks the hours with rain or snow: each day says *when* it is clear,

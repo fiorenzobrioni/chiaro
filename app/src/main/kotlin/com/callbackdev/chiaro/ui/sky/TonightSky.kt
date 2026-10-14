@@ -203,6 +203,8 @@ internal fun TonightCard(
                                 color = Color.White.copy(alpha = SecondaryAlpha)
                             )
                         }
+                    } else {
+                        NoWindowHeadline(tonight)
                     }
                 }
                 tonight.moonIlluminationPct?.let { pct ->
@@ -248,27 +250,107 @@ internal fun TonightCard(
     }
 }
 
-/** The three skies with no window, each in its own sentence (see [Tonight.reason]). */
+/**
+ * The answer at the top of a night with no dark window (review point 1, 14 ott 2026): a
+ * word in the verdict's place, so the card answers before it explains — until then the
+ * hero of a full-moon night was four lines of bold prose and no answer at all.
+ *
+ * It is **not a verdict**, and is not dressed as one: no mark, no verdict colour. The four
+ * verdicts judge a dark window, and there is none to judge; «Niente da fare» in red would
+ * be false on the night the moon itself is the sight. So it is a statement of what the
+ * night is, in white, with its arithmetic under it as a verdict would carry it: the
+ * night's mean cloud, beside the moon's own percentage on the badge — the two numbers
+ * that decide whether it is worth looking up at all.
+ */
+@Composable
+private fun NoWindowHeadline(tonight: Tonight) {
+    val res = LocalContext.current.resources
+    val word = when (tonight.reason) {
+        SkyNotScheduled.MOON_ALL_NIGHT -> R.string.sky_tonight_headline_moon
+        SkyNotScheduled.DARK_ALL_DAY -> R.string.sky_tonight_headline_dark_all_day
+        else -> R.string.sky_tonight_headline_no_darkness
+    }
+    Text(
+        text = stringResource(word),
+        style = MaterialTheme.typography.headlineMedium,
+        color = Color.White
+    )
+    // The moon's percentage is the badge's, right beside this: said once.
+    meanCloud(tonight.hours)?.let { res.getString(R.string.sky_evidence_cloud, it) }?.let { evidence ->
+        Text(
+            text = evidence,
+            style = MaterialTheme.typography.bodyMedium.tabular(),
+            color = Color.White.copy(alpha = SecondaryAlpha)
+        )
+    }
+}
+
+/**
+ * The night's mean cloud cover, the number a whole-night statement rests on, or null
+ * when the forecast has none of its hours (never a zero nobody forecast).
+ */
+internal fun meanCloud(hours: List<NightHour>): Int? =
+    hours.takeIf { it.isNotEmpty() }?.map { it.cloudPct }?.average()?.roundToInt()
+
+/**
+ * The times of the night, big and tabular (review point 1): what a reader came for,
+ * which used to be the middle of a sentence. Its label says which times they are; a
+ * screen reader hears the whole sentence instead of two clock readings.
+ */
+@Composable
+private fun NightTimes(label: String, start: String, end: String, spoken: String) {
+    Column(
+        modifier = Modifier
+            .padding(top = 8.dp)
+            .clearAndSetSemantics { contentDescription = spoken }
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            color = Color.White.copy(alpha = SecondaryAlpha)
+        )
+        Text(
+            text = "$start – $end",
+            style = MaterialTheme.typography.headlineSmall.tabular(),
+            color = Color.White
+        )
+    }
+}
+
+/** The three skies with no window (see [Tonight.reason]): the moon's night shows its
+ * dark hours like a window would, the other two are a fact about latitude and season. */
 @Composable
 private fun NoWindowText(tonight: Tonight, zone: ZoneId, timeFmt: DateTimeFormatter) {
-    // A fact about the latitude and the season, stated as such — and the RIGHT fact: an
-    // empty window is also the deep polar night, where it is dark at noon and "never gets
-    // fully dark" would be the reverse of the truth (8 set 2026). Since Fase 27 the common
-    // one is a moon up from dusk to dawn, said with the night it did NOT cancel after it.
+    // The RIGHT fact: an empty window is also the deep polar night, where it is dark at
+    // noon and "never gets fully dark" would be the reverse of the truth (8 set 2026).
     val night = tonight.night
     val moonPct = tonight.moonIlluminationPct
-    val text = when {
-        tonight.reason == SkyNotScheduled.MOON_ALL_NIGHT && night?.end != null && moonPct != null ->
-            stringResource(
-                R.string.sky_tonight_moon_all_night,
-                moonPct,
-                night.start.atZone(zone).format(timeFmt),
-                night.end!!.atZone(zone).format(timeFmt)
-            )
-        tonight.reason == SkyNotScheduled.DARK_ALL_DAY -> stringResource(R.string.sky_tonight_dark_all_day)
+    if (tonight.reason == SkyNotScheduled.MOON_ALL_NIGHT && night?.end != null && moonPct != null) {
+        val start = night.start.atZone(zone).format(timeFmt)
+        val end = night.end!!.atZone(zone).format(timeFmt)
+        NightTimes(
+            label = stringResource(R.string.sky_tonight_dark_label),
+            start = start,
+            end = end,
+            spoken = stringResource(R.string.sky_tonight_dark_between, start, end)
+        )
+        Text(
+            text = stringResource(R.string.sky_tonight_moon_all_night, moonPct),
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.White.copy(alpha = SecondaryAlpha)
+        )
+        return
+    }
+    val text = when (tonight.reason) {
+        SkyNotScheduled.DARK_ALL_DAY -> stringResource(R.string.sky_tonight_dark_all_day)
         else -> stringResource(R.string.sky_tonight_no_darkness)
     }
-    Text(text = text, style = MaterialTheme.typography.titleMedium, color = Color.White)
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyLarge,
+        color = Color.White,
+        modifier = Modifier.padding(top = 8.dp)
+    )
 }
 
 /** The window, what the moon took from it, and when it is clearest. */
@@ -279,15 +361,13 @@ private fun WindowLines(
     zone: ZoneId,
     timeFmt: DateTimeFormatter
 ) {
-    Text(
-        text = stringResource(
-            R.string.sky_tonight_window,
-            window.start.atZone(zone).format(timeFmt),
-            (window.end ?: window.start).atZone(zone).format(timeFmt)
-        ),
-        style = MaterialTheme.typography.titleMedium,
-        color = Color.White,
-        modifier = Modifier.padding(top = 6.dp)
+    val start = window.start.atZone(zone).format(timeFmt)
+    val end = (window.end ?: window.start).atZone(zone).format(timeFmt)
+    NightTimes(
+        label = stringResource(R.string.sky_tonight_window_label),
+        start = start,
+        end = end,
+        spoken = stringResource(R.string.sky_tonight_window, start, end)
     )
     // What the moon took out of the night, read off the window's edges against the
     // night's (Fase 27): the window IS the moonless part.

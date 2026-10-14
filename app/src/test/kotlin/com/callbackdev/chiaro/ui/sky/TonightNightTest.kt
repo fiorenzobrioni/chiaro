@@ -152,4 +152,11 @@ class TonightNightTest {
         assertEquals(8 * 6 + 1, samples.size)
         assertTrue(samples.all { it.sunAltitudeDeg < 0.0 })
     }
+
+    @Test
+    fun `a whole night's cloud is the mean of its hours, and no hours is no number`() {
+        assertEquals(45, meanCloud(listOf(NightHour(at(0), 10), NightHour(at(1), 80))))
+        assertEquals(33, meanCloud(listOf(NightHour(at(0), 0), NightHour(at(1), 50), NightHour(at(2), 50))))
+        assertNull(meanCloud(emptyList()))
+    }
 }

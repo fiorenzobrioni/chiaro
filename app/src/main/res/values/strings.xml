@@ -572,6 +572,8 @@
          verita': la parola non entra nelle descrizioni, dove potrebbe divergere. -->
     <string name="sky_catalog_search_photo_terms" translatable="true">photo photos photograph photographs photography photographing camera cameras shot shoot</string>
     <string name="sky_moment_now">Now</string>
+    <string name="sky_until">until %1$s</string>
+    <string name="sky_next_label">Next, %1$s</string>
     <string name="sky_day_today">Today</string>
     <string name="sky_day_tomorrow">Tomorrow</string>
     <string name="sky_tonight_label">Tonight</string>
@@ -586,8 +588,16 @@
          is up, so the card can say what shortened it — or took it all. -->
     <string name="sky_tonight_moon_sets">The moon is up until %1$s, %2$d%% lit</string>
     <string name="sky_tonight_moon_rises">The moon comes back up at %1$s, %2$d%% lit</string>
-    <string name="sky_tonight_moon_all_night">The moon is up from dusk to dawn, %1$d%% lit: no genuinely dark window tonight. The sky is dark from %2$s to %3$s all the same.</string>
+    <string name="sky_tonight_moon_all_night">The moon is up from dusk to dawn, %1$d%% lit: no genuinely dark window tonight.</string>
     <string name="sky_tonight_clear_between">Clearest between %1$s and %2$s</string>
+    <!-- The hero always answers (review, point 1, 14 Oct 2026): a word in the verdict's
+         place when there is no window to judge, and the times large. -->
+    <string name="sky_tonight_headline_moon">A moonlit night</string>
+    <string name="sky_tonight_headline_no_darkness">Never fully dark</string>
+    <string name="sky_tonight_headline_dark_all_day">Dark all day</string>
+    <string name="sky_tonight_window_label">Dark window</string>
+    <string name="sky_tonight_dark_label">Dark sky</string>
+    <string name="sky_tonight_dark_between">The sky is dark from %1$s to %2$s</string>
     <!-- The night strip is explored with a finger (14 Oct 2026): the line above it says
          what to do until somebody touches it, then the hour under the finger. -->
     <string name="sky_scrub_hint">Drag to see each hour</string>

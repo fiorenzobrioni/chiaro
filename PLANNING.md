@@ -12338,10 +12338,12 @@ Material 3 Expressive) e ha deciso di attuarla tutta. Il piano, nell'ordine in c
 - [-] ~~«Se non stanotte, quando?»~~: **scartata** dal committente (14 ott 2026): oltre due
   o tre giorni la previsione delle nuvole è troppo poco precisa per indicare una notte.
 - [x] La bussola «dove guardare» per le righe che hanno una direzione.
-- [ ] 1. Un hero che risponde sempre (anche la notte in cui la luna c'è tutta la notte).
-- [ ] 2. Il prossimo momento in evidenza; gli altri in una lista a gruppi.
-- [ ] 3. Gli orari in colonna.
-- [ ] 4. Il movimento: chiavi nelle liste, `animateItem`, `MotionScheme.expressive()`.
+- [x] 1. Un hero che risponde sempre (anche la notte in cui la luna c'è tutta la notte).
+- [x] 2. Il prossimo momento in evidenza; gli altri in una lista a gruppi.
+- [x] 3. Gli orari in colonna.
+- [-] 4. Il movimento: chiavi nelle liste, `animateItem`, `MotionScheme.expressive()`.
+  **Rimandato** (committente, 14 ott 2026): vedi «Material 3 Expressive, un passaggio a
+  parte» sotto.
 - [ ] 5. «Aggiungi momento» come FAB esteso; i promemoria fuori dalla pagina.
 - [ ] 6. Una sola luna: la stessa percentuale e la stessa fase ovunque nella pagina.
 - [ ] 7. Le icone ripetute (gli sciami, la stella per cinque cose diverse).
@@ -12467,3 +12469,74 @@ disegno, non l'ago vero.
 - La bussola disegnata con Robolectric e sensori simulati (girarsi, ci sei, da calibrare,
   disturbata, senza bussola) e la pagina con «Dove guardare», guardate immagine per immagine.
 - Da provare sul telefono del committente: l'ago vero, il gesto, il telefono dritto.
+
+## Cielo: l'hero che risponde sempre, il prossimo momento, gli orari in colonna (committente, 14 ott 2026)
+
+I punti 1, 2 e 3 della revisione del Cielo.
+
+### Cosa è cambiato
+
+- **Punto 1, l'hero.** Una notte senza finestra buia apre con una parola al posto del
+  verdetto: «Notte di luna», «Mai del tutto buio», «Buio tutto il giorno», con sotto le
+  nuvole medie della notte. Gli orari sono grandi e tabellari, sotto la loro etichetta
+  («Finestra buia», o «Cielo scuro» nella notte della luna); la prosa segue, più piccola.
+  `sky_tonight_moon_all_night` perde gli orari, che ora stanno sopra di lei.
+- **Punto 2, il prossimo momento** esce dal suo giorno e diventa una card in cima alla
+  sezione: «Il prossimo, oggi», il nome, l'orario grande, fra quanto e da che parte, il
+  verdetto, la campanella. Gli altri momenti e il calendario «In arrivo» stanno in gruppi di
+  righe (segmenti `surfaceContainer` a 2 dp, angoli esterni 20 e interni 4).
+- **Punto 3, gli orari in colonna**: l'inizio di ogni momento a destra del nome, prima della
+  campanella; la fine di una finestra nella riga sotto, «fino alle 19:15».
+
+### Decisioni e deviazioni
+
+- **La parola della notte senza finestra non è un verdetto**: niente segno, niente colore.
+  I verdetti giudicano una finestra e non ce n'è una; «Niente da fare» in rosso sarebbe
+  falso proprio la notte in cui la luna è lo spettacolo. Era la riserva detta in revisione:
+  la parola resta nella card, non va nelle notifiche né nei widget.
+- **La percentuale della luna una volta sola**: il disco accanto la porta già, e la prima
+  prova la stampava tre volte (disco, riga sotto la parola, prosa).
+- **La card del prossimo in `surfaceContainerHigh`, non in un contenitore colorato**: la
+  card della notte è già la cosa forte della pagina; due cose forti non sono una gerarchia.
+- **Righe fatte a mano e non `ListItem`**, e **il verdetto sotto l'icona, non sotto il
+  nome**. Con i gruppi la riga perde 32 dp. Sotto il nome il verdetto aveva 241 dp a 360,
+  e il più largo non è più il «pioggia 100%» da 236 misurato il 12 set: con lo strato delle
+  nuvole (24 set) «✗ Niente da fare  nuvole 86%, basse» vuole circa 262, e nella prova a
+  360 dp il numero è andato sotto la parola. Dal bordo dell'icona la riga ha 304 dp a 360.
+  La riga di prima era già a 1 dp dall'andare a capo (261).
+- **Le date del calendario non vanno in colonna**: sono giorni, non minuti, e restano nella
+  riga sotto il nome.
+
+### Come è stato verificato
+
+- `TonightNightTest`: le nuvole di una notte intera sono la media delle sue ore, e senza ore
+  non c'è un numero.
+- La pagina disegnata con Robolectric in chiaro a 384 dp e in scuro a 360 dp, e l'hero nei
+  tre stati senza finestra (IT ed EN), guardati immagine per immagine; le immagini del
+  README rigenerate e guardate.
+
+## Material 3 Expressive, un passaggio a parte (committente, 14 ott 2026)
+
+Il punto 4 della revisione del Cielo (`MotionScheme.expressive()` su `MaterialTheme`, le
+chiavi e `animateItem` nelle liste) è **rimandato** a un passaggio dedicato, per due ragioni:
+
+- **È di tutta l'app, non del Cielo.** Lo schema di movimento cambia ogni componente
+  Material (interruttori, fogli, barra di navigazione, pulsanti): va guardato schermata per
+  schermata, non dentro una revisione di una.
+- **È della famiglia, non di Chiaro.** Chiaro, Passo, Saldo e Tempo condividono un
+  linguaggio (la transizione fra le pagine è già quella di Saldo, §7 di DESIGN). Un
+  aggiornamento a Material 3 Expressive fatto in una sola delle quattro le farebbe divergere;
+  va deciso e fatto per tutte, con gli stessi valori.
+
+Quando si farà, il punto di partenza misurato il 14 ott 2026:
+
+- `material3` 1.4.0 (BOM 2026.02.01) ha `MotionScheme` (standard ed expressive) e
+  `ShortNavigationBar`; **non** ha `MaterialShapes`, `ButtonGroup`, `LoadingIndicator`,
+  `FloatingToolbar` né le top app bar flessibili, che sono nella 1.5 ancora alpha. Il
+  passaggio aspetta la 1.5 stabile, o decide consapevolmente di non aspettarla.
+- `ChiaroMotion` ha già le tre molle di §7 (spatial, spatial fast, effects) e il ripiego a
+  100 ms per chi riduce le animazioni: va riconciliato con `MotionScheme`, non affiancato.
+- Le liste del Cielo non hanno chiavi (`items(n)`), quindi aggiungere o togliere un momento
+  salta invece di muoversi: è la prima cosa da sistemare, ed è indipendente dallo schema.
+- Da guardare nello stesso passaggio: la top app bar flessibile con il luogo come
+  sottotitolo (punto 10 della revisione del Cielo), le forme espressive dove dicono qualcosa.

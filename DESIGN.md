@@ -1507,11 +1507,41 @@ way; back returns to the page.
   the direction in words.
 - **No degrees**, here as on the rows: the dial is the picture of the number.
 
+**The hero always answers** (committente, 14 ott 2026, review point 1). A night with no
+dark window used to open on four lines of bold prose and no answer. It now has a word in the
+verdict's place at `headlineMedium`: «Notte di luna», «Mai del tutto buio», «Buio tutto il
+giorno». **Not a verdict and not dressed as one**: white, no mark, no verdict colour, because
+the four verdicts judge a window and there is none to judge (a red «Niente da fare» would be
+false on the night the moon is the sight). Under it, as a verdict carries its arithmetic, the
+night's mean cloud; the moon's percentage is the badge's. **The times are large**: a
+`labelLarge` label («Finestra buia», or «Cielo scuro» on the moon's night) over the times at
+`headlineSmall` tabular, «23:24 – 05:35», read by TalkBack as the whole sentence («Buio dalle
+23:24 alle 05:35»). The prose follows at `bodyMedium` in the secondary white; the polar and
+the white night keep their one sentence, at `bodyLarge`.
+
 **The moments are grouped by day** (same review): «Oggi» and «Domani» are `labelLarge`
 headings in `primary` inside the section, and the rows lose the «Domani ·» each of them
 carried — four rows saying the same word pushed the time, which is what a reader scans for,
 to the middle of the line. A row keeps «Adesso», which no heading can say, and the **next**
 timed moment says how soon («tra 1 h 20 min», the words Today's agenda uses) within half a day.
+
+**The next moment is a card; the rest are grouped rows** (committente, 14 ott 2026, review
+points 2 and 3). The next timed moment leaves its day for a card at the head of the section:
+`surfaceContainerHigh` with the hero's 28 dp corners (not a coloured container: the tonight
+card is already the loud thing on the screen), «Il prossimo, oggi» in `primary`, the name at
+`titleMedium`, the time at `headlineMedium` tabular, how soon and which way under it, then
+the verdict chip and the bell. The other moments, and the calendar ahead, sit in grouped
+`surfaceContainer` segments, 2 dp apart, 20 dp outer corners and 4 dp inner ones, inside the
+16 dp margins: Material 3 Expressive's grouped list. Each moment's **start time stands at the
+end of its headline**, `titleMedium` tabular and end-aligned before the bell, so a day's times
+read down as a column; a window's end follows in the line under it («fino alle 19:15»). A
+date on the calendar is not a column (its rows are days out) and stays in its line. The rows
+are laid out by hand rather than with `ListItem` (12 dp to the glyph, 12 after it, 4 after
+the bell), and the **verdict line starts under the glyph** rather than under the name: under
+the name it had 241 dp at 360, and «✗ Niente da fare  nuvole 86%, basse» (the layer added on
+24 set) is about 262, so on the 360 dp render its number wrapped under its word. From the
+glyph's edge it has 304 at 360 and 328 at 384. §8.8's 236 dp was measured before the layer
+existed; the old row was already 1 dp from wrapping.
 
 **The calendar ahead counts down** — «8 ottobre · tra 15 giorni», «oggi», «domani», up to two
 months out — and «too far out to say» is said **once**, as a footnote under the section,

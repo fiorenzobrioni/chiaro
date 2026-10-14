@@ -1,6 +1,14 @@
 package com.callbackdev.chiaro.ui.sky
 
 import androidx.activity.compose.BackHandler
+import com.callbackdev.chiaro.ui.theme.tabular
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -297,10 +305,34 @@ private fun SkyContent(
         // Grouped by day under a heading of their own (design review, 23 set 2026): four
         // rows that each began «Domani ·» said the same word four times and pushed the
         // time — the thing a reader scans for — to the middle of the line.
-        val (todays, tomorrows) = content.moments.partition { it.timing != MomentTiming.TOMORROW }
+        // The next timed moment is lifted out of its day into a card of its own (review
+        // point 2, 14 ott 2026): every row used to weigh the same, and the one a reader
+        // is waiting for was a grey «tra 6 h 20 min» in the middle of a line.
         val next = content.moments.firstOrNull {
             it.timing != MomentTiming.NOW && it.occurrence is SkyOccurrence.At && it.moonPhase == null
         }
+        fun open(moment: Moment, line: String) {
+            pageId = moment.job.id
+            pageBearing = moment.bearingDeg
+            pageWhen = line
+        }
+        fun bell(moment: Moment) {
+            leadDialog = LeadDialog.ForMoment(moment.job.id, moment.lead, moment.followsDefault)
+        }
+        next?.let { moment ->
+            item(key = "next") {
+                NextMomentCard(
+                    moment = moment,
+                    zone = content.zone,
+                    timeFmt = timeFmt,
+                    onOpen = { open(moment, it) },
+                    onBell = { bell(moment) }
+                )
+            }
+        }
+        val (todays, tomorrows) = content.moments
+            .filter { it !== next }
+            .partition { it.timing != MomentTiming.TOMORROW }
         listOf(R.string.sky_day_today to todays, R.string.sky_day_tomorrow to tomorrows)
             .filter { it.second.isNotEmpty() }
             .forEach { (dayRes, dayMoments) ->
@@ -311,17 +343,9 @@ private fun SkyContent(
                         moment = moment,
                         zone = content.zone,
                         timeFmt = timeFmt,
-                        isNext = moment === next,
-                        onOpen = { line ->
-                            pageId = moment.job.id
-                            pageBearing = moment.bearingDeg
-                            pageWhen = line
-                        },
-                        onBell = {
-                            leadDialog = LeadDialog.ForMoment(
-                                moment.job.id, moment.lead, moment.followsDefault
-                            )
-                        }
+                        shape = segmentShape(index, dayMoments.size),
+                        onOpen = { open(moment, it) },
+                        onBell = { bell(moment) }
                     )
                 }
             }
@@ -362,6 +386,7 @@ private fun SkyContent(
         items(content.events.size) { index ->
             val event = content.events[index]
             EventRow(
+                shape = segmentShape(index, content.events.size),
                 event = event,
                 zone = content.zone,
                 dateFmt = dateFmt,
@@ -528,15 +553,55 @@ private fun MomentRow(
     moment: Moment,
     zone: ZoneId,
     timeFmt: DateTimeFormatter,
-    isNext: Boolean,
+    shape: Shape,
     /** Opens the row's page, handed the row's own time line for its compass. */
     onOpen: (String) -> Unit,
     onBell: () -> Unit
 ) {
     val res = LocalContext.current.resources
     val name = stringResource(SkyText.nameRes(moment.job.id))
-    val quiet = MaterialTheme.colorScheme.onSurfaceVariant
-    val timeLine = when (val occ = moment.occurrence) {
+    val occ = moment.occurrence
+    val timed = (occ as? SkyOccurrence.At)?.takeIf { moment.moonPhase == null }
+    // The time stands in a column at the row's end (review point 3, 14 ott 2026): it is
+    // what a reader scans the list for, and in the middle of a grey line it was the
+    // hardest thing on the row to find. A window's end follows in the line under it.
+    val start = timed?.start?.atZone(zone)?.format(timeFmt)
+    val until = timed?.end?.let { stringResource(R.string.sky_until, it.atZone(zone).format(timeFmt)) }
+    val detail = when {
+        moment.moonPhase != null -> moonLine(moment.moonPhase, moment.moonIlluminationPct)
+        occ is SkyOccurrence.None -> stringResource(SkyText.notScheduledRes(occ.reason))
+        else -> null
+    }
+    // Which day the time belongs to is the heading's to say since 23 set 2026; the row
+    // keeps only «Adesso», which no heading can (the next moment's «how soon» is its card's).
+    val now = if (moment.timing == MomentTiming.NOW) stringResource(R.string.sky_moment_now) else null
+    val line = timeLine(moment, zone, timeFmt)
+    SkyRow(
+        icon = momentIcon(moment),
+        name = name,
+        photographic = moment.job.photographic,
+        time = start,
+        supporting = listOfNotNull(detail, until, now, bearingLine(moment.bearingDeg)).joinToString(" · "),
+        shape = shape,
+        onOpen = { onOpen(line) },
+        bell = { BellButton(lead = moment.lead, name = name, onClick = onBell) },
+        verdict = moment.verdict?.let { verdict ->
+            {
+                VerdictChip(
+                    kind = SkyText.chipKind(verdict.kind),
+                    label = stringResource(SkyText.verdictWordRes(verdict.kind)),
+                    evidence = SkyText.chipEvidence(res, verdict)
+                )
+            }
+        }
+    )
+}
+
+/** «18:36 – 19:15», «19:15», the moon's phase, or the reason the sky skips it: the whole
+ * time of a moment in one line, for the compass's header. */
+@Composable
+private fun timeLine(moment: Moment, zone: ZoneId, timeFmt: DateTimeFormatter): String =
+    when (val occ = moment.occurrence) {
         is SkyOccurrence.At -> when {
             moment.moonPhase != null -> moonLine(moment.moonPhase, moment.moonIlluminationPct)
             occ.end != null ->
@@ -545,46 +610,77 @@ private fun MomentRow(
         }
         is SkyOccurrence.None -> stringResource(SkyText.notScheduledRes(occ.reason))
     }
-    // Which day the time belongs to is the heading's to say since 23 set 2026; the row
-    // keeps only «Adesso», which no heading can, and the next moment says how soon.
-    val dayMark = when {
-        moment.timing == MomentTiming.NOW -> stringResource(R.string.sky_moment_now)
-        isNext -> (moment.occurrence as? SkyOccurrence.At)?.let { soonLine(it.start) }
-        else -> null
-    }
-    // The chip lives UNDER the name, never beside it: in a trailing slot a wide
-    // verdict ("Niente da fare · nuvole 100%") squeezed the name to one letter per
-    // line (device finding, 3 set). Only the fixed-width bell trails. Since 12 set it
-    // lives under the whole list item too — see [SkyVerdictLine].
-    Column(Modifier.agendaRowOpens { onOpen(timeLine) }) {
-        ListItem(
-            leadingContent = {
-                // Its own colors and the Sky's own rung (review, 8 set 2026): these were
-                // 26dp silhouettes in `onSurfaceVariant`, the one place left where the
-                // family was tinted flat — and tinted flat the full moon and the new moon
-                // are the same disc, a sunrise and a sunset the same horizon. §13.1 holds
-                // here as on Today: the icons depict the world and keep their palette.
-                Icon(
-                    imageVector = momentIcon(moment),
-                    contentDescription = null,
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(WeatherIconSize.Sky)
-                )
-            },
-            headlineContent = { SkyHeadline(name, moment.job.photographic) },
-            supportingContent = {
+
+/**
+ * The next moment, as a card at the head of the list (review point 2, 14 ott 2026): its
+ * day and «the next» in the label, its time large and tabular, how soon and which way
+ * under it, and its verdict. The rest of the list keeps its rows.
+ *
+ * `surfaceContainerHigh` and the 28 dp corners of the hero above it, not a coloured
+ * container: the tonight card is already the loud thing on this screen, and two loud
+ * cards would be no hierarchy at all.
+ */
+@Composable
+private fun NextMomentCard(
+    moment: Moment,
+    zone: ZoneId,
+    timeFmt: DateTimeFormatter,
+    onOpen: (String) -> Unit,
+    onBell: () -> Unit
+) {
+    val res = LocalContext.current.resources
+    val name = stringResource(SkyText.nameRes(moment.job.id))
+    val occ = moment.occurrence as? SkyOccurrence.At ?: return
+    val line = timeLine(moment, zone, timeFmt)
+    val day = stringResource(
+        if (moment.timing == MomentTiming.TOMORROW) R.string.sky_day_tomorrow else R.string.sky_day_today
+    ).lowercase(currentLocale())
+    val shape = RoundedCornerShape(NextCardCorner)
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .agendaRowOpens { onOpen(line) }
+            .padding(start = 16.dp, top = 12.dp, end = 4.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = momentIcon(moment),
+                contentDescription = null,
+                tint = Color.Unspecified,
+                modifier = Modifier.size(WeatherIconSize.Sky)
+            )
+            Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                 Text(
-                    text = listOfNotNull(timeLine, dayMark, bearingLine(moment.bearingDeg))
-                        .joinToString(" · "),
-                    color = quiet
+                    text = stringResource(R.string.sky_next_label, day),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
                 )
-            },
-            trailingContent = {
-                BellButton(lead = moment.lead, name = name, onClick = onBell)
+                ProvideTextStyle(MaterialTheme.typography.titleMedium) {
+                    SkyHeadline(name, moment.job.photographic)
+                }
             }
+            BellButton(lead = moment.lead, name = name, onClick = onBell)
+        }
+        Text(
+            text = line,
+            style = MaterialTheme.typography.headlineMedium.tabular(),
+            modifier = Modifier.padding(top = 4.dp)
         )
+        listOfNotNull(soonLine(occ.start), bearingLine(moment.bearingDeg))
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                Text(
+                    text = it.joinToString(" · "),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         moment.verdict?.let { verdict ->
-            SkyVerdictLine {
+            Box(Modifier.padding(top = 8.dp, end = 12.dp)) {
                 VerdictChip(
                     kind = SkyText.chipKind(verdict.kind),
                     label = stringResource(SkyText.verdictWordRes(verdict.kind)),
@@ -594,6 +690,119 @@ private fun MomentRow(
         }
     }
 }
+
+/**
+ * One row of the Sky's lists, in a container of its group (review point 2, 14 ott 2026):
+ * the rows of a day, and the calendar ahead, sit in `surfaceContainer` segments two dp
+ * apart, the group's outer corners round and the inner ones tight — the grouped list
+ * Material 3 Expressive draws its settings with.
+ *
+ * Laid out by hand rather than with `ListItem`, and the reason is arithmetic. The group's
+ * 16 dp margins cost the row 32 dp, and Material's item spends 16 dp at each edge and 16
+ * between its slots. The row spends 12 at its start, 12 between the glyph and the text
+ * and 4 after the bell (whose 48 dp box carries its own air): the text column is 201 dp
+ * at a 360 dp screen.
+ *
+ * **The verdict line starts under the glyph, not under the name.** Under the name it had
+ * `screen − 32 − 12 − 51 − 12 − 12` = 241 dp at 360, and the widest verdict is not the 236
+ * of «Niente da fare  pioggia 100%» that §8.8 measured: since the evidence names the
+ * cloud's layer (24 set 2026) «✗ Niente da fare  nuvole 86%, basse» is about 262, and on
+ * the 360 dp render the number wrapped under its word — the one pair §8.7 does not let
+ * come apart (it was already 1 dp from wrapping in the old row, at 261). From the glyph's
+ * edge the line has `screen − 32 − 12 − 12` = **304 dp at 360**, 328 at 384: a margin,
+ * not a coincidence. The next moment's card already set its chip at its own edge.
+ *
+ * [time] stands at the end of the headline (point 3): end-aligned before the bell, so the
+ * times of a group read down as a column.
+ */
+@Composable
+private fun SkyRow(
+    icon: ImageVector,
+    name: String,
+    photographic: Boolean,
+    time: String?,
+    supporting: String,
+    shape: Shape,
+    onOpen: () -> Unit,
+    bell: (@Composable () -> Unit)?,
+    verdict: (@Composable () -> Unit)?,
+    extra: String? = null
+) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 1.dp)
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .agendaRowOpens(onOpen)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .heightIn(min = RowMinHeight)
+                .padding(start = RowStart, end = 4.dp, top = 8.dp, bottom = 8.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                // Its own colors and the Sky's own rung (review, 8 set 2026): tinted flat,
+                // the full moon and the new moon are the same disc, a sunrise and a
+                // sunset the same horizon. §13.1: the icons depict the world.
+                contentDescription = null,
+                tint = Color.Unspecified,
+                modifier = Modifier.size(WeatherIconSize.Sky)
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = RowGap, end = if (bell == null) RowStart else 0.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Row(verticalAlignment = Alignment.Top) {
+                    Box(Modifier.weight(1f)) {
+                        ProvideTextStyle(MaterialTheme.typography.bodyLarge) { SkyHeadline(name, photographic) }
+                    }
+                    if (time != null) {
+                        Text(
+                            text = time,
+                            style = MaterialTheme.typography.titleMedium.tabular(),
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+                if (supporting.isNotEmpty()) {
+                    Text(
+                        text = supporting,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                extra?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            bell?.invoke()
+        }
+        verdict?.let { SkyVerdictLine(it) }
+    }
+}
+
+/** The segment of a group at [index] of [count]: round outside, tight inside. */
+private fun segmentShape(index: Int, count: Int): Shape {
+    val top = if (index == 0) GroupOuter else GroupInner
+    val bottom = if (index == count - 1) GroupOuter else GroupInner
+    return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
+}
+
+private val GroupOuter = 20.dp
+private val GroupInner = 4.dp
+private val NextCardCorner = 28.dp
+private val RowStart = 12.dp
+private val RowGap = 12.dp
+private val RowMinHeight = 72.dp
 
 /**
  * The verdict's own line under a Sky row: it starts where the row's text starts and runs
@@ -628,8 +837,9 @@ private fun MomentRow(
  * extends it past its own bounds), a tighter chip 4, and the Sky's 51 dp glyph is a
  * decision of 11 set, not slack.
  *
- * [SkyChipIndent] is Material's own list-item arithmetic — 16 to the leading edge, the
- * glyph, 16 more to the text — so the chip's mark lines up under the name above it.
+ * Until 14 ott 2026 the line started under the name ([SkyChipIndent] was Material's 16,
+ * the glyph, 16) and the numbers above are that row's. In the grouped row ([SkyRow]) it
+ * starts under the glyph, at the row's own 12: see there for why.
  */
 @Composable
 private fun SkyVerdictLine(chip: @Composable () -> Unit) {
@@ -642,9 +852,10 @@ private fun SkyVerdictLine(chip: @Composable () -> Unit) {
     }
 }
 
-private val SkyRowInset = 16.dp
-private val SkyChipIndent = SkyRowInset + WeatherIconSize.Sky + SkyRowInset
-private val SkyChipBottom = 8.dp
+private val SkyRowInset = 12.dp
+// Since 14 ott 2026 the line starts where the row does, under the glyph ([SkyRow]).
+private val SkyChipIndent = RowStart
+private val SkyChipBottom = 12.dp
 
 /**
  * A row of the agenda opens its event's page ([AgendaPageSheet]).
@@ -670,6 +881,7 @@ private fun EventRow(
     yearFmt: DateTimeFormatter,
     timeFmt: DateTimeFormatter,
     today: java.time.LocalDate,
+    shape: Shape,
     onOpen: (String) -> Unit,
     onBell: (() -> Unit)?
 ) {
@@ -700,41 +912,25 @@ private fun EventRow(
         ?.takeIf { it.note != SkyVerdictNote.BEYOND_HORIZON }
         ?.let { verdict -> SkyText.unknownReason(res, verdict) }
     // Same rule as MomentRow: the chip goes under the text on a line of its own
-    // ([SkyVerdictLine]), only the bell trails.
-    Column(Modifier.agendaRowOpens { onOpen(whenLine) }) {
-        ListItem(
-            leadingContent = {
-                Icon(
-                    imageVector = eventIcon(event),
-                    contentDescription = null, // as in MomentRow: the family's own colors
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(WeatherIconSize.Sky)
-                )
-            },
-            headlineContent = { SkyHeadline(name, event.job.photographic) },
-            supportingContent = {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        listOfNotNull(
-                            whenLine,
-                            conjunctionLine(event),
-                            bearingLine(event.bearingDeg),
-                            verdictLine
-                        ).joinToString(" · ")
-                    )
-                    // An eclipse says which kind it is and the number that decides it,
-                    // the same way a verdict carries its own arithmetic.
-                    eclipseLine(res, event)?.let { Text(it) }
-                }
-            },
-            trailingContent = {
-                if (onBell != null && event.lead != null) {
-                    BellButton(lead = event.lead, name = name, onClick = onBell)
-                }
-            }
-        )
-        event.verdict?.takeIf { it.kind != SkyVerdictKind.UNKNOWN }?.let { verdict ->
-            SkyVerdictLine {
+    // ([SkyVerdictLine]), only the bell trails. A date is not a column (its row is days
+    // out, not minutes), so it stays in the line under the name.
+    SkyRow(
+        icon = eventIcon(event),
+        name = name,
+        photographic = event.job.photographic,
+        time = null,
+        supporting = listOfNotNull(whenLine, conjunctionLine(event), bearingLine(event.bearingDeg), verdictLine)
+            .joinToString(" · "),
+        // An eclipse says which kind it is and the number that decides it, the same way
+        // a verdict carries its own arithmetic.
+        extra = eclipseLine(res, event),
+        shape = shape,
+        onOpen = { onOpen(whenLine) },
+        bell = if (onBell != null && event.lead != null) {
+            { BellButton(lead = event.lead, name = name, onClick = onBell) }
+        } else null,
+        verdict = event.verdict?.takeIf { it.kind != SkyVerdictKind.UNKNOWN }?.let { verdict ->
+            {
                 VerdictChip(
                     kind = SkyText.chipKind(verdict.kind),
                     label = stringResource(SkyText.verdictWordRes(verdict.kind)),
@@ -742,7 +938,7 @@ private fun EventRow(
                 )
             }
         }
-    }
+    )
 }
 
 /**

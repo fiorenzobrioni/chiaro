@@ -41,7 +41,7 @@ fetched, and says how old that data is.
     <td align="center" width="33%"><img src="docs/screenshots/today-details.png" width="250" alt="The details grid: wind, clouds, humidity, pressure, visibility, air quality and pollen, each with the line that says what to do with it"><br><sub><b>Details</b>: every number with its meaning</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/sky-tonight.png" width="250" alt="In the dark theme: tonight's card with the numbers that decided it and the night strip a finger can explore, and the moments ahead each with its own verdict"><br><sub><b>Sky</b>: tonight, and the moments ahead</sub></td>
+    <td align="center"><img src="docs/screenshots/sky-tonight.png" width="250" alt="In the dark theme: tonight's card, which answers in a word with the night's numbers and its hours large over a strip a finger can explore, and the next moment in a card of its own"><br><sub><b>Sky</b>: tonight, and the moments ahead</sub></td>
     <td align="center"><img src="docs/screenshots/sky-ahead.png" width="250" alt="The calendar ahead: the full moon and the meteor peaks past the forecast horizon, then the reminders"><br><sub><b>The calendar ahead</b>, honestly dated</sub></td>
     <td align="center"><img src="docs/screenshots/guide.png" width="250" alt="The guide: a tour of the four screens, what each one answers and what it cannot say out loud"><br><sub><b>The guide</b>, in the app</sub></td>
   </tr>

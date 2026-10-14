@@ -553,6 +553,8 @@
          verita': la parola non entra nelle descrizioni, dove potrebbe divergere. -->
     <string name="sky_catalog_search_photo_terms" translatable="true">foto fotografia fotografie fotografare fotografico fotografica macchina obiettivo scatto scattare</string>
     <string name="sky_moment_now">Adesso</string>
+    <string name="sky_until">fino alle %1$s</string>
+    <string name="sky_next_label">Il prossimo, %1$s</string>
     <string name="sky_day_today">Oggi</string>
     <string name="sky_day_tomorrow">Domani</string>
     <string name="sky_tonight_label">Stanotte</string>
@@ -567,8 +569,16 @@
          e' su, cosi' la card puo' dire che cosa l'ha accorciata - o presa tutta. -->
     <string name="sky_tonight_moon_sets">La luna resta su fino alle %1$s, %2$d%% illuminata</string>
     <string name="sky_tonight_moon_rises">La luna torna su alle %1$s, %2$d%% illuminata</string>
-    <string name="sky_tonight_moon_all_night">La luna è su dal crepuscolo all\'alba, %1$d%% illuminata: stanotte non c\'è una finestra davvero buia. Il cielo è comunque scuro dalle %2$s alle %3$s.</string>
+    <string name="sky_tonight_moon_all_night">La luna è su dal crepuscolo all\'alba, %1$d%% illuminata: stanotte non c\'è una finestra davvero buia.</string>
     <string name="sky_tonight_clear_between">Più sereno tra le %1$s e le %2$s</string>
+    <!-- L'hero risponde sempre (revisione, punto 1, 14 ott 2026): una parola al posto del
+         verdetto quando non c'è una finestra da giudicare, e gli orari in grande. -->
+    <string name="sky_tonight_headline_moon">Notte di luna</string>
+    <string name="sky_tonight_headline_no_darkness">Mai del tutto buio</string>
+    <string name="sky_tonight_headline_dark_all_day">Buio tutto il giorno</string>
+    <string name="sky_tonight_window_label">Finestra buia</string>
+    <string name="sky_tonight_dark_label">Cielo scuro</string>
+    <string name="sky_tonight_dark_between">Il cielo è scuro dalle %1$s alle %2$s</string>
     <!-- La striscia della notte si esplora col dito (14 ott 2026): la riga sopra la striscia
          dice cosa fare finché nessuno la tocca, poi l'ora sotto il dito. -->
     <string name="sky_scrub_hint">Trascina per vedere ogni ora</string>
