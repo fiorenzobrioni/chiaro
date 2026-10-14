@@ -204,14 +204,17 @@ class ReadmeScreenshots {
     @Test
     fun skyAhead() {
         showTab(ShellTab.SKY) { sky() }
-        scrollUnderHeader(R.string.sky_section_events)
+        // From the guide's row, not from «Coming up»: since the reminders left the page for
+        // Settings (14 ott 2026) the list ends sooner, and scrolling the section title to
+        // the top stopped short with the row above it cut in half under the header.
+        scrollUnderHeader(R.string.sky_guide_entry_title)
         save("sky-ahead")
     }
 
     @Composable
     private fun sky() = SkyScreen(
         state = MilanRecording.sky(),
-        actions = SkyActions({}, {}, { _, _ -> }, {}, {}),
+        actions = SkyActions({}, {}, { _, _ -> }, {}),
         onOpenPlaces = {},
         onOpenSettings = {},
         onOpenGuide = {}
@@ -254,7 +257,7 @@ class ReadmeScreenshots {
         show {
             SettingsScreen(
                 settings = settings,
-                actions = SettingsActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
+                actions = SettingsActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
                 onBack = {},
                 onOpenGuide = {}
             )

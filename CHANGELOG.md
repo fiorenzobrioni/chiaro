@@ -14,8 +14,40 @@ sections are a normal size and live here alone.
 
 ## [Unreleased]
 
+### Added
+
+- **Explore tonight hour by hour.** On the Sky screen, drag a finger along the night strip, or
+  hold it, and the card paints the sky of that moment, with the hour's cloud, the rain when it
+  is likely and whether the moon is up. Lift the finger and the whole night comes back. The
+  strip now also marks every hour and the present moment, and draws the moon's hours in their
+  own color with the moon in them.
+- **A compass for where to look.** A sky row that says which way to look (golden and blue
+  hours, the moon at dusk, the Milky Way, Venus, Jupiter) now opens with «Where to look» and a
+  compass that turns you the right way. It tells you when the phone's compass needs
+  calibrating, shows the figure-of-eight gesture that fixes it, and warns when something
+  metallic nearby is pulling the needle. The sensors run only while the compass is open.
+
 ### Changed
 
+- **Undo on the Sky screen.** Adding or removing a moment from its page now shows a message
+  with «Undo», and undoing a removal brings the moment back with its own reminder.
+- **An easier place switcher.** On Sky, Alerts and Journal the whole title is now the button
+  that changes place, not just the small line under it.
+- **Adding a moment is one button.** «Add a moment» is now a floating button at the bottom
+  of the Sky screen. The usual reminder and «Even under a covered sky» moved to Settings,
+  under «Sky reminders».
+- **One moon on the Sky screen.** The tonight card, today's moon and the widget now read the
+  moon at the same moment of the night, so they print the same percentage, and a phase like
+  the full moon says its day and hour: «Full moon tomorrow at 18:49».
+- **Clearer sky icons.** Meteor showers have their own drawing, a shooting star, instead of a
+  moon with a streak across it; the conjunctions show the moon beside a star, or two stars.
+- **Tonight always answers.** On a night with no dark window (a moon up from dusk to dawn,
+  a summer night that never gets dark, a polar night) the Sky card now opens with a word, such
+  as «A moonlit night», and the night's cloud, instead of a paragraph. The hours of the night
+  are printed large.
+- **The next moment stands out.** At the top of the moments, the next one is a card of its
+  own with its time large, how soon, which way to look and its verdict. The others sit in
+  grouped rows, with their times in a column on the right.
 - **The ribbon shows the sky.** Under the temperature and on every day of the week, the band
   of the day's light now takes the forecast's clouds hour by hour, with the same colors as the
   sky at the top, and marks the hours with rain or snow: each day says *when* it is clear,

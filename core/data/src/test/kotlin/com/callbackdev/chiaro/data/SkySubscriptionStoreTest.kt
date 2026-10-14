@@ -128,6 +128,17 @@ class SkySubscriptionStoreTest {
         assertNull(store.subscriptions.first().first { it.jobId == "sun.set" }.notifyLeadMinutes)
     }
 
+    @Test
+    fun `restoring puts the line back as it was, lead included, and only once`() = withStore(file()) { store ->
+        store.setNotifyLead("sun.set", 30)
+        val line = store.subscriptions.first().first { it.jobId == "sun.set" }
+        store.remove("sun.set")
+        store.restore(line)
+        store.restore(line)
+        val back = store.subscriptions.first().filter { it.jobId == "sun.set" }
+        assertEquals(listOf(line), back)
+    }
+
     /**
      * Written in 16c, read in 16f. The file does not render a `--notify` token yet:
      * a token promising a reminder the app cannot send would be the first thing this

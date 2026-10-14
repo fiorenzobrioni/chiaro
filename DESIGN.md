@@ -1440,15 +1440,134 @@ underside so neighbouring hours read as one bank; a fixed scatter of stars showi
 where the hour is clear, dimmer where the moon is up; the dark window framed in the verdict's
 ink with its two times under its edges (one centred label when the window is too short for
 two); the clearest stretch underlined in the pass ink. Silent to a screen reader: nothing on
-it is not already a sentence above it. Until then the hero was a card in the verdict's
+it is not already a sentence above it (until 14 ott 2026, when it learned to answer a finger:
+below). Until then the hero was a card in the verdict's
 container color holding five lines of text: correct, and the least nocturnal thing on a screen
 about the night.
+
+**The strip answers a finger** (committente, 14 ott 2026). A horizontal drag along it, or a
+long press on it, asks for one instant of the night: a white cursor with a knob stands on
+the band, the line over the strip («Trascina per vedere ogni ora» while nobody touches it,
+in white at 60%) becomes that instant's reading in `labelLarge` tabular («02:05 · nuvole
+5% · senza luna»: the hour's cloud, its rain from the 20% the app prints a probability at,
+the moon), and the card's own ground repaints with the gradient of that instant (the sun
+and the moon where `AstronomyEngine` puts them then, sampled every 10 minutes by the state
+builder, and that hour's cloud and rain) through `ChiaroMotion.effects`. The moon badge drops
+to 35% while the instant has the moon below the horizon. Lifting the finger gives the whole
+night back. The time settles on the clock's five minutes (dusk and dawn reachable at the two
+ends): the forecast under it is hourly, and «02:07» would be a precision it does not have.
+Every whole hour crossed is a `SegmentFrequentTick`, the window's edges a `SegmentTick`. The
+moon in the reading is the strip's own account (the window is the moonless part of the
+night), so the line can never call set a moon the band washes. To a screen reader the strip
+is no longer silent: it is an adjustable control in whole hours whose state is the reading,
+because the hour-by-hour cloud is information no sentence above it carries.
+
+**The strip's marks** (same day, review point 8): the moon's hours are washed in
+`SkyPalette.MoonWash`, a pale straw, instead of the white the cloud hangs in (a moonlit
+clear hour and a cloudy moonless one were one grey), and carry the moon's disc in tonight's
+phase, low in the stretch, so the moon is a mark as well as a hue; a 5 dp tick stands on the
+band's floor at every whole hour; and «now», when the night is under way, is a thin white
+line through the band with a dot under it.
+
+**8.8c Where to look** (committente, 14 ott 2026). A row with a bearing (the photographer's
+hours, the moon at dusk and its earthshine, the Milky Way, Venus, Jupiter and the pairs:
+`SkySights.bearing` decides, and most rows have none) opens its page with «Dove guardare»:
+a `surfaceContainerHigh` card, the compass mark (`ic_compass`, the chrome hand), «Verso
+ovest», and a tonal «Apri la bussola». The compass takes the sheet's place, opened all the
+way; back returns to the page.
+
+- **The dial** turns with the phone, so its north is the world's: ticks every 15°, longer at
+  the eighths and the cardinals, the four letters localized (N E S O / N E S W) with north
+  in `primary`. The event's own drawing sits in the centre; a `primary` line runs from it to
+  a disc on the rim where the event will be; a fixed pointer over the top of the ring is
+  the phone. Before the first reading only the ring and the pointer are drawn: letters
+  before the sensor has spoken would be a north the app does not know.
+- **One line says what to do**, `headlineSmall`: «Gira a destra», «Gira a sinistra», «È alle
+  tue spalle: voltati», «Ci sei: è davanti a te» in `primary` with a `Confirm` haptic.
+  «Ahead» is within 12° and takes 18 to leave, so a hand's tremor does not flick the word.
+  It is a polite live region: TalkBack hears the word when it changes, not the needle.
+- **Where the phone points**: flat, the top edge of the screen (by the display's
+  rotation); held up as for a photo, the back of the phone, the camera's line of sight.
+  Read as a device vector carried into the world by the rotation matrix, not through
+  Euler angles, which are singular exactly where a camera is held; the switch between the
+  two has a gap (|up| 0.4 / 0.6) so the boundary does not flicker. **True north**:
+  `GeomagneticField`'s declination for the place, because the sky's bearings are true and
+  a magnetometer's are not.
+- **Calibration, honestly.** When the magnetometer reports itself unreliable or low, a
+  `secondaryContainer` card shows the figure of eight drawn with a small phone travelling
+  it and tilting (the wrist turn), still under reduced motion, and the words for the
+  gesture; it goes away when the sensor recovers. Phones report that flag unevenly and some
+  never report it, so the same gesture is one tap away under the dial («La direzione ti
+  sembra sbagliata?»). A field outside 20–70 µT for a second and a half (the earth's is
+  25–65) is not a calibration problem: a `tertiaryContainer` card says something nearby is
+  pulling the needle and to move. While either card shows, the dial is drawn at 45%: the
+  needle keeps moving, it stops claiming a confidence it does not have.
+- **Battery**: the sensors are registered on resume and released on pause, only while the
+  compass is on screen; never in the background. A phone with no magnetometer says so, and
+  the direction in words.
+- **No degrees**, here as on the rows: the dial is the picture of the number.
+
+**The hero always answers** (committente, 14 ott 2026, review point 1). A night with no
+dark window used to open on four lines of bold prose and no answer. It now has a word in the
+verdict's place at `headlineMedium`: «Notte di luna», «Mai del tutto buio», «Buio tutto il
+giorno». **Not a verdict and not dressed as one**: white, no mark, no verdict colour, because
+the four verdicts judge a window and there is none to judge (a red «Niente da fare» would be
+false on the night the moon is the sight). Under it, as a verdict carries its arithmetic, the
+night's mean cloud; the moon's percentage is the badge's. **The times are large**: a
+`labelLarge` label («Finestra buia», or «Cielo scuro» on the moon's night) over the times at
+`headlineSmall` tabular, «23:24 – 05:35», read by TalkBack as the whole sentence («Buio dalle
+23:24 alle 05:35»). The prose follows at `bodyMedium` in the secondary white; the polar and
+the white night keep their one sentence, at `bodyLarge`.
 
 **The moments are grouped by day** (same review): «Oggi» and «Domani» are `labelLarge`
 headings in `primary` inside the section, and the rows lose the «Domani ·» each of them
 carried — four rows saying the same word pushed the time, which is what a reader scans for,
 to the middle of the line. A row keeps «Adesso», which no heading can say, and the **next**
 timed moment says how soon («tra 1 h 20 min», the words Today's agenda uses) within half a day.
+
+**The next moment is a card; the rest are grouped rows** (committente, 14 ott 2026, review
+points 2 and 3). The next timed moment leaves its day for a card at the head of the section:
+`surfaceContainerHigh` with the hero's 28 dp corners (not a coloured container: the tonight
+card is already the loud thing on the screen), «Il prossimo, oggi» in `primary`, the name at
+`titleMedium`, the time at `headlineMedium` tabular, how soon and which way under it, then
+the verdict chip and the bell. The other moments, and the calendar ahead, sit in grouped
+`surfaceContainer` segments, 2 dp apart, 20 dp outer corners and 4 dp inner ones, inside the
+16 dp margins: Material 3 Expressive's grouped list. Each moment's **start time stands at the
+end of its headline**, `titleMedium` tabular and end-aligned before the bell, so a day's times
+read down as a column; a window's end follows in the line under it («fino alle 19:15»). A
+date on the calendar is not a column (its rows are days out) and stays in its line. The rows
+are laid out by hand rather than with `ListItem` (12 dp to the glyph, 12 after it, 4 after
+the bell), and the **verdict line starts under the glyph** rather than under the name: under
+the name it had 241 dp at 360, and «✗ Niente da fare  nuvole 86%, basse» (the layer added on
+24 set) is about 262, so on the 360 dp render its number wrapped under its word. From the
+glyph's edge it has 304 at 360 and 328 at 384. §8.8's 236 dp was measured before the layer
+existed; the old row was already 1 dp from wrapping.
+
+**One action, and no settings, on the page** (committente, 14 ott 2026, review point 5).
+«Aggiungi un momento» is an `ExtendedFloatingActionButton` at the bottom end (elevation 3,
+the one shadow §6 allows): extended while the top of the page is in view, its icon alone
+once the reader has scrolled into the list, so the label is read once and then stops
+covering rows. The list keeps 88 dp under its last row for it. The «Promemoria» section that
+closed the page (the usual reminder, «even under a covered sky», and the note that
+reminders can be a few minutes early or late) moved: the two preferences to Settings, group
+«Promemoria del cielo», and the note into the lead picker, where the reader is choosing a
+time; a moment's own picker adds that the usual reminder is changed in Settings.
+
+**«Annulla»** (same day, point 9). An add or a removal made from an event's page closes the
+sheet, and the row that appeared or vanished may be off screen: a snackbar says it («“Ora
+d'oro, sera” tolto dai tuoi momenti») with «Annulla», `Long` because it carries an action
+somebody may need time to reach. Undoing a removal puts the line back **as it was**, its own
+lead included (`SkySubscriptionStore.restore`; `add` would forget it); undoing an add removes
+it. The screen is a `Scaffold` for this, so the FAB rises over the snackbar. The catalog's
+rows need no snackbar (their mark turns in place, and a modal sheet would cover one): a line
+removed there and tapped again within the same sheet comes back with its lead too.
+
+**One moon** (same day, point 6). The card, «today's moon» and the widget read the moon at
+one instant, the middle of the date's astronomical night (`MoonOfTheNight`; the local
+midnight after it where there is none): the screen used to print 99% on the card and 98% on
+the row, measured at noon. And a phase that names a quarter carries its quarter's day and
+hour, «Luna piena domani alle 18:49 · 99% illuminata»: «Luna piena» alone, the evening before
+the calendar's full moon, was the name of a two-day range read as the name of an instant.
 
 **The calendar ahead counts down** — «8 ottobre · tra 15 giorni», «oggi», «domani», up to two
 months out — and «too far out to say» is said **once**, as a footnote under the section,
@@ -1545,6 +1664,15 @@ in the app bar with a dots indicator, and a horizontal pager between saved place
 tab, Today's stack always under the selected one so back from a tab's root lands on Today,
 and the bar drawn over the pages rather than beside them, so it can slide away under
 Settings and the guide without re-laying out the page under it. The motion is §7.
+
+**8.12b TabHeader** (14 ott 2026, review of the Sky screen, point 10) — the header of Sky,
+Alerts and Journal: the tab's name at `titleLarge`, the place under it at `titleSmall` with a
+chevron, Settings at the end. One composable (`ui/components/TabHeader.kt`) where there were
+three copies, each of which made only the place's line clickable: a target about 20 dp tall,
+under §6's 48. The target is now the name and the place together, 28 + 20 = 48 dp, at least
+48 wide, clipped to a 12 dp shape and inset 8 dp so its ripple has room while the text stays
+on the 16 dp margin. It is one button to TalkBack («Cielo, Milano», action «Cambia luogo»).
+Today keeps its own header, over the sky.
 
 **8.13 WarningBanner**, **WarningSheet** and the level chip (Fase 11) — an official warning
 as it reaches a screen.
@@ -2000,14 +2128,31 @@ a valid animator and only a person can say the rain falls downward.
    (the Lottie build is the other road and was not taken: it wants a runtime dependency
    for a 34dp glyph and does not run inside a Glance widget at all).
 
-   **The tools are five, and each one is a seam.** `tools/import_meteocons_v3.py` is the
+   **The tools are six, and each one is a seam.** `tools/import_meteocons_v3.py` is the
    importer of record — re-running it IS the import; `tools/svg_paths.py` holds the path
    arithmetic and the mask conversion; `tools/reanchor.py` holds the colour rule;
    `tools/shipped_icons.py` holds the list; `tools/compose_sun_cloud.py` composes the two
-   drawings the family does not have the way this app needs them (below). The Kotlin lookup tables are **generated**
-   into `ui/icons/MeteoconsSets.kt` and `ui/icons/ComposedIcons.kt`; what stays
+   drawings the family does not have the way this app needs them (below);
+   `tools/compose_sky_marks.py` composes the sky catalog's marks it does not have at all
+   (14 ott 2026, below). The Kotlin lookup tables are **generated**
+   into `ui/icons/MeteoconsSets.kt`, `ui/icons/ComposedIcons.kt` and `ui/icons/SkyMarks.kt`;
+   what stays
    hand-written in `ChiaroIcons` is the policy — which weather code gets which drawing,
    which metric gets which mark — because that is the part a person argues about.
+
+   **Three sky marks are composed too** (14 ott 2026, review of the Sky screen, point 7),
+   still faces only, because nothing in the sky catalog moves. **`meteor`** is
+   `falling-stars` without the moon it draws them across: in a list of five showers that
+   moon read as a moon crossed out, «no moon», the opposite of the row; the stars and the
+   streak are kept to the letter, at 110% and re-centred. **`moon-star`** (the crescent of
+   `clear-night` at 80% with a star of `star` at 42%) and **`two-stars`** (the star at 62%
+   and 40%) are the conjunctions, the only rows of the catalog that are two things in one
+   place; the star alone had been saying five things. Venus and Jupiter keep the star (the
+   evening star is their name to the eye), and so do the blue hours and the nautical
+   twilights, the same sky of the first stars, which Meteocons has no other drawing for.
+   Pieces are copied path for path and colour for colour from each face; only
+   `strokeWidth` is divided by the piece's scale, so a smaller star keeps the family's line
+   (`SkyMarksTest`).
 
    **One drawing is composed here, not imported** (12 set 2026): `sun-one-cloud-day` and
    `-night`, which WMO code 1 takes. It is `clear-day` untouched — the same paths, the

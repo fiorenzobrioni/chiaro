@@ -18,13 +18,20 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import android.content.Context
+import com.callbackdev.chiaro.notifications.SkyAlarmScheduler
+import com.callbackdev.chiaro.sync.SyncScheduler
 
 /**
  * A thin hand between the Settings screen and [SettingsStore]: every row edits one
  * key, and the flow below is the same one the rest of the app already reads, so a
  * change is visible everywhere the moment it lands.
  */
-class SettingsViewModel(private val store: SettingsStore) : ViewModel() {
+class SettingsViewModel(
+    private val store: SettingsStore,
+    /** For the Sky's alarms, which follow its two reminder settings (14 ott 2026). */
+    private val appContext: Context? = null
+) : ViewModel() {
 
     /** Null until the store's first answer: the screen draws nothing it cannot vouch
      * for, not even a default that might be about to change (DESIGN §1.1). */
@@ -52,16 +59,52 @@ class SettingsViewModel(private val store: SettingsStore) : ViewModel() {
     fun setWeatherIcons(style: WeatherIcons) =
         viewModelScope.launch { store.setWeatherIcons(style) }
 
-    fun setUpdateFrequency(minutes: Int) =
-        viewModelScope.launch { store.setUpdateFrequency(minutes) }
+    fun setUpdateFrequency(minutes: Int) = viewModelScope.launch {
+        store.setUpdateFrequency(minutes)
+        // The periodic job carries the interval it was enqueued with: until this was
+        // here, a new frequency waited for the next process start (14 ott 2026).
+        replanSync()
+    }
 
-    fun resetToDefaults() = viewModelScope.launch { store.resetToDefaults() }
+    /** The Sky's usual reminder and its «even under a covered sky», kept here since the
+     * review of the Sky screen (point 5, 14 ott 2026): they are preferences, not content.
+     * The alarms are re-planned after each, as the Sky screen did. */
+    fun setSkyDefaultLead(minutes: Int?) = viewModelScope.launch {
+        store.setSkyNotifyDefault(minutes)
+        replanSkyAlarms()
+    }
+
+    fun setSkyNotifyOnFail(enabled: Boolean) = viewModelScope.launch {
+        store.setSkyNotifyOnFail(enabled)
+        replanSkyAlarms()
+    }
+
+    /**
+     * Everything back as at first launch — the alerts' switches included, which all
+     * default to on, so a reset can turn back on an alert the reader had switched off
+     * (the dialog says so; committente, 14 ott 2026). The periodic job is re-planned
+     * here, not at the next process start: an alert the dialog says is on must be one
+     * the job is running for.
+     */
+    fun resetToDefaults() = viewModelScope.launch {
+        store.resetToDefaults()
+        replanSkyAlarms()
+        replanSync()
+    }
+
+    private suspend fun replanSync() {
+        appContext?.let { runCatching { SyncScheduler.reconcile(it) } }
+    }
+
+    private suspend fun replanSkyAlarms() {
+        appContext?.let { runCatching { SkyAlarmScheduler.reschedule(it) } }
+    }
 
     companion object {
         val Factory = viewModelFactory {
             initializer {
                 val app = checkNotNull(this[APPLICATION_KEY])
-                SettingsViewModel(store = ServiceLocator.settingsStore(app))
+                SettingsViewModel(store = ServiceLocator.settingsStore(app), appContext = app)
             }
         }
     }

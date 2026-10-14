@@ -11,6 +11,7 @@ import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.sky.SkyJob
+import com.callbackdev.chiaro.domain.sky.MoonOfTheNight
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
@@ -227,8 +228,10 @@ object WidgetData {
                 }
                 NextMoment(
                     at.job, at.start, at.end, verdict, upcoming.inProgress,
+                    // The screen's one moon ([MoonOfTheNight]): the card on the home screen
+                    // names the phase the Sky screen names.
                     moonPhase = if (at.job.id == SkyJobCatalog.MoonToday.id) {
-                        MoonPhase.at(at.start)
+                        MoonPhase.at(MoonOfTheNight.instant(upcoming.date, zone, city.coordinates))
                     } else {
                         null
                     }

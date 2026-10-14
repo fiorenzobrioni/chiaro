@@ -25,7 +25,7 @@ import org.junit.Test
  */
 class SkyMomentIconTest {
 
-    private val fallback = R.drawable.mc3_falling_stars
+    private val fallback = R.drawable.mc3_meteor
 
     @Test
     fun `ogni momento del catalogo ha il suo disegno, tranne gli sciami`() {
@@ -37,7 +37,7 @@ class SkyMomentIconTest {
     }
 
     @Test
-    fun `gli sciami tengono la stella cadente, che e' il loro disegno`() {
+    fun `gli sciami tengono la meteora, che e' il loro disegno`() {
         val showers = SkyJobCatalog.meteorShowers.map { it.id }
         assertTrue("il catalogo ha perso gli sciami", showers.isNotEmpty())
         showers.forEach { id ->
@@ -96,9 +96,10 @@ class SkyMomentIconTest {
             "venus.evening" to R.drawable.mc3_star,
             "venus.morning" to R.drawable.mc3_star,
             "jupiter.night" to R.drawable.mc3_star,
-            "conjunction.moon_venus" to R.drawable.mc3_star,
-            "conjunction.moon_jupiter" to R.drawable.mc3_star,
-            "conjunction.venus_jupiter" to R.drawable.mc3_star,
+            // Due cose in un punto (14 ott 2026, tools/compose_sky_marks.py).
+            "conjunction.moon_venus" to R.drawable.mc3_moon_star,
+            "conjunction.moon_jupiter" to R.drawable.mc3_moon_star,
+            "conjunction.venus_jupiter" to R.drawable.mc3_two_stars,
             "equinox.spring" to R.drawable.mc3_horizon,
             "solstice.summer" to R.drawable.mc3_horizon,
             "equinox.autumn" to R.drawable.mc3_horizon,

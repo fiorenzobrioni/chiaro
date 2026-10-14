@@ -186,6 +186,16 @@ class SkyPalette internal constructor(
         val SunLow = Color(0xFFFFB35C)
         val MoonFace = Color(0xFFF1F3F8)
 
+        /**
+         * The wash of the moon's hours on the tonight card's night strip (14 ott 2026).
+         * It was [MoonFace] at 10–30%, the same white the forecast's cloud hangs in, so a
+         * moonlit clear hour and a cloudy moonless one were one grey. Moonlight is warm to
+         * the eye against a night sky, and a pale straw tells the two apart without being
+         * mistaken for the amber «so-so» frame, which is a line and not a fill; the moon's
+         * own disc drawn in the stretch says it in a mark as well as a hue.
+         */
+        val MoonWash = Color(0xFFF2DFA6)
+
         /** What moonlight lifts a night sky toward. Shared: the moon is not part of the
          * palette the reader picked, it is the same moon. */
         internal val Moonlight = Color(0xFF273458)

@@ -71,8 +71,9 @@ object ChiaroIcons {
     private fun faceOf(
         @DrawableRes lineRes: Int,
         composed: Map<Int, Int>,
+        marks: Map<Int, Int>,
         family: Map<Int, Int>
-    ): Int = composed[lineRes] ?: family.getValue(lineRes)
+    ): Int = composed[lineRes] ?: marks[lineRes] ?: family.getValue(lineRes)
 
     /**
      * The style applied to a line resource id: the sibling for the style the reader
@@ -86,11 +87,11 @@ object ChiaroIcons {
         darkGround: Boolean = false
     ): Int = when {
         style == WeatherIcons.FILL && darkGround ->
-            faceOf(lineRes, ComposedIcons.flatDarkOf, MeteoconsSets.flatDarkOf)
+            faceOf(lineRes, ComposedIcons.flatDarkOf, SkyMarks.flatDarkOf, MeteoconsSets.flatDarkOf)
         style == WeatherIcons.FILL ->
-            faceOf(lineRes, ComposedIcons.flatOf, MeteoconsSets.flatOf)
+            faceOf(lineRes, ComposedIcons.flatOf, SkyMarks.flatOf, MeteoconsSets.flatOf)
         darkGround ->
-            faceOf(lineRes, ComposedIcons.lineDarkOf, MeteoconsSets.lineDarkOf)
+            faceOf(lineRes, ComposedIcons.lineDarkOf, SkyMarks.lineDarkOf, MeteoconsSets.lineDarkOf)
         else -> lineRes
     }
 
@@ -335,13 +336,19 @@ object ChiaroIcons {
         "earthshine.am" -> moonPhaseLineRes(MoonPhase.WANING_CRESCENT)
         // A planet to the naked eye IS a bright point of light, so the family's own star
         // is the honest drawing for it — Meteocons has no planets and inventing one would
-        // be a disk nobody sees. The pairs take it too: two points, one of them this.
-        "venus.evening", "venus.morning", "jupiter.night",
-        "conjunction.moon_venus", "conjunction.moon_jupiter",
-        "conjunction.venus_jupiter" -> R.drawable.mc3_star
+        // be a disk nobody sees («the evening star» is what people call Venus).
+        "venus.evening", "venus.morning", "jupiter.night" -> R.drawable.mc3_star
+        // The pairs are two things in one place, and since 14 ott 2026 their drawing says
+        // so (review point 7, tools/compose_sky_marks.py): the moon beside a star, or two
+        // stars. They were the star alone, the fifth thing it meant.
+        "conjunction.moon_venus", "conjunction.moon_jupiter" -> R.drawable.mc3_moon_star
+        "conjunction.venus_jupiter" -> R.drawable.mc3_two_stars
         "equinox.spring", "solstice.summer",
         "equinox.autumn", "solstice.winter" -> R.drawable.mc3_horizon
-        else -> R.drawable.mc3_falling_stars // the meteor showers
+        // The meteor showers: the falling stars without the moon Meteocons draws them
+        // across, which in a list read as a moon crossed out — «no moon», the opposite
+        // of the row (review point 7, 14 ott 2026, tools/compose_sky_marks.py).
+        else -> R.drawable.mc3_meteor
     }
 
     /** [skyJobLineRes] dressed for a ground: what the Glance widgets ask for. */

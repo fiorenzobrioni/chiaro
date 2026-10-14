@@ -44,6 +44,10 @@ SHIPPED = [
     "not-available", "wind", "humidity", "uv-index",
     "thermometer", "barometer", "raindrops", "mist", "snowflake", "smoke-particles",
     "compass", "pollen", "sunrise", "sunset", "moonrise", "moonset", "horizon",
+    # `falling-stars`, `star` e `clear-night` sono anche le sorgenti dei segni del cielo
+    # che compone `tools/compose_sky_marks.py` (14 ott 2026): la meteora, la luna con la
+    # stella, le due stelle. Gli sciami non disegnano piu' `falling-stars`, ma il composto
+    # ne legge le facce, quindi resta da importare
     "star", "starry-night", "falling-stars", "solar-eclipse", "moon-new",
     "moon-waxing-crescent", "moon-first-quarter", "moon-waxing-gibbous", "moon-full",
     "moon-waning-gibbous", "moon-last-quarter", "moon-waning-crescent", "rainbow",

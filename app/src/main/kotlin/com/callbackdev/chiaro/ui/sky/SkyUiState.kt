@@ -5,11 +5,13 @@ import com.callbackdev.chiaro.data.SkySubscription
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.LunarEclipse
 import com.callbackdev.chiaro.domain.sky.MeteorShowerTable
+import com.callbackdev.chiaro.domain.sky.MoonOfTheNight
 import com.callbackdev.chiaro.domain.sky.MoonQuarterKind
 import com.callbackdev.chiaro.domain.sky.SkyAlmanac
 import com.callbackdev.chiaro.domain.sky.SolarEclipse
@@ -52,7 +54,13 @@ sealed interface SkyUiState {
          * subscribed job with no row (an eclipse search that finds nothing ahead) then
          * showed as unsubscribed and offered to be added again (review, 8 set 2026).
          */
-        val subscribedIds: Set<String> = emptySet()
+        val subscribedIds: Set<String> = emptySet(),
+        /** The place's own coordinates, for the compass: where magnetic north is from
+         * true north there (14 ott 2026). */
+        val coordinates: Coordinates? = null,
+        /** The enabled lines as the store keeps them, leads included: what «Annulla»
+         * puts back after a removal (review point 9, 14 ott 2026). */
+        val subscriptions: List<SkySubscription> = emptyList()
     ) : SkyUiState
 }
 
@@ -92,7 +100,14 @@ data class Tonight(
      * waxing. For the phase the card draws; null with [moonIlluminationPct]. */
     val moonElongationDeg: Double? = null,
     /** South of the equator the moon's lit limb is mirrored. */
-    val southern: Boolean = false
+    val southern: Boolean = false,
+    /**
+     * Where the sun and the moon stand over the night, every [NightSampleStep] (14 ott
+     * 2026): what the card paints when a finger asks for one moment of the night rather
+     * than the whole of it, so the sky it shows at 02:00 is the one computed for 02:00.
+     * Empty when there is no night.
+     */
+    val samples: List<NightSample> = emptyList()
 ) {
     /** True when the moon is what opens the window late: the night started earlier. */
     val moonHeldTheStart: Boolean
@@ -103,8 +118,17 @@ data class Tonight(
         get() = window?.end != null && night?.end != null && window.end!!.isBefore(night.end!!)
 }
 
-/** One hour of the night strip: when it starts, and how much of the sky is cloud. */
-data class NightHour(val at: Instant, val cloudPct: Int)
+/** One hour of the night strip: when it starts, how much of the sky is cloud, and the
+ * chance of precipitation where the model gives one (it is nullable all the way to the
+ * screen, CLAUDE.md). */
+data class NightHour(val at: Instant, val cloudPct: Int, val precipPct: Int? = null)
+
+/** The sun's and the moon's altitude at one instant of the night, in degrees. */
+data class NightSample(val at: Instant, val sunAltitudeDeg: Double, val moonAltitudeDeg: Double)
+
+/** Ten minutes: a sky that changes slower than that cannot be told apart by eye, and a
+ * fourteen-hour polar night is still under a hundred samples. */
+val NightSampleStep: Duration = Duration.ofMinutes(10)
 
 /** When a moment's occurrence lands — the word the row prints before the time. */
 enum class MomentTiming { NOW, TODAY, TOMORROW }
@@ -130,6 +154,9 @@ data class Moment(
     /** For the moon's day-moment: the phase is the value, not a verdict. */
     val moonPhase: MoonPhase? = null,
     val moonIlluminationPct: Int? = null,
+    /** The exact instant of the quarter [moonPhase] is named after, when it is one of the
+     * four: the row prints its day and hour beside the name (review point 6). */
+    val moonQuarterAt: Instant? = null,
     /**
      * Which way to turn, degrees from north, on the rows where that is the half a
      * reader cannot work out from a time (Fase 28). Null on most of them, deliberately
@@ -260,7 +287,9 @@ object SkyStateBuilder {
             events = events(subscriptions, settings, city, zone, now, ::judge),
             defaultLead = SkyLead.ofMinutes(settings.skyNotifyDefaultMin),
             notifyOnFail = settings.skyNotifyOnFail,
-            subscribedIds = subscriptions.filter { it.enabled }.map { it.jobId }.toSet()
+            subscribedIds = subscriptions.filter { it.enabled }.map { it.jobId }.toSet(),
+            coordinates = city.coordinates,
+            subscriptions = subscriptions.filter { it.enabled }
         )
     }
 
@@ -286,14 +315,14 @@ object SkyStateBuilder {
         // cannot explain a short window without the night it was cut out of.
         val night = SkyScheduler.darkNight(upcoming.date, zone, city.coordinates).night
             as? SkyOccurrence.At
+        // The one moon of the screen ([MoonOfTheNight]): «today's moon» reads the same
+        // instant, so the card and the row cannot print two percentages for one evening.
         val moonLight = night?.let {
-            val middle = it.start.plus(
-                Duration.between(it.start, it.end ?: it.start).dividedBy(2)
-            )
-            AstronomyEngine.moonIllumination(middle)
+            AstronomyEngine.moonIllumination(MoonOfTheNight.instant(upcoming.date, zone, city.coordinates))
         }
         val moonPct = moonLight?.let { (it.illuminatedFraction * 100).roundToInt() }
         val hours = nightHours(night, hourly)
+        val samples = nightSamples(night, city.coordinates)
         val at = upcoming.at ?: return Tonight(
             window = null,
             verdict = null,
@@ -302,7 +331,8 @@ object SkyStateBuilder {
             moonIlluminationPct = moonPct,
             hours = hours,
             moonElongationDeg = moonLight?.elongation,
-            southern = city.coordinates.lat < 0.0
+            southern = city.coordinates.lat < 0.0,
+            samples = samples
         )
         return Tonight(
             window = at,
@@ -312,8 +342,21 @@ object SkyStateBuilder {
             clearStretch = clearStretch(at),
             hours = hours,
             moonElongationDeg = moonLight?.elongation,
-            southern = city.coordinates.lat < 0.0
+            southern = city.coordinates.lat < 0.0,
+            samples = samples
         )
+    }
+
+    /** The sun and the moon over [night], every [NightSampleStep] and at dawn itself. */
+    internal fun nightSamples(night: SkyOccurrence.At?, coordinates: Coordinates): List<NightSample> {
+        val start = night?.start ?: return emptyList()
+        val end = night.end ?: return emptyList()
+        val instants = generateSequence(start) { it.plus(NightSampleStep) }
+            .takeWhile { it.isBefore(end) }
+            .plus(end)
+        return instants.map {
+            NightSample(it, AstronomyEngine.sunAltitude(it, coordinates), AstronomyEngine.moonAltitude(it, coordinates))
+        }.toList()
     }
 
     /** The forecast hours that overlap [night], each with its cloud cover: an hour that
@@ -326,7 +369,7 @@ object SkyStateBuilder {
         val end = night.end ?: return emptyList()
         return hourly
             .filter { it.at.plus(Duration.ofHours(1)).isAfter(start) && it.at.isBefore(end) }
-            .map { NightHour(it.at, it.cloudCoverPct) }
+            .map { NightHour(it.at, it.cloudCoverPct, it.precipChancePct) }
     }
 
     /**
@@ -356,6 +399,12 @@ object SkyStateBuilder {
                 val upcoming = SkyUpcoming.of(job, now, zone, city.coordinates)
                 val at = upcoming.at
                 val isMoonDay = job.id == SkyJobCatalog.MoonToday.id
+                // Read at the night's middle, not at the occurrence's noon (which stays
+                // the reminder's time): [MoonOfTheNight].
+                val moonAt = if (isMoonDay && at != null) {
+                    MoonOfTheNight.instant(upcoming.date, zone, city.coordinates)
+                } else null
+                val phase = moonAt?.let { MoonPhase.at(it) }
                 Moment(
                     job = job,
                     occurrence = upcoming.occurrence,
@@ -367,10 +416,12 @@ object SkyStateBuilder {
                         upcoming.date == today -> MomentTiming.TODAY
                         else -> MomentTiming.TOMORROW
                     },
-                    moonPhase = if (isMoonDay && at != null) MoonPhase.at(at.start) else null,
-                    moonIlluminationPct = if (isMoonDay && at != null) {
-                        (AstronomyEngine.moonIllumination(at.start).illuminatedFraction * 100)
-                            .roundToInt()
+                    moonPhase = phase,
+                    moonIlluminationPct = moonAt?.let {
+                        (AstronomyEngine.moonIllumination(it).illuminatedFraction * 100).roundToInt()
+                    },
+                    moonQuarterAt = if (phase != null && moonAt != null) {
+                        MoonOfTheNight.quarterOf(phase, moonAt)?.at
                     } else null,
                     // Measured at the middle of a window rather than at its start: the
                     // sun moves 15° an hour, so a golden hour's bearing taken at its

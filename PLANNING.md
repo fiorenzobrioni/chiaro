@@ -12326,3 +12326,355 @@ circa 45 minuti». La domanda: può essere? Il numero sì, la frase no.
   pioggia probabile e un codice sconosciuto no.
 - `AlertNotifierTest`: la riga di domani in un giorno di pioggia è «Tomorrow's peak UV 5 · In
   sunny spells, burns in about 45 minutes»; i test esistenti (domani coperto, UV 5) invariati.
+
+## Cielo: la revisione della schermata, e la notte che si esplora col dito (committente, 14 ott 2026)
+
+Il committente ha chiesto una revisione della schermata Cielo (grafica, UI/UX, aderenza a
+Material 3 Expressive) e ha deciso di attuarla tutta. Il piano, nell'ordine in cui la si fa:
+
+- [x] **La striscia della notte si esplora col dito** (il «tocco wow» della revisione).
+- [x] **I segni della striscia** (punto 8): la luna distinta dalle nuvole, le tacche delle
+  ore, «adesso».
+- [-] ~~«Se non stanotte, quando?»~~: **scartata** dal committente (14 ott 2026): oltre due
+  o tre giorni la previsione delle nuvole è troppo poco precisa per indicare una notte.
+- [x] La bussola «dove guardare» per le righe che hanno una direzione.
+- [x] 1. Un hero che risponde sempre (anche la notte in cui la luna c'è tutta la notte).
+- [x] 2. Il prossimo momento in evidenza; gli altri in una lista a gruppi.
+- [x] 3. Gli orari in colonna.
+- [-] 4. Il movimento: chiavi nelle liste, `animateItem`, `MotionScheme.expressive()`.
+  **Rimandato** (committente, 14 ott 2026): vedi «Material 3 Expressive, un passaggio a
+  parte» sotto.
+- [x] 5. «Aggiungi momento» come FAB esteso; i promemoria fuori dalla pagina.
+- [x] 6. Una sola luna: la stessa percentuale e la stessa fase ovunque nella pagina.
+- [x] 7. Le icone ripetute (gli sciami, la stella per cinque cose diverse).
+- [x] 9. «Annulla» dopo un'aggiunta o una rimozione.
+- [x] 10. Il bersaglio del selettore del luogo a 48 dp (la top app bar flessibile aspetta
+  `material3` 1.5 stabile: la 1.4.0 del BOM non ha `MaterialShapes`, `ButtonGroup`,
+  `FloatingToolbar` né le top app bar flessibili; ha `MotionScheme` e `ShortNavigationBar`).
+
+### Cosa è cambiato
+
+- **Un dito sulla striscia chiede un istante della notte.** Un trascinamento orizzontale
+  parte subito (la pagina scorre in verticale, i due gesti non si contendono il dito);
+  tenere fermo il dito chiede la pressione lunga, così uno scorrimento verticale che comincia
+  sulla striscia non fa lampeggiare una lettura. Sotto il dito: un cursore bianco con il suo
+  pomello; sopra la striscia, la riga che finché nessuno tocca dice «Trascina per vedere ogni
+  ora» diventa la lettura di quell'istante, «02:05 · nuvole 5% · senza luna», con la pioggia
+  dal 20% in su; e il fondo della card si ridipinge con il cielo di quell'istante: il sole e
+  la luna dove stanno allora, le nuvole e la pioggia di quell'ora. La luna nell'angolo si
+  attenua al 35% quando l'istante la ha sotto l'orizzonte. Alzato il dito, torna la notte
+  intera.
+- **I dati**: `NightHour` porta anche la probabilità di precipitazione dell'ora (nullable,
+  come ovunque); `Tonight.samples` sono il sole e la luna ogni 10 minuti dal crepuscolo
+  all'alba, calcolati da `SkyStateBuilder` con `AstronomyEngine`.
+- **I segni**: le ore della luna in `SkyPalette.MoonWash` (paglierino) e non più nel bianco
+  delle nuvole, con il disco della luna nella sua fase dentro il tratto; una tacca a ogni ora
+  intera; «adesso», quando la notte è in corso.
+- **Accessibilità**: la striscia non è più muta. Per TalkBack è un controllo regolabile a ore
+  intere, il cui stato è la lettura: le nuvole ora per ora sono un'informazione che nessuna
+  frase sopra di lei porta.
+- La guida del Cielo («Stanotte») dice il gesto, IT/EN.
+
+### Decisioni e deviazioni
+
+- **Il dito che si alza riporta la notte intera**, come i grafici a scorrimento di sistema:
+  la card parla della notte, e una lettura rimasta appesa dopo il gesto la farebbe parlare di
+  un'ora senza che nessuno lo stia chiedendo. TalkBack è l'eccezione, perché lì non c'è un
+  dito da tenere giù: la lettura scelta resta finché la si cambia.
+- **Il tempo si posa sui cinque minuti dell'orologio**: la previsione sotto è oraria, e
+  «02:07» sarebbe una precisione che non ha. Il crepuscolo e l'alba, che hanno minuti
+  dispari, si raggiungono ai due capi (entro mezzo passo da un capo, il capo).
+- **La luna della lettura è quella della striscia**, non l'altezza calcolata: la finestra è
+  la parte della notte senza luna, e la riga non può dire «luna su» sopra un tratto che la
+  banda disegna buio. L'altezza calcolata serve solo a quanto la luna schiarisce il cielo, ed
+  è tenuta sopra o sotto l'orizzonte secondo quel racconto.
+- **Un suggerimento fisso sopra la striscia** costa una riga alla card. Senza, il gesto non
+  si scopre: niente nella striscia dice che risponde al dito.
+- **La paglia e non l'oro**: l'oro si sarebbe confuso con la cornice ambra del «così così»;
+  la paglia è un riempimento tenue, la cornice una linea piena.
+
+### Come è stato verificato
+
+- `TonightNightTest`: la lettura prende nuvole e pioggia dell'ora che contiene l'istante; un'ora
+  che la previsione non copre si legge senza nuvole, non con uno zero; la luna della lettura
+  è quella della striscia, e il bordo della finestra è buio; un punto della striscia si posa
+  sui cinque minuti e non esce mai dalla notte; le tacche sono le ore intere strettamente
+  dentro la notte; il cielo tra due campioni si legge tra i due; la notte è campionata dal
+  crepuscolo all'alba, alba compresa.
+- La card disegnata con Robolectric a metà gesto (ora con la luna, ora buia, notte di luna
+  piena, «adesso» nella notte), guardata immagine per immagine; le immagini del README
+  rigenerate e guardate.
+
+## Cielo: la bussola «Dove guardare» (committente, 14 ott 2026)
+
+Il secondo punto della revisione del Cielo. Le righe che dicono da che parte guardare
+(«verso ovest») ora portano a una bussola che fa girare il lettore dalla parte giusta. Il
+committente ha chiesto anche l'avviso di calibrazione con il gesto da fare, e lo proverà sul
+suo telefono: in un container non c'è un sensore, quindi qui è verificata la matematica e il
+disegno, non l'ago vero.
+
+### Cosa è cambiato
+
+- **La pagina di una riga con una direzione** (quella che si apre toccandola) comincia con
+  «Dove guardare · Verso ovest» e il pulsante «Apri la bussola». La bussola prende il posto
+  della pagina nel foglio, aperto del tutto; indietro torna alla pagina. Le righe senza
+  direzione (quasi tutte, per scelta: `SkySights.bearing`) non hanno il riquadro.
+- **La bussola**: il quadrante gira con il telefono, il segno dell'evento sul bordo dove
+  accadrà, un indice fisso in alto che è il telefono, e una riga sola: «Gira a destra», «Gira
+  a sinistra», «È alle tue spalle: voltati», «Ci sei: è davanti a te» (con una vibrazione di
+  conferma). Funziona con il telefono in piano (punta il bordo alto dello schermo) e dritto
+  come per una foto (punta la fotocamera).
+- **La calibrazione**: quando il magnetometro si dichiara inaffidabile o poco preciso, un
+  riquadro mostra l'8 disegnato con un telefonino che lo percorre girando il polso, e le
+  parole del gesto; sparisce quando il sensore torna a posto. Lo stesso gesto è sempre a un
+  tocco, «La direzione ti sembra sbagliata?», perché non tutti i telefoni lo segnalano.
+- **Il disturbo**: un campo fuori da 20–70 µT per un secondo e mezzo (quello terrestre sta
+  fra 25 e 65) è un oggetto di metallo o un magnete vicino, non una calibrazione: il riquadro
+  lo dice e dice di spostarsi.
+- `SkyUiState.Content.coordinates`, per la declinazione magnetica del luogo.
+- La guida («Il marchio della macchina fotografica») dice la bussola, IT/EN.
+
+### Decisioni e deviazioni
+
+- **Dietro un tocco, non accesa sulla pagina**: la pagina si legge, e un sensore acceso mentre
+  qualcuno legge della luce cinerea è batteria spesa per niente. I sensori si registrano alla
+  ripresa e si rilasciano alla pausa, solo con la bussola a schermo.
+- **Il nord vero**: le direzioni del cielo sono vere, quelle del magnetometro no (in Italia 2–5
+  gradi, altrove decine): la bussola aggiunge la declinazione di `GeomagneticField` per il
+  luogo. È il luogo della pagina, non la posizione del telefono: l'app non chiede la
+  posizione, e alla scala di una regione la differenza non si vede.
+- **Il vettore e non gli angoli di Eulero**: `getOrientation` è singolare proprio quando il
+  telefono è tenuto dritto, e l'ago impazziva lì. La direzione è un vettore del telefono
+  portato nel mondo dalla matrice di rotazione; il passaggio fra in piano e dritto ha un
+  margine (0,4 / 0,6) perché al confine la direzione non salti.
+- **«Ci sei» entro 12°, si esce a 18**: una mano a braccio teso copre una ventina di gradi, e
+  una parola che lampeggia fra «ci sei» e «gira a destra» sembra una bussola rotta.
+- **Il quadrante attenuato (45%) quando la bussola dubita**: l'ago continua a muoversi, perché
+  il gesto si fa meglio guardandolo assestarsi, ma non finge una sicurezza che non ha.
+- **Il limite onesto dell'avviso**: l'accuratezza che Android riporta dipende dal produttore;
+  alcuni telefoni non dicono mai «bassa». Per questo l'aiuto a richiesta, e il disturbo
+  misurato sull'intensità del campo, che non dipende da quel segnale.
+- **Mai i gradi**, come sulle righe: il quadrante è il disegno del numero.
+- **Nessuna immagine nuova nel README**: è una vista dentro un foglio, e l'insieme resta
+  piccolo.
+
+### Come è stato verificato
+
+- `CompassMathTest`: il telefono in piano punta il bordo alto dello schermo, e la rotazione
+  dello schermo sposta quel bordo; dritto punta la fotocamera, comunque sia girato lo schermo;
+  la postura cambia con il margine; la svolta è la via corta, destra positiva; «ci sei» è più
+  facile da tenere che da prendere, e oltre 150° è «alle spalle»; solo un campo che la Terra
+  non può fare è un disturbo; inaffidabile e bassa chiedono il gesto, media e alta no; la
+  media attraverso il nord resta a nord.
+- La bussola disegnata con Robolectric e sensori simulati (girarsi, ci sei, da calibrare,
+  disturbata, senza bussola) e la pagina con «Dove guardare», guardate immagine per immagine.
+- Da provare sul telefono del committente: l'ago vero, il gesto, il telefono dritto.
+
+## Cielo: l'hero che risponde sempre, il prossimo momento, gli orari in colonna (committente, 14 ott 2026)
+
+I punti 1, 2 e 3 della revisione del Cielo.
+
+### Cosa è cambiato
+
+- **Punto 1, l'hero.** Una notte senza finestra buia apre con una parola al posto del
+  verdetto: «Notte di luna», «Mai del tutto buio», «Buio tutto il giorno», con sotto le
+  nuvole medie della notte. Gli orari sono grandi e tabellari, sotto la loro etichetta
+  («Finestra buia», o «Cielo scuro» nella notte della luna); la prosa segue, più piccola.
+  `sky_tonight_moon_all_night` perde gli orari, che ora stanno sopra di lei.
+- **Punto 2, il prossimo momento** esce dal suo giorno e diventa una card in cima alla
+  sezione: «Il prossimo, oggi», il nome, l'orario grande, fra quanto e da che parte, il
+  verdetto, la campanella. Gli altri momenti e il calendario «In arrivo» stanno in gruppi di
+  righe (segmenti `surfaceContainer` a 2 dp, angoli esterni 20 e interni 4).
+- **Punto 3, gli orari in colonna**: l'inizio di ogni momento a destra del nome, prima della
+  campanella; la fine di una finestra nella riga sotto, «fino alle 19:15».
+
+### Decisioni e deviazioni
+
+- **La parola della notte senza finestra non è un verdetto**: niente segno, niente colore.
+  I verdetti giudicano una finestra e non ce n'è una; «Niente da fare» in rosso sarebbe
+  falso proprio la notte in cui la luna è lo spettacolo. Era la riserva detta in revisione:
+  la parola resta nella card, non va nelle notifiche né nei widget.
+- **La percentuale della luna una volta sola**: il disco accanto la porta già, e la prima
+  prova la stampava tre volte (disco, riga sotto la parola, prosa).
+- **La card del prossimo in `surfaceContainerHigh`, non in un contenitore colorato**: la
+  card della notte è già la cosa forte della pagina; due cose forti non sono una gerarchia.
+- **Righe fatte a mano e non `ListItem`**, e **il verdetto sotto l'icona, non sotto il
+  nome**. Con i gruppi la riga perde 32 dp. Sotto il nome il verdetto aveva 241 dp a 360,
+  e il più largo non è più il «pioggia 100%» da 236 misurato il 12 set: con lo strato delle
+  nuvole (24 set) «✗ Niente da fare  nuvole 86%, basse» vuole circa 262, e nella prova a
+  360 dp il numero è andato sotto la parola. Dal bordo dell'icona la riga ha 304 dp a 360.
+  La riga di prima era già a 1 dp dall'andare a capo (261).
+- **Le date del calendario non vanno in colonna**: sono giorni, non minuti, e restano nella
+  riga sotto il nome.
+
+### Come è stato verificato
+
+- `TonightNightTest`: le nuvole di una notte intera sono la media delle sue ore, e senza ore
+  non c'è un numero.
+- La pagina disegnata con Robolectric in chiaro a 384 dp e in scuro a 360 dp, e l'hero nei
+  tre stati senza finestra (IT ed EN), guardati immagine per immagine; le immagini del
+  README rigenerate e guardate.
+
+## Material 3 Expressive, un passaggio a parte (committente, 14 ott 2026)
+
+Il punto 4 della revisione del Cielo (`MotionScheme.expressive()` su `MaterialTheme`, le
+chiavi e `animateItem` nelle liste) è **rimandato** a un passaggio dedicato, per due ragioni:
+
+- **È di tutta l'app, non del Cielo.** Lo schema di movimento cambia ogni componente
+  Material (interruttori, fogli, barra di navigazione, pulsanti): va guardato schermata per
+  schermata, non dentro una revisione di una.
+- **È della famiglia, non di Chiaro.** Chiaro, Passo, Saldo e Tempo condividono un
+  linguaggio (la transizione fra le pagine è già quella di Saldo, §7 di DESIGN). Un
+  aggiornamento a Material 3 Expressive fatto in una sola delle quattro le farebbe divergere;
+  va deciso e fatto per tutte, con gli stessi valori.
+
+Quando si farà, il punto di partenza misurato il 14 ott 2026:
+
+- `material3` 1.4.0 (BOM 2026.02.01) ha `MotionScheme` (standard ed expressive) e
+  `ShortNavigationBar`; **non** ha `MaterialShapes`, `ButtonGroup`, `LoadingIndicator`,
+  `FloatingToolbar` né le top app bar flessibili, che sono nella 1.5 ancora alpha. Il
+  passaggio aspetta la 1.5 stabile, o decide consapevolmente di non aspettarla.
+- `ChiaroMotion` ha già le tre molle di §7 (spatial, spatial fast, effects) e il ripiego a
+  100 ms per chi riduce le animazioni: va riconciliato con `MotionScheme`, non affiancato.
+- Le liste del Cielo non hanno chiavi (`items(n)`), quindi aggiungere o togliere un momento
+  salta invece di muoversi: è la prima cosa da sistemare, ed è indipendente dallo schema.
+- Da guardare nello stesso passaggio: la top app bar flessibile con il luogo come
+  sottotitolo (punto 10 della revisione del Cielo), le forme espressive dove dicono qualcosa.
+
+## Cielo: il pulsante, una luna sola, i segni del cielo (committente, 14 ott 2026)
+
+I punti 5, 6 e 7 della revisione del Cielo.
+
+### Cosa è cambiato
+
+- **Punto 5.** «Aggiungi un momento» è un FAB esteso in basso a destra, che resta solo icona
+  quando si scorre nella lista; la lista lascia 88 dp sotto l'ultima riga. La sezione
+  «Promemoria» in fondo alla pagina non c'è più: «Promemoria abituale» e «Anche a cielo
+  coperto» stanno in Impostazioni, gruppo «Promemoria del cielo» (`SettingsViewModel`
+  ripianifica gli allarmi come faceva il Cielo, anche dopo il ripristino); la nota «possono
+  arrivare qualche minuto prima o dopo» sta nella finestra dell'anticipo, e quella di un
+  momento dice dove si cambia l'abituale. `SkyActions` perde i due setter.
+- **Punto 6.** `MoonOfTheNight` in `:core:domain`: la luna di una data si legge a metà della
+  sua notte astronomica (a mezzanotte dove non c'è), per la card, per «La luna di oggi» e
+  per il widget. Una fase che nomina un quarto porta il suo giorno e la sua ora: «Luna piena
+  domani alle 18:49 · 99% illuminata». L'occorrenza di «La luna di oggi» resta a
+  mezzogiorno: è l'ora del suo promemoria, e quella non cambia.
+- **Punto 7.** `tools/compose_sky_marks.py` compone tre segni dai disegni di Meteocons e
+  scrive `ui/icons/SkyMarks.kt`: la meteora per gli sciami, la luna con la stella per le
+  congiunzioni della luna, le due stelle per Venere e Giove. CLAUDE.md, DESIGN §13 e
+  `shipped_icons.py` lo dicono.
+- La guida (momenti, campanella, catalogo) dice la card del prossimo, dove si sceglie il
+  promemoria abituale e da dove si aggiunge un momento.
+
+### Decisioni e deviazioni
+
+- **I promemoria in Impostazioni e non nella finestra della campanella**: una preferenza che
+  vale per tutti i momenti non è contenuto della pagina di stanotte, e la finestra di un
+  momento sceglie per quel momento. La finestra però lo dice, perché chi cercava la riga in
+  fondo alla pagina sappia dove è andata.
+- **Il FAB primario di Material, non un colore nostro**: è il componente, con il suo
+  contenitore; il FAB esteso in cima alla pagina copre il bordo di una riga, che è il
+  comportamento di un FAB, e si ritira appena si scorre.
+- **La luna a metà della notte, non a mezzogiorno**: è la luna che si guarda, e quella che la
+  card ha sempre usato; spostare la card a mezzogiorno avrebbe messo la riga d'accordo con
+  un istante in cui la luna di solito non si vede. Il widget segue, perché la home e l'app
+  non stampino due fasi.
+- **Il quarto con giorno e ora solo per le quattro fasi che lo nominano**: «gibbosa
+  crescente» è un tratto del ciclo, non un istante, e non ha niente da precisare.
+- **Tre segni e non di più.** Venere e Giove restano la stella (è il loro nome a occhio
+  nudo); le ore blu e i crepuscoli nautici anche (lo stesso cielo delle prime stelle, e
+  Meteocons non disegna il sole appena sotto l'orizzonte). Gli sciami restano uno per riga
+  con lo stesso disegno: sono la stessa cosa in date diverse, e raggrupparli in una riga
+  sola avrebbe nascosto le date e le pagine.
+- **Le immagini del README**: «sky-ahead» ora parte dalla riga della guida, perché senza la
+  sezione dei promemoria la lista finisce prima e lo scorrimento si fermava con quella riga
+  tagliata sotto l'intestazione.
+
+### Come è stato verificato
+
+- `MoonOfTheNightTest`: la luna di una data si legge a metà della sua notte, a mezzanotte
+  dove la notte non c'è; una fase principale porta il suo quarto, entro due giorni, ed è lo
+  stesso istante del calendario; le fasi intermedie non ne hanno.
+- `SkyStateBuilderTest`: la card e «La luna di oggi» stampano la stessa percentuale, e il
+  quarto della luna piena del 25 set 2026 cade il 26.
+- `SkyMarksTest`: le quattro facce di ogni segno, nelle tabelle, senza gemelli animati; i pezzi
+  uguali alle sorgenti alla lettera, percorsi e colori; la meteora senza la luna; i contorni
+  della famiglia. `SkyMomentIconTest` e `MeteoconsSetsTest` aggiornati.
+- La pagina del Cielo, le Impostazioni e i segni in tutte le facce disegnati con Robolectric e
+  guardati; le immagini del README rigenerate e guardate.
+
+## Cielo: «Annulla» e il selettore del luogo (committente, 14 ott 2026)
+
+I punti 9 e 10, gli ultimi della revisione del Cielo. Restano aperti solo il punto 4,
+rimandato al passaggio Material 3 Expressive di famiglia, e «Se non stanotte, quando?»,
+scartato.
+
+### Cosa è cambiato
+
+- **Punto 9.** Aggiungere o togliere un momento dalla sua pagina chiude il foglio e mostra una
+  snackbar con «Annulla». Annullare una rimozione rimette la riga **com'era**, con il suo
+  anticipo: `SkySubscriptionStore.restore`, perché `add` lo dimentica; annullare un'aggiunta
+  la toglie. La schermata è uno `Scaffold`, che alza il FAB sopra la snackbar. Nel catalogo
+  niente snackbar (il segno della riga cambia sul posto, e il foglio modale la coprirebbe), ma
+  una riga tolta e ritoccata nello stesso foglio torna con il suo anticipo.
+  `SkyUiState.Content.subscriptions` porta le righe come il negozio le tiene.
+- **Punto 10.** `ui/components/TabHeader.kt` sostituisce le tre copie dell'intestazione di
+  Cielo, Avvisi e Diario. Il bersaglio è il nome della scheda e il luogo insieme, 48 dp di
+  altezza e almeno 48 di larghezza, un pulsante solo per TalkBack. Il testo non si sposta:
+  i dati del README non cambiano.
+
+### Decisioni e deviazioni
+
+- **Tutte e tre le schermate, non solo il Cielo**: il difetto era lo stesso in tre copie, e
+  correggerne una avrebbe lasciato le altre due a 20 dp. Un componente solo perché la
+  prossima correzione arrivi a tutte.
+- **Il bersaglio è il blocco intero e non una riga alta 48**: una riga del luogo alta 48
+  avrebbe allungato l'intestazione di 28 dp; il nome più il luogo fanno già 48, ed è lì che
+  un dito cerca «questo luogo».
+- **La snackbar solo per le azioni che chiudono un foglio**: dove il segno cambia sotto il
+  dito, la ricevuta c'è già e lo stesso tocco è l'annullamento.
+- **`Long`**: la snackbar porta un'azione, e con TalkBack raggiungerla richiede tempo.
+
+### Come è stato verificato
+
+- `SkySubscriptionStoreTest`: ripristinare rimette la riga com'era, anticipo compreso, e una
+  volta sola.
+- `SkyUndoTest`: dalla pagina di «Tramonto» con un anticipo di 30 minuti, togli → la snackbar
+  → «Annulla» → la riga torna con i suoi 30 minuti; il selettore del luogo è un bersaglio di
+  almeno 48 × 48 dp, e senza un luogo il titolo non è un pulsante.
+- Suite completa e lint; le immagini del README rigenerate: nessuna cambia.
+
+## La guida dopo la revisione del Cielo (committente, 14 ott 2026)
+
+Riletta per intero contro le cinque passate della revisione. Le parti già aggiornate lungo la
+strada (la striscia da esplorare, «Dove guardare», la campanella, il catalogo, la card del
+prossimo) reggono; erano rimaste indietro quattro cose.
+
+- **«Stanotte»**: la notte senza finestra ha una parola al posto del verdetto, gli orari sono in
+  grande, e la striscia ha le sue tacche, la luna color paglia e «adesso». La guida lo dice.
+- **«I prossimi momenti»**: i giorni come titoli e l'orario a destra, «La luna di oggi» che è la
+  luna di stanotte con il giorno e l'ora del suo quarto, e «Annulla» che rimette un momento
+  tolto per sbaglio con il suo promemoria.
+- **«I tuoi luoghi»**: diceva che il nome in cima a Oggi e a Cielo apre i luoghi; lo apre il
+  nome in cima a ogni schermata, ed è così anche per Avvisi e Diario.
+- **«Impostazioni»**: mancava il gruppo «Promemoria del cielo». La frase sul ripristino, nella
+  guida e nella finestra di conferma, dice ora che tornano ai valori iniziali anche i promemoria
+  del cielo, perché è vero: `SettingsStore.resetToDefaults` svuota tutto il negozio.
+- **L'esempio della riga di un momento** era una copia della riga di inizio settembre (icona di
+  26 dp in grigio, giorno e ora nella riga). Ora lo disegna `SkyRow` stessa, resa `internal` con
+  `onOpen` facoltativo e il margine come parametro: l'esempio è la riga, non una sua imitazione.
+
+**Il ripristino e gli avvisi** (decisione del committente, 14 ott 2026): `resetToDefaults`
+svuota tutto il negozio, quindi anche gli interruttori degli avvisi pronti all'uso
+(`notif_*`) e delle allerte ufficiali. **Resta così, e la frase lo dice.** È la direzione
+sicura: gli avvisi valgono tutti «acceso» per difetto, quindi un ripristino può solo
+riaccendere un avviso spento, mai zittirne uno. La finestra di conferma e la guida dicono
+ora «tutto torna come al primo avvio… gli avvisi che avevi spento si riaccendono», e non
+«si azzerano», che in italiano si legge come «si spengono».
+
+Perché la frase sia vera subito, `SettingsViewModel` ora ripianifica il lavoro periodico
+(`SyncScheduler.reconcile`) dopo il ripristino: prima lo faceva solo all'avvio del processo,
+e un avviso riacceso restava senza il lavoro che lo controlla fino al riavvio dell'app. Lo
+stesso valeva per il cambio di frequenza, che ora si applica subito. (La chiave dell'opacità
+dei widget nello stesso negozio non è letta da nessuna schermata: le card hanno ognuna il
+proprio aspetto, e la frase non la nomina.)

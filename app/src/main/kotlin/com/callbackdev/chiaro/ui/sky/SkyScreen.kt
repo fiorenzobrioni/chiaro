@@ -1,6 +1,29 @@
 package com.callbackdev.chiaro.ui.sky
 
+import com.callbackdev.chiaro.ui.components.TabHeader
 import androidx.activity.compose.BackHandler
+import com.callbackdev.chiaro.data.SkySubscription
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.rememberLazyListState
+import com.callbackdev.chiaro.ui.theme.tabular
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,7 +33,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -20,7 +42,6 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
@@ -28,6 +49,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,6 +58,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -56,6 +79,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -63,6 +87,7 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.components.NotificationsOffCard
 import com.callbackdev.chiaro.ui.components.rememberNotificationRequest
 import com.callbackdev.chiaro.ui.components.rememberNotificationsAllowed
+import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.sky.MoonQuarterKind
 import com.callbackdev.chiaro.domain.sky.SkyJob
@@ -79,6 +104,7 @@ import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.places.PlacesSheet
+import com.callbackdev.chiaro.ui.sky.compass.CompassView
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.theme.GroupTop
 import com.callbackdev.chiaro.ui.theme.SectionBottom
@@ -113,8 +139,7 @@ fun SkyRoute(
             addMoment = skyViewModel::addMoment,
             removeMoment = skyViewModel::removeMoment,
             setLead = skyViewModel::setLead,
-            setDefaultLead = skyViewModel::setDefaultLead,
-            setNotifyOnFail = skyViewModel::setNotifyOnFail
+            restoreMoment = skyViewModel::restoreMoment
         ),
         onOpenPlaces = { placesOpen = true },
         onOpenSettings = onOpenSettings,
@@ -139,7 +164,8 @@ internal fun SkyScreen(
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            SkyHeader(
+            TabHeader(
+                title = stringResource(R.string.tab_sky),
                 placeName = (state as? SkyUiState.Content)?.placeName,
                 onOpenPlaces = onOpenPlaces,
                 onOpenSettings = onOpenSettings
@@ -157,44 +183,6 @@ internal fun SkyScreen(
     }
 }
 
-@Composable
-private fun SkyHeader(placeName: String?, onOpenPlaces: () -> Unit, onOpenSettings: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.tab_sky), style = MaterialTheme.typography.titleLarge)
-            if (placeName != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable(onClick = onOpenPlaces)
-                ) {
-                    Text(
-                        text = placeName,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Icon(
-                        imageVector = Icons.Outlined.KeyboardArrowDown,
-                        contentDescription = stringResource(R.string.place_switcher_action),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-        }
-        IconButton(onClick = onOpenSettings) {
-            Icon(
-                imageVector = Icons.Outlined.Settings,
-                contentDescription = stringResource(R.string.settings_title)
-            )
-        }
-    }
-}
 
 @Composable
 private fun NoPlaceForSky(onOpenPlaces: () -> Unit) {
@@ -218,10 +206,10 @@ private fun NoPlaceForSky(onOpenPlaces: () -> Unit) {
 // Content
 // ---------------------------------------------------------------------------------
 
-/** Which lead picker is open: one moment's, or the default's. */
+/** The lead picker that is open: one moment's. The default's lives in Settings since
+ * 14 ott 2026 (review point 5). */
 private sealed interface LeadDialog {
     data class ForMoment(val jobId: String, val lead: SkyLead, val followsDefault: Boolean) : LeadDialog
-    data object ForDefault : LeadDialog
 }
 
 /** What the screen can ask of its store, as functions rather than the view model: the
@@ -230,8 +218,8 @@ internal class SkyActions(
     val addMoment: (String) -> Unit,
     val removeMoment: (String) -> Unit,
     val setLead: (String, Int?) -> Unit,
-    val setDefaultLead: (Int?) -> Unit,
-    val setNotifyOnFail: (Boolean) -> Unit
+    /** Puts a removed line back as it was, lead included (review point 9). */
+    val restoreMoment: (SkySubscription) -> Unit = { addMoment(it.jobId) }
 )
 
 @Composable
@@ -253,6 +241,10 @@ private fun SkyContent(
     var leadDialog by remember { mutableStateOf<LeadDialog?>(null) }
     // The page a row of the agenda opened, if any ([AgendaPageSheet]).
     var pageId by rememberSaveable { mutableStateOf<String?>(null) }
+    // And where that row says to look, with its time line, for the page's compass
+    // (14 ott 2026): a direction belongs to an occurrence, not to the job the page is for.
+    var pageBearing by rememberSaveable { mutableStateOf<Double?>(null) }
+    var pageWhen by rememberSaveable { mutableStateOf("") }
 
     // POST_NOTIFICATIONS is asked the first time a reminder is switched on (VISION
     // §5.8), never at startup: the tap that needs it is the sentence that explains it.
@@ -266,7 +258,67 @@ private fun SkyContent(
 
     // Read here and not in the list below: a lazy list's builder is not a composable.
     val clock = LocalClock.current
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    val listState = rememberLazyListState()
+    val snackbars = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val res = LocalContext.current.resources
+    val undoLabel = stringResource(R.string.action_undo)
+
+    /**
+     * «Annulla» (review point 9, 14 ott 2026) after an add or a removal made from an
+     * event's page: the sheet closes on the act, and the row that appeared or vanished
+     * may well be off screen, so the snackbar is the receipt and the way back. A removal
+     * is undone by putting the line back as it was, its own lead included ([restore]); an
+     * add by removing it. Long, because it carries an action somebody may need a moment
+     * to reach (and TalkBack users more than a moment).
+     */
+    fun announce(jobId: String, added: Boolean) {
+        val name = res.getString(SkyText.nameRes(jobId))
+        val line = content.subscriptions.firstOrNull { it.jobId == jobId }
+        scope.launch {
+            snackbars.currentSnackbarData?.dismiss()
+            val result = snackbars.showSnackbar(
+                message = res.getString(
+                    if (added) R.string.sky_moment_added else R.string.sky_moment_removed, name
+                ),
+                actionLabel = undoLabel,
+                duration = SnackbarDuration.Long
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                if (added) actions.removeMoment(jobId)
+                else actions.restoreMoment(line ?: SkySubscription(jobId))
+            }
+        }
+    }
+    // Extended while the top of the page is in view, the icon alone once the reader has
+    // scrolled into the list: the label is read once, and after that it covers rows.
+    val fabExpanded by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
+    // A Scaffold for the two things that float over the list: the FAB, and the snackbar
+    // that offers «Annulla» (review point 9), which the Scaffold lifts the FAB over.
+    Scaffold(
+        containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        snackbarHost = { SnackbarHost(snackbars) },
+        floatingActionButton = {
+            // «Aggiungi un momento» (review point 5, 14 ott 2026): the screen's one
+            // action, as Material puts a screen's one action, instead of a text button
+            // lost between the moments and the guide's row.
+            ExtendedFloatingActionButton(
+                text = { Text(stringResource(R.string.sky_add_moment)) },
+                icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
+                expanded = fabExpanded,
+                onClick = { catalogOpen = true }
+            )
+        }
+    ) { inner ->
+    LazyColumn(
+        state = listState,
+        // Zero today (no bars, no insets: the header and the bottom bar are the shell's),
+        // and right the day the Scaffold is given one.
+        modifier = Modifier.fillMaxSize().padding(inner),
+        // Room for the FAB under the last row, so nothing ends up beneath it.
+        contentPadding = PaddingValues(bottom = FabClearance)
+    ) {
         if (!notificationsAllowed && remindersArmed(content)) {
             item {
                 NotificationsOffCard(
@@ -289,10 +341,34 @@ private fun SkyContent(
         // Grouped by day under a heading of their own (design review, 23 set 2026): four
         // rows that each began «Domani ·» said the same word four times and pushed the
         // time — the thing a reader scans for — to the middle of the line.
-        val (todays, tomorrows) = content.moments.partition { it.timing != MomentTiming.TOMORROW }
+        // The next timed moment is lifted out of its day into a card of its own (review
+        // point 2, 14 ott 2026): every row used to weigh the same, and the one a reader
+        // is waiting for was a grey «tra 6 h 20 min» in the middle of a line.
         val next = content.moments.firstOrNull {
             it.timing != MomentTiming.NOW && it.occurrence is SkyOccurrence.At && it.moonPhase == null
         }
+        fun open(moment: Moment, line: String) {
+            pageId = moment.job.id
+            pageBearing = moment.bearingDeg
+            pageWhen = line
+        }
+        fun bell(moment: Moment) {
+            leadDialog = LeadDialog.ForMoment(moment.job.id, moment.lead, moment.followsDefault)
+        }
+        next?.let { moment ->
+            item(key = "next") {
+                NextMomentCard(
+                    moment = moment,
+                    zone = content.zone,
+                    timeFmt = timeFmt,
+                    onOpen = { open(moment, it) },
+                    onBell = { bell(moment) }
+                )
+            }
+        }
+        val (todays, tomorrows) = content.moments
+            .filter { it !== next }
+            .partition { it.timing != MomentTiming.TOMORROW }
         listOf(R.string.sky_day_today to todays, R.string.sky_day_tomorrow to tomorrows)
             .filter { it.second.isNotEmpty() }
             .forEach { (dayRes, dayMoments) ->
@@ -303,31 +379,14 @@ private fun SkyContent(
                         moment = moment,
                         zone = content.zone,
                         timeFmt = timeFmt,
-                        isNext = moment === next,
-                        onOpen = { pageId = moment.job.id },
-                        onBell = {
-                            leadDialog = LeadDialog.ForMoment(
-                                moment.job.id, moment.lead, moment.followsDefault
-                            )
-                        }
+                        shape = segmentShape(index, dayMoments.size),
+                        onOpen = { open(moment, it) },
+                        onBell = { bell(moment) }
                     )
                 }
             }
-        item {
-            TextButton(
-                onClick = { catalogOpen = true },
-                modifier = Modifier.padding(horizontal = 8.dp)
-            ) {
-                Icon(Icons.Outlined.Add, contentDescription = null)
-                Text(
-                    text = stringResource(R.string.sky_add_moment),
-                    modifier = Modifier.padding(start = 4.dp)
-                )
-            }
-        }
-        // A row and not a second button beside "Add a moment": the two labels are a
-        // line and a half on a 360dp screen in Italian, and this one is the door for a
-        // reader who came to understand rather than to subscribe.
+        // The door for a reader who came to understand rather than to subscribe; adding
+        // is the FAB's since 14 ott 2026.
         item {
             ListItem(
                 leadingContent = {
@@ -350,6 +409,7 @@ private fun SkyContent(
         items(content.events.size) { index ->
             val event = content.events[index]
             EventRow(
+                shape = segmentShape(index, content.events.size),
                 event = event,
                 zone = content.zone,
                 dateFmt = dateFmt,
@@ -358,7 +418,11 @@ private fun SkyContent(
                 today = today,
                 // A row that names two showers opens the first: it is the row's own job,
                 // and the page's «see also» is one tap from the rest.
-                onOpen = { pageId = event.job.id },
+                onOpen = { line ->
+                    pageId = event.job.id
+                    pageBearing = event.bearingDeg
+                    pageWhen = line
+                },
                 onBell = event.lead?.let { lead ->
                     { leadDialog = LeadDialog.ForMoment(event.job.id, lead, event.followsDefault) }
                 }
@@ -380,35 +444,7 @@ private fun SkyContent(
             }
         }
 
-        item { SkySectionTitle(stringResource(R.string.sky_section_reminders)) }
-        item {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.sky_default_lead)) },
-                supportingContent = { Text(leadLabel(content.defaultLead)) },
-                modifier = Modifier.clickable { leadDialog = LeadDialog.ForDefault }
-            )
-        }
-        item {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.sky_notify_on_fail)) },
-                supportingContent = { Text(stringResource(R.string.sky_notify_on_fail_note)) },
-                trailingContent = {
-                    Switch(checked = content.notifyOnFail, onCheckedChange = null)
-                },
-                modifier = Modifier.clickable(
-                    onClick = { actions.setNotifyOnFail(!content.notifyOnFail) },
-                    role = Role.Switch
-                )
-            )
-        }
-        item {
-            Text(
-                text = stringResource(R.string.sky_reminders_note),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-        }
+    }
     }
 
     if (catalogOpen) {
@@ -417,8 +453,10 @@ private fun SkyContent(
             // job with no row (an eclipse search that finds nothing ahead) used to show
             // as unsubscribed here and offer to be added twice (review, 8 set 2026).
             subscribedIds = content.subscribedIds,
+            subscriptions = content.subscriptions,
             onAdd = actions.addMoment,
             onRemove = actions.removeMoment,
+            onRestore = actions.restoreMoment,
             onDismiss = { catalogOpen = false }
         )
     }
@@ -427,10 +465,21 @@ private fun SkyContent(
         AgendaPageSheet(
             jobId = id,
             subscribed = id in content.subscribedIds,
-            onOpenRelated = { pageId = it },
-            onAdd = actions.addMoment,
-            onRemove = actions.removeMoment,
-            onDismiss = { pageId = null }
+            onOpenRelated = {
+                pageId = it
+                pageBearing = null
+            },
+            onAdd = {
+                actions.addMoment(it)
+                announce(it, added = true)
+            },
+            onRemove = {
+                actions.removeMoment(it)
+                announce(it, added = false)
+            },
+            onDismiss = { pageId = null },
+            look = pageBearing?.let { LookTarget(it, pageWhen) },
+            coordinates = content.coordinates
         )
     }
 
@@ -443,18 +492,6 @@ private fun SkyContent(
             onPick = { minutes ->
                 actions.setLead(dialog.jobId, minutes)
                 leadChosen(minutes ?: content.defaultLead.minutes)
-                leadDialog = null
-            },
-            onDismiss = { leadDialog = null }
-        )
-        LeadDialog.ForDefault -> LeadPickerDialog(
-            title = stringResource(R.string.sky_default_lead),
-            defaultLead = content.defaultLead,
-            current = content.defaultLead.minutes ?: 0,
-            perMoment = false,
-            onPick = { minutes ->
-                actions.setDefaultLead(minutes?.takeIf { it > 0 })
-                leadChosen(minutes)
                 leadDialog = null
             },
             onDismiss = { leadDialog = null }
@@ -507,62 +544,134 @@ private fun MomentRow(
     moment: Moment,
     zone: ZoneId,
     timeFmt: DateTimeFormatter,
-    isNext: Boolean,
-    onOpen: () -> Unit,
+    shape: Shape,
+    /** Opens the row's page, handed the row's own time line for its compass. */
+    onOpen: (String) -> Unit,
     onBell: () -> Unit
 ) {
     val res = LocalContext.current.resources
     val name = stringResource(SkyText.nameRes(moment.job.id))
-    val quiet = MaterialTheme.colorScheme.onSurfaceVariant
-    val timeLine = when (val occ = moment.occurrence) {
+    val occ = moment.occurrence
+    val timed = (occ as? SkyOccurrence.At)?.takeIf { moment.moonPhase == null }
+    // The time stands in a column at the row's end (review point 3, 14 ott 2026): it is
+    // what a reader scans the list for, and in the middle of a grey line it was the
+    // hardest thing on the row to find. A window's end follows in the line under it.
+    val start = timed?.start?.atZone(zone)?.format(timeFmt)
+    val until = timed?.end?.let { stringResource(R.string.sky_until, it.atZone(zone).format(timeFmt)) }
+    val detail = when {
+        moment.moonPhase != null -> moonLine(moment, zone, timeFmt)
+        occ is SkyOccurrence.None -> stringResource(SkyText.notScheduledRes(occ.reason))
+        else -> null
+    }
+    // Which day the time belongs to is the heading's to say since 23 set 2026; the row
+    // keeps only «Adesso», which no heading can (the next moment's «how soon» is its card's).
+    val now = if (moment.timing == MomentTiming.NOW) stringResource(R.string.sky_moment_now) else null
+    val line = timeLine(moment, zone, timeFmt)
+    SkyRow(
+        icon = momentIcon(moment),
+        name = name,
+        photographic = moment.job.photographic,
+        time = start,
+        supporting = listOfNotNull(detail, until, now, bearingLine(moment.bearingDeg)).joinToString(" · "),
+        shape = shape,
+        onOpen = { onOpen(line) },
+        bell = { BellButton(lead = moment.lead, name = name, onClick = onBell) },
+        verdict = moment.verdict?.let { verdict ->
+            {
+                VerdictChip(
+                    kind = SkyText.chipKind(verdict.kind),
+                    label = stringResource(SkyText.verdictWordRes(verdict.kind)),
+                    evidence = SkyText.chipEvidence(res, verdict)
+                )
+            }
+        }
+    )
+}
+
+/** «18:36 – 19:15», «19:15», the moon's phase, or the reason the sky skips it: the whole
+ * time of a moment in one line, for the compass's header. */
+@Composable
+private fun timeLine(moment: Moment, zone: ZoneId, timeFmt: DateTimeFormatter): String =
+    when (val occ = moment.occurrence) {
         is SkyOccurrence.At -> when {
-            moment.moonPhase != null -> moonLine(moment.moonPhase, moment.moonIlluminationPct)
+            moment.moonPhase != null -> moonLine(moment, zone, timeFmt)
             occ.end != null ->
                 "${occ.start.atZone(zone).format(timeFmt)} – ${occ.end!!.atZone(zone).format(timeFmt)}"
             else -> occ.start.atZone(zone).format(timeFmt)
         }
         is SkyOccurrence.None -> stringResource(SkyText.notScheduledRes(occ.reason))
     }
-    // Which day the time belongs to is the heading's to say since 23 set 2026; the row
-    // keeps only «Adesso», which no heading can, and the next moment says how soon.
-    val dayMark = when {
-        moment.timing == MomentTiming.NOW -> stringResource(R.string.sky_moment_now)
-        isNext -> (moment.occurrence as? SkyOccurrence.At)?.let { soonLine(it.start) }
-        else -> null
-    }
-    // The chip lives UNDER the name, never beside it: in a trailing slot a wide
-    // verdict ("Niente da fare · nuvole 100%") squeezed the name to one letter per
-    // line (device finding, 3 set). Only the fixed-width bell trails. Since 12 set it
-    // lives under the whole list item too — see [SkyVerdictLine].
-    Column(Modifier.agendaRowOpens(onOpen)) {
-        ListItem(
-            leadingContent = {
-                // Its own colors and the Sky's own rung (review, 8 set 2026): these were
-                // 26dp silhouettes in `onSurfaceVariant`, the one place left where the
-                // family was tinted flat — and tinted flat the full moon and the new moon
-                // are the same disc, a sunrise and a sunset the same horizon. §13.1 holds
-                // here as on Today: the icons depict the world and keep their palette.
-                Icon(
-                    imageVector = momentIcon(moment),
-                    contentDescription = null,
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(WeatherIconSize.Sky)
-                )
-            },
-            headlineContent = { SkyHeadline(name, moment.job.photographic) },
-            supportingContent = {
+
+/**
+ * The next moment, as a card at the head of the list (review point 2, 14 ott 2026): its
+ * day and «the next» in the label, its time large and tabular, how soon and which way
+ * under it, and its verdict. The rest of the list keeps its rows.
+ *
+ * `surfaceContainerHigh` and the 28 dp corners of the hero above it, not a coloured
+ * container: the tonight card is already the loud thing on this screen, and two loud
+ * cards would be no hierarchy at all.
+ */
+@Composable
+private fun NextMomentCard(
+    moment: Moment,
+    zone: ZoneId,
+    timeFmt: DateTimeFormatter,
+    onOpen: (String) -> Unit,
+    onBell: () -> Unit
+) {
+    val res = LocalContext.current.resources
+    val name = stringResource(SkyText.nameRes(moment.job.id))
+    val occ = moment.occurrence as? SkyOccurrence.At ?: return
+    val line = timeLine(moment, zone, timeFmt)
+    val day = stringResource(
+        if (moment.timing == MomentTiming.TOMORROW) R.string.sky_day_tomorrow else R.string.sky_day_today
+    ).lowercase(currentLocale())
+    val shape = RoundedCornerShape(NextCardCorner)
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .agendaRowOpens { onOpen(line) }
+            .padding(start = 16.dp, top = 12.dp, end = 4.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = momentIcon(moment),
+                contentDescription = null,
+                tint = Color.Unspecified,
+                modifier = Modifier.size(WeatherIconSize.Sky)
+            )
+            Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                 Text(
-                    text = listOfNotNull(timeLine, dayMark, bearingLine(moment.bearingDeg))
-                        .joinToString(" · "),
-                    color = quiet
+                    text = stringResource(R.string.sky_next_label, day),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
                 )
-            },
-            trailingContent = {
-                BellButton(lead = moment.lead, name = name, onClick = onBell)
+                ProvideTextStyle(MaterialTheme.typography.titleMedium) {
+                    SkyHeadline(name, moment.job.photographic)
+                }
             }
+            BellButton(lead = moment.lead, name = name, onClick = onBell)
+        }
+        Text(
+            text = line,
+            style = MaterialTheme.typography.headlineMedium.tabular(),
+            modifier = Modifier.padding(top = 4.dp)
         )
+        listOfNotNull(soonLine(occ.start), bearingLine(moment.bearingDeg))
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                Text(
+                    text = it.joinToString(" · "),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         moment.verdict?.let { verdict ->
-            SkyVerdictLine {
+            Box(Modifier.padding(top = 8.dp, end = 12.dp)) {
                 VerdictChip(
                     kind = SkyText.chipKind(verdict.kind),
                     label = stringResource(SkyText.verdictWordRes(verdict.kind)),
@@ -572,6 +681,124 @@ private fun MomentRow(
         }
     }
 }
+
+/**
+ * One row of the Sky's lists, in a container of its group (review point 2, 14 ott 2026):
+ * the rows of a day, and the calendar ahead, sit in `surfaceContainer` segments two dp
+ * apart, the group's outer corners round and the inner ones tight — the grouped list
+ * Material 3 Expressive draws its settings with.
+ *
+ * Laid out by hand rather than with `ListItem`, and the reason is arithmetic. The group's
+ * 16 dp margins cost the row 32 dp, and Material's item spends 16 dp at each edge and 16
+ * between its slots. The row spends 12 at its start, 12 between the glyph and the text
+ * and 4 after the bell (whose 48 dp box carries its own air): the text column is 201 dp
+ * at a 360 dp screen.
+ *
+ * **The verdict line starts under the glyph, not under the name.** Under the name it had
+ * `screen − 32 − 12 − 51 − 12 − 12` = 241 dp at 360, and the widest verdict is not the 236
+ * of «Niente da fare  pioggia 100%» that §8.8 measured: since the evidence names the
+ * cloud's layer (24 set 2026) «✗ Niente da fare  nuvole 86%, basse» is about 262, and on
+ * the 360 dp render the number wrapped under its word — the one pair §8.7 does not let
+ * come apart (it was already 1 dp from wrapping in the old row, at 261). From the glyph's
+ * edge the line has `screen − 32 − 12 − 12` = **304 dp at 360**, 328 at 384: a margin,
+ * not a coincidence. The next moment's card already set its chip at its own edge.
+ *
+ * [time] stands at the end of the headline (point 3): end-aligned before the bell, so the
+ * times of a group read down as a column.
+ */
+@Composable
+internal fun SkyRow(
+    icon: ImageVector,
+    name: String,
+    photographic: Boolean,
+    time: String?,
+    supporting: String,
+    shape: Shape,
+    /** Null for a row that opens nothing: the guide's example draws this very row. */
+    onOpen: (() -> Unit)?,
+    bell: (@Composable () -> Unit)?,
+    verdict: (@Composable () -> Unit)?,
+    extra: String? = null,
+    /** The page's margin; the guide, which has its own, passes zero. */
+    inset: Dp = 16.dp
+) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = inset, vertical = 1.dp)
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .then(if (onOpen != null) Modifier.agendaRowOpens(onOpen) else Modifier)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .heightIn(min = RowMinHeight)
+                .padding(start = RowStart, end = 4.dp, top = 8.dp, bottom = 8.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                // Its own colors and the Sky's own rung (review, 8 set 2026): tinted flat,
+                // the full moon and the new moon are the same disc, a sunrise and a
+                // sunset the same horizon. §13.1: the icons depict the world.
+                contentDescription = null,
+                tint = Color.Unspecified,
+                modifier = Modifier.size(WeatherIconSize.Sky)
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = RowGap, end = if (bell == null) RowStart else 0.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Row(verticalAlignment = Alignment.Top) {
+                    Box(Modifier.weight(1f)) {
+                        ProvideTextStyle(MaterialTheme.typography.bodyLarge) { SkyHeadline(name, photographic) }
+                    }
+                    if (time != null) {
+                        Text(
+                            text = time,
+                            style = MaterialTheme.typography.titleMedium.tabular(),
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+                if (supporting.isNotEmpty()) {
+                    Text(
+                        text = supporting,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                extra?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            bell?.invoke()
+        }
+        verdict?.let { SkyVerdictLine(it) }
+    }
+}
+
+/** The segment of a group at [index] of [count]: round outside, tight inside. */
+internal fun segmentShape(index: Int, count: Int): Shape {
+    val top = if (index == 0) GroupOuter else GroupInner
+    val bottom = if (index == count - 1) GroupOuter else GroupInner
+    return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
+}
+
+/** An extended FAB is 56 dp tall with 16 dp under it; 16 more so the last row clears it. */
+private val FabClearance = 88.dp
+private val GroupOuter = 20.dp
+private val GroupInner = 4.dp
+private val NextCardCorner = 28.dp
+private val RowStart = 12.dp
+private val RowGap = 12.dp
+private val RowMinHeight = 72.dp
 
 /**
  * The verdict's own line under a Sky row: it starts where the row's text starts and runs
@@ -606,8 +833,9 @@ private fun MomentRow(
  * extends it past its own bounds), a tighter chip 4, and the Sky's 51 dp glyph is a
  * decision of 11 set, not slack.
  *
- * [SkyChipIndent] is Material's own list-item arithmetic — 16 to the leading edge, the
- * glyph, 16 more to the text — so the chip's mark lines up under the name above it.
+ * Until 14 ott 2026 the line started under the name ([SkyChipIndent] was Material's 16,
+ * the glyph, 16) and the numbers above are that row's. In the grouped row ([SkyRow]) it
+ * starts under the glyph, at the row's own 12: see there for why.
  */
 @Composable
 private fun SkyVerdictLine(chip: @Composable () -> Unit) {
@@ -620,9 +848,10 @@ private fun SkyVerdictLine(chip: @Composable () -> Unit) {
     }
 }
 
-private val SkyRowInset = 16.dp
-private val SkyChipIndent = SkyRowInset + WeatherIconSize.Sky + SkyRowInset
-private val SkyChipBottom = 8.dp
+private val SkyRowInset = 12.dp
+// Since 14 ott 2026 the line starts where the row does, under the glyph ([SkyRow]).
+private val SkyChipIndent = RowStart
+private val SkyChipBottom = 12.dp
 
 /**
  * A row of the agenda opens its event's page ([AgendaPageSheet]).
@@ -648,7 +877,8 @@ private fun EventRow(
     yearFmt: DateTimeFormatter,
     timeFmt: DateTimeFormatter,
     today: java.time.LocalDate,
-    onOpen: () -> Unit,
+    shape: Shape,
+    onOpen: (String) -> Unit,
     onBell: (() -> Unit)?
 ) {
     val res = LocalContext.current.resources
@@ -678,41 +908,25 @@ private fun EventRow(
         ?.takeIf { it.note != SkyVerdictNote.BEYOND_HORIZON }
         ?.let { verdict -> SkyText.unknownReason(res, verdict) }
     // Same rule as MomentRow: the chip goes under the text on a line of its own
-    // ([SkyVerdictLine]), only the bell trails.
-    Column(Modifier.agendaRowOpens(onOpen)) {
-        ListItem(
-            leadingContent = {
-                Icon(
-                    imageVector = eventIcon(event),
-                    contentDescription = null, // as in MomentRow: the family's own colors
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(WeatherIconSize.Sky)
-                )
-            },
-            headlineContent = { SkyHeadline(name, event.job.photographic) },
-            supportingContent = {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        listOfNotNull(
-                            whenLine,
-                            conjunctionLine(event),
-                            bearingLine(event.bearingDeg),
-                            verdictLine
-                        ).joinToString(" · ")
-                    )
-                    // An eclipse says which kind it is and the number that decides it,
-                    // the same way a verdict carries its own arithmetic.
-                    eclipseLine(res, event)?.let { Text(it) }
-                }
-            },
-            trailingContent = {
-                if (onBell != null && event.lead != null) {
-                    BellButton(lead = event.lead, name = name, onClick = onBell)
-                }
-            }
-        )
-        event.verdict?.takeIf { it.kind != SkyVerdictKind.UNKNOWN }?.let { verdict ->
-            SkyVerdictLine {
+    // ([SkyVerdictLine]), only the bell trails. A date is not a column (its row is days
+    // out, not minutes), so it stays in the line under the name.
+    SkyRow(
+        icon = eventIcon(event),
+        name = name,
+        photographic = event.job.photographic,
+        time = null,
+        supporting = listOfNotNull(whenLine, conjunctionLine(event), bearingLine(event.bearingDeg), verdictLine)
+            .joinToString(" · "),
+        // An eclipse says which kind it is and the number that decides it, the same way
+        // a verdict carries its own arithmetic.
+        extra = eclipseLine(res, event),
+        shape = shape,
+        onOpen = { onOpen(whenLine) },
+        bell = if (onBell != null && event.lead != null) {
+            { BellButton(lead = event.lead, name = name, onClick = onBell) }
+        } else null,
+        verdict = event.verdict?.takeIf { it.kind != SkyVerdictKind.UNKNOWN }?.let { verdict ->
+            {
                 VerdictChip(
                     kind = SkyText.chipKind(verdict.kind),
                     label = stringResource(SkyText.verdictWordRes(verdict.kind)),
@@ -720,7 +934,7 @@ private fun EventRow(
                 )
             }
         }
-    }
+    )
 }
 
 /**
@@ -863,12 +1077,35 @@ private fun BellButton(lead: SkyLead, name: String, onClick: () -> Unit) {
     }
 }
 
+/**
+ * «Luna piena domani alle 18:49 · 99% illuminata» (review point 6, 14 ott 2026): the
+ * phase, with the day and hour of its quarter when it is one of the four — a phase name
+ * covers almost two days either side of its instant, and «Luna piena» on the evening
+ * before the calendar's full moon read as the app disagreeing with itself — and the
+ * percentage of the screen's one moon ([com.callbackdev.chiaro.domain.sky.MoonOfTheNight]).
+ */
 @Composable
-private fun moonLine(phase: MoonPhase, illuminationPct: Int?): String {
+private fun moonLine(moment: Moment, zone: ZoneId, timeFmt: DateTimeFormatter): String {
+    val phase = moment.moonPhase ?: return ""
     val name = stringResource(SkyText.phaseRes(phase))
-    return if (illuminationPct != null) {
-        stringResource(R.string.sky_moon_line, name, illuminationPct)
+    val quarter = moment.moonQuarterAt
+    val day = (moment.occurrence as? SkyOccurrence.At)?.start?.atZone(zone)?.toLocalDate()
+    val named = if (quarter != null && day != null) {
+        val local = quarter.atZone(zone)
+        val locale = currentLocale()
+        val whenDay = when (java.time.temporal.ChronoUnit.DAYS.between(day, local.toLocalDate())) {
+            0L -> stringResource(R.string.sky_day_today).lowercase(locale)
+            1L -> stringResource(R.string.sky_day_tomorrow).lowercase(locale)
+            -1L -> stringResource(R.string.sky_day_yesterday).lowercase(locale)
+            else -> stringResource(
+                R.string.sky_moon_on_date,
+                local.format(DateTimeFormatter.ofPattern("d MMMM", locale))
+            )
+        }
+        stringResource(R.string.sky_moon_quarter_when, name, whenDay, local.format(timeFmt))
     } else name
+    val pct = moment.moonIlluminationPct
+    return if (pct != null) stringResource(R.string.sky_moon_line, named, pct) else named
 }
 
 @Composable
@@ -915,11 +1152,26 @@ internal fun jobIcon(job: SkyJob) = ChiaroIcons.skyJob(job.id)
 @Composable
 private fun CatalogSheet(
     subscribedIds: Set<String>,
+    subscriptions: List<SkySubscription>,
     onAdd: (String) -> Unit,
     onRemove: (String) -> Unit,
+    onRestore: (SkySubscription) -> Unit,
     onDismiss: () -> Unit
 ) {
     var openId by rememberSaveable { mutableStateOf<String?>(null) }
+    // The catalog's undo is the same tap (review point 9, 14 ott 2026): the row's mark
+    // turns in place, so it needs no snackbar — which a modal sheet would cover anyway.
+    // What the tap could not do was bring back a line's own lead; the lines removed in
+    // this sheet are kept here, and tapping one again restores it as it was.
+    val removedHere = remember { mutableStateMapOf<String, SkySubscription>() }
+    fun toggle(jobId: String) {
+        if (jobId in subscribedIds) {
+            subscriptions.firstOrNull { it.jobId == jobId }?.let { removedHere[jobId] = it }
+            onRemove(jobId)
+        } else {
+            removedHere.remove(jobId)?.let(onRestore) ?: onAdd(jobId)
+        }
+    }
     var query by rememberSaveable { mutableStateOf("") }
     ModalBottomSheet(onDismissRequest = onDismiss) {
         val open = openId?.let { SkyJobCatalog.byId(it) }
@@ -937,7 +1189,7 @@ private fun CatalogSheet(
                     CatalogAction(
                         subscribed = subscribed,
                         onClick = {
-                            if (subscribed) onRemove(open.id) else onAdd(open.id)
+                            toggle(open.id)
                             openId = null
                         }
                     )
@@ -1012,7 +1264,7 @@ private fun CatalogSheet(
                             }
                         },
                         modifier = Modifier.clickable {
-                            if (subscribed) onRemove(job.id) else onAdd(job.id)
+                            toggle(job.id)
                         }
                     )
                 }
@@ -1143,6 +1395,10 @@ private fun CatalogAction(subscribed: Boolean, onClick: () -> Unit) {
  * the full-screen guide follows — so back always closes the sheet onto the agenda.
  * Acting closes it too: the agenda itself is the receipt, a row gone or a row added.
  */
+/** Where a row of the agenda says to look: its bearing, and its time line for the
+ * compass's header. */
+internal data class LookTarget(val bearingDeg: Double, val whenLine: String)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AgendaPageSheet(
@@ -1151,7 +1407,14 @@ internal fun AgendaPageSheet(
     onOpenRelated: (String) -> Unit,
     onAdd: (String) -> Unit,
     onRemove: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    /**
+     * The row's direction, when it has one (14 ott 2026): the page then opens with
+     * «Dove guardare», whose button turns the sheet into the compass. A row with no
+     * bearing — most of them, by design ([SkySights.bearing]) — has no compass to offer.
+     */
+    look: LookTarget? = null,
+    coordinates: Coordinates? = null
 ) {
     // An id the catalog no longer carries (restored across an update) has no true
     // page to draw: close rather than open an empty sheet.
@@ -1159,10 +1422,30 @@ internal fun AgendaPageSheet(
         LaunchedEffect(jobId) { onDismiss() }
         return
     }
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    val sheetState = rememberModalBottomSheetState()
+    var compassOpen by rememberSaveable(jobId) { mutableStateOf(false) }
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        val direction = look?.let { stringResource(SkyText.bearingRes(it.bearingDeg)) }
+        if (compassOpen && look != null && direction != null) {
+            // Back returns to the page, as the catalog's page returns to its list; the
+            // sheet opens all the way, because a dial in half a sheet is half a dial.
+            BackHandler { compassOpen = false }
+            LaunchedEffect(Unit) { sheetState.expand() }
+            CompassView(
+                name = stringResource(SkyText.nameRes(job.id)),
+                whenLine = look.whenLine,
+                direction = direction,
+                bearingDeg = look.bearingDeg,
+                icon = jobIcon(job),
+                coordinates = coordinates,
+                onBack = { compassOpen = false }
+            )
+            return@ModalBottomSheet
+        }
         SkyEventPage(
             job = job,
             onOpenRelated = onOpenRelated,
+            header = direction?.let { { LookBlock(direction = it, onOpen = { compassOpen = true }) } },
             action = {
                 CatalogAction(
                     subscribed = subscribed,
@@ -1176,6 +1459,44 @@ internal fun AgendaPageSheet(
     }
 }
 
+/**
+ * «Dove guardare» at the top of a row's page: the direction the row prints in its
+ * supporting line, said once more where there is room for the button that turns it into
+ * a needle. The compass is behind a tap rather than running on the page because the page
+ * is mostly read, and a sensor listening while somebody reads about earthshine is a
+ * battery spent on nothing.
+ */
+@Composable
+private fun LookBlock(direction: String, onOpen: () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = MaterialTheme.shapes.large,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_compass),
+                    contentDescription = null, // the title beside it says it
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Column {
+                    Text(stringResource(R.string.sky_look_title), style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        text = stringResource(R.string.sky_look_towards, direction),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            FilledTonalButton(onClick = onOpen, modifier = Modifier.align(Alignment.End)) {
+                Text(stringResource(R.string.sky_look_open))
+            }
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------------
 // The lead picker
 // ---------------------------------------------------------------------------------
@@ -1186,7 +1507,7 @@ internal fun AgendaPageSheet(
  * free-text field — the same discipline every value with a range gets in this app.
  */
 @Composable
-private fun LeadPickerDialog(
+internal fun LeadPickerDialog(
     title: String,
     defaultLead: SkyLead,
     /** null = follows the default; 0 = explicitly off; else minutes. */
@@ -1229,6 +1550,18 @@ private fun LeadPickerDialog(
                         )
                     }
                 }
+                // What used to be the footnote of the page's «Promemoria» section, said
+                // where the reader is choosing a time (review point 5, 14 ott 2026); and,
+                // on a moment's bell, where the default it can follow is kept now.
+                Text(
+                    text = listOfNotNull(
+                        stringResource(R.string.sky_reminders_note),
+                        if (perMoment) stringResource(R.string.sky_lead_default_where) else null
+                    ).joinToString(" "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 12.dp)
+                )
             }
         },
         confirmButton = {
@@ -1239,7 +1572,7 @@ private fun LeadPickerDialog(
 
 /** "30 minuti prima", "1 ora prima", or the plain off. */
 @Composable
-private fun leadLabel(lead: SkyLead): String = when (lead) {
+internal fun leadLabel(lead: SkyLead): String = when (lead) {
     SkyLead.OFF -> stringResource(R.string.sky_lead_off)
     SkyLead.FIFTEEN -> pluralStringResource(R.plurals.sky_lead_minutes, 15, 15)
     SkyLead.THIRTY -> pluralStringResource(R.plurals.sky_lead_minutes, 30, 30)

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.callbackdev.chiaro.data.SkySubscription
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
 import com.callbackdev.chiaro.data.ServiceLocator
@@ -73,6 +74,9 @@ class SkyViewModel(
 
     fun removeMoment(jobId: String) = mutate { subscriptionStore.remove(jobId) }
 
+    /** «Annulla» after a removal: the line back as it was, its own lead included. */
+    fun restoreMoment(line: SkySubscription) = mutate { subscriptionStore.restore(line) }
+
     /**
      * This moment's own lead: null follows the default, zero is an explicit "never"
      * (the store keeps 0, [com.callbackdev.chiaro.domain.sky.SkyLead.ofMinutes] reads
@@ -81,9 +85,8 @@ class SkyViewModel(
     fun setLead(jobId: String, minutes: Int?) =
         mutate { subscriptionStore.setNotifyLead(jobId, minutes) }
 
-    fun setDefaultLead(minutes: Int?) = mutate { settingsStore.setSkyNotifyDefault(minutes) }
-
-    fun setNotifyOnFail(enabled: Boolean) = mutate { settingsStore.setSkyNotifyOnFail(enabled) }
+    // The usual reminder and «even under a covered sky» are Settings' since 14 ott 2026
+    // (review point 5): see SettingsViewModel.
 
     private fun mutate(edit: suspend () -> Unit) {
         viewModelScope.launch {

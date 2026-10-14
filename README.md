@@ -41,7 +41,7 @@ fetched, and says how old that data is.
     <td align="center" width="33%"><img src="docs/screenshots/today-details.png" width="250" alt="The details grid: wind, clouds, humidity, pressure, visibility, air quality and pollen, each with the line that says what to do with it"><br><sub><b>Details</b>: every number with its meaning</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/sky-tonight.png" width="250" alt="In the dark theme: tonight's verdict with the numbers that decided it, and the moments ahead each with its own verdict"><br><sub><b>Sky</b>: tonight, and the moments ahead</sub></td>
+    <td align="center"><img src="docs/screenshots/sky-tonight.png" width="250" alt="In the dark theme: tonight's card, which answers in a word with the night's numbers and its hours large over a strip a finger can explore, and the next moment in a card of its own"><br><sub><b>Sky</b>: tonight, and the moments ahead</sub></td>
     <td align="center"><img src="docs/screenshots/sky-ahead.png" width="250" alt="The calendar ahead: the full moon and the meteor peaks past the forecast horizon, then the reminders"><br><sub><b>The calendar ahead</b>, honestly dated</sub></td>
     <td align="center"><img src="docs/screenshots/guide.png" width="250" alt="The guide: a tour of the four screens, what each one answers and what it cannot say out loud"><br><sub><b>The guide</b>, in the app</sub></td>
   </tr>
@@ -68,7 +68,7 @@ of real forecast history. The command that redraws them is in [Build](#build).
 - 🕐 **The next hours**: temperature as a curve, chance of rain, and the rest of the day as one timeline.
 - 📅 **The week**: seven days on one temperature scale, each with its ribbon of light. Open a day for its hours.
 - 🔢 **Details**: UV, wind, clouds, air quality, pollen, each with the line that says what to do with it.
-- 🌅 **Sky**: tonight's verdict, the moments ahead and a catalog of 60, all computed on the phone.
+- 🌅 **Sky**: tonight's verdict and a night to explore hour by hour with a finger, the moments ahead with a compass for where to look, and a catalog of 60, all computed on the phone.
 - 🔔 **Sky reminders**: a bell on any moment, quiet when clouds will hide it.
 - 🇮🇹 **Official warnings**: the Protezione Civile bulletin, located by where a place is, offline too.
 - ⚠️ **Alerts**: four ready-made switches, plus your own rules written as sentences, with the hours they may ring in.

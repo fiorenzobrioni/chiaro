@@ -102,16 +102,19 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
 - **No emoji as iconography.** The weather icons are a vector family (`DESIGN.md` §13.1):
   Meteocons v3, imported by `tools/import_meteocons_v3.py` (+ `svg_paths.py`,
   `reanchor.py`, `shipped_icons.py`). **Nothing under `res/drawable/mc3*`,
-  `ui/icons/MeteoconsSets.kt` or `ui/icons/ComposedIcons.kt` is edited by hand** —
-  re-running the tool IS the drawing. Two tools write there and they do not overlap: the
-  importer owns every name that exists in Meteocons, and `tools/compose_sun_cloud.py` owns
+  `ui/icons/MeteoconsSets.kt`, `ui/icons/ComposedIcons.kt` or `ui/icons/SkyMarks.kt` is
+  edited by hand** — re-running the tool IS the drawing. Three tools write there and they
+  do not overlap: the importer owns every name that exists in Meteocons, and
+  `tools/compose_sun_cloud.py` owns
   `sun-one-cloud-*` and `sun-half-cloud-*`, the «quasi sereno» and the «poco nuvoloso» this
   repo composes from `clear-day` and `cloudy`, so that WMO codes 0 to 3 climb in steps (the
   family has no honest drawing for code 1, and its code 2 jumped), and the showers
   (`sun-half-cloud-rain-*`, `-snow-*`), code 2 with the drops or flakes of
-  `partly-cloudy-*-rain/-snow`. Run the composer again after
-  any re-import: `ComposedIconsTest` compares the composed drawing with its sources path by
-  path and fails when they drift. The repo carries all 519 drawings; only what a screen
+  `partly-cloudy-*-rain/-snow`. `tools/compose_sky_marks.py` owns the sky catalog's marks
+  Meteocons does not have (14 Oct 2026): `meteor` (the falling stars without the moon they
+  cross), `moon-star` and `two-stars` (the conjunctions), still faces only. Run both
+  composers again after any re-import: `ComposedIconsTest` and `SkyMarksTest` compare the
+  composed drawings with their sources path by path and fail when they drift. The repo carries all 519 drawings; only what a screen
   names reaches the APK, so adding one to a screen means adding it to `shipped_icons.py`
   and re-running, and `MeteoconsSetsTest` fails the build if you forget.
 - **Localization**: everything on screen is prose or data, so **everything localizes**
