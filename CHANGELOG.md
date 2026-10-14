@@ -49,6 +49,9 @@ sections are a normal size and live here alone.
   above reads it: which day, from which update, with its rain and its high. Lift the finger
   and the strip goes back to how it was. With TalkBack each day can be adjusted update by
   update.
+- **Rain or highs, one tap.** The Journal's choice between the two is now a single
+  two-part button, and a «How to read the journal» row under the week opens the guide's
+  chapter about it.
 - **Undo on the Sky screen.** Adding or removing a moment from its page now shows a message
   with «Undo», and undoing a removal brings the moment back with its own reminder.
 - **An easier place switcher.** On Sky, Alerts and Journal the whole title is now the button

@@ -1732,6 +1732,14 @@ Lifting the finger brings the hint back; a tap still opens the table, and the lo
 longer does. For TalkBack each day is an adjustable control over the updates, one step per
 column, its state that square's reading (the newest until moved); the line itself is silent.
 
+**Rain or highs is a segmented button** (review of the Journal, A.7, 14 ott 2026): one
+choice of two, so Material's component for an exclusive choice, as wide as the strip, where
+two filter chips said «filters you can turn on together». Each segment keeps its quantity's
+drawing in place of the check mark. **A door to the guide** (A.10): under the hero, «Come si
+legge il diario», the Sky's «Che cosa sono questi eventi» row in shape, opens the guide's
+Journal chapter in a sheet over the page it explains (`JournalChapter`, the one composable
+the guide itself draws, so the two cannot drift).
+
 **8.11 States** — empty ("no place yet", with the one action that fixes it), error (what
 failed, in plain language, and a retry), stale (§8.2), loading (a shimmer that cannot be
 mistaken for a value, §1.1).

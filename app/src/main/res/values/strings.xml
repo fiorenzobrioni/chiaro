@@ -1331,6 +1331,8 @@
     <string name="journal_metric_high">Highs</string>
     <string name="journal_drift_waiting">The week\'s trend arrives after a few more updates: one column is not a trend.</string>
     <string name="journal_drift_label">The week</string>
+    <string name="journal_guide_entry_title">How to read the journal</string>
+    <string name="journal_guide_entry_subtitle">What is written there, and how the week has been moving</string>
     <string name="journal_drift_word_better">%1$s is improving</string>
     <string name="journal_drift_word_worse">%1$s is getting worse</string>
     <string name="journal_drift_word_warmer">%1$s is warming up</string>

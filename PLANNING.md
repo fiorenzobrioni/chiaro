@@ -12883,3 +12883,35 @@ A.8 (il suggerimento del gesto sopra la striscia).
 - La striscia disegnata a riposo, con una casella tenuta e con una fascia vuota, in chiaro (IT,
   384 dp) e in scuro (EN, 360 dp), guardata immagine per immagine.
 - Suite completa e lint.
+
+## Diario: il selettore segmentato, la porta della guida, e cosa non si fa (14 ott 2026)
+
+Punto 6 dell'ordine della review del Diario, nella parte che il committente ha scelto.
+
+- [x] **A.7**: Pioggia/Massime è un pulsante segmentato (`SingleChoiceSegmentedButtonRow`,
+  `MetricChoice`), largo quanto la striscia, con il disegno della grandezza al posto della
+  spunta. Erano due `FilterChip`, che in Material sono filtri attivabili insieme.
+- [x] **A.8**: fatto con C.1 (il suggerimento del gesto sopra la striscia).
+- [x] **A.10**: «Come si legge il diario» sotto l'hero, nella forma della riga «Che cosa sono
+  questi eventi» del Cielo, apre in un foglio il capitolo del Diario della guida.
+
+### Decisioni e deviazioni
+
+- **Il capitolo in un foglio, non la guida intera.** La guida è una pagina sola che scorre: aprirla
+  dal Diario voleva dire scorrere Oggi, Cielo e Avvisi per arrivare al capitolo, oppure dare alla
+  sua chiave di navigazione un capitolo d'arrivo (un cambio in `ChiaroNavigation` e nei suoi test,
+  in un file che il thread di Avvisi tocca). Il capitolo è estratto in `JournalChapter()`, disegnato
+  dalla guida e dal foglio: un solo testo, due porte.
+- **Non si fanno, per scelta del committente (14 ott 2026):**
+  - **B** (una tabella dei giorni chiusi tenuta 90 giorni) e **C.3** (il mese della previsione):
+    «Com'è andata la previsione» resta sui giorni che la storia tiene (circa quattro alla
+    cadenza oraria). Statistiche in più che rischiano di non essere guardate.
+  - **C.2** (la storia di un giorno con due grafici a gradini): la domanda «sabato si sta
+    stabilizzando?» ha già la sua risposta nella forma minima che apre una revisione (A.6).
+  Non riproporli senza una richiesta.
+
+### Come è stato verificato
+
+- `JournalChoiceTest`: le due grandezze sono una scelta sola; la riga apre il capitolo.
+- La pagina disegnata (IT chiaro, EN scuro) con il foglio della guida aperto, guardata.
+- Suite completa e lint.

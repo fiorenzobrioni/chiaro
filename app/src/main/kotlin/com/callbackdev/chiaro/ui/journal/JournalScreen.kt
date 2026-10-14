@@ -51,11 +51,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -89,6 +93,7 @@ import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.warnings.WarningText
 import com.callbackdev.chiaro.ui.alerts.ruleIcon
 import com.callbackdev.chiaro.domain.rules.NotificationRule
+import com.callbackdev.chiaro.ui.guide.JournalChapter
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
@@ -203,6 +208,7 @@ internal fun JournalBody(
     val dayFmt = remember(locale) { DateTimeFormatter.ofPattern("EEEE d MMMM", locale) }
     var metric by rememberSaveable { mutableStateOf(DriftMetric.RAIN) }
     var tableOpen by remember { mutableStateOf(false) }
+    var guideOpen by rememberSaveable { mutableStateOf(false) }
     // What a line opened (review of the Journal, A.6): the sky moment's page, the bulletin,
     // or the story of a day. Saveable, so a rotation does not close what the reader opened.
     var skyPage by rememberSaveable { mutableStateOf<String?>(null) }
@@ -233,33 +239,11 @@ internal fun JournalBody(
                     word = story.word,
                     evidence = story.evidence
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    MetricChoice(
+                        metric = metric,
+                        onChoose = { metric = it },
                         modifier = Modifier.padding(top = 8.dp)
-                    ) {
-                        FilterChip(
-                            selected = metric == DriftMetric.RAIN,
-                            onClick = { metric = DriftMetric.RAIN },
-                            label = { Text(stringResource(R.string.journal_metric_rain)) },
-                            leadingIcon = {
-                                Icon(
-                                    ChiaroIcons.precipitation, contentDescription = null,
-                                    tint = Color.Unspecified, modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        )
-                        FilterChip(
-                            selected = metric == DriftMetric.HIGH,
-                            onClick = { metric = DriftMetric.HIGH },
-                            label = { Text(stringResource(R.string.journal_metric_high)) },
-                            leadingIcon = {
-                                Icon(
-                                    ChiaroIcons.dewPoint, contentDescription = null,
-                                    tint = Color.Unspecified, modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        )
-                    }
+                    )
                     DriftStrip(
                         drift = content.drift,
                         metric = metric,
@@ -288,6 +272,24 @@ internal fun JournalBody(
                     )
                 }
             }
+        }
+
+        // The door to the guide's chapter (review of the Journal, A.10), as the Sky has
+        // «Che cosa sono questi eventi» under its night: the diary had a chapter in the
+        // guide and no way to reach it from the page it explains.
+        item {
+            ListItem(
+                leadingContent = {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = null, // the headline right beside it says it
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                headlineContent = { Text(stringResource(R.string.journal_guide_entry_title)) },
+                supportingContent = { Text(stringResource(R.string.journal_guide_entry_subtitle)) },
+                modifier = Modifier.clickable { guideOpen = true }
+            )
         }
 
         // How the forecast did, from the days the log has already closed (design review,
@@ -348,6 +350,9 @@ internal fun JournalBody(
         }
     }
 
+    if (guideOpen) {
+        JournalGuideSheet(onDismiss = { guideOpen = false })
+    }
     skyPage?.let { id ->
         SkyMomentSheet(
             jobId = id,
@@ -386,6 +391,55 @@ internal fun JournalBody(
             timeFmt = timeFmt,
             onDismiss = { tableOpen = false }
         )
+    }
+}
+
+/**
+ * Rain or highs (review of the Journal, A.7): one choice of two, so the component Material
+ * has for an exclusive choice, a segmented button, where two filter chips said «filters
+ * you can turn on together». Each segment keeps its quantity's drawing, the one the
+ * revisions' badges use, in place of the check mark: the drawing says which quantity, and
+ * the filled segment says which is chosen. The row is as wide as the strip under it.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MetricChoice(metric: DriftMetric, onChoose: (DriftMetric) -> Unit, modifier: Modifier = Modifier) {
+    val options = listOf(
+        Triple(DriftMetric.RAIN, R.string.journal_metric_rain, ChiaroIcons.precipitation),
+        Triple(DriftMetric.HIGH, R.string.journal_metric_high, ChiaroIcons.dewPoint)
+    )
+    SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
+        options.forEachIndexed { index, (option, label, drawing) ->
+            SegmentedButton(
+                selected = metric == option,
+                onClick = { onChoose(option) },
+                shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                icon = {
+                    Icon(drawing, contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(18.dp))
+                },
+                label = { Text(stringResource(label)) }
+            )
+        }
+    }
+}
+
+/** The guide's Journal chapter, in a sheet over the page it explains (A.10). */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun JournalGuideSheet(onDismiss: () -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.journal_guide_entry_title),
+                style = MaterialTheme.typography.titleLarge
+            )
+            JournalChapter()
+        }
     }
 }
 

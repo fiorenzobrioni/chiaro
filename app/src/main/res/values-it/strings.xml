@@ -1296,6 +1296,8 @@
     <string name="journal_metric_high">Massime</string>
     <string name="journal_drift_waiting">La tendenza della settimana arriva dopo qualche altro aggiornamento: una colonna sola non è una tendenza.</string>
     <string name="journal_drift_label">La settimana</string>
+    <string name="journal_guide_entry_title">Come si legge il diario</string>
+    <string name="journal_guide_entry_subtitle">Cosa c\'è scritto, e come si muove la settimana</string>
     <string name="journal_drift_word_better">%1$s migliora</string>
     <string name="journal_drift_word_worse">%1$s peggiora</string>
     <string name="journal_drift_word_warmer">%1$s si scalda</string>
