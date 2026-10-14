@@ -321,16 +321,21 @@ private fun Chapter(icon: ImageVector?, text: String) {
 @Composable
 internal fun JournalChapter() {
     Paragraph(stringResource(R.string.guide_journal_p1))
-    Feature(
-        stringResource(R.string.guide_journal_entries_title),
-        stringResource(R.string.guide_journal_entries_body)
-    )
+    // In the page's own order: the week's answer, how the forecast did, then the log.
     Feature(
         stringResource(R.string.guide_journal_drift_title),
         stringResource(R.string.guide_journal_drift_body)
     )
     DriftSample()
     Caption(stringResource(R.string.guide_journal_drift_caption))
+    Feature(
+        stringResource(R.string.guide_journal_skill_title),
+        stringResource(R.string.guide_journal_skill_body)
+    )
+    Feature(
+        stringResource(R.string.guide_journal_entries_title),
+        stringResource(R.string.guide_journal_entries_body)
+    )
 }
 
 /** Guide prose is bodyLarge (DESIGN §5): 16/24, made to be read, not scanned. */

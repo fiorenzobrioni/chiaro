@@ -71,8 +71,8 @@ of real forecast history. The command that redraws them is in [Build](#build).
 - 🌅 **Sky**: tonight's verdict and a night to explore hour by hour with a finger, the moments ahead with a compass for where to look, and a catalog of 60, all computed on the phone.
 - 🔔 **Sky reminders**: a bell on any moment, quiet when clouds will hide it.
 - 🇮🇹 **Official warnings**: the Protezione Civile bulletin, located by where a place is, offline too.
-- ⚠️ **Alerts**: four ready-made switches, plus your own rules written as sentences, with the hours they may ring in.
-- 📓 **Journal**: how the forecast changed, and how well it did on the days already over.
+- ⚠️ **Alerts**: four ready-made switches, plus your own rules written as sentences, with the hours they may ring in and whether each one is true right now.
+- 📓 **Journal**: which day of the week is moving and which way, the story of each change, and how well the forecast did on the days already over.
 - 📍 **Places**: saved places side by side, search as you type, optional coarse location.
 - 🏠 **Three widgets**: At a glance (the next hours and days as it grows), In words, and The day's arc (or the moments you follow), each configured on its own.
 - 📖 **The guide**: what each screen answers, and what a screen cannot say out loud.
