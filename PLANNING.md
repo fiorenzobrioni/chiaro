@@ -13619,7 +13619,7 @@ Il piano, in ordine di effetto sulla percezione e di costo:
   statico col movimento ridotto. Qui si decidono minSdk 34 e il budget dei 2 ms.
 - [x] 7. **La settimana leggibile**: le due barre (temperature e nastro) sulla stessa estensione
   orizzontale, via le sette frecce a favore di un'indicazione più discreta.
-- [ ] 8. **Gli schermi grandi**: due pannelli su tablet e pieghevoli (cielo, ore e agenda a
+- [x] 8. **Gli schermi grandi**: due pannelli su tablet e pieghevoli (cielo, ore e agenda a
   sinistra; settimana e dettagli a destra).
 
 ### Cosa è cambiato (punti 1 e 2)
@@ -13863,4 +13863,50 @@ fino al 140% a 360, fino al 150% a 411, il minimo del blocco al dp). `TodayAgend
 aperto e chiuso per TalkBack, il giorno che si chiude senza crash). `today-week` e `today-day`
 rigenerate e guardate; la settimana intera ora sta in una schermata col giorno aperto. Suite completa
 e lint.
+
+### Punto 8: gli schermi grandi (committente, 15 ott 2026)
+
+- [x] **La rail al posto della barra** da 600 dp di finestra (`RailMinWidth`, la soglia Material fra
+  compatto e medio: pieghevole aperto, tablet, telefono in orizzontale). Stesse tre tab, stesso
+  contenitore `surfaceContainer` della barra, voci al centro dell'altezza dove arriva il pollice di
+  chi tiene il dispositivo per i lati. Le pagine delle tab lasciano libera la larghezza della rail
+  all'inizio come lasciavano libera l'altezza della barra in fondo (`ChiaroRoot`, `NavRail.kt`).
+- [x] **Oggi resta a tutta finestra sotto la rail**, con `LocalRailInset` che dice di quanto tenere il
+  contenuto lontano dal bordo. La rail comincia **sotto** la barra di stato: sopra di lei la fascia di
+  stato è il cielo di Oggi, con le icone bianche. Una rail fin dietro all'orologio avrebbe messo cifre
+  bianche su un contenitore chiaro nel tema chiaro. Il foglio di carta comincia accanto alla rail
+  (`SkySheet.start`), così il suo angolo arrotondato si vede.
+- [x] **Due pannelli da 640 dp di carta** (`todayColumns`, puro, `TodayColumnsTest`): sotto il cielo, a
+  sinistra le ore e il resto della giornata, a destra la settimana e cosa è cambiato. 640 è la carta
+  a cui ogni pannello tiene la riga della settimana su una riga sola al 100% di testo (310 dp). I due
+  pannelli insieme non superano 1200 dp e stanno al centro; 8 dp fuori da ogni pannello più i 16
+  delle sezioni fanno i 24 di margine Material ai bordi e 32 di canale fra i pannelli.
+- [x] **L'hero sopra il primo pannello**: cifra, parola, frase e nastro hanno la larghezza del pannello
+  di sinistra, il sole e la luna tutto il cielo.
+- [x] **I dettagli sotto i due pannelli, a tutta larghezza**, con tante tessere per riga quante ne
+  stanno alla larghezza di una tessera da telefono (160 dp), fra 2 e 4, preferendo il numero che non
+  lascia una riga corta (`detailsPerRow`): nove tessere tre per tre. Sul telefono restano due.
+- [x] **Cielo e Allerte centrati a 840 dp** (`TabColumn`) su una finestra larga: sono una lista sola e
+  oltre quella larghezza le righe diventano più lunghe di quanto si legga in uno sguardo.
+- [x] Nuovo screenshot del README, `today-foldable` (841 × 701 dp, un pieghevole aperto), con la rail
+  disegnata come la disegna la shell.
+
+**Decisioni e deviazioni.** *I dettagli non a destra*: il piano li metteva nel pannello di destra. Nella
+prima resa il pannello di destra (settimana e nove tessere) era alto più del doppio di quello di
+sinistra, e in fondo alla pagina restava una schermata intera di carta vuota a sinistra. A tutta
+larghezza la griglia prende tre tessere per riga e i due pannelli sopra vengono alti più o meno
+uguali. *Un solo scorrimento e non due colonne indipendenti*: la pagina scorre come una, l'hero
+viaggia nella barra come sul telefono (§8.1e) e il tiro per aggiornare resta uno. I due pannelli sono
+un solo elemento della lista; su una pagina larga stanno comunque in una o due schermate.
+*La soglia dei due pannelli è la carta e non la finestra*: un pieghevole tenuto in verticale (701 dp,
+621 di carta dopo la rail) resta in una colonna, perché a 300 dp per pannello la riga della settimana
+si spezzerebbe in due su ogni giorno. *Impostazioni, guida e pagine del cielo* restano a tutta
+larghezza: sono pagine con la loro barra in alto e la freccia indietro, e centrarle porterebbe la
+freccia a metà schermo. Restano da rivedere a parte.
+
+**Come è stato verificato.** `TodayColumnsTest` (telefono, pieghevole verticale e aperto, il minimo dei
+pannelli contro la riga della settimana, il centrato oltre i 1200 dp, le tessere per riga). Rese di
+prova, poi tolte, a 841 × 701 chiaro e scuro, in fondo alla pagina, a 1280 × 800 (Oggi e Cielo),
+a 701 × 841 e di Allerte. Tutte le immagini del README rigenerate: quelle del telefono sono identiche
+(`widgets.png` differiva per l'antialiasing di un'area, ripristinata). Suite completa e lint.
 

@@ -39,6 +39,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -67,6 +69,11 @@ import com.callbackdev.chiaro.ui.settings.SettingsActions
 import com.callbackdev.chiaro.ui.settings.SettingsScreen
 import com.callbackdev.chiaro.ui.shell.BottomBarHeight
 import com.callbackdev.chiaro.ui.shell.ChiaroBottomBar
+import com.callbackdev.chiaro.ui.shell.ChiaroNavRail
+import com.callbackdev.chiaro.ui.shell.LocalRailInset
+import com.callbackdev.chiaro.ui.shell.RailMinWidth
+import com.callbackdev.chiaro.ui.shell.TabColumn
+import com.callbackdev.chiaro.ui.shell.railInset
 import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.ui.sky.SkyActions
 import com.callbackdev.chiaro.ui.sky.SkyScreen
@@ -169,6 +176,15 @@ class ReadmeScreenshots {
         compose.waitForIdle()
         scrollUnderHeader(R.string.section_week)
         save("today-week")
+    }
+
+    /** On an open foldable (DESIGN §8.12c): the rail at the start, the sky across the page,
+     * the hours and the day under the hero, the week and the details beside them. */
+    @Test
+    @Config(qualifiers = "+w841dp-h701dp")
+    fun todayFoldable() {
+        showTab(ShellTab.TODAY) { today() }
+        save("today-foldable")
     }
 
     @Test
@@ -514,8 +530,23 @@ class ReadmeScreenshots {
         compose.waitForIdle()
     }
 
-    /** A tab page with the bottom bar over it, laid out as `ChiaroRoot` lays them out. */
+    /** A tab page with the bottom bar over it, or the rail beside it on a wide window, laid
+     * out as `ChiaroRoot` lays them out. */
     private fun showTab(tab: ShellTab, dark: Boolean = false, page: @Composable () -> Unit) = show(dark) {
+        val width = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
+        if (width >= RailMinWidth) {
+            val inset = railInset()
+            val underRail = tab == ShellTab.TODAY
+            Box(modifier = Modifier.fillMaxSize()) {
+                Box(modifier = Modifier.fillMaxSize().padding(start = if (underRail) 0.dp else inset)) {
+                    CompositionLocalProvider(LocalRailInset provides if (underRail) inset else 0.dp) {
+                        if (underRail) page() else TabColumn { page() }
+                    }
+                }
+                ChiaroNavRail(selected = tab, onSelect = {})
+            }
+            return@show
+        }
         Box(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.fillMaxSize().padding(bottom = BottomBarHeight)) { page() }
             Box(modifier = Modifier.align(Alignment.BottomCenter)) {

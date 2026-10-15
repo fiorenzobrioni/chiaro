@@ -283,6 +283,12 @@ knows from every other weather app.
 Swiping left/right moves between saved places (dots on the app bar). Settings and place management
 live in the app bar, not in a tab: they are visited once a month.
 
+**On a wide window** (from 600dp: an open foldable, a tablet, a phone on its side; 15 ott 2026) the
+three destinations move to a rail at the start, and Today stands in two panes under one sky that
+runs across the page: today on the left (the next hours, the rest of the day), the days on the
+right (the week, what changed), the details across both. Sky and Alerts are one list each and stay
+one, centred at a width a line can be read at. DESIGN §8.12c has the numbers.
+
 ### 5.2 Today
 
 The spine of the product, one vertical scroll, in this order:

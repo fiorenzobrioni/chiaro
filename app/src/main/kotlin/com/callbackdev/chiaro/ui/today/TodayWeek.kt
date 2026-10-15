@@ -6,6 +6,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -63,37 +64,93 @@ internal fun LazyListScope.weekRows(
     is24h: Boolean,
     locale: Locale,
     expandedDay: java.time.LocalDate?,
+    onToggle: (java.time.LocalDate) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val shape = WeekShape.of(content, locale)
+    itemsIndexed(content.week, key = { _, day -> "week-${day.forecast.date}" }) { index, day ->
+        Box(modifier) { WeekRow(content, shape, day, index, units, is24h, locale, expandedDay, onToggle) }
+    }
+}
+
+/**
+ * The same week in a plain column, for the second pane of a wide page (DESIGN §8.12c), where
+ * the panes are one item of the list and a nested lazy list is not allowed.
+ */
+@Composable
+internal fun WeekColumn(
+    content: TodayUiState.Content,
+    units: UnitSettings,
+    is24h: Boolean,
+    locale: Locale,
+    expandedDay: java.time.LocalDate?,
     onToggle: (java.time.LocalDate) -> Unit
 ) {
-    val scaleLow = content.week.minOf { it.forecast.lowC }
-    val scaleHigh = content.week.maxOf { it.forecast.highC }
-    val today = content.now.toLocalDate()
-    // One lane for the whole week or none: a row that grew by its wet hours would make the
-    // week uneven, and a dry week pays nothing for a lane it would leave empty.
-    val wetLane = content.week.any { day -> day.sky.any { it.wet && it.at < 1f } }
-    // The same for the chance under the icon: a line for all seven rows or for none.
-    val locale0 = locale
-    val rainLine = content.week.any { chanceLabel(it.forecast.precipPct, locale0) != null }
-    val count = content.week.size
-    itemsIndexed(content.week, key = { _, day -> "week-${day.forecast.date}" }) { index, day ->
-        WeekRow(
-            day = day,
-            index = index,
-            count = count,
-            isToday = day.forecast.date == today,
-            scaleLowC = scaleLow,
-            scaleHighC = scaleHigh,
-            units = units,
-            is24h = is24h,
-            locale = locale,
-            expanded = expandedDay == day.forecast.date,
-            onToggle = { onToggle(day.forecast.date) },
-            nowC = content.report.current.tempC,
-            wetLane = wetLane,
-            rainLine = rainLine,
-            skyFrom = if (day.forecast.date == today) content.sky.nowFraction else 0f
+    val shape = WeekShape.of(content, locale)
+    Column {
+        content.week.forEachIndexed { index, day ->
+            androidx.compose.runtime.key(day.forecast.date) {
+                WeekRow(content, shape, day, index, units, is24h, locale, expandedDay, onToggle)
+            }
+        }
+    }
+}
+
+/**
+ * What the seven rows share, computed once for the week so the week has a shape (§8.5): the
+ * scale is its own extremes, and the lanes are there for every row or for none.
+ */
+private class WeekShape(
+    val scaleLow: Double,
+    val scaleHigh: Double,
+    val today: java.time.LocalDate,
+    /** One lane for the whole week or none: a row that grew by its wet hours would make the
+     * week uneven, and a dry week pays nothing for a lane it would leave empty. */
+    val wetLane: Boolean,
+    /** The same for the chance under the icon: a line for all seven rows or for none. */
+    val rainLine: Boolean
+) {
+    companion object {
+        fun of(content: TodayUiState.Content, locale: Locale) = WeekShape(
+            scaleLow = content.week.minOf { it.forecast.lowC },
+            scaleHigh = content.week.maxOf { it.forecast.highC },
+            today = content.now.toLocalDate(),
+            wetLane = content.week.any { day -> day.sky.any { it.wet && it.at < 1f } },
+            rainLine = content.week.any { chanceLabel(it.forecast.precipPct, locale) != null }
         )
     }
+}
+
+@Composable
+private fun WeekRow(
+    content: TodayUiState.Content,
+    shape: WeekShape,
+    day: WeekDay,
+    index: Int,
+    units: UnitSettings,
+    is24h: Boolean,
+    locale: Locale,
+    expandedDay: java.time.LocalDate?,
+    onToggle: (java.time.LocalDate) -> Unit
+) {
+    val isToday = day.forecast.date == shape.today
+    WeekRow(
+        day = day,
+        index = index,
+        count = content.week.size,
+        isToday = isToday,
+        scaleLowC = shape.scaleLow,
+        scaleHighC = shape.scaleHigh,
+        units = units,
+        is24h = is24h,
+        locale = locale,
+        expanded = expandedDay == day.forecast.date,
+        onToggle = { onToggle(day.forecast.date) },
+        nowC = content.report.current.tempC,
+        wetLane = shape.wetLane,
+        rainLine = shape.rainLine,
+        skyFrom = if (isToday) content.sky.nowFraction else 0f
+    )
 }
 
 /**

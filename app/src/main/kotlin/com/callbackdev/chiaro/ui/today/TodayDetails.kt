@@ -20,6 +20,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.BoxWithConstraints
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.model.AqiScale
 import com.callbackdev.chiaro.domain.model.CloudLayers
@@ -326,7 +327,11 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
         // 34dp icon has 84dp for a word that wants 115, and the tile becomes three
         // wrapped lines of two words. One column keeps the pair rule (a row of one is
         // still a row) and gives the label the whole width it needed all along.
-        val perRow = if (reflowForText()) 1 else 2
+        // Wider than a phone, as many tiles a row as the width holds at a phone's tile
+        // (DESIGN §8.12c): the grid spans a wide page under its two panes.
+        val reflow = reflowForText()
+        BoxWithConstraints {
+        val perRow = if (reflow) 1 else detailsPerRow(tiles.size, maxWidth)
         val rows = tiles.chunked(perRow)
         // One group, as the Sky's and Alerts' rows are (review of Today, 15 ott 2026,
         // committente): the tiles are segments of a grid 2dp apart, the grid's four outer
@@ -360,8 +365,27 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
                 }
             }
         }
+        }
     }
 }
+
+/**
+ * How many tiles a row of the details holds in [width] (pure, `TodayColumnsTest`): as many as
+ * fit at [DetailTileMinWidth], a phone's tile, between two and [DetailsMaxPerRow]. Of the
+ * counts that fit, the largest that leaves **no short last row**, so nine tiles stand three by
+ * three rather than four, four and one, whose odd tile would run the whole width of a tablet;
+ * when none divides the tiles evenly, the most that fit. A phone always gets its two.
+ */
+internal fun detailsPerRow(count: Int, width: Dp): Int {
+    val fit = (width / DetailTileMinWidth).toInt().coerceIn(2, DetailsMaxPerRow)
+    return (fit downTo 2).firstOrNull { count % it == 0 } ?: fit
+}
+
+/** A detail tile's narrowest on a wide page: about a phone's, (360 - 32 - 2) / 2. */
+internal val DetailTileMinWidth: Dp = 160.dp
+
+/** Past four the tiles of one row are too far apart to compare. */
+internal const val DetailsMaxPerRow = 4
 
 /**
  * Where the wind comes from, in words alone (DESIGN §8.6; committente, 11 set 2026). The

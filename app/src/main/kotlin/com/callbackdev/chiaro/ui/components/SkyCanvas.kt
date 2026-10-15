@@ -131,7 +131,10 @@ fun SkyCanvas(
 data class SkySheet(
     val surface: Color,
     val lip: Dp = 24.dp,
-    val glowSpan: Dp = 120.dp
+    val glowSpan: Dp = 120.dp,
+    /** Where the paper starts: past a navigation rail on a wide window (§8.12c), so its
+     * rounded corner shows beside the rail rather than under it. */
+    val start: Dp = 0.dp
 )
 
 private fun DrawScope.drawSheet(sheet: SkySheet, gradient: SkyGradient) {
@@ -150,11 +153,12 @@ private fun DrawScope.drawSheet(sheet: SkySheet, gradient: SkyGradient) {
         endY = top + span
     )
     val corner = CornerRadius(Corner.toPx())
+    val left = sheet.start.toPx()
     drawPath(
         Path().apply {
             addRoundRect(
                 RoundRect(
-                    left = 0f, top = top, right = size.width, bottom = size.height,
+                    left = left, top = top, right = size.width, bottom = size.height,
                     topLeftCornerRadius = corner, topRightCornerRadius = corner
                 )
             )
@@ -162,7 +166,7 @@ private fun DrawScope.drawSheet(sheet: SkySheet, gradient: SkyGradient) {
         brush = brush
     )
     // Below the canvas: the rest of the glow, over the list's own surface.
-    drawRect(brush = brush, topLeft = Offset(0f, size.height), size = Size(size.width, span - lip))
+    drawRect(brush = brush, topLeft = Offset(left, size.height), size = Size(size.width - left, span - lip))
 }
 
 private val Corner = 28.dp

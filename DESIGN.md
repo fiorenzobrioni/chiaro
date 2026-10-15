@@ -2008,7 +2008,44 @@ horizontal pager between saved places. Since
 22 set 2026 the shell is Navigation 3 (`ui/shell/ChiaroNavigation.kt`): one back stack per
 tab, Today's stack always under the selected one so back from a tab's root lands on Today,
 and the bar drawn over the pages rather than beside them, so it can slide away under
-Settings and the guide without re-laying out the page under it. The motion is §7.
+Settings and the guide without re-laying out the page under it. The motion is §7. From 600dp of
+window the bar becomes a rail (§8.12c).
+
+**8.12c Wide windows** (second review of Today, point 8, 15 ott 2026). Measured on a Pixel Fold's
+open screen (841 × 701dp), a foldable held upright (701 × 841) and a 1280 × 800 tablet.
+
+- **The rail.** From `RailMinWidth` = 600dp of window, Material's line between compact and medium,
+  the three tabs stand on a `NavigationRail` 80dp wide at the start, in the bar's own
+  `surfaceContainer`, the items in the middle of its height where a thumb reaches them on a device
+  held by its sides. It slides in from the start where the bar slid up, and leaves under Settings and
+  the guide the same way. **It starts under the status bar**, never behind it: over Today that band
+  is the sky's, with white icons, and a rail reaching up behind the clock would put white digits on
+  a pale container in the light theme. The tab pages leave the rail's width free at their start, as
+  they leave the bar's height at their foot.
+- **Today under the rail.** Today alone is laid out the full window, so its sky runs under the
+  status bar across the whole width; `LocalRailInset` keeps everything else clear of the rail: the
+  place row, the sun and the moon, the hero, the paper (whose sheet starts beside the rail, so its
+  rounded corner shows) and every section.
+- **Two panes from 640dp of paper** (`todayColumns`, the page less the rail). 640 is the paper at
+  which a pane still holds the week's row on one line at 100% type (182dp of fixed columns, 72 of
+  bars, the segment's 24, the section's 32: 310). The left pane is today (the next hours, the rest
+  of the day), the right one the days (the week, what changed); the details run across both under
+  them, then the footer. The two panes together stop at 1200dp and stand centred past it. Each pane
+  keeps 8dp outside its sections' own 16: 24 at the page's edges, Material's margin, and a 32dp
+  gutter. Under 640dp of paper the page is the phone's single column beside the rail, however wide.
+- **The hero over the first pane.** The number, its word, the day's sentence and the ribbon take the
+  left pane's width and start where its sections do; the sun and the moon keep the whole sky. The
+  sky stays one canvas across the page: the panorama is the point of a wide sky.
+- **The details across the page**, as many tiles a row as fit at a phone's tile (160dp), between
+  two and four, preferring the count that leaves no short last row (`detailsPerRow`): nine tiles
+  stand three by three, never four, four and a lonely one stretched across a tablet. In the right
+  pane they made it twice the left one's height and left a screen of empty paper at the foot.
+- **One scroll.** The two panes are one item of the list and scroll as one page: the hero travels
+  into the bar as on a phone (§8.1e), and there is one pull to refresh.
+- **Sky and Alerts** are one list each, centred at `TabColumnMax` = 840dp (Material's line between
+  medium and expanded): past it a row is longer than a line read in one look. Settings, the guide
+  and the sky's pages keep the full width for now: they carry their own top bar and back arrow, and
+  centring them would put the arrow in the middle of a tablet.
 
 **8.12b TabHeader** (14 ott 2026, review of the Sky screen, point 10) — the header of Sky
 and Alerts (and of the Journal, until it left the same day): the tab's name at
@@ -2936,3 +2973,8 @@ a valid animator and only a person can say the rain falls downward.
 4. **`heroTemperature`** is an extended type role, not a Material one. Confirm it survives
    contact with the expressive scale rather than becoming `displayLarge` with a tighter
    line height.
+5. **The pushed pages on a wide window** (§8.12c, 15 ott 2026). Settings and the guide still take
+   the whole window (the rail leaves under them as the bar did), the sky's guide and its event
+   pages the whole width beside it. They want their own
+   reading column with the top bar kept at the window's edges (a list-detail pane for Settings
+   on an expanded window is the candidate), measured on the same three devices as Today.

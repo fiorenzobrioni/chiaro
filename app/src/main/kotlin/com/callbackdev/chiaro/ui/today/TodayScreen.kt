@@ -48,6 +48,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
+import com.callbackdev.chiaro.ui.shell.LocalRailInset
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -313,7 +315,7 @@ internal fun TodayPage(
                 onRefresh, onOpenPlaces, onOpenSettings, onOpenGuide,
                 onDismissGuideCard, isCurrent, onCanvasBehindBar
             )
-        else -> Column(modifier = Modifier.fillMaxSize()) {
+        else -> Column(modifier = Modifier.fillMaxSize().padding(start = LocalRailInset.current)) {
             PlaceHeader(
                 title = title,
                 isGps = isGps,
@@ -560,23 +562,78 @@ internal fun ContentState(
         // stand 2dp apart where the list's even 12dp gap would have pulled the week's seven
         // segments apart into seven cards. So the list spaces nothing, and every item says
         // what air it needs: [ItemGap] over a notice, [SectionTitle]'s 24 over a section.
+        // A wide page stands in two panes under the sky (DESIGN §8.12c, 15 ott 2026): the
+        // hours and the rest of the day, which are about today, on the left under the hero;
+        // the week, what changed and the details, which are about the days and the air, on
+        // the right. The sky stays one, across the whole page.
+        val railInset = LocalRailInset.current
+        // The page's width once the list has measured it; the window's before, which is the
+        // same width (the page is the window's, rail included) and keeps the first frame
+        // from laying out a phone's column on a tablet.
+        val windowWidth = LocalWindowInfo.current.containerSize.width
+        val columns = with(density) {
+            todayColumns((if (pageWidth > 0) pageWidth else windowWidth).toDp(), railInset)
+        }
+        val paper = Modifier.padding(start = columns.start, end = columns.end)
+        // The first title on the paper (review of 12 ott 2026): the sheet's own 24dp lip
+        // is already above it, and a section's whole 24 more made a band of empty paper
+        // between the sky and the hours — the hours VISION §4.4 wants above the fold,
+        // pushed down by nothing. With a chip, a banner or the guide card in between, it
+        // keeps a section's air to stand apart from them.
+        val opensThePaper = content.error == null && !content.isStale &&
+            content.warnings == null && guideCardVisible != true
+        val firstTitleTop = if (opensThePaper) ItemGap else SectionGap
+        val restOfDay: @Composable () -> Unit = {
+            RestOfDay(content, timeFmt, units) { item, job ->
+                agendaPage = job.id
+                // Where to look, for the rows that have a direction: the same rule
+                // and the same instant the Sky's row asks (SkySights.bearing).
+                agendaBearing = SkySights.bearing(
+                    job,
+                    item.at.atZone(content.zone).toInstant(),
+                    content.report.location.coordinates
+                )
+                agendaWhen = listOfNotNull(item.at, item.until)
+                    .joinToString(" – ") { it.format(timeFmt) }
+            }
+        }
+        // The week says once that its days open (second review, 15 ott 2026), where
+        // seven chevrons said it seven times.
+        val weekTitle: @Composable (Dp) -> Unit = { top ->
+            SectionTitle(
+                stringResource(R.string.section_week),
+                top = top,
+                hint = stringResource(R.string.week_open_hint)
+            )
+        }
+        val onToggleDay: (java.time.LocalDate) -> Unit = { date ->
+            expandedDay = if (expandedDay == date) null else date
+        }
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize().onSizeChanged { pageWidth = it.width },
             contentPadding = WindowInsets.navigationBars.asPaddingValues()
         ) {
-            item { CanvasHeader(content, skyGradient, units, timeFmt, locale, headerHeight, dock) }
+            item {
+                CanvasHeader(
+                    content, skyGradient, units, timeFmt, locale, headerHeight, dock,
+                    columns = columns,
+                    railInset = railInset
+                )
+            }
 
             if (content.error != null) {
-                item { Box(Modifier.padding(top = ItemGap)) { ErrorBanner(content.error, onRefresh) } }
+                item { Box(paper.padding(top = ItemGap)) { ErrorBanner(content.error, onRefresh) } }
             }
             if (content.isStale) {
                 item {
-                    FreshnessChip(
-                        age = freshnessAge(content.lastSync),
-                        onRetry = onRefresh,
-                        modifier = Modifier.padding(start = 16.dp, top = ItemGap, end = 16.dp)
-                    )
+                    Box(paper) {
+                        FreshnessChip(
+                            age = freshnessAge(content.lastSync),
+                            onRetry = onRefresh,
+                            modifier = Modifier.padding(start = 16.dp, top = ItemGap, end = 16.dp)
+                        )
+                    }
                 }
             }
             // The official warning (Fase 11, DESIGN §8.13): after the chip, which
@@ -585,16 +642,18 @@ internal fun ContentState(
             // `warnings` is null there — and never drawn as an error.
             content.warnings?.let { warning ->
                 item {
-                    WarningBanner(
-                        warnings = warning,
-                        // The PLACE's day, like every other date on this screen: the
-                        // bulletin's own days are the issuer's, and for an Italian
-                        // place the two are the same one.
-                        today = content.now.toLocalDate(),
-                        timeFmt = timeFmt,
-                        onOpen = { warningSheetOpen = true },
-                        modifier = Modifier.padding(start = 16.dp, top = ItemGap, end = 16.dp)
-                    )
+                    Box(paper) {
+                        WarningBanner(
+                            warnings = warning,
+                            // The PLACE's day, like every other date on this screen: the
+                            // bulletin's own days are the issuer's, and for an Italian
+                            // place the two are the same one.
+                            today = content.now.toLocalDate(),
+                            timeFmt = timeFmt,
+                            onOpen = { warningSheetOpen = true },
+                            modifier = Modifier.padding(start = 16.dp, top = ItemGap, end = 16.dp)
+                        )
+                    }
                 }
             }
             // The one-time pointer to the guide (VISION 5.7): true shows it, false
@@ -602,61 +661,70 @@ internal fun ContentState(
             // still answering would be shown to everyone and dismissed by nobody.
             if (guideCardVisible == true) {
                 item {
-                    Box(Modifier.padding(top = ItemGap)) {
+                    Box(paper.padding(top = ItemGap)) {
                         GuideCard(onOpen = onOpenGuide, onDismiss = onDismissGuideCard)
                     }
                 }
             }
 
-            // The first title on the paper (review of 12 ott 2026): the sheet's own 24dp lip
-            // is already above it, and a section's whole 24 more made a band of empty paper
-            // between the sky and the hours — the hours VISION §4.4 wants above the fold,
-            // pushed down by nothing. With a chip, a banner or the guide card in between, it
-            // keeps a section's air to stand apart from them.
-            val opensThePaper = content.error == null && !content.isStale &&
-                content.warnings == null && guideCardVisible != true
-            item {
-                SectionTitle(
-                    stringResource(R.string.section_next_hours),
-                    top = if (opensThePaper) ItemGap else SectionGap
-                )
-            }
-            item { NextHours(content, units, is24h, timeFmt, locale) }
-
-            if (content.timeline.isNotEmpty()) {
-                item { SectionTitle(stringResource(R.string.section_rest_of_day)) }
+            if (columns.twoPanes) {
+                // The panes are one item: two columns of a lazy list cannot scroll as one
+                // page, and a wide page holds both of them in a screen or two anyway.
                 item {
-                    RestOfDay(content, timeFmt, units) { item, job ->
-                        agendaPage = job.id
-                        // Where to look, for the rows that have a direction: the same rule
-                        // and the same instant the Sky's row asks (SkySights.bearing).
-                        agendaBearing = SkySights.bearing(
-                            job,
-                            item.at.atZone(content.zone).toInstant(),
-                            content.report.location.coordinates
-                        )
-                        agendaWhen = listOfNotNull(item.at, item.until)
-                            .joinToString(" – ") { it.format(timeFmt) }
+                    Row(paper) {
+                        Column(Modifier.weight(1f)) {
+                            SectionTitle(stringResource(R.string.section_next_hours), top = firstTitleTop)
+                            NextHours(content, units, is24h, timeFmt, locale)
+                            if (content.timeline.isNotEmpty()) {
+                                SectionTitle(stringResource(R.string.section_rest_of_day))
+                                restOfDay()
+                            }
+                        }
+                        Column(Modifier.weight(1f)) {
+                            // The second pane's first title on the first one's line.
+                            var top = firstTitleTop
+                            if (content.week.isNotEmpty()) {
+                                weekTitle(top)
+                                WeekColumn(content, units, is24h, locale, expandedDay, onToggleDay)
+                                top = SectionGap
+                            }
+                            if (changed.isNotEmpty()) {
+                                SectionTitle(stringResource(R.string.today_changed_title), top = top)
+                                WhatChanged(lines = changed)
+                            }
+                        }
                     }
                 }
+                // The details under both panes, across the page (§8.12c): in one pane they
+                // were the tallest thing on it and left the other a screen of empty paper;
+                // across, the grid takes three or four tiles a row at a phone's tile width,
+                // and the two panes above come out about as tall as each other.
+                item { Box(paper) { SectionTitle(stringResource(R.string.section_details)) } }
+                item { Box(paper) { Details(content, units, locale) } }
+                item { Box(paper) { DataFooter(content, timeFmt) } }
+                return@LazyColumn
+            }
+
+            item {
+                Box(paper) { SectionTitle(stringResource(R.string.section_next_hours), top = firstTitleTop) }
+            }
+            item { Box(paper) { NextHours(content, units, is24h, timeFmt, locale) } }
+
+            if (content.timeline.isNotEmpty()) {
+                item { Box(paper) { SectionTitle(stringResource(R.string.section_rest_of_day)) } }
+                item { Box(paper) { restOfDay() } }
             }
 
             if (content.week.isNotEmpty()) {
-                item {
-                    // The week says once that its days open (second review, 15 ott 2026), where
-                    // seven chevrons said it seven times.
-                    SectionTitle(
-                        stringResource(R.string.section_week),
-                        hint = stringResource(R.string.week_open_hint)
-                    )
-                }
+                item { Box(paper) { weekTitle(SectionGap) } }
                 weekRows(
                     content = content,
                     units = units,
                     is24h = is24h,
                     locale = locale,
                     expandedDay = expandedDay,
-                    onToggle = { date -> expandedDay = if (expandedDay == date) null else date }
+                    onToggle = onToggleDay,
+                    modifier = paper
                 )
             }
 
@@ -667,13 +735,13 @@ internal fun ContentState(
             // so it used to name days the reader had not been shown yet, and it split
             // the two sections about today from the one about the days ahead.
             if (changed.isNotEmpty()) {
-                item { SectionTitle(stringResource(R.string.today_changed_title)) }
-                item { WhatChanged(lines = changed) }
+                item { Box(paper) { SectionTitle(stringResource(R.string.today_changed_title)) } }
+                item { Box(paper) { WhatChanged(lines = changed) } }
             }
 
-            item { SectionTitle(stringResource(R.string.section_details)) }
-            item { Details(content, units, locale) }
-            item { DataFooter(content, timeFmt) }
+            item { Box(paper) { SectionTitle(stringResource(R.string.section_details)) } }
+            item { Box(paper) { Details(content, units, locale) } }
+            item { Box(paper) { DataFooter(content, timeFmt) } }
         }
 
         // After the list so it stands over it, inside the pull box so the refresh
@@ -728,6 +796,8 @@ internal fun ContentState(
                 }
                 .background(headerGround)
                 .statusBarsPadding()
+                // Beside the rail, whose band of status bar is this bar's ground (§8.12c).
+                .padding(start = LocalRailInset.current)
                 .padding(HeaderPadding)
         )
         // Over the bar, so the docked figure stands on the bar's ground.

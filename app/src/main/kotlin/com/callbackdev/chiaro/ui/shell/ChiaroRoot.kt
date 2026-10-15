@@ -13,6 +13,11 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -171,30 +176,41 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
     // navigation-bar inset it read before.
     val barHeight = BottomBarHeight +
         WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    // A wide window takes the tabs on a rail at the start instead (DESIGN §8.12c): the tab
+    // pages leave the rail's width free at their start, as they leave the bar's height free
+    // at their foot, and Today alone is laid out the full width, its sky running under the
+    // status bar above the rail, its content kept clear of it by [LocalRailInset].
+    val windowWidth = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
+    val rail = windowWidth >= RailMinWidth
+    val railWidth = railInset()
     val tabPage = Modifier
         .fillMaxSize()
-        .padding(bottom = barHeight)
+        .then(if (rail) Modifier.padding(start = railWidth) else Modifier.padding(bottom = barHeight))
 
     val provider = entryProvider<NavKey> {
         entry<TodayKey> {
-            Box(tabPage) {
-                TodayRoute(
-                    onOpenSettings = { nav.navigate(SettingsKey) },
-                    onOpenGuide = { nav.navigate(GuideKey) }
-                )
+            Box(if (rail) Modifier.fillMaxSize() else tabPage) {
+                CompositionLocalProvider(LocalRailInset provides if (rail) railWidth else 0.dp) {
+                    TodayRoute(
+                        onOpenSettings = { nav.navigate(SettingsKey) },
+                        onOpenGuide = { nav.navigate(GuideKey) }
+                    )
+                }
             }
         }
         entry<SkyKey> {
             Box(tabPage) {
-                SkyRoute(
-                    onOpenSettings = { nav.navigate(SettingsKey) },
-                    onOpenGuide = { nav.navigate(SkyGuideKey(inTab = true)) }
-                )
+                TabColumn {
+                    SkyRoute(
+                        onOpenSettings = { nav.navigate(SettingsKey) },
+                        onOpenGuide = { nav.navigate(SkyGuideKey(inTab = true)) }
+                    )
+                }
             }
         }
         entry<AlertsKey> {
             Box(tabPage) {
-                AlertsRoute(onOpenSettings = { nav.navigate(SettingsKey) })
+                TabColumn { AlertsRoute(onOpenSettings = { nav.navigate(SettingsKey) }) }
             }
         }
         entry<SettingsKey> {
@@ -229,7 +245,9 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
     }
 
     val reduced = reducedMotion()
-    Box(modifier = Modifier.fillMaxSize()) {
+    // The paper behind everything, so the status bar's band over the rail is the page's
+    // ground wherever a page does not draw there itself.
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         NavDisplay(
             entries = nav.rememberDecoratedEntries(provider),
             modifier = Modifier.fillMaxSize(),
@@ -240,7 +258,23 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
         )
 
         AnimatedVisibility(
-            visible = nav.showsBottomBar,
+            visible = rail && nav.showsBottomBar,
+            enter = if (reduced) {
+                fadeIn(ChiaroMotion.fade())
+            } else {
+                slideInHorizontally(tween(NAV_TRANSITION_MS)) { -it }
+            },
+            exit = if (reduced) {
+                fadeOut(ChiaroMotion.fade())
+            } else {
+                slideOutHorizontally(tween(NAV_TRANSITION_MS)) { -it }
+            },
+            modifier = Modifier.align(Alignment.TopStart)
+        ) {
+            ChiaroNavRail(selected = nav.selected, onSelect = nav::switchTab)
+        }
+        AnimatedVisibility(
+            visible = !rail && nav.showsBottomBar,
             enter = if (reduced) {
                 fadeIn(ChiaroMotion.fade())
             } else {

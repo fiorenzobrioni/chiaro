@@ -5,6 +5,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -74,7 +75,11 @@ internal fun CanvasHeader(
     locale: Locale,
     placeRowHeight: Dp,
     /** The travelling number's dock, or null where the figure stays on the sky (reduced motion). */
-    dock: HeroDock? = null
+    dock: HeroDock? = null,
+    /** How the paper under the canvas is laid out (§8.12c): the hero stands over its first pane. */
+    columns: TodayColumns? = null,
+    /** A navigation rail over the canvas' start (§8.12c): the sky runs under it, nothing else. */
+    railInset: Dp = 0.dp
 ) {
     // The canvas item's own coordinates, for where the number rests inside it.
     var canvasCoords by remember { mutableStateOf<androidx.compose.ui.layout.LayoutCoordinates?>(null) }
@@ -87,7 +92,7 @@ internal fun CanvasHeader(
     // The page laid over the sky's last few dp (DESIGN §8.1, 23 set 2026). Its lip is
     // inside the floor, not added to it: the skeleton quotes the floor, and the block
     // must still end where the skeleton's does.
-    val sheet = SkySheet(surface = MaterialTheme.colorScheme.surface)
+    val sheet = SkySheet(surface = MaterialTheme.colorScheme.surface, start = railInset)
     // The scene over the gradient (DESIGN §3.9): the hour's clouds, its light, its stars, what
     // falls in it, moving with the wind while the weather may move — the reader's «weather that
     // moves», the system's animations, battery saver and a page at rest all have to agree.
@@ -138,6 +143,7 @@ internal fun CanvasHeader(
         // Between the two, since 23 set 2026, the sun and the moon, in a band of sky the
         // layout keeps for them ([SkyColumn]): the discs can never stand behind the place
         // row or the hero, and the band is never so thin that there is no room for one.
+        Box(Modifier.padding(start = railInset)) {
         SkyColumn(seat = placeRowHeight, floor = floor - sheet.lip) {
             Box(modifier = Modifier.fillMaxSize().padding(top = 4.dp)) {
                 SkyBodiesLayer(
@@ -162,8 +168,15 @@ internal fun CanvasHeader(
             //
             // Every line is [SkyPalette.Ink] at full strength (DESIGN §3.6): the secondary
             // ones are told apart by their size, never by a thinner white.
+            // Over the first pane on a wide page (§8.12c), so the number, its word and the
+            // day's sentence keep a line a reader can take in one look, and stand where the
+            // paper's first column does.
+            val heroStart = (columns?.start ?: railInset) - railInset
+            val heroWidth = columns?.takeIf { it.twoPanes }?.pane ?: Dp.Infinity
             Column(
                 modifier = Modifier
+                    .padding(start = heroStart)
+                    .widthIn(max = heroWidth)
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
@@ -285,6 +298,7 @@ internal fun CanvasHeader(
                 }
             }
         }
+        }
     }
 }
 
@@ -302,9 +316,9 @@ internal fun CanvasHeader(
 internal fun SkyColumn(seat: Dp, floor: Dp, content: @Composable () -> Unit) {
     androidx.compose.ui.layout.Layout(content = content) { measurables, constraints ->
         val width = constraints.maxWidth
-        val hero = measurables[1].measure(
-            androidx.compose.ui.unit.Constraints(minWidth = width, maxWidth = width)
-        )
+        // Up to the full width and not exactly it: the hero fills it itself, and a wide page
+        // narrows it to its first pane (§8.12c).
+        val hero = measurables[1].measure(androidx.compose.ui.unit.Constraints(maxWidth = width))
         val seatPx = seat.roundToPx()
         val band = maxOf(BodiesBand.roundToPx(), floor.roundToPx() - seatPx - hero.height)
         val bodies = measurables[0].measure(androidx.compose.ui.unit.Constraints.fixed(width, band))

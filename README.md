@@ -43,6 +43,8 @@ fetched, and says how old that data is.
   </tr>
 </table>
 
+<p align="center"><img src="docs/screenshots/today-foldable.png" width="520" alt="Today on an open foldable: the tabs on a rail at the left, the overcast sky across the whole page with the temperature, the day's high and low, its sentence and the daylight ribbon over the left half, then two panes under it, the next hours and the rest of the day on the left, the week on the right"><br><sub><b>On a foldable or a tablet</b>: the sky across the page, today on the left, the week on the right</sub></p>
+
 <table>
   <tr>
     <td align="center"><img src="docs/screenshots/sky-tonight.png" width="250" alt="In the dark theme: tonight's card, which answers in a word with the night's numbers and its hours large over a strip a finger can explore, and the next moment in a card of its own"><br><sub><b>Sky</b>: tonight, and the moments ahead</sub></td>
