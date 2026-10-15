@@ -130,7 +130,8 @@
     <string name="rain_chart_caption">Chance of rain</string>
     <string name="rain_chart_caption_snow">Chance of snow</string>
     <string name="rain_chart_caption_mixed">Chance of rain or snow</string>
-    <string name="rain_chart_desc">%1$s from %2$s to %3$s on a scale of 0 to 100%%, peaking at %4$d%% around %5$s</string>
+    <string name="strip_now">Now</string>
+    <string name="rain_lane_caption">%1$s, peaking at %2$s around %3$s</string>
 
     <!-- Details grid: labels. One line beside the tile's 34dp icon, which on a
          360dp screen is a budget of 84dp (94 until the icons grew on 6 set, 88 until
@@ -452,12 +453,12 @@
     <string name="guide_today_headline_title">The sentence</string>
     <string name="guide_today_headline_body">When there is something worth saying — an umbrella around five, a thunderstorm at three, frost by morning, fog on the way, strong wind this afternoon, or tomorrow\'s umbrella — it is written under the big number. The sentence looks ahead: what is happening now, the big number already says. On a quiet day it says when the next rain is due and when it will be warmest: two facts from the forecast, never a filler.</string>
     <string name="guide_today_rain_title">Is it about to rain?</string>
-    <string name="guide_today_rain_body">Three places answer that: the sentence at the top, right below it the chances hour by hour, with the peak of the coming hours marked on the small rain curve, and in the details how many millimetres are expected today and over how many hours. Chiaro describes rain the way its data arrives — how likely, how much, from when to when.</string>
+    <string name="guide_today_rain_body">Three places answer that: the sentence at the top, right below it the chances hour by hour, each with its bar, as tall as it is likely, and a line saying when the chance peaks, and in the details how many millimetres are expected today and over how many hours. Chiaro describes rain the way its data arrives — how likely, how much, from when to when.</string>
     <string name="guide_today_fresh_title">How fresh the numbers are</string>
     <string name="guide_today_fresh_body">When what you are reading is no longer fresh, Chiaro says its real age instead of hiding it, and an update that failed says why. If the data is over an hour old, the top of the screen shows the forecast for this hour instead of the old reading, and says «Estimated from the forecast» under the temperature. Pull the screen down to ask for a new one, or tap the age itself to try again.</string>
     <string name="guide_today_fresh_caption">An example: the age of what you are reading — tap it to try again.</string>
     <string name="guide_today_hours_title">The next hours</string>
-    <string name="guide_today_hours_body" formatted="false">Twenty-four hours of temperature, sky and rain chance, starting from the hour after this one: the hour you are in is the big number at the top. Each column is the hour that starts there: «3 PM · 60%» means a 60% chance of rain between 3 and 4, and the temperature is the one at 3. The chance shows from 20% up: below that the cell stays empty, because there is nothing to plan around.</string>
+    <string name="guide_today_hours_body" formatted="false">The hour you are in, «Now», then the twenty-four that follow: temperature, sky and rain chance. Each column is the hour that starts there: «3 PM · 60%» means a 60% chance of rain between 3 and 4, and the temperature is the one at 3. The chance shows from 20% up, with its bar above it: below 20% the cell stays empty, because there is nothing to plan around, and on a dry day the row of bars is not there at all.</string>
     <string name="guide_today_rest_title">The rest of the day</string>
     <string name="guide_today_rest_body">One timeline for everything still ahead: sunrise or sunset, the golden hour until sunset and the blue hour with the time it ends, the moment the sky goes fully dark, the hours rain is expected to start and ease off, and — when the sun is low and rain is likely in front of it — the window a rainbow could stand in, with the direction to turn and look. Each moment of the sky carries the same verdict the Sky tab gives it, with the number that decided it. Your own alerts that hold today stand among the moments, in your own words, at the hour they point to: the same answer their card on the Alerts tab gives, not a promise that the phone will ring. Moonrise and moonset are on the Sky tab. Tap a moment of the sky to open its page, the one the Sky tab opens: what it is, and where to look.</string>
     <string name="guide_today_week_title">The week</string>

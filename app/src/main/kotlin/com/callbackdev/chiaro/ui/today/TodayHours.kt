@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.ui.draw.clip
 import com.callbackdev.chiaro.ui.theme.CardCorner
 import androidx.compose.foundation.layout.Column
@@ -26,10 +27,6 @@ import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.ui.components.HourCell
 import com.callbackdev.chiaro.ui.components.HourStrip
-import com.callbackdev.chiaro.ui.components.RainChart
-import com.callbackdev.chiaro.ui.components.RainHour
-import com.callbackdev.chiaro.ui.components.VisibleCell
-import com.callbackdev.chiaro.ui.components.hourWindow
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
 import java.time.format.DateTimeFormatter
@@ -45,43 +42,15 @@ internal fun NextHours(
     timeFmt: DateTimeFormatter,
     locale: Locale
 ) {
-    // The page margin travels differently for the two children: the strip takes it as
-    // `contentPadding` so it scrolls edge to edge (DESIGN §8.3), the chart wears it.
-    // The strip's scroll is hoisted so the chart can follow it: the chart marks the
-    // hours in view and scrolls the strip to the hour it is tapped on (DESIGN §8.3b).
-    val rowState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
-    val window = {
-        val info = rowState.layoutInfo
-        hourWindow(
-            info.visibleItemsInfo.map { VisibleCell(it.index, it.offset, it.size) },
-            info.viewportStartOffset,
-            info.viewportEndOffset
-        )
-    }
-    val cellGap = with(LocalDensity.current) { StripCellGap.roundToPx() }
-    val seek: (Float, Boolean) -> Unit = { hour, animate ->
-        val info = rowState.layoutInfo
-        val cell = info.visibleItemsInfo.firstOrNull()
-        val inView = window()
-        if (cell != null && inView != null) {
-            // Center the hour under the finger, as far as the strip's ends allow.
-            val span = inView.end - inView.start
-            val first = (hour + 0.5f - span / 2f)
-                .coerceIn(0f, (info.totalItemsCount - span).coerceAtLeast(0f))
-            val index = first.toInt()
-            val offset = ((first - index) * (cell.size + cellGap)).roundToInt()
-            scope.launch {
-                if (animate) rowState.animateScrollToItem(index, offset)
-                else rowState.scrollToItem(index, offset)
-            }
-        }
-    }
-    // On a card of its own (15 ott 2026, DESIGN §8.0): the hours were the one section of the
-    // page standing bare on the paper, between a sky above and segments below. The strip
-    // scrolls inside the card, under its rounded edge, and its curve's dots are cut from the
-    // card's ground.
+    // On a card of its own (15 ott 2026, DESIGN §8.0); the strip scrolls inside the card,
+    // under its rounded edge, and its curve's dots are cut from the card's ground.
     val ground = MaterialTheme.colorScheme.surfaceContainer
+    // The hour we are in leads the strip as «Ora» (second review, 15 ott 2026): the strip
+    // started at the next full hour, so its first figure was an hour away from the hero's and
+    // the curve had no point where the reader stands. Its figures are the hero's own — the
+    // temperature now, its sky — and the hour's chance of rain.
+    val nowCell = nowCell(content, units, locale)
+    val cells = listOf(nowCell) + content.strip.map { it.toCell(units, is24h, locale) }
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -92,44 +61,51 @@ internal fun NextHours(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         HourStrip(
-            hours = content.strip.map { it.toCell(units, is24h, locale) },
+            hours = cells,
             contentPadding = CardPadding,
-            rowState = rowState,
             ground = ground
         )
-        // A dry run draws NO chart (device review, 4 set). Every value at zero put
-        // a flat line along the bottom of a 28dp box, which read on the screen as a
-        // stray divider with a hole above it — and said nothing the row of "0%" right
-        // over it had not already said. §1.1: a section with no data is not drawn, and
-        // a chart of nothing but zeros is one. Since 12 ott 2026 "dry" is the strip's own
-        // floor: a run that never reaches [ChanceFloorPct] prints no figure, and a chart
-        // of 8% bumps under a row of empty cells would be a shape with nothing to plan by.
+        // What the lane is a chance OF, and its peak, in one line (15 ott 2026): the lane's
+        // caption and its text equivalent (§9.3) at once. Only when the lane is drawn — a dry
+        // run has no lane and no line (§1.1).
         val peak = content.strip.maxByOrNull { it.hour.precipChancePct ?: -1 }
         val peakPct = peak?.hour?.precipChancePct
         if (peakPct != null && peakPct >= ChanceFloorPct) {
-            val caption = stringResource(chanceCaption(content.strip.map { it.hour.condition.wmoCode }))
-            RainChart(
-                hours = content.strip.map {
-                    RainHour(
-                        label = Formats.hourLabel(it.hour.time, is24h, locale),
-                        pct = it.hour.precipChancePct
-                    )
-                },
-                caption = caption,
-                description = stringResource(
-                    R.string.rain_chart_desc,
-                    caption,
-                    content.strip.first().hour.time.format(timeFmt),
-                    content.strip.last().hour.time.format(timeFmt),
-                    peakPct,
+            Text(
+                text = stringResource(
+                    R.string.rain_lane_caption,
+                    stringResource(chanceCaption(content.strip.map { it.hour.condition.wmoCode })),
+                    Formats.percent(peakPct, locale),
                     peak.hour.time.format(timeFmt)
                 ),
-                window = window,
-                onSeek = seek,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(CardPadding)
             )
         }
     }
+}
+
+/** The strip's first cell: the hour we are in, with the hero's figures. */
+@Composable
+private fun nowCell(content: TodayUiState.Content, units: UnitSettings, locale: Locale): HourCell {
+    val current = content.report.current
+    val label = stringResource(R.string.strip_now)
+    val temp = Formats.temperature(current.tempC, units.temperature, locale)
+    val word = stringResource(WeatherText.condition(current.condition.wmoCode))
+    val pct = content.report.hourly.firstOrNull()?.precipChancePct
+    return HourCell(
+        key = "now",
+        hourLabel = label,
+        tempC = current.tempC,
+        condition = ConditionGlyph(current.condition.wmoCode, content.night),
+        temperature = temp,
+        rainPct = pct,
+        rainLabel = chanceLabel(pct, locale),
+        description = pct?.let { stringResource(R.string.hour_cell_desc, label, word, temp, it) }
+            ?: stringResource(R.string.hour_cell_desc_no_rain, label, word, temp),
+        now = true
+    )
 }
 
 /**
@@ -173,8 +149,6 @@ internal const val ChanceFloorPct = com.callbackdev.chiaro.domain.WeatherStateEn
 /** The card's inner margin, as the strip's `contentPadding` and the chart's padding. */
 internal val CardPadding = PaddingValues(horizontal = 16.dp)
 
-/** `HourStrip`'s gap between cells, which the seek needs to turn hours into pixels. */
-internal val StripCellGap = 4.dp
 
 @Composable
 internal fun StripHour.toCell(

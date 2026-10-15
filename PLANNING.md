@@ -13613,7 +13613,7 @@ Il piano, in ordine di effetto sulla percezione e di costo:
 - [x] 4. **I dettagli uniformi**: un solo stile di icone (monocromo, `onSurfaceVariant`), gli
   indicatori in una famiglia sola, le altezze pari, il riquadro notevole del giorno in evidenza
   senza riordinare la griglia.
-- [ ] 5. **La striscia delle ore compatta** (circa 150 dp): 7–8 colonne a 360 dp, la probabilità
+- [x] 5. **La striscia delle ore compatta** (circa 150 dp): 7–8 colonne a 360 dp, la probabilità
   come corsia sotto le icone col linguaggio dei segni di pioggia del nastro, la prima colonna «Ora».
 - [ ] 6. **Il cielo con uno shader AGSL**: nuvole e pioggia dai dati (copertura, intensità, sole),
   statico col movimento ridotto. Qui si decidono minSdk 34 e il budget dei 2 ms.
@@ -13754,4 +13754,39 @@ nell'ordine detto. Disegnati sul Milano, oltre all'immagine del README, una vari
 tema chiaro e scuro, guardate prima di toglierle. `today-details` rigenerata; le altre identiche
 al pixel (la guida compresa: i suoi riquadri d'esempio stanno sotto la piega dell'immagine).
 Suite completa e lint.
+
+### Punto 5: la striscia delle ore compatta (committente, 15 ott 2026)
+
+- [x] **Celle da 42 dp che si toccano**, icona a 32 dp, curva su 16 dp di corsa a 1,5 dp per grado:
+  sette ore a 360 dp, otto a 384 (erano cinque, in celle da 56 dp con 4 dp fra l'una e l'altra).
+- [x] **«Ora» in testa**: l'ora in cui siamo, con la temperatura e il cielo dell'hero e la
+  probabilità dell'ora; la striscia partiva dall'ora piena successiva e la curva non aveva un punto
+  dove sta il lettore.
+- [x] **La corsia della pioggia al posto del grafico**: una barra per ora su 0–100%, alta quanto
+  l'ora è probabile, nella rampa di riempimento della pioggia, le barre vicine quasi a contatto
+  perché un pomeriggio bagnato sia una forma sola; la cifra sotto dal 20% nella rampa
+  dell'inchiostro; una riga sotto la striscia dice di cosa è la probabilità e quando tocca il
+  massimo («Probabilità di pioggia, massima 85% verso le 18:00»). Niente corsia e niente riga in
+  una giornata asciutta. La card: circa 130 dp asciutta, 160 bagnata, dove era circa 310.
+- [x] Tolti `RainChart` e i suoi aiuti (la finestra delle ore in vista, il tocco che scorreva la
+  striscia, gli assi) con `RainChartTest`; tolti i gradini `Tile` e `TileUv` della scala delle
+  icone, rimasti senza utenti dal punto 4, con il test dei distintivi che li misurava; la pagina
+  del momento del Cielo ha un gradino suo, `Page` (42 dp, la misura che aveva la striscia).
+- [x] La guida (le prossime ore, «Sta per piovere?»), lo scheletro (cella da 132 dp).
+
+**Decisioni e deviazioni.** *Il grafico è andato, non spostato*: era la mappa di una striscia che
+mostrava cinque ore, con una finestra che seguiva lo scorrimento e un tocco per saltare; una
+striscia che ne mostra sette o otto, con la forma della pioggia dentro, è la mappa di sé stessa, e
+le cento dp del grafico erano metà della card. Le ore oltre la vista restano a un gesto. *La rampa
+di riempimento per le barre, quella dell'inchiostro per le cifre*: la prima è la rampa dei segni
+(§2.3) e fa leggere l'improbabile come tenue; la seconda supera 4,5:1 ed è quella dei numeri. Il
+nastro della settimana usa l'inchiostro per i suoi segni bagnati perché lì il segno è alto 3 dp e
+il tenue sparirebbe; qui la barra ha la sua altezza per dirlo. *La corsia anche nel giorno aperto
+della settimana*: la stessa striscia, quindi le stesse otto ore e le stesse barre.
+
+**Come è stato verificato.** Disegnata sul Milano (asciutto: niente corsia, otto ore in vista, la
+card a 130 dp) e su una variante con la pioggia del pomeriggio (la forma che sale, le cifre dal
+20%, la riga del massimo), guardate prima di togliere la variante. `StripCurveTest` invariato.
+`today-now` e `today-week` rigenerate; le altre identiche (il widget a meno di un antialiasing che
+l'occhio non vede, lasciato com'era). Suite completa e lint.
 

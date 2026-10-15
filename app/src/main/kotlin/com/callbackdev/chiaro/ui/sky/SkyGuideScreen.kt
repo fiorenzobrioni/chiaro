@@ -232,7 +232,7 @@ internal fun SkyEventPage(
                 contentDescription = null, // the name is right beside it
                 // The page's one glyph: the family's largest rung, in its own colors.
                 tint = Color.Unspecified,
-                modifier = Modifier.size(WeatherIconSize.Strip)
+                modifier = Modifier.size(WeatherIconSize.Page)
             )
             Column {
                 Text(

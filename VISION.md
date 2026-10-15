@@ -288,11 +288,11 @@ The spine of the product, one vertical scroll, in this order:
    pinned bar and stays there (15 ott 2026).
 2. **A freshness chip** when, and only when, it matters: "Updated 3 hours ago" in amber, tappable to
    retry. Pull to refresh; no FAB on this screen, because the app refreshes itself.
-3. **Next hours**: a horizontal strip on a card of its own, 24 hours from the next full hour,
-   each with icon, temperature and rain probability (printed from 20%, since 12 ott 2026), plus
-   a rain-probability chart underneath — a 0–100% scale, the hours named under it, a dot per
-   hour — so a wet stretch is a shape rather than twelve numbers, and the shape has somewhere
-   to stand.
+3. **Next hours**: a horizontal strip on a card of its own, the hour we are in («Now») and the
+   24 after it, each with icon and temperature on one curve, seven hours to a 360dp phone; on a
+   wet day a lane of bars under them, one an hour, as tall as the hour is likely on a 0–100%
+   scale, with the chance printed from 20% (since 12 ott 2026) and one line naming the peak — so a
+   wet stretch is a shape rather than twelve numbers (15 ott 2026; it was a separate chart).
 4. **The rest of the day**: the merged timeline, and the second differentiator on this screen.
    Sun and sky events, weather turns ("rain starts around 17:00"), and the reader's own alerts
    that hold today, in one chronological list, one row a segment as the Sky draws its moments.

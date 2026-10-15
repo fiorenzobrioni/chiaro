@@ -91,9 +91,10 @@ internal fun EmptyState(state: TodayUiState.Empty, onRefresh: () -> Unit) {
  */
 internal val PlainHeaderHeight = 48.dp + HeaderVerticalPadding * 2
 
-/** One hour cell at 100% type, quoted from `HourStrip`: 16 (hour) + 6 + 42 (icon) + 6 +
- * 52 (the temperature curve's band, since 23 set 2026) + 6 + 16 (rain). */
-internal val SkeletonHourCellHeight = 144.dp
+/** One hour cell at 100% type with its rain lane, quoted from `HourStrip`: 16 (hour) + 4 +
+ * 32 (icon) + 4 + 42 (the temperature curve's band) + 4 + 14 (lane) + 16 (the chance), since
+ * the strip was made compact (15 ott 2026). */
+internal val SkeletonHourCellHeight = 132.dp
 
 /** A section title's band on the paper: its 12dp, a `titleMedium` line, 12 under it. */
 private val SkeletonTitleBand = ItemGap + 24.dp + ItemGap

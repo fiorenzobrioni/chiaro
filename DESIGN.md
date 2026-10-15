@@ -658,7 +658,7 @@ and the two cannot disagree.
   chance. The lane is the **week's**: drawn on all seven rows when any day has a wet hour
   (+5dp a row), on none in a dry week, so the rows stay one height.
 - **Every mark has its word**: the row's description adds «Pioggia dalle 15:00 alle 17:00,
-  alle 20:00» («Neve», «Pioggia e neve» by the hours' phases, as the rain chart's caption).
+  alle 20:00» («Neve», «Pioggia e neve» by the hours' phases, as the rain lane's caption).
 - Measured on the README's Milan and on a live week of Glasgow rain (the comparison page,
   12 ott 2026): overcast and clear separate in luminance at 4dp (vivid day mid `#2BB8FF`,
   overcast ≈ `#748FA0`), modestly; the wet lane is what makes a wet day legible at a glance.
@@ -1030,10 +1030,11 @@ the platform's own animators read, so this is the API and not a way around a mis
 at start-up would be wrong for exactly the reader it is for) and publishes
 `LocalReducedMotion`.
 
-The app moves in five places and all five ask (the fourth is §7.1's icons): the week row's hour strip opens with
-`ChiaroMotion.enter/exit`, the pager `scrollToPage`s instead of animating, the rule
-editor's dry-run answer jumps into view instead of scrolling to it, and the rain chart
-(§8.3b, 23 set 2026) is drawn whole instead of drawing itself in. Until that pass
+The app moves in these places and all of them ask (one is §7.1's icons): the week row's hour
+strip opens with `ChiaroMotion.enter/exit`, the pager `scrollToPage`s instead of animating, the
+rule editor's dry-run answer jumps into view instead of scrolling to it, and the hero's figure
+stays on the sky instead of travelling into the bar (§8.1e). The rain chart that drew itself in
+went with the chart (15 ott 2026). Until that pass
 `ChiaroMotion.reducedMotionFadeMillis` was a constant nothing consulted, which is the
 shape a design rule takes when it is only written down: true in this file, absent from
 the APK. The canvas needed nothing — it is a `Brush`, it has never animated, and §3.5's
@@ -1359,60 +1360,54 @@ longer belongs to.
 Warning role, the real age ("3 hours ago"), tappable to retry, with a progress state while
 retrying. Never a toast: a toast is gone before it is read.
 
-**8.3 HourStrip** — horizontal, 24 cells from the next full hour, each 56dp wide: hour,
-icon, temperature (tabular), rain probability on the ink ramp (§2.3), zero included; an
-hour the provider gave no probability for prints nothing at all. **On Today it stands on a
-card** (§8.0, 15 ott 2026), `surfaceContainer` with 28dp corners and 16dp of air top and
-bottom, the strip and its rain chart inside it: the strip's 16dp inner margin is its
-`contentPadding`, so the first cell starts on the card's column and the others slide under
-the card's rounded edge. Its curve's dots are cut from the ground it stands on (`ground`).
-It stood edge to edge on the paper from 8 set to 15 ott 2026, the one section of the page
-with no container.
+**8.3 HourStrip** — horizontal, **the hour we are in and the 24 after it**, one cell an hour,
+**42dp wide and touching** (second review of Today, 15 ott 2026): the hour, the sky's icon at
+32dp, the temperature riding its curve, and on a wet strip the rain lane under them. At 42dp a
+360dp phone shows seven hours, a 384dp one eight; the cells were 56dp with 4dp between them
+and showed five. A cell is **132dp** tall at 100% type with the lane (16 + 4 + 32 + 4 + 42 + 4 +
+14 + 16) and 102 without, and the skeleton quotes the tall number. **On Today it stands on a
+card** (§8.0), `surfaceContainer` with 28dp corners and 16dp of air top and bottom: the 16dp
+inner margin is the strip's `contentPadding`, so the first cell starts on the card's column and
+the others slide under the card's rounded edge; the curve's dots are cut from that ground.
 
-**The temperature is a curve** (design review, 23 set 2026): each figure rides a dot on a
-line drawn through the whole strip, so the evening's drop is a shape before it is six
-numbers. Every cell draws its own piece — a quadratic from the midpoint with the cell before,
-through its own point, to the midpoint with the cell after — and consecutive pieces share
-their midpoints and tangents there, so the strip reads as one smooth line and stays a lazy
-row. The scale is **2dp a degree, fixed**, around the strip's own middle (§9.1: a 10° drop is
-the same slope on any day); only a range that will not fit 24dp at that rate is compressed
-to fit, and the printed figures still say the truth. The line is `outlineVariant`, the dot
-the temperature ramp's color ringed in `outline`. The cell is **144dp** tall now (the 20dp
-figure became a 52dp band: figure, 2 of gap, 24 of travel, the 8dp dot), and the skeleton
-quotes that. A strip where no hour reaches the 20% Today prints a chance from (§2.3, 12 ott
-2026) has **no rain row** and is 122dp: a row kept for figures never there was a hole between
-the strip and the next section.
+**«Ora» leads it** (same review): the first cell is the hour we are in, labelled «Ora» in
+`onSurface` semibold, with the hero's own figures — the temperature now and its sky — and the
+hour's chance. The strip used to start at the next full hour, so its first figure stood an hour
+away from the hero's and the curve had no point where the reader stands.
 
-**Midnight has a name**: the first hour of a new day prints the day's short name in
-`primary` in place of «00», so «22 23 Gio 01» no longer reads as one evening. The cell still
-speaks the hour. Not in a week row's own strip, which is one day already.
+**The temperature is a curve** (design review, 23 set 2026): each figure rides a dot on a line
+drawn through the whole strip, so the evening's drop is a shape before it is six numbers. Every
+cell draws its own piece — a quadratic from the midpoint with the cell before, through its own
+point, to the midpoint with the cell after — and consecutive pieces share their midpoints and
+tangents there, so the strip reads as one smooth line and stays a lazy row. The scale is
+**1.5dp a degree, fixed**, around the strip's own middle (§9.1: a 10° drop is the same slope on
+any day), over **16dp of travel** (2dp a degree over 24 until the strip was made compact); only
+a range that will not fit is compressed, and the printed figures still say the truth. The line
+is `outlineVariant`, the dot the temperature ramp's colour ringed in `outline`.
 
-**8.3b RainChart** — under the strip, the same 24 hours as one series: 2px line on the
-**ink** ramp (a mark has its own 3:1 floor, and the fill ramp's light end clears neither
-floor), the area under it tinted with the fill ramp at 0.30 → 0.06, three recessive
-gridlines at 0 / 50 / 100% with the two ends labelled in the right-hand gutter, a tick
-and the hour under the axis every six hours with the first and last always named, and a
-dot on every hour. No legend: one series, named by its own caption. It replaced a bare
-sparkline on the second device review (6 set 2026) — over a day pinned at 100% a line
-with no scale under it is a shape with nowhere to stand, and the flatter the day the
-less it said. A dry run still draws nothing at all (§1.1).
+**The rain lane** (same review) is the strip's chance of rain as **a bar per hour**, on a 0–100%
+scale anchored to the world: 14dp is 100%, a bar as tall as its hour is likely, in the rain's
+**fill** ramp at that chance (§2.3, the ramp of the marks: an unlikely hour short and pale, a
+likely one tall and full), 1dp of air each side so the bars of neighbouring hours nearly touch
+and a wet afternoon is **one shape across the strip**, the way the ribbon's wet marks are; a
+hairline `outlineVariant` floor under every hour, so an hour of 0% still stands on the lane. The
+figure is printed under its bar from **20%** (the state engine's «probable», 12 ott 2026) in the
+**ink** ramp, the one that clears 4.5:1; under it the cell stays empty, never a dash. An hour the
+provider gave no probability for has an empty lane — never a zero bar, which is a forecast. A
+strip where no hour reaches 20% has **no lane at all** and no caption: a lane kept for bars that
+are never there would be a hole. Under the strip, on a wet day, **one line** says what the chance
+is a chance of and when it peaks — «Probabilità di pioggia, massima 85% verso le 18:00» (snow,
+or rain or snow, by the hours' phases) — the lane's caption and its text equivalent (§9.3).
 
-**The chart is the strip's map** (design review, 23 set 2026). The strip shows about six
-hours and scrolls, the chart shows all 24 and does not, so the two never lined up hour over
-hour — and stretching the chart across the strip's 24 cells would have bought alignment
-with the overview, which is the one thing the chart is for. So the overview stays and the
-**hours in view in the strip are marked on it**: a `surfaceContainerHigh` window with
-6dp corners behind the gridlines, spanning the plot and its ticks, following the strip's
-scroll at draw time (a scroll redraws the chart, it never recomposes it). A **tap or a
-horizontal drag** on the chart centres the strip on the hour under the finger — animated
-for a tap, tracking for a drag — so a wet stretch seen on the map is one touch from its
-numbers.
+The lane **replaced the rain chart** (§8.3b until 15 ott 2026): a 24-hour line chart under the
+strip, with its scale, its gridlines, its ticks, a window following the strip's scroll and a tap
+that scrolled the strip, about 100dp of card. It was the map of a strip that showed five hours;
+a strip that shows seven or eight, with the shape of the rain in it, is its own map, and the
+card went from some 310dp on a wet day to some 160 (130 dry).
 
-It **draws itself in** the first time it is shown: the line and its area are revealed left
-to right in 900 ms (`FastOutSlowInEasing`), along time, the way the day will go. Never
-grown up from the floor: for half a second that would draw a dry day nobody forecast, and
-§1.1 has no exception for animations. Once per page (the flag survives the chart being
-scrolled away), and not at all under reduced motion.
+**Midnight has a name**: the first hour of a new day prints the day's short name in `primary`
+in place of «00», so «22 23 Gio 01» no longer reads as one evening. The cell still speaks the
+hour. Not in a week row's own strip, which is one day already.
 
 **8.4 TimelineRow** — the rest of the day (VISION §5.2.4), **a group of segments** (§8.0, 15
 ott 2026): one row a segment, as the Sky draws the same moments. A row is the clock time in a
@@ -2233,17 +2228,16 @@ notification to remove. What changed is **when** they speak:
 2px lines, 4px rounded ends anchored to the baseline, markers ≥ 8dp, a 2px surface gap
 between adjacent fills, recessive gridlines (`outlineVariant` at 1dp, horizontal only).
 
-The one deliberate exception to the 8dp marker: a **per-point dot on a dense series** —
-the hour dots of §8.3b — is rhythm rather than a marker. It says where the hours are, no
-value is ever read off it (the strip above prints all 24), and it is drawn only while the
-points are at least 6dp apart. An axis tick is not a gridline and lives outside the plot:
-1dp, 3dp long, under the baseline.
+The one deliberate exception to the 8dp marker: a **per-point dot on a dense series** — the
+dots on the hour strip's temperature curve (§8.3) — is rhythm rather than a marker. It says where
+the hours are, and every value is printed over it. An axis tick is not a gridline and lives
+outside the plot: 1dp, 3dp long, under the baseline.
 Direct labels on the extremes only — never a number on every point.
 
 ### 9.3 Every chart has a text equivalent
 
-The rain chart prints the ends of its scale and the hours under it, and the strip above it
-prints every one of its values; the range bar's ends are printed. This is both the accessibility floor and §1.2: a picture of a number is not a
+The hour strip prints every temperature on its curve and every chance from 20% under its bar,
+and a wet strip's caption says the peak in words; the range bar's ends are printed. This is both the accessibility floor and §1.2: a picture of a number is not a
 number.
 
 ---

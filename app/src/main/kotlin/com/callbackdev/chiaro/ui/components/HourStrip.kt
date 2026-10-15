@@ -69,38 +69,37 @@ data class HourCell(
      * (§8.3, 23 set 2026); null draws the figure without a curve. */
     val tempC: Double? = null,
     /** The hour a new day starts at: its label is the day's name, in the accent. */
-    val dayStart: Boolean = false
+    val dayStart: Boolean = false,
+    /** The strip's first cell on Today: the hour we are in, labelled «Ora» (15 ott 2026). */
+    val now: Boolean = false
 )
 
 /**
- * DESIGN.md §8.3. Horizontal, 24 cells from the next full hour, each 56dp: hour, icon,
- * temperature, rain probability. The caller decides which chances are printed: Today
- * prints them from 20% (review of 12 ott 2026), and a cell under it is empty. A strip in
- * which **no** cell prints one has no rain row at all — a row kept for figures that are
- * never there was a 22dp hole between the strip and the next section.
+ * DESIGN.md §8.3. Horizontal, one cell an hour, **42dp wide and touching** (second review of
+ * Today, 15 ott 2026): hour, icon, the temperature riding its curve, and — on a strip where
+ * any hour reaches the chance the caller prints from — **the rain lane**, a bar per hour on a
+ * 0–100% scale anchored to the world, in the rain's ink ramp, with the figure under it from
+ * 20% up. The bars of neighbouring hours touch, so a wet afternoon is one shape across the
+ * strip, the way the ribbon's wet marks are; the lane replaced a separate 24-hour chart under
+ * the strip, and with it some 100dp of card. At 42dp a 360dp phone shows seven hours where it
+ * showed five.
  *
- * A **null** [HourCell.rainPct] is the other case and it really is "no data" (Fase
- * 26): the provider forecast no chance for that hour. The cell keeps its 56dp so the
- * strip does not shift, and prints nothing where the figure would be — never a 0,
- * which is a forecast, and never a dash, which §1.1 forbids.
+ * A **null** [HourCell.rainPct] is "no data" (Fase 26): the provider forecast no chance for
+ * that hour. The cell keeps its width and its lane is empty — never a zero bar, which is a
+ * forecast, and never a dash, which §1.1 forbids. A strip in which **no** cell prints a figure
+ * has no lane at all.
  *
- * The strip scrolls **edge to edge** (8 set 2026): the caller hands the page margin in
- * as [contentPadding] rather than padding the row, so the first cell starts on the
- * 16dp line like everything else and the others slide under the screen's edge instead
- * of being cut on a line 16dp inside it, which made the strip read as a box.
+ * The strip scrolls **edge to edge** of what it stands on: the caller hands the margin in as
+ * [contentPadding], so the first cell starts on the column and the others slide under the edge.
  *
- * One cell is 144dp tall at 100% type: 16 (hour) + 6 + 42 (icon) + 6 + 52 (the curve's
- * band: the 20dp figure, 2 of gap, 24 of travel and the 8dp dot) + 6 + 16 (rain); 122
- * with no rain row. The skeleton quotes the tall number. A strip with no temperatures (none, today) keeps the old
- * 20dp figure and is 112.
+ * One cell is **132dp** tall at 100% type with the lane (16 hour + 4 + 32 icon + 4 + 42 curve
+ * band + 4 + 14 lane + 16 figure) and 102 without; the skeleton quotes the tall number.
  */
 @Composable
 fun HourStrip(
     hours: List<HourCell>,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    /** Hoisted by a caller that follows the strip's scroll: the rain chart under it
-     * draws the hours in view and scrolls the strip from a tap (§8.3b). */
     rowState: LazyListState = rememberLazyListState(),
     /** What the strip stands on: the curve's dots are cut from it (a card, a segment). */
     ground: Color = MaterialTheme.colorScheme.surface
@@ -111,7 +110,7 @@ fun HourStrip(
     // And the page around it, whose other icons would otherwise keep moving while this strip
     // is dragged (committente, 15 ott 2026).
     ReportScrolling(rowState.isScrollInProgress)
-    val rainRow = hours.any { it.rainLabel != null }
+    val lane = hours.any { it.rainLabel != null }
     val curve = remember(hours) {
         StripCurve.of(hours.map { it.tempC }, CurveTravel.value, CurveDpPerDegree)
     }
@@ -119,67 +118,89 @@ fun HourStrip(
         LazyRow(
             state = rowState,
             modifier = modifier.fillMaxWidth(),
-            contentPadding = contentPadding,
-            horizontalArrangement = Arrangement.spacedBy(CellGap)
+            contentPadding = contentPadding
         ) {
             itemsIndexed(hours, key = { _, cell -> cell.key }) { index, cell ->
-            Column(
-                modifier = Modifier
-                    // §10: a cell measured in dp holding text measured in sp came
-                    // apart at 200% — «11 PM» and «-10°» both outgrow 56dp, and the
-                    // strip scrolls sideways anyway, so the cell can simply be as
-                    // wide as the reader's type needs.
-                    .width(56.dp.forText())
-                    .semantics { contentDescription = cell.description },
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Text(
-                    text = cell.hourLabel,
-                    style = if (cell.dayStart) {
-                        MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
-                    } else {
-                        MaterialTheme.typography.labelSmall.tabular()
-                    },
-                    color = if (cell.dayStart) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                )
-                ConditionIcon(
-                    glyph = cell.condition,
-                    // The top rung of the family's ladder, in a 56dp cell. The third
-                    // step (8 set 2026) took over the 2dp of vertical padding the icon
-                    // used to sit in, so the cell is as tall as it was at 38dp.
-                    modifier = Modifier.size(WeatherIconSize.Strip)
-                )
-                if (curve != null && cell.tempC != null) {
-                    CurveCell(
-                        curve = curve,
-                        index = index,
-                        temperature = cell.temperature,
-                        gap = CellGap,
-                        ground = ground
-                    )
-                } else {
+                Column(
+                    modifier = Modifier
+                        // §10: a cell measured in dp holding text measured in sp came apart at
+                        // 200% — «11 PM» and «-10°» outgrow it — and the strip scrolls sideways
+                        // anyway, so the cell is as wide as the reader's type needs.
+                        .width(CellWidth.forText())
+                        .semantics { contentDescription = cell.description },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Text(
-                        text = cell.temperature,
-                        style = MaterialTheme.typography.labelLarge.tabular()
+                        text = cell.hourLabel,
+                        style = when {
+                            cell.now || cell.dayStart ->
+                                MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                            else -> MaterialTheme.typography.labelSmall.tabular()
+                        },
+                        color = when {
+                            cell.now -> MaterialTheme.colorScheme.onSurface
+                            cell.dayStart -> MaterialTheme.colorScheme.primary
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     )
+                    ConditionIcon(
+                        glyph = cell.condition,
+                        modifier = Modifier.size(WeatherIconSize.Strip)
+                    )
+                    if (curve != null && cell.tempC != null) {
+                        CurveCell(
+                            curve = curve,
+                            index = index,
+                            temperature = cell.temperature,
+                            ground = ground
+                        )
+                    } else {
+                        Text(
+                            text = cell.temperature,
+                            style = MaterialTheme.typography.labelLarge.tabular()
+                        )
+                    }
+                    if (lane) RainLaneCell(pct = cell.rainPct, label = cell.rainLabel)
                 }
-                if (rainRow) Text(
-                    text = cell.rainLabel.orEmpty(),
-                    style = MaterialTheme.typography.labelSmall.tabular(),
-                    // Zero is the ramp's quiet end, not another role (DESIGN.md §2.3);
-                    // an hour with no forecast at all prints nothing, so its ink is moot.
-                    color = cell.rainPct
-                        ?.let { ChiaroTheme.colors.rainInkAt(it) }
-                        ?: MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        }
+    }
+}
+
+/**
+ * One hour of the rain lane: its bar, from the lane's floor, as tall as its chance on a
+ * 0–100% scale and in the rain's fill ramp at that chance (§2.3, the ramp of the marks), so an
+ * unlikely hour is short and pale and a likely one tall and full — the figure under it carries
+ * the number in the ink ramp, the one that clears 4.5:1; a hairline floor under every hour, so
+ * an hour of 0% still stands on the lane and the lane reads as a scale.
+ */
+@Composable
+private fun RainLaneCell(pct: Int?, label: String?) {
+    val floor = MaterialTheme.colorScheme.outlineVariant
+    val ink = pct?.let { ChiaroTheme.colors.rainInkAt(it) }
+    val fill = pct?.let { ChiaroTheme.colors.rainAt(it) }
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(LaneHeight)) {
+            val hairline = 1.dp.toPx()
+            drawRect(floor, topLeft = Offset(0f, size.height - hairline), size = androidx.compose.ui.geometry.Size(size.width, hairline))
+            if (pct != null && fill != null && pct > 0) {
+                val h = size.height * (pct.coerceIn(0, 100) / 100f)
+                val inset = BarInset.toPx()
+                drawRoundRect(
+                    color = fill,
+                    topLeft = Offset(inset, size.height - h),
+                    size = androidx.compose.ui.geometry.Size(size.width - inset * 2, h),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(BarCorner.toPx())
                 )
             }
         }
-        }
+        Text(
+            text = label.orEmpty(),
+            style = MaterialTheme.typography.labelSmall.tabular(),
+            // Zero is the ramp's quiet end, not another role (DESIGN.md §2.3).
+            color = ink ?: MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -223,7 +244,7 @@ internal class StripCurve(val temps: List<Double?>, private val mean: Double, pr
  * cell on each side; a lazy item is not clipped to itself.
  */
 @Composable
-private fun CurveCell(curve: StripCurve, index: Int, temperature: String, gap: Dp, ground: Color) {
+private fun CurveCell(curve: StripCurve, index: Int, temperature: String, ground: Color) {
     val level = curve.level(index) ?: 0.5f
     val before = curve.level(index - 1)
     val after = curve.level(index + 1)
@@ -245,7 +266,7 @@ private fun CurveCell(curve: StripCurve, index: Int, temperature: String, gap: D
             val r = DotRadius.toPx()
             fun y(l: Float) = r + l * (size.height - r * 2)
             val w = size.width
-            val half = gap.toPx() / 2f
+            val half = 0f
             val p = Offset(w / 2f, y(level))
             val start = before?.let { Offset(-half, y((it + level) / 2f)) } ?: p
             val end = after?.let { Offset(w + half, y((level + it) / 2f)) } ?: p
@@ -278,15 +299,21 @@ internal fun curveDotY(before: Float?, level: Float, after: Float?): Float {
     return 0.25f * a + 0.5f * level + 0.25f * b
 }
 
-/** How far a dot may travel in its band, and the rate it prefers: 2dp a degree puts an
- * ordinary day's swing of 8–12° across most of the band. */
-private val CurveTravel = 24.dp
-private const val CurveDpPerDegree = 2f
+/** How far a dot may travel in its band, and the rate it prefers: 1.5dp a degree puts an
+ * ordinary day's swing of 8–12° across most of the band (24dp and 2dp a degree until the strip
+ * was made compact, 15 ott 2026). */
+private val CurveTravel = 16.dp
+private const val CurveDpPerDegree = 1.5f
 private val DotRadius = 4.dp
 private val LabelGap = 2.dp
 
-/** The strip's gap between cells: `spacedBy` in the row, and the curve's reach. */
-private val CellGap = 4.dp
+/** A cell's width: seven hours at 360dp, the cells touching so the lane's bars do too. */
+private val CellWidth = 42.dp
+
+/** The rain lane: its height (the 100% bar), the air each side of a bar, its corner. */
+private val LaneHeight = 14.dp
+private val BarInset = 1.dp
+private val BarCorner = 2.dp
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
