@@ -109,7 +109,14 @@ data class SkySnapshot(
     val moonElongationDeg: Double = 0.0,
     val southern: Boolean = false,
     /** The rest of today's forecast sky, for the canvas' ribbon (12 ott 2026). */
-    val hours: List<RibbonHour> = emptyList()
+    val hours: List<RibbonHour> = emptyList(),
+    /** The canvas' scene (DESIGN §3.9, 15 ott 2026): the cloud layers of the hour, what
+     * falls in it by the state engine and how much, and the wind that moves the clouds. */
+    val layers: com.callbackdev.chiaro.domain.model.CloudLayers? = null,
+    val fall: com.callbackdev.chiaro.ui.components.SkyFall = com.callbackdev.chiaro.ui.components.SkyFall.NONE,
+    val fallMmPerHour: Double = 0.0,
+    val windKph: Double = 0.0,
+    val windFromDeg: Int = 0
 )
 
 enum class TimelineKind {
@@ -263,7 +270,13 @@ object TodayStateBuilder {
                 ),
                 moonElongationDeg = moon.elongation,
                 southern = coords.lat < 0.0,
-                hours = DaylightPhases.sky(trimmed.hourly, local.toLocalDate())
+                hours = DaylightPhases.sky(trimmed.hourly, local.toLocalDate()),
+                layers = trimmed.current.cloudLayers,
+                fall = fallOf(trimmed.current.condition.wmoCode),
+                // The quarter hour just measured, as a rate: the hourly series carries no amounts.
+                fallMmPerHour = trimmed.current.precipitation.lastQuarterHourMm * 4.0,
+                windKph = trimmed.current.wind.speedKph,
+                windFromDeg = trimmed.current.wind.degree
             ),
             // The ladder first; on a day it has nothing to warn about, the quiet day's own
             // sentence (12 ott 2026) — still the model's facts, never a filler.
@@ -283,6 +296,17 @@ object TodayStateBuilder {
             error = error,
             warnings = graded
         )
+    }
+
+    /** What falls now, by the hour's state (the state engine's, not the provider's code):
+     * snow when its phase is frozen, rain for any other falling phase. */
+    internal fun fallOf(wmoCode: Int): com.callbackdev.chiaro.ui.components.SkyFall {
+        if (!com.callbackdev.chiaro.domain.WmoCode.isPrecipitation(wmoCode)) return com.callbackdev.chiaro.ui.components.SkyFall.NONE
+        return if (com.callbackdev.chiaro.domain.WmoCode.of(wmoCode)?.phase == com.callbackdev.chiaro.domain.WmoCode.Phase.FROZEN) {
+            com.callbackdev.chiaro.ui.components.SkyFall.SNOW
+        } else {
+            com.callbackdev.chiaro.ui.components.SkyFall.RAIN
+        }
     }
 
     /**

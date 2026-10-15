@@ -497,11 +497,32 @@ only worth printing if something fails when it stops being true.
 
 ### 3.5 Motion and cost
 
-One shader, one animation, and a hard budget: **the canvas may not cost more than 2 ms per
-frame on a mid-range device.** It animates only the interpolation between bands (a slow
-crossfade on a 30-second tick, not a per-frame recomputation), and it becomes a static
-gradient when the system is in battery saver, when the reader has reduced motion on, or
-when the activity is not resumed. No particles, no parallax, no video.
+The canvas is **one AGSL shader** since the second review of Today (15 ott 2026): the
+gradient of §3.2–3.4, drawn by the shader exactly as the palette's three stops, and the scene
+of §3.9 over it. It replaced one gradient brush and the rule that went with it — «one shader,
+one animation, 2 ms a frame, no particles, no parallax» — because a gradient alone was the
+canvas' weakest state on the screen people see most: a grey-blue rectangle at noon under
+cloud. The budget is now written in what a frame may do, and in when there is a frame at all:
+
+- **per pixel, at most about twenty value-noise samples** in the worst sky (a domain-warped
+  cumulus with its light, a cirrus veil, a fall); a clear day spends almost none, because
+  every layer is skipped when its amount is zero;
+- **frames only while the sky may move**, 15 a second for a sky that drifts and 30 for one
+  in which something falls — the rates their own speeds need (a cloud drifts a few dp a
+  second) — and one frame asked for per step, never one per vsync;
+- **still, as one frame**, whenever any of these holds: the reader's «weather that moves» is
+  off (Settings → Appearance), the system asks for less motion, battery saver is on, the page
+  or a strip on it is being scrolled or swiped (§7.1), or the canvas is not on screen (the
+  item is disposed, the activity stopped);
+- **the target**: under **3 ms of GPU a frame on a mid-range phone** (a Pixel 6a class
+  device), so 15 frames a second cost under 5% of its GPU time. That figure has to be read
+  on a device (`adb shell dumpsys gfxinfo`, the GPU profile) and is recorded in PLANNING as the
+  one open check of this step: a cloud container has no GPU to measure it on.
+
+**minSdk stays 33**: `RuntimeShader` arrived in Android 13, which is already the floor. A
+canvas that is not hardware-accelerated (a software snapshot) cannot draw a `RuntimeShader`
+at all, and there the layer draws the palette's gradient alone, which is what the sky was
+before.
 
 ### 3.6 The scrim contract
 
@@ -613,6 +634,45 @@ two things: the disc reads as a sun on its path rather than a bead, and the open
 - **Why not the others**: a crescent C of light on blue was the strongest at 24px, but read as a
   moon — the night again, which is what the old badge (a starry crescent over two waves) drew;
   the sun's curve over a horizon read as a letter A below 48px.
+
+### 3.9 The scene
+
+What the shader draws over the gradient (second review of Today, 15 ott 2026,
+`SkyScene`, `skyScene`, `SkySceneTest`). Every element is the forecast for the hour we are in
+or the ephemeris, and none is chosen for looks — the canvas stays a computed sky (§3.1), now
+with the parts of it a gradient could not say.
+
+- **Cumulus**, in the hour's **cloud cover**: four octaves of value noise, each turned by 37°
+  so the grid never lines up (unturned, it drew V-shapes), warped once by a two-octave field
+  so the clouds billow, in dp so they have the same grain on every screen, and flatter toward
+  the horizon (the canvas' bottom) as a deck is in perspective. The threshold follows the
+  cover, so 30% draws a few clouds and 95% a deck with a few thin gaps. The shading flattens as
+  the cover closes: a deck is one grey with soft folds, not a sky of lit puffs.
+- **Light**: the edge of a cloud that faces the sun by day, or the moon at night, is the
+  lit one — the light's place is the bodies' own (§8.1c), the same bearing and altitude —
+  and near it the clouds catch a rim. **Lit** is a white with a breath of the sky by day, the
+  horizon's own colour in the golden hour, the moon's grey at night (`SkyPalette.CloudNight`,
+  stronger under a bright moon); **shade** is the lit colour toward the sky's top stop, darker
+  by night and under a likely rain.
+- **Cirrus**, in the **high layer's share** of the cover (`CloudLayers`): streaks stretched
+  across the sky, drifting faster than the deck below them.
+- **Stars**, only when the sun is past −10° and fading in to −18°, times the open sky squared,
+  less under a bright moon: one in a few cells of 13dp, twinkling slowly, thinning toward the
+  horizon. Never by day, never under a closed sky.
+- **What falls**, only when the hour's **state** is wet (the state engine's, not the
+  provider's code): rain as a veil and long slanted streaks, snow as flakes that fall and
+  sway, at a strength from a third to full by the quarter hour just measured (4 mm an hour
+  is full).
+- **Drift**: the clouds move with **the wind** — the hour's speed, a floor of 1.5 dp a second
+  plus 0.3 a km/h, toward where the wind blows as the reader facing the equator sees it (in
+  the north the west is on the right, in the south the east; the frame the sun and moon stand
+  in). A wind along the line of sight still breathes at the floor.
+- **The cap**: every pixel is held under the luminance of the palette's brightest stop, the
+  one §3.6 measured white against. The scene is drawn under the scrims like the gradient, and
+  with the cap nothing it draws can cost the text its 4.5:1 — the clouds' colours are capped in
+  Kotlin too, half a percent under, because an sRGB `Color` is stored at 8 bits and rounds up.
+
+The sun and the moon (§8.1c) are drawn over the scene as before, with their veils.
 
 ## 4. The daylight ribbon
 
@@ -1037,8 +1097,8 @@ stays on the sky instead of travelling into the bar (§8.1e). The rain chart tha
 went with the chart (15 ott 2026). Until that pass
 `ChiaroMotion.reducedMotionFadeMillis` was a constant nothing consulted, which is the
 shape a design rule takes when it is only written down: true in this file, absent from
-the APK. The canvas needed nothing — it is a `Brush`, it has never animated, and §3.5's
-"becomes a static gradient" is a promise it keeps by construction.
+the APK. The canvas asks too since 15 ott 2026 (§3.5): under reduced motion its scene is one
+still frame, the clouds where they stood.
 
 **Between pages** (22 set 2026, Navigation 3). The shell's pages move with Saldo's
 transition, value for value, because the committente asked for exactly that one: 300 ms
@@ -1063,6 +1123,12 @@ and the motion is the illustrator's own: every source SVG in the family carries 
 of dropping it. The sun turns once in 45 seconds, the moon rocks, cloud banks drift, drops
 fall in 0.7 seconds and out of step with each other, the bolt flickers. Nothing was
 invented here; a rewrite would have been a second opinion about somebody else's drawing.
+
+**The sky moves with them** (15 ott 2026, §3.5, §3.9): the canvas' clouds drift with the wind,
+its stars twinkle, its rain and snow fall, under the same switch and the same rules as the
+icons — the reader's «weather that moves», the system's animations, the page at rest — and
+battery saver besides, because the sky is the one moving thing on the screen that costs a
+shader a frame.
 
 **Only the condition family moves.** A metric tile's mark labels a quantity — a barometer
 that spins forever is decoration, and §1.4 is where decoration goes. `mc3_not_available`
@@ -1282,8 +1348,8 @@ phase — lit limb toward the evening sun, the terminator an ellipse, the dark p
 earthshine — and is pale by day. Both are drawn inside their band, the halo spilling at most
 14dp past it, so neither can stand behind text and cost it contrast; the colors are
 `SkyPalette.SunHigh`, `SunLow` and `MoonFace`, shared by both palettes like `Moonlight`.
-Static: they move with the page's minute tick and cost one draw (§3.5 still holds — no
-particles, no parallax).
+Static: they move with the page's minute tick and cost one draw; the scene under them (§3.9)
+is what moves.
 
 The **hero** itself was re-set the same day: the whole degrees and the degree sign at the
 hero size (the tenths, first set at 55% on the same baseline, went on 24 set 2026 with

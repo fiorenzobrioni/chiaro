@@ -13615,7 +13615,7 @@ Il piano, in ordine di effetto sulla percezione e di costo:
   senza riordinare la griglia.
 - [x] 5. **La striscia delle ore compatta** (circa 150 dp): 7–8 colonne a 360 dp, la probabilità
   come corsia sotto le icone col linguaggio dei segni di pioggia del nastro, la prima colonna «Ora».
-- [ ] 6. **Il cielo con uno shader AGSL**: nuvole e pioggia dai dati (copertura, intensità, sole),
+- [x] 6. **Il cielo con uno shader AGSL**: nuvole e pioggia dai dati (copertura, intensità, sole),
   statico col movimento ridotto. Qui si decidono minSdk 34 e il budget dei 2 ms.
 - [ ] 7. **La settimana leggibile**: le due barre (temperature e nastro) sulla stessa estensione
   orizzontale, via le sette frecce a favore di un'indicazione più discreta.
@@ -13789,4 +13789,52 @@ card a 130 dp) e su una variante con la pioggia del pomeriggio (la forma che sal
 20%, la riga del massimo), guardate prima di togliere la variante. `StripCurveTest` invariato.
 `today-now` e `today-week` rigenerate; le altre identiche (il widget a meno di un antialiasing che
 l'occhio non vede, lasciato com'era). Suite completa e lint.
+
+### Punto 6: il cielo con uno shader AGSL (committente, 15 ott 2026)
+
+Il committente ha lasciato a questo passo le due decisioni aperte (minSdk 34, il budget dei 2 ms) e
+ha chiesto di dare precedenza alla resa, riscrivendo il DESIGN di conseguenza.
+
+- [x] **Il canvas è uno shader AGSL** (`SkyShaderSource`, `SkyShaderLayer`): il gradiente della
+  palette disegnato com'era (i tre stop, la stessa interpolazione), e sopra la scena (DESIGN §3.9):
+  cumuli nella copertura dell'ora, con il bordo verso il sole (o la luna) illuminato e schiacciati
+  verso l'orizzonte; cirri nella quota dello strato alto; stelle solo a notte buia e sgombra, meno
+  sotto la luna; pioggia e neve solo se l'ora è bagnata per il motore degli stati, all'intensità
+  del quarto d'ora misurato; le nuvole che scorrono col vento dell'ora, nel verso in cui soffia.
+- [x] **Il contratto dello scrim vale anche per la scena**: ogni pixel sotto la luminanza dello stop
+  più chiaro della palette, nello shader e nei colori delle nuvole calcolati in Kotlin.
+- [x] **Il movimento**: 15 fotogrammi al secondo per un cielo che scorre, 30 se cade qualcosa, un
+  fotogramma chiesto per passo e mai uno per vsync; fermo, come un fotogramma solo, con il «meteo che
+  si muove» spento, le animazioni di sistema ridotte, il risparmio energetico, la pagina o una
+  striscia in scorrimento, il canvas fuori schermo.
+- [x] Le immagini del README passano dal renderer hardware (`renderWindow`), perché un canvas
+  software non disegna un `RuntimeShader`; le altre immagini sono uscite identiche al pixel.
+- [x] DESIGN §3.5 riscritto, §3.9 nuovo, §7.1, VISION §4.2, la guida.
+
+**Decisioni e deviazioni.** *minSdk resta 33*: `RuntimeShader` è di Android 13, che è già il
+pavimento; passare a 34 non avrebbe dato niente allo shader. *Il budget dei 2 ms per fotogramma è
+sostituito* da un budget scritto in quello che un fotogramma fa (una ventina di campioni di rumore
+per pixel nel cielo peggiore, quasi nessuno in un cielo sereno) e in quando un fotogramma c'è (15 o
+30 al secondo, solo mentre il meteo può muoversi), con un obiettivo da misurare: **sotto i 3 ms di
+GPU per fotogramma su un telefono di fascia media**. *Il rumore è ruotato a ogni ottava*: senza, la
+griglia del rumore a valori disegnava «V» e strisce diagonali (visto sul campionario). *Il coperto
+appiattisce l'ombreggiatura*: con il contrasto pieno un cielo al 95% era un vortice di macchie. *La
+distorsione dei cumuli a due ottave*: piega le nuvole, il dettaglio lo danno le quattro di sotto, e
+costa quattro campioni in meno. *Il campionario dei cieli non va nel README*: le sue condizioni sono
+inventate, e la regola delle immagini lo vieta; è servito a guardare, ed è stato tolto.
+
+**Da verificare sul telefono** (non si può in un container senza GPU): il tempo di GPU per
+fotogramma del canvas (`adb shell dumpsys gfxinfo com.callbackdev.chiaro.debug framestats`, o il
+profilo GPU), in un cielo coperto e in uno con la pioggia, contro l'obiettivo dei 3 ms; e la
+sensazione del movimento: la velocità della deriva e lo scintillio.
+
+**Come è stato verificato.** `SkySceneTest` (nuovo): nessuna nuvola più chiara dello stop del
+contratto a ogni altitudine, copertura e pioggia, nelle due palette; il tetto tiene la tinta; stelle
+solo al buio, a cielo aperto, meno con la luna; pioggia e neve solo su un'ora bagnata; la deriva nel
+verso del vento, nei due emisferi, più veloce col vento più forte; la quota dei cirri.
+`SkyShaderCompileTest` (nuovo, Robolectric con la grafica nativa): lo shader compila con il
+compilatore AGSL vero e accetta ogni uniform che lo schermo imposta. Un campionario di nove cieli
+(sereno, sparse, coperto, cirri, ora d'oro, stelle, luna piena, pioggia, neve) disegnato con il
+renderer hardware e guardato a ogni ritocco; `today-now` rigenerata (il coperto di Milano ora è un
+cielo coperto); le altre identiche al pixel. Suite completa e lint.
 

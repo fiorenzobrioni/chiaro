@@ -565,10 +565,38 @@ class ReadmeScreenshots {
 
     private fun save(name: String) {
         compose.waitForIdle()
+        saveBitmap(name, renderWindow())
+    }
+
+    /**
+     * The activity's window drawn through the GPU pipeline, as the widgets are (15 ott 2026):
+     * the sky's shader is a `RuntimeShader`, which a software canvas refuses to draw, so a
+     * `View.draw` into a bitmap showed the gradient alone. Recorded into a `RenderNode` and
+     * rendered by a `HardwareRenderer` into an `ImageReader`, the same road `hardwareDraw`
+     * takes, without re-hosting the view.
+     */
+    private fun renderWindow(): Bitmap {
         val view = compose.activity.window.decorView
-        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-        view.draw(Canvas(bitmap))
-        saveBitmap(name, bitmap)
+        val width = view.width
+        val height = view.height
+        val node = RenderNode("window").apply { setPosition(0, 0, width, height) }
+        compose.runOnUiThread { view.draw(node.beginRecording()); node.endRecording() }
+        val reader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1)
+        val renderer = HardwareRenderer()
+        try {
+            renderer.setSurface(reader.surface)
+            renderer.setContentRoot(node)
+            renderer.createRenderRequest().setWaitForPresent(true).syncAndDraw()
+            reader.acquireNextImage().use { image ->
+                val plane = image.planes[0]
+                val padded = Bitmap.createBitmap(plane.rowStride / plane.pixelStride, height, Bitmap.Config.ARGB_8888)
+                padded.copyPixelsFromBuffer(plane.buffer)
+                return Bitmap.createBitmap(padded, 0, 0, width, height)
+            }
+        } finally {
+            renderer.destroy()
+            reader.close()
+        }
     }
 
     private fun saveBitmap(name: String, bitmap: Bitmap) {

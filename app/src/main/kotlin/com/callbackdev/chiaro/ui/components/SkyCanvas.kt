@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -64,34 +65,47 @@ fun SkyCanvas(
     modifier: Modifier = Modifier,
     minHeight: Dp = 280.dp,
     sheet: SkySheet? = null,
+    /** The scene the shader draws over the gradient (§3.9), or null for the gradient alone. */
+    scene: SkyScene? = null,
+    /** Whether the scene may move now (§3.9, §7.1). */
+    moving: Boolean = false,
     content: @Composable BoxScope.() -> Unit
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = minHeight)
-            .drawBehind {
-                drawRect(Brush.verticalGradient(gradient.stops()))
-                val lip = sheet?.lip?.toPx() ?: 0f
-                // The bottom band reaches its full scrim where the text ends, not at the
-                // bottom edge: with a sheet over the canvas the last [SkySheet.lip] of
-                // sky is under the page, and the band must not lose any of its alpha to
-                // it (§3.6 is measured at full strength).
-                val full = ((size.height - lip) / size.height).coerceIn(0.46f, 1f)
-                drawRect(
-                    Brush.verticalGradient(
-                        0.00f to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha),
-                        SkyCanvasTopScrimEnd to Color.Transparent,
-                        0.45f to Color.Transparent,
-                        full to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha),
-                        1.00f to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha)
+    ) {
+        // The sky first, then the scrims and the sheet over it, then what stands on it: the
+        // scene's clouds are under the scrim like the gradient, so §3.6 holds over them too.
+        if (scene != null) {
+            SkyShaderLayer(gradient = gradient, scene = scene, moving = moving, modifier = Modifier.matchParentSize())
+        }
+        Spacer(
+            modifier = Modifier
+                .matchParentSize()
+                .drawBehind {
+                    if (scene == null) drawRect(Brush.verticalGradient(gradient.stops()))
+                    val lip = sheet?.lip?.toPx() ?: 0f
+                    // The bottom band reaches its full scrim where the text ends, not at the
+                    // bottom edge: with a sheet over the canvas the last [SkySheet.lip] of
+                    // sky is under the page, and the band must not lose any of its alpha to
+                    // it (§3.6 is measured at full strength).
+                    val full = ((size.height - lip) / size.height).coerceIn(0.46f, 1f)
+                    drawRect(
+                        Brush.verticalGradient(
+                            0.00f to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha),
+                            SkyCanvasTopScrimEnd to Color.Transparent,
+                            0.45f to Color.Transparent,
+                            full to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha),
+                            1.00f to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha)
+                        )
                     )
-                )
-                if (sheet != null) drawSheet(sheet, gradient)
-            }
-            .padding(bottom = sheet?.lip ?: 0.dp),
-        content = content
-    )
+                    if (sheet != null) drawSheet(sheet, gradient)
+                }
+        )
+        Box(modifier = Modifier.padding(bottom = sheet?.lip ?: 0.dp), content = content)
+    }
 }
 
 /**

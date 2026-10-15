@@ -88,10 +88,41 @@ internal fun CanvasHeader(
     // inside the floor, not added to it: the skeleton quotes the floor, and the block
     // must still end where the skeleton's does.
     val sheet = SkySheet(surface = MaterialTheme.colorScheme.surface)
+    // The scene over the gradient (DESIGN §3.9): the hour's clouds, its light, its stars, what
+    // falls in it, moving with the wind while the weather may move — the reader's «weather that
+    // moves», the system's animations, battery saver and a page at rest all have to agree.
+    val palette = com.callbackdev.chiaro.ui.theme.ChiaroTheme.sky
+    val scene = remember(sky, gradient, palette) {
+        com.callbackdev.chiaro.ui.components.skyScene(
+            palette = palette,
+            gradient = gradient,
+            sunAltitudeDeg = sky.sunAltitudeDeg,
+            sunAzimuthDeg = sky.sunAzimuthDeg,
+            moonAltitudeDeg = sky.moonAltitudeDeg,
+            moonAzimuthDeg = sky.moonAzimuthDeg,
+            moonIllumination = sky.moonIllumination,
+            southern = sky.southern,
+            cloudPct = sky.cloudPct,
+            layers = sky.layers,
+            precipPct = sky.precipPct,
+            fall = sky.fall,
+            fallMmPerHour = sky.fallMmPerHour,
+            windKph = sky.windKph,
+            windFromDeg = sky.windFromDeg
+        )
+    }
+    val context = LocalContext.current
+    val saving = remember(context) { com.callbackdev.chiaro.data.PowerSaveState.of(context) }
+    val moving = com.callbackdev.chiaro.ui.icons.LocalAnimatedIcons.current &&
+        !com.callbackdev.chiaro.ui.theme.reducedMotion() &&
+        !com.callbackdev.chiaro.ui.icons.LocalMotionPaused.current &&
+        !saving.isOn()
     SkyCanvas(
         gradient = gradient,
         minHeight = floor,
         sheet = sheet,
+        scene = scene,
+        moving = moving,
         modifier = Modifier.onGloballyPositioned { canvasCoords = it }
     ) {
         // One column with the place row's seat at the top and the hero at the bottom,

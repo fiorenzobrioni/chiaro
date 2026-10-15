@@ -208,6 +208,9 @@ class SkyPalette internal constructor(
          * contract, and now `ScrimContractTest` guards the value the canvas actually
          * uses instead of a copy of it.
          */
+        /** The clouds' colour under a bright moon, before the gradient tints it (§3.9). */
+        val CloudNight = Color(0xFF8C95A8)
+
         val ScrimColor = Color(0xFF101216)
 
         /**
