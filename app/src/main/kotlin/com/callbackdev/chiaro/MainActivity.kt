@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
                 font = settings?.font ?: AppFont.GOOGLE_SANS
             ) {
                 CompositionLocalProvider(
-                    LocalWeatherIcons provides (settings?.weatherIcons ?: WeatherIcons.LINE),
+                    LocalWeatherIcons provides (settings?.weatherIcons ?: WeatherIcons.FILL),
                     LocalAnimatedIcons provides (settings?.animatedIcons ?: true)
                 ) {
                     ChiaroRoot(

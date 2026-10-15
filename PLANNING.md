@@ -13982,3 +13982,22 @@ finestra, l'altezza in parole ai suoi confini), `TodayAgendaTest`, la parità de
 resa in chiaro e in scuro, in italiano, e guardata, poi tolta: nessuna immagine del README la mostra,
 perché Milano registrata è asciutta per tutta la settimana e il README non inventa dati.
 
+### Tre ritocchi dal dispositivo (committente, 15 ott 2026)
+
+- [x] **«La pioggia dovrebbe smettere» sotto «Coperto»** (Manaus). Il gradino «già bagnato» della
+  frase leggeva lo stato della *prima ora* (16–17, qualche decimo di mm al 39%: per il motore degli
+  stati un'ora bagnata), mentre l'eroe e la cella «Ora» mostrano le condizioni *attuali* (l'ultimo
+  quarto d'ora, niente che cade): la frase annunciava la fine di una pioggia che lo schermo diceva
+  assente. Ora quel gradino legge lo stesso «adesso» dell'eroe (`report.current`); gelo e nebbia
+  continuano a leggere la prima ora, come prima. Un'ora che sarà bagnata senza esserlo adesso è dei
+  gradini successivi: a Manaus, con il massimo al 44%, sotto la soglia dell'ombrello e del «possibile»,
+  la frase non parla di pioggia. Nuovo caso in `HeadlineEngineTest`.
+- [x] **Le icone piene sono il predefinito** (prima a tratto, dal 6 set): le icone ora stanno sulla
+  carta (ore, settimana, agenda), dove le forme piene portano i colori a colpo d'occhio. Chi non ha mai
+  toccato l'impostazione cambia con l'aggiornamento; la scelta resta in Impostazioni. Le immagini del
+  README rigenerate e guardate tutte (dodici cambiano).
+- [x] **L'anteprima dell'aspetto in Impostazioni aggiornata**: il cielo è quello di Oggi (la scena
+  con le nuvole, ferma, e il sole dove Oggi lo disegnerebbe) e non più un gradiente piatto; l'icona
+  sta sulla carta accanto al verdetto, dove vivono le icone di Oggi; e la parola concorda col numero:
+  il 20% di nuvole è «Quasi sereno», non il «Nuvoloso» che diceva sopra «nuvole 20%».
+

@@ -45,11 +45,14 @@ class HeadlineEngineTest {
         hours: List<Hour>,
         windKph: Double = 12.5,
         gustKph: Double = 18.0,
-        start: LocalDateTime = now
+        start: LocalDateTime = now,
+        /** What is falling now, as the hero shows it; by default the first hour's sky. */
+        currentCondition: WeatherCondition? = null
     ) =
         sampleWeatherReport().let { sample ->
             sample.copy(
                 current = sample.current.copy(
+                    condition = currentCondition ?: hours.firstOrNull()?.condition ?: sample.current.condition,
                     wind = Wind(speedKph = windKph, directionCompass = "NW", degree = 310, gustKph = gustKph)
                 ),
                 hourly = hours.mapIndexed { i, hour ->
@@ -321,6 +324,20 @@ class HeadlineEngineTest {
         val headline = HeadlineEngine.headline(report, now) as Headline.WetNow
         assertEquals(now.plusHours(3), headline.stopsAt)
         assertEquals(Headline.Falling.RAIN, headline.falling)
+    }
+
+    /** Manaus, 15 ott 2026: the hour under way holds a little rain at 39%, nothing falls now,
+     * and the hero says overcast. The sentence must not announce the end of a rain the screen
+     * says is not there. */
+    @Test
+    fun `a wet hour with nothing falling now is not rain stopping`() {
+        val overcast = WeatherCondition(3)
+        val report = report(
+            listOf(rain at 39, rain at 43, overcast at 44, overcast at 43, overcast at 39) + quiet(20),
+            currentCondition = overcast
+        )
+        val headline = HeadlineEngine.headline(report, now)
+        assertTrue("not wet now: $headline", headline !is Headline.WetNow)
     }
 
     @Test

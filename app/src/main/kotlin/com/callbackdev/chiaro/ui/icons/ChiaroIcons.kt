@@ -19,7 +19,7 @@ import com.callbackdev.chiaro.ui.today.WeatherText
 
 /**
  * The reader's icon style, provided by `MainActivity` from the settings alongside the
- * theme. LINE is the default a fresh install sees (6 set 2026); the accessors below read
+ * theme. FILL is the default a fresh install sees (15 ott 2026; LINE from 6 set); the accessors below read
  * this so every screen switches together, with no screen ever asked to care.
  *
  * `WeatherIcons.FILL` means Meteocons' **`flat`** since Fase 13, and the enum kept its
@@ -28,7 +28,7 @@ import com.callbackdev.chiaro.ui.today.WeatherText
  * constant would migrate a stored preference and rewrite a settings string, both to
  * describe the same drawing.
  */
-val LocalWeatherIcons = staticCompositionLocalOf { WeatherIcons.LINE }
+val LocalWeatherIcons = staticCompositionLocalOf { WeatherIcons.FILL }
 
 /**
  * The weather icon set, behind one lookup (DESIGN.md §4.5, §13.1): **Meteocons v3**

@@ -124,13 +124,13 @@ data class AppSettings(
      * not by this app.
      */
     val font: AppFont = AppFont.GOOGLE_SANS,
-    /** LINE by default (decision, 6 set 2026 — the default moves, the choice stays).
-     * The outlined drawings keep one weight of ink on a screen whose hero is already a
-     * painted sky, and at the sizes Today now uses (§13.1's ladder, 30-38dp) they read
-     * as fast as the solid ones did at 24-32. The fill set stays one Settings tap away.
-     * An install that never opened this setting flips on upgrade: that is what a default
-     * is, and moving it for those readers is the point of the change. */
-    val weatherIcons: WeatherIcons = WeatherIcons.LINE,
+    /** FILL by default since 15 ott 2026 (committente), LINE before it from 6 set 2026 — the
+     * default moves, the choice stays. Since the second review of Today the icons no longer
+     * stand on the painted sky but on the paper, in the hours, the week and the agenda, where
+     * the solid shapes carry their colours at a glance and the outlines read thin. The line
+     * set stays one Settings tap away. An install that never opened this setting flips on
+     * upgrade: that is what a default is, and moving it for those readers is the point. */
+    val weatherIcons: WeatherIcons = WeatherIcons.FILL,
     /**
      * Whether the weather icons move (DESIGN §7.1): Meteocons' own SMIL, carried over as
      * AnimatedVectorDrawables. On by default — it is the thing the reader is meant to
@@ -194,7 +194,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 dynamicColor = prefs[DynamicColor] ?: false,
                 palette = enumOrDefault(prefs[Palette], AppPalette.VIVID),
                 font = enumOrDefault(prefs[FontChoice], AppFont.GOOGLE_SANS),
-                weatherIcons = enumOrDefault(prefs[IconStyle], WeatherIcons.LINE),
+                weatherIcons = enumOrDefault(prefs[IconStyle], WeatherIcons.FILL),
                 animatedIcons = prefs[AnimatedIcons] ?: true,
                 skyEnabled = prefs[SkyEnabled] ?: true,
                 // 0 is how "off" is stored: an Int? preference cannot hold null, and

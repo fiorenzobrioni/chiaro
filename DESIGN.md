@@ -2642,8 +2642,10 @@ a valid animator and only a person can say the rain falls downward.
    **Two styles, `line` and `flat`** (`WeatherIcons.LINE` / `.FILL` — the enum kept its
    old constant because v3's `flat` IS what this app already shipped as its filled set:
    the v2 `fill` with every gradient flattened by the importer). `fill` and `monochrome`
-   are converted too and shipped by nothing. Line is the default a fresh install sees
-   (6 set 2026), and v3's line is not v2's: it is not a traced stroke but a filled
+   are converted too and shipped by nothing. **Flat (filled) is the default a fresh install
+   sees since 15 ott 2026** (committente; line from 6 set): the icons stand on the paper now,
+   in the hours, the week and the agenda, where the solid shapes carry their colours at a
+   glance. v3's line is not v2's: it is not a traced stroke but a filled
    `evenOdd` ring, which Android draws natively and which needs no stroke conversion at
    all.
 
