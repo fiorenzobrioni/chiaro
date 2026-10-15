@@ -136,6 +136,7 @@
     <string name="metric_visibility">Visibilità</string>
     <string name="metric_air">Qualità aria</string>
     <string name="metric_pollen">Pollini</string>
+    <string name="metric_notable_state">Da notare oggi</string>
 
     <!-- Griglia dettagli: i fatti sotto un valore (revisione delle card, 8 set 2026).
          Le famiglie di polline sono minuscole per stare in un elenco; la card mette
@@ -444,7 +445,7 @@
     <string name="guide_today_week_body">Sette giorni su un\'unica scala di temperatura, così la stessa lunghezza di barra significa la stessa cosa su ogni riga. Sotto ogni giorno c\'è il suo nastro, che dice quando è sereno, quando si copre e quando piove. La freccia in fondo alla riga dice che il giorno si apre: toccalo e si apre dentro la sua riga, dove sopra le sue ore trovi quanta pioggia e per quante ore, la neve, le raffiche più forti e l\'UV massimo, ciascuno con cosa vuol dire, e solo quelli che quel giorno dicono qualcosa.</string>
     <string name="guide_today_week_caption">Un esempio. La barra va dalla minima alla massima del giorno, dal blu del freddo all\'arancio del caldo, e il pallino è la temperatura di adesso. Il nastro è il giorno da mezzanotte a mezzanotte: azzurro dove è sereno, grigio dove si copre, tenue alle due estremità, che sono la notte, e nella parte di oggi già passata; i trattini sotto sono le ore di pioggia o di neve.</string>
     <string name="guide_today_details_title">I dettagli</string>
-    <string name="guide_today_details_body">La pioggia di oggi in millimetri, la neve quando c\'è, UV, vento con le raffiche, le nuvole con il tipo che le fa (alte e sottili, un sole velato; basse, una giornata grigia), umidità e punto di rugiada, pressione e dove sta andando, visibilità, qualità dell\'aria — sull\'indice europeo per i luoghi in Europa — e pollini, sulle soglie di ciascuna specie. Ogni numero porta con sé la riga che dice cosa farne, che è l\'unico motivo per cui sta sullo schermo.</string>
+    <string name="guide_today_details_body">La pioggia di oggi in millimetri, la neve quando c\'è, UV, vento con le raffiche, le nuvole con il tipo che le fa (alte e sottili, un sole velato; basse, una giornata grigia), umidità e punto di rugiada, pressione e dove sta andando, visibilità, qualità dell\'aria — sull\'indice europeo per i luoghi in Europa — e pollini, sulle soglie di ciascuna specie. Ogni numero porta con sé la riga che dice cosa farne, che è l\'unico motivo per cui sta sullo schermo. Nei giorni in cui uno di loro conta, il suo riquadro si distingue, e solo quello: la pioggia di una giornata bagnata, la neve, il vento forte, l\'aria cattiva, un UV alto, pollini alti, la nebbia o l\'aria afosa. Quasi sempre nessuno.</string>
     <string name="guide_today_details_caption">Un esempio: due dettagli, ognuno con la riga che dice cosa farne.</string>
     <string name="guide_today_changed_title">Cosa è cambiato</string>
     <string name="guide_today_changed_body">Quando l\'ultimo aggiornamento sposta i giorni che vengono, fino a tre righe dicono come: il giorno e se è migliorato o peggiorato, con sotto i numeri che si sono mossi.</string>

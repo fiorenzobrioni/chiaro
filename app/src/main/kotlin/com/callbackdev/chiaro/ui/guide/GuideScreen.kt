@@ -521,7 +521,7 @@ private fun MetricSample() {
     // Two segments of the details grid, as Today draws them (15 ott 2026).
     Row(horizontalArrangement = Arrangement.spacedBy(SegmentGap)) {
         MetricTile(
-            icon = ChiaroIcons.uv,
+            icon = com.callbackdev.chiaro.ui.icons.MetricIcons.uv,
             label = stringResource(R.string.metric_uv),
             value = "7",
             meaning = stringResource(R.string.uv_meaning_high),
@@ -530,7 +530,7 @@ private fun MetricSample() {
             modifier = Modifier.weight(1f)
         )
         MetricTile(
-            icon = ChiaroIcons.humidity,
+            icon = com.callbackdev.chiaro.ui.icons.MetricIcons.humidity,
             label = stringResource(R.string.metric_humidity),
             value = "62%",
             meaning = stringResource(R.string.dew_meaning_pleasant),

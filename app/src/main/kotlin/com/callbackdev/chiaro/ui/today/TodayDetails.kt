@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,7 +38,7 @@ import com.callbackdev.chiaro.ui.components.pressureTrack
 import com.callbackdev.chiaro.ui.components.rainTrack
 import com.callbackdev.chiaro.ui.components.uvTrack
 import com.callbackdev.chiaro.ui.format.Formats
-import com.callbackdev.chiaro.ui.icons.ChiaroIcons
+import com.callbackdev.chiaro.ui.icons.MetricIcons
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.theme.reflowForText
@@ -91,7 +92,8 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
             val hours = today.precipHours?.takeIf { !snowy && mm >= 0.2 && it >= 1.0 }
             add(
                 Tile(
-                    icon = { ChiaroIcons.precipitation },
+                    kind = DetailKind.RAIN,
+                    icon = { MetricIcons.rain },
                     label = R.string.metric_rain,
                     value = Formats.millimetres(mm, locale),
                     meaning = WeatherText.rainMeaning(mm),
@@ -115,7 +117,8 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
         today?.snowCm?.takeIf { it >= 0.1 }?.let { cm ->
             add(
                 Tile(
-                    icon = { ChiaroIcons.snow },
+                    kind = DetailKind.SNOW,
+                    icon = { MetricIcons.snow },
                     label = R.string.metric_snow,
                     value = Formats.centimetres(cm, locale),
                     meaning = WeatherText.snowMeaning(cm),
@@ -147,7 +150,8 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
         current.uvIndex?.let { uvNow ->
             add(
                 Tile(
-                    icon = { ChiaroIcons.uv(uvNow) },
+                    kind = DetailKind.UV,
+                    icon = { MetricIcons.uv },
                     label = R.string.metric_uv,
                     value = uvNow.toString(),
                     meaning = WeatherText.uvMeaning(uvNow),
@@ -155,11 +159,7 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
                     // Only while it is news: a peak that equals the reading is the tile
                     // printing its own number twice.
                     note = today?.uvIndexMax?.takeIf { it > uvNow }
-                        ?.let { stringResource(R.string.uv_peak_today, it) },
-                    // The one tile whose glyph is not on the ladder's tile rung: the
-                    // drawing carries the index as a badge, and at 38dp that badge read
-                    // smaller than the pollen tile's. See [WeatherIconSize.TileUv].
-                    iconSize = WeatherIconSize.TileUv
+                        ?.let { stringResource(R.string.uv_peak_today, it) }
                 )
             )
         }
@@ -167,7 +167,8 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
         val gusty = WeatherText.gustsMaterial(wind.speedKph, wind.gustKph)
         add(
             Tile(
-                icon = { ChiaroIcons.wind },
+                kind = DetailKind.WIND,
+                icon = { MetricIcons.wind },
                 label = R.string.metric_wind,
                 value = Formats.wind(wind.speedKph, units.windSpeed, locale),
                 // On a gusty day the wind a body feels is the gust, and the advice
@@ -202,7 +203,8 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
             val layer = current.cloudLayers?.dominant()
             add(
                 Tile(
-                    icon = { ChiaroIcons.cloudCover },
+                    kind = DetailKind.CLOUD,
+                    icon = { MetricIcons.cloud },
                     label = R.string.metric_cloud,
                     value = Formats.percent(total, locale),
                     meaning = WeatherText.cloudMeaning(total, layer, content.night),
@@ -213,7 +215,8 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
         }
         add(
             Tile(
-                icon = { ChiaroIcons.humidity },
+                kind = DetailKind.HUMIDITY,
+                icon = { MetricIcons.humidity },
                 label = R.string.metric_humidity,
                 value = Formats.percent(current.humidityPct, locale),
                 meaning = WeatherText.dewPointMeaning(current.dewPointC),
@@ -230,7 +233,8 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
         val trend = WeatherText.pressureTrend(report.hourly)
         add(
             Tile(
-                icon = { ChiaroIcons.pressure },
+                kind = DetailKind.PRESSURE,
+                icon = { MetricIcons.pressure },
                 label = R.string.metric_pressure,
                 value = Formats.pressure(current.pressureMb, locale),
                 meaning = WeatherText.pressureMeaning(current.pressureMb, trend),
@@ -244,7 +248,8 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
         current.visibilityKm?.let { km ->
             add(
                 Tile(
-                    icon = { ChiaroIcons.visibility(km) },
+                    kind = DetailKind.VISIBILITY,
+                    icon = { MetricIcons.visibility },
                     label = R.string.metric_visibility,
                     value = Formats.kilometers(km, locale),
                     meaning = WeatherText.visibilityMeaning(km)
@@ -257,7 +262,8 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
         report.airQuality?.let { air ->
             add(
                 Tile(
-                    icon = { ChiaroIcons.airQuality },
+                    kind = DetailKind.AIR,
+                    icon = { MetricIcons.air },
                     label = R.string.metric_air,
                     value = air.shownIndex.toString(),
                     meaning = WeatherText.airMeaning(air),
@@ -270,7 +276,8 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
             val families = WeatherText.pollenFamiliesAtWorst(pollen).map { stringResource(it) }
             add(
                 Tile(
-                    icon = { ChiaroIcons.pollen(pollen) },
+                    kind = DetailKind.POLLEN,
+                    icon = { MetricIcons.pollen },
                     label = R.string.metric_pollen,
                     value = stringResource(WeatherText.pollenLevel(worst)),
                     meaning = WeatherText.pollenMeaning(worst),
@@ -289,6 +296,20 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
             )
         }
     }
+    // Today's one tile to notice, if any (`notableDetail`): the grid keeps its order.
+    val notable = notableDetail(
+        rainMm = today?.rainMm,
+        snowCm = today?.snowCm,
+        windShownKph = current.wind.let {
+            if (WeatherText.gustsMaterial(it.speedKph, it.gustKph)) it.gustKph else it.speedKph
+        },
+        dayGustKph = today?.gustMaxKph,
+        air = report.airQuality,
+        uvNow = current.uvIndex,
+        pollen = report.pollen?.let { WeatherText.pollenWorst(it) },
+        visibilityKm = current.visibilityKm,
+        dewPointC = current.dewPointC
+    )
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         // An estimated now says so where its numbers are (DESIGN §1.1, 24 set 2026): the
         // tiles below are the forecast for this hour, and the air and pollen still what
@@ -331,9 +352,9 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
                             track = tile.track,
                             detail = tile.detail,
                             note = tile.note,
-                            iconSize = tile.iconSize,
+                            notable = tile.kind == notable,
                             shape = gridSegmentShape(rowIndex, rows.size, colIndex, rowTiles.size),
-                            modifier = Modifier.weight(1f).fillMaxHeight()
+                            modifier = Modifier.weight(1f).fillMaxHeight().heightIn(min = DetailTileMinHeight)
                         )
                     }
                 }
@@ -366,6 +387,9 @@ internal fun WindDirection(fromDegrees: Int) {
 }
 
 internal data class Tile(
+    /** Which quantity, for which tile is today's to notice. */
+    val kind: DetailKind,
+    /** The eyebrow's glyph ([MetricIcons]). */
     val icon: @Composable () -> androidx.compose.ui.graphics.vector.ImageVector,
     val label: Int,
     val value: String,
@@ -375,7 +399,14 @@ internal data class Tile(
     /** A composed fact about the value (where the wind comes from). */
     val detail: (@Composable () -> Unit)? = null,
     /** A printed fact about the value (gusts, dew point, which pollen). */
-    val note: String? = null,
-    /** The glyph's box, where it is not the ladder's tile rung (UV, and only UV). */
-    val iconSize: Dp = WeatherIconSize.Tile
+    val note: String? = null
 )
+
+/**
+ * Every row of the grid at least this tall (second review of Today, 15 ott 2026): the tallest
+ * tile a day commonly draws — the eyebrow, the reading, a track, a note and the meaning, 158dp
+ * at 100% type — so a row of two short tiles stands as tall as a row with a scale in it, and
+ * the grid reads as a grid. A tile with more to say grows past it.
+ */
+private val DetailTileMinHeight = 160.dp
+

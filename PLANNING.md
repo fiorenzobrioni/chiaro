@@ -13610,7 +13610,7 @@ Il piano, in ordine di effetto sulla percezione e di costo:
 - [x] 3. **Un hero che si trasforma**: un'intestazione collassabile su `nestedScroll`, la
   temperatura che viaggia nella barra (elemento condiviso), la temperatura più grande, massima e
   minima del giorno nell'hero.
-- [ ] 4. **I dettagli uniformi**: un solo stile di icone (monocromo, `onSurfaceVariant`), gli
+- [x] 4. **I dettagli uniformi**: un solo stile di icone (monocromo, `onSurfaceVariant`), gli
   indicatori in una famiglia sola, le altezze pari, il riquadro notevole del giorno in evidenza
   senza riordinare la griglia.
 - [ ] 5. **La striscia delle ore compatta** (circa 150 dp): 7–8 colonne a 360 dp, la probabilità
@@ -13718,4 +13718,40 @@ fondo, la barra dice la temperatura a TalkBack. Una sequenza di scorrimento (0, 
 200, 300 dp) disegnata sul Milano e guardata fotogramma per fotogramma. Le immagini `today-*` del
 README rigenerate (la cifra più grande, la riga delle temperature del giorno, la cifra agganciata
 nelle viste scorse); le altre identiche al pixel. Suite completa e lint.
+
+### Punto 4: i dettagli uniformi (committente, 15 ott 2026)
+
+- [x] **Le intestazioni in un inchiostro solo.** Il glifo della grandezza alla misura della sua
+  etichetta (20 dp, era un Meteocon da 34–38) e l'etichetta, tutti e due in `onSurfaceVariant`.
+  I glifi sono dieci Material Icons contornate (`MetricIcons`: ombrello, fiocco, sole, aria,
+  nuvola, goccia, manometro, occhio, particelle, fiore), copiate col loro tracciato invariato dal
+  jar dei sorgenti di `material-icons-extended` 1.7.8 invece di dipendere dalla libreria.
+- [x] **Gli indicatori in una famiglia sola**: a riposo ogni scala è lo stesso binario,
+  l'inchiostro al 12%; il colore della grandezza solo fino al valore. Erano l'intera rampa al 40%
+  sotto ogni riquadro, sei arcobaleni in sei tinte.
+- [x] **Le altezze pari**: il valore in alto, i fatti e la conseguenza ancorati in fondo, così
+  due riquadri affiancati allineano valori e conseguenze; ogni riga alta almeno 160 dp.
+- [x] **Il riquadro da notare** (`notableDetail`): al più uno, quasi sempre nessuno, su
+  `secondaryContainer` con la conseguenza un gradino più su e «Da notare oggi» per TalkBack; le
+  soglie sono quelle in cui la frase del riquadro cambia, e la griglia non si riordina mai.
+- [x] La guida dice del riquadro da notare; la riga delle Material Icons in `licenses/README.md`.
+
+**Decisioni e deviazioni.** *Non Meteocons tinte*: il piano diceva «un solo stile monocromo», e
+la strada corta era tingere i disegni che c'erano; il 4 set 2026 il telefono aveva già mostrato
+che una tinta piatta riduce un Meteocon alla sua sagoma («due sembrano uguali»). Servivano glifi
+disegnati per essere letti in un inchiostro solo. *Copiate e non dipendenza*: la libreria sono
+migliaia di icone da compilare e dexare per dieci, e il progetto copiava già allo stesso modo il
+`place` del widget. *Le tinte delle grandezze restano* (la rampa di ciascuna, §2.3): la revisione
+del 23 set aveva tolto proprio il colore unico, che diceva «quanto» senza dire «di cosa»; qui il
+colore resta sul valore e sparisce dal resto della scala. *Il riquadro da notare non è un colore
+che dice da solo una cosa* (§10): la riga della conseguenza la dice già a parole, l'enfasi la
+indica soltanto. *Le icone Meteocons delle grandezze restano* per Avvisi, il giorno aperto e i
+widget; due accessori rimasti senza utenti (`cloudCover`, `visibility(km)`) sono stati tolti.
+
+**Come è stato verificato.** `DetailsNotableTest` (nuovo): un giorno qualunque non ha niente da
+notare; ogni soglia scatta dove scatta la sua frase; l'aria sulla scala del luogo; uno solo,
+nell'ordine detto. Disegnati sul Milano, oltre all'immagine del README, una variante con UV 8 in
+tema chiaro e scuro, guardate prima di toglierle. `today-details` rigenerata; le altre identiche
+al pixel (la guida compresa: i suoi riquadri d'esempio stanno sotto la piega dell'immagine).
+Suite completa e lint.
 

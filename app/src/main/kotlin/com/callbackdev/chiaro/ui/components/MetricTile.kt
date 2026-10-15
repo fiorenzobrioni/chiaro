@@ -1,6 +1,12 @@
 package com.callbackdev.chiaro.ui.components
 
 import androidx.compose.foundation.Canvas
+import com.callbackdev.chiaro.ui.icons.MetricIcons
+import com.callbackdev.chiaro.ui.theme.forText
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,8 +37,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.callbackdev.chiaro.ui.icons.ChiaroIcons
-import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.theme.GroupCorner
 import com.callbackdev.chiaro.ui.theme.LocalChiaroType
 
@@ -44,15 +48,19 @@ import com.callbackdev.chiaro.ui.theme.LocalChiaroType
  * the home screen, it belongs in the details sheet. UV 7 is not information; "burns in
  * about 25 minutes" is.
  *
- * The tile's lines, top to bottom, since the card review of 8 set 2026: the icon and
- * the label; the value as a **reading** (`ChiaroType.readingValue`, 24sp light tabular — the hero's
- * voice at a tile's scale, because at 16sp the value barely outranked its own label); an
- * optional [track], the quantity's own scale anchored to the world (UV 0–11, humidity
- * 0–100, air 0–300, pressure around 1013, pollen's four levels), in its own hue with a
- * disc on the value since 23 set 2026 ([QuantityTrack]), so the eye gets "where on the
- * scale" before the number is read; an optional [detail] and [note], the facts behind the
- * value (where the wind comes from, its gusts, which pollen, the dew point) in the ink
- * of a fact; and the [meaning], the consequence, quiet and last.
+ * Two groups, since the second review of Today (15 ott 2026): at the **top** the eyebrow —
+ * the quantity's glyph and its label in one quiet ink ([MetricIcons]) — the value as a
+ * **reading** (`ChiaroType.readingValue`, 24sp light tabular, the hero's voice at a tile's
+ * scale) and its [track], the quantity's own scale anchored to the world; at the **foot** the
+ * facts behind the value ([detail], [note]) and the [meaning], the consequence, quiet and
+ * last. The foot is pushed to the tile's bottom, so the two tiles of a row, which share a
+ * height, put their values on one line and their meanings on another, whatever each holds.
+ *
+ * [notable] is the one tile of the grid that says something today (`DetailsNotable`): it
+ * stands on `secondaryContainer` and its meaning is set a step up, `bodyMedium` in the
+ * container's ink. The emphasis carries no fact of its own — the meaning line already says,
+ * in words, why the tile matters — so nothing is said by colour alone (§10); TalkBack hears
+ * «worth noting» with it.
  */
 @Composable
 fun MetricTile(
@@ -68,74 +76,72 @@ fun MetricTile(
     detail: (@Composable () -> Unit)? = null,
     /** A printed fact about the value: the gusts, the dew point, which pollen. */
     note: String? = null,
-    /**
-     * The glyph's box. [WeatherIconSize.Tile] for every tile but UV, which draws its own
-     * value inside the drawing and needs [WeatherIconSize.TileUv] for that value to read
-     * at the size the pollen tile's does — the arithmetic is there, not here.
-     */
-    iconSize: Dp = WeatherIconSize.Tile,
     /** The tile's corners: alone, the groups' 20dp; in the details grid, its segment's
      * ([gridSegmentShape]). */
     shape: Shape = RoundedCornerShape(GroupCorner),
+    /** The grid's one tile that matters today. */
+    notable: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {
+    val ground = if (notable) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer
+    val ink = if (notable) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface
+    val quiet = if (notable) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+    val worthNoting = androidx.compose.ui.res.stringResource(com.callbackdev.chiaro.R.string.metric_notable_state)
     Surface(
-        modifier = modifier.fillMaxWidth().let { if (onClick != null) it.clickable(onClick = onClick) else it },
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        // The groups' corners since the review of Today (15 ott 2026, DESIGN §6): at
-        // Material's 12 the grid was the one block of the app still cut from the old
-        // paper, beside the Sky's and the Alerts' 20 and 28.
+        modifier = modifier
+            .fillMaxWidth()
+            .let { if (onClick != null) it.clickable(onClick = onClick) else it }
+            .let { if (notable) it.semantics { stateDescription = worthNoting } else it },
+        color = ground,
+        contentColor = ink,
+        // The groups' corners since the review of Today (15 ott 2026, DESIGN §6).
         shape = shape
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            // The header holds one line by construction, never by truncation: on a
-            // 360dp screen the two columns leave the label 80dp beside the 38dp icon
-            // (94 before the ladder's first step on 6 set, 88 before its third on 8
-            // set), so the eight labels are written to fit that budget rather than
-            // trimmed with an ellipsis — the widest of them, «Qualità aria», measures
-            // 76.7dp. A label that outgrows the budget (a huge font scale) wraps and
-            // keeps its words, which is the honest way to fail. UV spends 17dp more of
-            // that budget than the rest ([WeatherIconSize.TileUv], 12 set 2026) and can
-            // afford to: its label is the two letters «UV».
+        Column(modifier = Modifier.padding(16.dp)) {
+            // The eyebrow holds one line by construction, never by truncation: the glyph is
+            // the label's own size now (20dp, it was a 38dp drawing), which leaves the label
+            // some 100dp on a 360dp screen where the widest, «Qualità aria», wants 77. A label
+            // that outgrows it (a huge font scale) wraps and keeps its words.
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null, // the label right beside it says the word
-                    // DESIGN.md §13.1: the icons keep their own colors, here as
-                    // everywhere else (HourStrip, DayRow, TimelineRow). A flat tint
-                    // collapses a Meteocon into its silhouette, and the details grid is
-                    // where that costs the most: the humidity drop loses the white %
-                    // that makes it humidity and becomes any other drop, the barometer
-                    // loses its needle and becomes a disc, the three particles of the
-                    // air-quality mark merge into one blob. Reported from a device
-                    // (4 set 2026): «due sembrano uguali».
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(iconSize)
+                    tint = quiet,
+                    modifier = Modifier.size(EyebrowIcon.forText())
                 )
                 Text(
                     text = label,
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = quiet
                 )
             }
-            Text(text = value, style = LocalChiaroType.current.readingValue)
-            track?.let { QuantityTrack(scale = it, modifier = Modifier.padding(vertical = 2.dp)) }
-            detail?.invoke()
-            note?.let { Text(text = it, style = MaterialTheme.typography.bodyMedium) }
             Text(
-                text = meaning,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = value,
+                style = LocalChiaroType.current.readingValue,
+                modifier = Modifier.padding(top = 8.dp)
             )
+            track?.let {
+                QuantityTrack(scale = it, ground = ground, modifier = Modifier.padding(top = 6.dp, bottom = 2.dp))
+            }
+            Spacer(modifier = Modifier.weight(1f).heightIn(min = 8.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                detail?.invoke()
+                note?.let { Text(text = it, style = MaterialTheme.typography.bodyMedium) }
+                Text(
+                    text = meaning,
+                    style = if (notable) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodySmall,
+                    color = quiet
+                )
+            }
         }
     }
 }
+
+/** The eyebrow's glyph: the label's own size. */
+private val EyebrowIcon = 20.dp
 
 /**
  * A world scale for [QuantityTrack]: where the value sits on it, the ramp that paints
@@ -173,8 +179,19 @@ data class TrackScale(
  * No semantics: the number it depicts is printed right above it (§9.3).
  */
 @Composable
-fun QuantityTrack(scale: TrackScale, modifier: Modifier = Modifier) {
-    val gap = MaterialTheme.colorScheme.surfaceContainer
+fun QuantityTrack(
+    scale: TrackScale,
+    modifier: Modifier = Modifier,
+    /** What the track stands on: its band gaps and the marker's ring are cut from it. */
+    ground: Color = MaterialTheme.colorScheme.surfaceContainer
+) {
+    val gap = ground
+    // At rest every scale is one track (second review of Today, 15 ott 2026): the quantity's
+    // hue only where the value has reached, so a grid of six scales is six lengths of colour
+    // on one grey, not six rainbows at 40%.
+    // The ink at 12%, Material's own rest for a track, so it reads on the plain tile and on
+    // the notable one alike: `surfaceContainerHighest` stood 1.11:1 off the tile and vanished.
+    val rest = MaterialTheme.colorScheme.onSurface.copy(alpha = RestAlpha)
     val ring = MaterialTheme.colorScheme.outline
     val colors = com.callbackdev.chiaro.ui.theme.ChiaroTheme.colors
     val at = colors.rampAt(scale.ramp, scale.fraction)
@@ -195,11 +212,10 @@ fun QuantityTrack(scale: TrackScale, modifier: Modifier = Modifier) {
             repeat(segments) { i ->
                 val left = i * (step + gapPx)
                 drawRoundRect(
-                    color = colors.rampAt(scale.ramp, (i + 0.5f) / segments),
+                    color = if (i <= lit) colors.rampAt(scale.ramp, (i + 0.5f) / segments) else rest,
                     topLeft = Offset(left, top),
                     size = Size(step, trackHeight),
-                    cornerRadius = radius,
-                    alpha = if (i <= lit) 1f else RestAlpha
+                    cornerRadius = radius
                 )
             }
             val center = Offset(lit * (step + gapPx) + step / 2f, size.height / 2f)
@@ -207,11 +223,10 @@ fun QuantityTrack(scale: TrackScale, modifier: Modifier = Modifier) {
             return@Canvas
         }
         drawRoundRect(
-            brush = brush,
+            color = rest,
             topLeft = Offset(0f, top),
             size = Size(size.width, trackHeight),
-            cornerRadius = radius,
-            alpha = RestAlpha
+            cornerRadius = radius
         )
         val from = if (scale.diverging) size.width / 2f else 0f
         val left = minOf(from, x)
@@ -253,7 +268,7 @@ private fun DrawScope.marker(center: Offset, radius: Float, fill: Color, ground:
 private val TrackHeight = 6.dp
 private val MarkerSize = 14.dp
 private val TickGap = 2.dp
-private const val RestAlpha = 0.4f
+private const val RestAlpha = 0.12f
 
 // The five scales of the details grid (DESIGN §8.6), each anchored to the world and
 // written once, so the grid and the guide's sample cannot draw two different UV tracks.
@@ -351,12 +366,12 @@ private fun MetricTilePreview() {
     com.callbackdev.chiaro.ui.theme.ChiaroTheme(dynamicColor = false) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             MetricTile(
-                icon = ChiaroIcons.uv,
+                icon = MetricIcons.uv,
                 label = "UV", value = "7", meaning = "Scotta in circa 25 minuti",
                 track = uvTrack(7)
             )
             MetricTile(
-                icon = ChiaroIcons.wind,
+                icon = MetricIcons.wind,
                 label = "Vento", value = "12 km/h", meaning = "Tieni il cappello",
                 detail = {
                     Text(text = "da nord-est", style = MaterialTheme.typography.bodyMedium)
@@ -364,14 +379,14 @@ private fun MetricTilePreview() {
                 note = "Raffiche fino a 45 km/h"
             )
             MetricTile(
-                icon = ChiaroIcons.humidity,
+                icon = MetricIcons.humidity,
                 label = "Umidità", value = "44%", meaning = "Gradevole",
                 track = humidityTrack(44),
                 note = "Punto di rugiada 12°"
             )
             MetricTile(
-                icon = ChiaroIcons.pollen,
-                label = "Pollini", value = "Alti", meaning = "Giornata dura per chi è allergico",
+                icon = MetricIcons.pollen,
+                label = "Pollini", notable = true, value = "Alti", meaning = "Giornata dura per chi è allergico",
                 note = "Graminacee e alberi"
             )
         }

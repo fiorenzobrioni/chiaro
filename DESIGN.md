@@ -1514,46 +1514,64 @@ as a promise for the whole day.
 (review of Today, 15 ott 2026, committente): the tiles 2dp apart, the grid's four outer corners
 at the 20dp `GroupCorner` and every corner where two tiles meet at 4dp (`gridSegmentShape`), so
 the details read as one block of facts, as the Sky's and Alerts' rows read as groups. The odd
-tile out, which takes the whole row, rounds both of its outer corners on the grid's edge. They
-were loose cards 12dp apart with Material's 12dp corners. A tile on its own (the guide's) takes
-the 20dp all round. Icon and label; the value as a **reading** (`ReadingValue`: Inter
-Light 24sp on a 32sp line, tabular — the hero's voice at a tile's scale, since the card
-review of 8 set 2026; at `titleMedium` the value barely outranked its own 14sp label and
-the eye went to the icon); where the metric has a scale the world uses, **its own scale as
-a track** (design review, 23 set 2026): 6dp tall, the quantity's ramp (§2.3, the details
-grid's tracks) drawn full width at 40% as the scale at rest, the part up to the value at
-full strength, the thresholds the meaning line switches at cut into it as 2dp gaps (§9.2's
-surface gap), and a **12dp disc on the value** — the ramp's color there, a ring of the
-tile's ground, a hairline of `outline` so the pale end of a ramp still has an edge. UV on
-0–11 with the WHO's bands, humidity on 0–100 in water's ramp, air on 0–300 with the US
-bands, **pressure** on 980–1046 hPa diverging from 1013 (filled from the middle out; its
-meaning line is the **tendency** since 12 ott 2026 — the hour we are in against three hours
-on, steady under 1.6 hPa, quick from 3.6, the marine forecasts' bands — with the change as
-its note, «−2,4 hPa nelle prossime 3 ore», and the reading's own meaning only while it holds;
-«Alta» now says *settled*, not *clear*, which an overcast anticyclone contradicted), and
-**pollen** as four steps with the level and those under it lit. It replaced one `primary`
-bar under every metric, which said "how much" without saying "of what". Visibility (a
-logarithmic quantity) and the wind (whose meaning is the gust) get none;
-then the **facts behind the value** in `bodyMedium` — where the wind comes from in words
-with an arrow for where it goes, the gusts on the days they matter, the dew point under
-the humidity, which pollen — and last the meaning line (`bodySmall`, `onSurfaceVariant`).
-Never ships without the meaning line (§1.2). Tapping opens the details sheet at that
-metric. An odd tile out at the foot of the two columns **takes the whole row** (12 ott 2026), where
-it sat beside half a row of nothing. Two tiles became one that day: the dew point said "pleasant" under the
-humidity's "comfortable", the same fact in two cards, and the dew point is the better
-predictor of how the air feels, so it writes the humidity tile's meaning and stays on it
-as a note. The air index lost its acronym — "AQI" was the one piece of jargon on a
-screen built to have none — and the wind lost its compass abbreviation for the words the
-Sky screen already uses for a bearing. The icon is drawn **untinted** like every other
-weather icon (§13.1): a flat tint turns the family into silhouettes, and two metrics
-whose drawings differ only inside — humidity's drop and its %, the barometer's needle —
-become one mark. The label is one line: beside a 34dp icon two columns of a 360dp screen
-leave it 84dp, and a label is written to fit that rather than trimmed to it. (It was 94dp
-beside a 24dp icon until the family's ladder went up on 6 set 2026 and 88dp beside 30
-until the third step on 8 set; the widest label the app ships measures 76.7dp, so the ten
-the icon took cost nothing and left 7.3dp of margin, which is where the ladder stops for
-this rung. The contract is a 360dp contract: narrower than that the labels wrap and keep
-their words, as they already did at 320dp beside the 24dp icon.)
+tile out takes the whole row and rounds both of its outer corners on the grid's edge. A tile on
+its own (the guide's) takes the 20dp all round. Never ships without the meaning line (§1.2).
+
+**Two groups, one grid** (second review of Today, 15 ott 2026). A tile is a **top** — the
+eyebrow, the value as a **reading** (`ReadingValue`, light 24sp on a 32sp line, tabular: the
+hero's voice at a tile's scale) and its track — and a **foot** — the facts behind the value
+in `bodyMedium` (where the wind comes from in words, the gusts on the days they matter, the
+dew point under the humidity, which pollen) and last the meaning line, `bodySmall` in
+`onSurfaceVariant`. The foot is pushed to the tile's bottom, so the two tiles of a row, which
+share a height, put their values on one line and their meanings on another; and **every row is
+at least 160dp** (the tallest tile a day commonly draws, 158 at 100% type), so a row of two
+short tiles stands as tall as one with a scale in it. Until then each tile stacked its lines
+from the top and the grid was rows of four different heights with the meanings at four
+different depths.
+
+**The eyebrow is one ink** (same review): the quantity's glyph at the label's own size, 20dp,
+and the label at `labelLarge`, both in `onSurfaceVariant` (§13, the icon family, has the
+exception this makes). The glyphs are ten of the outlined **Material Icons**
+(`MetricIcons`: umbrella for the rain, snowflake, sun for the UV, air for the wind, cloud,
+drop for the humidity, gauge for the pressure, eye for the visibility, particles for the air,
+flower for the pollen), copied with their path data unchanged rather than depended on, since
+the library is thousands of glyphs for ten. Until then the eyebrow was a 34–38dp Meteocon in
+its own colours: ten drawings of ten styles side by side — a blue drop, a gauge with a red
+needle, a green plant with a badge — the loudest and least consistent thing on the page, louder
+than the values they introduced. They could not simply be tinted: a flat tint collapses a
+Meteocon into its silhouette (device, 4 set 2026, «due sembrano uguali»). The label keeps one
+line by budget, not by truncation: beside a 20dp glyph a tile at 360dp leaves it some 100dp,
+the widest («Qualità aria») wants 77; past that it wraps and keeps its words.
+
+**The track: one grey, the quantity's colour only up to the value** (same review). Where the
+metric has a scale the world uses it is drawn as **its own scale**: 6dp tall, at rest **the
+ink at 12%** — Material's own rest for a track, the same on every tile and on the notable one —
+and the part up to the value in the quantity's ramp (§2.3) at full strength, the thresholds
+the meaning line switches at cut in as 2dp gaps (§9.2's surface gap), and a **12dp disc on the
+value** in the ramp's colour there, ringed in the tile's ground with a hairline of `outline`.
+UV on 0–11 with the WHO's bands, humidity on 0–100 in water's ramp, air on 0–300 with the US
+bands (0–100 with the EEA's in Europe), **pressure** on 980–1046 hPa diverging from 1013 (filled
+from the middle out; its meaning line is the **tendency** since 12 ott 2026 — the hour we are in
+against three hours on, steady under 1.6 hPa, quick from 3.6 — with the change as its note,
+«−2,4 hPa nelle prossime 3 ore»), the day's rain and snow as steps, and pollen as five steps,
+the level and those under it lit. Visibility (a logarithmic quantity), the clouds and the wind
+(whose meaning is the gust) get none. From 23 set to 15 ott 2026 the whole ramp was the track
+at 40%: six scales in six hues, every one a full-width gradient at rest, read across the grid
+as six rainbows; now the grid is one grey with six lengths of colour, and "of what" stays the
+eyebrow's to say.
+
+**The notable tile** (same review, `notableDetail`, `DetailsNotableTest`). On a day one tile
+says something, it stands on `secondaryContainer` with its ink, its meaning a step up at
+`bodyMedium` in the container's ink, and TalkBack hears «Da notare oggi» with it. At most one,
+and most days none: a grid where something is always highlighted has nothing highlighted. Each
+threshold is where the tile's own meaning line turns — snow from 1 cm, rain from 10 mm, wind
+from 39 km/h (or a day's gust from 62), air from «unhealthy for the sensitive» (US above 100, EU
+above 60), UV from 6, pollen from «high», visibility under 1 km, the dew point from 21° — and
+when two cross, the first of those wins: what changes the day for everyone, then what a body
+has to mind, then comfort. Clouds and pressure are never the one. **The grid is never
+reordered** for it: a tile that moved would cost the reader where to look. The emphasis is
+not a fact said by colour alone (§10): the meaning line already says, in words, why the tile
+matters, and the emphasis only points at it.
 
 **The tiles of 24 set 2026.** **Pioggia oggi**: the day's millimetres, a note with the hours
 it lasts and — while the report is fresh — what fell in the hour just closed; its track is
@@ -1567,7 +1585,7 @@ adds the day's strongest gust to its note when it is strong (≥ 39 km/h) and ab
 tile already shows. **Qualità aria** reads the **European index** (EEA, 2024 bands 20/40/
 60/80, track 0–100) for places in Europe by country code, the US one elsewhere, with the
 same six meaning lines matched on the EEA's advice. **Pollini** has **five** levels, MeteoSwiss'
-per-species classes, the fifth «molto alti» with Meteocons' `very-high` drawings.
+per-species classes, the fifth «molto alti».
 
 **8.7 VerdictChip** — glyph + word + evidence, in that order: `✓ Great · 12% cloud`. Since
 24 set 2026 the evidence names the cloud's layer when one makes the window's sky
@@ -2626,6 +2644,15 @@ a valid animator and only a person can say the rain falls downward.
    `calcMode="spline"` becomes a generated `<pathInterpolator>` per distinct pair of
    controls, and a `keyTimes` list under a negative `begin` needs the cycle rotated on
    uneven points — the raindrops, which fall out of step rather than in a chorus line.
+
+   **The details grid is no longer Meteocons'** (second review of Today, 15 ott 2026, §8.6).
+   Its eyebrows are ten outlined Material Icons in one ink (`MetricIcons`), and that is the
+   one place a quantity is not drawn by this family: the weather's states (the hours, the
+   week, the agenda, the widgets) and the open day's facts keep their Meteocons in colour,
+   and Alerts keeps them beside its variables. What follows about graded marks and the
+   barometer was written for the grid and holds where the marks are still drawn: the open
+   day's UV, the widgets and Alerts. In the grid the level is the value's and the track's to
+   say, and a 20dp eyebrow names the quantity, nothing more.
 
    **The graded marks** (Fase 13). v3 draws several metrics at their own levels, and the
    rule for using one is the rule a second verdict has to pass (§1.2). It has **two**
