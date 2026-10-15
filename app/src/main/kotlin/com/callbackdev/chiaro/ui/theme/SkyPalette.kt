@@ -218,6 +218,23 @@ class SkyPalette internal constructor(
          * in sRGB values — which is not what `Color.lerp` does (DESIGN.md §3.6).
          */
         const val ScrimAlpha = 0.55f
+
+        /**
+         * The one ink of text on the canvas (DESIGN.md §3.6, review of Today, 15 ott 2026):
+         * white at full strength, for the secondary lines too. Those were white at 70% (the
+         * feels-like, the estimate's note) and 85% (the ribbon's clock times), and the
+         * contract's 5.27:1 was measured for full white only: over the same brightest
+         * scrimmed stop, 70% is about 3.5:1 and 85% about 4.3:1, both under the 4.5 a line
+         * of text needs. A secondary line on the sky is set apart by its SIZE, never by a
+         * thinner white. `ScrimContractTest` holds both halves of that.
+         */
+        val Ink = Color.White
+
+        /**
+         * A mark on the canvas that is not text and says "not this one": the pager's other
+         * dots. The selected dot is [Ink]; this one only has to be told apart from it.
+         */
+        val InkQuiet = Color.White.copy(alpha = 0.4f)
     }
 }
 

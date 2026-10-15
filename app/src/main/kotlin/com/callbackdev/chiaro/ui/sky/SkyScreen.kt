@@ -107,6 +107,7 @@ import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.sky.compass.CompassView
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
+import com.callbackdev.chiaro.ui.theme.CardCorner
 import com.callbackdev.chiaro.ui.theme.GroupTop
 import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
@@ -465,20 +466,22 @@ private fun SkyContent(
     pageId?.let { id ->
         AgendaPageSheet(
             jobId = id,
-            subscribed = id in content.subscribedIds,
             onOpenRelated = {
                 pageId = it
                 pageBearing = null
             },
-            onAdd = {
-                actions.addMoment(it)
-                announce(it, added = true)
-            },
-            onRemove = {
-                actions.removeMoment(it)
-                announce(it, added = false)
-            },
             onDismiss = { pageId = null },
+            subscription = AgendaSubscription(
+                subscribed = id in content.subscribedIds,
+                onAdd = {
+                    actions.addMoment(it)
+                    announce(it, added = true)
+                },
+                onRemove = {
+                    actions.removeMoment(it)
+                    announce(it, added = false)
+                }
+            ),
             look = pageBearing?.let { LookTarget(it, pageWhen) },
             coordinates = content.coordinates
         )
@@ -627,7 +630,7 @@ private fun NextMomentCard(
     val day = stringResource(
         if (moment.timing == MomentTiming.TOMORROW) R.string.sky_day_tomorrow else R.string.sky_day_today
     ).lowercase(currentLocale())
-    val shape = RoundedCornerShape(NextCardCorner)
+    val shape = RoundedCornerShape(CardCorner)
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 4.dp)
@@ -787,7 +790,6 @@ internal fun SkyRow(
 
 /** An extended FAB is 56 dp tall with 16 dp under it; 16 more so the last row clears it. */
 private val FabClearance = 88.dp
-private val NextCardCorner = 28.dp
 private val RowStart = 12.dp
 private val RowGap = 12.dp
 private val RowMinHeight = 72.dp
@@ -1395,11 +1397,15 @@ internal data class LookTarget(val bearingDeg: Double, val whenLine: String)
 @Composable
 internal fun AgendaPageSheet(
     jobId: String,
-    subscribed: Boolean,
     onOpenRelated: (String) -> Unit,
-    onAdd: (String) -> Unit,
-    onRemove: (String) -> Unit,
     onDismiss: () -> Unit,
+    /**
+     * Whether the moment is one of the reader's, and the two gestures that change it: the
+     * page's one button, on the Sky. Null on Today (review of Today, 15 ott 2026), whose
+     * rows open the same page to say what the moment is and where to look, and subscribe
+     * to nothing: following a moment is the Sky's to do.
+     */
+    subscription: AgendaSubscription? = null,
     /**
      * The row's direction, when it has one (14 ott 2026): the page then opens with
      * «Dove guardare», whose button turns the sheet into the compass. A row with no
@@ -1438,18 +1444,28 @@ internal fun AgendaPageSheet(
             job = job,
             onOpenRelated = onOpenRelated,
             header = direction?.let { { LookBlock(direction = it, onOpen = { compassOpen = true }) } },
-            action = {
-                CatalogAction(
-                    subscribed = subscribed,
-                    onClick = {
-                        if (subscribed) onRemove(job.id) else onAdd(job.id)
-                        onDismiss()
-                    }
-                )
+            action = subscription?.let { sub ->
+                {
+                    CatalogAction(
+                        subscribed = sub.subscribed,
+                        onClick = {
+                            if (sub.subscribed) sub.onRemove(job.id) else sub.onAdd(job.id)
+                            onDismiss()
+                        }
+                    )
+                }
             }
         )
     }
 }
+
+/** A moment's page's one button, on the Sky: whether the moment is the reader's, and how to
+ * add it or take it away. */
+internal class AgendaSubscription(
+    val subscribed: Boolean,
+    val onAdd: (String) -> Unit,
+    val onRemove: (String) -> Unit
+)
 
 /**
  * «Dove guardare» at the top of a row's page: the direction the row prints in its

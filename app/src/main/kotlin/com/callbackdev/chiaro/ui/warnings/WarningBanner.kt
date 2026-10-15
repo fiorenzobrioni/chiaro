@@ -1,7 +1,6 @@
 package com.callbackdev.chiaro.ui.warnings
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -30,6 +31,7 @@ import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
+import com.callbackdev.chiaro.ui.theme.GroupCorner
 import com.callbackdev.chiaro.ui.warnings.WarningText.colors
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -68,20 +70,28 @@ fun WarningBanner(
             WarningText.issued(context, warnings.issuedAt, today, timeFmt)
         )
     )
+    // The groups' corner (DESIGN §6, review of Today, 15 ott 2026): a banner of one statement
+    // that a 28 would turn into a pill. The Surface takes the click itself, so the ripple is
+    // clipped to that corner; a `clickable` handed in through the modifier drew a square
+    // press over the rounded card.
     Surface(
+        onClick = onOpen,
         color = palette.container,
-        shape = MaterialTheme.shapes.medium,
+        shape = RoundedCornerShape(GroupCorner),
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onOpen)
             .clearAndSetSemantics { contentDescription = "$headline. $detail" }
     ) {
+        // Said in Alerts' voice (review of Today, 15 ott 2026): the hazards at `titleMedium`,
+        // when and who at `bodyMedium`, and the chevron Alerts' card carries, because the
+        // banner opens the bulletin the same way. It was `titleSmall` over `bodySmall`: the
+        // one statement about the world on the page, set smaller than a row's name.
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
                 .defaultMinSize(minHeight = 56.dp)
-                .padding(horizontal = 14.dp, vertical = 10.dp)
+                .padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp)
         ) {
             Icon(
                 painter = painterResource(ChiaroIcons.warningMarkRes()),
@@ -89,10 +99,18 @@ fun WarningBanner(
                 tint = palette.ink,
                 modifier = Modifier.size(24.dp)
             )
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(headline, style = MaterialTheme.typography.titleSmall, color = palette.ink)
-                Text(detail, style = MaterialTheme.typography.bodySmall, color = palette.ink)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(headline, style = MaterialTheme.typography.titleMedium, color = palette.ink)
+                Text(detail, style = MaterialTheme.typography.bodyMedium, color = palette.ink)
             }
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                contentDescription = null, // the surface's own semantics say it opens
+                tint = palette.ink
+            )
         }
     }
 }

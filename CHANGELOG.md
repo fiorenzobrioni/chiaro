@@ -29,6 +29,18 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Today in the shape of Sky and Alerts.** The top of Today reads in three steps: the
+  temperature and the sky's word, then the day's sentence set as a sentence, then the ribbon.
+  Every day of the week carries an arrow that says it opens, and an open day stands on a card of
+  its own with its facts and its hours; the closed days draw their skies more quietly, so the
+  temperatures are read first. The details are one group of tiles and «What changed» is a row
+  per day, as the Sky groups its moments. The bar at the top, once you scroll, is the same as on
+  Sky and Alerts, with a short fade from the sky's colours, and it keeps the place's full date
+  whenever the phone has room for it beside the temperature. The tiles, the banners and the notice
+  cards share the rounder corners and the type of the other two tabs.
+- **The rest of the day speaks the Sky's language.** Its moments carry the Sky's names («Golden
+  hour, evening»), the next one is marked «Next, today», and tapping one opens its page from the
+  Sky: what it is, and where to look.
 - **Alerts in the Sky's shape.** The alerts are grouped rows like the Sky's moments, and so are
   the rows of Settings. A warning in force is now the big card at the top of the official
   warnings, in the warning's own color, instead of a small banner. The hours of the morning and
@@ -131,6 +143,17 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **Closing a day of the week no longer crashes the app**, and an open day's temperature bar
+  shows its whole scale again instead of only the coloured part.
+- **Smoother scrolling through a day's hours.** Dragging the hours of an open day now holds all
+  the moving weather icons on the page still, not only that day's, as scrolling the page does.
+- **Easier to read on a bright sky.** The feels-like, the estimate's note and the sunrise and
+  sunset under the ribbon were a paler white than the rest of the sky's text, which on a clear
+  noon sky dropped them under the contrast a line of text needs. They are now the same white,
+  told apart by their size.
+- **The place name on Today is easier to tap.** The whole name and hour are one button, as
+  large as a finger needs, and TalkBack reads it as one; the week's days say whether they are
+  open and what tapping does.
 - **An alert you edit starts over.** Changing an alert's thresholds or hours now re-arms it,
   so it can speak under its new conditions the same day; until now an alert that had already
   fired kept quiet until its old condition happened to turn false.

@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.ui.sky
 
 import android.content.Context
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -39,16 +40,22 @@ class AgendaPageSheetTest {
     private val removed = mutableListOf<String>()
     private var dismissed = 0
 
-    private fun show(jobId: String, subscribed: Boolean) {
+    private fun show(jobId: String, subscribed: Boolean, withButton: Boolean = true) {
         compose.setContent {
             ChiaroTheme(dynamicColor = false) {
                 AgendaPageSheet(
                     jobId = jobId,
-                    subscribed = subscribed,
                     onOpenRelated = {},
-                    onAdd = { added += it },
-                    onRemove = { removed += it },
-                    onDismiss = { dismissed++ }
+                    onDismiss = { dismissed++ },
+                    subscription = if (withButton) {
+                        AgendaSubscription(
+                            subscribed = subscribed,
+                            onAdd = { added += it },
+                            onRemove = { removed += it }
+                        )
+                    } else {
+                        null
+                    }
                 )
             }
         }
@@ -88,5 +95,21 @@ class AgendaPageSheetTest {
         compose.waitForIdle()
 
         assertEquals(1, dismissed)
+    }
+
+    /** Today opens the same page from its agenda (15 ott 2026) and follows nothing from it:
+     * the page says what the moment is and where to look, without the Sky's button. */
+    @Test
+    fun `the page Today opens has no button to follow the moment`() {
+        show(SkyJobCatalog.GoldenPm.id, subscribed = false, withButton = false)
+        compose.waitForIdle()
+
+        assertTrue(
+            "the page is the moment's own",
+            compose.onAllNodesWithText(string(R.string.sky_name_golden_pm)).fetchSemanticsNodes().isNotEmpty()
+        )
+        compose.onNodeWithText(string(R.string.sky_guide_add_action)).assertDoesNotExist()
+        compose.onNodeWithText(string(R.string.sky_guide_remove_action)).assertDoesNotExist()
+        assertEquals(0, dismissed)
     }
 }

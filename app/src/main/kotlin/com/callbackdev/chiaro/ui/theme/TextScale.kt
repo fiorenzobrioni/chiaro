@@ -29,6 +29,11 @@ import androidx.compose.ui.unit.Dp
  *    icon and the five 8dp gaps leaves the range bar 28dp of 328 — under the 48dp that
  *    makes it a bar rather than a smudge.
  *
+ *    The week row has since stopped asking this threshold (review of Today, 15 ott 2026):
+ *    with the chevron's column it measures its own width and splits where its bar would
+ *    fall under 48dp (`DayRow.splitsRow`), which on a 360dp phone is a step before 150%
+ *    and on a 411dp phone a step after. The details grid still reflows here.
+ *
  * The ceiling on growth is 2.0 because the system's own slider stops at 200%; past that
  * the reflow is what carries the layout, not the multiplier.
  */

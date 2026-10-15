@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -23,6 +24,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -31,6 +33,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
+import com.callbackdev.chiaro.ui.theme.GroupCorner
 import com.callbackdev.chiaro.ui.theme.LocalChiaroType
 
 /**
@@ -61,7 +64,7 @@ fun MetricTile(
     /** The metric's world scale, or null for one that has none (visibility, a logarithmic
      * quantity, and the wind) — a track under those would be a shape with nothing to say. */
     track: TrackScale? = null,
-    /** A composed fact about the value: the wind's arrow and its source. */
+    /** A composed fact about the value: where the wind comes from. */
     detail: (@Composable () -> Unit)? = null,
     /** A printed fact about the value: the gusts, the dew point, which pollen. */
     note: String? = null,
@@ -71,12 +74,18 @@ fun MetricTile(
      * at the size the pollen tile's does — the arithmetic is there, not here.
      */
     iconSize: Dp = WeatherIconSize.Tile,
+    /** The tile's corners: alone, the groups' 20dp; in the details grid, its segment's
+     * ([gridSegmentShape]). */
+    shape: Shape = RoundedCornerShape(GroupCorner),
     onClick: (() -> Unit)? = null
 ) {
     Surface(
         modifier = modifier.fillMaxWidth().let { if (onClick != null) it.clickable(onClick = onClick) else it },
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = MaterialTheme.shapes.medium
+        // The groups' corners since the review of Today (15 ott 2026, DESIGN §6): at
+        // Material's 12 the grid was the one block of the app still cut from the old
+        // paper, beside the Sky's and the Alerts' 20 and 28.
+        shape = shape
     ) {
         Column(
             modifier = Modifier.padding(16.dp),

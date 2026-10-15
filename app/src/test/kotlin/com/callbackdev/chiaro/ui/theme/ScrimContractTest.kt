@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import java.io.File
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.pow
@@ -103,5 +104,58 @@ class ScrimContractTest {
             assertTrue("0.55 should clear it",
                 contrast(Color.White, scrimmed(brightest, 0.55f)) >= 4.5)
         }
+    }
+
+    /**
+     * The secondary lines (review of Today, 15 ott 2026). §3.6 used to allow white at 70%
+     * for them, and the contract's number was only ever measured for full white: over the
+     * brightest scrimmed stop, 70% lands near 3.5:1 and the ribbon's 85% near 4.3:1. So the
+     * canvas has one ink, [SkyPalette.Ink], and a thinner white is what this pins as failing.
+     */
+    @Test
+    fun `the canvas has one ink, and a thinner white would fail the floor`() {
+        assertTrue("the canvas ink is full white", SkyPalette.Ink == Color.White)
+        SkyPalette.entries.forEach { sky ->
+            val ground = scrimmed(sky.brightestBottomStop())
+            assertTrue(contrast(SkyPalette.Ink, ground) >= 4.5)
+            listOf(0.7f, 0.85f).forEach { a ->
+                val thinner = over(Color.White.copy(alpha = a), ground)
+                assertTrue(
+                    "white at $a is %.2f:1: if it clears the floor the spec is stale"
+                        .format(contrast(thinner, ground)),
+                    contrast(thinner, ground) < 4.5
+                )
+            }
+        }
+    }
+
+    /**
+     * And the screen keeps to it: no line of Today names a white of its own, opaque or not.
+     * The canvas' text, the place row over it and the hero all ask [SkyPalette] for their
+     * ink, so a translucent white cannot come back as a quick fix on one line.
+     */
+    @Test
+    fun `Today asks the palette for its ink, never names a white`() {
+        val dir = File("src/main/kotlin/com/callbackdev/chiaro/ui/today")
+        assertTrue("the sweep found no sources at ${dir.absolutePath}", dir.isDirectory)
+        val offenders = dir.walkTopDown()
+            .filter { it.isFile && it.extension == "kt" }
+            .flatMap { file ->
+                file.readLines().withIndex()
+                    .filter { (_, line) -> "Color.White" in line }
+                    .map { (i, line) -> "${file.name}:${i + 1}  ${line.trim()}" }
+            }
+            .toList()
+        assertTrue(
+            "the canvas' ink is SkyPalette.Ink:\n" + offenders.joinToString("\n"),
+            offenders.isEmpty()
+        )
+    }
+
+    /** A translucent [top] composited over an opaque [ground], as the framebuffer does. */
+    private fun over(top: Color, ground: Color): Color {
+        val a = top.alpha
+        fun mix(f: Float, b: Float) = f * a + b * (1 - a)
+        return Color(mix(top.red, ground.red), mix(top.green, ground.green), mix(top.blue, ground.blue))
     }
 }

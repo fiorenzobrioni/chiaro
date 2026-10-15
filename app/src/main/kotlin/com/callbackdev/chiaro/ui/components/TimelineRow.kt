@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,12 +8,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
@@ -34,8 +37,11 @@ import com.callbackdev.chiaro.ui.theme.tabular
  * row — only the leading glyph differs, which is what makes the list read as one
  * timeline instead of three.
  *
- * The verdict chip slot of §8.4 arrives with the Sky engine wiring (Fase 5); the row
- * takes an optional trailing composable so that lands here without a reshape.
+ * Since the review of Today (15 ott 2026) the row speaks the Sky row's grammar: the name
+ * at `bodyLarge`, what follows it (until when, how soon) on a line under it at
+ * `bodyMedium` in `onSurfaceVariant`, and the next moment of the day marked by a label
+ * over its name in the accent, «Il prossimo, oggi», as the Sky's and Alerts' next cards
+ * are. A row with a page ([onClick]) opens it, as a row of the Sky does.
  */
 @Composable
 fun TimelineRow(
@@ -43,18 +49,21 @@ fun TimelineRow(
     icon: ImageVector,
     text: String,
     modifier: Modifier = Modifier,
-    /**
-     * How soon, under the prose — «tra 18 min» — for the next moment of the day only
-     * (design review, 23 set 2026): the clock time is what you check against a watch,
-     * the countdown is what you plan with, and the first row is the one being planned.
-     */
-    soon: String? = null,
+    /** The accent label over the name: «Il prossimo, oggi» on the day's first row. */
+    label: String? = null,
+    /** The line under the name: until when the span lasts, how soon it comes. */
+    supporting: String? = null,
     /** The thread through the icons (design review, 23 set 2026): a line from this
      * row's glyph to its neighbours', so the rows read as one day in order. [reach] is
      * half the gap to the next row, which the line crosses to meet the next one's. */
     connectAbove: Boolean = false,
     connectBelow: Boolean = false,
     reach: Dp = 6.dp,
+    /** What a tap opens, or null for a row that opens nothing (a weather turn). */
+    onClick: (() -> Unit)? = null,
+    /** The air between the row's edge and its content, which the press's ripple reaches
+     * into. The thread is drawn outside the press's clip, so it still meets its neighbours. */
+    inset: Dp = 0.dp,
     trailing: (@Composable () -> Unit)? = null
 ) {
     val timeWidth = 48.dp.forText()
@@ -64,7 +73,7 @@ fun TimelineRow(
             .fillMaxWidth()
             .drawBehind {
                 if (!connectAbove && !connectBelow) return@drawBehind
-                val x = (timeWidth + ColumnGap + WeatherIconSize.Timeline / 2).toPx()
+                val x = (inset + timeWidth + ColumnGap + WeatherIconSize.Timeline / 2).toPx()
                 val half = WeatherIconSize.Timeline.toPx() / 2f + IconClearance.toPx()
                 val mid = size.height / 2f
                 val stroke = 2.dp.toPx()
@@ -74,7 +83,11 @@ fun TimelineRow(
                 if (connectBelow) {
                     drawLine(line, Offset(x, mid + half), Offset(x, size.height + reach.toPx()), stroke, StrokeCap.Round)
                 }
-            },
+            }
+            .let {
+                if (onClick != null) it.clip(PressShape).clickable(onClick = onClick) else it
+            }
+            .padding(horizontal = inset),
         horizontalArrangement = Arrangement.spacedBy(ColumnGap),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -93,21 +106,34 @@ fun TimelineRow(
             modifier = Modifier.size(WeatherIconSize.Timeline)
         )
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            soon?.let {
+            label?.let {
                 Text(
                     text = it,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
+                )
+            }
+            // `bodyLarge`, the Sky row's name and the Alerts row's (review of Today, 15 ott
+            // 2026): the same golden hour and the same sunset were set two sizes smaller on
+            // Today than on the tab that names them.
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            supporting?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
         trailing?.invoke()
     }
 }
+
+/** The press's shape, the week row's own: the ripple reads as one row, not a slab. */
+private val PressShape = RoundedCornerShape(12.dp)
 
 private val ColumnGap = 12.dp
 /** The line stops short of the glyph instead of running into it. */

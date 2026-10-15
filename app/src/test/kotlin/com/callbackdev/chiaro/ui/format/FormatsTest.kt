@@ -6,6 +6,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.Locale
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -110,4 +111,15 @@ class FormatsTest {
         assertEquals("Monday 7 September", Formats.dayLong(monday, en))
         assertEquals("Lunedì 7 settembre", Formats.dayLong(monday, it))
     }
+
+    /** The bar's middle form of the place's day (15 ott 2026): the date kept, the words short. */
+    @Test
+    fun `the medium day keeps the date and abbreviates the words`() {
+        val day = LocalDate.of(2026, 9, 30)
+        // en-GB's short September is «Sep» or «Sept» depending on the JDK's CLDR: either way
+        // the weekday, the date and the month, in that order.
+        assertTrue(Formats.dayMedium(day, en).startsWith("Wed 30 Sep"))
+        assertEquals("Mer 30 set", Formats.dayMedium(day, it))
+    }
 }
+

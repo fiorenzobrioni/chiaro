@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
+import com.callbackdev.chiaro.ui.theme.GroupCorner
+import com.callbackdev.chiaro.ui.theme.GroupInnerCorner
 
 /**
  * Rows that belong together, as Material 3 Expressive groups them (DESIGN §8.8, review of
@@ -49,13 +51,31 @@ fun SegmentedGroup(
 
 /** The segment of a group at [index] of [count]: round outside, tight inside. */
 fun segmentShape(index: Int, count: Int): Shape {
-    val top = if (index == 0) SegmentOuter else SegmentInner
-    val bottom = if (index == count - 1) SegmentOuter else SegmentInner
+    val top = if (index == 0) GroupCorner else GroupInnerCorner
+    val bottom = if (index == count - 1) GroupCorner else GroupInnerCorner
     return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
 }
 
 /** The air between two segments of a group. A lazy list that draws one segment per item
  * gives each half of it as vertical padding. */
 val SegmentGap = 2.dp
-private val SegmentOuter = 20.dp
-private val SegmentInner = 4.dp
+
+/**
+ * The segment of a grid at [row] of [rows] and [col] of the [cols] its own row holds: the
+ * grid's four outer corners round, every corner where two segments meet tight (review of
+ * Today, 15 ott 2026, the details grid). A row shorter than the others — the odd tile out,
+ * which takes the whole width — rounds both of its outer corners on the grid's edge.
+ */
+fun gridSegmentShape(row: Int, rows: Int, col: Int, cols: Int): Shape {
+    val top = row == 0
+    val bottom = row == rows - 1
+    val start = col == 0
+    val end = col == cols - 1
+    fun corner(outer: Boolean) = if (outer) GroupCorner else GroupInnerCorner
+    return RoundedCornerShape(
+        topStart = corner(top && start),
+        topEnd = corner(top && end),
+        bottomStart = corner(bottom && start),
+        bottomEnd = corner(bottom && end)
+    )
+}

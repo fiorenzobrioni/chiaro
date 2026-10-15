@@ -69,6 +69,7 @@ import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.components.VerdictKind
 import com.callbackdev.chiaro.ui.components.moonLitPath
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
+import com.callbackdev.chiaro.ui.theme.CardCorner
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.LocalChiaroColors
 import com.callbackdev.chiaro.ui.theme.SkyPalette
@@ -868,7 +869,6 @@ private const val MoonSetAlpha = 0.35f
 private const val PrecipPrintedFrom = 20
 private const val ScrubStepMs = 5 * 60_000L
 private const val StarCount = 46
-private val CardCorner = 28.dp
 private val BandHeight = 34.dp
 private val BandCorner = 10.dp
 private val LabelGap = 8.dp

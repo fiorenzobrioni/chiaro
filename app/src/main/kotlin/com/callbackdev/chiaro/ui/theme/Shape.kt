@@ -35,3 +35,25 @@ val SectionTop = 16.dp
 val GroupTop = 12.dp
 
 val SectionBottom = 4.dp
+
+/**
+ * The app's two card corners beyond Material's scale (DESIGN.md §6, review of Today,
+ * 15 ott 2026). They grew up as private constants of the screens that drew them first —
+ * the Sky's 28 for its tonight and next-moment cards, the segments' 20 and 4 — while
+ * Today kept Material's 12 for its tiles and banners, so two tabs and the third looked
+ * cut from different paper. Written down here so every screen asks for the same three.
+ *
+ * [CardCorner]: a card that stands alone and carries a screen's answer or a notice (the
+ * tonight card, the next moment, Alerts' answer, the guide's and the notifications' cards).
+ * It is Material's `extraLarge`, named for what it is used for.
+ */
+val CardCorner = 28.dp
+
+/**
+ * [GroupCorner]: the outer corner of a group's segments, and the corner of a smaller card
+ * that a 28 would turn into a pill — a metric tile, a banner of one statement, an open day
+ * of the week. [GroupInnerCorner]: where two segments of a group meet.
+ */
+val GroupCorner = 20.dp
+
+val GroupInnerCorner = 4.dp

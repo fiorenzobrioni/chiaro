@@ -75,6 +75,12 @@ data class RibbonHour(val at: Float, val cloudPct: Int, val precipPct: Int, val 
  * day that is the same every day). Given the track color, the dark phases lean toward it
  * and the row shows the day's pill of light instead.
  *
+ * [quiet] (review of Today, 15 ott 2026) leans the whole band toward [nightFade] by that
+ * much: the week's closed rows draw their seven skies at a lower voice, so the range bars
+ * above them, which are the week's figures, are read first. The colors stay the sky's,
+ * only their weight drops; the wet marks keep their full ink, because they are the rain's
+ * mark and not its shade. An open day draws its sky in full.
+ *
  * [wetLane] reserves a lane under the band and marks there every [RibbonHour.wet] hour,
  * in the rain's ink at the hour's chance. Color alone must not carry the rain (§2.3), and
  * the darkening the canvas gives a likely hour is a shade, not a mark.
@@ -90,7 +96,8 @@ fun DaylightRibbon(
     nightFade: Color? = null,
     hours: List<RibbonHour> = emptyList(),
     skyFrom: Float = 0f,
-    wetLane: Boolean = false
+    wetLane: Boolean = false,
+    quiet: Float = 0f
 ) {
     // Read outside the Canvas: the draw lambda is a DrawScope, not a composition.
     val sky = ChiaroTheme.sky
@@ -102,6 +109,12 @@ fun DaylightRibbon(
             // the same sky, not a second palette to keep in sync.
             sky.gradient(altitude, cloud, chance).mid
         }
+    }
+    // The quiet voice is a cheap second step over the stops, not a recomputation of the sky,
+    // so an opening day can animate it.
+    val shown = remember(stops, quiet, nightFade) {
+        val toward = nightFade
+        if (quiet <= 0f || toward == null) stops else stops.map { (t, c) -> t to lerp(c, toward, quiet) }
     }
     val wet = if (wetLane) hours.filter { it.wet && it.at < 1f } else emptyList()
     // The disc stands out of the band on both sides, so the box is as tall as the disc.
@@ -120,7 +133,7 @@ fun DaylightRibbon(
         // With a lane the band sits at the top and the marks under it; otherwise it is
         // centred, which is what the canvas' disc needs.
         val top = if (wetLane) 0f else (size.height - bandHeight) / 2f
-        val brush = ribbonBrush(stops, size.width)
+        val brush = ribbonBrush(shown, size.width)
         val corner = CornerRadius(bandHeight / 2f)
         fun band(alpha: Float) = drawRoundRect(
             brush = brush,

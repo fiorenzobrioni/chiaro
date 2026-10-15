@@ -13279,3 +13279,309 @@ Verificato con `AlertsYoursEmptyTest` (nuovo, Robolectric): con «I tuoi» vuoto
 riga e nessuna idea, e «Nuovo avviso» apre il foglio con «Da zero» e «Parti da un'idea». Suite
 completa e lint verdi. Le schermate del README rigenerate non cambiano: nessuna mostra «I tuoi»
 vuoto.
+
+## Oggi: la revisione della schermata (committente, 15 ott 2026)
+
+Il committente ha chiesto una revisione della schermata Oggi (stile grafico, tipografia, UI/UX) e
+della sua coerenza con Cielo e Avvisi, appena rivisti, e ne ha fatto attuare i primi cinque punti;
+il resto è pianificato qui sotto, da fare tutto, con il DESIGN aggiornato dove serve. La diagnosi
+in una riga: Oggi era rimasta alla generazione di prima delle revisioni del 14 ott (angoli da 12
+dp, il banner piccolo, le righe in `bodyMedium`, un'intestazione sotto i 48 dp), e accanto alle
+altre due tab sembrava un'altra app.
+
+- [x] 1. L'intestazione del luogo a 48 dp, con ruolo, azione e ripple ritagliato, come `TabHeader`.
+- [x] 2. Il testo secondario sul cielo in bianco pieno, distinto dalla misura; il contratto dello
+  scrim esteso al testo secondario.
+- [x] 3. Le righe della settimana: la freccia, lo stato per TalkBack, il giorno aperto su una card.
+- [x] 4. La gerarchia del blocco principale: tre gruppi, la frase come prosa.
+- [x] 5. Gli angoli 28/20 dp nominati nel tema; riquadri, banner e avvisi a quegli angoli; le righe
+  della giornata in `bodyLarge`.
+
+### Cosa è cambiato
+
+- **Punto 1.** `PlaceHeader` (`TodayScreen.kt`): il bersaglio è il blocco nome + ora del luogo,
+  28 + 20 = 48 dp (minimo 48 anche senza ora, la pagina della posizione), ritagliato a 12 dp,
+  rientrato di 8 dp dai 16 della riga perché il ripple abbia aria e il testo resti sul margine; il
+  ripple prende l'inchiostro della riga (bianco sul cielo). Un pulsante solo per TalkBack, «Milano,
+  venerdì 25 settembre · 12:15», azione «Cambia luogo», la freccia muta. Prima il bersaglio era la
+  sola riga del nome, circa 28 dp, con un ripple rettangolare sul cielo. I pallini delle pagine
+  restano fuori: sono un fatto, non un ingresso. `HeaderPadding` sostituisce le tre copie del
+  padding della riga.
+- **Punto 2.** `SkyPalette.Ink` (bianco pieno) è l'unico inchiostro del testo sulla tela;
+  `SkyPalette.InkQuiet` (bianco al 40%) solo per i pallini delle altre pagine, un segno e non un
+  testo. La percepita e la nota della stima erano al 70%, gli orari del nastro all'85%: sul cielo
+  più chiaro con lo scrim pieno fanno circa 3,5:1 e 4,3:1, sotto il 4,5 (DESIGN §3.6 misurava solo
+  il bianco pieno). `ScrimContractTest`: due prove nuove, i bianchi più sottili cadono sotto la
+  soglia, e nessun file sotto `ui/today/` nomina un bianco suo.
+- **Punto 3.** `DayRow`: una freccia da 18 dp dopo la massima, che si gira (molla spaziale) quando
+  il giorno è aperto; `stateDescription` «Aperto»/«Chiuso» e l'azione «Mostra le ore»/«Nascondi le
+  ore» (IT/EN), solo sulle righe che si aprono. La colonna della freccia c'è su ogni riga, perché le
+  sette barre finiscano allo stesso punto; la guida la disegna chiusa e dice che la freccia apre il
+  giorno. Il punto in cui la riga si spezza in due è **misurato sulla larghezza** (`splitsRow`): la
+  barra deve avere almeno 48 dp dopo colonne, icona, spazi e freccia. `WeekRow`: il giorno aperto è
+  una card `surfaceContainer` con angolo 20 dp, 8 dp dentro il margine della pagina e 8 dp d'aria
+  dentro, così le colonne non si spostano e la striscia scorre sotto il bordo della card; il fondo
+  appare con la molla degli effetti, l'aria in alto cresce con quella spaziale.
+- **Punto 4.** La tela in tre gruppi: l'adesso (cifra, parola del cielo, percepita, nota della
+  stima) stretto sotto la cifra; la frase del giorno 12 dp sotto, in **`bodyLarge`** (era
+  `titleLarge`, la stessa misura e lo stesso peso della parola sopra); il nastro 16 dp sotto, con
+  gli orari a 4 dp. Prima un passo uniforme di 6 dp.
+- **Punto 5.** `ui/theme/Shape.kt`: `CardCorner` (28), `GroupCorner` (20), `GroupInnerCorner` (4),
+  le costanti che il Cielo e i segmenti tenevano private (`SegmentedGroup`, `SkyScreen`,
+  `TonightSky` ora le leggono da lì). `MetricTile`, il banner dell'allerta e il banner d'errore a
+  20 dp; la card della guida su Oggi e `NotificationsOffCard` (Cielo, Avvisi) a 28 dp con 20 dp
+  d'aria. Il banner dell'allerta prende il clic da `Surface(onClick)`, così la pressione è
+  ritagliata all'angolo (prima un `clickable` nel modifier disegnava un rettangolo). `TimelineRow`:
+  la prosa in `bodyLarge`.
+
+### Decisioni e deviazioni
+
+- **La frase in `bodyLarge`, non in un 18 nuovo.** Fra la parola a 22 Medium e una prosa a 16
+  Regular la differenza è di misura e di peso insieme, e la scala resta quella che è (il widget
+  dice la frase a 16 anch'esso). Guardata sul Milano del README: si legge come una frase sotto il
+  titolo, non come un secondo titolo.
+- **Sul cielo niente opacità per gerarchia**, nemmeno a 85%: la misura basta, ed è l'unica cosa che
+  il contratto dello scrim garantisce. La card del Cielo di notte (`TonightSky`) tiene i suoi bianchi
+  al 70%: è su un fondo blu notte fisso, non sul cielo dipinto, e lì il contrasto regge.
+- **La freccia della settimana costa alla barra 20 dp** (da 102 a 82 dp a 360): la barra resta una
+  barra. Per questo la soglia di spezzatura non è più il 150% fisso di `TextScale.kt`, che resta solo
+  della griglia dei dettagli: a 360 dp la riga si spezza dal 125%, a 411 dp dal 180% circa.
+- **Le righe chiuse restano sulla carta**, non segmenti: sette card farebbero una settimana più
+  pesante da leggere, e la freccia dice già quali si aprono. La card è del giorno aperto soltanto.
+- **Il banner dell'allerta a 20 e non a 28**: è una dichiarazione di una o due righe e 28 lo farebbe
+  pillola. Resta banner (DESIGN §8.13): la card grande è di Avvisi, dove c'è anche lo stato «nessuna
+  allerta» contro cui misurarla; il resto dell'allineamento è nel piano qui sotto.
+- **La card della guida e quella delle notifiche insieme**: sono lo stesso tipo di avviso, e
+  cambiarne una sola avrebbe aperto la stessa incoerenza fra le tab.
+
+### Come è stato verificato
+
+- `DayRowSplitTest` (nuovo): a 360 dp la riga resta su una riga al 100% e al 120% e si spezza al
+  125%; a 411 dp regge il 150% e si spezza al 200%; il limite è esattamente la barra minima.
+- `ScrimContractTest`: bianco al 70% e all'85% sotto 4,5:1 su ogni tavola del cielo; nessun
+  `Color.White` sotto `ui/today/`. `TextScaleTest` aggiornato (la soglia del 150% non è più della
+  settimana).
+- Suite completa dell'app e lint. Le immagini del README rigenerate e guardate: `today-now`
+  (i tre gruppi, la timeline in `bodyLarge`), `today-week` (le frecce, sabato aperto sulla sua card),
+  `today-details` (i riquadri a 20 dp); quelle di Cielo e Avvisi rigenerate escono identiche.
+
+### Il piano per il resto (da fare tutto, committente 15 ott 2026)
+
+Tre passi, ciascuno con il suo DESIGN, le sue prove e le immagini del README rigenerate. Le
+domande segnate **(decide il committente)** vanno chiuse prima di quel passo.
+
+**Passo A — Coerenza con Cielo e Avvisi**
+
+- [x] A1. **Il resto della giornata e i momenti del Cielo dicono le stesse cose con le stesse
+  parole.** Oggi «Ora d'oro fino alle 19:15» alle 18:36, il Cielo «Ora d'oro, sera» 18:36 – 19:15.
+  Proposta: i nomi del Cielo (`sky_name_*`) anche su Oggi, l'intervallo scritto come intervallo
+  («18:36 – 19:15» nella colonna dell'ora, a due righe se serve), e le righe dei momenti del cielo
+  **toccabili**: aprono la pagina del momento del Cielo, con «Dove guardare» e la bussola.
+  **Deciso** (committente, 15 ott 2026): solo l'apertura della pagina, niente campanella.
+  DESIGN §8.4.
+- [x] A2. **Una grammatica sola per «il prossimo».** Oggi il conto alla rovescia in `labelMedium`
+  primary sotto la prima riga; Cielo e Avvisi un'etichetta «Prossimo, oggi» in `labelLarge` primary
+  sopra il nome. Proposta: su Oggi la stessa etichetta sopra la prima riga, e «tra 6 h 20 min» nella
+  riga sotto, `bodyMedium` `onSurfaceVariant`, come nella card del prossimo momento. DESIGN §8.4,
+  §8.8.
+- [x] A3. **L'allerta su Oggi parla come quella di Avvisi**: la freccia che dice «si apre», il
+  titolo in `titleMedium` anziché `titleSmall`, la fonte in `bodyMedium`; resta banner da 20 dp.
+  DESIGN §8.13.
+- [x] A4. **Le card d'avviso nella scala di Avvisi**: card della guida e card delle notifiche con
+  titolo in `bodyLarge`/`titleMedium` e testo in `bodyMedium` (oggi `titleSmall`/`bodySmall`); il
+  banner d'errore in `bodyMedium`. DESIGN §8.11, §8.14.
+- [x] A5. **La nota in fondo** («Aggiornato alle 12:10 · dati Open-Meteo») allineata a sinistra
+  come le note del Cielo. DESIGN §8.1 (la nota a piè di pagina).
+
+**Passo B — Modernizzare**
+
+- [x] B1. **I nastri della settimana più quieti.** Sette nastri saturi pesano quanto le barre delle
+  temperature, che sono il dato. Proposta: nella settimana il cielo previsto del nastro a saturazione
+  e contrasto ridotti (il colore resta, il peso scende), pieno solo sul giorno aperto; misurare
+  sul Milano e su una settimana di pioggia. DESIGN §4, §8.5.
+- [x] B2. **La barra compatta.** Scorrendo, nel tema chiaro diventa una fascia blu-ardesia scura
+  (il cielo che resta in alto, §8.1b). **Deciso** (committente, 15 ott 2026): uniformata a Cielo e
+  Avvisi, `surface` con l'inchiostro del tema; si torna alla scura se sul telefono non regge.
+- [x] B3. **I dettagli come gruppo.** Oggi riquadri separati da 12 dp. **Deciso** (committente, 15
+  ott 2026): i segmenti del Cielo in griglia (2 dp, 20 fuori e 4 dentro). DESIGN §8.6.
+- [x] B4. **«Cosa è cambiato»** come righe con un segno (la freccia su o giù della grandezza che è
+  cambiata) e il giorno in testa, in un gruppo di segmenti come le righe del Cielo, invece di frasi
+  `bodyMedium` sciolte. DESIGN §8 (VISION §5.2.6).
+- [x] B5. **Il movimento di §7 che manca ancora**: l'elemento condiviso fra la riga della settimana e
+  il suo giorno aperto (oggi l'espansione è a molle ma senza continuità della riga), e la verifica
+  del ritorno predittivo sulla scheda dei luoghi e sui fogli. DESIGN §7.
+
+**Passo C — Pulizia**
+
+- [x] C1. `WindDirection` ha due KDoc in fila (uno inglese che parla ancora della freccia, uno in
+  italiano); il KDoc di `Details` cita anch'esso la freccia del vento. Un KDoc solo, in inglese.
+- [x] C2. La freccia del luogo su Oggi a 24 dp accanto a un `titleLarge`, su Cielo e Avvisi a 18
+  accanto a un `titleSmall`: proporzionate ciascuna alla sua riga, da lasciare così, scritto nel
+  DESIGN (§8.1b, §8.12b) perché nessuno le «allinei».
+
+### Il resto della revisione (committente, 15 ott 2026)
+
+Il committente ha chiuso le tre domande (solo l'apertura della pagina, la barra come Cielo e
+Avvisi, i segmenti nei dettagli) e ha chiesto di fare tutto il piano.
+
+**Cosa è cambiato**
+
+- **A1, A2.** `RestOfDay` e `TimelineRow`: i momenti del cielo coi nomi del Cielo
+  (`SkyText.nameRes`, da `timelineJob`), «fino alle 19:15» e il conto alla rovescia sulla riga
+  sotto il nome in `bodyMedium` `onSurfaceVariant`, la prima riga con «Il prossimo, oggi» in
+  `labelLarge` `primary` (`sky_next_label`, la stessa stringa del Cielo). Una riga del cielo apre
+  `AgendaPageSheet`, la pagina del momento del Cielo, con «Dove guardare» per i momenti che hanno
+  una direzione (`SkySights.bearing` all'istante della riga) e senza il pulsante per seguirlo:
+  `AgendaPageSheet` prende ora un `AgendaSubscription?` al posto di `subscribed`/`onAdd`/`onRemove`,
+  che il Cielo passa e Oggi no. Pioggia e arcobaleno non aprono niente. Tolte le due stringhe
+  `tl_*_until` (le altre `tl_*` restano: le usa il widget dell'arco).
+- **A3.** Il banner dell'allerta in `titleMedium` su `bodyMedium`, con la freccia di Avvisi.
+- **A4.** La card della guida e `NotificationsOffCard` in `titleMedium`/`bodyMedium`; il banner
+  d'errore in `bodyMedium`.
+- **A5.** «Aggiornato alle…» sul margine di 16 dp, con 16 dp sotto.
+- **B1.** `DaylightRibbon(quiet)`: il nastro di una riga chiusa piega del 40% verso la sua traccia,
+  quello del giorno aperto è pieno, il passaggio sulla molla degli effetti; i segni della pioggia
+  restano a inchiostro pieno.
+- **B2.** La barra, appena la pagina scorre, è `surface` con l'inchiostro del tema; fondo,
+  inchiostro, pallini e icone della barra di stato cambiano insieme sulla molla degli effetti.
+- **B3.** `gridSegmentShape` (in `SegmentedGroup.kt`) e il parametro `shape` di `MetricTile`: la
+  griglia dei dettagli è un gruppo di segmenti, 2 dp, 20 fuori e 4 dentro. La guida disegna i due
+  riquadri d'esempio allo stesso modo.
+- **B4.** «Cosa è cambiato» come `SegmentedGroup`: l'icona del giorno com'è adesso nella settimana,
+  il giorno e il giudizio in `bodyLarge`, i numeri sotto in `bodyMedium`.
+- **B5.** Il ritorno predittivo c'era già (`enableOnBackInvokedCallback`, il pop predittivo della
+  navigazione, i fogli di Material). DESIGN §7 parlava ancora di un elemento condiviso verso un
+  «foglio del giorno» che non esiste più: ora dice l'apertura sul posto.
+- **C1.** `WindDirection` con un KDoc solo, in inglese; tolta la freccia del vento dai KDoc di
+  `Details`, `Tile` e `MetricTile`.
+- **C2.** Scritto in DESIGN §8.1b che le due frecce del luogo (24 e 18 dp) sono misurate ciascuna
+  sulla sua riga.
+- La guida dice che un momento del cielo apre la sua pagina e che «Cosa è cambiato» sono righe;
+  VISION §5.2 aggiornata (agenda, settimana, cosa è cambiato, dettagli).
+
+**Decisioni e deviazioni**
+
+- **«Cosa è cambiato» porta l'icona del giorno, non una freccia** come diceva il piano (B4): una
+  revisione sposta spesso due grandezze in versi opposti (meno pioggia, massima più bassa) e una
+  freccia sola ne avrebbe detta metà. Il giudizio resta a parole.
+- **«Il prossimo, oggi» anche su Oggi**, dove ogni riga è di oggi: è la stessa etichetta delle card
+  di Cielo e Avvisi, e una variante solo per questa schermata sarebbe stata la terza grammatica che
+  A2 voleva togliere.
+- **L'ora d'oro del mattino tiene le sue parole** («Finisce l'ora d'oro»): su Oggi la riga è la
+  sua fine, non il suo inizio, e il nome del Cielo avrebbe letto un orario d'inizio sbagliato.
+  Apre comunque la pagina del mattino.
+- **Il buio pieno apre «Buio pieno»** (`darkness.window`), non il crepuscolo astronomico: la riga
+  è l'inizio del buio, il crepuscolo astronomico ne è la causa, e il nome del Cielo per la finestra
+  è già quello della riga in italiano.
+- **La barra chiara, a mio parere onesto, è la scelta giusta** per il tema chiaro, dove la fascia
+  ardesia era l'elemento più pesante dell'app; in scuro le due sono quasi uguali. Il rischio è il
+  passaggio da bianco sul cielo a scuro sulla carta, che ora è una dissolvenza di circa un decimo di
+  secondo. Si torna alla scura con un colore e un inchiostro, se sul telefono non regge.
+- **La riga del giorno aperto non è un elemento condiviso**: si apre sul posto, e la continuità la
+  danno la card che cresce e la freccia che gira insieme.
+
+**Come è stato verificato**
+
+- `TodayAgendaTest` (nuovo, Robolectric, sul Milano del README): la prima riga ha «Il prossimo,
+  oggi» e il nome del Cielo; toccare l'ora d'oro apre la pagina con «Dove guardare» e senza
+  «Aggiungi» né «Togli»; una riga della settimana dice «Chiuso» e, aperta, «Aperto».
+  `AgendaPageSheetTest` aggiornato, con la pagina senza pulsante.
+- Oggi disegnata in chiaro e in scuro, a riposo, scorsa di poco (la barra sopra il cielo) e sulla
+  settimana con un giorno aperto: guardate immagine per immagine. Le immagini del README rigenerate
+  e guardate (`today-now`, `today-week`, `today-details`); `widgets.png` usciva diverso di qualche
+  pixel su due icone animate, senza nessun cambio che lo tocchi, ed è rimasto com'era.
+- Suite completa e lint.
+
+## Oggi: il giorno che si chiude, la sua barra, la barra in alto (committente, 15 ott 2026)
+
+Provando la revisione sul telefono il committente ha segnalato tre cose.
+
+- [x] **Chiudere un giorno della settimana faceva crollare l'app.** L'aria in alto della scheda del
+  giorno aperto seguiva la molla spaziale (smorzamento 0,8), che rimbalza: chiudendo, sulla via
+  verso 0 dp scendeva sotto zero, e un `padding` negativo in Compose è un'eccezione
+  (`IllegalArgumentException: Padding must be non-negative`). Riprodotto con un test prima di
+  correggerlo; ora il valore è tenuto a zero o più, e il tono del nastro fra 0 e 1.
+- [x] **Sulla scheda aperta la barra delle temperature era poco contrastata.** La sua traccia
+  vuota è `surfaceContainerHighest`, che sulla pagina sta a 1,23:1 dal fondo e sulla scheda
+  (`surfaceContainer`) a 1,11:1, misurato su entrambe le palette: la barra restava senza traccia.
+  Sulla scheda la traccia diventa `outlineVariant` (1,46:1 in chiaro, 1,74 in scuro), lo stesso
+  colore verso cui piega la notte del nastro, e il cerchio del «adesso» si ritaglia dal fondo della
+  scheda. Il colore segue l'apertura sulla molla degli effetti.
+- [x] **La barra in alto sfuma con lo scorrimento** invece di diventare chiara di colpo:
+  `placeBarColors` (nuovo, `ui/today/PlaceBarColors.kt`) dà fondo, inchiostro, pallini e icone
+  della barra di stato per un punto dello scorrimento. Il fondo va dal cielo in cima alla tela,
+  col velo di §3.6, alla carta della pagina, opaco, e arriva alla carta quando ci arriva il bordo
+  della pagina; l'inchiostro sfuma finché la sfumatura si legge a 4,5:1, altrimenti è il migliore
+  fra il bianco del cielo e quello del tema, e cambia una volta sola.
+
+**Decisioni e deviazioni**
+
+- **Non una semplice dissolvenza da trasparente a carta**, che era la cosa ovvia: a metà corsa il
+  nome sarebbe stato grigio su grigio, e col cielo che si vede attraverso un fondo semitrasparente
+  (in chiaro, di notte) testo scuro su blu notte. Il fondo sfuma invece fra due colori pieni, e il
+  testo sta sempre su un colore solo.
+- **Il punto peggiore è 4,14:1**, nel tema chiaro col sole a −10° a metà corsa: sopra il 3:1 del
+  nome a 22sp, poco sotto il 4,5 della riga dell'ora, per l'istante in cui lo scorrimento ci
+  passa. Fissato da `PlaceBarColorsTest`, che percorre ogni cielo, palette, tema e punto dello
+  scorrimento.
+- **La traccia più forte solo sulla scheda aperta**: sulla carta la traccia di prima regge ed è
+  quella delle altre righe; cambiarla ovunque avrebbe appesantito la settimana chiusa, che la
+  revisione aveva appena alleggerito.
+
+**Come è stato verificato**
+
+- `TodayAgendaTest`: aprire e chiudere due volte un giorno, con tutte le animazioni fino in fondo.
+  Prima della correzione falliva con l'eccezione del padding negativo; ora passa.
+- `PlaceBarColorsTest` (nuovo): il nome si legge in ogni punto della sfumatura (4,14:1 il
+  peggiore); le due estremità sono il bianco del cielo e la barra delle altre tab; in chiaro
+  l'inchiostro cambia una volta sola, mai avanti e indietro.
+- La pagina disegnata in chiaro a 100, 300, 450 e 600 px di scorrimento e in scuro a 300 e 600, e
+  la settimana col giorno aperto in chiaro e in scuro: guardate. `today-week.png` del README
+  rigenerata (la traccia della barra sulla scheda); le altre immagini non cambiano.
+- Suite completa e lint.
+
+## Oggi: la barra torna a cambiare d'un colpo, la pagina si ferma tutta (committente, 15 ott 2026)
+
+- [x] **La barra che sfumava con lo scorrimento non va.** Sul telefono, trascinando, sembrava
+  scurirsi di scatto e poi schiarirsi: per sfumare dal cielo alla carta il fondo doveva prima
+  comparire come cielo velato, più scuro della tela sotto di lui. Tolti `placeBarColors` e il suo
+  test. Il committente proponeva di tornare a com'era prima o di provare una barra sempre chiara
+  o scura secondo il tema, come su Cielo e Avvisi, chiedendo un parere: **sconsigliata per
+  estetica**, perché il cielo che arriva in cima allo schermo, sotto l'orologio, è ciò per cui
+  Oggi si riconosce, e una barra sopra lo farebbe diventare un riquadro dentro una pagina (la
+  tela arrotondata come card fu già scartata il 4 set per la stessa ragione). Quindi com'era
+  prima — trasparente a riposo, la carta del tema dal primo pixel — con una dissolvenza di 300 ms
+  al posto della molla degli effetti, che sul telefono si leggeva come uno scatto.
+- [x] **Scorrendo le ore di un giorno aperto le altre icone continuavano a muoversi.**
+  `LocalMotionPaused` scende soltanto: una striscia poteva fermare le proprie icone e non quelle
+  della pagina. `PageScrolls` e `ReportScrolling` (accanto a `LocalMotionPaused`): ogni striscia
+  dice alla pagina che si sta muovendo, e Oggi ferma tutte le sue icone finché qualcosa scorre — la
+  lista, il pager o una striscia. Vale anche per le prossime ore, che avevano lo stesso difetto.
+
+Verificato con `PageScrollsTest` (nuovo, Robolectric): la pagina è ferma finché uno qualsiasi
+dei suoi scorrimenti si muove, e viene liberata anche quando una striscia esce dalla
+composizione a metà corsa (un giorno chiuso mentre la sua striscia scorre ancora). Suite
+completa e lint; le immagini del README rigenerate non cambiano.
+
+## Oggi: la data del luogo, la più lunga che ci sta (committente, 15 ott 2026)
+
+Scorrendo, quando nella barra compariva la temperatura, la data sotto il nome passava sempre da
+«Venerdì 25 settembre · 12:15» a «Ven · 12:15», su ogni telefono. Il committente ha chiesto se
+si potesse tenere estesa: misurata in Google Sans a `labelLarge`, accanto alla temperatura su un
+360 dp restano circa 190 dp, e «Mercoledì 30 settembre · 12:15» ne vuole 197, «Wednesday 30
+September · 12:15» 213, con «PM» 237; su un 411 dp ci stanno tutte. Fra il formato medio sempre e
+il più lungo che ci sta il committente ha scelto il secondo.
+
+- [x] `FittingText` (`ui/components/`): fra più forme, la prima che sta su una riga alla larghezza
+  vera della riga, misurata con `TextMeasurer`; se non ne sta nessuna, l'ultima, che va a capo e
+  tiene le parole (§10). La riga del luogo gli passa la forma estesa, la media («Ven 25 set ·
+  12:15», `Formats.dayMedium`) e la breve. Non è più lo scorrimento a decidere: sul telefono di
+  riferimento del README la forma estesa resta anche con la temperatura accanto.
+- [x] TalkBack legge sempre la forma estesa, qualunque sia quella disegnata.
+
+Verificato con `FittingTextTest` (nuovo, Robolectric con la grafica nativa, perché quella di
+default misura ogni riga in pochi pixel): a 272 dp la forma estesa, a 190 la media, a 120 la
+breve, a 40 la breve che va a capo; `FormatsTest` per la forma media in IT/EN. Le immagini
+`today-week` e `today-details` del README rigenerate: la data estesa resta accanto alla
+temperatura. Suite completa e lint.
+

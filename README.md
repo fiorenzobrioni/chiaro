@@ -37,7 +37,7 @@ fetched, and says how old that data is.
 <table>
   <tr>
     <td align="center" width="33%"><img src="docs/screenshots/today-now.png" width="250" alt="The sky canvas with the temperature, the condition and the daylight ribbon, the next hours, and the rest of the day"><br><sub><b>Today</b>: the sky, then the numbers</sub></td>
-    <td align="center" width="33%"><img src="docs/screenshots/today-week.png" width="250" alt="The week on one shared temperature scale, each day with its ribbon of light, and tomorrow open on its UV and its hours"><br><sub><b>The week</b>, on one temperature scale</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/today-week.png" width="250" alt="The week on one shared temperature scale, each day with its ribbon of light and an arrow that opens it, and tomorrow open on a card of its own with its UV and its hours"><br><sub><b>The week</b>, on one temperature scale</sub></td>
     <td align="center" width="33%"><img src="docs/screenshots/today-details.png" width="250" alt="The details grid: wind, clouds, humidity, pressure, visibility, air quality and pollen, each with the line that says what to do with it"><br><sub><b>Details</b>: every number with its meaning</sub></td>
   </tr>
   <tr>

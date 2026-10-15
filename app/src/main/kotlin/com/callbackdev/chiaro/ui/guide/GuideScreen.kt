@@ -40,6 +40,8 @@ import com.callbackdev.chiaro.ui.components.DayRow
 import com.callbackdev.chiaro.ui.components.FreshnessChip
 import com.callbackdev.chiaro.ui.components.LightPhase
 import com.callbackdev.chiaro.ui.components.MetricTile
+import com.callbackdev.chiaro.ui.components.SegmentGap
+import com.callbackdev.chiaro.ui.components.gridSegmentShape
 import com.callbackdev.chiaro.ui.components.RibbonHour
 import com.callbackdev.chiaro.ui.components.humidityTrack
 import com.callbackdev.chiaro.ui.components.uvTrack
@@ -502,6 +504,9 @@ private fun WeekSample() {
                 phases = phases,
                 description = stringResource(R.string.guide_today_week_caption),
                 nowC = if (i == 0) 17.0 else null,
+                // The chevron the week's rows carry, closed: the body above says to tap a
+                // day, and the picture shows the mark that says so on Today.
+                expanded = false,
                 sky = sky,
                 wetLane = true,
                 skyFrom = if (i == 0) 0.42f else 0f
@@ -513,13 +518,15 @@ private fun WeekSample() {
 /** Two tiles of the details grid: the value, and the line that says what to do. */
 @Composable
 private fun MetricSample() {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    // Two segments of the details grid, as Today draws them (15 ott 2026).
+    Row(horizontalArrangement = Arrangement.spacedBy(SegmentGap)) {
         MetricTile(
             icon = ChiaroIcons.uv,
             label = stringResource(R.string.metric_uv),
             value = "7",
             meaning = stringResource(R.string.uv_meaning_high),
             track = uvTrack(7),
+            shape = gridSegmentShape(0, 1, 0, 2),
             modifier = Modifier.weight(1f)
         )
         MetricTile(
@@ -528,6 +535,7 @@ private fun MetricSample() {
             value = "62%",
             meaning = stringResource(R.string.dew_meaning_pleasant),
             track = humidityTrack(62),
+            shape = gridSegmentShape(0, 1, 1, 2),
             modifier = Modifier.weight(1f)
         )
     }

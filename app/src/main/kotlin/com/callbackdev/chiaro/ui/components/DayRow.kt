@@ -1,36 +1,53 @@
 package com.callbackdev.chiaro.ui.components
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
 import com.callbackdev.chiaro.ui.icons.ConditionIcon
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
+import com.callbackdev.chiaro.ui.theme.ChiaroMotion
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.forText
-import com.callbackdev.chiaro.ui.theme.reflowForText
+import com.callbackdev.chiaro.ui.theme.reducedMotion
 import com.callbackdev.chiaro.ui.theme.tabular
+import com.callbackdev.chiaro.ui.theme.textColumnScale
 
 /**
  * DESIGN.md §8.5. One day of the week: weekday, icon, rain probability, the range bar
@@ -48,6 +65,18 @@ import com.callbackdev.chiaro.ui.theme.tabular
  * "which day, what kind of day" and then "how warm", which is the order the row already
  * had, only turned through ninety degrees. The ribbon keeps its 52dp indent in one line
  * and loses it in two, because there is no longer a day column to line up under.
+ *
+ * **Where the row turns into two is measured, not quoted** (review of Today, 15 ott 2026).
+ * It was a type scale, 150%, worked out once against a 360dp screen; with the chevron's
+ * column the same arithmetic leaves the bar under its 48dp floor a step sooner there, and a
+ * 411dp phone never needed to split at 150% at all. The row now asks its own width: it
+ * splits when what is left to the bar after the columns, the icon, the gaps and the
+ * chevron is under [RangeBarMin].
+ *
+ * **A row that opens says so** (same review): a chevron after the high, turning over when
+ * the day is open, and the open or closed state told to TalkBack with the action's own
+ * words. The chevron's column is held on every row, opening or not, so the seven bars of a
+ * week share their ends as they share their scale.
  */
 @Composable
 fun DayRow(
@@ -70,6 +99,12 @@ fun DayRow(
     description: String,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
+    /** Whether the day is open, for a row that opens one; null draws no chevron and
+     * states nothing (the column stays). */
+    expanded: Boolean? = null,
+    /** The air between the row's touch target and its content: the target's ripple is
+     * clipped to [TargetShape] and reaches this far past the text. */
+    contentPadding: PaddingValues = PaddingValues(0.dp),
     /** Today's row: the temperature now, drawn on the range bar. */
     nowC: Double? = null,
     /** The day's forecast sky for its ribbon (DESIGN §4, 12 ott 2026). */
@@ -79,10 +114,25 @@ fun DayRow(
     wetLane: Boolean = false,
     /** Today's row: where now is in the day. What comes before it is spent, and the
      * ribbon fades it toward the track like the night (DESIGN §4, 12 ott 2026). */
-    skyFrom: Float = 0f
+    skyFrom: Float = 0f,
+    /** How far the ribbon's sky leans toward the track ([DaylightRibbon]'s quiet voice):
+     * the week's closed rows draw it lower, an open day in full. */
+    ribbonQuiet: Float = 0f,
+    /**
+     * The range bar's empty track, and the colour the ribbon's night leans toward: one step
+     * above the [ground] the row stands on. On the page that is `surfaceContainerHighest`
+     * over `surface`; on the open day's card (`surfaceContainer`) the same track measured
+     * 1.11:1 against its ground and all but vanished (committente, device, 15 ott 2026),
+     * so the card hands in a stronger one.
+     */
+    track: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    ground: Color = MaterialTheme.colorScheme.surface
 ) {
-    val reflow = reflowForText()
-    Column(
+    val openLabel = stringResource(if (expanded == true) R.string.week_day_close_action else R.string.week_day_open_action)
+    val state = expanded?.let {
+        stringResource(if (it) R.string.week_day_state_open else R.string.week_day_state_closed)
+    }
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
             // §10 asks for ≥ 48dp of target and the row draws 48 (a 38dp icon, 4dp of
@@ -95,47 +145,99 @@ fun DayRow(
             // target, so there is nothing here to disambiguate. Measured in Fase 9;
             // `minimumInteractiveComponentSize()` would cost the week 6dp a row and buy
             // the reader nothing.
-            .let { if (onClick != null) it.clickable(onClick = onClick) else it }
-            .semantics { contentDescription = description },
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        if (reflow) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) { DayAndSky(dayLabel, condition, rainPct, rainLabel) }
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) { Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC, nowC) }
-        } else {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                DayAndSky(dayLabel, condition, rainPct, rainLabel)
-                Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC, nowC)
+            // The press is clipped to the target's shape; a row that opens nothing (the guide's
+            // picture) is not clipped at all, so its ribbon keeps its square end.
+            .let {
+                if (onClick != null) {
+                    it.clip(TargetShape).clickable(onClickLabel = openLabel, onClick = onClick)
+                } else {
+                    it
+                }
             }
+            .semantics {
+                contentDescription = description
+                // Only on a row a finger can open: the guide draws the chevron as a picture.
+                if (onClick != null) state?.let { stateDescription = it }
+            }
+            .padding(contentPadding)
+    ) {
+        val reflow = splitsRow(maxWidth, LocalDensity.current.fontScale)
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            if (reflow) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) { DayAndSky(dayLabel, condition, rainPct, rainLabel) }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) { Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC, nowC, expanded, track, ground) }
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    DayAndSky(dayLabel, condition, rainPct, rainLabel)
+                    Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC, nowC, expanded, track, ground)
+                }
+            }
+            DaylightRibbon(
+                phases = phases,
+                nowFraction = null,
+                description = "", // idem: one announcement per row
+                // 6dp since the ribbon carries the sky (committente, 12 ott 2026): at 4dp an
+                // overcast afternoon had to be looked for; at 8dp the ribbon weighed as much
+                // as the range bar, and the row became two bars of one weight. Six reads at a
+                // glance and stays the second thing in the row.
+                height = 6.dp,
+                // The range bar's own track: the night leans toward it, so the row shows
+                // its pill of light rather than a navy bar (DESIGN §4, 23 set 2026).
+                nightFade = track,
+                hours = sky,
+                wetLane = wetLane,
+                skyFrom = skyFrom,
+                quiet = ribbonQuiet,
+                modifier = Modifier.padding(start = if (reflow) 0.dp else 52.dp)
+            )
         }
-        DaylightRibbon(
-            phases = phases,
-            nowFraction = null,
-            description = "", // idem: one announcement per row
-            // 6dp since the ribbon carries the sky (committente, 12 ott 2026): at 4dp an
-            // overcast afternoon had to be looked for; at 8dp the ribbon weighed as much
-            // as the range bar, and the row became two bars of one weight. Six reads at a
-            // glance and stays the second thing in the row.
-            height = 6.dp,
-            // The range bar's own track: the night leans toward it, so the row shows
-            // its pill of light rather than a navy bar (DESIGN §4, 23 set 2026).
-            nightFade = MaterialTheme.colorScheme.surfaceContainerHighest,
-            hours = sky,
-            wetLane = wetLane,
-            skyFrom = skyFrom,
-            modifier = Modifier.padding(start = if (reflow) 0.dp else 52.dp)
-        )
     }
 }
+
+/**
+ * Whether the row splits in two at this width and this type scale: when the range bar
+ * would get less than [RangeBarMin] beside the four text columns (which grow with the
+ * type), the icon, the five gaps between them and the chevron's column. Pure, so the
+ * arithmetic is testable without a device.
+ */
+internal fun splitsRow(width: Dp, fontScale: Float): Boolean {
+    val text = TextColumns * textColumnScale(fontScale)
+    val fixed = text + WeatherIconSize.Week + RowGap * 5 + ChevronColumn
+    return width - fixed < RangeBarMin
+}
+
+/** The day, rain, low and high columns, in dp at 100% type. */
+private val TextColumns = 44.dp + 36.dp + 34.dp + 34.dp
+
+/** The gap between the row's columns. */
+private val RowGap = 8.dp
+
+/** The chevron, at the size of the row's text rather than of its icons. */
+private val ChevronSize = 18.dp
+
+/** Between the high and the chevron: the two read as one column's end. */
+private val ChevronGap = 2.dp
+
+/** The chevron and the air before it: held on every row of a week. */
+private val ChevronColumn = ChevronGap + ChevronSize
+
+/** Under this the range bar is a smudge, not a bar (§10). */
+internal val RangeBarMin = 48.dp
+
+/** The ripple's shape: the row's own, rounded like the open day's container. */
+private val TargetShape = RoundedCornerShape(12.dp)
 
 /** Which day, and what kind of day. */
 @Composable
@@ -183,7 +285,10 @@ private fun RowScope.Range(
     highC: Double,
     scaleLowC: Double,
     scaleHighC: Double,
-    nowC: Double?
+    nowC: Double?,
+    expanded: Boolean?,
+    track: Color,
+    ground: Color
 ) {
     Text(
         text = lowLabel,
@@ -199,13 +304,37 @@ private fun RowScope.Range(
         scaleHighC = scaleHighC,
         description = "", // the row's own description covers it
         modifier = Modifier.weight(1f),
-        nowC = nowC
+        nowC = nowC,
+        track = track,
+        ground = ground
     )
-    Text(
-        text = highLabel,
-        style = MaterialTheme.typography.labelLarge.tabular(),
-        modifier = Modifier.width(34.dp.forText())
-    )
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(ChevronGap),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = highLabel,
+            style = MaterialTheme.typography.labelLarge.tabular(),
+            modifier = Modifier.width(34.dp.forText())
+        )
+        // Turns over when the day opens: the same mark points down to «there is more» and
+        // up to «put it away», which is how Material draws an expanding row.
+        val turn by animateFloatAsState(
+            targetValue = if (expanded == true) 180f else 0f,
+            animationSpec = ChiaroMotion.spatial(reducedMotion()),
+            label = "day chevron"
+        )
+        Box(modifier = Modifier.size(ChevronSize)) {
+            if (expanded != null) {
+                Icon(
+                    imageVector = Icons.Outlined.KeyboardArrowDown,
+                    contentDescription = null, // the row's state and action say it
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxSize().rotate(turn)
+                )
+            }
+        }
+    }
 }
 
 @Preview(showBackground = true, widthDp = 360)
