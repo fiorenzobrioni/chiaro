@@ -644,13 +644,19 @@ with the parts of it a gradient could not say.
 
 - **Cumulus**, in the hour's **cloud cover**: four octaves of value noise, each turned by 37°
   so the grid never lines up (unturned, it drew V-shapes), warped once by a two-octave field
-  so the clouds billow, in dp so they have the same grain on every screen, and flatter toward
+  so the clouds billow (by 0.6 of a cell, not more: at 0.9 the warp folded the plane over
+  itself here and there and every fold drew a crease drifting with the clouds), in dp so they have the same grain on every screen, and flatter toward
   the horizon (the canvas' bottom) as a deck is in perspective. The threshold follows the
   cover, so 30% draws a few clouds and 95% a deck with a few thin gaps. The shading flattens as
   the cover closes: a deck is one grey with soft folds, not a sky of lit puffs.
 - **Light**: the edge of a cloud that faces the sun by day, or the moon at night, is the
   lit one — the light's place is the bodies' own (§8.1c), the same bearing and altitude —
-  and near it the clouds catch a rim. **Lit** is a white with a breath of the sky by day, the
+  and near it the clouds catch a rim. **The lit side is one direction for the whole canvas**,
+  from its middle toward the light (device, 15 ott 2026): taken pixel by pixel toward the
+  light, the direction turned a full circle round it and the lit edge turned with it, which
+  drew rings and arcs into the clouds as far as 150dp from the moon, the «geometric shape» a
+  reader saw over the hero. The rim stays the light's own, a glow that fades with distance
+  and has no direction to turn. **Lit** is a white with a breath of the sky by day, the
   horizon's own colour in the golden hour, the moon's grey at night (`SkyPalette.CloudNight`,
   stronger under a bright moon); **shade** is the lit colour toward the sky's top stop, darker
   by night and under a likely rain.

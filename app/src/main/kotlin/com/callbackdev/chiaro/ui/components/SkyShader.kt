@@ -267,15 +267,20 @@ half4 main(float2 fc) {
     if (uCover > 0.01) {
         float2 p = float2((q.x + drift) * 0.0105, q.y * 0.0105 * persp);
         float2 w = float2(fbm2(p * 0.7 + float2(3.1, 7.7)), fbm2(p * 0.7 + float2(9.4, 1.3)));
-        float2 pw = p + (w - 0.5) * 0.9;
+        // 0.6 and not more: at 0.9 the warp folded the plane over itself here and there
+        // (its Jacobian went negative), and every fold drew a crease drifting with the clouds.
+        float2 pw = p + (w - 0.5) * 0.6;
         float n = fbm(pw);
         float th = mix(0.80, 0.16, uCover);
         float a = smoothstep(th, th + 0.22, n) * (1.0 - uCirrus * 0.75);
         if (a > 0.002) {
             float2 lightPx = uLight * uSize;
-            float2 toLight = lightPx - fc;
-            float len = max(length(toLight), 1.0);
-            float2 dir = toLight / len;
+            float len = max(length(lightPx - fc), 1.0);
+            // One direction for the whole canvas, from its middle toward the light. Taken per
+            // pixel it turned a full circle round the light, and the lit edge turned with it:
+            // rings and arcs drawn into the clouds 150dp around the moon (device, 15 ott 2026).
+            float2 across = lightPx - uSize * 0.5;
+            float2 dir = length(across) > 1.0 ? normalize(across) : float2(0.0, -1.0);
             float n2 = fbm(pw + dir * 0.16);
             float s = clamp(0.55 + (n - n2) * 4.0, 0.0, 1.0);
             // A deck is one grey with soft folds, not a sky of lit puffs: the shading flattens

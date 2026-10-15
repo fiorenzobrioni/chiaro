@@ -13910,3 +13910,34 @@ prova, poi tolte, a 841 × 701 chiaro e scuro, in fondo alla pagina, a 1280 × 8
 a 701 × 841 e di Allerte. Tutte le immagini del README rigenerate: quelle del telefono sono identiche
 (`widgets.png` differiva per l'antialiasing di un'area, ripristinata). Suite completa e lint.
 
+### Due difetti visti sul dispositivo (committente, 15 ott 2026)
+
+- [x] **Una forma geometrica nel cielo**, sopra la cifra, di sera con la luna. Riprodotta portando lo
+  shader in NumPy: la luce delle nuvole si calcolava pixel per pixel *verso* la luce, e attorno al
+  punto della luce quella direzione fa un giro completo. Il bordo illuminato gira con lei e disegna
+  anelli e archi concentrici fino a circa 150 dp dalla luna (la luna era 140 dp a destra della
+  forma, alla stessa altezza). Ora la direzione è una sola per tutto il canvas, dal centro verso la
+  luce; il bordo luminoso vicino alla luce resta legato al suo punto, che non ha direzione. Nella
+  stessa indagine: la distorsione delle nuvole a 0,9 piegava il piano su sé stesso nello 0,02% dei
+  punti (jacobiano negativo, misurato), con pieghe che viaggiano col vento; a 0,6 il minimo del
+  jacobiano è 0,21 e non piega mai. `today-now` e `today-foldable` rigenerate e confrontate: stesso
+  carattere, il vortice attorno al sole sparito.
+- [x] **Il foglio dei luoghi che rimbalza** dopo un trascinamento verso l'alto, finché non lo si tocca.
+  Una sonda Robolectric ha misurato che, al rilascio, la molla del foglio lo porta *sopra* la sua
+  posizione aperta (Material 1.4 lo concede e lo maschera). Material imbottisce il contenuto del
+  foglio con la parte della barra di stato che il foglio copre: al 94% dell'altezza il foglio stava a
+  pochi dp sotto la barra di stato, il piccolo superamento lo portava sotto, l'imbottitura lo faceva
+  crescere, la posizione aperta saliva, la molla la inseguiva, l'imbottitura spariva e la posizione
+  riscendeva. Un'altalena che solo un dito interrompe; in Robolectric, senza barra di stato, il
+  foglio si fermava. Ora il contenuto non prende l'inset in alto (solo quello in basso) e l'altezza è
+  la finestra meno la barra di stato e 12 dp, così l'altezza non dipende più da dove sta il foglio.
+  Gli altri fogli dell'app sono alti quanto il loro contenuto: stanno lontano dalla barra di stato o
+  attaccati in cima, dove l'imbottitura non cambia.
+
+**Come è stato verificato.** Lo shader portato in NumPy (le stesse funzioni, gli stessi numeri), rese
+prima e dopo su otto tratti di cielo a 50% e 80% di copertura con la luce dove l'aveva il
+dispositivo; il jacobiano della distorsione misurato su 4000 × 440 dp. Il rimbalzo: una sonda con
+la stessa struttura del foglio, poi tolta, e la lettura del sorgente di Material 1.4
+(`consumeWindowInsets(top = offset)`, `contentWindowInsets`, `animateTo` che ammette il superamento).
+Resta da confermare sul dispositivo che il foglio non rimbalzi più.
+
