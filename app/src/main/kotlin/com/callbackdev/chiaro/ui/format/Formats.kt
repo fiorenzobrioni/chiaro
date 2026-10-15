@@ -109,4 +109,10 @@ object Formats {
     fun dayLong(date: java.time.LocalDate, locale: Locale): String =
         date.format(DateTimeFormatter.ofPattern("EEEE d MMMM", locale))
             .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+
+    /** The day in short — "Sun 7 Sep", "Dom 7 set": the date kept, the words abbreviated, for
+     * a line that has no room for [dayLong] (the place row beside the bar's temperature). */
+    fun dayMedium(date: java.time.LocalDate, locale: Locale): String =
+        date.format(DateTimeFormatter.ofPattern("EEE d MMM", locale))
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
 }

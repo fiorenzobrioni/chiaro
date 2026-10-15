@@ -35,7 +35,8 @@ sections are a normal size and live here alone.
   its own with its facts and its hours; the closed days draw their skies more quietly, so the
   temperatures are read first. The details are one group of tiles and «What changed» is a row
   per day, as the Sky groups its moments. The bar at the top, once you scroll, is the same as on
-  Sky and Alerts, with a short fade from the sky's colours. The tiles, the banners and the notice
+  Sky and Alerts, with a short fade from the sky's colours, and it keeps the place's full date
+  whenever the phone has room for it beside the temperature. The tiles, the banners and the notice
   cards share the rounder corners and the type of the other two tabs.
 - **The rest of the day speaks the Sky's language.** Its moments carry the Sky's names («Golden
   hour, evening»), the next one is marked «Next, today», and tapping one opens its page from the

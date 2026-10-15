@@ -13563,3 +13563,25 @@ dei suoi scorrimenti si muove, e viene liberata anche quando una striscia esce d
 composizione a metà corsa (un giorno chiuso mentre la sua striscia scorre ancora). Suite
 completa e lint; le immagini del README rigenerate non cambiano.
 
+## Oggi: la data del luogo, la più lunga che ci sta (committente, 15 ott 2026)
+
+Scorrendo, quando nella barra compariva la temperatura, la data sotto il nome passava sempre da
+«Venerdì 25 settembre · 12:15» a «Ven · 12:15», su ogni telefono. Il committente ha chiesto se
+si potesse tenere estesa: misurata in Google Sans a `labelLarge`, accanto alla temperatura su un
+360 dp restano circa 190 dp, e «Mercoledì 30 settembre · 12:15» ne vuole 197, «Wednesday 30
+September · 12:15» 213, con «PM» 237; su un 411 dp ci stanno tutte. Fra il formato medio sempre e
+il più lungo che ci sta il committente ha scelto il secondo.
+
+- [x] `FittingText` (`ui/components/`): fra più forme, la prima che sta su una riga alla larghezza
+  vera della riga, misurata con `TextMeasurer`; se non ne sta nessuna, l'ultima, che va a capo e
+  tiene le parole (§10). La riga del luogo gli passa la forma estesa, la media («Ven 25 set ·
+  12:15», `Formats.dayMedium`) e la breve. Non è più lo scorrimento a decidere: sul telefono di
+  riferimento del README la forma estesa resta anche con la temperatura accanto.
+- [x] TalkBack legge sempre la forma estesa, qualunque sia quella disegnata.
+
+Verificato con `FittingTextTest` (nuovo, Robolectric con la grafica nativa, perché quella di
+default misura ogni riga in pochi pixel): a 272 dp la forma estesa, a 190 la media, a 120 la
+breve, a 40 la breve che va a capo; `FormatsTest` per la forma media in IT/EN. Le immagini
+`today-week` e `today-details` del README rigenerate: la data estesa resta accanto alla
+temperatura. Suite completa e lint.
+

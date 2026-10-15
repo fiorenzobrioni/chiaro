@@ -1275,8 +1275,14 @@ when the page is at rest — so it is the one bar in the app with two grounds:
 **Compact** (23 set 2026): once the canvas has climbed to within 120dp of the bar, the hero
 is under it or gone, and the bar carries it — the sky's still icon and the temperature in
 whole degrees, beside the name (which then keeps to one line), fading and sliding in on the
-effects and spatial springs. The place's date shortens to its short weekday at the same
-moment, so the bar never grows a line mid-scroll and moves the canvas under the finger.
+effects and spatial springs. **The place's day is the longest form that fits** (committente,
+15 ott 2026; `FittingText`): «Venerdì 25 settembre · 12:15», else «Ven 25 set · 12:15», else
+«Ven · 12:15», each measured at `labelLarge` against the width the line really has, so the line
+never wraps and the bar never grows mid-scroll. Until then the date shortened to its weekday
+whenever the temperature came in, on every phone; measured in Google Sans, the long form beside
+the temperature needs up to 213dp («Wednesday 30 September · 12:15», 237 with «PM») where a
+360dp phone leaves it about 190, and a 411dp phone fits them all. TalkBack hears the long form
+whichever is drawn.
 
 **The target is the place's whole block** (review of Today, 15 ott 2026), as on the other
 tabs' header (§8.12b): the name and the place's hour together, 28 + 20 = 48dp, at least 48

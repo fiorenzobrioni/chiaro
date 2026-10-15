@@ -110,6 +110,7 @@ import com.callbackdev.chiaro.domain.sky.SkyJob
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkySights
 import com.callbackdev.chiaro.ui.components.DayRow
+import com.callbackdev.chiaro.ui.components.FittingText
 import com.callbackdev.chiaro.ui.components.DaylightRibbon
 import com.callbackdev.chiaro.ui.components.FreshnessChip
 import com.callbackdev.chiaro.ui.components.HourCell
@@ -501,7 +502,9 @@ private fun GlobalFrame(
 private fun PlaceHeader(
     title: String,
     isGps: Boolean,
-    localNow: String?,
+    /** The place's day and hour, longest form first ([FittingText] draws the longest
+     * that fits). */
+    localNow: List<String>?,
     dots: Pair<Int, Int>?,
     onOpenPlaces: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -537,7 +540,9 @@ private fun PlaceHeader(
                         // word) and the place's own hour, with «change place» as its action.
                         // The chevron says nothing of its own.
                         .clearAndSetSemantics {
-                            contentDescription = listOfNotNull(spoken, localNow).joinToString(", ")
+                            // The longest form, whichever one the line can draw.
+                            contentDescription = listOfNotNull(spoken, localNow?.firstOrNull())
+                                .joinToString(", ")
                         }
                         .defaultMinSize(minWidth = PlaceTargetMin, minHeight = PlaceTargetMin)
                         .padding(horizontal = PlaceTargetInset)
@@ -573,9 +578,16 @@ private fun PlaceHeader(
                     // Full strength rather than a faded white: this sits over the sky,
                     // where §3.6's scrim is measured against ink at full opacity, and the
                     // size is what makes it secondary.
+                    //
+                    // The longest form that fits (committente, 15 ott 2026): «Venerdì 25
+                    // settembre · 12:15» while it has the room, «Ven 25 set · 12:15» when the
+                    // bar's temperature takes it, «Ven · 12:15» at a type size where neither
+                    // fits. Measured, not decided by the scroll: on a wide phone the long one
+                    // stays all the way down, and the line never wraps, which would make the
+                    // bar taller under the reader's finger.
                     localNow?.let {
-                        Text(
-                            text = it,
+                        FittingText(
+                            candidates = it,
                             style = MaterialTheme.typography.labelLarge,
                             color = contentColor
                         )
@@ -1113,16 +1125,16 @@ private fun ContentState(
         PlaceHeader(
             title = title,
             isGps = isGps,
-            localNow = when {
-                isGps -> null
-                // With the temperature beside it the long date no longer fits on one
-                // line, and a line that wrapped would make the bar taller mid-scroll —
-                // moving the canvas under the reader's finger. The short day keeps the
-                // bar's height and the hour, which is the part that differs by place.
-                heroGone -> "${Formats.dayLabel(content.now.toLocalDate(), locale)} · " +
-                    content.now.format(timeFmt)
-                else -> "${Formats.dayLong(content.now.toLocalDate(), locale)} · " +
-                    content.now.format(timeFmt)
+            localNow = if (isGps) {
+                null
+            } else {
+                val day = content.now.toLocalDate()
+                val time = content.now.format(timeFmt)
+                listOf(
+                    Formats.dayLong(day, locale),
+                    Formats.dayMedium(day, locale),
+                    Formats.dayLabel(day, locale)
+                ).map { "$it · $time" }
             },
             dots = dots,
             onOpenPlaces = onOpenPlaces,
