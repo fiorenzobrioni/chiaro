@@ -93,9 +93,12 @@ fun TimelineRow(
             modifier = Modifier.size(WeatherIconSize.Timeline)
         )
         Column(modifier = Modifier.weight(1f)) {
+            // `bodyLarge`, the Sky row's name and the Alerts row's (review of Today, 15 ott
+            // 2026): the same golden hour and the same sunset were set two sizes smaller on
+            // Today than on the tab that names them.
             Text(
                 text = text,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyLarge
             )
             soon?.let {
                 Text(

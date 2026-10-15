@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.ui.today
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,6 +39,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
@@ -47,6 +50,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -70,6 +74,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
@@ -78,6 +84,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -133,8 +140,10 @@ import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.sky.SkyText
+import com.callbackdev.chiaro.ui.theme.CardCorner
 import com.callbackdev.chiaro.ui.theme.ChiaroMotion
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
+import com.callbackdev.chiaro.ui.theme.GroupCorner
 import com.callbackdev.chiaro.ui.theme.SkyGradient
 import com.callbackdev.chiaro.ui.theme.SkyPalette
 import com.callbackdev.chiaro.ui.theme.reducedMotion
@@ -396,7 +405,7 @@ internal fun TodayPage(
                 dotInactive = MaterialTheme.colorScheme.outlineVariant,
                 modifier = Modifier
                     .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = HeaderVerticalPadding)
+                    .padding(HeaderPadding)
             )
             when (state) {
                 TodayUiState.Starting -> TodaySkeleton()
@@ -414,6 +423,25 @@ internal fun TodayPage(
  * one without moved the title 4dp (review, 8 set 2026).
  */
 private val HeaderVerticalPadding = 8.dp
+
+/** The air the place target's ripple has around its text, taken from [HeaderPadding]. */
+private val PlaceTargetInset = 8.dp
+
+/** The place row's padding: the page's 16 at the end, where the gear's own 48dp box carries
+ * its air, and 16 less the place target's inset at the start, so the name stands on the
+ * page margin and the target's ripple reaches past it. */
+private val HeaderPadding = PaddingValues(
+    start = 16.dp - PlaceTargetInset,
+    end = 16.dp,
+    top = HeaderVerticalPadding,
+    bottom = HeaderVerticalPadding
+)
+
+/** The place target's minimum, DESIGN §6's floor for anything a finger aims at. */
+private val PlaceTargetMin = 48.dp
+
+/** The place target's ripple: rounded like the other tabs' place targets. */
+private val PlaceTargetShape = RoundedCornerShape(12.dp)
 
 /** The frame for the two page-less situations: not started yet, and no place at all. */
 @Composable
@@ -435,7 +463,7 @@ private fun GlobalFrame(
                 dotInactive = MaterialTheme.colorScheme.outlineVariant,
                 modifier = Modifier
                     .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = HeaderVerticalPadding)
+                    .padding(HeaderPadding)
             )
             content()
         }
@@ -475,59 +503,85 @@ private fun PlaceHeader(
     compact: (@Composable () -> Unit)? = null
 ) {
     val spoken = if (isGps) stringResource(R.string.header_gps_desc, title) else title
+    val switcher = stringResource(R.string.place_switcher_action)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier
-                    .clickable(onClick = onOpenPlaces)
-                    .semantics { contentDescription = spoken }
-            ) {
-                if (isGps) {
-                    Icon(
-                        imageVector = Icons.Outlined.LocationOn,
-                        contentDescription = null, // the row speaks once, GPS included
-                        tint = contentColor,
-                        modifier = Modifier.size(20.dp)
-                    )
+            // The target is the whole block, name and hour together, as on the other tabs'
+            // `TabHeader` (review of Today, 15 ott 2026). It was the name's row alone: a
+            // `titleLarge` line beside a 24dp chevron, about 28dp tall, under the 48 DESIGN
+            // §6 asks of every target, with a ripple that was not clipped and so drew a
+            // rectangle over the sky. Name and hour are 28 + 20 = 48dp, which is also where
+            // a finger aims for "this place"; without the hour the block keeps 48 by its
+            // minimum. The 8dp it is inset by are the ripple's, taken from the row's 16, so
+            // the text stays where it was. The ripple takes the row's ink: white over the
+            // sky, the theme's ink on a plain surface.
+            CompositionLocalProvider(LocalContentColor provides contentColor) {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .clip(PlaceTargetShape)
+                        .clickable(onClickLabel = switcher, role = Role.Button, onClick = onOpenPlaces)
+                        // One button to a screen reader: the place (and the position pin's
+                        // word) and the place's own hour, with «change place» as its action.
+                        // The chevron says nothing of its own.
+                        .clearAndSetSemantics {
+                            contentDescription = listOfNotNull(spoken, localNow).joinToString(", ")
+                        }
+                        .defaultMinSize(minWidth = PlaceTargetMin, minHeight = PlaceTargetMin)
+                        .padding(horizontal = PlaceTargetInset)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        if (isGps) {
+                            Icon(
+                                imageVector = Icons.Outlined.LocationOn,
+                                contentDescription = null,
+                                tint = contentColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Text(
+                            title,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = contentColor,
+                            // One line when the bar also carries the temperature: a name
+                            // that wrapped under it would push the bar taller at every scroll.
+                            maxLines = if (compact != null) 1 else Int.MAX_VALUE,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                        Icon(
+                            imageVector = Icons.Outlined.KeyboardArrowDown,
+                            contentDescription = null, // the block's action says it
+                            tint = contentColor
+                        )
+                    }
+                    // Full strength rather than a faded white: this sits over the sky,
+                    // where §3.6's scrim is measured against ink at full opacity, and the
+                    // size is what makes it secondary.
+                    localNow?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = contentColor
+                        )
+                    }
                 }
-                Text(
-                    title,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = contentColor,
-                    // One line when the bar also carries the temperature: a name that
-                    // wrapped under it would push the bar taller at every scroll.
-                    maxLines = if (compact != null) 1 else Int.MAX_VALUE,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-                Icon(
-                    imageVector = Icons.Outlined.KeyboardArrowDown,
-                    contentDescription = stringResource(R.string.place_switcher_action),
-                    tint = contentColor
-                )
             }
-            // Outside the tappable row: it is a fact, not a way in. Full strength
-            // rather than a faded white — this sits over the sky, where §3.6's scrim
-            // is measured against ink at full opacity, and the size is what makes it
-            // secondary.
-            localNow?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = contentColor
-                )
-            }
+            // Outside the target: where this page stands among the others is a fact,
+            // not a way in.
             dots?.let { (selected, count) ->
                 PageDots(
                     selected = selected,
                     count = count,
                     active = contentColor,
-                    inactive = dotInactive
+                    inactive = dotInactive,
+                    modifier = Modifier.padding(start = PlaceTargetInset)
                 )
             }
         }
@@ -582,11 +636,17 @@ private val HeroReach = 120.dp
 
 /** The place dots of VISION §5.1: position among the pages, at a glance. */
 @Composable
-private fun PageDots(selected: Int, count: Int, active: Color, inactive: Color) {
+private fun PageDots(
+    selected: Int,
+    count: Int,
+    active: Color,
+    inactive: Color,
+    modifier: Modifier = Modifier
+) {
     val description = stringResource(R.string.pager_dots_desc, selected + 1, count)
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier
+        modifier = modifier
             .padding(top = 4.dp)
             .semantics { contentDescription = description }
     ) {
@@ -709,7 +769,8 @@ private fun TodaySkeleton() {
 private fun ErrorBanner(error: TodayError, onRetry: () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.errorContainer,
-        shape = MaterialTheme.shapes.medium,
+        // A banner of one statement: the groups' corner (DESIGN §6), as the warning's.
+        shape = RoundedCornerShape(GroupCorner),
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
         Row(
@@ -813,8 +874,8 @@ private fun ContentState(
         animationSpec = ChiaroMotion.effects(reduced),
         label = "place row ground"
     )
-    val headerInk = Color.White
-    val headerDotInk = Color.White.copy(alpha = 0.4f)
+    val headerInk = SkyPalette.Ink
+    val headerDotInk = SkyPalette.InkQuiet
     // The hero is gone once the canvas' bottom has climbed to within [HeroReach] of the
     // bar: past that line the temperature is under the bar or above the screen.
     val heroGone by remember {
@@ -1014,7 +1075,7 @@ private fun ContentState(
                 }
                 .background(headerGround)
                 .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = HeaderVerticalPadding)
+                .padding(HeaderPadding)
         )
     }
     }
@@ -1136,11 +1197,19 @@ private fun CanvasHeader(
                     )
                 )
             }
+            // Three groups, set apart by the air between them rather than by one even step
+            // (review of Today, 15 ott 2026): the NOW — the number, the sky's word, what it
+            // feels like and whether it is an estimate — packed tight under the figure; the
+            // DAY's sentence a step below it; the ribbon with its clock times closing the
+            // canvas. With 6dp between every line the word and the sentence read as one
+            // paragraph of three lines.
+            //
+            // Every line is [SkyPalette.Ink] at full strength (DESIGN §3.6): the secondary
+            // ones are told apart by their size, never by a thinner white.
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                    .padding(16.dp)
             ) {
                 // Whole degrees (committente, 24 set 2026), like every other temperature
                 // in the app. The tenths were the model's resolution, not its accuracy: a
@@ -1150,19 +1219,20 @@ private fun CanvasHeader(
                 Text(
                     text = Formats.temperature(current.tempC, units.temperature, locale),
                     style = com.callbackdev.chiaro.ui.theme.LocalChiaroType.current.heroTemperature,
-                    color = Color.White
+                    color = SkyPalette.Ink
                 )
                 // Two type sizes on one line align by BASELINE, not by top: top-aligned
                 // they read as a mistake the moment the sizes differ (device check, 2 set).
                 //
                 // The condition is `titleLarge` since the review of 23 set 2026: from the
                 // 64sp hero straight down to 16sp was a cliff, and the word that says what
-                // the sky is doing is the second thing a reader wants.
+                // the sky is doing is the second thing a reader wants. No space over it:
+                // the figure's own 68sp line already leaves air under its digits.
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         text = stringResource(WeatherText.condition(current.condition.wmoCode)),
                         style = MaterialTheme.typography.titleLarge,
-                        color = Color.White,
+                        color = SkyPalette.Ink,
                         modifier = Modifier.alignByBaseline()
                     )
                     // Only when it says something (§1.2): "21° / feels like 21°" is a number
@@ -1175,7 +1245,7 @@ private fun CanvasHeader(
                                 Formats.temperature(current.feelsLikeC, units.temperature, locale)
                             ),
                             style = MaterialTheme.typography.bodyLarge,
-                            color = Color.White.copy(alpha = 0.7f),
+                            color = SkyPalette.Ink,
                             modifier = Modifier.alignByBaseline()
                         )
                     }
@@ -1187,17 +1257,25 @@ private fun CanvasHeader(
                     Text(
                         text = stringResource(R.string.estimate_hero),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.7f)
+                        color = SkyPalette.Ink,
+                        modifier = Modifier.padding(top = HeroLineGap)
                     )
                 }
                 // The sentence before the ribbon (review of 12 ott 2026): it is the second
-                // thing the hero says, right under the word for the sky, and the ribbon
-                // with its two clock times closes the canvas as its floor line.
+                // thing the hero says, under the word for the sky, and the ribbon with its two
+                // clock times closes the canvas as its floor line.
+                //
+                // Prose at `bodyLarge` since the review of 15 ott 2026. At `titleLarge` it
+                // wore the sky's word's own size and weight, so two lines about the day
+                // outweighed the one word about now; set as a sentence it reads as one, and
+                // the order the eye takes is the order of the screen — the number, the word,
+                // the day.
                 headlineText(content.headline, timeFmt, units)?.let { sentence ->
                     Text(
                         text = sentence,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = Color.White
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = SkyPalette.Ink,
+                        modifier = Modifier.padding(top = HeroGroupGap)
                     )
                 }
                 DaylightRibbon(
@@ -1207,10 +1285,15 @@ private fun CanvasHeader(
                     // What is left of today wears its forecast sky (DESIGN §4, 12 ott
                     // 2026); what is already spent stays light alone, dimmed as before.
                     hours = sky.hours,
-                    skyFrom = sky.nowFraction
+                    skyFrom = sky.nowFraction,
+                    modifier = Modifier.padding(top = HeroRibbonGap)
                 )
                 ribbonTimes(content, timeFmt).takeIf { it.isNotEmpty() }?.let { times ->
-                    RibbonTimes(times = times, color = Color.White.copy(alpha = 0.85f))
+                    RibbonTimes(
+                        times = times,
+                        color = SkyPalette.Ink,
+                        modifier = Modifier.padding(top = HeroLineGap)
+                    )
                 }
             }
         }
@@ -1248,6 +1331,16 @@ private fun SkyColumn(seat: Dp, floor: Dp, content: @Composable () -> Unit) {
  * room for it to climb. */
 private val BodiesBand = 56.dp
 
+/** Between two lines of one group on the canvas: the estimate's note under the word, the
+ * clock times under the ribbon. */
+private val HeroLineGap = 4.dp
+
+/** Between the now and the day's sentence: a step, so the two read as two things. */
+private val HeroGroupGap = 12.dp
+
+/** Over the ribbon: the canvas' floor line stands clear of the prose above it. */
+private val HeroRibbonGap = 16.dp
+
 /** Below this the feels-like line is not drawn: the air feels like what it is. */
 private const val FeelsLikeMinDeltaC = 1.0
 
@@ -1264,13 +1357,16 @@ private fun GuideCard(onOpen: () -> Unit, onDismiss: () -> Unit) {
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
         ),
+        // The notice's card, as on Sky and Alerts (DESIGN §6): the app's card corner and the
+        // 20dp of inner air it asks for.
+        shape = RoundedCornerShape(CardCorner),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 4.dp)
+            modifier = Modifier.padding(start = 20.dp, top = 8.dp, end = 8.dp)
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -1291,7 +1387,7 @@ private fun GuideCard(onOpen: () -> Unit, onDismiss: () -> Unit) {
         }
         TextButton(
             onClick = onOpen,
-            modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
+            modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)
         ) {
             Text(stringResource(R.string.guide_card_open))
         }
@@ -1361,14 +1457,14 @@ private fun ribbonTimes(
 /** Labels placed under the fractions of the width they name, centred there and kept
  * inside the row. */
 @Composable
-private fun RibbonTimes(times: List<Pair<Float, String>>, color: Color) {
+private fun RibbonTimes(times: List<Pair<Float, String>>, color: Color, modifier: Modifier = Modifier) {
     androidx.compose.ui.layout.Layout(
         content = {
             times.forEach { (_, text) ->
                 Text(text = text, style = MaterialTheme.typography.labelSmall.tabular(), color = color)
             }
         },
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clearAndSetSemantics { }
     ) { measurables, constraints ->
@@ -1687,9 +1783,20 @@ private fun LazyListScope.weekRows(
     }
 }
 
-/** One day of the week and, when it is open, its hours: the row wears the page margin,
- * the strip under it takes the same margin as `contentPadding` and scrolls edge to edge
- * like the strip at the top of the page. */
+/**
+ * One day of the week and, when it is open, its hours.
+ *
+ * **The open day is a card** (review of Today, 15 ott 2026). Its facts and its strip used to
+ * open straight onto the paper between two rows, with the strip's curve running edge to
+ * edge, and nothing said which day they belonged to. Open, the row, its facts and its hours
+ * now stand on one `surfaceContainer` ground with the groups' 20dp corner ([GroupCorner]),
+ * drawn [OpenDayInset] inside the page margin so the row's text keeps its column (the seven
+ * bars still line up) and the strip scrolls inside the card rather than off the screen. The
+ * ground fades in with the effects spring and the card's top air grows with the spatial one,
+ * so opening a day is one movement; closing it reverses it. A closed row stands on the paper
+ * as before: seven cards would be a heavier week to read, and the chevron already says
+ * which rows open.
+ */
 @Composable
 private fun WeekRow(
     day: WeekDay,
@@ -1711,7 +1818,28 @@ private fun WeekRow(
     val low = Formats.temperature(f.lowC, units.temperature, locale)
     val high = Formats.temperature(f.highC, units.temperature, locale)
     val reduced = reducedMotion()
-    Column {
+    val opens = day.hours.isNotEmpty()
+    val card = MaterialTheme.colorScheme.surfaceContainer
+    val ground by animateColorAsState(
+        targetValue = if (expanded) card else card.copy(alpha = 0f),
+        animationSpec = ChiaroMotion.effects(reduced),
+        label = "open day ground"
+    )
+    val top by animateDpAsState(
+        targetValue = if (expanded) OpenDayInset else 0.dp,
+        animationSpec = ChiaroMotion.spatial(reduced),
+        label = "open day top"
+    )
+    Column(
+        modifier = Modifier
+            .padding(horizontal = OpenDayInset)
+            .drawBehind {
+                if (ground.alpha > 0f) {
+                    drawRoundRect(color = ground, cornerRadius = CornerRadius(GroupCorner.toPx()))
+                }
+            }
+            .padding(top = top)
+    ) {
         DayRow(
             dayLabel = label,
             condition = ConditionGlyph(f.condition.wmoCode, night = false),
@@ -1743,21 +1871,24 @@ private fun WeekRow(
                 stringResource(WeatherText.condition(f.condition.wmoCode)),
                 low, high
             ), wetDescription(day.hours.map { it.hour }, is24h, locale)).joinToString(". "),
-            onClick = if (day.hours.isNotEmpty()) onToggle else null,
+            onClick = if (opens) onToggle else null,
+            expanded = if (opens) expanded else null,
             nowC = if (isToday) nowC else null,
-            modifier = Modifier.padding(PagePadding)
+            contentPadding = PaddingValues(horizontal = OpenDayInset)
         )
         AnimatedVisibility(
             visible = expanded,
             enter = ChiaroMotion.enter(reduced),
             exit = ChiaroMotion.exit(reduced)
         ) {
-            Column {
+            Column(modifier = Modifier.padding(bottom = OpenDayBottom)) {
                 DayFacts(forecast = f, units = units, locale = locale)
                 HourStrip(
                     hours = day.hours.map { it.toCell(units, is24h, locale, markDayStart = false) },
                     modifier = Modifier.padding(top = 4.dp),
-                    contentPadding = PagePadding,
+                    // The card's own inset, so the first hour stands on the page's column and
+                    // the strip scrolls under the card's edge, not the screen's.
+                    contentPadding = PaddingValues(horizontal = OpenDayInset),
                     // Opened on the morning, not on midnight (review of 12 ott 2026): the
                     // first six cells of a later day were 00–05, all night, and the hours
                     // a reader opens a day for were off the screen. Remembered inside the
@@ -1770,6 +1901,13 @@ private fun WeekRow(
         }
     }
 }
+
+/** The open day's card stands this far inside the page margin, and its content this far
+ * inside the card: 8 + 8 is the page's 16, so the row's columns never move. */
+private val OpenDayInset = 8.dp
+
+/** The air under the open day's strip, before the card's edge. */
+private val OpenDayBottom = 12.dp
 
 /**
  * Where an open day's strip starts: the hour before the first daylight hour, so the
@@ -1861,7 +1999,8 @@ private fun DayFacts(forecast: DailyForecast, units: UnitSettings, locale: Local
     }
     if (facts.isEmpty()) return
     Column(
-        modifier = Modifier.padding(PagePadding).padding(top = 4.dp, bottom = 4.dp),
+        // Inside the open day's card, whose own inset makes up the page margin.
+        modifier = Modifier.padding(horizontal = OpenDayInset).padding(top = 4.dp, bottom = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         facts.forEach { fact ->

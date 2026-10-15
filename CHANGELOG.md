@@ -29,6 +29,12 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Today in the shape of Sky and Alerts.** The top of Today reads in three steps: the
+  temperature and the sky's word, then the day's sentence set as a sentence, then the ribbon.
+  Every day of the week carries an arrow that says it opens, and an open day stands on a card of
+  its own with its facts and its hours. The tiles, the banners and the notice cards share the
+  rounder corners of the other two tabs, and the rest of the day is set at the size the Sky uses
+  for the same moments.
 - **Alerts in the Sky's shape.** The alerts are grouped rows like the Sky's moments, and so are
   the rows of Settings. A warning in force is now the big card at the top of the official
   warnings, in the warning's own color, instead of a small banner. The hours of the morning and
@@ -131,6 +137,13 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **Easier to read on a bright sky.** The feels-like, the estimate's note and the sunrise and
+  sunset under the ribbon were a paler white than the rest of the sky's text, which on a clear
+  noon sky dropped them under the contrast a line of text needs. They are now the same white,
+  told apart by their size.
+- **The place name on Today is easier to tap.** The whole name and hour are one button, as
+  large as a finger needs, and TalkBack reads it as one; the week's days say whether they are
+  open and what tapping does.
 - **An alert you edit starts over.** Changing an alert's thresholds or hours now re-arms it,
   so it can speak under its new conditions the same day; until now an alert that had already
   fired kept quiet until its old condition happened to turn false.

@@ -502,6 +502,9 @@ private fun WeekSample() {
                 phases = phases,
                 description = stringResource(R.string.guide_today_week_caption),
                 nowC = if (i == 0) 17.0 else null,
+                // The chevron the week's rows carry, closed: the body above says to tap a
+                // day, and the picture shows the mark that says so on Today.
+                expanded = false,
                 sky = sky,
                 wetLane = true,
                 skyFrom = if (i == 0) 0.42f else 0f

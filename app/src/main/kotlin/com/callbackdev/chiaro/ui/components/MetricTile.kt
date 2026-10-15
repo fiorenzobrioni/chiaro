@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
+import com.callbackdev.chiaro.ui.theme.GroupCorner
 import com.callbackdev.chiaro.ui.theme.LocalChiaroType
 
 /**
@@ -76,7 +78,10 @@ fun MetricTile(
     Surface(
         modifier = modifier.fillMaxWidth().let { if (onClick != null) it.clickable(onClick = onClick) else it },
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = MaterialTheme.shapes.medium
+        // The groups' corner since the review of Today (15 ott 2026, DESIGN §6): at
+        // Material's 12 the grid was the one block of the app still cut from the old
+        // paper, beside the Sky's and the Alerts' 20 and 28.
+        shape = RoundedCornerShape(GroupCorner)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),

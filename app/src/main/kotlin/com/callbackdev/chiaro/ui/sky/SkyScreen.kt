@@ -107,6 +107,7 @@ import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.sky.compass.CompassView
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
+import com.callbackdev.chiaro.ui.theme.CardCorner
 import com.callbackdev.chiaro.ui.theme.GroupTop
 import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
@@ -627,7 +628,7 @@ private fun NextMomentCard(
     val day = stringResource(
         if (moment.timing == MomentTiming.TOMORROW) R.string.sky_day_tomorrow else R.string.sky_day_today
     ).lowercase(currentLocale())
-    val shape = RoundedCornerShape(NextCardCorner)
+    val shape = RoundedCornerShape(CardCorner)
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 4.dp)
@@ -787,7 +788,6 @@ internal fun SkyRow(
 
 /** An extended FAB is 56 dp tall with 16 dp under it; 16 more so the last row clears it. */
 private val FabClearance = 88.dp
-private val NextCardCorner = 28.dp
 private val RowStart = 12.dp
 private val RowGap = 12.dp
 private val RowMinHeight = 72.dp

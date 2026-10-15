@@ -1,7 +1,6 @@
 package com.callbackdev.chiaro.ui.warnings
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +29,7 @@ import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
+import com.callbackdev.chiaro.ui.theme.GroupCorner
 import com.callbackdev.chiaro.ui.warnings.WarningText.colors
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -68,12 +68,16 @@ fun WarningBanner(
             WarningText.issued(context, warnings.issuedAt, today, timeFmt)
         )
     )
+    // The groups' corner (DESIGN §6, review of Today, 15 ott 2026): a banner of one statement
+    // that a 28 would turn into a pill. The Surface takes the click itself, so the ripple is
+    // clipped to that corner; a `clickable` handed in through the modifier drew a square
+    // press over the rounded card.
     Surface(
+        onClick = onOpen,
         color = palette.container,
-        shape = MaterialTheme.shapes.medium,
+        shape = RoundedCornerShape(GroupCorner),
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onOpen)
             .clearAndSetSemantics { contentDescription = "$headline. $detail" }
     ) {
         Row(

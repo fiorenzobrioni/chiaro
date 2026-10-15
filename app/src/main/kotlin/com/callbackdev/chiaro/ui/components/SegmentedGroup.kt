@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
+import com.callbackdev.chiaro.ui.theme.GroupCorner
+import com.callbackdev.chiaro.ui.theme.GroupInnerCorner
 
 /**
  * Rows that belong together, as Material 3 Expressive groups them (DESIGN §8.8, review of
@@ -49,13 +51,11 @@ fun SegmentedGroup(
 
 /** The segment of a group at [index] of [count]: round outside, tight inside. */
 fun segmentShape(index: Int, count: Int): Shape {
-    val top = if (index == 0) SegmentOuter else SegmentInner
-    val bottom = if (index == count - 1) SegmentOuter else SegmentInner
+    val top = if (index == 0) GroupCorner else GroupInnerCorner
+    val bottom = if (index == count - 1) GroupCorner else GroupInnerCorner
     return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
 }
 
 /** The air between two segments of a group. A lazy list that draws one segment per item
  * gives each half of it as vertical padding. */
 val SegmentGap = 2.dp
-private val SegmentOuter = 20.dp
-private val SegmentInner = 4.dp

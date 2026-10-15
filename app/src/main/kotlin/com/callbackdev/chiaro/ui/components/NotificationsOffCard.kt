@@ -5,6 +5,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +25,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.notifications.NotificationPermission
+import com.callbackdev.chiaro.ui.theme.CardCorner
 
 /**
  * The card a screen draws when it is promising something the phone cannot deliver
@@ -54,9 +56,12 @@ fun NotificationsOffCard(
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
         ),
+        // A notice that stands alone: the app's card corner (DESIGN §6), with the 20dp of
+        // inner air that corner asks for, as on Alerts' answer card.
+        shape = RoundedCornerShape(CardCorner),
         modifier = modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp)) {
+        Column(modifier = Modifier.padding(start = CardInset, top = 16.dp, end = CardInset)) {
             Text(
                 text = stringResource(R.string.notifications_off_title),
                 style = MaterialTheme.typography.titleSmall
@@ -65,7 +70,7 @@ fun NotificationsOffCard(
         }
         TextButton(
             onClick = onAllow,
-            modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
+            modifier = Modifier.padding(start = CardInset - 8.dp, bottom = 8.dp)
         ) {
             // The button says which door it opens. "Allow" where the system will ask,
             // "Open settings" where it will not: a button that promises a dialog and
@@ -151,3 +156,6 @@ fun rememberNotificationRequest(onResult: (Boolean) -> Unit = {}): NotificationR
         }
     }
 }
+
+/** The text's inset inside a [CardCorner] card. */
+private val CardInset = 20.dp
