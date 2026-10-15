@@ -32,9 +32,14 @@ sections are a normal size and live here alone.
 - **Today in the shape of Sky and Alerts.** The top of Today reads in three steps: the
   temperature and the sky's word, then the day's sentence set as a sentence, then the ribbon.
   Every day of the week carries an arrow that says it opens, and an open day stands on a card of
-  its own with its facts and its hours. The tiles, the banners and the notice cards share the
-  rounder corners of the other two tabs, and the rest of the day is set at the size the Sky uses
-  for the same moments.
+  its own with its facts and its hours; the closed days draw their skies more quietly, so the
+  temperatures are read first. The details are one group of tiles and «What changed» is a row
+  per day, as the Sky groups its moments. The bar at the top, once you scroll, is the same as on
+  Sky and Alerts. The tiles, the banners and the notice cards share the rounder corners and the
+  type of the other two tabs.
+- **The rest of the day speaks the Sky's language.** Its moments carry the Sky's names («Golden
+  hour, evening»), the next one is marked «Next, today», and tapping one opens its page from the
+  Sky: what it is, and where to look.
 - **Alerts in the Sky's shape.** The alerts are grouped rows like the Sky's moments, and so are
   the rows of Settings. A warning in force is now the big card at the top of the official
   warnings, in the warning's own color, instead of a small banner. The hours of the morning and

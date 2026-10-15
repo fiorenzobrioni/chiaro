@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -80,12 +82,16 @@ fun WarningBanner(
             .fillMaxWidth()
             .clearAndSetSemantics { contentDescription = "$headline. $detail" }
     ) {
+        // Said in Alerts' voice (review of Today, 15 ott 2026): the hazards at `titleMedium`,
+        // when and who at `bodyMedium`, and the chevron Alerts' card carries, because the
+        // banner opens the bulletin the same way. It was `titleSmall` over `bodySmall`: the
+        // one statement about the world on the page, set smaller than a row's name.
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
                 .defaultMinSize(minHeight = 56.dp)
-                .padding(horizontal = 14.dp, vertical = 10.dp)
+                .padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp)
         ) {
             Icon(
                 painter = painterResource(ChiaroIcons.warningMarkRes()),
@@ -93,10 +99,18 @@ fun WarningBanner(
                 tint = palette.ink,
                 modifier = Modifier.size(24.dp)
             )
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(headline, style = MaterialTheme.typography.titleSmall, color = palette.ink)
-                Text(detail, style = MaterialTheme.typography.bodySmall, color = palette.ink)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(headline, style = MaterialTheme.typography.titleMedium, color = palette.ink)
+                Text(detail, style = MaterialTheme.typography.bodyMedium, color = palette.ink)
             }
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                contentDescription = null, // the surface's own semantics say it opens
+                tint = palette.ink
+            )
         }
     }
 }

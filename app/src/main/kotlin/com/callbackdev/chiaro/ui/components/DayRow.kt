@@ -114,7 +114,10 @@ fun DayRow(
     wetLane: Boolean = false,
     /** Today's row: where now is in the day. What comes before it is spent, and the
      * ribbon fades it toward the track like the night (DESIGN §4, 12 ott 2026). */
-    skyFrom: Float = 0f
+    skyFrom: Float = 0f,
+    /** How far the ribbon's sky leans toward the track ([DaylightRibbon]'s quiet voice):
+     * the week's closed rows draw it lower, an open day in full. */
+    ribbonQuiet: Float = 0f
 ) {
     val openLabel = stringResource(if (expanded == true) R.string.week_day_close_action else R.string.week_day_open_action)
     val state = expanded?.let {
@@ -187,6 +190,7 @@ fun DayRow(
                 hours = sky,
                 wetLane = wetLane,
                 skyFrom = skyFrom,
+                quiet = ribbonQuiet,
                 modifier = Modifier.padding(start = if (reflow) 0.dp else 52.dp)
             )
         }

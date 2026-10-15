@@ -1,0 +1,119 @@
+package com.callbackdev.chiaro.ui.today
+
+import android.content.Context
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasScrollToNodeAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
+import androidx.test.core.app.ApplicationProvider
+import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.readme.MilanRecording
+import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.theme.ChiaroTheme
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+
+/**
+ * Today after its review (15 ott 2026), on the README's recorded Milan: the day's agenda
+ * speaks the Sky's names and opens the Sky's page for a moment, without the Sky's button to
+ * follow it; and a week row says whether it is open.
+ *
+ * In `testDebug` for the reason `AgendaPageSheetTest` gives: a Compose rule's activity is a
+ * debug-only dependency.
+ */
+@RunWith(RobolectricTestRunner::class)
+class TodayAgendaTest {
+
+    @get:Rule
+    val compose = createComposeRule()
+
+    private val app: Context = ApplicationProvider.getApplicationContext()
+
+    private fun show() {
+        val state = MilanRecording.today(app)
+        compose.setContent {
+            ChiaroTheme(dynamicColor = false) {
+                TodayPage(
+                    state = state,
+                    title = state.city.name,
+                    isGps = false,
+                    dots = null,
+                    units = UnitSettings(),
+                    locating = false,
+                    guideCardVisible = false,
+                    onRefresh = {},
+                    onOpenPlaces = {},
+                    onOpenSettings = {},
+                    onOpenGuide = {},
+                    onDismissGuideCard = {},
+                    isCurrent = true,
+                    onCanvasBehindBar = {}
+                )
+            }
+        }
+    }
+
+    private fun scrollTo(text: String) {
+        compose.onAllNodes(hasScrollToNodeAction()).onFirst().performScrollToNode(hasText(text))
+    }
+
+    @Test
+    fun `the day's next moment wears the Sky's label and the Sky's name`() {
+        show()
+        val name = app.getString(R.string.sky_name_golden_pm)
+        scrollTo(name)
+
+        val next = app.getString(R.string.sky_next_label, app.getString(R.string.sky_day_today).lowercase())
+        compose.onAllNodesWithText(next).assertCountEquals(1)
+        compose.onAllNodesWithText(name).assertCountEquals(1)
+    }
+
+    @Test
+    fun `a moment of the sky opens its page, where to look and no button to follow it`() {
+        show()
+        val name = app.getString(R.string.sky_name_golden_pm)
+        scrollTo(name)
+
+        compose.onAllNodes(hasText(name) and hasClickAction()).onFirst().performClick()
+        compose.waitForIdle()
+
+        // The golden hour has a direction, so its page opens on «Where to look».
+        assertTrue(
+            "the page opens with where to look",
+            compose.onAllNodesWithText(app.getString(R.string.sky_look_title)).fetchSemanticsNodes().isNotEmpty()
+        )
+        compose.onAllNodesWithText(app.getString(R.string.sky_guide_add_action)).assertCountEquals(0)
+        compose.onAllNodesWithText(app.getString(R.string.sky_guide_remove_action)).assertCountEquals(0)
+    }
+
+    @Test
+    fun `a week row says whether it is open, and opening it says so`() {
+        show()
+        val tomorrow = MilanRecording.today(app).week[1].forecast.date
+        val label = Formats.dayLabel(tomorrow, app.resources.configuration.locales[0])
+        scrollTo(label)
+
+        val row = hasText(label) and hasClickAction()
+        fun state(word: Int) = SemanticsMatcher.expectValue(
+            SemanticsProperties.StateDescription,
+            app.getString(word)
+        )
+        compose.onAllNodes(row and state(R.string.week_day_state_closed)).assertCountEquals(1)
+
+        compose.onAllNodes(row).onFirst().performClick()
+        compose.waitForIdle()
+
+        compose.onAllNodes(row and state(R.string.week_day_state_open)).assertCountEquals(1)
+    }
+}

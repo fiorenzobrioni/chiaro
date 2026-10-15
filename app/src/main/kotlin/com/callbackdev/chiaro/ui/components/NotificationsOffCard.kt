@@ -62,11 +62,12 @@ fun NotificationsOffCard(
         modifier = modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(start = CardInset, top = 16.dp, end = CardInset)) {
+            // Alerts' scale (review of Today, 15 ott 2026), as the guide's card on Today.
             Text(
                 text = stringResource(R.string.notifications_off_title),
-                style = MaterialTheme.typography.titleSmall
+                style = MaterialTheme.typography.titleMedium
             )
-            Text(text = body, style = MaterialTheme.typography.bodySmall)
+            Text(text = body, style = MaterialTheme.typography.bodyMedium)
         }
         TextButton(
             onClick = onAllow,

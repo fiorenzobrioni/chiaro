@@ -106,8 +106,6 @@
     <string name="tl_golden_evening">Golden hour</string>
     <string name="tl_sunset">Sunset</string>
     <string name="tl_blue_evening">Blue hour</string>
-    <string name="tl_golden_evening_until">Golden hour until %1$s</string>
-    <string name="tl_blue_evening_until">Blue hour until %1$s</string>
     <string name="tl_dark">Fully dark sky</string>
     <string name="tl_moonrise">Moonrise</string>
     <string name="tl_moonset">Moonset</string>
@@ -459,7 +457,7 @@
     <string name="guide_today_hours_title">The next hours</string>
     <string name="guide_today_hours_body" formatted="false">Twenty-four hours of temperature, sky and rain chance, starting from the hour after this one: the hour you are in is the big number at the top. Each column is the hour that starts there: «3 PM · 60%» means a 60% chance of rain between 3 and 4, and the temperature is the one at 3. The chance shows from 20% up: below that the cell stays empty, because there is nothing to plan around.</string>
     <string name="guide_today_rest_title">The rest of the day</string>
-    <string name="guide_today_rest_body">One timeline for everything still ahead: sunrise or sunset, the golden and blue hours with the time they end, the moment the sky goes fully dark, the hours rain is expected to start and ease off, and — when the sun is low and rain is likely in front of it — the window a rainbow could stand in, with the direction to turn and look. Moonrise and moonset are on the Sky tab.</string>
+    <string name="guide_today_rest_body">One timeline for everything still ahead: sunrise or sunset, the golden and blue hours with the time they end, the moment the sky goes fully dark, the hours rain is expected to start and ease off, and — when the sun is low and rain is likely in front of it — the window a rainbow could stand in, with the direction to turn and look. Moonrise and moonset are on the Sky tab. Tap a moment of the sky to open its page, the one the Sky tab opens: what it is, and where to look.</string>
     <string name="guide_today_week_title">The week</string>
     <string name="guide_today_week_body">Seven days on one shared temperature scale, so the same bar length means the same thing on every row. Under each day is its ribbon, which says when it is clear, when it clouds over and when it rains. The arrow at the end of a row says the day opens: tap it and the day opens on a card of its own, where above its hours you find how much rain and over how many hours, the snow, the strongest gusts and the highest UV, each with what it means, and only those that say something that day.</string>
     <string name="guide_today_week_caption">An example. The bar runs from the day\'s low to its high, from the blue of cold to the orange of warm, and the dot is the temperature now. The ribbon is the day from midnight to midnight: light blue where it is clear, grey where it clouds over, pale at both ends, which are the night, and over the part of today already gone; the dashes under it are the hours of rain or snow.</string>
@@ -467,7 +465,7 @@
     <string name="guide_today_details_body">Today\'s rain in millimetres, the snow when there is some, UV, wind with its gusts, the clouds with the kind that makes them (high and thin, a veiled sun; low, a grey day), humidity and dew point, pressure and which way it is heading, visibility, air quality — on the European index for places in Europe — and pollen, on each species\' own thresholds. Each number carries the line that says what to do about it, which is the only reason it is on the screen.</string>
     <string name="guide_today_details_caption">An example: two details, each with the line that says what to do about it.</string>
     <string name="guide_today_changed_title">What changed</string>
-    <string name="guide_today_changed_body">When the latest update moves the days ahead, up to three sentences say how.</string>
+    <string name="guide_today_changed_body">When the latest update moves the days ahead, up to three rows say how: the day and whether it got better or worse, with the figures that moved under it.</string>
     <string name="guide_today_places_title">More than one place</string>
     <string name="guide_today_places_body">Swipe sideways to move between your places; the dots under the sky say where you are. For a place that is not the one you are standing in, the header says what day and what hour it is there.</string>
 
