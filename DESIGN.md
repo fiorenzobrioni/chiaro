@@ -497,11 +497,32 @@ only worth printing if something fails when it stops being true.
 
 ### 3.5 Motion and cost
 
-One shader, one animation, and a hard budget: **the canvas may not cost more than 2 ms per
-frame on a mid-range device.** It animates only the interpolation between bands (a slow
-crossfade on a 30-second tick, not a per-frame recomputation), and it becomes a static
-gradient when the system is in battery saver, when the reader has reduced motion on, or
-when the activity is not resumed. No particles, no parallax, no video.
+The canvas is **one AGSL shader** since the second review of Today (15 ott 2026): the
+gradient of §3.2–3.4, drawn by the shader exactly as the palette's three stops, and the scene
+of §3.9 over it. It replaced one gradient brush and the rule that went with it — «one shader,
+one animation, 2 ms a frame, no particles, no parallax» — because a gradient alone was the
+canvas' weakest state on the screen people see most: a grey-blue rectangle at noon under
+cloud. The budget is now written in what a frame may do, and in when there is a frame at all:
+
+- **per pixel, at most about twenty value-noise samples** in the worst sky (a domain-warped
+  cumulus with its light, a cirrus veil, a fall); a clear day spends almost none, because
+  every layer is skipped when its amount is zero;
+- **frames only while the sky may move**, 15 a second for a sky that drifts and 30 for one
+  in which something falls — the rates their own speeds need (a cloud drifts a few dp a
+  second) — and one frame asked for per step, never one per vsync;
+- **still, as one frame**, whenever any of these holds: the reader's «weather that moves» is
+  off (Settings → Appearance), the system asks for less motion, battery saver is on, the page
+  or a strip on it is being scrolled or swiped (§7.1), or the canvas is not on screen (the
+  item is disposed, the activity stopped);
+- **the target**: under **3 ms of GPU a frame on a mid-range phone** (a Pixel 6a class
+  device), so 15 frames a second cost under 5% of its GPU time. That figure has to be read
+  on a device (`adb shell dumpsys gfxinfo`, the GPU profile) and is recorded in PLANNING as the
+  one open check of this step: a cloud container has no GPU to measure it on.
+
+**minSdk stays 33**: `RuntimeShader` arrived in Android 13, which is already the floor. A
+canvas that is not hardware-accelerated (a software snapshot) cannot draw a `RuntimeShader`
+at all, and there the layer draws the palette's gradient alone, which is what the sky was
+before.
 
 ### 3.6 The scrim contract
 
@@ -523,7 +544,7 @@ measured for full white. Over the same brightest scrimmed stop, white at 70% is 
 and at 85% **4.3:1**, both under the floor, and higher up the canvas, where the scrim thins,
 lower still. So every line on the canvas is `SkyPalette.Ink` at full strength and a
 secondary line is set apart by its size (`bodyLarge`, `bodyMedium`, `labelSmall` under a
-22sp word and a 64sp figure). The one translucent white left is the pager's other dots
+22sp word and an 88sp figure). The one translucent white left is the pager's other dots
 (`SkyPalette.InkQuiet`), a mark and not text. `ScrimContractTest` pins both halves: the thinner
 whites fail, and no line under `ui/today/` names a white of its own.
 
@@ -614,6 +635,57 @@ two things: the disc reads as a sun on its path rather than a bead, and the open
   moon — the night again, which is what the old badge (a starry crescent over two waves) drew;
   the sun's curve over a horizon read as a letter A below 48px.
 
+### 3.9 The scene
+
+What the shader draws over the gradient (second review of Today, 15 ott 2026,
+`SkyScene`, `skyScene`, `SkySceneTest`). Every element is the forecast for the hour we are in
+or the ephemeris, and none is chosen for looks — the canvas stays a computed sky (§3.1), now
+with the parts of it a gradient could not say.
+
+- **Cumulus**, in the hour's **cloud cover**: four octaves of value noise, each turned by 37°
+  so the grid never lines up (unturned, it drew V-shapes), warped once by a two-octave field
+  so the clouds billow (by 0.6 of a cell, not more: at 0.9 the warp folded the plane over
+  itself here and there and every fold drew a crease drifting with the clouds). **Every corner
+  of a noise cell is hashed from its own whole number, taken through `floor`** (device, 15 ott
+  2026): written as `i + (1, 0)`, a GPU compiler may expand `(i.x + 1)·0.1031` into
+  `i.x·0.1031 + 0.1031`, rounded twice, while the cell next door hashes the same corner from
+  its own `floor`; the hash multiplies that one bit until, once in a few thousand corners, its
+  last `fract` crosses a whole number, and the corner has two values. The clouds then carried a
+  wedge with two sharp sides, a third-octave cell's size, that no CPU render showed; in dp so they have the same grain on every screen, and flatter toward
+  the horizon (the canvas' bottom) as a deck is in perspective. The threshold follows the
+  cover, so 30% draws a few clouds and 95% a deck with a few thin gaps. The shading flattens as
+  the cover closes: a deck is one grey with soft folds, not a sky of lit puffs.
+- **Light**: the edge of a cloud that faces the sun by day, or the moon at night, is the
+  lit one — the light's place is the bodies' own (§8.1c), the same bearing and altitude —
+  and near it the clouds catch a rim. **The lit side is one direction for the whole canvas**,
+  from its middle toward the light (device, 15 ott 2026): taken pixel by pixel toward the
+  light, the direction turned a full circle round it and the lit edge turned with it, which
+  drew rings and arcs into the clouds as far as 150dp from the moon, the «geometric shape» a
+  reader saw over the hero. The rim stays the light's own, a glow that fades with distance
+  and has no direction to turn. **Lit** is a white with a breath of the sky by day, the
+  horizon's own colour in the golden hour, the moon's grey at night (`SkyPalette.CloudNight`,
+  stronger under a bright moon); **shade** is the lit colour toward the sky's top stop, darker
+  by night and under a likely rain.
+- **Cirrus**, in the **high layer's share** of the cover (`CloudLayers`): streaks stretched
+  across the sky, drifting faster than the deck below them.
+- **Stars**, only when the sun is past −10° and fading in to −18°, times the open sky squared,
+  less under a bright moon: one in a few cells of 13dp, twinkling slowly, thinning toward the
+  horizon. Never by day, never under a closed sky.
+- **What falls**, only when the hour's **state** is wet (the state engine's, not the
+  provider's code): rain as a veil and long slanted streaks, snow as flakes that fall and
+  sway, at a strength from a third to full by the quarter hour just measured (4 mm an hour
+  is full).
+- **Drift**: the clouds move with **the wind** — the hour's speed, a floor of 1.5 dp a second
+  plus 0.3 a km/h, toward where the wind blows as the reader facing the equator sees it (in
+  the north the west is on the right, in the south the east; the frame the sun and moon stand
+  in). A wind along the line of sight still breathes at the floor.
+- **The cap**: every pixel is held under the luminance of the palette's brightest stop, the
+  one §3.6 measured white against. The scene is drawn under the scrims like the gradient, and
+  with the cap nothing it draws can cost the text its 4.5:1 — the clouds' colours are capped in
+  Kotlin too, half a percent under, because an sRGB `Color` is stored at 8 bits and rounds up.
+
+The sun and the moon (§8.1c) are drawn over the scene as before, with their veils.
+
 ## 4. The daylight ribbon
 
 An 8dp band (6dp in compact rows, 4dp until 12 ott 2026) showing one day of light: night, astronomical, nautical
@@ -658,7 +730,7 @@ and the two cannot disagree.
   chance. The lane is the **week's**: drawn on all seven rows when any day has a wet hour
   (+5dp a row), on none in a dry week, so the rows stay one height.
 - **Every mark has its word**: the row's description adds «Pioggia dalle 15:00 alle 17:00,
-  alle 20:00» («Neve», «Pioggia e neve» by the hours' phases, as the rain chart's caption).
+  alle 20:00» («Neve», «Pioggia e neve» by the hours' phases, as the rain lane's caption).
 - Measured on the README's Milan and on a live week of Glasgow rain (the comparison page,
   12 ott 2026): overcast and clear separate in luminance at 4dp (vivid day mid `#2BB8FF`,
   overcast ≈ `#748FA0`), modestly; the wet lane is what makes a wet day legible at a glance.
@@ -686,7 +758,7 @@ there is no exception.
 
 | Role | Size / line | Weight | Where |
 |---|---|---|---|
-| `heroTemperature` (extended) | 64 / 68, −0.02em | 700 | the canvas' current temperature |
+| `heroTemperature` (extended) | 88 / 88, −0.02em | 700 | the canvas' current temperature; grows with the reader's type to 130% and no further (§8.1a) |
 | `displaySmall` | 36 / 44 | 400 | the app's name on the first run |
 | `titleLarge` | 22 / 28 | 500 | the sky's word under the hero; a header's name |
 | `titleMedium` | 16 / 24 | 600 | section titles, metric values |
@@ -981,12 +1053,12 @@ and the neighbour is not the same everywhere:
 
 - next to one of the app's own rows (8dp of vertical padding), 16 + 8 is the 24dp above
   and 4 + 8 the 12dp below;
-- Today's list spaces its own items by 12dp, so its header asks for 12 rather than 16 and
-  arrives at the same 24 / 12;
-- the **first** header on Today's paper, «Prossime ore» right under the sky, asks for 0
-  (review of 12 ott 2026): the sheet's 24dp lip and the list's 12 are already above it, and
-  with its own 12 the sky and the hours stood 53dp of empty paper apart. With the freshness
-  chip, a warning banner or the guide card between them it keeps its 12;
+- Today's list spaces nothing of its own since 15 ott 2026 (§8.0): its title asks for the
+  whole 24 over it and 12 under it, and a notice asks for 12 over it;
+- the **first** title on Today's paper, «Prossime ore» right under the sky, asks for 12
+  (review of 12 ott 2026): the sheet's 24dp lip is already above it, and a section's whole
+  24 more stood the sky and the hours apart over empty paper. With the freshness chip, a
+  warning banner or the guide card between them it takes its 24;
 - next to a Material `ListItem` — the Sky moments, the Alerts switches and rule cards, the
   Settings rows — the gap is Material's, not ours: `ListItem` brings its own padding and a
   minimum height that centres its text, so the air under a header there is at least 12dp
@@ -1013,9 +1085,8 @@ Material 3 Expressive's spring physics, from `MaterialTheme.motionScheme`:
 | spatial fast | spring(damping 0.9, stiffness 800) | chips, toggles, small state |
 | effects | spring(damping 1.0, stiffness 1600) | color, alpha, elevation |
 
-A week row opens in place on its own card (§8.5b, since the day sheet left): the card's
-ground on the effects spring, its air and its content on the spatial one, the chevron turning
-with them; predictive back everywhere (`enableOnBackInvokedCallback`, the navigation's own
+A week row opens in place inside its own segment (§8.5b, since the day sheet left): the
+segment's ground on the effects spring, its content on the spatial one; predictive back everywhere (`enableOnBackInvokedCallback`, the navigation's own
 predictive pop, Material's sheets);
 the pager between places moves the canvas with it, so switching city looks like turning to
 another sky. **Reduced motion collapses every one of these to a 100 ms fade**, and the
@@ -1030,14 +1101,15 @@ the platform's own animators read, so this is the API and not a way around a mis
 at start-up would be wrong for exactly the reader it is for) and publishes
 `LocalReducedMotion`.
 
-The app moves in five places and all five ask (the fourth is §7.1's icons): the week row's hour strip opens with
-`ChiaroMotion.enter/exit`, the pager `scrollToPage`s instead of animating, the rule
-editor's dry-run answer jumps into view instead of scrolling to it, and the rain chart
-(§8.3b, 23 set 2026) is drawn whole instead of drawing itself in. Until that pass
+The app moves in these places and all of them ask (one is §7.1's icons): the week row's hour
+strip opens with `ChiaroMotion.enter/exit`, the pager `scrollToPage`s instead of animating, the
+rule editor's dry-run answer jumps into view instead of scrolling to it, and the hero's figure
+stays on the sky instead of travelling into the bar (§8.1e). The rain chart that drew itself in
+went with the chart (15 ott 2026). Until that pass
 `ChiaroMotion.reducedMotionFadeMillis` was a constant nothing consulted, which is the
 shape a design rule takes when it is only written down: true in this file, absent from
-the APK. The canvas needed nothing — it is a `Brush`, it has never animated, and §3.5's
-"becomes a static gradient" is a promise it keeps by construction.
+the APK. The canvas asks too since 15 ott 2026 (§3.5): under reduced motion its scene is one
+still frame, the clouds where they stood.
 
 **Between pages** (22 set 2026, Navigation 3). The shell's pages move with Saldo's
 transition, value for value, because the committente asked for exactly that one: 300 ms
@@ -1062,6 +1134,12 @@ and the motion is the illustrator's own: every source SVG in the family carries 
 of dropping it. The sun turns once in 45 seconds, the moon rocks, cloud banks drift, drops
 fall in 0.7 seconds and out of step with each other, the bolt flickers. Nothing was
 invented here; a rewrite would have been a second opinion about somebody else's drawing.
+
+**The sky moves with them** (15 ott 2026, §3.5, §3.9): the canvas' clouds drift with the wind,
+its stars twinkle, its rain and snow fall, under the same switch and the same rules as the
+icons — the reader's «weather that moves», the system's animations, the page at rest — and
+battery saver besides, because the sky is the one moving thing on the screen that costs a
+shader a frame.
 
 **Only the condition family moves.** A metric tile's mark labels a quantity — a barometer
 that spins forever is decoration, and §1.4 is where decoration goes. `mc3_not_available`
@@ -1167,6 +1245,31 @@ already flattened. Two things SMIL has that AVD does not:
 
 Each entry is the contract; the Compose signatures land in Fase 1.
 
+**8.0 Sections and containers** (15 ott 2026, the second review of Today). One grammar for
+every list in the app, and the one rule it comes down to: **nothing stands bare on the paper
+but a section's title.** A section is a `titleMedium` title on the paper (24dp over it, 12
+under it) and its content on a container under it, of one of two kinds:
+
+- **a card**, `CardCorner` (28dp), for a section that is one continuous thing: the tonight
+  card, the next moment, Today's hours (§8.3);
+- **a group of segments** (`SegmentedGroup`, §8.8), for a section that is a list: each row on
+  its own `surfaceContainer` segment, 2dp apart, the group's outer corners 20dp and the inner
+  ones 4dp. The Sky's moments, Alerts' rules, Settings, and on Today the rest of the day
+  (§8.4), the week (§8.5), what changed and the details grid (§8.6).
+
+Notices (the freshness chip, the error and warning banners, the guide's card) are their own
+containers and take 12dp over them. Until this review Today was the tab that did not follow it:
+its hours, its agenda and its closed week stood on the paper, only the open day and the
+details were contained, and beside Sky and Alerts the page read as cut from older paper. On
+Today the list spaces nothing of its own (it spaced every item 12dp apart, which would have
+pulled the week's segments into seven cards): each item says the air it needs.
+
+The tonal step is the scheme's own, `surface` → `surfaceContainer`, **1.11:1** in both light
+schemes and **1.13:1** in both dark ones (measured on the four schemes' values). It was
+reconsidered in this review and kept: on the README's Milan beside the Sky tab the containers
+read as containers, the fault was Today's bare sections and not the step, and a stronger one
+would have changed every screen to fix one.
+
 **8.1 SkyCanvas** — the gradient (§3), `heroTemperature`, condition, feels-like, the
 headline sentence, the daylight ribbon with its two clock times, the scrim (§3.6). Since the
 review of 12 ott 2026 the sentence stands **before** the ribbon, right under the word for the
@@ -1204,13 +1307,41 @@ leaves the list the part that leaves with it is already hidden under that row's 
 
 **8.1a The hero's three groups** (review of Today, 15 ott 2026). The canvas' text is three
 things and is spaced as three: the **now** — the figure (`heroTemperature`), the sky's word at
-`titleLarge` with the feels-like beside it on its baseline (`bodyLarge`), the estimate's note
-4dp under them (`bodyMedium`) — packed under the figure, whose 68sp line already leaves air
-under its digits; the **day's sentence**, 12dp below, at `bodyLarge`; and the **ribbon**,
+`titleLarge`, and 4dp under it **the day's figures** at `bodyLarge`, tabular: «Massima 23° ·
+minima 17°», with «percepiti 22°» after them when the air feels a degree or more off (second
+review, 15 ott 2026); the estimate's note 4dp under them (`bodyMedium`) — packed under the
+figure, whose own line already leaves air under its digits; the **day's sentence**, 12dp below, at `bodyLarge`; and the **ribbon**,
 16dp below that, with its clock times 4dp under it. Until then one 6dp step ran between every
 line, and the sentence was `titleLarge` like the word above it: two lines about the day
 outweighed one word about now, and the three read as a paragraph. Set as prose, the sentence
 reads as one, and the eye takes the screen's order — the number, the word, the day.
+
+**The figure is 88sp** (second review, 15 ott 2026; 64sp until then), the size a premium
+weather app gives the one number it is opened for, and the day's high and low stand right
+under the word: the number a reader looks for after the temperature was in the week's first
+row, two screens down. At the reader's larger type the figure grows to **130%** and no
+further (`heroStyle`, `HeroTravelTest`): at 200% «−12°» would be some 400dp wide on a 360dp
+phone, and what a larger type is for, the words, still grows in full. The canvas' floor
+grew by what the hero did (280 → 328dp: a 20dp taller line and the figures' 28), so the
+skeleton still ends where the canvas does.
+
+**8.1e The figure travels into the bar** (second review, 15 ott 2026). The temperature is one
+figure from the sky to the bar: scrolled, it rides the canvas like the rest of the hero until
+its top is 8dp under the bar, and over the next **96dp of scroll** it shrinks to the bar's
+`titleLarge` size and slides into the bar's slot beside the gear, where it stays (`heroPose`).
+Every step is arithmetic on the list's scroll, read at layout and draw time, so it follows
+the finger both ways and nothing recomposes while the page moves. One `Text` drawn over the
+page does it; the canvas keeps an invisible copy that holds the figure's place, tells the dock
+where it rests and is what TalkBack reads, and the bar's slot says the temperature once the
+figure has landed. **Two inks across the bar's edge**: the part of the figure inside the bar is
+drawn in the bar's ink, the part still over the sky in the sky's white, so the figure crossing
+the edge never stands on a ground it does not read on. The sky's still icon comes in beside it
+as it arrives. **Not under reduced motion**: a figure that shrinks and slides across the
+screen is the movement the setting asks to be spared, and there the figure scrolls away with
+the sky and the bar's own number fades in, as before.
+
+It replaces the bar's compact number that faded in when the canvas was nearly gone (23 set
+2026): two copies of one number, one leaving and one arriving, where a reader follows one.
 
 **8.1c The sun and the moon** (design review, 23 set 2026) — drawn on the canvas where they
 stand, in a band of sky the canvas' column keeps for them between the place row and the hero
@@ -1228,12 +1359,12 @@ phase — lit limb toward the evening sun, the terminator an ellipse, the dark p
 earthshine — and is pale by day. Both are drawn inside their band, the halo spilling at most
 14dp past it, so neither can stand behind text and cost it contrast; the colors are
 `SkyPalette.SunHigh`, `SunLow` and `MoonFace`, shared by both palettes like `Moonlight`.
-Static: they move with the page's minute tick and cost one draw (§3.5 still holds — no
-particles, no parallax).
+Static: they move with the page's minute tick and cost one draw; the scene under them (§3.9)
+is what moves.
 
 The **hero** itself was re-set the same day: the whole degrees and the degree sign at the
-64sp hero size (the tenths, first set at 55% on the same baseline, went on 24 set 2026 with
-the rounding rule of §5); the condition at `titleLarge` (from 64sp to 16sp was a cliff); and
+hero size (the tenths, first set at 55% on the same baseline, went on 24 set 2026 with
+the rounding rule of §5); the condition at `titleLarge` (from the hero straight to 16sp was a cliff); and
 the feels-like line **only when it differs by a degree or more** — "21°, feels like 21°" is a
 number with nothing to do about it (§1.2).
 
@@ -1272,10 +1403,11 @@ when the page is at rest — so it is the one bar in the app with two grounds:
   sky reaching the top of the screen, under the clock, is what Today is recognised by, and a
   bar above it would turn it into a picture inside a page.
 
-**Compact** (23 set 2026): once the canvas has climbed to within 120dp of the bar, the hero
-is under it or gone, and the bar carries it — the sky's still icon and the temperature in
-whole degrees, beside the name (which then keeps to one line), fading and sliding in on the
-effects and spatial springs. **The place's day is the longest form that fits** (committente,
+**Compact** (23 set 2026): the bar carries the hero once it has scrolled up — the sky's still
+icon and the temperature in whole degrees, beside the name (which then keeps to one line). Since
+15 ott 2026 the temperature is the hero's own figure, docked there (§8.1e), and the slot opens
+the moment it starts to travel; under reduced motion, once the canvas has climbed to within
+120dp of the bar, the bar's own number fades in on the effects spring. **The place's day is the longest form that fits** (committente,
 15 ott 2026; `FittingText`): «Venerdì 25 settembre · 12:15», else «Ven 25 set · 12:15», else
 «Ven · 12:15», each measured at `labelLarge` against the width the line really has, so the line
 never wraps and the bar never grows mid-scroll. Until then the date shortened to its weekday
@@ -1305,135 +1437,158 @@ longer belongs to.
 Warning role, the real age ("3 hours ago"), tappable to retry, with a progress state while
 retrying. Never a toast: a toast is gone before it is read.
 
-**8.3 HourStrip** — horizontal, 24 cells from the next full hour, each 56dp wide: hour,
-icon, temperature (tabular), rain probability on the ink ramp (§2.3), zero included; an
-hour the provider gave no probability for prints nothing at all. **Edge to edge** (8 set
-2026): the page margin is the row's `contentPadding`, so the first cell starts on the 16dp
-line and the rest slide under the screen's edge — cut on a line 16dp inside it, as they
-were, the strip read as a box. A cell is 112dp tall at 100% type (16 + 6 + 42 + 6 + 20 + 6
-+ 16), and the skeleton quotes that.
+**8.3 HourStrip** — horizontal, **the hour we are in and the 24 after it**, one cell an hour,
+**42dp wide and touching** (second review of Today, 15 ott 2026): the hour, the sky's icon at
+32dp, the temperature riding its curve, and on a wet strip the rain lane under them. At 42dp a
+360dp phone shows seven hours, a 384dp one eight; the cells were 56dp with 4dp between them
+and showed five. A cell is **132dp** tall at 100% type with the lane (16 + 4 + 32 + 4 + 42 + 4 +
+14 + 16) and 102 without, and the skeleton quotes the tall number. **On Today it stands on a
+card** (§8.0), `surfaceContainer` with 28dp corners and 16dp of air top and bottom: the 16dp
+inner margin is the strip's `contentPadding`, so the first cell starts on the card's column and
+the others slide under the card's rounded edge; the curve's dots are cut from that ground.
 
-**The temperature is a curve** (design review, 23 set 2026): each figure rides a dot on a
-line drawn through the whole strip, so the evening's drop is a shape before it is six
-numbers. Every cell draws its own piece — a quadratic from the midpoint with the cell before,
-through its own point, to the midpoint with the cell after — and consecutive pieces share
-their midpoints and tangents there, so the strip reads as one smooth line and stays a lazy
-row. The scale is **2dp a degree, fixed**, around the strip's own middle (§9.1: a 10° drop is
-the same slope on any day); only a range that will not fit 24dp at that rate is compressed
-to fit, and the printed figures still say the truth. The line is `outlineVariant`, the dot
-the temperature ramp's color ringed in `outline`. The cell is **144dp** tall now (the 20dp
-figure became a 52dp band: figure, 2 of gap, 24 of travel, the 8dp dot), and the skeleton
-quotes that. A strip where no hour reaches the 20% Today prints a chance from (§2.3, 12 ott
-2026) has **no rain row** and is 122dp: a row kept for figures never there was a hole between
-the strip and the next section.
+**«Ora» leads it** (same review): the first cell is the hour we are in, labelled «Ora» in
+`onSurface` semibold, with the hero's own figures — the temperature now and its sky — and the
+hour's chance. The strip used to start at the next full hour, so its first figure stood an hour
+away from the hero's and the curve had no point where the reader stands.
 
-**Midnight has a name**: the first hour of a new day prints the day's short name in
-`primary` in place of «00», so «22 23 Gio 01» no longer reads as one evening. The cell still
-speaks the hour. Not in a week row's own strip, which is one day already.
+**The temperature is a curve** (design review, 23 set 2026): each figure rides a dot on a line
+drawn through the whole strip, so the evening's drop is a shape before it is six numbers. Every
+cell draws its own piece — a quadratic from the midpoint with the cell before, through its own
+point, to the midpoint with the cell after — and consecutive pieces share their midpoints and
+tangents there, so the strip reads as one smooth line and stays a lazy row. The scale is
+**1.5dp a degree, fixed**, around the strip's own middle (§9.1: a 10° drop is the same slope on
+any day), over **16dp of travel** (2dp a degree over 24 until the strip was made compact); only
+a range that will not fit is compressed, and the printed figures still say the truth. The line
+is `outlineVariant`, the dot the temperature ramp's colour ringed in `outline`.
 
-**8.3b RainChart** — under the strip, the same 24 hours as one series: 2px line on the
-**ink** ramp (a mark has its own 3:1 floor, and the fill ramp's light end clears neither
-floor), the area under it tinted with the fill ramp at 0.30 → 0.06, three recessive
-gridlines at 0 / 50 / 100% with the two ends labelled in the right-hand gutter, a tick
-and the hour under the axis every six hours with the first and last always named, and a
-dot on every hour. No legend: one series, named by its own caption. It replaced a bare
-sparkline on the second device review (6 set 2026) — over a day pinned at 100% a line
-with no scale under it is a shape with nowhere to stand, and the flatter the day the
-less it said. A dry run still draws nothing at all (§1.1).
+**The rain lane** (same review) is the strip's chance of rain as **a bar per hour**, on a 0–100%
+scale anchored to the world: 14dp is 100%, a bar as tall as its hour is likely, in the rain's
+**fill** ramp at that chance (§2.3, the ramp of the marks: an unlikely hour short and pale, a
+likely one tall and full), 1dp of air each side so the bars of neighbouring hours nearly touch
+and a wet afternoon is **one shape across the strip**, the way the ribbon's wet marks are; a
+hairline `outlineVariant` floor under every hour, so an hour of 0% still stands on the lane. The
+figure is printed under its bar from **20%** (the state engine's «probable», 12 ott 2026) in the
+**ink** ramp, the one that clears 4.5:1; under it the cell stays empty, never a dash. An hour the
+provider gave no probability for has an empty lane — never a zero bar, which is a forecast. A
+strip where no hour reaches 20% has **no lane at all** and no caption: a lane kept for bars that
+are never there would be a hole. Under the strip, on a wet day, **one line** says what the chance
+is a chance of and when it peaks — «Probabilità di pioggia, massima 85% verso le 18:00» (snow,
+or rain or snow, by the hours' phases) — the lane's caption and its text equivalent (§9.3).
 
-**The chart is the strip's map** (design review, 23 set 2026). The strip shows about six
-hours and scrolls, the chart shows all 24 and does not, so the two never lined up hour over
-hour — and stretching the chart across the strip's 24 cells would have bought alignment
-with the overview, which is the one thing the chart is for. So the overview stays and the
-**hours in view in the strip are marked on it**: a `surfaceContainerHigh` window with
-6dp corners behind the gridlines, spanning the plot and its ticks, following the strip's
-scroll at draw time (a scroll redraws the chart, it never recomposes it). A **tap or a
-horizontal drag** on the chart centres the strip on the hour under the finger — animated
-for a tap, tracking for a drag — so a wet stretch seen on the map is one touch from its
-numbers.
+The lane **replaced the rain chart** (§8.3b until 15 ott 2026): a 24-hour line chart under the
+strip, with its scale, its gridlines, its ticks, a window following the strip's scroll and a tap
+that scrolled the strip, about 100dp of card. It was the map of a strip that showed five hours;
+a strip that shows seven or eight, with the shape of the rain in it, is its own map, and the
+card went from some 310dp on a wet day to some 160 (130 dry).
 
-It **draws itself in** the first time it is shown: the line and its area are revealed left
-to right in 900 ms (`FastOutSlowInEasing`), along time, the way the day will go. Never
-grown up from the floor: for half a second that would draw a dry day nobody forecast, and
-§1.1 has no exception for animations. Once per page (the flag survives the chart being
-scrolled away), and not at all under reduced motion.
+**Midnight has a name**: the first hour of a new day prints the day's short name in `primary`
+in place of «00», so «22 23 Gio 01» no longer reads as one evening. The cell still speaks the
+hour. Not in a week row's own strip, which is one day already.
 
-**8.4 TimelineRow** — the merged day (VISION §5.2.4): time, icon or event glyph, one line
-of prose, optional verdict chip. On Today (design review, 23 set 2026) the glyphs are
-**threaded**: a 2dp `outlineVariant` line from each glyph to the next, stopping 3dp short of
-each, so the rows read as one day in order; and the **first** row says how soon under its
-prose — «tra 18 min», «tra 1 h 20 min» — in `primary`, because the clock time is what you
-check against a watch and the countdown is what you plan with. **The moon is not on Today's
-agenda** (committente, 13 ott 2026; for a day, 12 ott, the countdown skipped it instead): on
-the README's Milan a moonrise led the list and took the countdown one minute before the
-golden hour, and on a dry day the agenda was the Sky tab over again. Moonrise and moonset
-stay on the Sky tab and in the day's arc widget. And the evening's **golden and blue hours print as spans** — «Ora d'oro fino alle
-19:15», and the blue hour to the sun at −6° — because they are spans; the blue hour keeps its star,
-the first light of the evening sky, since the family's alternatives are worse (`horizon` is
-`sunset` with a 1.6dp bump, a moon would announce a moon). Sun events, weather turns and the reader's own alerts use
-the same row; only the leading glyph differs. The prose is **`bodyLarge`** (review of Today, 15 ott
-2026), the Sky row's name and the Alerts row's: the same golden hour and the same sunset were
-set two sizes smaller here than on the tab that names them.
+**8.4 TimelineRow** — the rest of the day (VISION §5.2.4), **a group of segments** (§8.0, 15
+ott 2026): one row a segment, as the Sky draws the same moments. A row is the clock time in a
+48dp tabular column (`labelLarge`, `onSurfaceVariant`, growing with the type), the glyph at the
+timeline's 34dp rung, and the name at `bodyLarge` with what follows it under it at `bodyMedium`
+in `onSurfaceVariant`; 12dp of air at its start, 16 at its end, 64dp at least. In a group the
+order is the clock column's to say: the 2dp thread drawn through the glyphs from 23 set went
+with the bare rows.
 
-**In the Sky row's grammar** (same review). A moment of the sky is named as the Sky names it
-(«Ora d'oro, sera», «Tramonto», «Buio pieno», `SkyText.nameRes`), with until when a span lasts
-on a line under the name at `bodyMedium` in `onSurfaceVariant` («fino alle 19:15») rather than
-inside it; the morning's golden hour, which ends rather than starts here, keeps its own words.
-The day's **first** row is marked as the Sky's and Alerts' next cards mark theirs, «Il prossimo,
-oggi» at `labelLarge` in `primary` over its name, and its countdown joins the line under it
-(«fino alle 19:15 · tra 6 h 20 min»): it was a `labelMedium` countdown in the accent under the
-row, a third way of saying "next". **A moment of the sky opens the Sky's page for it**
-(`AgendaPageSheet`): what it is, and «Dove guardare» with the compass when it has a direction,
-at the instant the row prints. Without the Sky's button to follow the moment (committente):
-following is the Sky's to do, and Today's rows carry no bell. The weather's turns and the
-rainbow have no page and open nothing. The press is clipped to 12dp and inset 8dp into the
-page margin; the thread through the glyphs is drawn outside that clip, so it still meets its
-neighbours.
+- **Names**: a moment of the sky is named as the Sky names it («Ora d'oro, sera», «Tramonto»,
+  «Buio pieno», `SkyText.nameRes`); the morning's golden hour, which ends rather than starts
+  here, keeps its own words. **The moon is not on Today's agenda** (committente, 13 ott 2026):
+  on a dry day a moonrise led the list and the agenda was the Sky tab again; moonrise and
+  moonset stay on the Sky tab and in the day's arc widget.
+- **Spans**: the evening's golden hour runs **until sunset**, and says so («fino al tramonto,
+  alle 19:15»); **the sunset's own row is folded into it** (15 ott 2026) — «fino alle 19:15»
+  over «Tramonto 19:15» said one minute twice. Once the golden hour has begun its row is gone
+  and the sunset is a row again. The blue hour runs to the sun at −6° and keeps its star.
+- **The next moment** is marked as the Sky's and Alerts' next cards mark theirs: «Il
+  prossimo, oggi · tra 6 h 20 min» at `labelLarge` in `primary` over its name. How soon rides
+  on the label, not on the line under the name, where at 384dp it ran the row to three lines.
+- **The verdict**: every sight carries the Sky's verdict (§8.7) on its own line under the row,
+  **starting at the row's start**, under the clock: under the name the chip would have about
+  194dp at a 360dp screen and the widest pair the app prints wants 236; from the row's start it
+  has 300, and the word is never parted from its number. It is the **same verdict** as the Sky
+  tab's: `SkyVerdictEngine` on the job's own occurrence that day, over the same hours, stale
+  data included (no opinion). An `UNKNOWN` is not drawn here — the moment's page says why — and
+  a sight the sky has no occurrence of today says the Sky's reason in its line («La luna è su
+  tutta la notte» under «Buio pieno 20:54»): the clock time is the sun's, and the sky will not
+  keep it.
+- **The reader's rules** that hold today stand among the moments (15 ott 2026): the Material
+  bell in `primary` for a glyph, the rule's name and its message written out as its
+  notification would write it, both the reader's words and never translated. The clock column
+  says when: the hour the rule's subject points at if it is still ahead today, no earlier than
+  the rule's hours open, and «Adesso» for a rule about this moment, which stands first. It is
+  the answer the rule's card on Alerts gives (`RuleEngine.check`), never a promise that the
+  phone will ring. A
+  rule whose hours do not open again today is not a row, and while the reader's own alerts are
+  switched off none is.
+- **A moment of the sky opens the Sky's page for it** (`AgendaPageSheet`): what it is, and
+  «Dove guardare» with the compass when it has a direction, without the Sky's button to follow
+  it — following is the Sky's to do. The weather's turns and the rules open nothing. The
+  press fills the segment.
+- **The rainbow opens its own page** (`RainbowSheet`, 15 ott 2026), the Sky's page in its
+  parts: the icon and the name, «Arcobaleno possibile», over the window and its rain; «Dove
+  guardare» with the same compass; what a rainbow is in two sentences, because «your back to
+  the sun» is the half nobody knows; **how high the arc will stand, in words** — its top is
+  42° less the sun's altitude (`RainbowWindow.sight`), so «grande, quasi un semicerchio» from
+  28° up, «a media altezza» from 14°, «una fascia appena sopra l'orizzonte» under it, never a
+  degree on screen; and, quieter, that it is a possibility and why. **The direction is the
+  moment's**: inside the window the bow's place now, opposite the sun as it stands (it moves
+  about a compass point every two hours); ahead of it, the window's own, the one its row
+  prints. The row also says until when, as the golden hour's does.
 
-**8.5 DayRow** — weekday, icon, rain probability on the ink ramp (§2.3; printed from 20%),
-the **temperature range bar** and the ribbon, with the day's forecast sky and, in a week with
-rain, the wet lane under it (§4, 12 ott 2026). The bar is one horizontal track per day, all seven **sharing one scale across the
-week** so the week has a shape, filled with the diverging temperature ramp (§2.3) and
-anchored at 15 °C; the low and high are printed at its ends in tabular figures, because a
-colored bar is not a number. **Today's** bar carries a 12dp disc at the temperature right now
-(23 set 2026), in the ramp's color with an `onSurface` ring, on the week's shared scale — where
-in its day the day is.
+**8.5 DayRow** — the weekday, the sky's icon with **the chance of rain under it** on the ink
+ramp (§2.3; printed from 20%), and **the day's two tracks as one block** between its printed
+low and high: the **temperature range bar**, and under it, 4dp below and **on exactly the same
+width**, the ribbon with the day's forecast sky and, in a week with rain, the wet lane under it
+(§4, 12 ott 2026). The bar is one track per day, all seven **sharing one scale across the
+week** so the week has a shape, filled with the diverging temperature ramp (§2.3) and anchored
+at 15 °C; the low ends on the block's left and the high starts on its right, in tabular figures,
+both hugging the bars they are the ends of, because a coloured bar is not a number. **Today's**
+bar carries a 12dp disc at the temperature right now (23 set 2026), in the ramp's colour with
+an `onSurface` ring, on the week's shared scale — where in its day the day is.
 
-**A row that opens says so** (review of Today, 15 ott 2026): an 18dp chevron after the high,
-2dp from it, in `onSurfaceVariant`, turning over on the spatial spring when the day is open —
-the mark Material draws on a row that expands. TalkBack hears the row's state («Aperto»,
-«Chiuso») and its action in words («Mostra le ore», «Nascondi le ore»). The chevron's column is
-held on every row, opening or not, so the seven bars keep one right end as they keep one scale;
-the guide's example draws it closed, as a picture. The press is clipped to a 12dp shape.
+**One block** (second review of Today, 15 ott 2026). Until then the ribbon ran from under the
+icon to the row's end while the bar stood between the low and the high: two bars of one day,
+with two starts and two ends, the sunset on the ribbon nowhere near the evening on the bar.
+Now they share both ends and read as one day, the temperature over the light. The chance
+moved under the icon to give the block its width (a line held by all seven rows when any day
+prints one, as the wet lane is), and the chevron went: the block is about 122dp at 360dp, the
+ribbon's day 5dp an hour, enough to tell a clear afternoon from a grey one and to see the wet
+marks.
 
-**The closed week speaks its skies lower** (same review): a closed row's ribbon leans 40%
-toward its track (`DaylightRibbon`'s `quiet`), so the seven range bars, which are the week's
-figures, are read before the seven skies under them; the open day draws its sky in full, and
-the change rides the effects spring. The colours stay the sky's, only their weight drops, and
-the wet marks keep their full ink: they are the rain's mark, not its shade.
+**A row that opens is said once** (same review): the section's title carries a quiet note at
+its end, «Tocca un giorno per le sue ore» at `bodySmall` in `onSurfaceVariant`, where seven 18dp
+chevrons said it seven times and took the block's width to do it. TalkBack still hears every
+row's state («Aperto», «Chiuso») and its action in words («Mostra le ore», «Nascondi le ore»),
+and the open day says so by its own segment (§8.5b). The press takes the shape it is handed: on
+Today's week the segment's, elsewhere a 12dp one.
 
-**Where the row splits is measured, not quoted** (same review). It split at a type scale, 150%,
-worked out once for a 360dp screen; with the chevron's 20dp that arithmetic would leave the bar
-under 48dp a step sooner, and a 411dp phone never needed to split at 150% at all. The row now
-reads its own width (`splitsRow`): it becomes two rows when the bar would get less than 48dp
-beside the text columns (grown with the type), the icon, the gaps and the chevron — on a 360dp
-phone from 125%, on a 411dp one from about 180%. `DayRowSplitTest` holds the numbers.
+**The closed week speaks its skies lower**: a closed row's ribbon leans 40% toward its track
+(`DaylightRibbon`'s `quiet`), so the seven range bars, which are the week's figures, are read
+before the seven skies under them; the open day draws its sky in full, and the change rides the
+effects spring. The colours stay the sky's, only their weight drops, and the wet marks keep
+their full ink: they are the rain's mark, not its shade.
 
-**8.5b The open day** (24 set 2026) — **a card since the review of Today** (15 ott 2026): the
-row, its facts and its hours on one `surfaceContainer` ground with the 20dp `GroupCorner`. On the
-card the range bar's empty track (and the colour the ribbon's night leans toward) goes one step
-stronger, `outlineVariant`: the page's `surfaceContainerHighest` measured 1.11:1 against the card
-(1.23 against the page) and the open day showed a bar with no track (committente, device); with
-`outlineVariant` it is 1.46:1 in the light theme, 1.74 in the dark, and today's disc cuts its ring
-from the card. The card is drawn
-8dp inside the page margin with 8dp of air inside it, so the row's columns do not move and the
-strip scrolls under the card's edge rather than off the screen; the ground fades in on the
-effects spring while the card's top air grows on the spatial one, so opening is one movement.
-That air is held at zero or above: the spatial spring overshoots, and on closing it went under
-zero, a negative padding Compose refuses with an exception — the app crashed on closing a day
-until it was clamped (committente, device, 15 ott 2026; `TodayAgendaTest`). Until then the facts and the strip opened straight onto the paper between two rows, the strip's
-curve running edge to edge, and nothing said which day they belonged to. A closed row stays on
-the paper: seven cards would be a heavier week, and the chevron already says which rows open.
+**Where the row splits is measured, not quoted** (`splitsRow`, `DayRowSplitTest`): it becomes
+two rows — the day and its sky on one, the low, the block and the high on the whole width under
+it — when the block would get less than **72dp** beside the three text columns (grown with the
+type), the icon and the four gaps: on a 360dp phone from about 145% type, on a 411dp one from
+about 190%.
+
+**8.5b The week and the open day** — **every day is a segment of the week's group** (§8.0, 15
+ott 2026): seven `surfaceContainer` segments, 2dp apart, the row inside each with 12dp of air
+at its sides and 10 above and below; still one lazy item each, so the seven moving icons arrive
+a row at a time. On a segment the range bar's empty track (and the colour the ribbon's night
+leans toward) is `outlineVariant`: `surfaceContainerHighest` measured 1.11:1 against
+`surfaceContainer` and the bar had no track (committente, device, when only the open day was a
+card); with `outlineVariant` it is 1.46:1 in the light theme, 1.74 in the dark, and today's disc
+cuts its ring from the segment. **Open, the day grows inside its own segment**, whose ground goes
+one step up to `surfaceContainerHigh` on the effects spring: which day the facts and the hours
+belong to is the segment they stand in. Until this review the closed rows stood on the paper and
+the open one became a card 8dp inside the margin, the one section of the page with two grammars.
 Its hour strip opens **on the hour before the first
 daylight hour** (12 ott 2026; it opened on 00:00, six cells of night), and today's on the
 hour we are in. An open week row shows, above its hours, the day's
@@ -1450,46 +1605,64 @@ as a promise for the whole day.
 (review of Today, 15 ott 2026, committente): the tiles 2dp apart, the grid's four outer corners
 at the 20dp `GroupCorner` and every corner where two tiles meet at 4dp (`gridSegmentShape`), so
 the details read as one block of facts, as the Sky's and Alerts' rows read as groups. The odd
-tile out, which takes the whole row, rounds both of its outer corners on the grid's edge. They
-were loose cards 12dp apart with Material's 12dp corners. A tile on its own (the guide's) takes
-the 20dp all round. Icon and label; the value as a **reading** (`ReadingValue`: Inter
-Light 24sp on a 32sp line, tabular — the hero's voice at a tile's scale, since the card
-review of 8 set 2026; at `titleMedium` the value barely outranked its own 14sp label and
-the eye went to the icon); where the metric has a scale the world uses, **its own scale as
-a track** (design review, 23 set 2026): 6dp tall, the quantity's ramp (§2.3, the details
-grid's tracks) drawn full width at 40% as the scale at rest, the part up to the value at
-full strength, the thresholds the meaning line switches at cut into it as 2dp gaps (§9.2's
-surface gap), and a **12dp disc on the value** — the ramp's color there, a ring of the
-tile's ground, a hairline of `outline` so the pale end of a ramp still has an edge. UV on
-0–11 with the WHO's bands, humidity on 0–100 in water's ramp, air on 0–300 with the US
-bands, **pressure** on 980–1046 hPa diverging from 1013 (filled from the middle out; its
-meaning line is the **tendency** since 12 ott 2026 — the hour we are in against three hours
-on, steady under 1.6 hPa, quick from 3.6, the marine forecasts' bands — with the change as
-its note, «−2,4 hPa nelle prossime 3 ore», and the reading's own meaning only while it holds;
-«Alta» now says *settled*, not *clear*, which an overcast anticyclone contradicted), and
-**pollen** as four steps with the level and those under it lit. It replaced one `primary`
-bar under every metric, which said "how much" without saying "of what". Visibility (a
-logarithmic quantity) and the wind (whose meaning is the gust) get none;
-then the **facts behind the value** in `bodyMedium` — where the wind comes from in words
-with an arrow for where it goes, the gusts on the days they matter, the dew point under
-the humidity, which pollen — and last the meaning line (`bodySmall`, `onSurfaceVariant`).
-Never ships without the meaning line (§1.2). Tapping opens the details sheet at that
-metric. An odd tile out at the foot of the two columns **takes the whole row** (12 ott 2026), where
-it sat beside half a row of nothing. Two tiles became one that day: the dew point said "pleasant" under the
-humidity's "comfortable", the same fact in two cards, and the dew point is the better
-predictor of how the air feels, so it writes the humidity tile's meaning and stays on it
-as a note. The air index lost its acronym — "AQI" was the one piece of jargon on a
-screen built to have none — and the wind lost its compass abbreviation for the words the
-Sky screen already uses for a bearing. The icon is drawn **untinted** like every other
-weather icon (§13.1): a flat tint turns the family into silhouettes, and two metrics
-whose drawings differ only inside — humidity's drop and its %, the barometer's needle —
-become one mark. The label is one line: beside a 34dp icon two columns of a 360dp screen
-leave it 84dp, and a label is written to fit that rather than trimmed to it. (It was 94dp
-beside a 24dp icon until the family's ladder went up on 6 set 2026 and 88dp beside 30
-until the third step on 8 set; the widest label the app ships measures 76.7dp, so the ten
-the icon took cost nothing and left 7.3dp of margin, which is where the ladder stops for
-this rung. The contract is a 360dp contract: narrower than that the labels wrap and keep
-their words, as they already did at 320dp beside the 24dp icon.)
+tile out takes the whole row and rounds both of its outer corners on the grid's edge. A tile on
+its own (the guide's) takes the 20dp all round. Never ships without the meaning line (§1.2).
+
+**Two groups, one grid** (second review of Today, 15 ott 2026). A tile is a **top** — the
+eyebrow, the value as a **reading** (`ReadingValue`, light 24sp on a 32sp line, tabular: the
+hero's voice at a tile's scale) and its track — and a **foot** — the facts behind the value
+in `bodyMedium` (where the wind comes from in words, the gusts on the days they matter, the
+dew point under the humidity, which pollen) and last the meaning line, `bodySmall` in
+`onSurfaceVariant`. The foot is pushed to the tile's bottom, so the two tiles of a row, which
+share a height, put their values on one line and their meanings on another; and **every row is
+at least 160dp** (the tallest tile a day commonly draws, 158 at 100% type), so a row of two
+short tiles stands as tall as one with a scale in it. Until then each tile stacked its lines
+from the top and the grid was rows of four different heights with the meanings at four
+different depths.
+
+**The eyebrow is one ink** (same review): the quantity's glyph at the label's own size, 20dp,
+and the label at `labelLarge`, both in `onSurfaceVariant` (§13, the icon family, has the
+exception this makes). The glyphs are ten of the outlined **Material Icons**
+(`MetricIcons`: umbrella for the rain, snowflake, sun for the UV, air for the wind, cloud,
+drop for the humidity, gauge for the pressure, eye for the visibility, particles for the air,
+flower for the pollen), copied with their path data unchanged rather than depended on, since
+the library is thousands of glyphs for ten. Until then the eyebrow was a 34–38dp Meteocon in
+its own colours: ten drawings of ten styles side by side — a blue drop, a gauge with a red
+needle, a green plant with a badge — the loudest and least consistent thing on the page, louder
+than the values they introduced. They could not simply be tinted: a flat tint collapses a
+Meteocon into its silhouette (device, 4 set 2026, «due sembrano uguali»). The label keeps one
+line by budget, not by truncation: beside a 20dp glyph a tile at 360dp leaves it some 100dp,
+the widest («Qualità aria») wants 77; past that it wraps and keeps its words.
+
+**The track: one grey, the quantity's colour only up to the value** (same review). Where the
+metric has a scale the world uses it is drawn as **its own scale**: 6dp tall, at rest **the
+ink at 12%** — Material's own rest for a track, the same on every tile and on the notable one —
+and the part up to the value in the quantity's ramp (§2.3) at full strength, the thresholds
+the meaning line switches at cut in as 2dp gaps (§9.2's surface gap), and a **12dp disc on the
+value** in the ramp's colour there, ringed in the tile's ground with a hairline of `outline`.
+UV on 0–11 with the WHO's bands, humidity on 0–100 in water's ramp, air on 0–300 with the US
+bands (0–100 with the EEA's in Europe), **pressure** on 980–1046 hPa diverging from 1013 (filled
+from the middle out; its meaning line is the **tendency** since 12 ott 2026 — the hour we are in
+against three hours on, steady under 1.6 hPa, quick from 3.6 — with the change as its note,
+«−2,4 hPa nelle prossime 3 ore»), the day's rain and snow as steps, and pollen as five steps,
+the level and those under it lit. Visibility (a logarithmic quantity), the clouds and the wind
+(whose meaning is the gust) get none. From 23 set to 15 ott 2026 the whole ramp was the track
+at 40%: six scales in six hues, every one a full-width gradient at rest, read across the grid
+as six rainbows; now the grid is one grey with six lengths of colour, and "of what" stays the
+eyebrow's to say.
+
+**The notable tile** (same review, `notableDetail`, `DetailsNotableTest`). On a day one tile
+says something, it stands on `secondaryContainer` with its ink, its meaning a step up at
+`bodyMedium` in the container's ink, and TalkBack hears «Da notare oggi» with it. At most one,
+and most days none: a grid where something is always highlighted has nothing highlighted. Each
+threshold is where the tile's own meaning line turns — snow from 1 cm, rain from 10 mm, wind
+from 39 km/h (or a day's gust from 62), air from «unhealthy for the sensitive» (US above 100, EU
+above 60), UV from 6, pollen from «high», visibility under 1 km, the dew point from 21° — and
+when two cross, the first of those wins: what changes the day for everyone, then what a body
+has to mind, then comfort. Clouds and pressure are never the one. **The grid is never
+reordered** for it: a tile that moved would cost the reader where to look. The emphasis is
+not a fact said by colour alone (§10): the meaning line already says, in words, why the tile
+matters, and the emphasis only points at it.
 
 **The tiles of 24 set 2026.** **Pioggia oggi**: the day's millimetres, a note with the hours
 it lasts and — while the report is fresh — what fell in the hour just closed; its track is
@@ -1503,7 +1676,7 @@ adds the day's strongest gust to its note when it is strong (≥ 39 km/h) and ab
 tile already shows. **Qualità aria** reads the **European index** (EEA, 2024 bands 20/40/
 60/80, track 0–100) for places in Europe by country code, the US one elsewhere, with the
 same six meaning lines matched on the EEA's advice. **Pollini** has **five** levels, MeteoSwiss'
-per-species classes, the fifth «molto alti» with Meteocons' `very-high` drawings.
+per-species classes, the fifth «molto alti».
 
 **8.7 VerdictChip** — glyph + word + evidence, in that order: `✓ Great · 12% cloud`. Since
 24 set 2026 the evidence names the cloud's layer when one makes the window's sky
@@ -1840,7 +2013,11 @@ day's sky instead.
 
 **8.11 States** — empty ("no place yet", with the one action that fixes it), error (what
 failed, in plain language at `bodyMedium`, and a retry, on `errorContainer` with the 20dp
-`GroupCorner`), stale (§8.2), loading (a shimmer that cannot be mistaken for a value, §1.1).
+`GroupCorner`), stale (§8.2), loading (blocks of `surfaceContainerHigh` that cannot be mistaken for a value,
+§1.1). Today's skeleton is the page's shape, re-drawn whenever the page moves: the sky, a card
+as tall as the hours', three of the agenda's segments, and the titles as bands of empty paper,
+since a block where a word will be reads as a word that failed to load (15 ott 2026). The
+«shimmer» this line promised was never drawn: a still block says "not yet" without motion.
 
 **The page's last line** («Aggiornato alle 12:10 · dati Open-Meteo», `bodySmall` in
 `onSurfaceVariant`) stands on the page's 16dp margin like the Sky's footnote, with 16dp under
@@ -1853,7 +2030,44 @@ horizontal pager between saved places. Since
 22 set 2026 the shell is Navigation 3 (`ui/shell/ChiaroNavigation.kt`): one back stack per
 tab, Today's stack always under the selected one so back from a tab's root lands on Today,
 and the bar drawn over the pages rather than beside them, so it can slide away under
-Settings and the guide without re-laying out the page under it. The motion is §7.
+Settings and the guide without re-laying out the page under it. The motion is §7. From 600dp of
+window the bar becomes a rail (§8.12c).
+
+**8.12c Wide windows** (second review of Today, point 8, 15 ott 2026). Measured on a Pixel Fold's
+open screen (841 × 701dp), a foldable held upright (701 × 841) and a 1280 × 800 tablet.
+
+- **The rail.** From `RailMinWidth` = 600dp of window, Material's line between compact and medium,
+  the three tabs stand on a `NavigationRail` 80dp wide at the start, in the bar's own
+  `surfaceContainer`, the items in the middle of its height where a thumb reaches them on a device
+  held by its sides. It slides in from the start where the bar slid up, and leaves under Settings and
+  the guide the same way. **It starts under the status bar**, never behind it: over Today that band
+  is the sky's, with white icons, and a rail reaching up behind the clock would put white digits on
+  a pale container in the light theme. The tab pages leave the rail's width free at their start, as
+  they leave the bar's height at their foot.
+- **Today under the rail.** Today alone is laid out the full window, so its sky runs under the
+  status bar across the whole width; `LocalRailInset` keeps everything else clear of the rail: the
+  place row, the sun and the moon, the hero, the paper (whose sheet starts beside the rail, so its
+  rounded corner shows) and every section.
+- **Two panes from 640dp of paper** (`todayColumns`, the page less the rail). 640 is the paper at
+  which a pane still holds the week's row on one line at 100% type (182dp of fixed columns, 72 of
+  bars, the segment's 24, the section's 32: 310). The left pane is today (the next hours, the rest
+  of the day), the right one the days (the week, what changed); the details run across both under
+  them, then the footer. The two panes together stop at 1200dp and stand centred past it. Each pane
+  keeps 8dp outside its sections' own 16: 24 at the page's edges, Material's margin, and a 32dp
+  gutter. Under 640dp of paper the page is the phone's single column beside the rail, however wide.
+- **The hero over the first pane.** The number, its word, the day's sentence and the ribbon take the
+  left pane's width and start where its sections do; the sun and the moon keep the whole sky. The
+  sky stays one canvas across the page: the panorama is the point of a wide sky.
+- **The details across the page**, as many tiles a row as fit at a phone's tile (160dp), between
+  two and four, preferring the count that leaves no short last row (`detailsPerRow`): nine tiles
+  stand three by three, never four, four and a lonely one stretched across a tablet. In the right
+  pane they made it twice the left one's height and left a screen of empty paper at the foot.
+- **One scroll.** The two panes are one item of the list and scroll as one page: the hero travels
+  into the bar as on a phone (§8.1e), and there is one pull to refresh.
+- **Sky and Alerts** are one list each, centred at `TabColumnMax` = 840dp (Material's line between
+  medium and expanded): past it a row is longer than a line read in one look. Settings, the guide
+  and the sky's pages keep the full width for now: they carry their own top bar and back arrow, and
+  centring them would put the arrow in the middle of a tablet.
 
 **8.12b TabHeader** (14 ott 2026, review of the Sky screen, point 10) — the header of Sky
 and Alerts (and of the Journal, until it left the same day): the tab's name at
@@ -2147,17 +2361,16 @@ notification to remove. What changed is **when** they speak:
 2px lines, 4px rounded ends anchored to the baseline, markers ≥ 8dp, a 2px surface gap
 between adjacent fills, recessive gridlines (`outlineVariant` at 1dp, horizontal only).
 
-The one deliberate exception to the 8dp marker: a **per-point dot on a dense series** —
-the hour dots of §8.3b — is rhythm rather than a marker. It says where the hours are, no
-value is ever read off it (the strip above prints all 24), and it is drawn only while the
-points are at least 6dp apart. An axis tick is not a gridline and lives outside the plot:
-1dp, 3dp long, under the baseline.
+The one deliberate exception to the 8dp marker: a **per-point dot on a dense series** — the
+dots on the hour strip's temperature curve (§8.3) — is rhythm rather than a marker. It says where
+the hours are, and every value is printed over it. An axis tick is not a gridline and lives
+outside the plot: 1dp, 3dp long, under the baseline.
 Direct labels on the extremes only — never a number on every point.
 
 ### 9.3 Every chart has a text equivalent
 
-The rain chart prints the ends of its scale and the hours under it, and the strip above it
-prints every one of its values; the range bar's ends are printed. This is both the accessibility floor and §1.2: a picture of a number is not a
+The hour strip prints every temperature on its curve and every chance from 20% under its bar,
+and a wet strip's caption says the peak in words; the range bar's ends are printed. This is both the accessibility floor and §1.2: a picture of a number is not a
 number.
 
 ---
@@ -2429,8 +2642,10 @@ a valid animator and only a person can say the rain falls downward.
    **Two styles, `line` and `flat`** (`WeatherIcons.LINE` / `.FILL` — the enum kept its
    old constant because v3's `flat` IS what this app already shipped as its filled set:
    the v2 `fill` with every gradient flattened by the importer). `fill` and `monochrome`
-   are converted too and shipped by nothing. Line is the default a fresh install sees
-   (6 set 2026), and v3's line is not v2's: it is not a traced stroke but a filled
+   are converted too and shipped by nothing. **Flat (filled) is the default a fresh install
+   sees since 15 ott 2026** (committente; line from 6 set): the icons stand on the paper now,
+   in the hours, the week and the agenda, where the solid shapes carry their colours at a
+   glance. v3's line is not v2's: it is not a traced stroke but a filled
    `evenOdd` ring, which Android draws natively and which needs no stroke conversion at
    all.
 
@@ -2558,6 +2773,15 @@ a valid animator and only a person can say the rain falls downward.
    `calcMode="spline"` becomes a generated `<pathInterpolator>` per distinct pair of
    controls, and a `keyTimes` list under a negative `begin` needs the cycle rotated on
    uneven points — the raindrops, which fall out of step rather than in a chorus line.
+
+   **The details grid is no longer Meteocons'** (second review of Today, 15 ott 2026, §8.6).
+   Its eyebrows are ten outlined Material Icons in one ink (`MetricIcons`), and that is the
+   one place a quantity is not drawn by this family: the weather's states (the hours, the
+   week, the agenda, the widgets) and the open day's facts keep their Meteocons in colour,
+   and Alerts keeps them beside its variables. What follows about graded marks and the
+   barometer was written for the grid and holds where the marks are still drawn: the open
+   day's UV, the widgets and Alerts. In the grid the level is the value's and the track's to
+   say, and a 20dp eyebrow names the quantity, nothing more.
 
    **The graded marks** (Fase 13). v3 draws several metrics at their own levels, and the
    rule for using one is the rule a second verdict has to pass (§1.2). It has **two**
@@ -2773,3 +2997,8 @@ a valid animator and only a person can say the rain falls downward.
 4. **`heroTemperature`** is an extended type role, not a Material one. Confirm it survives
    contact with the expressive scale rather than becoming `displayLarge` with a tighter
    line height.
+5. **The pushed pages on a wide window** (§8.12c, 15 ott 2026). Settings and the guide still take
+   the whole window (the rail leaves under them as the bar did), the sky's guide and its event
+   pages the whole width beside it. They want their own
+   reading column with the top bar kept at the window's edges (a list-detail pane for Settings
+   on an expanded window is the candidate), measured on the same three devices as Today.

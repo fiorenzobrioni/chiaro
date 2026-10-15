@@ -1475,7 +1475,7 @@ internal class AgendaSubscription(
  * battery spent on nothing.
  */
 @Composable
-private fun LookBlock(direction: String, onOpen: () -> Unit) {
+internal fun LookBlock(direction: String, onOpen: () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shape = MaterialTheme.shapes.large,

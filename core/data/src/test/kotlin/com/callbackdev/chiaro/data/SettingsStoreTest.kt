@@ -54,7 +54,7 @@ class SettingsStoreTest {
         // Vivid since the same pass, with dynamic color off beside it: the two were
         // chosen together and neither says much without the other.
         assertEquals(AppPalette.VIVID, settings.palette)
-        assertEquals(WeatherIcons.LINE, settings.weatherIcons)
+        assertEquals(WeatherIcons.FILL, settings.weatherIcons)
         // Google Sans since the device pass of 20 set 2026 (committente: «va
         // benissimo»); the system font is a choice, never what a fresh install reads.
         assertEquals(AppFont.GOOGLE_SANS, settings.font)

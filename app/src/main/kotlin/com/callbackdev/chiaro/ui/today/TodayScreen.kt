@@ -1,94 +1,58 @@
 package com.callbackdev.chiaro.ui.today
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.activity.compose.LocalActivity
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
+import com.callbackdev.chiaro.ui.shell.LocalRailInset
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
@@ -97,78 +61,28 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.callbackdev.chiaro.R
-import com.callbackdev.chiaro.domain.AlertEngine
-import com.callbackdev.chiaro.domain.WmoCode
-import com.callbackdev.chiaro.domain.model.AqiScale
-import com.callbackdev.chiaro.domain.model.CloudLayers
-import com.callbackdev.chiaro.domain.model.DailyForecast
-import com.callbackdev.chiaro.domain.model.HourlyForecast
-import com.callbackdev.chiaro.domain.model.PollenLevel
-import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.settings.UnitSettings
-import com.callbackdev.chiaro.domain.sky.SkyJob
-import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkySights
-import com.callbackdev.chiaro.ui.components.DayRow
-import com.callbackdev.chiaro.ui.components.FittingText
-import com.callbackdev.chiaro.ui.components.DaylightRibbon
 import com.callbackdev.chiaro.ui.components.FreshnessChip
-import com.callbackdev.chiaro.ui.components.HourCell
-import com.callbackdev.chiaro.ui.components.HourStrip
-import com.callbackdev.chiaro.ui.components.MetricTile
-import com.callbackdev.chiaro.ui.components.RainChart
-import com.callbackdev.chiaro.ui.components.RainHour
-import com.callbackdev.chiaro.ui.components.SegmentGap
-import com.callbackdev.chiaro.ui.components.SegmentedGroup
-import com.callbackdev.chiaro.ui.components.SkyBodies
-import com.callbackdev.chiaro.ui.components.SkyBodiesLayer
-import com.callbackdev.chiaro.ui.components.SkyCanvas
-import com.callbackdev.chiaro.ui.components.SkySheet
-import com.callbackdev.chiaro.ui.components.TrackScale
-import com.callbackdev.chiaro.ui.components.VisibleCell
-import com.callbackdev.chiaro.ui.components.airTrack
-import com.callbackdev.chiaro.ui.components.euAirTrack
-import com.callbackdev.chiaro.ui.components.gridSegmentShape
-import com.callbackdev.chiaro.ui.components.hourWindow
-import com.callbackdev.chiaro.ui.components.humidityTrack
-import com.callbackdev.chiaro.ui.components.pollenTrack
-import com.callbackdev.chiaro.ui.components.pressureTrack
-import com.callbackdev.chiaro.ui.components.rainTrack
-import com.callbackdev.chiaro.ui.components.uvTrack
 import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
 import com.callbackdev.chiaro.ui.format.Formats
-import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.format.currentLocale
-import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
 import com.callbackdev.chiaro.ui.icons.LocalMotionPaused
 import com.callbackdev.chiaro.ui.icons.LocalPageScrolls
 import com.callbackdev.chiaro.ui.icons.PageScrolls
-import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.sky.AgendaPageSheet
 import com.callbackdev.chiaro.ui.sky.LookTarget
-import com.callbackdev.chiaro.ui.sky.SkyText
-import com.callbackdev.chiaro.ui.theme.CardCorner
-import com.callbackdev.chiaro.ui.theme.ChiaroMotion
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
-import com.callbackdev.chiaro.ui.theme.GroupCorner
-import com.callbackdev.chiaro.ui.theme.SkyGradient
 import com.callbackdev.chiaro.ui.theme.SkyPalette
 import com.callbackdev.chiaro.ui.theme.reducedMotion
-import com.callbackdev.chiaro.ui.theme.reflowForText
-import com.callbackdev.chiaro.ui.theme.tabular
 import com.callbackdev.chiaro.ui.warnings.WarningBanner
 import com.callbackdev.chiaro.ui.warnings.WarningSheet
-import java.time.Duration
-import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
-import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 
 /**
  * Today (VISION §5.2): the canvas, the sentence, the hours, the day, the week, the
@@ -242,7 +156,7 @@ fun TodayRoute(
  * persistent bar on scroll — remains the motion pass' work.
  */
 @Composable
-private fun PagedToday(
+internal fun PagedToday(
     model: PagerModel,
     units: UnitSettings,
     locating: Boolean,
@@ -351,7 +265,7 @@ private fun PagedToday(
 }
 
 @Composable
-private fun pageTitle(page: PlacePage): String = when (page) {
+internal fun pageTitle(page: PlacePage): String = when (page) {
     is PlacePage.Gps -> page.lastFix?.name ?: stringResource(R.string.places_gps_title)
     is PlacePage.Saved -> page.city.name
 }
@@ -360,7 +274,7 @@ private fun pageTitle(page: PlacePage): String = when (page) {
  * the APPLIED theme, read off the surface itself, because since Fase 4 the reader can
  * force light or dark against the system and the icons must follow the choice. */
 @Composable
-private fun StatusBarIcons(overCanvas: Boolean) {
+internal fun StatusBarIcons(overCanvas: Boolean) {
     val activity = LocalActivity.current
     val darkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     DisposableEffect(overCanvas, darkTheme, activity) {
@@ -401,7 +315,7 @@ internal fun TodayPage(
                 onRefresh, onOpenPlaces, onOpenSettings, onOpenGuide,
                 onDismissGuideCard, isCurrent, onCanvasBehindBar
             )
-        else -> Column(modifier = Modifier.fillMaxSize()) {
+        else -> Column(modifier = Modifier.fillMaxSize().padding(start = LocalRailInset.current)) {
             PlaceHeader(
                 title = title,
                 isGps = isGps,
@@ -427,419 +341,13 @@ internal fun TodayPage(
     }
 }
 
-/**
- * The place row's vertical padding, the same on the canvas and on a plain surface: it
- * was 8dp on the sky and 12dp everywhere else, so swiping from a place with a report to
- * one without moved the title 4dp (review, 8 set 2026).
- */
-private val HeaderVerticalPadding = 8.dp
-
-/** The air the place target's ripple has around its text, taken from [HeaderPadding]. */
-private val PlaceTargetInset = 8.dp
-
-/** The place row's padding: the page's 16 at the end, where the gear's own 48dp box carries
- * its air, and 16 less the place target's inset at the start, so the name stands on the
- * page margin and the target's ripple reaches past it. */
-private val HeaderPadding = PaddingValues(
-    start = 16.dp - PlaceTargetInset,
-    end = 16.dp,
-    top = HeaderVerticalPadding,
-    bottom = HeaderVerticalPadding
-)
-
-/** The place target's minimum, DESIGN §6's floor for anything a finger aims at. */
-private val PlaceTargetMin = 48.dp
-
-/** The place target's ripple: rounded like the other tabs' place targets. */
-private val PlaceTargetShape = RoundedCornerShape(12.dp)
-
-/** The frame for the two page-less situations: not started yet, and no place at all. */
-@Composable
-private fun GlobalFrame(
-    onOpenPlaces: () -> Unit,
-    onOpenSettings: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            PlaceHeader(
-                title = stringResource(R.string.app_name),
-                isGps = false,
-                localNow = null,
-                dots = null,
-                onOpenPlaces = onOpenPlaces,
-                onOpenSettings = onOpenSettings,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                dotInactive = MaterialTheme.colorScheme.outlineVariant,
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(HeaderPadding)
-            )
-            content()
-        }
-    }
-}
-
-/**
- * The place switcher: name, chevron, and the pager dots when there is more than one
- * page. One composable for both grounds — white over the canvas' scrim, theme ink on
- * a plain surface — so the two can never drift apart in shape.
- *
- * [isGps] draws the position pin before the name: a saved "Cavenago" and the GPS fix
- * standing in Cavenago would otherwise be two identical pages, and where a number
- * comes from is part of its truth (device request, 2 set). The pin carries its word
- * through the row's description, never alone.
- *
- * [localNow] is the other half of that same question, and appears on exactly the pages
- * the pin does not (device request, 7 set): the day and the hour IN this place. On the
- * position page it would be the phone's own clock printed under the status bar that
- * already shows it; on any other place it is the one thing the reader cannot look up —
- * Palermo and Reykjavík are not on the same hour, and some days not on the same date.
- * It is a fact about the place, not about the data: the page's last line still says
- * when the numbers arrived, in the same timezone as this one and in its own words.
- */
-@Composable
-private fun PlaceHeader(
-    title: String,
-    isGps: Boolean,
-    /** The place's day and hour, longest form first ([FittingText] draws the longest
-     * that fits). */
-    localNow: List<String>?,
-    dots: Pair<Int, Int>?,
-    onOpenPlaces: () -> Unit,
-    onOpenSettings: () -> Unit,
-    contentColor: Color,
-    dotInactive: Color,
-    modifier: Modifier = Modifier,
-    compactVisible: Boolean = false,
-    compact: (@Composable () -> Unit)? = null
-) {
-    val spoken = if (isGps) stringResource(R.string.header_gps_desc, title) else title
-    val switcher = stringResource(R.string.place_switcher_action)
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            // The target is the whole block, name and hour together, as on the other tabs'
-            // `TabHeader` (review of Today, 15 ott 2026). It was the name's row alone: a
-            // `titleLarge` line beside a 24dp chevron, about 28dp tall, under the 48 DESIGN
-            // §6 asks of every target, with a ripple that was not clipped and so drew a
-            // rectangle over the sky. Name and hour are 28 + 20 = 48dp, which is also where
-            // a finger aims for "this place"; without the hour the block keeps 48 by its
-            // minimum. The 8dp it is inset by are the ripple's, taken from the row's 16, so
-            // the text stays where it was. The ripple takes the row's ink: white over the
-            // sky, the theme's ink on a plain surface.
-            CompositionLocalProvider(LocalContentColor provides contentColor) {
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .clip(PlaceTargetShape)
-                        .clickable(onClickLabel = switcher, role = Role.Button, onClick = onOpenPlaces)
-                        // One button to a screen reader: the place (and the position pin's
-                        // word) and the place's own hour, with «change place» as its action.
-                        // The chevron says nothing of its own.
-                        .clearAndSetSemantics {
-                            // The longest form, whichever one the line can draw.
-                            contentDescription = listOfNotNull(spoken, localNow?.firstOrNull())
-                                .joinToString(", ")
-                        }
-                        .defaultMinSize(minWidth = PlaceTargetMin, minHeight = PlaceTargetMin)
-                        .padding(horizontal = PlaceTargetInset)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        if (isGps) {
-                            Icon(
-                                imageVector = Icons.Outlined.LocationOn,
-                                contentDescription = null,
-                                tint = contentColor,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Text(
-                            title,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = contentColor,
-                            // One line when the bar also carries the temperature: a name
-                            // that wrapped under it would push the bar taller at every scroll.
-                            maxLines = if (compact != null) 1 else Int.MAX_VALUE,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
-                        Icon(
-                            imageVector = Icons.Outlined.KeyboardArrowDown,
-                            contentDescription = null, // the block's action says it
-                            tint = contentColor
-                        )
-                    }
-                    // Full strength rather than a faded white: this sits over the sky,
-                    // where §3.6's scrim is measured against ink at full opacity, and the
-                    // size is what makes it secondary.
-                    //
-                    // The longest form that fits (committente, 15 ott 2026): «Venerdì 25
-                    // settembre · 12:15» while it has the room, «Ven 25 set · 12:15» when the
-                    // bar's temperature takes it, «Ven · 12:15» at a type size where neither
-                    // fits. Measured, not decided by the scroll: on a wide phone the long one
-                    // stays all the way down, and the line never wraps, which would make the
-                    // bar taller under the reader's finger.
-                    localNow?.let {
-                        FittingText(
-                            candidates = it,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = contentColor
-                        )
-                    }
-                }
-            }
-            // Outside the target: where this page stands among the others is a fact,
-            // not a way in.
-            dots?.let { (selected, count) ->
-                PageDots(
-                    selected = selected,
-                    count = count,
-                    active = contentColor,
-                    inactive = dotInactive,
-                    modifier = Modifier.padding(start = PlaceTargetInset)
-                )
-            }
-        }
-        compact?.let { now ->
-            AnimatedVisibility(
-                visible = compactVisible,
-                enter = fadeIn(ChiaroMotion.effects(reducedMotion())) +
-                    slideInVertically(ChiaroMotion.spatial(reducedMotion())) { it / 2 },
-                exit = fadeOut(ChiaroMotion.effects(reducedMotion())) +
-                    slideOutVertically(ChiaroMotion.spatial(reducedMotion())) { it / 2 }
-            ) { now() }
-        }
-        // The gear of VISION §5.1: settings are visited once a month, so they get an
-        // icon by the place row, not a tab. Same two grounds as the row itself.
-        IconButton(onClick = onOpenSettings) {
-            Icon(
-                imageVector = Icons.Outlined.Settings,
-                contentDescription = stringResource(R.string.settings_title),
-                tint = contentColor
-            )
-        }
-    }
-}
-
-/**
- * The hero in the bar (DESIGN §8.1b, 23 set 2026): the sky's icon and the temperature,
- * shown once the canvas has scrolled away. One announcement, the same number the hero
- * says; the icon is the still drawing, because the bar is where the eye rests while the
- * page moves under it.
- */
-@Composable
-private fun CompactNow(temperature: String, glyph: ConditionGlyph, color: Color) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.padding(start = 8.dp)
-    ) {
-        CompositionLocalProvider(LocalMotionPaused provides true) {
-            com.callbackdev.chiaro.ui.icons.ConditionIcon(glyph = glyph, modifier = Modifier.size(32.dp))
-        }
-        Text(
-            text = temperature,
-            style = MaterialTheme.typography.titleLarge.tabular(),
-            color = color
-        )
-    }
-}
-
-/**
- * How long the place row takes to turn from the sky's to the page's (committente, 15 ott
- * 2026): longer than §7's effects spring, about a tenth of a second, which on the device read
- * as a snap; short enough that the grey midway is gone before it is read. Reduced motion
- * keeps §7's 100 ms fade.
- */
-private const val BarCrossfadeMillis = 300
-
-private fun <T> barCrossfade(reduced: Boolean): androidx.compose.animation.core.FiniteAnimationSpec<T> =
-    if (reduced) ChiaroMotion.fade() else androidx.compose.animation.core.tween(
-        BarCrossfadeMillis,
-        easing = androidx.compose.animation.core.FastOutSlowInEasing
-    )
-
-/** How far above the bar's bottom edge the canvas' bottom may climb before the hero
- * counts as gone: the lip, the padding and the ribbon, up to the temperature's baseline. */
-private val HeroReach = 120.dp
-
-/** The place dots of VISION §5.1: position among the pages, at a glance. */
-@Composable
-private fun PageDots(
-    selected: Int,
-    count: Int,
-    active: Color,
-    inactive: Color,
-    modifier: Modifier = Modifier
-) {
-    val description = stringResource(R.string.pager_dots_desc, selected + 1, count)
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = modifier
-            .padding(top = 4.dp)
-            .semantics { contentDescription = description }
-    ) {
-        repeat(count) { index ->
-            Box(
-                modifier = Modifier
-                    .size(6.dp)
-                    .clip(CircleShape)
-                    .background(if (index == selected) active else inactive)
-            )
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------------
-// The four states. §8.11: an empty state names its one action; a skeleton is visibly
-// a skeleton; an error says what failed in words and offers the retry.
-// ---------------------------------------------------------------------------------
-
-@Composable
-private fun NoPlaceState(onOpenPlaces: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = stringResource(R.string.empty_no_place_title),
-            style = MaterialTheme.typography.titleLarge
-        )
-        Text(
-            text = stringResource(R.string.empty_no_place_body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        TextButton(onClick = onOpenPlaces) {
-            Text(stringResource(R.string.empty_no_place_action))
-        }
-    }
-}
-
-@Composable
-private fun EmptyState(state: TodayUiState.Empty, onRefresh: () -> Unit) {
-    Column {
-        state.error?.let { ErrorBanner(it, onRefresh) }
-        if (state.error == null) {
-            Text(
-                text = stringResource(R.string.empty_no_data_body, state.city.name),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(16.dp)
-            )
-        }
-        TodaySkeleton()
-    }
-}
-
-/**
- * The plain place row that stands over the skeleton: [HeaderVerticalPadding] above and
- * below a row the 48dp settings button makes 48 tall. The skeleton's sky block is the
- * canvas' height minus this, so the row and the block together end exactly where the
- * real canvas ends and nothing jumps when the report lands.
- */
-private val PlainHeaderHeight = 48.dp + HeaderVerticalPadding * 2
-
-/** One hour cell at 100% type, quoted from `HourStrip`: 16 (hour) + 6 + 42 (icon) + 6 +
- * 52 (the temperature curve's band, since 23 set 2026) + 6 + 16 (rain). */
-private val SkeletonHourCellHeight = 144.dp
-
-/**
- * Blocks of `surfaceContainerHigh` in the shape of the real layout: unmistakably not
- * data (§1.1 — no placeholder may render as a value, so none of these carries text).
- *
- * In the shape of the real layout, and re-measured against it on 8 set 2026: the sky
- * block had kept the 28dp bottom corners the canvas lost on 4 set and a 240dp height
- * from before the canvas reached the status bar, and the hour cells were 16dp shorter
- * than the strip had grown. A skeleton that is the wrong shape is a small lie told for
- * one second; still a lie.
- */
-@Composable
-private fun TodaySkeleton() {
-    val block = MaterialTheme.colorScheme.surfaceContainerHigh
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Straight edges, like the canvas: the sky is the ground, not a card.
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(CanvasBaseHeight - PlainHeaderHeight)
-                .background(block)
-        )
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            repeat(6) {
-                Box(
-                    modifier = Modifier
-                        .width(56.dp)
-                        .height(SkeletonHourCellHeight)
-                        .background(block, MaterialTheme.shapes.medium)
-                )
-            }
-        }
-        repeat(3) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(20.dp)
-                    .background(block, MaterialTheme.shapes.small)
-            )
-        }
-    }
-}
-
-@Composable
-private fun ErrorBanner(error: TodayError, onRetry: () -> Unit) {
-    Surface(
-        color = MaterialTheme.colorScheme.errorContainer,
-        // A banner of one statement: the groups' corner (DESIGN §6), as the warning's.
-        shape = RoundedCornerShape(GroupCorner),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(start = 16.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(
-                    when (error) {
-                        TodayError.OFFLINE -> R.string.error_offline
-                        TodayError.SERVICE -> R.string.error_service
-                        TodayError.UNKNOWN -> R.string.error_unknown
-                    }
-                ),
-                // `bodyMedium`, the size of a sentence everywhere else on the page: an error is
-                // not a footnote.
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier.weight(1f)
-            )
-            TextButton(onClick = onRetry) {
-                Text(stringResource(R.string.error_retry))
-            }
-        }
-    }
-}
-
 // ---------------------------------------------------------------------------------
 // Content
 // ---------------------------------------------------------------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ContentState(
+internal fun ContentState(
     content: TodayUiState.Content,
     title: String,
     isGps: Boolean,
@@ -926,7 +434,8 @@ private fun ContentState(
     // rest, white icons; the page once scrolled, the theme's.
     LaunchedEffect(isCurrent, atTop) { if (isCurrent) onCanvasBehindBar(atTop) }
     // The hero is gone once the canvas' bottom has climbed to within [HeroReach] of the
-    // bar: past that line the temperature is under the bar or above the screen.
+    // bar: past that line the temperature is under the bar or above the screen. Under reduced
+    // motion this is what brings the bar's own number in, with a fade.
     val heroGone by remember {
         derivedStateOf {
             val first = listState.layoutInfo.visibleItemsInfo.firstOrNull() ?: return@derivedStateOf false
@@ -934,6 +443,41 @@ private fun ContentState(
                 first.offset + first.size < with(density) { (headerHeight + HeroReach).roundToPx() }
         }
     }
+
+    // The hero's number travels into the bar (DESIGN §8.1e, 15 ott 2026): one figure, drawn
+    // over the page, whose place is arithmetic on the scroll. Not under reduced motion, where
+    // a figure that shrinks and slides across the screen is the kind of movement the setting
+    // asks to be spared: there the number scrolls away with the sky and the bar's own fades in.
+    val dock = if (reduced) null else remember { HeroDock() }
+    val heroType = heroStyle()
+    val barType = MaterialTheme.typography.titleLarge
+    val endScale = barType.fontSize.value / heroType.fontSize.value
+    var pageWidth by remember { mutableStateOf(0) }
+    val pose: () -> HeroPose = {
+        val d = dock!!
+        with(density) {
+            val barBottom = headerHeight.toPx()
+            heroPose(
+                itemTop = listState.canvasTop(),
+                rest = d.rest,
+                dock = dockSlot(
+                    pageWidth = pageWidth.toFloat(),
+                    statusBottom = statusTop.toPx(),
+                    barBottom = barBottom,
+                    numberWidth = d.size.width.toFloat(),
+                    numberHeight = d.size.height.toFloat(),
+                    endScale = endScale,
+                    endInset = (HeaderEndPadding + GearBox).toPx()
+                ),
+                trigger = barBottom + HeroTrigger.toPx(),
+                travel = HeroTravelDistance.toPx(),
+                endScale = endScale
+            )
+        }
+    }
+    val travelling = dock != null && dock.measured && pageWidth > 0
+    val docking by remember(travelling, endScale) { derivedStateOf { travelling && pose().progress > 0f } }
+    val docked by remember(travelling, endScale) { derivedStateOf { travelling && pose().progress >= 1f } }
 
     // Which day of the week is open, hoisted out of the week because the week is no
     // longer one composable: each row is its own lazy item (8 set 2026), so the seven
@@ -977,6 +521,19 @@ private fun ContentState(
         )
     }
 
+    // The rainbow's page (15 ott 2026), hoisted like the agenda's: its row is a lazy item.
+    var rainbowItem by remember { mutableStateOf<TimelineItem?>(null) }
+    rainbowItem?.let { item ->
+        RainbowSheet(
+            item = item,
+            now = content.now,
+            zone = content.zone,
+            coordinates = content.report.location.coordinates,
+            timeFmt = timeFmt,
+            onDismiss = { rainbowItem = null }
+        )
+    }
+
     // "What changed", written out here because a `LazyListScope` cannot call a
     // composable and these sentences need the string table. A revision whose fields
     // this screen has no words for (a condition code, say) produces NO line: on device
@@ -1013,24 +570,83 @@ private fun ContentState(
         isRefreshing = content.userRefreshing || locating,
         onRefresh = onRefresh
     ) {
+        // The page's rhythm is the items' own since 15 ott 2026: a section is a title on the
+        // paper and its content on a container under it (DESIGN §8.0), and a group's segments
+        // stand 2dp apart where the list's even 12dp gap would have pulled the week's seven
+        // segments apart into seven cards. So the list spaces nothing, and every item says
+        // what air it needs: [ItemGap] over a notice, [SectionTitle]'s 24 over a section.
+        // A wide page stands in two panes under the sky (DESIGN §8.12c, 15 ott 2026): the
+        // hours and the rest of the day, which are about today, on the left under the hero;
+        // the week, what changed and the details, which are about the days and the air, on
+        // the right. The sky stays one, across the whole page.
+        val railInset = LocalRailInset.current
+        // The page's width once the list has measured it; the window's before, which is the
+        // same width (the page is the window's, rail included) and keeps the first frame
+        // from laying out a phone's column on a tablet.
+        val windowWidth = LocalWindowInfo.current.containerSize.width
+        val columns = with(density) {
+            todayColumns((if (pageWidth > 0) pageWidth else windowWidth).toDp(), railInset)
+        }
+        val paper = Modifier.padding(start = columns.start, end = columns.end)
+        // The first title on the paper (review of 12 ott 2026): the sheet's own 24dp lip
+        // is already above it, and a section's whole 24 more made a band of empty paper
+        // between the sky and the hours — the hours VISION §4.4 wants above the fold,
+        // pushed down by nothing. With a chip, a banner or the guide card in between, it
+        // keeps a section's air to stand apart from them.
+        val opensThePaper = content.error == null && !content.isStale &&
+            content.warnings == null && guideCardVisible != true
+        val firstTitleTop = if (opensThePaper) ItemGap else SectionGap
+        val restOfDay: @Composable () -> Unit = {
+            RestOfDay(content, timeFmt, units, onOpenRainbow = { rainbowItem = it }) { item, job ->
+                agendaPage = job.id
+                // Where to look, for the rows that have a direction: the same rule
+                // and the same instant the Sky's row asks (SkySights.bearing).
+                agendaBearing = SkySights.bearing(
+                    job,
+                    item.at.atZone(content.zone).toInstant(),
+                    content.report.location.coordinates
+                )
+                agendaWhen = listOfNotNull(item.at, item.until)
+                    .joinToString(" – ") { it.format(timeFmt) }
+            }
+        }
+        // The week says once that its days open (second review, 15 ott 2026), where
+        // seven chevrons said it seven times.
+        val weekTitle: @Composable (Dp) -> Unit = { top ->
+            SectionTitle(
+                stringResource(R.string.section_week),
+                top = top,
+                hint = stringResource(R.string.week_open_hint)
+            )
+        }
+        val onToggleDay: (java.time.LocalDate) -> Unit = { date ->
+            expandedDay = if (expandedDay == date) null else date
+        }
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxSize().onSizeChanged { pageWidth = it.width },
             contentPadding = WindowInsets.navigationBars.asPaddingValues()
         ) {
-            item { CanvasHeader(content, skyGradient, units, timeFmt, locale, headerHeight) }
+            item {
+                CanvasHeader(
+                    content, skyGradient, units, timeFmt, locale, headerHeight, dock,
+                    columns = columns,
+                    railInset = railInset
+                )
+            }
 
             if (content.error != null) {
-                item { ErrorBanner(content.error, onRefresh) }
+                item { Box(paper.padding(top = ItemGap)) { ErrorBanner(content.error, onRefresh) } }
             }
             if (content.isStale) {
                 item {
-                    FreshnessChip(
-                        age = freshnessAge(content.lastSync),
-                        onRetry = onRefresh,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
+                    Box(paper) {
+                        FreshnessChip(
+                            age = freshnessAge(content.lastSync),
+                            onRetry = onRefresh,
+                            modifier = Modifier.padding(start = 16.dp, top = ItemGap, end = 16.dp)
+                        )
+                    }
                 }
             }
             // The official warning (Fase 11, DESIGN §8.13): after the chip, which
@@ -1039,68 +655,89 @@ private fun ContentState(
             // `warnings` is null there — and never drawn as an error.
             content.warnings?.let { warning ->
                 item {
-                    WarningBanner(
-                        warnings = warning,
-                        // The PLACE's day, like every other date on this screen: the
-                        // bulletin's own days are the issuer's, and for an Italian
-                        // place the two are the same one.
-                        today = content.now.toLocalDate(),
-                        timeFmt = timeFmt,
-                        onOpen = { warningSheetOpen = true },
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
+                    Box(paper) {
+                        WarningBanner(
+                            warnings = warning,
+                            // The PLACE's day, like every other date on this screen: the
+                            // bulletin's own days are the issuer's, and for an Italian
+                            // place the two are the same one.
+                            today = content.now.toLocalDate(),
+                            timeFmt = timeFmt,
+                            onOpen = { warningSheetOpen = true },
+                            modifier = Modifier.padding(start = 16.dp, top = ItemGap, end = 16.dp)
+                        )
+                    }
                 }
             }
             // The one-time pointer to the guide (VISION 5.7): true shows it, false
             // and null both draw nothing - a card that flashed while the store was
             // still answering would be shown to everyone and dismissed by nobody.
             if (guideCardVisible == true) {
-                item { GuideCard(onOpen = onOpenGuide, onDismiss = onDismissGuideCard) }
-            }
-
-            // The first title on the paper (review of 12 ott 2026): the sheet's own 24dp lip
-            // and the list's 12dp gap are already above it, and its usual 12 more made a
-            // 53dp band of empty paper between the sky and the hours, measured on the
-            // README's Milan — the hours VISION §4.4 wants above the fold, pushed down by
-            // nothing. With a chip, a banner or the guide card in between, it keeps the 12
-            // it needs to stand apart from them.
-            val opensThePaper = content.error == null && !content.isStale &&
-                content.warnings == null && guideCardVisible != true
-            item {
-                SectionTitle(
-                    stringResource(R.string.section_next_hours),
-                    top = if (opensThePaper) 0.dp else 12.dp
-                )
-            }
-            item { NextHours(content, units, is24h, timeFmt, locale) }
-
-            if (content.timeline.isNotEmpty()) {
-                item { SectionTitle(stringResource(R.string.section_rest_of_day)) }
                 item {
-                    RestOfDay(content, timeFmt) { item, job ->
-                        agendaPage = job.id
-                        // Where to look, for the rows that have a direction: the same rule
-                        // and the same instant the Sky's row asks (SkySights.bearing).
-                        agendaBearing = SkySights.bearing(
-                            job,
-                            item.at.atZone(content.zone).toInstant(),
-                            content.report.location.coordinates
-                        )
-                        agendaWhen = listOfNotNull(item.at, item.until)
-                            .joinToString(" – ") { it.format(timeFmt) }
+                    Box(paper.padding(top = ItemGap)) {
+                        GuideCard(onOpen = onOpenGuide, onDismiss = onDismissGuideCard)
                     }
                 }
             }
 
+            if (columns.twoPanes) {
+                // The panes are one item: two columns of a lazy list cannot scroll as one
+                // page, and a wide page holds both of them in a screen or two anyway.
+                item {
+                    Row(paper) {
+                        Column(Modifier.weight(1f)) {
+                            SectionTitle(stringResource(R.string.section_next_hours), top = firstTitleTop)
+                            NextHours(content, units, is24h, timeFmt, locale)
+                            if (content.timeline.isNotEmpty()) {
+                                SectionTitle(stringResource(R.string.section_rest_of_day))
+                                restOfDay()
+                            }
+                        }
+                        Column(Modifier.weight(1f)) {
+                            // The second pane's first title on the first one's line.
+                            var top = firstTitleTop
+                            if (content.week.isNotEmpty()) {
+                                weekTitle(top)
+                                WeekColumn(content, units, is24h, locale, expandedDay, onToggleDay)
+                                top = SectionGap
+                            }
+                            if (changed.isNotEmpty()) {
+                                SectionTitle(stringResource(R.string.today_changed_title), top = top)
+                                WhatChanged(lines = changed)
+                            }
+                        }
+                    }
+                }
+                // The details under both panes, across the page (§8.12c): in one pane they
+                // were the tallest thing on it and left the other a screen of empty paper;
+                // across, the grid takes three or four tiles a row at a phone's tile width,
+                // and the two panes above come out about as tall as each other.
+                item { Box(paper) { SectionTitle(stringResource(R.string.section_details)) } }
+                item { Box(paper) { Details(content, units, locale) } }
+                item { Box(paper) { DataFooter(content, timeFmt) } }
+                return@LazyColumn
+            }
+
+            item {
+                Box(paper) { SectionTitle(stringResource(R.string.section_next_hours), top = firstTitleTop) }
+            }
+            item { Box(paper) { NextHours(content, units, is24h, timeFmt, locale) } }
+
+            if (content.timeline.isNotEmpty()) {
+                item { Box(paper) { SectionTitle(stringResource(R.string.section_rest_of_day)) } }
+                item { Box(paper) { restOfDay() } }
+            }
+
             if (content.week.isNotEmpty()) {
-                item { SectionTitle(stringResource(R.string.section_week)) }
+                item { Box(paper) { weekTitle(SectionGap) } }
                 weekRows(
                     content = content,
                     units = units,
                     is24h = is24h,
                     locale = locale,
                     expandedDay = expandedDay,
-                    onToggle = { date -> expandedDay = if (expandedDay == date) null else date }
+                    onToggle = onToggleDay,
+                    modifier = paper
                 )
             }
 
@@ -1111,13 +748,13 @@ private fun ContentState(
             // so it used to name days the reader had not been shown yet, and it split
             // the two sections about today from the one about the days ahead.
             if (changed.isNotEmpty()) {
-                item { SectionTitle(stringResource(R.string.today_changed_title)) }
-                item { WhatChanged(lines = changed) }
+                item { Box(paper) { SectionTitle(stringResource(R.string.today_changed_title)) } }
+                item { Box(paper) { WhatChanged(lines = changed) } }
             }
 
-            item { SectionTitle(stringResource(R.string.section_details)) }
-            item { Details(content, units, locale) }
-            item { DataFooter(content, timeFmt) }
+            item { Box(paper) { SectionTitle(stringResource(R.string.section_details)) } }
+            item { Box(paper) { Details(content, units, locale) } }
+            item { Box(paper) { DataFooter(content, timeFmt) } }
         }
 
         // After the list so it stands over it, inside the pull box so the refresh
@@ -1141,18 +778,27 @@ private fun ContentState(
             onOpenSettings = onOpenSettings,
             contentColor = headerInk,
             dotInactive = headerDotInk,
-            compactVisible = heroGone,
+            compactVisible = if (travelling) docking else heroGone,
+            compactInstant = travelling,
             compact = {
-                CompactNow(
-                    // Whole degrees, like every other temperature below the hero: the bar
-                    // is a reminder of the number, and the tenths would cost the place's
-                    // name its room.
-                    temperature = Formats.temperature(
-                        content.report.current.tempC, units.temperature, locale
-                    ),
-                    glyph = ConditionGlyph(content.report.current.condition.wmoCode, content.night),
-                    color = headerInk
-                )
+                // Whole degrees, like every other temperature below the hero: the bar is a
+                // reminder of the number, and the tenths would cost the place's name its room.
+                val temperature = Formats.temperature(content.report.current.tempC, units.temperature, locale)
+                val glyph = ConditionGlyph(content.report.current.condition.wmoCode, content.night)
+                if (travelling) {
+                    with(density) {
+                        DockedNow(
+                            temperature = temperature,
+                            glyph = glyph,
+                            numberWidth = (dock!!.size.width * endScale).toDp(),
+                            numberHeight = (dock.size.height * endScale).toDp(),
+                            progress = { pose().progress },
+                            docked = docked
+                        )
+                    }
+                } else {
+                    CompactNow(temperature = temperature, glyph = glyph, color = headerInk)
+                }
             },
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -1163,8 +809,21 @@ private fun ContentState(
                 }
                 .background(headerGround)
                 .statusBarsPadding()
+                // Beside the rail, whose band of status bar is this bar's ground (§8.12c).
+                .padding(start = LocalRailInset.current)
                 .padding(HeaderPadding)
         )
+        // Over the bar, so the docked figure stands on the bar's ground.
+        if (travelling) {
+            TravellingNumber(
+                text = Formats.temperature(content.report.current.tempC, units.temperature, locale),
+                style = heroType,
+                pose = pose,
+                barBottom = { with(density) { headerHeight.toPx() } },
+                barInk = headerInk,
+                skyInk = SkyPalette.Ink
+            )
+        }
     }
     }
 }
@@ -1190,7 +849,7 @@ private fun ContentState(
  * the overwhelming case (the place you are in) the two are the same hour anyway.
  */
 @Composable
-private fun DataFooter(content: TodayUiState.Content, timeFmt: DateTimeFormatter) {
+internal fun DataFooter(content: TodayUiState.Content, timeFmt: DateTimeFormatter) {
     Text(
         text = stringResource(
             R.string.today_updated_footer,
@@ -1202,1362 +861,42 @@ private fun DataFooter(content: TodayUiState.Content, timeFmt: DateTimeFormatter
         // centred line was the one thing on the paper not standing on the 16dp column.
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 16.dp)
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)
     )
 }
 
 /**
- * The same header rhythm every other screen keeps (DESIGN §6, `SectionTop`), reached
- * by a different road: this list spaces its items by 12dp, so 12 of the section's 24
- * are already paid and the header adds the other 12 itself. The 12dp under it is that
- * same list gap — which is exactly what a 4dp bottom plus a row's 8dp of padding comes
- * to on the screens that have no list spacing.
+ * A section's title on the paper (DESIGN §6, §8.0): [SectionGap] over it, the 24 every
+ * screen keeps between one section and the next, and 12 under it, down to its container.
  */
 @Composable
-private fun SectionTitle(text: String, top: Dp = 12.dp) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(start = 16.dp, top = top)
-    )
-}
-
-/**
- * The canvas' height before the status bar's own height is added on top — a FLOOR since
- * 8 set 2026, not a size. Everything on the canvas is measured in sp (the 64sp
- * temperature, a 22sp sentence that runs to two lines in Italian) and the block was
- * measured in dp: at 100% type a two-line sentence left 2dp before the hero climbed into
- * the place row, and at 115% the two overlapped by 30dp. The canvas is now at least this
- * tall and grows with what it holds — see [CanvasHeader]. The place row is pinned over
- * the list rather than scrolling inside the canvas (18 set 2026), and the canvas holds a
- * spacer its height in its place, so this floor still measures the same block.
- */
-private val CanvasBaseHeight = 280.dp
-
-@Composable
-private fun CanvasHeader(
-    content: TodayUiState.Content,
-    gradient: SkyGradient,
-    units: UnitSettings,
-    timeFmt: DateTimeFormatter,
-    locale: Locale,
-    placeRowHeight: Dp
-) {
-    val sky = content.sky
-    val current = content.report.current
-    // The canvas owns the top edge of the screen: its height grows by the status bar
-    // so the sky sits behind the clock, over the top scrim that keeps both legible.
-    val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val floor = CanvasBaseHeight + statusTop
-    // The page laid over the sky's last few dp (DESIGN §8.1, 23 set 2026). Its lip is
-    // inside the floor, not added to it: the skeleton quotes the floor, and the block
-    // must still end where the skeleton's does.
-    val sheet = SkySheet(surface = MaterialTheme.colorScheme.surface)
-    SkyCanvas(
-        gradient = gradient,
-        minHeight = floor,
-        sheet = sheet
-    ) {
-        // One column with the place row's seat at the top and the hero at the bottom,
-        // rather than two children aligned to opposite edges of a fixed box:
-        // `SpaceBetween` on a floor keeps them apart when there is room and stacks them
-        // when there is not, and a fixed box let them overlap instead.
-        //
-        // The seat and not the row: the row is pinned over the list now, and the sky is
-        // still the thing it stands on. A spacer as tall as the real bar keeps the
-        // geometry the row used to make for itself — the hero lands where it always did,
-        // and it cannot climb under a bar it no longer belongs to.
-        //
-        // Between the two, since 23 set 2026, the sun and the moon, in a band of sky the
-        // layout keeps for them ([SkyColumn]): the discs can never stand behind the place
-        // row or the hero, and the band is never so thin that there is no room for one.
-        SkyColumn(seat = placeRowHeight, floor = floor - sheet.lip) {
-            Box(modifier = Modifier.fillMaxSize().padding(top = 4.dp)) {
-                SkyBodiesLayer(
-                    SkyBodies(
-                        sunAltitudeDeg = sky.sunAltitudeDeg,
-                        sunAzimuthDeg = sky.sunAzimuthDeg,
-                        moonAltitudeDeg = sky.moonAltitudeDeg,
-                        moonAzimuthDeg = sky.moonAzimuthDeg,
-                        moonIllumination = sky.moonIllumination,
-                        moonElongationDeg = sky.moonElongationDeg,
-                        cloudPct = sky.cloudPct,
-                        southern = sky.southern
-                    )
-                )
-            }
-            // Three groups, set apart by the air between them rather than by one even step
-            // (review of Today, 15 ott 2026): the NOW — the number, the sky's word, what it
-            // feels like and whether it is an estimate — packed tight under the figure; the
-            // DAY's sentence a step below it; the ribbon with its clock times closing the
-            // canvas. With 6dp between every line the word and the sentence read as one
-            // paragraph of three lines.
-            //
-            // Every line is [SkyPalette.Ink] at full strength (DESIGN §3.6): the secondary
-            // ones are told apart by their size, never by a thinner white.
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                // Whole degrees (committente, 24 set 2026), like every other temperature
-                // in the app. The tenths were the model's resolution, not its accuracy: a
-                // 2 m temperature from a forecast model is good to a degree or two, and
-                // since the same day the hero may be an estimate interpolated between two
-                // hours — «20,8°» claimed a precision nobody had.
-                Text(
-                    text = Formats.temperature(current.tempC, units.temperature, locale),
-                    style = com.callbackdev.chiaro.ui.theme.LocalChiaroType.current.heroTemperature,
-                    color = SkyPalette.Ink
-                )
-                // Two type sizes on one line align by BASELINE, not by top: top-aligned
-                // they read as a mistake the moment the sizes differ (device check, 2 set).
-                //
-                // The condition is `titleLarge` since the review of 23 set 2026: from the
-                // 64sp hero straight down to 16sp was a cliff, and the word that says what
-                // the sky is doing is the second thing a reader wants. No space over it:
-                // the figure's own 68sp line already leaves air under its digits.
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        text = stringResource(WeatherText.condition(current.condition.wmoCode)),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = SkyPalette.Ink,
-                        modifier = Modifier.alignByBaseline()
-                    )
-                    // Only when it says something (§1.2): "21° / feels like 21°" is a number
-                    // with nothing to do about it. A degree apart is where a body starts to
-                    // notice, and a degree apart the two whole numbers always differ.
-                    if (kotlin.math.abs(current.feelsLikeC - current.tempC) >= FeelsLikeMinDeltaC) {
-                        Text(
-                            text = stringResource(
-                                R.string.feels_like,
-                                Formats.temperature(current.feelsLikeC, units.temperature, locale)
-                            ),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = SkyPalette.Ink,
-                            modifier = Modifier.alignByBaseline()
-                        )
-                    }
-                }
-                // A now rebuilt from the forecast says so under its own numbers
-                // (DESIGN §1.1, 24 set 2026): the chip above says how old the data is,
-                // this says what the hero did about it.
-                if (current.estimated) {
-                    Text(
-                        text = stringResource(R.string.estimate_hero),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = SkyPalette.Ink,
-                        modifier = Modifier.padding(top = HeroLineGap)
-                    )
-                }
-                // The sentence before the ribbon (review of 12 ott 2026): it is the second
-                // thing the hero says, under the word for the sky, and the ribbon with its two
-                // clock times closes the canvas as its floor line.
-                //
-                // Prose at `bodyLarge` since the review of 15 ott 2026. At `titleLarge` it
-                // wore the sky's word's own size and weight, so two lines about the day
-                // outweighed the one word about now; set as a sentence it reads as one, and
-                // the order the eye takes is the order of the screen — the number, the word,
-                // the day.
-                headlineText(content.headline, timeFmt, units)?.let { sentence ->
-                    Text(
-                        text = sentence,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = SkyPalette.Ink,
-                        modifier = Modifier.padding(top = HeroGroupGap)
-                    )
-                }
-                DaylightRibbon(
-                    phases = sky.phases,
-                    nowFraction = sky.nowFraction,
-                    description = ribbonDescription(content, timeFmt),
-                    // What is left of today wears its forecast sky (DESIGN §4, 12 ott
-                    // 2026); what is already spent stays light alone, dimmed as before.
-                    hours = sky.hours,
-                    skyFrom = sky.nowFraction,
-                    modifier = Modifier.padding(top = HeroRibbonGap)
-                )
-                ribbonTimes(content, timeFmt).takeIf { it.isNotEmpty() }?.let { times ->
-                    RibbonTimes(
-                        times = times,
-                        color = SkyPalette.Ink,
-                        modifier = Modifier.padding(top = HeroLineGap)
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * The canvas' column (23 set 2026): the place row's seat, the band of sky the sun and the
- * moon are drawn in, and the hero, top to bottom. It was a `Column` with `SpaceBetween`,
- * which left the sky whatever the floor had over — 14dp on a page with the place's own
- * hour, which is no room for a sun. Now the band is **at least [BodiesBand]**, more when
- * the floor leaves more, and the canvas grows by what that costs: the sky is the hero of
- * this screen, and a hero with no sky in it is a temperature on a gradient.
- *
- * Children: the band's content, then the hero.
- */
-@Composable
-private fun SkyColumn(seat: Dp, floor: Dp, content: @Composable () -> Unit) {
-    androidx.compose.ui.layout.Layout(content = content) { measurables, constraints ->
-        val width = constraints.maxWidth
-        val hero = measurables[1].measure(
-            androidx.compose.ui.unit.Constraints(minWidth = width, maxWidth = width)
-        )
-        val seatPx = seat.roundToPx()
-        val band = maxOf(BodiesBand.roundToPx(), floor.roundToPx() - seatPx - hero.height)
-        val bodies = measurables[0].measure(androidx.compose.ui.unit.Constraints.fixed(width, band))
-        layout(width, seatPx + band + hero.height) {
-            bodies.place(0, seatPx)
-            hero.place(0, seatPx + band)
-        }
-    }
-}
-
-/** The least sky the canvas keeps between the place row and the hero: a 22dp disc and
- * room for it to climb. */
-private val BodiesBand = 56.dp
-
-/** Between two lines of one group on the canvas: the estimate's note under the word, the
- * clock times under the ribbon. */
-private val HeroLineGap = 4.dp
-
-/** Between the now and the day's sentence: a step, so the two read as two things. */
-private val HeroGroupGap = 12.dp
-
-/** Over the ribbon: the canvas' floor line stands clear of the prose above it. */
-private val HeroRibbonGap = 16.dp
-
-/** Below this the feels-like line is not drawn: the air feels like what it is. */
-private const val FeelsLikeMinDeltaC = 1.0
-
-/**
- * The one-time card that points at the guide (VISION 5.7): a card in the scroll, not
- * a dialog over it - it waits its turn and never blocks the sky. Opening the guide
- * uses it up, the X waves it away, and either way it never comes back: the guide
- * itself stays one tap away in Settings forever.
- */
-@Composable
-private fun GuideCard(onOpen: () -> Unit, onDismiss: () -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-        ),
-        // The notice's card, as on Sky and Alerts (DESIGN §6): the app's card corner and the
-        // 20dp of inner air it asks for.
-        shape = RoundedCornerShape(CardCorner),
+internal fun SectionTitle(text: String, top: Dp = SectionGap, hint: String? = null) {
+    Row(
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(start = 16.dp, top = top, end = 16.dp, bottom = ItemGap)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 20.dp, top = 8.dp, end = 8.dp)
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                // Alerts' scale (review of Today, 15 ott 2026): a card's title at
-                // `titleMedium`, its sentence at `bodyMedium`.
-                Text(
-                    text = stringResource(R.string.guide_card_title),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = stringResource(R.string.guide_card_body),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-            IconButton(onClick = onDismiss) {
-                Icon(
-                    imageVector = Icons.Outlined.Close,
-                    contentDescription = stringResource(R.string.guide_card_dismiss)
-                )
-            }
-        }
-        TextButton(
-            onClick = onOpen,
-            modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)
-        ) {
-            Text(stringResource(R.string.guide_card_open))
-        }
-    }
-}
-
-/** One revision as a row: the day and its verdict, then the figures behind it. */
-private class ChangedLine(val headline: String, val details: String, val glyph: ConditionGlyph?)
-
-/**
- * VISION §5.2.6: each revision as one row (review of Today, 15 ott 2026). They were
- * sentences in `bodyMedium` — «Sabato è migliorato: pioggia 70% → 30%» — loose on the paper,
- * the one section of the page with nothing to anchor the eye. Now a group of the Sky's
- * segments: the day's sky as the week draws it now, the day and its verdict in words at
- * `bodyLarge` (the judgement is a word, never a colour, DESIGN §8.10), and the figures that
- * moved under it at `bodyMedium`. A revision with no printable numbers never becomes a row.
- */
-@Composable
-private fun WhatChanged(lines: List<ChangedLine>) {
-    SegmentedGroup(
-        segments = lines.map { line ->
-            {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 64.dp)
-                        .semantics(mergeDescendants = true) {}
-                        .padding(start = 12.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
-                ) {
-                    Box(modifier = Modifier.size(WeatherIconSize.Week)) {
-                        line.glyph?.let { glyph ->
-                            com.callbackdev.chiaro.ui.icons.ConditionIcon(
-                                glyph = glyph,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-                    }
-                    Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
-                        Text(text = line.headline, style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            text = line.details,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
-    )
-}
-
-/** The sentence, or nothing: [HeadlineText]'s mapping, shared with the Today widget. */
-@Composable
-private fun headlineText(
-    headline: Headline?,
-    timeFmt: DateTimeFormatter,
-    units: UnitSettings
-): String? = HeadlineText.of(LocalContext.current, headline, timeFmt, units)
-
-@Composable
-private fun ribbonDescription(
-    content: TodayUiState.Content,
-    timeFmt: DateTimeFormatter
-): String {
-    val astro = content.report.astronomical
-    return when {
-        astro.sunrise != null && astro.sunset != null -> stringResource(
-            R.string.ribbon_desc, astro.sunrise!!.format(timeFmt), astro.sunset!!.format(timeFmt)
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.weight(1f)
         )
-        astro.daylightDuration == null && astro.sunrise == null && astro.sunset == null ->
-            stringResource(R.string.ribbon_desc_all_night)
-        else -> stringResource(R.string.ribbon_desc_all_day)
-    }
-}
-
-/**
- * The ribbon's two clock times (review of 12 ott 2026): sunrise and sunset, each under the
- * point of the band where it falls. Until then the band was a strip of colors that could
- * be read only by somebody who already knew it: the blue in the middle is the day, the
- * amber flecks are the sun's ends. The same two times the ribbon's description reads, so
- * TalkBack hears them once, from the ribbon, and the labels are cleared from semantics.
- * A day with no sunrise or no sunset draws neither: one time on its own is half a span.
- */
-@Composable
-private fun ribbonTimes(
-    content: TodayUiState.Content,
-    timeFmt: DateTimeFormatter
-): List<Pair<Float, String>> {
-    val astro = content.report.astronomical
-    val rise = astro.sunrise ?: return emptyList()
-    val set = astro.sunset ?: return emptyList()
-    fun at(time: java.time.LocalTime) = time.toSecondOfDay() / 86_400f
-    return listOf(at(rise) to rise.format(timeFmt), at(set) to set.format(timeFmt))
-}
-
-/** Labels placed under the fractions of the width they name, centred there and kept
- * inside the row. */
-@Composable
-private fun RibbonTimes(times: List<Pair<Float, String>>, color: Color, modifier: Modifier = Modifier) {
-    androidx.compose.ui.layout.Layout(
-        content = {
-            times.forEach { (_, text) ->
-                Text(text = text, style = MaterialTheme.typography.labelSmall.tabular(), color = color)
-            }
-        },
-        modifier = modifier
-            .fillMaxWidth()
-            .clearAndSetSemantics { }
-    ) { measurables, constraints ->
-        val placeables = measurables.map { it.measure(constraints.copy(minWidth = 0)) }
-        val width = constraints.maxWidth
-        layout(width, placeables.maxOfOrNull { it.height } ?: 0) {
-            placeables.forEachIndexed { i, label ->
-                val x = (times[i].first * width - label.width / 2f).roundToInt()
-                    .coerceIn(0, (width - label.width).coerceAtLeast(0))
-                label.place(x, 0)
-            }
-        }
-    }
-}
-
-/** How old the data really is, in the largest unit that keeps a whole number. */
-@Composable
-private fun freshnessAge(lastSync: Instant): String {
-    val elapsed = Duration.between(lastSync, Instant.now(LocalClock.current))
-    return when {
-        elapsed.toHours() < 1 -> pluralStringResource(
-            R.plurals.freshness_minutes_ago, elapsed.toMinutes().toInt(), elapsed.toMinutes().toInt()
-        )
-        elapsed.toDays() < 1 -> pluralStringResource(
-            R.plurals.freshness_hours_ago, elapsed.toHours().toInt(), elapsed.toHours().toInt()
-        )
-        else -> pluralStringResource(
-            R.plurals.freshness_days_ago, elapsed.toDays().toInt(), elapsed.toDays().toInt()
-        )
-    }
-}
-
-@Composable
-private fun NextHours(
-    content: TodayUiState.Content,
-    units: UnitSettings,
-    is24h: Boolean,
-    timeFmt: DateTimeFormatter,
-    locale: Locale
-) {
-    // The page margin travels differently for the two children: the strip takes it as
-    // `contentPadding` so it scrolls edge to edge (DESIGN §8.3), the chart wears it.
-    // The strip's scroll is hoisted so the chart can follow it: the chart marks the
-    // hours in view and scrolls the strip to the hour it is tapped on (DESIGN §8.3b).
-    val rowState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
-    val window = {
-        val info = rowState.layoutInfo
-        hourWindow(
-            info.visibleItemsInfo.map { VisibleCell(it.index, it.offset, it.size) },
-            info.viewportStartOffset,
-            info.viewportEndOffset
-        )
-    }
-    val cellGap = with(LocalDensity.current) { StripCellGap.roundToPx() }
-    val seek: (Float, Boolean) -> Unit = { hour, animate ->
-        val info = rowState.layoutInfo
-        val cell = info.visibleItemsInfo.firstOrNull()
-        val inView = window()
-        if (cell != null && inView != null) {
-            // Center the hour under the finger, as far as the strip's ends allow.
-            val span = inView.end - inView.start
-            val first = (hour + 0.5f - span / 2f)
-                .coerceIn(0f, (info.totalItemsCount - span).coerceAtLeast(0f))
-            val index = first.toInt()
-            val offset = ((first - index) * (cell.size + cellGap)).roundToInt()
-            scope.launch {
-                if (animate) rowState.animateScrollToItem(index, offset)
-                else rowState.scrollToItem(index, offset)
-            }
-        }
-    }
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        HourStrip(
-            hours = content.strip.map { it.toCell(units, is24h, locale) },
-            contentPadding = PagePadding,
-            rowState = rowState
-        )
-        // A dry run draws NO chart (device review, 4 set). Every value at zero put
-        // a flat line along the bottom of a 28dp box, which read on the screen as a
-        // stray divider with a hole above it — and said nothing the row of "0%" right
-        // over it had not already said. §1.1: a section with no data is not drawn, and
-        // a chart of nothing but zeros is one. Since 12 ott 2026 "dry" is the strip's own
-        // floor: a run that never reaches [ChanceFloorPct] prints no figure, and a chart
-        // of 8% bumps under a row of empty cells would be a shape with nothing to plan by.
-        val peak = content.strip.maxByOrNull { it.hour.precipChancePct ?: -1 }
-        val peakPct = peak?.hour?.precipChancePct
-        if (peakPct != null && peakPct >= ChanceFloorPct) {
-            val caption = stringResource(chanceCaption(content.strip.map { it.hour.condition.wmoCode }))
-            RainChart(
-                hours = content.strip.map {
-                    RainHour(
-                        label = Formats.hourLabel(it.hour.time, is24h, locale),
-                        pct = it.hour.precipChancePct
-                    )
-                },
-                caption = caption,
-                description = stringResource(
-                    R.string.rain_chart_desc,
-                    caption,
-                    content.strip.first().hour.time.format(timeFmt),
-                    content.strip.last().hour.time.format(timeFmt),
-                    peakPct,
-                    peak.hour.time.format(timeFmt)
-                ),
-                window = window,
-                onSeek = seek,
-                modifier = Modifier.padding(PagePadding)
-            )
-        }
-    }
-}
-
-/**
- * What the chance is a chance OF (24 set 2026). `precipitation_probability` is any
- * precipitation, snow included, and the chart said «pioggia» over a night of snow at
- * Longyearbyen. The strip's own codes name it, the way the headline names rain or snow
- * from its hour's code: snow when every hour that falls is snow, «rain or snow» when
- * both fall, rain otherwise — and rain too when no hour draws a code, the chart's word
- * before this.
- */
-private fun chanceCaption(codes: List<Int>): Int {
-    // By phase, not by `isPrecipitation` (25 set 2026): an hour of likely snow names the
-    // chance as much as a snowing one, and rain and snow together name both.
-    val phases = codes.mapNotNull { WmoCode.of(it)?.phase }.toSet()
-    val snow = WmoCode.Phase.FROZEN in phases || WmoCode.Phase.MIXED in phases
-    val rain = WmoCode.Phase.LIQUID in phases || WmoCode.Phase.FREEZING in phases ||
-        WmoCode.Phase.MIXED in phases
-    return when {
-        snow && rain -> R.string.rain_chart_caption_mixed
-        snow -> R.string.rain_chart_caption_snow
-        else -> R.string.rain_chart_caption
-    }
-}
-
-/**
- * A chance is printed from [ChanceFloorPct] up (review of 12 ott 2026). Under it the
- * figure has nothing to plan by — a row of six «0%» under the strip and five in the week
- * was the loudest repetition on the page, saying the one thing every other mark already
- * said. The floor is the state engine's own for a wet hour: below it the app never calls
- * an hour wet, so it has no business printing the figure as if it mattered. The cell and
- * the row keep their width (an empty column, never a dash), and the spoken description
- * still says the figure, zero included: TalkBack reads one cell at a time and has no
- * column of repetitions to be spared.
- */
-private fun chanceLabel(pct: Int?, locale: Locale): String? =
-    pct?.takeIf { it >= ChanceFloorPct }?.let { Formats.percent(it, locale) }
-
-/** The floor of [chanceLabel] and of the rain chart: the state engine's «probable». */
-private const val ChanceFloorPct = com.callbackdev.chiaro.domain.WeatherStateEngine.PROBABLE_PCT
-
-/** The page's side margin, as the strip's `contentPadding` and the chart's padding. */
-private val PagePadding = PaddingValues(horizontal = 16.dp)
-
-/** The day's strongest gust is news from here: «strong» on the wind tile's own ladder. */
-private const val DayGustNewsKph = 39.0
-
-/** …and when it is clearly above what the tile already prints. */
-private const val DayGustMarginKph = 5.0
-
-/** `HourStrip`'s gap between cells, which the seek needs to turn hours into pixels. */
-private val StripCellGap = 4.dp
-
-@Composable
-private fun StripHour.toCell(
-    units: UnitSettings,
-    is24h: Boolean,
-    locale: Locale,
-    markDayStart: Boolean = true
-): HourCell {
-    val hourLabel = Formats.hourLabel(hour.time, is24h, locale)
-    // The strip crosses midnight and never said so (design review, 23 set 2026): «22 23 00
-    // 01» reads as one evening. The first hour of a new day is labelled with the day's
-    // name, in the accent; the hour itself is the one hour a reader can infer, and the
-    // cell still says it aloud. Not in a week row's own strip, which is one day already.
-    val dayStart = markDayStart && hour.time.hour == 0
-    val shownLabel = if (dayStart) Formats.dayLabel(hour.time.toLocalDate(), locale) else hourLabel
-    val temp = Formats.temperature(hour.tempC, units.temperature, locale)
-    val word = stringResource(WeatherText.condition(hour.condition.wmoCode))
-    return HourCell(
-        // The MOMENT, not its label (20 set 2026). The label was unique across the
-        // strip's 24 and a day's 24 only while the app read the provider's fixed-offset
-        // timestamps as local times; now that they are re-expressed on the city's clock,
-        // the day a zone falls back really does hold 02:00 twice — and a `LazyRow` with
-        // two equal keys does not draw a duplicate row, it throws.
-        key = hour.at.toString(),
-        hourLabel = shownLabel,
-        tempC = hour.tempC,
-        dayStart = dayStart,
-        condition = ConditionGlyph(hour.condition.wmoCode, night),
-        temperature = temp,
-        rainPct = hour.precipChancePct,
-        rainLabel = chanceLabel(hour.precipChancePct, locale),
-        // Two forms, like the week row below (§1.1). The single form read "rain 0%"
-        // through a `?: 0` for an hour the provider forecast no chance for — the cell
-        // printed nothing and the announcement invented a forecast, which is the one
-        // value a probability must never be given. Spoken as 0 only when 0 is what
-        // was forecast.
-        description = hour.precipChancePct?.let { pct ->
-            stringResource(R.string.hour_cell_desc, hourLabel, word, temp, pct)
-        } ?: stringResource(R.string.hour_cell_desc_no_rain, hourLabel, word, temp)
-    )
-}
-
-/**
- * The rest of the day, in the Sky row's grammar (review of Today, 15 ott 2026): the Sky's
- * names for its moments («Ora d'oro, sera»), until when a span lasts on the line under the
- * name, and the first row marked «Il prossimo, oggi» with how soon on that same line, as
- * the Sky's next-moment card says it. A row of the sky opens the Sky's page for its moment,
- * with «Dove guardare» when it has a direction; a weather turn and the rainbow have no page
- * and open nothing.
- */
-@Composable
-private fun RestOfDay(
-    content: TodayUiState.Content,
-    timeFmt: DateTimeFormatter,
-    onOpen: (TimelineItem, SkyJob) -> Unit
-) {
-    val gap = 12.dp
-    val locale = currentLocale()
-    val next = stringResource(
-        R.string.sky_next_label,
-        stringResource(R.string.sky_day_today).lowercase(locale)
-    )
-    Column(
-        // The page's 16, less the rows' own inset, which their press reaches into.
-        modifier = Modifier.padding(horizontal = 16.dp - AgendaRowInset),
-        verticalArrangement = Arrangement.spacedBy(gap)
-    ) {
-        content.timeline.forEachIndexed { index, item ->
-            val job = timelineJob(item.kind)
-            val until = item.until?.let { stringResource(R.string.sky_until, it.format(timeFmt)) }
-            val soon = if (index == 0) soonText(content.now, item.at) else null
-            com.callbackdev.chiaro.ui.components.TimelineRow(
-                time = item.at.format(timeFmt),
-                icon = timelineIcon(item.kind),
-                text = timelineText(item),
-                label = if (index == 0) next else null,
-                supporting = listOfNotNull(until, soon).joinToString(" · ").ifEmpty { null },
-                connectAbove = index > 0,
-                connectBelow = index < content.timeline.lastIndex,
-                reach = gap / 2,
-                onClick = job?.let { { onOpen(item, it) } },
-                inset = AgendaRowInset
-            )
-        }
-    }
-}
-
-/** The agenda rows' inset, the room their press has around the text. */
-private val AgendaRowInset = 8.dp
-
-/**
- * The Sky's moment a row of the day is (15 ott 2026), whose page the row opens and whose
- * name it prints. The morning's golden hour ends here rather than starts, so its row keeps
- * its own words and opens the morning's page. Null for what the Sky has no page for: the
- * weather's turns and the rainbow.
- */
-private fun timelineJob(kind: TimelineKind): SkyJob? = when (kind) {
-    TimelineKind.SUNRISE -> SkyJobCatalog.SunRise
-    TimelineKind.GOLDEN_MORNING_END -> SkyJobCatalog.GoldenAm
-    TimelineKind.GOLDEN_EVENING -> SkyJobCatalog.GoldenPm
-    TimelineKind.SUNSET -> SkyJobCatalog.SunSet
-    TimelineKind.BLUE_EVENING -> SkyJobCatalog.BluePm
-    // From the sun at −18° the sky is as dark as the sun leaves it: the Sky's «Buio pieno».
-    TimelineKind.DARK -> SkyJobCatalog.DarknessWindow
-    TimelineKind.MOONRISE -> SkyJobCatalog.MoonRise
-    TimelineKind.MOONSET -> SkyJobCatalog.MoonSet
-    TimelineKind.RAINBOW, TimelineKind.RAIN_START, TimelineKind.RAIN_STOP -> null
-}
-
-/** «tra 18 min», «tra 2 h», «tra 1 h 20 min» — or nothing for a moment already here. */
-@Composable
-private fun soonText(now: LocalDateTime, at: LocalDateTime): String? {
-    val minutes = Duration.between(now, at).toMinutes()
-    return when {
-        minutes < 1 -> null
-        minutes < 60 -> stringResource(R.string.tl_in_minutes, minutes.toInt())
-        minutes % 60 == 0L -> stringResource(R.string.tl_in_hours, (minutes / 60).toInt())
-        else -> stringResource(R.string.tl_in_hours_minutes, (minutes / 60).toInt(), (minutes % 60).toInt())
-    }
-}
-
-@Composable
-private fun timelineIcon(kind: TimelineKind) = when (kind) {
-    TimelineKind.SUNRISE -> ChiaroIcons.sunrise
-    TimelineKind.GOLDEN_MORNING_END -> ChiaroIcons.goldenHour
-    TimelineKind.GOLDEN_EVENING -> ChiaroIcons.goldenHour
-    TimelineKind.SUNSET -> ChiaroIcons.sunset
-    TimelineKind.BLUE_EVENING -> ChiaroIcons.star
-    TimelineKind.DARK -> ChiaroIcons.starryNight
-    TimelineKind.MOONRISE -> ChiaroIcons.moonrise
-    TimelineKind.MOONSET -> ChiaroIcons.moonset
-    TimelineKind.RAINBOW -> ChiaroIcons.rainbow
-    TimelineKind.RAIN_START -> ChiaroIcons.precipitation
-    TimelineKind.RAIN_STOP -> ChiaroIcons.cloud
-}
-
-/** A row's name: the Sky's own for its moments, so the same golden hour has one name on
- * both tabs; until when a span lasts is the row's supporting line, not the name's. */
-@Composable
-private fun timelineText(item: TimelineItem): String = when (item.kind) {
-    TimelineKind.GOLDEN_MORNING_END -> stringResource(R.string.tl_golden_morning_end)
-    TimelineKind.RAINBOW -> stringResource(
-        R.string.timeline_rainbow,
-        item.pct ?: 0,
-        stringResource(SkyText.bearingRes(item.bearingDeg ?: 0.0))
-    )
-    TimelineKind.RAIN_START -> stringResource(R.string.tl_rain_start, item.pct ?: 0)
-    TimelineKind.RAIN_STOP -> stringResource(R.string.tl_rain_stop)
-    else -> stringResource(SkyText.nameRes(timelineJob(item.kind)!!.id))
-}
-
-/**
- * The week, one lazy item per day (8 set 2026). It was one item holding a column of
- * seven rows, which composed seven moving icons in the frame the section scrolled into
- * view; as seven items the list's prefetcher takes them one row ahead of the scroll. The
- * rhythm is unchanged: the column spaced its rows by 12dp and the list spaces its items
- * by the same 12dp.
- *
- * The scale is the week's own extremes, computed once here and shared by all seven rows
- * so the week has a shape (DESIGN §8.5).
- */
-private fun LazyListScope.weekRows(
-    content: TodayUiState.Content,
-    units: UnitSettings,
-    is24h: Boolean,
-    locale: Locale,
-    expandedDay: java.time.LocalDate?,
-    onToggle: (java.time.LocalDate) -> Unit
-) {
-    val scaleLow = content.week.minOf { it.forecast.lowC }
-    val scaleHigh = content.week.maxOf { it.forecast.highC }
-    val today = content.now.toLocalDate()
-    // One lane for the whole week or none: a row that grew by its wet hours would make the
-    // week uneven, and a dry week pays nothing for a lane it would leave empty.
-    val wetLane = content.week.any { day -> day.sky.any { it.wet && it.at < 1f } }
-    items(content.week, key = { "week-${it.forecast.date}" }) { day ->
-        WeekRow(
-            day = day,
-            isToday = day.forecast.date == today,
-            scaleLowC = scaleLow,
-            scaleHighC = scaleHigh,
-            units = units,
-            is24h = is24h,
-            locale = locale,
-            expanded = expandedDay == day.forecast.date,
-            onToggle = { onToggle(day.forecast.date) },
-            nowC = content.report.current.tempC,
-            wetLane = wetLane,
-            skyFrom = if (day.forecast.date == today) content.sky.nowFraction else 0f
-        )
-    }
-}
-
-/**
- * One day of the week and, when it is open, its hours.
- *
- * **The open day is a card** (review of Today, 15 ott 2026). Its facts and its strip used to
- * open straight onto the paper between two rows, with the strip's curve running edge to
- * edge, and nothing said which day they belonged to. Open, the row, its facts and its hours
- * now stand on one `surfaceContainer` ground with the groups' 20dp corner ([GroupCorner]),
- * drawn [OpenDayInset] inside the page margin so the row's text keeps its column (the seven
- * bars still line up) and the strip scrolls inside the card rather than off the screen. The
- * ground fades in with the effects spring and the card's top air grows with the spatial one,
- * so opening a day is one movement; closing it reverses it. A closed row stands on the paper
- * as before: seven cards would be a heavier week to read, and the chevron already says
- * which rows open.
- */
-@Composable
-private fun WeekRow(
-    day: WeekDay,
-    isToday: Boolean,
-    scaleLowC: Double,
-    scaleHighC: Double,
-    units: UnitSettings,
-    is24h: Boolean,
-    locale: Locale,
-    expanded: Boolean,
-    onToggle: () -> Unit,
-    nowC: Double? = null,
-    wetLane: Boolean = false,
-    /** Today's row: where now is in the day, so what is spent of it reads as spent. */
-    skyFrom: Float = 0f
-) {
-    val f = day.forecast
-    val label = if (isToday) stringResource(R.string.week_today) else Formats.dayLabel(f.date, locale)
-    val low = Formats.temperature(f.lowC, units.temperature, locale)
-    val high = Formats.temperature(f.highC, units.temperature, locale)
-    val reduced = reducedMotion()
-    val opens = day.hours.isNotEmpty()
-    val card = MaterialTheme.colorScheme.surfaceContainer
-    val ground by animateColorAsState(
-        targetValue = if (expanded) card else card.copy(alpha = 0f),
-        animationSpec = ChiaroMotion.effects(reduced),
-        label = "open day ground"
-    )
-    val top by animateDpAsState(
-        targetValue = if (expanded) OpenDayInset else 0.dp,
-        animationSpec = ChiaroMotion.spatial(reduced),
-        label = "open day top"
-    )
-    // On the card the bar's empty track goes one step stronger, `outlineVariant`: the page's
-    // `surfaceContainerHighest` stands 1.11:1 off the card (1.23 off the page), and an open day
-    // showed a range bar with no track (committente, device, 15 ott 2026). The ring of today's
-    // disc is cut from the ground it stands on, the card's while open.
-    val track by animateColorAsState(
-        targetValue = if (expanded) MaterialTheme.colorScheme.outlineVariant
-        else MaterialTheme.colorScheme.surfaceContainerHighest,
-        animationSpec = ChiaroMotion.effects(reduced),
-        label = "open day track"
-    )
-    val rowGround by animateColorAsState(
-        targetValue = if (expanded) card else MaterialTheme.colorScheme.surface,
-        animationSpec = ChiaroMotion.effects(reduced),
-        label = "open day row ground"
-    )
-    // The closed week speaks its skies lower, so the bars are read first; the open day says
-    // its own in full (review of Today, 15 ott 2026, DESIGN §4).
-    val ribbonQuiet by animateFloatAsState(
-        targetValue = if (expanded) 0f else WeekRibbonQuiet,
-        animationSpec = ChiaroMotion.effects(reduced),
-        label = "open day ribbon"
-    )
-    Column(
-        modifier = Modifier
-            .padding(horizontal = OpenDayInset)
-            .drawBehind {
-                if (ground.alpha > 0f) {
-                    drawRoundRect(color = ground, cornerRadius = CornerRadius(GroupCorner.toPx()))
-                }
-            }
-            // Never under zero: the spatial spring overshoots, and on its way back from 8dp it
-            // went below 0 — a negative padding, which Compose refuses with an exception, and
-            // the app crashed on closing a day (committente, 15 ott 2026; `TodayAgendaTest`).
-            .padding(top = top.coerceAtLeast(0.dp))
-    ) {
-        DayRow(
-            dayLabel = label,
-            condition = ConditionGlyph(f.condition.wmoCode, night = false),
-            rainPct = f.precipPct,
-            rainLabel = chanceLabel(f.precipPct, locale),
-            lowC = f.lowC,
-            highC = f.highC,
-            lowLabel = low,
-            highLabel = high,
-            scaleLowC = scaleLowC,
-            scaleHighC = scaleHighC,
-            phases = day.phases,
-            sky = day.sky,
-            wetLane = wetLane,
-            skyFrom = skyFrom,
-            // Two forms, because a day with no probability must not announce one:
-            // the row that prints nothing says nothing (§1.1). The ribbon's wet marks
-            // are spoken after them (§4.6: no mark without its word).
-            description = listOfNotNull(f.precipPct?.let { pct ->
-                stringResource(
-                    R.string.week_day_desc,
-                    label,
-                    stringResource(WeatherText.condition(f.condition.wmoCode)),
-                    low, high, pct
-                )
-            } ?: stringResource(
-                R.string.week_day_desc_no_rain,
-                label,
-                stringResource(WeatherText.condition(f.condition.wmoCode)),
-                low, high
-            ), wetDescription(day.hours.map { it.hour }, is24h, locale)).joinToString(". "),
-            onClick = if (opens) onToggle else null,
-            expanded = if (opens) expanded else null,
-            ribbonQuiet = ribbonQuiet.coerceIn(0f, 1f),
-            track = track,
-            ground = rowGround,
-            nowC = if (isToday) nowC else null,
-            contentPadding = PaddingValues(horizontal = OpenDayInset)
-        )
-        AnimatedVisibility(
-            visible = expanded,
-            enter = ChiaroMotion.enter(reduced),
-            exit = ChiaroMotion.exit(reduced)
-        ) {
-            Column(modifier = Modifier.padding(bottom = OpenDayBottom)) {
-                DayFacts(forecast = f, units = units, locale = locale)
-                HourStrip(
-                    hours = day.hours.map { it.toCell(units, is24h, locale, markDayStart = false) },
-                    modifier = Modifier.padding(top = 4.dp),
-                    // The card's own inset, so the first hour stands on the page's column and
-                    // the strip scrolls under the card's edge, not the screen's.
-                    contentPadding = PaddingValues(horizontal = OpenDayInset),
-                    // Opened on the morning, not on midnight (review of 12 ott 2026): the
-                    // first six cells of a later day were 00–05, all night, and the hours
-                    // a reader opens a day for were off the screen. Remembered inside the
-                    // expansion, so every opening starts there again.
-                    rowState = rememberLazyListState(
-                        initialFirstVisibleItemIndex = openingHour(day.hours)
-                    )
-                )
-            }
-        }
-    }
-}
-
-/** The open day's card stands this far inside the page margin, and its content this far
- * inside the card: 8 + 8 is the page's 16, so the row's columns never move. */
-private val OpenDayInset = 8.dp
-
-/**
- * How far a closed week row's ribbon leans toward its track (review of Today, 15 ott 2026).
- * Seven skies at full strength were the loudest thing in the section, louder than the
- * seven range bars that are its figures. Looked at on the README's Milan: at 0.4 a clear
- * afternoon still reads blue, a grey one grey and an evening amber, and the bars come first.
- * The wet marks keep their full ink whatever this is.
- */
-private const val WeekRibbonQuiet = 0.4f
-
-/** The air under the open day's strip, before the card's edge. */
-private val OpenDayBottom = 12.dp
-
-/**
- * Where an open day's strip starts: the hour before the first daylight hour, so the
- * sunrise is the second cell and the dawn before it is in view. Today's row starts at the
- * hour we are in already (the report holds nothing earlier), and opens there, as does a
- * day the sun never rises on.
- */
-internal fun openingHour(hours: List<StripHour>): Int =
-    (hours.indexOfFirst { !it.night } - 1).coerceAtLeast(0)
-
-/**
- * The words for a row's wet marks (12 ott 2026): what falls, named from the hours' own
- * states the way the rain chart's caption names it, and when — «Pioggia dalle 15:00 alle
- * 17:00, alle 20:00». Null on a dry day, which says nothing about it.
- */
-@Composable
-private fun wetDescription(hours: List<HourlyForecast>, is24h: Boolean, locale: Locale): String? {
-    val timeFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
-    val runs = DaylightPhases.wetRuns(hours)
-    if (runs.isEmpty()) return null
-    val phases = hours.filter { WmoCode.isPrecipitation(it.condition.wmoCode) }
-        .mapNotNull { WmoCode.of(it.condition.wmoCode)?.phase }
-        .toSet()
-    val snow = WmoCode.Phase.FROZEN in phases || WmoCode.Phase.MIXED in phases
-    val rain = WmoCode.Phase.LIQUID in phases || WmoCode.Phase.FREEZING in phases ||
-        WmoCode.Phase.MIXED in phases
-    val spans = runs.map { (from, to) ->
-        if (from == to) stringResource(R.string.ribbon_wet_at, from.format(timeFmt))
-        else stringResource(R.string.ribbon_wet_span, from.format(timeFmt), to.format(timeFmt))
-    }.joinToString(", ")
-    return stringResource(
-        when {
-            snow && rain -> R.string.ribbon_wet_mixed
-            snow -> R.string.ribbon_wet_snow
-            else -> R.string.ribbon_wet_rain
-        },
-        spans
-    )
-}
-
-/**
- * The open day's facts (24 set 2026): how much rain and over how many hours, the snow,
- * the strongest gust, the highest UV — one line each with its consequence (§1.2), and
- * only the lines that say something that day. The closed row stays what it was, weekday,
- * sky, chance and range: §1.3 puts the numbers one level down, and a row that grew four
- * figures would stop being a week you read at a glance. A day with nothing to say draws
- * nothing, not an empty block (§1.1).
- */
-@Composable
-private fun DayFacts(forecast: DailyForecast, units: UnitSettings, locale: Locale) {
-    // The rain is the rain alone (24 set 2026): the total also carries the snow's water,
-    // and printed «0,6 mm di pioggia in 6 ore» over a day whose 0.6 mm were 0.4 cm of snow.
-    // `precipitation_hours` counts every kind of hour, so it rides on whichever line is
-    // the day's only one, and on neither when rain and snow share the day.
-    val rainMm = forecast.rainMm?.takeIf { it >= 0.2 }
-    val snowCm = forecast.snowCm?.takeIf { it >= 0.1 }
-    val hours = forecast.precipHours?.takeIf { it >= 1.0 && (rainMm == null || snowCm == null) }?.let {
-        pluralStringResource(R.plurals.rain_hours_note, it.roundToInt(), Formats.hours(it, locale))
-    }
-    val facts = buildList {
-        rainMm?.let { mm ->
-            val amount = stringResource(R.string.day_fact_rain, Formats.millimetres(mm, locale))
-            add(DayFact({ ChiaroIcons.precipitation }, listOfNotNull(amount, hours).joinToString(" "), WeatherText.rainMeaning(mm)))
-        }
-        snowCm?.let { cm ->
-            val amount = stringResource(R.string.day_fact_snow, Formats.centimetres(cm, locale))
-            add(
-                DayFact(
-                    { ChiaroIcons.snow },
-                    listOfNotNull(amount, hours).joinToString(" "),
-                    WeatherText.snowMeaning(cm)
-                )
-            )
-        }
-        forecast.gustMaxKph?.takeIf { it >= DayGustNewsKph }?.let { gust ->
-            add(
-                DayFact(
-                    { ChiaroIcons.wind },
-                    stringResource(R.string.day_fact_gust, Formats.wind(gust, units.windSpeed, locale)),
-                    WeatherText.windMeaning(gust)
-                )
-            )
-        }
-        // From «moderate» up (3): a low UV asks nothing of the day, and a line saying so
-        // on every winter day would be the block talking to fill itself.
-        forecast.uvIndexMax?.takeIf { it >= 3 }?.let { uv ->
-            add(DayFact({ ChiaroIcons.uv(uv) }, stringResource(R.string.day_fact_uv, uv), WeatherText.uvPeakMeaning(uv, forecast.condition)))
-        }
-    }
-    if (facts.isEmpty()) return
-    Column(
-        // Inside the open day's card, whose own inset makes up the page margin.
-        modifier = Modifier.padding(horizontal = OpenDayInset).padding(top = 4.dp, bottom = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        facts.forEach { fact ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = fact.icon(),
-                    contentDescription = null,
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(DayFactIconSize)
-                )
-                Column {
-                    Text(text = fact.value, style = MaterialTheme.typography.bodyMedium)
-                    Text(
-                        text = stringResource(fact.meaning),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-    }
-}
-
-private class DayFact(
-    val icon: @Composable () -> androidx.compose.ui.graphics.vector.ImageVector,
-    val value: String,
-    @androidx.annotation.StringRes val meaning: Int
-)
-
-/** The open day's glyphs: the timeline's rung, a leading glyph for a line or two of
- * prose — which is what each fact is. */
-private val DayFactIconSize = WeatherIconSize.Timeline
-
-/**
- * The details grid (DESIGN §8.6), reviewed card by card on 8 set 2026. What each tile
- * carries beyond its value and its meaning, and why:
- *
- * - **UV, humidity, air, pressure, pollen**: a track on the scale the world uses (0–11,
- *   0–100, 0–300, 980–1046 around 1013, four levels), each in its own hue with a disc on
- *   the value (design review, 23 set 2026), so "where on the scale" arrives before the
- *   number is read. Visibility is logarithmic and the wind's meaning is the gust, and
- *   neither gets one.
- * - **Wind**: the words for where it comes from, and the gusts on the days they matter,
- *   when the wind a body feels is the gust.
- * - **Humidity**: one tile where there were two. The dew point tile said "pleasant"
- *   under the humidity tile's "comfortable", the same fact in two cards; the dew point
- *   is the better predictor of how the air feels, so it writes the meaning line and
- *   stays on the tile as a note, and "Rugiada" — the least understood word on the
- *   screen — stops being a headline.
- * - **Air**: the index without its acronym. "AQI" was the one piece of jargon on a
- *   screen built to have none; the label already says what the number is.
- * - **Pollen**: which pollen. "High" tells an allergic reader nothing to act on,
- *   "grass" does.
- */
-@Composable
-private fun Details(content: TodayUiState.Content, units: UnitSettings, locale: Locale) {
-    val report = content.report
-    val current = report.current
-    val today = report.daily.firstOrNull()
-    val tiles = buildList {
-        // The day's rain first (24 set 2026): how much, over how long, and — while the
-        // report is fresh — what fell in the hour just closed. The one number on this grid
-        // that answers "do I need the umbrella" rather than "what is it like".
-        //
-        // The rain ALONE (24 set 2026), like the week's open day: the total carries the
-        // snow's water too. On a day with snow in it the hours and the hour just closed
-        // stay off this tile, because both count the snow as well and it has its own.
-        val snowy = (today?.snowCm ?: 0.0) >= 0.1
-        today?.rainMm?.let { mm ->
-            val lastHour = current.precipitation.pastHours.firstOrNull()
-                ?.takeIf { !current.estimated && !snowy && it.precipMm > 0.0 }
-            val hours = today.precipHours?.takeIf { !snowy && mm >= 0.2 && it >= 1.0 }
-            add(
-                Tile(
-                    icon = { ChiaroIcons.precipitation },
-                    label = R.string.metric_rain,
-                    value = Formats.millimetres(mm, locale),
-                    meaning = WeatherText.rainMeaning(mm),
-                    track = rainTrack(WeatherText.rainBand(mm), WeatherText.RAIN_BANDS),
-                    note = listOfNotNull(
-                        hours?.let {
-                            pluralStringResource(
-                                R.plurals.rain_hours_note, it.roundToInt(), Formats.hours(it, locale)
-                            )
-                        },
-                        lastHour?.let {
-                            stringResource(R.string.rain_last_hour, Formats.millimetres(it.precipMm, locale))
-                        }
-                    ).joinToString(" · ").ifEmpty { null }
-                        ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
-                )
-            )
-        }
-        // Snow only on a day that has some: a «0 cm» every day of the year would be the
-        // tile saying nothing about nothing.
-        today?.snowCm?.takeIf { it >= 0.1 }?.let { cm ->
-            add(
-                Tile(
-                    icon = { ChiaroIcons.snow },
-                    label = R.string.metric_snow,
-                    value = Formats.centimetres(cm, locale),
-                    meaning = WeatherText.snowMeaning(cm),
-                    track = rainTrack(WeatherText.snowBand(cm), WeatherText.SNOW_BANDS)
-                )
-            )
-        }
-        // The UV tile says NOW, like every other tile in this grid (20 set 2026).
-        //
-        // It printed `uv_index_max` — the day's PEAK — under the bare label "UV" and
-        // under a meaning line written for the present: at 23:00 on a July day it read
-        // «UV 8 — Scotta in circa 25 minuti, copriti», advice about a sun that had set
-        // four hours earlier. `DailyForecast.uvIndexMax` defends the peak "under a Today
-        // heading" and it is right to; this grid is not that heading, it is the wind,
-        // the humidity and the pressure of this minute.
-        //
-        // So the value is the current index — fetched since the first commit and
-        // rendered nowhere until now — and the peak rides along as a note, the way the
-        // wind tile carries its gusts: the planning number kept, the consequence line
-        // no longer wearing it.
-        //
-        // The tile is still drawn at night, deliberately. §1.2: a metric whose value
-        // asks nothing of the reader today still gets its band's line, because
-        // "nothing to do about it" is also an answer — and «UV 0, nessuna protezione
-        // necessaria» at midnight is exactly that answer, where the old line was a
-        // different one about a different hour.
-        // No tile when the model carries no index (24 set 2026): the screen draws no
-        // section it has no data for, and a «UV 0» would be a sun that cannot burn.
-        current.uvIndex?.let { uvNow ->
-            add(
-                Tile(
-                    icon = { ChiaroIcons.uv(uvNow) },
-                    label = R.string.metric_uv,
-                    value = uvNow.toString(),
-                    meaning = WeatherText.uvMeaning(uvNow),
-                    track = uvTrack(uvNow),
-                    // Only while it is news: a peak that equals the reading is the tile
-                    // printing its own number twice.
-                    note = today?.uvIndexMax?.takeIf { it > uvNow }
-                        ?.let { stringResource(R.string.uv_peak_today, it) },
-                    // The one tile whose glyph is not on the ladder's tile rung: the
-                    // drawing carries the index as a badge, and at 38dp that badge read
-                    // smaller than the pollen tile's. See [WeatherIconSize.TileUv].
-                    iconSize = WeatherIconSize.TileUv
-                )
-            )
-        }
-        val wind = current.wind
-        val gusty = WeatherText.gustsMaterial(wind.speedKph, wind.gustKph)
-        add(
-            Tile(
-                icon = { ChiaroIcons.wind },
-                label = R.string.metric_wind,
-                value = Formats.wind(wind.speedKph, units.windSpeed, locale),
-                // On a gusty day the wind a body feels is the gust, and the advice
-                // follows it: "hold on to your hat" over a steady 20 km/h is the gust
-                // talking, and it is right.
-                meaning = WeatherText.windMeaning(if (gusty) wind.gustKph else wind.speedKph),
-                detail = { WindDirection(fromDegrees = wind.degree) },
-                // The day's strongest gust joins the note (24 set 2026) when it is news:
-                // strong on the tile's own ladder (39 km/h, «tieni il cappello») and
-                // clearly above what the tile already shows. A calm morning before a
-                // windy afternoon said nothing about the afternoon until then.
-                note = run {
-                    val shownNow = if (gusty) wind.gustKph else wind.speedKph
-                    val dayMax = today?.gustMaxKph
-                        ?.takeIf { it >= DayGustNewsKph && it >= shownNow + DayGustMarginKph }
-                    val max = dayMax?.let { Formats.wind(it, units.windSpeed, locale) }
-                    val now = Formats.wind(wind.gustKph, units.windSpeed, locale)
-                    when {
-                        gusty && max != null -> stringResource(R.string.wind_gusts_and_max, now, max)
-                        gusty -> stringResource(R.string.wind_gusts, now)
-                        max != null -> stringResource(R.string.wind_gust_max_today, max)
-                        else -> null
-                    }
-                }
-            )
-        )
-        // The sky by layer (24 set 2026): the total says how much is covered, the layer
-        // says what that looks like — 90% of high veil still lets the sun through. No
-        // track: the meaning turns on the layer as much as on the percentage, and a
-        // 0–100 line would draw a veiled sun and a grey day as the same place.
-        current.cloudCoverPct?.let { total ->
-            val layer = current.cloudLayers?.dominant()
-            add(
-                Tile(
-                    icon = { ChiaroIcons.cloudCover },
-                    label = R.string.metric_cloud,
-                    value = Formats.percent(total, locale),
-                    meaning = WeatherText.cloudMeaning(total, layer, content.night),
-                    note = layer?.takeIf { total >= CloudLayers.MIN_PCT }
-                        ?.let { stringResource(WeatherText.cloudLayerNote(it)) }
-                )
-            )
-        }
-        add(
-            Tile(
-                icon = { ChiaroIcons.humidity },
-                label = R.string.metric_humidity,
-                value = Formats.percent(current.humidityPct, locale),
-                meaning = WeatherText.dewPointMeaning(current.dewPointC),
-                track = humidityTrack(current.humidityPct),
-                note = stringResource(
-                    R.string.humidity_dew_note,
-                    Formats.temperature(current.dewPointC, units.temperature, locale)
-                )
-            )
-        )
-        // Where the barometer is going, when it is going somewhere (12 ott 2026): the
-        // meaning follows the tendency and the note carries its arithmetic; a steady
-        // barometer keeps the absolute reading's meaning and no note.
-        val trend = WeatherText.pressureTrend(report.hourly)
-        add(
-            Tile(
-                icon = { ChiaroIcons.pressure },
-                label = R.string.metric_pressure,
-                value = Formats.pressure(current.pressureMb, locale),
-                meaning = WeatherText.pressureMeaning(current.pressureMb, trend),
-                track = pressureTrack(current.pressureMb),
-                note = trend?.takeIf { it.direction != WeatherText.PressureTrend.Direction.STEADY }
-                    ?.let { stringResource(R.string.pressure_trend_note, String.format(locale, "%+.1f", it.deltaHpa)) }
-            )
-        )
-        // §1.1 again (Fase 26): `visibility` is a model-dependent field, and a model
-        // that does not carry it gets no tile rather than a tile reading 0 km.
-        current.visibilityKm?.let { km ->
-            add(
-                Tile(
-                    icon = { ChiaroIcons.visibility(km) },
-                    label = R.string.metric_visibility,
-                    value = Formats.kilometers(km, locale),
-                    meaning = WeatherText.visibilityMeaning(km)
-                )
-            )
-        }
-        // §1.1: data the provider does not have for here is not drawn — no dashes.
-        // On the scale the place reads (24 set 2026): the EEA's in Europe, the US one
-        // elsewhere — each with its own bands and track.
-        report.airQuality?.let { air ->
-            add(
-                Tile(
-                    icon = { ChiaroIcons.airQuality },
-                    label = R.string.metric_air,
-                    value = air.shownIndex.toString(),
-                    meaning = WeatherText.airMeaning(air),
-                    track = if (air.scale == AqiScale.EUROPEAN) euAirTrack(air.shownIndex) else airTrack(air.shownIndex)
-                )
-            )
-        }
-        report.pollen?.let { pollen ->
-            val worst = WeatherText.pollenWorst(pollen)
-            val families = WeatherText.pollenFamiliesAtWorst(pollen).map { stringResource(it) }
-            add(
-                Tile(
-                    icon = { ChiaroIcons.pollen(pollen) },
-                    label = R.string.metric_pollen,
-                    value = stringResource(WeatherText.pollenLevel(worst)),
-                    meaning = WeatherText.pollenMeaning(worst),
-                    track = pollenTrack(worst.ordinal, PollenLevel.entries.size),
-                    // The families are stored lowercase so they can be listed; the
-                    // line then starts like a sentence.
-                    note = when (families.size) {
-                        0 -> null
-                        1 -> families[0]
-                        2 -> stringResource(R.string.list_two, families[0], families[1])
-                        else -> stringResource(
-                            R.string.list_three, families[0], families[1], families[2]
-                        )
-                    }?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
-                )
-            )
-        }
-    }
-    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        // An estimated now says so where its numbers are (DESIGN §1.1, 24 set 2026): the
-        // tiles below are the forecast for this hour, and the air and pollen still what
-        // was measured when the data arrived.
-        if (current.estimated) {
+        hint?.let {
+            // A note on the section, not a label of it: quiet, on the title's baseline side.
             Text(
-                text = stringResource(R.string.estimate_details, freshnessAge(content.lastSync)),
+                text = it,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 12.dp)
+                textAlign = androidx.compose.ui.text.style.TextAlign.End
             )
-        }
-        // §10: two columns is a budget, not a layout. At 150% the label beside the
-        // 34dp icon has 84dp for a word that wants 115, and the tile becomes three
-        // wrapped lines of two words. One column keeps the pair rule (a row of one is
-        // still a row) and gives the label the whole width it needed all along.
-        val perRow = if (reflowForText()) 1 else 2
-        val rows = tiles.chunked(perRow)
-        // One group, as the Sky's and Alerts' rows are (review of Today, 15 ott 2026,
-        // committente): the tiles are segments of a grid 2dp apart, the grid's four outer
-        // corners round and every corner where two tiles meet tight, so the details read
-        // as one block of facts rather than nine loose cards 12dp apart.
-        Column(verticalArrangement = Arrangement.spacedBy(SegmentGap)) {
-            rows.forEachIndexed { rowIndex, rowTiles ->
-                // The pair shares one height: two cards whose bottoms disagree read as a
-                // misalignment, not as content of different lengths (device check, 2 set).
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(SegmentGap),
-                    modifier = Modifier.height(IntrinsicSize.Max)
-                ) {
-                    // An odd tile out takes the whole row (review of 12 ott 2026): it used
-                    // to sit beside an empty box, half a row of nothing at the foot of the
-                    // grid, which read as a tile that had failed to load.
-                    rowTiles.forEachIndexed { colIndex, tile ->
-                        MetricTile(
-                            icon = tile.icon(),
-                            label = stringResource(tile.label),
-                            value = tile.value,
-                            meaning = stringResource(tile.meaning),
-                            track = tile.track,
-                            detail = tile.detail,
-                            note = tile.note,
-                            iconSize = tile.iconSize,
-                            shape = gridSegmentShape(rowIndex, rows.size, colIndex, rowTiles.size),
-                            modifier = Modifier.weight(1f).fillMaxHeight()
-                        )
-                    }
-                }
-            }
         }
     }
 }
 
-/**
- * Where the wind comes from, in words alone (DESIGN §8.6; committente, 11 set 2026). The
- * eighth of the compass is `SkyText`'s vocabulary — the same "north-east" the Sky screen
- * says for a rainbow — because a general audience reads "from the north-east" and decodes
- * "NNE"; the 16-point label the model carries stays in the data.
- *
- * There was an arrow beside it, hand-drawn and then Meteocons' needle. It turned by the
- * true degrees, so it said the direction more precisely than the words; it went because at
- * 16 to 18dp it was not good to look at, and in a tile where everything else is a line of
- * text it was the one thing noticed for the wrong reason. The direction was already
- * written, so only a drawing was lost.
- */
-@Composable
-private fun WindDirection(fromDegrees: Int) {
-    Text(
-        text = stringResource(
-            R.string.wind_from,
-            stringResource(SkyText.bearingRes(fromDegrees.toDouble()))
-        ),
-        style = MaterialTheme.typography.bodyMedium
-    )
-}
+/** Between one section and the next. */
+internal val SectionGap = 24.dp
 
-private data class Tile(
-    val icon: @Composable () -> androidx.compose.ui.graphics.vector.ImageVector,
-    val label: Int,
-    val value: String,
-    val meaning: Int,
-    /** The metric's world scale, when it has one (DESIGN §8.6). */
-    val track: TrackScale? = null,
-    /** A composed fact about the value (where the wind comes from). */
-    val detail: (@Composable () -> Unit)? = null,
-    /** A printed fact about the value (gusts, dew point, which pollen). */
-    val note: String? = null,
-    /** The glyph's box, where it is not the ladder's tile rung (UV, and only UV). */
-    val iconSize: Dp = WeatherIconSize.Tile
-)
+/** Over a notice (the chip, a banner, the guide card) and under a section's title. */
+internal val ItemGap = 12.dp

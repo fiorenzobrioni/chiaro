@@ -46,6 +46,9 @@ internal object ArcText {
         )
         TimelineKind.RAIN_START -> context.getString(R.string.tl_rain_start, item.pct ?: 0)
         TimelineKind.RAIN_STOP -> context.getString(R.string.tl_rain_stop)
+        // Never in the widget's agenda ([TodayStateBuilder.agenda] makes none); the rule's name
+        // if one ever arrived, the reader's words.
+        TimelineKind.ALERT -> item.rule?.rule?.name.orEmpty()
     }
 
     /**
@@ -159,7 +162,7 @@ internal object ArcText {
                 return ChiaroIcons.moonPhaseRes(MoonPhase.at(at), WeatherIcons.FILL, darkGround)
             TimelineKind.RAINBOW -> R.drawable.mc3_rainbow
             TimelineKind.RAIN_START -> R.drawable.mc3_raindrops
-            TimelineKind.RAIN_STOP -> R.drawable.mc3_cloudy
+            TimelineKind.RAIN_STOP, TimelineKind.ALERT -> R.drawable.mc3_cloudy
         }
         return ChiaroIcons.styledRes(line, style, darkGround)
     }

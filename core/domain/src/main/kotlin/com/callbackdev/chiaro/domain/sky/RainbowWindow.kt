@@ -58,6 +58,22 @@ object RainbowWindow {
     const val MAX_CLOUD_PCT = 85
 
     /**
+     * Where a bow would stand at [at], and how high (15 ott 2026, the rainbow's page). The
+     * bearing is the antisolar point's, the sun's plus 180°: turn your back on the sun. The
+     * top is the bow's radius less the sun's altitude, so a low sun raises a tall arc, nearly
+     * a half circle, and a sun near 42° leaves a flat sliver on the horizon. Null with the sun
+     * down, where there is no bow, or above 42°, where all of it is under the horizon.
+     */
+    fun sight(at: Instant, coords: Coordinates): RainbowSight? {
+        val altitude = AstronomyEngine.sunAltitude(at, coords)
+        if (altitude <= 0.0 || altitude >= MAX_SUN_ALTITUDE) return null
+        return RainbowSight(
+            lookTowardsDeg = antisolar(at, coords),
+            topAltitudeDeg = MAX_SUN_ALTITUDE - altitude
+        )
+    }
+
+    /**
      * The windows inside [hours], merged where they are consecutive.
      *
      * Works hour by hour because the forecast does: each hour is tested at its own
@@ -89,7 +105,7 @@ object RainbowWindow {
                 end = end,
                 // Opposite the sun, which is where the bow is centred. The reader is
                 // told to turn their back on the sun and this is that sentence's number.
-                lookTowardsDeg = (AstronomyEngine.sunAzimuth(middle, coords) + 180.0) % 360.0,
+                lookTowardsDeg = antisolar(middle, coords),
                 precipChancePct = best.precipChancePct ?: 0
             )
         }
@@ -109,4 +125,11 @@ object RainbowWindow {
         close()
         return open
     }
+
+    private fun antisolar(at: Instant, coords: Coordinates): Double =
+        (AstronomyEngine.sunAzimuth(at, coords) + 180.0) % 360.0
 }
+
+/** A bow at one moment: where it stands, degrees clockwise from north, and how high its top
+ * rises above the horizon, degrees. */
+data class RainbowSight(val lookTowardsDeg: Double, val topAltitudeDeg: Double)

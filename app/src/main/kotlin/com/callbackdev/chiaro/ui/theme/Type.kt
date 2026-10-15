@@ -136,7 +136,7 @@ private const val Tabular = "tnum"
 private val HeroWeight = FontWeight.Bold
 
 /**
- * The hero's tracking: **−0.02 em, which is −1.28sp at 64**.
+ * The hero's tracking: **−0.02 em, which is −1.76sp at 88** (64sp until 15 ott 2026).
  *
  * Bold at display size needs negative tracking or the figures sit in their own way — the
  * default spacing is drawn for a paragraph, not for four glyphs that fill a quarter of
@@ -236,8 +236,8 @@ private fun chiaroTypeFor(family: FontFamily) = ChiaroType(
     heroTemperature = TextStyle(
         fontFamily = family,
         fontWeight = HeroWeight,
-        fontSize = 64.sp,
-        lineHeight = 68.sp,
+        fontSize = 88.sp,
+        lineHeight = 88.sp,
         letterSpacing = HeroTracking,
         fontFeatureSettings = Tabular
     ),

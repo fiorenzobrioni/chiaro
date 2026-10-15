@@ -60,6 +60,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -571,17 +572,43 @@ private fun GuideCard(onOpenGuide: () -> Unit) {
 }
 
 /**
- * The appearance, drawn with itself (design review, 23 set 2026): a slice of the sky canvas
- * in the reader's palette at the golden hour — where the two palettes differ most — with a
- * temperature in their typeface and a condition in their icon set on it, and under it a
- * verdict and a rain figure in their semantic colours. Every choice in the group below
- * changes something in it, the moment it is made. A picture, silent to a screen reader:
- * the rows under it say every choice in words.
+ * The appearance, drawn with itself (design review, 23 set 2026): a slice of Today's sky in
+ * the reader's palette at the golden hour — where the two palettes differ most — with a
+ * temperature in their typeface on it, and under it, on the paper, a condition in their icon
+ * set, a verdict and a rain figure in their semantic colours. Every choice in the group below
+ * changes something in it, the moment it is made. A picture, silent to a screen reader: the
+ * rows under it say every choice in words.
+ *
+ * **The sky is Today's own** (15 ott 2026): the scene with its clouds, still, and the sun
+ * where Today would draw it; a flat gradient showed a palette nobody meets on Today any more.
+ * The icon stands on the paper, where Today's icons live since the canvas lost its own, and
+ * the sky's word agrees with the verdict's number: 20% of cloud is «Quasi sereno», not the
+ * «Nuvoloso» this said until then.
  */
 @Composable
 private fun AppearancePreview(settings: AppSettings) {
     val locale = currentLocale()
-    val sky = ChiaroTheme.sky.gradient(sunAltitudeDeg = PreviewAltitude, cloudPct = 20)
+    val palette = ChiaroTheme.sky
+    val sky = palette.gradient(sunAltitudeDeg = PreviewAltitude, cloudPct = PreviewCloud)
+    val scene = remember(palette, sky) {
+        com.callbackdev.chiaro.ui.components.skyScene(
+            palette = palette,
+            gradient = sky,
+            sunAltitudeDeg = PreviewAltitude,
+            sunAzimuthDeg = PreviewSunAzimuth,
+            moonAltitudeDeg = -30.0,
+            moonAzimuthDeg = 0.0,
+            moonIllumination = 0.0,
+            southern = false,
+            cloudPct = PreviewCloud,
+            layers = null,
+            precipPct = 0,
+            fall = com.callbackdev.chiaro.ui.components.SkyFall.NONE,
+            fallMmPerHour = 0.0,
+            windKph = 0.0,
+            windFromDeg = 0
+        )
+    }
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = CardShape,
@@ -595,14 +622,40 @@ private fun AppearancePreview(settings: AppSettings) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(PreviewSky)
-                    .background(Brush.verticalGradient(sky.stops()))
-                    .background(
-                        Brush.verticalGradient(
-                            0.4f to Color.Transparent,
-                            1f to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha)
-                        )
-                    )
             ) {
+                com.callbackdev.chiaro.ui.components.SkyShaderLayer(
+                    gradient = sky,
+                    scene = scene,
+                    moving = false,
+                    modifier = Modifier.matchParentSize()
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            Brush.verticalGradient(
+                                0.4f to Color.Transparent,
+                                1f to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha)
+                            )
+                        )
+                )
+                // The sun as Today draws it, low in the west, over the band the number leaves.
+                com.callbackdev.chiaro.ui.components.SkyBodiesLayer(
+                    com.callbackdev.chiaro.ui.components.SkyBodies(
+                        sunAltitudeDeg = PreviewAltitude,
+                        sunAzimuthDeg = PreviewSunAzimuth,
+                        moonAltitudeDeg = -30.0,
+                        moonAzimuthDeg = 0.0,
+                        moonIllumination = 0.0,
+                        moonElongationDeg = 0.0,
+                        cloudPct = PreviewCloud,
+                        southern = false
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(PreviewSky / 2)
+                        .padding(top = 8.dp)
+                )
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
@@ -611,31 +664,28 @@ private fun AppearancePreview(settings: AppSettings) {
                     Text(
                         text = Formats.temperature(PreviewTempC, settings.units.temperature, locale),
                         style = LocalChiaroType.current.heroTemperature.copy(fontSize = 44.sp, lineHeight = 48.sp),
-                        color = Color.White
+                        color = SkyPalette.Ink
                     )
                     Text(
                         text = stringResource(com.callbackdev.chiaro.ui.today.WeatherText.condition(PreviewCode)),
                         style = MaterialTheme.typography.titleMedium,
-                        color = Color.White
+                        color = SkyPalette.Ink
                     )
                 }
-                ConditionIcon(
-                    glyph = ConditionGlyph(PreviewCode),
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(12.dp)
-                        .size(64.dp)
-                )
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
+                ConditionIcon(
+                    glyph = ConditionGlyph(PreviewCode),
+                    modifier = Modifier.size(WeatherIconSize.Strip)
+                )
                 VerdictChip(
                     kind = VerdictKind.PASS,
                     label = stringResource(R.string.verdict_pass),
-                    evidence = stringResource(R.string.sky_evidence_cloud).format(20)
+                    evidence = stringResource(R.string.sky_evidence_cloud).format(PreviewCloud)
                 )
                 Text(
                     text = Formats.percent(PreviewRain, locale),
@@ -783,7 +833,11 @@ private val PreviewSky = 132.dp
 /** The golden hour: where the two palettes' skies differ most. */
 private const val PreviewAltitude = 3.0
 private const val PreviewTempC = 21.0
-private const val PreviewCode = 2
+/** «Quasi sereno»: the word the app says for [PreviewCloud] of cloud. */
+private const val PreviewCode = 1
+private const val PreviewCloud = 20
+/** West of south-west, a golden-hour sun on the right of a northern sky. */
+private const val PreviewSunAzimuth = 255.0
 private const val PreviewRain = 30
 
 /**

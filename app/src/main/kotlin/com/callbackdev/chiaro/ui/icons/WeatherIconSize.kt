@@ -35,18 +35,24 @@ import androidx.compose.ui.unit.dp
  * - the **tile**'s header row grows 4dp and its label budget goes 88→84dp against the
  *   widest label the app ships, 76.7dp — see [Tile] for where that contract stops.
  *
- * The rungs stay in order, because the order is the reading order: the hour strip is
- * scanned sideways and carries the most weight, the week rows are read down, a line of
- * prose or a tile label leads with the smallest glyph of the three.
+ * The rungs stayed in order, the hour strip on top, until the strip was made compact (15 ott
+ * 2026): seven hours to a 360dp phone in 42dp cells leave its glyph 32dp, under the week's 38
+ * and the agenda's 34. The order was the reading order and the strip still leads it — by its
+ * place on the page and its count of glyphs, no longer by their size. The details grid left
+ * the ladder the same day: its eyebrows are Material glyphs at the label's size (§8.6).
  *
  * The widgets are not on this ladder: a Glance cell sizes its icon against the cell
  * (Fase 8), and the navigation bar's silhouettes are Material's own 24dp.
  */
 object WeatherIconSize {
 
-    /** Hour strip: the largest rung, in a 56dp cell — 7dp of air each side. The cell
-     * width never moved, so the strip still fits the same hours on the same screen. */
-    val Strip: Dp = 42.dp
+    /** Hour strip: in a 42dp cell, 5dp of air each side (15 ott 2026; it was the largest rung,
+     * 42dp in a 56dp cell, until the strip was made compact to show seven hours at 360dp). */
+    val Strip: Dp = 32.dp
+
+    /** A page's one glyph, beside its title (the Sky's page for a moment): the family's
+     * largest rung, 42dp, which the strip held until 15 ott 2026. */
+    val Page: Dp = 42.dp
 
     /** Week rows: under the strip, over the prose, sized to the row it sits in. */
     val Week: Dp = 38.dp
@@ -87,56 +93,4 @@ object WeatherIconSize {
      */
     val Sky: Dp = 51.dp
 
-    /**
-     * Details grid: the label beside it keeps a measured budget (DESIGN.md §8.6) —
-     * `(360 − 32 − 12) / 2 − 32 − (icon + 8)` on a 360dp screen, which is half the row
-     * minus the tile's padding minus the icon and the 8dp beside it, so **the budget is
-     * `118 − icon`**. Against the widest label the app ships ("Qualità aria", 76.7dp in
-     * Inter 14sp) that puts the ceiling at **41.3dp**.
-     *
-     * **38dp since 11 set 2026** (committente, from a device: v3's drawings are worth
-     * looking at and were asking to be bigger). It leaves 80dp of label, 3.3dp of margin,
-     * and it is the last step with a margin worth the name: 40dp leaves 1.3dp and 42dp
-     * wraps. The note that used to stand here said a fourth step would wrap the label; the
-     * arithmetic above says one step fits, and the arithmetic is right.
-     *
-     * What it costs is the ladder's strict order: this rung now **equals** [Week] instead
-     * of sitting under it. The order it must keep is the reading order — the strip carries
-     * the most weight and still leads — and a tile label beside a week row is not a
-     * comparison a reader ever makes.
-     *
-     * The contract is a **360dp** contract and always was. Below that the labels wrap and
-     * keep their words — the honest failure already chosen for them — and they did so at
-     * 320dp with the original 24dp icon too.
-     */
-    val Tile: Dp = 38.dp
-
-    /**
-     * **The UV tile's own rung, 55dp since 12 set 2026** (committente, from a device:
-     * the UV glyph should grow "until the number it shows is the same size as the one
-     * on the pollen icon"). It is the one rung aimed at a detail inside a drawing rather
-     * than at the drawing, and that is the whole reason it exists.
-     *
-     * Both families draw the same badge: a 30-unit rounded square in a 128 box, with the
-     * value in it (`M88,79 … A9,9` on `uv-index-*`, `M80,71 … A9,9` on `pollen-*-low`).
-     * What differs is the `mc3scale` the importer cooks in to bring every drawing to the
-     * same ink (§13.1): the UV sun spreads its rays to the corners so it is already big
-     * and is scaled **0.92**, the pollen sprig is compact and is scaled **1.3382** — so
-     * at one box size the pollen badge is 1.45× the UV one. Measured on the device's own
-     * screenshot at 2.8125 px/dp: 33 px of UV badge against 40 of pollen.
-     *
-     * The lever left at the call site is the box, and this is it:
-     * `38 × 1.3382 / 0.92 = 55.3`. At 55dp the UV badge is **11.85dp** against the grass
-     * and weed badge's 11.92 at [Tile] — 0.6% apart, which no eye separates. The tree
-     * pollens are scaled 1.3109, so their badge is 11.68 and the UV one lands 1.5% over
-     * instead of under; the grass badge is the one the request was measured against.
-     *
-     * What it costs, and it is not nothing: this rung is 45% over the ladder's [Tile]
-     * step, so the UV glyph is plainly the biggest thing in the details grid, and the
-     * header row it sits in grows 17dp — which its neighbour in the same row pays too,
-     * because a pair of tiles shares one height. The label budget is not what it costs:
-     * `(384 − 32 − 12) / 2 − 32 − (55 + 8)` leaves 75dp on this device and 63 at 360dp
-     * for a label that is the two letters «UV», the shortest the app ships.
-     */
-    val TileUv: Dp = 55.dp
 }

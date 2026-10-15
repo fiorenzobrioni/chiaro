@@ -220,8 +220,15 @@ object HeadlineEngine {
             .firstNotNullOfOrNull { hour -> AlertEngine.severeBucket(hour)?.let { hour to it } }
             ?.let { (hour, bucket) -> return Headline.Severe(bucket = bucket, at = hour.time) }
 
+        // Wet NOW is the now the hero shows (device, Manaus, 15 ott 2026): the current
+        // conditions, the last quarter of an hour, and not the hour under way. That hour is
+        // wet when its forecast holds a few tenths of a millimetre at 39%, and the sentence
+        // read it as rain falling: «Coperto», a dry «Ora» cell, and under them «la pioggia
+        // dovrebbe smettere verso le 18:00» — the end of a rain the screen said was not
+        // there. An hour that will be wet without being wet now is the next rungs' to tell.
         val current = hours.first()
-        if (WmoCode.isPrecipitation(current.condition.wmoCode)) {
+        val fallingNow = report.current.condition.wmoCode
+        if (WmoCode.isPrecipitation(fallingNow)) {
             val stopsAt = hours.asSequence()
                 .drop(1)
                 .takeWhile { it.time.isBefore(now.plusHours(TURN_LOOKAHEAD_HOURS)) }
@@ -233,7 +240,7 @@ object HeadlineEngine {
                 }
             return Headline.WetNow(
                 stopsAt = stopsAt?.time,
-                falling = Headline.Falling.of(current.condition.wmoCode)
+                falling = Headline.Falling.of(fallingNow)
             )
         }
 

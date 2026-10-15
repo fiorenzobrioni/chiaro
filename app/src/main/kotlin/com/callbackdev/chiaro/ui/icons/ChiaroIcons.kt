@@ -19,7 +19,7 @@ import com.callbackdev.chiaro.ui.today.WeatherText
 
 /**
  * The reader's icon style, provided by `MainActivity` from the settings alongside the
- * theme. LINE is the default a fresh install sees (6 set 2026); the accessors below read
+ * theme. FILL is the default a fresh install sees (15 ott 2026; LINE from 6 set); the accessors below read
  * this so every screen switches together, with no screen ever asked to care.
  *
  * `WeatherIcons.FILL` means Meteocons' **`flat`** since Fase 13, and the enum kept its
@@ -28,7 +28,7 @@ import com.callbackdev.chiaro.ui.today.WeatherText
  * constant would migrate a stored preference and rewrite a settings string, both to
  * describe the same drawing.
  */
-val LocalWeatherIcons = staticCompositionLocalOf { WeatherIcons.LINE }
+val LocalWeatherIcons = staticCompositionLocalOf { WeatherIcons.FILL }
 
 /**
  * The weather icon set, behind one lookup (DESIGN.md §4.5, §13.1): **Meteocons v3**
@@ -485,21 +485,6 @@ object ChiaroIcons {
      */
     val pressure: ImageVector @Composable get() = styled(R.drawable.mc3_barometer)
 
-    /**
-     * The air between the reader and the horizon, at the strength the tile names.
-     * `visibilityMeaning`'s two hazy bands share one drawing on purpose: they are the
-     * same phenomenon at two strengths and the words already tell them apart, and a
-     * glyph that under-claims is honest where one that over-claims is not.
-     */
-    @Composable
-    fun visibility(kilometres: Double): ImageVector = styled(
-        when {
-            kilometres >= 10 -> R.drawable.mc3_mist
-            kilometres >= 1 -> R.drawable.mc3_haze
-            else -> R.drawable.mc3_fog
-        }
-    )
-
     /** The thermometer, not the raindrop (4 set 2026). Meteocons draws `humidity` as
      * `raindrop` with a % laid over it, so the two tiles that sit one under the other
      * in the details grid were the same drawing twice — told apart only by a white
@@ -515,8 +500,6 @@ object ChiaroIcons {
      * question: how much falls, not whether it freezes (§13.1). */
     val snow: ImageVector @Composable get() = styled(R.drawable.mc3_snowflake)
 
-    /** The cloud cover tile (24 set 2026): a plain cloud, the sky's quantity. */
-    val cloudCover: ImageVector @Composable get() = styled(R.drawable.mc3_cloudy)
 
     /** Freezing, not snow: the ice alerts ask whether the minimum reaches zero, and the
      * question there is ice, not precipitation. The accessor names the metric (§13.1),

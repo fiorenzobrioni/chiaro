@@ -36,10 +36,16 @@ fetched, and says how old that data is.
 
 <table>
   <tr>
-    <td align="center" width="33%"><img src="docs/screenshots/today-now.png" width="250" alt="The sky canvas with the temperature, the condition and the daylight ribbon, the next hours, and the rest of the day"><br><sub><b>Today</b>: the sky, then the numbers</sub></td>
-    <td align="center" width="33%"><img src="docs/screenshots/today-week.png" width="250" alt="The week on one shared temperature scale, each day with its ribbon of light and an arrow that opens it, and tomorrow open on a card of its own with its UV and its hours"><br><sub><b>The week</b>, on one temperature scale</sub></td>
-    <td align="center" width="33%"><img src="docs/screenshots/today-details.png" width="250" alt="The details grid: wind, clouds, humidity, pressure, visibility, air quality and pollen, each with the line that says what to do with it"><br><sub><b>Details</b>: every number with its meaning</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/today-now.png" width="200" alt="The sky canvas, an overcast sky drawn with its clouds, with the temperature, the condition, the day's high and low and the daylight ribbon, then the next hours on a card of their own and the start of the rest of the day"><br><sub><b>Today</b>: the sky, then the numbers</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/today-day.png" width="200" alt="The rest of the day as a list of rows: your Bike and Run alerts where they hold, the evening golden hour until sunset with its verdict Great at 19% cloud, the blue hour So-so, and full darkness with the moon up all night"><br><sub><b>The rest of the day</b>, with a verdict on each moment</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/today-week.png" width="200" alt="The week on one shared temperature scale, each day a row with its temperature bar over its ribbon of light on the same width, and tomorrow open inside its own row with its UV and its hours"><br><sub><b>The week</b>, on one temperature scale</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/today-details.png" width="200" alt="The details grid: wind, clouds, humidity, pressure, visibility, air quality and pollen, each with the line that says what to do with it"><br><sub><b>Details</b>: every number with its meaning</sub></td>
   </tr>
+</table>
+
+<p align="center"><img src="docs/screenshots/today-foldable.png" width="520" alt="Today on an open foldable: the tabs on a rail at the left, the overcast sky across the whole page with the temperature, the day's high and low, its sentence and the daylight ribbon over the left half, then two panes under it, the next hours and the rest of the day on the left, the week on the right"><br><sub><b>On a foldable or a tablet</b>: the sky across the page, today on the left, the week on the right</sub></p>
+
+<table>
   <tr>
     <td align="center"><img src="docs/screenshots/sky-tonight.png" width="250" alt="In the dark theme: tonight's card, which answers in a word with the night's numbers and its hours large over a strip a finger can explore, and the next moment in a card of its own"><br><sub><b>Sky</b>: tonight, and the moments ahead</sub></td>
     <td align="center"><img src="docs/screenshots/sky-ahead.png" width="250" alt="The calendar ahead: the full moon and the meteor peaks past the forecast horizon, then the reminders"><br><sub><b>The calendar ahead</b>, honestly dated</sub></td>

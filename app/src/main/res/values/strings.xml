@@ -5,6 +5,7 @@
 
     <!-- The canvas -->
     <string name="feels_like">Feels like %1$s</string>
+    <string name="hero_high_low">High %1$s · low %2$s</string>
     <string name="place_switcher_action">Change place</string>
     <string name="ribbon_desc">Sunrise at %1$s, sunset at %2$s</string>
     <string name="ribbon_desc_all_day">The sun never sets today</string>
@@ -94,6 +95,7 @@
     <string name="section_next_hours">Next hours</string>
     <string name="section_rest_of_day">The rest of the day</string>
     <string name="section_week">The week</string>
+    <string name="week_open_hint">Tap a day for its hours</string>
     <string name="section_details">Details</string>
 
     <!-- The merged timeline -->
@@ -129,7 +131,8 @@
     <string name="rain_chart_caption">Chance of rain</string>
     <string name="rain_chart_caption_snow">Chance of snow</string>
     <string name="rain_chart_caption_mixed">Chance of rain or snow</string>
-    <string name="rain_chart_desc">%1$s from %2$s to %3$s on a scale of 0 to 100%%, peaking at %4$d%% around %5$s</string>
+    <string name="strip_now">Now</string>
+    <string name="rain_lane_caption">%1$s, peaking at %2$s around %3$s</string>
 
     <!-- Details grid: labels. One line beside the tile's 34dp icon, which on a
          360dp screen is a budget of 84dp (94 until the icons grew on 6 set, 88 until
@@ -143,6 +146,7 @@
     <string name="metric_visibility">Visibility</string>
     <string name="metric_air">Air quality</string>
     <string name="metric_pollen">Pollen</string>
+    <string name="metric_notable_state">Worth noting today</string>
 
     <!-- Details grid: the facts under a value (card review, 8 set 2026). The pollen
          families are lowercase so they can be listed mid-sentence; the tile
@@ -446,23 +450,23 @@
     <string name="guide_map_note">Your places are one tap away, behind the name at the top of the screen; the settings are behind the gear beside it.</string>
 
     <string name="guide_today_title">Today</string>
-    <string name="guide_today_p1">The sky at the top is not a photograph: it is computed for this minute from the height of the sun, the clouds, the rain and the moon, so at three in the morning under a clear sky it is the same deep blue you would see outside. The thin ribbon under it is the day from midnight to midnight, with the sky forecast hour by hour: the part already gone is paler, the dot is the hour you are in, and sunrise and sunset are written underneath.</string>
+    <string name="guide_today_p1">The sky at the top is not a photograph: it is computed for this minute from the height of the sun, the clouds, the rain and the moon, so at three in the morning under a clear sky it is the same deep blue you would see outside. The clouds are as many as this hour has, veils when they are high, their edge toward the sun the brighter one; the stars come out only when the sky is dark and open, rain and snow only when they are really falling, and all of it moves with the wind blowing now. The thin ribbon under it is the day from midnight to midnight, with the sky forecast hour by hour: the part already gone is paler, the dot is the hour you are in, and sunrise and sunset are written underneath.</string>
     <string name="guide_today_headline_title">The sentence</string>
     <string name="guide_today_headline_body">When there is something worth saying — an umbrella around five, a thunderstorm at three, frost by morning, fog on the way, strong wind this afternoon, or tomorrow\'s umbrella — it is written under the big number. The sentence looks ahead: what is happening now, the big number already says. On a quiet day it says when the next rain is due and when it will be warmest: two facts from the forecast, never a filler.</string>
     <string name="guide_today_rain_title">Is it about to rain?</string>
-    <string name="guide_today_rain_body">Three places answer that: the sentence at the top, right below it the chances hour by hour, with the peak of the coming hours marked on the small rain curve, and in the details how many millimetres are expected today and over how many hours. Chiaro describes rain the way its data arrives — how likely, how much, from when to when.</string>
+    <string name="guide_today_rain_body">Three places answer that: the sentence at the top, right below it the chances hour by hour, each with its bar, as tall as it is likely, and a line saying when the chance peaks, and in the details how many millimetres are expected today and over how many hours. Chiaro describes rain the way its data arrives — how likely, how much, from when to when.</string>
     <string name="guide_today_fresh_title">How fresh the numbers are</string>
     <string name="guide_today_fresh_body">When what you are reading is no longer fresh, Chiaro says its real age instead of hiding it, and an update that failed says why. If the data is over an hour old, the top of the screen shows the forecast for this hour instead of the old reading, and says «Estimated from the forecast» under the temperature. Pull the screen down to ask for a new one, or tap the age itself to try again.</string>
     <string name="guide_today_fresh_caption">An example: the age of what you are reading — tap it to try again.</string>
     <string name="guide_today_hours_title">The next hours</string>
-    <string name="guide_today_hours_body" formatted="false">Twenty-four hours of temperature, sky and rain chance, starting from the hour after this one: the hour you are in is the big number at the top. Each column is the hour that starts there: «3 PM · 60%» means a 60% chance of rain between 3 and 4, and the temperature is the one at 3. The chance shows from 20% up: below that the cell stays empty, because there is nothing to plan around.</string>
+    <string name="guide_today_hours_body" formatted="false">The hour you are in, «Now», then the twenty-four that follow: temperature, sky and rain chance. Each column is the hour that starts there: «3 PM · 60%» means a 60% chance of rain between 3 and 4, and the temperature is the one at 3. The chance shows from 20% up, with its bar above it: below 20% the cell stays empty, because there is nothing to plan around, and on a dry day the row of bars is not there at all.</string>
     <string name="guide_today_rest_title">The rest of the day</string>
-    <string name="guide_today_rest_body">One timeline for everything still ahead: sunrise or sunset, the golden and blue hours with the time they end, the moment the sky goes fully dark, the hours rain is expected to start and ease off, and — when the sun is low and rain is likely in front of it — the window a rainbow could stand in, with the direction to turn and look. Moonrise and moonset are on the Sky tab. Tap a moment of the sky to open its page, the one the Sky tab opens: what it is, and where to look.</string>
+    <string name="guide_today_rest_body">One timeline for everything still ahead: sunrise or sunset, the golden hour until sunset and the blue hour with the time it ends, the moment the sky goes fully dark, the hours rain is expected to start and ease off, and — when the sun is low and rain is likely — the window a rainbow could stand in, with the direction to turn and look: your back to the sun. Each moment of the sky carries the same verdict the Sky tab gives it, with the number that decided it. Your own alerts that hold today stand among the moments, in your own words, at the hour they point to: the same answer their card on the Alerts tab gives, not a promise that the phone will ring. Moonrise and moonset are on the Sky tab. Tap a moment of the sky to open its page, the one the Sky tab opens: what it is, and where to look. The rainbow\'s row opens one of its own: how high the arc will stand, and the compass.</string>
     <string name="guide_today_week_title">The week</string>
-    <string name="guide_today_week_body">Seven days on one shared temperature scale, so the same bar length means the same thing on every row. Under each day is its ribbon, which says when it is clear, when it clouds over and when it rains. The arrow at the end of a row says the day opens: tap it and the day opens on a card of its own, where above its hours you find how much rain and over how many hours, the snow, the strongest gusts and the highest UV, each with what it means, and only those that say something that day.</string>
+    <string name="guide_today_week_body">Seven days on one shared temperature scale, so the same bar length means the same thing on every row. Under each day\'s bar, on the same width, is its ribbon, which says when it is clear, when it clouds over and when it rains; the chance of rain is under the icon. Each day opens: tap it and it opens inside its own row, where above its hours you find how much rain and over how many hours, the snow, the strongest gusts and the highest UV, each with what it means, and only those that say something that day.</string>
     <string name="guide_today_week_caption">An example. The bar runs from the day\'s low to its high, from the blue of cold to the orange of warm, and the dot is the temperature now. The ribbon is the day from midnight to midnight: light blue where it is clear, grey where it clouds over, pale at both ends, which are the night, and over the part of today already gone; the dashes under it are the hours of rain or snow.</string>
     <string name="guide_today_details_title">The details</string>
-    <string name="guide_today_details_body">Today\'s rain in millimetres, the snow when there is some, UV, wind with its gusts, the clouds with the kind that makes them (high and thin, a veiled sun; low, a grey day), humidity and dew point, pressure and which way it is heading, visibility, air quality — on the European index for places in Europe — and pollen, on each species\' own thresholds. Each number carries the line that says what to do about it, which is the only reason it is on the screen.</string>
+    <string name="guide_today_details_body">Today\'s rain in millimetres, the snow when there is some, UV, wind with its gusts, the clouds with the kind that makes them (high and thin, a veiled sun; low, a grey day), humidity and dew point, pressure and which way it is heading, visibility, air quality — on the European index for places in Europe — and pollen, on each species\' own thresholds. Each number carries the line that says what to do about it, which is the only reason it is on the screen. On a day one of them matters, its tile stands out, and only that one: the rain of a wet day, snow, strong wind, poor air, a high UV, high pollen, fog or muggy air. Most days none does.</string>
     <string name="guide_today_details_caption">An example: two details, each with the line that says what to do about it.</string>
     <string name="guide_today_changed_title">What changed</string>
     <string name="guide_today_changed_body">When the latest update moves the days ahead, up to three rows say how: the day and whether it got better or worse, with the figures that moved under it.</string>
@@ -570,6 +574,7 @@
     <string name="sky_catalog_search_photo_terms" translatable="true">photo photos photograph photographs photography photographing camera cameras shot shoot</string>
     <string name="sky_moment_now">Now</string>
     <string name="sky_until">until %1$s</string>
+    <string name="tl_until_sunset">until sunset at %1$s</string>
     <string name="sky_next_label">Next, %1$s</string>
     <string name="sky_day_today">Today</string>
     <string name="sky_day_tomorrow">Tomorrow</string>
@@ -948,6 +953,15 @@
     <string name="compass_nw">north-west</string>
     <string name="timeline_rainbow">Low sun and rain (%1$d%%): a rainbow would stand to the %2$s</string>
     <string name="timeline_rainbow_desc">Rainbow window, %1$s to %2$s, looking %3$s</string>
+    <!-- The rainbow's page (15 ott 2026): what it is, how high, and the compass. -->
+    <string name="rainbow_title">A rainbow is possible</string>
+    <string name="rainbow_when">%1$s to %2$s · rain %3$d%%</string>
+    <string name="rainbow_compass_when">%1$s to %2$s</string>
+    <string name="rainbow_about">A rainbow is sunlight passing through falling rain. You see it with your back to the sun and the rain in front of you: the arc is centred on the point exactly opposite the sun.</string>
+    <string name="rainbow_height_tall">The sun is low: the arc is large, almost a half circle, and climbs high into the sky.</string>
+    <string name="rainbow_height_mid">The arc rises to a moderate height above the horizon.</string>
+    <string name="rainbow_height_low">The sun is still high: the arc stays low, a band just above the horizon.</string>
+    <string name="rainbow_honest">A possibility, not a forecast: the sky is set up for a rainbow, but the rain has to fall right there and the sun has to get through the clouds.</string>
 
     <!-- Alerts (Fase 6). Two groups, one screen: switches that say exactly what
          they send, and the reader's own rules as a sentence of chips. -->

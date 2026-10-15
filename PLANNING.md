@@ -13585,3 +13585,419 @@ breve, a 40 la breve che va a capo; `FormatsTest` per la forma media in IT/EN. L
 `today-week` e `today-details` del README rigenerate: la data estesa resta accanto alla
 temperatura. Suite completa e lint.
 
+
+## Oggi: la seconda revisione, da app premium (committente, 15 ott 2026)
+
+Il committente ha chiesto se, rifacendo oggi la schermata Oggi per un'app premium da Play Store,
+si terrebbe la soluzione attuale. La risposta: lo scheletro sì (l'ordine dei contenuti, il cielo
+calcolato, la frase prima del numero, il rigore sui dati), la resa no. Il committente ha chiesto
+di fare tutto, a partire dai punti 1 e 2, di spezzare `TodayScreen.kt`, e ha aperto due porte:
+**minSdk 34 se serve alla grafica**, e **il budget dei 2 ms del canvas da rivedere** se va
+rivisto; il DESIGN si riscrive per ciò che serve davvero, senza farsi limitare da ciò che dice ora.
+
+Il piano, in ordine di effetto sulla percezione e di costo:
+
+- [x] 0. **`TodayScreen.kt` in un file per sezione** (2 563 righe): `TodayScreen` (il pager e la
+  lista), `PlaceHeader`, `TodayStates`, `TodayHero`, `TodayHours`, `TodayAgenda`, `TodayWeek`,
+  `TodayChanged`, `TodayDetails`. Commit a sé, senza cambiare nulla di ciò che si disegna.
+- [x] 1. **L'agenda dice se il cielo lo permette, e porta gli avvisi del lettore.** Il primo
+  differenziatore del prodotto (VISION §2.2) era solo del Cielo: su Oggi l'ora d'oro non aveva
+  verdetto. E VISION §5.2.4 prometteva gli avvisi del lettore nella lista dal primo giorno,
+  mai disegnati. Il tramonto ripeteva la fine dell'ora d'oro. DESIGN §8.4, VISION §5.2.
+- [x] 2. **Una grammatica sola per i contenitori** (DESIGN §8.0): niente sulla carta tranne il
+  titolo di una sezione; le ore su una card, l'agenda e la settimana come gruppi di segmenti, come
+  il Cielo. DESIGN §8.0, §8.3, §8.5b, §6.
+- [x] 3. **Un hero che si trasforma**: un'intestazione collassabile su `nestedScroll`, la
+  temperatura che viaggia nella barra (elemento condiviso), la temperatura più grande, massima e
+  minima del giorno nell'hero.
+- [x] 4. **I dettagli uniformi**: un solo stile di icone (monocromo, `onSurfaceVariant`), gli
+  indicatori in una famiglia sola, le altezze pari, il riquadro notevole del giorno in evidenza
+  senza riordinare la griglia.
+- [x] 5. **La striscia delle ore compatta** (circa 150 dp): 7–8 colonne a 360 dp, la probabilità
+  come corsia sotto le icone col linguaggio dei segni di pioggia del nastro, la prima colonna «Ora».
+- [x] 6. **Il cielo con uno shader AGSL**: nuvole e pioggia dai dati (copertura, intensità, sole),
+  statico col movimento ridotto. Qui si decidono minSdk 34 e il budget dei 2 ms.
+- [x] 7. **La settimana leggibile**: le due barre (temperature e nastro) sulla stessa estensione
+  orizzontale, via le sette frecce a favore di un'indicazione più discreta.
+- [x] 8. **Gli schermi grandi**: due pannelli su tablet e pieghevoli (cielo, ore e agenda a
+  sinistra; settimana e dettagli a destra).
+
+### Cosa è cambiato (punti 1 e 2)
+
+- **I verdetti nell'agenda.** Ogni momento del cielo del resto della giornata porta il verdetto del
+  Cielo con il suo numero («Ottimo · nuvole 19%»), su una riga sua sotto la riga. È lo stesso
+  verdetto della tab Cielo: `SkyVerdictEngine` sull'occorrenza del lavoro in quel giorno
+  (`SkyScheduler.resolve`), sulle stesse ore, con gli stessi dati vecchi che non danno pareri.
+  Un momento che il cielo non ha oggi dice la ragione del Cielo nella sua riga («La luna è su
+  tutta la notte» sotto «Buio pieno 20:54»).
+- **Gli avvisi del lettore nell'agenda.** Ogni regola accesa che vale sul rapporto è una riga: la
+  campanella in `primary`, il nome e il messaggio della regola come li scriverebbe la sua
+  notifica (parole del lettore, mai tradotte), all'ora che il soggetto della regola indica, non
+  prima che le sue fasce si aprano, e «Adesso» per una regola su questo momento, in testa. Nessuna
+  riga se gli avvisi del lettore sono spenti. `TodayStateBuilder.ruleRows`, letto da
+  `RuleEngine.check` come la scheda della regola in Avvisi («Adesso sì»).
+- **Il tramonto dentro l'ora d'oro**: «Ora d'oro, sera — fino al tramonto, alle 19:15» al posto di
+  due righe con la stessa ora (`foldSunset`). Il widget dell'arco tiene entrambe.
+- **«Il prossimo, oggi · tra 6 h 20 min»**: il conto alla rovescia sale nell'etichetta.
+- **Le ore su una card**, `surfaceContainer` a 28 dp; la striscia scorre sotto il suo bordo e i
+  punti della curva sono ritagliati dal suo fondo (`HourStrip(ground)`).
+- **L'agenda e la settimana come gruppi di segmenti.** L'agenda come le righe del Cielo (il filo
+  fra le icone è andato: in un gruppo l'ordine lo dice la colonna dell'ora). La settimana in sette
+  segmenti; il giorno aperto cresce nel suo segmento, che sale a `surfaceContainerHigh`.
+- **La lista non spazia più niente da sé**: ogni elemento dice l'aria che gli serve (titolo 24
+  sopra e 12 sotto, avvisi 12 sopra), perché lo spazio uniforme di 12 dp avrebbe staccato i
+  segmenti della settimana in sette card.
+
+### Decisioni e deviazioni
+
+- **A2 della revisione precedente rivisto**: il «tra 6 h 20 min» stava sotto il nome, accanto a
+  «fino al tramonto, alle 19:15», e a 384 dp la riga andava su tre righe. Ora sta nell'etichetta,
+  come lo dice la card del prossimo momento del Cielo accanto a «il prossimo».
+- **Il verdetto parte dall'inizio della riga**, sotto l'ora, per la ragione della riga del Cielo:
+  sotto il nome il chip avrebbe circa 194 dp a 360 e la coppia più larga ne vuole 236.
+- **Nessun verdetto `UNKNOWN` su Oggi**: la pagina del momento dice perché non si sa, e su un dato
+  vecchio una fila di chip «?» ripeterebbe ciò che il chip della freschezza dice una volta.
+- **Una regola non è «il prossimo»**: l'etichetta va al primo momento del giorno, perché una regola
+  è la lettura del meteo del lettore, non un momento.
+- **Il salto tonale fra carta e contenitori resta quello dello schema** (1,11:1 nei temi chiari,
+  1,13 negli scuri, misurato): riguardato sul Milano accanto al Cielo, i contenitori si leggono;
+  il difetto erano le sezioni nude di Oggi, e uno schema più forte avrebbe cambiato ogni schermata.
+- **I decimali nei messaggi delle regole restano** («Fuori 19,7°» accanto all'hero «20°»). Provato
+  a portarli a gradi interi come ogni altra temperatura e tornato indietro: il valore di una regola
+  è quello che ha confrontato con la soglia, e una regola «sotto i 5°» scattata a 4,6° scritta
+  «5°» si contraddirebbe (`RuleNotifierTest` lo tiene, 23 set 2026).
+- **La regola sulla scheda del README**: il Milano registrato porta le due regole che l'immagine di
+  Avvisi già mostra (le idee Bici e Corsa, create con due tocchi), così l'agenda le mostra senza
+  inventare niente.
+
+### Come è stato verificato
+
+`TodayStateBuilderTest` con i nuovi casi: il tramonto piegato nell'ora d'oro e di nuovo riga
+dentro l'ora d'oro; il verdetto `PASS · nuvole 20%` sull'ora d'oro e nessun verdetto sulle svolte
+del tempo; nessun parere su dati vecchi; la regola di adesso in testa, la regola fuori fascia
+all'apertura della fascia, nessuna riga per una regola che non vale, spenta o con le fasce finite.
+`TodayAgendaTest` (Robolectric): l'etichetta del prossimo, il verdetto disegnato, la riga della
+regola, l'apertura e la chiusura del giorno senza crash. Le immagini `today-now` e `today-week`
+rigenerate e guardate; `today-day` nuova (il resto della giornata con i verdetti e le regole),
+nel README con didascalia e testo alternativo. Suite completa e lint.
+
+### Punto 3: l'hero che si trasforma (committente, 15 ott 2026)
+
+- [x] **La temperatura viaggia nella barra** (DESIGN §8.1e). Una sola cifra, disegnata sopra la
+  pagina (`TravellingNumber`): scorrendo segue il cielo finché la sua testa arriva 8 dp sotto la
+  barra, poi nei 96 dp di scorrimento successivi rimpicciolisce alla misura `titleLarge` della barra
+  e scivola nel suo posto accanto all'ingranaggio, dove resta. La posa è una funzione pura dello
+  scorrimento (`heroPose`, `dockSlot`), letta in layout e in disegno: segue il dito nei due sensi e
+  non ricompone niente mentre la pagina si muove. La parte della cifra già dentro la barra ha
+  l'inchiostro della barra, quella ancora sul cielo il bianco del cielo.
+- [x] **La cifra a 88 sp** (era 64), con un tetto: cresce col testo del lettore fino al 130% e non
+  oltre (`heroStyle`), perché a 200% «−12°» sarebbe largo circa 400 dp su un telefono da 360.
+- [x] **Massima e minima del giorno sotto la parola del cielo** («Massima 23° · minima 17°»), con il
+  «percepiti» dopo di loro quando dice qualcosa: prima erano solo nella prima riga della settimana.
+- [x] Il pavimento del canvas da 280 a 328 dp, quanto è cresciuto l'hero, così lo scheletro finisce
+  ancora dove finisce il canvas.
+
+**Decisioni e deviazioni.** *Non un `nestedScroll` con un'intestazione che si accorcia*, come diceva
+il piano: il canvas resta un elemento della lista e la barra resta fissata sopra, e a viaggiare è
+solo la cifra. Un'intestazione collassabile avrebbe dovuto rifare la barra a due fondi (§8.1b), che
+è stata provata e decisa sul telefono tre volte, e avrebbe spostato il cielo sotto il dito invece di
+lasciarlo scorrere; il viaggio della cifra dà la continuità che il piano chiedeva senza toccare né
+l'uno né l'altra. *Niente transizione d'elemento condiviso di Compose*: quelle animano fra due stati,
+qui lo stato è lo scorrimento stesso, e la cifra deve stare a ogni pixel dove il dito la porta.
+*Il punto d'innesco è misurato, la meta calcolata*: dove la cifra riposa nel canvas lo misura il
+canvas una volta (non cambia scorrendo); dove atterra è l'aritmetica della barra (16 dp di margine,
+48 dell'ingranaggio, il centro della riga), così niente si misura durante il movimento. *Col movimento
+ridotto* resta il comportamento di prima: la cifra se ne va col cielo e il numero della barra entra
+in dissolvenza.
+
+**Come è stato verificato.** `HeroTravelTest` (nuovo): a riposo la cifra sta dove la tiene il
+canvas, segue il cielo fino all'innesco, a metà corsa è a metà strada e alla scala di mezzo senza
+salti ai due capi, oltre la corsa e con il canvas uscito resta agganciata, la meta sta prima
+dell'ingranaggio al centro della riga, il tetto del 130%. `TodayAgendaTest`: scorsa la pagina fino in
+fondo, la barra dice la temperatura a TalkBack. Una sequenza di scorrimento (0, 60, 100, 130, 160,
+200, 300 dp) disegnata sul Milano e guardata fotogramma per fotogramma. Le immagini `today-*` del
+README rigenerate (la cifra più grande, la riga delle temperature del giorno, la cifra agganciata
+nelle viste scorse); le altre identiche al pixel. Suite completa e lint.
+
+### Punto 4: i dettagli uniformi (committente, 15 ott 2026)
+
+- [x] **Le intestazioni in un inchiostro solo.** Il glifo della grandezza alla misura della sua
+  etichetta (20 dp, era un Meteocon da 34–38) e l'etichetta, tutti e due in `onSurfaceVariant`.
+  I glifi sono dieci Material Icons contornate (`MetricIcons`: ombrello, fiocco, sole, aria,
+  nuvola, goccia, manometro, occhio, particelle, fiore), copiate col loro tracciato invariato dal
+  jar dei sorgenti di `material-icons-extended` 1.7.8 invece di dipendere dalla libreria.
+- [x] **Gli indicatori in una famiglia sola**: a riposo ogni scala è lo stesso binario,
+  l'inchiostro al 12%; il colore della grandezza solo fino al valore. Erano l'intera rampa al 40%
+  sotto ogni riquadro, sei arcobaleni in sei tinte.
+- [x] **Le altezze pari**: il valore in alto, i fatti e la conseguenza ancorati in fondo, così
+  due riquadri affiancati allineano valori e conseguenze; ogni riga alta almeno 160 dp.
+- [x] **Il riquadro da notare** (`notableDetail`): al più uno, quasi sempre nessuno, su
+  `secondaryContainer` con la conseguenza un gradino più su e «Da notare oggi» per TalkBack; le
+  soglie sono quelle in cui la frase del riquadro cambia, e la griglia non si riordina mai.
+- [x] La guida dice del riquadro da notare; la riga delle Material Icons in `licenses/README.md`.
+
+**Decisioni e deviazioni.** *Non Meteocons tinte*: il piano diceva «un solo stile monocromo», e
+la strada corta era tingere i disegni che c'erano; il 4 set 2026 il telefono aveva già mostrato
+che una tinta piatta riduce un Meteocon alla sua sagoma («due sembrano uguali»). Servivano glifi
+disegnati per essere letti in un inchiostro solo. *Copiate e non dipendenza*: la libreria sono
+migliaia di icone da compilare e dexare per dieci, e il progetto copiava già allo stesso modo il
+`place` del widget. *Le tinte delle grandezze restano* (la rampa di ciascuna, §2.3): la revisione
+del 23 set aveva tolto proprio il colore unico, che diceva «quanto» senza dire «di cosa»; qui il
+colore resta sul valore e sparisce dal resto della scala. *Il riquadro da notare non è un colore
+che dice da solo una cosa* (§10): la riga della conseguenza la dice già a parole, l'enfasi la
+indica soltanto. *Le icone Meteocons delle grandezze restano* per Avvisi, il giorno aperto e i
+widget; due accessori rimasti senza utenti (`cloudCover`, `visibility(km)`) sono stati tolti.
+
+**Come è stato verificato.** `DetailsNotableTest` (nuovo): un giorno qualunque non ha niente da
+notare; ogni soglia scatta dove scatta la sua frase; l'aria sulla scala del luogo; uno solo,
+nell'ordine detto. Disegnati sul Milano, oltre all'immagine del README, una variante con UV 8 in
+tema chiaro e scuro, guardate prima di toglierle. `today-details` rigenerata; le altre identiche
+al pixel (la guida compresa: i suoi riquadri d'esempio stanno sotto la piega dell'immagine).
+Suite completa e lint.
+
+### Punto 5: la striscia delle ore compatta (committente, 15 ott 2026)
+
+- [x] **Celle da 42 dp che si toccano**, icona a 32 dp, curva su 16 dp di corsa a 1,5 dp per grado:
+  sette ore a 360 dp, otto a 384 (erano cinque, in celle da 56 dp con 4 dp fra l'una e l'altra).
+- [x] **«Ora» in testa**: l'ora in cui siamo, con la temperatura e il cielo dell'hero e la
+  probabilità dell'ora; la striscia partiva dall'ora piena successiva e la curva non aveva un punto
+  dove sta il lettore.
+- [x] **La corsia della pioggia al posto del grafico**: una barra per ora su 0–100%, alta quanto
+  l'ora è probabile, nella rampa di riempimento della pioggia, le barre vicine quasi a contatto
+  perché un pomeriggio bagnato sia una forma sola; la cifra sotto dal 20% nella rampa
+  dell'inchiostro; una riga sotto la striscia dice di cosa è la probabilità e quando tocca il
+  massimo («Probabilità di pioggia, massima 85% verso le 18:00»). Niente corsia e niente riga in
+  una giornata asciutta. La card: circa 130 dp asciutta, 160 bagnata, dove era circa 310.
+- [x] Tolti `RainChart` e i suoi aiuti (la finestra delle ore in vista, il tocco che scorreva la
+  striscia, gli assi) con `RainChartTest`; tolti i gradini `Tile` e `TileUv` della scala delle
+  icone, rimasti senza utenti dal punto 4, con il test dei distintivi che li misurava; la pagina
+  del momento del Cielo ha un gradino suo, `Page` (42 dp, la misura che aveva la striscia).
+- [x] La guida (le prossime ore, «Sta per piovere?»), lo scheletro (cella da 132 dp).
+
+**Decisioni e deviazioni.** *Il grafico è andato, non spostato*: era la mappa di una striscia che
+mostrava cinque ore, con una finestra che seguiva lo scorrimento e un tocco per saltare; una
+striscia che ne mostra sette o otto, con la forma della pioggia dentro, è la mappa di sé stessa, e
+le cento dp del grafico erano metà della card. Le ore oltre la vista restano a un gesto. *La rampa
+di riempimento per le barre, quella dell'inchiostro per le cifre*: la prima è la rampa dei segni
+(§2.3) e fa leggere l'improbabile come tenue; la seconda supera 4,5:1 ed è quella dei numeri. Il
+nastro della settimana usa l'inchiostro per i suoi segni bagnati perché lì il segno è alto 3 dp e
+il tenue sparirebbe; qui la barra ha la sua altezza per dirlo. *La corsia anche nel giorno aperto
+della settimana*: la stessa striscia, quindi le stesse otto ore e le stesse barre.
+
+**Come è stato verificato.** Disegnata sul Milano (asciutto: niente corsia, otto ore in vista, la
+card a 130 dp) e su una variante con la pioggia del pomeriggio (la forma che sale, le cifre dal
+20%, la riga del massimo), guardate prima di togliere la variante. `StripCurveTest` invariato.
+`today-now` e `today-week` rigenerate; le altre identiche (il widget a meno di un antialiasing che
+l'occhio non vede, lasciato com'era). Suite completa e lint.
+
+### Punto 6: il cielo con uno shader AGSL (committente, 15 ott 2026)
+
+Il committente ha lasciato a questo passo le due decisioni aperte (minSdk 34, il budget dei 2 ms) e
+ha chiesto di dare precedenza alla resa, riscrivendo il DESIGN di conseguenza.
+
+- [x] **Il canvas è uno shader AGSL** (`SkyShaderSource`, `SkyShaderLayer`): il gradiente della
+  palette disegnato com'era (i tre stop, la stessa interpolazione), e sopra la scena (DESIGN §3.9):
+  cumuli nella copertura dell'ora, con il bordo verso il sole (o la luna) illuminato e schiacciati
+  verso l'orizzonte; cirri nella quota dello strato alto; stelle solo a notte buia e sgombra, meno
+  sotto la luna; pioggia e neve solo se l'ora è bagnata per il motore degli stati, all'intensità
+  del quarto d'ora misurato; le nuvole che scorrono col vento dell'ora, nel verso in cui soffia.
+- [x] **Il contratto dello scrim vale anche per la scena**: ogni pixel sotto la luminanza dello stop
+  più chiaro della palette, nello shader e nei colori delle nuvole calcolati in Kotlin.
+- [x] **Il movimento**: 15 fotogrammi al secondo per un cielo che scorre, 30 se cade qualcosa, un
+  fotogramma chiesto per passo e mai uno per vsync; fermo, come un fotogramma solo, con il «meteo che
+  si muove» spento, le animazioni di sistema ridotte, il risparmio energetico, la pagina o una
+  striscia in scorrimento, il canvas fuori schermo.
+- [x] Le immagini del README passano dal renderer hardware (`renderWindow`), perché un canvas
+  software non disegna un `RuntimeShader`; le altre immagini sono uscite identiche al pixel.
+- [x] DESIGN §3.5 riscritto, §3.9 nuovo, §7.1, VISION §4.2, la guida.
+
+**Decisioni e deviazioni.** *minSdk resta 33*: `RuntimeShader` è di Android 13, che è già il
+pavimento; passare a 34 non avrebbe dato niente allo shader. *Il budget dei 2 ms per fotogramma è
+sostituito* da un budget scritto in quello che un fotogramma fa (una ventina di campioni di rumore
+per pixel nel cielo peggiore, quasi nessuno in un cielo sereno) e in quando un fotogramma c'è (15 o
+30 al secondo, solo mentre il meteo può muoversi), con un obiettivo da misurare: **sotto i 3 ms di
+GPU per fotogramma su un telefono di fascia media**. *Il rumore è ruotato a ogni ottava*: senza, la
+griglia del rumore a valori disegnava «V» e strisce diagonali (visto sul campionario). *Il coperto
+appiattisce l'ombreggiatura*: con il contrasto pieno un cielo al 95% era un vortice di macchie. *La
+distorsione dei cumuli a due ottave*: piega le nuvole, il dettaglio lo danno le quattro di sotto, e
+costa quattro campioni in meno. *Il campionario dei cieli non va nel README*: le sue condizioni sono
+inventate, e la regola delle immagini lo vieta; è servito a guardare, ed è stato tolto.
+
+**Da verificare sul telefono** (non si può in un container senza GPU): il tempo di GPU per
+fotogramma del canvas (`adb shell dumpsys gfxinfo com.callbackdev.chiaro.debug framestats`, o il
+profilo GPU), in un cielo coperto e in uno con la pioggia, contro l'obiettivo dei 3 ms; e la
+sensazione del movimento: la velocità della deriva e lo scintillio.
+
+**Come è stato verificato.** `SkySceneTest` (nuovo): nessuna nuvola più chiara dello stop del
+contratto a ogni altitudine, copertura e pioggia, nelle due palette; il tetto tiene la tinta; stelle
+solo al buio, a cielo aperto, meno con la luna; pioggia e neve solo su un'ora bagnata; la deriva nel
+verso del vento, nei due emisferi, più veloce col vento più forte; la quota dei cirri.
+`SkyShaderCompileTest` (nuovo, Robolectric con la grafica nativa): lo shader compila con il
+compilatore AGSL vero e accetta ogni uniform che lo schermo imposta. Un campionario di nove cieli
+(sereno, sparse, coperto, cirri, ora d'oro, stelle, luna piena, pioggia, neve) disegnato con il
+renderer hardware e guardato a ogni ritocco; `today-now` rigenerata (il coperto di Milano ora è un
+cielo coperto); le altre identiche al pixel. Suite completa e lint.
+
+### Punto 7: la settimana leggibile (committente, 15 ott 2026)
+
+- [x] **Le due barre in un blocco solo**: la barra delle temperature e, 4 dp sotto, il nastro della
+  giornata, sulla stessa larghezza fra la minima e la massima. Il nastro partiva da sotto l'icona e
+  arrivava in fondo alla riga, la barra stava fra le cifre: due barre dello stesso giorno con due
+  inizi e due fini. La minima finisce sul bordo sinistro del blocco, la massima comincia sul destro.
+- [x] **La probabilità sotto l'icona**, su una riga tenuta da tutti e sette i giorni quando almeno uno
+  la stampa (come la corsia bagnata): la sua colonna da 36 dp è diventata larghezza del blocco.
+- [x] **Via le sette frecce**: il titolo della sezione dice una volta sola «Tocca un giorno per le sue
+  ore»; TalkBack sente ancora lo stato e l'azione di ogni riga, e il giorno aperto lo dice il suo
+  segmento.
+- [x] La riga si spezza in due quando il blocco avrebbe meno di 72 dp (`splitsRow`): da circa il 145%
+  di testo a 360 dp, il 190% a 411. La guida e il suo esempio senza la freccia.
+
+**Decisioni e deviazioni.** *Il blocco a 122 dp e non il nastro largo*: con le due barre allineate il
+nastro passa da circa 250 dp a 122 a 360 dp, 5 dp un'ora; abbastanza per un pomeriggio sereno contro
+uno grigio e per i segni della pioggia, e il giorno si legge come uno solo. Il nastro largo resta
+quello del canvas, che è la giornata di oggi. *L'indicazione nel titolo e non una per riga*: un
+segno ripetuto sette volte è il segno che si smette di vedere.
+
+**Come è stato verificato.** `DayRowSplitTest` riscritto sulle nuove misure (una riga a 360 e 411 dp,
+fino al 140% a 360, fino al 150% a 411, il minimo del blocco al dp). `TodayAgendaTest` (lo stato
+aperto e chiuso per TalkBack, il giorno che si chiude senza crash). `today-week` e `today-day`
+rigenerate e guardate; la settimana intera ora sta in una schermata col giorno aperto. Suite completa
+e lint.
+
+### Punto 8: gli schermi grandi (committente, 15 ott 2026)
+
+- [x] **La rail al posto della barra** da 600 dp di finestra (`RailMinWidth`, la soglia Material fra
+  compatto e medio: pieghevole aperto, tablet, telefono in orizzontale). Stesse tre tab, stesso
+  contenitore `surfaceContainer` della barra, voci al centro dell'altezza dove arriva il pollice di
+  chi tiene il dispositivo per i lati. Le pagine delle tab lasciano libera la larghezza della rail
+  all'inizio come lasciavano libera l'altezza della barra in fondo (`ChiaroRoot`, `NavRail.kt`).
+- [x] **Oggi resta a tutta finestra sotto la rail**, con `LocalRailInset` che dice di quanto tenere il
+  contenuto lontano dal bordo. La rail comincia **sotto** la barra di stato: sopra di lei la fascia di
+  stato è il cielo di Oggi, con le icone bianche. Una rail fin dietro all'orologio avrebbe messo cifre
+  bianche su un contenitore chiaro nel tema chiaro. Il foglio di carta comincia accanto alla rail
+  (`SkySheet.start`), così il suo angolo arrotondato si vede.
+- [x] **Due pannelli da 640 dp di carta** (`todayColumns`, puro, `TodayColumnsTest`): sotto il cielo, a
+  sinistra le ore e il resto della giornata, a destra la settimana e cosa è cambiato. 640 è la carta
+  a cui ogni pannello tiene la riga della settimana su una riga sola al 100% di testo (310 dp). I due
+  pannelli insieme non superano 1200 dp e stanno al centro; 8 dp fuori da ogni pannello più i 16
+  delle sezioni fanno i 24 di margine Material ai bordi e 32 di canale fra i pannelli.
+- [x] **L'hero sopra il primo pannello**: cifra, parola, frase e nastro hanno la larghezza del pannello
+  di sinistra, il sole e la luna tutto il cielo.
+- [x] **I dettagli sotto i due pannelli, a tutta larghezza**, con tante tessere per riga quante ne
+  stanno alla larghezza di una tessera da telefono (160 dp), fra 2 e 4, preferendo il numero che non
+  lascia una riga corta (`detailsPerRow`): nove tessere tre per tre. Sul telefono restano due.
+- [x] **Cielo e Allerte centrati a 840 dp** (`TabColumn`) su una finestra larga: sono una lista sola e
+  oltre quella larghezza le righe diventano più lunghe di quanto si legga in uno sguardo.
+- [x] Nuovo screenshot del README, `today-foldable` (841 × 701 dp, un pieghevole aperto), con la rail
+  disegnata come la disegna la shell.
+
+**Decisioni e deviazioni.** *I dettagli non a destra*: il piano li metteva nel pannello di destra. Nella
+prima resa il pannello di destra (settimana e nove tessere) era alto più del doppio di quello di
+sinistra, e in fondo alla pagina restava una schermata intera di carta vuota a sinistra. A tutta
+larghezza la griglia prende tre tessere per riga e i due pannelli sopra vengono alti più o meno
+uguali. *Un solo scorrimento e non due colonne indipendenti*: la pagina scorre come una, l'hero
+viaggia nella barra come sul telefono (§8.1e) e il tiro per aggiornare resta uno. I due pannelli sono
+un solo elemento della lista; su una pagina larga stanno comunque in una o due schermate.
+*La soglia dei due pannelli è la carta e non la finestra*: un pieghevole tenuto in verticale (701 dp,
+621 di carta dopo la rail) resta in una colonna, perché a 300 dp per pannello la riga della settimana
+si spezzerebbe in due su ogni giorno. *Impostazioni, guida e pagine del cielo* restano a tutta
+larghezza: sono pagine con la loro barra in alto e la freccia indietro, e centrarle porterebbe la
+freccia a metà schermo. Restano da rivedere a parte.
+
+**Come è stato verificato.** `TodayColumnsTest` (telefono, pieghevole verticale e aperto, il minimo dei
+pannelli contro la riga della settimana, il centrato oltre i 1200 dp, le tessere per riga). Rese di
+prova, poi tolte, a 841 × 701 chiaro e scuro, in fondo alla pagina, a 1280 × 800 (Oggi e Cielo),
+a 701 × 841 e di Allerte. Tutte le immagini del README rigenerate: quelle del telefono sono identiche
+(`widgets.png` differiva per l'antialiasing di un'area, ripristinata). Suite completa e lint.
+
+### Due difetti visti sul dispositivo (committente, 15 ott 2026)
+
+- [x] **Una forma geometrica nel cielo**, sopra la cifra, di sera con la luna. Riprodotta portando lo
+  shader in NumPy: la luce delle nuvole si calcolava pixel per pixel *verso* la luce, e attorno al
+  punto della luce quella direzione fa un giro completo. Il bordo illuminato gira con lei e disegna
+  anelli e archi concentrici fino a circa 150 dp dalla luna (la luna era 140 dp a destra della
+  forma, alla stessa altezza). Ora la direzione è una sola per tutto il canvas, dal centro verso la
+  luce; il bordo luminoso vicino alla luce resta legato al suo punto, che non ha direzione. Nella
+  stessa indagine: la distorsione delle nuvole a 0,9 piegava il piano su sé stesso nello 0,02% dei
+  punti (jacobiano negativo, misurato), con pieghe che viaggiano col vento; a 0,6 il minimo del
+  jacobiano è 0,21 e non piega mai. `today-now` e `today-foldable` rigenerate e confrontate: stesso
+  carattere, il vortice attorno al sole sparito.
+- [x] **Il foglio dei luoghi che rimbalza** dopo un trascinamento verso l'alto, finché non lo si tocca.
+  Una sonda Robolectric ha misurato che, al rilascio, la molla del foglio lo porta *sopra* la sua
+  posizione aperta (Material 1.4 lo concede e lo maschera). Material imbottisce il contenuto del
+  foglio con la parte della barra di stato che il foglio copre: al 94% dell'altezza il foglio stava a
+  pochi dp sotto la barra di stato, il piccolo superamento lo portava sotto, l'imbottitura lo faceva
+  crescere, la posizione aperta saliva, la molla la inseguiva, l'imbottitura spariva e la posizione
+  riscendeva. Un'altalena che solo un dito interrompe; in Robolectric, senza barra di stato, il
+  foglio si fermava. Ora il contenuto non prende l'inset in alto (solo quello in basso) e l'altezza è
+  la finestra meno la barra di stato e 12 dp, così l'altezza non dipende più da dove sta il foglio.
+  Gli altri fogli dell'app sono alti quanto il loro contenuto: stanno lontano dalla barra di stato o
+  attaccati in cima, dove l'imbottitura non cambia.
+
+**Come è stato verificato.** Lo shader portato in NumPy (le stesse funzioni, gli stessi numeri), rese
+prima e dopo su otto tratti di cielo a 50% e 80% di copertura con la luce dove l'aveva il
+dispositivo; il jacobiano della distorsione misurato su 4000 × 440 dp. Il rimbalzo: una sonda con
+la stessa struttura del foglio, poi tolta, e la lettura del sorgente di Material 1.4
+(`consumeWindowInsets(top = offset)`, `contentWindowInsets`, `animateTo` che ammette il superamento).
+Resta da confermare sul dispositivo che il foglio non rimbalzi più.
+
+**Il cuneo nel cielo, seconda parte (committente, 15 ott 2026).** Dopo la correzione della luce restava,
+sopra la cifra, un piccolo cuneo a «⌐» di circa 25 dp, con due lati netti inclinati di 10°, identico
+su due cieli diversi (Cavenago di sera, Bogotá di giorno con la pioggia) e che **scivola via con le
+nuvole**: quindi nel rumore, non sopra il cielo. Nessuna resa su CPU lo mostrava, nemmeno lo shader
+vero disegnato da Skia in Robolectric con i parametri del dispositivo: è la GPU. Escluse la mezza
+precisione (rovinerebbe tutta la texture) e la contrazione in FMA (esatta, misurata). La causa,
+riprodotta in fp32: ogni cella del rumore calcola i suoi angoli come `i + (1, 0)` e simili, e un
+compilatore può riscrivere `(i.x + 1)·0,1031` come `i.x·0,1031 + 0,1031` con due arrotondamenti;
+la cella accanto calcola lo stesso angolo dal suo `floor`, un bit diverso, e l'hash amplifica quel bit
+finché il suo ultimo `fract` scavalca un intero. Simulata così, la rottura cade **proprio a (80–100,
+140–170) dp, dove il dispositivo mostra il cuneo**, con un salto di 0,13 (l'ampiezza della terza
+ottava, celle di 23 dp) e la stessa forma. La correzione passa ogni angolo per `floor` (`floor(i +
+(1,5; 0,5))` e simili): gli stessi numeri, ma un valore che il compilatore non può aprire. Tutte le
+immagini del README rigenerate e **identiche al pixel**: l'aspetto del cielo non cambia. Resta da
+confermare sul dispositivo.
+
+### La pagina dell'arcobaleno (committente, 15 ott 2026)
+
+- [x] **La riga dell'arcobaleno apre una pagina** (`RainbowSheet`), come i momenti del cielo aprono la
+  loro: era l'unica riga del resto della giornata il cui senso è una direzione, e non apriva niente.
+  Nome e finestra con la pioggia, «Dove guardare» con la stessa bussola del Cielo (`LookBlock` e
+  `CompassView`, riusati), cos'è un arcobaleno in due frasi (spalle al sole, pioggia davanti),
+  **quanto sarà alto l'arco in parole** e, più quieta, la nota che è una possibilità.
+- [x] **`RainbowWindow.sight(at, coords)`** nel dominio: la direzione opposta al sole e la cima
+  dell'arco, 42° meno l'altezza del sole; null col sole giù o sopra i 42°. La finestra ricava la sua
+  direzione dalla stessa funzione. `RainbowSightTest`.
+- [x] **La direzione è quella del momento**: dentro la finestra, dove sta l'arco adesso (il sole si
+  sposta di circa 15° l'ora); prima, quella della finestra, la stessa che stampa la riga.
+- [x] L'altezza in tre parole, mai in gradi: da 28° «grande, quasi un semicerchio», da 14° «a media
+  altezza», sotto «una fascia appena sopra l'orizzonte» (`rainbowHeightRes`, `RainbowSheetTest`).
+- [x] La riga dice fino a quando (la fine della finestra), come l'ora d'oro.
+- [x] **La guida correggeva una fisica sbagliata**: «quando il sole è basso e *davanti a lui* la
+  pioggia è probabile» metteva la pioggia davanti al sole, mentre va davanti a chi guarda, col sole
+  alle spalle. Ora dice «le spalle al sole» e che la riga apre la sua pagina (IT/EN).
+
+**Come è stato verificato.** `RainbowSightTest` (la direzione opposta al sole, l'arco più alto col sole
+più basso, niente arco di notte o col sole a 68°), `RainbowSheetTest` (la pagina prima e dentro la
+finestra, l'altezza in parole ai suoi confini), `TodayAgendaTest`, la parità delle stringhe. La pagina
+resa in chiaro e in scuro, in italiano, e guardata, poi tolta: nessuna immagine del README la mostra,
+perché Milano registrata è asciutta per tutta la settimana e il README non inventa dati.
+
+### Tre ritocchi dal dispositivo (committente, 15 ott 2026)
+
+- [x] **«La pioggia dovrebbe smettere» sotto «Coperto»** (Manaus). Il gradino «già bagnato» della
+  frase leggeva lo stato della *prima ora* (16–17, qualche decimo di mm al 39%: per il motore degli
+  stati un'ora bagnata), mentre l'eroe e la cella «Ora» mostrano le condizioni *attuali* (l'ultimo
+  quarto d'ora, niente che cade): la frase annunciava la fine di una pioggia che lo schermo diceva
+  assente. Ora quel gradino legge lo stesso «adesso» dell'eroe (`report.current`); gelo e nebbia
+  continuano a leggere la prima ora, come prima. Un'ora che sarà bagnata senza esserlo adesso è dei
+  gradini successivi: a Manaus, con il massimo al 44%, sotto la soglia dell'ombrello e del «possibile»,
+  la frase non parla di pioggia. Nuovo caso in `HeadlineEngineTest`.
+- [x] **Le icone piene sono il predefinito** (prima a tratto, dal 6 set): le icone ora stanno sulla
+  carta (ore, settimana, agenda), dove le forme piene portano i colori a colpo d'occhio. Chi non ha mai
+  toccato l'impostazione cambia con l'aggiornamento; la scelta resta in Impostazioni. Le immagini del
+  README rigenerate e guardate tutte (dodici cambiano).
+- [x] **L'anteprima dell'aspetto in Impostazioni aggiornata**: il cielo è quello di Oggi (la scena
+  con le nuvole, ferma, e il sole dove Oggi lo disegnerebbe) e non più un gradiente piatto; l'icona
+  sta sulla carta accanto al verdetto, dove vivono le icone di Oggi; e la parola concorda col numero:
+  il 20% di nuvole è «Quasi sereno», non il «Nuvoloso» che diceva sopra «nuvole 20%».
+

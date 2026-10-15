@@ -39,6 +39,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -67,6 +69,11 @@ import com.callbackdev.chiaro.ui.settings.SettingsActions
 import com.callbackdev.chiaro.ui.settings.SettingsScreen
 import com.callbackdev.chiaro.ui.shell.BottomBarHeight
 import com.callbackdev.chiaro.ui.shell.ChiaroBottomBar
+import com.callbackdev.chiaro.ui.shell.ChiaroNavRail
+import com.callbackdev.chiaro.ui.shell.LocalRailInset
+import com.callbackdev.chiaro.ui.shell.RailMinWidth
+import com.callbackdev.chiaro.ui.shell.TabColumn
+import com.callbackdev.chiaro.ui.shell.railInset
 import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.ui.sky.SkyActions
 import com.callbackdev.chiaro.ui.sky.SkyScreen
@@ -149,6 +156,15 @@ class ReadmeScreenshots {
         save("today-now")
     }
 
+    /** The rest of the day: the sky's moments with their verdicts, and the reader's rules
+     * that hold today among them (15 ott 2026). */
+    @Test
+    fun todayDay() {
+        showTab(ShellTab.TODAY) { today() }
+        scrollUnderHeader(R.string.section_rest_of_day)
+        save("today-day")
+    }
+
     /** The week with tomorrow open: its hours and its facts, one tap on its row. */
     @Test
     fun todayWeek() {
@@ -160,6 +176,15 @@ class ReadmeScreenshots {
         compose.waitForIdle()
         scrollUnderHeader(R.string.section_week)
         save("today-week")
+    }
+
+    /** On an open foldable (DESIGN §8.12c): the rail at the start, the sky across the page,
+     * the hours and the day under the hero, the week and the details beside them. */
+    @Test
+    @Config(qualifiers = "+w841dp-h701dp")
+    fun todayFoldable() {
+        showTab(ShellTab.TODAY) { today() }
+        save("today-foldable")
     }
 
     @Test
@@ -505,8 +530,23 @@ class ReadmeScreenshots {
         compose.waitForIdle()
     }
 
-    /** A tab page with the bottom bar over it, laid out as `ChiaroRoot` lays them out. */
+    /** A tab page with the bottom bar over it, or the rail beside it on a wide window, laid
+     * out as `ChiaroRoot` lays them out. */
     private fun showTab(tab: ShellTab, dark: Boolean = false, page: @Composable () -> Unit) = show(dark) {
+        val width = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
+        if (width >= RailMinWidth) {
+            val inset = railInset()
+            val underRail = tab == ShellTab.TODAY
+            Box(modifier = Modifier.fillMaxSize()) {
+                Box(modifier = Modifier.fillMaxSize().padding(start = if (underRail) 0.dp else inset)) {
+                    CompositionLocalProvider(LocalRailInset provides if (underRail) inset else 0.dp) {
+                        if (underRail) page() else TabColumn { page() }
+                    }
+                }
+                ChiaroNavRail(selected = tab, onSelect = {})
+            }
+            return@show
+        }
         Box(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.fillMaxSize().padding(bottom = BottomBarHeight)) { page() }
             Box(modifier = Modifier.align(Alignment.BottomCenter)) {
@@ -556,10 +596,38 @@ class ReadmeScreenshots {
 
     private fun save(name: String) {
         compose.waitForIdle()
+        saveBitmap(name, renderWindow())
+    }
+
+    /**
+     * The activity's window drawn through the GPU pipeline, as the widgets are (15 ott 2026):
+     * the sky's shader is a `RuntimeShader`, which a software canvas refuses to draw, so a
+     * `View.draw` into a bitmap showed the gradient alone. Recorded into a `RenderNode` and
+     * rendered by a `HardwareRenderer` into an `ImageReader`, the same road `hardwareDraw`
+     * takes, without re-hosting the view.
+     */
+    private fun renderWindow(): Bitmap {
         val view = compose.activity.window.decorView
-        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-        view.draw(Canvas(bitmap))
-        saveBitmap(name, bitmap)
+        val width = view.width
+        val height = view.height
+        val node = RenderNode("window").apply { setPosition(0, 0, width, height) }
+        compose.runOnUiThread { view.draw(node.beginRecording()); node.endRecording() }
+        val reader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1)
+        val renderer = HardwareRenderer()
+        try {
+            renderer.setSurface(reader.surface)
+            renderer.setContentRoot(node)
+            renderer.createRenderRequest().setWaitForPresent(true).syncAndDraw()
+            reader.acquireNextImage().use { image ->
+                val plane = image.planes[0]
+                val padded = Bitmap.createBitmap(plane.rowStride / plane.pixelStride, height, Bitmap.Config.ARGB_8888)
+                padded.copyPixelsFromBuffer(plane.buffer)
+                return Bitmap.createBitmap(padded, 0, 0, width, height)
+            }
+        } finally {
+            renderer.destroy()
+            reader.close()
+        }
     }
 
     private fun saveBitmap(name: String, bitmap: Bitmap) {
