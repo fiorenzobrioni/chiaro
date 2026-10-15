@@ -2,7 +2,13 @@ package com.callbackdev.chiaro.ui.today
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.draw.clip
+import com.callbackdev.chiaro.ui.theme.CardCorner
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -71,11 +77,25 @@ internal fun NextHours(
             }
         }
     }
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    // On a card of its own (15 ott 2026, DESIGN §8.0): the hours were the one section of the
+    // page standing bare on the paper, between a sky above and segments below. The strip
+    // scrolls inside the card, under its rounded edge, and its curve's dots are cut from the
+    // card's ground.
+    val ground = MaterialTheme.colorScheme.surfaceContainer
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(CardCorner))
+            .background(ground)
+            .padding(vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         HourStrip(
             hours = content.strip.map { it.toCell(units, is24h, locale) },
-            contentPadding = PagePadding,
-            rowState = rowState
+            contentPadding = CardPadding,
+            rowState = rowState,
+            ground = ground
         )
         // A dry run draws NO chart (device review, 4 set). Every value at zero put
         // a flat line along the bottom of a 28dp box, which read on the screen as a
@@ -106,7 +126,7 @@ internal fun NextHours(
                 ),
                 window = window,
                 onSeek = seek,
-                modifier = Modifier.padding(PagePadding)
+                modifier = Modifier.padding(CardPadding)
             )
         }
     }
@@ -150,8 +170,8 @@ internal fun chanceLabel(pct: Int?, locale: Locale): String? =
 /** The floor of [chanceLabel] and of the rain chart: the state engine's «probable». */
 internal const val ChanceFloorPct = com.callbackdev.chiaro.domain.WeatherStateEngine.PROBABLE_PCT
 
-/** The page's side margin, as the strip's `contentPadding` and the chart's padding. */
-internal val PagePadding = PaddingValues(horizontal = 16.dp)
+/** The card's inner margin, as the strip's `contentPadding` and the chart's padding. */
+internal val CardPadding = PaddingValues(horizontal = 16.dp)
 
 /** `HourStrip`'s gap between cells, which the seek needs to turn hours into pixels. */
 internal val StripCellGap = 4.dp

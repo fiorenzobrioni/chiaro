@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -100,7 +101,9 @@ fun HourStrip(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     /** Hoisted by a caller that follows the strip's scroll: the rain chart under it
      * draws the hours in view and scrolls the strip from a tap (§8.3b). */
-    rowState: LazyListState = rememberLazyListState()
+    rowState: LazyListState = rememberLazyListState(),
+    /** What the strip stands on: the curve's dots are cut from it (a card, a segment). */
+    ground: Color = MaterialTheme.colorScheme.surface
 ) {
     // The strip's own scroll holds the weather still while it runs (DESIGN §7.1, 9 set
     // 2026), on top of whatever the page around it is already saying.
@@ -156,7 +159,8 @@ fun HourStrip(
                         curve = curve,
                         index = index,
                         temperature = cell.temperature,
-                        gap = CellGap
+                        gap = CellGap,
+                        ground = ground
                     )
                 } else {
                     Text(
@@ -219,12 +223,11 @@ internal class StripCurve(val temps: List<Double?>, private val mean: Double, pr
  * cell on each side; a lazy item is not clipped to itself.
  */
 @Composable
-private fun CurveCell(curve: StripCurve, index: Int, temperature: String, gap: Dp) {
+private fun CurveCell(curve: StripCurve, index: Int, temperature: String, gap: Dp, ground: Color) {
     val level = curve.level(index) ?: 0.5f
     val before = curve.level(index - 1)
     val after = curve.level(index + 1)
     val line = MaterialTheme.colorScheme.outlineVariant
-    val ground = MaterialTheme.colorScheme.surface
     val dotColor = ChiaroTheme.colors.temperatureAt(curve.temps[index] ?: 15.0)
     val dotRing = MaterialTheme.colorScheme.outline
     val labelStyle = MaterialTheme.typography.labelLarge.tabular()

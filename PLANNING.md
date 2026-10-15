@@ -13585,3 +13585,98 @@ breve, a 40 la breve che va a capo; `FormatsTest` per la forma media in IT/EN. L
 `today-week` e `today-details` del README rigenerate: la data estesa resta accanto alla
 temperatura. Suite completa e lint.
 
+
+## Oggi: la seconda revisione, da app premium (committente, 15 ott 2026)
+
+Il committente ha chiesto se, rifacendo oggi la schermata Oggi per un'app premium da Play Store,
+si terrebbe la soluzione attuale. La risposta: lo scheletro sì (l'ordine dei contenuti, il cielo
+calcolato, la frase prima del numero, il rigore sui dati), la resa no. Il committente ha chiesto
+di fare tutto, a partire dai punti 1 e 2, di spezzare `TodayScreen.kt`, e ha aperto due porte:
+**minSdk 34 se serve alla grafica**, e **il budget dei 2 ms del canvas da rivedere** se va
+rivisto; il DESIGN si riscrive per ciò che serve davvero, senza farsi limitare da ciò che dice ora.
+
+Il piano, in ordine di effetto sulla percezione e di costo:
+
+- [x] 0. **`TodayScreen.kt` in un file per sezione** (2 563 righe): `TodayScreen` (il pager e la
+  lista), `PlaceHeader`, `TodayStates`, `TodayHero`, `TodayHours`, `TodayAgenda`, `TodayWeek`,
+  `TodayChanged`, `TodayDetails`. Commit a sé, senza cambiare nulla di ciò che si disegna.
+- [x] 1. **L'agenda dice se il cielo lo permette, e porta gli avvisi del lettore.** Il primo
+  differenziatore del prodotto (VISION §2.2) era solo del Cielo: su Oggi l'ora d'oro non aveva
+  verdetto. E VISION §5.2.4 prometteva gli avvisi del lettore nella lista dal primo giorno,
+  mai disegnati. Il tramonto ripeteva la fine dell'ora d'oro. DESIGN §8.4, VISION §5.2.
+- [x] 2. **Una grammatica sola per i contenitori** (DESIGN §8.0): niente sulla carta tranne il
+  titolo di una sezione; le ore su una card, l'agenda e la settimana come gruppi di segmenti, come
+  il Cielo. DESIGN §8.0, §8.3, §8.5b, §6.
+- [ ] 3. **Un hero che si trasforma**: un'intestazione collassabile su `nestedScroll`, la
+  temperatura che viaggia nella barra (elemento condiviso), la temperatura più grande, massima e
+  minima del giorno nell'hero.
+- [ ] 4. **I dettagli uniformi**: un solo stile di icone (monocromo, `onSurfaceVariant`), gli
+  indicatori in una famiglia sola, le altezze pari, il riquadro notevole del giorno in evidenza
+  senza riordinare la griglia.
+- [ ] 5. **La striscia delle ore compatta** (circa 150 dp): 7–8 colonne a 360 dp, la probabilità
+  come corsia sotto le icone col linguaggio dei segni di pioggia del nastro, la prima colonna «Ora».
+- [ ] 6. **Il cielo con uno shader AGSL**: nuvole e pioggia dai dati (copertura, intensità, sole),
+  statico col movimento ridotto. Qui si decidono minSdk 34 e il budget dei 2 ms.
+- [ ] 7. **La settimana leggibile**: le due barre (temperature e nastro) sulla stessa estensione
+  orizzontale, via le sette frecce a favore di un'indicazione più discreta.
+- [ ] 8. **Gli schermi grandi**: due pannelli su tablet e pieghevoli (cielo, ore e agenda a
+  sinistra; settimana e dettagli a destra).
+
+### Cosa è cambiato (punti 1 e 2)
+
+- **I verdetti nell'agenda.** Ogni momento del cielo del resto della giornata porta il verdetto del
+  Cielo con il suo numero («Ottimo · nuvole 19%»), su una riga sua sotto la riga. È lo stesso
+  verdetto della tab Cielo: `SkyVerdictEngine` sull'occorrenza del lavoro in quel giorno
+  (`SkyScheduler.resolve`), sulle stesse ore, con gli stessi dati vecchi che non danno pareri.
+  Un momento che il cielo non ha oggi dice la ragione del Cielo nella sua riga («La luna è su
+  tutta la notte» sotto «Buio pieno 20:54»).
+- **Gli avvisi del lettore nell'agenda.** Ogni regola accesa che vale sul rapporto è una riga: la
+  campanella in `primary`, il nome e il messaggio della regola come li scriverebbe la sua
+  notifica (parole del lettore, mai tradotte), all'ora che il soggetto della regola indica, non
+  prima che le sue fasce si aprano, e «Adesso» per una regola su questo momento, in testa. Nessuna
+  riga se gli avvisi del lettore sono spenti. `TodayStateBuilder.ruleRows`, letto da
+  `RuleEngine.check` come la scheda della regola in Avvisi («Adesso sì»).
+- **Il tramonto dentro l'ora d'oro**: «Ora d'oro, sera — fino al tramonto, alle 19:15» al posto di
+  due righe con la stessa ora (`foldSunset`). Il widget dell'arco tiene entrambe.
+- **«Il prossimo, oggi · tra 6 h 20 min»**: il conto alla rovescia sale nell'etichetta.
+- **Le ore su una card**, `surfaceContainer` a 28 dp; la striscia scorre sotto il suo bordo e i
+  punti della curva sono ritagliati dal suo fondo (`HourStrip(ground)`).
+- **L'agenda e la settimana come gruppi di segmenti.** L'agenda come le righe del Cielo (il filo
+  fra le icone è andato: in un gruppo l'ordine lo dice la colonna dell'ora). La settimana in sette
+  segmenti; il giorno aperto cresce nel suo segmento, che sale a `surfaceContainerHigh`.
+- **La lista non spazia più niente da sé**: ogni elemento dice l'aria che gli serve (titolo 24
+  sopra e 12 sotto, avvisi 12 sopra), perché lo spazio uniforme di 12 dp avrebbe staccato i
+  segmenti della settimana in sette card.
+
+### Decisioni e deviazioni
+
+- **A2 della revisione precedente rivisto**: il «tra 6 h 20 min» stava sotto il nome, accanto a
+  «fino al tramonto, alle 19:15», e a 384 dp la riga andava su tre righe. Ora sta nell'etichetta,
+  come lo dice la card del prossimo momento del Cielo accanto a «il prossimo».
+- **Il verdetto parte dall'inizio della riga**, sotto l'ora, per la ragione della riga del Cielo:
+  sotto il nome il chip avrebbe circa 194 dp a 360 e la coppia più larga ne vuole 236.
+- **Nessun verdetto `UNKNOWN` su Oggi**: la pagina del momento dice perché non si sa, e su un dato
+  vecchio una fila di chip «?» ripeterebbe ciò che il chip della freschezza dice una volta.
+- **Una regola non è «il prossimo»**: l'etichetta va al primo momento del giorno, perché una regola
+  è la lettura del meteo del lettore, non un momento.
+- **Il salto tonale fra carta e contenitori resta quello dello schema** (1,11:1 nei temi chiari,
+  1,13 negli scuri, misurato): riguardato sul Milano accanto al Cielo, i contenitori si leggono;
+  il difetto erano le sezioni nude di Oggi, e uno schema più forte avrebbe cambiato ogni schermata.
+- **I decimali nei messaggi delle regole restano** («Fuori 19,7°» accanto all'hero «20°»). Provato
+  a portarli a gradi interi come ogni altra temperatura e tornato indietro: il valore di una regola
+  è quello che ha confrontato con la soglia, e una regola «sotto i 5°» scattata a 4,6° scritta
+  «5°» si contraddirebbe (`RuleNotifierTest` lo tiene, 23 set 2026).
+- **La regola sulla scheda del README**: il Milano registrato porta le due regole che l'immagine di
+  Avvisi già mostra (le idee Bici e Corsa, create con due tocchi), così l'agenda le mostra senza
+  inventare niente.
+
+### Come è stato verificato
+
+`TodayStateBuilderTest` con i nuovi casi: il tramonto piegato nell'ora d'oro e di nuovo riga
+dentro l'ora d'oro; il verdetto `PASS · nuvole 20%` sull'ora d'oro e nessun verdetto sulle svolte
+del tempo; nessun parere su dati vecchi; la regola di adesso in testa, la regola fuori fascia
+all'apertura della fascia, nessuna riga per una regola che non vale, spenta o con le fasce finite.
+`TodayAgendaTest` (Robolectric): l'etichetta del prossimo, il verdetto disegnato, la riga della
+regola, l'apertura e la chiusura del giorno senza crash. Le immagini `today-now` e `today-week`
+rigenerate e guardate; `today-day` nuova (il resto della giornata con i verdetti e le regole),
+nel README con didascalia e testo alternativo. Suite completa e lint.

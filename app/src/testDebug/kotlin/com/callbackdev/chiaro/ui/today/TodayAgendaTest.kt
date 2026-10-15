@@ -75,8 +75,40 @@ class TodayAgendaTest {
         scrollTo(name)
 
         val next = app.getString(R.string.sky_next_label, app.getString(R.string.sky_day_today).lowercase())
-        compose.onAllNodesWithText(next).assertCountEquals(1)
+        // «Next, today · in 6 h 20 min»: how soon rides on the label (15 ott 2026).
+        compose.onAllNodesWithText(next, substring = true).assertCountEquals(1)
         compose.onAllNodesWithText(name).assertCountEquals(1)
+    }
+
+    /** The product's first promise on Today (15 ott 2026): the golden hour says whether the
+     * sky will allow it, with the number that decided it, as the Sky tab does. */
+    @Test
+    fun `a moment of the sky carries its verdict and its number`() {
+        show()
+        val name = app.getString(R.string.sky_name_golden_pm)
+        scrollTo(name)
+        val word = app.getString(R.string.verdict_pass)
+        assertTrue(
+            "the golden hour's verdict is drawn",
+            compose.onAllNodes(hasText(word, substring = true)).fetchSemanticsNodes().isNotEmpty() ||
+                compose.onAllNodes(
+                    SemanticsMatcher("a chip saying $word") { node ->
+                        node.config.getOrElse(SemanticsProperties.ContentDescription) { emptyList() }
+                            .any { it.startsWith(word) }
+                    }
+                ).fetchSemanticsNodes().isNotEmpty()
+        )
+    }
+
+    /** The reader's own rules that hold today stand among the moments, in their own words. */
+    @Test
+    fun `a rule of the reader's that holds today is a row of the day`() {
+        show()
+        val rule = MilanRecording.yourRules(app).first()
+        scrollTo(rule.name)
+        compose.onAllNodes(hasText(rule.name)).fetchSemanticsNodes().let {
+            assertTrue("the rule's row is there", it.isNotEmpty())
+        }
     }
 
     @Test

@@ -32,6 +32,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.components.HourStrip
+import com.callbackdev.chiaro.ui.components.SegmentGap
+import com.callbackdev.chiaro.ui.components.segmentShape
 import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.theme.CardCorner
 import com.callbackdev.chiaro.ui.theme.GroupCorner
@@ -93,23 +95,24 @@ internal val PlainHeaderHeight = 48.dp + HeaderVerticalPadding * 2
  * 52 (the temperature curve's band, since 23 set 2026) + 6 + 16 (rain). */
 internal val SkeletonHourCellHeight = 144.dp
 
+/** A section title's band on the paper: its 12dp, a `titleMedium` line, 12 under it. */
+private val SkeletonTitleBand = ItemGap + 24.dp + ItemGap
+
 /**
  * Blocks of `surfaceContainerHigh` in the shape of the real layout: unmistakably not
  * data (§1.1 — no placeholder may render as a value, so none of these carries text).
  *
- * In the shape of the real layout, and re-measured against it on 8 set 2026: the sky
- * block had kept the 28dp bottom corners the canvas lost on 4 set and a 240dp height
- * from before the canvas reached the status bar, and the hour cells were 16dp shorter
- * than the strip had grown. A skeleton that is the wrong shape is a small lie told for
- * one second; still a lie.
+ * In the shape of the real layout, re-measured whenever the layout moves: on 8 set 2026 the
+ * sky block had kept corners and a height from before, and on 15 ott 2026 the hours went on
+ * a card and the agenda into segments (DESIGN §8.0), so the skeleton draws a card as tall as
+ * the hours' (16 + a cell + 16) and three of the agenda's segments. A skeleton that is the
+ * wrong shape is a small lie told for one second; still a lie. The titles are bands of empty
+ * paper: a block where a word will be would read as a word that failed to load.
  */
 @Composable
 internal fun TodaySkeleton() {
     val block = MaterialTheme.colorScheme.surfaceContainerHigh
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
         // Straight edges, like the canvas: the sky is the ground, not a card.
         Box(
             modifier = Modifier
@@ -117,27 +120,25 @@ internal fun TodaySkeleton() {
                 .height(CanvasBaseHeight - PlainHeaderHeight)
                 .background(block)
         )
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        Box(
+            modifier = Modifier
+                .padding(start = 16.dp, top = SkeletonTitleBand, end = 16.dp)
+                .fillMaxWidth()
+                .height(16.dp + SkeletonHourCellHeight + 16.dp)
+                .background(block, RoundedCornerShape(CardCorner))
+        )
+        Column(
+            modifier = Modifier.padding(start = 16.dp, top = SectionGap + SkeletonTitleBand - ItemGap, end = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(SegmentGap)
         ) {
-            repeat(6) {
+            repeat(3) { index ->
                 Box(
                     modifier = Modifier
-                        .width(56.dp)
-                        .height(SkeletonHourCellHeight)
-                        .background(block, MaterialTheme.shapes.medium)
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .background(block, segmentShape(index, 3))
                 )
             }
-        }
-        repeat(3) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(20.dp)
-                    .background(block, MaterialTheme.shapes.small)
-            )
         }
     }
 }

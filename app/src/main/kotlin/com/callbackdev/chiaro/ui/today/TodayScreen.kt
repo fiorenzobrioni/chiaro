@@ -518,23 +518,27 @@ internal fun ContentState(
         isRefreshing = content.userRefreshing || locating,
         onRefresh = onRefresh
     ) {
+        // The page's rhythm is the items' own since 15 ott 2026: a section is a title on the
+        // paper and its content on a container under it (DESIGN §8.0), and a group's segments
+        // stand 2dp apart where the list's even 12dp gap would have pulled the week's seven
+        // segments apart into seven cards. So the list spaces nothing, and every item says
+        // what air it needs: [ItemGap] over a notice, [SectionTitle]'s 24 over a section.
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = WindowInsets.navigationBars.asPaddingValues()
         ) {
             item { CanvasHeader(content, skyGradient, units, timeFmt, locale, headerHeight) }
 
             if (content.error != null) {
-                item { ErrorBanner(content.error, onRefresh) }
+                item { Box(Modifier.padding(top = ItemGap)) { ErrorBanner(content.error, onRefresh) } }
             }
             if (content.isStale) {
                 item {
                     FreshnessChip(
                         age = freshnessAge(content.lastSync),
                         onRetry = onRefresh,
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        modifier = Modifier.padding(start = 16.dp, top = ItemGap, end = 16.dp)
                     )
                 }
             }
@@ -552,7 +556,7 @@ internal fun ContentState(
                         today = content.now.toLocalDate(),
                         timeFmt = timeFmt,
                         onOpen = { warningSheetOpen = true },
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        modifier = Modifier.padding(start = 16.dp, top = ItemGap, end = 16.dp)
                     )
                 }
             }
@@ -560,21 +564,24 @@ internal fun ContentState(
             // and null both draw nothing - a card that flashed while the store was
             // still answering would be shown to everyone and dismissed by nobody.
             if (guideCardVisible == true) {
-                item { GuideCard(onOpen = onOpenGuide, onDismiss = onDismissGuideCard) }
+                item {
+                    Box(Modifier.padding(top = ItemGap)) {
+                        GuideCard(onOpen = onOpenGuide, onDismiss = onDismissGuideCard)
+                    }
+                }
             }
 
             // The first title on the paper (review of 12 ott 2026): the sheet's own 24dp lip
-            // and the list's 12dp gap are already above it, and its usual 12 more made a
-            // 53dp band of empty paper between the sky and the hours, measured on the
-            // README's Milan — the hours VISION §4.4 wants above the fold, pushed down by
-            // nothing. With a chip, a banner or the guide card in between, it keeps the 12
-            // it needs to stand apart from them.
+            // is already above it, and a section's whole 24 more made a band of empty paper
+            // between the sky and the hours — the hours VISION §4.4 wants above the fold,
+            // pushed down by nothing. With a chip, a banner or the guide card in between, it
+            // keeps a section's air to stand apart from them.
             val opensThePaper = content.error == null && !content.isStale &&
                 content.warnings == null && guideCardVisible != true
             item {
                 SectionTitle(
                     stringResource(R.string.section_next_hours),
-                    top = if (opensThePaper) 0.dp else 12.dp
+                    top = if (opensThePaper) ItemGap else SectionGap
                 )
             }
             item { NextHours(content, units, is24h, timeFmt, locale) }
@@ -582,7 +589,7 @@ internal fun ContentState(
             if (content.timeline.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.section_rest_of_day)) }
                 item {
-                    RestOfDay(content, timeFmt) { item, job ->
+                    RestOfDay(content, timeFmt, units) { item, job ->
                         agendaPage = job.id
                         // Where to look, for the rows that have a direction: the same rule
                         // and the same instant the Sky's row asks (SkySights.bearing).
@@ -707,22 +714,25 @@ internal fun DataFooter(content: TodayUiState.Content, timeFmt: DateTimeFormatte
         // centred line was the one thing on the paper not standing on the 16dp column.
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 16.dp)
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)
     )
 }
 
 /**
- * The same header rhythm every other screen keeps (DESIGN §6, `SectionTop`), reached
- * by a different road: this list spaces its items by 12dp, so 12 of the section's 24
- * are already paid and the header adds the other 12 itself. The 12dp under it is that
- * same list gap — which is exactly what a 4dp bottom plus a row's 8dp of padding comes
- * to on the screens that have no list spacing.
+ * A section's title on the paper (DESIGN §6, §8.0): [SectionGap] over it, the 24 every
+ * screen keeps between one section and the next, and 12 under it, down to its container.
  */
 @Composable
-internal fun SectionTitle(text: String, top: Dp = 12.dp) {
+internal fun SectionTitle(text: String, top: Dp = SectionGap) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(start = 16.dp, top = top)
+        modifier = Modifier.padding(start = 16.dp, top = top, bottom = ItemGap)
     )
 }
+
+/** Between one section and the next. */
+internal val SectionGap = 24.dp
+
+/** Over a notice (the chip, a banner, the guide card) and under a section's title. */
+internal val ItemGap = 12.dp

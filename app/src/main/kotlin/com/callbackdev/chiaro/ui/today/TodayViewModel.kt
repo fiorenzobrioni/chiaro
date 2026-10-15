@@ -91,7 +91,9 @@ class TodayViewModel(
      */
     private val fetchWarnings: (suspend (force: Boolean) -> Unit)? = null,
     private val clock: Clock = Clock.systemUTC(),
-    private val powerSave: PowerSaveState = PowerSaveState.Off
+    private val powerSave: PowerSaveState = PowerSaveState.Off,
+    /** The reader's rules, for the rows of the day they hold on (15 ott 2026). */
+    private val ruleStore: com.callbackdev.chiaro.data.RuleStore? = null
 ) : ViewModel() {
 
     /** Carries the cacheKey of the page whose reader pulled. */
@@ -315,6 +317,7 @@ class TodayViewModel(
             var report = repository.cachedReport(city)
             var whatChanged: List<ForecastShift> = emptyList()
             var yesterdayHighC: Double? = null
+            var rules: List<com.callbackdev.chiaro.domain.rules.NotificationRule> = emptyList()
             // The official warning for this place (Fase 11). The zone is looked up once —
             // it decodes a 290 KB asset the first time and cannot change under a place —
             // and only for a place that might be in one: a reader whose places are all
@@ -334,7 +337,8 @@ class TodayViewModel(
                             city, current, clock.instant(), updateFrequencyMin,
                             userRefreshing, error,
                             (warningState as? PlaceWarningState.Current)?.warnings,
-                            yesterdayHighC
+                            yesterdayHighC,
+                            rules
                         )
                         if (built is TodayUiState.Content) {
                             built.copy(whatChanged = whatChanged)
@@ -450,6 +454,22 @@ class TodayViewModel(
                     }
                 }
             }
+            // The reader's rules (15 ott 2026): a row of the day for each one that holds, and
+            // none while the reader's own alerts are switched off — what they turned off is
+            // the voice and the list of it alike. Re-read when the rules or the switch move.
+            ruleStore?.let { store ->
+                launch {
+                    combine(
+                        store.rules,
+                        settingsStore.settings.map { it.notifications.userRules }.distinctUntilChanged()
+                    ) { all, on -> if (on) all.filter { it.enabled } else emptyList() }
+                        .distinctUntilChanged()
+                        .collect {
+                            rules = it
+                            push()
+                        }
+                }
+            }
             launch { fetch(userAsked = false) }
             launch { refreshWarnings(userAsked = false) }
             launch {
@@ -511,7 +531,8 @@ class TodayViewModel(
                     locationProvider = ServiceLocator.locationProvider(app),
                     warnings = ServiceLocator.warningReader(app),
                     fetchWarnings = { force -> WarningRefresh.run(app, force) },
-                    powerSave = PowerSaveState.of(app)
+                    powerSave = PowerSaveState.of(app),
+                    ruleStore = ServiceLocator.ruleStore(app)
                 )
             }
         }

@@ -8,13 +8,25 @@ import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.placeZone
+import com.callbackdev.chiaro.domain.rules.NotificationRule
+import com.callbackdev.chiaro.domain.rules.RuleCheck
+import com.callbackdev.chiaro.domain.rules.RuleEngine
+import com.callbackdev.chiaro.domain.rules.RuleWindows
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
+import com.callbackdev.chiaro.domain.sky.SkyJob
+import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
+import com.callbackdev.chiaro.domain.sky.SkyOccurrence
+import com.callbackdev.chiaro.domain.sky.SkyScheduler
+import com.callbackdev.chiaro.domain.sky.SkyVerdict
+import com.callbackdev.chiaro.domain.sky.SkyVerdictEngine
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.components.LightPhase
 import com.callbackdev.chiaro.ui.components.RibbonHour
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 
 /**
@@ -102,8 +114,40 @@ data class SkySnapshot(
 
 enum class TimelineKind {
     SUNRISE, GOLDEN_MORNING_END, GOLDEN_EVENING, SUNSET, BLUE_EVENING, DARK,
-    MOONRISE, MOONSET, RAIN_START, RAIN_STOP, RAINBOW
+    MOONRISE, MOONSET, RAIN_START, RAIN_STOP, RAINBOW,
+    /** One of the reader's own rules that holds today (VISION §5.2.4, 15 ott 2026). */
+    ALERT
 }
+
+/**
+ * The Sky's moment a row of the day is (15 ott 2026), whose page the row opens, whose name it
+ * prints and whose verdict it carries. The morning's golden hour ends here rather than starts,
+ * so its row keeps its own words and opens the morning's page. Null for what the Sky has no
+ * page for: the weather's turns, the rainbow and the reader's rules.
+ */
+val TimelineKind.skyJob: SkyJob?
+    get() = when (this) {
+        TimelineKind.SUNRISE -> SkyJobCatalog.SunRise
+        TimelineKind.GOLDEN_MORNING_END -> SkyJobCatalog.GoldenAm
+        TimelineKind.GOLDEN_EVENING -> SkyJobCatalog.GoldenPm
+        TimelineKind.SUNSET -> SkyJobCatalog.SunSet
+        TimelineKind.BLUE_EVENING -> SkyJobCatalog.BluePm
+        // From the sun at −18° the sky is as dark as the sun leaves it: the Sky's «Buio pieno».
+        TimelineKind.DARK -> SkyJobCatalog.DarknessWindow
+        TimelineKind.MOONRISE -> SkyJobCatalog.MoonRise
+        TimelineKind.MOONSET -> SkyJobCatalog.MoonSet
+        TimelineKind.RAINBOW, TimelineKind.RAIN_START, TimelineKind.RAIN_STOP, TimelineKind.ALERT -> null
+    }
+
+/**
+ * A rule of the reader's that holds on this report (15 ott 2026): the rule, and what its
+ * first condition read and when, which is what its message's `{trigger.*}` placeholders say.
+ */
+data class AgendaRule(
+    val rule: NotificationRule,
+    val value: Double,
+    val at: LocalDateTime?
+)
 
 /**
  * One row of "the rest of the day". [pct] carries the rain probability of the turns
@@ -118,7 +162,20 @@ data class TimelineItem(
     /** Where a span ends, for the rows that are spans and not moments (12 ott 2026):
      * the evening's golden hour runs to sunset, its blue hour to the sun at −6°. Null for a
      * moment, and for a span whose end the day does not have. */
-    val until: LocalDateTime? = null
+    val until: LocalDateTime? = null,
+    /** Will the sky allow it (15 ott 2026): the Sky tab's verdict for the same moment, from
+     * the same engine on the same hours, so the two tabs cannot disagree. Null for a row
+     * that is not a sight (a weather turn, a rule) and for a sight the clouds cannot spoil. */
+    val verdict: SkyVerdict? = null,
+    /** Why the Sky has no occurrence of this row's sight today («the moon is up all night»),
+     * for a row whose clock time is the sun's and not the sky's: full darkness at 20:54 under
+     * a full moon is a time the sky will not keep, and the row says so in the Sky's words. */
+    val skipped: com.callbackdev.chiaro.domain.sky.SkyNotScheduled? = null,
+    /** The reader's rule, on an [TimelineKind.ALERT] row. */
+    val rule: AgendaRule? = null,
+    /** Holding now rather than at [at]: a rule about this very moment. The row's clock column
+     * says «Now», and the row stands before every moment still ahead. */
+    val now: Boolean = false
 )
 
 /** One cell's worth of forecast, with its own day/night already decided — the strip
@@ -163,7 +220,10 @@ object TodayStateBuilder {
         warnings: PlaceWarnings? = null,
         /** Yesterday's high as the history last wrote it ([yesterdayHigh]), for the
          * quiet day's sentence; null where the history has no yesterday. */
-        yesterdayHighC: Double? = null
+        yesterdayHighC: Double? = null,
+        /** The reader's rules, for the rest of the day's rows (15 ott 2026). Empty when the
+         * reader has switched their own alerts off. */
+        rules: List<NotificationRule> = emptyList()
     ): TodayUiState {
         val zone = placeZone(report, city)
         if (!WeatherRecency.coversNow(report, now)) {
@@ -210,7 +270,12 @@ object TodayStateBuilder {
             headline = HeadlineEngine.headline(trimmed, local, graded)
                 ?: HeadlineEngine.calm(trimmed, local, yesterdayHighC),
             strip = trimmed.hourly.drop(1).take(STRIP_HOURS).map { stripHour(it, zone, coords) },
-            timeline = timeline(trimmed, today, zone, local),
+            timeline = timeline(
+                trimmed, today, zone, local,
+                dataAge = Duration.between(report.systemInfo.lastSync, now),
+                staleAfter = WeatherFreshness.staleAfter(updateFrequencyMin),
+                rules = rules
+            ),
             week = week(trimmed, zone, coords),
             lastSync = report.systemInfo.lastSync,
             isStale = WeatherFreshness.isStale(report.systemInfo.lastSync, updateFrequencyMin, now),
@@ -221,22 +286,116 @@ object TodayStateBuilder {
     }
 
     /**
-     * The merged rest of the day (VISION §5.2.4): today's remaining sun and moon
-     * moments plus the hours where rain becomes likely or stops being. The reader's
-     * own alerts join this list in Fase 6, through the same [TimelineItem]. The rule
-     * itself lives in [agenda]; this is that rule cut at midnight.
+     * The merged rest of the day (VISION §5.2.4): today's remaining sun moments, the hours
+     * where rain becomes likely or stops being, and the reader's own rules that hold today.
+     * The cut at midnight of [agenda], plus three things the day's list does and the widget's
+     * does not (15 ott 2026):
+     *
+     * - **a verdict on every sight** ([judged]): «will the sky allow it», the product's first
+     *   promise, was the Sky tab's alone, and Today listed a golden hour with no answer;
+     * - **the reader's rules** ([ruleRows]), which this list had promised since its first
+     *   draft and never drawn;
+     * - **the sunset folded into the golden hour** that ends with it ([foldSunset]): «Ora d'oro,
+     *   until 19:15» over «Tramonto 19:15» said one time twice.
      */
     private fun timeline(
         report: WeatherReport,
         today: com.callbackdev.chiaro.domain.sky.SolarDay,
         zone: ZoneId,
-        now: LocalDateTime
-    ): List<TimelineItem> =
-        agenda(report, zone, now, until = now.toLocalDate().atTime(java.time.LocalTime.MAX), today = today)
+        now: LocalDateTime,
+        dataAge: Duration,
+        staleAfter: Duration,
+        rules: List<NotificationRule>
+    ): List<TimelineItem> {
+        val sky = agenda(report, zone, now, until = now.toLocalDate().atTime(LocalTime.MAX), today = today)
             // The moon stays on the Sky tab (committente, 13 ott 2026): on a dry day
             // Today's agenda was the Sky tab again, led by a moonrise nobody plans an
             // afternoon by. The day's arc widget keeps the whole agenda, moon included.
             .filterNot { it.kind == TimelineKind.MOONRISE || it.kind == TimelineKind.MOONSET }
+        return (foldSunset(sky).map { judged(it, report, zone, dataAge, staleAfter) } + ruleRows(rules, report, zone, now))
+            .sortedWith(compareBy<TimelineItem>({ !it.now }, { it.at }))
+    }
+
+    /**
+     * The evening's golden hour runs until sunset, and its row says so («until sunset at
+     * 19:15»): the sunset's own row, at that same minute, is folded into it. Only when the
+     * golden hour is still ahead; once it has begun its row is gone and the sunset keeps its own.
+     */
+    internal fun foldSunset(items: List<TimelineItem>): List<TimelineItem> {
+        val golden = items.firstOrNull { it.kind == TimelineKind.GOLDEN_EVENING } ?: return items
+        return items.filterNot { it.kind == TimelineKind.SUNSET && it.at == golden.until }
+    }
+
+    /**
+     * A sight's verdict, from [SkyVerdictEngine] on the job's own occurrence that day — the
+     * window the Sky tab judges, not the row's minute — so the two tabs give one answer.
+     */
+    private fun judged(
+        item: TimelineItem,
+        report: WeatherReport,
+        zone: ZoneId,
+        dataAge: Duration,
+        staleAfter: Duration
+    ): TimelineItem {
+        val job = item.kind.skyJob?.takeIf { it.observable } ?: return item
+        val coords = report.location.coordinates
+        val at = when (val occurrence = SkyScheduler.resolve(job, item.at.toLocalDate(), zone, coords)) {
+            is SkyOccurrence.At -> occurrence
+            is SkyOccurrence.None -> return item.copy(skipped = occurrence.reason)
+        }
+        return item.copy(
+            verdict = SkyVerdictEngine.evaluate(
+                job = job,
+                start = at.start,
+                end = at.end,
+                hours = report.hourly,
+                zone = zone,
+                coordinates = coords,
+                dataAge = dataAge,
+                staleAfter = staleAfter
+            )
+        )
+    }
+
+    /**
+     * The reader's rules that hold on this report, as rows of the day (15 ott 2026). What the
+     * row says is what the rule's card on Alerts says — [RuleEngine.check], no latch, no
+     * fingerprint — so it is a reading of the forecast in the reader's own words, never a
+     * promise that the phone will ring: whether it already has today is the job's to know.
+     *
+     * When: the hour the rule's subject points at, if it is still ahead today (the rain at
+     * 17:00 a «rain in the next 6 hours» rule found); no earlier than its window opens, if its
+     * window is closed now; and «now» for a rule about this moment. A rule whose window does
+     * not open again today is not a row of today.
+     */
+    internal fun ruleRows(
+        rules: List<NotificationRule>,
+        report: WeatherReport,
+        zone: ZoneId,
+        now: LocalDateTime
+    ): List<TimelineItem> {
+        val coords = report.location.coordinates
+        val endOfDay = now.toLocalDate().atTime(LocalTime.MAX)
+        return rules.filter { it.enabled }.mapNotNull { rule ->
+            val fires = RuleEngine.check(rule, report, now) as? RuleCheck.Fires ?: return@mapNotNull null
+            val open = RuleWindows.isOpen(rule.window, now, zone, coords)
+            val opening = if (open) {
+                null
+            } else {
+                RuleWindows.nextOpening(rule.window, now, zone, coords)
+                    ?.takeIf { !it.isAfter(endOfDay) }
+                    ?: return@mapNotNull null
+            }
+            val ahead = fires.at?.takeIf { it.isAfter(now) && !it.isAfter(endOfDay) }
+            val at = listOfNotNull(ahead, opening).maxOrNull()
+            TimelineItem(
+                at = at ?: now,
+                kind = TimelineKind.ALERT,
+                rule = AgendaRule(rule, fires.value, fires.at),
+                now = at == null
+            )
+        }
+    }
 
     /**
      * The merged agenda of everything still ahead between [now] and [until]: the sun's

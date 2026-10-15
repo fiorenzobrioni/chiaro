@@ -4,7 +4,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,7 +12,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import com.callbackdev.chiaro.ui.components.SegmentGap
+import com.callbackdev.chiaro.ui.components.segmentShape
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,8 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -70,9 +71,12 @@ internal fun LazyListScope.weekRows(
     // One lane for the whole week or none: a row that grew by its wet hours would make the
     // week uneven, and a dry week pays nothing for a lane it would leave empty.
     val wetLane = content.week.any { day -> day.sky.any { it.wet && it.at < 1f } }
-    items(content.week, key = { "week-${it.forecast.date}" }) { day ->
+    val count = content.week.size
+    itemsIndexed(content.week, key = { _, day -> "week-${day.forecast.date}" }) { index, day ->
         WeekRow(
             day = day,
+            index = index,
+            count = count,
             isToday = day.forecast.date == today,
             scaleLowC = scaleLow,
             scaleHighC = scaleHigh,
@@ -91,20 +95,25 @@ internal fun LazyListScope.weekRows(
 /**
  * One day of the week and, when it is open, its hours.
  *
- * **The open day is a card** (review of Today, 15 ott 2026). Its facts and its strip used to
- * open straight onto the paper between two rows, with the strip's curve running edge to
- * edge, and nothing said which day they belonged to. Open, the row, its facts and its hours
- * now stand on one `surfaceContainer` ground with the groups' 20dp corner ([GroupCorner]),
- * drawn [OpenDayInset] inside the page margin so the row's text keeps its column (the seven
- * bars still line up) and the strip scrolls inside the card rather than off the screen. The
- * ground fades in with the effects spring and the card's top air grows with the spatial one,
- * so opening a day is one movement; closing it reverses it. A closed row stands on the paper
- * as before: seven cards would be a heavier week to read, and the chevron already says
- * which rows open.
+ * **Every day is a segment of the week's group** (15 ott 2026, DESIGN §8.0). Until then the
+ * closed rows stood bare on the paper and only the open one became a card, which made the
+ * week the one section of the page with two grammars in it, and the page the one tab whose
+ * lists did not look like the Sky's. Now the seven days are the Sky's segments, 2dp apart,
+ * the group's outer corners round and the inner ones tight; one lazy item each still, so
+ * the seven moving icons arrive a row at a time. **Open, the day grows inside its own
+ * segment** and its ground goes one step up (`surfaceContainerHigh`), so which day the facts
+ * and the hours belong to is the segment they stand in.
+ *
+ * On a segment the range bar's empty track is `outlineVariant`: `surfaceContainerHighest`
+ * stands 1.11:1 off `surfaceContainer` and the bar had no track (committente, device, 15 ott
+ * 2026, when only the open day stood on a card). The ring of today's disc is cut from the
+ * segment's ground.
  */
 @Composable
-internal fun WeekRow(
+private fun WeekRow(
     day: WeekDay,
+    index: Int,
+    count: Int,
     isToday: Boolean,
     scaleLowC: Double,
     scaleHighC: Double,
@@ -124,31 +133,14 @@ internal fun WeekRow(
     val high = Formats.temperature(f.highC, units.temperature, locale)
     val reduced = reducedMotion()
     val opens = day.hours.isNotEmpty()
-    val card = MaterialTheme.colorScheme.surfaceContainer
     val ground by animateColorAsState(
-        targetValue = if (expanded) card else card.copy(alpha = 0f),
+        targetValue = if (expanded) {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        } else {
+            MaterialTheme.colorScheme.surfaceContainer
+        },
         animationSpec = ChiaroMotion.effects(reduced),
-        label = "open day ground"
-    )
-    val top by animateDpAsState(
-        targetValue = if (expanded) OpenDayInset else 0.dp,
-        animationSpec = ChiaroMotion.spatial(reduced),
-        label = "open day top"
-    )
-    // On the card the bar's empty track goes one step stronger, `outlineVariant`: the page's
-    // `surfaceContainerHighest` stands 1.11:1 off the card (1.23 off the page), and an open day
-    // showed a range bar with no track (committente, device, 15 ott 2026). The ring of today's
-    // disc is cut from the ground it stands on, the card's while open.
-    val track by animateColorAsState(
-        targetValue = if (expanded) MaterialTheme.colorScheme.outlineVariant
-        else MaterialTheme.colorScheme.surfaceContainerHighest,
-        animationSpec = ChiaroMotion.effects(reduced),
-        label = "open day track"
-    )
-    val rowGround by animateColorAsState(
-        targetValue = if (expanded) card else MaterialTheme.colorScheme.surface,
-        animationSpec = ChiaroMotion.effects(reduced),
-        label = "open day row ground"
+        label = "week day ground"
     )
     // The closed week speaks its skies lower, so the bars are read first; the open day says
     // its own in full (review of Today, 15 ott 2026, DESIGN §4).
@@ -157,18 +149,16 @@ internal fun WeekRow(
         animationSpec = ChiaroMotion.effects(reduced),
         label = "open day ribbon"
     )
+    val shape = segmentShape(index, count)
     Column(
         modifier = Modifier
-            .padding(horizontal = OpenDayInset)
-            .drawBehind {
-                if (ground.alpha > 0f) {
-                    drawRoundRect(color = ground, cornerRadius = CornerRadius(GroupCorner.toPx()))
-                }
-            }
-            // Never under zero: the spatial spring overshoots, and on its way back from 8dp it
-            // went below 0 — a negative padding, which Compose refuses with an exception, and
-            // the app crashed on closing a day (committente, 15 ott 2026; `TodayAgendaTest`).
-            .padding(top = top.coerceAtLeast(0.dp))
+            .padding(horizontal = 16.dp)
+            .padding(
+                top = if (index > 0) SegmentGap / 2 else 0.dp,
+                bottom = if (index < count - 1) SegmentGap / 2 else 0.dp
+            )
+            .clip(shape)
+            .background(ground)
     ) {
         DayRow(
             dayLabel = label,
@@ -204,10 +194,12 @@ internal fun WeekRow(
             onClick = if (opens) onToggle else null,
             expanded = if (opens) expanded else null,
             ribbonQuiet = ribbonQuiet.coerceIn(0f, 1f),
-            track = track,
-            ground = rowGround,
+            track = MaterialTheme.colorScheme.outlineVariant,
+            ground = ground,
             nowC = if (isToday) nowC else null,
-            contentPadding = PaddingValues(horizontal = OpenDayInset)
+            // The press fills the segment, whose shape it takes.
+            targetShape = shape,
+            contentPadding = PaddingValues(horizontal = SegmentInset, vertical = 10.dp)
         )
         AnimatedVisibility(
             visible = expanded,
@@ -219,9 +211,10 @@ internal fun WeekRow(
                 HourStrip(
                     hours = day.hours.map { it.toCell(units, is24h, locale, markDayStart = false) },
                     modifier = Modifier.padding(top = 4.dp),
-                    // The card's own inset, so the first hour stands on the page's column and
-                    // the strip scrolls under the card's edge, not the screen's.
-                    contentPadding = PaddingValues(horizontal = OpenDayInset),
+                    // The segment's own inset, so the first hour stands on the row's column
+                    // and the strip scrolls under the segment's edge, not the screen's.
+                    contentPadding = PaddingValues(horizontal = SegmentInset),
+                    ground = ground,
                     // Opened on the morning, not on midnight (review of 12 ott 2026): the
                     // first six cells of a later day were 00–05, all night, and the hours
                     // a reader opens a day for were off the screen. Remembered inside the
@@ -235,9 +228,8 @@ internal fun WeekRow(
     }
 }
 
-/** The open day's card stands this far inside the page margin, and its content this far
- * inside the card: 8 + 8 is the page's 16, so the row's columns never move. */
-internal val OpenDayInset = 8.dp
+/** A week segment's content stands this far inside its edge. */
+internal val SegmentInset = 12.dp
 
 /**
  * How far a closed week row's ribbon leans toward its track (review of Today, 15 ott 2026).
@@ -341,8 +333,8 @@ internal fun DayFacts(forecast: DailyForecast, units: UnitSettings, locale: Loca
     }
     if (facts.isEmpty()) return
     Column(
-        // Inside the open day's card, whose own inset makes up the page margin.
-        modifier = Modifier.padding(horizontal = OpenDayInset).padding(top = 4.dp, bottom = 4.dp),
+        // Inside the open day's segment, on the row's own column.
+        modifier = Modifier.padding(horizontal = SegmentInset).padding(top = 4.dp, bottom = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         facts.forEach { fact ->

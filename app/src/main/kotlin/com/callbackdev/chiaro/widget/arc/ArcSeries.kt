@@ -277,6 +277,8 @@ internal data class ArcSeries(
             TimelineKind.SUNSET, TimelineKind.BLUE_EVENING, TimelineKind.DARK -> settings.agendaSun
             TimelineKind.MOONRISE, TimelineKind.MOONSET -> settings.agendaMoon
             TimelineKind.RAIN_START, TimelineKind.RAIN_STOP, TimelineKind.RAINBOW -> settings.agendaRain
+            // The reader's rules are Today's rows, never the shared agenda's: it has none.
+            TimelineKind.ALERT -> false
         }
 
         /**
@@ -301,7 +303,8 @@ internal data class ArcSeries(
             TimelineKind.DARK -> listOf("twilight.astronomical.pm", "darkness.window")
             TimelineKind.MOONRISE -> listOf("moon.rise", "moon.full_at_dusk")
             TimelineKind.MOONSET -> listOf("moon.set")
-            TimelineKind.RAIN_START, TimelineKind.RAIN_STOP, TimelineKind.RAINBOW -> emptyList()
+            TimelineKind.RAIN_START, TimelineKind.RAIN_STOP, TimelineKind.RAINBOW,
+            TimelineKind.ALERT -> emptyList()
         }
 
         /** The verdict of the followed moment that IS this row, if the reader follows one. */

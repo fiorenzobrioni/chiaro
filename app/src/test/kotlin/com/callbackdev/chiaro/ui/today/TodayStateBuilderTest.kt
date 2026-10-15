@@ -176,13 +176,16 @@ class TodayStateBuilderTest {
             milan, report, nowLocal.atZone(zone).toInstant(), 60, false, null
         ) as TodayUiState.Content
         // Today's timeline is the agenda's first day without the moon, which stays on the
-        // Sky tab and in the day's arc widget (13 ott 2026).
+        // Sky tab and in the day's arc widget (13 ott 2026), and without the sunset the
+        // golden hour now ends on (15 ott 2026); its rows carry their verdicts.
+        val golden = agenda.firstOrNull { it.kind == TimelineKind.GOLDEN_EVENING }
         assertEquals(
-            content.timeline,
             agenda.filter {
                 it.at.toLocalDate() == date &&
-                    it.kind != TimelineKind.MOONRISE && it.kind != TimelineKind.MOONSET
-            }
+                    it.kind != TimelineKind.MOONRISE && it.kind != TimelineKind.MOONSET &&
+                    !(it.kind == TimelineKind.SUNSET && golden != null && it.at == golden.until)
+            }.map { it.at to it.kind },
+            content.timeline.map { it.at to it.kind }
         )
     }
 
@@ -202,16 +205,126 @@ class TodayStateBuilderTest {
     }
 
     /** The evening's golden and blue hours are spans (review of 12 ott 2026): the golden
-     * hour ends at the sunset the same agenda lists, the blue hour after it begins. */
+     * hour ends at the sunset the agenda lists, the blue hour after it begins. */
     @Test
     fun `the evening hours carry where they end`() {
-        val agenda = content(null).timeline
+        val nowLocal = LocalDateTime.of(2026, 9, 2, 12, 30)
+        val agenda = TodayStateBuilder.agenda(report(LocalDateTime.of(2026, 9, 2, 12, 0)), zone, nowLocal, date.atTime(23, 59))
         val golden = agenda.single { it.kind == TimelineKind.GOLDEN_EVENING }
         val sunset = agenda.single { it.kind == TimelineKind.SUNSET }
         val blue = agenda.single { it.kind == TimelineKind.BLUE_EVENING }
         assertEquals(sunset.at, golden.until)
         assertTrue(blue.until!!.isAfter(blue.at))
         assertEquals(null, sunset.until)
+    }
+
+    // ---------------------------------------------- the day's verdicts and rules (15 ott 2026)
+
+    /** «Ora d'oro, until 19:15» over «Tramonto 19:15» said one time twice: the sunset the
+     * golden hour ends on is folded into it; the widget's agenda keeps both. */
+    @Test
+    fun `the sunset folds into the golden hour that ends on it`() {
+        val timeline = content(null).timeline
+        val golden = timeline.single { it.kind == TimelineKind.GOLDEN_EVENING }
+        assertTrue(timeline.none { it.kind == TimelineKind.SUNSET && it.at == golden.until })
+    }
+
+    /** Once the golden hour has begun its row is gone, and the sunset keeps its own. */
+    @Test
+    fun `inside the golden hour the sunset is a row again`() {
+        val fetched = LocalDateTime.of(2026, 9, 2, 12, 0)
+        val agenda = TodayStateBuilder.agenda(report(fetched), zone, LocalDateTime.of(2026, 9, 2, 12, 30), date.atTime(23, 59))
+        val golden = agenda.single { it.kind == TimelineKind.GOLDEN_EVENING }
+        val inside = golden.at.plusMinutes(5)
+        val timeline = (TodayStateBuilder.build(
+            milan, report(fetched), inside.atZone(zone).toInstant(), 60, false, null
+        ) as TodayUiState.Content).timeline
+        assertTrue(timeline.any { it.kind == TimelineKind.SUNSET })
+    }
+
+    /** «Will the sky allow it» on Today is the Sky tab's answer: the same engine on the same
+     * hours over the job's own window. A sky of 20% cloud and 10% rain is a clear golden hour. */
+    @Test
+    fun `a sight carries the Sky's verdict and a weather turn carries none`() {
+        val timeline = content(null).timeline
+        val golden = timeline.single { it.kind == TimelineKind.GOLDEN_EVENING }
+        assertEquals(com.callbackdev.chiaro.domain.sky.SkyVerdictKind.PASS, golden.verdict?.kind)
+        assertEquals(20, golden.verdict?.cloudPct)
+        assertTrue(timeline.filter { it.kind.skyJob == null }.all { it.verdict == null })
+    }
+
+    /** Stale data does not get to hold an opinion, here as on the Sky tab. */
+    @Test
+    fun `a report too old to trust judges nothing`() {
+        val fetched = LocalDateTime.of(2026, 9, 2, 9, 0)
+        val now = LocalDateTime.of(2026, 9, 2, 12, 30).atZone(zone).toInstant()
+        // Polled every hour: stale after two, and this one is three and a half.
+        val timeline = (TodayStateBuilder.build(milan, report(fetched), now, 60, false, null)
+            as TodayUiState.Content).timeline
+        val golden = timeline.single { it.kind == TimelineKind.GOLDEN_EVENING }
+        assertEquals(com.callbackdev.chiaro.domain.sky.SkyVerdictKind.UNKNOWN, golden.verdict?.kind)
+    }
+
+    private fun rule(
+        id: Long,
+        variable: String,
+        op: com.callbackdev.chiaro.domain.rules.RuleOp,
+        threshold: Double,
+        window: com.callbackdev.chiaro.domain.rules.RuleWindow = com.callbackdev.chiaro.domain.rules.RuleWindow.Always,
+        enabled: Boolean = true
+    ) = com.callbackdev.chiaro.domain.rules.NotificationRule(
+        id = id,
+        name = "rule $id",
+        enabled = enabled,
+        conditions = listOf(com.callbackdev.chiaro.domain.rules.RuleCondition(variable, op, threshold)),
+        message = "msg {trigger.value}",
+        window = window
+    )
+
+    private fun timelineWith(vararg rules: com.callbackdev.chiaro.domain.rules.NotificationRule): List<TimelineItem> {
+        val fetched = LocalDateTime.of(2026, 9, 2, 12, 0)
+        val now = LocalDateTime.of(2026, 9, 2, 12, 30).atZone(zone).toInstant()
+        return (TodayStateBuilder.build(
+            milan, report(fetched), now, 60, false, null, rules = rules.toList()
+        ) as TodayUiState.Content).timeline
+    }
+
+    /** A rule about this moment holds now, and stands before every moment still ahead. */
+    @Test
+    fun `a rule that holds now is the first row, at now`() {
+        val timeline = timelineWith(rule(1, "current.temp_c", com.callbackdev.chiaro.domain.rules.RuleOp.GT, 15.0))
+        val first = timeline.first()
+        assertEquals(TimelineKind.ALERT, first.kind)
+        assertTrue(first.now)
+        assertEquals(1L, first.rule?.rule?.id)
+    }
+
+    /** A rule whose hours open later today is a row at the hour it would speak. */
+    @Test
+    fun `a rule outside its hours is a row when they open`() {
+        val evening = com.callbackdev.chiaro.domain.rules.RuleWindow(
+            com.callbackdev.chiaro.domain.rules.RuleWindowKind.HOURS,
+            listOf(com.callbackdev.chiaro.domain.rules.RuleBand(17 * 60, 19 * 60))
+        )
+        val row = timelineWith(rule(2, "current.temp_c", com.callbackdev.chiaro.domain.rules.RuleOp.GT, 15.0, evening))
+            .single { it.kind == TimelineKind.ALERT }
+        assertEquals(LocalDateTime.of(2026, 9, 2, 17, 0), row.at)
+        assertTrue(!row.now)
+    }
+
+    /** No row for a rule that does not hold, one that is off, or one whose hours are over. */
+    @Test
+    fun `a rule that does not hold, is off, or is done for the day is no row`() {
+        val morning = com.callbackdev.chiaro.domain.rules.RuleWindow(
+            com.callbackdev.chiaro.domain.rules.RuleWindowKind.HOURS,
+            listOf(com.callbackdev.chiaro.domain.rules.RuleBand(7 * 60, 9 * 60))
+        )
+        val timeline = timelineWith(
+            rule(3, "current.temp_c", com.callbackdev.chiaro.domain.rules.RuleOp.LT, 0.0),
+            rule(4, "current.temp_c", com.callbackdev.chiaro.domain.rules.RuleOp.GT, 15.0, enabled = false),
+            rule(5, "current.temp_c", com.callbackdev.chiaro.domain.rules.RuleOp.GT, 15.0, morning)
+        )
+        assertTrue(timeline.none { it.kind == TimelineKind.ALERT })
     }
 
     // ----------------------------------------------- yesterday off the history (13 ott 2026)

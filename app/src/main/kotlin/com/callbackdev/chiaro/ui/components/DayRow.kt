@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -126,7 +127,9 @@ fun DayRow(
      * so the card hands in a stronger one.
      */
     track: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
-    ground: Color = MaterialTheme.colorScheme.surface
+    ground: Color = MaterialTheme.colorScheme.surface,
+    /** The press's shape: the segment's own on Today's week, the row's elsewhere. */
+    targetShape: Shape = TargetShape
 ) {
     val openLabel = stringResource(if (expanded == true) R.string.week_day_close_action else R.string.week_day_open_action)
     val state = expanded?.let {
@@ -149,7 +152,7 @@ fun DayRow(
             // picture) is not clipped at all, so its ribbon keeps its square end.
             .let {
                 if (onClick != null) {
-                    it.clip(TargetShape).clickable(onClickLabel = openLabel, onClick = onClick)
+                    it.clip(targetShape).clickable(onClickLabel = openLabel, onClick = onClick)
                 } else {
                     it
                 }

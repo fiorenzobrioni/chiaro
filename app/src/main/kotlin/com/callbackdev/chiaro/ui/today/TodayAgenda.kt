@@ -1,15 +1,20 @@
 package com.callbackdev.chiaro.ui.today
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.domain.rules.RuleMessages
+import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.sky.SkyJob
-import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
+import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
+import com.callbackdev.chiaro.ui.alerts.RuleText
+import com.callbackdev.chiaro.ui.components.SegmentedGroup
+import com.callbackdev.chiaro.ui.components.TimelineRow
+import com.callbackdev.chiaro.ui.components.VerdictChip
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.sky.SkyText
@@ -18,75 +23,105 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 /**
- * The rest of the day, in the Sky row's grammar (review of Today, 15 ott 2026): the Sky's
- * names for its moments («Ora d'oro, sera»), until when a span lasts on the line under the
- * name, and the first row marked «Il prossimo, oggi» with how soon on that same line, as
- * the Sky's next-moment card says it. A row of the sky opens the Sky's page for its moment,
- * with «Dove guardare» when it has a direction; a weather turn and the rainbow have no page
- * and open nothing.
+ * The rest of the day (VISION §5.2.4), as a group of the Sky's segments (15 ott 2026): the
+ * Sky's names for its moments («Ora d'oro, sera»), until when a span lasts on the line under
+ * the name, the first moment ahead marked «Il prossimo, oggi» with how soon, and — the
+ * product's first promise, which until this day only the Sky tab kept — **will the sky allow
+ * it**, the Sky's verdict with the number that decided it. The reader's own rules that hold
+ * today stand among the moments, in their own words.
+ *
+ * A row of the sky opens the Sky's page for its moment, with «Dove guardare» when it has a
+ * direction; a weather turn, the rainbow and a rule have no page and open nothing.
  */
 @Composable
 internal fun RestOfDay(
     content: TodayUiState.Content,
     timeFmt: DateTimeFormatter,
+    units: UnitSettings,
     onOpen: (TimelineItem, SkyJob) -> Unit
 ) {
-    val gap = 12.dp
     val locale = currentLocale()
+    val res = LocalContext.current.resources
     val next = stringResource(
         R.string.sky_next_label,
         stringResource(R.string.sky_day_today).lowercase(locale)
     )
-    Column(
-        // The page's 16, less the rows' own inset, which their press reaches into.
-        modifier = Modifier.padding(horizontal = 16.dp - AgendaRowInset),
-        verticalArrangement = Arrangement.spacedBy(gap)
-    ) {
-        content.timeline.forEachIndexed { index, item ->
-            val job = timelineJob(item.kind)
-            val until = item.until?.let { stringResource(R.string.sky_until, it.format(timeFmt)) }
-            val soon = if (index == 0) soonText(content.now, item.at) else null
-            com.callbackdev.chiaro.ui.components.TimelineRow(
-                time = item.at.format(timeFmt),
-                icon = timelineIcon(item.kind),
-                text = timelineText(item),
-                label = if (index == 0) next else null,
-                supporting = listOfNotNull(until, soon).joinToString(" · ").ifEmpty { null },
-                connectAbove = index > 0,
-                connectBelow = index < content.timeline.lastIndex,
-                reach = gap / 2,
-                onClick = job?.let { { onOpen(item, it) } },
-                inset = AgendaRowInset
-            )
+    val nowWord = stringResource(R.string.sky_moment_now)
+    val writer = ruleWriter(units)
+    // «The next» is the first moment of the day still ahead, in the Sky's sense: a rule is the
+    // reader's reading of the weather, not a moment, and is not the next of anything.
+    val firstAhead = content.timeline.indexOfFirst { it.kind != TimelineKind.ALERT }
+    SegmentedGroup(
+        segments = content.timeline.mapIndexed { index, item ->
+            {
+                val job = item.kind.skyJob
+                if (item.kind == TimelineKind.ALERT && item.rule != null) {
+                    val rule = item.rule
+                    TimelineRow(
+                        time = if (item.now) nowWord else item.at.format(timeFmt),
+                        icon = Icons.Outlined.Notifications,
+                        iconTint = MaterialTheme.colorScheme.primary,
+                        // The reader's name and the reader's words: user content, never
+                        // translated (CLAUDE.md), written out as it would arrive.
+                        text = rule.rule.name,
+                        supporting = RuleMessages.interpolate(
+                            rule.rule.message, rule.rule, rule.value, rule.at,
+                            content.report, content.now, units, writer
+                        ).ifBlank { null }
+                    )
+                } else {
+                    val until = item.until?.let {
+                        stringResource(
+                            if (item.kind == TimelineKind.GOLDEN_EVENING) R.string.tl_until_sunset
+                            else R.string.sky_until,
+                            it.format(timeFmt)
+                        )
+                    }
+                    val soon = if (index == firstAhead) soonText(content.now, item.at) else null
+                    val skipped = item.skipped?.let { stringResource(SkyText.notScheduledRes(it)) }
+                    TimelineRow(
+                        time = item.at.format(timeFmt),
+                        icon = timelineIcon(item.kind),
+                        text = timelineText(item),
+                        // How soon rides on the label, as the Sky's next card says it beside «the
+                        // next»: on the line under the name it ran to three lines at 384dp.
+                        label = if (index == firstAhead) listOfNotNull(next, soon).joinToString(" · ") else null,
+                        supporting = listOfNotNull(until, skipped).joinToString(" · ").ifEmpty { null },
+                        onClick = job?.let { { onOpen(item, it) } },
+                        // Not knowing is not drawn here: the Sky's page for the moment says why
+                        // it does not know, and a row of «?» chips on a stale day would repeat
+                        // what the freshness chip already said once.
+                        verdict = item.verdict
+                            ?.takeIf { it.kind != SkyVerdictKind.UNKNOWN }
+                            ?.let { verdict ->
+                                {
+                                    VerdictChip(
+                                        kind = SkyText.chipKind(verdict.kind),
+                                        label = stringResource(SkyText.verdictWordRes(verdict.kind)),
+                                        evidence = SkyText.chipEvidence(res, verdict)
+                                    )
+                                }
+                            }
+                    )
+                }
+            }
         }
-    }
+    )
 }
 
-/** The agenda rows' inset, the room their press has around the text. */
-internal val AgendaRowInset = 8.dp
-
-/**
- * The Sky's moment a row of the day is (15 ott 2026), whose page the row opens and whose
- * name it prints. The morning's golden hour ends here rather than starts, so its row keeps
- * its own words and opens the morning's page. Null for what the Sky has no page for: the
- * weather's turns and the rainbow.
- */
-internal fun timelineJob(kind: TimelineKind): SkyJob? = when (kind) {
-    TimelineKind.SUNRISE -> SkyJobCatalog.SunRise
-    TimelineKind.GOLDEN_MORNING_END -> SkyJobCatalog.GoldenAm
-    TimelineKind.GOLDEN_EVENING -> SkyJobCatalog.GoldenPm
-    TimelineKind.SUNSET -> SkyJobCatalog.SunSet
-    TimelineKind.BLUE_EVENING -> SkyJobCatalog.BluePm
-    // From the sun at −18° the sky is as dark as the sun leaves it: the Sky's «Buio pieno».
-    TimelineKind.DARK -> SkyJobCatalog.DarknessWindow
-    TimelineKind.MOONRISE -> SkyJobCatalog.MoonRise
-    TimelineKind.MOONSET -> SkyJobCatalog.MoonSet
-    TimelineKind.RAINBOW, TimelineKind.RAIN_START, TimelineKind.RAIN_STOP -> null
+/** How a rule's message writes its placeholders on this screen: as its notification would. */
+@Composable
+private fun ruleWriter(units: UnitSettings): RuleMessages.Writer {
+    val context = LocalContext.current
+    return RuleText.MessageWriter(
+        context.resources, units, currentLocale(),
+        android.text.format.DateFormat.is24HourFormat(context)
+    )
 }
 
 /** «tra 18 min», «tra 2 h», «tra 1 h 20 min» — or nothing for a moment already here. */
 @Composable
-internal fun soonText(now: LocalDateTime, at: LocalDateTime): String? {
+private fun soonText(now: LocalDateTime, at: LocalDateTime): String? {
     val minutes = Duration.between(now, at).toMinutes()
     return when {
         minutes < 1 -> null
@@ -97,7 +132,7 @@ internal fun soonText(now: LocalDateTime, at: LocalDateTime): String? {
 }
 
 @Composable
-internal fun timelineIcon(kind: TimelineKind) = when (kind) {
+private fun timelineIcon(kind: TimelineKind) = when (kind) {
     TimelineKind.SUNRISE -> ChiaroIcons.sunrise
     TimelineKind.GOLDEN_MORNING_END -> ChiaroIcons.goldenHour
     TimelineKind.GOLDEN_EVENING -> ChiaroIcons.goldenHour
@@ -109,12 +144,13 @@ internal fun timelineIcon(kind: TimelineKind) = when (kind) {
     TimelineKind.RAINBOW -> ChiaroIcons.rainbow
     TimelineKind.RAIN_START -> ChiaroIcons.precipitation
     TimelineKind.RAIN_STOP -> ChiaroIcons.cloud
+    TimelineKind.ALERT -> ChiaroIcons.cloud // never drawn: an alert row takes the bell
 }
 
 /** A row's name: the Sky's own for its moments, so the same golden hour has one name on
  * both tabs; until when a span lasts is the row's supporting line, not the name's. */
 @Composable
-internal fun timelineText(item: TimelineItem): String = when (item.kind) {
+private fun timelineText(item: TimelineItem): String = when (item.kind) {
     TimelineKind.GOLDEN_MORNING_END -> stringResource(R.string.tl_golden_morning_end)
     TimelineKind.RAINBOW -> stringResource(
         R.string.timeline_rainbow,
@@ -123,5 +159,6 @@ internal fun timelineText(item: TimelineItem): String = when (item.kind) {
     )
     TimelineKind.RAIN_START -> stringResource(R.string.tl_rain_start, item.pct ?: 0)
     TimelineKind.RAIN_STOP -> stringResource(R.string.tl_rain_stop)
-    else -> stringResource(SkyText.nameRes(timelineJob(item.kind)!!.id))
+    TimelineKind.ALERT -> item.rule?.rule?.name.orEmpty()
+    else -> stringResource(SkyText.nameRes(item.kind.skyJob!!.id))
 }

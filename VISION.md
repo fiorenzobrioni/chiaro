@@ -287,20 +287,29 @@ The spine of the product, one vertical scroll, in this order:
    headline sentence (§3.3).
 2. **A freshness chip** when, and only when, it matters: "Updated 3 hours ago" in amber, tappable to
    retry. Pull to refresh; no FAB on this screen, because the app refreshes itself.
-3. **Next hours**: a horizontal strip, 24 hours from the next full hour, each with icon, temperature
-   and rain probability (printed from 20%, since 12 ott 2026), plus a rain-probability chart underneath — a 0–100% scale, the hours named
-   under it, a dot per hour — so a wet stretch is a shape rather than twelve numbers, and the shape
-   has somewhere to stand.
-4. **The rest of the day**: the merged timeline, and the second differentiator on this screen. Sun
-   and sky events, weather turns ("rain starts around 17:00"), and the reader's own alerts, in one
-   chronological list. The moon's rising and setting stay on the Sky tab (13 ott 2026): they are
-   the rows nobody plans an afternoon by. This is `sky.crontab` plus the hourly forecast plus `alerts.rules`, collapsed
-   into the artifact a person actually keeps in their head: what is going to happen today, in order.
-   Its moments of the sky carry the Sky tab's names and open the Sky tab's page for the moment,
-   with where to look (15 ott 2026); following a moment stays the Sky tab's to do.
-5. **The week**: seven rows, each with icon, a min/max bar aligned across the whole week (so the
-   week has a *shape*), rain probability, and the daylight ribbon. Tapping a row (an arrow at its
-   end says it opens) expands it in place, on a card of its own, into that day's facts and hours.
+3. **Next hours**: a horizontal strip on a card of its own, 24 hours from the next full hour,
+   each with icon, temperature and rain probability (printed from 20%, since 12 ott 2026), plus
+   a rain-probability chart underneath — a 0–100% scale, the hours named under it, a dot per
+   hour — so a wet stretch is a shape rather than twelve numbers, and the shape has somewhere
+   to stand.
+4. **The rest of the day**: the merged timeline, and the second differentiator on this screen.
+   Sun and sky events, weather turns ("rain starts around 17:00"), and the reader's own alerts
+   that hold today, in one chronological list, one row a segment as the Sky draws its moments.
+   **Every sight answers the product's first question, will the sky allow it** (15 ott 2026):
+   the Sky tab's verdict, from the same engine on the same hours, with the number that decided
+   it — until then only the Sky tab answered, and Today listed a golden hour with no word on
+   whether it would happen. The moon's rising and setting stay on the Sky tab (13 ott 2026):
+   they are the rows nobody plans an afternoon by. The sunset the evening's golden hour ends on
+   is folded into it. This is `sky.crontab` plus the hourly forecast plus `alerts.rules`,
+   collapsed into the artifact a person actually keeps in their head: what is going to happen
+   today, in order. Its moments of the sky carry the Sky tab's names and open the Sky tab's
+   page for the moment, with where to look (15 ott 2026); following a moment stays the Sky
+   tab's to do. A rule's row is the answer its card on Alerts gives («true right now»), never a promise
+   that the phone will ring.
+5. **The week**: seven rows, a segment each, each with icon, a min/max bar aligned across the
+   whole week (so the week has a *shape*), rain probability, and the daylight ribbon. Tapping a
+   row (an arrow at its end says it opens) expands it in place, inside its own segment, into
+   that day's facts and hours.
 6. **What changed** (when something did): "Saturday improved", with "rain 70% → 30%" under it, one
    row a revision in a group (15 ott 2026). Two or three rows,
    and nothing behind them since the Journal left (14 ott 2026). **After** the week, and not before

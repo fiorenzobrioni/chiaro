@@ -149,6 +149,15 @@ class ReadmeScreenshots {
         save("today-now")
     }
 
+    /** The rest of the day: the sky's moments with their verdicts, and the reader's rules
+     * that hold today among them (15 ott 2026). */
+    @Test
+    fun todayDay() {
+        showTab(ShellTab.TODAY) { today() }
+        scrollUnderHeader(R.string.section_rest_of_day)
+        save("today-day")
+    }
+
     /** The week with tomorrow open: its hours and its facts, one tap on its row. */
     @Test
     fun todayWeek() {
