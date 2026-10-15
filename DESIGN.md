@@ -645,7 +645,13 @@ with the parts of it a gradient could not say.
 - **Cumulus**, in the hour's **cloud cover**: four octaves of value noise, each turned by 37°
   so the grid never lines up (unturned, it drew V-shapes), warped once by a two-octave field
   so the clouds billow (by 0.6 of a cell, not more: at 0.9 the warp folded the plane over
-  itself here and there and every fold drew a crease drifting with the clouds), in dp so they have the same grain on every screen, and flatter toward
+  itself here and there and every fold drew a crease drifting with the clouds). **Every corner
+  of a noise cell is hashed from its own whole number, taken through `floor`** (device, 15 ott
+  2026): written as `i + (1, 0)`, a GPU compiler may expand `(i.x + 1)·0.1031` into
+  `i.x·0.1031 + 0.1031`, rounded twice, while the cell next door hashes the same corner from
+  its own `floor`; the hash multiplies that one bit until, once in a few thousand corners, its
+  last `fract` crosses a whole number, and the corner has two values. The clouds then carried a
+  wedge with two sharp sides, a third-octave cell's size, that no CPU render showed; in dp so they have the same grain on every screen, and flatter toward
   the horizon (the canvas' bottom) as a deck is in perspective. The threshold follows the
   cover, so 30% draws a few clouds and 95% a deck with a few thin gaps. The shading flattens as
   the cover closes: a deck is one grey with soft folds, not a sky of lit puffs.

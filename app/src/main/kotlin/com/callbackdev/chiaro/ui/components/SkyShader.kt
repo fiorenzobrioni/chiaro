@@ -206,14 +206,21 @@ float hash12(float2 p) {
     return fract((p3.x + p3.y) * p3.z);
 }
 
+// Every corner is hashed from its own whole number, taken through floor: the same numbers as
+// i + (1, 0) and the rest, but a value the compiler cannot open. Written as i + (1, 0), a GPU
+// compiler may turn (i.x + 1) * 0.1031 into i.x * 0.1031 + 0.1031, rounded twice; the cell next
+// door hashes the same corner from its own floor, one bit apart, and the hash multiplies that
+// bit until, once in a few thousand corners, its last fract falls on the other side of a whole
+// number. The corner then has two values and the clouds a crease along the cells' edges: the
+// wedge seen over the hero on a device (15 ott 2026), drifting away with the clouds.
 float vnoise(float2 p) {
     float2 i = floor(p);
     float2 f = fract(p);
     float2 u = f * f * (3.0 - 2.0 * f);
     float a = hash12(i);
-    float b = hash12(i + float2(1.0, 0.0));
-    float c = hash12(i + float2(0.0, 1.0));
-    float d = hash12(i + float2(1.0, 1.0));
+    float b = hash12(floor(i + float2(1.5, 0.5)));
+    float c = hash12(floor(i + float2(0.5, 1.5)));
+    float d = hash12(floor(i + float2(1.5, 1.5)));
     return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }
 

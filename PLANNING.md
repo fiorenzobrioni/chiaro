@@ -13941,3 +13941,19 @@ la stessa struttura del foglio, poi tolta, e la lettura del sorgente di Material
 (`consumeWindowInsets(top = offset)`, `contentWindowInsets`, `animateTo` che ammette il superamento).
 Resta da confermare sul dispositivo che il foglio non rimbalzi più.
 
+**Il cuneo nel cielo, seconda parte (committente, 15 ott 2026).** Dopo la correzione della luce restava,
+sopra la cifra, un piccolo cuneo a «⌐» di circa 25 dp, con due lati netti inclinati di 10°, identico
+su due cieli diversi (Cavenago di sera, Bogotá di giorno con la pioggia) e che **scivola via con le
+nuvole**: quindi nel rumore, non sopra il cielo. Nessuna resa su CPU lo mostrava, nemmeno lo shader
+vero disegnato da Skia in Robolectric con i parametri del dispositivo: è la GPU. Escluse la mezza
+precisione (rovinerebbe tutta la texture) e la contrazione in FMA (esatta, misurata). La causa,
+riprodotta in fp32: ogni cella del rumore calcola i suoi angoli come `i + (1, 0)` e simili, e un
+compilatore può riscrivere `(i.x + 1)·0,1031` come `i.x·0,1031 + 0,1031` con due arrotondamenti;
+la cella accanto calcola lo stesso angolo dal suo `floor`, un bit diverso, e l'hash amplifica quel bit
+finché il suo ultimo `fract` scavalca un intero. Simulata così, la rottura cade **proprio a (80–100,
+140–170) dp, dove il dispositivo mostra il cuneo**, con un salto di 0,13 (l'ampiezza della terza
+ottava, celle di 23 dp) e la stessa forma. La correzione passa ogni angolo per `floor` (`floor(i +
+(1,5; 0,5))` e simili): gli stessi numeri, ma un valore che il compilatore non può aprire. Tutte le
+immagini del README rigenerate e **identiche al pixel**: l'aspetto del cielo non cambia. Resta da
+confermare sul dispositivo.
+
