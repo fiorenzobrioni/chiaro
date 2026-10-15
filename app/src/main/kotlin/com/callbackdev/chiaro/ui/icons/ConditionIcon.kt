@@ -9,7 +9,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -53,6 +58,42 @@ val LocalAnimatedIcons = staticCompositionLocalOf { false }
  * paused). At rest the loop reappears where the clock puts it. Default false.
  */
 val LocalMotionPaused = staticCompositionLocalOf { false }
+
+/**
+ * Whatever is scrolling anywhere on a page (committente, 15 ott 2026). [LocalMotionPaused]
+ * flows down, so a strip scrolling sideways inside the page could only pause its own icons:
+ * opening a day of the week and dragging through its hours held that strip's weather still
+ * while every other icon on the page kept moving, and the drag stuttered. A nested scroller
+ * reports its scroll here ([ReportScrolling]) and the page that owns this holds ALL its
+ * weather still while any of them moves.
+ */
+@Stable
+class PageScrolls {
+    private var moving by mutableIntStateOf(0)
+
+    /** True while at least one scroller on the page is moving. */
+    val any: Boolean get() = moving > 0
+
+    internal fun start() { moving++ }
+    internal fun stop() { moving = (moving - 1).coerceAtLeast(0) }
+}
+
+/** The page's [PageScrolls], or null outside a page that listens (a preview, the guide). */
+val LocalPageScrolls = staticCompositionLocalOf<PageScrolls?> { null }
+
+/** Tells the page a scroller of it is moving, for as long as [scrolling] holds. */
+@Composable
+fun ReportScrolling(scrolling: Boolean) {
+    val page = LocalPageScrolls.current ?: return
+    DisposableEffect(scrolling, page) {
+        if (scrolling) {
+            page.start()
+            onDispose { page.stop() }
+        } else {
+            onDispose { }
+        }
+    }
+}
 
 /**
  * The weather, drawn: the still glyph, or the illustrator's own motion where the family

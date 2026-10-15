@@ -78,7 +78,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -142,6 +141,8 @@ import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
 import com.callbackdev.chiaro.ui.icons.LocalMotionPaused
+import com.callbackdev.chiaro.ui.icons.LocalPageScrolls
+import com.callbackdev.chiaro.ui.icons.PageScrolls
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.places.PlacesSheet
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
@@ -638,11 +639,19 @@ private fun CompactNow(temperature: String, glyph: ConditionGlyph, color: Color)
     }
 }
 
-/** Over how much scroll the bar's ground fades in, while it is still the scrimmed sky. */
-private val BarFadeIn = 16.dp
+/**
+ * How long the place row takes to turn from the sky's to the page's (committente, 15 ott
+ * 2026): longer than §7's effects spring, about a tenth of a second, which on the device read
+ * as a snap; short enough that the grey midway is gone before it is read. Reduced motion
+ * keeps §7's 100 ms fade.
+ */
+private const val BarCrossfadeMillis = 300
 
-/** The page's sheet laid over the canvas' last dp ([SkySheet]'s lip): where the paper starts. */
-private val CanvasLip = 24.dp
+private fun <T> barCrossfade(reduced: Boolean): androidx.compose.animation.core.FiniteAnimationSpec<T> =
+    if (reduced) ChiaroMotion.fade() else androidx.compose.animation.core.tween(
+        BarCrossfadeMillis,
+        easing = androidx.compose.animation.core.FastOutSlowInEasing
+    )
 
 /** How far above the bar's bottom edge the canvas' bottom may climb before the hero
  * counts as gone: the lip, the padding and the ribbon, up to the temperature's baseline. */
@@ -871,43 +880,39 @@ private fun ContentState(
         moonIllumination = content.sky.moonIllumination,
         moonAltitudeDeg = content.sky.moonAltitudeDeg
     )
-    // The bar fades with the scroll (committente, 15 ott 2026): from the sky at the top of
-    // the canvas to the page's paper, reaching the paper exactly when the page's edge reaches
-    // the bar, so the bar is always the colour of what is about to be under it. Its ground
-    // fades in over the first [BarFadeIn] while it is still the scrimmed sky; the ink and the
-    // status-bar icons follow the ground ([placeBarColors]).
-    val skyTop = SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha).compositeOver(skyGradient.top)
-    val barTravel by remember {
+    // The bar at rest stands on the sky; from the first scrolled pixel it is the page's own,
+    // as on Sky and Alerts (committente, 15 ott 2026). The change is a crossfade of
+    // [BarCrossfadeMillis], ground, ink and dots together. Tried and dropped the same day: a
+    // ground that followed the scroll from the sky to the paper, which on the device read as
+    // the bar darkening with a jolt under the finger and then lightening again.
+    val atTop by remember {
         derivedStateOf {
-            val first = listState.layoutInfo.visibleItemsInfo.firstOrNull()
-            when {
-                first == null -> 0f to 0f
-                first.index > 0 -> 1f to 1f
-                else -> {
-                    val scrolled = listState.firstVisibleItemScrollOffset.toFloat()
-                    val travel = with(density) { first.size - (headerHeight + CanvasLip).toPx() }
-                    val fadeIn = with(density) { BarFadeIn.toPx() }
-                    (scrolled / travel.coerceAtLeast(1f)).coerceIn(0f, 1f) to
-                        (scrolled / fadeIn).coerceIn(0f, 1f)
-                }
-            }
+            listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
         }
     }
-    val bar = placeBarColors(
-        skyTop = skyTop,
-        paper = MaterialTheme.colorScheme.surface,
-        paperInk = MaterialTheme.colorScheme.onSurface,
-        paperDots = MaterialTheme.colorScheme.outlineVariant,
-        toPaper = barTravel.first,
-        opacity = barTravel.second
+    val crossfade = barCrossfade<Color>(reduced)
+    // The transparent end is the same color at zero alpha, not `Color.Transparent`:
+    // colors interpolate perceptually here, and fading in from a transparent BLACK would
+    // draw a veil of the wrong hue on the way.
+    val paper = MaterialTheme.colorScheme.surface
+    val headerGround by animateColorAsState(
+        targetValue = if (atTop) paper.copy(alpha = 0f) else paper,
+        animationSpec = crossfade,
+        label = "place row ground"
     )
-    val headerGround = bar.ground
-    val headerInk = bar.ink
-    val headerDotInk = bar.dots
-    // The status bar shows what is behind it, and what is behind it is this bar: its icons
-    // are white while the bar's ink is.
-    val lightIcons = bar.inkIsLight
-    LaunchedEffect(isCurrent, lightIcons) { if (isCurrent) onCanvasBehindBar(lightIcons) }
+    val headerInk by animateColorAsState(
+        targetValue = if (atTop) SkyPalette.Ink else MaterialTheme.colorScheme.onSurface,
+        animationSpec = crossfade,
+        label = "place row ink"
+    )
+    val headerDotInk by animateColorAsState(
+        targetValue = if (atTop) SkyPalette.InkQuiet else MaterialTheme.colorScheme.outlineVariant,
+        animationSpec = crossfade,
+        label = "place row dots"
+    )
+    // The status bar shows what is behind it, and what is behind it is this bar: the sky at
+    // rest, white icons; the page once scrolled, the theme's.
+    LaunchedEffect(isCurrent, atTop) { if (isCurrent) onCanvasBehindBar(atTop) }
     // The hero is gone once the canvas' bottom has climbed to within [HeroReach] of the
     // bar: past that line the temperature is under the bar or above the screen.
     val heroGone by remember {
@@ -987,8 +992,11 @@ private fun ContentState(
     // moving icons hide behind their still drawings for as long as the list is in
     // motion, so the RenderThread spends its frames on the scroll and not on fourteen
     // vector loops. The pager's swipe says the same thing one level up.
-    val pageMoving = LocalMotionPaused.current || listState.isScrollInProgress
-    CompositionLocalProvider(LocalMotionPaused provides pageMoving) {
+    // So does any strip on the page that is being dragged sideways: the week's open day, the
+    // next hours (committente, 15 ott 2026). They report through [LocalPageScrolls].
+    val scrolls = remember { PageScrolls() }
+    val pageMoving = LocalMotionPaused.current || listState.isScrollInProgress || scrolls.any
+    CompositionLocalProvider(LocalMotionPaused provides pageMoving, LocalPageScrolls provides scrolls) {
     PullToRefreshBox(
         isRefreshing = content.userRefreshing || locating,
         onRefresh = onRefresh
@@ -1232,7 +1240,7 @@ private fun CanvasHeader(
     // The page laid over the sky's last few dp (DESIGN §8.1, 23 set 2026). Its lip is
     // inside the floor, not added to it: the skeleton quotes the floor, and the block
     // must still end where the skeleton's does.
-    val sheet = SkySheet(surface = MaterialTheme.colorScheme.surface, lip = CanvasLip)
+    val sheet = SkySheet(surface = MaterialTheme.colorScheme.surface)
     SkyCanvas(
         gradient = gradient,
         minHeight = floor,

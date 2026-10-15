@@ -13540,3 +13540,26 @@ Provando la revisione sul telefono il committente ha segnalato tre cose.
   rigenerata (la traccia della barra sulla scheda); le altre immagini non cambiano.
 - Suite completa e lint.
 
+## Oggi: la barra torna a cambiare d'un colpo, la pagina si ferma tutta (committente, 15 ott 2026)
+
+- [x] **La barra che sfumava con lo scorrimento non va.** Sul telefono, trascinando, sembrava
+  scurirsi di scatto e poi schiarirsi: per sfumare dal cielo alla carta il fondo doveva prima
+  comparire come cielo velato, più scuro della tela sotto di lui. Tolti `placeBarColors` e il suo
+  test. Il committente proponeva di tornare a com'era prima o di provare una barra sempre chiara
+  o scura secondo il tema, come su Cielo e Avvisi, chiedendo un parere: **sconsigliata per
+  estetica**, perché il cielo che arriva in cima allo schermo, sotto l'orologio, è ciò per cui
+  Oggi si riconosce, e una barra sopra lo farebbe diventare un riquadro dentro una pagina (la
+  tela arrotondata come card fu già scartata il 4 set per la stessa ragione). Quindi com'era
+  prima — trasparente a riposo, la carta del tema dal primo pixel — con una dissolvenza di 300 ms
+  al posto della molla degli effetti, che sul telefono si leggeva come uno scatto.
+- [x] **Scorrendo le ore di un giorno aperto le altre icone continuavano a muoversi.**
+  `LocalMotionPaused` scende soltanto: una striscia poteva fermare le proprie icone e non quelle
+  della pagina. `PageScrolls` e `ReportScrolling` (accanto a `LocalMotionPaused`): ogni striscia
+  dice alla pagina che si sta muovendo, e Oggi ferma tutte le sue icone finché qualcosa scorre — la
+  lista, il pager o una striscia. Vale anche per le prossime ore, che avevano lo stesso difetto.
+
+Verificato con `PageScrollsTest` (nuovo, Robolectric): la pagina è ferma finché uno qualsiasi
+dei suoi scorrimenti si muove, e viene liberata anche quando una striscia esce dalla
+composizione a metà corsa (un giorno chiuso mentre la sua striscia scorre ancora). Suite
+completa e lint; le immagini del README rigenerate non cambiano.
+

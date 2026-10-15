@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
 import com.callbackdev.chiaro.ui.icons.ConditionIcon
 import com.callbackdev.chiaro.ui.icons.LocalMotionPaused
+import com.callbackdev.chiaro.ui.icons.ReportScrolling
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.forText
@@ -104,6 +105,9 @@ fun HourStrip(
     // The strip's own scroll holds the weather still while it runs (DESIGN §7.1, 9 set
     // 2026), on top of whatever the page around it is already saying.
     val paused = LocalMotionPaused.current || rowState.isScrollInProgress
+    // And the page around it, whose other icons would otherwise keep moving while this strip
+    // is dragged (committente, 15 ott 2026).
+    ReportScrolling(rowState.isScrollInProgress)
     val rainRow = hours.any { it.rainLabel != null }
     val curve = remember(hours) {
         StripCurve.of(hours.map { it.tempC }, CurveTravel.value, CurveDpPerDegree)

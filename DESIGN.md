@@ -1105,6 +1105,14 @@ puts it, because the animators run on frame time. The visible price is a change 
 at the two ends of a scroll: the moving drawing snaps to its still pose as the finger
 moves, and back when it stops.
 
+**The whole page holds still, whatever is moving on it** (committente, 15 ott 2026).
+`LocalMotionPaused` flows down, so a strip dragged sideways could only pause its own icons:
+with a day of the week open, dragging through its hours held that strip's weather still while
+every other icon on the page went on moving, and the drag stuttered. A nested scroller now
+reports its scroll to the page (`PageScrolls`, `ReportScrolling`), and Today holds all its
+weather still while the list, the pager or any strip on it moves. `PageScrollsTest` holds it,
+including a strip that leaves mid-fling.
+
 **Why an `ImageView` and not a Compose painter** — corrected 8 set 2026. The first
 version of this section said Compose's `AnimatedImageVector` could not play an endless
 loop; it can (its parser reads `repeatCount="infinite"` and builds an infinite
@@ -1245,25 +1253,24 @@ when the page is at rest — so it is the one bar in the app with two grounds:
 
 - **at the very top**: no ground of its own, white ink over the canvas' top scrim band,
   which is exactly where §3.6 measures its 5.27:1;
-- **from the first scrolled pixel**: a ground of its own that **follows the scroll**
-  (committente, 15 ott 2026): the canvas' top stop under the §3.6 scrim at first, fading
-  into the page's `surface` as the page climbs, and reaching it exactly when the page's edge
-  meets the bar — so the bar is always the colour of what is about to be under it, and at
-  the end it is the header Sky and Alerts draw. The ground is opaque throughout (it fades in
-  over the first 16dp only while it is still the scrimmed sky), so the text stands on one
-  colour and never on sky showing through. The ink cannot blend the same way, since halfway
-  that is a grey name on a grey ground: it blends while the blend still reads at 4.5:1 (in the
-  dark theme, the whole way), and otherwise it is whichever of the sky's white and the theme's
-  ink reads better, which flips once. Swept over every sky top, both palettes, both themes and
-  the whole scroll, the worst is that flip in the light theme, **4.14:1** (sun at −10°, 47% of
-  the way): past the 3:1 the 22sp name needs, a hair under the hour line's 4.5 for the
-  instant the scroll passes it (`PlaceBarColorsTest`). The status-bar icons follow the ink.
+- **from the first scrolled pixel**: a ground of its own, **the page's** — `surface` with
+  the theme's ink, the header Sky and Alerts draw (review of Today, 15 ott 2026, committente),
+  so the three tabs have one bar once the page is being read. Ground, ink, the pager dots
+  cross over together in **300 ms** (`FastOutSlowInEasing`; §7's 100 ms fade under reduced
+  motion), and the status-bar icons with them. §7's effects spring, about a tenth of a second,
+  read on the device as a snap; 300 ms is long enough to read as a change and short enough that
+  the grey of its middle is gone before it is read. Nothing in between at rest, because in
+  between is white ink over unscrimmed sky.
 
-  Its history: until 23 set the bar took `surface` at once and flipped from white on sky to
-  black on paper in one frame; from 23 set to 15 ott it stayed the scrimmed sky with white
-  ink, which never flipped but was a slab of slate over the light page no other tab had; for
-  a day it turned to paper on a 100 ms crossfade, which the committente found too sudden. The
-  fade keeps both ends — the sky's at the top, the other tabs' below.
+  Its history, because each step was tried on a device: until 23 set the bar took `surface`
+  in one frame; from 23 set to 15 ott it stayed the scrimmed sky with white ink, which never
+  flipped but was a slab of slate over the light page no other tab had. On 15 ott a ground
+  that **followed the scroll** from the sky to the paper was tried and dropped the same day:
+  the ground had to fade in as the scrimmed sky before it could lighten, and under the finger
+  that read as the bar darkening with a jolt and then lightening. A bar always on the theme's
+  paper, with the sky starting under it as on the other tabs, was considered and not made: the
+  sky reaching the top of the screen, under the clock, is what Today is recognised by, and a
+  bar above it would turn it into a picture inside a page.
 
 **Compact** (23 set 2026): once the canvas has climbed to within 120dp of the bar, the hero
 is under it or gone, and the bar carries it — the sky's still icon and the temperature in

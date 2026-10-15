@@ -35,8 +35,7 @@ sections are a normal size and live here alone.
   its own with its facts and its hours; the closed days draw their skies more quietly, so the
   temperatures are read first. The details are one group of tiles and «What changed» is a row
   per day, as the Sky groups its moments. The bar at the top, once you scroll, is the same as on
-  Sky and Alerts, reached gradually: it fades from the sky's colour into the page's as you
-  scroll, and the name on it stays readable all the way. The tiles, the banners and the notice
+  Sky and Alerts, with a short fade from the sky's colours. The tiles, the banners and the notice
   cards share the rounder corners and the type of the other two tabs.
 - **The rest of the day speaks the Sky's language.** Its moments carry the Sky's names («Golden
   hour, evening»), the next one is marked «Next, today», and tapping one opens its page from the
@@ -145,6 +144,8 @@ sections are a normal size and live here alone.
 
 - **Closing a day of the week no longer crashes the app**, and an open day's temperature bar
   shows its whole scale again instead of only the coloured part.
+- **Smoother scrolling through a day's hours.** Dragging the hours of an open day now holds all
+  the moving weather icons on the page still, not only that day's, as scrolling the page does.
 - **Easier to read on a bright sky.** The feels-like, the estimate's note and the sunrise and
   sunset under the ribbon were a paler white than the rest of the sky's text, which on a clear
   noon sky dropped them under the contrast a line of text needs. They are now the same white,
