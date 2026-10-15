@@ -1073,9 +1073,8 @@ Material 3 Expressive's spring physics, from `MaterialTheme.motionScheme`:
 | spatial fast | spring(damping 0.9, stiffness 800) | chips, toggles, small state |
 | effects | spring(damping 1.0, stiffness 1600) | color, alpha, elevation |
 
-A week row opens in place on its own card (§8.5b, since the day sheet left): the card's
-ground on the effects spring, its air and its content on the spatial one, the chevron turning
-with them; predictive back everywhere (`enableOnBackInvokedCallback`, the navigation's own
+A week row opens in place inside its own segment (§8.5b, since the day sheet left): the
+segment's ground on the effects spring, its content on the spatial one; predictive back everywhere (`enableOnBackInvokedCallback`, the navigation's own
 predictive pop, Material's sheets);
 the pager between places moves the canvas with it, so switching city looks like turning to
 another sky. **Reduced motion collapses every one of these to a 100 ms fade**, and the
@@ -1518,35 +1517,44 @@ with the bare rows.
   it — following is the Sky's to do. The weather's turns, the rainbow and the rules open
   nothing. The press fills the segment.
 
-**8.5 DayRow** — weekday, icon, rain probability on the ink ramp (§2.3; printed from 20%),
-the **temperature range bar** and the ribbon, with the day's forecast sky and, in a week with
-rain, the wet lane under it (§4, 12 ott 2026). The bar is one horizontal track per day, all seven **sharing one scale across the
-week** so the week has a shape, filled with the diverging temperature ramp (§2.3) and
-anchored at 15 °C; the low and high are printed at its ends in tabular figures, because a
-colored bar is not a number. **Today's** bar carries a 12dp disc at the temperature right now
-(23 set 2026), in the ramp's color with an `onSurface` ring, on the week's shared scale — where
-in its day the day is.
+**8.5 DayRow** — the weekday, the sky's icon with **the chance of rain under it** on the ink
+ramp (§2.3; printed from 20%), and **the day's two tracks as one block** between its printed
+low and high: the **temperature range bar**, and under it, 4dp below and **on exactly the same
+width**, the ribbon with the day's forecast sky and, in a week with rain, the wet lane under it
+(§4, 12 ott 2026). The bar is one track per day, all seven **sharing one scale across the
+week** so the week has a shape, filled with the diverging temperature ramp (§2.3) and anchored
+at 15 °C; the low ends on the block's left and the high starts on its right, in tabular figures,
+both hugging the bars they are the ends of, because a coloured bar is not a number. **Today's**
+bar carries a 12dp disc at the temperature right now (23 set 2026), in the ramp's colour with
+an `onSurface` ring, on the week's shared scale — where in its day the day is.
 
-**A row that opens says so** (review of Today, 15 ott 2026): an 18dp chevron after the high,
-2dp from it, in `onSurfaceVariant`, turning over on the spatial spring when the day is open —
-the mark Material draws on a row that expands. TalkBack hears the row's state («Aperto»,
-«Chiuso») and its action in words («Mostra le ore», «Nascondi le ore»). The chevron's column is
-held on every row, opening or not, so the seven bars keep one right end as they keep one scale;
-the guide's example draws it closed, as a picture. The press takes the shape it is handed: on
+**One block** (second review of Today, 15 ott 2026). Until then the ribbon ran from under the
+icon to the row's end while the bar stood between the low and the high: two bars of one day,
+with two starts and two ends, the sunset on the ribbon nowhere near the evening on the bar.
+Now they share both ends and read as one day, the temperature over the light. The chance
+moved under the icon to give the block its width (a line held by all seven rows when any day
+prints one, as the wet lane is), and the chevron went: the block is about 122dp at 360dp, the
+ribbon's day 5dp an hour, enough to tell a clear afternoon from a grey one and to see the wet
+marks.
+
+**A row that opens is said once** (same review): the section's title carries a quiet note at
+its end, «Tocca un giorno per le sue ore» at `bodySmall` in `onSurfaceVariant`, where seven 18dp
+chevrons said it seven times and took the block's width to do it. TalkBack still hears every
+row's state («Aperto», «Chiuso») and its action in words («Mostra le ore», «Nascondi le ore»),
+and the open day says so by its own segment (§8.5b). The press takes the shape it is handed: on
 Today's week the segment's, elsewhere a 12dp one.
 
-**The closed week speaks its skies lower** (same review): a closed row's ribbon leans 40%
-toward its track (`DaylightRibbon`'s `quiet`), so the seven range bars, which are the week's
-figures, are read before the seven skies under them; the open day draws its sky in full, and
-the change rides the effects spring. The colours stay the sky's, only their weight drops, and
-the wet marks keep their full ink: they are the rain's mark, not its shade.
+**The closed week speaks its skies lower**: a closed row's ribbon leans 40% toward its track
+(`DaylightRibbon`'s `quiet`), so the seven range bars, which are the week's figures, are read
+before the seven skies under them; the open day draws its sky in full, and the change rides the
+effects spring. The colours stay the sky's, only their weight drops, and the wet marks keep
+their full ink: they are the rain's mark, not its shade.
 
-**Where the row splits is measured, not quoted** (same review). It split at a type scale, 150%,
-worked out once for a 360dp screen; with the chevron's 20dp that arithmetic would leave the bar
-under 48dp a step sooner, and a 411dp phone never needed to split at 150% at all. The row now
-reads its own width (`splitsRow`): it becomes two rows when the bar would get less than 48dp
-beside the text columns (grown with the type), the icon, the gaps and the chevron — on a 360dp
-phone from 125%, on a 411dp one from about 180%. `DayRowSplitTest` holds the numbers.
+**Where the row splits is measured, not quoted** (`splitsRow`, `DayRowSplitTest`): it becomes
+two rows — the day and its sky on one, the low, the block and the high on the whole width under
+it — when the block would get less than **72dp** beside the three text columns (grown with the
+type), the icon and the four gaps: on a 360dp phone from about 145% type, on a 411dp one from
+about 190%.
 
 **8.5b The week and the open day** — **every day is a segment of the week's group** (§8.0, 15
 ott 2026): seven `surfaceContainer` segments, 2dp apart, the row inside each with 12dp of air

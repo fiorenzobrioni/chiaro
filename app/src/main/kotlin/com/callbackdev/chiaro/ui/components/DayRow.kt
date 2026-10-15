@@ -1,6 +1,5 @@
 package com.callbackdev.chiaro.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,17 +14,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -43,49 +37,40 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
 import com.callbackdev.chiaro.ui.icons.ConditionIcon
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
-import com.callbackdev.chiaro.ui.theme.ChiaroMotion
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.forText
-import com.callbackdev.chiaro.ui.theme.reducedMotion
 import com.callbackdev.chiaro.ui.theme.tabular
 import com.callbackdev.chiaro.ui.theme.textColumnScale
 
 /**
- * DESIGN.md §8.5. One day of the week: weekday, icon, rain probability, the range bar
- * on the scale the caller computed **across the whole week**, the printed low and high
- * (a colored bar is not a number), and the day's ribbon underneath — its light and, since
- * 12 ott 2026, its forecast sky, with the wet hours marked under it.
+ * DESIGN.md §8.5. One day of the week: the weekday, the sky's icon with the chance of rain
+ * under it, and **the day's two tracks as one block** between its printed low and high (a
+ * coloured bar is not a number): the range bar on the scale the caller computed **across the
+ * whole week**, and under it, on exactly the same width, the day's ribbon — its light and,
+ * since 12 ott 2026, its forecast sky, with the wet hours marked under it.
  *
- * Everything arrives formatted; [scaleLowC]/[scaleHighC] are the week's own extremes,
- * shared by all seven rows so the week has a shape.
+ * **One block** (second review of Today, 15 ott 2026). The ribbon used to run from under the
+ * icon to the row's end while the bar stood between the low and the high, two bars of one
+ * day with two different starts and two different ends; now they share both, so the hour of a
+ * sunset under the bar is the same place as the evening on it, and the row reads as one day.
+ * The chance moved under the icon to give the block its width, and the chevron went (a row
+ * that opens is said once, by the section's title, and to TalkBack by every row).
  *
- * **At 200% type the row is two rows** (§10, Fase 9). Its four text columns are measured
- * in dp and its content in sp, so they grew apart: at 1.5 the four of them plus the icon
- * and the gaps leave the range bar 40dp, and past that the day name wraps inside its own
- * 44dp. Splitting is the honest answer and not a compromise — the week reads as
- * "which day, what kind of day" and then "how warm", which is the order the row already
- * had, only turned through ninety degrees. The ribbon keeps its 52dp indent in one line
- * and loses it in two, because there is no longer a day column to line up under.
+ * Everything arrives formatted; [scaleLowC]/[scaleHighC] are the week's own extremes, shared
+ * by all seven rows so the week has a shape.
  *
- * **Where the row turns into two is measured, not quoted** (review of Today, 15 ott 2026).
- * It was a type scale, 150%, worked out once against a 360dp screen; with the chevron's
- * column the same arithmetic leaves the bar under its 48dp floor a step sooner there, and a
- * 411dp phone never needed to split at 150% at all. The row now asks its own width: it
- * splits when what is left to the bar after the columns, the icon, the gaps and the
- * chevron is under [RangeBarMin].
- *
- * **A row that opens says so** (same review): a chevron after the high, turning over when
- * the day is open, and the open or closed state told to TalkBack with the action's own
- * words. The chevron's column is held on every row, opening or not, so the seven bars of a
- * week share their ends as they share their scale.
+ * **Where the row turns into two is measured** (`splitsRow`): when the block would get less
+ * than [TracksMin] beside the three text columns (grown with the type), the icon and the
+ * gaps, the day and its sky go on a line of their own and the block takes the whole width
+ * under them.
  */
 @Composable
 fun DayRow(
     dayLabel: String,
     condition: ConditionGlyph,
     /** The quantity, which the ink ramp needs; **null when the model carried no
-     * probability** (§1.1) — the column then prints nothing and keeps its width, the
-     * way the hour cell already does. A dash would read as a value. */
+     * probability** (§1.1) — nothing is printed and the space stays, the way the hour cell's
+     * does. A dash would read as a value. */
     rainPct: Int?,
     /** The same quantity printed, which the locale owns (§11); null with [rainPct], and
      * null under the floor the caller prints from (20%, 12 ott 2026). */
@@ -100,11 +85,10 @@ fun DayRow(
     description: String,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    /** Whether the day is open, for a row that opens one; null draws no chevron and
-     * states nothing (the column stays). */
+    /** Whether the day is open, for a row that opens one: said to TalkBack, drawn by the
+     * caller (the open day's segment). Null for a row that opens nothing. */
     expanded: Boolean? = null,
-    /** The air between the row's touch target and its content: the target's ripple is
-     * clipped to [TargetShape] and reaches this far past the text. */
+    /** The air between the row's touch target and its content. */
     contentPadding: PaddingValues = PaddingValues(0.dp),
     /** Today's row: the temperature now, drawn on the range bar. */
     nowC: Double? = null,
@@ -113,19 +97,17 @@ fun DayRow(
     /** Whether the ribbon keeps a lane for the wet hours. The caller decides it for the
      * whole week, so seven rows stay one height whichever of them has rain in it. */
     wetLane: Boolean = false,
+    /** Whether the icon keeps a line for the chance under it: the caller decides it for the
+     * whole week, as the lane, so a dry day's row is as tall as a wet one's. */
+    rainLine: Boolean = rainLabel != null,
     /** Today's row: where now is in the day. What comes before it is spent, and the
      * ribbon fades it toward the track like the night (DESIGN §4, 12 ott 2026). */
     skyFrom: Float = 0f,
     /** How far the ribbon's sky leans toward the track ([DaylightRibbon]'s quiet voice):
      * the week's closed rows draw it lower, an open day in full. */
     ribbonQuiet: Float = 0f,
-    /**
-     * The range bar's empty track, and the colour the ribbon's night leans toward: one step
-     * above the [ground] the row stands on. On the page that is `surfaceContainerHighest`
-     * over `surface`; on the open day's card (`surfaceContainer`) the same track measured
-     * 1.11:1 against its ground and all but vanished (committente, device, 15 ott 2026),
-     * so the card hands in a stronger one.
-     */
+    /** The range bar's empty track, and the colour the ribbon's night leans toward: one step
+     * above the [ground] the row stands on. */
     track: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
     ground: Color = MaterialTheme.colorScheme.surface,
     /** The press's shape: the segment's own on Today's week, the row's elsewhere. */
@@ -138,18 +120,8 @@ fun DayRow(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            // §10 asks for ≥ 48dp of target and the row draws 48 (a 38dp icon, 4dp of
-            // gap, the 6dp ribbon; 46 until the ribbon took the sky, 12 ott 2026). It
-            // would clear the floor anyway and not by luck:
-            // Compose expands a pointer node's bounds to the platform's minimum touch
-            // target, so `clickable` is already 48. What that expansion does NOT do is
-            // reserve space, so it fails when two small targets sit closer than their
-            // expanded bounds — the week's rows are 12dp apart and each holds one
-            // target, so there is nothing here to disambiguate. Measured in Fase 9;
-            // `minimumInteractiveComponentSize()` would cost the week 6dp a row and buy
-            // the reader nothing.
             // The press is clipped to the target's shape; a row that opens nothing (the guide's
-            // picture) is not clipped at all, so its ribbon keeps its square end.
+            // picture) is not clipped at all.
             .let {
                 if (onClick != null) {
                     it.clip(targetShape).clickable(onClickLabel = openLabel, onClick = onClick)
@@ -159,183 +131,139 @@ fun DayRow(
             }
             .semantics {
                 contentDescription = description
-                // Only on a row a finger can open: the guide draws the chevron as a picture.
+                // Only on a row a finger can open.
                 if (onClick != null) state?.let { stateDescription = it }
             }
             .padding(contentPadding)
     ) {
         val reflow = splitsRow(maxWidth, LocalDensity.current.fontScale)
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            if (reflow) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) { DayAndSky(dayLabel, condition, rainPct, rainLabel) }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) { Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC, nowC, expanded, track, ground) }
-            } else {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    DayAndSky(dayLabel, condition, rainPct, rainLabel)
-                    Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC, nowC, expanded, track, ground)
-                }
-            }
-            DaylightRibbon(
-                phases = phases,
-                nowFraction = null,
-                description = "", // idem: one announcement per row
-                // 6dp since the ribbon carries the sky (committente, 12 ott 2026): at 4dp an
-                // overcast afternoon had to be looked for; at 8dp the ribbon weighed as much
-                // as the range bar, and the row became two bars of one weight. Six reads at a
-                // glance and stays the second thing in the row.
-                height = 6.dp,
-                // The range bar's own track: the night leans toward it, so the row shows
-                // its pill of light rather than a navy bar (DESIGN §4, 23 set 2026).
-                nightFade = track,
-                hours = sky,
-                wetLane = wetLane,
-                skyFrom = skyFrom,
-                quiet = ribbonQuiet,
-                modifier = Modifier.padding(start = if (reflow) 0.dp else 52.dp)
+        val tracks: @Composable RowScope.() -> Unit = {
+            Text(
+                text = lowLabel,
+                style = MaterialTheme.typography.labelLarge.tabular(),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.End,
+                modifier = Modifier.width(TempColumn.forText())
             )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(TrackGap)
+            ) {
+                TemperatureRangeBar(
+                    lowC = lowC,
+                    highC = highC,
+                    scaleLowC = scaleLowC,
+                    scaleHighC = scaleHighC,
+                    description = "", // the row's own description covers it
+                    nowC = nowC,
+                    track = track,
+                    ground = ground
+                )
+                DaylightRibbon(
+                    phases = phases,
+                    nowFraction = null,
+                    description = "", // idem: one announcement per row
+                    // 6dp since the ribbon carries the sky (committente, 12 ott 2026): it reads
+                    // at a glance and stays second to the 8dp range bar above it.
+                    height = 6.dp,
+                    // The range bar's own track: the night leans toward it, so the row shows
+                    // its pill of light rather than a navy bar (DESIGN §4, 23 set 2026).
+                    nightFade = track,
+                    hours = sky,
+                    wetLane = wetLane,
+                    skyFrom = skyFrom,
+                    quiet = ribbonQuiet
+                )
+            }
+            // The low ends on the block's left and the high starts on its right: both figures
+            // hug the bars they are the ends of, at the same distance.
+            Text(
+                text = highLabel,
+                style = MaterialTheme.typography.labelLarge.tabular(),
+                textAlign = TextAlign.Start,
+                modifier = Modifier.width(TempColumn.forText())
+            )
+        }
+        if (reflow) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(RowGap),
+                    verticalAlignment = Alignment.CenterVertically
+                ) { DayAndSky(dayLabel, condition, rainPct, rainLabel, rainLine) }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(RowGap),
+                    verticalAlignment = Alignment.CenterVertically,
+                    content = tracks
+                )
+            }
+        } else {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(RowGap),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                DayAndSky(dayLabel, condition, rainPct, rainLabel, rainLine)
+                tracks()
+            }
         }
     }
 }
 
 /**
- * Whether the row splits in two at this width and this type scale: when the range bar
- * would get less than [RangeBarMin] beside the four text columns (which grow with the
- * type), the icon, the five gaps between them and the chevron's column. Pure, so the
- * arithmetic is testable without a device.
+ * Whether the row splits in two at this width and this type scale: when the block of the two
+ * tracks would get less than [TracksMin] beside the three text columns (which grow with the
+ * type), the icon and the four gaps between them. Pure, so the arithmetic is testable.
  */
 internal fun splitsRow(width: Dp, fontScale: Float): Boolean {
     val text = TextColumns * textColumnScale(fontScale)
-    val fixed = text + WeatherIconSize.Week + RowGap * 5 + ChevronColumn
-    return width - fixed < RangeBarMin
+    val fixed = text + WeatherIconSize.Week + RowGap * 4
+    return width - fixed < TracksMin
 }
 
-/** The day, rain, low and high columns, in dp at 100% type. */
-private val TextColumns = 44.dp + 36.dp + 34.dp + 34.dp
+/** The day and the two temperature columns, in dp at 100% type. */
+private val DayColumn = 44.dp
+private val TempColumn = 34.dp
+private val TextColumns = DayColumn + TempColumn * 2
 
-/** The gap between the row's columns. */
+/** The gap between the row's columns, and between its two tracks. */
 private val RowGap = 8.dp
+private val TrackGap = 4.dp
 
-/** The chevron, at the size of the row's text rather than of its icons. */
-private val ChevronSize = 18.dp
+/** Under this the two tracks are smudges, and the ribbon's day too short to read (§10). */
+internal val TracksMin = 72.dp
 
-/** Between the high and the chevron: the two read as one column's end. */
-private val ChevronGap = 2.dp
-
-/** The chevron and the air before it: held on every row of a week. */
-private val ChevronColumn = ChevronGap + ChevronSize
-
-/** Under this the range bar is a smudge, not a bar (§10). */
-internal val RangeBarMin = 48.dp
-
-/** The ripple's shape: the row's own, rounded like the open day's container. */
+/** The ripple's shape where the caller hands none: the row's own. */
 private val TargetShape = RoundedCornerShape(12.dp)
 
-/** Which day, and what kind of day. */
+/** Which day, and what kind of day: the weekday, and the sky's icon with the chance under it. */
 @Composable
 private fun RowScope.DayAndSky(
     dayLabel: String,
     condition: ConditionGlyph,
     rainPct: Int?,
-    rainLabel: String?
+    rainLabel: String?,
+    rainLine: Boolean
 ) {
     Text(
         text = dayLabel,
         style = MaterialTheme.typography.labelLarge,
-        modifier = Modifier.width(44.dp.forText())
+        modifier = Modifier.width(DayColumn.forText())
     )
-    ConditionIcon(
-        glyph = condition,
-        // Between the strip and the timeline on the family's ladder, sized to
-        // the row it sits in: the row is as tall as the icon, so every step of
-        // the ladder is a step in the week's height too. The ribbon below still
-        // starts at 52dp (the day label's 44 plus the 8 beside it), which the
-        // icon's size never touched.
-        modifier = Modifier.size(WeatherIconSize.Week)
-    )
-    Text(
-        // Empty, not a dash: the column holds its width so the week stays a grid, and
-        // an absent probability leaves no mark at all rather than one that looks like
-        // a reading.
-        text = rainLabel.orEmpty(),
-        style = MaterialTheme.typography.labelSmall.tabular(),
-        // The ink ramp, zero included: 0% is the quiet end of the same scale and
-        // not the secondary text role, which printed the emptiest day of the week
-        // in the heaviest ink on it (DESIGN.md §2.3).
-        color = ChiaroTheme.colors.rainInkAt(rainPct ?: 0),
-        textAlign = TextAlign.End,
-        modifier = Modifier.width(36.dp.forText())
-    )
-}
-
-/** How warm, printed at both ends and drawn between them. */
-@Composable
-private fun RowScope.Range(
-    lowLabel: String,
-    highLabel: String,
-    lowC: Double,
-    highC: Double,
-    scaleLowC: Double,
-    scaleHighC: Double,
-    nowC: Double?,
-    expanded: Boolean?,
-    track: Color,
-    ground: Color
-) {
-    Text(
-        text = lowLabel,
-        style = MaterialTheme.typography.labelLarge.tabular(),
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.End,
-        modifier = Modifier.width(34.dp.forText())
-    )
-    TemperatureRangeBar(
-        lowC = lowC,
-        highC = highC,
-        scaleLowC = scaleLowC,
-        scaleHighC = scaleHighC,
-        description = "", // the row's own description covers it
-        modifier = Modifier.weight(1f),
-        nowC = nowC,
-        track = track,
-        ground = ground
-    )
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(ChevronGap),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = highLabel,
-            style = MaterialTheme.typography.labelLarge.tabular(),
-            modifier = Modifier.width(34.dp.forText())
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        ConditionIcon(
+            glyph = condition,
+            // Sized to the row it sits in: the row is as tall as the icon and its chance.
+            modifier = Modifier.size(WeatherIconSize.Week)
         )
-        // Turns over when the day opens: the same mark points down to «there is more» and
-        // up to «put it away», which is how Material draws an expanding row.
-        val turn by animateFloatAsState(
-            targetValue = if (expanded == true) 180f else 0f,
-            animationSpec = ChiaroMotion.spatial(reducedMotion()),
-            label = "day chevron"
-        )
-        Box(modifier = Modifier.size(ChevronSize)) {
-            if (expanded != null) {
-                Icon(
-                    imageVector = Icons.Outlined.KeyboardArrowDown,
-                    contentDescription = null, // the row's state and action say it
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxSize().rotate(turn)
-                )
-            }
+        if (rainLine) {
+            Text(
+                // Empty, not a dash: the line holds its height so the week stays one rhythm,
+                // and an absent probability leaves no mark that looks like a reading.
+                text = rainLabel.orEmpty(),
+                style = MaterialTheme.typography.labelSmall.tabular(),
+                // The ink ramp, zero included: 0% is the quiet end of the same scale, not the
+                // secondary text role (DESIGN.md §2.3).
+                color = ChiaroTheme.colors.rainInkAt(rainPct ?: 0)
+            )
         }
     }
 }

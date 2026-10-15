@@ -71,6 +71,9 @@ internal fun LazyListScope.weekRows(
     // One lane for the whole week or none: a row that grew by its wet hours would make the
     // week uneven, and a dry week pays nothing for a lane it would leave empty.
     val wetLane = content.week.any { day -> day.sky.any { it.wet && it.at < 1f } }
+    // The same for the chance under the icon: a line for all seven rows or for none.
+    val locale0 = locale
+    val rainLine = content.week.any { chanceLabel(it.forecast.precipPct, locale0) != null }
     val count = content.week.size
     itemsIndexed(content.week, key = { _, day -> "week-${day.forecast.date}" }) { index, day ->
         WeekRow(
@@ -87,6 +90,7 @@ internal fun LazyListScope.weekRows(
             onToggle = { onToggle(day.forecast.date) },
             nowC = content.report.current.tempC,
             wetLane = wetLane,
+            rainLine = rainLine,
             skyFrom = if (day.forecast.date == today) content.sky.nowFraction else 0f
         )
     }
@@ -124,6 +128,7 @@ private fun WeekRow(
     onToggle: () -> Unit,
     nowC: Double? = null,
     wetLane: Boolean = false,
+    rainLine: Boolean = false,
     /** Today's row: where now is in the day, so what is spent of it reads as spent. */
     skyFrom: Float = 0f
 ) {
@@ -174,6 +179,7 @@ private fun WeekRow(
             phases = day.phases,
             sky = day.sky,
             wetLane = wetLane,
+            rainLine = rainLine,
             skyFrom = skyFrom,
             // Two forms, because a day with no probability must not announce one:
             // the row that prints nothing says nothing (§1.1). The ribbon's wet marks

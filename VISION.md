@@ -311,9 +311,10 @@ The spine of the product, one vertical scroll, in this order:
    page for the moment, with where to look (15 ott 2026); following a moment stays the Sky
    tab's to do. A rule's row is the answer its card on Alerts gives («true right now»), never a promise
    that the phone will ring.
-5. **The week**: seven rows, a segment each, each with icon, a min/max bar aligned across the
-   whole week (so the week has a *shape*), rain probability, and the daylight ribbon. Tapping a
-   row (an arrow at its end says it opens) expands it in place, inside its own segment, into
+5. **The week**: seven rows, a segment each, each with icon, rain probability, and one block of
+   two tracks on one width: a min/max bar aligned across the whole week (so the week has a
+   *shape*) over the daylight ribbon. Tapping a
+   row (the section says once that the days open) expands it in place, inside its own segment, into
    that day's facts and hours.
 6. **What changed** (when something did): "Saturday improved", with "rain 70% → 30%" under it, one
    row a revision in a group (15 ott 2026). Two or three rows,

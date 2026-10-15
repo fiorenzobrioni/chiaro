@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -641,7 +642,14 @@ internal fun ContentState(
             }
 
             if (content.week.isNotEmpty()) {
-                item { SectionTitle(stringResource(R.string.section_week)) }
+                item {
+                    // The week says once that its days open (second review, 15 ott 2026), where
+                    // seven chevrons said it seven times.
+                    SectionTitle(
+                        stringResource(R.string.section_week),
+                        hint = stringResource(R.string.week_open_hint)
+                    )
+                }
                 weekRows(
                     content = content,
                     units = units,
@@ -779,12 +787,29 @@ internal fun DataFooter(content: TodayUiState.Content, timeFmt: DateTimeFormatte
  * screen keeps between one section and the next, and 12 under it, down to its container.
  */
 @Composable
-internal fun SectionTitle(text: String, top: Dp = SectionGap) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(start = 16.dp, top = top, bottom = ItemGap)
-    )
+internal fun SectionTitle(text: String, top: Dp = SectionGap, hint: String? = null) {
+    Row(
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, top = top, end = 16.dp, bottom = ItemGap)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.weight(1f)
+        )
+        hint?.let {
+            // A note on the section, not a label of it: quiet, on the title's baseline side.
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.End
+            )
+        }
+    }
 }
 
 /** Between one section and the next. */

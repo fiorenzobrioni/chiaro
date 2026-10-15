@@ -13617,7 +13617,7 @@ Il piano, in ordine di effetto sulla percezione e di costo:
   come corsia sotto le icone col linguaggio dei segni di pioggia del nastro, la prima colonna «Ora».
 - [x] 6. **Il cielo con uno shader AGSL**: nuvole e pioggia dai dati (copertura, intensità, sole),
   statico col movimento ridotto. Qui si decidono minSdk 34 e il budget dei 2 ms.
-- [ ] 7. **La settimana leggibile**: le due barre (temperature e nastro) sulla stessa estensione
+- [x] 7. **La settimana leggibile**: le due barre (temperature e nastro) sulla stessa estensione
   orizzontale, via le sette frecce a favore di un'indicazione più discreta.
 - [ ] 8. **Gli schermi grandi**: due pannelli su tablet e pieghevoli (cielo, ore e agenda a
   sinistra; settimana e dettagli a destra).
@@ -13837,4 +13837,30 @@ compilatore AGSL vero e accetta ogni uniform che lo schermo imposta. Un campiona
 (sereno, sparse, coperto, cirri, ora d'oro, stelle, luna piena, pioggia, neve) disegnato con il
 renderer hardware e guardato a ogni ritocco; `today-now` rigenerata (il coperto di Milano ora è un
 cielo coperto); le altre identiche al pixel. Suite completa e lint.
+
+### Punto 7: la settimana leggibile (committente, 15 ott 2026)
+
+- [x] **Le due barre in un blocco solo**: la barra delle temperature e, 4 dp sotto, il nastro della
+  giornata, sulla stessa larghezza fra la minima e la massima. Il nastro partiva da sotto l'icona e
+  arrivava in fondo alla riga, la barra stava fra le cifre: due barre dello stesso giorno con due
+  inizi e due fini. La minima finisce sul bordo sinistro del blocco, la massima comincia sul destro.
+- [x] **La probabilità sotto l'icona**, su una riga tenuta da tutti e sette i giorni quando almeno uno
+  la stampa (come la corsia bagnata): la sua colonna da 36 dp è diventata larghezza del blocco.
+- [x] **Via le sette frecce**: il titolo della sezione dice una volta sola «Tocca un giorno per le sue
+  ore»; TalkBack sente ancora lo stato e l'azione di ogni riga, e il giorno aperto lo dice il suo
+  segmento.
+- [x] La riga si spezza in due quando il blocco avrebbe meno di 72 dp (`splitsRow`): da circa il 145%
+  di testo a 360 dp, il 190% a 411. La guida e il suo esempio senza la freccia.
+
+**Decisioni e deviazioni.** *Il blocco a 122 dp e non il nastro largo*: con le due barre allineate il
+nastro passa da circa 250 dp a 122 a 360 dp, 5 dp un'ora; abbastanza per un pomeriggio sereno contro
+uno grigio e per i segni della pioggia, e il giorno si legge come uno solo. Il nastro largo resta
+quello del canvas, che è la giornata di oggi. *L'indicazione nel titolo e non una per riga*: un
+segno ripetuto sette volte è il segno che si smette di vedere.
+
+**Come è stato verificato.** `DayRowSplitTest` riscritto sulle nuove misure (una riga a 360 e 411 dp,
+fino al 140% a 360, fino al 150% a 411, il minimo del blocco al dp). `TodayAgendaTest` (lo stato
+aperto e chiuso per TalkBack, il giorno che si chiude senza crash). `today-week` e `today-day`
+rigenerate e guardate; la settimana intera ora sta in una schermata col giorno aperto. Suite completa
+e lint.
 
