@@ -177,4 +177,21 @@ class TodayAgendaTest {
             )
         ).assertCountEquals(1)
     }
+
+    /** The number docked in the bar is what TalkBack hears there (DESIGN §8.1e): the figure
+     * drawn over the page is silent, and the bar's slot says the temperature once it has
+     * landed. */
+    @Test
+    fun `scrolled to the end, the bar says the temperature`() {
+        show()
+        val state = MilanRecording.today(app)
+        val temperature = Formats.temperature(
+            state.report.current.tempC, UnitSettings().temperature, app.resources.configuration.locales[0]
+        )
+        scrollTo(app.getString(R.string.section_details))
+        compose.waitForIdle()
+        compose.onAllNodes(
+            SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf(temperature))
+        ).assertCountEquals(1)
+    }
 }

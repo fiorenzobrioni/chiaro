@@ -13607,7 +13607,7 @@ Il piano, in ordine di effetto sulla percezione e di costo:
 - [x] 2. **Una grammatica sola per i contenitori** (DESIGN §8.0): niente sulla carta tranne il
   titolo di una sezione; le ore su una card, l'agenda e la settimana come gruppi di segmenti, come
   il Cielo. DESIGN §8.0, §8.3, §8.5b, §6.
-- [ ] 3. **Un hero che si trasforma**: un'intestazione collassabile su `nestedScroll`, la
+- [x] 3. **Un hero che si trasforma**: un'intestazione collassabile su `nestedScroll`, la
   temperatura che viaggia nella barra (elemento condiviso), la temperatura più grande, massima e
   minima del giorno nell'hero.
 - [ ] 4. **I dettagli uniformi**: un solo stile di icone (monocromo, `onSurfaceVariant`), gli
@@ -13680,3 +13680,42 @@ all'apertura della fascia, nessuna riga per una regola che non vale, spenta o co
 regola, l'apertura e la chiusura del giorno senza crash. Le immagini `today-now` e `today-week`
 rigenerate e guardate; `today-day` nuova (il resto della giornata con i verdetti e le regole),
 nel README con didascalia e testo alternativo. Suite completa e lint.
+
+### Punto 3: l'hero che si trasforma (committente, 15 ott 2026)
+
+- [x] **La temperatura viaggia nella barra** (DESIGN §8.1e). Una sola cifra, disegnata sopra la
+  pagina (`TravellingNumber`): scorrendo segue il cielo finché la sua testa arriva 8 dp sotto la
+  barra, poi nei 96 dp di scorrimento successivi rimpicciolisce alla misura `titleLarge` della barra
+  e scivola nel suo posto accanto all'ingranaggio, dove resta. La posa è una funzione pura dello
+  scorrimento (`heroPose`, `dockSlot`), letta in layout e in disegno: segue il dito nei due sensi e
+  non ricompone niente mentre la pagina si muove. La parte della cifra già dentro la barra ha
+  l'inchiostro della barra, quella ancora sul cielo il bianco del cielo.
+- [x] **La cifra a 88 sp** (era 64), con un tetto: cresce col testo del lettore fino al 130% e non
+  oltre (`heroStyle`), perché a 200% «−12°» sarebbe largo circa 400 dp su un telefono da 360.
+- [x] **Massima e minima del giorno sotto la parola del cielo** («Massima 23° · minima 17°»), con il
+  «percepiti» dopo di loro quando dice qualcosa: prima erano solo nella prima riga della settimana.
+- [x] Il pavimento del canvas da 280 a 328 dp, quanto è cresciuto l'hero, così lo scheletro finisce
+  ancora dove finisce il canvas.
+
+**Decisioni e deviazioni.** *Non un `nestedScroll` con un'intestazione che si accorcia*, come diceva
+il piano: il canvas resta un elemento della lista e la barra resta fissata sopra, e a viaggiare è
+solo la cifra. Un'intestazione collassabile avrebbe dovuto rifare la barra a due fondi (§8.1b), che
+è stata provata e decisa sul telefono tre volte, e avrebbe spostato il cielo sotto il dito invece di
+lasciarlo scorrere; il viaggio della cifra dà la continuità che il piano chiedeva senza toccare né
+l'uno né l'altra. *Niente transizione d'elemento condiviso di Compose*: quelle animano fra due stati,
+qui lo stato è lo scorrimento stesso, e la cifra deve stare a ogni pixel dove il dito la porta.
+*Il punto d'innesco è misurato, la meta calcolata*: dove la cifra riposa nel canvas lo misura il
+canvas una volta (non cambia scorrendo); dove atterra è l'aritmetica della barra (16 dp di margine,
+48 dell'ingranaggio, il centro della riga), così niente si misura durante il movimento. *Col movimento
+ridotto* resta il comportamento di prima: la cifra se ne va col cielo e il numero della barra entra
+in dissolvenza.
+
+**Come è stato verificato.** `HeroTravelTest` (nuovo): a riposo la cifra sta dove la tiene il
+canvas, segue il cielo fino all'innesco, a metà corsa è a metà strada e alla scala di mezzo senza
+salti ai due capi, oltre la corsa e con il canvas uscito resta agganciata, la meta sta prima
+dell'ingranaggio al centro della riga, il tetto del 130%. `TodayAgendaTest`: scorsa la pagina fino in
+fondo, la barra dice la temperatura a TalkBack. Una sequenza di scorrimento (0, 60, 100, 130, 160,
+200, 300 dp) disegnata sul Milano e guardata fotogramma per fotogramma. Le immagini `today-*` del
+README rigenerate (la cifra più grande, la riga delle temperature del giorno, la cifra agganciata
+nelle viste scorse); le altre identiche al pixel. Suite completa e lint.
+

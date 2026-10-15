@@ -18,7 +18,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -43,15 +51,19 @@ import kotlin.math.roundToInt
 
 /**
  * The canvas' height before the status bar's own height is added on top — a FLOOR since
- * 8 set 2026, not a size. Everything on the canvas is measured in sp (the 64sp
+ * 8 set 2026, not a size. Everything on the canvas is measured in sp (the 88sp
  * temperature, a 22sp sentence that runs to two lines in Italian) and the block was
  * measured in dp: at 100% type a two-line sentence left 2dp before the hero climbed into
  * the place row, and at 115% the two overlapped by 30dp. The canvas is now at least this
  * tall and grows with what it holds — see [CanvasHeader]. The place row is pinned over
  * the list rather than scrolling inside the canvas (18 set 2026), and the canvas holds a
  * spacer its height in its place, so this floor still measures the same block.
+ *
+ * 328 since 15 ott 2026: the figure went from a 68sp line to an 88sp one and the day's range
+ * took a line of its own under the word, 20 + 28dp, and the floor (which the skeleton quotes)
+ * grew by what the hero did.
  */
-internal val CanvasBaseHeight = 280.dp
+internal val CanvasBaseHeight = 328.dp
 
 @Composable
 internal fun CanvasHeader(
@@ -60,8 +72,12 @@ internal fun CanvasHeader(
     units: UnitSettings,
     timeFmt: DateTimeFormatter,
     locale: Locale,
-    placeRowHeight: Dp
+    placeRowHeight: Dp,
+    /** The travelling number's dock, or null where the figure stays on the sky (reduced motion). */
+    dock: HeroDock? = null
 ) {
+    // The canvas item's own coordinates, for where the number rests inside it.
+    var canvasCoords by remember { mutableStateOf<androidx.compose.ui.layout.LayoutCoordinates?>(null) }
     val sky = content.sky
     val current = content.report.current
     // The canvas owns the top edge of the screen: its height grows by the status bar
@@ -75,7 +91,8 @@ internal fun CanvasHeader(
     SkyCanvas(
         gradient = gradient,
         minHeight = floor,
-        sheet = sheet
+        sheet = sheet,
+        modifier = Modifier.onGloballyPositioned { canvasCoords = it }
     ) {
         // One column with the place row's seat at the top and the hero at the bottom,
         // rather than two children aligned to opposite edges of a fixed box:
@@ -124,39 +141,71 @@ internal fun CanvasHeader(
                 // 2 m temperature from a forecast model is good to a degree or two, and
                 // since the same day the hero may be an estimate interpolated between two
                 // hours — «20,8°» claimed a precision nobody had.
+                //
+                // With a [dock] the figure on screen is the travelling one (DESIGN §8.1e), drawn
+                // over the page; this copy keeps the figure's place and size in the column, is
+                // what TalkBack reads, and tells the dock where the figure rests.
                 Text(
                     text = Formats.temperature(current.tempC, units.temperature, locale),
-                    style = com.callbackdev.chiaro.ui.theme.LocalChiaroType.current.heroTemperature,
+                    style = heroStyle(),
+                    color = SkyPalette.Ink,
+                    modifier = if (dock == null) {
+                        Modifier
+                    } else {
+                        // Hidden only once the travelling figure knows where to stand, so the
+                        // first frame never has no number at all.
+                        Modifier
+                            .alpha(if (dock.measured) 0f else 1f)
+                            .onGloballyPositioned { number ->
+                                val item = canvasCoords ?: return@onGloballyPositioned
+                                if (!item.isAttached || !number.isAttached) return@onGloballyPositioned
+                                dock.rest = item.localPositionOf(number, Offset.Zero)
+                                dock.size = number.size
+                            }
+                    }
+                )
+                // The condition is `titleLarge` since the review of 23 set 2026: from the
+                // hero straight down to 16sp was a cliff, and the word that says what the sky
+                // is doing is the second thing a reader wants. No space over it: the figure's
+                // own line already leaves air under its digits.
+                Text(
+                    text = stringResource(WeatherText.condition(current.condition.wmoCode)),
+                    style = MaterialTheme.typography.titleLarge,
                     color = SkyPalette.Ink
                 )
-                // Two type sizes on one line align by BASELINE, not by top: top-aligned
-                // they read as a mistake the moment the sizes differ (device check, 2 set).
-                //
-                // The condition is `titleLarge` since the review of 23 set 2026: from the
-                // 64sp hero straight down to 16sp was a cliff, and the word that says what
-                // the sky is doing is the second thing a reader wants. No space over it:
-                // the figure's own 68sp line already leaves air under its digits.
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        text = stringResource(WeatherText.condition(current.condition.wmoCode)),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = SkyPalette.Ink,
-                        modifier = Modifier.alignByBaseline()
-                    )
-                    // Only when it says something (§1.2): "21° / feels like 21°" is a number
-                    // with nothing to do about it. A degree apart is where a body starts to
-                    // notice, and a degree apart the two whole numbers always differ.
-                    if (kotlin.math.abs(current.feelsLikeC - current.tempC) >= FeelsLikeMinDeltaC) {
-                        Text(
-                            text = stringResource(
-                                R.string.feels_like,
-                                Formats.temperature(current.feelsLikeC, units.temperature, locale)
-                            ),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = SkyPalette.Ink,
-                            modifier = Modifier.alignByBaseline()
+                // The day's range under the word (15 ott 2026), the number a reader looks for
+                // right after the one above: it was only in the week's first row, two screens
+                // down. The feels-like joins it only when it says something (§1.2): "21° /
+                // feels like 21°" is a number with nothing to do about it, and a degree apart
+                // is where a body starts to notice.
+                val day = content.week.firstOrNull { it.forecast.date == content.now.toLocalDate() }?.forecast
+                val figures = listOfNotNull(
+                    day?.let {
+                        stringResource(
+                            R.string.hero_high_low,
+                            Formats.temperature(it.highC, units.temperature, locale),
+                            Formats.temperature(it.lowC, units.temperature, locale)
                         )
+                    },
+                    if (kotlin.math.abs(current.feelsLikeC - current.tempC) >= FeelsLikeMinDeltaC) {
+                        stringResource(
+                            R.string.feels_like,
+                            Formats.temperature(current.feelsLikeC, units.temperature, locale)
+                        )
+                    } else {
+                        null
                     }
+                )
+                if (figures.isNotEmpty()) {
+                    Text(
+                        // One sentence of figures: only its first word keeps its capital.
+                        text = figures.mapIndexed { i, figure ->
+                            if (i == 0) figure else figure.replaceFirstChar { it.lowercase(locale) }
+                        }.joinToString(" · "),
+                        style = MaterialTheme.typography.bodyLarge.tabular(),
+                        color = SkyPalette.Ink,
+                        modifier = Modifier.padding(top = HeroLineGap)
+                    )
                 }
                 // A now rebuilt from the forecast says so under its own numbers
                 // (DESIGN §1.1, 24 set 2026): the chip above says how old the data is,
@@ -248,6 +297,29 @@ internal val HeroGroupGap = 12.dp
 
 /** Over the ribbon: the canvas' floor line stands clear of the prose above it. */
 internal val HeroRibbonGap = 16.dp
+
+/**
+ * The hero's style at the reader's type scale (15 ott 2026): the figure grows with the reader's
+ * type up to [HeroScaleCeiling] and no further. At 88sp a 200% scale would set «−12°» some 400dp
+ * wide on a 360dp phone; the figure is already the largest thing on the screen, and what a
+ * larger type is for — the words — still grows in full beside it.
+ */
+@Composable
+internal fun heroStyle(): TextStyle {
+    val base = com.callbackdev.chiaro.ui.theme.LocalChiaroType.current.heroTemperature
+    val scale = LocalDensity.current.fontScale
+    val capped = heroFontScale(scale)
+    if (capped == scale) return base
+    return base.copy(
+        fontSize = (base.fontSize.value * capped / scale).sp,
+        lineHeight = (base.lineHeight.value * capped / scale).sp
+    )
+}
+
+/** The scale the hero figure actually grows by: the reader's, up to [HeroScaleCeiling]. */
+internal fun heroFontScale(fontScale: Float): Float = fontScale.coerceAtMost(HeroScaleCeiling)
+
+internal const val HeroScaleCeiling = 1.3f
 
 /** Below this the feels-like line is not drawn: the air feels like what it is. */
 internal const val FeelsLikeMinDeltaC = 1.0

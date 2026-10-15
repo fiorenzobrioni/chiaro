@@ -283,8 +283,9 @@ live in the app bar, not in a tab: they are visited once a month.
 
 The spine of the product, one vertical scroll, in this order:
 
-1. **The canvas**: place, current temperature, condition, feels-like, the daylight ribbon, and the
-   headline sentence (§3.3).
+1. **The canvas**: place, current temperature, condition, the day's high and low, feels-like, the
+   daylight ribbon, and the headline sentence (§3.3). Scrolled, the temperature travels into the
+   pinned bar and stays there (15 ott 2026).
 2. **A freshness chip** when, and only when, it matters: "Updated 3 hours ago" in amber, tappable to
    retry. Pull to refresh; no FAB on this screen, because the app refreshes itself.
 3. **Next hours**: a horizontal strip on a card of its own, 24 hours from the next full hour,

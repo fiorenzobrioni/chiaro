@@ -36,7 +36,7 @@ fetched, and says how old that data is.
 
 <table>
   <tr>
-    <td align="center" width="25%"><img src="docs/screenshots/today-now.png" width="200" alt="The sky canvas with the temperature, the condition and the daylight ribbon, then the next hours on a card of their own and the start of the rest of the day"><br><sub><b>Today</b>: the sky, then the numbers</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/today-now.png" width="200" alt="The sky canvas with the temperature, the condition, the day's high and low and the daylight ribbon, then the next hours on a card of their own and the start of the rest of the day"><br><sub><b>Today</b>: the sky, then the numbers</sub></td>
     <td align="center" width="25%"><img src="docs/screenshots/today-day.png" width="200" alt="The rest of the day as a list of rows: your Bike and Run alerts where they hold, the evening golden hour until sunset with its verdict Great at 19% cloud, the blue hour So-so, and full darkness with the moon up all night"><br><sub><b>The rest of the day</b>, with a verdict on each moment</sub></td>
     <td align="center" width="25%"><img src="docs/screenshots/today-week.png" width="200" alt="The week on one shared temperature scale, each day a row with its ribbon of light and an arrow that opens it, and tomorrow open inside its own row with its UV and its hours"><br><sub><b>The week</b>, on one temperature scale</sub></td>
     <td align="center" width="25%"><img src="docs/screenshots/today-details.png" width="200" alt="The details grid: wind, clouds, humidity, pressure, visibility, air quality and pollen, each with the line that says what to do with it"><br><sub><b>Details</b>: every number with its meaning</sub></td>

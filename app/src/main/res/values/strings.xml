@@ -5,6 +5,7 @@
 
     <!-- The canvas -->
     <string name="feels_like">Feels like %1$s</string>
+    <string name="hero_high_low">High %1$s · low %2$s</string>
     <string name="place_switcher_action">Change place</string>
     <string name="ribbon_desc">Sunrise at %1$s, sunset at %2$s</string>
     <string name="ribbon_desc_all_day">The sun never sets today</string>

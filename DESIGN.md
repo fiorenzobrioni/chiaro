@@ -523,7 +523,7 @@ measured for full white. Over the same brightest scrimmed stop, white at 70% is 
 and at 85% **4.3:1**, both under the floor, and higher up the canvas, where the scrim thins,
 lower still. So every line on the canvas is `SkyPalette.Ink` at full strength and a
 secondary line is set apart by its size (`bodyLarge`, `bodyMedium`, `labelSmall` under a
-22sp word and a 64sp figure). The one translucent white left is the pager's other dots
+22sp word and an 88sp figure). The one translucent white left is the pager's other dots
 (`SkyPalette.InkQuiet`), a mark and not text. `ScrimContractTest` pins both halves: the thinner
 whites fail, and no line under `ui/today/` names a white of its own.
 
@@ -686,7 +686,7 @@ there is no exception.
 
 | Role | Size / line | Weight | Where |
 |---|---|---|---|
-| `heroTemperature` (extended) | 64 / 68, −0.02em | 700 | the canvas' current temperature |
+| `heroTemperature` (extended) | 88 / 88, −0.02em | 700 | the canvas' current temperature; grows with the reader's type to 130% and no further (§8.1a) |
 | `displaySmall` | 36 / 44 | 400 | the app's name on the first run |
 | `titleLarge` | 22 / 28 | 500 | the sky's word under the hero; a header's name |
 | `titleMedium` | 16 / 24 | 600 | section titles, metric values |
@@ -1229,13 +1229,41 @@ leaves the list the part that leaves with it is already hidden under that row's 
 
 **8.1a The hero's three groups** (review of Today, 15 ott 2026). The canvas' text is three
 things and is spaced as three: the **now** — the figure (`heroTemperature`), the sky's word at
-`titleLarge` with the feels-like beside it on its baseline (`bodyLarge`), the estimate's note
-4dp under them (`bodyMedium`) — packed under the figure, whose 68sp line already leaves air
-under its digits; the **day's sentence**, 12dp below, at `bodyLarge`; and the **ribbon**,
+`titleLarge`, and 4dp under it **the day's figures** at `bodyLarge`, tabular: «Massima 23° ·
+minima 17°», with «percepiti 22°» after them when the air feels a degree or more off (second
+review, 15 ott 2026); the estimate's note 4dp under them (`bodyMedium`) — packed under the
+figure, whose own line already leaves air under its digits; the **day's sentence**, 12dp below, at `bodyLarge`; and the **ribbon**,
 16dp below that, with its clock times 4dp under it. Until then one 6dp step ran between every
 line, and the sentence was `titleLarge` like the word above it: two lines about the day
 outweighed one word about now, and the three read as a paragraph. Set as prose, the sentence
 reads as one, and the eye takes the screen's order — the number, the word, the day.
+
+**The figure is 88sp** (second review, 15 ott 2026; 64sp until then), the size a premium
+weather app gives the one number it is opened for, and the day's high and low stand right
+under the word: the number a reader looks for after the temperature was in the week's first
+row, two screens down. At the reader's larger type the figure grows to **130%** and no
+further (`heroStyle`, `HeroTravelTest`): at 200% «−12°» would be some 400dp wide on a 360dp
+phone, and what a larger type is for, the words, still grows in full. The canvas' floor
+grew by what the hero did (280 → 328dp: a 20dp taller line and the figures' 28), so the
+skeleton still ends where the canvas does.
+
+**8.1e The figure travels into the bar** (second review, 15 ott 2026). The temperature is one
+figure from the sky to the bar: scrolled, it rides the canvas like the rest of the hero until
+its top is 8dp under the bar, and over the next **96dp of scroll** it shrinks to the bar's
+`titleLarge` size and slides into the bar's slot beside the gear, where it stays (`heroPose`).
+Every step is arithmetic on the list's scroll, read at layout and draw time, so it follows
+the finger both ways and nothing recomposes while the page moves. One `Text` drawn over the
+page does it; the canvas keeps an invisible copy that holds the figure's place, tells the dock
+where it rests and is what TalkBack reads, and the bar's slot says the temperature once the
+figure has landed. **Two inks across the bar's edge**: the part of the figure inside the bar is
+drawn in the bar's ink, the part still over the sky in the sky's white, so the figure crossing
+the edge never stands on a ground it does not read on. The sky's still icon comes in beside it
+as it arrives. **Not under reduced motion**: a figure that shrinks and slides across the
+screen is the movement the setting asks to be spared, and there the figure scrolls away with
+the sky and the bar's own number fades in, as before.
+
+It replaces the bar's compact number that faded in when the canvas was nearly gone (23 set
+2026): two copies of one number, one leaving and one arriving, where a reader follows one.
 
 **8.1c The sun and the moon** (design review, 23 set 2026) — drawn on the canvas where they
 stand, in a band of sky the canvas' column keeps for them between the place row and the hero
@@ -1257,8 +1285,8 @@ Static: they move with the page's minute tick and cost one draw (§3.5 still hol
 particles, no parallax).
 
 The **hero** itself was re-set the same day: the whole degrees and the degree sign at the
-64sp hero size (the tenths, first set at 55% on the same baseline, went on 24 set 2026 with
-the rounding rule of §5); the condition at `titleLarge` (from 64sp to 16sp was a cliff); and
+hero size (the tenths, first set at 55% on the same baseline, went on 24 set 2026 with
+the rounding rule of §5); the condition at `titleLarge` (from the hero straight to 16sp was a cliff); and
 the feels-like line **only when it differs by a degree or more** — "21°, feels like 21°" is a
 number with nothing to do about it (§1.2).
 
@@ -1297,10 +1325,11 @@ when the page is at rest — so it is the one bar in the app with two grounds:
   sky reaching the top of the screen, under the clock, is what Today is recognised by, and a
   bar above it would turn it into a picture inside a page.
 
-**Compact** (23 set 2026): once the canvas has climbed to within 120dp of the bar, the hero
-is under it or gone, and the bar carries it — the sky's still icon and the temperature in
-whole degrees, beside the name (which then keeps to one line), fading and sliding in on the
-effects and spatial springs. **The place's day is the longest form that fits** (committente,
+**Compact** (23 set 2026): the bar carries the hero once it has scrolled up — the sky's still
+icon and the temperature in whole degrees, beside the name (which then keeps to one line). Since
+15 ott 2026 the temperature is the hero's own figure, docked there (§8.1e), and the slot opens
+the moment it starts to travel; under reduced motion, once the canvas has climbed to within
+120dp of the bar, the bar's own number fades in on the effects spring. **The place's day is the longest form that fits** (committente,
 15 ott 2026; `FittingText`): «Venerdì 25 settembre · 12:15», else «Ven 25 set · 12:15», else
 «Ven · 12:15», each measured at `labelLarge` against the width the line really has, so the line
 never wraps and the bar never grows mid-scroll. Until then the date shortened to its weekday

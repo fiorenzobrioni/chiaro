@@ -2,6 +2,7 @@
 <resources>
     <!-- Il canvas -->
     <string name="feels_like">Percepiti %1$s</string>
+    <string name="hero_high_low">Massima %1$s · minima %2$s</string>
     <string name="place_switcher_action">Cambia luogo</string>
     <string name="ribbon_desc">Alba alle %1$s, tramonto alle %2$s</string>
     <string name="ribbon_desc_all_day">Oggi il sole non tramonta</string>
