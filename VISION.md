@@ -315,7 +315,8 @@ The spine of the product, one vertical scroll, in this order:
    collapsed into the artifact a person actually keeps in their head: what is going to happen
    today, in order. Its moments of the sky carry the Sky tab's names and open the Sky tab's
    page for the moment, with where to look (15 ott 2026); following a moment stays the Sky
-   tab's to do. A rule's row is the answer its card on Alerts gives («true right now»), never a promise
+   tab's to do. The rainbow's window opens a page of its own, with the compass and how high the
+   arc will stand: your back to the sun is the half of a rainbow nobody knows. A rule's row is the answer its card on Alerts gives («true right now»), never a promise
    that the phone will ring.
 5. **The week**: seven rows, a segment each, each with icon, rain probability, and one block of
    two tracks on one width: a min/max bar aligned across the whole week (so the week has a

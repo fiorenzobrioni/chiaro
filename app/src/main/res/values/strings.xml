@@ -461,7 +461,7 @@
     <string name="guide_today_hours_title">The next hours</string>
     <string name="guide_today_hours_body" formatted="false">The hour you are in, «Now», then the twenty-four that follow: temperature, sky and rain chance. Each column is the hour that starts there: «3 PM · 60%» means a 60% chance of rain between 3 and 4, and the temperature is the one at 3. The chance shows from 20% up, with its bar above it: below 20% the cell stays empty, because there is nothing to plan around, and on a dry day the row of bars is not there at all.</string>
     <string name="guide_today_rest_title">The rest of the day</string>
-    <string name="guide_today_rest_body">One timeline for everything still ahead: sunrise or sunset, the golden hour until sunset and the blue hour with the time it ends, the moment the sky goes fully dark, the hours rain is expected to start and ease off, and — when the sun is low and rain is likely in front of it — the window a rainbow could stand in, with the direction to turn and look. Each moment of the sky carries the same verdict the Sky tab gives it, with the number that decided it. Your own alerts that hold today stand among the moments, in your own words, at the hour they point to: the same answer their card on the Alerts tab gives, not a promise that the phone will ring. Moonrise and moonset are on the Sky tab. Tap a moment of the sky to open its page, the one the Sky tab opens: what it is, and where to look.</string>
+    <string name="guide_today_rest_body">One timeline for everything still ahead: sunrise or sunset, the golden hour until sunset and the blue hour with the time it ends, the moment the sky goes fully dark, the hours rain is expected to start and ease off, and — when the sun is low and rain is likely — the window a rainbow could stand in, with the direction to turn and look: your back to the sun. Each moment of the sky carries the same verdict the Sky tab gives it, with the number that decided it. Your own alerts that hold today stand among the moments, in your own words, at the hour they point to: the same answer their card on the Alerts tab gives, not a promise that the phone will ring. Moonrise and moonset are on the Sky tab. Tap a moment of the sky to open its page, the one the Sky tab opens: what it is, and where to look. The rainbow\'s row opens one of its own: how high the arc will stand, and the compass.</string>
     <string name="guide_today_week_title">The week</string>
     <string name="guide_today_week_body">Seven days on one shared temperature scale, so the same bar length means the same thing on every row. Under each day\'s bar, on the same width, is its ribbon, which says when it is clear, when it clouds over and when it rains; the chance of rain is under the icon. Each day opens: tap it and it opens inside its own row, where above its hours you find how much rain and over how many hours, the snow, the strongest gusts and the highest UV, each with what it means, and only those that say something that day.</string>
     <string name="guide_today_week_caption">An example. The bar runs from the day\'s low to its high, from the blue of cold to the orange of warm, and the dot is the temperature now. The ribbon is the day from midnight to midnight: light blue where it is clear, grey where it clouds over, pale at both ends, which are the night, and over the part of today already gone; the dashes under it are the hours of rain or snow.</string>
@@ -953,6 +953,15 @@
     <string name="compass_nw">north-west</string>
     <string name="timeline_rainbow">Low sun and rain (%1$d%%): a rainbow would stand to the %2$s</string>
     <string name="timeline_rainbow_desc">Rainbow window, %1$s to %2$s, looking %3$s</string>
+    <!-- The rainbow's page (15 ott 2026): what it is, how high, and the compass. -->
+    <string name="rainbow_title">A rainbow is possible</string>
+    <string name="rainbow_when">%1$s to %2$s · rain %3$d%%</string>
+    <string name="rainbow_compass_when">%1$s to %2$s</string>
+    <string name="rainbow_about">A rainbow is sunlight passing through falling rain. You see it with your back to the sun and the rain in front of you: the arc is centred on the point exactly opposite the sun.</string>
+    <string name="rainbow_height_tall">The sun is low: the arc is large, almost a half circle, and climbs high into the sky.</string>
+    <string name="rainbow_height_mid">The arc rises to a moderate height above the horizon.</string>
+    <string name="rainbow_height_low">The sun is still high: the arc stays low, a band just above the horizon.</string>
+    <string name="rainbow_honest">A possibility, not a forecast: the sky is set up for a rainbow, but the rain has to fall right there and the sun has to get through the clouds.</string>
 
     <!-- Alerts (Fase 6). Two groups, one screen: switches that say exactly what
          they send, and the reader's own rules as a sentence of chips. -->

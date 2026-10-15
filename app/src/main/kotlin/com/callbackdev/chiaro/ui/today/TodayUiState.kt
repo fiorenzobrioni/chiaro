@@ -483,7 +483,10 @@ object TodayStateBuilder {
                     at = LocalDateTime.ofInstant(rainbow.start, zone),
                     kind = TimelineKind.RAINBOW,
                     pct = rainbow.precipChancePct,
-                    bearingDeg = rainbow.lookTowardsDeg
+                    bearingDeg = rainbow.lookTowardsDeg,
+                    // A window, so the row says until when, as the golden hour's does, and
+                    // its page knows whether the bow is now or still ahead.
+                    until = LocalDateTime.ofInstant(rainbow.end, zone)
                 )
             }
 

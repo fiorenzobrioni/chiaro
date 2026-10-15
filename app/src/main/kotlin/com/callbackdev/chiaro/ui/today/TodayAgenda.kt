@@ -31,13 +31,16 @@ import java.time.format.DateTimeFormatter
  * today stand among the moments, in their own words.
  *
  * A row of the sky opens the Sky's page for its moment, with «Dove guardare» when it has a
- * direction; a weather turn, the rainbow and a rule have no page and open nothing.
+ * direction; the rainbow opens its own, with the same compass ([RainbowSheet]); a weather turn
+ * and a rule have no page and open nothing.
  */
 @Composable
 internal fun RestOfDay(
     content: TodayUiState.Content,
     timeFmt: DateTimeFormatter,
     units: UnitSettings,
+    /** The rainbow's row opens its own page (15 ott 2026); null leaves it a plain row. */
+    onOpenRainbow: ((TimelineItem) -> Unit)? = null,
     onOpen: (TimelineItem, SkyJob) -> Unit
 ) {
     val locale = currentLocale()
@@ -87,7 +90,11 @@ internal fun RestOfDay(
                         // next»: on the line under the name it ran to three lines at 384dp.
                         label = if (index == firstAhead) listOfNotNull(next, soon).joinToString(" · ") else null,
                         supporting = listOfNotNull(until, skipped).joinToString(" · ").ifEmpty { null },
-                        onClick = job?.let { { onOpen(item, it) } },
+                        onClick = if (item.kind == TimelineKind.RAINBOW) {
+                            onOpenRainbow?.let { open -> { open(item) } }
+                        } else {
+                            job?.let { { onOpen(item, it) } }
+                        },
                         // Not knowing is not drawn here: the Sky's page for the moment says why
                         // it does not know, and a row of «?» chips on a stale day would repeat
                         // what the freshness chip already said once.

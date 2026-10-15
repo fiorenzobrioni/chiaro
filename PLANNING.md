@@ -13957,3 +13957,28 @@ ottava, celle di 23 dp) e la stessa forma. La correzione passa ogni angolo per `
 immagini del README rigenerate e **identiche al pixel**: l'aspetto del cielo non cambia. Resta da
 confermare sul dispositivo.
 
+### La pagina dell'arcobaleno (committente, 15 ott 2026)
+
+- [x] **La riga dell'arcobaleno apre una pagina** (`RainbowSheet`), come i momenti del cielo aprono la
+  loro: era l'unica riga del resto della giornata il cui senso è una direzione, e non apriva niente.
+  Nome e finestra con la pioggia, «Dove guardare» con la stessa bussola del Cielo (`LookBlock` e
+  `CompassView`, riusati), cos'è un arcobaleno in due frasi (spalle al sole, pioggia davanti),
+  **quanto sarà alto l'arco in parole** e, più quieta, la nota che è una possibilità.
+- [x] **`RainbowWindow.sight(at, coords)`** nel dominio: la direzione opposta al sole e la cima
+  dell'arco, 42° meno l'altezza del sole; null col sole giù o sopra i 42°. La finestra ricava la sua
+  direzione dalla stessa funzione. `RainbowSightTest`.
+- [x] **La direzione è quella del momento**: dentro la finestra, dove sta l'arco adesso (il sole si
+  sposta di circa 15° l'ora); prima, quella della finestra, la stessa che stampa la riga.
+- [x] L'altezza in tre parole, mai in gradi: da 28° «grande, quasi un semicerchio», da 14° «a media
+  altezza», sotto «una fascia appena sopra l'orizzonte» (`rainbowHeightRes`, `RainbowSheetTest`).
+- [x] La riga dice fino a quando (la fine della finestra), come l'ora d'oro.
+- [x] **La guida correggeva una fisica sbagliata**: «quando il sole è basso e *davanti a lui* la
+  pioggia è probabile» metteva la pioggia davanti al sole, mentre va davanti a chi guarda, col sole
+  alle spalle. Ora dice «le spalle al sole» e che la riga apre la sua pagina (IT/EN).
+
+**Come è stato verificato.** `RainbowSightTest` (la direzione opposta al sole, l'arco più alto col sole
+più basso, niente arco di notte o col sole a 68°), `RainbowSheetTest` (la pagina prima e dentro la
+finestra, l'altezza in parole ai suoi confini), `TodayAgendaTest`, la parità delle stringhe. La pagina
+resa in chiaro e in scuro, in italiano, e guardata, poi tolta: nessuna immagine del README la mostra,
+perché Milano registrata è asciutta per tutta la settimana e il README non inventa dati.
+

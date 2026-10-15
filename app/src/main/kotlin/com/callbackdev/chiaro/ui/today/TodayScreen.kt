@@ -521,6 +521,19 @@ internal fun ContentState(
         )
     }
 
+    // The rainbow's page (15 ott 2026), hoisted like the agenda's: its row is a lazy item.
+    var rainbowItem by remember { mutableStateOf<TimelineItem?>(null) }
+    rainbowItem?.let { item ->
+        RainbowSheet(
+            item = item,
+            now = content.now,
+            zone = content.zone,
+            coordinates = content.report.location.coordinates,
+            timeFmt = timeFmt,
+            onDismiss = { rainbowItem = null }
+        )
+    }
+
     // "What changed", written out here because a `LazyListScope` cannot call a
     // composable and these sentences need the string table. A revision whose fields
     // this screen has no words for (a condition code, say) produces NO line: on device
@@ -584,7 +597,7 @@ internal fun ContentState(
             content.warnings == null && guideCardVisible != true
         val firstTitleTop = if (opensThePaper) ItemGap else SectionGap
         val restOfDay: @Composable () -> Unit = {
-            RestOfDay(content, timeFmt, units) { item, job ->
+            RestOfDay(content, timeFmt, units, onOpenRainbow = { rainbowItem = it }) { item, job ->
                 agendaPage = job.id
                 // Where to look, for the rows that have a direction: the same rule
                 // and the same instant the Sky's row asks (SkySights.bearing).

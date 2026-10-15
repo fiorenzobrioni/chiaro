@@ -1526,8 +1526,18 @@ with the bare rows.
   switched off none is.
 - **A moment of the sky opens the Sky's page for it** (`AgendaPageSheet`): what it is, and
   «Dove guardare» with the compass when it has a direction, without the Sky's button to follow
-  it — following is the Sky's to do. The weather's turns, the rainbow and the rules open
-  nothing. The press fills the segment.
+  it — following is the Sky's to do. The weather's turns and the rules open nothing. The
+  press fills the segment.
+- **The rainbow opens its own page** (`RainbowSheet`, 15 ott 2026), the Sky's page in its
+  parts: the icon and the name, «Arcobaleno possibile», over the window and its rain; «Dove
+  guardare» with the same compass; what a rainbow is in two sentences, because «your back to
+  the sun» is the half nobody knows; **how high the arc will stand, in words** — its top is
+  42° less the sun's altitude (`RainbowWindow.sight`), so «grande, quasi un semicerchio» from
+  28° up, «a media altezza» from 14°, «una fascia appena sopra l'orizzonte» under it, never a
+  degree on screen; and, quieter, that it is a possibility and why. **The direction is the
+  moment's**: inside the window the bow's place now, opposite the sun as it stands (it moves
+  about a compass point every two hours); ahead of it, the window's own, the one its row
+  prints. The row also says until when, as the golden hour's does.
 
 **8.5 DayRow** — the weekday, the sky's icon with **the chance of rain under it** on the ink
 ramp (§2.3; printed from 20%), and **the day's two tracks as one block** between its printed
