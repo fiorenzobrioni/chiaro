@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -402,11 +403,14 @@ fun TemperatureRangeBar(
      * 23 set 2026) — where in its day the day is. On the week's shared scale like the
      * bar itself, so a morning below the forecast low sits honestly left of the fill.
      */
-    nowC: Double? = null
+    nowC: Double? = null,
+    /** The empty bar, the scale at rest: one step above the ground it stands on. The page's
+     * `surfaceContainerHighest`; on the open day's card, a step stronger (see `DayRow`). */
+    track: Color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerHighest,
+    /** What the bar stands on, which the now-disc's ring is cut from. */
+    ground: Color = androidx.compose.material3.MaterialTheme.colorScheme.surface
 ) {
     val colors: ChiaroColors = ChiaroTheme.colors
-    val track = androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerHighest
-    val ground = androidx.compose.material3.MaterialTheme.colorScheme.surface
     val ring = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
     Canvas(
         modifier = modifier.fillMaxWidth().height(if (nowC != null) NowDisc else height)

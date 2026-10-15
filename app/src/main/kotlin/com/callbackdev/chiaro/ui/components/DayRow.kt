@@ -117,7 +117,16 @@ fun DayRow(
     skyFrom: Float = 0f,
     /** How far the ribbon's sky leans toward the track ([DaylightRibbon]'s quiet voice):
      * the week's closed rows draw it lower, an open day in full. */
-    ribbonQuiet: Float = 0f
+    ribbonQuiet: Float = 0f,
+    /**
+     * The range bar's empty track, and the colour the ribbon's night leans toward: one step
+     * above the [ground] the row stands on. On the page that is `surfaceContainerHighest`
+     * over `surface`; on the open day's card (`surfaceContainer`) the same track measured
+     * 1.11:1 against its ground and all but vanished (committente, device, 15 ott 2026),
+     * so the card hands in a stronger one.
+     */
+    track: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    ground: Color = MaterialTheme.colorScheme.surface
 ) {
     val openLabel = stringResource(if (expanded == true) R.string.week_day_close_action else R.string.week_day_open_action)
     val state = expanded?.let {
@@ -165,14 +174,14 @@ fun DayRow(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
-                ) { Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC, nowC, expanded) }
+                ) { Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC, nowC, expanded, track, ground) }
             } else {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     DayAndSky(dayLabel, condition, rainPct, rainLabel)
-                    Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC, nowC, expanded)
+                    Range(lowLabel, highLabel, lowC, highC, scaleLowC, scaleHighC, nowC, expanded, track, ground)
                 }
             }
             DaylightRibbon(
@@ -186,7 +195,7 @@ fun DayRow(
                 height = 6.dp,
                 // The range bar's own track: the night leans toward it, so the row shows
                 // its pill of light rather than a navy bar (DESIGN §4, 23 set 2026).
-                nightFade = MaterialTheme.colorScheme.surfaceContainerHighest,
+                nightFade = track,
                 hours = sky,
                 wetLane = wetLane,
                 skyFrom = skyFrom,
@@ -277,7 +286,9 @@ private fun RowScope.Range(
     scaleLowC: Double,
     scaleHighC: Double,
     nowC: Double?,
-    expanded: Boolean?
+    expanded: Boolean?,
+    track: Color,
+    ground: Color
 ) {
     Text(
         text = lowLabel,
@@ -293,7 +304,9 @@ private fun RowScope.Range(
         scaleHighC = scaleHighC,
         description = "", // the row's own description covers it
         modifier = Modifier.weight(1f),
-        nowC = nowC
+        nowC = nowC,
+        track = track,
+        ground = ground
     )
     Row(
         horizontalArrangement = Arrangement.spacedBy(ChevronGap),

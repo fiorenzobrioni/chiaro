@@ -78,6 +78,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -637,6 +638,12 @@ private fun CompactNow(temperature: String, glyph: ConditionGlyph, color: Color)
     }
 }
 
+/** Over how much scroll the bar's ground fades in, while it is still the scrimmed sky. */
+private val BarFadeIn = 16.dp
+
+/** The page's sheet laid over the canvas' last dp ([SkySheet]'s lip): where the paper starts. */
+private val CanvasLip = 24.dp
+
 /** How far above the bar's bottom edge the canvas' bottom may climb before the hero
  * counts as gone: the lip, the padding and the ribbon, up to the temperature's baseline. */
 private val HeroReach = 120.dp
@@ -839,27 +846,17 @@ private fun ContentState(
     // is at rest.
     //
     // At the very top the bar is transparent over the canvas' top scrim band, which is
-    // exactly where §3.6 measures its white. From the FIRST scrolled pixel it carries a
-    // ground of its own, and since the review of Today (15 ott 2026, committente) that
-    // ground is the page's, `surface` with the theme's ink: the bar the Sky and Alerts
-    // draw, so the three tabs have one header once the page is being read. From 23 set it
-    // had been the scrimmed sky staying at the top of the screen, which kept the ink white
-    // and avoided a flip, at the cost of a slab of slate over a light page that no other
-    // tab had. The flip is now a crossfade: ground, ink and status-bar icons move
-    // together on the effects spring, never white on paper or black on sky. When the hero
-    // has scrolled away the bar also carries the temperature and the sky's icon: the
-    // reader who is down in the details still has the one number the page is about.
+    // exactly where §3.6 measures its white. From the first scrolled pixel it carries a
+    // ground of its own, and that ground follows the scroll (committente, 15 ott 2026): the
+    // scrimmed sky at first, fading into the page's `surface` as the page climbs, and the
+    // paper exactly when the page's edge reaches the bar, which is then the header Sky and
+    // Alerts draw. The ink follows the ground ([placeBarColors]), so no point of the scroll
+    // sets the name on a ground it does not read on. When the hero has scrolled away the bar
+    // also carries the temperature and the sky's icon: the reader who is down in the details
+    // still has the one number the page is about.
     val listState = rememberLazyListState()
     val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val density = LocalDensity.current
-    val atTop by remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
-        }
-    }
-    // The status bar shows what is behind it, and what is behind it is this bar: the sky
-    // at rest, white icons; the page once scrolled, the theme's.
-    LaunchedEffect(isCurrent, atTop) { if (isCurrent) onCanvasBehindBar(atTop) }
 
     // The canvas keeps the row's seat empty: a spacer as tall as the bar really is,
     // measured rather than quoted because the row grows with the type scale, with the
@@ -874,25 +871,43 @@ private fun ContentState(
         moonIllumination = content.sky.moonIllumination,
         moonAltitudeDeg = content.sky.moonAltitudeDeg
     )
-    // The transparent end is the same color at zero alpha, not `Color.Transparent`:
-    // colors interpolate perceptually here, and fading in from a transparent BLACK would
-    // draw a veil of the wrong hue on the way.
-    val paper = MaterialTheme.colorScheme.surface
-    val headerGround by animateColorAsState(
-        targetValue = if (atTop) paper.copy(alpha = 0f) else paper,
-        animationSpec = ChiaroMotion.effects(reduced),
-        label = "place row ground"
+    // The bar fades with the scroll (committente, 15 ott 2026): from the sky at the top of
+    // the canvas to the page's paper, reaching the paper exactly when the page's edge reaches
+    // the bar, so the bar is always the colour of what is about to be under it. Its ground
+    // fades in over the first [BarFadeIn] while it is still the scrimmed sky; the ink and the
+    // status-bar icons follow the ground ([placeBarColors]).
+    val skyTop = SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha).compositeOver(skyGradient.top)
+    val barTravel by remember {
+        derivedStateOf {
+            val first = listState.layoutInfo.visibleItemsInfo.firstOrNull()
+            when {
+                first == null -> 0f to 0f
+                first.index > 0 -> 1f to 1f
+                else -> {
+                    val scrolled = listState.firstVisibleItemScrollOffset.toFloat()
+                    val travel = with(density) { first.size - (headerHeight + CanvasLip).toPx() }
+                    val fadeIn = with(density) { BarFadeIn.toPx() }
+                    (scrolled / travel.coerceAtLeast(1f)).coerceIn(0f, 1f) to
+                        (scrolled / fadeIn).coerceIn(0f, 1f)
+                }
+            }
+        }
+    }
+    val bar = placeBarColors(
+        skyTop = skyTop,
+        paper = MaterialTheme.colorScheme.surface,
+        paperInk = MaterialTheme.colorScheme.onSurface,
+        paperDots = MaterialTheme.colorScheme.outlineVariant,
+        toPaper = barTravel.first,
+        opacity = barTravel.second
     )
-    val headerInk by animateColorAsState(
-        targetValue = if (atTop) SkyPalette.Ink else MaterialTheme.colorScheme.onSurface,
-        animationSpec = ChiaroMotion.effects(reduced),
-        label = "place row ink"
-    )
-    val headerDotInk by animateColorAsState(
-        targetValue = if (atTop) SkyPalette.InkQuiet else MaterialTheme.colorScheme.outlineVariant,
-        animationSpec = ChiaroMotion.effects(reduced),
-        label = "place row dots"
-    )
+    val headerGround = bar.ground
+    val headerInk = bar.ink
+    val headerDotInk = bar.dots
+    // The status bar shows what is behind it, and what is behind it is this bar: its icons
+    // are white while the bar's ink is.
+    val lightIcons = bar.inkIsLight
+    LaunchedEffect(isCurrent, lightIcons) { if (isCurrent) onCanvasBehindBar(lightIcons) }
     // The hero is gone once the canvas' bottom has climbed to within [HeroReach] of the
     // bar: past that line the temperature is under the bar or above the screen.
     val heroGone by remember {
@@ -1217,7 +1232,7 @@ private fun CanvasHeader(
     // The page laid over the sky's last few dp (DESIGN §8.1, 23 set 2026). Its lip is
     // inside the floor, not added to it: the skeleton quotes the floor, and the block
     // must still end where the skeleton's does.
-    val sheet = SkySheet(surface = MaterialTheme.colorScheme.surface)
+    val sheet = SkySheet(surface = MaterialTheme.colorScheme.surface, lip = CanvasLip)
     SkyCanvas(
         gradient = gradient,
         minHeight = floor,
@@ -1953,6 +1968,21 @@ private fun WeekRow(
         animationSpec = ChiaroMotion.spatial(reduced),
         label = "open day top"
     )
+    // On the card the bar's empty track goes one step stronger, `outlineVariant`: the page's
+    // `surfaceContainerHighest` stands 1.11:1 off the card (1.23 off the page), and an open day
+    // showed a range bar with no track (committente, device, 15 ott 2026). The ring of today's
+    // disc is cut from the ground it stands on, the card's while open.
+    val track by animateColorAsState(
+        targetValue = if (expanded) MaterialTheme.colorScheme.outlineVariant
+        else MaterialTheme.colorScheme.surfaceContainerHighest,
+        animationSpec = ChiaroMotion.effects(reduced),
+        label = "open day track"
+    )
+    val rowGround by animateColorAsState(
+        targetValue = if (expanded) card else MaterialTheme.colorScheme.surface,
+        animationSpec = ChiaroMotion.effects(reduced),
+        label = "open day row ground"
+    )
     // The closed week speaks its skies lower, so the bars are read first; the open day says
     // its own in full (review of Today, 15 ott 2026, DESIGN §4).
     val ribbonQuiet by animateFloatAsState(
@@ -1968,7 +1998,10 @@ private fun WeekRow(
                     drawRoundRect(color = ground, cornerRadius = CornerRadius(GroupCorner.toPx()))
                 }
             }
-            .padding(top = top)
+            // Never under zero: the spatial spring overshoots, and on its way back from 8dp it
+            // went below 0 — a negative padding, which Compose refuses with an exception, and
+            // the app crashed on closing a day (committente, 15 ott 2026; `TodayAgendaTest`).
+            .padding(top = top.coerceAtLeast(0.dp))
     ) {
         DayRow(
             dayLabel = label,
@@ -2003,7 +2036,9 @@ private fun WeekRow(
             ), wetDescription(day.hours.map { it.hour }, is24h, locale)).joinToString(". "),
             onClick = if (opens) onToggle else null,
             expanded = if (opens) expanded else null,
-            ribbonQuiet = ribbonQuiet,
+            ribbonQuiet = ribbonQuiet.coerceIn(0f, 1f),
+            track = track,
+            ground = rowGround,
             nowC = if (isToday) nowC else null,
             contentPadding = PaddingValues(horizontal = OpenDayInset)
         )

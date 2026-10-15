@@ -1245,19 +1245,25 @@ when the page is at rest — so it is the one bar in the app with two grounds:
 
 - **at the very top**: no ground of its own, white ink over the canvas' top scrim band,
   which is exactly where §3.6 measures its 5.27:1;
-- **from the first scrolled pixel**: a ground of its own, **the page's** — `surface` with
-  the theme's ink, the header Sky and Alerts draw (review of Today, 15 ott 2026, committente),
-  so the three tabs have one bar once the page is being read. Ground, ink, the pager dots and
-  the status-bar icons cross over together on §7's effects spring, so the change from white on
-  sky to the theme's ink on paper is a crossfade and never a frame of black on sky or white on
-  paper. Nothing in between, because in between is white ink over unscrimmed sky.
+- **from the first scrolled pixel**: a ground of its own that **follows the scroll**
+  (committente, 15 ott 2026): the canvas' top stop under the §3.6 scrim at first, fading
+  into the page's `surface` as the page climbs, and reaching it exactly when the page's edge
+  meets the bar — so the bar is always the colour of what is about to be under it, and at
+  the end it is the header Sky and Alerts draw. The ground is opaque throughout (it fades in
+  over the first 16dp only while it is still the scrimmed sky), so the text stands on one
+  colour and never on sky showing through. The ink cannot blend the same way, since halfway
+  that is a grey name on a grey ground: it blends while the blend still reads at 4.5:1 (in the
+  dark theme, the whole way), and otherwise it is whichever of the sky's white and the theme's
+  ink reads better, which flips once. Swept over every sky top, both palettes, both themes and
+  the whole scroll, the worst is that flip in the light theme, **4.14:1** (sun at −10°, 47% of
+  the way): past the 3:1 the 22sp name needs, a hair under the hour line's 4.5 for the
+  instant the scroll passes it (`PlaceBarColorsTest`). The status-bar icons follow the ink.
 
-  From 23 set to 15 ott 2026 that ground was **the sky staying at the top**: the canvas' top
-  stop under the §3.6 scrim, with the ink white throughout, so nothing flipped. It was
-  dropped because in the light theme it was a slab of slate over a light page that no other
-  tab had, the one place the three tabs looked like two apps; in the dark theme the two
-  grounds are near enough to be the same. It is one colour and one ink to bring back if the
-  device says the crossfade is worse than the slab.
+  Its history: until 23 set the bar took `surface` at once and flipped from white on sky to
+  black on paper in one frame; from 23 set to 15 ott it stayed the scrimmed sky with white
+  ink, which never flipped but was a slab of slate over the light page no other tab had; for
+  a day it turned to paper on a 100 ms crossfade, which the committente found too sudden. The
+  fade keeps both ends — the sky's at the top, the other tabs' below.
 
 **Compact** (23 set 2026): once the canvas has climbed to within 120dp of the bar, the hero
 is under it or gone, and the bar carries it — the sky's still icon and the temperature in
@@ -1401,11 +1407,18 @@ beside the text columns (grown with the type), the icon, the gaps and the chevro
 phone from 125%, on a 411dp one from about 180%. `DayRowSplitTest` holds the numbers.
 
 **8.5b The open day** (24 set 2026) — **a card since the review of Today** (15 ott 2026): the
-row, its facts and its hours on one `surfaceContainer` ground with the 20dp `GroupCorner`, drawn
+row, its facts and its hours on one `surfaceContainer` ground with the 20dp `GroupCorner`. On the
+card the range bar's empty track (and the colour the ribbon's night leans toward) goes one step
+stronger, `outlineVariant`: the page's `surfaceContainerHighest` measured 1.11:1 against the card
+(1.23 against the page) and the open day showed a bar with no track (committente, device); with
+`outlineVariant` it is 1.46:1 in the light theme, 1.74 in the dark, and today's disc cuts its ring
+from the card. The card is drawn
 8dp inside the page margin with 8dp of air inside it, so the row's columns do not move and the
 strip scrolls under the card's edge rather than off the screen; the ground fades in on the
 effects spring while the card's top air grows on the spatial one, so opening is one movement.
-Until then the facts and the strip opened straight onto the paper between two rows, the strip's
+That air is held at zero or above: the spatial spring overshoots, and on closing it went under
+zero, a negative padding Compose refuses with an exception — the app crashed on closing a day
+until it was clamped (committente, device, 15 ott 2026; `TodayAgendaTest`). Until then the facts and the strip opened straight onto the paper between two rows, the strip's
 curve running edge to edge, and nothing said which day they belonged to. A closed row stays on
 the paper: seven cards would be a heavier week, and the chevron already says which rows open.
 Its hour strip opens **on the hour before the first

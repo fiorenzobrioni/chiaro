@@ -13491,3 +13491,52 @@ Avvisi, i segmenti nei dettagli) e ha chiesto di fare tutto il piano.
   e guardate (`today-now`, `today-week`, `today-details`); `widgets.png` usciva diverso di qualche
   pixel su due icone animate, senza nessun cambio che lo tocchi, ed è rimasto com'era.
 - Suite completa e lint.
+
+## Oggi: il giorno che si chiude, la sua barra, la barra in alto (committente, 15 ott 2026)
+
+Provando la revisione sul telefono il committente ha segnalato tre cose.
+
+- [x] **Chiudere un giorno della settimana faceva crollare l'app.** L'aria in alto della scheda del
+  giorno aperto seguiva la molla spaziale (smorzamento 0,8), che rimbalza: chiudendo, sulla via
+  verso 0 dp scendeva sotto zero, e un `padding` negativo in Compose è un'eccezione
+  (`IllegalArgumentException: Padding must be non-negative`). Riprodotto con un test prima di
+  correggerlo; ora il valore è tenuto a zero o più, e il tono del nastro fra 0 e 1.
+- [x] **Sulla scheda aperta la barra delle temperature era poco contrastata.** La sua traccia
+  vuota è `surfaceContainerHighest`, che sulla pagina sta a 1,23:1 dal fondo e sulla scheda
+  (`surfaceContainer`) a 1,11:1, misurato su entrambe le palette: la barra restava senza traccia.
+  Sulla scheda la traccia diventa `outlineVariant` (1,46:1 in chiaro, 1,74 in scuro), lo stesso
+  colore verso cui piega la notte del nastro, e il cerchio del «adesso» si ritaglia dal fondo della
+  scheda. Il colore segue l'apertura sulla molla degli effetti.
+- [x] **La barra in alto sfuma con lo scorrimento** invece di diventare chiara di colpo:
+  `placeBarColors` (nuovo, `ui/today/PlaceBarColors.kt`) dà fondo, inchiostro, pallini e icone
+  della barra di stato per un punto dello scorrimento. Il fondo va dal cielo in cima alla tela,
+  col velo di §3.6, alla carta della pagina, opaco, e arriva alla carta quando ci arriva il bordo
+  della pagina; l'inchiostro sfuma finché la sfumatura si legge a 4,5:1, altrimenti è il migliore
+  fra il bianco del cielo e quello del tema, e cambia una volta sola.
+
+**Decisioni e deviazioni**
+
+- **Non una semplice dissolvenza da trasparente a carta**, che era la cosa ovvia: a metà corsa il
+  nome sarebbe stato grigio su grigio, e col cielo che si vede attraverso un fondo semitrasparente
+  (in chiaro, di notte) testo scuro su blu notte. Il fondo sfuma invece fra due colori pieni, e il
+  testo sta sempre su un colore solo.
+- **Il punto peggiore è 4,14:1**, nel tema chiaro col sole a −10° a metà corsa: sopra il 3:1 del
+  nome a 22sp, poco sotto il 4,5 della riga dell'ora, per l'istante in cui lo scorrimento ci
+  passa. Fissato da `PlaceBarColorsTest`, che percorre ogni cielo, palette, tema e punto dello
+  scorrimento.
+- **La traccia più forte solo sulla scheda aperta**: sulla carta la traccia di prima regge ed è
+  quella delle altre righe; cambiarla ovunque avrebbe appesantito la settimana chiusa, che la
+  revisione aveva appena alleggerito.
+
+**Come è stato verificato**
+
+- `TodayAgendaTest`: aprire e chiudere due volte un giorno, con tutte le animazioni fino in fondo.
+  Prima della correzione falliva con l'eccezione del padding negativo; ora passa.
+- `PlaceBarColorsTest` (nuovo): il nome si legge in ogni punto della sfumatura (4,14:1 il
+  peggiore); le due estremità sono il bianco del cielo e la barra delle altre tab; in chiaro
+  l'inchiostro cambia una volta sola, mai avanti e indietro.
+- La pagina disegnata in chiaro a 100, 300, 450 e 600 px di scorrimento e in scuro a 300 e 600, e
+  la settimana col giorno aperto in chiaro e in scuro: guardate. `today-week.png` del README
+  rigenerata (la traccia della barra sulla scheda); le altre immagini non cambiano.
+- Suite completa e lint.
+

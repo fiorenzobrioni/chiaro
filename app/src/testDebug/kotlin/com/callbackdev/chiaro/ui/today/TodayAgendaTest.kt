@@ -116,4 +116,33 @@ class TodayAgendaTest {
 
         compose.onAllNodes(row and state(R.string.week_day_state_open)).assertCountEquals(1)
     }
+
+    /**
+     * Closing a day crashed the app (committente, device, 15 ott 2026): the open day's top air
+     * rode the spatial spring, which overshoots, and on its way back to zero it went under
+     * it — a negative padding, which Compose refuses with an exception. Open, close, and let
+     * every animation run to its end.
+     */
+    @Test
+    fun `a day opened and closed again closes without a crash`() {
+        show()
+        val tomorrow = MilanRecording.today(app).week[1].forecast.date
+        val label = Formats.dayLabel(tomorrow, app.resources.configuration.locales[0])
+        scrollTo(label)
+        val row = hasText(label) and hasClickAction()
+
+        repeat(2) {
+            compose.onAllNodes(row).onFirst().performClick()
+            compose.waitForIdle()
+            compose.onAllNodes(row).onFirst().performClick()
+            compose.waitForIdle()
+        }
+
+        compose.onAllNodes(
+            row and SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription,
+                app.getString(R.string.week_day_state_closed)
+            )
+        ).assertCountEquals(1)
+    }
 }
