@@ -43,6 +43,7 @@ import com.callbackdev.chiaro.ui.components.SkyBodiesLayer
 import com.callbackdev.chiaro.ui.components.SkyCanvas
 import com.callbackdev.chiaro.ui.components.SkySheet
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.shell.PageColumns
 import com.callbackdev.chiaro.ui.theme.SkyGradient
 import com.callbackdev.chiaro.ui.theme.SkyPalette
 import com.callbackdev.chiaro.ui.theme.tabular
@@ -77,7 +78,7 @@ internal fun CanvasHeader(
     /** The travelling number's dock, or null where the figure stays on the sky (reduced motion). */
     dock: HeroDock? = null,
     /** How the paper under the canvas is laid out (§8.12c): the hero stands over its first pane. */
-    columns: TodayColumns? = null,
+    columns: PageColumns? = null,
     /** A navigation rail over the canvas' start (§8.12c): the sky runs under it, nothing else. */
     railInset: Dp = 0.dp
 ) {

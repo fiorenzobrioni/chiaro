@@ -72,7 +72,6 @@ import com.callbackdev.chiaro.ui.shell.ChiaroBottomBar
 import com.callbackdev.chiaro.ui.shell.ChiaroNavRail
 import com.callbackdev.chiaro.ui.shell.LocalRailInset
 import com.callbackdev.chiaro.ui.shell.RailMinWidth
-import com.callbackdev.chiaro.ui.shell.TabColumn
 import com.callbackdev.chiaro.ui.shell.railInset
 import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.ui.sky.SkyActions
@@ -540,7 +539,7 @@ class ReadmeScreenshots {
             Box(modifier = Modifier.fillMaxSize()) {
                 Box(modifier = Modifier.fillMaxSize().padding(start = if (underRail) 0.dp else inset)) {
                     CompositionLocalProvider(LocalRailInset provides if (underRail) inset else 0.dp) {
-                        if (underRail) page() else TabColumn { page() }
+                        page()
                     }
                 }
                 ChiaroNavRail(selected = tab, onSelect = {})

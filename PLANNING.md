@@ -14034,3 +14034,66 @@ linguaggio; queste le differenze che restavano qui.
 
 `./gradlew :app:compileDebugKotlin test :app:testDebugUnitTest :app:lintDebug` (con lo script del
 mirror). Nessuna immagine del README mostra le impostazioni dei widget, quindi nessuna cambia.
+
+## Cielo e Avvisi su pieghevoli e tablet (committente, 16 ott 2026)
+
+Domanda del committente: Oggi ha il suo layout a due pannelli (punto 8, 15 ott), Cielo e Avvisi no; lasciarle
+così o dare loro un layout dedicato? **Verificato prima di decidere**, con rese di prova (poi tolte) a
+841 × 701 dp (pieghevole aperto) e 1280 × 800 dp (tablet in orizzontale) della lista com'era, centrata a
+840 dp (`TabColumn`):
+
+- sul pieghevole la lista prendeva tutti i 761 dp di carta: l'orario di una riga a un capo e la sua
+  campanella a 600 dp di distanza, la card di stasera una fascia blu con le parole nel terzo sinistro, la
+  prossima card con mezza larghezza vuota;
+- sul tablet 200 dp di carta vuota per lato, e in una schermata una sezione e mezza: stasera e metà della
+  prossima card in Cielo, la risposta e l'interruttore delle allerte in Avvisi;
+- e sullo stesso dispositivo Oggi stava in due pannelli e le altre due tab in una colonna sola: tre tab,
+  due grammatiche.
+
+**Deciso: due pannelli, con la regola di Oggi.**
+
+- [x] **Una regola sola per le tre tab** (`pageColumns`, ex `todayColumns`, ora in `ui/shell/PageColumns.kt`,
+  `PageColumnsTest`): due pannelli da 640 dp di carta, al massimo 1200 insieme e centrati oltre, 24 dp ai
+  bordi e 32 fra i pannelli. Oggi passa la rail come margine perché è disposto a tutta finestra; Cielo e
+  Avvisi sono disposti accanto alla rail e passano zero. Un test verifica che la stessa finestra dia gli
+  stessi pannelli a Oggi e alle altre due: un pieghevole che mostra Oggi in due pannelli mostra in due
+  tutte le tab, e tenuto in verticale (621 dp di carta) le mostra tutte in una.
+- [x] **Cielo**: a sinistra stasera e i momenti di oggi e domani con la riga della guida, cioè i prossimi due
+  giorni, come il pannello sinistro di Oggi è oggi; a destra il calendario («In arrivo») con la nota sulla
+  previsione, come la settimana di Oggi.
+- [x] **Avvisi**: a sinistra la risposta e le allerte ufficiali da cui risponde (cosa è in vigore e se il
+  telefono lo dirà); a destra gli avvisi letti dalla previsione, quelli pronti e poi i propri, che è la parte
+  che cresce. Senza avvisi propri i due pannelli vengono alti più o meno uguali.
+- [x] **La pagina detta una volta** (`PaneBlocks`, `paneItems` in `ui/shell/PaneList.kt`): ogni schermata
+  elenca i suoi blocchi attraverso, a sinistra, a destra, nell'ordine di lettura. Sul telefono ogni blocco
+  resta un item della lista nell'ordine di sempre; su una pagina larga i blocchi vanno nel loro pannello e i
+  pannelli sono un item solo, uno scorrimento, come in Oggi. Le schede dei propri avvisi restano con la
+  loro chiave (`key`), così un interruttore anima sul posto anche nel pannello.
+- [x] **La card «notifiche spente»** sta attraverso i due pannelli, come i banner di Oggi.
+- [x] **Il primo titolo del pannello destro** («In arrivo», «Pronti») parte dal bordo superiore della card
+  a sinistra (`PaneTitleTop`, gli 8 dp d'aria della card) invece che 16 dp più in basso. L'intestazione
+  della tab ha il nome sopra il primo pannello e l'ingranaggio sopra la fine del secondo.
+- [x] **Il FAB** finisce dove finiscono le sezioni del pannello destro (`columns.end`), non nell'angolo della
+  finestra; l'etichetta si chiude quando la prima card del pannello sinistro è uscita dallo schermo
+  (`firstInView`, misurata): sul telefono resta la regola di sempre, il primo item.
+- [x] Tolti `TabColumn` e `TabColumnMax`.
+
+**Decisioni e deviazioni.** *La stessa soglia di Oggi e non una propria*: la riga più esigente di Cielo e
+Avvisi (una scheda con interruttore e orario, un momento con orario e campanella) sta già a 310 dp, e una
+soglia diversa avrebbe fatto stare Oggi in due pannelli e il Cielo in uno sullo stesso schermo. *Il
+calendario a destra e non stasera*: stasera è la risposta della tab e sta dove si comincia a leggere. Il
+pannello sinistro di Cielo viene più lungo del destro (sul pieghevole circa 1000 dp contro 550 con la
+registrazione di Milano): dipende da quanti momenti segue il lettore, e un pannello destro con i momenti di
+domani avrebbe spezzato la sezione dei momenti in due. *La riga della guida a sinistra*, in fondo ai momenti,
+dove era sul telefono: aprire il pannello destro con lei avrebbe messo una riga d'informazione sopra il
+titolo del calendario. *I fogli restano fogli* (la pagina di un evento, l'editor di una regola, il catalogo,
+le idee): Material li limita a 640 dp e li centra; farne un pannello di dettaglio accanto alla lista è un
+layout a sé, aggiunto alla domanda aperta 5 di DESIGN. *Nessuna nuova immagine nel README*: `today-foldable`
+mostra già cosa fa l'app su uno schermo largo, e il gruppo delle immagini resta piccolo.
+
+**Come è stato verificato.** `PageColumnsTest` (telefono, pieghevole verticale e aperto, il minimo dei
+pannelli, il centrato oltre i 1200 dp, Oggi e le tab che si dividono alla stessa finestra) e
+`DetailsPerRowTest` (le tessere per riga, separate dal vecchio `TodayColumnsTest`). Rese di prova, poi
+tolte, di Cielo e Avvisi a 841 × 701 (in cima e in fondo alla pagina, chiaro e scuro, con e senza avvisi
+propri), a 701 × 841 (una colonna) e a 1280 × 800. Tutte le immagini del README rigenerate: identiche, perché
+il telefono e Oggi non cambiano. Suite completa e lint.

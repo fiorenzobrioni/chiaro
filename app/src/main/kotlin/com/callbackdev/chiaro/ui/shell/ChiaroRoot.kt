@@ -199,18 +199,18 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
             }
         }
         entry<SkyKey> {
+            // Sky and Alerts lay out their own panes from the width they are given
+            // (`pageColumns`, DESIGN §8.12c), as Today does.
             Box(tabPage) {
-                TabColumn {
-                    SkyRoute(
-                        onOpenSettings = { nav.navigate(SettingsKey) },
-                        onOpenGuide = { nav.navigate(SkyGuideKey(inTab = true)) }
-                    )
-                }
+                SkyRoute(
+                    onOpenSettings = { nav.navigate(SettingsKey) },
+                    onOpenGuide = { nav.navigate(SkyGuideKey(inTab = true)) }
+                )
             }
         }
         entry<AlertsKey> {
             Box(tabPage) {
-                TabColumn { AlertsRoute(onOpenSettings = { nav.navigate(SettingsKey) }) }
+                AlertsRoute(onOpenSettings = { nav.navigate(SettingsKey) })
             }
         }
         entry<SettingsKey> {

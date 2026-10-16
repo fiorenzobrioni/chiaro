@@ -370,7 +370,7 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
 }
 
 /**
- * How many tiles a row of the details holds in [width] (pure, `TodayColumnsTest`): as many as
+ * How many tiles a row of the details holds in [width] (pure, `DetailsPerRowTest`): as many as
  * fit at [DetailTileMinWidth], a phone's tile, between two and [DetailsMaxPerRow]. Of the
  * counts that fit, the largest that leaves **no short last row**, so nine tiles stand three by
  * three rather than four, four and one, whose odd tile would run the whole width of a tablet;

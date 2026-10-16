@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
 import com.callbackdev.chiaro.ui.shell.LocalRailInset
+import com.callbackdev.chiaro.ui.shell.pageColumns
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -585,7 +586,7 @@ internal fun ContentState(
         // from laying out a phone's column on a tablet.
         val windowWidth = LocalWindowInfo.current.containerSize.width
         val columns = with(density) {
-            todayColumns((if (pageWidth > 0) pageWidth else windowWidth).toDp(), railInset)
+            pageColumns((if (pageWidth > 0) pageWidth else windowWidth).toDp(), railInset)
         }
         val paper = Modifier.padding(start = columns.start, end = columns.end)
         // The first title on the paper (review of 12 ott 2026): the sheet's own 24dp lip
