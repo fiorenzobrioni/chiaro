@@ -31,7 +31,9 @@ data class SkyBodies(
     val moonIllumination: Double,
     /** Moon − sun longitude, `[0, 360)`: under 180 the moon is waxing. */
     val moonElongationDeg: Double,
-    val cloudPct: Int,
+    /** How much of the light the hour's cloud takes, 0..1: the scene's [SkyScene.opacity],
+     * so a low deck hides what a high veil lets through ([cloudOpacity]). */
+    val cloudOpacity: Float,
     /** South of the equator the reader faces north to find the sun: east is on the right,
      * and the moon's lit limb is mirrored. */
     val southern: Boolean
@@ -47,7 +49,9 @@ data class SkyBodies(
  * sun stays near the middle, a summer one rises and sets near the edges, which is true),
  * **up** by altitude. Below the horizon a body is not drawn. Clouds veil the sun rather than
  * hide it, and under a full cover it loses its **edge**, not only its strength — see
- * [sunVeil]: an overcast sun is a brighter part of the sky, never a disc.
+ * [sunVeil]: an overcast sun is a brighter part of the sky, never a disc. What veils is the
+ * cloud's **opacity**, not its cover (16 ott 2026): a sky closed by a high veil still shows
+ * the sun's disc, one closed by a low deck shows neither it nor the moon ([moonVeil]).
  *
  * The moon wears its phase — the lit limb on the sun's side, the terminator an ellipse —
  * and the rest of its disc is barely there, as earthshine.
@@ -63,12 +67,11 @@ fun SkyBodiesLayer(bodies: SkyBodies, modifier: Modifier = Modifier) {
     Canvas(modifier = modifier.fillMaxSize()) {
         val radius = BodyRadius.toPx()
         if (size.height < radius * 2 + 4.dp.toPx() || size.width <= 0f) return@Canvas
-        val cloud = (bodies.cloudPct.coerceIn(0, 100) / 100f)
+        val cloud = bodies.cloudOpacity.coerceIn(0f, 1f)
         if (bodies.moonAltitudeDeg > 0.0) {
             val center = place(bodies.moonAzimuthDeg, bodies.moonAltitudeDeg, bodies.southern, radius)
-            // By day the moon is the pale thing it is; at night it is the brightest mark.
-            val day = bodies.sunAltitudeDeg > 0.0
-            moon(center, radius * 0.9f, bodies, alpha = (if (day) 0.55f else 0.95f) * (1f - 0.8f * cloud))
+            val veil = moonVeil(cloud, day = bodies.sunAltitudeDeg > 0.0)
+            if (veil.disc > 0f || veil.glow > 0f) moon(center, radius * 0.9f, bodies, veil)
         }
         if (bodies.sunAltitudeDeg > -0.5) {
             val center = place(bodies.sunAzimuthDeg, bodies.sunAltitudeDeg, bodies.southern, radius)
@@ -109,7 +112,7 @@ private fun DrawScope.sun(center: Offset, radius: Float, altitudeDeg: Double, cl
 internal data class SunVeil(val disc: Float, val glowCore: Float, val glowMid: Float, val spread: Float)
 
 /**
- * The sun under [cloud] (0 clear, 1 full cover). Until 24 set 2026 the cloud only faded
+ * The sun under [cloud] (0 clear, 1 all the light taken: [cloudOpacity]). Until 24 set 2026 the cloud only faded
  * everything — disc and glow by the same 70% — so an overcast sun at noon was a crisp
  * grey-white disc at 30% with almost no glow: on a device, over a grey sky, **it read as
  * the moon** (committente, from a screenshot at 15:50 with the moon three hours from
@@ -119,23 +122,53 @@ internal data class SunVeil(val disc: Float, val glowCore: Float, val glowMid: F
  * 80% a faint disc in a wide glow, at half a disc with its halo, in a clear sky the same
  * sun as before. The moon, always a crisp disc with its phase, can no longer be taken
  * for it. Simulated on the screenshot's own sky before it was written.
+ *
+ * Since 16 ott 2026 [cloud] is the cloud's opacity rather than its cover, and the two ends
+ * are two skies: a full high veil is about 0.3, the sun's disc still there in a wide halo,
+ * which is what the 24 set glow was for; only a closed low deck reaches 1, and under a
+ * stratus the sun is a faint, broad brightening and no more. So the glow now dims with the
+ * opacity as well (its core from 0.55 to 0.30) while it spreads wider: Lima's stratus on a
+ * device kept a sun as bright as a veiled one.
  */
 internal fun sunVeil(cloud: Float): SunVeil {
     val c = cloud.coerceIn(0f, 1f)
     return SunVeil(
         disc = 1f - c,
-        glowCore = 0.55f - 0.15f * c,
-        glowMid = 0.18f + 0.10f * c,
-        spread = 1f + 0.3f * c
+        glowCore = 0.55f - 0.25f * c,
+        glowMid = 0.18f + 0.06f * c,
+        spread = 1f + 0.4f * c
     )
 }
 
-private fun DrawScope.moon(center: Offset, radius: Float, bodies: SkyBodies, alpha: Float) {
+/** How the cloud draws the moon: the opacity of its disc (the lit part and the earthshine)
+ * and of its glow, and how far the glow spreads (× the clear-sky reach). */
+internal data class MoonVeil(val disc: Float, val glow: Float, val spread: Float)
+
+/**
+ * The moon under [cloud] (its [cloudOpacity], 16 ott 2026). By day the moon is the pale thing
+ * it is, and a cloud that takes the light takes it: behind a closed low deck there is no moon
+ * to see, behind a high veil a paler one. At night it is the brightest mark, and a deck that
+ * hides its disc still shows where it is, as a dim, wide glow. Until then it faded by 80% of
+ * the cover at most, so a day moon stayed drawn behind a stratus that hides the sun.
+ */
+internal fun moonVeil(cloud: Float, day: Boolean): MoonVeil {
+    val c = cloud.coerceIn(0f, 1f)
+    return if (day) {
+        MoonVeil(disc = MoonByDay * (1f - c), glow = MoonByDay * (1f - c), spread = 1f)
+    } else {
+        MoonVeil(disc = MoonByNight * (1f - c), glow = MoonByNight * (1f - 0.6f * c), spread = 1f + 0.3f * c)
+    }
+}
+
+private const val MoonByDay = 0.55f
+private const val MoonByNight = 0.95f
+
+private fun DrawScope.moon(center: Offset, radius: Float, bodies: SkyBodies, veil: MoonVeil) {
     val face = SkyPalette.MoonFace
-    val glow = glowRadius(center, radius * 3f)
+    val glow = glowRadius(center, radius * 3f * veil.spread)
     drawCircle(
         brush = Brush.radialGradient(
-            0f to face.copy(alpha = 0.22f * alpha * bodies.moonIllumination.toFloat()),
+            0f to face.copy(alpha = 0.22f * veil.glow * bodies.moonIllumination.toFloat()),
             1f to Color.Transparent,
             center = center,
             radius = glow
@@ -144,9 +177,10 @@ private fun DrawScope.moon(center: Offset, radius: Float, bodies: SkyBodies, alp
         center = center
     )
     // Earthshine: the unlit disc, just there.
-    drawCircle(face.copy(alpha = 0.14f * alpha), radius = radius, center = center)
+    if (veil.disc <= 0f) return
+    drawCircle(face.copy(alpha = 0.14f * veil.disc), radius = radius, center = center)
     val lit = moonLitPath(center, radius, bodies.moonIllumination.toFloat(), litOnRight(bodies))
-    drawPath(lit, face.copy(alpha = alpha))
+    drawPath(lit, face.copy(alpha = veil.disc))
 }
 
 /** The glow may reach a little past the band — its tail there is a few percent of white,

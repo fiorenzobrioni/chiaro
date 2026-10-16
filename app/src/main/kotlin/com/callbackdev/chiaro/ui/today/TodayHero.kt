@@ -155,7 +155,7 @@ internal fun CanvasHeader(
                         moonAzimuthDeg = sky.moonAzimuthDeg,
                         moonIllumination = sky.moonIllumination,
                         moonElongationDeg = sky.moonElongationDeg,
-                        cloudPct = sky.cloudPct,
+                        cloudOpacity = scene.opacity,
                         southern = sky.southern
                     )
                 )

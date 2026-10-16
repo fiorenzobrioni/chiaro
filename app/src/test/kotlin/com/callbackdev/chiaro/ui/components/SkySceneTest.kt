@@ -105,9 +105,76 @@ class SkySceneTest {
         assertTrue("a wind from the north still breathes", kotlin.math.abs(scene(windFrom = 0).drift) > 0f)
     }
 
+    /**
+     * 16 ott 2026: the low and middle layers make the deck, the high one the veil behind it,
+     * overlapping at random as the provider's total does; neither more than the total.
+     */
     @Test
-    fun `the high layer's share of the cover makes the veils`() {
-        assertEquals(0f, scene(layers = null).cirrus, 0f)
-        assertEquals(0.75f, scene(layers = CloudLayers(lowPct = 20, midPct = 0, highPct = 60)).cirrus, 1e-6f)
+    fun `the layers split the cover into a deck and a veil`() {
+        // No layers: the whole cover is the deck, as before the layers were read.
+        assertEquals(0.4f to 0f, cloudDecks(40, null))
+        // Layers that explain nothing of a cloudy total do not empty the sky.
+        assertEquals(0.6f to 0f, cloudDecks(60, CloudLayers(0, 0, 0)))
+        assertEquals(1f to 0f, cloudDecks(100, CloudLayers(100, 0, 0)))
+        assertEquals(0f to 1f, cloudDecks(100, CloudLayers(0, 0, 100)))
+        // Low and middle overlap at random: 50% and 50% cover 75% of the sky.
+        val (deck, veil) = cloudDecks(90, CloudLayers(50, 50, 60))
+        assertEquals(0.75f, deck, 1e-6f)
+        assertEquals(0.6f, veil, 1e-6f)
+        // Never more than the total, which is the number the hero's word comes from.
+        assertEquals(0.2f to 0.2f, cloudDecks(20, CloudLayers(80, null, 90)))
+        assertEquals(0.75f, scene(cloud = 90, layers = CloudLayers(50, 50, 60)).deck, 1e-6f)
+    }
+
+    /**
+     * 16 ott 2026: a low deck takes the light, a middle one most of it, a high veil little;
+     * a wet hour takes all its cover's; no layers is the cover itself.
+     */
+    @Test
+    fun `the cloud's opacity is its layer's`() {
+        assertEquals(0.7f, cloudOpacity(70, null, SkyFall.NONE), 1e-6f)
+        assertEquals(1f, cloudOpacity(100, CloudLayers(100, 0, 0), SkyFall.NONE), 1e-6f)
+        assertEquals(0.8f, cloudOpacity(100, CloudLayers(0, 100, 0), SkyFall.NONE), 1e-6f)
+        assertEquals(0.3f, cloudOpacity(100, CloudLayers(0, 0, 100), SkyFall.NONE), 1e-6f)
+        assertEquals(1f, cloudOpacity(100, CloudLayers(0, 0, 100), SkyFall.RAIN), 1e-6f)
+        // The README's Milan, 29 Sep at 13:00: 92% of cloud, almost all of it high.
+        assertTrue(cloudOpacity(92, CloudLayers(2, 0, 92), SkyFall.NONE) < 0.35f)
+        // Never more than the cover.
+        assertEquals(0.3f, cloudOpacity(30, CloudLayers(90, 0, 0), SkyFall.NONE), 1e-6f)
+        assertEquals(0.3f, scene(cloud = 100, layers = CloudLayers(0, 0, 100)).opacity, 1e-6f)
+    }
+
+    /** The light catches the clouds' rims under a high veil, hardly under a low deck. */
+    @Test
+    fun `the sun's rim light follows the opacity, not the cover`() {
+        val veiled = scene(cloud = 100, layers = CloudLayers(0, 0, 100)).glow
+        val decked = scene(cloud = 100, layers = CloudLayers(100, 0, 0)).glow
+        assertTrue(veiled > decked + 0.3f)
+    }
+
+    /**
+     * 16 ott 2026: a closed deck is grey, its shade no longer drawn toward the blue of the
+     * sky's top stop (the blue hollows of an overcast on a device), and no darker for it.
+     */
+    @Test
+    fun `a closed deck's shade loses its hue and keeps its brightness`() {
+        fun chroma(c: Color) = maxOf(c.red, c.green, c.blue) - minOf(c.red, c.green, c.blue)
+        val open = scene(cloud = 30, layers = CloudLayers(30, 0, 0)).shade
+        val closed = scene(cloud = 100, layers = CloudLayers(100, 0, 0)).shade
+        val veiled = scene(cloud = 100, layers = CloudLayers(0, 0, 100)).shade
+        assertTrue(chroma(closed) < chroma(open) * 0.5f)
+        // Under a high veil the deck is a few puffs, shaded as puffs are.
+        assertTrue(chroma(veiled) > chroma(closed) * 2f)
+        val toned = grey(closed)
+        assertEquals(closed.luminance(), toned.luminance(), 0.01f)
+    }
+
+    @Test
+    fun `a grey keeps its colour's luminance`() {
+        val c = Color(0.35f, 0.55f, 0.85f)
+        val g = grey(c)
+        assertEquals(c.luminance(), g.luminance(), 1e-3f)
+        assertEquals(g.red, g.blue, 1e-6f)
+        assertEquals(g.red, g.green, 1e-6f)
     }
 }

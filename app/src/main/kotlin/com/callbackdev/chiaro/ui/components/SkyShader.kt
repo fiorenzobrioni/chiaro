@@ -33,7 +33,11 @@ import kotlin.math.sin
  * (§3.2–3.4); the scene is what a gradient could not say.
  *
  * - [cover], the hour's cloud cover, 0..1, is the share of the sky the clouds take;
- * - [cirrus], the high layer's share of that cover, turns puffs into veils;
+ * - [deck], the low and middle layers' part of it, drawn as clouds with a body, and [veil],
+ *   the high layer's, drawn as cirrus behind them: streaks while it is scattered, a milky
+ *   sheet as it closes ([cloudDecks]);
+ * - [opacity], how much of the light that cover takes ([cloudOpacity]): a low deck hides the
+ *   sun, a high veil lets it through. The bodies' veils read it too ([SkyBodies]);
  * - [lit] and [shade], the clouds' two colours, from the same light the gradient has (white
  *   by day, warm in the golden hour, the moon's grey at night), never brighter than the
  *   palette's brightest stop ([maxLuminance], what §3.6's scrim is measured against);
@@ -47,7 +51,9 @@ import kotlin.math.sin
 @Immutable
 data class SkyScene(
     val cover: Float,
-    val cirrus: Float,
+    val deck: Float,
+    val veil: Float,
+    val opacity: Float,
     val lit: Color,
     val shade: Color,
     val light: Offset,
@@ -84,6 +90,8 @@ fun skyScene(
     windFromDeg: Int
 ): SkyScene {
     val cover = (cloudPct.coerceIn(0, 100) / 100f)
+    val (deck, veil) = cloudDecks(cloudPct, layers)
+    val opacity = cloudOpacity(cloudPct, layers, fall)
     val maxLum = palette.brightestBottomStop().luminance()
     val day = smoothstep(-6f, 6f, sunAltitudeDeg.toFloat())
     val moonUp = moonAltitudeDeg > 0.0
@@ -97,24 +105,21 @@ fun skyScene(
     val nightLit = lerp(gradient.mid, SkyPalette.CloudNight, 0.25f + 0.45f * moonLight)
     val lit = capLuminance(lerp(nightLit, warmLit, day), maxLum)
     val wet = (precipPct.coerceIn(0, 100) / 100f)
-    val shade = capLuminance(
-        lerp(lit, gradient.top, 0.45f + 0.25f * (1f - day)).let { scale(it, 1f - 0.30f * wet) },
-        maxLum
-    )
+    // A closed deck is grey (device, 16 ott 2026): the underside of a stratus is lit by the
+    // cloud itself, not by the blue above it, and a shade still drawn toward the sky's top
+    // stop put blue hollows into a sky the hero called overcast. The hue goes as the deck
+    // closes, the luminance stays, so the deck keeps its folds and the cap still holds.
+    val toned = lerp(lit, gradient.top, 0.45f + 0.25f * (1f - day)).let { scale(it, 1f - 0.30f * wet) }
+    val shade = capLuminance(lerp(toned, grey(toned), DeckGrey * smoothstep(0.55f, 1f, deck)), maxLum)
     val (lightAz, lightAlt) = if (day > 0.5f || !moonUp) sunAzimuthDeg to sunAltitudeDeg else moonAzimuthDeg to moonAltitudeDeg
     val light = Offset(
         bodyAcross(lightAz, southern),
         // The bodies' band is the upper half of the canvas: high is near its top.
         (0.12f + 0.38f * (1f - bodyUp(lightAlt))).coerceIn(0f, 1f)
     )
-    val glow = if (day > 0.5f) day * (1f - 0.6f * cover) else 0.6f * moonLight * (1f - 0.6f * cover)
+    val glow = if (day > 0.5f) day * (1f - 0.6f * opacity) else 0.6f * moonLight * (1f - 0.6f * opacity)
     val darkness = smoothstep(-10f, -18f, sunAltitudeDeg.toFloat())
     val stars = darkness * (1f - cover) * (1f - cover) * (1f - 0.65f * moonLight)
-    val layered = layers?.let { l ->
-        val low = (l.lowPct ?: 0) + (l.midPct ?: 0)
-        val high = l.highPct ?: 0
-        if (low + high == 0) 0f else high.toFloat() / (low + high)
-    } ?: 0f
     val intensity = (0.35f + 0.65f * (fallMmPerHour / FallFullMmPerHour).toFloat()).coerceIn(0.35f, 1f)
     // Toward where the wind blows, as seen facing the equator: in the north the right of the
     // screen is the west, in the south the east (the same frame the sun and moon stand in).
@@ -124,7 +129,9 @@ fun skyScene(
     val drift = (if (abs(across) < 0.15) 0.15 * (if (across < 0) -1 else 1) else across).toFloat() * speed
     return SkyScene(
         cover = cover,
-        cirrus = layered,
+        deck = deck,
+        veil = veil,
+        opacity = opacity,
         lit = lit,
         shade = shade,
         light = light,
@@ -137,6 +144,77 @@ fun skyScene(
     )
 }
 
+/**
+ * The low deck and the high veil, 0..1 each, for the shader (16 ott 2026). The deck is the low
+ * and middle layers together, the veil the high one; each layer is a share of the whole sky and
+ * they overlap at random, which is how the provider's total is made of them (measured on the
+ * four recorded forecasts, Milan, Reykjavík, Everest and the README's Milan, 672 hours: the
+ * total is the random overlap of its layers within 1% on average, 10 at worst). Neither is
+ * ever more than the total, which is the number the hero's word comes from. With no layers,
+ * or layers that explain nothing of a cloudy total, the whole cover is the deck, as it was
+ * before the layers were read.
+ */
+internal fun cloudDecks(cloudPct: Int, layers: CloudLayers?): Pair<Float, Float> {
+    val cover = cloudPct.coerceIn(0, 100) / 100f
+    val l = layers?.takeIf { (it.lowPct ?: 0) + (it.midPct ?: 0) + (it.highPct ?: 0) > 0 }
+        ?: return cover to 0f
+    val deck = 1f - (1f - share(l.lowPct)) * (1f - share(l.midPct))
+    return minOf(deck, cover) to minOf(share(l.highPct), cover)
+}
+
+/**
+ * How much of the sun's or the moon's light the hour's cloud takes, 0 (none) to 1 (all of it),
+ * by layer (16 ott 2026). A layer's cloud is not equally thick: a low deck (stratus,
+ * stratocumulus) hides the sun, a middle one (altostratus) shows it «as through ground glass»
+ * when it shows it at all, a high one (cirrus, cirrostratus) never stops it from casting
+ * shadows, in the words of the WMO's cloud atlas. The README's recorded Milan says the same in
+ * the provider's own numbers: UV 0.75 under 100% low cloud, 4.45 under 92% high, against 4.55
+ * on the clear day before. Each layer counts by [MidOpacity] and [HighOpacity] of its share,
+ * the low one in full, and they combine like the cover does. A wet hour takes the light of its
+ * whole cover, because what falls comes from a thick cloud whichever layer the model files it
+ * under (an anvil is high). With no layers it is the cover, which is what it was before.
+ */
+fun cloudOpacity(cloudPct: Int, layers: CloudLayers?, fall: SkyFall): Float {
+    val cover = cloudPct.coerceIn(0, 100) / 100f
+    val l = layers?.takeIf { (it.lowPct ?: 0) + (it.midPct ?: 0) + (it.highPct ?: 0) > 0 }
+        ?: return cover
+    val layered = 1f - (1f - share(l.lowPct)) * (1f - MidOpacity * share(l.midPct)) *
+        (1f - HighOpacity * share(l.highPct))
+    return if (fall != SkyFall.NONE) cover else minOf(layered, cover)
+}
+
+private fun share(pct: Int?): Float = (pct ?: 0).coerceIn(0, 100) / 100f
+
+/** What a middle and a high layer take of the light, against a low one's whole. */
+private const val MidOpacity = 0.8f
+private const val HighOpacity = 0.3f
+
+/**
+ * The shader's cumulus threshold for a [deck] of 0..1, so that the clouds drawn take the
+ * share of the canvas the deck says (16 ott 2026). The threshold used to run straight from
+ * 0.80 to 0.16: over the shader's own noise, measured on 1.8 million points of sixty
+ * 400 × 300 dp canvases along 100 000 dp of drift, that drew 2% of cloud for 20% of cover and
+ * 26% for 50%, and at 100% it still left 11% of the sky to the gradient (the cloud's mean
+ * alpha, 0.95, under its 0.94), the blue hollows of an overcast seen on a device. These are
+ * the thresholds at which the mean alpha of the clouds is the cover, every 5% (one canvas
+ * alone is a few big cells of noise and strays by a few percent either way, as one look at a
+ * real sky does); the first is over the noise's ceiling, the last under its floor, so a closed
+ * deck has no gap at all.
+ */
+internal fun deckThreshold(deck: Float): Float {
+    val x = deck.coerceIn(0f, 1f) * (DeckThresholds.size - 1)
+    val i = x.toInt().coerceAtMost(DeckThresholds.size - 2)
+    return DeckThresholds[i] + (DeckThresholds[i + 1] - DeckThresholds[i]) * (x - i)
+}
+
+private val DeckThresholds = floatArrayOf(
+    0.930f, 0.620f, 0.574f, 0.541f, 0.514f, 0.490f, 0.468f, 0.448f, 0.428f, 0.409f, 0.390f,
+    0.371f, 0.352f, 0.332f, 0.311f, 0.290f, 0.265f, 0.238f, 0.205f, 0.159f, -0.250f
+)
+
+/** How far a closed deck's shade goes toward a grey of its own luminance. */
+private const val DeckGrey = 0.8f
+
 /** A colour no brighter than [max] in relative luminance, its hue kept. */
 internal fun capLuminance(color: Color, max: Float): Color {
     val l = color.luminance()
@@ -145,13 +223,21 @@ internal fun capLuminance(color: Color, max: Float): Color {
     // percent under the cap, because an sRGB `Color` is stored at 8 bits a channel and the
     // rounding may go up.
     val k = max * CapMargin / l
-    fun channel(c: Float): Float {
-        val lin = if (c <= 0.04045f) c / 12.92f else Math.pow(((c + 0.055f) / 1.055f).toDouble(), 2.4).toFloat()
-        val s = lin * k
-        return if (s <= 0.0031308f) s * 12.92f else (1.055 * Math.pow(s.toDouble(), 1 / 2.4) - 0.055).toFloat()
-    }
+    fun channel(c: Float): Float = toSrgb(toLinear(c) * k)
     return Color(channel(color.red), channel(color.green), channel(color.blue), color.alpha)
 }
+
+/** The grey with [color]'s relative luminance: its hue gone, its brightness kept. */
+internal fun grey(color: Color): Color {
+    val g = toSrgb(color.luminance())
+    return Color(g, g, g, color.alpha)
+}
+
+private fun toLinear(c: Float): Float =
+    if (c <= 0.04045f) c / 12.92f else Math.pow(((c + 0.055f) / 1.055f).toDouble(), 2.4).toFloat()
+
+private fun toSrgb(s: Float): Float =
+    if (s <= 0.0031308f) s * 12.92f else (1.055 * Math.pow(s.toDouble(), 1 / 2.4) - 0.055).toFloat()
 
 private const val CapMargin = 0.995f
 
@@ -173,7 +259,7 @@ private const val DriftPerKph = 0.3f
 /**
  * The canvas' shader (AGSL). The gradient is drawn here exactly as the palette's three stops
  * (the same interpolation `Brush.verticalGradient` uses), then the scene over it, in this
- * order: stars, cumulus, cirrus, the fall, and last a cap on every pixel's luminance at the
+ * order: stars, cirrus, cumulus, the fall, and last a cap on every pixel's luminance at the
  * palette's brightest stop, which is what keeps §3.6's scrim contract true whatever is drawn.
  *
  * The noise is value noise over a hash, four octaves; the cumulus is domain-warped once so it
@@ -188,8 +274,9 @@ uniform float uTime;
 uniform half4 uTop;
 uniform half4 uMid;
 uniform half4 uBottom;
-uniform float uCover;
-uniform float uCirrus;
+uniform float uDeck;
+uniform float uDeckTh;
+uniform float uVeil;
 uniform half4 uLit;
 uniform half4 uShade;
 uniform float2 uLight;
@@ -271,15 +358,29 @@ half4 main(float2 fc) {
         }
     }
 
-    if (uCover > 0.01) {
+    // The high layer first, behind the deck: from the ground a cirrus shows through the gaps
+    // of the clouds below it, never over them. Streaks stretched 7.5 to 1 while it is
+    // scattered; as it closes (cirrostratus) the stretch relaxes to 4 to 3 and the streaks give
+    // way to a milky sheet with a soft unevenness, which is what a closed high veil looks like.
+    if (uVeil > 0.01) {
+        float closed = smoothstep(0.6, 1.0, uVeil);
+        float2 p = float2((q.x + drift * 1.8) * mix(0.0045, 0.009, closed), q.y * mix(0.034, 0.012, closed) * persp);
+        float n = fbm(p + float2(0.0, vnoise(p * float2(2.0, 0.6)) * 0.8));
+        float streak = smoothstep(mix(0.82, 0.38, uVeil), 1.0, n);
+        float sheet = clamp(0.75 + (n - 0.5) * 0.6, 0.0, 1.0);
+        float a = mix(streak, sheet, closed) * 0.6;
+        col = mix(col, uLit.rgb, half(a));
+    }
+
+    if (uDeck > 0.01) {
         float2 p = float2((q.x + drift) * 0.0105, q.y * 0.0105 * persp);
         float2 w = float2(fbm2(p * 0.7 + float2(3.1, 7.7)), fbm2(p * 0.7 + float2(9.4, 1.3)));
         // 0.6 and not more: at 0.9 the warp folded the plane over itself here and there
         // (its Jacobian went negative), and every fold drew a crease drifting with the clouds.
         float2 pw = p + (w - 0.5) * 0.6;
         float n = fbm(pw);
-        float th = mix(0.80, 0.16, uCover);
-        float a = smoothstep(th, th + 0.22, n) * (1.0 - uCirrus * 0.75);
+        // The threshold is Kotlin's (deckThreshold), measured so the clouds take the deck's share.
+        float a = smoothstep(uDeckTh, uDeckTh + 0.22, n);
         if (a > 0.002) {
             float2 lightPx = uLight * uSize;
             float len = max(length(lightPx - fc), 1.0);
@@ -292,20 +393,13 @@ half4 main(float2 fc) {
             float s = clamp(0.55 + (n - n2) * 4.0, 0.0, 1.0);
             // A deck is one grey with soft folds, not a sky of lit puffs: the shading flattens
             // as the cover closes.
-            s = 0.62 + (s - 0.62) * mix(1.0, 0.35, smoothstep(0.55, 1.0, uCover));
+            s = 0.62 + (s - 0.62) * mix(1.0, 0.35, smoothstep(0.55, 1.0, uDeck));
             half3 cloud = mix(uShade.rgb, uLit.rgb, half(s));
             float near = exp(-len / (uSize.x * 0.35));
             float rim = uGlow * near * (1.0 - smoothstep(0.15, 0.7, a));
             cloud = mix(cloud, uLit.rgb, half(rim * 0.6));
             col = mix(col, cloud, half(a * 0.94));
         }
-    }
-
-    if (uCirrus > 0.01 && uCover > 0.01) {
-        float2 p = float2((q.x + drift * 1.8) * 0.0045, q.y * 0.034 * persp);
-        float n = fbm(p + float2(0.0, vnoise(p * float2(2.0, 0.6)) * 0.8));
-        float a = smoothstep(mix(0.82, 0.38, uCover), 1.0, n) * uCirrus * 0.6;
-        col = mix(col, uLit.rgb, half(a));
     }
 
     if (uRain > 0.01) {
@@ -403,8 +497,9 @@ internal fun RuntimeShader.bindSky(
     setColor("uTop", gradient.top)
     setColor("uMid", gradient.mid)
     setColor("uBottom", gradient.bottom)
-    setFloatUniform("uCover", scene.cover)
-    setFloatUniform("uCirrus", scene.cirrus)
+    setFloatUniform("uDeck", scene.deck)
+    setFloatUniform("uDeckTh", deckThreshold(scene.deck))
+    setFloatUniform("uVeil", scene.veil)
     setColor("uLit", scene.lit)
     setColor("uShade", scene.shade)
     setFloatUniform("uLight", scene.light.x, scene.light.y)
