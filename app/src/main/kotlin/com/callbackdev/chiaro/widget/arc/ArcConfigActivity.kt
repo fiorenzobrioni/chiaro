@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,9 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -44,6 +43,8 @@ import com.callbackdev.chiaro.widget.ConfigDivider
 import com.callbackdev.chiaro.widget.ConfigDoneButton
 import com.callbackdev.chiaro.widget.ConfigGroup
 import com.callbackdev.chiaro.widget.ConfigHeader
+import com.callbackdev.chiaro.widget.ConfigPage
+import com.callbackdev.chiaro.widget.ConfigResetButton
 import com.callbackdev.chiaro.widget.ConfigSwitch
 import com.callbackdev.chiaro.widget.ConfigSwitchRow
 import com.callbackdev.chiaro.widget.ConfigSwitches
@@ -73,6 +74,7 @@ class ArcConfigActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         val appWidgetId = intent?.extras?.getInt(
             AppWidgetManager.EXTRA_APPWIDGET_ID,
             AppWidgetManager.INVALID_APPWIDGET_ID
@@ -102,16 +104,18 @@ class ArcConfigActivity : ComponentActivity() {
             ) {
                 Scaffold(
                     topBar = {
-                        TopAppBar(title = { Text(stringResource(R.string.widget_arc_label)) })
+                        // «Questo widget», as on every widget's settings (16 Oct 2026): the
+                        // preview under it already shows which widget this is.
+                        TopAppBar(title = { Text(stringResource(R.string.widget_config_title)) })
                     }
                 ) { padding ->
-                    ArcConfigContent(
-                        appWidgetId = appWidgetId,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding),
-                        onDone = { finish() }
-                    )
+                    ConfigPage(padding) {
+                        ArcConfigContent(
+                            appWidgetId = appWidgetId,
+                            modifier = Modifier.fillMaxSize(),
+                            onDone = { finish() }
+                        )
+                    }
                 }
             }
         }
@@ -401,42 +405,15 @@ internal fun ArcConfigContent(appWidgetId: Int, modifier: Modifier, onDone: () -
                 selected = current.density,
                 onPick = { saveArc(current.copy(density = it)) }
             )
-
-            // The one control that undoes the others: outlined, in the error colour, at
-            // the foot — the Settings screen's reset.
-            OutlinedButton(
-                onClick = {
-                    saveArc(ArcSettings())
-                    saveLook(WidgetLook.defaultsFor(WidgetKind.ARC))
-                },
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 24.dp)
-            ) {
-                Text(stringResource(R.string.arc_config_reset))
-            }
         }
 
-        arc?.takeIf { it.drawing == ArcDrawing.MOMENTS }?.let {
-            OutlinedButton(
-                onClick = {
-                    saveArc(ArcSettings())
-                    saveLook(WidgetLook.defaultsFor(WidgetKind.ARC))
-                },
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 24.dp)
-            ) {
-                Text(stringResource(R.string.arc_config_reset))
+        // The one control that undoes the others, on a card of moments as on an arc.
+        if (arc != null) {
+            ConfigResetButton {
+                saveArc(ArcSettings())
+                saveLook(WidgetLook.defaultsFor(WidgetKind.ARC))
             }
         }
-
         ConfigDoneButton(onDone)
     }
 }

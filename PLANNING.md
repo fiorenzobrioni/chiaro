@@ -14001,3 +14001,36 @@ perché Milano registrata è asciutta per tutta la settimana e il README non inv
   sta sulla carta accanto al verdetto, dove vivono le icone di Oggi; e la parola concorda col numero:
   il 20% di nuvole è «Quasi sereno», non il «Nuvoloso» che diceva sopra «nuvole 20%».
 
+
+## Impostazioni dei widget: una sola grammatica per la famiglia (committente, 16 ott 2026)
+
+Revisione delle schermate di impostazione dei widget delle quattro app, con l'obiettivo che layout e
+stile siano gli stessi ovunque (ognuna con le sue impostazioni). Le due di Chiaro erano la fonte del
+linguaggio; queste le differenze che restavano qui.
+
+- [x] **L'ultimo colore non si schiaccia più.** La fila dei sei dischi da 36 dp chiedeva 266 dp; su un
+  telefono da 360 dp il gruppo ne lascia 256, e Terracotta diventava un ovale. Ora ogni colore è un
+  bersaglio da 48 dp attorno al suo disco, in una fila che va a capo (`ColorSwatches`), come era già
+  in Passo e Tempo: niente più ovale e niente più bersagli sotto i 48 dp.
+- [x] **«Ripristina questo widget» su tutti i widget**, non solo sull'arco: rimette com'erano
+  l'aspetto e il contenuto (`WidgetLook.defaultsFor`), mai il luogo, che è da dove arrivano i dati e non
+  un aspetto. Sull'arco è uno solo per la carta dell'arco e per quella dei momenti (prima erano due
+  copie). Sotto il reset, «Fatto» a 12 dp invece di 24: i due pulsanti sono una coppia.
+- [x] **Il titolo è «Questo widget» anche sull'arco** (era «L'arco del giorno»): l'anteprima sotto il
+  titolo dice già quale widget è.
+- [x] **Da bordo a bordo, e a colonna sui pieghevoli** (`ConfigPage`): le due attività chiamano
+  `enableEdgeToEdge`, e la colonna non supera i 640 dp, centrata, come le pagine di Passo e Tempo.
+- [x] **I titoli dei gruppi a `SectionTop` (16 dp)**, come in Impostazioni, invece di 24.
+
+### Decisioni e deviazioni
+
+- **La regola dell'ordine** (committente): la fonte dei dati viene sempre per prima (qui il luogo),
+  poi lo sfondo, poi il contenuto e le scelte proprie del widget. Chiaro la rispettava già.
+- **Niente nuovi colori di sfondo.** Proposta valutata e scartata (committente): i sei colori sono
+  scuri perché reggono l'inchiostro bianco (§2.6); le stesse tinte vivaci danno 3,1–3,7:1 col bianco
+  e 2,3–2,7:1 con l'inchiostro tenue, sotto il 4,5:1 del testo piccolo.
+
+### Come è stato verificato
+
+`./gradlew :app:compileDebugKotlin test :app:testDebugUnitTest :app:lintDebug` (con lo script del
+mirror). Nessuna immagine del README mostra le impostazioni dei widget, quindi nessuna cambia.

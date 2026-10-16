@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -27,11 +28,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.verticalScroll
@@ -84,6 +88,7 @@ class WidgetConfigActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         val appWidgetId = intent?.extras?.getInt(
             AppWidgetManager.EXTRA_APPWIDGET_ID,
             AppWidgetManager.INVALID_APPWIDGET_ID
@@ -121,14 +126,14 @@ class WidgetConfigActivity : ComponentActivity() {
                         TopAppBar(title = { Text(stringResource(R.string.widget_config_title)) })
                     }
                 ) { padding ->
-                    ConfigContent(
-                        appWidgetId = appWidgetId,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding),
-                        onDone = { finish() },
-                        kind = kind
-                    )
+                    ConfigPage(padding) {
+                        ConfigContent(
+                            appWidgetId = appWidgetId,
+                            modifier = Modifier.fillMaxSize(),
+                            onDone = { finish() },
+                            kind = kind
+                        )
+                    }
                 }
             }
         }
@@ -349,6 +354,9 @@ internal fun ConfigContent(
             }
         }
 
+        if (look != null) {
+            ConfigResetButton { save(WidgetLook.defaultsFor(kind)) }
+        }
         ConfigDoneButton(onDone)
     }
 }
@@ -430,7 +438,9 @@ internal fun BackgroundSection(
         )
     }
     if (look.background == WidgetBackground.COLOR) {
-        ColorSwatches(look.cardColor, start = inset + 40.dp, end = inset) {
+        // The swatches' 48dp targets centre each 36dp disc 6dp in: the discs line up with the
+        // labels above them, and the strip ends where the rows do.
+        ColorSwatches(look.cardColor, start = inset + 34.dp, end = inset - 6.dp) {
             onPick(look.copy(cardColor = it))
         }
     }
@@ -484,7 +494,13 @@ private fun GroundSwatch(
 /**
  * The six colours as swatches across the group, the chosen one ringed and ticked, and its
  * name under the strip — the swatch shows the colour, the word says which one it is.
+ *
+ * Each colour is a 48dp target around its 36dp disc, side by side, and the strip wraps
+ * (16 Oct 2026): a fixed row of six 36dp discs wanted 266dp where a 360dp phone leaves the
+ * group 256, so the last one was squeezed into an oval, and every disc was a target under
+ * the 48dp a finger needs.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ColorSwatches(
     selected: WidgetCardColor,
@@ -493,34 +509,40 @@ private fun ColorSwatches(
     onPick: (WidgetCardColor) -> Unit
 ) {
     Column(modifier = Modifier.padding(start = start, end = end, bottom = 12.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        FlowRow(modifier = Modifier.selectableGroup()) {
             WidgetCardColorChoices.forEach { (color, labelRes) ->
                 val chosen = color == selected
                 val name = stringResource(labelRes)
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .border(
-                            width = if (chosen) 2.dp else 0.dp,
-                            color = if (chosen) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            shape = CircleShape
-                        )
-                        .padding(if (chosen) 4.dp else 0.dp)
-                        .clip(CircleShape)
-                        .background(widgetCardContainer(color))
+                        .size(48.dp)
                         .selectable(selected = chosen, onClick = { onPick(color) }, role = Role.RadioButton)
                         .semantics { contentDescription = name }
                 ) {
-                    if (chosen) {
-                        Icon(
-                            imageVector = Icons.Rounded.Check,
-                            contentDescription = null,
-                            // Every card colour is a dark ground under white ink (§2.6).
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .border(
+                                width = if (chosen) 2.dp else 0.dp,
+                                color = if (chosen) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                shape = CircleShape
+                            )
+                            .padding(if (chosen) 4.dp else 0.dp)
+                            .clip(CircleShape)
+                            .background(widgetCardContainer(color))
+                    ) {
+                        if (chosen) {
+                            Icon(
+                                imageVector = Icons.Rounded.Check,
+                                contentDescription = null,
+                                // Every card colour is a dark ground under white ink (§2.6).
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }
