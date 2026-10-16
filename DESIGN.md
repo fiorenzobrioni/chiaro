@@ -642,7 +642,13 @@ What the shader draws over the gradient (second review of Today, 15 ott 2026,
 or the ephemeris, and none is chosen for looks — the canvas stays a computed sky (§3.1), now
 with the parts of it a gradient could not say.
 
-- **Cumulus**, in the hour's **cloud cover**: four octaves of value noise, each turned by 37°
+- **The layers** (16 ott 2026, `cloudDecks`): the provider's total is the random overlap of
+  its three layers (measured on the four recorded forecasts, 672 hours: within 1% on average,
+  10 at worst), so the scene splits it the same way. The low and middle layers are the
+  **deck**, drawn as cumulus; the high one is the **veil**, drawn as cirrus behind it. Neither
+  is ever more than the total, the number the hero's word comes from; with no layers, or
+  layers that explain nothing of a cloudy total, the whole cover is the deck.
+- **Cumulus**, in the **deck**: four octaves of value noise, each turned by 37°
   so the grid never lines up (unturned, it drew V-shapes), warped once by a two-octave field
   so the clouds billow (by 0.6 of a cell, not more: at 0.9 the warp folded the plane over
   itself here and there and every fold drew a crease drifting with the clouds). **Every corner
@@ -652,9 +658,15 @@ with the parts of it a gradient could not say.
   its own `floor`; the hash multiplies that one bit until, once in a few thousand corners, its
   last `fract` crosses a whole number, and the corner has two values. The clouds then carried a
   wedge with two sharp sides, a third-octave cell's size, that no CPU render showed; in dp so they have the same grain on every screen, and flatter toward
-  the horizon (the canvas' bottom) as a deck is in perspective. The threshold follows the
-  cover, so 30% draws a few clouds and 95% a deck with a few thin gaps. The shading flattens as
-  the cover closes: a deck is one grey with soft folds, not a sky of lit puffs.
+  the horizon (the canvas' bottom) as a deck is in perspective. **The clouds take the
+  deck's share of the canvas** (16 ott 2026, `deckThreshold`, `SkyDeckTest`): the threshold is
+  read from a table measured on the shader's own noise (1.8 million points, sixty 400 × 300 dp
+  canvases along 100 000 dp of drift) at which the clouds' mean alpha is the deck, every 5%.
+  The straight line from 0.80 to 0.16 it replaced drew 2% of cloud for 20% and 26% for 50%,
+  and at 100% left 11% of the sky to the gradient: the blue hollows of an overcast seen on a
+  device. A closed deck's threshold is under the noise's floor, so it has no gap at all. The
+  shading flattens as the deck closes: a deck is one grey with soft folds, not a sky of lit
+  puffs.
 - **Light**: the edge of a cloud that faces the sun by day, or the moon at night, is the
   lit one — the light's place is the bodies' own (§8.1c), the same bearing and altitude —
   and near it the clouds catch a rim. **The lit side is one direction for the whole canvas**,
@@ -665,9 +677,25 @@ with the parts of it a gradient could not say.
   and has no direction to turn. **Lit** is a white with a breath of the sky by day, the
   horizon's own colour in the golden hour, the moon's grey at night (`SkyPalette.CloudNight`,
   stronger under a bright moon); **shade** is the lit colour toward the sky's top stop, darker
-  by night and under a likely rain.
-- **Cirrus**, in the **high layer's share** of the cover (`CloudLayers`): streaks stretched
-  across the sky, drifting faster than the deck below them.
+  by night and under a likely rain, and **grey as the deck closes** (16 ott 2026): 80% of the
+  way to a grey of its own luminance at a closed deck, because the underside of a stratus is
+  lit by the cloud and not by the blue above it. The luminance stays, so the folds and the
+  cap do too.
+- **Cirrus**, in the **veil**, drawn **before** the deck (16 ott 2026): from the ground a
+  cirrus shows through the gaps of the clouds below it, never over them. Streaks stretched
+  7.5 to 1 across the sky while the veil is scattered, drifting faster than the deck below;
+  from 60% to 100% (cirrostratus) the stretch relaxes to 4 to 3 and the streaks give way to
+  a milky sheet with a soft unevenness, at most 0.6 of the lit colour. Until then the veil
+  was the high layer's *share* of the total and drawn over the deck, which also faded by
+  three quarters of that share: a sky closed by high cloud was a screen of stripes.
+- **Opacity** (16 ott 2026, `cloudOpacity`): how much of the light the cloud takes, which is
+  not how much sky it covers. A low layer takes all its share, a middle one 0.8 of it
+  (altostratus shows the sun «as through ground glass» when at all), a high one 0.3
+  (cirrostratus never stops the sun from casting shadows, in the WMO cloud atlas' words; the
+  README's Milan says it in the provider's UV, 0.75 under 100% low, 4.45 under 92% high,
+  4.55 clear), combined like the cover and never more than it. A wet hour takes its whole
+  cover, because what falls comes from a thick cloud whichever layer the model files it
+  under. It dims the clouds' rim light and veils the sun and the moon (§8.1c).
 - **Stars**, only when the sun is past −10° and fading in to −18°, times the open sky squared,
   less under a bright moon: one in a few cells of 13dp, twinkling slowly, thinning toward the
   horizon. Never by day, never under a closed sky.
@@ -684,7 +712,8 @@ with the parts of it a gradient could not say.
   with the cap nothing it draws can cost the text its 4.5:1 — the clouds' colours are capped in
   Kotlin too, half a percent under, because an sRGB `Color` is stored at 8 bits and rounds up.
 
-The sun and the moon (§8.1c) are drawn over the scene as before, with their veils.
+The sun and the moon (§8.1c) are drawn over the scene as before, with their veils, which read
+the scene's opacity.
 
 ## 4. The daylight ribbon
 
@@ -1354,7 +1383,12 @@ A winter sun stays near the middle and a summer one rises and sets near the edge
 true. Below the horizon a body is not drawn. The sun is a 22dp disc with a soft halo, white-gold
 above the golden hour and reddening below it, veiled (not hidden) by cloud — and under a full
 cover without its edge (24 set 2026: the disc fades out with the cloud while the glow keeps
-its strength and spreads, because a crisp pale disc on a grey sky was read as the moon). The moon wears its
+its strength and spreads, because a crisp pale disc on a grey sky was read as the moon). What
+veils both bodies is the cloud's **opacity** (§3.9, 16 ott 2026), not its cover: under a
+closed high veil the sun keeps most of its disc in its halo; under a closed low deck it has
+none and its glow dims from 0.55 to 0.30 at the core while it spreads wider, a faint broad
+brightening. The day moon goes with the light behind a low deck; at night its disc goes and a
+dim, wide glow stays where it is. The moon wears its
 phase — lit limb toward the evening sun, the terminator an ellipse, the dark part at 14% as
 earthshine — and is pale by day. Both are drawn inside their band, the halo spilling at most
 14dp past it, so neither can stand behind text and cost it contrast; the colors are

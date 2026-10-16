@@ -14097,3 +14097,71 @@ pannelli, il centrato oltre i 1200 dp, Oggi e le tab che si dividono alla stessa
 tolte, di Cielo e Avvisi a 841 × 701 (in cima e in fondo alla pagina, chiaro e scuro, con e senza avvisi
 propri), a 701 × 841 (una colonna) e a 1280 × 800. Tutte le immagini del README rigenerate: identiche, perché
 il telefono e Oggi non cambiano. Suite completa e lint.
+
+## Il cielo coperto: il banco basso, il velo alto, sole e luna (committente, 16 ott 2026)
+
+Il committente ha mandato due schermate di prova, tutte e due «Coperto»: una con un banco grigio
+compatto, l'altra con nuvole stirate a strisce, e ha chiesto se fosse voluto e se fosse realistico.
+Le strisce erano volute (lo strato alto, DESIGN §3.9), ma guardando le due immagini sono emersi tre
+difetti, da correggere per ogni luogo e solo dai dati meteo: sotto un banco basso il sole restava
+luminoso come sotto un velo e la luna di giorno si vedeva ancora; il banco chiuso aveva buchi blu;
+un velo alto chiuso restava a strisce, con il sole senza disco.
+
+- [x] **La copertura si divide in banco e velo** (`cloudDecks`): lo strato basso e il medio sono il
+  banco (i cumuli), l'alto il velo (i cirri), sovrapposti a caso come il totale del fornitore
+  (misurato sulle quattro previsioni registrate, 672 ore: il totale è la sovrapposizione casuale degli
+  strati entro l'1% in media, 10 al peggio). Nessuno dei due supera il totale; senza strati, o con
+  strati tutti a zero e un totale nuvoloso, tutto il totale è banco, come prima.
+- [x] **L'opacità della nuvola** (`cloudOpacity`): quanta luce prende, non quanto cielo copre. Basso
+  per intero, medio 0,8, alto 0,3, combinati come la copertura e mai oltre; un'ora bagnata prende
+  tutta la sua copertura. Le ragioni: l'atlante delle nubi del WMO (il cirrostrato non impedisce mai
+  le ombre, l'altostrato mostra il sole «come dietro un vetro smerigliato») e l'UV del fornitore nella
+  Milano registrata (0,75 sotto il 100% di nuvole basse, 4,45 sotto il 92% di alte, 4,55 col sereno).
+- [x] **Sole e luna leggono l'opacità** (`SkyBodies.cloudOpacity`, dalla scena: una fonte sola).
+  `sunVeil`: il disco svanisce con l'opacità e il bagliore ora si attenua anche (il nucleo da 0,55 a
+  0,30) mentre si allarga: sotto uno strato il sole è un chiarore largo e tenue, sotto un velo alto
+  tiene il disco nell'alone. `moonVeil` (nuovo): di giorno la luna se ne va con la luce dietro un banco
+  basso, più pallida dietro un velo; di notte il disco se ne va e resta un bagliore tenue e largo.
+  Il bordo luminoso delle nuvole vicino alla luce segue l'opacità.
+- [x] **Il banco prende la sua quota del canvas** (`deckThreshold`, `SkyDeckTest`): la soglia dei
+  cumuli è letta da una tabella misurata sul rumore dello shader (1,8 milioni di punti, sessanta canvas
+  di 400 × 300 dp lungo 100 000 dp di deriva), alla quale l'alfa medio delle nuvole è il banco, ogni 5%.
+  La retta da 0,80 a 0,16 di prima disegnava il 2% di nuvole per il 20% di copertura, il 26% per il
+  50%, e al 100% lasciava l'11% del cielo al gradiente: i buchi blu. Al banco chiuso la soglia sta sotto
+  il minimo del rumore, quindi nessun buco.
+- [x] **L'ombra del banco chiuso è grigia**: verso un grigio della sua stessa luminanza, fino all'80%
+  a banco chiuso, perché il sotto di uno strato è illuminato dalla nuvola e non dal blu sopra.
+- [x] **Il velo alto si chiude in un velo** e sta **dietro** il banco: strisce stirate 7,5 a 1 finché
+  è sparso; dal 60% al 100% lo stiramento scende a 4 a 3 e le strisce diventano un velo lattiginoso,
+  appena disuguale. I cumuli non si sbiadiscono più per far vedere i cirri.
+- [x] La guida (IT/EN) lo dice in una frase: sole e luna si vedono attraverso un velo alto, non dietro
+  un banco basso e spesso. DESIGN §3.9 e §8.1c aggiornati.
+
+**Decisioni e deviazioni.** *La taratura vale per tutta la scala, non solo per il coperto*: il
+DESIGN diceva già che la copertura è «la quota del cielo che le nuvole prendono», e il 20% disegnato
+come il 2% non lo era; ora un cielo al 25% ha nuvole visibili dove prima ne aveva appena. Un canvas
+da solo copre pochi grandi riccioli di rumore e si scosta di qualche punto dalla media, come un'occhiata
+al cielo vero. *Il velo dietro il banco*, non sopra: è la quota, e un velo sopra un banco chiuso avrebbe
+steso una pellicola lattiginosa su nuvole che lo nascondono. *I pesi dell'opacità sono tre numeri e non
+uno spessore*: il fornitore non dà lo spessore delle nuvole; la quota è quello che c'è, e l'atlante e l'UV
+dicono che basta a separare i due cieli delle schermate. *Le stelle restano sulla copertura*: dietro un
+cirrostrato si vede la luna e quasi nessuna stella, ed è quello che già succede. *Il gradiente non cambia*:
+lo legge anche il nastro, e il velo lattiginoso lo dice già la scena. *Nessuna città nel codice*: tutto
+viene dagli strati, dalla copertura e dallo stato dell'ora.
+
+**Da verificare sul telefono**: la resa del velo chiuso e del banco chiuso sul GPU vero, di giorno e di
+notte, e il tempo di GPU per fotogramma (il velo costa quanto i cirri di prima, gli stessi campioni di rumore,
+e il banco quanto prima).
+
+**Come è stato verificato.** `SkySceneTest`: banco e velo dagli strati (senza strati, strati vuoti,
+sovrapposizione casuale, mai oltre il totale), l'opacità per strato e per un'ora bagnata, il bordo
+luminoso sotto un velo e sotto un banco, l'ombra che perde la tinta e tiene la luminanza. `SkyBodiesTest`:
+il sole con il disco sotto un velo alto e senza sotto un banco basso, la luna di giorno e di notte.
+`SkyDeckTest` (nuovo): il rumore del banco rifatto in Kotlin riga per riga (con le righe dello shader
+fissate da un test), la quota disegnata uguale al banco entro il 3% dal 10 al 90%, il banco chiuso senza
+un pixel scoperto, la soglia sempre decrescente. `SkyShaderCompileTest`: lo shader compila e prende ogni
+uniform. Un campionario di otto cieli (strato chiuso, velo chiuso, velo al 60%, misto, basso al 25 e al
+50%, notte con luna piena sotto uno strato e sotto un velo), prima e dopo, disegnato con il renderer
+hardware, guardato e tolto. Rigenerate `today-now` e `today-foldable` (la Milano delle 12: 66% basse, 13%
+medie, 49% alte; ora un banco al 70% con il velo negli spazi, il sole un disco tenue) e `settings` (il 20%
+dell'anteprima ora ha le sue nuvole); le altre identiche. Suite completa e lint.

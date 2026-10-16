@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.components
 
 import androidx.compose.ui.geometry.Offset
+import com.callbackdev.chiaro.domain.model.CloudLayers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -21,7 +22,7 @@ class SkyBodiesTest {
         sunAltitudeDeg = -20.0, sunAzimuthDeg = 300.0,
         moonAltitudeDeg = 30.0, moonAzimuthDeg = 150.0,
         moonIllumination = 0.5, moonElongationDeg = elongation,
-        cloudPct = 0, southern = southern
+        cloudOpacity = 0f, southern = southern
     )
 
     @Test
@@ -79,8 +80,9 @@ class SkyBodiesTest {
         assertEquals(SunVeil(disc = 1f, glowCore = 0.55f, glowMid = 0.18f, spread = 1f), clear)
         val overcast = sunVeil(1f)
         assertEquals(0f, overcast.disc, 1e-6f)
-        // The glow stays the brightest thing there is, and spreads.
-        assertTrue(overcast.glowCore >= 0.35f)
+        // The glow stays, dimmer, and spreads: a brighter part of the sky, never a disc.
+        assertTrue(overcast.glowCore >= 0.25f)
+        assertTrue(overcast.glowMid > clear.glowMid)
         assertTrue(overcast.spread > 1.2f)
         // In between the disc fades steadily and never jumps.
         val half = sunVeil(0.5f)
@@ -89,5 +91,41 @@ class SkyBodiesTest {
         // Out of range clamps.
         assertEquals(overcast, sunVeil(1.7f))
         assertEquals(clear, sunVeil(-0.2f))
+    }
+
+    /**
+     * 16 ott 2026: what veils the sun is how much light the cloud takes, not how much sky it
+     * covers. A sky closed by a high veil keeps the sun's disc in its halo; one closed by a low
+     * deck keeps only a dim, wide brightening.
+     */
+    @Test
+    fun `a high veil keeps the sun's disc, a low deck takes it and dims the glow`() {
+        val veiled = sunVeil(cloudOpacity(100, CloudLayers(0, 0, 100), SkyFall.NONE))
+        val decked = sunVeil(cloudOpacity(100, CloudLayers(100, 0, 0), SkyFall.NONE))
+        assertTrue("a cirrostratus sun has its outline", veiled.disc > 0.6f)
+        assertEquals(0f, decked.disc, 1e-6f)
+        assertTrue(decked.glowCore < veiled.glowCore)
+        assertTrue(decked.spread > veiled.spread)
+    }
+
+    /** 16 ott 2026: a day moon behind a stratus is not there; at night its place still glows. */
+    @Test
+    fun `the moon goes behind a low deck, and keeps a glow there only at night`() {
+        val clearDay = moonVeil(0f, day = true)
+        assertEquals(MoonVeil(disc = 0.55f, glow = 0.55f, spread = 1f), clearDay)
+        assertEquals(MoonVeil(disc = 0.95f, glow = 0.95f, spread = 1f), moonVeil(0f, day = false))
+        val deckDay = moonVeil(1f, day = true)
+        assertEquals(0f, deckDay.disc, 1e-6f)
+        assertEquals(0f, deckDay.glow, 1e-6f)
+        val deckNight = moonVeil(1f, day = false)
+        assertEquals(0f, deckNight.disc, 1e-6f)
+        assertTrue(deckNight.glow > 0.3f)
+        assertTrue(deckNight.spread > 1.2f)
+        // Behind a high veil the day moon is paler, not gone.
+        val veilDay = moonVeil(cloudOpacity(100, CloudLayers(0, 0, 100), SkyFall.NONE), day = true)
+        assertTrue(veilDay.disc in 0.3f..0.45f)
+        // Steady in between, and clamped outside.
+        assertTrue(moonVeil(0.8f, day = true).disc < moonVeil(0.5f, day = true).disc)
+        assertEquals(deckDay, moonVeil(1.4f, day = true))
     }
 }

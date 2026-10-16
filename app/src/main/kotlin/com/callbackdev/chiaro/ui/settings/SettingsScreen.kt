@@ -648,7 +648,7 @@ private fun AppearancePreview(settings: AppSettings) {
                         moonAzimuthDeg = 0.0,
                         moonIllumination = 0.0,
                         moonElongationDeg = 0.0,
-                        cloudPct = PreviewCloud,
+                        cloudOpacity = scene.opacity,
                         southern = false
                     ),
                     modifier = Modifier
