@@ -13,7 +13,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,6 +32,8 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +65,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
 import androidx.glance.appwidget.GlanceRemoteViews
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.ui.theme.paletteFor
 import com.callbackdev.chiaro.widget.arc.ArcForm
 import com.callbackdev.chiaro.widget.arc.ArcSettings
@@ -346,16 +357,40 @@ private class TouchlessFrame(context: Context) : FrameLayout(context) {
     override fun onTouchEvent(event: MotionEvent?): Boolean = true
 }
 
-/** A group's title, the Settings screen's: the section's name above its card. */
+/** A group's title, the Settings screen's: the section's name above its card, [SectionTop]
+ * over it (16 Oct 2026: it was 24, the one widget settings screen of the household whose
+ * groups stood further apart than its Settings screen's). */
 @Composable
 internal fun ConfigHeader(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 20.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
+        modifier = Modifier.padding(start = 20.dp, end = 16.dp, top = SectionTop, bottom = 8.dp)
     )
 }
+
+/**
+ * The page's column (16 Oct 2026): edge to edge, as the app's own pages are, and never wider
+ * than [ConfigPageMaxWidth] — on an open foldable or a phone on its side the groups stay a
+ * phone's width, centred, rather than stretching a switch a hand's width from its label.
+ */
+@Composable
+internal fun ConfigPage(padding: PaddingValues, content: @Composable () -> Unit) {
+    Box(
+        contentAlignment = Alignment.TopCenter,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .consumeWindowInsets(padding)
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+    ) {
+        Box(Modifier.widthIn(max = ConfigPageMaxWidth)) { content() }
+    }
+}
+
+/** Material's bottom sheet width, a phone's column and a little more. */
+internal val ConfigPageMaxWidth: Dp = 640.dp
 
 /** Rows that belong together, on one rounded ground — the Settings and Alerts screens'
  * grouping, so the widgets' own settings read as part of the same app. */
@@ -497,15 +532,32 @@ internal fun OpacityRow(pct: Int, onChange: (Int) -> Unit, onDone: () -> Unit) {
     }
 }
 
-/** «Fatto», full width at the foot of every widget's settings: the choices are saved as
- * they are made, so this only closes the door. */
+/** The one control that undoes the others: outlined, in the error colour, at the foot over
+ * «Fatto» — the Settings screen's reset. On every widget's settings since 16 Oct 2026 (it was
+ * the arc's alone): it puts back how the card looks and what it carries, never the place it
+ * watches, which is where its data comes from and not a look. */
+@Composable
+internal fun ConfigResetButton(onReset: () -> Unit) {
+    OutlinedButton(
+        onClick = onReset,
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, top = 24.dp)
+    ) {
+        Text(stringResource(R.string.arc_config_reset))
+    }
+}
+
+/** «Fatto», full width at the foot of every widget's settings, under the reset: the choices
+ * are saved as they are made, so this only closes the door. */
 @Composable
 internal fun ConfigDoneButton(onDone: () -> Unit) {
     Button(
         onClick = onDone,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, top = 24.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp)
     ) {
         Text(stringResource(R.string.action_done))
     }
