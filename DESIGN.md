@@ -2064,10 +2064,30 @@ open screen (841 × 701dp), a foldable held upright (701 × 841) and a 1280 × 8
   pane they made it twice the left one's height and left a screen of empty paper at the foot.
 - **One scroll.** The two panes are one item of the list and scroll as one page: the hero travels
   into the bar as on a phone (§8.1e), and there is one pull to refresh.
-- **Sky and Alerts** are one list each, centred at `TabColumnMax` = 840dp (Material's line between
-  medium and expanded): past it a row is longer than a line read in one look. Settings, the guide
-  and the sky's pages keep the full width for now: they carry their own top bar and back arrow, and
-  centring them would put the arrow in the middle of a tablet.
+- **Sky and Alerts in two panes too** (16 ott 2026, replacing a single list centred at 840dp).
+  Same rule, same numbers: `pageColumns`, from 640dp of paper (the page beside the rail), the panes
+  at most 1200dp together and centred past it, 24dp at the edges and a 32dp gutter, so a device that
+  shows Today in two panes shows every tab in two, and an upright foldable shows every tab in one.
+  Measured before the change on the same three devices: on an open foldable the centred list was the
+  whole 761dp of paper, the time of a row at one end and its bell 600dp away, the tonight card a band
+  of navy with its words in the left third; on a landscape tablet 200dp of empty paper each side and
+  a section and a half on screen. The page is said once (`PaneBlocks`): on a phone every block is
+  still its own item in the order it always had, on a wide page the blocks go to their pane and the
+  panes are one item, one scroll, as Today's.
+  - **Sky**: on the left tonight and the moments of today and tomorrow with the guide's row, the
+    next two days, as Today's left pane is today; on the right the calendar ahead, as Today's week.
+  - **Alerts**: on the left the answer and the issuer's warnings it answers from; on the right the
+    alerts read from the forecast, the ready-made ones and then the reader's own, which is the part
+    that grows. With no alert of the reader's the two panes come out about as tall as each other.
+  - The notifications-off card stands across both panes, as Today's banners do. The right pane's
+    first title stands on the left card's top edge (`PaneTitleTop`, the card's own 8dp), not a
+    section's 16 lower. The FAB ends where the right pane's sections do (`columns.end`), not in the
+    window's corner; its label folds once the left pane's first card has scrolled away.
+  - The sheets (an event's page, the rule editor, the catalog, the ideas) stay sheets: Material
+    caps a bottom sheet at 640dp and centres it, and turning them into a detail pane is a layout of
+    its own (open question 5).
+- **The pushed pages** (Settings, the guide, the sky's pages) keep the full width for now: they carry
+  their own top bar and back arrow, and centring them would put the arrow in the middle of a tablet.
 
 **8.12b TabHeader** (14 ott 2026, review of the Sky screen, point 10) — the header of Sky
 and Alerts (and of the Journal, until it left the same day): the tab's name at
@@ -3001,4 +3021,7 @@ a valid animator and only a person can say the rain falls downward.
    the whole window (the rail leaves under them as the bar did), the sky's guide and its event
    pages the whole width beside it. They want their own
    reading column with the top bar kept at the window's edges (a list-detail pane for Settings
-   on an expanded window is the candidate), measured on the same three devices as Today.
+   on an expanded window is the candidate), measured on the same three devices as Today. The
+   same question holds for the sheets Sky and Alerts open (an event's page, the rule editor):
+   on an expanded window the detail pane beside the list is the candidate, where today the
+   sheet rises over both panes (16 ott 2026).

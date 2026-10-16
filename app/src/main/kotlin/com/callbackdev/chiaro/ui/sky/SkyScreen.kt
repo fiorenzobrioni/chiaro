@@ -1,6 +1,13 @@
 package com.callbackdev.chiaro.ui.sky
 
 import com.callbackdev.chiaro.ui.components.TabHeader
+import com.callbackdev.chiaro.ui.shell.PageColumns
+import com.callbackdev.chiaro.ui.shell.PaneBlocks
+import com.callbackdev.chiaro.ui.shell.PaneTitleTop
+import com.callbackdev.chiaro.ui.shell.pageColumns
+import com.callbackdev.chiaro.ui.shell.paneItems
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.runtime.mutableIntStateOf
 import com.callbackdev.chiaro.ui.components.segmentShape
 import androidx.activity.compose.BackHandler
 import com.callbackdev.chiaro.data.SkySubscription
@@ -165,21 +172,29 @@ internal fun SkyScreen(
     onOpenGuide: () -> Unit
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            TabHeader(
-                title = stringResource(R.string.tab_sky),
-                placeName = (state as? SkyUiState.Content)?.placeName,
-                onOpenPlaces = onOpenPlaces,
-                onOpenSettings = onOpenSettings
-            )
-            when (state) {
-                SkyUiState.Starting -> Unit // the tick answers within a frame; no skeleton flash
-                SkyUiState.NoPlace -> NoPlaceForSky(onOpenPlaces = onOpenPlaces)
-                is SkyUiState.Content -> SkyContent(
-                    content = state,
-                    actions = actions,
-                    onOpenGuide = onOpenGuide
+        // Two panes on a wide page, as Today stands (DESIGN §8.12c, 16 ott 2026); the header
+        // over both, its name over the left pane's first line and the gear over the right
+        // pane's end.
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val columns = pageColumns(maxWidth)
+            Column(modifier = Modifier.fillMaxSize()) {
+                TabHeader(
+                    title = stringResource(R.string.tab_sky),
+                    placeName = (state as? SkyUiState.Content)?.placeName,
+                    onOpenPlaces = onOpenPlaces,
+                    onOpenSettings = onOpenSettings,
+                    modifier = Modifier.padding(start = columns.start, end = columns.end)
                 )
+                when (state) {
+                    SkyUiState.Starting -> Unit // the tick answers within a frame; no skeleton flash
+                    SkyUiState.NoPlace -> NoPlaceForSky(onOpenPlaces = onOpenPlaces)
+                    is SkyUiState.Content -> SkyContent(
+                        content = state,
+                        actions = actions,
+                        onOpenGuide = onOpenGuide,
+                        columns = columns
+                    )
+                }
             }
         }
     }
@@ -228,7 +243,8 @@ internal class SkyActions(
 private fun SkyContent(
     content: SkyUiState.Content,
     actions: SkyActions,
-    onOpenGuide: () -> Unit
+    onOpenGuide: () -> Unit,
+    columns: PageColumns
 ) {
     val locale = currentLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
@@ -292,91 +308,68 @@ private fun SkyContent(
             }
         }
     }
-    // Extended while the top of the page is in view, the icon alone once the reader has
-    // scrolled into the list: the label is read once, and after that it covers rows.
-    val fabExpanded by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
-    // A Scaffold for the two things that float over the list: the FAB, and the snackbar
-    // that offers «Annulla» (review point 9), which the Scaffold lifts the FAB over.
-    Scaffold(
-        containerColor = Color.Transparent,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(snackbars) },
-        floatingActionButton = {
-            // «Aggiungi un momento» (review point 5, 14 ott 2026): the screen's one
-            // action, as Material puts a screen's one action, instead of a text button
-            // lost between the moments and the guide's row.
-            ExtendedFloatingActionButton(
-                text = { Text(stringResource(R.string.sky_add_moment)) },
-                icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
-                expanded = fabExpanded,
-                onClick = { catalogOpen = true }
+    // The page's blocks, said once for the phone's list and the wide page's two panes
+    // (DESIGN §8.12c, 16 ott 2026): on the left tonight and the moments of today and
+    // tomorrow, which are about the next two days as Today's left pane is about today; on
+    // the right the calendar ahead, which is about the months, as Today's week is about
+    // the days. The card that says the phone cannot ring stands across both.
+    val blocks = PaneBlocks(remember { mutableIntStateOf(0) })
+    if (!notificationsAllowed && remindersArmed(content)) {
+        blocks.across {
+            NotificationsOffCard(
+                body = stringResource(R.string.notifications_off_sky),
+                onAllow = request.ask,
+                settingsOnly = request.settingsOnly,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
         }
-    ) { inner ->
-    LazyColumn(
-        state = listState,
-        // Zero today (no bars, no insets: the header and the bottom bar are the shell's),
-        // and right the day the Scaffold is given one.
-        modifier = Modifier.fillMaxSize().padding(inner),
-        // Room for the FAB under the last row, so nothing ends up beneath it.
-        contentPadding = PaddingValues(bottom = FabClearance)
-    ) {
-        if (!notificationsAllowed && remindersArmed(content)) {
-            item {
-                NotificationsOffCard(
-                    body = stringResource(R.string.notifications_off_sky),
-                    onAllow = request.ask,
-                    settingsOnly = request.settingsOnly,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-        }
-        item {
-            TonightCard(
-                tonight = content.tonight,
-                zone = content.zone,
-                timeFmt = timeFmt
-            )
-        }
+    }
+    blocks.left {
+        TonightCard(
+            tonight = content.tonight,
+            zone = content.zone,
+            timeFmt = timeFmt
+        )
+    }
 
-        item { SkySectionTitle(stringResource(R.string.sky_section_moments)) }
-        // Grouped by day under a heading of their own (design review, 23 set 2026): four
-        // rows that each began «Domani ·» said the same word four times and pushed the
-        // time — the thing a reader scans for — to the middle of the line.
-        // The next timed moment is lifted out of its day into a card of its own (review
-        // point 2, 14 ott 2026): every row used to weigh the same, and the one a reader
-        // is waiting for was a grey «tra 6 h 20 min» in the middle of a line.
-        val next = content.moments.firstOrNull {
-            it.timing != MomentTiming.NOW && it.occurrence is SkyOccurrence.At && it.moonPhase == null
+    blocks.left { SkySectionTitle(stringResource(R.string.sky_section_moments)) }
+    // Grouped by day under a heading of their own (design review, 23 set 2026): four
+    // rows that each began «Domani ·» said the same word four times and pushed the
+    // time — the thing a reader scans for — to the middle of the line.
+    // The next timed moment is lifted out of its day into a card of its own (review
+    // point 2, 14 ott 2026): every row used to weigh the same, and the one a reader
+    // is waiting for was a grey «tra 6 h 20 min» in the middle of a line.
+    val next = content.moments.firstOrNull {
+        it.timing != MomentTiming.NOW && it.occurrence is SkyOccurrence.At && it.moonPhase == null
+    }
+    fun open(moment: Moment, line: String) {
+        pageId = moment.job.id
+        pageBearing = moment.bearingDeg
+        pageWhen = line
+    }
+    fun bell(moment: Moment) {
+        leadDialog = LeadDialog.ForMoment(moment.job.id, moment.lead, moment.followsDefault)
+    }
+    next?.let { moment ->
+        blocks.left(key = "next") {
+            NextMomentCard(
+                moment = moment,
+                zone = content.zone,
+                timeFmt = timeFmt,
+                onOpen = { open(moment, it) },
+                onBell = { bell(moment) }
+            )
         }
-        fun open(moment: Moment, line: String) {
-            pageId = moment.job.id
-            pageBearing = moment.bearingDeg
-            pageWhen = line
-        }
-        fun bell(moment: Moment) {
-            leadDialog = LeadDialog.ForMoment(moment.job.id, moment.lead, moment.followsDefault)
-        }
-        next?.let { moment ->
-            item(key = "next") {
-                NextMomentCard(
-                    moment = moment,
-                    zone = content.zone,
-                    timeFmt = timeFmt,
-                    onOpen = { open(moment, it) },
-                    onBell = { bell(moment) }
-                )
-            }
-        }
-        val (todays, tomorrows) = content.moments
-            .filter { it !== next }
-            .partition { it.timing != MomentTiming.TOMORROW }
-        listOf(R.string.sky_day_today to todays, R.string.sky_day_tomorrow to tomorrows)
-            .filter { it.second.isNotEmpty() }
-            .forEach { (dayRes, dayMoments) ->
-                item { SkyDayHeading(stringResource(dayRes)) }
-                items(dayMoments.size) { index ->
-                    val moment = dayMoments[index]
+    }
+    val (todays, tomorrows) = content.moments
+        .filter { it !== next }
+        .partition { it.timing != MomentTiming.TOMORROW }
+    listOf(R.string.sky_day_today to todays, R.string.sky_day_tomorrow to tomorrows)
+        .filter { it.second.isNotEmpty() }
+        .forEach { (dayRes, dayMoments) ->
+            blocks.left { SkyDayHeading(stringResource(dayRes)) }
+            dayMoments.forEachIndexed { index, moment ->
+                blocks.left {
                     MomentRow(
                         moment = moment,
                         zone = content.zone,
@@ -387,29 +380,35 @@ private fun SkyContent(
                     )
                 }
             }
-        // The door for a reader who came to understand rather than to subscribe; adding
-        // is the FAB's since 14 ott 2026.
-        item {
-            ListItem(
-                leadingContent = {
-                    Icon(
-                        imageVector = Icons.Outlined.Info,
-                        contentDescription = null, // the headline right beside it says it
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                headlineContent = { Text(stringResource(R.string.sky_guide_entry_title)) },
-                supportingContent = {
-                    Text(stringResource(R.string.sky_guide_entry_subtitle))
-                },
-                modifier = Modifier.clickable(onClick = onOpenGuide)
-            )
         }
+    // The door for a reader who came to understand rather than to subscribe; adding
+    // is the FAB's since 14 ott 2026.
+    blocks.left {
+        ListItem(
+            leadingContent = {
+                Icon(
+                    imageVector = Icons.Outlined.Info,
+                    contentDescription = null, // the headline right beside it says it
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            headlineContent = { Text(stringResource(R.string.sky_guide_entry_title)) },
+            supportingContent = {
+                Text(stringResource(R.string.sky_guide_entry_subtitle))
+            },
+            modifier = Modifier.clickable(onClick = onOpenGuide)
+        )
+    }
 
-        item { SkySectionTitle(stringResource(R.string.sky_section_events)) }
-        val today = java.time.LocalDate.now(clock.withZone(content.zone))
-        items(content.events.size) { index ->
-            val event = content.events[index]
+    blocks.right {
+        SkySectionTitle(
+            stringResource(R.string.sky_section_events),
+            top = if (columns.twoPanes) PaneTitleTop else SectionTop
+        )
+    }
+    val today = java.time.LocalDate.now(clock.withZone(content.zone))
+    content.events.forEachIndexed { index, event ->
+        blocks.right {
             EventRow(
                 shape = segmentShape(index, content.events.size),
                 event = event,
@@ -430,23 +429,59 @@ private fun SkyContent(
                 }
             )
         }
-
-        // «Too far out to say» once for the section, not once a row (23 set 2026): five
-        // rows in a row each ending «La previsione non arriva ancora così lontano» was the
-        // same sentence five times, wrapped onto a second line each time. It is still said
-        // — the rows simply carry no chip until the forecast reaches them.
-        if (content.events.any { it.verdict?.note == SkyVerdictNote.BEYOND_HORIZON }) {
-            item {
-                Text(
-                    text = stringResource(R.string.sky_events_beyond_note),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-        }
-
     }
+
+    // «Too far out to say» once for the section, not once a row (23 set 2026): five
+    // rows in a row each ending «La previsione non arriva ancora così lontano» was the
+    // same sentence five times, wrapped onto a second line each time. It is still said
+    // — the rows simply carry no chip until the forecast reaches them.
+    if (content.events.any { it.verdict?.note == SkyVerdictNote.BEYOND_HORIZON }) {
+        blocks.right {
+            Text(
+                text = stringResource(R.string.sky_events_beyond_note),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
+    }
+
+    // Extended while the top of the page is in view, the icon alone once the reader has
+    // scrolled into the list: the label is read once, and after that it covers rows.
+    val hasAcross = blocks.across.isNotEmpty()
+    val fabExpanded by remember(columns.twoPanes, hasAcross) {
+        derivedStateOf { blocks.firstInView(listState, columns.twoPanes) }
+    }
+    // A Scaffold for the two things that float over the list: the FAB, and the snackbar
+    // that offers «Annulla» (review point 9), which the Scaffold lifts the FAB over.
+    Scaffold(
+        containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        snackbarHost = { SnackbarHost(snackbars) },
+        floatingActionButton = {
+            // «Aggiungi un momento» (review point 5, 14 ott 2026): the screen's one
+            // action, as Material puts a screen's one action, instead of a text button
+            // lost between the moments and the guide's row.
+            ExtendedFloatingActionButton(
+                text = { Text(stringResource(R.string.sky_add_moment)) },
+                icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
+                expanded = fabExpanded,
+                onClick = { catalogOpen = true },
+                // On a wide page its end on the right pane's, not in the window's corner.
+                modifier = Modifier.padding(end = columns.end)
+            )
+        }
+    ) { inner ->
+        LazyColumn(
+            state = listState,
+            // Zero today (no bars, no insets: the header and the bottom bar are the shell's),
+            // and right the day the Scaffold is given one.
+            modifier = Modifier.fillMaxSize().padding(inner),
+            // Room for the FAB under the last row, so nothing ends up beneath it.
+            contentPadding = PaddingValues(bottom = FabClearance)
+        ) {
+            paneItems(blocks, columns)
+        }
     }
 
     if (catalogOpen) {
@@ -526,11 +561,11 @@ private fun SkyDayHeading(text: String) {
 }
 
 @Composable
-private fun SkySectionTitle(text: String) {
+private fun SkySectionTitle(text: String, top: Dp = SectionTop) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(start = 16.dp, top = SectionTop, bottom = SectionBottom)
+        modifier = Modifier.padding(start = 16.dp, top = top, bottom = SectionBottom)
     )
 }
 

@@ -102,12 +102,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.theme.GroupTop
 import com.callbackdev.chiaro.ui.theme.SectionBottom
+import com.callbackdev.chiaro.ui.shell.PageColumns
+import com.callbackdev.chiaro.ui.shell.PaneBlocks
+import com.callbackdev.chiaro.ui.shell.PaneTitleTop
+import com.callbackdev.chiaro.ui.shell.pageColumns
+import com.callbackdev.chiaro.ui.shell.paneItems
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.runtime.mutableIntStateOf
 import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.components.NotificationsOffCard
@@ -227,15 +235,26 @@ internal fun AlertsScreen(
     snackbars: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            TabHeader(
-                title = stringResource(R.string.tab_alerts),
-                placeName = (state as? AlertsUiState.Content)?.placeName,
-                onOpenPlaces = onOpenPlaces,
-                onOpenSettings = onOpenSettings
-            )
-            (state as? AlertsUiState.Content)?.let { content ->
-                AlertsContent(content = content, actions = actions, onEdit = onEdit, snackbars = snackbars)
+        // Two panes on a wide page, as Today and the Sky stand (DESIGN §8.12c, 16 ott 2026).
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val columns = pageColumns(maxWidth)
+            Column(modifier = Modifier.fillMaxSize()) {
+                TabHeader(
+                    title = stringResource(R.string.tab_alerts),
+                    placeName = (state as? AlertsUiState.Content)?.placeName,
+                    onOpenPlaces = onOpenPlaces,
+                    onOpenSettings = onOpenSettings,
+                    modifier = Modifier.padding(start = columns.start, end = columns.end)
+                )
+                (state as? AlertsUiState.Content)?.let { content ->
+                    AlertsContent(
+                        content = content,
+                        actions = actions,
+                        onEdit = onEdit,
+                        snackbars = snackbars,
+                        columns = columns
+                    )
+                }
             }
         }
     }
@@ -264,7 +283,8 @@ private fun AlertsContent(
     content: AlertsUiState.Content,
     actions: AlertsActions,
     onEdit: (Long) -> Unit,
-    snackbars: SnackbarHostState
+    snackbars: SnackbarHostState,
+    columns: PageColumns
 ) {
     // Asked the first time something that needs it is switched on (VISION §5.8) — and
     // stated in a card above the list for as long as it is missing, because on this
@@ -321,9 +341,202 @@ private fun AlertsContent(
     }
 
     val listState = rememberLazyListState()
+    // The page's blocks, said once for the phone's list and the wide page's two panes
+    // (DESIGN §8.12c, 16 ott 2026). On the left the answer and the issuer's warnings,
+    // which the card above them answers from: what is in force and whether the phone
+    // will say so. On the right the alerts read from the forecast, the app's ready-made
+    // ones and then the reader's own, which is where a reader who has made some keeps
+    // coming back to. The order is the phone's, read pane by pane; the card that says the
+    // phone cannot ring stands across both.
+    val blocks = PaneBlocks(remember { mutableIntStateOf(0) })
+    // Above everything, and only while the screen would otherwise be lying: the
+    // switches below say an alert will arrive, and with notifications off none of
+    // them can. With nothing switched on there is no promise to break and no card.
+    if (!notificationsAllowed && notificationsPromised(content)) {
+        blocks.across {
+            NotificationsOffCard(
+                body = stringResource(R.string.notifications_off_alerts),
+                onAllow = request.ask,
+                settingsOnly = request.settingsOnly,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
+    }
+    // VISION §5.4 and Fase 11: the authority's warnings lead, because they are the
+    // only ones on this screen nobody chose — and because the reader who opens
+    // Avvisi in an autumn afternoon is usually here to check exactly this. Since the
+    // Alerts review (point 7, 14 ott 2026) they lead as the answer of one card, which
+    // goes on to say when the phone may ring next and draws the day under it.
+    blocks.left {
+        AlertsHero(
+            content = content,
+            today = placeToday,
+            now = placeNow,
+            timeFmt = issuedFmt,
+            onOpenSheet = { warningSheetOpen = true }
+        )
+    }
+    blocks.left { GroupTitle(stringResource(R.string.alerts_group_warnings)) }
+    // The switch is a setting, not a property of the place on screen: it stays put
+    // when the active place is abroad, because hiding a setting behind today's
+    // choice of city is how a setting becomes unfindable. The card above is what
+    // says whether this place has a zone at all.
+    //
+    // In a group of its own with the level it starts from (design review, 23 set
+    // 2026): the level is a property of the switch, and as two loose rows under a
+    // row they read as three settings.
+    blocks.left {
+        SegmentedGroup(
+            segments = buildList<@Composable () -> Unit> {
+                add {
+                    AlertRow(
+                        icon = ChiaroIcons.warning,
+                        iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        title = stringResource(R.string.warning_switch_title),
+                        hours = stringResource(R.string.alerts_hours_range, 15, 17),
+                        description = stringResource(R.string.warning_switch_desc),
+                        cadence = stringResource(R.string.warning_switch_when),
+                        checked = content.notifications.officialWarnings,
+                        onChange = { actions.setOfficialWarnings(it); if (it) somethingTurnedOn() }
+                    )
+                }
+                // The other honest road to the same choice: the two channels let the
+                // system silence the yellow, this lets the app never send it (§8.13).
+                if (content.notifications.officialWarnings) {
+                    add {
+                        WarningFromRow(
+                            from = content.notifications.officialWarningsFrom,
+                            onChange = actions.setOfficialWarningsFrom
+                        )
+                    }
+                }
+            },
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+    }
+
+    blocks.right {
+        GroupTitle(
+            stringResource(R.string.alerts_group_ready),
+            top = if (columns.twoPanes) PaneTitleTop else SectionTop
+        )
+    }
+    // One group, four rows with their own drawing (design review, 23 set 2026): four
+    // loose list items of three or four lines each were the densest block of text in
+    // the app, and nothing on them said which was which before it was read.
+    // Four segments (the Alerts review, point 1, 14 ott 2026): the grouped list the Sky
+    // draws its moments with, where these rows sat on one ground with hairlines.
+    blocks.right {
+        SegmentedGroup(
+            segments = listOf(
+                {
+                    AlertRow(
+                        icon = ChiaroIcons.condition(ThunderstormCode),
+                        title = stringResource(R.string.alert_severe_title),
+                        description = stringResource(R.string.alert_severe_desc),
+                        cadence = stringResource(R.string.alert_severe_when),
+                        checked = content.notifications.severeWeatherAlerts,
+                        onChange = { actions.setSevereWeather(it); if (it) somethingTurnedOn() }
+                    )
+                },
+                {
+                    AlertRow(
+                        icon = ChiaroIcons.precipitation,
+                        title = stringResource(R.string.alert_precip_title),
+                        description = stringResource(R.string.alert_precip_desc),
+                        cadence = stringResource(R.string.alert_precip_when),
+                        checked = content.notifications.precipitationWarning,
+                        onChange = { actions.setPrecipitationWarning(it); if (it) somethingTurnedOn() }
+                    )
+                },
+                {
+                    AlertRow(
+                        icon = ChiaroIcons.sunrise,
+                        title = stringResource(R.string.alert_summary_title),
+                        hours = stringResource(R.string.alerts_hours_range, 6, 12),
+                        description = stringResource(R.string.alert_summary_desc),
+                        cadence = stringResource(R.string.alert_summary_when),
+                        checked = content.notifications.dailySummary,
+                        onChange = { actions.setDailySummary(it); if (it) somethingTurnedOn() }
+                    )
+                },
+                // Immediately under its twin, and never anywhere else: the pair is the
+                // point, and a reader who has just read the morning's hours is exactly
+                // the reader who wants to know there is an evening one.
+                {
+                    AlertRow(
+                        icon = ChiaroIcons.starryNight,
+                        title = stringResource(R.string.alert_evening_title),
+                        hours = stringResource(R.string.alerts_hours_range, 18, 23),
+                        description = stringResource(R.string.alert_evening_desc),
+                        cadence = stringResource(R.string.alert_evening_when),
+                        checked = content.notifications.eveningSummary,
+                        onChange = { actions.setEveningSummary(it); if (it) somethingTurnedOn() }
+                    )
+                }
+            ),
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+    }
+
+    blocks.right { GroupTitle(stringResource(R.string.alerts_group_yours)) }
+    // The reader's rules are CARDS (VISION §5.4), since the review of 8 set 2026:
+    // as list rows they were indistinguishable from the ready-made switches above
+    // them, and a row with a switch does not say "I open". Keyed, so a toggle
+    // animates in place instead of the list rebuilding the row.
+    content.rules.forEachIndexed { index, card ->
+        blocks.right(key = card.rule.id) {
+            RuleCard(
+                card = card,
+                shape = segmentShape(index, content.rules.size),
+                units = content.units,
+                zone = content.zone,
+                firedFmt = firedFmt,
+                clock = issuedFmt,
+                onToggle = { enabled ->
+                    actions.update(card.rule.copy(enabled = enabled))
+                    if (enabled) somethingTurnedOn()
+                },
+                onOpen = { onEdit(card.rule.id) },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = SegmentGap / 2)
+            )
+        }
+    }
+
+    // «I tuoi» empty: one line, not a row of ideas (committente, 14 ott 2026). The ideas
+    // had stayed on the page while the section was empty, as its empty state, and the
+    // page changed shape at the first alert: the row vanished and the FAB was left as
+    // the one way in, which it had been all along beside the row. Now the FAB is the
+    // only way in from the start, and the section says what it is for instead of
+    // standing as a title over nothing (DESIGN §1.1).
+    if (content.canAdd && content.rules.isEmpty()) {
+        blocks.right {
+            Text(
+                text = stringResource(R.string.alerts_yours_empty),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+        }
+    } else if (!content.canAdd) {
+        // The templates used to vanish without a word at the cap (review, 8 set), and
+        // the FAB goes with them now: this sentence is what says why.
+        blocks.right {
+            Text(
+                text = stringResource(R.string.alerts_max_reached, MaxRules),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+            )
+        }
+    }
+
     // Extended while the top of the page is in view, the icon alone once the reader has
     // scrolled into the list, as the Sky's: the label is read once, then it covers rows.
-    val fabExpanded by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
+    val hasAcross = blocks.across.isNotEmpty()
+    val fabExpanded by remember(columns.twoPanes, hasAcross) {
+        derivedStateOf { blocks.firstInView(listState, columns.twoPanes) }
+    }
     // A Scaffold for the two things that float over the list (the Alerts review, points 9
     // and 10, 14 ott 2026): the FAB, and the snackbar that offers «Annulla», which the
     // Scaffold lifts the FAB over.
@@ -341,193 +554,21 @@ private fun AlertsContent(
                     text = { Text(stringResource(R.string.alerts_new_rule)) },
                     icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
                     expanded = fabExpanded,
-                    onClick = { ideasOpen = true }
+                    onClick = { ideasOpen = true },
+                    // On a wide page its end on the right pane's, not in the window's corner.
+                    modifier = Modifier.padding(end = columns.end)
                 )
             }
         }
     ) { inner ->
-    LazyColumn(
-        state = listState,
-        modifier = Modifier.fillMaxSize().padding(inner),
-        // Room for the FAB under the last row, so nothing ends up beneath it.
-        contentPadding = PaddingValues(bottom = FabClearance)
-    ) {
-        // Above everything, and only while the screen would otherwise be lying: the
-        // switches below say an alert will arrive, and with notifications off none of
-        // them can. With nothing switched on there is no promise to break and no card.
-        if (!notificationsAllowed && notificationsPromised(content)) {
-            item {
-                NotificationsOffCard(
-                    body = stringResource(R.string.notifications_off_alerts),
-                    onAllow = request.ask,
-                    settingsOnly = request.settingsOnly,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize().padding(inner),
+            // Room for the FAB under the last row, so nothing ends up beneath it.
+            contentPadding = PaddingValues(bottom = FabClearance)
+        ) {
+            paneItems(blocks, columns)
         }
-        // VISION §5.4 and Fase 11: the authority's warnings lead, because they are the
-        // only ones on this screen nobody chose — and because the reader who opens
-        // Avvisi in an autumn afternoon is usually here to check exactly this. Since the
-        // Alerts review (point 7, 14 ott 2026) they lead as the answer of one card, which
-        // goes on to say when the phone may ring next and draws the day under it.
-        item {
-            AlertsHero(
-                content = content,
-                today = placeToday,
-                now = placeNow,
-                timeFmt = issuedFmt,
-                onOpenSheet = { warningSheetOpen = true }
-            )
-        }
-        item { GroupTitle(stringResource(R.string.alerts_group_warnings)) }
-        // The switch is a setting, not a property of the place on screen: it stays put
-        // when the active place is abroad, because hiding a setting behind today's
-        // choice of city is how a setting becomes unfindable. The card above is what
-        // says whether this place has a zone at all.
-        //
-        // In a group of its own with the level it starts from (design review, 23 set
-        // 2026): the level is a property of the switch, and as two loose rows under a
-        // row they read as three settings.
-        item {
-            SegmentedGroup(
-                segments = buildList<@Composable () -> Unit> {
-                    add {
-                        AlertRow(
-                            icon = ChiaroIcons.warning,
-                            iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            title = stringResource(R.string.warning_switch_title),
-                            hours = stringResource(R.string.alerts_hours_range, 15, 17),
-                            description = stringResource(R.string.warning_switch_desc),
-                            cadence = stringResource(R.string.warning_switch_when),
-                            checked = content.notifications.officialWarnings,
-                            onChange = { actions.setOfficialWarnings(it); if (it) somethingTurnedOn() }
-                        )
-                    }
-                    // The other honest road to the same choice: the two channels let the
-                    // system silence the yellow, this lets the app never send it (§8.13).
-                    if (content.notifications.officialWarnings) {
-                        add {
-                            WarningFromRow(
-                                from = content.notifications.officialWarningsFrom,
-                                onChange = actions.setOfficialWarningsFrom
-                            )
-                        }
-                    }
-                },
-                modifier = Modifier.padding(vertical = 4.dp)
-            )
-        }
-
-        item { GroupTitle(stringResource(R.string.alerts_group_ready)) }
-        // One group, four rows with their own drawing (design review, 23 set 2026): four
-        // loose list items of three or four lines each were the densest block of text in
-        // the app, and nothing on them said which was which before it was read.
-        // Four segments (the Alerts review, point 1, 14 ott 2026): the grouped list the Sky
-        // draws its moments with, where these rows sat on one ground with hairlines.
-        item {
-            SegmentedGroup(
-                segments = listOf(
-                    {
-                        AlertRow(
-                            icon = ChiaroIcons.condition(ThunderstormCode),
-                            title = stringResource(R.string.alert_severe_title),
-                            description = stringResource(R.string.alert_severe_desc),
-                            cadence = stringResource(R.string.alert_severe_when),
-                            checked = content.notifications.severeWeatherAlerts,
-                            onChange = { actions.setSevereWeather(it); if (it) somethingTurnedOn() }
-                        )
-                    },
-                    {
-                        AlertRow(
-                            icon = ChiaroIcons.precipitation,
-                            title = stringResource(R.string.alert_precip_title),
-                            description = stringResource(R.string.alert_precip_desc),
-                            cadence = stringResource(R.string.alert_precip_when),
-                            checked = content.notifications.precipitationWarning,
-                            onChange = { actions.setPrecipitationWarning(it); if (it) somethingTurnedOn() }
-                        )
-                    },
-                    {
-                        AlertRow(
-                            icon = ChiaroIcons.sunrise,
-                            title = stringResource(R.string.alert_summary_title),
-                            hours = stringResource(R.string.alerts_hours_range, 6, 12),
-                            description = stringResource(R.string.alert_summary_desc),
-                            cadence = stringResource(R.string.alert_summary_when),
-                            checked = content.notifications.dailySummary,
-                            onChange = { actions.setDailySummary(it); if (it) somethingTurnedOn() }
-                        )
-                    },
-                    // Immediately under its twin, and never anywhere else: the pair is the
-                    // point, and a reader who has just read the morning's hours is exactly
-                    // the reader who wants to know there is an evening one.
-                    {
-                        AlertRow(
-                            icon = ChiaroIcons.starryNight,
-                            title = stringResource(R.string.alert_evening_title),
-                            hours = stringResource(R.string.alerts_hours_range, 18, 23),
-                            description = stringResource(R.string.alert_evening_desc),
-                            cadence = stringResource(R.string.alert_evening_when),
-                            checked = content.notifications.eveningSummary,
-                            onChange = { actions.setEveningSummary(it); if (it) somethingTurnedOn() }
-                        )
-                    }
-                ),
-                modifier = Modifier.padding(vertical = 4.dp)
-            )
-        }
-
-        item { GroupTitle(stringResource(R.string.alerts_group_yours)) }
-        // The reader's rules are CARDS (VISION §5.4), since the review of 8 set 2026:
-        // as list rows they were indistinguishable from the ready-made switches above
-        // them, and a row with a switch does not say "I open". Keyed, so a toggle
-        // animates in place instead of the list rebuilding the row.
-        items(content.rules.size, key = { content.rules[it].rule.id }) { index ->
-            val card = content.rules[index]
-            RuleCard(
-                card = card,
-                shape = segmentShape(index, content.rules.size),
-                units = content.units,
-                zone = content.zone,
-                firedFmt = firedFmt,
-                clock = issuedFmt,
-                onToggle = { enabled ->
-                    actions.update(card.rule.copy(enabled = enabled))
-                    if (enabled) somethingTurnedOn()
-                },
-                onOpen = { onEdit(card.rule.id) },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = SegmentGap / 2)
-            )
-        }
-
-        // «I tuoi» empty: one line, not a row of ideas (committente, 14 ott 2026). The ideas
-        // had stayed on the page while the section was empty, as its empty state, and the
-        // page changed shape at the first alert: the row vanished and the FAB was left as
-        // the one way in, which it had been all along beside the row. Now the FAB is the
-        // only way in from the start, and the section says what it is for instead of
-        // standing as a title over nothing (DESIGN §1.1).
-        if (content.canAdd && content.rules.isEmpty()) {
-            item {
-                Text(
-                    text = stringResource(R.string.alerts_yours_empty),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                )
-            }
-        } else if (!content.canAdd) {
-            // The templates used to vanish without a word at the cap (review, 8 set), and
-            // the FAB goes with them now: this sentence is what says why.
-            item {
-                Text(
-                    text = stringResource(R.string.alerts_max_reached, MaxRules),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-                )
-            }
-        }
-    }
     }
 }
 
@@ -900,11 +941,11 @@ private fun WarningFromRow(from: WarningLevel, onChange: (WarningLevel) -> Unit)
 }
 
 @Composable
-private fun GroupTitle(text: String) {
+private fun GroupTitle(text: String, top: Dp = SectionTop) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(start = 16.dp, top = SectionTop, bottom = SectionBottom)
+        modifier = Modifier.padding(start = 16.dp, top = top, bottom = SectionBottom)
     )
 }
 

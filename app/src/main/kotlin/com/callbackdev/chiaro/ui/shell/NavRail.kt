@@ -2,10 +2,6 @@ package com.callbackdev.chiaro.ui.shell
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -98,18 +94,3 @@ private fun ColumnScope.RailItem(
         label = { Text(stringResource(label)) }
     )
 }
-
-/**
- * A tab page's column on a wide window (DESIGN §8.12c): Sky and Alerts are one list each, and
- * past [TabColumnMax] their rows would be wider than a line anyone reads in one look, so the
- * list stands centred at that width. Under it, the page as it always was.
- */
-@Composable
-internal fun TabColumn(content: @Composable () -> Unit) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Box(Modifier.widthIn(max = TabColumnMax).fillMaxHeight()) { content() }
-    }
-}
-
-/** The widest a one-list tab gets: Material's line between a medium window and an expanded one. */
-internal val TabColumnMax: Dp = 840.dp
