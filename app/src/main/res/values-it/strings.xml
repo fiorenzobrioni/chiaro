@@ -126,6 +126,64 @@
     <string name="strip_now">Ora</string>
     <string name="rain_lane_caption">%1$s, massima %2$s verso le %3$s</string>
 
+    <!-- Le prossime due ore, un quarto d'ora alla volta (17 ott 2026): la frase in alto. -->
+    <string name="nowcast_noun_rain_light">Pioggia debole</string>
+    <string name="nowcast_noun_rain_moderate">Pioggia moderata</string>
+    <string name="nowcast_noun_rain_heavy">Pioggia forte</string>
+    <string name="nowcast_noun_snow_light">Neve debole</string>
+    <string name="nowcast_noun_snow_moderate">Neve moderata</string>
+    <string name="nowcast_noun_snow_heavy">Neve forte</string>
+    <string name="nowcast_noun_mixed_light">Pioggia e neve deboli</string>
+    <string name="nowcast_noun_mixed_moderate">Pioggia e neve</string>
+    <string name="nowcast_noun_mixed_heavy">Pioggia e neve forti</string>
+    <string name="nowcast_when_now">a momenti</string>
+    <plurals name="nowcast_when_minutes">
+        <item quantity="one">tra circa %d minuto</item>
+        <item quantity="other">tra circa %d minuti</item>
+    </plurals>
+    <string name="nowcast_when_at">verso le %1$s</string>
+    <string name="nowcast_starts">%1$s %2$s</string>
+    <plurals name="nowcast_tail_for">
+        <item quantity="one">per circa %d minuto</item>
+        <item quantity="other">per circa %d minuti</item>
+    </plurals>
+    <string name="nowcast_tail_until">fino alle %1$s circa</string>
+    <string name="nowcast_tail_at_least">almeno fino alle %1$s</string>
+    <string name="nowcast_lasts">%1$s almeno fino alle %2$s</string>
+    <string name="nowcast_stops_rain">La pioggia smette %1$s</string>
+    <string name="nowcast_stops_snow">La neve smette %1$s</string>
+    <string name="nowcast_stops_mixed">Pioggia e neve smettono %1$s</string>
+    <string name="nowcast_resumes">poi riprende %1$s</string>
+    <string name="nowcast_pair">%1$s, %2$s</string>
+    <!-- La sezione. -->
+    <string name="nowcast_title_rain">Pioggia nelle prossime 2 ore</string>
+    <string name="nowcast_title_snow">Neve nelle prossime 2 ore</string>
+    <string name="nowcast_title_mixed">Pioggia e neve nelle prossime 2 ore</string>
+    <string name="nowcast_hint">Ogni 15 minuti</string>
+    <string name="nowcast_band_light">debole</string>
+    <string name="nowcast_band_moderate">moderata</string>
+    <string name="nowcast_band_heavy">forte</string>
+    <string name="nowcast_run_from_to">dalle %1$s alle %2$s</string>
+    <string name="nowcast_run_until">fino alle %1$s</string>
+    <string name="nowcast_run_from">dalle %1$s in poi</string>
+    <string name="nowcast_run_all">per tutte e due le ore</string>
+    <string name="nowcast_runs_then">%1$s, poi %2$s</string>
+    <string name="nowcast_peak">più intensa verso le %1$s: %2$s, %3$s</string>
+    <string name="nowcast_peak_now">più intensa ora: %1$s, %2$s</string>
+    <string name="nowcast_caption">%1$s · %2$s</string>
+    <string name="nowcast_rate_mm">%1$s mm/h</string>
+    <string name="nowcast_rate_cm">%1$s cm/h</string>
+    <string name="nowcast_open">Mostra ogni quarto d\'ora</string>
+    <!-- La sua pagina. -->
+    <string name="nowcast_sheet_range">%1$s – %2$s</string>
+    <string name="nowcast_sheet_dry">niente</string>
+    <string name="nowcast_sheet_row_desc">Dalle %1$s alle %2$s: %3$s, %4$s</string>
+    <string name="nowcast_sheet_row_desc_dry">Dalle %1$s alle %2$s: non cade niente</string>
+    <string name="nowcast_sheet_about_title">Da dove viene</string>
+    <string name="nowcast_sheet_about">È la previsione di un modello ad alta risoluzione, che calcola la pioggia ogni quarto d\'ora su una griglia di un paio di chilometri ed è rifatto più volte al giorno: in Europa centrale quello del servizio meteorologico tedesco, negli Stati Uniti quello del servizio meteorologico nazionale. Non è un radar: dice dove il modello mette la pioggia, e l\'inizio e la fine possono spostarsi di un quarto d\'ora o due.</string>
+    <string name="nowcast_sheet_rule" formatted="false">Un quarto d\'ora conta come pioggia dallo 0,1 mm, e solo se la sua ora è probabile almeno al 20%: la stessa regola delle icone delle ore, così le due non si contraddicono mai.</string>
+    <string name="nowcast_sheet_where">Chiaro la mostra solo dove il modello calcola davvero il quarto d\'ora: il Nord Italia fino a Firenze e Ancona, la Svizzera, l\'Austria, la Germania, la Slovenia, la Repubblica Ceca e gli Stati Uniti. Altrove la previsione a 15 minuti è quella oraria divisa in quattro, e la sezione non compare; non compare nemmeno quando nelle prossime due ore non cade niente.</string>
+
     <!-- Griglia dettagli: etichette. Una riga sola accanto all'icona da 34dp:
          su uno schermo da 360dp sono 84dp (erano 94 con l'icona da 24 il 6 set e
          88 con quella da 30 fino all'8 set). «Punto di rugiada» (111) e «Qualità
@@ -436,6 +494,8 @@
     <string name="guide_today_headline_body">Quando c\'è qualcosa che vale la pena dire — ombrello verso le cinque, temporale alle tre, gelo entro domattina, nebbia in arrivo, vento forte nel pomeriggio, o l\'ombrello di domani — è scritto sotto il numero grande. La frase anticipa: quello che succede adesso lo dice già il numero grande. Nei giorni tranquilli dice quando è attesa la prossima pioggia e quando farà più caldo: due fatti della previsione, mai una frase di circostanza.</string>
     <string name="guide_today_rain_title">Sta per piovere?</string>
     <string name="guide_today_rain_body">La risposta è in tre punti: la frase in cima, subito sotto le probabilità ora per ora, ciascuna con la sua barra, alta quanto è probabile, e una riga che dice quando la probabilità tocca il massimo, e nei dettagli quanti millimetri sono previsti oggi e per quante ore. Chiaro descrive la pioggia nella lingua in cui arrivano i dati: quanto è probabile, quanta, da che ora a che ora.</string>
+    <string name="guide_today_nowcast_title">Le prossime due ore</string>
+    <string name="guide_today_nowcast_body">Nel Nord Italia (fino a Firenze e Ancona), in Svizzera, Austria, Germania, Slovenia, Repubblica Ceca e negli Stati Uniti la previsione è calcolata anche ogni quarto d\'ora. Quando nelle prossime due ore sta per cadere qualcosa, sopra le ore compare una scheda: una barra per quarto d\'ora, alta quanto la pioggia è forte, sulle parole debole, moderata e forte, e sotto da che ora a che ora e il momento più intenso. La frase in cima allora lo dice in minuti: «Pioggia debole tra circa 20 minuti, per circa 30 minuti», oppure quando smetterà la pioggia che vedi. Tocca la scheda per ogni quarto d\'ora a parole e per sapere da dove viene la previsione. È un modello, non un radar: l\'inizio e la fine possono spostarsi di un quarto d\'ora o due. Altrove, e in un pomeriggio asciutto, la scheda non c\'è.</string>
     <string name="guide_today_fresh_title">Quanto sono freschi i numeri</string>
     <string name="guide_today_fresh_body">Quando quello che stai leggendo non è più fresco, Chiaro ne dice l\'età vera invece di nasconderla, e un aggiornamento fallito dice perché. Se i dati hanno più di un\'ora, in cima non trovi quelli di allora ma la previsione per quest\'ora, e sotto la temperatura c\'è scritto «Stima dalla previsione». Tira giù la schermata per chiederne uno nuovo, o tocca l\'età stessa per riprovare.</string>
     <string name="guide_today_fresh_caption">Un esempio: l\'età di quello che stai leggendo — si tocca per riprovare.</string>

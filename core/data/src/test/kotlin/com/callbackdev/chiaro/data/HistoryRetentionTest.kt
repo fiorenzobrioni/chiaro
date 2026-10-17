@@ -62,7 +62,9 @@ class HistoryRetentionTest {
             hourly: String,
             daily: String,
             timezone: String,
-            forecastDays: Int
+            forecastDays: Int,
+            minutely15: String,
+            forecastQuarters: Int
         ): ForecastResponseDto {
             calls++
             return milanResponse

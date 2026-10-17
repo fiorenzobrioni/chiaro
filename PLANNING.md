@@ -14208,3 +14208,102 @@ dove il DNS risponde ma nulla passa si legge «il servizio non risponde»: meno 
 lettura, fine del flusso) ha un secondo tentativo e il report; un nome non risolto e il `callTimeout`
 esaurito no; solo il nome non risolto dice `NoNetwork`. `WeatherSyncWorkerTest` (la porta chiusa del test
 ora è `Unreachable`, con ritardo zero). Suite completa e lint.
+
+## La pioggia nelle prossime due ore (committente, 17 ott 2026)
+
+**La richiesta.** Dire quando arriva e quando smette la pioggia **nei prossimi minuti**, dove i dati
+lo permettono, con una qualità da app premium. Il Nord Italia è il caso d'uso dichiarato.
+
+**I dati, misurati prima del codice.** Open-Meteo risponde `minutely_15` ovunque, ma solo tre dei
+suoi modelli calcolano davvero il quarto d'ora: ICON-D2 del DWD (Europa centrale), AROME di
+Météo-France (Francia, 6 ore), HRRR della NOAA (Stati Uniti). Altrove la serie è **quella oraria
+divisa in quattro**. Misurato quel pomeriggio, `best_match` contro ciascun modello nello stesso punto,
+192 quarti per città:
+
+| Città | `best_match` = | Ore bagnate | di cui piatte | Lettura |
+|---|---|---|---|---|
+| Milano, Bologna, Ancona, Firenze, Torino, Venezia, Genova, Trieste, Bolzano | ICON-D2, 0 differenze | Milano 8, Genova 10 | 0, 1 | calcolato |
+| Zurigo, Monaco, Vienna, Lubiana, Praga | ICON-D2, 0 differenze | Zurigo 9, Monaco 7, Praga 2 | 0 | calcolato |
+| New York | HRRR, 0 differenze | 4 | 0 | calcolato |
+| Londra | né ICON-D2 (20 differenze) né AROME (16) | 3 | 3 | interpolato (UKMO) |
+| Amsterdam | non ICON-D2 (54 differenze) | 9 | 9 | interpolato (KNMI) |
+| Perugia, Roma, Napoli, Bari, Palermo | ICON-D2 assente dalla risposta | 0 | — | fuori griglia |
+| Parigi, Nizza | ICON-D2 e AROME uguali | 0 | — | asciutto, non deciso |
+
+Due cose decise da queste righe: **la griglia non basta** (Londra e Amsterdam ci stanno dentro e sono
+interpolate), quindi conta il paese; e **l'interpolazione si riconosce** dalla forma (quattro quarti
+uguali in ogni ora bagnata). E una terza, la ragione per cui la sezione non può contraddire la striscia
+delle ore: a Milano i quattro quarti di ogni ora sommano esattamente l'ora (19:15–20:00 = 0,3 + 0,1 +
+0,1 + 0,8 = 1,3 mm, lo slot orario delle 20:00), perché quarti e ore vengono dallo stesso modello.
+
+**Cosa è cambiato.**
+
+1. *La richiesta*: `minutely_15=precipitation,snowfall` e `forecast_minutely_15=24` nella stessa
+   chiamata delle previsioni, nessuna chiamata in più. Ventiquattro quarti, sei ore: la sezione ne
+   mostra otto, gli altri servono a leggere la forma della serie. Il primo quarto è quello appena
+   finito (lo stesso del blocco `current`), e il motore lo salta.
+2. *`NowcastCoverage`* (`:core:domain`): coperto è un posto il cui paese ha `best_match` = un modello
+   che calcola il quarto **e** che sta nella sua griglia, meno un margine di 0,25° (la fascia dove un
+   modello ad area limitata è ancora rilassato verso quello che lo contiene). ICON-D2: IT, SM, CH, LI,
+   AT, DE, SI, CZ, nella griglia 43,18–58,08° N, 3,94° O–20,34° E (Firenze e Ancona sì, Siena e Perugia
+   no); HRRR: US contigui. Per codice ISO come `PlaceRegion`: un posto senza codice non è coperto,
+   mai indovinato. E `looksInterpolated`: se **ogni** ora bagnata della serie ha quattro quarti
+   uguali, la serie è scartata. *Fallisce chiuso*: una pioviggine regolare disegnata piatta da un
+   modello vero, sola nella sua serie, nasconde la sezione per quel fetch.
+3. *Il mapper* tiene i quarti solo dove la copertura lo dice e la forma regge; ogni slot è il quarto
+   che FINISCE alla sua etichetta, come le somme orarie. Uno slot senza valore lascia un buco, non uno
+   zero, e il buco chiude la finestra.
+4. *`NowcastEngine`* (`:core:domain`): la finestra parte dal quarto in cui siamo, tagliato a ora, e
+   chiude sull'ultimo quarto intero entro due ore. Lo stato di un quarto è di `WeatherStateEngine`,
+   sul quarto come tasso orario (×4) e con la **probabilità della sua ora**: un quarto in un'ora sotto
+   il 20% è una traccia del modello, come l'ora. Così le icone delle ore e la sezione dicono la stessa
+   cosa. L'intensità è la scala già del motore (AMS: debole sotto 2,5 mm/h, forte da 7,6; neve: 0,2 e
+   0,8 cm/h). La pioggia che gela, che le quantità non mostrano, prende lo stato della sua ora solo
+   nei quarti misurabili. Niente lettura se il fetch ha più di un'ora (una precisione al quarto d'ora
+   non sopravvive a un dato vecchio) o se i quarti davanti coprono meno di un'ora.
+5. *La frase in cima* (`Headline.NextRain`): un gradino dopo l'allerta e il maltempo, prima di
+   «piove ora» e dell'ombrello orario, che dove la copertura c'è non parlano più della stessa ora.
+   «Pioggia debole tra circa 20 minuti, per circa 30 minuti»; «La pioggia smette tra circa 25 minuti,
+   poi riprende verso le 15:15»; «Pioggia moderata almeno fino alle 16:00»; «La pioggia smette a
+   momenti» quando l'eroe mostra pioggia e i quarti davanti sono asciutti. Sotto l'ora si dice in
+   minuti, arrotondati a cinque; sotto i dieci è «a momenti»; da un'ora in là, l'orario. I widget non
+   ricevono la lettura: una scheda ridisegnata una volta l'ora non può dire «tra circa 20 minuti».
+6. *La sezione* «Pioggia nelle prossime 2 ore» (DESIGN §8.3c), sopra le ore, solo quando nella
+   finestra cade qualcosa: una barra per quarto d'ora su una scala fissa, le parole delle bande come
+   unico asse, «Ora» e le mezz'ore sotto; la didascalia è l'aritmetica della frase (da quando a quando,
+   il quarto più intenso con il suo mm/h e la sua parola) e il suo equivalente testuale. Un tocco apre
+   la pagina: la finestra, ogni quarto a parole (gli asciutti consecutivi in una riga sola), da dove
+   viene la previsione, la regola dello 0,1 mm e del 20%, e dove funziona.
+7. *La guida* ha «Le prossime due ore».
+
+**Decisioni e deviazioni.**
+
+- *La stessa chiamata, non un modello esplicito.* Chiedere `models=icon_d2` a parte avrebbe dato la
+  certezza del modello al prezzo di una seconda chiamata e di una seconda previsione, che avrebbe
+  potuto dire un'altra cosa rispetto alla striscia delle ore dove `best_match` non è ICON-D2.
+  Con `best_match` quarti e ore sono la stessa previsione per costruzione; la copertura e la forma
+  dicono dove crederle.
+- *Due ore, non una.* Con un passo di 15 minuti un'ora sono quattro barre: troppo poche per una forma.
+  Otto lo sono, e due ore sono ancora il raggio in cui un modello rifatto ogni ora o tre ha senso al
+  quarto d'ora.
+- *Asciutto, niente sezione.* Una scheda che dice «niente pioggia nelle prossime due ore» ogni giorno
+  asciutto sarebbe la cosa più ripetuta della pagina; la frase in cima e le ore lo dicono già.
+- *La Francia resta fuori*: Parigi e Nizza erano asciutte, e un'uguaglianza tra zeri non dice quale
+  modello parla. Si aggiunge quando una misura bagnata lo dice.
+- *I colori delle barre* partono dal punto 80% della rampa della pioggia: il 70% misurava 2,48:1 sulla
+  card, sotto il 3:1 di un segno. `PaletteContrastTest` lo ha trovato prima del telefono.
+- *Lo screenshot del README non c'è*: la registrazione di Milano (25 set) non ha `minutely_15`, e una
+  nuova registrazione cambia ogni immagine, quindi è una modifica a sé, da fare in un momento di
+  pioggia vera su Milano («nessun dato inventato»).
+
+**Come è stato verificato.** `NowcastCoverageTest` (le città misurate dentro e fuori, le serie
+registrate di Milano, Genova e New York accettate, quelle di Londra e Amsterdam scartate);
+`NowcastEngineTest` (la finestra, inizio, fine, pausa, durata oltre la finestra, soglia di probabilità,
+0,1 mm, intensità, neve, misto, gelicidio, «sta per smettere», dato vecchio, buco); `WeatherReportMapperTest`
+(l'inizio del quarto, fuori copertura, serie piatta, cache senza quarti, slot senza valore);
+`NextRainTextTest` (le frasi in italiano e in inglese, gli arrotondamenti, il posto nella scala);
+`TodayStateBuilderTest` (sezione e frase con la pioggia, niente con l'asciutto); `PaletteContrastTest`
+(le barre ≥ 3:1 su `surfaceContainer` in ogni schema, più forti salendo d'intensità). La pagina è stata
+disegnata su Robolectric sopra la Milano registrata con quarti veri di Milano e di Genova, chiaro e
+scuro, italiano e inglese, testo al 200%, pieghevole: a 200% le parole delle bande si sovrapponevano,
+e l'altezza del grafico ora è misurata in testo. Suite completa e lint.

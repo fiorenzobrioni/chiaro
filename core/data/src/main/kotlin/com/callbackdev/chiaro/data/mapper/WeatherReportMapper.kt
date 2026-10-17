@@ -7,6 +7,7 @@ import com.callbackdev.chiaro.data.remote.dto.DailyDto
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.HourlyDto
 import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.NowcastCoverage
 import com.callbackdev.chiaro.domain.PlaceRegion
 import com.callbackdev.chiaro.domain.WeatherCodes
 import com.callbackdev.chiaro.domain.WeatherCodes.PollenSpecies
@@ -24,10 +25,12 @@ import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.Location
 import com.callbackdev.chiaro.domain.model.MoonPhase
+import com.callbackdev.chiaro.domain.model.Nowcast
 import com.callbackdev.chiaro.domain.model.PastHour
 import com.callbackdev.chiaro.domain.model.PollenReport
 import com.callbackdev.chiaro.domain.model.Pollutants
 import com.callbackdev.chiaro.domain.model.Precipitation
+import com.callbackdev.chiaro.domain.model.QuarterHour
 import com.callbackdev.chiaro.domain.model.SystemInfo
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.model.WeatherReport
@@ -237,8 +240,32 @@ object WeatherReportMapper {
                 lastSync = fetchedAt,
                 cacheStatus = cacheStatus,
                 responseTimeMs = responseTimeMs
-            )
+            ),
+            nowcast = mapNowcast(forecast, clock, city)
         )
+    }
+
+    /**
+     * The quarters ahead (17 ott 2026), only where a model computes them
+     * ([NowcastCoverage.covers]) and only when the series does not read as the hourly one cut
+     * in four ([NowcastCoverage.looksInterpolated]). Each slot is the quarter that ENDS at its
+     * label, like the hourly sums: the quarter starts fifteen minutes earlier. A slot with no
+     * amount is left out, and the gap it leaves ends the window where it is
+     * ([com.callbackdev.chiaro.domain.NowcastEngine] reads only quarters without a gap).
+     */
+    private fun mapNowcast(forecast: ForecastResponseDto, clock: ProviderClock, city: City): Nowcast? {
+        val series = forecast.minutely15 ?: return null
+        if (!NowcastCoverage.covers(city.countryCode, city.coordinates)) return null
+        val quarters = series.time.indices.mapNotNull { i ->
+            val mm = series.precipitationMm.getOrNull(i) ?: return@mapNotNull null
+            QuarterHour(
+                start = clock.instantOf(LocalDateTime.parse(series.time[i])).minus(QuarterHour.LENGTH),
+                precipMm = mm,
+                snowCm = series.snowfallCm.getOrNull(i)
+            )
+        }
+        if (quarters.isEmpty() || NowcastCoverage.looksInterpolated(quarters)) return null
+        return Nowcast(quarters)
     }
 
     /**

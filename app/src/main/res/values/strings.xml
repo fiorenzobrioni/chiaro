@@ -134,6 +134,64 @@
     <string name="strip_now">Now</string>
     <string name="rain_lane_caption">%1$s, peaking at %2$s around %3$s</string>
 
+    <!-- The next two hours, a quarter at a time (17 ott 2026): the sentence at the top. -->
+    <string name="nowcast_noun_rain_light">Light rain</string>
+    <string name="nowcast_noun_rain_moderate">Moderate rain</string>
+    <string name="nowcast_noun_rain_heavy">Heavy rain</string>
+    <string name="nowcast_noun_snow_light">Light snow</string>
+    <string name="nowcast_noun_snow_moderate">Moderate snow</string>
+    <string name="nowcast_noun_snow_heavy">Heavy snow</string>
+    <string name="nowcast_noun_mixed_light">Light rain and snow</string>
+    <string name="nowcast_noun_mixed_moderate">Rain and snow</string>
+    <string name="nowcast_noun_mixed_heavy">Heavy rain and snow</string>
+    <string name="nowcast_when_now">any minute now</string>
+    <plurals name="nowcast_when_minutes">
+        <item quantity="one">in about %d minute</item>
+        <item quantity="other">in about %d minutes</item>
+    </plurals>
+    <string name="nowcast_when_at">around %1$s</string>
+    <string name="nowcast_starts">%1$s %2$s</string>
+    <plurals name="nowcast_tail_for">
+        <item quantity="one">for about %d minute</item>
+        <item quantity="other">for about %d minutes</item>
+    </plurals>
+    <string name="nowcast_tail_until">until about %1$s</string>
+    <string name="nowcast_tail_at_least">until at least %1$s</string>
+    <string name="nowcast_lasts">%1$s until at least %2$s</string>
+    <string name="nowcast_stops_rain">The rain stops %1$s</string>
+    <string name="nowcast_stops_snow">The snow stops %1$s</string>
+    <string name="nowcast_stops_mixed">The rain and snow stop %1$s</string>
+    <string name="nowcast_resumes">then starts again %1$s</string>
+    <string name="nowcast_pair">%1$s, %2$s</string>
+    <!-- The section. -->
+    <string name="nowcast_title_rain">Rain in the next 2 hours</string>
+    <string name="nowcast_title_snow">Snow in the next 2 hours</string>
+    <string name="nowcast_title_mixed">Rain and snow in the next 2 hours</string>
+    <string name="nowcast_hint">Every 15 minutes</string>
+    <string name="nowcast_band_light">light</string>
+    <string name="nowcast_band_moderate">moderate</string>
+    <string name="nowcast_band_heavy">heavy</string>
+    <string name="nowcast_run_from_to">from %1$s to %2$s</string>
+    <string name="nowcast_run_until">until %1$s</string>
+    <string name="nowcast_run_from">from %1$s on</string>
+    <string name="nowcast_run_all">for the whole two hours</string>
+    <string name="nowcast_runs_then">%1$s, then %2$s</string>
+    <string name="nowcast_peak">heaviest around %1$s: %2$s, %3$s</string>
+    <string name="nowcast_peak_now">heaviest now: %1$s, %2$s</string>
+    <string name="nowcast_caption">%1$s · %2$s</string>
+    <string name="nowcast_rate_mm">%1$s mm/h</string>
+    <string name="nowcast_rate_cm">%1$s cm/h</string>
+    <string name="nowcast_open">Show every quarter of an hour</string>
+    <!-- Its page. -->
+    <string name="nowcast_sheet_range">%1$s – %2$s</string>
+    <string name="nowcast_sheet_dry">nothing</string>
+    <string name="nowcast_sheet_row_desc">From %1$s to %2$s: %3$s, %4$s</string>
+    <string name="nowcast_sheet_row_desc_dry">From %1$s to %2$s: nothing falls</string>
+    <string name="nowcast_sheet_about_title">Where it comes from</string>
+    <string name="nowcast_sheet_about">This is the forecast of a high-resolution model that computes the rain every quarter of an hour on a grid of a couple of kilometres and is run again several times a day: the German weather service\'s over central Europe, the US national weather service\'s over the United States. It is not a radar: it says where the model puts the rain, and a start or an end can move by a quarter of an hour or two.</string>
+    <string name="nowcast_sheet_rule" formatted="false">A quarter counts as wet from 0.1 mm, and only when its hour is at least 20% likely: the same rule the icons of the hours follow, so the two never disagree.</string>
+    <string name="nowcast_sheet_where">Chiaro shows it only where the model really computes the quarter: northern Italy down to Florence and Ancona, Switzerland, Austria, Germany, Slovenia, the Czech Republic and the United States. Elsewhere a 15-minute forecast is the hourly one split in four, and the section does not appear; it does not appear either when nothing falls in the next two hours.</string>
+
     <!-- Details grid: labels. One line beside the tile's 34dp icon, which on a
          360dp screen is a budget of 84dp (94 until the icons grew on 6 set, 88 until
          their third step on 8 set): a label written past it wraps and pushes its own
@@ -455,6 +513,8 @@
     <string name="guide_today_headline_body">When there is something worth saying — an umbrella around five, a thunderstorm at three, frost by morning, fog on the way, strong wind this afternoon, or tomorrow\'s umbrella — it is written under the big number. The sentence looks ahead: what is happening now, the big number already says. On a quiet day it says when the next rain is due and when it will be warmest: two facts from the forecast, never a filler.</string>
     <string name="guide_today_rain_title">Is it about to rain?</string>
     <string name="guide_today_rain_body">Three places answer that: the sentence at the top, right below it the chances hour by hour, each with its bar, as tall as it is likely, and a line saying when the chance peaks, and in the details how many millimetres are expected today and over how many hours. Chiaro describes rain the way its data arrives — how likely, how much, from when to when.</string>
+    <string name="guide_today_nowcast_title">The next two hours</string>
+    <string name="guide_today_nowcast_body">In northern Italy (down to Florence and Ancona), Switzerland, Austria, Germany, Slovenia, the Czech Republic and the United States, the forecast is also computed every quarter of an hour. When something is going to fall in the next two hours, a card appears above the hours: a bar per quarter, as tall as the rain is heavy, on the words light, moderate and heavy, and under it from when to when and the heaviest moment. The sentence at the top then says it in minutes: «Light rain in about 20 minutes, for about 30 minutes», or when the rain you see will stop. Tap the card for every quarter in words and where the forecast comes from. It is a model, not a radar: a start or an end can move by a quarter of an hour or two. Elsewhere, and on a dry afternoon, the card is not there.</string>
     <string name="guide_today_fresh_title">How fresh the numbers are</string>
     <string name="guide_today_fresh_body">When what you are reading is no longer fresh, Chiaro says its real age instead of hiding it, and an update that failed says why. If the data is over an hour old, the top of the screen shows the forecast for this hour instead of the old reading, and says «Estimated from the forecast» under the temperature. Pull the screen down to ask for a new one, or tap the age itself to try again.</string>
     <string name="guide_today_fresh_caption">An example: the age of what you are reading — tap it to try again.</string>

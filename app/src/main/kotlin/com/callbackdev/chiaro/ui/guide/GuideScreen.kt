@@ -138,6 +138,11 @@ private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifi
             stringResource(R.string.guide_today_rain_title),
             stringResource(R.string.guide_today_rain_body)
         )
+        // The quarters (17 ott 2026): where they are read and what the card says.
+        Feature(
+            stringResource(R.string.guide_today_nowcast_title),
+            stringResource(R.string.guide_today_nowcast_body)
+        )
         Feature(
             stringResource(R.string.guide_today_fresh_title),
             stringResource(R.string.guide_today_fresh_body)

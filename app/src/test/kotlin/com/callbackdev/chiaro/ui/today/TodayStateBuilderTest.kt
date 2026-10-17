@@ -362,4 +362,39 @@ class TodayStateBuilderTest {
             it.kind == TimelineKind.MOONRISE || it.kind == TimelineKind.MOONSET
         })
     }
+
+    // -------------------------------------------------- the next two hours (17 ott 2026)
+
+    private fun withQuarters(vararg mm: Double): TodayUiState.Content {
+        val fetched = LocalDateTime.of(2026, 9, 2, 12, 0)
+        val now = LocalDateTime.of(2026, 9, 2, 12, 5).atZone(zone).toInstant()
+        val wet = report(fetched).let { r ->
+            r.copy(
+                // The ensemble backs the hours, so a measurable quarter is a wet one.
+                hourly = r.hourly.map { it.copy(precipChancePct = 70) },
+                nowcast = com.callbackdev.chiaro.domain.model.Nowcast(
+                    mm.mapIndexed { i, v ->
+                        com.callbackdev.chiaro.domain.model.QuarterHour(
+                            fetched.atZone(zone).toInstant().plusSeconds(900L * i), v, 0.0
+                        )
+                    }
+                )
+            )
+        }
+        return TodayStateBuilder.build(milan, wet, now, 60, false, null) as TodayUiState.Content
+    }
+
+    @Test
+    fun `rain in the quarters ahead is the section and the sentence`() {
+        val content = withQuarters(0.0, 0.0, 0.3, 0.3, *DoubleArray(12))
+        assertTrue(content.nowcast?.wet == true)
+        assertTrue(content.headline is Headline.NextRain)
+    }
+
+    @Test
+    fun `a dry window draws no section`() {
+        val content = withQuarters(*DoubleArray(16))
+        assertEquals(null, content.nowcast)
+        assertTrue(content.headline !is Headline.NextRain)
+    }
 }

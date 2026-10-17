@@ -1520,6 +1520,51 @@ card went from some 310dp on a wet day to some 160 (130 dry).
 in place of «00», so «22 23 Gio 01» no longer reads as one evening. The cell still speaks the
 hour. Not in a week row's own strip, which is one day already.
 
+**8.3c The next two hours** (17 ott 2026) — «Pioggia nelle prossime 2 ore», a card of its own
+(§8.0) **above** the hours, and the first section on the paper when it is there: the one section
+about minutes, and the most urgent thing the page knows. Drawn only where a model computes the
+quarter of an hour (`NowcastCoverage`: northern Italy to Florence and Ancona, Switzerland, Austria,
+Germany, Slovenia, Czechia, the United States) and only when something falls in the window; a dry
+window draws nothing (§1.1), and the hours' title then opens the paper as before. The title names
+what falls (rain, snow, or both, by the window's own quarters), with «Ogni 15 minuti» as its hint.
+
+The card is the sentence's arithmetic. The sentence at the top says it in words («Pioggia debole tra
+circa 20 minuti, per circa 30 minuti»); the card draws it and its caption gives the numbers:
+
+- **A bar a quarter** on a time axis that starts where the reader stands, «Ora» at its left edge,
+  the quarter we are in cut at now, and ends on the last whole quarter within two hours. 2dp of
+  surface between neighbouring quarters (§9.2), so a spell is one shape; 4dp rounded tops on a flat
+  base; a wet quarter is never under 3dp, because wet is not a hairline. A dry quarter draws nothing
+  over the floor.
+- **The height is a fixed scale** (§9.1): the square root of the rate over 16 mm/h for rain (2 cm/h
+  for snow), so a light 0.4 mm/h stands a sixth of the way up and a cloudburst cannot flatten the rest.
+  Past the top a bar stops there and the caption carries its number. The plot is **88dp at 100% type**
+  and measured in text (`forText()`): at 200% the bands' words are twice as tall, and a plot held at
+  88dp stacked them on each other (seen on the first render).
+- **The only axis is words.** Two `outlineVariant` gridlines on the state engine's own ladder — the
+  AMS's 2.5 and 7.6 mm/h for rain, Open-Meteo's 0.2 and 0.8 cm/h for snow — and in a gutter at the
+  right, on the middle of each band, its word: «debole», «moderata», «forte». Under the floor, «Ora»
+  and the half hours, each with a 1×3dp tick; a label that would touch the one before it is skipped.
+- **One hue, a step per band** (§9.1, §2.3): the rain's fill ramp at 80%, 90% and 100% for light,
+  moderate and heavy — darker as it gets heavier on paper, brighter in the dark. Measured on
+  `surfaceContainer`: **3.02, 3.73, 4.66:1** on paper and **5.14, 6.31, 7.65:1** in the dark (the
+  vivid dress within 0.04); the 70% stop, the first choice, was 2.48:1 and failed the 3:1 a mark
+  owes its ground. `PaletteContrastTest` holds the floor and the order.
+- **The caption** (`bodyMedium`, `onSurfaceVariant`), the chart's text equivalent (§9.3) and what
+  TalkBack reads for the whole card: the spells, at most two («Dalle 13:00 alle 13:30, poi dalle 14:00
+  in poi»), then the heaviest quarter with its rate and its word («più intensa verso le 13:15:
+  24,0 mm/h, forte»). The canvas itself is silent to TalkBack.
+- **Motion**: the bars rise once per fetch, left to right, the last one starting 35% of the way into
+  a 700ms pass, each on `FastOutSlowIn` — the rain arriving the way it will. The window sliding by a
+  quarter does not replay it. Under reduced motion the bars are simply there.
+
+A tap opens **its page** (a bottom sheet): the title, the sentence, the chart again on its card, the
+quarters as a group of segments — a wet quarter a row with a 4×20dp swatch of its bar's colour, its
+stretch of the clock, its word and its amount in mm (cm for snow), a dry spell one row («niente»,
+no amount: «0,0 mm» is a figure with nothing to plan by) — and then where the forecast comes from,
+the rule a wet quarter follows (0.1 mm and an hour at least 20% likely, the hours' own rule) and
+where the section is drawn. It is a model and says so: «non è un radar».
+
 **8.4 TimelineRow** — the rest of the day (VISION §5.2.4), **a group of segments** (§8.0, 15
 ott 2026): one row a segment, as the Sky draws the same moments. A row is the clock time in a
 48dp tabular column (`labelLarge`, `onSurfaceVariant`, growing with the type), the glyph at the
@@ -2424,7 +2469,8 @@ Direct labels on the extremes only — never a number on every point.
 ### 9.3 Every chart has a text equivalent
 
 The hour strip prints every temperature on its curve and every chance from 20% under its bar,
-and a wet strip's caption says the peak in words; the range bar's ends are printed. This is both the accessibility floor and §1.2: a picture of a number is not a
+and a wet strip's caption says the peak in words; the range bar's ends are printed; the next two
+hours' caption says the spells and the heaviest quarter, and its page lists every quarter (§8.3c). This is both the accessibility floor and §1.2: a picture of a number is not a
 number.
 
 ---
