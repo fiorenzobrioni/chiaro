@@ -14165,3 +14165,46 @@ uniform. Un campionario di otto cieli (strato chiuso, velo chiuso, velo al 60%, 
 hardware, guardato e tolto. Rigenerate `today-now` e `today-foldable` (la Milano delle 12: 66% basse, 13%
 medie, 49% alte; ora un banco al 70% con il velo negli spazi, il sole un disco tenue) e `settings` (il 20%
 dell'anteprima ora ha le sue nuvole); le altre identiche. Suite completa e lint.
+
+## «Sei offline» con il Wi-Fi acceso, e la pagina vuota che non si tira (committente, 17 ott 2026)
+
+**Il difetto, visto sul telefono.** Dalla mattina l'app non si aggiornava più: il banner diceva
+«Aggiornamento non riuscito: sei offline» con il Wi-Fi acceso, una pagina senza ancora un report restava
+sullo scheletro e il gesto di trascinare in basso non faceva niente. Cancellare dati e cambiare città non
+cambiava nulla.
+
+**La causa era fuori dall'app, l'etichetta dentro.** Misurato dal sandbox nello stesso pomeriggio: l'host
+delle previsioni di Open-Meteo falliva una stretta di mano TLS su due (`SSL_ERROR_SYSCALL` dopo ~30 s),
+e le risposte che passavano impiegavano ~4 s (`generationtime_ms` 4214); la qualità dell'aria rispondeva
+normale. Il report, quando arrivava, era integro. Ma `wrapErrors` trasformava ogni `IOException` in
+`NoNetwork`, e il banner diceva al lettore che il problema era il suo telefono.
+
+**Cosa è cambiato.**
+
+1. *Offline vuol dire offline.* Solo un nome che non si risolve (`UnknownHostException`, quello che
+   Android dà senza una rete) è `NoNetwork`; una connessione rifiutata, interrotta, una stretta di mano
+   ferma, un timeout sono `WeatherException.Unreachable` e a schermo il già esistente «il servizio non
+   risponde» (`TodayError.SERVICE`). Il job periodico tratta `Unreachable` come `NoNetwork`:
+   `Result.retry()`, il backoff di WorkManager riprova prima del periodo successivo.
+2. *Un secondo tentativo per una connessione caduta*, lo stesso che i 5xx hanno dal 24 set: uno, dopo
+   2 s. Non per un telefono offline (niente cambia in 2 s e il report in cache è già a schermo) e non per
+   il `callTimeout` esaurito (sono già 30 s spesi; altri 30 sarebbero una pagina che non si risolve).
+   Con un errore su due, la probabilità che un aggiornamento fallisca scende da 1/2 a 1/4.
+3. *La pagina senza report prende il trascinamento.* Non aveva un `PullToRefreshBox`: lo stato `Empty`
+   ora ce l'ha, con la colonna scorrevole perché il gesto arrivi al box.
+4. *Un trascinamento durante un aggiornamento automatico si unisce a quello*: prima `fetch` tornava
+   indietro in silenzio per via di `inFlight`, e con un servizio che impiegava 30 s a fallire il gesto
+   non mostrava niente. Ora l'indicatore gira finché la richiesta in corso non risponde; una seconda
+   richiesta non parte.
+
+**Decisioni e deviazioni.** *Niente `ConnectivityManager`*: decidere «offline» dalla rete del sistema
+avrebbe portato un `Context` nella classificazione, e l'eccezione lo dice già. Un Wi-Fi senza internet
+dove il DNS risponde ma nulla passa si legge «il servizio non risponde»: meno preciso, non falso.
+*La ricerca dei luoghi* mostra per `Unreachable` il suo «la ricerca non ha funzionato, riprova», non
+«sei offline». *Il «tap» che non rispondeva*: lo scheletro non ha nulla da toccare; l'intestazione
+(luoghi, impostazioni) resta attiva. Il gesto che mancava era il trascinamento, ora c'è.
+
+**Come è stato verificato.** `TransientRetryTest`: una connessione caduta (TLS, rifiutata, timeout di
+lettura, fine del flusso) ha un secondo tentativo e il report; un nome non risolto e il `callTimeout`
+esaurito no; solo il nome non risolto dice `NoNetwork`. `WeatherSyncWorkerTest` (la porta chiusa del test
+ora è `Unreachable`, con ritardo zero). Suite completa e lint.
