@@ -140,7 +140,9 @@ object WidgetData {
         val content = report?.let {
             TodayStateBuilder.build(
                 city, it, now, settings.updateFrequencyMin,
-                userRefreshing = false, error = null, warnings = warning
+                userRefreshing = false, error = null, warnings = warning,
+                // No quarter-hour sentence on a card that is repainted once a sync.
+                readQuarters = false
             ) as? TodayUiState.Content
         }
         return WidgetModel(
