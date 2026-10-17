@@ -338,11 +338,18 @@ internal val BodiesBand = 56.dp
  * clock times under the ribbon. */
 internal val HeroLineGap = 4.dp
 
-/** Between the now and the day's sentence: a step, so the two read as two things. */
-internal val HeroGroupGap = 12.dp
+/** Between the now and the day's sentence: a step, so the two read as two things.
+ *
+ * 8dp since 17 ott 2026, with [HeroRibbonGap] taking the 4dp: at 12 and 16 the sentence
+ * stood 25dp of air under the day's figures and 26dp over the ribbon (measured on a
+ * phone), because a line of text carries its leading on both sides and the ribbon none,
+ * so it belonged to neither. Now it is 21 under the figures, a step over the 17 between
+ * the word and the figures, and 30 over the ribbon, and the canvas keeps its height. */
+internal val HeroGroupGap = 8.dp
 
-/** Over the ribbon: the canvas' floor line stands clear of the prose above it. */
-internal val HeroRibbonGap = 16.dp
+/** Over the ribbon: the canvas' floor line stands clear of the prose above it, by more
+ * air than any step inside the prose (see [HeroGroupGap]). */
+internal val HeroRibbonGap = 20.dp
 
 /**
  * The hero's style at the reader's type scale (15 ott 2026): the figure grows with the reader's

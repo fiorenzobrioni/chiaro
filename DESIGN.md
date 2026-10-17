@@ -1339,11 +1339,16 @@ things and is spaced as three: the **now** — the figure (`heroTemperature`), t
 `titleLarge`, and 4dp under it **the day's figures** at `bodyLarge`, tabular: «Massima 23° ·
 minima 17°», with «percepiti 22°» after them when the air feels a degree or more off (second
 review, 15 ott 2026); the estimate's note 4dp under them (`bodyMedium`) — packed under the
-figure, whose own line already leaves air under its digits; the **day's sentence**, 12dp below, at `bodyLarge`; and the **ribbon**,
-16dp below that, with its clock times 4dp under it. Until then one 6dp step ran between every
+figure, whose own line already leaves air under its digits; the **day's sentence**, 8dp below, at `bodyLarge`; and the **ribbon**,
+20dp below that, with its clock times 4dp under it. Until then one 6dp step ran between every
 line, and the sentence was `titleLarge` like the word above it: two lines about the day
 outweighed one word about now, and the three read as a paragraph. Set as prose, the sentence
 reads as one, and the eye takes the screen's order — the number, the word, the day.
+The two steps were 12 and 16dp until 17 ott 2026: measured on a phone, that left the sentence
+25dp of air under the figures and 26dp over the ribbon (a text line carries its leading on
+both sides, the ribbon none), so it floated between the two. At 8 and 20 the air is 17 (word
+to figures), 21 (figures to sentence), 30 (sentence to ribbon): each step larger than the one
+above it, and the canvas the same height.
 
 **The figure is 88sp** (second review, 15 ott 2026; 64sp until then), the size a premium
 weather app gives the one number it is opened for, and the day's high and low stand right
