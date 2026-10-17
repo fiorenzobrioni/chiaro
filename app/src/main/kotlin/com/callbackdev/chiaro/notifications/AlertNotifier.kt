@@ -16,9 +16,7 @@ import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.zone
 import com.callbackdev.chiaro.ui.format.Formats
-import com.callbackdev.chiaro.ui.today.Headline
 import com.callbackdev.chiaro.ui.today.HeadlineEngine
-import com.callbackdev.chiaro.ui.today.HeadlineText
 import com.callbackdev.chiaro.ui.today.WeatherText
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -130,25 +128,10 @@ object AlertNotifier {
             }
             AlertKind.PRECIPITATION -> {
                 val pct = alert.precipPct
-                val spell = alert.spell
-                when {
-                    time == null || pct == null -> context.getString(R.string.notif_precip_body_plain)
-                    // Where the quarters see the same rain (17 ott 2026): what falls, how
-                    // hard, from when to when, by the clock — and still the chance that
-                    // made the alert fire, the number behind it.
-                    spell != null -> {
-                        val clock = clockFormat(context)
-                        val noun = context.getString(
-                            HeadlineText.nounRes(Headline.Falling.of(spell.falling), spell.intensity)
-                        )
-                        spell.end?.let { end ->
-                            context.getString(
-                                R.string.notif_precip_body_spell,
-                                noun, spell.start.format(clock), end.format(clock), pct
-                            )
-                        } ?: context.getString(R.string.notif_precip_body_spell_open, noun, spell.start.format(clock), pct)
-                    }
-                    else -> context.getString(R.string.notif_precip_body, time, pct)
+                if (time == null || pct == null) {
+                    context.getString(R.string.notif_precip_body_plain)
+                } else {
+                    context.getString(R.string.notif_precip_body, time, pct)
                 }
             }
             // The two summaries share one sentence and differ in their TITLE ("Oggi"

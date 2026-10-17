@@ -1565,11 +1565,6 @@ no amount: «0,0 mm» is a figure with nothing to plan by) — and then where th
 the rule a wet quarter follows (0.1 mm and an hour at least 20% likely, the hours' own rule) and
 where the section is drawn. It is a model and says so: «non è un radar».
 
-**The rain alert borrows it** (17 ott 2026): when «Pioggia in arrivo» fires with its rain already
-inside these two hours, its sentence names the spell by the clock and the band's word — «Pioggia
-moderata dalle 14:15 alle 15:00 circa, probabilità 80%» — and never in minutes, because a notification
-is read when it is read. Same channel, same fingerprint, no new notification.
-
 **8.4 TimelineRow** — the rest of the day (VISION §5.2.4), **a group of segments** (§8.0, 15
 ott 2026): one row a segment, as the Sky draws the same moments. A row is the clock time in a
 48dp tabular column (`labelLarge`, `onSurfaceVariant`, growing with the type), the glyph at the

@@ -4,7 +4,6 @@ import com.callbackdev.chiaro.domain.settings.NotificationSettings
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.model.WeatherReport
-import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -33,26 +32,7 @@ data class Alert(
      * a day off the city's own (a place east of the date line, a phone still on
      * holiday time): the numbers above were read off that day and no other.
      */
-    val forDate: LocalDate? = null,
-    /**
-     * [AlertKind.PRECIPITATION] only, where the quarters are read (17 ott 2026): the same
-     * spell's arrival a quarter of an hour at a time, which the sentence then says instead
-     * of the hour ([AlertEngine.nowcastSpell]). Null everywhere else, and wherever the two
-     * readings do not describe the same rain.
-     */
-    val spell: NowcastSpell? = null
-)
-
-/**
- * A spell of rain or snow as the quarters see it: when it starts, when it stops (null when
- * it is still falling where the quarters end), how hard at its heaviest, and what falls.
- * Clock times, never «in about 20 minutes»: a notification is read when it is read.
- */
-data class NowcastSpell(
-    val start: LocalDateTime,
-    val end: LocalDateTime?,
-    val intensity: NowcastEngine.Intensity,
-    val falling: NowcastEngine.Falling
+    val forDate: LocalDate? = null
 )
 
 /**
@@ -277,46 +257,7 @@ object AlertEngine {
             cityLabel = report.location.city,
             condition = hit.condition,
             at = hit.time,
-            precipPct = hit.precipChancePct,
-            spell = nowcastSpell(report, now, hit.time)
-        )
-    }
-
-    /** How far the quarters' start may stand from the alert's hour and still be its rain. */
-    private val SPELL_AGREEMENT: Duration = Duration.ofHours(1)
-
-    /**
-     * The rain alert's spell read off the quarters (17 ott 2026), or null.
-     *
-     * It only sharpens what the alert already says: the alert fires on the hourly chance,
-     * at the hour it always did, under the fingerprint it always had, and posts no more
-     * often than before. The quarters only replace «around 15» with «from about 15:30 to
-     * 16:15», and only when they describe **the same rain**: a spell that starts after now
-     * and within [SPELL_AGREEMENT] of the alert's hour. Where they do not — the hour is past
-     * the quarters' two hours, the model draws the window dry while the ensemble gives 70%,
-     * or the first rain it draws is another, earlier one — the alert keeps its hourly
-     * sentence: two readings are never blended into one claim. No reading at all (outside
-     * `NowcastCoverage`, a fetch over an hour old) is the same null.
-     *
-     * The quarters are read over [NowcastEngine.WINDOW], two hours, as on Today and for the
-     * same reason: past that a quarter-hour time from a model is a precision it does not
-     * have. The alert looks six hours out and usually fires before the rain is inside those
-     * two, so this sentence is the late alert's — the chance that crossed 70% only shortly
-     * before, the phone that was asleep — and the early one keeps its hour.
-     */
-    fun nowcastSpell(report: WeatherReport, now: LocalDateTime, hour: LocalDateTime): NowcastSpell? {
-        val zone = report.zone()
-        val reading = NowcastEngine.read(report, now.atZone(zone).toInstant()) ?: return null
-        val run = reading.runs.firstOrNull { run ->
-            if (run.ongoing) return@firstOrNull false
-            val start = LocalDateTime.ofInstant(run.start, zone)
-            Duration.between(hour, start).abs() <= SPELL_AGREEMENT
-        } ?: return null
-        return NowcastSpell(
-            start = LocalDateTime.ofInstant(run.start, zone),
-            end = if (run.lasting) null else LocalDateTime.ofInstant(run.end, zone),
-            intensity = run.intensity,
-            falling = run.falling
+            precipPct = hit.precipChancePct
         )
     }
 

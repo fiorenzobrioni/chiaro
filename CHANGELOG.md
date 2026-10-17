@@ -23,9 +23,7 @@ sections are a normal size and live here alone.
   the top says it in minutes, «Light rain in about 20 minutes, for about 30 minutes», or when the
   rain you see will stop. Tap the card for every quarter in words and where the forecast comes
   from. It appears only where the forecast is really computed every 15 minutes, never where it
-  would be the hourly one split in four. When the rain alert arrives with the rain less than two
-  hours away, it names the times and how heavy, «Moderate rain from about 14:15 to 15:00, 80%
-  likely», instead of the hour alone.
+  would be the hourly one split in four.
 
 - **Explore tonight hour by hour.** On the Sky screen, drag a finger along the night strip, or
   hold it, and the card paints the sky of that moment, with the hour's cloud, the rain when it
