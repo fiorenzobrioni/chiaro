@@ -433,5 +433,34 @@ data class WeatherReport(
     val astronomical: Astronomical,
     val hourly: List<HourlyForecast>,
     val daily: List<DailyForecast>,
-    val systemInfo: SystemInfo
+    val systemInfo: SystemInfo,
+    /**
+     * The next hours a quarter of an hour at a time (17 ott 2026), or null where the app
+     * has no 15-minute forecast it can stand behind: outside `NowcastCoverage`, in a cache
+     * entry from before it was asked for, or in a series that reads as the hourly one cut
+     * in four. Defaulted, like every field this class gained after its first release.
+     */
+    val nowcast: Nowcast? = null
 )
+
+/**
+ * One quarter of an hour of forecast (17 ott 2026): what falls in it, as the model
+ * computes it every fifteen minutes. [precipMm] is the total, rain, showers and the
+ * snow's water together, like the hours' own; [snowCm] is null when the response does not
+ * carry the snow, and then the phase is read from the temperature, as an hour's is.
+ */
+data class QuarterHour(
+    /** When the quarter starts; it ends [LENGTH] later. */
+    val start: Instant,
+    val precipMm: Double,
+    val snowCm: Double?
+) {
+    val end: Instant get() = start.plus(LENGTH)
+
+    companion object {
+        val LENGTH: Duration = Duration.ofMinutes(15)
+    }
+}
+
+/** The quarters of the hours ahead, in order and without gaps. */
+data class Nowcast(val quarters: List<QuarterHour>)

@@ -1,15 +1,19 @@
 package com.callbackdev.chiaro.ui.today
 
 import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.NowcastEngine
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningHazard
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
+import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
 
 /**
  * What the line at the top of Today says, before it says it in any language. The
@@ -45,6 +49,30 @@ sealed interface Headline {
     /** A severe hour ahead (the same table the notifier uses — one definition of
      * "severe" in the whole app). */
     data class Severe(val bucket: AlertEngine.SevereBucket, val at: LocalDateTime) : Headline
+
+    /**
+     * The next two hours, a quarter of an hour at a time (17 ott 2026): rain about to start,
+     * to stop, or to hold, where the app has a 15-minute forecast it stands behind
+     * ([com.callbackdev.chiaro.domain.NowcastCoverage]). It takes the place of [WetNow] and
+     * [WetSoon] there, never of a warning or of a severe hour: the sentence and the section
+     * under it read the same quarters, so the two cannot disagree about the next hour.
+     *
+     * [change] is when it starts (dry now) or stops (wet now), null when it does not stop
+     * inside the window; [then] is the turn after it — the stop after a start, the return
+     * after a stop — when the window has one. The minutes are counted from the reading's
+     * own now, so «in about 20 minutes» is right at the minute the page is built for.
+     */
+    data class NextRain(
+        val falling: Falling,
+        val intensity: NowcastEngine.Intensity,
+        val wetNow: Boolean,
+        val change: LocalDateTime?,
+        val changeInMinutes: Long?,
+        val then: LocalDateTime?,
+        val thenInMinutes: Long?,
+        /** Where the window ends: «until at least 16:07». */
+        val until: LocalDateTime
+    ) : Headline
 
     /** Already wet: when it should stop, or the honest "not today". */
     data class WetNow(val stopsAt: LocalDateTime?, val falling: Falling) : Headline
@@ -124,6 +152,12 @@ sealed interface Headline {
                 WmoCode.isSnow(wmoCode) -> SNOW
                 else -> RAIN
             }
+
+            fun of(falling: NowcastEngine.Falling): Falling = when (falling) {
+                NowcastEngine.Falling.RAIN -> RAIN
+                NowcastEngine.Falling.SNOW -> SNOW
+                NowcastEngine.Falling.MIXED -> MIXED
+            }
         }
     }
 }
@@ -141,6 +175,8 @@ sealed interface Headline {
  * 0. an official warning at **orange or red** for the place (Fase 11) — an authority
  *    grading the day outranks a model's reading of it;
  * 1. a severe hour inside [AlertEngine.SEVERE_LOOKAHEAD_HOURS];
+ * 1b. where the quarters are read ([Headline.NextRain], 17 ott 2026): what falls in the next
+ *    two hours, a quarter at a time — it starts, stops, or holds;
  * 2. wet now — when it stops;
  * 3. rain likely later **today** (or inside six hours, past midnight) — the umbrella;
  * 4. frost by tomorrow mid-morning;
@@ -206,7 +242,12 @@ object HeadlineEngine {
     fun headline(
         report: WeatherReport,
         now: LocalDateTime,
-        warnings: PlaceWarnings? = null
+        warnings: PlaceWarnings? = null,
+        /**
+         * Today's reading of the quarters ([nextRain]), or null — the widgets pass none: a
+         * card repainted once an hour cannot say «in about 20 minutes».
+         */
+        nextRain: Headline.NextRain? = null
     ): Headline? {
         official(warnings, now)?.let { return it }
 
@@ -219,6 +260,8 @@ object HeadlineEngine {
             .takeWhile { !it.time.isAfter(severeEnd) }
             .firstNotNullOfOrNull { hour -> AlertEngine.severeBucket(hour)?.let { hour to it } }
             ?.let { (hour, bucket) -> return Headline.Severe(bucket = bucket, at = hour.time) }
+
+        nextRain?.let { return it }
 
         // Wet NOW is the now the hero shows (device, Manaus, 15 ott 2026): the current
         // conditions, the last quarter of an hour, and not the hour under way. That hour is
@@ -393,6 +436,63 @@ object HeadlineEngine {
             }
 
         return if (dry == null && warmth == null) null else Headline.Calm(dry, warmth)
+    }
+
+    /**
+     * The sentence's reading of the quarters (17 ott 2026), or null when they say nothing
+     * worth a sentence: no reading, or a dry window under a dry sky. Wet now is the hero's
+     * now ([currentCode], the `current` block's state) as well as the quarter's: [NowcastEngine.Reading.endingNow] is the rain the reader
+     * sees, about to stop, and its sentence says so at once rather than at the next hour.
+     */
+    fun nextRain(reading: NowcastEngine.Reading?, zone: ZoneId, currentCode: Int): Headline.NextRain? {
+        if (reading == null) return null
+        fun local(at: Instant) = LocalDateTime.ofInstant(at, zone)
+        fun minutes(at: Instant) = Duration.between(reading.now, at).toMinutes().coerceAtLeast(0)
+        val runs = reading.runs
+        val ongoing = runs.firstOrNull { it.ongoing }
+        return when {
+            ongoing != null -> {
+                val next = runs.getOrNull(runs.indexOf(ongoing) + 1)
+                Headline.NextRain(
+                    falling = Headline.Falling.of(ongoing.falling),
+                    intensity = ongoing.intensity,
+                    wetNow = true,
+                    change = if (ongoing.lasting) null else local(ongoing.end),
+                    changeInMinutes = if (ongoing.lasting) null else minutes(ongoing.end),
+                    then = next?.let { local(it.start) },
+                    thenInMinutes = next?.let { minutes(it.start) },
+                    until = local(reading.until)
+                )
+            }
+            reading.endingNow -> {
+                val next = runs.firstOrNull()
+                Headline.NextRain(
+                    // What stops is what the hero shows falling, the quarter just measured.
+                    falling = Headline.Falling.of(currentCode),
+                    intensity = NowcastEngine.intensityOf(currentCode) ?: NowcastEngine.Intensity.LIGHT,
+                    wetNow = true,
+                    change = local(reading.now),
+                    changeInMinutes = 0,
+                    then = next?.let { local(it.start) },
+                    thenInMinutes = next?.let { minutes(it.start) },
+                    until = local(reading.until)
+                )
+            }
+            runs.isNotEmpty() -> {
+                val first = runs.first()
+                Headline.NextRain(
+                    falling = Headline.Falling.of(first.falling),
+                    intensity = first.intensity,
+                    wetNow = false,
+                    change = local(first.start),
+                    changeInMinutes = minutes(first.start),
+                    then = if (first.lasting) null else local(first.end),
+                    thenInMinutes = if (first.lasting) null else minutes(first.end),
+                    until = local(reading.until)
+                )
+            }
+            else -> null
+        }
     }
 
     /**

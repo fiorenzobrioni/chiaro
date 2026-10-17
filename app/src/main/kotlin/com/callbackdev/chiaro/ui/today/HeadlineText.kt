@@ -4,9 +4,11 @@ import android.content.Context
 import androidx.annotation.StringRes
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.NowcastEngine
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.warnings.WarningText
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -66,6 +68,10 @@ object HeadlineText {
                 },
                 t(headline.at)
             )
+            // The quarters (17 ott 2026): the same sentence in both registers, though no card
+            // asks for it — the widgets pass no reading — because a card that one day does
+            // must not get a second wording of the same fact.
+            is Headline.NextRain -> nextRain(context, headline, ::t)
             is Headline.WetNow -> {
                 val falling = headline.falling
                 val stopsAt = headline.stopsAt
@@ -158,6 +164,93 @@ object HeadlineText {
             // brief register keeps its own fallback, the sky right now, which is what a
             // card with three short lines is for.
             is Headline.Calm -> if (brief) null else calm(context, headline, ::t, units, locale)
+        }
+    }
+
+    /**
+     * «Pioggia debole tra circa 20 minuti, per circa 45 minuti»; «La pioggia smette tra circa
+     * 25 minuti, poi riprende verso le 15:30»; «Pioggia moderata almeno fino alle 16:07».
+     *
+     * A time under an hour away is said in minutes, rounded to five and hedged («circa»): the
+     * quarter is the model's resolution and the page is rebuilt every minute, so the count is
+     * right when it is read; under ten minutes it is «a momenti», because «in about 5 minutes»
+     * claims more than a quarter-hour forecast knows. An hour or more away it is the clock
+     * time, like every other sentence on the page.
+     */
+    internal fun nextRain(context: Context, headline: Headline.NextRain, t: (LocalDateTime) -> String): String {
+        val res = context.resources
+        fun whenOf(minutes: Long?, at: LocalDateTime): String = when {
+            minutes == null || minutes >= SAY_THE_HOUR_FROM_MIN -> context.getString(R.string.nowcast_when_at, t(at))
+            minutes < IMMINENT_UNDER_MIN -> context.getString(R.string.nowcast_when_now)
+            else -> roundedMinutes(minutes).let { res.getQuantityString(R.plurals.nowcast_when_minutes, it, it) }
+        }
+        val change = headline.change
+        val then = headline.then
+        if (!headline.wetNow && change != null) {
+            val head = context.getString(
+                R.string.nowcast_starts,
+                context.getString(nounRes(headline.falling, headline.intensity)),
+                whenOf(headline.changeInMinutes, change)
+            )
+            val tail = when {
+                then == null -> context.getString(R.string.nowcast_tail_at_least, t(headline.until))
+                (headline.thenInMinutes ?: Long.MAX_VALUE) < SAY_THE_HOUR_FROM_MIN -> {
+                    // From one quarter's edge to another: a multiple of fifteen, said as it is.
+                    val lasts = Duration.between(change, then).toMinutes().toInt()
+                    res.getQuantityString(R.plurals.nowcast_tail_for, lasts, lasts)
+                }
+                else -> context.getString(R.string.nowcast_tail_until, t(then))
+            }
+            return context.getString(R.string.nowcast_pair, head, tail)
+        }
+        if (change == null) {
+            return context.getString(
+                R.string.nowcast_lasts,
+                context.getString(nounRes(headline.falling, headline.intensity)),
+                t(headline.until)
+            )
+        }
+        val stops = context.getString(
+            headline.falling.pick(R.string.nowcast_stops_rain, R.string.nowcast_stops_snow, R.string.nowcast_stops_mixed),
+            whenOf(headline.changeInMinutes, change)
+        )
+        if (then == null) return stops
+        return context.getString(
+            R.string.nowcast_pair,
+            stops,
+            context.getString(R.string.nowcast_resumes, whenOf(headline.thenInMinutes, then))
+        )
+    }
+
+    /** Under this many minutes, a turn is «any minute now». */
+    internal const val IMMINENT_UNDER_MIN = 10L
+
+    /** From this many minutes away, a turn is said by the clock. */
+    internal const val SAY_THE_HOUR_FROM_MIN = 60L
+
+    /** Minutes said to the nearest five, the way a person estimates them. */
+    internal fun roundedMinutes(minutes: Long): Int = (((minutes + 2) / 5) * 5).toInt().coerceAtLeast(IMMINENT_UNDER_MIN.toInt())
+
+    @StringRes
+    internal fun nounRes(falling: Headline.Falling, intensity: NowcastEngine.Intensity): Int {
+        val light = NowcastEngine.Intensity.LIGHT
+        val heavy = NowcastEngine.Intensity.HEAVY
+        return when (falling) {
+            Headline.Falling.RAIN -> when (intensity) {
+                light -> R.string.nowcast_noun_rain_light
+                heavy -> R.string.nowcast_noun_rain_heavy
+                else -> R.string.nowcast_noun_rain_moderate
+            }
+            Headline.Falling.SNOW -> when (intensity) {
+                light -> R.string.nowcast_noun_snow_light
+                heavy -> R.string.nowcast_noun_snow_heavy
+                else -> R.string.nowcast_noun_snow_moderate
+            }
+            Headline.Falling.MIXED -> when (intensity) {
+                light -> R.string.nowcast_noun_mixed_light
+                heavy -> R.string.nowcast_noun_mixed_heavy
+                else -> R.string.nowcast_noun_mixed_moderate
+            }
         }
     }
 

@@ -38,7 +38,26 @@ data class ForecastResponseDto(
     @SerialName("utc_offset_seconds") val utcOffsetSeconds: Int? = null,
     val current: CurrentDto,
     val hourly: HourlyDto,
-    val daily: DailyDto
+    val daily: DailyDto,
+    /**
+     * The next hours by the quarter (17 ott 2026), for Today's «Pioggia nelle prossime due
+     * ore». Null in a cache entry from before it was asked for; the mapper then has no
+     * nowcast, which is what the section reads as «nothing to draw».
+     */
+    @SerialName("minutely_15") val minutely15: Minutely15Dto? = null
+)
+
+/**
+ * Open-Meteo's 15-minute series. Like the hourly sums, a slot's [precipitationMm] and
+ * [snowfallCm] are «of the preceding 15 minutes»: the 14:15 slot is what falls from 14:00
+ * to 14:15 (measured: Milan's four quarters 19:15–20:00 sum to the hourly 20:00 slot,
+ * 0.3 + 0.1 + 0.1 + 0.8 = 1.3 mm). Element-nullable, as a model-dependent field is.
+ */
+@Serializable
+data class Minutely15Dto(
+    val time: List<String>,
+    @SerialName("precipitation") val precipitationMm: List<Double?> = emptyList(),
+    @SerialName("snowfall") val snowfallCm: List<Double?> = emptyList()
 )
 
 @Serializable

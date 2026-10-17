@@ -70,6 +70,7 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 ## Features
 
 - 🌤️ **Today**: a sky computed from the sun, the clouds and the moon, and one sentence on what is coming.
+- ☔ **The next two hours**: in northern Italy, the Alps, Germany and the United States, rain and snow a quarter of an hour at a time, and a sentence that says when it starts and stops, in minutes.
 - 🕐 **The next hours**: temperature as a curve, chance of rain, and the rest of the day as one timeline.
 - 📅 **The week**: seven days on one temperature scale, each with its ribbon of light. Open a day for its hours.
 - 🔢 **Details**: UV, wind, clouds, air quality, pollen, each with the line that says what to do with it.
@@ -102,7 +103,7 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 
 | What | Source |
 |---|---|
-| Current conditions, hourly, daily | Open-Meteo Forecast API |
+| Current conditions, hourly, daily, every 15 minutes *(where a model computes it)* | Open-Meteo Forecast API |
 | Air quality, pollen *(Europe only)* | Open-Meteo Air Quality API |
 | Place search | Open-Meteo Geocoding API |
 | Official warnings *(Italy only)* | Dipartimento della Protezione Civile |

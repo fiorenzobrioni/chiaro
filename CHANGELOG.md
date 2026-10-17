@@ -16,6 +16,15 @@ sections are a normal size and live here alone.
 
 ### Added
 
+- **Rain in the next two hours.** In northern Italy (down to Florence and Ancona), Switzerland,
+  Austria, Germany, Slovenia, the Czech Republic and the United States, Today shows the next two
+  hours a quarter of an hour at a time when rain or snow is on the way: a bar for every quarter,
+  as tall as it is heavy, and under it from when to when and the heaviest moment. The sentence at
+  the top says it in minutes, «Light rain in about 20 minutes, for about 30 minutes», or when the
+  rain you see will stop. Tap the card for every quarter in words and where the forecast comes
+  from. It appears only where the forecast is really computed every 15 minutes, never where it
+  would be the hourly one split in four.
+
 - **Explore tonight hour by hour.** On the Sky screen, drag a finger along the night strip, or
   hold it, and the card paints the sky of that moment, with the hour's cloud, the rain when it
   is likely and whether the moon is up. Lift the finger and the whole night comes back. The

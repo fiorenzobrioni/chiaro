@@ -258,6 +258,28 @@ class PaletteContrastTest {
         }
     }
 
+    /**
+     * The next two hours' bars (17 ott 2026, DESIGN §8.3c): marks on the card's ground, so
+     * 3:1 each (§10), and the heavier band always the stronger mark — darker on paper,
+     * brighter in the dark.
+     */
+    @Test
+    fun `the next two hours' bars read on their card, the heavier the stronger`() {
+        dresses.forEach { (dress, palette) ->
+            listOf(
+                Triple("$dress light", palette.lightColors, palette.lightScheme.surfaceContainer),
+                Triple("$dress dark", palette.darkColors, palette.darkScheme.surfaceContainer)
+            ).forEach { (name, colors, ground) ->
+                val bars = com.callbackdev.chiaro.domain.NowcastEngine.Intensity.entries.map {
+                    with(com.callbackdev.chiaro.ui.today.NextRainColors) { colors.bar(it) }
+                }
+                bars.forEachIndexed { i, bar -> assertAtLeast(3.0, bar, ground, "$name nowcast bar $i") }
+                val ratios = bars.map { contrast(it, ground) }
+                assertTrue("$name bars do not strengthen: $ratios", ratios.zipWithNext().all { (a, b) -> a < b })
+            }
+        }
+    }
+
     @Test
     fun `a printed probability reads at every value, zero included`() {
         // The bug this ramp exists for: the FILL ramp is a fill, and painting a figure

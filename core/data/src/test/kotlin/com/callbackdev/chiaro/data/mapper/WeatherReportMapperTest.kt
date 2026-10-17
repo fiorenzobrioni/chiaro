@@ -5,6 +5,7 @@ import com.callbackdev.chiaro.data.remote.dto.CurrentDto
 import com.callbackdev.chiaro.data.remote.dto.DailyDto
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.HourlyDto
+import com.callbackdev.chiaro.data.remote.dto.Minutely15Dto
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.AqiScale
 import com.callbackdev.chiaro.domain.model.CacheStatus
@@ -1201,5 +1202,64 @@ class WeatherReportMapperTest {
         val report = map(base.copy(daily = base.daily.copy(uvIndexMax = listOf(6.0))))
         assertEquals(6, report.daily.first().uvIndexMax)
         assertNull(report.daily[1].uvIndexMax)
+    }
+
+    // --- The quarters (17 ott 2026) ---------------------------------------------------
+
+    /** Sixteen slots from 14:15, local, the amounts given; the quarter ENDS at its label. */
+    private fun quarters(vararg mm: Double) = Minutely15Dto(
+        time = mm.indices.map { LocalDateTime.parse("2026-08-13T14:15").plusMinutes(15L * it).toString() },
+        precipitationMm = mm.toList(),
+        snowfallCm = mm.map { 0.0 }
+    )
+
+    private fun mapAt(place: City, minutely: Minutely15Dto?) = WeatherReportMapper.map(
+        city = place,
+        forecast = forecast().copy(minutely15 = minutely),
+        airQuality = null,
+        fetchedAt = fetchedAt,
+        responseTimeMs = 245,
+        cacheStatus = CacheStatus.MISS
+    )
+
+    private val shaped = doubleArrayOf(0.0, 0.1, 0.3, 0.2, 0.0, 0.0, 0.0, 0.0, 0.1, 0.4, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+    @Test
+    fun `a covered place keeps its quarters, each starting fifteen minutes before its label`() {
+        val nowcast = mapAt(city.copy(countryCode = "US"), quarters(*shaped)).nowcast!!
+        assertEquals(16, nowcast.quarters.size)
+        // The 14:15 slot is 14:00–14:15, on New York's clock (UTC-4 in August).
+        assertEquals(Instant.parse("2026-08-13T18:00:00Z"), nowcast.quarters.first().start)
+        assertEquals(0.3, nowcast.quarters[2].precipMm, 0.0)
+        assertEquals(0.0, nowcast.quarters[2].snowCm!!, 0.0)
+    }
+
+    @Test
+    fun `outside the coverage the series is not read`() {
+        // No country code: never guessed into the table.
+        assertNull(mapAt(city, quarters(*shaped)).nowcast)
+        assertNull(mapAt(city.copy(countryCode = "CA"), quarters(*shaped)).nowcast)
+    }
+
+    @Test
+    fun `a series that reads as the hourly one cut in four is dropped`() {
+        // 14:00–15:00 in four equal parts, the hour's own 0.8 mm spread evenly.
+        val flat = doubleArrayOf(0.2, 0.2, 0.2, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        assertNull(mapAt(city.copy(countryCode = "US"), quarters(*flat)).nowcast)
+    }
+
+    @Test
+    fun `a cache entry from before the quarters has no nowcast, and still maps`() {
+        val report = mapAt(city.copy(countryCode = "US"), null)
+        assertNull(report.nowcast)
+        assertEquals(33, report.hourly.size)
+    }
+
+    @Test
+    fun `a slot with no amount leaves a gap rather than a zero`() {
+        val series = quarters(*shaped).let { it.copy(precipitationMm = it.precipitationMm.mapIndexed { i, v -> if (i == 4) null else v }) }
+        val nowcast = mapAt(city.copy(countryCode = "US"), series).nowcast!!
+        assertEquals(15, nowcast.quarters.size)
+        assertEquals(Duration.ofMinutes(30), Duration.between(nowcast.quarters[3].start, nowcast.quarters[4].start))
     }
 }

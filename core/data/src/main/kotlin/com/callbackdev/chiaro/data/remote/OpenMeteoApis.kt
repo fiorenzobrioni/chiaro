@@ -19,7 +19,9 @@ interface OpenMeteoForecastApi {
         @Query("hourly") hourly: String = HOURLY_VARIABLES,
         @Query("daily") daily: String = DAILY_VARIABLES,
         @Query("timezone") timezone: String = "auto",
-        @Query("forecast_days") forecastDays: Int = FORECAST_DAYS
+        @Query("forecast_days") forecastDays: Int = FORECAST_DAYS,
+        @Query("minutely_15") minutely15: String = MINUTELY_15_VARIABLES,
+        @Query("forecast_minutely_15") forecastQuarters: Int = FORECAST_QUARTERS
     ): ForecastResponseDto
 
     companion object {
@@ -87,7 +89,19 @@ interface OpenMeteoForecastApi {
          * fresh HIT for up to 15 minutes after an update: Longyearbyen showed no rain on
          * a day of 3.8 mm because the response on disk did not have `rain_sum` yet.
          */
-        val REQUEST: String get() = "$CURRENT_VARIABLES|$HOURLY_VARIABLES|$DAILY_VARIABLES"
+        val REQUEST: String get() =
+            "$CURRENT_VARIABLES|$HOURLY_VARIABLES|$DAILY_VARIABLES|$MINUTELY_15_VARIABLES:$FORECAST_QUARTERS"
+
+        /**
+         * The quarters of the next hours (17 ott 2026), for Today's «Pioggia nelle prossime
+         * due ore»: the amount and the snow, the two the state of a quarter is read from.
+         * Asked everywhere, read only where `NowcastCoverage` says a model computes the
+         * quarter: elsewhere the series is the hourly one cut in four, and the mapper drops
+         * it. Twenty-four quarters, six hours: the section shows two, and the other four are
+         * what `NowcastCoverage.looksInterpolated` reads the series' shape from.
+         */
+        const val MINUTELY_15_VARIABLES = "precipitation,snowfall"
+        const val FORECAST_QUARTERS = 24
 
         const val DAILY_VARIABLES =
             "weather_code,temperature_2m_max,temperature_2m_min," +

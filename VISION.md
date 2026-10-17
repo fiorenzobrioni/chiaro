@@ -335,6 +335,17 @@ The spine of the product, one vertical scroll, in this order:
    of small cards, segments of one group since 15 ott 2026, each with its number and its one-line meaning (§3.3). Cards for data the region
    does not have are not drawn (pollen outside Europe simply is not there).
 
+**The next two hours** (17 ott 2026) sit between 2 and 3, before the hours, and only where a model
+computes the quarter of an hour (northern Italy to Florence and Ancona, Switzerland, Austria,
+Germany, Slovenia, Czechia, the United States) and only when something falls in them: a bar a
+quarter on a fixed scale whose only axis is the words light, moderate and heavy, a caption that
+says from when to when and the heaviest moment, and a page with every quarter and where the
+forecast comes from. The headline sentence says it in minutes there («Pioggia debole tra circa 20
+minuti, per circa 30 minuti»), taking the place of the hourly «wet now» and umbrella rungs, never
+of a warning or a severe hour. Quarters and hours are the same model, so the two cannot disagree;
+where the 15-minute series is the hourly one split in four, the section is not drawn (DESIGN §8.3c,
+`PLANNING.md`, «La pioggia nelle prossime due ore»).
+
 **The official warning** sits between 2 and 3, and only on the days there is one (decided 9 set
 2026, §12.8): a full-width banner in the level's own color carrying, in this order, a drawn warning
 mark, the level as a *word* ("Allerta arancione"), the hazard ("per temporali"), the day it covers
@@ -811,7 +822,9 @@ civil-protection instruction is a sentence nobody signed.
 ## 9. Data, battery, privacy
 
 - **Provider**: Open-Meteo (forecast, air quality, geocoding), no API key, attributed in the guide.
-  Astronomy is computed locally and works offline.
+  Astronomy is computed locally and works offline. The forecast request carries six hours of
+  15-minute amounts (17 ott 2026), read only where a model computes them; it is the same call,
+  not a second one.
 - **Network**: one fetch per active place per interval (15/30/60/120 min, default 60), a 15-minute
   in-memory/disk TTL in front of it, CONNECTED-constrained. Nothing polls.
 - **Battery**: one periodic WorkManager job for everything (sync, alerts, rules, sky reminders),

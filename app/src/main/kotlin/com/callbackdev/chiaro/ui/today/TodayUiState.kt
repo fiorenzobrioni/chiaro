@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.today
 
 import com.callbackdev.chiaro.domain.CurrentEstimate
+import com.callbackdev.chiaro.domain.NowcastEngine
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.WeatherRecency
 import com.callbackdev.chiaro.domain.model.City
@@ -86,7 +87,13 @@ sealed interface TodayUiState {
          * HERE and a value in Avvisi: on this screen an absence is not drawn (§1.1),
          * on that one it is the answer somebody came for.
          */
-        val warnings: PlaceWarnings? = null
+        val warnings: PlaceWarnings? = null,
+        /**
+         * The next two hours a quarter at a time (17 ott 2026), only when something falls in
+         * them: the section is not drawn for a dry window, and is never drawn where the app
+         * has no 15-minute forecast it stands behind ([NowcastEngine.read] is null there).
+         */
+        val nowcast: NowcastEngine.Reading? = null
     ) : TodayUiState
 }
 
@@ -247,6 +254,8 @@ object TodayStateBuilder {
         val currentHour = trimmed.hourly.first()
         val moon = AstronomyEngine.moonIllumination(now)
         val graded = warnings?.takeIf { it.maxLevel != WarningLevel.NONE }
+        // The quarters ahead (17 ott 2026): one reading for the sentence and the section.
+        val nowcast = NowcastEngine.read(trimmed, now)
 
         return TodayUiState.Content(
             city = city,
@@ -280,8 +289,10 @@ object TodayStateBuilder {
             ),
             // The ladder first; on a day it has nothing to warn about, the quiet day's own
             // sentence (12 ott 2026) — still the model's facts, never a filler.
-            headline = HeadlineEngine.headline(trimmed, local, graded)
-                ?: HeadlineEngine.calm(trimmed, local, yesterdayHighC),
+            headline = HeadlineEngine.headline(
+                trimmed, local, graded,
+                nextRain = HeadlineEngine.nextRain(nowcast, zone, trimmed.current.condition.wmoCode)
+            ) ?: HeadlineEngine.calm(trimmed, local, yesterdayHighC),
             strip = trimmed.hourly.drop(1).take(STRIP_HOURS).map { stripHour(it, zone, coords) },
             timeline = timeline(
                 trimmed, today, zone, local,
@@ -294,7 +305,8 @@ object TodayStateBuilder {
             isStale = WeatherFreshness.isStale(report.systemInfo.lastSync, updateFrequencyMin, now),
             userRefreshing = userRefreshing,
             error = error,
-            warnings = graded
+            warnings = graded,
+            nowcast = nowcast?.takeIf { it.wet }
         )
     }
 

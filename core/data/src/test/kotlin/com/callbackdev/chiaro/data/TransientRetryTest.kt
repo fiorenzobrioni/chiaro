@@ -57,7 +57,9 @@ class TransientRetryTest {
             hourly: String,
             daily: String,
             timezone: String,
-            forecastDays: Int
+            forecastDays: Int,
+            minutely15: String,
+            forecastQuarters: Int
         ): ForecastResponseDto {
             val failure = failures.getOrNull(calls)
             calls++

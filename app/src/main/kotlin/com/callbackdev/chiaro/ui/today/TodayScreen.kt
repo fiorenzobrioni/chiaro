@@ -544,6 +544,23 @@ internal fun ContentState(
         )
     }
 
+    // The next two hours' page (17 ott 2026), hoisted like the others: its card is a lazy item.
+    var nextRainOpen by rememberSaveable { mutableStateOf(false) }
+    val nowcast = content.nowcast
+    // Closed for good, not hidden: a page left "open" under a dry window would come back by
+    // itself the next time it rains.
+    LaunchedEffect(nowcast == null) { if (nowcast == null) nextRainOpen = false }
+    if (nextRainOpen && nowcast != null) {
+        NextRainSheet(
+            reading = nowcast,
+            zone = content.zone,
+            timeFmt = timeFmt,
+            locale = locale,
+            currentCode = content.report.current.condition.wmoCode,
+            onDismiss = { nextRainOpen = false }
+        )
+    }
+
     // The rainbow's page (15 ott 2026), hoisted like the agenda's: its row is a lazy item.
     var rainbowItem by remember { mutableStateOf<TimelineItem?>(null) }
     rainbowItem?.let { item ->
@@ -645,6 +662,31 @@ internal fun ContentState(
         val onToggleDay: (java.time.LocalDate) -> Unit = { date ->
             expandedDay = if (expandedDay == date) null else date
         }
+        // The next two hours (17 ott 2026), first on the paper when something falls in them:
+        // the most urgent thing the page knows, and the only section about minutes.
+        val nextRainTitle: @Composable () -> Unit = {
+            nowcast?.let {
+                SectionTitle(
+                    stringResource(nextRainTitleRes(it)),
+                    top = firstTitleTop,
+                    hint = stringResource(R.string.nowcast_hint)
+                )
+            }
+        }
+        val nextRainCard: @Composable () -> Unit = {
+            nowcast?.let {
+                NextRainCard(
+                    reading = it,
+                    zone = content.zone,
+                    timeFmt = timeFmt,
+                    locale = locale,
+                    // Once per fetch: the window sliding by a quarter is not new rain.
+                    animationKey = content.lastSync,
+                    onOpen = { nextRainOpen = true }
+                )
+            }
+        }
+        val hoursTitleTop = if (nowcast != null) SectionGap else firstTitleTop
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize().onSizeChanged { pageWidth = it.width },
@@ -709,7 +751,9 @@ internal fun ContentState(
                 item {
                     Row(paper) {
                         Column(Modifier.weight(1f)) {
-                            SectionTitle(stringResource(R.string.section_next_hours), top = firstTitleTop)
+                            nextRainTitle()
+                            nextRainCard()
+                            SectionTitle(stringResource(R.string.section_next_hours), top = hoursTitleTop)
                             NextHours(content, units, is24h, timeFmt, locale)
                             if (content.timeline.isNotEmpty()) {
                                 SectionTitle(stringResource(R.string.section_rest_of_day))
@@ -741,8 +785,12 @@ internal fun ContentState(
                 return@LazyColumn
             }
 
+            if (nowcast != null) {
+                item { Box(paper) { nextRainTitle() } }
+                item { Box(paper) { nextRainCard() } }
+            }
             item {
-                Box(paper) { SectionTitle(stringResource(R.string.section_next_hours), top = firstTitleTop) }
+                Box(paper) { SectionTitle(stringResource(R.string.section_next_hours), top = hoursTitleTop) }
             }
             item { Box(paper) { NextHours(content, units, is24h, timeFmt, locale) } }
 
