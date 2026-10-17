@@ -64,6 +64,11 @@ class WeatherSyncWorker(
             // 8): repaint so its stale marker can appear.
             widgets?.repaintAll()
             return Result.retry() // captive portal/DNS flap; CONNECTED already gated
+        } catch (e: WeatherException.Unreachable) {
+            // The service dropping connections (17 ott 2026) passes like a DNS flap
+            // does: WorkManager's backoff tries again well before the next period.
+            widgets?.repaintAll()
+            return Result.retry()
         } catch (e: WeatherException) {
             widgets?.repaintAll()
             return Result.success() // next period is at most one interval away

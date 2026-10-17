@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -335,9 +337,29 @@ internal fun TodayPage(
             when (state) {
                 TodayUiState.Starting -> TodaySkeleton()
                 TodayUiState.NoPlace -> NoPlaceState(onOpenPlaces)
-                is TodayUiState.Empty -> EmptyState(state, onRefresh)
+                is TodayUiState.Empty -> EmptyPage(state, locating, onRefresh)
                 is TodayUiState.Content -> Unit // handled above
             }
+        }
+    }
+}
+
+/**
+ * A page with no report yet takes the pull like a page with one (17 ott 2026). It had
+ * none: the gesture that refreshes every other page did nothing here, and here is
+ * exactly where a reader whose first fetch failed, or is still waiting on a service
+ * slow to answer, tries it. The column scrolls so that the drag reaches the box.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EmptyPage(state: TodayUiState.Empty, locating: Boolean, onRefresh: () -> Unit) {
+    PullToRefreshBox(
+        isRefreshing = state.userRefreshing || locating,
+        onRefresh = onRefresh,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            EmptyState(state, onRefresh)
         }
     }
 }

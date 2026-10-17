@@ -16,6 +16,9 @@ import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import java.io.IOException
+import java.io.InterruptedIOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -312,13 +315,24 @@ class WeatherRepository(
      * way. A 429 is left alone on purpose: Open-Meteo's limits are per minute, hour and
      * day per IP, and its own answer is «try again in one minute» — a retry two seconds
      * later can only fail again and count against the same limit, which on a carrier's
-     * shared address is not ours alone. And no retry on an [IOException]: offline is the
-     * common case, and the cached report is already on screen.
+     * shared address is not ours alone.
+     *
+     * The same one more try for a connection the service dropped (17 ott 2026): on that
+     * day Open-Meteo's forecast host failed one TLS handshake in two, each failure a
+     * stalled connection and the next one fine, and a report that needed one lucky try
+     * out of two showed a skeleton for hours. Not for an offline phone
+     * ([isOffline]): the cached report is already on screen and nothing changes in two
+     * seconds. Not for the call's own budget run out either ([isCallTimeout]): that is thirty
+     * seconds already spent, and a second thirty is a page that never resolves.
      */
     private suspend fun <T> retryingTransient(block: suspend () -> T): T = try {
         block()
     } catch (e: HttpException) {
         if (e.code() !in TRANSIENT_HTTP_CODES) throw e
+        delay(transientRetryDelay.toMillis())
+        block()
+    } catch (e: IOException) {
+        if (e.isOffline() || e.isCallTimeout()) throw e
         delay(transientRetryDelay.toMillis())
         block()
     }
@@ -332,10 +346,23 @@ class WeatherRepository(
     } catch (e: HttpException) {
         throw WeatherException.ApiError(e.code(), e)
     } catch (e: IOException) {
-        throw WeatherException.NoNetwork(e)
+        throw if (e.isOffline()) WeatherException.NoNetwork(e) else WeatherException.Unreachable(e)
     } catch (e: Exception) {
         throw WeatherException.Unknown(e)
     }
+
+    /**
+     * A name that did not resolve is the phone with no way out: with no network Android
+     * has nowhere to ask, and that is the one failure that says so. Everything else — a
+     * refused or reset connection, a handshake that stalled, a read that timed out — got
+     * as far as the service and is the service's ([WeatherException.Unreachable]).
+     */
+    private fun IOException.isOffline(): Boolean = this is UnknownHostException
+
+    /** OkHttp's `callTimeout`, the whole call's budget: an [InterruptedIOException]
+     * that is not a single read's or connect's [SocketTimeoutException]. */
+    private fun IOException.isCallTimeout(): Boolean =
+        this is InterruptedIOException && this !is SocketTimeoutException
 
     /**
      * Has this install ever fetched weather? The one durable trace of an app that has
@@ -345,7 +372,7 @@ class WeatherRepository(
     suspend fun hasAnyHistory(): Boolean = historyDao.any()
 
     companion object {
-        /** The server-side failures worth one more try; see [retryingTransient]. */
+        /** The server-side answers worth one more try; see [retryingTransient]. */
         val TRANSIENT_HTTP_CODES = setOf(500, 502, 503, 504)
 
         /** Long enough for a restarting node, short enough for a pull to refresh. */

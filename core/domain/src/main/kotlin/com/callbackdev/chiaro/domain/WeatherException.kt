@@ -13,6 +13,16 @@ sealed class WeatherException(
         "net::ERR_INTERNET_DISCONNECTED — check your connection", cause
     )
 
+    /**
+     * The phone is online and the service did not answer: a connection refused or
+     * reset, a TLS handshake that stalled, a timeout (17 ott 2026). It used to be
+     * [NoNetwork], and Open-Meteo dropping one handshake in two told a reader on a
+     * working Wi-Fi that they were offline.
+     */
+    class Unreachable(cause: Throwable? = null) : WeatherException(
+        "net::ERR_CONNECTION_FAILED — Open-Meteo did not answer", cause
+    )
+
     class CityNotFound(query: String) : WeatherException(
         "404: location \"$query\" not found in geocoding index"
     )

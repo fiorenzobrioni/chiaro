@@ -377,7 +377,18 @@ class TodayViewModel(
             }
 
             suspend fun fetch(userAsked: Boolean) {
-                if (inFlight) return
+                // A pull during an automatic fetch joins it (17 ott 2026): it used to be
+                // dropped without a word, and on a page with nothing yet, waiting on a
+                // service that took thirty seconds to fail, the gesture did nothing at
+                // all. A second request is not started; the one running is the answer,
+                // and the indicator says it is being waited for.
+                if (inFlight) {
+                    if (userAsked && !userRefreshing) {
+                        userRefreshing = true
+                        push()
+                    }
+                    return
+                }
                 // Battery saver postpones the fetches nobody asked for out loud: the
                 // one on landing and the one the tick makes past the fifteen minutes.
                 // Never a pull, and never a page that has nothing to show yet — the
@@ -403,7 +414,8 @@ class TodayViewModel(
                 } catch (e: WeatherException) {
                     error = when (e) {
                         is WeatherException.NoNetwork -> TodayError.OFFLINE
-                        is WeatherException.ApiError -> TodayError.SERVICE
+                        is WeatherException.ApiError,
+                        is WeatherException.Unreachable -> TodayError.SERVICE
                         else -> TodayError.UNKNOWN
                     }
                 } finally {

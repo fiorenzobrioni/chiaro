@@ -109,7 +109,7 @@ class WeatherSyncWorkerTest {
         database = Room.inMemoryDatabaseBuilder(context, ChiaroDatabase::class.java)
             .allowMainThreadQueries().build()
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://127.0.0.1:1/") // unreachable: getWeather → NoNetwork
+            .baseUrl("http://127.0.0.1:1/") // unreachable: getWeather → Unreachable
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
         val cityStore = store("cities") { CityStore(it, json) }
@@ -123,7 +123,9 @@ class WeatherSyncWorkerTest {
                 airQualityApi = retrofit.create(OpenMeteoAirQualityApi::class.java),
                 geocodingApi = retrofit.create(OpenMeteoGeocodingApi::class.java),
                 historyDao = database.weatherHistoryDao(),
-                json = json
+                json = json,
+                // The refused connection gets its one more try; no need to wait for it.
+                transientRetryDelay = java.time.Duration.ZERO
             ),
             cityStore = cityStore,
             settingsStore = settingsStore,
