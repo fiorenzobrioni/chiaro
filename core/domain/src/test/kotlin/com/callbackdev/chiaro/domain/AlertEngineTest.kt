@@ -442,5 +442,72 @@ class AlertEngineTest {
                 .any { it.kind == AlertKind.PRECIPITATION }
         )
     }
-}
 
+    // --- the rain's quarters (17 ott 2026) ---
+
+    /** Quarters from now, fetched five minutes ago, on the fixture's own zone. */
+    private fun withQuarters(hourly: List<HourlyForecast>, vararg mm: Double): WeatherReport =
+        report(hourly).let { r ->
+            r.copy(
+                location = r.location.copy(timezone = rome.id),
+                systemInfo = r.systemInfo.copy(lastSync = now.minusMinutes(5).atZone(rome).toInstant()),
+                nowcast = com.callbackdev.chiaro.domain.model.Nowcast(
+                    mm.mapIndexed { i, v ->
+                        com.callbackdev.chiaro.domain.model.QuarterHour(
+                            now.atZone(rome).toInstant().plusSeconds(900L * i), v, 0.0
+                        )
+                    }
+                )
+            )
+        }
+
+    /** Rain likely from 10:00, an hour after the 09:00 poll. */
+    private val lateRain = (0..6).map { hour(it.toLong(), precipPct = if (it in 1..2) 80 else 0) }
+
+    private fun precip(report: WeatherReport) =
+        AlertEngine.evaluate(report, allOn, AlertState(), now, cityKey).single { it.kind == AlertKind.PRECIPITATION }
+
+    @Test
+    fun `a late rain alert carries the quarters' spell, under the same fingerprint`() {
+        // Dry to 10:15, then 0.3 mm a quarter to 10:45: 1.2 mm/h, light.
+        val alert = precip(withQuarters(lateRain, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.3, 0.0, *DoubleArray(8)))
+        val spell = alert.spell!!
+        assertEquals(now.withMinute(0).plusHours(1).plusMinutes(15), spell.start)
+        assertEquals(now.plusHours(1).plusMinutes(45), spell.end)
+        assertEquals(NowcastEngine.Intensity.LIGHT, spell.intensity)
+        assertEquals(NowcastEngine.Falling.RAIN, spell.falling)
+        assertEquals(precip(report(lateRain)).fingerprint, alert.fingerprint)
+    }
+
+    @Test
+    fun `a spell still falling where the quarters end has no end`() {
+        val alert = precip(withQuarters(lateRain, 0.0, 0.0, 0.0, 0.0, *DoubleArray(12) { 0.3 }))
+        assertNull(alert.spell!!.end)
+    }
+
+    @Test
+    fun `quarters that draw the window dry leave the hourly sentence`() {
+        assertNull(precip(withQuarters(lateRain, *DoubleArray(16))).spell)
+    }
+
+    @Test
+    fun `the alert's hour past the quarters' two hours keeps its hour`() {
+        // Likely from 13:00: four hours out, the usual early alert.
+        val early = (0..6).map { hour(it.toLong(), precipPct = if (it in 4..5) 80 else 30) }
+        // The model's rain at 10:15 is another rain than the one the alert is about.
+        assertNull(precip(withQuarters(early, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.3, *DoubleArray(9))).spell)
+    }
+
+    @Test
+    fun `rain already falling is not the alert's arrival`() {
+        // Wet from now and on through 10:15 (the 09:00 hour backed at 30%, under the alert's
+        // 70%): the run is ongoing, not the spell on the way.
+        val wetting = (0..6).map { hour(it.toLong(), precipPct = when (it) { 0 -> 30; 1, 2 -> 80; else -> 0 }) }
+        assertNull(precip(withQuarters(wetting, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, *DoubleArray(10))).spell)
+    }
+
+    @Test
+    fun `no quarters, no spell`() {
+        assertNull(precip(report(lateRain)).spell)
+    }
+}

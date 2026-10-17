@@ -14307,3 +14307,37 @@ registrate di Milano, Genova e New York accettate, quelle di Londra e Amsterdam 
 disegnata su Robolectric sopra la Milano registrata con quarti veri di Milano e di Genova, chiaro e
 scuro, italiano e inglese, testo al 200%, pieghevole: a 200% le parole delle bande si sovrapponevano,
 e l'altezza del grafico ora è misurata in testo. Suite completa e lint.
+
+### L'avviso pioggia con i quarti d'ora (committente, 17 ott 2026)
+
+**Cosa è cambiato.** L'avviso «Pioggia in arrivo» (oltre il 70% entro 6 ore) scatta come prima, alla
+stessa ora e con la stessa impronta, quindi mai più spesso. Dove i quarti d'ora vedono **la stessa
+pioggia** la frase dice orari e intensità invece dell'ora: «Pioggia moderata dalle 14:15 alle 15:00
+circa, probabilità 80%», oppure «dalle 14:15 circa» quando a fine finestra sta ancora cadendo. La
+stessa pioggia vuol dire un inizio dopo adesso ed entro un'ora dall'ora dell'avviso
+(`AlertEngine.nowcastSpell`). Altrimenti resta la frase oraria: se il modello disegna la finestra
+asciutta mentre l'ensemble dà il 70%, se la prima pioggia dei quarti è un'altra, se piove già. Due
+letture non si mescolano mai in una frase sola.
+
+**Decisioni e deviazioni.**
+
+- *Orari, mai minuti*: una notifica si legge quando si legge, e «tra circa 20 minuti» letto mezz'ora
+  dopo è falso. La probabilità resta in fondo, perché è il numero che ha fatto scattare l'avviso.
+- *Il limite, detto com'è*: i quarti si leggono sulle stesse due ore della scheda, perché oltre la
+  precisione al quarto d'ora di un modello è falsa precisione. L'avviso guarda sei ore avanti e di solito
+  scatta prima che la pioggia sia dentro quelle due, quindi questa frase è quella dell'**avviso
+  tardivo** (la probabilità che passa il 70% poco prima, il telefono rimasto in standby). L'avviso
+  anticipato tiene la sua ora. Vale meno spesso di quanto sembrava proponendolo, ed è stato detto al
+  committente prima di scriverlo.
+- *Niente avviso nuovo, niente variabili nuove nelle regole*: il job periodico gira ogni 15–120 minuti,
+  in modo inesatto, e «pioggia tra 20 minuti» arriverebbe tardi; una variabile che esiste solo in
+  alcune zone farebbe tacere in silenzio le regole scritte altrove. Sono decisioni del committente, su
+  questo parere.
+- *I widget restano senza*: una scheda ridisegnata a ogni sincronizzazione non può tenere una frase al
+  quarto d'ora (vedi «La pioggia nelle prossime due ore»).
+
+**Come è stato verificato.** `AlertEngineTest`: l'avviso tardivo porta inizio, fine, intensità e
+fase con la stessa impronta di prima; una pioggia ancora in corso a fine finestra non ha fine; una
+finestra asciutta, l'ora dell'avviso oltre le due ore dei quarti, una pioggia già in corso e un report
+senza quarti lasciano la frase oraria. `AlertNotifierTest`: due orari e la probabilità, mai «minuti»;
+un orario solo quando la fine non si vede.

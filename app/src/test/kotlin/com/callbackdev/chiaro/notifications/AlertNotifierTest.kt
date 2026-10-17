@@ -350,5 +350,27 @@ class AlertNotifierTest {
         post(evening())
         assertEquals(context.getColor(com.callbackdev.chiaro.R.color.notification_accent), posted().color)
     }
-}
 
+    // --- the rain alert where the quarters see its spell (17 ott 2026) ---
+
+    @Test
+    fun `the rain alert says the quarters' spell by the clock, and keeps its chance`() {
+        val hour = tomorrow.atTime(14, 0)
+        val spell = com.callbackdev.chiaro.domain.NowcastSpell(
+            start = tomorrow.atTime(14, 15),
+            end = tomorrow.atTime(15, 0),
+            intensity = com.callbackdev.chiaro.domain.NowcastEngine.Intensity.MODERATE,
+            falling = com.callbackdev.chiaro.domain.NowcastEngine.Falling.RAIN
+        )
+        post(Alert(AlertKind.PRECIPITATION, "f", "Milano", cloudy, at = hour, precipPct = 80, spell = spell))
+        val text = collapsed()
+        assertTrue(text, text.startsWith("Moderate rain from about"))
+        assertTrue(text, text.endsWith("80% likely."))
+        // Two clock times, never «in about N minutes»: it is read when it is read.
+        assertEquals(text, 2, Regex("""\d{1,2}:\d{2}""").findAll(text).count())
+        assertFalse(text, text.contains("minute"))
+
+        post(Alert(AlertKind.PRECIPITATION, "f", "Milano", cloudy, at = hour, precipPct = 80, spell = spell.copy(end = null)))
+        assertEquals(1, Regex("""\d{1,2}:\d{2}""").findAll(collapsed()).count())
+    }
+}
