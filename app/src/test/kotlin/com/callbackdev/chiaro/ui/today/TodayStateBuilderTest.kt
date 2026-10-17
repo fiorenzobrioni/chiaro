@@ -365,7 +365,7 @@ class TodayStateBuilderTest {
 
     // -------------------------------------------------- the next two hours (17 ott 2026)
 
-    private fun withQuarters(vararg mm: Double): TodayUiState.Content {
+    private fun withQuarters(vararg mm: Double, readQuarters: Boolean = true): TodayUiState.Content {
         val fetched = LocalDateTime.of(2026, 9, 2, 12, 0)
         val now = LocalDateTime.of(2026, 9, 2, 12, 5).atZone(zone).toInstant()
         val wet = report(fetched).let { r ->
@@ -381,7 +381,8 @@ class TodayStateBuilderTest {
                 )
             )
         }
-        return TodayStateBuilder.build(milan, wet, now, 60, false, null) as TodayUiState.Content
+        return TodayStateBuilder.build(milan, wet, now, 60, false, null, readQuarters = readQuarters)
+            as TodayUiState.Content
     }
 
     @Test
@@ -394,6 +395,15 @@ class TodayStateBuilderTest {
     @Test
     fun `a dry window draws no section`() {
         val content = withQuarters(*DoubleArray(16))
+        assertEquals(null, content.nowcast)
+        assertTrue(content.headline !is Headline.NextRain)
+    }
+
+    @Test
+    fun `the widgets' state reads no quarters, and keeps the hourly sentence`() {
+        // A home-screen card is repainted once a sync: «in about 45 minutes» would outlive
+        // its truth there (seen on a device, 17 ott 2026).
+        val content = withQuarters(0.0, 0.0, 0.3, 0.3, *DoubleArray(12), readQuarters = false)
         assertEquals(null, content.nowcast)
         assertTrue(content.headline !is Headline.NextRain)
     }

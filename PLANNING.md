@@ -14337,3 +14337,21 @@ canvas (DESIGN §8.1a), non si staccava dalla prosa più di quanto la prosa si s
 **Come è stato verificato.** Suite completa e lint; gli screenshot del README (`today-now`,
 `today-foldable`) rigenerati, guardati e rimisurati: 17, 18–21 (secondo la discendente della g di
 «High»), 29dp d'aria, i gradini che salgono come previsto.
+
+### I widget dicevano i minuti (committente, dal telefono, 17 ott 2026)
+
+**Il difetto.** Il widget «In breve» di Ulma mostrava «La pioggia smette tra circa 45 minuti, poi
+riprende tra circa…»: la frase al quarto d'ora su una scheda che si ridisegna a ogni
+sincronizzazione, cioè una frase in minuti destinata a restare sulla schermata per un'ora. Era
+esattamente quello che la voce sopra diceva di escludere («I widget non ricevono la lettura»), ed era
+falso: `HeadlineEngine.headline` riceve davvero `null` di default, ma i widget non lo chiamano; riusano
+lo stato di Oggi (`WidgetData` → `TodayStateBuilder.build`), e lì la lettura veniva passata.
+
+**Cosa è cambiato.** `TodayStateBuilder.build` ha `readQuarters` (vero di default, per la pagina);
+`WidgetData` passa falso, quindi lo stato dei widget non ha né la sezione né la frase al quarto d'ora,
+e la loro frase torna quella della scala oraria («La pioggia dovrebbe smettere verso le…»).
+
+**Come è stato verificato.** `TodayStateBuilderTest`: con `readQuarters = false` nessuna lettura e
+nessun `Headline.NextRain` sugli stessi quarti che sulla pagina li producono. La lezione resta scritta
+qui: un default su un parametro non è una garanzia, se chi lo dovrebbe rispettare passa da un'altra
+porta.

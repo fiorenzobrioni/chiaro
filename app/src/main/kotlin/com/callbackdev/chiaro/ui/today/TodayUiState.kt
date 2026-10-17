@@ -237,7 +237,15 @@ object TodayStateBuilder {
         yesterdayHighC: Double? = null,
         /** The reader's rules, for the rest of the day's rows (15 ott 2026). Empty when the
          * reader has switched their own alerts off. */
-        rules: List<NotificationRule> = emptyList()
+        rules: List<NotificationRule> = emptyList(),
+        /**
+         * Whether to read the quarters at all (17 ott 2026). The page does; a widget must not
+         * (`WidgetData` passes false): a card repainted once a sync cannot keep a sentence
+         * said in minutes, and «La pioggia smette tra circa 45 minuti» stood on a home screen
+         * long after it stopped being true. Off, the state has no section and the sentence is
+         * the hourly ladder's, as it was before the quarters.
+         */
+        readQuarters: Boolean = true
     ): TodayUiState {
         val zone = placeZone(report, city)
         if (!WeatherRecency.coversNow(report, now)) {
@@ -255,7 +263,7 @@ object TodayStateBuilder {
         val moon = AstronomyEngine.moonIllumination(now)
         val graded = warnings?.takeIf { it.maxLevel != WarningLevel.NONE }
         // The quarters ahead (17 ott 2026): one reading for the sentence and the section.
-        val nowcast = NowcastEngine.read(trimmed, now)
+        val nowcast = if (readQuarters) NowcastEngine.read(trimmed, now) else null
 
         return TodayUiState.Content(
             city = city,
