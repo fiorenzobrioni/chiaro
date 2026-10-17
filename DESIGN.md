@@ -1566,9 +1566,11 @@ circa 20 minuti, per circa 30 minuti»); the card draws it and its caption gives
 A tap opens **its page** (a bottom sheet): the title, the sentence, the chart again on its card, the
 quarters as a group of segments — a wet quarter a row with a 4×20dp swatch of its bar's colour, its
 stretch of the clock, its word and its amount in mm (cm for snow), a dry spell one row («niente»,
-no amount: «0,0 mm» is a figure with nothing to plan by) — and then where the forecast comes from,
-the rule a wet quarter follows (0.1 mm and an hour at least 20% likely, the hours' own rule) and
-where the section is drawn. It is a model and says so: «non è un radar».
+no amount: «0,0 mm» is a figure with nothing to plan by) — and then one line in `bodySmall`,
+`onSurfaceVariant`: it is a model and says so, «non di un radar», and a start or an end can move by
+a quarter or two. Only that (17 ott 2026): the three paragraphs that stood there (the source, the
+0.1 mm and 20% rule, where the section is drawn) were a manual under a chart; where it is drawn
+and what it is are the guide's.
 
 **8.4 TimelineRow** — the rest of the day (VISION §5.2.4), **a group of segments** (§8.0, 15
 ott 2026): one row a segment, as the Sky draws the same moments. A row is the clock time in a

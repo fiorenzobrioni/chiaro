@@ -14375,3 +14375,23 @@ stesso pacchetto `@meteocons/svg@3.0.0-next.10` ha riprodotto l'albero identico 
 
 **Come è stato verificato.** Suite completa e lint. Il foglio Luoghi non è in nessuno screenshot del
 README, quindi non ce n'è da rigenerare.
+
+## La nota in fondo alla pagina dei prossimi quarti d'ora (committente, dal telefono, 17 ott 2026)
+
+**La richiesta.** La descrizione in fondo alla pagina «Pioggia nelle prossime 2 ore» è troppo
+lunga per una schermata d'app, e la guida la dice già: basta un'informazione concisa.
+
+**Cosa c'era.** Un titolo, «Da dove viene», e tre paragrafi: il modello (griglia, servizi
+meteorologici, «non è un radar»), la regola del quarto bagnato (0,1 mm e un'ora al 20%), e dove la
+sezione compare. Letti con la pagina davanti, uno solo serve a chi guarda le barre: che è un modello,
+quindi inizio e fine possono spostarsi. La regola è aritmetica interna (la stessa delle icone delle
+ore, che la guida non spiega da nessuna parte: spiegarla solo qui era incoerente); il «dove» non
+serve a chi ha la pagina aperta, che è per forza in una zona coperta, e la guida lo dice già.
+
+**Cosa è cambiato.** Titolo e tre paragrafi diventano una riga, `nowcast_sheet_note`, in
+`bodySmall` e `onSurfaceVariant` sotto le righe dei quarti: «Previsione di un modello ad alta
+risoluzione, non di un radar: l'inizio e la fine possono spostarsi di un quarto d'ora o due.» La
+guida perde «e per sapere da dove viene la previsione», che prometteva una spiegazione non più sulla
+pagina. Le tre stringhe tolte non hanno altri lettori. DESIGN §8 aggiornato.
+
+**Come è stato verificato.** Suite completa e lint. La pagina non è in nessuno screenshot del README.
