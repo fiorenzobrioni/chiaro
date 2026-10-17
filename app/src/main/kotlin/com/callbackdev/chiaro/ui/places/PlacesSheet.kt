@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -58,10 +59,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
@@ -288,10 +287,12 @@ private fun GpsRow(
     Column {
         ListItem(
             leadingContent = {
+                // The pin "my position" carries everywhere else (Today's header, the
+                // guide, the widgets), in the row's own content color. The compass it
+                // replaced drew its ring in dark ink and lost it on the dark sheet.
                 Icon(
-                    imageVector = ImageVector.vectorResource(R.drawable.mc3_compass),
-                    contentDescription = null,
-                    tint = androidx.compose.ui.graphics.Color.Unspecified
+                    imageVector = Icons.Outlined.LocationOn,
+                    contentDescription = null
                 )
             },
             headlineContent = { Text(stringResource(R.string.places_gps_title)) },

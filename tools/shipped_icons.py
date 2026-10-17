@@ -43,7 +43,7 @@ SHIPPED = [
     "drizzle", "rain", "sleet", "snow", "thunderstorms", "thunderstorms-rain",
     "not-available", "wind", "humidity", "uv-index",
     "thermometer", "barometer", "raindrops", "mist", "snowflake", "smoke-particles",
-    "compass", "pollen", "sunrise", "sunset", "moonrise", "moonset", "horizon",
+    "pollen", "sunrise", "sunset", "moonrise", "moonset", "horizon",
     # `falling-stars`, `star` e `clear-night` sono anche le sorgenti dei segni del cielo
     # che compone `tools/compose_sky_marks.py` (14 ott 2026): la meteora, la luna con la
     # stella, le due stelle. Gli sciami non disegnano piu' `falling-stars`, ma il composto
@@ -106,6 +106,11 @@ PLANNED = [
     "wind-alert", "thermometer-alert", "uv-index-alert", "water-alert", "fire-alert",
     "avalanche-danger-alert", "tornado", "hurricane", "cyclone", "waterspout",
     "falling-rocks-alert",
+    # la bussola, spedita fino al 17 ott 2026 per la riga «La mia posizione» del foglio
+    # Luoghi: il suo cerchio e' inchiostro scuro e sul foglio scuro spariva, lasciando
+    # due aghi. Quella riga prende ora il segnaposto che «la mia posizione» porta in
+    # tutta l'app (l'intestazione di Oggi, la guida, i widget)
+    "compass",
 ]
 
 #: Le condizioni si muovono, e solo loro. `not-available` no: Meteocons lo disegna fermo,

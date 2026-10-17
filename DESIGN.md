@@ -2824,12 +2824,15 @@ a valid animator and only a person can say the rain falls downward.
      real defect, found on a device on 11 set 2026: the barometer's clip is a rectangle
      rotated 45°, and without the rotation it landed in the top-left corner and **erased
      the needle**. Twenty drawings, every `barometer*` and `compass*`, two of them
-     shipped — and «the dial has no indicator» is exactly how it was reported.
+     shipped then (only the barometer since 17 ott 2026) — and «the dial has no
+     indicator» is exactly how it was reported.
    - **A group can be left behind**: `DROP_GROUPS`, and it is about language, never about
      size. `compass` carries **N E S W drawn as paths**, and in Italian the west is O — the
      same English-text-inside-an-image the `wind-direction-*` glyphs were turned down for.
      Its `Letters` group is dropped, which also returns it to the v2 drawing (housing and
-     needle) the places row was tuned with.
+     needle) the places row was tuned with. That row no longer draws it (17 ott 2026): the
+     housing is dark ink, gone on the dark sheet, and «my position» takes the location pin
+     it carries everywhere else, so `compass` is back in `PLANNED`.
    - **Two drawings do not convert**: `pressure-high-alt` and `pressure-low-alt`, whose
      mask is a Figma stroke outline applied to a single shape. Neither is shipped.
 

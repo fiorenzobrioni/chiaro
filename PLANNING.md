@@ -14355,3 +14355,23 @@ e la loro frase torna quella della scala oraria («La pioggia dovrebbe smettere 
 nessun `Headline.NextRain` sugli stessi quarti che sulla pagina li producono. La lezione resta scritta
 qui: un default su un parametro non è una garanzia, se chi lo dovrebbe rispettare passa da un'altra
 porta.
+
+## Il segno di «La mia posizione» nel foglio Luoghi (committente, dal telefono, 17 ott 2026)
+
+**La domanda.** Dallo schermo: l'icona della riga «La mia posizione» sembra piccola e non si
+riconosce; meglio più grande?
+
+**Non era la taglia.** La riga disegnava `mc3_compass` presa per nome, la faccia *line su fondo
+chiaro*, senza passare da `ChiaroIcons` che sceglie la faccia per il fondo. Il cerchio della bussola
+è `#182234`, quasi il colore del foglio scuro: spariva, e restavano due aghi storti. Ingrandita, la
+stessa cosa più grande. E la bussola era comunque il segno sbagliato: «la mia posizione» porta il
+segnaposto ovunque altro (l'intestazione di Oggi, la guida, i widget con `ic_place_pin`).
+
+**Cosa è cambiato.** La riga prende `Icons.Outlined.LocationOn` a 24dp (la misura dell'icona
+iniziale di un `ListItem`), nel colore di contenuto della riga, che segue il tema da sé. La bussola
+non la disegnava nessun altro: passa da `SHIPPED` a `PLANNED` in `tools/shipped_icons.py`, e
+`MeteoconsSets.kt` è rigenerato dall'importatore (quattro voci in meno, nessun'altra differenza: lo
+stesso pacchetto `@meteocons/svg@3.0.0-next.10` ha riprodotto l'albero identico prima del cambio).
+
+**Come è stato verificato.** Suite completa e lint. Il foglio Luoghi non è in nessuno screenshot del
+README, quindi non ce n'è da rigenerare.
