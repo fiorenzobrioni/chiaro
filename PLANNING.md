@@ -14355,3 +14355,78 @@ e la loro frase torna quella della scala oraria («La pioggia dovrebbe smettere 
 nessun `Headline.NextRain` sugli stessi quarti che sulla pagina li producono. La lezione resta scritta
 qui: un default su un parametro non è una garanzia, se chi lo dovrebbe rispettare passa da un'altra
 porta.
+
+## Il segno di «La mia posizione» nel foglio Luoghi (committente, dal telefono, 17 ott 2026)
+
+**La domanda.** Dallo schermo: l'icona della riga «La mia posizione» sembra piccola e non si
+riconosce; meglio più grande?
+
+**Non era la taglia.** La riga disegnava `mc3_compass` presa per nome, la faccia *line su fondo
+chiaro*, senza passare da `ChiaroIcons` che sceglie la faccia per il fondo. Il cerchio della bussola
+è `#182234`, quasi il colore del foglio scuro: spariva, e restavano due aghi storti. Ingrandita, la
+stessa cosa più grande. E la bussola era comunque il segno sbagliato: «la mia posizione» porta il
+segnaposto ovunque altro (l'intestazione di Oggi, la guida, i widget con `ic_place_pin`).
+
+**Cosa è cambiato.** La riga prende `Icons.Outlined.LocationOn` a 24dp (la misura dell'icona
+iniziale di un `ListItem`), nel colore di contenuto della riga, che segue il tema da sé. La bussola
+non la disegnava nessun altro: passa da `SHIPPED` a `PLANNED` in `tools/shipped_icons.py`, e
+`MeteoconsSets.kt` è rigenerato dall'importatore (quattro voci in meno, nessun'altra differenza: lo
+stesso pacchetto `@meteocons/svg@3.0.0-next.10` ha riprodotto l'albero identico prima del cambio).
+
+**Come è stato verificato.** Suite completa e lint. Il foglio Luoghi non è in nessuno screenshot del
+README, quindi non ce n'è da rigenerare.
+
+## La nota in fondo alla pagina dei prossimi quarti d'ora (committente, dal telefono, 17 ott 2026)
+
+**La richiesta.** La descrizione in fondo alla pagina «Pioggia nelle prossime 2 ore» è troppo
+lunga per una schermata d'app, e la guida la dice già: basta un'informazione concisa.
+
+**Cosa c'era.** Un titolo, «Da dove viene», e tre paragrafi: il modello (griglia, servizi
+meteorologici, «non è un radar»), la regola del quarto bagnato (0,1 mm e un'ora al 20%), e dove la
+sezione compare. Letti con la pagina davanti, uno solo serve a chi guarda le barre: che è un modello,
+quindi inizio e fine possono spostarsi. La regola è aritmetica interna (la stessa delle icone delle
+ore, che la guida non spiega da nessuna parte: spiegarla solo qui era incoerente); il «dove» non
+serve a chi ha la pagina aperta, che è per forza in una zona coperta, e la guida lo dice già.
+
+**Cosa è cambiato.** Titolo e tre paragrafi diventano una riga, `nowcast_sheet_note`, in
+`bodySmall` e `onSurfaceVariant` sotto le righe dei quarti: «Previsione di un modello ad alta
+risoluzione, non di un radar: l'inizio e la fine possono spostarsi di un quarto d'ora o due.» La
+guida perde «e per sapere da dove viene la previsione», che prometteva una spiegazione non più sulla
+pagina. Le tre stringhe tolte non hanno altri lettori. DESIGN §8 aggiornato.
+
+**Come è stato verificato.** Suite completa e lint. La pagina non è in nessuno screenshot del README.
+
+### La pagina dei quarti d'ora che rimbalza (committente, dal telefono, 17 ott 2026)
+
+**Il difetto.** Aperta del tutto e poi tirata appena in giù, la pagina «Pioggia nelle prossime 2
+ore» rimbalzava di qualche pixel finché non la si toccava: lo stesso difetto del foglio dei luoghi
+(15 ott), corretto allora solo lì.
+
+**La causa, letta nel sorgente di Material 1.4.** La posizione aperta è l'altezza della finestra
+meno quella del foglio (`Expanded at fullHeight - sheetSize.height`); il contenuto prende l'inset in
+alto (`BottomSheetDefaults.windowInsets` è `safeDrawing` sopra e sotto) meno la parte che il foglio
+già lascia libera (`consumeWindowInsets(top = offset)`). Un foglio che si ferma dentro la fascia
+della barra di stato cambia altezza di tanto quanto si muove: la posizione d'arrivo si sposta con
+lui, e la molla la insegue. La pagina dei quarti d'ora, accorciata dalla nota di oggi, si ferma
+proprio lì; ogni foglio dell'app alto quasi quanto lo schermo poteva farlo.
+
+**Cosa è cambiato.** Un componente solo, `ChiaroSheet` (`ui/components/`), per tutti e sette i
+fogli: il contenuto prende solo l'inset in basso, e l'altezza ha un tetto alla finestra meno la
+barra di stato e 12dp, con il contenuto che scorre dentro (già lo faceva in ogni foglio). Il foglio
+dei luoghi perde la sua correzione locale e prende la stessa, con `fillHeight` perché la ricerca
+che risponde sotto il campo non lo faccia saltare. `OneSheetTest` fa fallire la build per un
+`ModalBottomSheet` scritto fuori dal componente: il prossimo foglio sarà scritto dall'esempio di
+Material, non da questo.
+
+**Decisioni e deviazioni.**
+
+- *Tutti i fogli, non solo questo.* Il primo rimedio era stato locale e il difetto è tornato due
+  giorni dopo su un'altra pagina; la causa è nel componente, quindi il rimedio sta lì.
+- *Un tetto, non un'altezza fissa.* I fogli corti restano alti quanto il loro contenuto; solo
+  quello dei luoghi riempie lo spazio, per la ragione sopra.
+- *Un effetto visibile:* un foglio lungo che prima arrivava sotto la barra di stato ora si ferma
+  12dp sotto, con il velo a dire che sotto c'è la pagina, come quello dei luoghi dal 15 ott.
+
+**Come è stato verificato.** Suite completa e lint, `OneSheetTest` compreso. Nessun foglio è negli
+screenshot del README. Resta da confermare sul dispositivo, come allora: Robolectric non ha la barra
+di stato, e senza la barra il foglio non rimbalza nemmeno prima.

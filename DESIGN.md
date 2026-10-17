@@ -1299,6 +1299,13 @@ reconsidered in this review and kept: on the README's Milan beside the Sky tab t
 read as containers, the fault was Today's bare sections and not the step, and a stronger one
 would have changed every screen to fix one.
 
+**Sheets** (17 ott 2026) are one component, `ChiaroSheet`: Material's bottom sheet with its
+content taking only the bottom inset and its height capped at the window less the status bar
+and 12dp, the content scrolling inside. Material pads a sheet's content by the part of the
+status bar the sheet is under, so a sheet that came to rest inside that band changed its own
+height as it moved and bounced until touched (the Places sheet, then the next quarters'
+page). `OneSheetTest` fails the build over a `ModalBottomSheet` written anywhere else.
+
 **8.1 SkyCanvas** — the gradient (§3), `heroTemperature`, condition, feels-like, the
 headline sentence, the daylight ribbon with its two clock times, the scrim (§3.6). Since the
 review of 12 ott 2026 the sentence stands **before** the ribbon, right under the word for the
@@ -1566,9 +1573,11 @@ circa 20 minuti, per circa 30 minuti»); the card draws it and its caption gives
 A tap opens **its page** (a bottom sheet): the title, the sentence, the chart again on its card, the
 quarters as a group of segments — a wet quarter a row with a 4×20dp swatch of its bar's colour, its
 stretch of the clock, its word and its amount in mm (cm for snow), a dry spell one row («niente»,
-no amount: «0,0 mm» is a figure with nothing to plan by) — and then where the forecast comes from,
-the rule a wet quarter follows (0.1 mm and an hour at least 20% likely, the hours' own rule) and
-where the section is drawn. It is a model and says so: «non è un radar».
+no amount: «0,0 mm» is a figure with nothing to plan by) — and then one line in `bodySmall`,
+`onSurfaceVariant`: it is a model and says so, «non di un radar», and a start or an end can move by
+a quarter or two. Only that (17 ott 2026): the three paragraphs that stood there (the source, the
+0.1 mm and 20% rule, where the section is drawn) were a manual under a chart; where it is drawn
+and what it is are the guide's.
 
 **8.4 TimelineRow** — the rest of the day (VISION §5.2.4), **a group of segments** (§8.0, 15
 ott 2026): one row a segment, as the Sky draws the same moments. A row is the clock time in a
@@ -2824,12 +2833,15 @@ a valid animator and only a person can say the rain falls downward.
      real defect, found on a device on 11 set 2026: the barometer's clip is a rectangle
      rotated 45°, and without the rotation it landed in the top-left corner and **erased
      the needle**. Twenty drawings, every `barometer*` and `compass*`, two of them
-     shipped — and «the dial has no indicator» is exactly how it was reported.
+     shipped then (only the barometer since 17 ott 2026) — and «the dial has no
+     indicator» is exactly how it was reported.
    - **A group can be left behind**: `DROP_GROUPS`, and it is about language, never about
      size. `compass` carries **N E S W drawn as paths**, and in Italian the west is O — the
      same English-text-inside-an-image the `wind-direction-*` glyphs were turned down for.
      Its `Letters` group is dropped, which also returns it to the v2 drawing (housing and
-     needle) the places row was tuned with.
+     needle) the places row was tuned with. That row no longer draws it (17 ott 2026): the
+     housing is dark ink, gone on the dark sheet, and «my position» takes the location pin
+     it carries everywhere else, so `compass` is back in `PLANNED`.
    - **Two drawings do not convert**: `pressure-high-alt` and `pressure-low-alt`, whose
      mask is a Figma stroke outline applied to a single shape. Neither is shipped.
 

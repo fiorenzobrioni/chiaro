@@ -12,7 +12,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -26,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.callbackdev.chiaro.ui.components.ChiaroSheet
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.RainbowWindow
@@ -71,7 +71,7 @@ internal fun RainbowSheet(
 
     val sheetState = rememberModalBottomSheetState()
     var compassOpen by rememberSaveable(item.at) { mutableStateOf(false) }
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+    ChiaroSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         val direction = bearing?.let { stringResource(SkyText.bearingRes(it)) }
         if (compassOpen && bearing != null && direction != null) {
             BackHandler { compassOpen = false }
@@ -85,7 +85,7 @@ internal fun RainbowSheet(
                 coordinates = coordinates,
                 onBack = { compassOpen = false }
             )
-            return@ModalBottomSheet
+            return@ChiaroSheet
         }
         RainbowPage(
             from = from,

@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,6 +43,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.callbackdev.chiaro.ui.components.ChiaroSheet
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.NowcastEngine
 import com.callbackdev.chiaro.domain.NowcastEngine.Falling
@@ -331,7 +331,7 @@ internal fun halfHours(from: Instant, until: Instant): List<Instant> {
     return generateSequence(start) { it.plus(step) }.takeWhile { !it.isAfter(until) }.toList()
 }
 
-/** The section's page: the window again, every quarter in words, and where it comes from. */
+/** The section's page: the window again, every quarter in words, and what kind of forecast it is. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun NextRainSheet(
@@ -342,7 +342,7 @@ internal fun NextRainSheet(
     currentCode: Int,
     onDismiss: () -> Unit
 ) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ChiaroSheet(onDismissRequest = onDismiss) {
         NextRainPage(reading, zone, timeFmt, locale, currentCode)
     }
 }
@@ -387,18 +387,14 @@ internal fun NextRainPage(
                 { QuarterRow(from, to, step, first = from == 0, steps = reading.steps, zone = zone, timeFmt = timeFmt, locale = locale) }
             }
         )
+        // One line under the rows, the only thing the reader needs while reading them: a
+        // model, not a radar, so the bars are less exact than they look. Where the section
+        // exists, its rule and its source are the guide's to explain (17 ott 2026).
         Text(
-            text = stringResource(R.string.nowcast_sheet_about_title),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = text.padding(top = 12.dp)
-        )
-        Text(stringResource(R.string.nowcast_sheet_about), style = MaterialTheme.typography.bodyMedium, modifier = text)
-        Text(stringResource(R.string.nowcast_sheet_rule), style = MaterialTheme.typography.bodyMedium, modifier = text)
-        Text(
-            text = stringResource(R.string.nowcast_sheet_where),
-            style = MaterialTheme.typography.bodyMedium,
+            text = stringResource(R.string.nowcast_sheet_note),
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = text
+            modifier = text.padding(top = 4.dp)
         )
     }
 }
