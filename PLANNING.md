@@ -14395,3 +14395,38 @@ guida perde «e per sapere da dove viene la previsione», che prometteva una spi
 pagina. Le tre stringhe tolte non hanno altri lettori. DESIGN §8 aggiornato.
 
 **Come è stato verificato.** Suite completa e lint. La pagina non è in nessuno screenshot del README.
+
+### La pagina dei quarti d'ora che rimbalza (committente, dal telefono, 17 ott 2026)
+
+**Il difetto.** Aperta del tutto e poi tirata appena in giù, la pagina «Pioggia nelle prossime 2
+ore» rimbalzava di qualche pixel finché non la si toccava: lo stesso difetto del foglio dei luoghi
+(15 ott), corretto allora solo lì.
+
+**La causa, letta nel sorgente di Material 1.4.** La posizione aperta è l'altezza della finestra
+meno quella del foglio (`Expanded at fullHeight - sheetSize.height`); il contenuto prende l'inset in
+alto (`BottomSheetDefaults.windowInsets` è `safeDrawing` sopra e sotto) meno la parte che il foglio
+già lascia libera (`consumeWindowInsets(top = offset)`). Un foglio che si ferma dentro la fascia
+della barra di stato cambia altezza di tanto quanto si muove: la posizione d'arrivo si sposta con
+lui, e la molla la insegue. La pagina dei quarti d'ora, accorciata dalla nota di oggi, si ferma
+proprio lì; ogni foglio dell'app alto quasi quanto lo schermo poteva farlo.
+
+**Cosa è cambiato.** Un componente solo, `ChiaroSheet` (`ui/components/`), per tutti e sette i
+fogli: il contenuto prende solo l'inset in basso, e l'altezza ha un tetto alla finestra meno la
+barra di stato e 12dp, con il contenuto che scorre dentro (già lo faceva in ogni foglio). Il foglio
+dei luoghi perde la sua correzione locale e prende la stessa, con `fillHeight` perché la ricerca
+che risponde sotto il campo non lo faccia saltare. `OneSheetTest` fa fallire la build per un
+`ModalBottomSheet` scritto fuori dal componente: il prossimo foglio sarà scritto dall'esempio di
+Material, non da questo.
+
+**Decisioni e deviazioni.**
+
+- *Tutti i fogli, non solo questo.* Il primo rimedio era stato locale e il difetto è tornato due
+  giorni dopo su un'altra pagina; la causa è nel componente, quindi il rimedio sta lì.
+- *Un tetto, non un'altezza fissa.* I fogli corti restano alti quanto il loro contenuto; solo
+  quello dei luoghi riempie lo spazio, per la ragione sopra.
+- *Un effetto visibile:* un foglio lungo che prima arrivava sotto la barra di stato ora si ferma
+  12dp sotto, con il velo a dire che sotto c'è la pagina, come quello dei luoghi dal 15 ott.
+
+**Come è stato verificato.** Suite completa e lint, `OneSheetTest` compreso. Nessun foglio è negli
+screenshot del README. Resta da confermare sul dispositivo, come allora: Robolectric non ha la barra
+di stato, e senza la barra il foglio non rimbalza nemmeno prima.

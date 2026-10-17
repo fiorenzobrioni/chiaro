@@ -10,13 +10,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.ui.layout.layout
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -35,7 +28,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -67,6 +59,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.callbackdev.chiaro.ui.components.ChiaroSheet
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.LocationSettings
@@ -125,21 +118,14 @@ fun PlacesSheet(
         viewModel.gpsSelected.collect { onDismiss() }
     }
 
-    // The sheet's top always rests clear of the status bar, and its content never takes the
-    // top inset (device, 15 ott 2026). At 94% of the height it rested a few dp under the
-    // status bar; Material pads a sheet's content by the part of that inset the sheet is
-    // under, so the spring's small overshoot on letting go put it under the bar, the padding
-    // grew the sheet, its open position moved up, the spring chased it, the padding went away
-    // and the position moved back: a sheet bouncing until a finger stopped it. With no top
-    // inset the sheet's size no longer depends on where it is, and the gap keeps it from ever
-    // needing one.
-    val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    ModalBottomSheet(
+    // As tall as the room whatever the list holds, so a search answering under the field
+    // does not move the sheet while the reader types.
+    ChiaroSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom) }
+        fillHeight = true
     ) {
-        Box(modifier = Modifier.sheetHeight(reserve = statusTop + SheetTopGap)) {
+        Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -619,16 +605,3 @@ private class DragState(private val listState: LazyListState) {
     }
 }
 
-/** Between the status bar and the sheet's top at rest: the scrim says there is a page under it. */
-private val SheetTopGap = 12.dp
-
-/**
- * The sheet's content as tall as the room it is given less [reserve]: what the window keeps
- * above the sheet, independent of the sheet's own padding, so the sheet's height is the same
- * wherever it stands while it moves.
- */
-private fun Modifier.sheetHeight(reserve: androidx.compose.ui.unit.Dp): Modifier = layout { measurable, constraints ->
-    val height = (constraints.maxHeight - reserve.roundToPx()).coerceAtLeast(0)
-    val placeable = measurable.measure(constraints.copy(minHeight = height, maxHeight = height))
-    layout(placeable.width, height) { placeable.place(0, 0) }
-}

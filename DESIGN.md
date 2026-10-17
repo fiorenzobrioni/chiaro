@@ -1299,6 +1299,13 @@ reconsidered in this review and kept: on the README's Milan beside the Sky tab t
 read as containers, the fault was Today's bare sections and not the step, and a stronger one
 would have changed every screen to fix one.
 
+**Sheets** (17 ott 2026) are one component, `ChiaroSheet`: Material's bottom sheet with its
+content taking only the bottom inset and its height capped at the window less the status bar
+and 12dp, the content scrolling inside. Material pads a sheet's content by the part of the
+status bar the sheet is under, so a sheet that came to rest inside that band changed its own
+height as it moved and bounced until touched (the Places sheet, then the next quarters'
+page). `OneSheetTest` fails the build over a `ModalBottomSheet` written anywhere else.
+
 **8.1 SkyCanvas** — the gradient (§3), `heroTemperature`, condition, feels-like, the
 headline sentence, the daylight ribbon with its two clock times, the scrim (§3.6). Since the
 review of 12 ott 2026 the sentence stands **before** the ribbon, right under the word for the

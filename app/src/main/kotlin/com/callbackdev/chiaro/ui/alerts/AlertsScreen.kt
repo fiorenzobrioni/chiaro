@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.ui.alerts
 
+import com.callbackdev.chiaro.ui.components.ChiaroSheet
 import com.callbackdev.chiaro.ui.components.TabHeader
 import com.callbackdev.chiaro.ui.components.SegmentGap
 import com.callbackdev.chiaro.ui.components.SegmentedGroup
@@ -78,7 +79,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
@@ -587,7 +587,7 @@ private fun IdeasSheet(
     onDismiss: () -> Unit
 ) {
     val addedState = stringResource(R.string.tpl_already_added)
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ChiaroSheet(onDismissRequest = onDismiss) {
         LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
             item {
                 IdeaRow(
@@ -1574,7 +1574,7 @@ private fun RuleEditorSheet(
         preview = viewModel.preview(rule.copy(message = message.text))
     }
 
-    ModalBottomSheet(
+    ChiaroSheet(
         onDismissRequest = ::close,
         // A form is not a list: it opens on all of itself. Material's half-open state
         // is for content that continues past the fold, and this content does not —

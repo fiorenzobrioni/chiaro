@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.ui.sky
 
+import com.callbackdev.chiaro.ui.components.ChiaroSheet
 import com.callbackdev.chiaro.ui.components.TabHeader
 import com.callbackdev.chiaro.ui.shell.PageColumns
 import com.callbackdev.chiaro.ui.shell.PaneBlocks
@@ -63,7 +64,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -1202,7 +1202,7 @@ private fun CatalogSheet(
         }
     }
     var query by rememberSaveable { mutableStateOf("") }
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ChiaroSheet(onDismissRequest = onDismiss) {
         val open = openId?.let { SkyJobCatalog.byId(it) }
         if (open != null) {
             // Back closes the page, not the sheet: the reader came here from the list
@@ -1224,7 +1224,7 @@ private fun CatalogSheet(
                     )
                 }
             )
-            return@ModalBottomSheet
+            return@ChiaroSheet
         }
         // Sixty entries in six groups is a long scroll for a reader who came looking for
         // «Perseidi» by name (review, Fase 28). The field filters on the words the rows
@@ -1457,7 +1457,7 @@ internal fun AgendaPageSheet(
     }
     val sheetState = rememberModalBottomSheetState()
     var compassOpen by rememberSaveable(jobId) { mutableStateOf(false) }
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+    ChiaroSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         val direction = look?.let { stringResource(SkyText.bearingRes(it.bearingDeg)) }
         if (compassOpen && look != null && direction != null) {
             // Back returns to the page, as the catalog's page returns to its list; the
@@ -1473,7 +1473,7 @@ internal fun AgendaPageSheet(
                 coordinates = coordinates,
                 onBack = { compassOpen = false }
             )
-            return@ModalBottomSheet
+            return@ChiaroSheet
         }
         SkyEventPage(
             job = job,

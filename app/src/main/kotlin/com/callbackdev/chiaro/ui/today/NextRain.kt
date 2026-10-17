@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,6 +43,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.callbackdev.chiaro.ui.components.ChiaroSheet
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.NowcastEngine
 import com.callbackdev.chiaro.domain.NowcastEngine.Falling
@@ -342,7 +342,7 @@ internal fun NextRainSheet(
     currentCode: Int,
     onDismiss: () -> Unit
 ) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ChiaroSheet(onDismissRequest = onDismiss) {
         NextRainPage(reading, zone, timeFmt, locale, currentCode)
     }
 }

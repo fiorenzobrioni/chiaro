@@ -14,7 +14,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import com.callbackdev.chiaro.ui.components.ChiaroSheet
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningHazard
@@ -56,7 +56,7 @@ fun WarningSheet(
     val context = LocalContext.current
     val locale = currentLocale()
     val dateFmt = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ChiaroSheet(onDismissRequest = onDismiss) {
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
