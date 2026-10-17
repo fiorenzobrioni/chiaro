@@ -14307,3 +14307,33 @@ registrate di Milano, Genova e New York accettate, quelle di Londra e Amsterdam 
 disegnata su Robolectric sopra la Milano registrata con quarti veri di Milano e di Genova, chiaro e
 scuro, italiano e inglese, testo al 200%, pieghevole: a 200% le parole delle bande si sovrapponevano,
 e l'altezza del grafico ora è misurata in testo. Suite completa e lint.
+
+## La frase dell'eroe tra le cifre e il nastro (committente, 17 ott 2026)
+
+**La richiesta.** Dallo schermo: lo spazio tra «Massima 21° · minima 14°» e «Domani ombrello dalle
+11:00» è giusto o è troppo? In mezzo ci finisce qualcosa?
+
+**Misurato sullo screenshot** (1080 px di larghezza, circa 2,75 px/dp), aria tra i segni di una riga e
+quelli della successiva: parola del cielo → cifre del giorno circa 17dp; cifre → frase circa **25dp**;
+frase → nastro circa **26dp**; nastro → orari circa 11dp. In mezzo non c'è niente: il salto era
+`HeroGroupGap` (12dp), e l'unica riga che può comparire lì, la nota della stima, sta 4dp sotto le
+cifre, prima del salto. Il difetto era un altro: nel codice 12 e 16dp, sullo schermo la stessa aria,
+perché una riga di testo porta la sua interlinea sopra e sotto e il nastro no. La frase stava a metà
+tra le cifre e il nastro e non apparteneva a nessuno dei due; e il nastro, che deve chiudere il
+canvas (DESIGN §8.1a), non si staccava dalla prosa più di quanto la prosa si staccasse da sé.
+
+**Cosa è cambiato.** `HeroGroupGap` 12 → **8dp**, `HeroRibbonGap` 16 → **20dp**. L'aria diventa 17,
+21, 30: ogni gradino più grande di quello sopra. La somma resta 28dp, quindi `CanvasBaseHeight`
+(328dp), la fascia del cielo e lo scheletro non cambiano.
+
+**Decisioni e deviazioni.**
+
+- *Spostare i 4dp, non toglierli.* Togliere solo i 4dp sopra la frase avrebbe accorciato il canvas e
+  lasciato il nastro a pari distanza; aggiungerli solo sopra il nastro avrebbe allungato il canvas di
+  4dp e lasciato la frase lontana dalle cifre. Spostarli corregge entrambe le cose a costo zero.
+- *8dp e non 4.* A 4 la frase sarebbe entrata nel gruppo dell'ora (le righe dentro un gruppo stanno a
+  4dp); la frase parla di dopo, e il passo da 17 a 21dp di aria lo dice ancora.
+
+**Come è stato verificato.** Suite completa e lint; gli screenshot del README (`today-now`,
+`today-foldable`) rigenerati, guardati e rimisurati: 17, 18–21 (secondo la discendente della g di
+«High»), 29dp d'aria, i gradini che salgono come previsto.
