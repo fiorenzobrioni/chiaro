@@ -549,6 +549,17 @@ button that fixes it — the runtime dialog where the system will still show one
 the system settings where it will not (DESIGN §8.14). Unlike the dialog it can be offered again every
 time, and it disappears by itself the moment the permission is granted.
 
+**The frame** (18 ott 2026, the family's onboarding review). Both steps are one frame: the words
+centered in the room above the buttons, and the buttons at the bottom, in the same place on both
+steps, where a thumb reaches them (they sat under the words, so they moved with the length of the
+text, and were 40 dp tall; they are 52). No picture, no progress bar: the run is two steps, and a
+screen reader hears «Passaggio 1 di 2» on the heading. The heading is the name alone, not the
+launcher's label (a debug build read «Chiaro (dev)»). A location refused for good turns «Usa la mia
+posizione» into «Apri le impostazioni», where the request would otherwise come back refused with no
+dialog and the button do nothing; and a refusal is said in the page's quiet ink, not the error's,
+which stays for a switched-off location or a fix that never came. From the place to the
+notifications the step slides on as a page does, a fade under reduced motion.
+
 ### 5.9 Widgets
 
 Glance, **three cards in the picker** since 13 ott 2026 (the widget review): «At a glance», «In

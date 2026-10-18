@@ -1,17 +1,23 @@
 package com.callbackdev.chiaro.ui.shell
 
-import androidx.annotation.StringRes
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.ui.unit.IntOffset
+import com.callbackdev.chiaro.ui.theme.ChiaroMotion
+import com.callbackdev.chiaro.ui.theme.LocalReducedMotion
+import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
@@ -64,7 +70,6 @@ import com.callbackdev.chiaro.ui.settings.SettingsRoute
 import com.callbackdev.chiaro.ui.sky.SkyEventRoute
 import com.callbackdev.chiaro.ui.sky.SkyGuideIndexRoute
 import com.callbackdev.chiaro.ui.sky.SkyRoute
-import com.callbackdev.chiaro.ui.theme.ChiaroMotion
 import com.callbackdev.chiaro.ui.theme.reducedMotion
 import com.callbackdev.chiaro.ui.today.TodayRoute
 import kotlinx.coroutines.flow.SharingStarted
@@ -129,18 +134,41 @@ fun ChiaroRoot(
     shellViewModel: ShellViewModel = viewModel(factory = ShellViewModel.Factory)
 ) {
     val firstRun by shellViewModel.firstRun.collectAsStateWithLifecycle()
-    when (firstRun) {
-        FirstRun.Unknown -> Surface(modifier = Modifier.fillMaxSize()) { }
-        FirstRun.Pending -> FirstRunRoute(onSkip = shellViewModel::skip)
-        // The one question that could not be asked on the screen before it: a
-        // notification is a promise about a place, and there was no place yet.
-        FirstRun.Notifications ->
-            FirstRunNotificationsRoute(onDone = shellViewModel::notificationsAnswered)
-        // A widget tapped before first-run is answered keeps its request rather than
-        // losing it: the shell honours it on the first frame the tabs exist.
-        FirstRun.Done -> MainScreens(requestedTab, onRequestedTabHandled)
+    val reduced = LocalReducedMotion.current
+    AnimatedContent(
+        targetState = firstRun,
+        transitionSpec = { firstRunTransition(initialState, targetState, reduced) },
+        label = "firstRun"
+    ) { state ->
+        when (state) {
+            FirstRun.Unknown -> Surface(modifier = Modifier.fillMaxSize()) { }
+            FirstRun.Pending -> FirstRunRoute(onSkip = shellViewModel::skip)
+            // The one question that could not be asked on the screen before it: a
+            // notification is a promise about a place, and there was no place yet.
+            FirstRun.Notifications ->
+                FirstRunNotificationsRoute(onDone = shellViewModel::notificationsAnswered)
+            // A widget tapped before first-run is answered keeps its request rather than
+            // losing it: the shell honours it on the first frame the tabs exist.
+            FirstRun.Done -> MainScreens(requestedTab, onRequestedTabHandled)
+        }
     }
 }
+
+/**
+ * From the place to the notifications, the step slides on and fades, as a page of the
+ * run does (a fade alone under reduced motion). Every other change — the store's first
+ * answer, the run's end — is a cut: the tabs arrive as the app opens, not as a page.
+ */
+private fun firstRunTransition(from: FirstRun, to: FirstRun, reduced: Boolean): ContentTransform {
+    val step = from == FirstRun.Pending && to == FirstRun.Notifications
+    if (!step) return EnterTransition.None togetherWith ExitTransition.None
+    if (reduced) return fadeIn(ChiaroMotion.fade()) togetherWith fadeOut(ChiaroMotion.fade())
+    val slide = tween<IntOffset>(FirstRunStepMillis, easing = FastOutSlowInEasing)
+    return (fadeIn(tween(FirstRunStepMillis)) + slideInHorizontally(slide) { it / 6 }) togetherWith
+        (fadeOut(tween(FirstRunStepMillis)) + slideOutHorizontally(slide) { -it / 6 })
+}
+
+private const val FirstRunStepMillis = 300
 
 /** Height of the Material 3 navigation bar's content, without the system inset under it. */
 internal val BottomBarHeight = 80.dp

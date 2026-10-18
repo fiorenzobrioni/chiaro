@@ -14430,3 +14430,84 @@ Material, non da questo.
 **Come è stato verificato.** Suite completa e lint, `OneSheetTest` compreso. Nessun foglio è negli
 screenshot del README. Resta da confermare sul dispositivo, come allora: Robolectric non ha la barra
 di stato, e senza la barra il foglio non rimbalza nemmeno prima.
+
+## Le icone della famiglia, rese omogenee (committente, 18 ott 2026)
+
+**La richiesta.** Una review delle icone delle quattro app (Chiaro, Passo, Tempo, Saldo): se sono
+omogenee e fanno pensare a una sola suite, i punti forti e cosa correggere. Poi, dopo averne
+ragionato insieme: gli emblemi non devono sembrare chiusi in un cerchio (sole, orologio e moneta
+sono rotondi di natura, non racchiusi), più «premium»; le icone della barra di stato non più
+l'anello ma l'oggetto dell'app; Chiaro disegnata da uno script come le altre; palette e luce
+uniformate.
+
+**La review.** La grammatica comune regge (fondo `#F7F4EE`, anello di raggio 21 e tratto 10,
+emblema ambra che lo taglia, i quattro emblemi sulle quattro diagonali). Le stonature: il sole di
+Chiaro sfumato a sfera, l'unico emblema in 3D; il disco senza raggi che si legge come un bollino;
+l'unica icona del launcher scritta a mano.
+
+**Cosa è cambiato in Chiaro.**
+
+- `tools/draw_launcher_icon.py`, nuovo: scrive i due strati dell'icona e `ic_stat_chiaro.xml`. Il
+  disegno dell'anello resta quello del 23 set, valore per valore.
+- **Il sole**: piatto, un disco (5,6) e otto raggi corti e pieni (da 7,6 a 9,4, larghi 2,6) nell'ambra
+  di famiglia `#FFC658` → `#EF8618`, luce dall'alto a sinistra, dov'era una sfera sfumata. Il vuoto
+  nell'anello passa a 2,6 oltre le punte dei raggi (raggio 13,3). Scelta del committente fra le
+  varianti disegnate (disco piatto, 8 raggi sottili, 12 raggi corti, 8 raggi pieni): i raggi sottili
+  pesavano meno dell'anello, il disco piatto restava un bollino.
+- **La barra di stato**: il sole con una nuvola davanti, non più l'anello. Il sole da solo è l'icona
+  della luminosità di Android; con la nuvola dice «meteo». La prima stesura, con la nuvola fino al
+  centro del sole, ne copriva troppo (parere del committente, condiviso): la nuvola è scesa e si è
+  fatta piatta, un banco basso sotto un sole più grande che ne copre solo l'angolo in basso a
+  sinistra. Fra le due stesure rimaste (una nuvola piccola e tonda, una piatta) il committente ha
+  scelto la piatta.
+- DESIGN §3.8 e §8 (la riga dell'icona piccola), CLAUDE.md (l'icona è l'output di uno script).
+
+**Come è stato verificato.** Rese dei veri XML (cerchio, squircle, quadrato, 48 px, a tema chiaro e
+scuro, su sfondo scuro, la barra di stato a 24 px su chiaro e scuro) guardate accanto alle altre tre
+app; suite completa e lint; `notification-summary.png` rigenerato, perché mostra l'icona piccola.
+
+### Da fare sul dispositivo
+
+- [x] L'icona sulla Home con due launcher (maschere diverse) e a tema; la barra di stato con una
+  notifica vera. Verificato dal committente sul dispositivo (18 ott 2026), con la nuvola piatta.
+
+## Gli onboarding della famiglia, resi uniformi (committente, 18 ott 2026)
+
+**La richiesta.** Uniformare gli onboarding delle quattro app nello stile e nella tipografia, senza
+l'icona dell'app nella prima pagina, prendendo Chiaro come modello: niente icona, la sua tipografia,
+niente indicatore di pagina, il suo modo di trattare i permessi. Scelte del committente sul piano:
+pulsanti in basso, i punti di forza della prima pagina alleggeriti (nelle app che li hanno), Saldo
+da cinque a quattro pagine.
+
+**Lo standard di famiglia.** Nessuna immagine; la prima pagina è il nome (`displaySmall`) e la sua
+frase (`titleMedium`); un passaggio è un titolo (`headlineMedium`) e un testo (`bodyLarge`), centrati
+nello spazio sopra i pulsanti; i pulsanti stanno in basso, sempre nello stesso punto (il principale
+pieno, un'alternativa vera contornata, «Non ora» di solo testo, alti almeno 52 dp), con la riga sotto
+il principale in `bodySmall`. Nessun indicatore di avanzamento: il passaggio lo sente chi usa
+TalkBack, sul titolo. I permessi: prima si spiega, poi si chiede; «Non ora» non costa nulla e non
+mostra testi rossi; quando il dialogo non può più comparire, lo stesso pulsante apre le impostazioni;
+la schermata che usa il permesso continua a offrirlo.
+
+**L'indicatore di pagina.** Material non lo impone: è tipico dei caroselli che si sfogliano e dei
+percorsi lunghi. Qui le pagine si avanzano solo con i pulsanti e sono al massimo quattro (cinque in
+Passo solo sui telefoni che chiedono il consiglio sulla batteria).
+
+**Cosa è cambiato in Chiaro** (VISION §5.8, «The frame»).
+
+- I due passaggi in una cornice sola: il testo centrato in alto, i pulsanti in basso, alti almeno
+  52 dp (erano 40, sotto il testo, e si spostavano con la sua lunghezza).
+- Il titolo è il nome nudo (`first_run_title`): con `app_name` una build di prova diceva «Chiaro
+  (dev)».
+- Il secondo passaggio prende la scala del primo: titolo `headlineMedium` (era `headlineSmall`),
+  testo `bodyLarge` (era `bodyMedium`).
+- La posizione negata per sempre: il pulsante diventa «Apri le impostazioni», dove prima la
+  richiesta tornava rifiutata senza dialogo e il pulsante non faceva più nulla; tornando con il
+  permesso dato, la posizione si cerca da sola. Il rifiuto è detto in grigio, l'errore resta per la
+  posizione spenta o il segnale che non arriva.
+- Dal luogo alle notifiche il passaggio scorre ed entra in dissolvenza, come una pagina (solo
+  dissolvenza con l'animazione ridotta); prima era un taglio.
+- TalkBack sente «Passaggio 1 di 2» sul titolo.
+
+**Come è stato verificato.** Rese delle due pagine (chiaro, scuro, testo al doppio) accanto a quelle
+delle altre tre app; suite completa e lint. Nessuno screenshot del README mostra il primo avvio.
+Provato dal committente sul dispositivo (18 ott 2026): tutto a posto.

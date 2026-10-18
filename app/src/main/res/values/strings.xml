@@ -378,6 +378,10 @@
 
     <!-- First run: one screen, two answers, skipping allowed -->
     <string name="first_run_tagline">Weather that tells you whether it is worth going out, and when.</string>
+    <!-- The first run's heading: the name alone, where app_name carries the debug build's mark. -->
+    <string name="first_run_title" translatable="false">Chiaro</string>
+    <string name="first_run_step">Step %1$d of %2$d</string>
+    <string name="first_run_open_settings">Open settings</string>
     <string name="first_run_use_location">Use my position</string>
     <string name="first_run_location_why">Used only to get the forecast where you are, rounded to about a kilometre.</string>
     <string name="first_run_search">Search for a city</string>
