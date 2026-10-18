@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Status-bar icon: the system renders only the alpha channel. Since 23 set 2026 it is the
-     launcher icon's own mark, restated for 24 dp — the day's ring, the gap the sun opens in
-     it, and the sun — so the notification a reader sees first and the icon they tap to open
-     the app are one drawing. The proportions are the monochrome layer's, scaled (ring radius
-     7.6 with a 3.6 stroke, the sun 3.1 at −40°, the gap 4.3), and nudged only where 24 dp asks:
-     a stroke under 3.5 dp breaks up at the status bar's size. -->
+<!-- Written by tools/draw_launcher_icon.py: change the script and run it, never this file.
+     Status-bar icon: the system renders only the alpha channel. The sun of the launcher
+     icon with a cloud low in front of it, which says weather where the sun alone is the
+     system's brightness icon; a band of air keeps the two apart. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <group>
-        <clip-path android:pathData="M 0,0 H 24 V 24 H 0 Z M 13.52,7.11 a 4.30,4.30 0 1,0 8.60,0 a 4.30,4.30 0 1,0 -8.60,0 z" />
-        <path
-            android:fillColor="#FFFFFFFF"
-            android:fillType="evenOdd"
-            android:pathData="M 2.60,12.00 a 9.40,9.40 0 1,0 18.80,0 a 9.40,9.40 0 1,0 -18.80,0 z M 6.20,12.00 a 5.80,5.80 0 1,0 11.60,0 a 5.80,5.80 0 1,0 -11.60,0 z" />
-    </group>
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M 14.72,7.11 a 3.10,3.10 0 1,0 6.20,0 a 3.10,3.10 0 1,0 -6.20,0 z" />
+<group>
+    <clip-path android:pathData="M 0,0 H 24 V 24 H 0 Z M 5.10,15.04 A 3.96,3.96 0 0,0 5.10,22.95 L 11.72,22.95 A 3.96,3.96 0 0,0 11.72,15.04 Z"/>
+<group>
+    <clip-path android:pathData="M 0,0 H 24 V 24 H 0 Z M 2.25,16.51 a 4.05,4.05 0 1,0 8.10,0 a 4.05,4.05 0 1,0 -8.10,0 z"/>
+<group>
+    <clip-path android:pathData="M 0,0 H 24 V 24 H 0 Z M 5.10,15.40 a 4.69,4.69 0 1,0 9.38,0 a 4.69,4.69 0 1,0 -9.38,0 z"/>
+<path android:pathData="M 9.61,10.62 a 3.68,3.68 0 1,0 7.36,0 a 3.68,3.68 0 1,0 -7.36,0 z M 14.21,5.10 L 14.21,3.26 A 0.92,0.92 0 0,0 12.37,3.26 L 12.37,5.10 A 0.92,0.92 0 0,0 14.21,5.10 Z M 17.84,7.37 L 19.14,6.07 A 0.92,0.92 0 0,0 17.84,4.77 L 16.54,6.07 A 0.92,0.92 0 0,0 17.84,7.37 Z M 18.81,11.54 L 20.65,11.54 A 0.92,0.92 0 0,0 20.65,9.70 L 18.81,9.70 A 0.92,0.92 0 0,0 18.81,11.54 Z M 16.54,15.17 L 17.84,16.47 A 0.92,0.92 0 0,0 19.14,15.17 L 17.84,13.87 A 0.92,0.92 0 0,0 16.54,15.17 Z M 12.37,16.14 L 12.37,17.98 A 0.92,0.92 0 0,0 14.21,17.98 L 14.21,16.14 A 0.92,0.92 0 0,0 12.37,16.14 Z M 8.73,13.87 L 7.43,15.17 A 0.92,0.92 0 0,0 8.73,16.47 L 10.04,15.17 A 0.92,0.92 0 0,0 8.73,13.87 Z M 7.77,9.70 L 5.93,9.70 A 0.92,0.92 0 0,0 5.93,11.54 L 7.77,11.54 A 0.92,0.92 0 0,0 7.77,9.70 Z M 10.04,6.07 L 8.73,4.77 A 0.92,0.92 0 0,0 7.43,6.07 L 8.73,7.37 A 0.92,0.92 0 0,0 10.04,6.07 Z" android:fillColor="#FFFFFFFF"/>
+</group>
+</group>
+</group>
+<path android:pathData="M 5.10,16.32 A 2.67,2.67 0 0,0 5.10,21.66 L 11.72,21.66 A 2.67,2.67 0 0,0 11.72,16.32 Z" android:fillColor="#FFFFFFFF"/>
+<path android:pathData="M 3.54,16.51 a 2.76,2.76 0 1,0 5.52,0 a 2.76,2.76 0 1,0 -5.52,0 z" android:fillColor="#FFFFFFFF"/>
+<path android:pathData="M 6.39,15.40 a 3.40,3.40 0 1,0 6.81,0 a 3.40,3.40 0 1,0 -6.81,0 z" android:fillColor="#FFFFFFFF"/>
 </vector>

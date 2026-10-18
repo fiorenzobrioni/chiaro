@@ -14430,3 +14430,41 @@ Material, non da questo.
 **Come è stato verificato.** Suite completa e lint, `OneSheetTest` compreso. Nessun foglio è negli
 screenshot del README. Resta da confermare sul dispositivo, come allora: Robolectric non ha la barra
 di stato, e senza la barra il foglio non rimbalza nemmeno prima.
+
+## Le icone della famiglia, rese omogenee (committente, 18 ott 2026)
+
+**La richiesta.** Una review delle icone delle quattro app (Chiaro, Passo, Tempo, Saldo): se sono
+omogenee e fanno pensare a una sola suite, i punti forti e cosa correggere. Poi, dopo averne
+ragionato insieme: gli emblemi non devono sembrare chiusi in un cerchio (sole, orologio e moneta
+sono rotondi di natura, non racchiusi), più «premium»; le icone della barra di stato non più
+l'anello ma l'oggetto dell'app; Chiaro disegnata da uno script come le altre; palette e luce
+uniformate.
+
+**La review.** La grammatica comune regge (fondo `#F7F4EE`, anello di raggio 21 e tratto 10,
+emblema ambra che lo taglia, i quattro emblemi sulle quattro diagonali). Le stonature: il sole di
+Chiaro sfumato a sfera, l'unico emblema in 3D; il disco senza raggi che si legge come un bollino;
+l'unica icona del launcher scritta a mano.
+
+**Cosa è cambiato in Chiaro.**
+
+- `tools/draw_launcher_icon.py`, nuovo: scrive i due strati dell'icona e `ic_stat_chiaro.xml`. Il
+  disegno dell'anello resta quello del 23 set, valore per valore.
+- **Il sole**: piatto, un disco (5,6) e otto raggi corti e pieni (da 7,6 a 9,4, larghi 2,6) nell'ambra
+  di famiglia `#FFC658` → `#EF8618`, luce dall'alto a sinistra, dov'era una sfera sfumata. Il vuoto
+  nell'anello passa a 2,6 oltre le punte dei raggi (raggio 13,3). Scelta del committente fra le
+  varianti disegnate (disco piatto, 8 raggi sottili, 12 raggi corti, 8 raggi pieni): i raggi sottili
+  pesavano meno dell'anello, il disco piatto restava un bollino.
+- **La barra di stato**: il sole con una nuvola davanti, non più l'anello. Il sole da solo è l'icona
+  della luminosità di Android; con la nuvola dice «meteo». La prima stesura, con la nuvola fino al
+  centro del sole, ne copriva troppo (parere del committente, condiviso): la nuvola è scesa e si è
+  fatta più piccola, copre solo l'angolo in basso a sinistra del sole.
+- DESIGN §3.8 e §8 (la riga dell'icona piccola), CLAUDE.md (l'icona è l'output di uno script).
+
+**Come è stato verificato.** Rese dei veri XML (cerchio, squircle, quadrato, 48 px, a tema chiaro e
+scuro, su sfondo scuro, la barra di stato a 24 px su chiaro e scuro) guardate accanto alle altre tre
+app; suite completa e lint; `notification-summary.png` rigenerato, perché mostra l'icona piccola.
+
+### Da fare sul dispositivo
+
+- L'icona sulla Home con due launcher (maschere diverse) e a tema; la barra di stato con una
+  notifica vera.

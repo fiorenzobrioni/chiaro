@@ -621,16 +621,28 @@ One day of twenty-four hours as a ring painted like the canvas: a sweep gradient
 dusk's amber at three o'clock, clockwise through the night's indigo to midnight at the bottom,
 the dawn's amber at nine and the noon azure at the top — the vivid sky table's anchors (§3.7).
 The sun sits on the ring at mid-afternoon and a clip opens the ring around it, which does
-two things: the disc reads as a sun on its path rather than a bead, and the open ring is a
+two things: the sun reads as a sun on its path rather than a bead, and the open ring is a
 **C**. It is the daylight ribbon (§4) bent into a dial and the arc widget's sun on its path.
 
+- **Drawn by a script** (18 ott 2026): `tools/draw_launcher_icon.py` writes the two layers and
+  the status-bar icon; re-running it is the drawing, the XML is never edited by hand.
 - **Ground**: `#F7F4EE`, a warm daylight white between the paper surface and its first
   container: paper on any wallpaper, and still apart from the ring's two palest stops.
-- **Geometry** (108-unit adaptive canvas): ring radius 21, stroke 10; sun radius 8.2 at −40°;
-  gap radius 11.2. Everything stays inside the 33-unit safe circle, so circle, squircle and
+- **The sun** (18 ott 2026, the icons' review): flat, a disc and eight short full rays in one
+  amber (`#FFC658` to `#EF8618`, lit from the upper left), where it was a shaded sphere. A disc
+  alone read as a dot; with its rays it is the sun the app draws for a clear sky, and full rays
+  carry the ring's weight where thin ones (tried at 1.9) looked lighter than the ring.
+- **Geometry** (108-unit adaptive canvas): ring radius 21, stroke 10; the sun at −40°, its
+  disc 5.6, its rays from 7.6 to 9.4 at a width of 2.6 (their round tips at 10.7); a gap of 2.6
+  past the tips. The mark stays inside the 33-unit safe circle, so circle, squircle and
   rounded-square masks crop air, never the mark.
 - **Themed icon**: a drawable of its own (`ic_launcher_monochrome`), the same mark as shapes —
-  annulus, gap, disc — because the system reads only alpha and a gradient's alpha is not a shape.
+  annulus, gap, sun — because the system reads only alpha and a gradient's alpha is not a shape.
+- **Status-bar icon** (`ic_stat_chiaro`, 18 ott 2026): not the ring, the sun with a cloud low in
+  front of it. The notifications are about the weather, and the sun alone is the system's own
+  brightness icon. The cloud covers only the sun's lower left, with a band of air between them,
+  so the sun stays the larger shape (a first drawing, with the cloud up to the sun's middle,
+  hid too much of it).
 - **Why not the others**: a crescent C of light on blue was the strongest at 24px, but read as a
   moon — the night again, which is what the old badge (a starry crescent over two waves) drew;
   the sun's curve over a horizon read as a letter A below 48px.
@@ -2424,7 +2436,7 @@ What the review changed:
   pictures are 75–90dp at a notification's width and the details stop at five lines
   (`NotificationChartsTest` does the arithmetic at the narrowest width).
 - **The brand's accent** (`notification_accent`, the vivid primary) on the small icon's disc,
-  and the small icon itself is the launcher icon's ring (§3.8) at 24dp.
+  and the small icon itself is the launcher icon's sun with a cloud in front of it (§3.8).
 - **Words**: the morning summary says when it rains today, not only how likely; the night is
   «Stanotte minima 9°», not «fino a 9°»; a fired rule's reading carries its unit and the
   reader's decimal mark («· ora 21,4°», where it printed «— valore 21.4»), and each
