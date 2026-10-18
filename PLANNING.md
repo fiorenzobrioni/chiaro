@@ -14468,8 +14468,8 @@ app; suite completa e lint; `notification-summary.png` rigenerato, perché mostr
 
 ### Da fare sul dispositivo
 
-- L'icona sulla Home con due launcher (maschere diverse) e a tema; la barra di stato con una
-  notifica vera.
+- [x] L'icona sulla Home con due launcher (maschere diverse) e a tema; la barra di stato con una
+  notifica vera. Verificato dal committente sul dispositivo (18 ott 2026), con la nuvola piatta.
 
 ## Gli onboarding della famiglia, resi uniformi (committente, 18 ott 2026)
 
@@ -14510,3 +14510,4 @@ Passo solo sui telefoni che chiedono il consiglio sulla batteria).
 
 **Come è stato verificato.** Rese delle due pagine (chiaro, scuro, testo al doppio) accanto a quelle
 delle altre tre app; suite completa e lint. Nessuno screenshot del README mostra il primo avvio.
+Provato dal committente sul dispositivo (18 ott 2026): tutto a posto.
