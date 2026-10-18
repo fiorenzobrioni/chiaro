@@ -1145,7 +1145,7 @@ at start-up would be wrong for exactly the reader it is for) and publishes
 The app moves in these places and all of them ask (one is §7.1's icons): the week row's hour
 strip opens with `ChiaroMotion.enter/exit`, the pager `scrollToPage`s instead of animating, the
 rule editor's dry-run answer jumps into view instead of scrolling to it, and the hero's figure
-stays on the sky instead of travelling into the bar (§8.1e). The rain chart that drew itself in
+stays on the sky with the rest of the hero, and the bar's number fades in (§8.1e, the same since 18 ott 2026 with the setting off). The rain chart that drew itself in
 went with the chart (15 ott 2026). Until that pass
 `ChiaroMotion.reducedMotionFadeMillis` was a constant nothing consulted, which is the
 shape a design rule takes when it is only written down: true in this file, absent from
@@ -1373,28 +1373,26 @@ above it, and the canvas the same height.
 weather app gives the one number it is opened for, and the day's high and low stand right
 under the word: the number a reader looks for after the temperature was in the week's first
 row, two screens down. At the reader's larger type the figure grows to **130%** and no
-further (`heroStyle`, `HeroTravelTest`): at 200% «−12°» would be some 400dp wide on a 360dp
+further (`heroStyle`, `HeroInBarTest`): at 200% «−12°» would be some 400dp wide on a 360dp
 phone, and what a larger type is for, the words, still grows in full. The canvas' floor
 grew by what the hero did (280 → 328dp: a 20dp taller line and the figures' 28), so the
 skeleton still ends where the canvas does.
 
-**8.1e The figure travels into the bar** (second review, 15 ott 2026). The temperature is one
-figure from the sky to the bar: scrolled, it rides the canvas like the rest of the hero until
-its top is 8dp under the bar, and over the next **96dp of scroll** it shrinks to the bar's
-`titleLarge` size and slides into the bar's slot beside the gear, where it stays (`heroPose`).
-Every step is arithmetic on the list's scroll, read at layout and draw time, so it follows
-the finger both ways and nothing recomposes while the page moves. One `Text` drawn over the
-page does it; the canvas keeps an invisible copy that holds the figure's place, tells the dock
-where it rests and is what TalkBack reads, and the bar's slot says the temperature once the
-figure has landed. **Two inks across the bar's edge**: the part of the figure inside the bar is
-drawn in the bar's ink, the part still over the sky in the sky's white, so the figure crossing
-the edge never stands on a ground it does not read on. The sky's still icon comes in beside it
-as it arrives. **Not under reduced motion**: a figure that shrinks and slides across the
-screen is the movement the setting asks to be spared, and there the figure scrolls away with
-the sky and the bar's own number fades in, as before.
+**8.1e The figure goes under the bar, and the bar's comes in** (committente, 18 ott 2026). The
+temperature rides the canvas like the rest of the hero and scrolls away with the sky; the moment
+its middle crosses the bar's bottom edge (`heroUnderBar`, on where the canvas measured it at rest,
+arithmetic on the scroll), the bar's still icon and number come in together on the effects
+spring's fade and a half-height slide (`CompactNow`), and they leave the same way when the page
+is dragged back. **Two states and one line between them**, the same with or without reduced
+motion (where the springs are §7's 100 ms fade). One announcement in the bar, the temperature.
 
-It replaces the bar's compact number that faded in when the canvas was nearly gone (23 set
-2026): two copies of one number, one leaving and one arriving, where a reader follows one.
+Until that day the figure travelled into the bar (15 ott 2026): over 96dp of scroll it shrank to
+`titleLarge` and slid into the slot by the gear, a pixel at a time with the finger, drawn in two
+inks across the bar's edge. It was taken out because it had no rest between its two ends: a page
+left a little scrolled kept the figure halfway, half-shrunk and astride the edge, and those 96dp
+were exactly where a reader stops to read the day's range under it, so the halfway was the state
+seen most. The continuity it bought is kept by the moment and the place: the bar's number comes in as the
+big one goes under, beside the sky's icon where the eye already looks for it.
 
 **8.1c The sun and the moon** (design review, 23 set 2026) — drawn on the canvas where they
 stand, in a band of sky the canvas' column keeps for them between the place row and the hero
@@ -1462,10 +1460,9 @@ when the page is at rest — so it is the one bar in the app with two grounds:
   bar above it would turn it into a picture inside a page.
 
 **Compact** (23 set 2026): the bar carries the hero once it has scrolled up — the sky's still
-icon and the temperature in whole degrees, beside the name (which then keeps to one line). Since
-15 ott 2026 the temperature is the hero's own figure, docked there (§8.1e), and the slot opens
-the moment it starts to travel; under reduced motion, once the canvas has climbed to within
-120dp of the bar, the bar's own number fades in on the effects spring. **The place's day is the longest form that fits** (committente,
+icon and the temperature in whole degrees, beside the name (which then keeps to one line). They
+come in together once the hero's figure has gone under the bar (§8.1e), on the effects spring;
+before the canvas has measured the figure, once the canvas has climbed to within 120dp of the bar. **The place's day is the longest form that fits** (committente,
 15 ott 2026; `FittingText`): «Venerdì 25 settembre · 12:15», else «Ven 25 set · 12:15», else
 «Ven · 12:15», each measured at `labelLarge` against the width the line really has, so the line
 never wraps and the bar never grows mid-scroll. Until then the date shortened to its weekday
@@ -2167,8 +2164,8 @@ open screen (841 × 701dp), a foldable held upright (701 × 841) and a 1280 × 8
   two and four, preferring the count that leaves no short last row (`detailsPerRow`): nine tiles
   stand three by three, never four, four and a lonely one stretched across a tablet. In the right
   pane they made it twice the left one's height and left a screen of empty paper at the foot.
-- **One scroll.** The two panes are one item of the list and scroll as one page: the hero travels
-  into the bar as on a phone (§8.1e), and there is one pull to refresh.
+- **One scroll.** The two panes are one item of the list and scroll as one page: the hero's figure
+  goes under the bar and the bar's comes in as on a phone (§8.1e), and there is one pull to refresh.
 - **Sky and Alerts in two panes too** (16 ott 2026, replacing a single list centred at 840dp).
   Same rule, same numbers: `pageColumns`, from 640dp of paper (the page beside the rail), the panes
   at most 1200dp together and centred past it, 24dp at the edges and a 32dp gutter, so a device that

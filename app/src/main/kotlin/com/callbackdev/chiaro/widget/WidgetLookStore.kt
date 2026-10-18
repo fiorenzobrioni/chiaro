@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.callbackdev.chiaro.data.WeatherIcons
+import com.callbackdev.chiaro.data.moveWidgetKeys
 import com.callbackdev.chiaro.ui.theme.WidgetCardColor
 import kotlinx.coroutines.flow.first
 
@@ -255,6 +256,31 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 // while it existed still carries the key, and leaves with it.
                 prefs.remove(legacyConditionKey(it))
             }
+        }
+    }
+
+    /**
+     * A backup restored onto a new phone hands every widget a new id (18 ott 2026): each
+     * look moves to its widget's new number, and the old one keeps nothing. Left where it
+     * was, a look was an orphan no `onDeleted` would ever name, and the restored widget
+     * came back in the defaults.
+     */
+    suspend fun remap(oldIds: IntArray, newIds: IntArray) {
+        dataStore.edit { prefs ->
+            prefs.moveWidgetKeys(oldIds, newIds) { old, new ->
+                move(backgroundKey(old), backgroundKey(new))
+                move(opacityKey(old), opacityKey(new))
+                move(rangeKey(old), rangeKey(new))
+                move(sentenceKey(old), sentenceKey(new))
+                move(warningKey(old), warningKey(new))
+                move(arrangementKey(old), arrangementKey(new))
+                move(iconsKey(old), iconsKey(new))
+                move(iconShownKey(old), iconShownKey(new))
+                move(laterKey(old), laterKey(new))
+                move(cardColorKey(old), cardColorKey(new))
+            }
+            // The retired switch is not carried to the new id: it only ever leaves.
+            oldIds.forEach { prefs.remove(legacyConditionKey(it)) }
         }
     }
 

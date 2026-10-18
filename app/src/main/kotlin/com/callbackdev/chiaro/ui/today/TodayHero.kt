@@ -22,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -75,8 +74,8 @@ internal fun CanvasHeader(
     timeFmt: DateTimeFormatter,
     locale: Locale,
     placeRowHeight: Dp,
-    /** The travelling number's dock, or null where the figure stays on the sky (reduced motion). */
-    dock: HeroDock? = null,
+    /** Where the hero's number rests, measured for the bar (DESIGN §8.1e); null measures nothing. */
+    figure: HeroFigure? = null,
     /** How the paper under the canvas is laid out (§8.12c): the hero stands over its first pane. */
     columns: PageColumns? = null,
     /** A navigation rail over the canvas' start (§8.12c): the sky runs under it, nothing else. */
@@ -187,26 +186,21 @@ internal fun CanvasHeader(
                 // since the same day the hero may be an estimate interpolated between two
                 // hours — «20,8°» claimed a precision nobody had.
                 //
-                // With a [dock] the figure on screen is the travelling one (DESIGN §8.1e), drawn
-                // over the page; this copy keeps the figure's place and size in the column, is
-                // what TalkBack reads, and tells the dock where the figure rests.
+                // With a [figure] the number also tells the page where it rests, so the bar
+                // knows when it has gone under it (DESIGN §8.1e).
                 Text(
                     text = Formats.temperature(current.tempC, units.temperature, locale),
                     style = heroStyle(),
                     color = SkyPalette.Ink,
-                    modifier = if (dock == null) {
+                    modifier = if (figure == null) {
                         Modifier
                     } else {
-                        // Hidden only once the travelling figure knows where to stand, so the
-                        // first frame never has no number at all.
-                        Modifier
-                            .alpha(if (dock.measured) 0f else 1f)
-                            .onGloballyPositioned { number ->
-                                val item = canvasCoords ?: return@onGloballyPositioned
-                                if (!item.isAttached || !number.isAttached) return@onGloballyPositioned
-                                dock.rest = item.localPositionOf(number, Offset.Zero)
-                                dock.size = number.size
-                            }
+                        Modifier.onGloballyPositioned { number ->
+                            val item = canvasCoords ?: return@onGloballyPositioned
+                            if (!item.isAttached || !number.isAttached) return@onGloballyPositioned
+                            figure.rest = item.localPositionOf(number, Offset.Zero)
+                            figure.size = number.size
+                        }
                     }
                 )
                 // The condition is `titleLarge` since the review of 23 set 2026: from the

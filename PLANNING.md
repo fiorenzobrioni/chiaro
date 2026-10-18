@@ -14511,3 +14511,106 @@ Passo solo sui telefoni che chiedono il consiglio sulla batteria).
 **Come è stato verificato.** Rese delle due pagine (chiaro, scuro, testo al doppio) accanto a quelle
 delle altre tre app; suite completa e lint. Nessuno screenshot del README mostra il primo avvio.
 Provato dal committente sul dispositivo (18 ott 2026): tutto a posto.
+
+## Revisione: fusi orari, quarti d'ora, dati che restano sul telefono (committente, 18 ott 2026)
+
+**La richiesta.** Verificare che i dati di Open-Meteo arrivino a schermo sul fuso giusto, quarti
+d'ora delle prossime due ore compresi, e che nessuna tabella o dato cresca senza limite.
+
+**Fusi orari: cosa è stato verificato e regge.**
+
+- *L'offset fisso.* Misurato di nuovo sull'endpoint vivo il 18 ott: Milano, `timezone=auto`, il 25 ott
+  (il giorno che torna l'ora solare) risponde `utc_offset_seconds: 7200`, `GMT+2`, 24 valori. Il
+  `ProviderClock` del mapper legge ogni etichetta con quell'offset e la ri-esprime sull'orologio del
+  luogo: ore, `pastHours`, `quarterEndedAt` e i quarti d'ora passano tutti da `instantOf`.
+- *I quarti d'ora.* `minutely_15` usa lo stesso offset della serie oraria e la sua prima etichetta è
+  quella di `current.time` (16:30 alle 16:33 locali): il quarto 16:15-16:30, già chiuso, che
+  `NowcastEngine.read` scarta perché la sua fine non è dopo `now`. La convenzione «somma dei 15 minuti
+  precedenti» è confermata dai dati: i quattro quarti 19:15-20:00 sommano lo slot orario delle 20:00
+  (0 + 0 + 0,1 + 0,4 = 0,5 mm), e così 20:15-21:00 (1,2 mm). L'età massima (un'ora) è misurata su
+  `lastSync`, che una lettura dalla cache disco conserva com'era. Gli orari a schermo (didascalia,
+  tacche del grafico, frase dell'eroe) passano tutti per `placeZone`, il fuso del luogo.
+- *Il resto.* Avvisi e regole girano sul fuso del luogo (`report.zone()` nel job); il widget lo
+  risolve dopo il report (`placeZone`); l'unico orologio del telefono è quello voluto, le ore di
+  silenzio delle notifiche.
+
+**Fusi orari: il difetto trovato.** `WeatherRecency.trim` confrontava le *etichette* locali delle ore
+con l'ora corrente troncata. La notte che si torna all'ora solare due righe dicono 02:00, e durante la
+seconda la prima (un'ora già finita) restava `hourly[0]`, «l'ora in cui siamo»: l'eroe e la striscia
+erano un'ora indietro per quell'ora. Ora un'ora è finita quando la sua *fine* (`at` + 1 h) è passata;
+identico in ogni altra ora dell'anno, e anche nei fusi a mezz'ora. I giorni restano sul calendario del
+luogo. Test: `WeatherRecencyTest`, la notte del 25 ott a Roma.
+
+**Dati: l'inventario.** Ogni cosa scritta su disco e il suo limite.
+
+| Dove | Limite |
+|---|---|
+| Room `weather_history` | 3 giorni per luogo, mai meno di 2 righe; un commit per finestra di 15 min; tetto globale 2 304 righe; i luoghi non più seguiti se ne vanno dopo 7 giorni di silenzio (`StoredDataSweep`) |
+| `report_cache/` | un file per luogo, via a 7 giorni (l'orizzonte); al massimo 8 file di luoghi non seguiti |
+| cache in memoria del repository | ridotta ai luoghi seguiti a ogni commit |
+| `alerts`, `rule_state`, `sky_alerts`, `warnings` | anelli di impronte (16, 32, 40, 120); i latch delle regole tenuti solo per luoghi e regole vivi |
+| `search_history` | 5 voci |
+| `cities`, `rules`, `sky`, `settings`, `workspace` | ciò che il lettore ha creato |
+| `widget_cities`, `widget_look`, `widget_arc` | una voce per widget, tolta in `onDeleted` |
+
+**Dati: il difetto trovato.** I tre store per widget sono nel backup (`data_extraction_rules.xml`), ma
+il ripristino su un telefono nuovo dà ai widget id nuovi e nessun receiver sovrascriveva `onRestored`:
+`WidgetCityStore.remap` esisteva, documentato come la risposta al ripristino, e non lo chiamava nessuno.
+Così ogni widget ripristinato tornava ai valori di default, le sue chiavi restavano sotto id a cui
+nessun `onDeleted` sarebbe mai arrivato, e un widget nuovo che riceveva uno di quei numeri ereditava
+il luogo e l'aspetto di un altro. Ora `ChiaroWidgetReceiver.onRestored` sposta luogo, aspetto e
+impostazioni dell'arco sui nuovi id e ridisegna; il `remap` delle città sposta anche la riga del cielo,
+che lasciava indietro. Lo spostamento è uno solo per store (`WidgetKeyMoves`: prima si legge tutto,
+poi si toglie ogni chiave vecchia, poi si scrive), perché vecchi e nuovi id possono sovrapporsi.
+
+**Decisioni e deviazioni.** *Nessuna pulizia per confronto con `AppWidgetManager.getAppWidgetIds`*:
+toglierebbe anche gli orfani di un `onDeleted` perso, ma eseguita tra un ripristino e il suo
+`onRestored` cancellerebbe proprio le impostazioni da spostare, e il sistema consegna `onDeleted`
+anche quando un launcher viene disinstallato. *Lasciati come sono, annotati:* il tetto globale della
+storia (2 304 righe) può troncare chi segue più di otto luoghi aggiornati ogni quarto d'ora per tre
+giorni, ed è un caso lontano; `NowcastCoverage.looksInterpolated` raggruppa i quarti per ora UTC, che
+coincide con l'ora del fornitore in tutti i luoghi coperti (nessun fuso a mezz'ora tra Europa centrale
+e Stati Uniti) e andrà ripensato solo se la copertura si allargasse a uno di quei fusi.
+
+**Come è stato verificato.** `WeatherRecencyTest` (la notte del cambio d'ora), `WidgetCityStoreTest`
+(spostamento con id sovrapposti, riga del cielo inclusa, niente resta sotto l'id vecchio),
+`WidgetLookStoreTest` (gli aspetti seguono i widget). Suite completa.
+
+## La temperatura non viaggia più nella barra (committente, 18 ott 2026)
+
+**La richiesta.** «Se scorri solo poco la temperatura rimane a metà strada e sta male»: togliere il
+viaggio della cifra nella barra (DESIGN §8.1e, 15 ott) e farla comparire come l'icona del cielo.
+
+**Perché.** La posa era una funzione continua dello scorrimento senza un riposo fra i due capi, e i
+96 dp della corsa cadevano dove ci si ferma a leggere (la frase, massima e minima): lo stato a metà,
+la cifra rimpicciolita a cavallo del bordo in due inchiostri, era quello che si vedeva di più. Anche
+l'icona della barra entrava con un'alfa proporzionale allo scorrimento, e restava a metà allo stesso
+modo.
+
+**Cosa è cambiato.**
+
+- La cifra resta nel cielo e scorre via con lui; non c'è più una copia disegnata sopra la pagina
+  (`TravellingNumber`, `heroPose`, `dockSlot`, `DockedNow` tolti).
+- Una sola soglia, `heroUnderBar`: la metà della cifra passa sopra il bordo inferiore della barra.
+  Il canvas misura una volta dove la cifra riposa (`HeroFigure`), il resto è aritmetica sullo
+  scorrimento. Prima della misura vale la soglia di prima (`HeroReach`, 120 dp).
+- Superata la soglia, icona e numero della barra (`CompactNow`) entrano insieme con la dissolvenza e
+  il mezzo scorrimento della molla `effects`/`spatial`, ed escono allo stesso modo: due stati, a tempo,
+  mai una via di mezzo. Lo stesso con il movimento ridotto (dove sono la dissolvenza di 100 ms di §7).
+- Un solo annuncio per TalkBack nella barra, la temperatura (`clearAndSetSemantics` su `CompactNow`).
+
+**Decisioni e deviazioni.** *La soglia a metà cifra*, non al suo primo pixel sotto la barra (il
+numero piccolo comparirebbe mentre il grande è quasi tutto visibile, due copie a schermo) né
+all'ultimo (un tratto senza temperatura da nessuna parte). *Nessun aggancio dello scorrimento* (far
+finire la pagina a uno dei due capi): avrebbe tolto lo stato a metà spostando la pagina sotto il dito
+del lettore, che è peggio. *Persa la continuità del movimento*: la tiene il momento e il posto, il
+numero piccolo entra mentre il grande passa sotto, accanto all'icona dove l'occhio già lo cerca.
+
+**Come è stato verificato.** `HeroInBarTest` (nuovo, al posto di `HeroTravelTest`): a riposo la cifra
+è nel cielo, passa sotto la barra quando la sua metà ne supera il bordo e non un pixel prima, torna nel
+cielo trascinando indietro, col canvas uscito è sotto la barra; il tetto del 130% del testo. Il test di
+TalkBack in `TodayAgendaTest`. Una sequenza di scorrimento (60, 100, 130, 150, 170, 200, 300 dp)
+disegnata sul Milano e guardata fotogramma per fotogramma: a 100 dp la barra è vuota, da 130 icona e
+numero interi. Le immagini `today-day`, `today-week`, `today-details` rigenerate e guardate (il numero
+della barra ora è il `titleLarge` vero, non la cifra da 88 sp rimpicciolita); `today-now` identica al
+pixel. Suite completa e lint.

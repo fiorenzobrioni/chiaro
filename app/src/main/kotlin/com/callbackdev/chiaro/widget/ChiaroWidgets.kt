@@ -124,7 +124,8 @@ object ChiaroWidgets {
 /**
  * Placing the first widget starts the periodic job (it is its own reason to fetch,
  * see `SyncScheduler.shouldRun`); removing the last one lets the job self-heal away;
- * a removed instance takes its pin and its look with it.
+ * a removed instance takes its pin and its look with it, and a restored one finds them
+ * under its new id.
  */
 abstract class ChiaroWidgetReceiver : GlanceAppWidgetReceiver() {
 
@@ -152,6 +153,25 @@ abstract class ChiaroWidgetReceiver : GlanceAppWidgetReceiver() {
             runCatching { ServiceLocator.widgetCityStore(appContext).forget(appWidgetIds) }
             runCatching { WidgetLookStore.get(appContext).forget(appWidgetIds) }
             runCatching { ArcSettingsStore.get(appContext).forget(appWidgetIds) }
+        }
+    }
+
+    /**
+     * A backup restored onto a new phone (18 ott 2026): the launcher puts the widgets back
+     * under new ids, and the pin, the look and the arc's settings move with them. The
+     * three stores are in the backup (`data_extraction_rules.xml`), and until this was
+     * overridden they came back filed under ids nothing was bound to: every restored
+     * widget lost its settings, and a new widget handed one of the old numbers inherited
+     * somebody else's.
+     */
+    override fun onRestored(context: Context, oldWidgetIds: IntArray, newWidgetIds: IntArray) {
+        super.onRestored(context, oldWidgetIds, newWidgetIds)
+        val appContext = context.applicationContext
+        scope.launch {
+            runCatching { ServiceLocator.widgetCityStore(appContext).remap(oldWidgetIds, newWidgetIds) }
+            runCatching { WidgetLookStore.get(appContext).remap(oldWidgetIds, newWidgetIds) }
+            runCatching { ArcSettingsStore.get(appContext).remap(oldWidgetIds, newWidgetIds) }
+            runCatching { ChiaroWidgets.updateAll(appContext) }
         }
     }
 }

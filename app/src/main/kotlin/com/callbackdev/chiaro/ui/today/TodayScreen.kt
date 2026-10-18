@@ -456,51 +456,26 @@ internal fun ContentState(
     // The status bar shows what is behind it, and what is behind it is this bar: the sky at
     // rest, white icons; the page once scrolled, the theme's.
     LaunchedEffect(isCurrent, atTop) { if (isCurrent) onCanvasBehindBar(atTop) }
-    // The hero is gone once the canvas' bottom has climbed to within [HeroReach] of the
-    // bar: past that line the temperature is under the bar or above the screen. Under reduced
-    // motion this is what brings the bar's own number in, with a fade.
+    // The hero is gone once its number's middle has gone under the bar (DESIGN §8.1e, 18 ott
+    // 2026): the canvas measures where the number rests, and the rest is arithmetic on the
+    // scroll. The bar's own icon and number then come in on a timed transition, the same with
+    // or without reduced motion, so the bar holds the number or does not and never a half of
+    // it. Until the figure is measured, the canvas' bottom climbing to within [HeroReach] of
+    // the bar stands in for it.
+    val figure = remember { HeroFigure() }
     val heroGone by remember {
         derivedStateOf {
-            val first = listState.layoutInfo.visibleItemsInfo.firstOrNull() ?: return@derivedStateOf false
-            first.index > 0 ||
-                first.offset + first.size < with(density) { (headerHeight + HeroReach).roundToPx() }
+            val barBottom = with(density) { headerHeight.toPx() }
+            if (figure.measured) {
+                heroUnderBar(listState.canvasTop(), figure.rest, figure.size, barBottom)
+            } else {
+                val first = listState.layoutInfo.visibleItemsInfo.firstOrNull() ?: return@derivedStateOf false
+                first.index > 0 ||
+                    first.offset + first.size < with(density) { (headerHeight + HeroReach).roundToPx() }
+            }
         }
     }
-
-    // The hero's number travels into the bar (DESIGN §8.1e, 15 ott 2026): one figure, drawn
-    // over the page, whose place is arithmetic on the scroll. Not under reduced motion, where
-    // a figure that shrinks and slides across the screen is the kind of movement the setting
-    // asks to be spared: there the number scrolls away with the sky and the bar's own fades in.
-    val dock = if (reduced) null else remember { HeroDock() }
-    val heroType = heroStyle()
-    val barType = MaterialTheme.typography.titleLarge
-    val endScale = barType.fontSize.value / heroType.fontSize.value
     var pageWidth by remember { mutableStateOf(0) }
-    val pose: () -> HeroPose = {
-        val d = dock!!
-        with(density) {
-            val barBottom = headerHeight.toPx()
-            heroPose(
-                itemTop = listState.canvasTop(),
-                rest = d.rest,
-                dock = dockSlot(
-                    pageWidth = pageWidth.toFloat(),
-                    statusBottom = statusTop.toPx(),
-                    barBottom = barBottom,
-                    numberWidth = d.size.width.toFloat(),
-                    numberHeight = d.size.height.toFloat(),
-                    endScale = endScale,
-                    endInset = (HeaderEndPadding + GearBox).toPx()
-                ),
-                trigger = barBottom + HeroTrigger.toPx(),
-                travel = HeroTravelDistance.toPx(),
-                endScale = endScale
-            )
-        }
-    }
-    val travelling = dock != null && dock.measured && pageWidth > 0
-    val docking by remember(travelling, endScale) { derivedStateOf { travelling && pose().progress > 0f } }
-    val docked by remember(travelling, endScale) { derivedStateOf { travelling && pose().progress >= 1f } }
 
     // Which day of the week is open, hoisted out of the week because the week is no
     // longer one composable: each row is its own lazy item (8 set 2026), so the seven
@@ -694,7 +669,7 @@ internal fun ContentState(
         ) {
             item {
                 CanvasHeader(
-                    content, skyGradient, units, timeFmt, locale, headerHeight, dock,
+                    content, skyGradient, units, timeFmt, locale, headerHeight, figure,
                     columns = columns,
                     railInset = railInset
                 )
@@ -849,27 +824,15 @@ internal fun ContentState(
             onOpenSettings = onOpenSettings,
             contentColor = headerInk,
             dotInactive = headerDotInk,
-            compactVisible = if (travelling) docking else heroGone,
-            compactInstant = travelling,
+            compactVisible = heroGone,
             compact = {
                 // Whole degrees, like every other temperature below the hero: the bar is a
                 // reminder of the number, and the tenths would cost the place's name its room.
-                val temperature = Formats.temperature(content.report.current.tempC, units.temperature, locale)
-                val glyph = ConditionGlyph(content.report.current.condition.wmoCode, content.night)
-                if (travelling) {
-                    with(density) {
-                        DockedNow(
-                            temperature = temperature,
-                            glyph = glyph,
-                            numberWidth = (dock!!.size.width * endScale).toDp(),
-                            numberHeight = (dock.size.height * endScale).toDp(),
-                            progress = { pose().progress },
-                            docked = docked
-                        )
-                    }
-                } else {
-                    CompactNow(temperature = temperature, glyph = glyph, color = headerInk)
-                }
+                CompactNow(
+                    temperature = Formats.temperature(content.report.current.tempC, units.temperature, locale),
+                    glyph = ConditionGlyph(content.report.current.condition.wmoCode, content.night),
+                    color = headerInk
+                )
             },
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -884,17 +847,6 @@ internal fun ContentState(
                 .padding(start = LocalRailInset.current)
                 .padding(HeaderPadding)
         )
-        // Over the bar, so the docked figure stands on the bar's ground.
-        if (travelling) {
-            TravellingNumber(
-                text = Formats.temperature(content.report.current.tempC, units.temperature, locale),
-                style = heroType,
-                pose = pose,
-                barBottom = { with(density) { headerHeight.toPx() } },
-                barInk = headerInk,
-                skyInk = SkyPalette.Ink
-            )
-        }
     }
     }
 }

@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.callbackdev.chiaro.data.moveWidgetKeys
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -212,6 +213,15 @@ class ArcSettingsStore(private val dataStore: DataStore<Preferences>) {
         dataStore.edit { prefs ->
             appWidgetIds.forEach { id ->
                 ArcSettingsCodec.keys.forEach { key -> prefs.remove(key(id, key)) }
+            }
+        }
+    }
+
+    /** A restore's new ids, as [com.callbackdev.chiaro.widget.WidgetLookStore.remap]. */
+    suspend fun remap(oldIds: IntArray, newIds: IntArray) {
+        dataStore.edit { prefs ->
+            prefs.moveWidgetKeys(oldIds, newIds) { old, new ->
+                ArcSettingsCodec.keys.forEach { field -> move(key(old, field), key(new, field)) }
             }
         }
     }

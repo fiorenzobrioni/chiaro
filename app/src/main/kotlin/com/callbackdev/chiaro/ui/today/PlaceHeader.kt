@@ -1,9 +1,5 @@
 package com.callbackdev.chiaro.ui.today
 
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.EnterTransition
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.animation.AnimatedVisibility
@@ -67,9 +63,8 @@ internal val HeaderVerticalPadding = 8.dp
 /** The air the place target's ripple has around its text, taken from [HeaderPadding]. */
 internal val PlaceTargetInset = 8.dp
 
-/** The bar's end padding, and the gear's box beside it: the docked number's right edge. */
+/** The bar's end padding. */
 internal val HeaderEndPadding = 16.dp
-internal val GearBox = 48.dp
 
 /** The place row's padding: the page's 16 at the end, where the gear's own 48dp box carries
  * its air, and 16 less the place target's inset at the start, so the name stands on the
@@ -146,9 +141,6 @@ internal fun PlaceHeader(
     dotInactive: Color,
     modifier: Modifier = Modifier,
     compactVisible: Boolean = false,
-    /** The compact slot appears and goes at once: its content moves with the scroll itself
-     * (the travelling number, DESIGN §8.1e), and a fade of its own would lag the finger. */
-    compactInstant: Boolean = false,
     compact: (@Composable () -> Unit)? = null
 ) {
     val spoken = if (isGps) stringResource(R.string.header_gps_desc, title) else title
@@ -246,14 +238,10 @@ internal fun PlaceHeader(
         compact?.let { now ->
             AnimatedVisibility(
                 visible = compactVisible,
-                enter = if (compactInstant) EnterTransition.None else {
-                    fadeIn(ChiaroMotion.effects(reducedMotion())) +
-                        slideInVertically(ChiaroMotion.spatial(reducedMotion())) { it / 2 }
-                },
-                exit = if (compactInstant) ExitTransition.None else {
-                    fadeOut(ChiaroMotion.effects(reducedMotion())) +
-                        slideOutVertically(ChiaroMotion.spatial(reducedMotion())) { it / 2 }
-                }
+                enter = fadeIn(ChiaroMotion.effects(reducedMotion())) +
+                    slideInVertically(ChiaroMotion.spatial(reducedMotion())) { it / 2 },
+                exit = fadeOut(ChiaroMotion.effects(reducedMotion())) +
+                    slideOutVertically(ChiaroMotion.spatial(reducedMotion())) { it / 2 }
             ) { now() }
         }
         // The gear of VISION §5.1: settings are visited once a month, so they get an
@@ -270,16 +258,18 @@ internal fun PlaceHeader(
 
 /**
  * The hero in the bar (DESIGN §8.1b, 23 set 2026): the sky's icon and the temperature,
- * shown once the canvas has scrolled away. One announcement, the same number the hero
- * says; the icon is the still drawing, because the bar is where the eye rests while the
- * page moves under it.
+ * shown once the hero's number has gone under the bar (§8.1e). One announcement, the same
+ * number the hero says; the icon is the still drawing, because the bar is where the eye rests
+ * while the page moves under it.
  */
 @Composable
 internal fun CompactNow(temperature: String, glyph: ConditionGlyph, color: Color) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.padding(start = 8.dp)
+        modifier = Modifier
+            .padding(start = 8.dp)
+            .clearAndSetSemantics { contentDescription = temperature }
     ) {
         CompositionLocalProvider(LocalMotionPaused provides true) {
             com.callbackdev.chiaro.ui.icons.ConditionIcon(glyph = glyph, modifier = Modifier.size(32.dp))
@@ -288,40 +278,6 @@ internal fun CompactNow(temperature: String, glyph: ConditionGlyph, color: Color
             text = temperature,
             style = MaterialTheme.typography.titleLarge.tabular(),
             color = color
-        )
-    }
-}
-
-/**
- * The bar's slot for the travelling number (DESIGN §8.1e, 15 ott 2026): the sky's icon, coming
- * in as the number arrives ([progress]), and the room the docked number lands in, as wide and
- * tall as the hero's figure at [scale]. The number itself is drawn over the page by
- * `TravellingNumber`; this slot is what TalkBack hears once it has docked, the same number
- * the hero says.
- */
-@Composable
-internal fun DockedNow(
-    temperature: String,
-    glyph: ConditionGlyph,
-    numberWidth: Dp,
-    numberHeight: Dp,
-    progress: () -> Float,
-    docked: Boolean
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.padding(start = 8.dp)
-    ) {
-        Box(modifier = Modifier.size(32.dp).graphicsLayer { alpha = progress() }) {
-            CompositionLocalProvider(LocalMotionPaused provides true) {
-                com.callbackdev.chiaro.ui.icons.ConditionIcon(glyph = glyph, modifier = Modifier.fillMaxSize())
-            }
-        }
-        Box(
-            modifier = Modifier
-                .size(numberWidth, numberHeight)
-                .clearAndSetSemantics { if (docked) contentDescription = temperature }
         )
     }
 }
