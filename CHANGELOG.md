@@ -152,6 +152,11 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **The temperature no longer stops halfway into the top bar.** Scrolling Today used to slide
+  and shrink the big temperature into the bar a little at a time, so a page scrolled only a bit
+  left it half-shrunk across the bar's edge. Now it scrolls away with the sky, and the moment it
+  goes under the bar the bar shows the temperature and the sky's icon together, with a short
+  fade.
 - **Closing a day of the week no longer crashes the app**, and an open day's temperature bar
   shows its whole scale again instead of only the coloured part.
 - **Smoother scrolling through a day's hours.** Dragging the hours of an open day now holds all

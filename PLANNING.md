@@ -14575,3 +14575,42 @@ e Stati Uniti) e andrà ripensato solo se la copertura si allargasse a uno di qu
 **Come è stato verificato.** `WeatherRecencyTest` (la notte del cambio d'ora), `WidgetCityStoreTest`
 (spostamento con id sovrapposti, riga del cielo inclusa, niente resta sotto l'id vecchio),
 `WidgetLookStoreTest` (gli aspetti seguono i widget). Suite completa.
+
+## La temperatura non viaggia più nella barra (committente, 18 ott 2026)
+
+**La richiesta.** «Se scorri solo poco la temperatura rimane a metà strada e sta male»: togliere il
+viaggio della cifra nella barra (DESIGN §8.1e, 15 ott) e farla comparire come l'icona del cielo.
+
+**Perché.** La posa era una funzione continua dello scorrimento senza un riposo fra i due capi, e i
+96 dp della corsa cadevano dove ci si ferma a leggere (la frase, massima e minima): lo stato a metà,
+la cifra rimpicciolita a cavallo del bordo in due inchiostri, era quello che si vedeva di più. Anche
+l'icona della barra entrava con un'alfa proporzionale allo scorrimento, e restava a metà allo stesso
+modo.
+
+**Cosa è cambiato.**
+
+- La cifra resta nel cielo e scorre via con lui; non c'è più una copia disegnata sopra la pagina
+  (`TravellingNumber`, `heroPose`, `dockSlot`, `DockedNow` tolti).
+- Una sola soglia, `heroUnderBar`: la metà della cifra passa sopra il bordo inferiore della barra.
+  Il canvas misura una volta dove la cifra riposa (`HeroFigure`), il resto è aritmetica sullo
+  scorrimento. Prima della misura vale la soglia di prima (`HeroReach`, 120 dp).
+- Superata la soglia, icona e numero della barra (`CompactNow`) entrano insieme con la dissolvenza e
+  il mezzo scorrimento della molla `effects`/`spatial`, ed escono allo stesso modo: due stati, a tempo,
+  mai una via di mezzo. Lo stesso con il movimento ridotto (dove sono la dissolvenza di 100 ms di §7).
+- Un solo annuncio per TalkBack nella barra, la temperatura (`clearAndSetSemantics` su `CompactNow`).
+
+**Decisioni e deviazioni.** *La soglia a metà cifra*, non al suo primo pixel sotto la barra (il
+numero piccolo comparirebbe mentre il grande è quasi tutto visibile, due copie a schermo) né
+all'ultimo (un tratto senza temperatura da nessuna parte). *Nessun aggancio dello scorrimento* (far
+finire la pagina a uno dei due capi): avrebbe tolto lo stato a metà spostando la pagina sotto il dito
+del lettore, che è peggio. *Persa la continuità del movimento*: la tiene il momento e il posto, il
+numero piccolo entra mentre il grande passa sotto, accanto all'icona dove l'occhio già lo cerca.
+
+**Come è stato verificato.** `HeroInBarTest` (nuovo, al posto di `HeroTravelTest`): a riposo la cifra
+è nel cielo, passa sotto la barra quando la sua metà ne supera il bordo e non un pixel prima, torna nel
+cielo trascinando indietro, col canvas uscito è sotto la barra; il tetto del 130% del testo. Il test di
+TalkBack in `TodayAgendaTest`. Una sequenza di scorrimento (60, 100, 130, 150, 170, 200, 300 dp)
+disegnata sul Milano e guardata fotogramma per fotogramma: a 100 dp la barra è vuota, da 130 icona e
+numero interi. Le immagini `today-day`, `today-week`, `today-details` rigenerate e guardate (il numero
+della barra ora è il `titleLarge` vero, non la cifra da 88 sp rimpicciolita); `today-now` identica al
+pixel. Suite completa e lint.

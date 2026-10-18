@@ -296,8 +296,8 @@ forecast's alerts, ready-made and the reader's own, on the right. DESIGN §8.12c
 The spine of the product, one vertical scroll, in this order:
 
 1. **The canvas**: place, current temperature, condition, the day's high and low, feels-like, the
-   daylight ribbon, and the headline sentence (§3.3). Scrolled, the temperature travels into the
-   pinned bar and stays there (15 ott 2026).
+   daylight ribbon, and the headline sentence (§3.3). Scrolled, the temperature goes under the
+   pinned bar and the bar shows it, with the sky's icon (18 ott 2026).
 2. **A freshness chip** when, and only when, it matters: "Updated 3 hours ago" in amber, tappable to
    retry. Pull to refresh; no FAB on this screen, because the app refreshes itself.
 3. **Next hours**: a horizontal strip on a card of its own, the hour we are in («Now») and the

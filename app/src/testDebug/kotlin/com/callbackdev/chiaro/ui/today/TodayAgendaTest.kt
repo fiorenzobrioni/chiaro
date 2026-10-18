@@ -178,9 +178,8 @@ class TodayAgendaTest {
         ).assertCountEquals(1)
     }
 
-    /** The number docked in the bar is what TalkBack hears there (DESIGN §8.1e): the figure
-     * drawn over the page is silent, and the bar's slot says the temperature once it has
-     * landed. */
+    /** The bar's number is what TalkBack hears there once the hero's has gone under it
+     * (DESIGN §8.1e): one announcement, the icon beside it silent. */
     @Test
     fun `scrolled to the end, the bar says the temperature`() {
         show()
