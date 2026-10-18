@@ -68,14 +68,17 @@ class WidgetCityStore(private val dataStore: DataStore<Preferences>) {
      * land on whichever widget inherited that number. One edit, and the moves are
      * snapshotted first: old and new sets can overlap (1→2 while 2→3), so removing
      * as we go would clobber a value we still need.
+     *
+     * The sky line moves with the pin (18 ott 2026), for the reason [forget] takes both:
+     * left under the old id it is an orphan, and the next widget handed that id inherits it.
+     * Called from the receivers' `onRestored`, which until that day nothing overrode.
      */
     suspend fun remap(oldIds: IntArray, newIds: IntArray) {
         dataStore.edit { prefs ->
-            val moved = oldIds.zip(newIds).mapNotNull { (old, new) ->
-                prefs[key(old)]?.let { new to it }
+            prefs.moveWidgetKeys(oldIds, newIds) { old, new ->
+                move(key(old), key(new))
+                move(skyKey(old), skyKey(new))
             }
-            oldIds.forEach { prefs.remove(key(it)) }
-            moved.forEach { (id, cityId) -> prefs[key(id)] = cityId }
         }
     }
 

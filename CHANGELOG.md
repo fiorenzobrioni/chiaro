@@ -173,6 +173,12 @@ sections are a normal size and live here alone.
   or for an alert you deleted, is cleaned up at the next update; the offline copy of a place
   you follow is never thrown away to make room, whatever the number of places; and the copies
   kept for places you passed through are capped.
+- **Widgets keep their settings on a new phone.** After a backup is restored, each widget
+  comes back with its own place, look and arc settings instead of the defaults, and nothing is
+  left behind under the old phone's widget numbers.
+- **The right hour the night the clocks go back.** During the repeated hour (02:00 to 03:00 on
+  the last Sunday of October in Europe) Today's current hour and the hours strip were one hour
+  behind: the first 02:00, already over, was still read as the present.
 
 ## [1.1.0] - 2026-10-01
 

@@ -103,6 +103,26 @@ class WeatherRecencyTest {
     }
 
     @Test
+    fun `the night the clock falls back, the first 02 00 is over during the second`() {
+        // Rome, 25 Oct 2026: 03:00 CEST is 02:00 CET, so two rows say 02:00. The rows are
+        // built the way the mapper builds them, one per instant, labelled on the city's clock.
+        val start = Instant.parse("2026-10-24T22:00:00Z") // 00:00 CEST
+        val hours = List(6) { i ->
+            val at = start.plusSeconds(3600L * i)
+            HourlyForecast(LocalDateTime.ofInstant(at, rome), at, 20.0, WeatherCondition(0), 0, 0)
+        }
+        val report = report().copy(hourly = hours)
+        assertEquals(2, hours.count { it.time == LocalDateTime.parse("2026-10-25T02:00") })
+
+        // 02:30 CET, the second time the clock reads 02:30.
+        val trimmed = WeatherRecency.trim(report, Instant.parse("2026-10-25T01:30:00Z"))
+
+        assertEquals(Instant.parse("2026-10-25T01:00:00Z"), trimmed.hourly.first().at)
+        assertEquals(LocalDateTime.parse("2026-10-25T02:00"), trimmed.hourly.first().time)
+        assertEquals(3, trimmed.hourly.size)
+    }
+
+    @Test
     fun `a report still reaching the present covers now, one past its horizon does not`() {
         assertTrue(WeatherRecency.coversNow(report(), at("2026-08-27T09:30")))
         // 48 hourly slots from 06:00 on the 26th end at 05:00 on the 28th

@@ -106,6 +106,33 @@ class WidgetCityStoreTest {
     }
 
     @Test
+    fun `a restore moves the pin and the sky line to the new ids, overlaps included`() = runBlocking {
+        // 1→2 while 2→3: moving key by key would let the first move overwrite the second's
+        // value before it was read.
+        val store = store()
+        store.pin(1, turinId)
+        store.pin(2, romeId)
+        store.setSkyLine(1, enabled = true)
+
+        store.remap(oldIds = intArrayOf(1, 2), newIds = intArrayOf(2, 3))
+
+        assertEquals(mapOf(2 to turinId, 3 to romeId), store.current())
+        assertEquals(setOf(2), store.currentSkyLine())
+    }
+
+    @Test
+    fun `a restore leaves nothing under an old id`() = runBlocking {
+        val store = store()
+        store.pin(5, turinId)
+        store.setSkyLine(5, enabled = true)
+
+        store.remap(oldIds = intArrayOf(5), newIds = intArrayOf(9))
+
+        assertEquals(mapOf(9 to turinId), store.current())
+        assertEquals(setOf(9), store.currentSkyLine())
+    }
+
+    @Test
     fun `the pinned flow reports the map after a pin`() = runBlocking {
         // The updater observes `pinned` rather than polling, so the edit must reach the flow
         val store = store()

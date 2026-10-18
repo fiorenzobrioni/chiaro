@@ -1,8 +1,9 @@
 package com.callbackdev.chiaro.domain
 
+import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
+import java.time.Duration
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 
 /**
  * Which part of a report is still about NOW (Fase 17).
@@ -31,13 +32,17 @@ object WeatherRecency {
      * The current hour is KEPT: it is the slot `current_conditions` and every engine
      * read at fetch time, and both renderers drop it themselves ([WeatherReport]'s
      * `hourly[0]` is "the hour we are in" by contract).
+     *
+     * An hour is over when its END has passed, read off [HourlyForecast.at] and not off
+     * its label (18 ott 2026). The label is not an identity: the night a zone falls back
+     * two rows say 02:00, and comparing labels kept the first of them — an hour already
+     * gone — as `hourly[0]` for the whole of the second, so the hero's hour and the strip
+     * were one row late for that hour. The days stay on the place's calendar, which is
+     * what a date is.
      */
     fun trim(report: WeatherReport, now: Instant): WeatherReport {
-        val zone = report.zone()
-        val local = now.atZone(zone).toLocalDateTime()
-        val hour = local.truncatedTo(ChronoUnit.HOURS)
-        val today = local.toLocalDate()
-        val hourly = report.hourly.filterNot { it.time.isBefore(hour) }
+        val today = now.atZone(report.zone()).toLocalDate()
+        val hourly = report.hourly.filter { it.at.plus(HOUR).isAfter(now) }
         val daily = report.daily.filterNot { it.date.isBefore(today) }
         return if (hourly.size == report.hourly.size && daily.size == report.daily.size) {
             report
@@ -58,4 +63,7 @@ object WeatherRecency {
      */
     fun coversNow(report: WeatherReport, now: Instant): Boolean =
         trim(report, now).let { it.hourly.isNotEmpty() && it.daily.isNotEmpty() }
+
+    /** A row is the hour that starts at it. */
+    private val HOUR: Duration = Duration.ofHours(1)
 }
