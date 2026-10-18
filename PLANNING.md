@@ -14457,7 +14457,9 @@ l'unica icona del launcher scritta a mano.
 - **La barra di stato**: il sole con una nuvola davanti, non più l'anello. Il sole da solo è l'icona
   della luminosità di Android; con la nuvola dice «meteo». La prima stesura, con la nuvola fino al
   centro del sole, ne copriva troppo (parere del committente, condiviso): la nuvola è scesa e si è
-  fatta più piccola, copre solo l'angolo in basso a sinistra del sole.
+  fatta piatta, un banco basso sotto un sole più grande che ne copre solo l'angolo in basso a
+  sinistra. Fra le due stesure rimaste (una nuvola piccola e tonda, una piatta) il committente ha
+  scelto la piatta.
 - DESIGN §3.8 e §8 (la riga dell'icona piccola), CLAUDE.md (l'icona è l'output di uno script).
 
 **Come è stato verificato.** Rese dei veri XML (cerchio, squircle, quadrato, 48 px, a tema chiaro e

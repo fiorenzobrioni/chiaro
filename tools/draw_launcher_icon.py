@@ -18,8 +18,8 @@ and it carries the ring's weight, which thin rays did not.
 
 The status-bar icon is not the ring (same review): the system shows it at 24 dp in one ink, and
 the notifications are about the weather, so it is the sun with a cloud in front of it. The sun
-alone is the system's own brightness icon. The cloud sits low and covers only the sun's lower
-left, so the sun stays the larger shape.
+alone is the system's own brightness icon. The cloud is a flat bank low under the sun and covers
+only its lower left, so the sun stays the larger shape.
 
 Re-running this script IS the drawing: ic_launcher_foreground.xml, ic_launcher_monochrome.xml
 and ic_stat_chiaro.xml are its output and are not edited by hand. Only the standard library is
@@ -55,11 +55,12 @@ AMBER_REACH = 7.5  # how far from the sun's centre the amber runs, along the dia
 
 # The status-bar icon, drawn on a 24-unit grid and then fitted into it (STAT_SCALE about the
 # drawing's own middle), so the rays' tips keep a unit of air from the edge.
-STAT_SUN = (14.2, 9.8)
-STAT_SUN_CORE, STAT_RAY_FROM, STAT_RAY_TO, STAT_RAY_WIDTH = 4.0, 6.0, 8.0, 2.0
-# The cloud: a rounded base and two bumps, the right one the taller.
-STAT_CLOUD_BASE = (2.4, 16.0, 15.4, 21.8)  # left, top, right, bottom
-STAT_CLOUD_BUMPS = [(6.6, 16.2, 3.0), (10.4, 15.0, 3.7)]
+STAT_SUN = (13.6, 10.0)
+STAT_SUN_CORE, STAT_RAY_FROM, STAT_RAY_TO, STAT_RAY_WIDTH = 4.4, 6.5, 8.5, 2.1
+# The cloud: a long low base and two shallow bumps, the right one the taller: a flat bank the
+# sun stands on, rather than a heap in front of it (committente's choice).
+STAT_CLOUD_BASE = (2.0, 16.6, 16.0, 22.0)  # left, top, right, bottom
+STAT_CLOUD_BUMPS = [(6.4, 16.8, 2.8), (10.6, 15.8, 3.5)]
 STAT_CUT = 1.4  # the clear band between the cloud and the sun behind it
 STAT_SCALE = 0.92
 

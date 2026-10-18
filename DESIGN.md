@@ -640,9 +640,9 @@ two things: the sun reads as a sun on its path rather than a bead, and the open 
   annulus, gap, sun — because the system reads only alpha and a gradient's alpha is not a shape.
 - **Status-bar icon** (`ic_stat_chiaro`, 18 ott 2026): not the ring, the sun with a cloud low in
   front of it. The notifications are about the weather, and the sun alone is the system's own
-  brightness icon. The cloud covers only the sun's lower left, with a band of air between them,
-  so the sun stays the larger shape (a first drawing, with the cloud up to the sun's middle,
-  hid too much of it).
+  brightness icon. The cloud is a flat bank under the sun and covers only its lower left, with a
+  band of air between them, so the sun stays the larger shape (a first drawing, with the cloud
+  up to the sun's middle, hid too much of it; a smaller, rounder cloud was the other candidate).
 - **Why not the others**: a crescent C of light on blue was the strongest at 24px, but read as a
   moon — the night again, which is what the old badge (a starry crescent over two waves) drew;
   the sun's curve over a horizon read as a letter A below 48px.
