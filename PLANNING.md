@@ -14470,3 +14470,43 @@ app; suite completa e lint; `notification-summary.png` rigenerato, perché mostr
 
 - L'icona sulla Home con due launcher (maschere diverse) e a tema; la barra di stato con una
   notifica vera.
+
+## Gli onboarding della famiglia, resi uniformi (committente, 18 ott 2026)
+
+**La richiesta.** Uniformare gli onboarding delle quattro app nello stile e nella tipografia, senza
+l'icona dell'app nella prima pagina, prendendo Chiaro come modello: niente icona, la sua tipografia,
+niente indicatore di pagina, il suo modo di trattare i permessi. Scelte del committente sul piano:
+pulsanti in basso, i punti di forza della prima pagina alleggeriti (nelle app che li hanno), Saldo
+da cinque a quattro pagine.
+
+**Lo standard di famiglia.** Nessuna immagine; la prima pagina è il nome (`displaySmall`) e la sua
+frase (`titleMedium`); un passaggio è un titolo (`headlineMedium`) e un testo (`bodyLarge`), centrati
+nello spazio sopra i pulsanti; i pulsanti stanno in basso, sempre nello stesso punto (il principale
+pieno, un'alternativa vera contornata, «Non ora» di solo testo, alti almeno 52 dp), con la riga sotto
+il principale in `bodySmall`. Nessun indicatore di avanzamento: il passaggio lo sente chi usa
+TalkBack, sul titolo. I permessi: prima si spiega, poi si chiede; «Non ora» non costa nulla e non
+mostra testi rossi; quando il dialogo non può più comparire, lo stesso pulsante apre le impostazioni;
+la schermata che usa il permesso continua a offrirlo.
+
+**L'indicatore di pagina.** Material non lo impone: è tipico dei caroselli che si sfogliano e dei
+percorsi lunghi. Qui le pagine si avanzano solo con i pulsanti e sono al massimo quattro (cinque in
+Passo solo sui telefoni che chiedono il consiglio sulla batteria).
+
+**Cosa è cambiato in Chiaro** (VISION §5.8, «The frame»).
+
+- I due passaggi in una cornice sola: il testo centrato in alto, i pulsanti in basso, alti almeno
+  52 dp (erano 40, sotto il testo, e si spostavano con la sua lunghezza).
+- Il titolo è il nome nudo (`first_run_title`): con `app_name` una build di prova diceva «Chiaro
+  (dev)».
+- Il secondo passaggio prende la scala del primo: titolo `headlineMedium` (era `headlineSmall`),
+  testo `bodyLarge` (era `bodyMedium`).
+- La posizione negata per sempre: il pulsante diventa «Apri le impostazioni», dove prima la
+  richiesta tornava rifiutata senza dialogo e il pulsante non faceva più nulla; tornando con il
+  permesso dato, la posizione si cerca da sola. Il rifiuto è detto in grigio, l'errore resta per la
+  posizione spenta o il segnale che non arriva.
+- Dal luogo alle notifiche il passaggio scorre ed entra in dissolvenza, come una pagina (solo
+  dissolvenza con l'animazione ridotta); prima era un taglio.
+- TalkBack sente «Passaggio 1 di 2» sul titolo.
+
+**Come è stato verificato.** Rese delle due pagine (chiaro, scuro, testo al doppio) accanto a quelle
+delle altre tre app; suite completa e lint. Nessuno screenshot del README mostra il primo avvio.

@@ -800,7 +800,7 @@ there is no exception.
 | Role | Size / line | Weight | Where |
 |---|---|---|---|
 | `heroTemperature` (extended) | 88 / 88, −0.02em | 700 | the canvas' current temperature; grows with the reader's type to 130% and no further (§8.1a) |
-| `displaySmall` | 36 / 44 | 400 | the app's name on the first run |
+| `displaySmall` | 36 / 44 | 400 | the app's name on the first run (a step's title is `headlineMedium`, its text `bodyLarge`, the line under a button `bodySmall`: VISION §5.8) |
 | `titleLarge` | 22 / 28 | 500 | the sky's word under the hero; a header's name |
 | `titleMedium` | 16 / 24 | 600 | section titles, metric values |
 | `bodyLarge` | 16 / 24 | 400 | the canvas' sentence of the day; a row's name (Today's day, the Sky's moments, Alerts' rows); prose in the guide |
