@@ -14723,3 +14723,179 @@ lint 0 errori; build release minificata con la chiave di debug. Nessuna immagine
 niente a schermo è cambiato. **Da fare sul dispositivo**: un trascinamento allo scoccare di un'ora
 piena (09:00-09:03) deve restituire il report invece di «il servizio non risponde»; una pagina
 lasciata aperta durante un guasto deve guarire da sola entro il quarto d'ora.
+
+## Il cielo premium: la review del motore e i sette passi (committente, 19 ott 2026)
+
+**La richiesta.** Una review del motore grafico che disegna il cielo dell'hero: se è corretto dal
+punto di vista matematico, se ha errori, se l'immagine è realistica, cosa farebbe la differenza per
+un'app di qualità premium, e se vada rifatto con un'altra logica o libreria. Poi: una fase con tutto
+dettagliato, e l'attuazione a partire dai punti 1 e 2 (o solo l'1, se il 2 è complesso).
+
+**Come è stata fatta.** Letti `SkyShader.kt`, `SkyCanvas.kt`, `SkyBodies.kt`, `SkyPalette.kt`, i
+test e DESIGN §3. Lo shader e la scena portati in NumPy, stesse funzioni e stessi numeri, e dodici
+cieli disegnati a 400 × 352 dp (cumuli al 25 e al 50%, coperto basso, velo alto chiuso e al 60%,
+ora d'oro, ora blu, luna piena, stelle, pioggia, neve, sole a est), ognuno nudo e come lo vede il
+lettore con scrim e corpi celesti; `today-now.png` del README, resa dal renderer hardware, conferma
+che il telefono disegna lo stesso cielo del port. Il tempo di GPU per fotogramma resta da misurare
+sul dispositivo, come il passo del 15 ott già annota.
+
+**Il verdetto.** Il motore è matematicamente corretto e **non va rifatto**: uno shader AGSL, la
+scena in Kotlin puro, i test che fissano il rumore riga per riga, il tetto di luminanza sotto lo
+scrim sono l'architettura giusta per Android 13 e oltre, e non c'è una libreria che faccia meglio
+(Filament o Sceneform sono motori 3D da megabyte e thread propri; Lottie o Rive darebbero un cielo
+disegnato a mano, non calcolato, contro §3.1). Quello che tiene la resa sotto il livello premium
+sta nel modello di illuminazione dentro lo shader e nel sole disegnato fuori da esso, e si corregge
+a passi dentro la struttura attuale. Corretto tutto ciò che il codice dichiara: l'hash di Hoskins e
+il value noise, la normalizzazione dell'fbm (0,9375 = la somma delle ampiezze), la rotazione fra le
+ottave ortonormale (36,9°), la sovrapposizione casuale degli strati, il tetto in luminanza lineare,
+l'ellisse del terminatore lunare (semiasse r·|2k−1|, rigonfia dal lato giusto), lo specchio
+dell'emisfero sud, la deriva nel verso del vento, lo stato dell'ora dal motore e non dal codice del
+fornitore.
+
+**Gli errori trovati** (misurati sul port, canvas di 400 × 352 dp):
+
+1. *La luce dello shader non è dove sta il sole disegnato.* Lo shader prende la x su tutta la
+   larghezza e la y fra il 12% e il 50% del canvas; `SkyBodiesLayer` disegna nella propria fascia
+   (80–152 dp) con un inset dell'8%. Distanza fra i due: 19 dp a 35° di altezza, 33 a 10°, 42 a
+   mezzogiorno. Il bordo luminoso delle nuvole è centrato dove il sole non c'è. → passo 2.
+2. *Sole e luna stanno davanti alle nuvole e sopra lo scrim.* Il layer dei corpi è nel Box del
+   contenuto di `SkyCanvas`, dopo lo scrim, e conosce solo l'opacità globale, non l'alfa della
+   nuvola nel suo pixel: al 25% il disco pieno sta sopra un cumulo. Il commento di `glowRadius`
+   dice che lo scrim assorbe la coda dell'alone: non può, lo scrim è sotto. → passo 2.
+3. *Il cielo piovoso è al contrario.* Il colore `lit` non era attenuato dalla pioggia mentre il
+   gradiente sì (§3.3): al 94% di banco e 90% di pioggia nuvole grigio chiaro (luminanza 0,45)
+   sopra varchi blu scuro (0,09–0,30). Un nembostrato è più scuro del cielo attorno. → passo 1.
+4. *Nessun dithering.* Il gradiente notturno va da #0D1323 a #182237: 17 livelli di rosso su una
+   colonna di 1 056 px, bande larghe fino a 110 px. Su un OLED si vede a scalini. → passo 1.
+
+**Le inesattezze fisiche.** I cirri derivavano 1,8 volte più veloci dei cumuli: essendo lontani
+devono muoversi più lenti sullo schermo (parallasse rovesciata) → passo 1. Il clock avvolge ogni
+3 600 s e le nuvole saltano di 3 600 × deriva dp, da 21 600 in su, in un fotogramma → accettato,
+vedi le decisioni. La scelta della luce è binaria (sole se `day` > 0,5, altrimenti luna) e con il
+sole sotto l'orizzonte la y della luce resta a metà canvas: al tramonto le nuvole non sono mai
+illuminate da sotto, che è l'immagine stessa del tramonto → passo 3. La fusione è in spazio gamma:
+al bordo di una nuvola a metà mix la luminanza è 0,537 contro 0,558 in lineare, l'alone grigio
+delle nuvole composte male → passo 1.
+
+**La resa.** Reggono: il coperto (un grigio con pieghe morbide), la notte con la luna, il cielo
+stellato, i cumuli al 25%. Non reggono per un prodotto premium: il sole è un adesivo (disco piatto
+di 22 dp con alone in SRC_OVER, all'ora d'oro un dischetto arancione senza il bagliore di un sole a
+3°); le nuvole sono una parete e non un soffitto (la scala orizzontale del rumore è la stessa in
+cima e in fondo, `persp` schiaccia solo in verticale); l'ombreggiatura pettina le nuvole (una sola
+differenza finita lungo la luce, offset 0,16 e guadagno 4: striature allungate in quella direzione,
+visibili al 50% con il sole a est; nessuna auto-ombra); neve e pioggia sono un pattern (un fiocco per
+cella di 22 dp, mai due vicini, un piano solo; la pioggia graffi sottili a 68 dp/s); le stelle sono
+tutte uguali e non sono quelle del cielo; lo scrim affumica la metà bassa (dal 45% al 93% del canvas
+il nero al 55% rende l'orizzonte, la parte più luminosa di un cielo vero, la più scura dello
+schermo: è il contratto di §3.6 e non un bug, ma è la cosa che più fa sembrare il cielo dietro un
+vetro).
+
+### I sette passi, in ordine di resa per costo
+
+- [x] **1. Luce lineare e dither.** Gli uniform di colore arrivano allo shader in RGB lineare
+  (convertiti in `bindSky` con la curva sRGB esatta), ogni `mix` avviene lì, il tetto è un prodotto
+  scalare esatto, e il pixel torna in sRGB alla fine con la curva esatta più mezzo livello di dither
+  fisso per pixel. Con lo stesso passo le tre correzioni piccole che sono solo colore: le nuvole più
+  scure sotto una pioggia probabile (errore 3), il velo che deriva a metà del banco (parallasse). Un
+  test di pixel (`SkyShaderPixelTest`) disegna lo shader con Skia e lo confronta con l'aritmetica
+  in Kotlin.
+- [ ] **2. Sole e luna dentro lo shader.** Un solo sistema di coordinate (via l'errore 1),
+  occlusione per pixel dall'alfa della nuvola (via l'errore 2), bagliore additivo con un lobo in
+  avanti alla Henyey-Greenstein, il disco piccolo e bruciato, l'alone di 22° sotto un velo alto
+  chiuso (il dato lo dice: strato alto, cirrostrato). La fase della luna resta un disegno in Kotlin
+  (la geometria del terminatore è già giusta) o passa nello shader come maschera; da decidere in
+  attuazione. `SkyBodiesLayer` e la sua fascia (`SkyColumn`) restano solo se serve ancora un layer
+  Compose; `sunVeil` e `moonVeil` restano le regole, i loro test con loro. Immagini del README da
+  rigenerare.
+- [ ] **3. La luce del banco.** Due campioni lungo la direzione della luce (ε e 2ε) per
+  un'auto-ombra che dia spessore; gradient noise al posto del value noise nella derivata, così la
+  striatura lungo la luce sparisce; il contrasto dell'ombreggiatura scalato con la luce disponibile
+  (senza sole né luna le nuvole sono piatte); la y della luce libera di stare sotto il canvas al
+  crepuscolo, così il sottopancia delle nuvole prende l'arancio del tramonto; la scelta sole/luna
+  pesata sulla luce di ciascuno e non binaria. Qui anche il residuo dell'errore 3: lo stop alto del
+  gradiente sotto nuvole e pioggia (§3.3) scende a 0,09 di luminanza, più scuro dell'ombra di
+  qualunque nuvola, e un varco in cima resta un buco scuro; va rivisto nel modello del gradiente,
+  che legge anche il nastro.
+- [ ] **4. La proiezione a piano.** Il banco come un piano a quota h visto da sotto: u = x·k/(y_h −
+  y), v = k/(y_h − y) con l'orizzonte y_h sotto il bordo inferiore, al posto dello schiacciamento
+  verticale di `persp`. Le nuvole rimpiccioliscono e si appiattiscono verso l'orizzonte insieme. La
+  tabella di `deckThreshold` va rimisurata sul nuovo campionamento (`SkyDeckTest`).
+- [ ] **5. Pioggia e neve a tre piani.** Tre strati con scala, velocità e dimensione diverse (vicino
+  grande e veloce, lontano piccolo e lento), ciascuno a celle con hash come ora ma più celle per
+  piano e un'occupazione casuale, così la neve non è un reticolo e la pioggia ha profondità.
+- [ ] **6. Le stelle vere.** `AstronomyEngine` ha già l'effemeride, la fascia del canvas è già una
+  proiezione azimut-altezza (`bodyAcross`, `bodyUp`), e un catalogo delle stelle sopra la terza
+  magnitudine pesa pochi kilobyte: le stelle disegnate sono quelle che ci sono, con la magnitudine
+  nella grandezza. Con lo stesso passo l'angolo del lembo luminoso della luna, calcolabile dalle
+  posizioni di sole e luna (oggi il terminatore è sempre verticale).
+- [ ] **7. Lo scrim**, da decidere con il committente: misurare il contratto di §3.6 sul rettangolo
+  del testo e non su tutta la larghezza (una scrim che sfuma anche in orizzontale), oppure un'ombra
+  morbida sul testo, così la metà bassa del cielo torna chiara. Nessuna delle due è gratis: la prima
+  cambia `ScrimContractTest`, la seconda il modo in cui il contratto si misura.
+
+### Passo 1: luce lineare e dither (19 ott 2026)
+
+**Cosa è cambiato.**
+
+1. *Lo shader compone in luce lineare* (`SkyShaderSource`, `bindSky`). I tre stop del gradiente e
+   i due colori delle nuvole arrivano come RGB lineare (`setLinearColor`, con `toLinear`, la curva
+   sRGB esatta); ogni `mix` dello shader somma luce; il bianco delle stelle è scritto in lineare;
+   il tetto di §3.6 è `dot(col, (0,2126; 0,7152; 0,0722))` confrontato con `uMaxLum`, esatto, al
+   posto della potenza 2,2 sui valori sRGB; alla fine `encode` riporta il pixel in sRGB con la curva
+   a tratti esatta (`12,92·c` sotto 0,0031308, altrimenti `1,055·c^(1/2,4) − 0,055`). Le tre
+   fermate stampano gli stessi numeri di prima; cambia solo quello che sta fra loro, più chiaro
+   della differenza fra i due mix.
+2. *Il dither*: mezzo livello di rumore (`(hash12(fc) − 0,5)/255`) sommato al pixel codificato,
+   un pattern fisso per pixel, così non luccica fra un fotogramma e l'altro. Sulla colonna della
+   notte serena la corsa più lunga di un valore scende da 110 a 41 px e ai punti di mezzo fra due
+   livelli lo shader stampa l'uno e l'altro a metà.
+3. *Le nuvole sotto una pioggia probabile sono più scure* (`skyScene`, `WetLitDim` = 0,25): il
+   colore `lit` scende di un quarto della probabilità in valore sRGB, sotto il 30% che l'ombra già
+   aveva. Sulla scena della review (95% di nuvole, 90% di pioggia, sole a 40°): `lit` da 0,695 a
+   0,479 di luminanza, ombra 0,13; lo stop medio del gradiente (0,174) e quello basso (0,30) stanno
+   fra i due, un varco non è più né un buco né una luce. Lo stop alto (0,092) resta sotto l'ombra:
+   è il modello di §3.3, rimandato al passo 3.
+4. *Il velo deriva a metà del banco* (era 1,8 volte): un cirro è cinque-otto volte più alto di un
+   cumulo e il suo vento due-tre volte più forte, quindi attraversa il cielo più lento.
+5. DESIGN §3.5 (la luce lineare, il dither), §3.9 (il velo, le nuvole bagnate, il tetto esatto).
+
+**Decisioni e deviazioni.** *Anche il gradiente in lineare*, non solo le nuvole: una pipeline
+sola; i tre stop restano quelli di §3.2 e il contratto di §3.6 è misurato sullo stop più chiaro,
+che non si muove; fra due stop un mix lineare ha luminanza fra le due (la luminanza è lineare nei
+canali lineari), quindi mai sopra il tetto. Il fallback software (`Brush.verticalGradient`, dove un
+`RuntimeShader` non si disegna) resta in sRGB: è uno snapshot, non lo schermo. *La curva esatta e
+non la potenza 2,2*: allo stop più scuro della notte (13 su 255) la potenza stamperebbe 21, e la
+notte impallidirebbe. *Il dither sta dentro il contratto*: mezzo livello sopra il tetto, contro un
+margine misurato di 5,27:1 su 4,5. *La precisione `half`* basta: a 0,004 di lineare (la notte) l'ulp
+di fp16 è 4·10⁻⁶, dopo la codifica 5·10⁻⁵, un ventesimo di livello. *Il salto orario del clock è
+accettato*: l'offset delle nuvole deve restare sotto circa 10⁵ dp perché alla quarta ottava
+(coordinate × 0,0105 × 8,4) fp32 tenga la millesima parte di cella, il rumore non è periodico (le
+ottave sono ruotate), e una dissolvenza al cambio raddoppierebbe il banco per due secondi ogni ora;
+il salto si vede solo tenendo Oggi aperta e ferma per un'ora intera. *L'errore 1 (la luce non dove
+sta il sole) non è toccato qui*: si risolve da solo portando i corpi nello shader (passo 2), un
+raccordo provvisorio delle coordinate andrebbe rifatto subito dopo. *Sull'ora d'oro* il mix lineare
+tinge il sottopancia delle nuvole di malva-rosa dove prima era grigio-azzurro: è l'azzurro del
+cielo alto sommato all'arancio dell'orizzonte come luce, ed è il rosa delle nuvole al tramonto;
+tenuto, da guardare sul telefono.
+
+**Da verificare sul telefono.** La grana del dither su OLED (deve essere ferma, mai un luccichio);
+la resa in luce lineare di giorno (nuvole più bianche ai bordi) e all'ora d'oro (il malva); il
+tempo di GPU per fotogramma, con tre `pow` in più per pixel nella codifica.
+
+**Come è stato verificato.** `SkyShaderPixelTest` (nuovo, `testDebug` con la grafica nativa, lo
+shader disegnato da Skia attraverso un `RenderNode` e un `HardwareRenderer` come le immagini del
+README, perché un canvas software rifiuta un `RuntimeShader`): i tre stop stampano i numeri della
+palette entro un livello; fra gli stop ogni pixel di un giorno e di una notte è il mix lineare
+codificato con la curva esatta entro un livello; nelle righe in cui il valore ideale cade a metà
+fra due livelli lo shader stampa l'uno e l'altro, fra il 30 e il 70%; nessun pixel del giorno più
+luminoso supera lo stop del contratto. `SkySceneTest` (nuovo caso): sotto una pioggia probabile il
+colore chiaro scende sotto i tre quarti di quello asciutto, lo stop medio e quello basso del
+gradiente stanno fra ombra e luce, un'ora asciutta è com'era. `SkyDeckTest` fissa ancora le righe
+del banco, che non sono cambiate. Il port NumPy reso prima e dopo su quattro cieli (cumuli al 25%,
+ora d'oro, pioggia, sole a est) e guardato. Immagini del README rigenerate: `today-now`,
+`today-foldable` (la Milano coperta, i bordi delle nuvole più puliti) e `settings` (l'ora d'oro con
+il malva), guardate; `widgets` differiva per 322 px di antialiasing e nessun motivo, ripristinata.
+Suite completa (738 app debug con i 14 screenshot saltati, 694 release, i moduli core invariati) e
+lint con 0 errori. Il salto trovato scrivendo il test di pixel: dentro `RenderNode.apply { }` i
+`width` e `height` del nodo, ancora a zero, nascondono quelli della classe e posizionano un nodo
+senza dimensione, che disegna il nulla; il test li passa come parametri e lo dice.

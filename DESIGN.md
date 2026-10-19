@@ -498,8 +498,17 @@ only worth printing if something fails when it stops being true.
 ### 3.5 Motion and cost
 
 The canvas is **one AGSL shader** since the second review of Today (15 ott 2026): the
-gradient of §3.2–3.4, drawn by the shader exactly as the palette's three stops, and the scene
-of §3.9 over it. It replaced one gradient brush and the rule that went with it — «one shader,
+gradient of §3.2–3.4, drawn by the shader from the palette's three stops, and the scene
+of §3.9 over it. **It composes in linear light** (review of the sky, 19 ott 2026): the stops
+and the clouds' colours reach the shader as linear RGB, every mix happens there, and the
+pixel is encoded back to sRGB at the end by the exact transfer curve, with half a level of
+dither fixed per pixel. Mixed as sRGB values, as it was, the middle of a cloud's edge came out
+darker than the light makes it (0.537 against 0.558 in luminance at half mix over the day
+band's mid stop), the grey rim of clouds composed in gamma space; and without dither the night
+band, seventeen levels of red over the whole height, drew in steps up to 110 px wide on an
+OLED. The three stops themselves are still §3.2's: only what lies between them is lighter by
+the difference between the two mixes, and the brightest stop, the one §3.6 is measured
+against, is where it was. It replaced one gradient brush and the rule that went with it — «one shader,
 one animation, 2 ms a frame, no particles, no parallax» — because a gradient alone was the
 canvas' weakest state on the screen people see most: a grey-blue rectangle at noon under
 cloud. The budget is now written in what a frame may do, and in when there is a frame at all:
@@ -692,10 +701,17 @@ with the parts of it a gradient could not say.
   by night and under a likely rain, and **grey as the deck closes** (16 ott 2026): 80% of the
   way to a grey of its own luminance at a closed deck, because the underside of a stratus is
   lit by the cloud and not by the blue above it. The luminance stays, so the folds and the
-  cap do too.
+  cap do too. **Under a likely rain the lit colour dims as well** (19 ott 2026), by a quarter
+  of the chance in sRGB value against the shade's 30%: the gradient already dimmed under rain
+  (§3.3) and the clouds did not, so a 94% deck at 90% of rain drew light grey clouds with dark
+  blue holes between them, the inverse of a nimbostratus. Now the sky's mid stop lands between
+  the clouds' two colours and a gap is neither a hole nor a light.
 - **Cirrus**, in the **veil**, drawn **before** the deck (16 ott 2026): from the ground a
   cirrus shows through the gaps of the clouds below it, never over them. Streaks stretched
-  7.5 to 1 across the sky while the veil is scattered, drifting faster than the deck below;
+  7.5 to 1 across the sky while the veil is scattered, drifting at **half the deck's speed**
+  (19 ott 2026: a cirrus is five to eight times higher than a cumulus and its wind two or three
+  times stronger, so across the sky it moves slower; at 1.8 times the deck's, as it was, the far
+  layer overtook the near one, a parallax inside out);
   from 60% to 100% (cirrostratus) the stretch relaxes to 4 to 3 and the streaks give way to
   a milky sheet with a soft unevenness, at most 0.6 of the lit colour. Until then the veil
   was the high layer's *share* of the total and drawn over the deck, which also faded by
@@ -723,6 +739,9 @@ with the parts of it a gradient could not say.
   one §3.6 measured white against. The scene is drawn under the scrims like the gradient, and
   with the cap nothing it draws can cost the text its 4.5:1 — the clouds' colours are capped in
   Kotlin too, half a percent under, because an sRGB `Color` is stored at 8 bits and rounds up.
+  In the shader the cap is exact since 19 ott 2026, a dot product on linear values (it was a
+  2.2 power over sRGB values, a touch stricter than the curve); the half level of dither added
+  after it is inside what the contract has to spare, 5.27:1 measured against 4.5 needed.
 
 The sun and the moon (§8.1c) are drawn over the scene as before, with their veils, which read
 the scene's opacity.

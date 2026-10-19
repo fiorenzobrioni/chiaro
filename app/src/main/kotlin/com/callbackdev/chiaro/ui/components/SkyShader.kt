@@ -103,8 +103,13 @@ fun skyScene(
     val golden = smoothstep(14f, 2f, sunAltitudeDeg.toFloat()) * day
     val warmLit = lerp(dayLit, gradient.bottom, 0.65f * golden)
     val nightLit = lerp(gradient.mid, SkyPalette.CloudNight, 0.25f + 0.45f * moonLight)
-    val lit = capLuminance(lerp(nightLit, warmLit, day), maxLum)
     val wet = (precipPct.coerceIn(0, 100) / 100f)
+    // A rain cloud is darker than the sky in its gaps, not lighter (review of the sky, 19 ott
+    // 2026): the gradient dims under a likely rain (§3.3) but the lit colour did not, so a
+    // 94% deck at 90% of rain drew light grey clouds with dark blue holes between them, the
+    // inverse of a nimbostratus. The lit colour now dims by [WetLitDim] of the chance, under
+    // the shade's own 30%, so the sky's mid stop lands between the clouds' two colours.
+    val lit = capLuminance(scale(lerp(nightLit, warmLit, day), 1f - WetLitDim * wet), maxLum)
     // A closed deck is grey (device, 16 ott 2026): the underside of a stratus is lit by the
     // cloud itself, not by the blue above it, and a shade still drawn toward the sky's top
     // stop put blue hollows into a sky the hero called overcast. The hue goes as the deck
@@ -215,6 +220,10 @@ private val DeckThresholds = floatArrayOf(
 /** How far a closed deck's shade goes toward a grey of its own luminance. */
 private const val DeckGrey = 0.8f
 
+/** How much of the lit colour a sure rain takes, in sRGB value: a quarter, against the
+ * shade's 30%, so the folds keep a little of their contrast under a flat wet sky. */
+private const val WetLitDim = 0.25f
+
 /** A colour no brighter than [max] in relative luminance, its hue kept. */
 internal fun capLuminance(color: Color, max: Float): Color {
     val l = color.luminance()
@@ -233,10 +242,12 @@ internal fun grey(color: Color): Color {
     return Color(g, g, g, color.alpha)
 }
 
-private fun toLinear(c: Float): Float =
+/** An sRGB channel as linear light, by the exact transfer curve (the one the shader inverts). */
+internal fun toLinear(c: Float): Float =
     if (c <= 0.04045f) c / 12.92f else Math.pow(((c + 0.055f) / 1.055f).toDouble(), 2.4).toFloat()
 
-private fun toSrgb(s: Float): Float =
+/** Linear light as an sRGB channel: the shader's `encode`, in Kotlin. */
+internal fun toSrgb(s: Float): Float =
     if (s <= 0.0031308f) s * 12.92f else (1.055 * Math.pow(s.toDouble(), 1 / 2.4) - 0.055).toFloat()
 
 private const val CapMargin = 0.995f
@@ -257,10 +268,19 @@ private const val DriftBase = 1.5f
 private const val DriftPerKph = 0.3f
 
 /**
- * The canvas' shader (AGSL). The gradient is drawn here exactly as the palette's three stops
- * (the same interpolation `Brush.verticalGradient` uses), then the scene over it, in this
- * order: stars, cirrus, cumulus, the fall, and last a cap on every pixel's luminance at the
- * palette's brightest stop, which is what keeps §3.6's scrim contract true whatever is drawn.
+ * The canvas' shader (AGSL). The gradient is drawn here from the palette's three stops, then
+ * the scene over it, in this order: stars, cirrus, cumulus, the fall, and last a cap on every
+ * pixel's luminance at the palette's brightest stop, which is what keeps §3.6's scrim contract
+ * true whatever is drawn.
+ *
+ * **It works in linear light** (review of the sky, 19 ott 2026): every colour uniform arrives
+ * as linear RGB ([bindSky] converts the palette's sRGB stops by the exact transfer curve),
+ * every `mix` adds light as light adds, and the pixel is encoded back to sRGB at the very end,
+ * with half a level of dither. Mixed as sRGB values, as it was, the middle of a cloud's edge
+ * came out darker than the light makes it (luminance 0.537 against 0.558 at half mix over the
+ * day band's mid stop): the grey rim of clouds composed in gamma space. And without dither the
+ * night band, seventeen levels of red over the whole height, drew in bands up to 110 px wide.
+ * The luminance cap is exact here, a dot product on linear values, no longer a 2.2 power.
  *
  * The noise is value noise over a hash, four octaves; the cumulus is domain-warped once so it
  * billows rather than blots, and flattens toward the horizon (the bottom of the canvas) as a
@@ -329,9 +349,12 @@ float fbm2(float2 p) {
     return (0.5 * vnoise(p) + 0.25 * vnoise(float2(0.8 * p.x - 0.6 * p.y, 0.6 * p.x + 0.8 * p.y) * 2.03 + float2(11.7, 5.3))) / 0.75;
 }
 
-float lum(half3 c) {
-    half3 l = pow(max(c, half3(0.0)), half3(2.2));
-    return dot(l, half3(0.2126, 0.7152, 0.0722));
+// Linear light back to sRGB, by the exact piecewise curve and not a 2.2 power: at the night
+// band's darkest stop (13 of 255) the power curve would print 21, and the night would pale.
+half3 encode(half3 c) {
+    half3 lo = c * 12.92;
+    half3 hi = 1.055 * pow(max(c, half3(0.0)), half3(1.0 / 2.4)) - 0.055;
+    return mix(lo, hi, step(half3(0.0031308), c));
 }
 
 half4 main(float2 fc) {
@@ -354,7 +377,8 @@ half4 main(float2 fc) {
             float size = 0.55 + (h - 0.88) * 6.0;
             float b = (1.0 - smoothstep(0.0, size, dist)) * twinkle;
             float fade = 1.0 - smoothstep(0.30, 0.80, uv.y);
-            col = mix(col, half3(0.93, 0.95, 1.0), half(b * uStars * fade));
+            // The stars' white (#EDF2FF) as linear light.
+            col = mix(col, half3(0.8469, 0.8900, 1.0), half(b * uStars * fade));
         }
     }
 
@@ -362,9 +386,12 @@ half4 main(float2 fc) {
     // of the clouds below it, never over them. Streaks stretched 7.5 to 1 while it is
     // scattered; as it closes (cirrostratus) the stretch relaxes to 4 to 3 and the streaks give
     // way to a milky sheet with a soft unevenness, which is what a closed high veil looks like.
+    // It drifts at half the deck's speed (19 ott 2026): a cirrus is five to eight times higher
+    // than a cumulus and its wind two or three times stronger, so across the sky it moves
+    // slower, not faster. At 1.8 the far layer overtook the near one, a parallax inside out.
     if (uVeil > 0.01) {
         float closed = smoothstep(0.6, 1.0, uVeil);
-        float2 p = float2((q.x + drift * 1.8) * mix(0.0045, 0.009, closed), q.y * mix(0.034, 0.012, closed) * persp);
+        float2 p = float2((q.x + drift * 0.5) * mix(0.0045, 0.009, closed), q.y * mix(0.034, 0.012, closed) * persp);
         float n = fbm(p + float2(0.0, vnoise(p * float2(2.0, 0.6)) * 0.8));
         float streak = smoothstep(mix(0.82, 0.38, uVeil), 1.0, n);
         float sheet = clamp(0.75 + (n - 0.5) * 0.6, 0.0, 1.0);
@@ -420,11 +447,15 @@ half4 main(float2 fc) {
         col = mix(col, uLit.rgb, half(flake * uSnow * 0.85 * step(0.25, h)));
     }
 
-    float L = lum(col);
+    // The cap (§3.6), exact: luminance is linear in linear light.
+    float L = dot(col, half3(0.2126, 0.7152, 0.0722));
     if (L > uMaxLum) {
-        col = col * half(pow(uMaxLum / L, 1.0 / 2.2));
+        col = col * half(uMaxLum / L);
     }
-    return half4(col, 1.0);
+    // Encoded, then dithered by half a level: a fixed pattern per pixel, so it never shimmers,
+    // and within what the scrim contract has to spare (5.27:1 measured against 4.5 needed).
+    half3 srgb = encode(col) + half((hash12(fc) - 0.5) / 255.0);
+    return half4(clamp(srgb, 0.0, 1.0), 1.0);
 }
 """
 
@@ -494,14 +525,14 @@ internal fun RuntimeShader.bindSky(
     setFloatUniform("uSize", width, height)
     setFloatUniform("uPx", density)
     setFloatUniform("uTime", time)
-    setColor("uTop", gradient.top)
-    setColor("uMid", gradient.mid)
-    setColor("uBottom", gradient.bottom)
+    setLinearColor("uTop", gradient.top)
+    setLinearColor("uMid", gradient.mid)
+    setLinearColor("uBottom", gradient.bottom)
     setFloatUniform("uDeck", scene.deck)
     setFloatUniform("uDeckTh", deckThreshold(scene.deck))
     setFloatUniform("uVeil", scene.veil)
-    setColor("uLit", scene.lit)
-    setColor("uShade", scene.shade)
+    setLinearColor("uLit", scene.lit)
+    setLinearColor("uShade", scene.shade)
     setFloatUniform("uLight", scene.light.x, scene.light.y)
     setFloatUniform("uGlow", scene.glow)
     setFloatUniform("uStars", scene.stars)
@@ -511,10 +542,10 @@ internal fun RuntimeShader.bindSky(
     setFloatUniform("uMaxLum", scene.maxLuminance)
 }
 
-/** A colour as a plain float4 uniform: the shader's colours are sRGB values, like the
- * gradient brush's, never converted by the colour pipeline. */
-private fun RuntimeShader.setColor(name: String, c: Color) =
-    setFloatUniform(name, c.red, c.green, c.blue, c.alpha)
+/** A colour as a plain float4 uniform in linear light: the shader mixes linear values and
+ * encodes the pixel itself, so the colour pipeline never touches these. */
+private fun RuntimeShader.setLinearColor(name: String, c: Color) =
+    setFloatUniform(name, toLinear(c.red), toLinear(c.green), toLinear(c.blue), c.alpha)
 
 private const val DriftFps = 15
 private const val FallingFps = 30

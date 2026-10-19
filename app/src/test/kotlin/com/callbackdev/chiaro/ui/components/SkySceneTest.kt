@@ -169,6 +169,26 @@ class SkySceneTest {
         assertEquals(closed.luminance(), toned.luminance(), 0.01f)
     }
 
+    /**
+     * 19 ott 2026: a rain cloud is darker than the sky in its gaps, not lighter. Before, the
+     * lit colour ignored the rain while the gradient dimmed under it (§3.3), and a 94% deck at
+     * 90% of rain drew light grey clouds over dark blue holes. Now the sky's mid and bottom
+     * stops sit between the clouds' two colours (the top stop stays darker, §3.3's own number).
+     */
+    @Test
+    fun `a likely rain darkens the clouds, and the sky's mid stop sits between their colours`() {
+        val layers = CloudLayers(90, 40, 20)
+        val dry = scene(cloud = 95, layers = layers)
+        val wet = scene(cloud = 95, layers = layers, precip = 90, fall = SkyFall.RAIN)
+        assertTrue(wet.lit.luminance() < dry.lit.luminance() * 0.75f)
+        val sky = SkyPalette.Paper.gradient(40.0, 95, 90)
+        assertTrue(wet.shade.luminance() < sky.mid.luminance())
+        assertTrue(sky.mid.luminance() < wet.lit.luminance())
+        assertTrue(sky.bottom.luminance() < wet.lit.luminance())
+        // A dry hour is as it was.
+        assertEquals(dry.lit, scene(cloud = 95, layers = layers, precip = 0).lit)
+    }
+
     @Test
     fun `a grey keeps its colour's luminance`() {
         val c = Color(0.35f, 0.55f, 0.85f)
