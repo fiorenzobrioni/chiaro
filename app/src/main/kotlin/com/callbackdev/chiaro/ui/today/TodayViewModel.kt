@@ -315,6 +315,8 @@ class TodayViewModel(
             var userRefreshing = false
             var error: TodayError? = null
             var report = repository.cachedReport(city)
+            // How long the tick waits to ask again after a failure (19 ott 2026).
+            val backoff = RefreshBackoff()
             var whatChanged: List<ForecastShift> = emptyList()
             var yesterdayHighC: Double? = null
             var rules: List<com.callbackdev.chiaro.domain.rules.NotificationRule> = emptyList()
@@ -403,6 +405,7 @@ class TodayViewModel(
                 // An automatic fetch has nothing to announce, so it does not even
                 // spend a frame saying it started.
                 if (userAsked) push()
+                backoff.attempting(clock.instant())
                 try {
                     // No `ttl` of its own since 6 set 2026: the repository's
                     // WeatherFreshness.ProviderResolution applies. Handing it the
@@ -410,8 +413,10 @@ class TodayViewModel(
                     // last sync showed that sync's numbers as the present.
                     report = repository.getWeather(city, forceRefresh = userAsked)
                     error = null
+                    backoff.succeeded()
                     refreshChanged()
                 } catch (e: WeatherException) {
+                    backoff.failed()
                     error = when (e) {
                         is WeatherException.NoNetwork -> TodayError.OFFLINE
                         is WeatherException.ApiError,
@@ -499,13 +504,17 @@ class TodayViewModel(
             // on, the next tick re-reads it. Silent, like every automatic fetch, and
             // free when the page is not on screen — this whole flow is cancelled five
             // seconds after the reader leaves it.
+            //
+            // A failed fetch leaves the report exactly that old, so the tick used to ask
+            // again every minute for as long as an outage lasted (19 ott 2026). It now
+            // waits what [RefreshBackoff] says: a minute, then two, four, eight, then the
+            // provider's own quarter of an hour. A pull never waits.
             launch {
                 while (true) {
                     delay(60_000)
-                    val age = report?.let {
-                        Duration.between(it.systemInfo.lastSync, clock.instant())
-                    }
-                    if (age != null && age >= WeatherFreshness.ProviderResolution) {
+                    val now = clock.instant()
+                    val age = report?.let { Duration.between(it.systemInfo.lastSync, now) }
+                    if (age != null && age >= WeatherFreshness.ProviderResolution && backoff.isDue(now)) {
                         fetch(userAsked = false)
                     }
                     // The bulletin ages with the clock the way the report does: past

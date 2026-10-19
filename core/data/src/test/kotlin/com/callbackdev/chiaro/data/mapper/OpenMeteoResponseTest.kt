@@ -47,7 +47,7 @@ class OpenMeteoResponseTest {
     fun `reykjavik - the quarter is not the hour, and both are kept`() {
         val report = map(load("reykjavik"), 64.1466, -21.9426)
         val rain = report.current.precipitation
-        assertEquals(0.4, rain.lastQuarterHourMm, 0.0)
+        assertEquals(0.4, rain.lastQuarterHourMm!!, 0.0)
         assertEquals(Instant.parse("2026-09-24T09:45:00Z"), rain.quarterEndedAt)
         // current.time 09:45; the hours closed by then end at 09:00, 08:00, 07:00.
         assertEquals(
@@ -90,6 +90,34 @@ class OpenMeteoResponseTest {
         assertEquals(4, report.current.uvIndex) // 3.6
     }
 
+    /** 19 ott 2026: the real response with the holes the provider can serve still maps —
+     * the block becomes the forecast for its moment, the day's high its own hours'. */
+    @Test
+    fun `milan full - a null current temperature and a null daily maximum cost nothing the report cannot replace`() {
+        val text = javaClass.getResource("/openmeteo/milan-full-2026-09-24.json")!!.readText()
+        val holed = text
+            // The first numeric `temperature_2m` is the current block's (the units are strings).
+            .replaceFirst(Regex("\"temperature_2m\":-?[0-9.]+"), "\"temperature_2m\":null")
+            .replaceFirst(Regex("\"temperature_2m_max\":\\[-?[0-9.]+"), "\"temperature_2m_max\":[null")
+        assertTrue(holed != text)
+        val forecast = json.decodeFromString(ForecastResponseDto.serializer(), holed)
+        assertNull(forecast.current.temperatureC)
+        assertNull(forecast.daily.temperatureMaxC.first())
+        val report = WeatherReportMapper.map(
+            city = City(1, "Milano", "Lombardia", "Italia", Coordinates(45.4642, 9.19), "Europe/Rome", countryCode = "IT"),
+            forecast = forecast, airQuality = null, fetchedAt = Instant.parse("2026-09-24T10:45:00Z"),
+            responseTimeMs = 1, cacheStatus = CacheStatus.MISS
+        )
+        assertTrue(report.current.estimated)
+        val day = forecast.daily.time.first()
+        val ownHigh = forecast.hourly.time.indices
+            .filter { forecast.hourly.time[it].startsWith(day) }
+            .maxOf { forecast.hourly.temperatureC[it]!! }
+        assertEquals(ownHigh, report.daily.first().highC, 0.0)
+        assertEquals(forecast.daily.temperatureMinC.first()!!, report.daily.first().lowC, 0.0)
+        assertEquals(7, report.daily.size)
+    }
+
     /** P6: the same response with the model's UV missing costs the tile, not the report. */
     @Test
     fun `a null current uv index parses, and maps to no index`() {
@@ -106,7 +134,8 @@ class OpenMeteoResponseTest {
     fun `every served code is in the table`() {
         listOf("reykjavik", "milan", "sydney").map(::load).forEach { f ->
             (f.hourly.weatherCode + f.daily.weatherCode + f.current.weatherCode).forEach {
-                assertTrue("code $it", com.callbackdev.chiaro.domain.WmoCode.of(it) != null)
+                // Served, hence present: a null here would be a hole, not a code.
+                assertTrue("code $it", it != null && com.callbackdev.chiaro.domain.WmoCode.of(it) != null)
             }
         }
     }
@@ -174,7 +203,7 @@ class OpenMeteoResponseTest {
         assertTrue(estimated.estimated)
         val h = forecast.hourly
         val at14 = h.time.indexOf("2026-09-24T14:00")
-        val expected = h.temperatureC[at14] + (h.temperatureC[at14 + 1] - h.temperatureC[at14]) * 0.75
+        val expected = h.temperatureC[at14]!! + (h.temperatureC[at14 + 1]!! - h.temperatureC[at14]!!) * 0.75
         assertEquals(expected, estimated.tempC, 1e-9)
         // Nothing changes on a fresh report.
         assertEquals(false, com.callbackdev.chiaro.domain.CurrentEstimate.apply(report, fetched).current.estimated)

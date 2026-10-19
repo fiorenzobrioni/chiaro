@@ -69,6 +69,14 @@ class WeatherSyncWorker(
             // does: WorkManager's backoff tries again well before the next period.
             widgets?.repaintAll()
             return Result.retry()
+        } catch (e: WeatherException.ApiError) {
+            // A 503 at the peak of the full hour, a 429 on a shared address (19 ott
+            // 2026): the same passing state as a dropped connection, and until then the
+            // one failure that waited out the whole period — up to two hours of alerts
+            // and widgets on old numbers. The request's own fault, any other 4xx, still
+            // waits: it would fail the same way again.
+            widgets?.repaintAll()
+            return if (e.isTransient) Result.retry() else Result.success()
         } catch (e: WeatherException) {
             widgets?.repaintAll()
             return Result.success() // next period is at most one interval away

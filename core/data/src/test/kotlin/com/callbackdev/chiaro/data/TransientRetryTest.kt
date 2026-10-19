@@ -20,8 +20,11 @@ import javax.net.ssl.SSLHandshakeException
 import java.time.Duration
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -97,16 +100,24 @@ class TransientRetryTest {
 
     private val city = City(1, "Milano", "Lombardia", "Italia", Coordinates(45.4642, 9.19), "Europe/Rome")
 
-    private fun http(code: Int) = HttpException(Response.error<Any>(code, "".toResponseBody()))
+    /** An error status, with the body Open-Meteo would put under it when [reason] is given. */
+    private fun http(code: Int, reason: String? = null): HttpException {
+        val body = reason?.let { """{"error":true,"reason":"$it"}""" } ?: ""
+        return HttpException(Response.error<Any>(code, body.toResponseBody("application/json".toMediaType())))
+    }
 
-    private fun repository(api: OpenMeteoForecastApi, dao: WeatherHistoryDao = CountingHistoryDao()) =
-        WeatherRepository(
-            forecastApi = api,
-            airQualityApi = NoAirQuality,
-            geocodingApi = NoGeocoding,
-            historyDao = dao,
-            transientRetryDelay = Duration.ofSeconds(2)
-        )
+    private fun repository(
+        api: OpenMeteoForecastApi,
+        dao: WeatherHistoryDao = CountingHistoryDao(),
+        jitter: Duration = Duration.ZERO
+    ) = WeatherRepository(
+        forecastApi = api,
+        airQualityApi = NoAirQuality,
+        geocodingApi = NoGeocoding,
+        historyDao = dao,
+        transientRetryDelay = Duration.ofSeconds(2),
+        transientRetryJitter = jitter
+    )
 
     @Test
     fun `a 5xx gets one more try, and the second answer is the report`() = runTest {
@@ -133,11 +144,17 @@ class TransientRetryTest {
     }
 
     @Test
-    fun `a 4xx, a 429, an offline phone and a spent call budget are not retried`() = runTest {
+    fun `a 4xx, a 429 on a limit, an offline phone and any timeout are not retried`() = runTest {
         listOf(
-            http(400),
+            http(400, "Cannot initialize Float from invalid String value"),
             http(429),
+            http(429, MINUTELY_LIMIT),
+            http(429, "Daily API request limit exceeded. Please try again tomorrow."),
             UnknownHostException("api.open-meteo.com"),
+            // Time already spent (19 ott 2026): a read's or connect's ten or twenty
+            // seconds, the call's thirty — a second try after either never resolves.
+            SocketTimeoutException("read timed out"),
+            SocketTimeoutException("connect timed out"),
             InterruptedIOException("timeout")
         ).forEach { failure ->
             val api = ScriptedForecastApi(listOf(failure), milan)
@@ -159,7 +176,6 @@ class TransientRetryTest {
         listOf(
             SSLHandshakeException("Connection reset"),
             ConnectException("refused"),
-            SocketTimeoutException("read timed out"),
             IOException("unexpected end of stream")
         ).forEach { failure ->
             val api = ScriptedForecastApi(listOf(failure), milan)
@@ -167,6 +183,65 @@ class TransientRetryTest {
             assertEquals("$failure", 2, api.calls)
             assertEquals("Europe/Rome", report.location.timezone)
         }
+    }
+
+    /** The one 429 that clears by itself: the address's queue, full for a few seconds. */
+    @Test
+    fun `a 429 for the address's queue gets one more try, a 429 for a limit does not`() = runTest {
+        val queued = ScriptedForecastApi(listOf(http(429, WeatherRepository.CONCURRENCY_LIMIT_REASON)), milan)
+        val report = repository(queued).getWeather(city, forceRefresh = true)
+        assertEquals(2, queued.calls)
+        assertEquals("Europe/Rome", report.location.timezone)
+
+        val limited = ScriptedForecastApi(listOf(http(429, MINUTELY_LIMIT)), milan)
+        try {
+            repository(limited).getWeather(city, forceRefresh = true)
+            fail("expected an ApiError")
+        } catch (e: WeatherException.ApiError) {
+            assertEquals(429, e.code)
+            assertEquals(MINUTELY_LIMIT, e.reason)
+        }
+        assertEquals(1, limited.calls)
+    }
+
+    /** The service's own sentence rides on the error, read off the body once. */
+    @Test
+    fun `the reason the service gives is the error's, and says whether a later try is worth it`() = runTest {
+        val overloaded = "The service is overloaded"
+        val api = ScriptedForecastApi(listOf(http(503, overloaded), http(503, overloaded)), milan)
+        try {
+            repository(api).getWeather(city, forceRefresh = true)
+            fail("expected an ApiError")
+        } catch (e: WeatherException.ApiError) {
+            assertEquals(503, e.code)
+            assertEquals(overloaded, e.reason)
+            assertTrue(e.message!!.contains(overloaded))
+            assertTrue(e.isTransient)
+        }
+        // An empty body, or one that is not Open-Meteo's JSON, is no reason at all.
+        assertNull(WeatherException.ApiError(502).reason)
+        val html = ScriptedForecastApi(listOf(http(400, null)), milan)
+        try {
+            repository(html).getWeather(city, forceRefresh = true)
+            fail("expected an ApiError")
+        } catch (e: WeatherException.ApiError) {
+            assertNull(e.reason)
+            assertFalse(e.isTransient)
+        }
+        assertTrue(WeatherException.ApiError(429).isTransient)
+        assertFalse(WeatherException.ApiError(404).isTransient)
+    }
+
+    /** Two seconds at least, six at most: the floor a restarting node needs, a spread
+     * so that one 503 does not bring every phone back together. */
+    @Test
+    fun `the retry waits two to six seconds, not the same two for everyone`() {
+        val repository = repository(ScriptedForecastApi(emptyList(), milan), jitter = Duration.ofSeconds(4))
+        val waits = List(500) { repository.nextRetryDelay() }
+        assertTrue(waits.all { it >= Duration.ofSeconds(2) && it <= Duration.ofSeconds(6) })
+        assertTrue(waits.distinct().size > 1)
+        val fixed = repository(ScriptedForecastApi(emptyList(), milan), jitter = Duration.ZERO)
+        assertEquals(Duration.ofSeconds(2), fixed.nextRetryDelay())
     }
 
     @Test
@@ -186,5 +261,6 @@ class TransientRetryTest {
 
     private companion object {
         val TRANSIENT = listOf(500, 502, 503, 504)
+        const val MINUTELY_LIMIT = "Minutely API request limit exceeded. Please try again in one minute."
     }
 }

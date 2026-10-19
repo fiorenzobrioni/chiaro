@@ -21,7 +21,10 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WeatherReportMapperTest {
@@ -130,7 +133,7 @@ class WeatherReportMapperTest {
         // which the fixture leaves without one — not 14:00's 40%, which is 13-14's.
         assertNull(current.precipitation.chancePct)
         // `current.precipitation` is the provider's quarter of an hour, named as such.
-        assertEquals(0.5, current.precipitation.lastQuarterHourMm, 0.0)
+        assertEquals(0.5, current.precipitation.lastQuarterHourMm!!, 0.0)
     }
 
     @Test
@@ -1261,5 +1264,118 @@ class WeatherReportMapperTest {
         val nowcast = mapAt(city.copy(countryCode = "US"), series).nowcast!!
         assertEquals(15, nowcast.quarters.size)
         assertEquals(Duration.ofMinutes(30), Duration.between(nowcast.quarters[3].start, nowcast.quarters[4].start))
+    }
+
+    // ---- 19 ott 2026: a null from the model costs the hour, the day's aggregate or the
+    // block it sits in — never the report.
+
+    private fun <T> List<T>.withNullAt(vararg indices: Int): List<T?> =
+        mapIndexed { i, v -> if (i in indices) null else v }
+
+    @Test
+    fun `an hour without a temperature is not a row, and its neighbours keep their places`() {
+        val base = forecast()
+        val holed = base.copy(hourly = base.hourly.copy(temperatureC = base.hourly.temperatureC.withNullAt(16)))
+        val hourly = map(holed).hourly
+        assertEquals(32, hourly.size)
+        assertEquals(listOf(14, 15, 17), hourly.take(3).map { it.time.hour })
+        assertEquals(27.0, hourly[2].tempC, 0.0) // 10 + 17: the row after the gap is its own
+        // The hour that closed without a temperature is not a closed hour either.
+        val past = map(base.copy(hourly = base.hourly.copy(temperatureC = base.hourly.temperatureC.withNullAt(13))))
+            .current.precipitation.pastHours
+        assertEquals(
+            listOf("2026-08-13T18:00:00Z", "2026-08-13T16:00:00Z"),
+            past.map { it.endedAt.toString() }
+        )
+    }
+
+    @Test
+    fun `an hour without a code reads its sky from its cloud, and without either is not a row`() {
+        val base = forecast()
+        val h = base.hourly
+        // Slot 16 loses its code and is overcast by its cloud; slot 18 loses both and is gone.
+        val holed = base.copy(
+            hourly = h.copy(
+                weatherCode = h.weatherCode.withNullAt(16, 18),
+                cloudCoverPct = h.cloudCoverPct.mapIndexed { i, c -> if (i == 16) 95 else c }.withNullAt(18)
+            )
+        )
+        val hourly = map(holed).hourly
+        val at16 = hourly.first { it.time.hour == 16 }
+        assertEquals(3, at16.condition.wmoCode)
+        assertEquals(95, at16.cloudCoverPct)
+        assertEquals(listOf(15, 16, 17, 19), hourly.drop(1).take(4).map { it.time.hour })
+        // Row 17 takes its interval from slot 18, which says nothing: nothing falls, and
+        // the row keeps the sky it starts with.
+        assertEquals(0, hourly.first { it.time.hour == 17 }.condition.wmoCode)
+        // A slot with a cloud but no code is a row; one with a code but no cloud is not.
+        val cloudless = base.copy(hourly = h.copy(cloudCoverPct = h.cloudCoverPct.withNullAt(20)))
+        assertTrue(map(cloudless).hourly.none { it.time.hour == 20 && it.time.dayOfMonth == 13 })
+    }
+
+    @Test
+    fun `a day whose extremes the provider left null takes them from its own hours`() {
+        val base = forecast()
+        val holed = base.copy(
+            daily = base.daily.copy(
+                temperatureMaxC = base.daily.temperatureMaxC.withNullAt(1),
+                temperatureMinC = base.daily.temperatureMinC.withNullAt(1)
+            )
+        )
+        val daily = map(holed).daily
+        assertEquals(7, daily.size) // the week the mapper keeps of the fixture's eight days
+        // 14 Aug is the fixture's hours 24..47 at 10 + index: its own 34 and 57.
+        assertEquals(57.0, daily[1].highC, 0.0)
+        assertEquals(34.0, daily[1].lowC, 0.0)
+        // The provider's aggregates where it gave them.
+        assertEquals(28.0, daily[0].highC, 0.0)
+        assertEquals(18.0, daily[0].lowC, 0.0)
+    }
+
+    @Test
+    fun `a day with no hours to read from either is not a row`() {
+        val base = forecast()
+        // 18 Aug lies past the fixture's 48 hours: without its aggregate it has nothing.
+        val noHigh = base.copy(daily = base.daily.copy(temperatureMaxC = base.daily.temperatureMaxC.withNullAt(5)))
+        val days = map(noHigh).daily
+        assertEquals(6, days.size)
+        assertTrue(days.none { it.date == LocalDate.parse("2026-08-18") })
+        // The same for a label: past the hours the provider's code is all there is.
+        val noCode = base.copy(daily = base.daily.copy(weatherCode = base.daily.weatherCode.withNullAt(6)))
+        assertTrue(map(noCode).daily.none { it.date == LocalDate.parse("2026-08-19") })
+        // Inside the hours a null code changes nothing: the day's label was theirs already.
+        val noCodeToday = base.copy(daily = base.daily.copy(weatherCode = base.daily.weatherCode.withNullAt(0)))
+        assertEquals(61, map(noCodeToday).daily.first().condition.wmoCode)
+    }
+
+    @Test
+    fun `a current block with a hole in it is the forecast for its own moment, and says so`() {
+        val base = forecast()
+        // Rows that carry the rest of an hour, as every fetch since 24 set 2026 does.
+        val whole = base.hourly.copy(
+            apparentTemperatureC = base.hourly.temperatureC.map { it?.plus(1.0) },
+            humidityPct = List(48) { 60 },
+            dewPointC = List(48) { 12.0 },
+            pressureMslHpa = List(48) { 1010.0 },
+            windSpeedKph = List(48) { 8.0 },
+            windDirectionDeg = List(48) { 270 }
+        )
+        val holed = base.copy(hourly = whole, current = base.current.copy(temperatureC = null))
+        val current = map(holed).current
+        assertTrue(current.estimated)
+        // 14:23 between the 14:00 row (24.0) and the 15:00 row (25.0).
+        assertEquals(24.0 + 23.0 / 60.0, current.tempC, 1e-9)
+        assertEquals(60, current.humidityPct)
+        // What the rows cannot replace stays the block's: the quarter's own amount.
+        assertEquals(0.5, current.precipitation.lastQuarterHourMm!!, 0.0)
+        // A whole block is never an estimate, and a block without a code reads its sky
+        // from its cloud like an hour does.
+        assertFalse(map(base.copy(hourly = whole)).current.estimated)
+        val noCode = map(base.copy(hourly = whole, current = base.current.copy(weatherCode = null, precipitationMm = 0.0)))
+        assertFalse(noCode.current.estimated)
+        assertEquals(2, noCode.current.condition.wmoCode) // 60% cloud
+        // Rows from before they carried the rest of an hour cannot stand in: the report
+        // is not built, which is the old failure and the only one left.
+        assertThrows(IllegalStateException::class.java) { map(base.copy(current = base.current.copy(temperatureC = null))) }
     }
 }
