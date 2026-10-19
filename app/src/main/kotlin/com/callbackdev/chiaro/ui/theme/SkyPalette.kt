@@ -1,9 +1,14 @@
 package com.callbackdev.chiaro.ui.theme
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import kotlin.math.abs
 
 /**
@@ -254,7 +259,34 @@ class SkyPalette internal constructor(
          * dots. The selected dot is [Ink]; this one only has to be told apart from it.
          */
         val InkQuiet = Color.White.copy(alpha = 0.4f)
+
+        /**
+         * The halo under every text on the canvas (step 7 of the sky review, 19 ott 2026):
+         * the scrim's own colour at [InkHaloAlpha], blurred by [InkHaloBlur] round the glyphs
+         * and dropped [InkHaloDrop] under them ([skyInkShadow]). Measured on a mock-up of the
+         * hero over the brightest sky, with the contrast read on the pixels just outside the
+         * glyphs: the scrim's 5.27:1 holds where the scrim is full, the ribbon's times, and
+         * every line above sits on its ramp, the 88sp figure at 2.30:1 on a clear noon, under
+         * the 3:1 a large text needs. The halo raises the figure over 3:1 and the lines a
+         * little; a lighter scrim with a halo instead lost the ribbon's times (3.0 to 4.1:1),
+         * because a blur under a 1.5dp stroke keeps a third of its strength. So the scrim
+         * stays as it is and the halo adds to it: function, like the scrim, not decoration.
+         */
+        const val InkHaloAlpha = 0.8f
+        val InkHaloBlur = 3.dp
+        val InkHaloDrop = 1.dp
     }
+}
+
+/** The canvas text's halo as a text shadow, in this density's pixels: [SkyPalette.ScrimColor]
+ * at [alpha], blurred and dropped by [SkyPalette.InkHaloBlur] and [SkyPalette.InkHaloDrop]. */
+@Composable
+fun skyInkShadow(alpha: Float = SkyPalette.InkHaloAlpha): Shadow = with(LocalDensity.current) {
+    Shadow(
+        color = SkyPalette.ScrimColor.copy(alpha = alpha),
+        offset = Offset(0f, SkyPalette.InkHaloDrop.toPx()),
+        blurRadius = SkyPalette.InkHaloBlur.toPx()
+    )
 }
 
 /** The sky table the app is currently painting with, so a composable deep in the tree

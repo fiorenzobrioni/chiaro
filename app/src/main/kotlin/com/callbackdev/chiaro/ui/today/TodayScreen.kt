@@ -453,6 +453,13 @@ internal fun ContentState(
         animationSpec = crossfade,
         label = "place row dots"
     )
+    // The canvas' halo under the row's text while it stands on the sky (DESIGN §3.6, 19 ott
+    // 2026), fading with the ink on the same crossfade so it never pops on or off.
+    val headerHalo by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (atTop) SkyPalette.InkHaloAlpha else 0f,
+        animationSpec = barCrossfade<Float>(reduced),
+        label = "place row halo"
+    )
     // The status bar shows what is behind it, and what is behind it is this bar: the sky at
     // rest, white icons; the page once scrolled, the theme's.
     LaunchedEffect(isCurrent, atTop) { if (isCurrent) onCanvasBehindBar(atTop) }
@@ -824,6 +831,7 @@ internal fun ContentState(
             onOpenSettings = onOpenSettings,
             contentColor = headerInk,
             dotInactive = headerDotInk,
+            shadow = if (headerHalo > 0.01f) com.callbackdev.chiaro.ui.theme.skyInkShadow(headerHalo) else null,
             compactVisible = heroGone,
             compact = {
                 // Whole degrees, like every other temperature below the hero: the bar is a

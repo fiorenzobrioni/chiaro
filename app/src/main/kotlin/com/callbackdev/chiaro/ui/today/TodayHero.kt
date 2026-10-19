@@ -45,6 +45,7 @@ import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.shell.PageColumns
 import com.callbackdev.chiaro.ui.theme.SkyGradient
 import com.callbackdev.chiaro.ui.theme.SkyPalette
+import com.callbackdev.chiaro.ui.theme.skyInkShadow
 import com.callbackdev.chiaro.ui.theme.tabular
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -194,9 +195,13 @@ internal fun CanvasHeader(
                 //
                 // With a [figure] the number also tells the page where it rests, so the bar
                 // knows when it has gone under it (DESIGN §8.1e).
+                // Every line wears the canvas' halo (DESIGN §3.6, step 7 of the sky review,
+                // 19 ott 2026): the figure sat at 2.3:1 on a clear noon, and the deck now
+                // draws white cloud tops under white glyphs.
+                val halo = skyInkShadow()
                 Text(
                     text = Formats.temperature(current.tempC, units.temperature, locale),
-                    style = heroStyle(),
+                    style = heroStyle().copy(shadow = halo),
                     color = SkyPalette.Ink,
                     modifier = if (figure == null) {
                         Modifier
@@ -215,7 +220,7 @@ internal fun CanvasHeader(
                 // own line already leaves air under its digits.
                 Text(
                     text = stringResource(WeatherText.condition(current.condition.wmoCode)),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleLarge.copy(shadow = halo),
                     color = SkyPalette.Ink
                 )
                 // The day's range under the word (15 ott 2026), the number a reader looks for
@@ -247,7 +252,7 @@ internal fun CanvasHeader(
                         text = figures.mapIndexed { i, figure ->
                             if (i == 0) figure else figure.replaceFirstChar { it.lowercase(locale) }
                         }.joinToString(" · "),
-                        style = MaterialTheme.typography.bodyLarge.tabular(),
+                        style = MaterialTheme.typography.bodyLarge.tabular().copy(shadow = halo),
                         color = SkyPalette.Ink,
                         modifier = Modifier.padding(top = HeroLineGap)
                     )
@@ -258,7 +263,7 @@ internal fun CanvasHeader(
                 if (current.estimated) {
                     Text(
                         text = stringResource(R.string.estimate_hero),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium.copy(shadow = halo),
                         color = SkyPalette.Ink,
                         modifier = Modifier.padding(top = HeroLineGap)
                     )
@@ -275,7 +280,7 @@ internal fun CanvasHeader(
                 headlineText(content.headline, timeFmt, units)?.let { sentence ->
                     Text(
                         text = sentence,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyLarge.copy(shadow = halo),
                         color = SkyPalette.Ink,
                         modifier = Modifier.padding(top = HeroGroupGap)
                     )
@@ -294,6 +299,7 @@ internal fun CanvasHeader(
                     RibbonTimes(
                         times = times,
                         color = SkyPalette.Ink,
+                        shadow = halo,
                         modifier = Modifier.padding(top = HeroLineGap)
                     )
                 }
@@ -424,11 +430,17 @@ internal fun ribbonTimes(
 /** Labels placed under the fractions of the width they name, centred there and kept
  * inside the row. */
 @Composable
-internal fun RibbonTimes(times: List<Pair<Float, String>>, color: Color, modifier: Modifier = Modifier) {
+internal fun RibbonTimes(
+    times: List<Pair<Float, String>>,
+    color: Color,
+    modifier: Modifier = Modifier,
+    /** The canvas' halo under the labels, when they stand on the sky. */
+    shadow: androidx.compose.ui.graphics.Shadow? = null
+) {
     androidx.compose.ui.layout.Layout(
         content = {
             times.forEach { (_, text) ->
-                Text(text = text, style = MaterialTheme.typography.labelSmall.tabular(), color = color)
+                Text(text = text, style = MaterialTheme.typography.labelSmall.tabular().copy(shadow = shadow), color = color)
             }
         },
         modifier = modifier

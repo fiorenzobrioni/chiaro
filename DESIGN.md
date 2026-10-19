@@ -565,6 +565,26 @@ secondary line is set apart by its size (`bodyLarge`, `bodyMedium`, `labelSmall`
 (`SkyPalette.InkQuiet`), a mark and not text. `ScrimContractTest` pins both halves: the thinner
 whites fail, and no line under `ui/today/` names a white of its own.
 
+**A halo under every line, and the scrim as it is** (step 7 of the sky review, 19 ott 2026,
+decided on a measurement the committente delegated). The numbers above hold where the scrim
+is full, which is the bottom of the canvas: the ribbon's clock times. Every line above them
+sits on the scrim's ramp, and a mock-up of the hero over the brightest sky, with the contrast
+read on the pixels just outside the glyphs (Roboto, the lines where Today lays them), found
+the 88sp figure at **2.30:1** on a clear noon, the word at 2.85, the lines at 3.27, the times
+at 5.28. A lighter scrim with a blurred halo on the text showed more sky and raised the figure
+to 3.1, but took the times down to 3.0 to 4.1 and the lines with them: under a 1.5dp stroke a
+blur keeps a third of its strength, so the halo helps the big figure and little else. So the
+scrim does not move, and every text on the canvas wears a **halo** besides: the scrim's own
+colour at 0.8, blurred by 3dp, dropped 1dp (`SkyPalette.InkHaloAlpha`, `InkHaloBlur`,
+`InkHaloDrop`, `skyInkShadow`), on the hero's figure, word, lines and clock times, on the
+place row while it stands on the sky (fading with its ink), and on the Settings preview. It
+brings the figure over the 3:1 a large text needs and sets the white glyphs apart from the
+white cloud tops the deck draws since §3.9's self-shadow. Function, like the scrim, not
+decoration; it adds to the contract and replaces none of it, which is why the numbers above
+and `ScrimContractTest` are untouched. The one alternative that would free the lower half of
+the sky, the clock times off the canvas and onto the paper, is a layout decision for the
+committente, not taken here.
+
 Those three numbers are **SRC_OVER in sRGB values** — `scrim × α + sky × (1 − α)`, which
 is what the brush does — held at the 8 bits per channel the framebuffer holds. They were
 re-measured in the Fase 9 pass and two of them moved: the section had quoted 5.29 / 4.58

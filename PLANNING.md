@@ -14828,7 +14828,7 @@ vetro).
   magnitudine pesa pochi kilobyte: le stelle disegnate sono quelle che ci sono, con la magnitudine
   nella grandezza. Con lo stesso passo l'angolo del lembo luminoso della luna, calcolabile dalle
   posizioni di sole e luna (oggi il terminatore è sempre verticale).
-- [ ] **7. Lo scrim**, da decidere con il committente: misurare il contratto di §3.6 sul rettangolo
+- [x] **7. Lo scrim**, deciso sulla misura (vedi sotto); era da decidere con il committente: misurare il contratto di §3.6 sul rettangolo
   del testo e non su tutta la larghezza (una scrim che sfuma anche in orizzontale), oppure un'ombra
   morbida sul testo, così la metà bassa del cielo torna chiara. Nessuna delle due è gratis: la prima
   cambia `ScrimContractTest`, la seconda il modo in cui il contratto si misura.
@@ -15041,3 +15041,49 @@ variante B) reso vecchio contro nuovo su otto cieli. Immagini del README rigener
 `widget-day-arc` (il cielo del widget sotto le nuvole è un filo più piatto: 22 635 px diversi, 17
 livelli al massimo, invisibile; `widgets` identica). Suite completa (748 app debug con i 14 screenshot
 saltati, 700 release, i moduli core invariati) e lint con 0 errori.
+
+### Passo 7: lo scrim, deciso sulla misura (19 ott 2026)
+
+Il committente ha lasciato la decisione a chi scrive, «in base a quello che graficamente è
+migliore». Decisa sulla misura e non sul gusto: un mockup in NumPy e PIL del canvas di Oggi
+(Roboto, le righe dell'hero dove le mette la pagina) sopra il cielo più chiaro, un mezzogiorno
+sereno e uno al 25% di cumuli, con il contrasto letto **sui pixel subito fuori da ogni glifo**, che
+è dove un testo si legge, per quattro gruppi: la cifra, la parola, le righe, gli orari del nastro.
+
+**Cosa ha detto la misura.** Con lo scrim com'è (0,55 in fondo, rampa dal 45% al 93% del canvas),
+senza alone, sul mezzogiorno sereno: cifra **2,30:1** (il pavimento del testo grande è 3), parola
+2,85, righe 3,27, orari del nastro 5,28. Il contratto di §3.6 tiene dove lo scrim è pieno, cioè sugli
+orari in fondo; ogni riga sopra sta sulla rampa. Con uno scrim più leggero (0,30-0,40) più un alone
+sfocato sul testo (2-4 dp, nero al 60-80%): cifra 3,1 (meglio), parola e righe 2,7-2,9 (uguali o
+peggio), orari 3,0-4,1 (**sotto il pavimento**). Con la rampa che parte più in basso (60% o 70%)
+parola e righe peggiorano ancora. L'alone aiuta la cifra, poco i tratti sottili: sotto un tratto di
+1,5 dp una sfocatura lascia un terzo della sua forza.
+
+- [x] **Lo scrim resta com'è**, geometria e alfa: il contratto di §3.6, i suoi numeri e
+  `PaletteDocTest` non si muovono. La metà bassa affumicata è il prezzo del testo piccolo in fondo, e
+  la misura dice che più leggero non si leggerebbe.
+- [x] **Un alone su ogni testo del canvas** (`skyInkShadow`: il colore dello scrim all'80%, sfocato
+  di 3 dp, 1 dp più in basso): la cifra, la parola, le righe e gli orari dell'hero, la riga del luogo
+  quando sta sul cielo, l'anteprima delle Impostazioni. Porta la cifra sopra il 3:1 del testo grande
+  e stacca il bianco del testo dalle cime bianche che il banco del passo 3 ora disegna sotto di esso.
+  È funzione e non decorazione, come lo scrim: aggiunge contrasto, non toglie cielo.
+
+**Decisioni e deviazioni.** *Un'alternativa non presa*: portare gli orari del nastro fuori dal
+cielo, sul foglio di carta sotto, libererebbe lo scrim in fondo fino a circa 0,3 e mostrerebbe la
+metà bassa del cielo; è un cambio di layout dell'hero, da decidere con il committente e non da soli.
+*Il contratto non cambia*: l'alone si somma allo scrim e non lo sostituisce, quindi il caso peggiore
+misurato da `ScrimContractTest` resta quello; la misura sui glifi vive in PLANNING e nello script del
+mockup, perché un test Kotlin che disegni il testo vero sul cielo vero è un lavoro a sé.
+
+**Da verificare sul telefono.** L'alone non deve leggersi come un'ombra: a 3 dp e 80% è un velo
+scuro attorno ai tratti, visibile solo dove il cielo è chiaro; e la cifra su un mezzogiorno sereno.
+
+**Come è stato verificato.** Il mockup (`scrim_mock.py` nello scratchpad della sessione: il cielo del
+port NumPy, Roboto dai font di layoutlib, le righe dove le mette Oggi, il contrasto letto sull'anello
+di pixel subito fuori dai glifi) su otto varianti: scrim com'è; 0,30, 0,35 e 0,40 con alone da 2 a
+4 dp; rampa dal 60% e dal 70% con alone; 0,50 dal 55% con alone. `NoRawColorTest` (l'alone è il
+colore dello scrim, in `ui/theme`), `ScrimContractTest` e `PaletteDocTest` invariati e verdi,
+`HeroInBarTest` e `TodayAgendaTest` con la riga del luogo che prende l'alone. Immagini del README
+rigenerate e guardate: `today-now`, `today-foldable` (la cifra si stacca dalle cime delle nuvole, la
+riga del luogo e gli orari con il velo) e `settings`; le altre identiche. Suite completa (748 app
+debug con i 14 screenshot saltati, 700 release) e lint con 0 errori.

@@ -649,14 +649,16 @@ private fun AppearancePreview(settings: AppSettings) {
                         .align(Alignment.BottomStart)
                         .padding(16.dp)
                 ) {
+                    // With the canvas' halo, as on Today (DESIGN §3.6, 19 ott 2026).
+                    val halo = com.callbackdev.chiaro.ui.theme.skyInkShadow()
                     Text(
                         text = Formats.temperature(PreviewTempC, settings.units.temperature, locale),
-                        style = LocalChiaroType.current.heroTemperature.copy(fontSize = 44.sp, lineHeight = 48.sp),
+                        style = LocalChiaroType.current.heroTemperature.copy(fontSize = 44.sp, lineHeight = 48.sp, shadow = halo),
                         color = SkyPalette.Ink
                     )
                     Text(
                         text = stringResource(com.callbackdev.chiaro.ui.today.WeatherText.condition(PreviewCode)),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium.copy(shadow = halo),
                         color = SkyPalette.Ink
                     )
                 }
