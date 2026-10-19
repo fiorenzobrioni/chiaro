@@ -706,8 +706,17 @@ with the parts of it a gradient could not say.
   `i.x·0.1031 + 0.1031`, rounded twice, while the cell next door hashes the same corner from
   its own `floor`; the hash multiplies that one bit until, once in a few thousand corners, its
   last `fract` crosses a whole number, and the corner has two values. The clouds then carried a
-  wedge with two sharp sides, a third-octave cell's size, that no CPU render showed; in dp so they have the same grain on every screen, and flatter toward
-  the horizon (the canvas' bottom) as a deck is in perspective. **The clouds take the
+  wedge with two sharp sides, a third-octave cell's size, that no CPU render showed; in dp so they have the same grain on every screen. **The deck is a
+  plane seen from below** (step 4 of the sky review, 19 ott 2026): the canvas' rows are
+  elevations, 45° at the top down to 15° at the bottom, and a row's ray meets the plane at
+  1/tan(elevation) of its height, so overhead the clouds are near and big, toward the horizon
+  far, small and flat together, and they drift across the screen 1.7 times faster at the top
+  than at the bottom, the parallax a deck has. Until then the field was only squashed in height
+  toward the bottom, by half, and the clouds were a wall, the same width at the top and at the
+  bottom. The elevations span the canvas whatever its height (a taller canvas sees the same sky
+  with a touch wider cells, never a horizon low enough to alias the noise), the scale is the old
+  one at the middle row, 95 dp a cell, and `deckThreshold`'s table holds on the new sampling,
+  measured on 24 canvases within 0.021 as before. The cirrus keeps its own stretch. **The clouds take the
   deck's share of the canvas** (16 ott 2026, `deckThreshold`, `SkyDeckTest`): the threshold is
   read from a table measured on the shader's own noise (1.8 million points, sixty 400 × 300 dp
   canvases along 100 000 dp of drift) at which the clouds' mean alpha is the deck, every 5%.

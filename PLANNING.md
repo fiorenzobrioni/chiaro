@@ -14816,7 +14816,7 @@ vetro).
   gradiente sotto nuvole e pioggia (§3.3) scende a 0,09 di luminanza, più scuro dell'ombra di
   qualunque nuvola, e un varco in cima resta un buco scuro; va rivisto nel modello del gradiente,
   che legge anche il nastro.
-- [ ] **4. La proiezione a piano.** Il banco come un piano a quota h visto da sotto: u = x·k/(y_h −
+- [x] **4. La proiezione a piano.** Il banco come un piano a quota h visto da sotto: u = x·k/(y_h −
   y), v = k/(y_h − y) con l'orizzonte y_h sotto il bordo inferiore, al posto dello schiacciamento
   verticale di `persp`. Le nuvole rimpiccioliscono e si appiattiscono verso l'orizzonte insieme. La
   tabella di `deckThreshold` va rimisurata sul nuovo campionamento (`SkyDeckTest`).
@@ -15098,3 +15098,47 @@ colore dello scrim, in `ui/theme`), `ScrimContractTest` e `PaletteDocTest` invar
 rigenerate e guardate: `today-now`, `today-foldable` (la cifra si stacca dalle cime delle nuvole, la
 riga del luogo e gli orari con il velo) e `settings`; le altre identiche. Suite completa (748 app
 debug con i 14 screenshot saltati, 700 release) e lint con 0 errori.
+
+### Passo 4: la proiezione a piano (19 ott 2026)
+
+**Cosa è cambiato.** Il banco è un piano a una quota, visto da sotto. Le righe del canvas sono
+elevazioni, 45° in cima e 15° in fondo, e il raggio di una riga incontra il piano a 1/tan(elevazione)
+della sua quota: il campo del rumore si campiona in `((x − cx)·dist/f + deriva·dist_m/f, dist)`, con
+`f` la focale che fa stare quelle elevazioni nell'altezza del canvas e `dist_m` la distanza della riga
+di mezzo (30°, 1,732). Sopra la testa le nuvole sono vicine e grandi, verso l'orizzonte lontane,
+piccole e piatte insieme; e scorrono sullo schermo 1,7 volte più in fretta in cima che in fondo, la
+parallasse di un banco vero. Prima il campo era solo schiacciato in altezza verso il fondo, della
+metà, e le nuvole erano una parete: larghe uguali in cima e in fondo. La scala è quella di prima
+sulla riga di mezzo, 95 dp per cella, e le elevazioni coprono il canvas qualunque sia la sua altezza
+(un canvas più alto vede lo stesso cielo con celle un filo più larghe, mai un orizzonte così basso da
+far scintillare il rumore). I cirri tengono il loro stiramento; pioggia, neve e stelle sono dello
+schermo. DESIGN §3.9.
+
+**Decisioni e deviazioni.** *La tabella delle soglie non si rimisura*: il piano diceva di farlo, ma
+misurata sul nuovo campionamento (24 canvas, come `SkyDeckTest`) l'alfa medio centra la quota del
+banco con uno scarto massimo di 0,021, lo stesso dello schiacciamento di prima, perché i valori del
+campo hanno la stessa distribuzione comunque lo si campioni; cambia la varianza di un canvas solo (in
+cima ci sono poche celle grandi), che è quella di un'occhiata al cielo. *45°–15° e non 55°–20°*:
+resi tutti e due accanto allo schiacciamento attuale su quattro cieli, quasi uguali; il primo dà un
+po' più di cielo. *Le elevazioni legate all'altezza del canvas e non a una focale fissa*: con la
+focale fissa un canvas da 450 dp (testo grande) scenderebbe a 6,6° in fondo, celle di 3 dp e la
+quarta ottava sotto il pixel. *La direzione della luce nel campo resta quella dello schermo*: in
+coordinate del piano «su» è «più vicino», e l'ombreggiatura è una stilizzazione a due dimensioni
+comunque; la rende uguale a prima.
+
+**Da verificare sul telefono.** I cumuli al 25% e al 50%: grandi in alto, una fascia sottile in fondo;
+la deriva più veloce in cima che in fondo; un coperto che recede verso l'orizzonte.
+
+**Come è stato verificato.** Il prototipo NumPy (`skyport4.py`): la tabella delle soglie misurata sul
+nuovo campionamento (24 canvas di 400 × 300 dp, un punto ogni 4 dp, 100 000 dp di deriva) per lo
+schiacciamento attuale e per due coppie di elevazioni, alfa medio contro quota del banco entro 0,021,
+0,021 e 0,023; quattro cieli (25%, 50% col sole a est, ora d'oro, coperto) resi nelle tre versioni e
+guardati. `SkyDeckTest` fissa le cinque righe della proiezione e misura la quota del banco sul port
+rifatto con la stessa aritmetica, entro il 3% dal 10 al 90% come prima; `SkyShaderCompileTest` e
+`SkyShaderPixelTest` verdi (i corpi e il tetto non cambiano). Le rese dello shader vero
+(`CHIARO_RENDER_DIR`) guardate: cumuli grandi in alto e una fascia schiacciata in fondo, sotto
+pioggia e coperto il banco recede verso l'orizzonte, la notte con la luna. Immagini del README
+rigenerate e guardate: `today-now` e `today-foldable` (la Milano coperta recede), `settings`
+(l'ora d'oro su un ritaglio basso, nuvole allungate come si deve); le altre identiche. Suite
+completa (748 app debug con i 14 screenshot saltati, 700 release, i moduli core invariati) e lint con
+0 errori.

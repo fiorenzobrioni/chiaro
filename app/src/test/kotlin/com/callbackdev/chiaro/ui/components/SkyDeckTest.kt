@@ -17,8 +17,11 @@ class SkyDeckTest {
     @Test
     fun `the port is the shader's deck`() {
         listOf(
-            "float persp = mix(1.0, 1.5, uv.y);",
-            "float2 p = float2((q.x + drift) * 0.0105, q.y * 0.0105 * persp);",
+            "float elev = mix(0.7854, 0.2618, uv.y);",
+            "float dist = 1.0 / tan(elev);",
+            "float focal = (uSize.y / uPx) / (0.7854 - 0.2618);",
+            "float2 ground = float2((q.x - 0.5 * uSize.x / uPx) * dist / focal + drift * 1.732 / focal, dist);",
+            "float2 p = ground * (focal / (1.732 * 95.0));",
             "float2 w = float2(fbm2(p * 0.7 + float2(3.1, 7.7)), fbm2(p * 0.7 + float2(9.4, 1.3)));",
             "float2 pw = p + (w - 0.5) * 0.6;",
             // fbmParts is fbm with its two- and three-octave sums handed back: the same n.
@@ -70,12 +73,17 @@ class SkyDeckTest {
         val w = 400
         val h = 300
         val out = ArrayList<Float>(w * h * 24 / 16)
+        // The plane projection, as the shader writes it (step 4, 19 ott 2026): elevations 45°
+        // to 15° down the canvas, the field sampled where the row's ray meets the deck.
+        val focal = h / (0.7854f - 0.2618f)
         for (k in 0 until 24) {
             val drift = k * 4100f
             for (y in 0 until h step 4) for (x in 0 until w step 4) {
-                val persp = 1f + 0.5f * (y.toFloat() / h)
-                val px = (x + drift) * 0.0105f
-                val py = y * 0.0105f * persp
+                val elev = 0.7854f + (0.2618f - 0.7854f) * (y.toFloat() / h)
+                val dist = 1f / kotlin.math.tan(elev)
+                val scale = focal / (1.732f * 95f)
+                val px = ((x - w / 2f) * dist / focal + drift * 1.732f / focal) * scale
+                val py = dist * scale
                 val wx = fbm2(px * 0.7f + 3.1f, py * 0.7f + 7.7f)
                 val wy = fbm2(px * 0.7f + 9.4f, py * 0.7f + 1.3f)
                 out += fbm(px + (wx - 0.5f) * 0.6f, py + (wy - 0.5f) * 0.6f)

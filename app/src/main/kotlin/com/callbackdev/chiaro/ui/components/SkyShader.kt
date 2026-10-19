@@ -555,7 +555,22 @@ half4 main(float2 fc) {
     float deck3 = 0.0;
     float2 deckP = float2(0.0, 0.0);
     if (uDeck > 0.01) {
-        float2 p = float2((q.x + drift) * 0.0105, q.y * 0.0105 * persp);
+        // The deck as a plane at one height seen from below (step 4 of the sky review, 19 ott
+        // 2026). The canvas' rows are elevations, 45° at the top down to 15° at the bottom, and
+        // a row's ray meets the plane at 1 / tan(elevation) of its height: overhead the clouds
+        // are near and big, toward the horizon far, small and flat, together, and they drift
+        // across the screen 1.7 times faster at the top than at the bottom, the parallax a
+        // deck has. Until then the field was only squashed in height toward the bottom, by
+        // half, and the clouds were a wall: the same width at the top and at the bottom. The
+        // elevations span the canvas whatever its height, so a taller canvas sees the same sky
+        // with a touch wider cells and never a horizon low enough to alias the noise; the
+        // scale is the old one at the middle row, 95 dp a cell, so deckThreshold's table holds
+        // (measured on 24 canvases: the mean alpha is the deck within 0.021, as before).
+        float elev = mix(0.7854, 0.2618, uv.y);
+        float dist = 1.0 / tan(elev);
+        float focal = (uSize.y / uPx) / (0.7854 - 0.2618);
+        float2 ground = float2((q.x - 0.5 * uSize.x / uPx) * dist / focal + drift * 1.732 / focal, dist);
+        float2 p = ground * (focal / (1.732 * 95.0));
         float2 w = float2(fbm2(p * 0.7 + float2(3.1, 7.7)), fbm2(p * 0.7 + float2(9.4, 1.3)));
         // 0.6 and not more: at 0.9 the warp folded the plane over itself here and there
         // (its Jacobian went negative), and every fold drew a crease drifting with the clouds.
