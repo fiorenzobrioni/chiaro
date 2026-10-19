@@ -63,17 +63,26 @@ data class Minutely15Dto(
 @Serializable
 data class CurrentDto(
     val time: String,
-    @SerialName("temperature_2m") val temperatureC: Double,
-    @SerialName("relative_humidity_2m") val humidityPct: Int,
-    @SerialName("apparent_temperature") val apparentTemperatureC: Double,
-    @SerialName("dew_point_2m") val dewPointC: Double,
-    @SerialName("is_day") val isDay: Int,
-    @SerialName("precipitation") val precipitationMm: Double,
-    @SerialName("weather_code") val weatherCode: Int,
-    @SerialName("pressure_msl") val pressureMslHpa: Double,
-    @SerialName("wind_speed_10m") val windSpeedKph: Double,
-    @SerialName("wind_direction_10m") val windDirectionDeg: Int,
-    @SerialName("wind_gusts_10m") val windGustsKph: Double,
+    /**
+     * Every value of the block nullable since 19 ott 2026, as the hourly series' have
+     * been one by one: a null is what the provider serves where a model has no value
+     * (its EU node served `null` daily extremes for a model on 12-13 Oct 2026, and its
+     * own changes now let a cell «produce null values rather than fail»), and a
+     * non-nullable field here met it by failing the WHOLE report — the week, the hours,
+     * everything. The mapper reads the block only when it is whole; with a hole in it the
+     * forecast for this hour stands in and says so (`CurrentEstimate`).
+     */
+    @SerialName("temperature_2m") val temperatureC: Double? = null,
+    @SerialName("relative_humidity_2m") val humidityPct: Int? = null,
+    @SerialName("apparent_temperature") val apparentTemperatureC: Double? = null,
+    @SerialName("dew_point_2m") val dewPointC: Double? = null,
+    @SerialName("is_day") val isDay: Int? = null,
+    @SerialName("precipitation") val precipitationMm: Double? = null,
+    @SerialName("weather_code") val weatherCode: Int? = null,
+    @SerialName("pressure_msl") val pressureMslHpa: Double? = null,
+    @SerialName("wind_speed_10m") val windSpeedKph: Double? = null,
+    @SerialName("wind_direction_10m") val windDirectionDeg: Int? = null,
+    @SerialName("wind_gusts_10m") val windGustsKph: Double? = null,
     /**
      * Nullable since Fase 26, like [HourlyDto]'s. Never seen absent — probed on twelve
      * places including McMurdo, mid-Pacific, Everest and Svalbard — but `visibility`
@@ -82,7 +91,7 @@ data class CurrentDto(
      * DTO has always tolerated it; there was no reason for the two to disagree.
      */
     @SerialName("visibility") val visibilityM: Double? = null,
-    @SerialName("cloud_cover") val cloudCoverPct: Int,
+    @SerialName("cloud_cover") val cloudCoverPct: Int? = null,
     /**
      * Nullable since 24 set 2026, the last model-dependent field of this block to be
      * found out: `models=icon_seamless` serves `current.uv_index: null` on the live
@@ -112,8 +121,14 @@ data class CurrentDto(
 @Serializable
 data class HourlyDto(
     val time: List<String>,
-    @SerialName("temperature_2m") val temperatureC: List<Double>,
-    @SerialName("weather_code") val weatherCode: List<Int>,
+    /**
+     * Element-nullable since 19 ott 2026, the last four columns to be — temperature,
+     * code, `is_day` and cloud — for the reason the others already were: a model's null
+     * costs the hour, never the report. An hour without a temperature, or without a code
+     * and a cloud to read a sky from, is not a row (`WeatherReportMapper.mapHourly`).
+     */
+    @SerialName("temperature_2m") val temperatureC: List<Double?>,
+    @SerialName("weather_code") val weatherCode: List<Int?>,
     /**
      * Millimetres in the hour. Defaulted so a `ReportDiskCache` entry written before
      * Fase 26 still deserializes: an offline phone must not lose its week of forecast
@@ -122,9 +137,9 @@ data class HourlyDto(
      */
     @SerialName("precipitation") val precipitationMm: List<Double> = emptyList(),
     @SerialName("precipitation_probability") val precipitationProbabilityPct: List<Int?>,
-    @SerialName("is_day") val isDay: List<Int>,
+    @SerialName("is_day") val isDay: List<Int?>,
     @SerialName("visibility") val visibilityM: List<Double?>,
-    @SerialName("cloud_cover") val cloudCoverPct: List<Int>,
+    @SerialName("cloud_cover") val cloudCoverPct: List<Int?>,
     // 24 set 2026, see OpenMeteoForecastApi.HOURLY_VARIABLES. All defaulted to empty (a
     // cache entry from before) and all element-nullable (a model that lacks one):
     // readers go through `getOrNull`, and an absent value is an absent value.
@@ -148,9 +163,16 @@ data class HourlyDto(
 @Serializable
 data class DailyDto(
     val time: List<String>,
-    @SerialName("weather_code") val weatherCode: List<Int>,
-    @SerialName("temperature_2m_max") val temperatureMaxC: List<Double>,
-    @SerialName("temperature_2m_min") val temperatureMinC: List<Double>,
+    /**
+     * Element-nullable since 19 ott 2026, like every other column of this block. The
+     * extremes are the ones seen null on the live endpoint: Open-Meteo's EU node served
+     * `temperature_2m_max: [null, null, null]` for a model on 12-13 Oct 2026 (its issue
+     * #2200) while the hourly series behind it was whole. The mapper then takes the
+     * day's extremes from the day's own hours, as it already takes its label.
+     */
+    @SerialName("weather_code") val weatherCode: List<Int?>,
+    @SerialName("temperature_2m_max") val temperatureMaxC: List<Double?>,
+    @SerialName("temperature_2m_min") val temperatureMinC: List<Double?>,
     @SerialName("precipitation_probability_max") val precipitationProbabilityMaxPct: List<Int?>,
     /**
      * Nullable elements since 20 set 2026, like `precipitation_probability_max` beside

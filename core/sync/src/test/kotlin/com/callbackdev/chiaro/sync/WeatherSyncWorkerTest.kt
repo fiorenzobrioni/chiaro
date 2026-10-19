@@ -20,6 +20,7 @@ import com.callbackdev.chiaro.data.local.ChiaroDatabase
 import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoGeocodingApi
+import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.WeatherReport
@@ -33,6 +34,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -43,6 +45,8 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import retrofit2.HttpException
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
@@ -62,11 +66,37 @@ class WeatherSyncWorkerTest {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val context: Context = ApplicationProvider.getApplicationContext()
+    private val json = Json { ignoreUnknownKeys = true }
     private lateinit var settingsStore: SettingsStore
     private lateinit var ruleStore: RuleStore
+    private lateinit var cityStore: CityStore
     private lateinit var database: ChiaroDatabase
+    private lateinit var retrofit: Retrofit
     private val notifiers = FakeNotifiers()
     private val widgets = FakeWidgets()
+
+    /** A provider that answers every forecast with the status [failure] builds — built
+     * per call, since an error body is read once (19 ott 2026). */
+    private class StatusApi(private val failure: () -> Throwable) : OpenMeteoForecastApi {
+        override suspend fun forecast(
+            latitude: Double,
+            longitude: Double,
+            current: String,
+            hourly: String,
+            daily: String,
+            timezone: String,
+            forecastDays: Int,
+            minutely15: String,
+            forecastQuarters: Int
+        ): ForecastResponseDto = throw failure()
+    }
+
+    private fun status(code: Int, reason: String) = HttpException(
+        Response.error<Any>(
+            code,
+            """{"error":true,"reason":"$reason"}""".toResponseBody("application/json".toMediaType())
+        )
+    )
 
     private class FakeNotifiers : SyncNotifiers {
         override fun notificationsEnabled() = true
@@ -105,27 +135,33 @@ class WeatherSyncWorkerTest {
     fun setUp() {
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
         SyncDependencies.install(notifiers, widgets)
-        val json = Json { ignoreUnknownKeys = true }
         database = Room.inMemoryDatabaseBuilder(context, ChiaroDatabase::class.java)
             .allowMainThreadQueries().build()
-        val retrofit = Retrofit.Builder()
+        retrofit = Retrofit.Builder()
             .baseUrl("http://127.0.0.1:1/") // unreachable: getWeather → Unreachable
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
-        val cityStore = store("cities") { CityStore(it, json) }
+        cityStore = store("cities") { CityStore(it, json) }
         // No seeded place: without one the worker has nothing to fetch.
         runBlocking { cityStore.add(CityStore.DefaultCity) }
         settingsStore = store("settings") { SettingsStore(it) }
         ruleStore = store("rules") { RuleStore(it, json) }
+        install(retrofit.create(OpenMeteoForecastApi::class.java))
+    }
+
+    /** The graph under test with [forecastApi] as the provider: the refused port by
+     * default, a scripted status where a test needs the service's own answer. */
+    private fun install(forecastApi: OpenMeteoForecastApi) {
         ServiceLocator.overrideForTests(
             repository = WeatherRepository(
-                forecastApi = retrofit.create(OpenMeteoForecastApi::class.java),
+                forecastApi = forecastApi,
                 airQualityApi = retrofit.create(OpenMeteoAirQualityApi::class.java),
                 geocodingApi = retrofit.create(OpenMeteoGeocodingApi::class.java),
                 historyDao = database.weatherHistoryDao(),
                 json = json,
                 // The refused connection gets its one more try; no need to wait for it.
-                transientRetryDelay = java.time.Duration.ZERO
+                transientRetryDelay = java.time.Duration.ZERO,
+                transientRetryJitter = java.time.Duration.ZERO
             ),
             cityStore = cityStore,
             settingsStore = settingsStore,
@@ -202,6 +238,31 @@ class WeatherSyncWorkerTest {
     fun `network failure - worker asks for a retry`() {
         // defaults: severe+precip on, notifications enabled (the fake says so)
         assertEquals(ListenableWorker.Result.retry(), runWorker())
+    }
+
+    /** The service's own passing states (19 ott 2026): a 503 at the peak of the full hour
+     * and a 429 on a shared address are retried on the backoff like a dropped
+     * connection, instead of waiting out the whole period. */
+    @Test
+    fun `the service shedding load - worker asks for a retry, and the widgets repaint`() {
+        install(StatusApi { status(503, "The service is overloaded") })
+        widgets.placed = true
+        assertEquals(ListenableWorker.Result.retry(), runWorker())
+        assertEquals(1, widgets.repaints)
+    }
+
+    @Test
+    fun `a limit on the address - worker asks for a retry`() {
+        install(StatusApi { status(429, "Minutely API request limit exceeded. Please try again in one minute.") })
+        assertEquals(ListenableWorker.Result.retry(), runWorker())
+    }
+
+    @Test
+    fun `the request's own fault - worker waits for the next period`() {
+        install(StatusApi { status(400, "Cannot initialize Float from invalid String value") })
+        widgets.placed = true
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+        assertEquals(1, widgets.repaints)
     }
 
     /** A successful fetch repaints through the repository's commit hook; a FAILED one

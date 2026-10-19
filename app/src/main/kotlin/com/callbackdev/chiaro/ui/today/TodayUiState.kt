@@ -290,8 +290,9 @@ object TodayStateBuilder {
                 hours = DaylightPhases.sky(trimmed.hourly, local.toLocalDate()),
                 layers = trimmed.current.cloudLayers,
                 fall = fallOf(trimmed.current.condition.wmoCode),
-                // The quarter hour just measured, as a rate: the hourly series carries no amounts.
-                fallMmPerHour = trimmed.current.precipitation.lastQuarterHourMm * 4.0,
+                // The quarter hour just measured, as a rate: the hourly series carries no
+                // amounts. No amount served draws as nothing falling: a tint, not a number.
+                fallMmPerHour = trimmed.current.precipitation.lastQuarterHourMm?.times(4.0) ?: 0.0,
                 windKph = trimmed.current.wind.speedKph,
                 windFromDeg = trimmed.current.wind.degree
             ),

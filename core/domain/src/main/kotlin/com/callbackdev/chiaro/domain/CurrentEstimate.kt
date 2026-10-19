@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.domain
 
 import com.callbackdev.chiaro.domain.model.CurrentConditions
 import com.callbackdev.chiaro.domain.model.HourlyForecast
+import com.callbackdev.chiaro.domain.model.Precipitation
 import com.callbackdev.chiaro.domain.model.Wind
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import java.time.Duration
@@ -58,8 +59,22 @@ object CurrentEstimate {
     }
 
     /** The conditions at [now] from the report's hours, or null when they cannot say. */
-    fun estimate(report: WeatherReport, now: Instant): CurrentConditions? {
-        val hours = report.hourly
+    fun estimate(report: WeatherReport, now: Instant): CurrentConditions? =
+        estimate(report.hourly, report.current.precipitation, now)
+
+    /**
+     * The same from the rows alone (19 ott 2026): what the mapper asks for when the
+     * provider's `current` block arrives with a hole in it — a null temperature, humidity,
+     * pressure or wind, which a model can serve and which used to fail the whole report —
+     * and the forecast for this hour is the honest «now» to show, labelled as the estimate
+     * it is, like the one age brings. [precipitation] is the block's own, which the rows
+     * cannot replace; only its chance is the row's.
+     */
+    fun estimate(
+        hours: List<HourlyForecast>,
+        precipitation: Precipitation,
+        now: Instant
+    ): CurrentConditions? {
         val index = hours.indexOfLast { !it.at.isAfter(now) }
         if (index < 0) return null
         val row = hours[index]
@@ -83,8 +98,7 @@ object CurrentEstimate {
         val windKph = lerpOf { it.windKph } ?: return null
         val direction = nearer.windDirectionDeg ?: row.windDirectionDeg ?: return null
 
-        val current = report.current
-        return current.copy(
+        return CurrentConditions(
             condition = row.condition,
             tempC = lerpOf { it.tempC }!!,
             feelsLikeC = feelsLike,
@@ -101,7 +115,7 @@ object CurrentEstimate {
                 // steady wind rather than a gust nobody forecast.
                 gustKph = maxOf(row.gustKph ?: windKph, windKph)
             ),
-            precipitation = current.precipitation.copy(chancePct = row.precipChancePct),
+            precipitation = precipitation.copy(chancePct = row.precipChancePct),
             cloudCoverPct = lerpOf { it.cloudCoverPct.toDouble() }?.roundToInt(),
             cloudLayers = nearer.cloudLayers,
             estimated = true

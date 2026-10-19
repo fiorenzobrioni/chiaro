@@ -8,6 +8,7 @@ import com.callbackdev.chiaro.data.mapper.WeatherReportMapper
 import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoGeocodingApi
+import com.callbackdev.chiaro.data.remote.dto.ApiErrorDto
 import com.callbackdev.chiaro.data.remote.dto.GeoResultDto
 import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.WeatherFreshness
@@ -15,9 +16,9 @@ import com.callbackdev.chiaro.domain.model.CacheStatus
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.WeatherReport
+import androidx.annotation.VisibleForTesting
 import java.io.IOException
 import java.io.InterruptedIOException
-import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.time.Clock
 import java.time.Duration
@@ -25,6 +26,7 @@ import java.time.Instant
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.random.Random
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -65,8 +67,10 @@ class WeatherRepository(
      */
     private val liveKeys: (suspend () -> Set<String>)? = null,
     private val onHousekeeping: suspend (liveKeys: Set<String>) -> Unit = {},
-    /** How long [fetch] waits before its one retry of a transient failure. */
-    private val transientRetryDelay: Duration = TRANSIENT_RETRY_DELAY
+    /** How long [fetch] waits at least before its one retry of a transient failure. */
+    private val transientRetryDelay: Duration = TRANSIENT_RETRY_DELAY,
+    /** The random spread on top of it, so that one failure does not become one herd. */
+    private val transientRetryJitter: Duration = TRANSIENT_RETRY_JITTER
 ) {
 
     private data class CacheEntry(val report: WeatherReport, val fetchedAt: Instant)
@@ -306,34 +310,46 @@ class WeatherRepository(
     }
 
     /**
-     * [block] once more, after [transientRetryDelay], when Open-Meteo answers with one of
-     * [TRANSIENT_HTTP_CODES] (24 set 2026): a 5xx is the service's own passing state — a
-     * deploy, a node restarting — and not a verdict on the request, so the reader who
-     * pulled to refresh should not be told the service is down because of one of them.
+     * [block] once more, after [nextRetryDelay], when the failure is one the service will
+     * have passed by then and the first try cost no time to wait through:
      *
-     * **Once**, and only for those. A 4xx is the request's fault and will fail the same
-     * way. A 429 is left alone on purpose: Open-Meteo's limits are per minute, hour and
-     * day per IP, and its own answer is «try again in one minute» — a retry two seconds
-     * later can only fail again and count against the same limit, which on a carrier's
-     * shared address is not ours alone.
+     * - one of [TRANSIENT_HTTP_CODES] (24 set 2026): a 5xx is the service's own passing
+     *   state — a deploy, a node restarting, and since 19 ott 2026 a node shedding load
+     *   with a 503 «The service is overloaded» at the peak of every full hour — and not a
+     *   verdict on the request, so the reader who pulled to refresh should not be told
+     *   the service is down because of one of them;
+     * - a 429 whose reason is [CONCURRENCY_LIMIT_REASON] (19 ott 2026): Open-Meteo runs
+     *   one request per address at a time and queues five, and the sixth is refused with
+     *   that sentence; the queue clears in seconds. Every other 429 is a limit on the
+     *   minute, the hour or the day and is left alone as before — a retry seconds later
+     *   can only fail again and count against the same limit, which on a carrier's shared
+     *   address is not ours alone;
+     * - a connection the service dropped (17 ott 2026): on that day Open-Meteo's forecast
+     *   host failed one TLS handshake in two, each failure a stalled connection and the
+     *   next one fine, and a report that needed one lucky try out of two showed a
+     *   skeleton for hours.
      *
-     * The same one more try for a connection the service dropped (17 ott 2026): on that
-     * day Open-Meteo's forecast host failed one TLS handshake in two, each failure a
-     * stalled connection and the next one fine, and a report that needed one lucky try
-     * out of two showed a skeleton for hours. Not for an offline phone
-     * ([isOffline]): the cached report is already on screen and nothing changes in two
-     * seconds. Not for the call's own budget run out either ([isCallTimeout]): that is thirty
-     * seconds already spent, and a second thirty is a page that never resolves.
+     * **Once**, and never after time already spent. A 4xx is the request's fault and will
+     * fail the same way. Not for an offline phone ([isOffline]): the cached report is
+     * already on screen and nothing changes in a few seconds. Not after a timeout of any
+     * kind either ([isTimeout], 19 ott 2026): the read timeout is twenty seconds and the
+     * call's budget thirty (`ServiceLocator`), and a second try after either is a page that
+     * never resolves and a worker held open on somebody's battery. The minute tick and the
+     * job's own backoff are the second try, later.
      */
     private suspend fun <T> retryingTransient(block: suspend () -> T): T = try {
         block()
     } catch (e: HttpException) {
-        if (e.code() !in TRANSIENT_HTTP_CODES) throw e
-        delay(transientRetryDelay.toMillis())
+        // The body is read here, once: it is what tells the address's queue from a limit.
+        val reason = e.reason()
+        val passing = e.code() in TRANSIENT_HTTP_CODES ||
+            (e.code() == 429 && reason == CONCURRENCY_LIMIT_REASON)
+        if (!passing) throw WeatherException.ApiError(e.code(), e, reason)
+        delay(nextRetryDelay().toMillis())
         block()
     } catch (e: IOException) {
-        if (e.isOffline() || e.isCallTimeout()) throw e
-        delay(transientRetryDelay.toMillis())
+        if (e.isOffline() || e.isTimeout()) throw e
+        delay(nextRetryDelay().toMillis())
         block()
     }
 
@@ -344,7 +360,7 @@ class WeatherRepository(
     } catch (e: WeatherException) {
         throw e
     } catch (e: HttpException) {
-        throw WeatherException.ApiError(e.code(), e)
+        throw WeatherException.ApiError(e.code(), e, e.reason())
     } catch (e: IOException) {
         throw if (e.isOffline()) WeatherException.NoNetwork(e) else WeatherException.Unreachable(e)
     } catch (e: Exception) {
@@ -359,10 +375,33 @@ class WeatherRepository(
      */
     private fun IOException.isOffline(): Boolean = this is UnknownHostException
 
-    /** OkHttp's `callTimeout`, the whole call's budget: an [InterruptedIOException]
-     * that is not a single read's or connect's [SocketTimeoutException]. */
-    private fun IOException.isCallTimeout(): Boolean =
-        this is InterruptedIOException && this !is SocketTimeoutException
+    /** A timeout of any kind — a single connect's or read's (`SocketTimeoutException`)
+     * and OkHttp's `callTimeout`, both an [InterruptedIOException]: time already spent. */
+    private fun IOException.isTimeout(): Boolean = this is InterruptedIOException
+
+    /**
+     * Open-Meteo's own sentence for an error status, from the body's `reason`
+     * ([ApiErrorDto]); null for an empty body or one that is not its JSON (an
+     * intermediary's HTML page). Read once and closed: a body left unread holds its
+     * connection until the garbage collector finds it.
+     */
+    private fun HttpException.reason(): String? = runCatching {
+        response()?.errorBody()?.use { body -> json.decodeFromString<ApiErrorDto>(body.string()).reason }
+    }.getOrNull()
+
+    /**
+     * [transientRetryDelay] plus a random share of [transientRetryJitter] (19 ott 2026):
+     * every phone that met the same 503 at the same second used to come back two seconds
+     * later, together, to the same node. The floor stays the two seconds a restarting
+     * node needs; the spread is paid to the service, not by the reader — a pull resolves
+     * within seven seconds either way.
+     */
+    @VisibleForTesting
+    internal fun nextRetryDelay(): Duration {
+        val jitter = transientRetryJitter.toMillis()
+        val share = if (jitter > 0) Random.nextLong(jitter + 1) else 0L
+        return transientRetryDelay.plusMillis(share)
+    }
 
     /**
      * Has this install ever fetched weather? The one durable trace of an app that has
@@ -377,6 +416,18 @@ class WeatherRepository(
 
         /** Long enough for a restarting node, short enough for a pull to refresh. */
         val TRANSIENT_RETRY_DELAY: Duration = Duration.ofSeconds(2)
+
+        /** The random spread on top of [TRANSIENT_RETRY_DELAY]: two to six seconds in all. */
+        val TRANSIENT_RETRY_JITTER: Duration = Duration.ofSeconds(4)
+
+        /**
+         * What Open-Meteo answers a request that finds five others from the same address
+         * already waiting (`RateLimiter.swift`, `ConcurrencyGroupLimiter.swift` in its
+         * repository: one runs, five queue, the sixth is refused with HTTP 429 and this
+         * sentence). The only 429 that clears by itself in seconds; the forecast host has
+         * no IPv6, so on a carrier's shared IPv4 the address is every phone behind it.
+         */
+        const val CONCURRENCY_LIMIT_REASON = "Too many concurrent requests"
 
         /**
          * How far back a place's history reaches. Three days: the deepest reader is

@@ -27,9 +27,28 @@ sealed class WeatherException(
         "404: location \"$query\" not found in geocoding index"
     )
 
-    class ApiError(val code: Int, cause: Throwable? = null) : WeatherException(
-        "http::$code — Open-Meteo request failed", cause
-    )
+    /**
+     * The service answered with an error status. [reason] is Open-Meteo's own sentence
+     * from the body (`{"error":true,"reason":"…"}`, read since 19 ott 2026), null when
+     * the body was empty or not that JSON: it is the one thing that tells a limit on
+     * the minute from a queue on the address from a node shedding load, since none of
+     * them carries a header that does.
+     */
+    class ApiError(
+        val code: Int,
+        cause: Throwable? = null,
+        val reason: String? = null
+    ) : WeatherException(
+        "http::$code — ${reason ?: "Open-Meteo request failed"}", cause
+    ) {
+        /**
+         * The service's own passing state, worth another try LATER (19 ott 2026): a
+         * 5xx — Open-Meteo sheds load with a 503 «The service is overloaded» at the peak
+         * of every full hour — or a 429, whose limit a later try is past. Not the
+         * request's fault: any other 4xx will fail the same way again.
+         */
+        val isTransient: Boolean get() = code in 500..599 || code == 429
+    }
 
     class Unknown(cause: Throwable) : WeatherException(
         "panic: unexpected error — ${cause.message ?: cause::class.simpleName}", cause

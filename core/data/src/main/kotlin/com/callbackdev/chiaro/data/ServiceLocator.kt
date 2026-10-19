@@ -273,15 +273,29 @@ object ServiceLocator {
     private fun okHttp(): OkHttpClient =
         okHttp ?: synchronized(this) {
             okHttp ?: OkHttpClient.Builder()
-                // OkHttp's defaults bound each PHASE — 10s to connect, 10s between
-                // bytes — and nothing bounds the call. A connection that dribbles a
-                // byte before every read timeout never trips one, which on a screen
-                // the reader just opened is a refresh that never resolves and in
-                // `WeatherSyncWorker` is a worker held open on somebody's battery.
-                // Thirty seconds is past the worst honest case (connect plus a slow
-                // read of a 10 KB response) and well inside what the app can absorb:
-                // every caller already falls back to the cached report, and a pull to
-                // refresh is one gesture away.
+                // Three clocks, and two of them add up to the third. OkHttp's defaults
+                // bound each PHASE — 10 s to connect, 10 s between bytes — and nothing
+                // bounds the call: a connection that dribbles a byte before every read
+                // timeout never trips one, which on a screen the reader just opened is a
+                // refresh that never resolves and in `WeatherSyncWorker` a worker held
+                // open on somebody's battery. The call budget of thirty seconds is there
+                // for that, and every caller falls back to the cached report under it.
+                //
+                // The read timeout is twenty seconds, not the default ten (19 ott 2026).
+                // Open-Meteo sends nothing until it has computed the answer, so this
+                // clock is the time the service gets to think — and at the peak of every
+                // full hour, measured that morning on the app's own request from Italy,
+                // the first byte took 8.6 to 11.7 s (`generationtime_ms` 7–8 s, against
+                // 5 ms outside it) for three minutes, with every request a 200. Under ten
+                // seconds half of them died as a timeout, the one retry fell inside the
+                // same three minutes, and the reader read «il servizio non risponde»
+                // about a service that was answering. Twenty is well past the worst
+                // first byte measured; ten to connect plus twenty to think is exactly
+                // the thirty the call may take; and a timeout is no longer retried
+                // (`WeatherRepository`), so the worst case of a silent service went from
+                // 10 + 2 + 10 seconds of radio to 20.
+                .connectTimeout(Duration.ofSeconds(10))
+                .readTimeout(Duration.ofSeconds(20))
                 .callTimeout(Duration.ofSeconds(30))
                 .addInterceptor { chain ->
                     chain.proceed(

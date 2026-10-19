@@ -97,8 +97,13 @@ data class Wind(
  * values ARE sums of the preceding hour, each with the moment it ended.
  */
 data class Precipitation(
-    /** Millimetres in the 15 minutes ending at the provider's `current.time`. */
-    val lastQuarterHourMm: Double,
+    /**
+     * Millimetres in the 15 minutes ending at the provider's `current.time`, or null when
+     * the provider served no amount for the quarter (19 ott 2026) — never a zero nobody
+     * forecast. Its one reader is the sky's rain intensity, a tint and not a printed
+     * number, which draws nothing falling for it.
+     */
+    val lastQuarterHourMm: Double?,
     /**
      * The hours that have already closed, newest first, as the hourly series has them
      * (up to [PAST_HOURS]). Empty for a report built from a cache entry written before

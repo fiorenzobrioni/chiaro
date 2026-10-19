@@ -14614,3 +14614,112 @@ disegnata sul Milano e guardata fotogramma per fotogramma: a 100 dp la barra è 
 numero interi. Le immagini `today-day`, `today-week`, `today-details` rigenerate e guardate (il numero
 della barra ora è il `titleLarge` vero, non la cifra da 88 sp rimpicciolita); `today-now` identica al
 pixel. Suite completa e lint.
+
+## Il servizio che non risponde: la review delle chiamate a Open-Meteo (committente, 19 ott 2026)
+
+**La richiesta.** «Ultimamente l'app ha dei momenti in cui non riesce a scaricare i dati meteo, dà
+un errore tipo che il server non risponde»: una review completa delle chiamate a Open-Meteo
+(header, body, uso nell'app), la verifica dal vivo della raggiungibilità, i report storici
+dell'ultima settimana; poi l'attuazione dei punti 1-6 della review, con due vincoli: nessun effetto
+sulla batteria (altrimenti fermarsi) e nessuna riga di log in più.
+
+**Cosa ha detto la misura.** Le chiamate sono corrette: GET senza body, liste con le virgole
+letterali (il server accetta anche `%2C`), `timezone=auto`, i 24 quarti d'ora serviti dal quarto
+corrente, User-Agent con versione e repo pubblico, gzip onorato (21 KB → 5 KB), HTTP/1.1 e TLS 1.3
+soli in ALPN, ogni tipo del JSON uguale a quello dei DTO. Il sintomo è del server. Dal 17 ottobre il
+nodo europeo dell'API gratuita (94.130.142.35, a cui `api.open-meteo.com` risolve dall'Italia; solo
+un record A, nessun AAAA, mentre aria e geocoding ce l'hanno) è sovraccarico allo scoccare di ogni
+ora piena, e i maintainer lo confermano nelle issue #2220 e #2219 del repo open-meteo («we only drop
+API requests during peak loads at every full hour», «we will add new servers»). Misurato il 19 ott
+con l'URL e lo User-Agent esatti dell'app, 72 campioni a cavallo delle 09:00: fuori picco
+0,14-0,18 s con `generationtime_ms` 4-8; dalle 09:00:04 per tre minuti 8,6-11,7 s al primo byte con
+`generationtime_ms` 5 700-8 200, tutti 200, l'host dell'aria invariato; normale dalle 09:04:45. La
+voce del 17 ott qui sopra (una stretta di mano su due, generazione a 4,2 s) è lo stesso evento
+visto dal client. Dal sorgente del server (`RateLimiter.swift`, `ConcurrencyGroupLimiter.swift`,
+`ForecastApiResult.swift`): concorrenza per indirizzo IPv4 una richiesta in corso più cinque in coda,
+la sesta 429 `Too many concurrent requests`; oltre 4 096 richieste in corso su un'istanza 503
+`The service is overloaded`; nessun `Retry-After` in tutto il codice; il peso di una chiamata è
+max(1, variabili/10 × max(1, giorni/14)), quindi la forecast di Chiaro (52 variabili) pesa 5,2
+chiamate e l'aria 1,4 sui limiti per IP (600/min, 5 000/h, 10 000/giorno). La status page
+(StatusCake) non ha test configurati e non mostra nulla: le issue sono l'unica cronologia.
+
+**Cosa è cambiato.**
+
+1. *Il tempo che il servizio ha per pensare è 20 s, non 10.* `readTimeout` esplicito a 20 s in
+   `ServiceLocator`, `connectTimeout` dichiarato a 10, `callTimeout` 30 = la somma dei due. Il server
+   non manda un byte finché non ha calcolato, quindi il timeout di lettura è il tempo che gli si dà:
+   col default di 10 s metà delle risposte del picco moriva in timeout, e il retry a 2 s cadeva nello
+   stesso picco. Venti è oltre il peggior primo byte misurato (11,7 s).
+2. *Un timeout di qualsiasi tipo non si ritenta più* (`WeatherRepository.isTimeout`: ogni
+   `InterruptedIOException`, cioè connect, read e call). È tempo già speso: con 20 s di lettura un
+   secondo tentativo sarebbe una pagina da 42 s. Il caso peggiore di un servizio muto passa da
+   10 + 2 + 10 s di radio a 20. Una connessione caduta (rifiutata, reset, fine del flusso, stretta di
+   mano fallita) e un 5xx, che costano zero, tengono il loro secondo tentativo.
+3. *Il retry aspetta da 2 a 6 s*: 2 s più una quota casuale di 4 (`TRANSIENT_RETRY_JITTER`,
+   `nextRetryDelay`), così i telefoni che incontrano lo stesso 503 allo stesso secondo non tornano
+   tutti insieme sullo stesso nodo. Il pavimento resta i 2 s di un nodo che riparte.
+4. *Il 429 della coda si ritenta, i 429 dei limiti no.* Il body dell'errore viene letto una volta
+   (`ApiErrorDto`, `HttpException.reason()`): `Too many concurrent requests` ha un secondo tentativo
+   con lo stesso ritardo, perché la coda si libera in secondi; minuto, ora e giorno restano senza,
+   come prima. La frase del server viaggia in `WeatherException.ApiError.reason` e nel suo
+   messaggio; leggere il body chiude anche la connessione che prima restava appesa al garbage
+   collector.
+5. *Il job periodico ritenta su 503 e 429* (`ApiError.isTransient`: 5xx e 429) con
+   `Result.retry()`, come già per offline e `Unreachable` dal 17 ott: prima un 503 al picco aspettava
+   il periodo intero, fino a due ore di avvisi e widget sui numeri vecchi. Un altro 4xx aspetta
+   ancora: fallirebbe uguale.
+6. *Il tick di Oggi aspetta dopo un fallimento* (`RefreshBackoff`): un minuto, due, quattro, otto,
+   poi il quarto d'ora del provider; un successo azzera; il trascinamento, l'atterraggio e il cambio
+   di luogo non aspettano mai. Prima un guasto lungo erano quattro richieste al minuto per pagina
+   aperta, a un servizio già in sofferenza.
+7. *Un null del modello costa l'ora, l'aggregato o il blocco, mai il report.* Le ultime colonne non
+   nullable dei DTO lo sono diventate: temperatura, codice, `is_day` e nuvole orarie; codice,
+   massima e minima giornaliere; tutto il blocco `current`. Nel mapper: un'ora senza temperatura,
+   senza stato (né codice né nuvole) o senza nuvole non è una riga, e le vicine tengono il posto
+   (una riga è il suo istante, non la sua posizione); un'ora senza codice legge il cielo dalle sue
+   nuvole, e un codice mancante sull'intervallo dice «non cade niente»; un giorno senza massima o
+   minima le prende dalle sue ore, come già prende l'etichetta, e senza ore né etichetta non è una
+   riga; un blocco `current` con un buco (temperatura, percepita, umidità, rugiada, pressione,
+   vento, o niente da cui leggere uno stato) diventa la previsione del suo stesso istante dalle
+   righe, con `estimated = true` e la dicitura che le superfici già hanno
+   (`CurrentEstimate.estimate` sulle sole righe); l'ammontare del quarto d'ora, che le righe non
+   hanno, resta del blocco ed è nullable (`Precipitation.lastQuarterHourMm`; il suo unico lettore è
+   la tinta della pioggia dello shader, che senza disegna niente che cade). Se nemmeno le righe
+   possono sostituire il blocco (una voce di cache di prima che portassero il resto dell'ora), il
+   report non si costruisce: il fallimento di prima, l'unico rimasto.
+
+**Decisioni e deviazioni.** *Batteria*: nessun punto aggiunge radio. Il caso peggiore (punti 1 e 2)
+scende da 22 a 20 s per un servizio muto, e il caso misurato (risposta a 11 s) diventa un successo a
+11 s invece di 22 s buttati più il banner. Il punto 5 aggiunge al più un tentativo per periodo
+fallito, col backoff esponenziale di WorkManager (15 min) già in uso dal 17 ott. Il 6 toglie
+richieste. *Il retry sui timeout tolto* è la conseguenza del punto 1, non un'aggiunta: la regola del
+17 ott («sono già 30 s spesi») vale per ogni orologio. Il modo del 17 ott (stretta di mano ferma una
+volta su due) guarisce ora al tick successivo invece che dopo 2 s: accettato, perché il modo
+misurato oggi e descritto dai maintainer è il server lento, non quello muto. *Il punto 7 della
+review (il `reason` a log) non è attuato*: l'app non scrive log propri, l'unico è
+l'`HttpLoggingInterceptor` BASIC dei build di debug, due righe per chiamata della libreria a cui non
+si aggiunge un campo senza riscriverle, e il vincolo era «nessuna riga nuova». La frase del server
+c'è comunque in `ApiError.reason` e nel messaggio dell'eccezione. *Le ore mancanti e la nebbia*:
+l'engine vede le ore presenti come una serie sola, quindi i vicini di un'ora mancante si giudicano a
+vicenda per la regola della nebbia; una risposta con buchi è già un giorno che il modello non ha
+intero, e questa è l'imprecisione minore. *La massima dalle ore* è aritmetica sui numeri del modello
+(è quello che Open-Meteo stesso serve per la maggior parte dei modelli), non una stima: senza flag.
+*Nessun `Retry-After` da onorare*: il server non lo manda. *Nessun allineamento all'ora piena da
+evitare*: il job conta dall'enqueue, il tick dall'apertura della pagina; Chiaro subisce il picco,
+non lo alimenta. *Il peso 5,2 della chiamata* resta: ogni variabile ha un lettore documentato.
+
+**Come è stato verificato.** `TransientRetryTest` (riscritto: i timeout di ogni tipo e i 429 dei
+limiti senza retry; il 429 della coda e le connessioni cadute con uno; il `reason` sull'errore e
+`isTransient`; il ritardo in [2 s, 6 s] e non uguale per tutti). `WeatherSyncWorkerTest` (503 e 429
+→ `retry()` con il repaint dei widget, 400 → `success()`). `RefreshBackoffTest` (nuovo: la scala
+1-2-4-8-15, il tick che chiede solo ad attesa finita, il successo che azzera, il tetto).
+`WeatherReportMapperTest` (cinque test nuovi: l'ora senza temperatura e l'ora chiusa senza, l'ora
+senza codice e quella senza nuvole con le vicine al loro posto, le estreme dalle ore, il giorno
+senza nulla da leggere, il blocco `current` bucato come stima del suo istante, intero mai stima,
+senza righe capaci il report non si costruisce). `OpenMeteoResponseTest` (la risposta reale di
+Milano con `current.temperature_2m` e `temperature_2m_max` a null mappa: stima e massima dalle ore).
+Suite completa: 353 domain, 275 data, 24 sync, 733 app (14 saltati, gli screenshot del README),
+lint 0 errori; build release minificata con la chiave di debug. Nessuna immagine da rigenerare:
+niente a schermo è cambiato. **Da fare sul dispositivo**: un trascinamento allo scoccare di un'ora
+piena (09:00-09:03) deve restituire il report invece di «il servizio non risponde»; una pagina
+lasciata aperta durante un guasto deve guarire da sola entro il quarto d'ora.
