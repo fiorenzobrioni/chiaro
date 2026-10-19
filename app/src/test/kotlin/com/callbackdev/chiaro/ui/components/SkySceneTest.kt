@@ -245,6 +245,37 @@ class SkySceneTest {
         assertTrue(decked.spread > 1.2f)
     }
 
+    /**
+     * Step 3 (19 ott 2026): the clouds' light is the sun's or the moon's, whichever gives more;
+     * at dusk the sun lights them from under the horizon, and without either they are flat.
+     */
+    @Test
+    fun `at dusk the sun lights the clouds from below the band, and without a light they are flat`() {
+        val dusk = scene(alt = -3.0, cloud = 40)
+        assertTrue("the light is under the band at −3°", dusk.light.y < 0f)
+        assertEquals(-0.25f, dusk.light.y, 1e-6f)
+        assertTrue("the dusk still lights the clouds", dusk.lightAmount > 0.5f)
+        assertTrue("and they are warm", dusk.lit.red > dusk.lit.blue)
+        assertEquals(0f, scene(alt = -30.0, cloud = 40).lightAmount, 1e-6f)
+        assertEquals(1f, scene(alt = 30.0, cloud = 40).lightAmount, 1e-6f)
+        // The rim light follows the light there is: some at dusk, none on a moonless night.
+        assertTrue(dusk.glow > 0.3f)
+        assertEquals(0f, scene(alt = -30.0, cloud = 40).glow, 0f)
+    }
+
+    @Test
+    fun `the light is the body that gives more of it, not the sun by default`() {
+        // A thin crescent at dusk: the sun, still, from under the horizon.
+        val dusk = scene(alt = -3.0, moonAlt = 30.0, moonIllum = 0.2)
+        assertTrue(dusk.light.y < 0f)
+        assertEquals(bodyAcross(180.0, southern = false), dusk.light.x, 1e-6f)
+        // The same crescent at −12°: the moon.
+        val night = scene(alt = -12.0, moonAlt = 30.0, moonIllum = 0.2)
+        assertEquals(bodyAcross(150.0, southern = false), night.light.x, 1e-6f)
+        assertEquals(bodyUp(30.0), night.light.y, 1e-6f)
+        assertEquals(0.2f, night.lightAmount, 0.01f)
+    }
+
     @Test
     fun `a grey keeps its colour's luminance`() {
         val c = Color(0.35f, 0.55f, 0.85f)

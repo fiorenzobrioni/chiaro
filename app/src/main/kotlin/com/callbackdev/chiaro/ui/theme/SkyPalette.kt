@@ -58,8 +58,20 @@ class SkyPalette internal constructor(
         moonIllumination: Double = 0.0,
         moonAltitudeDeg: Double = -90.0
     ): SkyGradient {
-        val base = interpolate(sunAltitudeDeg)
+        val interpolated = interpolate(sunAltitudeDeg)
         val cloud = (cloudPct.coerceIn(0, 100) / 100f)
+        // An overcast is flat (step 3 of the sky review, 19 ott 2026): the zenith comes toward
+        // the mid stop by 0.6 of the cover before the desaturation below. A clear zenith is the
+        // darkest part of the sky and the horizon the brightest, 2.7:1 by day; a cloud deck is
+        // lit from above and shows its base, so under it the zenith is no darker than the rest,
+        // and often brighter. Darkening the clear zenith further, as the rules below did on
+        // their own, put the top stop at 0.09 of luminance under a wet overcast, under the
+        // shade of any cloud the scene draws, and a gap in the deck up there was a dark hole.
+        val base = listOf(
+            lerp(interpolated[0], interpolated[1], CloudZenith * cloud),
+            interpolated[1],
+            interpolated[2]
+        )
         val clouded = base.map { stop ->
             val grey = stop.red * 0.2126f + stop.green * 0.7152f + stop.blue * 0.0722f
             val flat = lerp(stop, Color(grey, grey, grey, stop.alpha), CloudDesaturation * cloud)
@@ -175,6 +187,10 @@ class SkyPalette internal constructor(
          */
         private const val CloudDesaturation = 0.7f
         private const val CloudDarkening = 0.15f
+
+        /** How far a full cover brings the zenith stop toward the mid one, before the two
+         * rules above: an overcast is flat, not a darker blue. */
+        private const val CloudZenith = 0.6f
 
         /**
          * The discs drawn on the canvas (design review, 23 set 2026): the sun high, the

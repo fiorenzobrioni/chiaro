@@ -471,7 +471,14 @@ what makes it safe.
 
 Cloud cover **desaturates each stop toward its own brightness** by `0.7 × cloudPct` and
 then dims it by `0.15 × cloudPct`, so a fully overcast day keeps 30% of its color and
-stays recognizably morning or evening.
+stays recognizably morning or evening. Before either, **the zenith stop comes toward the mid
+stop by `0.6 × cloudPct`** (step 3 of the sky review, 19 ott 2026): a clear zenith is the
+darkest part of the sky and the horizon the brightest, 2.7:1 by day, but a cloud deck is lit
+from above and shows its base, so under it the zenith is no darker than the rest. Darkening
+the clear zenith further, as the two rules alone did, put the top stop at 0.09 of luminance
+under a wet overcast, under the shade of any cloud the scene draws (§3.9), and a gap in the
+deck up there was a dark hole. `SkyPaletteTest` holds that an overcast is flatter than a clear
+sky and that a wet overcast's zenith stays above a nimbostratus' shade.
 
 The first draft of this section mixed every stop toward one fixed grey, and implementing
 it found the hole: a fixed grey is brighter than a night sky, so an overcast midnight came
@@ -513,9 +520,10 @@ one animation, 2 ms a frame, no particles, no parallax» — because a gradient 
 canvas' weakest state on the screen people see most: a grey-blue rectangle at noon under
 cloud. The budget is now written in what a frame may do, and in when there is a frame at all:
 
-- **per pixel, at most about twenty value-noise samples** in the worst sky (a domain-warped
-  cumulus with its light, a cirrus veil, a fall); a clear day spends almost none, because
-  every layer is skipped when its amount is zero;
+- **per pixel, at most about twenty-five value-noise samples** in the worst sky (a
+  domain-warped cumulus with its light and its self-shadow, a cirrus veil, a fall; twenty
+  until step 3 of the sky review, 19 ott 2026, which spends five more on the shadow); a clear
+  day spends almost none, because every layer is skipped when its amount is zero;
 - **frames only while the sky may move**, 15 a second for a sky that drifts and 30 for one
   in which something falls — the rates their own speeds need (a cloud drifts a few dp a
   second) — and one frame asked for per step, never one per vsync;
@@ -688,9 +696,22 @@ with the parts of it a gradient could not say.
   device. A closed deck's threshold is under the noise's floor, so it has no gap at all. The
   shading flattens as the deck closes: a deck is one grey with soft folds, not a sky of lit
   puffs.
-- **Light**: the edge of a cloud that faces the sun by day, or the moon at night, is the
-  lit one — the light's place is the bodies' own (§8.1c), the same bearing and altitude —
-  and near it the clouds catch a rim. **The lit side is one direction for the whole canvas**,
+- **Light**: the edge of a cloud that faces the light is the lit one, and the light is the
+  sun's or the moon's, **whichever gives more** (step 3, 19 ott 2026: the sun's from 1° down
+  to −9°, so a dusk at −3° still lights the clouds over a thin crescent; the moon's by its
+  illumination and altitude); the light's place is the body's own (§8.1c), the same bearing
+  and altitude, and **a sun under the horizon stands under the canvas**, down to 40 dp below
+  it at −12°, so what faces it at sunset is the clouds' undersides, which take the horizon's
+  own colour (the lit colour follows the sun's light, not the day). The lit edge is read on
+  the field's first three octaves 0.22 of a cell toward the light, with a gain of 3 (on all
+  four at 0.16 and a gain of 4, as it was, the fourth octave's lattice combed the clouds along
+  the light at half cover); the **self-shadow** is a cloud thicker toward the light than here,
+  read on the two coarse octaves twice as far, which puts the undersides and the hollows into
+  shade and gives a cumulus its body. **With no light the clouds are flat**: on a moonless
+  night the shading goes to one tone, as a cloud with nothing to light it does. Near the light
+  the clouds catch a rim. Gradient noise was tried for the deck the same day and left: it took
+  the comb out but turned the cumulus into fractus, and a 25% sky into a mackerel one.
+  **The lit side is one direction for the whole canvas**,
   from its middle toward the light (device, 15 ott 2026): taken pixel by pixel toward the
   light, the direction turned a full circle round it and the lit edge turned with it, which
   drew rings and arcs into the clouds as far as 150dp from the moon, the «geometric shape» a

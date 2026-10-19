@@ -21,7 +21,10 @@ class SkyDeckTest {
             "float2 p = float2((q.x + drift) * 0.0105, q.y * 0.0105 * persp);",
             "float2 w = float2(fbm2(p * 0.7 + float2(3.1, 7.7)), fbm2(p * 0.7 + float2(9.4, 1.3)));",
             "float2 pw = p + (w - 0.5) * 0.6;",
-            "float n = fbm(pw);",
+            // fbmParts is fbm with its two- and three-octave sums handed back: the same n.
+            "float n = fbmParts(pw, deck2, deck3);",
+            "if (i == 1) two = v / 0.75;",
+            "if (i == 2) three = v / 0.875;",
             "float a = smoothstep(uDeckTh, uDeckTh + 0.22, n);",
             "p = float2(0.8 * p.x - 0.6 * p.y, 0.6 * p.x + 0.8 * p.y) * 2.03 + float2(11.7, 5.3);",
             "for (int i = 0; i < 4; i++) {",

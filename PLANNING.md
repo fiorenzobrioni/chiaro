@@ -14807,7 +14807,7 @@ vetro).
   attuazione. `SkyBodiesLayer` e la sua fascia (`SkyColumn`) restano solo se serve ancora un layer
   Compose; `sunVeil` e `moonVeil` restano le regole, i loro test con loro. Immagini del README da
   rigenerare.
-- [ ] **3. La luce del banco.** Due campioni lungo la direzione della luce (ε e 2ε) per
+- [x] **3. La luce del banco.** Due campioni lungo la direzione della luce (ε e 2ε) per
   un'auto-ombra che dia spessore; gradient noise al posto del value noise nella derivata, così la
   striatura lungo la luce sparisce; il contrasto dell'ombreggiatura scalato con la luce disponibile
   (senza sole né luna le nuvole sono piatte); la y della luce libera di stare sotto il canvas al
@@ -14979,3 +14979,65 @@ layer. `SkyDeckTest` fissa ancora le righe del banco. Immagini del README rigene
 `today-now` e `today-foldable` (la Milano coperta mostra del sole un chiarore tenue, non più un disco
 sopra le nuvole) e `settings` (il sole dell'ora d'oro con il suo bagliore). Suite completa (745 app
 debug con i 14 screenshot saltati, 697 release, i moduli core invariati) e lint con 0 errori.
+
+### Passo 3: la luce del banco (19 ott 2026)
+
+**Cosa è cambiato.**
+
+1. *Il bordo illuminato si legge sulle prime tre ottave*, a 0,22 di cella verso la luce e con
+   guadagno 3 (era su tutte e quattro a 0,16 con guadagno 4): la quarta ottava, celle di 11 dp,
+   metteva nella derivata il suo reticolo e pettinava le nuvole lungo la luce, la rigatura vista al
+   50% con il sole a est. Le somme a due e tre ottave escono dallo stesso `fbm` del banco
+   (`fbmParts`, con `out`), quindi il bordo costa i tre campioni del punto spostato e basta.
+2. *L'auto-ombra*: una nuvola più spessa verso la luce di quanto sia qui, letta sulle due ottave
+   grosse al doppio della distanza (`1 − exp(−7·eccesso)`, fino al 55% di buio). Mette in ombra il
+   sotto e gli incavi, ed è quello che dà corpo a un cumulo. Due campioni in più; il budget di §3.5
+   passa da «circa venti» a «circa venticinque».
+3. *La luce è di chi ne dà di più*: il sole da 1° fino a −9° (`sunLight`, una `smoothstep`), la
+   luna per illuminazione e altezza; vince il maggiore e non più il sole sopra lo 0,5 di `day`. Il
+   contrasto dell'ombreggiatura è scalato da `uLightAmount`: senza sole né luna le nuvole sono
+   piatte, un tono solo, com'è una nuvola che niente illumina. Anche il bordo luminoso (`glow`)
+   segue la luce che c'è.
+4. *Il sole sotto l'orizzonte sta sotto il canvas*: `up` scende fino a −1 a −12° e lo shader
+   (`placeLight`) lo mette dal piede della fascia fino a 40 dp sotto il bordo inferiore, così quello
+   che gli sta di fronte è il sotto delle nuvole. Il colore chiaro segue la luce del sole e non il
+   giorno (`lerp(nightLit, warmLit, sunLight)`, con l'ora d'oro piena sotto i 2°): al tramonto le
+   basi prendono l'arancio e il rosa dell'orizzonte, le cime restano grigio-azzurre.
+5. *Il residuo dell'errore 3*: lo stop alto del gradiente va verso quello medio di 0,6 della
+   copertura, prima della desaturazione e dello scurimento di §3.3 (`CloudZenith`). Un cielo coperto è
+   piatto, non un azzurro più scuro; sotto nuvole e pioggia lo stop alto passa da 0,092 a 0,138 di
+   luminanza, sopra l'ombra di un nembostrato (0,13), e il rapporto orizzonte/zenit del coperto scende
+   da 2,79 (sereno) a 2,18. Lo leggono anche i widget che disegnano il gradiente intero.
+6. DESIGN §3.3, §3.5, §3.9 (la luce), VISION invariata.
+
+**Decisioni e deviazioni.** *Il gradient noise provato e lasciato*: il piano diceva «gradient noise al
+posto del value noise nella derivata»; portato in NumPy con la fade quintica e le soglie rimisurate
+(l'alfa medio centrava la quota del banco entro l'1%), toglieva la rigatura ma cambiava il carattere:
+le masse diventavano stracciate, più fractus che cumuli, e un cielo al 25% un cielo a pecorelle. Il
+value noise resta, con le forme viste e tarate sul telefono da un mese, e la derivata si leviga
+leggendola sulle ottave basse: rese vecchio contro nuovo su otto cieli, la rigatura sparisce uguale.
+*La tabella delle soglie non si tocca*: il campo del banco è lo stesso. *Un tramonto a −3° con una
+falce al 20% è ancora illuminato dal sole* (0,65 contro 0,2): la scelta pesata e non binaria è
+esattamente questo caso. *I varchi di un cielo piovoso in cima* ora sono grigio-azzurri e non più buchi
+scuri; restano di una tinta diversa dal banco, perché il gradiente di §3.3 tiene il 30% del colore
+anche sotto la pioggia, e questo è il modello e non un difetto.
+
+**Da verificare sul telefono.** I cumuli al 50% con il sole di lato (niente rigatura, le basi in
+ombra), un tramonto con nuvole basse (le basi accese), una notte senza luna (nuvole piatte), il tempo
+di GPU con i cinque campioni in più.
+
+**Come è stato verificato.** `SkySceneTest` (due casi nuovi): a −3° la luce sta sotto la fascia
+(`up` = −0,25), le nuvole sono ancora illuminate (0,65) e calde, a −30° senza luna la luce è zero e
+le nuvole piatte, il bordo luminoso segue la luce che c'è; la luce è del corpo che ne dà di più (il
+sole a −3° con una falce al 20%, la luna a −12°). `SkyPaletteTest` (un caso nuovo): sotto le nuvole il
+rapporto orizzonte/zenit scende sotto 0,85 di quello sereno, lo zenit di un coperto piovoso sta sopra
+0,13, un cielo sereno non si muove. `SkyDeckTest` fissa le righe nuove (`fbmParts` e le sue somme
+parziali) e misura ancora la quota del banco, che non è cambiata. Le rese dello shader vero
+(`CHIARO_RENDER_DIR`, tre cieli in più: tramonto a −3° con 40% di basse, notte senza luna, pioggia al
+95%) guardate: cumuli con le basi in ombra e senza rigatura, il tramonto con i bordi bassi accesi, la
+notte piatta, i varchi del cielo piovoso non più buchi. Il prototipo NumPy (`skyport3.py`, poi la
+variante B) reso vecchio contro nuovo su otto cieli. Immagini del README rigenerate e guardate:
+`today-now` e `today-foldable` (la Milano coperta ha ora un banco con corpo e ombre), `settings`,
+`widget-day-arc` (il cielo del widget sotto le nuvole è un filo più piatto: 22 635 px diversi, 17
+livelli al massimo, invisibile; `widgets` identica). Suite completa (748 app debug con i 14 screenshot
+saltati, 700 release, i moduli core invariati) e lint con 0 errori.

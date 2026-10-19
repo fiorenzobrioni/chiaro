@@ -106,6 +106,27 @@ class SkyPaletteTest {
                 sky.brightness(-30.0, cloud = 100) < sky.brightness(-3.0))
         }
 
+    /**
+     * Step 3 of the sky review (19 ott 2026): an overcast is flat. The zenith stop comes toward
+     * the mid one by 0.6 of the cover, so under a wet overcast it is no longer the darkest thing
+     * on the canvas (0.09 of luminance, under the shade of any cloud the scene draws).
+     */
+    @Test
+    fun `under cloud the zenith comes toward the mid stop, and an overcast is flatter than a clear sky`() =
+        eachPalette { sky, name ->
+            val clear = sky.gradient(50.0)
+            val overcast = sky.gradient(50.0, cloudPct = 100)
+            val clearSpan = luminance(clear.bottom) / luminance(clear.top)
+            val overcastSpan = luminance(overcast.bottom) / luminance(overcast.top)
+            assertTrue("$name: the overcast's horizon-to-zenith span (%.2f) under the clear one's (%.2f)".format(overcastSpan, clearSpan),
+                overcastSpan < clearSpan * 0.85)
+            // Under a wet overcast the zenith stays above a nimbostratus' shade (about 0.13).
+            val wet = sky.gradient(40.0, cloudPct = 95, precipPct = 90)
+            assertTrue("$name: wet zenith %.3f".format(luminance(wet.top)), luminance(wet.top) > 0.13)
+            // A clear sky is untouched, and the mid and bottom stops never move for it.
+            assertEquals(name, sky.gradient(50.0, cloudPct = 0), clear)
+        }
+
     @Test
     fun `clouds hide the moon, and not the other way round`() = eachPalette { sky, name ->
         // The hole in the first draft of §3.4: applying the moon lift after the cloud mix

@@ -259,7 +259,10 @@ class SkyShaderPixelTest {
             Triple("high-veil-closed", SkyPalette.Paper.gradient(50.0, 100), scene(SkyPalette.Paper.gradient(50.0, 100), 50.0, cloudPct = 100, layers = CloudLayers(0, 0, 100))),
             Triple("cumulus-50-sun-behind", SkyPalette.Paper.gradient(35.0, 50), scene(SkyPalette.Paper.gradient(35.0, 50), 35.0, cloudPct = 50, layers = CloudLayers(50, 0, 0))),
             Triple("full-moon-20-low", SkyPalette.Paper.gradient(-30.0, 20, 0, 1.0, 40.0), scene(SkyPalette.Paper.gradient(-30.0, 20, 0, 1.0, 40.0), -30.0, moonAltitudeDeg = 40.0, moonIllumination = 1.0, cloudPct = 20, layers = CloudLayers(20, 0, 0))),
-            Triple("day-moon-gibbous", SkyPalette.Paper.gradient(40.0, 10), scene(SkyPalette.Paper.gradient(40.0, 10), 40.0, moonAltitudeDeg = 25.0, moonIllumination = 0.8, cloudPct = 10, layers = CloudLayers(10, 0, 0)))
+            Triple("day-moon-gibbous", SkyPalette.Paper.gradient(40.0, 10), scene(SkyPalette.Paper.gradient(40.0, 10), 40.0, moonAltitudeDeg = 25.0, moonIllumination = 0.8, cloudPct = 10, layers = CloudLayers(10, 0, 0))),
+            Triple("sunset-40-low", SkyPalette.Paper.gradient(-3.0, 40), scene(SkyPalette.Paper.gradient(-3.0, 40), -3.0, cloudPct = 40, layers = CloudLayers(40, 0, 0))),
+            Triple("night-no-moon-40-low", SkyPalette.Paper.gradient(-30.0, 40), scene(SkyPalette.Paper.gradient(-30.0, 40), -30.0, cloudPct = 40, layers = CloudLayers(40, 0, 0))),
+            Triple("rain-95", SkyPalette.Paper.gradient(40.0, 95, 90), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(40.0, 95, 90), 40.0, 180.0, -20.0, 150.0, 0.0, 90.0, false, 95, CloudLayers(90, 40, 20), 90, SkyFall.RAIN, 3.0, 30.0, 270))
         ).forEach { (name, gradient, scene) -> render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, name) }
     }
 
