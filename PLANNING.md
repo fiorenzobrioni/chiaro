@@ -14826,8 +14826,19 @@ vetro).
 - [ ] **6. Le stelle vere.** `AstronomyEngine` ha già l'effemeride, la fascia del canvas è già una
   proiezione azimut-altezza (`bodyAcross`, `bodyUp`), e un catalogo delle stelle sopra la terza
   magnitudine pesa pochi kilobyte: le stelle disegnate sono quelle che ci sono, con la magnitudine
-  nella grandezza. Con lo stesso passo l'angolo del lembo luminoso della luna, calcolabile dalle
-  posizioni di sole e luna (oggi il terminatore è sempre verticale).
+  nella grandezza. Con lo stesso passo **la luna ruotata come la si vede dal luogo** (committente,
+  19 ott 2026: «si può fare? lo consigli?»; sì, e consigliata): l'angolo del lembo illuminato
+  rispetto alla verticale locale si calcola dalle posizioni di sole e luna che il motore ha già (la
+  direzione dalla luna verso il sole proiettata sul piano tangente del cielo in quel luogo e in
+  quell'ora), e nello shader è una rotazione della maschera della fase, costo nullo; ingloba
+  `litOnRight`, emisfero sud compreso. Non è rumore: non aggiunge un elemento, orienta uno che c'è,
+  e la falce «a barchetta» della sera di primavera o la luna «sorridente» ai tropici sono tra le
+  cose della luna che un lettore nota e può verificare alzando gli occhi. Due limiti da scrivere:
+  sul canvas la resa è approssimata, perché la fascia è una proiezione azimut-altezza compressa e
+  non conforme (l'angolo vale nel cielo, sullo schermo «quasi»); e a 11 dp si legge sulle falci e
+  sulle gibbose, non alla luna piena. Da fare sul canvas e sulla luna della scheda «Stanotte»
+  (`moonLitPath`, disegnata «come la vedi»), lasciando dritte le icone della famiglia, che sono
+  simboli.
 - [x] **7. Lo scrim**, deciso sulla misura (vedi sotto); era da decidere con il committente: misurare il contratto di §3.6 sul rettangolo
   del testo e non su tutta la larghezza (una scrim che sfuma anche in orizzontale), oppure un'ombra
   morbida sul testo, così la metà bassa del cielo torna chiara. Nessuna delle due è gratis: la prima
