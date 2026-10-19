@@ -471,7 +471,14 @@ what makes it safe.
 
 Cloud cover **desaturates each stop toward its own brightness** by `0.7 × cloudPct` and
 then dims it by `0.15 × cloudPct`, so a fully overcast day keeps 30% of its color and
-stays recognizably morning or evening.
+stays recognizably morning or evening. Before either, **the zenith stop comes toward the mid
+stop by `0.6 × cloudPct`** (step 3 of the sky review, 19 ott 2026): a clear zenith is the
+darkest part of the sky and the horizon the brightest, 2.7:1 by day, but a cloud deck is lit
+from above and shows its base, so under it the zenith is no darker than the rest. Darkening
+the clear zenith further, as the two rules alone did, put the top stop at 0.09 of luminance
+under a wet overcast, under the shade of any cloud the scene draws (§3.9), and a gap in the
+deck up there was a dark hole. `SkyPaletteTest` holds that an overcast is flatter than a clear
+sky and that a wet overcast's zenith stays above a nimbostratus' shade.
 
 The first draft of this section mixed every stop toward one fixed grey, and implementing
 it found the hole: a fixed grey is brighter than a night sky, so an overcast midnight came
@@ -498,15 +505,25 @@ only worth printing if something fails when it stops being true.
 ### 3.5 Motion and cost
 
 The canvas is **one AGSL shader** since the second review of Today (15 ott 2026): the
-gradient of §3.2–3.4, drawn by the shader exactly as the palette's three stops, and the scene
-of §3.9 over it. It replaced one gradient brush and the rule that went with it — «one shader,
+gradient of §3.2–3.4, drawn by the shader from the palette's three stops, and the scene
+of §3.9 over it. **It composes in linear light** (review of the sky, 19 ott 2026): the stops
+and the clouds' colours reach the shader as linear RGB, every mix happens there, and the
+pixel is encoded back to sRGB at the end by the exact transfer curve, with half a level of
+dither fixed per pixel. Mixed as sRGB values, as it was, the middle of a cloud's edge came out
+darker than the light makes it (0.537 against 0.558 in luminance at half mix over the day
+band's mid stop), the grey rim of clouds composed in gamma space; and without dither the night
+band, seventeen levels of red over the whole height, drew in steps up to 110 px wide on an
+OLED. The three stops themselves are still §3.2's: only what lies between them is lighter by
+the difference between the two mixes, and the brightest stop, the one §3.6 is measured
+against, is where it was. It replaced one gradient brush and the rule that went with it — «one shader,
 one animation, 2 ms a frame, no particles, no parallax» — because a gradient alone was the
 canvas' weakest state on the screen people see most: a grey-blue rectangle at noon under
 cloud. The budget is now written in what a frame may do, and in when there is a frame at all:
 
-- **per pixel, at most about twenty value-noise samples** in the worst sky (a domain-warped
-  cumulus with its light, a cirrus veil, a fall); a clear day spends almost none, because
-  every layer is skipped when its amount is zero;
+- **per pixel, at most about twenty-five value-noise samples** in the worst sky (a
+  domain-warped cumulus with its light and its self-shadow, a cirrus veil, a fall; twenty
+  until step 3 of the sky review, 19 ott 2026, which spends five more on the shadow); a clear
+  day spends almost none, because every layer is skipped when its amount is zero;
 - **frames only while the sky may move**, 15 a second for a sky that drifts and 30 for one
   in which something falls — the rates their own speeds need (a cloud drifts a few dp a
   second) — and one frame asked for per step, never one per vsync;
@@ -547,6 +564,26 @@ secondary line is set apart by its size (`bodyLarge`, `bodyMedium`, `labelSmall`
 22sp word and an 88sp figure). The one translucent white left is the pager's other dots
 (`SkyPalette.InkQuiet`), a mark and not text. `ScrimContractTest` pins both halves: the thinner
 whites fail, and no line under `ui/today/` names a white of its own.
+
+**A halo under every line, and the scrim as it is** (step 7 of the sky review, 19 ott 2026,
+decided on a measurement the committente delegated). The numbers above hold where the scrim
+is full, which is the bottom of the canvas: the ribbon's clock times. Every line above them
+sits on the scrim's ramp, and a mock-up of the hero over the brightest sky, with the contrast
+read on the pixels just outside the glyphs (Roboto, the lines where Today lays them), found
+the 88sp figure at **2.30:1** on a clear noon, the word at 2.85, the lines at 3.27, the times
+at 5.28. A lighter scrim with a blurred halo on the text showed more sky and raised the figure
+to 3.1, but took the times down to 3.0 to 4.1 and the lines with them: under a 1.5dp stroke a
+blur keeps a third of its strength, so the halo helps the big figure and little else. So the
+scrim does not move, and every text on the canvas wears a **halo** besides: the scrim's own
+colour at 0.8, blurred by 3dp, dropped 1dp (`SkyPalette.InkHaloAlpha`, `InkHaloBlur`,
+`InkHaloDrop`, `skyInkShadow`), on the hero's figure, word, lines and clock times, on the
+place row while it stands on the sky (fading with its ink), and on the Settings preview. It
+brings the figure over the 3:1 a large text needs and sets the white glyphs apart from the
+white cloud tops the deck draws since §3.9's self-shadow. Function, like the scrim, not
+decoration; it adds to the contract and replaces none of it, which is why the numbers above
+and `ScrimContractTest` are untouched. The one alternative that would free the lower half of
+the sky, the clock times off the canvas and onto the paper, is a layout decision for the
+committente, not taken here.
 
 Those three numbers are **SRC_OVER in sRGB values** — `scrim × α + sky × (1 − α)`, which
 is what the brush does — held at the 8 bits per channel the framebuffer holds. They were
@@ -669,8 +706,17 @@ with the parts of it a gradient could not say.
   `i.x·0.1031 + 0.1031`, rounded twice, while the cell next door hashes the same corner from
   its own `floor`; the hash multiplies that one bit until, once in a few thousand corners, its
   last `fract` crosses a whole number, and the corner has two values. The clouds then carried a
-  wedge with two sharp sides, a third-octave cell's size, that no CPU render showed; in dp so they have the same grain on every screen, and flatter toward
-  the horizon (the canvas' bottom) as a deck is in perspective. **The clouds take the
+  wedge with two sharp sides, a third-octave cell's size, that no CPU render showed; in dp so they have the same grain on every screen. **The deck is a
+  plane seen from below** (step 4 of the sky review, 19 ott 2026): the canvas' rows are
+  elevations, 45° at the top down to 15° at the bottom, and a row's ray meets the plane at
+  1/tan(elevation) of its height, so overhead the clouds are near and big, toward the horizon
+  far, small and flat together, and they drift across the screen 1.7 times faster at the top
+  than at the bottom, the parallax a deck has. Until then the field was only squashed in height
+  toward the bottom, by half, and the clouds were a wall, the same width at the top and at the
+  bottom. The elevations span the canvas whatever its height (a taller canvas sees the same sky
+  with a touch wider cells, never a horizon low enough to alias the noise), the scale is the old
+  one at the middle row, 95 dp a cell, and `deckThreshold`'s table holds on the new sampling,
+  measured on 24 canvases within 0.021 as before. The cirrus keeps its own stretch. **The clouds take the
   deck's share of the canvas** (16 ott 2026, `deckThreshold`, `SkyDeckTest`): the threshold is
   read from a table measured on the shader's own noise (1.8 million points, sixty 400 × 300 dp
   canvases along 100 000 dp of drift) at which the clouds' mean alpha is the deck, every 5%.
@@ -679,9 +725,22 @@ with the parts of it a gradient could not say.
   device. A closed deck's threshold is under the noise's floor, so it has no gap at all. The
   shading flattens as the deck closes: a deck is one grey with soft folds, not a sky of lit
   puffs.
-- **Light**: the edge of a cloud that faces the sun by day, or the moon at night, is the
-  lit one — the light's place is the bodies' own (§8.1c), the same bearing and altitude —
-  and near it the clouds catch a rim. **The lit side is one direction for the whole canvas**,
+- **Light**: the edge of a cloud that faces the light is the lit one, and the light is the
+  sun's or the moon's, **whichever gives more** (step 3, 19 ott 2026: the sun's from 1° down
+  to −9°, so a dusk at −3° still lights the clouds over a thin crescent; the moon's by its
+  illumination and altitude); the light's place is the body's own (§8.1c), the same bearing
+  and altitude, and **a sun under the horizon stands under the canvas**, down to 40 dp below
+  it at −12°, so what faces it at sunset is the clouds' undersides, which take the horizon's
+  own colour (the lit colour follows the sun's light, not the day). The lit edge is read on
+  the field's first three octaves 0.22 of a cell toward the light, with a gain of 3 (on all
+  four at 0.16 and a gain of 4, as it was, the fourth octave's lattice combed the clouds along
+  the light at half cover); the **self-shadow** is a cloud thicker toward the light than here,
+  read on the two coarse octaves twice as far, which puts the undersides and the hollows into
+  shade and gives a cumulus its body. **With no light the clouds are flat**: on a moonless
+  night the shading goes to one tone, as a cloud with nothing to light it does. Near the light
+  the clouds catch a rim. Gradient noise was tried for the deck the same day and left: it took
+  the comb out but turned the cumulus into fractus, and a 25% sky into a mackerel one.
+  **The lit side is one direction for the whole canvas**,
   from its middle toward the light (device, 15 ott 2026): taken pixel by pixel toward the
   light, the direction turned a full circle round it and the lit edge turned with it, which
   drew rings and arcs into the clouds as far as 150dp from the moon, the «geometric shape» a
@@ -692,10 +751,17 @@ with the parts of it a gradient could not say.
   by night and under a likely rain, and **grey as the deck closes** (16 ott 2026): 80% of the
   way to a grey of its own luminance at a closed deck, because the underside of a stratus is
   lit by the cloud and not by the blue above it. The luminance stays, so the folds and the
-  cap do too.
+  cap do too. **Under a likely rain the lit colour dims as well** (19 ott 2026), by a quarter
+  of the chance in sRGB value against the shade's 30%: the gradient already dimmed under rain
+  (§3.3) and the clouds did not, so a 94% deck at 90% of rain drew light grey clouds with dark
+  blue holes between them, the inverse of a nimbostratus. Now the sky's mid stop lands between
+  the clouds' two colours and a gap is neither a hole nor a light.
 - **Cirrus**, in the **veil**, drawn **before** the deck (16 ott 2026): from the ground a
   cirrus shows through the gaps of the clouds below it, never over them. Streaks stretched
-  7.5 to 1 across the sky while the veil is scattered, drifting faster than the deck below;
+  7.5 to 1 across the sky while the veil is scattered, drifting at **half the deck's speed**
+  (19 ott 2026: a cirrus is five to eight times higher than a cumulus and its wind two or three
+  times stronger, so across the sky it moves slower; at 1.8 times the deck's, as it was, the far
+  layer overtook the near one, a parallax inside out);
   from 60% to 100% (cirrostratus) the stretch relaxes to 4 to 3 and the streaks give way to
   a milky sheet with a soft unevenness, at most 0.6 of the lit colour. Until then the veil
   was the high layer's *share* of the total and drawn over the deck, which also faded by
@@ -709,12 +775,38 @@ with the parts of it a gradient could not say.
   cover, because what falls comes from a thick cloud whichever layer the model files it
   under. It dims the clouds' rim light and veils the sun and the moon (§8.1c).
 - **Stars**, only when the sun is past −10° and fading in to −18°, times the open sky squared,
-  less under a bright moon: one in a few cells of 13dp, twinkling slowly, thinning toward the
-  horizon. Never by day, never under a closed sky.
+  less under a bright moon, twinkling slowly, thinning toward the horizon. Never by day, never
+  under a closed sky. **They are the stars that are there** (step 6 of the sky review, 19 ott
+  2026, `BrightStars`, `StarField`, `StarMap`): every star of the Yale Bright Star Catalogue
+  brighter than magnitude 4.5, 904 of them, generated into `:core:domain` by
+  `tools/gen_bright_stars.py` (never edited by hand), placed by the engine for this instant and
+  place like the moon is, and drawn where the deck's camera puts them (§3.9's plane: 45° at the
+  top row, 15° at the bottom, the azimuth through `tan` as a pinhole does, facing the equator
+  as the bodies do), so a star and a cloud sit in one sky. Each is as bright as its magnitude
+  (a bent span from the limit to Sirius, with a floor so a star at the limit is a star), as
+  warm as its B-V colour (blue-white to orange, a tint and never a saturated colour), and
+  twinkles on a phase of its own. The engine places them once a minute; the shader does not
+  loop over them, it reads a texture `StarMap` draws from the list (brightness, phase and
+  warmth in the colour channels, the disc in the alpha), one read per pixel, nothing by day.
+  Until then the stars were a hash, one in a few cells of 13dp, all alike. On a January
+  evening in Milan the window holds Orion, and a reader may look up and check: the one thing
+  on the canvas that is the sky itself and not a reading of it. Precession since J2000 moves
+  a star by a third of a degree, under what a dp holds, and is not applied; light pollution is
+  not modelled, because no data says how much there is.
 - **What falls**, only when the hour's **state** is wet (the state engine's, not the
   provider's code): rain as a veil and long slanted streaks, snow as flakes that fall and
   sway, at a strength from a third to full by the quarter hour just measured (4 mm an hour
-  is full).
+  is full). **On three planes** since step 5 of the sky review (19 ott 2026): near, middle
+  and far, each with its own size, speed and strength, the near one big and fast and the far
+  one small, slow and faint, so the fall has depth. Rain: streaks of 1.8, 1.2 and 0.8 dp at
+  160, 90 and 55 dp a second, leaning with the wind (a drop goes where the air goes while it
+  falls, so the lean follows the drift's sign, up to 19°) and sliding along their own line.
+  Snow: cells of 34, 22 and 14 dp with a flake in about two thirds of them, jittered inside
+  the cell and of a size of its own, swaying, falling at 22, 14 and 8 dp a second and carried
+  sideways by the wind in the plane's share. Until then there was one plane: the rain thin
+  scratches crawling at 68 dp a second, the snow one flake a cell, never two close together,
+  a lattice of dots. On a moonless night the rain is all but invisible, as it was and as it
+  is: the drops wear the clouds' lit colour, and nothing lights it.
 - **Drift**: the clouds move with **the wind** — the hour's speed, a floor of 1.5 dp a second
   plus 0.3 a km/h, toward where the wind blows as the reader facing the equator sees it (in
   the north the west is on the right, in the south the east; the frame the sun and moon stand
@@ -723,9 +815,14 @@ with the parts of it a gradient could not say.
   one §3.6 measured white against. The scene is drawn under the scrims like the gradient, and
   with the cap nothing it draws can cost the text its 4.5:1 — the clouds' colours are capped in
   Kotlin too, half a percent under, because an sRGB `Color` is stored at 8 bits and rounds up.
+  In the shader the cap is exact since 19 ott 2026, a dot product on linear values (it was a
+  2.2 power over sRGB values, a touch stricter than the curve); the half level of dither added
+  after it is inside what the contract has to spare, 5.27:1 measured against 4.5 needed.
 
-The sun and the moon (§8.1c) are drawn over the scene as before, with their veils, which read
-the scene's opacity.
+The sun and the moon (§8.1c) are part of the scene since 19 ott 2026: drawn by the same
+shader behind the clouds, placed by the bodies' rules in the band the column reports, veiled
+by the high layer globally and by the deck pixel by pixel, their glows in front of the clouds
+reading the whole opacity. The clouds' light is the body's own place, by the same arithmetic.
 
 ## 4. The daylight ribbon
 
@@ -1394,7 +1491,8 @@ were exactly where a reader stops to read the day's range under it, so the halfw
 seen most. The continuity it bought is kept by the moment and the place: the bar's number comes in as the
 big one goes under, beside the sky's icon where the eye already looks for it.
 
-**8.1c The sun and the moon** (design review, 23 set 2026) — drawn on the canvas where they
+**8.1c The sun and the moon** (design review, 23 set 2026; drawn by the shader since the review
+of the sky, 19 ott 2026) — drawn on the canvas where they
 stand, in a band of sky the canvas' column keeps for them between the place row and the hero
 (at least 56dp, more when the floor leaves more; the canvas grows by what that costs, because
 a hero with no sky in it is a temperature on a gradient). **Across** by compass bearing as
@@ -1415,8 +1513,48 @@ phase — lit limb toward the evening sun, the terminator an ellipse, the dark p
 earthshine — and is pale by day. Both are drawn inside their band, the halo spilling at most
 14dp past it, so neither can stand behind text and cost it contrast; the colors are
 `SkyPalette.SunHigh`, `SunLow` and `MoonFace`, shared by both palettes like `Moonlight`.
-Static: they move with the page's minute tick and cost one draw; the scene under them (§3.9)
-is what moves.
+
+**In the shader, behind the clouds, in linear light** (19 ott 2026). Until then the bodies
+were a Compose layer over the shader and over the scrim, veiled by the cloud's global opacity
+alone and glowing in SRC_OVER paint: a full disc stood on a cumulus at 25% of cover, the
+clouds' rim light was centred 19 to 42 dp from the drawn sun (the shader had its own idea of
+where the band was), and a noon sun read as a pale sticker. Now `SkyShaderSource` draws them
+from the same band (`SkyBand`, reported by the column) and the same rules (`SkyBodies.kt`):
+- **behind the deck, pixel by pixel**: the sun's disc and its corona, the moon's disc, are gone
+  where a cloud stands, so the global veil a disc wears is the high layer's opacity alone (the
+  whole cover's on a wet hour); the glows in front of the clouds, the sun's long tail, the
+  broad patch a thin cloud lets through, the moon's glow where a deck hides it, read the whole
+  opacity as before;
+- **light, not paint**: the sun's disc is added at three times the cap and its corona as light,
+  so it burns to white; the moon reflects and is a colour over the sky, its lit face at the
+  face's own luminance, 0.9, brighter than any sky;
+- **the cap opens in the band**: §3.6's ceiling is the palette's brightest stop everywhere
+  text can stand, and the band holds none by construction (`SkyColumn`), so inside it, 6 dp
+  from its edges, the ceiling rises to white and a sun can be a sun. A body's glow is a
+  **circle** round it, fading from its centre to nothing 8 dp past the band's nearer edge
+  (past the edge it is a fifth of itself at most, under the cap), what `glowRadius` did for the
+  old layer, never a window cut out of the band: cut in height alone, the tail of a noon sun
+  drew a bright stripe across the whole canvas in the shader's first render. So nothing bright
+  reaches the place row or the hero (`SkyShaderPixelTest` reads the pixels above the band and
+  beside the sun). The glow is as big as the band lets it: a sun at the top of the band has
+  19 dp under the place row and little more than its disc, one in the middle has 36;
+- a **22° halo** under a closed cirrostratus was tried and left out: at four discs from the
+  sun it does not fit a band of 72 dp, and squeezed to fit it was a second corona. It comes
+  back if the band ever grows (§3.9's open item 7, the scrim);
+- what used to be the layer's static draw now costs the shader a few samples per pixel inside
+  the band and nothing outside it (every term is skipped when a body is under the horizon);
+- **the moon is turned as the place sees it** (step 6, 19 ott 2026,
+  `AstronomyEngine.moonBrightLimbAngle`): the bright limb points at the sun, the angle from
+  the sun's and the moon's own places on the local sky (the sun's direction on the plane
+  tangent to the sky at the moon, resolved on the axes of growing azimuth and growing
+  altitude), and the phase's mask is turned onto it in the shader. Down toward a sun just set,
+  the «boat» of a spring dusk; up toward one not yet risen; the «smile» of the tropics. It
+  replaces the rule that put the lit limb on the right while waxing and on the left while
+  waning, which is what this angle says when the sun is at the moon's height. Two limits:
+  on the canvas it is approximate, because the bodies' band is a compressed azimuth-altitude
+  frame and not a conformal one, so the angle is the sky's and the screen's only nearly; and
+  at 22dp it reads on crescents and gibbous moons, not on a full one. The tonight card's moon
+  (§8.7) stays upright: it stands for a whole night, not for an instant.
 
 The **hero** itself was re-set the same day: the whole degrees and the degree sign at the
 hero size (the tenths, first set at 55% on the same baseline, went on 24 set 2026 with

@@ -141,7 +141,10 @@ internal fun PlaceHeader(
     dotInactive: Color,
     modifier: Modifier = Modifier,
     compactVisible: Boolean = false,
-    compact: (@Composable () -> Unit)? = null
+    compact: (@Composable () -> Unit)? = null,
+    /** The canvas' halo under the name and the hour while the row stands on the sky
+     * (DESIGN §3.6, 19 ott 2026); null on the paper. */
+    shadow: androidx.compose.ui.graphics.Shadow? = null
 ) {
     val spoken = if (isGps) stringResource(R.string.header_gps_desc, title) else title
     val switcher = stringResource(R.string.place_switcher_action)
@@ -190,7 +193,7 @@ internal fun PlaceHeader(
                         }
                         Text(
                             title,
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleLarge.copy(shadow = shadow),
                             color = contentColor,
                             // One line when the bar also carries the temperature: a name
                             // that wrapped under it would push the bar taller at every scroll.
@@ -217,7 +220,7 @@ internal fun PlaceHeader(
                     localNow?.let {
                         FittingText(
                             candidates = it,
-                            style = MaterialTheme.typography.labelLarge,
+                            style = MaterialTheme.typography.labelLarge.copy(shadow = shadow),
                             color = contentColor
                         )
                     }

@@ -198,8 +198,9 @@ that in tweather already — one engine, one sunrise). Competitors animate a gen
 paints the sky it just described.
 
 The canvas draws more than the gradient since 15 ott 2026 (DESIGN §3.5, §3.9): one shader paints
-the hour's clouds at the cover the forecast gives, the high veils of its cirrus, the stars of a
-dark clear night, the rain or snow of a wet hour, and moves them with the real wind — every
+the hour's clouds at the cover the forecast gives, the high veils of its cirrus, the sun and the
+moon where they stand, behind those clouds (19 ott 2026), the stars of a dark clear night, the rain
+or snow of a wet hour, and moves them with the real wind — every
 element from the data, so it is still the sky the screen describes and never a generic loop. It
 moves only while the weather may move (the reader's switch, the system's animations, battery
 saver, a page at rest, the canvas on screen), at 15 frames a second for a drift and 30 for a

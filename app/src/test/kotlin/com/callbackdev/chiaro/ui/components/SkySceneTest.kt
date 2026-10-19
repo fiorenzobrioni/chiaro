@@ -1,10 +1,12 @@
 package com.callbackdev.chiaro.ui.components
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.ui.theme.SkyPalette
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -22,6 +24,7 @@ class SkySceneTest {
         fall: SkyFall = SkyFall.NONE,
         moonAlt: Double = -20.0,
         moonIllum: Double = 0.0,
+        moonLimb: Double = 0.0,
         layers: CloudLayers? = null,
         windKph: Double = 15.0,
         windFrom: Int = 270,
@@ -34,6 +37,7 @@ class SkySceneTest {
         moonAltitudeDeg = moonAlt,
         moonAzimuthDeg = 150.0,
         moonIllumination = moonIllum,
+        moonLimbAngleDeg = moonLimb,
         southern = southern,
         cloudPct = cloud,
         layers = layers,
@@ -167,6 +171,109 @@ class SkySceneTest {
         assertTrue(chroma(veiled) > chroma(closed) * 2f)
         val toned = grey(closed)
         assertEquals(closed.luminance(), toned.luminance(), 0.01f)
+    }
+
+    /**
+     * 19 ott 2026: a rain cloud is darker than the sky in its gaps, not lighter. Before, the
+     * lit colour ignored the rain while the gradient dimmed under it (§3.3), and a 94% deck at
+     * 90% of rain drew light grey clouds over dark blue holes. Now the sky's mid and bottom
+     * stops sit between the clouds' two colours (the top stop stays darker, §3.3's own number).
+     */
+    @Test
+    fun `a likely rain darkens the clouds, and the sky's mid stop sits between their colours`() {
+        val layers = CloudLayers(90, 40, 20)
+        val dry = scene(cloud = 95, layers = layers)
+        val wet = scene(cloud = 95, layers = layers, precip = 90, fall = SkyFall.RAIN)
+        assertTrue(wet.lit.luminance() < dry.lit.luminance() * 0.75f)
+        val sky = SkyPalette.Paper.gradient(40.0, 95, 90)
+        assertTrue(wet.shade.luminance() < sky.mid.luminance())
+        assertTrue(sky.mid.luminance() < wet.lit.luminance())
+        assertTrue(sky.bottom.luminance() < wet.lit.luminance())
+        // A dry hour is as it was.
+        assertEquals(dry.lit, scene(cloud = 95, layers = layers, precip = 0).lit)
+    }
+
+    /**
+     * 19 ott 2026: the sun and the moon are the scene's, placed by the bodies' rules in the
+     * same frame the clouds' light is, and only while they are up.
+     */
+    @Test
+    fun `the sun's mark stands where the bodies' rules put it, and only while it is up`() {
+        val s = scene(alt = 30.0)
+        val sun = requireNotNull(s.sun)
+        assertEquals(bodyAcross(180.0, southern = false), sun.across, 1e-6f)
+        assertEquals(bodyUp(30.0), sun.up, 1e-6f)
+        assertEquals(1f, sun.disc, 1e-6f)
+        assertEquals(0f, sun.warmth, 1e-6f)
+        assertTrue(scene(alt = 3.0).sun!!.warmth > 0.7f)
+        assertNull(scene(alt = -1.0).sun)
+        // The light the clouds read is the sun's own place, the same two numbers.
+        assertEquals(Offset(sun.across, sun.up), s.light)
+    }
+
+    /** The deck hides a disc pixel by pixel in the shader, so only the high veil dims it here;
+     * the glow in front of the clouds reads the whole opacity, and a wet hour takes it all. */
+    @Test
+    fun `a deck leaves the sun's disc to the shader, a veil dims it, a wet hour takes it`() {
+        val decked = scene(cloud = 100, layers = CloudLayers(100, 0, 0)).sun!!
+        val veiled = scene(cloud = 100, layers = CloudLayers(0, 0, 100)).sun!!
+        assertEquals(1f, decked.disc, 1e-6f)
+        assertEquals(0.7f, veiled.disc, 1e-6f)
+        assertTrue(decked.spread > veiled.spread)
+        assertTrue(decked.glowMid > veiled.glowMid)
+        val wet = scene(cloud = 100, layers = CloudLayers(100, 0, 0), precip = 90, fall = SkyFall.RAIN).sun!!
+        assertEquals(0f, wet.disc, 1e-6f)
+    }
+
+    @Test
+    fun `the moon's mark wears its phase and its veil`() {
+        val night = scene(alt = -30.0, moonAlt = 40.0, moonIllum = 0.3, moonLimb = -35.0)
+        val moon = requireNotNull(night.moon)
+        // The bright limb's angle is the place's, carried as it is (step 6).
+        assertEquals(-35f, moon.limbAngleDeg, 1e-6f)
+        assertEquals(150f, scene(alt = -30.0, moonAlt = 40.0, moonIllum = 0.3, moonLimb = 150.0).moon!!.limbAngleDeg, 1e-6f)
+        assertEquals(0.95f, moon.disc, 1e-6f)
+        assertEquals(0.3f, moon.illumination, 1e-6f)
+        assertEquals(Offset(moon.across, moon.up), night.light)
+        assertNull(scene(moonAlt = -5.0).moon)
+        // By day the moon is the pale thing it is; behind a closed low deck, at night, its disc
+        // is the shader's to hide and its glow stays, dimmer and wider.
+        assertEquals(0.55f, scene(alt = 30.0, moonAlt = 20.0, moonIllum = 0.8).moon!!.disc, 1e-6f)
+        val decked = scene(alt = -30.0, moonAlt = 40.0, moonIllum = 1.0, cloud = 100, layers = CloudLayers(100, 0, 0)).moon!!
+        assertEquals(0.95f, decked.disc, 1e-6f)
+        assertTrue(decked.glow in 0.3f..0.5f)
+        assertTrue(decked.spread > 1.2f)
+    }
+
+    /**
+     * Step 3 (19 ott 2026): the clouds' light is the sun's or the moon's, whichever gives more;
+     * at dusk the sun lights them from under the horizon, and without either they are flat.
+     */
+    @Test
+    fun `at dusk the sun lights the clouds from below the band, and without a light they are flat`() {
+        val dusk = scene(alt = -3.0, cloud = 40)
+        assertTrue("the light is under the band at −3°", dusk.light.y < 0f)
+        assertEquals(-0.25f, dusk.light.y, 1e-6f)
+        assertTrue("the dusk still lights the clouds", dusk.lightAmount > 0.5f)
+        assertTrue("and they are warm", dusk.lit.red > dusk.lit.blue)
+        assertEquals(0f, scene(alt = -30.0, cloud = 40).lightAmount, 1e-6f)
+        assertEquals(1f, scene(alt = 30.0, cloud = 40).lightAmount, 1e-6f)
+        // The rim light follows the light there is: some at dusk, none on a moonless night.
+        assertTrue(dusk.glow > 0.3f)
+        assertEquals(0f, scene(alt = -30.0, cloud = 40).glow, 0f)
+    }
+
+    @Test
+    fun `the light is the body that gives more of it, not the sun by default`() {
+        // A thin crescent at dusk: the sun, still, from under the horizon.
+        val dusk = scene(alt = -3.0, moonAlt = 30.0, moonIllum = 0.2)
+        assertTrue(dusk.light.y < 0f)
+        assertEquals(bodyAcross(180.0, southern = false), dusk.light.x, 1e-6f)
+        // The same crescent at −12°: the moon.
+        val night = scene(alt = -12.0, moonAlt = 30.0, moonIllum = 0.2)
+        assertEquals(bodyAcross(150.0, southern = false), night.light.x, 1e-6f)
+        assertEquals(bodyUp(30.0), night.light.y, 1e-6f)
+        assertEquals(0.2f, night.lightAmount, 0.01f)
     }
 
     @Test

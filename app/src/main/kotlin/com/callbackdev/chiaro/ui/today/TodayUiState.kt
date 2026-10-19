@@ -114,6 +114,11 @@ data class SkySnapshot(
     val sunAzimuthDeg: Double = 180.0,
     val moonAzimuthDeg: Double = 180.0,
     val moonElongationDeg: Double = 0.0,
+    /** The angle of the moon's bright limb as this place sees it now (step 6 of the sky
+     * review, 19 ott 2026), and the stars in the canvas' window; the stars only once the sun
+     * is under −6°, because until then none is drawn and the engine need not place them. */
+    val moonLimbAngleDeg: Double = 0.0,
+    val stars: List<com.callbackdev.chiaro.ui.components.StarMark> = emptyList(),
     val southern: Boolean = false,
     /** The rest of today's forecast sky, for the canvas' ribbon (12 ott 2026). */
     val hours: List<RibbonHour> = emptyList(),
@@ -286,6 +291,12 @@ object TodayStateBuilder {
                     com.callbackdev.chiaro.domain.sky.SkyBody.MOON, now, coords
                 ),
                 moonElongationDeg = moon.elongation,
+                moonLimbAngleDeg = AstronomyEngine.moonBrightLimbAngle(now, coords),
+                stars = if (sunAltitude < -6.0) {
+                    com.callbackdev.chiaro.ui.components.StarField.visible(now, coords, coords.lat < 0.0)
+                } else {
+                    emptyList()
+                },
                 southern = coords.lat < 0.0,
                 hours = DaylightPhases.sky(trimmed.hourly, local.toLocalDate()),
                 layers = trimmed.current.cloudLayers,

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,14 +38,14 @@ import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.ui.components.DaylightRibbon
-import com.callbackdev.chiaro.ui.components.SkyBodies
-import com.callbackdev.chiaro.ui.components.SkyBodiesLayer
+import com.callbackdev.chiaro.ui.components.SkyBand
 import com.callbackdev.chiaro.ui.components.SkyCanvas
 import com.callbackdev.chiaro.ui.components.SkySheet
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.shell.PageColumns
 import com.callbackdev.chiaro.ui.theme.SkyGradient
 import com.callbackdev.chiaro.ui.theme.SkyPalette
+import com.callbackdev.chiaro.ui.theme.skyInkShadow
 import com.callbackdev.chiaro.ui.theme.tabular
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -106,6 +107,7 @@ internal fun CanvasHeader(
             moonAltitudeDeg = sky.moonAltitudeDeg,
             moonAzimuthDeg = sky.moonAzimuthDeg,
             moonIllumination = sky.moonIllumination,
+            moonLimbAngleDeg = sky.moonLimbAngleDeg,
             southern = sky.southern,
             cloudPct = sky.cloudPct,
             layers = sky.layers,
@@ -113,7 +115,8 @@ internal fun CanvasHeader(
             fall = sky.fall,
             fallMmPerHour = sky.fallMmPerHour,
             windKph = sky.windKph,
-            windFromDeg = sky.windFromDeg
+            windFromDeg = sky.windFromDeg,
+            starMarks = sky.stars
         )
     }
     val context = LocalContext.current
@@ -122,12 +125,17 @@ internal fun CanvasHeader(
         !com.callbackdev.chiaro.ui.theme.reducedMotion() &&
         !com.callbackdev.chiaro.ui.icons.LocalMotionPaused.current &&
         !saving.isOn()
+    // The band of sky the sun and the moon stand in, as the column lays it out, reported to
+    // the shader that draws them there (§8.1c, 19 ott 2026).
+    var band by remember { mutableStateOf<SkyBand?>(null) }
+    val density = LocalDensity.current
     SkyCanvas(
         gradient = gradient,
         minHeight = floor,
         sheet = sheet,
         scene = scene,
         moving = moving,
+        band = band,
         modifier = Modifier.onGloballyPositioned { canvasCoords = it }
     ) {
         // One column with the place row's seat at the top and the hero at the bottom,
@@ -143,22 +151,22 @@ internal fun CanvasHeader(
         // Between the two, since 23 set 2026, the sun and the moon, in a band of sky the
         // layout keeps for them ([SkyColumn]): the discs can never stand behind the place
         // row or the hero, and the band is never so thin that there is no room for one.
+        // The shader draws them (19 ott 2026); the band's only child tells it where the
+        // band is, in the canvas' own coordinates.
         Box(Modifier.padding(start = railInset)) {
         SkyColumn(seat = placeRowHeight, floor = floor - sheet.lip) {
-            Box(modifier = Modifier.fillMaxSize().padding(top = 4.dp)) {
-                SkyBodiesLayer(
-                    SkyBodies(
-                        sunAltitudeDeg = sky.sunAltitudeDeg,
-                        sunAzimuthDeg = sky.sunAzimuthDeg,
-                        moonAltitudeDeg = sky.moonAltitudeDeg,
-                        moonAzimuthDeg = sky.moonAzimuthDeg,
-                        moonIllumination = sky.moonIllumination,
-                        moonElongationDeg = sky.moonElongationDeg,
-                        cloudOpacity = scene.opacity,
-                        southern = sky.southern
-                    )
-                )
-            }
+            Spacer(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 4.dp)
+                    .onGloballyPositioned { slot ->
+                        val canvas = canvasCoords ?: return@onGloballyPositioned
+                        if (!canvas.isAttached || !slot.isAttached) return@onGloballyPositioned
+                        val top = canvas.localPositionOf(slot, Offset.Zero).y
+                        val next = with(density) { SkyBand(top = top.toDp(), height = slot.size.height.toDp()) }
+                        if (next != band) band = next
+                    }
+            )
             // Three groups, set apart by the air between them rather than by one even step
             // (review of Today, 15 ott 2026): the NOW — the number, the sky's word, what it
             // feels like and whether it is an estimate — packed tight under the figure; the
@@ -188,9 +196,13 @@ internal fun CanvasHeader(
                 //
                 // With a [figure] the number also tells the page where it rests, so the bar
                 // knows when it has gone under it (DESIGN §8.1e).
+                // Every line wears the canvas' halo (DESIGN §3.6, step 7 of the sky review,
+                // 19 ott 2026): the figure sat at 2.3:1 on a clear noon, and the deck now
+                // draws white cloud tops under white glyphs.
+                val halo = skyInkShadow()
                 Text(
                     text = Formats.temperature(current.tempC, units.temperature, locale),
-                    style = heroStyle(),
+                    style = heroStyle().copy(shadow = halo),
                     color = SkyPalette.Ink,
                     modifier = if (figure == null) {
                         Modifier
@@ -209,7 +221,7 @@ internal fun CanvasHeader(
                 // own line already leaves air under its digits.
                 Text(
                     text = stringResource(WeatherText.condition(current.condition.wmoCode)),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleLarge.copy(shadow = halo),
                     color = SkyPalette.Ink
                 )
                 // The day's range under the word (15 ott 2026), the number a reader looks for
@@ -241,7 +253,7 @@ internal fun CanvasHeader(
                         text = figures.mapIndexed { i, figure ->
                             if (i == 0) figure else figure.replaceFirstChar { it.lowercase(locale) }
                         }.joinToString(" · "),
-                        style = MaterialTheme.typography.bodyLarge.tabular(),
+                        style = MaterialTheme.typography.bodyLarge.tabular().copy(shadow = halo),
                         color = SkyPalette.Ink,
                         modifier = Modifier.padding(top = HeroLineGap)
                     )
@@ -252,7 +264,7 @@ internal fun CanvasHeader(
                 if (current.estimated) {
                     Text(
                         text = stringResource(R.string.estimate_hero),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium.copy(shadow = halo),
                         color = SkyPalette.Ink,
                         modifier = Modifier.padding(top = HeroLineGap)
                     )
@@ -269,7 +281,7 @@ internal fun CanvasHeader(
                 headlineText(content.headline, timeFmt, units)?.let { sentence ->
                     Text(
                         text = sentence,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyLarge.copy(shadow = halo),
                         color = SkyPalette.Ink,
                         modifier = Modifier.padding(top = HeroGroupGap)
                     )
@@ -288,6 +300,7 @@ internal fun CanvasHeader(
                     RibbonTimes(
                         times = times,
                         color = SkyPalette.Ink,
+                        shadow = halo,
                         modifier = Modifier.padding(top = HeroLineGap)
                     )
                 }
@@ -418,11 +431,17 @@ internal fun ribbonTimes(
 /** Labels placed under the fractions of the width they name, centred there and kept
  * inside the row. */
 @Composable
-internal fun RibbonTimes(times: List<Pair<Float, String>>, color: Color, modifier: Modifier = Modifier) {
+internal fun RibbonTimes(
+    times: List<Pair<Float, String>>,
+    color: Color,
+    modifier: Modifier = Modifier,
+    /** The canvas' halo under the labels, when they stand on the sky. */
+    shadow: androidx.compose.ui.graphics.Shadow? = null
+) {
     androidx.compose.ui.layout.Layout(
         content = {
             times.forEach { (_, text) ->
-                Text(text = text, style = MaterialTheme.typography.labelSmall.tabular(), color = color)
+                Text(text = text, style = MaterialTheme.typography.labelSmall.tabular().copy(shadow = shadow), color = color)
             }
         },
         modifier = modifier

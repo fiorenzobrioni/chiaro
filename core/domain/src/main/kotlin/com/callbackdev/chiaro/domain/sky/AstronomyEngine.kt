@@ -403,6 +403,65 @@ object AstronomyEngine {
         SkyBody.JUPITER -> planetAzimuth(Planet.JUPITER, at, coords)
     }
 
+    /** A place on the local sky: altitude above the horizon and bearing clockwise from
+     * north, both in degrees. */
+    data class Horizontal(val altitudeDeg: Double, val azimuthDeg: Double)
+
+    /**
+     * Where a star stands at [at] from [coords] (step 6 of the sky review, 19 ott 2026), from
+     * its J2000 right ascension and declination in degrees ([BrightStars]). The catalogue's
+     * place is taken as it is: precession moves it by a third of a degree in a generation,
+     * under what a dp of the canvas holds, and a star has no parallax worth the name.
+     */
+    fun starHorizontal(raDeg: Double, decDeg: Double, at: Instant, coords: Coordinates): Horizontal {
+        val equatorial = AstronomyMath.Equatorial(raDeg, decDeg)
+        val julianDay = AstronomyMath.julianDay(at)
+        return Horizontal(
+            altitudeDeg = AstronomyMath.altitude(equatorial, julianDay, coords.lat, coords.lon),
+            azimuthDeg = AstronomyMath.azimuth(equatorial, julianDay, coords.lat, coords.lon)
+        )
+    }
+
+    /**
+     * The angle of the moon's bright limb as seen from [coords] at [at], degrees (step 6 of the
+     * sky review, 19 ott 2026): where the sun is from the moon on the sky, measured from the
+     * direction of increasing azimuth toward the zenith, in (−180, 180]. 0 is a limb lit from
+     * the right for a reader facing the equator in either hemisphere (facing south in the
+     * north the azimuth grows toward the west, which is on the right; facing north in the
+     * south it grows toward the east, on the right again), 90 a limb lit from above, −90 from
+     * below: an evening crescent's bright limb points down toward the sun that has just set,
+     * and the «boat» of a spring dusk and the «smile» of the tropics are this number.
+     */
+    fun moonBrightLimbAngle(at: Instant, coords: Coordinates): Double = brightLimbAngle(
+        sunAltitude(at, coords), sunAzimuth(at, coords),
+        moonAltitude(at, coords), bodyAzimuth(SkyBody.MOON, at, coords)
+    )
+
+    /**
+     * The arithmetic of [moonBrightLimbAngle] on two places of the sky: the sun's direction
+     * projected on the plane tangent to the sky at the moon, resolved on that plane's axes of
+     * growing azimuth and growing altitude.
+     */
+    fun brightLimbAngle(sunAltDeg: Double, sunAzDeg: Double, moonAltDeg: Double, moonAzDeg: Double): Double {
+        fun direction(altDeg: Double, azDeg: Double): DoubleArray {
+            val a = Math.toRadians(altDeg)
+            val z = Math.toRadians(azDeg)
+            // East, north, up.
+            return doubleArrayOf(Math.cos(a) * Math.sin(z), Math.cos(a) * Math.cos(z), Math.sin(a))
+        }
+        val moon = direction(moonAltDeg, moonAzDeg)
+        val sun = direction(sunAltDeg, sunAzDeg)
+        val am = Math.toRadians(moonAltDeg)
+        val zm = Math.toRadians(moonAzDeg)
+        val moreAzimuth = doubleArrayOf(Math.cos(zm), -Math.sin(zm), 0.0)
+        val moreAltitude = doubleArrayOf(-Math.sin(am) * Math.sin(zm), -Math.sin(am) * Math.cos(zm), Math.cos(am))
+        val along = sun[0] * moon[0] + sun[1] * moon[1] + sun[2] * moon[2]
+        val d = doubleArrayOf(sun[0] - along * moon[0], sun[1] - along * moon[1], sun[2] - along * moon[2])
+        val x = d[0] * moreAzimuth[0] + d[1] * moreAzimuth[1] + d[2] * moreAzimuth[2]
+        val y = d[0] * moreAltitude[0] + d[1] * moreAltitude[1] + d[2] * moreAltitude[2]
+        return Math.toDegrees(Math.atan2(y, x))
+    }
+
     private fun equatorialOf(body: SkyBody, t: Double): AstronomyMath.Equatorial = when (body) {
         SkyBody.MOON -> AstronomyMath.moonEquatorial(t)
         SkyBody.VENUS -> PlanetMath.equatorial(Planet.VENUS, t).equatorial

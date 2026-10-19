@@ -14723,3 +14723,528 @@ lint 0 errori; build release minificata con la chiave di debug. Nessuna immagine
 niente a schermo è cambiato. **Da fare sul dispositivo**: un trascinamento allo scoccare di un'ora
 piena (09:00-09:03) deve restituire il report invece di «il servizio non risponde»; una pagina
 lasciata aperta durante un guasto deve guarire da sola entro il quarto d'ora.
+
+## Il cielo premium: la review del motore e i sette passi (committente, 19 ott 2026)
+
+**La richiesta.** Una review del motore grafico che disegna il cielo dell'hero: se è corretto dal
+punto di vista matematico, se ha errori, se l'immagine è realistica, cosa farebbe la differenza per
+un'app di qualità premium, e se vada rifatto con un'altra logica o libreria. Poi: una fase con tutto
+dettagliato, e l'attuazione a partire dai punti 1 e 2 (o solo l'1, se il 2 è complesso).
+
+**Come è stata fatta.** Letti `SkyShader.kt`, `SkyCanvas.kt`, `SkyBodies.kt`, `SkyPalette.kt`, i
+test e DESIGN §3. Lo shader e la scena portati in NumPy, stesse funzioni e stessi numeri, e dodici
+cieli disegnati a 400 × 352 dp (cumuli al 25 e al 50%, coperto basso, velo alto chiuso e al 60%,
+ora d'oro, ora blu, luna piena, stelle, pioggia, neve, sole a est), ognuno nudo e come lo vede il
+lettore con scrim e corpi celesti; `today-now.png` del README, resa dal renderer hardware, conferma
+che il telefono disegna lo stesso cielo del port. Il tempo di GPU per fotogramma resta da misurare
+sul dispositivo, come il passo del 15 ott già annota.
+
+**Il verdetto.** Il motore è matematicamente corretto e **non va rifatto**: uno shader AGSL, la
+scena in Kotlin puro, i test che fissano il rumore riga per riga, il tetto di luminanza sotto lo
+scrim sono l'architettura giusta per Android 13 e oltre, e non c'è una libreria che faccia meglio
+(Filament o Sceneform sono motori 3D da megabyte e thread propri; Lottie o Rive darebbero un cielo
+disegnato a mano, non calcolato, contro §3.1). Quello che tiene la resa sotto il livello premium
+sta nel modello di illuminazione dentro lo shader e nel sole disegnato fuori da esso, e si corregge
+a passi dentro la struttura attuale. Corretto tutto ciò che il codice dichiara: l'hash di Hoskins e
+il value noise, la normalizzazione dell'fbm (0,9375 = la somma delle ampiezze), la rotazione fra le
+ottave ortonormale (36,9°), la sovrapposizione casuale degli strati, il tetto in luminanza lineare,
+l'ellisse del terminatore lunare (semiasse r·|2k−1|, rigonfia dal lato giusto), lo specchio
+dell'emisfero sud, la deriva nel verso del vento, lo stato dell'ora dal motore e non dal codice del
+fornitore.
+
+**Gli errori trovati** (misurati sul port, canvas di 400 × 352 dp):
+
+1. *La luce dello shader non è dove sta il sole disegnato.* Lo shader prende la x su tutta la
+   larghezza e la y fra il 12% e il 50% del canvas; `SkyBodiesLayer` disegna nella propria fascia
+   (80–152 dp) con un inset dell'8%. Distanza fra i due: 19 dp a 35° di altezza, 33 a 10°, 42 a
+   mezzogiorno. Il bordo luminoso delle nuvole è centrato dove il sole non c'è. → passo 2.
+2. *Sole e luna stanno davanti alle nuvole e sopra lo scrim.* Il layer dei corpi è nel Box del
+   contenuto di `SkyCanvas`, dopo lo scrim, e conosce solo l'opacità globale, non l'alfa della
+   nuvola nel suo pixel: al 25% il disco pieno sta sopra un cumulo. Il commento di `glowRadius`
+   dice che lo scrim assorbe la coda dell'alone: non può, lo scrim è sotto. → passo 2.
+3. *Il cielo piovoso è al contrario.* Il colore `lit` non era attenuato dalla pioggia mentre il
+   gradiente sì (§3.3): al 94% di banco e 90% di pioggia nuvole grigio chiaro (luminanza 0,45)
+   sopra varchi blu scuro (0,09–0,30). Un nembostrato è più scuro del cielo attorno. → passo 1.
+4. *Nessun dithering.* Il gradiente notturno va da #0D1323 a #182237: 17 livelli di rosso su una
+   colonna di 1 056 px, bande larghe fino a 110 px. Su un OLED si vede a scalini. → passo 1.
+
+**Le inesattezze fisiche.** I cirri derivavano 1,8 volte più veloci dei cumuli: essendo lontani
+devono muoversi più lenti sullo schermo (parallasse rovesciata) → passo 1. Il clock avvolge ogni
+3 600 s e le nuvole saltano di 3 600 × deriva dp, da 21 600 in su, in un fotogramma → accettato,
+vedi le decisioni. La scelta della luce è binaria (sole se `day` > 0,5, altrimenti luna) e con il
+sole sotto l'orizzonte la y della luce resta a metà canvas: al tramonto le nuvole non sono mai
+illuminate da sotto, che è l'immagine stessa del tramonto → passo 3. La fusione è in spazio gamma:
+al bordo di una nuvola a metà mix la luminanza è 0,537 contro 0,558 in lineare, l'alone grigio
+delle nuvole composte male → passo 1.
+
+**La resa.** Reggono: il coperto (un grigio con pieghe morbide), la notte con la luna, il cielo
+stellato, i cumuli al 25%. Non reggono per un prodotto premium: il sole è un adesivo (disco piatto
+di 22 dp con alone in SRC_OVER, all'ora d'oro un dischetto arancione senza il bagliore di un sole a
+3°); le nuvole sono una parete e non un soffitto (la scala orizzontale del rumore è la stessa in
+cima e in fondo, `persp` schiaccia solo in verticale); l'ombreggiatura pettina le nuvole (una sola
+differenza finita lungo la luce, offset 0,16 e guadagno 4: striature allungate in quella direzione,
+visibili al 50% con il sole a est; nessuna auto-ombra); neve e pioggia sono un pattern (un fiocco per
+cella di 22 dp, mai due vicini, un piano solo; la pioggia graffi sottili a 68 dp/s); le stelle sono
+tutte uguali e non sono quelle del cielo; lo scrim affumica la metà bassa (dal 45% al 93% del canvas
+il nero al 55% rende l'orizzonte, la parte più luminosa di un cielo vero, la più scura dello
+schermo: è il contratto di §3.6 e non un bug, ma è la cosa che più fa sembrare il cielo dietro un
+vetro).
+
+### I sette passi, in ordine di resa per costo
+
+- [x] **1. Luce lineare e dither.** Gli uniform di colore arrivano allo shader in RGB lineare
+  (convertiti in `bindSky` con la curva sRGB esatta), ogni `mix` avviene lì, il tetto è un prodotto
+  scalare esatto, e il pixel torna in sRGB alla fine con la curva esatta più mezzo livello di dither
+  fisso per pixel. Con lo stesso passo le tre correzioni piccole che sono solo colore: le nuvole più
+  scure sotto una pioggia probabile (errore 3), il velo che deriva a metà del banco (parallasse). Un
+  test di pixel (`SkyShaderPixelTest`) disegna lo shader con Skia e lo confronta con l'aritmetica
+  in Kotlin.
+- [x] **2. Sole e luna dentro lo shader.** Un solo sistema di coordinate (via l'errore 1),
+  occlusione per pixel dall'alfa della nuvola (via l'errore 2), bagliore additivo con un lobo in
+  avanti alla Henyey-Greenstein, il disco piccolo e bruciato, l'alone di 22° sotto un velo alto
+  chiuso (il dato lo dice: strato alto, cirrostrato). La fase della luna resta un disegno in Kotlin
+  (la geometria del terminatore è già giusta) o passa nello shader come maschera; da decidere in
+  attuazione. `SkyBodiesLayer` e la sua fascia (`SkyColumn`) restano solo se serve ancora un layer
+  Compose; `sunVeil` e `moonVeil` restano le regole, i loro test con loro. Immagini del README da
+  rigenerare.
+- [x] **3. La luce del banco.** Due campioni lungo la direzione della luce (ε e 2ε) per
+  un'auto-ombra che dia spessore; gradient noise al posto del value noise nella derivata, così la
+  striatura lungo la luce sparisce; il contrasto dell'ombreggiatura scalato con la luce disponibile
+  (senza sole né luna le nuvole sono piatte); la y della luce libera di stare sotto il canvas al
+  crepuscolo, così il sottopancia delle nuvole prende l'arancio del tramonto; la scelta sole/luna
+  pesata sulla luce di ciascuno e non binaria. Qui anche il residuo dell'errore 3: lo stop alto del
+  gradiente sotto nuvole e pioggia (§3.3) scende a 0,09 di luminanza, più scuro dell'ombra di
+  qualunque nuvola, e un varco in cima resta un buco scuro; va rivisto nel modello del gradiente,
+  che legge anche il nastro.
+- [x] **4. La proiezione a piano.** Il banco come un piano a quota h visto da sotto: u = x·k/(y_h −
+  y), v = k/(y_h − y) con l'orizzonte y_h sotto il bordo inferiore, al posto dello schiacciamento
+  verticale di `persp`. Le nuvole rimpiccioliscono e si appiattiscono verso l'orizzonte insieme. La
+  tabella di `deckThreshold` va rimisurata sul nuovo campionamento (`SkyDeckTest`).
+- [x] **5. Pioggia e neve a tre piani.** Tre strati con scala, velocità e dimensione diverse (vicino
+  grande e veloce, lontano piccolo e lento), ciascuno a celle con hash come ora ma più celle per
+  piano e un'occupazione casuale, così la neve non è un reticolo e la pioggia ha profondità.
+- [x] **6. Le stelle vere.** `AstronomyEngine` ha già l'effemeride, la fascia del canvas è già una
+  proiezione azimut-altezza (`bodyAcross`, `bodyUp`), e un catalogo delle stelle sopra la terza
+  magnitudine pesa pochi kilobyte: le stelle disegnate sono quelle che ci sono, con la magnitudine
+  nella grandezza. Con lo stesso passo **la luna ruotata come la si vede dal luogo** (committente,
+  19 ott 2026: «si può fare? lo consigli?»; sì, e consigliata): l'angolo del lembo illuminato
+  rispetto alla verticale locale si calcola dalle posizioni di sole e luna che il motore ha già (la
+  direzione dalla luna verso il sole proiettata sul piano tangente del cielo in quel luogo e in
+  quell'ora), e nello shader è una rotazione della maschera della fase, costo nullo; ingloba
+  `litOnRight`, emisfero sud compreso. Non è rumore: non aggiunge un elemento, orienta uno che c'è,
+  e la falce «a barchetta» della sera di primavera o la luna «sorridente» ai tropici sono tra le
+  cose della luna che un lettore nota e può verificare alzando gli occhi. Due limiti da scrivere:
+  sul canvas la resa è approssimata, perché la fascia è una proiezione azimut-altezza compressa e
+  non conforme (l'angolo vale nel cielo, sullo schermo «quasi»); e a 11 dp si legge sulle falci e
+  sulle gibbose, non alla luna piena. Da fare sul canvas e sulla luna della scheda «Stanotte»
+  (`moonLitPath`, disegnata «come la vedi»), lasciando dritte le icone della famiglia, che sono
+  simboli.
+- [x] **7. Lo scrim**, deciso sulla misura (vedi sotto); era da decidere con il committente: misurare il contratto di §3.6 sul rettangolo
+  del testo e non su tutta la larghezza (una scrim che sfuma anche in orizzontale), oppure un'ombra
+  morbida sul testo, così la metà bassa del cielo torna chiara. Nessuna delle due è gratis: la prima
+  cambia `ScrimContractTest`, la seconda il modo in cui il contratto si misura.
+
+### Passo 1: luce lineare e dither (19 ott 2026)
+
+**Cosa è cambiato.**
+
+1. *Lo shader compone in luce lineare* (`SkyShaderSource`, `bindSky`). I tre stop del gradiente e
+   i due colori delle nuvole arrivano come RGB lineare (`setLinearColor`, con `toLinear`, la curva
+   sRGB esatta); ogni `mix` dello shader somma luce; il bianco delle stelle è scritto in lineare;
+   il tetto di §3.6 è `dot(col, (0,2126; 0,7152; 0,0722))` confrontato con `uMaxLum`, esatto, al
+   posto della potenza 2,2 sui valori sRGB; alla fine `encode` riporta il pixel in sRGB con la curva
+   a tratti esatta (`12,92·c` sotto 0,0031308, altrimenti `1,055·c^(1/2,4) − 0,055`). Le tre
+   fermate stampano gli stessi numeri di prima; cambia solo quello che sta fra loro, più chiaro
+   della differenza fra i due mix.
+2. *Il dither*: mezzo livello di rumore (`(hash12(fc) − 0,5)/255`) sommato al pixel codificato,
+   un pattern fisso per pixel, così non luccica fra un fotogramma e l'altro. Sulla colonna della
+   notte serena la corsa più lunga di un valore scende da 110 a 41 px e ai punti di mezzo fra due
+   livelli lo shader stampa l'uno e l'altro a metà.
+3. *Le nuvole sotto una pioggia probabile sono più scure* (`skyScene`, `WetLitDim` = 0,25): il
+   colore `lit` scende di un quarto della probabilità in valore sRGB, sotto il 30% che l'ombra già
+   aveva. Sulla scena della review (95% di nuvole, 90% di pioggia, sole a 40°): `lit` da 0,695 a
+   0,479 di luminanza, ombra 0,13; lo stop medio del gradiente (0,174) e quello basso (0,30) stanno
+   fra i due, un varco non è più né un buco né una luce. Lo stop alto (0,092) resta sotto l'ombra:
+   è il modello di §3.3, rimandato al passo 3.
+4. *Il velo deriva a metà del banco* (era 1,8 volte): un cirro è cinque-otto volte più alto di un
+   cumulo e il suo vento due-tre volte più forte, quindi attraversa il cielo più lento.
+5. DESIGN §3.5 (la luce lineare, il dither), §3.9 (il velo, le nuvole bagnate, il tetto esatto).
+
+**Decisioni e deviazioni.** *Anche il gradiente in lineare*, non solo le nuvole: una pipeline
+sola; i tre stop restano quelli di §3.2 e il contratto di §3.6 è misurato sullo stop più chiaro,
+che non si muove; fra due stop un mix lineare ha luminanza fra le due (la luminanza è lineare nei
+canali lineari), quindi mai sopra il tetto. Il fallback software (`Brush.verticalGradient`, dove un
+`RuntimeShader` non si disegna) resta in sRGB: è uno snapshot, non lo schermo. *La curva esatta e
+non la potenza 2,2*: allo stop più scuro della notte (13 su 255) la potenza stamperebbe 21, e la
+notte impallidirebbe. *Il dither sta dentro il contratto*: mezzo livello sopra il tetto, contro un
+margine misurato di 5,27:1 su 4,5. *La precisione `half`* basta: a 0,004 di lineare (la notte) l'ulp
+di fp16 è 4·10⁻⁶, dopo la codifica 5·10⁻⁵, un ventesimo di livello. *Il salto orario del clock è
+accettato*: l'offset delle nuvole deve restare sotto circa 10⁵ dp perché alla quarta ottava
+(coordinate × 0,0105 × 8,4) fp32 tenga la millesima parte di cella, il rumore non è periodico (le
+ottave sono ruotate), e una dissolvenza al cambio raddoppierebbe il banco per due secondi ogni ora;
+il salto si vede solo tenendo Oggi aperta e ferma per un'ora intera. *L'errore 1 (la luce non dove
+sta il sole) non è toccato qui*: si risolve da solo portando i corpi nello shader (passo 2), un
+raccordo provvisorio delle coordinate andrebbe rifatto subito dopo. *Sull'ora d'oro* il mix lineare
+tinge il sottopancia delle nuvole di malva-rosa dove prima era grigio-azzurro: è l'azzurro del
+cielo alto sommato all'arancio dell'orizzonte come luce, ed è il rosa delle nuvole al tramonto;
+tenuto, da guardare sul telefono.
+
+**Da verificare sul telefono.** La grana del dither su OLED (deve essere ferma, mai un luccichio);
+la resa in luce lineare di giorno (nuvole più bianche ai bordi) e all'ora d'oro (il malva); il
+tempo di GPU per fotogramma, con tre `pow` in più per pixel nella codifica.
+
+**Come è stato verificato.** `SkyShaderPixelTest` (nuovo, `testDebug` con la grafica nativa, lo
+shader disegnato da Skia attraverso un `RenderNode` e un `HardwareRenderer` come le immagini del
+README, perché un canvas software rifiuta un `RuntimeShader`): i tre stop stampano i numeri della
+palette entro un livello; fra gli stop ogni pixel di un giorno e di una notte è il mix lineare
+codificato con la curva esatta entro un livello; nelle righe in cui il valore ideale cade a metà
+fra due livelli lo shader stampa l'uno e l'altro, fra il 30 e il 70%; nessun pixel del giorno più
+luminoso supera lo stop del contratto. `SkySceneTest` (nuovo caso): sotto una pioggia probabile il
+colore chiaro scende sotto i tre quarti di quello asciutto, lo stop medio e quello basso del
+gradiente stanno fra ombra e luce, un'ora asciutta è com'era. `SkyDeckTest` fissa ancora le righe
+del banco, che non sono cambiate. Il port NumPy reso prima e dopo su quattro cieli (cumuli al 25%,
+ora d'oro, pioggia, sole a est) e guardato. Immagini del README rigenerate: `today-now`,
+`today-foldable` (la Milano coperta, i bordi delle nuvole più puliti) e `settings` (l'ora d'oro con
+il malva), guardate; `widgets` differiva per 322 px di antialiasing e nessun motivo, ripristinata.
+Suite completa (738 app debug con i 14 screenshot saltati, 694 release, i moduli core invariati) e
+lint con 0 errori. Il salto trovato scrivendo il test di pixel: dentro `RenderNode.apply { }` i
+`width` e `height` del nodo, ancora a zero, nascondono quelli della classe e posizionano un nodo
+senza dimensione, che disegna il nulla; il test li passa come parametri e lo dice.
+
+### Passo 2: sole e luna dentro lo shader (19 ott 2026)
+
+**Cosa è cambiato.**
+
+1. *I corpi sono della scena* (`SunMark`, `MoonMark` in `SkyScene`, da `skyScene`, che ora legge anche
+   l'elongazione della luna): dove stanno (`bodyAcross`, `bodyUp`, le regole di `SkyBodies.kt`, che
+   resta il file delle regole e perde il layer), il colore del sole e il suo calore, la fase e il
+   lembo illuminato della luna, e il loro velo. Il velo globale di un disco è l'opacità dello strato
+   alto soltanto (tutta la copertura in un'ora bagnata), perché il banco lo nasconde **pixel per
+   pixel** nello shader; i bagliori davanti alle nuvole leggono l'opacità intera, come le regole
+   `sunVeil` e `moonVeil` erano state scritte. La luce delle nuvole è il posto del corpo, con la
+   stessa aritmetica: via l'errore 1 (19–42 dp di distanza) per costruzione.
+2. *La fascia è un dato* (`SkyBand`, dp dal bordo alto del canvas e altezza): `SkyColumn` tiene lo
+   spazio fra la riga del luogo e l'hero come prima, e il suo unico figlio è uno `Spacer` che
+   riferisce il proprio rettangolo nelle coordinate del canvas; l'anteprima delle Impostazioni
+   dichiara la sua (8 dp dal bordo, metà del ritaglio). `SkyCanvas` e `SkyShaderLayer` la passano
+   allo shader (`uBand`); senza, lo shader usa la metà alta del canvas, dove stava la luce prima.
+3. *Lo shader disegna i corpi dietro le nuvole, in luce lineare*: prima la forma del banco (il suo
+   colore viene dopo), poi il sole come luce aggiunta (disco a tre volte il tetto, che brucia a
+   bianco; corona e coda dell'aureola), la luna come colore sopra il cielo (riflette, non brilla:
+   la fase è la geometria di `moonLitPath` come maschera, il buio al 14% di terra-luce), tutti
+   moltiplicati per `1 − alfa del banco`; poi il velo, il colore del banco, e davanti alle nuvole
+   la quota della coda che l'aria fra noi e le nuvole diffonde, la chiazza larga e tenue che una
+   nuvola lascia passare (tutto quello che uno strato chiuso mostra del sole) e il bagliore della
+   luna dove un banco ne nasconde il disco. Un disco visto attraverso una nuvola sottile ha il bordo
+   sfocato prima di sparire.
+4. *Il tetto si apre nella fascia*: il tetto di §3.6 resta lo stop più chiaro della palette ovunque
+   possa stare un testo, e la fascia non ne contiene per costruzione; dentro, a 6 dp dai bordi, sale
+   a bianco. Oltre il tetto il colore viene tenuto al tetto; molto oltre (un disco a tre volte)
+   brucia a un bianco della luminanza del tetto, come in un obiettivo, invece di restare un giallo
+   schiacciato.
+5. *Il bagliore di un corpo è un cerchio* che sfuma dal centro fino a zero 8 dp oltre il bordo più
+   vicino della fascia (oltre il bordo è al più un quinto di sé, sotto il tetto), quello che
+   `glowRadius` faceva per il vecchio layer; mai una finestra ritagliata dalla fascia.
+6. `SkyBodiesLayer`, `SkyBodies` e il disegno in Compose tolti; `moonLitPath` resta (la scheda di
+   stanotte lo disegna). DESIGN §8.1c e §3.9.
+
+**Decisioni e deviazioni.** *La striscia*: la prima resa vera dello shader (Skia, `CHIARO_RENDER_DIR`)
+aveva una striscia luminosa attraverso tutto il canvas all'altezza del sole, e sotto il velo alto il
+blob tagliato in piano sul bordo della fascia: il bagliore era limitato alla fascia in altezza ma non
+in larghezza, e la coda dell'aureola, larga e tenue, si vedeva come una banda. Ora è un cerchio attorno
+al corpo che si spegne al bordo della fascia, e il test di pixel legge il cielo accanto al sole alla
+sua stessa altezza. *L'alone di 22° provato e tolto*: a quattro dischi dal sole non sta in una fascia
+di 72 dp, e stretto per starci era una seconda corona; torna se la fascia cresce (passo 7, lo scrim).
+*Il disco dietro un banco è del pixel e non della regola*: `sunVeil(1).disc = 0` resta vera per lo
+strato chiuso perché il velo globale di un'ora bagnata è tutta la copertura, e per uno strato asciutto
+la copre l'alfa del banco, che a banco chiuso è 1 su ogni pixel (`SkyDeckTest`). *La luna di giorno
+dietro uno strato*: 55% × (1 − 0) di disco, nascosto per intero dal banco; la regola di `moonVeil` per
+lo strato (disco 0) si legge ora attraverso l'alfa. *Il tetto aperto non tocca il contratto*: il
+test di pixel legge ogni riga sopra la fascia di un mezzogiorno sereno con il sole in cima alla
+fascia e la trova sotto lo stop del contratto. *Il bagliore è grande quanto la fascia concede*: un sole in cima
+alla fascia ha 19 dp di spazio sotto la riga del luogo e il suo bagliore è poco più del disco, uno a
+metà ne ha 36; con una sfumatura a plateau (piena fino a metà spazio) la chiazza sotto uno strato
+chiuso prendeva la forma di un disco, per cui sfuma dal centro. È il prezzo di una fascia da 72 dp,
+non una scelta. *Un salto trovato scrivendo il test*: `RenderNode.apply
+{ setPosition(0, 0, width, height) }` leggeva `width` e `height` del nodo, zero, e disegnava il nulla;
+il test li passa come parametri.
+
+**Da verificare sul telefono.** Il sole di mezzogiorno (disco bianco, corona, nessuna striscia), un
+sole dietro un cumulo (il disco sfocato che spunta dal bordo), la luna con la fase e il suo bagliore,
+il tempo di GPU (ogni termine è saltato se il corpo è sotto l'orizzonte; dentro la fascia una decina di
+operazioni in più per pixel).
+
+**Come è stato verificato.** `SkyShaderPixelTest` (quattro casi nuovi, con il renderer hardware di
+Robolectric): il centro del sole di un mezzogiorno sereno è bianco (ogni canale ≥ 0,96), a sei dischi
+di distanza il cielo è ancora un cielo, ogni riga sopra la fascia sta sotto lo stop del contratto, e
+il cielo accanto al sole alla sua altezza è quello del gradiente (niente striscia); sotto uno strato
+chiuso il centro non è bianco ed è appena più chiaro del banco attorno; la falce è illuminata dal lato
+del sole, tre volte più della terra-luce, e più chiara di qualunque cielo; più cinque cieli disegnati
+solo per guardarli quando `CHIARO_RENDER_DIR` è impostata (ora d'oro, velo chiuso, sole dietro un
+cumulo, luna piena, luna di giorno), guardati tre volte: la prima con la striscia, la seconda con la
+chiazza a forma di disco, la terza buona. `SkySceneTest` (tre casi nuovi): il sole dove lo mettono le
+regole e solo sopra l'orizzonte, la luce delle nuvole uguale al suo posto, il calore all'ora d'oro; il
+disco lasciato allo shader sotto un banco, attenuato sotto un velo, tolto da un'ora bagnata; la luna
+con la fase, il lembo, il velo di giorno e di notte. `SkyBodiesTest` riscritto sulle regole senza il
+layer. `SkyDeckTest` fissa ancora le righe del banco. Immagini del README rigenerate e guardate:
+`today-now` e `today-foldable` (la Milano coperta mostra del sole un chiarore tenue, non più un disco
+sopra le nuvole) e `settings` (il sole dell'ora d'oro con il suo bagliore). Suite completa (745 app
+debug con i 14 screenshot saltati, 697 release, i moduli core invariati) e lint con 0 errori.
+
+### Passo 3: la luce del banco (19 ott 2026)
+
+**Cosa è cambiato.**
+
+1. *Il bordo illuminato si legge sulle prime tre ottave*, a 0,22 di cella verso la luce e con
+   guadagno 3 (era su tutte e quattro a 0,16 con guadagno 4): la quarta ottava, celle di 11 dp,
+   metteva nella derivata il suo reticolo e pettinava le nuvole lungo la luce, la rigatura vista al
+   50% con il sole a est. Le somme a due e tre ottave escono dallo stesso `fbm` del banco
+   (`fbmParts`, con `out`), quindi il bordo costa i tre campioni del punto spostato e basta.
+2. *L'auto-ombra*: una nuvola più spessa verso la luce di quanto sia qui, letta sulle due ottave
+   grosse al doppio della distanza (`1 − exp(−7·eccesso)`, fino al 55% di buio). Mette in ombra il
+   sotto e gli incavi, ed è quello che dà corpo a un cumulo. Due campioni in più; il budget di §3.5
+   passa da «circa venti» a «circa venticinque».
+3. *La luce è di chi ne dà di più*: il sole da 1° fino a −9° (`sunLight`, una `smoothstep`), la
+   luna per illuminazione e altezza; vince il maggiore e non più il sole sopra lo 0,5 di `day`. Il
+   contrasto dell'ombreggiatura è scalato da `uLightAmount`: senza sole né luna le nuvole sono
+   piatte, un tono solo, com'è una nuvola che niente illumina. Anche il bordo luminoso (`glow`)
+   segue la luce che c'è.
+4. *Il sole sotto l'orizzonte sta sotto il canvas*: `up` scende fino a −1 a −12° e lo shader
+   (`placeLight`) lo mette dal piede della fascia fino a 40 dp sotto il bordo inferiore, così quello
+   che gli sta di fronte è il sotto delle nuvole. Il colore chiaro segue la luce del sole e non il
+   giorno (`lerp(nightLit, warmLit, sunLight)`, con l'ora d'oro piena sotto i 2°): al tramonto le
+   basi prendono l'arancio e il rosa dell'orizzonte, le cime restano grigio-azzurre.
+5. *Il residuo dell'errore 3*: lo stop alto del gradiente va verso quello medio di 0,6 della
+   copertura, prima della desaturazione e dello scurimento di §3.3 (`CloudZenith`). Un cielo coperto è
+   piatto, non un azzurro più scuro; sotto nuvole e pioggia lo stop alto passa da 0,092 a 0,138 di
+   luminanza, sopra l'ombra di un nembostrato (0,13), e il rapporto orizzonte/zenit del coperto scende
+   da 2,79 (sereno) a 2,18. Lo leggono anche i widget che disegnano il gradiente intero.
+6. DESIGN §3.3, §3.5, §3.9 (la luce), VISION invariata.
+
+**Decisioni e deviazioni.** *Il gradient noise provato e lasciato*: il piano diceva «gradient noise al
+posto del value noise nella derivata»; portato in NumPy con la fade quintica e le soglie rimisurate
+(l'alfa medio centrava la quota del banco entro l'1%), toglieva la rigatura ma cambiava il carattere:
+le masse diventavano stracciate, più fractus che cumuli, e un cielo al 25% un cielo a pecorelle. Il
+value noise resta, con le forme viste e tarate sul telefono da un mese, e la derivata si leviga
+leggendola sulle ottave basse: rese vecchio contro nuovo su otto cieli, la rigatura sparisce uguale.
+*La tabella delle soglie non si tocca*: il campo del banco è lo stesso. *Un tramonto a −3° con una
+falce al 20% è ancora illuminato dal sole* (0,65 contro 0,2): la scelta pesata e non binaria è
+esattamente questo caso. *I varchi di un cielo piovoso in cima* ora sono grigio-azzurri e non più buchi
+scuri; restano di una tinta diversa dal banco, perché il gradiente di §3.3 tiene il 30% del colore
+anche sotto la pioggia, e questo è il modello e non un difetto.
+
+**Da verificare sul telefono.** I cumuli al 50% con il sole di lato (niente rigatura, le basi in
+ombra), un tramonto con nuvole basse (le basi accese), una notte senza luna (nuvole piatte), il tempo
+di GPU con i cinque campioni in più.
+
+**Come è stato verificato.** `SkySceneTest` (due casi nuovi): a −3° la luce sta sotto la fascia
+(`up` = −0,25), le nuvole sono ancora illuminate (0,65) e calde, a −30° senza luna la luce è zero e
+le nuvole piatte, il bordo luminoso segue la luce che c'è; la luce è del corpo che ne dà di più (il
+sole a −3° con una falce al 20%, la luna a −12°). `SkyPaletteTest` (un caso nuovo): sotto le nuvole il
+rapporto orizzonte/zenit scende sotto 0,85 di quello sereno, lo zenit di un coperto piovoso sta sopra
+0,13, un cielo sereno non si muove. `SkyDeckTest` fissa le righe nuove (`fbmParts` e le sue somme
+parziali) e misura ancora la quota del banco, che non è cambiata. Le rese dello shader vero
+(`CHIARO_RENDER_DIR`, tre cieli in più: tramonto a −3° con 40% di basse, notte senza luna, pioggia al
+95%) guardate: cumuli con le basi in ombra e senza rigatura, il tramonto con i bordi bassi accesi, la
+notte piatta, i varchi del cielo piovoso non più buchi. Il prototipo NumPy (`skyport3.py`, poi la
+variante B) reso vecchio contro nuovo su otto cieli. Immagini del README rigenerate e guardate:
+`today-now` e `today-foldable` (la Milano coperta ha ora un banco con corpo e ombre), `settings`,
+`widget-day-arc` (il cielo del widget sotto le nuvole è un filo più piatto: 22 635 px diversi, 17
+livelli al massimo, invisibile; `widgets` identica). Suite completa (748 app debug con i 14 screenshot
+saltati, 700 release, i moduli core invariati) e lint con 0 errori.
+
+### Passo 7: lo scrim, deciso sulla misura (19 ott 2026)
+
+Il committente ha lasciato la decisione a chi scrive, «in base a quello che graficamente è
+migliore». Decisa sulla misura e non sul gusto: un mockup in NumPy e PIL del canvas di Oggi
+(Roboto, le righe dell'hero dove le mette la pagina) sopra il cielo più chiaro, un mezzogiorno
+sereno e uno al 25% di cumuli, con il contrasto letto **sui pixel subito fuori da ogni glifo**, che
+è dove un testo si legge, per quattro gruppi: la cifra, la parola, le righe, gli orari del nastro.
+
+**Cosa ha detto la misura.** Con lo scrim com'è (0,55 in fondo, rampa dal 45% al 93% del canvas),
+senza alone, sul mezzogiorno sereno: cifra **2,30:1** (il pavimento del testo grande è 3), parola
+2,85, righe 3,27, orari del nastro 5,28. Il contratto di §3.6 tiene dove lo scrim è pieno, cioè sugli
+orari in fondo; ogni riga sopra sta sulla rampa. Con uno scrim più leggero (0,30-0,40) più un alone
+sfocato sul testo (2-4 dp, nero al 60-80%): cifra 3,1 (meglio), parola e righe 2,7-2,9 (uguali o
+peggio), orari 3,0-4,1 (**sotto il pavimento**). Con la rampa che parte più in basso (60% o 70%)
+parola e righe peggiorano ancora. L'alone aiuta la cifra, poco i tratti sottili: sotto un tratto di
+1,5 dp una sfocatura lascia un terzo della sua forza.
+
+- [x] **Lo scrim resta com'è**, geometria e alfa: il contratto di §3.6, i suoi numeri e
+  `PaletteDocTest` non si muovono. La metà bassa affumicata è il prezzo del testo piccolo in fondo, e
+  la misura dice che più leggero non si leggerebbe.
+- [x] **Un alone su ogni testo del canvas** (`skyInkShadow`: il colore dello scrim all'80%, sfocato
+  di 3 dp, 1 dp più in basso): la cifra, la parola, le righe e gli orari dell'hero, la riga del luogo
+  quando sta sul cielo, l'anteprima delle Impostazioni. Porta la cifra sopra il 3:1 del testo grande
+  e stacca il bianco del testo dalle cime bianche che il banco del passo 3 ora disegna sotto di esso.
+  È funzione e non decorazione, come lo scrim: aggiunge contrasto, non toglie cielo.
+
+**Decisioni e deviazioni.** *Un'alternativa non presa*: portare gli orari del nastro fuori dal
+cielo, sul foglio di carta sotto, libererebbe lo scrim in fondo fino a circa 0,3 e mostrerebbe la
+metà bassa del cielo; è un cambio di layout dell'hero, da decidere con il committente e non da soli.
+*Il contratto non cambia*: l'alone si somma allo scrim e non lo sostituisce, quindi il caso peggiore
+misurato da `ScrimContractTest` resta quello; la misura sui glifi vive in PLANNING e nello script del
+mockup, perché un test Kotlin che disegni il testo vero sul cielo vero è un lavoro a sé.
+
+**Da verificare sul telefono.** L'alone non deve leggersi come un'ombra: a 3 dp e 80% è un velo
+scuro attorno ai tratti, visibile solo dove il cielo è chiaro; e la cifra su un mezzogiorno sereno.
+
+**Come è stato verificato.** Il mockup (`scrim_mock.py` nello scratchpad della sessione: il cielo del
+port NumPy, Roboto dai font di layoutlib, le righe dove le mette Oggi, il contrasto letto sull'anello
+di pixel subito fuori dai glifi) su otto varianti: scrim com'è; 0,30, 0,35 e 0,40 con alone da 2 a
+4 dp; rampa dal 60% e dal 70% con alone; 0,50 dal 55% con alone. `NoRawColorTest` (l'alone è il
+colore dello scrim, in `ui/theme`), `ScrimContractTest` e `PaletteDocTest` invariati e verdi,
+`HeroInBarTest` e `TodayAgendaTest` con la riga del luogo che prende l'alone. Immagini del README
+rigenerate e guardate: `today-now`, `today-foldable` (la cifra si stacca dalle cime delle nuvole, la
+riga del luogo e gli orari con il velo) e `settings`; le altre identiche. Suite completa (748 app
+debug con i 14 screenshot saltati, 700 release) e lint con 0 errori.
+
+### Passo 4: la proiezione a piano (19 ott 2026)
+
+**Cosa è cambiato.** Il banco è un piano a una quota, visto da sotto. Le righe del canvas sono
+elevazioni, 45° in cima e 15° in fondo, e il raggio di una riga incontra il piano a 1/tan(elevazione)
+della sua quota: il campo del rumore si campiona in `((x − cx)·dist/f + deriva·dist_m/f, dist)`, con
+`f` la focale che fa stare quelle elevazioni nell'altezza del canvas e `dist_m` la distanza della riga
+di mezzo (30°, 1,732). Sopra la testa le nuvole sono vicine e grandi, verso l'orizzonte lontane,
+piccole e piatte insieme; e scorrono sullo schermo 1,7 volte più in fretta in cima che in fondo, la
+parallasse di un banco vero. Prima il campo era solo schiacciato in altezza verso il fondo, della
+metà, e le nuvole erano una parete: larghe uguali in cima e in fondo. La scala è quella di prima
+sulla riga di mezzo, 95 dp per cella, e le elevazioni coprono il canvas qualunque sia la sua altezza
+(un canvas più alto vede lo stesso cielo con celle un filo più larghe, mai un orizzonte così basso da
+far scintillare il rumore). I cirri tengono il loro stiramento; pioggia, neve e stelle sono dello
+schermo. DESIGN §3.9.
+
+**Decisioni e deviazioni.** *La tabella delle soglie non si rimisura*: il piano diceva di farlo, ma
+misurata sul nuovo campionamento (24 canvas, come `SkyDeckTest`) l'alfa medio centra la quota del
+banco con uno scarto massimo di 0,021, lo stesso dello schiacciamento di prima, perché i valori del
+campo hanno la stessa distribuzione comunque lo si campioni; cambia la varianza di un canvas solo (in
+cima ci sono poche celle grandi), che è quella di un'occhiata al cielo. *45°–15° e non 55°–20°*:
+resi tutti e due accanto allo schiacciamento attuale su quattro cieli, quasi uguali; il primo dà un
+po' più di cielo. *Le elevazioni legate all'altezza del canvas e non a una focale fissa*: con la
+focale fissa un canvas da 450 dp (testo grande) scenderebbe a 6,6° in fondo, celle di 3 dp e la
+quarta ottava sotto il pixel. *La direzione della luce nel campo resta quella dello schermo*: in
+coordinate del piano «su» è «più vicino», e l'ombreggiatura è una stilizzazione a due dimensioni
+comunque; la rende uguale a prima.
+
+**Da verificare sul telefono.** I cumuli al 25% e al 50%: grandi in alto, una fascia sottile in fondo;
+la deriva più veloce in cima che in fondo; un coperto che recede verso l'orizzonte.
+
+**Come è stato verificato.** Il prototipo NumPy (`skyport4.py`): la tabella delle soglie misurata sul
+nuovo campionamento (24 canvas di 400 × 300 dp, un punto ogni 4 dp, 100 000 dp di deriva) per lo
+schiacciamento attuale e per due coppie di elevazioni, alfa medio contro quota del banco entro 0,021,
+0,021 e 0,023; quattro cieli (25%, 50% col sole a est, ora d'oro, coperto) resi nelle tre versioni e
+guardati. `SkyDeckTest` fissa le cinque righe della proiezione e misura la quota del banco sul port
+rifatto con la stessa aritmetica, entro il 3% dal 10 al 90% come prima; `SkyShaderCompileTest` e
+`SkyShaderPixelTest` verdi (i corpi e il tetto non cambiano). Le rese dello shader vero
+(`CHIARO_RENDER_DIR`) guardate: cumuli grandi in alto e una fascia schiacciata in fondo, sotto
+pioggia e coperto il banco recede verso l'orizzonte, la notte con la luna. Immagini del README
+rigenerate e guardate: `today-now` e `today-foldable` (la Milano coperta recede), `settings`
+(l'ora d'oro su un ritaglio basso, nuvole allungate come si deve); le altre identiche. Suite
+completa (748 app debug con i 14 screenshot saltati, 700 release, i moduli core invariati) e lint con
+0 errori.
+
+### Passo 5: pioggia e neve a tre piani (19 ott 2026)
+
+**Cosa è cambiato.** Quello che cade sta su tre piani, vicino, medio e lontano, ciascuno con la sua
+misura, la sua velocità e la sua forza: il vicino grande e veloce, il lontano piccolo, lento e
+tenue, così la caduta ha profondità. *Pioggia*: strisce da 1,8, 1,2 e 0,8 dp a 160, 90 e 55 dp al
+secondo (il piano medio è quello che c'era), ciascuna dal suo campo di rumore; si inclinano col
+vento, perché una goccia va dove va l'aria mentre cade, con il segno della deriva e fino a 19°, e
+scorrono lungo la propria linea (spostare il campo lungo `r.y` è spostarlo lungo la striscia). *Neve*:
+celle da 34, 22 e 14 dp con un fiocco in circa due terzi di esse, spostato a caso dentro la cella e di
+una misura sua, che ondeggia, cade a 22, 14 e 8 dp al secondo ed è portato di lato dal vento nella
+quota del suo piano. Prima c'era un piano solo: la pioggia graffi sottili a 68 dp al secondo, la neve
+un fiocco per cella di 22 dp, mai due vicini, un reticolo di punti. DESIGN §3.9.
+
+**Decisioni e deviazioni.** *Il costo*: la pioggia passa da due a sei campioni di rumore per pixel,
+la neve da tre a nove hash e tre seni; dentro il budget di §3.5, perché un'ora bagnata ha il banco
+chiuso e nessuna stella. *La pioggerella di notte senza luna resta quasi invisibile*, com'era: le
+gocce vestono il colore chiaro delle nuvole e di notte niente lo illumina; è vero anche fuori, e la
+parola dell'hero dice che piove. *Nessun prototipo NumPy*: tre piani di particelle sono aritmetica
+da leggere, e le rese dello shader vero bastavano a guardarle.
+
+**Da verificare sul telefono.** La pioggia a 30 fotogrammi: tre velocità leggibili come profondità,
+le strisce che scorrono lungo la loro inclinazione e non in verticale; la neve che ondeggia senza
+reticolo, con il vento che la porta di lato.
+
+**Come è stato verificato.** `SkyShaderCompileTest` (il ciclo sui tre piani compila e prende ogni
+uniform), `SkyShaderPixelTest` (due rese in più per guardare: neve al 100% a 1,5 mm/h, pioggerella
+di notte a 0,4 mm/h) e `SkyDeckTest` verdi. Le rese dello shader vero guardate al pixel: la neve in
+tre taglie senza reticolo, la pioggia in tre piani inclinata col vento dell'ora. Immagini del README
+lanciate e identiche, perché la Milano registrata è asciutta. Suite completa (748 app debug con i 14
+screenshot saltati, 700 release, i moduli core invariati) e lint con 0 errori.
+
+### Passo 6: le stelle vere e la luna ruotata (19 ott 2026)
+
+**Cosa è cambiato.**
+
+1. *Il catalogo* (`BrightStars`, in `:core:domain`, generato da `tools/gen_bright_stars.py` e mai
+   scritto a mano): ogni stella del Bright Star Catalogue di Yale, quinta edizione (Hoffleit &
+   Warren 1991, pubblico dominio), più luminosa della magnitudine 4,5: 904 stelle, dalla più
+   luminosa, con ascensione retta e declinazione J2000 in gradi, magnitudine visuale e colore B−V.
+   Lo strumento scarica il catalogo se non lo trova accanto a sé. Sirio in testa a −1,46, Polare e
+   Vega dentro: `BrightStarsTest`.
+2. *Dove sta una stella* (`AstronomyEngine.starHorizontal`): altezza e azimut dalle stesse funzioni
+   che mettono la luna, con il tempo siderale di Greenwich e la longitudine del luogo. La precessione
+   dal J2000 sposta una stella di un terzo di grado in una generazione, meno di un dp del canvas, e
+   non è applicata. Verificato: la Polare sta all'altezza della latitudine di Milano, a nord, a tre
+   istanti diversi; Sirio non sale mai oltre la sua altezza di transito.
+3. *La finestra* (`StarField.visible`): le stelle che stanno davanti a un lettore che guarda
+   l'equatore (sud nel nord, nord nel sud, la cornice di sole e luna), entro ±30° di azimut e fra 5°
+   e 55° di altezza, un margine oltre la camera del banco (±16,6° e 45°–15°), così un canvas più alto
+   o più largo trova le sue nella lista e la lista non dipende dal layout. Ogni stella porta la sua
+   luminosità (lo span di magnitudine dal limite a Sirio, piegato a 1,3 e con un pavimento di 0,2,
+   perché una stella al limite sia ancora una stella), il suo calore dal B−V (da Rigel a Betelgeuse,
+   una tinta e mai un colore saturo) e una fase di scintillio sua (la sezione aurea sull'indice).
+   Calcolate nel `TodayUiState` ogni minuto, solo quando il sole è sotto −6°: prima nessuna si disegna.
+4. *Come si disegnano* (`StarMap`): uno shader che cicli su qualche centinaio di stelle per ogni pixel
+   costerebbe più delle nuvole; il campo si disegna una volta in una bitmap della misura del canvas
+   (`RadialGradient` per stella: nei canali del colore luminosità, fase e calore, nell'alfa il
+   disco), si ridisegna solo quando cambiano le stelle o la misura, e lo shader la legge una volta per
+   pixel (`uniform shader uStarMap`, `setInputShader`). La stella è messa dalla camera del banco
+   (`starPlace`: 45° in cima, 15° in fondo, l'azimut attraverso la tangente come un foro stenopeico),
+   così stella e nuvola stanno in un cielo solo; di notte la nuvola la copre. Niente di giorno: il
+   test di pixel lo verifica, con una Sirio al centro e una stella al limite accanto.
+5. *La luna ruotata come la vede il luogo* (`AstronomyEngine.moonBrightLimbAngle`,
+   `brightLimbAngle`): la direzione del sole dalla luna sul cielo, proiettata sul piano tangente alla
+   sfera nella luna e risolta sugli assi «più azimut» e «più altezza», in gradi: 0 lembo acceso a
+   destra (per chi guarda l'equatore, in tutti e due gli emisferi), 90 da sopra, −90 da sotto. Nello
+   shader è una rotazione della maschera della fase (`uMoonLimb`): la falce della sera punta in basso
+   verso il sole appena tramontato, la «barchetta». Sostituisce `litOnRight`, che è quello che
+   quest'angolo dice quando il sole sta all'altezza della luna. Il test di pixel accende una luna dal
+   basso e legge che il lembo chiaro sta in fondo. La scheda «Stanotte» tiene la sua luna dritta.
+6. DESIGN §3.9 (le stelle), §8.1c (la luna ruotata); `SkySnapshot` porta l'angolo e le stelle.
+
+**Decisioni e deviazioni.** *La finestra è quella del banco, 34° × 30°, e non la fascia di sole e
+luna*: la fascia comprime 300° di azimut in 400 dp e 60° di altezza in 72, e una costellazione
+schiacciata nove a uno non è riconoscibile; la camera del banco è quasi conforme, e in quella finestra
+Orione a gennaio è Orione. Così il cielo ha tre cornici dichiarate: la fascia per i corpi (un vincolo di
+layout), la camera per nuvole e stelle. *Una bitmap e non un ciclo nello shader*: 904 stelle, o anche le
+25 della finestra, per ogni pixel a 15 fotogrammi, sono più del banco intero; una lettura di texture
+costa meno delle stelle a hash di prima. *Magnitudine 4,5 e non 3,5*: a 3,5 la finestra ha sette stelle
+in una sera di gennaio e il cielo sembra vuoto; a 4,5 ne ha venticinque, le deboli appena visibili, che
+è quello che si vede da una città. *Niente inquinamento luminoso*: nessun dato lo dice. *La luna di
+«Stanotte» resta dritta*, diversamente da quanto detto a voce: quella luna sta per una notte intera e
+non per un istante, e l'inclinazione cambia durante la notte; sarebbe la bugia di un istante. *Il raggio
+e il pavimento ritoccati dopo la prima resa* (da 0,6 + 1,6·b a 0,8 + 2,2·b dp, pavimento da 0,12 a 0,2):
+Rigel era un puntino e le deboli invisibili.
+
+**Da verificare sul telefono.** Una notte serena: le stelle dove stanno (Orione a sud nelle sere
+d'inverno, il Cigno alto in estate: controllare alzando gli occhi), lo scintillio, il loro passare dietro
+le nuvole; la falce della sera inclinata verso il sole tramontato; il costo: il campo si ridisegna una
+volta al minuto, lo shader legge una texture.
+
+**Come è stato verificato.** `BrightStarsTest` (nuovo, `:core:domain`): il catalogo è 904 stelle entro
+la 4,5, ordinate, Sirio in testa con i suoi numeri, Polare e Vega dentro; la Polare sta alla latitudine
+di Milano a nord a tre istanti, Sirio non sale oltre il transito (entro 0,3°); il lembo punta al sole
+(a destra, da sotto, da sopra, la «barchetta» della sera, lo specchio) e l'angolo ricostruisce il
+vettore da cui nasce. `StarFieldTest` (nuovo): la finestra di una sera di gennaio a Milano ha fra 8 e
+120 stelle, ognuna dove il motore mette la sua, la Polare mai; a Sydney la finestra guarda a nord e non
+divide stelle con quella a sud; luminosità e calore dalle formule; la camera mette una stella al centro,
+in cima, a destra con la focale del piano, e fuori quando è fuori. `SkyShaderPixelTest` (due casi
+nuovi): una Sirio al centro e una stella al limite accanto, brillanti di notte e nulla di giorno; una
+luna accesa dal basso ha il lembo chiaro in fondo; più due notti vere di Milano rese per guardarle
+(gennaio con Orione, luglio), guardate due volte, la seconda dopo il ritocco di raggio e pavimento.
+`SkySceneTest` porta l'angolo del lembo; `SkyShaderCompileTest` lega la texture. Immagini del README
+lanciate e identiche (la Milano registrata è a mezzogiorno). Suite completa (753 app debug con i 14
+screenshot saltati, 703 release, 358 domain, 275 data, 24 sync) e lint con 0 errori.

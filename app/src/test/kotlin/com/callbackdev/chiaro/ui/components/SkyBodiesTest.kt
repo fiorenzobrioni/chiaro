@@ -3,7 +3,6 @@ package com.callbackdev.chiaro.ui.components
 import androidx.compose.ui.geometry.Offset
 import com.callbackdev.chiaro.domain.model.CloudLayers
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -12,18 +11,12 @@ import org.robolectric.annotation.GraphicsMode
 
 /**
  * The sun and the moon on the canvas (23 set 2026): where they are drawn is arithmetic,
- * and the arithmetic is what makes them the sky rather than a decoration.
+ * and the arithmetic is what makes them the sky rather than a decoration. The shader draws
+ * them since 19 ott 2026 (`SkyShaderPixelTest`); these are the rules it reads.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class SkyBodiesTest {
-
-    private fun bodies(elongation: Double, southern: Boolean) = SkyBodies(
-        sunAltitudeDeg = -20.0, sunAzimuthDeg = 300.0,
-        moonAltitudeDeg = 30.0, moonAzimuthDeg = 150.0,
-        moonIllumination = 0.5, moonElongationDeg = elongation,
-        cloudOpacity = 0f, southern = southern
-    )
 
     @Test
     fun `in the north the south is the middle, east the left and west the right`() {
@@ -51,14 +44,6 @@ class SkyBodiesTest {
         assertEquals(0.5f, bodyUp(30.0), 1e-5f)
         assertEquals(1f, bodyUp(75.0), 0f)
         assertEquals(0f, bodyUp(-10.0), 0f)
-    }
-
-    @Test
-    fun `a waxing moon is lit toward the evening sun, mirrored south of the equator`() {
-        assertTrue(litOnRight(bodies(elongation = 90.0, southern = false)))
-        assertFalse(litOnRight(bodies(elongation = 270.0, southern = false)))
-        assertFalse(litOnRight(bodies(elongation = 90.0, southern = true)))
-        assertTrue(litOnRight(bodies(elongation = 270.0, southern = true)))
     }
 
     @Test
