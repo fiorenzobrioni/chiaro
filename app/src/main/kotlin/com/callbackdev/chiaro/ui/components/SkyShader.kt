@@ -50,7 +50,9 @@ import kotlin.math.sin
  *   clouds' undersides face it): the sun's or the moon's, whichever gives more light, the
  *   edges of the clouds that face it are the bright ones; [lightAmount], 0..1, how much
  *   light that is, which is how much the clouds are shaded at all;
- * - [stars], 0..1: a dark sky, a clear one and no moon to wash it out;
+ * - [stars], 0..1: a dark sky, a clear one and no moon to wash it out; and [starField], the
+ *   stars that stand in the canvas' window at this instant ([StarField], step 6, 19 ott 2026),
+ *   which the shader draws where they are, as bright and as warm as they are;
  * - [rain], [snow], 0..1: only while the hour is wet by the state engine, by its intensity;
  * - [drift], the clouds' speed across the canvas in dp a second, signed: the wind's, from the
  *   direction it blows toward as the reader facing the equator sees it.
@@ -72,7 +74,8 @@ data class SkyScene(
     val maxLuminance: Float,
     val sun: SunMark? = null,
     val moon: MoonMark? = null,
-    val lightAmount: Float = 1f
+    val lightAmount: Float = 1f,
+    val starField: List<StarMark> = emptyList()
 )
 
 /**
@@ -96,15 +99,17 @@ data class SunMark(
 
 /**
  * The moon as the shader draws it (19 ott 2026): its place, its [illumination] (0 new, 1 full)
- * and which limb is lit ([litRight]), and its veil: the [disc] under the high veil alone, the
- * [glow] and its [spread] under the whole opacity (`moonVeil`).
+ * and the angle of its bright limb ([limbAngleDeg], `AstronomyEngine.moonBrightLimbAngle`: 0
+ * lit from the right, 90 from above, −90 from below, as the place sees it at this instant),
+ * and its veil: the [disc] under the high veil alone, the [glow] and its [spread] under the
+ * whole opacity (`moonVeil`).
  */
 @Immutable
 data class MoonMark(
     val across: Float,
     val up: Float,
     val illumination: Float,
-    val litRight: Boolean,
+    val limbAngleDeg: Float,
     val disc: Float,
     val glow: Float,
     val spread: Float
@@ -134,8 +139,9 @@ fun skyScene(
     moonAltitudeDeg: Double,
     moonAzimuthDeg: Double,
     moonIllumination: Double,
-    /** Moon − sun longitude, `[0, 360)`: under 180 the moon is waxing. */
-    moonElongationDeg: Double,
+    /** The angle of the moon's bright limb as the place sees it, degrees
+     * (`AstronomyEngine.moonBrightLimbAngle`: 0 lit from the right, 90 from above). */
+    moonLimbAngleDeg: Double,
     southern: Boolean,
     cloudPct: Int,
     layers: CloudLayers?,
@@ -143,7 +149,9 @@ fun skyScene(
     fall: SkyFall,
     fallMmPerHour: Double,
     windKph: Double,
-    windFromDeg: Int
+    windFromDeg: Int,
+    /** The stars in the canvas' window at this instant ([StarField.visible]); none by day. */
+    starMarks: List<StarMark> = emptyList()
 ): SkyScene {
     val cover = (cloudPct.coerceIn(0, 100) / 100f)
     val (deck, veil) = cloudDecks(cloudPct, layers)
@@ -210,7 +218,7 @@ fun skyScene(
             across = bodyAcross(moonAzimuthDeg, southern),
             up = bodyUp(moonAltitudeDeg),
             illumination = moonIllumination.coerceIn(0.0, 1.0).toFloat(),
-            litRight = litOnRight(moonElongationDeg, southern),
+            limbAngleDeg = moonLimbAngleDeg.toFloat(),
             disc = behind.disc,
             glow = front.glow,
             spread = front.spread
@@ -249,9 +257,16 @@ fun skyScene(
         maxLuminance = maxLum,
         sun = sun,
         moon = moon,
-        lightAmount = lightAmount
+        lightAmount = lightAmount,
+        starField = starMarks
     )
 }
+
+/** The canvas' camera (§3.9, step 4): the elevation of its top row and of its bottom row,
+ * degrees. The shader writes them as radians, 0.7854 and 0.2618, and `SkyDeckTest` pins the
+ * line; [starPlace] uses these, so a star and a cloud are drawn in one frame. */
+internal const val SkyCameraTopDeg = 45f
+internal const val SkyCameraBottomDeg = 15f
 
 /** The sun this far under the horizon lights the clouds from as far below the canvas as the
  * shader goes; at −9° its light is gone anyway ([skyScene]'s `sunLight`). */
@@ -424,8 +439,9 @@ uniform float2 uMoon;
 uniform float uMoonOn;
 uniform half4 uMoonFace;
 uniform float4 uMoonVeil;
-uniform float uMoonLit;
+uniform float uMoonLimb;
 uniform float uLightAmount;
+uniform shader uStarMap;
 
 float hash12(float2 p) {
     float3 p3 = fract(float3(p.x, p.y, p.x) * 0.1031);
@@ -532,19 +548,21 @@ half4 main(float2 fc) {
     float persp = mix(1.0, 1.5, uv.y);
     float drift = uTime * uDrift;
 
+    // The stars that are there (step 6 of the sky review, 19 ott 2026): the texture StarMap
+    // draws from the catalogue for this instant and place, one read per pixel; its channels
+    // are the star's brightness, its twinkle phase and its warmth, premultiplied by the disc's
+    // alpha. Until then the stars were a hash: one in a few cells of 13 dp, all alike.
     if (uStars > 0.003) {
-        float cellSize = 13.0;
-        float2 cell = floor(q / cellSize);
-        float h = hash12(cell);
-        if (h > 0.88) {
-            float2 pos = (cell + float2(hash12(cell + 7.1), hash12(cell + 3.3))) * cellSize;
-            float dist = length(q - pos);
-            float twinkle = 0.75 + 0.25 * sin(uTime * (0.8 + h * 1.7) + h * 40.0);
-            float size = 0.55 + (h - 0.88) * 6.0;
-            float b = (1.0 - smoothstep(0.0, size, dist)) * twinkle;
-            float fade = 1.0 - smoothstep(0.30, 0.80, uv.y);
-            // The stars' white (#EDF2FF) as linear light.
-            col = mix(col, half3(0.8469, 0.8900, 1.0), half(b * uStars * fade));
+        half4 st = uStarMap.eval(fc);
+        float cover = float(st.a);
+        if (cover > 0.004) {
+            float3 d = float3(st.rgb) / cover;
+            float twinkle = 0.78 + 0.22 * sin(uTime * (0.8 + d.y * 1.7) + d.y * 40.0);
+            // Thinner toward the horizon: the air a low star shines through.
+            float fade = 1.0 - 0.5 * smoothstep(0.55, 1.0, uv.y);
+            // Blue-white to orange, in linear light, by the star's own colour.
+            half3 tint = mix(half3(0.72, 0.82, 1.0), half3(1.0, 0.86, 0.62), half(d.z));
+            col = mix(col, tint, half(cover * d.x * twinkle * uStars * fade));
         }
     }
 
@@ -623,15 +641,22 @@ half4 main(float2 fc) {
     // reflects. Its phase is moonLitPath's geometry as a mask: the half toward the sun, closed
     // by the terminator, an ellipse of half-width r·|2k − 1| that bulges toward the lit side
     // for a crescent and away from it for a gibbous moon; the dark part at 14% as earthshine.
+    // The mask is turned onto the bright limb's angle (step 6, 19 ott 2026): the lit side
+    // points at the sun as the place sees it, down toward a sun just set, up toward one not
+    // yet risen, the «boat» of a spring dusk; until then the terminator stood vertical.
     if (uMoonOn > 0.5) {
         float2 mp = place(uMoon);
-        float2 dm = fc - mp;
-        float d = length(dm);
+        float2 dm0 = fc - mp;
+        float d = length(dm0);
         float r = uBody.y * 0.9;
         float edge = 0.75 * uPx;
         float inside = smoothstep(r + edge, r - edge, d);
         float k = uMoonVeil.w;
-        float halfLit = smoothstep(-edge, edge, dm.x * uMoonLit);
+        // The screen's y points down, so the lit direction of angle θ is (cos θ, −sin θ).
+        float ca = cos(uMoonLimb);
+        float sa = sin(uMoonLimb);
+        float2 dm = float2(dm0.x * ca - dm0.y * sa, dm0.x * sa + dm0.y * ca);
+        float halfLit = smoothstep(-edge, edge, dm.x);
         float rx = max(r * abs(2.0 * k - 1.0), 0.001);
         float e = length(float2(dm.x / rx, dm.y / r));
         float ell = smoothstep(1.0 + edge / r, 1.0 - edge / r, e);
@@ -779,6 +804,7 @@ fun SkyShaderLayer(
 ) {
     val shader = remember { RuntimeShader(SkyShaderSource) }
     val brush = remember(shader) { ShaderBrush(shader) }
+    val starMap = remember { StarMap() }
     var time by remember { mutableFloatStateOf(0f) }
     val falling = scene.rain > 0f || scene.snow > 0f
     val stepMillis = if (falling) 1_000L / FallingFps else 1_000L / DriftFps
@@ -808,7 +834,8 @@ fun SkyShaderLayer(
             val r = BodyRadius.toPx()
             val top = band?.top?.toPx() ?: (size.height * 0.12f - r)
             val height = band?.height?.toPx() ?: (size.height * 0.38f + 2f * r)
-            shader.bindSky(size.width, size.height, density, time, gradient, scene, top, height)
+            val stars = starMap.shaderFor(scene.starField, size.width.toInt(), size.height.toInt(), density)
+            shader.bindSky(size.width, size.height, density, time, gradient, scene, top, height, stars)
             drawRect(brush)
         }
     )
@@ -828,7 +855,9 @@ internal fun RuntimeShader.bindSky(
     scene: SkyScene,
     /** The bodies' band, in px from the canvas' top: where it starts and how tall it is. */
     bandTop: Float,
-    bandHeight: Float
+    bandHeight: Float,
+    /** The star field as [StarMap] draws it for this canvas, or its empty texture. */
+    starMap: android.graphics.Shader
 ) {
     setFloatUniform("uSize", width, height)
     setFloatUniform("uPx", density)
@@ -861,8 +890,9 @@ internal fun RuntimeShader.bindSky(
     setFloatUniform("uMoon", moon?.across ?: 0f, moon?.up ?: 0f)
     setLinearColor("uMoonFace", SkyPalette.MoonFace)
     setFloatUniform("uMoonVeil", moon?.disc ?: 0f, moon?.glow ?: 0f, moon?.spread ?: 1f, moon?.illumination ?: 0f)
-    setFloatUniform("uMoonLit", if (moon?.litRight == false) -1f else 1f)
+    setFloatUniform("uMoonLimb", Math.toRadians((moon?.limbAngleDeg ?: 0f).toDouble()).toFloat())
     setFloatUniform("uLightAmount", scene.lightAmount)
+    setInputShader("uStarMap", starMap)
 }
 
 /** A colour as a plain float4 uniform in linear light: the shader mixes linear values and

@@ -599,7 +599,7 @@ private fun AppearancePreview(settings: AppSettings) {
             moonAltitudeDeg = -30.0,
             moonAzimuthDeg = 0.0,
             moonIllumination = 0.0,
-            moonElongationDeg = 0.0,
+            moonLimbAngleDeg = 0.0,
             southern = false,
             cloudPct = PreviewCloud,
             layers = null,

@@ -62,15 +62,18 @@ class SkyShaderPixelTest {
         cloudPct: Int = 0,
         layers: CloudLayers? = null
     ) = skyScene(
-        SkyPalette.Paper, gradient, sunAltitudeDeg, 180.0, moonAltitudeDeg, 150.0, moonIllumination, 90.0,
+        SkyPalette.Paper, gradient, sunAltitudeDeg, 180.0, moonAltitudeDeg, 150.0, moonIllumination, 0.0,
         false, cloudPct, layers, 0, SkyFall.NONE, 0.0, 15.0, 270
     )
 
     /** Drawn, and saved as a PNG under `CHIARO_RENDER_DIR` when that is set, so a sky the
      * shader draws can be looked at on a machine with no device (as `ArcPainterTest` does). */
+    private val starMap = StarMap()
+
     private fun render(gradient: SkyGradient, scene: SkyScene, w: Int, h: Int, bandTop: Float, bandHeight: Float, name: String = "sky"): Bitmap {
         val shader = RuntimeShader(SkyShaderSource)
-        shader.bindSky(w.toFloat(), h.toFloat(), density, 0f, gradient, scene, bandTop, bandHeight)
+        val stars = starMap.shaderFor(scene.starField, w, h, density)
+        shader.bindSky(w.toFloat(), h.toFloat(), density, 0f, gradient, scene, bandTop, bandHeight, stars)
         val bitmap = draw(shader, w, h)
         System.getenv("CHIARO_RENDER_DIR")?.let { dir ->
             val file = java.io.File(dir).apply { mkdirs() }.resolve("$name.png")
@@ -264,8 +267,69 @@ class SkyShaderPixelTest {
             Triple("night-no-moon-40-low", SkyPalette.Paper.gradient(-30.0, 40), scene(SkyPalette.Paper.gradient(-30.0, 40), -30.0, cloudPct = 40, layers = CloudLayers(40, 0, 0))),
             Triple("rain-95", SkyPalette.Paper.gradient(40.0, 95, 90), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(40.0, 95, 90), 40.0, 180.0, -20.0, 150.0, 0.0, 90.0, false, 95, CloudLayers(90, 40, 20), 90, SkyFall.RAIN, 3.0, 30.0, 270)),
             Triple("snow-100", SkyPalette.Paper.gradient(10.0, 100, 85), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(10.0, 100, 85), 10.0, 180.0, -20.0, 150.0, 0.0, 90.0, false, 100, CloudLayers(100, 0, 0), 85, SkyFall.SNOW, 1.5, 10.0, 270)),
-            Triple("rain-night-drizzle", SkyPalette.Paper.gradient(-30.0, 100, 70), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(-30.0, 100, 70), -30.0, 180.0, -20.0, 150.0, 0.0, 90.0, false, 100, CloudLayers(100, 0, 0), 70, SkyFall.RAIN, 0.4, 5.0, 90))
+            Triple("rain-night-drizzle", SkyPalette.Paper.gradient(-30.0, 100, 70), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(-30.0, 100, 70), -30.0, 180.0, -20.0, 150.0, 0.0, 90.0, false, 100, CloudLayers(100, 0, 0), 70, SkyFall.RAIN, 0.4, 5.0, 90)),
+            // The sky that is there: Milan on a January night at 22:00, Orion in the south, and
+            // a July night at 01:00, with the real moon's limb; clear, so every star shows.
+            realNight("stars-milan-january", "2026-01-15T21:00:00Z"),
+            realNight("stars-milan-july", "2026-07-15T23:00:00Z")
         ).forEach { (name, gradient, scene) -> render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, name) }
+    }
+
+    /** A star of the field is drawn where the camera puts it, as bright as it is, at night
+     * only; and a turned moon is lit where its limb angle says (step 6, 19 ott 2026). */
+    @Test
+    fun `a star is drawn where the field puts it, and only at night`() {
+        val field = listOf(
+            StarMark(acrossDeg = 0f, altitudeDeg = 30f, brightness = 1f, warmth = 0.1f, phase = 0.3f),
+            StarMark(acrossDeg = -8f, altitudeDeg = 40f, brightness = 0.2f, warmth = 0.9f, phase = 0.7f)
+        )
+        val night = SkyPalette.Paper.gradient(-30.0)
+        val scene = scene(night, -30.0).copy(starField = field)
+        val bitmap = render(night, scene, canvasW, canvasH, bandTop, bandHeight, "stars-two")
+        val (sx, sy) = starPlace(field[0], canvasW, canvasH)!!
+        val (fx, fy) = starPlace(field[1], canvasW, canvasH)!!
+        val sky = colorAt(bitmap, sx.toInt() + 40, sy.toInt() + 40).luminance()
+        val bright = colorAt(bitmap, sx.toInt(), sy.toInt()).luminance()
+        val faint = colorAt(bitmap, fx.toInt(), fy.toInt()).luminance()
+        assertTrue("Sirius-bright star $bright over the sky $sky", bright > sky + 0.3f)
+        assertTrue("a faint star $faint, still a star over $sky", faint > sky + 0.02f && faint < bright)
+        // By day the same field draws nothing: uStars is zero.
+        val day = SkyPalette.Paper.gradient(50.0)
+        val dayBitmap = render(day, scene(day, 50.0).copy(starField = field), canvasW, canvasH, bandTop, bandHeight)
+        assertEquals(colorAt(dayBitmap, sx.toInt() + 40, sy.toInt()).luminance(), colorAt(dayBitmap, sx.toInt(), sy.toInt()).luminance(), 0.01f)
+    }
+
+    @Test
+    fun `a moon lit from below has its bright limb at the bottom`() {
+        val gradient = SkyPalette.Paper.gradient(-30.0, 0, 0, 0.3, 40.0)
+        val scene = skyScene(
+            SkyPalette.Paper, gradient, -30.0, 300.0, 40.0, 150.0, 0.3, -90.0, false, 0, null, 0, SkyFall.NONE, 0.0, 15.0, 270
+        ).copy(stars = 0f)
+        val bitmap = render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, "moon-lit-below")
+        val (mx, my) = placed(scene.moon!!.across, scene.moon!!.up, canvasW, bandTop, bandHeight)
+        val r = BodyRadius.value * density * 0.9f
+        val below = colorAt(bitmap, mx, my + (0.6f * r).roundToInt()).luminance()
+        val above = colorAt(bitmap, mx, my - (0.6f * r).roundToInt()).luminance()
+        assertTrue("lit below $below, dark above $above", below > above * 3f)
+    }
+
+    /** A clear night over Milan at [iso], with the engine's sun and moon and the catalogue's
+     * stars, for the eye. */
+    private fun realNight(name: String, iso: String): Triple<String, SkyGradient, SkyScene> {
+        val at = java.time.Instant.parse(iso)
+        val milan = com.callbackdev.chiaro.domain.model.Coordinates(45.4642, 9.19)
+        val engine = com.callbackdev.chiaro.domain.sky.AstronomyEngine
+        val sunAlt = engine.sunAltitude(at, milan)
+        val moonAlt = engine.moonAltitude(at, milan)
+        val illumination = engine.moonIllumination(at).illuminatedFraction
+        val gradient = SkyPalette.Paper.gradient(sunAlt, 0, 0, illumination, moonAlt)
+        val scene = skyScene(
+            SkyPalette.Paper, gradient, sunAlt, engine.sunAzimuth(at, milan), moonAlt,
+            engine.bodyAzimuth(com.callbackdev.chiaro.domain.sky.SkyBody.MOON, at, milan), illumination,
+            engine.moonBrightLimbAngle(at, milan), false, 0, null, 0, SkyFall.NONE, 0.0, 10.0, 270,
+            starMarks = StarField.visible(at, milan, southern = false)
+        )
+        return Triple(name, gradient, scene)
     }
 
     /** The crescent is lit on the sun's side and brighter than any sky: the cap is open in
@@ -274,7 +338,7 @@ class SkyShaderPixelTest {
     fun `a crescent is lit on the sun's side`() {
         val gradient = SkyPalette.Paper.gradient(-30.0, 0, 0, 0.25, 40.0)
         val scene = scene(gradient, -30.0, moonAltitudeDeg = 40.0, moonIllumination = 0.25).copy(stars = 0f)
-        assertTrue(scene.moon!!.litRight)
+        assertEquals(0f, scene.moon!!.limbAngleDeg, 1e-6f)
         val bitmap = render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, "moon-crescent")
         val (mx, my) = placed(scene.moon!!.across, scene.moon!!.up, canvasW, bandTop, bandHeight)
         val r = BodyRadius.value * density * 0.9f

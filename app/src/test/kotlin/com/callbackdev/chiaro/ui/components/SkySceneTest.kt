@@ -6,7 +6,6 @@ import androidx.compose.ui.graphics.luminance
 import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.ui.theme.SkyPalette
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -25,7 +24,7 @@ class SkySceneTest {
         fall: SkyFall = SkyFall.NONE,
         moonAlt: Double = -20.0,
         moonIllum: Double = 0.0,
-        moonElongation: Double = 90.0,
+        moonLimb: Double = 0.0,
         layers: CloudLayers? = null,
         windKph: Double = 15.0,
         windFrom: Int = 270,
@@ -38,7 +37,7 @@ class SkySceneTest {
         moonAltitudeDeg = moonAlt,
         moonAzimuthDeg = 150.0,
         moonIllumination = moonIllum,
-        moonElongationDeg = moonElongation,
+        moonLimbAngleDeg = moonLimb,
         southern = southern,
         cloudPct = cloud,
         layers = layers,
@@ -228,10 +227,11 @@ class SkySceneTest {
 
     @Test
     fun `the moon's mark wears its phase and its veil`() {
-        val night = scene(alt = -30.0, moonAlt = 40.0, moonIllum = 0.3, moonElongation = 90.0)
+        val night = scene(alt = -30.0, moonAlt = 40.0, moonIllum = 0.3, moonLimb = -35.0)
         val moon = requireNotNull(night.moon)
-        assertTrue(moon.litRight)
-        assertFalse(scene(alt = -30.0, moonAlt = 40.0, moonIllum = 0.3, moonElongation = 270.0).moon!!.litRight)
+        // The bright limb's angle is the place's, carried as it is (step 6).
+        assertEquals(-35f, moon.limbAngleDeg, 1e-6f)
+        assertEquals(150f, scene(alt = -30.0, moonAlt = 40.0, moonIllum = 0.3, moonLimb = 150.0).moon!!.limbAngleDeg, 1e-6f)
         assertEquals(0.95f, moon.disc, 1e-6f)
         assertEquals(0.3f, moon.illumination, 1e-6f)
         assertEquals(Offset(moon.across, moon.up), night.light)

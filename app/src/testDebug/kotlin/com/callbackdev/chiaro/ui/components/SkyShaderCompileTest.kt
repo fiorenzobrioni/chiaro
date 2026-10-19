@@ -25,6 +25,7 @@ class SkyShaderCompileTest {
             palette, gradient, 10.0, 200.0, 20.0, 120.0, 0.6, 95.0, false, 60,
             null, 70, SkyFall.RAIN, 1.5, 20.0, 250
         )
-        RuntimeShader(SkyShaderSource).bindSky(400f, 600f, 2.5f, 12f, gradient, scene, 200f, 180f)
+        val stars = StarMap().shaderFor(listOf(StarMark(0f, 30f, 1f, 0.5f, 0.2f)), 400, 600, 2.5f)
+        RuntimeShader(SkyShaderSource).bindSky(400f, 600f, 2.5f, 12f, gradient, scene, 200f, 180f, stars)
     }
 }

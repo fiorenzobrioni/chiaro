@@ -28,7 +28,9 @@ import kotlin.math.abs
  * the same rules below, which hide a body **pixel by pixel** under the deck: so the global veil
  * a disc wears is the opacity of what the deck does not draw, the high veil's, or the whole
  * cover's on a wet hour (`skyScene`). The moon's phase ([moonLitPath]) is one geometry in two
- * places: the shader's mask on the canvas, this path on the tonight card.
+ * places: the shader's mask on the canvas, turned onto the bright limb's angle the place sees
+ * (`AstronomyEngine.moonBrightLimbAngle`, step 6), and this path on the tonight card, upright,
+ * because that card's moon stands for a whole night and not for an instant.
  */
 
 /** How the cloud draws the sun: the disc's opacity, the glow's at its core and at a third
@@ -86,13 +88,6 @@ internal fun moonVeil(cloud: Float, day: Boolean): MoonVeil {
 
 private const val MoonByDay = 0.55f
 private const val MoonByNight = 0.95f
-
-/** Waxing (moon − sun longitude under 180°), the lit limb faces the evening sun: west, which
- * is on the right for a reader in the north and on the left in the south. */
-internal fun litOnRight(moonElongationDeg: Double, southern: Boolean): Boolean {
-    val waxing = moonElongationDeg < 180.0
-    return waxing != southern
-}
 
 /**
  * The lit part of a moon at [illumination] (0 new, 1 full): a half disc on the lit side,

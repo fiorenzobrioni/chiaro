@@ -775,8 +775,24 @@ with the parts of it a gradient could not say.
   cover, because what falls comes from a thick cloud whichever layer the model files it
   under. It dims the clouds' rim light and veils the sun and the moon (§8.1c).
 - **Stars**, only when the sun is past −10° and fading in to −18°, times the open sky squared,
-  less under a bright moon: one in a few cells of 13dp, twinkling slowly, thinning toward the
-  horizon. Never by day, never under a closed sky.
+  less under a bright moon, twinkling slowly, thinning toward the horizon. Never by day, never
+  under a closed sky. **They are the stars that are there** (step 6 of the sky review, 19 ott
+  2026, `BrightStars`, `StarField`, `StarMap`): every star of the Yale Bright Star Catalogue
+  brighter than magnitude 4.5, 904 of them, generated into `:core:domain` by
+  `tools/gen_bright_stars.py` (never edited by hand), placed by the engine for this instant and
+  place like the moon is, and drawn where the deck's camera puts them (§3.9's plane: 45° at the
+  top row, 15° at the bottom, the azimuth through `tan` as a pinhole does, facing the equator
+  as the bodies do), so a star and a cloud sit in one sky. Each is as bright as its magnitude
+  (a bent span from the limit to Sirius, with a floor so a star at the limit is a star), as
+  warm as its B-V colour (blue-white to orange, a tint and never a saturated colour), and
+  twinkles on a phase of its own. The engine places them once a minute; the shader does not
+  loop over them, it reads a texture `StarMap` draws from the list (brightness, phase and
+  warmth in the colour channels, the disc in the alpha), one read per pixel, nothing by day.
+  Until then the stars were a hash, one in a few cells of 13dp, all alike. On a January
+  evening in Milan the window holds Orion, and a reader may look up and check: the one thing
+  on the canvas that is the sky itself and not a reading of it. Precession since J2000 moves
+  a star by a third of a degree, under what a dp holds, and is not applied; light pollution is
+  not modelled, because no data says how much there is.
 - **What falls**, only when the hour's **state** is wet (the state engine's, not the
   provider's code): rain as a veil and long slanted streaks, snow as flakes that fall and
   sway, at a strength from a third to full by the quarter hour just measured (4 mm an hour
@@ -1526,7 +1542,19 @@ from the same band (`SkyBand`, reported by the column) and the same rules (`SkyB
   sun it does not fit a band of 72 dp, and squeezed to fit it was a second corona. It comes
   back if the band ever grows (§3.9's open item 7, the scrim);
 - what used to be the layer's static draw now costs the shader a few samples per pixel inside
-  the band and nothing outside it (every term is skipped when a body is under the horizon).
+  the band and nothing outside it (every term is skipped when a body is under the horizon);
+- **the moon is turned as the place sees it** (step 6, 19 ott 2026,
+  `AstronomyEngine.moonBrightLimbAngle`): the bright limb points at the sun, the angle from
+  the sun's and the moon's own places on the local sky (the sun's direction on the plane
+  tangent to the sky at the moon, resolved on the axes of growing azimuth and growing
+  altitude), and the phase's mask is turned onto it in the shader. Down toward a sun just set,
+  the «boat» of a spring dusk; up toward one not yet risen; the «smile» of the tropics. It
+  replaces the rule that put the lit limb on the right while waxing and on the left while
+  waning, which is what this angle says when the sun is at the moon's height. Two limits:
+  on the canvas it is approximate, because the bodies' band is a compressed azimuth-altitude
+  frame and not a conformal one, so the angle is the sky's and the screen's only nearly; and
+  at 22dp it reads on crescents and gibbous moons, not on a full one. The tonight card's moon
+  (§8.7) stays upright: it stands for a whole night, not for an instant.
 
 The **hero** itself was re-set the same day: the whole degrees and the degree sign at the
 hero size (the tenths, first set at 55% on the same baseline, went on 24 set 2026 with

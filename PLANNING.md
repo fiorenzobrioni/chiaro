@@ -14823,7 +14823,7 @@ vetro).
 - [x] **5. Pioggia e neve a tre piani.** Tre strati con scala, velocità e dimensione diverse (vicino
   grande e veloce, lontano piccolo e lento), ciascuno a celle con hash come ora ma più celle per
   piano e un'occupazione casuale, così la neve non è un reticolo e la pioggia ha profondità.
-- [ ] **6. Le stelle vere.** `AstronomyEngine` ha già l'effemeride, la fascia del canvas è già una
+- [x] **6. Le stelle vere.** `AstronomyEngine` ha già l'effemeride, la fascia del canvas è già una
   proiezione azimut-altezza (`bodyAcross`, `bodyUp`), e un catalogo delle stelle sopra la terza
   magnitudine pesa pochi kilobyte: le stelle disegnate sono quelle che ci sono, con la magnitudine
   nella grandezza. Con lo stesso passo **la luna ruotata come la si vede dal luogo** (committente,
@@ -15173,3 +15173,78 @@ di notte a 0,4 mm/h) e `SkyDeckTest` verdi. Le rese dello shader vero guardate a
 tre taglie senza reticolo, la pioggia in tre piani inclinata col vento dell'ora. Immagini del README
 lanciate e identiche, perché la Milano registrata è asciutta. Suite completa (748 app debug con i 14
 screenshot saltati, 700 release, i moduli core invariati) e lint con 0 errori.
+
+### Passo 6: le stelle vere e la luna ruotata (19 ott 2026)
+
+**Cosa è cambiato.**
+
+1. *Il catalogo* (`BrightStars`, in `:core:domain`, generato da `tools/gen_bright_stars.py` e mai
+   scritto a mano): ogni stella del Bright Star Catalogue di Yale, quinta edizione (Hoffleit &
+   Warren 1991, pubblico dominio), più luminosa della magnitudine 4,5: 904 stelle, dalla più
+   luminosa, con ascensione retta e declinazione J2000 in gradi, magnitudine visuale e colore B−V.
+   Lo strumento scarica il catalogo se non lo trova accanto a sé. Sirio in testa a −1,46, Polare e
+   Vega dentro: `BrightStarsTest`.
+2. *Dove sta una stella* (`AstronomyEngine.starHorizontal`): altezza e azimut dalle stesse funzioni
+   che mettono la luna, con il tempo siderale di Greenwich e la longitudine del luogo. La precessione
+   dal J2000 sposta una stella di un terzo di grado in una generazione, meno di un dp del canvas, e
+   non è applicata. Verificato: la Polare sta all'altezza della latitudine di Milano, a nord, a tre
+   istanti diversi; Sirio non sale mai oltre la sua altezza di transito.
+3. *La finestra* (`StarField.visible`): le stelle che stanno davanti a un lettore che guarda
+   l'equatore (sud nel nord, nord nel sud, la cornice di sole e luna), entro ±30° di azimut e fra 5°
+   e 55° di altezza, un margine oltre la camera del banco (±16,6° e 45°–15°), così un canvas più alto
+   o più largo trova le sue nella lista e la lista non dipende dal layout. Ogni stella porta la sua
+   luminosità (lo span di magnitudine dal limite a Sirio, piegato a 1,3 e con un pavimento di 0,2,
+   perché una stella al limite sia ancora una stella), il suo calore dal B−V (da Rigel a Betelgeuse,
+   una tinta e mai un colore saturo) e una fase di scintillio sua (la sezione aurea sull'indice).
+   Calcolate nel `TodayUiState` ogni minuto, solo quando il sole è sotto −6°: prima nessuna si disegna.
+4. *Come si disegnano* (`StarMap`): uno shader che cicli su qualche centinaio di stelle per ogni pixel
+   costerebbe più delle nuvole; il campo si disegna una volta in una bitmap della misura del canvas
+   (`RadialGradient` per stella: nei canali del colore luminosità, fase e calore, nell'alfa il
+   disco), si ridisegna solo quando cambiano le stelle o la misura, e lo shader la legge una volta per
+   pixel (`uniform shader uStarMap`, `setInputShader`). La stella è messa dalla camera del banco
+   (`starPlace`: 45° in cima, 15° in fondo, l'azimut attraverso la tangente come un foro stenopeico),
+   così stella e nuvola stanno in un cielo solo; di notte la nuvola la copre. Niente di giorno: il
+   test di pixel lo verifica, con una Sirio al centro e una stella al limite accanto.
+5. *La luna ruotata come la vede il luogo* (`AstronomyEngine.moonBrightLimbAngle`,
+   `brightLimbAngle`): la direzione del sole dalla luna sul cielo, proiettata sul piano tangente alla
+   sfera nella luna e risolta sugli assi «più azimut» e «più altezza», in gradi: 0 lembo acceso a
+   destra (per chi guarda l'equatore, in tutti e due gli emisferi), 90 da sopra, −90 da sotto. Nello
+   shader è una rotazione della maschera della fase (`uMoonLimb`): la falce della sera punta in basso
+   verso il sole appena tramontato, la «barchetta». Sostituisce `litOnRight`, che è quello che
+   quest'angolo dice quando il sole sta all'altezza della luna. Il test di pixel accende una luna dal
+   basso e legge che il lembo chiaro sta in fondo. La scheda «Stanotte» tiene la sua luna dritta.
+6. DESIGN §3.9 (le stelle), §8.1c (la luna ruotata); `SkySnapshot` porta l'angolo e le stelle.
+
+**Decisioni e deviazioni.** *La finestra è quella del banco, 34° × 30°, e non la fascia di sole e
+luna*: la fascia comprime 300° di azimut in 400 dp e 60° di altezza in 72, e una costellazione
+schiacciata nove a uno non è riconoscibile; la camera del banco è quasi conforme, e in quella finestra
+Orione a gennaio è Orione. Così il cielo ha tre cornici dichiarate: la fascia per i corpi (un vincolo di
+layout), la camera per nuvole e stelle. *Una bitmap e non un ciclo nello shader*: 904 stelle, o anche le
+25 della finestra, per ogni pixel a 15 fotogrammi, sono più del banco intero; una lettura di texture
+costa meno delle stelle a hash di prima. *Magnitudine 4,5 e non 3,5*: a 3,5 la finestra ha sette stelle
+in una sera di gennaio e il cielo sembra vuoto; a 4,5 ne ha venticinque, le deboli appena visibili, che
+è quello che si vede da una città. *Niente inquinamento luminoso*: nessun dato lo dice. *La luna di
+«Stanotte» resta dritta*, diversamente da quanto detto a voce: quella luna sta per una notte intera e
+non per un istante, e l'inclinazione cambia durante la notte; sarebbe la bugia di un istante. *Il raggio
+e il pavimento ritoccati dopo la prima resa* (da 0,6 + 1,6·b a 0,8 + 2,2·b dp, pavimento da 0,12 a 0,2):
+Rigel era un puntino e le deboli invisibili.
+
+**Da verificare sul telefono.** Una notte serena: le stelle dove stanno (Orione a sud nelle sere
+d'inverno, il Cigno alto in estate: controllare alzando gli occhi), lo scintillio, il loro passare dietro
+le nuvole; la falce della sera inclinata verso il sole tramontato; il costo: il campo si ridisegna una
+volta al minuto, lo shader legge una texture.
+
+**Come è stato verificato.** `BrightStarsTest` (nuovo, `:core:domain`): il catalogo è 904 stelle entro
+la 4,5, ordinate, Sirio in testa con i suoi numeri, Polare e Vega dentro; la Polare sta alla latitudine
+di Milano a nord a tre istanti, Sirio non sale oltre il transito (entro 0,3°); il lembo punta al sole
+(a destra, da sotto, da sopra, la «barchetta» della sera, lo specchio) e l'angolo ricostruisce il
+vettore da cui nasce. `StarFieldTest` (nuovo): la finestra di una sera di gennaio a Milano ha fra 8 e
+120 stelle, ognuna dove il motore mette la sua, la Polare mai; a Sydney la finestra guarda a nord e non
+divide stelle con quella a sud; luminosità e calore dalle formule; la camera mette una stella al centro,
+in cima, a destra con la focale del piano, e fuori quando è fuori. `SkyShaderPixelTest` (due casi
+nuovi): una Sirio al centro e una stella al limite accanto, brillanti di notte e nulla di giorno; una
+luna accesa dal basso ha il lembo chiaro in fondo; più due notti vere di Milano rese per guardarle
+(gennaio con Orione, luglio), guardate due volte, la seconda dopo il ritocco di raggio e pavimento.
+`SkySceneTest` porta l'angolo del lembo; `SkyShaderCompileTest` lega la texture. Immagini del README
+lanciate e identiche (la Milano registrata è a mezzogiorno). Suite completa (753 app debug con i 14
+screenshot saltati, 703 release, 358 domain, 275 data, 24 sync) e lint con 0 errori.

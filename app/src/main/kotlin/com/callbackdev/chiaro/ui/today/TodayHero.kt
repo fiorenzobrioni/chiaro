@@ -107,7 +107,7 @@ internal fun CanvasHeader(
             moonAltitudeDeg = sky.moonAltitudeDeg,
             moonAzimuthDeg = sky.moonAzimuthDeg,
             moonIllumination = sky.moonIllumination,
-            moonElongationDeg = sky.moonElongationDeg,
+            moonLimbAngleDeg = sky.moonLimbAngleDeg,
             southern = sky.southern,
             cloudPct = sky.cloudPct,
             layers = sky.layers,
@@ -115,7 +115,8 @@ internal fun CanvasHeader(
             fall = sky.fall,
             fallMmPerHour = sky.fallMmPerHour,
             windKph = sky.windKph,
-            windFromDeg = sky.windFromDeg
+            windFromDeg = sky.windFromDeg,
+            starMarks = sky.stars
         )
     }
     val context = LocalContext.current

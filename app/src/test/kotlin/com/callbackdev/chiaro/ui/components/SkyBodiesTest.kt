@@ -3,7 +3,6 @@ package com.callbackdev.chiaro.ui.components
 import androidx.compose.ui.geometry.Offset
 import com.callbackdev.chiaro.domain.model.CloudLayers
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -45,14 +44,6 @@ class SkyBodiesTest {
         assertEquals(0.5f, bodyUp(30.0), 1e-5f)
         assertEquals(1f, bodyUp(75.0), 0f)
         assertEquals(0f, bodyUp(-10.0), 0f)
-    }
-
-    @Test
-    fun `a waxing moon is lit toward the evening sun, mirrored south of the equator`() {
-        assertTrue(litOnRight(90.0, southern = false))
-        assertFalse(litOnRight(270.0, southern = false))
-        assertFalse(litOnRight(90.0, southern = true))
-        assertTrue(litOnRight(270.0, southern = true))
     }
 
     @Test
