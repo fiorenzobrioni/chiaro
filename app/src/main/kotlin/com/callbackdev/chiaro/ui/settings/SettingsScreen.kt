@@ -599,6 +599,7 @@ private fun AppearancePreview(settings: AppSettings) {
             moonAltitudeDeg = -30.0,
             moonAzimuthDeg = 0.0,
             moonIllumination = 0.0,
+            moonElongationDeg = 0.0,
             southern = false,
             cloudPct = PreviewCloud,
             layers = null,
@@ -623,11 +624,15 @@ private fun AppearancePreview(settings: AppSettings) {
                     .fillMaxWidth()
                     .height(PreviewSky)
             ) {
+                // The sun as Today draws it, low in the west, in the band the number leaves:
+                // the upper half of the slice, 8dp under its top (19 ott 2026: the shader
+                // draws it, where the layer over the shader used to).
                 com.callbackdev.chiaro.ui.components.SkyShaderLayer(
                     gradient = sky,
                     scene = scene,
                     moving = false,
-                    modifier = Modifier.matchParentSize()
+                    modifier = Modifier.matchParentSize(),
+                    band = com.callbackdev.chiaro.ui.components.SkyBand(top = 8.dp, height = PreviewSky / 2 - 8.dp)
                 )
                 Box(
                     modifier = Modifier
@@ -638,23 +643,6 @@ private fun AppearancePreview(settings: AppSettings) {
                                 1f to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha)
                             )
                         )
-                )
-                // The sun as Today draws it, low in the west, over the band the number leaves.
-                com.callbackdev.chiaro.ui.components.SkyBodiesLayer(
-                    com.callbackdev.chiaro.ui.components.SkyBodies(
-                        sunAltitudeDeg = PreviewAltitude,
-                        sunAzimuthDeg = PreviewSunAzimuth,
-                        moonAltitudeDeg = -30.0,
-                        moonAzimuthDeg = 0.0,
-                        moonIllumination = 0.0,
-                        moonElongationDeg = 0.0,
-                        cloudOpacity = scene.opacity,
-                        southern = false
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(PreviewSky / 2)
-                        .padding(top = 8.dp)
                 )
                 Column(
                     modifier = Modifier

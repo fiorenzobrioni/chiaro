@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,8 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.ui.components.DaylightRibbon
-import com.callbackdev.chiaro.ui.components.SkyBodies
-import com.callbackdev.chiaro.ui.components.SkyBodiesLayer
+import com.callbackdev.chiaro.ui.components.SkyBand
 import com.callbackdev.chiaro.ui.components.SkyCanvas
 import com.callbackdev.chiaro.ui.components.SkySheet
 import com.callbackdev.chiaro.ui.format.Formats
@@ -106,6 +106,7 @@ internal fun CanvasHeader(
             moonAltitudeDeg = sky.moonAltitudeDeg,
             moonAzimuthDeg = sky.moonAzimuthDeg,
             moonIllumination = sky.moonIllumination,
+            moonElongationDeg = sky.moonElongationDeg,
             southern = sky.southern,
             cloudPct = sky.cloudPct,
             layers = sky.layers,
@@ -122,12 +123,17 @@ internal fun CanvasHeader(
         !com.callbackdev.chiaro.ui.theme.reducedMotion() &&
         !com.callbackdev.chiaro.ui.icons.LocalMotionPaused.current &&
         !saving.isOn()
+    // The band of sky the sun and the moon stand in, as the column lays it out, reported to
+    // the shader that draws them there (§8.1c, 19 ott 2026).
+    var band by remember { mutableStateOf<SkyBand?>(null) }
+    val density = LocalDensity.current
     SkyCanvas(
         gradient = gradient,
         minHeight = floor,
         sheet = sheet,
         scene = scene,
         moving = moving,
+        band = band,
         modifier = Modifier.onGloballyPositioned { canvasCoords = it }
     ) {
         // One column with the place row's seat at the top and the hero at the bottom,
@@ -143,22 +149,22 @@ internal fun CanvasHeader(
         // Between the two, since 23 set 2026, the sun and the moon, in a band of sky the
         // layout keeps for them ([SkyColumn]): the discs can never stand behind the place
         // row or the hero, and the band is never so thin that there is no room for one.
+        // The shader draws them (19 ott 2026); the band's only child tells it where the
+        // band is, in the canvas' own coordinates.
         Box(Modifier.padding(start = railInset)) {
         SkyColumn(seat = placeRowHeight, floor = floor - sheet.lip) {
-            Box(modifier = Modifier.fillMaxSize().padding(top = 4.dp)) {
-                SkyBodiesLayer(
-                    SkyBodies(
-                        sunAltitudeDeg = sky.sunAltitudeDeg,
-                        sunAzimuthDeg = sky.sunAzimuthDeg,
-                        moonAltitudeDeg = sky.moonAltitudeDeg,
-                        moonAzimuthDeg = sky.moonAzimuthDeg,
-                        moonIllumination = sky.moonIllumination,
-                        moonElongationDeg = sky.moonElongationDeg,
-                        cloudOpacity = scene.opacity,
-                        southern = sky.southern
-                    )
-                )
-            }
+            Spacer(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 4.dp)
+                    .onGloballyPositioned { slot ->
+                        val canvas = canvasCoords ?: return@onGloballyPositioned
+                        if (!canvas.isAttached || !slot.isAttached) return@onGloballyPositioned
+                        val top = canvas.localPositionOf(slot, Offset.Zero).y
+                        val next = with(density) { SkyBand(top = top.toDp(), height = slot.size.height.toDp()) }
+                        if (next != band) band = next
+                    }
+            )
             // Three groups, set apart by the air between them rather than by one even step
             // (review of Today, 15 ott 2026): the NOW — the number, the sky's word, what it
             // feels like and whether it is an estimate — packed tight under the figure; the

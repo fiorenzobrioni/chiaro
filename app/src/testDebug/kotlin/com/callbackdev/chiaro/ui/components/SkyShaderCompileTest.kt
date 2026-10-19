@@ -22,9 +22,9 @@ class SkyShaderCompileTest {
         val palette = SkyPalette.Paper
         val gradient = palette.gradient(10.0, 60, 70)
         val scene = skyScene(
-            palette, gradient, 10.0, 200.0, 20.0, 120.0, 0.6, false, 60,
+            palette, gradient, 10.0, 200.0, 20.0, 120.0, 0.6, 95.0, false, 60,
             null, 70, SkyFall.RAIN, 1.5, 20.0, 250
         )
-        RuntimeShader(SkyShaderSource).bindSky(400f, 600f, 2.5f, 12f, gradient, scene)
+        RuntimeShader(SkyShaderSource).bindSky(400f, 600f, 2.5f, 12f, gradient, scene, 200f, 180f)
     }
 }

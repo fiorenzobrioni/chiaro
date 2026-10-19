@@ -1,111 +1,35 @@
 package com.callbackdev.chiaro.ui.components
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.dp
-import com.callbackdev.chiaro.ui.theme.SkyPalette
 import kotlin.math.abs
 
-/**
- * Where the sun and the moon are, for [SkyBodiesLayer]: altitude and compass bearing from
- * the same `AstronomyEngine` the canvas' gradient reads, so the disc and the color behind
- * it cannot disagree about whether the sun is up.
+/*
+ * The sun and the moon on the canvas: the rules (design review, 23 set 2026; drawn by the
+ * shader since 19 ott 2026, review of the sky).
+ *
+ * Where a body stands is arithmetic on the same `AstronomyEngine` the gradient reads, so the
+ * disc and the colour behind it cannot disagree about whether the sun is up: **across** by
+ * compass bearing as the reader facing the equator sees it ([bodyAcross]: east on the left in
+ * the north, on the right in the south — a winter sun stays near the middle, a summer one rises
+ * and sets near the edges, which is true), **up** by altitude ([bodyUp]), inside the band of
+ * sky the layout keeps between the place row and the hero (`SkyColumn`, [SkyBand]). Below the
+ * horizon a body is not drawn. What veils a body is the cloud's **opacity**, not its cover
+ * ([sunVeil], [moonVeil]): a sky closed by a high veil still shows the sun's disc, one closed by
+ * a low deck shows neither it nor the moon.
+ *
+ * Until 19 ott 2026 the bodies were a Compose layer over the shader and over the scrim, veiled
+ * by the cloud's global opacity alone, with a glow painted in SRC_OVER: a full disc stood on a
+ * cumulus at 25% of cover, the clouds' rim light was centred 19 to 42 dp from the drawn sun
+ * (the shader had its own idea of where the band was), and a sun at noon read as a pale sticker.
+ * Now `SkyShaderSource` draws them behind the clouds, in linear light, from the same band and
+ * the same rules below, which hide a body **pixel by pixel** under the deck: so the global veil
+ * a disc wears is the opacity of what the deck does not draw, the high veil's, or the whole
+ * cover's on a wet hour (`skyScene`). The moon's phase ([moonLitPath]) is one geometry in two
+ * places: the shader's mask on the canvas, this path on the tonight card.
  */
-@Immutable
-data class SkyBodies(
-    val sunAltitudeDeg: Double,
-    val sunAzimuthDeg: Double,
-    val moonAltitudeDeg: Double,
-    val moonAzimuthDeg: Double,
-    /** 0 at new moon, 1 at full. */
-    val moonIllumination: Double,
-    /** Moon − sun longitude, `[0, 360)`: under 180 the moon is waxing. */
-    val moonElongationDeg: Double,
-    /** How much of the light the hour's cloud takes, 0..1: the scene's [SkyScene.opacity],
-     * so a low deck hides what a high veil lets through ([cloudOpacity]). */
-    val cloudOpacity: Float,
-    /** South of the equator the reader faces north to find the sun: east is on the right,
-     * and the moon's lit limb is mirrored. */
-    val southern: Boolean
-)
-
-/**
- * The sun and the moon, drawn where they stand (design review, 23 set 2026).
- *
- * The canvas has always been the computed sky; until now it painted the light and left the
- * two bodies that make it out. The layer fills the free band between the place row and the
- * hero and puts each body in it as the reader would see it facing the equator: **across**
- * by compass bearing (east on the left in the north, on the right in the south — a winter
- * sun stays near the middle, a summer one rises and sets near the edges, which is true),
- * **up** by altitude. Below the horizon a body is not drawn. Clouds veil the sun rather than
- * hide it, and under a full cover it loses its **edge**, not only its strength — see
- * [sunVeil]: an overcast sun is a brighter part of the sky, never a disc. What veils is the
- * cloud's **opacity**, not its cover (16 ott 2026): a sky closed by a high veil still shows
- * the sun's disc, one closed by a low deck shows neither it nor the moon ([moonVeil]).
- *
- * The moon wears its phase — the lit limb on the sun's side, the terminator an ellipse —
- * and the rest of its disc is barely there, as earthshine.
- *
- * It draws inside its own box and never behind text: the band it gets is the space the
- * column leaves between the row and the hero, and when that space is too small for a disc
- * (a two-line sentence at a large font size) nothing is drawn — a sun squeezed behind the
- * temperature would be a sun that costs the number its contrast. Static: it moves as the
- * page's minute tick moves it, and costs one draw.
- */
-@Composable
-fun SkyBodiesLayer(bodies: SkyBodies, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier.fillMaxSize()) {
-        val radius = BodyRadius.toPx()
-        if (size.height < radius * 2 + 4.dp.toPx() || size.width <= 0f) return@Canvas
-        val cloud = bodies.cloudOpacity.coerceIn(0f, 1f)
-        if (bodies.moonAltitudeDeg > 0.0) {
-            val center = place(bodies.moonAzimuthDeg, bodies.moonAltitudeDeg, bodies.southern, radius)
-            val veil = moonVeil(cloud, day = bodies.sunAltitudeDeg > 0.0)
-            if (veil.disc > 0f || veil.glow > 0f) moon(center, radius * 0.9f, bodies, veil)
-        }
-        if (bodies.sunAltitudeDeg > -0.5) {
-            val center = place(bodies.sunAzimuthDeg, bodies.sunAltitudeDeg, bodies.southern, radius)
-            sun(center, radius, bodies.sunAltitudeDeg, cloud)
-        }
-    }
-}
-
-private fun DrawScope.place(azimuthDeg: Double, altitudeDeg: Double, southern: Boolean, radius: Float): Offset {
-    val inset = size.width * EdgeInset
-    val x = inset + (size.width - inset * 2) * bodyAcross(azimuthDeg, southern)
-    val y = radius + (size.height - radius * 2) * (1f - bodyUp(altitudeDeg))
-    return Offset(x, y)
-}
-
-private fun DrawScope.sun(center: Offset, radius: Float, altitudeDeg: Double, cloud: Float) {
-    // Warm near the horizon, white-gold above the golden hour.
-    val warmth = (1.0 - (altitudeDeg / 12.0)).coerceIn(0.0, 1.0).toFloat()
-    val core = lerp(SkyPalette.SunHigh, SkyPalette.SunLow, warmth)
-    val veil = sunVeil(cloud)
-    val glow = glowRadius(center, radius * 4f * veil.spread)
-    drawCircle(
-        brush = Brush.radialGradient(
-            0f to core.copy(alpha = veil.glowCore),
-            0.35f to core.copy(alpha = veil.glowMid),
-            1f to Color.Transparent,
-            center = center,
-            radius = glow
-        ),
-        radius = glow,
-        center = center
-    )
-    if (veil.disc > 0f) drawCircle(core.copy(alpha = veil.disc), radius = radius, center = center)
-}
 
 /** How the cloud draws the sun: the disc's opacity, the glow's at its core and at a third
  * of its reach, and how far the glow spreads (× the clear-sky reach). */
@@ -163,47 +87,18 @@ internal fun moonVeil(cloud: Float, day: Boolean): MoonVeil {
 private const val MoonByDay = 0.55f
 private const val MoonByNight = 0.95f
 
-private fun DrawScope.moon(center: Offset, radius: Float, bodies: SkyBodies, veil: MoonVeil) {
-    val face = SkyPalette.MoonFace
-    val glow = glowRadius(center, radius * 3f * veil.spread)
-    drawCircle(
-        brush = Brush.radialGradient(
-            0f to face.copy(alpha = 0.22f * veil.glow * bodies.moonIllumination.toFloat()),
-            1f to Color.Transparent,
-            center = center,
-            radius = glow
-        ),
-        radius = glow,
-        center = center
-    )
-    // Earthshine: the unlit disc, just there.
-    if (veil.disc <= 0f) return
-    drawCircle(face.copy(alpha = 0.14f * veil.disc), radius = radius, center = center)
-    val lit = moonLitPath(center, radius, bodies.moonIllumination.toFloat(), litOnRight(bodies))
-    drawPath(lit, face.copy(alpha = veil.disc))
-}
-
-/** The glow may reach a little past the band — its tail there is a few percent of white,
- * which the scrim over the text bands absorbs — but never far: a halo that washed over
- * the temperature would cost the number its contrast. */
-private fun DrawScope.glowRadius(center: Offset, wanted: Float): Float {
-    val room = minOf(center.y, size.height - center.y) + GlowSpill.toPx()
-    return minOf(wanted, room).coerceAtLeast(1f)
-}
-
-private val GlowSpill = 14.dp
-
-/** Waxing, the lit limb faces the evening sun: west, which is on the right for a reader
- * in the north and on the left in the south. */
-internal fun litOnRight(bodies: SkyBodies): Boolean {
-    val waxing = bodies.moonElongationDeg < 180.0
-    return waxing != bodies.southern
+/** Waxing (moon − sun longitude under 180°), the lit limb faces the evening sun: west, which
+ * is on the right for a reader in the north and on the left in the south. */
+internal fun litOnRight(moonElongationDeg: Double, southern: Boolean): Boolean {
+    val waxing = moonElongationDeg < 180.0
+    return waxing != southern
 }
 
 /**
  * The lit part of a moon at [illumination] (0 new, 1 full): a half disc on the lit side,
  * closed by the terminator — an ellipse whose half-width is `r·|2k − 1|`, bulging toward
- * the lit side for a crescent and away from it for a gibbous moon.
+ * the lit side for a crescent and away from it for a gibbous moon. The shader's moon is the
+ * same geometry as a mask (`SkyShaderSource`); this path draws it on the tonight card.
  */
 internal fun moonLitPath(center: Offset, radius: Float, illumination: Float, litRight: Boolean): Path {
     val k = illumination.coerceIn(0f, 1f)
@@ -245,5 +140,10 @@ internal fun bodyUp(altitudeDeg: Double): Float =
     (altitudeDeg / TopAltitude).coerceIn(0.0, 1.0).toFloat()
 
 private const val TopAltitude = 60.0
-private const val EdgeInset = 0.08f
-private val BodyRadius = 11.dp
+
+/** The canvas' width a body never crosses, each side, as a fraction of it: a sun on the
+ * very edge would be a half sun. The shader places the bodies with the same inset. */
+internal const val EdgeInset = 0.08f
+
+/** The disc's radius; the moon's is nine tenths of it. */
+internal val BodyRadius = 11.dp

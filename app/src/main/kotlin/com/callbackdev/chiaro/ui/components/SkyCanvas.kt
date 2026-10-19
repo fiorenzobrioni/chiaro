@@ -69,6 +69,8 @@ fun SkyCanvas(
     scene: SkyScene? = null,
     /** Whether the scene may move now (§3.9, §7.1). */
     moving: Boolean = false,
+    /** Where the sun and the moon stand inside the canvas (§8.1c), when the caller knows. */
+    band: SkyBand? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     Box(
@@ -79,7 +81,7 @@ fun SkyCanvas(
         // The sky first, then the scrims and the sheet over it, then what stands on it: the
         // scene's clouds are under the scrim like the gradient, so §3.6 holds over them too.
         if (scene != null) {
-            SkyShaderLayer(gradient = gradient, scene = scene, moving = moving, modifier = Modifier.matchParentSize())
+            SkyShaderLayer(gradient = gradient, scene = scene, moving = moving, modifier = Modifier.matchParentSize(), band = band)
         }
         Spacer(
             modifier = Modifier

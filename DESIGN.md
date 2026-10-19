@@ -743,8 +743,10 @@ with the parts of it a gradient could not say.
   2.2 power over sRGB values, a touch stricter than the curve); the half level of dither added
   after it is inside what the contract has to spare, 5.27:1 measured against 4.5 needed.
 
-The sun and the moon (§8.1c) are drawn over the scene as before, with their veils, which read
-the scene's opacity.
+The sun and the moon (§8.1c) are part of the scene since 19 ott 2026: drawn by the same
+shader behind the clouds, placed by the bodies' rules in the band the column reports, veiled
+by the high layer globally and by the deck pixel by pixel, their glows in front of the clouds
+reading the whole opacity. The clouds' light is the body's own place, by the same arithmetic.
 
 ## 4. The daylight ribbon
 
@@ -1413,7 +1415,8 @@ were exactly where a reader stops to read the day's range under it, so the halfw
 seen most. The continuity it bought is kept by the moment and the place: the bar's number comes in as the
 big one goes under, beside the sky's icon where the eye already looks for it.
 
-**8.1c The sun and the moon** (design review, 23 set 2026) — drawn on the canvas where they
+**8.1c The sun and the moon** (design review, 23 set 2026; drawn by the shader since the review
+of the sky, 19 ott 2026) — drawn on the canvas where they
 stand, in a band of sky the canvas' column keeps for them between the place row and the hero
 (at least 56dp, more when the floor leaves more; the canvas grows by what that costs, because
 a hero with no sky in it is a temperature on a gradient). **Across** by compass bearing as
@@ -1434,8 +1437,36 @@ phase — lit limb toward the evening sun, the terminator an ellipse, the dark p
 earthshine — and is pale by day. Both are drawn inside their band, the halo spilling at most
 14dp past it, so neither can stand behind text and cost it contrast; the colors are
 `SkyPalette.SunHigh`, `SunLow` and `MoonFace`, shared by both palettes like `Moonlight`.
-Static: they move with the page's minute tick and cost one draw; the scene under them (§3.9)
-is what moves.
+
+**In the shader, behind the clouds, in linear light** (19 ott 2026). Until then the bodies
+were a Compose layer over the shader and over the scrim, veiled by the cloud's global opacity
+alone and glowing in SRC_OVER paint: a full disc stood on a cumulus at 25% of cover, the
+clouds' rim light was centred 19 to 42 dp from the drawn sun (the shader had its own idea of
+where the band was), and a noon sun read as a pale sticker. Now `SkyShaderSource` draws them
+from the same band (`SkyBand`, reported by the column) and the same rules (`SkyBodies.kt`):
+- **behind the deck, pixel by pixel**: the sun's disc and its corona, the moon's disc, are gone
+  where a cloud stands, so the global veil a disc wears is the high layer's opacity alone (the
+  whole cover's on a wet hour); the glows in front of the clouds, the sun's long tail, the
+  broad patch a thin cloud lets through, the moon's glow where a deck hides it, read the whole
+  opacity as before;
+- **light, not paint**: the sun's disc is added at three times the cap and its corona as light,
+  so it burns to white; the moon reflects and is a colour over the sky, its lit face at the
+  face's own luminance, 0.9, brighter than any sky;
+- **the cap opens in the band**: §3.6's ceiling is the palette's brightest stop everywhere
+  text can stand, and the band holds none by construction (`SkyColumn`), so inside it, 6 dp
+  from its edges, the ceiling rises to white and a sun can be a sun. A body's glow is a
+  **circle** round it, fading from its centre to nothing 8 dp past the band's nearer edge
+  (past the edge it is a fifth of itself at most, under the cap), what `glowRadius` did for the
+  old layer, never a window cut out of the band: cut in height alone, the tail of a noon sun
+  drew a bright stripe across the whole canvas in the shader's first render. So nothing bright
+  reaches the place row or the hero (`SkyShaderPixelTest` reads the pixels above the band and
+  beside the sun). The glow is as big as the band lets it: a sun at the top of the band has
+  19 dp under the place row and little more than its disc, one in the middle has 36;
+- a **22° halo** under a closed cirrostratus was tried and left out: at four discs from the
+  sun it does not fit a band of 72 dp, and squeezed to fit it was a second corona. It comes
+  back if the band ever grows (§3.9's open item 7, the scrim);
+- what used to be the layer's static draw now costs the shader a few samples per pixel inside
+  the band and nothing outside it (every term is skipped when a body is under the horizon).
 
 The **hero** itself was re-set the same day: the whole degrees and the degree sign at the
 hero size (the tenths, first set at 55% on the same baseline, went on 24 set 2026 with

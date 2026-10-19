@@ -14799,7 +14799,7 @@ vetro).
   scure sotto una pioggia probabile (errore 3), il velo che deriva a metà del banco (parallasse). Un
   test di pixel (`SkyShaderPixelTest`) disegna lo shader con Skia e lo confronta con l'aritmetica
   in Kotlin.
-- [ ] **2. Sole e luna dentro lo shader.** Un solo sistema di coordinate (via l'errore 1),
+- [x] **2. Sole e luna dentro lo shader.** Un solo sistema di coordinate (via l'errore 1),
   occlusione per pixel dall'alfa della nuvola (via l'errore 2), bagliore additivo con un lobo in
   avanti alla Henyey-Greenstein, il disco piccolo e bruciato, l'alone di 22° sotto un velo alto
   chiuso (il dato lo dice: strato alto, cirrostrato). La fase della luna resta un disegno in Kotlin
@@ -14899,3 +14899,83 @@ Suite completa (738 app debug con i 14 screenshot saltati, 694 release, i moduli
 lint con 0 errori. Il salto trovato scrivendo il test di pixel: dentro `RenderNode.apply { }` i
 `width` e `height` del nodo, ancora a zero, nascondono quelli della classe e posizionano un nodo
 senza dimensione, che disegna il nulla; il test li passa come parametri e lo dice.
+
+### Passo 2: sole e luna dentro lo shader (19 ott 2026)
+
+**Cosa è cambiato.**
+
+1. *I corpi sono della scena* (`SunMark`, `MoonMark` in `SkyScene`, da `skyScene`, che ora legge anche
+   l'elongazione della luna): dove stanno (`bodyAcross`, `bodyUp`, le regole di `SkyBodies.kt`, che
+   resta il file delle regole e perde il layer), il colore del sole e il suo calore, la fase e il
+   lembo illuminato della luna, e il loro velo. Il velo globale di un disco è l'opacità dello strato
+   alto soltanto (tutta la copertura in un'ora bagnata), perché il banco lo nasconde **pixel per
+   pixel** nello shader; i bagliori davanti alle nuvole leggono l'opacità intera, come le regole
+   `sunVeil` e `moonVeil` erano state scritte. La luce delle nuvole è il posto del corpo, con la
+   stessa aritmetica: via l'errore 1 (19–42 dp di distanza) per costruzione.
+2. *La fascia è un dato* (`SkyBand`, dp dal bordo alto del canvas e altezza): `SkyColumn` tiene lo
+   spazio fra la riga del luogo e l'hero come prima, e il suo unico figlio è uno `Spacer` che
+   riferisce il proprio rettangolo nelle coordinate del canvas; l'anteprima delle Impostazioni
+   dichiara la sua (8 dp dal bordo, metà del ritaglio). `SkyCanvas` e `SkyShaderLayer` la passano
+   allo shader (`uBand`); senza, lo shader usa la metà alta del canvas, dove stava la luce prima.
+3. *Lo shader disegna i corpi dietro le nuvole, in luce lineare*: prima la forma del banco (il suo
+   colore viene dopo), poi il sole come luce aggiunta (disco a tre volte il tetto, che brucia a
+   bianco; corona e coda dell'aureola), la luna come colore sopra il cielo (riflette, non brilla:
+   la fase è la geometria di `moonLitPath` come maschera, il buio al 14% di terra-luce), tutti
+   moltiplicati per `1 − alfa del banco`; poi il velo, il colore del banco, e davanti alle nuvole
+   la quota della coda che l'aria fra noi e le nuvole diffonde, la chiazza larga e tenue che una
+   nuvola lascia passare (tutto quello che uno strato chiuso mostra del sole) e il bagliore della
+   luna dove un banco ne nasconde il disco. Un disco visto attraverso una nuvola sottile ha il bordo
+   sfocato prima di sparire.
+4. *Il tetto si apre nella fascia*: il tetto di §3.6 resta lo stop più chiaro della palette ovunque
+   possa stare un testo, e la fascia non ne contiene per costruzione; dentro, a 6 dp dai bordi, sale
+   a bianco. Oltre il tetto il colore viene tenuto al tetto; molto oltre (un disco a tre volte)
+   brucia a un bianco della luminanza del tetto, come in un obiettivo, invece di restare un giallo
+   schiacciato.
+5. *Il bagliore di un corpo è un cerchio* che sfuma dal centro fino a zero 8 dp oltre il bordo più
+   vicino della fascia (oltre il bordo è al più un quinto di sé, sotto il tetto), quello che
+   `glowRadius` faceva per il vecchio layer; mai una finestra ritagliata dalla fascia.
+6. `SkyBodiesLayer`, `SkyBodies` e il disegno in Compose tolti; `moonLitPath` resta (la scheda di
+   stanotte lo disegna). DESIGN §8.1c e §3.9.
+
+**Decisioni e deviazioni.** *La striscia*: la prima resa vera dello shader (Skia, `CHIARO_RENDER_DIR`)
+aveva una striscia luminosa attraverso tutto il canvas all'altezza del sole, e sotto il velo alto il
+blob tagliato in piano sul bordo della fascia: il bagliore era limitato alla fascia in altezza ma non
+in larghezza, e la coda dell'aureola, larga e tenue, si vedeva come una banda. Ora è un cerchio attorno
+al corpo che si spegne al bordo della fascia, e il test di pixel legge il cielo accanto al sole alla
+sua stessa altezza. *L'alone di 22° provato e tolto*: a quattro dischi dal sole non sta in una fascia
+di 72 dp, e stretto per starci era una seconda corona; torna se la fascia cresce (passo 7, lo scrim).
+*Il disco dietro un banco è del pixel e non della regola*: `sunVeil(1).disc = 0` resta vera per lo
+strato chiuso perché il velo globale di un'ora bagnata è tutta la copertura, e per uno strato asciutto
+la copre l'alfa del banco, che a banco chiuso è 1 su ogni pixel (`SkyDeckTest`). *La luna di giorno
+dietro uno strato*: 55% × (1 − 0) di disco, nascosto per intero dal banco; la regola di `moonVeil` per
+lo strato (disco 0) si legge ora attraverso l'alfa. *Il tetto aperto non tocca il contratto*: il
+test di pixel legge ogni riga sopra la fascia di un mezzogiorno sereno con il sole in cima alla
+fascia e la trova sotto lo stop del contratto. *Il bagliore è grande quanto la fascia concede*: un sole in cima
+alla fascia ha 19 dp di spazio sotto la riga del luogo e il suo bagliore è poco più del disco, uno a
+metà ne ha 36; con una sfumatura a plateau (piena fino a metà spazio) la chiazza sotto uno strato
+chiuso prendeva la forma di un disco, per cui sfuma dal centro. È il prezzo di una fascia da 72 dp,
+non una scelta. *Un salto trovato scrivendo il test*: `RenderNode.apply
+{ setPosition(0, 0, width, height) }` leggeva `width` e `height` del nodo, zero, e disegnava il nulla;
+il test li passa come parametri.
+
+**Da verificare sul telefono.** Il sole di mezzogiorno (disco bianco, corona, nessuna striscia), un
+sole dietro un cumulo (il disco sfocato che spunta dal bordo), la luna con la fase e il suo bagliore,
+il tempo di GPU (ogni termine è saltato se il corpo è sotto l'orizzonte; dentro la fascia una decina di
+operazioni in più per pixel).
+
+**Come è stato verificato.** `SkyShaderPixelTest` (quattro casi nuovi, con il renderer hardware di
+Robolectric): il centro del sole di un mezzogiorno sereno è bianco (ogni canale ≥ 0,96), a sei dischi
+di distanza il cielo è ancora un cielo, ogni riga sopra la fascia sta sotto lo stop del contratto, e
+il cielo accanto al sole alla sua altezza è quello del gradiente (niente striscia); sotto uno strato
+chiuso il centro non è bianco ed è appena più chiaro del banco attorno; la falce è illuminata dal lato
+del sole, tre volte più della terra-luce, e più chiara di qualunque cielo; più cinque cieli disegnati
+solo per guardarli quando `CHIARO_RENDER_DIR` è impostata (ora d'oro, velo chiuso, sole dietro un
+cumulo, luna piena, luna di giorno), guardati tre volte: la prima con la striscia, la seconda con la
+chiazza a forma di disco, la terza buona. `SkySceneTest` (tre casi nuovi): il sole dove lo mettono le
+regole e solo sopra l'orizzonte, la luce delle nuvole uguale al suo posto, il calore all'ora d'oro; il
+disco lasciato allo shader sotto un banco, attenuato sotto un velo, tolto da un'ora bagnata; la luna
+con la fase, il lembo, il velo di giorno e di notte. `SkyBodiesTest` riscritto sulle regole senza il
+layer. `SkyDeckTest` fissa ancora le righe del banco. Immagini del README rigenerate e guardate:
+`today-now` e `today-foldable` (la Milano coperta mostra del sole un chiarore tenue, non più un disco
+sopra le nuvole) e `settings` (il sole dell'ora d'oro con il suo bagliore). Suite completa (745 app
+debug con i 14 screenshot saltati, 697 release, i moduli core invariati) e lint con 0 errori.

@@ -1,10 +1,13 @@
 package com.callbackdev.chiaro.ui.components
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.ui.theme.SkyPalette
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -22,6 +25,7 @@ class SkySceneTest {
         fall: SkyFall = SkyFall.NONE,
         moonAlt: Double = -20.0,
         moonIllum: Double = 0.0,
+        moonElongation: Double = 90.0,
         layers: CloudLayers? = null,
         windKph: Double = 15.0,
         windFrom: Int = 270,
@@ -34,6 +38,7 @@ class SkySceneTest {
         moonAltitudeDeg = moonAlt,
         moonAzimuthDeg = 150.0,
         moonIllumination = moonIllum,
+        moonElongationDeg = moonElongation,
         southern = southern,
         cloudPct = cloud,
         layers = layers,
@@ -187,6 +192,57 @@ class SkySceneTest {
         assertTrue(sky.bottom.luminance() < wet.lit.luminance())
         // A dry hour is as it was.
         assertEquals(dry.lit, scene(cloud = 95, layers = layers, precip = 0).lit)
+    }
+
+    /**
+     * 19 ott 2026: the sun and the moon are the scene's, placed by the bodies' rules in the
+     * same frame the clouds' light is, and only while they are up.
+     */
+    @Test
+    fun `the sun's mark stands where the bodies' rules put it, and only while it is up`() {
+        val s = scene(alt = 30.0)
+        val sun = requireNotNull(s.sun)
+        assertEquals(bodyAcross(180.0, southern = false), sun.across, 1e-6f)
+        assertEquals(bodyUp(30.0), sun.up, 1e-6f)
+        assertEquals(1f, sun.disc, 1e-6f)
+        assertEquals(0f, sun.warmth, 1e-6f)
+        assertTrue(scene(alt = 3.0).sun!!.warmth > 0.7f)
+        assertNull(scene(alt = -1.0).sun)
+        // The light the clouds read is the sun's own place, the same two numbers.
+        assertEquals(Offset(sun.across, sun.up), s.light)
+    }
+
+    /** The deck hides a disc pixel by pixel in the shader, so only the high veil dims it here;
+     * the glow in front of the clouds reads the whole opacity, and a wet hour takes it all. */
+    @Test
+    fun `a deck leaves the sun's disc to the shader, a veil dims it, a wet hour takes it`() {
+        val decked = scene(cloud = 100, layers = CloudLayers(100, 0, 0)).sun!!
+        val veiled = scene(cloud = 100, layers = CloudLayers(0, 0, 100)).sun!!
+        assertEquals(1f, decked.disc, 1e-6f)
+        assertEquals(0.7f, veiled.disc, 1e-6f)
+        assertTrue(decked.spread > veiled.spread)
+        assertTrue(decked.glowMid > veiled.glowMid)
+        val wet = scene(cloud = 100, layers = CloudLayers(100, 0, 0), precip = 90, fall = SkyFall.RAIN).sun!!
+        assertEquals(0f, wet.disc, 1e-6f)
+    }
+
+    @Test
+    fun `the moon's mark wears its phase and its veil`() {
+        val night = scene(alt = -30.0, moonAlt = 40.0, moonIllum = 0.3, moonElongation = 90.0)
+        val moon = requireNotNull(night.moon)
+        assertTrue(moon.litRight)
+        assertFalse(scene(alt = -30.0, moonAlt = 40.0, moonIllum = 0.3, moonElongation = 270.0).moon!!.litRight)
+        assertEquals(0.95f, moon.disc, 1e-6f)
+        assertEquals(0.3f, moon.illumination, 1e-6f)
+        assertEquals(Offset(moon.across, moon.up), night.light)
+        assertNull(scene(moonAlt = -5.0).moon)
+        // By day the moon is the pale thing it is; behind a closed low deck, at night, its disc
+        // is the shader's to hide and its glow stays, dimmer and wider.
+        assertEquals(0.55f, scene(alt = 30.0, moonAlt = 20.0, moonIllum = 0.8).moon!!.disc, 1e-6f)
+        val decked = scene(alt = -30.0, moonAlt = 40.0, moonIllum = 1.0, cloud = 100, layers = CloudLayers(100, 0, 0)).moon!!
+        assertEquals(0.95f, decked.disc, 1e-6f)
+        assertTrue(decked.glow in 0.3f..0.5f)
+        assertTrue(decked.spread > 1.2f)
     }
 
     @Test

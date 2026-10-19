@@ -11,6 +11,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.ui.theme.SkyGradient
 import com.callbackdev.chiaro.ui.theme.SkyPalette
 import org.junit.Assert.assertEquals
@@ -48,14 +49,48 @@ class SkyShaderPixelTest {
 
     /** The gradient alone, as a column of pixels: a scene with nothing drawn over it. */
     private fun column(gradient: SkyGradient, sunAltitudeDeg: Double): Bitmap {
-        val palette = SkyPalette.Paper
-        val scene = skyScene(
-            palette, gradient, sunAltitudeDeg, 180.0, -20.0, 150.0, 0.0, false, 0,
-            null, 0, SkyFall.NONE, 0.0, 15.0, 270
-        ).copy(deck = 0f, veil = 0f, stars = 0f, rain = 0f, snow = 0f)
+        val scene = scene(gradient, sunAltitudeDeg)
+            .copy(deck = 0f, veil = 0f, stars = 0f, rain = 0f, snow = 0f, sun = null, moon = null)
+        return render(gradient, scene, width, height, 0f, 0f)
+    }
+
+    private fun scene(
+        gradient: SkyGradient,
+        sunAltitudeDeg: Double,
+        moonAltitudeDeg: Double = -20.0,
+        moonIllumination: Double = 0.0,
+        cloudPct: Int = 0,
+        layers: CloudLayers? = null
+    ) = skyScene(
+        SkyPalette.Paper, gradient, sunAltitudeDeg, 180.0, moonAltitudeDeg, 150.0, moonIllumination, 90.0,
+        false, cloudPct, layers, 0, SkyFall.NONE, 0.0, 15.0, 270
+    )
+
+    /** Drawn, and saved as a PNG under `CHIARO_RENDER_DIR` when that is set, so a sky the
+     * shader draws can be looked at on a machine with no device (as `ArcPainterTest` does). */
+    private fun render(gradient: SkyGradient, scene: SkyScene, w: Int, h: Int, bandTop: Float, bandHeight: Float, name: String = "sky"): Bitmap {
         val shader = RuntimeShader(SkyShaderSource)
-        shader.bindSky(width.toFloat(), height.toFloat(), density, 0f, gradient, scene)
-        return draw(shader, width, height)
+        shader.bindSky(w.toFloat(), h.toFloat(), density, 0f, gradient, scene, bandTop, bandHeight)
+        val bitmap = draw(shader, w, h)
+        System.getenv("CHIARO_RENDER_DIR")?.let { dir ->
+            val file = java.io.File(dir).apply { mkdirs() }.resolve("$name.png")
+            file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        }
+        return bitmap
+    }
+
+    /** Where the shader places a body, the arithmetic of `place()` in Kotlin. */
+    private fun placed(across: Float, up: Float, w: Int, bandTop: Float, bandHeight: Float): Pair<Int, Int> {
+        val inset = w * EdgeInset
+        val r = BodyRadius.value * density
+        val x = inset + (w - 2 * inset) * across
+        val y = bandTop + r + (bandHeight - 2 * r) * (1 - up)
+        return x.roundToInt() to y.roundToInt()
+    }
+
+    private fun colorAt(bitmap: Bitmap, x: Int, y: Int): Color {
+        val p = bitmap.getPixel(x, y)
+        return Color(((p shr 16) and 0xFF) / 255f, ((p shr 8) and 0xFF) / 255f, (p and 0xFF) / 255f)
     }
 
     /** [width] and [height] are parameters on purpose: inside `RenderNode.apply` the node's own
@@ -167,5 +202,81 @@ class SkyShaderPixelTest {
             val c = Color(red(bitmap, y) / 255f, green(bitmap, y) / 255f, blue(bitmap, y) / 255f)
             assertTrue("row $y", c.luminance() <= max + 0.01f)
         }
+    }
+
+    // ------------------------------------------------------------- the sun and the moon (§8.1c)
+
+    private val canvasW = 400 * 3
+    private val canvasH = 352 * 3
+    private val bandTop = 80f * 3
+    private val bandHeight = 72f * 3
+
+    /** The sun burns white inside its band, where no text stands; its glow is a circle that
+     * ends at the band's edge, so the sky past the band is under the cap of §3.6 as if there
+     * were no sun, and the sky beside the sun, at the band's own height, is a sky and not a
+     * stripe of light. */
+    @Test
+    fun `the sun burns white in its band and the sky past the band stays under the cap`() {
+        val gradient = SkyPalette.Paper.gradient(50.0)
+        val scene = scene(gradient, 50.0)
+        val bitmap = render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, "sun-clear-noon")
+        val (sx, sy) = placed(scene.sun!!.across, scene.sun!!.up, canvasW, bandTop, bandHeight)
+        val centre = colorAt(bitmap, sx, sy)
+        assertTrue("the disc's centre is white, not $centre", centre.red >= 0.96f && centre.green >= 0.96f && centre.blue >= 0.96f)
+        // A few discs away the sky is still a sky: lit by the sun, not white.
+        assertTrue(colorAt(bitmap, sx + (6 * BodyRadius.value * density).roundToInt(), sy).luminance() < 0.9f)
+        val max = SkyPalette.Paper.brightestBottomStop().luminance()
+        for (y in 0 until bandTop.toInt() step 6) for (x in 0 until canvasW step 30) {
+            assertTrue("row $y, column $x", colorAt(bitmap, x, y).luminance() <= max + 0.01f)
+        }
+        // At the sun's own height, far from it, the sky is what the gradient says: no stripe.
+        val ideal = colorAt(bitmap, 30, (bandTop + bandHeight + 40f * density).toInt()).luminance()
+        val beside = colorAt(bitmap, 30, sy).luminance()
+        assertTrue("beside the sun $beside, under the band $ideal", beside < ideal + 0.03f)
+    }
+
+    /** Under a closed low deck the disc is gone pixel by pixel and only a broad, faint
+     * brightening says where the sun is: nothing near the disc's white. */
+    @Test
+    fun `a closed low deck hides the sun's disc`() {
+        val gradient = SkyPalette.Paper.gradient(50.0, 100)
+        val scene = scene(gradient, 50.0, cloudPct = 100, layers = CloudLayers(100, 0, 0))
+        val bitmap = render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, "sun-closed-deck")
+        val (sx, sy) = placed(scene.sun!!.across, scene.sun!!.up, canvasW, bandTop, bandHeight)
+        val centre = colorAt(bitmap, sx, sy).luminance()
+        val away = colorAt(bitmap, sx + (8 * BodyRadius.value * density).roundToInt(), sy + (3 * BodyRadius.value * density).roundToInt()).luminance()
+        assertTrue("centre $centre is not white", centre < 0.85f)
+        assertTrue("the sun's place ($centre) is a little brighter than the deck around it ($away)", centre > away)
+    }
+
+    /** More skies, for the eye only: drawn when `CHIARO_RENDER_DIR` is set, asserted on
+     * nothing but the draw itself. */
+    @Test
+    fun `the skies a reader meets, drawn for a look`() {
+        if (System.getenv("CHIARO_RENDER_DIR") == null) return
+        listOf(
+            Triple("golden-hour-35-low", SkyPalette.Paper.gradient(3.0, 35), scene(SkyPalette.Paper.gradient(3.0, 35), 3.0, cloudPct = 35, layers = CloudLayers(35, 0, 0))),
+            Triple("high-veil-closed", SkyPalette.Paper.gradient(50.0, 100), scene(SkyPalette.Paper.gradient(50.0, 100), 50.0, cloudPct = 100, layers = CloudLayers(0, 0, 100))),
+            Triple("cumulus-50-sun-behind", SkyPalette.Paper.gradient(35.0, 50), scene(SkyPalette.Paper.gradient(35.0, 50), 35.0, cloudPct = 50, layers = CloudLayers(50, 0, 0))),
+            Triple("full-moon-20-low", SkyPalette.Paper.gradient(-30.0, 20, 0, 1.0, 40.0), scene(SkyPalette.Paper.gradient(-30.0, 20, 0, 1.0, 40.0), -30.0, moonAltitudeDeg = 40.0, moonIllumination = 1.0, cloudPct = 20, layers = CloudLayers(20, 0, 0))),
+            Triple("day-moon-gibbous", SkyPalette.Paper.gradient(40.0, 10), scene(SkyPalette.Paper.gradient(40.0, 10), 40.0, moonAltitudeDeg = 25.0, moonIllumination = 0.8, cloudPct = 10, layers = CloudLayers(10, 0, 0)))
+        ).forEach { (name, gradient, scene) -> render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, name) }
+    }
+
+    /** The crescent is lit on the sun's side and brighter than any sky: the cap is open in
+     * the band, and the dark part is only earthshine. */
+    @Test
+    fun `a crescent is lit on the sun's side`() {
+        val gradient = SkyPalette.Paper.gradient(-30.0, 0, 0, 0.25, 40.0)
+        val scene = scene(gradient, -30.0, moonAltitudeDeg = 40.0, moonIllumination = 0.25).copy(stars = 0f)
+        assertTrue(scene.moon!!.litRight)
+        val bitmap = render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, "moon-crescent")
+        val (mx, my) = placed(scene.moon!!.across, scene.moon!!.up, canvasW, bandTop, bandHeight)
+        val r = BodyRadius.value * density * 0.9f
+        val lit = colorAt(bitmap, mx + (0.6f * r).roundToInt(), my).luminance()
+        val dark = colorAt(bitmap, mx - (0.6f * r).roundToInt(), my).luminance()
+        val max = SkyPalette.Paper.brightestBottomStop().luminance()
+        assertTrue("lit limb $lit against earthshine $dark", lit > dark * 3f)
+        assertTrue("the moon ($lit) is brighter than the brightest sky ($max)", lit > max)
     }
 }

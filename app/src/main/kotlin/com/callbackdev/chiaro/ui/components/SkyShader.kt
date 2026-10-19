@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.unit.Dp
 import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.ui.theme.SkyGradient
 import com.callbackdev.chiaro.ui.theme.SkyPalette
@@ -41,8 +42,12 @@ import kotlin.math.sin
  * - [lit] and [shade], the clouds' two colours, from the same light the gradient has (white
  *   by day, warm in the golden hour, the moon's grey at night), never brighter than the
  *   palette's brightest stop ([maxLuminance], what §3.6's scrim is measured against);
- * - [light], where the light comes from, as a fraction of the canvas: the sun's place by day,
- *   the moon's at night, the edges of the clouds that face it are the bright ones;
+ * - [sun] and [moon] (19 ott 2026, §8.1c): the bodies the shader draws behind the clouds, in
+ *   the band the layout keeps for them ([SkyBand]), placed by the bodies' rules (`SkyBodies.kt`)
+ *   and veiled by them; null while a body is under the horizon;
+ * - [light], where the light comes from, as a body's place (across by bearing, up by altitude,
+ *   the frame of [SunMark.across]): the sun's by day, the moon's at night, the edges of the
+ *   clouds that face it are the bright ones;
  * - [stars], 0..1: a dark sky, a clear one and no moon to wash it out;
  * - [rain], [snow], 0..1: only while the hour is wet by the state engine, by its intensity;
  * - [drift], the clouds' speed across the canvas in dp a second, signed: the wind's, from the
@@ -62,8 +67,54 @@ data class SkyScene(
     val rain: Float,
     val snow: Float,
     val drift: Float,
-    val maxLuminance: Float
+    val maxLuminance: Float,
+    val sun: SunMark? = null,
+    val moon: MoonMark? = null
 )
+
+/**
+ * The sun as the shader draws it (19 ott 2026): where it stands ([across], [up], the bodies'
+ * frame), its [color] and [warmth] (0 high, 1 at the horizon), and its veil: the [disc]'s and
+ * the corona's ([glowCore]) strength under the high veil alone, because the deck hides them
+ * pixel by pixel in the shader; the long tail's ([glowMid]) and its [spread] under the whole
+ * opacity, because that light is scattered in front of the clouds (`sunVeil`).
+ */
+@Immutable
+data class SunMark(
+    val across: Float,
+    val up: Float,
+    val color: Color,
+    val warmth: Float,
+    val disc: Float,
+    val glowCore: Float,
+    val glowMid: Float,
+    val spread: Float
+)
+
+/**
+ * The moon as the shader draws it (19 ott 2026): its place, its [illumination] (0 new, 1 full)
+ * and which limb is lit ([litRight]), and its veil: the [disc] under the high veil alone, the
+ * [glow] and its [spread] under the whole opacity (`moonVeil`).
+ */
+@Immutable
+data class MoonMark(
+    val across: Float,
+    val up: Float,
+    val illumination: Float,
+    val litRight: Boolean,
+    val disc: Float,
+    val glow: Float,
+    val spread: Float
+)
+
+/**
+ * The band of sky the sun and the moon stand in, inside the canvas (§8.1c): its [top] from the
+ * canvas' top edge and its [height]. Today's column keeps it between the place row and the
+ * hero and reports it; the Settings preview declares its own. The shader needs it for two
+ * things: where to place a body, and where the luminance cap may open (the band holds no text).
+ */
+@Immutable
+data class SkyBand(val top: Dp, val height: Dp)
 
 /** What the hour is doing, for [skyScene]: nothing falls, rain falls, or snow does. */
 enum class SkyFall { NONE, RAIN, SNOW }
@@ -80,6 +131,8 @@ fun skyScene(
     moonAltitudeDeg: Double,
     moonAzimuthDeg: Double,
     moonIllumination: Double,
+    /** Moon − sun longitude, `[0, 360)`: under 180 the moon is waxing. */
+    moonElongationDeg: Double,
     southern: Boolean,
     cloudPct: Int,
     layers: CloudLayers?,
@@ -116,12 +169,46 @@ fun skyScene(
     // closes, the luminance stays, so the deck keeps its folds and the cap still holds.
     val toned = lerp(lit, gradient.top, 0.45f + 0.25f * (1f - day)).let { scale(it, 1f - 0.30f * wet) }
     val shade = capLuminance(lerp(toned, grey(toned), DeckGrey * smoothstep(0.55f, 1f, deck)), maxLum)
+    // The bodies (19 ott 2026): the shader hides them under the deck pixel by pixel, so the
+    // veil a disc wears globally is the opacity of what the deck does not draw: the high
+    // veil's share of the light, or the whole cover's on a wet hour, when what falls comes
+    // from a thick cloud whichever layer the model files it under. The glows in front of the
+    // clouds read the whole opacity, as the rules were written for.
+    val veilOpacity = if (fall != SkyFall.NONE) opacity else minOf(HighOpacity * veil, opacity)
+    val sun = if (sunAltitudeDeg <= -0.5) null else {
+        // Warm near the horizon, white-gold above the golden hour.
+        val warmth = (1.0 - (sunAltitudeDeg / 12.0)).coerceIn(0.0, 1.0).toFloat()
+        val behind = sunVeil(veilOpacity)
+        val front = sunVeil(opacity)
+        SunMark(
+            across = bodyAcross(sunAzimuthDeg, southern),
+            up = bodyUp(sunAltitudeDeg),
+            color = lerp(SkyPalette.SunHigh, SkyPalette.SunLow, warmth),
+            warmth = warmth,
+            disc = behind.disc,
+            glowCore = behind.glowCore,
+            glowMid = front.glowMid,
+            spread = front.spread
+        )
+    }
+    val moon = if (!moonUp) null else {
+        val byDay = sunAltitudeDeg > 0.0
+        val behind = moonVeil(veilOpacity, byDay)
+        val front = moonVeil(opacity, byDay)
+        MoonMark(
+            across = bodyAcross(moonAzimuthDeg, southern),
+            up = bodyUp(moonAltitudeDeg),
+            illumination = moonIllumination.coerceIn(0.0, 1.0).toFloat(),
+            litRight = litOnRight(moonElongationDeg, southern),
+            disc = behind.disc,
+            glow = front.glow,
+            spread = front.spread
+        )
+    }
     val (lightAz, lightAlt) = if (day > 0.5f || !moonUp) sunAzimuthDeg to sunAltitudeDeg else moonAzimuthDeg to moonAltitudeDeg
-    val light = Offset(
-        bodyAcross(lightAz, southern),
-        // The bodies' band is the upper half of the canvas: high is near its top.
-        (0.12f + 0.38f * (1f - bodyUp(lightAlt))).coerceIn(0f, 1f)
-    )
+    // The light's place is the body's own, in the same frame and by the same arithmetic the
+    // shader places the discs with: the rim light is centred on the sun, not near it.
+    val light = Offset(bodyAcross(lightAz, southern), bodyUp(lightAlt))
     val glow = if (day > 0.5f) day * (1f - 0.6f * opacity) else 0.6f * moonLight * (1f - 0.6f * opacity)
     val darkness = smoothstep(-10f, -18f, sunAltitudeDeg.toFloat())
     val stars = darkness * (1f - cover) * (1f - cover) * (1f - 0.65f * moonLight)
@@ -145,7 +232,9 @@ fun skyScene(
         rain = if (fall == SkyFall.RAIN) intensity else 0f,
         snow = if (fall == SkyFall.SNOW) intensity else 0f,
         drift = drift,
-        maxLuminance = maxLum
+        maxLuminance = maxLum,
+        sun = sun,
+        moon = moon
     )
 }
 
@@ -306,6 +395,17 @@ uniform float uRain;
 uniform float uSnow;
 uniform float uDrift;
 uniform float uMaxLum;
+uniform float2 uBand;
+uniform float2 uBody;
+uniform float2 uSun;
+uniform float uSunOn;
+uniform half4 uSunColor;
+uniform float4 uSunVeil;
+uniform float2 uMoon;
+uniform float uMoonOn;
+uniform half4 uMoonFace;
+uniform float4 uMoonVeil;
+uniform float uMoonLit;
 
 float hash12(float2 p) {
     float3 p3 = fract(float3(p.x, p.y, p.x) * 0.1031);
@@ -349,6 +449,14 @@ float fbm2(float2 p) {
     return (0.5 * vnoise(p) + 0.25 * vnoise(float2(0.8 * p.x - 0.6 * p.y, 0.6 * p.x + 0.8 * p.y) * 2.03 + float2(11.7, 5.3))) / 0.75;
 }
 
+// Where a body stands, in px (§8.1c, the arithmetic of SkyBodies.kt): across by bearing inside
+// the canvas' width less the inset each side, up by altitude inside the band less the disc.
+float2 place(float2 body) {
+    float inset = uSize.x * uBody.x;
+    float r = uBody.y;
+    return float2(inset + (uSize.x - 2.0 * inset) * body.x, uBand.x + r + (uBand.y - 2.0 * r) * (1.0 - body.y));
+}
+
 // Linear light back to sRGB, by the exact piecewise curve and not a 2.2 power: at the night
 // band's darkest stop (13 of 255) the power curve would print 21, and the night would pale.
 half3 encode(half3 c) {
@@ -382,7 +490,88 @@ half4 main(float2 fc) {
         }
     }
 
-    // The high layer first, behind the deck: from the ground a cirrus shows through the gaps
+    // The deck's shape before its colour (19 ott 2026), so that what stands behind it, the sun,
+    // the moon, the halo, can be hidden by it pixel by pixel.
+    float deckA = 0.0;
+    float deckN = 0.0;
+    float2 deckP = float2(0.0, 0.0);
+    if (uDeck > 0.01) {
+        float2 p = float2((q.x + drift) * 0.0105, q.y * 0.0105 * persp);
+        float2 w = float2(fbm2(p * 0.7 + float2(3.1, 7.7)), fbm2(p * 0.7 + float2(9.4, 1.3)));
+        // 0.6 and not more: at 0.9 the warp folded the plane over itself here and there
+        // (its Jacobian went negative), and every fold drew a crease drifting with the clouds.
+        float2 pw = p + (w - 0.5) * 0.6;
+        float n = fbm(pw);
+        // The threshold is Kotlin's (deckThreshold), measured so the clouds take the deck's share.
+        float a = smoothstep(uDeckTh, uDeckTh + 0.22, n);
+        deckA = a;
+        deckN = n;
+        deckP = pw;
+    }
+
+    // The band the bodies stand in (§8.1c). Inside it the cap of §3.6 opens from the palette's
+    // brightest stop to white, because the band holds no text by construction (SkyColumn): a
+    // sun may burn there and a moon be brighter than any sky. A body's glow is a circle round
+    // it, fading from its centre to nothing 8 dp past the band's nearer edge (what glowRadius
+    // did for the old layer; past the edge it is a fifth of itself at most, under the cap),
+    // never a window cut out of the band: cut in height alone, the tail of a noon sun drew a
+    // bright stripe across the whole canvas (the shader's first render, 19 ott 2026).
+    float bandTop = uBand.x;
+    float bandEnd = uBand.x + uBand.y;
+    float edge6 = 6.0 * uPx;
+    float spill = 8.0 * uPx;
+    float open = smoothstep(bandTop - edge6, bandTop + edge6, fc.y) * smoothstep(bandEnd + edge6, bandEnd - edge6, fc.y);
+    half3 front = half3(0.0);
+
+    // The sun, behind the clouds: a disc at three times the cap, which burns to white, the
+    // corona the air scatters round it and the long tail of its aureole, all gone where the
+    // deck stands (the veil's share of the light is in uSunVeil, the deck's is this pixel's
+    // alpha; a thinner cloud blurs the disc's edge before it hides it). In front of the clouds,
+    // added further down: the share of the tail the air between us and the clouds scatters,
+    // and the broad, faint patch a cloud lets through, which is all of the sun a closed stratus
+    // shows (sunVeil).
+    if (uSunOn > 0.5) {
+        float2 sp = place(uSun);
+        float dSun = length(fc - sp);
+        float r = uBody.y;
+        float warm = uSunColor.a;
+        float room = min(sp.y - bandTop, bandEnd - sp.y) + spill;
+        float reach = smoothstep(room, 0.0, dSun);
+        float blur = 0.75 * uPx + 5.0 * uPx * deckA;
+        float disc = smoothstep(r + blur, r - blur, dSun) * uSunVeil.x;
+        float corona = exp(-pow(dSun / (r * (2.0 + 1.5 * warm)), 2.0)) * uSunVeil.y * 1.6;
+        float tail = 1.0 / (1.0 + pow(dSun / (r * (6.0 + 4.0 * warm) * uSunVeil.w), 2.0)) * uSunVeil.z;
+        col += uSunColor.rgb * half((disc * 3.0 + (corona + tail * 1.5) * reach) * (1.0 - deckA));
+        float through = exp(-pow(dSun / (r * 3.0 * uSunVeil.w), 2.0)) * 0.12 * deckA;
+        front += uSunColor.rgb * half((tail * 0.6 + through) * reach);
+    }
+
+    // The moon, behind the clouds, as a colour over the sky and not light added to it: it
+    // reflects. Its phase is moonLitPath's geometry as a mask: the half toward the sun, closed
+    // by the terminator, an ellipse of half-width r·|2k − 1| that bulges toward the lit side
+    // for a crescent and away from it for a gibbous moon; the dark part at 14% as earthshine.
+    if (uMoonOn > 0.5) {
+        float2 mp = place(uMoon);
+        float2 dm = fc - mp;
+        float d = length(dm);
+        float r = uBody.y * 0.9;
+        float edge = 0.75 * uPx;
+        float inside = smoothstep(r + edge, r - edge, d);
+        float k = uMoonVeil.w;
+        float halfLit = smoothstep(-edge, edge, dm.x * uMoonLit);
+        float rx = max(r * abs(2.0 * k - 1.0), 0.001);
+        float e = length(float2(dm.x / rx, dm.y / r));
+        float ell = smoothstep(1.0 + edge / r, 1.0 - edge / r, e);
+        float lit = k >= 0.5 ? max(halfLit, ell) : halfLit * (1.0 - ell);
+        float a = inside * (0.14 + 0.86 * lit) * uMoonVeil.x * (1.0 - deckA);
+        col = mix(col, uMoonFace.rgb, half(a));
+        float room = min(mp.y - bandTop, bandEnd - mp.y) + spill;
+        float reach = smoothstep(room, 0.0, d);
+        float glow = exp(-pow(d / (r * 3.0 * uMoonVeil.z), 2.0)) * 0.22 * uMoonVeil.y * k;
+        front += uMoonFace.rgb * half(glow * 0.6 * reach);
+    }
+
+    // The high layer next, behind the deck: from the ground a cirrus shows through the gaps
     // of the clouds below it, never over them. Streaks stretched 7.5 to 1 while it is
     // scattered; as it closes (cirrostratus) the stretch relaxes to 4 to 3 and the streaks give
     // way to a milky sheet with a soft unevenness, which is what a closed high veil looks like.
@@ -399,35 +588,29 @@ half4 main(float2 fc) {
         col = mix(col, uLit.rgb, half(a));
     }
 
-    if (uDeck > 0.01) {
-        float2 p = float2((q.x + drift) * 0.0105, q.y * 0.0105 * persp);
-        float2 w = float2(fbm2(p * 0.7 + float2(3.1, 7.7)), fbm2(p * 0.7 + float2(9.4, 1.3)));
-        // 0.6 and not more: at 0.9 the warp folded the plane over itself here and there
-        // (its Jacobian went negative), and every fold drew a crease drifting with the clouds.
-        float2 pw = p + (w - 0.5) * 0.6;
-        float n = fbm(pw);
-        // The threshold is Kotlin's (deckThreshold), measured so the clouds take the deck's share.
-        float a = smoothstep(uDeckTh, uDeckTh + 0.22, n);
-        if (a > 0.002) {
-            float2 lightPx = uLight * uSize;
-            float len = max(length(lightPx - fc), 1.0);
-            // One direction for the whole canvas, from its middle toward the light. Taken per
-            // pixel it turned a full circle round the light, and the lit edge turned with it:
-            // rings and arcs drawn into the clouds 150dp around the moon (device, 15 ott 2026).
-            float2 across = lightPx - uSize * 0.5;
-            float2 dir = length(across) > 1.0 ? normalize(across) : float2(0.0, -1.0);
-            float n2 = fbm(pw + dir * 0.16);
-            float s = clamp(0.55 + (n - n2) * 4.0, 0.0, 1.0);
-            // A deck is one grey with soft folds, not a sky of lit puffs: the shading flattens
-            // as the cover closes.
-            s = 0.62 + (s - 0.62) * mix(1.0, 0.35, smoothstep(0.55, 1.0, uDeck));
-            half3 cloud = mix(uShade.rgb, uLit.rgb, half(s));
-            float near = exp(-len / (uSize.x * 0.35));
-            float rim = uGlow * near * (1.0 - smoothstep(0.15, 0.7, a));
-            cloud = mix(cloud, uLit.rgb, half(rim * 0.6));
-            col = mix(col, cloud, half(a * 0.94));
-        }
+    if (deckA > 0.002) {
+        float2 lightPx = place(uLight);
+        float len = max(length(lightPx - fc), 1.0);
+        // One direction for the whole canvas, from its middle toward the light. Taken per
+        // pixel it turned a full circle round the light, and the lit edge turned with it:
+        // rings and arcs drawn into the clouds 150dp around the moon (device, 15 ott 2026).
+        float2 across = lightPx - uSize * 0.5;
+        float2 dir = length(across) > 1.0 ? normalize(across) : float2(0.0, -1.0);
+        float n2 = fbm(deckP + dir * 0.16);
+        float s = clamp(0.55 + (deckN - n2) * 4.0, 0.0, 1.0);
+        // A deck is one grey with soft folds, not a sky of lit puffs: the shading flattens
+        // as the cover closes.
+        s = 0.62 + (s - 0.62) * mix(1.0, 0.35, smoothstep(0.55, 1.0, uDeck));
+        half3 cloud = mix(uShade.rgb, uLit.rgb, half(s));
+        float near = exp(-len / (uSize.x * 0.35));
+        float rim = uGlow * near * (1.0 - smoothstep(0.15, 0.7, deckA));
+        cloud = mix(cloud, uLit.rgb, half(rim * 0.6));
+        col = mix(col, cloud, half(deckA * 0.94));
     }
+
+    // What shines in front of the clouds: the sun's long tail, the patch a thin cloud lets
+    // through, the moon's glow where a deck hides its disc.
+    col += front;
 
     if (uRain > 0.01) {
         float2 r = float2((q.x + q.y * 0.17) * 0.85, q.y * 0.035 - uTime * 2.4);
@@ -447,10 +630,15 @@ half4 main(float2 fc) {
         col = mix(col, uLit.rgb, half(flake * uSnow * 0.85 * step(0.25, h)));
     }
 
-    // The cap (§3.6), exact: luminance is linear in linear light.
+    // The cap (§3.6), exact: luminance is linear in linear light. Open to white inside the
+    // bodies' band, the palette's brightest stop everywhere else; and far over it (a sun's
+    // disc, three times the cap) the colour burns to a white of the cap's luminance, as it
+    // does in a lens, instead of staying a yellow held down to the cap.
+    float capY = mix(uMaxLum, 1.0, open);
     float L = dot(col, half3(0.2126, 0.7152, 0.0722));
-    if (L > uMaxLum) {
-        col = col * half(uMaxLum / L);
+    if (L > capY) {
+        half3 held = col * half(capY / L);
+        col = mix(held, half3(half(capY)), half(smoothstep(1.0, 3.5, L / capY)));
     }
     // Encoded, then dithered by half a level: a fixed pattern per pixel, so it never shimmers,
     // and within what the scrim contract has to spare (5.27:1 measured against 4.5 needed).
@@ -473,7 +661,10 @@ fun SkyShaderLayer(
     gradient: SkyGradient,
     scene: SkyScene,
     moving: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Where the sun and the moon stand (§8.1c); null places them in the canvas' upper half,
+     * where the scene's light used to be before the band was reported. */
+    band: SkyBand? = null
 ) {
     val shader = remember { RuntimeShader(SkyShaderSource) }
     val brush = remember(shader) { ShaderBrush(shader) }
@@ -503,7 +694,10 @@ fun SkyShaderLayer(
                 drawRect(Brush.verticalGradient(gradient.stops()))
                 return@drawBehind
             }
-            shader.bindSky(size.width, size.height, density, time, gradient, scene)
+            val r = BodyRadius.toPx()
+            val top = band?.top?.toPx() ?: (size.height * 0.12f - r)
+            val height = band?.height?.toPx() ?: (size.height * 0.38f + 2f * r)
+            shader.bindSky(size.width, size.height, density, time, gradient, scene, top, height)
             drawRect(brush)
         }
     )
@@ -520,7 +714,10 @@ internal fun RuntimeShader.bindSky(
     density: Float,
     time: Float,
     gradient: SkyGradient,
-    scene: SkyScene
+    scene: SkyScene,
+    /** The bodies' band, in px from the canvas' top: where it starts and how tall it is. */
+    bandTop: Float,
+    bandHeight: Float
 ) {
     setFloatUniform("uSize", width, height)
     setFloatUniform("uPx", density)
@@ -540,6 +737,20 @@ internal fun RuntimeShader.bindSky(
     setFloatUniform("uSnow", scene.snow)
     setFloatUniform("uDrift", scene.drift)
     setFloatUniform("uMaxLum", scene.maxLuminance)
+    setFloatUniform("uBand", bandTop, bandHeight)
+    setFloatUniform("uBody", EdgeInset, BodyRadius.value * density)
+    val sun = scene.sun
+    setFloatUniform("uSunOn", if (sun != null) 1f else 0f)
+    setFloatUniform("uSun", sun?.across ?: 0f, sun?.up ?: 0f)
+    val sunColor = sun?.color ?: Color.Black
+    setFloatUniform("uSunColor", toLinear(sunColor.red), toLinear(sunColor.green), toLinear(sunColor.blue), sun?.warmth ?: 0f)
+    setFloatUniform("uSunVeil", sun?.disc ?: 0f, sun?.glowCore ?: 0f, sun?.glowMid ?: 0f, sun?.spread ?: 1f)
+    val moon = scene.moon
+    setFloatUniform("uMoonOn", if (moon != null) 1f else 0f)
+    setFloatUniform("uMoon", moon?.across ?: 0f, moon?.up ?: 0f)
+    setLinearColor("uMoonFace", SkyPalette.MoonFace)
+    setFloatUniform("uMoonVeil", moon?.disc ?: 0f, moon?.glow ?: 0f, moon?.spread ?: 1f, moon?.illumination ?: 0f)
+    setFloatUniform("uMoonLit", if (moon?.litRight == false) -1f else 1f)
 }
 
 /** A colour as a plain float4 uniform in linear light: the shader mixes linear values and
