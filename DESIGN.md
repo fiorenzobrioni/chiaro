@@ -780,7 +780,17 @@ with the parts of it a gradient could not say.
 - **What falls**, only when the hour's **state** is wet (the state engine's, not the
   provider's code): rain as a veil and long slanted streaks, snow as flakes that fall and
   sway, at a strength from a third to full by the quarter hour just measured (4 mm an hour
-  is full).
+  is full). **On three planes** since step 5 of the sky review (19 ott 2026): near, middle
+  and far, each with its own size, speed and strength, the near one big and fast and the far
+  one small, slow and faint, so the fall has depth. Rain: streaks of 1.8, 1.2 and 0.8 dp at
+  160, 90 and 55 dp a second, leaning with the wind (a drop goes where the air goes while it
+  falls, so the lean follows the drift's sign, up to 19°) and sliding along their own line.
+  Snow: cells of 34, 22 and 14 dp with a flake in about two thirds of them, jittered inside
+  the cell and of a size of its own, swaying, falling at 22, 14 and 8 dp a second and carried
+  sideways by the wind in the plane's share. Until then there was one plane: the rain thin
+  scratches crawling at 68 dp a second, the snow one flake a cell, never two close together,
+  a lattice of dots. On a moonless night the rain is all but invisible, as it was and as it
+  is: the drops wear the clouds' lit colour, and nothing lights it.
 - **Drift**: the clouds move with **the wind** — the hour's speed, a floor of 1.5 dp a second
   plus 0.3 a km/h, toward where the wind blows as the reader facing the equator sees it (in
   the north the west is on the right, in the south the east; the frame the sun and moon stand

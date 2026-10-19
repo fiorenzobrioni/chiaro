@@ -14820,7 +14820,7 @@ vetro).
   y), v = k/(y_h − y) con l'orizzonte y_h sotto il bordo inferiore, al posto dello schiacciamento
   verticale di `persp`. Le nuvole rimpiccioliscono e si appiattiscono verso l'orizzonte insieme. La
   tabella di `deckThreshold` va rimisurata sul nuovo campionamento (`SkyDeckTest`).
-- [ ] **5. Pioggia e neve a tre piani.** Tre strati con scala, velocità e dimensione diverse (vicino
+- [x] **5. Pioggia e neve a tre piani.** Tre strati con scala, velocità e dimensione diverse (vicino
   grande e veloce, lontano piccolo e lento), ciascuno a celle con hash come ora ma più celle per
   piano e un'occupazione casuale, così la neve non è un reticolo e la pioggia ha profondità.
 - [ ] **6. Le stelle vere.** `AstronomyEngine` ha già l'effemeride, la fascia del canvas è già una
@@ -15142,3 +15142,34 @@ rigenerate e guardate: `today-now` e `today-foldable` (la Milano coperta recede)
 (l'ora d'oro su un ritaglio basso, nuvole allungate come si deve); le altre identiche. Suite
 completa (748 app debug con i 14 screenshot saltati, 700 release, i moduli core invariati) e lint con
 0 errori.
+
+### Passo 5: pioggia e neve a tre piani (19 ott 2026)
+
+**Cosa è cambiato.** Quello che cade sta su tre piani, vicino, medio e lontano, ciascuno con la sua
+misura, la sua velocità e la sua forza: il vicino grande e veloce, il lontano piccolo, lento e
+tenue, così la caduta ha profondità. *Pioggia*: strisce da 1,8, 1,2 e 0,8 dp a 160, 90 e 55 dp al
+secondo (il piano medio è quello che c'era), ciascuna dal suo campo di rumore; si inclinano col
+vento, perché una goccia va dove va l'aria mentre cade, con il segno della deriva e fino a 19°, e
+scorrono lungo la propria linea (spostare il campo lungo `r.y` è spostarlo lungo la striscia). *Neve*:
+celle da 34, 22 e 14 dp con un fiocco in circa due terzi di esse, spostato a caso dentro la cella e di
+una misura sua, che ondeggia, cade a 22, 14 e 8 dp al secondo ed è portato di lato dal vento nella
+quota del suo piano. Prima c'era un piano solo: la pioggia graffi sottili a 68 dp al secondo, la neve
+un fiocco per cella di 22 dp, mai due vicini, un reticolo di punti. DESIGN §3.9.
+
+**Decisioni e deviazioni.** *Il costo*: la pioggia passa da due a sei campioni di rumore per pixel,
+la neve da tre a nove hash e tre seni; dentro il budget di §3.5, perché un'ora bagnata ha il banco
+chiuso e nessuna stella. *La pioggerella di notte senza luna resta quasi invisibile*, com'era: le
+gocce vestono il colore chiaro delle nuvole e di notte niente lo illumina; è vero anche fuori, e la
+parola dell'hero dice che piove. *Nessun prototipo NumPy*: tre piani di particelle sono aritmetica
+da leggere, e le rese dello shader vero bastavano a guardarle.
+
+**Da verificare sul telefono.** La pioggia a 30 fotogrammi: tre velocità leggibili come profondità,
+le strisce che scorrono lungo la loro inclinazione e non in verticale; la neve che ondeggia senza
+reticolo, con il vento che la porta di lato.
+
+**Come è stato verificato.** `SkyShaderCompileTest` (il ciclo sui tre piani compila e prende ogni
+uniform), `SkyShaderPixelTest` (due rese in più per guardare: neve al 100% a 1,5 mm/h, pioggerella
+di notte a 0,4 mm/h) e `SkyDeckTest` verdi. Le rese dello shader vero guardate al pixel: la neve in
+tre taglie senza reticolo, la pioggia in tre piani inclinata col vento dell'ora. Immagini del README
+lanciate e identiche, perché la Milano registrata è asciutta. Suite completa (748 app debug con i 14
+screenshot saltati, 700 release, i moduli core invariati) e lint con 0 errori.

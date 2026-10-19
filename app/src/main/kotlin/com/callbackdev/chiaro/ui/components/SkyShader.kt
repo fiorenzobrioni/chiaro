@@ -695,22 +695,50 @@ half4 main(float2 fc) {
     // through, the moon's glow where a deck hides its disc.
     col += front;
 
+    // What falls, on three planes (step 5 of the sky review, 19 ott 2026): near, middle and
+    // far, each with its own size, speed and strength, the near one big and fast and the far
+    // one small, slow and faint, so the fall has depth. Until then there was one plane: the
+    // rain thin scratches crawling at 68 dp a second, the snow one flake a cell of 22 dp,
+    // never two close together, a lattice of dots.
     if (uRain > 0.01) {
-        float2 r = float2((q.x + q.y * 0.17) * 0.85, q.y * 0.035 - uTime * 2.4);
-        float streak = smoothstep(0.66, 1.0, vnoise(r)) * smoothstep(0.45, 1.0, vnoise(r * 0.37 + 4.0));
+        // The streaks lean with the wind (a drop goes where the air goes while it falls) and
+        // slide along their own line: moving the field down r.y is moving it along the streak.
+        float slant = clamp(uDrift * 0.03, -0.35, 0.35);
+        float lean = q.x - slant * q.y;
         col = mix(col, uShade.rgb, half(uRain * 0.14));
-        col = mix(col, mix(uLit.rgb, uShade.rgb, 0.3), half(streak * uRain * 0.75));
+        half3 drop = mix(uLit.rgb, uShade.rgb, 0.3);
+        // Near: 1.8 dp wide, 40 dp long, 160 dp a second, the fewest.
+        float2 r0 = float2(lean * 0.55 + 3.0, q.y * 0.025 - uTime * 4.0);
+        float s0 = smoothstep(0.72, 1.0, vnoise(r0)) * smoothstep(0.5, 1.0, vnoise(r0 * 0.37 + 4.0));
+        // Middle: what the one plane was, 1.2 dp wide, 28 dp long, 90 dp a second.
+        float2 r1 = float2(lean * 0.85, q.y * 0.035 - uTime * 3.2);
+        float s1 = smoothstep(0.66, 1.0, vnoise(r1)) * smoothstep(0.45, 1.0, vnoise(r1 * 0.37 + 4.0));
+        // Far: 0.8 dp wide, 18 dp long, 55 dp a second, the faintest.
+        float2 r2 = float2(lean * 1.3 + 11.0, q.y * 0.055 - uTime * 3.0);
+        float s2 = smoothstep(0.62, 1.0, vnoise(r2)) * smoothstep(0.45, 1.0, vnoise(r2 * 0.37 + 4.0));
+        col = mix(col, drop, half(s2 * uRain * 0.45));
+        col = mix(col, drop, half(s1 * uRain * 0.7));
+        col = mix(col, drop, half(s0 * uRain * 0.85));
     }
 
     if (uSnow > 0.01) {
-        float cellSize = 22.0;
-        float2 sq = float2(q.x, q.y - uTime * 11.0);
-        float2 cell = floor(sq / cellSize);
-        float h = hash12(cell);
-        float2 pos = (cell + float2(0.2 + 0.6 * hash12(cell + 2.7), 0.2 + 0.6 * hash12(cell + 9.1))) * cellSize;
-        pos.x += sin(uTime * 0.9 + h * 30.0) * 3.0;
-        float flake = 1.0 - smoothstep(0.6, 1.8, length(sq - pos));
-        col = mix(col, uLit.rgb, half(flake * uSnow * 0.85 * step(0.25, h)));
+        // Each plane: cells of its own size with a flake in about two thirds of them, jittered
+        // inside the cell, of a size of its own, swaying, falling at its speed and carried
+        // sideways by the wind in its share; the far plane first, the near one over it.
+        for (int k = 2; k >= 0; k--) {
+            float near = 1.0 - float(k) * 0.5;                      // 1 near, 0.5 middle, 0 far
+            float cellSize = mix(14.0, 34.0, near);
+            float fall = mix(8.0, 22.0, near);
+            float size = mix(1.1, 2.6, near);
+            float2 sq = float2(q.x - uTime * uDrift * mix(0.3, 0.8, near) + float(k) * 7.0, q.y - uTime * fall);
+            float2 cell = floor(sq / cellSize);
+            float h = hash12(cell + float(k) * 13.1);
+            float2 pos = (cell + float2(0.2 + 0.6 * hash12(cell + 2.7), 0.2 + 0.6 * hash12(cell + 9.1))) * cellSize;
+            pos.x += sin(uTime * (0.7 + near * 0.5) + h * 30.0) * mix(2.0, 5.0, near);
+            float r = size * (0.7 + 0.6 * fract(h * 7.3));
+            float flake = 1.0 - smoothstep(r * 0.35, r, length(sq - pos));
+            col = mix(col, uLit.rgb, half(flake * uSnow * mix(0.5, 0.9, near) * step(0.33, h)));
+        }
     }
 
     // The cap (§3.6), exact: luminance is linear in linear light. Open to white inside the
