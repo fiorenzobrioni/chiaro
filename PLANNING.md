@@ -15677,3 +15677,17 @@ chip), la frase lascia il numero al disco («Bello stanotte · nuvole 3%», «Ch
 notte · nuvole 61%»); quando la luna non è in finestra, la frase tiene il numero di metà notte,
 uguale a quello di Cielo. Verificato in `WindowTextTest` (le frasi senza luna) e `WindowPainterTest`
 (la notte della registrazione nomina la luna, il giorno no); `widget-window.png` rigenerata.
+
+**L'orologio vivo del luogo** (committente, 20 ott 2026, dallo screenshot di Taipei: «l'ora, non
+essendo quella del fuso del dispositivo, si potrebbe indicare»). Sì, ma non dipinta: un'ora nella
+bitmap è vecchia di un minuto subito e di un'ora a fine ciclo, e lo schermo non mente. La via
+onesta è la `TextClock` della piattaforma, che il launcher aggiorna da solo ogni minuto nel fuso
+che le si dice, senza ripitture: sta dentro la card Glance come `AndroidRemoteViews`
+(`layout/widget_window_clock.xml`, il fuso e l'inchiostro messi dalla card, dimensione Caption,
+il punto mediano come separatore). Accanto al nome del luogo, «Taipei · 21:18», e solo quando il
+luogo tiene un'ora diversa dal telefono, confrontando gli offset e non i nomi dei fusi
+(`clockDiffers`): Parigi non ha l'orologio su un telefono a Roma, e il luogo del telefono non ce
+l'ha mai, perché il suo orologio è quello del launcher. Verificato in `WindowClockTest` (la card
+composta come la riceve il launcher e applicata a una vista: Milano su un telefono a Roma senza
+orologio, Taipei con una `TextClock` nel fuso Asia/Taipei; l'offset e non il nome). Da provare sul
+launcher: una vista classica dentro una card Glance.
