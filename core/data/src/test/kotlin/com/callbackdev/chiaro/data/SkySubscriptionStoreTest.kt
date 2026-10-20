@@ -183,4 +183,27 @@ class SkySubscriptionStoreTest {
             assertEquals(listOf("sun.rise"), store.subscriptions.first().map { it.jobId })
         }
     }
+
+    /** The way back to the four defaults, and the way back from it: the whole file, leads included. */
+    @Test
+    fun `replacing the file whole goes to the defaults and back`() {
+        val f = file("sky-replace.preferences_pb")
+        withStore(f) { store ->
+            store.add("meteor.perseids.peak")
+            store.setNotifyLead("sun.set", 30)
+            store.remove("sun.rise")
+        }
+        val touched = withStore(f) { it.subscriptions.first() }
+        assertEquals(setOf("sun.set", "golden_hour.pm", "moon.today", "meteor.perseids.peak"), touched.map { it.jobId }.toSet())
+        withStore(f) { it.replaceAll(SkyJobCatalog.defaults.map { job -> SkySubscription(job.id) }) }
+        withStore(f) { store ->
+            assertEquals(SkyJobCatalog.defaults.map { it.id }, store.subscriptions.first().map { it.jobId })
+            assertTrue(store.subscriptions.first().all { it.notifyLeadMinutes == null && it.enabled })
+        }
+        withStore(f) { it.replaceAll(touched) }
+        withStore(f) { assertEquals(touched, it.subscriptions.first()) }
+        // A line the catalog does not know is dropped on the way in.
+        withStore(f) { it.replaceAll(touched + SkySubscription("not.a.job")) }
+        withStore(f) { assertEquals(touched, it.subscriptions.first()) }
+    }
 }

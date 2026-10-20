@@ -152,4 +152,16 @@ class SeasonsAndShowersTest {
         // The Ursids' radiant is near the pole: up all night from Milan, every night.
         assertTrue(requireNotNull(MeteorShowerTable.byId("ursids")).radiantDecDeg > 70.0)
     }
+
+    /** Eight strong showers by the written threshold, five weak ones: the Taurids and the
+     * Capricornids are in the catalogue for their fireballs, not for their rate. */
+    @Test
+    fun `the strong showers are the eight worth a night out`() {
+        val strong = MeteorShowerTable.all.filter { it.strong }.map { it.id }.toSet()
+        assertEquals(
+            setOf("quadrantids", "lyrids", "eta_aquariids", "delta_aquariids", "perseids", "orionids", "leonids", "geminids"),
+            strong
+        )
+        assertEquals(5, MeteorShowerTable.all.count { !it.strong })
+    }
 }

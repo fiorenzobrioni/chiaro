@@ -601,6 +601,9 @@
     <!-- Fase 27: due sciami che culminano la stessa notte stanno su una riga sola. -->
     <string name="sky_event_and">%1$s e %2$s</string>
     <string name="sky_add_moment">Aggiungi un momento</string>
+    <string name="sky_catalog_reset">Torna ai quattro predefiniti</string>
+    <string name="sky_catalog_reset_note">Alba, tramonto, l\'ora d\'oro della sera e la luna: quello che segue un\'installazione nuova. I promemoria che avevi messo sulle righe se ne vanno con il resto.</string>
+    <string name="sky_catalog_reset_done">I quattro predefiniti sono tornati</string>
     <!-- «Annulla» dopo un'aggiunta o una rimozione fatta dalla pagina di un evento (14 ott 2026). -->
     <string name="sky_moment_added">«%1$s» aggiunto ai tuoi momenti</string>
     <string name="sky_moment_removed">«%1$s» tolto dai tuoi momenti</string>

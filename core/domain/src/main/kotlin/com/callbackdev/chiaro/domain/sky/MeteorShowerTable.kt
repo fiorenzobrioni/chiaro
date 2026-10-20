@@ -45,23 +45,33 @@ object MeteorShowerTable {
          * and are not asked about on any other.
          */
         val radiantRaDeg: Double,
-        val radiantDecDeg: Double
+        val radiantDecDeg: Double,
+        /**
+         * Whether the shower is one worth a night out (20 ott 2026): a working-list rate of
+         * fifteen an hour or more at maximum (Quadrantids 110, Perseids 100, Geminids 150,
+         * eta Aquariids 50, delta Aquariids 25, Orionids 20, Lyrids 18, Leonids 15) against
+         * the five or ten of the rest (alpha Capricornids, Draconids, the Taurids, Ursids).
+         * A judgment with its threshold written, not a rate printed: the app still promises
+         * no number. The window names a strong shower's radiant on every peak night, and a
+         * weak one's only when the reader follows it.
+         */
+        val strong: Boolean
     )
 
     val all: List<MeteorShower> = listOf(
-        MeteorShower("quadrantids", 283.2, 230.0, 49.0),
-        MeteorShower("lyrids", 32.3, 271.0, 34.0),
-        MeteorShower("eta_aquariids", 45.5, 338.0, -1.0),
-        MeteorShower("delta_aquariids", 127.0, 340.0, -16.0),
-        MeteorShower("alpha_capricornids", 127.0, 307.0, -10.0),
-        MeteorShower("perseids", 140.0, 48.0, 58.0),
-        MeteorShower("draconids", 195.4, 262.0, 54.0),
-        MeteorShower("southern_taurids", 197.0, 32.0, 9.0),
-        MeteorShower("orionids", 208.0, 95.0, 16.0),
-        MeteorShower("northern_taurids", 230.0, 58.0, 22.0),
-        MeteorShower("leonids", 235.3, 152.0, 22.0),
-        MeteorShower("geminids", 262.2, 112.0, 33.0),
-        MeteorShower("ursids", 270.7, 217.0, 76.0)
+        MeteorShower("quadrantids", 283.2, 230.0, 49.0, strong = true),
+        MeteorShower("lyrids", 32.3, 271.0, 34.0, strong = true),
+        MeteorShower("eta_aquariids", 45.5, 338.0, -1.0, strong = true),
+        MeteorShower("delta_aquariids", 127.0, 340.0, -16.0, strong = true),
+        MeteorShower("alpha_capricornids", 127.0, 307.0, -10.0, strong = false),
+        MeteorShower("perseids", 140.0, 48.0, 58.0, strong = true),
+        MeteorShower("draconids", 195.4, 262.0, 54.0, strong = false),
+        MeteorShower("southern_taurids", 197.0, 32.0, 9.0, strong = false),
+        MeteorShower("orionids", 208.0, 95.0, 16.0, strong = true),
+        MeteorShower("northern_taurids", 230.0, 58.0, 22.0, strong = false),
+        MeteorShower("leonids", 235.3, 152.0, 22.0, strong = true),
+        MeteorShower("geminids", 262.2, 112.0, 33.0, strong = true),
+        MeteorShower("ursids", 270.7, 217.0, 76.0, strong = false)
     )
 
     fun byId(id: String): MeteorShower? = all.firstOrNull { it.id == id }

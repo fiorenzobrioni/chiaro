@@ -106,11 +106,18 @@ internal object WindowPainter {
     /**
      * The shower whose peak night this is, with its radiant placed by the engine, or null:
      * the catalogue's showers resolved for [at] as the Sky tab resolves them, kept when the
-     * peak's night window is open or opens within [PeakAhead]. Two showers on one night (the
-     * delta Aquariids and the alpha Capricornids share one) give the earlier window.
+     * peak's night window is open or opens within [PeakAhead]. A strong shower counts on every
+     * peak night; a weak one only when the reader follows it ([followed], the job ids of the
+     * moments on the card; committente, 20 ott 2026: a fresh install follows no shower and
+     * must still see the Perseids, and «Taurids, from here» for five an hour is a promise the
+     * sky will not keep). Two showers on one night (the delta Aquariids and the alpha
+     * Capricornids share one) give the earlier window.
      */
-    internal fun peakRadiant(at: Instant, zone: ZoneId, coords: Coordinates): Radiant? {
-        val tonight = SkyUpcoming.allAt(SkyJobCatalog.meteorShowers, at, zone, coords)
+    internal fun peakRadiant(at: Instant, zone: ZoneId, coords: Coordinates, followed: Set<String>): Radiant? {
+        val jobs = SkyJobCatalog.meteorShowers.filter { job ->
+            MeteorShowerTable.showerOf(job.id)?.strong == true || job.id in followed
+        }
+        val tonight = SkyUpcoming.allAt(jobs, at, zone, coords)
             .firstOrNull { resolved ->
                 val window = resolved.at ?: return@firstOrNull false
                 val end = window.end ?: return@firstOrNull false
@@ -142,7 +149,12 @@ internal object WindowPainter {
         val moonUp = night && sky.moonAltitudeDeg > MoonFacingFloorDeg
         // Where the window looks: at the moon when it is up; else, on a shower's peak night,
         // at its radiant when that is up (20 ott 2026); else at the equator.
-        val radiant = if (night) peakRadiant(at, model.zone, coords)?.takeIf { it.altitudeDeg >= WindowAltLowDeg } else null
+        val radiant = if (night) {
+            peakRadiant(at, model.zone, coords, followed = model.moments.map { it.job.id }.toSet())
+                ?.takeIf { it.altitudeDeg >= WindowAltLowDeg }
+        } else {
+            null
+        }
         val facing = when {
             moonUp -> sky.moonAzimuthDeg
             radiant != null -> radiant.azimuthDeg

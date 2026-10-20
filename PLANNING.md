@@ -15625,3 +15625,28 @@ sera del picco delle Geminidi 2026 il radiante è il loro, dove il motore lo met
 una notte senza picco nulla; sei ore prima del picco delle Perseidi il radiante c'è e una settimana
 prima no. `WindowTextTest`: «Perseids, from here». Immagini del README identiche (il 25 settembre
 non è una notte di picco). Suite completa (721 app debug con i 15 screenshot saltati, 665 release, 361 domain, 275 data, 24 sync) e lint con 0 errori.
+
+**Forti sempre, deboli solo se seguiti; e la via del ritorno ai predefiniti** (committente, 20 ott
+2026). La domanda: un'installazione nuova, che non segue nessuno sciame e si affida alla schermata
+Cielo, cosa vedrebbe? Misurato sul catalogo: i predefiniti sono alba, tramonto, ora d'oro della
+sera e luna di oggi, nessuno sciame; con «solo i seguiti» quell'utente non avrebbe mai visto un
+radiante, neanche alle Perseidi; con «tutti» avrebbe visto «Tauridi, da qui» per cinque meteore
+l'ora. La regola scelta sta in mezzo: `MeteorShower.strong`, vero per gli otto sciami con un tasso
+da quindici l'ora in su nella working list IMO (Quadrantidi 110, Perseidi 100, Geminidi 150, Eta
+Aquaridi 50, delta Aquaridi 25, Orionidi 20, Liridi 18, Leonidi 15), falso per i cinque da cinque
+o dieci (alfa Capricornidi, Draconidi, le due Tauridi, Ursidi); un giudizio con la soglia scritta
+e la fonte citata, non un numero stampato. `peakRadiant(at, zone, coords, followed)` tiene i forti
+sempre e i deboli solo se il loro id è fra i momenti della card (`model.moments`, i seguiti). E la
+via del ritorno: chi ha toccato la lista dei momenti seguiti trova in fondo al catalogo «Torna ai
+quattro predefiniti», con la riga che dice cosa sono e che i promemoria messi sulle righe se ne
+vanno; offerta solo quando la lista è diversa da quella di un'installazione nuova (altre righe, o
+una riga con un promemoria suo o commentata), perché una riga che non cambia nulla non si offre;
+e annullabile sul posto finché il foglio è aperto, con il file precedente rimesso intero, promemoria
+compresi (`SkySubscriptionStore.replaceAll`, `SkyViewModel.setMoments`, `SkyActions.setMoments`).
+Il ripristino generale delle impostazioni non la tocca: il suo testo nomina unità, aspetto,
+frequenza, promemoria e interruttori, e i momenti seguiti sono contenuto del lettore, come i luoghi.
+Verificato: `SeasonsAndShowersTest` (otto forti, cinque deboli), `WindowRadiantTest` (le Tauridi sud
+nella loro notte: nulla senza seguirle, il radiante se seguite; le Geminidi sono forti),
+`SkySubscriptionStoreTest` (il file intero ai predefiniti e indietro, una riga ignota cade),
+`SkyCatalogResetTest` (la riga c'è solo con una lista toccata, il tocco manda i quattro predefiniti,
+l'annulla rimette la lista com'era con il promemoria; su una lista nuova la riga non c'è).

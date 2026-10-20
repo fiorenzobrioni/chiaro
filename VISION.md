@@ -644,7 +644,10 @@ dynamic color:
   at most; nothing under a cover of 60% or more, nothing over the words), and the caption says
   where the window looks: at the moon when it is up at night; else, on a shower's peak night, at
   its radiant, ringed and named («Perseids, from here»: the point the meteors trace back to,
-  from the catalogue's own table, 20 ott 2026); else at the equator. On a
+  from the catalogue's own table, 20 ott 2026: the eight strong showers on every peak night, the
+  five weak ones only for a reader who follows them, because a fresh install follows no shower
+  and must still see the Perseids, and «Taurids, from here» for five an hour is a promise the
+  sky will not keep); else at the equator. On a
   card there is no hero text to keep a band for, so the moon stands where the stars' camera puts
   it and its distance from a star is the sky's, the one place in the product where it is. Four
   forms by the grant (`WindowLayout.kt`): a strip on one row, the narrow window on two cells, the
