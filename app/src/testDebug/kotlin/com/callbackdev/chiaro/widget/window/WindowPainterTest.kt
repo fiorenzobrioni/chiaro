@@ -80,6 +80,8 @@ class WindowPainterTest {
         val moon = luminanceAt(picture.bitmap, spot.first.roundToInt(), spot.second.roundToInt())
         val corner = luminanceAt(picture.bitmap, 12, 12)
         assertTrue("the moon ($moon) outshines the sky's corner ($corner)", moon > corner * 3f && moon > 0.5f)
+        // The moon is named on the disc, so the caption will leave its number to it.
+        assertTrue(picture.moonNamed)
     }
 
     @Test
@@ -91,8 +93,9 @@ class WindowPainterTest {
         save("widget-window-day", picture.bitmap)
         assertFalse(picture.night)
         assertEquals(180.0, picture.facingDeg, 1e-9)
-        // By day the picture is drawn for now.
+        // By day the picture is drawn for now, and names no moon.
         assertEquals(at, picture.drawnAt)
+        assertFalse(picture.moonNamed)
         // An overcast noon: a light sky, not a night.
         assertTrue(luminanceAt(picture.bitmap, picture.bitmap.width / 2, 20) > 0.2f)
     }

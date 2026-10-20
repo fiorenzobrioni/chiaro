@@ -55,7 +55,11 @@ internal class WindowPicture(
     /** Whether the sky's shader drew it, or the plain fallback did. */
     val gpu: Boolean,
     /** The instant the sky in it is computed for: now, or the middle of the hour at full night. */
-    val drawnAt: Instant
+    val drawnAt: Instant,
+    /** Whether the moon is drawn and named in it, with its phase: then the caption leaves the
+     * moon's number to the disc (from the device, 20 ott 2026: «Moon 68%» on the disc and
+     * «moon 69%» in the sentence, now and the night's middle, read as a mistake). */
+    val moonNamed: Boolean
 )
 
 /**
@@ -200,6 +204,7 @@ internal object WindowPainter {
             galactic = if (night) StarField.galacticFrame(drawAt, coords, facing) else null
         )
         val labels = ArrayList<Label>()
+        var moonLabel: Label? = null
         var moonSpot: Pair<Float, Float>? = null
         if (night) {
             // The moon in the stars' camera, through the band's arithmetic with the band set to
@@ -217,10 +222,12 @@ internal object WindowPainter {
             }
             if (plan.labels && sky.cloudPct < LabelCloudCeilingPct) {
                 moonSpot?.let { (x, y) ->
-                    labels += Label(
+                    val label = Label(
                         WindowText.moonLabel(context, (moonIllumination * 100).roundToInt()),
                         x, y, gapDp = BodyRadius.value + 6f
                     )
+                    moonLabel = label
+                    labels += label
                 }
                 radiant?.let { r ->
                     starPlace(StarMark(acrossOf(r.azimuthDeg, facing), r.altitudeDeg.toFloat(), 1f, 0f, 0f), w, skyH)?.let { (x, y) ->
@@ -254,8 +261,11 @@ internal object WindowPainter {
             canvas.drawRect(0f, skyH.toFloat(), w.toFloat(), h.toFloat(), Paint().apply { color = RowsShade })
         }
         skyBitmap.recycle()
-        finish(context, canvas, labels, plan, w, skyH, density)
-        return WindowPicture(picture, facing, night, gpu = drawn != null, drawnAt = drawAt)
+        val written = finish(context, canvas, labels, plan, w, skyH, density)
+        return WindowPicture(
+            picture, facing, night, gpu = drawn != null, drawnAt = drawAt,
+            moonNamed = moonLabel != null && moonLabel in written
+        )
     }
 
     /** The window's half-width in azimuth for a box: the stars' camera's focal length is set
@@ -362,7 +372,7 @@ internal object WindowPainter {
         return bitmap
     }
 
-    /** The caption's scrim and the names, over the picture. */
+    /** The caption's scrim and the names, over the picture; the names really written. */
     private fun finish(
         context: Context,
         canvas: Canvas,
@@ -371,7 +381,7 @@ internal object WindowPainter {
         w: Int,
         skyH: Int,
         density: Float
-    ) {
+    ): List<Label> {
         val scrimTop = skyH - CaptionScrimDp * density
         canvas.drawRect(
             0f, scrimTop, w.toFloat(), skyH.toFloat(),
@@ -382,7 +392,8 @@ internal object WindowPainter {
                 )
             }
         )
-        if (labels.isEmpty()) return
+        if (labels.isEmpty()) return emptyList()
+        val written = ArrayList<Label>(labels.size)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = LabelInk
             textSize = WindowLabelSp * fontScale(context) * density
@@ -406,7 +417,9 @@ internal object WindowPainter {
             val x = if (label.x + gap + width > w - 8f * density) label.x - gap - width else label.x + gap
             val y = (label.y + 4f * density).coerceAtLeast(14f * density)
             canvas.drawText(label.text, x, y, paint)
+            written += label
         }
+        return written
     }
 
     /** The scrim the caption stands on: nothing to half black over the last 70 dp of the sky. */

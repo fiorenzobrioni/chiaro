@@ -15666,3 +15666,14 @@ l'astronomia. Verificato in `WindowPainterTest`: la notte della registrazione è
 21:30 (la luna dove il motore la mette a quell'ora, la finestra girata sul suo azimut di allora),
 il giorno per adesso, il crepuscolo delle 20:00 (sole a −8,7°) per adesso con le stelle fuori.
 `widget-window.png` rigenerata (la luna un poco più alta) e guardata; VISION §5.9 lo dice.
+
+**Un numero solo per la luna** (committente, 20 ott 2026, da uno screenshot di Taipei: «Luna 68%»
+sul disco e «luna 69%» nella frase). Due istanti onesti su una card sola, letti come un errore:
+l'etichetta dice la fase di adesso (della metà dell'ora, da PR #86), la frase riporta il numero
+della scheda «Stanotte», la fase a metà notte, quella che ha deciso il verdetto e che la schermata
+Cielo stampa. Regola: un numero per card. Quando la luna è disegnata e nominata (`WindowPicture.
+moonNamed`, vero solo se l'etichetta è stata davvero scritta, non nascosta dalla didascalia o dal
+chip), la frase lascia il numero al disco («Bello stanotte · nuvole 3%», «Chiaro di luna tutta la
+notte · nuvole 61%»); quando la luna non è in finestra, la frase tiene il numero di metà notte,
+uguale a quello di Cielo. Verificato in `WindowTextTest` (le frasi senza luna) e `WindowPainterTest`
+(la notte della registrazione nomina la luna, il giorno no); `widget-window.png` rigenerata.

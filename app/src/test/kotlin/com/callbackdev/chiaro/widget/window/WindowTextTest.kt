@@ -51,6 +51,8 @@ class WindowTextTest {
         val noMoon = Tonight(window = null, verdict = SkyVerdict(SkyVerdictKind.UNSTABLE, cloudPct = 40))
         val soso = context.getString(SkyText.verdictWordRes(SkyVerdictKind.UNSTABLE))
         assertEquals("$soso tonight · cloud 40%", WindowText.tonight(context, model(noMoon)))
+        // One moon number per card: with the moon named on the disc, the sentence leaves it out.
+        assertEquals("$word tonight · cloud 9%", WindowText.tonight(context, model(tonight), withMoon = false))
     }
 
     @Test
@@ -62,6 +64,8 @@ class WindowTextTest {
         )
         assertEquals("Moonlit all night · moon 99% · cloud 60%", WindowText.tonight(context, model(tonight)))
         assertEquals("Moonlit all night · moon 99%", WindowText.tonight(context, model(Tonight(window = null, verdict = null, moonIlluminationPct = 99))))
+        assertEquals("Moonlit all night · cloud 60%", WindowText.tonight(context, model(tonight), withMoon = false))
+        assertEquals("Moonlit all night", WindowText.tonight(context, model(Tonight(window = null, verdict = null, moonIlluminationPct = 99)), withMoon = false))
         assertNull(WindowText.tonight(context, model(null)))
         assertNull(WindowText.tonight(context, model(Tonight(window = null, verdict = null))))
     }
