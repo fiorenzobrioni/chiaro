@@ -7,7 +7,9 @@ import com.callbackdev.chiaro.domain.sky.BrightStars
 import com.callbackdev.chiaro.domain.sky.Planet
 import java.time.Instant
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.pow
+import kotlin.math.sin
 
 /**
  * A star on the canvas (step 6 of the sky review, 19 ott 2026): where it stands against the
@@ -27,6 +29,19 @@ data class StarMark(
     /** The disc's radius over a star's of the same brightness: 1 for every star, more for a
      * planet, which the eye sees larger than any star ([StarField.planets]). */
     val scale: Float = 1f
+)
+
+/**
+ * The galactic frame as the camera sees it (the Milky Way, 20 ott 2026): the north galactic
+ * pole and the galactic centre as unit vectors in the camera's frame, x to the right, y up, z
+ * toward the direction the camera faces, from their J2000 coordinates through the same
+ * arithmetic that places a star. The shader turns a pixel's direction into a galactic latitude
+ * and longitude with these two, and draws the band where the plane is.
+ */
+@Immutable
+data class SkyFrame(
+    val poleX: Float, val poleY: Float, val poleZ: Float,
+    val centreX: Float, val centreY: Float, val centreZ: Float
 )
 
 /**
@@ -144,6 +159,29 @@ object StarField {
     fun planetWarmth(planet: Planet): Float = when (planet) {
         Planet.VENUS -> 0.45f
         Planet.JUPITER -> 0.55f
+    }
+
+    /** The north galactic pole and the galactic centre, J2000 (the IAU 1958 frame carried to J2000). */
+    const val GALACTIC_POLE_RA_DEG = 192.85948
+    const val GALACTIC_POLE_DEC_DEG = 27.12825
+    const val GALACTIC_CENTRE_RA_DEG = 266.40500
+    const val GALACTIC_CENTRE_DEC_DEG = -28.93617
+
+    /** The galactic frame for this instant and place, as a camera facing [facingDeg] sees it ([SkyFrame]). */
+    fun galacticFrame(at: Instant, coords: Coordinates, facingDeg: Double): SkyFrame {
+        fun vector(raDeg: Double, decDeg: Double): FloatArray {
+            val h = AstronomyEngine.starHorizontal(raDeg, decDeg, at, coords)
+            val across = Math.toRadians(((h.azimuthDeg - facingDeg + 540.0) % 360.0) - 180.0)
+            val altitude = Math.toRadians(h.altitudeDeg)
+            return floatArrayOf(
+                (sin(across) * cos(altitude)).toFloat(),
+                sin(altitude).toFloat(),
+                (cos(across) * cos(altitude)).toFloat()
+            )
+        }
+        val pole = vector(GALACTIC_POLE_RA_DEG, GALACTIC_POLE_DEC_DEG)
+        val centre = vector(GALACTIC_CENTRE_RA_DEG, GALACTIC_CENTRE_DEC_DEG)
+        return SkyFrame(pole[0], pole[1], pole[2], centre[0], centre[1], centre[2])
     }
 
     /**

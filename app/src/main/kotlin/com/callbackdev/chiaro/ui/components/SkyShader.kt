@@ -75,7 +75,11 @@ data class SkyScene(
     val sun: SunMark? = null,
     val moon: MoonMark? = null,
     val lightAmount: Float = 1f,
-    val starField: List<StarMark> = emptyList()
+    val starField: List<StarMark> = emptyList(),
+    /** How much of the Milky Way shows, 0..1: the dark, the open sky and the moon's absence, all three. */
+    val milkyWay: Float = 0f,
+    /** The galactic frame the shader draws the Milky Way in; null by day, and the band is off. */
+    val galactic: SkyFrame? = null
 )
 
 /**
@@ -151,7 +155,9 @@ fun skyScene(
     windKph: Double,
     windFromDeg: Int,
     /** The stars in the canvas' window at this instant ([StarField.visible]); none by day. */
-    starMarks: List<StarMark> = emptyList()
+    starMarks: List<StarMark> = emptyList(),
+    /** The galactic frame as this camera sees it ([StarField.galacticFrame]), for the Milky Way; none by day. */
+    galactic: SkyFrame? = null
 ): SkyScene {
     val cover = (cloudPct.coerceIn(0, 100) / 100f)
     val (deck, veil) = cloudDecks(cloudPct, layers)
@@ -234,6 +240,12 @@ fun skyScene(
     val glow = lightAmount * (1f - 0.6f * opacity) * (if (useSun) 1f else 0.6f)
     val darkness = smoothstep(-10f, -18f, sunAltitudeDeg.toFloat())
     val stars = darkness * (1f - cover) * (1f - cover) * (1f - 0.65f * moonLight)
+    // The Milky Way wants more dark than a star does (20 ott 2026): the cover cubed, because a
+    // veil that leaves Vega takes the band, and the moon squared, because a half moon takes it
+    // twice over; what a city's light takes is not modelled, as it is not for the stars.
+    val milkyWay = if (galactic == null) 0f else {
+        darkness * (1f - cover) * (1f - cover) * (1f - cover) * (1f - moonLight) * (1f - moonLight)
+    }
     val intensity = (0.35f + 0.65f * (fallMmPerHour / FallFullMmPerHour).toFloat()).coerceIn(0.35f, 1f)
     // Toward where the wind blows, as seen facing the equator: in the north the right of the
     // screen is the west, in the south the east (the same frame the sun and moon stand in).
@@ -258,7 +270,9 @@ fun skyScene(
         sun = sun,
         moon = moon,
         lightAmount = lightAmount,
-        starField = starMarks
+        starField = starMarks,
+        milkyWay = milkyWay,
+        galactic = galactic
     )
 }
 
@@ -443,6 +457,10 @@ uniform float4 uMoonVeil;
 uniform float uMoonLimb;
 uniform float uLightAmount;
 uniform shader uStarMap;
+uniform float3 uGalPole;
+uniform float3 uGalCentre;
+uniform float uMilkyWay;
+uniform float2 uStarCam;
 
 float hash12(float2 p) {
     float3 p3 = fract(float3(p.x, p.y, p.x) * 0.1031);
@@ -548,6 +566,31 @@ half4 main(float2 fc) {
     float2 q = fc / uPx;
     float persp = mix(1.0, 1.5, uv.y);
     float drift = uTime * uDrift;
+
+    // The Milky Way (20 ott 2026): a band along the galactic plane, where the plane is for this
+    // place and hour. The pixel's direction in the stars' camera; its galactic latitude from the
+    // pole and its longitude from the centre (two vectors the engine computes once a minute); a
+    // Gaussian across the plane, wider and brighter toward the centre (Sagittarius) and narrow
+    // and faint toward the anticentre (Auriga), mottled by a noise fixed to the sky, thinner
+    // toward the horizon. A drawing of a real thing at its real place, with a model's profile:
+    // the rift and the clouds of the real band are not in it. Faint by design, under the stars.
+    if (uMilkyWay > 0.003) {
+        float alt = uStarCam.x - uv.y * (uStarCam.x - uStarCam.y);
+        float focal = uSize.y / (uStarCam.x - uStarCam.y);
+        float across = atan((fc.x - 0.5 * uSize.x) / focal);
+        float3 dir = float3(sin(across) * cos(alt), sin(alt), cos(across) * cos(alt));
+        float b = asin(clamp(dot(dir, uGalPole), -1.0, 1.0));
+        float3 gy = cross(uGalPole, uGalCentre);
+        float l = atan(dot(dir, gy), dot(dir, uGalCentre));
+        float toward = 0.5 + 0.5 * cos(l);
+        float sigma = 0.10 + 0.07 * toward;
+        float band = exp(-b * b / (2.0 * sigma * sigma));
+        float along = 0.3 + 0.7 * pow(toward, 1.5);
+        float mottle = 0.8 + 0.4 * fbm2(float2(l, b) * 9.0);
+        float low = 1.0 - 0.6 * smoothstep(0.55, 1.0, uv.y);
+        float mw = uMilkyWay * band * along * mottle * low;
+        col += half3(0.74, 0.80, 0.92) * half(mw * 0.05);
+    }
 
     // The stars that are there (step 6 of the sky review, 19 ott 2026): the texture StarMap
     // draws from the catalogue for this instant and place, one read per pixel; its channels
@@ -896,6 +939,15 @@ internal fun RuntimeShader.bindSky(
     setFloatUniform("uMoonLimb", Math.toRadians((moon?.limbAngleDeg ?: 0f).toDouble()).toFloat())
     setFloatUniform("uLightAmount", scene.lightAmount)
     setInputShader("uStarMap", starMap)
+    val frame = scene.galactic
+    setFloatUniform("uGalPole", frame?.poleX ?: 0f, frame?.poleY ?: 1f, frame?.poleZ ?: 0f)
+    setFloatUniform("uGalCentre", frame?.centreX ?: 0f, frame?.centreY ?: 0f, frame?.centreZ ?: 1f)
+    setFloatUniform("uMilkyWay", if (frame != null) scene.milkyWay else 0f)
+    setFloatUniform(
+        "uStarCam",
+        Math.toRadians(StarCameraTopDeg.toDouble()).toFloat(),
+        Math.toRadians(StarCameraBottomDeg.toDouble()).toFloat()
+    )
 }
 
 /** A colour as a plain float4 uniform in linear light: the shader mixes linear values and

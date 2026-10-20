@@ -15552,3 +15552,42 @@ e un tocco sul cielo porta al cielo, più grande, con i numeri sotto. `destinati
 Today e In parole; VISION §5.9 lo dice. Nello stesso giro `WidgetData.load` costruisce lo stato di
 Cielo per «stanotte» solo quando la card è la finestra: le altre non lo stampano e non devono
 pagarlo a ogni ripittura.
+
+### La Via Lattea (committente, 20 ott 2026)
+
+**Da dove nasce.** Registrata al passo 6 come idea e rifiutata lì per non far troppo in un giro;
+proposta di nuovo come prima cosa da aggiungere dopo la finestra, perché cambia una notte senza
+luna nell'eroe e nel widget insieme. Il committente: «parti con il punto 1».
+
+**Cosa è cambiato.** `StarField.galacticFrame(at, coords, facingDeg)`: il polo nord galattico e il
+centro galattico (J2000, IAU 1958) come due vettori unitari nel sistema della camera delle stelle
+(x a destra, y in alto, z verso dove guarda), dalla stessa aritmetica che mette una stella
+(`SkyFrame`). Lo snapshot li calcola con le stelle (sole sotto −6°), la scena li porta
+(`SkyScene.galactic`) con la quantità `milkyWay` = buio × (1 − copertura)³ × (1 − luce lunare)²:
+alla Via Lattea serve più buio che a una stella, un velo che lascia Vega la toglie, e una mezza
+luna la toglie due volte. Nello shader, sotto le stelle: la direzione del pixel nella camera
+(65°–10°, `uStarCam`), la latitudine galattica dal polo e la longitudine dal centro, una
+gaussiana trasversale larga 6° verso l'anticentro e 10° verso il centro, più luminosa verso il
+Sagittario (0,3 + 0,7·cos^1,5), screziata da un rumore fisso al cielo (`fbm2` su longitudine e
+latitudine, 0,8 + 0,4: a 0,7 + 0,6 la banda si leggeva come chiazze di nubi, visto sulla resa di luglio), più sottile verso l'orizzonte, tinta fredda (0,74, 0,80, 0,92) a un ventesimo della
+luce lineare al massimo. L'eroe e la finestra la ricevono dallo stesso `skyScene`; la finestra con
+la sua direzione. La guida (IT, EN), il README e DESIGN §3.9 la nominano.
+
+**Decisioni e deviazioni.** *Un modello dichiarato, non una mappa*: il profilo lungo il piano è
+una funzione della longitudine, non una misura; la fenditura da Cigno a Scorpione e le nubi vere
+della banda non ci sono, e DESIGN lo scrive, come scrive che l'inquinamento luminoso non è
+modellato. Una mappa di brillanza misurata (per esempio per gradi di longitudine) è il passo dopo,
+se la banda disegnata risulta troppo liscia sul telefono. *Sotto le stelle*: la banda è il fondo
+su cui le stelle si posano. *Un ventesimo di luce lineare*: misurato sulle rese di luglio (la
+banda da Aquila a Sagittario attraversa la finestra a sud), gennaio (la Via Lattea invernale, a
+est di Orione, debole per profilo) e ottobre (fuori finestra sotto la luna piena: nulla, com'è
+giusto); da ritoccare sul telefono.
+
+**Come è stato verificato.** `StarFieldTest`: i due vettori sono unitari e perpendicolari, l'altezza
+del centro è quella del motore (`galacticCoreAltitude`, entro un decimo di grado), girare la camera
+cambia x e z e non y. `SkySceneTest`: la quantità è 0 di giorno, 0 con cielo coperto, 0 senza
+cornice; sopra 0,9 in una notte buia e sgombra; meno di un ottavo con metà cielo coperto e sotto le
+stelle; quasi nulla con la luna piena. `SkyShaderPixelTest`: una cornice col piano che taglia il
+canvas in verticale contro una che lo manca: il centro è più chiaro di oltre 0,01 di luminanza con
+la banda, i bordi uguali (è una banda, non una tinta), e di giorno la quantità è 0; le tre notti di
+Milano rese di nuovo e guardate. `SkyShaderCompileTest` compila `atan(y, x)`, `cross` e `asin`.

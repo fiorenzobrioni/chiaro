@@ -26,8 +26,8 @@ Chiaro answers the question people actually have: is it worth going outside, and
 opens on a computed sky and one sentence ("Umbrella around 17:00, clearing after 19:00"), with
 the numbers underneath, and every number says what to do with it: UV 8 is "burns in about 15
 minutes, cover up", not an 8. At night the sky is the real one: the stars in front of you facing
-south (north, south of the equator), drawn where they stand, and the moon with its true phase and
-tilt. The moon keeps a strip of its own, between the place name and the big number, so its
+south (north, south of the equator), drawn where they stand, the Milky Way where it crosses, as faint
+as the moon leaves it, and the moon with its true phase and tilt. The moon keeps a strip of its own, between the place name and the big number, so its
 distance from a star on the screen is not the one in the sky.
 
 Around the forecast: an agenda of the sky (golden hour, dark window, moon, meteor peaks) with

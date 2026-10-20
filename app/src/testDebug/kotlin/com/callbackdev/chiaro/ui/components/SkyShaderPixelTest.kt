@@ -328,7 +328,8 @@ class SkyShaderPixelTest {
             SkyPalette.Paper, gradient, sunAlt, engine.sunAzimuth(at, milan), moonAlt,
             engine.bodyAzimuth(com.callbackdev.chiaro.domain.sky.SkyBody.MOON, at, milan), illumination,
             engine.moonBrightLimbAngle(at, milan), false, 0, null, 0, SkyFall.NONE, 0.0, 10.0, 270,
-            starMarks = StarField.visible(at, milan, southern = false)
+            starMarks = StarField.visible(at, milan, southern = false),
+            galactic = StarField.galacticFrame(at, milan, 180.0)
         )
         return Triple(name, gradient, scene)
     }
@@ -348,5 +349,37 @@ class SkyShaderPixelTest {
         val max = SkyPalette.Paper.brightestBottomStop().luminance()
         assertTrue("lit limb $lit against earthshine $dark", lit > dark * 3f)
         assertTrue("the moon ($lit) is brighter than the brightest sky ($max)", lit > max)
+    }
+
+    /** The Milky Way is a band where the galactic plane crosses the window, and nothing by day:
+     * a frame whose plane runs up the middle of the canvas against one whose plane misses it. */
+    @Test
+    fun `the Milky Way crosses where the plane is, and only in the dark`() {
+        val gradient = SkyPalette.Paper.gradient(-30.0, 0, 0, 0.0, -20.0)
+        // The pole to the right: the plane is the vertical plane through the camera's axis.
+        val across = SkyFrame(1f, 0f, 0f, 0f, 0f, 1f)
+        // The pole ahead: the plane is the ring around the camera, far from its middle.
+        val away = SkyFrame(0f, 0f, 1f, 1f, 0f, 0f)
+        val base = scene(gradient, -30.0).copy(stars = 0f)
+        val with = render(gradient, skyScene(
+            SkyPalette.Paper, gradient, -30.0, 180.0, -20.0, 150.0, 0.0, 0.0, false, 0, null, 0, SkyFall.NONE, 0.0, 15.0, 270,
+            galactic = across
+        ).copy(stars = 0f), canvasW, canvasH, bandTop, bandHeight, "milky-way-across")
+        val without = render(gradient, skyScene(
+            SkyPalette.Paper, gradient, -30.0, 180.0, -20.0, 150.0, 0.0, 0.0, false, 0, null, 0, SkyFall.NONE, 0.0, 15.0, 270,
+            galactic = away
+        ).copy(stars = 0f), canvasW, canvasH, bandTop, bandHeight, "milky-way-away")
+        val x = canvasW / 2
+        val y = canvasH / 2
+        val band = colorAt(with, x, y).luminance()
+        val plain = colorAt(without, x, y).luminance()
+        assertTrue("the band ($band) over the plain sky ($plain)", band > plain + 0.01f)
+        // Off the plane, the two agree: the band is a band, not a tint over the whole sky.
+        assertEquals(colorAt(without, 40, y).luminance(), colorAt(with, 40, y).luminance(), 0.012f)
+        assertTrue(base.milkyWay == 0f)
+        // By day the frame is carried and the band is off.
+        val day = SkyPalette.Paper.gradient(30.0, 0, 0, 0.0, -20.0)
+        val noon = skyScene(SkyPalette.Paper, day, 30.0, 180.0, -20.0, 150.0, 0.0, 0.0, false, 0, null, 0, SkyFall.NONE, 0.0, 15.0, 270, galactic = across)
+        assertEquals(0f, noon.milkyWay, 0f)
     }
 }

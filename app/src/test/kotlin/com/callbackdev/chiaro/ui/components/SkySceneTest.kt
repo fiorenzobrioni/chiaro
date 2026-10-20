@@ -28,7 +28,8 @@ class SkySceneTest {
         layers: CloudLayers? = null,
         windKph: Double = 15.0,
         windFrom: Int = 270,
-        southern: Boolean = false
+        southern: Boolean = false,
+        galactic: SkyFrame? = null
     ) = skyScene(
         palette = palette,
         gradient = palette.gradient(alt, cloud, precip, moonIllum, moonAlt),
@@ -45,7 +46,8 @@ class SkySceneTest {
         fall = fall,
         fallMmPerHour = 2.0,
         windKph = windKph,
-        windFromDeg = windFrom
+        windFromDeg = windFrom,
+        galactic = galactic
     )
 
     /** The clouds are drawn under the scrim like the gradient, so they may never be brighter
@@ -87,6 +89,24 @@ class SkySceneTest {
         assertTrue(dark > 0.9f)
         assertTrue(scene(alt = -30.0, cloud = 0, moonAlt = 40.0, moonIllum = 1.0).stars < dark * 0.5f)
         assertEquals(0f, scene(alt = -7.0, cloud = 0).stars, 0f)
+    }
+
+    /** The Milky Way needs more dark than the stars: an open, moonless sky, and the frame to draw it in. */
+    @Test
+    fun `the Milky Way needs a darker sky than the stars`() {
+        val frame = SkyFrame(1f, 0f, 0f, 0f, 0f, 1f)
+        assertEquals(0f, scene(alt = -30.0, cloud = 0).milkyWay, 0f)
+        assertEquals(0f, scene(alt = 30.0, cloud = 0, galactic = frame).milkyWay, 0f)
+        assertEquals(0f, scene(alt = -30.0, cloud = 100, galactic = frame).milkyWay, 0f)
+        val dark = scene(alt = -30.0, cloud = 0, galactic = frame)
+        assertTrue(dark.milkyWay > 0.9f)
+        assertEquals(frame, dark.galactic)
+        val half = scene(alt = -30.0, cloud = 50, galactic = frame)
+        assertTrue("half a sky of cloud leaves an eighth of the band", half.milkyWay < 0.15f)
+        assertTrue(half.milkyWay < half.stars)
+        val moon = scene(alt = -30.0, cloud = 0, moonAlt = 40.0, moonIllum = 1.0, galactic = frame)
+        assertTrue(moon.milkyWay < 0.05f)
+        assertTrue(moon.milkyWay < moon.stars)
     }
 
     /** Nothing falls on the canvas unless the hour's state says it does. */

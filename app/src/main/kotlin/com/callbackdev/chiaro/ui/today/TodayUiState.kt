@@ -119,6 +119,8 @@ data class SkySnapshot(
      * is under −6°, because until then none is drawn and the engine need not place them. */
     val moonLimbAngleDeg: Double = 0.0,
     val stars: List<com.callbackdev.chiaro.ui.components.StarMark> = emptyList(),
+    /** The galactic frame for the Milky Way (20 ott 2026), with the stars; null by day. */
+    val galactic: com.callbackdev.chiaro.ui.components.SkyFrame? = null,
     val southern: Boolean = false,
     /** The rest of today's forecast sky, for the canvas' ribbon (12 ott 2026). */
     val hours: List<RibbonHour> = emptyList(),
@@ -298,6 +300,13 @@ object TodayStateBuilder {
                         com.callbackdev.chiaro.ui.components.StarField.planets(now, coords, coords.lat < 0.0)
                 } else {
                     emptyList()
+                },
+                galactic = if (sunAltitude < -6.0) {
+                    com.callbackdev.chiaro.ui.components.StarField.galacticFrame(
+                        now, coords, com.callbackdev.chiaro.ui.components.StarField.facing(coords.lat < 0.0)
+                    )
+                } else {
+                    null
                 },
                 southern = coords.lat < 0.0,
                 hours = DaylightPhases.sky(trimmed.hourly, local.toLocalDate()),

@@ -120,7 +120,8 @@ internal object WindowPainter {
         var scene = skyScene(
             table, gradient, sky.sunAltitudeDeg, sky.sunAzimuthDeg, sky.moonAltitudeDeg, sky.moonAzimuthDeg,
             sky.moonIllumination, sky.moonLimbAngleDeg, sky.southern, sky.cloudPct, sky.layers, sky.precipPct,
-            sky.fall, sky.fallMmPerHour, sky.windKph, sky.windFromDeg, starMarks = marks
+            sky.fall, sky.fallMmPerHour, sky.windKph, sky.windFromDeg, starMarks = marks,
+            galactic = if (night) StarField.galacticFrame(at, coords, facing) else null
         )
         val labels = ArrayList<Label>()
         var moonSpot: Pair<Float, Float>? = null

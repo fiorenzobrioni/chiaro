@@ -143,4 +143,24 @@ class StarFieldTest {
         assertNull(starPlace(StarMark(0f, 70f, 1f, 0f, 0f), w, h))
         assertTrue(starRadiusDp(1f) > starRadiusDp(0.09f) * 2)
     }
+
+    @Test
+    fun `the galactic frame is two unit vectors at right angles, where the engine puts the centre`() {
+        val at = Instant.parse("2026-07-15T23:00:00Z")
+        val frame = StarField.galacticFrame(at, milan, 180.0)
+        val pole = doubleArrayOf(frame.poleX.toDouble(), frame.poleY.toDouble(), frame.poleZ.toDouble())
+        val centre = doubleArrayOf(frame.centreX.toDouble(), frame.centreY.toDouble(), frame.centreZ.toDouble())
+        fun norm(v: DoubleArray) = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])
+        assertEquals(1.0, norm(pole), 1e-5)
+        assertEquals(1.0, norm(centre), 1e-5)
+        assertEquals(0.0, pole[0] * centre[0] + pole[1] * centre[1] + pole[2] * centre[2], 2e-3)
+        // The centre's height is the engine's own galactic core altitude (its constant sits
+        // a tenth of a degree from the J2000 centre).
+        val altitude = Math.toDegrees(Math.asin(centre[1]))
+        assertEquals(AstronomyEngine.galacticCoreAltitude(at, milan), altitude, 0.15)
+        // Turning the camera turns x and z and leaves the height alone.
+        val turned = StarField.galacticFrame(at, milan, 135.0)
+        assertEquals(frame.centreY, turned.centreY, 1e-6f)
+        assertTrue(abs(frame.centreX - turned.centreX) > 0.05f)
+    }
 }

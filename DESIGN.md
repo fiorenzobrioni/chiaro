@@ -814,7 +814,17 @@ with the parts of it a gradient could not say.
   steady: the shader reads a twinkle phase at the top of its channel as a planet and does not
   twinkle it, because a light that holds still is how a passer-by tells Venus from a star, and
   the stars' own phases stay under that mark. They come out with the stars, under the same
-  sun: Venus in the bright dusk, where it is most noticed, is the gap this rule leaves.
+  sun: Venus in the bright dusk, where it is most noticed, is the gap this rule leaves. **The
+  Milky Way** (20 ott 2026, `StarField.galacticFrame`, `uMilkyWay`): a band along the galactic
+  plane where the plane is for this place and hour, drawn by the shader under the stars from
+  two vectors the engine computes once a minute (the north galactic pole and the centre, in
+  the stars' camera's frame): a Gaussian across the plane, 6° wide toward the anticentre and
+  10° toward the centre, brighter toward Sagittarius, mottled by a noise fixed to the sky,
+  thinner toward the horizon, a pale cool tint at a twentieth of linear light at most. It
+  wants more dark than a star: the cover cubed and the moon's light squared, so a half moon or
+  a thin veil takes it and only a dark, open, moonless sky shows it. A drawing of a real thing
+  at its real place, with a model's profile: the rift from Cygnus to Scorpius and the band's
+  clouds are not in it, and that is written here rather than drawn from nothing.
 - **What falls**, only when the hour's **state** is wet (the state engine's, not the
   provider's code): rain as a veil and long slanted streaks, snow as flakes that fall and
   sway, at a strength from a third to full by the quarter hour just measured (4 mm an hour
