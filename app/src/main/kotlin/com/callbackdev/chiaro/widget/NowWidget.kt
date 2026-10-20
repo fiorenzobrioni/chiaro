@@ -20,6 +20,7 @@ import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
+import androidx.glance.layout.RowScope
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
@@ -96,10 +97,18 @@ private fun RowContent(
     palette: WidgetPalette,
     size: DpSize,
     withSentence: Boolean,
-    warning: WarningSlot = WarningSlot.NONE
+    warning: WarningSlot = WarningSlot.NONE,
+    wide: Boolean = false
 ) {
     val context = LocalContext.current
-    val trailing = withSentence || warning.drawn
+    // The marker line (21 ott 2026). Under the place it was cut off on every one-row card:
+    // the number and the place are already the row's height, so old data never said its
+    // age there, and a position card still on the place the reader left never said so. On
+    // a wide card it stands at the far edge under the sentence; with no column there, at
+    // the number's shoulder ([MarkerAside]).
+    val marker = if (content.marked) markerText(context, content, Instant.now(LocalClock.current)) else null
+    val markerTrailing = marker != null && wide
+    val trailing = withSentence || warning.drawn || markerTrailing
     // Built once: it is measured below and then printed, and building it twice would
     // build the clock formatter twice with it.
     val headline = if (withSentence) sentence(context, content, model.settings.units) else null
@@ -116,7 +125,14 @@ private fun RowContent(
         sentenceKeep = if (headline == null || warning.drawn) {
             nowSentenceColumnWidth(size)
         } else {
-            measureWidgetText(context, headline, SentenceSp, medium = true) + RowFitSlack
+            maxOf(
+                measureWidgetText(context, headline, SentenceSp, medium = true),
+                if (marker != null && markerTrailing) {
+                    measureWidgetText(context, marker, StaleSp, medium = false)
+                } else {
+                    0.dp
+                }
+            ) + RowFitSlack
         }
     )
     Row(
@@ -145,14 +161,20 @@ private fun RowContent(
                     }
                 )
         ) {
-            Temperature(content, model, palette)
+            if (marker != null && !markerTrailing && nowRowMarkerAsideFits(size)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Temperature(content, model, palette)
+                    MarkerAside(marker, palette)
+                }
+            } else {
+                Temperature(content, model, palette)
+            }
             PlaceLine(
                 name = content.city.name,
                 fromGps = model.fromGps,
                 palette = palette,
                 size = PlaceSp.sp
             )
-            StaleLine(content, palette)
         }
         if (trailing) {
             // Right-aligned and centred on the row, as the reference draws it. The
@@ -171,13 +193,21 @@ private fun RowContent(
                         style = sentenceStyle(palette, TextAlign.End),
                         // The chip takes a line off the sentence when it sits under it.
                         maxLines = nowSentenceLines(
-                            size, fontScale(context), warning == WarningSlot.OWN_ROW
+                            size, fontScale(context), warning == WarningSlot.OWN_ROW, markerTrailing
                         ),
                         modifier = GlanceModifier.fillMaxWidth()
                     )
                 }
                 model.warning?.maxLevel?.takeIf { warning.drawn }?.let { level ->
                     WarningChipRow(level, palette, if (headline != null) WarningChipGap else 0.dp)
+                }
+                if (marker != null && markerTrailing) {
+                    Text(
+                        text = marker,
+                        style = TextStyle(color = palette.stale, fontSize = StaleSp.sp, textAlign = TextAlign.End),
+                        maxLines = 1,
+                        modifier = GlanceModifier.fillMaxWidth()
+                    )
                 }
             }
         }
@@ -204,6 +234,10 @@ private fun MirroredRowContent(
     warning: WarningSlot = WarningSlot.NONE
 ) {
     val context = LocalContext.current
+    // At the number's shoulder, as on the standard row's far edge: under the place it was
+    // cut off (21 ott 2026). With the sentence there, the sentence gives it one of its two
+    // lines; with the chip there, it goes under the chip.
+    val marker = if (content.marked) markerText(context, content, Instant.now(LocalClock.current)) else null
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier.fillMaxSize()
@@ -219,21 +253,25 @@ private fun MirroredRowContent(
             ) {
                 Temperature(content, model, palette)
                 if (withSentence) {
-                    Text(
-                        text = sentence(context, content, model.settings.units),
-                        style = sentenceStyle(palette, TextAlign.Start),
-                        // Two lines beside a 34 sp number are the number's own height;
-                        // a third would push the place off the card.
-                        maxLines = TallSentenceMaxLines,
-                        modifier = GlanceModifier
-                            .padding(start = SentenceGap)
-                            .defaultWeight()
-                    )
+                    Column(modifier = GlanceModifier.padding(start = SentenceGap).defaultWeight()) {
+                        Text(
+                            text = sentence(context, content, model.settings.units),
+                            style = sentenceStyle(palette, TextAlign.Start),
+                            // Two lines beside a 34 sp number are the number's own height;
+                            // a third would push the place off the card.
+                            maxLines = if (marker != null) 1 else TallSentenceMaxLines,
+                            modifier = GlanceModifier.fillMaxWidth()
+                        )
+                        if (marker != null) MarkerLine(marker, palette)
+                    }
+                } else if (marker != null && !warning.drawn && nowRowMarkerAsideFits(size)) {
+                    MarkerAside(marker, palette)
                 }
                 // Only ever in the sentence's place here, so it costs the row nothing.
                 model.warning?.maxLevel?.takeIf { warning.drawn }?.let { level ->
-                    Box(modifier = GlanceModifier.padding(start = SentenceGap).defaultWeight()) {
+                    Column(modifier = GlanceModifier.padding(start = SentenceGap).defaultWeight()) {
                         WarningChip(level, palette)
+                        if (marker != null && !withSentence) MarkerLine(marker, palette)
                     }
                 }
             }
@@ -243,7 +281,6 @@ private fun MirroredRowContent(
                 palette = palette,
                 size = PlaceSp.sp
             )
-            StaleLine(content, palette)
         }
         HeroIcon(content, model, palette, nowRowIconSize(size))
     }
@@ -420,8 +457,32 @@ private fun Temperature(
     )
 }
 
+/** The marker line on a one-row card with no column for it: beside the number, whose
+ * height holds two caption lines with room to spare (21 ott 2026). */
+@Composable
+private fun RowScope.MarkerAside(marker: String, palette: WidgetPalette) {
+    Text(
+        text = marker,
+        style = TextStyle(color = palette.stale, fontSize = StaleSp.sp),
+        maxLines = MarkerAsideMaxLines,
+        modifier = GlanceModifier.padding(start = SentenceGap).defaultWeight()
+    )
+}
+
+/** The marker as one line of a column it shares with the sentence or the chip. */
+@Composable
+private fun MarkerLine(marker: String, palette: WidgetPalette) {
+    Text(
+        text = marker,
+        style = TextStyle(color = palette.stale, fontSize = StaleSp.sp),
+        maxLines = 1
+    )
+}
+
+private const val MarkerAsideMaxLines = 2
+
 /** The stale marker (VISION §5.9): with old data the widget says how old, under the
- * place, on every form. */
+ * place, on the tall form; the one-row forms put it beside the number or at the far edge. */
 @Composable
 private fun StaleLine(content: TodayUiState.Content, palette: WidgetPalette) {
     if (!content.marked) return
@@ -578,6 +639,7 @@ internal fun NowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
                 val wide = layout == NowLayout.WIDE
                 RowContent(
                     content, model, palette, size,
+                    wide = wide,
                     withSentence = sentenceOn && wide,
                     // The narrow form has no sentence column at all, so it has
                     // nowhere to put a warning either: two or three cells are the
@@ -587,7 +649,7 @@ internal fun NowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
                         enabled = model.look.showWarning,
                         headlineShown = sentenceOn && wide,
                         sentenceSlot = wide,
-                        ownRow = wide && nowRowHasWarningRow(size, scale, sentenceOn)
+                        ownRow = wide && nowRowHasWarningRow(size, scale, sentenceOn, withMarker = stale)
                     )
                 )
             }

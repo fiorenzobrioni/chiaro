@@ -233,11 +233,38 @@ internal val SentenceColumnMin = 96.dp
 internal fun nowSentenceLines(
     size: DpSize,
     fontScale: Float,
-    withWarning: Boolean = false
+    withWarning: Boolean = false,
+    withMarker: Boolean = false
 ): Int {
-    val room = size.height - WidgetCardPaddingSnug * 2 - warningBlock(fontScale, withWarning)
+    val room = size.height - WidgetCardPaddingSnug * 2 - warningBlock(fontScale, withWarning) -
+        markerBlock(fontScale, withMarker)
     return (room / textLineHeight(SentenceSp, fontScale)).toInt().coerceIn(1, RowSentenceMaxLines)
 }
+
+/**
+ * What the marker line costs a one-row card's sentence column (21 ott 2026): one caption
+ * line, or nothing. The row's words column has no line to spare for it, the number and the
+ * place being already the card's height, so on a wide card the marker stands at the far
+ * edge under the sentence and takes its line from there.
+ */
+internal fun markerBlock(fontScale: Float, drawn: Boolean): Dp =
+    if (drawn) textLineHeight(StaleSp, fontScale) else 0.dp
+
+/**
+ * Whether a one-row card with no column for the marker has room for it beside the number
+ * (21 ott 2026): the words' width, less the number's own column and the gap, must hold
+ * «Sei altrove» at 11 sp, ~55 dp measured; the longer readings wrap onto the second line
+ * the number's height holds. Three cells clear it with room; two do not even clear the
+ * number, and there the card is the number and the place, as it always was. Measured on
+ * the standard row; the mirrored row's room is the same figure.
+ */
+internal fun nowRowMarkerAsideFits(size: DpSize): Boolean {
+    val words = size.width - WidgetCardPaddingLeading - nowRowIconSize(size) - IconTextGap -
+        WidgetCardPaddingTrailing
+    return words - TemperatureColumnMin - SentenceGap >= MarkerAsideMin
+}
+
+internal val MarkerAsideMin = 56.dp
 
 /** What a drawn chip costs a budget: its own box and the air above it, or nothing. */
 internal fun warningBlock(fontScale: Float, drawn: Boolean): Dp =
@@ -252,10 +279,15 @@ internal fun warningBlock(fontScale: Float, drawn: Boolean): Dp =
  * 82 dp row that leaves 70 dp against the 45.6 a line and a chip need, so a wide card
  * carries both; the narrow form has no column at all and never gets here.
  */
-internal fun nowRowHasWarningRow(size: DpSize, fontScale: Float, withSentence: Boolean): Boolean {
+internal fun nowRowHasWarningRow(
+    size: DpSize,
+    fontScale: Float,
+    withSentence: Boolean,
+    withMarker: Boolean = false
+): Boolean {
     val room = size.height - WidgetCardPaddingSnug * 2
     val needed = (if (withSentence) textLineHeight(SentenceSp, fontScale) else 0.dp) +
-        warningChipHeight(fontScale) + WarningChipGap
+        warningChipHeight(fontScale) + WarningChipGap + markerBlock(fontScale, withMarker)
     return room >= needed
 }
 

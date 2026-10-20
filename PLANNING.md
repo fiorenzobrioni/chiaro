@@ -15906,3 +15906,40 @@ la distanza), `MarkerTextTest` (fresco: niente finché non si è altrove; vecchi
 forma corta), suite intera verde, lint. Pagina e card renderizzate e guardate in IT e EN, con dati
 freschi e vecchi di 8 ore. Le immagini del README non cambiano: la registrazione non ha nessuno
 spostamento.
+
+## «Colpo d'occhio» a una riga: la riga dell'età dove c'è posto (committente, 21 ott 2026)
+
+**Il difetto.** Sulle forme a una riga di «Colpo d'occhio» (4×1, 3×1, standard e rovesciata)
+la riga dell'età stava sotto il luogo, e lì non c'era altezza: numero 44,9 dp, luogo 21,1, riga
+14,5, contro i ~70 che la card lascia. Veniva tagliata fuori, quindi i dati vecchi non dicevano
+mai la loro età su quella card, e dal 20 ott nemmeno lo spostamento («Sei altrove»). Era la card
+più comune ed era muta proprio dove doveva parlare.
+
+**Dove va adesso.**
+- **4×1 standard** (c'è la colonna della frase): al bordo opposto, sotto la frase, che cede una
+  delle sue righe (`markerBlock`, `nowSentenceLines(withMarker)`). Con il chip dell'allerta il
+  chip tiene la sua riga accanto al marcatore alla dimensione di default, non a 1,3
+  (`nowRowHasWarningRow(withMarker)`).
+- **Disposizione rovesciata con la frase**: alla spalla del numero, la frase scende a una riga e
+  la riga dell'età va sotto di lei; con il chip, sotto il chip.
+- **Senza colonna** (3×1, o la frase spenta): accanto al numero, in piccolo, su due righe al
+  massimo: l'altezza del numero ne contiene due con margine.
+
+**La soglia.** Accanto al numero solo dove ci sta (`nowRowMarkerAsideFits`): la larghezza delle
+parole, meno la colonna del numero (66 dp) e lo spazio (12), deve tenere «Sei altrove» a 11 sp,
+~55 dp misurati; le forme più lunghe vanno a capo sulla seconda riga. Tre celle passano con
+margine; due no, e lì la card resta il numero e il luogo come prima. Visto a 130 dp: senza la
+soglia la riga rubava la larghezza al numero, che diventava «1…».
+
+**Da sapere, e non toccato qui.** A 130 dp il numero è già troncato («1…») sul codice di `main`,
+con o senza questa modifica: la colonna delle parole (~52 dp) è più stretta del numero (66). La
+card dichiara `minWidth="110dp"`, quindi un lettore può portarla lì. È un difetto del layout a
+due celle, da decidere a parte.
+
+**Come è stato verificato.** `NowWidgetLayoutTest` (il marcatore toglie una riga alla frase e mai
+l'ultima; il chip accanto al marcatore a 1 sì, a 1,3 no; accanto al numero a quattro e tre celle
+sì, a due no), suite intera verde, lint. Card renderizzate e guardate in italiano a 340 e 250 dp,
+standard, rovesciata e senza frase, nei quattro stati (fresco, vecchio, altrove, vecchio e
+altrove), e a 130 dp contro `main`. Le immagini del README non cambiano: sul codice di `main` e su
+questo ramo `widgets.png` esce identica pixel per pixel (la differenza con quella committata è la
+deriva di render di questa macchina sulla card della finestra, uguale nei due casi).
