@@ -15402,3 +15402,251 @@ crash: `Color.rgb` mette l'alfa a 0xFF e un `or` sopra lasciava opachi tutti gli
 polvere a 0xB0 e il bordo del disco a 0xA0 erano scritti e non applicati); ora i tre canali sono
 mascherati e l'alfa è quello scritto, e le tre notti di Milano sono state rese di nuovo e guardate.
 La documentazione di `StarField` allineata ai conteggi di DESIGN e PLANNING (45 / 242, 91 / 441).
+
+### Venere e Giove nell'eroe (committente, 20 ott 2026)
+
+**Da dove nasce.** Il committente, pensando al widget: «Venere e Giove, che sono due punti di
+luce che un passante nota, sono disegnati oggi nell'eroe? Se no, pensi che sia buona idea?». Non
+lo erano: il motore li calcola dalla Fase 28 (`PlanetMath`, Venere e Giove soltanto, a qualche
+minuto d'arco), ma il canvas disegnava il solo catalogo delle stelle. Sì, è una buona idea, per
+tre ragioni: un cielo che mostra Altair e non Giove accanto è smentibile alzando gli occhi; costa
+due marchi nella texture; e una cosa vera in più li distingue dalle stelle, la luce ferma.
+
+**Cosa è cambiato.** `StarField.planets(at, coords, southern)`: i due pianeti dove il motore li
+mette, nella finestra delle stelle, come `StarMark` con luminosità 1 (la mappatura si ferma a
+Sirio, e −4 e −2 stanno ben oltre), disco più largo (`scale` 1,4 Venere, 1,2 Giove: l'occhio li
+vede come dischi dove una stella è un punto), tinta calda (0,45 e 0,55) e fase `STEADY_PHASE` =
+1: lo shader legge una fase sopra 0,985 come «luce ferma» e non la fa scintillare; le fasi delle
+stelle restano sotto `STAR_PHASE_CEILING` = 0,97 (il byte della texture le separa di sette
+livelli), così nessuna stella è mai letta come pianeta. `markRadiusDp` in `StarMap` porta la
+scala. `TodayUiState` somma stelle e pianeti nello snapshot, sotto lo stesso sole (−6°).
+`StarField.visible` e `planets` hanno ora anche la forma con direzione e mezza larghezza
+(`facingDeg`, `halfWidthDeg`): il widget «finestra» guarda altrove ed è più largo che alto.
+
+**Decisioni e deviazioni.** *Sotto lo stesso sole delle stelle*: Venere si vede nel crepuscolo
+chiaro, prima di −6°, ed è proprio lì che la gente la nota; disegnarla prima delle stelle
+richiede una regola sua nello shader (il fattore `stars` della scena si apre con il buio); è il
+limite scritto in DESIGN §3.9, da riaprire se dal telefono manca. *Luminosità 1 e non oltre*: il
+canale rosso della texture è un byte, e un pianeta più luminoso di Sirio si dice con il disco,
+non con un valore che non c'è. *Niente simbolo*: un pianeta è un punto di luce, e il canvas non
+scrive; i nomi stanno sul widget.
+
+**Come è stato verificato.** `StarFieldTest`: nessuna stella ha fase sopra il soffitto, il
+soffitto e la fase ferma distano più di tre livelli; in un anno di sere a Milano (ogni cinque
+giorni alle 22) i pianeti compaiono, e ogni marchio sta dove il motore mette il suo pianeta,
+entro la finestra, con fase ferma, luminosità 1 e disco più largo di Sirio; la finestra con
+direzione e larghezza sue restituisce le stesse stelle a sud, di più se più larga, e altre se
+girata a sud-est. `SkyShaderCompileTest` compila il ternario; `SkyShaderPixelTest` e
+`SkySceneTest` come prima.
+
+## La finestra: il widget del cielo al posto dell'arco (committente, 20 ott 2026)
+
+**Da dove nasce.** Dopo la review del motore grafico, il committente sul widget dell'arco: «una
+vecchia idea; non la trovo molto interessante né graficamente di qualità premium. Un'idea più
+fresca, utile, con grafica accattivante, con un occhio alle modifiche del motore (stelle, pianeti,
+Via Lattea)». Il giudizio condiviso: l'arco era un cruscotto, non un'immagine; un grafico
+dell'altezza del sole, una riga di temperature, quattro momenti e la settimana, tre liste e un
+diagramma da imparare; la curva del sole è la cosa che interessa meno a chi vive di momenti, e i
+momenti stavano già nelle righe sotto; ore e settimana doppioni di «At a glance» e dell'app.
+L'unica cosa da salvare: l'elenco «i momenti che segui» con i verdetti, ereditato dal widget Sky.
+
+**La proposta, approvata su maquette.** «La finestra»: una card che è il cielo di quest'ora,
+disegnato dalla stessa scena dell'eroe (gradiente, nubi, sole, luna con fase e inclinazione vere,
+stelle che ci sono, Venere e Giove fra loro), con il luogo e una frase in basso (il verdetto di
+stanotte con i numeri che l'hanno deciso, o il prossimo momento di luce con il suo verdetto) e i
+nomi delle due o tre cose più luminose scritti dove stanno. Più alta, le righe dei momenti seguiti.
+Prima di una riga di codice, sei card rese dal motore vero sulla Milano registrata (il test
+`WindowWidgetMockup`, tenuto fuori dal repo, nello scratchpad della sessione), guardate e
+approvate: «bellissime». Tre cose decise disegnando:
+
+- *La finestra si gira.* Alle 21 la luna stava a sud-est, fuori dai ±41° di una finestra a sud:
+  o si perdeva, o tornava sulla fascia compressa dell'eroe. Terza via: di notte, con la luna su
+  (sopra 5°), la finestra guarda la luna; altrimenti l'equatore. La didascalia lo dice («Looking
+  SE», `SkyText.bearingRes`). Luna e stelle in una camera sola, quella delle stelle: in un widget
+  non c'è il testo dell'eroe da cui tenere una fascia, e la distanza luna-stella è quella del
+  cielo, l'unico posto del prodotto in cui lo è.
+- *Le parole in basso*, su uno scrim che sale dal fondo: le stelle luminose stanno in alto e le
+  etichette finivano sotto la frase.
+- *Senza finestra buia* (luna al 99%) il builder non dà verdetto, e la frase dice i fatti:
+  «Moonlit all night · moon 99% · cloud 61%».
+
+**Cosa è cambiato.**
+
+1. *Il pacchetto `widget/window`* (nuovo): `WindowWidget` (receiver, widget, `WindowWidgetContent`
+   in Glance: l'immagine a tutta card, la didascalia su due righe, la bussola o l'età del dato a
+   destra, il chip dell'allerta in alto a sinistra, le righe dei momenti sotto con la riga della
+   card Sky, `CompactRow`, resa `internal`); `WindowLayout` (quattro forme dal grant: STRIP a una
+   riga, NARROW a due celle, WINDOW a tre o quattro per due, TALL da tre righe; il cielo mai meno
+   di 189 dp, le righe quante ne stanno e mai più dei momenti disponibili, `WindowLayoutTest`);
+   `WindowPainter` (la scena con `skyScene` sulle stelle della finestra, `StarField.visible` e
+   `planets` con direzione e mezza larghezza dal rapporto del box; la luna rimessa nella camera
+   delle stelle attraverso l'aritmetica della fascia con la fascia pari all'immagine; lo shader
+   reso fuori schermo con `HardwareRenderer` in un `ImageReader`, come le immagini del README; se
+   fallisce, il disegno piano: gradiente, stelle a punti, luna a disco, niente nubi, e
+   `WindowPicture.gpu` lo dice; gli scrim e le etichette disegnati sul bitmap, 11 sp per la scala
+   del font, con l'alone di §3.6; nessuna etichetta con copertura ≥ 60%, nessuna nella striscia
+   della didascalia o sotto il chip); `WindowText` (le frasi, da `SkyText` e dalle stringhe nuove);
+   `StarNames` (le diciotto stelle più luminose con un nome, J2000, le stringhe localizzate:
+   Sirio, Procione, Arturo, Polluce, Regolo, Castore, Canopo).
+2. *Il modello*: `WidgetModel.tonight` (`Tonight` del builder della scheda Cielo, letto in
+   `WidgetData.load` sulle stesse sottoscrizioni dei momenti), per la frase di notte.
+3. *Il registro e la configurazione*: `WidgetKind.WINDOW` al posto di `ARC`; il manifest dichiara
+   `WindowWidgetReceiver` con `widget_window_info.xml` (minimo due celle per una, quattro per due
+   di default) e la schermata condivisa; l'anteprima del picker `widget_window_preview.xml` su un
+   cielo notturno suo (`widget_preview_window`, l'unico fondo ammesso oltre la card, e
+   `WidgetPreviewTest` lo sa); nelle impostazioni la finestra non offre sfondo né opacità (il suo
+   fondo è l'immagine, e un interruttore che non cambia nulla non si offre) e del gruppo «La card
+   mostra» offre solo l'allerta; le note delle forme (`window_form_*`).
+4. *L'arco è cancellato*: il pacchetto `widget/arc` (2 970 righe), i suoi cinque test, la sua
+   schermata di configurazione, l'info, l'anteprima, le 71 stringhe per lingua (`arc_config_reset`
+   sopravvive come `widget_config_reset`, perché il pulsante è di tutti), i colori dell'anteprima.
+   `ChiaroWidgets` non ha più il terzo store da dimenticare e rimappare.
+5. *README, guida, VISION, DESIGN*: le immagini `widgets.png` (la finestra di giorno al posto
+   dell'arco) e `widget-window.png` (la finestra di notte a quattro per due, la sera della
+   registrazione, e la card alta di giorno con tre momenti) al posto di `widget-day-arc.png`; il
+   paragrafo dei widget nella guida (IT e EN) e la riga del README; VISION §5.9 (la finestra, e
+   perché l'arco è andato via); DESIGN dove nominava l'arco.
+
+**Decisioni e deviazioni.** *Il codice dell'arco va via, non resta nascosto*: i due provider
+ritirati il 13 ottobre restano dichiarati perché il loro contenuto vive dentro altre card; qui non
+vive da nessuna parte, e tremila righe per una card che il picker non offre più sono un peso che la
+serie rifiuta. Un arco già su una home screen sparisce; git lo conserva. *Tre forme sulla carta e
+non cinque*: la cella singola non ha spazio per un cielo, due celle di larghezza sono il minimo
+(`minWidth` 110 dp). *Il rendering sul telefono è la cosa da misurare per prima*:
+`HardwareRenderer` fuori da una finestra è API pubblica dalla 29 e il README lo usa in Robolectric,
+ma il widget lo chiama dal processo in background; se cade, il disegno piano è onesto e povero.
+*La cadenza resta quella della famiglia* (ogni sync e ogni ora): le stelle si spostano di 15° l'ora,
+un quarto della finestra; l'ora dell'immagine è quella del rapporto, scritta sull'eroe e non sulla
+card; una ripittura ogni quarto d'ora è la misura successiva, se dal telefono serve. *L'immagine del
+README di notte dice «Updated 8 hours ago»*: la registrazione è delle 12:10 e alle 21 il widget è
+vecchio; la famiglia dice l'età del dato al posto della bussola, e la foto non la nasconde (la
+schermata Oggi di notte, invece, è stata tagliata sopra il chip: lì l'età è un elemento del foglio,
+qui una riga della card). *La luna bassa sta bassa*: alle 21 sta a 24° e nella camera 65°–10° finisce
+nella striscia della didascalia, senza etichetta; è la fisica, non un difetto. *Venere e Giove* sono
+etichettati ma quella sera non erano in finestra; i nomi delle stelle neppure (Altair a sud, fuori
+dalla finestra girata a sud-est): la maquette senza luna del 1° ottobre li mostra.
+
+**Da verificare sul telefono.** La resa GPU nel processo del widget (`WindowPicture.gpu`: se il
+disegno piano compare, nubi assenti e luna a disco, lo si vede); la finestra di giorno e di notte,
+le etichette, la bussola; la card alta con le righe; il peso di una ripittura (un fotogramma GPU
+per sync); il picker con l'anteprima e le tre card; le impostazioni della finestra (luogo, allerta,
+icone, azzera).
+
+**Come è stato verificato.** `WindowLayoutTest` (forme dal grant, righe dal cielo che resta e mai
+una riga inesistente, un font più grande toglie righe, cosa porta la didascalia per forma),
+`WindowTextTest` (stanotte col verdetto e i numeri, i fatti della luna senza finestra buia, il
+prossimo momento con orologio e verdetto e «domani», la bussola, i nomi), `StarNamesTest` (diciotto,
+dalla più luminosa, sulla sfera), `WindowPainterTest` (testDebug, pipeline GPU: di notte la finestra
+si gira sulla luna e la disegna dove la mette la camera delle stelle, un disco chiaro sopra il
+cielo; di giorno guarda l'equatore e non disegna stelle; il disegno piano senza shader ha il
+gradiente e il disco; la card alta tiene il cielo sopra il fondo delle righe), le sei maquette e le
+tre immagini del painter rese e guardate; `WidgetPreviewTest`, `WidgetPreviewSizesTest`,
+`WidgetTypeTest`, `WidgetConfigChoicesTest`, `WidgetLookDefaultsTest`, `ManifestTasksTest`
+aggiornati; le immagini del README rigenerate e guardate (`widgets.png`, `widget-window.png`,
+`today-night.png` per la maschera dell'alfa); suite completa (715 app debug con i 15 screenshot saltati, 660 release, 360 domain, 275 data, 24 sync: meno di prima, perché i cinque test dell'arco sono andati con lui) e lint con 0 errori.
+
+**Il tap apre l'app, non Cielo** (committente, 20 ott 2026, dal telefono, dopo la prova: «preferirei
+che apra la schermata principale come avviene negli altri widget»). D'accordo: l'arco atterrava su
+Cielo perché era materiale di Cielo (momenti e verdetti); l'immagine della finestra è l'eroe di Oggi,
+e un tocco sul cielo porta al cielo, più grande, con i numeri sotto. `destination = null` come Now,
+Today e In parole; VISION §5.9 lo dice. Nello stesso giro `WidgetData.load` costruisce lo stato di
+Cielo per «stanotte» solo quando la card è la finestra: le altre non lo stampano e non devono
+pagarlo a ogni ripittura.
+
+### La Via Lattea (committente, 20 ott 2026)
+
+**Da dove nasce.** Registrata al passo 6 come idea e rifiutata lì per non far troppo in un giro;
+proposta di nuovo come prima cosa da aggiungere dopo la finestra, perché cambia una notte senza
+luna nell'eroe e nel widget insieme. Il committente: «parti con il punto 1».
+
+**Cosa è cambiato.** `StarField.galacticFrame(at, coords, facingDeg)`: il polo nord galattico e il
+centro galattico (J2000, IAU 1958) come due vettori unitari nel sistema della camera delle stelle
+(x a destra, y in alto, z verso dove guarda), dalla stessa aritmetica che mette una stella
+(`SkyFrame`). Lo snapshot li calcola con le stelle (sole sotto −6°), la scena li porta
+(`SkyScene.galactic`) con la quantità `milkyWay` = buio × (1 − copertura)³ × (1 − luce lunare)²:
+alla Via Lattea serve più buio che a una stella, un velo che lascia Vega la toglie, e una mezza
+luna la toglie due volte. Nello shader, sotto le stelle: la direzione del pixel nella camera
+(65°–10°, `uStarCam`), la latitudine galattica dal polo e la longitudine dal centro, una
+gaussiana trasversale larga 6° verso l'anticentro e 10° verso il centro, più luminosa verso il
+Sagittario (0,3 + 0,7·cos^1,5), screziata da un rumore fisso al cielo (`fbm2` su longitudine e
+latitudine, 0,8 + 0,4: a 0,7 + 0,6 la banda si leggeva come chiazze di nubi, visto sulla resa di luglio), più sottile verso l'orizzonte, tinta fredda (0,74, 0,80, 0,92) a un ventesimo della
+luce lineare al massimo. L'eroe e la finestra la ricevono dallo stesso `skyScene`; la finestra con
+la sua direzione. La guida (IT, EN), il README e DESIGN §3.9 la nominano.
+
+**Decisioni e deviazioni.** *Un modello dichiarato, non una mappa*: il profilo lungo il piano è
+una funzione della longitudine, non una misura; la fenditura da Cigno a Scorpione e le nubi vere
+della banda non ci sono, e DESIGN lo scrive, come scrive che l'inquinamento luminoso non è
+modellato. Una mappa di brillanza misurata (per esempio per gradi di longitudine) è il passo dopo,
+se la banda disegnata risulta troppo liscia sul telefono. *Sotto le stelle*: la banda è il fondo
+su cui le stelle si posano. *Un ventesimo di luce lineare*: misurato sulle rese di luglio (la
+banda da Aquila a Sagittario attraversa la finestra a sud), gennaio (la Via Lattea invernale, a
+est di Orione, debole per profilo) e ottobre (fuori finestra sotto la luna piena: nulla, com'è
+giusto); da ritoccare sul telefono.
+
+**Come è stato verificato.** `StarFieldTest`: i due vettori sono unitari e perpendicolari, l'altezza
+del centro è quella del motore (`galacticCoreAltitude`, entro un decimo di grado), girare la camera
+cambia x e z e non y. `SkySceneTest`: la quantità è 0 di giorno, 0 con cielo coperto, 0 senza
+cornice; sopra 0,9 in una notte buia e sgombra; meno di un ottavo con metà cielo coperto e sotto le
+stelle; quasi nulla con la luna piena. `SkyShaderPixelTest`: una cornice col piano che taglia il
+canvas in verticale contro una che lo manca: il centro è più chiaro di oltre 0,01 di luminanza con
+la banda, i bordi uguali (è una banda, non una tinta), e di giorno la quantità è 0; le tre notti di
+Milano rese di nuovo e guardate. `SkyShaderCompileTest` compila `atan(y, x)`, `cross` e `asin`.
+
+### Il radiante nelle notti di picco (committente, 20 ott 2026)
+
+**Da dove nasce.** Il secondo dei punti suggeriti dopo la finestra: nella notte del picco di uno
+sciame la finestra sa dove guarda, e un'etichetta «Perseidi, da qui» nel punto da cui le meteore
+sembrano partire è una cosa che nessun widget meteo fa. Il committente: «implementa il radiante».
+
+**Cosa è cambiato.** `MeteorShowerTable.MeteorShower` porta il radiante al massimo (ascensione retta e
+declinazione J2000, al grado, dalla working list IMO: Quadrantidi 230° +49°, Liridi 271° +34°, Eta
+Aquaridi 338° −1°, delta Aquaridi 340° −16°, alfa Capricornidi 307° −10°, Perseidi 48° +58°,
+Draconidi 262° +54°, Tauridi sud 32° +9°, Orionidi 95° +16°, Tauridi nord 58° +22°, Leonidi 152°
++22°, Geminidi 112° +33°, Ursidi 217° +76°); il radiante deriva di un grado al giorno lungo lo
+sciame, quindi vale nella notte del picco e non si chiede in altre. `WindowPainter.peakRadiant(at,
+zone, coords)`: gli sciami del catalogo risolti per l'istante come li risolve la scheda Cielo
+(`SkyUpcoming.allAt`), tenuti se la finestra della notte del picco è aperta o apre entro 14 ore
+(la sera prima di un picco alle 3 è la sua notte: lo sciame è largo giorni); due sciami nella stessa
+notte (delta Aquaridi e alfa Capricornidi) danno la finestra che apre prima; il radiante messo dal
+motore come una stella. La finestra si gira: luna se è su; altrimenti il radiante se è sopra i 3°;
+altrimenti l'equatore. Nel disegno, un anello sottile di 5 dp nel punto e l'etichetta «<sciame>, da
+qui» (`window_label_radiant`, con il nome breve di `SkyText`), con le regole delle altre: niente
+con copertura ≥ 60%, niente sulla didascalia o sotto il chip. Solo sul widget: l'eroe non scrive.
+
+**Decisioni e deviazioni.** *Un anello e non una luce*: il radiante è un punto del cielo, non un
+oggetto; disegnarci una stella sarebbe inventarla. *Nessun tasso*: la tabella non ha lo ZHR per la
+ragione scritta in Fase 16b, e l'etichetta non lo promette. *La luna prima del radiante*: una luna
+alta è anche quella che ammazza lo sciame, e la finestra lo mostra. *Il radiante sotto l'orizzonte
+non si nomina* (Leonidi e Eta Aquaridi sorgono dopo mezzanotte: prima, niente, com'è giusto).
+
+**Come è stato verificato.** `SeasonsAndShowersTest`: ogni radiante sulla sfera, le Perseidi a
+48°/+58°, le Geminidi a due gradi da Castore, le Ursidi vicino al polo. `WindowRadiantTest`: nella
+sera del picco delle Geminidi 2026 il radiante è il loro, dove il motore lo mette, su, a est; in
+una notte senza picco nulla; sei ore prima del picco delle Perseidi il radiante c'è e una settimana
+prima no. `WindowTextTest`: «Perseids, from here». Immagini del README identiche (il 25 settembre
+non è una notte di picco). Suite completa (721 app debug con i 15 screenshot saltati, 665 release, 361 domain, 275 data, 24 sync) e lint con 0 errori.
+
+**Forti sempre, deboli solo se seguiti; e la via del ritorno ai predefiniti** (committente, 20 ott
+2026). La domanda: un'installazione nuova, che non segue nessuno sciame e si affida alla schermata
+Cielo, cosa vedrebbe? Misurato sul catalogo: i predefiniti sono alba, tramonto, ora d'oro della
+sera e luna di oggi, nessuno sciame; con «solo i seguiti» quell'utente non avrebbe mai visto un
+radiante, neanche alle Perseidi; con «tutti» avrebbe visto «Tauridi, da qui» per cinque meteore
+l'ora. La regola scelta sta in mezzo: `MeteorShower.strong`, vero per gli otto sciami con un tasso
+da quindici l'ora in su nella working list IMO (Quadrantidi 110, Perseidi 100, Geminidi 150, Eta
+Aquaridi 50, delta Aquaridi 25, Orionidi 20, Liridi 18, Leonidi 15), falso per i cinque da cinque
+o dieci (alfa Capricornidi, Draconidi, le due Tauridi, Ursidi); un giudizio con la soglia scritta
+e la fonte citata, non un numero stampato. `peakRadiant(at, zone, coords, followed)` tiene i forti
+sempre e i deboli solo se il loro id è fra i momenti della card (`model.moments`, i seguiti). E la
+via del ritorno: chi ha toccato la lista dei momenti seguiti trova in fondo al catalogo «Torna ai
+quattro predefiniti», con la riga che dice cosa sono e che i promemoria messi sulle righe se ne
+vanno; offerta solo quando la lista è diversa da quella di un'installazione nuova (altre righe, o
+una riga con un promemoria suo o commentata), perché una riga che non cambia nulla non si offre;
+e annullabile sul posto finché il foglio è aperto, con il file precedente rimesso intero, promemoria
+compresi (`SkySubscriptionStore.replaceAll`, `SkyViewModel.setMoments`, `SkyActions.setMoments`).
+Il ripristino generale delle impostazioni non la tocca: il suo testo nomina unità, aspetto,
+frequenza, promemoria e interruttori, e i momenti seguiti sono contenuto del lettore, come i luoghi.
+Verificato: `SeasonsAndShowersTest` (otto forti, cinque deboli), `WindowRadiantTest` (le Tauridi sud
+nella loro notte: nulla senza seguirle, il radiante se seguite; le Geminidi sono forti),
+`SkySubscriptionStoreTest` (il file intero ai predefiniti e indietro, una riga ignota cade),
+`SkyCatalogResetTest` (la riga c'è solo con una lista toccata, il tocco manda i quattro predefiniti,
+l'annulla rimette la lista com'era con il promemoria; su una lista nuova la riga non c'è).

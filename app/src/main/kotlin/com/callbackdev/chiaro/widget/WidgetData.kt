@@ -17,7 +17,9 @@ import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.domain.sky.SkyVerdictEngine
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
+import com.callbackdev.chiaro.ui.sky.SkyStateBuilder
 import com.callbackdev.chiaro.ui.sky.SkyUpcoming
+import com.callbackdev.chiaro.ui.sky.Tonight
 import com.callbackdev.chiaro.ui.today.TodayStateBuilder
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import java.time.Duration
@@ -60,7 +62,12 @@ data class WidgetModel(
      * from the store the periodic job writes — never from the network at render time,
      * like everything else on a card.
      */
-    val warning: PlaceWarnings? = null
+    val warning: PlaceWarnings? = null,
+    /**
+     * Tonight as the Sky tab judges it (20 ott 2026): the window's caption at night is the
+     * tonight card's verdict with the numbers that decided it. Null without a report.
+     */
+    val tonight: Tonight? = null
 ) {
     /** The one a one-cell widget shows, and the head of every taller one. */
     val nextMoment: NextMoment? get() = moments.firstOrNull()
@@ -106,8 +113,8 @@ object WidgetData {
      */
     suspend fun load(context: Context, appWidgetId: Int): WidgetModel {
         val settings = ServiceLocator.settingsStore(context).settings.first()
-        val look = WidgetLookStore.get(context)
-            .lookFor(appWidgetId, ChiaroWidgets.kindOf(context, appWidgetId))
+        val kind = ChiaroWidgets.kindOf(context, appWidgetId)
+        val look = WidgetLookStore.get(context).lookFor(appWidgetId, kind)
         val pinned = pinnedCity(context, appWidgetId)
         // The active source is only asked for when nothing is pinned: a pin answers
         // the question on its own, and asking anyway would let a GPS fix put its pin
@@ -153,8 +160,25 @@ object WidgetData {
             content = content,
             moments = moments(context, city, zone, now, report, settings),
             zone = zone,
-            warning = warning
+            warning = warning,
+            // Only the window reads tonight: the Sky state is a build, and a card that
+            // never prints it should not pay for it at every repaint.
+            tonight = if (kind == WidgetKind.WINDOW) tonight(context, city, report, settings, now) else null
         )
+    }
+
+    /** Tonight, as `SkyStateBuilder` builds it for the Sky tab, over the same subscriptions
+     * the moments come from; never lets a card fail to draw. */
+    private suspend fun tonight(
+        context: Context,
+        city: City,
+        report: WeatherReport?,
+        settings: AppSettings,
+        now: Instant
+    ): Tonight? {
+        if (report == null) return null
+        val subscriptions = ServiceLocator.skySubscriptionStore(context).subscriptions.first()
+        return runCatching { SkyStateBuilder.build(city, report, subscriptions, settings, now).tonight }.getOrNull()
     }
 
     private suspend fun pinnedCity(context: Context, appWidgetId: Int): City? {

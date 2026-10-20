@@ -148,7 +148,8 @@ fun SkyRoute(
             addMoment = skyViewModel::addMoment,
             removeMoment = skyViewModel::removeMoment,
             setLead = skyViewModel::setLead,
-            restoreMoment = skyViewModel::restoreMoment
+            restoreMoment = skyViewModel::restoreMoment,
+            setMoments = skyViewModel::setMoments
         ),
         onOpenPlaces = { placesOpen = true },
         onOpenSettings = onOpenSettings,
@@ -236,7 +237,9 @@ internal class SkyActions(
     val removeMoment: (String) -> Unit,
     val setLead: (String, Int?) -> Unit,
     /** Puts a removed line back as it was, lead included (review point 9). */
-    val restoreMoment: (SkySubscription) -> Unit = { addMoment(it.jobId) }
+    val restoreMoment: (SkySubscription) -> Unit = { addMoment(it.jobId) },
+    /** The file whole: the catalog's way back to the four defaults, and its undo (20 ott 2026). */
+    val setMoments: (List<SkySubscription>) -> Unit = {}
 )
 
 @Composable
@@ -494,6 +497,7 @@ private fun SkyContent(
             onAdd = actions.addMoment,
             onRemove = actions.removeMoment,
             onRestore = actions.restoreMoment,
+            onSet = actions.setMoments,
             onDismiss = { catalogOpen = false }
         )
     }
@@ -1185,9 +1189,13 @@ private fun CatalogSheet(
     onAdd: (String) -> Unit,
     onRemove: (String) -> Unit,
     onRestore: (SkySubscription) -> Unit,
+    onSet: (List<SkySubscription>) -> Unit,
     onDismiss: () -> Unit
 ) {
     var openId by rememberSaveable { mutableStateOf<String?>(null) }
+    // The way back to the four defaults (committente, 20 ott 2026): the list it replaced is
+    // kept while the sheet is open, so the row that reset it undoes it in place.
+    var resetFrom by remember { mutableStateOf<List<SkySubscription>?>(null) }
     // The catalog's undo is the same tap (review point 9, 14 ott 2026): the row's mark
     // turns in place, so it needs no snackbar — which a modal sheet would cover anyway.
     // What the tap could not do was bring back a line's own lead; the lines removed in
@@ -1298,9 +1306,55 @@ private fun CatalogSheet(
                     )
                 }
             }
+            // Back to the four defaults (committente, 20 ott 2026): a list touched by hand
+            // has a way back, offered only while it differs from a fresh install's — a row
+            // that changes nothing is not offered — and undone in place while the sheet is
+            // open, the previous file put back whole, leads included.
+            val previous = resetFrom
+            if (query.isBlank() && (previous != null || differsFromDefaults(subscriptions))) {
+                item {
+                    ListItem(
+                        headlineContent = {
+                            Text(stringResource(if (previous != null) R.string.sky_catalog_reset_done else R.string.sky_catalog_reset))
+                        },
+                        supportingContent = if (previous == null) {
+                            { Text(stringResource(R.string.sky_catalog_reset_note)) }
+                        } else {
+                            null
+                        },
+                        trailingContent = if (previous != null) {
+                            {
+                                TextButton(onClick = { onSet(previous); resetFrom = null }) {
+                                    Text(stringResource(R.string.action_undo))
+                                }
+                            }
+                        } else {
+                            null
+                        },
+                        modifier = Modifier
+                            .padding(top = GroupTop)
+                            .then(
+                                if (previous == null) {
+                                    Modifier.clickable {
+                                        resetFrom = subscriptions
+                                        onSet(SkyJobCatalog.defaults.map { SkySubscription(it.id) })
+                                    }
+                                } else {
+                                    Modifier
+                                }
+                            )
+                    )
+                }
+            }
         }
     }
 }
+
+/** Whether the file is no longer a fresh install's: other lines, or a line with a lead or
+ * commented out. The catalog's way back is offered only then. */
+internal fun differsFromDefaults(subscriptions: List<SkySubscription>): Boolean =
+    subscriptions.map { it.jobId }.toSet() != SkyJobCatalog.defaults.map { it.id }.toSet() ||
+        subscriptions.any { !it.enabled || it.notifyLeadMinutes != null }
 
 /**
  * The catalog's search field. Its own composable so the sheet's list stays a list.

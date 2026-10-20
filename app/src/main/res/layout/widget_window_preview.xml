@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The window in the picker (20 ott 2026). Same rules as `widget_now_preview`: a static
+  layout with sample values and the default dress baked in, because the picker never runs
+  `provideGlance` and a Glance widget has no preview of its own.
+
+  The form drawn is the window, the default four-by-two placement: a clear night's sky,
+  the moon in it, the place and the sentence at the foot, where the window looks at the
+  right. Same insets as the card (16dp), same sizes (16 sp place, 13 sp sentence, 11 sp
+  compass). Sample data only: a preview is a drawing of the product, never a reading.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_preview_window"
+    tools:ignore="HardcodedText">
+
+    <ImageView
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="34dp"
+        android:layout_marginStart="60dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/widget_preview_window_moon" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
+                android:singleLine="true"
+                android:text="@string/widget_preview_place"
+                android:textColor="@color/widget_preview_ink"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@string/widget_preview_window_looking"
+                android:textColor="@color/widget_preview_ink_dim"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:text="@string/widget_preview_window_sentence"
+            android:textColor="@color/widget_preview_ink"
+            android:textSize="13sp" />
+    </LinearLayout>
+</FrameLayout>

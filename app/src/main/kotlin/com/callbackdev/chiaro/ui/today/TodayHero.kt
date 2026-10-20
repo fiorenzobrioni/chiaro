@@ -116,7 +116,8 @@ internal fun CanvasHeader(
             fallMmPerHour = sky.fallMmPerHour,
             windKph = sky.windKph,
             windFromDeg = sky.windFromDeg,
-            starMarks = sky.stars
+            starMarks = sky.stars,
+            galactic = sky.galactic
         )
     }
     val context = LocalContext.current

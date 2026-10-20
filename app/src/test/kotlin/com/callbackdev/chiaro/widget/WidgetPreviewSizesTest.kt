@@ -19,7 +19,7 @@ class WidgetPreviewSizesTest {
         WidgetKind.TODAY to "widget_today_info.xml",
         WidgetKind.SKY to "widget_sky_info.xml",
         WidgetKind.TEXT to "widget_text_info.xml",
-        WidgetKind.ARC to "widget_arc_info.xml"
+        WidgetKind.WINDOW to "widget_window_info.xml"
     )
 
     private fun dp(xml: String, attribute: String): Float? =

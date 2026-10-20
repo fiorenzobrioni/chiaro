@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The window (20 ott 2026): the sky of this hour over the reader's place, drawn by the
+     hero's own scene, with the place and one sentence at its foot; taller, the moments the
+     reader follows. It replaced the day's arc. Two cells wide at least (110dp is the
+     platform's formula for two, 70 × n − 30), one row tall at least, and the card reshapes
+     itself at every size (WindowLayout.kt). Four by two as the default placement: the
+     window form, the one the picker shows.
+
+     updatePeriodMillis is 0 on purpose, like the other cards: the shared periodic job
+     drives every repaint. The configuration screen is the shared one. previewLayout: see
+     `layout/widget_window_preview.xml`, and widget_now_info for why a Glance widget needs
+     one. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_window_desc"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:previewLayout="@layout/widget_window_preview"
+    android:minWidth="110dp"
+    android:minHeight="40dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="40dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0"
+    android:configure="com.callbackdev.chiaro.widget.WidgetConfigActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional"
+    android:widgetCategory="home_screen" />

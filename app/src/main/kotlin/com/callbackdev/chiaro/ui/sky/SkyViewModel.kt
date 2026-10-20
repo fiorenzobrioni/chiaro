@@ -77,6 +77,9 @@ class SkyViewModel(
     /** «Annulla» after a removal: the line back as it was, its own lead included. */
     fun restoreMoment(line: SkySubscription) = mutate { subscriptionStore.restore(line) }
 
+    /** The file whole: the catalog's way back to the four defaults, and its undo (20 ott 2026). */
+    fun setMoments(lines: List<SkySubscription>) = mutate { subscriptionStore.replaceAll(lines) }
+
     /**
      * This moment's own lead: null follows the default, zero is an explicit "never"
      * (the store keeps 0, [com.callbackdev.chiaro.domain.sky.SkyLead.ofMinutes] reads

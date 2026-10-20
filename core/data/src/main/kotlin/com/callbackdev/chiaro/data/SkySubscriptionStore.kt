@@ -101,6 +101,15 @@ class SkySubscriptionStore(
         }
     }
 
+    /**
+     * The file replaced whole (20 ott 2026): the catalog's «back to the four defaults» and
+     * its undo, which puts the previous file back as it was, leads included. Lines of jobs
+     * the catalog does not know are dropped, as [decode] drops them; a job twice is once.
+     */
+    suspend fun replaceAll(lines: List<SkySubscription>) {
+        edit { lines.filter { SkyJobCatalog.byId(it.jobId) != null }.distinctBy { it.jobId } }
+    }
+
     private suspend fun edit(transform: (List<SkySubscription>) -> List<SkySubscription>) {
         dataStore.edit { prefs ->
             // Read BEFORE marking seeded. The other order looks equivalent and is

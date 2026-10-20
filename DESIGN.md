@@ -659,7 +659,7 @@ dusk's amber at three o'clock, clockwise through the night's indigo to midnight 
 the dawn's amber at nine and the noon azure at the top — the vivid sky table's anchors (§3.7).
 The sun sits on the ring at mid-afternoon and a clip opens the ring around it, which does
 two things: the sun reads as a sun on its path rather than a bead, and the open ring is a
-**C**. It is the daylight ribbon (§4) bent into a dial and the arc widget's sun on its path.
+**C**. It is the daylight ribbon (§4) bent into a dial, with the sun on its path as the day's arc widget drew it (the card went on 20 ott 2026; the dial stays).
 
 - **Drawn by a script** (18 ott 2026): `tools/draw_launcher_icon.py` writes the two layers and
   the status-bar icon; re-running it is the drawing, the XML is never edited by hand.
@@ -807,7 +807,24 @@ with the parts of it a gradient could not say.
   layout constraint; so the stars are the window south and the moon is on its band, the strip
   between the place row and the figure,
   and their distance on the screen is not the sky's. Whoever touches the shader next: that is
-  not a bug to fix, it is written here so it is not fixed by mistake.
+  not a bug to fix, it is written here so it is not fixed by mistake. **Venus and Jupiter
+  among the stars** (20 ott 2026, `StarField.planets`): where the engine puts them (Fase 28,
+  a few arcminutes), as bright as Sirius in the mapping and larger than it (1.4× and 1.2× the
+  disc: −4 and −2 outshine every star, and the eye sees them as discs), a warm white, and
+  steady: the shader reads a twinkle phase at the top of its channel as a planet and does not
+  twinkle it, because a light that holds still is how a passer-by tells Venus from a star, and
+  the stars' own phases stay under that mark. They come out with the stars, under the same
+  sun: Venus in the bright dusk, where it is most noticed, is the gap this rule leaves. **The
+  Milky Way** (20 ott 2026, `StarField.galacticFrame`, `uMilkyWay`): a band along the galactic
+  plane where the plane is for this place and hour, drawn by the shader under the stars from
+  two vectors the engine computes once a minute (the north galactic pole and the centre, in
+  the stars' camera's frame): a Gaussian across the plane, 6° wide toward the anticentre and
+  10° toward the centre, brighter toward Sagittarius, mottled by a noise fixed to the sky,
+  thinner toward the horizon, a pale cool tint at a twentieth of linear light at most. It
+  wants more dark than a star: the cover cubed and the moon's light squared, so a half moon or
+  a thin veil takes it and only a dark, open, moonless sky shows it. A drawing of a real thing
+  at its real place, with a model's profile: the rift from Cygnus to Scorpius and the band's
+  clouds are not in it, and that is written here rather than drawn from nothing.
 - **What falls**, only when the hour's **state** is wet (the state engine's, not the
   provider's code): rain as a veil and long slanted streaks, snow as flakes that fall and
   sway, at a strength from a third to full by the quarter hour just measured (4 mm an hour
@@ -1756,7 +1773,7 @@ with the bare rows.
   «Buio pieno», `SkyText.nameRes`); the morning's golden hour, which ends rather than starts
   here, keeps its own words. **The moon is not on Today's agenda** (committente, 13 ott 2026):
   on a dry day a moonrise led the list and the agenda was the Sky tab again; moonrise and
-  moonset stay on the Sky tab and in the day's arc widget.
+  moonset stay on the Sky tab and in the window widget's rows.
 - **Spans**: the evening's golden hour runs **until sunset**, and says so («fino al tramonto,
   alle 19:15»); **the sunset's own row is folded into it** (15 ott 2026) — «fino alle 19:15»
   over «Tramonto 19:15» said one minute twice. Once the golden hour has begun its row is gone
@@ -1946,7 +1963,7 @@ alone** (§2.3), never a bare dot, never a number without the word. The glyph is
 (`ic_verdict_pass/unstable/fail/unknown`, one line weight, tinted with the ink), not the
 `✓ ✗` characters: Roboto has neither, and a phone's symbol fallback font draws them in a
 hand of its own (calligraphic on One UI, seen 9 set 2026). The same four marks serve the
-chip, the Sky widget's round mark and the arc widget's agenda rows.
+chip, the Sky widget's round mark and the window widget's rows.
 
 **On a widget the verdict has two dresses, by role** (widget review, 13 ott 2026; it had
 three). The **hero** — the moment the Sky card is about — wears this chip: the mark, then
@@ -2412,8 +2429,8 @@ where it is not — the reader turned it off, or the arc's hero is showing the n
 moment instead — the chip takes the sentence's place and the card grows by nothing.
 **Yellow is never in the sentence** and needs a line of its own, so it appears only where
 the form has one to spare: the Now widget wide and tall, the Today widget's hero row under
-the sentence, the arc's card and panel. Never on a form with one line — the Now widget's
-narrow card, the arc's dial and strips — and never on the Sky card, whose subject is the
+the sentence, the window's picture (its top-left corner, over the sky). Never on a form with one line — the Now widget's
+narrow card, the window's strip and its narrow form — and never on the Sky card, whose subject is the
 moments of the sky and where a chip about the ground would be a second one.
 
 The chip is a **line the card pays for**, and every budget subtracts the same number

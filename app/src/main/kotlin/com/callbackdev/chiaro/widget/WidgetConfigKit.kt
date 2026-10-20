@@ -65,20 +65,18 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
 import androidx.glance.appwidget.GlanceRemoteViews
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.widget.window.WindowForm
+import com.callbackdev.chiaro.widget.window.WindowWidgetContent
+import com.callbackdev.chiaro.widget.window.windowForm
 import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.ui.theme.paletteFor
-import com.callbackdev.chiaro.widget.arc.ArcForm
-import com.callbackdev.chiaro.widget.arc.ArcSettings
-import com.callbackdev.chiaro.widget.arc.showsMoments
-import com.callbackdev.chiaro.widget.arc.ArcWidgetContent
-import com.callbackdev.chiaro.widget.arc.arcForm
 import kotlin.math.roundToInt
 
 /*
  * The parts every widget's settings screen is built from (23 set 2026, widget review):
  * the card itself at the top, at the sizes the launcher can grant it, and the choices under
- * it on the Settings screen's rounded groups. Two activities use them — the shared one for
- * Now, Today, Sky and «In parole», and the arc widget's own — so the five screens read as
+ONE activity uses them for all five cards (two until
+ * 20 ott 2026, when the arc's own screen went with the arc), so the five screens read as
  * one app and a change to the grammar lands on all of them at once.
  */
 
@@ -116,10 +114,10 @@ internal fun previewSizes(kind: WidgetKind?): List<PreviewSize> = when (kind) {
         PreviewSize.THREE_BY_ONE, PreviewSize.FOUR_BY_ONE, PreviewSize.THREE_BY_TWO,
         PreviewSize.FOUR_BY_TWO, PreviewSize.THREE_BY_THREE, PreviewSize.FOUR_BY_THREE
     )
-    WidgetKind.ARC -> listOf(
-        PreviewSize.ONE_BY_ONE, PreviewSize.TWO_BY_ONE, PreviewSize.FOUR_BY_ONE,
-        PreviewSize.TWO_BY_TWO, PreviewSize.FOUR_BY_TWO, PreviewSize.FOUR_BY_THREE,
-        PreviewSize.TWO_BY_FOUR, PreviewSize.FOUR_BY_FOUR
+    WidgetKind.WINDOW -> listOf(
+        PreviewSize.TWO_BY_ONE, PreviewSize.FOUR_BY_ONE, PreviewSize.TWO_BY_TWO,
+        PreviewSize.THREE_BY_TWO, PreviewSize.FOUR_BY_TWO, PreviewSize.FOUR_BY_THREE,
+        PreviewSize.FOUR_BY_FOUR
     )
     else -> listOf(
         PreviewSize.TWO_BY_ONE, PreviewSize.THREE_BY_ONE, PreviewSize.FOUR_BY_ONE,
@@ -130,7 +128,7 @@ internal fun previewSizes(kind: WidgetKind?): List<PreviewSize> = when (kind) {
 
 /** Where a card lands when it is first placed: its provider's `targetCell*`. */
 internal fun defaultPreviewSize(kind: WidgetKind?): PreviewSize = when (kind) {
-    WidgetKind.TODAY, WidgetKind.ARC -> PreviewSize.FOUR_BY_TWO
+    WidgetKind.TODAY, WidgetKind.WINDOW -> PreviewSize.FOUR_BY_TWO
     else -> PreviewSize.FOUR_BY_ONE
 }
 
@@ -154,11 +152,7 @@ internal fun placedWidgetSize(context: Context, appWidgetId: Int): DpSize? {
  * the same functions the card lays itself out with, so the sentence and the card can never
  * describe two different forms.
  */
-internal fun formNote(kind: WidgetKind?, size: DpSize, arc: ArcSettings? = null): Int = when {
-    kind == WidgetKind.ARC && arc != null && showsMoments(arc, size) ->
-        if (skyIsTall(size)) R.string.moments_form_tall else formNote(WidgetKind.SKY, size)
-    else -> formNoteOf(kind, size)
-}
+internal fun formNote(kind: WidgetKind?, size: DpSize): Int = formNoteOf(kind, size)
 
 private fun formNoteOf(kind: WidgetKind?, size: DpSize): Int = when (kind) {
     WidgetKind.NOW -> if (nowShowsHours(size)) formNoteOf(WidgetKind.TODAY, size) else when (nowLayout(size)) {
@@ -178,12 +172,11 @@ private fun formNoteOf(kind: WidgetKind?, size: DpSize): Int = when (kind) {
         skyIsWide(size) -> R.string.sky_form_wide
         else -> R.string.sky_form_narrow
     }
-    WidgetKind.ARC -> when (arcForm(size)) {
-        ArcForm.DIAL -> R.string.arc_form_dial
-        ArcForm.STRIP -> R.string.arc_form_strip
-        ArcForm.CARD -> R.string.arc_form_card
-        ArcForm.PANEL -> R.string.arc_form_panel
-        ArcForm.BOARD -> R.string.arc_form_board
+    WidgetKind.WINDOW -> when (windowForm(size)) {
+        WindowForm.STRIP -> R.string.window_form_strip
+        WindowForm.NARROW -> R.string.window_form_narrow
+        WindowForm.WINDOW -> R.string.window_form_window
+        WindowForm.TALL -> R.string.window_form_tall
     }
     else -> when (textForm(size)) {
         TextForm.LINE -> R.string.text_form_line
@@ -205,8 +198,7 @@ private fun formNoteOf(kind: WidgetKind?, size: DpSize): Int = when (kind) {
 internal fun WidgetPreviewSection(
     appWidgetId: Int,
     kind: WidgetKind?,
-    model: WidgetModel?,
-    arc: ArcSettings? = null
+    model: WidgetModel?
 ) {
     val context = LocalContext.current
     val placed = remember(appWidgetId) { placedWidgetSize(context, appWidgetId) }
@@ -225,7 +217,7 @@ internal fun WidgetPreviewSection(
             )
             .padding(horizontal = 16.dp, vertical = 24.dp)
     ) {
-        WidgetPreview(kind = kind, model = model, arc = arc, size = size)
+        WidgetPreview(kind = kind, model = model, size = size)
     }
     Row(
         modifier = Modifier
@@ -250,7 +242,7 @@ internal fun WidgetPreviewSection(
         }
     }
     Text(
-        text = stringResource(formNote(kind, size, arc)),
+        text = stringResource(formNote(kind, size)),
         style = MaterialTheme.typography.bodyMedium,
         modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp)
     )
@@ -283,13 +275,12 @@ internal fun WidgetPreviewSection(
 internal fun WidgetPreview(
     kind: WidgetKind?,
     model: WidgetModel?,
-    arc: ArcSettings?,
     size: DpSize,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     var views by remember { mutableStateOf<RemoteViews?>(null) }
-    LaunchedEffect(kind, model, arc, size) {
+    LaunchedEffect(kind, model, size) {
         if (model == null) return@LaunchedEffect
         val schemes = widgetSchemes(context, model.settings.dynamicColor, model.settings.palette)
         val sky = model.content?.sky
@@ -301,7 +292,7 @@ internal fun WidgetPreview(
                     WidgetKind.NOW -> NowWidgetContent(model, schemes, sky)
                     WidgetKind.TODAY -> TodayWidgetContent(model, schemes, sky)
                     WidgetKind.SKY -> SkyWidgetContent(model, schemes, sky)
-                    WidgetKind.ARC -> ArcWidgetContent(model, schemes, sky, arc ?: ArcSettings())
+                    WidgetKind.WINDOW -> WindowWidgetContent(model, schemes, sky)
                     else -> TextWidgetContent(model, schemes, sky)
                 }
             }.remoteViews
@@ -545,7 +536,7 @@ internal fun ConfigResetButton(onReset: () -> Unit) {
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp, top = 24.dp)
     ) {
-        Text(stringResource(R.string.arc_config_reset))
+        Text(stringResource(R.string.widget_config_reset))
     }
 }
 

@@ -134,4 +134,34 @@ class SeasonsAndShowersTest {
         assertTrue("window runs backwards", end.isAfter(at.start))
         assertTrue("window longer than a night", Duration.between(at.start, end).toHours() < 12)
     }
+
+    /** Every shower has its radiant on the sphere, and the two everybody knows are where
+     * their constellations are: the Perseids' in Perseus, the Geminids' by Castor. */
+    @Test
+    fun `every shower carries its radiant, where the sky has it`() {
+        MeteorShowerTable.all.forEach { shower ->
+            assertTrue(shower.id, shower.radiantRaDeg in 0.0..360.0)
+            assertTrue(shower.id, shower.radiantDecDeg in -90.0..90.0)
+        }
+        val perseids = requireNotNull(MeteorShowerTable.byId("perseids"))
+        assertEquals(48.0, perseids.radiantRaDeg, 1e-9)
+        assertEquals(58.0, perseids.radiantDecDeg, 1e-9)
+        val geminids = requireNotNull(MeteorShowerTable.byId("geminids"))
+        // Castor is at 113.65°, +31.9°: the Geminid radiant stands a degree or two from it.
+        assertTrue(abs(geminids.radiantRaDeg - 113.65) < 3.0 && abs(geminids.radiantDecDeg - 31.9) < 3.0)
+        // The Ursids' radiant is near the pole: up all night from Milan, every night.
+        assertTrue(requireNotNull(MeteorShowerTable.byId("ursids")).radiantDecDeg > 70.0)
+    }
+
+    /** Eight strong showers by the written threshold, five weak ones: the Taurids and the
+     * Capricornids are in the catalogue for their fireballs, not for their rate. */
+    @Test
+    fun `the strong showers are the eight worth a night out`() {
+        val strong = MeteorShowerTable.all.filter { it.strong }.map { it.id }.toSet()
+        assertEquals(
+            setOf("quadrantids", "lyrids", "eta_aquariids", "delta_aquariids", "perseids", "orionids", "leonids", "geminids"),
+            strong
+        )
+        assertEquals(5, MeteorShowerTable.all.count { !it.strong })
+    }
 }

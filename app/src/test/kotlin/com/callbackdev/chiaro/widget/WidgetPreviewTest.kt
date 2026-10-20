@@ -54,7 +54,8 @@ class WidgetPreviewTest {
 
     /**
      * Three in the picker (13 ott 2026, the widget review): «The hours ahead» joined «At a
-     * glance» and «Sky moments» joined the day's arc. The two retired providers stay
+     * glance» and «Sky moments» joined the day's arc, whose place the window took on 20 ott
+     * 2026. The two retired providers stay
      * declared, so the cards already on home screens keep working, and are hidden from the
      * picker; a third hidden one, or one of the three hidden, fails here.
      */
@@ -101,9 +102,12 @@ class WidgetPreviewTest {
         )
 
         layout.listFiles { file -> file.name.endsWith("_preview.xml") }.orEmpty().forEach { preview ->
+            // The window's ground is its picture (20 ott 2026): its preview stands on a night
+            // sky of its own, the one drawable this rule allows besides the card.
+            val ground = if (preview.name == "widget_window_preview.xml") "widget_preview_window" else "widget_preview_card"
             assertTrue(
-                "${preview.name} does not stand on the default card",
-                preview.readText().contains("""android:background="@drawable/widget_preview_card"""")
+                "${preview.name} does not stand on its ground ($ground)",
+                preview.readText().contains("""android:background="@drawable/$ground"""")
             )
         }
     }

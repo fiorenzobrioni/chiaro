@@ -10,9 +10,8 @@ import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.sync.SyncScheduler
 import com.callbackdev.chiaro.sync.SyncWidgets
-import com.callbackdev.chiaro.widget.arc.ArcSettingsStore
-import com.callbackdev.chiaro.widget.arc.ArcWidget
-import com.callbackdev.chiaro.widget.arc.ArcWidgetReceiver
+import com.callbackdev.chiaro.widget.window.WindowWidget
+import com.callbackdev.chiaro.widget.window.WindowWidgetReceiver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -34,9 +33,9 @@ import kotlinx.coroutines.launch
  * live composition without re-running `provideGlance`, so on its own it repaints the
  * OLD model (see [WidgetRefresh] for the whole of it).
  */
-/** The five, as the reconfigure screen needs to tell them apart. ARC has a
- * configuration screen of its own (`widget/arc`) and only passes through here. */
-enum class WidgetKind { NOW, TODAY, SKY, ARC, TEXT }
+/** The five, as the reconfigure screen needs to tell them apart. WINDOW took ARC's place
+ * on 20 ott 2026, and with it the arc's own configuration screen went: one screen for all. */
+enum class WidgetKind { NOW, TODAY, SKY, WINDOW, TEXT }
 
 object ChiaroWidgets {
 
@@ -44,7 +43,7 @@ object ChiaroWidgets {
         NowWidgetReceiver::class.java to { NowWidget() },
         TodayWidgetReceiver::class.java to { TodayWidget() },
         SkyWidgetReceiver::class.java to { SkyWidget() },
-        ArcWidgetReceiver::class.java to { ArcWidget() },
+        WindowWidgetReceiver::class.java to { WindowWidget() },
         TextWidgetReceiver::class.java to { TextWidget() }
     )
 
@@ -69,7 +68,7 @@ object ChiaroWidgets {
             NowWidgetReceiver::class.java.name -> WidgetKind.NOW
             TodayWidgetReceiver::class.java.name -> WidgetKind.TODAY
             SkyWidgetReceiver::class.java.name -> WidgetKind.SKY
-            ArcWidgetReceiver::class.java.name -> WidgetKind.ARC
+            WindowWidgetReceiver::class.java.name -> WidgetKind.WINDOW
             TextWidgetReceiver::class.java.name -> WidgetKind.TEXT
             else -> null
         }
@@ -152,14 +151,13 @@ abstract class ChiaroWidgetReceiver : GlanceAppWidgetReceiver() {
         scope.launch {
             runCatching { ServiceLocator.widgetCityStore(appContext).forget(appWidgetIds) }
             runCatching { WidgetLookStore.get(appContext).forget(appWidgetIds) }
-            runCatching { ArcSettingsStore.get(appContext).forget(appWidgetIds) }
         }
     }
 
     /**
      * A backup restored onto a new phone (18 ott 2026): the launcher puts the widgets back
-     * under new ids, and the pin, the look and the arc's settings move with them. The
-     * three stores are in the backup (`data_extraction_rules.xml`), and until this was
+     * under new ids, and the pin and the look move with them. The
+     * two stores are in the backup (`data_extraction_rules.xml`), and until this was
      * overridden they came back filed under ids nothing was bound to: every restored
      * widget lost its settings, and a new widget handed one of the old numbers inherited
      * somebody else's.
@@ -170,7 +168,6 @@ abstract class ChiaroWidgetReceiver : GlanceAppWidgetReceiver() {
         scope.launch {
             runCatching { ServiceLocator.widgetCityStore(appContext).remap(oldWidgetIds, newWidgetIds) }
             runCatching { WidgetLookStore.get(appContext).remap(oldWidgetIds, newWidgetIds) }
-            runCatching { ArcSettingsStore.get(appContext).remap(oldWidgetIds, newWidgetIds) }
             runCatching { ChiaroWidgets.updateAll(appContext) }
         }
     }

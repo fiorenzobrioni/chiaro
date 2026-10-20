@@ -132,32 +132,20 @@
                 android:resource="@xml/widget_text_info" />
         </receiver>
 
-        <!-- The day's arc (9 set 2026): the fourth widget, one cell to sixteen, with a
-             configuration screen of its own: it has far more to configure than the
-             other three, and its screen previews the card as the choices change. -->
+        <!-- The window (20 ott 2026): the sky of this hour on the home screen, the moon and
+             the stars where they stand, the moments the reader follows under it. It took the
+             day's arc's place in the picker; the shared settings screen configures it. -->
         <receiver
-            android:name=".widget.arc.ArcWidgetReceiver"
+            android:name=".widget.window.WindowWidgetReceiver"
             android:exported="false"
-            android:label="@string/widget_arc_label">
+            android:label="@string/widget_window_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/widget_arc_info" />
+                android:resource="@xml/widget_window_info" />
         </receiver>
-        <!-- Same isolation as the shared settings screen above, for the same reason. -->
-        <activity
-            android:name=".widget.arc.ArcConfigActivity"
-            android:exported="true"
-            android:excludeFromRecents="true"
-            android:noHistory="true"
-            android:taskAffinity=""
-            android:theme="@style/Theme.Chiaro">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
-            </intent-filter>
-        </activity>
 
         <!-- The one alarm of the sky reminders (Fase 5), plus the boot re-arm.
              exported=false: BOOT_COMPLETED is a protected broadcast the system is

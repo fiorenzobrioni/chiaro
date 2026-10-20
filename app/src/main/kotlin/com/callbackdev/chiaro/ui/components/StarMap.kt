@@ -72,12 +72,15 @@ internal fun starPlace(star: StarMark, widthPx: Int, heightPx: Int): Pair<Float,
 /** The disc a star draws: its radius in dp by its brightness. */
 internal fun starRadiusDp(brightness: Float): Float = 0.8f + 2.2f * brightness
 
+/** The disc a mark draws: a star's by its brightness, a planet's scaled up ([StarMark.scale]). */
+internal fun markRadiusDp(mark: StarMark): Float = starRadiusDp(mark.brightness) * mark.scale
+
 internal fun drawStars(canvas: Canvas, stars: List<StarMark>, widthPx: Int, heightPx: Int, density: Float) {
     val soft = Paint(Paint.ANTI_ALIAS_FLAG)
     val speck = Paint(Paint.ANTI_ALIAS_FLAG)
     stars.forEach { star ->
         val (x, y) = starPlace(star, widthPx, heightPx) ?: return@forEach
-        val r = starRadiusDp(star.brightness) * density
+        val r = markRadiusDp(star) * density
         // The three channels alone: `Color.rgb` sets the alpha to 0xFF, and an `or` over it
         // left every stop opaque (found 20 ott 2026); the alpha is the disc and is set below.
         val data = Color.rgb(
