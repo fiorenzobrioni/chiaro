@@ -113,8 +113,8 @@ object WidgetData {
      */
     suspend fun load(context: Context, appWidgetId: Int): WidgetModel {
         val settings = ServiceLocator.settingsStore(context).settings.first()
-        val look = WidgetLookStore.get(context)
-            .lookFor(appWidgetId, ChiaroWidgets.kindOf(context, appWidgetId))
+        val kind = ChiaroWidgets.kindOf(context, appWidgetId)
+        val look = WidgetLookStore.get(context).lookFor(appWidgetId, kind)
         val pinned = pinnedCity(context, appWidgetId)
         // The active source is only asked for when nothing is pinned: a pin answers
         // the question on its own, and asking anyway would let a GPS fix put its pin
@@ -161,7 +161,9 @@ object WidgetData {
             moments = moments(context, city, zone, now, report, settings),
             zone = zone,
             warning = warning,
-            tonight = tonight(context, city, report, settings, now)
+            // Only the window reads tonight: the Sky state is a build, and a card that
+            // never prints it should not pay for it at every repaint.
+            tonight = if (kind == WidgetKind.WINDOW) tonight(context, city, report, settings, now) else null
         )
     }
 

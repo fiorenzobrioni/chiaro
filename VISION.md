@@ -670,11 +670,12 @@ dynamic color:
 A widget never invents: with stale data it says how old it is, with no place configured it says so
 and opens the app, and no layout ever pads itself out to fill the space it was given.
 
-**A tap opens the screen the card was showing** (21 set 2026, committente): **Sky** and **the
-window** are the Sky screen's own material — its moments, its verdicts, its next light moment, its
-agenda — so they land on Sky rather than on Today, which was asking the reader to go and find again
-what they had just read on the home screen. The other three cards open the app as they always did,
-wherever the reader left it.
+**A tap opens the screen the card was showing** (21 set 2026, committente): **Sky** is the Sky
+screen's own material — its moments, its verdicts — so it lands on Sky rather than on Today, which
+was asking the reader to go and find again what they had just read on the home screen. The other
+cards open the app as they always did, wherever the reader left it, **the window among them**
+(committente, 20 ott 2026, from the device): its picture is Today's hero, and a tap on the sky
+lands on the sky, bigger, with its numbers under it; the day's arc landed on Sky.
 
 All five open it through **one intent, and it is the launcher's own** (`ShellDestination`, the same
 day, from the device) — and so does every notification, which lands on the screen it is about by the

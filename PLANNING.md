@@ -15544,3 +15544,11 @@ tre immagini del painter rese e guardate; `WidgetPreviewTest`, `WidgetPreviewSiz
 `WidgetTypeTest`, `WidgetConfigChoicesTest`, `WidgetLookDefaultsTest`, `ManifestTasksTest`
 aggiornati; le immagini del README rigenerate e guardate (`widgets.png`, `widget-window.png`,
 `today-night.png` per la maschera dell'alfa); suite completa (715 app debug con i 15 screenshot saltati, 660 release, 360 domain, 275 data, 24 sync: meno di prima, perché i cinque test dell'arco sono andati con lui) e lint con 0 errori.
+
+**Il tap apre l'app, non Cielo** (committente, 20 ott 2026, dal telefono, dopo la prova: «preferirei
+che apra la schermata principale come avviene negli altri widget»). D'accordo: l'arco atterrava su
+Cielo perché era materiale di Cielo (momenti e verdetti); l'immagine della finestra è l'eroe di Oggi,
+e un tocco sul cielo porta al cielo, più grande, con i numeri sotto. `destination = null` come Now,
+Today e In parole; VISION §5.9 lo dice. Nello stesso giro `WidgetData.load` costruisce lo stato di
+Cielo per «stanotte» solo quando la card è la finestra: le altre non lo stampano e non devono
+pagarlo a ogni ripittura.

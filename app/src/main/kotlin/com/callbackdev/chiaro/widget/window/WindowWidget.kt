@@ -36,7 +36,6 @@ import androidx.glance.unit.ColorProvider as FixedColorProvider
 import com.callbackdev.chiaro.MainActivity
 import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.shell.ShellDestination
-import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.widget.ChiaroWidgetReceiver
 import com.callbackdev.chiaro.widget.CompactRow
 import com.callbackdev.chiaro.widget.NoDataContent
@@ -73,7 +72,8 @@ class WindowWidgetReceiver : ChiaroWidgetReceiver() {
  * numbers that decided it, or the next moment of light with its verdict. The brightest
  * things in the window are named where they stand, and the caption says where the window
  * looks. Taller, it carries the moments the reader follows with their verdicts, the Sky
- * card's own rows. It replaced the day's arc, a chart of the sky, with the sky.
+ * card's own rows. It replaced the day's arc, a chart of the sky, with the sky. A tap opens
+ * the app where the reader left it, as the other cards do: the picture is Today's hero.
  *
  * It resizes from two cells by one to four by four and reshapes itself at every step
  * ([WindowLayout.kt]). Like every card of the family it never invents: no place and no
@@ -115,7 +115,7 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
     val content = model.content
     val city = model.city
     if (content == null || city == null) {
-        WidgetCard(model, schemes, skyBitmap, destination = ShellTab.SKY) { palette ->
+        WidgetCard(model, schemes, skyBitmap) { palette ->
             if (city == null) NoPlaceContent(palette) else NoDataContent(palette)
         }
         return
@@ -135,10 +135,12 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
             .fillMaxSize()
             .appWidgetBackground()
             .cornerRadius(android.R.dimen.system_app_widget_background_radius)
-            // The sky, its moments and their verdicts are the Sky screen's material.
+            // The app, wherever the reader left it, as the other cards open it (committente,
+            // 20 ott 2026, from the device): the picture is Today's own hero, and a tap on
+            // the sky lands on the sky, bigger, with its numbers under it.
             .clickable(
                 androidx.glance.appwidget.action.actionStartActivity(
-                    ShellDestination.intent(context, MainActivity::class.java, ShellTab.SKY)
+                    ShellDestination.intent(context, MainActivity::class.java, null)
                 )
             )
     ) {
