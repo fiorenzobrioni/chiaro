@@ -642,7 +642,9 @@ dynamic color:
   window, the fact of the moon; by day the next moment of light with its verdict. The brightest
   things in it are named where they stand (the moon with its phase, the two planets, two stars
   at most; nothing under a cover of 60% or more, nothing over the words), and the caption says
-  where the window looks: at the moon when it is up at night, at the equator otherwise. On a
+  where the window looks: at the moon when it is up at night; else, on a shower's peak night, at
+  its radiant, ringed and named («Perseids, from here»: the point the meteors trace back to,
+  from the catalogue's own table, 20 ott 2026); else at the equator. On a
   card there is no hero text to keep a band for, so the moon stands where the stars' camera puts
   it and its distance from a star is the sky's, the one place in the product where it is. Four
   forms by the grant (`WindowLayout.kt`): a strip on one row, the narrow window on two cells, the

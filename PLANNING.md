@@ -15591,3 +15591,37 @@ stelle; quasi nulla con la luna piena. `SkyShaderPixelTest`: una cornice col pia
 canvas in verticale contro una che lo manca: il centro è più chiaro di oltre 0,01 di luminanza con
 la banda, i bordi uguali (è una banda, non una tinta), e di giorno la quantità è 0; le tre notti di
 Milano rese di nuovo e guardate. `SkyShaderCompileTest` compila `atan(y, x)`, `cross` e `asin`.
+
+### Il radiante nelle notti di picco (committente, 20 ott 2026)
+
+**Da dove nasce.** Il secondo dei punti suggeriti dopo la finestra: nella notte del picco di uno
+sciame la finestra sa dove guarda, e un'etichetta «Perseidi, da qui» nel punto da cui le meteore
+sembrano partire è una cosa che nessun widget meteo fa. Il committente: «implementa il radiante».
+
+**Cosa è cambiato.** `MeteorShowerTable.MeteorShower` porta il radiante al massimo (ascensione retta e
+declinazione J2000, al grado, dalla working list IMO: Quadrantidi 230° +49°, Liridi 271° +34°, Eta
+Aquaridi 338° −1°, delta Aquaridi 340° −16°, alfa Capricornidi 307° −10°, Perseidi 48° +58°,
+Draconidi 262° +54°, Tauridi sud 32° +9°, Orionidi 95° +16°, Tauridi nord 58° +22°, Leonidi 152°
++22°, Geminidi 112° +33°, Ursidi 217° +76°); il radiante deriva di un grado al giorno lungo lo
+sciame, quindi vale nella notte del picco e non si chiede in altre. `WindowPainter.peakRadiant(at,
+zone, coords)`: gli sciami del catalogo risolti per l'istante come li risolve la scheda Cielo
+(`SkyUpcoming.allAt`), tenuti se la finestra della notte del picco è aperta o apre entro 14 ore
+(la sera prima di un picco alle 3 è la sua notte: lo sciame è largo giorni); due sciami nella stessa
+notte (delta Aquaridi e alfa Capricornidi) danno la finestra che apre prima; il radiante messo dal
+motore come una stella. La finestra si gira: luna se è su; altrimenti il radiante se è sopra i 3°;
+altrimenti l'equatore. Nel disegno, un anello sottile di 5 dp nel punto e l'etichetta «<sciame>, da
+qui» (`window_label_radiant`, con il nome breve di `SkyText`), con le regole delle altre: niente
+con copertura ≥ 60%, niente sulla didascalia o sotto il chip. Solo sul widget: l'eroe non scrive.
+
+**Decisioni e deviazioni.** *Un anello e non una luce*: il radiante è un punto del cielo, non un
+oggetto; disegnarci una stella sarebbe inventarla. *Nessun tasso*: la tabella non ha lo ZHR per la
+ragione scritta in Fase 16b, e l'etichetta non lo promette. *La luna prima del radiante*: una luna
+alta è anche quella che ammazza lo sciame, e la finestra lo mostra. *Il radiante sotto l'orizzonte
+non si nomina* (Leonidi e Eta Aquaridi sorgono dopo mezzanotte: prima, niente, com'è giusto).
+
+**Come è stato verificato.** `SeasonsAndShowersTest`: ogni radiante sulla sfera, le Perseidi a
+48°/+58°, le Geminidi a due gradi da Castore, le Ursidi vicino al polo. `WindowRadiantTest`: nella
+sera del picco delle Geminidi 2026 il radiante è il loro, dove il motore lo mette, su, a est; in
+una notte senza picco nulla; sei ore prima del picco delle Perseidi il radiante c'è e una settimana
+prima no. `WindowTextTest`: «Perseids, from here». Immagini del README identiche (il 25 settembre
+non è una notte di picco). Suite completa (721 app debug con i 15 screenshot saltati, 665 release, 361 domain, 275 data, 24 sync) e lint con 0 errori.

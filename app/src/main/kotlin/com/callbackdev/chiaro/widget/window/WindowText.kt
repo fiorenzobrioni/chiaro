@@ -79,6 +79,10 @@ internal object WindowText {
     fun moonLabel(context: Context, illuminationPct: Int): String =
         context.getString(R.string.window_label_moon, illuminationPct)
 
+    /** «Perseids, from here»: the radiant named on its peak night, with the Sky tab's own name. */
+    fun radiantLabel(context: Context, jobId: String): String =
+        context.getString(R.string.window_label_radiant, context.getString(SkyText.shortNameRes(jobId)))
+
     fun planetLabel(context: Context, planet: Planet): String = context.getString(
         when (planet) {
             Planet.VENUS -> R.string.window_label_venus

@@ -1433,6 +1433,7 @@
     <string name="window_label_moon">Luna %1$d%%</string>
     <string name="window_label_venus">Venere</string>
     <string name="window_label_jupiter">Giove</string>
+    <string name="window_label_radiant">%1$s, da qui</string>
     <string name="window_form_strip">Una riga: il cielo come una striscia, con il luogo e la frase sopra.</string>
     <string name="window_form_narrow">Due celle di larghezza: la finestra con il luogo e la frase, e i nomi delle cose più luminose.</string>
     <string name="window_form_window">Due righe: la finestra, il luogo, il verdetto di stanotte o il prossimo momento di luce, dove guarda, e i nomi delle cose più luminose che inquadra.</string>

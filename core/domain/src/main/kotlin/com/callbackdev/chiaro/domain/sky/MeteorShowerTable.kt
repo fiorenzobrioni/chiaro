@@ -35,22 +35,33 @@ object MeteorShowerTable {
      * Aquariids moved with them, from 125.0° to the 127.0° the working list now gives
      * — two days, and the file cites that list rather than a memory of it.
      */
-    data class MeteorShower(val id: String, val solarLongitudeDeg: Double)
+    data class MeteorShower(
+        val id: String,
+        val solarLongitudeDeg: Double,
+        /**
+         * The radiant at maximum, J2000, to the degree (the IMO working list's own
+         * rounding; 20 ott 2026): the point the shower's meteors trace back to. A radiant
+         * drifts about a degree a day along the stream, so these hold on the peak night
+         * and are not asked about on any other.
+         */
+        val radiantRaDeg: Double,
+        val radiantDecDeg: Double
+    )
 
     val all: List<MeteorShower> = listOf(
-        MeteorShower("quadrantids", 283.2),
-        MeteorShower("lyrids", 32.3),
-        MeteorShower("eta_aquariids", 45.5),
-        MeteorShower("delta_aquariids", 127.0),
-        MeteorShower("alpha_capricornids", 127.0),
-        MeteorShower("perseids", 140.0),
-        MeteorShower("draconids", 195.4),
-        MeteorShower("southern_taurids", 197.0),
-        MeteorShower("orionids", 208.0),
-        MeteorShower("northern_taurids", 230.0),
-        MeteorShower("leonids", 235.3),
-        MeteorShower("geminids", 262.2),
-        MeteorShower("ursids", 270.7)
+        MeteorShower("quadrantids", 283.2, 230.0, 49.0),
+        MeteorShower("lyrids", 32.3, 271.0, 34.0),
+        MeteorShower("eta_aquariids", 45.5, 338.0, -1.0),
+        MeteorShower("delta_aquariids", 127.0, 340.0, -16.0),
+        MeteorShower("alpha_capricornids", 127.0, 307.0, -10.0),
+        MeteorShower("perseids", 140.0, 48.0, 58.0),
+        MeteorShower("draconids", 195.4, 262.0, 54.0),
+        MeteorShower("southern_taurids", 197.0, 32.0, 9.0),
+        MeteorShower("orionids", 208.0, 95.0, 16.0),
+        MeteorShower("northern_taurids", 230.0, 58.0, 22.0),
+        MeteorShower("leonids", 235.3, 152.0, 22.0),
+        MeteorShower("geminids", 262.2, 112.0, 33.0),
+        MeteorShower("ursids", 270.7, 217.0, 76.0)
     )
 
     fun byId(id: String): MeteorShower? = all.firstOrNull { it.id == id }

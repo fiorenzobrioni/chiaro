@@ -1470,6 +1470,7 @@
     <string name="window_label_moon">Moon %1$d%%</string>
     <string name="window_label_venus">Venus</string>
     <string name="window_label_jupiter">Jupiter</string>
+    <string name="window_label_radiant">%1$s, from here</string>
     <string name="window_form_strip">One row: the sky as a strip, the place and the sentence over it.</string>
     <string name="window_form_narrow">Two cells wide: the window with the place and the sentence, the names of the brightest things on it.</string>
     <string name="window_form_window">Two rows: the window, the place, tonight\'s verdict or the next moment of light, where it looks, and the names of the brightest things in it.</string>

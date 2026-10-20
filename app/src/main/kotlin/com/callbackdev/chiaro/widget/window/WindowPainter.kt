@@ -15,8 +15,12 @@ import android.graphics.Typeface
 import android.media.ImageReader
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.DpSize
+import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
+import com.callbackdev.chiaro.domain.sky.MeteorShowerTable
 import com.callbackdev.chiaro.domain.sky.Planet
+import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
+import com.callbackdev.chiaro.ui.sky.SkyUpcoming
 import com.callbackdev.chiaro.ui.components.BodyRadius
 import com.callbackdev.chiaro.ui.components.EdgeInset
 import com.callbackdev.chiaro.ui.theme.SkyGradient
@@ -34,7 +38,9 @@ import com.callbackdev.chiaro.ui.components.starPlace
 import com.callbackdev.chiaro.ui.theme.paletteFor
 import com.callbackdev.chiaro.widget.WidgetModel
 import com.callbackdev.chiaro.widget.fontScale
+import java.time.Duration
 import java.time.Instant
+import java.time.ZoneId
 import kotlin.math.atan
 import kotlin.math.roundToInt
 
@@ -84,7 +90,36 @@ internal object WindowPainter {
     /** The strip at the foot of the picture the caption owns: no name is written in it. */
     const val LabelKeepOutDp = 60f
 
-    private class Label(val text: String, val x: Float, val y: Float, val gapDp: Float = 7f, val rank: Double = 0.0)
+    private class Label(
+        val text: String, val x: Float, val y: Float, val gapDp: Float = 7f, val rank: Double = 0.0,
+        /** A small ring at the spot: the thing named is a point of the sky, not a light. */
+        val ring: Boolean = false
+    )
+
+    /** A shower's radiant on its peak night, where it stands: the point its meteors trace back to. */
+    internal class Radiant(val jobId: String, val altitudeDeg: Double, val azimuthDeg: Double)
+
+    /** How far ahead a peak window may start and still be tonight's: the evening before a
+     * peak in the small hours is the peak's night, the stream being days wide. */
+    private val PeakAhead: Duration = Duration.ofHours(14)
+
+    /**
+     * The shower whose peak night this is, with its radiant placed by the engine, or null:
+     * the catalogue's showers resolved for [at] as the Sky tab resolves them, kept when the
+     * peak's night window is open or opens within [PeakAhead]. Two showers on one night (the
+     * delta Aquariids and the alpha Capricornids share one) give the earlier window.
+     */
+    internal fun peakRadiant(at: Instant, zone: ZoneId, coords: Coordinates): Radiant? {
+        val tonight = SkyUpcoming.allAt(SkyJobCatalog.meteorShowers, at, zone, coords)
+            .firstOrNull { resolved ->
+                val window = resolved.at ?: return@firstOrNull false
+                val end = window.end ?: return@firstOrNull false
+                end.isAfter(at) && window.start.isBefore(at.plus(PeakAhead))
+            } ?: return null
+        val shower = MeteorShowerTable.showerOf(tonight.occurrence.job.id) ?: return null
+        val place = AstronomyEngine.starHorizontal(shower.radiantRaDeg, shower.radiantDecDeg, at, coords)
+        return Radiant(tonight.occurrence.job.id, place.altitudeDeg, place.azimuthDeg)
+    }
 
     /** The picture for [model] in a card of [size] laid out as [plan], at [at]; null without a report. */
     fun paint(
@@ -105,7 +140,14 @@ internal object WindowPainter {
         val coords = city.coordinates
         val night = sky.sunAltitudeDeg < -6.0
         val moonUp = night && sky.moonAltitudeDeg > MoonFacingFloorDeg
-        val facing = if (moonUp) sky.moonAzimuthDeg else StarField.facing(sky.southern)
+        // Where the window looks: at the moon when it is up; else, on a shower's peak night,
+        // at its radiant when that is up (20 ott 2026); else at the equator.
+        val radiant = if (night) peakRadiant(at, model.zone, coords)?.takeIf { it.altitudeDeg >= WindowAltLowDeg } else null
+        val facing = when {
+            moonUp -> sky.moonAzimuthDeg
+            radiant != null -> radiant.azimuthDeg
+            else -> StarField.facing(sky.southern)
+        }
         val halfWidth = halfWidthDeg(w, skyH)
         val marks = if (night) {
             StarField.visible(at, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg) +
@@ -145,6 +187,11 @@ internal object WindowPainter {
                         WindowText.moonLabel(context, (sky.moonIllumination * 100).roundToInt()),
                         x, y, gapDp = BodyRadius.value + 6f
                     )
+                }
+                radiant?.let { r ->
+                    starPlace(StarMark(acrossOf(r.azimuthDeg, facing), r.altitudeDeg.toFloat(), 1f, 0f, 0f), w, skyH)?.let { (x, y) ->
+                        labels += Label(WindowText.radiantLabel(context, r.jobId), x, y, gapDp = 10f, ring = true)
+                    }
                 }
                 for (planet in Planet.values()) {
                     val altitude = AstronomyEngine.planetAltitude(planet, at, coords)
@@ -310,9 +357,16 @@ internal object WindowPainter {
         }
         val keepOut = skyH - LabelKeepOutDp * density
         val warningBox = if (plan.warning) RectF(0f, 0f, WarningBoxWidthDp * density, WarningBoxHeightDp * density) else null
+        val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = LabelInk
+            style = Paint.Style.STROKE
+            strokeWidth = 1f * density
+            setShadowLayer(2f * density, 0f, 0f, LabelHalo)
+        }
         labels.forEach { label ->
             if (label.y > keepOut || label.y < 8f * density) return@forEach
             if (warningBox?.contains(label.x, label.y) == true) return@forEach
+            if (label.ring) canvas.drawCircle(label.x, label.y, RadiantRingDp * density, ring)
             val width = paint.measureText(label.text)
             val gap = label.gapDp * density
             val x = if (label.x + gap + width > w - 8f * density) label.x - gap - width else label.x + gap
@@ -331,6 +385,9 @@ internal object WindowPainter {
     /** The names' ink and its halo (§3.6's halo, in a bitmap). */
     private const val LabelInk = 0xD9FFFFFF.toInt()
     private const val LabelHalo = 0xB3000000.toInt()
+
+    /** The radiant's ring: a point of the sky marked, not a light drawn. */
+    private const val RadiantRingDp = 5f
 
     /** Where the warning's chip sits (top-left, inside the caption's padding): no name under it. */
     private const val WarningBoxWidthDp = 220f
