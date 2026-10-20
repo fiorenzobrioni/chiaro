@@ -194,7 +194,7 @@ private fun LineContent(
             PlaceLineText(content, model, palette)
             HeroTemperature(
                 content, model, palette,
-                textRowHeroSp(size, fontScale(context), content.isStale)
+                textRowHeroSp(size, fontScale(context), content.marked)
             )
             StaleLineText(content, palette)
         }
@@ -284,7 +284,7 @@ private fun RowContent(
             ) {
                 PlaceLineText(content, model, palette)
                 HeroTemperature(
-                    content, model, palette, textRowHeroSp(size, scale, content.isStale)
+                    content, model, palette, textRowHeroSp(size, scale, content.marked)
                 )
                 StaleLineText(content, palette)
             }
@@ -349,12 +349,12 @@ private fun StackContent(
         enabled = model.look.showWarning,
         headlineShown = sentenceOn,
         sentenceSlot = true,
-        ownRow = textStackHasFactLine(size, scale, content.isStale, sentenceOn)
+        ownRow = textStackHasFactLine(size, scale, content.marked, sentenceOn)
     )
     val later = laterHours(content.strip, content.now)
     val plan = textStackPlan(
         size, scale,
-        stale = content.isStale,
+        stale = content.marked,
         sentence = sentenceOn,
         warning = warning.drawn,
         range = model.look.showDayRange && today != null,
@@ -456,7 +456,7 @@ private fun PanelContent(
     val sentenceText = sentence(context, content, model.settings.units)
     val plan = textPanelPlan(
         size, scale,
-        stale = content.isStale,
+        stale = content.marked,
         sentence = sentenceOn,
         warning = warning.drawn,
         range = model.look.showDayRange && today != null,
@@ -751,10 +751,10 @@ private fun WarningWord(level: WarningLevel, palette: WidgetPalette, align: Text
  * optional, and never one of the things a budget may drop. */
 @Composable
 private fun StaleLineText(content: TodayUiState.Content, palette: WidgetPalette) {
-    if (!content.isStale) return
+    if (!content.marked) return
     val context = LocalContext.current
     Text(
-        text = staleText(context, content.lastSync, Instant.now(LocalClock.current)),
+        text = markerText(context, content, Instant.now(LocalClock.current)),
         style = TextStyle(color = palette.stale, fontSize = TextStaleSp.sp),
         maxLines = 1
     )

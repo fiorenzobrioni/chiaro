@@ -29,11 +29,14 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -273,6 +276,28 @@ internal fun PagedToday(
                     .navigationBarsPadding()
             )
         }
+    }
+}
+
+/** The position page standing on the place it has weather for, said in one sentence. */
+@Composable
+private fun ElsewhereNote(km: Int, place: String, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.LocationOn,
+            contentDescription = null, // the sentence says it
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp)
+        )
+        Text(
+            text = stringResource(R.string.today_elsewhere, km, place),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -700,6 +725,20 @@ internal fun ContentState(
                         FreshnessChip(
                             age = freshnessAge(content.lastSync),
                             onRetry = onRefresh,
+                            modifier = Modifier.padding(start = 16.dp, top = ItemGap, end = 16.dp)
+                        )
+                    }
+                }
+            }
+            // The reader is elsewhere and this is still the place they left (20 ott 2026):
+            // said with the age, which it qualifies, because the pin by the name reads
+            // «you are here» and the numbers must not be taken for the new place's.
+            content.elsewhereKm?.let { km ->
+                item {
+                    Box(paper) {
+                        ElsewhereNote(
+                            km = km,
+                            place = content.city.name,
                             modifier = Modifier.padding(start = 16.dp, top = ItemGap, end = 16.dp)
                         )
                     }

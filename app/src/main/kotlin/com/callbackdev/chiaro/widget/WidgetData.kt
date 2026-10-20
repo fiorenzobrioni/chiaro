@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.widget
 import android.content.Context
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.AppSettings
+import com.callbackdev.chiaro.data.GpsArrival
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.WeatherFreshness
@@ -144,13 +145,19 @@ object WidgetData {
         val warning = runCatching {
             ServiceLocator.warningReader(context).graded(city)
         }.getOrNull()
+        // A card on the position that stays on the place it has weather for while the
+        // reader is elsewhere says so on its marker line (20 ott 2026), as the page does.
+        val elsewhereKm = (active as? ActiveSource.Gps)?.let {
+            ServiceLocator.cityStore(context).locationSettings.first().arrival
+                ?.let { reached -> GpsArrival.distanceKm(city, reached) }
+        }
         val content = report?.let {
-            TodayStateBuilder.build(
+            (TodayStateBuilder.build(
                 city, it, now, settings.updateFrequencyMin,
                 userRefreshing = false, error = null, warnings = warning,
                 // No quarter-hour sentence on a card that is repainted once a sync.
                 readQuarters = false
-            ) as? TodayUiState.Content
+            ) as? TodayUiState.Content)?.copy(elsewhereKm = elsewhereKm)
         }
         return WidgetModel(
             settings = settings,

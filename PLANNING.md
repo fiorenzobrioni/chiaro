@@ -15849,3 +15849,60 @@ posizione arriva a riposo; una selezione che torna indietro a un terzo di corsa 
 casa. Il secondo passa anche sul codice di prima: in Robolectric lo scorrimento interrotto è già
 finito quando il pager segue di nuovo, quindi il vecchio vincolo su «uno scorrimento in corso»
 non scatta; è la parte della correzione che solo il telefono conferma.
+
+## La posizione resta dove ha il meteo (committente, dal telefono, 20 ott 2026)
+
+**Il difetto.** Offline, un luogo salvato restava sui suoi ultimi dati con l'età dichiarata;
+«La mia posizione» no. Spostandosi oltre i 2 km l'app adottava subito il fix nuovo
+(`adoptGpsFix`), cioè un posto senza cache: pagina vuota, banner offline, e per titolo le
+coordinate, perché offline fallisce anche il nome. Le app premium fanno il contrario: restano
+sull'ultimo posto di cui hanno dati e si spostano, posto e meteo insieme, appena raggiungono la
+fonte. Il widget faceva lo stesso, dal momento in cui l'app prendeva il fix: «Sto prendendo la
+prima previsione…», che offline non era nemmeno vero.
+
+**La regola** (`GpsArrival`, in `:core:data`, la passano tutte e tre le strade del fix: il
+toggle e la riga del foglio Luoghi, il refix di Oggi). Sotto i 2 km niente cambia. Oltre, si
+chiede PRIMA la previsione del posto nuovo: arriva, e la pagina si sposta con i dati già in
+cache; non arriva, e la pagina resta sul posto di cui ha il meteo, mentre il posto raggiunto
+aspetta in `LocationSettings.arrival` (`holdGpsFix`; l'istante del fix si scrive comunque, un fix
+è stato preso). Se il posto di prima non ha meteo da mostrare si adotta come prima: una pagina
+vuota del posto nuovo è tutto quello che c'è. Un fix nuovo risponde all'attesa in ogni caso
+(`adoptGpsFix` la cancella), anche tornando vicino al posto mostrato; spegnere la posizione la
+dimentica.
+
+**Quando si riprova**, sempre senza un fix nuovo, perché le coordinate ci sono già: all'atterrare
+sulla pagina e al ritorno in primo piano (se il fix non è ancora dovuto; se lo è, il fix nuovo
+riprova da sé), al tick del minuto della pagina posizione con lo stesso `RefreshBackoff` di un
+fetch fallito, mai sotto risparmio energetico, e nel job periodico prima di scegliere il posto.
+Quest'ultimo è il motivo per cui la regola sta in `:core:data` e non nel ViewModel: il job non
+prende mai la posizione in background, ma il fix lo ha già preso l'app, e così lo spostamento
+avviene alla prima esecuzione di nuovo in rete e non solo alla prossima apertura. In ogni caso
+la scrittura avviene solo se il posto in attesa è ancora quello (`adoptArrival`): un fix più
+recente non deve vedersi riportare indietro.
+
+**Cosa dice la pagina.** Sotto il chip dell'età, «Sei a 17 km da Cavenago di Brianza: questo è
+ancora il suo meteo, finché non arriva quello di dove sei.» Il chip parla dell'età del meteo, non
+del posto, e il pin accanto al nome si legge «sei qui»: senza questa riga la pagina direbbe una
+cosa falsa con numeri veri. La distanza è in chilometri interi e mai sotto 2, perché sotto i 2
+km il fix non è un arrivo. Il campo è `TodayUiState.Content.elsewhereKm`, riempito dal
+ViewModel e dai widget, mai dal builder, che dei fix non sa niente.
+
+**Cosa dicono i widget.** Leggono la stessa posizione salvata, quindi restano sul posto vecchio
+senza modifiche al loro codice. Il segnale va nella riga dell'età (`marked`, `markerText`), che
+ogni forma riserva già: «Sei altrove» con dati freschi, che altrimenti non stamperebbero niente,
+e «Altrove · 8 h fa» con dati vecchi. La forma lunga, «You've moved · 8 hours ago», sulle card
+4×2 veniva troncata a «8 hou…», cioè perdeva proprio il numero per cui la riga esiste. Il
+collettore dei widget in `ChiaroApplication` ascolta anche l'attesa, che non cambia il posto
+attivo ma cambia cosa le card devono dire.
+
+**Il limite, che c'era già.** «Colpo d'occhio» a 4×1 non ha altezza per la riga: l'età dei dati
+vecchi non c'era nemmeno prima, e così ora lo spostamento. Va risolto nel layout di quella forma,
+per entrambe le cose; non è in questa modifica.
+
+**Come è stato verificato.** `GpsArrivalTest` (offline resta e aspetta; online si sposta con il
+meteo già preso; sotto i 2 km non chiede niente; senza meteo da tenere adotta come prima; l'attesa
+si adotta quando il meteo arriva; tornare vicino la cancella; spegnere la posizione la dimentica;
+la distanza), `MarkerTextTest` (fresco: niente finché non si è altrove; vecchio: entrambe le cose,
+forma corta), suite intera verde, lint. Pagina e card renderizzate e guardate in IT e EN, con dati
+freschi e vecchi di 8 ore. Le immagini del README non cambiano: la registrazione non ha nessuno
+spostamento.

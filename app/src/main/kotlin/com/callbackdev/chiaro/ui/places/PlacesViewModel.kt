@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
+import com.callbackdev.chiaro.data.GpsArrival
 import com.callbackdev.chiaro.data.LocationProvider
 import com.callbackdev.chiaro.data.LocationSettings
 import com.callbackdev.chiaro.data.SearchHistoryStore
@@ -79,6 +80,9 @@ class PlacesViewModel(
     private val locationProvider: LocationProvider,
     private val clock: Clock = Clock.systemUTC()
 ) : ViewModel() {
+
+    /** Whether a fix moves the position page, decided with its weather (20 ott 2026). */
+    private val arrival = GpsArrival(cityStore, repository)
 
     val places: StateFlow<List<SavedPlace>> = cityStore.cities
         .mapLatest { cities ->
@@ -198,7 +202,7 @@ class PlacesViewModel(
                 // position, and the page settle this enable causes will read the
                 // provider's memo rather than pay for a second acquisition.
                 val fix = locationProvider.currentFix(maxAge = LocationProvider.Now)
-                cityStore.adoptGpsFix(fix, clock.instant())
+                arrival.take(fix, clock.instant())
                 cityStore.setUseGps(true)
                 cityStore.markInitDone()
                 gpsStateFlow.value = GpsState.Idle
@@ -230,7 +234,7 @@ class PlacesViewModel(
             cityStore.setActiveGps()
             try {
                 val fix = locationProvider.currentFix(maxAge = LocationProvider.Now)
-                cityStore.adoptGpsFix(fix, clock.instant())
+                arrival.take(fix, clock.instant())
                 gpsStateFlow.value = GpsState.Idle
                 gpsSelectedFlow.tryEmit(Unit)
             } catch (e: WeatherException) {

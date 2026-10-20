@@ -64,7 +64,8 @@ import com.callbackdev.chiaro.widget.rememberWidgetModel
 import com.callbackdev.chiaro.widget.rememberWidgetSchemes
 import com.callbackdev.chiaro.widget.resolveWidgetPalette
 import com.callbackdev.chiaro.widget.secondaryStyle
-import com.callbackdev.chiaro.widget.staleText
+import com.callbackdev.chiaro.widget.marked
+import com.callbackdev.chiaro.widget.markerText
 import com.callbackdev.chiaro.widget.widgetCardFill
 import java.time.Instant
 import java.time.ZoneId
@@ -229,7 +230,7 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
                         // Old data says its age where the compass would be: the age is the
                         // one thing a reader must not miss, and the two are read last alike.
                         val aside = when {
-                            content.isStale -> staleText(context, content.lastSync, at)
+                            content.marked -> markerText(context, content, at)
                             plan.compass && picture?.night == true -> WindowText.looking(context, picture.facingDeg)
                             else -> null
                         }

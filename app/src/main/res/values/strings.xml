@@ -86,6 +86,7 @@
         <item quantity="one">Updated %d day ago</item>
         <item quantity="other">Updated %d days ago</item>
     </plurals>
+    <string name="today_elsewhere">You\'re %1$d km from %2$s: this is still its weather, until the weather for where you are arrives.</string>
     <string name="error_offline">Couldn\'t update: you\'re offline</string>
     <string name="error_service">Couldn\'t update: the service isn\'t answering</string>
     <string name="error_unknown">Couldn\'t update: something went wrong</string>
@@ -1403,6 +1404,22 @@
     <string name="widget_color_plum">Violet</string>
     <string name="widget_color_clay">Terracotta</string>
     <string name="widget_no_place_hint">Tap to open Chiaro and add one</string>
+    <!-- The position page stays on the place it has weather for (20 ott 2026). -->
+    <string name="widget_elsewhere">You\'ve moved</string>
+    <string name="widget_elsewhere_short">Moved</string>
+    <string name="widget_elsewhere_age">%1$s · %2$s</string>
+    <plurals name="widget_minutes_ago">
+        <item quantity="one">%d min ago</item>
+        <item quantity="other">%d min ago</item>
+    </plurals>
+    <plurals name="widget_hours_ago">
+        <item quantity="one">%d h ago</item>
+        <item quantity="other">%d h ago</item>
+    </plurals>
+    <plurals name="widget_days_ago">
+        <item quantity="one">%d d ago</item>
+        <item quantity="other">%d d ago</item>
+    </plurals>
     <string name="widget_no_data">Getting the first forecast…</string>
     <string name="widget_sky_empty">No sky moment coming up. Tap to follow one.</string>
     <string name="settings_opacity_full">Solid</string>

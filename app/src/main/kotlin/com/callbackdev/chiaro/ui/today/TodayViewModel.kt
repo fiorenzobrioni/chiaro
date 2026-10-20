@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.callbackdev.chiaro.sync.WarningRefresh
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
+import com.callbackdev.chiaro.data.GpsArrival
 import com.callbackdev.chiaro.data.LocationProvider
 import com.callbackdev.chiaro.data.PowerSaveState
 import com.callbackdev.chiaro.data.ServiceLocator
@@ -96,6 +97,9 @@ class TodayViewModel(
     private val ruleStore: com.callbackdev.chiaro.data.RuleStore? = null
 ) : ViewModel() {
 
+    /** Whether a fix moves the position page, decided with its weather (20 ott 2026). */
+    private val arrival = GpsArrival(cityStore, repository)
+
     /** Carries the cacheKey of the page whose reader pulled. */
     private val refreshRequests = MutableSharedFlow<String>(extraBufferCapacity = 4)
 
@@ -175,7 +179,7 @@ class TodayViewModel(
             settingsStore.settings
                 .map { it.updateFrequencyMin }
                 .distinctUntilChanged()
-                .flatMapLatest { cityStates(city, it) }
+                .flatMapLatest { cityStates(city, it, isGps = page is PlacePage.Gps) }
                 .flowOn(Dispatchers.Default)
                 .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TodayUiState.Starting)
         }
@@ -243,6 +247,13 @@ class TodayViewModel(
      */
     private suspend fun refix(page: PlacePage.Gps, explicit: Boolean) {
         val previous = page.lastFix
+        // A place reached and still waiting for its weather (20 ott 2026): with no fix
+        // due, landing and coming back are the moments to ask for that weather again.
+        // The position was taken already; only the forecast is missing.
+        if (!explicit && cityStore.locationSettings.first().arrival != null && !fixIsDue()) {
+            arrival.retry()
+            return
+        }
         // A moved fix rebuilds the page under a new cacheKey and the state for that
         // key fetches on its own: asking for a refresh here as well would spend two
         // GETs on the same arrival.
@@ -291,9 +302,10 @@ class TodayViewModel(
         }
         if (fix == null) return false
 
-        // The adoption rule lives in the store, so every road to a fix obeys it: under
-        // two kilometres this keeps the place and takes only its better name.
-        val adopted = cityStore.adoptGpsFix(fix, clock.instant())
+        // The adoption rule is shared, so every road to a fix obeys it: under two
+        // kilometres this keeps the place and takes only its better name, and past them
+        // the page moves only with the new place's weather in hand (20 ott 2026).
+        val adopted = arrival.take(fix, clock.instant())
         return adopted.cacheKey != previous?.cacheKey
     }
 
@@ -305,7 +317,7 @@ class TodayViewModel(
         return age.isNegative || age >= GpsRefixInterval
     }
 
-    private fun cityStates(city: City, updateFrequencyMin: Int): Flow<TodayUiState> =
+    private fun cityStates(city: City, updateFrequencyMin: Int, isGps: Boolean): Flow<TodayUiState> =
         channelFlow {
             // Two flags, not one (Fase 3b): [inFlight] is the guard against two
             // fetches racing, [userRefreshing] is the only thing the pull indicator
@@ -328,6 +340,9 @@ class TodayViewModel(
             var bulletin: StoredBulletin? = null
             var zone: WarningZone? = null
             var zoneResolved = false
+            // On the position page, how far the reader is from [city] while the place they
+            // reached waits for its weather (20 ott 2026); and whether one is waiting.
+            var elsewhereKm: Int? = null
 
             suspend fun push() {
                 val current = report
@@ -343,7 +358,7 @@ class TodayViewModel(
                             rules
                         )
                         if (built is TodayUiState.Content) {
-                            built.copy(whatChanged = whatChanged)
+                            built.copy(whatChanged = whatChanged, elsewhereKm = elsewhereKm)
                         } else built
                     }
                 )
@@ -487,6 +502,17 @@ class TodayViewModel(
                         }
                 }
             }
+            if (isGps) {
+                launch {
+                    cityStore.locationSettings
+                        .map { settings -> settings.arrival?.let { GpsArrival.distanceKm(city, it) } }
+                        .distinctUntilChanged()
+                        .collect {
+                            elsewhereKm = it
+                            push()
+                        }
+                }
+            }
             launch { fetch(userAsked = false) }
             launch { refreshWarnings(userAsked = false) }
             launch {
@@ -514,7 +540,16 @@ class TodayViewModel(
                     delay(60_000)
                     val now = clock.instant()
                     val age = report?.let { Duration.between(it.systemInfo.lastSync, now) }
-                    if (age != null && age >= WeatherFreshness.ProviderResolution && backoff.isDue(now)) {
+                    if (elsewhereKm != null) {
+                        // The reader is elsewhere: what the tick asks for is the weather of
+                        // where they are, on the same backoff, and once it lands the page
+                        // moves there and this flow is let go (20 ott 2026). Refreshing the
+                        // place they left would spend the request on the lesser answer.
+                        if (backoff.isDue(now) && !powerSave.isOn()) {
+                            backoff.attempting(now)
+                            if (arrival.retry()) backoff.succeeded() else backoff.failed()
+                        }
+                    } else if (age != null && age >= WeatherFreshness.ProviderResolution && backoff.isDue(now)) {
                         fetch(userAsked = false)
                     }
                     // The bulletin ages with the clock the way the report does: past
