@@ -141,6 +141,11 @@ class StarFieldTest {
         assertTrue(starPlace(StarMark(28f, 30f, 1f, 0f, 0f), w, h) != null)
         assertNull(starPlace(StarMark(31f, 30f, 1f, 0f, 0f), w, h))
         assertNull(starPlace(StarMark(0f, 70f, 1f, 0f, 0f), w, h))
+        // Behind or beside the camera, nothing projects: tan(177°) is tan(−3°), and Capella
+        // behind a reader facing south-west landed on the moon (from the device, 20 ott 2026).
+        assertNull(starPlace(StarMark(177f, 30f, 1f, 0f, 0f), w, h))
+        assertNull(starPlace(StarMark(-150f, 30f, 1f, 0f, 0f), w, h))
+        assertNull(starPlace(StarMark(92f, 30f, 1f, 0f, 0f), w, h))
         assertTrue(starRadiusDp(1f) > starRadiusDp(0.09f) * 2)
     }
 

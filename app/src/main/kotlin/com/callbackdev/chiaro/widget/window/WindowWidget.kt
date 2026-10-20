@@ -2,8 +2,10 @@ package com.callbackdev.chiaro.widget.window
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.widget.RemoteViews
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -13,6 +15,7 @@ import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.clickable
+import androidx.glance.appwidget.AndroidRemoteViews
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.SizeMode
@@ -34,6 +37,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider as FixedColorProvider
 import com.callbackdev.chiaro.MainActivity
+import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.shell.ShellDestination
 import com.callbackdev.chiaro.widget.ChiaroWidgetReceiver
@@ -58,7 +62,9 @@ import com.callbackdev.chiaro.widget.resolveWidgetPalette
 import com.callbackdev.chiaro.widget.secondaryStyle
 import com.callbackdev.chiaro.widget.staleText
 import com.callbackdev.chiaro.widget.widgetCardFill
+import com.callbackdev.chiaro.widget.widgetTextDescentEm
 import java.time.Instant
+import java.time.ZoneId
 
 class WindowWidgetReceiver : ChiaroWidgetReceiver() {
     override val glanceAppWidget = WindowWidget()
@@ -175,14 +181,35 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
                         modifier = GlanceModifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = city.name,
-                            style = TextStyle(
-                                color = palette.primary, fontSize = WindowPlaceSp.sp, fontWeight = FontWeight.Medium
-                            ),
-                            maxLines = 1,
-                            modifier = GlanceModifier.defaultWeight()
-                        )
+                        Row(
+                            modifier = GlanceModifier.defaultWeight(),
+                            // The clock is set on the place's baseline by its own padding
+                            // ([clockPaddingBottom]), because the view that wraps it has no
+                            // baseline for the row to align (from the device, 20 ott 2026).
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = city.name,
+                                style = TextStyle(
+                                    color = palette.primary, fontSize = WindowPlaceSp.sp, fontWeight = FontWeight.Medium
+                                ),
+                                maxLines = 1
+                            )
+                            // The place's own time, live, when its clock is not the phone's
+                            // (committente, 20 ott 2026: a night sky at three in the afternoon asks
+                            // what time it is there). The platform's TextClock, kept by the
+                            // launcher minute by minute in the place's zone: a time painted into
+                            // the picture would be a minute stale, then an hour.
+                            if (clockDiffers(model.zone, at)) {
+                                AndroidRemoteViews(
+                                    remoteViews = RemoteViews(context.packageName, R.layout.widget_window_clock).apply {
+                                        setString(R.id.window_clock, "setTimeZone", model.zone.id)
+                                        setTextColor(R.id.window_clock, palette.secondary.getColor(context).toArgb())
+                                    },
+                                    modifier = GlanceModifier.padding(start = 6.dp, bottom = clockPaddingBottom(fontScale(context)))
+                                )
+                            }
+                        }
                         // Old data says its age where the compass would be: the age is the
                         // one thing a reader must not miss, and the two are read last alike.
                         val aside = when {
@@ -227,3 +254,17 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
         }
     }
 }
+
+/**
+ * The air under the clock that sets its baseline on the place's: the clock sits at the bottom of
+ * a box as tall as the place's line, both texts with the font's padding, so the two baselines
+ * differ by the two faces' descents, which scale with the size: the place's at 16 sp minus the
+ * clock's at 11 sp, in the system face's own descent ([widgetTextDescentEm]).
+ */
+internal fun clockPaddingBottom(fontScale: Float): androidx.compose.ui.unit.Dp =
+    ((WindowPlaceSp - WindowCaptionSp) * widgetTextDescentEm() * fontScale).dp
+
+/** Whether the place keeps a different time from the phone at [at]: by offset, not by zone id,
+ * so Paris does not get a clock on a phone in Rome. */
+internal fun clockDiffers(zone: ZoneId, at: Instant): Boolean =
+    zone.rules.getOffset(at) != ZoneId.systemDefault().rules.getOffset(at)

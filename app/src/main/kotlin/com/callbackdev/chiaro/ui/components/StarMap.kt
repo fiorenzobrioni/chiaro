@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RadialGradient
 import android.graphics.Shader
+import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.tan
 
@@ -61,6 +62,11 @@ internal const val StarCameraBottomDeg = 10f
  * a phone. Facing the equator, like the deck and the bodies.
  */
 internal fun starPlace(star: StarMark, widthPx: Int, heightPx: Int): Pair<Float, Float>? {
+    // A direction beside or behind the camera has no place on its film: the tangent of 177°
+    // is the tangent of −3°, and Capella, behind a reader facing south-west, was written on
+    // the moon (from the device, 20 ott 2026). The stars drawn pass the window's filter first;
+    // a name placed on its own did not, and now the camera refuses it here.
+    if (abs(star.acrossDeg) >= BehindCameraDeg) return null
     val span = StarCameraTopDeg - StarCameraBottomDeg
     val focal = heightPx / Math.toRadians(span.toDouble())
     val x = widthPx / 2.0 + tan(Math.toRadians(star.acrossDeg.toDouble())) * focal
@@ -68,6 +74,9 @@ internal fun starPlace(star: StarMark, widthPx: Int, heightPx: Int): Pair<Float,
     if (x < -8 || x > widthPx + 8 || y < -8 || y > heightPx + 8) return null
     return x.toFloat() to y
 }
+
+/** From this far off the camera's axis, a direction is beside it or behind it and projects nowhere. */
+internal const val BehindCameraDeg = 89f
 
 /** The disc a star draws: its radius in dp by its brightness. */
 internal fun starRadiusDp(brightness: Float): Float = 0.8f + 2.2f * brightness

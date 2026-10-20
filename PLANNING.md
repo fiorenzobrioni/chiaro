@@ -15677,3 +15677,48 @@ chip), la frase lascia il numero al disco («Bello stanotte · nuvole 3%», «Ch
 notte · nuvole 61%»); quando la luna non è in finestra, la frase tiene il numero di metà notte,
 uguale a quello di Cielo. Verificato in `WindowTextTest` (le frasi senza luna) e `WindowPainterTest`
 (la notte della registrazione nomina la luna, il giorno no); `widget-window.png` rigenerata.
+
+**L'orologio vivo del luogo** (committente, 20 ott 2026, dallo screenshot di Taipei: «l'ora, non
+essendo quella del fuso del dispositivo, si potrebbe indicare»). Sì, ma non dipinta: un'ora nella
+bitmap è vecchia di un minuto subito e di un'ora a fine ciclo, e lo schermo non mente. La via
+onesta è la `TextClock` della piattaforma, che il launcher aggiorna da solo ogni minuto nel fuso
+che le si dice, senza ripitture: sta dentro la card Glance come `AndroidRemoteViews`
+(`layout/widget_window_clock.xml`, il fuso e l'inchiostro messi dalla card, dimensione Caption,
+il punto mediano come separatore). Accanto al nome del luogo, «Taipei · 21:18», e solo quando il
+luogo tiene un'ora diversa dal telefono, confrontando gli offset e non i nomi dei fusi
+(`clockDiffers`): Parigi non ha l'orologio su un telefono a Roma, e il luogo del telefono non ce
+l'ha mai, perché il suo orologio è quello del launcher. Verificato in `WindowClockTest` (la card
+composta come la riceve il launcher e applicata a una vista: Milano su un telefono a Roma senza
+orologio, Taipei con una `TextClock` nel fuso Asia/Taipei; l'offset e non il nome). Da provare sul
+launcher: una vista classica dentro una card Glance.
+
+**Venere nel crepuscolo** (committente, 20 ott 2026: «se lo ritieni utile e un'aggiunta grafica
+premium»). Sì: la stella della sera sopra il rosso del tramonto è la vista classica, e il limite
+era scritto in DESIGN. I pianeti escono dal sole a −3° (`StarField.PLANETS_SUN_DEG`), pieni a −5° (a −8° il punto era ancora debole sul crepuscolo, visto sulla resa),
+con un fattore loro nella scena (`SkyScene.planets`, `uPlanets`: copertura al quadrato, la luna ne
+toglie un terzo dove a una stella ne toglie due); lo shader riconosce il pianeta dalla fase ferma
+e lo accende con la sua quantità, mentre le stelle aspettano −10°. Lo snapshot dell'eroe calcola i
+pianeti da −3° e le stelle da −6°; la finestra lo stesso, con le etichette «Venere»/«Giove» anche
+nel crepuscolo. Verificato in `SkySceneTest` (nulla di giorno e a −1°, a −4° i pianeti sì e le
+stelle no, pieni a −10°, nulla sotto il cielo coperto, la luna piena ne lascia più di due terzi) e
+`SkyShaderPixelTest` (a −4° Venere al centro è più chiara del cielo di oltre 0,02 di luminanza, una
+stella nello stesso punto non si distingue dal cielo). DESIGN §3.9 chiude il limite.
+
+**Dal secondo screenshot di Taipei** (committente, 20 ott 2026, cinquanta minuti dopo il primo).
+Tre cose. *Capella sulla luna*: Capella a quell'ora stava a nord-est, dietro le spalle di chi guarda
+a sud-ovest, a 177° dall'asse della camera; la tangente di 177° è quella di −3°, e `starPlace` la
+metteva a nove dp dal centro, all'altezza della luna. Le stelle disegnate passano dal filtro della
+finestra prima della camera; un nome messo da solo (stelle con nome, pianeti, radiante) no. Ora la
+camera rifiuta ogni direzione oltre 89° dal suo asse (`BehindCameraDeg`), e `StarFieldTest` lo
+pinna a 177°, −150° e 92°. È quello che aveva rubato il posto a Fomalhaut, che a 29° dal centro
+era in finestra. *Due nomi uno sull'altro*: `finish` tiene le scatole dei nomi scritti e non scrive
+un nome che ne tocchi un altro, nell'ordine che è la priorità (luna, radiante, pianeti, stelle per
+luminosità). *L'ora sopra la base del nome*: la vista che avvolge la `TextClock` non ha una base da
+allineare, quindi la riga allinea in alto e l'orologio porta un'aria sopra calcolata dal font
+(`clockPaddingTop`: la prima base di un `Text` di Glance sta al `top` del font, quella di una
+TextClock senza padding al suo `ascent`, misurati sul font del sistema come fa
+`widgetTextDescentEm`); `WindowClockTest` misura la card impaginata e pretende le due basi entro un
+dp e mezzo. Controllato il resto del disegno: la luna al 68% a 29° a sud-ovest alle 22:26 (la metà
+dell'ora), la sua falce accesa verso il basso a destra dove sta il sole sotto l'orizzonte a
+nord-ovest, la frase senza il numero della luna, le righe con i verdetti, «21:56» uguale a 15:56
+più sei ore.

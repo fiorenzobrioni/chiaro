@@ -91,6 +91,24 @@ class SkySceneTest {
         assertEquals(0f, scene(alt = -7.0, cloud = 0).stars, 0f)
     }
 
+    /** The planets come out before the stars: in the dusk at −4° Venus shows and no star does. */
+    @Test
+    fun `the planets come out before the stars`() {
+        assertEquals(0f, scene(alt = 10.0, cloud = 0).planets, 0f)
+        assertEquals(0f, scene(alt = -1.0, cloud = 0).planets, 0f)
+        val dusk = scene(alt = -4.0, cloud = 0)
+        assertTrue("Venus at −4°: ${dusk.planets}", dusk.planets > 0.1f)
+        assertEquals(0f, dusk.stars, 0f)
+        val night = scene(alt = -10.0, cloud = 0)
+        assertEquals(1f, night.planets, 1e-6f)
+        assertTrue(night.planets >= night.stars)
+        assertEquals(0f, scene(alt = -10.0, cloud = 100).planets, 0f)
+        // A moon dims a planet by a third at most, a star by two thirds.
+        val moon = scene(alt = -30.0, cloud = 0, moonAlt = 40.0, moonIllum = 1.0)
+        assertTrue(moon.planets > 0.65f)
+        assertTrue(moon.planets > moon.stars)
+    }
+
     /** The Milky Way needs more dark than the stars: an open, moonless sky, and the frame to draw it in. */
     @Test
     fun `the Milky Way needs a darker sky than the stars`() {

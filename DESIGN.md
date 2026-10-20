@@ -813,8 +813,10 @@ with the parts of it a gradient could not say.
   disc: −4 and −2 outshine every star, and the eye sees them as discs), a warm white, and
   steady: the shader reads a twinkle phase at the top of its channel as a planet and does not
   twinkle it, because a light that holds still is how a passer-by tells Venus from a star, and
-  the stars' own phases stay under that mark. They come out with the stars, under the same
-  sun: Venus in the bright dusk, where it is most noticed, is the gap this rule leaves. **The
+  the stars' own phases stay under that mark. **They come out before the stars** (20 ott 2026,
+  `uPlanets`): from the sun at −3°, fully at −5° (at −8° the dot was still faint over the dusk, looked at), where the stars wait for −10° and −18°,
+  because Venus is seen in the bright dusk and that is where it is noticed; a moon takes a
+  third of a planet where it takes two thirds of a star. The window names them there too. **The
   Milky Way** (20 ott 2026, `StarField.galacticFrame`, `uMilkyWay`): a band along the galactic
   plane where the plane is for this place and hour, drawn by the shader under the stars from
   two vectors the engine computes once a minute (the north galactic pole and the centre, in

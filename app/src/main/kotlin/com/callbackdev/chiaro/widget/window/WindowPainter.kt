@@ -189,12 +189,13 @@ internal object WindowPainter {
             else -> StarField.facing(sky.southern)
         }
         val halfWidth = halfWidthDeg(w, skyH)
-        val marks = if (night) {
-            StarField.visible(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg) +
-                StarField.planets(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg)
-        } else {
-            emptyList()
-        }
+        // The planets from the sun at −3°, before the stars (20 ott 2026): Venus in the dusk.
+        val planetsOut = sunAltitude < StarField.PLANETS_SUN_DEG
+        val marks = (
+            if (night) StarField.visible(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg) else emptyList()
+        ) + (
+            if (planetsOut) StarField.planets(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg) else emptyList()
+        )
         val table = paletteFor(model.settings.palette).sky
         val gradient = table.gradient(sunAltitude, sky.cloudPct, sky.precipPct, moonIllumination, moonAltitude)
         var scene = skyScene(
@@ -234,13 +235,6 @@ internal object WindowPainter {
                         labels += Label(WindowText.radiantLabel(context, r.jobId), x, y, gapDp = 10f, ring = true)
                     }
                 }
-                for (planet in Planet.values()) {
-                    val altitude = AstronomyEngine.planetAltitude(planet, drawAt, coords)
-                    if (altitude < WindowAltLowDeg) continue
-                    val azimuth = AstronomyEngine.planetAzimuth(planet, drawAt, coords)
-                    val spot = starPlace(StarMark(acrossOf(azimuth, facing), altitude.toFloat(), 1f, 0f, 0f), w, skyH) ?: continue
-                    labels += Label(WindowText.planetLabel(context, planet), spot.first, spot.second)
-                }
                 labels += NamedStars.mapNotNull { star ->
                     val hz = AstronomyEngine.starHorizontal(star.raDeg, star.decDeg, drawAt, coords)
                     if (hz.altitudeDeg < WindowAltLowDeg) return@mapNotNull null
@@ -248,6 +242,15 @@ internal object WindowPainter {
                         ?: return@mapNotNull null
                     Label(context.getString(star.nameRes), spot.first, spot.second, rank = star.mag)
                 }.sortedBy { it.rank }.take(NamedStarsAtMost)
+            }
+        }
+        if (planetsOut && plan.labels && sky.cloudPct < LabelCloudCeilingPct) {
+            for (planet in Planet.values()) {
+                val altitude = AstronomyEngine.planetAltitude(planet, drawAt, coords)
+                if (altitude < WindowAltLowDeg) continue
+                val azimuth = AstronomyEngine.planetAzimuth(planet, drawAt, coords)
+                val spot = starPlace(StarMark(acrossOf(azimuth, facing), altitude.toFloat(), 1f, 0f, 0f), w, skyH) ?: continue
+                labels += Label(WindowText.planetLabel(context, planet), spot.first, spot.second)
             }
         }
         val drawn = if (gpu) runCatching { renderGpu(gradient, scene, w, skyH, density) }.getOrNull() else null
@@ -408,15 +411,23 @@ internal object WindowPainter {
             strokeWidth = 1f * density
             setShadowLayer(2f * density, 0f, 0f, LabelHalo)
         }
+        // The names written so far, as boxes: a name that would sit on another is not written
+        // (from the device, 20 ott 2026: two names on the moon). The order is the priority: the
+        // moon, the radiant, the planets, the stars by brightness.
+        val boxes = ArrayList<RectF>(labels.size)
+        val descent = paint.fontMetrics.descent
         labels.forEach { label ->
             if (label.y > keepOut || label.y < 8f * density) return@forEach
             if (warningBox?.contains(label.x, label.y) == true) return@forEach
-            if (label.ring) canvas.drawCircle(label.x, label.y, RadiantRingDp * density, ring)
             val width = paint.measureText(label.text)
             val gap = label.gapDp * density
             val x = if (label.x + gap + width > w - 8f * density) label.x - gap - width else label.x + gap
             val y = (label.y + 4f * density).coerceAtLeast(14f * density)
+            val box = RectF(x - 2f * density, y - paint.textSize, x + width + 2f * density, y + descent)
+            if (boxes.any { RectF.intersects(it, box) }) return@forEach
+            if (label.ring) canvas.drawCircle(label.x, label.y, RadiantRingDp * density, ring)
             canvas.drawText(label.text, x, y, paint)
+            boxes += box
             written += label
         }
         return written

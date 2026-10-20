@@ -661,7 +661,13 @@ dynamic color:
   thirty minutes on, seven degrees ahead when fresh and seven behind at the end instead of fifteen
   behind (committente, 20 ott 2026); by day and in twilight it is drawn for now, because there the
   sky changes in minutes. No quarter-hour repaint: a wake-up of its own for a card glanced at, and
-  one Doze would defer anyway; the reader who sets the sync to a quarter hour has it.
+  one Doze would defer anyway; the reader who sets the sync to a quarter hour has it. **A place
+  that keeps another time carries a live clock** beside its name (committente, 20 ott 2026: a
+  night sky at three in the afternoon asks what time it is there): the platform's own clock view
+  inside the card, kept by the launcher minute by minute in the place's zone, because a time
+  painted into the picture would be a minute stale and then an hour; by offset and not by zone
+  name, so Paris gets none on a phone in Rome, and none at all for the phone's own place, whose
+  clock is the launcher's.
 - **Sky** (retired from the picker on 13 ott 2026: the window draws its list, from three cells
   and three rows, under the picture; the day's arc did before it): the moments in
   front of the reader and their verdicts, with the day named when it is not today — the widget

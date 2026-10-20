@@ -382,4 +382,22 @@ class SkyShaderPixelTest {
         val noon = skyScene(SkyPalette.Paper, day, 30.0, 180.0, -20.0, 150.0, 0.0, 0.0, false, 0, null, 0, SkyFall.NONE, 0.0, 15.0, 270, galactic = across)
         assertEquals(0f, noon.milkyWay, 0f)
     }
+
+    /** In the dusk a planet is drawn and a star is not: Venus shows at the sun's −4°. */
+    @Test
+    fun `in the dusk the planets show and the stars wait`() {
+        val gradient = SkyPalette.Paper.gradient(-4.0, 0, 0, 0.0, -20.0)
+        val venus = StarMark(0f, 37.5f, 1f, StarField.planetWarmth(com.callbackdev.chiaro.domain.sky.Planet.VENUS), StarField.STEADY_PHASE, scale = 1.4f)
+        val star = StarMark(0f, 37.5f, 1f, 0.3f, 0.5f)
+        val base = scene(gradient, -4.0)
+        assertTrue(base.planets > 0.1f && base.stars == 0f)
+        val withVenus = render(gradient, base.copy(starField = listOf(venus)), canvasW, canvasH, bandTop, bandHeight, "dusk-venus")
+        val withStar = render(gradient, base.copy(starField = listOf(star)), canvasW, canvasH, bandTop, bandHeight, "dusk-star")
+        val plain = render(gradient, base, canvasW, canvasH, bandTop, bandHeight)
+        val x = canvasW / 2
+        val y = canvasH / 2
+        val sky = colorAt(plain, x, y).luminance()
+        assertTrue("Venus over the dusk", colorAt(withVenus, x, y).luminance() > sky + 0.02f)
+        assertEquals("a star waits for the dark", sky, colorAt(withStar, x, y).luminance(), 0.004f)
+    }
 }

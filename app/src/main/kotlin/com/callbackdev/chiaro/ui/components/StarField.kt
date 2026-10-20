@@ -77,6 +77,11 @@ object StarField {
     const val STEADY_PHASE = 1f
     const val STAR_PHASE_CEILING = 0.97f
 
+    /** The sun's altitude under which the planets are computed and drawn (20 ott 2026): before
+     * the stars, because Venus is seen in the bright dusk and that is where it is noticed; the
+     * shader opens them from here and fully at −5° (`uPlanets`), the stars from −10° to −18°. */
+    const val PLANETS_SUN_DEG = -3.0
+
     /** The direction a reader faces, degrees from north: the equator, as the bodies' frame. */
     fun facing(southern: Boolean): Double = if (southern) 0.0 else 180.0
 
@@ -118,8 +123,8 @@ object StarField {
      * passer-by notices, drawn among the stars: as bright as the brightest star the mapping
      * allows and larger than it (Venus at −4 and Jupiter at −2 outshine Sirius by far, and the
      * eye sees them as discs where a star is a point), a warm white, and steady: no twinkle,
-     * [STEADY_PHASE]. They come out with the stars, under the same sun: Venus in the bright
-     * dusk, where it is most noticed, is the gap this rule leaves, and it is written here.
+     * [STEADY_PHASE]. They come out BEFORE the stars, from the sun at [PLANETS_SUN_DEG]
+     * (20 ott 2026): Venus is seen in the bright dusk, and that is where it is noticed.
      */
     fun planets(at: Instant, coords: Coordinates, southern: Boolean): List<StarMark> =
         planets(at, coords, facing(southern), WINDOW_ACROSS_DEG)
