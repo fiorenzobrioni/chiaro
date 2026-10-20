@@ -19,15 +19,16 @@ class BrightStarsTest {
     private val milan = Coordinates(45.4642, 9.19)
 
     @Test
-    fun `the catalogue is the bright stars to the limit, brightest first, Sirius at the head`() {
+    fun `the catalogue is the stars to the sixth magnitude, brightest first, Sirius at the head`() {
         val n = BrightStars.count
-        assertTrue("$n stars", n in 850..950)
+        assertTrue("$n stars", n in 4900..5300)
         assertEquals(n, BrightStars.raDeg.size)
         assertEquals(n, BrightStars.decDeg.size)
         assertEquals(n, BrightStars.bv.size)
         assertTrue(BrightStars.mag.all { it <= BrightStars.LIMIT_MAG })
         for (i in 1 until n) assertTrue("sorted at $i", BrightStars.mag[i] >= BrightStars.mag[i - 1])
-        // Sirius: 06h 45m 08.9s, −16° 42′ 58″, −1.46.
+        // Sirius: 06h 45m 08.9s, −16° 42′ 58″, −1.46; the binary's 16-bit fields hold a
+        // hundredth of a degree.
         assertEquals(101.287, BrightStars.raDeg[0].toDouble(), 0.01)
         assertEquals(-16.716, BrightStars.decDeg[0].toDouble(), 0.01)
         assertEquals(-1.46, BrightStars.mag[0].toDouble(), 0.01)

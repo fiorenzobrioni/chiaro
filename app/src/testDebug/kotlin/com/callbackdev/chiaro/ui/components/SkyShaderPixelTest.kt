@@ -271,7 +271,8 @@ class SkyShaderPixelTest {
             // The sky that is there: Milan on a January night at 22:00, Orion in the south, and
             // a July night at 01:00, with the real moon's limb; clear, so every star shows.
             realNight("stars-milan-january", "2026-01-15T21:00:00Z"),
-            realNight("stars-milan-july", "2026-07-15T23:00:00Z")
+            realNight("stars-milan-july", "2026-07-15T23:00:00Z"),
+            realNight("stars-milan-october", "2026-10-19T19:00:00Z")
         ).forEach { (name, gradient, scene) -> render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, name) }
     }
 
@@ -281,7 +282,7 @@ class SkyShaderPixelTest {
     fun `a star is drawn where the field puts it, and only at night`() {
         val field = listOf(
             StarMark(acrossDeg = 0f, altitudeDeg = 30f, brightness = 1f, warmth = 0.1f, phase = 0.3f),
-            StarMark(acrossDeg = -8f, altitudeDeg = 40f, brightness = 0.2f, warmth = 0.9f, phase = 0.7f)
+            StarMark(acrossDeg = -8f, altitudeDeg = 40f, brightness = 0.09f, warmth = 0.9f, phase = 0.7f)
         )
         val night = SkyPalette.Paper.gradient(-30.0)
         val scene = scene(night, -30.0).copy(starField = field)
@@ -292,7 +293,7 @@ class SkyShaderPixelTest {
         val bright = colorAt(bitmap, sx.toInt(), sy.toInt()).luminance()
         val faint = colorAt(bitmap, fx.toInt(), fy.toInt()).luminance()
         assertTrue("Sirius-bright star $bright over the sky $sky", bright > sky + 0.3f)
-        assertTrue("a faint star $faint, still a star over $sky", faint > sky + 0.02f && faint < bright)
+        assertTrue("a speck of the dust $faint, still there over $sky", faint > sky + 0.005f && faint < bright)
         // By day the same field draws nothing: uStars is zero.
         val day = SkyPalette.Paper.gradient(50.0)
         val dayBitmap = render(day, scene(day, 50.0).copy(starField = field), canvasW, canvasH, bandTop, bandHeight)

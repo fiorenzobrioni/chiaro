@@ -778,21 +778,35 @@ with the parts of it a gradient could not say.
   less under a bright moon, twinkling slowly, thinning toward the horizon. Never by day, never
   under a closed sky. **They are the stars that are there** (step 6 of the sky review, 19 ott
   2026, `BrightStars`, `StarField`, `StarMap`): every star of the Yale Bright Star Catalogue
-  brighter than magnitude 4.5, 904 of them, generated into `:core:domain` by
-  `tools/gen_bright_stars.py` (never edited by hand), placed by the engine for this instant and
-  place like the moon is, and drawn where the deck's camera puts them (§3.9's plane: 45° at the
-  top row, 15° at the bottom, the azimuth through `tan` as a pinhole does, facing the equator
-  as the bodies do), so a star and a cloud sit in one sky. Each is as bright as its magnitude
-  (a bent span from the limit to Sirius, with a floor so a star at the limit is a star), as
-  warm as its B-V colour (blue-white to orange, a tint and never a saturated colour), and
-  twinkles on a phase of its own. The engine places them once a minute; the shader does not
-  loop over them, it reads a texture `StarMap` draws from the list (brightness, phase and
-  warmth in the colour channels, the disc in the alpha), one read per pixel, nothing by day.
-  Until then the stars were a hash, one in a few cells of 13dp, all alike. On a January
-  evening in Milan the window holds Orion, and a reader may look up and check: the one thing
-  on the canvas that is the sky itself and not a reading of it. Precession since J2000 moves
-  a star by a third of a degree, under what a dp holds, and is not applied; light pollution is
-  not modelled, because no data says how much there is.
+  brighter than magnitude 6.0, the eye's limit under a dark sky, 5 080 of them, a binary
+  resource of `:core:domain` written by `tools/gen_bright_stars.py` (never edited by hand; at
+  that count a Kotlin array of literals is over what a static initialiser may hold), placed
+  by the engine for this instant and place like the moon is, and drawn by **the stars' own
+  camera**: facing the equator as the bodies do, 65° of elevation at the top row down to 10°
+  at the bottom, the azimuth through `tan` as a pinhole does, about ±29° on a phone. Each is
+  as bright as its magnitude (a bent span from the limit to Sirius: a tenth of Sirius at the
+  limit, a fifth at 4.5, a third at the third magnitude; the stars between 4.5 and 6 are the
+  dust a dark sky has, specks and not discs), as warm as its B-V colour (blue-white to
+  orange, a tint and never a saturated colour), and twinkles on a phase of its own. The engine
+  places them once a minute; the shader does not loop over them, it reads a texture `StarMap`
+  draws from the list (brightness, phase and warmth in the colour channels, the disc in the
+  alpha), one read per pixel, nothing by day. Until then the stars were a hash, one in a few
+  cells of 13dp, all alike. On a January evening in Milan the window holds Orion, and a reader
+  may look up and check: the one thing on the canvas that is the sky itself and not a reading
+  of it. Precession since J2000 moves a star by a third of a degree, under what a dp holds,
+  and is not applied; light pollution is not modelled, because no data says how much there is.
+  **The first camera was the deck's, 34° × 30°, and the catalogue stopped at 4.5** (20 ott
+  2026, the committente from the device: «two or three stars»); measured for Milan, an
+  October evening, Capricorn and Aquarius in the south under a gibbous moon, held 15 stars in
+  that window and 3 under the third magnitude, halved again by the moon's rule; the wider
+  camera holds 45 to 4.5 and 242 to 6.0 the same evening, 91 and 441 on a January one. Random
+  stars were refused, alone or mixed in: a star a reader can disprove by looking up is the
+  one thing this canvas must not draw. **Three frames, on purpose**: the deck's plane (45° to
+  15°), the stars' camera (65° to 10°) and the bodies' band (§8.1c, 0° to 60° in 72dp and
+  300° of azimuth in the width). Nobody compares a cloud with a star, and the band is a
+  layout constraint; so the stars are the window south and the moon is on the horizon's band,
+  and their distance on the screen is not the sky's. Whoever touches the shader next: that is
+  not a bug to fix, it is written here so it is not fixed by mistake.
 - **What falls**, only when the hour's **state** is wet (the state engine's, not the
   provider's code): rain as a veil and long slanted streaks, snow as flakes that fall and
   sway, at a strength from a third to full by the quarter hour just measured (4 mm an hour
@@ -1554,7 +1568,10 @@ from the same band (`SkyBand`, reported by the column) and the same rules (`SkyB
   on the canvas it is approximate, because the bodies' band is a compressed azimuth-altitude
   frame and not a conformal one, so the angle is the sky's and the screen's only nearly; and
   at 22dp it reads on crescents and gibbous moons, not on a full one. The tonight card's moon
-  (§8.7) stays upright: it stands for a whole night, not for an instant.
+  (§8.7) stays upright: it stands for a whole night, not for an instant. And the moon's
+  distance from a star on the screen is not the sky's (20 ott 2026): the stars are drawn by
+  their own camera (§3.9, 65° to 10° of elevation over the whole canvas) and the moon by this
+  band (0° to 60° in 72dp), two frames on purpose, not a mismatch to correct.
 
 The **hero** itself was re-set the same day: the whole degrees and the degree sign at the
 hero size (the tenths, first set at 55% on the same baseline, went on 24 set 2026 with

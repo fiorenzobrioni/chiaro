@@ -14838,7 +14838,11 @@ vetro).
   non conforme (l'angolo vale nel cielo, sullo schermo «quasi»); e a 11 dp si legge sulle falci e
   sulle gibbose, non alla luna piena. Da fare sul canvas e sulla luna della scheda «Stanotte»
   (`moonLitPath`, disegnata «come la vedi»), lasciando dritte le icone della famiglia, che sono
-  simboli.
+  simboli. **Seconda parte** (committente, 20 ott 2026, dal telefono: «due o tre stelle»): la
+  camera delle stelle è sua e più larga (65°–10°, ±29°), il catalogo arriva alla sesta magnitudine
+  come polvere, e il README, la guida e DESIGN dicono che la luna sta sulla fascia dell'orizzonte e
+  le stelle nella finestra a sud, quindi la loro distanza sullo schermo non è quella del cielo.
+  Stelle casuali rifiutate. Vedi «Passo 6, seconda parte» in fondo.
 - [x] **7. Lo scrim**, deciso sulla misura (vedi sotto); era da decidere con il committente: misurare il contratto di §3.6 sul rettangolo
   del testo e non su tutta la larghezza (una scrim che sfuma anche in orizzontale), oppure un'ombra
   morbida sul testo, così la metà bassa del cielo torna chiara. Nessuna delle due è gratis: la prima
@@ -15248,3 +15252,100 @@ luna accesa dal basso ha il lembo chiaro in fondo; più due notti vere di Milano
 `SkySceneTest` porta l'angolo del lembo; `SkyShaderCompileTest` lega la texture. Immagini del README
 lanciate e identiche (la Milano registrata è a mezzogiorno). Suite completa (753 app debug con i 14
 screenshot saltati, 703 release, 358 domain, 275 data, 24 sync) e lint con 0 errori.
+
+### Passo 6, seconda parte: la polvere e la finestra larga (committente, 20 ott 2026)
+
+**Da dove nasce.** Dal telefono, la prima notte serena dopo il passo 6: «il cielo di notte guardando
+a sud è quasi vuoto, due o tre stelle», a Milano e altrove. Misurato sul catalogo prima di rispondere
+(le formule del motore, senza rifrazione; al bordo della finestra il conto può cambiare di qualche
+unità), Milano, 19 ottobre 2026 alle 21 ora legale e, per confronto, la sera del 15 gennaio alle 22
+con Orione a sud:
+
+| finestra | limite | stelle | sotto la terza magnitudine |
+|---|---|---|---|
+| quella del banco, 34° × 30° (passo 6), ottobre | 4,5 | 15 | 3 (Capricorno e Acquario) |
+| quella del banco, ottobre | 6,0 | 88 | 3 |
+| la camera larga, 55° × 59°, ottobre | 4,5 | 45 | 5 |
+| la camera larga, ottobre | 6,0 | 242 | 5 |
+| quella del banco, gennaio | 4,5 | 30 | 10 |
+| la camera larga, gennaio | 4,5 / 6,0 | 91 / 441 | 18 |
+
+E la luna gibbosa crescente, nove giorni, stava proprio a sud, che per la regola della scena (§3.9)
+dimezza le stelle: le quindici diventavano sette, e le deboli sparivano sotto la soglia. Il cielo non
+mentiva, era davvero quello: l'autunno a sud è il tratto più vuoto dell'eclittica, e una finestra di
+34° sotto una luna alta ha poco da mostrare. Ma un cielo vuoto non è un cielo premium.
+
+**La scelta: due leve vere, e nessuna stella inventata.** Proposto al committente: lasciare com'è,
+riempire con stelle casuali, solo stelle casuali, o le due leve che seguono. *Le stelle casuali sono
+state rifiutate*, da sole o mescolate alle vere: una stella che il lettore può smentire alzando gli
+occhi è l'unica cosa che questo canvas non deve disegnare, ed è la regola del README («nessun dato
+inventato») applicata al cielo. Il committente: «Procedi con tutte e due le leve».
+
+**Cosa è cambiato.**
+
+1. *La camera delle stelle è sua, e più larga* (`StarCameraTopDeg = 65`, `StarCameraBottomDeg =
+   10` in `StarMap.kt`, `starPlace`): 55° di altezza sul canvas invece dei 30° del banco, e con la
+   stessa focale a foro stenopeico ±29,3° di azimut sul canvas base (384 × 328 dp) invece di ±17°.
+   Il banco tiene la sua camera di 45°–15° (`SkyCameraTopDeg`, `SkyCameraBottomDeg` in
+   `SkyShader.kt`): la tabella delle soglie misurata al passo 4 vale per quella, e una nuvola non si
+   confronta con una stella. La finestra di `StarField.visible` segue con il suo margine: ±36° di
+   azimut, 5°–70° di altezza.
+2. *Il catalogo arriva alla magnitudine 6,0*, il limite dell'occhio sotto un cielo buio: 5 080
+   stelle. A quel numero un array Kotlin di literal supera i 64 KB di un inizializzatore statico
+   della JVM, quindi il catalogo è una risorsa binaria di `:core:domain`
+   (`src/main/resources/com/callbackdev/chiaro/domain/sky/bright_stars.bin`, 40 648 byte): «CHST»,
+   versione uint16, conteggio uint16, poi per stella quattro campi a 16 bit big-endian (ascensione
+   retta uint16 su 0–360°, declinazione int16 su ±90°, magnitudine × 1000, B−V × 1000). Lo scrive
+   `tools/gen_bright_stars.py` (`LIMIT_MAG = 6.0`), lo legge `BrightStars.kt`, ora un caricatore
+   pigro scritto a mano che pretende la magia e la versione 1. Lo strumento resta il disegno: si
+   cambia lui e si rilancia, mai il binario.
+3. *La luminosità distingue la polvere dai dischi* (`StarField.brightness`, `StarMap.drawStars`):
+   lo span di magnitudine va dal limite a Sirio piegato a 1,5 con un pavimento di 0,08
+   (`0,08 + 0,92·t^1,5`): un decimo di Sirio al limite, un quinto alla 4,5, un terzo alla terza
+   magnitudine. Sotto 0,2 (`DustBrightness`) la stella è un granello pieno al 70% del raggio e
+   alfa 0xB0, non un gradiente: le stelle fra la 4,5 e la 6 sono la polvere che un cielo buio ha,
+   e disegnate a disco sarebbero state una nebbia. Il raggio resta 0,8 + 2,2·b dp.
+4. *Dirlo al lettore e a chi tocca lo shader*: una frase nel README e una nel paragrafo del cielo
+   della guida (`guide_today_p1`, IT e EN): di notte le stelle sono quelle vere, il cielo davanti a
+   chi guarda a sud (a nord sotto l'equatore), disegnate dove stanno; il sole e la luna, disegnati
+   come sono, tengono la loro fascia vicino alla linea dell'orizzonte, quindi la distanza fra la luna
+   e una stella sullo schermo non è quella del cielo. DESIGN §3.9 e §8.1c dicono la stessa cosa a
+   chi tocca lo shader, con il perché: tre cornici dichiarate, il piano del banco (45°–15°), la
+   camera delle stelle (65°–10°) e la fascia dei corpi (0°–60° in 72 dp); non è un disallineamento
+   da correggere, ed è scritto perché nessuno lo «corregga» per sbaglio.
+
+**Decisioni e deviazioni.** *Due cornici per le stelle e il banco, e non una*: al passo 6 la camera
+unica era la scelta («stella e nuvola in un cielo solo»); allargare anche il banco a 65°–10° avrebbe
+rifatto la tabella delle soglie del passo 4 e schiacciato i cumuli, e nessuno confronta la posizione
+di una nuvola con quella di una stella. La nuvola copre la stella comunque: la texture si legge sotto
+il banco. *65° in cima e non lo zenit*: sul canvas base il banco dava 10,9 dp per grado d'altezza e
+Orione da Betelgeuse a Rigel (18,6°) non ci stava (203 dp su 328, e ±17° di azimut); a 90°–10° la
+scala scende a 4,1 dp per grado, Orione sta in 76 dp e la cintura (2,7°) in 11 dp, una costellazione
+da cartolina; a 65°–10° sono 6 dp per grado, Orione in 111 dp, la cintura in 16 dp, tre stelle
+distinte, e la finestra tiene tre volte le stelle di prima. *Magnitudine 6,0 e non 5,0*: a 5,0 la
+sera d'ottobre ha 79 stelle e il campo è un cielo di periferia; a 6,0 ne ha 242 ed è il cielo dei
+monti, che è quello che un cielo «premium» promette; la polvere sotto la 4,5 è quello che fa la
+differenza fra un disegno e un cielo. *Niente Via Lattea*: idea registrata (una banda debole lungo il
+piano galattico, ferma rispetto alle stelle), non decisa; non costa quasi nulla nella texture, ma è una
+cosa in più da far vera.
+
+**Da verificare sul telefono.** La prima notte serena: la ricchezza del campo (a sud in ottobre
+Capricorno e Acquario sotto la luna, la Fomalhaut bassa a sinistra; Orione in inverno), la polvere che
+non diventi nebbia sullo schermo del telefono, le stelle che passano dietro le nuvole, la falce della
+sera inclinata. Il costo non cambia: la texture si ridisegna una volta al minuto, con 250 stelle
+invece di 25, e lo shader fa la stessa lettura per pixel.
+
+**Come è stato verificato.** `BrightStarsTest`: il binario si legge, 4 900–5 300 stelle ordinate
+dalla più luminosa, Sirio in testa coi suoi numeri, Polare e Vega dentro, la posizione della Polare e
+il transito di Sirio come prima. `StarFieldTest`: la finestra di gennaio a Milano tiene fra 200 e 900
+stelle, mai la Polare (sta a 45° ma a nord); la luminosità vale 0,09 al limite, 0,2 alla 4,5 e il
+pavimento 0,08; la camera mette al centro la stella a 37,5°, in cima quella a 65°, dentro una a ±28°
+di azimut e fuori una a 31°, fuori una a 70° di altezza. `SkyShaderPixelTest`: la stella al limite
+accanto a Sirio è ora polvere (0,09) e si legge ancora sopra il cielo (`faint > sky + 0.005`); le tre
+notti vere di Milano (gennaio, luglio e la nuova `stars-milan-october` del 19 ottobre alle 19 UTC,
+con la gibbosa a sud) rese con `CHIARO_RENDER_DIR` e guardate: ottobre ha la luna sulla fascia e la
+polvere con le poche luminose del Capricorno, gennaio è denso con Orione, luglio è ricco.
+`SkyShaderCompileTest`, `SkySceneTest` come prima. Immagini del README rilanciate: `guide.png` cambia
+se il paragrafo è in vista, le altre sono identiche (la Milano registrata è a mezzogiorno). Suite
+completa (753 app debug con i 14 screenshot saltati, 703 release, 358 domain, 275 data, 24 sync) e
+lint con 0 errori.

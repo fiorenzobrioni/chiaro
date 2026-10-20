@@ -262,9 +262,10 @@ fun skyScene(
     )
 }
 
-/** The canvas' camera (§3.9, step 4): the elevation of its top row and of its bottom row,
+/** The deck's camera (§3.9, step 4): the elevation of its top row and of its bottom row,
  * degrees. The shader writes them as radians, 0.7854 and 0.2618, and `SkyDeckTest` pins the
- * line; [starPlace] uses these, so a star and a cloud are drawn in one frame. */
+ * line. The stars have a wider camera of their own ([StarCameraTopDeg], 20 ott 2026), and the
+ * bodies their band: three frames on purpose, see §3.9. */
 internal const val SkyCameraTopDeg = 45f
 internal const val SkyCameraBottomDeg = 15f
 
