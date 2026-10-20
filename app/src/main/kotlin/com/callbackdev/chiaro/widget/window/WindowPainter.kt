@@ -189,12 +189,13 @@ internal object WindowPainter {
             else -> StarField.facing(sky.southern)
         }
         val halfWidth = halfWidthDeg(w, skyH)
-        val marks = if (night) {
-            StarField.visible(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg) +
-                StarField.planets(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg)
-        } else {
-            emptyList()
-        }
+        // The planets from the sun at −3°, before the stars (20 ott 2026): Venus in the dusk.
+        val planetsOut = sunAltitude < StarField.PLANETS_SUN_DEG
+        val marks = (
+            if (night) StarField.visible(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg) else emptyList()
+        ) + (
+            if (planetsOut) StarField.planets(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg) else emptyList()
+        )
         val table = paletteFor(model.settings.palette).sky
         val gradient = table.gradient(sunAltitude, sky.cloudPct, sky.precipPct, moonIllumination, moonAltitude)
         var scene = skyScene(
@@ -234,13 +235,6 @@ internal object WindowPainter {
                         labels += Label(WindowText.radiantLabel(context, r.jobId), x, y, gapDp = 10f, ring = true)
                     }
                 }
-                for (planet in Planet.values()) {
-                    val altitude = AstronomyEngine.planetAltitude(planet, drawAt, coords)
-                    if (altitude < WindowAltLowDeg) continue
-                    val azimuth = AstronomyEngine.planetAzimuth(planet, drawAt, coords)
-                    val spot = starPlace(StarMark(acrossOf(azimuth, facing), altitude.toFloat(), 1f, 0f, 0f), w, skyH) ?: continue
-                    labels += Label(WindowText.planetLabel(context, planet), spot.first, spot.second)
-                }
                 labels += NamedStars.mapNotNull { star ->
                     val hz = AstronomyEngine.starHorizontal(star.raDeg, star.decDeg, drawAt, coords)
                     if (hz.altitudeDeg < WindowAltLowDeg) return@mapNotNull null
@@ -248,6 +242,15 @@ internal object WindowPainter {
                         ?: return@mapNotNull null
                     Label(context.getString(star.nameRes), spot.first, spot.second, rank = star.mag)
                 }.sortedBy { it.rank }.take(NamedStarsAtMost)
+            }
+        }
+        if (planetsOut && plan.labels && sky.cloudPct < LabelCloudCeilingPct) {
+            for (planet in Planet.values()) {
+                val altitude = AstronomyEngine.planetAltitude(planet, drawAt, coords)
+                if (altitude < WindowAltLowDeg) continue
+                val azimuth = AstronomyEngine.planetAzimuth(planet, drawAt, coords)
+                val spot = starPlace(StarMark(acrossOf(azimuth, facing), altitude.toFloat(), 1f, 0f, 0f), w, skyH) ?: continue
+                labels += Label(WindowText.planetLabel(context, planet), spot.first, spot.second)
             }
         }
         val drawn = if (gpu) runCatching { renderGpu(gradient, scene, w, skyH, density) }.getOrNull() else null

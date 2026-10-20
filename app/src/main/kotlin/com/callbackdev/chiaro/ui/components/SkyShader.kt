@@ -76,6 +76,9 @@ data class SkyScene(
     val moon: MoonMark? = null,
     val lightAmount: Float = 1f,
     val starField: List<StarMark> = emptyList(),
+    /** How much the planets show, 0..1: open from the sun at −3° and fully at −5°, before the
+     * stars (20 ott 2026), under the open sky; a moon dims them little. */
+    val planets: Float = 0f,
     /** How much of the Milky Way shows, 0..1: the dark, the open sky and the moon's absence, all three. */
     val milkyWay: Float = 0f,
     /** The galactic frame the shader draws the Milky Way in; null by day, and the band is off. */
@@ -240,6 +243,10 @@ fun skyScene(
     val glow = lightAmount * (1f - 0.6f * opacity) * (if (useSun) 1f else 0.6f)
     val darkness = smoothstep(-10f, -18f, sunAltitudeDeg.toFloat())
     val stars = darkness * (1f - cover) * (1f - cover) * (1f - 0.65f * moonLight)
+    // The planets before the stars (20 ott 2026): Venus at −4 shows against a dusk the stars
+    // cannot, and a moon takes a third of it where it takes two thirds of a star.
+    val planets = smoothstep(StarField.PLANETS_SUN_DEG.toFloat(), -5f, sunAltitudeDeg.toFloat()) *
+        (1f - cover) * (1f - cover) * (1f - 0.3f * moonLight)
     // The Milky Way wants more dark than a star does (20 ott 2026): the cover cubed, because a
     // veil that leaves Vega takes the band, and the moon squared, because a half moon takes it
     // twice over; what a city's light takes is not modelled, as it is not for the stars.
@@ -271,6 +278,7 @@ fun skyScene(
         moon = moon,
         lightAmount = lightAmount,
         starField = starMarks,
+        planets = planets,
         milkyWay = milkyWay,
         galactic = galactic
     )
@@ -440,6 +448,7 @@ uniform half4 uShade;
 uniform float2 uLight;
 uniform float uGlow;
 uniform float uStars;
+uniform float uPlanets;
 uniform float uRain;
 uniform float uSnow;
 uniform float uDrift;
@@ -596,19 +605,22 @@ half4 main(float2 fc) {
     // draws from the catalogue for this instant and place, one read per pixel; its channels
     // are the star's brightness, its twinkle phase and its warmth, premultiplied by the disc's
     // alpha. Until then the stars were a hash: one in a few cells of 13 dp, all alike.
-    if (uStars > 0.003) {
+    if (uStars > 0.003 || uPlanets > 0.003) {
         half4 st = uStarMap.eval(fc);
         float cover = float(st.a);
         if (cover > 0.004) {
             float3 d = float3(st.rgb) / cover;
             // A phase at the top of the channel is a planet (StarField.STEADY_PHASE, 20 ott
             // 2026): a steady light, which is how the eye tells Venus from a star.
-            float twinkle = d.y > 0.985 ? 1.0 : 0.78 + 0.22 * sin(uTime * (0.8 + d.y * 1.7) + d.y * 40.0);
+            float planet = step(0.985, d.y);
+            float twinkle = planet > 0.5 ? 1.0 : 0.78 + 0.22 * sin(uTime * (0.8 + d.y * 1.7) + d.y * 40.0);
+            // A planet shows by its own amount: open in the dusk, where the stars are not yet.
+            float amount = mix(uStars, uPlanets, planet);
             // Thinner toward the horizon: the air a low star shines through.
             float fade = 1.0 - 0.5 * smoothstep(0.55, 1.0, uv.y);
             // Blue-white to orange, in linear light, by the star's own colour.
             half3 tint = mix(half3(0.72, 0.82, 1.0), half3(1.0, 0.86, 0.62), half(d.z));
-            col = mix(col, tint, half(cover * d.x * twinkle * uStars * fade));
+            col = mix(col, tint, half(cover * d.x * twinkle * amount * fade));
         }
     }
 
@@ -919,6 +931,7 @@ internal fun RuntimeShader.bindSky(
     setFloatUniform("uLight", scene.light.x, scene.light.y)
     setFloatUniform("uGlow", scene.glow)
     setFloatUniform("uStars", scene.stars)
+    setFloatUniform("uPlanets", scene.planets)
     setFloatUniform("uRain", scene.rain)
     setFloatUniform("uSnow", scene.snow)
     setFloatUniform("uDrift", scene.drift)

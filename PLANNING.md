@@ -15691,3 +15691,15 @@ l'ha mai, perché il suo orologio è quello del launcher. Verificato in `WindowC
 composta come la riceve il launcher e applicata a una vista: Milano su un telefono a Roma senza
 orologio, Taipei con una `TextClock` nel fuso Asia/Taipei; l'offset e non il nome). Da provare sul
 launcher: una vista classica dentro una card Glance.
+
+**Venere nel crepuscolo** (committente, 20 ott 2026: «se lo ritieni utile e un'aggiunta grafica
+premium»). Sì: la stella della sera sopra il rosso del tramonto è la vista classica, e il limite
+era scritto in DESIGN. I pianeti escono dal sole a −3° (`StarField.PLANETS_SUN_DEG`), pieni a −5° (a −8° il punto era ancora debole sul crepuscolo, visto sulla resa),
+con un fattore loro nella scena (`SkyScene.planets`, `uPlanets`: copertura al quadrato, la luna ne
+toglie un terzo dove a una stella ne toglie due); lo shader riconosce il pianeta dalla fase ferma
+e lo accende con la sua quantità, mentre le stelle aspettano −10°. Lo snapshot dell'eroe calcola i
+pianeti da −3° e le stelle da −6°; la finestra lo stesso, con le etichette «Venere»/«Giove» anche
+nel crepuscolo. Verificato in `SkySceneTest` (nulla di giorno e a −1°, a −4° i pianeti sì e le
+stelle no, pieni a −10°, nulla sotto il cielo coperto, la luna piena ne lascia più di due terzi) e
+`SkyShaderPixelTest` (a −4° Venere al centro è più chiara del cielo di oltre 0,02 di luminanza, una
+stella nello stesso punto non si distingue dal cielo). DESIGN §3.9 chiude il limite.

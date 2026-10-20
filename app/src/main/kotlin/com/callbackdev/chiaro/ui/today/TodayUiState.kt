@@ -294,13 +294,21 @@ object TodayStateBuilder {
                 ),
                 moonElongationDeg = moon.elongation,
                 moonLimbAngleDeg = AstronomyEngine.moonBrightLimbAngle(now, coords),
-                // The stars that are there, and Venus and Jupiter among them (20 ott 2026).
-                stars = if (sunAltitude < -6.0) {
-                    com.callbackdev.chiaro.ui.components.StarField.visible(now, coords, coords.lat < 0.0) +
+                // The stars that are there, and Venus and Jupiter among them (20 ott 2026); the
+                // planets from the sun at −3°, before the stars, because Venus is seen in the dusk.
+                stars = (
+                    if (sunAltitude < -6.0) {
+                        com.callbackdev.chiaro.ui.components.StarField.visible(now, coords, coords.lat < 0.0)
+                    } else {
+                        emptyList()
+                    }
+                ) + (
+                    if (sunAltitude < com.callbackdev.chiaro.ui.components.StarField.PLANETS_SUN_DEG) {
                         com.callbackdev.chiaro.ui.components.StarField.planets(now, coords, coords.lat < 0.0)
-                } else {
-                    emptyList()
-                },
+                    } else {
+                        emptyList()
+                    }
+                ),
                 galactic = if (sunAltitude < -6.0) {
                     com.callbackdev.chiaro.ui.components.StarField.galacticFrame(
                         now, coords, com.callbackdev.chiaro.ui.components.StarField.facing(coords.lat < 0.0)
