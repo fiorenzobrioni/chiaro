@@ -44,16 +44,27 @@ internal class StarMap {
 }
 
 /**
- * Where a star lands on the canvas, in px, or null off it: the deck's camera (§3.9), the rows
- * elevations from [SkyCameraTopDeg] down to [SkyCameraBottomDeg] and the focal length that
- * fits them in the height, the azimuth offset through `tan` as a pinhole does. The same frame
- * the clouds are drawn in, so a star and a cloud sit in one sky.
+ * The stars' camera (§3.9): the elevation of the canvas' top row and of its bottom row,
+ * degrees. Wider than the deck's 45° to 15° (20 ott 2026): the deck's window held 15 stars on
+ * an October evening in Milan, and a sky is not a keyhole. Nobody compares a cloud with a
+ * star, so the two cameras may differ; the band the sun and the moon stand in (§8.1c) is a
+ * third frame again, compressed, and a star's distance from the moon on the screen is not
+ * the sky's. Do not «fix» one onto the other.
+ */
+internal const val StarCameraTopDeg = 65f
+internal const val StarCameraBottomDeg = 10f
+
+/**
+ * Where a star lands on the canvas, in px, or null off it: the stars' camera, the rows
+ * elevations from [StarCameraTopDeg] down to [StarCameraBottomDeg] and the focal length that
+ * fits them in the height, the azimuth offset through `tan` as a pinhole does, about ±29° on
+ * a phone. Facing the equator, like the deck and the bodies.
  */
 internal fun starPlace(star: StarMark, widthPx: Int, heightPx: Int): Pair<Float, Float>? {
-    val span = SkyCameraTopDeg - SkyCameraBottomDeg
+    val span = StarCameraTopDeg - StarCameraBottomDeg
     val focal = heightPx / Math.toRadians(span.toDouble())
     val x = widthPx / 2.0 + tan(Math.toRadians(star.acrossDeg.toDouble())) * focal
-    val y = heightPx * ((SkyCameraTopDeg - star.altitudeDeg) / span)
+    val y = heightPx * ((StarCameraTopDeg - star.altitudeDeg) / span)
     if (x < -8 || x > widthPx + 8 || y < -8 || y > heightPx + 8) return null
     return x.toFloat() to y
 }
@@ -62,21 +73,33 @@ internal fun starPlace(star: StarMark, widthPx: Int, heightPx: Int): Pair<Float,
 internal fun starRadiusDp(brightness: Float): Float = 0.8f + 2.2f * brightness
 
 internal fun drawStars(canvas: Canvas, stars: List<StarMark>, widthPx: Int, heightPx: Int, density: Float) {
-    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    val soft = Paint(Paint.ANTI_ALIAS_FLAG)
+    val speck = Paint(Paint.ANTI_ALIAS_FLAG)
     stars.forEach { star ->
         val (x, y) = starPlace(star, widthPx, heightPx) ?: return@forEach
         val r = starRadiusDp(star.brightness) * density
+        // The three channels alone: `Color.rgb` sets the alpha to 0xFF, and an `or` over it
+        // left every stop opaque (found 20 ott 2026); the alpha is the disc and is set below.
         val data = Color.rgb(
             (star.brightness * 255f).roundToInt().coerceIn(0, 255),
             (star.phase * 255f).roundToInt().coerceIn(0, 255),
             (star.warmth * 255f).roundToInt().coerceIn(0, 255)
-        )
-        paint.shader = RadialGradient(
-            x, y, r,
-            intArrayOf(data or (0xFF shl 24), data or (0xA0 shl 24), data and 0x00FFFFFF),
-            floatArrayOf(0f, 0.45f, 1f),
-            Shader.TileMode.CLAMP
-        )
-        canvas.drawCircle(x, y, r, paint)
+        ) and 0x00FFFFFF
+        if (star.brightness < DustBrightness) {
+            // The dust: a plain speck, so a few hundred of them a minute cost nothing.
+            speck.color = data or (0xB0 shl 24)
+            canvas.drawCircle(x, y, r * 0.7f, speck)
+        } else {
+            soft.shader = RadialGradient(
+                x, y, r,
+                intArrayOf(data or (0xFF shl 24), data or (0xA0 shl 24), data),
+                floatArrayOf(0f, 0.45f, 1f),
+                Shader.TileMode.CLAMP
+            )
+            canvas.drawCircle(x, y, r, soft)
+        }
     }
 }
+
+/** Under this brightness a star is one of the dust and drawn as a speck, not a soft disc. */
+private const val DustBrightness = 0.2f

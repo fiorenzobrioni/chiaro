@@ -24,7 +24,7 @@ class StarFieldTest {
     fun `the window holds the stars in front of a reader facing the equator, within the margin`() {
         val at = Instant.parse("2026-01-15T21:00:00Z")
         val stars = StarField.visible(at, milan, southern = false)
-        assertTrue("some stars on a January evening: ${stars.size}", stars.size in 8..120)
+        assertTrue("some stars on a January evening: ${stars.size}", stars.size in 200..900)
         stars.forEach {
             assertTrue(abs(it.acrossDeg) <= StarField.WINDOW_ACROSS_DEG)
             assertTrue(it.altitudeDeg in StarField.WINDOW_ALT_LOW_DEG..StarField.WINDOW_ALT_HIGH_DEG)
@@ -38,7 +38,7 @@ class StarFieldTest {
             assertTrue("a mark with no star under it", found)
         }
         // Polaris, due north, is behind the reader and never in it.
-        assertTrue(stars.none { it.altitudeDeg > 44f && abs(it.acrossDeg) > 29f })
+        assertTrue(stars.none { it.altitudeDeg > 44f && it.altitudeDeg < 47f && abs(it.acrossDeg) > 35f && it.brightness > 0.3f })
     }
 
     @Test
@@ -57,7 +57,11 @@ class StarFieldTest {
         assertEquals(1f, StarField.brightness(-1.46f), 0.02f)
         assertTrue(StarField.brightness(0f) > StarField.brightness(2f))
         assertTrue(StarField.brightness(2f) > StarField.brightness(4.5f))
-        assertEquals(0.2f, StarField.brightness(BrightStars.LIMIT_MAG + 0.5f), 1e-6f)
+        assertTrue(StarField.brightness(4.5f) > StarField.brightness(6f))
+        // The dust: a star at the limit is a tenth of Sirius, one at 4.5 a fifth.
+        assertEquals(0.09f, StarField.brightness(6f), 0.01f)
+        assertEquals(0.2f, StarField.brightness(4.5f), 0.02f)
+        assertEquals(0.08f, StarField.brightness(BrightStars.LIMIT_MAG + 0.5f), 1e-6f)
         assertTrue(StarField.warmth(-0.03f) < 0.15f)
         assertEquals(0.53f, StarField.warmth(0.65f), 0.01f)
         assertEquals(1f, StarField.warmth(1.85f), 1e-6f)
@@ -69,18 +73,20 @@ class StarFieldTest {
     fun `a star lands on the canvas by the deck's camera, and off it when outside`() {
         val w = 800
         val h = 704
-        val centre = starPlace(StarMark(0f, 30f, 1f, 0f, 0f), w, h)!!
+        val centre = starPlace(StarMark(0f, 37.5f, 1f, 0f, 0f), w, h)!!
         assertEquals(400f, centre.first, 0.01f)
         assertEquals(352f, centre.second, 0.01f)
-        val top = starPlace(StarMark(0f, 45f, 1f, 0f, 0f), w, h)!!
+        val top = starPlace(StarMark(0f, 65f, 1f, 0f, 0f), w, h)!!
         assertEquals(0f, top.second, 0.01f)
         val right = starPlace(StarMark(10f, 30f, 1f, 0f, 0f), w, h)!!
         assertTrue(right.first > centre.first)
-        // The horizontal scale is the plane's: a degree is the same number of px either way.
-        val focal = h / Math.toRadians((SkyCameraTopDeg - SkyCameraBottomDeg).toDouble())
+        // The horizontal scale is the vertical one: a degree is the same number of px either way.
+        val focal = h / Math.toRadians((StarCameraTopDeg - StarCameraBottomDeg).toDouble())
         assertEquals(400 + Math.tan(Math.toRadians(10.0)) * focal, right.first.toDouble(), 0.01)
-        assertNull(starPlace(StarMark(29f, 30f, 1f, 0f, 0f), w, h))
-        assertNull(starPlace(StarMark(0f, 60f, 1f, 0f, 0f), w, h))
-        assertTrue(starRadiusDp(1f) > starRadiusDp(0.2f) * 2)
+        // About ±29° across a 400 dp canvas; beyond it, and over the top, a star is off.
+        assertTrue(starPlace(StarMark(28f, 30f, 1f, 0f, 0f), w, h) != null)
+        assertNull(starPlace(StarMark(31f, 30f, 1f, 0f, 0f), w, h))
+        assertNull(starPlace(StarMark(0f, 70f, 1f, 0f, 0f), w, h))
+        assertTrue(starRadiusDp(1f) > starRadiusDp(0.09f) * 2)
     }
 }

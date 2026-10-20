@@ -67,6 +67,19 @@ internal object MilanRecording {
     /** The moment every screen is drawn at. */
     val now: Instant = fetchedAt.plus(Duration.ofMinutes(5))
 
+    /**
+     * The night the README's night picture is drawn at (20 ott 2026): the recording's own
+     * evening, 21:00 of the day it was fetched, the first hour of full night (the sun at
+     * −19°). Chosen on the recording, not for looks: the week holds no rain and no fog at
+     * night, and the moon is a day from full on every night of it. At 21:00 the sky is
+     * clear under a thin high veil, the moon stands at 24° in the east-southeast with its
+     * glow, and around it the stars a full moon leaves; at 22:00 a few low clouds take half
+     * of them, at 23:00 a third of low cloud hides the moon (both drawn and set aside). The
+     * forecast is the noon run's, so by then the page honestly wears its «updated 8 hours
+     * ago» chip; the picture stops above it, see [ReadmeScreenshots.todayNight].
+     */
+    val night: Instant = Instant.parse("2026-09-25T19:00:00Z")
+
     val settings = AppSettings()
 
     /** The geocoder's first answer, mapped as `WeatherRepository` maps a search result. */
@@ -105,13 +118,13 @@ internal object MilanRecording {
             ?: PlaceWarningState.Stale(zone, bulletin.issuedAt)
     }
 
-    fun today(context: Context): TodayUiState.Content {
+    fun today(context: Context, at: Instant = now): TodayUiState.Content {
         val graded = (warnings(context) as? PlaceWarningState.Current)?.warnings
             ?.takeIf { it.maxLevel != WarningLevel.NONE }
         val state = TodayStateBuilder.build(
             city = city,
             report = report,
-            now = now,
+            now = at,
             updateFrequencyMin = settings.updateFrequencyMin,
             userRefreshing = false,
             error = null,

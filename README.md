@@ -25,7 +25,10 @@ Free, no account, no ads, no tracking, no API key.
 Chiaro answers the question people actually have: is it worth going outside, and when. It
 opens on a computed sky and one sentence ("Umbrella around 17:00, clearing after 19:00"), with
 the numbers underneath, and every number says what to do with it: UV 8 is "burns in about 15
-minutes, cover up", not an 8.
+minutes, cover up", not an 8. At night the sky is the real one: the stars in front of you facing
+south (north, south of the equator), drawn where they stand, and the moon with its true phase and
+tilt. The moon keeps a strip of its own, between the place name and the big number, so its
+distance from a star on the screen is not the one in the sky.
 
 Around the forecast: an agenda of the sky (golden hour, dark window, moon, meteor peaks) with
 a verdict on each moment, what changed in the forecast since the last look, alerts you write
@@ -42,6 +45,8 @@ fetched, and says how old that data is.
     <td align="center" width="25%"><img src="docs/screenshots/today-details.png" width="200" alt="The details grid: wind, clouds, humidity, pressure, visibility, air quality and pollen, each with the line that says what to do with it"><br><sub><b>Details</b>: every number with its meaning</sub></td>
   </tr>
 </table>
+
+<p align="center"><img src="docs/screenshots/today-night.png" width="384" alt="Today at 21:00 in the dark theme: a clear night over Milan under a thin high veil, the moon one day before full with its glow in the strip under the place name, around it the few stars a full moon leaves, drawn where they stand, then 19 degrees, Clear, the day's high and low, the sentence about tomorrow and the daylight ribbon with its dot past sunset"><br><sub><b>At night</b>: the stars that are there, the moon as it looks</sub></p>
 
 <p align="center"><img src="docs/screenshots/today-foldable.png" width="520" alt="Today on an open foldable: the tabs on a rail at the left, the overcast sky across the whole page with the temperature, the day's high and low, its sentence and the daylight ribbon over the left half, then two panes under it, the next hours and the rest of the day on the left, the week on the right"><br><sub><b>On a foldable or a tablet</b>: the sky across the page, today on the left, the week on the right</sub></p>
 

@@ -28,17 +28,26 @@ data class StarMark(
 /**
  * The stars the canvas draws: the ones of [BrightStars] that stand in its window at this
  * instant from this place (DESIGN §3.9). The canvas is a camera facing the equator (south in
- * the north, north in the south, the frame the sun and the moon stand in) at the deck's
- * elevations, 45° at the top down to 15° at the bottom, some 34° wide at the canvas' middle
- * row; the window kept here is wider by a margin, so a taller or wider canvas finds its stars
- * in the list and the list does not change with the layout. They are the sky that is there:
- * on a January evening in Milan the window holds Orion, and a reader may look up and check.
+ * the north, north in the south, the frame the sun and the moon stand in), for the stars from
+ * [StarCameraTopDeg] at the top row down to [StarCameraBottomDeg] at the bottom and about
+ * ±29° of azimuth on a phone (`starPlace`); the window kept here is wider by a margin, so a
+ * taller or wider canvas finds its stars in the list and the list does not change with the
+ * layout. They are the sky that is there: on a January evening in Milan the window holds
+ * Orion, and a reader may look up and check.
+ *
+ * The window was the deck's camera, 34° × 30°, and the catalogue stopped at magnitude 4.5
+ * (committente, from the device, 20 ott 2026: «two or three stars»). Measured for Milan: on
+ * an October evening, with Capricorn and Aquarius in the south and a gibbous moon over them,
+ * that window held 15 stars, 3 of them under the third magnitude, which the moon's rule then
+ * halved; the same evening the wider camera holds 45 to magnitude 4.5 and 242 to 6.0, a
+ * January one 91 and 441. Random stars were refused: a star a reader can disprove by looking
+ * up is the one thing this canvas must not draw.
  */
 object StarField {
-    /** The window's half-width in azimuth and its altitudes, with the margin. */
-    const val WINDOW_ACROSS_DEG = 30f
+    /** The window's half-width in azimuth and its altitudes, with the margin over the camera. */
+    const val WINDOW_ACROSS_DEG = 36f
     const val WINDOW_ALT_LOW_DEG = 5f
-    const val WINDOW_ALT_HIGH_DEG = 55f
+    const val WINDOW_ALT_HIGH_DEG = 70f
 
     fun visible(at: Instant, coords: Coordinates, southern: Boolean): List<StarMark> {
         val facing = if (southern) 0.0 else 180.0
@@ -62,11 +71,14 @@ object StarField {
     /**
      * How bright a star is drawn, 0..1: the magnitude's span from the catalogue's limit to
      * Sirius, bent so the faint ones stay faint and the few bright ones stand out, with a
-     * floor so a star at the limit is still a star and not nothing.
+     * floor so a star at the limit is still a speck and not nothing. At magnitude 6.0 the
+     * limit is the eye's under a dark sky, and the stars between 4.5 and 6 are the dust a
+     * dark sky has: a tenth of Sirius at the limit, a fifth at 4.5, a third at the third
+     * magnitude, three fifths at the first.
      */
     fun brightness(mag: Float): Float {
         val t = ((BrightStars.LIMIT_MAG + 0.5f - mag) / (BrightStars.LIMIT_MAG + 0.5f + 1.5f)).coerceIn(0f, 1f)
-        return 0.2f + 0.8f * t.pow(1.3f)
+        return 0.08f + 0.92f * t.pow(1.5f)
     }
 
     /** The B-V colour as a warmth, 0..1: Rigel's −0.03 near 0, the Sun's 0.65 in the middle,
