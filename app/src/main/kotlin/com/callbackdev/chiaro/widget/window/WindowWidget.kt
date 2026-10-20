@@ -127,7 +127,7 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
         return
     }
     val warning = model.warning?.takeIf { model.look.showWarning }
-    val plan = windowPlan(size, fontScale(context), model.moments.size, warning != null)
+    val plan = windowPlan(size, fontScale(context), model.moments.size, warning != null, weather = model.look.windowWeather)
     val clock = LocalClock.current
     val at = Instant.now(clock)
     val picture = remember(model, size, plan) { WindowPainter.paint(context, model, size, plan, at) }
@@ -166,9 +166,23 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
         }
         Column(modifier = GlanceModifier.fillMaxSize()) {
             Box(modifier = GlanceModifier.fillMaxWidth().height(plan.skyHeight)) {
-                if (warning != null && plan.warning) {
-                    Box(modifier = GlanceModifier.padding(WindowCaptionPadding)) {
-                        WarningChipRow(warning.maxLevel, palette)
+                if (plan.weather || (warning != null && plan.warning)) {
+                    Column(modifier = GlanceModifier.padding(WindowCaptionPadding)) {
+                        if (plan.weather) {
+                            // The hour's weather, when asked for (committente, 20 ott 2026): the
+                            // temperature and the sky's word, and nothing else, so the picture
+                            // stays the subject; the painter lays a scrim under them.
+                            Text(
+                                text = WindowText.weatherLine(context, content, model),
+                                style = TextStyle(
+                                    color = palette.primary, fontSize = WindowPlaceSp.sp, fontWeight = FontWeight.Medium
+                                ),
+                                maxLines = 1
+                            )
+                        }
+                        if (warning != null && plan.warning) {
+                            WarningChipRow(warning.maxLevel, palette, topGap = if (plan.weather) 6.dp else 0.dp)
+                        }
                     }
                 }
                 Column(

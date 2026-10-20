@@ -15722,3 +15722,46 @@ dp e mezzo. Controllato il resto del disegno: la luna al 68% a 29° a sud-ovest 
 dell'ora), la sua falce accesa verso il basso a destra dove sta il sole sotto l'orizzonte a
 nord-ovest, la frase senza il numero della luna, le righe con i verdetti, «21:56» uguale a 15:56
 più sei ore.
+
+### La finestra: il meteo dell'ora, e dietro le nuvole (committente, 20 ott 2026)
+
+**Da dove nasce.** Due idee del committente davanti alla finestra. La prima: una card uguale che
+racconti il meteo di Oggi invece del cielo, come opzione del widget e non come widget nuovo; poi
+precisata a voce: a quattro per due la card resta quella del cielo e porta solo la temperatura
+e lo stato dell'ora, in alto a sinistra, senza frase né massima e minima, «così il disegno rimane
+protagonista». La seconda: un'opzione che disegni il cielo senza nuvole, per vedere di notte lo
+stato vero del cielo anche quando il tempo lo nasconde, e di giorno il sole e il colore del
+sereno, con una nota cortissima sulla card. Il parere dato: la prima è coerente e non un
+doppione (l'immagine è già l'eroe di Oggi, cambiano le parole); la seconda va contro «lo schermo
+non mente» e diventa onesta solo perché la accende il lettore e la card lo scrive sempre; il
+valore c'è ed è la domanda della schermata Cielo, il rumore è il lettore che se ne dimentica,
+tenuto a bada dalla nota e dalle parole che restano quelle del meteo.
+
+**Cosa è cambiato.** Due interruttori nel look per widget (`WidgetLook.windowWeather`,
+`windowBareSky`, chiavi `window_weather_<id>` e `window_bare_<id>`, tenuti, spostati e
+dimenticati come gli altri), offerti nella schermata condivisa sotto «La card mostra» per la sola
+finestra, spenti di default. *Il meteo dell'ora*: `WindowPlan.weather` (non sulla striscia a una
+riga); in alto a sinistra «20° · Coperto» (`WindowText.weatherLine`: `Formats.temperature` e la
+parola di `WeatherText`, le stesse della card «Colpo d'occhio»), a 16 sp medio come il nome del
+luogo, con uno scrim suo nell'immagine (metà di quello della didascalia, su 56 dp); sotto, il chip
+dell'allerta se c'è. *Dietro le nuvole*: il pittore disegna con copertura 0, strati nulli, niente
+pioggia né neve, per il gradiente, la scena e il tetto delle etichette; la luce della luna resta
+(è vera); la nota «Dietro le nuvole» / «Behind the clouds» in alto a destra dell'immagine, a
+Caption con l'alone, con una scatola che le etichette non toccano; `WindowPicture.bare` lo dice.
+Sulla prima riga, a meno che la riga del meteo in alto a sinistra la raggiunga (la card stretta
+a due per due, un carattere grande; il pittore misura la riga del meteo): allora sulla riga sotto,
+e sotto il chip dell'allerta se c'è, perché niente di quello che la card scrive stia su altro.
+Le parole della card (frase, verdetti, righe, numeri) restano quelle della previsione.
+
+**Decisioni e deviazioni.** *Nessuna seconda card*: un'opzione sulla finestra, come chiesto, e con
+il meteo ridotto a due dati perché il disegno resti il soggetto. *La nota nell'immagine e non nel
+testo Glance*: è parte del disegno che qualifica, e con l'alone sta su ogni cielo senza scrim.
+*Le parole non cambiano con «dietro le nuvole»*: «nuvole 90%» sotto un cielo stellato è il patto
+con il lettore, non una contraddizione.
+
+**Come è stato verificato.** `WidgetLookStoreTest` (i due interruttori persistono, si spostano col
+look, si dimenticano), `WindowLayoutTest` (la riga del meteo c'è dove c'è un alto, non sulla
+striscia), `WindowWeatherTest` (la card composta come la riceve il launcher: «20° · Overcast» solo
+con l'interruttore acceso), `WindowPainterTest` (il mezzogiorno coperto della registrazione, dietro
+le nuvole, è un cielo blu: più blu del grigio di oltre 0,1; l'immagine lo sa), `StringsParityTest`.
+Immagini del README identiche (interruttori spenti).

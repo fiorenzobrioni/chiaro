@@ -121,6 +121,20 @@ data class WidgetLook(
      * warning, so this follows a habit rather than inventing one.
      */
     val showWarning: Boolean = true,
+    /**
+     * The window's weather line (committente, 20 ott 2026): the hour's temperature and the
+     * sky's word at the top left of the picture, and nothing else, so the picture stays the
+     * subject; off by default, because the card's name is the sky's. The rest of the card
+     * (the names, the sentence, the moments) stays the sky's either way.
+     */
+    val windowWeather: Boolean = false,
+    /**
+     * «Behind the clouds» (committente, 20 ott 2026): the window drawn without this hour's
+     * clouds, veil, rain and snow, the sky as it really is behind them, with the words
+     * «Behind the clouds» in the picture, because a sky that is not the forecast's has to
+     * say so; off by default. The sentence, the numbers and the moments keep the weather.
+     */
+    val windowBareSky: Boolean = false,
     /** Which way round the Now widget's one-row card is laid; see [WidgetArrangement]. */
     val arrangement: WidgetArrangement = WidgetArrangement.ICON_START,
     /**
@@ -209,6 +223,8 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             showDayRange = prefs[rangeKey(appWidgetId)] ?: default.showDayRange,
             showSentence = prefs[sentenceKey(appWidgetId)] ?: default.showSentence,
             showWarning = prefs[warningKey(appWidgetId)] ?: default.showWarning,
+            windowWeather = prefs[windowWeatherKey(appWidgetId)] ?: default.windowWeather,
+            windowBareSky = prefs[windowBareKey(appWidgetId)] ?: default.windowBareSky,
             arrangement = prefs[arrangementKey(appWidgetId)]
                 ?.let { name -> WidgetArrangement.entries.firstOrNull { it.name == name } }
                 ?: default.arrangement,
@@ -230,6 +246,8 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             prefs[rangeKey(appWidgetId)] = look.showDayRange
             prefs[sentenceKey(appWidgetId)] = look.showSentence
             prefs[warningKey(appWidgetId)] = look.showWarning
+            prefs[windowWeatherKey(appWidgetId)] = look.windowWeather
+            prefs[windowBareKey(appWidgetId)] = look.windowBareSky
             prefs[arrangementKey(appWidgetId)] = look.arrangement.name
             prefs[iconsKey(appWidgetId)] = look.icons.name
             prefs[iconShownKey(appWidgetId)] = look.showIcon
@@ -247,6 +265,8 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 prefs.remove(rangeKey(it))
                 prefs.remove(sentenceKey(it))
                 prefs.remove(warningKey(it))
+                prefs.remove(windowWeatherKey(it))
+                prefs.remove(windowBareKey(it))
                 prefs.remove(arrangementKey(it))
                 prefs.remove(iconsKey(it))
                 prefs.remove(iconShownKey(it))
@@ -273,6 +293,8 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 move(rangeKey(old), rangeKey(new))
                 move(sentenceKey(old), sentenceKey(new))
                 move(warningKey(old), warningKey(new))
+                move(windowWeatherKey(old), windowWeatherKey(new))
+                move(windowBareKey(old), windowBareKey(new))
                 move(arrangementKey(old), arrangementKey(new))
                 move(iconsKey(old), iconsKey(new))
                 move(iconShownKey(old), iconShownKey(new))
@@ -289,6 +311,8 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
     private fun rangeKey(id: Int) = booleanPreferencesKey("range_$id")
     private fun sentenceKey(id: Int) = booleanPreferencesKey("sentence_$id")
     private fun warningKey(id: Int) = booleanPreferencesKey("warning_$id")
+    private fun windowWeatherKey(id: Int) = booleanPreferencesKey("window_weather_$id")
+    private fun windowBareKey(id: Int) = booleanPreferencesKey("window_bare_$id")
     private fun arrangementKey(id: Int) = stringPreferencesKey("arrangement_$id")
     private fun iconsKey(id: Int) = stringPreferencesKey("icons_$id")
     private fun iconShownKey(id: Int) = booleanPreferencesKey("icon_shown_$id")

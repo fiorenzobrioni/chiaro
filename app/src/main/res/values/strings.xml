@@ -586,7 +586,7 @@
 
     <string name="guide_widgets_title">The home widgets</string>
     <string name="guide_widgets_all_title">Three of them</string>
-    <string name="guide_widgets_all_body">At a glance: icon, temperature, place and the day\'s sentence, or the sky\'s state when there is nothing to warn about. Make it taller and wider, from three cells by two, and it adds the next hours, and on three rows the next days; resize it and it shows what fits, and its settings can lay the one-row card the other way round. In words: the same facts with nothing drawn on the card at all (no glyph, no pin, no mark), where the temperature is the drawing and the place is printed whole however long its name. The window: the sky of this hour over your place as the Today screen draws it, the moon as it looks and the stars that are there with the names of the brightest, and under it tonight\'s verdict or the next moment of light; taller, the moments you follow with their verdicts.</string>
+    <string name="guide_widgets_all_body">At a glance: icon, temperature, place and the day\'s sentence, or the sky\'s state when there is nothing to warn about. Make it taller and wider, from three cells by two, and it adds the next hours, and on three rows the next days; resize it and it shows what fits, and its settings can lay the one-row card the other way round. In words: the same facts with nothing drawn on the card at all (no glyph, no pin, no mark), where the temperature is the drawing and the place is printed whole however long its name. The window: the sky of this hour over your place as the Today screen draws it, the moon as it looks and the stars that are there with the names of the brightest, and under it tonight\'s verdict or the next moment of light; taller, the moments you follow with their verdicts. Its settings can add the hour\'s temperature and word at the top left, and can draw the sky behind the clouds, the stars and the moon where they stand whatever the weather: then the picture says “Behind the clouds”, and the words keep the forecast.</string>
     <string name="guide_widgets_config_title">Setting one up</string>
     <string name="guide_widgets_config_body">Press and hold a widget to open its own settings: which place it watches (the active one, or a fixed place of its own), its background — including the same computed sky the app draws — how solid that background is, and which weather icons it draws with.</string>
     <string name="guide_widgets_honest_title">They never invent</string>
@@ -1476,6 +1476,12 @@
     <string name="window_label_venus">Venus</string>
     <string name="window_label_jupiter">Jupiter</string>
     <string name="window_label_radiant">%1$s, from here</string>
+    <string name="window_weather_line">%1$s · %2$s</string>
+    <string name="window_bare_note">Behind the clouds</string>
+    <string name="widget_config_window_weather">The hour\'s weather</string>
+    <string name="widget_config_window_weather_note">The temperature and the sky\'s word at the top left of the picture, and nothing else. The rest stays the sky\'s: the names, the sentence, the moments.</string>
+    <string name="widget_config_window_bare">Behind the clouds</string>
+    <string name="widget_config_window_bare_note">The sky as it really is, without this hour\'s clouds, veil, rain or snow: the stars, the moon and the sun where they stand. The picture says so, and the words keep the weather.</string>
     <string name="window_form_strip">One row: the sky as a strip, the place and the sentence over it.</string>
     <string name="window_form_narrow">Two cells wide: the window with the place and the sentence, the names of the brightest things on it.</string>
     <string name="window_form_window">Two rows: the window, the place, tonight\'s verdict or the next moment of light, where it looks, and the names of the brightest things in it.</string>

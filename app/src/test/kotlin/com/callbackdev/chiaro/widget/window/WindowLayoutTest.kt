@@ -81,5 +81,10 @@ class WindowLayoutTest {
         assertFalse(windowPlan(DpSize(340.dp, 189.dp), 1f, 3, warning = false).warning)
         val tall = windowPlan(DpSize(340.dp, 293.dp), 1f, 3, warning = true)
         assertTrue(tall.labels && tall.compass && tall.warning)
+        // The hour's weather line is the look's, and needs a top: not on the strip.
+        assertFalse(windowPlan(DpSize(340.dp, 189.dp), 1f, 3, warning = false).weather)
+        assertTrue(windowPlan(DpSize(340.dp, 189.dp), 1f, 3, warning = false, weather = true).weather)
+        assertTrue(windowPlan(DpSize(159.dp, 189.dp), 1f, 3, warning = false, weather = true).weather)
+        assertFalse(windowPlan(DpSize(340.dp, 82.dp), 1f, 3, warning = false, weather = true).weather)
     }
 }

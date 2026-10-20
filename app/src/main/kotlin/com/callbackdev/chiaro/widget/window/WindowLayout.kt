@@ -73,7 +73,9 @@ internal data class WindowPlan(
     /** The official warning's chip, over the top of the picture (Fase 11). */
     val warning: Boolean,
     /** The lines the sentence may take. */
-    val captionLines: Int
+    val captionLines: Int,
+    /** The hour's temperature and word at the top left (the look's switch), where there is a top. */
+    val weather: Boolean = false
 )
 
 /**
@@ -82,7 +84,7 @@ internal data class WindowPlan(
  * thing a widget of this family must not show. [warning] is whether there is an official
  * warning to carry and the reader has not turned the chip off.
  */
-internal fun windowPlan(size: DpSize, fontScale: Float, momentsAvailable: Int, warning: Boolean): WindowPlan {
+internal fun windowPlan(size: DpSize, fontScale: Float, momentsAvailable: Int, warning: Boolean, weather: Boolean = false): WindowPlan {
     val form = windowForm(size)
     val rowHeight = windowRowHeight(fontScale)
     val rows = if (form == WindowForm.TALL) {
@@ -100,7 +102,8 @@ internal fun windowPlan(size: DpSize, fontScale: Float, momentsAvailable: Int, w
         labels = form != WindowForm.STRIP,
         compass = wide,
         warning = warning && wide,
-        captionLines = if (form == WindowForm.STRIP) 1 else 2
+        captionLines = if (form == WindowForm.STRIP) 1 else 2,
+        weather = weather && form != WindowForm.STRIP
     )
 }
 

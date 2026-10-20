@@ -142,4 +142,27 @@ class WindowPainterTest {
         assertTrue(picture.night)
         assertEquals(at, picture.drawnAt)
     }
+
+    /** «Behind the clouds»: the overcast noon becomes a blue sky, and the picture says which it is. */
+    @Test
+    fun `behind the clouds the overcast noon is a blue sky, and the picture says so`() {
+        val at = MilanRecording.now
+        val model = MilanRecording.widget(app, WidgetKind.WINDOW, at)
+        val plan = windowPlan(size, 1f, model.moments.size, warning = false)
+        val clouded = checkNotNull(WindowPainter.paint(app, model, size, plan, at))
+        val bare = checkNotNull(WindowPainter.paint(app, model.copy(look = model.look.copy(windowBareSky = true)), size, plan, at))
+        save("widget-window-bare", bare.bitmap)
+        assertFalse(clouded.bare)
+        assertTrue(bare.bare)
+        fun blueness(bitmap: Bitmap, x: Int, y: Int): Float {
+            val p = bitmap.getPixel(x, y)
+            return ((p and 0xFF) - ((p shr 16) and 0xFF)) / 255f
+        }
+        val x = bare.bitmap.width / 2
+        val y = bare.bitmap.height / 3
+        assertTrue(
+            "a clear sky is bluer than an overcast one: ${blueness(bare.bitmap, x, y)} over ${blueness(clouded.bitmap, x, y)}",
+            blueness(bare.bitmap, x, y) > blueness(clouded.bitmap, x, y) + 0.1f
+        )
+    }
 }

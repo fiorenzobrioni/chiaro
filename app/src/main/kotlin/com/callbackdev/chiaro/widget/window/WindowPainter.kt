@@ -15,6 +15,7 @@ import android.graphics.Typeface
 import android.media.ImageReader
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.DpSize
+import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.MeteorShowerTable
@@ -25,6 +26,7 @@ import com.callbackdev.chiaro.ui.sky.SkyUpcoming
 import com.callbackdev.chiaro.ui.components.BodyRadius
 import com.callbackdev.chiaro.ui.components.EdgeInset
 import com.callbackdev.chiaro.ui.theme.SkyGradient
+import com.callbackdev.chiaro.ui.components.SkyFall
 import com.callbackdev.chiaro.ui.components.SkyScene
 import com.callbackdev.chiaro.ui.components.SkyShaderSource
 import com.callbackdev.chiaro.ui.components.StarCameraBottomDeg
@@ -59,7 +61,9 @@ internal class WindowPicture(
     /** Whether the moon is drawn and named in it, with its phase: then the caption leaves the
      * moon's number to the disc (from the device, 20 ott 2026: «Moon 68%» on the disc and
      * «moon 69%» in the sentence, now and the night's middle, read as a mistake). */
-    val moonNamed: Boolean
+    val moonNamed: Boolean,
+    /** Whether it is the sky behind the clouds (the look's switch), with the note that says so. */
+    val bare: Boolean
 )
 
 /**
@@ -153,6 +157,15 @@ internal object WindowPainter {
         val content = model.content ?: return null
         val city = model.city ?: return null
         val sky = content.sky
+        // «Behind the clouds» (committente, 20 ott 2026): the picture without this hour's
+        // clouds, veil, rain and snow, the sky as it really is behind them, and a note in the
+        // picture that says so. The words of the card keep the forecast; only the drawing moves.
+        val bare = model.look.windowBareSky
+        val cloudPct = if (bare) 0 else sky.cloudPct
+        val layers = if (bare) null else sky.layers
+        val precipPct = if (bare) 0 else sky.precipPct
+        val fall = if (bare) SkyFall.NONE else sky.fall
+        val fallMm = if (bare) 0.0 else sky.fallMmPerHour
         val density = context.resources.displayMetrics.density
         val w = (size.width.value * density).roundToInt().coerceAtLeast(1)
         val h = (size.height.value * density).roundToInt().coerceAtLeast(1)
@@ -197,11 +210,11 @@ internal object WindowPainter {
             if (planetsOut) StarField.planets(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg) else emptyList()
         )
         val table = paletteFor(model.settings.palette).sky
-        val gradient = table.gradient(sunAltitude, sky.cloudPct, sky.precipPct, moonIllumination, moonAltitude)
+        val gradient = table.gradient(sunAltitude, cloudPct, precipPct, moonIllumination, moonAltitude)
         var scene = skyScene(
             table, gradient, sunAltitude, sunAzimuth, moonAltitude, moonAzimuth,
-            moonIllumination, moonLimb, sky.southern, sky.cloudPct, sky.layers, sky.precipPct,
-            sky.fall, sky.fallMmPerHour, sky.windKph, sky.windFromDeg, starMarks = marks,
+            moonIllumination, moonLimb, sky.southern, cloudPct, layers, precipPct,
+            fall, fallMm, sky.windKph, sky.windFromDeg, starMarks = marks,
             galactic = if (night) StarField.galacticFrame(drawAt, coords, facing) else null
         )
         val labels = ArrayList<Label>()
@@ -221,7 +234,7 @@ internal object WindowPainter {
             } else {
                 scene.copy(moon = null)
             }
-            if (plan.labels && sky.cloudPct < LabelCloudCeilingPct) {
+            if (plan.labels && cloudPct < LabelCloudCeilingPct) {
                 moonSpot?.let { (x, y) ->
                     val label = Label(
                         WindowText.moonLabel(context, (moonIllumination * 100).roundToInt()),
@@ -244,7 +257,7 @@ internal object WindowPainter {
                 }.sortedBy { it.rank }.take(NamedStarsAtMost)
             }
         }
-        if (planetsOut && plan.labels && sky.cloudPct < LabelCloudCeilingPct) {
+        if (planetsOut && plan.labels && cloudPct < LabelCloudCeilingPct) {
             for (planet in Planet.values()) {
                 val altitude = AstronomyEngine.planetAltitude(planet, drawAt, coords)
                 if (altitude < WindowAltLowDeg) continue
@@ -264,10 +277,15 @@ internal object WindowPainter {
             canvas.drawRect(0f, skyH.toFloat(), w.toFloat(), h.toFloat(), Paint().apply { color = RowsShade })
         }
         skyBitmap.recycle()
-        val written = finish(context, canvas, labels, plan, w, skyH, density)
+        val written = finish(
+            context, canvas, labels, plan, w, skyH, density,
+            note = if (bare) context.getString(R.string.window_bare_note) else null,
+            weatherLine = if (plan.weather) WindowText.weatherLine(context, content, model) else null
+        )
         return WindowPicture(
             picture, facing, night, gpu = drawn != null, drawnAt = drawAt,
-            moonNamed = moonLabel != null && moonLabel in written
+            moonNamed = moonLabel != null && moonLabel in written,
+            bare = bare
         )
     }
 
@@ -375,7 +393,11 @@ internal object WindowPainter {
         return bitmap
     }
 
-    /** The caption's scrim and the names, over the picture; the names really written. */
+    /**
+     * The caption's scrim and the names over the picture, and the picture's own words: a scrim
+     * at the top when the hour's weather is written there, and «Behind the clouds» at the top
+     * right when the sky is the one behind them. The names really written are returned.
+     */
     private fun finish(
         context: Context,
         canvas: Canvas,
@@ -383,7 +405,9 @@ internal object WindowPainter {
         plan: WindowPlan,
         w: Int,
         skyH: Int,
-        density: Float
+        density: Float,
+        note: String?,
+        weatherLine: String?
     ): List<Label> {
         val scrimTop = skyH - CaptionScrimDp * density
         canvas.drawRect(
@@ -395,27 +419,68 @@ internal object WindowPainter {
                 )
             }
         )
-        if (labels.isEmpty()) return emptyList()
-        val written = ArrayList<Label>(labels.size)
+        if (plan.weather) {
+            // The words at the top left stand on a scrim of their own, as the caption's do.
+            val scrimBottom = TopScrimDp * density
+            canvas.drawRect(
+                0f, 0f, w.toFloat(), scrimBottom,
+                Paint().apply {
+                    shader = LinearGradient(
+                        0f, 0f, 0f, scrimBottom,
+                        intArrayOf(TopScrim, 0x00000000), floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
+                    )
+                }
+            )
+        }
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = LabelInk
             textSize = WindowLabelSp * fontScale(context) * density
             typeface = Typeface.create("sans-serif", Typeface.NORMAL)
             setShadowLayer(3f * density, 0f, 1f * density, LabelHalo)
         }
-        val keepOut = skyH - LabelKeepOutDp * density
-        val warningBox = if (plan.warning) RectF(0f, 0f, WarningBoxWidthDp * density, WarningBoxHeightDp * density) else null
+        val boxes = ArrayList<RectF>(labels.size + 1)
+        val descent = paint.fontMetrics.descent
+        val scale = fontScale(context)
+        // What the card writes over the top-left of the picture, in dp from the top: the
+        // hour's weather line (a Glance Text at 16 sp with the font's padding), then the
+        // warning's chip under it, each where WindowWidgetContent lays it.
+        val weatherBottom = WindowCaptionPadding.value + if (weatherLine != null) WeatherLineDp * scale else 0f
+        val chipBottom = if (plan.warning) weatherBottom + (if (weatherLine != null) WarningChipGapDp else 0f) + WarningChipDp * scale else weatherBottom
+        if (note != null) {
+            val width = paint.measureText(note)
+            val x = w - NotePadDp * density - width
+            // The note's line: the first, unless the hour's weather at the top left reaches
+            // it (a narrow card, a large font); then the one under it, under the chip too if
+            // there is one, so that nothing the card writes stands on anything else.
+            val weatherEnd = weatherLine?.let {
+                val line = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    textSize = WindowPlaceSp * scale * density
+                    typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                }
+                (WindowCaptionPadding.value + NoteGapDp) * density + line.measureText(it)
+            }
+            val top = if (weatherEnd != null && weatherEnd > x) chipBottom + NoteGapDp else NotePadDp
+            val y = top * density + paint.textSize
+            canvas.drawText(note, x, y, paint)
+            boxes += RectF(x - 8f * density, 0f, w.toFloat(), y + descent + 4f * density)
+        }
+        val written = ArrayList<Label>(labels.size)
+        if (labels.isEmpty()) return written
         val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = LabelInk
             style = Paint.Style.STROKE
             strokeWidth = 1f * density
             setShadowLayer(2f * density, 0f, 0f, LabelHalo)
         }
+        val keepOut = skyH - LabelKeepOutDp * density
+        val warningBox = if (plan.warning || plan.weather) {
+            RectF(0f, 0f, WarningBoxWidthDp * density, (chipBottom + NoteGapDp) * density)
+        } else {
+            null
+        }
         // The names written so far, as boxes: a name that would sit on another is not written
         // (from the device, 20 ott 2026: two names on the moon). The order is the priority: the
         // moon, the radiant, the planets, the stars by brightness.
-        val boxes = ArrayList<RectF>(labels.size)
-        val descent = paint.fontMetrics.descent
         labels.forEach { label ->
             if (label.y > keepOut || label.y < 8f * density) return@forEach
             if (warningBox?.contains(label.x, label.y) == true) return@forEach
@@ -444,10 +509,24 @@ internal object WindowPainter {
     private const val LabelInk = 0xD9FFFFFF.toInt()
     private const val LabelHalo = 0xB3000000.toInt()
 
+    /** The scrim under the hour's weather at the top: half the caption's, over 56 dp. */
+    private const val TopScrimDp = 56f
+    private const val TopScrim = 0x66000000
+
+    /** The note's inset from the picture's top-right corner, and its air from the weather line. */
+    private const val NotePadDp = 10f
+    private const val NoteGapDp = 6f
+
+    /** The height of the hour's weather line and of the warning's chip at font scale 1, and the
+     * air between them, as WindowWidgetContent lays them: 16 sp and 13 sp with the font's
+     * padding (1.33 em in the system face), the chip's 2 dp above and below. */
+    private const val WeatherLineDp = 22f
+    private const val WarningChipDp = 22f
+    private const val WarningChipGapDp = 6f
+
     /** The radiant's ring: a point of the sky marked, not a light drawn. */
     private const val RadiantRingDp = 5f
 
-    /** Where the warning's chip sits (top-left, inside the caption's padding): no name under it. */
+    /** How far the warning's chip and the weather line reach from the left: no name under them. */
     private const val WarningBoxWidthDp = 220f
-    private const val WarningBoxHeightDp = 48f
 }

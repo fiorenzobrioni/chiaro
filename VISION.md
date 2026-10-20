@@ -667,7 +667,13 @@ dynamic color:
   inside the card, kept by the launcher minute by minute in the place's zone, because a time
   painted into the picture would be a minute stale and then an hour; by offset and not by zone
   name, so Paris gets none on a phone in Rome, and none at all for the phone's own place, whose
-  clock is the launcher's.
+  clock is the launcher's. **Two switches of its own** (committente, 20 ott 2026): «the hour's
+  weather» puts the temperature and the sky's word at the top left of the picture, and nothing
+  else, so the picture stays the subject and the rest of the card stays the sky's; «behind the
+  clouds» draws the sky without this hour's clouds, veil, rain and snow, the stars, the moon and
+  the sun where they stand, with «Behind the clouds» written in the picture, because a sky that
+  is not the forecast's has to say so, while the sentence, the numbers and the moments keep the
+  weather. Both off by default.
 - **Sky** (retired from the picker on 13 ott 2026: the window draws its list, from three cells
   and three rows, under the picture; the day's arc did before it): the moments in
   front of the reader and their verdicts, with the day named when it is not today — the widget

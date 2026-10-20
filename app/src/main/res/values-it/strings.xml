@@ -565,7 +565,7 @@
 
     <string name="guide_widgets_title">I widget sulla home</string>
     <string name="guide_widgets_all_title">Sono tre</string>
-    <string name="guide_widgets_all_body">Colpo d\'occhio: icona, temperatura, luogo e la frase della giornata, o lo stato del cielo quando non c\'è niente da segnalare. Allargala e alzala, da tre celle per due, e aggiunge le prossime ore, e su tre righe i prossimi giorni; ridimensionala e mostra quello che ci sta, e dalle sue impostazioni la card a una riga si può girare al contrario. In parole: gli stessi fatti senza niente di disegnato sulla card (nessuna icona, nessun segnaposto, nessun marchio), dove il disegno è la temperatura e il nome del luogo è stampato per intero per quanto sia lungo. La finestra: il cielo di quest\'ora sul tuo luogo come lo disegna la schermata Oggi, la luna com\'è e le stelle che ci sono con i nomi delle più luminose, e sotto il verdetto di stanotte o il prossimo momento di luce; più alta, i momenti che segui con i loro verdetti.</string>
+    <string name="guide_widgets_all_body">Colpo d\'occhio: icona, temperatura, luogo e la frase della giornata, o lo stato del cielo quando non c\'è niente da segnalare. Allargala e alzala, da tre celle per due, e aggiunge le prossime ore, e su tre righe i prossimi giorni; ridimensionala e mostra quello che ci sta, e dalle sue impostazioni la card a una riga si può girare al contrario. In parole: gli stessi fatti senza niente di disegnato sulla card (nessuna icona, nessun segnaposto, nessun marchio), dove il disegno è la temperatura e il nome del luogo è stampato per intero per quanto sia lungo. La finestra: il cielo di quest\'ora sul tuo luogo come lo disegna la schermata Oggi, la luna com\'è e le stelle che ci sono con i nomi delle più luminose, e sotto il verdetto di stanotte o il prossimo momento di luce; più alta, i momenti che segui con i loro verdetti. Dalle sue impostazioni può aggiungere la temperatura e lo stato dell\'ora in alto a sinistra, e può disegnare il cielo dietro le nuvole, le stelle e la luna dove stanno qualunque tempo faccia: allora l\'immagine scrive «Dietro le nuvole», e le parole restano quelle della previsione.</string>
     <string name="guide_widgets_config_title">Come si imposta</string>
     <string name="guide_widgets_config_body">Tieni premuto un widget per aprire le sue impostazioni: quale luogo guarda (quello attivo, o un luogo fisso suo), lo sfondo — compreso lo stesso cielo calcolato che disegna l\'app — quanto quello sfondo è coprente, e con quali icone del meteo disegna.</string>
     <string name="guide_widgets_honest_title">Non inventano</string>
@@ -1439,6 +1439,12 @@
     <string name="window_label_venus">Venere</string>
     <string name="window_label_jupiter">Giove</string>
     <string name="window_label_radiant">%1$s, da qui</string>
+    <string name="window_weather_line">%1$s · %2$s</string>
+    <string name="window_bare_note">Dietro le nuvole</string>
+    <string name="widget_config_window_weather">Il meteo dell\'ora</string>
+    <string name="widget_config_window_weather_note">La temperatura e lo stato del cielo in alto a sinistra dell\'immagine, e nient\'altro. Il resto resta del cielo: i nomi, la frase, i momenti.</string>
+    <string name="widget_config_window_bare">Dietro le nuvole</string>
+    <string name="widget_config_window_bare_note">Il cielo com\'è davvero, senza le nuvole, il velo, la pioggia o la neve di quest\'ora: le stelle, la luna e il sole dove stanno. L\'immagine lo scrive, e le parole restano quelle del meteo.</string>
     <string name="window_form_strip">Una riga: il cielo come una striscia, con il luogo e la frase sopra.</string>
     <string name="window_form_narrow">Due celle di larghezza: la finestra con il luogo e la frase, e i nomi delle cose più luminose.</string>
     <string name="window_form_window">Due righe: la finestra, il luogo, il verdetto di stanotte o il prossimo momento di luce, dove guarda, e i nomi delle cose più luminose che inquadra.</string>
