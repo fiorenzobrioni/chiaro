@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextClock
+import android.widget.TextView
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
@@ -54,6 +55,32 @@ class WindowClockTest {
         return found
     }
 
+    /** The card laid out at its size, and the baselines of its texts, absolute in the card. */
+    @OptIn(ExperimentalGlanceRemoteViewsApi::class)
+    private fun baselines(model: WidgetModel): Map<String, Int> {
+        val size = DpSize(340.dp, 189.dp)
+        val composed = runBlocking {
+            GlanceRemoteViews().compose(app, size) {
+                WindowWidgetContent(model, widgetSchemes(app, model.settings.dynamicColor, model.settings.palette), null)
+            }
+        }
+        val view = composed.remoteViews.apply(app, FrameLayout(app))
+        val density = app.resources.displayMetrics.density
+        val w = (size.width.value * density).toInt()
+        val h = (size.height.value * density).toInt()
+        view.measure(View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(h, View.MeasureSpec.EXACTLY))
+        view.layout(0, 0, w, h)
+        val out = HashMap<String, Int>()
+        fun walk(v: View, top: Int) {
+            val y = top + v.top
+            if (v is TextClock) out["clock"] = y + v.baseline
+            else if (v is TextView && v.baseline >= 0) out[v.text.toString()] = y + v.baseline
+            if (v is ViewGroup) for (i in 0 until v.childCount) walk(v.getChildAt(i), y)
+        }
+        walk(view, 0)
+        return out
+    }
+
     private fun <T> inRome(block: () -> T): T {
         val before = TimeZone.getDefault()
         TimeZone.setDefault(TimeZone.getTimeZone("Europe/Rome"))
@@ -71,6 +98,17 @@ class WindowClockTest {
         val taipei = milan.copy(zone = ZoneId.of("Asia/Taipei"))
         val clock = clocks(taipei).single()
         assertEquals("Asia/Taipei", clock.timeZone)
+    }
+
+    /** «Taipei · 21:18» on one line: the clock's baseline is the place's, within a dp. */
+    @Test
+    fun `the clock sits on the place's baseline`() = inRome {
+        val taipei = MilanRecording.widget(app, WidgetKind.WINDOW).copy(zone = ZoneId.of("Asia/Taipei"))
+        val found = baselines(taipei)
+        val place = found.getValue("Milan")
+        val clock = found.getValue("clock")
+        val density = app.resources.displayMetrics.density
+        assertTrue("place baseline $place, clock baseline $clock", kotlin.math.abs(place - clock) <= density * 1.5f)
     }
 
     @Test

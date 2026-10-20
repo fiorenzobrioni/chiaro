@@ -3,15 +3,18 @@
      minute in the place's zone, shown only when that zone is not the phone's. A clock painted
      into the card would be stale a minute after the hourly repaint; this is the platform's own
      view inside the Glance card (AndroidRemoteViews), and the card sets its zone and its ink.
-     The size is the family's Caption step, the dot the caption's own separator. -->
+     The size is the family's Caption step, the dot the caption's own separator. It fills its
+     wrapper's height and sits at the bottom, with the font's padding like the place's own
+     TextView: the card then lifts it by the difference of the two faces' descents, and the
+     clock's baseline is the place's (measured in WindowClockTest). -->
 <TextClock xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/window_clock"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
+    android:gravity="bottom"
     android:fontFamily="sans-serif"
     android:format12Hour="· h:mm a"
     android:format24Hour="· HH:mm"
-    android:includeFontPadding="false"
     android:singleLine="true"
     android:textColor="@color/widget_preview_ink_dim"
     android:textSize="11sp" />

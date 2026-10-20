@@ -411,15 +411,23 @@ internal object WindowPainter {
             strokeWidth = 1f * density
             setShadowLayer(2f * density, 0f, 0f, LabelHalo)
         }
+        // The names written so far, as boxes: a name that would sit on another is not written
+        // (from the device, 20 ott 2026: two names on the moon). The order is the priority: the
+        // moon, the radiant, the planets, the stars by brightness.
+        val boxes = ArrayList<RectF>(labels.size)
+        val descent = paint.fontMetrics.descent
         labels.forEach { label ->
             if (label.y > keepOut || label.y < 8f * density) return@forEach
             if (warningBox?.contains(label.x, label.y) == true) return@forEach
-            if (label.ring) canvas.drawCircle(label.x, label.y, RadiantRingDp * density, ring)
             val width = paint.measureText(label.text)
             val gap = label.gapDp * density
             val x = if (label.x + gap + width > w - 8f * density) label.x - gap - width else label.x + gap
             val y = (label.y + 4f * density).coerceAtLeast(14f * density)
+            val box = RectF(x - 2f * density, y - paint.textSize, x + width + 2f * density, y + descent)
+            if (boxes.any { RectF.intersects(it, box) }) return@forEach
+            if (label.ring) canvas.drawCircle(label.x, label.y, RadiantRingDp * density, ring)
             canvas.drawText(label.text, x, y, paint)
+            boxes += box
             written += label
         }
         return written

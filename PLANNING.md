@@ -15703,3 +15703,22 @@ nel crepuscolo. Verificato in `SkySceneTest` (nulla di giorno e a −1°, a −4
 stelle no, pieni a −10°, nulla sotto il cielo coperto, la luna piena ne lascia più di due terzi) e
 `SkyShaderPixelTest` (a −4° Venere al centro è più chiara del cielo di oltre 0,02 di luminanza, una
 stella nello stesso punto non si distingue dal cielo). DESIGN §3.9 chiude il limite.
+
+**Dal secondo screenshot di Taipei** (committente, 20 ott 2026, cinquanta minuti dopo il primo).
+Tre cose. *Capella sulla luna*: Capella a quell'ora stava a nord-est, dietro le spalle di chi guarda
+a sud-ovest, a 177° dall'asse della camera; la tangente di 177° è quella di −3°, e `starPlace` la
+metteva a nove dp dal centro, all'altezza della luna. Le stelle disegnate passano dal filtro della
+finestra prima della camera; un nome messo da solo (stelle con nome, pianeti, radiante) no. Ora la
+camera rifiuta ogni direzione oltre 89° dal suo asse (`BehindCameraDeg`), e `StarFieldTest` lo
+pinna a 177°, −150° e 92°. È quello che aveva rubato il posto a Fomalhaut, che a 29° dal centro
+era in finestra. *Due nomi uno sull'altro*: `finish` tiene le scatole dei nomi scritti e non scrive
+un nome che ne tocchi un altro, nell'ordine che è la priorità (luna, radiante, pianeti, stelle per
+luminosità). *L'ora sopra la base del nome*: la vista che avvolge la `TextClock` non ha una base da
+allineare, quindi la riga allinea in alto e l'orologio porta un'aria sopra calcolata dal font
+(`clockPaddingTop`: la prima base di un `Text` di Glance sta al `top` del font, quella di una
+TextClock senza padding al suo `ascent`, misurati sul font del sistema come fa
+`widgetTextDescentEm`); `WindowClockTest` misura la card impaginata e pretende le due basi entro un
+dp e mezzo. Controllato il resto del disegno: la luna al 68% a 29° a sud-ovest alle 22:26 (la metà
+dell'ora), la sua falce accesa verso il basso a destra dove sta il sole sotto l'orizzonte a
+nord-ovest, la frase senza il numero della luna, le righe con i verdetti, «21:56» uguale a 15:56
+più sei ore.

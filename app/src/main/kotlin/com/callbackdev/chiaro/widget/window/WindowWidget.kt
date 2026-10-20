@@ -62,6 +62,7 @@ import com.callbackdev.chiaro.widget.resolveWidgetPalette
 import com.callbackdev.chiaro.widget.secondaryStyle
 import com.callbackdev.chiaro.widget.staleText
 import com.callbackdev.chiaro.widget.widgetCardFill
+import com.callbackdev.chiaro.widget.widgetTextDescentEm
 import java.time.Instant
 import java.time.ZoneId
 
@@ -182,6 +183,9 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
                     ) {
                         Row(
                             modifier = GlanceModifier.defaultWeight(),
+                            // The clock is set on the place's baseline by its own padding
+                            // ([clockPaddingBottom]), because the view that wraps it has no
+                            // baseline for the row to align (from the device, 20 ott 2026).
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
@@ -202,7 +206,7 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
                                         setString(R.id.window_clock, "setTimeZone", model.zone.id)
                                         setTextColor(R.id.window_clock, palette.secondary.getColor(context).toArgb())
                                     },
-                                    modifier = GlanceModifier.padding(start = 6.dp)
+                                    modifier = GlanceModifier.padding(start = 6.dp, bottom = clockPaddingBottom(fontScale(context)))
                                 )
                             }
                         }
@@ -250,6 +254,15 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
         }
     }
 }
+
+/**
+ * The air under the clock that sets its baseline on the place's: the clock sits at the bottom of
+ * a box as tall as the place's line, both texts with the font's padding, so the two baselines
+ * differ by the two faces' descents, which scale with the size: the place's at 16 sp minus the
+ * clock's at 11 sp, in the system face's own descent ([widgetTextDescentEm]).
+ */
+internal fun clockPaddingBottom(fontScale: Float): androidx.compose.ui.unit.Dp =
+    ((WindowPlaceSp - WindowCaptionSp) * widgetTextDescentEm() * fontScale).dp
 
 /** Whether the place keeps a different time from the phone at [at]: by offset, not by zone id,
  * so Paris does not get a clock on a phone in Rome. */
