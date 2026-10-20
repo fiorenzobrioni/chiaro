@@ -545,7 +545,7 @@ private fun PanelContent(
  * children, inside a column of at most four rows.
  */
 @Composable
-private fun LaterTable(
+internal fun LaterTable(
     rows: List<StripHour>,
     model: WidgetModel,
     palette: WidgetPalette,

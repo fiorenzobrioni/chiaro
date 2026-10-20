@@ -42,6 +42,10 @@ import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.shell.ShellDestination
 import com.callbackdev.chiaro.widget.ChiaroWidgetReceiver
 import com.callbackdev.chiaro.widget.CompactRow
+import com.callbackdev.chiaro.widget.LaterTable
+import com.callbackdev.chiaro.widget.TextLaterMinRows
+import com.callbackdev.chiaro.widget.laterHours
+import com.callbackdev.chiaro.widget.textLaterHeight
 import com.callbackdev.chiaro.widget.NoDataContent
 import com.callbackdev.chiaro.widget.NoPlaceContent
 import com.callbackdev.chiaro.widget.SkyRowGap
@@ -62,7 +66,6 @@ import com.callbackdev.chiaro.widget.resolveWidgetPalette
 import com.callbackdev.chiaro.widget.secondaryStyle
 import com.callbackdev.chiaro.widget.staleText
 import com.callbackdev.chiaro.widget.widgetCardFill
-import com.callbackdev.chiaro.widget.widgetTextDescentEm
 import java.time.Instant
 import java.time.ZoneId
 
@@ -127,7 +130,8 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
         return
     }
     val warning = model.warning?.takeIf { model.look.showWarning }
-    val plan = windowPlan(size, fontScale(context), model.moments.size, warning != null, weather = model.look.windowWeather)
+    val scale = fontScale(context)
+    val plan = windowPlan(size, scale, model.moments.size, warning != null, weather = model.look.windowWeather)
     val clock = LocalClock.current
     val at = Instant.now(clock)
     val picture = remember(model, size, plan) { WindowPainter.paint(context, model, size, plan, at) }
@@ -195,34 +199,32 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
                         modifier = GlanceModifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = GlanceModifier.defaultWeight(),
-                            // The clock is set on the place's baseline by its own padding
-                            // ([clockPaddingBottom]), because the view that wraps it has no
-                            // baseline for the row to align (from the device, 20 ott 2026).
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                        if (clockDiffers(model.zone, at)) {
+                            // The place's own time, live, when its clock is not the phone's
+                            // (committente, 20 ott 2026: a night sky at three in the afternoon asks
+                            // what time it is there). The platform's TextClock, kept by the
+                            // launcher minute by minute in the place's zone: a time painted into
+                            // the picture would be a minute stale, then an hour. The name and the
+                            // clock are one platform layout aligned by baseline (the layout says
+                            // why), so the clock stands on the place's line in any face.
+                            AndroidRemoteViews(
+                                remoteViews = RemoteViews(context.packageName, R.layout.widget_window_name).apply {
+                                    setTextViewText(R.id.window_name, city.name)
+                                    setTextColor(R.id.window_name, palette.primary.getColor(context).toArgb())
+                                    setString(R.id.window_clock, "setTimeZone", model.zone.id)
+                                    setTextColor(R.id.window_clock, palette.secondary.getColor(context).toArgb())
+                                },
+                                modifier = GlanceModifier.defaultWeight()
+                            )
+                        } else {
                             Text(
                                 text = city.name,
                                 style = TextStyle(
                                     color = palette.primary, fontSize = WindowPlaceSp.sp, fontWeight = FontWeight.Medium
                                 ),
-                                maxLines = 1
+                                maxLines = 1,
+                                modifier = GlanceModifier.defaultWeight()
                             )
-                            // The place's own time, live, when its clock is not the phone's
-                            // (committente, 20 ott 2026: a night sky at three in the afternoon asks
-                            // what time it is there). The platform's TextClock, kept by the
-                            // launcher minute by minute in the place's zone: a time painted into
-                            // the picture would be a minute stale, then an hour.
-                            if (clockDiffers(model.zone, at)) {
-                                AndroidRemoteViews(
-                                    remoteViews = RemoteViews(context.packageName, R.layout.widget_window_clock).apply {
-                                        setString(R.id.window_clock, "setTimeZone", model.zone.id)
-                                        setTextColor(R.id.window_clock, palette.secondary.getColor(context).toArgb())
-                                    },
-                                    modifier = GlanceModifier.padding(start = 6.dp, bottom = clockPaddingBottom(fontScale(context)))
-                                )
-                            }
                         }
                         // Old data says its age where the compass would be: the age is the
                         // one thing a reader must not miss, and the two are read last alike.
@@ -250,10 +252,28 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
                     )
                 }
             }
-            if (plan.momentRows > 0) {
+            // With the hour's weather on (committente, 20 ott 2026), the tall card's rows are
+            // the next hours as «In words» prints them (laterHours, LaterTable: the same table,
+            // so the hours read one way on every card), in place of the sky's moments; at the
+            // forecast's end, with fewer than a table's worth, the moments that fit the band.
+            val hours = if (plan.hourRows > 0) laterHours(content.strip, content.now).take(plan.hourRows) else emptyList()
+            val momentRows = when {
+                plan.hourRows > 0 && hours.size >= TextLaterMinRows -> 0
+                plan.hourRows > 0 -> ((textLaterHeight(plan.hourRows, scale) + WindowRowsPadding) / windowRowHeight(scale)).toInt()
+                else -> plan.momentRows
+            }
+            if (hours.size >= TextLaterMinRows && plan.hourRows > 0) {
+                Box(
+                    modifier = GlanceModifier.fillMaxWidth().padding(
+                        start = WidgetCardPadding, end = WidgetCardPadding, top = WindowRowsPadding / 2
+                    )
+                ) {
+                    LaterTable(hours, model, palette, scale, width = size.width - WidgetCardPadding * 2, edgeGive = 0.dp)
+                }
+            } else if (momentRows > 0) {
                 // The Sky card's own rows, so the two lists say a verdict one way. The air
                 // between rows is padding inside each row, for Glance's ten-children cap.
-                val shown = model.moments.take(plan.momentRows)
+                val shown = model.moments.take(momentRows)
                 val marks = shown.any { it.verdict != null }
                 Column(
                     modifier = GlanceModifier.fillMaxWidth().padding(
@@ -268,15 +288,6 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
         }
     }
 }
-
-/**
- * The air under the clock that sets its baseline on the place's: the clock sits at the bottom of
- * a box as tall as the place's line, both texts with the font's padding, so the two baselines
- * differ by the two faces' descents, which scale with the size: the place's at 16 sp minus the
- * clock's at 11 sp, in the system face's own descent ([widgetTextDescentEm]).
- */
-internal fun clockPaddingBottom(fontScale: Float): androidx.compose.ui.unit.Dp =
-    ((WindowPlaceSp - WindowCaptionSp) * widgetTextDescentEm() * fontScale).dp
 
 /** Whether the place keeps a different time from the phone at [at]: by offset, not by zone id,
  * so Paris does not get a clock on a phone in Rome. */

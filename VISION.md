@@ -673,7 +673,11 @@ dynamic color:
   clouds» draws the sky without this hour's clouds, veil, rain and snow, the stars, the moon and
   the sun where they stand, with «Behind the clouds» written in the picture, because a sky that
   is not the forecast's has to say so, while the sentence, the numbers and the moments keep the
-  weather. Both off by default.
+  weather. Both off by default. With the hour's weather on, the tall card's rows are the next
+  hours as «In words» prints them (the same table, three hours apart), in place of the sky's
+  moments: the one place the two modes differ in substance, so a reader who wants the weather
+  under the picture gets the hours and not the moments, with the picture still the subject
+  and the sentence still the sky's.
 - **Sky** (retired from the picker on 13 ott 2026: the window draws its list, from three cells
   and three rows, under the picture; the day's arc did before it): the moments in
   front of the reader and their verdicts, with the day named when it is not today — the widget

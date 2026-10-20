@@ -100,15 +100,15 @@ class WindowClockTest {
         assertEquals("Asia/Taipei", clock.timeZone)
     }
 
-    /** «Taipei · 21:18» on one line: the clock's baseline is the place's, within a dp. */
+    /** «Taipei · 21:18» on one line: the clock's baseline is the place's, to the pixel, because
+     * the two are one layout aligned by baseline (from the device, 20 ott 2026, twice). */
     @Test
     fun `the clock sits on the place's baseline`() = inRome {
         val taipei = MilanRecording.widget(app, WidgetKind.WINDOW).copy(zone = ZoneId.of("Asia/Taipei"))
         val found = baselines(taipei)
         val place = found.getValue("Milan")
         val clock = found.getValue("clock")
-        val density = app.resources.displayMetrics.density
-        assertTrue("place baseline $place, clock baseline $clock", kotlin.math.abs(place - clock) <= density * 1.5f)
+        assertEquals("place baseline $place, clock baseline $clock", place, clock)
     }
 
     @Test
