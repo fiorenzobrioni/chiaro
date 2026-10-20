@@ -32,7 +32,13 @@ private val Context.citiesDataStore by preferencesDataStore(name = "cities")
 data class LocationSettings(
     val useGps: Boolean,
     val gpsCity: City?,
-    val fixedAt: Instant?
+    val fixedAt: Instant?,
+    /**
+     * Where the device was last found, when that is somewhere [gpsCity] is not and no
+     * weather for it could be had yet (20 ott 2026). The position page stays on
+     * [gpsCity], whose weather the app has, and says the reader is elsewhere.
+     */
+    val arrival: City? = null
 )
 
 /** What the main screen shows weather for: a saved city, the device position, or
@@ -95,7 +101,8 @@ class CityStore(
             LocationSettings(
                 useGps = prefs[UseGps] ?: false,
                 gpsCity = decodeGpsCity(prefs),
-                fixedAt = prefs[GpsFixedAt]?.let(Instant::ofEpochMilli)
+                fixedAt = prefs[GpsFixedAt]?.let(Instant::ofEpochMilli),
+                arrival = prefs[GpsArrivalJson]?.let(::decodeCity)
             )
         }
         .distinctUntilChanged()
@@ -285,6 +292,9 @@ class CityStore(
     suspend fun setUseGps(enabled: Boolean) {
         dataStore.edit { prefs ->
             prefs[UseGps] = enabled
+            // A place still waiting for its weather is a question about the position,
+            // and with the position off nobody is asking it.
+            if (!enabled) prefs.remove(GpsArrivalJson)
             if (enabled) {
                 prefs[ActiveCityId] = GpsCityId
             } else if (prefs[ActiveCityId] == GpsCityId) {
@@ -338,12 +348,44 @@ class CityStore(
             }
             prefs[GpsCityJson] = json.encodeToString(adopted)
             prefs[GpsFixedAt] = at.toEpochMilli()
+            // Whatever was waiting is answered: by this place, or by being here again.
+            prefs.remove(GpsArrivalJson)
         }
         return decodeGpsCity(updated) ?: fix.toGpsCity()
     }
 
-    private fun decodeGpsCity(prefs: Preferences): City? =
-        prefs[GpsCityJson]?.let { runCatching { json.decodeFromString<City>(it) }.getOrNull() }
+    /**
+     * Records a fix that moved the reader to a place with no weather yet, without
+     * moving the position page there (20 ott 2026): [GpsArrival] decides, and calls this
+     * when the arrival's first forecast could not be had. The page keeps the place it
+     * has weather for, which beats an empty page with coordinates for a title. The
+     * instant is written as [adoptGpsFix] writes it: a fix was taken.
+     */
+    suspend fun holdGpsFix(fix: GeoFix, at: Instant) {
+        dataStore.edit { prefs ->
+            prefs[GpsArrivalJson] = json.encodeToString(fix.toGpsCity())
+            prefs[GpsFixedAt] = at.toEpochMilli()
+        }
+    }
+
+    /**
+     * Moves the position page to the waiting [arrival], once its weather is in hand.
+     * Only if it is still the one waiting: a newer fix may have replaced or answered it
+     * meanwhile, and this must not bring back a place the reader has already left.
+     */
+    suspend fun adoptArrival(arrival: City) {
+        dataStore.edit { prefs ->
+            val waiting = prefs[GpsArrivalJson]?.let(::decodeCity) ?: return@edit
+            if (waiting.cacheKey != arrival.cacheKey) return@edit
+            prefs[GpsCityJson] = json.encodeToString(waiting)
+            prefs.remove(GpsArrivalJson)
+        }
+    }
+
+    private fun decodeGpsCity(prefs: Preferences): City? = prefs[GpsCityJson]?.let(::decodeCity)
+
+    private fun decodeCity(encoded: String): City? =
+        runCatching { json.decodeFromString<City>(encoded) }.getOrNull()
 
     private fun decode(prefs: Preferences): List<City> =
         prefs[CitiesJson]
@@ -368,6 +410,9 @@ class CityStore(
 
         /** When [GpsCityJson] was taken, so the interval survives the process. */
         private val GpsFixedAt = longPreferencesKey("gps_fixed_at")
+
+        /** [LocationSettings.arrival]: a fix not adopted yet for want of its weather. */
+        private val GpsArrivalJson = stringPreferencesKey("gps_arrival_json")
 
         /**
          * NOT seeded on a fresh install: a city the user never chose is the one

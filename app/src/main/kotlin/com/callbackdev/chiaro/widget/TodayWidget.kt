@@ -93,7 +93,7 @@ private fun TodayContent(
     // rather than the resolved sentence. The trailing column is the only place a chip
     // can stand on this card, so a card too narrow for one carries no warning either.
     val baseRain = anyRain &&
-        todayShowRain(size, fontScale, content.isStale, sentenceOn, range != null)
+        todayShowRain(size, fontScale, content.marked, sentenceOn, range != null)
     val wide = todayIsWide(size, todayHeroIconSize(size, fontScale, baseRain))
     val warning = warningSlot(
         level = model.warning?.maxLevel,
@@ -101,14 +101,14 @@ private fun TodayContent(
         headlineShown = sentenceOn && wide,
         sentenceSlot = wide,
         ownRow = wide &&
-            todayHasWarningRow(size, fontScale, content.isStale, sentenceOn, range != null)
+            todayHasWarningRow(size, fontScale, content.marked, sentenceOn, range != null)
     )
     // The rain row appears when any visible hour has something to report — then EVERY
     // cell prints its figure, because a 0% next to an 80% is information (the app
     // strip's own rule) — and when it fits under the hero's words (the budget's).
     val showRain = anyRain &&
         todayShowRain(
-            size, fontScale, content.isStale,
+            size, fontScale, content.marked,
             sentence = sentenceOn, range = range != null, warning = warning.drawn
         )
     val icon = todayHeroIconSize(size, fontScale, showRain)
@@ -116,7 +116,7 @@ private fun TodayContent(
     val days = content.week.take(cells)
     val showDays = model.look.showLater && days.size >= StripCellsFloor &&
         todayShowDays(
-            size, fontScale, content.isStale,
+            size, fontScale, content.marked,
             sentence = sentenceOn, range = range != null, warning = warning.drawn,
             rain = showRain
         )
@@ -124,7 +124,7 @@ private fun TodayContent(
     // The hours after the first row's, on a card tall enough for them under the days.
     val more = if (
         showDays && todayShowMoreHours(
-            size, fontScale, content.isStale,
+            size, fontScale, content.marked,
             sentence = sentenceOn, range = range != null, warning = warning.drawn, rain = showRain
         )
     ) {
@@ -217,9 +217,9 @@ private fun TodayContent(
                     palette = palette,
                     size = PlaceSp.sp
                 )
-                if (content.isStale) {
+                if (content.marked) {
                     Text(
-                        text = staleText(context, content.lastSync, Instant.now(LocalClock.current)),
+                        text = markerText(context, content, Instant.now(LocalClock.current)),
                         style = TextStyle(color = palette.stale, fontSize = StaleSp.sp),
                         maxLines = 1
                     )

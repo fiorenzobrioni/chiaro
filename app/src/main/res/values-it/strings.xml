@@ -80,6 +80,7 @@
         <item quantity="one">Aggiornato %d giorno fa</item>
         <item quantity="other">Aggiornato %d giorni fa</item>
     </plurals>
+    <string name="today_elsewhere">Sei a %1$d km da %2$s: questo è ancora il suo meteo, finché non arriva quello di dove sei.</string>
     <string name="error_offline">Aggiornamento non riuscito: sei offline</string>
     <string name="error_service">Aggiornamento non riuscito: il servizio non risponde</string>
     <string name="error_unknown">Aggiornamento non riuscito: qualcosa è andato storto</string>
@@ -1367,6 +1368,22 @@
     <string name="widget_color_plum">Viola</string>
     <string name="widget_color_clay">Terracotta</string>
     <string name="widget_no_place_hint">Tocca per aprire Chiaro e aggiungerne uno</string>
+    <!-- The position page stays on the place it has weather for (20 ott 2026). -->
+    <string name="widget_elsewhere">Sei altrove</string>
+    <string name="widget_elsewhere_short">Altrove</string>
+    <string name="widget_elsewhere_age">%1$s · %2$s</string>
+    <plurals name="widget_minutes_ago">
+        <item quantity="one">%d min fa</item>
+        <item quantity="other">%d min fa</item>
+    </plurals>
+    <plurals name="widget_hours_ago">
+        <item quantity="one">%d h fa</item>
+        <item quantity="other">%d h fa</item>
+    </plurals>
+    <plurals name="widget_days_ago">
+        <item quantity="one">%d g fa</item>
+        <item quantity="other">%d g fa</item>
+    </plurals>
     <string name="widget_no_data">Sto prendendo la prima previsione…</string>
     <string name="widget_sky_empty">Nessun momento del cielo in arrivo. Tocca per sceglierne.</string>
     <string name="settings_opacity_full">Pieno</string>

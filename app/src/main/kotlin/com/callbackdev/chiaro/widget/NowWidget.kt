@@ -274,7 +274,7 @@ private fun TallContent(
     val context = LocalContext.current
     val scale = fontScale(context)
     val temperatureSp = nowTallTemperatureSp(
-        size, scale, content.isStale, withSentence, warning.drawn
+        size, scale, content.marked, withSentence, warning.drawn
     )
     Box(
         contentAlignment = Alignment.TopEnd,
@@ -284,7 +284,7 @@ private fun TallContent(
             content, model, palette,
             heroIconSize(
                 nowTallIconRoom(
-                    size, scale, content.isStale, withSentence, warning.drawn, temperatureSp
+                    size, scale, content.marked, withSentence, warning.drawn, temperatureSp
                 )
             )
         )
@@ -424,10 +424,10 @@ private fun Temperature(
  * place, on every form. */
 @Composable
 private fun StaleLine(content: TodayUiState.Content, palette: WidgetPalette) {
-    if (!content.isStale) return
+    if (!content.marked) return
     val context = LocalContext.current
     Text(
-        text = staleText(context, content.lastSync, Instant.now(LocalClock.current)),
+        text = markerText(context, content, Instant.now(LocalClock.current)),
         style = TextStyle(color = palette.stale, fontSize = StaleSp.sp),
         maxLines = 1
     )
@@ -514,7 +514,7 @@ internal fun NowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
     ) { palette ->
         val sentenceOn = model.look.showSentence
         val level = model.warning?.maxLevel
-        val stale = content?.isStale == true
+        val stale = content?.marked == true
         val scale = fontScale(context)
         when {
             content == null && model.city == null -> NoPlaceContent(palette)

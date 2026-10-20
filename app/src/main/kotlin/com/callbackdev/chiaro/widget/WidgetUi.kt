@@ -68,6 +68,7 @@ import com.callbackdev.chiaro.ui.theme.WidgetCardColor
 import com.callbackdev.chiaro.ui.theme.paletteFor
 import com.callbackdev.chiaro.ui.theme.widgetCardContainer
 import com.callbackdev.chiaro.ui.today.SkySnapshot
+import com.callbackdev.chiaro.ui.today.TodayUiState
 import com.callbackdev.chiaro.ui.warnings.WarningText
 import java.time.Duration
 import java.time.Instant
@@ -779,6 +780,48 @@ private fun placePinSize(context: Context, fontSizeSp: Float): Dp =
  */
 private const val PinToText = 1.0f
 private val PlacePinGap = 4.dp
+
+/**
+ * Whether the card prints its marker line (20 ott 2026): old data, or a position page
+ * still on the place it has weather for while the reader is elsewhere. The second has its
+ * own reason to be said, because the pin beside the name reads «you are here», and a
+ * forecast twenty minutes old is not stale, so the age alone would print nothing.
+ */
+val TodayUiState.Content.marked: Boolean get() = isStale || elsewhereKm != null
+
+/**
+ * The marker line's words: the age, the move, or both, the move first because the age of
+ * a place the reader has left is the lesser news. One line, as the age always was, and
+ * both in their short forms: on a two-row card «You've moved · 8 hours ago» was cut at
+ * «8 hou…», which drops exactly the number the line is there for.
+ */
+fun markerText(context: Context, content: TodayUiState.Content, now: Instant): String {
+    if (content.elsewhereKm == null) return staleText(context, content.lastSync, now)
+    if (!content.isStale) return context.getString(R.string.widget_elsewhere)
+    return context.getString(
+        R.string.widget_elsewhere_age,
+        context.getString(R.string.widget_elsewhere_short),
+        shortAge(context, content.lastSync, now)
+    )
+}
+
+/** «8 h fa» without the «Aggiornato», for the line that has to hold the move too. */
+private fun shortAge(context: Context, lastSync: Instant, now: Instant): String {
+    val age = Duration.between(lastSync, now)
+    return when {
+        age.toDays() >= 1 -> context.resources.getQuantityString(
+            R.plurals.widget_days_ago, age.toDays().toInt(), age.toDays().toInt()
+        )
+        age.toHours() >= 1 -> context.resources.getQuantityString(
+            R.plurals.widget_hours_ago, age.toHours().toInt(), age.toHours().toInt()
+        )
+        else -> context.resources.getQuantityString(
+            R.plurals.widget_minutes_ago,
+            age.toMinutes().coerceAtLeast(1).toInt(),
+            age.toMinutes().coerceAtLeast(1).toInt()
+        )
+    }
+}
 
 /** The stale marker (VISION §5.9): with old data the widget says how old. */
 fun staleText(context: Context, lastSync: Instant, now: Instant): String {

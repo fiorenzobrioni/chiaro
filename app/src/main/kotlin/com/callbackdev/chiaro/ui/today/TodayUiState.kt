@@ -93,7 +93,15 @@ sealed interface TodayUiState {
          * them: the section is not drawn for a dry window, and is never drawn where the app
          * has no 15-minute forecast it stands behind ([NowcastEngine.read] is null there).
          */
-        val nowcast: NowcastEngine.Reading? = null
+        val nowcast: NowcastEngine.Reading? = null,
+        /**
+         * On the position page, how far the reader now is from [city], in whole
+         * kilometres, while the place they reached has no weather yet (20 ott 2026): the
+         * page stays on the place it has a forecast for and says so. Null everywhere else.
+         * Filled by the ViewModel and the widgets, never by the builder, which knows
+         * nothing of fixes.
+         */
+        val elsewhereKm: Int? = null
     ) : TodayUiState
 }
 

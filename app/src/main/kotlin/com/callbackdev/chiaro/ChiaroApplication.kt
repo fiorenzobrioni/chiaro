@@ -15,7 +15,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -71,8 +73,13 @@ class ChiaroApplication : Application() {
                 // The official warnings' store joins the collector (Fase 11): the
                 // bulletin is content on the cards, and it changes on its own clock —
                 // once an afternoon, on a run that may not have fetched anything else.
-                ServiceLocator.warningReader(this@ChiaroApplication).bulletin
-            ) { active, settings, bulletin -> Triple(active, settings, bulletin) }
+                ServiceLocator.warningReader(this@ChiaroApplication).bulletin,
+                // A place reached and waiting for its weather (20 ott 2026) does not move
+                // the active place, but the cards on the position must say it.
+                ServiceLocator.cityStore(this@ChiaroApplication).locationSettings
+                    .map { it.arrival?.cacheKey }
+                    .distinctUntilChanged()
+            ) { active, settings, bulletin, arrival -> listOf(active, settings, bulletin, arrival) }
                 .drop(1) // the first emission is startup, not a change
                 .collect {
                     runCatching { ChiaroWidgets.updateAll(this@ChiaroApplication) }

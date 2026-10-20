@@ -26,13 +26,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -86,6 +90,7 @@ import com.callbackdev.chiaro.ui.warnings.WarningSheet
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 
 /**
  * Today (VISION §5.2): the canvas, the sentence, the hours, the day, the week, the
@@ -180,24 +185,31 @@ internal fun PagedToday(
         initialPage = model.activeIndex.coerceIn(0, model.pages.lastIndex)
     ) { pages.size }
 
-    // Selection made elsewhere (the sheet, a removal) → the pager follows.
+    // Selection made elsewhere (the sheet, a removal) → the pager follows. Only the
+    // reader's own finger holds it back: a scroll of ours that was cut short by the
+    // next change is taken over, and a pager left between two pages is brought home
+    // even when its nearest page is already the target (20 ott 2026: turning the
+    // position on from the sheet left Today stopped halfway between two places).
     val reduced = reducedMotion()
+    val dragged by pagerState.interactionSource.collectIsDraggedAsState()
     LaunchedEffect(model.activeIndex, pages.size, reduced) {
         val target = model.activeIndex
-        if (target in pages.indices && target != pagerState.currentPage &&
-            !pagerState.isScrollInProgress
-        ) {
+        val atRest = target == pagerState.currentPage && pagerState.currentPageOffsetFraction == 0f
+        if (target in pages.indices && !atRest && !dragged) {
             // The page arrives either way; with motion off it arrives without the
             // sideways travel, which on a full-screen pager is the largest movement
             // in the app (§7).
             if (reduced) pagerState.scrollToPage(target) else pagerState.animateScrollToPage(target)
         }
     }
-    // The pager settled → that is the selection now.
+    // The pager settled → that is the selection now. Read by key, not by index: a page
+    // inserted before this one (the position, turned on) moves its index without the
+    // reader going anywhere, and reporting that move as a settle wrote the old place
+    // back over the position the sheet had just selected.
     LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.settledPage }.collect { settled ->
-            pages.getOrNull(settled)?.let(onSettled)
-        }
+        snapshotFlow { pages.getOrNull(pagerState.settledPage) }
+            .distinctUntilChangedBy { it?.key }
+            .collect { settled -> settled?.let(onSettled) }
     }
     // Coming back to the front is the moment the position is most likely to be wrong,
     // and the settle above does not fire again on a warm resume. Silent and gated:
@@ -264,6 +276,28 @@ internal fun PagedToday(
                     .navigationBarsPadding()
             )
         }
+    }
+}
+
+/** The position page standing on the place it has weather for, said in one sentence. */
+@Composable
+private fun ElsewhereNote(km: Int, place: String, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.LocationOn,
+            contentDescription = null, // the sentence says it
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp)
+        )
+        Text(
+            text = stringResource(R.string.today_elsewhere, km, place),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -691,6 +725,20 @@ internal fun ContentState(
                         FreshnessChip(
                             age = freshnessAge(content.lastSync),
                             onRetry = onRefresh,
+                            modifier = Modifier.padding(start = 16.dp, top = ItemGap, end = 16.dp)
+                        )
+                    }
+                }
+            }
+            // The reader is elsewhere and this is still the place they left (20 ott 2026):
+            // said with the age, which it qualifies, because the pin by the name reads
+            // «you are here» and the numbers must not be taken for the new place's.
+            content.elsewhereKm?.let { km ->
+                item {
+                    Box(paper) {
+                        ElsewhereNote(
+                            km = km,
+                            place = content.city.name,
                             modifier = Modifier.padding(start = 16.dp, top = ItemGap, end = 16.dp)
                         )
                     }

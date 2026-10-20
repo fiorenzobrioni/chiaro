@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.callbackdev.chiaro.data.ActiveSource
+import com.callbackdev.chiaro.data.GpsArrival
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.WeatherException
@@ -46,10 +47,18 @@ class WeatherSyncWorker(
             return Result.success()
         }
 
-        val city = when (val source = ServiceLocator.cityStore(context).activeSource.first()) {
+        val cityStore = ServiceLocator.cityStore(context)
+        val city = when (val source = cityStore.activeSource.first()) {
             is ActiveSource.Saved -> source.city
-            // Background location is off the table by design: last persisted fix only
-            is ActiveSource.Gps -> source.lastFix ?: return Result.success()
+            // Background location is off the table by design: last persisted fix only.
+            // A fix the app took and could not move to for want of its weather is one
+            // of those (20 ott 2026): its weather is asked for here as well, with the
+            // coordinates already in hand, so the move happens at the first run back
+            // online and not only when the reader next opens the app.
+            is ActiveSource.Gps -> {
+                GpsArrival(cityStore, ServiceLocator.weatherRepository(context)).retry()
+                cityStore.locationSettings.first().gpsCity ?: return Result.success()
+            }
             ActiveSource.None -> return Result.success()
         }
 
