@@ -78,11 +78,13 @@ internal fun drawStars(canvas: Canvas, stars: List<StarMark>, widthPx: Int, heig
     stars.forEach { star ->
         val (x, y) = starPlace(star, widthPx, heightPx) ?: return@forEach
         val r = starRadiusDp(star.brightness) * density
+        // The three channels alone: `Color.rgb` sets the alpha to 0xFF, and an `or` over it
+        // left every stop opaque (found 20 ott 2026); the alpha is the disc and is set below.
         val data = Color.rgb(
             (star.brightness * 255f).roundToInt().coerceIn(0, 255),
             (star.phase * 255f).roundToInt().coerceIn(0, 255),
             (star.warmth * 255f).roundToInt().coerceIn(0, 255)
-        )
+        ) and 0x00FFFFFF
         if (star.brightness < DustBrightness) {
             // The dust: a plain speck, so a few hundred of them a minute cost nothing.
             speck.color = data or (0xB0 shl 24)
@@ -90,7 +92,7 @@ internal fun drawStars(canvas: Canvas, stars: List<StarMark>, widthPx: Int, heig
         } else {
             soft.shader = RadialGradient(
                 x, y, r,
-                intArrayOf(data or (0xFF shl 24), data or (0xA0 shl 24), data and 0x00FFFFFF),
+                intArrayOf(data or (0xFF shl 24), data or (0xA0 shl 24), data),
                 floatArrayOf(0f, 0.45f, 1f),
                 Shader.TileMode.CLAMP
             )

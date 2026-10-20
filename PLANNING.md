@@ -15384,3 +15384,21 @@ l'immagine sotto la riga di «Today», larga 384 (l'eroe a 1×, le stelle grandi
 
 Verificato: le tre ore rese e guardate, le due scartate cancellate; `today-night.png` guardata alla
 fine; `StringsParityTest`, `SkyGuideTest`; le altre immagini del README rilanciate e identiche.
+
+**Il crash di notte sull'APK minificato** (committente, 20 ott 2026, dal telefono: «va in crash
+quando scelgo una località dove è notte; su Milano, di giorno, funziona tutto»). Verificato
+costruendo in locale i due APK della CI: il catalogo `bright_stars.bin` sta in tutti e due, al suo
+posto (`com/callbackdev/chiaro/domain/sky/`), ma nella mappa di R8 della release `BrightStars` è
+ripacchettata in `j7.o`; il caricatore cercava la risorsa con un nome relativo alla classe,
+`getResourceAsStream("bright_stars.bin")`, che R8 fa diventare `j7/bright_stars.bin`: nulla,
+`error(...)`, e la prima volta che il sole scende sotto −6° (le stelle si calcolano solo allora)
+l'app cade. L'APK di debug non è minificato e non ne soffre, e nessun test unitario gira sotto R8:
+per questo la suite era verde e la notte di Milano del README si disegnava. Corretto con il
+percorso assoluto (`BrightStars.RESOURCE`, con la barra iniziale), che R8 non tocca perché non
+rinomina le risorse Java; il commento sulla classe dice perché, così nessuno lo «semplifica».
+Regola da tenere: **una risorsa Java si carica per percorso assoluto**, mai relativo alla classe,
+in un'app che passa da R8. Nello stesso giro due cose trovate leggendo `StarMap` per cercare il
+crash: `Color.rgb` mette l'alfa a 0xFF e un `or` sopra lasciava opachi tutti gli stop (la
+polvere a 0xB0 e il bordo del disco a 0xA0 erano scritti e non applicati); ora i tre canali sono
+mascherati e l'alfa è quello scritto, e le tre notti di Milano sono state rese di nuovo e guardate.
+La documentazione di `StarField` allineata ai conteggi di DESIGN e PLANNING (45 / 242, 91 / 441).

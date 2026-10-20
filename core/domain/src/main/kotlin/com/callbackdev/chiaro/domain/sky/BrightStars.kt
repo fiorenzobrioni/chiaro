@@ -10,14 +10,24 @@ import java.io.DataInputStream
  * Precession since J2000 moves a star by about a third of a degree, under what a dp of the
  * canvas holds, and is not applied.
  *
- * The data is `bright_stars.bin` next to this class on the classpath, written by
+ * The data is `bright_stars.bin` at [RESOURCE] on the classpath, written by
  * `tools/gen_bright_stars.py` and never by hand (20 ott 2026: at magnitude 6.0 the catalogue
  * is 5 080 stars, over what a Kotlin array of literals may hold in one static initialiser), and
  * read once, on first use: four 16-bit fields a star after a four-byte magic, a version and a
  * count, the layout the tool's docstring gives.
+ *
+ * Looked up by its ABSOLUTE path, never relative to this class (the night crash of 20 ott
+ * 2026, from the device): the minified build's R8 repackages this class (`j7.o` in that
+ * build's mapping) while the resource stays where the module put it, so a name resolved
+ * against the class' package pointed at `j7/bright_stars.bin`, found nothing, and the first
+ * place where it was night brought the app down. The debug build, not minified, never showed
+ * it, and no unit test runs under R8.
  */
 object BrightStars {
     const val LIMIT_MAG = 6.0f
+
+    /** The catalogue's place in the jar and in the APK, absolute (leading slash) on purpose. */
+    const val RESOURCE = "/com/callbackdev/chiaro/domain/sky/bright_stars.bin"
 
     val count: Int get() = mag.size
     val raDeg: FloatArray get() = table.ra
@@ -30,8 +40,8 @@ object BrightStars {
     private val table: Table by lazy { read() }
 
     private fun read(): Table {
-        val stream = BrightStars::class.java.getResourceAsStream("bright_stars.bin")
-            ?: error("bright_stars.bin is not on the classpath: run tools/gen_bright_stars.py")
+        val stream = BrightStars::class.java.getResourceAsStream(RESOURCE)
+            ?: error("$RESOURCE is not on the classpath: run tools/gen_bright_stars.py")
         DataInputStream(stream.buffered()).use { input ->
             val magic = ByteArray(4).also { input.readFully(it) }
             require(String(magic, Charsets.US_ASCII) == "CHST") { "bright_stars.bin: not a star catalogue" }

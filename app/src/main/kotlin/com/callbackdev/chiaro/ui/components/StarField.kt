@@ -39,8 +39,8 @@ data class StarMark(
  * (committente, from the device, 20 ott 2026: «two or three stars»). Measured for Milan: on
  * an October evening, with Capricorn and Aquarius in the south and a gibbous moon over them,
  * that window held 15 stars, 3 of them under the third magnitude, which the moon's rule then
- * halved; the same evening the wider camera holds 46 to magnitude 4.5 and 245 to 6.0, a
- * January one 91 and 447. Random stars were refused: a star a reader can disprove by looking
+ * halved; the same evening the wider camera holds 45 to magnitude 4.5 and 242 to 6.0, a
+ * January one 91 and 441. Random stars were refused: a star a reader can disprove by looking
  * up is the one thing this canvas must not draw.
  */
 object StarField {
